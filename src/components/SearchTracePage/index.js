@@ -77,7 +77,7 @@ const traceResultsFiltersFormSelector = formValueSelector(
 export default class SearchTracePage extends Component {
   componentDidMount() {
     const { searchTraces, urlQueryParams, fetchServices } = this.props;
-    if (urlQueryParams.service) {
+    if (urlQueryParams.service || urlQueryParams.traceID) {
       searchTraces(urlQueryParams);
     }
     fetchServices();
