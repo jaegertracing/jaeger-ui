@@ -48,6 +48,13 @@ export function tagsToQuery(tags) {
   return tags.split('|');
 }
 
+export function traceIDsToQuery(traceIDs) {
+  if (!traceIDs) {
+    return null;
+  }
+  return traceIDs.split(',');
+}
+
 export function convertQueryParamsToFormDates({ start, end }) {
   let queryStartDate;
   let queryStartDateTime;
@@ -246,6 +253,7 @@ const mapStateToProps = state => {
     maxDuration,
     minDuration,
     lookback,
+    traceID: traceIDParams,
   } = state.routing.locationBeforeTransitions.query;
 
   const nowInMicroseconds = moment().valueOf() * 1000;
@@ -271,6 +279,12 @@ const mapStateToProps = state => {
   if (tagParams) {
     tags = tagParams instanceof Array ? tagParams.join('|') : tagParams;
   }
+  let traceIDs;
+  if (traceIDParams) {
+    traceIDs = traceIDParams instanceof Array
+      ? traceIDParams.join(',')
+      : traceIDParams;
+  }
   return {
     destroyOnUnmount: false,
     initialValues: {
@@ -285,6 +299,7 @@ const mapStateToProps = state => {
       tags,
       minDuration: minDuration || null,
       maxDuration: maxDuration || null,
+      traceIDs: traceIDs || null,
     },
     selectedService: searchSideBarFormSelector(state, 'service'),
     selectedLookback: searchSideBarFormSelector(state, 'lookback'),
@@ -307,6 +322,7 @@ const mapDispatchToProps = dispatch => {
         minDuration,
         maxDuration,
         lookback,
+        traceIDs,
       } = fields;
 
       store.set('lastSearch', { service, operation });
@@ -339,6 +355,7 @@ const mapDispatchToProps = dispatch => {
         tag: tagsToQuery(tags) || undefined,
         minDuration: minDuration || null,
         maxDuration: maxDuration || null,
+        traceID: traceIDsToQuery(traceIDs) || undefined,
       });
     },
   };
