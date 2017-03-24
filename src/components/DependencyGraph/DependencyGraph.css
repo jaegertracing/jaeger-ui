@@ -1,0 +1,9 @@
+.rv-force__node {
+  fill: #11939A;
+  cursor: pointer;
+}
+
+.rv-force__label {
+  user-select: none;
+  pointer-events: none;
+}

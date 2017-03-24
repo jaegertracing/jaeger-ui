@@ -1,0 +1,9 @@
+[ignore]
+.*/node_modules/fbjs/.*
+.*/node_modules/uber-licence/.*
+
+[include]
+
+[libs]
+
+[options]
