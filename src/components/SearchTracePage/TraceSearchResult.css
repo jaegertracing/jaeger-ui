@@ -1,0 +1,7 @@
+.ui.header.trace-search-result--duration {
+  color: #11939A;
+}
+
+.trace-search-result:hover .ui.header.trace-search-result--duration {
+  color: #00474E;
+}
