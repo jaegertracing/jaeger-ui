@@ -45,13 +45,25 @@ npm start
 
 ## Build
 
-Running build will output all the static files to the `./dist` folder:
+Running build will output all the static files to the `./build` directory:
 
 ```
 npm install
 npm run build
 ```
 
+### Dockerfile
+
+To generate a Docker image, run:
+
+```bash
+docker build -t yournamespace/jaeger-ui .
+```
+
+You can run it as:
+```bash
+docker run --rm -p 8080:8080 yournamespace/jaeger-ui
+```
 
 #### Enable Google Analytics
 
