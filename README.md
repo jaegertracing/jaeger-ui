@@ -1,6 +1,6 @@
 ## WARNING: This is Alpha software and not intended for use until a stable release.
 
-# Jaeger UI
+# Jaeger UI [![Build Status](https://travis-ci.org/uber/jaeger-ui.svg?branch=master)](https://travis-ci.org/uber/jaeger-ui)
 
 
 Visualize distributed tracing with Jaeger. [See the demo](https://uber.github.io/jaeger-ui/).
