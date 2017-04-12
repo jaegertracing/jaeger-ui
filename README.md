@@ -1,9 +1,8 @@
-## WARNING: This is Alpha software and not intended for use until a stable release.
+[![ReadTheDocs][doc-img]][doc] [![Build Status][ci-img]][ci] [![Coverage Status][cov-img]][cov]
 
-# Jaeger UI [![Build Status](https://travis-ci.org/uber/jaeger-ui.svg?branch=master)](https://travis-ci.org/uber/jaeger-ui)
+# Jaeger UI 
 
-
-Visualize distributed tracing with Jaeger. [See the demo](https://uber.github.io/jaeger-ui/).
+Visualize distributed tracing with Jaeger.
 
 ## Development
 
@@ -62,3 +61,13 @@ To enable Google Analytics tracking, set the `REACT_APP_GA_ANALYTICS_ID` env var
 export REACT_APP_GA_ANALYTICS_ID = UA-*******-**
 npm run build
 ```
+
+[![Build Status](https://travis-ci.org/uber/jaeger-ui.svg?branch=master)](https://travis-ci.org/uber/jaeger-ui)
+
+
+[doc-img]: https://readthedocs.org/projects/jaeger/badge/?version=latest
+[doc]: http://jaeger.readthedocs.org/en/latest/
+[ci-img]: https://travis-ci.org/uber/jaeger-ui.svg?branch=master
+[ci]: https://travis-ci.org/uber/jaeger-ui
+[cov-img]: https://coveralls.io/repos/uber/jaeger-ui/badge.svg?branch=master
+[cov]: https://coveralls.io/github/uber/jaeger-ui?branch=master
