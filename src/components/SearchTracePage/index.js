@@ -26,7 +26,7 @@ import { Link } from 'react-router';
 import { Sticky } from 'react-sticky';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 
-import JaegerLogo from '../../img/jaeger-logo.jpg';
+import JaegerLogo from '../../img/jaeger-logo.svg';
 
 import TraceSearchForm from './TraceSearchForm';
 import TraceSearchResult from './TraceSearchResult';
@@ -124,7 +124,7 @@ export default class SearchTracePage extends Component {
               style={{ marginTop: 100 }}
             >
               <div className="column">
-                <img alt="presentation" src={JaegerLogo} />
+                <img alt="presentation" src={JaegerLogo} width="400" />
               </div>
             </div>}
           {!isHomepage &&
