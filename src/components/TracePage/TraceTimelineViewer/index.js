@@ -198,10 +198,8 @@ TimelineRow.Left.propTypes = {
 TimelineRow.Right = props => {
   const { children, ...rest } = props;
   return (
-    <div className="col-xs-9" {...rest}>
-      <div className="relative" style={{ height: '100%' }}>
-        {children}
-      </div>
+    <div className="col-xs-9 relative" {...rest}>
+      {children}
     </div>
   );
 };
