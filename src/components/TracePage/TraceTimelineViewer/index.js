@@ -38,6 +38,7 @@ import {
   formatDuration,
   findServerChildSpan,
   isErrorSpan,
+  spanContainsErredSpan,
 } from './utils';
 import { transformTrace } from './transforms';
 import colorGenerator from '../../../utils/color-generator';
@@ -323,12 +324,9 @@ function TraceView(props) {
         };
       }
 
-      let backgroundColor;
-      if (isErrorSpan(span)) {
-        backgroundColor = '#ffe6e6';
-      } else if (showSpanDetails) {
-        backgroundColor = 'whitesmoke';
-      }
+      const showErrorIcon = isErrorSpan(span) ||
+        (spanIsCollapsed && spanContainsErredSpan(trace.spans, i));
+      const backgroundColor = showSpanDetails ? 'whitesmoke' : null;
       arr.push(
         <TimelineRow
           key={spanID}
@@ -378,6 +376,11 @@ function TraceView(props) {
                       : undefined,
                   }}
                 >
+                  {showErrorIcon &&
+                    <i
+                      aria-hidden="true"
+                      className="icon warning circle red"
+                    />}
                   {span.process.serviceName} {childServerSpan &&
                     spanIsCollapsed &&
                     <span>
