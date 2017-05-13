@@ -18,8 +18,34 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import { spanContainsErredSpan } from './utils';
+import {
+  isClientSpan,
+  isErrorSpan,
+  isServerSpan,
+  spanContainsErredSpan,
+} from './utils';
 import traceGenerator from '../../../demo/trace-generators';
+
+it('isClientSpan(...) is true only when a span.kind=client tag is present', () => {
+  const tags = traceGenerator.tags();
+  expect(isClientSpan({ tags })).toBe(false);
+  tags.push({ key: 'span.kind', value: 'client' });
+  expect(isClientSpan({ tags })).toBe(true);
+});
+
+it('isServerSpan(...) is true only when a span.kind=server tag is present', () => {
+  const tags = traceGenerator.tags();
+  expect(isServerSpan({ tags })).toBe(false);
+  tags.push({ key: 'span.kind', value: 'server' });
+  expect(isServerSpan({ tags })).toBe(true);
+});
+
+it('isErrorSpan(...) is true only when a error=true tag is present', () => {
+  const tags = traceGenerator.tags();
+  expect(isErrorSpan({ tags })).toBe(false);
+  tags.push({ key: 'error', value: true });
+  expect(isErrorSpan({ tags })).toBe(true);
+});
 
 it('spanContainsErredSpan(...) is true only when a descendant has an error tag', () => {
   const errorTag = { key: 'error', type: 'bool', value: true };
