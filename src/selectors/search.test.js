@@ -32,6 +32,16 @@ it('transformTrace() works accurately', () => {
   expect(transformedTrace.duration).toBe(trace.duration / 1000);
 
   expect(transformedTrace.timestamp).toBe(Math.floor(trace.timestamp / 1000));
+
+  const erredTag = { key: 'error', type: 'bool', value: true };
+
+  expect(transformedTrace.numberOfErredSpans).toBe(0);
+
+  trace.spans[0].tags.push(erredTag);
+  expect(searchSelectors.transformTrace(trace).numberOfErredSpans).toBe(1);
+
+  trace.spans[1].tags.push(erredTag);
+  expect(searchSelectors.transformTrace(trace).numberOfErredSpans).toBe(2);
 });
 
 it('transformTraceResults() calculates the max duration of all traces', () => {

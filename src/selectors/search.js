@@ -87,12 +87,19 @@ export function transformTrace(trace) {
     };
   });
 
+  const isErredTag = ({ key, value }) => key === 'error' && value === true;
+  const numberOfErredSpans = trace.spans.reduce(
+    (total, { tags }) => total + Number(tags.some(isErredTag)),
+    0
+  );
+
   return {
     traceName: getTraceName(trace),
     traceID: trace.traceID,
     numberOfSpans: trace.spans.length,
     duration: traceDuration / 1000,
     timestamp: Math.floor(getTraceTimestamp(trace) / 1000),
+    numberOfErredSpans,
     services,
   };
 }

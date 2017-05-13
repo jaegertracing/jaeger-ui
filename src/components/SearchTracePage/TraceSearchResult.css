@@ -5,3 +5,13 @@
 .trace-search-result:hover .ui.header.trace-search-result--duration {
   color: #00474E;
 }
+
+.trace-search-result--spans {
+	display: inline-block;
+	margin-right: 0.5em;
+}
+
+.trace-search-result--erred-spans {
+	color: #c00;
+	display: inline-block;
+}
