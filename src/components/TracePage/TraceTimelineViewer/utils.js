@@ -107,6 +107,28 @@ export const isServerSpan = span => hasTagKey(span.tags, 'span.kind', 'server');
 export const isErrorSpan = span => hasTagKey(span.tags, 'error', true);
 
 /**
+ * Returns `true` if at least one of the descendants of the `parentSpanIndex`
+ * span contains an error tag.
+ *
+ * @param      {Span[]}   spans            The spans for a trace - should be
+ *                                         sorted with children following parents.
+ * @param      {number}   parentSpanIndex  The index of the parent span - only
+ *                                         subsequent spans with depth less than
+ *                                         the parent span will be checked.
+ * @return     {boolean}  Returns `true` if a descendant contains an error tag.
+ */
+export function spanContainsErredSpan(spans, parentSpanIndex) {
+  const { depth } = spans[parentSpanIndex];
+  let i = parentSpanIndex + 1;
+  for (; spans[i].depth > depth; i++) {
+    if (isErrorSpan(spans[i])) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
  * Expects the first span to be the parent span.
  */
 export function findServerChildSpan(spans) {
