@@ -120,7 +120,7 @@ export const isErrorSpan = span => hasTagKey(span.tags, 'error', true);
 export function spanContainsErredSpan(spans, parentSpanIndex) {
   const { depth } = spans[parentSpanIndex];
   let i = parentSpanIndex + 1;
-  for (; spans[i].depth > depth; i++) {
+  for (; i < spans.length && spans[i].depth > depth; i++) {
     if (isErrorSpan(spans[i])) {
       return true;
     }
