@@ -120,6 +120,8 @@ export default class TracePage extends Component {
 
   toggleSlimView(slimView) {
     this.setState({ slimView });
+    // fix issue #12 - TraceView header expander not working correctly
+    setTimeout(() => this.forceUpdate(), 0);
   }
 
   ensureTraceFetched() {
