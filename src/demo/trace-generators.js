@@ -106,9 +106,9 @@ export default chance.mixin({
       // very short trace
       // average case
       numberOfSpans = chance.pickone([
-        Math.ceil(chance.normal({ mean: 200, dev: 10 })),
+        Math.ceil(chance.normal({ mean: 200, dev: 10 })) + 1,
         Math.ceil(chance.integer({ min: 3, max: 10 })),
-        Math.ceil(chance.normal({ mean: 45, dev: 15 })),
+        Math.ceil(chance.normal({ mean: 45, dev: 15 })) + 1,
       ]),
       numberOfProcesses = chance.integer({ min: 1, max: 10 }),
     }
