@@ -53,23 +53,7 @@ export default class DependencyGraphPage extends Component {
     };
   }
   componentDidMount() {
-    this.ensureDependenciesFetched();
-  }
-
-  componentDidUpdate() {
-    const { nodes, links } = this.props;
-
-    if (!nodes || !links) {
-      this.ensureDependenciesFetched();
-    }
-  }
-
-  ensureDependenciesFetched() {
-    const { fetchDependencies, nodes, links, loading, error } = this.props;
-
-    if (!(nodes && links) && !(loading || error)) {
-      fetchDependencies();
-    }
+    this.props.fetchDependencies();
   }
 
   handleGraphTypeChange(graphType) {
@@ -77,16 +61,30 @@ export default class DependencyGraphPage extends Component {
   }
 
   render() {
-    const { nodes, links, error, dependencies } = this.props;
+    const { nodes, links, error, dependencies, loading } = this.props;
     const { graphType } = this.state;
     const serviceCalls = dependencies.toJS();
-
+    if (loading) {
+      return (
+        <div className="m1">
+          <div className="ui active centered inline loader" />
+        </div>
+      );
+    }
     if (error) {
       return <NotFound error={error} />;
     }
 
     if (!nodes || !links) {
-      return <section />;
+      return (
+        <div className="m1">
+          <div className="ui warning message">
+            <div className="header">
+              No service dependencies found.
+            </div>
+          </div>
+        </div>
+      );
     }
 
     const GRAPH_TYPE_OPTIONS = [
