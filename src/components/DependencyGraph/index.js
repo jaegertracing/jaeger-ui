@@ -76,7 +76,15 @@ export default class DependencyGraphPage extends Component {
     }
 
     if (!nodes || !links) {
-      return <section />;
+      return (
+        <div className="m1">
+          <div className="ui warning message">
+            <div className="header">
+              No service dependencies found.
+            </div>
+          </div>
+        </div>
+      );
     }
 
     const GRAPH_TYPE_OPTIONS = [
