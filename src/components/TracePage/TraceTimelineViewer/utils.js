@@ -104,7 +104,8 @@ export function hasTagKey(tags, key, value) {
 
 export const isClientSpan = span => hasTagKey(span.tags, 'span.kind', 'client');
 export const isServerSpan = span => hasTagKey(span.tags, 'span.kind', 'server');
-export const isErrorSpan = span => hasTagKey(span.tags, 'error', true);
+export const isErrorSpan = span =>
+  hasTagKey(span.tags, 'error', true) || hasTagKey(span.tags, 'error', 'true');
 
 /**
  * Returns `true` if at least one of the descendants of the `parentSpanIndex`
