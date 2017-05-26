@@ -94,6 +94,7 @@ const spanTypeTestCases = [
   { fn: isClientSpan, name: 'isClientSpan', key: 'span.kind', value: 'client' },
   { fn: isServerSpan, name: 'isServerSpan', key: 'span.kind', value: 'server' },
   { fn: isErrorSpan, name: 'isErrorSpan', key: 'error', value: true },
+  { fn: isErrorSpan, name: 'isErrorSpan', key: 'error', value: 'true' },
 ];
 
 spanTypeTestCases.forEach(testCase => {
