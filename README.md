@@ -17,7 +17,7 @@ git clone https://github.com/uber/jaeger-ui.git
 cd jaeger-ui
 ```
 
-Use the recommended npm and Node versions: (defined in (.nvmrc)[./.nvmrc] file):
+Use the recommended npm and Node versions: (defined in [.nvmrc](./.nvmrc) file):
 
 ```
 nvm use
@@ -32,7 +32,7 @@ yarn install
 ```
 
 Make sure you have the Jaeger Query service running on http://localhost:16686.
-For example, you can run Jaeger all-in-one Docker image as descibed in the (documentation)[aio-docs].
+For example, you can run Jaeger all-in-one Docker image as descibed in the [documentation][aio-docs].
 
 If you don't have it running locally, then tunnel to the correct host and port.
 
