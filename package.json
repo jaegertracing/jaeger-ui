@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "main": "src/index.js",
   "license": "MIT",
-  "proxy": "http://localhost:3001",
+  "proxy": "http://localhost:16686",
   "devDependencies": {
     "babel-eslint": "^7.1.1",
     "enzyme": "^2.4.1",
