@@ -37,7 +37,7 @@ For example, you can run Jaeger all-in-one Docker image as descibed in the [docu
 If you don't have it running locally, then tunnel to the correct host and port.
 
 ```
-ssh -fN -L 16686:some-other-host:16686 16686
+ssh -fN -L 16686:$BACKEND_HOST:$BACKEND_PORT $BACKEND_PORT
 ```
 
 Start the development server with hot loading:
@@ -74,9 +74,6 @@ To enable Google Analytics tracking, set the `REACT_APP_GA_ANALYTICS_ID` env var
 export REACT_APP_GA_ANALYTICS_ID = UA-*******-**
 npm run build
 ```
-
-[![Build Status](https://travis-ci.org/uber/jaeger-ui.svg?branch=master)](https://travis-ci.org/uber/jaeger-ui)
-
 
 [doc-img]: https://readthedocs.org/projects/jaeger/badge/?version=latest
 [doc]: http://jaeger.readthedocs.org/en/latest/
