@@ -18,7 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import React, { Children, PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React, { Children } from 'react';
 
 import './SpanGraph.css';
 import SpanGraphTick from './SpanGraphTick';

@@ -18,7 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import React, { PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React from 'react';
 import { withState } from 'recompose';
 
 import jsonMarkup from 'json-markup';
@@ -163,7 +164,7 @@ function Logs({ logs, traceStartTime, open, onToggleOpen }) {
 Logs.propTypes = {
   open: PropTypes.bool,
   onToggleOpen: PropTypes.func,
-  logs: PropTypes.array(
+  logs: PropTypes.arrayOf(
     PropTypes.shape({
       timestamp: PropTypes.number,
       fields: PropTypes.array,
