@@ -1,4 +1,3 @@
-import PropTypes from 'prop-types';
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -19,6 +18,7 @@ import PropTypes from 'prop-types';
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+import PropTypes from 'prop-types';
 import React from 'react';
 import { Link } from 'react-router';
 
