@@ -164,7 +164,7 @@ function Logs({ logs, traceStartTime, open, onToggleOpen }) {
 Logs.propTypes = {
   open: PropTypes.bool,
   onToggleOpen: PropTypes.func,
-  logs: PropTypes.array(
+  logs: PropTypes.arrayOf(
     PropTypes.shape({
       timestamp: PropTypes.number,
       fields: PropTypes.array,
