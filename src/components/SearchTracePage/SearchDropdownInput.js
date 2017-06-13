@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -18,7 +19,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import React, { PropTypes, Component } from 'react';
+import React, { Component } from 'react';
 import { Dropdown } from 'semantic-ui-react';
 
 /**

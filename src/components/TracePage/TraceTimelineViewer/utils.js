@@ -85,7 +85,7 @@ export function convertTimeRangeToPercent(
   return [getPercent(startTime), getPercent(endTime)];
 }
 
-export function ensureWithinRange([floor = 0, ceiling = 100], num) {
+export function ensureWithinRange([floor = (0, (ceiling = 100))], num) {
   if (num < floor) {
     return floor;
   }
