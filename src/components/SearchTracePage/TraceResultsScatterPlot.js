@@ -18,7 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import React, { PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React from 'react';
 import moment from 'moment';
 import { XYPlot, XAxis, YAxis, MarkSeries } from 'react-vis';
 import 'react-vis/main.css';
