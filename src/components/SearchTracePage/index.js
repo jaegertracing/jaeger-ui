@@ -42,6 +42,7 @@ import {
   MOST_RECENT,
 } from '../../selectors/search';
 import { getPercentageOfDuration } from '../../utils/date';
+import getLastXformCacher from '../../utils/get-last-xform-cacher';
 
 /**
  * Contains the dropdown to sort and filter trace search results
@@ -196,6 +197,7 @@ export default class SearchTracePage extends Component {
 
 SearchTracePage.propTypes = {
   isHomepage: PropTypes.bool,
+  // eslint-disable-next-line react/forbid-prop-types
   traceResults: PropTypes.array,
   numberOfTraceResults: PropTypes.number,
   maxTraceDuration: PropTypes.number,
@@ -218,20 +220,32 @@ SearchTracePage.propTypes = {
   errorMessage: PropTypes.string,
 };
 
+const stateTraceXformer = getLastXformCacher(stateTrace => {
+  const { traces: traceMap, loading, error: traceError } = stateTrace.toJS();
+  const traces = Object.keys(traceMap).map(traceID => traceMap[traceID]);
+  return { tracesSrc: { traces }, loading, traceError };
+});
+
+const stateServicesXformer = getLastXformCacher(stateServices => {
+  const {
+    services: serviceList,
+    operationsForService: opsBySvc,
+    error: serviceError,
+  } = stateServices.toJS();
+  const services = serviceList.map(name => ({
+    name,
+    operations: opsBySvc[name] || [],
+  }));
+  return { services, serviceError };
+});
+
 function mapStateToProps(state) {
   const query = state.routing.locationBeforeTransitions.query;
   const isHomepage = !Object.keys(query).length;
-  const { traces: traceMap, loading, error: traceError } = state.trace.toJS();
-  const {
-    services,
-    operationsForService,
-    error: serviceError,
-  } = state.services.toJS();
-  const traceResults = Object.keys(traceMap).map(traceID => traceMap[traceID]);
+  const { tracesSrc, loading, traceError } = stateTraceXformer(state.trace);
+  const { traces, maxDuration } = transformTraceResultsSelector(tracesSrc);
+  const { services, serviceError } = stateServicesXformer(state.services);
   const sortBy = traceResultsFiltersFormSelector(state, 'sortBy');
-  const { traces, maxDuration } = transformTraceResultsSelector({
-    traces: traceResults,
-  });
   const traceResultsSorted = getSortedTraceResults(traces, sortBy);
   const errorMessage = serviceError || traceError
     ? `${serviceError || ''} ${traceError || ''}`
@@ -244,10 +258,7 @@ function mapStateToProps(state) {
     numberOfTraceResults: traceResultsSorted.length,
     maxTraceDuration: maxDuration,
     urlQueryParams: query,
-    services: services.map(serviceName => ({
-      name: serviceName,
-      operations: operationsForService[serviceName] || [],
-    })),
+    services,
     loading,
     errorMessage,
   };
