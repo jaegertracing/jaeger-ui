@@ -26,9 +26,9 @@
  *
  * @param  {function} xformer The transformer function, the most recent result
  *                            of which is cached.
- * @return {function} A wrapper around the transformer function which which
- *                    caches the last transformation, returning the cached
- *                    value if the source value is the same.
+ * @return {function} A wrapper around the transformer function which caches
+ *                    the last transformation, returning the cached value if
+ *                    the source value is the same.
  */
 export default function getLastXformCacher(xformer) {
   let lastArgs = null;
