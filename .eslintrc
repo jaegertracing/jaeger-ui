@@ -1,15 +1,15 @@
 {
   "extends": [
-    "react-app", 
-    "airbnb", 
-    "prettier", 
-    "prettier/flowtype", 
+    "react-app",
+    "airbnb",
+    "prettier",
+    "prettier/flowtype",
     "prettier/react"
   ],
   "rules": {
     /* general */
     "comma-dangle": 0,
-    "arrow-parens": 1,
+    "arrow-parens": [1, "as-needed"],
     "no-restricted-syntax": 0,
     "no-plusplus": 0,
 
