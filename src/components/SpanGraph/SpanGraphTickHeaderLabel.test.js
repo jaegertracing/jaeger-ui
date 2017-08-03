@@ -51,9 +51,7 @@ it('<SpanGraphTickHeaderLabel /> should render the duration as text', () => {
   const wrapper = shallow(<SpanGraphTickHeaderLabel {...defaultProps} />);
   const div = wrapper.find('div').first();
 
-  expect(div.prop('children')).toBe(
-    formatDurationForTrace({ trace, duration })
-  );
+  expect(div.prop('children')).toBe(formatDurationForTrace({ trace, duration }));
 });
 
 it('<SpanGraphTickHeaderLabel /> should pass the style through', () => {

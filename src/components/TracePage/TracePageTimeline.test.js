@@ -29,10 +29,8 @@ import TimelineScrubber from './TimelineScrubber';
 import traceGenerator from '../../../src/demo/trace-generators';
 
 const listeners = {};
-const addEventListener = sinon.spy((name, fn) =>
-  Object.assign(listeners, { [name]: fn }));
-const removeEventListener = sinon.spy((name, fn) =>
-  Object.assign(listeners, { [name]: fn }));
+const addEventListener = sinon.spy((name, fn) => Object.assign(listeners, { [name]: fn }));
+const removeEventListener = sinon.spy((name, fn) => Object.assign(listeners, { [name]: fn }));
 const clearListeners = () =>
   Object.keys(listeners).forEach(key => {
     delete listeners[key];
@@ -85,28 +83,19 @@ const defaultOptions = {
 };
 
 it('<TracePageTimeline /> should render a <SpanGraph />', () => {
-  const wrapper = shallow(
-    <TracePageTimeline {...defaultProps} />,
-    defaultOptions
-  );
+  const wrapper = shallow(<TracePageTimeline {...defaultProps} />, defaultOptions);
 
   expect(wrapper.find(SpanGraph).length).toBe(1);
 });
 
 it('<TracePageTimeline /> should render a <SpanGraphTickHeader />', () => {
-  const wrapper = shallow(
-    <TracePageTimeline {...defaultProps} />,
-    defaultOptions
-  );
+  const wrapper = shallow(<TracePageTimeline {...defaultProps} />, defaultOptions);
 
   expect(wrapper.find(SpanGraphTickHeader).length).toBe(1);
 });
 
 it('<TracePageTimeline /> should just return a <div /> if no trace is present', () => {
-  const wrapper = shallow(
-    <TracePageTimeline {...defaultProps} trace={null} />,
-    defaultOptions
-  );
+  const wrapper = shallow(<TracePageTimeline {...defaultProps} trace={null} />, defaultOptions);
 
   expect(wrapper.matchesElement(<div />)).toBeTruthy();
 });
@@ -122,13 +111,7 @@ it('<TracePageTimeline /> should render a filtering box if leftBound exists', ()
 
   expect(
     wrapper.containsMatchingElement(
-      <rect
-        className="trace-page-timeline__graph--inactive"
-        x={0}
-        y={0}
-        height="100%"
-        width="20%"
-      />
+      <rect className="trace-page-timeline__graph--inactive" x={0} y={0} height="100%" width="20%" />
     )
   ).toBeTruthy();
 });
@@ -144,22 +127,13 @@ it('<TracePageTimeline /> should render a filtering box if rightBound exists', (
 
   expect(
     wrapper.containsMatchingElement(
-      <rect
-        className="trace-page-timeline__graph--inactive"
-        x="80%"
-        y={0}
-        height="100%"
-        width="20%"
-      />
+      <rect className="trace-page-timeline__graph--inactive" x="80%" y={0} height="100%" width="20%" />
     )
   ).toBeTruthy();
 });
 
 it('<TracePageTimeline /> should render handles for the timeRangeFilter', () => {
-  const wrapper = shallow(
-    <TracePageTimeline {...defaultProps} />,
-    defaultOptions
-  );
+  const wrapper = shallow(<TracePageTimeline {...defaultProps} />, defaultOptions);
 
   expect(
     wrapper.containsMatchingElement(
@@ -174,39 +148,25 @@ it('<TracePageTimeline /> should render handles for the timeRangeFilter', () => 
 });
 
 it('<TracePageTimeline /> should call startDragging for the leftBound handle', () => {
-  const wrapper = shallow(
-    <TracePageTimeline {...defaultProps} />,
-    defaultOptions
-  );
+  const wrapper = shallow(<TracePageTimeline {...defaultProps} />, defaultOptions);
   const event = { clientX: 50 };
 
   sinon.stub(wrapper.instance(), 'startDragging');
 
-  wrapper.find('#trace-page-timeline__left-bound-handle').prop('onMouseDown')(
-    event
-  );
+  wrapper.find('#trace-page-timeline__left-bound-handle').prop('onMouseDown')(event);
 
-  expect(
-    wrapper.instance().startDragging.calledWith('leftBound', event)
-  ).toBeTruthy();
+  expect(wrapper.instance().startDragging.calledWith('leftBound', event)).toBeTruthy();
 });
 
 it('<TracePageTimeline /> should call startDragging for the rightBound handle', () => {
-  const wrapper = shallow(
-    <TracePageTimeline {...defaultProps} />,
-    defaultOptions
-  );
+  const wrapper = shallow(<TracePageTimeline {...defaultProps} />, defaultOptions);
   const event = { clientX: 50 };
 
   sinon.stub(wrapper.instance(), 'startDragging');
 
-  wrapper.find('#trace-page-timeline__right-bound-handle').prop('onMouseDown')(
-    event
-  );
+  wrapper.find('#trace-page-timeline__right-bound-handle').prop('onMouseDown')(event);
 
-  expect(
-    wrapper.instance().startDragging.calledWith('rightBound', event)
-  ).toBeTruthy();
+  expect(wrapper.instance().startDragging.calledWith('rightBound', event)).toBeTruthy();
 });
 
 it('<TracePageTimeline /> should render without handles if no filtering', () => {
@@ -230,10 +190,7 @@ it('<TracePageTimeline /> should timeline-sort the trace before rendering', () =
     defaultProps.trace.spans[1],
   ];
 
-  const wrapper = shallow(
-    <TracePageTimeline {...defaultProps} />,
-    defaultOptions
-  );
+  const wrapper = shallow(<TracePageTimeline {...defaultProps} />, defaultOptions);
   const spanGraph = wrapper.find(SpanGraph).first();
 
   expect(spanGraph.prop('spans')).toEqual(sortedTraceSpans);
@@ -250,10 +207,7 @@ it('<TracePageTimeline /> should create ticks and pass them to components', () =
     { timestamp: timestamp + 50000, width: 2 },
   ];
 
-  const wrapper = shallow(
-    <TracePageTimeline {...defaultProps} />,
-    defaultOptions
-  );
+  const wrapper = shallow(<TracePageTimeline {...defaultProps} />, defaultOptions);
   const spanGraph = wrapper.find(SpanGraph).first();
   const spanGraphTickHeader = wrapper.find(SpanGraphTickHeader).first();
 
@@ -262,40 +216,28 @@ it('<TracePageTimeline /> should create ticks and pass them to components', () =
 });
 
 it('<TracePageTimeline /> should calculate the rowHeight', () => {
-  const wrapper = shallow(
-    <TracePageTimeline {...defaultProps} />,
-    defaultOptions
-  );
+  const wrapper = shallow(<TracePageTimeline {...defaultProps} />, defaultOptions);
   const spanGraph = wrapper.find(SpanGraph).first();
 
   expect(spanGraph.prop('rowHeight')).toBe(50 / 3);
 });
 
 it('<TracePageTimeline /> should pass the props through to SpanGraph', () => {
-  const wrapper = shallow(
-    <TracePageTimeline {...defaultProps} />,
-    defaultOptions
-  );
+  const wrapper = shallow(<TracePageTimeline {...defaultProps} />, defaultOptions);
   const spanGraph = wrapper.find(SpanGraph).first();
 
   expect(spanGraph.prop('rowPadding')).toBe(0);
 });
 
 it('<TracePageTimeline /> should pass the props through to SpanGraphTickHeader', () => {
-  const wrapper = shallow(
-    <TracePageTimeline {...defaultProps} />,
-    defaultOptions
-  );
+  const wrapper = shallow(<TracePageTimeline {...defaultProps} />, defaultOptions);
   const spanGraphTickHeader = wrapper.find(SpanGraphTickHeader).first();
 
   expect(spanGraphTickHeader.prop('trace')).toEqual(defaultProps.trace);
 });
 
 it('TracePageTimeline.shouldComponentUpdate should return true for new timeRange', () => {
-  const wrapper = shallow(
-    <TracePageTimeline {...defaultProps} />,
-    defaultOptions
-  );
+  const wrapper = shallow(<TracePageTimeline {...defaultProps} />, defaultOptions);
 
   expect(
     wrapper.instance().shouldComponentUpdate(defaultProps, wrapper.state(), {
@@ -305,10 +247,7 @@ it('TracePageTimeline.shouldComponentUpdate should return true for new timeRange
 });
 
 it('TracePageTimeline.shouldComponentUpdate should return true for new traces', () => {
-  const wrapper = shallow(
-    <TracePageTimeline {...defaultProps} />,
-    defaultOptions
-  );
+  const wrapper = shallow(<TracePageTimeline {...defaultProps} />, defaultOptions);
 
   expect(
     wrapper
@@ -322,10 +261,7 @@ it('TracePageTimeline.shouldComponentUpdate should return true for new traces', 
 });
 
 it('TracePageTimeline.shouldComponentUpdate should return true for currentlyDragging', () => {
-  const wrapper = shallow(
-    <TracePageTimeline {...defaultProps} />,
-    defaultOptions
-  );
+  const wrapper = shallow(<TracePageTimeline {...defaultProps} />, defaultOptions);
 
   expect(
     wrapper.instance().shouldComponentUpdate(
@@ -340,19 +276,10 @@ it('TracePageTimeline.shouldComponentUpdate should return true for currentlyDrag
 });
 
 it('TracePageTimeline.shouldComponentUpdate should return false otherwise', () => {
-  const wrapper = shallow(
-    <TracePageTimeline {...defaultProps} />,
-    defaultOptions
-  );
+  const wrapper = shallow(<TracePageTimeline {...defaultProps} />, defaultOptions);
 
   expect(
-    wrapper
-      .instance()
-      .shouldComponentUpdate(
-        defaultProps,
-        wrapper.state(),
-        defaultOptions.context
-      )
+    wrapper.instance().shouldComponentUpdate(defaultProps, wrapper.state(), defaultOptions.context)
   ).toBe(false);
 });
 
@@ -376,10 +303,7 @@ it('TracePageTimeline.onMouseMove should do nothing if currentlyDragging is fals
 });
 
 it('TracePageTimeline.onMouseMove should store the clientX on the state', () => {
-  const wrapper = shallow(
-    <TracePageTimeline {...defaultProps} />,
-    defaultOptions
-  );
+  const wrapper = shallow(<TracePageTimeline {...defaultProps} />, defaultOptions);
 
   wrapper.instance().svg = { clientWidth: 100 };
   wrapper.setState({ currentlyDragging: 'leftBound' });
@@ -404,9 +328,7 @@ it('TracePageTimeline.onMouseMove should update the timeRangeFilter for the left
 
   wrapper.instance().onMouseMove({ clientX: 45 });
 
-  expect(
-    updateTimeRangeFilter.calledWith(timestamp + 22500, timestamp + 50000)
-  ).toBeTruthy();
+  expect(updateTimeRangeFilter.calledWith(timestamp + 22500, timestamp + 50000)).toBeTruthy();
 });
 
 it('TracePageTimeline.onMouseMove should update the timeRangeFilter for the right handle', () => {
@@ -424,16 +346,11 @@ it('TracePageTimeline.onMouseMove should update the timeRangeFilter for the righ
 
   wrapper.instance().onMouseMove({ clientX: 45 });
 
-  expect(
-    updateTimeRangeFilter.calledWith(timestamp, timestamp + 22500)
-  ).toBeTruthy();
+  expect(updateTimeRangeFilter.calledWith(timestamp, timestamp + 22500)).toBeTruthy();
 });
 
 it('TracePageTimeline.startDragging should store the boundName and the prevX in state', () => {
-  const wrapper = shallow(
-    <TracePageTimeline {...defaultProps} />,
-    defaultOptions
-  );
+  const wrapper = shallow(<TracePageTimeline {...defaultProps} />, defaultOptions);
 
   wrapper.instance().startDragging('leftBound', { clientX: 100 });
 
@@ -442,96 +359,61 @@ it('TracePageTimeline.startDragging should store the boundName and the prevX in 
 });
 
 // TODO: Need to figure out how to mock to window events.
-it.skip(
-  'TracePageTimeline.startDragging should bind event listeners to the window',
-  () => {
-    const wrapper = shallow(
-      <TracePageTimeline {...defaultProps} />,
-      defaultOptions
-    );
+it.skip('TracePageTimeline.startDragging should bind event listeners to the window', () => {
+  const wrapper = shallow(<TracePageTimeline {...defaultProps} />, defaultOptions);
 
-    clearListeners();
+  clearListeners();
 
-    wrapper.instance().startDragging('leftBound', { clientX: 100 });
+  wrapper.instance().startDragging('leftBound', { clientX: 100 });
 
-    expect(
-      addEventListener.calledWith('mousemove', sinon.match.func)
-    ).toBeTruthy();
-    expect(
-      addEventListener.calledWith('mouseup', sinon.match.func)
-    ).toBeTruthy();
-  }
-);
+  expect(addEventListener.calledWith('mousemove', sinon.match.func)).toBeTruthy();
+  expect(addEventListener.calledWith('mouseup', sinon.match.func)).toBeTruthy();
+});
 
-it.skip(
-  'TracePageTimeline.startDragging should call onMouseMove on the window',
-  () => {
-    const wrapper = shallow(
-      <TracePageTimeline {...defaultProps} />,
-      defaultOptions
-    );
+it.skip('TracePageTimeline.startDragging should call onMouseMove on the window', () => {
+  const wrapper = shallow(<TracePageTimeline {...defaultProps} />, defaultOptions);
 
-    clearListeners();
+  clearListeners();
 
-    wrapper.instance().startDragging('leftBound', { clientX: 100 });
-    sinon.stub(wrapper.instance(), 'onMouseMove');
+  wrapper.instance().startDragging('leftBound', { clientX: 100 });
+  sinon.stub(wrapper.instance(), 'onMouseMove');
 
-    const event = { clientX: 99 };
-    listeners.mousemove(event);
+  const event = { clientX: 99 };
+  listeners.mousemove(event);
 
-    expect(wrapper.instance().onMouseMove.calledWith(event)).toBeTruthy();
-  }
-);
+  expect(wrapper.instance().onMouseMove.calledWith(event)).toBeTruthy();
+});
 
-it.skip(
-  'TracePageTimeline.startDragging mouseup should call stopDragging',
-  () => {
-    const wrapper = shallow(
-      <TracePageTimeline {...defaultProps} />,
-      defaultOptions
-    );
+it.skip('TracePageTimeline.startDragging mouseup should call stopDragging', () => {
+  const wrapper = shallow(<TracePageTimeline {...defaultProps} />, defaultOptions);
 
-    clearListeners();
+  clearListeners();
 
-    wrapper.instance().startDragging('leftBound', { clientX: 100 });
-    sinon.stub(wrapper.instance(), 'stopDragging');
+  wrapper.instance().startDragging('leftBound', { clientX: 100 });
+  sinon.stub(wrapper.instance(), 'stopDragging');
 
-    const event = { clientX: 99 };
-    listeners.mouseup(event);
+  const event = { clientX: 99 };
+  listeners.mouseup(event);
 
-    expect(wrapper.instance().stopDragging.called).toBeTruthy();
-  }
-);
+  expect(wrapper.instance().stopDragging.called).toBeTruthy();
+});
 
-it.skip(
-  'TracePageTimeline.startDragging mouseup should stop listening to the events',
-  () => {
-    const wrapper = shallow(
-      <TracePageTimeline {...defaultProps} />,
-      defaultOptions
-    );
+it.skip('TracePageTimeline.startDragging mouseup should stop listening to the events', () => {
+  const wrapper = shallow(<TracePageTimeline {...defaultProps} />, defaultOptions);
 
-    clearListeners();
+  clearListeners();
 
-    wrapper.instance().startDragging('leftBound', { clientX: 100 });
+  wrapper.instance().startDragging('leftBound', { clientX: 100 });
 
-    const event = { clientX: 99 };
-    listeners.mouseup(event);
+  const event = { clientX: 99 };
+  listeners.mouseup(event);
 
-    expect(
-      removeEventListener.calledWith('mousemove', sinon.match.func)
-    ).toBeTruthy();
-    expect(
-      removeEventListener.calledWith('mouseup', sinon.match.func)
-    ).toBeTruthy();
-  }
-);
+  expect(removeEventListener.calledWith('mousemove', sinon.match.func)).toBeTruthy();
+  expect(removeEventListener.calledWith('mouseup', sinon.match.func)).toBeTruthy();
+});
 
 it('TracePageTimeline.stopDragging should clear currentlyDragging and prevX', () => {
-  const wrapper = shallow(
-    <TracePageTimeline {...defaultProps} />,
-    defaultOptions
-  );
+  const wrapper = shallow(<TracePageTimeline {...defaultProps} />, defaultOptions);
 
   wrapper.instance().stopDragging();
 

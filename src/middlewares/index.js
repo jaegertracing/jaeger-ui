@@ -28,36 +28,30 @@ import { searchTraces, fetchServiceOperations } from '../actions/jaeger-api';
 /**
  * Middleware to load "operations" for a particular service.
  */
-export const loadOperationsForServiceMiddleware = store =>
-  next =>
-    action => {
-      if (
-        action.type === '@@redux-form/CHANGE' &&
-        action.meta.form === 'searchSideBar' &&
-        action.meta.field === 'service' &&
-        action.payload !== '-'
-      ) {
-        store.dispatch(fetchServiceOperations(action.payload));
-        store.dispatch(change('searchSideBar', 'operation', 'all'));
-      }
-      return next(action);
-    };
+export const loadOperationsForServiceMiddleware = store => next => action => {
+  if (
+    action.type === '@@redux-form/CHANGE' &&
+    action.meta.form === 'searchSideBar' &&
+    action.meta.field === 'service' &&
+    action.payload !== '-'
+  ) {
+    store.dispatch(fetchServiceOperations(action.payload));
+    store.dispatch(change('searchSideBar', 'operation', 'all'));
+  }
+  return next(action);
+};
 
-export const historyUpdateMiddleware = store =>
-  next =>
-    action => {
-      switch (action.type) {
-        case `${searchTraces}`: {
-          store.dispatch(
-            replace(`/search?${queryString.stringify(action.meta.query)}`)
-          );
-          break;
-        }
-        default:
-          break;
-      }
+export const historyUpdateMiddleware = store => next => action => {
+  switch (action.type) {
+    case `${searchTraces}`: {
+      store.dispatch(replace(`/search?${queryString.stringify(action.meta.query)}`));
+      break;
+    }
+    default:
+      break;
+  }
 
-      next(action);
-    };
+  next(action);
+};
 
 export const promise = promiseMiddleware();

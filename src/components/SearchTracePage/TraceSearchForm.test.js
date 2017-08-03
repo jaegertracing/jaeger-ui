@@ -32,18 +32,13 @@ const {
 } = require('./TraceSearchForm');
 
 const defaultProps = {
-  services: [
-    { name: 'svcA', operations: ['A', 'B'] },
-    { name: 'svcB', operations: ['A', 'B'] },
-  ],
+  services: [{ name: 'svcA', operations: ['A', 'B'] }, { name: 'svcB', operations: ['A', 'B'] }],
   dataCenters: ['dc1'],
 };
 
 it('<TraceSearchForm /> only shows operations when a service is selected', () => {
   let wrapper;
-  wrapper = shallow(
-    <TraceSearchForm {...defaultProps} selectedService="svcA" />
-  );
+  wrapper = shallow(<TraceSearchForm {...defaultProps} selectedService="svcA" />);
   expect(wrapper.find('.search-form--operation').length).toBe(1);
 
   wrapper = shallow(<TraceSearchForm {...defaultProps} />);

@@ -33,22 +33,19 @@ const getTrace = state => state.trace;
 export function calculatePercentOfTotal(timestamps) {
   const timestampsByStartTime = sortBy(timestamps, t => t[0]);
   let lastTimestamp;
-  const duration = timestampsByStartTime.reduce(
-    (lastDuration, t) => {
-      let newDuration;
-      if (lastTimestamp >= t[1]) {
-        newDuration = lastDuration;
-      } else if (lastTimestamp > t[0] && lastTimestamp < t[1]) {
-        newDuration = lastDuration + (t[1] - lastTimestamp);
-        lastTimestamp = t[1];
-      } else {
-        newDuration = lastDuration + (t[1] - t[0]);
-        lastTimestamp = t[1];
-      }
-      return newDuration;
-    },
-    0
-  );
+  const duration = timestampsByStartTime.reduce((lastDuration, t) => {
+    let newDuration;
+    if (lastTimestamp >= t[1]) {
+      newDuration = lastDuration;
+    } else if (lastTimestamp > t[0] && lastTimestamp < t[1]) {
+      newDuration = lastDuration + (t[1] - lastTimestamp);
+      lastTimestamp = t[1];
+    } else {
+      newDuration = lastDuration + (t[1] - t[0]);
+      lastTimestamp = t[1];
+    }
+    return newDuration;
+  }, 0);
   return duration;
 }
 
@@ -64,10 +61,7 @@ export function transformTrace(trace) {
       if (!processMap[processName]) {
         processMap[processName] = [];
       }
-      processMap[processName].push([
-        span.startTime,
-        span.startTime + span.duration,
-      ]);
+      processMap[processName].push([span.startTime, span.startTime + span.duration]);
     });
   }
 
@@ -78,10 +72,7 @@ export function transformTrace(trace) {
       name: processName,
       numberOfApperancesInTrace: timestamps.length,
       percentOfTrace: Math.round(
-        getPercentageOfDuration(
-          calculatePercentOfTotal(timestamps),
-          traceDuration
-        ),
+        getPercentageOfDuration(calculatePercentOfTotal(timestamps), traceDuration),
         -1
       ),
     };
@@ -122,7 +113,8 @@ export function transformTraceResults(rawTraces) {
   };
 }
 export const transformTraceResultsSelector = createSelector(getTraces, traces =>
-  transformTraceResults(traces));
+  transformTraceResults(traces)
+);
 
 // Sorting options
 export const MOST_RECENT = 'MOST_RECENT';

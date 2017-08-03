@@ -23,18 +23,7 @@ import sinon from 'sinon';
 import * as sortUtils from './sort';
 
 it('stringSortComparator() should properly sort a list of strings', () => {
-  const arr = [
-    'allen',
-    'Gustav',
-    'paul',
-    'Tim',
-    'abernathy',
-    'tucker',
-    'Steve',
-    'mike',
-    'John',
-    'Paul',
-  ];
+  const arr = ['allen', 'Gustav', 'paul', 'Tim', 'abernathy', 'tucker', 'Steve', 'mike', 'John', 'Paul'];
 
   expect(arr.sort(sortUtils.stringSortComparator)).toEqual([
     'abernathy',
@@ -53,18 +42,7 @@ it('stringSortComparator() should properly sort a list of strings', () => {
 it('numberSortComparator() should properly sort a list of numbers', () => {
   const arr = [3, -1.1, 4, -1, 9, 4, 2, Infinity, 0, 0];
 
-  expect(arr.sort(sortUtils.numberSortComparator)).toEqual([
-    -1.1,
-    -1,
-    0,
-    0,
-    2,
-    3,
-    4,
-    4,
-    9,
-    Infinity,
-  ]);
+  expect(arr.sort(sortUtils.numberSortComparator)).toEqual([-1.1, -1, 0, 0, 2, 3, 4, 4, 9, Infinity]);
 });
 
 it('classNameForSortDir() should return the proper asc classes', () => {
@@ -77,27 +55,28 @@ it('classNameForSortDir() should return the proper desc classes', () => {
 
 it('getNewSortForClick() should sort to the defaultDir if new column', () => {
   // no defaultDir provided
-  expect(
-    sortUtils.getNewSortForClick({ key: 'alpha', dir: 1 }, { name: 'beta' })
-  ).toEqual({ key: 'beta', dir: 1 });
+  expect(sortUtils.getNewSortForClick({ key: 'alpha', dir: 1 }, { name: 'beta' })).toEqual({
+    key: 'beta',
+    dir: 1,
+  });
 
   // defaultDir provided
-  expect(
-    sortUtils.getNewSortForClick(
-      { key: 'alpha', dir: 1 },
-      { name: 'beta', defaultDir: -1 }
-    )
-  ).toEqual({ key: 'beta', dir: -1 });
+  expect(sortUtils.getNewSortForClick({ key: 'alpha', dir: 1 }, { name: 'beta', defaultDir: -1 })).toEqual({
+    key: 'beta',
+    dir: -1,
+  });
 });
 
 it('getNewSortForClick() should toggle direction if same column', () => {
-  expect(
-    sortUtils.getNewSortForClick({ key: 'alpha', dir: 1 }, { name: 'alpha' })
-  ).toEqual({ key: 'alpha', dir: -1 });
+  expect(sortUtils.getNewSortForClick({ key: 'alpha', dir: 1 }, { name: 'alpha' })).toEqual({
+    key: 'alpha',
+    dir: -1,
+  });
 
-  expect(
-    sortUtils.getNewSortForClick({ key: 'alpha', dir: -1 }, { name: 'alpha' })
-  ).toEqual({ key: 'alpha', dir: 1 });
+  expect(sortUtils.getNewSortForClick({ key: 'alpha', dir: -1 }, { name: 'alpha' })).toEqual({
+    key: 'alpha',
+    dir: 1,
+  });
 });
 
 it('createSortClickHandler() should return a function', () => {
@@ -106,14 +85,9 @@ it('createSortClickHandler() should return a function', () => {
   const currentSortDir = 1;
   const updateSort = sinon.spy();
 
-  expect(
-    typeof sortUtils.createSortClickHandler(
-      column,
-      currentSortKey,
-      currentSortDir,
-      updateSort
-    )
-  ).toBe('function');
+  expect(typeof sortUtils.createSortClickHandler(column, currentSortKey, currentSortDir, updateSort)).toBe(
+    'function'
+  );
 });
 
 it('createSortClickHandler() should call updateSort with the new sort vals', () => {
@@ -123,12 +97,7 @@ it('createSortClickHandler() should call updateSort with the new sort vals', () 
   const currentSortDir = prevSort.dir;
   const updateSort = sinon.spy();
 
-  const clickHandler = sortUtils.createSortClickHandler(
-    column,
-    currentSortKey,
-    currentSortDir,
-    updateSort
-  );
+  const clickHandler = sortUtils.createSortClickHandler(column, currentSortKey, currentSortDir, updateSort);
 
   clickHandler();
 

@@ -34,7 +34,5 @@ it('loadOperationsForServiceMiddleware fetches operations for services', () => {
   const action = change('searchSideBar', 'service', 'yo');
   loadOperationsForServiceMiddleware({ dispatch })(next)(action);
   expect(dispatch.calledWith(fetchServiceOperations('yo'))).toBeTruthy();
-  expect(
-    dispatch.calledWith(change('searchSideBar', 'operation', 'all'))
-  ).toBeTruthy();
+  expect(dispatch.calledWith(change('searchSideBar', 'operation', 'all'))).toBeTruthy();
 });

@@ -29,8 +29,10 @@ jest.mock('isomorphic-fetch', () =>
         resolve({
           status: 200,
           data: () => Promise.resolve({ data: null }),
-        }))
-  ));
+        })
+      )
+  )
+);
 
 const fetchMock = require('isomorphic-fetch');
 
@@ -49,8 +51,7 @@ it('fetchTrace() should resolve the whole response', () => {
     })
   );
 
-  return JaegerAPI.fetchTrace('trace-id').then(resp =>
-    expect(resp.data).toBe(generatedTraces));
+  return JaegerAPI.fetchTrace('trace-id').then(resp => expect(resp.data).toBe(generatedTraces));
 });
 
 it('fetchTrace() should reject with a bad status code', () => {

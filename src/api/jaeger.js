@@ -34,9 +34,7 @@ function getJSON(url, query) {
       return response
         .json()
         .then(({ errors = [] }) => {
-          throw new Error(
-            errors.length > 0 ? errors[0].msg : 'An unknown error occurred.'
-          );
+          throw new Error(errors.length > 0 ? errors[0].msg : 'An unknown error occurred.');
         })
         .catch(
           (/* err */) => {
@@ -50,9 +48,7 @@ function getJSON(url, query) {
 }
 
 export const DEFAULT_API_ROOT = '/api/';
-export const DEFAULT_DEPENDENCY_LOOKBACK = moment
-  .duration(1, 'weeks')
-  .asMilliseconds();
+export const DEFAULT_DEPENDENCY_LOOKBACK = moment.duration(1, 'weeks').asMilliseconds();
 
 const JaegerAPI = {
   apiRoot: DEFAULT_API_ROOT,
@@ -68,10 +64,7 @@ const JaegerAPI = {
   fetchServiceOperations(serviceName) {
     return getJSON(`${this.apiRoot}services/${serviceName}/operations`);
   },
-  fetchDependencies(
-    endTs = new Date().getTime(),
-    lookback = DEFAULT_DEPENDENCY_LOOKBACK
-  ) {
+  fetchDependencies(endTs = new Date().getTime(), lookback = DEFAULT_DEPENDENCY_LOOKBACK) {
     return getJSON(`${this.apiRoot}dependencies`, { endTs, lookback });
   },
 };

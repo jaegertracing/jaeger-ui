@@ -49,9 +49,7 @@ it('transformTraceResults() calculates the max duration of all traces', () => {
   const traceDurationOne = searchSelectors.transformTrace(traces[0]).duration;
   const traceDurationTwo = searchSelectors.transformTrace(traces[1]).duration;
 
-  const expectedMaxDuration = traceDurationOne > traceDurationTwo
-    ? traceDurationOne
-    : traceDurationTwo;
+  const expectedMaxDuration = traceDurationOne > traceDurationTwo ? traceDurationOne : traceDurationTwo;
 
   const { maxDuration } = searchSelectors.transformTraceResults(traces);
 
@@ -78,24 +76,16 @@ it('getSortedTraceResults() sorting works', () => {
   const maxDurationTraceID = maxBy(traces, trace => trace.duration).traceID;
   const minDurationTraceID = minBy(traces, trace => trace.duration).traceID;
   const mostRecentTraceID = maxBy(traces, trace => trace.timestamp).traceID;
-  expect(getSortedTraceResults(traces, MOST_RECENT)[0].traceID).toBe(
-    mostRecentTraceID
-  );
+  expect(getSortedTraceResults(traces, MOST_RECENT)[0].traceID).toBe(mostRecentTraceID);
 
-  expect(getSortedTraceResults(traces, LONGEST_FIRST)[0].traceID).toBe(
-    maxDurationTraceID
-  );
+  expect(getSortedTraceResults(traces, LONGEST_FIRST)[0].traceID).toBe(maxDurationTraceID);
 
-  expect(getSortedTraceResults(traces, SHORTEST_FIRST)[0].traceID).toBe(
-    minDurationTraceID
-  );
+  expect(getSortedTraceResults(traces, SHORTEST_FIRST)[0].traceID).toBe(minDurationTraceID);
 
   expect(getSortedTraceResults(traces, MOST_SPANS)[0].traceID).toBe(2);
 
   expect(getSortedTraceResults(traces, LEAST_SPANS)[0].traceID).toBe(4);
-  expect(getSortedTraceResults(traces, 'invalid')[0].traceID).toBe(
-    maxDurationTraceID
-  );
+  expect(getSortedTraceResults(traces, 'invalid')[0].traceID).toBe(maxDurationTraceID);
 });
 
 it('calculatePercentOfTotal() works properly', () => {
@@ -114,8 +104,6 @@ it('calculatePercentOfTotal() works properly', () => {
     },
   ];
   testCases.forEach(testCase => {
-    expect(searchSelectors.calculatePercentOfTotal(testCase.input)).toBe(
-      testCase.expectedOutput
-    );
+    expect(searchSelectors.calculatePercentOfTotal(testCase.input)).toBe(testCase.expectedOutput);
   });
 });

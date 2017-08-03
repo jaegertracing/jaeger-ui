@@ -27,17 +27,23 @@ export default function NotFound({ error }) {
     <section className="ui container">
       <div className="ui center aligned basic segment">
         <div className="ui center aligned basic segment">
-          <h1>{'404'}</h1>
+          <h1>
+            {'404'}
+          </h1>
           <p>
             {"Looks like you tried to access something that doesn't exist."}
           </p>
         </div>
         {error &&
           <div className="ui red message">
-            <p>{error.toString()}</p>
+            <p>
+              {error.toString()}
+            </p>
           </div>}
         <div className="ui center aligned basic segment">
-          <Link to="/">{'Back home'}</Link>
+          <Link to="/">
+            {'Back home'}
+          </Link>
         </div>
       </div>
     </section>

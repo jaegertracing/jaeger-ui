@@ -20,10 +20,7 @@
 
 import Chance from 'chance';
 
-import traceGenerator, {
-  SERVICE_LIST,
-  OPERATIONS_LIST,
-} from './trace-generators';
+import traceGenerator, { SERVICE_LIST, OPERATIONS_LIST } from './trace-generators';
 import dependencyGenerator from './dependency-generators';
 import { getTraceId } from '../selectors/trace';
 
@@ -31,23 +28,16 @@ const chance = new Chance();
 
 export const DEPENDENCIES_FIXTURES = dependencyGenerator.dependencies({});
 export const TRACE_FIXTURES = traceGenerator.traces({});
-const traceMap = new Map(
-  TRACE_FIXTURES.map(trace => [getTraceId(trace), trace])
-);
+const traceMap = new Map(TRACE_FIXTURES.map(trace => [getTraceId(trace), trace]));
 
 function resolveWithData(data) {
-  return new Promise(
-    resolve => setTimeout(() => resolve({ data })),
-    chance.integer({ min: 100, max: 2000 })
-  );
+  return new Promise(resolve => setTimeout(() => resolve({ data })), chance.integer({ min: 100, max: 2000 }));
 }
 
 function rejectWithErrors(...errors) {
   return new Promise((resolve, reject) =>
-    setTimeout(
-      () => reject({ errors }),
-      chance.integer({ min: 100, max: 2000 })
-    ));
+    setTimeout(() => reject({ errors }), chance.integer({ min: 100, max: 2000 }))
+  );
 }
 
 export default {

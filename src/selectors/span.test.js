@@ -77,9 +77,7 @@ it('getSpanReferenceByType() should return undefined if one does not exist', () 
 
 it('getSpanParentId() should return the spanID of the parent span', () => {
   expect(spanSelectors.getSpanParentId(generatedTrace.spans[1])).toBe(
-    generatedTrace.spans[1].references.find(
-      ({ refType }) => refType === 'CHILD_OF'
-    ).spanID
+    generatedTrace.spans[1].references.find(({ refType }) => refType === 'CHILD_OF').spanID
   );
 });
 

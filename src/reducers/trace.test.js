@@ -45,10 +45,7 @@ it('trace reducer should handle a successful FETCH_TRACE', () => {
   });
 
   expect(
-    Immutable.is(
-      state.get('traces'),
-      Immutable.fromJS({ [getTraceId(generatedTrace)]: generatedTrace })
-    )
+    Immutable.is(state.get('traces'), Immutable.fromJS({ [getTraceId(generatedTrace)]: generatedTrace }))
   ).toBeTruthy();
 
   expect(state.get('loading')).toBe(false);
@@ -63,10 +60,7 @@ it('trace reducer should handle a failed FETCH_TRACE', () => {
   });
 
   expect(
-    Immutable.is(
-      state.get('traces'),
-      Immutable.fromJS({ [generatedTrace.traceID]: error })
-    )
+    Immutable.is(state.get('traces'), Immutable.fromJS({ [generatedTrace.traceID]: error }))
   ).toBeTruthy();
 
   expect(state.get('loading')).toBe(false);

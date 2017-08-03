@@ -41,11 +41,7 @@ function MoreTraceOptionsDropdown({ traceID }) {
       <Dropdown text="View Options" className="item">
         <Dropdown.Menu>
           <Dropdown.Item>
-            <a
-              rel="noopener noreferrer"
-              target="_blank"
-              href={`/api/traces/${traceID}`}
-            >
+            <a rel="noopener noreferrer" target="_blank" href={`/api/traces/${traceID}`}>
               View Trace JSON
             </a>
           </Dropdown.Item>
@@ -68,8 +64,7 @@ export const HEADER_ITEMS = [
   {
     key: 'duration',
     title: 'Duration',
-    renderer: trace =>
-      formatDurationForTrace({ trace, duration: getTraceDuration(trace) }),
+    renderer: trace => formatDurationForTrace({ trace, duration: getTraceDuration(trace) }),
   },
   {
     key: 'service-count',
@@ -103,9 +98,7 @@ export default function TracePageHeader(
           <h2>
             <a onClick={() => onSlimViewClicked()}>
               <i
-                className={
-                  `ui icon angle double ${slimView ? 'right' : 'down'}`
-                }
+                className={`ui icon angle double ${slimView ? 'right' : 'down'}`}
                 style={{ float: 'none' }}
               />
             </a>
@@ -129,12 +122,16 @@ export default function TracePageHeader(
       </div>
       {!slimView &&
         <div>
-          {HEADER_ITEMS.map(({ renderer, title, ...itemProps }) => (
+          {HEADER_ITEMS.map(({ renderer, title, ...itemProps }) =>
             <div className="inline-block mr1" {...itemProps}>
-              <strong>{title}:{' '}</strong>
-              <span>{renderer(trace)}</span>
+              <strong>
+                {title}:{' '}
+              </strong>
+              <span>
+                {renderer(trace)}
+              </span>
             </div>
-          ))}
+          )}
         </div>}
     </header>
   );
