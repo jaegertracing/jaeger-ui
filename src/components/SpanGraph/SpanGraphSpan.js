@@ -24,15 +24,8 @@ import shallowCompare from 'react-addons-shallow-compare';
 
 import spanPropTypes from '../../propTypes/span';
 import colorGenerator from '../../utils/color-generator';
-import {
-  getPercentageOfDuration,
-  getPercentageOfInterval,
-} from '../../utils/date';
-import {
-  getSpanTimestamp,
-  getSpanDuration,
-  getSpanServiceName,
-} from '../../selectors/span';
+import { getPercentageOfDuration, getPercentageOfInterval } from '../../utils/date';
+import { getSpanTimestamp, getSpanDuration, getSpanServiceName } from '../../selectors/span';
 
 export const MIN_SPAN_WIDTH = 0.2; // in percent
 
@@ -74,30 +67,28 @@ export default class SpanGraphSpan extends Component {
     const topOffset = index * (rowHeight + rowPadding * 2) + rowPadding * 2;
     const spanTimestamp = getSpanTimestamp(span);
     const spanDuration = getSpanDuration(span);
-    const leftOffset = getPercentageOfInterval(
-      spanTimestamp,
-      initialTimestamp,
-      totalDuration
-    );
+    const leftOffset = getPercentageOfInterval(spanTimestamp, initialTimestamp, totalDuration);
     const width = getPercentageOfDuration(spanDuration, totalDuration);
 
     // wrap all "onWhatever" handlers to pass the span along as the first argument.
     // attach any other props to the spreadable object
-    const handlerFilter = name =>
-      typeof rest[name] === 'function' && name.substr(0, 2) === 'on';
-    const handlers = Object.keys(rest).filter(handlerFilter).reduce((
-      obj,
-      fnName
-    ) =>
-      Object.assign(obj, {
-        [fnName]: (...args) => rest[fnName](span, ...args),
-      }), {});
+    const handlerFilter = name => typeof rest[name] === 'function' && name.substr(0, 2) === 'on';
+    const handlers = Object.keys(rest).filter(handlerFilter).reduce(
+      (obj, fnName) =>
+        Object.assign(obj, {
+          [fnName]: (...args) => rest[fnName](span, ...args),
+        }),
+      {}
+    );
     const spreadable = Object.keys(rest)
       .filter(name => !handlerFilter(name))
       .reduce((obj, name) => Object.assign(obj, { [name]: rest[name] }), {});
     return (
       <g aria-labelledby="title">
-        {label && <title>{label}</title>}
+        {label &&
+          <title>
+            {label}
+          </title>}
         <rect
           style={{
             fill: colorGenerator.getColorByKey(getSpanServiceName(span)),

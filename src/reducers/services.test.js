@@ -21,9 +21,7 @@
 import Immutable from 'immutable';
 
 import * as jaegerApiActions from '../../src/actions/jaeger-api';
-import serviceReducer, {
-  initialState as servicesInitialState,
-} from '../../src/reducers/services';
+import serviceReducer, { initialState as servicesInitialState } from '../../src/reducers/services';
 
 it('should initialize an empty services array', () => {
   expect(

@@ -119,10 +119,7 @@ it('<SpanGraphTick /> should push the x value over if this is at the totalDurati
 
 it('<SpanGraphTick /> should spread unhandled tick properties', () => {
   const wrapper = shallow(
-    <SpanGraphTick
-      {...defaultProps}
-      tick={{ ...defaultProps.tick, stroke: 'black' }}
-    />
+    <SpanGraphTick {...defaultProps} tick={{ ...defaultProps.tick, stroke: 'black' }} />
   );
   const line = wrapper.find('line').first();
   expect(line.prop('stroke')).toBe('black');
@@ -136,12 +133,7 @@ it('<SpanGraphTick /> should make the width of the tick based on the tick defini
   line = wrapper.find('line').first();
   expect(line.prop('strokeWidth')).toBe(3);
 
-  wrapper = shallow(
-    <SpanGraphTick
-      {...defaultProps}
-      tick={{ ...defaultProps.tick, width: 8 }}
-    />
-  );
+  wrapper = shallow(<SpanGraphTick {...defaultProps} tick={{ ...defaultProps.tick, width: 8 }} />);
   line = wrapper.find('line').first();
   expect(line.prop('strokeWidth')).toBe(8);
 });

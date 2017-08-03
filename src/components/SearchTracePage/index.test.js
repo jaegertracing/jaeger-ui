@@ -30,25 +30,18 @@ const SCATTER_PLOT = 'SCATTER_PLOT';
 const defaultProps = {
   sortTracesBy: 'LONGEST_FIRST',
   traceResultsChartType: SCATTER_PLOT,
-  traceResults: [
-    { traceID: 'a', spans: [], processes: {} },
-    { traceID: 'b', spans: [], processes: {} },
-  ],
+  traceResults: [{ traceID: 'a', spans: [], processes: {} }, { traceID: 'b', spans: [], processes: {} }],
   numberOfTraceResults: 0,
   maxTraceDuration: 100,
 };
 
 it('should show default message when there are no results', () => {
-  const wrapper = shallow(
-    <SearchTracePage {...defaultProps} traceResults={[]} />
-  );
+  const wrapper = shallow(<SearchTracePage {...defaultProps} traceResults={[]} />);
   expect(wrapper.find('.trace-search--no-results').length).toBe(1);
 });
 
 it('renders the a SCATTER_PLOT chart', () => {
-  const wrapper = shallow(
-    <SearchTracePage {...defaultProps} traceResultsChartType={SCATTER_PLOT} />
-  );
+  const wrapper = shallow(<SearchTracePage {...defaultProps} traceResultsChartType={SCATTER_PLOT} />);
   expect(wrapper.find(TraceResultsScatterPlot).length).toBe(1);
 });
 

@@ -32,9 +32,7 @@ export { SearchTracePage } from './components/SearchTracePage';
 export default JaegerUIApp;
 
 const UI_ROOT_ID = 'jaeger-ui-root';
-const history = process.env.REACT_APP_GH_PAGES === 'true'
-  ? hashHistory
-  : browserHistory;
+const history = process.env.REACT_APP_GH_PAGES === 'true' ? hashHistory : browserHistory;
 
 /* istanbul ignore if */
 if (process.env.NODE_ENV === 'development') {
@@ -48,8 +46,5 @@ if (process.env.NODE_ENV === 'development') {
 
 /* istanbul ignore if */
 if (document && process.env.NODE_ENV !== 'test') {
-  ReactDOM.render(
-    <JaegerUIApp history={history} />,
-    document.getElementById(UI_ROOT_ID)
-  );
+  ReactDOM.render(<JaegerUIApp history={history} />, document.getElementById(UI_ROOT_ID));
 }

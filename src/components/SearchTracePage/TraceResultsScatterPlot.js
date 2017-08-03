@@ -39,16 +39,8 @@ function TraceResultsScatterPlot(props) {
         width={containerWidth}
         height={200}
       >
-        <XAxis
-          title="Time"
-          tickTotal={4}
-          tickFormat={t => moment(t).format('hh:mm:ss a')}
-        />
-        <YAxis
-          title="Duration"
-          tickTotal={3}
-          tickFormat={t => formatDuration(t, 'milliseconds')}
-        />
+        <XAxis title="Time" tickTotal={4} tickFormat={t => moment(t).format('hh:mm:ss a')} />
+        <YAxis title="Duration" tickTotal={3} tickFormat={t => formatDuration(t, 'milliseconds')} />
         <MarkSeries size={3} onValueClick={onValueClick} data={data} />
       </XYPlot>
     </div>

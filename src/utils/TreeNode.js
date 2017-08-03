@@ -28,8 +28,7 @@ export default class TreeNode {
       return search;
     }
 
-    return (value, node) =>
-      search instanceof TreeNode ? node === search : value === search;
+    return (value, node) => (search instanceof TreeNode ? node === search : value === search);
   }
 
   constructor(value, children = []) {

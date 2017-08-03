@@ -38,44 +38,30 @@ const defaultOptions = {
 };
 
 it('<TracePageHeader /> should render a <header />', () => {
-  const wrapper = shallow(
-    <TracePageHeader {...defaultProps} />,
-    defaultOptions
-  );
+  const wrapper = shallow(<TracePageHeader {...defaultProps} />, defaultOptions);
 
   expect(wrapper.find('header').length).toBe(1);
 });
 
 it('<TracePageHeader /> should render an empty <div /> if no trace present', () => {
-  const wrapper = shallow(
-    <TracePageHeader {...defaultProps} trace={null} />,
-    defaultOptions
-  );
+  const wrapper = shallow(<TracePageHeader {...defaultProps} trace={null} />, defaultOptions);
 
   expect(wrapper.matchesElement(<div />)).toBeTruthy();
 });
 
 it('<TracePageHeader /> should render the trace title', () => {
-  const wrapper = shallow(
-    <TracePageHeader {...defaultProps} />,
-    defaultOptions
-  );
+  const wrapper = shallow(<TracePageHeader {...defaultProps} />, defaultOptions);
   const h2 = wrapper.find('h2').first();
 
   expect(h2.contains(getTraceName(defaultProps.trace))).toBeTruthy();
 });
 
 it('<TracePageHeader /> should render the header items', () => {
-  const wrapper = shallow(
-    <TracePageHeader {...defaultProps} />,
-    defaultOptions
-  );
+  const wrapper = shallow(<TracePageHeader {...defaultProps} />, defaultOptions);
 
   wrapper.find('.horizontal .item').forEach((item, idx) => {
     expect(item.contains(HEADER_ITEMS[idx].title)).toBeTruthy();
-    expect(
-      item.contains(HEADER_ITEMS[idx].renderer(defaultProps.trace))
-    ).toBeTruthy();
+    expect(item.contains(HEADER_ITEMS[idx].renderer(defaultProps.trace))).toBeTruthy();
   });
 });
 

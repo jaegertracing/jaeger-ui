@@ -47,12 +47,7 @@ export default class SpanGraphTick extends Component {
   }
 
   render() {
-    const {
-      color,
-      initialTimestamp,
-      tick,
-      totalDuration,
-    } = this.props;
+    const { color, initialTimestamp, tick, totalDuration } = this.props;
     const { timestamp, width = DEFAULT_TICK_WIDTH, ...rest } = tick;
     const timeSinceSpanStart = timestamp - initialTimestamp;
     const x = getPercentageOfDuration(timeSinceSpanStart, totalDuration);

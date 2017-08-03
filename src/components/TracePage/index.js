@@ -89,10 +89,7 @@ export default class TracePage extends Component {
       return;
     }
 
-    if (
-      !(trace instanceof Error) &&
-      (!prevTrace || getTraceId(prevTrace) !== getTraceId(trace))
-    ) {
+    if (!(trace instanceof Error) && (!prevTrace || getTraceId(prevTrace) !== getTraceId(trace))) {
       this.setDefaultTimeRange();
     }
   }
@@ -105,10 +102,7 @@ export default class TracePage extends Component {
       return;
     }
 
-    this.updateTimeRangeFilter(
-      getTraceTimestamp(trace),
-      getTraceEndTimestamp(trace)
-    );
+    this.updateTimeRangeFilter(getTraceTimestamp(trace), getTraceEndTimestamp(trace));
   }
 
   updateTextFilter(textFilter) {
@@ -135,10 +129,7 @@ export default class TracePage extends Component {
   }
 
   render() {
-    const {
-      id,
-      trace,
-    } = this.props;
+    const { id, trace } = this.props;
     const { slimView } = this.state;
 
     if (!trace) {
@@ -196,6 +187,4 @@ function mapDispatchToProps(dispatch) {
   return { fetchTrace };
 }
 
-export const ConnectedTracePage = connect(mapStateToProps, mapDispatchToProps)(
-  TracePage
-);
+export const ConnectedTracePage = connect(mapStateToProps, mapDispatchToProps)(TracePage);

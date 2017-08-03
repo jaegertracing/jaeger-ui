@@ -30,23 +30,17 @@ const HANDLE_HEIGHT = 20;
 const HANDLE_TOP_OFFSET = 0;
 const LINE_WIDTH = 2;
 
-export default function TimelineScrubber(
-  {
-    trace,
-    timestamp,
-    onMouseDown,
-    handleTopOffset = HANDLE_TOP_OFFSET,
-    handleWidth = HANDLE_WIDTH,
-    handleHeight = HANDLE_HEIGHT,
-  }
-) {
+export default function TimelineScrubber({
+  trace,
+  timestamp,
+  onMouseDown,
+  handleTopOffset = HANDLE_TOP_OFFSET,
+  handleWidth = HANDLE_WIDTH,
+  handleHeight = HANDLE_HEIGHT,
+}) {
   const initialTimestamp = getTraceTimestamp(trace);
   const totalDuration = getTraceDuration(trace);
-  const xPercentage = getPercentageOfInterval(
-    timestamp,
-    initialTimestamp,
-    totalDuration
-  );
+  const xPercentage = getPercentageOfInterval(timestamp, initialTimestamp, totalDuration);
 
   return (
     <g className="timeline-scrubber" onMouseDown={onMouseDown}>
@@ -74,11 +68,7 @@ export default function TimelineScrubber(
         cx={`${xPercentage}%`}
         cy={'50%'}
       />
-      <circle
-        className="timeline-scrubber__handle--grip"
-        cx={`${xPercentage}%`}
-        cy={'50%'}
-      />
+      <circle className="timeline-scrubber__handle--grip" cx={`${xPercentage}%`} cy={'50%'} />
       <circle
         className="timeline-scrubber__handle--grip"
         style={{ transform: `translateY(${-(handleHeight / 4)}px)` }}

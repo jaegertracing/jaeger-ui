@@ -30,9 +30,7 @@ export const formatDependenciesAsNodesAndLinks = createSelector(
 
         // add both the parent and child to the node map, or increment their
         // call count.
-        nodeMap[link.parent] = nodeMap[link.parent]
-          ? nodeMap[link.parent] + link.callCount
-          : link.callCount;
+        nodeMap[link.parent] = nodeMap[link.parent] ? nodeMap[link.parent] + link.callCount : link.callCount;
         nodeMap[link.child] = nodeMap[link.child]
           ? response.nodeMap[link.child] + link.callCount
           : link.callCount;
@@ -57,9 +55,7 @@ export const formatDependenciesAsNodesAndLinks = createSelector(
     data.nodes = Object.keys(data.nodeMap).map(id => ({
       callCount: data.nodeMap[id],
       radius: Math.max(Math.log(data.nodeMap[id] / 1000), 3),
-      orphan: data.links.findIndex(
-        link => id === link.source || id === link.target
-      ) === -1,
+      orphan: data.links.findIndex(link => id === link.source || id === link.target) === -1,
       id,
     }));
 

@@ -20,9 +20,7 @@
 
 import ReactGA from 'react-ga';
 
-if (
-  process.env.NODE_ENV === 'production' && process.env.REACT_APP_GA_TRACKING_ID
-) {
+if (process.env.NODE_ENV === 'production' && process.env.REACT_APP_GA_TRACKING_ID) {
   const GA_CODE = process.env.REACT_APP_GA_TRACKING_ID;
   ReactGA.initialize(GA_CODE);
 }
