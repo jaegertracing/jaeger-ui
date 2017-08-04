@@ -18,35 +18,52 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import Immutable from 'immutable';
+import keyBy from 'lodash/keyBy';
 import { handleActions } from 'redux-actions';
 
-import * as jaegerApiActions from '../actions/jaeger-api';
+import { fetchTrace, searchTraces } from '../actions/jaeger-api';
 import { enforceUniqueSpanIds } from '../selectors/trace';
 
-export const initialState = Immutable.Map({
-  traces: Immutable.Map(),
+const initialState = {
+  traces: {},
   loading: false,
   error: null,
-});
+};
+
+function fetchStarted(state) {
+  return Object.assign(state, { loading: true });
+}
+
+function fetchTraceDone(state, { meta, payload }) {
+  const trace = enforceUniqueSpanIds(payload.data[0]);
+  const traces = Object.assign({}, state.traces, { [meta.id]: trace });
+  return Object.assign({}, state, { traces, loading: false });
+}
+
+function fetchTraceErred(state, { meta, payload }) {
+  const traces = Object.assign({}, state.traces, { [meta.id]: payload });
+  return Object.assign({}, state, { traces, loading: false });
+}
+
+function searchDone(state, { payload }) {
+  const traces = keyBy(payload.data, 'traceID');
+  return Object.assign({}, state, { traces, error: null, loading: false });
+}
+
+function searchErred(state, action) {
+  const error = action.payload.message;
+  return Object.assign({}, state, { error, loading: false });
+}
 
 export default handleActions(
   {
-    [`${jaegerApiActions.fetchTrace}_PENDING`]: state => state.set('loading', true),
-    [`${jaegerApiActions.fetchTrace}_FULFILLED`]: (state, { meta: { id }, payload: { data: traces } }) =>
-      state.set('loading', false).setIn(['traces', id], Immutable.fromJS(enforceUniqueSpanIds(traces[0]))),
-    [`${jaegerApiActions.fetchTrace}_REJECTED`]: (state, { meta: { id }, payload: error }) =>
-      state.set('loading', false).setIn(['traces', id], error),
-    [`${jaegerApiActions.searchTraces}_PENDING`]: state => state.set('loading', true),
-    [`${jaegerApiActions.searchTraces}_FULFILLED`]: (state, action) => {
-      const traceResults = {};
-      action.payload.data.forEach(trace => {
-        traceResults[trace.traceID] = trace;
-      });
-      return state.set('traces', Immutable.fromJS(traceResults)).set('loading', false).set('error', null);
-    },
-    [`${jaegerApiActions.searchTraces}_REJECTED`]: (state, action) =>
-      state.set('traces', Immutable.fromJS([])).set('loading', false).set('error', action.payload.message),
+    [`${fetchTrace}_PENDING`]: fetchStarted,
+    [`${fetchTrace}_FULFILLED`]: fetchTraceDone,
+    [`${fetchTrace}_REJECTED`]: fetchTraceErred,
+
+    [`${searchTraces}_PENDING`]: fetchStarted,
+    [`${searchTraces}_FULFILLED`]: searchDone,
+    [`${searchTraces}_REJECTED`]: searchErred,
   },
   initialState
 );
