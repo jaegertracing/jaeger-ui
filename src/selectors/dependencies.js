@@ -21,7 +21,7 @@
 import { createSelector } from 'reselect';
 
 export const formatDependenciesAsNodesAndLinks = createSelector(
-  ({ dependencies }) => dependencies.toJS(),
+  ({ dependencies }) => dependencies,
   dependencies => {
     const data = dependencies.reduce(
       (response, link) => {

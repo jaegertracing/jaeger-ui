@@ -194,13 +194,13 @@ SearchTracePage.propTypes = {
 };
 
 const stateTraceXformer = getLastXformCacher(stateTrace => {
-  const { traces: traceMap, loading, error: traceError } = stateTrace.toJS();
+  const { traces: traceMap, loading, error: traceError } = stateTrace;
   const traces = Object.keys(traceMap).map(traceID => traceMap[traceID]);
   return { tracesSrc: { traces }, loading, traceError };
 });
 
 const stateServicesXformer = getLastXformCacher(stateServices => {
-  const { services: serviceList, operationsForService: opsBySvc, error: serviceError } = stateServices.toJS();
+  const { services: serviceList, operationsForService: opsBySvc, error: serviceError } = stateServices;
   const services = serviceList.map(name => ({
     name,
     operations: opsBySvc[name] || [],

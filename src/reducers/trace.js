@@ -31,7 +31,7 @@ const initialState = {
 };
 
 function fetchStarted(state) {
-  return Object.assign(state, { loading: true });
+  return Object.assign({}, state, { loading: true });
 }
 
 function fetchTraceDone(state, { meta, payload }) {
@@ -52,7 +52,7 @@ function searchDone(state, { payload }) {
 
 function searchErred(state, action) {
   const error = action.payload.message;
-  return Object.assign({}, state, { error, loading: false });
+  return Object.assign({}, state, { error, loading: false, traces: [] });
 }
 
 export default handleActions(

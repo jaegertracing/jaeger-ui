@@ -92,7 +92,7 @@ export function TraceSearchFormComponent(props) {
             name="service"
             component={SearchDropdownInput}
             className="ui dropdown"
-            items={services.concat({ name: '-' }).map(s => ({ text: s.name, value: s.name }))}
+            items={services.concat({ name: '-' }).map(s => ({ text: s.name, value: s.name, key: s.name }))}
           />
         </div>
 
@@ -102,7 +102,7 @@ export function TraceSearchFormComponent(props) {
               name="operation"
               component={SearchDropdownInput}
               className="ui dropdown"
-              items={operationsForService.concat('all').map(op => ({ text: op, value: op }))}
+              items={operationsForService.concat('all').map(op => ({ text: op, value: op, key: op }))}
             />
           </div>}
 
@@ -190,7 +190,12 @@ export function TraceSearchFormComponent(props) {
 TraceSearchFormComponent.propTypes = {
   handleSubmit: PropTypes.func,
   submitting: PropTypes.bool,
-  services: PropTypes.arrayOf(PropTypes.string),
+  services: PropTypes.arrayOf(
+    PropTypes.shape({
+      name: PropTypes.string,
+      operations: PropTypes.arrayOf(PropTypes.string),
+    })
+  ),
   selectedService: PropTypes.string,
   selectedLookback: PropTypes.string,
 };
