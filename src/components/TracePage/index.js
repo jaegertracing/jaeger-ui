@@ -89,10 +89,7 @@ export default class TracePage extends Component {
       return;
     }
 
-    if (
-      !(trace instanceof Error) &&
-      (!prevTrace || getTraceId(prevTrace) !== getTraceId(trace))
-    ) {
+    if (!(trace instanceof Error) && (!prevTrace || getTraceId(prevTrace) !== getTraceId(trace))) {
       this.setDefaultTimeRange();
     }
   }
@@ -105,10 +102,7 @@ export default class TracePage extends Component {
       return;
     }
 
-    this.updateTimeRangeFilter(
-      getTraceTimestamp(trace),
-      getTraceEndTimestamp(trace)
-    );
+    this.updateTimeRangeFilter(getTraceTimestamp(trace), getTraceEndTimestamp(trace));
   }
 
   updateTextFilter(textFilter) {
@@ -135,10 +129,7 @@ export default class TracePage extends Component {
   }
 
   render() {
-    const {
-      id,
-      trace,
-    } = this.props;
+    const { id, trace } = this.props;
     const { slimView } = this.state;
 
     if (!trace) {
@@ -177,18 +168,13 @@ export default class TracePage extends Component {
 
 // export connected component separately
 function mapStateToProps(state, ownProps) {
-  const { params: { id } } = ownProps;
-
-  let trace = state.trace.getIn(['traces', id]);
+  const { id } = ownProps.params;
+  let trace = state.trace.traces[id];
   if (trace && !(trace instanceof Error)) {
-    trace = trace.toJS();
     trace = dropEmptyStartTimeSpans(trace);
     trace = hydrateSpansWithProcesses(trace);
   }
-
-  const loading = state.trace.get('loading');
-
-  return { id, loading, trace };
+  return { id, trace, loading: state.trace.loading };
 }
 
 function mapDispatchToProps(dispatch) {
@@ -196,6 +182,4 @@ function mapDispatchToProps(dispatch) {
   return { fetchTrace };
 }
 
-export const ConnectedTracePage = connect(mapStateToProps, mapDispatchToProps)(
-  TracePage
-);
+export const ConnectedTracePage = connect(mapStateToProps, mapDispatchToProps)(TracePage);

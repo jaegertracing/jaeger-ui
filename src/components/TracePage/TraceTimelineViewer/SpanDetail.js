@@ -29,12 +29,7 @@ import { formatDuration } from './utils';
 const collapseEnhancer = withState('open', 'onToggleOpen', false);
 
 function CollapsePanel(props) {
-  const {
-    header,
-    onToggleOpen,
-    children,
-    open,
-  } = props;
+  const { header, onToggleOpen, children, open } = props;
   return (
     <div>
       <a style={{ cursor: 'pointer' }} onClick={() => onToggleOpen(!open)}>
@@ -75,12 +70,14 @@ function ExpandableDataTable(props) {
         </span>
         {!open &&
           <span>
-            {data.map(row => (
+            {data.map(row =>
               <span className="px1">
-                <span style={{ color: 'gray' }}>{row.key}=</span>
+                <span style={{ color: 'gray' }}>
+                  {row.key}=
+                </span>
                 {row.value.toString()}
               </span>
-            ))}
+            )}
           </span>}
       </div>
       {open &&
@@ -95,10 +92,7 @@ function ExpandableDataTable(props) {
               }
               return (
                 <tr key={row.key}>
-                  <td
-                    width="150"
-                    style={{ color: 'gray', verticalAlign: 'top' }}
-                  >
+                  <td width="150" style={{ color: 'gray', verticalAlign: 'top' }}>
                     {row.key}
                   </td>
                   <td>
@@ -145,16 +139,14 @@ function Logs({ logs, traceStartTime, open, onToggleOpen }) {
       </div>
       {open &&
         <div>
-          {_.sortBy(logs, 'timestamp').map(log => (
+          {_.sortBy(logs, 'timestamp').map(log =>
             <ExpandableDataTableStatefull
               data={log.fields || []}
               label={`${formatDuration(log.timestamp - traceStartTime)}`}
             />
-          ))}
+          )}
           <div style={{ color: 'gray' }}>
-            <small>
-              **Log timestamps are relative to the start time of the full trace.
-            </small>
+            <small>**Log timestamps are relative to the start time of the full trace.</small>
           </div>
         </div>}
     </div>
@@ -180,19 +172,27 @@ export default function SpanDetail(props) {
   return (
     <div>
       <div>
-        <h3 className="mb1">{span.operationName}</h3>
+        <h3 className="mb1">
+          {span.operationName}
+        </h3>
         <div>
           <div className="inline-block mr1">
             <strong>Service: </strong>
-            <span>{span.process.serviceName}</span>
+            <span>
+              {span.process.serviceName}
+            </span>
           </div>
           <div className="inline-block mr1">
             <strong>Duration: </strong>
-            <span>{formatDuration(span.duration)}</span>
+            <span>
+              {formatDuration(span.duration)}
+            </span>
           </div>
           <div className="inline-block mr1">
             <strong>Start Time: </strong>
-            <span>{formatDuration(span.relativeStartTime)}</span>
+            <span>
+              {formatDuration(span.relativeStartTime)}
+            </span>
           </div>
         </div>
         <hr />
@@ -202,10 +202,7 @@ export default function SpanDetail(props) {
           <ExpandableDataTableStatefull data={span.tags} label="Tags" />
           {span.process &&
             span.process.tags &&
-            <ExpandableDataTableStatefull
-              data={span.process.tags || []}
-              label="Process"
-            />}
+            <ExpandableDataTableStatefull data={span.process.tags || []} label="Process" />}
         </div>
         {span.logs &&
           span.logs.length > 0 &&
@@ -215,7 +212,9 @@ export default function SpanDetail(props) {
             <table className="ui very striped compact table">
               <tr>
                 <td>spanID</td>
-                <td>{span.spanID}</td>
+                <td>
+                  {span.spanID}
+                </td>
               </tr>
             </table>
           </CollapsePanelStatefull>

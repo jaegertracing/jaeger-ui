@@ -85,9 +85,7 @@ it('addChild() should add a child to the set', () => {
   treeRoot.addChild(1);
   treeRoot.addChild(2);
 
-  expect(treeRoot).toEqual(
-    new TreeNode(4, [new TreeNode(3), new TreeNode(1), new TreeNode(2)])
-  );
+  expect(treeRoot).toEqual(new TreeNode(4, [new TreeNode(3), new TreeNode(1), new TreeNode(2)]));
 });
 
 it('addChild() should support taking a treenode', () => {
@@ -97,9 +95,7 @@ it('addChild() should support taking a treenode', () => {
   treeRoot.addChild(1);
   treeRoot.addChild(2);
 
-  expect(treeRoot).toEqual(
-    new TreeNode(4, [otherNode, new TreeNode(1), new TreeNode(2)])
-  );
+  expect(treeRoot).toEqual(new TreeNode(4, [otherNode, new TreeNode(1), new TreeNode(2)]));
 });
 
 it('addChild() should support the parent argument for nested insertion', () => {
@@ -109,9 +105,7 @@ it('addChild() should support the parent argument for nested insertion', () => {
   treeRoot.addChild(secondTier);
   secondTier.addChild(thirdTier);
 
-  expect(treeRoot).toEqual(
-    new TreeNode(1, [new TreeNode(2, [new TreeNode(3)])])
-  );
+  expect(treeRoot).toEqual(new TreeNode(1, [new TreeNode(2, [new TreeNode(3)])]));
 });
 
 it('find() should return the found item for a function', () => {
@@ -215,11 +209,7 @@ it('getPath() should return the path to the node', () => {
   treeRoot.addChild(11);
   treeRoot.addChild(12);
 
-  expect(treeRoot.getPath(secondChildNode)).toEqual([
-    treeRoot,
-    firstChildNode,
-    secondChildNode,
-  ]);
+  expect(treeRoot.getPath(secondChildNode)).toEqual([treeRoot, firstChildNode, secondChildNode]);
 });
 
 it('getPath() should return null if the node is not in the tree', () => {

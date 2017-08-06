@@ -18,93 +18,76 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import Immutable from 'immutable';
+import { fetchServices, fetchServiceOperations } from '../../src/actions/jaeger-api';
+import serviceReducer from '../../src/reducers/services';
 
-import * as jaegerApiActions from '../../src/actions/jaeger-api';
-import serviceReducer, {
-  initialState as servicesInitialState,
-} from '../../src/reducers/services';
+const initialState = serviceReducer(undefined, {});
 
-it('should initialize an empty services array', () => {
-  expect(
-    Immutable.is(
-      serviceReducer(servicesInitialState, {}),
-      Immutable.fromJS({
-        services: [],
-        loading: false,
-        error: null,
-        operationsForService: {},
-      })
-    )
-  ).toBeTruthy();
-});
+function verifyInitialState() {
+  expect(initialState).toEqual({
+    services: [],
+    loading: false,
+    error: null,
+    operationsForService: {},
+  });
+}
+
+beforeEach(verifyInitialState);
+afterEach(verifyInitialState);
 
 it('should handle a fetch services with loading state', () => {
-  expect(
-    Immutable.is(
-      serviceReducer(servicesInitialState, {
-        type: `${jaegerApiActions.fetchServices}_PENDING`,
-      }),
-      Immutable.fromJS({
-        services: [],
-        operationsForService: {},
-        loading: true,
-        error: null,
-      })
-    )
-  ).toBeTruthy();
+  const state = serviceReducer(initialState, {
+    type: `${fetchServices}_PENDING`,
+  });
+  expect(state).toEqual({
+    services: [],
+    operationsForService: {},
+    loading: true,
+    error: null,
+  });
 });
 
 it('should handle successful services fetch', () => {
-  expect(
-    Immutable.is(
-      serviceReducer(servicesInitialState, {
-        type: `${jaegerApiActions.fetchServices}_FULFILLED`,
-        payload: { data: ['a', 'b', 'c'] },
-      }),
-      Immutable.fromJS({
-        services: ['a', 'b', 'c'],
-        operationsForService: {},
-        loading: false,
-        error: null,
-      })
-    )
-  ).toBeTruthy();
+  const services = ['a', 'b', 'c'];
+  const state = serviceReducer(initialState, {
+    type: `${fetchServices}_FULFILLED`,
+    payload: { data: services.slice() },
+  });
+  expect(state).toEqual({
+    services,
+    operationsForService: {},
+    loading: false,
+    error: null,
+  });
 });
 
 it('should handle a failed services fetch', () => {
-  expect(
-    Immutable.is(
-      serviceReducer(servicesInitialState, {
-        type: `${jaegerApiActions.fetchServices}_REJECTED`,
-        payload: new Error('Error'),
-      }),
-      Immutable.fromJS({
-        services: [],
-        operationsForService: {},
-        loading: false,
-        error: 'Error',
-      })
-    )
-  ).toBeTruthy();
+  const error = new Error('some-message');
+  const state = serviceReducer(initialState, {
+    type: `${fetchServices}_REJECTED`,
+    payload: error,
+  });
+  expect(state).toEqual({
+    services: [],
+    operationsForService: {},
+    loading: false,
+    error: error.message,
+  });
 });
 
 it('should handle a successful fetching operations for a service ', () => {
-  expect(
-    Immutable.is(
-      serviceReducer(servicesInitialState, {
-        type: `${jaegerApiActions.fetchServiceOperations}_FULFILLED`,
-        meta: { serviceName: 'serviceA' },
-        payload: { data: ['a', 'b'] },
-      }),
-      Immutable.fromJS({
-        services: [],
-        operationsForService: {
-          serviceA: ['a', 'b'],
-        },
-        loading: false,
-        error: null,
-      })
-    )
-  ).toBeTruthy();
+  const ops = ['a', 'b'];
+  const state = serviceReducer(initialState, {
+    type: `${fetchServiceOperations}_FULFILLED`,
+    meta: { serviceName: 'serviceA' },
+    payload: { data: ops.slice() },
+  });
+  expect(state).toEqual({
+    services: [],
+    operationsForService: {
+      serviceA: ops,
+    },
+    loading: false,
+    error: null,
+  });
 });

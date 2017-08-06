@@ -24,17 +24,13 @@ import traceGenerator from '../demo/trace-generators';
 const generatedTrace = traceGenerator.trace({ numberOfSpans: 45 });
 
 it('getProcessServiceName() should return the serviceName of the process', () => {
-  const proc = generatedTrace.processes[
-    Object.keys(generatedTrace.processes)[0]
-  ];
+  const proc = generatedTrace.processes[Object.keys(generatedTrace.processes)[0]];
 
   expect(processSelectors.getProcessServiceName(proc)).toBe(proc.serviceName);
 });
 
 it('getProcessTags() should return the tags on the process', () => {
-  const proc = generatedTrace.processes[
-    Object.keys(generatedTrace.processes)[0]
-  ];
+  const proc = generatedTrace.processes[Object.keys(generatedTrace.processes)[0]];
 
   expect(processSelectors.getProcessTags(proc)).toBe(proc.tags);
 });

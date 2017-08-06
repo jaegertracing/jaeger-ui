@@ -18,37 +18,46 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import { handleActions } from 'redux-actions';
-
 import { fetchDependencies } from '../actions/jaeger-api';
+import reducer from '../../src/reducers/dependencies';
 
-const initialState = {
-  dependencies: [],
-  loading: false,
-  error: null,
-};
+const initialState = reducer(undefined, {});
 
-function fetchStarted(state) {
-  return Object.assign({}, state, { loading: true });
-}
-
-function fetchDepsDone(state, { payload }) {
-  return Object.assign({}, state, { dependencies: payload.data, loading: false });
-}
-
-function fetchDepsErred(state, { payload: error }) {
-  return Object.assign({}, state, {
-    error,
+function verifyInitialState() {
+  expect(initialState).toEqual({
     dependencies: [],
     loading: false,
+    error: null,
   });
 }
 
-export default handleActions(
-  {
-    [`${fetchDependencies}_PENDING`]: fetchStarted,
-    [`${fetchDependencies}_FULFILLED`]: fetchDepsDone,
-    [`${fetchDependencies}_REJECTED`]: fetchDepsErred,
-  },
-  initialState
-);
+beforeEach(verifyInitialState);
+afterEach(verifyInitialState);
+
+it('sets loading to true when fetching dependencies is pending', () => {
+  const state = reducer(initialState, {
+    type: `${fetchDependencies}_PENDING`,
+  });
+  expect(state.loading).toBe(true);
+});
+
+it('handles a successful dependencies fetch', () => {
+  const deps = ['a', 'b', 'c'];
+  const state = reducer(initialState, {
+    type: `${fetchDependencies}_FULFILLED`,
+    payload: { data: deps.slice() },
+  });
+  expect(state.loading).toBe(false);
+  expect(state.dependencies).toEqual(deps);
+});
+
+it('handles a failed dependencies fetch', () => {
+  const error = new Error('some-message');
+  const state = reducer(initialState, {
+    type: `${fetchDependencies}_REJECTED`,
+    payload: error,
+  });
+  expect(state.loading).toBe(false);
+  expect(state.dependencies).toEqual([]);
+  expect(state.error).toBe(error);
+});

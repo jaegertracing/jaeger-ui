@@ -31,9 +31,7 @@ import SearchDropdownInput from './SearchDropdownInput';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import { formatDate, formatTime } from '../../utils/date';
 
-export function getUnixTimeStampInMSFromForm(
-  { startDate, startDateTime, endDate, endDateTime }
-) {
+export function getUnixTimeStampInMSFromForm({ startDate, startDateTime, endDate, endDateTime }) {
   const start = `${startDate} ${startDateTime}`;
   const end = `${endDate} ${endDateTime}`;
   return {
@@ -81,16 +79,9 @@ export function convertQueryParamsToFormDates({ start, end }) {
 }
 
 export function TraceSearchFormComponent(props) {
-  const {
-    selectedService = '-',
-    selectedLookback,
-    handleSubmit,
-    submitting,
-    services,
-  } = props;
+  const { selectedService = '-', selectedLookback, handleSubmit, submitting, services } = props;
   const selectedServicePayload = services.find(s => s.name === selectedService);
-  const operationsForService = (selectedServicePayload &&
-    selectedServicePayload.operations) || [];
+  const operationsForService = (selectedServicePayload && selectedServicePayload.operations) || [];
   const noSelectedService = selectedService === '-' || !selectedService;
   return (
     <div className="search-form">
@@ -101,9 +92,7 @@ export function TraceSearchFormComponent(props) {
             name="service"
             component={SearchDropdownInput}
             className="ui dropdown"
-            items={services
-              .concat({ name: '-' })
-              .map(s => ({ text: s.name, value: s.name }))}
+            items={services.concat({ name: '-' }).map(s => ({ text: s.name, value: s.name, key: s.name }))}
           />
         </div>
 
@@ -113,9 +102,7 @@ export function TraceSearchFormComponent(props) {
               name="operation"
               component={SearchDropdownInput}
               className="ui dropdown"
-              items={operationsForService
-                .concat('all')
-                .map(op => ({ text: op, value: op }))}
+              items={operationsForService.concat('all').map(op => ({ text: op, value: op, key: op }))}
             />
           </div>}
 
@@ -150,12 +137,7 @@ export function TraceSearchFormComponent(props) {
             <label htmlFor="service">Start Time</label>
             <div>
               <div className="ui input">
-                <Field
-                  name="startDate"
-                  component="input"
-                  type="date"
-                  placeholder="Start Date"
-                />
+                <Field name="startDate" component="input" type="date" placeholder="Start Date" />
               </div>
               <div className="ui input">
                 <Field name="startDateTime" component="input" type="time" />
@@ -168,12 +150,7 @@ export function TraceSearchFormComponent(props) {
             <label htmlFor="service">End time</label>
             <div>
               <div className="ui input">
-                <Field
-                  name="endDate"
-                  component="input"
-                  type="date"
-                  placeholder="End Date"
-                />
+                <Field name="endDate" component="input" type="date" placeholder="End Date" />
               </div>
               <div className="ui input">
                 <Field name="endDateTime" component="input" type="time" />
@@ -185,23 +162,13 @@ export function TraceSearchFormComponent(props) {
           <div className="field">
             <label htmlFor="minDuration">Min Duration</label>
             <div className="ui input">
-              <Field
-                name="minDuration"
-                component="input"
-                type="text"
-                placeholder="e.g. 1.2s, 100ms, 500us"
-              />
+              <Field name="minDuration" component="input" type="text" placeholder="e.g. 1.2s, 100ms, 500us" />
             </div>
           </div>
           <div className="field">
             <label htmlFor="maxDuration">Max Duration</label>
             <div className="ui input">
-              <Field
-                name="maxDuration"
-                component="input"
-                type="text"
-                placeholder="e.g. 1.1s"
-              />
+              <Field name="maxDuration" component="input" type="text" placeholder="e.g. 1.1s" />
             </div>
           </div>
         </div>
@@ -209,19 +176,10 @@ export function TraceSearchFormComponent(props) {
         <div className="search-form--limit field">
           <label htmlFor="resultsLimit">Limit Results</label>
           <div className="ui input">
-            <Field
-              name="resultsLimit"
-              component="input"
-              type="number"
-              placeholder="Limit Results"
-            />
+            <Field name="resultsLimit" component="input" type="number" placeholder="Limit Results" />
           </div>
         </div>
-        <button
-          className="ui button"
-          type="submit"
-          disabled={submitting || noSelectedService}
-        >
+        <button className="ui button" type="submit" disabled={submitting || noSelectedService}>
           Find Traces
         </button>
       </form>
@@ -232,7 +190,12 @@ export function TraceSearchFormComponent(props) {
 TraceSearchFormComponent.propTypes = {
   handleSubmit: PropTypes.func,
   submitting: PropTypes.bool,
-  services: PropTypes.arrayOf(PropTypes.string),
+  services: PropTypes.arrayOf(
+    PropTypes.shape({
+      name: PropTypes.string,
+      operations: PropTypes.arrayOf(PropTypes.string),
+    })
+  ),
   selectedService: PropTypes.string,
   selectedLookback: PropTypes.string,
 };
@@ -282,9 +245,7 @@ const mapStateToProps = state => {
   }
   let traceIDs;
   if (traceIDParams) {
-    traceIDs = traceIDParams instanceof Array
-      ? traceIDParams.join(',')
-      : traceIDParams;
+    traceIDs = traceIDParams instanceof Array ? traceIDParams.join(',') : traceIDParams;
   }
   return {
     destroyOnUnmount: false,
@@ -332,8 +293,7 @@ const mapDispatchToProps = dispatch => {
       let end;
       if (lookback !== 'custom') {
         const unit = lookback.split('').pop();
-        start = moment().subtract(parseInt(lookback, 10), unit).valueOf() *
-          1000;
+        start = moment().subtract(parseInt(lookback, 10), unit).valueOf() * 1000;
         end = moment().valueOf() * 1000;
       } else {
         const times = getUnixTimeStampInMSFromForm({

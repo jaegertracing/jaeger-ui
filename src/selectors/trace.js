@@ -30,11 +30,7 @@ import {
   getSpanProcessId,
 } from './span';
 import { getProcessServiceName } from './process';
-import {
-  formatMillisecondTime,
-  formatSecondTime,
-  ONE_SECOND,
-} from '../utils/date';
+import { formatMillisecondTime, formatSecondTime, ONE_SECOND } from '../utils/date';
 import { numberSortComparator } from '../utils/sort';
 import TreeNode from '../utils/TreeNode';
 
@@ -52,7 +48,8 @@ const getSpanWithProcess = createSelector(
 );
 
 export const getTraceSpansAsMap = createSelector(getTraceSpans, spans =>
-  spans.reduce((map, span) => map.set(getSpanId(span), span), new Map()));
+  spans.reduce((map, span) => map.set(getSpanId(span), span), new Map())
+);
 
 export const TREE_ROOT_ID = '__root__';
 
@@ -82,25 +79,23 @@ function insertSpanIntoTree(tree, span, spanMap) {
   return tree;
 }
 
-export const getTraceSpanIdsAsTree = createSelector(
-  getTraceSpans,
-  getTraceSpansAsMap,
-  (spans, spanMap) => {
-    const result = spans.reduce(
-      (tree, span) => insertSpanIntoTree(tree, span, spanMap),
-      new TreeNode(TREE_ROOT_ID)
-    );
+export const getTraceSpanIdsAsTree = createSelector(getTraceSpans, getTraceSpansAsMap, (spans, spanMap) => {
+  const result = spans.reduce(
+    (tree, span) => insertSpanIntoTree(tree, span, spanMap),
+    new TreeNode(TREE_ROOT_ID)
+  );
 
-    result.walk((value, node) =>
-      node.children.sort((nodeA, nodeB) =>
-        numberSortComparator(
-          getSpanTimestamp(spanMap.get(nodeA.value)),
-          getSpanTimestamp(spanMap.get(nodeB.value))
-        )));
+  result.walk((value, node) =>
+    node.children.sort((nodeA, nodeB) =>
+      numberSortComparator(
+        getSpanTimestamp(spanMap.get(nodeA.value)),
+        getSpanTimestamp(spanMap.get(nodeB.value))
+      )
+    )
+  );
 
-    return result;
-  }
-);
+  return result;
+});
 
 // attach "process" as an object to each span.
 export const hydrateSpansWithProcesses = trace => {
@@ -113,34 +108,24 @@ export const hydrateSpansWithProcesses = trace => {
   };
 };
 
-export const getTraceSpanCount = createSelector(
-  getTraceSpans,
-  spans => spans.length
-);
+export const getTraceSpanCount = createSelector(getTraceSpans, spans => spans.length);
 
 export const getTraceTimestamp = createSelector(getTraceSpans, spans =>
   spans.reduce(
     (prevTimestamp, span) =>
-      prevTimestamp
-        ? Math.min(prevTimestamp, getSpanTimestamp(span))
-        : getSpanTimestamp(span),
+      prevTimestamp ? Math.min(prevTimestamp, getSpanTimestamp(span)) : getSpanTimestamp(span),
     null
-  ));
+  )
+);
 
-export const getTraceDuration = createSelector(
-  getTraceSpans,
-  getTraceTimestamp,
-  (spans, timestamp) =>
-    spans.reduce(
-      (prevDuration, span) =>
-        prevDuration
-          ? Math.max(
-              getSpanTimestamp(span) - timestamp + getSpanDuration(span),
-              prevDuration
-            )
-          : getSpanDuration(span),
-      null
-    )
+export const getTraceDuration = createSelector(getTraceSpans, getTraceTimestamp, (spans, timestamp) =>
+  spans.reduce(
+    (prevDuration, span) =>
+      prevDuration
+        ? Math.max(getSpanTimestamp(span) - timestamp + getSpanDuration(span), prevDuration)
+        : getSpanDuration(span),
+    null
+  )
 );
 
 export const getTraceEndTimestamp = createSelector(
@@ -155,16 +140,10 @@ export const getParentSpan = createSelector(
   (tree, spanMap) =>
     tree.children
       .map(node => spanMap.get(node.value))
-      .sort((spanA, spanB) =>
-        numberSortComparator(getSpanTimestamp(spanA), getSpanTimestamp(spanB)))[
-      0
-    ]
+      .sort((spanA, spanB) => numberSortComparator(getSpanTimestamp(spanA), getSpanTimestamp(spanB)))[0]
 );
 
-export const getTraceDepth = createSelector(
-  getTraceSpanIdsAsTree,
-  spanTree => spanTree.depth - 1
-);
+export const getTraceDepth = createSelector(getTraceSpanIdsAsTree, spanTree => spanTree.depth - 1);
 
 export const getSpanDepthForTrace = createSelector(
   createSelector(state => state.trace, getTraceSpanIdsAsTree),
@@ -174,15 +153,12 @@ export const getSpanDepthForTrace = createSelector(
 
 export const getTraceServices = createSelector(getTraceProcesses, processes =>
   Object.keys(processes).reduce(
-    (services, processID) =>
-      services.add(getProcessServiceName(processes[processID])),
+    (services, processID) => services.add(getProcessServiceName(processes[processID])),
     new Set()
-  ));
-
-export const getTraceServiceCount = createSelector(
-  getTraceServices,
-  services => services.size
+  )
 );
+
+export const getTraceServiceCount = createSelector(getTraceServices, services => services.size);
 
 // establish constants to determine how math should be handled
 // for nanosecond-to-millisecond conversions.
@@ -193,8 +169,7 @@ export const DURATION_FORMATTERS = {
 
 const getDurationFormatterForTrace = createSelector(
   getTraceDuration,
-  totalDuration =>
-    totalDuration >= ONE_SECOND ? DURATION_FORMATTERS.s : DURATION_FORMATTERS.ms
+  totalDuration => (totalDuration >= ONE_SECOND ? DURATION_FORMATTERS.s : DURATION_FORMATTERS.ms)
 );
 
 export const formatDurationForUnit = createSelector(
@@ -214,21 +189,15 @@ export const getSortedSpans = createSelector(
   ({ spans }) => spans,
   ({ sort }) => sort,
   (trace, spans, { dir, comparator, selector }) =>
-    [...spans].sort(
-      (spanA, spanB) =>
-        dir * comparator(selector(spanA, trace), selector(spanB, trace))
-    )
+    [...spans].sort((spanA, spanB) => dir * comparator(selector(spanA, trace), selector(spanB, trace)))
 );
 
-const getTraceSpansByHierarchyPosition = createSelector(
-  getTraceSpanIdsAsTree,
-  tree => {
-    const hierarchyPositionMap = new Map();
-    let i = 0;
-    tree.walk(spanID => hierarchyPositionMap.set(spanID, i++));
-    return hierarchyPositionMap;
-  }
-);
+const getTraceSpansByHierarchyPosition = createSelector(getTraceSpanIdsAsTree, tree => {
+  const hierarchyPositionMap = new Map();
+  let i = 0;
+  tree.walk(spanID => hierarchyPositionMap.set(spanID, i++));
+  return hierarchyPositionMap;
+});
 
 export const getTreeSizeForTraceSpan = createSelector(
   createSelector(state => state.trace, getTraceSpanIdsAsTree),
@@ -264,19 +233,12 @@ export const omitCollapsedSpans = createSelector(
   createSelector(({ trace }) => trace, getTraceSpanIdsAsTree),
   ({ collapsed }) => collapsed,
   (spans, tree, collapse) => {
-    const hiddenSpanIds = collapse.reduce(
-      (result, collapsedSpanId) => {
-        tree
-          .find(collapsedSpanId)
-          .walk(id => id !== collapsedSpanId && result.add(id));
-        return result;
-      },
-      new Set()
-    );
+    const hiddenSpanIds = collapse.reduce((result, collapsedSpanId) => {
+      tree.find(collapsedSpanId).walk(id => id !== collapsedSpanId && result.add(id));
+      return result;
+    }, new Set());
 
-    return hiddenSpanIds.size > 0
-      ? spans.filter(span => !hiddenSpanIds.has(getSpanId(span)))
-      : spans;
+    return hiddenSpanIds.size > 0 ? spans.filter(span => !hiddenSpanIds.has(getSpanId(span))) : spans;
   }
 );
 
@@ -293,8 +255,7 @@ export const getTicksForTrace = createSelector(
     // timestamps will be spaced over the interval, starting from the initial timestamp
   ) =>
     [...Array(interval + 1).keys()].map(num => ({
-      timestamp: getTraceTimestamp(trace) +
-        getTraceDuration(trace) * (num / interval),
+      timestamp: getTraceTimestamp(trace) + getTraceDuration(trace) * (num / interval),
       width,
     }))
 );
@@ -309,29 +270,21 @@ export const enforceUniqueSpanIds = createSelector(
 
     return {
       ...trace,
-      spans: spans.reduce(
-        (result, span) => {
-          const spanID = map.has(getSpanId(span))
-            ? `${getSpanId(span)}_${map.get(getSpanId(span))}`
-            : getSpanId(span);
-          const updatedSpan = { ...span, spanID };
+      spans: spans.reduce((result, span) => {
+        const spanID = map.has(getSpanId(span))
+          ? `${getSpanId(span)}_${map.get(getSpanId(span))}`
+          : getSpanId(span);
+        const updatedSpan = { ...span, spanID };
 
-          if (spanID !== getSpanId(span)) {
-            console.warn(
-              'duplicate spanID in trace replaced',
-              getSpanId(span),
-              'new:',
-              spanID
-            );
-          }
+        if (spanID !== getSpanId(span)) {
+          console.warn('duplicate spanID in trace replaced', getSpanId(span), 'new:', spanID);
+        }
 
-          // set the presence of the span in the map or increment the number
-          map.set(getSpanId(span), (map.get(getSpanId(span)) || 0) + 1);
+        // set the presence of the span in the map or increment the number
+        map.set(getSpanId(span), (map.get(getSpanId(span)) || 0) + 1);
 
-          return result.concat([updatedSpan]);
-        },
-        []
-      ),
+        return result.concat([updatedSpan]);
+      }, []),
     };
   }
 );

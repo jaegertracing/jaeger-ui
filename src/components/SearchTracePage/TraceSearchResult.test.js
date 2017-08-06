@@ -38,14 +38,9 @@ const testTraceProps = {
 };
 
 it('<TraceSearchResult /> should render base case correctly', () => {
-  const wrapper = shallow(
-    <TraceSearchResult trace={testTraceProps} durationPercent={50} />
-  );
+  const wrapper = shallow(<TraceSearchResult trace={testTraceProps} durationPercent={50} />);
 
-  const numberOfSpanText = wrapper
-    .find('.trace-search-result--spans')
-    .first()
-    .text();
+  const numberOfSpanText = wrapper.find('.trace-search-result--spans').first().text();
   const numberOfServicesTags = wrapper.find(TraceServiceTag).length;
   expect(numberOfSpanText).toBe('5 spans');
   expect(numberOfServicesTags).toBe(1);

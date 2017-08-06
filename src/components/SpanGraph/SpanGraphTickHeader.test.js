@@ -76,8 +76,5 @@ it('<SpanGraphTickHeader /> should place the middle ticks at proper intervals', 
 });
 
 it('<SpanGraphTickHeader /> should not explode if no trace is present', () => {
-  expect(() =>
-    shallow(
-      <SpanGraphTickHeader {...defaultProps} trace={null} />
-    )).not.toThrow();
+  expect(() => shallow(<SpanGraphTickHeader {...defaultProps} trace={null} />)).not.toThrow();
 });

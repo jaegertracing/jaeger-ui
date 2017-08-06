@@ -25,10 +25,7 @@ import colorGenerator from '../../utils/color-generator';
 export default function TraceServiceTag({ service }) {
   const { name, numberOfApperancesInTrace } = service;
   return (
-    <div
-      className="ui mini label"
-      style={{ borderLeft: `5px solid ${colorGenerator.getColorByKey(name)}` }}
-    >
+    <div className="ui mini label" style={{ borderLeft: `5px solid ${colorGenerator.getColorByKey(name)}` }}>
       {name} ({numberOfApperancesInTrace})
     </div>
   );

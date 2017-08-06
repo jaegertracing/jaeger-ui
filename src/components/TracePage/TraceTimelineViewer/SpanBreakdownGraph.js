@@ -64,7 +64,7 @@ export default function SpanBreakdownBar({ span }) {
           backgroundColor: 'rgba(0, 0 , 50, 0.02)',
         }}
       >
-        {span.logs.map((log, i) => (
+        {span.logs.map((log, i) =>
           <SpanGraphTick
             key={i}
             color={log.color}
@@ -72,7 +72,7 @@ export default function SpanBreakdownBar({ span }) {
             tick={{ timestamp: log.relativeTime, width: 2 }}
             totalDuration={span.duration}
           />
-        ))}
+        )}
       </svg>
     </div>
   );

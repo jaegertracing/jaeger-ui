@@ -113,9 +113,7 @@ it('<SpanGraphSpan /> should calculate the top offset for the index', () => {
   expect(rect.prop('y')).toBe(14);
 
   // (4 * (15 + 6)) + 6.
-  wrapper = shallow(
-    <SpanGraphSpan {...defaultProps} index={4} rowHeight={15} rowPadding={3} />
-  );
+  wrapper = shallow(<SpanGraphSpan {...defaultProps} index={4} rowHeight={15} rowPadding={3} />);
   rect = wrapper.find('rect').first();
   expect(rect.prop('y')).toBe(90);
 
@@ -133,9 +131,7 @@ it('<SpanGraphSpan /> should decorate handlers with the span', () => {
     expect(passedEvent).toEqual(event);
   }
 
-  const wrapper = shallow(
-    <SpanGraphSpan {...defaultProps} onClick={onClick} />
-  );
+  const wrapper = shallow(<SpanGraphSpan {...defaultProps} onClick={onClick} />);
 
   const rect = wrapper.find('rect').first();
   rect.props().onClick(event);

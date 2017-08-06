@@ -33,13 +33,11 @@ export default chance.mixin({
     return chance.city();
   },
 
-  link(
-    {
-      parent = chance.city(),
-      child = chance.city(),
-      callCount = chance.integer({ min: 1, max: 250000000 }),
-    }
-  ) {
+  link({
+    parent = chance.city(),
+    child = chance.city(),
+    callCount = chance.integer({ min: 1, max: 250000000 }),
+  }) {
     return { parent, child, callCount };
   },
 

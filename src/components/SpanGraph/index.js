@@ -27,49 +27,40 @@ import SpanGraphSpan from './SpanGraphSpan';
 import tracePropTypes from '../../propTypes/trace';
 import spanPropTypes from '../../propTypes/span';
 import spanGraphTickPropTypes from '../../propTypes/spanGraphTick';
-import {
-  getTraceId,
-  getTraceDuration,
-  getTraceTimestamp,
-  getTraceSpans,
-} from '../../selectors/trace';
+import { getTraceId, getTraceDuration, getTraceTimestamp, getTraceSpans } from '../../selectors/trace';
 import { getSpanId } from '../../selectors/span';
 
-export default function SpanGraph(
-  {
-    trace,
-    getSpanLabel,
-    rowHeight,
-    rowPadding,
-    ticks,
-    spans = getTraceSpans(trace),
-    onSpanClick,
-    children,
-    ...rest
-  }
-) {
+export default function SpanGraph({
+  trace,
+  getSpanLabel,
+  rowHeight,
+  rowPadding,
+  ticks,
+  spans = getTraceSpans(trace),
+  onSpanClick,
+  children,
+  ...rest
+}) {
   let childElements = children;
 
   // grab handler functions for spans (such as onSpanClick) off of the
   // rest of the props and build an object with them to be applied to the spans
   const spanHandlerFilter = name =>
-    typeof rest[name] === 'function' &&
-    name.substr(0, 2) === 'on' &&
-    name.substr(-4) === 'Span';
+    typeof rest[name] === 'function' && name.substr(0, 2) === 'on' && name.substr(-4) === 'Span';
   const spreadable = Object.keys(rest)
     .filter(name => !spanHandlerFilter(name))
     .reduce((obj, name) => Object.assign(obj, { [name]: rest[name] }), {});
 
   if (!childElements) {
-    const spanHandlers = Object.keys(rest).filter(spanHandlerFilter).reduce((
-      obj,
-      fnName
-    ) =>
-      Object.assign(obj, {
-        [fnName.substr(0, fnName.length - 'Span'.length)]: rest[fnName],
-      }), {});
+    const spanHandlers = Object.keys(rest).filter(spanHandlerFilter).reduce(
+      (obj, fnName) =>
+        Object.assign(obj, {
+          [fnName.substr(0, fnName.length - 'Span'.length)]: rest[fnName],
+        }),
+      {}
+    );
 
-    childElements = spans.map((span, idx) => (
+    childElements = spans.map((span, idx) =>
       <SpanGraphSpan
         onClick={() => onSpanClick(span.spanID)}
         key={`trace-${getTraceId(trace)}-span-${getSpanId(span)}`}
@@ -82,7 +73,7 @@ export default function SpanGraph(
         rowPadding={rowPadding}
         {...spanHandlers}
       />
-    ));
+    );
   }
 
   const height = (rowHeight + rowPadding * 2) * Children.count(childElements);
@@ -95,14 +86,14 @@ export default function SpanGraph(
       style={{ marginBottom: -2 * rowPadding }}
       {...spreadable}
     >
-      {ticks.map((tick, idx) => (
+      {ticks.map((tick, idx) =>
         <SpanGraphTick
           key={`trace-${getTraceId(trace)}-tick-${idx}`}
           initialTimestamp={getTraceTimestamp(trace)}
           tick={tick}
           totalDuration={getTraceDuration(trace)}
         />
-      ))}
+      )}
 
       {childElements}
     </svg>
