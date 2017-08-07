@@ -29,19 +29,15 @@ const initialState = {
 };
 
 function fetchStarted(state) {
-  return Object.assign({}, state, { loading: true });
+  return { ...state, loading: true };
 }
 
 function fetchDepsDone(state, { payload }) {
-  return Object.assign({}, state, { dependencies: payload.data, loading: false });
+  return { ...state, dependencies: payload.data, loading: false };
 }
 
 function fetchDepsErred(state, { payload: error }) {
-  return Object.assign({}, state, {
-    error,
-    dependencies: [],
-    loading: false,
-  });
+  return { ...state, error, dependencies: [], loading: false };
 }
 
 export default handleActions(

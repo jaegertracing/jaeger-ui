@@ -31,28 +31,28 @@ const initialState = {
 };
 
 function fetchStarted(state) {
-  return Object.assign({}, state, { loading: true });
+  return { ...state, loading: true };
 }
 
 function fetchTraceDone(state, { meta, payload }) {
   const trace = enforceUniqueSpanIds(payload.data[0]);
-  const traces = Object.assign({}, state.traces, { [meta.id]: trace });
-  return Object.assign({}, state, { traces, loading: false });
+  const traces = { ...state.traces, [meta.id]: trace };
+  return { ...state, traces, loading: false };
 }
 
 function fetchTraceErred(state, { meta, payload }) {
   const traces = Object.assign({}, state.traces, { [meta.id]: payload });
-  return Object.assign({}, state, { traces, loading: false });
+  return { ...state, traces, loading: false };
 }
 
 function searchDone(state, { payload }) {
   const traces = keyBy(payload.data, 'traceID');
-  return Object.assign({}, state, { traces, error: null, loading: false });
+  return { ...state, traces, error: null, loading: false };
 }
 
 function searchErred(state, action) {
   const error = action.payload.message;
-  return Object.assign({}, state, { error, loading: false, traces: [] });
+  return { ...state, error, loading: false, traces: [] };
 }
 
 export default handleActions(

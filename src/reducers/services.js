@@ -30,37 +30,27 @@ const initialState = {
 };
 
 function fetchStarted(state) {
-  return Object.assign({}, state, { loading: true });
+  return { ...state, loading: true };
 }
 
 function fetchServicesDone(state, { payload }) {
   const services = payload.data;
-  return Object.assign({}, state, {
-    services,
-    error: null,
-    loading: false,
-  });
+  return { ...state, services, error: null, loading: false };
 }
 
 function fetchServicesErred(state, { payload: error }) {
-  return Object.assign({}, state, {
-    error: error.message,
-    loading: false,
-    services: [],
-  });
+  return { ...state, error: error.message, loading: false, services: [] };
 }
 
 function fetchOpsStarted(state, { meta: { serviceName } }) {
-  const operationsForService = Object.assign({}, state.operationsForService, { [serviceName]: [] });
-  return Object.assign({}, state, { operationsForService });
+  const operationsForService = { ...state.operationsForService, [serviceName]: [] };
+  return { ...state, operationsForService };
 }
 
 function fetchOpsDone(state, { meta, payload }) {
   const { data: operations } = payload;
-  const operationsForService = Object.assign({}, state.operationsForService, {
-    [meta.serviceName]: operations,
-  });
-  return Object.assign({}, state, { operationsForService });
+  const operationsForService = { ...state.operationsForService, [meta.serviceName]: operations };
+  return { ...state, operationsForService };
 }
 
 // TODO(joe): fetchOpsErred
