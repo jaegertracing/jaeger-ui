@@ -207,15 +207,15 @@ function mapStateToProps(state) {
   const isHomepage = !Object.keys(query).length;
   const { traces, maxDuration, loading, traceError } = stateTraceXformer(state.trace);
   const { services, serviceError } = stateServicesXformer(state.services);
-  const sortBy = traceResultsFiltersFormSelector(state, 'sortBy');
-  const traceResultsSorted = sortTraces(traces, sortBy);
   const errorMessage = serviceError || traceError ? `${serviceError || ''} ${traceError || ''}` : '';
+  const sortBy = traceResultsFiltersFormSelector(state, 'sortBy');
+  sortTraces(traces, sortBy);
 
   return {
     isHomepage,
     sortTracesBy: sortBy,
-    traceResults: traceResultsSorted,
-    numberOfTraceResults: traceResultsSorted.length,
+    traceResults: traces,
+    numberOfTraceResults: traces.length,
     maxTraceDuration: maxDuration,
     urlQueryParams: query,
     services,

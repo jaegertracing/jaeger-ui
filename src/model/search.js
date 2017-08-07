@@ -1,3 +1,5 @@
+// @flow
+
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -22,36 +24,22 @@ import _map from 'lodash/map';
 import _values from 'lodash/values';
 
 import { LEAST_SPANS, LONGEST_FIRST, MOST_RECENT, MOST_SPANS, SHORTEST_FIRST } from './order-by';
+import type { Trace } from '../types';
+import type { TraceSummaries, TraceSummary } from '../types/search';
 
 const isErrorTag = ({ key, value }) => key === 'error' && (value === true || value === 'true');
 
-// end format:
-// {
-//   "traceName": "someService: /a/b",
-//   "traceID": "e04028108058962b",
-//   "numberOfSpans": 7,
-//   "duration": 32,
-//   "timestamp": 1502057422947,
-//   "numberOfErredSpans": 0,
-//   "services": [
-//     {
-//       "name": "serviceB",
-//       "numberOfSpans": 4
-//     },
-//     {
-//       "name": "serviceC",
-//       "numberOfSpans": 1
-//     },
-//     {
-//       "name": "serviceD",
-//       "numberOfSpans": 2
-//     }
-//   ]
-// }
-function getTraceSummary(trace) {
+/**
+ * Transforms a trace from the HTTP response to the data structure needed by the search page. Note: exported
+ * for unit tests.
+ *
+ * @param  {Trace} trace Trace data in the format sent over the wire.
+ * @return {TraceSummary} Summary of the trace data for use in the search results.
+ */
+export function getTraceSummary(trace: Trace): TraceSummary {
   const { processes, spans, traceID } = trace;
 
-  let traceName;
+  let traceName = '';
   let minTs = Number.MAX_SAFE_INTEGER;
   let maxTs = Number.MIN_SAFE_INTEGER;
   let numErrorSpans = 0;
@@ -93,7 +81,13 @@ function getTraceSummary(trace) {
   };
 }
 
-export function getTraceSummaries(_traces) {
+/**
+ * Transforms `Trace` values into `TraceSummary` values and finds the max duration of the traces.
+ *
+ * @param  {Trace} _traces The trace data in the format from the HTTP request.
+ * @return {TraceSummaries} The `{ traces, maxDuration }` value.
+ */
+export function getTraceSummaries(_traces: Trace[]): TraceSummaries {
   const traces = _traces.map(getTraceSummary);
   const maxDuration = Math.max(..._map(traces, 'duration'));
   return { maxDuration, traces };
@@ -107,6 +101,13 @@ const comparators = {
   [LEAST_SPANS]: (a, b) => +(a.numberOfSpans > b.numberOfSpans) || +(a.numberOfSpans === b.numberOfSpans) - 1,
 };
 
-export function sortTraces(traces, sortBy) {
-  return traces.sort(comparators[sortBy]);
+/**
+ * Sorts `TraceSummary[]`, in place.
+ *
+ * @param  {TraceSummary[]} traces The `TraceSummary` array to sort.
+ * @param  {string} sortBy A sort specification, see ./order-by.js.
+ */
+export function sortTraces(traces: TraceSummary[], sortBy: string) {
+  const comparator = comparators[sortBy] || comparators[LONGEST_FIRST];
+  traces.sort(comparator);
 }

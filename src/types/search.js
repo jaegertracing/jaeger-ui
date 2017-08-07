@@ -20,50 +20,29 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-/**
- * All timestamps are in microseconds
- */
-
-type KeyValuePair = {
-  key: string,
-  type: string,
-  value: string,
-};
-
-export type Tag = KeyValuePair;
-
-export type Log = {
-  timestamp: number,
-  fields: Array<KeyValuePair>,
-};
-
-export type Process = {
-  serviceName: string,
-  tags: Array<Tag>,
-};
-
-export type SpanReference = {
-  refType: 'CHILD_OF' | 'FOLLOWS_FROM',
-  spanID: string,
-  traceID: string,
-};
-
-export type Span = {
-  spanID: string,
-  traceID: string,
-  processID: string,
-  operationName: string,
-  startTime: number,
+export type TraceSummary = {
+  /**
+  * Duration of trace in milliseconds.
+  * @type {number}
+  */
   duration: number,
-  logs: Array<Log>,
-  tags: Array<Tag>,
-  references: Array<SpanReference>,
+  /**
+  * Start time of trace in milliseconds.
+  * @type {number}
+  */
+  timestamp: number,
+  traceName: string,
+  traceID: string,
+  numberOfErredSpans: number,
+  numberOfSpans: number,
+  services: { name: string, numberOfSpans: number }[],
 };
 
-export type Trace = {
-  traceID: string,
-  spans: Array<Span>,
-  processes: {
-    [string]: Process,
-  },
+export type TraceSummaries = {
+  /**
+   * Duration of longest trace in `traces` in milliseconds.
+   * @type {[type]}
+   */
+  maxDuration: number,
+  traces: TraceSummary[],
 };
