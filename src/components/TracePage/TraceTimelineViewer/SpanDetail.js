@@ -44,7 +44,7 @@ function CollapsePanel(props) {
   );
 }
 CollapsePanel.propTypes = {
-  header: PropTypes.element.isRequired,
+  header: PropTypes.node.isRequired,
   onToggleOpen: PropTypes.func.isRequired,
   children: PropTypes.element.isRequired,
   open: PropTypes.bool.isRequired,

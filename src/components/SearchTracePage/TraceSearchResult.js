@@ -55,7 +55,7 @@ export default function TraceSearchResult({ trace, durationPercent = 100 }) {
             <span className="trace-search-result--spans">
               {numberOfSpans} span{numberOfSpans > 1 && 's'}
             </span>
-            {numberOfErredSpans &&
+            {Boolean(numberOfErredSpans) &&
               <span className="trace-search-result--erred-spans">
                 {numberOfErredSpans} error{numberOfErredSpans > 1 && 's'}
               </span>}
@@ -63,7 +63,7 @@ export default function TraceSearchResult({ trace, durationPercent = 100 }) {
           <div className="col col-6">
             {sortBy(services, s => s.name).map(service =>
               <div key={service.name} className="inline-block mr1 mb1">
-                <TraceServiceTag key={service.name} service={service} />
+                <TraceServiceTag service={service} />
               </div>
             )}
           </div>
