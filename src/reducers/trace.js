@@ -41,7 +41,7 @@ function fetchTraceDone(state, { meta, payload }) {
 }
 
 function fetchTraceErred(state, { meta, payload }) {
-  const traces = Object.assign({}, state.traces, { [meta.id]: payload });
+  const traces = { ...state.traces, [meta.id]: payload };
   return { ...state, traces, loading: false };
 }
 

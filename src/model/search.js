@@ -46,8 +46,7 @@ export function getTraceSummary(trace: Trace): TraceSummary {
   // serviceName -> { name, numberOfSpans }
   const serviceMap = {};
 
-  let i = 0;
-  for (; i < spans.length; i++) {
+  for (let i = 0; i < spans.length; i++) {
     const { duration, processID, spanID, startTime, tags } = spans[i];
     // time bounds of trace
     minTs = minTs > startTime ? startTime : minTs;

@@ -30,7 +30,7 @@ describe('getTraceSummary()', () => {
   let summary;
 
   beforeEach(() => {
-    trace = traceGenerator.trace({ numberOfSpans: 10 });
+    trace = traceGenerator.trace({ numberOfSpans: 2 });
     summary = getTraceSummary(trace);
   });
 
@@ -49,7 +49,48 @@ describe('getTraceSummary()', () => {
     expect(getTraceSummary(trace).numberOfErredSpans).toBe(2);
   });
 
-  xit('generates the traceName', () => {});
+  it('generates the traceName', () => {
+    trace = {
+      traceID: 'main-id',
+      spans: [
+        {
+          traceID: 'main-id',
+          processID: 'pid0',
+          spanID: 'main-id',
+          operationName: 'op0',
+          startTime: 1502221240933000,
+          duration: 236857,
+          tags: [],
+        },
+        {
+          traceID: 'main-id',
+          processID: 'pid1',
+          spanID: 'span-child',
+          operationName: 'op1',
+          startTime: 1502221241144382,
+          duration: 25305,
+          tags: [],
+        },
+      ],
+      duration: 236857,
+      timestamp: 1502221240933000,
+      processes: {
+        pid0: {
+          processID: 'pid0',
+          serviceName: 'serviceA',
+          tags: [],
+        },
+        pid1: {
+          processID: 'pid1',
+          serviceName: 'serviceB',
+          tags: [],
+        },
+      },
+    };
+    const { traceName } = getTraceSummary(trace);
+    expect(traceName).toBe('serviceA: op0');
+  });
+
   xit('derives services summations', () => {});
 });
 
