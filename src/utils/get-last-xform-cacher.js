@@ -35,9 +35,8 @@ export default function getLastXformCacher(xformer) {
   let lastXformed = null;
 
   return function getOrCache(...args) {
-    const sameArgs = lastArgs &&
-      lastArgs.length === args.length &&
-      lastArgs.every((lastArg, i) => lastArg === args[i]);
+    const sameArgs =
+      lastArgs && lastArgs.length === args.length && lastArgs.every((lastArg, i) => lastArg === args[i]);
     if (sameArgs) {
       return lastXformed;
     }

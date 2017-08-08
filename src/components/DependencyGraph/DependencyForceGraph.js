@@ -19,18 +19,13 @@
 // THE SOFTWARE.
 
 import React, { Component } from 'react';
-import {
-  InteractiveForceGraph,
-  ForceGraphNode,
-  ForceGraphLink,
-} from 'react-vis-force';
+import { InteractiveForceGraph, ForceGraphNode, ForceGraphLink } from 'react-vis-force';
 import { window } from 'global';
 import { debounce } from 'lodash';
 
 import { nodesPropTypes, linksPropTypes } from '../../propTypes/dependencies';
 
-const chargeStrength = ({ radius = 5, orphan }) =>
-  orphan ? -20 * radius : -12 * radius;
+const chargeStrength = ({ radius = 5, orphan }) => (orphan ? -20 * radius : -12 * radius);
 
 export default class DependencyForceGraph extends Component {
   static get propTypes() {
@@ -102,14 +97,7 @@ export default class DependencyForceGraph extends Component {
           nodeAttrs={['orphan']}
           highlightDependencies
         >
-          {nodes.map(({
-            labelStyle,
-            labelClass,
-            showLabel,
-            opacity,
-            fill,
-            ...node
-          }) => (
+          {nodes.map(({ labelStyle, labelClass, showLabel, opacity, fill, ...node }) =>
             <ForceGraphNode
               key={node.id}
               node={node}
@@ -119,14 +107,10 @@ export default class DependencyForceGraph extends Component {
               opacity={opacity}
               fill={fill}
             />
-          ))}
-          {links.map(({ opacity, ...link }) => (
-            <ForceGraphLink
-              key={`${link.source}=>${link.target}`}
-              opacity={opacity}
-              link={link}
-            />
-          ))}
+          )}
+          {links.map(({ opacity, ...link }) =>
+            <ForceGraphLink key={`${link.source}=>${link.target}`} opacity={opacity} link={link} />
+          )}
         </InteractiveForceGraph>
       </div>
     );

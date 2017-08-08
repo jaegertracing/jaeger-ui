@@ -36,7 +36,7 @@ export const getSpanReferenceByType = createSelector(
 );
 export const getSpanParentId = createSelector(
   span => getSpanReferenceByType({ span, type: 'CHILD_OF' }),
-  childOfRef => childOfRef ? childOfRef.spanID : null
+  childOfRef => (childOfRef ? childOfRef.spanID : null)
 );
 
 export const getSpanProcess = span => {
@@ -52,21 +52,14 @@ export const getSpanProcess = span => {
   return span.process;
 };
 
-export const getSpanServiceName = createSelector(
-  getSpanProcess,
-  getProcessServiceName
-);
+export const getSpanServiceName = createSelector(getSpanProcess, getProcessServiceName);
 
 export const filterSpansForTimestamps = createSelector(
   ({ spans }) => spans,
   ({ leftBound }) => leftBound,
   ({ rightBound }) => rightBound,
   (spans, leftBound, rightBound) =>
-    spans.filter(
-      span =>
-        getSpanTimestamp(span) >= leftBound &&
-        getSpanTimestamp(span) <= rightBound
-    )
+    spans.filter(span => getSpanTimestamp(span) >= leftBound && getSpanTimestamp(span) <= rightBound)
 );
 
 export const filterSpansForText = createSelector(
@@ -80,16 +73,14 @@ export const filterSpansForText = createSelector(
       .map(({ original }) => original)
 );
 
-const getTextFilterdSpansAsMap = createSelector(
-  filterSpansForText,
-  matchingSpans =>
-    matchingSpans.reduce(
-      (obj, span) => ({
-        ...obj,
-        [getSpanId(span)]: span,
-      }),
-      {}
-    )
+const getTextFilterdSpansAsMap = createSelector(filterSpansForText, matchingSpans =>
+  matchingSpans.reduce(
+    (obj, span) => ({
+      ...obj,
+      [getSpanId(span)]: span,
+    }),
+    {}
+  )
 );
 
 export const highlightSpansForTextFilter = createSelector(

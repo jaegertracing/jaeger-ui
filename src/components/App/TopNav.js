@@ -46,9 +46,11 @@ export default function TopNav() {
         <div className="ui input">
           <TraceIDSearchInput />
         </div>
-        {NAV_LINKS.map(({ key, to, text }) => (
-          <Link key={key} to={to} className="item">{text}</Link>
-        ))}
+        {NAV_LINKS.map(({ key, to, text }) =>
+          <Link key={key} to={to} className="item">
+            {text}
+          </Link>
+        )}
       </div>
     </nav>
   );

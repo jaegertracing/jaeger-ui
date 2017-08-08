@@ -32,36 +32,17 @@ export const initialState = Immutable.fromJS({
 
 export default handleActions(
   {
-    [`${jaegerApiActions.fetchServices}_PENDING`]: state =>
-      state.set('loading', true),
-    [`${jaegerApiActions.fetchServices}_FULFILLED`]: (
-      state,
-      { payload: { data: services } }
-    ) =>
-      state
-        .set('loading', false)
-        .set('error', null)
-        .set('services', Immutable.fromJS(services).sort()),
-    [`${jaegerApiActions.fetchServices}_REJECTED`]: (
-      state,
-      { payload: error }
-    ) =>
-      state
-        .set('services', Immutable.fromJS([]))
-        .set('loading', false)
-        .set('error', error.message),
-    [`${jaegerApiActions.fetchServiceOperations}_PENDING`]: (
-      state,
-      { meta: { serviceName } }
-    ) => state.setIn(['operationsForService', serviceName], Immutable.List()),
+    [`${jaegerApiActions.fetchServices}_PENDING`]: state => state.set('loading', true),
+    [`${jaegerApiActions.fetchServices}_FULFILLED`]: (state, { payload: { data: services } }) =>
+      state.set('loading', false).set('error', null).set('services', Immutable.fromJS(services).sort()),
+    [`${jaegerApiActions.fetchServices}_REJECTED`]: (state, { payload: error }) =>
+      state.set('services', Immutable.fromJS([])).set('loading', false).set('error', error.message),
+    [`${jaegerApiActions.fetchServiceOperations}_PENDING`]: (state, { meta: { serviceName } }) =>
+      state.setIn(['operationsForService', serviceName], Immutable.List()),
     [`${jaegerApiActions.fetchServiceOperations}_FULFILLED`]: (
       state,
       { meta: { serviceName }, payload: { data: operations } }
-    ) =>
-      state.setIn(
-        ['operationsForService', serviceName],
-        Immutable.List(operations)
-      ),
+    ) => state.setIn(['operationsForService', serviceName], Immutable.List(operations)),
   },
   initialState
 );

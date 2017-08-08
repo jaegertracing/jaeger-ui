@@ -55,12 +55,8 @@ it('calculateSpanPosition() maps a sub-range to percents with a zoom applied', (
 it('calculateTimeAtPositon() converts a percent to a value in [0, duration]', () => {
   const traceDuration = 1000;
   expect(calculateTimeAtPositon({ position: 0, traceDuration })).toBe(0);
-  expect(calculateTimeAtPositon({ position: 100, traceDuration })).toBe(
-    traceDuration
-  );
-  expect(calculateTimeAtPositon({ position: 50, traceDuration })).toBe(
-    0.5 * traceDuration
-  );
+  expect(calculateTimeAtPositon({ position: 100, traceDuration })).toBe(traceDuration);
+  expect(calculateTimeAtPositon({ position: 50, traceDuration })).toBe(0.5 * traceDuration);
 });
 
 it('convertTimeRangeToPercent() converts a sub-range to percent start and end values', () => {
@@ -109,8 +105,7 @@ spanTypeTestCases.forEach(testCase => {
 
 it('spanContainsErredSpan() is true only when a descendant has an error tag', () => {
   const errorTag = { key: 'error', type: 'bool', value: true };
-  const getTags = withError =>
-    withError ? traceGenerator.tags().concat(errorTag) : traceGenerator.tags();
+  const getTags = withError => (withError ? traceGenerator.tags().concat(errorTag) : traceGenerator.tags());
 
   // Using a string to generate the test spans. Each line results in a span. The
   // left number indicates whether or not the generated span has a descendant

@@ -26,9 +26,7 @@ import { Menu } from 'semantic-ui-react';
 
 import './DependencyGraph.css';
 import * as jaegerApiActions from '../../actions/jaeger-api';
-import {
-  formatDependenciesAsNodesAndLinks,
-} from '../../selectors/dependencies';
+import { formatDependenciesAsNodesAndLinks } from '../../selectors/dependencies';
 import NotFound from '../App/NotFound';
 import { nodesPropTypes, linksPropTypes } from '../../propTypes/dependencies';
 
@@ -80,17 +78,13 @@ export default class DependencyGraphPage extends Component {
       return (
         <div className="m1">
           <div className="ui warning message">
-            <div className="header">
-              No service dependencies found.
-            </div>
+            <div className="header">No service dependencies found.</div>
           </div>
         </div>
       );
     }
 
-    const GRAPH_TYPE_OPTIONS = [
-      { type: 'FORCE_DIRECTED', name: 'Force Directed Graph' },
-    ];
+    const GRAPH_TYPE_OPTIONS = [{ type: 'FORCE_DIRECTED', name: 'Force Directed Graph' }];
 
     if (serviceCalls.length <= 100) {
       GRAPH_TYPE_OPTIONS.push({ type: 'DAG', name: 'DAG' });
@@ -98,13 +92,13 @@ export default class DependencyGraphPage extends Component {
     return (
       <div className="my2">
         <Menu tabular>
-          {GRAPH_TYPE_OPTIONS.map(option => (
+          {GRAPH_TYPE_OPTIONS.map(option =>
             <Menu.Item
               name={option.name}
               active={graphType === option.type}
               onClick={() => this.handleGraphTypeChange(option.type)}
             />
-          ))}
+          )}
         </Menu>
         <div
           style={{
@@ -117,8 +111,7 @@ export default class DependencyGraphPage extends Component {
             background: 'whitesmoke',
           }}
         >
-          {graphType === 'FORCE_DIRECTED' &&
-            <DependencyForceGraph nodes={nodes} links={links} />}
+          {graphType === 'FORCE_DIRECTED' && <DependencyForceGraph nodes={nodes} links={links} />}
           {graphType === 'DAG' && <DAG serviceCalls={serviceCalls} />}
         </div>
       </div>
@@ -147,7 +140,4 @@ function mapDispatchToProps(dispatch) {
   return { fetchDependencies };
 }
 
-export const ConnectedDependencyGraphPage = connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(DependencyGraphPage);
+export const ConnectedDependencyGraphPage = connect(mapStateToProps, mapDispatchToProps)(DependencyGraphPage);

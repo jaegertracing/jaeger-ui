@@ -34,8 +34,6 @@ it('TracePage should be exported as as a named export', () => {
 });
 
 it('SearchTracePage should be exported as a named export', () => {
-  expect(SearchTracePage).toBe(
-    require('../src/components/SearchTracePage').SearchTracePage
-  );
+  expect(SearchTracePage).toBe(require('../src/components/SearchTracePage').SearchTracePage);
 });
 /* eslint-enable global-require, import/newline-after-import */

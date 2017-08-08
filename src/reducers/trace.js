@@ -32,39 +32,21 @@ export const initialState = Immutable.Map({
 
 export default handleActions(
   {
-    [`${jaegerApiActions.fetchTrace}_PENDING`]: state =>
-      state.set('loading', true),
-    [`${jaegerApiActions.fetchTrace}_FULFILLED`]: (
-      state,
-      { meta: { id }, payload: { data: traces } }
-    ) =>
-      state
-        .set('loading', false)
-        .setIn(
-          ['traces', id],
-          Immutable.fromJS(enforceUniqueSpanIds(traces[0]))
-        ),
-    [`${jaegerApiActions.fetchTrace}_REJECTED`]: (
-      state,
-      { meta: { id }, payload: error }
-    ) => state.set('loading', false).setIn(['traces', id], error),
-    [`${jaegerApiActions.searchTraces}_PENDING`]: state =>
-      state.set('loading', true),
+    [`${jaegerApiActions.fetchTrace}_PENDING`]: state => state.set('loading', true),
+    [`${jaegerApiActions.fetchTrace}_FULFILLED`]: (state, { meta: { id }, payload: { data: traces } }) =>
+      state.set('loading', false).setIn(['traces', id], Immutable.fromJS(enforceUniqueSpanIds(traces[0]))),
+    [`${jaegerApiActions.fetchTrace}_REJECTED`]: (state, { meta: { id }, payload: error }) =>
+      state.set('loading', false).setIn(['traces', id], error),
+    [`${jaegerApiActions.searchTraces}_PENDING`]: state => state.set('loading', true),
     [`${jaegerApiActions.searchTraces}_FULFILLED`]: (state, action) => {
       const traceResults = {};
       action.payload.data.forEach(trace => {
         traceResults[trace.traceID] = trace;
       });
-      return state
-        .set('traces', Immutable.fromJS(traceResults))
-        .set('loading', false)
-        .set('error', null);
+      return state.set('traces', Immutable.fromJS(traceResults)).set('loading', false).set('error', null);
     },
     [`${jaegerApiActions.searchTraces}_REJECTED`]: (state, action) =>
-      state
-        .set('traces', Immutable.fromJS([]))
-        .set('loading', false)
-        .set('error', action.payload.message),
+      state.set('traces', Immutable.fromJS([])).set('loading', false).set('error', action.payload.message),
   },
   initialState
 );

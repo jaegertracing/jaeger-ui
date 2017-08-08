@@ -38,10 +38,7 @@ export default class SearchDropdownInput extends Component {
     };
   }
   componentWillReceiveProps(nextProps) {
-    if (
-      this.props.items.map(i => i.text).join(',') !==
-      nextProps.items.map(i => i.text).join(',')
-    ) {
+    if (this.props.items.map(i => i.text).join(',') !== nextProps.items.map(i => i.text).join(',')) {
       this.setState({
         items: nextProps.items,
         currentItems: nextProps.items.slice(0, nextProps.maxResults),
@@ -50,9 +47,7 @@ export default class SearchDropdownInput extends Component {
   }
   onSearch(items, v) {
     const { maxResults } = this.props;
-    return this.state.items
-      .filter(i => i.text.startsWith(v))
-      .slice(0, maxResults);
+    return this.state.items.filter(i => i.text.startsWith(v)).slice(0, maxResults);
   }
   render() {
     const { input: { value, onChange } } = this.props;

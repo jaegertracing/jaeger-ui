@@ -47,17 +47,12 @@ export function getPercentageOfDuration(duration, totalDuration) {
  * @return {number} 0-100 percentage value for location of timestamp in interval starting
  *   at initialTimestamp and lasting totalDuration
  */
-export function getPercentageOfInterval(
-  timestamp,
-  initialTimestamp,
-  totalDuration
-) {
+export function getPercentageOfInterval(timestamp, initialTimestamp, totalDuration) {
   return getPercentageOfDuration(timestamp - initialTimestamp, totalDuration);
 }
 
 const quantizeDuration = (duration, floatPrecision, conversionFactor) =>
-  toFloatPrecision(duration / conversionFactor, floatPrecision) *
-  conversionFactor;
+  toFloatPrecision(duration / conversionFactor, floatPrecision) * conversionFactor;
 
 /**
  * @param {number} duration (in microseconds)
@@ -88,14 +83,8 @@ export function formatDatetime(duration) {
  * @return {string} formatted, unit-labelled string with time in milliseconds
  */
 export function formatMillisecondTime(duration) {
-  const targetDuration = quantizeDuration(
-    duration,
-    DEFAULT_MS_PRECISION,
-    ONE_MILLISECOND
-  );
-  return `${moment
-    .duration(targetDuration / ONE_MILLISECOND)
-    .asMilliseconds()}ms`;
+  const targetDuration = quantizeDuration(duration, DEFAULT_MS_PRECISION, ONE_MILLISECOND);
+  return `${moment.duration(targetDuration / ONE_MILLISECOND).asMilliseconds()}ms`;
 }
 
 /**
@@ -103,11 +92,7 @@ export function formatMillisecondTime(duration) {
  * @return {string} formatted, unit-labelled string with time in seconds
  */
 export function formatSecondTime(duration) {
-  const targetDuration = quantizeDuration(
-    duration,
-    DEFAULT_MS_PRECISION,
-    ONE_SECOND
-  );
+  const targetDuration = quantizeDuration(duration, DEFAULT_MS_PRECISION, ONE_SECOND);
   return `${moment.duration(targetDuration / ONE_MILLISECOND).asSeconds()}s`;
 }
 
