@@ -33,14 +33,9 @@ export default function configureStore(history) {
     }),
     compose(
       applyMiddleware(
-        ...[
-          ...Object.keys(jaegerMiddlewares).map(key => jaegerMiddlewares[key]),
-          routerMiddleware(history),
-        ]
+        ...[...Object.keys(jaegerMiddlewares).map(key => jaegerMiddlewares[key]), routerMiddleware(history)]
       ),
-      window && window.devToolsExtension
-        ? window.devToolsExtension()
-        : noop => noop
+      window && window.devToolsExtension ? window.devToolsExtension() : noop => noop
     )
   );
 }

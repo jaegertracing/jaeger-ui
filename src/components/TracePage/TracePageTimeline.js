@@ -76,15 +76,9 @@ export default class TracePageTimeline extends Component {
   }
 
   shouldComponentUpdate(
-    {
-      trace: newTrace,
-    },
-    {
-      currentlyDragging: newCurrentlyDragging,
-    },
-    {
-      timeRangeFilter: newTimeRangeFilter,
-    }
+    { trace: newTrace },
+    { currentlyDragging: newCurrentlyDragging },
+    { timeRangeFilter: newTimeRangeFilter }
   ) {
     const { trace } = this.props;
     const { currentlyDragging } = this.state;
@@ -94,10 +88,12 @@ export default class TracePageTimeline extends Component {
     const newLeftBound = newTimeRangeFilter[0];
     const newRightBound = newTimeRangeFilter[1];
 
-    return getTraceId(trace) !== getTraceId(newTrace) ||
+    return (
+      getTraceId(trace) !== getTraceId(newTrace) ||
       leftBound !== newLeftBound ||
       rightBound !== newRightBound ||
-      currentlyDragging !== newCurrentlyDragging;
+      currentlyDragging !== newCurrentlyDragging
+    );
   }
 
   onMouseMove({ clientX }) {
@@ -177,17 +173,12 @@ export default class TracePageTimeline extends Component {
 
     let leftInactive;
     if (leftBound) {
-      leftInactive = getPercentageOfInterval(
-        leftBound,
-        initialTimestamp,
-        traceDuration
-      );
+      leftInactive = getPercentageOfInterval(leftBound, initialTimestamp, traceDuration);
     }
 
     let rightInactive;
     if (rightBound) {
-      rightInactive = 100 -
-        getPercentageOfInterval(rightBound, initialTimestamp, traceDuration);
+      rightInactive = 100 - getPercentageOfInterval(rightBound, initialTimestamp, traceDuration);
     }
 
     return (
@@ -243,8 +234,7 @@ export default class TracePageTimeline extends Component {
                 handleWidth={8}
                 handleHeight={30}
                 handleTopOffset={10}
-                onMouseDown={(...args) =>
-                  this.startDragging('leftBound', ...args)}
+                onMouseDown={(...args) => this.startDragging('leftBound', ...args)}
               />}
             {rightBound &&
               <TimelineScrubber
@@ -254,8 +244,7 @@ export default class TracePageTimeline extends Component {
                 handleWidth={8}
                 handleHeight={30}
                 handleTopOffset={10}
-                onMouseDown={(...args) =>
-                  this.startDragging('rightBound', ...args)}
+                onMouseDown={(...args) => this.startDragging('rightBound', ...args)}
               />}
           </svg>
         </div>

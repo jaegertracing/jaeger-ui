@@ -22,14 +22,10 @@ import React from 'react';
 import { shallow } from 'enzyme';
 import sinon from 'sinon';
 
-import TimelineScrubber
-  from '../../../src/components/TracePage/TimelineScrubber';
+import TimelineScrubber from '../../../src/components/TracePage/TimelineScrubber';
 import traceGenerator from '../../../src/demo/trace-generators';
 
-import {
-  getTraceTimestamp,
-  getTraceDuration,
-} from '../../../src/selectors/trace';
+import { getTraceTimestamp, getTraceDuration } from '../../../src/selectors/trace';
 
 const generatedTrace = traceGenerator.trace({ numberOfSpans: 45 });
 
@@ -56,12 +52,9 @@ it('<TimelineScrubber /> should contain the proper svg components', () => {
 });
 
 it('<TimelineScrubber /> should calculate the correct x% for a timestamp', () => {
-  const timestamp = getTraceDuration(generatedTrace) * 0.5 +
-    getTraceTimestamp(generatedTrace);
+  const timestamp = getTraceDuration(generatedTrace) * 0.5 + getTraceTimestamp(generatedTrace);
 
-  const wrapper = shallow(
-    <TimelineScrubber {...defaultProps} timestamp={timestamp} />
-  );
+  const wrapper = shallow(<TimelineScrubber {...defaultProps} timestamp={timestamp} />);
   const line = wrapper.find('line').first();
   const rect = wrapper.find('rect').first();
 

@@ -26,20 +26,15 @@ import _ from 'lodash';
  * given a trace startTime and endTime.
  * Will also factor in zoom.
  */
-export function calculateSpanPosition(
-  {
-    traceStartTime,
-    traceEndTime,
-    spanStart,
-    spanEnd,
-    xStart = 0,
-    xEnd = 100,
-  }
-) {
-  const xValue = d3
-    .scaleLinear()
-    .domain([traceStartTime, traceEndTime])
-    .range([0, 100]);
+export function calculateSpanPosition({
+  traceStartTime,
+  traceEndTime,
+  spanStart,
+  spanEnd,
+  xStart = 0,
+  xEnd = 100,
+}) {
+  const xValue = d3.scaleLinear().domain([traceStartTime, traceEndTime]).range([0, 100]);
   const zoomValue = d3.scaleLinear().domain([xStart, xEnd]).range([0, 100]);
   return {
     xStart: zoomValue(xValue(spanStart)),
@@ -53,12 +48,7 @@ export function calculateSpanPosition(
  *
  * eg: 50% at 100ms = 50ms
  */
-export function calculateTimeAtPositon(
-  {
-    position,
-    traceDuration,
-  }
-) {
+export function calculateTimeAtPositon({ position, traceDuration }) {
   const xValue = d3.scaleLinear().domain([0, 100]).range([0, traceDuration]);
   return xValue(position);
 }
@@ -71,17 +61,11 @@ export function calculateTimeAtPositon(
  * 150ms, 200ms => 50,100
  * 100ms, 200ms => 0,100
  */
-export function convertTimeRangeToPercent(
-  [startTime, endTime],
-  [traceStartTime, traceEndTime]
-) {
+export function convertTimeRangeToPercent([startTime, endTime], [traceStartTime, traceEndTime]) {
   if (startTime === null || endTime === null) {
     return [0, 100];
   }
-  const getPercent = d3
-    .scaleLinear()
-    .domain([traceStartTime, traceEndTime])
-    .range([0, 100]);
+  const getPercent = d3.scaleLinear().domain([traceStartTime, traceEndTime]).range([0, 100]);
   return [getPercent(startTime), getPercent(endTime)];
 }
 

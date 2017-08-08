@@ -33,19 +33,9 @@ const getBackgroundStyle = durationPercent =>
   90deg, rgba(17, 147, 154, .3) ${durationPercent}%, whitesmoke ${durationPercent - 100}%)`;
 
 export default function TraceSearchResult({ trace, durationPercent = 100 }) {
-  const {
-    duration,
-    services,
-    timestamp,
-    numberOfErredSpans,
-    numberOfSpans,
-    traceName,
-  } = trace;
+  const { duration, services, timestamp, numberOfErredSpans, numberOfSpans, traceName } = trace;
   return (
-    <div
-      className="trace-search-result"
-      style={{ border: '2px solid whitesmoke' }}
-    >
+    <div className="trace-search-result" style={{ border: '2px solid whitesmoke' }}>
       <div
         className="p1 clearfix"
         style={{
@@ -71,17 +61,15 @@ export default function TraceSearchResult({ trace, durationPercent = 100 }) {
               </span>}
           </div>
           <div className="col col-6">
-            {sortBy(services, s => s.name).map(service => (
+            {sortBy(services, s => s.name).map(service =>
               <div key={service.name} className="inline-block mr1 mb1">
                 <TraceServiceTag key={service.name} service={service} />
               </div>
-            ))}
+            )}
           </div>
           <div className="col col-4">
             <span className="trace-search-result--timestamp right">
-              {moment(timestamp).format('hh:mm:ss a')}
-              {' '}
-              (
+              {moment(timestamp).format('hh:mm:ss a')} (
               {moment(timestamp).fromNow()}
               )
             </span>

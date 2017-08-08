@@ -24,14 +24,7 @@ import { getSpanId } from '../selectors/span';
 
 const chance = new Chance();
 
-export const SERVICE_LIST = [
-  'serviceA',
-  'serviceB',
-  'serviceC',
-  'serviceD',
-  'serviceE',
-  'serviceF',
-];
+export const SERVICE_LIST = ['serviceA', 'serviceB', 'serviceC', 'serviceD', 'serviceE', 'serviceF'];
 export const OPERATIONS_LIST = [
   'GET',
   'PUT',
@@ -58,9 +51,7 @@ function getParentSpanId(span, levels) {
     }
   });
 
-  return nestingLevel - 1 >= 0
-    ? chance.pickone(levels[nestingLevel - 1])
-    : null;
+  return nestingLevel - 1 >= 0 ? chance.pickone(levels[nestingLevel - 1]) : null;
 }
 
 /* this simulates the hierarchy created by CHILD_OF tags */
@@ -68,8 +59,8 @@ function attachReferences(spans) {
   const depth = chance.integer({ min: 1, max: 10 });
   let levels = [[getSpanId(spans[0])]];
 
-  const duplicateLevelFilter = currentLevels =>
-    spanID => !currentLevels.find(level => level.indexOf(spanID) >= 0);
+  const duplicateLevelFilter = currentLevels => spanID =>
+    !currentLevels.find(level => level.indexOf(spanID) >= 0);
 
   while (levels.length < depth) {
     const newLevel = chance
@@ -100,30 +91,23 @@ function attachReferences(spans) {
 }
 
 export default chance.mixin({
-  trace(
-    {
-      // long trace
-      // very short trace
-      // average case
-      numberOfSpans = chance.pickone([
-        Math.ceil(chance.normal({ mean: 200, dev: 10 })) + 1,
-        Math.ceil(chance.integer({ min: 3, max: 10 })),
-        Math.ceil(chance.normal({ mean: 45, dev: 15 })) + 1,
-      ]),
-      numberOfProcesses = chance.integer({ min: 1, max: 10 }),
-    }
-  ) {
+  trace({
+    // long trace
+    // very short trace
+    // average case
+    numberOfSpans = chance.pickone([
+      Math.ceil(chance.normal({ mean: 200, dev: 10 })) + 1,
+      Math.ceil(chance.integer({ min: 3, max: 10 })),
+      Math.ceil(chance.normal({ mean: 45, dev: 15 })) + 1,
+    ]),
+    numberOfProcesses = chance.integer({ min: 1, max: 10 }),
+  }) {
     const traceID = chance.guid();
     const duration = chance.integer({ min: 10000, max: 5000000 });
-    const timestamp = (new Date().getTime() -
-      chance.integer({ min: 0, max: 1000 }) * 1000) *
-      1000;
+    const timestamp = (new Date().getTime() - chance.integer({ min: 0, max: 1000 }) * 1000) * 1000;
 
     const processArray = chance.processes({ numberOfProcesses });
-    const processes = processArray.reduce(
-      (pMap, p) => ({ ...pMap, [p.processID]: p }),
-      {}
-    );
+    const processes = processArray.reduce((pMap, p) => ({ ...pMap, [p.processID]: p }), {});
 
     let spans = chance.n(chance.span, numberOfSpans, {
       traceID,
@@ -148,22 +132,16 @@ export default chance.mixin({
     return {
       key: 'http.url',
       type: 'String',
-      value: `/v2/${chance.pickone([
-        'alpha',
-        'beta',
-        'gamma',
-      ])}/${chance.guid()}`,
+      value: `/v2/${chance.pickone(['alpha', 'beta', 'gamma'])}/${chance.guid()}`,
     };
   },
-  span(
-    {
-      traceID = chance.guid(),
-      processes = {},
-      traceStartTime = chance.timestamp() * 1000 * 1000,
-      traceEndTime = traceStartTime + 100000,
-      operations = OPERATIONS_LIST,
-    }
-  ) {
+  span({
+    traceID = chance.guid(),
+    processes = {},
+    traceStartTime = chance.timestamp() * 1000 * 1000,
+    traceEndTime = traceStartTime + 100000,
+    operations = OPERATIONS_LIST,
+  }) {
     const startTime = chance.integer({
       min: traceStartTime,
       max: traceEndTime,

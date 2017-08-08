@@ -31,23 +31,11 @@ export const initialState = Immutable.fromJS({
 
 export default handleActions(
   {
-    [`${jaegerApiActions.fetchDependencies}_PENDING`]: state =>
-      state.set('loading', true),
-    [`${jaegerApiActions.fetchDependencies}_FULFILLED`]: (
-      state,
-      { payload: { data: dependencies } }
-    ) =>
-      state
-        .set('loading', false)
-        .set('dependencies', Immutable.fromJS(dependencies)),
-    [`${jaegerApiActions.fetchDependencies}_REJECTED`]: (
-      state,
-      { payload: error }
-    ) =>
-      state
-        .set('dependencies', Immutable.fromJS([]))
-        .set('loading', false)
-        .set('error', error),
+    [`${jaegerApiActions.fetchDependencies}_PENDING`]: state => state.set('loading', true),
+    [`${jaegerApiActions.fetchDependencies}_FULFILLED`]: (state, { payload: { data: dependencies } }) =>
+      state.set('loading', false).set('dependencies', Immutable.fromJS(dependencies)),
+    [`${jaegerApiActions.fetchDependencies}_REJECTED`]: (state, { payload: error }) =>
+      state.set('dependencies', Immutable.fromJS([])).set('loading', false).set('error', error),
   },
   initialState
 );

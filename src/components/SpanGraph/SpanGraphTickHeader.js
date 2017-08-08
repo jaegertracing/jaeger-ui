@@ -38,7 +38,8 @@ export default class SpanGraphTickHeader extends Component {
   render() {
     const { ticks, trace } = this.props;
 
-    return trace &&
+    return (
+      trace &&
       <div className="span-graph--tick-header">
         {ticks.map(tick => {
           const leftOffset = getPercentageOfInterval(
@@ -47,9 +48,7 @@ export default class SpanGraphTickHeader extends Component {
             getTraceDuration(trace)
           );
 
-          const style = Math.ceil(leftOffset) === 100
-            ? { right: '0%' }
-            : { left: `${leftOffset}%` };
+          const style = Math.ceil(leftOffset) === 100 ? { right: '0%' } : { left: `${leftOffset}%` };
 
           return (
             <SpanGraphTickHeaderLabel
@@ -60,7 +59,8 @@ export default class SpanGraphTickHeader extends Component {
             />
           );
         })}
-      </div>;
+      </div>
+    );
   }
 }
 

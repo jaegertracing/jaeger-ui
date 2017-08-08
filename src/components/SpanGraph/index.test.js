@@ -95,9 +95,7 @@ it('<SpanGraphSpan /> should attach "onSomethingSpan" handlers with to the spans
     expect(true).toBeTruthy();
   }
 
-  const wrapper = shallow(
-    <SpanGraph {...defaultProps} onClickSpan={onClick} />
-  );
+  const wrapper = shallow(<SpanGraph {...defaultProps} onClickSpan={onClick} />);
 
   wrapper.find(SpanGraphSpan).first().props().onClick();
 });

@@ -23,8 +23,7 @@ import sinon from 'sinon';
 import { shallow } from 'enzyme';
 import TracePage from '../../../src/components/TracePage';
 import TracePageHeader from '../../../src/components/TracePage/TracePageHeader';
-import TracePageTimeline
-  from '../../../src/components/TracePage/TracePageTimeline';
+import TracePageTimeline from '../../../src/components/TracePage/TracePageTimeline';
 
 const traceID = 'trace-id';
 const timestamp = new Date().getTime() * 1000;
@@ -76,9 +75,7 @@ it('<TracePage /> should render a <TracePageHeader /> with the trace', () => {
 it('<TracePage /> should render a <TracePageTimeline /> with the trace', () => {
   const wrapper = shallow(<TracePage {...defaultProps} />);
 
-  expect(
-    wrapper.contains(<TracePageTimeline trace={defaultProps.trace} />)
-  ).toBeTruthy();
+  expect(wrapper.contains(<TracePageTimeline trace={defaultProps.trace} />)).toBeTruthy();
 });
 
 it('<TracePage /> should render an empty page if no trace', () => {
@@ -90,9 +87,7 @@ it('<TracePage /> should render an empty page if no trace', () => {
 // can't do mount tests in standard tape run.
 it('TracePage should fetch the trace if necessary', () => {
   const fetchTrace = sinon.spy();
-  const wrapper = shallow(
-    <TracePage {...defaultProps} trace={null} fetchTrace={fetchTrace} />
-  );
+  const wrapper = shallow(<TracePage {...defaultProps} trace={null} fetchTrace={fetchTrace} />);
 
   wrapper.instance().componentDidMount();
 
@@ -102,9 +97,7 @@ it('TracePage should fetch the trace if necessary', () => {
 
 it('TracePage should not fetch the trace if already present', () => {
   const fetchTrace = sinon.spy();
-  const wrapper = shallow(
-    <TracePage {...defaultProps} fetchTrace={fetchTrace} />
-  );
+  const wrapper = shallow(<TracePage {...defaultProps} fetchTrace={fetchTrace} />);
 
   wrapper.instance().componentDidMount();
 

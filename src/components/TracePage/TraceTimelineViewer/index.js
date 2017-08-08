@@ -21,13 +21,7 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import _ from 'lodash';
-import {
-  onlyUpdateForKeys,
-  compose,
-  withState,
-  withProps,
-  pure,
-} from 'recompose';
+import { onlyUpdateForKeys, compose, withState, withProps, pure } from 'recompose';
 import * as d3 from 'd3-scale';
 import { filterSpansForText } from '../../../selectors/span';
 import './grid.css';
@@ -50,8 +44,7 @@ import SpanDetail from './SpanDetail';
 // TODO: Add unit tests
 // TODO: unify transforms and utils
 
-const ensurePercentIsBetween0And100 = percent =>
-  ensureWithinRange([0, 100], percent);
+const ensurePercentIsBetween0And100 = percent => ensureWithinRange([0, 100], percent);
 
 /**
  * Components!
@@ -140,7 +133,7 @@ function Ticks(props) {
   const margin = 5;
   return (
     <div>
-      {ticks.map(tick => (
+      {ticks.map(tick =>
         <div
           key={tick.percent}
           style={{
@@ -161,7 +154,7 @@ function Ticks(props) {
             {tick.label}
           </span>
         </div>
-      ))}
+      )}
     </div>
   );
 }
@@ -258,189 +251,152 @@ function TraceView(props) {
   }
 
   let collapseBelow = null;
-  const renderSpansRows = trace.spans.reduce(
-    (arr, span, i) => {
-      const { spanID } = span;
-      const showSpanDetails = selectedSpanIDs.has(spanID);
-      const spanHasChildren = span.hasChildren;
-      const spanIsCollapsed = collapsedSpanIDs.has(spanID);
-      const spanColor = colorGenerator.getColorByKey(span.process.serviceName);
+  const renderSpansRows = trace.spans.reduce((arr, span, i) => {
+    const { spanID } = span;
+    const showSpanDetails = selectedSpanIDs.has(spanID);
+    const spanHasChildren = span.hasChildren;
+    const spanIsCollapsed = collapsedSpanIDs.has(spanID);
+    const spanColor = colorGenerator.getColorByKey(span.process.serviceName);
 
-      let filterOutSpan = false;
-      if (filteredSpansIDs) {
-        filterOutSpan = !filteredSpansIDs.has(spanID);
-      }
+    let filterOutSpan = false;
+    if (filteredSpansIDs) {
+      filterOutSpan = !filteredSpansIDs.has(spanID);
+    }
 
-      // Collapse logic
-      // TODO: Investigate if this should be moved out to statefull component.
-      let hidden = false;
-      if (collapseBelow) {
-        if (span.depth >= collapseBelow) {
-          hidden = true;
-        } else {
-          collapseBelow = null;
-        }
+    // Collapse logic
+    // TODO: Investigate if this should be moved out to statefull component.
+    let hidden = false;
+    if (collapseBelow) {
+      if (span.depth >= collapseBelow) {
+        hidden = true;
+      } else {
+        collapseBelow = null;
       }
-      if (spanIsCollapsed && !hidden) {
-        collapseBelow = span.depth + 1;
-      }
-      if (hidden) {
-        return arr;
-      }
+    }
+    if (spanIsCollapsed && !hidden) {
+      collapseBelow = span.depth + 1;
+    }
+    if (hidden) {
+      return arr;
+    }
 
-      // Compute span position with given zoom.
-      const { xStart: startPercent, xEnd: endPercent } = calculateSpanPosition({
+    // Compute span position with given zoom.
+    const { xStart: startPercent, xEnd: endPercent } = calculateSpanPosition({
+      traceStartTime: trace.startTime,
+      traceEndTime: trace.endTime,
+      spanStart: span.startTime,
+      spanEnd: span.startTime + span.duration,
+      xStart: zoomStart,
+      xEnd: zoomEnd,
+    });
+
+    // Check for direct child "server" span if the span is a "client" span.
+    // TODO: Can probably optimize this a bit more so it does not do it
+    // on render.
+    const childServerSpan = findServerChildSpan(trace.spans.slice(i));
+    let interval;
+    if (childServerSpan && spanIsCollapsed) {
+      const childSpanPosition = calculateSpanPosition({
         traceStartTime: trace.startTime,
         traceEndTime: trace.endTime,
-        spanStart: span.startTime,
-        spanEnd: span.startTime + span.duration,
+        spanStart: childServerSpan.startTime,
+        spanEnd: childServerSpan.startTime + childServerSpan.duration,
         xStart: zoomStart,
         xEnd: zoomEnd,
       });
+      const x = d3.scaleLinear().domain([startPercent, endPercent]).range([0, 100]);
+      interval = {
+        color: colorGenerator.getColorByKey(childServerSpan.process.serviceName),
+        startPercent: x(childSpanPosition.xStart),
+        endPercent: x(childSpanPosition.xEnd),
+      };
+    }
 
-      // Check for direct child "server" span if the span is a "client" span.
-      // TODO: Can probably optimize this a bit more so it does not do it
-      // on render.
-      const childServerSpan = findServerChildSpan(trace.spans.slice(i));
-      let interval;
-      if (childServerSpan && spanIsCollapsed) {
-        const childSpanPosition = calculateSpanPosition({
-          traceStartTime: trace.startTime,
-          traceEndTime: trace.endTime,
-          spanStart: childServerSpan.startTime,
-          spanEnd: childServerSpan.startTime + childServerSpan.duration,
-          xStart: zoomStart,
-          xEnd: zoomEnd,
-        });
-        const x = d3
-          .scaleLinear()
-          .domain([startPercent, endPercent])
-          .range([0, 100]);
-        interval = {
-          color: colorGenerator.getColorByKey(
-            childServerSpan.process.serviceName
-          ),
-          startPercent: x(childSpanPosition.xStart),
-          endPercent: x(childSpanPosition.xEnd),
-        };
-      }
-
-      const showErrorIcon = isErrorSpan(span) ||
-        (spanIsCollapsed && spanContainsErredSpan(trace.spans, i));
-      const backgroundColor = showSpanDetails ? 'whitesmoke' : null;
-      arr.push(
-        <TimelineRow
-          key={spanID}
-          className="span-row"
-          style={{
-            backgroundColor,
-            opacity: filterOutSpan ? 0.2 : undefined,
-          }}
-        >
-          <TimelineRow.Left>
-            <div
-              className="overflow-hidden nowrap"
-              style={{
-                textOverflow: 'ellipsis',
-              }}
-            >
-              {_.times(span.depth, z => <Rail key={z} />)}
-              {spanHasChildren
-                ? <i
-                    style={{ cursor: 'pointer' }}
-                    className={
-                      `icon square ${spanIsCollapsed ? 'plus' : 'outline minus'}`
-                    }
-                    onClick={() => onSpanCollapseClick(spanID)}
-                  />
-                : <Rail />}
-              <a
-                tabIndex="0"
-                className="inline border-left"
-                style={{
-                  outline: 0,
-                  color: 'black',
-                  borderLeft: `4px solid ${spanColor}`,
-                  cursor: 'pointer',
-                }}
-                onClick={() => onSpanClick(spanID)}
-              >
-                <span
-                  className="p1"
-                  style={{
-                    fontSize: '1.05em',
-                    fontWeight: spanIsCollapsed && spanHasChildren
-                      ? 'bold'
-                      : undefined,
-                    fontStyle: spanIsCollapsed && spanHasChildren
-                      ? 'italic'
-                      : undefined,
-                  }}
-                >
-                  {showErrorIcon &&
-                    <i
-                      aria-hidden="true"
-                      className="icon warning circle red"
-                    />}
-                  {span.process.serviceName} {childServerSpan &&
-                    spanIsCollapsed &&
-                    <span>
-                      <i
-                        className="long arrow right icon"
-                        style={{ float: 'none' }}
-                      />
-                      <i
-                        className="circle icon"
-                        style={{
-                          color: colorGenerator.getColorByKey(
-                            childServerSpan.process.serviceName
-                          ),
-                        }}
-                      />
-                      {childServerSpan.process.serviceName}
-                    </span>}
-                </span>
-                <span className="mb1 pl1 h6" style={{ color: 'gray' }}>
-                  {childServerSpan && spanIsCollapsed
-                    ? childServerSpan.operationName
-                    : span.operationName}
-                </span>
-              </a>
-            </div>
-          </TimelineRow.Left>
-          <TimelineRow.Right
-            style={{ cursor: 'pointer' }}
-            onClick={() => onSpanClick(spanID)}
+    const showErrorIcon = isErrorSpan(span) || (spanIsCollapsed && spanContainsErredSpan(trace.spans, i));
+    const backgroundColor = showSpanDetails ? 'whitesmoke' : null;
+    arr.push(
+      <TimelineRow
+        key={spanID}
+        className="span-row"
+        style={{
+          backgroundColor,
+          opacity: filterOutSpan ? 0.2 : undefined,
+        }}
+      >
+        <TimelineRow.Left>
+          <div
+            className="overflow-hidden nowrap"
+            style={{
+              textOverflow: 'ellipsis',
+            }}
           >
-            <Ticks ticks={tickPercents.map(percent => ({ percent }))} />
-            <SpanBarEnhanced
-              childInterval={interval}
-              startPercent={startPercent}
-              endPercent={endPercent}
-              color={spanColor}
-              shortLabel={formatDuration(span.duration)}
-              longLabel={
-                `${formatDuration(span.duration)}
-              | ${span.process.serviceName}::${span.operationName}`
-              }
-            />
-          </TimelineRow.Right>
-        </TimelineRow>
-      );
-      if (showSpanDetails) {
-        arr.push(
-          <Timeline.SpanDetails
-            key={span.id}
-            span={span}
-            trace={trace}
+            {_.times(span.depth, z => <Rail key={z} />)}
+            {spanHasChildren
+              ? <i
+                  style={{ cursor: 'pointer' }}
+                  className={`icon square ${spanIsCollapsed ? 'plus' : 'outline minus'}`}
+                  onClick={() => onSpanCollapseClick(spanID)}
+                />
+              : <Rail />}
+            <a
+              tabIndex="0"
+              className="inline border-left"
+              style={{
+                outline: 0,
+                color: 'black',
+                borderLeft: `4px solid ${spanColor}`,
+                cursor: 'pointer',
+              }}
+              onClick={() => onSpanClick(spanID)}
+            >
+              <span
+                className="p1"
+                style={{
+                  fontSize: '1.05em',
+                  fontWeight: spanIsCollapsed && spanHasChildren ? 'bold' : undefined,
+                  fontStyle: spanIsCollapsed && spanHasChildren ? 'italic' : undefined,
+                }}
+              >
+                {showErrorIcon && <i aria-hidden="true" className="icon warning circle red" />}
+                {span.process.serviceName}{' '}
+                {childServerSpan &&
+                  spanIsCollapsed &&
+                  <span>
+                    <i className="long arrow right icon" style={{ float: 'none' }} />
+                    <i
+                      className="circle icon"
+                      style={{
+                        color: colorGenerator.getColorByKey(childServerSpan.process.serviceName),
+                      }}
+                    />
+                    {childServerSpan.process.serviceName}
+                  </span>}
+              </span>
+              <span className="mb1 pl1 h6" style={{ color: 'gray' }}>
+                {childServerSpan && spanIsCollapsed ? childServerSpan.operationName : span.operationName}
+              </span>
+            </a>
+          </div>
+        </TimelineRow.Left>
+        <TimelineRow.Right style={{ cursor: 'pointer' }} onClick={() => onSpanClick(spanID)}>
+          <Ticks ticks={tickPercents.map(percent => ({ percent }))} />
+          <SpanBarEnhanced
+            childInterval={interval}
+            startPercent={startPercent}
+            endPercent={endPercent}
             color={spanColor}
+            shortLabel={formatDuration(span.duration)}
+            longLabel={`${formatDuration(span.duration)}
+              | ${span.process.serviceName}::${span.operationName}`}
           />
-        );
-      }
-      return arr;
-    },
-    []
-  );
+        </TimelineRow.Right>
+      </TimelineRow>
+    );
+    if (showSpanDetails) {
+      arr.push(<Timeline.SpanDetails key={span.id} span={span} trace={trace} color={spanColor} />);
+    }
+    return arr;
+  }, []);
 
   return (
     <div className="mx0 px1 overflow-hidden">
@@ -452,9 +408,7 @@ function TraceView(props) {
           <Ticks
             ticks={tickPercents.map(tickPercent => ({
               percent: tickPercent,
-              label: tickPercent !== 0
-                ? formatDuration(getDuationAtTickPercent(tickPercent))
-                : '',
+              label: tickPercent !== 0 ? formatDuration(getDuationAtTickPercent(tickPercent)) : '',
               position: tickPercent === 100 ? 'left' : 'right',
             }))}
           />
@@ -528,10 +482,7 @@ export default class TraceTimelineViewer extends Component {
       }).forEach(span => filteredSpansIDs.set(span.spanID, true));
     }
     const { startTime, endTime } = trace;
-    const zoom = convertTimeRangeToPercent(timeRangeFilter, [
-      startTime,
-      endTime,
-    ]);
+    const zoom = convertTimeRangeToPercent(timeRangeFilter, [startTime, endTime]);
     return (
       <div>
         <TraceView

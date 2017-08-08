@@ -70,10 +70,7 @@ export default class JaegerUIApp extends Component {
           <Route path="/" component={PageWithMetrics}>
             <Route path="/search" component={ConnectedSearchTracePage} />
             <Route path="/trace/:id" component={ConnectedTracePage} />
-            <Route
-              path="/dependencies"
-              component={ConnectedDependencyGraphPage}
-            />
+            <Route path="/dependencies" component={ConnectedDependencyGraphPage} />
             <Route path="*" component={NotFound} />
             <IndexRedirect to="/search" />
           </Route>

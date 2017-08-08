@@ -47,16 +47,11 @@ import getLastXformCacher from '../../utils/get-last-xform-cacher';
 /**
  * Contains the dropdown to sort and filter trace search results
  */
-let TraceResultsFilterForm = () => (
+let TraceResultsFilterForm = () =>
   <div className="ui form">
     <div className="field inline">
       <label htmlFor="traceResultsSortBy">Sort</label>
-      <Field
-        name="sortBy"
-        id="traceResultsSortBy"
-        className="ui dropdown"
-        component="select"
-      >
+      <Field name="sortBy" id="traceResultsSortBy" className="ui dropdown" component="select">
         <option value={MOST_RECENT}>Most Recent</option>
         <option value={LONGEST_FIRST}>Longest First</option>
         <option value={SHORTEST_FIRST}>Shortest First</option>
@@ -64,17 +59,14 @@ let TraceResultsFilterForm = () => (
         <option value={LEAST_SPANS}>Least Spans</option>
       </Field>
     </div>
-  </div>
-);
+  </div>;
 TraceResultsFilterForm = reduxForm({
   form: 'traceResultsFilters',
   initialValues: {
     sortBy: MOST_RECENT,
   },
 })(TraceResultsFilterForm);
-const traceResultsFiltersFormSelector = formValueSelector(
-  'traceResultsFilters'
-);
+const traceResultsFiltersFormSelector = formValueSelector('traceResultsFilters');
 
 export default class SearchTracePage extends Component {
   componentDidMount() {
@@ -98,14 +90,8 @@ export default class SearchTracePage extends Component {
     return (
       <div className="trace-search ui grid padded">
         <div className="four wide column">
-          <Sticky
-            topOffset={-60}
-            stickyStyle={{ top: 'calc(40px + 1rem)', zIndex: 1000 }}
-          >
-            <div
-              className="ui tertiary segment"
-              style={{ background: 'whitesmoke' }}
-            >
+          <Sticky topOffset={-60} stickyStyle={{ top: 'calc(40px + 1rem)', zIndex: 1000 }}>
+            <div className="ui tertiary segment" style={{ background: 'whitesmoke' }}>
               <h3>Find Traces</h3>
               <TraceSearchForm services={services} />
             </div>
@@ -121,10 +107,7 @@ export default class SearchTracePage extends Component {
             </div>}
           {isHomepage &&
             !hasTraceResults &&
-            <div
-              className="ui middle aligned center aligned grid"
-              style={{ marginTop: 100 }}
-            >
+            <div className="ui middle aligned center aligned grid" style={{ marginTop: 100 }}>
               <div className="column">
                 <img alt="presentation" src={JaegerLogo} width="400" />
               </div>
@@ -133,9 +116,7 @@ export default class SearchTracePage extends Component {
             !hasTraceResults &&
             !loading &&
             !errorMessage &&
-            <div className="ui message trace-search--no-results">
-              No trace results. Try another query.
-            </div>}
+            <div className="ui message trace-search--no-results">No trace results. Try another query.</div>}
           {hasTraceResults &&
             !loading &&
             <div>
@@ -153,15 +134,10 @@ export default class SearchTracePage extends Component {
                       }}
                     />
                   </div>
-                  <div
-                    className="p2 clearfix"
-                    style={{ backgroundColor: 'whitesmoke' }}
-                  >
+                  <div className="p2 clearfix" style={{ backgroundColor: 'whitesmoke' }}>
                     <div className="left">
                       <span>
-                        {numberOfTraceResults}
-                        {' '}
-                        Trace
+                        {numberOfTraceResults} Trace
                         {numberOfTraceResults > 1 && 's'}
                       </span>
                     </div>
@@ -173,19 +149,16 @@ export default class SearchTracePage extends Component {
               </div>
               <div>
                 <ul className="list-reset">
-                  {traceResults.map(trace => (
+                  {traceResults.map(trace =>
                     <li key={trace.traceID} className="my1">
                       <Link to={`/trace/${trace.traceID}`}>
                         <TraceSearchResult
                           trace={trace}
-                          durationPercent={getPercentageOfDuration(
-                            trace.duration,
-                            maxTraceDuration
-                          )}
+                          durationPercent={getPercentageOfDuration(trace.duration, maxTraceDuration)}
                         />
                       </Link>
                     </li>
-                  ))}
+                  )}
                 </ul>
               </div>
             </div>}
@@ -227,11 +200,7 @@ const stateTraceXformer = getLastXformCacher(stateTrace => {
 });
 
 const stateServicesXformer = getLastXformCacher(stateServices => {
-  const {
-    services: serviceList,
-    operationsForService: opsBySvc,
-    error: serviceError,
-  } = stateServices.toJS();
+  const { services: serviceList, operationsForService: opsBySvc, error: serviceError } = stateServices.toJS();
   const services = serviceList.map(name => ({
     name,
     operations: opsBySvc[name] || [],
@@ -247,9 +216,7 @@ function mapStateToProps(state) {
   const { services, serviceError } = stateServicesXformer(state.services);
   const sortBy = traceResultsFiltersFormSelector(state, 'sortBy');
   const traceResultsSorted = getSortedTraceResults(traces, sortBy);
-  const errorMessage = serviceError || traceError
-    ? `${serviceError || ''} ${traceError || ''}`
-    : '';
+  const errorMessage = serviceError || traceError ? `${serviceError || ''} ${traceError || ''}` : '';
 
   return {
     isHomepage,
@@ -265,17 +232,11 @@ function mapStateToProps(state) {
 }
 
 function mapDispatchToProps(dispatch) {
-  const { searchTraces, fetchServices } = bindActionCreators(
-    jaegerApiActions,
-    dispatch
-  );
+  const { searchTraces, fetchServices } = bindActionCreators(jaegerApiActions, dispatch);
 
   return {
     searchTraces,
     fetchServices,
   };
 }
-export const ConnectedSearchTracePage = connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(SearchTracePage);
+export const ConnectedSearchTracePage = connect(mapStateToProps, mapDispatchToProps)(SearchTracePage);

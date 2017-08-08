@@ -37,8 +37,7 @@ export const searchTraces = createAction(
   query => ({ query })
 );
 
-export const fetchServices = createAction('@JAEGER_API/FETCH_SERVICES', () =>
-  JaegerAPI.fetchServices());
+export const fetchServices = createAction('@JAEGER_API/FETCH_SERVICES', () => JaegerAPI.fetchServices());
 
 export const fetchServiceOperations = createAction(
   '@JAEGER_API/FETCH_SERVICE_OPERATIONS',
@@ -46,7 +45,6 @@ export const fetchServiceOperations = createAction(
   serviceName => ({ serviceName })
 );
 
-export const fetchDependencies = createAction(
-  '@JAEGER_API/FETCH_DEPENDENCIES',
-  () => JaegerAPI.fetchDependencies()
+export const fetchDependencies = createAction('@JAEGER_API/FETCH_DEPENDENCIES', () =>
+  JaegerAPI.fetchDependencies()
 );
