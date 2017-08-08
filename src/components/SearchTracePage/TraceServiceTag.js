@@ -23,10 +23,10 @@ import React from 'react';
 import colorGenerator from '../../utils/color-generator';
 
 export default function TraceServiceTag({ service }) {
-  const { name, numberOfApperancesInTrace } = service;
+  const { name, numberOfSpans } = service;
   return (
     <div className="ui mini label" style={{ borderLeft: `5px solid ${colorGenerator.getColorByKey(name)}` }}>
-      {name} ({numberOfApperancesInTrace})
+      {name} ({numberOfSpans})
     </div>
   );
 }
@@ -34,6 +34,6 @@ export default function TraceServiceTag({ service }) {
 TraceServiceTag.propTypes = {
   service: PropTypes.shape({
     name: PropTypes.string.isRequired,
-    numberOfApperancesInTrace: PropTypes.number.isRequired,
+    numberOfSpans: PropTypes.number.isRequired,
   }).isRequired,
 };

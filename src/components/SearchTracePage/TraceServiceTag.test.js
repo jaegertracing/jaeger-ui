@@ -28,7 +28,7 @@ it('<SearchTracePage /> tests', () => {
     <TraceServiceTag
       service={{
         name: 'Service A',
-        numberOfApperancesInTrace: 1,
+        numberOfSpans: 1,
       }}
     />
   );

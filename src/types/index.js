@@ -64,6 +64,6 @@ export type Trace = {
   traceID: string,
   spans: Array<Span>,
   processes: {
-    [processID: string]: Process,
+    [string]: Process,
   },
 };

@@ -18,33 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import { handleActions } from 'redux-actions';
-
-import { fetchDependencies } from '../actions/jaeger-api';
-
-const initialState = {
-  dependencies: [],
-  loading: false,
-  error: null,
-};
-
-function fetchStarted(state) {
-  return { ...state, loading: true };
-}
-
-function fetchDepsDone(state, { payload }) {
-  return { ...state, dependencies: payload.data, loading: false };
-}
-
-function fetchDepsErred(state, { payload: error }) {
-  return { ...state, error, dependencies: [], loading: false };
-}
-
-export default handleActions(
-  {
-    [`${fetchDependencies}_PENDING`]: fetchStarted,
-    [`${fetchDependencies}_FULFILLED`]: fetchDepsDone,
-    [`${fetchDependencies}_REJECTED`]: fetchDepsErred,
-  },
-  initialState
-);
+export const MOST_RECENT = 'MOST_RECENT';
+export const LONGEST_FIRST = 'LONGEST_FIRST';
+export const SHORTEST_FIRST = 'SHORTEST_FIRST';
+export const MOST_SPANS = 'MOST_SPANS';
+export const LEAST_SPANS = 'LEAST_SPANS';
