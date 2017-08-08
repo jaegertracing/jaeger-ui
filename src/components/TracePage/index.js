@@ -168,18 +168,13 @@ export default class TracePage extends Component {
 
 // export connected component separately
 function mapStateToProps(state, ownProps) {
-  const { params: { id } } = ownProps;
-
-  let trace = state.trace.getIn(['traces', id]);
+  const { id } = ownProps.params;
+  let trace = state.trace.traces[id];
   if (trace && !(trace instanceof Error)) {
-    trace = trace.toJS();
     trace = dropEmptyStartTimeSpans(trace);
     trace = hydrateSpansWithProcesses(trace);
   }
-
-  const loading = state.trace.get('loading');
-
-  return { id, loading, trace };
+  return { id, trace, loading: state.trace.loading };
 }
 
 function mapDispatchToProps(dispatch) {

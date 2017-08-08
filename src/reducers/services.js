@@ -18,31 +18,51 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import Immutable from 'immutable';
 import { handleActions } from 'redux-actions';
 
-import * as jaegerApiActions from '../actions/jaeger-api';
+import { fetchServices, fetchServiceOperations as fetchOps } from '../actions/jaeger-api';
 
-export const initialState = Immutable.fromJS({
+const initialState = {
   services: [],
   operationsForService: {},
   loading: false,
   error: null,
-});
+};
+
+function fetchStarted(state) {
+  return { ...state, loading: true };
+}
+
+function fetchServicesDone(state, { payload }) {
+  const services = payload.data;
+  return { ...state, services, error: null, loading: false };
+}
+
+function fetchServicesErred(state, { payload: error }) {
+  return { ...state, error: error.message, loading: false, services: [] };
+}
+
+function fetchOpsStarted(state, { meta: { serviceName } }) {
+  const operationsForService = { ...state.operationsForService, [serviceName]: [] };
+  return { ...state, operationsForService };
+}
+
+function fetchOpsDone(state, { meta, payload }) {
+  const { data: operations } = payload;
+  const operationsForService = { ...state.operationsForService, [meta.serviceName]: operations };
+  return { ...state, operationsForService };
+}
+
+// TODO(joe): fetchOpsErred
 
 export default handleActions(
   {
-    [`${jaegerApiActions.fetchServices}_PENDING`]: state => state.set('loading', true),
-    [`${jaegerApiActions.fetchServices}_FULFILLED`]: (state, { payload: { data: services } }) =>
-      state.set('loading', false).set('error', null).set('services', Immutable.fromJS(services).sort()),
-    [`${jaegerApiActions.fetchServices}_REJECTED`]: (state, { payload: error }) =>
-      state.set('services', Immutable.fromJS([])).set('loading', false).set('error', error.message),
-    [`${jaegerApiActions.fetchServiceOperations}_PENDING`]: (state, { meta: { serviceName } }) =>
-      state.setIn(['operationsForService', serviceName], Immutable.List()),
-    [`${jaegerApiActions.fetchServiceOperations}_FULFILLED`]: (
-      state,
-      { meta: { serviceName }, payload: { data: operations } }
-    ) => state.setIn(['operationsForService', serviceName], Immutable.List(operations)),
+    [`${fetchServices}_PENDING`]: fetchStarted,
+    [`${fetchServices}_FULFILLED`]: fetchServicesDone,
+    [`${fetchServices}_REJECTED`]: fetchServicesErred,
+
+    [`${fetchOps}_PENDING`]: fetchOpsStarted,
+    [`${fetchOps}_FULFILLED`]: fetchOpsDone,
   },
   initialState
 );

@@ -1,3 +1,5 @@
+// @flow
+
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -18,9 +20,29 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import jaegerReducers from './index';
-import traceReducer from './trace';
+export type TraceSummary = {
+  /**
+  * Duration of trace in milliseconds.
+  * @type {number}
+  */
+  duration: number,
+  /**
+  * Start time of trace in milliseconds.
+  * @type {number}
+  */
+  timestamp: number,
+  traceName: string,
+  traceID: string,
+  numberOfErredSpans: number,
+  numberOfSpans: number,
+  services: { name: string, numberOfSpans: number }[],
+};
 
-it('jaegerReducers should contain the trace reducer', () => {
-  expect(jaegerReducers.trace).toBe(traceReducer);
-});
+export type TraceSummaries = {
+  /**
+   * Duration of longest trace in `traces` in milliseconds.
+   * @type {[type]}
+   */
+  maxDuration: number,
+  traces: TraceSummary[],
+};

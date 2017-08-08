@@ -62,7 +62,6 @@ export default class DependencyGraphPage extends Component {
   render() {
     const { nodes, links, error, dependencies, loading } = this.props;
     const { graphType } = this.state;
-    const serviceCalls = dependencies.toJS();
     if (loading) {
       return (
         <div className="m1">
@@ -86,7 +85,7 @@ export default class DependencyGraphPage extends Component {
 
     const GRAPH_TYPE_OPTIONS = [{ type: 'FORCE_DIRECTED', name: 'Force Directed Graph' }];
 
-    if (serviceCalls.length <= 100) {
+    if (dependencies.length <= 100) {
       GRAPH_TYPE_OPTIONS.push({ type: 'DAG', name: 'DAG' });
     }
     return (
@@ -94,8 +93,9 @@ export default class DependencyGraphPage extends Component {
         <Menu tabular>
           {GRAPH_TYPE_OPTIONS.map(option =>
             <Menu.Item
-              name={option.name}
               active={graphType === option.type}
+              key={option.type}
+              name={option.name}
               onClick={() => this.handleGraphTypeChange(option.type)}
             />
           )}
@@ -112,7 +112,7 @@ export default class DependencyGraphPage extends Component {
           }}
         >
           {graphType === 'FORCE_DIRECTED' && <DependencyForceGraph nodes={nodes} links={links} />}
-          {graphType === 'DAG' && <DAG serviceCalls={serviceCalls} />}
+          {graphType === 'DAG' && <DAG serviceCalls={dependencies} />}
         </div>
       </div>
     );
@@ -121,17 +121,14 @@ export default class DependencyGraphPage extends Component {
 
 // export connected component separately
 function mapStateToProps(state) {
-  const dependencies = state.dependencies.get('dependencies');
-  let nodes;
+  const { dependencies, error, loading } = state.dependencies;
   let links;
-  if (dependencies && dependencies.size > 0) {
-    const nodesAndLinks = formatDependenciesAsNodesAndLinks({ dependencies });
-    nodes = nodesAndLinks.nodes;
-    links = nodesAndLinks.links;
+  let nodes;
+  if (dependencies && dependencies.length > 0) {
+    const formatted = formatDependenciesAsNodesAndLinks({ dependencies });
+    links = formatted.links;
+    nodes = formatted.nodes;
   }
-  const error = state.dependencies.get('error');
-  const loading = state.dependencies.get('loading');
-
   return { loading, error, nodes, links, dependencies };
 }
 

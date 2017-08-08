@@ -29,7 +29,7 @@ const testTraceProps = {
   services: [
     {
       name: 'Service A',
-      numberOfApperancesInTrace: 2,
+      numberOfSpans: 2,
       percentOfTrace: 50,
     },
   ],

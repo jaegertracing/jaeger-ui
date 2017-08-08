@@ -18,6 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+import _values from 'lodash/values';
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { bindActionCreators } from 'redux';
@@ -25,22 +26,15 @@ import { connect } from 'react-redux';
 import { Field, reduxForm, formValueSelector } from 'redux-form';
 import { Link } from 'react-router';
 import { Sticky } from 'react-sticky';
-import * as jaegerApiActions from '../../actions/jaeger-api';
 
 import JaegerLogo from '../../img/jaeger-logo.svg';
 
+import * as jaegerApiActions from '../../actions/jaeger-api';
 import TraceSearchForm from './TraceSearchForm';
 import TraceSearchResult from './TraceSearchResult';
 import TraceResultsScatterPlot from './TraceResultsScatterPlot';
-import {
-  transformTraceResultsSelector,
-  getSortedTraceResults,
-  LONGEST_FIRST,
-  SHORTEST_FIRST,
-  MOST_SPANS,
-  LEAST_SPANS,
-  MOST_RECENT,
-} from '../../selectors/search';
+import * as orderBy from '../../model/order-by';
+import { sortTraces, getTraceSummaries } from '../../model/search';
 import { getPercentageOfDuration } from '../../utils/date';
 import getLastXformCacher from '../../utils/get-last-xform-cacher';
 
@@ -52,18 +46,18 @@ let TraceResultsFilterForm = () =>
     <div className="field inline">
       <label htmlFor="traceResultsSortBy">Sort</label>
       <Field name="sortBy" id="traceResultsSortBy" className="ui dropdown" component="select">
-        <option value={MOST_RECENT}>Most Recent</option>
-        <option value={LONGEST_FIRST}>Longest First</option>
-        <option value={SHORTEST_FIRST}>Shortest First</option>
-        <option value={MOST_SPANS}>Most Spans</option>
-        <option value={LEAST_SPANS}>Least Spans</option>
+        <option value={orderBy.MOST_RECENT}>Most Recent</option>
+        <option value={orderBy.LONGEST_FIRST}>Longest First</option>
+        <option value={orderBy.SHORTEST_FIRST}>Shortest First</option>
+        <option value={orderBy.MOST_SPANS}>Most Spans</option>
+        <option value={orderBy.LEAST_SPANS}>Least Spans</option>
       </Field>
     </div>
   </div>;
 TraceResultsFilterForm = reduxForm({
   form: 'traceResultsFilters',
   initialValues: {
-    sortBy: MOST_RECENT,
+    sortBy: orderBy.MOST_RECENT,
   },
 })(TraceResultsFilterForm);
 const traceResultsFiltersFormSelector = formValueSelector('traceResultsFilters');
@@ -194,13 +188,13 @@ SearchTracePage.propTypes = {
 };
 
 const stateTraceXformer = getLastXformCacher(stateTrace => {
-  const { traces: traceMap, loading, error: traceError } = stateTrace.toJS();
-  const traces = Object.keys(traceMap).map(traceID => traceMap[traceID]);
-  return { tracesSrc: { traces }, loading, traceError };
+  const { traces: traceMap, loading, error: traceError } = stateTrace;
+  const { traces, maxDuration } = getTraceSummaries(_values(traceMap));
+  return { traces, maxDuration, loading, traceError };
 });
 
 const stateServicesXformer = getLastXformCacher(stateServices => {
-  const { services: serviceList, operationsForService: opsBySvc, error: serviceError } = stateServices.toJS();
+  const { services: serviceList, operationsForService: opsBySvc, error: serviceError } = stateServices;
   const services = serviceList.map(name => ({
     name,
     operations: opsBySvc[name] || [],
@@ -211,18 +205,17 @@ const stateServicesXformer = getLastXformCacher(stateServices => {
 function mapStateToProps(state) {
   const query = state.routing.locationBeforeTransitions.query;
   const isHomepage = !Object.keys(query).length;
-  const { tracesSrc, loading, traceError } = stateTraceXformer(state.trace);
-  const { traces, maxDuration } = transformTraceResultsSelector(tracesSrc);
+  const { traces, maxDuration, loading, traceError } = stateTraceXformer(state.trace);
   const { services, serviceError } = stateServicesXformer(state.services);
-  const sortBy = traceResultsFiltersFormSelector(state, 'sortBy');
-  const traceResultsSorted = getSortedTraceResults(traces, sortBy);
   const errorMessage = serviceError || traceError ? `${serviceError || ''} ${traceError || ''}` : '';
+  const sortBy = traceResultsFiltersFormSelector(state, 'sortBy');
+  sortTraces(traces, sortBy);
 
   return {
     isHomepage,
     sortTracesBy: sortBy,
-    traceResults: traceResultsSorted,
-    numberOfTraceResults: traceResultsSorted.length,
+    traceResults: traces,
+    numberOfTraceResults: traces.length,
     maxTraceDuration: maxDuration,
     urlQueryParams: query,
     services,
@@ -233,7 +226,6 @@ function mapStateToProps(state) {
 
 function mapDispatchToProps(dispatch) {
   const { searchTraces, fetchServices } = bindActionCreators(jaegerApiActions, dispatch);
-
   return {
     searchTraces,
     fetchServices,
