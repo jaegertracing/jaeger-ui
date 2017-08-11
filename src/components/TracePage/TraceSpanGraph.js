@@ -22,36 +22,28 @@ import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { window } from 'global';
 
-import SpanGraph from '../SpanGraph';
-import SpanGraphTickHeader from '../SpanGraph/SpanGraphTickHeader';
+import SpanGraph from './SpanGraph';
+import SpanGraphTickHeader from './SpanGraph/SpanGraphTickHeader';
 import tracePropTypes from '../../propTypes/trace';
 import TimelineScrubber from './TimelineScrubber';
 
 import {
   getTraceId,
-  getSortedSpans,
   getTicksForTrace,
   getTraceTimestamp,
   getTraceEndTimestamp,
   getTraceDuration,
-  getTraceSpans,
   getTraceSpanCount,
 } from '../../selectors/trace';
-import { getSpanTimestamp } from '../../selectors/span';
-import { numberSortComparator } from '../../utils/sort';
 import { getPercentageOfInterval } from '../../utils/date';
 
-const TIMELINE_TICK_INTERVAL = 5;
+const TIMELINE_TICK_INTERVAL = 4;
 const TIMELINE_TICK_WIDTH = 2;
-const TIMELINE_TRACE_SORT = {
-  dir: 1,
-  selector: getSpanTimestamp,
-  comparator: numberSortComparator,
-};
 
-export default class TracePageTimeline extends Component {
+export default class TraceSpanGraph extends Component {
   static get propTypes() {
     return {
+      xformedTrace: PropTypes.object,
       trace: tracePropTypes,
       height: PropTypes.number.isRequired,
     };
@@ -59,7 +51,7 @@ export default class TracePageTimeline extends Component {
 
   static get defaultProps() {
     return {
-      height: 50,
+      height: 60,
     };
   }
 
@@ -152,7 +144,7 @@ export default class TracePageTimeline extends Component {
   }
 
   render() {
-    const { trace, height } = this.props;
+    const { trace, xformedTrace, height } = this.props;
     const { currentlyDragging } = this.state;
     const { timeRangeFilter } = this.context;
     const leftBound = timeRangeFilter[0];
@@ -161,12 +153,6 @@ export default class TracePageTimeline extends Component {
     if (!trace) {
       return <div />;
     }
-
-    const ticks = getTicksForTrace({
-      trace,
-      interval: TIMELINE_TICK_INTERVAL,
-      width: TIMELINE_TICK_WIDTH,
-    });
 
     const initialTimestamp = getTraceTimestamp(trace);
     const traceDuration = getTraceDuration(trace);
@@ -184,7 +170,7 @@ export default class TracePageTimeline extends Component {
     return (
       <div className="trace-page-timeline condensed-span-graphs">
         <div className="trace-page-timeline--tick-container">
-          <SpanGraphTickHeader trace={trace} ticks={ticks} />
+          <SpanGraphTickHeader numTicks={TIMELINE_TICK_INTERVAL} duration={traceDuration} />
         </div>
         <div className="trace-page-timeline__graph">
           <svg
@@ -216,15 +202,13 @@ export default class TracePageTimeline extends Component {
                 className="trace-page-timeline__graph--inactive"
               />}
             <SpanGraph
-              trace={trace}
-              spans={getSortedSpans({
-                trace,
-                spans: getTraceSpans(trace),
-                sort: TIMELINE_TRACE_SORT,
-              })}
-              rowPadding={0}
-              rowHeight={height / getTraceSpanCount(trace)}
-              ticks={ticks}
+              valueWidth={xformedTrace.duration}
+              numTicks={TIMELINE_TICK_INTERVAL}
+              items={xformedTrace.spans.map(span => ({
+                valueOffset: span.relativeStartTime,
+                valueWidth: span.duration,
+                serviceName: span.process.serviceName,
+              }))}
             />
             {leftBound &&
               <TimelineScrubber

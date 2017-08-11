@@ -22,91 +22,70 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import { Dropdown, Menu } from 'semantic-ui-react';
 
-import tracePropTypes from '../../propTypes/trace';
-import { formatDatetime } from '../../utils/date';
-
-import {
-  formatDurationForTrace,
-  getTraceDepth,
-  getTraceDuration,
-  getTraceName,
-  getTraceServiceCount,
-  getTraceSpanCount,
-  getTraceTimestamp,
-} from '../../selectors/trace';
-
-function MoreTraceOptionsDropdown({ traceID }) {
-  return (
-    <Menu>
-      <Dropdown text="View Options" className="item">
-        <Dropdown.Menu>
-          <Dropdown.Item>
-            <a rel="noopener noreferrer" target="_blank" href={`/api/traces/${traceID}`}>
-              View Trace JSON
-            </a>
-          </Dropdown.Item>
-        </Dropdown.Menu>
-      </Dropdown>
-    </Menu>
-  );
-}
-
-MoreTraceOptionsDropdown.propTypes = {
-  traceID: PropTypes.string,
-};
+import { formatDatetime, formatDuration } from '../../utils/date';
 
 export const HEADER_ITEMS = [
   {
     key: 'timestamp',
     title: 'Trace Start',
-    renderer: trace => formatDatetime(getTraceTimestamp(trace)),
+    renderer: props => formatDatetime(props.timestampMs * 1000),
   },
   {
     key: 'duration',
     title: 'Duration',
-    renderer: trace => formatDurationForTrace({ trace, duration: getTraceDuration(trace) }),
+    renderer: props => formatDuration(props.durationMs * 1000),
   },
   {
     key: 'service-count',
     title: 'Services',
-    renderer: trace => getTraceServiceCount(trace),
+    propName: 'numServices',
   },
   {
     key: 'depth',
     title: 'Depth',
-    renderer: trace => getTraceDepth(trace),
+    propName: 'maxDepth',
   },
   {
     key: 'span-count',
     title: 'Total Spans',
-    renderer: trace => getTraceSpanCount(trace),
+    propName: 'numSpans',
   },
 ];
 
-export default function TracePageHeader(
-  { trace, slimView = false, onSlimViewClicked = noop => noop },
-  { updateTextFilter, textFilter }
-) {
-  if (!trace) {
-    return <div />;
+export default function TracePageHeader(props, context) {
+  const { traceID, name, slimView, onSlimViewClicked } = props;
+  const { updateTextFilter, textFilter } = context;
+
+  if (!traceID) {
+    return null;
   }
 
   return (
-    <header className="trace-page-header mb2">
+    <header className="trace-page-header mb1">
       <div className="flex">
         <div className="flex-auto">
           <h2>
-            <a onClick={() => onSlimViewClicked()}>
+            <a onClick={onSlimViewClicked}>
               <i
                 className={`ui icon angle double ${slimView ? 'right' : 'down'}`}
                 style={{ float: 'none' }}
               />
             </a>
-            {getTraceName(trace)}
+            {name}
           </h2>
         </div>
         <div className="inline-block mr1">
-          <MoreTraceOptionsDropdown traceID={trace.traceID} />
+          <Menu>
+            <Dropdown text="View Options" className="item">
+              <Dropdown.Menu>
+                <Dropdown.Item>
+                  <a rel="noopener noreferrer" target="_blank" href={`/api/traces/${traceID}`}>
+                    View Trace JSON
+                  </a>
+                </Dropdown.Item>
+              </Dropdown.Menu>
+            </Dropdown>
+          </Menu>
         </div>
         <div className="inline-block">
           <div className="ui input">
@@ -115,21 +94,19 @@ export default function TracePageHeader(
               type="text"
               defaultValue={textFilter}
               placeholder="Search..."
-              onChange={({ target: { value } }) => updateTextFilter(value)}
+              onChange={event => updateTextFilter(event.target.value)}
             />
           </div>
         </div>
       </div>
       {!slimView &&
         <div>
-          {HEADER_ITEMS.map(({ renderer, title, ...itemProps }) =>
-            <div className="inline-block mr1" {...itemProps}>
+          {HEADER_ITEMS.map(({ renderer, propName, title, key }) =>
+            <div className="inline-block mr1" key={key}>
               <strong>
                 {title}:{' '}
               </strong>
-              <span>
-                {renderer(trace)}
-              </span>
+              {propName ? props[propName] : renderer(props)}
             </div>
           )}
         </div>}
@@ -138,7 +115,13 @@ export default function TracePageHeader(
 }
 
 TracePageHeader.propTypes = {
-  trace: tracePropTypes,
+  traceID: PropTypes.string,
+  name: PropTypes.string,
+  maxDepth: PropTypes.number, // eslint-disable-line react/no-unused-prop-types
+  numServices: PropTypes.number, // eslint-disable-line react/no-unused-prop-types
+  numSpans: PropTypes.number, // eslint-disable-line react/no-unused-prop-types
+  durationMs: PropTypes.number, // eslint-disable-line react/no-unused-prop-types
+  timestampMs: PropTypes.number, // eslint-disable-line react/no-unused-prop-types
   slimView: PropTypes.bool,
   onSlimViewClicked: PropTypes.func,
 };

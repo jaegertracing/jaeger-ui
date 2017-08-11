@@ -19,8 +19,8 @@
 // THE SOFTWARE.
 
 export default class TreeNode {
-  static iterFunction(fn) {
-    return node => fn(node.value, node);
+  static iterFunction(fn, depth = 0) {
+    return node => fn(node.value, node, depth);
   }
 
   static searchFunction(search) {
@@ -100,8 +100,8 @@ export default class TreeNode {
     return findPath(this, []);
   }
 
-  walk(fn) {
-    TreeNode.iterFunction(fn)(this);
-    this.children.forEach(child => child.walk(fn));
+  walk(fn, depth = 0) {
+    TreeNode.iterFunction(fn, depth)(this);
+    this.children.forEach(child => child.walk(fn, depth + 1));
   }
 }

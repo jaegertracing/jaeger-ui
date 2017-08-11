@@ -23,7 +23,7 @@ import sinon from 'sinon';
 import { shallow } from 'enzyme';
 import TracePage from '../../../src/components/TracePage';
 import TracePageHeader from '../../../src/components/TracePage/TracePageHeader';
-import TracePageTimeline from '../../../src/components/TracePage/TracePageTimeline';
+import TraceSpanGraph from '../../../src/components/TracePage/TraceSpanGraph';
 
 const traceID = 'trace-id';
 const timestamp = new Date().getTime() * 1000;
@@ -72,10 +72,10 @@ it('<TracePage /> should render a <TracePageHeader /> with the trace', () => {
   expect(wrapper.find(TracePageHeader).get(0)).toBeTruthy();
 });
 
-it('<TracePage /> should render a <TracePageTimeline /> with the trace', () => {
+it('<TracePage /> should render a <TraceSpanGraph /> with the trace', () => {
   const wrapper = shallow(<TracePage {...defaultProps} />);
 
-  expect(wrapper.contains(<TracePageTimeline trace={defaultProps.trace} />)).toBeTruthy();
+  expect(wrapper.contains(<TraceSpanGraph trace={defaultProps.trace} />)).toBeTruthy();
 });
 
 it('<TracePage /> should render an empty page if no trace', () => {

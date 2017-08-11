@@ -22,9 +22,9 @@ import React from 'react';
 import sinon from 'sinon';
 import { shallow } from 'enzyme';
 
-import SpanGraph from '../SpanGraph';
-import TracePageTimeline from './TracePageTimeline';
-import SpanGraphTickHeader from '../SpanGraph/SpanGraphTickHeader';
+import SpanGraph from './SpanGraph';
+import TraceSpanGraph from './TraceSpanGraph';
+import SpanGraphTickHeader from './SpanGraph/SpanGraphTickHeader';
 import TimelineScrubber from './TimelineScrubber';
 import traceGenerator from '../../../src/demo/trace-generators';
 
@@ -82,26 +82,26 @@ const defaultOptions = {
   },
 };
 
-it('<TracePageTimeline /> should render a <SpanGraph />', () => {
-  const wrapper = shallow(<TracePageTimeline {...defaultProps} />, defaultOptions);
+it('<TraceSpanGraph /> should render a <SpanGraph />', () => {
+  const wrapper = shallow(<TraceSpanGraph {...defaultProps} />, defaultOptions);
 
   expect(wrapper.find(SpanGraph).length).toBe(1);
 });
 
-it('<TracePageTimeline /> should render a <SpanGraphTickHeader />', () => {
-  const wrapper = shallow(<TracePageTimeline {...defaultProps} />, defaultOptions);
+it('<TraceSpanGraph /> should render a <SpanGraphTickHeader />', () => {
+  const wrapper = shallow(<TraceSpanGraph {...defaultProps} />, defaultOptions);
 
   expect(wrapper.find(SpanGraphTickHeader).length).toBe(1);
 });
 
-it('<TracePageTimeline /> should just return a <div /> if no trace is present', () => {
-  const wrapper = shallow(<TracePageTimeline {...defaultProps} trace={null} />, defaultOptions);
+it('<TraceSpanGraph /> should just return a <div /> if no trace is present', () => {
+  const wrapper = shallow(<TraceSpanGraph {...defaultProps} trace={null} />, defaultOptions);
 
   expect(wrapper.matchesElement(<div />)).toBeTruthy();
 });
 
-it('<TracePageTimeline /> should render a filtering box if leftBound exists', () => {
-  const wrapper = shallow(<TracePageTimeline {...defaultProps} />, {
+it('<TraceSpanGraph /> should render a filtering box if leftBound exists', () => {
+  const wrapper = shallow(<TraceSpanGraph {...defaultProps} />, {
     ...defaultOptions,
     context: {
       ...defaultOptions.context,
@@ -116,8 +116,8 @@ it('<TracePageTimeline /> should render a filtering box if leftBound exists', ()
   ).toBeTruthy();
 });
 
-it('<TracePageTimeline /> should render a filtering box if rightBound exists', () => {
-  const wrapper = shallow(<TracePageTimeline {...defaultProps} />, {
+it('<TraceSpanGraph /> should render a filtering box if rightBound exists', () => {
+  const wrapper = shallow(<TraceSpanGraph {...defaultProps} />, {
     ...defaultOptions,
     context: {
       ...defaultOptions.context,
@@ -132,8 +132,8 @@ it('<TracePageTimeline /> should render a filtering box if rightBound exists', (
   ).toBeTruthy();
 });
 
-it('<TracePageTimeline /> should render handles for the timeRangeFilter', () => {
-  const wrapper = shallow(<TracePageTimeline {...defaultProps} />, defaultOptions);
+it('<TraceSpanGraph /> should render handles for the timeRangeFilter', () => {
+  const wrapper = shallow(<TraceSpanGraph {...defaultProps} />, defaultOptions);
 
   expect(
     wrapper.containsMatchingElement(
@@ -147,8 +147,8 @@ it('<TracePageTimeline /> should render handles for the timeRangeFilter', () => 
   ).toBeTruthy();
 });
 
-it('<TracePageTimeline /> should call startDragging for the leftBound handle', () => {
-  const wrapper = shallow(<TracePageTimeline {...defaultProps} />, defaultOptions);
+it('<TraceSpanGraph /> should call startDragging for the leftBound handle', () => {
+  const wrapper = shallow(<TraceSpanGraph {...defaultProps} />, defaultOptions);
   const event = { clientX: 50 };
 
   sinon.stub(wrapper.instance(), 'startDragging');
@@ -158,8 +158,8 @@ it('<TracePageTimeline /> should call startDragging for the leftBound handle', (
   expect(wrapper.instance().startDragging.calledWith('leftBound', event)).toBeTruthy();
 });
 
-it('<TracePageTimeline /> should call startDragging for the rightBound handle', () => {
-  const wrapper = shallow(<TracePageTimeline {...defaultProps} />, defaultOptions);
+it('<TraceSpanGraph /> should call startDragging for the rightBound handle', () => {
+  const wrapper = shallow(<TraceSpanGraph {...defaultProps} />, defaultOptions);
   const event = { clientX: 50 };
 
   sinon.stub(wrapper.instance(), 'startDragging');
@@ -169,8 +169,8 @@ it('<TracePageTimeline /> should call startDragging for the rightBound handle', 
   expect(wrapper.instance().startDragging.calledWith('rightBound', event)).toBeTruthy();
 });
 
-it('<TracePageTimeline /> should render without handles if no filtering', () => {
-  const wrapper = shallow(<TracePageTimeline {...defaultProps} />, {
+it('<TraceSpanGraph /> should render without handles if no filtering', () => {
+  const wrapper = shallow(<TraceSpanGraph {...defaultProps} />, {
     ...defaultOptions,
     context: {
       ...defaultOptions.context,
@@ -182,7 +182,7 @@ it('<TracePageTimeline /> should render without handles if no filtering', () => 
   expect(wrapper.find(TimelineScrubber).length).toBe(0);
 });
 
-it('<TracePageTimeline /> should timeline-sort the trace before rendering', () => {
+it('<TraceSpanGraph /> should timeline-sort the trace before rendering', () => {
   // manually sort the spans in the defaultProps.
   const sortedTraceSpans = [
     defaultProps.trace.spans[2],
@@ -190,13 +190,13 @@ it('<TracePageTimeline /> should timeline-sort the trace before rendering', () =
     defaultProps.trace.spans[1],
   ];
 
-  const wrapper = shallow(<TracePageTimeline {...defaultProps} />, defaultOptions);
+  const wrapper = shallow(<TraceSpanGraph {...defaultProps} />, defaultOptions);
   const spanGraph = wrapper.find(SpanGraph).first();
 
   expect(spanGraph.prop('spans')).toEqual(sortedTraceSpans);
 });
 
-it('<TracePageTimeline /> should create ticks and pass them to components', () => {
+it('<TraceSpanGraph /> should create ticks and pass them to components', () => {
   // manually build a ticks object for the trace
   const ticks = [
     { timestamp, width: 2 },
@@ -207,7 +207,7 @@ it('<TracePageTimeline /> should create ticks and pass them to components', () =
     { timestamp: timestamp + 50000, width: 2 },
   ];
 
-  const wrapper = shallow(<TracePageTimeline {...defaultProps} />, defaultOptions);
+  const wrapper = shallow(<TraceSpanGraph {...defaultProps} />, defaultOptions);
   const spanGraph = wrapper.find(SpanGraph).first();
   const spanGraphTickHeader = wrapper.find(SpanGraphTickHeader).first();
 
@@ -215,29 +215,29 @@ it('<TracePageTimeline /> should create ticks and pass them to components', () =
   expect(spanGraphTickHeader.prop('ticks')).toEqual(ticks);
 });
 
-it('<TracePageTimeline /> should calculate the rowHeight', () => {
-  const wrapper = shallow(<TracePageTimeline {...defaultProps} />, defaultOptions);
+it('<TraceSpanGraph /> should calculate the rowHeight', () => {
+  const wrapper = shallow(<TraceSpanGraph {...defaultProps} />, defaultOptions);
   const spanGraph = wrapper.find(SpanGraph).first();
 
   expect(spanGraph.prop('rowHeight')).toBe(50 / 3);
 });
 
-it('<TracePageTimeline /> should pass the props through to SpanGraph', () => {
-  const wrapper = shallow(<TracePageTimeline {...defaultProps} />, defaultOptions);
+it('<TraceSpanGraph /> should pass the props through to SpanGraph', () => {
+  const wrapper = shallow(<TraceSpanGraph {...defaultProps} />, defaultOptions);
   const spanGraph = wrapper.find(SpanGraph).first();
 
   expect(spanGraph.prop('rowPadding')).toBe(0);
 });
 
-it('<TracePageTimeline /> should pass the props through to SpanGraphTickHeader', () => {
-  const wrapper = shallow(<TracePageTimeline {...defaultProps} />, defaultOptions);
+it('<TraceSpanGraph /> should pass the props through to SpanGraphTickHeader', () => {
+  const wrapper = shallow(<TraceSpanGraph {...defaultProps} />, defaultOptions);
   const spanGraphTickHeader = wrapper.find(SpanGraphTickHeader).first();
 
   expect(spanGraphTickHeader.prop('trace')).toEqual(defaultProps.trace);
 });
 
-it('TracePageTimeline.shouldComponentUpdate should return true for new timeRange', () => {
-  const wrapper = shallow(<TracePageTimeline {...defaultProps} />, defaultOptions);
+it('TraceSpanGraph.shouldComponentUpdate should return true for new timeRange', () => {
+  const wrapper = shallow(<TraceSpanGraph {...defaultProps} />, defaultOptions);
 
   expect(
     wrapper.instance().shouldComponentUpdate(defaultProps, wrapper.state(), {
@@ -246,8 +246,8 @@ it('TracePageTimeline.shouldComponentUpdate should return true for new timeRange
   ).toBe(true);
 });
 
-it('TracePageTimeline.shouldComponentUpdate should return true for new traces', () => {
-  const wrapper = shallow(<TracePageTimeline {...defaultProps} />, defaultOptions);
+it('TraceSpanGraph.shouldComponentUpdate should return true for new traces', () => {
+  const wrapper = shallow(<TraceSpanGraph {...defaultProps} />, defaultOptions);
 
   expect(
     wrapper
@@ -260,8 +260,8 @@ it('TracePageTimeline.shouldComponentUpdate should return true for new traces', 
   ).toBe(true);
 });
 
-it('TracePageTimeline.shouldComponentUpdate should return true for currentlyDragging', () => {
-  const wrapper = shallow(<TracePageTimeline {...defaultProps} />, defaultOptions);
+it('TraceSpanGraph.shouldComponentUpdate should return true for currentlyDragging', () => {
+  const wrapper = shallow(<TraceSpanGraph {...defaultProps} />, defaultOptions);
 
   expect(
     wrapper.instance().shouldComponentUpdate(
@@ -275,17 +275,17 @@ it('TracePageTimeline.shouldComponentUpdate should return true for currentlyDrag
   ).toBe(true);
 });
 
-it('TracePageTimeline.shouldComponentUpdate should return false otherwise', () => {
-  const wrapper = shallow(<TracePageTimeline {...defaultProps} />, defaultOptions);
+it('TraceSpanGraph.shouldComponentUpdate should return false otherwise', () => {
+  const wrapper = shallow(<TraceSpanGraph {...defaultProps} />, defaultOptions);
 
   expect(
     wrapper.instance().shouldComponentUpdate(defaultProps, wrapper.state(), defaultOptions.context)
   ).toBe(false);
 });
 
-it('TracePageTimeline.onMouseMove should do nothing if currentlyDragging is false', () => {
+it('TraceSpanGraph.onMouseMove should do nothing if currentlyDragging is false', () => {
   const updateTimeRangeFilter = sinon.spy();
-  const wrapper = shallow(<TracePageTimeline {...defaultProps} />, {
+  const wrapper = shallow(<TraceSpanGraph {...defaultProps} />, {
     ...defaultOptions,
     context: {
       ...defaultOptions.context,
@@ -302,8 +302,8 @@ it('TracePageTimeline.onMouseMove should do nothing if currentlyDragging is fals
   expect(updateTimeRangeFilter.called).toBeFalsy();
 });
 
-it('TracePageTimeline.onMouseMove should store the clientX on the state', () => {
-  const wrapper = shallow(<TracePageTimeline {...defaultProps} />, defaultOptions);
+it('TraceSpanGraph.onMouseMove should store the clientX on the state', () => {
+  const wrapper = shallow(<TraceSpanGraph {...defaultProps} />, defaultOptions);
 
   wrapper.instance().svg = { clientWidth: 100 };
   wrapper.setState({ currentlyDragging: 'leftBound' });
@@ -313,9 +313,9 @@ it('TracePageTimeline.onMouseMove should store the clientX on the state', () => 
   expect(wrapper.state('prevX')).toBe(45);
 });
 
-it('TracePageTimeline.onMouseMove should update the timeRangeFilter for the left handle', () => {
+it('TraceSpanGraph.onMouseMove should update the timeRangeFilter for the left handle', () => {
   const updateTimeRangeFilter = sinon.spy();
-  const wrapper = shallow(<TracePageTimeline {...defaultProps} />, {
+  const wrapper = shallow(<TraceSpanGraph {...defaultProps} />, {
     ...defaultOptions,
     context: {
       ...defaultOptions.context,
@@ -331,9 +331,9 @@ it('TracePageTimeline.onMouseMove should update the timeRangeFilter for the left
   expect(updateTimeRangeFilter.calledWith(timestamp + 22500, timestamp + 50000)).toBeTruthy();
 });
 
-it('TracePageTimeline.onMouseMove should update the timeRangeFilter for the right handle', () => {
+it('TraceSpanGraph.onMouseMove should update the timeRangeFilter for the right handle', () => {
   const updateTimeRangeFilter = sinon.spy();
-  const wrapper = shallow(<TracePageTimeline {...defaultProps} />, {
+  const wrapper = shallow(<TraceSpanGraph {...defaultProps} />, {
     ...defaultOptions,
     context: {
       ...defaultOptions.context,
@@ -349,8 +349,8 @@ it('TracePageTimeline.onMouseMove should update the timeRangeFilter for the righ
   expect(updateTimeRangeFilter.calledWith(timestamp, timestamp + 22500)).toBeTruthy();
 });
 
-it('TracePageTimeline.startDragging should store the boundName and the prevX in state', () => {
-  const wrapper = shallow(<TracePageTimeline {...defaultProps} />, defaultOptions);
+it('TraceSpanGraph.startDragging should store the boundName and the prevX in state', () => {
+  const wrapper = shallow(<TraceSpanGraph {...defaultProps} />, defaultOptions);
 
   wrapper.instance().startDragging('leftBound', { clientX: 100 });
 
@@ -359,8 +359,8 @@ it('TracePageTimeline.startDragging should store the boundName and the prevX in 
 });
 
 // TODO: Need to figure out how to mock to window events.
-it.skip('TracePageTimeline.startDragging should bind event listeners to the window', () => {
-  const wrapper = shallow(<TracePageTimeline {...defaultProps} />, defaultOptions);
+it.skip('TraceSpanGraph.startDragging should bind event listeners to the window', () => {
+  const wrapper = shallow(<TraceSpanGraph {...defaultProps} />, defaultOptions);
 
   clearListeners();
 
@@ -370,8 +370,8 @@ it.skip('TracePageTimeline.startDragging should bind event listeners to the wind
   expect(addEventListener.calledWith('mouseup', sinon.match.func)).toBeTruthy();
 });
 
-it.skip('TracePageTimeline.startDragging should call onMouseMove on the window', () => {
-  const wrapper = shallow(<TracePageTimeline {...defaultProps} />, defaultOptions);
+it.skip('TraceSpanGraph.startDragging should call onMouseMove on the window', () => {
+  const wrapper = shallow(<TraceSpanGraph {...defaultProps} />, defaultOptions);
 
   clearListeners();
 
@@ -384,8 +384,8 @@ it.skip('TracePageTimeline.startDragging should call onMouseMove on the window',
   expect(wrapper.instance().onMouseMove.calledWith(event)).toBeTruthy();
 });
 
-it.skip('TracePageTimeline.startDragging mouseup should call stopDragging', () => {
-  const wrapper = shallow(<TracePageTimeline {...defaultProps} />, defaultOptions);
+it.skip('TraceSpanGraph.startDragging mouseup should call stopDragging', () => {
+  const wrapper = shallow(<TraceSpanGraph {...defaultProps} />, defaultOptions);
 
   clearListeners();
 
@@ -398,8 +398,8 @@ it.skip('TracePageTimeline.startDragging mouseup should call stopDragging', () =
   expect(wrapper.instance().stopDragging.called).toBeTruthy();
 });
 
-it.skip('TracePageTimeline.startDragging mouseup should stop listening to the events', () => {
-  const wrapper = shallow(<TracePageTimeline {...defaultProps} />, defaultOptions);
+it.skip('TraceSpanGraph.startDragging mouseup should stop listening to the events', () => {
+  const wrapper = shallow(<TraceSpanGraph {...defaultProps} />, defaultOptions);
 
   clearListeners();
 
@@ -412,8 +412,8 @@ it.skip('TracePageTimeline.startDragging mouseup should stop listening to the ev
   expect(removeEventListener.calledWith('mouseup', sinon.match.func)).toBeTruthy();
 });
 
-it('TracePageTimeline.stopDragging should clear currentlyDragging and prevX', () => {
-  const wrapper = shallow(<TracePageTimeline {...defaultProps} />, defaultOptions);
+it('TraceSpanGraph.stopDragging should clear currentlyDragging and prevX', () => {
+  const wrapper = shallow(<TraceSpanGraph {...defaultProps} />, defaultOptions);
 
   wrapper.instance().stopDragging();
 

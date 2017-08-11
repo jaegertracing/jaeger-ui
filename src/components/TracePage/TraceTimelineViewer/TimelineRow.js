@@ -18,33 +18,49 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+import PropTypes from 'prop-types';
 import React from 'react';
-import ReactDOM from 'react-dom';
-import { browserHistory, hashHistory } from 'react-router';
-import { document } from 'global';
-import 'basscss/css/basscss.css';
 
-import JaegerUIApp from './components/App';
-
-export { default as SpanGraph } from './components/TracePage/SpanGraph';
-export { default as TracePage } from './components/TracePage';
-export { SearchTracePage } from './components/SearchTracePage';
-export default JaegerUIApp;
-
-const UI_ROOT_ID = 'jaeger-ui-root';
-const history = process.env.REACT_APP_GH_PAGES === 'true' ? hashHistory : browserHistory;
-
-/* istanbul ignore if */
-if (process.env.NODE_ENV === 'development') {
-  require.ensure(['global/window', 'react-addons-perf'], require => {
-    const window = require('global/window');
-    /* eslint-disable import/no-extraneous-dependencies */
-    window.Perf = require('react-addons-perf');
-    /* eslint-enable import/no-extraneous-dependencies */
-  });
+export default function TimelineRow(props) {
+  const { children, className, ...rest } = props;
+  return (
+    <div className={`row ${className}`} {...rest}>
+      {children}
+    </div>
+  );
 }
 
-/* istanbul ignore if */
-if (document && process.env.NODE_ENV !== 'test') {
-  ReactDOM.render(<JaegerUIApp history={history} />, document.getElementById(UI_ROOT_ID));
+TimelineRow.propTypes = {
+  children: PropTypes.node,
+  className: PropTypes.string,
+};
+
+function TimelineRowLeft(props) {
+  const { children, ...rest } = props;
+  return (
+    <div className="col-xs-3" {...rest}>
+      {children}
+    </div>
+  );
 }
+
+TimelineRowLeft.propTypes = {
+  children: PropTypes.node,
+};
+
+TimelineRow.Left = TimelineRowLeft;
+
+function TimelineRowRight(props) {
+  const { children, ...rest } = props;
+  return (
+    <div className="col-xs-9 relative" {...rest}>
+      {children}
+    </div>
+  );
+}
+
+TimelineRowRight.propTypes = {
+  children: PropTypes.node,
+};
+
+TimelineRow.Right = TimelineRowRight;

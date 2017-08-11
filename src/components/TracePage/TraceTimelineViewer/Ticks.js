@@ -18,33 +18,44 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+import PropTypes from 'prop-types';
 import React from 'react';
-import ReactDOM from 'react-dom';
-import { browserHistory, hashHistory } from 'react-router';
-import { document } from 'global';
-import 'basscss/css/basscss.css';
 
-import JaegerUIApp from './components/App';
-
-export { default as SpanGraph } from './components/TracePage/SpanGraph';
-export { default as TracePage } from './components/TracePage';
-export { SearchTracePage } from './components/SearchTracePage';
-export default JaegerUIApp;
-
-const UI_ROOT_ID = 'jaeger-ui-root';
-const history = process.env.REACT_APP_GH_PAGES === 'true' ? hashHistory : browserHistory;
-
-/* istanbul ignore if */
-if (process.env.NODE_ENV === 'development') {
-  require.ensure(['global/window', 'react-addons-perf'], require => {
-    const window = require('global/window');
-    /* eslint-disable import/no-extraneous-dependencies */
-    window.Perf = require('react-addons-perf');
-    /* eslint-enable import/no-extraneous-dependencies */
-  });
+export default function Ticks(props) {
+  const { ticks } = props;
+  const margin = 5;
+  return (
+    <div>
+      {ticks.map(tick =>
+        <div
+          key={tick.percent}
+          style={{
+            position: 'absolute',
+            left: `${tick.percent}%`,
+            height: '100%',
+            width: 1,
+            backgroundColor: 'lightgray',
+          }}
+        >
+          <span
+            style={{
+              position: 'absolute',
+              left: tick.position !== 'left' ? margin : undefined,
+              right: tick.position === 'left' ? margin : undefined,
+            }}
+          >
+            {tick.label}
+          </span>
+        </div>
+      )}
+    </div>
+  );
 }
-
-/* istanbul ignore if */
-if (document && process.env.NODE_ENV !== 'test') {
-  ReactDOM.render(<JaegerUIApp history={history} />, document.getElementById(UI_ROOT_ID));
-}
+Ticks.propTypes = {
+  ticks: PropTypes.arrayOf(
+    PropTypes.shape({
+      percent: PropTypes.number,
+      label: PropTypes.string,
+    })
+  ).isRequired,
+};

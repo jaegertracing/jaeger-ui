@@ -25,7 +25,7 @@ import SpanGraph from '.';
 
 import SpanGraphTick from './SpanGraphTick';
 import SpanGraphSpan from './SpanGraphSpan';
-import { getTicksForTrace } from '../../selectors/trace';
+import { getTicksForTrace } from '../../../../../selectors/trace';
 
 const initialTimestamp = new Date().getTime() * 1000;
 const trace = {

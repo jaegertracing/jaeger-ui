@@ -18,20 +18,28 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import * as traceSelectors from '../../../selectors/trace';
+import {
+  getTraceDuration,
+  getTraceEndTimestamp,
+  getTraceSpanIdsAsTree,
+  getTraceSpansAsMap,
+  getTraceTimestamp,
+  hydrateSpansWithProcesses,
+} from '../../../selectors/trace';
 
 const cache = new Map();
+
 export function transformTrace(trace) {
   if (cache.has(trace.traceID)) {
     return cache.get(trace.traceID);
   }
-  traceSelectors.hydrateSpansWithProcesses(trace);
-  const Tree = traceSelectors.getTraceSpanIdsAsTree(trace);
-  const spanMap = traceSelectors.getTraceSpansAsMap(trace);
+  hydrateSpansWithProcesses(trace);
+  const traceStartTime = getTraceTimestamp(trace);
+  const traceEndTime = getTraceEndTimestamp(trace);
+  const tree = getTraceSpanIdsAsTree(trace);
+  const spanMap = getTraceSpansAsMap(trace);
   const spans = [];
-  const traceStartTime = traceSelectors.getTraceTimestamp(trace);
-  const traceEndTime = traceSelectors.getTraceEndTimestamp(trace);
-  Tree.walk((spanID, value) => {
+  tree.walk((spanID, node, depth) => {
     if (spanID === '__root__') {
       return;
     }
@@ -39,16 +47,16 @@ export function transformTrace(trace) {
     spans.push({
       ...span,
       relativeStartTime: span.startTime - traceStartTime,
-      depth: traceSelectors.getSpanDepthForTrace({ trace, span }) - 1,
-      hasChildren: value.children.length > 0,
+      depth: depth - 1,
+      hasChildren: node.children.length > 0,
     });
   });
   const transform = {
     ...trace,
-    duration: traceSelectors.getTraceDuration(trace),
+    spans,
+    duration: getTraceDuration(trace),
     startTime: traceStartTime,
     endTime: traceEndTime,
-    spans,
   };
   cache.set(trace.traceID, transform);
   return transform;

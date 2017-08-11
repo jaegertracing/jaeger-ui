@@ -21,7 +21,7 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import _ from 'lodash';
-import { onlyUpdateForKeys, compose, withState, withProps, pure } from 'recompose';
+import { pure } from 'recompose';
 import * as d3 from 'd3-scale';
 import { filterSpansForText } from '../../../selectors/span';
 import './grid.css';
@@ -29,181 +29,29 @@ import './index.css';
 import {
   calculateSpanPosition,
   convertTimeRangeToPercent,
-  ensureWithinRange,
+  // ensureWithinRange,
   formatDuration,
   findServerChildSpan,
   isErrorSpan,
   spanContainsErredSpan,
 } from './utils';
-import { transformTrace } from './transforms';
+// import { transformTrace } from './transforms';
 import colorGenerator from '../../../utils/color-generator';
 import SpanDetail from './SpanDetail';
+import Ticks from './Ticks';
+import SpanBar from './SpanBar';
+import TimelineRow from './TimelineRow';
 
 // TODO: Move some styles to css
 // TODO: Clean up component names and move to seperate files.
 // TODO: Add unit tests
 // TODO: unify transforms and utils
 
-const ensurePercentIsBetween0And100 = percent => ensureWithinRange([0, 100], percent);
-
-/**
- * Components!
- */
 function Rail() {
   return <i className="plus icon" style={{ opacity: 0 }} />;
 }
 
-function SpanBar(props) {
-  const {
-    startPercent,
-    endPercent,
-    color,
-    label,
-    enableTransition,
-    onClick = noop => noop,
-    onMouseOver = noop => noop,
-    onMouseOut = noop => noop,
-    childInterval,
-  } = props;
-  const barWidth = endPercent - startPercent;
-  const barHeightPercent = 50;
-  return (
-    <div
-      onMouseOver={() => onMouseOver()}
-      onMouseOut={() => onMouseOut()}
-      className="span-row__bar hint--right hint--always"
-      onClick={onClick}
-      aria-label={label}
-      style={{
-        transition: enableTransition ? 'width 500ms' : undefined,
-        borderRadius: 3,
-        position: 'absolute',
-        display: 'inline-block',
-        backgroundColor: color,
-        top: `${(100 - barHeightPercent) / 2}%`,
-        height: `${barHeightPercent}%`,
-        width: `${ensurePercentIsBetween0And100(barWidth)}%`,
-        left: `${ensurePercentIsBetween0And100(startPercent)}%`,
-      }}
-    >
-      {childInterval &&
-        <div
-          style={{
-            position: 'absolute',
-            backgroundColor: childInterval.color,
-            left: `${ensurePercentIsBetween0And100(childInterval.startPercent)}%`,
-            right: `${100 - ensurePercentIsBetween0And100(childInterval.endPercent)}%`,
-            top: '20%',
-            bottom: '20%',
-          }}
-        />}
-    </div>
-  );
-}
-SpanBar.defaultProps = {
-  enableTransition: true,
-};
-SpanBar.propTypes = {
-  childInterval: PropTypes.shape({
-    startPercent: PropTypes.number,
-    endPercent: PropTypes.number,
-    color: PropTypes.string,
-  }),
-  enableTransition: PropTypes.bool,
-  startPercent: PropTypes.number.isRequired,
-  endPercent: PropTypes.number.isRequired,
-  color: PropTypes.string,
-  label: PropTypes.string,
-
-  onClick: PropTypes.func,
-  onMouseOver: PropTypes.func,
-  onMouseOut: PropTypes.func,
-};
-const SpanBarEnhanced = compose(
-  withState('label', 'setLabel', props => props.shortLabel),
-  withProps(({ setLabel, shortLabel, longLabel }) => ({
-    onMouseOver: () => setLabel(longLabel),
-    onMouseOut: () => setLabel(shortLabel),
-  })),
-  onlyUpdateForKeys(['startPercent', 'endPercent', 'label', 'childInterval'])
-)(SpanBar);
-
-function Ticks(props) {
-  const { ticks } = props;
-  const margin = 5;
-  return (
-    <div>
-      {ticks.map(tick =>
-        <div
-          key={tick.percent}
-          style={{
-            position: 'absolute',
-            left: `${tick.percent}%`,
-            height: '100%',
-            width: 1,
-            backgroundColor: 'lightgray',
-          }}
-        >
-          <span
-            style={{
-              position: 'absolute',
-              left: tick.position !== 'left' ? margin : undefined,
-              right: tick.position === 'left' ? margin : undefined,
-            }}
-          >
-            {tick.label}
-          </span>
-        </div>
-      )}
-    </div>
-  );
-}
-Ticks.propTypes = {
-  ticks: PropTypes.arrayOf(
-    PropTypes.shape({
-      percent: PropTypes.number,
-      label: PropTypes.string,
-    })
-  ),
-};
-
-const TimelineRow = props => {
-  const { children, className, ...rest } = props;
-  return (
-    <div className={`row ${className}`} {...rest}>
-      {children}
-    </div>
-  );
-};
-TimelineRow.propTypes = {
-  children: PropTypes.node,
-  className: PropTypes.string,
-};
-TimelineRow.Left = props => {
-  const { children, ...rest } = props;
-  return (
-    <div className="col-xs-3" {...rest}>
-      {children}
-    </div>
-  );
-};
-TimelineRow.Left.propTypes = {
-  children: PropTypes.node,
-};
-TimelineRow.Right = props => {
-  const { children, ...rest } = props;
-  return (
-    <div className="col-xs-9 relative" {...rest}>
-      {children}
-    </div>
-  );
-};
-TimelineRow.Right.propTypes = {
-  children: PropTypes.node,
-};
-
-const Timeline = {};
-Timeline.SpanDetails = pure(props => {
+const TimelineSpanDetailRow = pure(props => {
   const { span, color, trace } = props;
   const { spanID } = span;
   return (
@@ -226,7 +74,8 @@ Timeline.SpanDetails = pure(props => {
     </TimelineRow>
   );
 });
-Timeline.SpanDetails.propTypes = {
+
+TimelineSpanDetailRow.propTypes = {
   span: PropTypes.object,
   color: PropTypes.string,
 };
@@ -380,7 +229,7 @@ function TraceView(props) {
         </TimelineRow.Left>
         <TimelineRow.Right style={{ cursor: 'pointer' }} onClick={() => onSpanClick(spanID)}>
           <Ticks ticks={tickPercents.map(percent => ({ percent }))} />
-          <SpanBarEnhanced
+          <SpanBar
             childInterval={interval}
             startPercent={startPercent}
             endPercent={endPercent}
@@ -393,7 +242,10 @@ function TraceView(props) {
       </TimelineRow>
     );
     if (showSpanDetails) {
-      arr.push(<Timeline.SpanDetails key={span.id} span={span} trace={trace} color={spanColor} />);
+      arr.push(
+        // <Timeline.SpanDetails key={`${span.spanID}-details`} span={span} trace={trace} color={spanColor} />
+        <TimelineSpanDetailRow key={`${span.spanID}-details`} span={span} trace={trace} color={spanColor} />
+      );
     }
     return arr;
   }, []);
@@ -421,7 +273,6 @@ function TraceView(props) {
 }
 TraceView.propTypes = {
   trace: PropTypes.object,
-
   collapsedSpanIDs: PropTypes.object,
   selectedSpanIDs: PropTypes.object,
   filteredSpansIDs: PropTypes.oneOfType([PropTypes.bool, PropTypes.object]),
@@ -436,16 +287,19 @@ TraceView.propTypes = {
 export default class TraceTimelineViewer extends Component {
   constructor(props) {
     super(props);
-    const initialDepthCollapse = false; // Change this to = 1 to first children spans only.
+    // const initialDepthCollapse = false; // Change this to = 1 to first children spans only.
     const collapsedSpans = new Map();
-    const transformedTrace = transformTrace(props.trace);
-    if (_.isNumber(initialDepthCollapse)) {
-      transformedTrace.spans.forEach(span => {
-        if (span.depth >= initialDepthCollapse && span.hasChildren) {
-          collapsedSpans.set(span.spanID, true);
-        }
-      });
-    }
+    // const transformedTrace = transformTrace(props.trace);
+    const transformedTrace = props.xformedTrace;
+    // if (_.isNumber(initialDepthCollapse)) {
+    //   transformedTrace.spans.forEach(span => {
+    //     if (span.depth >= initialDepthCollapse && span.hasChildren) {
+    //       collapsedSpans.set(span.spanID, true);
+    //     }
+    //   });
+    // }
+    this.toggleSpanCollapse = this.toggleSpanCollapse.bind(this);
+    this.toggleSpanSelect = this.toggleSpanSelect.bind(this);
 
     this.state = {
       selectedSpans: new Map(),
@@ -493,15 +347,16 @@ export default class TraceTimelineViewer extends Component {
           filteredSpansIDs={filteredSpansIDs}
           zoomStart={zoom[0]}
           zoomEnd={zoom[1]}
-          onSpanClick={spanID => this.toggleSpanSelect(spanID)}
-          onSpanCollapseClick={spanID => this.toggleSpanCollapse(spanID)}
+          onSpanClick={this.toggleSpanSelect}
+          onSpanCollapseClick={this.toggleSpanCollapse}
         />
       </div>
     );
   }
 }
 TraceTimelineViewer.propTypes = {
-  trace: PropTypes.object,
+  // trace: PropTypes.object,
+  xformedTrace: PropTypes.object,
   timeRangeFilter: PropTypes.array,
   textFilter: PropTypes.string,
 };

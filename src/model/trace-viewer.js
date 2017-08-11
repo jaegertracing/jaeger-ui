@@ -18,22 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import PropTypes from 'prop-types';
-import React from 'react';
-
-import tracePropTypes from '../../propTypes/trace';
-import { formatDurationForTrace } from '../../selectors/trace';
-
-export default function SpanGraphTickHeaderLabel({ duration, style, trace }) {
-  return (
-    <div className="span-graph--tick-header__label" style={style}>
-      {formatDurationForTrace({ trace, duration })}
-    </div>
-  );
+export function getTraceName(spans, processes) {
+  const span = spans.find(sp => sp.spanID === sp.traceID) || spans[0];
+  return span ? `${processes[span.processID].serviceName}: ${span.operationName}` : '';
 }
-
-SpanGraphTickHeaderLabel.propTypes = {
-  style: PropTypes.object,
-  trace: tracePropTypes.isRequired,
-  duration: PropTypes.number.isRequired,
-};

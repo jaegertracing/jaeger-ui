@@ -14,7 +14,7 @@
 }
 
 .trace-page-timeline__graph--inactive {
-  fill: #D6D6D5;
+  fill: #d6d6d5;
 }
 
 .timeline-scrubber {
@@ -22,15 +22,15 @@
 }
 
 .timeline-scrubber__line {
-  stroke: #D6D6D5;
+  stroke: #d6d6d5;
 }
 
 .timeline-scrubber__handle {
-  stroke: #E5E5E4;
+  stroke: #e5e5e4;
   fill: white;
 }
 
 .timeline-scrubber__handle--grip {
   r: 2;
-  fill: #E5E5E4;
+  fill: #e5e5e4;
 }

@@ -1,6 +1,7 @@
 .span-graph--tick {
-  stroke: #E5E5E4;
+  stroke: #e5e5e4;
   opacity: 0.5;
+  stroke-width: 2px;
 }
 
 .span-graph--tick-header {

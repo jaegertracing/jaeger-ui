@@ -54,10 +54,10 @@ const CollapsePanelStatefull = collapseEnhancer(CollapsePanel);
 function ExpandableDataTable(props) {
   const { data, label, open, onToggleOpen } = props;
   return (
-    <div className="my1 overflow-hidden" style={{ textOverflow: 'ellipsis' }}>
+    <div className="my1" style={{ textOverflow: 'ellipsis' }}>
       <div
         onClick={() => onToggleOpen(!open)}
-        className="overflow-hidden nowrap inline"
+        className="overflow-hidden nowrap"
         style={{
           cursor: 'pointer',
           textOverflow: 'ellipsis',
@@ -70,8 +70,8 @@ function ExpandableDataTable(props) {
         </span>
         {!open &&
           <span>
-            {data.map(row =>
-              <span className="px1">
+            {data.map((row, i) =>
+              <span className="px1" key={`${row.key}-${i}`}>
                 <span style={{ color: 'gray' }}>
                   {row.key}=
                 </span>
@@ -81,32 +81,31 @@ function ExpandableDataTable(props) {
           </span>}
       </div>
       {open &&
-        <table className="ui very striped compact table">
-          <tbody>
-            {data.map(row => {
-              let json;
-              try {
-                json = JSON.parse(row.value);
-              } catch (e) {
-                json = row.value;
-              }
-              return (
-                <tr key={row.key}>
-                  <td width="150" style={{ color: 'gray', verticalAlign: 'top' }}>
-                    {row.key}
-                  </td>
-                  <td>
-                    <div
-                      className="overflow-scroll"
-                      style={{ maxHeight: 300 }}
-                      dangerouslySetInnerHTML={{ __html: jsonMarkup(json) }}
-                    />
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>}
+        <div className="overflow-auto" style={{ maxHeight: 300, marginTop: '0.7em' }}>
+          <table className="ui very striped compact table">
+            <tbody>
+              {data.map((row, i) => {
+                let json;
+                try {
+                  json = JSON.parse(row.value);
+                } catch (e) {
+                  json = row.value;
+                }
+                return (
+                  // `i` is necessary in the key because row.key can repeat
+                  <tr key={`${row.key}-${i}`}>
+                    <td width="150" style={{ color: 'gray', verticalAlign: 'top' }}>
+                      {row.key}
+                    </td>
+                    <td>
+                      <div dangerouslySetInnerHTML={{ __html: jsonMarkup(json) }} />
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>}
     </div>
   );
 }
@@ -116,10 +115,13 @@ ExpandableDataTable.defaultProps = {
 };
 ExpandableDataTable.propTypes = {
   open: PropTypes.bool,
-  data: PropTypes.shape({
-    key: PropTypes.string,
-    value: PropTypes.value,
-  }),
+  data: PropTypes.arrayOf(
+    PropTypes.shape({
+      key: PropTypes.string,
+      type: PropTypes.string,
+      value: PropTypes.value,
+    })
+  ),
   label: PropTypes.string,
   onToggleOpen: PropTypes.func,
 };
@@ -128,15 +130,13 @@ const ExpandableDataTableStatefull = collapseEnhancer(ExpandableDataTable);
 function Logs({ logs, traceStartTime, open, onToggleOpen }) {
   return (
     <div className="ui segment">
-      <div className="ui top attached label">
-        <a onClick={() => onToggleOpen(!open)} style={{ opacity: 1 }}>
-          <i
-            className={`${open ? 'down' : 'right'} angle double icon`}
-            style={{ cursor: 'pointer', float: 'none' }}
-          />
-          Logs ({logs.length})
-        </a>
-      </div>
+      <a className="ui top attached label" onClick={() => onToggleOpen(!open)} style={{ opacity: 1 }}>
+        <i
+          className={`${open ? 'down' : 'right'} angle double icon`}
+          style={{ cursor: 'pointer', float: 'none' }}
+        />
+        Logs ({logs.length})
+      </a>
       {open &&
         <div>
           {_.sortBy(logs, 'timestamp').map(log =>
@@ -224,6 +224,6 @@ export default function SpanDetail(props) {
   );
 }
 SpanDetail.propTypes = {
-  span: PropTypes.obj,
-  trace: PropTypes.obj,
+  span: PropTypes.object,
+  trace: PropTypes.object,
 };

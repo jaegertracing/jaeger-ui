@@ -18,33 +18,33 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+import PropTypes from 'prop-types';
 import React from 'react';
-import ReactDOM from 'react-dom';
-import { browserHistory, hashHistory } from 'react-router';
-import { document } from 'global';
-import 'basscss/css/basscss.css';
 
-import JaegerUIApp from './components/App';
+import { formatDuration } from '../../../utils/date';
 
-export { default as SpanGraph } from './components/TracePage/SpanGraph';
-export { default as TracePage } from './components/TracePage';
-export { SearchTracePage } from './components/SearchTracePage';
-export default JaegerUIApp;
+export default function SpanGraphTickHeader(props) {
+  const { numTicks, duration } = props;
 
-const UI_ROOT_ID = 'jaeger-ui-root';
-const history = process.env.REACT_APP_GH_PAGES === 'true' ? hashHistory : browserHistory;
+  const ticks = [];
+  for (let i = 0; i < numTicks + 1; i++) {
+    const portion = i / numTicks;
+    const style = portion === 1 ? { right: '0%' } : { left: `${portion * 100}%` };
+    ticks.push(
+      <div className="span-graph--tick-header__label" style={style} key={portion}>
+        {formatDuration(duration * portion)}
+      </div>
+    );
+  }
 
-/* istanbul ignore if */
-if (process.env.NODE_ENV === 'development') {
-  require.ensure(['global/window', 'react-addons-perf'], require => {
-    const window = require('global/window');
-    /* eslint-disable import/no-extraneous-dependencies */
-    window.Perf = require('react-addons-perf');
-    /* eslint-enable import/no-extraneous-dependencies */
-  });
+  return (
+    <div className="span-graph--tick-header">
+      {ticks}
+    </div>
+  );
 }
 
-/* istanbul ignore if */
-if (document && process.env.NODE_ENV !== 'test') {
-  ReactDOM.render(<JaegerUIApp history={history} />, document.getElementById(UI_ROOT_ID));
-}
+SpanGraphTickHeader.propTypes = {
+  numTicks: PropTypes.number.isRequired,
+  duration: PropTypes.number.isRequired,
+};

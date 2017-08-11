@@ -42,16 +42,16 @@ export function calculateSpanPosition({
   };
 }
 
-/**
- * Given a percent and traceDuration, will give back
- * a relative time from 0.
- *
- * eg: 50% at 100ms = 50ms
- */
-export function calculateTimeAtPositon({ position, traceDuration }) {
-  const xValue = d3.scaleLinear().domain([0, 100]).range([0, traceDuration]);
-  return xValue(position);
-}
+// /**
+//  * Given a percent and traceDuration, will give back
+//  * a relative time from 0.
+//  *
+//  * eg: 50% at 100ms = 50ms
+//  */
+// export function calculateTimeAtPositon({ position, traceDuration }) {
+//   const xValue = d3.scaleLinear().domain([0, 100]).range([0, traceDuration]);
+//   return xValue(position);
+// }
 
 /**
  * Given a subset of the duration of two timestamps,
@@ -69,15 +69,25 @@ export function convertTimeRangeToPercent([startTime, endTime], [traceStartTime,
   return [getPercent(startTime), getPercent(endTime)];
 }
 
-export function ensureWithinRange([floor = 0, ceiling = 100], num) {
-  if (num < floor) {
-    return floor;
+export function clampValue(min, max, value) {
+  if (value <= min) {
+    return min;
   }
-  if (num > ceiling) {
-    return ceiling;
+  if (value >= max) {
+    return max;
   }
-  return num;
+  return value;
 }
+
+// export function ensureWithinRange([floor = 0, ceiling = 100], num) {
+//   if (num < floor) {
+//     return floor;
+//   }
+//   if (num > ceiling) {
+//     return ceiling;
+//   }
+//   return num;
+// }
 
 export function hasTagKey(tags, key, value) {
   if (!tags || !tags.length) {
@@ -122,15 +132,14 @@ export function findServerChildSpan(spans) {
   }
   const span = spans[0];
   const spanChildDepth = span.depth + 1;
-  let serverSpan;
   let i = 1;
-  while (i < spans.length && spans[i].depth === spanChildDepth && !serverSpan) {
+  while (i < spans.length && spans[i].depth === spanChildDepth) {
     if (isServerSpan(spans[i])) {
-      serverSpan = spans[i];
+      return spans[i];
     }
     i++;
   }
-  return serverSpan;
+  return null;
 }
 
 export { formatDuration } from '../../../utils/date';

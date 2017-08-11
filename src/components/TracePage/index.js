@@ -23,10 +23,15 @@ import React, { Component } from 'react';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 import { Sticky } from 'react-sticky';
+import _maxBy from 'lodash/maxBy';
+import _values from 'lodash/values';
 
 import './TracePage.css';
+import { transformTrace } from './TraceTimelineViewer/transforms';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import colorGenerator from '../../utils/color-generator';
+// import { getTraceSummary } from '../../model/search';
+import { getTraceName } from '../../model/trace-viewer';
 
 import {
   dropEmptyStartTimeSpans,
@@ -38,7 +43,7 @@ import {
 import NotFound from '../App/NotFound';
 import TracePageHeader from './TracePageHeader';
 import TraceTimelineViewer from './TraceTimelineViewer';
-import TracePageTimeline from './TracePageTimeline';
+import TraceSpanGraph from './TraceSpanGraph';
 
 import tracePropTypes from '../../propTypes/trace';
 
@@ -47,6 +52,7 @@ export default class TracePage extends Component {
     return {
       fetchTrace: PropTypes.func.isRequired,
       trace: tracePropTypes,
+      xformedTrace: PropTypes.object,
       loading: PropTypes.bool,
       id: PropTypes.string.isRequired,
     };
@@ -65,6 +71,7 @@ export default class TracePage extends Component {
   constructor(props) {
     super(props);
     this.state = { textFilter: '', timeRangeFilter: [], slimView: false };
+    this.toggleSlimView = this.toggleSlimView.bind(this);
   }
 
   getChildContext() {
@@ -113,8 +120,8 @@ export default class TracePage extends Component {
     this.setState({ timeRangeFilter });
   }
 
-  toggleSlimView(slimView) {
-    this.setState({ slimView });
+  toggleSlimView() {
+    this.setState({ slimView: !this.state.slimView });
     // fix issue #12 - TraceView header expander not working correctly
     // TODO: evaluate alternatives to react-sticky
     setTimeout(() => this.forceUpdate(), 0);
@@ -129,7 +136,7 @@ export default class TracePage extends Component {
   }
 
   render() {
-    const { id, trace } = this.props;
+    const { id, trace, xformedTrace } = this.props;
     const { slimView } = this.state;
 
     if (!trace) {
@@ -140,6 +147,10 @@ export default class TracePage extends Component {
       return <NotFound error={trace} />;
     }
 
+    const { duration, processes, spans, startTime, traceID } = xformedTrace;
+    const maxSpanDepth = _maxBy(spans, 'depth').depth + 1;
+    const numberOfServices = new Set(_values(processes).map(p => p.serviceName)).size;
+
     return (
       <section id={`jaeger-trace-${id}`}>
         <Sticky
@@ -149,15 +160,22 @@ export default class TracePage extends Component {
         >
           <div style={{ marginTop: 10 }}>
             <TracePageHeader
-              trace={trace}
+              durationMs={duration / 1000}
+              maxDepth={maxSpanDepth}
+              name={getTraceName(spans, processes)}
+              numServices={numberOfServices}
+              numSpans={spans.length}
               slimView={slimView}
-              onSlimViewClicked={() => this.toggleSlimView(!slimView)}
+              timestampMs={startTime / 1000}
+              traceID={traceID}
+              onSlimViewClicked={this.toggleSlimView}
             />
-            {!slimView && <TracePageTimeline trace={trace} />}
+            {!slimView && <TraceSpanGraph trace={trace} xformedTrace={xformedTrace} />}
           </div>
         </Sticky>
         <TraceTimelineViewer
           trace={trace}
+          xformedTrace={xformedTrace}
           timeRangeFilter={this.state.timeRangeFilter}
           textFilter={this.state.textFilter}
         />
@@ -170,11 +188,13 @@ export default class TracePage extends Component {
 function mapStateToProps(state, ownProps) {
   const { id } = ownProps.params;
   let trace = state.trace.traces[id];
+  let xformedTrace;
   if (trace && !(trace instanceof Error)) {
     trace = dropEmptyStartTimeSpans(trace);
     trace = hydrateSpansWithProcesses(trace);
+    xformedTrace = transformTrace(trace);
   }
-  return { id, trace, loading: state.trace.loading };
+  return { id, trace, xformedTrace, loading: state.trace.loading };
 }
 
 function mapDispatchToProps(dispatch) {
