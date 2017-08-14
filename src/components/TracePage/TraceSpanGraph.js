@@ -217,7 +217,7 @@ export default class TraceSpanGraph extends Component {
                 timestamp={leftBound}
                 handleWidth={8}
                 handleHeight={30}
-                handleTopOffset={10}
+                handleTopOffset={15}
                 onMouseDown={(...args) => this.startDragging('leftBound', ...args)}
               />}
             {rightBound &&
@@ -227,7 +227,7 @@ export default class TraceSpanGraph extends Component {
                 timestamp={rightBound}
                 handleWidth={8}
                 handleHeight={30}
-                handleTopOffset={10}
+                handleTopOffset={15}
                 onMouseDown={(...args) => this.startDragging('rightBound', ...args)}
               />}
           </svg>

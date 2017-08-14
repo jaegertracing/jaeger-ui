@@ -1,0 +1,22 @@
+
+
+
+.span-kids-toggle {
+  cursor: pointer;
+  color: #000;
+  position: relative;
+}
+
+.span-kids-toggle:hover {
+  background-color: #e8e8e8;
+}
+
+.span-tree-offset {
+  display: inline-block;
+  height: 1em;
+}
+
+.span-tree-toggle-icon {
+  position: absolute;
+  right: 0;
+}

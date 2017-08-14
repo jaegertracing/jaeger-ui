@@ -23,11 +23,13 @@ import React, { Component } from 'react';
 import _ from 'lodash';
 import { pure } from 'recompose';
 import * as d3 from 'd3-scale';
+import cx from 'classnames';
 import { filterSpansForText } from '../../../selectors/span';
 import './grid.css';
 import './index.css';
 import {
-  calculateSpanPosition,
+  // calculateSpanPosition,
+  getViewedBounds,
   convertTimeRangeToPercent,
   // ensureWithinRange,
   formatDuration,
@@ -37,48 +39,18 @@ import {
 } from './utils';
 // import { transformTrace } from './transforms';
 import colorGenerator from '../../../utils/color-generator';
-import SpanDetail from './SpanDetail';
+// import SpanDetail from './SpanDetail';
+import SpanDetailRow from './SpanDetailRow';
 import Ticks from './Ticks';
-import SpanBar from './SpanBar';
+// import SpanBar from './SpanBar';
+import SpanBarRow from './SpanBarRow';
 import TimelineRow from './TimelineRow';
+// import SpanTreeOffset from './SpanTreeOffset';
 
 // TODO: Move some styles to css
 // TODO: Clean up component names and move to seperate files.
 // TODO: Add unit tests
 // TODO: unify transforms and utils
-
-function Rail() {
-  return <i className="plus icon" style={{ opacity: 0 }} />;
-}
-
-const TimelineSpanDetailRow = pure(props => {
-  const { span, color, trace } = props;
-  const { spanID } = span;
-  return (
-    <TimelineRow key={`${spanID}-details`}>
-      <TimelineRow.Left />
-      <TimelineRow.Right>
-        <div
-          className="p2"
-          style={{
-            backgroundColor: 'whitesmoke',
-            border: '1px solid lightgray',
-            borderTop: `3px solid ${color}`,
-            boxShadow: `inset 0 16px 20px -20px rgba(0,0,0,0.45),
-              inset 0 -12px 20px -20px rgba(0,0,0,0.45)`,
-          }}
-        >
-          <SpanDetail span={span} trace={trace} />
-        </div>
-      </TimelineRow.Right>
-    </TimelineRow>
-  );
-});
-
-TimelineSpanDetailRow.propTypes = {
-  span: PropTypes.object,
-  color: PropTypes.string,
-};
 
 function TraceView(props) {
   const {
@@ -90,28 +62,26 @@ function TraceView(props) {
     filteredSpansIDs,
     onSpanClick,
     onSpanCollapseClick,
-    tickPercents = [0, 25, 50, 75, 100],
+    ticks = [0, 0.25, 0.5, 0.75, 1],
   } = props;
 
-  function getDuationAtTickPercent(tickPercent) {
-    const d1 = d3.scaleLinear().domain([0, 100]).range([zoomStart, zoomEnd]);
-    const d2 = d3.scaleLinear().domain([0, 100]).range([0, trace.duration]);
-    return d2(d1(tickPercent));
+  const zoomMin = zoomStart / 100 * trace.duration;
+  const zoomMax = zoomEnd / 100 * trace.duration;
+  const zoomDuration = zoomMax - zoomMin;
+  function getDuationAtTick(tick) {
+    return zoomMin + tick * zoomDuration;
   }
 
+  const clippingCssClasses = cx({
+    'clipping-left': zoomStart > 0,
+    'clipping-right': zoomEnd < 100,
+  });
+
   let collapseBelow = null;
+
   const renderSpansRows = trace.spans.reduce((arr, span, i) => {
     const { spanID } = span;
-    const showSpanDetails = selectedSpanIDs.has(spanID);
-    const spanHasChildren = span.hasChildren;
     const spanIsCollapsed = collapsedSpanIDs.has(spanID);
-    const spanColor = colorGenerator.getColorByKey(span.process.serviceName);
-
-    let filterOutSpan = false;
-    if (filteredSpansIDs) {
-      filterOutSpan = !filteredSpansIDs.has(spanID);
-    }
-
     // Collapse logic
     // TODO: Investigate if this should be moved out to statefull component.
     let hidden = false;
@@ -122,147 +92,96 @@ function TraceView(props) {
         collapseBelow = null;
       }
     }
-    if (spanIsCollapsed && !hidden) {
-      collapseBelow = span.depth + 1;
-    }
     if (hidden) {
       return arr;
     }
+    if (spanIsCollapsed && !hidden) {
+      collapseBelow = span.depth + 1;
+    }
 
-    // Compute span position with given zoom.
-    const { xStart: startPercent, xEnd: endPercent } = calculateSpanPosition({
-      traceStartTime: trace.startTime,
-      traceEndTime: trace.endTime,
-      spanStart: span.startTime,
-      spanEnd: span.startTime + span.duration,
-      xStart: zoomStart,
-      xEnd: zoomEnd,
+    const spanColor = colorGenerator.getColorByKey(span.process.serviceName);
+    const isDetailExapnded = selectedSpanIDs.has(spanID);
+    const isFilteredOut = Boolean(filteredSpansIDs) && !filteredSpansIDs.has(spanID);
+    const { start: viewStart, end: viewEnd } = getViewedBounds({
+      min: trace.startTime,
+      max: trace.endTime,
+      start: span.startTime,
+      end: span.startTime + span.duration,
+      viewStart: zoomStart / 100,
+      viewEnd: zoomEnd / 100,
     });
 
     // Check for direct child "server" span if the span is a "client" span.
     // TODO: Can probably optimize this a bit more so it does not do it
     // on render.
-    const childServerSpan = findServerChildSpan(trace.spans.slice(i));
-    let interval;
-    if (childServerSpan && spanIsCollapsed) {
-      const childSpanPosition = calculateSpanPosition({
-        traceStartTime: trace.startTime,
-        traceEndTime: trace.endTime,
-        spanStart: childServerSpan.startTime,
-        spanEnd: childServerSpan.startTime + childServerSpan.duration,
-        xStart: zoomStart,
-        xEnd: zoomEnd,
-      });
-      const x = d3.scaleLinear().domain([startPercent, endPercent]).range([0, 100]);
-      interval = {
-        color: colorGenerator.getColorByKey(childServerSpan.process.serviceName),
-        startPercent: x(childSpanPosition.xStart),
-        endPercent: x(childSpanPosition.xEnd),
-      };
+    let rpc = null;
+    if (spanIsCollapsed) {
+      const childServerSpan = findServerChildSpan(trace.spans.slice(i));
+      if (childServerSpan) {
+        const { start: rpcStart, end: rpcEnd } = getViewedBounds({
+          min: trace.startTime,
+          max: trace.endTime,
+          start: childServerSpan.startTime,
+          end: childServerSpan.startTime + childServerSpan.duration,
+          viewStart: zoomStart / 100,
+          viewEnd: zoomEnd / 100,
+        });
+        rpc = {
+          serviceName: childServerSpan.process.serviceName,
+          operationName: childServerSpan.operationName,
+          color: colorGenerator.getColorByKey(childServerSpan.process.serviceName),
+          viewStart: rpcStart,
+          viewEnd: rpcEnd,
+        };
+      }
     }
-
     const showErrorIcon = isErrorSpan(span) || (spanIsCollapsed && spanContainsErredSpan(trace.spans, i));
-    const backgroundColor = showSpanDetails ? 'whitesmoke' : null;
+    const toggleDetailExpansion = () => onSpanClick(spanID);
     arr.push(
-      <TimelineRow
+      <SpanBarRow
         key={spanID}
-        className="span-row"
-        style={{
-          backgroundColor,
-          opacity: filterOutSpan ? 0.2 : undefined,
-        }}
-      >
-        <TimelineRow.Left>
-          <div
-            className="overflow-hidden nowrap"
-            style={{
-              textOverflow: 'ellipsis',
-            }}
-          >
-            {_.times(span.depth, z => <Rail key={z} />)}
-            {spanHasChildren
-              ? <i
-                  style={{ cursor: 'pointer' }}
-                  className={`icon square ${spanIsCollapsed ? 'plus' : 'outline minus'}`}
-                  onClick={() => onSpanCollapseClick(spanID)}
-                />
-              : <Rail />}
-            <a
-              tabIndex="0"
-              className="inline border-left"
-              style={{
-                outline: 0,
-                color: 'black',
-                borderLeft: `4px solid ${spanColor}`,
-                cursor: 'pointer',
-              }}
-              onClick={() => onSpanClick(spanID)}
-            >
-              <span
-                className="p1"
-                style={{
-                  fontSize: '1.05em',
-                  fontWeight: spanIsCollapsed && spanHasChildren ? 'bold' : undefined,
-                  fontStyle: spanIsCollapsed && spanHasChildren ? 'italic' : undefined,
-                }}
-              >
-                {showErrorIcon && <i aria-hidden="true" className="icon warning circle red" />}
-                {span.process.serviceName}{' '}
-                {childServerSpan &&
-                  spanIsCollapsed &&
-                  <span>
-                    <i className="long arrow right icon" style={{ float: 'none' }} />
-                    <i
-                      className="circle icon"
-                      style={{
-                        color: colorGenerator.getColorByKey(childServerSpan.process.serviceName),
-                      }}
-                    />
-                    {childServerSpan.process.serviceName}
-                  </span>}
-              </span>
-              <span className="mb1 pl1 h6" style={{ color: 'gray' }}>
-                {childServerSpan && spanIsCollapsed ? childServerSpan.operationName : span.operationName}
-              </span>
-            </a>
-          </div>
-        </TimelineRow.Left>
-        <TimelineRow.Right style={{ cursor: 'pointer' }} onClick={() => onSpanClick(spanID)}>
-          <Ticks ticks={tickPercents.map(percent => ({ percent }))} />
-          <SpanBar
-            childInterval={interval}
-            startPercent={startPercent}
-            endPercent={endPercent}
-            color={spanColor}
-            shortLabel={formatDuration(span.duration)}
-            longLabel={`${formatDuration(span.duration)}
-              | ${span.process.serviceName}::${span.operationName}`}
-          />
-        </TimelineRow.Right>
-      </TimelineRow>
+        className={clippingCssClasses}
+        color={spanColor}
+        depth={span.depth}
+        label={formatDuration(span.duration)}
+        isChildrenExpanded={!spanIsCollapsed}
+        isDetailExapnded={isDetailExapnded}
+        isFilteredOut={isFilteredOut}
+        isParent={span.hasChildren}
+        onDetailToggled={toggleDetailExpansion}
+        onChildrenToggled={() => onSpanCollapseClick(spanID)}
+        operationName={span.operationName}
+        rpc={rpc}
+        serviceName={span.process.serviceName}
+        showErrorIcon={showErrorIcon}
+        ticks={ticks}
+        viewEnd={viewEnd}
+        viewStart={viewStart}
+      />
     );
-    if (showSpanDetails) {
+    if (isDetailExapnded) {
       arr.push(
-        // <Timeline.SpanDetails key={`${span.spanID}-details`} span={span} trace={trace} color={spanColor} />
-        <TimelineSpanDetailRow key={`${span.spanID}-details`} span={span} trace={trace} color={spanColor} />
+        <SpanDetailRow
+          key={`${spanID}-details`}
+          span={span}
+          trace={trace}
+          color={spanColor}
+          toggleDetailExpansion={toggleDetailExpansion}
+        />
       );
     }
     return arr;
   }, []);
-
   return (
     <div className="mx0 px1 overflow-hidden">
-      <TimelineRow style={{ backgroundColor: 'whitesmoke' }}>
+      <TimelineRow style={{ backgroundColor: '#e8e8e8', borderBottom: '1px solid #ccc' }}>
         <TimelineRow.Left>
           <h3 className="m0 p1">Span Name</h3>
         </TimelineRow.Left>
         <TimelineRow.Right>
           <Ticks
-            ticks={tickPercents.map(tickPercent => ({
-              percent: tickPercent,
-              label: tickPercent !== 0 ? formatDuration(getDuationAtTickPercent(tickPercent)) : '',
-              position: tickPercent === 100 ? 'left' : 'right',
-            }))}
+            labels={ticks.map(tick => (tick > 0 ? formatDuration(getDuationAtTick(tick)) : ''))}
+            ticks={ticks}
           />
           <h3 className="m0 p1">Timeline</h3>
         </TimelineRow.Right>
@@ -276,10 +195,9 @@ TraceView.propTypes = {
   collapsedSpanIDs: PropTypes.object,
   selectedSpanIDs: PropTypes.object,
   filteredSpansIDs: PropTypes.oneOfType([PropTypes.bool, PropTypes.object]),
-  tickPercents: PropTypes.arrayOf(PropTypes.number),
+  ticks: PropTypes.arrayOf(PropTypes.number),
   zoomStart: PropTypes.number,
   zoomEnd: PropTypes.number,
-
   onSpanClick: PropTypes.func,
   onSpanCollapseClick: PropTypes.func,
 };
@@ -338,7 +256,7 @@ export default class TraceTimelineViewer extends Component {
     const { startTime, endTime } = trace;
     const zoom = convertTimeRangeToPercent(timeRangeFilter, [startTime, endTime]);
     return (
-      <div>
+      <div className="trace-timeline-viewer">
         <TraceView
           {...this.props}
           trace={trace}
@@ -355,7 +273,6 @@ export default class TraceTimelineViewer extends Component {
   }
 }
 TraceTimelineViewer.propTypes = {
-  // trace: PropTypes.object,
   xformedTrace: PropTypes.object,
   timeRangeFilter: PropTypes.array,
   textFilter: PropTypes.string,

@@ -22,15 +22,28 @@
 }
 
 .timeline-scrubber__line {
-  stroke: #d6d6d5;
+  stroke: #999;
+  stroke-width: 1;
 }
 
+.timeline-scrubber:hover .timeline-scrubber__line {
+  stroke: #777;
+}
+
+
 .timeline-scrubber__handle {
-  stroke: #e5e5e4;
-  fill: white;
+  stroke: #999;
+  fill: #fff;
+}
+
+.timeline-scrubber:hover .timeline-scrubber__handle {
+  stroke: #777;
 }
 
 .timeline-scrubber__handle--grip {
   r: 2;
-  fill: #e5e5e4;
+  fill: #bbb;
+}
+.timeline-scrubber:hover .timeline-scrubber__handle--grip {
+  fill: #999;
 }

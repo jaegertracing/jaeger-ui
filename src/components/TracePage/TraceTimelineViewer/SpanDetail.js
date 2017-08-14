@@ -43,12 +43,14 @@ function CollapsePanel(props) {
     </div>
   );
 }
+
 CollapsePanel.propTypes = {
   header: PropTypes.node.isRequired,
   onToggleOpen: PropTypes.func.isRequired,
   children: PropTypes.element.isRequired,
   open: PropTypes.bool.isRequired,
 };
+
 const CollapsePanelStatefull = collapseEnhancer(CollapsePanel);
 
 function ExpandableDataTable(props) {
@@ -141,6 +143,7 @@ function Logs({ logs, traceStartTime, open, onToggleOpen }) {
         <div>
           {_.sortBy(logs, 'timestamp').map(log =>
             <ExpandableDataTableStatefull
+              key={log.timestamp}
               data={log.fields || []}
               label={`${formatDuration(log.timestamp - traceStartTime)}`}
             />

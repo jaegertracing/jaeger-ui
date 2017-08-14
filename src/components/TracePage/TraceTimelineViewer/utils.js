@@ -42,6 +42,24 @@ export function calculateSpanPosition({
   };
 }
 
+// viewStart: number [0, 1]
+// viewEnd: number [0, 1]
+export function getViewedBounds({ min, max, start, end, viewStart, viewEnd }) {
+  const duration = max - min;
+  const viewMin = min + viewStart * duration;
+  const viewMax = max - (1 - viewEnd) * duration;
+  const viewWindow = viewMax - viewMin;
+  // console.log({ min, max, start, end, viewStart, viewEnd }, {
+  //   start: (start - viewMin) / viewWindow,
+  //   // end: (end - viewMax) / viewWindow,
+  //   end: (end - viewMin) / viewWindow,
+  // })
+  return {
+    start: (start - viewMin) / viewWindow,
+    end: (end - viewMin) / viewWindow,
+  };
+}
+
 // /**
 //  * Given a percent and traceDuration, will give back
 //  * a relative time from 0.
@@ -69,15 +87,15 @@ export function convertTimeRangeToPercent([startTime, endTime], [traceStartTime,
   return [getPercent(startTime), getPercent(endTime)];
 }
 
-export function clampValue(min, max, value) {
-  if (value <= min) {
-    return min;
-  }
-  if (value >= max) {
-    return max;
-  }
-  return value;
-}
+// export function clampValue(min, max, value) {
+//   if (value <= min) {
+//     return min;
+//   }
+//   if (value >= max) {
+//     return max;
+//   }
+//   return value;
+// }
 
 // export function ensureWithinRange([floor = 0, ceiling = 100], num) {
 //   if (num < floor) {

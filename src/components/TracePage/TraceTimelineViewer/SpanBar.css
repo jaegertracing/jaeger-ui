@@ -1,0 +1,29 @@
+
+.span-bar-wrapper {
+  bottom: 0;
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+  overflow: hidden;
+  opacity: 0.5;
+}
+
+.span-row.is-expanded .span-bar-wrapper,
+.span-row:hover .span-bar-wrapper {
+  opacity: 1;
+}
+
+.span-bar {
+  border-radius: 3px;
+  position: absolute;
+  height: 50%;
+  top: 25%;
+}
+
+.span-bar-rpc {
+  position: absolute;
+  top: 35%;
+  bottom: 35%;
+  z-index: 1;
+}

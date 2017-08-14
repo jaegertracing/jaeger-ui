@@ -22,88 +22,60 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import { onlyUpdateForKeys, compose, withState, withProps } from 'recompose';
 
-import './grid.css';
-import './index.css';
-import { clampValue } from './utils';
+import './SpanBar.css';
 
-const clampPercent = clampValue.bind(null, 0, 100);
+function toPercent(value) {
+  return `${value * 100}%`;
+}
 
-function SpanBarInternal(props) {
-  const {
-    startPercent,
-    endPercent,
-    color,
-    label,
-    enableTransition,
-    onClick,
-    onMouseOver,
-    onMouseOut,
-    childInterval,
-  } = props;
-  const barWidth = endPercent - startPercent;
-  const barHeightPercent = 50;
+function SpanBarImpl(props) {
+  const { viewEnd, viewStart, color, label, hintSide, onClick, onMouseOver, onMouseOut, rpc } = props;
+
   return (
-    <div
-      onMouseOver={onMouseOver}
-      onMouseOut={onMouseOut}
-      onClick={onClick}
-      style={{
-        bottom: 0,
-        left: 0,
-        position: 'absolute',
-        right: 0,
-        top: 0,
-      }}
-    >
+    <div className="span-bar-wrapper" onClick={onClick} onMouseOut={onMouseOut} onMouseOver={onMouseOver}>
       <div
-        className="span-row__bar hint--right hint--always"
         aria-label={label}
+        className={`span-bar hint--always hint--${hintSide}`}
         style={{
-          transition: enableTransition ? 'width 500ms' : undefined,
-          borderRadius: 3,
-          position: 'absolute',
-          display: 'inline-block',
-          backgroundColor: color,
-          top: `${(100 - barHeightPercent) / 2}%`,
-          height: `${barHeightPercent}%`,
-          width: `${clampPercent(barWidth)}%`,
-          left: `${clampPercent(startPercent)}%`,
+          background: color,
+          left: toPercent(viewStart),
+          width: toPercent(viewEnd - viewStart),
         }}
-      >
-        {childInterval &&
-          <div
-            style={{
-              position: 'absolute',
-              backgroundColor: childInterval.color,
-              left: `${clampPercent(childInterval.startPercent)}%`,
-              right: `${100 - clampPercent(childInterval.endPercent)}%`,
-              top: '20%',
-              bottom: '20%',
-            }}
-          />}
-      </div>
+      />
+      {rpc &&
+        <div
+          className="span-bar-rpc"
+          style={{
+            background: rpc.color,
+            left: toPercent(rpc.viewStart),
+            width: toPercent(rpc.viewEnd - rpc.viewStart),
+          }}
+        />}
     </div>
   );
 }
 
-SpanBarInternal.defaultProps = {
-  enableTransition: true,
-};
-
-SpanBarInternal.propTypes = {
-  childInterval: PropTypes.shape({
-    startPercent: PropTypes.number,
-    endPercent: PropTypes.number,
+SpanBarImpl.propTypes = {
+  rpc: PropTypes.shape({
+    viewStart: PropTypes.number,
+    viewEnd: PropTypes.number,
     color: PropTypes.string,
   }),
-  enableTransition: PropTypes.bool,
-  startPercent: PropTypes.number.isRequired,
-  endPercent: PropTypes.number.isRequired,
-  color: PropTypes.string,
-  label: PropTypes.string,
+  viewStart: PropTypes.number.isRequired,
+  viewEnd: PropTypes.number.isRequired,
+  color: PropTypes.string.isRequired,
+  hintSide: PropTypes.string.isRequired,
+  label: PropTypes.string.isRequired,
   onClick: PropTypes.func,
   onMouseOver: PropTypes.func,
   onMouseOut: PropTypes.func,
+};
+
+SpanBarImpl.defaultProps = {
+  rpc: null,
+  onClick: null,
+  onMouseOver: null,
+  onMouseOut: null,
 };
 
 const SpanBar = compose(
@@ -112,7 +84,7 @@ const SpanBar = compose(
     onMouseOver: () => setLabel(longLabel),
     onMouseOut: () => setLabel(shortLabel),
   })),
-  onlyUpdateForKeys(['startPercent', 'endPercent', 'label', 'childInterval'])
-)(SpanBarInternal);
+  onlyUpdateForKeys(['viewStart', 'viewEnd', 'label', 'rpc'])
+)(SpanBarImpl);
 
 export default SpanBar;

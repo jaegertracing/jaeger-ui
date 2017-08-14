@@ -1,0 +1,17 @@
+
+
+.span-row-tick {
+  position: absolute;
+  height: 100%;
+  width: 1px;
+  background: #d3d3d3;
+}
+.span-row-tick-label {
+  position: absolute;
+  left: 5px;
+}
+
+.span-row-tick-label.is-end-anchor {
+  left: initial;
+  right: 5px;
+}

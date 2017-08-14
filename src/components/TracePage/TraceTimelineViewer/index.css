@@ -1,17 +1,104 @@
+
+.span-row.is-filtered-out {
+  opacity: 0.2;
+}
+
+.trace-timeline-viewer {
+  border: 1px solid #bbb;
+  border-top: none;
+}
+
+.span-name-column {
+  background: #fafafa;
+  position: relative;
+}
+
+.span-row:hover .span-name-column {
+  background: #f8f8f8;
+}
+
+.span-row.is-expanded .span-name-column {
+  background: #f0f0f0;
+  outline: 1px solid #ddd;
+}
+
+.span-row.clipping-left .span-name-column::before {
+  content: " ";
+  height: 100%;
+  position: absolute;
+  width: 6px;
+  background-image: linear-gradient(to right, rgba(25, 25, 25, 0.25), rgba(32, 32, 32, 0.0));
+  left: 100%;
+  z-index: 1;
+}
+
+.endpoint-name {
+  color: #808080;
+}
+
+.span-name:hover > .endpoint-name {
+  color: #000;
+  font-weight: bold;
+}
+
+.span-view {
+  position: relative;
+}
+
+.span-row.is-expanded .span-view {
+  background: #eee;
+}
+
+.span-row.is-expanded:hover .span-view {
+  background: #e0e0e0;
+}
+
+.span-row.clipping-right .span-view::before {
+  content: " ";
+  height: 100%;
+  position: absolute;
+  width: 6px;
+  background-image: linear-gradient(to left, rgba(25, 25, 25, 0.25), rgba(32, 32, 32, 0.0));
+  right: 0%;
+  z-index: 1;
+}
+
+.detail-row .span-name-expanded-accent {
+  cursor: pointer;
+  position: absolute;
+  height: 100%;
+  width: 100%;
+}
+
+.detail-row .span-name-expanded-accent::before {
+  border-left: 4px solid;
+  opacity: 0.2;
+  pointer-events: none;
+  width: 1000px;
+}
+
+.detail-row .span-name-expanded-accent::after {
+  border-right: 1000px solid;
+  border-color: inherit;
+  cursor: pointer;
+  opacity: 0.1;
+}
+
+/* border-color inherit must come AFTER other border declarations for accent */
+.detail-row .span-name-expanded-accent::before,
+.detail-row .span-name-expanded-accent::after {
+  border-color: inherit;
+  content: " ";
+  position: absolute;
+  height: 100%;
+}
+
+.detail-row .span-name-expanded-accent:hover::after {
+  opacity: 0.25;
+}
+
 .span-row:hover {
-  background-color: whitesmoke;
-}
-.span-row .span-row__bar {
-  opacity: 0.5;
-}
-.span-row--selected {
-  background-color: whitesmoke;
-}
-.span-row--selected .span-row__bar {
-  opacity: 1;
-}
-.span-row:hover .span-row__bar {
-  opacity: 1;
+  background-color: #f5f5f5;
 }
 
 .noselect {

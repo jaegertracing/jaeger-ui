@@ -28,7 +28,6 @@ import { getPercentageOfInterval } from '../../utils/date';
 const HANDLE_WIDTH = 6;
 const HANDLE_HEIGHT = 20;
 const HANDLE_TOP_OFFSET = 0;
-const LINE_WIDTH = 2;
 
 export default function TimelineScrubber({
   trace,
@@ -50,7 +49,6 @@ export default function TimelineScrubber({
         y2="100%"
         x1={`${xPercentage}%`}
         x2={`${xPercentage}%`}
-        strokeWidth={LINE_WIDTH}
       />
       <rect
         x={`${xPercentage}%`}

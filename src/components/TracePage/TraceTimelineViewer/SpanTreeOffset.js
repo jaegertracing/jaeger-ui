@@ -18,39 +18,20 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import PropTypes from 'prop-types';
+// import PropTypes from 'prop-types';
 import React from 'react';
 
-import './Ticks.css';
+import './SpanTreeOffset.css';
 
-export default function Ticks(props) {
-  const { labels, ticks } = props;
-
+export default function SpanTreeOffset({ level, hasChildren, childrenVisible, onClick }) {
+  const className = hasChildren ? 'span-kids-toggle' : '';
+  const icon = hasChildren
+    ? <i className={`span-tree-toggle-icon icon square ${childrenVisible ? 'outline minus' : 'plus'}`} />
+    : null;
   return (
-    <div>
-      {ticks.map((tick, i) =>
-        <div
-          key={tick}
-          className="span-row-tick"
-          style={{
-            left: `${tick * 100}%`,
-          }}
-        >
-          {labels &&
-            <span className={`span-row-tick-label ${tick >= 1 ? 'is-end-anchor' : ''}`}>
-              {labels[i]}
-            </span>}
-        </div>
-      )}
-    </div>
+    <span className={className} onClick={onClick}>
+      <span className="span-tree-offset" style={{ paddingLeft: `${level * 20}px` }} />
+      {icon}
+    </span>
   );
 }
-
-Ticks.propTypes = {
-  ticks: PropTypes.arrayOf(PropTypes.number).isRequired,
-  labels: PropTypes.arrayOf(PropTypes.string),
-};
-
-Ticks.defaultProps = {
-  labels: null,
-};

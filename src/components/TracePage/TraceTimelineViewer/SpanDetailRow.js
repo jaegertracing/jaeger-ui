@@ -21,36 +21,48 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 
-import './Ticks.css';
+import TimelineRow from './TimelineRow';
+import SpanTreeOffset from './SpanTreeOffset';
+import SpanDetail from './SpanDetail';
 
-export default function Ticks(props) {
-  const { labels, ticks } = props;
+// import './SpanDetailRow.css';
 
+export default function SpanDetailRow(props) {
+  const { span, color, trace, toggleDetailExpansion } = props;
   return (
-    <div>
-      {ticks.map((tick, i) =>
+    <TimelineRow className="detail-row">
+      <TimelineRow.Left>
+        <div style={{ position: 'absolute', height: '100%' }}>
+          <SpanTreeOffset level={span.depth + 1} />
+          <span>
+            <span
+              className="span-name-expanded-accent"
+              onClick={toggleDetailExpansion}
+              style={{ borderColor: color }}
+            />
+          </span>
+        </div>
+      </TimelineRow.Left>
+      <TimelineRow.Right>
         <div
-          key={tick}
-          className="span-row-tick"
+          className="p2"
           style={{
-            left: `${tick * 100}%`,
+            backgroundColor: 'whitesmoke',
+            border: '1px solid lightgray',
+            borderTop: `3px solid ${color}`,
+            borderLeftColor: '#bbb',
+            boxShadow: `inset 0 16px 20px -20px rgba(0,0,0,0.45),
+              inset 0 -12px 20px -20px rgba(0,0,0,0.45)`,
           }}
         >
-          {labels &&
-            <span className={`span-row-tick-label ${tick >= 1 ? 'is-end-anchor' : ''}`}>
-              {labels[i]}
-            </span>}
+          <SpanDetail span={span} trace={trace} />
         </div>
-      )}
-    </div>
+      </TimelineRow.Right>
+    </TimelineRow>
   );
 }
 
-Ticks.propTypes = {
-  ticks: PropTypes.arrayOf(PropTypes.number).isRequired,
-  labels: PropTypes.arrayOf(PropTypes.string),
-};
-
-Ticks.defaultProps = {
-  labels: null,
+SpanDetailRow.propTypes = {
+  span: PropTypes.object,
+  color: PropTypes.string,
 };

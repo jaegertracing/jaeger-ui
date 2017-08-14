@@ -21,6 +21,16 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 
+const propTypes = {
+  children: PropTypes.node,
+  className: PropTypes.string,
+};
+
+const defaultProps = {
+  children: null,
+  className: '',
+};
+
 export default function TimelineRow(props) {
   const { children, className, ...rest } = props;
   return (
@@ -29,38 +39,31 @@ export default function TimelineRow(props) {
     </div>
   );
 }
-
-TimelineRow.propTypes = {
-  children: PropTypes.node,
-  className: PropTypes.string,
-};
+TimelineRow.propTypes = { ...propTypes };
+TimelineRow.defaultProps = { ...defaultProps };
 
 function TimelineRowLeft(props) {
-  const { children, ...rest } = props;
+  const { children, className, ...rest } = props;
   return (
-    <div className="col-xs-3" {...rest}>
+    <div className={`col-xs-3 relative ${className}`} {...rest}>
       {children}
     </div>
   );
 }
-
-TimelineRowLeft.propTypes = {
-  children: PropTypes.node,
-};
+TimelineRowLeft.propTypes = { ...propTypes };
+TimelineRowLeft.defaultProps = { ...defaultProps };
 
 TimelineRow.Left = TimelineRowLeft;
 
 function TimelineRowRight(props) {
-  const { children, ...rest } = props;
+  const { children, className, ...rest } = props;
   return (
-    <div className="col-xs-9 relative" {...rest}>
+    <div className={`col-xs-9 relative ${className}`} {...rest}>
       {children}
     </div>
   );
 }
-
-TimelineRowRight.propTypes = {
-  children: PropTypes.node,
-};
+TimelineRowRight.propTypes = { ...propTypes };
+TimelineRowRight.defaultProps = { ...defaultProps };
 
 TimelineRow.Right = TimelineRowRight;
