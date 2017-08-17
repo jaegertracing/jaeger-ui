@@ -25,18 +25,18 @@ import TimelineRow from './TimelineRow';
 import SpanTreeOffset from './SpanTreeOffset';
 import SpanDetail from './SpanDetail';
 
-// import './SpanDetailRow.css';
+import './SpanDetailRow.css';
 
 export default function SpanDetailRow(props) {
-  const { span, color, trace, toggleDetailExpansion } = props;
+  const { span, color, trace, toggleDetailExpansion, isFilteredOut } = props;
   return (
-    <TimelineRow className="detail-row">
+    <TimelineRow className={`detail-row ${isFilteredOut ? 'is-filtered-out' : ''}`}>
       <TimelineRow.Left>
-        <div style={{ position: 'absolute', height: '100%' }}>
+        <div className="detail-row-name-column">
           <SpanTreeOffset level={span.depth + 1} />
           <span>
             <span
-              className="span-name-expanded-accent"
+              className="detail-row-expanded-accent"
               onClick={toggleDetailExpansion}
               style={{ borderColor: color }}
             />
@@ -44,17 +44,7 @@ export default function SpanDetailRow(props) {
         </div>
       </TimelineRow.Left>
       <TimelineRow.Right>
-        <div
-          className="p2"
-          style={{
-            backgroundColor: 'whitesmoke',
-            border: '1px solid lightgray',
-            borderTop: `3px solid ${color}`,
-            borderLeftColor: '#bbb',
-            boxShadow: `inset 0 16px 20px -20px rgba(0,0,0,0.45),
-              inset 0 -12px 20px -20px rgba(0,0,0,0.45)`,
-          }}
-        >
+        <div className="p2 detail-info-wrapper" style={{ borderTopColor: color }}>
           <SpanDetail span={span} trace={trace} />
         </div>
       </TimelineRow.Right>
@@ -63,6 +53,9 @@ export default function SpanDetailRow(props) {
 }
 
 SpanDetailRow.propTypes = {
+  trace: PropTypes.object,
   span: PropTypes.object,
   color: PropTypes.string,
+  isFilteredOut: PropTypes.bool,
+  toggleDetailExpansion: PropTypes.func,
 };

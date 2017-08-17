@@ -1,0 +1,100 @@
+/*
+Copyright (c) 2017 Uber Technologies, Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*/
+
+.span-name-column {
+  background: #fafafa;
+  position: relative;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.span-row:hover .span-name-column {
+  background: #f8f8f8;
+}
+
+.span-row.is-expanded .span-name-column {
+  background: #f0f0f0;
+  outline: 1px solid #ddd;
+}
+
+.span-row.clipping-left .span-name-column::before {
+  content: " ";
+  height: 100%;
+  position: absolute;
+  width: 6px;
+  background-image: linear-gradient(to right, rgba(25, 25, 25, 0.25), rgba(32, 32, 32, 0.0));
+  left: 100%;
+  z-index: 1;
+}
+
+.span-name {
+  outline: none;
+  color: #000;
+  border-left: 4px solid;
+  cursor: pointer;
+  display: inline;
+}
+.span-name.is-detail-expanded {
+  display: inline-block;
+}
+
+.endpoint-name {
+  color: #808080;
+}
+
+.span-name:hover > .endpoint-name {
+  color: #000;
+  font-weight: bold;
+}
+
+.span-svc-name {
+  padding: 0.5rem;
+  font-size: 1.05em;
+}
+
+.span-svc-name.is-children-collapsed {
+  font-weight: bold;
+  font-style: italic;
+}
+
+.span-view {
+  position: relative;
+}
+
+.span-row.is-expanded .span-view {
+  background: #f8f8f8;
+  outline: 1px solid #ddd;
+}
+
+.span-row.is-expanded:hover .span-view {
+  background: #eee;
+}
+
+.span-row.clipping-right .span-view::before {
+  content: " ";
+  height: 100%;
+  position: absolute;
+  width: 6px;
+  background-image: linear-gradient(to left, rgba(25, 25, 25, 0.25), rgba(32, 32, 32, 0.0));
+  right: 0%;
+  z-index: 1;
+}

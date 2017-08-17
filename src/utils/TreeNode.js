@@ -32,7 +32,8 @@ export default class TreeNode {
   }
 
   constructor(value, children = []) {
-    Object.assign(this, { value, children });
+    this.value = value;
+    this.children = children;
   }
 
   get depth() {

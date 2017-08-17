@@ -58,10 +58,10 @@ export default function SpanGraph(props) {
 
   return (
     <g>
-      <g aria-hidden="true">
+      <g data-test="ticks" aria-hidden="true">
         {ticks}
       </g>
-      <g>
+      <g data-test="span-items">
         {spanItems}
       </g>
     </g>

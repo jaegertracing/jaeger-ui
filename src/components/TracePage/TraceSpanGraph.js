@@ -27,14 +27,7 @@ import SpanGraphTickHeader from './SpanGraph/SpanGraphTickHeader';
 import tracePropTypes from '../../propTypes/trace';
 import TimelineScrubber from './TimelineScrubber';
 
-import {
-  getTraceId,
-  getTicksForTrace,
-  getTraceTimestamp,
-  getTraceEndTimestamp,
-  getTraceDuration,
-  getTraceSpanCount,
-} from '../../selectors/trace';
+import { getTraceId, getTraceTimestamp, getTraceEndTimestamp, getTraceDuration } from '../../selectors/trace';
 import { getPercentageOfInterval } from '../../utils/date';
 
 const TIMELINE_TICK_INTERVAL = 4;

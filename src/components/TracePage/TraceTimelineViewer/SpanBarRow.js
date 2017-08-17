@@ -26,6 +26,8 @@ import SpanTreeOffset from './SpanTreeOffset';
 import SpanBar from './SpanBar';
 import Ticks from './Ticks';
 
+import './SpanBarRow.css';
+
 export default function SpanBarRow(props) {
   const {
     className,
@@ -74,7 +76,7 @@ export default function SpanBarRow(props) {
       `}
     >
       <TimelineRow.Left className="span-name-column">
-        <div className="overflow-hidden nowrap" style={{ textOverflow: 'ellipsis' }} title={title}>
+        <div className="overflow-hidden" title={title}>
           <SpanTreeOffset
             level={depth + 1}
             hasChildren={isParent}
@@ -83,23 +85,12 @@ export default function SpanBarRow(props) {
           />
           <a
             tabIndex="0"
-            className="span-name"
-            style={{
-              outline: 0,
-              color: 'black',
-              borderLeft: `4px solid ${color}`,
-              cursor: 'pointer',
-              display: isDetailExapnded ? 'inline-block' : 'inline',
-            }}
+            className={`span-name ${isDetailExapnded ? 'is-detail-expanded' : ''}`}
+            style={{ borderColor: color }}
             onClick={onDetailToggled}
           >
             <span
-              className="p1"
-              style={{
-                fontSize: '1.05em',
-                fontWeight: isParent && !isChildrenExpanded ? 'bold' : undefined,
-                fontStyle: isParent && !isChildrenExpanded ? 'italic' : undefined,
-              }}
+              className={`span-svc-name ${isParent && !isChildrenExpanded ? 'is-children-collapsed' : ''}`}
             >
               {showErrorIcon && <i aria-hidden="true" className="icon warning circle red" />}
               {serviceName}{' '}

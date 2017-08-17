@@ -31,7 +31,7 @@ export default function SpanGraphTickHeader(props) {
     const portion = i / numTicks;
     const style = portion === 1 ? { right: '0%' } : { left: `${portion * 100}%` };
     ticks.push(
-      <div className="span-graph--tick-header__label" style={style} key={portion}>
+      <div key={portion} className="span-graph--tick-header__label" style={style} data-test="tick">
         {formatDuration(duration * portion)}
       </div>
     );

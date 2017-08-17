@@ -21,91 +21,46 @@
 import React from 'react';
 import { shallow } from 'enzyme';
 
-import SpanGraph from '.';
+import SpanGraph from './';
 
-import SpanGraphTick from './SpanGraphTick';
-import SpanGraphSpan from './SpanGraphSpan';
-import { getTicksForTrace } from '../../../../../selectors/trace';
+describe('<SpanGraph>', () => {
+  const defaultProps = {
+    items: [
+      { valueWidth: 100, valueOffset: 25, serviceName: 'a' },
+      { valueWidth: 100, valueOffset: 50, serviceName: 'b' },
+    ],
+    valueWidth: 200,
+    numTicks: 4,
+  };
 
-const initialTimestamp = new Date().getTime() * 1000;
-const trace = {
-  traceID: 'trace-id',
-  spans: [
-    {
-      spanID: 'span-id',
-      traceID: 'trace-id',
-      startTime: initialTimestamp,
-      duration: 1000000,
-    },
-    {
-      spanID: 'span-id',
-      traceID: 'trace-id',
-      startTime: initialTimestamp + 200,
-      duration: 10000,
-    },
-  ],
-};
-const ticks = getTicksForTrace({ trace });
-const defaultProps = {
-  rowHeight: 10,
-  rowPadding: 1,
-  ticks,
-  trace,
-  width: 500,
-};
+  let itemsG;
+  let ticksG;
 
-it('<SpanGraph /> should render an <svg>', () => {
-  const wrapper = shallow(<SpanGraph {...defaultProps} />);
+  beforeEach(() => {
+    const wrapper = shallow(<SpanGraph {...defaultProps} />);
+    itemsG = wrapper.find('[data-test="span-items"]');
+    ticksG = wrapper.find('[data-test="ticks"]');
+  });
 
-  expect(wrapper.find('svg').length).toBe(1);
-});
+  it('renders a <g>', () => {
+    expect(itemsG.length).toBe(1);
+  });
 
-it('<SpanGraph /> should set the width', () => {
-  const wrapper = shallow(<SpanGraph {...defaultProps} />);
-  const svg = wrapper.find('svg').first();
+  it('calculates the height of rects based on the number of items', () => {
+    const rect = itemsG.find('rect').first();
+    expect(rect).toBeDefined();
+    expect(rect.prop('height')).toBe('50%');
+  });
 
-  expect(svg.prop('width')).toBe(defaultProps.width);
-});
+  it('creates a <g> for ticks', () => {
+    expect(ticksG.length).toBe(1);
+  });
 
-it('<SpanGraph /> should calculate the height based on the rowHeight and rowPadding', () => {
-  const wrapper = shallow(<SpanGraph {...defaultProps} />);
-  const svg = wrapper.find('svg').first();
+  it('creates a line for each tick block', () => {
+    expect(ticksG.find('line').length).toBe(defaultProps.numTicks + 1);
+  });
 
-  // (10 + 2) * 2
-  expect(svg.prop('height')).toBe(24);
-});
-
-it('<SpanGraph /> should create <SpanGraphTick />s for the ticks', () => {
-  const wrapper = shallow(<SpanGraph {...defaultProps} />);
-  const ticksWrapper = wrapper.find(SpanGraphTick);
-
-  expect(ticksWrapper.length).toBe(ticks.length);
-});
-
-it('<SpanGraph /> should create <SpanGraphSpan />s for the spans', () => {
-  const wrapper = shallow(<SpanGraph {...defaultProps} />);
-  const spansWrapper = wrapper.find(SpanGraphSpan);
-
-  expect(spansWrapper.length).toBe(trace.spans.length);
-});
-
-it('<SpanGraphSpan /> should attach "onSomethingSpan" handlers with to the spans', () => {
-  function onClick() {
-    // just checking to see that we got in here
-    expect(true).toBeTruthy();
-  }
-
-  const wrapper = shallow(<SpanGraph {...defaultProps} onClickSpan={onClick} />);
-
-  wrapper.find(SpanGraphSpan).first().props().onClick();
-});
-
-it('<SpanGraphSpan /> should spread unmatched props onto the rect', () => {
-  const onClick = () => {};
-
-  const wrapper = shallow(<SpanGraph {...defaultProps} onClick={onClick} />);
-
-  const svg = wrapper.find('svg').first();
-
-  expect(svg.prop('onClick')).toBe(onClick);
+  it('creates a rect for each item in the items prop', () => {
+    expect(itemsG.find('rect').length).toBe(defaultProps.items.length);
+  });
 });

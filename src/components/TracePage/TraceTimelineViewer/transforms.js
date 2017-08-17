@@ -24,7 +24,6 @@ import {
   getTraceSpanIdsAsTree,
   getTraceSpansAsMap,
   getTraceTimestamp,
-  hydrateSpansWithProcesses,
 } from '../../../selectors/trace';
 
 const cache = new Map();
@@ -33,11 +32,10 @@ export function transformTrace(trace) {
   if (cache.has(trace.traceID)) {
     return cache.get(trace.traceID);
   }
-  hydrateSpansWithProcesses(trace);
   const traceStartTime = getTraceTimestamp(trace);
   const traceEndTime = getTraceEndTimestamp(trace);
-  const tree = getTraceSpanIdsAsTree(trace);
   const spanMap = getTraceSpansAsMap(trace);
+  const tree = getTraceSpanIdsAsTree(trace);
   const spans = [];
   tree.walk((spanID, node, depth) => {
     if (spanID === '__root__') {
