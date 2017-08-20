@@ -24,20 +24,18 @@ import { window } from 'global';
 
 import SpanGraph from './SpanGraph';
 import SpanGraphTickHeader from './SpanGraph/SpanGraphTickHeader';
-import tracePropTypes from '../../propTypes/trace';
 import TimelineScrubber from './TimelineScrubber';
 
 import { getTraceId, getTraceTimestamp, getTraceEndTimestamp, getTraceDuration } from '../../selectors/trace';
 import { getPercentageOfInterval } from '../../utils/date';
 
 const TIMELINE_TICK_INTERVAL = 4;
-const TIMELINE_TICK_WIDTH = 2;
 
 export default class TraceSpanGraph extends Component {
   static get propTypes() {
     return {
       xformedTrace: PropTypes.object,
-      trace: tracePropTypes,
+      trace: PropTypes.object,
       height: PropTypes.number.isRequired,
     };
   }

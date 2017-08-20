@@ -26,7 +26,6 @@ import 'basscss/css/basscss.css';
 
 import JaegerUIApp from './components/App';
 
-export { default as SpanGraph } from './components/TracePage/SpanGraph';
 export { default as TracePage } from './components/TracePage';
 export { SearchTracePage } from './components/SearchTracePage';
 export default JaegerUIApp;

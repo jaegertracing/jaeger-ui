@@ -18,7 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-// import PropTypes from 'prop-types';
+import PropTypes from 'prop-types';
 import React from 'react';
 
 import './SpanTreeOffset.css';
@@ -35,3 +35,16 @@ export default function SpanTreeOffset({ level, hasChildren, childrenVisible, on
     </span>
   );
 }
+
+SpanTreeOffset.propTypes = {
+  level: PropTypes.number.isRequired,
+  hasChildren: PropTypes.bool,
+  childrenVisible: PropTypes.bool,
+  onClick: PropTypes.func,
+};
+
+SpanTreeOffset.defaultProps = {
+  hasChildren: false,
+  childrenVisible: false,
+  onClick: null,
+};

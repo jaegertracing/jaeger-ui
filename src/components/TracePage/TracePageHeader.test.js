@@ -20,65 +20,69 @@
 
 import React from 'react';
 import sinon from 'sinon';
-import { shallow } from 'enzyme';
+import { shallow, mount } from 'enzyme';
 
 import TracePageHeader, { HEADER_ITEMS } from './TracePageHeader';
-import traceGenerator from '../../demo/trace-generators';
-import { getTraceName } from '../../selectors/trace';
 
-const defaultProps = {
-  trace: traceGenerator.trace({ numberOfSpans: 50 }),
-};
+describe('<TracePageHeader>', () => {
+  const defaultProps = {
+    traceID: 'some-trace-id',
+    name: 'some-trace-name',
 
-const defaultOptions = {
-  context: {
-    textFilter: '',
-    updateTextFilter: () => {},
-  },
-};
+    // maxDepth: PropTypes.number, // eslint-disable-line react/no-unused-prop-types
+    // numServices: PropTypes.number, // eslint-disable-line react/no-unused-prop-types
+    // numSpans: PropTypes.number, // eslint-disable-line react/no-unused-prop-types
+    // durationMs: PropTypes.number, // eslint-disable-line react/no-unused-prop-types
+    // timestampMs: PropTypes.number, // eslint-disable-line react/no-unused-prop-types
+    // slimView: PropTypes.bool,
+    // onSlimViewClicked: PropTypes.func,
+  };
 
-it('<TracePageHeader /> should render a <header />', () => {
-  const wrapper = shallow(<TracePageHeader {...defaultProps} />, defaultOptions);
-
-  expect(wrapper.find('header').length).toBe(1);
-});
-
-it('<TracePageHeader /> should render an empty <div /> if no trace present', () => {
-  const wrapper = shallow(<TracePageHeader {...defaultProps} trace={null} />, defaultOptions);
-
-  expect(wrapper.matchesElement(<div />)).toBeTruthy();
-});
-
-it('<TracePageHeader /> should render the trace title', () => {
-  const wrapper = shallow(<TracePageHeader {...defaultProps} />, defaultOptions);
-  const h2 = wrapper.find('h2').first();
-
-  expect(h2.contains(getTraceName(defaultProps.trace))).toBeTruthy();
-});
-
-it('<TracePageHeader /> should render the header items', () => {
-  const wrapper = shallow(<TracePageHeader {...defaultProps} />, defaultOptions);
-
-  wrapper.find('.horizontal .item').forEach((item, idx) => {
-    expect(item.contains(HEADER_ITEMS[idx].title)).toBeTruthy();
-    expect(item.contains(HEADER_ITEMS[idx].renderer(defaultProps.trace))).toBeTruthy();
-  });
-});
-
-it('<TracePageHeader /> should call the context filter method onChange of the input', () => {
-  const updateTextFilter = sinon.spy();
-
-  const wrapper = shallow(<TracePageHeader {...defaultProps} />, {
-    ...defaultOptions,
+  const defaultOptions = {
     context: {
-      ...defaultOptions.context,
-      updateTextFilter,
+      textFilter: '',
+      updateTextFilter: () => {},
     },
+  };
+
+  let wrapper;
+
+  beforeEach(() => {
+    wrapper = shallow(<TracePageHeader {...defaultProps} />, defaultOptions);
   });
 
-  const event = { target: { value: 'my new value' } };
+  it('renders a <header />', () => {
+    expect(wrapper.find('header').length).toBe(1);
+  });
 
-  wrapper.find('#trace-page__text-filter').first().prop('onChange')(event);
+  it('renders an empty <div> if no traceID is present', () => {
+    wrapper = mount(<TracePageHeader {...defaultProps} traceID={null} />, defaultOptions);
+    expect(wrapper.children().length).toBe(0);
+  });
 
-  expect(updateTextFilter.calledWith('my new value')).toBeTruthy();
+  it('renders the trace title', () => {
+    const h2 = wrapper.find('h2').first();
+    expect(h2.contains(defaultProps.name)).toBeTruthy();
+  });
+
+  it('renders the header items', () => {
+    wrapper.find('.horizontal .item').forEach((item, i) => {
+      expect(item.contains(HEADER_ITEMS[i].title)).toBeTruthy();
+      expect(item.contains(HEADER_ITEMS[i].renderer(defaultProps.trace))).toBeTruthy();
+    });
+  });
+
+  it('calls the context updateTextFilter() function for onChange of the input', () => {
+    const updateTextFilter = sinon.spy();
+    wrapper = shallow(<TracePageHeader {...defaultProps} />, {
+      ...defaultOptions,
+      context: {
+        ...defaultOptions.context,
+        updateTextFilter,
+      },
+    });
+    const event = { target: { value: 'my new value' } };
+    wrapper.find('#trace-page__text-filter').first().prop('onChange')(event);
+    expect(updateTextFilter.calledWith('my new value')).toBeTruthy();
+  });
 });

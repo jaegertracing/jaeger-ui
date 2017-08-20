@@ -45,13 +45,11 @@ import TracePageHeader from './TracePageHeader';
 import TraceTimelineViewer from './TraceTimelineViewer';
 import TraceSpanGraph from './TraceSpanGraph';
 
-import tracePropTypes from '../../propTypes/trace';
-
 export default class TracePage extends Component {
   static get propTypes() {
     return {
       fetchTrace: PropTypes.func.isRequired,
-      trace: tracePropTypes,
+      trace: PropTypes.object,
       xformedTrace: PropTypes.object,
       loading: PropTypes.bool,
       id: PropTypes.string.isRequired,

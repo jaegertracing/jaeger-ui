@@ -21,7 +21,6 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 
-import tracePropTypes from '../../propTypes/trace';
 import { getTraceTimestamp, getTraceDuration } from '../../selectors/trace';
 import { getPercentageOfInterval } from '../../utils/date';
 
@@ -79,7 +78,7 @@ export default function TimelineScrubber({
 
 TimelineScrubber.propTypes = {
   onMouseDown: PropTypes.func,
-  trace: tracePropTypes.isRequired,
+  trace: PropTypes.object,
   timestamp: PropTypes.number.isRequired,
   handleTopOffset: PropTypes.number,
   handleWidth: PropTypes.number,

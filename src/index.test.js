@@ -18,15 +18,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import JaegerUIApp, { SpanGraph, TracePage, SearchTracePage } from './index';
+import JaegerUIApp, { TracePage, SearchTracePage } from './index';
 
 /* eslint-disable global-require, import/newline-after-import */
 it('JaegerUIApp should be exported as default', () => {
   expect(JaegerUIApp).toBe(require('../src/components/App').default);
-});
-
-it('SpanGraph should be exported as as a named export', () => {
-  expect(SpanGraph).toBe(require('../src/components/SpanGraph').default);
 });
 
 it('TracePage should be exported as as a named export', () => {
