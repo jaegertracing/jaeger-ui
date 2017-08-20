@@ -21,26 +21,23 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 import Helmet from 'react-helmet';
-import { Sticky, StickyContainer } from 'react-sticky';
 
 import TopNav from './TopNav';
 
+import './Page.css';
+
 export default function JaegerUIPage({ children }) {
   return (
-    <section id="jaeger-ui">
-      <StickyContainer>
-        <Helmet title="Jaeger UI" />
-        <Sticky topOffset={0} stickyStyle={{ zIndex: 1000 }}>
-          <TopNav />
-        </Sticky>
-        <div className="jaeger-ui--content">
-          {children}
-        </div>
-      </StickyContainer>
+    <section className="jaeger-ui-page" id="jaeger-ui">
+      <Helmet title="Jaeger UI" />
+      <TopNav />
+      <div className="jaeger-ui--content">
+        {children}
+      </div>
     </section>
   );
 }
 
 JaegerUIPage.propTypes = {
-  children: PropTypes.any,
+  children: PropTypes.node,
 };

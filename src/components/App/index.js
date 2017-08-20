@@ -21,12 +21,12 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { Provider } from 'react-redux';
-import { Router, Route, IndexRedirect, browserHistory } from 'react-router';
-import { syncHistoryWithStore } from 'react-router-redux';
+import { Route, Redirect, Switch } from 'react-router-dom';
+import createHistory from 'history/createBrowserHistory';
+import { ConnectedRouter } from 'react-router-redux';
 import { metrics } from 'react-metrics';
 
 import 'semantic-ui-css/semantic.min.css';
-import './App.css';
 
 import configureStore from '../../utils/configure-store';
 import JaegerAPI, { DEFAULT_API_ROOT } from '../../api/jaeger';
@@ -38,19 +38,23 @@ import { ConnectedSearchTracePage } from '../SearchTracePage';
 import { ConnectedDependencyGraphPage } from '../DependencyGraph';
 import metricConfig from '../../utils/metrics';
 
+import './App.css';
+
 const PageWithMetrics = metrics(metricConfig)(Page);
+
+const defaultHistory = createHistory();
 
 export default class JaegerUIApp extends Component {
   static get propTypes() {
     return {
-      history: Router.propTypes.history,
+      history: PropTypes.object,
       apiRoot: PropTypes.string,
     };
   }
 
   static get defaultProps() {
     return {
-      history: browserHistory,
+      history: defaultHistory,
       apiRoot: DEFAULT_API_ROOT,
     };
   }
@@ -66,15 +70,17 @@ export default class JaegerUIApp extends Component {
 
     return (
       <Provider store={store}>
-        <Router history={syncHistoryWithStore(history, store)}>
-          <Route path="/" component={PageWithMetrics}>
-            <Route path="/search" component={ConnectedSearchTracePage} />
-            <Route path="/trace/:id" component={ConnectedTracePage} />
-            <Route path="/dependencies" component={ConnectedDependencyGraphPage} />
-            <Route path="*" component={NotFound} />
-            <IndexRedirect to="/search" />
-          </Route>
-        </Router>
+        <ConnectedRouter history={history}>
+          <PageWithMetrics>
+            <Switch>
+              <Route path="/search" component={ConnectedSearchTracePage} />
+              <Route path="/trace/:id" component={ConnectedTracePage} />
+              <Route path="/dependencies" component={ConnectedDependencyGraphPage} />
+              <Redirect exact path="/" to="/search" />
+              <Route path="*" component={NotFound} />
+            </Switch>
+          </PageWithMetrics>
+        </ConnectedRouter>
       </Provider>
     );
   }

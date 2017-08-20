@@ -21,9 +21,8 @@ THE SOFTWARE.
 */
 
 .span-graph--tick {
-  stroke: #e5e5e4;
-  opacity: 0.5;
-  stroke-width: 2px;
+  stroke: #aaa;
+  stroke-width: 1px;
 }
 
 .span-graph--tick-header {

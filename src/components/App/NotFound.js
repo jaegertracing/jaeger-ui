@@ -20,7 +20,7 @@
 
 import PropTypes from 'prop-types';
 import React from 'react';
-import { Link } from 'react-router';
+import { Link } from 'react-router-dom';
 
 export default function NotFound({ error }) {
   return (
@@ -37,7 +37,7 @@ export default function NotFound({ error }) {
         {error &&
           <div className="ui red message">
             <p>
-              {error.toString()}
+              {String(error)}
             </p>
           </div>}
         <div className="ui center aligned basic segment">

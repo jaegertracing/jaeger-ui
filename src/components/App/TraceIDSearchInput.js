@@ -20,11 +20,11 @@
 
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import { withRouter } from 'react-router';
+import { withRouter } from 'react-router-dom';
 
 class TraceIDSearchInput extends Component {
   goToTrace(e) {
-    this.props.router.push(`/trace/${this.traceIDInput.value}`);
+    this.props.history.push(`/trace/${this.traceIDInput.value}`);
     e.preventDefault();
     return false;
   }
@@ -44,7 +44,7 @@ class TraceIDSearchInput extends Component {
 }
 
 TraceIDSearchInput.propTypes = {
-  router: PropTypes.shape({
+  history: PropTypes.shape({
     push: PropTypes.func,
   }).isRequired,
 };

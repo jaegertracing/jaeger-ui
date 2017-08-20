@@ -23,7 +23,7 @@ import React from 'react';
 
 import colorGenerator from '../../../utils/color-generator';
 
-import './SpanGraph.css';
+import './index.css';
 
 const MIN_SPAN_WIDTH = 0.002;
 
@@ -33,7 +33,8 @@ export default function SpanGraph(props) {
   const itemHeight = 1 / items.length * 100;
 
   const ticks = [];
-  for (let i = 0; i < numTicks + 1; i++) {
+  // i starts at 1, limit is `i < numTicks` so the first and last ticks aren't drawn
+  for (let i = 1; i < numTicks; i++) {
     const x = `${i / numTicks * 100}%`;
     ticks.push(<line className="span-graph--tick" x1={x} y1="0%" x2={x} y2="100%" key={i / numTicks} />);
   }

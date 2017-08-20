@@ -20,73 +20,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#jaeger-ui-root {
-  height: 100%;
-}
-
-a {
-  color: #11939A;
-}
-
-a:hover {
-  color: #00474E;
-  cursor: pointer;
-}
-
-.clearfix:after {
-   content: " ";
-   visibility: hidden;
-   display: block;
-   height: 0;
-   clear: both;
-}
-
-.pull-left {
-  float: left;
-}
-
-.pull-right {
-  float: right;
-}
-
-.hard {
-  padding: 0 !important;
-}
-
-.soft {
-  padding: 1rem !important;
-}
-
-.flush {
-  margin: 0 !important;
-}
-
-.push {
-  margin: 1rem !important;
-}
-
-.overflow-x {
-  overflow-x: scroll;
-}
-
-.ui.compact.table td {
-  padding: 0.1em 0.5em;
-}
-
-.ui.table td.light-grey {
-  background-color: #F1F1F1;
-}
-
-.ui.table, .ui.table thead tr:first-child>th:last-child, .ui.table thead tr:first-child>th:first-child {
+.ui.menu.jaeger-ui--topnav {
   border-radius: 0;
-}
-
-.ui.table thead th {
-  background-color: #F1F1F1;
-}
-
-.ui.sortable.table thead th.sorted,
-.ui.sortable.table thead th:hover,
-.ui.sortable.table thead th.sorted:hover {
-  background-color: #D6D6D5;
+  padding: 5px;
+  position: fixed;
+  width: 100%;
+  z-index: 1000;
 }

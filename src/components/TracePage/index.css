@@ -20,11 +20,23 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-/* timeline */
-.trace-page-timeline {
-  margin-bottom: 0.5rem;
+.trace-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
+.trace-page-header-section {
+  width: 100%;
+  padding: 0.5em;
+}
+
+.trace-timeline-section {
+  border-top: 1px solid #999;
+  overflow-y: auto;
+}
+
+/* timeline */
 .trace-page-timeline--tick-container{
   position: relative;
   height: 1.25rem;
@@ -33,6 +45,18 @@ THE SOFTWARE.
 .trace-page-timeline--tick-container .span-graph--tick-header__label {
   font-size: 0.8rem;
   color: #717171;
+}
+
+.trace-page-timeline__graph {
+  background: #f8f8f8;
+  border: 1px solid #999;
+  overflow: visible !important;
+  transform-origin: 0 0;
+  width: 100%;
+}
+
+.trace-page-timeline__graph.is-dragging {
+  cursor: ew-resize;
 }
 
 .trace-page-timeline__graph--inactive {
@@ -51,7 +75,6 @@ THE SOFTWARE.
 .timeline-scrubber:hover .timeline-scrubber__line {
   stroke: #777;
 }
-
 
 .timeline-scrubber__handle {
   stroke: #999;

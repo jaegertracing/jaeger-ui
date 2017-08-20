@@ -18,16 +18,16 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import PropTypes from 'prop-types';
 import React from 'react';
-import { bindActionCreators } from 'redux';
-import { connect } from 'react-redux';
-import { Field, reduxForm, formValueSelector } from 'redux-form';
 import moment from 'moment';
+import PropTypes from 'prop-types';
+import queryString from 'query-string';
+import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
+import { Field, reduxForm, formValueSelector } from 'redux-form';
 import store from 'store';
 
 import SearchDropdownInput from './SearchDropdownInput';
-
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import { formatDate, formatTime } from '../../utils/date';
 
@@ -89,10 +89,11 @@ export function TraceSearchFormComponent(props) {
         <div className="search-form--service field">
           <label htmlFor="service">Service</label>
           <Field
+            id="service"
             name="service"
             component={SearchDropdownInput}
             className="ui dropdown"
-            items={services.concat({ name: '-' }).map(s => ({ text: s.name, value: s.name, key: s.name }))}
+            items={services.concat({ name: '-' }).map(v => ({ text: v.name, value: v.name, key: v.name }))}
           />
         </div>
 
@@ -218,7 +219,7 @@ const mapStateToProps = state => {
     minDuration,
     lookback,
     traceID: traceIDParams,
-  } = state.routing.locationBeforeTransitions.query;
+  } = queryString.parse(state.routing.location.search);
 
   const nowInMicroseconds = moment().valueOf() * 1000;
   const today = formatDate(nowInMicroseconds);

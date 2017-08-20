@@ -18,14 +18,13 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { window } from 'global';
+import PropTypes from 'prop-types';
 
 import SpanGraph from './SpanGraph';
 import SpanGraphTickHeader from './SpanGraph/SpanGraphTickHeader';
 import TimelineScrubber from './TimelineScrubber';
-
 import { getTraceId, getTraceTimestamp, getTraceEndTimestamp, getTraceDuration } from '../../selectors/trace';
 import { getPercentageOfInterval } from '../../utils/date';
 
@@ -159,21 +158,16 @@ export default class TraceSpanGraph extends Component {
     }
 
     return (
-      <div className="trace-page-timeline condensed-span-graphs">
+      <div>
         <div className="trace-page-timeline--tick-container">
           <SpanGraphTickHeader numTicks={TIMELINE_TICK_INTERVAL} duration={traceDuration} />
         </div>
-        <div className="trace-page-timeline__graph">
+        <div>
           <svg
-            width="100%"
             height={height}
+            className={`trace-page-timeline__graph ${currentlyDragging ? 'is-dragging' : ''}`}
             ref={/* istanbul ignore next */ c => {
               this.svg = c;
-            }}
-            style={{
-              cursor: currentlyDragging ? 'ew-resize' : 'auto',
-              transformOrigin: '0 0',
-              borderBottom: '1px solid #E5E5E4',
             }}
           >
             {leftInactive > 0 &&

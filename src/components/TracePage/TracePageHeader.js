@@ -61,7 +61,7 @@ export default function TracePageHeader(props, context) {
   }
 
   return (
-    <header className="trace-page-header mb1">
+    <header className="mb1">
       <div className="flex">
         <div className="flex-auto">
           <h2>

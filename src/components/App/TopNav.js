@@ -19,8 +19,11 @@
 // THE SOFTWARE.
 
 import React from 'react';
-import { Link } from 'react-router';
+import { Link } from 'react-router-dom';
+
 import TraceIDSearchInput from './TraceIDSearchInput';
+
+import './TopNav.css';
 
 const NAV_LINKS = [
   {

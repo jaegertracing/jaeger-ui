@@ -80,6 +80,10 @@ THE SOFTWARE.
   position: relative;
 }
 
+.span-row:hover .span-view {
+  background-color: #f5f5f5;
+}
+
 .span-row.is-expanded .span-view {
   background: #f8f8f8;
   outline: 1px solid #ddd;

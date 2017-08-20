@@ -84,10 +84,12 @@ export default function SpanBarRow(props) {
             onClick={onChildrenToggled}
           />
           <a
-            tabIndex="0"
             className={`span-name ${isDetailExapnded ? 'is-detail-expanded' : ''}`}
-            style={{ borderColor: color }}
+            aria-checked={isDetailExapnded}
             onClick={onDetailToggled}
+            role="switch"
+            style={{ borderColor: color }}
+            tabIndex="0"
           >
             <span
               className={`span-svc-name ${isParent && !isChildrenExpanded ? 'is-children-collapsed' : ''}`}

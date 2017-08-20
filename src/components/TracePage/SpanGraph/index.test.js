@@ -56,8 +56,8 @@ describe('<SpanGraph>', () => {
     expect(ticksG.length).toBe(1);
   });
 
-  it('creates a line for each tick block', () => {
-    expect(ticksG.find('line').length).toBe(defaultProps.numTicks + 1);
+  it('creates a line for each ticks excluding the first and last', () => {
+    expect(ticksG.find('line').length).toBe(defaultProps.numTicks - 1);
   });
 
   it('creates a rect for each item in the items prop', () => {

@@ -18,7 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import { createMemoryHistory } from 'react-router';
+import createMemoryHistory from 'history/createMemoryHistory';
 
 import configureStore from './configure-store';
 
