@@ -141,9 +141,10 @@ function Logs({ logs, traceStartTime, open, onToggleOpen }) {
       </a>
       {open &&
         <div>
-          {_.sortBy(logs, 'timestamp').map(log =>
+          {_.sortBy(logs, 'timestamp').map((log, i) =>
+            // `i` is necessary in the key because timestamps can repeat
             <ExpandableDataTableStatefull
-              key={log.timestamp}
+              key={`${log.timestamp}-${i}`}
               data={log.fields || []}
               label={`${formatDuration(log.timestamp - traceStartTime)}`}
             />
