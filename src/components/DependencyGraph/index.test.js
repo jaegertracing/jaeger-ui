@@ -18,18 +18,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import JaegerUIApp, { TracePage, SearchTracePage } from './index';
+import React from 'react';
+import { shallow } from 'enzyme';
 
-/* eslint-disable global-require, import/newline-after-import */
-it('JaegerUIApp should be exported as default', () => {
-  expect(JaegerUIApp).toBe(require('../src/components/App').default);
-});
+import DependencyGraphPage from './index';
 
-it('TracePage should be exported as as a named export', () => {
-  expect(TracePage).toBe(require('../src/components/TracePage').default);
+it('DependencyGraphPage does not explode', () => {
+  shallow(<DependencyGraphPage fetchDependencies={() => {}} />);
 });
-
-it('SearchTracePage should be exported as a named export', () => {
-  expect(SearchTracePage).toBe(require('../src/components/SearchTracePage').SearchTracePage);
-});
-/* eslint-enable global-require, import/newline-after-import */
