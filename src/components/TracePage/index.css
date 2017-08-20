@@ -27,13 +27,16 @@ THE SOFTWARE.
 }
 
 .trace-page-header-section {
+  background: #fff;
+  border-bottom: 1px solid #bbb;
+  padding: 0.5em 0.5em 0 0.5em;
+  position: fixed;
   width: 100%;
-  padding: 0.5em;
+  z-index: 1000001;
 }
 
 .trace-timeline-section {
   border-top: 1px solid #999;
-  overflow-y: auto;
 }
 
 /* timeline */

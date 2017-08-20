@@ -66,15 +66,24 @@ export default class TracePage extends Component {
 
   constructor(props) {
     super(props);
-    this.state = { textFilter: '', timeRangeFilter: [], slimView: false };
+    this.state = {
+      textFilter: '',
+      timeRangeFilter: [],
+      slimView: false,
+      headerHeight: null,
+    };
+    this.headerElm = null;
+    this.setHeaderHeight = this.setHeaderHeight.bind(this);
     this.toggleSlimView = this.toggleSlimView.bind(this);
   }
 
   getChildContext() {
+    const state = { ...this.state };
+    delete state.headerHeight;
     return {
       updateTextFilter: this.updateTextFilter.bind(this),
       updateTimeRangeFilter: this.updateTimeRangeFilter.bind(this),
-      ...this.state,
+      ...state,
     };
   }
 
@@ -86,12 +95,24 @@ export default class TracePage extends Component {
 
   componentDidUpdate({ trace: prevTrace }) {
     const { trace } = this.props;
+    this.setHeaderHeight(this.headerElm);
     if (!trace) {
       this.ensureTraceFetched();
       return;
     }
     if (!(trace instanceof Error) && (!prevTrace || getTraceId(prevTrace) !== getTraceId(trace))) {
       this.setDefaultTimeRange();
+    }
+  }
+
+  setHeaderHeight(elm) {
+    this.headerElm = elm;
+    if (elm) {
+      if (this.state.headerHeight !== elm.clientHeight) {
+        this.setState({ headerHeight: elm.clientHeight });
+      }
+    } else if (this.state.headerHeight) {
+      this.setState({ headerHeight: null });
     }
   }
 
@@ -126,7 +147,7 @@ export default class TracePage extends Component {
 
   render() {
     const { id, trace, xformedTrace } = this.props;
-    const { slimView } = this.state;
+    const { slimView, headerHeight } = this.state;
 
     if (!trace) {
       return <section />;
@@ -141,7 +162,7 @@ export default class TracePage extends Component {
     const numberOfServices = new Set(_values(processes).map(p => p.serviceName)).size;
     return (
       <div className="trace-page" id={`jaeger-trace-${id}`}>
-        <section className="trace-page-header-section">
+        <section className="trace-page-header-section" ref={this.setHeaderHeight}>
           <TracePageHeader
             durationMs={duration / 1000}
             maxDepth={maxSpanDepth}
@@ -155,14 +176,15 @@ export default class TracePage extends Component {
           />
           {!slimView && <TraceSpanGraph trace={trace} xformedTrace={xformedTrace} />}
         </section>
-        <section className="trace-timeline-section">
-          <TraceTimelineViewer
-            trace={trace}
-            xformedTrace={xformedTrace}
-            timeRangeFilter={this.state.timeRangeFilter}
-            textFilter={this.state.textFilter}
-          />
-        </section>
+        {headerHeight &&
+          <section className="trace-timeline-section" style={{ paddingTop: headerHeight }}>
+            <TraceTimelineViewer
+              trace={trace}
+              xformedTrace={xformedTrace}
+              timeRangeFilter={this.state.timeRangeFilter}
+              textFilter={this.state.textFilter}
+            />
+          </section>}
       </div>
     );
   }
