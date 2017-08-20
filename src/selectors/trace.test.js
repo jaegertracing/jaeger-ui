@@ -19,7 +19,6 @@
 // THE SOFTWARE.
 
 import _values from 'lodash/values';
-import setsEqual from 'sets-equal';
 
 import traceGenerator from '../../src/demo/trace-generators';
 import * as traceSelectors from '../../src/selectors/trace';

@@ -4655,10 +4655,6 @@ make-dir@^1.0.0:
   dependencies:
     pify "^2.3.0"
 
-make-set@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/make-set/-/make-set-1.0.0.tgz#5e507e3c57b7ce04d00426e31cc404db703d73d2"
-
 makeerror@1.0.x:
   version "1.0.11"
   resolved "https://registry.yarnpkg.com/makeerror/-/makeerror-1.0.11.tgz#e01a5c9109f2af79660e4e8b9587790184f5a96c"
@@ -6600,12 +6596,6 @@ setimmediate@^1.0.4, setimmediate@^1.0.5:
 setprototypeof@1.0.3:
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/setprototypeof/-/setprototypeof-1.0.3.tgz#66567e37043eeb4f04d91bd658c0cbefb55b8e04"
-
-sets-equal@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/sets-equal/-/sets-equal-1.0.0.tgz#19a08ebfab3bdde2a75efb23cc66ee2c69d15e44"
-  dependencies:
-    make-set "^1.0.0"
 
 settle-promise@1.0.0:
   version "1.0.0"
