@@ -19,43 +19,27 @@
 // THE SOFTWARE.
 
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { shallow } from 'enzyme';
 
-import TraceIDSearchInput from './TraceIDSearchInput';
-import prefixUrl from '../../utils/prefix-url';
+import TraceTimelineViewer from './index';
+import { transformTrace } from './transforms';
+import traceGenerator from '../../../demo/trace-generators';
 
-import './TopNav.css';
+describe('<TraceTimelineViewer>', () => {
+  const trace = traceGenerator.trace({});
+  const props = {
+    textFilter: null,
+    timeRangeFilter: [0, 1],
+    xformedTrace: transformTrace(trace),
+  };
 
-const NAV_LINKS = [
-  {
-    key: 'dependencies',
-    to: prefixUrl('/dependencies'),
-    text: 'Dependencies',
-  },
-  {
-    key: 'search',
-    to: prefixUrl('/search'),
-    text: 'Search',
-  },
-];
+  let wrapper;
 
-export default function TopNav() {
-  return (
-    <nav className="ui top inverted menu jaeger-ui--topnav">
-      <Link to={prefixUrl('/')} className="header item">
-        {'Jaeger UI'}
-      </Link>
+  beforeEach(() => {
+    wrapper = shallow(<TraceTimelineViewer {...props} />);
+  });
 
-      <div className="right menu">
-        <div className="ui input">
-          <TraceIDSearchInput />
-        </div>
-        {NAV_LINKS.map(({ key, to, text }) =>
-          <Link key={key} to={to} className="item">
-            {text}
-          </Link>
-        )}
-      </div>
-    </nav>
-  );
-}
+  it('it does not explode', () => {
+    expect(wrapper).toBeDefined();
+  });
+});

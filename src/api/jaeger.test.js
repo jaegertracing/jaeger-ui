@@ -23,14 +23,12 @@ import JaegerAPI from './jaeger';
 
 const generatedTraces = traceGenerator.traces({ traces: 5 });
 jest.mock('isomorphic-fetch', () =>
-  jest.fn(
-    () =>
-      new Promise(resolve =>
-        resolve({
-          status: 200,
-          data: () => Promise.resolve({ data: null }),
-        })
-      )
+  jest.fn(() =>
+    Promise.resolve({
+      status: 200,
+      data: () => Promise.resolve({ data: null }),
+      json: () => Promise.resolve({ data: null }),
+    })
   )
 );
 

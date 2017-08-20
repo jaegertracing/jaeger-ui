@@ -18,44 +18,43 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import React from 'react';
-import { Link } from 'react-router-dom';
+import prefixUrl, { deriveAndSetPrefix } from './prefix-url';
 
-import TraceIDSearchInput from './TraceIDSearchInput';
-import prefixUrl from '../../utils/prefix-url';
+describe('deriveAndSetPrefix()', () => {
+  const targetPrefix = '/some/prefix';
+  const homepages = [
+    '/some/prefix',
+    'some/prefix',
+    '/some/prefix/',
+    'http://my.example.com/some/prefix',
+    'https://my.example.com/some/prefix/',
+  ];
 
-import './TopNav.css';
+  homepages.forEach(s => {
+    it(`parses "${s}" correctly`, () => {
+      expect(deriveAndSetPrefix(s)).toBe(targetPrefix);
+    });
+  });
+});
 
-const NAV_LINKS = [
-  {
-    key: 'dependencies',
-    to: prefixUrl('/dependencies'),
-    text: 'Dependencies',
-  },
-  {
-    key: 'search',
-    to: prefixUrl('/search'),
-    text: 'Search',
-  },
-];
+describe('prefixUrl()', () => {
+  beforeAll(() => {
+    deriveAndSetPrefix('/some/prefix');
+  });
 
-export default function TopNav() {
-  return (
-    <nav className="ui top inverted menu jaeger-ui--topnav">
-      <Link to={prefixUrl('/')} className="header item">
-        {'Jaeger UI'}
-      </Link>
+  const tests = [
+    { source: undefined, target: '/some/prefix' },
+    { source: null, target: '/some/prefix' },
+    { source: '', target: '/some/prefix' },
+    { source: '/', target: '/some/prefix/' },
+    { source: '/a', target: '/some/prefix/a' },
+    { source: '/a/', target: '/some/prefix/a/' },
+    { source: '/a/b', target: '/some/prefix/a/b' },
+  ];
 
-      <div className="right menu">
-        <div className="ui input">
-          <TraceIDSearchInput />
-        </div>
-        {NAV_LINKS.map(({ key, to, text }) =>
-          <Link key={key} to={to} className="item">
-            {text}
-          </Link>
-        )}
-      </div>
-    </nav>
-  );
-}
+  tests.forEach(({ source, target }) => {
+    it(`prefixes "${source}" correctly`, () => {
+      expect(prefixUrl(source)).toBe(target);
+    });
+  });
+});

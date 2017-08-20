@@ -4,6 +4,7 @@
   "main": "src/index.js",
   "license": "MIT",
   "proxy": "http://localhost:16686",
+  "homepage": null,
   "devDependencies": {
     "babel-eslint": "^7.2.3",
     "enzyme": "^2.9.1",

@@ -24,6 +24,7 @@ import { change } from 'redux-form';
 import { replace } from 'react-router-redux';
 
 import { searchTraces, fetchServiceOperations } from '../actions/jaeger-api';
+import prefixUrl from '../utils/prefix-url';
 
 /**
  * Middleware to load "operations" for a particular service.
@@ -42,15 +43,10 @@ export const loadOperationsForServiceMiddleware = store => next => action => {
 };
 
 export const historyUpdateMiddleware = store => next => action => {
-  switch (action.type) {
-    case `${searchTraces}`: {
-      store.dispatch(replace(`/search?${queryString.stringify(action.meta.query)}`));
-      break;
-    }
-    default:
-      break;
+  if (action.type === String(searchTraces)) {
+    const url = prefixUrl(`/search?${queryString.stringify(action.meta.query)}`);
+    store.dispatch(replace(url));
   }
-
   next(action);
 };
 

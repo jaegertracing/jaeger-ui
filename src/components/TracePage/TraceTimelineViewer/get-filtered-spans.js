@@ -18,44 +18,12 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import React from 'react';
-import { Link } from 'react-router-dom';
+import { filterSpansForText } from '../../../selectors/span';
 
-import TraceIDSearchInput from './TraceIDSearchInput';
-import prefixUrl from '../../utils/prefix-url';
-
-import './TopNav.css';
-
-const NAV_LINKS = [
-  {
-    key: 'dependencies',
-    to: prefixUrl('/dependencies'),
-    text: 'Dependencies',
-  },
-  {
-    key: 'search',
-    to: prefixUrl('/search'),
-    text: 'Search',
-  },
-];
-
-export default function TopNav() {
-  return (
-    <nav className="ui top inverted menu jaeger-ui--topnav">
-      <Link to={prefixUrl('/')} className="header item">
-        {'Jaeger UI'}
-      </Link>
-
-      <div className="right menu">
-        <div className="ui input">
-          <TraceIDSearchInput />
-        </div>
-        {NAV_LINKS.map(({ key, to, text }) =>
-          <Link key={key} to={to} className="item">
-            {text}
-          </Link>
-        )}
-      </div>
-    </nav>
-  );
+export default function getFilteredSpans(trace, text) {
+  const matches = filterSpansForText({
+    text,
+    spans: trace.spans,
+  });
+  return new Set(matches.map(span => span.spanID));
 }

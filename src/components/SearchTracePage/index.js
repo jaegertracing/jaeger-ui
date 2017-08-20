@@ -37,6 +37,7 @@ import * as orderBy from '../../model/order-by';
 import { sortTraces, getTraceSummaries } from '../../model/search';
 import { getPercentageOfDuration } from '../../utils/date';
 import getLastXformCacher from '../../utils/get-last-xform-cacher';
+import prefixUrl from '../../utils/prefix-url';
 
 /**
  * Contains the dropdown to sort and filter trace search results
@@ -147,7 +148,7 @@ export default class SearchTracePage extends Component {
                 <ul className="list-reset">
                   {traceResults.map(trace =>
                     <li key={trace.traceID} className="my1">
-                      <Link to={`/trace/${trace.traceID}`}>
+                      <Link to={prefixUrl(`/trace/${trace.traceID}`)}>
                         <TraceSearchResult
                           trace={trace}
                           durationPercent={getPercentageOfDuration(trace.duration, maxTraceDuration)}

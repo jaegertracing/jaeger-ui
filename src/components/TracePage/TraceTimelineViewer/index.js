@@ -21,25 +21,14 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 
-import { filterSpansForText } from '../../../selectors/span';
+import getFilteredSpans from './get-filtered-spans';
 import TraceView from './TraceView';
 import { getPositionInRange } from './utils';
 
 import './grid.css';
 import './index.css';
 
-// TODO: Move some styles to css
-// TODO: Clean up component names and move to seperate files.
 // TODO: Add unit tests
-// TODO: unify transforms and utils
-
-function getFilteredSpans(trace, text) {
-  const matches = filterSpansForText({
-    text,
-    spans: trace.spans,
-  });
-  return new Set(matches.map(span => span.spanID));
-}
 
 export default class TraceTimelineViewer extends Component {
   constructor(props) {
@@ -60,12 +49,12 @@ export default class TraceTimelineViewer extends Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    const { textFilter } = nextProps;
-    if (textFilter === this.props.textFilter) {
+    const { xformedTrace, textFilter } = nextProps;
+    if (textFilter === this.props.textFilter && xformedTrace === this.props.xformedTrace) {
       return;
     }
     const filteredSpans = textFilter ? getFilteredSpans(nextProps.xformedTrace, textFilter) : null;
-    this.setState({ filteredSpans });
+    this.setState({ filteredSpans, trace: xformedTrace });
   }
 
   toggleSpanCollapse(spanID) {
