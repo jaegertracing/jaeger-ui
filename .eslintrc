@@ -17,6 +17,7 @@
     "arrow-parens": [1, "as-needed"],
     "no-restricted-syntax": 0,
     "no-plusplus": 0,
+    "no-continue": 0,
 
     /* jsx */
     "jsx-a11y/no-static-element-interactions": 1,

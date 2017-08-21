@@ -53,6 +53,7 @@
     "react-redux": "^5.0.6",
     "react-router-dom": "^4.1.2",
     "react-router-redux": "5.0.0-alpha.6",
+    "react-virtualized": "^9.9.0",
     "react-vis": "^1.7.2",
     "react-vis-force": "^0.3.1",
     "recompose": "^0.25.0",

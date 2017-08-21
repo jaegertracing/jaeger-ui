@@ -39,6 +39,7 @@ THE SOFTWARE.
 /* Add the hint related selector to override the hint styling (via specificity) */
 [class*="hint--"].span-bar {
   border-radius: 3px;
+  min-width: 2px;
   position: absolute;
   height: 50%;
   top: 25%;

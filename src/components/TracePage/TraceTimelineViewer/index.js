@@ -22,7 +22,8 @@ import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 
 import getFilteredSpans from './get-filtered-spans';
-import TraceView from './TraceView';
+// import TraceView from './TraceView';
+import VirtualizedTraceView from './VirtualizedTraceView';
 import { getPositionInRange } from './utils';
 
 import './grid.css';
@@ -81,7 +82,7 @@ export default class TraceTimelineViewer extends Component {
     const { startTime, endTime } = trace;
     return (
       <div className="trace-timeline-viewer">
-        <TraceView
+        <VirtualizedTraceView
           {...this.props}
           trace={trace}
           collapsedSpanIDs={collapsedSpans}
