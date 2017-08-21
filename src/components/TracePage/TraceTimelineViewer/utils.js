@@ -18,8 +18,21 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-// viewStart: number [0, 1]
-// viewEnd: number [0, 1]
+/**
+ * Given a range (`min`, `max`), finds the position of a sub-range (`start`,
+ * `end`) factoring in a zoom (`viewStart`, `viewEnd`). The result is returned
+ * as a `{ start, end }` object with values ranging in [0, 1].
+ *
+ * @param  {number} min       The start of the outer range.
+ * @param  {number} max       The end of the outer range.
+ * @param  {number} start     The start of the sub-range.
+ * @param  {number} end       The end of the sub-range.
+ * @param  {number} viewStart The start of the zoom, on a range of [0, 1],
+ *                            relative to the `min`, `max`.
+ * @param  {number} viewEnd   The end of the zoom, on a range of [0, 1],
+ *                            relative to the `min`, `max`.
+ * @return {Object}           The resultant range.
+ */
 export function getViewedBounds({ min, max, start, end, viewStart, viewEnd }) {
   const duration = max - min;
   const viewMin = min + viewStart * duration;
@@ -31,6 +44,17 @@ export function getViewedBounds({ min, max, start, end, viewStart, viewEnd }) {
   };
 }
 
+/**
+ * Given `start` and `end`, returns the position of `value` within that range
+ * with `0` returned when `value` is equal to `start` and `1` return when it
+ * is equal to `end`.
+ *
+ * @param  {number} start The start of the range to find `value`'s position in.
+ * @param  {number} end   The end of the range.
+ * @param  {number} value The value to find the position of.
+ * @return {number}       A number representing the placement of `value`
+ *                        relative to `start` and `end`.
+ */
 export function getPositionInRange(start, end, value) {
   if (value == null) {
     return undefined;
@@ -38,6 +62,15 @@ export function getPositionInRange(start, end, value) {
   return (value - start) / (end - start);
 }
 
+/**
+ * Returns `true` if the `span` has a tag matching `key` = `value`.
+ *
+ * @param  {string} key   The tag key to match on.
+ * @param  {any}    value The tag value to match.
+ * @param  {{tags}} span  An object with a `tags` property of { key, value }
+ *                        items.
+ * @return {boolean}      True if a match was found.
+ */
 export function spanHasTag(key, value, span) {
   if (!Array.isArray(span.tags) || !span.tags.length) {
     return false;
