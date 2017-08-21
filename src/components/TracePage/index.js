@@ -164,13 +164,13 @@ export default class TracePage extends Component {
       <div className="trace-page" id={`jaeger-trace-${id}`}>
         <section className="trace-page-header-section" ref={this.setHeaderHeight}>
           <TracePageHeader
-            durationMs={duration / 1000}
+            duration={duration}
             maxDepth={maxSpanDepth}
             name={getTraceName(spans, processes)}
             numServices={numberOfServices}
             numSpans={spans.length}
             slimView={slimView}
-            timestampMs={startTime / 1000}
+            timestamp={startTime}
             traceID={traceID}
             onSlimViewClicked={this.toggleSlimView}
           />
