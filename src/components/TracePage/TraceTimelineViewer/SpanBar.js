@@ -28,7 +28,7 @@ function toPercent(value) {
   return `${value * 100}%`;
 }
 
-function SpanBarImpl(props) {
+function SpanBar(props) {
   const { viewEnd, viewStart, color, label, hintSide, onClick, onMouseOver, onMouseOut, rpc } = props;
 
   return (
@@ -55,7 +55,7 @@ function SpanBarImpl(props) {
   );
 }
 
-SpanBarImpl.propTypes = {
+SpanBar.propTypes = {
   rpc: PropTypes.shape({
     viewStart: PropTypes.number,
     viewEnd: PropTypes.number,
@@ -71,20 +71,18 @@ SpanBarImpl.propTypes = {
   onMouseOut: PropTypes.func,
 };
 
-SpanBarImpl.defaultProps = {
+SpanBar.defaultProps = {
   rpc: null,
   onClick: null,
   onMouseOver: null,
   onMouseOut: null,
 };
 
-const SpanBar = compose(
+export default compose(
   withState('label', 'setLabel', props => props.shortLabel),
   withProps(({ setLabel, shortLabel, longLabel }) => ({
     onMouseOver: () => setLabel(longLabel),
     onMouseOut: () => setLabel(shortLabel),
   })),
   onlyUpdateForKeys(['viewStart', 'viewEnd', 'label', 'rpc'])
-)(SpanBarImpl);
-
-export default SpanBar;
+)(SpanBar);
