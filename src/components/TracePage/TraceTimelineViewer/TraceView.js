@@ -160,7 +160,7 @@ export default function TraceView(props) {
     <div className="mx0 px1 overflow-hidden">
       <TimelineRow style={{ backgroundColor: '#e8e8e8', borderBottom: '1px solid #ccc' }}>
         <TimelineRow.Left>
-          <h3 className="m0 p1">Span Name</h3>
+          <h3 className="m0 p1">Service & Operation</h3>
         </TimelineRow.Left>
         <TimelineRow.Right>
           <Ticks
