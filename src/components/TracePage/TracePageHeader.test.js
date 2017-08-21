@@ -28,14 +28,6 @@ describe('<TracePageHeader>', () => {
   const defaultProps = {
     traceID: 'some-trace-id',
     name: 'some-trace-name',
-
-    // maxDepth: PropTypes.number, // eslint-disable-line react/no-unused-prop-types
-    // numServices: PropTypes.number, // eslint-disable-line react/no-unused-prop-types
-    // numSpans: PropTypes.number, // eslint-disable-line react/no-unused-prop-types
-    // durationMs: PropTypes.number, // eslint-disable-line react/no-unused-prop-types
-    // timestampMs: PropTypes.number, // eslint-disable-line react/no-unused-prop-types
-    // slimView: PropTypes.bool,
-    // onSlimViewClicked: PropTypes.func,
   };
 
   const defaultOptions = {
