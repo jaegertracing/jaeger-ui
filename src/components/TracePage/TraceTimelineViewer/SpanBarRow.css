@@ -46,6 +46,11 @@ THE SOFTWARE.
   z-index: 1;
 }
 
+.span-name-wrapper {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .span-name {
   outline: none;
   color: #000;

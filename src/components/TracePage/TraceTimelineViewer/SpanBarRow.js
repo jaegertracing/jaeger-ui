@@ -76,7 +76,7 @@ export default function SpanBarRow(props) {
       `}
     >
       <TimelineRow.Left className="span-name-column">
-        <div className="overflow-hidden" title={title}>
+        <div className="span-name-wrapper" title={title}>
           <SpanTreeOffset
             level={depth + 1}
             hasChildren={isParent}
