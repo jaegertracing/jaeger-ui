@@ -67,7 +67,8 @@ export default function SpanDetail(props) {
         {span.logs && span.logs.length > 0 && <AccordianLogs logs={span.logs} timestamp={trace.startTime} />}
 
         <small className="SpanDetail--debugInfo">
-          {span.spanID}
+          <span className="SpanDetail--debugLabel" data-label="SpanID:" />{' '}
+          <span className="SpanDetail--debugValue">{span.spanID}</span>
         </small>
       </div>
     </div>

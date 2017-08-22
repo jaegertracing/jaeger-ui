@@ -21,9 +21,21 @@ THE SOFTWARE.
 */
 
 .SpanDetail--debugInfo {
-  color: #888;
   display: block;
   letter-spacing: 0.25px;
   margin: 0.5em 0 -0.75em;
   text-align: right;
+}
+
+.SpanDetail--debugLabel::before {
+  color: #bbb;
+  content: attr(data-label);
+}
+
+.SpanDetail--debugValue {
+  color: #888;
+}
+
+.SpanDetail--debugValue:hover {
+  color: #333;
 }
