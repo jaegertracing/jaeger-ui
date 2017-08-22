@@ -28,12 +28,12 @@ export const HEADER_ITEMS = [
   {
     key: 'timestamp',
     title: 'Trace Start',
-    renderer: props => formatDatetime(props.timestampMs * 1000),
+    renderer: props => formatDatetime(props.timestamp),
   },
   {
     key: 'duration',
     title: 'Duration',
-    renderer: props => formatDuration(props.durationMs * 1000),
+    renderer: props => formatDuration(props.duration),
   },
   {
     key: 'service-count',
@@ -120,8 +120,8 @@ TracePageHeader.propTypes = {
   maxDepth: PropTypes.number, // eslint-disable-line react/no-unused-prop-types
   numServices: PropTypes.number, // eslint-disable-line react/no-unused-prop-types
   numSpans: PropTypes.number, // eslint-disable-line react/no-unused-prop-types
-  durationMs: PropTypes.number, // eslint-disable-line react/no-unused-prop-types
-  timestampMs: PropTypes.number, // eslint-disable-line react/no-unused-prop-types
+  duration: PropTypes.number, // eslint-disable-line react/no-unused-prop-types
+  timestamp: PropTypes.number, // eslint-disable-line react/no-unused-prop-types
   slimView: PropTypes.bool,
   onSlimViewClicked: PropTypes.func,
 };

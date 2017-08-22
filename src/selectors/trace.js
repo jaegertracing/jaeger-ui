@@ -54,6 +54,20 @@ export const getTraceSpansAsMap = createSelector(getTraceSpans, spans =>
 
 export const TREE_ROOT_ID = '__root__';
 
+/**
+ * Build a tree of { value: spanID, children } items derived from the
+ * `span.references` information. The tree represents the grouping of parent /
+ * child relationships. The root-most node is nominal in that
+ * `.value === TREE_ROOT_ID`. This is done because a root span (the main trace
+ * span) is not always included with the trace data. Thus, there can be
+ * multiple top-level spans, and the root node acts as their common parent.
+ *
+ * The children are sorted by `span.startTime` after the tree is built.
+ *
+ * @param  {Trace} trace The trace to build the tree of spanIDs.
+ * @return {TreeNode}    A tree of spanIDs derived from the relationships
+ *                       between spans in the trace.
+ */
 export function getTraceSpanIdsAsTree(trace) {
   const nodesById = new Map(trace.spans.map(span => [span.spanID, new TreeNode(span.spanID)]));
   const spansById = new Map(trace.spans.map(span => [span.spanID, span]));
