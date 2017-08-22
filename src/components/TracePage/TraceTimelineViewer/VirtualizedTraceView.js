@@ -21,7 +21,7 @@
 import React, { PureComponent } from 'react';
 import cx from 'classnames';
 import PropTypes from 'prop-types';
-import { List } from 'react-virtualized';
+import { AutoSizer, List, WindowScroller } from 'react-virtualized';
 
 import colorGenerator from '../../../utils/color-generator';
 import SpanBarRow from './SpanBarRow';
@@ -35,6 +35,8 @@ import {
   isErrorSpan,
   spanContainsErredSpan,
 } from './utils';
+
+import './VirtualizedTraceView.css';
 
 function generateRowStates(spans, collapsedSpanIDs, selectedSpanIDs) {
   let collapseDepth = null;
@@ -79,14 +81,7 @@ function generateRowStates(spans, collapsedSpanIDs, selectedSpanIDs) {
 export default class VirtualizedTraceView extends PureComponent {
   constructor(props) {
     super(props);
-    const {
-      collapsedSpanIDs,
-      filteredSpansIDs,
-      selectedSpanIDs,
-      trace,
-      zoomEnd = 1,
-      zoomStart = 0,
-    } = this.props;
+    const { collapsedSpanIDs, selectedSpanIDs, trace, zoomEnd = 1, zoomStart = 0 } = this.props;
 
     const clippingCssClasses = cx({
       'clipping-left': zoomStart > 0,
@@ -216,17 +211,7 @@ export default class VirtualizedTraceView extends PureComponent {
   }
 
   render() {
-    const {
-      trace,
-      zoomStart = 0,
-      zoomEnd = 1,
-      collapsedSpanIDs,
-      selectedSpanIDs,
-      filteredSpansIDs,
-      onSpanClick,
-      onSpanCollapseClick,
-      ticks = [0, 0.25, 0.5, 0.75, 1],
-    } = this.props;
+    const { trace, zoomStart = 0, zoomEnd = 1, ticks = [0, 0.25, 0.5, 0.75, 1] } = this.props;
 
     const zoomMin = zoomStart * trace.duration;
     const zoomMax = zoomEnd * trace.duration;
@@ -236,8 +221,8 @@ export default class VirtualizedTraceView extends PureComponent {
     }
 
     return (
-      <div className="mx0 px1 overflow-hidden">
-        <TimelineRow style={{ backgroundColor: '#e8e8e8', borderBottom: '1px solid #ccc' }}>
+      <div className="">
+        <TimelineRow className="VirtualizedTraceView--headerRow">
           <TimelineRow.Left>
             <h3 className="m0 p1">Span Name</h3>
           </TimelineRow.Left>
@@ -249,15 +234,25 @@ export default class VirtualizedTraceView extends PureComponent {
             <h3 className="m0 p1">Timeline</h3>
           </TimelineRow.Right>
         </TimelineRow>
-        <List
-          width={910}
-          height={790}
-          rowCount={this.state.rowStates.length}
-          rowHeight={21}
-          estimatedRowSize={21}
-          overscanRowCount={200}
-          rowRenderer={this.renderRow}
-        />
+        <div className="VirtualizedTraceView--spans">
+          <WindowScroller scrollingResetTimeInterval={10}>
+            {({ height, scrollTop }) =>
+              <AutoSizer disableHeight>
+                {({ width }) =>
+                  <List
+                    width={width}
+                    scrollTop={scrollTop}
+                    autoHeight
+                    height={height}
+                    rowCount={this.state.rowStates.length}
+                    rowHeight={21}
+                    estimatedRowSize={21}
+                    overscanRowCount={200}
+                    rowRenderer={this.renderRow}
+                  />}
+              </AutoSizer>}
+          </WindowScroller>
+        </div>
       </div>
     );
   }

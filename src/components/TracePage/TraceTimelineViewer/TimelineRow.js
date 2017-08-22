@@ -18,8 +18,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import PropTypes from 'prop-types';
 import React from 'react';
+import PropTypes from 'prop-types';
+
+import './TimelineRow.css';
 
 const propTypes = {
   children: PropTypes.node,
@@ -33,8 +35,9 @@ const defaultProps = {
 
 export default function TimelineRow(props) {
   const { children, className, ...rest } = props;
+  // <div className={`row ${className}`} {...rest}>
   return (
-    <div className={`row ${className}`} {...rest}>
+    <div className={`flex-row ${className}`} {...rest}>
       {children}
     </div>
   );
