@@ -21,6 +21,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
+import measureEnhancer from '../../../utils/measure-enhancer';
+
 import './TimelineRow.css';
 
 const propTypes = {
@@ -33,17 +35,21 @@ const defaultProps = {
   className: '',
 };
 
-export default function TimelineRow(props) {
-  const { children, className, ...rest } = props;
-  // <div className={`row ${className}`} {...rest}>
+function TimelineRowBase(props) {
+  const { children, className, setMeasureRef, ...rest } = props;
+  // setMeasureRef is from the measureEnhancer HOC
   return (
-    <div className={`flex-row ${className}`} {...rest}>
+    <div className={`flex-row ${className}`} ref={setMeasureRef} {...rest}>
       {children}
     </div>
   );
 }
-TimelineRow.propTypes = { ...propTypes };
-TimelineRow.defaultProps = { ...defaultProps };
+TimelineRowBase.propTypes = { ...propTypes };
+TimelineRowBase.defaultProps = { ...defaultProps };
+
+const TimelineRow = measureEnhancer(TimelineRowBase);
+
+export default TimelineRow;
 
 function TimelineRowLeft(props) {
   const { children, className, ...rest } = props;

@@ -76,5 +76,5 @@ export default function SpanDetail(props) {
 }
 SpanDetail.propTypes = {
   span: PropTypes.object,
-  trace: PropTypes.object,
+  timestampOrigin: PropTypes.object,
 };

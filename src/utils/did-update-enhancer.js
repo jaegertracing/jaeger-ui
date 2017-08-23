@@ -18,16 +18,27 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import { compose, withHandlers, withState } from 'recompose';
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 
-// import didUpdateEnhancer from '../../../../utils/did-update-enhancer';
+import wrapComponentName from './wrap-component-name';
 
-export default compose(
-  // didUpdateEnhancer,
-  withState('isOpen', 'setOpen', false),
-  withHandlers({
-    onToggle: props => () => {
-      props.setOpen(!props.isOpen);
-    },
-  })
-);
+export default function didUpdateEnhancer(BaseComponent) {
+  return class extends Component {
+    static displayName = wrapComponentName('didUpdate', BaseComponent);
+    static propTypes = { onDidUpdate: PropTypes.func };
+    static defaultProps = { onDidUpdate: null };
+
+    componentDidUpdate() {
+      const { onDidUpdate } = this.props;
+      if (onDidUpdate) {
+        onDidUpdate();
+      }
+    }
+
+    render() {
+      const { onDidUpdate: _, ...childProps } = this.props;
+      return <BaseComponent {...childProps} />;
+    }
+  };
+}

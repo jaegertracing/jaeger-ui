@@ -18,16 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import { compose, withHandlers, withState } from 'recompose';
-
-// import didUpdateEnhancer from '../../../../utils/did-update-enhancer';
-
-export default compose(
-  // didUpdateEnhancer,
-  withState('isOpen', 'setOpen', false),
-  withHandlers({
-    onToggle: props => () => {
-      props.setOpen(!props.isOpen);
-    },
-  })
-);
+export default function wrapComponentName(hocName, BaseComponent) {
+  const name = BaseComponent.displayName || BaseComponent.name || 'Component';
+  return `${hocName}(${name})`;
+}

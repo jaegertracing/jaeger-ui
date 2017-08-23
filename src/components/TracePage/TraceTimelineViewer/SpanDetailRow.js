@@ -28,9 +28,12 @@ import SpanDetail from './SpanDetail';
 import './SpanDetailRow.css';
 
 export default function SpanDetailRow(props) {
-  const { span, color, trace, toggleDetailExpansion, isFilteredOut } = props;
+  const { span, color, trace, toggleDetailExpansion, isFilteredOut, onMeasureChange } = props;
   return (
-    <TimelineRow className={`detail-row ${isFilteredOut ? 'is-filtered-out' : ''}`}>
+    <TimelineRow
+      className={`detail-row ${isFilteredOut ? 'is-filtered-out' : ''}`}
+      onMeasureChange={onMeasureChange}
+    >
       <TimelineRow.Left>
         <div className="detail-row-name-column">
           <SpanTreeOffset level={span.depth + 1} />

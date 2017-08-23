@@ -21,9 +21,9 @@
 import React, { PureComponent } from 'react';
 import cx from 'classnames';
 import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
 import { AutoSizer, List, WindowScroller } from 'react-virtualized';
 
-import colorGenerator from '../../../utils/color-generator';
 import SpanBarRow from './SpanBarRow';
 import SpanDetailRow from './SpanDetailRow';
 import Ticks from './Ticks';
@@ -35,10 +35,11 @@ import {
   isErrorSpan,
   spanContainsErredSpan,
 } from './utils';
+import colorGenerator from '../../../utils/color-generator';
 
 import './VirtualizedTraceView.css';
 
-function generateRowStates(spans, collapsedSpanIDs, selectedSpanIDs) {
+function generateRowStates(spans, childrenHiddenIDs, detailStates) {
   let collapseDepth = null;
   const rowStates = [];
   for (let i = 0; i < spans.length; i++) {
@@ -55,7 +56,7 @@ function generateRowStates(spans, collapsedSpanIDs, selectedSpanIDs) {
     if (hidden) {
       continue;
     }
-    if (collapsedSpanIDs.has(spanID)) {
+    if (childrenHiddenIDs.has(spanID)) {
       collapseDepth = depth + 1;
     }
     rowStates.push({
@@ -63,7 +64,7 @@ function generateRowStates(spans, collapsedSpanIDs, selectedSpanIDs) {
       isDetail: false,
       spanIndex: i,
     });
-    if (selectedSpanIDs.has(spanID)) {
+    if (detailStates.has(spanID)) {
       rowStates.push({
         span,
         isDetail: true,
@@ -78,22 +79,29 @@ function generateRowStates(spans, collapsedSpanIDs, selectedSpanIDs) {
   // }
 }
 
-export default class VirtualizedTraceView extends PureComponent {
+function deriveState(props) {
+  const { childrenHiddenIDs, detailStates, trace, zoomEnd = 1, zoomStart = 0 } = props;
+  const clippingCssClasses = cx({
+    'clipping-left': zoomStart > 0,
+    'clipping-right': zoomEnd < 1,
+  });
+  return {
+    clippingCssClasses,
+    rowStates: trace ? generateRowStates(trace.spans, childrenHiddenIDs, detailStates) : [],
+  };
+}
+
+class VirtualizedTraceView extends PureComponent {
   constructor(props) {
     super(props);
-    const { collapsedSpanIDs, selectedSpanIDs, trace, zoomEnd = 1, zoomStart = 0 } = this.props;
-
-    const clippingCssClasses = cx({
-      'clipping-left': zoomStart > 0,
-      'clipping-right': zoomEnd < 1,
-    });
-
-    this.state = {
-      clippingCssClasses,
-      rowStates: trace ? generateRowStates(trace.spans, collapsedSpanIDs, selectedSpanIDs) : [],
-    };
-
+    console.log('ctor props:', props);
+    this.state = deriveState(props);
     this.renderRow = this.renderRow.bind(this);
+    this.setListRef = this.setListRef.bind(this);
+  }
+
+  updateDetailMeasurement(spanID, width, height) {
+    console.log('detail measurement:', spanID, width, height);
   }
 
   renderRow({
@@ -115,11 +123,11 @@ export default class VirtualizedTraceView extends PureComponent {
     const { spanID } = span;
     const { serviceName } = span.process;
     const {
-      collapsedSpanIDs,
-      filteredSpansIDs,
-      onSpanClick,
-      onSpanCollapseClick,
-      selectedSpanIDs,
+      childrenHiddenIDs,
+      findMatchesIDs,
+      detailToggle,
+      childrenToggle,
+      detailStates,
       ticks = [0, 0.25, 0.5, 0.75, 1],
       trace,
       zoomEnd = 1,
@@ -128,11 +136,11 @@ export default class VirtualizedTraceView extends PureComponent {
     const { clippingCssClasses } = this.state;
 
     const color = colorGenerator.getColorByKey(serviceName);
-    const toggleDetailExpansion = () => onSpanClick(spanID);
+    const toggleDetailExpansion = () => detailToggle(spanID);
 
-    const isCollapsed = collapsedSpanIDs.has(spanID);
-    const isDetailExapnded = selectedSpanIDs.has(spanID);
-    const isFilteredOut = Boolean(filteredSpansIDs) && !filteredSpansIDs.has(spanID);
+    const isCollapsed = childrenHiddenIDs.has(spanID);
+    const isDetailExapnded = detailStates.has(spanID);
+    const isFilteredOut = Boolean(findMatchesIDs) && !findMatchesIDs.has(spanID);
     const showErrorIcon = isErrorSpan(span) || (isCollapsed && spanContainsErredSpan(trace.spans, spanIndex));
     const viewBounds = getViewedBounds({
       min: trace.startTime,
@@ -177,7 +185,7 @@ export default class VirtualizedTraceView extends PureComponent {
           isFilteredOut={isFilteredOut}
           isParent={span.hasChildren}
           onDetailToggled={toggleDetailExpansion}
-          onChildrenToggled={() => onSpanCollapseClick(spanID)}
+          onChildrenToggled={() => childrenToggle(spanID)}
           operationName={span.operationName}
           rpc={rpc}
           serviceName={span.process.serviceName}
@@ -193,10 +201,11 @@ export default class VirtualizedTraceView extends PureComponent {
   renderSpanDetailRow(span, key, style) {
     const { spanID } = span;
     const { serviceName } = span.process;
-    const { filteredSpansIDs, onSpanClick, trace } = this.props;
+    const { findMatchesIDs, detailToggle, trace } = this.props;
     const color = colorGenerator.getColorByKey(serviceName);
-    const isFilteredOut = Boolean(filteredSpansIDs) && !filteredSpansIDs.has(spanID);
-    const toggleDetailExpansion = () => onSpanClick(spanID);
+    const isFilteredOut = Boolean(findMatchesIDs) && !findMatchesIDs.has(spanID);
+    const toggleDetailExpansion = () => detailToggle(spanID);
+    const onMeasureChange = (width, height) => this.updateDetailMeasurement(spanID, width, height);
     return (
       <div key={key} style={style}>
         <SpanDetailRow
@@ -205,9 +214,24 @@ export default class VirtualizedTraceView extends PureComponent {
           span={span}
           toggleDetailExpansion={toggleDetailExpansion}
           trace={trace}
+          onMeasureChange={onMeasureChange}
         />
       </div>
     );
+  }
+
+  setListRef(elm) {
+    this.listRef = elm;
+  }
+
+  componentWillReceiveProps(nextProps) {
+    // console.log('will get props');
+    console.log('new props:', this.props);
+    const nextState = deriveState(nextProps);
+    this.setState(nextState);
+    // if (this.listRef) {
+    //   this.listRef.forceGridUpdate();
+    // }
   }
 
   render() {
@@ -257,14 +281,24 @@ export default class VirtualizedTraceView extends PureComponent {
     );
   }
 }
+
 VirtualizedTraceView.propTypes = {
   trace: PropTypes.object,
-  collapsedSpanIDs: PropTypes.object,
-  selectedSpanIDs: PropTypes.object,
-  filteredSpansIDs: PropTypes.oneOfType([PropTypes.bool, PropTypes.object]),
+  childrenHiddenIDs: PropTypes.object,
+  detailStates: PropTypes.object,
+  findMatchesIDs: PropTypes.oneOfType([PropTypes.bool, PropTypes.object]),
   ticks: PropTypes.arrayOf(PropTypes.number),
   zoomStart: PropTypes.number,
   zoomEnd: PropTypes.number,
-  onSpanClick: PropTypes.func,
-  onSpanCollapseClick: PropTypes.func,
+  detailToggle: PropTypes.func,
+  childrenToggle: PropTypes.func,
 };
+
+function mapStateToProps(state, ownProps) {
+  return {
+    ...ownProps,
+    ...state,
+  };
+}
+
+export default connect(mapStateToProps)(VirtualizedTraceView);

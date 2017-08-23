@@ -18,16 +18,45 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import { compose, withHandlers, withState } from 'recompose';
-
-// import didUpdateEnhancer from '../../../../utils/did-update-enhancer';
-
-export default compose(
-  // didUpdateEnhancer,
-  withState('isOpen', 'setOpen', false),
-  withHandlers({
-    onToggle: props => () => {
-      props.setOpen(!props.isOpen);
-    },
-  })
-);
+// DetailState {
+//   isTagsOpen: bool,
+//   isProcessOpen: bool,
+//   logs: {
+//     isOpen: bool,
+//     openItems: Set<LogItem>
+//   }
+// }
+export default class DetailState {
+  constructor({ isTagsOpen, isProcessOpen, logs } = {}) {
+    this.isTagsOpen = isTagsOpen;
+    this.isProcessOpen = isProcessOpen;
+    this.logs = {
+      isOpen: logs && logs.isOpen,
+      openItems: logs && logs.openItems ? new Set(logs.openItems) : new Set(),
+    };
+  }
+  toggleTags() {
+    const next = new DetailState(this);
+    next.isTagsOpen = !this.isTagsOpen;
+    return next;
+  }
+  toggleProcess() {
+    const next = new DetailState(this);
+    next.isTagsOpen = !this.isTagsOpen;
+    return next;
+  }
+  toggleLogs() {
+    const next = new DetailState(this);
+    next.logs.isOpen = !this.logs.isOpen;
+    return next;
+  }
+  toggleLogItem(logItem) {
+    const next = new DetailState(this);
+    if (next.logs.openItems.has(logItem)) {
+      next.logs.openItems.delete(logItem);
+    } else {
+      next.logs.openItems.add(logItem);
+    }
+    return next;
+  }
+}
