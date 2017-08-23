@@ -20,7 +20,9 @@
 
 import PropTypes from 'prop-types';
 import React from 'react';
-import { Link } from 'react-router';
+import { Link } from 'react-router-dom';
+
+import prefixUrl from '../../utils/prefix-url';
 
 export default function NotFound({ error }) {
   return (
@@ -37,11 +39,11 @@ export default function NotFound({ error }) {
         {error &&
           <div className="ui red message">
             <p>
-              {error.toString()}
+              {String(error)}
             </p>
           </div>}
         <div className="ui center aligned basic segment">
-          <Link to="/">
+          <Link to={prefixUrl('/')}>
             {'Back home'}
           </Link>
         </div>

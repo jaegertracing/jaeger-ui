@@ -26,7 +26,6 @@ import {
   getSpanServiceName,
   getSpanTimestamp,
   getSpanDuration,
-  getSpanParentId,
   getSpanProcessId,
 } from './span';
 import { getProcessServiceName } from './process';
@@ -37,7 +36,9 @@ import TreeNode from '../utils/TreeNode';
 export const getTraceId = trace => trace.traceID;
 
 export const getTraceSpans = trace => trace.spans;
+
 const getTraceProcesses = trace => trace.processes;
+
 const getSpanWithProcess = createSelector(
   state => state.span,
   state => state.processes,
@@ -53,49 +54,52 @@ export const getTraceSpansAsMap = createSelector(getTraceSpans, spans =>
 
 export const TREE_ROOT_ID = '__root__';
 
-function insertSpanIntoTree(tree, span, spanMap) {
-  const spanId = getSpanId(span);
-
-  // base case: the span has already been visited
-  // edge case: if the tree contains this spanId already, move on
-  if (!tree.find(spanId)) {
-    let parentId = getSpanParentId(span);
-
-    // base case: if this span has no parent OR
-    // edge case: if the the parent span is not found on the trace,
-    // return the tree, since the main method will
-    if (parentId && spanMap.has(parentId)) {
-      // make sure that the parent gets inserted before we continue by recursing
-      insertSpanIntoTree(tree, spanMap.get(parentId), spanMap);
+/**
+ * Build a tree of { value: spanID, children } items derived from the
+ * `span.references` information. The tree represents the grouping of parent /
+ * child relationships. The root-most node is nominal in that
+ * `.value === TREE_ROOT_ID`. This is done because a root span (the main trace
+ * span) is not always included with the trace data. Thus, there can be
+ * multiple top-level spans, and the root node acts as their common parent.
+ *
+ * The children are sorted by `span.startTime` after the tree is built.
+ *
+ * @param  {Trace} trace The trace to build the tree of spanIDs.
+ * @return {TreeNode}    A tree of spanIDs derived from the relationships
+ *                       between spans in the trace.
+ */
+export function getTraceSpanIdsAsTree(trace) {
+  const nodesById = new Map(trace.spans.map(span => [span.spanID, new TreeNode(span.spanID)]));
+  const spansById = new Map(trace.spans.map(span => [span.spanID, span]));
+  const root = new TreeNode(TREE_ROOT_ID);
+  trace.spans.forEach(span => {
+    const node = nodesById.get(span.spanID);
+    if (Array.isArray(span.references) && span.references.length) {
+      const { refType, spanID: parentID } = span.references[0];
+      if (refType === 'CHILD_OF') {
+        const parent = nodesById.get(parentID) || root;
+        parent.children.push(node);
+      } else {
+        throw new Error(`Unrecognized ref type: ${refType}`);
+      }
     } else {
-      parentId = TREE_ROOT_ID;
+      root.children.push(node);
     }
-
-    // add the child span to its parent
-    const parentNode = tree.find(parentId);
-    parentNode.addChild(spanId);
-  }
-
-  return tree;
+  });
+  const comparator = (nodeA, nodeB) => {
+    const a = spansById.get(nodeA.value);
+    const b = spansById.get(nodeB.value);
+    return +(a.startTime > b.startTime) || +(a.startTime === b.startTime) - 1;
+  };
+  trace.spans.forEach(span => {
+    const node = nodesById.get(span.spanID);
+    if (node.children.length > 1) {
+      node.children.sort(comparator);
+    }
+  });
+  root.children.sort(comparator);
+  return root;
 }
-
-export const getTraceSpanIdsAsTree = createSelector(getTraceSpans, getTraceSpansAsMap, (spans, spanMap) => {
-  const result = spans.reduce(
-    (tree, span) => insertSpanIntoTree(tree, span, spanMap),
-    new TreeNode(TREE_ROOT_ID)
-  );
-
-  result.walk((value, node) =>
-    node.children.sort((nodeA, nodeB) =>
-      numberSortComparator(
-        getSpanTimestamp(spanMap.get(nodeA.value)),
-        getSpanTimestamp(spanMap.get(nodeB.value))
-      )
-    )
-  );
-
-  return result;
-});
 
 // attach "process" as an object to each span.
 export const hydrateSpansWithProcesses = trace => {

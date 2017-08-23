@@ -21,11 +21,11 @@
 import _values from 'lodash/values';
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import queryString from 'query-string';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 import { Field, reduxForm, formValueSelector } from 'redux-form';
-import { Link } from 'react-router';
-import { Sticky } from 'react-sticky';
+import { Link } from 'react-router-dom';
 
 import JaegerLogo from '../../img/jaeger-logo.svg';
 
@@ -37,6 +37,7 @@ import * as orderBy from '../../model/order-by';
 import { sortTraces, getTraceSummaries } from '../../model/search';
 import { getPercentageOfDuration } from '../../utils/date';
 import getLastXformCacher from '../../utils/get-last-xform-cacher';
+import prefixUrl from '../../utils/prefix-url';
 
 /**
  * Contains the dropdown to sort and filter trace search results
@@ -54,12 +55,14 @@ let TraceResultsFilterForm = () =>
       </Field>
     </div>
   </div>;
+
 TraceResultsFilterForm = reduxForm({
   form: 'traceResultsFilters',
   initialValues: {
     sortBy: orderBy.MOST_RECENT,
   },
 })(TraceResultsFilterForm);
+
 const traceResultsFiltersFormSelector = formValueSelector('traceResultsFilters');
 
 export default class SearchTracePage extends Component {
@@ -84,12 +87,10 @@ export default class SearchTracePage extends Component {
     return (
       <div className="trace-search ui grid padded">
         <div className="four wide column">
-          <Sticky topOffset={-60} stickyStyle={{ top: 'calc(40px + 1rem)', zIndex: 1000 }}>
-            <div className="ui tertiary segment" style={{ background: 'whitesmoke' }}>
-              <h3>Find Traces</h3>
-              <TraceSearchForm services={services} />
-            </div>
-          </Sticky>
+          <div className="ui tertiary segment" style={{ background: 'whitesmoke' }}>
+            <h3>Find Traces</h3>
+            <TraceSearchForm services={services} />
+          </div>
         </div>
         <div className="twelve wide column padded">
           {loading && <div className="ui active centered inline loader" />}
@@ -122,6 +123,8 @@ export default class SearchTracePage extends Component {
                         x: t.timestamp,
                         y: t.duration,
                         traceID: t.traceID,
+                        size: t.numberOfSpans,
+                        name: t.traceName,
                       }))}
                       onValueClick={t => {
                         this.props.history.push(`/trace/${t.traceID}`);
@@ -145,7 +148,7 @@ export default class SearchTracePage extends Component {
                 <ul className="list-reset">
                   {traceResults.map(trace =>
                     <li key={trace.traceID} className="my1">
-                      <Link to={`/trace/${trace.traceID}`}>
+                      <Link to={prefixUrl(`/trace/${trace.traceID}`)}>
                         <TraceSearchResult
                           trace={trace}
                           durationPercent={getPercentageOfDuration(trace.duration, maxTraceDuration)}
@@ -203,7 +206,7 @@ const stateServicesXformer = getLastXformCacher(stateServices => {
 });
 
 function mapStateToProps(state) {
-  const query = state.routing.locationBeforeTransitions.query;
+  const query = queryString.parse(state.routing.location.search);
   const isHomepage = !Object.keys(query).length;
   const { traces, maxDuration, loading, traceError } = stateTraceXformer(state.trace);
   const { services, serviceError } = stateServicesXformer(state.services);

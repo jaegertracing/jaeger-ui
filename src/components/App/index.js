@@ -18,39 +18,43 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import { Provider } from 'react-redux';
-import { Router, Route, IndexRedirect, browserHistory } from 'react-router';
-import { syncHistoryWithStore } from 'react-router-redux';
+import createHistory from 'history/createBrowserHistory';
+import PropTypes from 'prop-types';
 import { metrics } from 'react-metrics';
+import { Provider } from 'react-redux';
+import { Route, Redirect, Switch } from 'react-router-dom';
+import { ConnectedRouter } from 'react-router-redux';
 
 import 'semantic-ui-css/semantic.min.css';
-import './App.css';
-
-import configureStore from '../../utils/configure-store';
-import JaegerAPI, { DEFAULT_API_ROOT } from '../../api/jaeger';
 
 import Page from './Page';
 import NotFound from './NotFound';
-import { ConnectedTracePage } from '../TracePage';
-import { ConnectedSearchTracePage } from '../SearchTracePage';
 import { ConnectedDependencyGraphPage } from '../DependencyGraph';
+import { ConnectedSearchTracePage } from '../SearchTracePage';
+import { ConnectedTracePage } from '../TracePage';
+import JaegerAPI, { DEFAULT_API_ROOT } from '../../api/jaeger';
+import configureStore from '../../utils/configure-store';
 import metricConfig from '../../utils/metrics';
+import prefixUrl from '../../utils/prefix-url';
+
+import './App.css';
 
 const PageWithMetrics = metrics(metricConfig)(Page);
+
+const defaultHistory = createHistory();
 
 export default class JaegerUIApp extends Component {
   static get propTypes() {
     return {
-      history: Router.propTypes.history,
+      history: PropTypes.object,
       apiRoot: PropTypes.string,
     };
   }
 
   static get defaultProps() {
     return {
-      history: browserHistory,
+      history: defaultHistory,
       apiRoot: DEFAULT_API_ROOT,
     };
   }
@@ -63,18 +67,21 @@ export default class JaegerUIApp extends Component {
   render() {
     const { history } = this.props;
     const store = configureStore(history);
-
     return (
       <Provider store={store}>
-        <Router history={syncHistoryWithStore(history, store)}>
-          <Route path="/" component={PageWithMetrics}>
-            <Route path="/search" component={ConnectedSearchTracePage} />
-            <Route path="/trace/:id" component={ConnectedTracePage} />
-            <Route path="/dependencies" component={ConnectedDependencyGraphPage} />
-            <Route path="*" component={NotFound} />
-            <IndexRedirect to="/search" />
-          </Route>
-        </Router>
+        <ConnectedRouter history={history}>
+          <PageWithMetrics>
+            <Switch>
+              <Route path={prefixUrl('/search')} component={ConnectedSearchTracePage} />
+              <Route path={prefixUrl('/trace/:id')} component={ConnectedTracePage} />
+              <Route path={prefixUrl('/dependencies')} component={ConnectedDependencyGraphPage} />
+              <Redirect exact path="/" to={prefixUrl('/search')} />
+              <Redirect exact path={prefixUrl()} to={prefixUrl('/search')} />
+              <Redirect exact path={prefixUrl('/')} to={prefixUrl('/search')} />
+              <Route component={NotFound} />
+            </Switch>
+          </PageWithMetrics>
+        </ConnectedRouter>
       </Provider>
     );
   }

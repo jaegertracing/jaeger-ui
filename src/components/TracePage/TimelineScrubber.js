@@ -21,14 +21,12 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 
-import tracePropTypes from '../../propTypes/trace';
 import { getTraceTimestamp, getTraceDuration } from '../../selectors/trace';
 import { getPercentageOfInterval } from '../../utils/date';
 
 const HANDLE_WIDTH = 6;
 const HANDLE_HEIGHT = 20;
 const HANDLE_TOP_OFFSET = 0;
-const LINE_WIDTH = 2;
 
 export default function TimelineScrubber({
   trace,
@@ -50,7 +48,6 @@ export default function TimelineScrubber({
         y2="100%"
         x1={`${xPercentage}%`}
         x2={`${xPercentage}%`}
-        strokeWidth={LINE_WIDTH}
       />
       <rect
         x={`${xPercentage}%`}
@@ -81,7 +78,7 @@ export default function TimelineScrubber({
 
 TimelineScrubber.propTypes = {
   onMouseDown: PropTypes.func,
-  trace: tracePropTypes.isRequired,
+  trace: PropTypes.object,
   timestamp: PropTypes.number.isRequired,
   handleTopOffset: PropTypes.number,
   handleWidth: PropTypes.number,

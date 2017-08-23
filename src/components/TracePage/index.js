@@ -18,16 +18,20 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import { bindActionCreators } from 'redux';
+import _maxBy from 'lodash/maxBy';
+import _values from 'lodash/values';
+import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { Sticky } from 'react-sticky';
+import { bindActionCreators } from 'redux';
 
-import './TracePage.css';
+import TracePageHeader from './TracePageHeader';
+import TraceSpanGraph from './TraceSpanGraph';
+import TraceTimelineViewer from './TraceTimelineViewer';
+import { transformTrace } from './TraceTimelineViewer/transforms';
+import NotFound from '../App/NotFound';
 import * as jaegerApiActions from '../../actions/jaeger-api';
-import colorGenerator from '../../utils/color-generator';
-
+import { getTraceName } from '../../model/trace-viewer';
 import {
   dropEmptyStartTimeSpans,
   hydrateSpansWithProcesses,
@@ -35,18 +39,16 @@ import {
   getTraceEndTimestamp,
   getTraceId,
 } from '../../selectors/trace';
-import NotFound from '../App/NotFound';
-import TracePageHeader from './TracePageHeader';
-import TraceTimelineViewer from './TraceTimelineViewer';
-import TracePageTimeline from './TracePageTimeline';
+import colorGenerator from '../../utils/color-generator';
 
-import tracePropTypes from '../../propTypes/trace';
+import './index.css';
 
 export default class TracePage extends Component {
   static get propTypes() {
     return {
       fetchTrace: PropTypes.func.isRequired,
-      trace: tracePropTypes,
+      trace: PropTypes.object,
+      xformedTrace: PropTypes.object,
       loading: PropTypes.bool,
       id: PropTypes.string.isRequired,
     };
@@ -64,14 +66,24 @@ export default class TracePage extends Component {
 
   constructor(props) {
     super(props);
-    this.state = { textFilter: '', timeRangeFilter: [], slimView: false };
+    this.state = {
+      textFilter: '',
+      timeRangeFilter: [],
+      slimView: false,
+      headerHeight: null,
+    };
+    this.headerElm = null;
+    this.setHeaderHeight = this.setHeaderHeight.bind(this);
+    this.toggleSlimView = this.toggleSlimView.bind(this);
   }
 
   getChildContext() {
+    const state = { ...this.state };
+    delete state.headerHeight;
     return {
       updateTextFilter: this.updateTextFilter.bind(this),
       updateTimeRangeFilter: this.updateTimeRangeFilter.bind(this),
-      ...this.state,
+      ...state,
     };
   }
 
@@ -83,25 +95,33 @@ export default class TracePage extends Component {
 
   componentDidUpdate({ trace: prevTrace }) {
     const { trace } = this.props;
-
+    this.setHeaderHeight(this.headerElm);
     if (!trace) {
       this.ensureTraceFetched();
       return;
     }
-
     if (!(trace instanceof Error) && (!prevTrace || getTraceId(prevTrace) !== getTraceId(trace))) {
       this.setDefaultTimeRange();
     }
   }
 
+  setHeaderHeight(elm) {
+    this.headerElm = elm;
+    if (elm) {
+      if (this.state.headerHeight !== elm.clientHeight) {
+        this.setState({ headerHeight: elm.clientHeight });
+      }
+    } else if (this.state.headerHeight) {
+      this.setState({ headerHeight: null });
+    }
+  }
+
   setDefaultTimeRange() {
     const { trace } = this.props;
-
     if (!trace) {
       this.updateTimeRangeFilter(null, null);
       return;
     }
-
     this.updateTimeRangeFilter(getTraceTimestamp(trace), getTraceEndTimestamp(trace));
   }
 
@@ -113,11 +133,8 @@ export default class TracePage extends Component {
     this.setState({ timeRangeFilter });
   }
 
-  toggleSlimView(slimView) {
-    this.setState({ slimView });
-    // fix issue #12 - TraceView header expander not working correctly
-    // TODO: evaluate alternatives to react-sticky
-    setTimeout(() => this.forceUpdate(), 0);
+  toggleSlimView() {
+    this.setState({ slimView: !this.state.slimView });
   }
 
   ensureTraceFetched() {
@@ -129,8 +146,8 @@ export default class TracePage extends Component {
   }
 
   render() {
-    const { id, trace } = this.props;
-    const { slimView } = this.state;
+    const { id, trace, xformedTrace } = this.props;
+    const { slimView, headerHeight } = this.state;
 
     if (!trace) {
       return <section />;
@@ -140,41 +157,50 @@ export default class TracePage extends Component {
       return <NotFound error={trace} />;
     }
 
+    const { duration, processes, spans, startTime, traceID } = xformedTrace;
+    const maxSpanDepth = _maxBy(spans, 'depth').depth + 1;
+    const numberOfServices = new Set(_values(processes).map(p => p.serviceName)).size;
     return (
-      <section id={`jaeger-trace-${id}`}>
-        <Sticky
-          topOffset={-50}
-          style={{ zIndex: 1000, transform: 'none' }}
-          stickyStyle={{ top: 50, zIndex: 1000, background: 'white' }}
-        >
-          <div style={{ marginTop: 10 }}>
-            <TracePageHeader
+      <div className="trace-page" id={`jaeger-trace-${id}`}>
+        <section className="trace-page-header-section" ref={this.setHeaderHeight}>
+          <TracePageHeader
+            duration={duration}
+            maxDepth={maxSpanDepth}
+            name={getTraceName(spans, processes)}
+            numServices={numberOfServices}
+            numSpans={spans.length}
+            slimView={slimView}
+            timestamp={startTime}
+            traceID={traceID}
+            onSlimViewClicked={this.toggleSlimView}
+          />
+          {!slimView && <TraceSpanGraph trace={trace} xformedTrace={xformedTrace} />}
+        </section>
+        {headerHeight &&
+          <section className="trace-timeline-section" style={{ paddingTop: headerHeight }}>
+            <TraceTimelineViewer
               trace={trace}
-              slimView={slimView}
-              onSlimViewClicked={() => this.toggleSlimView(!slimView)}
+              xformedTrace={xformedTrace}
+              timeRangeFilter={this.state.timeRangeFilter}
+              textFilter={this.state.textFilter}
             />
-            {!slimView && <TracePageTimeline trace={trace} />}
-          </div>
-        </Sticky>
-        <TraceTimelineViewer
-          trace={trace}
-          timeRangeFilter={this.state.timeRangeFilter}
-          textFilter={this.state.textFilter}
-        />
-      </section>
+          </section>}
+      </div>
     );
   }
 }
 
 // export connected component separately
 function mapStateToProps(state, ownProps) {
-  const { id } = ownProps.params;
+  const { id } = ownProps.match.params;
   let trace = state.trace.traces[id];
+  let xformedTrace;
   if (trace && !(trace instanceof Error)) {
     trace = dropEmptyStartTimeSpans(trace);
     trace = hydrateSpansWithProcesses(trace);
+    xformedTrace = transformTrace(trace);
   }
-  return { id, trace, loading: state.trace.loading };
+  return { id, trace, xformedTrace, loading: state.trace.loading };
 }
 
 function mapDispatchToProps(dispatch) {

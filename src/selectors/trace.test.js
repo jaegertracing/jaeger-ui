@@ -18,7 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import setsEqual from 'sets-equal';
+import _values from 'lodash/values';
 
 import traceGenerator from '../../src/demo/trace-generators';
 import * as traceSelectors from '../../src/selectors/trace';
@@ -158,15 +158,10 @@ it('getSpanDepthForTrace() should determine the depth of a given span in the par
 });
 
 it('getTraceServices() should return an unique array of all services in the trace', () => {
-  expect(
-    setsEqual(
-      new Set(traceSelectors.getTraceServices(generatedTrace)),
-      generatedTrace.spans.reduce(
-        (results, { processID }) => results.add(generatedTrace.processes[processID].serviceName),
-        new Set()
-      )
-    )
-  ).toBeTruthy();
+  const svcs = [...traceSelectors.getTraceServices(generatedTrace)].sort();
+  const set = new Set(_values(generatedTrace.processes).map(v => v.serviceName));
+  const setSvcs = [...set.values()].sort();
+  expect(svcs).toEqual(setSvcs);
 });
 
 it('getTraceServiceCount() should return the length of the service list', () => {

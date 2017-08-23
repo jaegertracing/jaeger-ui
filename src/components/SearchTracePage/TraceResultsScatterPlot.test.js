@@ -21,9 +21,7 @@
 import React from 'react';
 import { shallow } from 'enzyme';
 
-/* eslint-disable */
 import TraceResultsScatterPlot from './TraceResultsScatterPlot';
-/* eslint-enable */
 
 it('<TraceResultsScatterPlot /> should render base case correctly', () => {
   const wrapper = shallow(

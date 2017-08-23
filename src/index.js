@@ -20,19 +20,11 @@
 
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { browserHistory, hashHistory } from 'react-router';
 import { document } from 'global';
+
 import 'basscss/css/basscss.css';
 
 import JaegerUIApp from './components/App';
-
-export { default as SpanGraph } from './components/SpanGraph';
-export { default as TracePage } from './components/TracePage';
-export { SearchTracePage } from './components/SearchTracePage';
-export default JaegerUIApp;
-
-const UI_ROOT_ID = 'jaeger-ui-root';
-const history = process.env.REACT_APP_GH_PAGES === 'true' ? hashHistory : browserHistory;
 
 /* istanbul ignore if */
 if (process.env.NODE_ENV === 'development') {
@@ -44,7 +36,9 @@ if (process.env.NODE_ENV === 'development') {
   });
 }
 
+const UI_ROOT_ID = 'jaeger-ui-root';
+
 /* istanbul ignore if */
 if (document && process.env.NODE_ENV !== 'test') {
-  ReactDOM.render(<JaegerUIApp history={history} />, document.getElementById(UI_ROOT_ID));
+  ReactDOM.render(<JaegerUIApp />, document.getElementById(UI_ROOT_ID));
 }
