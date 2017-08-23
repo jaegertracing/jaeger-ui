@@ -18,78 +18,72 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import * as d3 from 'd3-scale';
-import _ from 'lodash';
-
 /**
- * Will calculate the start and end percent of span,
- * given a trace startTime and endTime.
- * Will also factor in zoom.
+ * Given a range (`min`, `max`), finds the position of a sub-range (`start`,
+ * `end`) factoring in a zoom (`viewStart`, `viewEnd`). The result is returned
+ * as a `{ start, end }` object with values ranging in [0, 1].
+ *
+ * @param  {number} min       The start of the outer range.
+ * @param  {number} max       The end of the outer range.
+ * @param  {number} start     The start of the sub-range.
+ * @param  {number} end       The end of the sub-range.
+ * @param  {number} viewStart The start of the zoom, on a range of [0, 1],
+ *                            relative to the `min`, `max`.
+ * @param  {number} viewEnd   The end of the zoom, on a range of [0, 1],
+ *                            relative to the `min`, `max`.
+ * @return {Object}           The resultant range.
  */
-export function calculateSpanPosition({
-  traceStartTime,
-  traceEndTime,
-  spanStart,
-  spanEnd,
-  xStart = 0,
-  xEnd = 100,
-}) {
-  const xValue = d3.scaleLinear().domain([traceStartTime, traceEndTime]).range([0, 100]);
-  const zoomValue = d3.scaleLinear().domain([xStart, xEnd]).range([0, 100]);
+export function getViewedBounds({ min, max, start, end, viewStart, viewEnd }) {
+  const duration = max - min;
+  const viewMin = min + viewStart * duration;
+  const viewMax = max - (1 - viewEnd) * duration;
+  const viewWindow = viewMax - viewMin;
   return {
-    xStart: zoomValue(xValue(spanStart)),
-    xEnd: zoomValue(xValue(spanEnd)),
+    start: (start - viewMin) / viewWindow,
+    end: (end - viewMin) / viewWindow,
   };
 }
 
 /**
- * Given a percent and traceDuration, will give back
- * a relative time from 0.
+ * Given `start` and `end`, returns the position of `value` within that range
+ * with `0` returned when `value` is equal to `start` and `1` return when it
+ * is equal to `end`.
  *
- * eg: 50% at 100ms = 50ms
+ * @param  {number} start The start of the range to find `value`'s position in.
+ * @param  {number} end   The end of the range.
+ * @param  {number} value The value to find the position of.
+ * @return {number}       A number representing the placement of `value`
+ *                        relative to `start` and `end`.
  */
-export function calculateTimeAtPositon({ position, traceDuration }) {
-  const xValue = d3.scaleLinear().domain([0, 100]).range([0, traceDuration]);
-  return xValue(position);
+export function getPositionInRange(start, end, value) {
+  if (value == null) {
+    return undefined;
+  }
+  return (value - start) / (end - start);
 }
 
 /**
- * Given a subset of the duration of two timestamps,
- * return the start and end time as a percent.
+ * Returns `true` if the `span` has a tag matching `key` = `value`.
  *
- * for example if a span starts at 100ms and ends at 200ms:
- * 150ms, 200ms => 50,100
- * 100ms, 200ms => 0,100
+ * @param  {string} key   The tag key to match on.
+ * @param  {any}    value The tag value to match.
+ * @param  {{tags}} span  An object with a `tags` property of { key, value }
+ *                        items.
+ * @return {boolean}      True if a match was found.
  */
-export function convertTimeRangeToPercent([startTime, endTime], [traceStartTime, traceEndTime]) {
-  if (startTime === null || endTime === null) {
-    return [0, 100];
-  }
-  const getPercent = d3.scaleLinear().domain([traceStartTime, traceEndTime]).range([0, 100]);
-  return [getPercent(startTime), getPercent(endTime)];
-}
-
-export function ensureWithinRange([floor = 0, ceiling = 100], num) {
-  if (num < floor) {
-    return floor;
-  }
-  if (num > ceiling) {
-    return ceiling;
-  }
-  return num;
-}
-
-export function hasTagKey(tags, key, value) {
-  if (!tags || !tags.length) {
+export function spanHasTag(key, value, span) {
+  if (!Array.isArray(span.tags) || !span.tags.length) {
     return false;
   }
-  return _.some(tags, tag => tag.key === key && tag.value === value);
+  return span.tags.some(tag => tag.key === key && tag.value === value);
 }
 
-export const isClientSpan = span => hasTagKey(span.tags, 'span.kind', 'client');
-export const isServerSpan = span => hasTagKey(span.tags, 'span.kind', 'server');
-export const isErrorSpan = span =>
-  hasTagKey(span.tags, 'error', true) || hasTagKey(span.tags, 'error', 'true');
+export const isClientSpan = spanHasTag.bind(null, 'span.kind', 'client');
+export const isServerSpan = spanHasTag.bind(null, 'span.kind', 'server');
+
+const isErrorBool = spanHasTag.bind(null, 'error', true);
+const isErrorStr = spanHasTag.bind(null, 'error', 'true');
+export const isErrorSpan = span => isErrorBool(span) || isErrorStr(span);
 
 /**
  * Returns `true` if at least one of the descendants of the `parentSpanIndex`
@@ -122,15 +116,14 @@ export function findServerChildSpan(spans) {
   }
   const span = spans[0];
   const spanChildDepth = span.depth + 1;
-  let serverSpan;
   let i = 1;
-  while (i < spans.length && spans[i].depth === spanChildDepth && !serverSpan) {
+  while (i < spans.length && spans[i].depth === spanChildDepth) {
     if (isServerSpan(spans[i])) {
-      serverSpan = spans[i];
+      return spans[i];
     }
     i++;
   }
-  return serverSpan;
+  return null;
 }
 
 export { formatDuration } from '../../../utils/date';

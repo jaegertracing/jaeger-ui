@@ -18,22 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import JaegerUIApp, { SpanGraph, TracePage, SearchTracePage } from './index';
-
-/* eslint-disable global-require, import/newline-after-import */
-it('JaegerUIApp should be exported as default', () => {
-  expect(JaegerUIApp).toBe(require('../src/components/App').default);
-});
-
-it('SpanGraph should be exported as as a named export', () => {
-  expect(SpanGraph).toBe(require('../src/components/SpanGraph').default);
-});
-
-it('TracePage should be exported as as a named export', () => {
-  expect(TracePage).toBe(require('../src/components/TracePage').default);
-});
-
-it('SearchTracePage should be exported as a named export', () => {
-  expect(SearchTracePage).toBe(require('../src/components/SearchTracePage').SearchTracePage);
-});
-/* eslint-enable global-require, import/newline-after-import */
+export function getTraceName(spans, processes) {
+  const span = spans.find(sp => sp.spanID === sp.traceID) || spans[0];
+  return span ? `${processes[span.processID].serviceName}: ${span.operationName}` : '';
+}

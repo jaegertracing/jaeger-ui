@@ -21,42 +21,45 @@
 import React from 'react';
 import { shallow } from 'enzyme';
 
-import SpanGraphTickHeaderLabel from './SpanGraphTickHeaderLabel';
-import { formatDurationForTrace } from '../../selectors/trace';
+import SpanGraphTickHeader from './SpanGraphTickHeader';
 
-const timestamp = new Date().getTime() * 1000;
-const duration = 1000000;
-const trace = {
-  spans: [
-    {
-      duration: 4000000,
-      timestamp,
-    },
-  ],
-};
-const defaultProps = {
-  style: { left: 100 },
-  duration,
-  trace,
-};
+describe('<SpanGraphTickHeader>', () => {
+  const defaultProps = {
+    numTicks: 4,
+    duration: 5000,
+  };
 
-it('<SpanGraphTickHeaderLabel /> should render a <div>', () => {
-  const wrapper = shallow(<SpanGraphTickHeaderLabel {...defaultProps} />);
-  const divs = wrapper.find('div');
+  let wrapper;
+  let ticks;
 
-  expect(divs.length).toBe(1);
-});
+  beforeEach(() => {
+    wrapper = shallow(<SpanGraphTickHeader {...defaultProps} />);
+    ticks = wrapper.find('[data-test="tick"]');
+  });
 
-it('<SpanGraphTickHeaderLabel /> should render the duration as text', () => {
-  const wrapper = shallow(<SpanGraphTickHeaderLabel {...defaultProps} />);
-  const div = wrapper.find('div').first();
+  it('renders the right number of ticks', () => {
+    expect(ticks.length).toBe(defaultProps.numTicks + 1);
+  });
 
-  expect(div.prop('children')).toBe(formatDurationForTrace({ trace, duration }));
-});
+  it('places the first tick on the left', () => {
+    const firstTick = ticks.first();
+    expect(firstTick.prop('style')).toEqual({ left: '0%' });
+  });
 
-it('<SpanGraphTickHeaderLabel /> should pass the style through', () => {
-  const wrapper = shallow(<SpanGraphTickHeaderLabel {...defaultProps} />);
-  const firstTick = wrapper.find('div').first();
+  it('places the last tick on the right', () => {
+    const lastTick = ticks.last();
+    expect(lastTick.prop('style')).toEqual({ right: '0%' });
+  });
 
-  expect(firstTick.prop('style')).toEqual(defaultProps.style);
+  it('places middle ticks at proper intervals', () => {
+    const positions = ['25%', '50%', '75%'];
+    positions.forEach((pos, i) => {
+      const tick = ticks.at(i + 1);
+      expect(tick.prop('style')).toEqual({ left: pos });
+    });
+  });
+
+  it("doesn't explode if no trace is present", () => {
+    expect(() => shallow(<SpanGraphTickHeader {...defaultProps} trace={null} />)).not.toThrow();
+  });
 });

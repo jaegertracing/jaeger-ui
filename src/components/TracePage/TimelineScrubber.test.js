@@ -27,53 +27,51 @@ import traceGenerator from '../../../src/demo/trace-generators';
 
 import { getTraceTimestamp, getTraceDuration } from '../../../src/selectors/trace';
 
-const generatedTrace = traceGenerator.trace({ numberOfSpans: 45 });
+describe('<TimelineScrubber>', () => {
+  const generatedTrace = traceGenerator.trace({ numberOfSpans: 45 });
+  const defaultProps = {
+    onMouseDown: sinon.spy(),
+    trace: generatedTrace,
+    timestamp: getTraceTimestamp(generatedTrace),
+  };
 
-const defaultProps = {
-  onMouseDown: sinon.spy(),
-  trace: generatedTrace,
-  timestamp: getTraceTimestamp(generatedTrace),
-};
+  let wrapper;
 
-it('<TimelineScrubber /> should contain the proper svg components', () => {
-  const wrapper = shallow(<TimelineScrubber {...defaultProps} />);
+  beforeEach(() => {
+    wrapper = shallow(<TimelineScrubber {...defaultProps} />);
+  });
 
-  expect(
-    wrapper.matchesElement(
-      <g className="timeline-scrubber">
-        <line className="timeline-scrubber__line" />
-        <rect className="timeline-scrubber__handle" />
-        <circle className="timeline-scrubber__handle--grip" />
-        <circle className="timeline-scrubber__handle--grip" />
-        <circle className="timeline-scrubber__handle--grip" />
-      </g>
-    )
-  ).toBeTruthy();
-});
+  it('contains the proper svg components', () => {
+    expect(
+      wrapper.matchesElement(
+        <g className="timeline-scrubber">
+          <line className="timeline-scrubber__line" />
+          <rect className="timeline-scrubber__handle" />
+          <circle className="timeline-scrubber__handle--grip" />
+          <circle className="timeline-scrubber__handle--grip" />
+          <circle className="timeline-scrubber__handle--grip" />
+        </g>
+      )
+    ).toBeTruthy();
+  });
 
-it('<TimelineScrubber /> should calculate the correct x% for a timestamp', () => {
-  const timestamp = getTraceDuration(generatedTrace) * 0.5 + getTraceTimestamp(generatedTrace);
+  it('calculates the correct x% for a timestamp', () => {
+    const timestamp = getTraceDuration(generatedTrace) * 0.5 + getTraceTimestamp(generatedTrace);
+    wrapper = shallow(<TimelineScrubber {...defaultProps} timestamp={timestamp} />);
+    const line = wrapper.find('line').first();
+    const rect = wrapper.find('rect').first();
+    expect(line.prop('x1')).toBe('50%');
+    expect(line.prop('x2')).toBe('50%');
+    expect(rect.prop('x')).toBe('50%');
+  });
 
-  const wrapper = shallow(<TimelineScrubber {...defaultProps} timestamp={timestamp} />);
-  const line = wrapper.find('line').first();
-  const rect = wrapper.find('rect').first();
+  it('supports onMouseDown', () => {
+    const event = {};
+    wrapper.find('g').prop('onMouseDown')(event);
+    expect(defaultProps.onMouseDown.calledWith(event)).toBeTruthy();
+  });
 
-  expect(line.prop('x1')).toBe('50%');
-  expect(line.prop('x2')).toBe('50%');
-  expect(rect.prop('x')).toBe('50%');
-});
-
-it('<TimelineScrubber /> should support onMouseDown', () => {
-  const wrapper = shallow(<TimelineScrubber {...defaultProps} />);
-  const event = {};
-
-  wrapper.find('g').prop('onMouseDown')(event);
-
-  expect(defaultProps.onMouseDown.calledWith(event)).toBeTruthy();
-});
-
-it('<TimelineScrubber /> should not fail if onMouseDown is not provided', () => {
-  const wrapper = shallow(<TimelineScrubber {...defaultProps} />);
-
-  expect(() => wrapper.find('g').prop('onMouseDown')()).not.toThrow();
+  it("doesn't fail if onMouseDown is not provided", () => {
+    expect(() => wrapper.find('g').prop('onMouseDown')()).not.toThrow();
+  });
 });

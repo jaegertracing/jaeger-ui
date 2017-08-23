@@ -19,18 +19,22 @@
 // THE SOFTWARE.
 
 import React from 'react';
-import { Link } from 'react-router';
+import { Link } from 'react-router-dom';
+
 import TraceIDSearchInput from './TraceIDSearchInput';
+import prefixUrl from '../../utils/prefix-url';
+
+import './TopNav.css';
 
 const NAV_LINKS = [
   {
     key: 'dependencies',
-    to: '/dependencies',
+    to: prefixUrl('/dependencies'),
     text: 'Dependencies',
   },
   {
     key: 'search',
-    to: '/search',
+    to: prefixUrl('/search'),
     text: 'Search',
   },
 ];
@@ -38,7 +42,7 @@ const NAV_LINKS = [
 export default function TopNav() {
   return (
     <nav className="ui top inverted menu jaeger-ui--topnav">
-      <Link to="/" className="header item">
+      <Link to={prefixUrl('/')} className="header item">
         {'Jaeger UI'}
       </Link>
 

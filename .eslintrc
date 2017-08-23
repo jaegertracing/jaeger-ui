@@ -21,6 +21,7 @@
     /* jsx */
     "jsx-a11y/no-static-element-interactions": 1,
     "jsx-a11y/href-no-hash": 0,
+    "jsx-a11y/label-has-for": 0,
 
     /* react */
     "react/jsx-filename-extension": 0,

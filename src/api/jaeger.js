@@ -22,6 +22,8 @@ import fetch from 'isomorphic-fetch';
 import moment from 'moment';
 import queryString from 'query-string';
 
+import prefixUrl from '../utils/prefix-url';
+
 function getJSON(url, query) {
   return fetch(`${url}${query ? `?${queryString.stringify(query)}` : ''}`, {
     credentials: 'include',
@@ -42,12 +44,11 @@ function getJSON(url, query) {
           }
         );
     }
-
     return response.json();
   });
 }
 
-export const DEFAULT_API_ROOT = '/api/';
+export const DEFAULT_API_ROOT = prefixUrl('/api/');
 export const DEFAULT_DEPENDENCY_LOOKBACK = moment.duration(1, 'weeks').asMilliseconds();
 
 const JaegerAPI = {

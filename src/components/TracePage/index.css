@@ -1,0 +1,97 @@
+/*
+Copyright (c) 2017 Uber Technologies, Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*/
+
+.trace-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.trace-page-header-section {
+  background: #fff;
+  border-bottom: 1px solid #bbb;
+  padding: 0.5em 0.5em 0 0.5em;
+  position: fixed;
+  width: 100%;
+  z-index: 1000001;
+}
+
+.trace-timeline-section {
+  border-top: 1px solid #999;
+}
+
+/* timeline */
+.trace-page-timeline--tick-container{
+  position: relative;
+  height: 1.25rem;
+}
+
+.trace-page-timeline--tick-container .span-graph--tick-header__label {
+  font-size: 0.8rem;
+  color: #717171;
+}
+
+.trace-page-timeline__graph {
+  background: #f8f8f8;
+  border: 1px solid #999;
+  overflow: visible !important;
+  transform-origin: 0 0;
+  width: 100%;
+}
+
+.trace-page-timeline__graph.is-dragging {
+  cursor: ew-resize;
+}
+
+.trace-page-timeline__graph--inactive {
+  fill: #d6d6d5;
+}
+
+.timeline-scrubber {
+  cursor: ew-resize;
+}
+
+.timeline-scrubber__line {
+  stroke: #999;
+  stroke-width: 1;
+}
+
+.timeline-scrubber:hover .timeline-scrubber__line {
+  stroke: #777;
+}
+
+.timeline-scrubber__handle {
+  stroke: #999;
+  fill: #fff;
+}
+
+.timeline-scrubber:hover .timeline-scrubber__handle {
+  stroke: #777;
+}
+
+.timeline-scrubber__handle--grip {
+  r: 2;
+  fill: #bbb;
+}
+.timeline-scrubber:hover .timeline-scrubber__handle--grip {
+  fill: #999;
+}

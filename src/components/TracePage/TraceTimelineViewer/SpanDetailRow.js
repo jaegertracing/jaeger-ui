@@ -21,19 +21,41 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 
-import tracePropTypes from '../../propTypes/trace';
-import { formatDurationForTrace } from '../../selectors/trace';
+import TimelineRow from './TimelineRow';
+import SpanTreeOffset from './SpanTreeOffset';
+import SpanDetail from './SpanDetail';
 
-export default function SpanGraphTickHeaderLabel({ duration, style, trace }) {
+import './SpanDetailRow.css';
+
+export default function SpanDetailRow(props) {
+  const { span, color, trace, toggleDetailExpansion, isFilteredOut } = props;
   return (
-    <div className="span-graph--tick-header__label" style={style}>
-      {formatDurationForTrace({ trace, duration })}
-    </div>
+    <TimelineRow className={`detail-row ${isFilteredOut ? 'is-filtered-out' : ''}`}>
+      <TimelineRow.Left>
+        <div className="detail-row-name-column">
+          <SpanTreeOffset level={span.depth + 1} />
+          <span>
+            <span
+              className="detail-row-expanded-accent"
+              onClick={toggleDetailExpansion}
+              style={{ borderColor: color }}
+            />
+          </span>
+        </div>
+      </TimelineRow.Left>
+      <TimelineRow.Right>
+        <div className="p2 detail-info-wrapper" style={{ borderTopColor: color }}>
+          <SpanDetail span={span} trace={trace} />
+        </div>
+      </TimelineRow.Right>
+    </TimelineRow>
   );
 }
 
-SpanGraphTickHeaderLabel.propTypes = {
-  style: PropTypes.object,
-  trace: tracePropTypes.isRequired,
-  duration: PropTypes.number.isRequired,
+SpanDetailRow.propTypes = {
+  trace: PropTypes.object,
+  span: PropTypes.object,
+  color: PropTypes.string,
+  isFilteredOut: PropTypes.bool,
+  toggleDetailExpansion: PropTypes.func,
 };

@@ -18,18 +18,20 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import PropTypes from 'prop-types';
 import React from 'react';
 import moment from 'moment';
-import { XYPlot, XAxis, YAxis, MarkSeries } from 'react-vis';
-import 'react-vis/main.css';
+import PropTypes from 'prop-types';
 import dimensions from 'react-dimensions';
+import { XYPlot, XAxis, YAxis, MarkSeries, Hint } from 'react-vis';
+import { compose, withState, withProps } from 'recompose';
 
 import { formatDuration } from '../../utils/date';
+
+import './react-vis.css';
 import './TraceResultsScatterPlot.css';
 
-function TraceResultsScatterPlot(props) {
-  const { data, containerWidth, onValueClick } = props;
+function TraceResultsScatterPlotBase(props) {
+  const { data, containerWidth, onValueClick, overValue, onValueOver, onValueOut } = props;
   return (
     <div className="TraceResultsScatterPlot">
       <XYPlot
@@ -41,20 +43,53 @@ function TraceResultsScatterPlot(props) {
       >
         <XAxis title="Time" tickTotal={4} tickFormat={t => moment(t).format('hh:mm:ss a')} />
         <YAxis title="Duration" tickTotal={3} tickFormat={t => formatDuration(t, 'milliseconds')} />
-        <MarkSeries size={3} onValueClick={onValueClick} data={data} />
+        <MarkSeries
+          sizeRange={[3, 10]}
+          opacity={0.5}
+          onValueClick={onValueClick}
+          onValueMouseOver={onValueOver}
+          onValueMouseOut={onValueOut}
+          data={data}
+        />
+        {overValue &&
+          <Hint value={overValue}>
+            <h4 className="scatter-plot-hint">
+              {overValue.name || '¯\\_(ツ)_/¯'}
+            </h4>
+          </Hint>}
       </XYPlot>
     </div>
   );
 }
 
-export default dimensions()(TraceResultsScatterPlot);
+const valueShape = PropTypes.shape({
+  x: PropTypes.number,
+  y: PropTypes.number,
+  traceID: PropTypes.string,
+  size: PropTypes.number,
+  name: PropTypes.string,
+});
 
-TraceResultsScatterPlot.propTypes = {
-  data: PropTypes.array.isRequired,
+TraceResultsScatterPlotBase.propTypes = {
   containerWidth: PropTypes.number,
-  onValueClick: PropTypes.func,
+  data: PropTypes.arrayOf(valueShape).isRequired,
+  overValue: valueShape,
+  onValueClick: PropTypes.func.isRequired,
+  onValueOut: PropTypes.func.isRequired,
+  onValueOver: PropTypes.func.isRequired,
 };
 
-TraceResultsScatterPlot.defaultProps = {
-  data: [],
+TraceResultsScatterPlotBase.defaultProps = {
+  containerWidth: null,
+  overValue: null,
 };
+
+const TraceResultsScatterPlot = compose(
+  withState('overValue', 'setOverValue', null),
+  withProps(({ setOverValue }) => ({
+    onValueOver: value => setOverValue(value),
+    onValueOut: () => setOverValue(null),
+  }))
+)(TraceResultsScatterPlotBase);
+
+export default dimensions()(TraceResultsScatterPlot);

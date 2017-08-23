@@ -20,86 +20,56 @@
 
 import React from 'react';
 import sinon from 'sinon';
-import { shallow } from 'enzyme';
-import TracePage from '../../../src/components/TracePage';
-import TracePageHeader from '../../../src/components/TracePage/TracePageHeader';
-import TracePageTimeline from '../../../src/components/TracePage/TracePageTimeline';
+import { shallow, mount } from 'enzyme';
 
-const traceID = 'trace-id';
-const timestamp = new Date().getTime() * 1000;
-const defaultProps = {
-  fetchTrace() {},
-  id: traceID,
-  trace: {
-    traceID,
-    spans: [
-      {
-        spanID: 'spanID-2',
-        traceID,
-        timestamp: timestamp + 10000,
-        duration: 10000,
-        operationName: 'whatever',
-        process: {
-          serviceName: 'my-other-service',
-        },
-      },
-      {
-        spanID: 'spanID-3',
-        traceID,
-        timestamp: timestamp + 20000,
-        duration: 10000,
-        operationName: 'bob',
-        process: {
-          serviceName: 'my-service',
-        },
-      },
-      {
-        spanID: 'spanID-1',
-        traceID,
-        timestamp,
-        duration: 50000,
-        operationName: 'whatever',
-        process: {
-          serviceName: 'my-service',
-        },
-      },
-    ],
-  },
-};
+import traceGenerator from '../../demo/trace-generators';
+import TracePage from './';
+import TracePageHeader from './TracePageHeader';
+import TraceSpanGraph from './TraceSpanGraph';
+import { transformTrace } from './TraceTimelineViewer/transforms';
 
-it('<TracePage /> should render a <TracePageHeader /> with the trace', () => {
-  const wrapper = shallow(<TracePage {...defaultProps} />);
-  expect(wrapper.find(TracePageHeader).get(0)).toBeTruthy();
-});
+describe('<TracePage>', () => {
+  const trace = traceGenerator.trace({});
+  const defaultProps = {
+    trace,
+    fetchTrace() {},
+    id: trace.traceID,
+    xformedTrace: transformTrace(trace),
+  };
 
-it('<TracePage /> should render a <TracePageTimeline /> with the trace', () => {
-  const wrapper = shallow(<TracePage {...defaultProps} />);
+  let wrapper;
 
-  expect(wrapper.contains(<TracePageTimeline trace={defaultProps.trace} />)).toBeTruthy();
-});
+  beforeEach(() => {
+    wrapper = shallow(<TracePage {...defaultProps} />);
+  });
 
-it('<TracePage /> should render an empty page if no trace', () => {
-  const wrapper = shallow(<TracePage {...defaultProps} trace={null} />);
+  it('renders a <TracePageHeader>', () => {
+    expect(wrapper.find(TracePageHeader).get(0)).toBeTruthy();
+  });
 
-  expect(wrapper.matchesElement(<section />)).toBeTruthy();
-});
+  it('renders a <TraceSpanGraph>', () => {
+    const props = { trace: defaultProps.trace, xformedTrace: defaultProps.xformedTrace };
+    expect(wrapper.contains(<TraceSpanGraph {...props} />)).toBeTruthy();
+  });
 
-// can't do mount tests in standard tape run.
-it('TracePage should fetch the trace if necessary', () => {
-  const fetchTrace = sinon.spy();
-  const wrapper = shallow(<TracePage {...defaultProps} trace={null} fetchTrace={fetchTrace} />);
+  it('renders an empty page when not provided a trace', () => {
+    wrapper = shallow(<TracePage {...defaultProps} trace={null} />);
+    const isEmpty = wrapper.matchesElement(<section />);
+    expect(isEmpty).toBe(true);
+  });
 
-  wrapper.instance().componentDidMount();
+  // can't do mount tests in standard tape run.
+  it('fetches the trace if necessary', () => {
+    const fetchTrace = sinon.spy();
+    wrapper = mount(<TracePage {...defaultProps} trace={null} fetchTrace={fetchTrace} />);
+    expect(fetchTrace.called).toBeTruthy();
+    expect(fetchTrace.calledWith(trace.traceID)).toBe(true);
+  });
 
-  expect(fetchTrace.called).toBeTruthy();
-  expect(fetchTrace.calledWith(traceID)).toBeTruthy();
-});
-
-it('TracePage should not fetch the trace if already present', () => {
-  const fetchTrace = sinon.spy();
-  const wrapper = shallow(<TracePage {...defaultProps} fetchTrace={fetchTrace} />);
-
-  wrapper.instance().componentDidMount();
-
-  expect(!fetchTrace.called).toBeTruthy();
+  it("doesn't fetch the trace if already present", () => {
+    const fetchTrace = sinon.spy();
+    wrapper = shallow(<TracePage {...defaultProps} fetchTrace={fetchTrace} />);
+    wrapper.instance().componentDidMount();
+    expect(fetchTrace.called).toBeFalsy();
+  });
 });
