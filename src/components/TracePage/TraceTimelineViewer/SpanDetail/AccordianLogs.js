@@ -1,3 +1,4 @@
+// @flow
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -20,7 +21,6 @@
 
 import React from 'react';
 import _sortBy from 'lodash/sortBy';
-import PropTypes from 'prop-types';
 
 import AccordianKeyValues from './AccordianKeyValues';
 import toggleEnhancer from './toggle-enhancer';
@@ -28,7 +28,19 @@ import { formatDuration } from '../utils';
 
 import './AccordianLogs.css';
 
-function AccordianLogs(props) {
+type LogMessage = {
+  timestamp: number,
+  fields: { key: string, value: any }[],
+};
+
+type AccordianLogsProps = {
+  isOpen: boolean,
+  logs: LogMessage[],
+  onToggle: () => void,
+  timestamp: number,
+};
+
+function AccordianLogs(props: AccordianLogsProps) {
   const { logs, timestamp, isOpen, onToggle } = props;
   return (
     <div className="ui segment">
@@ -60,17 +72,5 @@ function AccordianLogs(props) {
     </div>
   );
 }
-
-AccordianLogs.propTypes = {
-  isOpen: PropTypes.bool.isRequired,
-  onToggle: PropTypes.func.isRequired,
-  logs: PropTypes.arrayOf(
-    PropTypes.shape({
-      timestamp: PropTypes.number,
-      fields: PropTypes.array,
-    })
-  ).isRequired,
-  timestamp: PropTypes.number.isRequired,
-};
 
 export default toggleEnhancer(AccordianLogs);

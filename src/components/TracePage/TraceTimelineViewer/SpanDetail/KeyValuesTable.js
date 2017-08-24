@@ -1,3 +1,4 @@
+// @flow
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -20,7 +21,6 @@
 
 import React from 'react';
 import jsonMarkup from 'json-markup';
-import PropTypes from 'prop-types';
 
 import './KeyValuesTable.css';
 
@@ -32,7 +32,11 @@ function parseOrPass(value) {
   }
 }
 
-export default function KeyValuesTable(props) {
+type KeyValuesTableProps = {
+  data: { key: string, value: any }[],
+};
+
+export default function KeyValuesTable(props: KeyValuesTableProps) {
   const { data } = props;
   return (
     <div className="KeyValueTable">
@@ -55,12 +59,3 @@ export default function KeyValuesTable(props) {
     </div>
   );
 }
-
-KeyValuesTable.propTypes = {
-  data: PropTypes.arrayOf(
-    PropTypes.shape({
-      key: PropTypes.string,
-      value: PropTypes.any,
-    })
-  ).isRequired,
-};

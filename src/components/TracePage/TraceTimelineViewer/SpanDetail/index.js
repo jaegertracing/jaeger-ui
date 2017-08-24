@@ -19,15 +19,20 @@
 // THE SOFTWARE.
 
 import React from 'react';
-import PropTypes from 'prop-types';
 
 import AccordianKeyValues from './AccordianKeyValues';
 import AccordianLogs from './AccordianLogs';
 import { formatDuration } from '../utils';
+import type { XformedSpan, XformedTrace } from '../transforms';
 
 import './index.css';
 
-export default function SpanDetail(props) {
+type SpanDetailProps = {
+  span: XformedSpan,
+  trace: XformedTrace,
+};
+
+export default function SpanDetail(props: SpanDetailProps) {
   const { span, trace } = props;
   return (
     <div>
@@ -74,7 +79,3 @@ export default function SpanDetail(props) {
     </div>
   );
 }
-SpanDetail.propTypes = {
-  span: PropTypes.object,
-  trace: PropTypes.object,
-};
