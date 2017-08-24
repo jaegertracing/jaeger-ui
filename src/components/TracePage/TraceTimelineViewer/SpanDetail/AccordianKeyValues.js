@@ -1,3 +1,4 @@
+// @flow
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -19,22 +20,17 @@
 // THE SOFTWARE.
 
 import React from 'react';
-import PropTypes from 'prop-types';
 
 import KeyValuesTable from './KeyValuesTable';
 import toggleEnhancer from './toggle-enhancer';
 
 import './AccordianKeyValues.css';
 
-const dataPropType = PropTypes.arrayOf(
-  PropTypes.shape({
-    key: PropTypes.string,
-    type: PropTypes.string,
-    value: PropTypes.value,
-  })
-);
+type KeyValuesSummaryProps = {
+  data: { key: string, value: any }[],
+};
 
-function KeyValuesSummary(props) {
+function KeyValuesSummary(props: KeyValuesSummaryProps) {
   const { data } = props;
   return (
     <ul className="AccordianKeyValues--summary">
@@ -53,15 +49,16 @@ function KeyValuesSummary(props) {
   );
 }
 
-KeyValuesSummary.propTypes = {
-  data: dataPropType,
+type AccordianKeyValuesProps = {
+  compact?: boolean,
+  data: { key: string, value: any }[],
+  highContrast?: boolean,
+  isOpen: boolean,
+  label: string,
+  onToggle: () => void,
 };
 
-KeyValuesSummary.defaultProps = {
-  data: [],
-};
-
-function AccordianKeyValues(props) {
+function AccordianKeyValues(props: AccordianKeyValuesProps) {
   const { compact, data, highContrast, isOpen, label, onToggle } = props;
   return (
     <div className={`AccordianKeyValues ${compact ? 'is-compact' : ''}`}>
@@ -83,20 +80,9 @@ function AccordianKeyValues(props) {
   );
 }
 
-AccordianKeyValues.propTypes = {
-  compact: PropTypes.bool,
-  data: dataPropType,
-  highContrast: PropTypes.bool,
-  isOpen: PropTypes.bool.isRequired,
-  label: PropTypes.string,
-  onToggle: PropTypes.func.isRequired,
-};
-
 AccordianKeyValues.defaultProps = {
   compact: false,
-  data: [],
   highContrast: false,
-  label: null,
 };
 
 export default toggleEnhancer(AccordianKeyValues);
