@@ -20,88 +20,48 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#jaeger-ui-root {
-  height: 100%;
+.AccordianKeyValues {
+  margin: 0.3em 0;
+  text-overflow: ellipsis;
 }
 
-.u-no-float {
-  float: none;
+.AccordianKeyValues.is-compact {
+  margin: 0;
 }
 
-.u-cursor-pointer {
+.AccordianKeyValues--header {
   cursor: pointer;
+  overflow: hidden;
+  margin: 0 1px;
+  padding: 0.25em 0.1em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-/* override semantic UI webkit scrollbar styling (keep the other scroll styling) */
-body ::-webkit-scrollbar {
-  -webkit-appearance: none;
-  width: 7px;
-  height: 7px;
+.AccordianKeyValues--header:hover {
+  background: #eee;
 }
 
-a {
-  color: #11939A;
+.AccordianKeyValues--header.is-high-contrast:hover {
+  background: #ddd;
 }
 
-a:hover {
-  color: #00474E;
-  cursor: pointer;
+.AccordianKeyValues--summary {
+  display: inline;
+  list-style: none;
+  padding: 0;
 }
 
-.clearfix:after {
-   content: " ";
-   visibility: hidden;
-   display: block;
-   height: 0;
-   clear: both;
+.AccordianKeyValues--summaryItem {
+  display: inline;
+  margin-left: 0.7em;
 }
 
-.pull-left {
-  float: left;
+.AccordianKeyValues--summaryLabel {
+  color: #777;
 }
 
-.pull-right {
-  float: right;
-}
-
-.hard {
-  padding: 0 !important;
-}
-
-.soft {
-  padding: 1rem !important;
-}
-
-.flush {
-  margin: 0 !important;
-}
-
-.push {
-  margin: 1rem !important;
-}
-
-.overflow-x {
-  overflow-x: scroll;
-}
-
-.ui.compact.table td {
-  padding: 0.2em 0.5em;
-}
-
-.ui.table td.light-grey {
-  background-color: #F1F1F1;
-}
-
-.ui.table, .ui.table thead tr:first-child>th:last-child, .ui.table thead tr:first-child>th:first-child {
-  border-radius: 0;
-}
-
-.ui.table thead th {
-  background-color: #F1F1F1;
-}
-
-.ui.sortable.table thead th.sorted,
-.ui.sortable.table thead th:hover,
-.ui.sortable.table thead th.sorted:hover {
-  background-color: #D6D6D5;
+.AccordianKeyValues--summaryDelim {
+  color: #aaa;
+  padding: 0 0.1em;
 }
