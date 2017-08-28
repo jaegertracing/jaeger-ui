@@ -61,7 +61,7 @@ export default function AccordianKeyValues(props: AccordianKeyValuesProps) {
       <div
         className={`AccordianKeyValues--header ${highContrast ? 'is-high-contrast' : ''}`}
         aria-checked={isOpen}
-        onClick={() => onToggle()}
+        onClick={onToggle}
         role="switch"
       >
         <strong>
