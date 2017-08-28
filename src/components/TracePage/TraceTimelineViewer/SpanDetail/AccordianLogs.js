@@ -24,25 +24,23 @@ import React from 'react';
 import _sortBy from 'lodash/sortBy';
 
 import AccordianKeyValues from './AccordianKeyValues';
-import toggleEnhancer from './toggle-enhancer';
 import { formatDuration } from '../utils';
+import type { Log } from '../../../../types';
 
 import './AccordianLogs.css';
 
-type LogMessage = {
-  timestamp: number,
-  fields: { key: string, value: any }[],
-};
-
 type AccordianLogsProps = {
   isOpen: boolean,
-  logs: LogMessage[],
+  logs: Log[],
+  onItemToggle: Log => void,
   onToggle: () => void,
+  openedItems: Set<Log>,
   timestamp: number,
 };
 
-function AccordianLogs(props: AccordianLogsProps) {
-  const { logs, timestamp, isOpen, onToggle } = props;
+export default function AccordianLogs(props: AccordianLogsProps) {
+  const { isOpen, logs, openedItems, onItemToggle, onToggle, timestamp } = props;
+
   return (
     <div className="ui segment">
       <a
@@ -62,8 +60,10 @@ function AccordianLogs(props: AccordianLogsProps) {
               // eslint-disable-next-line react/no-array-index-key
               key={`${log.timestamp}-${i}`}
               compact
+              isOpen={openedItems.has(log)}
               data={log.fields || []}
               label={`${formatDuration(log.timestamp - timestamp)}`}
+              onToggle={() => onItemToggle(log)}
             />
           )}
           <small className="AccordianLogs--footer">
@@ -73,5 +73,3 @@ function AccordianLogs(props: AccordianLogsProps) {
     </div>
   );
 }
-
-export default toggleEnhancer(AccordianLogs);

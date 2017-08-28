@@ -29,10 +29,11 @@ const defaultGetIndexFromKey = s => Number(s);
 export default class ListView extends Component {
   constructor(props) {
     super(props);
-    this.yPositions = new Positions(200);
 
+    this.yPositions = new Positions(200);
+    // _knownHeights is (item-key => observed height) of list items
     this._knownHeights = new Map();
-    this._experimentGetHeight = this._experimentGetHeight.bind(this);
+    this._getHeight = this._getHeight.bind(this);
     this._scanItemHeights = this._scanItemHeights.bind(this);
 
     this._startIndexDrawn = 2 ** 20;
@@ -46,20 +47,17 @@ export default class ListView extends Component {
     this._onScroll = this._onScroll.bind(this);
     this._positionList = this._positionList.bind(this);
 
-    this._initWrapper = this._initWrapper.bind(this);
-    this._initItemHolder = this._initItemHolder.bind(this);
-    this._itemHolder = undefined;
-
-    this._wrapperElm = undefined;
+    this._htmlTopOffset = undefined;
+    this._windowScrollListenerAdded = false;
     if (props.windowScroller) {
       this._htmlElm = window.document.querySelector('html');
     } else {
       this._htmlElm = undefined;
     }
-    this._htmlTopOffset = undefined;
-    this._windowScrollListenerAdded = false;
-
-    this._doForcedUpdate = () => this.forceUpdate();
+    this._wrapperElm = undefined;
+    this._itemHolder = undefined;
+    this._initWrapper = this._initWrapper.bind(this);
+    this._initItemHolder = this._initItemHolder.bind(this);
   }
 
   componentDidMount() {
@@ -126,8 +124,8 @@ export default class ListView extends Component {
       yStart = this._scrollTop;
       yEnd = this._scrollTop + this._viewHeight;
     }
-    this._startIndex = this.yPositions.findFloorIndex(yStart, this._experimentGetHeight);
-    this._endIndex = this.yPositions.findFloorIndex(yEnd, this._experimentGetHeight);
+    this._startIndex = this.yPositions.findFloorIndex(yStart, this._getHeight);
+    this._endIndex = this.yPositions.findFloorIndex(yEnd, this._getHeight);
   }
 
   _positionList() {
@@ -163,22 +161,20 @@ export default class ListView extends Component {
   }
 
   _scanItemHeights() {
-    const nodes = this._itemHolder.childNodes;
-    const max = nodes.length;
     const getIndexFromKey = this.props.getIndexFromKey || defaultGetIndexFromKey;
-    const getKeyFromIndex = this.props.getKeyFromIndex || defaultGetKeyFromIndex;
     let isDirty = false;
     let lowDirtyKey = null;
     let highDirtyKey = null;
+    const nodes = this._itemHolder.childNodes;
+    const max = nodes.length;
     for (let i = 0; i < max; i++) {
       const node = nodes[i];
       const itemKey = node.dataset.itemKey;
-      // checking for NaN
       if (!itemKey) {
-        // TODO(joe): something smarter here
+        // eslint-disable-next-line no-console
+        console.warn('itemKey not found');
         continue;
       }
-      // const observed = child.clientHeight;
       const observed = node.firstChild.scrollHeight;
       const known = this._knownHeights.get(itemKey);
       if (observed !== known) {
@@ -192,22 +188,18 @@ export default class ListView extends Component {
         }
       }
     }
-    // console.log('scan dirty', lowDirtyI, this._knownHeights[lowDirtyI], this.yPositions.ys[lowDirtyI + 1]);
-    // console.log('scan dirty', highDirtyI, this._knownHeights[highDirtyI], this.yPositions.ys[highDirtyI+ 1]);
-    // console.log('scan dirty', lowDirtyI, this._knownHeights[lowDirtyI], highDirtyI, this._knownHeights[highDirtyI])
     if (isDirty) {
       const imin = getIndexFromKey(lowDirtyKey);
       const imax = highDirtyKey === lowDirtyKey ? imin : getIndexFromKey(highDirtyKey);
-      this.yPositions.calcHeights(imax, this._experimentGetHeight, imin);
-      // window.requestAnimationFrame(this._doForcedUpdate);
+      this.yPositions.calcHeights(imax, this._getHeight, imin);
       this.forceUpdate();
     }
   }
 
-  _experimentGetHeight(i) {
+  _getHeight(i) {
     const key = (this.props.getKeyFromIndex || defaultGetKeyFromIndex)(i);
     const known = this._knownHeights.get(key);
-    // known === known is false if known is NaN
+    // known !== known iff known is NaN
     if (known != null && known === known) {
       return known;
     }
@@ -218,7 +210,7 @@ export default class ListView extends Component {
     const { data, itemRenderer, initialDraw, viewBuffer, viewBufferMin } = this.props;
     const items = [];
 
-    const heightGetter = this._experimentGetHeight;
+    const heightGetter = this._getHeight;
     const getKeyFromIndex = this.props.getKeyFromIndex || defaultGetKeyFromIndex;
     let start;
     let end;
@@ -242,13 +234,11 @@ export default class ListView extends Component {
         }
       } else {
         start = this._startIndexDrawn;
-        end = this._endIndexDrawn;
+        end = this._endIndexDrawn > data.length - 1 ? data.length - 1 : this._endIndexDrawn;
       }
     }
-    console.log('start, end', start, end);
 
     this.yPositions.profileData(data);
-    // this.yPositions.calcHeights(start, heightGetter);
     this.yPositions.calcHeights(end, heightGetter, start || -1);
     this._startIndexDrawn = start;
     this._endIndexDrawn = end;
@@ -262,8 +252,9 @@ export default class ListView extends Component {
         height: this.yPositions.heights[i],
         overflow: 'hidden',
       };
-      const attrs = { 'data-item-key': getKeyFromIndex(i) };
-      items.push(itemRenderer(i, style, i, attrs));
+      const itemKey = getKeyFromIndex(i);
+      const attrs = { 'data-item-key': itemKey };
+      items.push(itemRenderer(itemKey, style, i, attrs));
     }
 
     const scrollerStyle = {

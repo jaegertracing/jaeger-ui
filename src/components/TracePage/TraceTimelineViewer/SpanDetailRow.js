@@ -1,3 +1,5 @@
+// @flow
+
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -18,41 +20,52 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import PropTypes from 'prop-types';
 import React from 'react';
 
-import TimelineRow from './TimelineRow';
-import SpanTreeOffset from './SpanTreeOffset';
 import SpanDetail from './SpanDetail';
+import DetailState from './SpanDetail/DetailState';
+import SpanTreeOffset from './SpanTreeOffset';
+import TimelineRow from './TimelineRow';
+import type { XformedTrace, XformedSpan } from './transforms';
+import type { Log } from '../../../types';
 
 import './SpanDetailRow.css';
 
-export default function SpanDetailRow(props) {
+type SpanDetailRowProps = {
+  color: string,
+  detailState: DetailState,
+  detailToggle: string => void,
+  isFilteredOut: boolean,
+  logItemToggle: (string, Log) => void,
+  logsToggle: string => void,
+  processToggle: string => void,
+  span: XformedSpan,
+  tagsToggle: string => void,
+  trace: XformedTrace,
+};
+
+export default function SpanDetailRow(props: SpanDetailRowProps) {
   const {
     color,
-    detailExpansionToggle,
     detailState,
+    detailToggle,
     isFilteredOut,
     logItemToggle,
     logsToggle,
-    onMeasureChange,
     processToggle,
     span,
     tagsToggle,
     trace,
   } = props;
   return (
-    <TimelineRow
-      className={`detail-row ${isFilteredOut ? 'is-filtered-out' : ''}`}
-      onMeasureChange={onMeasureChange}
-    >
+    <TimelineRow className={`detail-row ${isFilteredOut ? 'is-filtered-out' : ''}`}>
       <TimelineRow.Left>
         <div className="detail-row-name-column">
           <SpanTreeOffset level={span.depth + 1} />
           <span>
             <span
               className="detail-row-expanded-accent"
-              onClick={detailExpansionToggle}
+              onClick={detailToggle}
               style={{ borderColor: color }}
             />
           </span>
@@ -74,11 +87,3 @@ export default function SpanDetailRow(props) {
     </TimelineRow>
   );
 }
-
-SpanDetailRow.propTypes = {
-  trace: PropTypes.object,
-  span: PropTypes.object,
-  color: PropTypes.string,
-  isFilteredOut: PropTypes.bool,
-  toggleDetailExpansion: PropTypes.func,
-};

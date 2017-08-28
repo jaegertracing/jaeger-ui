@@ -78,6 +78,24 @@ export default class TraceSpanGraph extends Component {
     );
   }
 
+  startDragging(boundName, { clientX }) {
+    this.setState({ currentlyDragging: boundName, prevX: clientX });
+
+    const mouseMoveHandler = (...args) => this.onMouseMove(...args);
+    const mouseUpHandler = () => {
+      this.stopDragging();
+      window.removeEventListener('mouseup', mouseUpHandler);
+      window.removeEventListener('mousemove', mouseMoveHandler);
+    };
+
+    window.addEventListener('mouseup', mouseUpHandler);
+    window.addEventListener('mousemove', mouseMoveHandler);
+  }
+
+  stopDragging() {
+    this.setState({ currentlyDragging: null, prevX: null });
+  }
+
   onMouseMove({ clientX }) {
     const { trace } = this.props;
     const { prevX, currentlyDragging } = this.state;
@@ -113,24 +131,6 @@ export default class TraceSpanGraph extends Component {
     if (leftBound <= rightBound) {
       updateTimeRangeFilter(leftBound, rightBound);
     }
-  }
-
-  startDragging(boundName, { clientX }) {
-    this.setState({ currentlyDragging: boundName, prevX: clientX });
-
-    const mouseMoveHandler = (...args) => this.onMouseMove(...args);
-    const mouseUpHandler = () => {
-      this.stopDragging();
-      window.removeEventListener('mouseup', mouseUpHandler);
-      window.removeEventListener('mousemove', mouseMoveHandler);
-    };
-
-    window.addEventListener('mouseup', mouseUpHandler);
-    window.addEventListener('mousemove', mouseMoveHandler);
-  }
-
-  stopDragging() {
-    this.setState({ currentlyDragging: null, prevX: null });
   }
 
   render() {

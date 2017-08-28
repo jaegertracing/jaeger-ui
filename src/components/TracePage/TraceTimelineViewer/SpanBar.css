@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 
 
-.span-bar-wrapper {
+.SpanBar--wrapper {
   bottom: 0;
   left: 0;
   position: absolute;
@@ -31,13 +31,13 @@ THE SOFTWARE.
   opacity: 0.5;
 }
 
-.span-row.is-expanded .span-bar-wrapper,
-.span-row:hover .span-bar-wrapper {
+.span-row.is-expanded .SpanBar--wrapper,
+.span-row:hover .SpanBar--wrapper {
   opacity: 1;
 }
 
 /* Add the hint related selector to override the hint styling (via specificity) */
-[class*="hint--"].span-bar {
+.SpanBar--bar {
   border-radius: 3px;
   min-width: 2px;
   position: absolute;
@@ -45,9 +45,26 @@ THE SOFTWARE.
   top: 25%;
 }
 
-.span-bar-rpc {
+.SpanBar--rpc {
   position: absolute;
   top: 35%;
   bottom: 35%;
   z-index: 1;
+}
+
+.SpanBar--label {
+  font-size: 12px;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  line-height: 1em;
+  white-space: nowrap;
+  padding: 0 0.5em;
+  position: absolute;
+}
+
+.SpanBar--label.is-right {
+  left: 100%;
+}
+
+.SpanBar--label.is-left {
+  right: 100%;
 }

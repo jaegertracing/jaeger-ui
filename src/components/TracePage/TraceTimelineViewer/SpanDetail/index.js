@@ -22,13 +22,20 @@ import React from 'react';
 
 import AccordianKeyValues from './AccordianKeyValues';
 import AccordianLogs from './AccordianLogs';
+import DetailState from './DetailState';
 import { formatDuration } from '../utils';
 import type { XformedSpan, XformedTrace } from '../transforms';
+import type { Log } from '../../../../types';
 
 import './index.css';
 
 type SpanDetailProps = {
+  detailState: DetailState,
+  logItemToggle: (string, Log) => void,
+  logsToggle: string => void,
+  processToggle: string => void,
   span: XformedSpan,
+  tagsToggle: string => void,
   trace: XformedTrace,
 };
 
@@ -36,7 +43,6 @@ export default function SpanDetail(props: SpanDetailProps) {
   const { detailState, logItemToggle, logsToggle, processToggle, span, tagsToggle, trace } = props;
   const { isTagsOpen, isProcessOpen, logs: logsState } = detailState;
   const { operationName, process, duration, relativeStartTime, spanID, logs, tags } = span;
-  // console.log('detailState', detailState);
   return (
     <div>
       <div>
@@ -74,9 +80,25 @@ export default function SpanDetail(props: SpanDetailProps) {
             isOpen={isTagsOpen}
             onToggle={() => tagsToggle(spanID)}
           />
-          {process.tags && <AccordianKeyValues data={process.tags} highContrast label="Process" />}
+          {process.tags &&
+            <AccordianKeyValues
+              data={process.tags}
+              highContrast
+              label="Process"
+              isOpen={isProcessOpen}
+              onToggle={() => processToggle(spanID)}
+            />}
         </div>
-        {logs && logs.length > 0 && <AccordianLogs logs={logs} timestamp={trace.startTime} />}
+        {logs &&
+          logs.length > 0 &&
+          <AccordianLogs
+            logs={logs}
+            isOpen={logsState.isOpen}
+            openedItems={logsState.openedItems}
+            onToggle={() => logsToggle(spanID)}
+            onItemToggle={logItem => logItemToggle(spanID, logItem)}
+            timestamp={trace.startTime}
+          />}
 
         <small className="SpanDetail--debugInfo">
           <span className="SpanDetail--debugLabel" data-label="SpanID:" />{' '}

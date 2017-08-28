@@ -18,12 +18,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-//* eslint-disable */
-
 import { createActions, handleActions } from 'redux-actions';
 
 import getFilteredSpans from './get-filtered-spans';
-import DetailState from './SpanDetail/detail-state';
+import DetailState from './SpanDetail/DetailState';
 
 // DetailState {
 //   isTagsOpen: bool,

@@ -24,8 +24,6 @@ import { Provider } from 'react-redux';
 import { bindActionCreators, createStore } from 'redux';
 
 import reducer, { actions, newInitialState } from './duck';
-// import getFilteredSpans from './get-filtered-spans';
-// import TraceView from './TraceView';
 import VirtualizedTraceView from './VirtualizedTraceView';
 import { getPositionInRange } from './utils';
 
@@ -37,20 +35,14 @@ import './index.css';
 export default class TraceTimelineViewer extends Component {
   constructor(props) {
     super(props);
+
     const { textFilter, xformedTrace } = props;
+
     this.store = createStore(reducer, newInitialState(xformedTrace));
-    // const filteredSpans = textFilter ? getFilteredSpans(xformedTrace, textFilter) : null;
+    this.actionsCreators = bindActionCreators(actions, this.store.dispatch);
     if (textFilter) {
       this.store.dispatch(actions.find(textFilter));
     }
-    this.state = {
-      // filteredSpans,
-      // collapsedSpans: new Set(),
-      selectedSpans: new Set(),
-      // trace: props.xformedTrace,
-    };
-    // this.toggleSpanCollapse = this.toggleSpanCollapse.bind(this);
-    // this.toggleSpanSelect = this.toggleSpanSelect.bind(this);
   }
 
   componentWillReceiveProps(nextProps) {
@@ -63,43 +55,16 @@ export default class TraceTimelineViewer extends Component {
     }
   }
 
-  // toggleSpanCollapse(spanID) {
-  //   this.toggleStateSet('collapsedSpans', spanID);
-  // }
-  //
-  // toggleSpanSelect(spanID) {
-  //   this.toggleStateSet('selectedSpans', spanID);
-  // }
-  //
-  // toggleStateSet(statePropName, spanID) {
-  //   const set = new Set(this.state[statePropName]);
-  //   if (set.has(spanID)) {
-  //     set.delete(spanID);
-  //   } else {
-  //     set.add(spanID);
-  //   }
-  //   this.setState({ [statePropName]: set });
-  // }
-
   render() {
-    // const { selectedSpans, collapsedSpans, filteredSpans, trace } = this.state;
-    const { selectedSpans } = this.state;
     const { timeRangeFilter: zoomRange, xformedTrace } = this.props;
-    const actionsCreators = bindActionCreators(actions, this.store.dispatch);
     const { startTime, endTime } = xformedTrace;
     return (
       <div className="trace-timeline-viewer">
         <Provider store={this.store}>
           <VirtualizedTraceView
-            {...actionsCreators}
-            // trace={trace}
-            // collapsedSpanIDs={collapsedSpans}
-            selectedSpanIDs={selectedSpans}
-            // filteredSpansIDs={filteredSpans}
+            {...this.actionsCreators}
             zoomStart={getPositionInRange(startTime, endTime, zoomRange[0])}
             zoomEnd={getPositionInRange(startTime, endTime, zoomRange[1])}
-            // onSpanClick={this.toggleSpanSelect}
-            // onSpanCollapseClick={this.toggleSpanCollapse}
           />
         </Provider>
       </div>

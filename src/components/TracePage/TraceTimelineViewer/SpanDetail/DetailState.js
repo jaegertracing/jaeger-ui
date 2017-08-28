@@ -1,3 +1,5 @@
+// @flow
+
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -18,21 +20,29 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+import type { Log } from '../../../../types';
+
 // DetailState {
 //   isTagsOpen: bool,
 //   isProcessOpen: bool,
 //   logs: {
 //     isOpen: bool,
-//     openItems: Set<LogItem>
+//     openItems: Set<Log>
 //   }
 // }
+
 export default class DetailState {
-  constructor({ isTagsOpen, isProcessOpen, logs } = {}) {
+  isTagsOpen: boolean;
+  isProcessOpen: boolean;
+  logs: { isOpen: boolean, openedItems: Set<Log> };
+
+  constructor(oldState?: DetailState) {
+    const { isTagsOpen, isProcessOpen, logs } = oldState || {};
     this.isTagsOpen = Boolean(isTagsOpen);
     this.isProcessOpen = Boolean(isProcessOpen);
     this.logs = {
       isOpen: Boolean(logs && logs.isOpen),
-      openItems: logs && logs.openItems ? new Set(logs.openItems) : new Set(),
+      openedItems: logs && logs.openedItems ? new Set(logs.openedItems) : new Set(),
     };
   }
   toggleTags() {
@@ -42,7 +52,7 @@ export default class DetailState {
   }
   toggleProcess() {
     const next = new DetailState(this);
-    next.isTagsOpen = !this.isTagsOpen;
+    next.isProcessOpen = !this.isProcessOpen;
     return next;
   }
   toggleLogs() {
@@ -50,12 +60,12 @@ export default class DetailState {
     next.logs.isOpen = !this.logs.isOpen;
     return next;
   }
-  toggleLogItem(logItem) {
+  toggleLogItem(logItem: Log) {
     const next = new DetailState(this);
-    if (next.logs.openItems.has(logItem)) {
-      next.logs.openItems.delete(logItem);
+    if (next.logs.openedItems.has(logItem)) {
+      next.logs.openedItems.delete(logItem);
     } else {
-      next.logs.openItems.add(logItem);
+      next.logs.openedItems.add(logItem);
     }
     return next;
   }

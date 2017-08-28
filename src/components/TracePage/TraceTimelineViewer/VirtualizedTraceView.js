@@ -1,3 +1,5 @@
+// @flow
+
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -18,17 +20,17 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import React, { PureComponent } from 'react';
+import * as React from 'react';
 import cx from 'classnames';
-import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { AutoSizer, List, WindowScroller } from 'react-virtualized';
 
 import ListView from './ListView';
 import SpanBarRow from './SpanBarRow';
+import DetailState from './SpanDetail/DetailState';
 import SpanDetailRow from './SpanDetailRow';
 import Ticks from './Ticks';
 import TimelineRow from './TimelineRow';
+import type { XformedSpan, XformedTrace } from './transforms';
 import {
   findServerChildSpan,
   formatDuration,
@@ -36,9 +38,32 @@ import {
   isErrorSpan,
   spanContainsErredSpan,
 } from './utils';
+import type { Log } from '../../../types';
 import colorGenerator from '../../../utils/color-generator';
 
 import './VirtualizedTraceView.css';
+
+type RowState = {
+  isDetail: boolean,
+  span: XformedSpan,
+  spanIndex: number,
+};
+
+type VirtualizedTraceViewProps = {
+  childrenHiddenIDs: Set<string>,
+  childrenToggle: string => void,
+  detailLogItemToggle: (string, Log) => void,
+  detailLogsToggle: string => void,
+  detailProcessToggle: string => void,
+  detailStates: Map<string, ?DetailState>,
+  detailTagsToggle: string => void,
+  detailToggle: string => void,
+  findMatchesIDs: Set<string>,
+  ticks: number[],
+  trace?: XformedTrace,
+  zoomEnd: number,
+  zoomStart: number,
+};
 
 const DEFAULT_HEIGHTS = {
   bar: 21,
@@ -46,10 +71,16 @@ const DEFAULT_HEIGHTS = {
   detailWithLogs: 223,
 };
 
-function generateRowStates(spans, childrenHiddenIDs, detailStates) {
+function generateRowStates(
+  spans: ?(XformedSpan[]),
+  childrenHiddenIDs: Set<string>,
+  detailStates: Map<string, ?DetailState>
+): RowState[] {
+  if (!spans) {
+    return [];
+  }
   let collapseDepth = null;
   const rowStates = [];
-  const detailRowIndexes = new Map();
   for (let i = 0; i < spans.length; i++) {
     const span = spans[i];
     const { spanID, depth } = span;
@@ -73,7 +104,6 @@ function generateRowStates(spans, childrenHiddenIDs, detailStates) {
       spanIndex: i,
     });
     if (detailStates.has(spanID)) {
-      detailRowIndexes.set(spanID, rowStates.length);
       rowStates.push({
         span,
         isDetail: true,
@@ -81,67 +111,59 @@ function generateRowStates(spans, childrenHiddenIDs, detailStates) {
       });
     }
   }
-  return { detailRowIndexes, rowStates };
+  return rowStates;
 }
 
-// TODO(joe): rename func
-function deriveState(props) {
+function getPropDerivations(props: VirtualizedTraceViewProps) {
   const { childrenHiddenIDs, detailStates, trace, zoomEnd = 1, zoomStart = 0 } = props;
   const clippingCssClasses = cx({
     'clipping-left': zoomStart > 0,
     'clipping-right': zoomEnd < 1,
   });
-  const rowInfo = trace
-    ? generateRowStates(trace.spans, childrenHiddenIDs, detailStates)
-    : { detailRowIndexes: new Map(), rowStates: [] };
+  let spans: ?(XformedSpan[]);
+  if (trace) {
+    spans = trace.spans;
+  }
   return {
-    ...rowInfo,
     clippingCssClasses,
+    rowStates: generateRowStates(spans, childrenHiddenIDs, detailStates),
   };
 }
 
-class VirtualizedTraceView extends PureComponent {
+class VirtualizedTraceView extends React.PureComponent<VirtualizedTraceViewProps> {
+  // regarding `props` - eslint-plugin-react is not compat with flow 0.53, yet
+  // https://github.com/yannickcr/eslint-plugin-react/issues/1376
+  props: VirtualizedTraceViewProps;
+  rowStates: RowState[];
+  clippingCssClasses: string;
+
   constructor(props) {
     super(props);
-    // console.log('------ctor props:', props);
-
-    this.listRef = null;
-    this.lastDetailStateChange = null;
-
-    const { detailRowIndexes, rowStates, clippingCssClasses } = deriveState(props);
-    this.rowStates = rowStates;
-    this.clippingCssClasses = clippingCssClasses;
-    this.detailRowIndexes = detailRowIndexes;
-    this.detailRowMeasurements = new Map();
-
     this.getKeyFromIndex = this.getKeyFromIndex.bind(this);
     this.getIndexFromKey = this.getIndexFromKey.bind(this);
     this.getRowHeight = this.getRowHeight.bind(this);
-    // this.renderRow = this.renderRow.bind(this);
-    this.renderRowLV = this.renderRowLV.bind(this);
-    this.updateDetailMeasurement = this.updateDetailMeasurement.bind(this);
+    this.renderRow = this.renderRow.bind(this);
+    // keep "prop derivations" on the instance instead of calculating in
+    // `.render()` to avoid recalculating in every invocatino of `.renderRow()`
+    const { clippingCssClasses, rowStates } = getPropDerivations(props);
+    this.clippingCssClasses = clippingCssClasses;
+    this.rowStates = rowStates;
   }
 
-  // getRowHeight({ index }) {
-  //   // console.log('get row hight', index);
-  //   const { isDetail, span } = this.rowStates[index];
-  //   if (isDetail) {
-  //     const h = this.detailRowMeasurements.get(span.spanID);
-  //     // console.log('h', span.spanID, h);
-  //     if (h != null) {
-  //       return h;
-  //     }
-  //   }
-  //   // console.log('21')
-  //   return 21;
-  // }
+  componentWillReceiveProps(nextProps) {
+    const { clippingCssClasses, rowStates } = getPropDerivations(nextProps);
+    this.clippingCssClasses = clippingCssClasses;
+    this.rowStates = rowStates;
+  }
 
-  getKeyFromIndex(index) {
+  // use long form syntax to avert flow error
+  // https://github.com/facebook/flow/issues/3076#issuecomment-290944051
+  getKeyFromIndex = function getKeyFromIndex(index) {
     const { isDetail, span } = this.rowStates[index];
     return `${span.spanID}--${isDetail ? 'detail' : 'bar'}`;
-  }
+  };
 
-  getIndexFromKey(key) {
+  getIndexFromKey = function getIndexFromKey(key) {
     const parts = key.split('--');
     const _spanID = parts[0];
     const _isDetail = parts[1] === 'detail';
@@ -152,9 +174,10 @@ class VirtualizedTraceView extends PureComponent {
         return i;
       }
     }
-  }
+    return undefined;
+  };
 
-  getRowHeight(index) {
+  getRowHeight = function getRowHeight(index) {
     const { span, isDetail } = this.rowStates[index];
     if (!isDetail) {
       return DEFAULT_HEIGHTS.bar;
@@ -163,35 +186,16 @@ class VirtualizedTraceView extends PureComponent {
       return DEFAULT_HEIGHTS.detailWithLogs;
     }
     return DEFAULT_HEIGHTS.detail;
-  }
+  };
 
-  // renderRow({
-  //   index, // Index of row
-  //   // isScrolling, // The List is currently being scrolled
-  //   // isVisible,   // This row is visible within the List (eg it is not an overscanned row)
-  //   key, // Unique key within array of rendered rows
-  //   parent,      // Reference to the parent List (instance)
-  //   style, // Style object to be applied to row (to position it);
-  //   // This must be passed through to the rendered row element.
-  // }) {
-  //   // console.log('render row');
-  //   this.listRef = parent;
-  //   const { isDetail, span, spanIndex } = this.rowStates[index];
-  //   return isDetail
-  //     ? this.renderSpanDetailRow(span, key, style)
-  //     : this.renderSpanBarRow(span, spanIndex, key, style);
-  // }
-
-  renderRowLV(key, style, index, attrs) {
-    // console.log('render row LV');
-    // this.listRef = parent;
+  renderRow = function renderRow(key, style, index, attrs) {
     const { isDetail, span, spanIndex } = this.rowStates[index];
     return isDetail
       ? this.renderSpanDetailRow(span, key, style, attrs)
       : this.renderSpanBarRow(span, spanIndex, key, style, attrs);
-  }
+  };
 
-  renderSpanBarRow(span, spanIndex, key, style, attrs = {}) {
+  renderSpanBarRow(span, spanIndex, key, style, attrs) {
     const { spanID } = span;
     const { serviceName } = span.process;
     const {
@@ -205,6 +209,10 @@ class VirtualizedTraceView extends PureComponent {
       zoomEnd = 1,
       zoomStart = 0,
     } = this.props;
+    // to avert flow error
+    if (!trace) {
+      return null;
+    }
 
     const color = colorGenerator.getColorByKey(serviceName);
     const toggleDetailExpansion = () => detailToggle(spanID);
@@ -269,7 +277,7 @@ class VirtualizedTraceView extends PureComponent {
     );
   }
 
-  renderSpanDetailRow(span, key, style, attrs = {}) {
+  renderSpanDetailRow(span, key, style, attrs) {
     const { spanID } = span;
     const { serviceName } = span.process;
     const {
@@ -283,20 +291,20 @@ class VirtualizedTraceView extends PureComponent {
       trace,
     } = this.props;
     const detailState = detailStates.get(spanID);
+    if (!trace || !detailState) {
+      return null;
+    }
     const color = colorGenerator.getColorByKey(serviceName);
     const isFilteredOut = Boolean(findMatchesIDs) && !findMatchesIDs.has(spanID);
-    const detailExpansionToggle = () => detailToggle(spanID);
-    const onMeasureChange = (width, height) => this.updateDetailMeasurement(spanID, width, height);
     return (
       <div className="VirtualizedTraceView--row" key={key} style={{ ...style, zIndex: 1 }} {...attrs}>
         <SpanDetailRow
           color={color}
-          detailExpansionToggle={detailExpansionToggle}
+          detailToggle={() => detailToggle(spanID)}
           detailState={detailState}
           isFilteredOut={isFilteredOut}
           logItemToggle={detailLogItemToggle}
           logsToggle={detailLogsToggle}
-          onMeasureChange={onMeasureChange}
           processToggle={detailProcessToggle}
           span={span}
           tagsToggle={detailTagsToggle}
@@ -306,50 +314,17 @@ class VirtualizedTraceView extends PureComponent {
     );
   }
 
-  componentWillReceiveProps(nextProps) {
-    // console.log('will get props');
-    console.log('new props:', nextProps);
-    // const nextState = deriveState(nextProps);
-    // this.setState(nextState);
-    const { detailRowIndexes, rowStates, clippingCssClasses } = deriveState(nextProps);
-    this.rowStates = rowStates;
-    this.clippingCssClasses = clippingCssClasses;
-    this.detailRowIndexes = detailRowIndexes;
-    // if (this.listRef) {
-    //   this.listRef.forceGridUpdate();
-    // }
-  }
-
-  updateDetailMeasurement(spanID, width, height) {
-    console.log(this.name, 'detail measurement:', spanID, width, height);
-    const h = this.detailRowMeasurements.get(spanID);
-    if (h !== height) {
-      this.detailRowMeasurements.set(spanID, height);
-      if (this.listRef) {
-        const i = this.detailRowIndexes.get(spanID);
-        console.log('compute heights', i);
-        // this.listRef.recomputeGridSize({ rowIndex: i });
-      }
-    }
-  }
-
-  componentDidUpdate() {
-    if (this.listRef) {
-      this.listRef.forceUpdate();
-    }
-  }
-
   render() {
-    console.log('render virt', this.rowStates.length);
     const { trace, zoomStart = 0, zoomEnd = 1, ticks = [0, 0.25, 0.5, 0.75, 1] } = this.props;
-
+    if (!trace) {
+      return null;
+    }
     const zoomMin = zoomStart * trace.duration;
     const zoomMax = zoomEnd * trace.duration;
     const zoomDuration = zoomMax - zoomMin;
     function getDuationAtTick(tick) {
       return zoomMin + tick * zoomDuration;
     }
-
     return (
       <div className="">
         <TimelineRow className="VirtualizedTraceView--headerRow">
@@ -369,7 +344,7 @@ class VirtualizedTraceView extends PureComponent {
             data={this.rowStates}
             averageItemHeight={21}
             itemHeightGetter={this.getRowHeight}
-            itemRenderer={this.renderRowLV}
+            itemRenderer={this.renderRow}
             viewBuffer={300}
             viewBufferMin={150}
             itemsWrapperClassName="VirtualizedTraceView--rowsWrapper"
@@ -378,43 +353,10 @@ class VirtualizedTraceView extends PureComponent {
             windowScroller
           />
         </div>
-        {/*
-        <div className="VirtualizedTraceView--spans">
-          <WindowScroller scrollingResetTimeInterval={10}>
-            {({ height, scrollTop }) =>
-              <AutoSizer disableHeight>
-                {({ width }) =>
-                  <List
-                    autoHeight
-                    estimatedRowSize={21}
-                    height={height}
-                    overscanRowCount={150}
-                    rowCount={this.rowStates.length}
-                    rowHeight={this.getRowHeight}
-                    rowRenderer={this.renderRow}
-                    scrollTop={scrollTop}
-                    width={width}
-                  />}
-              </AutoSizer>}
-          </WindowScroller>
-        </div>
-*/}
       </div>
     );
   }
 }
-
-VirtualizedTraceView.propTypes = {
-  trace: PropTypes.object,
-  childrenHiddenIDs: PropTypes.object,
-  detailStates: PropTypes.object,
-  findMatchesIDs: PropTypes.oneOfType([PropTypes.bool, PropTypes.object]),
-  ticks: PropTypes.arrayOf(PropTypes.number),
-  zoomStart: PropTypes.number,
-  zoomEnd: PropTypes.number,
-  detailToggle: PropTypes.func,
-  childrenToggle: PropTypes.func,
-};
 
 function mapStateToProps(state, ownProps) {
   return {

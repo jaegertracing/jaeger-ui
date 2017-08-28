@@ -23,16 +23,19 @@
 import React from 'react';
 
 import KeyValuesTable from './KeyValuesTable';
-import toggleEnhancer from './toggle-enhancer';
 
 import './AccordianKeyValues.css';
 
-type KeyValuesSummaryProps = {
+type AccordianKeyValuesProps = {
+  compact?: boolean,
   data: { key: string, value: any }[],
+  highContrast?: boolean,
+  isOpen: boolean,
+  label: string,
+  onToggle: () => void,
 };
 
-function KeyValuesSummary(props: KeyValuesSummaryProps) {
-  const { data } = props;
+function getKVSummary(data: { key: string, value: any }[]) {
   return (
     <ul className="AccordianKeyValues--summary">
       {data.map((item, i) =>
@@ -50,24 +53,15 @@ function KeyValuesSummary(props: KeyValuesSummaryProps) {
   );
 }
 
-type AccordianKeyValuesProps = {
-  compact?: boolean,
-  data: { key: string, value: any }[],
-  highContrast?: boolean,
-  isOpen: boolean,
-  label: string,
-  onToggle: () => void,
-};
-
 export default function AccordianKeyValues(props: AccordianKeyValuesProps) {
   const { compact, data, highContrast, isOpen, label, onToggle } = props;
-  // console.log('kvs', props.label, props);
+
   return (
     <div className={`AccordianKeyValues ${compact ? 'is-compact' : ''}`}>
       <div
         className={`AccordianKeyValues--header ${highContrast ? 'is-high-contrast' : ''}`}
         aria-checked={isOpen}
-        onClick={onToggle}
+        onClick={() => onToggle()}
         role="switch"
       >
         <strong>
@@ -75,7 +69,7 @@ export default function AccordianKeyValues(props: AccordianKeyValuesProps) {
           {label}
           :
         </strong>
-        {!isOpen && <KeyValuesSummary data={data} />}
+        {!isOpen && getKVSummary(data)}
       </div>
       {isOpen && <KeyValuesTable data={data} />}
     </div>
@@ -86,5 +80,3 @@ AccordianKeyValues.defaultProps = {
   compact: false,
   highContrast: false,
 };
-
-// export default toggleEnhancer(AccordianKeyValues);
