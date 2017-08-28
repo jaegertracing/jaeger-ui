@@ -33,30 +33,33 @@ type SpanDetailProps = {
 };
 
 export default function SpanDetail(props: SpanDetailProps) {
-  const { span, trace } = props;
+  const { detailState, logItemToggle, logsToggle, processToggle, span, tagsToggle, trace } = props;
+  const { isTagsOpen, isProcessOpen, logs: logsState } = detailState;
+  const { operationName, process, duration, relativeStartTime, spanID, logs, tags } = span;
+  // console.log('detailState', detailState);
   return (
     <div>
       <div>
         <h3 className="mb1">
-          {span.operationName}
+          {operationName}
         </h3>
         <div>
           <div className="inline-block mr1">
             <strong>Service: </strong>
             <span>
-              {span.process.serviceName}
+              {process.serviceName}
             </span>
           </div>
           <div className="inline-block mr1">
             <strong>Duration: </strong>
             <span>
-              {formatDuration(span.duration)}
+              {formatDuration(duration)}
             </span>
           </div>
           <div className="inline-block mr1">
             <strong>Start Time: </strong>
             <span>
-              {formatDuration(span.relativeStartTime)}
+              {formatDuration(relativeStartTime)}
             </span>
           </div>
         </div>
@@ -64,16 +67,20 @@ export default function SpanDetail(props: SpanDetailProps) {
       </div>
       <div>
         <div>
-          <AccordianKeyValues data={span.tags} highContrast label="Tags" />
-          {span.process &&
-            span.process.tags &&
-            <AccordianKeyValues data={span.process.tags} highContrast label="Process" />}
+          <AccordianKeyValues
+            data={tags}
+            highContrast
+            label="Tags"
+            isOpen={isTagsOpen}
+            onToggle={() => tagsToggle(spanID)}
+          />
+          {process.tags && <AccordianKeyValues data={process.tags} highContrast label="Process" />}
         </div>
-        {span.logs && span.logs.length > 0 && <AccordianLogs logs={span.logs} timestamp={trace.startTime} />}
+        {logs && logs.length > 0 && <AccordianLogs logs={logs} timestamp={trace.startTime} />}
 
         <small className="SpanDetail--debugInfo">
           <span className="SpanDetail--debugLabel" data-label="SpanID:" />{' '}
-          <span className="SpanDetail--debugValue">{span.spanID}</span>
+          <span className="SpanDetail--debugValue">{spanID}</span>
         </small>
       </div>
     </div>

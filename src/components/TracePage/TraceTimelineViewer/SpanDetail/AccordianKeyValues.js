@@ -58,8 +58,9 @@ type AccordianKeyValuesProps = {
   onToggle: () => void,
 };
 
-function AccordianKeyValues(props: AccordianKeyValuesProps) {
+export default function AccordianKeyValues(props: AccordianKeyValuesProps) {
   const { compact, data, highContrast, isOpen, label, onToggle } = props;
+  // console.log('kvs', props.label, props);
   return (
     <div className={`AccordianKeyValues ${compact ? 'is-compact' : ''}`}>
       <div
@@ -85,4 +86,4 @@ AccordianKeyValues.defaultProps = {
   highContrast: false,
 };
 
-export default toggleEnhancer(AccordianKeyValues);
+// export default toggleEnhancer(AccordianKeyValues);

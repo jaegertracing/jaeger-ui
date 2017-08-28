@@ -28,10 +28,10 @@
 // }
 export default class DetailState {
   constructor({ isTagsOpen, isProcessOpen, logs } = {}) {
-    this.isTagsOpen = isTagsOpen;
-    this.isProcessOpen = isProcessOpen;
+    this.isTagsOpen = Boolean(isTagsOpen);
+    this.isProcessOpen = Boolean(isProcessOpen);
     this.logs = {
-      isOpen: logs && logs.isOpen,
+      isOpen: Boolean(logs && logs.isOpen),
       openItems: logs && logs.openItems ? new Set(logs.openItems) : new Set(),
     };
   }

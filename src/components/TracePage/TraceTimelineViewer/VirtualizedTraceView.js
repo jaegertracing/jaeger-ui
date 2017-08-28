@@ -24,6 +24,7 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { AutoSizer, List, WindowScroller } from 'react-virtualized';
 
+import ListView from './ListView';
 import SpanBarRow from './SpanBarRow';
 import SpanDetailRow from './SpanDetailRow';
 import Ticks from './Ticks';
@@ -39,9 +40,16 @@ import colorGenerator from '../../../utils/color-generator';
 
 import './VirtualizedTraceView.css';
 
+const DEFAULT_HEIGHTS = {
+  bar: 21,
+  detail: 169,
+  detailWithLogs: 223,
+};
+
 function generateRowStates(spans, childrenHiddenIDs, detailStates) {
   let collapseDepth = null;
   const rowStates = [];
+  const detailRowIndexes = new Map();
   for (let i = 0; i < spans.length; i++) {
     const span = spans[i];
     const { spanID, depth } = span;
@@ -65,6 +73,7 @@ function generateRowStates(spans, childrenHiddenIDs, detailStates) {
       spanIndex: i,
     });
     if (detailStates.has(spanID)) {
+      detailRowIndexes.set(spanID, rowStates.length);
       rowStates.push({
         span,
         isDetail: true,
@@ -72,54 +81,117 @@ function generateRowStates(spans, childrenHiddenIDs, detailStates) {
       });
     }
   }
-  return rowStates;
-  // return {
-  //   data: rowStates,
-  //   signature: rowStates.map(st => `${st.span.spanID}:${st.isDetail ? 'detail' : 'bar'}`).join('|'),
-  // }
+  return { detailRowIndexes, rowStates };
 }
 
+// TODO(joe): rename func
 function deriveState(props) {
   const { childrenHiddenIDs, detailStates, trace, zoomEnd = 1, zoomStart = 0 } = props;
   const clippingCssClasses = cx({
     'clipping-left': zoomStart > 0,
     'clipping-right': zoomEnd < 1,
   });
+  const rowInfo = trace
+    ? generateRowStates(trace.spans, childrenHiddenIDs, detailStates)
+    : { detailRowIndexes: new Map(), rowStates: [] };
   return {
+    ...rowInfo,
     clippingCssClasses,
-    rowStates: trace ? generateRowStates(trace.spans, childrenHiddenIDs, detailStates) : [],
   };
 }
 
 class VirtualizedTraceView extends PureComponent {
   constructor(props) {
     super(props);
-    console.log('ctor props:', props);
-    this.state = deriveState(props);
-    this.renderRow = this.renderRow.bind(this);
-    this.setListRef = this.setListRef.bind(this);
+    // console.log('------ctor props:', props);
+
+    this.listRef = null;
+    this.lastDetailStateChange = null;
+
+    const { detailRowIndexes, rowStates, clippingCssClasses } = deriveState(props);
+    this.rowStates = rowStates;
+    this.clippingCssClasses = clippingCssClasses;
+    this.detailRowIndexes = detailRowIndexes;
+    this.detailRowMeasurements = new Map();
+
+    this.getKeyFromIndex = this.getKeyFromIndex.bind(this);
+    this.getIndexFromKey = this.getIndexFromKey.bind(this);
+    this.getRowHeight = this.getRowHeight.bind(this);
+    // this.renderRow = this.renderRow.bind(this);
+    this.renderRowLV = this.renderRowLV.bind(this);
+    this.updateDetailMeasurement = this.updateDetailMeasurement.bind(this);
   }
 
-  updateDetailMeasurement(spanID, width, height) {
-    console.log('detail measurement:', spanID, width, height);
+  // getRowHeight({ index }) {
+  //   // console.log('get row hight', index);
+  //   const { isDetail, span } = this.rowStates[index];
+  //   if (isDetail) {
+  //     const h = this.detailRowMeasurements.get(span.spanID);
+  //     // console.log('h', span.spanID, h);
+  //     if (h != null) {
+  //       return h;
+  //     }
+  //   }
+  //   // console.log('21')
+  //   return 21;
+  // }
+
+  getKeyFromIndex(index) {
+    const { isDetail, span } = this.rowStates[index];
+    return `${span.spanID}--${isDetail ? 'detail' : 'bar'}`;
   }
 
-  renderRow({
-    index, // Index of row
-    // isScrolling, // The List is currently being scrolled
-    // isVisible,   // This row is visible within the List (eg it is not an overscanned row)
-    key, // Unique key within array of rendered rows
-    // parent,      // Reference to the parent List (instance)
-    style, // Style object to be applied to row (to position it);
-    // This must be passed through to the rendered row element.
-  }) {
-    const { isDetail, span, spanIndex } = this.state.rowStates[index];
+  getIndexFromKey(key) {
+    const parts = key.split('--');
+    const _spanID = parts[0];
+    const _isDetail = parts[1] === 'detail';
+    const max = this.rowStates.length;
+    for (let i = 0; i < max; i++) {
+      const { span, isDetail } = this.rowStates[i];
+      if (span.spanID === _spanID && isDetail === _isDetail) {
+        return i;
+      }
+    }
+  }
+
+  getRowHeight(index) {
+    const { span, isDetail } = this.rowStates[index];
+    if (!isDetail) {
+      return DEFAULT_HEIGHTS.bar;
+    }
+    if (Array.isArray(span.logs) && span.logs.length) {
+      return DEFAULT_HEIGHTS.detailWithLogs;
+    }
+    return DEFAULT_HEIGHTS.detail;
+  }
+
+  // renderRow({
+  //   index, // Index of row
+  //   // isScrolling, // The List is currently being scrolled
+  //   // isVisible,   // This row is visible within the List (eg it is not an overscanned row)
+  //   key, // Unique key within array of rendered rows
+  //   parent,      // Reference to the parent List (instance)
+  //   style, // Style object to be applied to row (to position it);
+  //   // This must be passed through to the rendered row element.
+  // }) {
+  //   // console.log('render row');
+  //   this.listRef = parent;
+  //   const { isDetail, span, spanIndex } = this.rowStates[index];
+  //   return isDetail
+  //     ? this.renderSpanDetailRow(span, key, style)
+  //     : this.renderSpanBarRow(span, spanIndex, key, style);
+  // }
+
+  renderRowLV(key, style, index, attrs) {
+    // console.log('render row LV');
+    // this.listRef = parent;
+    const { isDetail, span, spanIndex } = this.rowStates[index];
     return isDetail
-      ? this.renderSpanDetailRow(span, key, style)
-      : this.renderSpanBarRow(span, spanIndex, key, style);
+      ? this.renderSpanDetailRow(span, key, style, attrs)
+      : this.renderSpanBarRow(span, spanIndex, key, style, attrs);
   }
 
-  renderSpanBarRow(span, spanIndex, key, style) {
+  renderSpanBarRow(span, spanIndex, key, style, attrs = {}) {
     const { spanID } = span;
     const { serviceName } = span.process;
     const {
@@ -133,7 +205,6 @@ class VirtualizedTraceView extends PureComponent {
       zoomEnd = 1,
       zoomStart = 0,
     } = this.props;
-    const { clippingCssClasses } = this.state;
 
     const color = colorGenerator.getColorByKey(serviceName);
     const toggleDetailExpansion = () => detailToggle(spanID);
@@ -174,9 +245,9 @@ class VirtualizedTraceView extends PureComponent {
       }
     }
     return (
-      <div key={key} style={style}>
+      <div className="VirtualizedTraceView--row" key={key} style={style} {...attrs}>
         <SpanBarRow
-          className={clippingCssClasses}
+          className={this.clippingCssClasses}
           color={color}
           depth={span.depth}
           label={formatDuration(span.duration)}
@@ -198,43 +269,78 @@ class VirtualizedTraceView extends PureComponent {
     );
   }
 
-  renderSpanDetailRow(span, key, style) {
+  renderSpanDetailRow(span, key, style, attrs = {}) {
     const { spanID } = span;
     const { serviceName } = span.process;
-    const { findMatchesIDs, detailToggle, trace } = this.props;
+    const {
+      detailLogItemToggle,
+      detailLogsToggle,
+      detailProcessToggle,
+      detailStates,
+      detailTagsToggle,
+      detailToggle,
+      findMatchesIDs,
+      trace,
+    } = this.props;
+    const detailState = detailStates.get(spanID);
     const color = colorGenerator.getColorByKey(serviceName);
     const isFilteredOut = Boolean(findMatchesIDs) && !findMatchesIDs.has(spanID);
-    const toggleDetailExpansion = () => detailToggle(spanID);
+    const detailExpansionToggle = () => detailToggle(spanID);
     const onMeasureChange = (width, height) => this.updateDetailMeasurement(spanID, width, height);
     return (
-      <div key={key} style={style}>
+      <div className="VirtualizedTraceView--row" key={key} style={{ ...style, zIndex: 1 }} {...attrs}>
         <SpanDetailRow
           color={color}
+          detailExpansionToggle={detailExpansionToggle}
+          detailState={detailState}
           isFilteredOut={isFilteredOut}
-          span={span}
-          toggleDetailExpansion={toggleDetailExpansion}
-          trace={trace}
+          logItemToggle={detailLogItemToggle}
+          logsToggle={detailLogsToggle}
           onMeasureChange={onMeasureChange}
+          processToggle={detailProcessToggle}
+          span={span}
+          tagsToggle={detailTagsToggle}
+          trace={trace}
         />
       </div>
     );
   }
 
-  setListRef(elm) {
-    this.listRef = elm;
-  }
-
   componentWillReceiveProps(nextProps) {
     // console.log('will get props');
-    console.log('new props:', this.props);
-    const nextState = deriveState(nextProps);
-    this.setState(nextState);
+    console.log('new props:', nextProps);
+    // const nextState = deriveState(nextProps);
+    // this.setState(nextState);
+    const { detailRowIndexes, rowStates, clippingCssClasses } = deriveState(nextProps);
+    this.rowStates = rowStates;
+    this.clippingCssClasses = clippingCssClasses;
+    this.detailRowIndexes = detailRowIndexes;
     // if (this.listRef) {
     //   this.listRef.forceGridUpdate();
     // }
   }
 
+  updateDetailMeasurement(spanID, width, height) {
+    console.log(this.name, 'detail measurement:', spanID, width, height);
+    const h = this.detailRowMeasurements.get(spanID);
+    if (h !== height) {
+      this.detailRowMeasurements.set(spanID, height);
+      if (this.listRef) {
+        const i = this.detailRowIndexes.get(spanID);
+        console.log('compute heights', i);
+        // this.listRef.recomputeGridSize({ rowIndex: i });
+      }
+    }
+  }
+
+  componentDidUpdate() {
+    if (this.listRef) {
+      this.listRef.forceUpdate();
+    }
+  }
+
   render() {
+    console.log('render virt', this.rowStates.length);
     const { trace, zoomStart = 0, zoomEnd = 1, ticks = [0, 0.25, 0.5, 0.75, 1] } = this.props;
 
     const zoomMin = zoomStart * trace.duration;
@@ -259,24 +365,40 @@ class VirtualizedTraceView extends PureComponent {
           </TimelineRow.Right>
         </TimelineRow>
         <div className="VirtualizedTraceView--spans">
+          <ListView
+            data={this.rowStates}
+            averageItemHeight={21}
+            itemHeightGetter={this.getRowHeight}
+            itemRenderer={this.renderRowLV}
+            viewBuffer={300}
+            viewBufferMin={150}
+            itemsWrapperClassName="VirtualizedTraceView--rowsWrapper"
+            getKeyFromIndex={this.getKeyFromIndex}
+            getIndexFromKey={this.getIndexFromKey}
+            windowScroller
+          />
+        </div>
+        {/*
+        <div className="VirtualizedTraceView--spans">
           <WindowScroller scrollingResetTimeInterval={10}>
             {({ height, scrollTop }) =>
               <AutoSizer disableHeight>
                 {({ width }) =>
                   <List
-                    width={width}
-                    scrollTop={scrollTop}
                     autoHeight
-                    height={height}
-                    rowCount={this.state.rowStates.length}
-                    rowHeight={21}
                     estimatedRowSize={21}
-                    overscanRowCount={200}
+                    height={height}
+                    overscanRowCount={150}
+                    rowCount={this.rowStates.length}
+                    rowHeight={this.getRowHeight}
                     rowRenderer={this.renderRow}
+                    scrollTop={scrollTop}
+                    width={width}
                   />}
               </AutoSizer>}
           </WindowScroller>
         </div>
+*/}
       </div>
     );
   }

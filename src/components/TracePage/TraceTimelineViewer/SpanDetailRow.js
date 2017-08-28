@@ -28,7 +28,19 @@ import SpanDetail from './SpanDetail';
 import './SpanDetailRow.css';
 
 export default function SpanDetailRow(props) {
-  const { span, color, trace, toggleDetailExpansion, isFilteredOut, onMeasureChange } = props;
+  const {
+    color,
+    detailExpansionToggle,
+    detailState,
+    isFilteredOut,
+    logItemToggle,
+    logsToggle,
+    onMeasureChange,
+    processToggle,
+    span,
+    tagsToggle,
+    trace,
+  } = props;
   return (
     <TimelineRow
       className={`detail-row ${isFilteredOut ? 'is-filtered-out' : ''}`}
@@ -40,7 +52,7 @@ export default function SpanDetailRow(props) {
           <span>
             <span
               className="detail-row-expanded-accent"
-              onClick={toggleDetailExpansion}
+              onClick={detailExpansionToggle}
               style={{ borderColor: color }}
             />
           </span>
@@ -48,7 +60,15 @@ export default function SpanDetailRow(props) {
       </TimelineRow.Left>
       <TimelineRow.Right>
         <div className="p2 detail-info-wrapper" style={{ borderTopColor: color }}>
-          <SpanDetail span={span} trace={trace} />
+          <SpanDetail
+            detailState={detailState}
+            logItemToggle={logItemToggle}
+            logsToggle={logsToggle}
+            processToggle={processToggle}
+            span={span}
+            tagsToggle={tagsToggle}
+            trace={trace}
+          />
         </div>
       </TimelineRow.Right>
     </TimelineRow>

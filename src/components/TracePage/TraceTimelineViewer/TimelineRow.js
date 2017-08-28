@@ -47,7 +47,8 @@ function TimelineRowBase(props) {
 TimelineRowBase.propTypes = { ...propTypes };
 TimelineRowBase.defaultProps = { ...defaultProps };
 
-const TimelineRow = measureEnhancer(TimelineRowBase);
+// const TimelineRow = measureEnhancer(TimelineRowBase);
+const TimelineRow = TimelineRowBase;
 
 export default TimelineRow;
 

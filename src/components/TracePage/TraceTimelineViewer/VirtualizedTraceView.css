@@ -27,9 +27,19 @@ THE SOFTWARE.
   overflow: hidden;
   position: fixed;
   width: 100%;
-  z-index: 1;
+  z-index: 2;
 }
 
 .VirtualizedTraceView--spans {
   padding-top: 40px;
+  position: relative;
+  z-index: 1;
+}
+
+.VirtualizedTraceView--rowsWrapper {
+  width: 100%;
+}
+
+.VirtualizedTraceView--row {
+  width: 100%;
 }
