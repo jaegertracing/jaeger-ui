@@ -1,3 +1,5 @@
+// @flow
+
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -18,20 +20,188 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import React, { Component } from 'react';
-import PropTypes from 'prop-types';
+import * as React from 'react';
 
 import Positions from './Positions';
 
-const defaultGetKeyFromIndex = i => String(i);
-const defaultGetIndexFromKey = s => Number(s);
+type ListViewProps = {
+  /**
+   * Number of elements in the list.
+   * @type {number}
+   */
+  dataLength: number,
+  /**
+   * Convert item index (number) to the key (string). ListView uses both indexes
+   * and keys to handle the addtion of new rows.
+   * @type {string => number}
+   */
+  getIndexFromKey: string => number,
+  /**
+   * Convert item key (string) to the index (number). ListView uses both indexes
+   * and keys to handle the addtion of new rows.
+   * @type {number => string}
+   */
+  getKeyFromIndex: number => string,
+  /**
+   * Number of items to draw and add to the DOM, initially.
+   * @type {number}
+   */
+  initialDraw: number,
+  /**
+   * The parent provides fallback height measurements when there is not a
+   * rendered element to measure.
+   * @type {(number, string) => number}
+   */
+  itemHeightGetter: (number, string) => number,
+  /**
+   * Function that renders an item; rendered items are added directly to the
+   * DOM, they are not wrapped in list item wrapper HTMLElement.
+   * @type {(string, {}, number, {}) => React.Node}
+   */
+  itemRenderer: (string, {}, number, {}) => React.Node,
+  /**
+   * `className` for the HTMLElement that holds the items.
+   * @type {string}
+   */
+  itemsWrapperClassName?: string,
+  /**
+   * When adding new items to the DOM, this is the number of items to add above
+   * and below the current view. E.g. if list is 100 items and is srcolled
+   * halfway down (so items [46, 55] are in view), then when a new range of
+   * items is rendered, it will render items `46 - viewBuffer` to
+   * `55 + viewBuffer`.
+   * @type {number}
+   */
+  viewBuffer: number,
+  /**
+   * The minimum number of items offscreen in either direction; e.g. at least
+   * `viewBuffer` number of items must be off screen above and below the
+   * current view, or more items will be rendered.
+   * @type {number}
+   */
+  viewBufferMin: number,
+  /**
+   * When `true`, expect `_wrapperElm` to have `overflow: visible` and to,
+   * essentially, be tall to the point the entire page will will end up
+   * scrolling as a result of the ListView. Similar to react-virtualized
+   * window scroller.
+   *
+   * Ref: https://bvaughn.github.io/react-virtualized/#/components/WindowScroller
+   * Ref:https://github.com/bvaughn/react-virtualized/blob/497e2a1942529560681d65a9ef9f5e9c9c9a49ba/docs/WindowScroller.md
+   * @type {boolean}
+   */
+  windowScroller?: boolean,
+};
 
-export default class ListView extends Component {
-  constructor(props) {
+/**
+ * Virtualized list view component, for the most part, only renders the window
+ * of items that are in-view with some buffer before and after. Listens for
+ * scroll events and updates which items are rendered. See react-virtualized
+ * for a suite of components with similar, but generalized, functinality.
+ * https://github.com/bvaughn/react-virtualized
+ *
+ * Note: Presently, ListView cannot be a PureComponent. This is because ListView
+ * is sensitive to the underlying state that drives the list items, but it
+ * doesn't actually receive that state. So, a render may still be required even
+ * if ListView's props are unchanged.
+ *
+ * @export
+ * @class ListView
+ * @extends {React.PureComponent<ListViewProps>}
+ */
+export default class ListView extends React.Component<ListViewProps> {
+  props: ListViewProps;
+  /**
+   * Keeps track of the height and y-value of items, by item index, in the
+   * ListView.
+   * @type {Positions}
+   */
+  _yPositions: Positions;
+  /**
+   * Keep track of the known / measured heights of the rendered items; populated
+   * with values through observation and keyed on the item key, not the item
+   * index.
+   * @type {Map<string, number>}
+   */
+  _knownHeights: Map<string, number>;
+  /**
+   * The start index of the items currently drawn.
+   * @type {number}
+   */
+  _startIndexDrawn: number;
+  /**
+   * The end index of the items currently drawn.
+   * @type {number}
+   */
+  _endIndexDrawn: number;
+  /**
+   * The start index of the items currently in view.
+   * @type {number}
+   */
+  _startIndex: number;
+  /**
+   * The end index of the items currently in view.
+   * @type {number}
+   */
+  _endIndex: number;
+  /**
+   * Height of the visual window, e.g. height of the scroller element.
+   * @type {number}
+   */
+  _viewHeight: number;
+  /**
+   * `scrollTop` of the current scroll position.
+   * @type {number}
+   */
+  _scrollTop: number;
+  /**
+   * Used to keep track of whether or not a re-calculation of what should be
+   * drawn / viewable has been scheduled.
+   * @type {boolean}
+   */
+  _isScrolledOrResized: boolean;
+  /**
+   * If `windowScroller` is true, this notes how far down the page the scroller
+   * is located. (Note: repositioning and below-the-fold views are untested)
+   *
+   * @type {number}
+   * @memberof ListView
+   */
+  _htmlTopOffset: number;
+  _windowScrollListenerAdded: boolean;
+  _htmlElm: HTMLElement;
+  /**
+   * HTMLElement holding the scroller.
+   * @type HTMLElement
+   */
+  _wrapperElm: ?HTMLElement;
+  /**
+   * HTMLElement holding the rendered items.
+   * @type HTMLElement
+   */
+  _itemHolderElm: ?HTMLElement;
+
+  static defaultProps = {
+    /**
+     * E.g.`str => Number(str)`
+     */
+    getIndexFromKey: Number,
+    /**
+     * E.g.`num => String(num)`
+     */
+    getKeyFromIndex: String,
+    initialDraw: 300,
+    itemsWrapperClassName: '',
+    viewBuffer: 90,
+    viewBufferMin: 30,
+    windowScroller: false,
+  };
+
+  constructor(props: ListViewProps) {
     super(props);
 
-    this.yPositions = new Positions(200);
-    // _knownHeights is (item-key => observed height) of list items
+    this._yPositions = new Positions(200);
+    // _knownHeights is (item-key -> observed height) of list items
     this._knownHeights = new Map();
     this._getHeight = this._getHeight.bind(this);
     this._scanItemHeights = this._scanItemHeights.bind(this);
@@ -40,22 +210,19 @@ export default class ListView extends Component {
     this._endIndexDrawn = -(2 ** 20);
     this._startIndex = 0;
     this._endIndex = 0;
-    this._viewHeight = undefined;
-    this._scrollTop = undefined;
+    this._viewHeight = -1;
+    this._scrollTop = -1;
     this._isScrolledOrResized = false;
 
     this._onScroll = this._onScroll.bind(this);
     this._positionList = this._positionList.bind(this);
 
-    this._htmlTopOffset = undefined;
+    this._htmlTopOffset = -1;
     this._windowScrollListenerAdded = false;
-    if (props.windowScroller) {
-      this._htmlElm = window.document.querySelector('html');
-    } else {
-      this._htmlElm = undefined;
-    }
+    // _htmlElm is only relevant if props.windowScroller is true
+    this._htmlElm = window.document.querySelector('html');
     this._wrapperElm = undefined;
-    this._itemHolder = undefined;
+    this._itemHolderElm = undefined;
     this._initWrapper = this._initWrapper.bind(this);
     this._initItemHolder = this._initItemHolder.bind(this);
   }
@@ -72,7 +239,7 @@ export default class ListView extends Component {
   }
 
   componentDidUpdate() {
-    if (this._itemHolder) {
+    if (this._itemHolderElm) {
       this._scanItemHeights();
     }
   }
@@ -83,13 +250,23 @@ export default class ListView extends Component {
     }
   }
 
-  _onScroll() {
+  /**
+   * Scroll event listener that schedules a remeasuring of which items should be
+   * rendered.
+   *
+   * @memberof ListView
+   */
+  _onScroll = function _onScroll() {
     if (!this._isScrolledOrResized) {
       this._isScrolledOrResized = true;
       window.requestAnimationFrame(this._positionList);
     }
-  }
+  };
 
+  /**
+   * Returns true is the view height (scroll window) or scroll position have
+   * changed.
+   */
   _isViewChanged() {
     if (!this._wrapperElm) {
       return false;
@@ -100,9 +277,12 @@ export default class ListView extends Component {
     return clientHeight !== this._viewHeight || scrollTop !== this._scrollTop;
   }
 
+  /**
+   * Recalculate _startIndex and _endIndex, e.g. which items are in view.
+   */
   _calcViewIndexes() {
     if (!this._wrapperElm) {
-      this._viewHeight = null;
+      this._viewHeight = -1;
       this._startIndex = 0;
       this._endIndex = 0;
       return;
@@ -124,11 +304,17 @@ export default class ListView extends Component {
       yStart = this._scrollTop;
       yEnd = this._scrollTop + this._viewHeight;
     }
-    this._startIndex = this.yPositions.findFloorIndex(yStart, this._getHeight);
-    this._endIndex = this.yPositions.findFloorIndex(yEnd, this._getHeight);
+    this._startIndex = this._yPositions.findFloorIndex(yStart, this._getHeight);
+    this._endIndex = this._yPositions.findFloorIndex(yEnd, this._getHeight);
   }
 
-  _positionList() {
+  /**
+   * Checked to see if the currently rendered items are sufficient, if not,
+   * force an update to trigger more items to be rendered.
+   *
+   * @memberof ListView
+   */
+  _positionList = function _positionList() {
     this._isScrolledOrResized = false;
     if (!this._wrapperElm) {
       return;
@@ -138,44 +324,60 @@ export default class ListView extends Component {
     const maxStart =
       this.props.viewBufferMin > this._startIndex ? 0 : this._startIndex - this.props.viewBufferMin;
     const minEnd =
-      this.props.viewBufferMin < this.props.data.length - this._endIndex
+      this.props.viewBufferMin < this.props.dataLength - this._endIndex
         ? this._endIndex + this.props.viewBufferMin
-        : this.props.data.length - 1;
+        : this.props.dataLength - 1;
     if (maxStart < this._startIndexDrawn || minEnd > this._endIndexDrawn) {
       // console.time('force update');
-      // setTimeout(() => console.timeEnd('force update') || console.log('rawn', this._endIndexDrawn, minEnd), 0);
+      // setTimeout(() => console.timeEnd('force update'), 0);
       this.forceUpdate();
     }
-  }
+  };
 
-  _initWrapper(elm) {
+  _initWrapper = function _initWrapper(elm: HTMLElement) {
     this._wrapperElm = elm;
     this._viewHeight = elm && elm.clientHeight;
-  }
+  };
 
-  _initItemHolder(elm) {
-    this._itemHolder = elm;
-    if (elm) {
-      this._scanItemHeights();
+  _initItemHolder = function _initItemHolder(elm: HTMLElement) {
+    this._itemHolderElm = elm;
+    this._scanItemHeights();
+  };
+
+  /**
+   * Go through all items that are rendered and save their height based on their
+   * item-key (which is on a data-* attribute). If any new or adjusted heights
+   * are found, re-measure the current known y-positions (via .yPositions).
+   *
+   * @memberof ListView
+   */
+  _scanItemHeights = function _scanItemHeights() {
+    const getIndexFromKey = this.props.getIndexFromKey;
+    if (!this._itemHolderElm) {
+      return;
     }
-  }
-
-  _scanItemHeights() {
-    const getIndexFromKey = this.props.getIndexFromKey || defaultGetIndexFromKey;
-    let isDirty = false;
+    // note the keys for the first and last altered heights, the `yPositions`
+    // needs to be updated
     let lowDirtyKey = null;
     let highDirtyKey = null;
-    const nodes = this._itemHolder.childNodes;
+    let isDirty = false;
+    // iterating childNodes is faster than children
+    // https://jsperf.com/large-htmlcollection-vs-large-nodelist
+    const nodes = this._itemHolderElm.childNodes;
     const max = nodes.length;
     for (let i = 0; i < max; i++) {
-      const node = nodes[i];
+      const node: HTMLElement = (nodes[i]: any);
       const itemKey = node.dataset.itemKey;
       if (!itemKey) {
         // eslint-disable-next-line no-console
         console.warn('itemKey not found');
         continue;
       }
-      const observed = node.firstChild.scrollHeight;
+      // measure the first child, if it's available, otherwise the node itself
+      // (likely not transferable to other contexts, and instead is specific to
+      // how we have the items rendered)
+      const measureSrc: Element = node.firstElementChild || node;
+      const observed = measureSrc.scrollHeight;
       const known = this._knownHeights.get(itemKey);
       if (observed !== known) {
         this._knownHeights.set(itemKey, observed);
@@ -188,68 +390,73 @@ export default class ListView extends Component {
         }
       }
     }
-    if (isDirty) {
+    if (lowDirtyKey != null && highDirtyKey != null) {
+      // update yPositions, then redraw
       const imin = getIndexFromKey(lowDirtyKey);
       const imax = highDirtyKey === lowDirtyKey ? imin : getIndexFromKey(highDirtyKey);
-      this.yPositions.calcHeights(imax, this._getHeight, imin);
+      this._yPositions.calcHeights(imax, this._getHeight, imin);
       this.forceUpdate();
     }
-  }
+  };
 
-  _getHeight(i) {
-    const key = (this.props.getKeyFromIndex || defaultGetKeyFromIndex)(i);
+  /**
+   * Get the height of the element at index `i`; first check the known heigths,
+   * fallbck to `.props.itemHeightGetter(...)`.
+   *
+   * @memberof ListView
+   */
+  _getHeight = function _getHeight(i: number) {
+    const key = this.props.getKeyFromIndex(i);
     const known = this._knownHeights.get(key);
     // known !== known iff known is NaN
     if (known != null && known === known) {
       return known;
     }
     return this.props.itemHeightGetter(i, key);
-  }
+  };
 
   render() {
-    const { data, itemRenderer, initialDraw, viewBuffer, viewBufferMin } = this.props;
+    const { dataLength, getKeyFromIndex, initialDraw, itemRenderer, viewBuffer, viewBufferMin } = this.props;
+    const heightGetter = this._getHeight;
     const items = [];
 
-    const heightGetter = this._getHeight;
-    const getKeyFromIndex = this.props.getKeyFromIndex || defaultGetKeyFromIndex;
     let start;
     let end;
 
     if (!this._wrapperElm) {
       start = 0;
-      end = initialDraw < data.length ? initialDraw : data.length - 1;
+      end = initialDraw < dataLength ? initialDraw : dataLength - 1;
     } else {
       if (this._isViewChanged()) {
         this._calcViewIndexes();
       }
-
       const maxStart = viewBufferMin > this._startIndex ? 0 : this._startIndex - viewBufferMin;
       const minEnd =
-        viewBufferMin < data.length - this._endIndex ? this._endIndex + viewBufferMin : data.length - 1;
+        viewBufferMin < dataLength - this._endIndex ? this._endIndex + viewBufferMin : dataLength - 1;
       if (maxStart < this._startIndexDrawn || minEnd > this._endIndexDrawn) {
         start = viewBuffer > this._startIndex ? 0 : this._startIndex - viewBuffer;
         end = this._endIndex + viewBuffer;
-        if (end >= data.length) {
-          end = data.length - 1;
+        if (end >= dataLength) {
+          end = dataLength - 1;
         }
       } else {
         start = this._startIndexDrawn;
-        end = this._endIndexDrawn > data.length - 1 ? data.length - 1 : this._endIndexDrawn;
+        end = this._endIndexDrawn > dataLength - 1 ? dataLength - 1 : this._endIndexDrawn;
       }
     }
 
-    this.yPositions.profileData(data);
-    this.yPositions.calcHeights(end, heightGetter, start || -1);
+    this._yPositions.profileData(dataLength);
+    this._yPositions.calcHeights(end, heightGetter, start || -1);
     this._startIndexDrawn = start;
     this._endIndexDrawn = end;
 
     items.length = end - start + 1;
     for (let i = start; i <= end; i++) {
-      this.yPositions.confirmHeight(i, heightGetter);
+      this._yPositions.confirmHeight(i, heightGetter);
       const style = {
         position: 'absolute',
-        top: this.yPositions.ys[i],
-        height: this.yPositions.heights[i],
+        top: this._yPositions.ys[i],
+        height: this._yPositions.heights[i],
         overflow: 'hidden',
       };
       const itemKey = getKeyFromIndex(i);
@@ -257,11 +464,12 @@ export default class ListView extends Component {
       items.push(itemRenderer(itemKey, style, i, attrs));
     }
 
-    const scrollerStyle = {
-      position: 'relative',
-      height: this.yPositions.getEstimatedHeight(),
+    type wrapperPropsT = {
+      style: { [string]: string },
+      ref: Function,
+      onScroll?: Function,
     };
-    const wrapperProps = {
+    const wrapperProps: wrapperPropsT = {
       style: {
         overflowY: 'auto',
         position: 'relative',
@@ -272,6 +480,10 @@ export default class ListView extends Component {
     if (!this.props.windowScroller) {
       wrapperProps.onScroll = this._onScroll;
     }
+    const scrollerStyle = {
+      position: 'relative',
+      height: this._yPositions.getEstimatedHeight(),
+    };
     return (
       <div {...wrapperProps}>
         <div style={scrollerStyle}>
@@ -283,7 +495,7 @@ export default class ListView extends Component {
               padding: 0,
             }}
             className={this.props.itemsWrapperClassName}
-            ref={this._initItemHolder}
+            ref={(this._initItemHolder: Function)}
           >
             {items}
           </div>
@@ -292,27 +504,3 @@ export default class ListView extends Component {
     );
   }
 }
-
-ListView.propTypes = {
-  data: PropTypes.array.isRequired,
-  initialDraw: PropTypes.number.isRequired,
-  viewBuffer: PropTypes.number.isRequired,
-  viewBufferMin: PropTypes.number.isRequired,
-  itemHeightGetter: PropTypes.func,
-  itemRenderer: PropTypes.oneOfType([PropTypes.element, PropTypes.func]).isRequired,
-  itemsWrapperClassName: PropTypes.string,
-  windowScroller: PropTypes.bool,
-  getKeyFromIndex: PropTypes.func,
-  getIndexFromKey: PropTypes.func,
-};
-
-ListView.defaultProps = {
-  data: undefined,
-  initialDraw: 300,
-  viewBuffer: 90,
-  viewBufferMin: 30,
-  itemHeightGetter: undefined,
-  itemRenderer: undefined,
-  itemsWrapperClassName: '',
-  windowScroller: false,
-};

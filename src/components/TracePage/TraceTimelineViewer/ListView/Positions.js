@@ -25,11 +25,17 @@
  * y-positions follow one-after-another and can be derived from the height of
  * the prior entries. The height is known from an accessor function parameter
  * to the methods that require new knowledge the heights.
+ *
+ * @export
+ * @class Positions
  */
 export default class Positions {
   /**
    * Indicates how far past the explicitly required height or y-values should
    * checked.
+   * @type {number}
+   * @memberof Positions
+   * @instance
    */
   bufferLen: number;
   dataLen: number;
@@ -38,6 +44,9 @@ export default class Positions {
    * `lastI` keeps track of which values have already been visited. In many
    * scenarios, values do not need to be revisited. But, revisiting is required
    * when heights have changed, so `lastI` can be forced.
+   * @type {number}
+   * @memberof Positions
+   * @instance
    */
   lastI: number;
   ys: number[];
@@ -55,14 +64,15 @@ export default class Positions {
    * the context; in particular `lastI` needs to remain valid.
    *
    * @param {any[]} data
+   * @instance
    */
-  profileData(data: any[]) {
-    if (data.length !== this.dataLen) {
-      this.dataLen = data.length;
-      this.ys.length = this.dataLen;
-      this.heights.length = this.dataLen;
-      if (this.lastI >= this.dataLen) {
-        this.lastI = this.dataLen - 1;
+  profileData(dataLength: number) {
+    if (dataLength !== this.dataLen) {
+      this.dataLen = dataLength;
+      this.ys.length = dataLength;
+      this.heights.length = dataLength;
+      if (this.lastI >= dataLength) {
+        this.lastI = dataLength - 1;
       }
     }
   }
@@ -73,8 +83,9 @@ export default class Positions {
    * via the `forcedLastI` parameter.
    *
    * @param {number} max
-   * @param {number => number} heightGetter
+   * @param {number} heightGetter
    * @param {number} [forcedLastI]
+   * @instance
    */
   calcHeights(max: number, heightGetter: number => number, forcedLastI?: number) {
     if (forcedLastI != null) {
@@ -106,6 +117,7 @@ export default class Positions {
    *
    * @param {number} yValue
    * @param {number => number} heightGetter
+   * @instance
    */
   calcYs(yValue: number, heightGetter: number => number) {
     while (yValue > this.ys[this.lastI] && this.lastI < this.heights.length - 1) {
@@ -120,7 +132,8 @@ export default class Positions {
    *
    * @param {number} yValue
    * @param {number => number} heightGetter
-   * @return {number}
+   * @returns {number}
+   * @instance
    */
   findFloorIndex(yValue: number, heightGetter: number => number): number {
     this.calcYs(yValue, heightGetter);
@@ -158,7 +171,8 @@ export default class Positions {
    * Get the estimated height of the whole shebang by extrapolating based on
    * the average known height.
    *
-   * @return {number}
+   * @returns {number}
+   * @instance
    */
   getEstimatedHeight(): number {
     const known = this.ys[this.lastI] + this.heights[this.lastI];
@@ -179,6 +193,7 @@ export default class Positions {
    *
    * @param {number} _i
    * @param {number => number} heightGetter
+   * @instance
    */
   confirmHeight(_i: number, heightGetter: number => number) {
     let i = _i;

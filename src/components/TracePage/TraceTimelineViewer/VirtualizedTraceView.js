@@ -174,7 +174,7 @@ class VirtualizedTraceView extends React.PureComponent<VirtualizedTraceViewProps
         return i;
       }
     }
-    return undefined;
+    return -1;
   };
 
   getRowHeight = function getRowHeight(index) {
@@ -341,7 +341,7 @@ class VirtualizedTraceView extends React.PureComponent<VirtualizedTraceViewProps
         </TimelineRow>
         <div className="VirtualizedTraceView--spans">
           <ListView
-            data={this.rowStates}
+            dataLength={this.rowStates.length}
             averageItemHeight={21}
             itemHeightGetter={this.getRowHeight}
             itemRenderer={this.renderRow}

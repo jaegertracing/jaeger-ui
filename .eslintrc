@@ -35,7 +35,11 @@
     "react/sort-comp": [2, {
       "order": [
         "type-annotations",
+        "statics",
+        "state",
+        "propTypes",
         "static-methods",
+        "constructor",
         "lifecycle",
         "everything-else",
         "/^on.+$/",
