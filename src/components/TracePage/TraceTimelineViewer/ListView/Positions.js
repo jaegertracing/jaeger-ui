@@ -35,7 +35,6 @@ export default class Positions {
    * checked.
    * @type {number}
    * @memberof Positions
-   * @instance
    */
   bufferLen: number;
   dataLen: number;
@@ -46,7 +45,6 @@ export default class Positions {
    * when heights have changed, so `lastI` can be forced.
    * @type {number}
    * @memberof Positions
-   * @instance
    */
   lastI: number;
   ys: number[];
@@ -64,7 +62,6 @@ export default class Positions {
    * the context; in particular `lastI` needs to remain valid.
    *
    * @param {any[]} data
-   * @instance
    */
   profileData(dataLength: number) {
     if (dataLength !== this.dataLen) {
@@ -85,7 +82,6 @@ export default class Positions {
    * @param {number} max
    * @param {number} heightGetter
    * @param {number} [forcedLastI]
-   * @instance
    */
   calcHeights(max: number, heightGetter: number => number, forcedLastI?: number) {
     if (forcedLastI != null) {
@@ -117,10 +113,9 @@ export default class Positions {
    *
    * @param {number} yValue
    * @param {number => number} heightGetter
-   * @instance
    */
   calcYs(yValue: number, heightGetter: number => number) {
-    while (yValue > this.ys[this.lastI] && this.lastI < this.heights.length - 1) {
+    while ((this.ys[this.lastI] == null || yValue > this.ys[this.lastI]) && this.lastI < this.dataLen - 1) {
       this.calcHeights(this.lastI, heightGetter);
     }
   }
@@ -133,7 +128,6 @@ export default class Positions {
    * @param {number} yValue
    * @param {number => number} heightGetter
    * @returns {number}
-   * @instance
    */
   findFloorIndex(yValue: number, heightGetter: number => number): number {
     this.calcYs(yValue, heightGetter);
@@ -172,7 +166,6 @@ export default class Positions {
    * the average known height.
    *
    * @returns {number}
-   * @instance
    */
   getEstimatedHeight(): number {
     const known = this.ys[this.lastI] + this.heights[this.lastI];
@@ -193,7 +186,6 @@ export default class Positions {
    *
    * @param {number} _i
    * @param {number => number} heightGetter
-   * @instance
    */
   confirmHeight(_i: number, heightGetter: number => number) {
     let i = _i;
@@ -210,6 +202,9 @@ export default class Positions {
     // shift the y positions by `chg` for all known y positions
     while (++i <= this.lastI) {
       this.ys[i] += chg;
+    }
+    if (this.ys[this.lastI + 1] != null) {
+      this.ys[this.lastI + 1] += chg;
     }
   }
 }

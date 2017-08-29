@@ -410,6 +410,7 @@ export default class ListView extends React.Component<ListViewProps> {
     const known = this._knownHeights.get(key);
     // known !== known iff known is NaN
     if (known != null && known === known) {
+      // eslint-disable-line no-self-compare
       return known;
     }
     return this.props.itemHeightGetter(i, key);
