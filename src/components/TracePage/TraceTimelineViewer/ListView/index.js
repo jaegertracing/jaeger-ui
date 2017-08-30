@@ -375,7 +375,7 @@ export default class ListView extends React.Component<ListViewProps> {
     const max = nodes.length;
     for (let i = 0; i < max; i++) {
       const node: HTMLElement = (nodes[i]: any);
-      // const itemKey = node.dataset.itemKey;
+      // use `.getAttribute(...)` instead of `.dataset` for jest / JSDOM
       const itemKey = node.getAttribute('data-item-key');
       if (!itemKey) {
         // eslint-disable-next-line no-console

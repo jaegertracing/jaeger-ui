@@ -134,7 +134,7 @@ describe('<ListView>', () => {
         windowAddListenerSpy.mockRestore();
       });
 
-      it('adds the onScroll listener to the root HTML element after it mounts', () => {
+      it('adds the onScroll listener to the window element after the component mounts', () => {
         expect(windowAddListenerSpy).toHaveBeenCalled();
         expect(windowAddListenerSpy).toHaveBeenLastCalledWith('scroll', instance._onScroll);
       });
