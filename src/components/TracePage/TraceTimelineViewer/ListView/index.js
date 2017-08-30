@@ -281,15 +281,21 @@ export default class ListView extends React.Component<ListViewProps> {
    * Recalculate _startIndex and _endIndex, e.g. which items are in view.
    */
   _calcViewIndexes() {
-    if (!this._wrapperElm) {
-      this._viewHeight = -1;
-      this._startIndex = 0;
-      this._endIndex = 0;
-      return;
-    }
     const useRoot = this.props.windowScroller;
-    this._viewHeight = useRoot ? this._htmlElm.clientHeight : this._wrapperElm.clientHeight;
-    this._scrollTop = useRoot ? this._htmlElm.scrollTop : this._wrapperElm.scrollTop;
+    // funky if statement is to satisfy flow
+    if (!useRoot) {
+      if (!this._wrapperElm) {
+        this._viewHeight = -1;
+        this._startIndex = 0;
+        this._endIndex = 0;
+        return;
+      }
+      this._viewHeight = this._wrapperElm.clientHeight;
+      this._scrollTop = this._wrapperElm.scrollTop;
+    } else {
+      this._viewHeight = this._htmlElm.clientHeight;
+      this._scrollTop = this._htmlElm.scrollTop;
+    }
     let yStart;
     let yEnd;
     if (useRoot) {
@@ -336,7 +342,9 @@ export default class ListView extends React.Component<ListViewProps> {
 
   _initWrapper = function _initWrapper(elm: HTMLElement) {
     this._wrapperElm = elm;
-    this._viewHeight = elm && elm.clientHeight;
+    if (!this.props.windowScroller) {
+      this._viewHeight = elm && elm.clientHeight;
+    }
   };
 
   _initItemHolder = function _initItemHolder(elm: HTMLElement) {
@@ -367,7 +375,8 @@ export default class ListView extends React.Component<ListViewProps> {
     const max = nodes.length;
     for (let i = 0; i < max; i++) {
       const node: HTMLElement = (nodes[i]: any);
-      const itemKey = node.dataset.itemKey;
+      // const itemKey = node.dataset.itemKey;
+      const itemKey = node.getAttribute('data-item-key');
       if (!itemKey) {
         // eslint-disable-next-line no-console
         console.warn('itemKey not found');
@@ -426,7 +435,7 @@ export default class ListView extends React.Component<ListViewProps> {
 
     if (!this._wrapperElm) {
       start = 0;
-      end = initialDraw < dataLength ? initialDraw : dataLength - 1;
+      end = (initialDraw < dataLength ? initialDraw : dataLength) - 1;
     } else {
       if (this._isViewChanged()) {
         this._calcViewIndexes();

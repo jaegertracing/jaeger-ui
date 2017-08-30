@@ -342,7 +342,6 @@ class VirtualizedTraceView extends React.PureComponent<VirtualizedTraceViewProps
         <div className="VirtualizedTraceView--spans">
           <ListView
             dataLength={this.rowStates.length}
-            averageItemHeight={21}
             itemHeightGetter={this.getRowHeight}
             itemRenderer={this.renderRow}
             viewBuffer={300}
