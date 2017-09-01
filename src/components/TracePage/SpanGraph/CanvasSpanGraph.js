@@ -28,50 +28,50 @@ import './index.css';
 
 const MIN_SPAN_WIDTH = 0.002;
 
-export default function SpanGraph(props) {
-  const { valueWidth: totalValueWidth, numTicks, items } = props;
+const CV_WIDTH = 10000;
 
-  const itemHeight = 1 / items.length * 100;
+const getColor = str => colorGenerator.getColorByKey(str);
 
-  const ticks = [];
-  // i starts at 1, limit is `i < numTicks` so the first and last ticks aren't drawn
-  for (let i = 1; i < numTicks; i++) {
-    const x = `${i / numTicks * 100}%`;
-    ticks.push(<line className="span-graph--tick" x1={x} y1="0%" x2={x} y2="100%" key={i / numTicks} />);
+export default class CanvasSpanGraph extends React.PureComponent {
+  constructor(props) {
+    super(props);
+    this._canvasElm = undefined;
+    this._setCanvasRef = this._setCanvasRef.bind(this);
   }
 
-  const spanItems = items.map((item, i) => {
-    const { valueWidth, valueOffset, serviceName } = item;
-    const key = `span-graph-${i}`;
-    const fill = colorGenerator.getColorByKey(serviceName);
-    const width = `${Math.max(valueWidth / totalValueWidth, MIN_SPAN_WIDTH) * 100}%`;
+  componentDidMount() {
+    this._draw();
+  }
+
+  componentDidUpdate() {
+    this._draw();
+  }
+
+  _setCanvasRef(elm) {
+    this._canvasElm = elm;
+  }
+
+  _draw() {
+    if (!this._canvasElm) {
+      return;
+    }
+    const { valueWidth: totalValueWidth, items } = this.props;
+    renderIntoCanvas(this._canvasElm, items, totalValueWidth, getColor);
+  }
+
+  render() {
     return (
-      <rect
-        key={key}
-        className="span-graph--span-rect"
-        height={`${itemHeight}%`}
-        style={{ fill }}
-        width={width}
-        x={`${valueOffset / totalValueWidth * 100}%`}
-        y={`${i / items.length * 100}%`}
+      <canvas
+        className="CanvasSpanGraph"
+        ref={this._setCanvasRef}
+        width={CV_WIDTH}
+        height={this.props.items.length}
       />
     );
-  });
-
-  return (
-    <g>
-      <g data-test="ticks" aria-hidden="true">
-        {ticks}
-      </g>
-      {/*
-      <g data-test="span-items">
-        {spanItems}
-      </g> */}
-    </g>
-  );
+  }
 }
 
-SpanGraph.propTypes = {
+CanvasSpanGraph.propTypes = {
   items: PropTypes.arrayOf(
     PropTypes.shape({
       valueWidth: PropTypes.number.isRequired,
@@ -79,6 +79,5 @@ SpanGraph.propTypes = {
       serviceName: PropTypes.string.isRequired,
     })
   ).isRequired,
-  numTicks: PropTypes.number.isRequired,
   valueWidth: PropTypes.number.isRequired,
 };

@@ -36,3 +36,10 @@ THE SOFTWARE.
   user-select: none;
   cursor: default;
 }
+
+.CanvasSpanGraph {
+  background: #fafafa;
+  height: 60px;
+  position: absolute;
+  width: 100%;
+}

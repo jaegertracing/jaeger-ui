@@ -51,9 +51,9 @@ THE SOFTWARE.
 }
 
 .trace-page-timeline__graph {
-  background: #f8f8f8;
   border: 1px solid #999;
   overflow: visible !important;
+  position: relative;
   transform-origin: 0 0;
   width: 100%;
 }
@@ -63,7 +63,7 @@ THE SOFTWARE.
 }
 
 .trace-page-timeline__graph--inactive {
-  fill: #d6d6d5;
+  fill: rgba(214, 214, 214, 0.5);
 }
 
 .timeline-scrubber {

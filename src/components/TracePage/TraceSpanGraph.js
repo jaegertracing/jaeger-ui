@@ -23,6 +23,7 @@ import { window } from 'global';
 import PropTypes from 'prop-types';
 
 import SpanGraph from './SpanGraph';
+import CanvasSpanGraph from './SpanGraph/CanvasSpanGraph';
 import SpanGraphTickHeader from './SpanGraph/SpanGraphTickHeader';
 import TimelineScrubber from './TimelineScrubber';
 import { getTraceId, getTraceTimestamp, getTraceEndTimestamp, getTraceDuration } from '../../selectors/trace';
@@ -54,14 +55,20 @@ export default class TraceSpanGraph extends Component {
 
   constructor(props) {
     super(props);
-    this.state = { currentlyDragging: null, prevX: null };
+    this.state = {
+      currentlyDragging: null,
+      leftBound: null,
+      prevX: null,
+      rightBound: null,
+    };
+    this.publishTimeRange = this.publishTimeRange.bind(this);
+    this.publishIntervalID = undefined;
   }
 
-  shouldComponentUpdate(
-    { trace: newTrace },
-    { currentlyDragging: newCurrentlyDragging },
-    { timeRangeFilter: newTimeRangeFilter }
-  ) {
+  shouldComponentUpdate(nextProps, nextState, nextContext) {
+    const { trace: newTrace } = nextProps;
+    const { currentlyDragging: newCurrentlyDragging } = nextState;
+    const { timeRangeFilter: newTimeRangeFilter } = nextContext;
     const { trace } = this.props;
     const { currentlyDragging } = this.state;
     const { timeRangeFilter } = this.context;
@@ -74,21 +81,24 @@ export default class TraceSpanGraph extends Component {
       getTraceId(trace) !== getTraceId(newTrace) ||
       leftBound !== newLeftBound ||
       rightBound !== newRightBound ||
-      currentlyDragging !== newCurrentlyDragging
+      currentlyDragging !== newCurrentlyDragging ||
+      newCurrentlyDragging
     );
   }
 
   onMouseMove({ clientX }) {
     const { trace } = this.props;
+    // const { prevX, currentlyDragging } = this.state;
     const { prevX, currentlyDragging } = this.state;
-    const { timeRangeFilter, updateTimeRangeFilter } = this.context;
+    let { leftBound, rightBound } = this.state;
+    // const { timeRangeFilter, updateTimeRangeFilter } = this.context;
 
     if (!currentlyDragging) {
       return;
     }
 
-    let leftBound = timeRangeFilter[0];
-    let rightBound = timeRangeFilter[1];
+    // let leftBound = timeRangeFilter[0];
+    // let rightBound = timeRangeFilter[1];
 
     const deltaX = (clientX - prevX) / this.svg.clientWidth;
     const timestamp = getTraceTimestamp(trace);
@@ -109,14 +119,26 @@ export default class TraceSpanGraph extends Component {
         break;
     }
 
-    this.setState({ prevX: clientX });
-    if (leftBound <= rightBound) {
-      updateTimeRangeFilter(leftBound, rightBound);
+    // if (leftBound > rightBound) {
+    //   const temp = leftBound;
+    //   leftBound = rightBound;
+    //   rightBound = temp;
+    // }
+    this.setState({ prevX: clientX, leftBound, rightBound });
+    if (this.publishIntervalID == null) {
+      this.publishIntervalID = window.requestAnimationFrame(this.publishTimeRange);
     }
+    // this.setState({ prevX: clientX });
+    // if (leftBound <= rightBound) {
+    //   updateTimeRangeFilter(leftBound, rightBound);
+    // }
   }
 
   startDragging(boundName, { clientX }) {
-    this.setState({ currentlyDragging: boundName, prevX: clientX });
+    const { timeRangeFilter } = this.context;
+    const [leftBound, rightBound] = timeRangeFilter;
+
+    this.setState({ currentlyDragging: boundName, prevX: clientX, leftBound, rightBound });
 
     const mouseMoveHandler = (...args) => this.onMouseMove(...args);
     const mouseUpHandler = () => {
@@ -130,15 +152,29 @@ export default class TraceSpanGraph extends Component {
   }
 
   stopDragging() {
+    this.publishTimeRange();
     this.setState({ currentlyDragging: null, prevX: null });
+  }
+
+  publishTimeRange() {
+    const { currentlyDragging, leftBound, rightBound } = this.state;
+    const { updateTimeRangeFilter } = this.context;
+    clearTimeout(this.publishIntervalID);
+    this.publishIntervalID = undefined;
+    if (currentlyDragging) {
+      updateTimeRangeFilter(leftBound, rightBound);
+    }
   }
 
   render() {
     const { trace, xformedTrace, height } = this.props;
     const { currentlyDragging } = this.state;
-    const { timeRangeFilter } = this.context;
-    const leftBound = timeRangeFilter[0];
-    const rightBound = timeRangeFilter[1];
+    let { leftBound, rightBound } = this.state;
+    if (!currentlyDragging) {
+      const { timeRangeFilter } = this.context;
+      leftBound = timeRangeFilter[0];
+      rightBound = timeRangeFilter[1];
+    }
 
     if (!trace) {
       return <div />;
@@ -162,7 +198,15 @@ export default class TraceSpanGraph extends Component {
         <div className="trace-page-timeline--tick-container">
           <SpanGraphTickHeader numTicks={TIMELINE_TICK_INTERVAL} duration={traceDuration} />
         </div>
-        <div>
+        <div className="relative">
+          <CanvasSpanGraph
+            valueWidth={xformedTrace.duration}
+            items={xformedTrace.spans.map(span => ({
+              valueOffset: span.relativeStartTime,
+              valueWidth: span.duration,
+              serviceName: span.process.serviceName,
+            }))}
+          />
           <svg
             height={height}
             className={`trace-page-timeline__graph ${currentlyDragging ? 'is-dragging' : ''}`}
