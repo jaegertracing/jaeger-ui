@@ -26,8 +26,7 @@ import SpanDetail from './SpanDetail';
 import DetailState from './SpanDetail/DetailState';
 import SpanTreeOffset from './SpanTreeOffset';
 import TimelineRow from './TimelineRow';
-import type { XformedTrace, XformedSpan } from './transforms';
-import type { Log } from '../../../types';
+import type { Log, Span } from '../../../types';
 
 import './SpanDetailRow.css';
 
@@ -39,9 +38,9 @@ type SpanDetailRowProps = {
   logItemToggle: (string, Log) => void,
   logsToggle: string => void,
   processToggle: string => void,
-  span: XformedSpan,
+  span: Span,
   tagsToggle: string => void,
-  trace: XformedTrace,
+  traceStartTime: number,
 };
 
 export default function SpanDetailRow(props: SpanDetailRowProps) {
@@ -55,7 +54,7 @@ export default function SpanDetailRow(props: SpanDetailRowProps) {
     processToggle,
     span,
     tagsToggle,
-    trace,
+    traceStartTime,
   } = props;
   return (
     <TimelineRow className={`detail-row ${isFilteredOut ? 'is-filtered-out' : ''}`}>
@@ -80,7 +79,7 @@ export default function SpanDetailRow(props: SpanDetailRowProps) {
             processToggle={processToggle}
             span={span}
             tagsToggle={tagsToggle}
-            trace={trace}
+            traceStartTime={traceStartTime}
           />
         </div>
       </TimelineRow.Right>

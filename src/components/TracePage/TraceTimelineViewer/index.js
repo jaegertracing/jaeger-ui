@@ -30,15 +30,13 @@ import { getPositionInRange } from './utils';
 import './grid.css';
 import './index.css';
 
-// TODO: Add unit tests
-
 export default class TraceTimelineViewer extends Component {
   constructor(props) {
     super(props);
 
-    const { textFilter, xformedTrace } = props;
+    const { textFilter, trace } = props;
 
-    this.store = createStore(reducer, newInitialState(xformedTrace));
+    this.store = createStore(reducer, newInitialState(trace));
     this.actionsCreators = bindActionCreators(actions, this.store.dispatch);
     if (textFilter) {
       this.store.dispatch(actions.find(textFilter));
@@ -46,8 +44,8 @@ export default class TraceTimelineViewer extends Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    const { xformedTrace, textFilter } = nextProps;
-    if (xformedTrace !== this.props.xformedTrace) {
+    const { trace, textFilter } = nextProps;
+    if (trace !== this.props.trace) {
       throw new Error('Component does not support changing the trace');
     }
     if (textFilter !== this.props.textFilter) {
@@ -56,8 +54,8 @@ export default class TraceTimelineViewer extends Component {
   }
 
   render() {
-    const { timeRangeFilter: zoomRange, xformedTrace } = this.props;
-    const { startTime, endTime } = xformedTrace;
+    const { timeRangeFilter: zoomRange, trace } = this.props;
+    const { startTime, endTime } = trace;
     return (
       <div className="trace-timeline-viewer">
         <Provider store={this.store}>
@@ -72,7 +70,7 @@ export default class TraceTimelineViewer extends Component {
   }
 }
 TraceTimelineViewer.propTypes = {
-  xformedTrace: PropTypes.object,
+  trace: PropTypes.object,
   timeRangeFilter: PropTypes.array,
   textFilter: PropTypes.string,
 };

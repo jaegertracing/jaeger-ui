@@ -33,7 +33,7 @@ const isErrorTag = ({ key, value }) => key === 'error' && (value === true || val
  * Transforms a trace from the HTTP response to the data structure needed by the search page. Note: exported
  * for unit tests.
  *
- * @param  {Trace} trace Trace data in the format sent over the wire.
+ * @param trace Trace data in the format sent over the wire.
  * @return {TraceSummary} Summary of the trace data for use in the search results.
  */
 export function getTraceSummary(trace: Trace): TraceSummary {

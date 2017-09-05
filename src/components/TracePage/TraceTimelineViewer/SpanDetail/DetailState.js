@@ -22,15 +22,9 @@
 
 import type { Log } from '../../../../types';
 
-// DetailState {
-//   isTagsOpen: bool,
-//   isProcessOpen: bool,
-//   logs: {
-//     isOpen: bool,
-//     openItems: Set<Log>
-//   }
-// }
-
+/**
+ * Which items of a {@link SpanDetail} component are expanded.
+ */
 export default class DetailState {
   isTagsOpen: boolean;
   isProcessOpen: boolean;

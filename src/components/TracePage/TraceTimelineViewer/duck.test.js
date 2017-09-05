@@ -22,21 +22,21 @@ import { createStore } from 'redux';
 
 import reducer, { actions, newInitialState } from './duck';
 import DetailState from './SpanDetail/DetailState';
-import { transformTrace } from './transforms';
+import transformTraceData from '../../../model/transform-trace-data';
 import traceGenerator from '../../../demo/trace-generators';
 
 describe('TraceTimelineViewer/duck', () => {
-  const xformedTrace = transformTrace(traceGenerator.trace({ numberOfSpans: 10 }));
+  const trace = transformTraceData(traceGenerator.trace({ numberOfSpans: 10 }));
   let store;
 
   beforeEach(() => {
-    store = createStore(reducer, newInitialState(xformedTrace));
+    store = createStore(reducer, newInitialState(trace));
   });
 
   describe('initial state', () => {
     it('retains a provided trace', () => {
       const state = store.getState();
-      expect(state.trace).toBe(xformedTrace);
+      expect(state.trace).toBe(trace);
     });
 
     it('has no details, collapsed children or text search', () => {
@@ -48,7 +48,7 @@ describe('TraceTimelineViewer/duck', () => {
   });
 
   describe('toggles children and details', () => {
-    const parentID = xformedTrace.spans[0].spanID;
+    const parentID = trace.spans[0].spanID;
     const tests = [
       {
         msg: 'toggles children',
@@ -87,7 +87,7 @@ describe('TraceTimelineViewer/duck', () => {
   });
 
   describe("toggles a detail's sub-sections", () => {
-    const id = xformedTrace.spans[0].spanID;
+    const id = trace.spans[0].spanID;
     const baseDetail = new DetailState();
     const tests = [
       {

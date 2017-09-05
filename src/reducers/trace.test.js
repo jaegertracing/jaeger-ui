@@ -21,6 +21,7 @@
 import * as jaegerApiActions from '../../src/actions/jaeger-api';
 import traceReducer from '../../src/reducers/trace';
 import traceGenerator from '../../src/demo/trace-generators';
+import transformTraceData from '../../src/model/transform-trace-data';
 
 const generatedTrace = traceGenerator.trace({ numberOfSpans: 1 });
 const { traceID } = generatedTrace;
@@ -38,7 +39,7 @@ it('trace reducer should handle a successful FETCH_TRACE', () => {
     payload: { data: [generatedTrace] },
     meta: { id: traceID },
   });
-  expect(state.traces).toEqual({ [traceID]: generatedTrace });
+  expect(state.traces).toEqual({ [traceID]: transformTraceData(generatedTrace) });
   expect(state.loading).toBe(false);
 });
 
@@ -60,6 +61,6 @@ it('trace reducer should handle a successful SEARCH_TRACES', () => {
     payload: { data: [generatedTrace] },
     meta: { query: 'whatever' },
   });
-  expect(state.traces).toEqual({ [traceID]: generatedTrace });
+  expect(state.traces).toEqual({ [traceID]: transformTraceData(generatedTrace) });
   expect(state.loading).toBe(false);
 });

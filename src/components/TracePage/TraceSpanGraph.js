@@ -25,7 +25,6 @@ import PropTypes from 'prop-types';
 import SpanGraph from './SpanGraph';
 import SpanGraphTickHeader from './SpanGraph/SpanGraphTickHeader';
 import TimelineScrubber from './TimelineScrubber';
-import { getTraceId, getTraceTimestamp, getTraceEndTimestamp, getTraceDuration } from '../../selectors/trace';
 import { getPercentageOfInterval } from '../../utils/date';
 
 const TIMELINE_TICK_INTERVAL = 4;
@@ -33,7 +32,6 @@ const TIMELINE_TICK_INTERVAL = 4;
 export default class TraceSpanGraph extends Component {
   static get propTypes() {
     return {
-      xformedTrace: PropTypes.object,
       trace: PropTypes.object,
       height: PropTypes.number.isRequired,
     };
@@ -71,7 +69,7 @@ export default class TraceSpanGraph extends Component {
     const newRightBound = newTimeRangeFilter[1];
 
     return (
-      getTraceId(trace) !== getTraceId(newTrace) ||
+      trace.traceID !== newTrace.traceID ||
       leftBound !== newLeftBound ||
       rightBound !== newRightBound ||
       currentlyDragging !== newCurrentlyDragging
@@ -109,19 +107,16 @@ export default class TraceSpanGraph extends Component {
     let rightBound = timeRangeFilter[1];
 
     const deltaX = (clientX - prevX) / this.svg.clientWidth;
-    const timestamp = getTraceTimestamp(trace);
-    const endTimestamp = getTraceEndTimestamp(trace);
-    const duration = getTraceDuration(this.props.trace);
     const prevValue = { leftBound, rightBound }[currentlyDragging];
-    const newValue = prevValue + duration * deltaX;
+    const newValue = prevValue + trace.duration * deltaX;
 
     // enforce the edges of the graph
     switch (currentlyDragging) {
       case 'leftBound':
-        leftBound = Math.max(timestamp, newValue);
+        leftBound = Math.max(trace.startTime, newValue);
         break;
       case 'rightBound':
-        rightBound = Math.min(endTimestamp, newValue);
+        rightBound = Math.min(trace.endTime, newValue);
         break;
       /* istanbul ignore next */ default:
         break;
@@ -134,7 +129,7 @@ export default class TraceSpanGraph extends Component {
   }
 
   render() {
-    const { trace, xformedTrace, height } = this.props;
+    const { trace, height } = this.props;
     const { currentlyDragging } = this.state;
     const { timeRangeFilter } = this.context;
     const leftBound = timeRangeFilter[0];
@@ -144,23 +139,20 @@ export default class TraceSpanGraph extends Component {
       return <div />;
     }
 
-    const initialTimestamp = getTraceTimestamp(trace);
-    const traceDuration = getTraceDuration(trace);
-
     let leftInactive;
     if (leftBound) {
-      leftInactive = getPercentageOfInterval(leftBound, initialTimestamp, traceDuration);
+      leftInactive = getPercentageOfInterval(leftBound, trace.startTime, trace.duration);
     }
 
     let rightInactive;
     if (rightBound) {
-      rightInactive = 100 - getPercentageOfInterval(rightBound, initialTimestamp, traceDuration);
+      rightInactive = 100 - getPercentageOfInterval(rightBound, trace.startTime, trace.duration);
     }
 
     return (
       <div>
         <div className="trace-page-timeline--tick-container">
-          <SpanGraphTickHeader numTicks={TIMELINE_TICK_INTERVAL} duration={traceDuration} />
+          <SpanGraphTickHeader numTicks={TIMELINE_TICK_INTERVAL} duration={trace.duration} />
         </div>
         <div>
           <svg
@@ -187,9 +179,9 @@ export default class TraceSpanGraph extends Component {
                 className="trace-page-timeline__graph--inactive"
               />}
             <SpanGraph
-              valueWidth={xformedTrace.duration}
+              valueWidth={trace.duration}
               numTicks={TIMELINE_TICK_INTERVAL}
-              items={xformedTrace.spans.map(span => ({
+              items={trace.spans.map(span => ({
                 valueOffset: span.relativeStartTime,
                 valueWidth: span.duration,
                 serviceName: span.process.serviceName,

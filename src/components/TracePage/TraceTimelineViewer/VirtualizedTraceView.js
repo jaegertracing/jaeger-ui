@@ -30,7 +30,6 @@ import DetailState from './SpanDetail/DetailState';
 import SpanDetailRow from './SpanDetailRow';
 import Ticks from './Ticks';
 import TimelineRow from './TimelineRow';
-import type { XformedSpan, XformedTrace } from './transforms';
 import {
   findServerChildSpan,
   formatDuration,
@@ -38,14 +37,14 @@ import {
   isErrorSpan,
   spanContainsErredSpan,
 } from './utils';
-import type { Log } from '../../../types';
+import type { Log, Span, Trace } from '../../../types';
 import colorGenerator from '../../../utils/color-generator';
 
 import './VirtualizedTraceView.css';
 
 type RowState = {
   isDetail: boolean,
-  span: XformedSpan,
+  span: Span,
   spanIndex: number,
 };
 
@@ -60,7 +59,7 @@ type VirtualizedTraceViewProps = {
   detailToggle: string => void,
   findMatchesIDs: Set<string>,
   ticks: number[],
-  trace?: XformedTrace,
+  trace?: Trace,
   zoomEnd: number,
   zoomStart: number,
 };
@@ -72,7 +71,7 @@ const DEFAULT_HEIGHTS = {
 };
 
 function generateRowStates(
-  spans: ?(XformedSpan[]),
+  spans: ?(Span[]),
   childrenHiddenIDs: Set<string>,
   detailStates: Map<string, ?DetailState>
 ): RowState[] {
@@ -120,7 +119,7 @@ function getPropDerivations(props: VirtualizedTraceViewProps) {
     'clipping-left': zoomStart > 0,
     'clipping-right': zoomEnd < 1,
   });
-  let spans: ?(XformedSpan[]);
+  let spans: ?(Span[]);
   if (trace) {
     spans = trace.spans;
   }
@@ -308,7 +307,7 @@ class VirtualizedTraceView extends React.PureComponent<VirtualizedTraceViewProps
           processToggle={detailProcessToggle}
           span={span}
           tagsToggle={detailTagsToggle}
-          trace={trace}
+          traceStartTime={trace.startTime}
         />
       </div>
     );

@@ -123,8 +123,6 @@ export default chance.mixin({
     return {
       traceID,
       spans,
-      duration,
-      timestamp,
       processes,
     };
   },

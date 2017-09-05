@@ -24,8 +24,7 @@ import AccordianKeyValues from './AccordianKeyValues';
 import AccordianLogs from './AccordianLogs';
 import DetailState from './DetailState';
 import { formatDuration } from '../utils';
-import type { XformedSpan, XformedTrace } from '../transforms';
-import type { Log } from '../../../../types';
+import type { Log, Span } from '../../../../types';
 
 import './index.css';
 
@@ -34,13 +33,13 @@ type SpanDetailProps = {
   logItemToggle: (string, Log) => void,
   logsToggle: string => void,
   processToggle: string => void,
-  span: XformedSpan,
+  span: Span,
   tagsToggle: string => void,
-  trace: XformedTrace,
+  traceStartTime: number,
 };
 
 export default function SpanDetail(props: SpanDetailProps) {
-  const { detailState, logItemToggle, logsToggle, processToggle, span, tagsToggle, trace } = props;
+  const { detailState, logItemToggle, logsToggle, processToggle, span, tagsToggle, traceStartTime } = props;
   const { isTagsOpen, isProcessOpen, logs: logsState } = detailState;
   const { operationName, process, duration, relativeStartTime, spanID, logs, tags } = span;
   return (
@@ -97,7 +96,7 @@ export default function SpanDetail(props: SpanDetailProps) {
             openedItems={logsState.openedItems}
             onToggle={() => logsToggle(spanID)}
             onItemToggle={logItem => logItemToggle(spanID, logItem)}
-            timestamp={trace.startTime}
+            timestamp={traceStartTime}
           />}
 
         <small className="SpanDetail--debugInfo">

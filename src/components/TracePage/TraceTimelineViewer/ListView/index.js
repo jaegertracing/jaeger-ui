@@ -24,44 +24,40 @@ import * as React from 'react';
 
 import Positions from './Positions';
 
+/**
+ * @typedef
+ */
 type ListViewProps = {
   /**
    * Number of elements in the list.
-   * @type {number}
    */
   dataLength: number,
   /**
    * Convert item index (number) to the key (string). ListView uses both indexes
    * and keys to handle the addtion of new rows.
-   * @type {string => number}
    */
   getIndexFromKey: string => number,
   /**
    * Convert item key (string) to the index (number). ListView uses both indexes
    * and keys to handle the addtion of new rows.
-   * @type {number => string}
    */
   getKeyFromIndex: number => string,
   /**
    * Number of items to draw and add to the DOM, initially.
-   * @type {number}
    */
   initialDraw: number,
   /**
    * The parent provides fallback height measurements when there is not a
    * rendered element to measure.
-   * @type {(number, string) => number}
    */
   itemHeightGetter: (number, string) => number,
   /**
    * Function that renders an item; rendered items are added directly to the
    * DOM, they are not wrapped in list item wrapper HTMLElement.
-   * @type {(string, {}, number, {}) => React.Node}
    */
   itemRenderer: (string, {}, number, {}) => React.Node,
   /**
    * `className` for the HTMLElement that holds the items.
-   * @type {string}
    */
   itemsWrapperClassName?: string,
   /**
@@ -70,14 +66,12 @@ type ListViewProps = {
    * halfway down (so items [46, 55] are in view), then when a new range of
    * items is rendered, it will render items `46 - viewBuffer` to
    * `55 + viewBuffer`.
-   * @type {number}
    */
   viewBuffer: number,
   /**
    * The minimum number of items offscreen in either direction; e.g. at least
    * `viewBuffer` number of items must be off screen above and below the
    * current view, or more items will be rendered.
-   * @type {number}
    */
   viewBufferMin: number,
   /**
@@ -86,9 +80,8 @@ type ListViewProps = {
    * scrolling as a result of the ListView. Similar to react-virtualized
    * window scroller.
    *
-   * Ref: https://bvaughn.github.io/react-virtualized/#/components/WindowScroller
-   * Ref:https://github.com/bvaughn/react-virtualized/blob/497e2a1942529560681d65a9ef9f5e9c9c9a49ba/docs/WindowScroller.md
-   * @type {boolean}
+   * - Ref: https://bvaughn.github.io/react-virtualized/#/components/WindowScroller
+   * - Ref:https://github.com/bvaughn/react-virtualized/blob/497e2a1942529560681d65a9ef9f5e9c9c9a49ba/docs/WindowScroller.md
    */
   windowScroller?: boolean,
 };
@@ -107,77 +100,62 @@ type ListViewProps = {
  *
  * @export
  * @class ListView
- * @extends {React.PureComponent<ListViewProps>}
  */
 export default class ListView extends React.Component<ListViewProps> {
   props: ListViewProps;
   /**
    * Keeps track of the height and y-value of items, by item index, in the
    * ListView.
-   * @type {Positions}
    */
   _yPositions: Positions;
   /**
    * Keep track of the known / measured heights of the rendered items; populated
    * with values through observation and keyed on the item key, not the item
    * index.
-   * @type {Map<string, number>}
    */
   _knownHeights: Map<string, number>;
   /**
    * The start index of the items currently drawn.
-   * @type {number}
    */
   _startIndexDrawn: number;
   /**
    * The end index of the items currently drawn.
-   * @type {number}
    */
   _endIndexDrawn: number;
   /**
    * The start index of the items currently in view.
-   * @type {number}
    */
   _startIndex: number;
   /**
    * The end index of the items currently in view.
-   * @type {number}
    */
   _endIndex: number;
   /**
    * Height of the visual window, e.g. height of the scroller element.
-   * @type {number}
    */
   _viewHeight: number;
   /**
    * `scrollTop` of the current scroll position.
-   * @type {number}
    */
   _scrollTop: number;
   /**
    * Used to keep track of whether or not a re-calculation of what should be
    * drawn / viewable has been scheduled.
-   * @type {boolean}
    */
   _isScrolledOrResized: boolean;
   /**
    * If `windowScroller` is true, this notes how far down the page the scroller
    * is located. (Note: repositioning and below-the-fold views are untested)
-   *
-   * @type {number}
-   * @memberof ListView
    */
   _htmlTopOffset: number;
   _windowScrollListenerAdded: boolean;
   _htmlElm: HTMLElement;
   /**
    * HTMLElement holding the scroller.
-   * @type HTMLElement
    */
   _wrapperElm: ?HTMLElement;
   /**
    * HTMLElement holding the rendered items.
-   * @type HTMLElement
    */
   _itemHolderElm: ?HTMLElement;
 
@@ -253,8 +231,6 @@ export default class ListView extends React.Component<ListViewProps> {
   /**
    * Scroll event listener that schedules a remeasuring of which items should be
    * rendered.
-   *
-   * @memberof ListView
    */
   _onScroll = function _onScroll() {
     if (!this._isScrolledOrResized) {
@@ -317,8 +293,6 @@ export default class ListView extends React.Component<ListViewProps> {
   /**
    * Checked to see if the currently rendered items are sufficient, if not,
    * force an update to trigger more items to be rendered.
-   *
-   * @memberof ListView
    */
   _positionList = function _positionList() {
     this._isScrolledOrResized = false;
@@ -356,8 +330,6 @@ export default class ListView extends React.Component<ListViewProps> {
    * Go through all items that are rendered and save their height based on their
    * item-key (which is on a data-* attribute). If any new or adjusted heights
    * are found, re-measure the current known y-positions (via .yPositions).
-   *
-   * @memberof ListView
    */
   _scanItemHeights = function _scanItemHeights() {
     const getIndexFromKey = this.props.getIndexFromKey;
@@ -411,8 +383,6 @@ export default class ListView extends React.Component<ListViewProps> {
   /**
    * Get the height of the element at index `i`; first check the known heigths,
    * fallbck to `.props.itemHeightGetter(...)`.
-   *
-   * @memberof ListView
    */
   _getHeight = function _getHeight(i: number) {
     const key = this.props.getKeyFromIndex(i);

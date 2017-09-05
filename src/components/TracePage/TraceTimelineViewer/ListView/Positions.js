@@ -33,8 +33,6 @@ export default class Positions {
   /**
    * Indicates how far past the explicitly required height or y-values should
    * checked.
-   * @type {number}
-   * @memberof Positions
    */
   bufferLen: number;
   dataLen: number;
@@ -43,8 +41,6 @@ export default class Positions {
    * `lastI` keeps track of which values have already been visited. In many
    * scenarios, values do not need to be revisited. But, revisiting is required
    * when heights have changed, so `lastI` can be forced.
-   * @type {number}
-   * @memberof Positions
    */
   lastI: number;
   ys: number[];
@@ -60,8 +56,6 @@ export default class Positions {
   /**
    * Used to make sure the length of y-values and heights is consistent with
    * the context; in particular `lastI` needs to remain valid.
-   *
-   * @param {any[]} data
    */
   profileData(dataLength: number) {
     if (dataLength !== this.dataLen) {
@@ -78,10 +72,7 @@ export default class Positions {
    * Calculate and save the heights and y-values, based on `heightGetter`, from
    * `lastI` until the`max` index; the starting point (`lastI`) can be forced
    * via the `forcedLastI` parameter.
-   *
-   * @param {number} max
-   * @param {number} heightGetter
-   * @param {number} [forcedLastI]
+   * @param {number=} forcedLastI
    */
   calcHeights(max: number, heightGetter: number => number, forcedLastI?: number) {
     if (forcedLastI != null) {
@@ -110,9 +101,6 @@ export default class Positions {
 
   /**
    * Verify the height and y-values from `lastI` up to `yValue`.
-   *
-   * @param {number} yValue
-   * @param {number => number} heightGetter
    */
   calcYs(yValue: number, heightGetter: number => number) {
     while ((this.ys[this.lastI] == null || yValue > this.ys[this.lastI]) && this.lastI < this.dataLen - 1) {
@@ -124,10 +112,6 @@ export default class Positions {
    * Given a target y-value (`yValue`), find the closest index (in the `.ys`
    * array) that is prior to the y-value; e.g. map from y-value to index in
    * `.ys`.
-   *
-   * @param {number} yValue
-   * @param {number => number} heightGetter
-   * @returns {number}
    */
   findFloorIndex(yValue: number, heightGetter: number => number): number {
     this.calcYs(yValue, heightGetter);
@@ -164,8 +148,6 @@ export default class Positions {
   /**
    * Get the estimated height of the whole shebang by extrapolating based on
    * the average known height.
-   *
-   * @returns {number}
    */
   getEstimatedHeight(): number {
     const known = this.ys[this.lastI] + this.heights[this.lastI];
@@ -183,9 +165,6 @@ export default class Positions {
    * known territory (_i <= lastI) and the height is different than what is
    * known, recalculate subsequent y values, but don't confirm the heights of
    * those items, just update based on the difference.
-   *
-   * @param {number} _i
-   * @param {number => number} heightGetter
    */
   confirmHeight(_i: number, heightGetter: number => number) {
     let i = _i;
