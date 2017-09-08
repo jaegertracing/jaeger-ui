@@ -38,12 +38,16 @@ THE SOFTWARE.
   white-space: nowrap;
 }
 
-.AccordianKeyValues--header:hover {
+.AccordianKeyValues--header:not(.is-empty):hover {
   background: #eee;
 }
 
-.AccordianKeyValues--header.is-high-contrast:hover {
+.AccordianKeyValues--header.is-high-contrast:not(.is-empty):hover {
   background: #ddd;
+}
+
+.AccordianKeyValues--emptyArtifact {
+  color: #aaa;
 }
 
 .AccordianKeyValues--summary {

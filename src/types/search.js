@@ -20,15 +20,16 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+/**
+ * Type used to summarize traces for the search page.
+ */
 export type TraceSummary = {
   /**
   * Duration of trace in milliseconds.
-  * @type {number}
   */
   duration: number,
   /**
   * Start time of trace in milliseconds.
-  * @type {number}
   */
   timestamp: number,
   traceName: string,
@@ -41,7 +42,6 @@ export type TraceSummary = {
 export type TraceSummaries = {
   /**
    * Duration of longest trace in `traces` in milliseconds.
-   * @type {[type]}
    */
   maxDuration: number,
   traces: TraceSummary[],

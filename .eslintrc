@@ -13,10 +13,13 @@
   ],
   "rules": {
     /* general */
-    "comma-dangle": 0,
     "arrow-parens": [1, "as-needed"],
-    "no-restricted-syntax": 0,
+    "comma-dangle": 0,
+    "no-continue": 0,
     "no-plusplus": 0,
+    "no-restricted-syntax": 0,
+    "no-self-compare": 0,
+    "no-underscore-dangle": 0,
 
     /* jsx */
     "jsx-a11y/no-static-element-interactions": 1,
@@ -29,7 +32,20 @@
     "react/forbid-prop-types": 1,
     "react/require-default-props": 1,
     "react/no-array-index-key": 1,
-
+    "react/sort-comp": [2, {
+      "order": [
+        "type-annotations",
+        "statics",
+        "state",
+        "propTypes",
+        "static-methods",
+        "constructor",
+        "lifecycle",
+        "everything-else",
+        "/^on.+$/",
+        "render"
+      ]
+    }],
 
     /* import */
     "import/prefer-default-export": 1,

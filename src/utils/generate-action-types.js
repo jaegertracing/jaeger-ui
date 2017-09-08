@@ -1,3 +1,5 @@
+// @flow
+
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -18,13 +20,24 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import PropTypes from 'prop-types';
-
-export default PropTypes.shape({
-  comparator: PropTypes.func.isRequired,
-  label: PropTypes.string.isRequired,
-  name: PropTypes.string.isRequired,
-  render: PropTypes.func.isRequired,
-  selector: PropTypes.func.isRequired,
-  defaultDir: PropTypes.number,
-});
+/**
+ * Util to generate an object of key:value pairs where key is
+ * `commonPrefix/topLevelTypes[i]` and value is `topLevelTypes[i]` for all `i`
+ * in `topLevelTypes`.
+ *
+ * @example generateActionTypes('a', ['b']) -> {'a/b': 'b'}
+ *
+ * @param commonPrefix A string that is prepended to each value in
+ *                     `topLevelTypes` to create a property name
+ * @param topLevelTypes An array of strings to generate property names from and
+ *                      to assign as the corresponding values.
+ * @returns {{[string]: string}}
+ */
+export default function generateActionTypes(commonPrefix: string, topLevelTypes: string[]) {
+  const rv = {};
+  topLevelTypes.forEach(type => {
+    const fullType = `${commonPrefix}/${type}`;
+    rv[type] = fullType;
+  });
+  return rv;
+}
