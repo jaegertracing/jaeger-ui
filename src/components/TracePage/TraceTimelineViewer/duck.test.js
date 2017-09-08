@@ -33,18 +33,11 @@ describe('TraceTimelineViewer/duck', () => {
     store = createStore(reducer, newInitialState(trace));
   });
 
-  describe('initial state', () => {
-    it('retains a provided trace', () => {
-      const state = store.getState();
-      expect(state.trace).toBe(trace);
-    });
-
-    it('has no details, collapsed children or text search', () => {
-      const state = store.getState();
-      expect(state.childrenHiddenIDs).toEqual(new Set());
-      expect(state.findMatches).not.toBeDefined();
-      expect(state.detailStates).toEqual(new Map());
-    });
+  it('the initial state has no details, collapsed children or text search', () => {
+    const state = store.getState();
+    expect(state.childrenHiddenIDs).toEqual(new Set());
+    expect(state.findMatches).not.toBeDefined();
+    expect(state.detailStates).toEqual(new Map());
   });
 
   describe('toggles children and details', () => {

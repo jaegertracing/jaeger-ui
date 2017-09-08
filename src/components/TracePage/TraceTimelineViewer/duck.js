@@ -22,6 +22,7 @@ import { createActions, handleActions } from 'redux-actions';
 
 import getFilteredSpans from './get-filtered-spans';
 import DetailState from './SpanDetail/DetailState';
+import generateActionTypes from '../../../utils/generate-action-types';
 
 // DetailState {
 //   isTagsOpen: bool,
@@ -33,31 +34,53 @@ import DetailState from './SpanDetail/DetailState';
 // }
 //
 // TraceState {
-//   trace: Trace,
+//   traceID: string,
 //   childrenHiddenIDs: Set<spanID>,
 //   findMatches: ?Set<spanID>,
 //   detailStates: Map<spanID, DetailState>
 // }
 //
 
-export function newInitialState(trace = null) {
+export function newInitialState(traceID = null) {
   return {
-    trace,
+    traceID,
     childrenHiddenIDs: new Set(),
     detailStates: new Map(),
     findMatchesIDs: null,
   };
 }
 
-export const actions = createActions({
-  CHILDREN_TOGGLE: spanID => ({ spanID }),
-  DETAIL_TOGGLE: spanID => ({ spanID }),
-  DETAIL_TAGS_TOGGLE: spanID => ({ spanID }),
-  DETAIL_PROCESS_TOGGLE: spanID => ({ spanID }),
-  DETAIL_LOGS_TOGGLE: spanID => ({ spanID }),
-  DETAIL_LOG_ITEM_TOGGLE: (spanID, logItem) => ({ logItem, spanID }),
-  FIND: searchText => ({ searchText }),
+const actionTypes = generateActionTypes('@jaeger-ui/trace-timeline-viewer', [
+  'SET_TRACE',
+  'CHILDREN_TOGGLE',
+  'DETAIL_TOGGLE',
+  'DETAIL_TAGS_TOGGLE',
+  'DETAIL_PROCESS_TOGGLE',
+  'DETAIL_LOGS_TOGGLE',
+  'DETAIL_LOG_ITEM_TOGGLE',
+  'FIND',
+]);
+
+const fullActions = createActions({
+  [actionTypes.SET_TRACE]: traceID => ({ traceID }),
+  [actionTypes.CHILDREN_TOGGLE]: spanID => ({ spanID }),
+  [actionTypes.DETAIL_TOGGLE]: spanID => ({ spanID }),
+  [actionTypes.DETAIL_TAGS_TOGGLE]: spanID => ({ spanID }),
+  [actionTypes.DETAIL_PROCESS_TOGGLE]: spanID => ({ spanID }),
+  [actionTypes.DETAIL_LOGS_TOGGLE]: spanID => ({ spanID }),
+  [actionTypes.DETAIL_LOG_ITEM_TOGGLE]: (spanID, logItem) => ({ logItem, spanID }),
+  [actionTypes.FIND]: (trace, searchText) => ({ searchText, trace }),
 });
+
+export const actions = fullActions.jaegerUi.traceTimelineViewer;
+
+function setTrace(state, { payload }) {
+  const { traceID } = payload;
+  if (traceID === state.traceID) {
+    return state;
+  }
+  return newInitialState(traceID);
+}
 
 function childrenToggle(state, { payload }) {
   const { spanID } = payload;
@@ -111,21 +134,22 @@ function detailLogItemToggle(state, { payload }) {
 }
 
 function find(state, { payload }) {
-  const { searchText } = payload;
+  const { searchText, trace } = payload;
   const needle = searchText ? searchText.trim() : null;
-  const findMatchesIDs = needle ? getFilteredSpans(state.trace, needle) : null;
+  const findMatchesIDs = needle ? getFilteredSpans(trace, needle) : null;
   return { ...state, findMatchesIDs };
 }
 
 export default handleActions(
   {
-    CHILDREN_TOGGLE: childrenToggle,
-    DETAIL_TOGGLE: detailToggle,
-    DETAIL_TAGS_TOGGLE: detailTagsToggle,
-    DETAIL_PROCESS_TOGGLE: detailProcessToggle,
-    DETAIL_LOGS_TOGGLE: detailLogsToggle,
-    DETAIL_LOG_ITEM_TOGGLE: detailLogItemToggle,
-    FIND: find,
+    [actionTypes.SET_TRACE]: setTrace,
+    [actionTypes.CHILDREN_TOGGLE]: childrenToggle,
+    [actionTypes.DETAIL_TOGGLE]: detailToggle,
+    [actionTypes.DETAIL_TAGS_TOGGLE]: detailTagsToggle,
+    [actionTypes.DETAIL_PROCESS_TOGGLE]: detailProcessToggle,
+    [actionTypes.DETAIL_LOGS_TOGGLE]: detailLogsToggle,
+    [actionTypes.DETAIL_LOG_ITEM_TOGGLE]: detailLogItemToggle,
+    [actionTypes.FIND]: find,
   },
   newInitialState()
 );

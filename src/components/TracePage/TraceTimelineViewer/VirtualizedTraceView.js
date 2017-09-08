@@ -23,7 +23,9 @@
 import * as React from 'react';
 import cx from 'classnames';
 import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
 
+import { actions } from './duck';
 import ListView from './ListView';
 import SpanBarRow from './SpanBarRow';
 import DetailState from './SpanDetail/DetailState';
@@ -57,7 +59,10 @@ type VirtualizedTraceViewProps = {
   detailStates: Map<string, ?DetailState>,
   detailTagsToggle: string => void,
   detailToggle: string => void,
+  find: (?Trace, ?string) => void,
   findMatchesIDs: Set<string>,
+  setTrace: (?string) => void,
+  textFilter: ?string,
   ticks: number[],
   trace?: Trace,
   zoomEnd: number,
@@ -147,9 +152,20 @@ class VirtualizedTraceView extends React.PureComponent<VirtualizedTraceViewProps
     const { clippingCssClasses, rowStates } = getPropDerivations(props);
     this.clippingCssClasses = clippingCssClasses;
     this.rowStates = rowStates;
+
+    const { find, setTrace, textFilter, trace } = this.props;
+    const traceID = trace ? trace.traceID : null;
+    setTrace(traceID);
+    if (textFilter) {
+      find(trace, textFilter);
+    }
   }
 
   componentWillReceiveProps(nextProps) {
+    const { find, textFilter } = nextProps;
+    if (this.props.textFilter !== textFilter) {
+      find(this.props.trace, textFilter);
+    }
     const { clippingCssClasses, rowStates } = getPropDerivations(nextProps);
     this.clippingCssClasses = clippingCssClasses;
     this.rowStates = rowStates;
@@ -357,10 +373,15 @@ class VirtualizedTraceView extends React.PureComponent<VirtualizedTraceViewProps
 }
 
 function mapStateToProps(state, ownProps) {
+  const traceTimeline = state.traceTimeline;
   return {
+    ...traceTimeline,
     ...ownProps,
-    ...state,
   };
 }
 
-export default connect(mapStateToProps)(VirtualizedTraceView);
+function mapDispatchToProps(dispatch) {
+  return bindActionCreators(actions, dispatch);
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(VirtualizedTraceView);

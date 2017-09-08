@@ -1,3 +1,5 @@
+// @flow
+
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -18,40 +20,24 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
-
-import VirtualizedTraceView from './VirtualizedTraceView';
-import { getPositionInRange } from './utils';
-
-import './grid.css';
-import './index.css';
-
-export default class TraceTimelineViewer extends Component {
-  componentWillReceiveProps(nextProps) {
-    const { trace } = nextProps;
-    if (trace !== this.props.trace) {
-      throw new Error('Component does not support changing the trace');
-    }
-  }
-
-  render() {
-    const { timeRangeFilter: zoomRange, textFilter, trace } = this.props;
-    const { startTime, endTime } = trace;
-    return (
-      <div className="trace-timeline-viewer">
-        <VirtualizedTraceView
-          textFilter={textFilter}
-          trace={trace}
-          zoomStart={getPositionInRange(startTime, endTime, zoomRange[0])}
-          zoomEnd={getPositionInRange(startTime, endTime, zoomRange[1])}
-        />
-      </div>
-    );
-  }
+/**
+ * Util to generate an object of key:value pairs where key is
+ * `commonPrefix/topLevelTypes[i]` and value is `topLevelTypes[i]` for all `i`
+ * in `topLevelTypes`.
+ *
+ * @example generateActionTypes('a', ['b']) -> {'a/b': 'b'}
+ *
+ * @param commonPrefix A string that is prepended to each value in
+ *                     `topLevelTypes` to create a property name
+ * @param topLevelTypes An array of strings to generate property names from and
+ *                      to assign as the corresponding values.
+ * @returns {{[string]: string}}
+ */
+export default function generateActionTypes(commonPrefix: string, topLevelTypes: string[]) {
+  const rv = {};
+  topLevelTypes.forEach(type => {
+    const fullType = `${commonPrefix}/${type}`;
+    rv[type] = fullType;
+  });
+  return rv;
 }
-TraceTimelineViewer.propTypes = {
-  trace: PropTypes.object,
-  timeRangeFilter: PropTypes.array,
-  textFilter: PropTypes.string,
-};
