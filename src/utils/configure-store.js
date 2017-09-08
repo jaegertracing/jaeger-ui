@@ -24,11 +24,13 @@ import { window } from 'global';
 
 import jaegerReducers from '../reducers';
 import * as jaegerMiddlewares from '../middlewares';
+import traceTimelineViewReducer from '../components/TracePage/TraceTimelineViewer/duck';
 
 export default function configureStore(history) {
   return createStore(
     combineReducers({
       ...jaegerReducers,
+      traceTimeline: traceTimelineViewReducer,
       routing: routerReducer,
     }),
     compose(

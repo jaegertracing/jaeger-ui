@@ -22,15 +22,15 @@ import React from 'react';
 import { shallow } from 'enzyme';
 
 import TraceTimelineViewer from './index';
-import { transformTrace } from './transforms';
 import traceGenerator from '../../../demo/trace-generators';
+import transformTraceData from '../../../model/transform-trace-data';
 
 describe('<TraceTimelineViewer>', () => {
-  const trace = traceGenerator.trace({});
+  const trace = transformTraceData(traceGenerator.trace({}));
   const props = {
+    trace,
     textFilter: null,
     timeRangeFilter: [0, 1],
-    xformedTrace: transformTrace(trace),
   };
 
   let wrapper;

@@ -20,51 +20,26 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-
-.SpanBar--wrapper {
-  bottom: 0;
-  left: 0;
-  position: absolute;
-  right: 0;
-  top: 0;
+.VirtualizedTraceView--headerRow {
+  background: #e8e8e8;
+  border-bottom: 1px solid #ccc;
+  height: 38px;
   overflow: hidden;
-  opacity: 0.5;
+  position: fixed;
+  width: 100%;
+  z-index: 2;
 }
 
-.span-row.is-expanded .SpanBar--wrapper,
-.span-row:hover .SpanBar--wrapper {
-  opacity: 1;
-}
-
-/* Add the hint related selector to override the hint styling (via specificity) */
-.SpanBar--bar {
-  border-radius: 3px;
-  min-width: 2px;
-  position: absolute;
-  height: 50%;
-  top: 25%;
-}
-
-.SpanBar--rpc {
-  position: absolute;
-  top: 35%;
-  bottom: 35%;
+.VirtualizedTraceView--spans {
+  padding-top: 40px;
+  position: relative;
   z-index: 1;
 }
 
-.SpanBar--label {
-  font-size: 12px;
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  line-height: 1em;
-  white-space: nowrap;
-  padding: 0 0.5em;
-  position: absolute;
+.VirtualizedTraceView--rowsWrapper {
+  width: 100%;
 }
 
-.SpanBar--label.is-right {
-  left: 100%;
-}
-
-.SpanBar--label.is-left {
-  right: 100%;
+.VirtualizedTraceView--row {
+  width: 100%;
 }

@@ -29,22 +29,26 @@ function toPercent(value) {
 }
 
 function SpanBar(props) {
-  const { viewEnd, viewStart, color, label, hintSide, onClick, onMouseOver, onMouseOut, rpc } = props;
+  const { viewEnd, viewStart, color, label, hintSide, onClick, setLongLabel, setShortLabel, rpc } = props;
 
   return (
-    <div className="span-bar-wrapper" onClick={onClick} onMouseOut={onMouseOut} onMouseOver={onMouseOver}>
+    <div className="SpanBar--wrapper" onClick={onClick} onMouseOut={setShortLabel} onMouseOver={setLongLabel}>
       <div
         aria-label={label}
-        className={`span-bar hint--always hint--${hintSide}`}
+        className="SpanBar--bar"
         style={{
           background: color,
           left: toPercent(viewStart),
           width: toPercent(viewEnd - viewStart),
         }}
-      />
+      >
+        <div className={`SpanBar--label is-${hintSide}`}>
+          {label}
+        </div>
+      </div>
       {rpc &&
         <div
-          className="span-bar-rpc"
+          className="SpanBar--rpc"
           style={{
             background: rpc.color,
             left: toPercent(rpc.viewStart),
@@ -67,8 +71,8 @@ SpanBar.propTypes = {
   hintSide: PropTypes.string.isRequired,
   label: PropTypes.string.isRequired,
   onClick: PropTypes.func,
-  onMouseOver: PropTypes.func,
-  onMouseOut: PropTypes.func,
+  setLongLabel: PropTypes.func,
+  setShortLabel: PropTypes.func,
 };
 
 SpanBar.defaultProps = {
@@ -81,8 +85,8 @@ SpanBar.defaultProps = {
 export default compose(
   withState('label', 'setLabel', props => props.shortLabel),
   withProps(({ setLabel, shortLabel, longLabel }) => ({
-    onMouseOver: () => setLabel(longLabel),
-    onMouseOut: () => setLabel(shortLabel),
+    setLongLabel: () => setLabel(longLabel),
+    setShortLabel: () => setLabel(shortLabel),
   })),
-  onlyUpdateForKeys(['viewStart', 'viewEnd', 'label', 'rpc'])
+  onlyUpdateForKeys(['label', 'rpc', 'viewStart', 'viewEnd'])
 )(SpanBar);

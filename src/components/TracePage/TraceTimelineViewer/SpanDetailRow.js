@@ -1,3 +1,5 @@
+// @flow
+
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -18,17 +20,42 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import PropTypes from 'prop-types';
 import React from 'react';
 
-import TimelineRow from './TimelineRow';
-import SpanTreeOffset from './SpanTreeOffset';
 import SpanDetail from './SpanDetail';
+import DetailState from './SpanDetail/DetailState';
+import SpanTreeOffset from './SpanTreeOffset';
+import TimelineRow from './TimelineRow';
+import type { Log, Span } from '../../../types';
 
 import './SpanDetailRow.css';
 
-export default function SpanDetailRow(props) {
-  const { span, color, trace, toggleDetailExpansion, isFilteredOut } = props;
+type SpanDetailRowProps = {
+  color: string,
+  detailState: DetailState,
+  detailToggle: string => void,
+  isFilteredOut: boolean,
+  logItemToggle: (string, Log) => void,
+  logsToggle: string => void,
+  processToggle: string => void,
+  span: Span,
+  tagsToggle: string => void,
+  traceStartTime: number,
+};
+
+export default function SpanDetailRow(props: SpanDetailRowProps) {
+  const {
+    color,
+    detailState,
+    detailToggle,
+    isFilteredOut,
+    logItemToggle,
+    logsToggle,
+    processToggle,
+    span,
+    tagsToggle,
+    traceStartTime,
+  } = props;
   return (
     <TimelineRow className={`detail-row ${isFilteredOut ? 'is-filtered-out' : ''}`}>
       <TimelineRow.Left>
@@ -37,7 +64,7 @@ export default function SpanDetailRow(props) {
           <span>
             <span
               className="detail-row-expanded-accent"
-              onClick={toggleDetailExpansion}
+              onClick={detailToggle}
               style={{ borderColor: color }}
             />
           </span>
@@ -45,17 +72,17 @@ export default function SpanDetailRow(props) {
       </TimelineRow.Left>
       <TimelineRow.Right>
         <div className="p2 detail-info-wrapper" style={{ borderTopColor: color }}>
-          <SpanDetail span={span} trace={trace} />
+          <SpanDetail
+            detailState={detailState}
+            logItemToggle={logItemToggle}
+            logsToggle={logsToggle}
+            processToggle={processToggle}
+            span={span}
+            tagsToggle={tagsToggle}
+            traceStartTime={traceStartTime}
+          />
         </div>
       </TimelineRow.Right>
     </TimelineRow>
   );
 }
-
-SpanDetailRow.propTypes = {
-  trace: PropTypes.object,
-  span: PropTypes.object,
-  color: PropTypes.string,
-  isFilteredOut: PropTypes.bool,
-  toggleDetailExpansion: PropTypes.func,
-};

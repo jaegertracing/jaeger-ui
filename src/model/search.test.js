@@ -24,20 +24,21 @@ import _minBy from 'lodash/minBy';
 import * as orderBy from './order-by';
 import { getTraceSummaries, getTraceSummary, sortTraces } from './search';
 import traceGenerator from '../demo/trace-generators';
+import transformTraceData from '../model/transform-trace-data';
 
 describe('getTraceSummary()', () => {
   let trace;
   let summary;
 
   beforeEach(() => {
-    trace = traceGenerator.trace({ numberOfSpans: 2 });
+    trace = transformTraceData(traceGenerator.trace({ numberOfSpans: 2 }));
     summary = getTraceSummary(trace);
   });
 
   it('derives duration, timestamp and numberOfSpans', () => {
     expect(summary.numberOfSpans).toBe(trace.spans.length);
     expect(summary.duration).toBe(trace.duration / 1000);
-    expect(summary.timestamp).toBe(Math.floor(trace.timestamp / 1000));
+    expect(summary.timestamp).toBe(Math.floor(trace.startTime / 1000));
   });
 
   it('handles error spans', () => {
@@ -96,7 +97,10 @@ describe('getTraceSummary()', () => {
 
 describe('getTraceSummaries()', () => {
   it('finds the max duration', () => {
-    const traces = [traceGenerator.trace({}), traceGenerator.trace({})];
+    const traces = [
+      transformTraceData(traceGenerator.trace({})),
+      transformTraceData(traceGenerator.trace({})),
+    ];
     const maxDuration = _maxBy(traces, 'duration').duration / 1000;
     expect(getTraceSummaries(traces).maxDuration).toBe(maxDuration);
   });
@@ -106,10 +110,10 @@ describe('sortTraces()', () => {
   const idMinSpans = 4;
   const idMaxSpans = 2;
   const rawTraces = [
-    { ...traceGenerator.trace({ numberOfSpans: 3 }), traceID: 1 },
-    { ...traceGenerator.trace({ numberOfSpans: 100 }), traceID: idMaxSpans },
-    { ...traceGenerator.trace({ numberOfSpans: 5 }), traceID: 3 },
-    { ...traceGenerator.trace({ numberOfSpans: 1 }), traceID: idMinSpans },
+    { ...transformTraceData(traceGenerator.trace({ numberOfSpans: 3 })), traceID: 1 },
+    { ...transformTraceData(traceGenerator.trace({ numberOfSpans: 100 })), traceID: idMaxSpans },
+    { ...transformTraceData(traceGenerator.trace({ numberOfSpans: 5 })), traceID: 3 },
+    { ...transformTraceData(traceGenerator.trace({ numberOfSpans: 1 })), traceID: idMinSpans },
   ];
   const { traces } = getTraceSummaries(rawTraces);
 

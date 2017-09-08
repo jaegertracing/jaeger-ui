@@ -48,7 +48,7 @@ export type SpanReference = {
   traceID: string,
 };
 
-export type Span = {
+export type SpanData = {
   spanID: string,
   traceID: string,
   processID: string,
@@ -60,10 +60,21 @@ export type Span = {
   references: Array<SpanReference>,
 };
 
-export type Trace = {
+export type Span = SpanData & {
+  depth: number,
+  hasChildren: boolean,
+  process: Process,
+  relativeStartTime: number,
+};
+
+export type TraceData = {
+  processes: { [string]: Process },
   traceID: string,
-  spans: Array<Span>,
-  processes: {
-    [string]: Process,
-  },
+};
+
+export type Trace = TraceData & {
+  duration: number,
+  endTime: number,
+  spans: Span[],
+  startTime: number,
 };

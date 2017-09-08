@@ -26,8 +26,7 @@ THE SOFTWARE.
 }
 
 .trace-timeline-viewer {
-  border: 1px solid #bbb;
-  border-top: none;
+  border-bottom: 1px solid #bbb;
 }
 
 .noselect {

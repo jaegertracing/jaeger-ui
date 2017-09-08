@@ -28,17 +28,10 @@ import { bindActionCreators } from 'redux';
 import TracePageHeader from './TracePageHeader';
 import TraceSpanGraph from './TraceSpanGraph';
 import TraceTimelineViewer from './TraceTimelineViewer';
-import { transformTrace } from './TraceTimelineViewer/transforms';
 import NotFound from '../App/NotFound';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import { getTraceName } from '../../model/trace-viewer';
-import {
-  dropEmptyStartTimeSpans,
-  hydrateSpansWithProcesses,
-  getTraceTimestamp,
-  getTraceEndTimestamp,
-  getTraceId,
-} from '../../selectors/trace';
+import { getTraceTimestamp, getTraceEndTimestamp, getTraceId } from '../../selectors/trace';
 import colorGenerator from '../../utils/color-generator';
 
 import './index.css';
@@ -48,7 +41,6 @@ export default class TracePage extends Component {
     return {
       fetchTrace: PropTypes.func.isRequired,
       trace: PropTypes.object,
-      xformedTrace: PropTypes.object,
       loading: PropTypes.bool,
       id: PropTypes.string.isRequired,
     };
@@ -146,7 +138,7 @@ export default class TracePage extends Component {
   }
 
   render() {
-    const { id, trace, xformedTrace } = this.props;
+    const { id, trace } = this.props;
     const { slimView, headerHeight } = this.state;
 
     if (!trace) {
@@ -157,7 +149,7 @@ export default class TracePage extends Component {
       return <NotFound error={trace} />;
     }
 
-    const { duration, processes, spans, startTime, traceID } = xformedTrace;
+    const { duration, processes, spans, startTime, traceID } = trace;
     const maxSpanDepth = _maxBy(spans, 'depth').depth + 1;
     const numberOfServices = new Set(_values(processes).map(p => p.serviceName)).size;
     return (
@@ -174,13 +166,12 @@ export default class TracePage extends Component {
             traceID={traceID}
             onSlimViewClicked={this.toggleSlimView}
           />
-          {!slimView && <TraceSpanGraph trace={trace} xformedTrace={xformedTrace} />}
+          {!slimView && <TraceSpanGraph trace={trace} />}
         </section>
         {headerHeight &&
           <section className="trace-timeline-section" style={{ paddingTop: headerHeight }}>
             <TraceTimelineViewer
               trace={trace}
-              xformedTrace={xformedTrace}
               timeRangeFilter={this.state.timeRangeFilter}
               textFilter={this.state.textFilter}
             />
@@ -193,14 +184,8 @@ export default class TracePage extends Component {
 // export connected component separately
 function mapStateToProps(state, ownProps) {
   const { id } = ownProps.match.params;
-  let trace = state.trace.traces[id];
-  let xformedTrace;
-  if (trace && !(trace instanceof Error)) {
-    trace = dropEmptyStartTimeSpans(trace);
-    trace = hydrateSpansWithProcesses(trace);
-    xformedTrace = transformTrace(trace);
-  }
-  return { id, trace, xformedTrace, loading: state.trace.loading };
+  const trace = state.trace.traces[id];
+  return { id, trace, loading: state.trace.loading };
 }
 
 function mapDispatchToProps(dispatch) {

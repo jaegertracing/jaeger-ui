@@ -26,15 +26,14 @@ import traceGenerator from '../../demo/trace-generators';
 import TracePage from './';
 import TracePageHeader from './TracePageHeader';
 import TraceSpanGraph from './TraceSpanGraph';
-import { transformTrace } from './TraceTimelineViewer/transforms';
+import transformTraceData from '../../model/transform-trace-data';
 
 describe('<TracePage>', () => {
-  const trace = traceGenerator.trace({});
+  const trace = transformTraceData(traceGenerator.trace({}));
   const defaultProps = {
     trace,
     fetchTrace() {},
     id: trace.traceID,
-    xformedTrace: transformTrace(trace),
   };
 
   let wrapper;
@@ -48,7 +47,7 @@ describe('<TracePage>', () => {
   });
 
   it('renders a <TraceSpanGraph>', () => {
-    const props = { trace: defaultProps.trace, xformedTrace: defaultProps.xformedTrace };
+    const props = { trace: defaultProps.trace };
     expect(wrapper.contains(<TraceSpanGraph {...props} />)).toBeTruthy();
   });
 

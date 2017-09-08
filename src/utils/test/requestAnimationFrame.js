@@ -18,9 +18,30 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import PropTypes from 'prop-types';
+const DEFAULT_ELAPSE = 0;
 
-export default PropTypes.shape({
-  key: PropTypes.string,
-  value: PropTypes.any,
-});
+export default function requestAnimationFrame(callback) {
+  return setTimeout(callback, DEFAULT_ELAPSE);
+}
+
+export function cancelAnimationFrame(id) {
+  return clearTimeout(id);
+}
+
+export function polyfill(target, msElapse = DEFAULT_ELAPSE) {
+  if (!target.requestAnimationFrame) {
+    if (msElapse === DEFAULT_ELAPSE) {
+      // eslint-disable-next-line no-param-reassign
+      target.requestAnimationFrame = requestAnimationFrame;
+    } else {
+      // eslint-disable-next-line no-param-reassign, no-shadow
+      target.requestAnimationFrame = function requestAnimationFrame(callback) {
+        return setTimeout(callback, msElapse);
+      };
+    }
+  }
+  if (!target.cancelAnimationFrame) {
+    // eslint-disable-next-line no-param-reassign
+    target.cancelAnimationFrame = cancelAnimationFrame;
+  }
+}

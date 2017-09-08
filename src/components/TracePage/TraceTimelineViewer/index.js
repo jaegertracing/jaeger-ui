@@ -21,83 +21,37 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 
-import getFilteredSpans from './get-filtered-spans';
-import TraceView from './TraceView';
+import VirtualizedTraceView from './VirtualizedTraceView';
 import { getPositionInRange } from './utils';
 
 import './grid.css';
 import './index.css';
 
-// TODO: Add unit tests
-
 export default class TraceTimelineViewer extends Component {
-  constructor(props) {
-    super(props);
-
-    const { textFilter, xformedTrace } = props;
-    const filteredSpans = textFilter ? getFilteredSpans(xformedTrace, textFilter) : null;
-    this.state = {
-      filteredSpans,
-      collapsedSpans: new Set(),
-      endX: 100,
-      selectedSpans: new Set(),
-      startX: 0,
-      trace: props.xformedTrace,
-    };
-    this.toggleSpanCollapse = this.toggleSpanCollapse.bind(this);
-    this.toggleSpanSelect = this.toggleSpanSelect.bind(this);
-  }
-
   componentWillReceiveProps(nextProps) {
-    const { xformedTrace, textFilter } = nextProps;
-    if (textFilter === this.props.textFilter && xformedTrace === this.props.xformedTrace) {
-      return;
+    const { trace } = nextProps;
+    if (trace !== this.props.trace) {
+      throw new Error('Component does not support changing the trace');
     }
-    const filteredSpans = textFilter ? getFilteredSpans(nextProps.xformedTrace, textFilter) : null;
-    this.setState({ filteredSpans, trace: xformedTrace });
-  }
-
-  toggleSpanCollapse(spanID) {
-    this.toggleStateSet('collapsedSpans', spanID);
-  }
-
-  toggleSpanSelect(spanID) {
-    this.toggleStateSet('selectedSpans', spanID);
-  }
-
-  toggleStateSet(statePropName, spanID) {
-    const set = new Set(this.state[statePropName]);
-    if (set.has(spanID)) {
-      set.delete(spanID);
-    } else {
-      set.add(spanID);
-    }
-    this.setState({ [statePropName]: set });
   }
 
   render() {
-    const { selectedSpans, collapsedSpans, filteredSpans, trace } = this.state;
-    const { timeRangeFilter: zoomRange } = this.props;
+    const { timeRangeFilter: zoomRange, textFilter, trace } = this.props;
     const { startTime, endTime } = trace;
     return (
       <div className="trace-timeline-viewer">
-        <TraceView
-          {...this.props}
+        <VirtualizedTraceView
+          textFilter={textFilter}
           trace={trace}
-          collapsedSpanIDs={collapsedSpans}
-          selectedSpanIDs={selectedSpans}
-          filteredSpansIDs={filteredSpans}
           zoomStart={getPositionInRange(startTime, endTime, zoomRange[0])}
           zoomEnd={getPositionInRange(startTime, endTime, zoomRange[1])}
-          onSpanClick={this.toggleSpanSelect}
-          onSpanCollapseClick={this.toggleSpanCollapse}
         />
       </div>
     );
   }
 }
 TraceTimelineViewer.propTypes = {
-  xformedTrace: PropTypes.object,
+  trace: PropTypes.object,
   timeRangeFilter: PropTypes.array,
   textFilter: PropTypes.string,
 };

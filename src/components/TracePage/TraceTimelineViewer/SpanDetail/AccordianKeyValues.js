@@ -1,4 +1,5 @@
 // @flow
+
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -20,18 +21,26 @@
 // THE SOFTWARE.
 
 import React from 'react';
+import cx from 'classnames';
 
 import KeyValuesTable from './KeyValuesTable';
-import toggleEnhancer from './toggle-enhancer';
 
 import './AccordianKeyValues.css';
 
-type KeyValuesSummaryProps = {
+type AccordianKeyValuesProps = {
+  compact?: boolean,
   data: { key: string, value: any }[],
+  highContrast?: boolean,
+  isOpen: boolean,
+  label: string,
+  onToggle: () => void,
 };
 
-function KeyValuesSummary(props: KeyValuesSummaryProps) {
+function KeyValuesSummary(props: { data?: { key: string, value: any }[] }) {
   const { data } = props;
+  if (!Array.isArray(data) || !data.length) {
+    return null;
+  }
   return (
     <ul className="AccordianKeyValues--summary">
       {data.map((item, i) =>
@@ -49,27 +58,30 @@ function KeyValuesSummary(props: KeyValuesSummaryProps) {
   );
 }
 
-type AccordianKeyValuesProps = {
-  compact?: boolean,
-  data: { key: string, value: any }[],
-  highContrast?: boolean,
-  isOpen: boolean,
-  label: string,
-  onToggle: () => void,
+KeyValuesSummary.defaultProps = {
+  data: null,
 };
 
-function AccordianKeyValues(props: AccordianKeyValuesProps) {
+export default function AccordianKeyValues(props: AccordianKeyValuesProps) {
   const { compact, data, highContrast, isOpen, label, onToggle } = props;
+  const isEmpty = !Array.isArray(data) || !data.length;
+  const iconCls = cx(
+    { minus: isOpen, plus: !isOpen, 'AccordianKeyValues--emptyArtifact': isEmpty },
+    'square outline icon'
+  );
   return (
-    <div className={`AccordianKeyValues ${compact ? 'is-compact' : ''}`}>
+    <div className={cx('AccordianKeyValues', { 'is-compact': compact })}>
       <div
-        className={`AccordianKeyValues--header ${highContrast ? 'is-high-contrast' : ''}`}
+        className={cx('AccordianKeyValues--header', {
+          'is-empty': isEmpty,
+          'is-high-contrast': highContrast,
+        })}
         aria-checked={isOpen}
-        onClick={onToggle}
+        onClick={isEmpty ? null : onToggle}
         role="switch"
       >
         <strong>
-          <i className={`${isOpen ? 'minus' : 'plus'} square outline icon`} />
+          <i className={iconCls} />
           {label}
           :
         </strong>
@@ -84,5 +96,3 @@ AccordianKeyValues.defaultProps = {
   compact: false,
   highContrast: false,
 };
-
-export default toggleEnhancer(AccordianKeyValues);
