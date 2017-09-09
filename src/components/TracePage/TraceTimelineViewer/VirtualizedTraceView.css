@@ -30,6 +30,10 @@ THE SOFTWARE.
   z-index: 2;
 }
 
+.VirtualizedTraceView--labelHeader {
+  border-right: 1px solid #bbb;
+}
+
 .VirtualizedTraceView--spans {
   padding-top: 40px;
   position: relative;

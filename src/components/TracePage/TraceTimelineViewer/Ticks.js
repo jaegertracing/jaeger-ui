@@ -28,19 +28,22 @@ export default function Ticks(props) {
 
   return (
     <div>
-      {ticks.map((tick, i) =>
-        <div
-          key={tick}
-          className="span-row-tick"
-          style={{
-            left: `${tick * 100}%`,
-          }}
-        >
-          {labels &&
-            <span className={`span-row-tick-label ${tick >= 1 ? 'is-end-anchor' : ''}`}>
-              {labels[i]}
-            </span>}
-        </div>
+      {ticks.map(
+        (tick, i) =>
+          i
+            ? <div
+                key={tick}
+                className="span-row-tick"
+                style={{
+                  left: `${tick * 100}%`,
+                }}
+              >
+                {labels &&
+                  <span className={`span-row-tick-label ${tick >= 1 ? 'is-end-anchor' : ''}`}>
+                    {labels[i]}
+                  </span>}
+              </div>
+            : null
       )}
     </div>
   );
