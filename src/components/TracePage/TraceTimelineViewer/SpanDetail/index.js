@@ -22,41 +22,49 @@ import React from 'react';
 
 import AccordianKeyValues from './AccordianKeyValues';
 import AccordianLogs from './AccordianLogs';
+import DetailState from './DetailState';
 import { formatDuration } from '../utils';
-import type { XformedSpan, XformedTrace } from '../transforms';
+import type { Log, Span } from '../../../../types';
 
 import './index.css';
 
 type SpanDetailProps = {
-  span: XformedSpan,
-  trace: XformedTrace,
+  detailState: DetailState,
+  logItemToggle: (string, Log) => void,
+  logsToggle: string => void,
+  processToggle: string => void,
+  span: Span,
+  tagsToggle: string => void,
+  traceStartTime: number,
 };
 
 export default function SpanDetail(props: SpanDetailProps) {
-  const { span, trace } = props;
+  const { detailState, logItemToggle, logsToggle, processToggle, span, tagsToggle, traceStartTime } = props;
+  const { isTagsOpen, isProcessOpen, logs: logsState } = detailState;
+  const { operationName, process, duration, relativeStartTime, spanID, logs, tags } = span;
   return (
     <div>
       <div>
         <h3 className="mb1">
-          {span.operationName}
+          {operationName}
         </h3>
         <div>
           <div className="inline-block mr1">
             <strong>Service: </strong>
             <span>
-              {span.process.serviceName}
+              {process.serviceName}
             </span>
           </div>
           <div className="inline-block mr1">
             <strong>Duration: </strong>
             <span>
-              {formatDuration(span.duration)}
+              {formatDuration(duration)}
             </span>
           </div>
           <div className="inline-block mr1">
             <strong>Start Time: </strong>
             <span>
-              {formatDuration(span.relativeStartTime)}
+              {formatDuration(relativeStartTime)}
             </span>
           </div>
         </div>
@@ -64,16 +72,36 @@ export default function SpanDetail(props: SpanDetailProps) {
       </div>
       <div>
         <div>
-          <AccordianKeyValues data={span.tags} highContrast label="Tags" />
-          {span.process &&
-            span.process.tags &&
-            <AccordianKeyValues data={span.process.tags} highContrast label="Process" />}
+          <AccordianKeyValues
+            data={tags}
+            highContrast
+            label="Tags"
+            isOpen={isTagsOpen}
+            onToggle={() => tagsToggle(spanID)}
+          />
+          {process.tags &&
+            <AccordianKeyValues
+              data={process.tags}
+              highContrast
+              label="Process"
+              isOpen={isProcessOpen}
+              onToggle={() => processToggle(spanID)}
+            />}
         </div>
-        {span.logs && span.logs.length > 0 && <AccordianLogs logs={span.logs} timestamp={trace.startTime} />}
+        {logs &&
+          logs.length > 0 &&
+          <AccordianLogs
+            logs={logs}
+            isOpen={logsState.isOpen}
+            openedItems={logsState.openedItems}
+            onToggle={() => logsToggle(spanID)}
+            onItemToggle={logItem => logItemToggle(spanID, logItem)}
+            timestamp={traceStartTime}
+          />}
 
         <small className="SpanDetail--debugInfo">
           <span className="SpanDetail--debugLabel" data-label="SpanID:" />{' '}
-          <span className="SpanDetail--debugValue">{span.spanID}</span>
+          <span className="SpanDetail--debugValue">{spanID}</span>
         </small>
       </div>
     </div>

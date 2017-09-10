@@ -21,7 +21,6 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 
-import renderIntoCanvas from './render-into-canvas';
 import colorGenerator from '../../../utils/color-generator';
 
 import './index.css';

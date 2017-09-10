@@ -27,21 +27,14 @@ import TraceSpanGraph from './TraceSpanGraph';
 import SpanGraphTickHeader from './SpanGraph/SpanGraphTickHeader';
 import TimelineScrubber from './TimelineScrubber';
 import traceGenerator from '../../../src/demo/trace-generators';
-import { transformTrace } from './TraceTimelineViewer/transforms';
-import { hydrateSpansWithProcesses } from '../../selectors/trace';
+import transformTraceData from '../../model/transform-trace-data';
 
 describe('<TraceSpanGraph>', () => {
-  const trace = hydrateSpansWithProcesses(traceGenerator.trace({}));
-  const xformedTrace = transformTrace(trace);
-
-  const props = {
-    trace,
-    xformedTrace,
-  };
-
+  const trace = transformTraceData(traceGenerator.trace({}));
+  const props = { trace };
   const options = {
     context: {
-      timeRangeFilter: [trace.timestamp, trace.timestamp + trace.duration],
+      timeRangeFilter: [trace.startTime, trace.startTime + trace.duration],
       updateTimeRangeFilter: () => {},
     },
   };
@@ -68,7 +61,7 @@ describe('<TraceSpanGraph>', () => {
   it('renders a filtering box if leftBound exists', () => {
     const context = {
       ...options.context,
-      timeRangeFilter: [trace.timestamp + 0.2 * trace.duration, trace.timestamp + trace.duration],
+      timeRangeFilter: [trace.startTime + 0.2 * trace.duration, trace.startTime + trace.duration],
     };
     wrapper = shallow(<TraceSpanGraph {...props} />, { ...options, context });
     const leftBox = wrapper.find('.trace-page-timeline__graph--inactive');
@@ -82,7 +75,7 @@ describe('<TraceSpanGraph>', () => {
   it('renders a filtering box if rightBound exists', () => {
     const context = {
       ...options.context,
-      timeRangeFilter: [trace.timestamp, trace.timestamp + 0.8 * trace.duration],
+      timeRangeFilter: [trace.startTime, trace.startTime + 0.8 * trace.duration],
     };
     wrapper = shallow(<TraceSpanGraph {...props} />, { ...options, context });
     const rightBox = wrapper.find('.trace-page-timeline__graph--inactive');
@@ -132,7 +125,7 @@ describe('<TraceSpanGraph>', () => {
 
   it('passes items to SpanGraph', () => {
     const spanGraph = wrapper.find(SpanGraph).first();
-    const items = xformedTrace.spans.map(span => ({
+    const items = trace.spans.map(span => ({
       valueOffset: span.relativeStartTime,
       valueWidth: span.duration,
       serviceName: span.process.serviceName,
@@ -151,9 +144,8 @@ describe('<TraceSpanGraph>', () => {
     it('returns true for new trace', () => {
       const state = wrapper.state();
       const instance = wrapper.instance();
-      const trace2 = hydrateSpansWithProcesses(traceGenerator.trace({}));
-      const xformedTrace2 = transformTrace(trace2);
-      const altProps = { trace: trace2, xformedTrace: xformedTrace2 };
+      const trace2 = transformTraceData(traceGenerator.trace({}));
+      const altProps = { trace: trace2 };
       expect(instance.shouldComponentUpdate(altProps, state, options.context)).toBe(true);
     });
 
@@ -190,7 +182,7 @@ describe('<TraceSpanGraph>', () => {
     });
 
     it('updates the timeRangeFilter for the left handle', () => {
-      const timestamp = trace.timestamp;
+      const timestamp = trace.startTime;
       const duration = trace.duration;
       const updateTimeRangeFilter = sinon.spy();
       const context = { ...options.context, updateTimeRangeFilter };
@@ -204,7 +196,7 @@ describe('<TraceSpanGraph>', () => {
     });
 
     it('updates the timeRangeFilter for the right handle', () => {
-      const timestamp = trace.timestamp;
+      const timestamp = trace.startTime;
       const duration = trace.duration;
       const updateTimeRangeFilter = sinon.spy();
       const context = { ...options.context, updateTimeRangeFilter };

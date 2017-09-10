@@ -22,7 +22,7 @@ import keyBy from 'lodash/keyBy';
 import { handleActions } from 'redux-actions';
 
 import { fetchTrace, searchTraces } from '../actions/jaeger-api';
-import { enforceUniqueSpanIds } from '../selectors/trace';
+import transformTraceData from '../model/transform-trace-data';
 
 const initialState = {
   traces: {},
@@ -34,9 +34,9 @@ function fetchStarted(state) {
   return { ...state, loading: true };
 }
 
-function fetchTraceDone(state, { meta, payload }) {
-  const trace = enforceUniqueSpanIds(payload.data[0]);
-  const traces = { ...state.traces, [meta.id]: trace };
+function fetchTraceDone(state, { payload }) {
+  const trace = transformTraceData(payload.data[0]);
+  const traces = { ...state.traces, [trace.traceID]: trace };
   return { ...state, traces, loading: false };
 }
 
@@ -46,7 +46,8 @@ function fetchTraceErred(state, { meta, payload }) {
 }
 
 function searchDone(state, { payload }) {
-  const traces = keyBy(payload.data, 'traceID');
+  const processed = payload.data.map(transformTraceData);
+  const traces = keyBy(processed, 'traceID');
   return { ...state, traces, error: null, loading: false };
 }
 
