@@ -19,37 +19,26 @@
 // THE SOFTWARE.
 
 import PropTypes from 'prop-types';
-import React, { Component } from 'react';
+import React from 'react';
 
-import VirtualizedTraceView from './VirtualizedTraceView';
+import './GraphTicks.css';
 
-import './grid.css';
-import './index.css';
-
-export default class TraceTimelineViewer extends Component {
-  componentWillReceiveProps(nextProps) {
-    const { trace } = nextProps;
-    if (trace !== this.props.trace) {
-      throw new Error('Component does not support changing the trace');
-    }
+export default function SpanGraph(props) {
+  const { numTicks } = props;
+  const ticks = [];
+  // i starts at 1, limit is `i < numTicks` so the first and last ticks aren't drawn
+  for (let i = 1; i < numTicks; i++) {
+    const x = `${i / numTicks * 100}%`;
+    ticks.push(<line className="GraphTick" x1={x} y1="0%" x2={x} y2="100%" key={i / numTicks} />);
   }
 
-  render() {
-    const { timeRangeFilter: zoomRange, textFilter, trace } = this.props;
-    return (
-      <div className="trace-timeline-viewer">
-        <VirtualizedTraceView
-          textFilter={textFilter}
-          trace={trace}
-          zoomStart={zoomRange[0]}
-          zoomEnd={zoomRange[1]}
-        />
-      </div>
-    );
-  }
+  return (
+    <g data-test="ticks" aria-hidden="true">
+      {ticks}
+    </g>
+  );
 }
-TraceTimelineViewer.propTypes = {
-  trace: PropTypes.object,
-  timeRangeFilter: PropTypes.array,
-  textFilter: PropTypes.string,
+
+SpanGraph.propTypes = {
+  numTicks: PropTypes.number.isRequired,
 };

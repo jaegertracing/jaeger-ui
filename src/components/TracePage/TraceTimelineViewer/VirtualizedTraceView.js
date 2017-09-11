@@ -347,11 +347,7 @@ class VirtualizedTraceView extends React.PureComponent<VirtualizedTraceViewProps
             <h3 className="m0 p1">Span Name</h3>
           </TimelineRow.Left>
           <TimelineRow.Right>
-            <Ticks
-              labels={ticks.map(tick => (tick > 0 ? formatDuration(getDuationAtTick(tick)) : ''))}
-              ticks={ticks}
-            />
-            <h3 className="m0 p1">Timeline</h3>
+            <Ticks labels={ticks.map(tick => formatDuration(getDuationAtTick(tick)))} ticks={ticks} />
           </TimelineRow.Right>
         </TimelineRow>
         <div className="VirtualizedTraceView--spans">

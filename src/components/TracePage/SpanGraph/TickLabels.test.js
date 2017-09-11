@@ -21,9 +21,9 @@
 import React from 'react';
 import { shallow } from 'enzyme';
 
-import SpanGraphTickHeader from './SpanGraphTickHeader';
+import TickLabels from './TickLabels';
 
-describe('<SpanGraphTickHeader>', () => {
+describe('<TickLabels>', () => {
   const defaultProps = {
     numTicks: 4,
     duration: 5000,
@@ -33,7 +33,7 @@ describe('<SpanGraphTickHeader>', () => {
   let ticks;
 
   beforeEach(() => {
-    wrapper = shallow(<SpanGraphTickHeader {...defaultProps} />);
+    wrapper = shallow(<TickLabels {...defaultProps} />);
     ticks = wrapper.find('[data-test="tick"]');
   });
 
@@ -60,6 +60,6 @@ describe('<SpanGraphTickHeader>', () => {
   });
 
   it("doesn't explode if no trace is present", () => {
-    expect(() => shallow(<SpanGraphTickHeader {...defaultProps} trace={null} />)).not.toThrow();
+    expect(() => shallow(<TickLabels {...defaultProps} trace={null} />)).not.toThrow();
   });
 });

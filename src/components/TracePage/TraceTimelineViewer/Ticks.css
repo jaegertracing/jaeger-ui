@@ -27,8 +27,9 @@ THE SOFTWARE.
   background: #d3d3d3;
 }
 .span-row-tick-label {
-  position: absolute;
+  bottom: 0.5rem;
   left: 5px;
+  position: absolute;
 }
 
 .span-row-tick-label.is-end-anchor {

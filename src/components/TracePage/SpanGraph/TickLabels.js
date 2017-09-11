@@ -23,7 +23,9 @@ import React from 'react';
 
 import { formatDuration } from '../../../utils/date';
 
-export default function SpanGraphTickHeader(props) {
+import './TickLabels.css';
+
+export default function TickLabels(props) {
   const { numTicks, duration } = props;
 
   const ticks = [];
@@ -31,20 +33,20 @@ export default function SpanGraphTickHeader(props) {
     const portion = i / numTicks;
     const style = portion === 1 ? { right: '0%' } : { left: `${portion * 100}%` };
     ticks.push(
-      <div key={portion} className="span-graph--tick-header__label" style={style} data-test="tick">
+      <div key={portion} className="TickLabels--label" style={style} data-test="tick">
         {formatDuration(duration * portion)}
       </div>
     );
   }
 
   return (
-    <div className="span-graph--tick-header">
+    <div className="TickLabels">
       {ticks}
     </div>
   );
 }
 
-SpanGraphTickHeader.propTypes = {
+TickLabels.propTypes = {
   numTicks: PropTypes.number.isRequired,
   duration: PropTypes.number.isRequired,
 };

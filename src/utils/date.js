@@ -40,17 +40,6 @@ export function getPercentageOfDuration(duration, totalDuration) {
   return duration / totalDuration * 100;
 }
 
-/**
- * @param {number} timestamp
- * @param {number} initialTimestamp
- * @param {number} totalDuration
- * @return {number} 0-100 percentage value for location of timestamp in interval starting
- *   at initialTimestamp and lasting totalDuration
- */
-export function getPercentageOfInterval(timestamp, initialTimestamp, totalDuration) {
-  return getPercentageOfDuration(timestamp - initialTimestamp, totalDuration);
-}
-
 const quantizeDuration = (duration, floatPrecision, conversionFactor) =>
   toFloatPrecision(duration / conversionFactor, floatPrecision) * conversionFactor;
 

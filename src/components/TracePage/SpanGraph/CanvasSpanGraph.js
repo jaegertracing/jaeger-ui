@@ -24,11 +24,9 @@ import React from 'react';
 import renderIntoCanvas from './render-into-canvas';
 import colorGenerator from '../../../utils/color-generator';
 
-import './index.css';
+import './CanvasSpanGraph.css';
 
-const MIN_SPAN_WIDTH = 0.002;
-
-const CV_WIDTH = 10000;
+const CV_WIDTH = 4000;
 
 const getColor = str => colorGenerator.getColorByKey(str);
 
@@ -52,11 +50,10 @@ export default class CanvasSpanGraph extends React.PureComponent {
   }
 
   _draw() {
-    if (!this._canvasElm) {
-      return;
+    if (this._canvasElm) {
+      const { valueWidth: totalValueWidth, items } = this.props;
+      renderIntoCanvas(this._canvasElm, items, totalValueWidth, getColor);
     }
-    const { valueWidth: totalValueWidth, items } = this.props;
-    renderIntoCanvas(this._canvasElm, items, totalValueWidth, getColor);
   }
 
   render() {

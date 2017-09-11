@@ -20,21 +20,31 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-.trace-page {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
+.timeline-scrubber {
+  cursor: ew-resize;
 }
 
-.trace-page-header-section {
-  background: #fff;
-  border-bottom: 1px solid #bbb;
-  padding: 0.5em 0.5em 0 0.5em;
-  position: fixed;
-  width: 100%;
-  z-index: 1000001;
+.timeline-scrubber__line {
+  stroke: #999;
+  stroke-width: 1;
 }
 
-.trace-timeline-section {
-  border-top: 1px solid #999;
+.timeline-scrubber:hover .timeline-scrubber__line {
+  stroke: #777;
+}
+
+.timeline-scrubber__handle {
+  stroke: #999;
+  fill: #fff;
+}
+
+.timeline-scrubber:hover .timeline-scrubber__handle {
+  stroke: #777;
+}
+
+.timeline-scrubber__handle--grip {
+  fill: #bbb;
+}
+.timeline-scrubber:hover .timeline-scrubber__handle--grip {
+  fill: #999;
 }

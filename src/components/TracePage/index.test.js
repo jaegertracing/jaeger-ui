@@ -25,7 +25,7 @@ import { shallow, mount } from 'enzyme';
 import traceGenerator from '../../demo/trace-generators';
 import TracePage from './';
 import TracePageHeader from './TracePageHeader';
-import TraceSpanGraph from './TraceSpanGraph';
+import SpanGraph from './SpanGraph';
 import transformTraceData from '../../model/transform-trace-data';
 
 describe('<TracePage>', () => {
@@ -46,9 +46,8 @@ describe('<TracePage>', () => {
     expect(wrapper.find(TracePageHeader).get(0)).toBeTruthy();
   });
 
-  it('renders a <TraceSpanGraph>', () => {
-    const props = { trace: defaultProps.trace };
-    expect(wrapper.contains(<TraceSpanGraph {...props} />)).toBeTruthy();
+  it('renders a <SpanGraph>', () => {
+    expect(wrapper.find(SpanGraph).length).toBe(1);
   });
 
   it('renders an empty page when not provided a trace', () => {

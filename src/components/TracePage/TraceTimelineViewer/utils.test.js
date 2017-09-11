@@ -19,7 +19,6 @@
 // THE SOFTWARE.
 
 import {
-  getPositionInRange,
   getViewedBounds,
   isClientSpan,
   isErrorSpan,
@@ -58,16 +57,6 @@ describe('TraceTimelineViewer/utils', () => {
       const { start, end } = getViewedBounds(args);
       expect(start).toBe(0.25);
       expect(end).toBe(0.75);
-    });
-  });
-
-  describe('getPositionInRange()', () => {
-    it('gets the position of a value within a range', () => {
-      expect(getPositionInRange(100, 200, 150)).toBe(0.5);
-      expect(getPositionInRange(100, 200, 0)).toBe(-1);
-      expect(getPositionInRange(100, 200, 200)).toBe(1);
-      expect(getPositionInRange(100, 200, 100)).toBe(0);
-      expect(getPositionInRange(0, 200, 100)).toBe(0.5);
     });
   });
 

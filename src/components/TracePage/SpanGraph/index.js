@@ -18,66 +18,209 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+import React, { Component } from 'react';
+import { window } from 'global';
 import PropTypes from 'prop-types';
-import React from 'react';
 
-import colorGenerator from '../../../utils/color-generator';
+import GraphTicks from './GraphTicks';
+import CanvasSpanGraph from './CanvasSpanGraph';
+import TickLabels from './TickLabels';
+import Scrubber from './Scrubber';
 
 import './index.css';
 
-const MIN_SPAN_WIDTH = 0.002;
+const TIMELINE_TICK_INTERVAL = 4;
 
-export default function SpanGraph(props) {
-  const { valueWidth: totalValueWidth, numTicks, items } = props;
-
-  const itemHeight = 1 / items.length * 100;
-
-  const ticks = [];
-  // i starts at 1, limit is `i < numTicks` so the first and last ticks aren't drawn
-  for (let i = 1; i < numTicks; i++) {
-    const x = `${i / numTicks * 100}%`;
-    ticks.push(<line className="span-graph--tick" x1={x} y1="0%" x2={x} y2="100%" key={i / numTicks} />);
+export default class SpanGraph extends Component {
+  static get propTypes() {
+    return {
+      height: PropTypes.number.isRequired,
+      trace: PropTypes.object,
+      viewRange: PropTypes.arrayOf(PropTypes.number).isRequired,
+    };
   }
 
-  const spanItems = items.map((item, i) => {
-    const { valueWidth, valueOffset, serviceName } = item;
-    const key = `span-graph-${i}`;
-    const fill = colorGenerator.getColorByKey(serviceName);
-    const width = `${Math.max(valueWidth / totalValueWidth, MIN_SPAN_WIDTH) * 100}%`;
+  static get defaultProps() {
+    return {
+      height: 60,
+    };
+  }
+
+  static get contextTypes() {
+    return {
+      updateTimeRangeFilter: PropTypes.func.isRequired,
+    };
+  }
+
+  constructor(props) {
+    super(props);
+    this.state = {
+      currentlyDragging: null,
+      leftBound: null,
+      prevX: null,
+      rightBound: null,
+    };
+    this._wrapper = undefined;
+    this._setWrapper = this._setWrapper.bind(this);
+    this._publishTimeRange = this._publishTimeRange.bind(this);
+    this.publishIntervalID = undefined;
+  }
+
+  shouldComponentUpdate(nextProps, nextState) {
+    const { trace: newTrace, viewRange: newViewRange } = nextProps;
+    const {
+      currentlyDragging: newCurrentlyDragging,
+      leftBound: newLeftBound,
+      rightBound: newRightBound,
+    } = nextState;
+    const { trace, viewRange } = this.props;
+    const { currentlyDragging, leftBound, rightBound } = this.state;
+
     return (
-      <rect
-        key={key}
-        className="span-graph--span-rect"
-        height={`${itemHeight}%`}
-        style={{ fill }}
-        width={width}
-        x={`${valueOffset / totalValueWidth * 100}%`}
-        y={`${i / items.length * 100}%`}
-      />
+      trace.traceID !== newTrace.traceID ||
+      viewRange[0] !== newViewRange[0] ||
+      viewRange[1] !== newViewRange[1] ||
+      currentlyDragging !== newCurrentlyDragging ||
+      leftBound !== newLeftBound ||
+      rightBound !== newRightBound
     );
-  });
+  }
 
-  return (
-    <g>
-      <g data-test="ticks" aria-hidden="true">
-        {ticks}
-      </g>
-      {/*
-      <g data-test="span-items">
-        {spanItems}
-      </g> */}
-    </g>
-  );
+  _setWrapper(elm) {
+    this._wrapper = elm;
+  }
+
+  _startDragging(boundName, { clientX }) {
+    const { viewRange } = this.props;
+    const [leftBound, rightBound] = viewRange;
+
+    this.setState({ currentlyDragging: boundName, prevX: clientX, leftBound, rightBound });
+
+    const mouseMoveHandler = (...args) => this._onMouseMove(...args);
+    const mouseUpHandler = () => {
+      this._stopDragging();
+      window.removeEventListener('mouseup', mouseUpHandler);
+      window.removeEventListener('mousemove', mouseMoveHandler);
+    };
+
+    window.addEventListener('mouseup', mouseUpHandler);
+    window.addEventListener('mousemove', mouseMoveHandler);
+  }
+
+  _stopDragging() {
+    this._publishTimeRange();
+    this.setState({ currentlyDragging: null, prevX: null });
+  }
+
+  _publishTimeRange() {
+    const { currentlyDragging, leftBound, rightBound } = this.state;
+    const { updateTimeRangeFilter } = this.context;
+    clearTimeout(this.publishIntervalID);
+    this.publishIntervalID = undefined;
+    if (currentlyDragging) {
+      updateTimeRangeFilter(leftBound, rightBound);
+    }
+  }
+
+  _onMouseMove({ clientX }) {
+    const { currentlyDragging } = this.state;
+    let { leftBound, rightBound } = this.state;
+    if (!currentlyDragging) {
+      return;
+    }
+    const newValue = clientX / this._wrapper.clientWidth;
+    switch (currentlyDragging) {
+      case 'leftBound':
+        leftBound = Math.max(0, newValue);
+        break;
+      case 'rightBound':
+        rightBound = Math.min(1, newValue);
+        break;
+      default:
+        break;
+    }
+    this.setState({ prevX: clientX, leftBound, rightBound });
+    if (this.publishIntervalID == null) {
+      this.publishIntervalID = window.requestAnimationFrame(this._publishTimeRange);
+    }
+  }
+
+  render() {
+    const { height, trace, viewRange } = this.props;
+    if (!trace) {
+      return <div />;
+    }
+    const { currentlyDragging } = this.state;
+    let { leftBound, rightBound } = this.state;
+    if (!currentlyDragging) {
+      leftBound = viewRange[0];
+      rightBound = viewRange[1];
+    }
+    let leftInactive;
+    if (leftBound) {
+      leftInactive = leftBound * 100;
+    }
+    let rightInactive;
+    if (rightBound) {
+      rightInactive = 100 - rightBound * 100;
+    }
+    return (
+      <div>
+        <TickLabels numTicks={TIMELINE_TICK_INTERVAL} duration={trace.duration} />
+        <div className="relative" ref={this._setWrapper}>
+          <CanvasSpanGraph
+            valueWidth={trace.duration}
+            items={trace.spans.map(span => ({
+              valueOffset: span.relativeStartTime,
+              valueWidth: span.duration,
+              serviceName: span.process.serviceName,
+            }))}
+          />
+          <div className="SpanGraph--zlayer">
+            <svg height={height} className={`SpanGraph--graph ${currentlyDragging ? 'is-dragging' : ''}`}>
+              {leftInactive > 0 &&
+                <rect x={0} y={0} height="100%" width={`${leftInactive}%`} className="SpanGraph--inactive" />}
+              {rightInactive > 0 &&
+                <rect
+                  x={`${100 - rightInactive}%`}
+                  y={0}
+                  height="100%"
+                  width={`${rightInactive}%`}
+                  className="SpanGraph--inactive"
+                />}
+              <GraphTicks
+                valueWidth={trace.duration}
+                numTicks={TIMELINE_TICK_INTERVAL}
+                items={trace.spans.map(span => ({
+                  valueOffset: span.relativeStartTime,
+                  valueWidth: span.duration,
+                  serviceName: span.process.serviceName,
+                }))}
+              />
+              {
+                <Scrubber
+                  id="trace-page-timeline__left-bound-handle"
+                  position={leftBound || 0}
+                  handleWidth={8}
+                  handleHeight={30}
+                  handleTopOffset={15}
+                  onMouseDown={(...args) => this._startDragging('leftBound', ...args)}
+                />
+              }
+              {
+                <Scrubber
+                  id="trace-page-timeline__right-bound-handle"
+                  position={rightBound || 1}
+                  handleWidth={8}
+                  handleHeight={30}
+                  handleTopOffset={15}
+                  onMouseDown={(...args) => this._startDragging('rightBound', ...args)}
+                />
+              }
+            </svg>
+          </div>
+        </div>
+      </div>
+    );
+  }
 }
-
-SpanGraph.propTypes = {
-  items: PropTypes.arrayOf(
-    PropTypes.shape({
-      valueWidth: PropTypes.number.isRequired,
-      valueOffset: PropTypes.number.isRequired,
-      serviceName: PropTypes.string.isRequired,
-    })
-  ).isRequired,
-  numTicks: PropTypes.number.isRequired,
-  valueWidth: PropTypes.number.isRequired,
-};
