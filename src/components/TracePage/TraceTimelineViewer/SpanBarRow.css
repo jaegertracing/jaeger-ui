@@ -21,19 +21,14 @@ THE SOFTWARE.
 */
 
 .span-name-column {
-  background: #fafafa;
   position: relative;
   text-overflow: ellipsis;
   white-space: nowrap;
+  z-index: 1;
 }
 
-.span-row:hover .span-name-column {
-  background: #f8f8f8;
-}
-
-.span-row.is-expanded .span-name-column {
-  background: #f0f0f0;
-  outline: 1px solid #ddd;
+.span-name-column:hover {
+  z-index: 1;
 }
 
 .span-row.clipping-left .span-name-column::before {
@@ -47,19 +42,35 @@ THE SOFTWARE.
 }
 
 .span-name-wrapper {
+  background: #fafafa;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
+.span-name-wrapper:hover {
+  border-right: 1px solid #bbb;
+  float: left;
+  min-width: 100%;
+  overflow: visible;
+}
+
+.span-row:hover .span-name-wrapper {
+  background: #f8f8f8;
+  background: linear-gradient(90deg, #fafafa, #f8f8f8 75%, #eee);
+}
+
+.span-row.is-expanded .span-name-wrapper {
+  background: #f0f0f0;
+  outline: 1px solid #ddd;
+}
+
 .span-name {
-  outline: none;
-  color: #000;
   border-left: 4px solid;
+  color: #000;
   cursor: pointer;
   display: inline;
-}
-.span-name.is-detail-expanded {
-  display: inline-block;
+  outline: none;
+  padding-right: 0.25em;
 }
 
 .endpoint-name {
@@ -87,6 +98,7 @@ THE SOFTWARE.
 
 .span-row:hover .span-view {
   background-color: #f5f5f5;
+  outline: 1px solid #ddd;
 }
 
 .span-row.is-expanded .span-view {
