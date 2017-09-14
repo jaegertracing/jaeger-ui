@@ -35,15 +35,16 @@ import generateActionTypes from '../../../utils/generate-action-types';
 //
 // TraceState {
 //   traceID: string,
+//   spanNameColumnWidth:
 //   childrenHiddenIDs: Set<spanID>,
 //   findMatches: ?Set<spanID>,
 //   detailStates: Map<spanID, DetailState>
 // }
-//
 
-export function newInitialState(traceID = null) {
+export function newInitialState({ spanNameColumnWidth = null, traceID = null } = {}) {
   return {
     traceID,
+    spanNameColumnWidth: spanNameColumnWidth || 0.25,
     childrenHiddenIDs: new Set(),
     detailStates: new Map(),
     findMatchesIDs: null,
@@ -52,6 +53,7 @@ export function newInitialState(traceID = null) {
 
 const actionTypes = generateActionTypes('@jaeger-ui/trace-timeline-viewer', [
   'SET_TRACE',
+  'SET_SPAN_NAME_COLUMN_WIDTH',
   'CHILDREN_TOGGLE',
   'DETAIL_TOGGLE',
   'DETAIL_TAGS_TOGGLE',
@@ -63,6 +65,7 @@ const actionTypes = generateActionTypes('@jaeger-ui/trace-timeline-viewer', [
 
 const fullActions = createActions({
   [actionTypes.SET_TRACE]: traceID => ({ traceID }),
+  [actionTypes.SET_SPAN_NAME_COLUMN_WIDTH]: width => ({ width }),
   [actionTypes.CHILDREN_TOGGLE]: spanID => ({ spanID }),
   [actionTypes.DETAIL_TOGGLE]: spanID => ({ spanID }),
   [actionTypes.DETAIL_TAGS_TOGGLE]: spanID => ({ spanID }),
@@ -79,7 +82,14 @@ function setTrace(state, { payload }) {
   if (traceID === state.traceID) {
     return state;
   }
-  return newInitialState(traceID);
+  // preserve spanNameColumnWidth when resetting state
+  const { spanNameColumnWidth } = state;
+  return newInitialState({ spanNameColumnWidth, traceID });
+}
+
+function setColumnWidth(state, { payload }) {
+  const { width } = payload;
+  return { ...state, spanNameColumnWidth: width };
 }
 
 function childrenToggle(state, { payload }) {
@@ -143,6 +153,7 @@ function find(state, { payload }) {
 export default handleActions(
   {
     [actionTypes.SET_TRACE]: setTrace,
+    [actionTypes.SET_SPAN_NAME_COLUMN_WIDTH]: setColumnWidth,
     [actionTypes.CHILDREN_TOGGLE]: childrenToggle,
     [actionTypes.DETAIL_TOGGLE]: detailToggle,
     [actionTypes.DETAIL_TAGS_TOGGLE]: detailTagsToggle,

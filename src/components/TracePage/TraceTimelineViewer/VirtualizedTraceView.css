@@ -20,16 +20,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-.VirtualizedTraceView--headerRow {
-  background: #e8e8e8;
-  border-bottom: 1px solid #ccc;
-  height: 38px;
-  overflow: hidden;
-  position: fixed;
-  width: 100%;
-  z-index: 2;
-}
-
 .VirtualizedTraceView--spans {
   padding-top: 40px;
   position: relative;

@@ -60,17 +60,17 @@ function SpanBar(props) {
 }
 
 SpanBar.propTypes = {
+  color: PropTypes.string.isRequired,
+  hintSide: PropTypes.string.isRequired,
+  label: PropTypes.string.isRequired,
+  onClick: PropTypes.func,
+  viewEnd: PropTypes.number.isRequired,
+  viewStart: PropTypes.number.isRequired,
   rpc: PropTypes.shape({
     viewStart: PropTypes.number,
     viewEnd: PropTypes.number,
     color: PropTypes.string,
   }),
-  viewStart: PropTypes.number.isRequired,
-  viewEnd: PropTypes.number.isRequired,
-  color: PropTypes.string.isRequired,
-  hintSide: PropTypes.string.isRequired,
-  label: PropTypes.string.isRequired,
-  onClick: PropTypes.func,
   setLongLabel: PropTypes.func,
   setShortLabel: PropTypes.func,
 };

@@ -32,6 +32,7 @@ export default function SpanBarRow(props) {
   const {
     className,
     color,
+    columnDivision,
     depth,
     isChildrenExpanded,
     isDetailExapnded,
@@ -40,11 +41,11 @@ export default function SpanBarRow(props) {
     label,
     onDetailToggled,
     onChildrenToggled,
+    numTicks,
     operationName,
     rpc,
     serviceName,
     showErrorIcon,
-    ticks,
     viewEnd,
     viewStart,
   } = props;
@@ -75,7 +76,7 @@ export default function SpanBarRow(props) {
         ${isFilteredOut ? 'is-filtered-out' : ''}
       `}
     >
-      <TimelineRow.Left className="span-name-column">
+      <TimelineRow.Cell className="span-name-column" width={columnDivision}>
         <div className="span-name-wrapper" title={title}>
           <SpanTreeOffset
             level={depth + 1}
@@ -108,9 +109,14 @@ export default function SpanBarRow(props) {
             </span>
           </a>
         </div>
-      </TimelineRow.Left>
-      <TimelineRow.Right className="span-view" style={{ cursor: 'pointer' }} onClick={onDetailToggled}>
-        <Ticks ticks={ticks} />
+      </TimelineRow.Cell>
+      <TimelineRow.Cell
+        className="span-view"
+        style={{ cursor: 'pointer' }}
+        width={1 - columnDivision}
+        onClick={onDetailToggled}
+      >
+        <Ticks numTicks={numTicks} />
         <SpanBar
           rpc={rpc}
           viewStart={viewStart}
@@ -120,7 +126,7 @@ export default function SpanBarRow(props) {
           longLabel={longLabel}
           hintSide={hintSide}
         />
-      </TimelineRow.Right>
+      </TimelineRow.Cell>
     </TimelineRow>
   );
 }
@@ -128,6 +134,7 @@ export default function SpanBarRow(props) {
 SpanBarRow.propTypes = {
   className: PropTypes.string,
   color: PropTypes.string.isRequired,
+  columnDivision: PropTypes.number.isRequired,
   depth: PropTypes.number.isRequired,
   isChildrenExpanded: PropTypes.bool.isRequired,
   isDetailExapnded: PropTypes.bool.isRequired,
@@ -137,6 +144,7 @@ SpanBarRow.propTypes = {
   onDetailToggled: PropTypes.func.isRequired,
   onChildrenToggled: PropTypes.func.isRequired,
   operationName: PropTypes.string.isRequired,
+  numTicks: PropTypes.number.isRequired,
   rpc: PropTypes.shape({
     viewStart: PropTypes.number,
     viewEnd: PropTypes.number,
@@ -146,7 +154,6 @@ SpanBarRow.propTypes = {
   }),
   serviceName: PropTypes.string.isRequired,
   showErrorIcon: PropTypes.bool.isRequired,
-  ticks: PropTypes.arrayOf(PropTypes.number).isRequired,
   viewEnd: PropTypes.number.isRequired,
   viewStart: PropTypes.number.isRequired,
 };

@@ -26,6 +26,7 @@ import './TimelineRow.css';
 const propTypes = {
   children: PropTypes.node,
   className: PropTypes.string,
+  style: PropTypes.object,
 };
 
 const defaultProps = {
@@ -44,28 +45,17 @@ export default function TimelineRow(props) {
 TimelineRow.propTypes = { ...propTypes };
 TimelineRow.defaultProps = { ...defaultProps };
 
-function TimelineRowLeft(props) {
-  const { children, className, ...rest } = props;
+function TimelineRowCell(props) {
+  const { children, className, width, style, ...rest } = props;
+  const widthPercent = `${width * 100}%`;
+  const mergedStyle = { ...style, flexBasis: widthPercent, maxWidth: widthPercent };
   return (
-    <div className={`col-xs-3 relative ${className}`} {...rest}>
+    <div className={`relative ${className}`} style={mergedStyle} {...rest}>
       {children}
     </div>
   );
 }
-TimelineRowLeft.propTypes = { ...propTypes };
-TimelineRowLeft.defaultProps = { ...defaultProps };
+TimelineRowCell.propTypes = { ...propTypes, width: PropTypes.number.isRequired };
+TimelineRowCell.defaultProps = { ...defaultProps };
 
-TimelineRow.Left = TimelineRowLeft;
-
-function TimelineRowRight(props) {
-  const { children, className, ...rest } = props;
-  return (
-    <div className={`col-xs-9 relative ${className}`} {...rest}>
-      {children}
-    </div>
-  );
-}
-TimelineRowRight.propTypes = { ...propTypes };
-TimelineRowRight.defaultProps = { ...defaultProps };
-
-TimelineRow.Right = TimelineRowRight;
+TimelineRow.Cell = TimelineRowCell;
