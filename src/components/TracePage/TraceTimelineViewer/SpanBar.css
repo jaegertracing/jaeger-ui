@@ -29,6 +29,7 @@ THE SOFTWARE.
   top: 0;
   overflow: hidden;
   opacity: 0.5;
+  z-index: 0;
 }
 
 .span-row.is-expanded .SpanBar--wrapper,

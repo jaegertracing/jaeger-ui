@@ -58,17 +58,15 @@ export default function SpanDetailRow(props: SpanDetailRowProps) {
   } = props;
   return (
     <TimelineRow className={`detail-row ${isFilteredOut ? 'is-filtered-out' : ''}`}>
-      <TimelineRow.Left>
-        <div className="detail-row-name-column">
-          <SpanTreeOffset level={span.depth + 1} />
-          <span>
-            <span
-              className="detail-row-expanded-accent"
-              onClick={detailToggle}
-              style={{ borderColor: color }}
-            />
-          </span>
-        </div>
+      <TimelineRow.Left className="detail-row-name-column">
+        <SpanTreeOffset level={span.depth + 1} />
+        <span>
+          <span
+            className="detail-row-expanded-accent"
+            onClick={detailToggle}
+            style={{ borderColor: color }}
+          />
+        </span>
       </TimelineRow.Left>
       <TimelineRow.Right>
         <div className="p2 detail-info-wrapper" style={{ borderTopColor: color }}>

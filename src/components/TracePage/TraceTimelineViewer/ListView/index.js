@@ -358,7 +358,7 @@ export default class ListView extends React.Component<ListViewProps> {
       // (likely not transferable to other contexts, and instead is specific to
       // how we have the items rendered)
       const measureSrc: Element = node.firstElementChild || node;
-      const observed = measureSrc.scrollHeight;
+      const observed = measureSrc.clientHeight;
       const known = this._knownHeights.get(itemKey);
       if (observed !== known) {
         this._knownHeights.set(itemKey, observed);
@@ -437,7 +437,6 @@ export default class ListView extends React.Component<ListViewProps> {
         position: 'absolute',
         top: this._yPositions.ys[i],
         height: this._yPositions.heights[i],
-        overflow: 'hidden',
       };
       const itemKey = getKeyFromIndex(i);
       const attrs = { 'data-item-key': itemKey };
