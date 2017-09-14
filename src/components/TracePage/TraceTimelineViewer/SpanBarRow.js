@@ -59,13 +59,6 @@ export default function SpanBarRow(props) {
     longLabel = `${label} | ${labelDetail}`;
     hintSide = 'right';
   }
-
-  let title = serviceName;
-  if (rpc) {
-    title += ` → ${rpc.serviceName}::${rpc.operationName}`;
-  } else {
-    title += `::${operationName}`;
-  }
   return (
     <TimelineRow
       className={`
@@ -76,7 +69,7 @@ export default function SpanBarRow(props) {
       `}
     >
       <TimelineRow.Left className="span-name-column">
-        <div className="span-name-wrapper" title={title}>
+        <div className="span-name-wrapper">
           <SpanTreeOffset
             level={depth + 1}
             hasChildren={isParent}
