@@ -47,19 +47,21 @@ THE SOFTWARE.
   border-left: 1px solid #999;
 }
 
-.TimelineColumnResizer--wrapper.isDraggingLeft > .TimelineColumnResizer--dragger {
-  border-left: 1px solid #808;
+.TimelineColumnResizer--wrapper.isDraggingLeft > .TimelineColumnResizer--dragger,
+.TimelineColumnResizer--wrapper.isDraggingRight > .TimelineColumnResizer--dragger {
   /* #808 === rgb(136, 0, 136) */
   background: rgba(136, 0, 136, 0.05);
+  width: auto;
 }
 
-/* .TimelineColumnResizer--dragger.isDraggingRight,
-.TimelineColumnResizer--dragger.isDraggingRight:hover { */
+.TimelineColumnResizer--wrapper.isDraggingLeft > .TimelineColumnResizer--dragger {
+  border-left: 2px solid #808;
+  border-right: 1px solid #999;
+}
 
 .TimelineColumnResizer--wrapper.isDraggingRight > .TimelineColumnResizer--dragger {
-  border-right: 1px solid #808;
-  /* #808 === rgb(136, 0, 136) */
-  background: rgba(136, 0, 136, 0.03);
+  border-left: 1px solid #999;
+  border-right: 2px solid #808;
 }
 
 .TimelineColumnResizer--dragger::before {
@@ -119,6 +121,9 @@ THE SOFTWARE.
 }
 
 .TimelineHeaderRow--title {
+  overflow: hidden;
   padding: 0.5rem;
+  padding-right: 0.1rem;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }

@@ -22,6 +22,7 @@
 
 import * as React from 'react';
 import cx from 'classnames';
+import _clamp from 'lodash/clamp';
 
 import Ticks from './Ticks';
 import TimelineRow from './TimelineRow';
@@ -44,7 +45,7 @@ type TimelineColumnResizerProps = {
 };
 
 type TimelineColumnResizerState = {
-  currentDragPosition: ?number,
+  dragPosition: ?number,
   rootX: ?number,
 };
 
@@ -64,7 +65,7 @@ class TimelineColumnResizer extends React.PureComponent<
     this._rootElm = undefined;
     this._isDragging = false;
     this.state = {
-      currentDragPosition: null,
+      dragPosition: null,
       rootX: null,
     };
     this._setRootElm = this._setRootElm.bind(this);
@@ -85,15 +86,25 @@ class TimelineColumnResizer extends React.PureComponent<
     this._rootElm = elm;
   };
 
+  _getDraggedPosition(clientX: number, rootX: ?number = null) {
+    if (!this._rootElm) {
+      return null;
+    }
+    const { min, max } = this.props;
+    const rx = rootX == null ? this.state.rootX : rootX;
+    // pos is position of cursor in the horizontal portion of the bounding box,
+    // in range [0, 1]
+    const pos = (clientX - (rx || 0)) / this._rootElm.clientWidth;
+    return _clamp(pos, min, max);
+  }
+
   _onDraggerMouseDown = function _onDraggerMouseDown({ button, clientX }) {
     if (this._isDragging || button !== LEFT_MOUSE_BUTTON || !this._rootElm) {
       return;
     }
     const rootX = this._rootElm.getBoundingClientRect().left;
-    this.setState({
-      rootX,
-      currentDragPosition: clientX - rootX,
-    });
+    const dragPosition = this._getDraggedPosition(clientX, rootX);
+    this.setState({ rootX, dragPosition });
     window.addEventListener('mousemove', this._onWindowMouseMove);
     window.addEventListener('mouseup', this._onWindowMouseUp);
     this._isDragging = true;
@@ -103,8 +114,8 @@ class TimelineColumnResizer extends React.PureComponent<
   };
 
   _onWindowMouseMove = function _onWindowMouseMove({ clientX }) {
-    const { rootX } = this.state;
-    this.setState({ rootX, currentDragPosition: clientX - (rootX || 0) });
+    const dragPosition = this._getDraggedPosition(clientX);
+    this.setState({ ...this.state, dragPosition });
   };
 
   _onWindowMouseUp = function _onWindowMouseUp({ clientX }) {
@@ -114,41 +125,33 @@ class TimelineColumnResizer extends React.PureComponent<
       (document.body.style: any).userSelect = undefined;
     }
     this._isDragging = false;
-    const { rootX } = this.state;
-    this.setState({ rootX: null, currentDragPosition: null });
-    const { min, max } = this.props;
-    if (this._rootElm) {
-      let value = (clientX - (rootX || 0)) / this._rootElm.clientWidth;
-      if (value < min) {
-        value = min;
-      } else if (value > max) {
-        value = max;
-      }
-      this.props.onChange(value);
+    const dragPosition = this._getDraggedPosition(clientX);
+    if (dragPosition != null) {
+      this.props.onChange(dragPosition);
     }
+    this.setState({ rootX: null, dragPosition: null });
   };
 
   render() {
     let left;
     let draggerStyle;
     let draggerStateCls = '';
-    if (this._isDragging && this._rootElm) {
-      const { min, max, position } = this.props;
-      const { currentDragPosition } = this.state;
-      let newPosition = (currentDragPosition || 0) / this._rootElm.clientWidth;
-      if (newPosition < min) {
-        newPosition = min;
-      } else if (newPosition > max) {
-        newPosition = max;
-      }
-      left = `${newPosition * 100}%`;
-      const draggLeft = `${Math.min(position, newPosition) * 100}%`;
-      const width = `${Math.abs(position - newPosition) * 100}%`;
-      draggerStyle = { width, left: draggLeft };
+    const { dragPosition } = this.state;
+    if (this._isDragging && this._rootElm && dragPosition != null) {
+      const { position } = this.props;
       draggerStateCls = cx({
-        isDraggingLeft: newPosition < position,
-        isDraggingRight: newPosition > position,
+        isDraggingLeft: dragPosition < position,
+        isDraggingRight: dragPosition > position,
       });
+      left = `${dragPosition * 100}%`;
+      // Draw a highlight from the current dragged position back to the original
+      // position, e.g. highlight the change. Draw the highlight via `left` and
+      // `right` css styles (simpler than using `width`).
+      const draggerLeft = `${Math.min(position, dragPosition) * 100}%`;
+      // subtract 1px for draggerRight to deal with the right border being off
+      // by 1px when dragging left
+      const draggerRight = `calc(${(1 - Math.max(position, dragPosition)) * 100}% - 1px)`;
+      draggerStyle = { left: draggerLeft, right: draggerRight };
     } else {
       const { position } = this.props;
       left = `${position * 100}%`;
@@ -159,6 +162,7 @@ class TimelineColumnResizer extends React.PureComponent<
         <div className={`TimelineColumnResizer--wrapper ${draggerStateCls}`} style={{ left }}>
           <div className="TimelineColumnResizer--gripIcon" />
           <div
+            aria-hidden
             className="TimelineColumnResizer--dragger"
             onMouseDown={this._onDraggerMouseDown}
             style={draggerStyle}
