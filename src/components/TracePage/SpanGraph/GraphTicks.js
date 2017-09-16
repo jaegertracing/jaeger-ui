@@ -1,3 +1,5 @@
+// @flow
+
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -18,12 +20,15 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import PropTypes from 'prop-types';
 import React from 'react';
 
 import './GraphTicks.css';
 
-export default function SpanGraph(props) {
+type GraphTicksProps = {
+  numTicks: number,
+};
+
+export default function GraphTicks(props: GraphTicksProps) {
   const { numTicks } = props;
   const ticks = [];
   // i starts at 1, limit is `i < numTicks` so the first and last ticks aren't drawn
@@ -38,7 +43,3 @@ export default function SpanGraph(props) {
     </g>
   );
 }
-
-SpanGraph.propTypes = {
-  numTicks: PropTypes.number.isRequired,
-};

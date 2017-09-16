@@ -1,3 +1,5 @@
+// @flow
+
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -18,10 +20,17 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import PropTypes from 'prop-types';
 import React from 'react';
 
 import './Scrubber.css';
+
+type ScrubberProps = {
+  position: number,
+  onMouseDown: (SyntheticMouseEvent<any>) => void,
+  handleTopOffset: number,
+  handleWidth: number,
+  handleHeight: number,
+};
 
 const HANDLE_WIDTH = 6;
 const HANDLE_HEIGHT = 20;
@@ -33,7 +42,7 @@ export default function Scrubber({
   handleTopOffset = HANDLE_TOP_OFFSET,
   handleWidth = HANDLE_WIDTH,
   handleHeight = HANDLE_HEIGHT,
-}) {
+}: ScrubberProps) {
   const xPercent = `${position * 100}%`;
   return (
     <g className="timeline-scrubber" onMouseDown={onMouseDown}>
@@ -66,11 +75,3 @@ export default function Scrubber({
     </g>
   );
 }
-
-Scrubber.propTypes = {
-  onMouseDown: PropTypes.func,
-  position: PropTypes.number.isRequired,
-  handleTopOffset: PropTypes.number,
-  handleWidth: PropTypes.number,
-  handleHeight: PropTypes.number,
-};

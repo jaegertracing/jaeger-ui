@@ -1,3 +1,5 @@
+// @flow
+
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -18,20 +20,27 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import PropTypes from 'prop-types';
-import React from 'react';
+import * as React from 'react';
 
 import renderIntoCanvas from './render-into-canvas';
 import colorGenerator from '../../../utils/color-generator';
 
 import './CanvasSpanGraph.css';
 
+type CanvasSpanGraphProps = {
+  items: { valueWidth: number, valueOffset: number, serviceName: string }[],
+  valueWidth: number,
+};
+
 const CV_WIDTH = 4000;
 
 const getColor = str => colorGenerator.getColorByKey(str);
 
-export default class CanvasSpanGraph extends React.PureComponent {
-  constructor(props) {
+export default class CanvasSpanGraph extends React.PureComponent<CanvasSpanGraphProps> {
+  props: CanvasSpanGraphProps;
+  _canvasElm: ?HTMLCanvasElement;
+
+  constructor(props: CanvasSpanGraphProps) {
     super(props);
     this._canvasElm = undefined;
     this._setCanvasRef = this._setCanvasRef.bind(this);
@@ -45,9 +54,9 @@ export default class CanvasSpanGraph extends React.PureComponent {
     this._draw();
   }
 
-  _setCanvasRef(elm) {
+  _setCanvasRef = function _setCanvasRef(elm: React.Node) {
     this._canvasElm = elm;
-  }
+  };
 
   _draw() {
     if (this._canvasElm) {
@@ -67,14 +76,3 @@ export default class CanvasSpanGraph extends React.PureComponent {
     );
   }
 }
-
-CanvasSpanGraph.propTypes = {
-  items: PropTypes.arrayOf(
-    PropTypes.shape({
-      valueWidth: PropTypes.number.isRequired,
-      valueOffset: PropTypes.number.isRequired,
-      serviceName: PropTypes.string.isRequired,
-    })
-  ).isRequired,
-  valueWidth: PropTypes.number.isRequired,
-};

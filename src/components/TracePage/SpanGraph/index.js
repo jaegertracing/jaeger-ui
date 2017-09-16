@@ -1,3 +1,5 @@
+// @flow
+
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -18,41 +20,49 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import React, { Component } from 'react';
-import { window } from 'global';
+import * as React from 'react';
 import PropTypes from 'prop-types';
+import { window } from 'global';
 
 import GraphTicks from './GraphTicks';
 import CanvasSpanGraph from './CanvasSpanGraph';
 import TickLabels from './TickLabels';
 import Scrubber from './Scrubber';
+import type { Trace } from '../../../types';
 
 import './index.css';
 
 const TIMELINE_TICK_INTERVAL = 4;
 
-export default class SpanGraph extends Component {
-  static get propTypes() {
-    return {
-      height: PropTypes.number.isRequired,
-      trace: PropTypes.object,
-      viewRange: PropTypes.arrayOf(PropTypes.number).isRequired,
-    };
-  }
+type SpanGraphProps = {
+  height: number,
+  trace: Trace,
+  viewRange: [number, number],
+};
 
-  static get defaultProps() {
-    return {
-      height: 60,
-    };
-  }
+type SpanGraphState = {
+  currentlyDragging: ?string,
+  leftBound: ?number,
+  prevX: ?number,
+  rightBound: ?number,
+};
 
-  static get contextTypes() {
-    return {
-      updateTimeRangeFilter: PropTypes.func.isRequired,
-    };
-  }
+export default class SpanGraph extends React.Component<SpanGraphProps, SpanGraphState> {
+  props: SpanGraphProps;
+  state: SpanGraphState;
 
-  constructor(props) {
+  _wrapper: ?HTMLElement;
+  _publishIntervalID: ?number;
+
+  static defaultProps = {
+    height: 60,
+  };
+
+  static contextTypes = {
+    updateTimeRangeFilter: PropTypes.func.isRequired,
+  };
+
+  constructor(props: SpanGraphProps) {
     super(props);
     this.state = {
       currentlyDragging: null,
@@ -63,10 +73,10 @@ export default class SpanGraph extends Component {
     this._wrapper = undefined;
     this._setWrapper = this._setWrapper.bind(this);
     this._publishTimeRange = this._publishTimeRange.bind(this);
-    this.publishIntervalID = undefined;
+    this._publishIntervalID = undefined;
   }
 
-  shouldComponentUpdate(nextProps, nextState) {
+  shouldComponentUpdate(nextProps: SpanGraphProps, nextState: SpanGraphState) {
     const { trace: newTrace, viewRange: newViewRange } = nextProps;
     const {
       currentlyDragging: newCurrentlyDragging,
@@ -86,11 +96,11 @@ export default class SpanGraph extends Component {
     );
   }
 
-  _setWrapper(elm) {
+  _setWrapper = function _setWrapper(elm: React.Node) {
     this._wrapper = elm;
-  }
+  };
 
-  _startDragging(boundName, { clientX }) {
+  _startDragging(boundName: string, { clientX }: SyntheticMouseEvent<any>) {
     const { viewRange } = this.props;
     const [leftBound, rightBound] = viewRange;
 
@@ -112,20 +122,20 @@ export default class SpanGraph extends Component {
     this.setState({ currentlyDragging: null, prevX: null });
   }
 
-  _publishTimeRange() {
+  _publishTimeRange = function _publishTimeRange() {
     const { currentlyDragging, leftBound, rightBound } = this.state;
     const { updateTimeRangeFilter } = this.context;
-    clearTimeout(this.publishIntervalID);
-    this.publishIntervalID = undefined;
+    clearTimeout(this._publishIntervalID);
+    this._publishIntervalID = undefined;
     if (currentlyDragging) {
       updateTimeRangeFilter(leftBound, rightBound);
     }
-  }
+  };
 
-  _onMouseMove({ clientX }) {
+  _onMouseMove({ clientX }: SyntheticMouseEvent<any>) {
     const { currentlyDragging } = this.state;
     let { leftBound, rightBound } = this.state;
-    if (!currentlyDragging) {
+    if (!currentlyDragging || !this._wrapper) {
       return;
     }
     const newValue = clientX / this._wrapper.clientWidth;
@@ -140,8 +150,8 @@ export default class SpanGraph extends Component {
         break;
     }
     this.setState({ prevX: clientX, leftBound, rightBound });
-    if (this.publishIntervalID == null) {
-      this.publishIntervalID = window.requestAnimationFrame(this._publishTimeRange);
+    if (this._publishIntervalID == null) {
+      this._publishIntervalID = window.requestAnimationFrame(this._publishTimeRange);
     }
   }
 
@@ -178,9 +188,9 @@ export default class SpanGraph extends Component {
           />
           <div className="SpanGraph--zlayer">
             <svg height={height} className={`SpanGraph--graph ${currentlyDragging ? 'is-dragging' : ''}`}>
-              {leftInactive > 0 &&
+              {leftInactive &&
                 <rect x={0} y={0} height="100%" width={`${leftInactive}%`} className="SpanGraph--inactive" />}
-              {rightInactive > 0 &&
+              {rightInactive &&
                 <rect
                   x={`${100 - rightInactive}%`}
                   y={0}
@@ -204,7 +214,7 @@ export default class SpanGraph extends Component {
                   handleWidth={8}
                   handleHeight={30}
                   handleTopOffset={15}
-                  onMouseDown={(...args) => this._startDragging('leftBound', ...args)}
+                  onMouseDown={event => this._startDragging('leftBound', event)}
                 />
               }
               {
@@ -214,7 +224,7 @@ export default class SpanGraph extends Component {
                   handleWidth={8}
                   handleHeight={30}
                   handleTopOffset={15}
-                  onMouseDown={(...args) => this._startDragging('rightBound', ...args)}
+                  onMouseDown={event => this._startDragging('rightBound', event)}
                 />
               }
             </svg>

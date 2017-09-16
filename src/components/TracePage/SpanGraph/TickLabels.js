@@ -1,3 +1,5 @@
+// @flow
+
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -18,14 +20,18 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import PropTypes from 'prop-types';
 import React from 'react';
 
 import { formatDuration } from '../../../utils/date';
 
 import './TickLabels.css';
 
-export default function TickLabels(props) {
+type TickLabelsProps = {
+  numTicks: number,
+  duration: number,
+};
+
+export default function TickLabels(props: TickLabelsProps) {
   const { numTicks, duration } = props;
 
   const ticks = [];
@@ -45,8 +51,3 @@ export default function TickLabels(props) {
     </div>
   );
 }
-
-TickLabels.propTypes = {
-  numTicks: PropTypes.number.isRequired,
-  duration: PropTypes.number.isRequired,
-};
