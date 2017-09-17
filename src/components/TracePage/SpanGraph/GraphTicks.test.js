@@ -18,38 +18,33 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
+import React from 'react';
+import { shallow } from 'enzyme';
 
-import VirtualizedTraceView from './VirtualizedTraceView';
+import GraphTicks from './GraphTicks';
 
-import './grid.css';
-import './index.css';
+describe('<GraphTicks>', () => {
+  const defaultProps = {
+    items: [
+      { valueWidth: 100, valueOffset: 25, serviceName: 'a' },
+      { valueWidth: 100, valueOffset: 50, serviceName: 'b' },
+    ],
+    valueWidth: 200,
+    numTicks: 4,
+  };
 
-export default class TraceTimelineViewer extends Component {
-  componentWillReceiveProps(nextProps) {
-    const { trace } = nextProps;
-    if (trace !== this.props.trace) {
-      throw new Error('Component does not support changing the trace');
-    }
-  }
+  let ticksG;
 
-  render() {
-    const { timeRangeFilter: zoomRange, textFilter, trace } = this.props;
-    return (
-      <div className="trace-timeline-viewer">
-        <VirtualizedTraceView
-          textFilter={textFilter}
-          trace={trace}
-          zoomStart={zoomRange[0]}
-          zoomEnd={zoomRange[1]}
-        />
-      </div>
-    );
-  }
-}
-TraceTimelineViewer.propTypes = {
-  trace: PropTypes.object,
-  timeRangeFilter: PropTypes.array,
-  textFilter: PropTypes.string,
-};
+  beforeEach(() => {
+    const wrapper = shallow(<GraphTicks {...defaultProps} />);
+    ticksG = wrapper.find('[data-test="ticks"]');
+  });
+
+  it('creates a <g> for ticks', () => {
+    expect(ticksG.length).toBe(1);
+  });
+
+  it('creates a line for each ticks excluding the first and last', () => {
+    expect(ticksG.find('line').length).toBe(defaultProps.numTicks - 1);
+  });
+});

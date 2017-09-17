@@ -20,21 +20,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-.trace-page {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
+.TickLabels {
+  height: 1.25rem;
+  position: relative;
 }
 
-.trace-page-header-section {
-  background: #fff;
-  border-bottom: 1px solid #bbb;
-  padding: 0.5em 0.5em 0 0.5em;
-  position: fixed;
-  width: 100%;
-  z-index: 1000001;
-}
-
-.trace-timeline-section {
-  border-top: 1px solid #999;
+.TickLabels--label {
+  color: #717171;
+  font-size: 0.8rem;
+  position: absolute;
+  user-select: none;
 }

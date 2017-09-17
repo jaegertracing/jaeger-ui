@@ -1,3 +1,5 @@
+// @flow
+
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -18,39 +20,35 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import PropTypes from 'prop-types';
 import React from 'react';
 
-import { getTraceTimestamp, getTraceDuration } from '../../selectors/trace';
-import { getPercentageOfInterval } from '../../utils/date';
+import './Scrubber.css';
+
+type ScrubberProps = {
+  position: number,
+  onMouseDown: (SyntheticMouseEvent<any>) => void,
+  handleTopOffset: number,
+  handleWidth: number,
+  handleHeight: number,
+};
 
 const HANDLE_WIDTH = 6;
 const HANDLE_HEIGHT = 20;
 const HANDLE_TOP_OFFSET = 0;
 
-export default function TimelineScrubber({
-  trace,
-  timestamp,
+export default function Scrubber({
+  position,
   onMouseDown,
   handleTopOffset = HANDLE_TOP_OFFSET,
   handleWidth = HANDLE_WIDTH,
   handleHeight = HANDLE_HEIGHT,
-}) {
-  const initialTimestamp = getTraceTimestamp(trace);
-  const totalDuration = getTraceDuration(trace);
-  const xPercentage = getPercentageOfInterval(timestamp, initialTimestamp, totalDuration);
-
+}: ScrubberProps) {
+  const xPercent = `${position * 100}%`;
   return (
     <g className="timeline-scrubber" onMouseDown={onMouseDown}>
-      <line
-        className="timeline-scrubber__line"
-        y1={0}
-        y2="100%"
-        x1={`${xPercentage}%`}
-        x2={`${xPercentage}%`}
-      />
+      <line className="timeline-scrubber__line" y2="100%" x1={xPercent} x2={xPercent} />
       <rect
-        x={`${xPercentage}%`}
+        x={xPercent}
         y={handleTopOffset}
         className="timeline-scrubber__handle"
         style={{ transform: `translate(${-(handleWidth / 2)}px)` }}
@@ -62,25 +60,18 @@ export default function TimelineScrubber({
       <circle
         className="timeline-scrubber__handle--grip"
         style={{ transform: `translateY(${handleHeight / 4}px)` }}
-        cx={`${xPercentage}%`}
-        cy={'50%'}
+        cx={xPercent}
+        cy="50%"
+        r="2"
       />
-      <circle className="timeline-scrubber__handle--grip" cx={`${xPercentage}%`} cy={'50%'} />
+      <circle className="timeline-scrubber__handle--grip" cx={xPercent} cy="50%" r="2" />
       <circle
         className="timeline-scrubber__handle--grip"
-        style={{ transform: `translateY(${-(handleHeight / 4)}px)` }}
-        cx={`${xPercentage}%`}
-        cy={'50%'}
+        style={{ transform: `translateY(${-handleHeight / 4}px)` }}
+        cx={xPercent}
+        cy="50%"
+        r="2"
       />
     </g>
   );
 }
-
-TimelineScrubber.propTypes = {
-  onMouseDown: PropTypes.func,
-  trace: PropTypes.object,
-  timestamp: PropTypes.number.isRequired,
-  handleTopOffset: PropTypes.number,
-  handleWidth: PropTypes.number,
-  handleHeight: PropTypes.number,
-};

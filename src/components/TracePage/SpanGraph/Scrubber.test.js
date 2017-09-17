@@ -22,23 +22,18 @@ import React from 'react';
 import { shallow } from 'enzyme';
 import sinon from 'sinon';
 
-import TimelineScrubber from '../../../src/components/TracePage/TimelineScrubber';
-import traceGenerator from '../../../src/demo/trace-generators';
+import Scrubber from './Scrubber';
 
-import { getTraceTimestamp, getTraceDuration } from '../../../src/selectors/trace';
-
-describe('<TimelineScrubber>', () => {
-  const generatedTrace = traceGenerator.trace({ numberOfSpans: 45 });
+describe('<Scrubber>', () => {
   const defaultProps = {
     onMouseDown: sinon.spy(),
-    trace: generatedTrace,
-    timestamp: getTraceTimestamp(generatedTrace),
+    position: 0,
   };
 
   let wrapper;
 
   beforeEach(() => {
-    wrapper = shallow(<TimelineScrubber {...defaultProps} />);
+    wrapper = shallow(<Scrubber {...defaultProps} />);
   });
 
   it('contains the proper svg components', () => {
@@ -56,8 +51,7 @@ describe('<TimelineScrubber>', () => {
   });
 
   it('calculates the correct x% for a timestamp', () => {
-    const timestamp = getTraceDuration(generatedTrace) * 0.5 + getTraceTimestamp(generatedTrace);
-    wrapper = shallow(<TimelineScrubber {...defaultProps} timestamp={timestamp} />);
+    wrapper = shallow(<Scrubber {...defaultProps} position={0.5} />);
     const line = wrapper.find('line').first();
     const rect = wrapper.find('rect').first();
     expect(line.prop('x1')).toBe('50%');

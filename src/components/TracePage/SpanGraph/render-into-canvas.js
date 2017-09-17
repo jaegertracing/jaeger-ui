@@ -1,3 +1,5 @@
+// @flow
+
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -18,38 +20,30 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
+const CV_WIDTH = 4000;
+const MIN_WIDTH = 50;
 
-import VirtualizedTraceView from './VirtualizedTraceView';
-
-import './grid.css';
-import './index.css';
-
-export default class TraceTimelineViewer extends Component {
-  componentWillReceiveProps(nextProps) {
-    const { trace } = nextProps;
-    if (trace !== this.props.trace) {
-      throw new Error('Component does not support changing the trace');
+export default function renderIntoCanvas(
+  canvas: HTMLCanvasElement,
+  items: { valueWidth: number, valueOffset: number, serviceName: string }[],
+  totalValueWidth: number,
+  getFillColor: string => string
+) {
+  // eslint-disable-next-line  no-param-reassign
+  canvas.width = CV_WIDTH;
+  // eslint-disable-next-line  no-param-reassign
+  canvas.height = items.length;
+  const ctx = canvas.getContext('2d');
+  for (let i = 0; i < items.length; i++) {
+    const { valueWidth, valueOffset, serviceName } = items[i];
+    // eslint-disable-next-line no-bitwise
+    const x = (valueOffset / totalValueWidth * CV_WIDTH) | 0;
+    // eslint-disable-next-line no-bitwise
+    let width = (valueWidth / totalValueWidth * CV_WIDTH) | 0;
+    if (width < MIN_WIDTH) {
+      width = MIN_WIDTH;
     }
-  }
-
-  render() {
-    const { timeRangeFilter: zoomRange, textFilter, trace } = this.props;
-    return (
-      <div className="trace-timeline-viewer">
-        <VirtualizedTraceView
-          textFilter={textFilter}
-          trace={trace}
-          zoomStart={zoomRange[0]}
-          zoomEnd={zoomRange[1]}
-        />
-      </div>
-    );
+    ctx.fillStyle = getFillColor(serviceName);
+    ctx.fillRect(x, i, width, 1);
   }
 }
-TraceTimelineViewer.propTypes = {
-  trace: PropTypes.object,
-  timeRangeFilter: PropTypes.array,
-  textFilter: PropTypes.string,
-};

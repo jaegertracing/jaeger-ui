@@ -1,3 +1,5 @@
+// @flow
+
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -18,65 +20,217 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+import * as React from 'react';
 import PropTypes from 'prop-types';
-import React from 'react';
+import { window } from 'global';
 
-import colorGenerator from '../../../utils/color-generator';
+import GraphTicks from './GraphTicks';
+import CanvasSpanGraph from './CanvasSpanGraph';
+import TickLabels from './TickLabels';
+import Scrubber from './Scrubber';
+import type { Trace } from '../../../types';
 
 import './index.css';
 
-const MIN_SPAN_WIDTH = 0.002;
+const TIMELINE_TICK_INTERVAL = 4;
 
-export default function SpanGraph(props) {
-  const { valueWidth: totalValueWidth, numTicks, items } = props;
+type SpanGraphProps = {
+  height: number,
+  trace: Trace,
+  viewRange: [number, number],
+};
 
-  const itemHeight = 1 / items.length * 100;
+type SpanGraphState = {
+  currentlyDragging: ?string,
+  leftBound: ?number,
+  prevX: ?number,
+  rightBound: ?number,
+};
 
-  const ticks = [];
-  // i starts at 1, limit is `i < numTicks` so the first and last ticks aren't drawn
-  for (let i = 1; i < numTicks; i++) {
-    const x = `${i / numTicks * 100}%`;
-    ticks.push(<line className="span-graph--tick" x1={x} y1="0%" x2={x} y2="100%" key={i / numTicks} />);
+export default class SpanGraph extends React.Component<SpanGraphProps, SpanGraphState> {
+  props: SpanGraphProps;
+  state: SpanGraphState;
+
+  _wrapper: ?HTMLElement;
+  _publishIntervalID: ?number;
+
+  static defaultProps = {
+    height: 60,
+  };
+
+  static contextTypes = {
+    updateTimeRangeFilter: PropTypes.func.isRequired,
+  };
+
+  constructor(props: SpanGraphProps) {
+    super(props);
+    this.state = {
+      currentlyDragging: null,
+      leftBound: null,
+      prevX: null,
+      rightBound: null,
+    };
+    this._wrapper = undefined;
+    this._setWrapper = this._setWrapper.bind(this);
+    this._publishTimeRange = this._publishTimeRange.bind(this);
+    this._publishIntervalID = undefined;
   }
 
-  const spanItems = items.map((item, i) => {
-    const { valueWidth, valueOffset, serviceName } = item;
-    const key = `span-graph-${i}`;
-    const fill = colorGenerator.getColorByKey(serviceName);
-    const width = `${Math.max(valueWidth / totalValueWidth, MIN_SPAN_WIDTH) * 100}%`;
+  shouldComponentUpdate(nextProps: SpanGraphProps, nextState: SpanGraphState) {
+    const { trace: newTrace, viewRange: newViewRange } = nextProps;
+    const {
+      currentlyDragging: newCurrentlyDragging,
+      leftBound: newLeftBound,
+      rightBound: newRightBound,
+    } = nextState;
+    const { trace, viewRange } = this.props;
+    const { currentlyDragging, leftBound, rightBound } = this.state;
+
     return (
-      <rect
-        key={key}
-        className="span-graph--span-rect"
-        height={`${itemHeight}%`}
-        style={{ fill }}
-        width={width}
-        x={`${valueOffset / totalValueWidth * 100}%`}
-        y={`${i / items.length * 100}%`}
-      />
+      trace.traceID !== newTrace.traceID ||
+      viewRange[0] !== newViewRange[0] ||
+      viewRange[1] !== newViewRange[1] ||
+      currentlyDragging !== newCurrentlyDragging ||
+      leftBound !== newLeftBound ||
+      rightBound !== newRightBound
     );
-  });
+  }
 
-  return (
-    <g>
-      <g data-test="ticks" aria-hidden="true">
-        {ticks}
-      </g>
-      <g data-test="span-items">
-        {spanItems}
-      </g>
-    </g>
-  );
+  _setWrapper = function _setWrapper(elm: React.Node) {
+    this._wrapper = elm;
+  };
+
+  _startDragging(boundName: string, { clientX }: SyntheticMouseEvent<any>) {
+    const { viewRange } = this.props;
+    const [leftBound, rightBound] = viewRange;
+
+    this.setState({ currentlyDragging: boundName, prevX: clientX, leftBound, rightBound });
+
+    const mouseMoveHandler = (...args) => this._onMouseMove(...args);
+    const mouseUpHandler = () => {
+      this._stopDragging();
+      window.removeEventListener('mouseup', mouseUpHandler);
+      window.removeEventListener('mousemove', mouseMoveHandler);
+    };
+
+    window.addEventListener('mouseup', mouseUpHandler);
+    window.addEventListener('mousemove', mouseMoveHandler);
+  }
+
+  _stopDragging() {
+    this._publishTimeRange();
+    this.setState({ currentlyDragging: null, prevX: null });
+  }
+
+  _publishTimeRange = function _publishTimeRange() {
+    const { currentlyDragging, leftBound, rightBound } = this.state;
+    const { updateTimeRangeFilter } = this.context;
+    clearTimeout(this._publishIntervalID);
+    this._publishIntervalID = undefined;
+    if (currentlyDragging) {
+      updateTimeRangeFilter(leftBound, rightBound);
+    }
+  };
+
+  _onMouseMove({ clientX }: SyntheticMouseEvent<any>) {
+    const { currentlyDragging } = this.state;
+    let { leftBound, rightBound } = this.state;
+    if (!currentlyDragging || !this._wrapper) {
+      return;
+    }
+    const newValue = clientX / this._wrapper.clientWidth;
+    switch (currentlyDragging) {
+      case 'leftBound':
+        leftBound = Math.max(0, newValue);
+        break;
+      case 'rightBound':
+        rightBound = Math.min(1, newValue);
+        break;
+      default:
+        break;
+    }
+    this.setState({ prevX: clientX, leftBound, rightBound });
+    if (this._publishIntervalID == null) {
+      this._publishIntervalID = window.requestAnimationFrame(this._publishTimeRange);
+    }
+  }
+
+  render() {
+    const { height, trace, viewRange } = this.props;
+    if (!trace) {
+      return <div />;
+    }
+    const { currentlyDragging } = this.state;
+    let { leftBound, rightBound } = this.state;
+    if (!currentlyDragging) {
+      leftBound = viewRange[0];
+      rightBound = viewRange[1];
+    }
+    let leftInactive;
+    if (leftBound) {
+      leftInactive = leftBound * 100;
+    }
+    let rightInactive;
+    if (rightBound) {
+      rightInactive = 100 - rightBound * 100;
+    }
+    return (
+      <div>
+        <TickLabels numTicks={TIMELINE_TICK_INTERVAL} duration={trace.duration} />
+        <div className="relative" ref={this._setWrapper}>
+          <CanvasSpanGraph
+            valueWidth={trace.duration}
+            items={trace.spans.map(span => ({
+              valueOffset: span.relativeStartTime,
+              valueWidth: span.duration,
+              serviceName: span.process.serviceName,
+            }))}
+          />
+          <div className="SpanGraph--zlayer">
+            <svg height={height} className={`SpanGraph--graph ${currentlyDragging ? 'is-dragging' : ''}`}>
+              {leftInactive &&
+                <rect x={0} y={0} height="100%" width={`${leftInactive}%`} className="SpanGraph--inactive" />}
+              {rightInactive &&
+                <rect
+                  x={`${100 - rightInactive}%`}
+                  y={0}
+                  height="100%"
+                  width={`${rightInactive}%`}
+                  className="SpanGraph--inactive"
+                />}
+              <GraphTicks
+                valueWidth={trace.duration}
+                numTicks={TIMELINE_TICK_INTERVAL}
+                items={trace.spans.map(span => ({
+                  valueOffset: span.relativeStartTime,
+                  valueWidth: span.duration,
+                  serviceName: span.process.serviceName,
+                }))}
+              />
+              {
+                <Scrubber
+                  id="trace-page-timeline__left-bound-handle"
+                  position={leftBound || 0}
+                  handleWidth={8}
+                  handleHeight={30}
+                  handleTopOffset={15}
+                  onMouseDown={event => this._startDragging('leftBound', event)}
+                />
+              }
+              {
+                <Scrubber
+                  id="trace-page-timeline__right-bound-handle"
+                  position={rightBound || 1}
+                  handleWidth={8}
+                  handleHeight={30}
+                  handleTopOffset={15}
+                  onMouseDown={event => this._startDragging('rightBound', event)}
+                />
+              }
+            </svg>
+          </div>
+        </div>
+      </div>
+    );
+  }
 }
-
-SpanGraph.propTypes = {
-  items: PropTypes.arrayOf(
-    PropTypes.shape({
-      valueWidth: PropTypes.number.isRequired,
-      valueOffset: PropTypes.number.isRequired,
-      serviceName: PropTypes.string.isRequired,
-    })
-  ).isRequired,
-  numTicks: PropTypes.number.isRequired,
-  valueWidth: PropTypes.number.isRequired,
-};
