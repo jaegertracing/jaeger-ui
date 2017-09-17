@@ -1,3 +1,5 @@
+// @flow
+
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -18,33 +20,26 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import PropTypes from 'prop-types';
 import React from 'react';
 
-import { formatDuration } from '../../../utils/date';
+import './GraphTicks.css';
 
-export default function SpanGraphTickHeader(props) {
-  const { numTicks, duration } = props;
+type GraphTicksProps = {
+  numTicks: number,
+};
 
+export default function GraphTicks(props: GraphTicksProps) {
+  const { numTicks } = props;
   const ticks = [];
-  for (let i = 0; i < numTicks + 1; i++) {
-    const portion = i / numTicks;
-    const style = portion === 1 ? { right: '0%' } : { left: `${portion * 100}%` };
-    ticks.push(
-      <div key={portion} className="span-graph--tick-header__label" style={style} data-test="tick">
-        {formatDuration(duration * portion)}
-      </div>
-    );
+  // i starts at 1, limit is `i < numTicks` so the first and last ticks aren't drawn
+  for (let i = 1; i < numTicks; i++) {
+    const x = `${i / numTicks * 100}%`;
+    ticks.push(<line className="GraphTick" x1={x} y1="0%" x2={x} y2="100%" key={i / numTicks} />);
   }
 
   return (
-    <div className="span-graph--tick-header">
+    <g data-test="ticks" aria-hidden="true">
       {ticks}
-    </div>
+    </g>
   );
 }
-
-SpanGraphTickHeader.propTypes = {
-  numTicks: PropTypes.number.isRequired,
-  duration: PropTypes.number.isRequired,
-};

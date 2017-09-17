@@ -1,3 +1,5 @@
+// @flow
+
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -18,38 +20,34 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
+import React from 'react';
 
-import VirtualizedTraceView from './VirtualizedTraceView';
+import { formatDuration } from '../../../utils/date';
 
-import './grid.css';
-import './index.css';
+import './TickLabels.css';
 
-export default class TraceTimelineViewer extends Component {
-  componentWillReceiveProps(nextProps) {
-    const { trace } = nextProps;
-    if (trace !== this.props.trace) {
-      throw new Error('Component does not support changing the trace');
-    }
-  }
+type TickLabelsProps = {
+  numTicks: number,
+  duration: number,
+};
 
-  render() {
-    const { timeRangeFilter: zoomRange, textFilter, trace } = this.props;
-    return (
-      <div className="trace-timeline-viewer">
-        <VirtualizedTraceView
-          textFilter={textFilter}
-          trace={trace}
-          zoomStart={zoomRange[0]}
-          zoomEnd={zoomRange[1]}
-        />
+export default function TickLabels(props: TickLabelsProps) {
+  const { numTicks, duration } = props;
+
+  const ticks = [];
+  for (let i = 0; i < numTicks + 1; i++) {
+    const portion = i / numTicks;
+    const style = portion === 1 ? { right: '0%' } : { left: `${portion * 100}%` };
+    ticks.push(
+      <div key={portion} className="TickLabels--label" style={style} data-test="tick">
+        {formatDuration(duration * portion)}
       </div>
     );
   }
+
+  return (
+    <div className="TickLabels">
+      {ticks}
+    </div>
+  );
 }
-TraceTimelineViewer.propTypes = {
-  trace: PropTypes.object,
-  timeRangeFilter: PropTypes.array,
-  textFilter: PropTypes.string,
-};
