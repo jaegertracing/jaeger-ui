@@ -20,19 +20,24 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-.span-graph--tick {
-  stroke: #aaa;
-  stroke-width: 1px;
-}
-
-.span-graph--tick-header {
+.SpanGraph--zlayer {
   position: relative;
+  z-index: 1;
 }
 
-.span-graph--tick-header__label {
-  position: absolute;
-  top: 0;
-  width: auto;
-  user-select: none;
-  cursor: default;
+.SpanGraph--graph {
+  border: 1px solid #999;
+  /* need !important here to overcome something from semantic UI */
+  overflow: visible !important;
+  position: relative;
+  transform-origin: 0 0;
+  width: 100%;
+}
+
+.SpanGraph--graph.is-dragging {
+  cursor: ew-resize;
+}
+
+.SpanGraph--inactive {
+  fill: rgba(214, 214, 214, 0.5);
 }

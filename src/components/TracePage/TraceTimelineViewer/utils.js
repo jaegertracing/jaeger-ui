@@ -45,24 +45,6 @@ export function getViewedBounds({ min, max, start, end, viewStart, viewEnd }) {
 }
 
 /**
- * Given `start` and `end`, returns the position of `value` within that range
- * with `0` returned when `value` is equal to `start` and `1` return when it
- * is equal to `end`.
- *
- * @param  {number} start The start of the range to find `value`'s position in.
- * @param  {number} end   The end of the range.
- * @param  {number} value The value to find the position of.
- * @return {number}       A number representing the placement of `value`
- *                        relative to `start` and `end`.
- */
-export function getPositionInRange(start, end, value) {
-  if (value == null) {
-    return undefined;
-  }
-  return (value - start) / (end - start);
-}
-
-/**
  * Returns `true` if the `span` has a tag matching `key` = `value`.
  *
  * @param  {string} key   The tag key to match on.

@@ -22,28 +22,32 @@
 
 import React from 'react';
 
-import VirtualizedTraceView from './VirtualizedTraceView';
-import type { Trace } from '../../../types';
+import { formatDuration } from '../../../utils/date';
 
-import './grid.css';
-import './index.css';
+import './TickLabels.css';
 
-type TraceTimelineViewerProps = {
-  trace: ?Trace,
-  timeRangeFilter: [number, number],
-  textFilter: ?string,
+type TickLabelsProps = {
+  numTicks: number,
+  duration: number,
 };
 
-export default function TraceTimelineViewer(props: TraceTimelineViewerProps) {
-  const { timeRangeFilter: zoomRange, textFilter, trace } = props;
+export default function TickLabels(props: TickLabelsProps) {
+  const { numTicks, duration } = props;
+
+  const ticks = [];
+  for (let i = 0; i < numTicks + 1; i++) {
+    const portion = i / numTicks;
+    const style = portion === 1 ? { right: '0%' } : { left: `${portion * 100}%` };
+    ticks.push(
+      <div key={portion} className="TickLabels--label" style={style} data-test="tick">
+        {formatDuration(duration * portion)}
+      </div>
+    );
+  }
+
   return (
-    <div className="trace-timeline-viewer">
-      <VirtualizedTraceView
-        textFilter={textFilter}
-        trace={trace}
-        zoomStart={zoomRange[0]}
-        zoomEnd={zoomRange[1]}
-      />
+    <div className="TickLabels">
+      {ticks}
     </div>
   );
 }

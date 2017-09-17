@@ -26,12 +26,11 @@ import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 
 import TracePageHeader from './TracePageHeader';
-import TraceSpanGraph from './TraceSpanGraph';
+import SpanGraph from './SpanGraph';
 import TraceTimelineViewer from './TraceTimelineViewer';
 import NotFound from '../App/NotFound';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import { getTraceName } from '../../model/trace-viewer';
-import { getTraceTimestamp, getTraceEndTimestamp, getTraceId } from '../../selectors/trace';
 import colorGenerator from '../../utils/color-generator';
 
 import './index.css';
@@ -49,7 +48,6 @@ export default class TracePage extends Component {
   static get childContextTypes() {
     return {
       textFilter: PropTypes.string,
-      timeRangeFilter: PropTypes.arrayOf(PropTypes.number),
       updateTextFilter: PropTypes.func,
       updateTimeRangeFilter: PropTypes.func,
       slimView: PropTypes.bool,
@@ -72,6 +70,7 @@ export default class TracePage extends Component {
   getChildContext() {
     const state = { ...this.state };
     delete state.headerHeight;
+    delete state.timeRangeFilter;
     return {
       updateTextFilter: this.updateTextFilter.bind(this),
       updateTimeRangeFilter: this.updateTimeRangeFilter.bind(this),
@@ -92,7 +91,7 @@ export default class TracePage extends Component {
       this.ensureTraceFetched();
       return;
     }
-    if (!(trace instanceof Error) && (!prevTrace || getTraceId(prevTrace) !== getTraceId(trace))) {
+    if (!(trace instanceof Error) && (!prevTrace || prevTrace.traceID !== trace.traceID)) {
       this.setDefaultTimeRange();
     }
   }
@@ -114,7 +113,7 @@ export default class TracePage extends Component {
       this.updateTimeRangeFilter(null, null);
       return;
     }
-    this.updateTimeRangeFilter(getTraceTimestamp(trace), getTraceEndTimestamp(trace));
+    this.updateTimeRangeFilter(0, 1);
   }
 
   updateTextFilter(textFilter) {
@@ -173,7 +172,7 @@ export default class TracePage extends Component {
             traceID={traceID}
             onSlimViewClicked={this.toggleSlimView}
           />
-          {!slimView && <TraceSpanGraph trace={trace} />}
+          {!slimView && <SpanGraph trace={trace} viewRange={this.state.timeRangeFilter} />}
         </section>
         {headerHeight &&
           <section className="trace-timeline-section" style={{ paddingTop: headerHeight }}>

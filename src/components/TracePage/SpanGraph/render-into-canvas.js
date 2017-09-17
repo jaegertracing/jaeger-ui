@@ -20,30 +20,30 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import React from 'react';
+const CV_WIDTH = 4000;
+const MIN_WIDTH = 50;
 
-import VirtualizedTraceView from './VirtualizedTraceView';
-import type { Trace } from '../../../types';
-
-import './grid.css';
-import './index.css';
-
-type TraceTimelineViewerProps = {
-  trace: ?Trace,
-  timeRangeFilter: [number, number],
-  textFilter: ?string,
-};
-
-export default function TraceTimelineViewer(props: TraceTimelineViewerProps) {
-  const { timeRangeFilter: zoomRange, textFilter, trace } = props;
-  return (
-    <div className="trace-timeline-viewer">
-      <VirtualizedTraceView
-        textFilter={textFilter}
-        trace={trace}
-        zoomStart={zoomRange[0]}
-        zoomEnd={zoomRange[1]}
-      />
-    </div>
-  );
+export default function renderIntoCanvas(
+  canvas: HTMLCanvasElement,
+  items: { valueWidth: number, valueOffset: number, serviceName: string }[],
+  totalValueWidth: number,
+  getFillColor: string => string
+) {
+  // eslint-disable-next-line  no-param-reassign
+  canvas.width = CV_WIDTH;
+  // eslint-disable-next-line  no-param-reassign
+  canvas.height = items.length;
+  const ctx = canvas.getContext('2d');
+  for (let i = 0; i < items.length; i++) {
+    const { valueWidth, valueOffset, serviceName } = items[i];
+    // eslint-disable-next-line no-bitwise
+    const x = (valueOffset / totalValueWidth * CV_WIDTH) | 0;
+    // eslint-disable-next-line no-bitwise
+    let width = (valueWidth / totalValueWidth * CV_WIDTH) | 0;
+    if (width < MIN_WIDTH) {
+      width = MIN_WIDTH;
+    }
+    ctx.fillStyle = getFillColor(serviceName);
+    ctx.fillRect(x, i, width, 1);
+  }
 }

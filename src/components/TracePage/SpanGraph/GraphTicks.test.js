@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -21,29 +19,32 @@
 // THE SOFTWARE.
 
 import React from 'react';
+import { shallow } from 'enzyme';
 
-import VirtualizedTraceView from './VirtualizedTraceView';
-import type { Trace } from '../../../types';
+import GraphTicks from './GraphTicks';
 
-import './grid.css';
-import './index.css';
+describe('<GraphTicks>', () => {
+  const defaultProps = {
+    items: [
+      { valueWidth: 100, valueOffset: 25, serviceName: 'a' },
+      { valueWidth: 100, valueOffset: 50, serviceName: 'b' },
+    ],
+    valueWidth: 200,
+    numTicks: 4,
+  };
 
-type TraceTimelineViewerProps = {
-  trace: ?Trace,
-  timeRangeFilter: [number, number],
-  textFilter: ?string,
-};
+  let ticksG;
 
-export default function TraceTimelineViewer(props: TraceTimelineViewerProps) {
-  const { timeRangeFilter: zoomRange, textFilter, trace } = props;
-  return (
-    <div className="trace-timeline-viewer">
-      <VirtualizedTraceView
-        textFilter={textFilter}
-        trace={trace}
-        zoomStart={zoomRange[0]}
-        zoomEnd={zoomRange[1]}
-      />
-    </div>
-  );
-}
+  beforeEach(() => {
+    const wrapper = shallow(<GraphTicks {...defaultProps} />);
+    ticksG = wrapper.find('[data-test="ticks"]');
+  });
+
+  it('creates a <g> for ticks', () => {
+    expect(ticksG.length).toBe(1);
+  });
+
+  it('creates a line for each ticks excluding the first and last', () => {
+    expect(ticksG.find('line').length).toBe(defaultProps.numTicks - 1);
+  });
+});
