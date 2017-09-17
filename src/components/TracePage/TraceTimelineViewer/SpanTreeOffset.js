@@ -1,3 +1,5 @@
+// @flow
+
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -18,12 +20,19 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import PropTypes from 'prop-types';
 import React from 'react';
 
 import './SpanTreeOffset.css';
 
-export default function SpanTreeOffset({ level, hasChildren, childrenVisible, onClick }) {
+type SpanTreeOffsetProps = {
+  level: number,
+  hasChildren: boolean,
+  childrenVisible: boolean,
+  onClick: ?() => void,
+};
+
+export default function SpanTreeOffset(props: SpanTreeOffsetProps) {
+  const { level, hasChildren, childrenVisible, onClick } = props;
   const className = hasChildren ? 'span-kids-toggle' : '';
   const icon = hasChildren
     ? <i className={`span-tree-toggle-icon icon square ${childrenVisible ? 'outline minus' : 'plus'}`} />
@@ -35,13 +44,6 @@ export default function SpanTreeOffset({ level, hasChildren, childrenVisible, on
     </span>
   );
 }
-
-SpanTreeOffset.propTypes = {
-  level: PropTypes.number.isRequired,
-  hasChildren: PropTypes.bool,
-  childrenVisible: PropTypes.bool,
-  onClick: PropTypes.func,
-};
 
 SpanTreeOffset.defaultProps = {
   hasChildren: false,

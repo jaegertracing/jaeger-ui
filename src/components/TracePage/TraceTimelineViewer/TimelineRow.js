@@ -1,3 +1,5 @@
+// @flow
+
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -18,23 +20,23 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import React from 'react';
-import PropTypes from 'prop-types';
+import * as React from 'react';
 
 import './TimelineRow.css';
 
-const propTypes = {
-  children: PropTypes.node,
-  className: PropTypes.string,
-  style: PropTypes.object,
+type TimelineRowProps = {
+  children?: React.Node,
+  className: string,
 };
 
-const defaultProps = {
-  children: null,
-  className: '',
+type TimelineRowCellProps = {
+  children?: React.Node,
+  className: string,
+  width: number,
+  style?: Object,
 };
 
-export default function TimelineRow(props) {
+export default function TimelineRow(props: TimelineRowProps) {
   const { children, className, ...rest } = props;
   return (
     <div className={`flex-row ${className}`} {...rest}>
@@ -42,10 +44,12 @@ export default function TimelineRow(props) {
     </div>
   );
 }
-TimelineRow.propTypes = { ...propTypes };
-TimelineRow.defaultProps = { ...defaultProps };
 
-function TimelineRowCell(props) {
+TimelineRow.defaultProps = {
+  className: '',
+};
+
+function TimelineRowCell(props: TimelineRowCellProps) {
   const { children, className, width, style, ...rest } = props;
   const widthPercent = `${width * 100}%`;
   const mergedStyle = { ...style, flexBasis: widthPercent, maxWidth: widthPercent };
@@ -55,7 +59,7 @@ function TimelineRowCell(props) {
     </div>
   );
 }
-TimelineRowCell.propTypes = { ...propTypes, width: PropTypes.number.isRequired };
-TimelineRowCell.defaultProps = { ...defaultProps };
+
+TimelineRowCell.defaultProps = { className: '' };
 
 TimelineRow.Cell = TimelineRowCell;

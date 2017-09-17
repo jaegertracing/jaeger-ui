@@ -27,10 +27,10 @@ import { formatDuration } from './utils';
 import './Ticks.css';
 
 type TicksProps = {
-  endTime: number,
+  endTime?: number,
   numTicks: number,
   showLabels?: boolean,
-  startTime: number,
+  startTime?: ?number,
 };
 
 export default function Ticks(props: TicksProps) {
@@ -39,7 +39,7 @@ export default function Ticks(props: TicksProps) {
   let labels: string[];
   if (showLabels) {
     labels = [];
-    const viewingDuration = endTime - startTime;
+    const viewingDuration = (endTime || 0) - (startTime || 0);
     for (let i = 0; i < numTicks; i++) {
       const durationAtTick = startTime + i / (numTicks - 1) * viewingDuration;
       labels.push(formatDuration(durationAtTick));
