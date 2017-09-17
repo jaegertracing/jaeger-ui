@@ -57,6 +57,12 @@ describe('<TracePage>', () => {
     expect(isEmpty).toBe(true);
   });
 
+  it('renders a loading indicator when loading', () => {
+    wrapper = shallow(<TracePage {...defaultProps} trace={null} loading />);
+    const loading = wrapper.find('.loader');
+    expect(loading.length).toBe(1);
+  });
+
   // can't do mount tests in standard tape run.
   it('fetches the trace if necessary', () => {
     const fetchTrace = sinon.spy();

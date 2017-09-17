@@ -1,3 +1,5 @@
+// @flow
+
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -18,40 +20,32 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
+import React from 'react';
 
 import VirtualizedTraceView from './VirtualizedTraceView';
 import { getPositionInRange } from './utils';
+import type { Trace } from '../../../types';
 
 import './grid.css';
 import './index.css';
 
-export default class TraceTimelineViewer extends Component {
-  componentWillReceiveProps(nextProps) {
-    const { trace } = nextProps;
-    if (trace !== this.props.trace) {
-      throw new Error('Component does not support changing the trace');
-    }
-  }
-
-  render() {
-    const { timeRangeFilter: zoomRange, textFilter, trace } = this.props;
-    const { startTime, endTime } = trace;
-    return (
-      <div className="trace-timeline-viewer">
-        <VirtualizedTraceView
-          textFilter={textFilter}
-          trace={trace}
-          zoomStart={getPositionInRange(startTime, endTime, zoomRange[0])}
-          zoomEnd={getPositionInRange(startTime, endTime, zoomRange[1])}
-        />
-      </div>
-    );
-  }
-}
-TraceTimelineViewer.propTypes = {
-  trace: PropTypes.object,
-  timeRangeFilter: PropTypes.array,
-  textFilter: PropTypes.string,
+type TraceTimelineViewerProps = {
+  trace: ?Trace,
+  timeRangeFilter: [number, number],
+  textFilter: ?string,
 };
+
+export default function TraceTimelineViewer(props: TraceTimelineViewerProps) {
+  const { timeRangeFilter: zoomRange, textFilter, trace } = props;
+  const { startTime, endTime } = trace || {};
+  return (
+    <div className="trace-timeline-viewer">
+      <VirtualizedTraceView
+        textFilter={textFilter}
+        trace={trace}
+        zoomStart={zoomRange != null ? getPositionInRange(startTime, endTime, zoomRange[0]) : 0}
+        zoomEnd={zoomRange != null ? getPositionInRange(startTime, endTime, zoomRange[1]) : 1}
+      />
+    </div>
+  );
+}

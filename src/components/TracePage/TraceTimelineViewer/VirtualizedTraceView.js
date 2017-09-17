@@ -164,9 +164,15 @@ class VirtualizedTraceView extends React.PureComponent<VirtualizedTraceViewProps
   }
 
   componentWillReceiveProps(nextProps) {
-    const { find, textFilter } = nextProps;
-    if (this.props.textFilter !== textFilter) {
-      find(this.props.trace, textFilter);
+    const { textFilter, trace } = this.props;
+    const { find, setTrace, textFilter: nextTextFilter, trace: nextTrace } = nextProps;
+    if (trace !== nextTrace) {
+      setTrace(nextTrace ? nextTrace.traceID : null);
+      if (nextTextFilter) {
+        find(nextTrace, nextTextFilter);
+      }
+    } else if (textFilter !== nextTextFilter) {
+      find(nextTrace, nextTextFilter);
     }
     const { clippingCssClasses, rowStates } = getPropDerivations(nextProps);
     this.clippingCssClasses = clippingCssClasses;

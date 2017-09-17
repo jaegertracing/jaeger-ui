@@ -79,7 +79,6 @@ THE SOFTWARE.
 
 .span-name:hover > .endpoint-name {
   color: #000;
-  font-weight: bold;
 }
 
 .span-svc-name {
