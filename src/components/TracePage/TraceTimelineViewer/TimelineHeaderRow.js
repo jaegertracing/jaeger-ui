@@ -23,6 +23,7 @@
 import * as React from 'react';
 import cx from 'classnames';
 import _clamp from 'lodash/clamp';
+import _get from 'lodash/get';
 
 import Ticks from './Ticks';
 import TimelineRow from './TimelineRow';
@@ -108,8 +109,9 @@ class TimelineColumnResizer extends React.PureComponent<
     window.addEventListener('mousemove', this._onWindowMouseMove);
     window.addEventListener('mouseup', this._onWindowMouseUp);
     this._isDragging = true;
-    if (document && document.body && document.body.style) {
-      (document.body.style: any).userSelect = 'none';
+    const style = _get(document, 'body.style');
+    if (style) {
+      (style: any).userSelect = 'none';
     }
   };
 
@@ -121,8 +123,9 @@ class TimelineColumnResizer extends React.PureComponent<
   _onWindowMouseUp = function _onWindowMouseUp({ clientX }) {
     window.removeEventListener('mousemove', this._onWindowMouseMove);
     window.removeEventListener('mouseup', this._onWindowMouseUp);
-    if (document && document.body && document.body.style) {
-      (document.body.style: any).userSelect = undefined;
+    const style = _get(document, 'body.style');
+    if (style) {
+      (style: any).userSelect = undefined;
     }
     this._isDragging = false;
     const dragPosition = this._getDraggedPosition(clientX);
