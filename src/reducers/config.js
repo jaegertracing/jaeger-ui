@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -20,37 +18,40 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import * as React from 'react';
-import Helmet from 'react-helmet';
-import { connect } from 'react-redux';
+import { handleActions } from 'redux-actions';
 
-import TopNav from './TopNav';
-import type { Config } from '../../types/config';
+import { fetchConfig } from '../actions/jaeger-api';
+import defaultConfig from '../constants/default-config';
 
-import './Page.css';
-
-type JaegerUIPageProps = {
-  children: React.Node,
-  config: { data: Config },
+const initialState = {
+  data: {},
+  loading: false,
+  error: null,
 };
 
-function JaegerUIPage({ config, children }: JaegerUIPageProps) {
-  const menu = config && config.data && config.data.menu;
-  return (
-    <section className="jaeger-ui-page" id="jaeger-ui">
-      <Helmet title="Jaeger UI" />
-      <TopNav menuConfig={menu} />
-      <div className="jaeger-ui--content">
-        {children}
-      </div>
-    </section>
-  );
+function fetchStarted(state) {
+  return { ...state, loading: true };
 }
 
-function mapStateToProps(state, ownProps) {
-  const { config } = state;
-  const { children } = ownProps;
-  return { children, config };
+function fetchDone(state, { payload }) {
+  const data = payload;
+  // fetchConfig action creator is set to handle rejected promises
+  if (data.error) {
+    const { message, stack } = data.error;
+    return { ...state, error: { message, stack }, loading: false, data: defaultConfig };
+  }
+  return { ...state, data, error: null, loading: false };
 }
 
-export default connect(mapStateToProps)(JaegerUIPage);
+function fetchErred(state, { payload: error }) {
+  return { ...state, error: error.message, loading: false, data: defaultConfig };
+}
+
+export default handleActions(
+  {
+    [`${fetchConfig}_PENDING`]: fetchStarted,
+    [`${fetchConfig}_FULFILLED`]: fetchDone,
+    [`${fetchConfig}_REJECTED`]: fetchErred,
+  },
+  initialState
+);

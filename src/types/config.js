@@ -20,37 +20,16 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import * as React from 'react';
-import Helmet from 'react-helmet';
-import { connect } from 'react-redux';
-
-import TopNav from './TopNav';
-import type { Config } from '../../types/config';
-
-import './Page.css';
-
-type JaegerUIPageProps = {
-  children: React.Node,
-  config: { data: Config },
+export type ConfigMenuItem = {
+  label: string,
+  url: string,
 };
 
-function JaegerUIPage({ config, children }: JaegerUIPageProps) {
-  const menu = config && config.data && config.data.menu;
-  return (
-    <section className="jaeger-ui-page" id="jaeger-ui">
-      <Helmet title="Jaeger UI" />
-      <TopNav menuConfig={menu} />
-      <div className="jaeger-ui--content">
-        {children}
-      </div>
-    </section>
-  );
-}
+export type ConfigMenuGroup = {
+  label: string,
+  items: ConfigMenuItem[],
+};
 
-function mapStateToProps(state, ownProps) {
-  const { config } = state;
-  const { children } = ownProps;
-  return { children, config };
-}
-
-export default connect(mapStateToProps)(JaegerUIPage);
+export type Config = {
+  menu: (ConfigMenuGroup | ConfigMenuItem)[],
+};

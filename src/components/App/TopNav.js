@@ -1,3 +1,5 @@
+// @flow
+
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -20,11 +22,44 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { Dropdown, Menu } from 'semantic-ui-react';
 
 import TraceIDSearchInput from './TraceIDSearchInput';
+import type { ConfigMenuItem, ConfigMenuGroup } from '../../types/config';
 import prefixUrl from '../../utils/prefix-url';
 
 import './TopNav.css';
+
+type TopNavProps = {
+  menuConfig: (ConfigMenuItem | ConfigMenuGroup)[],
+};
+
+function CustomNavItem({ label, url }: ConfigMenuItem) {
+  return (
+    <a href={url} className="header item" target="_blank">
+      {label}
+    </a>
+  );
+}
+
+function CustomNavDropdown({ label, items }: ConfigMenuGroup) {
+  return (
+    <Dropdown text={label} pointing className="link item">
+      <Dropdown.Menu>
+        {items.map(item => {
+          const { label: itemLabel, url } = item;
+          return (
+            <Dropdown.Item key={itemLabel}>
+              <a href={url} className="ui TopNav--DropdownItem" target="_blank">
+                {itemLabel}
+              </a>
+            </Dropdown.Item>
+          );
+        })}
+      </Dropdown.Menu>
+    </Dropdown>
+  );
+}
 
 const NAV_LINKS = [
   {
@@ -39,13 +74,20 @@ const NAV_LINKS = [
   },
 ];
 
-export default function TopNav() {
+export default function TopNav(props: TopNavProps) {
+  const { menuConfig } = props;
+  const menuItems = Array.isArray(menuConfig) ? menuConfig : [];
   return (
-    <nav className="ui top inverted menu jaeger-ui--topnav">
+    <Menu inverted className="TopNav">
       <Link to={prefixUrl('/')} className="header item">
-        {'Jaeger UI'}
+        Jaeger UI
       </Link>
-
+      {menuItems.map(item => {
+        if (item.items) {
+          return <CustomNavDropdown key={item.label} {...item} />;
+        }
+        return <CustomNavItem key={item.label} {...item} />;
+      })}
       <div className="right menu">
         <div className="ui input">
           <TraceIDSearchInput />
@@ -56,6 +98,14 @@ export default function TopNav() {
           </Link>
         )}
       </div>
-    </nav>
+    </Menu>
   );
 }
+
+TopNav.defaultProps = {
+  menuConfig: [],
+};
+
+// exported for tests
+TopNav.CustomNavItem = CustomNavItem;
+TopNav.CustomNavDropdown = CustomNavDropdown;
