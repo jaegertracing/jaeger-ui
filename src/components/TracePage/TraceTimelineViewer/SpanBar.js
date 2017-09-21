@@ -1,3 +1,5 @@
+// @flow
+
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -18,17 +20,32 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import PropTypes from 'prop-types';
 import React from 'react';
 import { onlyUpdateForKeys, compose, withState, withProps } from 'recompose';
 
 import './SpanBar.css';
 
-function toPercent(value) {
+type SpanBarProps = {
+  color: string,
+  hintSide: string,
+  label: string,
+  onClick: (SyntheticMouseEvent<any>) => void,
+  viewEnd: number,
+  viewStart: number,
+  rpc: {
+    viewStart: number,
+    viewEnd: number,
+    color: string,
+  },
+  setLongLabel: () => void,
+  setShortLabel: () => void,
+};
+
+function toPercent(value: number) {
   return `${value * 100}%`;
 }
 
-function SpanBar(props) {
+function SpanBar(props: SpanBarProps) {
   const { viewEnd, viewStart, color, label, hintSide, onClick, setLongLabel, setShortLabel, rpc } = props;
 
   return (
@@ -58,29 +75,6 @@ function SpanBar(props) {
     </div>
   );
 }
-
-SpanBar.propTypes = {
-  rpc: PropTypes.shape({
-    viewStart: PropTypes.number,
-    viewEnd: PropTypes.number,
-    color: PropTypes.string,
-  }),
-  viewStart: PropTypes.number.isRequired,
-  viewEnd: PropTypes.number.isRequired,
-  color: PropTypes.string.isRequired,
-  hintSide: PropTypes.string.isRequired,
-  label: PropTypes.string.isRequired,
-  onClick: PropTypes.func,
-  setLongLabel: PropTypes.func,
-  setShortLabel: PropTypes.func,
-};
-
-SpanBar.defaultProps = {
-  rpc: null,
-  onClick: null,
-  onMouseOver: null,
-  onMouseOut: null,
-};
 
 export default compose(
   withState('label', 'setLabel', props => props.shortLabel),

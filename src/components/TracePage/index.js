@@ -137,10 +137,17 @@ export default class TracePage extends Component {
   }
 
   render() {
-    const { id, trace } = this.props;
+    const { id, loading, trace } = this.props;
     const { slimView, headerHeight } = this.state;
 
     if (!trace) {
+      if (loading) {
+        return (
+          <div className="m1">
+            <div className="ui active centered inline loader" />
+          </div>
+        );
+      }
       return <section />;
     }
 

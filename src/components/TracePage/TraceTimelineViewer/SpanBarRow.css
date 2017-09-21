@@ -43,12 +43,12 @@ THE SOFTWARE.
 
 .span-name-wrapper {
   background: #fafafa;
-  border-right: 1px solid #bbb;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .span-name-wrapper:hover {
+  border-right: 1px solid #bbb;
   float: left;
   min-width: 100%;
   overflow: visible;
@@ -79,7 +79,6 @@ THE SOFTWARE.
 
 .span-name:hover > .endpoint-name {
   color: #000;
-  font-weight: bold;
 }
 
 .span-svc-name {

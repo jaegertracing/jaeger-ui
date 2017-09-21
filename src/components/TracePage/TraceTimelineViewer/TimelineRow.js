@@ -1,3 +1,5 @@
+// @flow
+
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -18,22 +20,23 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import React from 'react';
-import PropTypes from 'prop-types';
+import * as React from 'react';
 
 import './TimelineRow.css';
 
-const propTypes = {
-  children: PropTypes.node,
-  className: PropTypes.string,
+type TimelineRowProps = {
+  children?: React.Node,
+  className: string,
 };
 
-const defaultProps = {
-  children: null,
-  className: '',
+type TimelineRowCellProps = {
+  children?: React.Node,
+  className: string,
+  width: number,
+  style?: Object,
 };
 
-export default function TimelineRow(props) {
+export default function TimelineRow(props: TimelineRowProps) {
   const { children, className, ...rest } = props;
   return (
     <div className={`flex-row ${className}`} {...rest}>
@@ -41,31 +44,22 @@ export default function TimelineRow(props) {
     </div>
   );
 }
-TimelineRow.propTypes = { ...propTypes };
-TimelineRow.defaultProps = { ...defaultProps };
 
-function TimelineRowLeft(props) {
-  const { children, className, ...rest } = props;
+TimelineRow.defaultProps = {
+  className: '',
+};
+
+function TimelineRowCell(props: TimelineRowCellProps) {
+  const { children, className, width, style, ...rest } = props;
+  const widthPercent = `${width * 100}%`;
+  const mergedStyle = { ...style, flexBasis: widthPercent, maxWidth: widthPercent };
   return (
-    <div className={`col-xs-3 relative ${className}`} {...rest}>
+    <div className={`relative ${className}`} style={mergedStyle} {...rest}>
       {children}
     </div>
   );
 }
-TimelineRowLeft.propTypes = { ...propTypes };
-TimelineRowLeft.defaultProps = { ...defaultProps };
 
-TimelineRow.Left = TimelineRowLeft;
+TimelineRowCell.defaultProps = { className: '' };
 
-function TimelineRowRight(props) {
-  const { children, className, ...rest } = props;
-  return (
-    <div className={`col-xs-9 relative ${className}`} {...rest}>
-      {children}
-    </div>
-  );
-}
-TimelineRowRight.propTypes = { ...propTypes };
-TimelineRowRight.defaultProps = { ...defaultProps };
-
-TimelineRow.Right = TimelineRowRight;
+TimelineRow.Cell = TimelineRowCell;

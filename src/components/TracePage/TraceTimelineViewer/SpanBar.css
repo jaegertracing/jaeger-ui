@@ -37,7 +37,6 @@ THE SOFTWARE.
   opacity: 1;
 }
 
-/* Add the hint related selector to override the hint styling (via specificity) */
 .SpanBar--bar {
   border-radius: 3px;
   min-width: 2px;
