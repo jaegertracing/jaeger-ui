@@ -82,21 +82,21 @@ export default function TopNav(props: TopNavProps) {
       <Link to={prefixUrl('/')} className="header item">
         Jaeger UI
       </Link>
-      {menuItems.map(item => {
-        if (item.items) {
-          return <CustomNavDropdown key={item.label} {...item} />;
-        }
-        return <CustomNavItem key={item.label} {...item} />;
-      })}
+      <div className="ui input">
+        <TraceIDSearchInput />
+      </div>
+      {NAV_LINKS.map(({ key, to, text }) =>
+        <Link key={key} to={to} className="item">
+          {text}
+        </Link>
+      )}
       <div className="right menu">
-        <div className="ui input">
-          <TraceIDSearchInput />
-        </div>
-        {NAV_LINKS.map(({ key, to, text }) =>
-          <Link key={key} to={to} className="item">
-            {text}
-          </Link>
-        )}
+        {menuItems.map(item => {
+          if (item.items) {
+            return <CustomNavDropdown key={item.label} {...item} />;
+          }
+          return <CustomNavItem key={item.label} {...item} />;
+        })}
       </div>
     </Menu>
   );

@@ -49,34 +49,5 @@ export default {
         },
       ],
     },
-    {
-      label: 'Create a ticket',
-      items: [
-        {
-          label: 'Jaeger Core',
-          url: 'https://github.com/uber/jaeger/issues',
-        },
-        {
-          label: 'Go Client',
-          url: 'https://github.com/uber/jaeger-client-go/issues',
-        },
-        {
-          label: 'Java Client',
-          url: 'https://github.com/uber/jaeger-client-java/issues',
-        },
-        {
-          label: 'Node Client',
-          url: 'https://github.com/uber/jaeger-client-node/issues',
-        },
-        {
-          label: 'Python Client',
-          url: 'https://github.com/uber/jaeger-client-python/issues',
-        },
-        {
-          label: 'Jaeger UI',
-          url: 'https://github.com/uber/jaeger-ui/issues',
-        },
-      ],
-    },
   ],
 };
