@@ -22,6 +22,7 @@
 
 const CV_WIDTH = 4000;
 const MIN_WIDTH = 50;
+const MIN_TOTAL_HEIGHT = 60;
 
 export default function renderIntoCanvas(
   canvas: HTMLCanvasElement,
@@ -29,10 +30,18 @@ export default function renderIntoCanvas(
   totalValueWidth: number,
   getFillColor: string => string
 ) {
-  // eslint-disable-next-line  no-param-reassign
+  // eslint-disable-next-line no-param-reassign
   canvas.width = CV_WIDTH;
-  // eslint-disable-next-line  no-param-reassign
-  canvas.height = items.length;
+  let itemHeight = 1;
+  if (items.length < MIN_TOTAL_HEIGHT) {
+    // eslint-disable-next-line no-param-reassign
+    canvas.height = MIN_TOTAL_HEIGHT;
+    itemHeight = MIN_TOTAL_HEIGHT / items.length;
+  } else {
+    // eslint-disable-next-line no-param-reassign
+    canvas.height = items.length;
+    itemHeight = 1;
+  }
   const ctx = canvas.getContext('2d');
   for (let i = 0; i < items.length; i++) {
     const { valueWidth, valueOffset, serviceName } = items[i];
@@ -44,6 +53,6 @@ export default function renderIntoCanvas(
       width = MIN_WIDTH;
     }
     ctx.fillStyle = getFillColor(serviceName);
-    ctx.fillRect(x, i, width, 1);
+    ctx.fillRect(x, i * itemHeight, width, itemHeight);
   }
 }
