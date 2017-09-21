@@ -30,8 +30,7 @@ import ListView from './ListView';
 import SpanBarRow from './SpanBarRow';
 import DetailState from './SpanDetail/DetailState';
 import SpanDetailRow from './SpanDetailRow';
-import Ticks from './Ticks';
-import TimelineRow from './TimelineRow';
+import TimelineHeaderRow from './TimelineHeaderRow';
 import {
   findServerChildSpan,
   formatDuration,
@@ -62,8 +61,9 @@ type VirtualizedTraceViewProps = {
   find: (?Trace, ?string) => void,
   findMatchesIDs: Set<string>,
   setTrace: (?string) => void,
+  setSpanNameColumnWidth: number => void,
+  spanNameColumnWidth: number,
   textFilter: ?string,
-  ticks: number[],
   trace?: Trace,
   zoomEnd: number,
   zoomStart: number,
@@ -74,6 +74,8 @@ const DEFAULT_HEIGHTS = {
   detail: 169,
   detailWithLogs: 223,
 };
+
+const NUM_TICKS = 5;
 
 function generateRowStates(
   spans: ?(Span[]),
@@ -162,9 +164,15 @@ class VirtualizedTraceView extends React.PureComponent<VirtualizedTraceViewProps
   }
 
   componentWillReceiveProps(nextProps) {
-    const { find, textFilter } = nextProps;
-    if (this.props.textFilter !== textFilter) {
-      find(this.props.trace, textFilter);
+    const { textFilter, trace } = this.props;
+    const { find, setTrace, textFilter: nextTextFilter, trace: nextTrace } = nextProps;
+    if (trace !== nextTrace) {
+      setTrace(nextTrace ? nextTrace.traceID : null);
+      if (nextTextFilter) {
+        find(nextTrace, nextTextFilter);
+      }
+    } else if (textFilter !== nextTextFilter) {
+      find(nextTrace, nextTextFilter);
     }
     const { clippingCssClasses, rowStates } = getPropDerivations(nextProps);
     this.clippingCssClasses = clippingCssClasses;
@@ -215,11 +223,11 @@ class VirtualizedTraceView extends React.PureComponent<VirtualizedTraceViewProps
     const { serviceName } = span.process;
     const {
       childrenHiddenIDs,
-      findMatchesIDs,
-      detailToggle,
       childrenToggle,
       detailStates,
-      ticks = [0, 0.25, 0.5, 0.75, 1],
+      detailToggle,
+      findMatchesIDs,
+      spanNameColumnWidth,
       trace,
       zoomEnd = 1,
       zoomStart = 0,
@@ -272,19 +280,20 @@ class VirtualizedTraceView extends React.PureComponent<VirtualizedTraceViewProps
         <SpanBarRow
           className={this.clippingCssClasses}
           color={color}
+          columnDivision={spanNameColumnWidth}
           depth={span.depth}
           label={formatDuration(span.duration)}
           isChildrenExpanded={!isCollapsed}
           isDetailExapnded={isDetailExapnded}
           isFilteredOut={isFilteredOut}
           isParent={span.hasChildren}
+          numTicks={NUM_TICKS}
           onDetailToggled={toggleDetailExpansion}
           onChildrenToggled={() => childrenToggle(spanID)}
           operationName={span.operationName}
           rpc={rpc}
           serviceName={span.process.serviceName}
           showErrorIcon={showErrorIcon}
-          ticks={ticks}
           viewEnd={viewBounds.end}
           viewStart={viewBounds.start}
         />
@@ -303,6 +312,7 @@ class VirtualizedTraceView extends React.PureComponent<VirtualizedTraceViewProps
       detailTagsToggle,
       detailToggle,
       findMatchesIDs,
+      spanNameColumnWidth,
       trace,
     } = this.props;
     const detailState = detailStates.get(spanID);
@@ -315,6 +325,7 @@ class VirtualizedTraceView extends React.PureComponent<VirtualizedTraceViewProps
       <div className="VirtualizedTraceView--row" key={key} style={{ ...style, zIndex: 1 }} {...attrs}>
         <SpanDetailRow
           color={color}
+          columnDivision={spanNameColumnWidth}
           detailToggle={() => detailToggle(spanID)}
           detailState={detailState}
           isFilteredOut={isFilteredOut}
@@ -330,26 +341,21 @@ class VirtualizedTraceView extends React.PureComponent<VirtualizedTraceViewProps
   }
 
   render() {
-    const { trace, zoomStart = 0, zoomEnd = 1, ticks = [0, 0.25, 0.5, 0.75, 1] } = this.props;
+    const { trace, zoomStart = 0, zoomEnd = 1, setSpanNameColumnWidth, spanNameColumnWidth } = this.props;
     if (!trace) {
       return null;
     }
     const zoomMin = zoomStart * trace.duration;
     const zoomMax = zoomEnd * trace.duration;
-    const zoomDuration = zoomMax - zoomMin;
-    function getDuationAtTick(tick) {
-      return zoomMin + tick * zoomDuration;
-    }
     return (
       <div className="">
-        <TimelineRow className="VirtualizedTraceView--headerRow">
-          <TimelineRow.Left>
-            <h3 className="m0 p1 VirtualizedTraceView--labelHeader">Service &amp; Operation</h3>
-          </TimelineRow.Left>
-          <TimelineRow.Right>
-            <Ticks labels={ticks.map(tick => formatDuration(getDuationAtTick(tick)))} ticks={ticks} />
-          </TimelineRow.Right>
-        </TimelineRow>
+        <TimelineHeaderRow
+          numTicks={NUM_TICKS}
+          startTime={zoomMin}
+          endTime={zoomMax}
+          nameColumnWidth={spanNameColumnWidth}
+          onColummWidthChange={setSpanNameColumnWidth}
+        />
         <div className="VirtualizedTraceView--spans">
           <ListView
             dataLength={this.rowStates.length}

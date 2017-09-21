@@ -32,6 +32,7 @@ import './SpanDetailRow.css';
 
 type SpanDetailRowProps = {
   color: string,
+  columnDivision: number,
   detailState: DetailState,
   detailToggle: string => void,
   isFilteredOut: boolean,
@@ -46,6 +47,7 @@ type SpanDetailRowProps = {
 export default function SpanDetailRow(props: SpanDetailRowProps) {
   const {
     color,
+    columnDivision,
     detailState,
     detailToggle,
     isFilteredOut,
@@ -58,7 +60,7 @@ export default function SpanDetailRow(props: SpanDetailRowProps) {
   } = props;
   return (
     <TimelineRow className={`detail-row ${isFilteredOut ? 'is-filtered-out' : ''}`}>
-      <TimelineRow.Left className="detail-row-name-column">
+      <TimelineRow.Cell width={columnDivision}>
         <SpanTreeOffset level={span.depth + 1} />
         <span>
           <span
@@ -67,8 +69,8 @@ export default function SpanDetailRow(props: SpanDetailRowProps) {
             style={{ borderColor: color }}
           />
         </span>
-      </TimelineRow.Left>
-      <TimelineRow.Right>
+      </TimelineRow.Cell>
+      <TimelineRow.Cell width={1 - columnDivision}>
         <div className="p2 detail-info-wrapper" style={{ borderTopColor: color }}>
           <SpanDetail
             detailState={detailState}
@@ -80,7 +82,7 @@ export default function SpanDetailRow(props: SpanDetailRowProps) {
             traceStartTime={traceStartTime}
           />
         </div>
-      </TimelineRow.Right>
+      </TimelineRow.Cell>
     </TimelineRow>
   );
 }

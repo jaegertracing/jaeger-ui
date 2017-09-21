@@ -1,3 +1,5 @@
+// @flow
+
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -19,7 +21,6 @@
 // THE SOFTWARE.
 
 import React from 'react';
-import PropTypes from 'prop-types';
 
 import TimelineRow from './TimelineRow';
 import SpanTreeOffset from './SpanTreeOffset';
@@ -28,10 +29,38 @@ import Ticks from './Ticks';
 
 import './SpanBarRow.css';
 
-export default function SpanBarRow(props) {
+type SpanBarRowProps = {
+  className: string,
+  color: string,
+  columnDivision: number,
+  depth: number,
+  isChildrenExpanded: boolean,
+  isDetailExapnded: boolean,
+  isFilteredOut: boolean,
+  isParent: boolean,
+  label: string,
+  onDetailToggled: () => void,
+  onChildrenToggled: () => void,
+  operationName: string,
+  numTicks: number,
+  rpc: ?{
+    viewStart: number,
+    viewEnd: number,
+    color: string,
+    operationName: string,
+    serviceName: string,
+  },
+  serviceName: string,
+  showErrorIcon: boolean,
+  viewEnd: number,
+  viewStart: number,
+};
+
+export default function SpanBarRow(props: SpanBarRowProps) {
   const {
     className,
     color,
+    columnDivision,
     depth,
     isChildrenExpanded,
     isDetailExapnded,
@@ -40,11 +69,11 @@ export default function SpanBarRow(props) {
     label,
     onDetailToggled,
     onChildrenToggled,
+    numTicks,
     operationName,
     rpc,
     serviceName,
     showErrorIcon,
-    ticks,
     viewEnd,
     viewStart,
   } = props;
@@ -68,7 +97,7 @@ export default function SpanBarRow(props) {
         ${isFilteredOut ? 'is-filtered-out' : ''}
       `}
     >
-      <TimelineRow.Left className="span-name-column">
+      <TimelineRow.Cell className="span-name-column" width={columnDivision}>
         <div className="span-name-wrapper">
           <SpanTreeOffset
             level={depth + 1}
@@ -101,9 +130,14 @@ export default function SpanBarRow(props) {
             </span>
           </a>
         </div>
-      </TimelineRow.Left>
-      <TimelineRow.Right className="span-view" style={{ cursor: 'pointer' }} onClick={onDetailToggled}>
-        <Ticks ticks={ticks} />
+      </TimelineRow.Cell>
+      <TimelineRow.Cell
+        className="span-view"
+        style={{ cursor: 'pointer' }}
+        width={1 - columnDivision}
+        onClick={onDetailToggled}
+      >
+        <Ticks numTicks={numTicks} />
         <SpanBar
           rpc={rpc}
           viewStart={viewStart}
@@ -113,36 +147,10 @@ export default function SpanBarRow(props) {
           longLabel={longLabel}
           hintSide={hintSide}
         />
-      </TimelineRow.Right>
+      </TimelineRow.Cell>
     </TimelineRow>
   );
 }
-
-SpanBarRow.propTypes = {
-  className: PropTypes.string,
-  color: PropTypes.string.isRequired,
-  depth: PropTypes.number.isRequired,
-  isChildrenExpanded: PropTypes.bool.isRequired,
-  isDetailExapnded: PropTypes.bool.isRequired,
-  isFilteredOut: PropTypes.bool.isRequired,
-  isParent: PropTypes.bool.isRequired,
-  label: PropTypes.string.isRequired,
-  onDetailToggled: PropTypes.func.isRequired,
-  onChildrenToggled: PropTypes.func.isRequired,
-  operationName: PropTypes.string.isRequired,
-  rpc: PropTypes.shape({
-    viewStart: PropTypes.number,
-    viewEnd: PropTypes.number,
-    color: PropTypes.string,
-    operationName: PropTypes.string,
-    serviceName: PropTypes.string,
-  }),
-  serviceName: PropTypes.string.isRequired,
-  showErrorIcon: PropTypes.bool.isRequired,
-  ticks: PropTypes.arrayOf(PropTypes.number).isRequired,
-  viewEnd: PropTypes.number.isRequired,
-  viewStart: PropTypes.number.isRequired,
-};
 
 SpanBarRow.defaultProps = {
   className: '',

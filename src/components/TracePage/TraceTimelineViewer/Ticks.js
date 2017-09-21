@@ -1,3 +1,5 @@
+// @flow
+
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -18,42 +20,52 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import PropTypes from 'prop-types';
-import React from 'react';
+import * as React from 'react';
+
+import { formatDuration } from './utils';
 
 import './Ticks.css';
 
-export default function Ticks(props) {
-  const { labels, ticks } = props;
+type TicksProps = {
+  endTime?: number,
+  numTicks: number,
+  showLabels?: boolean,
+  startTime?: ?number,
+};
 
+export default function Ticks(props: TicksProps) {
+  const { endTime, numTicks, showLabels, startTime } = props;
+
+  let labels: string[];
+  if (showLabels) {
+    labels = [];
+    const viewingDuration = (endTime || 0) - (startTime || 0);
+    for (let i = 0; i < numTicks; i++) {
+      const durationAtTick = startTime + i / (numTicks - 1) * viewingDuration;
+      labels.push(formatDuration(durationAtTick));
+    }
+  }
+  const ticks: React.Node[] = [];
+  for (let i = 0; i < numTicks; i++) {
+    const portion = i / (numTicks - 1);
+    ticks.push(
+      <div
+        key={portion}
+        className="span-row-tick"
+        style={{
+          left: `${portion * 100}%`,
+        }}
+      >
+        {labels &&
+          <span className={`span-row-tick-label ${portion >= 1 ? 'is-end-anchor' : ''}`}>
+            {labels[i]}
+          </span>}
+      </div>
+    );
+  }
   return (
     <div>
-      {ticks.map(
-        (tick, i) =>
-          i
-            ? <div
-                key={tick}
-                className="span-row-tick"
-                style={{
-                  left: `${tick * 100}%`,
-                }}
-              >
-                {labels &&
-                  <span className={`span-row-tick-label ${tick >= 1 ? 'is-end-anchor' : ''}`}>
-                    {labels[i]}
-                  </span>}
-              </div>
-            : null
-      )}
+      {ticks}
     </div>
   );
 }
-
-Ticks.propTypes = {
-  ticks: PropTypes.arrayOf(PropTypes.number).isRequired,
-  labels: PropTypes.arrayOf(PropTypes.string),
-};
-
-Ticks.defaultProps = {
-  labels: null,
-};

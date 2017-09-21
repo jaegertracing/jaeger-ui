@@ -1,3 +1,5 @@
+// @flow
+
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -18,38 +20,30 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
+import React from 'react';
 
 import VirtualizedTraceView from './VirtualizedTraceView';
+import type { Trace } from '../../../types';
 
 import './grid.css';
 import './index.css';
 
-export default class TraceTimelineViewer extends Component {
-  componentWillReceiveProps(nextProps) {
-    const { trace } = nextProps;
-    if (trace !== this.props.trace) {
-      throw new Error('Component does not support changing the trace');
-    }
-  }
-
-  render() {
-    const { timeRangeFilter: zoomRange, textFilter, trace } = this.props;
-    return (
-      <div className="trace-timeline-viewer">
-        <VirtualizedTraceView
-          textFilter={textFilter}
-          trace={trace}
-          zoomStart={zoomRange[0]}
-          zoomEnd={zoomRange[1]}
-        />
-      </div>
-    );
-  }
-}
-TraceTimelineViewer.propTypes = {
-  trace: PropTypes.object,
-  timeRangeFilter: PropTypes.array,
-  textFilter: PropTypes.string,
+type TraceTimelineViewerProps = {
+  trace: ?Trace,
+  timeRangeFilter: [number, number],
+  textFilter: ?string,
 };
+
+export default function TraceTimelineViewer(props: TraceTimelineViewerProps) {
+  const { timeRangeFilter: zoomRange, textFilter, trace } = props;
+  return (
+    <div className="trace-timeline-viewer">
+      <VirtualizedTraceView
+        textFilter={textFilter}
+        trace={trace}
+        zoomStart={zoomRange[0]}
+        zoomEnd={zoomRange[1]}
+      />
+    </div>
+  );
+}
