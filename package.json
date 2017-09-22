@@ -76,7 +76,7 @@
     "test": "react-scripts test --env=jsdom",
     "coverage": "npm run test -- --coverage",
     "lint": "npm run eslint && npm run prettier && npm run flow",
-    "eslint": "eslint .",
+    "eslint": "eslint src",
     "prettier": "prettier --single-quote --trailing-comma es5 --print-width 110 --write \"src/**/*.js\"",
     "flow": "flow; test $? -eq 0 -o $? -eq 2",
     "set-homepage": "json -I -f package.json -e 'this.homepage=process.env.HOMEPAGE'",

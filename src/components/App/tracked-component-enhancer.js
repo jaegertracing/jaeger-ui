@@ -1,3 +1,5 @@
+// @flow
+
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -18,27 +20,41 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import PropTypes from 'prop-types';
-import React from 'react';
-import Helmet from 'react-helmet';
+import * as React from 'react';
+import type { Location } from 'react-router-dom';
 
-import TopNav from './TopNav';
+import { trackPageView } from '../../utils/metrics';
 
-import './Page.css';
-
-export default function JaegerUIPage(props) {
-  const { children } = props;
-  return (
-    <section className="jaeger-ui-page" id="jaeger-ui">
-      <Helmet title="Jaeger UI" />
-      <TopNav />
-      <div className="jaeger-ui--content">
-        {children}
-      </div>
-    </section>
-  );
-}
-
-JaegerUIPage.propTypes = {
-  children: PropTypes.node,
+type TrackedComponentProps = {
+  location: Location,
 };
+
+/**
+ * Wrap `Component` to add tracking based on changes in
+ * `props.location.pathname` and `props.location.search`. If either change, a
+ * page-view is tracked.
+ */
+export default function trackedComponentEnhancer(Component: any) {
+  class TrackedComponent extends React.Component<TrackedComponentProps> {
+    props: TrackedComponentProps;
+
+    componentDidMount() {
+      const { pathname, search } = this.props.location;
+      trackPageView(pathname, search);
+    }
+
+    componentWillReceiveProps(nextProps: TrackedComponentProps) {
+      const { pathname, search } = this.props.location;
+      const { pathname: nextPathname, search: nextSearch } = nextProps.location;
+      if (pathname !== nextPathname || search !== nextSearch) {
+        trackPageView(nextPathname, nextSearch);
+      }
+    }
+
+    render() {
+      return <Component {...this.props} />;
+    }
+  }
+
+  return TrackedComponent;
+}
