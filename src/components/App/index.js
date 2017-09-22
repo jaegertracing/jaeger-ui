@@ -29,7 +29,6 @@ import 'semantic-ui-css/semantic.min.css';
 
 import Page from './Page';
 import NotFound from './NotFound';
-import trackedComponentEnahncer from './tracked-component-enhancer';
 import { ConnectedDependencyGraphPage } from '../DependencyGraph';
 import { ConnectedSearchTracePage } from '../SearchTracePage';
 import { ConnectedTracePage } from '../TracePage';
@@ -40,10 +39,6 @@ import prefixUrl from '../../utils/prefix-url';
 import './App.css';
 
 const defaultHistory = createHistory();
-
-const TrackedSearchPage = trackedComponentEnahncer(ConnectedSearchTracePage);
-const TrackedTracePage = trackedComponentEnahncer(ConnectedTracePage);
-const TrackedDependencyPage = trackedComponentEnahncer(ConnectedDependencyGraphPage);
 
 export default class JaegerUIApp extends Component {
   static get propTypes() {
@@ -73,9 +68,9 @@ export default class JaegerUIApp extends Component {
         <ConnectedRouter history={history}>
           <Page>
             <Switch>
-              <Route path={prefixUrl('/search')} component={TrackedSearchPage} />
-              <Route path={prefixUrl('/trace/:id')} component={TrackedTracePage} />
-              <Route path={prefixUrl('/dependencies')} component={TrackedDependencyPage} />
+              <Route path={prefixUrl('/search')} component={ConnectedSearchTracePage} />
+              <Route path={prefixUrl('/trace/:id')} component={ConnectedTracePage} />
+              <Route path={prefixUrl('/dependencies')} component={ConnectedDependencyGraphPage} />
               <Redirect exact path="/" to={prefixUrl('/search')} />
               <Redirect exact path={prefixUrl()} to={prefixUrl('/search')} />
               <Redirect exact path={prefixUrl('/')} to={prefixUrl('/search')} />
