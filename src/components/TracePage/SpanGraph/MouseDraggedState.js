@@ -22,9 +22,6 @@
 
 import _clamp from 'lodash/clamp';
 
-/**
- * Which items of a {@link SpanDetail} component are expanded.
- */
 export default class MouseDraggedState {
   clientRect: ClientRect;
   max: number;
@@ -38,6 +35,7 @@ export default class MouseDraggedState {
     clientX: number,
     max?: number,
     min?: number,
+    start?: number,
     tag: string,
   }) {
     const opts = {};
@@ -45,7 +43,7 @@ export default class MouseDraggedState {
     opts.max = options.max == null ? 1 : options.max;
     opts.min = options.min == null ? 0 : options.min;
     opts.position = (options.clientX - opts.clientRect.left) / (opts.clientRect.width || 1);
-    opts.start = opts.position;
+    opts.start = options.start == null ? opts.position : options.start;
     opts.tag = options.tag;
     return new MouseDraggedState(opts);
   }
@@ -72,17 +70,13 @@ export default class MouseDraggedState {
     if (this.position < this.start) {
       return {
         x: `${this.position * 100}%`,
-        // right: `${(1 - this.start) * 100}%`,
         width: `${(this.start - this.position) * 100}%`,
-        // className: 'isDraggingLeft',
         leadingX: `${this.position * 100}%`,
       };
     }
     return {
       x: `${this.start * 100}%`,
-      // right: `${(1 - this.position) * 100}%`,
       width: `${(this.position - this.start) * 100}%`,
-      // className: 'isDraggingRight',
       leadingX: `${this.position * 100}%`,
     };
   }
