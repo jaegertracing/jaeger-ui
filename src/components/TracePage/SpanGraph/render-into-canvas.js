@@ -21,7 +21,7 @@
 // THE SOFTWARE.
 
 const CV_WIDTH = 4000;
-const MIN_WIDTH = 50;
+const MIN_WIDTH = 16;
 const MIN_TOTAL_HEIGHT = 60;
 
 export default function renderIntoCanvas(

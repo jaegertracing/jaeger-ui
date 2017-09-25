@@ -26,7 +26,7 @@ import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 
 import TracePageHeader from './TracePageHeader';
-import SpanGraph from './SpanGraph';
+import SpanGraph from './SpanGraph/SpanGraphV2';
 import TraceTimelineViewer from './TraceTimelineViewer';
 import NotFound from '../App/NotFound';
 import * as jaegerApiActions from '../../actions/jaeger-api';
@@ -65,6 +65,7 @@ export default class TracePage extends Component {
     this.headerElm = null;
     this.setHeaderHeight = this.setHeaderHeight.bind(this);
     this.toggleSlimView = this.toggleSlimView.bind(this);
+    this.updateTimeRangeFilter = this.updateTimeRangeFilter.bind(this);
   }
 
   getChildContext() {
@@ -73,7 +74,7 @@ export default class TracePage extends Component {
     delete state.timeRangeFilter;
     return {
       updateTextFilter: this.updateTextFilter.bind(this),
-      updateTimeRangeFilter: this.updateTimeRangeFilter.bind(this),
+      updateTimeRangeFilter: this.updateTimeRangeFilter,
       ...state,
     };
   }
@@ -172,7 +173,12 @@ export default class TracePage extends Component {
             traceID={traceID}
             onSlimViewClicked={this.toggleSlimView}
           />
-          {!slimView && <SpanGraph trace={trace} viewRange={this.state.timeRangeFilter} />}
+          {!slimView &&
+            <SpanGraph
+              trace={trace}
+              viewRange={this.state.timeRangeFilter}
+              updateViewRange={this.updateTimeRangeFilter}
+            />}
         </section>
         {headerHeight &&
           <section className="trace-timeline-section" style={{ paddingTop: headerHeight }}>
