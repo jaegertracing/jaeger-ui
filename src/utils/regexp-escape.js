@@ -18,34 +18,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-export function baseStringComparator(itemA, itemB) {
-  return itemA.localeCompare(itemB, 'en', { sensitivity: 'base' });
-}
-
-export function stringSortComparator(itemA, itemB) {
-  return itemA.localeCompare(itemB);
-}
-
-export function numberSortComparator(itemA, itemB) {
-  return itemA - itemB;
-}
-
-export function classNameForSortDir(dir) {
-  return `sorted ${dir === 1 ? 'ascending' : 'descending'}`;
-}
-
-export function getNewSortForClick(prevSort, column) {
-  const { defaultDir = 1 } = column;
-
-  return {
-    key: column.name,
-    dir: prevSort.key === column.name ? -1 * prevSort.dir : defaultDir,
-  };
-}
-
-export function createSortClickHandler(column, currentSortKey, currentSortDir, updateSort) {
-  return function onClickSortingElement() {
-    const { key, dir } = getNewSortForClick({ key: currentSortKey, dir: currentSortDir }, column);
-    updateSort(key, dir);
-  };
+export default function regexpEscape(s) {
+  return s.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
 }
