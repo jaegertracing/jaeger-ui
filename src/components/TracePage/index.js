@@ -26,7 +26,7 @@ import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 
 import TracePageHeader from './TracePageHeader';
-import SpanGraph from './SpanGraph/SpanGraphV2';
+import SpanGraph from './SpanGraph';
 import TraceTimelineViewer from './TraceTimelineViewer';
 import NotFound from '../App/NotFound';
 import * as jaegerApiActions from '../../actions/jaeger-api';

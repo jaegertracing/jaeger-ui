@@ -25,7 +25,7 @@ import cx from 'classnames';
 
 import MouseDraggedState from './MouseDraggedState';
 import GraphTicks from './GraphTicks';
-import Scrubber2 from './Scrubber2';
+import Scrubber from './Scrubber';
 
 import './ViewingLayer.css';
 
@@ -58,6 +58,8 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
   _root: ?Element;
   _rootClientRect: ?ClientRect;
   _windowListenersAttached: boolean;
+  _handleLeftScrubberMouseDown: (SyntheticMouseEvent<any>) => void;
+  _handleRightScrubberMouseDown: (SyntheticMouseEvent<any>) => void;
 
   constructor(props: ViewingLayerProps) {
     super(props);
@@ -69,10 +71,16 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
     this._root = undefined;
     this._rootClientRect = undefined;
     this._windowListenersAttached = false;
+
     this._setRoot = this._setRoot.bind(this);
     this._handleScrubberMouseEnter = this._handleScrubberMouseEnter.bind(this);
     this._handleScrubberMouseLeave = this._handleScrubberMouseLeave.bind(this);
-    this._handleScrubberMouseDown = this._handleScrubberMouseDown.bind(this);
+    this._handleLeftScrubberMouseDown = (event: SyntheticMouseEvent<any>) => {
+      this._handleScrubberMouseDown(dragTags.SCRUB_LEFT_HANDLE, event);
+    };
+    this._handleRightScrubberMouseDown = (event: SyntheticMouseEvent<any>) => {
+      this._handleScrubberMouseDown(dragTags.SCRUB_RIGHT_HANDLE, event);
+    };
     this._handleRootMouseMove = this._handleRootMouseMove.bind(this);
     this._handleRootMouseLeave = this._handleRootMouseLeave.bind(this);
     this._handleRootMouseDown = this._handleRootMouseDown.bind(this);
@@ -97,40 +105,40 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
     this.setState({ ...this.state, preventCursorLine: false });
   };
 
-  _handleScrubberMouseDown = function _handleScrubberMouseDown(event: SyntheticMouseEvent<any>) {
-    console.log('scrubber mouse down', event);
+  _handleScrubberMouseDown(tag: string, event: SyntheticMouseEvent<any>) {
     const { button, clientX } = event;
-    if (!this._root || button !== LEFT_MOUSE_BUTTON) {
+    if (button !== LEFT_MOUSE_BUTTON) {
       return;
     }
+    // stop propagation so the root mousedown listener does not hi-jack the show
     event.stopPropagation();
-
+    if (!this._root) {
+      return;
+    }
     // the ClientRect retrieved when the SVG is initially rendered has an
     // inaccurate width, so refresh the ClientRect on mouse down
     this._rootClientRect = this._root.getBoundingClientRect();
     window.addEventListener('mousemove', this._handleWindowMouseMove);
     window.addEventListener('mouseup', this._handleWindowMouseUp);
     this._windowListenersAttached = true;
-    const draggedState = MouseDraggedState.newFromOptions({
-      clientX,
-      clientRect: this._rootClientRect,
-      max: 1,
-      min: 0,
-      tag: dragTags.SCRUB_INTERMEDIATE_STATE,
-    });
-    const position = draggedState.position;
     const [leftViewPosition, rightViewPosition] = this.props.viewRange;
-    if (Math.abs(leftViewPosition - position) < Math.abs(rightViewPosition - position)) {
-      draggedState.tag = dragTags.SCRUB_LEFT_HANDLE;
-      draggedState.max = rightViewPosition;
-      draggedState.start = leftViewPosition;
+    const opts: Object = {
+      clientX,
+      tag,
+      clientRect: this._rootClientRect,
+    };
+    if (tag === dragTags.SCRUB_LEFT_HANDLE) {
+      opts.start = leftViewPosition;
+      opts.min = 0;
+      opts.max = rightViewPosition;
     } else {
-      draggedState.tag = dragTags.SCRUB_RIGHT_HANDLE;
-      draggedState.min = leftViewPosition;
-      draggedState.start = rightViewPosition;
+      opts.start = rightViewPosition;
+      opts.min = leftViewPosition;
+      opts.max = 1;
     }
+    const draggedState = MouseDraggedState.newFromOptions(opts);
     this.setState({ ...this.state, draggedState });
-  };
+  }
 
   _handleRootMouseMove = function _handleRootMouseMove({ clientX }: SyntheticMouseEvent<any>) {
     if (this._rootClientRect) {
@@ -187,11 +195,11 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
           viewEnd = draggedFrom;
         }
       } else if (draggedState.tag === dragTags.SCRUB_LEFT_HANDLE) {
-        const [_, currentViewEnd] = this.props.viewRange;
+        const [, currentViewEnd] = this.props.viewRange;
         viewStart = draggedTo;
         viewEnd = currentViewEnd;
       } else {
-        const [currentViewStart, _] = this.props.viewRange;
+        const [currentViewStart] = this.props.viewRange;
         viewStart = currentViewStart;
         viewEnd = draggedTo;
       }
@@ -216,10 +224,8 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
     }
     let isScrubberDrag = false;
     let dragMarkers: ?(React.Node[]);
-    let scrubDragMarkers: ?(React.Node[]);
     let fullOverlay: ?React.Node;
     let cursorGuide: ?React.Node;
-    // if (draggedState && draggedState.tag === dragTags.RESET) {
     if (draggedState) {
       const { tag } = draggedState;
       isScrubberDrag = tag !== dragTags.RESET;
@@ -282,15 +288,15 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
           <GraphTicks numTicks={numTicks} />
           {cursorGuide}
           {isScrubberDrag && dragMarkers}
-          <Scrubber2
+          <Scrubber
             position={leftBound || 0}
-            onMouseDown={this._handleScrubberMouseDown}
+            onMouseDown={this._handleLeftScrubberMouseDown}
             onMouseEnter={this._handleScrubberMouseEnter}
             onMouseLeave={this._handleScrubberMouseLeave}
           />
-          <Scrubber2
+          <Scrubber
             position={rightBound || 1}
-            onMouseDown={this._handleScrubberMouseDown}
+            onMouseDown={this._handleRightScrubberMouseDown}
             onMouseEnter={this._handleScrubberMouseEnter}
             onMouseLeave={this._handleScrubberMouseLeave}
           />
