@@ -1,3 +1,5 @@
+// @flow
+
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -18,26 +20,54 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import PropTypes from 'prop-types';
-import React from 'react';
+import * as React from 'react';
 import Helmet from 'react-helmet';
+import { connect } from 'react-redux';
+import type { Location } from 'react-router-dom';
 
 import TopNav from './TopNav';
+import { trackPageView } from '../../utils/metrics';
 
 import './Page.css';
 
-export default function JaegerUIPage({ children }) {
-  return (
-    <section className="jaeger-ui-page" id="jaeger-ui">
-      <Helmet title="Jaeger UI" />
-      <TopNav />
-      <div className="jaeger-ui--content">
-        {children}
-      </div>
-    </section>
-  );
+type PageProps = {
+  location: Location,
+  children: React.Node,
+};
+
+class Page extends React.Component<PageProps> {
+  props: PageProps;
+
+  componentDidMount() {
+    const { pathname, search } = this.props.location;
+    trackPageView(pathname, search);
+  }
+
+  componentWillReceiveProps(nextProps: PageProps) {
+    const { pathname, search } = this.props.location;
+    const { pathname: nextPathname, search: nextSearch } = nextProps.location;
+    if (pathname !== nextPathname || search !== nextSearch) {
+      trackPageView(nextPathname, nextSearch);
+    }
+  }
+
+  render() {
+    const { children } = this.props;
+    return (
+      <section className="jaeger-ui-page" id="jaeger-ui">
+        <Helmet title="Jaeger UI" />
+        <TopNav />
+        <div className="jaeger-ui--content">
+          {children}
+        </div>
+      </section>
+    );
+  }
 }
 
-JaegerUIPage.propTypes = {
-  children: PropTypes.node,
-};
+function mapStateToProps(state, ownProps) {
+  const { location } = state.routing;
+  return { ...ownProps, location };
+}
+
+export default connect(mapStateToProps)(Page);

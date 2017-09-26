@@ -38,7 +38,7 @@ THE SOFTWARE.
   width: 6px;
   background-image: linear-gradient(to right, rgba(25, 25, 25, 0.25), rgba(32, 32, 32, 0.0));
   left: 100%;
-  z-index: 1;
+  z-index: -1;
 }
 
 .span-name-wrapper {
