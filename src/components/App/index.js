@@ -20,7 +20,6 @@
 
 import React, { Component } from 'react';
 import createHistory from 'history/createBrowserHistory';
-import PropTypes from 'prop-types';
 import { Provider } from 'react-redux';
 import { Route, Redirect, Switch } from 'react-router-dom';
 import { ConnectedRouter } from 'react-router-redux';
@@ -32,39 +31,26 @@ import NotFound from './NotFound';
 import { ConnectedDependencyGraphPage } from '../DependencyGraph';
 import { ConnectedSearchTracePage } from '../SearchTracePage';
 import { ConnectedTracePage } from '../TracePage';
+import { fetchConfig } from '../../actions/jaeger-api';
 import JaegerAPI, { DEFAULT_API_ROOT } from '../../api/jaeger';
 import configureStore from '../../utils/configure-store';
 import prefixUrl from '../../utils/prefix-url';
 
 import './App.css';
 
-const defaultHistory = createHistory();
+const history = createHistory();
 
 export default class JaegerUIApp extends Component {
-  static get propTypes() {
-    return {
-      history: PropTypes.object,
-      apiRoot: PropTypes.string,
-    };
-  }
-
-  static get defaultProps() {
-    return {
-      history: defaultHistory,
-      apiRoot: DEFAULT_API_ROOT,
-    };
-  }
-
-  componentDidMount() {
-    const { apiRoot } = this.props;
-    JaegerAPI.apiRoot = apiRoot;
+  constructor(props) {
+    super(props);
+    this.store = configureStore(history);
+    JaegerAPI.apiRoot = DEFAULT_API_ROOT;
+    this.store.dispatch(fetchConfig());
   }
 
   render() {
-    const { history } = this.props;
-    const store = configureStore(history);
     return (
-      <Provider store={store}>
+      <Provider store={this.store}>
         <ConnectedRouter history={history}>
           <Page>
             <Switch>

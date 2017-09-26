@@ -1,3 +1,5 @@
+// @flow
+
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -18,17 +20,16 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import { reducer as formReducer } from 'redux-form';
+export type ConfigMenuItem = {
+  label: string,
+  url: string,
+};
 
-import config from './config';
-import dependencies from './dependencies';
-import services from './services';
-import trace from './trace';
+export type ConfigMenuGroup = {
+  label: string,
+  items: ConfigMenuItem[],
+};
 
-export default {
-  config,
-  dependencies,
-  services,
-  trace,
-  form: formReducer,
+export type Config = {
+  menu: (ConfigMenuGroup | ConfigMenuItem)[],
 };

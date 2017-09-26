@@ -20,10 +20,18 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-.ui.menu.jaeger-ui--topnav {
-  border-radius: 0;
+.TopNav {
+  /* !important is to override styles from semantic UI */
+  border-radius: 0 !important;
+  margin: 0 !important;
   padding: 5px;
   position: fixed;
   width: 100%;
   z-index: 1000;
+}
+
+.TopNav--DropdownItem {
+  display: block;
+  margin: -1em;
+  padding: 1em;
 }
