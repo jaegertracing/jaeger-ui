@@ -18,17 +18,40 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import { reducer as formReducer } from 'redux-form';
+import { handleActions } from 'redux-actions';
 
-import config from './config';
-import dependencies from './dependencies';
-import services from './services';
-import trace from './trace';
+import { fetchConfig } from '../actions/jaeger-api';
+import defaultConfig from '../constants/default-config';
 
-export default {
-  config,
-  dependencies,
-  services,
-  trace,
-  form: formReducer,
+const initialState = {
+  data: {},
+  loading: false,
+  error: null,
 };
+
+function fetchStarted(state) {
+  return { ...state, loading: true };
+}
+
+function fetchDone(state, { payload }) {
+  const data = payload;
+  // fetchConfig action creator is set to handle rejected promises
+  if (data.error) {
+    const { message, stack } = data.error;
+    return { ...state, error: { message, stack }, loading: false, data: defaultConfig };
+  }
+  return { ...state, data, error: null, loading: false };
+}
+
+function fetchErred(state, { payload: error }) {
+  return { ...state, error: error.message, loading: false, data: defaultConfig };
+}
+
+export default handleActions(
+  {
+    [`${fetchConfig}_PENDING`]: fetchStarted,
+    [`${fetchConfig}_FULFILLED`]: fetchDone,
+    [`${fetchConfig}_REJECTED`]: fetchErred,
+  },
+  initialState
+);
