@@ -21,25 +21,34 @@
 // THE SOFTWARE.
 
 import React from 'react';
+import cx from 'classnames';
 
 import './Scrubber.css';
 
 type ScrubberProps = {
+  isDragging: boolean,
   position: number,
   onMouseDown: (SyntheticMouseEvent<any>) => void,
   onMouseEnter: (SyntheticMouseEvent<any>) => void,
   onMouseLeave: (SyntheticMouseEvent<any>) => void,
 };
 
-export default function Scrubber({ position, onMouseDown, onMouseEnter, onMouseLeave }: ScrubberProps) {
+export default function Scrubber({
+  isDragging,
+  onMouseDown,
+  onMouseEnter,
+  onMouseLeave,
+  position,
+}: ScrubberProps) {
   const xPercent = `${position * 100}%`;
+  const className = cx('Scrubber', { isDragging });
   return (
-    <g>
+    <g className={className}>
       <rect
         x={xPercent}
         className="Scrubber--handle"
-        style={{ transform: `translate(-2.5px)` }}
-        width="5"
+        style={{ transform: `translate(-1.5px)` }}
+        width="3"
         height="20"
         onMouseDown={onMouseDown}
         onMouseEnter={onMouseEnter}
