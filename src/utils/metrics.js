@@ -20,43 +20,14 @@
 
 import ReactGA from 'react-ga';
 
-if (process.env.NODE_ENV === 'production' && process.env.REACT_APP_GA_TRACKING_ID) {
-  const GA_CODE = process.env.REACT_APP_GA_TRACKING_ID;
-  ReactGA.initialize(GA_CODE);
+export function init() {
+  if (process.env.NODE_ENV === 'production' && process.env.REACT_APP_GA_TRACKING_ID) {
+    const GA_CODE = process.env.REACT_APP_GA_TRACKING_ID;
+    ReactGA.initialize(GA_CODE);
+  }
 }
 
-const GoogleAnalytics = {
-  pageView(event, fields) {
-    ReactGA.set({
-      page: fields.page,
-    });
-    ReactGA.pageview(fields.pathname);
-  },
-  track(eventName, params) {
-    ReactGA.event({
-      category: params.page,
-      action: eventName,
-      label: params.label,
-      value: params.value,
-    });
-  },
-};
-
-export default {
-  enabled: process.env.NODE_ENV === 'production',
-  debug: process.env.NODE_ENV === 'development',
-  vendors: [
-    {
-      name: 'Google Analytics',
-      api: GoogleAnalytics,
-    },
-  ],
-  pageDefaults(routeState) {
-    const paths = routeState.pathname.substr(1).split('/');
-    return {
-      pathname: routeState.pathname,
-      query: routeState.query,
-      page: !paths[0] ? 'landing' : paths[0],
-    };
-  },
-};
+export function trackPageView(pathname, search) {
+  const pagePath = search ? `${pathname}?${search}` : pathname;
+  ReactGA.pageview(pagePath);
+}

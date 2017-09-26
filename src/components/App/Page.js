@@ -23,34 +23,55 @@
 import * as React from 'react';
 import Helmet from 'react-helmet';
 import { connect } from 'react-redux';
+import type { Location } from 'react-router-dom';
 
 import TopNav from './TopNav';
 import type { Config } from '../../types/config';
+import { trackPageView } from '../../utils/metrics';
 
 import './Page.css';
 
-type JaegerUIPageProps = {
+type PageProps = {
+  location: Location,
   children: React.Node,
   config: { data: Config },
 };
 
-function JaegerUIPage({ config, children }: JaegerUIPageProps) {
-  const menu = config && config.data && config.data.menu;
-  return (
-    <section className="jaeger-ui-page" id="jaeger-ui">
-      <Helmet title="Jaeger UI" />
-      <TopNav menuConfig={menu} />
-      <div className="jaeger-ui--content">
-        {children}
-      </div>
-    </section>
-  );
+class Page extends React.Component<PageProps> {
+  props: PageProps;
+
+  componentDidMount() {
+    const { pathname, search } = this.props.location;
+    trackPageView(pathname, search);
+  }
+
+  componentWillReceiveProps(nextProps: PageProps) {
+    const { pathname, search } = this.props.location;
+    const { pathname: nextPathname, search: nextSearch } = nextProps.location;
+    if (pathname !== nextPathname || search !== nextSearch) {
+      trackPageView(nextPathname, nextSearch);
+    }
+  }
+
+  render() {
+    const { children, config } = this.props;
+    const menu = config && config.data && config.data.menu;
+    return (
+      <section className="jaeger-ui-page" id="jaeger-ui">
+        <Helmet title="Jaeger UI" />
+        <TopNav menuConfig={menu} />
+        <div className="jaeger-ui--content">
+          {children}
+        </div>
+      </section>
+    );
+  }
 }
 
 function mapStateToProps(state, ownProps) {
   const { config } = state;
-  const { children } = ownProps;
-  return { children, config };
+  const { location } = state.routing;
+  return { ...ownProps, config, location };
 }
 
-export default connect(mapStateToProps)(JaegerUIPage);
+export default connect(mapStateToProps)(Page);

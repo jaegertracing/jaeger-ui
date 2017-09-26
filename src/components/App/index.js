@@ -20,7 +20,6 @@
 
 import React, { Component } from 'react';
 import createHistory from 'history/createBrowserHistory';
-import { metrics } from 'react-metrics';
 import { Provider } from 'react-redux';
 import { Route, Redirect, Switch } from 'react-router-dom';
 import { ConnectedRouter } from 'react-router-redux';
@@ -35,19 +34,16 @@ import { ConnectedTracePage } from '../TracePage';
 import { fetchConfig } from '../../actions/jaeger-api';
 import JaegerAPI, { DEFAULT_API_ROOT } from '../../api/jaeger';
 import configureStore from '../../utils/configure-store';
-import metricConfig from '../../utils/metrics';
 import prefixUrl from '../../utils/prefix-url';
 
 import './App.css';
 
-const PageWithMetrics = metrics(metricConfig)(Page);
-
-const defaultHistory = createHistory();
+const history = createHistory();
 
 export default class JaegerUIApp extends Component {
   constructor(props) {
     super(props);
-    this.store = configureStore(defaultHistory);
+    this.store = configureStore(history);
     JaegerAPI.apiRoot = DEFAULT_API_ROOT;
     this.store.dispatch(fetchConfig());
   }
@@ -55,8 +51,8 @@ export default class JaegerUIApp extends Component {
   render() {
     return (
       <Provider store={this.store}>
-        <ConnectedRouter history={defaultHistory}>
-          <PageWithMetrics>
+        <ConnectedRouter history={history}>
+          <Page>
             <Switch>
               <Route path={prefixUrl('/search')} component={ConnectedSearchTracePage} />
               <Route path={prefixUrl('/trace/:id')} component={ConnectedTracePage} />
@@ -66,7 +62,7 @@ export default class JaegerUIApp extends Component {
               <Redirect exact path={prefixUrl('/')} to={prefixUrl('/search')} />
               <Route component={NotFound} />
             </Switch>
-          </PageWithMetrics>
+          </Page>
         </ConnectedRouter>
       </Provider>
     );
