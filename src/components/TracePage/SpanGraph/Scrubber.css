@@ -22,18 +22,20 @@ THE SOFTWARE.
 
 .Scrubber--handle {
   cursor: ew-resize;
-  fill: #999;
+  fill: #555;
 }
 
+.Scrubber.isDragging > .Scrubber--handle,
 .Scrubber--handle:hover {
   fill: #44f;
 }
 
 .Scrubber--line {
   pointer-events: none;
-  stroke: #999;
+  stroke: #555;
 }
 
+.Scrubber.isDragging > .Scrubber--line,
 .Scrubber--handle:hover + .Scrubber--line {
   stroke: #44f;
 }

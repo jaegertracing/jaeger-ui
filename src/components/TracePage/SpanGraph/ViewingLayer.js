@@ -223,12 +223,12 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
       rightInactive = 100 - rightBound * 100;
     }
     let isScrubberDrag = false;
+    const dragTag = draggedState && draggedState.tag;
     let dragMarkers: ?(React.Node[]);
     let fullOverlay: ?React.Node;
     let cursorGuide: ?React.Node;
-    if (draggedState) {
-      const { tag } = draggedState;
-      isScrubberDrag = tag !== dragTags.RESET;
+    if (draggedState && dragTag) {
+      isScrubberDrag = dragTag !== dragTags.RESET;
       const cls = cx({
         isScrubberDrag,
         isResetDrag: !isScrubberDrag,
@@ -248,7 +248,7 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
           className={`ViewingLayer--draggedEdge ${cls}`}
           x={layout.leadingX}
           y="0"
-          width="2.3"
+          width="1"
           height={height - 2}
         />,
       ];
@@ -261,14 +261,23 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
           y1="0"
           x2={cursorX}
           y2={height - 2}
-          strokeWidth="1.3"
+          strokeWidth="1"
         />
       );
     }
     return (
-      <div className="ViewingLayer">
+      <div
+        aria-hidden
+        className="ViewingLayer"
+        onMouseDown={this._handleRootMouseDown}
+        onMouseLeave={this._handleRootMouseLeave}
+        onMouseMove={this._handleRootMouseMove}
+        ref={this._setRoot}
+        style={{ height }}
+      >
         <svg
           height={height}
+          style={{ shapeRendering: 'crispEdges' }}
           className="ViewingLayer--graph"
           ref={this._setRoot}
           onMouseMove={this._handleRootMouseMove}
@@ -289,12 +298,14 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
           {cursorGuide}
           {isScrubberDrag && dragMarkers}
           <Scrubber
-            position={leftBound || 0}
+            isDragging={dragTag === dragTags.SCRUB_LEFT_HANDLE}
             onMouseDown={this._handleLeftScrubberMouseDown}
             onMouseEnter={this._handleScrubberMouseEnter}
             onMouseLeave={this._handleScrubberMouseLeave}
+            position={leftBound || 0}
           />
           <Scrubber
+            isDragging={dragTag === dragTags.SCRUB_RIGHT_HANDLE}
             position={rightBound || 1}
             onMouseDown={this._handleRightScrubberMouseDown}
             onMouseEnter={this._handleScrubberMouseEnter}
