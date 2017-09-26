@@ -285,8 +285,8 @@ const mapDispatchToProps = dispatch => {
         minDuration,
         maxDuration,
         lookback,
-        traceIDs,
       } = fields;
+      // Note: traceID is ignored when the form is submitted
 
       store.set('lastSearch', { service, operation });
 
@@ -317,7 +317,6 @@ const mapDispatchToProps = dispatch => {
         tag: tagsToQuery(tags) || undefined,
         minDuration: minDuration || null,
         maxDuration: maxDuration || null,
-        traceID: traceIDsToQuery(traceIDs) || undefined,
       });
     },
   };
