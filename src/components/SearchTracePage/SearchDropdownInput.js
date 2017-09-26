@@ -48,9 +48,9 @@ export default class SearchDropdownInput extends Component {
   }
   onSearch(_, searchText) {
     const { items, maxResults } = this.props;
-    const rxStr = regexpEscape(searchText);
-    const rx = new RegExp(rxStr, 'i');
-    return items.filter(v => rx.test(v.text)).slice(0, maxResults);
+    const regexStr = regexpEscape(searchText);
+    const regex = new RegExp(regexStr, 'i');
+    return items.filter(v => regex.test(v.text)).slice(0, maxResults);
   }
   render() {
     const { input: { value, onChange } } = this.props;
