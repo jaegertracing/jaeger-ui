@@ -32,7 +32,7 @@ THE SOFTWARE.
   padding: 0.5em 0.5em 0 0.5em;
   position: fixed;
   width: 100%;
-  z-index: 1000001;
+  z-index: 3;
 }
 
 .trace-timeline-section {

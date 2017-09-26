@@ -26,6 +26,7 @@ import { connect } from 'react-redux';
 import type { Location } from 'react-router-dom';
 
 import TopNav from './TopNav';
+import type { Config } from '../../types/config';
 import { trackPageView } from '../../utils/metrics';
 
 import './Page.css';
@@ -33,6 +34,7 @@ import './Page.css';
 type PageProps = {
   location: Location,
   children: React.Node,
+  config: { data: Config },
 };
 
 class Page extends React.Component<PageProps> {
@@ -52,11 +54,12 @@ class Page extends React.Component<PageProps> {
   }
 
   render() {
-    const { children } = this.props;
+    const { children, config } = this.props;
+    const menu = config && config.data && config.data.menu;
     return (
       <section className="jaeger-ui-page" id="jaeger-ui">
         <Helmet title="Jaeger UI" />
-        <TopNav />
+        <TopNav menuConfig={menu} />
         <div className="jaeger-ui--content">
           {children}
         </div>
@@ -66,8 +69,9 @@ class Page extends React.Component<PageProps> {
 }
 
 function mapStateToProps(state, ownProps) {
+  const { config } = state;
   const { location } = state.routing;
-  return { ...ownProps, location };
+  return { ...ownProps, config, location };
 }
 
 export default connect(mapStateToProps)(Page);

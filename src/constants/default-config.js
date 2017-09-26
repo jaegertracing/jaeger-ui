@@ -18,17 +18,36 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import { reducer as formReducer } from 'redux-form';
-
-import config from './config';
-import dependencies from './dependencies';
-import services from './services';
-import trace from './trace';
-
 export default {
-  config,
-  dependencies,
-  services,
-  trace,
-  form: formReducer,
+  menu: [
+    {
+      label: 'About Jaeger',
+      items: [
+        {
+          label: 'GitHub',
+          url: 'https://github.com/uber/jaeger',
+        },
+        {
+          label: 'Docs',
+          url: 'http://jaeger.readthedocs.io/en/latest/',
+        },
+        {
+          label: 'Twitter',
+          url: 'https://twitter.com/JaegerTracing',
+        },
+        {
+          label: 'Discussion Group',
+          url: 'https://groups.google.com/forum/#!forum/jaeger-tracing',
+        },
+        {
+          label: 'Gitter.im',
+          url: 'https://gitter.im/jaegertracing/Lobby',
+        },
+        {
+          label: 'Blog',
+          url: 'https://medium.com/jaegertracing/',
+        },
+      ],
+    },
+  ],
 };
