@@ -125,7 +125,7 @@ class TimelineColumnResizer extends React.PureComponent<
     window.removeEventListener('mouseup', this._onWindowMouseUp);
     const style = _get(document, 'body.style');
     if (style) {
-      (style: any).userSelect = undefined;
+      (style: any).userSelect = null;
     }
     this._isDragging = false;
     const dragPosition = this._getDraggedPosition(clientX);

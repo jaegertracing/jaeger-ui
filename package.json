@@ -83,7 +83,7 @@
     "clear-homepage": "json -I -f package.json -e 'delete this.homepage'",
     "deploy-docs": "./bin/deploy-docs.sh",
     "postpublish": "npm run build:docs && npm run deploy-docs",
-    "add-license": "uber-licence",
+    "add-license": "uber-licence --dir src",
     "precommit": "lint-staged"
   },
   "lint-staged": {

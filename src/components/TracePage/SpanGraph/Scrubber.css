@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 
 .Scrubber--handle {
-  cursor: ew-resize;
+  cursor: col-resize;
   fill: #555;
 }
 
