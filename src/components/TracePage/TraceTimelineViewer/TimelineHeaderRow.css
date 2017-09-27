@@ -37,7 +37,7 @@ THE SOFTWARE.
 .TimelineColumnResizer--dragger {
   border-left: 1px solid transparent;
   bottom: 0;
-  cursor: ew-resize;
+  cursor: col-resize;
   position: fixed;
   top: 0;
   width: 5px;

@@ -25,6 +25,7 @@ import * as React from 'react';
 import CanvasSpanGraph from './CanvasSpanGraph';
 import TickLabels from './TickLabels';
 import ViewingLayer from './ViewingLayer';
+import type { NextViewRangeType, ViewRange } from '../types';
 import type { Trace } from '../../../types';
 
 const TIMELINE_TICK_INTERVAL = 4;
@@ -32,12 +33,13 @@ const TIMELINE_TICK_INTERVAL = 4;
 type SpanGraphProps = {
   height: number,
   trace: Trace,
-  viewRange: [number, number],
-  updateViewRange: ([number, number]) => void,
+  viewRange: ViewRange,
+  updateViewRange: (number, number) => void,
+  updateNextViewRange: (number, number, NextViewRangeType) => void,
 };
 
 export default function SpanGraph(props: SpanGraphProps) {
-  const { height, trace, viewRange, updateViewRange } = props;
+  const { height, trace, viewRange, updateNextViewRange, updateViewRange } = props;
 
   if (!trace) {
     return <div />;
@@ -59,6 +61,7 @@ export default function SpanGraph(props: SpanGraphProps) {
           numTicks={TIMELINE_TICK_INTERVAL}
           height={height}
           updateViewRange={updateViewRange}
+          updateNextViewRange={updateNextViewRange}
         />
       </div>
     </div>

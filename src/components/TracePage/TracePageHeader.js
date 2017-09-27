@@ -52,9 +52,8 @@ export const HEADER_ITEMS = [
   },
 ];
 
-export default function TracePageHeader(props, context) {
-  const { traceID, name, slimView, onSlimViewClicked } = props;
-  const { updateTextFilter, textFilter } = context;
+export default function TracePageHeader(props) {
+  const { traceID, name, slimView, onSlimViewClicked, updateTextFilter, textFilter } = props;
 
   if (!traceID) {
     return null;
@@ -115,18 +114,15 @@ export default function TracePageHeader(props, context) {
 }
 
 TracePageHeader.propTypes = {
-  traceID: PropTypes.string,
-  name: PropTypes.string,
+  duration: PropTypes.number, // eslint-disable-line react/no-unused-prop-types
   maxDepth: PropTypes.number, // eslint-disable-line react/no-unused-prop-types
+  name: PropTypes.string,
   numServices: PropTypes.number, // eslint-disable-line react/no-unused-prop-types
   numSpans: PropTypes.number, // eslint-disable-line react/no-unused-prop-types
-  duration: PropTypes.number, // eslint-disable-line react/no-unused-prop-types
-  timestamp: PropTypes.number, // eslint-disable-line react/no-unused-prop-types
-  slimView: PropTypes.bool,
   onSlimViewClicked: PropTypes.func,
-};
-
-TracePageHeader.contextTypes = {
-  textFilter: PropTypes.string.isRequired,
+  slimView: PropTypes.bool,
+  textFilter: PropTypes.string,
+  timestamp: PropTypes.number, // eslint-disable-line react/no-unused-prop-types
+  traceID: PropTypes.string,
   updateTextFilter: PropTypes.func.isRequired,
 };

@@ -24,6 +24,7 @@ THE SOFTWARE.
   position: relative;
   z-index: 1;
   margin-bottom: 0.5em;
+  cursor: vertical-text;
 }
 
 .ViewingLayer--graph {
@@ -48,21 +49,22 @@ THE SOFTWARE.
   fill-opacity: 0.2;
 }
 
-.ViewingLayer--draggedShift.isScrubberDrag,
-.ViewingLayer--draggedEdge.isScrubberDrag {
+.ViewingLayer--draggedShift.isShiftDrag,
+.ViewingLayer--draggedEdge.isShiftDrag {
   fill: #44f;
 }
 
-.ViewingLayer--draggedShift.isResetDrag,
-.ViewingLayer--draggedEdge.isResetDrag {
+.ViewingLayer--draggedShift.isReframeDrag,
+.ViewingLayer--draggedEdge.isReframeDrag {
   fill: #f44;
 }
 
 .ViewingLayer--fullOverlay {
   bottom: 0;
-  cursor: ew-resize;
+  cursor: col-resize;
   left: 0;
   position: fixed;
   right: 0;
   top: 0;
+  user-select: none;
 }

@@ -1,3 +1,5 @@
+// @flow
+
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -18,74 +20,67 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import React, { Component } from 'react';
+import * as React from 'react';
 import _maxBy from 'lodash/maxBy';
 import _values from 'lodash/values';
-import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 
 import TracePageHeader from './TracePageHeader';
 import SpanGraph from './SpanGraph';
 import TraceTimelineViewer from './TraceTimelineViewer';
+import type { NextViewRangeType, ViewRange } from './types';
 import NotFound from '../App/NotFound';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import { getTraceName } from '../../model/trace-viewer';
+import type { Trace } from '../../types';
 import colorGenerator from '../../utils/color-generator';
 
 import './index.css';
 
-export default class TracePage extends Component {
-  static get propTypes() {
-    return {
-      fetchTrace: PropTypes.func.isRequired,
-      trace: PropTypes.object,
-      loading: PropTypes.bool,
-      id: PropTypes.string.isRequired,
-    };
-  }
+type TracePageProps = {
+  fetchTrace: string => void,
+  trace: ?Trace,
+  loading: boolean,
+  id: string,
+};
 
-  static get childContextTypes() {
-    return {
-      textFilter: PropTypes.string,
-      updateTextFilter: PropTypes.func,
-      updateTimeRangeFilter: PropTypes.func,
-      slimView: PropTypes.bool,
-    };
-  }
+type TracePageState = {
+  textFilter: ?string,
+  viewRange: ViewRange,
+  slimView: boolean,
+  headerHeight: ?number,
+};
 
-  constructor(props) {
+export default class TracePage extends React.PureComponent<TracePageProps, TracePageState> {
+  props: TracePageProps;
+  state: TracePageState;
+
+  headerElm: ?Element;
+
+  constructor(props: TracePageProps) {
     super(props);
     this.state = {
       textFilter: '',
-      timeRangeFilter: [],
+      viewRange: { current: [0, 1] },
       slimView: false,
       headerHeight: null,
     };
     this.headerElm = null;
     this.setHeaderHeight = this.setHeaderHeight.bind(this);
     this.toggleSlimView = this.toggleSlimView.bind(this);
-    this.updateTimeRangeFilter = this.updateTimeRangeFilter.bind(this);
-  }
-
-  getChildContext() {
-    const state = { ...this.state };
-    delete state.headerHeight;
-    delete state.timeRangeFilter;
-    return {
-      updateTextFilter: this.updateTextFilter.bind(this),
-      updateTimeRangeFilter: this.updateTimeRangeFilter,
-      ...state,
-    };
+    this.updateViewRange = this.updateViewRange.bind(this);
+    this.updateNextViewRange = this.updateNextViewRange.bind(this);
+    this.updateTextFilter = this.updateTextFilter.bind(this);
   }
 
   componentDidMount() {
     colorGenerator.clear();
     this.ensureTraceFetched();
-    this.setDefaultTimeRange();
+    this.updateViewRange(0, 1);
   }
 
-  componentDidUpdate({ trace: prevTrace }) {
+  componentDidUpdate({ trace: prevTrace }: TracePageProps) {
     const { trace } = this.props;
     this.setHeaderHeight(this.headerElm);
     if (!trace) {
@@ -93,11 +88,11 @@ export default class TracePage extends Component {
       return;
     }
     if (!(trace instanceof Error) && (!prevTrace || prevTrace.traceID !== trace.traceID)) {
-      this.setDefaultTimeRange();
+      this.updateViewRange(0, 1);
     }
   }
 
-  setHeaderHeight(elm) {
+  setHeaderHeight = function setHeaderHeight(elm: ?Element) {
     this.headerElm = elm;
     if (elm) {
       if (this.state.headerHeight !== elm.clientHeight) {
@@ -106,28 +101,31 @@ export default class TracePage extends Component {
     } else if (this.state.headerHeight) {
       this.setState({ headerHeight: null });
     }
-  }
+  };
 
-  setDefaultTimeRange() {
-    const { trace } = this.props;
-    if (!trace) {
-      this.updateTimeRangeFilter(null, null);
-      return;
-    }
-    this.updateTimeRangeFilter(0, 1);
-  }
-
-  updateTextFilter(textFilter) {
+  updateTextFilter = function updateTextFilter(textFilter: ?string) {
     this.setState({ textFilter });
-  }
+  };
 
-  updateTimeRangeFilter(...timeRangeFilter) {
-    this.setState({ timeRangeFilter });
-  }
+  updateViewRange = function updateViewRange(start: number, end: number) {
+    const viewRange = { current: [start, end] };
+    this.setState({ viewRange });
+  };
 
-  toggleSlimView() {
+  updateNextViewRange = function updateNextViewRange(
+    start: number,
+    position: number,
+    type: NextViewRangeType
+  ) {
+    console.log('next view range', start, position, type);
+    const { current } = this.state.viewRange;
+    const viewRange = { current, next: { start, position, type } };
+    this.setState({ viewRange });
+  };
+
+  toggleSlimView = function toggleSlimView() {
     this.setState({ slimView: !this.state.slimView });
-  }
+  };
 
   ensureTraceFetched() {
     const { fetchTrace, trace, id, loading } = this.props;
@@ -139,7 +137,7 @@ export default class TracePage extends Component {
 
   render() {
     const { id, loading, trace } = this.props;
-    const { slimView, headerHeight } = this.state;
+    const { slimView, headerHeight, textFilter, viewRange } = this.state;
 
     if (!trace) {
       if (loading) {
@@ -172,21 +170,20 @@ export default class TracePage extends Component {
             timestamp={startTime}
             traceID={traceID}
             onSlimViewClicked={this.toggleSlimView}
+            textFilter={textFilter}
+            updateTextFilter={this.updateTextFilter}
           />
           {!slimView &&
             <SpanGraph
               trace={trace}
-              viewRange={this.state.timeRangeFilter}
-              updateViewRange={this.updateTimeRangeFilter}
+              viewRange={viewRange}
+              updateViewRange={this.updateViewRange}
+              updateNextViewRange={this.updateNextViewRange}
             />}
         </section>
         {headerHeight &&
           <section className="trace-timeline-section" style={{ paddingTop: headerHeight }}>
-            <TraceTimelineViewer
-              trace={trace}
-              timeRangeFilter={this.state.timeRangeFilter}
-              textFilter={this.state.textFilter}
-            />
+            <TraceTimelineViewer trace={trace} currentViewRange={viewRange.current} textFilter={textFilter} />
           </section>}
       </div>
     );

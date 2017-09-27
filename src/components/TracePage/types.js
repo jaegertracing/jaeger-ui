@@ -20,30 +20,15 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import React from 'react';
-
-import VirtualizedTraceView from './VirtualizedTraceView';
-import type { Trace } from '../../../types';
-
-import './grid.css';
-import './index.css';
-
-type TraceTimelineViewerProps = {
-  trace: ?Trace,
-  currentViewRange: [number, number],
-  textFilter: ?string,
+export const NextViewRangeTypes = {
+  REFRAME: 'REFRAME',
+  SHIFT_LEFT: 'SHIFT_LEFT',
+  SHIFT_RIGHT: 'SHIFT_RIGHT',
 };
 
-export default function TraceTimelineViewer(props: TraceTimelineViewerProps) {
-  const { currentViewRange, textFilter, trace } = props;
-  return (
-    <div className="trace-timeline-viewer">
-      <VirtualizedTraceView
-        textFilter={textFilter}
-        trace={trace}
-        zoomStart={currentViewRange[0]}
-        zoomEnd={currentViewRange[1]}
-      />
-    </div>
-  );
-}
+export type NextViewRangeType = $Keys<typeof NextViewRangeTypes>;
+
+export type ViewRange = {
+  current: [number, number],
+  next?: { start: number, position: number, type: NextViewRangeType },
+};
