@@ -22,6 +22,8 @@ import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { Dropdown } from 'semantic-ui-react';
 
+import regexpEscape from '../../utils/regexp-escape';
+
 /**
  * We have to wrap the semantic ui component becuase it doesn't perform well
  * when there are 200+ suggestions.
@@ -33,21 +35,22 @@ export default class SearchDropdownInput extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      items: props.items,
       currentItems: props.items.slice(0, props.maxResults),
     };
+    this.onSearch = this.onSearch.bind(this);
   }
   componentWillReceiveProps(nextProps) {
     if (this.props.items.map(i => i.text).join(',') !== nextProps.items.map(i => i.text).join(',')) {
       this.setState({
-        items: nextProps.items,
         currentItems: nextProps.items.slice(0, nextProps.maxResults),
       });
     }
   }
-  onSearch(items, v) {
-    const { maxResults } = this.props;
-    return this.state.items.filter(i => i.text.startsWith(v)).slice(0, maxResults);
+  onSearch(_, searchText) {
+    const { items, maxResults } = this.props;
+    const regexStr = regexpEscape(searchText);
+    const regex = new RegExp(regexStr, 'i');
+    return items.filter(v => regex.test(v.text)).slice(0, maxResults);
   }
   render() {
     const { input: { value, onChange } } = this.props;
@@ -56,7 +59,7 @@ export default class SearchDropdownInput extends Component {
       <Dropdown
         value={value}
         text={value}
-        search={(items, v) => this.onSearch(items, v)}
+        search={this.onSearch}
         onChange={(e, { value: newValue }) => onChange(newValue)}
         options={currentItems}
         selection
