@@ -22,6 +22,12 @@ import sinon from 'sinon';
 
 import * as sortUtils from './sort';
 
+it('baseStringComparator() provides a case-insensitive sort', () => {
+  const arr = ['Z', 'ab', 'AC'];
+  expect(arr.slice().sort()).toEqual(['AC', 'Z', 'ab']);
+  expect(arr.slice().sort(sortUtils.baseStringComparator)).toEqual(['ab', 'AC', 'Z']);
+});
+
 it('stringSortComparator() should properly sort a list of strings', () => {
   const arr = ['allen', 'Gustav', 'paul', 'Tim', 'abernathy', 'tucker', 'Steve', 'mike', 'John', 'Paul'];
 
