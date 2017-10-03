@@ -21,13 +21,19 @@
 // THE SOFTWARE.
 
 import * as React from 'react';
+import _clamp from 'lodash/clamp';
+import _mapKeys from 'lodash/mapKeys';
 import _maxBy from 'lodash/maxBy';
 import _values from 'lodash/values';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 
-import TracePageHeader from './TracePageHeader';
+import type { CombokeysHandler, ShortcutCallbacks } from './keyboard-shortcuts';
+import { init as initShortcuts, reset as resetShortcuts } from './keyboard-shortcuts';
+import { cancel as cancelPageScroll, scrollBy, scrollTo } from './scroll-page';
+import ScrollManager from './ScrollManager';
 import SpanGraph from './SpanGraph';
+import TracePageHeader from './TracePageHeader';
 import TraceTimelineViewer from './TraceTimelineViewer';
 import type { NextViewRangeType, ViewRange } from './types';
 import NotFound from '../App/NotFound';
@@ -52,37 +58,87 @@ type TracePageState = {
   headerHeight: ?number,
 };
 
+const VIEW_MIN_RANGE = 0.01;
+const VIEW_CHANGE_BASE = 0.005;
+const VIEW_CHANGE_FAST = 0.05;
+
+const shortcutConfig = {
+  panLeft: [-VIEW_CHANGE_BASE, -VIEW_CHANGE_BASE],
+  panLeftFast: [-VIEW_CHANGE_FAST, -VIEW_CHANGE_FAST],
+  panRight: [VIEW_CHANGE_BASE, VIEW_CHANGE_BASE],
+  panRightFast: [VIEW_CHANGE_FAST, VIEW_CHANGE_FAST],
+  zoomIn: [VIEW_CHANGE_BASE, -VIEW_CHANGE_BASE],
+  zoomInFast: [VIEW_CHANGE_FAST, -VIEW_CHANGE_FAST],
+  zoomOut: [-VIEW_CHANGE_BASE, VIEW_CHANGE_BASE],
+  zoomOutFast: [-VIEW_CHANGE_FAST, VIEW_CHANGE_FAST],
+};
+
+function makeShortcutCallbacks(adjRange): ShortcutCallbacks {
+  const callbacks: { [string]: CombokeysHandler } = {};
+  _mapKeys(shortcutConfig, ([startChange, endChange], key) => {
+    callbacks[key] = (event: SyntheticKeyboardEvent<any>) => {
+      event.preventDefault();
+      adjRange(startChange, endChange);
+    };
+  });
+  return (callbacks: any);
+}
+
 export default class TracePage extends React.PureComponent<TracePageProps, TracePageState> {
   props: TracePageProps;
   state: TracePageState;
 
-  headerElm: ?Element;
+  _headerElm: ?Element;
+  _scrollManager: ScrollManager;
 
   constructor(props: TracePageProps) {
     super(props);
+    this.setHeaderHeight = this.setHeaderHeight.bind(this);
+    this.toggleSlimView = this.toggleSlimView.bind(this);
+    this.updateViewRange = this.updateViewRange.bind(this);
+    this.updateNextViewRange = this.updateNextViewRange.bind(this);
+    this.updateTextFilter = this.updateTextFilter.bind(this);
     this.state = {
       textFilter: '',
       viewRange: { current: [0, 1] },
       slimView: false,
       headerHeight: null,
     };
-    this.headerElm = null;
-    this.setHeaderHeight = this.setHeaderHeight.bind(this);
-    this.toggleSlimView = this.toggleSlimView.bind(this);
-    this.updateViewRange = this.updateViewRange.bind(this);
-    this.updateNextViewRange = this.updateNextViewRange.bind(this);
-    this.updateTextFilter = this.updateTextFilter.bind(this);
+    this._headerElm = null;
+    this._scrollManager = new ScrollManager(props.trace, { scrollBy, scrollTo });
   }
 
   componentDidMount() {
     colorGenerator.clear();
     this.ensureTraceFetched();
     this.updateViewRange(0, 1);
+    if (!this._scrollManager) {
+      throw new Error('Invalid state - scrollManager is unset');
+    }
+    const {
+      scrollPageDown,
+      scrollPageUp,
+      scrollToNextVisibleSpan,
+      scrollToPrevVisibleSpan,
+    } = this._scrollManager;
+    const adjViewRange = (a: number, b: number) => this._adjustViewRange(a, b);
+    const shortcutCallbacks = makeShortcutCallbacks(adjViewRange);
+    shortcutCallbacks.scrollPageDown = scrollPageDown;
+    shortcutCallbacks.scrollPageUp = scrollPageUp;
+    shortcutCallbacks.scrollToNextVisibleSpan = scrollToNextVisibleSpan;
+    shortcutCallbacks.scrollToPrevVisibleSpan = scrollToPrevVisibleSpan;
+    initShortcuts(shortcutCallbacks);
+  }
+
+  componentWillReceiveProps(nextProps: TracePageProps) {
+    if (this._scrollManager) {
+      this._scrollManager.setTrace(nextProps.trace);
+    }
   }
 
   componentDidUpdate({ trace: prevTrace }: TracePageProps) {
     const { trace } = this.props;
-    this.setHeaderHeight(this.headerElm);
+    this.setHeaderHeight(this._headerElm);
     if (!trace) {
       this.ensureTraceFetched();
       return;
@@ -92,8 +148,35 @@ export default class TracePage extends React.PureComponent<TracePageProps, Trace
     }
   }
 
+  componentWillUnmount() {
+    resetShortcuts();
+    cancelPageScroll();
+    if (this._scrollManager) {
+      this._scrollManager.destroy();
+      this._scrollManager = new ScrollManager(undefined, { scrollBy, scrollTo });
+    }
+  }
+
+  _adjustViewRange(startChange: number, endChange: number) {
+    const [viewStart, viewEnd] = this.state.viewRange.current;
+    let start = _clamp(viewStart + startChange, 0, 0.99);
+    let end = _clamp(viewEnd + endChange, 0.01, 1);
+    if (end - start < VIEW_MIN_RANGE) {
+      if (startChange < 0 && endChange < 0) {
+        end = start + VIEW_MIN_RANGE;
+      } else if (startChange > 0 && endChange > 0) {
+        end = start + VIEW_MIN_RANGE;
+      } else {
+        const center = viewStart + (viewEnd - viewStart) / 2;
+        start = center - VIEW_MIN_RANGE / 2;
+        end = center + VIEW_MIN_RANGE / 2;
+      }
+    }
+    this.updateViewRange(start, end);
+  }
+
   setHeaderHeight = function setHeaderHeight(elm: ?Element) {
-    this.headerElm = elm;
+    this._headerElm = elm;
     if (elm) {
       if (this.state.headerHeight !== elm.clientHeight) {
         this.setState({ headerHeight: elm.clientHeight });
@@ -117,7 +200,6 @@ export default class TracePage extends React.PureComponent<TracePageProps, Trace
     position: number,
     type: NextViewRangeType
   ) {
-    console.log('next view range', start, position, type);
     const { current } = this.state.viewRange;
     const viewRange = { current, next: { start, position, type } };
     this.setState({ viewRange });
@@ -129,7 +211,6 @@ export default class TracePage extends React.PureComponent<TracePageProps, Trace
 
   ensureTraceFetched() {
     const { fetchTrace, trace, id, loading } = this.props;
-
     if (!trace && !loading) {
       fetchTrace(id);
     }
@@ -183,7 +264,12 @@ export default class TracePage extends React.PureComponent<TracePageProps, Trace
         </section>
         {headerHeight &&
           <section className="trace-timeline-section" style={{ paddingTop: headerHeight }}>
-            <TraceTimelineViewer trace={trace} currentViewRange={viewRange.current} textFilter={textFilter} />
+            <TraceTimelineViewer
+              currentViewRange={viewRange.current}
+              registerAccessors={this._scrollManager.setAccessors}
+              textFilter={textFilter}
+              trace={trace}
+            />
           </section>}
       </div>
     );

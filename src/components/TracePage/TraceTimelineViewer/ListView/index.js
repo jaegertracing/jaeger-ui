@@ -178,11 +178,20 @@ export default class ListView extends React.Component<ListViewProps> {
   constructor(props: ListViewProps) {
     super(props);
 
+    this.getViewHeight = this.getViewHeight.bind(this);
+    this.getBottomVisibleIndex = this.getBottomVisibleIndex.bind(this);
+    this.getTopVisibleIndex = this.getTopVisibleIndex.bind(this);
+    this.getRowPosition = this.getRowPosition.bind(this);
+    this._getHeight = this._getHeight.bind(this);
+    this._scanItemHeights = this._scanItemHeights.bind(this);
+    this._onScroll = this._onScroll.bind(this);
+    this._positionList = this._positionList.bind(this);
+    this._initWrapper = this._initWrapper.bind(this);
+    this._initItemHolder = this._initItemHolder.bind(this);
+
     this._yPositions = new Positions(200);
     // _knownHeights is (item-key -> observed height) of list items
     this._knownHeights = new Map();
-    this._getHeight = this._getHeight.bind(this);
-    this._scanItemHeights = this._scanItemHeights.bind(this);
 
     this._startIndexDrawn = 2 ** 20;
     this._endIndexDrawn = -(2 ** 20);
@@ -192,17 +201,12 @@ export default class ListView extends React.Component<ListViewProps> {
     this._scrollTop = -1;
     this._isScrolledOrResized = false;
 
-    this._onScroll = this._onScroll.bind(this);
-    this._positionList = this._positionList.bind(this);
-
     this._htmlTopOffset = -1;
     this._windowScrollListenerAdded = false;
     // _htmlElm is only relevant if props.windowScroller is true
-    this._htmlElm = window.document.querySelector('html');
+    this._htmlElm = (document.documentElement: any);
     this._wrapperElm = undefined;
     this._itemHolderElm = undefined;
-    this._initWrapper = this._initWrapper.bind(this);
-    this._initItemHolder = this._initItemHolder.bind(this);
   }
 
   componentDidMount() {
@@ -227,6 +231,23 @@ export default class ListView extends React.Component<ListViewProps> {
       window.removeEventListener('scroll', this._onScroll);
     }
   }
+
+  getViewHeight = function getViewHeight(): number {
+    return this._viewHeight;
+  };
+
+  getBottomVisibleIndex = function getBottomVisibleIndex(): number {
+    const bottomY = this._scrollTop + this._viewHeight;
+    return this._yPositions.findFloorIndex(bottomY);
+  };
+
+  getTopVisibleIndex = function getTopVisibleIndex(): number {
+    return this._yPositions.findFloorIndex(this._scrollTop, this._getHeight);
+  };
+
+  getRowPosition = function getRowPosition(index: number): { height: number, y: number } {
+    return this._yPositions.getRowPosition(index, this._getHeight);
+  };
 
   /**
    * Scroll event listener that schedules a remeasuring of which items should be
@@ -269,23 +290,11 @@ export default class ListView extends React.Component<ListViewProps> {
       this._viewHeight = this._wrapperElm.clientHeight;
       this._scrollTop = this._wrapperElm.scrollTop;
     } else {
-      this._viewHeight = this._htmlElm.clientHeight;
-      this._scrollTop = this._htmlElm.scrollTop;
+      this._viewHeight = window.innerHeight - this._htmlTopOffset;
+      this._scrollTop = window.scrollY;
     }
-    let yStart;
-    let yEnd;
-    if (useRoot) {
-      if (this._scrollTop < this._htmlTopOffset) {
-        yStart = 0;
-        yEnd = this._viewHeight - this._htmlTopOffset + this._scrollTop;
-      } else {
-        yStart = this._scrollTop - this._htmlTopOffset;
-        yEnd = yStart + this._viewHeight;
-      }
-    } else {
-      yStart = this._scrollTop;
-      yEnd = this._scrollTop + this._viewHeight;
-    }
+    const yStart = this._scrollTop;
+    const yEnd = this._scrollTop + this._viewHeight;
     this._startIndex = this._yPositions.findFloorIndex(yStart, this._getHeight);
     this._endIndex = this._yPositions.findFloorIndex(yEnd, this._getHeight);
   }
@@ -432,11 +441,11 @@ export default class ListView extends React.Component<ListViewProps> {
 
     items.length = end - start + 1;
     for (let i = start; i <= end; i++) {
-      this._yPositions.confirmHeight(i, heightGetter);
+      const { y: top, height } = this._yPositions.getRowPosition(i, heightGetter);
       const style = {
+        height,
+        top,
         position: 'absolute',
-        top: this._yPositions.ys[i],
-        height: this._yPositions.heights[i],
       };
       const itemKey = getKeyFromIndex(i);
       const attrs = { 'data-item-key': itemKey };

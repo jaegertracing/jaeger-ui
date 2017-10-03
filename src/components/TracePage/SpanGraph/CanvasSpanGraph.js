@@ -34,7 +34,7 @@ type CanvasSpanGraphProps = {
 
 const CV_WIDTH = 4000;
 
-const getColor = str => colorGenerator.getColorByKey(str);
+const getColor: string => [number, number, number] = str => colorGenerator.getRgbColorByKey(str);
 
 export default class CanvasSpanGraph extends React.PureComponent<CanvasSpanGraphProps> {
   props: CanvasSpanGraphProps;

@@ -1,3 +1,5 @@
+// @flow
+
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -18,7 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-const DEFAULT_COLORS = [
+const COLORS_HEX = [
   '#17B8BE',
   '#F8DCA1',
   '#B7885E',
@@ -41,11 +43,43 @@ const DEFAULT_COLORS = [
   '#776E57',
 ];
 
+function mapHexToRgb(colors): [number, number, number][] {
+  const hexRegex = /\w\w/g;
+  return colors.map(s => {
+    const _s = s.slice(1);
+    const rv: number[] = [];
+    let match = hexRegex.exec(_s);
+    while (match) {
+      const hex = match[0];
+      const b10 = parseInt(hex, 16);
+      rv.push(b10);
+      match = hexRegex.exec(_s);
+    }
+    return Object.freeze((rv: any));
+  });
+}
+
 export class ColorGenerator {
-  constructor(colorPalette = DEFAULT_COLORS) {
-    this.colors = colorPalette;
+  colorsHex: string[];
+  colorsRgb: [number, number, number][];
+  cache: Map<string, ?number>;
+  currentIdx: number;
+
+  constructor(colorsHex: string[] = COLORS_HEX) {
+    this.colorsHex = colorsHex;
+    this.colorsRgb = mapHexToRgb(colorsHex);
     this.cache = new Map();
     this.currentIdx = 0;
+  }
+
+  _getColorIndex(key: string): number {
+    let i = this.cache.get(key);
+    if (i == null) {
+      i = this.currentIdx;
+      this.cache.set(key, this.currentIdx);
+      this.currentIdx = ++this.currentIdx % this.colorsHex.length;
+    }
+    return i;
   }
   /**
    * Will assign a color to an arbitrary key.
@@ -55,17 +89,21 @@ export class ColorGenerator {
    * @param  {String} key Key name
    * @return {String} HEX Color
    */
-  getColorByKey(key) {
-    const cache = this.cache;
-    if (!cache.has(key)) {
-      cache.set(key, this.colors[this.currentIdx]);
-      this.currentIdx++;
-      if (this.currentIdx >= this.colors.length) {
-        this.currentIdx = 0;
-      }
-    }
-    return cache.get(key);
+  getColorByKey(key: string) {
+    const i = this._getColorIndex(key);
+    return this.colorsHex[i];
   }
+
+  /**
+   * Retrieve the RGB values associated with a key. Adds the key and associates
+   * it with a color if the key is not recognized.
+   * @return {number[]} An array of three ints [0, 255] representing a color.
+   */
+  getRgbColorByKey(key: string): [number, number, number] {
+    const i = this._getColorIndex(key);
+    return this.colorsRgb[i];
+  }
+
   clear() {
     this.cache.clear();
     this.currentIdx = 0;

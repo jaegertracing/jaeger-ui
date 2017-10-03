@@ -202,6 +202,9 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
       this.props.updateViewRange(position, viewEnd);
       return;
     }
+    // reset cursorX to prevent a remnant cursorX from missing the mouseleave
+    // event
+    this.setState({ cursorX: undefined, preventCursorLine: false });
     const [viewStart] = this.props.viewRange.current;
     this.props.updateViewRange(viewStart, position);
   };
@@ -210,8 +213,6 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
     const { height, viewRange, numTicks } = this.props;
     const { cursorX, preventCursorLine } = this.state;
     const [viewStart, viewEnd] = viewRange.current;
-    // const
-    console.log('viewRange:', viewRange);
     let leftInactive = 0;
     if (viewStart) {
       leftInactive = viewStart * 100;

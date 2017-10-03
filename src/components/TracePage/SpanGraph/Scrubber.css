@@ -20,22 +20,33 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+.Scrubber--handleExpansion {
+  cursor: col-resize;
+  fill-opacity: 0;
+  fill: #44f;
+}
+
+  .Scrubber.isDragging .Scrubber--handleExpansion,
+  .Scrubber--handles:hover > .Scrubber--handleExpansion {
+    fill-opacity: 1;
+  }
+
 .Scrubber--handle {
   cursor: col-resize;
   fill: #555;
 }
 
-.Scrubber.isDragging > .Scrubber--handle,
-.Scrubber--handle:hover {
-  fill: #44f;
-}
+  .Scrubber.isDragging .Scrubber--handle,
+  .Scrubber--handles:hover > .Scrubber--handle {
+    fill: #44f;
+  }
 
 .Scrubber--line {
   pointer-events: none;
   stroke: #555;
 }
 
-.Scrubber.isDragging > .Scrubber--line,
-.Scrubber--handle:hover + .Scrubber--line {
-  stroke: #44f;
-}
+  .Scrubber.isDragging > .Scrubber--line,
+  .Scrubber--handles:hover + .Scrubber--line {
+    stroke: #44f;
+  }
