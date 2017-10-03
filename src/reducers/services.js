@@ -21,6 +21,7 @@
 import { handleActions } from 'redux-actions';
 
 import { fetchServices, fetchServiceOperations as fetchOps } from '../actions/jaeger-api';
+import { baseStringComparator } from '../utils/sort';
 
 const initialState = {
   services: [],
@@ -35,6 +36,9 @@ function fetchStarted(state) {
 
 function fetchServicesDone(state, { payload }) {
   const services = payload.data;
+  if (Array.isArray(services)) {
+    services.sort(baseStringComparator);
+  }
   return { ...state, services, error: null, loading: false };
 }
 
@@ -49,6 +53,9 @@ function fetchOpsStarted(state, { meta: { serviceName } }) {
 
 function fetchOpsDone(state, { meta, payload }) {
   const { data: operations } = payload;
+  if (Array.isArray(operations)) {
+    operations.sort(baseStringComparator);
+  }
   const operationsForService = { ...state.operationsForService, [meta.serviceName]: operations };
   return { ...state, operationsForService };
 }
