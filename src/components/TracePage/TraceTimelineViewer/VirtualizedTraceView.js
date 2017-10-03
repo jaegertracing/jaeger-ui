@@ -38,6 +38,7 @@ import {
   isErrorSpan,
   spanContainsErredSpan,
 } from './utils';
+import type { Accessors } from '../ScrollManager';
 import type { Log, Span, Trace } from '../../../types';
 import colorGenerator from '../../../utils/color-generator';
 
@@ -52,6 +53,7 @@ type RowState = {
 type VirtualizedTraceViewProps = {
   childrenHiddenIDs: Set<string>,
   childrenToggle: string => void,
+  currentViewRange: [number, number],
   detailLogItemToggle: (string, Log) => void,
   detailLogsToggle: string => void,
   detailProcessToggle: string => void,
@@ -60,13 +62,12 @@ type VirtualizedTraceViewProps = {
   detailToggle: string => void,
   find: (?Trace, ?string) => void,
   findMatchesIDs: Set<string>,
+  registerAccessors: Accessors => void,
   setTrace: (?string) => void,
   setSpanNameColumnWidth: number => void,
   spanNameColumnWidth: number,
   textFilter: ?string,
-  trace?: Trace,
-  zoomEnd: number,
-  zoomStart: number,
+  trace: Trace,
 };
 
 const DEFAULT_HEIGHTS = {
@@ -120,20 +121,12 @@ function generateRowStates(
   return rowStates;
 }
 
-function getPropDerivations(props: VirtualizedTraceViewProps) {
-  const { childrenHiddenIDs, detailStates, trace, zoomEnd = 1, zoomStart = 0 } = props;
-  const clippingCssClasses = cx({
+function getCssClasses(viewRange) {
+  const [zoomStart, zoomEnd] = viewRange;
+  return cx({
     'clipping-left': zoomStart > 0,
     'clipping-right': zoomEnd < 1,
   });
-  let spans: ?(Span[]);
-  if (trace) {
-    spans = trace.spans;
-  }
-  return {
-    clippingCssClasses,
-    rowStates: generateRowStates(spans, childrenHiddenIDs, detailStates),
-  };
 }
 
 class VirtualizedTraceView extends React.PureComponent<VirtualizedTraceViewProps> {
@@ -142,20 +135,27 @@ class VirtualizedTraceView extends React.PureComponent<VirtualizedTraceViewProps
   props: VirtualizedTraceViewProps;
   rowStates: RowState[];
   clippingCssClasses: string;
+  listView: ?ListView;
 
   constructor(props) {
     super(props);
+    this.getViewRange = this.getViewRange.bind(this);
+    this.getSearchedSpanIDs = this.getSearchedSpanIDs.bind(this);
+    this.getCollapsedChildren = this.getCollapsedChildren.bind(this);
+    this.mapRowIndexToSpanIndex = this.mapRowIndexToSpanIndex.bind(this);
+    this.mapSpanIndexToRowIndex = this.mapSpanIndexToRowIndex.bind(this);
+    this.setListView = this.setListView.bind(this);
     this.getKeyFromIndex = this.getKeyFromIndex.bind(this);
     this.getIndexFromKey = this.getIndexFromKey.bind(this);
     this.getRowHeight = this.getRowHeight.bind(this);
     this.renderRow = this.renderRow.bind(this);
     // keep "prop derivations" on the instance instead of calculating in
-    // `.render()` to avoid recalculating in every invocatino of `.renderRow()`
-    const { clippingCssClasses, rowStates } = getPropDerivations(props);
-    this.clippingCssClasses = clippingCssClasses;
-    this.rowStates = rowStates;
+    // `.render()` to avoid recalculating in every invocation of `.renderRow()`
+    const { currentViewRange, childrenHiddenIDs, detailStates, trace } = props;
+    this.clippingCssClasses = getCssClasses(currentViewRange);
+    this.rowStates = generateRowStates(trace.spans, childrenHiddenIDs, detailStates);
 
-    const { find, setTrace, textFilter, trace } = this.props;
+    const { find, setTrace, textFilter } = props;
     const traceID = trace ? trace.traceID : null;
     setTrace(traceID);
     if (textFilter) {
@@ -164,8 +164,24 @@ class VirtualizedTraceView extends React.PureComponent<VirtualizedTraceViewProps
   }
 
   componentWillReceiveProps(nextProps) {
-    const { textFilter, trace } = this.props;
-    const { find, setTrace, textFilter: nextTextFilter, trace: nextTrace } = nextProps;
+    const {
+      childrenHiddenIDs,
+      detailStates,
+      registerAccessors,
+      textFilter,
+      trace,
+      currentViewRange,
+    } = this.props;
+    const {
+      currentViewRange: nextViewRange,
+      childrenHiddenIDs: nextHiddenIDs,
+      detailStates: nextDetailStates,
+      find,
+      registerAccessors: nextRegisterAccessors,
+      setTrace,
+      textFilter: nextTextFilter,
+      trace: nextTrace,
+    } = nextProps;
     if (trace !== nextTrace) {
       setTrace(nextTrace ? nextTrace.traceID : null);
       if (nextTextFilter) {
@@ -174,10 +190,69 @@ class VirtualizedTraceView extends React.PureComponent<VirtualizedTraceViewProps
     } else if (textFilter !== nextTextFilter) {
       find(nextTrace, nextTextFilter);
     }
-    const { clippingCssClasses, rowStates } = getPropDerivations(nextProps);
-    this.clippingCssClasses = clippingCssClasses;
-    this.rowStates = rowStates;
+    if (trace !== nextTrace || childrenHiddenIDs !== nextHiddenIDs || detailStates !== nextDetailStates) {
+      this.rowStates = generateRowStates(nextTrace.spans, nextHiddenIDs, nextDetailStates);
+    }
+    if (currentViewRange !== nextViewRange) {
+      this.clippingCssClasses = getCssClasses(nextViewRange);
+    }
+    if (this.listView && registerAccessors !== nextRegisterAccessors) {
+      nextRegisterAccessors(this.getAccessors());
+    }
   }
+
+  getAccessors() {
+    const lv = this.listView;
+    if (!lv) {
+      throw new Error('ListView unavailable');
+    }
+    return {
+      getViewRange: this.getViewRange,
+      getSearchedSpanIDs: this.getSearchedSpanIDs,
+      getCollapsedChildren: this.getCollapsedChildren,
+      getViewHeight: lv.getViewHeight,
+      getBottomRowIndexVisible: lv.getBottomVisibleIndex,
+      getTopRowIndexVisible: lv.getTopVisibleIndex,
+      getRowPosition: lv.getRowPosition,
+      mapRowIndexToSpanIndex: this.mapRowIndexToSpanIndex,
+      mapSpanIndexToRowIndex: this.mapSpanIndexToRowIndex,
+    };
+  }
+
+  getViewRange = function getViewRange() {
+    return this.props.currentViewRange;
+  };
+
+  getSearchedSpanIDs = function getSearchedSpanIDs() {
+    return this.props.findMatchesIDs;
+  };
+
+  getCollapsedChildren = function getCollapsedChildren() {
+    return this.props.childrenHiddenIDs;
+  };
+
+  mapRowIndexToSpanIndex = function mapRowIndexToSpanIndex(index: number) {
+    return this.rowStates[index].spanIndex;
+  };
+
+  mapSpanIndexToRowIndex = function mapSpanIndexToRowIndex(index: number) {
+    const max = this.rowStates.length;
+    for (let i = 0; i < max; i++) {
+      const { spanIndex } = this.rowStates[i];
+      if (spanIndex === index) {
+        return i;
+      }
+    }
+    throw new Error(`unable to find row for span index: ${index}`);
+  };
+
+  setListView = function setListView(listView: ?ListView) {
+    const isChanged = this.listView !== listView;
+    this.listView = listView;
+    if (listView && isChanged) {
+      this.props.registerAccessors(this.getAccessors());
+    }
+  };
 
   // use long form syntax to avert flow error
   // https://github.com/facebook/flow/issues/3076#issuecomment-290944051
@@ -224,14 +299,14 @@ class VirtualizedTraceView extends React.PureComponent<VirtualizedTraceViewProps
     const {
       childrenHiddenIDs,
       childrenToggle,
+      currentViewRange,
       detailStates,
       detailToggle,
       findMatchesIDs,
       spanNameColumnWidth,
       trace,
-      zoomEnd = 1,
-      zoomStart = 0,
     } = this.props;
+    const [zoomStart, zoomEnd] = currentViewRange;
     // to avert flow error
     if (!trace) {
       return null;
@@ -341,12 +416,10 @@ class VirtualizedTraceView extends React.PureComponent<VirtualizedTraceViewProps
   }
 
   render() {
-    const { trace, zoomStart = 0, zoomEnd = 1, setSpanNameColumnWidth, spanNameColumnWidth } = this.props;
-    if (!trace) {
-      return null;
-    }
-    const zoomMin = zoomStart * trace.duration;
-    const zoomMax = zoomEnd * trace.duration;
+    const { trace, currentViewRange, setSpanNameColumnWidth, spanNameColumnWidth } = this.props;
+    const [viewStart, viewEnd] = currentViewRange;
+    const zoomMin = viewStart * trace.duration;
+    const zoomMax = viewEnd * trace.duration;
     return (
       <div className="">
         <TimelineHeaderRow
@@ -358,11 +431,12 @@ class VirtualizedTraceView extends React.PureComponent<VirtualizedTraceViewProps
         />
         <div className="VirtualizedTraceView--spans">
           <ListView
+            ref={this.setListView}
             dataLength={this.rowStates.length}
             itemHeightGetter={this.getRowHeight}
             itemRenderer={this.renderRow}
-            viewBuffer={300}
-            viewBufferMin={150}
+            viewBuffer={150}
+            viewBufferMin={60}
             itemsWrapperClassName="VirtualizedTraceView--rowsWrapper"
             getKeyFromIndex={this.getKeyFromIndex}
             getIndexFromKey={this.getIndexFromKey}

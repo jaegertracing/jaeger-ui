@@ -44,16 +44,27 @@ export default function Scrubber({
   const className = cx('Scrubber', { isDragging });
   return (
     <g className={className}>
-      <rect
-        x={xPercent}
-        className="Scrubber--handle"
-        style={{ transform: `translate(-1.5px)` }}
-        width="3"
-        height="20"
+      <g
+        className="Scrubber--handles"
         onMouseDown={onMouseDown}
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
-      />
+      >
+        <rect
+          x={xPercent}
+          className="Scrubber--handleExpansion"
+          style={{ transform: `translate(-4.5px)` }}
+          width="9"
+          height="20"
+        />
+        <rect
+          x={xPercent}
+          className="Scrubber--handle"
+          style={{ transform: `translate(-1.5px)` }}
+          width="3"
+          height="20"
+        />
+      </g>
       <line className="Scrubber--line" y2="100%" x1={xPercent} x2={xPercent} />
     </g>
   );

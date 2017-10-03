@@ -23,27 +23,25 @@
 import React from 'react';
 
 import VirtualizedTraceView from './VirtualizedTraceView';
+import type { Accessors } from '../ScrollManager';
 import type { Trace } from '../../../types';
 
 import './grid.css';
 import './index.css';
 
 type TraceTimelineViewerProps = {
-  trace: ?Trace,
   currentViewRange: [number, number],
+  registerAccessors: Accessors => void,
   textFilter: ?string,
+  trace: Trace,
 };
 
+// TODO(joe): remove this component
+
 export default function TraceTimelineViewer(props: TraceTimelineViewerProps) {
-  const { currentViewRange, textFilter, trace } = props;
   return (
     <div className="trace-timeline-viewer">
-      <VirtualizedTraceView
-        textFilter={textFilter}
-        trace={trace}
-        zoomStart={currentViewRange[0]}
-        zoomEnd={currentViewRange[1]}
-      />
+      <VirtualizedTraceView {...props} />
     </div>
   );
 }
