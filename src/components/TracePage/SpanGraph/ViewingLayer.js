@@ -26,16 +26,17 @@ import _clamp from 'lodash/clamp';
 
 import GraphTicks from './GraphTicks';
 import Scrubber from './Scrubber';
-import { NextViewRangeTypes } from '../types';
-import type { NextViewRangeType, ViewRange } from '../types';
+import type { ViewRange, ViewRangeTimeUpdate } from '../types';
 
 import './ViewingLayer.css';
+
+type DragType = 'SHIFT_END' | 'SHIFT_START' | 'REFRAME';
 
 type ViewingLayerProps = {
   height: number,
   numTicks: number,
   updateViewRange: (number, number) => void,
-  updateNextViewRange: (number, number, NextViewRangeType) => void,
+  updateNextViewRangeTime: ViewRangeTimeUpdate => void,
   viewRange: ViewRange,
 };
 
@@ -46,17 +47,17 @@ type ViewingLayerState = {
 
 const LEFT_MOUSE_BUTTON = 0;
 
+const dragTypes = {
+  SHIFT_END: 'SHIFT_END',
+  SHIFT_START: 'SHIFT_START',
+  REFRAME: 'REFRAME',
+};
+
 function getNextViewLayout(start: number, position: number) {
-  if (start < position) {
-    return {
-      x: `${start * 100}%`,
-      width: `${(position - start) * 100}%`,
-      leadingX: `${position * 100}%`,
-    };
-  }
+  const [left, right] = start < position ? [start, position] : [position, start];
   return {
-    x: `${position * 100}%`,
-    width: `${(start - position) * 100}%`,
+    x: `${left * 100}%`,
+    width: `${(right - left) * 100}%`,
     leadingX: `${position * 100}%`,
   };
 }
@@ -68,11 +69,27 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
   _root: ?Element;
   _rootClientRect: ?ClientRect;
   _windowListenersAttached: boolean;
+  _currentDragType: ?DragType;
   _handleLeftScrubberMouseDown: (SyntheticMouseEvent<any>) => void;
   _handleRightScrubberMouseDown: (SyntheticMouseEvent<any>) => void;
 
   constructor(props: ViewingLayerProps) {
     super(props);
+    this._setRoot = this._setRoot.bind(this);
+    this._handleScrubberMouseEnter = this._handleScrubberMouseEnter.bind(this);
+    this._handleScrubberMouseLeave = this._handleScrubberMouseLeave.bind(this);
+    this._handleLeftScrubberMouseDown = (event: SyntheticMouseEvent<any>) => {
+      this._handleScrubberMouseDown(dragTypes.SHIFT_START, event);
+    };
+    this._handleRightScrubberMouseDown = (event: SyntheticMouseEvent<any>) => {
+      this._handleScrubberMouseDown(dragTypes.SHIFT_END, event);
+    };
+    this._handleRootMouseMove = this._handleRootMouseMove.bind(this);
+    this._handleRootMouseLeave = this._handleRootMouseLeave.bind(this);
+    this._handleRootMouseDown = this._handleRootMouseDown.bind(this);
+    this._handleWindowMouseMove = this._handleWindowMouseMove.bind(this);
+    this._handleWindowMouseUp = this._handleWindowMouseUp.bind(this);
+
     this.state = {
       cursorX: undefined,
       preventCursorLine: false,
@@ -80,21 +97,7 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
     this._root = undefined;
     this._rootClientRect = undefined;
     this._windowListenersAttached = false;
-
-    this._setRoot = this._setRoot.bind(this);
-    this._handleScrubberMouseEnter = this._handleScrubberMouseEnter.bind(this);
-    this._handleScrubberMouseLeave = this._handleScrubberMouseLeave.bind(this);
-    this._handleLeftScrubberMouseDown = (event: SyntheticMouseEvent<any>) => {
-      this._handleScrubberMouseDown(NextViewRangeTypes.SHIFT_LEFT, event);
-    };
-    this._handleRightScrubberMouseDown = (event: SyntheticMouseEvent<any>) => {
-      this._handleScrubberMouseDown(NextViewRangeTypes.SHIFT_RIGHT, event);
-    };
-    this._handleRootMouseMove = this._handleRootMouseMove.bind(this);
-    this._handleRootMouseLeave = this._handleRootMouseLeave.bind(this);
-    this._handleRootMouseDown = this._handleRootMouseDown.bind(this);
-    this._handleWindowMouseMove = this._handleWindowMouseMove.bind(this);
-    this._handleWindowMouseUp = this._handleWindowMouseUp.bind(this);
+    this._currentDragType = undefined;
   }
 
   _setRoot = function _setRoot(elm: ?Element) {
@@ -106,20 +109,28 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
     }
   };
 
-  _getPosition(clientX: number, type: NextViewRangeType) {
+  _getUpdate(clientX: number, type: DragType): ViewRangeTimeUpdate {
     if (!this._rootClientRect) {
-      return NaN;
+      throw new Error('Invalid program state, cannot update view range');
     }
     const position = (clientX - this._rootClientRect.left) / (this._rootClientRect.width || 1);
-    if (type === NextViewRangeTypes.REFRAME) {
-      return _clamp(position, 0, 1);
+    const { time } = this.props.viewRange;
+    if (type === dragTypes.REFRAME) {
+      const shift = _clamp(position, 0, 1);
+      const anchor = time.reframe ? time.reframe.anchor : shift;
+      return { reframe: { anchor, shift } };
     }
-    if (type === NextViewRangeTypes.SHIFT_LEFT) {
-      const [, endView] = this.props.viewRange.current;
-      return _clamp(position, 0, endView);
+    if (type === dragTypes.SHIFT_START) {
+      const [, endView] = time.current;
+      const value = _clamp(position, 0, endView);
+      return { shiftStart: value };
     }
-    const [startView] = this.props.viewRange.current;
-    return _clamp(position, startView, 1);
+    if (type === dragTypes.SHIFT_END) {
+      const [startView] = time.current;
+      const value = _clamp(position, startView, 1);
+      return { shiftEnd: value };
+    }
+    throw new Error(`invalid drag type: ${type}`);
   }
 
   _handleScrubberMouseEnter = function _handleScrubberMouseEnter() {
@@ -130,7 +141,7 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
     this.setState({ preventCursorLine: false });
   };
 
-  _handleScrubberMouseDown(type: NextViewRangeType, event: SyntheticMouseEvent<any>) {
+  _handleScrubberMouseDown(type: DragType, event: SyntheticMouseEvent<any>) {
     const { button, clientX } = event;
     if (button !== LEFT_MOUSE_BUTTON) {
       return;
@@ -141,13 +152,14 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
       return;
     }
     this._rootClientRect = this._root.getBoundingClientRect();
-    const position = this._getPosition(clientX, type);
-    const [viewStart, viewEnd] = this.props.viewRange.current;
-    const start = type === NextViewRangeTypes.SHIFT_LEFT ? viewStart : viewEnd;
-    window.addEventListener('mousemove', this._handleWindowMouseMove);
-    window.addEventListener('mouseup', this._handleWindowMouseUp);
-    this._windowListenersAttached = true;
-    this.props.updateNextViewRange(start, position, type);
+    if (!this._windowListenersAttached) {
+      window.addEventListener('mousemove', this._handleWindowMouseMove);
+      window.addEventListener('mouseup', this._handleWindowMouseUp);
+      this._windowListenersAttached = true;
+    }
+    this._currentDragType = type;
+    const update = this._getUpdate(clientX, type);
+    this.props.updateNextViewRangeTime(update);
   }
 
   _handleRootMouseMove = function _handleRootMouseMove({ clientX }: SyntheticMouseEvent<any>) {
@@ -164,55 +176,87 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
     if (!this._root || button !== LEFT_MOUSE_BUTTON) {
       return;
     }
-    window.addEventListener('mousemove', this._handleWindowMouseMove);
-    window.addEventListener('mouseup', this._handleWindowMouseUp);
-    this._windowListenersAttached = true;
+    if (!this._windowListenersAttached) {
+      window.addEventListener('mousemove', this._handleWindowMouseMove);
+      window.addEventListener('mouseup', this._handleWindowMouseUp);
+      this._windowListenersAttached = true;
+    }
     // the ClientRect retrieved when the SVG is initially rendered has an
     // inaccurate width, so refresh the ClientRect on mouse down
     this._rootClientRect = this._root.getBoundingClientRect();
-    const position = this._getPosition(clientX, NextViewRangeTypes.REFRAME);
-    this.props.updateNextViewRange(position, position, NextViewRangeTypes.REFRAME);
+    this._currentDragType = dragTypes.REFRAME;
+    const update = this._getUpdate(clientX, dragTypes.REFRAME);
+    this.props.updateNextViewRangeTime(update);
   };
 
   _handleWindowMouseMove = function _handleWindowMouseMove({ clientX }: SyntheticMouseEvent<any>) {
-    if (!this._root || !this.props.viewRange.next) {
+    if (!this._root || !this._currentDragType) {
       return;
     }
-    const { start, type } = this.props.viewRange.next;
-    const position = this._getPosition(clientX, type);
-    this.props.updateNextViewRange(start, position, type);
+    const update = this._getUpdate(clientX, this._currentDragType);
+    this.props.updateNextViewRangeTime(update);
   };
 
   _handleWindowMouseUp = function _handleWindowMouseUp({ clientX }: SyntheticMouseEvent<any>) {
     window.removeEventListener('mousemove', this._handleWindowMouseMove);
     window.removeEventListener('mouseup', this._handleWindowMouseUp);
     this._windowListenersAttached = false;
-    if (!this._root || !this.props.viewRange.next) {
+    if (!this._root || !this._currentDragType) {
       return;
     }
-    const { start, type } = this.props.viewRange.next;
-    const position = this._getPosition(clientX, type);
-    if (type === NextViewRangeTypes.REFRAME) {
-      const [newStart, newEnd] = start < position ? [start, position] : [position, start];
-      this.props.updateViewRange(newStart, newEnd);
-      return;
-    }
-    if (type === NextViewRangeTypes.SHIFT_LEFT) {
-      const [, viewEnd] = this.props.viewRange.current;
-      this.props.updateViewRange(position, viewEnd);
-      return;
-    }
+    const type = this._currentDragType;
+    this._currentDragType = undefined;
     // reset cursorX to prevent a remnant cursorX from missing the mouseleave
     // event
     this.setState({ cursorX: undefined, preventCursorLine: false });
-    const [viewStart] = this.props.viewRange.current;
-    this.props.updateViewRange(viewStart, position);
+
+    const update = this._getUpdate(clientX, type);
+    if (type === dragTypes.REFRAME) {
+      const { reframe: { anchor, shift } } = update;
+      const [start, end] = anchor < shift ? [anchor, shift] : [shift, anchor];
+      this.props.updateViewRange(start, end);
+      return;
+    }
+    const [viewStart, viewEnd] = this.props.viewRange.time.current;
+    if (type === dragTypes.SHIFT_START) {
+      this.props.updateViewRange(update.shiftStart, viewEnd);
+      return;
+    }
+    this.props.updateViewRange(viewStart, update.shiftEnd);
   };
+
+  getMarkers(from: number, to: number, isShift: boolean) {
+    const layout = getNextViewLayout(from, to);
+    const cls = cx({
+      isShiftDrag: isShift,
+      isReframeDrag: !isShift,
+    });
+    return [
+      <rect
+        key="fill"
+        className={`ViewingLayer--draggedShift ${cls}`}
+        x={layout.x}
+        y="0"
+        width={layout.width}
+        height={this.props.height - 2}
+      />,
+      <rect
+        key="edge"
+        className={`ViewingLayer--draggedEdge ${cls}`}
+        x={layout.leadingX}
+        y="0"
+        width="1"
+        height={this.props.height - 2}
+      />,
+    ];
+  }
 
   render() {
     const { height, viewRange, numTicks } = this.props;
     const { cursorX, preventCursorLine } = this.state;
-    const [viewStart, viewEnd] = viewRange.current;
+    const { current, shiftStart, shiftEnd, reframe } = viewRange.time;
+    const haveNextTimeRange = shiftStart != null || shiftEnd != null || reframe != null;
+    const [viewStart, viewEnd] = current;
     let leftInactive = 0;
     if (viewStart) {
       leftInactive = viewStart * 100;
@@ -221,49 +265,7 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
     if (viewEnd) {
       rightInactive = 100 - viewEnd * 100;
     }
-    let isShiftDrag = false;
-    let dragMarkers: ?(React.Node[]);
-    let fullOverlay: ?React.Node;
-    let cursorGuide: ?React.Node;
-    if (viewRange.next) {
-      const { start, position, type } = viewRange.next;
-      isShiftDrag = type !== NextViewRangeTypes.REFRAME;
-      const cls = cx({
-        isShiftDrag,
-        isReframeDrag: !isShiftDrag,
-      });
-      const layout = getNextViewLayout(start, position);
-      dragMarkers = [
-        <rect
-          key="fill"
-          className={`ViewingLayer--draggedShift ${cls}`}
-          x={layout.x}
-          y="0"
-          width={layout.width}
-          height={height - 2}
-        />,
-        <rect
-          key="edge"
-          className={`ViewingLayer--draggedEdge ${cls}`}
-          x={layout.leadingX}
-          y="0"
-          width="1"
-          height={height - 2}
-        />,
-      ];
-      fullOverlay = <div className="ViewingLayer--fullOverlay" />;
-    } else if (cursorX != null && !preventCursorLine) {
-      cursorGuide = (
-        <line
-          className="ViewingLayer--cursorGuide"
-          x1={cursorX}
-          y1="0"
-          x2={cursorX}
-          y2={height - 2}
-          strokeWidth="1"
-        />
-      );
-    }
+    const drawCursor = !haveNextTimeRange && cursorX != null && !preventCursorLine;
     return (
       <div
         aria-hidden
@@ -294,25 +296,34 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
               className="ViewingLayer--inactive"
             />}
           <GraphTicks numTicks={numTicks} />
-          {cursorGuide}
-          {isShiftDrag && dragMarkers}
+          {drawCursor &&
+            <line
+              className="ViewingLayer--cursorGuide"
+              x1={cursorX}
+              y1="0"
+              x2={cursorX}
+              y2={height - 2}
+              strokeWidth="1"
+            />}
+          {shiftStart != null && this.getMarkers(viewStart, shiftStart, true)}
+          {shiftEnd != null && this.getMarkers(viewEnd, shiftEnd, true)}
           <Scrubber
-            isDragging={!!viewRange.next && viewRange.next.type === NextViewRangeTypes.SHIFT_LEFT}
+            isDragging={shiftStart != null}
             onMouseDown={this._handleLeftScrubberMouseDown}
             onMouseEnter={this._handleScrubberMouseEnter}
             onMouseLeave={this._handleScrubberMouseLeave}
             position={viewStart || 0}
           />
           <Scrubber
-            isDragging={!!viewRange.next && viewRange.next.type === NextViewRangeTypes.SHIFT_RIGHT}
+            isDragging={shiftEnd != null}
             position={viewEnd || 1}
             onMouseDown={this._handleRightScrubberMouseDown}
             onMouseEnter={this._handleScrubberMouseEnter}
             onMouseLeave={this._handleScrubberMouseLeave}
           />
-          {!isShiftDrag && dragMarkers}
+          {reframe != null && this.getMarkers(reframe.anchor, reframe.shift, false)}
         </svg>
-        {fullOverlay}
+        {haveNextTimeRange && <div className="ViewingLayer--fullOverlay" />}
       </div>
     );
   }

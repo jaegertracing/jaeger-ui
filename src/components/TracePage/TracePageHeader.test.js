@@ -28,19 +28,14 @@ describe('<TracePageHeader>', () => {
   const defaultProps = {
     traceID: 'some-trace-id',
     name: 'some-trace-name',
-  };
-
-  const defaultOptions = {
-    context: {
-      textFilter: '',
-      updateTextFilter: () => {},
-    },
+    textFilter: '',
+    updateTextFilter: () => {},
   };
 
   let wrapper;
 
   beforeEach(() => {
-    wrapper = shallow(<TracePageHeader {...defaultProps} />, defaultOptions);
+    wrapper = shallow(<TracePageHeader {...defaultProps} />);
   });
 
   it('renders a <header />', () => {
@@ -48,7 +43,7 @@ describe('<TracePageHeader>', () => {
   });
 
   it('renders an empty <div> if no traceID is present', () => {
-    wrapper = mount(<TracePageHeader {...defaultProps} traceID={null} />, defaultOptions);
+    wrapper = mount(<TracePageHeader {...defaultProps} traceID={null} />);
     expect(wrapper.children().length).toBe(0);
   });
 
@@ -66,13 +61,8 @@ describe('<TracePageHeader>', () => {
 
   it('calls the context updateTextFilter() function for onChange of the input', () => {
     const updateTextFilter = sinon.spy();
-    wrapper = shallow(<TracePageHeader {...defaultProps} />, {
-      ...defaultOptions,
-      context: {
-        ...defaultOptions.context,
-        updateTextFilter,
-      },
-    });
+    const props = { ...defaultProps, updateTextFilter };
+    wrapper = shallow(<TracePageHeader {...props} />);
     const event = { target: { value: 'my new value' } };
     wrapper.find('#trace-page__text-filter').first().prop('onChange')(event);
     expect(updateTextFilter.calledWith('my new value')).toBeTruthy();
