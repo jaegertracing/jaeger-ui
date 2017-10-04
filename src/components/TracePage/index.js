@@ -35,7 +35,7 @@ import ScrollManager from './ScrollManager';
 import SpanGraph from './SpanGraph';
 import TracePageHeader from './TracePageHeader';
 import TraceTimelineViewer from './TraceTimelineViewer';
-import type { NextViewRangeType, ViewRange } from './types';
+import type { ViewRange, ViewRangeTimeUpdate } from './types';
 import NotFound from '../App/NotFound';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import { getTraceName } from '../../model/trace-viewer';
@@ -52,10 +52,10 @@ type TracePageProps = {
 };
 
 type TracePageState = {
+  headerHeight: ?number,
+  slimView: boolean,
   textFilter: ?string,
   viewRange: ViewRange,
-  slimView: boolean,
-  headerHeight: ?number,
 };
 
 const VIEW_MIN_RANGE = 0.01;
@@ -96,13 +96,25 @@ export default class TracePage extends React.PureComponent<TracePageProps, Trace
     this.setHeaderHeight = this.setHeaderHeight.bind(this);
     this.toggleSlimView = this.toggleSlimView.bind(this);
     this.updateViewRange = this.updateViewRange.bind(this);
-    this.updateNextViewRange = this.updateNextViewRange.bind(this);
+    this.updateNextViewRangeTime = this.updateNextViewRangeTime.bind(this);
     this.updateTextFilter = this.updateTextFilter.bind(this);
     this.state = {
-      textFilter: '',
-      viewRange: { current: [0, 1] },
-      slimView: false,
       headerHeight: null,
+      slimView: false,
+      textFilter: '',
+      viewRange: {
+        time: {
+          current: [0, 1],
+        },
+        rows: {
+          bottom: 0,
+          top: 0,
+        },
+        spans: {
+          bottom: 0,
+          top: 0,
+        },
+      },
     };
     this._headerElm = null;
     this._scrollManager = new ScrollManager(props.trace, { scrollBy, scrollTo });
@@ -136,6 +148,15 @@ export default class TracePage extends React.PureComponent<TracePageProps, Trace
     }
   }
 
+  shouldComponentUpdate(nextProps: TracePageProps, nextState: TracePageState) {
+    if (this.state !== nextState) {
+      return true;
+    }
+    const { id, loading, trace } = this.props;
+    const { id: _id, loading: _loading, trace: _trace } = nextProps;
+    return id !== _id || loading !== _loading || trace !== _trace;
+  }
+
   componentDidUpdate({ trace: prevTrace }: TracePageProps) {
     const { trace } = this.props;
     this.setHeaderHeight(this._headerElm);
@@ -158,7 +179,7 @@ export default class TracePage extends React.PureComponent<TracePageProps, Trace
   }
 
   _adjustViewRange(startChange: number, endChange: number) {
-    const [viewStart, viewEnd] = this.state.viewRange.current;
+    const [viewStart, viewEnd] = this.state.viewRange.time.current;
     let start = _clamp(viewStart + startChange, 0, 0.99);
     let end = _clamp(viewEnd + endChange, 0.01, 1);
     if (end - start < VIEW_MIN_RANGE) {
@@ -191,17 +212,14 @@ export default class TracePage extends React.PureComponent<TracePageProps, Trace
   };
 
   updateViewRange = function updateViewRange(start: number, end: number) {
-    const viewRange = { current: [start, end] };
+    const time = { current: [start, end] };
+    const viewRange = { ...this.state.viewRange, time };
     this.setState({ viewRange });
   };
 
-  updateNextViewRange = function updateNextViewRange(
-    start: number,
-    position: number,
-    type: NextViewRangeType
-  ) {
-    const { current } = this.state.viewRange;
-    const viewRange = { current, next: { start, position, type } };
+  updateNextViewRangeTime = function updateNextViewRangeTime(update: ViewRangeTimeUpdate) {
+    const time = { ...this.state.viewRange.time, ...update };
+    const viewRange = { ...this.state.viewRange, time };
     this.setState({ viewRange });
   };
 
@@ -259,13 +277,13 @@ export default class TracePage extends React.PureComponent<TracePageProps, Trace
               trace={trace}
               viewRange={viewRange}
               updateViewRange={this.updateViewRange}
-              updateNextViewRange={this.updateNextViewRange}
+              updateNextViewRangeTime={this.updateNextViewRangeTime}
             />}
         </section>
         {headerHeight &&
           <section className="trace-timeline-section" style={{ paddingTop: headerHeight }}>
             <TraceTimelineViewer
-              currentViewRange={viewRange.current}
+              currentViewRange={viewRange.time.current}
               registerAccessors={this._scrollManager.setAccessors}
               textFilter={textFilter}
               trace={trace}

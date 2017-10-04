@@ -20,15 +20,39 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-export const NextViewRangeTypes = {
-  REFRAME: 'REFRAME',
-  SHIFT_LEFT: 'SHIFT_LEFT',
-  SHIFT_RIGHT: 'SHIFT_RIGHT',
+type TimeReframeUpdate = {
+  reframe: {
+    anchor: number,
+    shift: number,
+  },
 };
 
-export type NextViewRangeType = $Keys<typeof NextViewRangeTypes>;
+type TimeShiftEndUpdate = {
+  shiftEnd: number,
+};
+
+type TimeShiftStartUpdate = {
+  shiftStart: number,
+};
+
+export type ViewRangeTimeUpdate = TimeReframeUpdate | TimeShiftEndUpdate | TimeShiftStartUpdate;
 
 export type ViewRange = {
-  current: [number, number],
-  next?: { start: number, position: number, type: NextViewRangeType },
+  time: {
+    current: [number, number],
+    reframe?: {
+      anchor: number,
+      shift: number,
+    },
+    shiftEnd?: number,
+    shiftStart?: number,
+  },
+  rows: {
+    bottom: number,
+    top: number,
+  },
+  spans: {
+    bottom: number,
+    top: number,
+  },
 };

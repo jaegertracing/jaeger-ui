@@ -40,7 +40,6 @@ export function scrollBy(yDelta: number, appendToLast: boolean = false) {
   const { scrollY } = window;
   let targetFrom = scrollY;
   if (appendToLast && lastTween) {
-    // if `append` and we will be scrolling in the same direction as lastTween
     const currentDirection = lastTween.to < scrollY ? 'up' : 'down';
     const nextDirection = yDelta < 0 ? 'up' : 'down';
     if (currentDirection === nextDirection) {
