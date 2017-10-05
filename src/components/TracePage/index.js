@@ -30,7 +30,7 @@ import { bindActionCreators } from 'redux';
 
 import type { CombokeysHandler, ShortcutCallbacks } from './keyboard-shortcuts';
 import { init as initShortcuts, reset as resetShortcuts } from './keyboard-shortcuts';
-import { cancel as cancelPageScroll, scrollBy, scrollTo } from './scroll-page';
+import { cancel as cancelScroll, scrollBy, scrollTo } from './scroll-page';
 import ScrollManager from './ScrollManager';
 import SpanGraph from './SpanGraph';
 import TracePageHeader from './TracePageHeader';
@@ -171,7 +171,7 @@ export default class TracePage extends React.PureComponent<TracePageProps, Trace
 
   componentWillUnmount() {
     resetShortcuts();
-    cancelPageScroll();
+    cancelScroll();
     if (this._scrollManager) {
       this._scrollManager.destroy();
       this._scrollManager = new ScrollManager(undefined, { scrollBy, scrollTo });

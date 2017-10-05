@@ -163,7 +163,7 @@ class VirtualizedTraceView extends React.PureComponent<VirtualizedTraceViewProps
     }
   }
 
-  componentWillReceiveProps(nextProps) {
+  componentWillUpdate(nextProps) {
     const {
       childrenHiddenIDs,
       detailStates,
@@ -311,10 +311,7 @@ class VirtualizedTraceView extends React.PureComponent<VirtualizedTraceViewProps
     if (!trace) {
       return null;
     }
-
     const color = colorGenerator.getColorByKey(serviceName);
-    const toggleDetailExpansion = () => detailToggle(spanID);
-
     const isCollapsed = childrenHiddenIDs.has(spanID);
     const isDetailExapnded = detailStates.has(spanID);
     const isFilteredOut = Boolean(findMatchesIDs) && !findMatchesIDs.has(spanID);
@@ -363,12 +360,13 @@ class VirtualizedTraceView extends React.PureComponent<VirtualizedTraceViewProps
           isFilteredOut={isFilteredOut}
           isParent={span.hasChildren}
           numTicks={NUM_TICKS}
-          onDetailToggled={toggleDetailExpansion}
-          onChildrenToggled={() => childrenToggle(spanID)}
+          onDetailToggled={detailToggle}
+          onChildrenToggled={childrenToggle}
           operationName={span.operationName}
           rpc={rpc}
           serviceName={span.process.serviceName}
           showErrorIcon={showErrorIcon}
+          spanID={spanID}
           viewEnd={viewBounds.end}
           viewStart={viewBounds.start}
         />
@@ -401,7 +399,7 @@ class VirtualizedTraceView extends React.PureComponent<VirtualizedTraceViewProps
         <SpanDetailRow
           color={color}
           columnDivision={spanNameColumnWidth}
-          detailToggle={() => detailToggle(spanID)}
+          onDetailToggled={detailToggle}
           detailState={detailState}
           isFilteredOut={isFilteredOut}
           logItemToggle={detailLogItemToggle}
