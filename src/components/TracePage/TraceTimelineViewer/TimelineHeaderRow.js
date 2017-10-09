@@ -22,11 +22,11 @@
 
 import * as React from 'react';
 import cx from 'classnames';
-import _clamp from 'lodash/clamp';
-import _get from 'lodash/get';
 
 import Ticks from './Ticks';
 import TimelineRow from './TimelineRow';
+import type { DraggableBounds, DraggingUpdate } from '../../../utils/DraggableManager';
+import DraggableManager from '../../../utils/DraggableManager';
 
 import './TimelineHeaderRow.css';
 
@@ -47,10 +47,7 @@ type TimelineColumnResizerProps = {
 
 type TimelineColumnResizerState = {
   dragPosition: ?number,
-  rootX: ?number,
 };
-
-const LEFT_MOUSE_BUTTON = 0;
 
 class TimelineColumnResizer extends React.PureComponent<
   TimelineColumnResizerProps,
@@ -58,81 +55,57 @@ class TimelineColumnResizer extends React.PureComponent<
 > {
   props: TimelineColumnResizerProps;
   state: TimelineColumnResizerState;
+
   _rootElm: ?Element;
-  _isDragging: boolean;
+  _dragManager: DraggableManager;
 
   constructor(props) {
     super(props);
+    this._setRootElm = this._setRootElm.bind(this);
+    this._getDraggingBounds = this._getDraggingBounds.bind(this);
+    this._handleDragUpdate = this._handleDragUpdate.bind(this);
+    this._handleDragEnd = this._handleDragEnd.bind(this);
+
     this._rootElm = undefined;
-    this._isDragging = false;
+    this._dragManager = new DraggableManager(this._getDraggingBounds);
+    this._dragManager.onDragStart = this._handleDragUpdate;
+    this._dragManager.onDragMove = this._handleDragUpdate;
+    this._dragManager.onDragEnd = this._handleDragEnd;
     this.state = {
       dragPosition: null,
-      rootX: null,
     };
-    this._setRootElm = this._setRootElm.bind(this);
-    this._onDraggerMouseDown = this._onDraggerMouseDown.bind(this);
-    this._onWindowMouseMove = this._onWindowMouseMove.bind(this);
-    this._onWindowMouseUp = this._onWindowMouseUp.bind(this);
   }
 
   componentWillUnmount() {
-    if (this._isDragging) {
-      window.removeEventListener('mousemove', this._onWindowMouseMove);
-      window.removeEventListener('mouseup', this._onWindowMouseUp);
-      this._isDragging = false;
-    }
+    this._dragManager.dispose();
   }
 
   _setRootElm = function _setRootElm(elm) {
     this._rootElm = elm;
   };
 
-  _getDraggedPosition(clientX: number, rootX: ?number = null) {
+  _getDraggingBounds = function _getDraggingBounds(): DraggableBounds {
     if (!this._rootElm) {
-      return null;
+      throw new Error('invalid state');
     }
+    const { left: clientXLeft, width } = this._rootElm.getBoundingClientRect();
     const { min, max } = this.props;
-    const rx = rootX == null ? this.state.rootX : rootX;
-    // pos is position of cursor in the horizontal portion of the bounding box,
-    // in range [0, 1]
-    const pos = (clientX - (rx || 0)) / this._rootElm.clientWidth;
-    return _clamp(pos, min, max);
-  }
-
-  _onDraggerMouseDown = function _onDraggerMouseDown({ button, clientX }) {
-    if (this._isDragging || button !== LEFT_MOUSE_BUTTON || !this._rootElm) {
-      return;
-    }
-    const rootX = this._rootElm.getBoundingClientRect().left;
-    const dragPosition = this._getDraggedPosition(clientX, rootX);
-    this.setState({ rootX, dragPosition });
-    window.addEventListener('mousemove', this._onWindowMouseMove);
-    window.addEventListener('mouseup', this._onWindowMouseUp);
-    this._isDragging = true;
-    const style = _get(document, 'body.style');
-    if (style) {
-      (style: any).userSelect = 'none';
-    }
+    return {
+      clientXLeft,
+      width,
+      maxValue: max,
+      minValue: min,
+    };
   };
 
-  _onWindowMouseMove = function _onWindowMouseMove({ clientX }) {
-    const dragPosition = this._getDraggedPosition(clientX);
-    this.setState({ ...this.state, dragPosition });
+  _handleDragUpdate = function _handleDragUpdate({ value }: DraggingUpdate) {
+    this.setState({ dragPosition: value });
   };
 
-  _onWindowMouseUp = function _onWindowMouseUp({ clientX }) {
-    window.removeEventListener('mousemove', this._onWindowMouseMove);
-    window.removeEventListener('mouseup', this._onWindowMouseUp);
-    const style = _get(document, 'body.style');
-    if (style) {
-      (style: any).userSelect = null;
-    }
-    this._isDragging = false;
-    const dragPosition = this._getDraggedPosition(clientX);
-    if (dragPosition != null) {
-      this.props.onChange(dragPosition);
-    }
-    this.setState({ rootX: null, dragPosition: null });
+  _handleDragEnd = function _handleDragEnd({ manager, value }: DraggingUpdate) {
+    manager.resetBounds();
+    this.setState({ dragPosition: null });
+    this.props.onChange(value);
   };
 
   render() {
@@ -140,7 +113,7 @@ class TimelineColumnResizer extends React.PureComponent<
     let draggerStyle;
     let draggerStateCls = '';
     const { dragPosition } = this.state;
-    if (this._isDragging && this._rootElm && dragPosition != null) {
+    if (this._dragManager.isDragging() && this._rootElm && dragPosition != null) {
       const { position } = this.props;
       draggerStateCls = cx({
         isDraggingLeft: dragPosition < position,
@@ -167,7 +140,7 @@ class TimelineColumnResizer extends React.PureComponent<
           <div
             aria-hidden
             className="TimelineColumnResizer--dragger"
-            onMouseDown={this._onDraggerMouseDown}
+            onMouseDown={this._dragManager.handleMouseDown}
             style={draggerStyle}
           />
         </div>

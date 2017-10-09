@@ -64,7 +64,7 @@ export default function Ticks(props: TicksProps) {
     );
   }
   return (
-    <div>
+    <div className="le-ticks">
       {ticks}
     </div>
   );
