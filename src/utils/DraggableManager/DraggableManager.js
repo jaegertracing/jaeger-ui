@@ -46,7 +46,7 @@ export default class DraggableManager {
   handleMouseLeave: (SyntheticMouseEvent<any>) => void;
   handleMouseDown: (SyntheticMouseEvent<any>) => void;
 
-  constructor(getBounds: () => DraggableBounds, tag: ?string) {
+  constructor(getBounds: () => DraggableBounds, tag?: ?string) {
     this._handleMinorMouseEvent = this._handleMinorMouseEvent.bind(this);
     this._handleDragEvent = this._handleDragEvent.bind(this);
 

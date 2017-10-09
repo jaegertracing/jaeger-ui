@@ -26,9 +26,8 @@ import cx from 'classnames';
 import GraphTicks from './GraphTicks';
 import Scrubber from './Scrubber';
 import type { ViewRange, ViewRangeTimeUpdate } from '../types';
-import type { DraggableBounds, DraggingUpdate } from '../../../utils/draggable/types';
-import DraggableManager from '../../../utils/draggable/DraggableManager';
-import updateTypes from '../../../utils/draggable/update-types';
+import type { DraggableBounds, DraggingUpdate } from '../../../utils/DraggableManager';
+import DraggableManager, { updateTypes } from '../../../utils/DraggableManager';
 
 import './ViewingLayer.css';
 
