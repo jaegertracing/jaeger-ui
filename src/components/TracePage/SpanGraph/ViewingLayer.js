@@ -22,15 +22,15 @@
 
 import * as React from 'react';
 import cx from 'classnames';
-import _clamp from 'lodash/clamp';
 
 import GraphTicks from './GraphTicks';
 import Scrubber from './Scrubber';
 import type { ViewRange, ViewRangeTimeUpdate } from '../types';
+import type { DraggableBounds, DraggingUpdate } from '../../../utils/draggable/types';
+import DraggableManager from '../../../utils/draggable/DraggableManager';
+import updateTypes from '../../../utils/draggable/update-types';
 
 import './ViewingLayer.css';
-
-type DragType = 'SHIFT_END' | 'SHIFT_START' | 'REFRAME';
 
 type ViewingLayerProps = {
   height: number,
@@ -44,8 +44,6 @@ type ViewingLayerState = {
   cursorX: ?number,
   preventCursorLine: boolean,
 };
-
-const LEFT_MOUSE_BUTTON = 0;
 
 const dragTypes = {
   SHIFT_END: 'SHIFT_END',
@@ -67,165 +65,137 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
   state: ViewingLayerState;
 
   _root: ?Element;
-  _rootClientRect: ?ClientRect;
-  _windowListenersAttached: boolean;
-  _currentDragType: ?DragType;
-  _handleLeftScrubberMouseDown: (SyntheticMouseEvent<any>) => void;
-  _handleRightScrubberMouseDown: (SyntheticMouseEvent<any>) => void;
+  _draggerReframe: DraggableManager;
+  _draggerStart: DraggableManager;
+  _draggerEnd: DraggableManager;
 
   constructor(props: ViewingLayerProps) {
     super(props);
     this._setRoot = this._setRoot.bind(this);
-    this._handleScrubberMouseEnter = this._handleScrubberMouseEnter.bind(this);
-    this._handleScrubberMouseLeave = this._handleScrubberMouseLeave.bind(this);
-    this._handleLeftScrubberMouseDown = (event: SyntheticMouseEvent<any>) => {
-      this._handleScrubberMouseDown(dragTypes.SHIFT_START, event);
-    };
-    this._handleRightScrubberMouseDown = (event: SyntheticMouseEvent<any>) => {
-      this._handleScrubberMouseDown(dragTypes.SHIFT_END, event);
-    };
-    this._handleRootMouseMove = this._handleRootMouseMove.bind(this);
-    this._handleRootMouseLeave = this._handleRootMouseLeave.bind(this);
-    this._handleRootMouseDown = this._handleRootMouseDown.bind(this);
-    this._handleWindowMouseMove = this._handleWindowMouseMove.bind(this);
-    this._handleWindowMouseUp = this._handleWindowMouseUp.bind(this);
+    this._getDraggingBounds = this._getDraggingBounds.bind(this);
+    this._handleReframeMouseMove = this._handleReframeMouseMove.bind(this);
+    this._handleReframeMouseLeave = this._handleReframeMouseLeave.bind(this);
+    this._handleReframeDragUpdate = this._handleReframeDragUpdate.bind(this);
+    this._handleReframeDragEnd = this._handleReframeDragEnd.bind(this);
+    this._handleScrubberEnterLeave = this._handleScrubberEnterLeave.bind(this);
+    this._handleScrubberDragUpdate = this._handleScrubberDragUpdate.bind(this);
+    this._handleScrubberDragEnd = this._handleScrubberDragEnd.bind(this);
 
+    this._draggerReframe = new DraggableManager(this._getDraggingBounds, dragTypes.REFRAME);
+    this._draggerReframe.onMouseMove = this._handleReframeMouseMove;
+    this._draggerReframe.onMouseLeave = this._handleReframeMouseLeave;
+    this._draggerReframe.onDragStart = this._handleReframeDragUpdate;
+    this._draggerReframe.onDragMove = this._handleReframeDragUpdate;
+    this._draggerReframe.onDragEnd = this._handleReframeDragEnd;
+
+    this._draggerStart = new DraggableManager(this._getDraggingBounds, dragTypes.SHIFT_START);
+    this._draggerStart.onMouseEnter = this._handleScrubberEnterLeave;
+    this._draggerStart.onMouseLeave = this._handleScrubberEnterLeave;
+    this._draggerStart.onDragStart = this._handleScrubberDragUpdate;
+    this._draggerStart.onDragMove = this._handleScrubberDragUpdate;
+    this._draggerStart.onDragEnd = this._handleScrubberDragEnd;
+
+    this._draggerEnd = new DraggableManager(this._getDraggingBounds, dragTypes.SHIFT_END);
+    this._draggerEnd.onMouseEnter = this._handleScrubberEnterLeave;
+    this._draggerEnd.onMouseLeave = this._handleScrubberEnterLeave;
+    this._draggerEnd.onDragStart = this._handleScrubberDragUpdate;
+    this._draggerEnd.onDragMove = this._handleScrubberDragUpdate;
+    this._draggerEnd.onDragEnd = this._handleScrubberDragEnd;
+
+    this._root = undefined;
     this.state = {
       cursorX: undefined,
       preventCursorLine: false,
     };
-    this._root = undefined;
-    this._rootClientRect = undefined;
-    this._windowListenersAttached = false;
-    this._currentDragType = undefined;
+  }
+
+  componentWillUnmount() {
+    this._draggerReframe.dispose();
+    this._draggerEnd.dispose();
+    this._draggerStart.dispose();
   }
 
   _setRoot = function _setRoot(elm: ?Element) {
     this._root = elm;
-    if (elm) {
-      this._rootClientRect = elm.getBoundingClientRect();
-    } else {
-      this._rootClientRect = undefined;
-    }
   };
 
-  _getUpdate(clientX: number, type: DragType): ViewRangeTimeUpdate {
-    if (!this._rootClientRect) {
-      throw new Error('Invalid program state, cannot update view range');
-    }
-    const position = (clientX - this._rootClientRect.left) / (this._rootClientRect.width || 1);
-    const { time } = this.props.viewRange;
-    if (type === dragTypes.REFRAME) {
-      const shift = _clamp(position, 0, 1);
-      const anchor = time.reframe ? time.reframe.anchor : shift;
-      return { reframe: { anchor, shift } };
-    }
-    if (type === dragTypes.SHIFT_START) {
-      const [, endView] = time.current;
-      const value = _clamp(position, 0, endView);
-      return { shiftStart: value };
-    }
-    if (type === dragTypes.SHIFT_END) {
-      const [startView] = time.current;
-      const value = _clamp(position, startView, 1);
-      return { shiftEnd: value };
-    }
-    throw new Error(`invalid drag type: ${type}`);
-  }
-
-  _handleScrubberMouseEnter = function _handleScrubberMouseEnter() {
-    this.setState({ preventCursorLine: true });
-  };
-
-  _handleScrubberMouseLeave = function _handleScrubberMouseLeave() {
-    this.setState({ preventCursorLine: false });
-  };
-
-  _handleScrubberMouseDown(type: DragType, event: SyntheticMouseEvent<any>) {
-    const { button, clientX } = event;
-    if (button !== LEFT_MOUSE_BUTTON) {
-      return;
-    }
-    // stop propagation so the root mousedown listener does not hi-jack the show
-    event.stopPropagation();
+  _getDraggingBounds = function _getDraggingBounds(tag: ?string): DraggableBounds {
     if (!this._root) {
-      return;
+      throw new Error('invalid state');
     }
-    this._rootClientRect = this._root.getBoundingClientRect();
-    if (!this._windowListenersAttached) {
-      window.addEventListener('mousemove', this._handleWindowMouseMove);
-      window.addEventListener('mouseup', this._handleWindowMouseUp);
-      this._windowListenersAttached = true;
+    const { left: clientXLeft, width } = this._root.getBoundingClientRect();
+    const [viewStart, viewEnd] = this.props.viewRange.time.current;
+    let maxValue = 1;
+    let minValue = 0;
+    if (tag === dragTypes.SHIFT_START) {
+      maxValue = viewEnd;
+    } else if (tag === dragTypes.SHIFT_END) {
+      minValue = viewStart;
     }
-    this._currentDragType = type;
-    const update = this._getUpdate(clientX, type);
-    this.props.updateNextViewRangeTime(update);
-  }
-
-  _handleRootMouseMove = function _handleRootMouseMove({ clientX }: SyntheticMouseEvent<any>) {
-    if (this._rootClientRect) {
-      this.setState({ cursorX: clientX - this._rootClientRect.left });
-    }
+    return { clientXLeft, maxValue, minValue, width };
   };
 
-  _handleRootMouseLeave = function _handleRootMouseLeave() {
+  _handleReframeMouseMove = function _handleReframeMouseMove({ x }: DraggingUpdate) {
+    this.setState({ cursorX: x });
+  };
+
+  _handleReframeMouseLeave = function _handleReframeMouseLeave() {
     this.setState({ cursorX: undefined });
   };
 
-  _handleRootMouseDown = function _handleRootMouseDown({ button, clientX }: SyntheticMouseEvent<any>) {
-    if (!this._root || button !== LEFT_MOUSE_BUTTON) {
-      return;
-    }
-    if (!this._windowListenersAttached) {
-      window.addEventListener('mousemove', this._handleWindowMouseMove);
-      window.addEventListener('mouseup', this._handleWindowMouseUp);
-      this._windowListenersAttached = true;
-    }
-    // the ClientRect retrieved when the SVG is initially rendered has an
-    // inaccurate width, so refresh the ClientRect on mouse down
-    this._rootClientRect = this._root.getBoundingClientRect();
-    this._currentDragType = dragTypes.REFRAME;
-    const update = this._getUpdate(clientX, dragTypes.REFRAME);
+  _handleReframeDragUpdate = function _handleReframeDragUpdate({ value }: DraggingUpdate) {
+    const shift = value;
+    const { time } = this.props.viewRange;
+    const anchor = time.reframe ? time.reframe.anchor : shift;
+    const update = { reframe: { anchor, shift } };
     this.props.updateNextViewRangeTime(update);
   };
 
-  _handleWindowMouseMove = function _handleWindowMouseMove({ clientX }: SyntheticMouseEvent<any>) {
-    if (!this._root || !this._currentDragType) {
-      return;
+  _handleReframeDragEnd = function _handleReframeDragEnd({ manager, value }: DraggingUpdate) {
+    const { time } = this.props.viewRange;
+    const anchor = time.reframe ? time.reframe.anchor : value;
+    const [start, end] = value < anchor ? [value, anchor] : [anchor, value];
+    manager.resetBounds();
+    this.props.updateViewRange(start, end);
+  };
+
+  _handleScrubberEnterLeave = function _handleScrubberEnterLeave({ type }: DraggingUpdate) {
+    const preventCursorLine = type === updateTypes.MOUSE_ENTER;
+    this.setState({ preventCursorLine });
+  };
+
+  _handleScrubberDragUpdate = function _handleScrubberDragUpdate({
+    event,
+    tag,
+    type,
+    value,
+  }: DraggingUpdate) {
+    if (type === updateTypes.DRAG_START) {
+      event.stopPropagation();
     }
-    const update = this._getUpdate(clientX, this._currentDragType);
+    const update = {};
+    if (tag === dragTypes.SHIFT_START) {
+      update.shiftStart = value;
+    } else if (tag === dragTypes.SHIFT_END) {
+      update.shiftEnd = value;
+    }
     this.props.updateNextViewRangeTime(update);
   };
 
-  _handleWindowMouseUp = function _handleWindowMouseUp({ clientX }: SyntheticMouseEvent<any>) {
-    window.removeEventListener('mousemove', this._handleWindowMouseMove);
-    window.removeEventListener('mouseup', this._handleWindowMouseUp);
-    this._windowListenersAttached = false;
-    if (!this._root || !this._currentDragType) {
-      return;
-    }
-    const type = this._currentDragType;
-    this._currentDragType = undefined;
-    // reset cursorX to prevent a remnant cursorX from missing the mouseleave
-    // event
-    this.setState({ cursorX: undefined, preventCursorLine: false });
-
-    const update = this._getUpdate(clientX, type);
-    if (type === dragTypes.REFRAME) {
-      const { reframe: { anchor, shift } } = update;
-      const [start, end] = anchor < shift ? [anchor, shift] : [shift, anchor];
-      this.props.updateViewRange(start, end);
-      return;
-    }
+  _handleScrubberDragEnd = function _handleScrubberDragEnd({ manager, tag, value }: DraggingUpdate) {
     const [viewStart, viewEnd] = this.props.viewRange.time.current;
-    if (type === dragTypes.SHIFT_START) {
-      this.props.updateViewRange(update.shiftStart, viewEnd);
-      return;
+    let update: [number, number];
+    if (tag === dragTypes.SHIFT_START) {
+      update = [value, viewEnd];
+    } else if (tag === dragTypes.SHIFT_END) {
+      update = [viewStart, value];
     }
-    this.props.updateViewRange(viewStart, update.shiftEnd);
+    manager.resetBounds();
+    this.setState({ preventCursorLine: false });
+    this.props.updateViewRange(...update);
   };
 
-  getMarkers(from: number, to: number, isShift: boolean) {
+  _getMarkers(from: number, to: number, isShift: boolean) {
     const layout = getNextViewLayout(from, to);
     const cls = cx({
       isShiftDrag: isShift,
@@ -266,24 +236,17 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
       rightInactive = 100 - viewEnd * 100;
     }
     const drawCursor = !haveNextTimeRange && cursorX != null && !preventCursorLine;
+
     return (
-      <div
-        aria-hidden
-        className="ViewingLayer"
-        onMouseDown={this._handleRootMouseDown}
-        onMouseLeave={this._handleRootMouseLeave}
-        onMouseMove={this._handleRootMouseMove}
-        ref={this._setRoot}
-        style={{ height }}
-      >
+      <div aria-hidden className="ViewingLayer" style={{ height }}>
         <svg
           height={height}
           style={{ shapeRendering: 'crispEdges' }}
           className="ViewingLayer--graph"
           ref={this._setRoot}
-          onMouseMove={this._handleRootMouseMove}
-          onMouseLeave={this._handleRootMouseLeave}
-          onMouseDown={this._handleRootMouseDown}
+          onMouseDown={this._draggerReframe.handleMouseDown}
+          onMouseLeave={this._draggerReframe.handleMouseLeave}
+          onMouseMove={this._draggerReframe.handleMouseMove}
         >
           {leftInactive > 0 &&
             <rect x={0} y={0} height="100%" width={`${leftInactive}%`} className="ViewingLayer--inactive" />}
@@ -305,23 +268,23 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
               y2={height - 2}
               strokeWidth="1"
             />}
-          {shiftStart != null && this.getMarkers(viewStart, shiftStart, true)}
-          {shiftEnd != null && this.getMarkers(viewEnd, shiftEnd, true)}
+          {shiftStart != null && this._getMarkers(viewStart, shiftStart, true)}
+          {shiftEnd != null && this._getMarkers(viewEnd, shiftEnd, true)}
           <Scrubber
             isDragging={shiftStart != null}
-            onMouseDown={this._handleLeftScrubberMouseDown}
-            onMouseEnter={this._handleScrubberMouseEnter}
-            onMouseLeave={this._handleScrubberMouseLeave}
+            onMouseDown={this._draggerStart.handleMouseDown}
+            onMouseEnter={this._draggerStart.handleMouseEnter}
+            onMouseLeave={this._draggerStart.handleMouseLeave}
             position={viewStart || 0}
           />
           <Scrubber
             isDragging={shiftEnd != null}
             position={viewEnd || 1}
-            onMouseDown={this._handleRightScrubberMouseDown}
-            onMouseEnter={this._handleScrubberMouseEnter}
-            onMouseLeave={this._handleScrubberMouseLeave}
+            onMouseDown={this._draggerEnd.handleMouseDown}
+            onMouseEnter={this._draggerEnd.handleMouseEnter}
+            onMouseLeave={this._draggerEnd.handleMouseLeave}
           />
-          {reframe != null && this.getMarkers(reframe.anchor, reframe.shift, false)}
+          {reframe != null && this._getMarkers(reframe.anchor, reframe.shift, false)}
         </svg>
         {haveNextTimeRange && <div className="ViewingLayer--fullOverlay" />}
       </div>
