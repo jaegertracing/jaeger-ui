@@ -20,23 +20,20 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-.Ticks {
-  pointer-events: none;
+.TimelineHeaderRow {
+  background: #e8e8e8;
+  border-bottom: 1px solid #ccc;
+  height: 38px;
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+  z-index: 2;
 }
 
-.Ticks--tick {
-  position: absolute;
-  height: 100%;
-  width: 1px;
-  background: #d3d3d3;
-}
-.Ticks--tickLabel {
-  bottom: 0.5rem;
-  left: 5px;
-  position: absolute;
-}
-
-.Ticks--tickLabel.isEndAnchor {
-  left: initial;
-  right: 5px;
+.TimelineHeaderRow--title {
+  overflow: hidden;
+  padding: 0.5rem;
+  padding-right: 0.1rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

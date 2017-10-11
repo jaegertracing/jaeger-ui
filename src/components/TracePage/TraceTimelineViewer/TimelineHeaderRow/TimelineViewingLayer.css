@@ -20,23 +20,70 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-.Ticks {
-  pointer-events: none;
+.TimelineViewingLayer {
+  bottom: 0;
+  cursor: vertical-text;
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
 }
 
-.Ticks--tick {
+.TimelineViewingLayer--cursorGuide {
   position: absolute;
-  height: 100%;
+  top: 0;
+  bottom: 0;
+  left: 0;
   width: 1px;
-  background: #d3d3d3;
-}
-.Ticks--tickLabel {
-  bottom: 0.5rem;
-  left: 5px;
-  position: absolute;
+  background-color: red;
 }
 
-.Ticks--tickLabel.isEndAnchor {
-  left: initial;
-  right: 5px;
+
+
+.TimelineViewingLayer--dragged {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+}
+
+.TimelineViewingLayer--dragged.isDraggingLeft {
+  border-left: 1px solid;
+}
+
+.TimelineViewingLayer--dragged.isDraggingRight {
+  border-right: 1px solid;
+}
+
+.TimelineViewingLayer--dragged.isShiftDrag {
+  background-color: rgba(68, 68, 255, 0.2);
+  border-color: #44f;
+}
+
+.TimelineViewingLayer--dragged.isReframeDrag {
+  background-color: rgba(255, 68, 68, 0.2);
+  border-color: #f44;
+}
+
+/* .TimelineViewingLayer--draggedShift {
+  opacity: 0.2;
+}
+
+.TimelineViewingLayer--draggedShift.isShiftDrag,
+.TimelineViewingLayer--draggedEdge.isShiftDrag {
+  fill: #44f;
+}
+
+.TimelineViewingLayer--draggedShift.isReframeDrag,
+.TimelineViewingLayer--draggedEdge.isReframeDrag {
+  fill: #f44;
+} */
+
+.TimelineViewingLayer--fullOverlay {
+  bottom: 0;
+  cursor: col-resize;
+  left: 0;
+  position: fixed;
+  right: 0;
+  top: 0;
+  user-select: none;
 }

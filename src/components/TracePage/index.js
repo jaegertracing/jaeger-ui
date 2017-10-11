@@ -276,17 +276,19 @@ export default class TracePage extends React.PureComponent<TracePageProps, Trace
             <SpanGraph
               trace={trace}
               viewRange={viewRange}
-              updateViewRange={this.updateViewRange}
               updateNextViewRangeTime={this.updateNextViewRangeTime}
+              updateViewRange={this.updateViewRange}
             />}
         </section>
         {headerHeight &&
           <section className="trace-timeline-section" style={{ paddingTop: headerHeight }}>
             <TraceTimelineViewer
-              currentViewRange={viewRange.time.current}
               registerAccessors={this._scrollManager.setAccessors}
               textFilter={textFilter}
               trace={trace}
+              updateNextViewRangeTime={this.updateNextViewRangeTime}
+              updateViewRange={this.updateViewRange}
+              viewRange={viewRange}
             />
           </section>}
       </div>

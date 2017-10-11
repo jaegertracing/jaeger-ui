@@ -23,20 +23,10 @@
 import * as React from 'react';
 import cx from 'classnames';
 
-import Ticks from './Ticks';
-import TimelineRow from './TimelineRow';
-import type { DraggableBounds, DraggingUpdate } from '../../../utils/DraggableManager';
-import DraggableManager from '../../../utils/DraggableManager';
+import type { DraggableBounds, DraggingUpdate } from '../../../../utils/DraggableManager';
+import DraggableManager from '../../../../utils/DraggableManager';
 
-import './TimelineHeaderRow.css';
-
-type TimelineHeaderRowProps = {
-  endTime: number,
-  nameColumnWidth: number,
-  numTicks: number,
-  onColummWidthChange: number => void,
-  startTime: number,
-};
+import './TimelineColumnResizer.css';
 
 type TimelineColumnResizerProps = {
   min: number,
@@ -49,7 +39,7 @@ type TimelineColumnResizerState = {
   dragPosition: ?number,
 };
 
-class TimelineColumnResizer extends React.PureComponent<
+export default class TimelineColumnResizer extends React.PureComponent<
   TimelineColumnResizerProps,
   TimelineColumnResizerState
 > {
@@ -59,7 +49,7 @@ class TimelineColumnResizer extends React.PureComponent<
   _rootElm: ?Element;
   _dragManager: DraggableManager;
 
-  constructor(props) {
+  constructor(props: TimelineColumnResizerProps) {
     super(props);
     this._setRootElm = this._setRootElm.bind(this);
     this._getDraggingBounds = this._getDraggingBounds.bind(this);
@@ -80,7 +70,7 @@ class TimelineColumnResizer extends React.PureComponent<
     this._dragManager.dispose();
   }
 
-  _setRootElm = function _setRootElm(elm) {
+  _setRootElm = function _setRootElm(elm: ?Element) {
     this._rootElm = elm;
   };
 
@@ -147,24 +137,4 @@ class TimelineColumnResizer extends React.PureComponent<
       </div>
     );
   }
-}
-
-export default function TimelineHeaderRow(props: TimelineHeaderRowProps) {
-  const { endTime, nameColumnWidth, numTicks, onColummWidthChange, startTime } = props;
-  return (
-    <TimelineRow className="TimelineHeaderRow">
-      <TimelineRow.Cell width={nameColumnWidth}>
-        <h3 className="TimelineHeaderRow--title">Service &amp; Operation</h3>
-      </TimelineRow.Cell>
-      <TimelineRow.Cell width={1 - nameColumnWidth}>
-        <Ticks numTicks={numTicks} startTime={startTime} endTime={endTime} showLabels />
-      </TimelineRow.Cell>
-      <TimelineColumnResizer
-        position={nameColumnWidth}
-        onChange={onColummWidthChange}
-        min={0.15}
-        max={0.85}
-      />
-    </TimelineRow>
-  );
 }

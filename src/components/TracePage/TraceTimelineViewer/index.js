@@ -21,27 +21,61 @@
 // THE SOFTWARE.
 
 import React from 'react';
+import { connect } from 'react-redux';
 
+import { actions } from './duck';
+import TimelineHeaderRow from './TimelineHeaderRow';
 import VirtualizedTraceView from './VirtualizedTraceView';
 import type { Accessors } from '../ScrollManager';
+import type { ViewRange, ViewRangeTimeUpdate } from '../types';
 import type { Trace } from '../../../types';
 
 import './grid.css';
 import './index.css';
 
 type TraceTimelineViewerProps = {
-  currentViewRange: [number, number],
   registerAccessors: Accessors => void,
+  setSpanNameColumnWidth: number => void,
+  spanNameColumnWidth: number,
   textFilter: ?string,
   trace: Trace,
+  updateNextViewRangeTime: ViewRangeTimeUpdate => void,
+  updateViewRange: (number, number) => void,
+  viewRange: ViewRange,
 };
 
-// TODO(joe): remove this component
+const NUM_TICKS = 5;
 
-export default function TraceTimelineViewer(props: TraceTimelineViewerProps) {
+function TraceTimelineViewer(props: TraceTimelineViewerProps) {
+  const { setSpanNameColumnWidth, updateNextViewRangeTime, updateViewRange, viewRange, ...rest } = props;
+  const { spanNameColumnWidth, trace } = rest;
   return (
     <div className="trace-timeline-viewer">
-      <VirtualizedTraceView {...props} />
+      <TimelineHeaderRow
+        duration={trace.duration}
+        nameColumnWidth={spanNameColumnWidth}
+        numTicks={NUM_TICKS}
+        onColummWidthChange={setSpanNameColumnWidth}
+        viewRangeTime={viewRange.time}
+        updateNextViewRangeTime={updateNextViewRangeTime}
+        updateViewRange={updateViewRange}
+      />
+      <VirtualizedTraceView {...rest} currentViewRangeTime={viewRange.time.current} />
     </div>
   );
 }
+
+function mapStateToProps(state, ownProps) {
+  const spanNameColumnWidth = state.traceTimeline.spanNameColumnWidth;
+  return { spanNameColumnWidth, ...ownProps };
+}
+
+function mapDispatchToProps(dispatch) {
+  const setSpanNameColumnWidth = (...args) => {
+    const action = actions.setSpanNameColumnWidth(...args);
+    return dispatch(action);
+  };
+  return { setSpanNameColumnWidth };
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(TraceTimelineViewer);
