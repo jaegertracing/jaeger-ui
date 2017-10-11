@@ -326,6 +326,10 @@ ShallowWrapper {
           ],
         },
         "context": Object {},
+        "getBottomVisibleIndex": [Function],
+        "getRowPosition": [Function],
+        "getTopVisibleIndex": [Function],
+        "getViewHeight": [Function],
         "props": Object {
           "dataLength": 40,
           "getIndexFromKey": [Function],

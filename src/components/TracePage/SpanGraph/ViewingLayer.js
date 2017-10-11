@@ -43,7 +43,8 @@ type ViewingLayerState = {
   preventCursorLine: boolean,
 };
 
-const dragTypes = {
+// exported for tests
+export const dragTypes = {
   SHIFT_END: 'SHIFT_END',
   SHIFT_START: 'SHIFT_START',
   REFRAME: 'REFRAME',
