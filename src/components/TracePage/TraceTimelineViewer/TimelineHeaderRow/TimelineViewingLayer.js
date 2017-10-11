@@ -30,6 +30,7 @@ import DraggableManager from '../../../../utils/DraggableManager';
 import './TimelineViewingLayer.css';
 
 type TimelineViewingLayerProps = {
+  boundsInvalidator: ?any,
   updateNextViewRangeTime: ViewRangeTimeUpdate => void,
   updateViewRange: (number, number) => void,
   viewRangeTime: ViewRangeTime,
@@ -37,12 +38,6 @@ type TimelineViewingLayerProps = {
 
 type TimelineViewingLayerState = {
   preventCursorLine: boolean,
-};
-
-const dragTypes = {
-  SHIFT_END: 'SHIFT_END',
-  SHIFT_START: 'SHIFT_START',
-  REFRAME: 'REFRAME',
 };
 
 function mapToViewRange(viewStart, viewEnd, value) {
@@ -106,7 +101,7 @@ export default class TimelineViewingLayer extends React.PureComponent<
     this._handleReframeDragUpdate = this._handleReframeDragUpdate.bind(this);
     this._handleReframeDragEnd = this._handleReframeDragEnd.bind(this);
 
-    this._draggerReframe = new DraggableManager(this._getDraggingBounds, dragTypes.REFRAME);
+    this._draggerReframe = new DraggableManager(this._getDraggingBounds);
     this._draggerReframe.onMouseMove = this._handleReframeMouseMove;
     this._draggerReframe.onMouseLeave = this._handleReframeMouseLeave;
     this._draggerReframe.onDragStart = this._handleReframeDragUpdate;
@@ -117,6 +112,13 @@ export default class TimelineViewingLayer extends React.PureComponent<
     this.state = {
       preventCursorLine: false,
     };
+  }
+
+  componentWillReceiveProps(nextProps: TimelineViewingLayerProps) {
+    const { boundsInvalidator } = this.props;
+    if (boundsInvalidator !== nextProps.boundsInvalidator) {
+      this._draggerReframe.resetBounds();
+    }
   }
 
   componentWillUnmount() {
@@ -168,6 +170,7 @@ export default class TimelineViewingLayer extends React.PureComponent<
   };
 
   render() {
+    console.log('render');
     const { preventCursorLine } = this.state;
     const { viewRangeTime } = this.props;
     const { current, cursor, reframe, shiftEnd, shiftStart } = viewRangeTime;
@@ -192,7 +195,7 @@ export default class TimelineViewingLayer extends React.PureComponent<
         onMouseLeave={this._draggerReframe.handleMouseLeave}
         onMouseMove={this._draggerReframe.handleMouseMove}
       >
-        {cusrorPosition &&
+        {cusrorPosition != null &&
           <div className="TimelineViewingLayer--cursorGuide" style={{ left: cusrorPosition }} />}
         {reframe != null && getMarkers(viewStart, viewEnd, reframe.anchor, reframe.shift, false)}
         {shiftEnd != null && getMarkers(viewStart, viewEnd, viewEnd, shiftEnd, true)}

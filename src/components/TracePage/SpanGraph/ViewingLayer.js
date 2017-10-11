@@ -232,12 +232,15 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
     if (viewEnd) {
       rightInactive = 100 - viewEnd * 100;
     }
+    let cursorPosition: ?string;
+    if (!haveNextTimeRange && cursor != null && !preventCursorLine) {
+      cursorPosition = `${cursor * 100}%`;
+    }
 
     return (
       <div aria-hidden className="ViewingLayer" style={{ height }}>
         <svg
           height={height}
-          style={{ shapeRendering: 'crispEdges' }}
           className="ViewingLayer--graph"
           ref={this._setRoot}
           onMouseDown={this._draggerReframe.handleMouseDown}
@@ -246,7 +249,7 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
         >
           {leftInactive > 0 &&
             <rect x={0} y={0} height="100%" width={`${leftInactive}%`} className="ViewingLayer--inactive" />}
-          {rightInactive < 100 &&
+          {rightInactive > 0 &&
             <rect
               x={`${100 - rightInactive}%`}
               y={0}
@@ -255,14 +258,12 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
               className="ViewingLayer--inactive"
             />}
           <GraphTicks numTicks={numTicks} />
-          {!haveNextTimeRange &&
-            cursor != null &&
-            !preventCursorLine &&
+          {cursorPosition &&
             <line
               className="ViewingLayer--cursorGuide"
-              x1={`${cursor * 100}%`}
+              x1={cursorPosition}
               y1="0"
-              x2={`${cursor * 100}%`}
+              x2={cursorPosition}
               y2={height - 2}
               strokeWidth="1"
             />}
