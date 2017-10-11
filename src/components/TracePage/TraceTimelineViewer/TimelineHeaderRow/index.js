@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -20,50 +18,4 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-type TimeCursorUpdate = {
-  cursor: number,
-};
-
-type TimeReframeUpdate = {
-  reframe: {
-    anchor: number,
-    shift: number,
-  },
-};
-
-type TimeShiftEndUpdate = {
-  shiftEnd: number,
-};
-
-type TimeShiftStartUpdate = {
-  shiftStart: number,
-};
-
-export type ViewRangeTimeUpdate =
-  | TimeCursorUpdate
-  | TimeReframeUpdate
-  | TimeShiftEndUpdate
-  | TimeShiftStartUpdate;
-
-export type ViewRangeTime = {
-  current: [number, number],
-  cursor?: number,
-  reframe?: {
-    anchor: number,
-    shift: number,
-  },
-  shiftEnd?: number,
-  shiftStart?: number,
-};
-
-export type ViewRange = {
-  time: ViewRangeTime,
-  rows: {
-    bottom: number,
-    top: number,
-  },
-  spans: {
-    bottom: number,
-    top: number,
-  },
-};
+export { default } from './TimelineHeaderRow';

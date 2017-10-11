@@ -27,9 +27,9 @@ import { formatDuration } from './utils';
 import './Ticks.css';
 
 type TicksProps = {
-  endTime?: number,
+  endTime?: ?number,
   numTicks: number,
-  showLabels?: boolean,
+  showLabels?: ?boolean,
   startTime?: ?number,
 };
 
@@ -51,21 +51,27 @@ export default function Ticks(props: TicksProps) {
     ticks.push(
       <div
         key={portion}
-        className="span-row-tick"
+        className="Ticks--tick"
         style={{
           left: `${portion * 100}%`,
         }}
       >
         {labels &&
-          <span className={`span-row-tick-label ${portion >= 1 ? 'is-end-anchor' : ''}`}>
+          <span className={`Ticks--tickLabel ${portion >= 1 ? 'isEndAnchor' : ''}`}>
             {labels[i]}
           </span>}
       </div>
     );
   }
   return (
-    <div>
+    <div className="Ticks">
       {ticks}
     </div>
   );
 }
+
+Ticks.defaultProps = {
+  endTime: null,
+  showLabels: null,
+  startTime: null,
+};

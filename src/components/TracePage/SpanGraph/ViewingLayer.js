@@ -40,7 +40,6 @@ type ViewingLayerProps = {
 };
 
 type ViewingLayerState = {
-  cursorX: ?number,
   preventCursorLine: boolean,
 };
 
@@ -103,7 +102,6 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
 
     this._root = undefined;
     this.state = {
-      cursorX: undefined,
       preventCursorLine: false,
     };
   }
@@ -134,12 +132,12 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
     return { clientXLeft, maxValue, minValue, width };
   };
 
-  _handleReframeMouseMove = function _handleReframeMouseMove({ x }: DraggingUpdate) {
-    this.setState({ cursorX: x });
+  _handleReframeMouseMove = function _handleReframeMouseMove({ value }: DraggingUpdate) {
+    this.props.updateNextViewRangeTime({ cursor: value });
   };
 
   _handleReframeMouseLeave = function _handleReframeMouseLeave() {
-    this.setState({ cursorX: undefined });
+    this.props.updateNextViewRangeTime({ cursor: null });
   };
 
   _handleReframeDragUpdate = function _handleReframeDragUpdate({ value }: DraggingUpdate) {
@@ -222,8 +220,8 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
 
   render() {
     const { height, viewRange, numTicks } = this.props;
-    const { cursorX, preventCursorLine } = this.state;
-    const { current, shiftStart, shiftEnd, reframe } = viewRange.time;
+    const { preventCursorLine } = this.state;
+    const { current, cursor, shiftStart, shiftEnd, reframe } = viewRange.time;
     const haveNextTimeRange = shiftStart != null || shiftEnd != null || reframe != null;
     const [viewStart, viewEnd] = current;
     let leftInactive = 0;
@@ -234,7 +232,6 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
     if (viewEnd) {
       rightInactive = 100 - viewEnd * 100;
     }
-    const drawCursor = !haveNextTimeRange && cursorX != null && !preventCursorLine;
 
     return (
       <div aria-hidden className="ViewingLayer" style={{ height }}>
@@ -258,12 +255,14 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
               className="ViewingLayer--inactive"
             />}
           <GraphTicks numTicks={numTicks} />
-          {drawCursor &&
+          {!haveNextTimeRange &&
+            cursor != null &&
+            !preventCursorLine &&
             <line
               className="ViewingLayer--cursorGuide"
-              x1={cursorX}
+              x1={`${cursor * 100}%`}
               y1="0"
-              x2={cursorX}
+              x2={`${cursor * 100}%`}
               y2={height - 2}
               strokeWidth="1"
             />}
