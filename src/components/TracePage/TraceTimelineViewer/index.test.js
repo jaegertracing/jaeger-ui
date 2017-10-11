@@ -30,13 +30,26 @@ describe('<TraceTimelineViewer>', () => {
   const props = {
     trace,
     textFilter: null,
-    timeRangeFilter: [0, 1],
+    viewRange: {
+      time: {
+        current: [0, 1],
+      },
+    },
+  };
+  const options = {
+    context: {
+      store: {
+        getState() {
+          return { traceTimeline: { spanNameColumnWidth: 0.25 } };
+        },
+      },
+    },
   };
 
   let wrapper;
 
   beforeEach(() => {
-    wrapper = shallow(<TraceTimelineViewer {...props} />);
+    wrapper = shallow(<TraceTimelineViewer {...props} />, options);
   });
 
   it('it does not explode', () => {

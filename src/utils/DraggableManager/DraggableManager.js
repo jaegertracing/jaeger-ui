@@ -29,10 +29,10 @@ const LEFT_MOUSE_BUTTON = 0;
 
 export default class DraggableManager {
   _bounds: ?DraggableBounds;
+  _isDragging: boolean;
+  _resetBoundsOnResize: boolean;
   getBounds: (?string) => DraggableBounds;
   tag: ?string;
-  _isDragging: boolean;
-  _minorEventMap: { [string]: { handler: ?(DraggingUpdate) => void, type: string } };
 
   onMouseEnter: ?(DraggingUpdate) => void;
   onMouseLeave: ?(DraggingUpdate) => void;
@@ -46,7 +46,7 @@ export default class DraggableManager {
   handleMouseLeave: (SyntheticMouseEvent<any>) => void;
   handleMouseDown: (SyntheticMouseEvent<any>) => void;
 
-  constructor(getBounds: () => DraggableBounds, tag?: ?string) {
+  constructor(getBounds: (?string) => DraggableBounds, tag?: ?string, resetBoundsOnResize?: boolean = true) {
     this._handleMinorMouseEvent = this._handleMinorMouseEvent.bind(this);
     this._handleDragEvent = this._handleDragEvent.bind(this);
 
@@ -54,11 +54,16 @@ export default class DraggableManager {
     this.handleMouseEnter = this._handleMinorMouseEvent;
     this.handleMouseMove = this._handleMinorMouseEvent;
     this.handleMouseLeave = this._handleMinorMouseEvent;
+    this.resetBounds = this.resetBounds.bind(this);
 
     this.getBounds = getBounds;
     this.tag = tag;
     this._isDragging = false;
     this._bounds = undefined;
+    this._resetBoundsOnResize = Boolean(resetBoundsOnResize);
+    if (this._resetBoundsOnResize) {
+      window.addEventListener('resize', this.resetBounds);
+    }
   }
 
   _getBounds(): DraggableBounds {
@@ -100,6 +105,9 @@ export default class DraggableManager {
     if (this._isDragging) {
       this._stopDragging();
     }
+    if (this._resetBoundsOnResize) {
+      window.removeEventListener('resize', this.resetBounds);
+    }
     this._bounds = undefined;
     this.onMouseLeave = undefined;
     this.onMouseMove = undefined;
@@ -108,9 +116,9 @@ export default class DraggableManager {
     this.onDragEnd = undefined;
   }
 
-  resetBounds() {
+  resetBounds = function resetBounds() {
     this._bounds = undefined;
-  }
+  };
 
   _handleMinorMouseEvent = function _handleMinorMouseEvent(event: SyntheticMouseEvent<any>) {
     const { button, clientX, type: eventType } = event;

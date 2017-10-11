@@ -32,14 +32,12 @@ import './TimelineHeaderRow.css';
 
 type TimelineHeaderRowProps = {
   duration: number,
-  // endTime: number,
   nameColumnWidth: number,
   numTicks: number,
   onColummWidthChange: number => void,
   updateNextViewRangeTime: ViewRangeTimeUpdate => void,
   updateViewRange: (number, number) => void,
   viewRangeTime: ViewRangeTime,
-  // startTime: number,
 };
 
 export default function TimelineHeaderRow(props: TimelineHeaderRowProps) {
@@ -60,6 +58,7 @@ export default function TimelineHeaderRow(props: TimelineHeaderRowProps) {
       </TimelineRow.Cell>
       <TimelineRow.Cell width={1 - nameColumnWidth}>
         <TimelineViewingLayer
+          boundsInvalidator={nameColumnWidth}
           updateNextViewRangeTime={updateNextViewRangeTime}
           updateViewRange={updateViewRange}
           viewRangeTime={viewRangeTime}

@@ -196,7 +196,6 @@ export default class ScrollManager {
   };
 
   destroy() {
-    // eslint-disable-next-line no-unused-vars
     this._trace = undefined;
     this._scroller = (undefined: any);
     this._accessors = undefined;
