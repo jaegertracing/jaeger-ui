@@ -22,10 +22,10 @@ import React from 'react';
 import sinon from 'sinon';
 import { shallow, mount } from 'enzyme';
 
-import traceGenerator from '../../demo/trace-generators';
-import TracePage from './';
+import TracePage from './index';
 import TracePageHeader from './TracePageHeader';
 import SpanGraph from './SpanGraph';
+import traceGenerator from '../../demo/trace-generators';
 import transformTraceData from '../../model/transform-trace-data';
 
 describe('<TracePage>', () => {

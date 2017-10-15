@@ -36,11 +36,11 @@ type TimelineViewingLayerProps = {
   viewRangeTime: ViewRangeTime,
 };
 
-type TimelineViewingLayerState = {
-  preventCursorLine: boolean,
-};
+function mapFromViewSubRange(viewStart, viewEnd, value) {
+  return viewStart + value * (viewEnd - viewStart);
+}
 
-function mapToViewRange(viewStart, viewEnd, value) {
+function mapToViewSubRange(viewStart, viewEnd, value) {
   return (value - viewStart) / (viewEnd - viewStart);
 }
 
@@ -66,8 +66,8 @@ function getNextViewLayout(
 }
 
 function getMarkers(viewStart: number, viewEnd: number, from: number, to: number, isShift: boolean) {
-  const mappedFrom = mapToViewRange(viewStart, viewEnd, from);
-  const mappedTo = mapToViewRange(viewStart, viewEnd, to);
+  const mappedFrom = mapToViewSubRange(viewStart, viewEnd, from);
+  const mappedTo = mapToViewSubRange(viewStart, viewEnd, to);
   const layout = getNextViewLayout(mappedFrom, mappedTo);
   if (layout.isOutOfView) {
     return null;
@@ -82,12 +82,8 @@ function getMarkers(viewStart: number, viewEnd: number, from: number, to: number
   return <div className={`TimelineViewingLayer--dragged ${cls}`} style={{ left, width }} />;
 }
 
-export default class TimelineViewingLayer extends React.PureComponent<
-  TimelineViewingLayerProps,
-  TimelineViewingLayerState
-> {
+export default class TimelineViewingLayer extends React.PureComponent<TimelineViewingLayerProps> {
   props: TimelineViewingLayerProps;
-  state: TimelineViewingLayerState;
 
   _root: ?Element;
   _draggerReframe: DraggableManager;
@@ -109,9 +105,6 @@ export default class TimelineViewingLayer extends React.PureComponent<
     this._draggerReframe.onDragEnd = this._handleReframeDragEnd;
 
     this._root = undefined;
-    this.state = {
-      preventCursorLine: false,
-    };
   }
 
   componentWillReceiveProps(nextProps: TimelineViewingLayerProps) {
@@ -139,7 +132,7 @@ export default class TimelineViewingLayer extends React.PureComponent<
 
   _handleReframeMouseMove = function _handleReframeMouseMove({ value }: DraggingUpdate) {
     const [viewStart, viewEnd] = this.props.viewRangeTime.current;
-    const cursor = value * (viewEnd - viewStart) + viewStart;
+    const cursor = mapFromViewSubRange(viewStart, viewEnd, value);
     this.props.updateNextViewRangeTime({ cursor });
   };
 
@@ -150,19 +143,16 @@ export default class TimelineViewingLayer extends React.PureComponent<
   _handleReframeDragUpdate = function _handleReframeDragUpdate({ value }: DraggingUpdate) {
     const { current, reframe } = this.props.viewRangeTime;
     const [viewStart, viewEnd] = current;
-    const shift = viewStart + value * (viewEnd - viewStart);
+    const shift = mapFromViewSubRange(viewStart, viewEnd, value);
     const anchor = reframe ? reframe.anchor : shift;
     const update = { reframe: { anchor, shift } };
     this.props.updateNextViewRangeTime(update);
-    if (this.state.cursorX != null) {
-      this.setState({ cursorX: null });
-    }
   };
 
   _handleReframeDragEnd = function _handleReframeDragEnd({ manager, value }: DraggingUpdate) {
     const { current, reframe } = this.props.viewRangeTime;
     const [viewStart, viewEnd] = current;
-    const shift = viewStart + value * (viewEnd - viewStart);
+    const shift = mapFromViewSubRange(viewStart, viewEnd, value);
     const anchor = reframe ? reframe.anchor : shift;
     const [start, end] = shift < anchor ? [shift, anchor] : [anchor, shift];
     manager.resetBounds();
@@ -170,21 +160,13 @@ export default class TimelineViewingLayer extends React.PureComponent<
   };
 
   render() {
-    console.log('render');
-    const { preventCursorLine } = this.state;
     const { viewRangeTime } = this.props;
     const { current, cursor, reframe, shiftEnd, shiftStart } = viewRangeTime;
     const [viewStart, viewEnd] = current;
     const haveNextTimeRange = reframe != null || shiftEnd != null || shiftStart != null;
     let cusrorPosition: ?string;
-    if (
-      !haveNextTimeRange &&
-      cursor != null &&
-      !preventCursorLine &&
-      cursor >= viewStart &&
-      cursor <= viewEnd
-    ) {
-      cusrorPosition = `${mapToViewRange(viewStart, viewEnd, cursor) * 100}%`;
+    if (!haveNextTimeRange && cursor != null && cursor >= viewStart && cursor <= viewEnd) {
+      cusrorPosition = `${mapToViewSubRange(viewStart, viewEnd, cursor) * 100}%`;
     }
     return (
       <div

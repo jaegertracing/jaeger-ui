@@ -19,6 +19,7 @@
 // THE SOFTWARE.
 
 import {
+  findServerChildSpan,
   getViewedBounds,
   isClientSpan,
   isErrorSpan,
@@ -127,6 +128,36 @@ describe('TraceTimelineViewer/utils', () => {
         const result = [i, spanContainsErredSpan(spans, i)];
         expect(result).toEqual([i, target]);
       });
+    });
+  });
+
+  describe('findServerChildSpan()', () => {
+    let spans;
+
+    beforeEach(() => {
+      spans = [
+        { depth: 0, tags: [{ key: 'span.kind', value: 'client' }] },
+        { depth: 1, tags: [] },
+        { depth: 1, tags: [{ key: 'span.kind', value: 'server' }] },
+        { depth: 1, tags: [{ key: 'span.kind', value: 'third-kind' }] },
+        { depth: 1, tags: [{ key: 'span.kind', value: 'server' }] },
+      ];
+    });
+
+    it('returns falsy if the frist span is not a client', () => {
+      expect(findServerChildSpan(spans.slice(1))).toBeFalsy();
+    });
+
+    it('returns the first server span', () => {
+      const span = findServerChildSpan(spans);
+      expect(span).toBe(spans[2]);
+    });
+
+    it('bails when a non-child-depth span is encountered', () => {
+      spans[1].depth++;
+      expect(findServerChildSpan(spans)).toBeFalsy();
+      spans[1].depth = spans[0].depth;
+      expect(findServerChildSpan(spans)).toBeFalsy();
     });
   });
 });

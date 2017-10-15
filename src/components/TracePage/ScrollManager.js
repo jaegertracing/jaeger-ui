@@ -120,8 +120,11 @@ export default class ScrollManager {
     if ((spanIndex === 0 && isUp) || (spanIndex === spans.length - 1 && !isUp)) {
       return;
     }
-    // fullViewSpanIndex is one row inside the view window
-    const fullViewSpanIndex = spanIndex - direction;
+    // fullViewSpanIndex is one row inside the view window unless already at the top or bottom
+    let fullViewSpanIndex = spanIndex;
+    if (spanIndex !== 0 && spanIndex !== spans.length - 1) {
+      fullViewSpanIndex -= direction;
+    }
     const [viewStart, viewEnd] = xrs.getViewRange();
     const checkVisibility = viewStart !== 0 || viewEnd !== 1;
     // use NaN as fallback to make flow happy
