@@ -43,6 +43,8 @@ import colorGenerator from '../../../utils/color-generator';
 
 import './VirtualizedTraceView.css';
 
+type Style = { [string]: string | number };
+
 type RowState = {
   isDetail: boolean,
   span: Span,
@@ -128,7 +130,7 @@ function getCssClasses(currentViewRange: [number, number]) {
   });
 }
 
-class VirtualizedTraceView extends React.PureComponent<VirtualizedTraceViewProps> {
+export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTraceViewProps> {
   // regarding `props` - eslint-plugin-react is not compat with flow 0.53, yet
   // https://github.com/yannickcr/eslint-plugin-react/issues/1376
   props: VirtualizedTraceViewProps;
@@ -136,7 +138,7 @@ class VirtualizedTraceView extends React.PureComponent<VirtualizedTraceViewProps
   clippingCssClasses: string;
   listView: ?ListView;
 
-  constructor(props) {
+  constructor(props: VirtualizedTraceViewProps) {
     super(props);
     this.getViewRange = this.getViewRange.bind(this);
     this.getSearchedSpanIDs = this.getSearchedSpanIDs.bind(this);
@@ -162,7 +164,7 @@ class VirtualizedTraceView extends React.PureComponent<VirtualizedTraceViewProps
     }
   }
 
-  componentWillUpdate(nextProps) {
+  componentWillUpdate(nextProps: VirtualizedTraceViewProps) {
     const {
       childrenHiddenIDs,
       detailStates,
@@ -255,12 +257,12 @@ class VirtualizedTraceView extends React.PureComponent<VirtualizedTraceViewProps
 
   // use long form syntax to avert flow error
   // https://github.com/facebook/flow/issues/3076#issuecomment-290944051
-  getKeyFromIndex = function getKeyFromIndex(index) {
+  getKeyFromIndex = function getKeyFromIndex(index: number) {
     const { isDetail, span } = this.rowStates[index];
     return `${span.spanID}--${isDetail ? 'detail' : 'bar'}`;
   };
 
-  getIndexFromKey = function getIndexFromKey(key) {
+  getIndexFromKey = function getIndexFromKey(key: string) {
     const parts = key.split('--');
     const _spanID = parts[0];
     const _isDetail = parts[1] === 'detail';
@@ -274,7 +276,7 @@ class VirtualizedTraceView extends React.PureComponent<VirtualizedTraceViewProps
     return -1;
   };
 
-  getRowHeight = function getRowHeight(index) {
+  getRowHeight = function getRowHeight(index: number) {
     const { span, isDetail } = this.rowStates[index];
     if (!isDetail) {
       return DEFAULT_HEIGHTS.bar;
@@ -285,14 +287,14 @@ class VirtualizedTraceView extends React.PureComponent<VirtualizedTraceViewProps
     return DEFAULT_HEIGHTS.detail;
   };
 
-  renderRow = function renderRow(key, style, index, attrs) {
+  renderRow = function renderRow(key: string, style: Style, index: number, attrs: {}) {
     const { isDetail, span, spanIndex } = this.rowStates[index];
     return isDetail
       ? this.renderSpanDetailRow(span, key, style, attrs)
       : this.renderSpanBarRow(span, spanIndex, key, style, attrs);
   };
 
-  renderSpanBarRow(span, spanIndex, key, style, attrs) {
+  renderSpanBarRow(span: Span, spanIndex: number, key: string, style: Style, attrs: {}) {
     const { spanID } = span;
     const { serviceName } = span.process;
     const {
@@ -373,7 +375,7 @@ class VirtualizedTraceView extends React.PureComponent<VirtualizedTraceViewProps
     );
   }
 
-  renderSpanDetailRow(span, key, style, attrs) {
+  renderSpanDetailRow(span: Span, key: string, style: Style, attrs: {}) {
     const { spanID } = span;
     const { serviceName } = span.process;
     const {
@@ -444,4 +446,4 @@ function mapDispatchToProps(dispatch) {
   return bindActionCreators(actions, dispatch);
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(VirtualizedTraceView);
+export default connect(mapStateToProps, mapDispatchToProps)(VirtualizedTraceViewImpl);

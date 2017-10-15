@@ -20,9 +20,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-const CV_WIDTH = 4000;
-const MIN_WIDTH = 16;
-const MIN_TOTAL_HEIGHT = 60;
+// exported for tests
+export const CV_WIDTH = 4000;
+export const MIN_WIDTH = 16;
+export const MIN_TOTAL_HEIGHT = 60;
 
 export default function renderIntoCanvas(
   canvas: HTMLCanvasElement,

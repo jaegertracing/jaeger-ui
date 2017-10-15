@@ -22,7 +22,7 @@
 
 import * as React from 'react';
 
-import renderIntoCanvas from './render-into-canvas';
+import renderIntoCanvas, { CV_WIDTH } from './render-into-canvas';
 import colorGenerator from '../../../utils/color-generator';
 
 import './CanvasSpanGraph.css';
@@ -31,8 +31,6 @@ type CanvasSpanGraphProps = {
   items: { valueWidth: number, valueOffset: number, serviceName: string }[],
   valueWidth: number,
 };
-
-const CV_WIDTH = 4000;
 
 const getColor: string => [number, number, number] = str => colorGenerator.getRgbColorByKey(str);
 

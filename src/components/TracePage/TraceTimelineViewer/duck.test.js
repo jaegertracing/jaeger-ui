@@ -27,6 +27,12 @@ import traceGenerator from '../../../demo/trace-generators';
 
 describe('TraceTimelineViewer/duck', () => {
   const trace = transformTraceData(traceGenerator.trace({ numberOfSpans: 10 }));
+  const searchSetup = {
+    uniqueText: '--something-unique',
+    spanID: trace.spans[0].spanID,
+  };
+  trace.spans[0].operationName += searchSetup.uniqueText;
+
   let store;
 
   beforeEach(() => {
@@ -130,5 +136,22 @@ describe('TraceTimelineViewer/duck', () => {
     });
   });
 
-  // TODO(joe): test toggling log items
+  it('toggles a log item', () => {
+    const logItem = 'hello-log-item';
+    const id = trace.spans[0].spanID;
+    const baseDetail = new DetailState();
+    const toggledDetail = baseDetail.toggleLogItem(logItem);
+
+    store.dispatch(actions.detailToggle(id));
+    expect(store.getState().detailStates.get(id)).toEqual(baseDetail);
+    store.dispatch(actions.detailLogItemToggle(id, logItem));
+    expect(store.getState().detailStates.get(id)).toEqual(toggledDetail);
+  });
+
+  it('filters based on search text', () => {
+    const { uniqueText, spanID } = searchSetup;
+    expect(store.getState().findMatchesIDs).toBe(null);
+    store.dispatch(actions.find(trace, uniqueText));
+    expect(store.getState().findMatchesIDs).toEqual(new Set([spanID]));
+  });
 });

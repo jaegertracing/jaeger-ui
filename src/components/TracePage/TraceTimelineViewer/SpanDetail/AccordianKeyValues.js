@@ -36,7 +36,8 @@ type AccordianKeyValuesProps = {
   onToggle: () => void,
 };
 
-function KeyValuesSummary(props: { data?: { key: string, value: any }[] }) {
+// export for tests
+export function KeyValuesSummary(props: { data?: { key: string, value: any }[] }) {
   const { data } = props;
   if (!Array.isArray(data) || !data.length) {
     return null;
