@@ -36,7 +36,7 @@ describe('<TimelineHeaderRow>', () => {
     numTicks: 5,
     onColummWidthChange: () => {},
     updateNextViewRangeTime: () => {},
-    updateViewRange: () => {},
+    updateViewRangeTime: () => {},
     viewRangeTime: {
       current: [0.1, 0.9],
     },
@@ -67,7 +67,7 @@ describe('<TimelineHeaderRow>', () => {
       <TimelineViewingLayer
         boundsInvalidator={nameColumnWidth}
         updateNextViewRangeTime={props.updateNextViewRangeTime}
-        updateViewRange={props.updateViewRange}
+        updateViewRangeTime={props.updateViewRangeTime}
         viewRangeTime={props.viewRangeTime}
       />
     );

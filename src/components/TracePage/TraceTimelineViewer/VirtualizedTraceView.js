@@ -130,6 +130,7 @@ function getCssClasses(currentViewRange: [number, number]) {
   });
 }
 
+// export from tests
 export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTraceViewProps> {
   // regarding `props` - eslint-plugin-react is not compat with flow 0.53, yet
   // https://github.com/yannickcr/eslint-plugin-react/issues/1376

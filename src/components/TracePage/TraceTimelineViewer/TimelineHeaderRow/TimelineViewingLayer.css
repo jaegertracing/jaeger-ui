@@ -38,8 +38,6 @@ THE SOFTWARE.
   background-color: red;
 }
 
-
-
 .TimelineViewingLayer--dragged {
   position: absolute;
   top: 0;
@@ -63,20 +61,6 @@ THE SOFTWARE.
   background-color: rgba(255, 68, 68, 0.2);
   border-color: #f44;
 }
-
-/* .TimelineViewingLayer--draggedShift {
-  opacity: 0.2;
-}
-
-.TimelineViewingLayer--draggedShift.isShiftDrag,
-.TimelineViewingLayer--draggedEdge.isShiftDrag {
-  fill: #44f;
-}
-
-.TimelineViewingLayer--draggedShift.isReframeDrag,
-.TimelineViewingLayer--draggedEdge.isReframeDrag {
-  fill: #f44;
-} */
 
 .TimelineViewingLayer--fullOverlay {
   bottom: 0;

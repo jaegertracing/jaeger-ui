@@ -40,14 +40,20 @@ type TraceTimelineViewerProps = {
   textFilter: ?string,
   trace: Trace,
   updateNextViewRangeTime: ViewRangeTimeUpdate => void,
-  updateViewRange: (number, number) => void,
+  updateViewRangeTime: (number, number) => void,
   viewRange: ViewRange,
 };
 
 const NUM_TICKS = 5;
 
+/**
+ * `TraceTimelineViewer` now renders the header row because it is sensitive to
+ * `props.viewRange.time.cursor`. If `VirtualizedTraceView` renders it, it will
+ * re-render the ListView every time the cursor is moved on the trace minimap
+ * or `TimelineHeaderRow`.
+ */
 function TraceTimelineViewer(props: TraceTimelineViewerProps) {
-  const { setSpanNameColumnWidth, updateNextViewRangeTime, updateViewRange, viewRange, ...rest } = props;
+  const { setSpanNameColumnWidth, updateNextViewRangeTime, updateViewRangeTime, viewRange, ...rest } = props;
   const { spanNameColumnWidth, trace } = rest;
   return (
     <div className="trace-timeline-viewer">
@@ -58,7 +64,7 @@ function TraceTimelineViewer(props: TraceTimelineViewerProps) {
         onColummWidthChange={setSpanNameColumnWidth}
         viewRangeTime={viewRange.time}
         updateNextViewRangeTime={updateNextViewRangeTime}
-        updateViewRange={updateViewRange}
+        updateViewRangeTime={updateViewRangeTime}
       />
       <VirtualizedTraceView {...rest} currentViewRangeTime={viewRange.time.current} />
     </div>

@@ -173,6 +173,11 @@ export default class Positions {
     throw new Error(`unable to find floor index for y=${yValue}`);
   }
 
+  /**
+   * Get the `y` and `height` for a given row.
+   *
+   * @returns {{ height: number, y: number }}
+   */
   getRowPosition(index: number, heightGetter: number => number) {
     this.confirmHeight(index, heightGetter);
     return {

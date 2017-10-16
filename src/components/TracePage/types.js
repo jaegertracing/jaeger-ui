@@ -58,12 +58,4 @@ export type ViewRangeTime = {
 
 export type ViewRange = {
   time: ViewRangeTime,
-  rows: {
-    bottom: number,
-    top: number,
-  },
-  spans: {
-    bottom: number,
-    top: number,
-  },
 };

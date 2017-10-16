@@ -22,7 +22,7 @@
 
 import * as React from 'react';
 import _clamp from 'lodash/clamp';
-import _mapKeys from 'lodash/mapKeys';
+import _mapValues from 'lodash/mapValues';
 import _maxBy from 'lodash/maxBy';
 import _values from 'lodash/values';
 import { connect } from 'react-redux';
@@ -74,14 +74,13 @@ const shortcutConfig = {
 };
 
 function makeShortcutCallbacks(adjRange): ShortcutCallbacks {
-  const callbacks: { [string]: CombokeysHandler } = {};
-  _mapKeys(shortcutConfig, ([startChange, endChange], key) => {
-    callbacks[key] = (event: SyntheticKeyboardEvent<any>) => {
+  function getHandler([startChange, endChange]): CombokeysHandler {
+    return function combokeyHandler(event: SyntheticKeyboardEvent<any>) {
       event.preventDefault();
       adjRange(startChange, endChange);
     };
-  });
-  return (callbacks: any);
+  }
+  return _mapValues(shortcutConfig, getHandler);
 }
 
 export default class TracePage extends React.PureComponent<TracePageProps, TracePageState> {
@@ -95,7 +94,7 @@ export default class TracePage extends React.PureComponent<TracePageProps, Trace
     super(props);
     this.setHeaderHeight = this.setHeaderHeight.bind(this);
     this.toggleSlimView = this.toggleSlimView.bind(this);
-    this.updateViewRange = this.updateViewRange.bind(this);
+    this.updateViewRangeTime = this.updateViewRangeTime.bind(this);
     this.updateNextViewRangeTime = this.updateNextViewRangeTime.bind(this);
     this.updateTextFilter = this.updateTextFilter.bind(this);
     this.state = {
@@ -106,14 +105,6 @@ export default class TracePage extends React.PureComponent<TracePageProps, Trace
         time: {
           current: [0, 1],
         },
-        rows: {
-          bottom: 0,
-          top: 0,
-        },
-        spans: {
-          bottom: 0,
-          top: 0,
-        },
       },
     };
     this._headerElm = null;
@@ -123,7 +114,7 @@ export default class TracePage extends React.PureComponent<TracePageProps, Trace
   componentDidMount() {
     colorGenerator.clear();
     this.ensureTraceFetched();
-    this.updateViewRange(0, 1);
+    this.updateViewRangeTime(0, 1);
     if (!this._scrollManager) {
       throw new Error('Invalid state - scrollManager is unset');
     }
@@ -148,15 +139,6 @@ export default class TracePage extends React.PureComponent<TracePageProps, Trace
     }
   }
 
-  shouldComponentUpdate(nextProps: TracePageProps, nextState: TracePageState) {
-    if (this.state !== nextState) {
-      return true;
-    }
-    const { id, loading, trace } = this.props;
-    const { id: _id, loading: _loading, trace: _trace } = nextProps;
-    return id !== _id || loading !== _loading || trace !== _trace;
-  }
-
   componentDidUpdate({ trace: prevTrace }: TracePageProps) {
     const { trace } = this.props;
     this.setHeaderHeight(this._headerElm);
@@ -165,7 +147,7 @@ export default class TracePage extends React.PureComponent<TracePageProps, Trace
       return;
     }
     if (!(trace instanceof Error) && (!prevTrace || prevTrace.traceID !== trace.traceID)) {
-      this.updateViewRange(0, 1);
+      this.updateViewRangeTime(0, 1);
     }
   }
 
@@ -193,7 +175,7 @@ export default class TracePage extends React.PureComponent<TracePageProps, Trace
         end = center + VIEW_MIN_RANGE / 2;
       }
     }
-    this.updateViewRange(start, end);
+    this.updateViewRangeTime(start, end);
   }
 
   setHeaderHeight = function setHeaderHeight(elm: ?Element) {
@@ -211,7 +193,7 @@ export default class TracePage extends React.PureComponent<TracePageProps, Trace
     this.setState({ textFilter });
   };
 
-  updateViewRange = function updateViewRange(start: number, end: number) {
+  updateViewRangeTime = function updateViewRangeTime(start: number, end: number) {
     const time = { current: [start, end] };
     const viewRange = { ...this.state.viewRange, time };
     this.setState({ viewRange });
@@ -277,7 +259,7 @@ export default class TracePage extends React.PureComponent<TracePageProps, Trace
               trace={trace}
               viewRange={viewRange}
               updateNextViewRangeTime={this.updateNextViewRangeTime}
-              updateViewRange={this.updateViewRange}
+              updateViewRangeTime={this.updateViewRangeTime}
             />}
         </section>
         {headerHeight &&
@@ -287,7 +269,7 @@ export default class TracePage extends React.PureComponent<TracePageProps, Trace
               textFilter={textFilter}
               trace={trace}
               updateNextViewRangeTime={this.updateNextViewRangeTime}
-              updateViewRange={this.updateViewRange}
+              updateViewRangeTime={this.updateViewRangeTime}
               viewRange={viewRange}
             />
           </section>}
@@ -296,7 +278,6 @@ export default class TracePage extends React.PureComponent<TracePageProps, Trace
   }
 }
 
-// export connected component separately
 function mapStateToProps(state, ownProps) {
   const { id } = ownProps.match.params;
   const trace = state.trace.traces[id];
