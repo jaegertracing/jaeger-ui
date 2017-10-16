@@ -30,20 +30,41 @@ import DraggableManager from '../../../../utils/DraggableManager';
 import './TimelineViewingLayer.css';
 
 type TimelineViewingLayerProps = {
+  /**
+   * `boundsInvalidator` is an arbitrary prop that lets the component know the
+   * bounds for dragging need to be recalculated. In practice, the name column
+   * width serves fine for this.
+   */
   boundsInvalidator: ?any,
   updateNextViewRangeTime: ViewRangeTimeUpdate => void,
-  updateViewRange: (number, number) => void,
+  updateViewRangeTime: (number, number) => void,
   viewRangeTime: ViewRangeTime,
 };
 
+/**
+ * Map from a sub range to the greater view range, e.g, when the view range is
+ * the middle half ([0.25, 0.75]), a value of 0.25 befomes 3/8.
+ * @returns {number}
+ */
 function mapFromViewSubRange(viewStart, viewEnd, value) {
   return viewStart + value * (viewEnd - viewStart);
 }
 
+/**
+ * Map a value from the view ([0, 1]) to a sub-range, e.g, when the view range is
+ * the middle half ([0.25, 0.75]), a value of 3/8 becomes 1/4.
+ * @returns {number}
+ */
 function mapToViewSubRange(viewStart, viewEnd, value) {
   return (value - viewStart) / (viewEnd - viewStart);
 }
 
+/**
+ * Get the layout for the "next" view range time, e.g. the difference from the
+ * drag start and the drag end. This is driven by `shiftStart`, `shiftEnd` or
+ * `reframe` on `props.viewRangeTime`, not by the current state of the
+ * component. So, it reflects in-progress dragging from the span minimap.
+ */
 function getNextViewLayout(
   start: number,
   position: number
@@ -65,7 +86,16 @@ function getNextViewLayout(
   };
 }
 
-function getMarkers(viewStart: number, viewEnd: number, from: number, to: number, isShift: boolean) {
+/**
+ * Render the visual indication of the "next" view range.
+ */
+function getMarkers(
+  viewStart: number,
+  viewEnd: number,
+  from: number,
+  to: number,
+  isShift: boolean
+): React.Node {
   const mappedFrom = mapToViewSubRange(viewStart, viewEnd, from);
   const mappedTo = mapToViewSubRange(viewStart, viewEnd, to);
   const layout = getNextViewLayout(mappedFrom, mappedTo);
@@ -82,6 +112,11 @@ function getMarkers(viewStart: number, viewEnd: number, from: number, to: number
   return <div className={`TimelineViewingLayer--dragged ${cls}`} style={{ left, width }} />;
 }
 
+/**
+ * `TimelineViewingLayer` is rendered on top of the TimelineHeaderRow time
+ * labels; it handles showing the current view range and handles mouse UX for
+ * modifying it.
+ */
 export default class TimelineViewingLayer extends React.PureComponent<TimelineViewingLayerProps> {
   props: TimelineViewingLayerProps;
 
@@ -97,13 +132,14 @@ export default class TimelineViewingLayer extends React.PureComponent<TimelineVi
     this._handleReframeDragUpdate = this._handleReframeDragUpdate.bind(this);
     this._handleReframeDragEnd = this._handleReframeDragEnd.bind(this);
 
-    this._draggerReframe = new DraggableManager(this._getDraggingBounds);
-    this._draggerReframe.onMouseMove = this._handleReframeMouseMove;
-    this._draggerReframe.onMouseLeave = this._handleReframeMouseLeave;
-    this._draggerReframe.onDragStart = this._handleReframeDragUpdate;
-    this._draggerReframe.onDragMove = this._handleReframeDragUpdate;
-    this._draggerReframe.onDragEnd = this._handleReframeDragEnd;
-
+    this._draggerReframe = new DraggableManager({
+      getBounds: this._getDraggingBounds,
+      onDragEnd: this._handleReframeDragEnd,
+      onDragMove: this._handleReframeDragUpdate,
+      onDragStart: this._handleReframeDragUpdate,
+      onMouseLeave: this._handleReframeMouseLeave,
+      onMouseMove: this._handleReframeMouseMove,
+    });
     this._root = undefined;
   }
 
@@ -156,7 +192,7 @@ export default class TimelineViewingLayer extends React.PureComponent<TimelineVi
     const anchor = reframe ? reframe.anchor : shift;
     const [start, end] = shift < anchor ? [shift, anchor] : [anchor, shift];
     manager.resetBounds();
-    this.props.updateViewRange(start, end);
+    this.props.updateViewRangeTime(start, end);
   };
 
   render() {

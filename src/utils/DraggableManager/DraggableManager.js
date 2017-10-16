@@ -27,26 +27,51 @@ import type { DraggableBounds, DraggingUpdate } from './types';
 
 const LEFT_MOUSE_BUTTON = 0;
 
+type DraggableManagerOptions = {
+  getBounds: (?string) => DraggableBounds,
+  onMouseEnter?: DraggingUpdate => void,
+  onMouseLeave?: DraggingUpdate => void,
+  onMouseMove?: DraggingUpdate => void,
+  onDragStart?: DraggingUpdate => void,
+  onDragMove?: DraggingUpdate => void,
+  onDragEnd?: DraggingUpdate => void,
+  resetBoundsOnResize?: boolean,
+  tag?: string,
+};
+
 export default class DraggableManager {
+  // cache the last known DraggableBounds (invalidate via `#resetBounds())
   _bounds: ?DraggableBounds;
   _isDragging: boolean;
+  // optional callbacks for various dragging events
+  _onMouseEnter: ?(DraggingUpdate) => void;
+  _onMouseLeave: ?(DraggingUpdate) => void;
+  _onMouseMove: ?(DraggingUpdate) => void;
+  _onDragStart: ?(DraggingUpdate) => void;
+  _onDragMove: ?(DraggingUpdate) => void;
+  _onDragEnd: ?(DraggingUpdate) => void;
+  // whether to reset the bounds on window resize
   _resetBoundsOnResize: boolean;
+
+  /**
+   * Get the `DraggableBounds` for the current drag. The returned value is
+   * cached until either `#resetBounds()` is called or the window is resized
+   * (assuming `_resetBoundsOnResize` is `true`). The `DraggableBounds` defines
+   * the range the current drag can span to. It also establishes the left offset
+   * to adjust `clientX` by (from the `MouseEvent`s).
+   */
   getBounds: (?string) => DraggableBounds;
+
+  // convenience data
   tag: ?string;
 
-  onMouseEnter: ?(DraggingUpdate) => void;
-  onMouseLeave: ?(DraggingUpdate) => void;
-  onMouseMove: ?(DraggingUpdate) => void;
-  onDragStart: ?(DraggingUpdate) => void;
-  onDragMove: ?(DraggingUpdate) => void;
-  onDragEnd: ?(DraggingUpdate) => void;
-
+  // handlers for integration with DOM elements
   handleMouseEnter: (SyntheticMouseEvent<any>) => void;
   handleMouseMove: (SyntheticMouseEvent<any>) => void;
   handleMouseLeave: (SyntheticMouseEvent<any>) => void;
   handleMouseDown: (SyntheticMouseEvent<any>) => void;
 
-  constructor(getBounds: (?string) => DraggableBounds, tag?: ?string, resetBoundsOnResize?: boolean = true) {
+  constructor({ getBounds, tag, resetBoundsOnResize = true, ...rest }: DraggableManagerOptions) {
     this._handleMinorMouseEvent = this._handleMinorMouseEvent.bind(this);
     this._handleDragEvent = this._handleDragEvent.bind(this);
 
@@ -64,6 +89,12 @@ export default class DraggableManager {
     if (this._resetBoundsOnResize) {
       window.addEventListener('resize', this.resetBounds);
     }
+    this._onMouseEnter = rest.onMouseEnter;
+    this._onMouseLeave = rest.onMouseLeave;
+    this._onMouseMove = rest.onMouseMove;
+    this._onDragStart = rest.onDragStart;
+    this._onDragMove = rest.onDragMove;
+    this._onDragEnd = rest.onDragEnd;
   }
 
   _getBounds(): DraggableBounds {
@@ -109,11 +140,12 @@ export default class DraggableManager {
       window.removeEventListener('resize', this.resetBounds);
     }
     this._bounds = undefined;
-    this.onMouseLeave = undefined;
-    this.onMouseMove = undefined;
-    this.onDragStart = undefined;
-    this.onDragMove = undefined;
-    this.onDragEnd = undefined;
+    this._onMouseEnter = undefined;
+    this._onMouseLeave = undefined;
+    this._onMouseMove = undefined;
+    this._onDragStart = undefined;
+    this._onDragMove = undefined;
+    this._onDragEnd = undefined;
   }
 
   resetBounds = function resetBounds() {
@@ -129,13 +161,13 @@ export default class DraggableManager {
     let handler: ?(DraggingUpdate) => void;
     if (eventType === 'mouseenter') {
       type = updateTypes.MOUSE_ENTER;
-      handler = this.onMouseEnter;
+      handler = this._onMouseEnter;
     } else if (eventType === 'mouseleave') {
       type = updateTypes.MOUSE_LEAVE;
-      handler = this.onMouseLeave;
+      handler = this._onMouseLeave;
     } else if (eventType === 'mousemove') {
       type = updateTypes.MOUSE_MOVE;
-      handler = this.onMouseMove;
+      handler = this._onMouseMove;
     } else {
       throw new Error(`invalid event type: ${eventType}`);
     }
@@ -170,20 +202,20 @@ export default class DraggableManager {
       this._isDragging = true;
 
       type = updateTypes.DRAG_START;
-      handler = this.onDragStart;
+      handler = this._onDragStart;
     } else if (eventType === 'mousemove') {
       if (!this._isDragging) {
         return;
       }
       type = updateTypes.DRAG_MOVE;
-      handler = this.onDragMove;
+      handler = this._onDragMove;
     } else if (eventType === 'mouseup') {
       if (!this._isDragging) {
         return;
       }
       this._stopDragging();
       type = updateTypes.DRAG_END;
-      handler = this.onDragEnd;
+      handler = this._onDragEnd;
     } else {
       throw new Error(`invalid event type: ${eventType}`);
     }

@@ -22,6 +22,16 @@
 
 import type { Span, Trace } from '../../types';
 
+/**
+ * `Accessors` is necessary because `ScrollManager` needs to be created by
+ * `TracePage` so it can be passed into the keyboard shortcut manager. But,
+ * `ScrollManager` needs to know about the state of `ListView` and `Positions`,
+ * which are very low-level. And, storing their state info in redux or
+ * `TracePage#state` would be inefficient because the state info only rarely
+ * needs to be accessed (when a keyboard shortcut is triggered). `Accessors`
+ * allows that state info to be accessed in a loosely coupled fashion on an
+ * as-needed basis.
+ */
 export type Accessors = {
   getViewRange: () => [number, number],
   getSearchedSpanIDs: () => ?Set<string>,
@@ -39,6 +49,17 @@ interface Scroller {
   scrollBy: number => void,
 }
 
+/**
+ * Returns `{ isHidden: true, ... }` if one of the parents of `span` is
+ * collapsed, e.g. has children hidden.
+ *
+ * @param {Span} span The Span to check for.
+ * @param {Set<string>} childrenAreHidden The set of Spans known to have hidden
+ *                                        children, either because it is
+ *                                        collapsed or has a collapsed parent.
+ * @param {Map<string, ?Span} spansMap Mapping from spanID to Span.
+ * @returns {{ isHidden: boolean, parentIds: Set<string> }}
+ */
 function isSpanHidden(span: Span, childrenAreHidden: Set<string>, spansMap: Map<string, ?Span>) {
   const parentIDs = new Set();
   let { references } = span;
@@ -66,6 +87,10 @@ function isSpanHidden(span: Span, childrenAreHidden: Set<string>, spansMap: Map<
   return { parentIDs, isHidden: false };
 }
 
+/**
+ * ScrollManager is intended for scrolling the TracePage. Has two modes, paging
+ * and scrolling to the previous or next visible span.
+ */
 export default class ScrollManager {
   _trace: ?Trace;
   _scroller: Scroller;
@@ -168,14 +193,26 @@ export default class ScrollManager {
     this._scrollPast(nextRow, direction);
   }
 
+  /**
+   * Sometimes the ScrollManager is created before the trace is loaded. This
+   * setter allows the trace to be set asynchronously.
+   */
   setTrace(trace: ?Trace) {
     this._trace = trace;
   }
 
+  /**
+   * `setAccessors` is bound in the ctor, so it can be passed as a prop to
+   * children components.
+   */
   setAccessors = function setAccessors(accessors: Accessors) {
     this._accessors = accessors;
   };
 
+  /**
+   * Scrolls around one page down (0.95x). It is bounds in the ctor, so it can
+   * be used as a keyboard shortcut handler.
+   */
   scrollPageDown = function scrollPageDown() {
     if (!this._scroller || !this._accessors) {
       return;
@@ -183,6 +220,10 @@ export default class ScrollManager {
     this._scroller.scrollBy(0.95 * this._accessors.getViewHeight(), true);
   };
 
+  /**
+   * Scrolls around one page up (0.95x). It is bounds in the ctor, so it can
+   * be used as a keyboard shortcut handler.
+   */
   scrollPageUp = function scrollPageUp() {
     if (!this._scroller || !this._accessors) {
       return;
@@ -190,10 +231,20 @@ export default class ScrollManager {
     this._scroller.scrollBy(-0.95 * this._accessors.getViewHeight(), true);
   };
 
+  /**
+   * Scrolls to the next visible span, ignoring spans that do not match the
+   * text filter, if there is one. It is bounds in the ctor, so it can
+   * be used as a keyboard shortcut handler.
+   */
   scrollToNextVisibleSpan = function scrollToNextVisibleSpan() {
     this._scrollToVisibleSpan(1);
   };
 
+  /**
+   * Scrolls to the previous visible span, ignoring spans that do not match the
+   * text filter, if there is one. It is bounds in the ctor, so it can
+   * be used as a keyboard shortcut handler.
+   */
   scrollToPrevVisibleSpan = function scrollToPrevVisibleSpan() {
     this._scrollToVisibleSpan(-1);
   };

@@ -36,7 +36,7 @@ describe('<TimelineViewingLayer>', () => {
   const props = {
     boundsInvalidator: Math.random(),
     updateNextViewRangeTime: jest.fn(),
-    updateViewRange: jest.fn(),
+    updateViewRangeTime: jest.fn(),
     viewRangeTime: {
       current: [viewStart, viewEnd],
     },
@@ -44,7 +44,7 @@ describe('<TimelineViewingLayer>', () => {
 
   beforeEach(() => {
     props.updateNextViewRangeTime.mockReset();
-    props.updateViewRange.mockReset();
+    props.updateViewRangeTime.mockReset();
     wrapper = mount(<TimelineViewingLayer {...props} />);
     instance = wrapper.instance();
   });
@@ -63,11 +63,11 @@ describe('<TimelineViewingLayer>', () => {
     it('initializes the DraggableManager', () => {
       const dm = instance._draggerReframe;
       expect(dm).toBeDefined();
-      expect(dm.onMouseMove).toBe(instance._handleReframeMouseMove);
-      expect(dm.onMouseLeave).toBe(instance._handleReframeMouseLeave);
-      expect(dm.onDragStart).toBe(instance._handleReframeDragUpdate);
-      expect(dm.onDragMove).toBe(instance._handleReframeDragUpdate);
-      expect(dm.onDragEnd).toBe(instance._handleReframeDragEnd);
+      expect(dm._onMouseMove).toBe(instance._handleReframeMouseMove);
+      expect(dm._onMouseLeave).toBe(instance._handleReframeMouseLeave);
+      expect(dm._onDragStart).toBe(instance._handleReframeDragUpdate);
+      expect(dm._onDragMove).toBe(instance._handleReframeDragUpdate);
+      expect(dm._onDragEnd).toBe(instance._handleReframeDragEnd);
     });
 
     it('provides the DraggableManager handlers as callbacks', () => {
@@ -85,27 +85,27 @@ describe('<TimelineViewingLayer>', () => {
       expect(instance._getDraggingBounds()).toEqual({ width, clientXLeft: left });
     });
 
-    it('updates viewRange.time.cursor via _draggerReframe.onMouseMove', () => {
+    it('updates viewRange.time.cursor via _draggerReframe._onMouseMove', () => {
       const value = 0.5;
       const cursor = mapFromSubRange(viewStart, viewEnd, value);
-      instance._draggerReframe.onMouseMove({ value });
+      instance._draggerReframe._onMouseMove({ value });
       expect(props.updateNextViewRangeTime.mock.calls).toEqual([[{ cursor }]]);
     });
 
-    it('resets viewRange.time.cursor via _draggerReframe.onMouseLeave', () => {
-      instance._draggerReframe.onMouseLeave();
+    it('resets viewRange.time.cursor via _draggerReframe._onMouseLeave', () => {
+      instance._draggerReframe._onMouseLeave();
       expect(props.updateNextViewRangeTime.mock.calls).toEqual([[{ cursor: undefined }]]);
     });
 
-    it('handles drag start via _draggerReframe.onDragStart', () => {
+    it('handles drag start via _draggerReframe._onDragStart', () => {
       const value = 0.5;
       const shift = mapFromSubRange(viewStart, viewEnd, value);
       const update = { reframe: { shift, anchor: shift } };
-      instance._draggerReframe.onDragStart({ value });
+      instance._draggerReframe._onDragStart({ value });
       expect(props.updateNextViewRangeTime.mock.calls).toEqual([[update]]);
     });
 
-    it('handles drag move via _draggerReframe.onDragMove', () => {
+    it('handles drag move via _draggerReframe._onDragMove', () => {
       const anchor = 0.25;
       const viewRangeTime = { ...props.viewRangeTime, reframe: { anchor, shift: Math.random() } };
       const value = 0.5;
@@ -114,21 +114,21 @@ describe('<TimelineViewingLayer>', () => {
       wrapper.setProps({ viewRangeTime });
       expect(wrapper.prop('viewRangeTime').reframe.anchor).toBe(anchor);
       // the next update should integrate `value` and use the existing anchor
-      instance._draggerReframe.onDragStart({ value });
+      instance._draggerReframe._onDragStart({ value });
       const update = { reframe: { anchor, shift } };
       expect(props.updateNextViewRangeTime.mock.calls).toEqual([[update]]);
     });
 
-    it('handles drag end via _draggerReframe.onDragEnd', () => {
+    it('handles drag end via _draggerReframe._onDragEnd', () => {
       const manager = { resetBounds: jest.fn() };
       const value = 0.5;
       const shift = mapFromSubRange(viewStart, viewEnd, value);
       const anchor = 0.25;
       const viewRangeTime = { ...props.viewRangeTime, reframe: { anchor, shift: Math.random() } };
       wrapper.setProps({ viewRangeTime });
-      instance._draggerReframe.onDragEnd({ manager, value });
+      instance._draggerReframe._onDragEnd({ manager, value });
       expect(manager.resetBounds.mock.calls).toEqual([[]]);
-      expect(props.updateViewRange.mock.calls).toEqual([[anchor, shift]]);
+      expect(props.updateViewRangeTime.mock.calls).toEqual([[anchor, shift]]);
     });
   });
 

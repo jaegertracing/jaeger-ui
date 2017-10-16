@@ -34,22 +34,43 @@ import './ViewingLayer.css';
 type ViewingLayerProps = {
   height: number,
   numTicks: number,
-  updateViewRange: (number, number) => void,
+  updateViewRangeTime: (number, number) => void,
   updateNextViewRangeTime: ViewRangeTimeUpdate => void,
   viewRange: ViewRange,
 };
 
 type ViewingLayerState = {
+  /**
+   * Cursor line should not be drawn when the mouse is over the scrubber handle.
+   */
   preventCursorLine: boolean,
 };
 
-// exported for tests
+/**
+ * Designate the tags for the different dragging managers. Exported for tests.
+ */
 export const dragTypes = {
+  /**
+   * Tag for dragging the right scrubber, e.g. end of the current view range.
+   */
   SHIFT_END: 'SHIFT_END',
+  /**
+   * Tag for dragging the left scrubber, e.g. start of the current view range.
+   */
   SHIFT_START: 'SHIFT_START',
+  /**
+   * Tag for dragging a new view range.
+   */
   REFRAME: 'REFRAME',
 };
 
+/**
+ * Returns the layout information for drawing the view-range differential, e.g.
+ * show what will change when the mouse is released. Basically, this is the
+ * difference from the start of the drag to the current position.
+ *
+ * @returns {{ x: string, width: string, leadginX: string }}
+ */
 function getNextViewLayout(start: number, position: number) {
   const [left, right] = start < position ? [start, position] : [position, start];
   return {
@@ -59,13 +80,32 @@ function getNextViewLayout(start: number, position: number) {
   };
 }
 
+/**
+ * `ViewingLayer` is rendered on top of the Canvas rendering of the minimap and
+ * handles showing the current view range and handles mouse UX for modifying it.
+ */
 export default class ViewingLayer extends React.PureComponent<ViewingLayerProps, ViewingLayerState> {
   props: ViewingLayerProps;
   state: ViewingLayerState;
 
   _root: ?Element;
+
+  /**
+   * `_draggerReframe` handles clicking and dragging on the `ViewingLayer` to
+   * redefined the view range.
+   */
   _draggerReframe: DraggableManager;
+
+  /**
+   * `_draggerStart` handles dragging the left scrubber to adjust the start of
+   * the view range.
+   */
   _draggerStart: DraggableManager;
+
+  /**
+   * `_draggerEnd` handles dragging the right scrubber to adjust the end of
+   * the view range.
+   */
   _draggerEnd: DraggableManager;
 
   constructor(props: ViewingLayerProps) {
@@ -80,26 +120,35 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
     this._handleScrubberDragUpdate = this._handleScrubberDragUpdate.bind(this);
     this._handleScrubberDragEnd = this._handleScrubberDragEnd.bind(this);
 
-    this._draggerReframe = new DraggableManager(this._getDraggingBounds, dragTypes.REFRAME);
-    this._draggerReframe.onMouseMove = this._handleReframeMouseMove;
-    this._draggerReframe.onMouseLeave = this._handleReframeMouseLeave;
-    this._draggerReframe.onDragStart = this._handleReframeDragUpdate;
-    this._draggerReframe.onDragMove = this._handleReframeDragUpdate;
-    this._draggerReframe.onDragEnd = this._handleReframeDragEnd;
+    this._draggerReframe = new DraggableManager({
+      getBounds: this._getDraggingBounds,
+      onDragEnd: this._handleReframeDragEnd,
+      onDragMove: this._handleReframeDragUpdate,
+      onDragStart: this._handleReframeDragUpdate,
+      onMouseMove: this._handleReframeMouseMove,
+      onMouseLeave: this._handleReframeMouseLeave,
+      tag: dragTypes.REFRAME,
+    });
 
-    this._draggerStart = new DraggableManager(this._getDraggingBounds, dragTypes.SHIFT_START);
-    this._draggerStart.onMouseEnter = this._handleScrubberEnterLeave;
-    this._draggerStart.onMouseLeave = this._handleScrubberEnterLeave;
-    this._draggerStart.onDragStart = this._handleScrubberDragUpdate;
-    this._draggerStart.onDragMove = this._handleScrubberDragUpdate;
-    this._draggerStart.onDragEnd = this._handleScrubberDragEnd;
+    this._draggerStart = new DraggableManager({
+      getBounds: this._getDraggingBounds,
+      onDragEnd: this._handleScrubberDragEnd,
+      onDragMove: this._handleScrubberDragUpdate,
+      onDragStart: this._handleScrubberDragUpdate,
+      onMouseEnter: this._handleScrubberEnterLeave,
+      onMouseLeave: this._handleScrubberEnterLeave,
+      tag: dragTypes.SHIFT_START,
+    });
 
-    this._draggerEnd = new DraggableManager(this._getDraggingBounds, dragTypes.SHIFT_END);
-    this._draggerEnd.onMouseEnter = this._handleScrubberEnterLeave;
-    this._draggerEnd.onMouseLeave = this._handleScrubberEnterLeave;
-    this._draggerEnd.onDragStart = this._handleScrubberDragUpdate;
-    this._draggerEnd.onDragMove = this._handleScrubberDragUpdate;
-    this._draggerEnd.onDragEnd = this._handleScrubberDragEnd;
+    this._draggerEnd = new DraggableManager({
+      getBounds: this._getDraggingBounds,
+      onDragEnd: this._handleScrubberDragEnd,
+      onDragMove: this._handleScrubberDragUpdate,
+      onDragStart: this._handleScrubberDragUpdate,
+      onMouseEnter: this._handleScrubberEnterLeave,
+      onMouseLeave: this._handleScrubberEnterLeave,
+      tag: dragTypes.SHIFT_END,
+    });
 
     this._root = undefined;
     this.state = {
@@ -154,7 +203,7 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
     const anchor = time.reframe ? time.reframe.anchor : value;
     const [start, end] = value < anchor ? [value, anchor] : [anchor, value];
     manager.resetBounds();
-    this.props.updateViewRange(start, end);
+    this.props.updateViewRangeTime(start, end);
   };
 
   _handleScrubberEnterLeave = function _handleScrubberEnterLeave({ type }: DraggingUpdate) {
@@ -190,9 +239,15 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
     }
     manager.resetBounds();
     this.setState({ preventCursorLine: false });
-    this.props.updateViewRange(...update);
+    this.props.updateViewRangeTime(...update);
   };
 
+  /**
+   * Randers the difference between where the drag started and the current
+   * position, e.g. the red or blue highlight.
+   *
+   * @returns React.Node[]
+   */
   _getMarkers(from: number, to: number, isShift: boolean) {
     const layout = getNextViewLayout(from, to);
     const cls = cx({
@@ -286,6 +341,7 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
           />
           {reframe != null && this._getMarkers(reframe.anchor, reframe.shift, false)}
         </svg>
+        {/* fullOverlay updates the mouse cursor blocks mouse events */}
         {haveNextTimeRange && <div className="ViewingLayer--fullOverlay" />}
       </div>
     );

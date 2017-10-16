@@ -57,6 +57,14 @@ type SpanBarRowProps = {
   viewStart: number,
 };
 
+/**
+ * This was originally a stateless function, but changing to a PureComponent
+ * reduced the render time of expanding a span row detail by ~50%. This is
+ * even true in the case where the stateless function has the same prop types as
+ * this class and arrow functions are created in the stateless function as
+ * handlers to the onClick props. E.g. for now, the PureComponent is more
+ * performance than the stateless function.
+ */
 export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
   props: SpanBarRowProps;
 

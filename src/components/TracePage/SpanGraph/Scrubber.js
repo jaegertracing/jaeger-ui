@@ -50,6 +50,7 @@ export default function Scrubber({
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
       >
+        {/* handleExpansion is only visible when `isDragging` is true */}
         <rect
           x={xPercent}
           className="Scrubber--handleExpansion"

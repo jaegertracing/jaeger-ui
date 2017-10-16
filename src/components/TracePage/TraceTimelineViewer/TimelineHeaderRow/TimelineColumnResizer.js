@@ -57,10 +57,12 @@ export default class TimelineColumnResizer extends React.PureComponent<
     this._handleDragEnd = this._handleDragEnd.bind(this);
 
     this._rootElm = undefined;
-    this._dragManager = new DraggableManager(this._getDraggingBounds);
-    this._dragManager.onDragStart = this._handleDragUpdate;
-    this._dragManager.onDragMove = this._handleDragUpdate;
-    this._dragManager.onDragEnd = this._handleDragEnd;
+    this._dragManager = new DraggableManager({
+      getBounds: this._getDraggingBounds,
+      onDragEnd: this._handleDragEnd,
+      onDragMove: this._handleDragUpdate,
+      onDragStart: this._handleDragUpdate,
+    });
     this.state = {
       dragPosition: null,
     };

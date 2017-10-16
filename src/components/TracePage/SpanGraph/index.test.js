@@ -35,7 +35,7 @@ describe('<SpanGraph>', () => {
   const trace = transformTraceData(traceGenerator.trace({}));
   const props = {
     trace,
-    updateViewRange: () => {},
+    updateViewRangeTime: () => {},
     viewRange: {
       time: {
         current: [0, 1],

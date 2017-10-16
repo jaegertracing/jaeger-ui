@@ -36,7 +36,7 @@ type TimelineHeaderRowProps = {
   numTicks: number,
   onColummWidthChange: number => void,
   updateNextViewRangeTime: ViewRangeTimeUpdate => void,
-  updateViewRange: (number, number) => void,
+  updateViewRangeTime: (number, number) => void,
   viewRangeTime: ViewRangeTime,
 };
 
@@ -46,7 +46,7 @@ export default function TimelineHeaderRow(props: TimelineHeaderRowProps) {
     nameColumnWidth,
     numTicks,
     onColummWidthChange,
-    updateViewRange,
+    updateViewRangeTime,
     updateNextViewRangeTime,
     viewRangeTime,
   } = props;
@@ -60,7 +60,7 @@ export default function TimelineHeaderRow(props: TimelineHeaderRowProps) {
         <TimelineViewingLayer
           boundsInvalidator={nameColumnWidth}
           updateNextViewRangeTime={updateNextViewRangeTime}
-          updateViewRange={updateViewRange}
+          updateViewRangeTime={updateViewRangeTime}
           viewRangeTime={viewRangeTime}
         />
         <Ticks numTicks={numTicks} startTime={viewStart * duration} endTime={viewEnd * duration} showLabels />

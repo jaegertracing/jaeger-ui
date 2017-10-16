@@ -46,7 +46,7 @@ describe('<SpanGraph>', () => {
       height: 60,
       numTicks: 5,
       updateNextViewRangeTime: jest.fn(),
-      updateViewRange: jest.fn(),
+      updateViewRangeTime: jest.fn(),
       viewRange: getViewRange(0, 1),
     };
     wrapper = shallow(<ViewingLayer {...props} />);
@@ -146,7 +146,7 @@ describe('<SpanGraph>', () => {
           const value = 0.5;
           wrapper.instance()._handleReframeDragEnd({ manager, value });
           expect(manager.resetBounds.mock.calls).toEqual([[]]);
-          const calls = props.updateViewRange.mock.calls;
+          const calls = props.updateViewRangeTime.mock.calls;
           expect(calls).toEqual([[value, value]]);
         });
 
@@ -159,7 +159,7 @@ describe('<SpanGraph>', () => {
           wrapper.instance()._handleReframeDragEnd({ manager, value });
 
           expect(manager.resetBounds.mock.calls).toEqual([[]]);
-          const calls = props.updateViewRange.mock.calls;
+          const calls = props.updateViewRangeTime.mock.calls;
           expect(calls).toEqual([[value, anchor]]);
         });
 
@@ -172,7 +172,7 @@ describe('<SpanGraph>', () => {
           wrapper.instance()._handleReframeDragEnd({ manager, value });
 
           expect(manager.resetBounds.mock.calls).toEqual([[]]);
-          const calls = props.updateViewRange.mock.calls;
+          const calls = props.updateViewRangeTime.mock.calls;
           expect(calls).toEqual([[anchor, value]]);
         });
       });
@@ -257,7 +257,7 @@ describe('<SpanGraph>', () => {
           instance._handleScrubberDragEnd(_case.dragUpdate);
           expect(wrapper.state('preventCursorLine')).toBe(false);
           expect(manager.resetBounds.mock.calls).toEqual([[]]);
-          expect(props.updateViewRange).lastCalledWith(..._case.viewRangeUpdate);
+          expect(props.updateViewRangeTime).lastCalledWith(..._case.viewRangeUpdate);
         });
       });
     });

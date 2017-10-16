@@ -236,11 +236,17 @@ export default class ListView extends React.Component<ListViewProps> {
     return this._viewHeight;
   };
 
+  /**
+   * Get the index of the item at the bottom of the current view.
+   */
   getBottomVisibleIndex = function getBottomVisibleIndex(): number {
     const bottomY = this._scrollTop + this._viewHeight;
     return this._yPositions.findFloorIndex(bottomY);
   };
 
+  /**
+   * Get the index of the item at the top of the current view.
+   */
   getTopVisibleIndex = function getTopVisibleIndex(): number {
     return this._yPositions.findFloorIndex(this._scrollTop, this._getHeight);
   };
