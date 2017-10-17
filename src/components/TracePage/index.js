@@ -40,7 +40,6 @@ import NotFound from '../App/NotFound';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import { getTraceName } from '../../model/trace-viewer';
 import type { Trace } from '../../types';
-import colorGenerator from '../../utils/color-generator';
 
 import './index.css';
 
@@ -112,7 +111,6 @@ export default class TracePage extends React.PureComponent<TracePageProps, Trace
   }
 
   componentDidMount() {
-    colorGenerator.clear();
     this.ensureTraceFetched();
     this.updateViewRangeTime(0, 1);
     if (!this._scrollManager) {

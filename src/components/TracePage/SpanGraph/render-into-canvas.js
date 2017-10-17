@@ -24,6 +24,7 @@
 export const CV_WIDTH = 4000;
 export const MIN_WIDTH = 16;
 export const MIN_TOTAL_HEIGHT = 60;
+export const ALPHA = 0.8;
 
 export default function renderIntoCanvas(
   canvas: HTMLCanvasElement,
@@ -56,7 +57,7 @@ export default function renderIntoCanvas(
     if (width < MIN_WIDTH) {
       width = MIN_WIDTH;
     }
-    ctx.fillStyle = `rgba(${getFillColor(serviceName).concat(0.3).join()})`;
+    ctx.fillStyle = `rgba(${getFillColor(serviceName).concat(ALPHA).join()})`;
     ctx.fillRect(x, i * itemYChange, width, itemHeight);
   }
 }
