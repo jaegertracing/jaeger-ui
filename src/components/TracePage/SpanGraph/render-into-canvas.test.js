@@ -20,7 +20,7 @@
 
 import _range from 'lodash/range';
 
-import renderIntoCanvas, { CV_WIDTH, MIN_TOTAL_HEIGHT, MIN_WIDTH } from './render-into-canvas';
+import renderIntoCanvas, { ALPHA, CV_WIDTH, MIN_TOTAL_HEIGHT, MIN_WIDTH } from './render-into-canvas';
 
 describe('renderIntoCanvas()', () => {
   const basicItem = { valueWidth: 100, valueOffset: 50, serviceName: 'some-name' };
@@ -104,7 +104,7 @@ describe('renderIntoCanvas()', () => {
       const expectedDrawings = items.map((item, i) => {
         const { valueWidth: width, valueOffset: x } = item;
         const color = expectedColors[i].output;
-        const fillStyle = `rgba(${color.concat(0.3).join()})`;
+        const fillStyle = `rgba(${color.concat(ALPHA).join()})`;
         const height = MIN_TOTAL_HEIGHT / items.length;
         const y = height * i;
         return { fillStyle, height, width, x, y };
@@ -147,7 +147,7 @@ describe('renderIntoCanvas()', () => {
         const { valueWidth, valueOffset: x } = item;
         const width = Math.max(valueWidth, MIN_WIDTH);
         const color = expectedColors[i].output;
-        const fillStyle = `rgba(${color.concat(0.3).join()})`;
+        const fillStyle = `rgba(${color.concat(ALPHA).join()})`;
         const height = itemHeight;
         const y = i;
         return { fillStyle, height, width, x, y };
