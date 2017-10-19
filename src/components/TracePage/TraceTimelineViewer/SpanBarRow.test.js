@@ -32,7 +32,7 @@ describe('<SpanBarRow>', () => {
     columnDivision: '0.5',
     depth: 3,
     isChildrenExpanded: true,
-    isDetailExapnded: false,
+    isDetailExpanded: false,
     isFilteredOut: false,
     isParent: true,
     label: 'omg-awesome-label',

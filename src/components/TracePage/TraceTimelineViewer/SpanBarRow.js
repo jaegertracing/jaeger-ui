@@ -35,7 +35,7 @@ type SpanBarRowProps = {
   columnDivision: number,
   depth: number,
   isChildrenExpanded: boolean,
-  isDetailExapnded: boolean,
+  isDetailExpanded: boolean,
   isFilteredOut: boolean,
   isParent: boolean,
   label: string,
@@ -88,7 +88,7 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
       columnDivision,
       depth,
       isChildrenExpanded,
-      isDetailExapnded,
+      isDetailExpanded,
       isFilteredOut,
       isParent,
       label,
@@ -116,7 +116,7 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
         className={`
           span-row
           ${className || ''}
-          ${isDetailExapnded ? 'is-expanded' : ''}
+          ${isDetailExpanded ? 'is-expanded' : ''}
           ${isFilteredOut ? 'is-filtered-out' : ''}
         `}
       >
@@ -129,8 +129,8 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
               onClick={this._childrenToggle}
             />
             <a
-              className={`span-name ${isDetailExapnded ? 'is-detail-expanded' : ''}`}
-              aria-checked={isDetailExapnded}
+              className={`span-name ${isDetailExpanded ? 'is-detail-expanded' : ''}`}
+              aria-checked={isDetailExpanded}
               onClick={this._detailToggle}
               role="switch"
               style={{ borderColor: color }}

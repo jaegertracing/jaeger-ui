@@ -296,7 +296,7 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
     }
     const color = colorGenerator.getColorByKey(serviceName);
     const isCollapsed = childrenHiddenIDs.has(spanID);
-    const isDetailExapnded = detailStates.has(spanID);
+    const isDetailExpanded = detailStates.has(spanID);
     const isFilteredOut = Boolean(findMatchesIDs) && !findMatchesIDs.has(spanID);
     const showErrorIcon = isErrorSpan(span) || (isCollapsed && spanContainsErredSpan(trace.spans, spanIndex));
     const viewBounds = getViewedBounds({
@@ -339,7 +339,7 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
           depth={span.depth}
           label={formatDuration(span.duration)}
           isChildrenExpanded={!isCollapsed}
-          isDetailExapnded={isDetailExapnded}
+          isDetailExpanded={isDetailExpanded}
           isFilteredOut={isFilteredOut}
           isParent={span.hasChildren}
           numTicks={NUM_TICKS}
