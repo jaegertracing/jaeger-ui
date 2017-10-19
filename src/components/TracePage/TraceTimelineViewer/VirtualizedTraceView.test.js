@@ -291,7 +291,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
             columnDivision={props.spanNameColumnWidth}
             depth={span.depth}
             isChildrenExpanded
-            isDetailExapnded={false}
+            isDetailExpanded={false}
             isFilteredOut={false}
             isParent={span.hasChildren}
             numTicks={5}
