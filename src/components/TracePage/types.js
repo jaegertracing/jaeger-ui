@@ -21,7 +21,7 @@
 // THE SOFTWARE.
 
 type TimeCursorUpdate = {
-  cursor: number,
+  cursor: ?number,
 };
 
 type TimeReframeUpdate = {
@@ -47,7 +47,7 @@ export type ViewRangeTimeUpdate =
 
 export type ViewRangeTime = {
   current: [number, number],
-  cursor?: number,
+  cursor?: ?number,
   reframe?: {
     anchor: number,
     shift: number,

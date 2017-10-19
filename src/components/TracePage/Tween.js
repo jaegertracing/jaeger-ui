@@ -55,7 +55,6 @@ export default class Tween {
       this.timeoutID = undefined;
       this.requestID = undefined;
     } else {
-      this._frameCallback = this._frameCallback.bind(this);
       this.callbackComplete = onComplete;
       this.callbackUpdate = onUpdate;
       if (delay) {
@@ -68,7 +67,7 @@ export default class Tween {
     }
   }
 
-  _frameCallback = function _frameCallback() {
+  _frameCallback = () => {
     this.timeoutID = undefined;
     this.requestID = undefined;
     const current = Object.freeze(this.getCurrent());

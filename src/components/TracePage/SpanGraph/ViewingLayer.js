@@ -110,15 +110,6 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
 
   constructor(props: ViewingLayerProps) {
     super(props);
-    this._setRoot = this._setRoot.bind(this);
-    this._getDraggingBounds = this._getDraggingBounds.bind(this);
-    this._handleReframeMouseMove = this._handleReframeMouseMove.bind(this);
-    this._handleReframeMouseLeave = this._handleReframeMouseLeave.bind(this);
-    this._handleReframeDragUpdate = this._handleReframeDragUpdate.bind(this);
-    this._handleReframeDragEnd = this._handleReframeDragEnd.bind(this);
-    this._handleScrubberEnterLeave = this._handleScrubberEnterLeave.bind(this);
-    this._handleScrubberDragUpdate = this._handleScrubberDragUpdate.bind(this);
-    this._handleScrubberDragEnd = this._handleScrubberDragEnd.bind(this);
 
     this._draggerReframe = new DraggableManager({
       getBounds: this._getDraggingBounds,
@@ -162,11 +153,11 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
     this._draggerStart.dispose();
   }
 
-  _setRoot = function _setRoot(elm: ?Element) {
+  _setRoot = (elm: ?Element) => {
     this._root = elm;
   };
 
-  _getDraggingBounds = function _getDraggingBounds(tag: ?string): DraggableBounds {
+  _getDraggingBounds = (tag: ?string): DraggableBounds => {
     if (!this._root) {
       throw new Error('invalid state');
     }
@@ -182,15 +173,15 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
     return { clientXLeft, maxValue, minValue, width };
   };
 
-  _handleReframeMouseMove = function _handleReframeMouseMove({ value }: DraggingUpdate) {
+  _handleReframeMouseMove = ({ value }: DraggingUpdate) => {
     this.props.updateNextViewRangeTime({ cursor: value });
   };
 
-  _handleReframeMouseLeave = function _handleReframeMouseLeave() {
+  _handleReframeMouseLeave = () => {
     this.props.updateNextViewRangeTime({ cursor: null });
   };
 
-  _handleReframeDragUpdate = function _handleReframeDragUpdate({ value }: DraggingUpdate) {
+  _handleReframeDragUpdate = ({ value }: DraggingUpdate) => {
     const shift = value;
     const { time } = this.props.viewRange;
     const anchor = time.reframe ? time.reframe.anchor : shift;
@@ -198,7 +189,7 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
     this.props.updateNextViewRangeTime(update);
   };
 
-  _handleReframeDragEnd = function _handleReframeDragEnd({ manager, value }: DraggingUpdate) {
+  _handleReframeDragEnd = ({ manager, value }: DraggingUpdate) => {
     const { time } = this.props.viewRange;
     const anchor = time.reframe ? time.reframe.anchor : value;
     const [start, end] = value < anchor ? [value, anchor] : [anchor, value];
@@ -206,36 +197,32 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
     this.props.updateViewRangeTime(start, end);
   };
 
-  _handleScrubberEnterLeave = function _handleScrubberEnterLeave({ type }: DraggingUpdate) {
+  _handleScrubberEnterLeave = ({ type }: DraggingUpdate) => {
     const preventCursorLine = type === updateTypes.MOUSE_ENTER;
     this.setState({ preventCursorLine });
   };
 
-  _handleScrubberDragUpdate = function _handleScrubberDragUpdate({
-    event,
-    tag,
-    type,
-    value,
-  }: DraggingUpdate) {
+  _handleScrubberDragUpdate = ({ event, tag, type, value }: DraggingUpdate) => {
     if (type === updateTypes.DRAG_START) {
       event.stopPropagation();
     }
-    const update = {};
     if (tag === dragTypes.SHIFT_START) {
-      update.shiftStart = value;
+      this.props.updateNextViewRangeTime({ shiftStart: value });
     } else if (tag === dragTypes.SHIFT_END) {
-      update.shiftEnd = value;
+      this.props.updateNextViewRangeTime({ shiftEnd: value });
     }
-    this.props.updateNextViewRangeTime(update);
   };
 
-  _handleScrubberDragEnd = function _handleScrubberDragEnd({ manager, tag, value }: DraggingUpdate) {
+  _handleScrubberDragEnd = ({ manager, tag, value }: DraggingUpdate) => {
     const [viewStart, viewEnd] = this.props.viewRange.time.current;
     let update: [number, number];
     if (tag === dragTypes.SHIFT_START) {
       update = [value, viewEnd];
     } else if (tag === dragTypes.SHIFT_END) {
       update = [viewStart, value];
+    } else {
+      // to satisfy flow
+      throw new Error('bad state');
     }
     manager.resetBounds();
     this.setState({ preventCursorLine: false });
