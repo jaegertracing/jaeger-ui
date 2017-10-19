@@ -46,23 +46,18 @@ export default class TimelineColumnResizer extends React.PureComponent<
   props: TimelineColumnResizerProps;
   state: TimelineColumnResizerState;
 
-  _rootElm: ?Element;
   _dragManager: DraggableManager;
+  _rootElm: ?Element;
 
   constructor(props: TimelineColumnResizerProps) {
     super(props);
-    this._setRootElm = this._setRootElm.bind(this);
-    this._getDraggingBounds = this._getDraggingBounds.bind(this);
-    this._handleDragUpdate = this._handleDragUpdate.bind(this);
-    this._handleDragEnd = this._handleDragEnd.bind(this);
-
-    this._rootElm = undefined;
     this._dragManager = new DraggableManager({
       getBounds: this._getDraggingBounds,
       onDragEnd: this._handleDragEnd,
       onDragMove: this._handleDragUpdate,
       onDragStart: this._handleDragUpdate,
     });
+    this._rootElm = undefined;
     this.state = {
       dragPosition: null,
     };
@@ -72,11 +67,11 @@ export default class TimelineColumnResizer extends React.PureComponent<
     this._dragManager.dispose();
   }
 
-  _setRootElm = function _setRootElm(elm: ?Element) {
+  _setRootElm = (elm: ?Element) => {
     this._rootElm = elm;
   };
 
-  _getDraggingBounds = function _getDraggingBounds(): DraggableBounds {
+  _getDraggingBounds = (): DraggableBounds => {
     if (!this._rootElm) {
       throw new Error('invalid state');
     }
@@ -90,11 +85,11 @@ export default class TimelineColumnResizer extends React.PureComponent<
     };
   };
 
-  _handleDragUpdate = function _handleDragUpdate({ value }: DraggingUpdate) {
+  _handleDragUpdate = ({ value }: DraggingUpdate) => {
     this.setState({ dragPosition: value });
   };
 
-  _handleDragEnd = function _handleDragEnd({ manager, value }: DraggingUpdate) {
+  _handleDragEnd = ({ manager, value }: DraggingUpdate) => {
     manager.resetBounds();
     this.setState({ dragPosition: null });
     this.props.onChange(value);

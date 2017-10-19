@@ -132,25 +132,14 @@ function getCssClasses(currentViewRange: [number, number]) {
 
 // export from tests
 export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTraceViewProps> {
-  // regarding `props` - eslint-plugin-react is not compat with flow 0.53, yet
-  // https://github.com/yannickcr/eslint-plugin-react/issues/1376
   props: VirtualizedTraceViewProps;
-  rowStates: RowState[];
+
   clippingCssClasses: string;
   listView: ?ListView;
+  rowStates: RowState[];
 
   constructor(props: VirtualizedTraceViewProps) {
     super(props);
-    this.getViewRange = this.getViewRange.bind(this);
-    this.getSearchedSpanIDs = this.getSearchedSpanIDs.bind(this);
-    this.getCollapsedChildren = this.getCollapsedChildren.bind(this);
-    this.mapRowIndexToSpanIndex = this.mapRowIndexToSpanIndex.bind(this);
-    this.mapSpanIndexToRowIndex = this.mapSpanIndexToRowIndex.bind(this);
-    this.setListView = this.setListView.bind(this);
-    this.getKeyFromIndex = this.getKeyFromIndex.bind(this);
-    this.getIndexFromKey = this.getIndexFromKey.bind(this);
-    this.getRowHeight = this.getRowHeight.bind(this);
-    this.renderRow = this.renderRow.bind(this);
     // keep "prop derivations" on the instance instead of calculating in
     // `.render()` to avoid recalculating in every invocation of `.renderRow()`
     const { currentViewRangeTime, childrenHiddenIDs, detailStates, trace } = props;
@@ -221,23 +210,15 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
     };
   }
 
-  getViewRange = function getViewRange() {
-    return this.props.currentViewRangeTime;
-  };
+  getViewRange = () => this.props.currentViewRangeTime;
 
-  getSearchedSpanIDs = function getSearchedSpanIDs() {
-    return this.props.findMatchesIDs;
-  };
+  getSearchedSpanIDs = () => this.props.findMatchesIDs;
 
-  getCollapsedChildren = function getCollapsedChildren() {
-    return this.props.childrenHiddenIDs;
-  };
+  getCollapsedChildren = () => this.props.childrenHiddenIDs;
 
-  mapRowIndexToSpanIndex = function mapRowIndexToSpanIndex(index: number) {
-    return this.rowStates[index].spanIndex;
-  };
+  mapRowIndexToSpanIndex = (index: number) => this.rowStates[index].spanIndex;
 
-  mapSpanIndexToRowIndex = function mapSpanIndexToRowIndex(index: number) {
+  mapSpanIndexToRowIndex = (index: number) => {
     const max = this.rowStates.length;
     for (let i = 0; i < max; i++) {
       const { spanIndex } = this.rowStates[i];
@@ -248,7 +229,7 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
     throw new Error(`unable to find row for span index: ${index}`);
   };
 
-  setListView = function setListView(listView: ?ListView) {
+  setListView = (listView: ?ListView) => {
     const isChanged = this.listView !== listView;
     this.listView = listView;
     if (listView && isChanged) {
@@ -258,12 +239,12 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
 
   // use long form syntax to avert flow error
   // https://github.com/facebook/flow/issues/3076#issuecomment-290944051
-  getKeyFromIndex = function getKeyFromIndex(index: number) {
+  getKeyFromIndex = (index: number) => {
     const { isDetail, span } = this.rowStates[index];
     return `${span.spanID}--${isDetail ? 'detail' : 'bar'}`;
   };
 
-  getIndexFromKey = function getIndexFromKey(key: string) {
+  getIndexFromKey = (key: string) => {
     const parts = key.split('--');
     const _spanID = parts[0];
     const _isDetail = parts[1] === 'detail';
@@ -277,7 +258,7 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
     return -1;
   };
 
-  getRowHeight = function getRowHeight(index: number) {
+  getRowHeight = (index: number) => {
     const { span, isDetail } = this.rowStates[index];
     if (!isDetail) {
       return DEFAULT_HEIGHTS.bar;
@@ -288,7 +269,7 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
     return DEFAULT_HEIGHTS.detail;
   };
 
-  renderRow = function renderRow(key: string, style: Style, index: number, attrs: {}) {
+  renderRow = (key: string, style: Style, index: number, attrs: {}) => {
     const { isDetail, span, spanIndex } = this.rowStates[index];
     return isDetail
       ? this.renderSpanDetailRow(span, key, style, attrs)

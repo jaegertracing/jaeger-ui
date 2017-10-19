@@ -73,17 +73,11 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
     rpc: null,
   };
 
-  constructor(props: SpanBarRowProps) {
-    super(props);
-    this._detailToggle = this._detailToggle.bind(this);
-    this._childrenToggle = this._childrenToggle.bind(this);
-  }
-
-  _detailToggle = function _detailToggle() {
+  _detailToggle = () => {
     this.props.onDetailToggled(this.props.spanID);
   };
 
-  _childrenToggle = function _childrenToggle() {
+  _childrenToggle = () => {
     this.props.onChildrenToggled(this.props.spanID);
   };
 

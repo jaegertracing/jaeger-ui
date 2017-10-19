@@ -46,7 +46,7 @@ export type Accessors = {
 
 interface Scroller {
   scrollTo: number => void,
-  scrollBy: number => void,
+  scrollBy: (number, ?boolean) => void,
 }
 
 /**
@@ -100,12 +100,6 @@ export default class ScrollManager {
     this._trace = trace;
     this._scroller = scroller;
     this._accessors = undefined;
-
-    this.scrollToNextVisibleSpan = this.scrollToNextVisibleSpan.bind(this);
-    this.scrollToPrevVisibleSpan = this.scrollToPrevVisibleSpan.bind(this);
-    this.scrollPageDown = this.scrollPageDown.bind(this);
-    this.scrollPageUp = this.scrollPageUp.bind(this);
-    this.setAccessors = this.setAccessors.bind(this);
   }
 
   _scrollPast(rowIndex: number, direction: 1 | -1) {
@@ -205,7 +199,7 @@ export default class ScrollManager {
    * `setAccessors` is bound in the ctor, so it can be passed as a prop to
    * children components.
    */
-  setAccessors = function setAccessors(accessors: Accessors) {
+  setAccessors = (accessors: Accessors) => {
     this._accessors = accessors;
   };
 
@@ -213,7 +207,7 @@ export default class ScrollManager {
    * Scrolls around one page down (0.95x). It is bounds in the ctor, so it can
    * be used as a keyboard shortcut handler.
    */
-  scrollPageDown = function scrollPageDown() {
+  scrollPageDown = () => {
     if (!this._scroller || !this._accessors) {
       return;
     }
@@ -224,7 +218,7 @@ export default class ScrollManager {
    * Scrolls around one page up (0.95x). It is bounds in the ctor, so it can
    * be used as a keyboard shortcut handler.
    */
-  scrollPageUp = function scrollPageUp() {
+  scrollPageUp = () => {
     if (!this._scroller || !this._accessors) {
       return;
     }
@@ -236,7 +230,7 @@ export default class ScrollManager {
    * text filter, if there is one. It is bounds in the ctor, so it can
    * be used as a keyboard shortcut handler.
    */
-  scrollToNextVisibleSpan = function scrollToNextVisibleSpan() {
+  scrollToNextVisibleSpan = () => {
     this._scrollToVisibleSpan(1);
   };
 
@@ -245,7 +239,7 @@ export default class ScrollManager {
    * text filter, if there is one. It is bounds in the ctor, so it can
    * be used as a keyboard shortcut handler.
    */
-  scrollToPrevVisibleSpan = function scrollToPrevVisibleSpan() {
+  scrollToPrevVisibleSpan = () => {
     this._scrollToVisibleSpan(-1);
   };
 

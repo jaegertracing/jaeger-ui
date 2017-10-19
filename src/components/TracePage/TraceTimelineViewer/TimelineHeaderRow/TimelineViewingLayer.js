@@ -120,18 +120,11 @@ function getMarkers(
 export default class TimelineViewingLayer extends React.PureComponent<TimelineViewingLayerProps> {
   props: TimelineViewingLayerProps;
 
-  _root: ?Element;
   _draggerReframe: DraggableManager;
+  _root: ?Element;
 
   constructor(props: TimelineViewingLayerProps) {
     super(props);
-    this._setRoot = this._setRoot.bind(this);
-    this._getDraggingBounds = this._getDraggingBounds.bind(this);
-    this._handleReframeMouseMove = this._handleReframeMouseMove.bind(this);
-    this._handleReframeMouseLeave = this._handleReframeMouseLeave.bind(this);
-    this._handleReframeDragUpdate = this._handleReframeDragUpdate.bind(this);
-    this._handleReframeDragEnd = this._handleReframeDragEnd.bind(this);
-
     this._draggerReframe = new DraggableManager({
       getBounds: this._getDraggingBounds,
       onDragEnd: this._handleReframeDragEnd,
@@ -154,11 +147,11 @@ export default class TimelineViewingLayer extends React.PureComponent<TimelineVi
     this._draggerReframe.dispose();
   }
 
-  _setRoot = function _setRoot(elm: ?Element) {
+  _setRoot = (elm: ?Element) => {
     this._root = elm;
   };
 
-  _getDraggingBounds = function _getDraggingBounds(): DraggableBounds {
+  _getDraggingBounds = (): DraggableBounds => {
     if (!this._root) {
       throw new Error('invalid state');
     }
@@ -166,17 +159,17 @@ export default class TimelineViewingLayer extends React.PureComponent<TimelineVi
     return { clientXLeft, width };
   };
 
-  _handleReframeMouseMove = function _handleReframeMouseMove({ value }: DraggingUpdate) {
+  _handleReframeMouseMove = ({ value }: DraggingUpdate) => {
     const [viewStart, viewEnd] = this.props.viewRangeTime.current;
     const cursor = mapFromViewSubRange(viewStart, viewEnd, value);
     this.props.updateNextViewRangeTime({ cursor });
   };
 
-  _handleReframeMouseLeave = function _handleReframeMouseLeave() {
+  _handleReframeMouseLeave = () => {
     this.props.updateNextViewRangeTime({ cursor: undefined });
   };
 
-  _handleReframeDragUpdate = function _handleReframeDragUpdate({ value }: DraggingUpdate) {
+  _handleReframeDragUpdate = ({ value }: DraggingUpdate) => {
     const { current, reframe } = this.props.viewRangeTime;
     const [viewStart, viewEnd] = current;
     const shift = mapFromViewSubRange(viewStart, viewEnd, value);
@@ -185,7 +178,7 @@ export default class TimelineViewingLayer extends React.PureComponent<TimelineVi
     this.props.updateNextViewRangeTime(update);
   };
 
-  _handleReframeDragEnd = function _handleReframeDragEnd({ manager, value }: DraggingUpdate) {
+  _handleReframeDragEnd = ({ manager, value }: DraggingUpdate) => {
     const { current, reframe } = this.props.viewRangeTime;
     const [viewStart, viewEnd] = current;
     const shift = mapFromViewSubRange(viewStart, viewEnd, value);

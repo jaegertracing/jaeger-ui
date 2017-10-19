@@ -178,17 +178,6 @@ export default class ListView extends React.Component<ListViewProps> {
   constructor(props: ListViewProps) {
     super(props);
 
-    this.getViewHeight = this.getViewHeight.bind(this);
-    this.getBottomVisibleIndex = this.getBottomVisibleIndex.bind(this);
-    this.getTopVisibleIndex = this.getTopVisibleIndex.bind(this);
-    this.getRowPosition = this.getRowPosition.bind(this);
-    this._getHeight = this._getHeight.bind(this);
-    this._scanItemHeights = this._scanItemHeights.bind(this);
-    this._onScroll = this._onScroll.bind(this);
-    this._positionList = this._positionList.bind(this);
-    this._initWrapper = this._initWrapper.bind(this);
-    this._initItemHolder = this._initItemHolder.bind(this);
-
     this._yPositions = new Positions(200);
     // _knownHeights is (item-key -> observed height) of list items
     this._knownHeights = new Map();
@@ -232,34 +221,29 @@ export default class ListView extends React.Component<ListViewProps> {
     }
   }
 
-  getViewHeight = function getViewHeight(): number {
-    return this._viewHeight;
-  };
+  getViewHeight = () => this._viewHeight;
 
   /**
    * Get the index of the item at the bottom of the current view.
    */
-  getBottomVisibleIndex = function getBottomVisibleIndex(): number {
+  getBottomVisibleIndex = (): number => {
     const bottomY = this._scrollTop + this._viewHeight;
-    return this._yPositions.findFloorIndex(bottomY);
+    return this._yPositions.findFloorIndex(bottomY, this._getHeight);
   };
 
   /**
    * Get the index of the item at the top of the current view.
    */
-  getTopVisibleIndex = function getTopVisibleIndex(): number {
-    return this._yPositions.findFloorIndex(this._scrollTop, this._getHeight);
-  };
+  getTopVisibleIndex = (): number => this._yPositions.findFloorIndex(this._scrollTop, this._getHeight);
 
-  getRowPosition = function getRowPosition(index: number): { height: number, y: number } {
-    return this._yPositions.getRowPosition(index, this._getHeight);
-  };
+  getRowPosition = (index: number): { height: number, y: number } =>
+    this._yPositions.getRowPosition(index, this._getHeight);
 
   /**
    * Scroll event listener that schedules a remeasuring of which items should be
    * rendered.
    */
-  _onScroll = function _onScroll() {
+  _onScroll = () => {
     if (!this._isScrolledOrResized) {
       this._isScrolledOrResized = true;
       window.requestAnimationFrame(this._positionList);
@@ -309,7 +293,7 @@ export default class ListView extends React.Component<ListViewProps> {
    * Checked to see if the currently rendered items are sufficient, if not,
    * force an update to trigger more items to be rendered.
    */
-  _positionList = function _positionList() {
+  _positionList = () => {
     this._isScrolledOrResized = false;
     if (!this._wrapperElm) {
       return;
@@ -329,14 +313,14 @@ export default class ListView extends React.Component<ListViewProps> {
     }
   };
 
-  _initWrapper = function _initWrapper(elm: HTMLElement) {
+  _initWrapper = (elm: HTMLElement) => {
     this._wrapperElm = elm;
     if (!this.props.windowScroller) {
       this._viewHeight = elm && elm.clientHeight;
     }
   };
 
-  _initItemHolder = function _initItemHolder(elm: HTMLElement) {
+  _initItemHolder = (elm: HTMLElement) => {
     this._itemHolderElm = elm;
     this._scanItemHeights();
   };
@@ -346,7 +330,7 @@ export default class ListView extends React.Component<ListViewProps> {
    * item-key (which is on a data-* attribute). If any new or adjusted heights
    * are found, re-measure the current known y-positions (via .yPositions).
    */
-  _scanItemHeights = function _scanItemHeights() {
+  _scanItemHeights = () => {
     const getIndexFromKey = this.props.getIndexFromKey;
     if (!this._itemHolderElm) {
       return;
@@ -399,7 +383,7 @@ export default class ListView extends React.Component<ListViewProps> {
    * Get the height of the element at index `i`; first check the known heigths,
    * fallbck to `.props.itemHeightGetter(...)`.
    */
-  _getHeight = function _getHeight(i: number) {
+  _getHeight = (i: number) => {
     const key = this.props.getKeyFromIndex(i);
     const known = this._knownHeights.get(key);
     // known !== known iff known is NaN

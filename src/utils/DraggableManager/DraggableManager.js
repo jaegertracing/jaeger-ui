@@ -72,14 +72,10 @@ export default class DraggableManager {
   handleMouseDown: (SyntheticMouseEvent<any>) => void;
 
   constructor({ getBounds, tag, resetBoundsOnResize = true, ...rest }: DraggableManagerOptions) {
-    this._handleMinorMouseEvent = this._handleMinorMouseEvent.bind(this);
-    this._handleDragEvent = this._handleDragEvent.bind(this);
-
     this.handleMouseDown = this._handleDragEvent;
     this.handleMouseEnter = this._handleMinorMouseEvent;
     this.handleMouseMove = this._handleMinorMouseEvent;
     this.handleMouseLeave = this._handleMinorMouseEvent;
-    this.resetBounds = this.resetBounds.bind(this);
 
     this.getBounds = getBounds;
     this.tag = tag;
@@ -148,11 +144,11 @@ export default class DraggableManager {
     this._onDragEnd = undefined;
   }
 
-  resetBounds = function resetBounds() {
+  resetBounds = () => {
     this._bounds = undefined;
   };
 
-  _handleMinorMouseEvent = function _handleMinorMouseEvent(event: SyntheticMouseEvent<any>) {
+  _handleMinorMouseEvent = (event: SyntheticMouseEvent<any>) => {
     const { button, clientX, type: eventType } = event;
     if (this._isDragging || button !== LEFT_MOUSE_BUTTON) {
       return;
@@ -185,7 +181,7 @@ export default class DraggableManager {
     });
   };
 
-  _handleDragEvent = function _handleDragEvent(event: SyntheticMouseEvent<any>) {
+  _handleDragEvent = (event: SyntheticMouseEvent<any>) => {
     const { button, clientX, type: eventType } = event;
     let type = '';
     let handler: ?(DraggingUpdate) => void;

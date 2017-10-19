@@ -47,12 +47,7 @@ type SpanDetailRowProps = {
 export default class SpanDetailRow extends React.PureComponent<SpanDetailRowProps> {
   props: SpanDetailRowProps;
 
-  constructor(props: SpanDetailRowProps) {
-    super(props);
-    this._detailToggle = this._detailToggle.bind(this);
-  }
-
-  _detailToggle = function _detailToggle() {
+  _detailToggle = () => {
     this.props.onDetailToggled(this.props.span.spanID);
   };
 

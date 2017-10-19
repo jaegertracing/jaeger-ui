@@ -36,7 +36,7 @@ function _onTweenUpdate({ done, value }: { done: boolean, value: number }) {
   }
 }
 
-export function scrollBy(yDelta: number, appendToLast: boolean = false) {
+export function scrollBy(yDelta: number, appendToLast: ?boolean = false) {
   const { scrollY } = window;
   let targetFrom = scrollY;
   if (appendToLast && lastTween) {

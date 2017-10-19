@@ -91,11 +91,6 @@ export default class TracePage extends React.PureComponent<TracePageProps, Trace
 
   constructor(props: TracePageProps) {
     super(props);
-    this.setHeaderHeight = this.setHeaderHeight.bind(this);
-    this.toggleSlimView = this.toggleSlimView.bind(this);
-    this.updateViewRangeTime = this.updateViewRangeTime.bind(this);
-    this.updateNextViewRangeTime = this.updateNextViewRangeTime.bind(this);
-    this.updateTextFilter = this.updateTextFilter.bind(this);
     this.state = {
       headerHeight: null,
       slimView: false,
@@ -176,7 +171,7 @@ export default class TracePage extends React.PureComponent<TracePageProps, Trace
     this.updateViewRangeTime(start, end);
   }
 
-  setHeaderHeight = function setHeaderHeight(elm: ?Element) {
+  setHeaderHeight = (elm: ?Element) => {
     this._headerElm = elm;
     if (elm) {
       if (this.state.headerHeight !== elm.clientHeight) {
@@ -187,23 +182,23 @@ export default class TracePage extends React.PureComponent<TracePageProps, Trace
     }
   };
 
-  updateTextFilter = function updateTextFilter(textFilter: ?string) {
+  updateTextFilter = (textFilter: ?string) => {
     this.setState({ textFilter });
   };
 
-  updateViewRangeTime = function updateViewRangeTime(start: number, end: number) {
+  updateViewRangeTime = (start: number, end: number) => {
     const time = { current: [start, end] };
     const viewRange = { ...this.state.viewRange, time };
     this.setState({ viewRange });
   };
 
-  updateNextViewRangeTime = function updateNextViewRangeTime(update: ViewRangeTimeUpdate) {
+  updateNextViewRangeTime = (update: ViewRangeTimeUpdate) => {
     const time = { ...this.state.viewRange.time, ...update };
     const viewRange = { ...this.state.viewRange, time };
     this.setState({ viewRange });
   };
 
-  toggleSlimView = function toggleSlimView() {
+  toggleSlimView = () => {
     this.setState({ slimView: !this.state.slimView });
   };
 

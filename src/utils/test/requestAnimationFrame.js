@@ -35,9 +35,7 @@ export function polyfill(target, msElapse = DEFAULT_ELAPSE) {
       target.requestAnimationFrame = requestAnimationFrame;
     } else {
       // eslint-disable-next-line no-param-reassign, no-shadow
-      target.requestAnimationFrame = function requestAnimationFrame(callback) {
-        return setTimeout(callback, msElapse);
-      };
+      target.requestAnimationFrame = callback => setTimeout(callback, msElapse);
     }
   }
   if (!target.cancelAnimationFrame) {

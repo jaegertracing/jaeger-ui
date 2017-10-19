@@ -41,7 +41,6 @@ export default class CanvasSpanGraph extends React.PureComponent<CanvasSpanGraph
   constructor(props: CanvasSpanGraphProps) {
     super(props);
     this._canvasElm = undefined;
-    this._setCanvasRef = this._setCanvasRef.bind(this);
   }
 
   componentDidMount() {
@@ -52,7 +51,7 @@ export default class CanvasSpanGraph extends React.PureComponent<CanvasSpanGraph
     this._draw();
   }
 
-  _setCanvasRef = function _setCanvasRef(elm: React.Node) {
+  _setCanvasRef = (elm: ?HTMLCanvasElement) => {
     this._canvasElm = elm;
   };
 
