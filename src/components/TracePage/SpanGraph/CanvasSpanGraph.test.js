@@ -19,14 +19,14 @@
 // THE SOFTWARE.
 
 import React from 'react';
-import { mount } from 'enzyme';
+import { shallow } from 'enzyme';
 
 import CanvasSpanGraph from './CanvasSpanGraph';
 
 describe('<CanvasSpanGraph>', () => {
   it('renders without exploding', () => {
     const items = [{ valueWidth: 1, valueOffset: 1, serviceName: 'service-name-0' }];
-    const wrapper = mount(<CanvasSpanGraph items={[]} valueWidth={4000} />);
+    const wrapper = shallow(<CanvasSpanGraph items={[]} valueWidth={4000} />);
     expect(wrapper).toBeDefined();
     wrapper.instance()._setCanvasRef({
       getContext: () => ({
