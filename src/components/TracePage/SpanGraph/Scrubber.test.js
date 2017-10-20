@@ -39,12 +39,12 @@ describe('<Scrubber>', () => {
   it('contains the proper svg components', () => {
     expect(
       wrapper.matchesElement(
-        <g className="timeline-scrubber">
-          <line className="timeline-scrubber__line" />
-          <rect className="timeline-scrubber__handle" />
-          <circle className="timeline-scrubber__handle--grip" />
-          <circle className="timeline-scrubber__handle--grip" />
-          <circle className="timeline-scrubber__handle--grip" />
+        <g>
+          <g className="Scrubber--handles">
+            <rect className="Scrubber--handleExpansion" />
+            <rect className="Scrubber--handle" />
+          </g>
+          <line className="Scrubber--line" />
         </g>
       )
     ).toBeTruthy();
@@ -61,11 +61,7 @@ describe('<Scrubber>', () => {
 
   it('supports onMouseDown', () => {
     const event = {};
-    wrapper.find('g').prop('onMouseDown')(event);
+    wrapper.find('.Scrubber--handles').prop('onMouseDown')(event);
     expect(defaultProps.onMouseDown.calledWith(event)).toBeTruthy();
-  });
-
-  it("doesn't fail if onMouseDown is not provided", () => {
-    expect(() => wrapper.find('g').prop('onMouseDown')()).not.toThrow();
   });
 });

@@ -1,6 +1,6 @@
 [![ReadTheDocs][doc-img]][doc] [![Build Status][ci-img]][ci] [![Coverage Status][cov-img]][cov]
 
-# Jaeger UI 
+# Jaeger UI
 
 Visualize distributed tracing with Jaeger.
 
@@ -28,7 +28,7 @@ Install dependencies via `npm` or `yarn`:
 ```
 npm install
 # or
-yarn install
+yarn
 ```
 
 Make sure you have the Jaeger Query service running on http://localhost:16686.

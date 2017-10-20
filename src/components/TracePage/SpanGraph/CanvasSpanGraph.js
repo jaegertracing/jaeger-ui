@@ -22,7 +22,7 @@
 
 import * as React from 'react';
 
-import renderIntoCanvas from './render-into-canvas';
+import renderIntoCanvas, { CV_WIDTH } from './render-into-canvas';
 import colorGenerator from '../../../utils/color-generator';
 
 import './CanvasSpanGraph.css';
@@ -32,9 +32,7 @@ type CanvasSpanGraphProps = {
   valueWidth: number,
 };
 
-const CV_WIDTH = 4000;
-
-const getColor = str => colorGenerator.getColorByKey(str);
+const getColor: string => [number, number, number] = str => colorGenerator.getRgbColorByKey(str);
 
 export default class CanvasSpanGraph extends React.PureComponent<CanvasSpanGraphProps> {
   props: CanvasSpanGraphProps;
@@ -43,7 +41,6 @@ export default class CanvasSpanGraph extends React.PureComponent<CanvasSpanGraph
   constructor(props: CanvasSpanGraphProps) {
     super(props);
     this._canvasElm = undefined;
-    this._setCanvasRef = this._setCanvasRef.bind(this);
   }
 
   componentDidMount() {
@@ -54,7 +51,7 @@ export default class CanvasSpanGraph extends React.PureComponent<CanvasSpanGraph
     this._draw();
   }
 
-  _setCanvasRef = function _setCanvasRef(elm: React.Node) {
+  _setCanvasRef = (elm: ?HTMLCanvasElement) => {
     this._canvasElm = elm;
   };
 

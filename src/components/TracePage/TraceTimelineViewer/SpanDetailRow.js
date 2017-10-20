@@ -34,7 +34,7 @@ type SpanDetailRowProps = {
   color: string,
   columnDivision: number,
   detailState: DetailState,
-  detailToggle: string => void,
+  onDetailToggled: string => void,
   isFilteredOut: boolean,
   logItemToggle: (string, Log) => void,
   logsToggle: string => void,
@@ -44,45 +44,52 @@ type SpanDetailRowProps = {
   traceStartTime: number,
 };
 
-export default function SpanDetailRow(props: SpanDetailRowProps) {
-  const {
-    color,
-    columnDivision,
-    detailState,
-    detailToggle,
-    isFilteredOut,
-    logItemToggle,
-    logsToggle,
-    processToggle,
-    span,
-    tagsToggle,
-    traceStartTime,
-  } = props;
-  return (
-    <TimelineRow className={`detail-row ${isFilteredOut ? 'is-filtered-out' : ''}`}>
-      <TimelineRow.Cell width={columnDivision}>
-        <SpanTreeOffset level={span.depth + 1} />
-        <span>
-          <span
-            className="detail-row-expanded-accent"
-            onClick={detailToggle}
-            style={{ borderColor: color }}
-          />
-        </span>
-      </TimelineRow.Cell>
-      <TimelineRow.Cell width={1 - columnDivision}>
-        <div className="p2 detail-info-wrapper" style={{ borderTopColor: color }}>
-          <SpanDetail
-            detailState={detailState}
-            logItemToggle={logItemToggle}
-            logsToggle={logsToggle}
-            processToggle={processToggle}
-            span={span}
-            tagsToggle={tagsToggle}
-            traceStartTime={traceStartTime}
-          />
-        </div>
-      </TimelineRow.Cell>
-    </TimelineRow>
-  );
+export default class SpanDetailRow extends React.PureComponent<SpanDetailRowProps> {
+  props: SpanDetailRowProps;
+
+  _detailToggle = () => {
+    this.props.onDetailToggled(this.props.span.spanID);
+  };
+
+  render() {
+    const {
+      color,
+      columnDivision,
+      detailState,
+      isFilteredOut,
+      logItemToggle,
+      logsToggle,
+      processToggle,
+      span,
+      tagsToggle,
+      traceStartTime,
+    } = this.props;
+    return (
+      <TimelineRow className={`detail-row ${isFilteredOut ? 'is-filtered-out' : ''}`}>
+        <TimelineRow.Cell width={columnDivision}>
+          <SpanTreeOffset level={span.depth + 1} />
+          <span>
+            <span
+              className="detail-row-expanded-accent"
+              onClick={this._detailToggle}
+              style={{ borderColor: color }}
+            />
+          </span>
+        </TimelineRow.Cell>
+        <TimelineRow.Cell width={1 - columnDivision}>
+          <div className="p2 detail-info-wrapper" style={{ borderTopColor: color }}>
+            <SpanDetail
+              detailState={detailState}
+              logItemToggle={logItemToggle}
+              logsToggle={logsToggle}
+              processToggle={processToggle}
+              span={span}
+              tagsToggle={tagsToggle}
+              traceStartTime={traceStartTime}
+            />
+          </div>
+        </TimelineRow.Cell>
+      </TimelineRow>
+    );
+  }
 }

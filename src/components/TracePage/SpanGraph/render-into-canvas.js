@@ -20,27 +20,32 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-const CV_WIDTH = 4000;
-const MIN_WIDTH = 50;
-const MIN_TOTAL_HEIGHT = 60;
+// exported for tests
+export const CV_WIDTH = 4000;
+export const MIN_WIDTH = 16;
+export const MIN_TOTAL_HEIGHT = 60;
+export const ALPHA = 0.8;
 
 export default function renderIntoCanvas(
   canvas: HTMLCanvasElement,
   items: { valueWidth: number, valueOffset: number, serviceName: string }[],
   totalValueWidth: number,
-  getFillColor: string => string
+  getFillColor: string => [number, number, number]
 ) {
   // eslint-disable-next-line no-param-reassign
   canvas.width = CV_WIDTH;
   let itemHeight = 1;
+  let itemYChange = 1;
   if (items.length < MIN_TOTAL_HEIGHT) {
     // eslint-disable-next-line no-param-reassign
     canvas.height = MIN_TOTAL_HEIGHT;
     itemHeight = MIN_TOTAL_HEIGHT / items.length;
+    itemYChange = MIN_TOTAL_HEIGHT / items.length;
   } else {
     // eslint-disable-next-line no-param-reassign
     canvas.height = items.length;
-    itemHeight = 1;
+    itemYChange = 1;
+    itemHeight = 1 / (MIN_TOTAL_HEIGHT / items.length);
   }
   const ctx = canvas.getContext('2d');
   for (let i = 0; i < items.length; i++) {
@@ -52,7 +57,7 @@ export default function renderIntoCanvas(
     if (width < MIN_WIDTH) {
       width = MIN_WIDTH;
     }
-    ctx.fillStyle = getFillColor(serviceName);
-    ctx.fillRect(x, i * itemHeight, width, itemHeight);
+    ctx.fillStyle = `rgba(${getFillColor(serviceName).concat(ALPHA).join()})`;
+    ctx.fillRect(x, i * itemYChange, width, itemHeight);
   }
 }

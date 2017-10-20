@@ -109,6 +109,34 @@ export default class Positions {
   }
 
   /**
+   * Get the latest height for index `_i`. If it's in new terretory
+   * (_i > lastI), find the heights (and y-values) leading up to it. If it's in
+   * known territory (_i <= lastI) and the height is different than what is
+   * known, recalculate subsequent y values, but don't confirm the heights of
+   * those items, just update based on the difference.
+   */
+  confirmHeight(_i: number, heightGetter: number => number) {
+    let i = _i;
+    if (i > this.lastI) {
+      this.calcHeights(i, heightGetter);
+      return;
+    }
+    const h = heightGetter(i);
+    if (h === this.heights[i]) {
+      return;
+    }
+    const chg = h - this.heights[i];
+    this.heights[i] = h;
+    // shift the y positions by `chg` for all known y positions
+    while (++i <= this.lastI) {
+      this.ys[i] += chg;
+    }
+    if (this.ys[this.lastI + 1] != null) {
+      this.ys[this.lastI + 1] += chg;
+    }
+  }
+
+  /**
    * Given a target y-value (`yValue`), find the closest index (in the `.ys`
    * array) that is prior to the y-value; e.g. map from y-value to index in
    * `.ys`.
@@ -146,6 +174,19 @@ export default class Positions {
   }
 
   /**
+   * Get the `y` and `height` for a given row.
+   *
+   * @returns {{ height: number, y: number }}
+   */
+  getRowPosition(index: number, heightGetter: number => number) {
+    this.confirmHeight(index, heightGetter);
+    return {
+      height: this.heights[index],
+      y: this.ys[index],
+    };
+  }
+
+  /**
    * Get the estimated height of the whole shebang by extrapolating based on
    * the average known height.
    */
@@ -157,33 +198,5 @@ export default class Positions {
     }
     // eslint-disable-next-line no-bitwise
     return (known / (this.lastI + 1) * this.heights.length) | 0;
-  }
-
-  /**
-   * Get the latest height for index `_i`. If it's in new terretory
-   * (_i > lastI), find the heights (and y-values) leading up to it. If it's in
-   * known territory (_i <= lastI) and the height is different than what is
-   * known, recalculate subsequent y values, but don't confirm the heights of
-   * those items, just update based on the difference.
-   */
-  confirmHeight(_i: number, heightGetter: number => number) {
-    let i = _i;
-    if (i > this.lastI) {
-      this.calcHeights(i, heightGetter);
-      return;
-    }
-    const h = heightGetter(i);
-    if (h === this.heights[i]) {
-      return;
-    }
-    const chg = h - this.heights[i];
-    this.heights[i] = h;
-    // shift the y positions by `chg` for all known y positions
-    while (++i <= this.lastI) {
-      this.ys[i] += chg;
-    }
-    if (this.ys[this.lastI + 1] != null) {
-      this.ys[this.lastI + 1] += chg;
-    }
   }
 }

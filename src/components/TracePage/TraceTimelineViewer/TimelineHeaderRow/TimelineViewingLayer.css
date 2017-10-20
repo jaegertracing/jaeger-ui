@@ -1,0 +1,73 @@
+/*
+Copyright (c) 2017 Uber Technologies, Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*/
+
+.TimelineViewingLayer {
+  bottom: 0;
+  cursor: vertical-text;
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+
+.TimelineViewingLayer--cursorGuide {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 1px;
+  background-color: red;
+}
+
+.TimelineViewingLayer--dragged {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+}
+
+.TimelineViewingLayer--dragged.isDraggingLeft {
+  border-left: 1px solid;
+}
+
+.TimelineViewingLayer--dragged.isDraggingRight {
+  border-right: 1px solid;
+}
+
+.TimelineViewingLayer--dragged.isShiftDrag {
+  background-color: rgba(68, 68, 255, 0.2);
+  border-color: #44f;
+}
+
+.TimelineViewingLayer--dragged.isReframeDrag {
+  background-color: rgba(255, 68, 68, 0.2);
+  border-color: #f44;
+}
+
+.TimelineViewingLayer--fullOverlay {
+  bottom: 0;
+  cursor: col-resize;
+  left: 0;
+  position: fixed;
+  right: 0;
+  top: 0;
+  user-select: none;
+}

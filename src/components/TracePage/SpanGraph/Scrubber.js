@@ -21,57 +21,52 @@
 // THE SOFTWARE.
 
 import React from 'react';
+import cx from 'classnames';
 
 import './Scrubber.css';
 
 type ScrubberProps = {
+  isDragging: boolean,
   position: number,
   onMouseDown: (SyntheticMouseEvent<any>) => void,
-  handleTopOffset: number,
-  handleWidth: number,
-  handleHeight: number,
+  onMouseEnter: (SyntheticMouseEvent<any>) => void,
+  onMouseLeave: (SyntheticMouseEvent<any>) => void,
 };
 
-const HANDLE_WIDTH = 6;
-const HANDLE_HEIGHT = 20;
-const HANDLE_TOP_OFFSET = 0;
-
 export default function Scrubber({
-  position,
+  isDragging,
   onMouseDown,
-  handleTopOffset = HANDLE_TOP_OFFSET,
-  handleWidth = HANDLE_WIDTH,
-  handleHeight = HANDLE_HEIGHT,
+  onMouseEnter,
+  onMouseLeave,
+  position,
 }: ScrubberProps) {
   const xPercent = `${position * 100}%`;
+  const className = cx('Scrubber', { isDragging });
   return (
-    <g className="timeline-scrubber" onMouseDown={onMouseDown}>
-      <line className="timeline-scrubber__line" y2="100%" x1={xPercent} x2={xPercent} />
-      <rect
-        x={xPercent}
-        y={handleTopOffset}
-        className="timeline-scrubber__handle"
-        style={{ transform: `translate(${-(handleWidth / 2)}px)` }}
-        rx={handleWidth / 4}
-        ry={handleWidth / 4}
-        width={handleWidth}
-        height={handleHeight}
-      />
-      <circle
-        className="timeline-scrubber__handle--grip"
-        style={{ transform: `translateY(${handleHeight / 4}px)` }}
-        cx={xPercent}
-        cy="50%"
-        r="2"
-      />
-      <circle className="timeline-scrubber__handle--grip" cx={xPercent} cy="50%" r="2" />
-      <circle
-        className="timeline-scrubber__handle--grip"
-        style={{ transform: `translateY(${-handleHeight / 4}px)` }}
-        cx={xPercent}
-        cy="50%"
-        r="2"
-      />
+    <g className={className}>
+      <g
+        className="Scrubber--handles"
+        onMouseDown={onMouseDown}
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
+      >
+        {/* handleExpansion is only visible when `isDragging` is true */}
+        <rect
+          x={xPercent}
+          className="Scrubber--handleExpansion"
+          style={{ transform: `translate(-4.5px)` }}
+          width="9"
+          height="20"
+        />
+        <rect
+          x={xPercent}
+          className="Scrubber--handle"
+          style={{ transform: `translate(-1.5px)` }}
+          width="3"
+          height="20"
+        />
+      </g>
+      <line className="Scrubber--line" y2="100%" x1={xPercent} x2={xPercent} />
     </g>
   );
 }

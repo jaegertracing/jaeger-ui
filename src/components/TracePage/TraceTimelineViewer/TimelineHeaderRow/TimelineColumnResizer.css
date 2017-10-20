@@ -25,7 +25,6 @@ THE SOFTWARE.
   left: 0;
   position: absolute;
   right: 0;
-  top: 0;
 }
 
 .TimelineColumnResizer--wrapper {
@@ -37,7 +36,7 @@ THE SOFTWARE.
 .TimelineColumnResizer--dragger {
   border-left: 1px solid transparent;
   bottom: 0;
-  cursor: ew-resize;
+  cursor: col-resize;
   position: fixed;
   top: 0;
   width: 5px;
@@ -89,8 +88,8 @@ THE SOFTWARE.
 .TimelineColumnResizer--gripIcon::after {
   position: absolute;
   content: " ";
-  top: 60%;
-  bottom: 10%;
+  top: -15px;
+  bottom: 3px;
   right: 8px;
   border-right: 1px solid #ccc;
 }
@@ -108,22 +107,4 @@ THE SOFTWARE.
 .TimelineColumnResizer--wrapper.isDraggingLeft > .TimelineColumnResizer--gripIcon::after,
 .TimelineColumnResizer--wrapper.isDraggingRight > .TimelineColumnResizer--gripIcon::after {
   border-right: 1px solid rgba(136, 0, 136, 0.5);
-}
-
-.TimelineHeaderRow {
-  background: #e8e8e8;
-  border-bottom: 1px solid #ccc;
-  height: 38px;
-  overflow: hidden;
-  position: fixed;
-  width: 100%;
-  z-index: 2;
-}
-
-.TimelineHeaderRow--title {
-  overflow: hidden;
-  padding: 0.5rem;
-  padding-right: 0.1rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }

@@ -20,7 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import React from 'react';
+import * as React from 'react';
 
 import TimelineRow from './TimelineRow';
 import SpanTreeOffset from './SpanTreeOffset';
@@ -35,12 +35,12 @@ type SpanBarRowProps = {
   columnDivision: number,
   depth: number,
   isChildrenExpanded: boolean,
-  isDetailExapnded: boolean,
+  isDetailExpanded: boolean,
   isFilteredOut: boolean,
   isParent: boolean,
   label: string,
-  onDetailToggled: () => void,
-  onChildrenToggled: () => void,
+  onDetailToggled: string => void,
+  onChildrenToggled: string => void,
   operationName: string,
   numTicks: number,
   rpc: ?{
@@ -52,107 +52,126 @@ type SpanBarRowProps = {
   },
   serviceName: string,
   showErrorIcon: boolean,
+  spanID: string,
   viewEnd: number,
   viewStart: number,
 };
 
-export default function SpanBarRow(props: SpanBarRowProps) {
-  const {
-    className,
-    color,
-    columnDivision,
-    depth,
-    isChildrenExpanded,
-    isDetailExapnded,
-    isFilteredOut,
-    isParent,
-    label,
-    onDetailToggled,
-    onChildrenToggled,
-    numTicks,
-    operationName,
-    rpc,
-    serviceName,
-    showErrorIcon,
-    viewEnd,
-    viewStart,
-  } = props;
+/**
+ * This was originally a stateless function, but changing to a PureComponent
+ * reduced the render time of expanding a span row detail by ~50%. This is
+ * even true in the case where the stateless function has the same prop types as
+ * this class and arrow functions are created in the stateless function as
+ * handlers to the onClick props. E.g. for now, the PureComponent is more
+ * performance than the stateless function.
+ */
+export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
+  props: SpanBarRowProps;
 
-  const labelDetail = `${serviceName}::${operationName}`;
-  let longLabel;
-  let hintSide;
-  if (viewStart > 1 - viewEnd) {
-    longLabel = `${labelDetail} | ${label}`;
-    hintSide = 'left';
-  } else {
-    longLabel = `${label} | ${labelDetail}`;
-    hintSide = 'right';
-  }
-  return (
-    <TimelineRow
-      className={`
-        span-row
-        ${className || ''}
-        ${isDetailExapnded ? 'is-expanded' : ''}
-        ${isFilteredOut ? 'is-filtered-out' : ''}
-      `}
-    >
-      <TimelineRow.Cell className="span-name-column" width={columnDivision}>
-        <div className="span-name-wrapper">
-          <SpanTreeOffset
-            level={depth + 1}
-            hasChildren={isParent}
-            childrenVisible={isChildrenExpanded}
-            onClick={onChildrenToggled}
-          />
-          <a
-            className={`span-name ${isDetailExapnded ? 'is-detail-expanded' : ''}`}
-            aria-checked={isDetailExapnded}
-            onClick={onDetailToggled}
-            role="switch"
-            style={{ borderColor: color }}
-            tabIndex="0"
-          >
-            <span
-              className={`span-svc-name ${isParent && !isChildrenExpanded ? 'is-children-collapsed' : ''}`}
-            >
-              {showErrorIcon && <i aria-hidden="true" className="icon warning circle red" />}
-              {serviceName}{' '}
-              {rpc &&
-                <span>
-                  <i className="long arrow right icon" style={{ float: 'none' }} />
-                  <i className="circle icon" style={{ color: rpc.color }} />
-                  {rpc.serviceName}
-                </span>}
-            </span>
-            <span className="endpoint-name mb1 pl1 h6">
-              {rpc ? rpc.operationName : operationName}
-            </span>
-          </a>
-        </div>
-      </TimelineRow.Cell>
-      <TimelineRow.Cell
-        className="span-view"
-        style={{ cursor: 'pointer' }}
-        width={1 - columnDivision}
-        onClick={onDetailToggled}
+  static defaultProps = {
+    className: '',
+    rpc: null,
+  };
+
+  _detailToggle = () => {
+    this.props.onDetailToggled(this.props.spanID);
+  };
+
+  _childrenToggle = () => {
+    this.props.onChildrenToggled(this.props.spanID);
+  };
+
+  render() {
+    const {
+      className,
+      color,
+      columnDivision,
+      depth,
+      isChildrenExpanded,
+      isDetailExpanded,
+      isFilteredOut,
+      isParent,
+      label,
+      numTicks,
+      operationName,
+      rpc,
+      serviceName,
+      showErrorIcon,
+      viewEnd,
+      viewStart,
+    } = this.props;
+
+    const labelDetail = `${serviceName}::${operationName}`;
+    let longLabel;
+    let hintSide;
+    if (viewStart > 1 - viewEnd) {
+      longLabel = `${labelDetail} | ${label}`;
+      hintSide = 'left';
+    } else {
+      longLabel = `${label} | ${labelDetail}`;
+      hintSide = 'right';
+    }
+    return (
+      <TimelineRow
+        className={`
+          span-row
+          ${className || ''}
+          ${isDetailExpanded ? 'is-expanded' : ''}
+          ${isFilteredOut ? 'is-filtered-out' : ''}
+        `}
       >
-        <Ticks numTicks={numTicks} />
-        <SpanBar
-          rpc={rpc}
-          viewStart={viewStart}
-          viewEnd={viewEnd}
-          color={color}
-          shortLabel={label}
-          longLabel={longLabel}
-          hintSide={hintSide}
-        />
-      </TimelineRow.Cell>
-    </TimelineRow>
-  );
+        <TimelineRow.Cell className="span-name-column" width={columnDivision}>
+          <div className="span-name-wrapper">
+            <SpanTreeOffset
+              level={depth + 1}
+              hasChildren={isParent}
+              childrenVisible={isChildrenExpanded}
+              onClick={this._childrenToggle}
+            />
+            <a
+              className={`span-name ${isDetailExpanded ? 'is-detail-expanded' : ''}`}
+              aria-checked={isDetailExpanded}
+              onClick={this._detailToggle}
+              role="switch"
+              style={{ borderColor: color }}
+              tabIndex="0"
+            >
+              <span
+                className={`span-svc-name ${isParent && !isChildrenExpanded ? 'is-children-collapsed' : ''}`}
+              >
+                {showErrorIcon && <i aria-hidden="true" className="icon warning circle red" />}
+                {serviceName}{' '}
+                {rpc &&
+                  <span>
+                    <i className="long arrow right icon" style={{ float: 'none' }} />
+                    <i className="circle icon" style={{ color: rpc.color }} />
+                    {rpc.serviceName}
+                  </span>}
+              </span>
+              <span className="endpoint-name mb1 pl1 h6">
+                {rpc ? rpc.operationName : operationName}
+              </span>
+            </a>
+          </div>
+        </TimelineRow.Cell>
+        <TimelineRow.Cell
+          className="span-view"
+          style={{ cursor: 'pointer' }}
+          width={1 - columnDivision}
+          onClick={this._detailToggle}
+        >
+          <Ticks numTicks={numTicks} />
+          <SpanBar
+            rpc={rpc}
+            viewStart={viewStart}
+            viewEnd={viewEnd}
+            color={color}
+            shortLabel={label}
+            longLabel={longLabel}
+            hintSide={hintSide}
+          />
+        </TimelineRow.Cell>
+      </TimelineRow>
+    );
+  }
 }
-
-SpanBarRow.defaultProps = {
-  className: '',
-  rpc: null,
-};

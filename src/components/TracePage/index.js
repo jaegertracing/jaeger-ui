@@ -1,3 +1,5 @@
+// @flow
+
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -18,86 +20,159 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import React, { Component } from 'react';
+import * as React from 'react';
+import _clamp from 'lodash/clamp';
+import _mapValues from 'lodash/mapValues';
 import _maxBy from 'lodash/maxBy';
 import _values from 'lodash/values';
-import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 
-import TracePageHeader from './TracePageHeader';
+import type { CombokeysHandler, ShortcutCallbacks } from './keyboard-shortcuts';
+import { init as initShortcuts, reset as resetShortcuts } from './keyboard-shortcuts';
+import { cancel as cancelScroll, scrollBy, scrollTo } from './scroll-page';
+import ScrollManager from './ScrollManager';
 import SpanGraph from './SpanGraph';
+import TracePageHeader from './TracePageHeader';
 import TraceTimelineViewer from './TraceTimelineViewer';
+import type { ViewRange, ViewRangeTimeUpdate } from './types';
 import NotFound from '../App/NotFound';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import { getTraceName } from '../../model/trace-viewer';
-import colorGenerator from '../../utils/color-generator';
+import type { Trace } from '../../types';
 
 import './index.css';
 
-export default class TracePage extends Component {
-  static get propTypes() {
-    return {
-      fetchTrace: PropTypes.func.isRequired,
-      trace: PropTypes.object,
-      loading: PropTypes.bool,
-      id: PropTypes.string.isRequired,
+type TracePageProps = {
+  fetchTrace: string => void,
+  trace: ?Trace,
+  loading: boolean,
+  id: string,
+};
+
+type TracePageState = {
+  headerHeight: ?number,
+  slimView: boolean,
+  textFilter: ?string,
+  viewRange: ViewRange,
+};
+
+const VIEW_MIN_RANGE = 0.01;
+const VIEW_CHANGE_BASE = 0.005;
+const VIEW_CHANGE_FAST = 0.05;
+
+const shortcutConfig = {
+  panLeft: [-VIEW_CHANGE_BASE, -VIEW_CHANGE_BASE],
+  panLeftFast: [-VIEW_CHANGE_FAST, -VIEW_CHANGE_FAST],
+  panRight: [VIEW_CHANGE_BASE, VIEW_CHANGE_BASE],
+  panRightFast: [VIEW_CHANGE_FAST, VIEW_CHANGE_FAST],
+  zoomIn: [VIEW_CHANGE_BASE, -VIEW_CHANGE_BASE],
+  zoomInFast: [VIEW_CHANGE_FAST, -VIEW_CHANGE_FAST],
+  zoomOut: [-VIEW_CHANGE_BASE, VIEW_CHANGE_BASE],
+  zoomOutFast: [-VIEW_CHANGE_FAST, VIEW_CHANGE_FAST],
+};
+
+function makeShortcutCallbacks(adjRange): ShortcutCallbacks {
+  function getHandler([startChange, endChange]): CombokeysHandler {
+    return function combokeyHandler(event: SyntheticKeyboardEvent<any>) {
+      event.preventDefault();
+      adjRange(startChange, endChange);
     };
   }
+  return _mapValues(shortcutConfig, getHandler);
+}
 
-  static get childContextTypes() {
-    return {
-      textFilter: PropTypes.string,
-      updateTextFilter: PropTypes.func,
-      updateTimeRangeFilter: PropTypes.func,
-      slimView: PropTypes.bool,
-    };
-  }
+export default class TracePage extends React.PureComponent<TracePageProps, TracePageState> {
+  props: TracePageProps;
+  state: TracePageState;
 
-  constructor(props) {
+  _headerElm: ?Element;
+  _scrollManager: ScrollManager;
+
+  constructor(props: TracePageProps) {
     super(props);
     this.state = {
-      textFilter: '',
-      timeRangeFilter: [],
-      slimView: false,
       headerHeight: null,
+      slimView: false,
+      textFilter: '',
+      viewRange: {
+        time: {
+          current: [0, 1],
+        },
+      },
     };
-    this.headerElm = null;
-    this.setHeaderHeight = this.setHeaderHeight.bind(this);
-    this.toggleSlimView = this.toggleSlimView.bind(this);
-  }
-
-  getChildContext() {
-    const state = { ...this.state };
-    delete state.headerHeight;
-    delete state.timeRangeFilter;
-    return {
-      updateTextFilter: this.updateTextFilter.bind(this),
-      updateTimeRangeFilter: this.updateTimeRangeFilter.bind(this),
-      ...state,
-    };
+    this._headerElm = null;
+    this._scrollManager = new ScrollManager(props.trace, { scrollBy, scrollTo });
   }
 
   componentDidMount() {
-    colorGenerator.clear();
     this.ensureTraceFetched();
-    this.setDefaultTimeRange();
+    this.updateViewRangeTime(0, 1);
+    if (!this._scrollManager) {
+      throw new Error('Invalid state - scrollManager is unset');
+    }
+    const {
+      scrollPageDown,
+      scrollPageUp,
+      scrollToNextVisibleSpan,
+      scrollToPrevVisibleSpan,
+    } = this._scrollManager;
+    const adjViewRange = (a: number, b: number) => this._adjustViewRange(a, b);
+    const shortcutCallbacks = makeShortcutCallbacks(adjViewRange);
+    shortcutCallbacks.scrollPageDown = scrollPageDown;
+    shortcutCallbacks.scrollPageUp = scrollPageUp;
+    shortcutCallbacks.scrollToNextVisibleSpan = scrollToNextVisibleSpan;
+    shortcutCallbacks.scrollToPrevVisibleSpan = scrollToPrevVisibleSpan;
+    initShortcuts(shortcutCallbacks);
   }
 
-  componentDidUpdate({ trace: prevTrace }) {
+  componentWillReceiveProps(nextProps: TracePageProps) {
+    if (this._scrollManager) {
+      this._scrollManager.setTrace(nextProps.trace);
+    }
+  }
+
+  componentDidUpdate({ trace: prevTrace }: TracePageProps) {
     const { trace } = this.props;
-    this.setHeaderHeight(this.headerElm);
+    this.setHeaderHeight(this._headerElm);
     if (!trace) {
       this.ensureTraceFetched();
       return;
     }
     if (!(trace instanceof Error) && (!prevTrace || prevTrace.traceID !== trace.traceID)) {
-      this.setDefaultTimeRange();
+      this.updateViewRangeTime(0, 1);
     }
   }
 
-  setHeaderHeight(elm) {
-    this.headerElm = elm;
+  componentWillUnmount() {
+    resetShortcuts();
+    cancelScroll();
+    if (this._scrollManager) {
+      this._scrollManager.destroy();
+      this._scrollManager = new ScrollManager(undefined, { scrollBy, scrollTo });
+    }
+  }
+
+  _adjustViewRange(startChange: number, endChange: number) {
+    const [viewStart, viewEnd] = this.state.viewRange.time.current;
+    let start = _clamp(viewStart + startChange, 0, 0.99);
+    let end = _clamp(viewEnd + endChange, 0.01, 1);
+    if (end - start < VIEW_MIN_RANGE) {
+      if (startChange < 0 && endChange < 0) {
+        end = start + VIEW_MIN_RANGE;
+      } else if (startChange > 0 && endChange > 0) {
+        end = start + VIEW_MIN_RANGE;
+      } else {
+        const center = viewStart + (viewEnd - viewStart) / 2;
+        start = center - VIEW_MIN_RANGE / 2;
+        end = center + VIEW_MIN_RANGE / 2;
+      }
+    }
+    this.updateViewRangeTime(start, end);
+  }
+
+  setHeaderHeight = (elm: ?Element) => {
+    this._headerElm = elm;
     if (elm) {
       if (this.state.headerHeight !== elm.clientHeight) {
         this.setState({ headerHeight: elm.clientHeight });
@@ -105,32 +180,30 @@ export default class TracePage extends Component {
     } else if (this.state.headerHeight) {
       this.setState({ headerHeight: null });
     }
-  }
+  };
 
-  setDefaultTimeRange() {
-    const { trace } = this.props;
-    if (!trace) {
-      this.updateTimeRangeFilter(null, null);
-      return;
-    }
-    this.updateTimeRangeFilter(0, 1);
-  }
-
-  updateTextFilter(textFilter) {
+  updateTextFilter = (textFilter: ?string) => {
     this.setState({ textFilter });
-  }
+  };
 
-  updateTimeRangeFilter(...timeRangeFilter) {
-    this.setState({ timeRangeFilter });
-  }
+  updateViewRangeTime = (start: number, end: number) => {
+    const time = { current: [start, end] };
+    const viewRange = { ...this.state.viewRange, time };
+    this.setState({ viewRange });
+  };
 
-  toggleSlimView() {
+  updateNextViewRangeTime = (update: ViewRangeTimeUpdate) => {
+    const time = { ...this.state.viewRange.time, ...update };
+    const viewRange = { ...this.state.viewRange, time };
+    this.setState({ viewRange });
+  };
+
+  toggleSlimView = () => {
     this.setState({ slimView: !this.state.slimView });
-  }
+  };
 
   ensureTraceFetched() {
     const { fetchTrace, trace, id, loading } = this.props;
-
     if (!trace && !loading) {
       fetchTrace(id);
     }
@@ -138,7 +211,7 @@ export default class TracePage extends Component {
 
   render() {
     const { id, loading, trace } = this.props;
-    const { slimView, headerHeight } = this.state;
+    const { slimView, headerHeight, textFilter, viewRange } = this.state;
 
     if (!trace) {
       if (loading) {
@@ -171,15 +244,26 @@ export default class TracePage extends Component {
             timestamp={startTime}
             traceID={traceID}
             onSlimViewClicked={this.toggleSlimView}
+            textFilter={textFilter}
+            updateTextFilter={this.updateTextFilter}
           />
-          {!slimView && <SpanGraph trace={trace} viewRange={this.state.timeRangeFilter} />}
+          {!slimView &&
+            <SpanGraph
+              trace={trace}
+              viewRange={viewRange}
+              updateNextViewRangeTime={this.updateNextViewRangeTime}
+              updateViewRangeTime={this.updateViewRangeTime}
+            />}
         </section>
         {headerHeight &&
           <section className="trace-timeline-section" style={{ paddingTop: headerHeight }}>
             <TraceTimelineViewer
+              registerAccessors={this._scrollManager.setAccessors}
+              textFilter={textFilter}
               trace={trace}
-              timeRangeFilter={this.state.timeRangeFilter}
-              textFilter={this.state.textFilter}
+              updateNextViewRangeTime={this.updateNextViewRangeTime}
+              updateViewRangeTime={this.updateViewRangeTime}
+              viewRange={viewRange}
             />
           </section>}
       </div>
@@ -187,7 +271,6 @@ export default class TracePage extends Component {
   }
 }
 
-// export connected component separately
 function mapStateToProps(state, ownProps) {
   const { id } = ownProps.match.params;
   const trace = state.trace.traces[id];

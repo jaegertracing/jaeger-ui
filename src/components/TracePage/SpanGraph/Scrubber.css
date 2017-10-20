@@ -20,31 +20,33 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-.timeline-scrubber {
-  cursor: ew-resize;
+.Scrubber--handleExpansion {
+  cursor: col-resize;
+  fill-opacity: 0;
+  fill: #44f;
 }
 
-.timeline-scrubber__line {
-  stroke: #999;
-  stroke-width: 1;
+  .Scrubber.isDragging .Scrubber--handleExpansion,
+  .Scrubber--handles:hover > .Scrubber--handleExpansion {
+    fill-opacity: 1;
+  }
+
+.Scrubber--handle {
+  cursor: col-resize;
+  fill: #555;
 }
 
-.timeline-scrubber:hover .timeline-scrubber__line {
-  stroke: #777;
+  .Scrubber.isDragging .Scrubber--handle,
+  .Scrubber--handles:hover > .Scrubber--handle {
+    fill: #44f;
+  }
+
+.Scrubber--line {
+  pointer-events: none;
+  stroke: #555;
 }
 
-.timeline-scrubber__handle {
-  stroke: #999;
-  fill: #fff;
-}
-
-.timeline-scrubber:hover .timeline-scrubber__handle {
-  stroke: #777;
-}
-
-.timeline-scrubber__handle--grip {
-  fill: #bbb;
-}
-.timeline-scrubber:hover .timeline-scrubber__handle--grip {
-  fill: #999;
-}
+  .Scrubber.isDragging > .Scrubber--line,
+  .Scrubber--handles:hover + .Scrubber--line {
+    stroke: #44f;
+  }
