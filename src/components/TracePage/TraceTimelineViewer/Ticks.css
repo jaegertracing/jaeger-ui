@@ -20,19 +20,23 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-.span-row-tick {
+.Ticks {
+  pointer-events: none;
+}
+
+.Ticks--tick {
   position: absolute;
   height: 100%;
   width: 1px;
   background: #d3d3d3;
 }
-.span-row-tick-label {
+.Ticks--tickLabel {
   bottom: 0.5rem;
   left: 5px;
   position: absolute;
 }
 
-.span-row-tick-label.is-end-anchor {
+.Ticks--tickLabel.isEndAnchor {
   left: initial;
   right: 5px;
 }

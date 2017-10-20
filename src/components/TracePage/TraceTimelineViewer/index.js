@@ -21,29 +21,67 @@
 // THE SOFTWARE.
 
 import React from 'react';
+import { connect } from 'react-redux';
 
+import { actions } from './duck';
+import TimelineHeaderRow from './TimelineHeaderRow';
 import VirtualizedTraceView from './VirtualizedTraceView';
+import type { Accessors } from '../ScrollManager';
+import type { ViewRange, ViewRangeTimeUpdate } from '../types';
 import type { Trace } from '../../../types';
 
 import './grid.css';
 import './index.css';
 
 type TraceTimelineViewerProps = {
-  trace: ?Trace,
-  timeRangeFilter: [number, number],
+  registerAccessors: Accessors => void,
+  setSpanNameColumnWidth: number => void,
+  spanNameColumnWidth: number,
   textFilter: ?string,
+  trace: Trace,
+  updateNextViewRangeTime: ViewRangeTimeUpdate => void,
+  updateViewRangeTime: (number, number) => void,
+  viewRange: ViewRange,
 };
 
-export default function TraceTimelineViewer(props: TraceTimelineViewerProps) {
-  const { timeRangeFilter: zoomRange, textFilter, trace } = props;
+const NUM_TICKS = 5;
+
+/**
+ * `TraceTimelineViewer` now renders the header row because it is sensitive to
+ * `props.viewRange.time.cursor`. If `VirtualizedTraceView` renders it, it will
+ * re-render the ListView every time the cursor is moved on the trace minimap
+ * or `TimelineHeaderRow`.
+ */
+function TraceTimelineViewer(props: TraceTimelineViewerProps) {
+  const { setSpanNameColumnWidth, updateNextViewRangeTime, updateViewRangeTime, viewRange, ...rest } = props;
+  const { spanNameColumnWidth, trace } = rest;
   return (
     <div className="trace-timeline-viewer">
-      <VirtualizedTraceView
-        textFilter={textFilter}
-        trace={trace}
-        zoomStart={zoomRange[0]}
-        zoomEnd={zoomRange[1]}
+      <TimelineHeaderRow
+        duration={trace.duration}
+        nameColumnWidth={spanNameColumnWidth}
+        numTicks={NUM_TICKS}
+        onColummWidthChange={setSpanNameColumnWidth}
+        viewRangeTime={viewRange.time}
+        updateNextViewRangeTime={updateNextViewRangeTime}
+        updateViewRangeTime={updateViewRangeTime}
       />
+      <VirtualizedTraceView {...rest} currentViewRangeTime={viewRange.time.current} />
     </div>
   );
 }
+
+function mapStateToProps(state, ownProps) {
+  const spanNameColumnWidth = state.traceTimeline.spanNameColumnWidth;
+  return { spanNameColumnWidth, ...ownProps };
+}
+
+function mapDispatchToProps(dispatch) {
+  const setSpanNameColumnWidth = (...args) => {
+    const action = actions.setSpanNameColumnWidth(...args);
+    return dispatch(action);
+  };
+  return { setSpanNameColumnWidth };
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(TraceTimelineViewer);

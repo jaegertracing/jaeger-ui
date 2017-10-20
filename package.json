@@ -29,6 +29,7 @@
     "basscss": "^8.0.3",
     "chance": "^1.0.10",
     "classnames": "^2.2.5",
+    "combokeys": "^3.0.0",
     "cytoscape": "^3.2.1",
     "cytoscape-dagre": "^2.0.0",
     "d3-scale": "^1.0.6",
@@ -65,7 +66,8 @@
     "reselect": "^3.0.1",
     "semantic-ui-css": "^2.2.12",
     "semantic-ui-react": "^0.71.4",
-    "store": "^2.0.12"
+    "store": "^2.0.12",
+    "tween-functions": "^1.2.0"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -83,7 +85,7 @@
     "clear-homepage": "json -I -f package.json -e 'delete this.homepage'",
     "deploy-docs": "./bin/deploy-docs.sh",
     "postpublish": "npm run build:docs && npm run deploy-docs",
-    "add-license": "uber-licence",
+    "add-license": "cd src && uber-licence",
     "precommit": "lint-staged"
   },
   "lint-staged": {

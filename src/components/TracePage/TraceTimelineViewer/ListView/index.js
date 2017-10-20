@@ -181,8 +181,6 @@ export default class ListView extends React.Component<ListViewProps> {
     this._yPositions = new Positions(200);
     // _knownHeights is (item-key -> observed height) of list items
     this._knownHeights = new Map();
-    this._getHeight = this._getHeight.bind(this);
-    this._scanItemHeights = this._scanItemHeights.bind(this);
 
     this._startIndexDrawn = 2 ** 20;
     this._endIndexDrawn = -(2 ** 20);
@@ -192,17 +190,12 @@ export default class ListView extends React.Component<ListViewProps> {
     this._scrollTop = -1;
     this._isScrolledOrResized = false;
 
-    this._onScroll = this._onScroll.bind(this);
-    this._positionList = this._positionList.bind(this);
-
     this._htmlTopOffset = -1;
     this._windowScrollListenerAdded = false;
     // _htmlElm is only relevant if props.windowScroller is true
-    this._htmlElm = window.document.querySelector('html');
+    this._htmlElm = (document.documentElement: any);
     this._wrapperElm = undefined;
     this._itemHolderElm = undefined;
-    this._initWrapper = this._initWrapper.bind(this);
-    this._initItemHolder = this._initItemHolder.bind(this);
   }
 
   componentDidMount() {
@@ -228,11 +221,29 @@ export default class ListView extends React.Component<ListViewProps> {
     }
   }
 
+  getViewHeight = () => this._viewHeight;
+
+  /**
+   * Get the index of the item at the bottom of the current view.
+   */
+  getBottomVisibleIndex = (): number => {
+    const bottomY = this._scrollTop + this._viewHeight;
+    return this._yPositions.findFloorIndex(bottomY, this._getHeight);
+  };
+
+  /**
+   * Get the index of the item at the top of the current view.
+   */
+  getTopVisibleIndex = (): number => this._yPositions.findFloorIndex(this._scrollTop, this._getHeight);
+
+  getRowPosition = (index: number): { height: number, y: number } =>
+    this._yPositions.getRowPosition(index, this._getHeight);
+
   /**
    * Scroll event listener that schedules a remeasuring of which items should be
    * rendered.
    */
-  _onScroll = function _onScroll() {
+  _onScroll = () => {
     if (!this._isScrolledOrResized) {
       this._isScrolledOrResized = true;
       window.requestAnimationFrame(this._positionList);
@@ -269,23 +280,11 @@ export default class ListView extends React.Component<ListViewProps> {
       this._viewHeight = this._wrapperElm.clientHeight;
       this._scrollTop = this._wrapperElm.scrollTop;
     } else {
-      this._viewHeight = this._htmlElm.clientHeight;
-      this._scrollTop = this._htmlElm.scrollTop;
+      this._viewHeight = window.innerHeight - this._htmlTopOffset;
+      this._scrollTop = window.scrollY;
     }
-    let yStart;
-    let yEnd;
-    if (useRoot) {
-      if (this._scrollTop < this._htmlTopOffset) {
-        yStart = 0;
-        yEnd = this._viewHeight - this._htmlTopOffset + this._scrollTop;
-      } else {
-        yStart = this._scrollTop - this._htmlTopOffset;
-        yEnd = yStart + this._viewHeight;
-      }
-    } else {
-      yStart = this._scrollTop;
-      yEnd = this._scrollTop + this._viewHeight;
-    }
+    const yStart = this._scrollTop;
+    const yEnd = this._scrollTop + this._viewHeight;
     this._startIndex = this._yPositions.findFloorIndex(yStart, this._getHeight);
     this._endIndex = this._yPositions.findFloorIndex(yEnd, this._getHeight);
   }
@@ -294,7 +293,7 @@ export default class ListView extends React.Component<ListViewProps> {
    * Checked to see if the currently rendered items are sufficient, if not,
    * force an update to trigger more items to be rendered.
    */
-  _positionList = function _positionList() {
+  _positionList = () => {
     this._isScrolledOrResized = false;
     if (!this._wrapperElm) {
       return;
@@ -314,14 +313,14 @@ export default class ListView extends React.Component<ListViewProps> {
     }
   };
 
-  _initWrapper = function _initWrapper(elm: HTMLElement) {
+  _initWrapper = (elm: HTMLElement) => {
     this._wrapperElm = elm;
     if (!this.props.windowScroller) {
       this._viewHeight = elm && elm.clientHeight;
     }
   };
 
-  _initItemHolder = function _initItemHolder(elm: HTMLElement) {
+  _initItemHolder = (elm: HTMLElement) => {
     this._itemHolderElm = elm;
     this._scanItemHeights();
   };
@@ -331,7 +330,7 @@ export default class ListView extends React.Component<ListViewProps> {
    * item-key (which is on a data-* attribute). If any new or adjusted heights
    * are found, re-measure the current known y-positions (via .yPositions).
    */
-  _scanItemHeights = function _scanItemHeights() {
+  _scanItemHeights = () => {
     const getIndexFromKey = this.props.getIndexFromKey;
     if (!this._itemHolderElm) {
       return;
@@ -384,7 +383,7 @@ export default class ListView extends React.Component<ListViewProps> {
    * Get the height of the element at index `i`; first check the known heigths,
    * fallbck to `.props.itemHeightGetter(...)`.
    */
-  _getHeight = function _getHeight(i: number) {
+  _getHeight = (i: number) => {
     const key = this.props.getKeyFromIndex(i);
     const known = this._knownHeights.get(key);
     // known !== known iff known is NaN
@@ -432,11 +431,11 @@ export default class ListView extends React.Component<ListViewProps> {
 
     items.length = end - start + 1;
     for (let i = start; i <= end; i++) {
-      this._yPositions.confirmHeight(i, heightGetter);
+      const { y: top, height } = this._yPositions.getRowPosition(i, heightGetter);
       const style = {
+        height,
+        top,
         position: 'absolute',
-        top: this._yPositions.ys[i],
-        height: this._yPositions.heights[i],
       };
       const itemKey = getKeyFromIndex(i);
       const attrs = { 'data-item-key': itemKey };

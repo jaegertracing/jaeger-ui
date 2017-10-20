@@ -20,24 +20,20 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-.SpanGraph--zlayer {
-  position: relative;
-  z-index: 1;
-}
-
-.SpanGraph--graph {
-  border: 1px solid #999;
-  /* need !important here to overcome something from semantic UI */
-  overflow: visible !important;
-  position: relative;
-  transform-origin: 0 0;
+.TimelineHeaderRow {
+  background: #e8e8e8;
+  border-bottom: 1px solid #ccc;
+  height: 38px;
+  overflow: hidden;
+  position: fixed;
   width: 100%;
+  z-index: 2;
 }
 
-.SpanGraph--graph.is-dragging {
-  cursor: ew-resize;
-}
-
-.SpanGraph--inactive {
-  fill: rgba(214, 214, 214, 0.5);
+.TimelineHeaderRow--title {
+  overflow: hidden;
+  padding: 0.5rem;
+  padding-right: 0.1rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
