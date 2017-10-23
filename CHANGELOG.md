@@ -1,7 +1,6 @@
 # Changes merged into master
 
 
-
 ## [#103](https://github.com/jaegertracing/jaeger-ui/pull/103) Add a changelog, dates to 2017-08-23
 
 Non-functional change.
@@ -9,6 +8,29 @@ Non-functional change.
 Adds a `CHANGELOG.md` document that details merged PRs.
 
 Starts from late August, 2017.
+
+
+## [#102](https://github.com/jaegertracing/jaeger-ui/pull/102) Resolve #96 - problem with Jest and watchman (2017-10-23)
+
+Fix #96. Non-functional change.
+
+Was able to reproduce #96 locally with:
+
+```
+yarn test -- --no-watchman
+```
+
+Issue stems from something specific to `jest` pre `jest@20.1.0-alpha.3`, [apparently](https://github.com/facebook/jest/issues/1767#issuecomment-313434888).
+
+[A way to resolve the issue is](https://github.com/facebook/jest/issues/3436#issuecomment-302543205):
+
+```
+brew install watchman
+```
+
+Or, upgrading jest resolved the issue (when running with `--no-watchman`).
+
+Only precarious thing about upgrading `jest` is it is now pinned in the repo instead of implied by `react-scripts` (the latest version of which uses `jest@20.0.4`). So, the install should be reverted when `react-scripts` comes around to having the newer version of `jest`.
 
 
 ## [#93](https://github.com/jaegertracing/jaeger-ui/pull/93) Keyboard shortcuts and minimap UX (2017-10-20)
