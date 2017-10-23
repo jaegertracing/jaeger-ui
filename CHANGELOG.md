@@ -33,6 +33,36 @@ Or, upgrading jest resolved the issue (when running with `--no-watchman`).
 Only precarious thing about upgrading `jest` is it is now pinned in the repo instead of implied by `react-scripts` (the latest version of which uses `jest@20.0.4`). So, the install should be reverted when `react-scripts` comes around to having the newer version of `jest`.
 
 
+## [#99](https://github.com/jaegertracing/jaeger-ui/pull/99) Apache license headers and a license check (2017-10-22)
+
+Resolves #95
+
+Headers are updated with the following script ([source](https://stackoverflow.com/questions/14107309/how-can-i-use-sed-to-replace-copyright-license-headers-in-my-source-files)):
+
+```
+#!/bin/sh
+
+find src -name "*.js" -print0 | xargs -0 \
+gsed -i -e '/Permission is hereby granted, free of charge, to any person obtaining a copy/,/THE SOFTWARE.$/c\
+// Licensed under the Apache License, Version 2.0 (the "License");\
+// you may not use this file except in compliance with the License.\
+// You may obtain a copy of the License at\
+//\
+// http://www.apache.org/licenses/LICENSE-2.0\
+//\
+// Unless required by applicable law or agreed to in writing, software\
+// distributed under the License is distributed on an "AS IS" BASIS,\
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\
+// See the License for the specific language governing permissions and\
+// limitations under the License.'
+```
+
+
+## [#97](https://github.com/jaegertracing/jaeger-ui/pull/97) Change to Apache license v.2 and add DCO / CONTRIBUTING.md (2017-10-22)
+
+Per #95
+
+
 ## [#93](https://github.com/jaegertracing/jaeger-ui/pull/93) Keyboard shortcuts and minimap UX (2017-10-20)
 
 ![93-00-viewrange-ux-kbd](https://user-images.githubusercontent.com/2304337/31641055-2c00529e-b2b0-11e7-9ff2-34716ecfcc70.gif)
