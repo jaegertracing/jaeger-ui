@@ -17,7 +17,7 @@ The app was built with [create-react-app](https://github.com/facebookincubator/c
 Fork, then clone the `jaeger-ui` repo and change directory into it.
 
 ```
-git clone https://github.com/uber/jaeger-ui.git
+git clone https://github.com/jaegertracing/jaeger-ui.git
 cd jaeger-ui
 ```
 
@@ -55,7 +55,7 @@ npm start
 | Command | Description |
 | ------- | ----------- |
 | `npm start` | Starts development server with hot reloading and api proxy. |
-| `npm test` | Runs all the test |
+| `npm test -- --coverage` | Runs all the tests |
 | `npm run lint` | Lint the project (eslint, prettier, flow) |
 | `npm run build` | Runs production build. Outputs files to `/dist`. |
 
