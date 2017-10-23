@@ -2,6 +2,15 @@
 
 
 
+## [#103](https://github.com/jaegertracing/jaeger-ui/pull/103) Add a changelog, dates to 2017-08-23
+
+Non-functional change.
+
+Adds a `CHANGELOG.md` document that details merged PRs.
+
+Starts from late August, 2017.
+
+
 ## [#93](https://github.com/jaegertracing/jaeger-ui/pull/93) Keyboard shortcuts and minimap UX (2017-10-20)
 
 ![93-00-viewrange-ux-kbd](https://user-images.githubusercontent.com/2304337/31641055-2c00529e-b2b0-11e7-9ff2-34716ecfcc70.gif)
