@@ -4,6 +4,10 @@
 
 Visualize distributed tracing with Jaeger.
 
+## Contributing
+
+See [CONTRIBUTING](./CONTRIBUTING.md).
+
 ## Development
 
 The app was built with [create-react-app](https://github.com/facebookincubator/create-react-app).
@@ -77,8 +81,8 @@ npm run build
 
 [doc-img]: https://readthedocs.org/projects/jaeger/badge/?version=latest
 [doc]: http://jaeger.readthedocs.org/en/latest/
-[ci-img]: https://travis-ci.org/uber/jaeger-ui.svg?branch=master
-[ci]: https://travis-ci.org/uber/jaeger-ui
-[cov-img]: https://coveralls.io/repos/uber/jaeger-ui/badge.svg?branch=master
-[cov]: https://coveralls.io/github/uber/jaeger-ui?branch=master
+[ci-img]: https://travis-ci.org/jaegertracing/jaeger-ui.svg?branch=master
+[ci]: https://travis-ci.org/jaegertracing/jaeger-ui
+[cov-img]: https://coveralls.io/repos/jaegertracing/jaeger-ui/badge.svg?branch=master
+[cov]: https://coveralls.io/github/jaegertracing/jaeger-ui?branch=master
 [aio-docs]: http://jaeger.readthedocs.io/en/latest/getting_started/
