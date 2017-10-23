@@ -77,7 +77,7 @@
     "eject": "react-scripts eject",
     "test": "react-scripts test --env=jsdom",
     "coverage": "npm run test -- --coverage",
-    "lint": "npm run eslint && npm run prettier && npm run flow && ncpm run heck-license",
+    "lint": "npm run eslint && npm run prettier && npm run flow && npm run check-license",
     "eslint": "eslint src",
     "check-license": "./scripts/check-license.sh",
     "prettier": "prettier --single-quote --trailing-comma es5 --print-width 110 --write \"src/**/*.js\"",
