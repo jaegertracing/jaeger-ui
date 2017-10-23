@@ -55,7 +55,7 @@ npm start
 | Command | Description |
 | ------- | ----------- |
 | `npm start` | Starts development server with hot reloading and api proxy. |
-| `npm test -- --coverage` | Runs all the tests |
+| `npm test` | Runs all the tests |
 | `npm run lint` | Lint the project (eslint, prettier, flow) |
 | `npm run build` | Runs production build. Outputs files to `/dist`. |
 
