@@ -11,184 +11,188 @@ ShallowWrapper {
   "node": <div
     onScroll={[Function]}
     style={
-        Object {
-            "height": "100%",
-            "overflowY": "auto",
-            "position": "relative",
-          }
+      Object {
+        "height": "100%",
+        "overflowY": "auto",
+        "position": "relative",
+      }
     }
->
+  >
     <div
-        style={
-            Object {
-                "height": 1640,
-                "position": "relative",
-              }
+      style={
+        Object {
+          "height": 1640,
+          "position": "relative",
         }
+      }
     >
-        <div
-            className="SomeClassName"
-            style={
-                Object {
-                    "margin": 0,
-                    "padding": 0,
-                    "position": "absolute",
-                    "top": 0,
-                  }
+      <div
+        className="SomeClassName"
+        style={
+          Object {
+            "margin": 0,
+            "padding": 0,
+            "position": "absolute",
+            "top": 0,
+          }
+        }
+      >
+        <Item
+          data-item-key="0"
+          style={
+            Object {
+              "height": 2,
+              "position": "absolute",
+              "top": 0,
             }
+          }
         >
-            <Item
-                data-item-key="0"
-                style={
-                    Object {
-                        "height": 2,
-                        "position": "absolute",
-                        "top": 0,
-                      }
-                }
-            />
-            <Item
-                data-item-key="1"
-                style={
-                    Object {
-                        "height": 4,
-                        "position": "absolute",
-                        "top": 2,
-                      }
-                }
-            >
-                1
-            </Item>
-            <Item
-                data-item-key="2"
-                style={
-                    Object {
-                        "height": 6,
-                        "position": "absolute",
-                        "top": 6,
-                      }
-                }
-            >
-                2
-            </Item>
-            <Item
-                data-item-key="3"
-                style={
-                    Object {
-                        "height": 8,
-                        "position": "absolute",
-                        "top": 12,
-                      }
-                }
-            >
-                3
-            </Item>
-            <Item
-                data-item-key="4"
-                style={
-                    Object {
-                        "height": 10,
-                        "position": "absolute",
-                        "top": 20,
-                      }
-                }
-            >
-                4
-            </Item>
-        </div>
+          0
+        </Item>
+        <Item
+          data-item-key="1"
+          style={
+            Object {
+              "height": 4,
+              "position": "absolute",
+              "top": 2,
+            }
+          }
+        >
+          1
+        </Item>
+        <Item
+          data-item-key="2"
+          style={
+            Object {
+              "height": 6,
+              "position": "absolute",
+              "top": 6,
+            }
+          }
+        >
+          2
+        </Item>
+        <Item
+          data-item-key="3"
+          style={
+            Object {
+              "height": 8,
+              "position": "absolute",
+              "top": 12,
+            }
+          }
+        >
+          3
+        </Item>
+        <Item
+          data-item-key="4"
+          style={
+            Object {
+              "height": 10,
+              "position": "absolute",
+              "top": 20,
+            }
+          }
+        >
+          4
+        </Item>
+      </div>
     </div>
-</div>,
+  </div>,
   "nodes": Array [
     <div
       onScroll={[Function]}
       style={
-            Object {
-                  "height": "100%",
-                  "overflowY": "auto",
-                  "position": "relative",
-                }
+        Object {
+          "height": "100%",
+          "overflowY": "auto",
+          "position": "relative",
+        }
       }
->
+    >
       <div
-            style={
-                  Object {
-                        "height": 1640,
-                        "position": "relative",
-                      }
-            }
+        style={
+          Object {
+            "height": 1640,
+            "position": "relative",
+          }
+        }
       >
-            <div
-                  className="SomeClassName"
-                  style={
-                        Object {
-                              "margin": 0,
-                              "padding": 0,
-                              "position": "absolute",
-                              "top": 0,
-                            }
-                  }
-            >
-                  <Item
-                        data-item-key="0"
-                        style={
-                              Object {
-                                    "height": 2,
-                                    "position": "absolute",
-                                    "top": 0,
-                                  }
-                        }
-                  />
-                  <Item
-                        data-item-key="1"
-                        style={
-                              Object {
-                                    "height": 4,
-                                    "position": "absolute",
-                                    "top": 2,
-                                  }
-                        }
-                  >
-                        1
-                  </Item>
-                  <Item
-                        data-item-key="2"
-                        style={
-                              Object {
-                                    "height": 6,
-                                    "position": "absolute",
-                                    "top": 6,
-                                  }
-                        }
-                  >
-                        2
-                  </Item>
-                  <Item
-                        data-item-key="3"
-                        style={
-                              Object {
-                                    "height": 8,
-                                    "position": "absolute",
-                                    "top": 12,
-                                  }
-                        }
-                  >
-                        3
-                  </Item>
-                  <Item
-                        data-item-key="4"
-                        style={
-                              Object {
-                                    "height": 10,
-                                    "position": "absolute",
-                                    "top": 20,
-                                  }
-                        }
-                  >
-                        4
-                  </Item>
-            </div>
+        <div
+          className="SomeClassName"
+          style={
+            Object {
+              "margin": 0,
+              "padding": 0,
+              "position": "absolute",
+              "top": 0,
+            }
+          }
+        >
+          <Item
+            data-item-key="0"
+            style={
+              Object {
+                "height": 2,
+                "position": "absolute",
+                "top": 0,
+              }
+            }
+          >
+            0
+          </Item>
+          <Item
+            data-item-key="1"
+            style={
+              Object {
+                "height": 4,
+                "position": "absolute",
+                "top": 2,
+              }
+            }
+          >
+            1
+          </Item>
+          <Item
+            data-item-key="2"
+            style={
+              Object {
+                "height": 6,
+                "position": "absolute",
+                "top": 6,
+              }
+            }
+          >
+            2
+          </Item>
+          <Item
+            data-item-key="3"
+            style={
+              Object {
+                "height": 8,
+                "position": "absolute",
+                "top": 12,
+              }
+            }
+          >
+            3
+          </Item>
+          <Item
+            data-item-key="4"
+            style={
+              Object {
+                "height": 10,
+                "position": "absolute",
+                "top": 20,
+              }
+            }
+          >
+            4
+          </Item>
+        </div>
       </div>
-</div>,
+    </div>,
   ],
   "options": Object {},
   "renderer": ReactShallowRenderer {
@@ -207,7 +211,7 @@ ShallowWrapper {
         viewBuffer={10}
         viewBufferMin={5}
         windowScroller={false}
-/>,
+      />,
       "_debugID": 3,
       "_hostContainerInfo": null,
       "_hostParent": null,
@@ -218,7 +222,7 @@ ShallowWrapper {
         "_htmlElm": <html>
           <head />
           <body />
-</html>,
+        </html>,
         "_htmlTopOffset": -1,
         "_initItemHolder": [Function],
         "_initWrapper": [Function],
@@ -365,184 +369,188 @@ ShallowWrapper {
         "_currentElement": <div
           onScroll={[Function]}
           style={
-                    Object {
-                              "height": "100%",
-                              "overflowY": "auto",
-                              "position": "relative",
-                            }
+            Object {
+              "height": "100%",
+              "overflowY": "auto",
+              "position": "relative",
+            }
           }
->
+        >
           <div
-                    style={
-                              Object {
-                                        "height": 1640,
-                                        "position": "relative",
-                                      }
-                    }
+            style={
+              Object {
+                "height": 1640,
+                "position": "relative",
+              }
+            }
           >
-                    <div
-                              className="SomeClassName"
-                              style={
-                                        Object {
-                                                  "margin": 0,
-                                                  "padding": 0,
-                                                  "position": "absolute",
-                                                  "top": 0,
-                                                }
-                              }
-                    >
-                              <Item
-                                        data-item-key="0"
-                                        style={
-                                                  Object {
-                                                            "height": 2,
-                                                            "position": "absolute",
-                                                            "top": 0,
-                                                          }
-                                        }
-                              />
-                              <Item
-                                        data-item-key="1"
-                                        style={
-                                                  Object {
-                                                            "height": 4,
-                                                            "position": "absolute",
-                                                            "top": 2,
-                                                          }
-                                        }
-                              >
-                                        1
-                              </Item>
-                              <Item
-                                        data-item-key="2"
-                                        style={
-                                                  Object {
-                                                            "height": 6,
-                                                            "position": "absolute",
-                                                            "top": 6,
-                                                          }
-                                        }
-                              >
-                                        2
-                              </Item>
-                              <Item
-                                        data-item-key="3"
-                                        style={
-                                                  Object {
-                                                            "height": 8,
-                                                            "position": "absolute",
-                                                            "top": 12,
-                                                          }
-                                        }
-                              >
-                                        3
-                              </Item>
-                              <Item
-                                        data-item-key="4"
-                                        style={
-                                                  Object {
-                                                            "height": 10,
-                                                            "position": "absolute",
-                                                            "top": 20,
-                                                          }
-                                        }
-                              >
-                                        4
-                              </Item>
-                    </div>
+            <div
+              className="SomeClassName"
+              style={
+                Object {
+                  "margin": 0,
+                  "padding": 0,
+                  "position": "absolute",
+                  "top": 0,
+                }
+              }
+            >
+              <Item
+                data-item-key="0"
+                style={
+                  Object {
+                    "height": 2,
+                    "position": "absolute",
+                    "top": 0,
+                  }
+                }
+              >
+                0
+              </Item>
+              <Item
+                data-item-key="1"
+                style={
+                  Object {
+                    "height": 4,
+                    "position": "absolute",
+                    "top": 2,
+                  }
+                }
+              >
+                1
+              </Item>
+              <Item
+                data-item-key="2"
+                style={
+                  Object {
+                    "height": 6,
+                    "position": "absolute",
+                    "top": 6,
+                  }
+                }
+              >
+                2
+              </Item>
+              <Item
+                data-item-key="3"
+                style={
+                  Object {
+                    "height": 8,
+                    "position": "absolute",
+                    "top": 12,
+                  }
+                }
+              >
+                3
+              </Item>
+              <Item
+                data-item-key="4"
+                style={
+                  Object {
+                    "height": 10,
+                    "position": "absolute",
+                    "top": 20,
+                  }
+                }
+              >
+                4
+              </Item>
+            </div>
           </div>
-</div>,
+        </div>,
         "_debugID": 4,
         "_renderedOutput": <div
           onScroll={[Function]}
           style={
-                    Object {
-                              "height": "100%",
-                              "overflowY": "auto",
-                              "position": "relative",
-                            }
+            Object {
+              "height": "100%",
+              "overflowY": "auto",
+              "position": "relative",
+            }
           }
->
+        >
           <div
-                    style={
-                              Object {
-                                        "height": 1640,
-                                        "position": "relative",
-                                      }
-                    }
+            style={
+              Object {
+                "height": 1640,
+                "position": "relative",
+              }
+            }
           >
-                    <div
-                              className="SomeClassName"
-                              style={
-                                        Object {
-                                                  "margin": 0,
-                                                  "padding": 0,
-                                                  "position": "absolute",
-                                                  "top": 0,
-                                                }
-                              }
-                    >
-                              <Item
-                                        data-item-key="0"
-                                        style={
-                                                  Object {
-                                                            "height": 2,
-                                                            "position": "absolute",
-                                                            "top": 0,
-                                                          }
-                                        }
-                              />
-                              <Item
-                                        data-item-key="1"
-                                        style={
-                                                  Object {
-                                                            "height": 4,
-                                                            "position": "absolute",
-                                                            "top": 2,
-                                                          }
-                                        }
-                              >
-                                        1
-                              </Item>
-                              <Item
-                                        data-item-key="2"
-                                        style={
-                                                  Object {
-                                                            "height": 6,
-                                                            "position": "absolute",
-                                                            "top": 6,
-                                                          }
-                                        }
-                              >
-                                        2
-                              </Item>
-                              <Item
-                                        data-item-key="3"
-                                        style={
-                                                  Object {
-                                                            "height": 8,
-                                                            "position": "absolute",
-                                                            "top": 12,
-                                                          }
-                                        }
-                              >
-                                        3
-                              </Item>
-                              <Item
-                                        data-item-key="4"
-                                        style={
-                                                  Object {
-                                                            "height": 10,
-                                                            "position": "absolute",
-                                                            "top": 20,
-                                                          }
-                                        }
-                              >
-                                        4
-                              </Item>
-                    </div>
+            <div
+              className="SomeClassName"
+              style={
+                Object {
+                  "margin": 0,
+                  "padding": 0,
+                  "position": "absolute",
+                  "top": 0,
+                }
+              }
+            >
+              <Item
+                data-item-key="0"
+                style={
+                  Object {
+                    "height": 2,
+                    "position": "absolute",
+                    "top": 0,
+                  }
+                }
+              >
+                0
+              </Item>
+              <Item
+                data-item-key="1"
+                style={
+                  Object {
+                    "height": 4,
+                    "position": "absolute",
+                    "top": 2,
+                  }
+                }
+              >
+                1
+              </Item>
+              <Item
+                data-item-key="2"
+                style={
+                  Object {
+                    "height": 6,
+                    "position": "absolute",
+                    "top": 6,
+                  }
+                }
+              >
+                2
+              </Item>
+              <Item
+                data-item-key="3"
+                style={
+                  Object {
+                    "height": 8,
+                    "position": "absolute",
+                    "top": 12,
+                  }
+                }
+              >
+                3
+              </Item>
+              <Item
+                data-item-key="4"
+                style={
+                  Object {
+                    "height": 10,
+                    "position": "absolute",
+                    "top": 20,
+                  }
+                }
+              >
+                4
+              </Item>
+            </div>
           </div>
-</div>,
+        </div>,
       },
       "_renderedNodeType": 0,
       "_rootNodeID": 0,
@@ -565,6 +573,6 @@ ShallowWrapper {
     viewBuffer={10}
     viewBufferMin={5}
     windowScroller={false}
-/>,
+  />,
 }
 `;
