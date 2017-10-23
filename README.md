@@ -17,7 +17,7 @@ The app was built with [create-react-app](https://github.com/facebookincubator/c
 Fork, then clone the `jaeger-ui` repo and change directory into it.
 
 ```
-git clone https://github.com/uber/jaeger-ui.git
+git clone https://github.com/jaegertracing/jaeger-ui.git
 cd jaeger-ui
 ```
 
