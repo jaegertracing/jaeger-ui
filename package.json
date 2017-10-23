@@ -40,6 +40,7 @@
     "history": "^4.6.3",
     "is-promise": "^2.1.0",
     "isomorphic-fetch": "^2.2.1",
+    "jest": "^21.2.1",
     "json-markup": "^1.1.0",
     "lodash": "^4.17.4",
     "moment": "^2.18.1",
