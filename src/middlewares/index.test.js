@@ -12,8 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import sinon from 'sinon';
+/* eslint-disable import/first */
+jest.mock('node-fetch', () => () =>
+  Promise.resolve({
+    status: 200,
+    data: () => Promise.resolve({ data: null }),
+    json: () => Promise.resolve({ data: null }),
+  })
+);
+
 import { change } from 'redux-form';
+import sinon from 'sinon';
+
 import * as jaegerMiddlewares from './index';
 import { fetchServiceOperations } from '../actions/jaeger-api';
 
