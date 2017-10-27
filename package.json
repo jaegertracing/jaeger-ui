@@ -22,8 +22,7 @@
     "prettier": "^1.5.3",
     "react-scripts": "^1.0.11",
     "react-test-renderer": "^15.6.1",
-    "sinon": "^3.2.1",
-    "uber-licence": "^3.1.1"
+    "sinon": "^3.2.1"
   },
   "dependencies": {
     "basscss": "^8.0.3",
@@ -84,7 +83,6 @@
     "check-license": "./scripts/check-license.sh",
     "prettier": "prettier --single-quote --trailing-comma es5 --print-width 110 --write \"src/**/*.js\"",
     "flow": "flow; test $? -eq 0 -o $? -eq 2",
-    "add-license": "cd src && uber-licence",
     "precommit": "lint-staged"
   },
   "lint-staged": {
