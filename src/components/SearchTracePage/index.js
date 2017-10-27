@@ -12,14 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import React, { Component } from 'react';
 import _values from 'lodash/values';
 import PropTypes from 'prop-types';
-import React, { Component } from 'react';
 import queryString from 'query-string';
-import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
-import { Field, reduxForm, formValueSelector } from 'redux-form';
 import { Link } from 'react-router-dom';
+import { bindActionCreators } from 'redux';
+import { Field, reduxForm, formValueSelector } from 'redux-form';
+import store from 'store';
 
 import JaegerLogo from '../../img/jaeger-logo.svg';
 
@@ -61,21 +62,27 @@ const traceResultsFiltersFormSelector = formValueSelector('traceResultsFilters')
 
 export default class SearchTracePage extends Component {
   componentDidMount() {
-    const { searchTraces, urlQueryParams, fetchServices } = this.props;
+    const { searchTraces, urlQueryParams, fetchServices, fetchServiceOperations } = this.props;
     if (urlQueryParams.service || urlQueryParams.traceID) {
       searchTraces(urlQueryParams);
     }
     fetchServices();
+    const { service } = store.get('lastSearch') || {};
+    if (service && service !== '-') {
+      fetchServiceOperations(service);
+    }
   }
+
   render() {
     const {
-      traceResults,
-      services,
-      numberOfTraceResults,
-      maxTraceDuration,
-      loading,
       errorMessage,
       isHomepage,
+      loadingServices,
+      loadingTraces,
+      maxTraceDuration,
+      numberOfTraceResults,
+      services,
+      traceResults,
     } = this.props;
     const hasTraceResults = traceResults && traceResults.length > 0;
     return (
@@ -83,13 +90,17 @@ export default class SearchTracePage extends Component {
         <div className="four wide column">
           <div className="ui tertiary segment" style={{ background: 'whitesmoke' }}>
             <h3>Find Traces</h3>
-            <TraceSearchForm services={services} />
+            {!loadingServices && services
+              ? <TraceSearchForm services={services} />
+              : <div className="m1">
+                  <div className="ui active centered inline loader" />
+                </div>}
           </div>
         </div>
         <div className="twelve wide column padded">
-          {loading && <div className="ui active centered inline loader" />}
+          {loadingTraces && <div className="ui active centered inline loader" />}
           {errorMessage &&
-            !loading &&
+            !loadingTraces &&
             <div className="ui message red trace-search--error">
               There was an error querying for traces:<br />
               {errorMessage}
@@ -103,11 +114,11 @@ export default class SearchTracePage extends Component {
             </div>}
           {!isHomepage &&
             !hasTraceResults &&
-            !loading &&
+            !loadingTraces &&
             !errorMessage &&
             <div className="ui message trace-search--no-results">No trace results. Try another query.</div>}
           {hasTraceResults &&
-            !loading &&
+            !loadingTraces &&
             <div>
               <div>
                 <div style={{ border: '1px solid #e6e6e6' }}>
@@ -165,7 +176,8 @@ SearchTracePage.propTypes = {
   traceResults: PropTypes.array,
   numberOfTraceResults: PropTypes.number,
   maxTraceDuration: PropTypes.number,
-  loading: PropTypes.bool,
+  loadingServices: PropTypes.bool,
+  loadingTraces: PropTypes.bool,
   urlQueryParams: PropTypes.shape({
     service: PropTypes.string,
     limit: PropTypes.string,
@@ -180,30 +192,38 @@ SearchTracePage.propTypes = {
   history: PropTypes.shape({
     push: PropTypes.func,
   }),
+  fetchServiceOperations: PropTypes.func,
   fetchServices: PropTypes.func,
   errorMessage: PropTypes.string,
 };
 
 const stateTraceXformer = getLastXformCacher(stateTrace => {
-  const { traces: traceMap, loading, error: traceError } = stateTrace;
+  const { traces: traceMap, loading: loadingTraces, error: traceError } = stateTrace;
   const { traces, maxDuration } = getTraceSummaries(_values(traceMap));
-  return { traces, maxDuration, loading, traceError };
+  return { traces, maxDuration, traceError, loadingTraces };
 });
 
 const stateServicesXformer = getLastXformCacher(stateServices => {
-  const { services: serviceList, operationsForService: opsBySvc, error: serviceError } = stateServices;
-  const services = serviceList.map(name => ({
-    name,
-    operations: opsBySvc[name] || [],
-  }));
-  return { services, serviceError };
+  const {
+    loading: loadingServices,
+    services: serviceList,
+    operationsForService: opsBySvc,
+    error: serviceError,
+  } = stateServices;
+  const services =
+    serviceList &&
+    serviceList.map(name => ({
+      name,
+      operations: opsBySvc[name] || [],
+    }));
+  return { loadingServices, services, serviceError };
 });
 
 function mapStateToProps(state) {
   const query = queryString.parse(state.routing.location.search);
   const isHomepage = !Object.keys(query).length;
-  const { traces, maxDuration, loading, traceError } = stateTraceXformer(state.trace);
-  const { services, serviceError } = stateServicesXformer(state.services);
+  const { traces, maxDuration, traceError, loadingTraces } = stateTraceXformer(state.trace);
+  const { loadingServices, services, serviceError } = stateServicesXformer(state.services);
   const errorMessage = serviceError || traceError ? `${serviceError || ''} ${traceError || ''}` : '';
   const sortBy = traceResultsFiltersFormSelector(state, 'sortBy');
   sortTraces(traces, sortBy);
@@ -216,16 +236,21 @@ function mapStateToProps(state) {
     maxTraceDuration: maxDuration,
     urlQueryParams: query,
     services,
-    loading,
+    loadingTraces,
+    loadingServices,
     errorMessage,
   };
 }
 
 function mapDispatchToProps(dispatch) {
-  const { searchTraces, fetchServices } = bindActionCreators(jaegerApiActions, dispatch);
+  const { searchTraces, fetchServices, fetchServiceOperations } = bindActionCreators(
+    jaegerApiActions,
+    dispatch
+  );
   return {
-    searchTraces,
+    fetchServiceOperations,
     fetchServices,
+    searchTraces,
   };
 }
 export const ConnectedSearchTracePage = connect(mapStateToProps, mapDispatchToProps)(SearchTracePage);
