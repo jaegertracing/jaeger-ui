@@ -18,6 +18,7 @@ import * as React from 'react';
 import Helmet from 'react-helmet';
 import { connect } from 'react-redux';
 import type { Location } from 'react-router-dom';
+import { withRouter } from 'react-router-dom';
 
 import TopNav from './TopNav';
 import type { Config } from '../../types/config';
@@ -64,8 +65,8 @@ class Page extends React.Component<PageProps> {
 
 function mapStateToProps(state, ownProps) {
   const { config } = state;
-  const { location } = state.routing;
+  const { location } = state.router;
   return { ...ownProps, config, location };
 }
 
-export default connect(mapStateToProps)(Page);
+export default withRouter(connect(mapStateToProps)(Page));
