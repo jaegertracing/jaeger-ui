@@ -1,6 +1,11 @@
 # Changes
 
 
+### [#107](https://github.com/jaegertracing/jaeger-ui/pull/107) Embed UI config
+
+The query service can embed custom UI configuration into `index.html`, speeding up the initial page load and allowing custom Google Analytics tracking IDs without requiring the UI bundle to be regenerated. This also lays the ground work for other UI configuration scenarios, in the future.
+
+
 ### [#97](https://github.com/jaegertracing/jaeger-ui/pull/97) Change to Apache license v.2 and add DCO / CONTRIBUTING.md
 
 
