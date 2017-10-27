@@ -1,4 +1,9 @@
-# Changes
+# Changes merged into master
+
+
+### [#110](https://github.com/jaegertracing/jaeger-ui/pull/110) Fix browser back button not working correctly
+
+Fix bug causing browser back button to not work correctly. Fixes [#94](https://github.com/jaegertracing/jaeger-ui/issues/94).
 
 
 ### [#107](https://github.com/jaegertracing/jaeger-ui/pull/107) Embed UI config

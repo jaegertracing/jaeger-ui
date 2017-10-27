@@ -25,7 +25,7 @@ export default function configureStore(history) {
     combineReducers({
       ...jaegerReducers,
       traceTimeline: traceTimelineViewReducer,
-      routing: routerReducer,
+      router: routerReducer,
     }),
     compose(
       applyMiddleware(
