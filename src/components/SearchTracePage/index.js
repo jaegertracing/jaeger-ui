@@ -200,7 +200,7 @@ const stateServicesXformer = getLastXformCacher(stateServices => {
 });
 
 function mapStateToProps(state) {
-  const query = queryString.parse(state.routing.location.search);
+  const query = queryString.parse(state.router.location.search);
   const isHomepage = !Object.keys(query).length;
   const { traces, maxDuration, loading, traceError } = stateTraceXformer(state.trace);
   const { services, serviceError } = stateServicesXformer(state.services);

@@ -213,7 +213,7 @@ const mapStateToProps = state => {
     minDuration,
     lookback,
     traceID: traceIDParams,
-  } = queryString.parse(state.routing.location.search);
+  } = queryString.parse(state.router.location.search);
 
   const nowInMicroseconds = moment().valueOf() * 1000;
   const today = formatDate(nowInMicroseconds);
