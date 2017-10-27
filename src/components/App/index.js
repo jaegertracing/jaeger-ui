@@ -25,7 +25,6 @@ import NotFound from './NotFound';
 import { ConnectedDependencyGraphPage } from '../DependencyGraph';
 import { ConnectedSearchTracePage } from '../SearchTracePage';
 import { ConnectedTracePage } from '../TracePage';
-import { fetchConfig } from '../../actions/jaeger-api';
 import JaegerAPI, { DEFAULT_API_ROOT } from '../../api/jaeger';
 import configureStore from '../../utils/configure-store';
 import prefixUrl from '../../utils/prefix-url';
@@ -39,7 +38,6 @@ export default class JaegerUIApp extends Component {
     super(props);
     this.store = configureStore(history);
     JaegerAPI.apiRoot = DEFAULT_API_ROOT;
-    this.store.dispatch(fetchConfig());
   }
 
   render() {
