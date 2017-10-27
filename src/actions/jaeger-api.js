@@ -15,12 +15,6 @@
 import { createAction } from 'redux-actions';
 import JaegerAPI from '../api/jaeger';
 
-/**
- * async wrapper to get the api object in case we're in demo mode.
- */
-
-export const fetchConfig = createAction('@JAEGER_API/FETCH_CONFIG', () => JaegerAPI.fetchConfig());
-
 export const fetchTrace = createAction(
   '@JAEGER_API/FETCH_TRACE',
   id => JaegerAPI.fetchTrace(id),

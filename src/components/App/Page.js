@@ -28,7 +28,7 @@ import './Page.css';
 type PageProps = {
   location: Location,
   children: React.Node,
-  config: { data: Config },
+  config: Config,
 };
 
 class Page extends React.Component<PageProps> {
@@ -49,7 +49,7 @@ class Page extends React.Component<PageProps> {
 
   render() {
     const { children, config } = this.props;
-    const menu = config && config.data && config.data.menu;
+    const menu = config && config.menu;
     return (
       <section className="jaeger-ui-page" id="jaeger-ui">
         <Helmet title="Jaeger UI" />
