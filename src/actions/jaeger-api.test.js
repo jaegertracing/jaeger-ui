@@ -12,12 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+/* eslint-disable import/first */
+jest.mock('node-fetch', () => () =>
+  Promise.resolve({
+    status: 200,
+    data: () => Promise.resolve({ data: null }),
+    json: () => Promise.resolve({ data: null }),
+  })
+);
+
 import sinon from 'sinon';
 import isPromise from 'is-promise';
 
-import JaegerAPI from '../api/jaeger';
-
 import * as jaegerApiActions from './jaeger-api';
+import JaegerAPI from '../api/jaeger';
 
 it('@JAEGER_API/FETCH_TRACE should fetch the trace by id', () => {
   const api = JaegerAPI;
