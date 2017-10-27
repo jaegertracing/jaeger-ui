@@ -29,10 +29,8 @@ function fetchStarted(state) {
 }
 
 function fetchServicesDone(state, { payload }) {
-  const services = payload.data;
-  if (Array.isArray(services)) {
-    services.sort(baseStringComparator);
-  }
+  const services = payload.data || [];
+  services.sort(baseStringComparator);
   return { ...state, services, error: null, loading: false };
 }
 
