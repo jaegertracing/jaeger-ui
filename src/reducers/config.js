@@ -12,40 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { handleActions } from 'redux-actions';
+import getConfig from '../utils/config/get-config';
 
-import { fetchConfig } from '../actions/jaeger-api';
-import defaultConfig from '../constants/default-config';
-
-const initialState = {
-  data: {},
-  loading: false,
-  error: null,
-};
-
-function fetchStarted(state) {
-  return { ...state, loading: true };
-}
-
-function fetchDone(state, { payload }) {
-  const data = payload;
-  // fetchConfig action creator is set to handle rejected promises
-  if (data.error) {
-    const { message, stack } = data.error;
-    return { ...state, error: { message, stack }, loading: false, data: defaultConfig };
+export default function reduceConfig(state) {
+  if (state === undefined) {
+    return getConfig();
   }
-  return { ...state, data, error: null, loading: false };
+  return state;
 }
-
-function fetchErred(state, { payload: error }) {
-  return { ...state, error: error.message, loading: false, data: defaultConfig };
-}
-
-export default handleActions(
-  {
-    [`${fetchConfig}_PENDING`]: fetchStarted,
-    [`${fetchConfig}_FULFILLED`]: fetchDone,
-    [`${fetchConfig}_REJECTED`]: fetchErred,
-  },
-  initialState
-);

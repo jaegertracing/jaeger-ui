@@ -25,5 +25,6 @@ export type ConfigMenuGroup = {
 };
 
 export type Config = {
+  gaTrackingID?: ?string,
   menu: (ConfigMenuGroup | ConfigMenuItem)[],
 };
