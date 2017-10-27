@@ -29,6 +29,20 @@ function verifyInitialState() {
 beforeEach(verifyInitialState);
 afterEach(verifyInitialState);
 
+it('#92 - ensures services is at least an empty array', () => {
+  const services = null;
+  const state = serviceReducer(initialState, {
+    type: `${fetchServices}_FULFILLED`,
+    payload: { data: services },
+  });
+  expect(state).toEqual({
+    services: [],
+    operationsForService: {},
+    loading: false,
+    error: null,
+  });
+});
+
 it('should handle a fetch services with loading state', () => {
   const state = serviceReducer(initialState, {
     type: `${fetchServices}_PENDING`,
