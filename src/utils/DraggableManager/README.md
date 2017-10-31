@@ -1,11 +1,13 @@
 # DraggbleManager Information and Demo
 
-The folder in which this file resides (`src/utils/DraggableManager/docs`) contains a small project that demos the use of the `DraggableManager` utility.
+In the `src/utils/DraggableManager/demo` folder there is a small project that demonstrates the use of the `DraggableManager` utility.
 
-![GIF of Demo](demo-ux.gif)
+The demo contains two components:
 
-The top half of the gif shows the `DividerDemo` component. The bottom half shows the `RegionDemo` component.
+- `DividerDemo`, which occupies the top half of the web page
+- `RegionDemo`, which occupies the bottom half of the web page, as shown in the GIF, below
 
+![GIF of Demo](demo/demo-ux.gif)
 
 
 ## Caveat
