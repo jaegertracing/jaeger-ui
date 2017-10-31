@@ -212,7 +212,7 @@ Then, we handle the callbacks as follows:
   - Set `regionDragging` to `[regionDragging[0], value]`
   - Again, for drawing the dragging region. We keep `regionDragging[0]` as-is so we always know where the drag started
 - `onDragEnd`
-  - Set `regionDragging` to `null`, set `regionCursor` to `null`
+  - Set `regionDragging` to `null`, set `regionCursor` to `value`
   - Setting `regionDragging` to `null` lets us know not to draw the region, and setting `regionCursor` lets us know to draw the cursor right where the user left off
 
 This is a contrived demo, so `onDragEnd` is kind of boring... Usually we would do something more interesting with the final `x` or `value`.
@@ -291,7 +291,7 @@ type DraggableManagerOptions = {
 
 `getBounds()` is used to map the `clientX` to whatever the dragging context is. **It is called lazily** and the returned value is cached, until either `DraggableManager#resetBounds()` is called, the window is resized (when `resetBoundsOnResize` is `true`) or `DraggableManager#dispose()` is called.
 
-The callbacks are all optional. The callbacks all present the same data (`DraggingUpdate`), with the `type` field being set based on which callback is firing (e.g. `type` is `'MOUSE_ENTER'` when `onMouseEnter` is fired, and the `x` and `value` representing the last know position of the mouse cursor.
+The callbacks are all optional. The callbacks all present the same data (`DraggingUpdate`), with the `type` field being set based on which callback is firing (e.g. `type` is `'MOUSE_ENTER'` when `onMouseEnter` is fired), and the `x` and `value` representing the last know position of the mouse cursor.
 
 If `resetBoundsOnResize` is `true`, the instance resets the cached `DraggableBounds` when the window is resized.
 
