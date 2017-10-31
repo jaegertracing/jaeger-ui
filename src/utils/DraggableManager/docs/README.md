@@ -12,7 +12,7 @@ The top half of the gif shows the `DividerDemo` component. The bottom half shows
 
 This DraggableManager utility does not actually "drag" anything, it does not move or drag DOM elements, it just tells us where the mouse is while the mouse is down. Primarily, it listens for `mousedown` and subsequent `mousemove` and then finally `mouseup` events. (It listens to `window` for the `mousemove` and `mouseup` events.)
 
-What we do with that information is up to us. This is mentiond beacuse you need to handle the DraggableManager callbacks *to create the illusion of dragging*.
+What we do with that information is up to us. This is mentioned because you need to handle the DraggableManager callbacks *to create the illusion of dragging*.
 
 
 ## In brief
@@ -100,7 +100,7 @@ When dragging starts, the util then switches over to listening to window events 
 
 Last but not least...
 
-The util listens for window resize events and makes adjustments accordingly, preventing things from going crazy (due to miscalibration) if the user resizes the window. This primilary relates to the `getBounds()` constructor option (see below).
+The util listens for window resize events and makes adjustments accordingly, preventing things from going crazy (due to miscalibration) if the user resizes the window. This primary relates to the `getBounds()` constructor option (see below).
 
 
 
@@ -136,7 +136,7 @@ But, if implementing the ability to drag a sub-range (see `RegionDemo.js` and th
 
 ### `getBounds()` constructor parameter
 
-The crux of the conversion from `clientX` to `x` and `value` is the `getBounds()` contructor parameter.
+The crux of the conversion from `clientX` to `x` and `value` is the `getBounds()` constructor parameter.
 
 The function is a required constructor parameter, and it must return a `DraggableBounds` object:
 
@@ -170,7 +170,7 @@ _getDraggingBounds = (): DraggableBounds => {
 
 In the snippet above, `this._realmElm` is the `<div>` that fills the green draggable region.
 
-On the other hand, if you need more flexibilty, this function can ignore the DOM altogether and do something else entirely. It just needs to return an object with `clientXLeft` and `width` properties, at the minimum.
+On the other hand, if you need more flexibility, this function can ignore the DOM altogether and do something else entirely. It just needs to return an object with `clientXLeft` and `width` properties, at the minimum.
 
 `maxValue` and `minValue` are optional and will restrict the extent of the dragging. They are in terms of `value`, not `x`.
 
@@ -185,7 +185,7 @@ In the other scenario, `RegionDemo`, we care about showing the red vertical line
 
 The `RegionDemo` is a bit more involved, so, to break down how we handle the callbacks... First, we store the following state (in the parent element, incidentally):
 
-- `regionCursor` is where we draw the cursor indicator (a red verticl line, in the demo).
+- `regionCursor` is where we draw the cursor indicator (a red vertical line, in the demo).
 - `regionDragging` represents the start (at index `0`) and current position (at index `1`) of the region currently being dragged.
 
 ```
@@ -304,4 +304,4 @@ Returns `true` when the instance is in a dragged state, e.g. after `onDragStart`
 
 ### `DraggableManager# dispose()`
 
-Removes any event listeners attached to `window` and sets all instance properties to `underfined`.
+Removes any event listeners attached to `window` and sets all instance properties to `undefined`.
