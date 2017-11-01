@@ -1,4 +1,5 @@
 [![ReadTheDocs][doc-img]][doc] [![Build Status][ci-img]][ci] [![Coverage Status][cov-img]][cov]
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fjaegertracing%2Fjaeger-ui.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fjaegertracing%2Fjaeger-ui?ref=badge_shield)
 
 # Jaeger UI
 
@@ -86,3 +87,7 @@ npm run build
 [cov-img]: https://coveralls.io/repos/jaegertracing/jaeger-ui/badge.svg?branch=master
 [cov]: https://coveralls.io/github/jaegertracing/jaeger-ui?branch=master
 [aio-docs]: http://jaeger.readthedocs.io/en/latest/getting_started/
+
+
+## License
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fjaegertracing%2Fjaeger-ui.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fjaegertracing%2Fjaeger-ui?ref=badge_large)
