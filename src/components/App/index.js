@@ -20,8 +20,8 @@ import { ConnectedRouter } from 'react-router-redux';
 
 import 'semantic-ui-css/semantic.min.css';
 
-import Page from './Page';
 import NotFound from './NotFound';
+import Page from './Page';
 import { ConnectedDependencyGraphPage } from '../DependencyGraph';
 import { ConnectedSearchTracePage } from '../SearchTracePage';
 import { ConnectedTracePage } from '../TracePage';
