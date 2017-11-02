@@ -70,7 +70,7 @@ export function getTraceSpanIdsAsTree(trace) {
     const node = nodesById.get(span.spanID);
     if (Array.isArray(span.references) && span.references.length) {
       const { refType, spanID: parentID } = span.references[0];
-      if (refType === 'CHILD_OF') {
+      if (refType === 'CHILD_OF' || refType === 'FOLLOWS_FROM') {
         const parent = nodesById.get(parentID) || root;
         parent.children.push(node);
       } else {

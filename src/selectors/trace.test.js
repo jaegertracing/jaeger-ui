@@ -14,8 +14,7 @@
 
 import _values from 'lodash/values';
 
-import traceGenerator from '../../src/demo/trace-generators';
-import * as traceSelectors from '../../src/selectors/trace';
+import { followsFromRef } from './trace.fixture';
 import {
   getSpanId,
   getSpanName,
@@ -24,7 +23,9 @@ import {
   getSpanProcessId,
   getSpanServiceName,
   getSpanTimestamp,
-} from '../../src/selectors/span';
+} from './span';
+import * as traceSelectors from './trace';
+import traceGenerator from '../../src/demo/trace-generators';
 import { numberSortComparator } from '../../src/utils/sort';
 
 const generatedTrace = traceGenerator.trace({ numberOfSpans: 45 });
@@ -49,15 +50,21 @@ it('getTraceSpansAsMap() should return a map of all of the spans', () => {
   }
 });
 
-it('getTraceSpanIdsAsTree() should build the tree properly', () => {
-  const tree = traceSelectors.getTraceSpanIdsAsTree(generatedTrace);
-  const spanMap = traceSelectors.getTraceSpansAsMap(generatedTrace);
+describe('getTraceSpanIdsAsTree()', () => {
+  it('builds the tree properly', () => {
+    const tree = traceSelectors.getTraceSpanIdsAsTree(generatedTrace);
+    const spanMap = traceSelectors.getTraceSpansAsMap(generatedTrace);
 
-  tree.walk((value, node) => {
-    const expectedParentValue = value === traceSelectors.TREE_ROOT_ID ? null : value;
-    node.children.forEach(childNode => {
-      expect(getSpanParentId(spanMap.get(childNode.value))).toBe(expectedParentValue);
+    tree.walk((value, node) => {
+      const expectedParentValue = value === traceSelectors.TREE_ROOT_ID ? null : value;
+      node.children.forEach(childNode => {
+        expect(getSpanParentId(spanMap.get(childNode.value))).toBe(expectedParentValue);
+      });
     });
+  });
+
+  it('#115 - handles FOLLOW_FROM refs', () => {
+    expect(() => traceSelectors.getTraceSpanIdsAsTree(followsFromRef)).not.toThrow();
   });
 });
 
