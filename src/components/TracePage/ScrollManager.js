@@ -59,7 +59,7 @@ function isSpanHidden(span: Span, childrenAreHidden: Set<string>, spansMap: Map<
   let { references } = span;
   let parentID: ?string;
   const checkRef = ref => {
-    if (ref.refType === 'CHILD_OF') {
+    if (ref.refType === 'CHILD_OF' || ref.refType === 'FOLLOWS_FROM') {
       parentID = ref.spanID;
       parentIDs.add(parentID);
       return childrenAreHidden.has(parentID);

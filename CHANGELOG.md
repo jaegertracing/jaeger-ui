@@ -1,6 +1,11 @@
 # Changes merged into master
 
 
+### [#118](https://github.com/jaegertracing/jaeger-ui/pull/118) Handle `FOLLOWS_FROM` reference type
+
+Fix issue processing `FOLLOWS_FROM` references to parent spans. Fixes [#115](https://github.com/jaegertracing/jaeger-ui/issues/115).
+
+
 ### [#110](https://github.com/jaegertracing/jaeger-ui/pull/110) Fix browser back button not working correctly
 
 Fix bug causing browser back button to not work correctly. Fixes [#94](https://github.com/jaegertracing/jaeger-ui/issues/94).
