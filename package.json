@@ -85,6 +85,9 @@
     "flow": "flow; test $? -eq 0 -o $? -eq 2",
     "precommit": "lint-staged"
   },
+  "jest": {
+    "collectCoverageFrom": ["src/**/*.js", "!src/utils/DraggableManager/demo/*.js"]
+  },
   "lint-staged": {
     "*.js": [
       "npm run prettier",
