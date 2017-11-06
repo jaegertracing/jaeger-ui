@@ -19,7 +19,7 @@ const initialState = serviceReducer(undefined, {});
 
 function verifyInitialState() {
   expect(initialState).toEqual({
-    services: [],
+    services: null,
     loading: false,
     error: null,
     operationsForService: {},
@@ -47,12 +47,8 @@ it('should handle a fetch services with loading state', () => {
   const state = serviceReducer(initialState, {
     type: `${fetchServices}_PENDING`,
   });
-  expect(state).toEqual({
-    services: [],
-    operationsForService: {},
-    loading: true,
-    error: null,
-  });
+  const expected = { ...initialState, loading: true };
+  expect(state).toEqual(expected);
 });
 
 it('should handle successful services fetch', () => {
@@ -90,12 +86,11 @@ it('should handle a successful fetching operations for a service ', () => {
     meta: { serviceName: 'serviceA' },
     payload: { data: ops.slice() },
   });
-  expect(state).toEqual({
-    services: [],
+  const expected = {
+    ...initialState,
     operationsForService: {
       serviceA: ops,
     },
-    loading: false,
-    error: null,
-  });
+  };
+  expect(state).toEqual(expected);
 });
