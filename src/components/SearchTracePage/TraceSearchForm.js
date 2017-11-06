@@ -223,8 +223,19 @@ const mapStateToProps = state => {
   let lastSearchOperation;
 
   if (lastSearch) {
-    lastSearchService = lastSearch.service;
-    lastSearchOperation = lastSearch.operation;
+    // last search is only valid if the service is in the list of services
+    const { operation: lastOp, service: lastSvc } = lastSearch;
+    if (lastSvc && lastSvc !== '-') {
+      if (state.services.services.includes(lastSvc)) {
+        lastSearchService = lastSvc;
+        if (lastOp && lastOp !== '-') {
+          const ops = state.services.operationsForService[lastSvc];
+          if (lastOp === 'all' || (ops && ops.includes(lastOp))) {
+            lastSearchOperation = lastOp;
+          }
+        }
+      }
+    }
   }
 
   const {
@@ -242,6 +253,7 @@ const mapStateToProps = state => {
   if (traceIDParams) {
     traceIDs = traceIDParams instanceof Array ? traceIDParams.join(',') : traceIDParams;
   }
+
   return {
     destroyOnUnmount: false,
     initialValues: {

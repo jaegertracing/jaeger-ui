@@ -18,7 +18,8 @@ import { fetchServices, fetchServiceOperations as fetchOps } from '../actions/ja
 import { baseStringComparator } from '../utils/sort';
 
 const initialState = {
-  services: [],
+  // `services` initial value of `null` indicates they haven't yet been loaded
+  services: null,
   operationsForService: {},
   loading: false,
   error: null,
@@ -48,7 +49,7 @@ function fetchOpsDone(state, { meta, payload }) {
   if (Array.isArray(operations)) {
     operations.sort(baseStringComparator);
   }
-  const operationsForService = { ...state.operationsForService, [meta.serviceName]: operations };
+  const operationsForService = { ...state.operationsForService, [meta.serviceName]: operations || [] };
   return { ...state, operationsForService };
 }
 
