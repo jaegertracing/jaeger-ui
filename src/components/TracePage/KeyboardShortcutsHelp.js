@@ -44,12 +44,12 @@ const descriptions = {
   zoomOutFast: 'Zoom out — Large',
 };
 
-function convertKeys(keyConfig: string | string[]): string[] {
+function convertKeys(keyConfig: string | string[]): string[][] {
   const config = Array.isArray(keyConfig) ? keyConfig : [keyConfig];
   return config.map(str => str.split('+').map(part => symbolConv[part] || part.toUpperCase()));
 }
 
-export default function KeyboardShortcutsHelp(props) {
+export default function KeyboardShortcutsHelp() {
   const rows = [];
   Object.keys(kbdMappings).forEach(title => {
     const keyConfigs = convertKeys(kbdMappings[title]);
