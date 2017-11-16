@@ -14,7 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-
 .SpanBar--wrapper {
   bottom: 0;
   left: 0;
@@ -48,7 +47,7 @@ limitations under the License.
 
 .SpanBar--label {
   font-size: 12px;
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   line-height: 1em;
   white-space: nowrap;
   padding: 0 0.5em;

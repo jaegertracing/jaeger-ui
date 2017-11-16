@@ -50,18 +50,13 @@ export default function Ticks(props: TicksProps) {
           left: `${portion * 100}%`,
         }}
       >
-        {labels &&
-          <span className={`Ticks--tickLabel ${portion >= 1 ? 'isEndAnchor' : ''}`}>
-            {labels[i]}
-          </span>}
+        {labels && (
+          <span className={`Ticks--tickLabel ${portion >= 1 ? 'isEndAnchor' : ''}`}>{labels[i]}</span>
+        )}
       </div>
     );
   }
-  return (
-    <div className="Ticks">
-      {ticks}
-    </div>
-  );
+  return <div className="Ticks">{ticks}</div>;
 }
 
 Ticks.defaultProps = {

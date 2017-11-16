@@ -39,9 +39,5 @@ export default function TickLabels(props: TickLabelsProps) {
     );
   }
 
-  return (
-    <div className="TickLabels">
-      {ticks}
-    </div>
-  );
+  return <div className="TickLabels">{ticks}</div>;
 }

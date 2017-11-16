@@ -135,16 +135,15 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
               >
                 {showErrorIcon && <i aria-hidden="true" className="icon warning circle red" />}
                 {serviceName}{' '}
-                {rpc &&
+                {rpc && (
                   <span>
                     <i className="long arrow right icon" style={{ float: 'none' }} />
                     <i className="circle icon" style={{ color: rpc.color }} />
                     {rpc.serviceName}
-                  </span>}
+                  </span>
+                )}
               </span>
-              <span className="endpoint-name mb1 pl1 h6">
-                {rpc ? rpc.operationName : operationName}
-              </span>
+              <span className="endpoint-name mb1 pl1 h6">{rpc ? rpc.operationName : operationName}</span>
             </a>
           </div>
         </TimelineRow.Cell>

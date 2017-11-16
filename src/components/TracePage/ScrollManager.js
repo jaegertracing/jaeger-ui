@@ -39,8 +39,8 @@ export type Accessors = {
 };
 
 interface Scroller {
-  scrollTo: number => void,
-  scrollBy: (number, ?boolean) => void,
+  scrollTo: number => void;
+  scrollBy: (number, ?boolean) => void;
 }
 
 /**

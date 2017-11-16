@@ -85,14 +85,14 @@ export default class DependencyGraphPage extends Component {
     return (
       <div className="my2">
         <Menu tabular>
-          {GRAPH_TYPE_OPTIONS.map(option =>
+          {GRAPH_TYPE_OPTIONS.map(option => (
             <Menu.Item
               active={graphType === option.type}
               key={option.type}
               name={option.name}
               onClick={() => this.handleGraphTypeChange(option.type)}
             />
-          )}
+          ))}
         </Menu>
         <div
           style={{

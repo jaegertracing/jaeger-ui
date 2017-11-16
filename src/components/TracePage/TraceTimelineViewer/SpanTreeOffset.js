@@ -28,9 +28,9 @@ type SpanTreeOffsetProps = {
 export default function SpanTreeOffset(props: SpanTreeOffsetProps) {
   const { level, hasChildren, childrenVisible, onClick } = props;
   const className = hasChildren ? 'span-kids-toggle' : '';
-  const icon = hasChildren
-    ? <i className={`span-tree-toggle-icon icon square ${childrenVisible ? 'outline minus' : 'plus'}`} />
-    : null;
+  const icon = hasChildren ? (
+    <i className={`span-tree-toggle-icon icon square ${childrenVisible ? 'outline minus' : 'plus'}`} />
+  ) : null;
   return (
     <span className={className} onClick={onClick}>
       <span className="span-tree-offset" style={{ paddingLeft: `${level * 20}px` }} />

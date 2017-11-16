@@ -23,23 +23,16 @@ export default function NotFound({ error }) {
     <section className="ui container">
       <div className="ui center aligned basic segment">
         <div className="ui center aligned basic segment">
-          <h1>
-            {'404'}
-          </h1>
-          <p>
-            {"Looks like you tried to access something that doesn't exist."}
-          </p>
+          <h1>{'404'}</h1>
+          <p>{"Looks like you tried to access something that doesn't exist."}</p>
         </div>
-        {error &&
+        {error && (
           <div className="ui red message">
-            <p>
-              {String(error)}
-            </p>
-          </div>}
+            <p>{String(error)}</p>
+          </div>
+        )}
         <div className="ui center aligned basic segment">
-          <Link to={prefixUrl('/')}>
-            {'Back home'}
-          </Link>
+          <Link to={prefixUrl('/')}>{'Back home'}</Link>
         </div>
       </div>
     </section>

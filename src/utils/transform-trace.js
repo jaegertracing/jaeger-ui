@@ -64,9 +64,12 @@ export default function transformTrace(
 
   // Find all root nodes (really there should only be 1)
   const rootNodes = [];
-  cy.nodes().roots().forEach(root => {
-    rootNodes.push(root);
-  });
+  cy
+    .nodes()
+    .roots()
+    .forEach(root => {
+      rootNodes.push(root);
+    });
   const rootNode = rootNodes[0];
   const rootSpan = rootNode.data().data;
 
