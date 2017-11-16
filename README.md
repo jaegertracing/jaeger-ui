@@ -70,17 +70,9 @@ npm run build
 ```
 
 
-#### Enable Google Analytics
+## UI Configuration
 
-To enable Google Analytics tracking, set the `gaTrackingID` property in the UI config:
-
-```json
-{
-  "gaTrackingID": " UA-000000-2"
-}
-```
-
-For additional details, see the [deployment guide](http://jaeger.readthedocs.io/en/latest/deployment/#ui-configuration).
+See the [deployment guide](http://jaeger.readthedocs.io/en/latest/deployment/#ui-configuration) for details on configuring Google Analytics tracking and menu customizations.
 
 [doc-img]: https://readthedocs.org/projects/jaeger/badge/?version=latest
 [doc]: http://jaeger.readthedocs.org/en/latest/
