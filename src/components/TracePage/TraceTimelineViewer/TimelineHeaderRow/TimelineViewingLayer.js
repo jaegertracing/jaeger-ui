@@ -200,8 +200,9 @@ export default class TimelineViewingLayer extends React.PureComponent<TimelineVi
         onMouseLeave={this._draggerReframe.handleMouseLeave}
         onMouseMove={this._draggerReframe.handleMouseMove}
       >
-        {cusrorPosition != null &&
-          <div className="TimelineViewingLayer--cursorGuide" style={{ left: cusrorPosition }} />}
+        {cusrorPosition != null && (
+          <div className="TimelineViewingLayer--cursorGuide" style={{ left: cusrorPosition }} />
+        )}
         {reframe != null && getMarkers(viewStart, viewEnd, reframe.anchor, reframe.shift, false)}
         {shiftEnd != null && getMarkers(viewStart, viewEnd, viewEnd, shiftEnd, true)}
         {shiftStart != null && getMarkers(viewStart, viewEnd, viewStart, shiftStart, true)}

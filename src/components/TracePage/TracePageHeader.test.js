@@ -58,7 +58,10 @@ describe('<TracePageHeader>', () => {
     const props = { ...defaultProps, updateTextFilter };
     wrapper = shallow(<TracePageHeader {...props} />);
     const event = { target: { value: 'my new value' } };
-    wrapper.find('#trace-page__text-filter').first().prop('onChange')(event);
+    wrapper
+      .find('#trace-page__text-filter')
+      .first()
+      .prop('onChange')(event);
     expect(updateTextFilter.calledWith('my new value')).toBeTruthy();
   });
 });

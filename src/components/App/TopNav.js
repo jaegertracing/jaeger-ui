@@ -79,11 +79,11 @@ export default function TopNav(props: TopNavProps) {
       <div className="ui input">
         <TraceIDSearchInput />
       </div>
-      {NAV_LINKS.map(({ key, to, text }) =>
+      {NAV_LINKS.map(({ key, to, text }) => (
         <Link key={key} to={to} className="item">
           {text}
         </Link>
-      )}
+      ))}
       <div className="right menu">
         {menuItems.map(item => {
           if (item.items) {

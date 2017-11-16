@@ -91,7 +91,7 @@ export function TraceSearchFormComponent(props) {
           />
         </div>
 
-        {!noSelectedService &&
+        {!noSelectedService && (
           <div className="search-form--operation field">
             <Field
               name="operation"
@@ -99,7 +99,8 @@ export function TraceSearchFormComponent(props) {
               className="ui dropdown"
               items={operationsForService.concat('all').map(op => ({ text: op, value: op, key: op }))}
             />
-          </div>}
+          </div>
+        )}
 
         <div className="search-form--tags field">
           <label htmlFor="tags">Tags</label>
@@ -127,7 +128,7 @@ export function TraceSearchFormComponent(props) {
           </Field>
         </div>
 
-        {selectedLookback === 'custom' &&
+        {selectedLookback === 'custom' && (
           <div className="search-form--start-time field">
             <label htmlFor="service">Start Time</label>
             <div>
@@ -138,9 +139,10 @@ export function TraceSearchFormComponent(props) {
                 <Field name="startDateTime" component="input" type="time" />
               </div>
             </div>
-          </div>}
+          </div>
+        )}
 
-        {selectedLookback === 'custom' &&
+        {selectedLookback === 'custom' && (
           <div className="search-form--end-time field">
             <label htmlFor="service">End time</label>
             <div>
@@ -151,7 +153,8 @@ export function TraceSearchFormComponent(props) {
                 <Field name="endDateTime" component="input" type="time" />
               </div>
             </div>
-          </div>}
+          </div>
+        )}
 
         <div className="two fields">
           <div className="field">
@@ -300,7 +303,10 @@ const mapDispatchToProps = dispatch => {
       let end;
       if (lookback !== 'custom') {
         const unit = lookback.split('').pop();
-        start = moment().subtract(parseInt(lookback, 10), unit).valueOf() * 1000;
+        start =
+          moment()
+            .subtract(parseInt(lookback, 10), unit)
+            .valueOf() * 1000;
         end = moment().valueOf() * 1000;
       } else {
         const times = getUnixTimeStampInMSFromForm({

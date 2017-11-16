@@ -106,7 +106,10 @@ it('@JAEGER_API/FETCH_SERVICES should return a promise', () => {
 it('@JAEGER_API/FETCH_SERVICE_OPERATIONS should call the JaegerAPI', () => {
   const api = JaegerAPI;
   const mock = sinon.mock(api);
-  const called = mock.expects('fetchServiceOperations').once().withExactArgs('service');
+  const called = mock
+    .expects('fetchServiceOperations')
+    .once()
+    .withExactArgs('service');
   jaegerApiActions.fetchServiceOperations('service');
   expect(called.verify()).toBeTruthy();
   mock.restore();

@@ -55,9 +55,7 @@ class Page extends React.Component<PageProps> {
       <section className="jaeger-ui-page" id="jaeger-ui">
         <Helmet title="Jaeger UI" />
         <TopNav menuConfig={menu} />
-        <div className="jaeger-ui--content">
-          {children}
-        </div>
+        <div className="jaeger-ui--content">{children}</div>
       </section>
     );
   }

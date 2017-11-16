@@ -92,17 +92,16 @@ export default function TracePageHeader(props) {
           </div>
         </div>
       </div>
-      {!slimView &&
+      {!slimView && (
         <div>
-          {HEADER_ITEMS.map(({ renderer, propName, title, key }) =>
+          {HEADER_ITEMS.map(({ renderer, propName, title, key }) => (
             <div className="inline-block mr1" key={key}>
-              <strong>
-                {title}:{' '}
-              </strong>
+              <strong>{title}: </strong>
               {propName ? props[propName] : renderer(props)}
             </div>
-          )}
-        </div>}
+          ))}
+        </div>
+      )}
     </header>
   );
 }
