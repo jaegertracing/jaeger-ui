@@ -66,11 +66,6 @@ const NAV_LINKS = [
     to: prefixUrl('/search'),
     text: 'Search',
   },
-  {
-    key: 'help',
-    to: prefixUrl('/help'),
-    text: 'Help',
-  },
 ];
 
 export default function TopNav(props: TopNavProps) {

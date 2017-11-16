@@ -23,7 +23,6 @@ import 'semantic-ui-css/semantic.min.css';
 import NotFound from './NotFound';
 import Page from './Page';
 import { ConnectedDependencyGraphPage } from '../DependencyGraph';
-import Help from '../Help';
 import { ConnectedSearchTracePage } from '../SearchTracePage';
 import { ConnectedTracePage } from '../TracePage';
 import JaegerAPI, { DEFAULT_API_ROOT } from '../../api/jaeger';
@@ -47,7 +46,6 @@ export default class JaegerUIApp extends Component {
         <ConnectedRouter history={history}>
           <Page>
             <Switch>
-              <Route path={prefixUrl('/help')} component={Help} />
               <Route path={prefixUrl('/search')} component={ConnectedSearchTracePage} />
               <Route path={prefixUrl('/trace/:id')} component={ConnectedTracePage} />
               <Route path={prefixUrl('/dependencies')} component={ConnectedDependencyGraphPage} />
