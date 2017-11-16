@@ -70,14 +70,9 @@ npm run build
 ```
 
 
-#### Enable Google Analytics
+## UI Configuration
 
-To enable Google Analytics tracking, set the `REACT_APP_GA_ANALYTICS_ID` env variable with your GA tracking ID before running the build:
-
-```
-export REACT_APP_GA_ANALYTICS_ID = UA-*******-**
-npm run build
-```
+See the [deployment guide](http://jaeger.readthedocs.io/en/latest/deployment/#ui-configuration) for details on configuring Google Analytics tracking and menu customizations.
 
 [doc-img]: https://readthedocs.org/projects/jaeger/badge/?version=latest
 [doc]: http://jaeger.readthedocs.org/en/latest/
