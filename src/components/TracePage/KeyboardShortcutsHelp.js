@@ -96,20 +96,3 @@ export default function KeyboardShortcutsHelp() {
     </Modal>
   );
 }
-
-// | Key(s)        | Description |
-// | ------------- |-------------|
-// | `w` | Scroll up |
-// | `s` | Scroll down |
-// | `a` | Pan left |
-// | `d` | Pan right |
-// | `f` | Scroll to the next visible span |
-// | `b` |  |
-// | `up` | Zoom in |
-// | `shift` + `up` | Zoom in — Large |
-// | `down` | Zoom out |
-// | `shift` + `down` | Zoom out — Large |
-// | `left` | Pan left |
-// | `shift` + `left` | Pan left — Large |
-// | `right` | Pan right |
-// | `shift` + `right` | Pan right — Large |
