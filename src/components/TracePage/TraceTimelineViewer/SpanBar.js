@@ -43,7 +43,13 @@ function SpanBar(props: SpanBarProps) {
   const { viewEnd, viewStart, color, label, hintSide, onClick, setLongLabel, setShortLabel, rpc } = props;
 
   return (
-    <div className="SpanBar--wrapper" onClick={onClick} onMouseOut={setShortLabel} onMouseOver={setLongLabel}>
+    <div
+      className="SpanBar--wrapper"
+      onClick={onClick}
+      onMouseOut={setShortLabel}
+      onMouseOver={setLongLabel}
+      aria-hidden
+    >
       <div
         aria-label={label}
         className="SpanBar--bar"

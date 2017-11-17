@@ -65,7 +65,9 @@ export default class SpanDetailRow extends React.PureComponent<SpanDetailRowProp
           <span>
             <span
               className="detail-row-expanded-accent"
+              aria-checked="true"
               onClick={this._detailToggle}
+              role="switch"
               style={{ borderColor: color }}
             />
           </span>

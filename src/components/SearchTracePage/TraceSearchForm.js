@@ -186,7 +186,7 @@ export function TraceSearchFormComponent(props) {
 }
 
 TraceSearchFormComponent.propTypes = {
-  handleSubmit: PropTypes.func,
+  handleSubmit: PropTypes.func.isRequired,
   submitting: PropTypes.bool,
   services: PropTypes.arrayOf(
     PropTypes.shape({
@@ -200,6 +200,9 @@ TraceSearchFormComponent.propTypes = {
 
 TraceSearchFormComponent.defaultProps = {
   services: [],
+  submitting: false,
+  selectedService: null,
+  selectedLookback: null,
 };
 
 export const searchSideBarFormSelector = formValueSelector('searchSideBar');

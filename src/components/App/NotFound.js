@@ -1,3 +1,5 @@
+// @flow
+
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,13 +14,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import PropTypes from 'prop-types';
 import React from 'react';
 import { Link } from 'react-router-dom';
 
 import prefixUrl from '../../utils/prefix-url';
 
-export default function NotFound({ error }) {
+type NotFoundProps = {
+  error: any,
+};
+
+export default function NotFound({ error }: NotFoundProps) {
   return (
     <section className="ui container">
       <div className="ui center aligned basic segment">
@@ -38,7 +43,3 @@ export default function NotFound({ error }) {
     </section>
   );
 }
-
-NotFound.propTypes = {
-  error: PropTypes.object,
-};

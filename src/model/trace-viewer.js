@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// eslint-disable-next-line import/prefer-default-export
 export function getTraceName(spans, processes) {
   const span = spans.find(sp => sp.spanID === sp.traceID) || spans[0];
   return span ? `${processes[span.processID].serviceName}: ${span.operationName}` : '';

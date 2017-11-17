@@ -65,6 +65,7 @@ export default class SearchDropdownInput extends Component {
 
 SearchDropdownInput.defaultProps = {
   maxResults: 250,
+  items: [],
 };
 SearchDropdownInput.propTypes = {
   items: PropTypes.arrayOf(
@@ -76,6 +77,6 @@ SearchDropdownInput.propTypes = {
   input: PropTypes.shape({
     value: PropTypes.string,
     onChange: PropTypes.func,
-  }),
+  }).isRequired,
   maxResults: PropTypes.number,
 };
