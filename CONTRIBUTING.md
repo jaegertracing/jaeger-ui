@@ -38,7 +38,7 @@ to be accepted if it:
 By contributing your code, you agree to license your contribution under the terms
 of the [Apache License](LICENSE).
 
-If you are adding a new file it should have a header like below. 
+If you are adding a new file it should have a header like below.
 
 ```
 // Copyright (c) 2017 The Jaeger Authors.
@@ -117,3 +117,17 @@ If you want this to be automatic you can set up some aliases:
 git config --add alias.amend "commit -s --amend"
 git config --add alias.c "commit -s"
 ```
+
+# Style Guide
+
+Prefer to use [flow](https://flow.org/) for new code.
+
+We use [`prettier`](https://prettier.io/), an "opinionated" code formatter. It
+can be applied to both JavaScript and CSS source files via `yarn prettier`.
+
+Then, most issues will be caught by the linter, which can be applied via `yarn
+eslint`.
+
+Finally, we generally adhere to the
+[Airbnb Style Guide](https://github.com/airbnb/javascript), with exceptions as
+noted in our `.eslintrc`.
