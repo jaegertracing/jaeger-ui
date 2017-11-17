@@ -44,10 +44,9 @@ it('hydrateSpansWithProcesses() should return the trace with processes on each s
 
 it('getTraceSpansAsMap() should return a map of all of the spans', () => {
   const spanMap = traceSelectors.getTraceSpansAsMap(generatedTrace);
-
-  for (const duple of spanMap) {
-    expect(duple[1]).toEqual(generatedTrace.spans.find(span => getSpanId(span) === duple[0]));
-  }
+  [...spanMap.entries()].forEach(pair => {
+    expect(pair[1]).toEqual(generatedTrace.spans.find(span => getSpanId(span) === pair[0]));
+  });
 });
 
 describe('getTraceSpanIdsAsTree()', () => {
