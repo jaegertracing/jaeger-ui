@@ -73,11 +73,11 @@ describe('<VirtualizedTraceViewImpl>', () => {
   }
 
   beforeEach(() => {
-    for (const key in props) {
+    Object.keys(props).forEach(key => {
       if (typeof props[key] === 'function') {
         props[key].mockReset();
       }
-    }
+    });
     wrapper = shallow(<VirtualizedTraceViewImpl {...props} />);
     instance = wrapper.instance();
   });

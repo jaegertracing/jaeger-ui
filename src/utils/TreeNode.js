@@ -31,13 +31,7 @@ export default class TreeNode {
   }
 
   get depth() {
-    let result = 1;
-
-    for (const child of this.children) {
-      result = Math.max(child.depth + 1, result);
-    }
-
-    return result;
+    return this.children.reduce((depth, child) => Math.max(child.depth + 1, depth), 1);
   }
 
   get size() {
@@ -53,18 +47,15 @@ export default class TreeNode {
 
   find(search) {
     const searchFn = TreeNode.iterFunction(TreeNode.searchFunction(search));
-
     if (searchFn(this)) {
       return this;
     }
-
-    for (const child of this.children) {
-      const result = child.find(search);
+    for (let i = 0; i < this.children.length; i++) {
+      const result = this.children[i].find(search);
       if (result) {
         return result;
       }
     }
-
     return null;
   }
 
@@ -74,21 +65,17 @@ export default class TreeNode {
     const findPath = (currentNode, currentPath) => {
       // skip if we already found the result
       const attempt = currentPath.concat([currentNode]);
-
       // base case: return the array when there is a match
       if (searchFn(currentNode)) {
         return attempt;
       }
-
-      // base case
-      for (const child of currentNode.children) {
+      for (let i = 0; i < currentNode.children.length; i++) {
+        const child = currentNode.children[i];
         const match = findPath(child, attempt);
-
         if (match) {
           return match;
         }
       }
-
       return null;
     };
 
