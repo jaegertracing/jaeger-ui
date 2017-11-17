@@ -19,12 +19,12 @@ import * as React from 'react';
 import './TimelineRow.css';
 
 type TimelineRowProps = {
-  children?: React.Node,
+  children: React.Node,
   className: string,
 };
 
 type TimelineRowCellProps = {
-  children?: React.Node,
+  children: React.Node,
   className: string,
   width: number,
   style?: Object,
@@ -54,6 +54,6 @@ function TimelineRowCell(props: TimelineRowCellProps) {
   );
 }
 
-TimelineRowCell.defaultProps = { className: '' };
+TimelineRowCell.defaultProps = { className: '', style: {} };
 
 TimelineRow.Cell = TimelineRowCell;

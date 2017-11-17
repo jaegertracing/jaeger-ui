@@ -32,7 +32,7 @@ export default function SpanTreeOffset(props: SpanTreeOffsetProps) {
     <i className={`span-tree-toggle-icon icon square ${childrenVisible ? 'outline minus' : 'plus'}`} />
   ) : null;
   return (
-    <span className={className} onClick={onClick}>
+    <span className={className} onClick={onClick} role="switch" aria-checked={childrenVisible}>
       <span className="span-tree-offset" style={{ paddingLeft: `${level * 20}px` }} />
       {icon}
     </span>

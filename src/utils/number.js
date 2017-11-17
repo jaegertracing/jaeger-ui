@@ -26,6 +26,7 @@
  * @param {number} precision
  * @return {number} number at new floating precision
  */
+// eslint-disable-next-line import/prefer-default-export
 export function toFloatPrecision(number, precision) {
   const log10Length = Math.floor(Math.log10(Math.abs(number))) + 1;
   const targetPrecision = precision + log10Length;
