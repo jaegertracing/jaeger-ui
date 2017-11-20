@@ -64,7 +64,7 @@ const NAV_LINKS = [
   },
 ];
 
-if (getConfig().depsMenuEnabled === true) {
+if (getConfig().dependenciesMenuEnabled) {
   NAV_LINKS.push({
     key: 'dependencies',
     to: prefixUrl('/dependencies'),
