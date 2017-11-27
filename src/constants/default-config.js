@@ -46,4 +46,5 @@ export default deepFreeze({
       ],
     },
   ],
+  dependenciesMenuEnabled: true,
 });
