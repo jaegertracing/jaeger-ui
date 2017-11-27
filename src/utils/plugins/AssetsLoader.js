@@ -18,17 +18,13 @@ import Bluebird from 'bluebird';
 import loadStylsheet from 'ffxnz-load-stylesheet';
 import fetch from 'isomorphic-fetch';
 
-// import getConfig from '../config/get-config';
 import type { PluginsOptions } from '../../types/config';
-
-// const options = getConfig().plugins.options;
 
 export default class AssetsLoader {
   _options: PluginsOptions;
   _isBailed: boolean;
   _alreadyStartedJs: Map<string, ?Bluebird<string>>;
 
-  // TODO(joe): load serially
   constructor(options: PluginsOptions) {
     this._options = options;
     this._isBailed = false;
@@ -38,6 +34,7 @@ export default class AssetsLoader {
   addCssLink(url: string): Bluebird$Promise<string> {
     if (this._isBailed) {
       const msg = `Skipping ${url} because the plugin inititialization has bailed`;
+      // eslint-disable-next-line no-console
       console.error(msg);
       return Bluebird.reject(new Error(msg));
     }

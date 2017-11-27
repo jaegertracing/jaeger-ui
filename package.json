@@ -94,7 +94,8 @@
     ]
   },
   "lint-staged": {
-    "*.js": [
+    "*.+(js|css)": [
+      "npm run check-license",
       "npm run prettier",
       "git add"
     ]
