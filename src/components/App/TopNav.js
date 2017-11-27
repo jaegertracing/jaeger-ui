@@ -20,6 +20,7 @@ import { Dropdown, Menu } from 'semantic-ui-react';
 
 import TraceIDSearchInput from './TraceIDSearchInput';
 import type { ConfigMenuItem, ConfigMenuGroup } from '../../types/config';
+import { menu as pluginsMenu } from '../../utils/plugins/integrations';
 import prefixUrl from '../../utils/prefix-url';
 
 import './TopNav.css';
@@ -58,19 +59,20 @@ function CustomNavDropdown({ label, items }: ConfigMenuGroup) {
 const NAV_LINKS = [
   {
     key: 'dependencies',
-    to: prefixUrl('/dependencies'),
-    text: 'Dependencies',
+    path: prefixUrl('/dependencies'),
+    label: 'Dependencies',
   },
   {
     key: 'search',
-    to: prefixUrl('/search'),
-    text: 'Search',
+    path: prefixUrl('/search'),
+    label: 'Search',
   },
 ];
 
 export default function TopNav(props: TopNavProps) {
   const { menuConfig } = props;
   const menuItems = Array.isArray(menuConfig) ? menuConfig : [];
+  const leftMenu = [...NAV_LINKS, ...pluginsMenu];
   return (
     <Menu inverted className="TopNav">
       <Link to={prefixUrl('/')} className="header item">
@@ -79,9 +81,9 @@ export default function TopNav(props: TopNavProps) {
       <div className="ui input">
         <TraceIDSearchInput />
       </div>
-      {NAV_LINKS.map(({ key, to, text }) =>
-        <Link key={key} to={to} className="item">
-          {text}
+      {leftMenu.map(({ key, path, label }) =>
+        <Link key={key} to={path} className="item">
+          {label}
         </Link>
       )}
       <div className="right menu">

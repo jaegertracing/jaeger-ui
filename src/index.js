@@ -19,7 +19,13 @@ import { document } from 'global';
 import 'basscss/css/basscss.css';
 
 import JaegerUIApp from './components/App';
+import PluginBail from './components/PluginBail/PluginBail';
 import { init as initTracking } from './utils/metrics';
+
+// import Bluebird from 'bluebird';
+// import AssetsLoader from './utils/plugins/AssetsLoader';
+// import getConfig from './utils/config/get-config';
+import initPlugins from './utils/plugins/init-plugins';
 
 /* istanbul ignore if */
 if (process.env.NODE_ENV === 'development') {
@@ -33,8 +39,55 @@ if (process.env.NODE_ENV === 'development') {
 initTracking();
 
 const UI_ROOT_ID = 'jaeger-ui-root';
+// const plugins = getConfig().plugins;
+// const loader = new AssetsLoader(plugins.options);
 
-/* istanbul ignore if */
 if (document && process.env.NODE_ENV !== 'test') {
-  ReactDOM.render(<JaegerUIApp />, document.getElementById(UI_ROOT_ID));
+  /* istanbul ignore if */
+  initPlugins()
+    .then(() => {
+      ReactDOM.render(<JaegerUIApp />, document.getElementById(UI_ROOT_ID));
+    })
+    .catch(multiError => {
+      console.log(multiError);
+      const msgs = multiError.errors.map((error, i) =>
+        <PluginBail key={`${error.message}-${i}`} message={error.message || error} stack={error.stack} />
+      );
+      ReactDOM.render(
+        <div>
+          {msgs}
+        </div>,
+        document.getElementById(UI_ROOT_ID)
+      );
+    });
 }
+// if (document && process.env.NODE_ENV !== 'test') {
+//   /* istanbul ignore if */
+//   Bluebird.all([
+//     loader.addCssLink('/static/css/main.0f4cd097.css').reflect(),
+//     loader.loadJavaScriptAsText('/static/js/1.chunk.js').reflect(),
+//     loader.loadJavaScriptAsText('/static/js/1.chunk0.js').reflect(),
+//     loader.loadJavaScriptAsText('/static/js/1.chunk1.js').reflect(),
+//     loader.loadJavaScriptAsText('/static/js/1.chunk2.js').reflect(),
+//   ]).then(args => {
+//     if (args.some(p => p.isRejected())) {
+//       const msgs = [];
+//       args.forEach((pr, i) => {
+//         if (pr.isRejected()) {
+//           const error = pr.reason();
+//           msgs.push(<PluginBail key={`${error.message}-${i}`} message={error.message} stack={error.stack} />);
+//         }
+//       });
+//       ReactDOM.render(
+//         <div>
+//           {msgs}
+//         </div>,
+//         document.getElementById(UI_ROOT_ID)
+//       );
+//       return;
+//     }
+//     console.log(args);
+//     window.args = args;
+//     ReactDOM.render(<JaegerUIApp />, document.getElementById(UI_ROOT_ID));
+//   });
+// }

@@ -14,6 +14,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+export type ConfigFormatVersion = '0.0.0';
+
 export type ConfigMenuItem = {
   label: string,
   url: string,
@@ -24,7 +26,26 @@ export type ConfigMenuGroup = {
   items: ConfigMenuItem[],
 };
 
+export type PluginsOptions = {
+  bail?: boolean,
+  loadSerially?: boolean,
+  timeoutMs?: number,
+  verbose?: boolean,
+};
+
+export type PluginSources = {
+  js?: string[],
+  css?: string[],
+};
+
+export type PluginsConfig = {
+  options?: PluginsOptions,
+  sources?: PluginSources[],
+};
+
 export type Config = {
+  formatVersion: ConfigFormatVersion,
   gaTrackingID?: ?string,
   menu: (ConfigMenuGroup | ConfigMenuItem)[],
+  plugins: PluginsConfig,
 };

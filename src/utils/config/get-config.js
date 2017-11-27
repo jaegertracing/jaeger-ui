@@ -14,6 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import getPluginsConfig from './get-plugins-config';
 import defaultConfig from '../../constants/default-config';
 
 let haveWarned = false;
@@ -30,8 +31,10 @@ export default function getConfig() {
       console.warn('Embedded config not available');
       haveWarned = true;
     }
-    return { ...defaultConfig };
+    return { ...defaultConfig, ...getPluginsConfig() };
   }
   const embedded = getJaegerUiConfig() || {};
-  return { ...defaultConfig, ...embedded };
+  const plugins = getPluginsConfig(embedded.plugins);
+  // console.log({ ...defaultConfig, ...embedded, plugins });
+  return { ...defaultConfig, ...embedded, plugins };
 }
