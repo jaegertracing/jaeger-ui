@@ -42,7 +42,7 @@ export type ShortcutCallbacks = {
   zoomOutFast: CombokeysHandler,
 };
 
-const kbdMappings = {
+export const kbdMappings = {
   scrollPageDown: 's',
   scrollPageUp: 'w',
   scrollToNextVisibleSpan: 'f',

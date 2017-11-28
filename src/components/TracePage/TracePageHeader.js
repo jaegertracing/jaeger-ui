@@ -16,6 +16,7 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import { Dropdown, Menu } from 'semantic-ui-react';
 
+import KeyboardShortcutsHelp from './KeyboardShortcutsHelp';
 import { formatDatetime, formatDuration } from '../../utils/date';
 
 export const HEADER_ITEMS = [
@@ -68,6 +69,9 @@ export default function TracePageHeader(props) {
           </h2>
         </div>
         <div className="inline-block mr1">
+          <KeyboardShortcutsHelp />
+        </div>
+        <div className="mr1">
           <Menu>
             <Dropdown text="View Options" className="item">
               <Dropdown.Menu>
