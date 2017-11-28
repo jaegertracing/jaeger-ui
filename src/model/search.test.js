@@ -122,11 +122,11 @@ describe('sortTraces()', () => {
   };
   expecations.invalidOrderBy = expecations[LONGEST_FIRST];
 
-  for (const sortBy of Object.keys(expecations)) {
+  Object.keys(expecations).forEach(sortBy => {
     it(`sorts by ${sortBy}`, () => {
       const traceID = expecations[sortBy];
       sortTraces(traces, sortBy);
       expect(traces[0].traceID).toBe(traceID);
     });
-  }
+  });
 });

@@ -284,18 +284,20 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
           onMouseLeave={this._draggerReframe.handleMouseLeave}
           onMouseMove={this._draggerReframe.handleMouseMove}
         >
-          {leftInactive > 0 &&
-            <rect x={0} y={0} height="100%" width={`${leftInactive}%`} className="ViewingLayer--inactive" />}
-          {rightInactive > 0 &&
+          {leftInactive > 0 && (
+            <rect x={0} y={0} height="100%" width={`${leftInactive}%`} className="ViewingLayer--inactive" />
+          )}
+          {rightInactive > 0 && (
             <rect
               x={`${100 - rightInactive}%`}
               y={0}
               height="100%"
               width={`${rightInactive}%`}
               className="ViewingLayer--inactive"
-            />}
+            />
+          )}
           <GraphTicks numTicks={numTicks} />
-          {cursorPosition &&
+          {cursorPosition && (
             <line
               className="ViewingLayer--cursorGuide"
               x1={cursorPosition}
@@ -303,7 +305,8 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
               x2={cursorPosition}
               y2={height - 2}
               strokeWidth="1"
-            />}
+            />
+          )}
           {shiftStart != null && this._getMarkers(viewStart, shiftStart, true)}
           {shiftEnd != null && this._getMarkers(viewEnd, shiftEnd, true)}
           <Scrubber

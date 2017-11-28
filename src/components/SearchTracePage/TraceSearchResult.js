@@ -36,12 +36,8 @@ export default function TraceSearchResult({ trace, durationPercent = 100 }) {
           background: getBackgroundStyle(durationPercent),
         }}
       >
-        <span className="trace-search-result--traceName left">
-          {traceName}
-        </span>
-        <span className="trace-search-result--duration right">
-          {formatDuration(duration * 1000)}
-        </span>
+        <span className="trace-search-result--traceName left">{traceName}</span>
+        <span className="trace-search-result--duration right">{formatDuration(duration * 1000)}</span>
       </div>
       <div className="p1">
         <div className="clearfix">
@@ -49,17 +45,18 @@ export default function TraceSearchResult({ trace, durationPercent = 100 }) {
             <span className="trace-search-result--spans">
               {numberOfSpans} span{numberOfSpans > 1 && 's'}
             </span>
-            {Boolean(numberOfErredSpans) &&
+            {Boolean(numberOfErredSpans) && (
               <span className="trace-search-result--erred-spans">
                 {numberOfErredSpans} error{numberOfErredSpans > 1 && 's'}
-              </span>}
+              </span>
+            )}
           </div>
           <div className="col col-6">
-            {sortBy(services, s => s.name).map(service =>
+            {sortBy(services, s => s.name).map(service => (
               <div key={service.name} className="inline-block mr1 mb1">
                 <TraceServiceTag service={service} />
               </div>
-            )}
+            ))}
           </div>
           <div className="col col-4">
             <span className="trace-search-result--timestamp right">

@@ -37,18 +37,20 @@ export default function KeyValuesTable(props: KeyValuesTableProps) {
     <div className="KeyValueTable">
       <table className="ui very striped compact table">
         <tbody className="KeyValueTable--body">
-          {data.map((row, i) =>
-            // `i` is necessary in the key because row.key can repeat
-            // eslint-disable-next-line react/no-array-index-key
-            <tr key={`${row.key}-${i}`}>
-              <td className="KeyValueTable--keyColumn">
-                {row.key}
-              </td>
-              <td>
-                <div dangerouslySetInnerHTML={{ __html: jsonMarkup(parseOrPass(row.value)) }} />
-              </td>
-            </tr>
-          )}
+          {data.map((row, i) => {
+            const jsonTable = (
+              // eslint-disable-next-line react/no-danger
+              <div dangerouslySetInnerHTML={{ __html: jsonMarkup(parseOrPass(row.value)) }} />
+            );
+            return (
+              // `i` is necessary in the key because row.key can repeat
+              // eslint-disable-next-line react/no-array-index-key
+              <tr key={`${row.key}-${i}`}>
+                <td className="KeyValueTable--keyColumn">{row.key}</td>
+                <td>{jsonTable}</td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>

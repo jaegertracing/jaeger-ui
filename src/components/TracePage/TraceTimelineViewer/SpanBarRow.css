@@ -26,11 +26,11 @@ limitations under the License.
 }
 
 .span-row.clipping-left .span-name-column::before {
-  content: " ";
+  content: ' ';
   height: 100%;
   position: absolute;
   width: 6px;
-  background-image: linear-gradient(to right, rgba(25, 25, 25, 0.25), rgba(32, 32, 32, 0.0));
+  background-image: linear-gradient(to right, rgba(25, 25, 25, 0.25), rgba(32, 32, 32, 0));
   left: 100%;
   z-index: -1;
 }
@@ -104,11 +104,11 @@ limitations under the License.
 }
 
 .span-row.clipping-right .span-view::before {
-  content: " ";
+  content: ' ';
   height: 100%;
   position: absolute;
   width: 6px;
-  background-image: linear-gradient(to left, rgba(25, 25, 25, 0.25), rgba(32, 32, 32, 0.0));
+  background-image: linear-gradient(to left, rgba(25, 25, 25, 0.25), rgba(32, 32, 32, 0));
   right: 0%;
   z-index: 1;
 }

@@ -81,12 +81,20 @@
     "lint": "npm run eslint && npm run prettier && npm run flow && npm run check-license",
     "eslint": "eslint src",
     "check-license": "./scripts/check-license.sh",
-    "prettier": "prettier --single-quote --trailing-comma es5 --print-width 110 --write \"src/**/*.js\"",
+    "prettier": "prettier --write \"src/**/*.js\" \"src/**/*.css\"",
     "flow": "flow; test $? -eq 0 -o $? -eq 2",
     "precommit": "lint-staged"
   },
   "jest": {
-    "collectCoverageFrom": ["src/**/*.js", "!src/utils/DraggableManager/demo/*.js"]
+    "collectCoverageFrom": [
+      "src/**/*.js",
+      "!src/utils/DraggableManager/demo/*.js"
+    ]
+  },
+  "prettier": {
+    "printWidth": 110,
+    "singleQuote": true,
+    "trailingComma": "es5"
   },
   "lint-staged": {
     "*.js": [

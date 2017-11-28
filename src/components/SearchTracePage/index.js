@@ -37,7 +37,7 @@ import prefixUrl from '../../utils/prefix-url';
 /**
  * Contains the dropdown to sort and filter trace search results
  */
-let TraceResultsFilterForm = () =>
+let TraceResultsFilterForm = () => (
   <div className="ui form">
     <div className="field inline">
       <label htmlFor="traceResultsSortBy">Sort</label>
@@ -49,7 +49,8 @@ let TraceResultsFilterForm = () =>
         <option value={orderBy.LEAST_SPANS}>Least Spans</option>
       </Field>
     </div>
-  </div>;
+  </div>
+);
 
 TraceResultsFilterForm = reduxForm({
   form: 'traceResultsFilters',
@@ -90,80 +91,86 @@ export default class SearchTracePage extends Component {
         <div className="four wide column">
           <div className="ui tertiary segment" style={{ background: 'whitesmoke' }}>
             <h3>Find Traces</h3>
-            {!loadingServices && services
-              ? <TraceSearchForm services={services} />
-              : <div className="m1">
-                  <div className="ui active centered inline loader" />
-                </div>}
+            {!loadingServices && services ? (
+              <TraceSearchForm services={services} />
+            ) : (
+              <div className="m1">
+                <div className="ui active centered inline loader" />
+              </div>
+            )}
           </div>
         </div>
         <div className="twelve wide column padded">
           {loadingTraces && <div className="ui active centered inline loader" />}
           {errorMessage &&
-            !loadingTraces &&
-            <div className="ui message red trace-search--error">
-              There was an error querying for traces:<br />
-              {errorMessage}
-            </div>}
-          {isHomepage &&
-            !hasTraceResults &&
-            <div className="ui middle aligned center aligned grid" style={{ marginTop: 100 }}>
-              <div className="column">
-                <img alt="presentation" src={JaegerLogo} width="400" />
+            !loadingTraces && (
+              <div className="ui message red trace-search--error">
+                There was an error querying for traces:<br />
+                {errorMessage}
               </div>
-            </div>}
+            )}
+          {isHomepage &&
+            !hasTraceResults && (
+              <div className="ui middle aligned center aligned grid" style={{ marginTop: 100 }}>
+                <div className="column">
+                  <img alt="presentation" src={JaegerLogo} width="400" />
+                </div>
+              </div>
+            )}
           {!isHomepage &&
             !hasTraceResults &&
             !loadingTraces &&
-            !errorMessage &&
-            <div className="ui message trace-search--no-results">No trace results. Try another query.</div>}
+            !errorMessage && (
+              <div className="ui message trace-search--no-results">No trace results. Try another query.</div>
+            )}
           {hasTraceResults &&
-            !loadingTraces &&
-            <div>
+            !loadingTraces && (
               <div>
-                <div style={{ border: '1px solid #e6e6e6' }}>
-                  <div className="p2">
-                    <TraceResultsScatterPlot
-                      data={traceResults.map(t => ({
-                        x: t.timestamp,
-                        y: t.duration,
-                        traceID: t.traceID,
-                        size: t.numberOfSpans,
-                        name: t.traceName,
-                      }))}
-                      onValueClick={t => {
-                        this.props.history.push(`/trace/${t.traceID}`);
-                      }}
-                    />
-                  </div>
-                  <div className="p2 clearfix" style={{ backgroundColor: 'whitesmoke' }}>
-                    <div className="left">
-                      <span>
-                        {numberOfTraceResults} Trace
-                        {numberOfTraceResults > 1 && 's'}
-                      </span>
+                <div>
+                  <div style={{ border: '1px solid #e6e6e6' }}>
+                    <div className="p2">
+                      <TraceResultsScatterPlot
+                        data={traceResults.map(t => ({
+                          x: t.timestamp,
+                          y: t.duration,
+                          traceID: t.traceID,
+                          size: t.numberOfSpans,
+                          name: t.traceName,
+                        }))}
+                        onValueClick={t => {
+                          this.props.history.push(`/trace/${t.traceID}`);
+                        }}
+                      />
                     </div>
-                    <div className="right">
-                      <TraceResultsFilterForm />
+                    <div className="p2 clearfix" style={{ backgroundColor: 'whitesmoke' }}>
+                      <div className="left">
+                        <span>
+                          {numberOfTraceResults} Trace
+                          {numberOfTraceResults > 1 && 's'}
+                        </span>
+                      </div>
+                      <div className="right">
+                        <TraceResultsFilterForm />
+                      </div>
                     </div>
                   </div>
                 </div>
+                <div>
+                  <ul className="list-reset">
+                    {traceResults.map(trace => (
+                      <li key={trace.traceID} className="my1">
+                        <Link to={prefixUrl(`/trace/${trace.traceID}`)}>
+                          <TraceSearchResult
+                            trace={trace}
+                            durationPercent={getPercentageOfDuration(trace.duration, maxTraceDuration)}
+                          />
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </div>
-              <div>
-                <ul className="list-reset">
-                  {traceResults.map(trace =>
-                    <li key={trace.traceID} className="my1">
-                      <Link to={prefixUrl(`/trace/${trace.traceID}`)}>
-                        <TraceSearchResult
-                          trace={trace}
-                          durationPercent={getPercentageOfDuration(trace.duration, maxTraceDuration)}
-                        />
-                      </Link>
-                    </li>
-                  )}
-                </ul>
-              </div>
-            </div>}
+            )}
         </div>
       </div>
     );

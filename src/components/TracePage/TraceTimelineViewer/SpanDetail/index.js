@@ -39,27 +39,19 @@ export default function SpanDetail(props: SpanDetailProps) {
   return (
     <div>
       <div>
-        <h3 className="mb1">
-          {operationName}
-        </h3>
+        <h3 className="mb1">{operationName}</h3>
         <div>
           <div className="inline-block mr1">
             <strong>Service: </strong>
-            <span>
-              {process.serviceName}
-            </span>
+            <span>{process.serviceName}</span>
           </div>
           <div className="inline-block mr1">
             <strong>Duration: </strong>
-            <span>
-              {formatDuration(duration)}
-            </span>
+            <span>{formatDuration(duration)}</span>
           </div>
           <div className="inline-block mr1">
             <strong>Start Time: </strong>
-            <span>
-              {formatDuration(relativeStartTime)}
-            </span>
+            <span>{formatDuration(relativeStartTime)}</span>
           </div>
         </div>
         <hr />
@@ -73,25 +65,27 @@ export default function SpanDetail(props: SpanDetailProps) {
             isOpen={isTagsOpen}
             onToggle={() => tagsToggle(spanID)}
           />
-          {process.tags &&
+          {process.tags && (
             <AccordianKeyValues
               data={process.tags}
               highContrast
               label="Process"
               isOpen={isProcessOpen}
               onToggle={() => processToggle(spanID)}
-            />}
+            />
+          )}
         </div>
         {logs &&
-          logs.length > 0 &&
-          <AccordianLogs
-            logs={logs}
-            isOpen={logsState.isOpen}
-            openedItems={logsState.openedItems}
-            onToggle={() => logsToggle(spanID)}
-            onItemToggle={logItem => logItemToggle(spanID, logItem)}
-            timestamp={traceStartTime}
-          />}
+          logs.length > 0 && (
+            <AccordianLogs
+              logs={logs}
+              isOpen={logsState.isOpen}
+              openedItems={logsState.openedItems}
+              onToggle={() => logsToggle(spanID)}
+              onItemToggle={logItem => logItemToggle(spanID, logItem)}
+              timestamp={traceStartTime}
+            />
+          )}
 
         <small className="SpanDetail--debugInfo">
           <span className="SpanDetail--debugLabel" data-label="SpanID:" />{' '}

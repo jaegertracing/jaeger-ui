@@ -43,7 +43,13 @@ function SpanBar(props: SpanBarProps) {
   const { viewEnd, viewStart, color, label, hintSide, onClick, setLongLabel, setShortLabel, rpc } = props;
 
   return (
-    <div className="SpanBar--wrapper" onClick={onClick} onMouseOut={setShortLabel} onMouseOver={setLongLabel}>
+    <div
+      className="SpanBar--wrapper"
+      onClick={onClick}
+      onMouseOut={setShortLabel}
+      onMouseOver={setLongLabel}
+      aria-hidden
+    >
       <div
         aria-label={label}
         className="SpanBar--bar"
@@ -53,11 +59,9 @@ function SpanBar(props: SpanBarProps) {
           width: toPercent(viewEnd - viewStart),
         }}
       >
-        <div className={`SpanBar--label is-${hintSide}`}>
-          {label}
-        </div>
+        <div className={`SpanBar--label is-${hintSide}`}>{label}</div>
       </div>
-      {rpc &&
+      {rpc && (
         <div
           className="SpanBar--rpc"
           style={{
@@ -65,7 +69,8 @@ function SpanBar(props: SpanBarProps) {
             left: toPercent(rpc.viewStart),
             width: toPercent(rpc.viewEnd - rpc.viewStart),
           }}
-        />}
+        />
+      )}
     </div>
   );
 }

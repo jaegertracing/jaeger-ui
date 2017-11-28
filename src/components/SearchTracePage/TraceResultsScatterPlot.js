@@ -45,12 +45,11 @@ function TraceResultsScatterPlotBase(props) {
           onValueMouseOut={onValueOut}
           data={data}
         />
-        {overValue &&
+        {overValue && (
           <Hint value={overValue}>
-            <h4 className="scatter-plot-hint">
-              {overValue.name || '¯\\_(ツ)_/¯'}
-            </h4>
-          </Hint>}
+            <h4 className="scatter-plot-hint">{overValue.name || '¯\\_(ツ)_/¯'}</h4>
+          </Hint>
+        )}
       </XYPlot>
     </div>
   );

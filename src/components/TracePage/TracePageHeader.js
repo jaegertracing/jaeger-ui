@@ -1,3 +1,5 @@
+// @flow
+
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,42 +14,66 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import PropTypes from 'prop-types';
-import React from 'react';
+import * as React from 'react';
 import { Dropdown, Menu } from 'semantic-ui-react';
 
 import KeyboardShortcutsHelp from './KeyboardShortcutsHelp';
 import { formatDatetime, formatDuration } from '../../utils/date';
 
+type TracePageHeaderProps = {
+  traceID: string,
+  name: String,
+  slimView: boolean,
+  onSlimViewClicked: () => void,
+  updateTextFilter: string => void,
+  textFilter: ?string,
+  // these props are used by the `HEADER_ITEMS`
+  // eslint-disable-next-line react/no-unused-prop-types
+  timestamp: number,
+  // eslint-disable-next-line react/no-unused-prop-types
+  duration: number,
+  // eslint-disable-next-line react/no-unused-prop-types
+  numServices: number,
+  // eslint-disable-next-line react/no-unused-prop-types
+  maxDepth: number,
+  // eslint-disable-next-line react/no-unused-prop-types
+  numSpans: number,
+};
+
 export const HEADER_ITEMS = [
   {
     key: 'timestamp',
     title: 'Trace Start',
-    renderer: props => formatDatetime(props.timestamp),
+    propName: null,
+    renderer: (props: TracePageHeaderProps) => formatDatetime(props.timestamp),
   },
   {
     key: 'duration',
     title: 'Duration',
-    renderer: props => formatDuration(props.duration),
+    propName: null,
+    renderer: (props: TracePageHeaderProps) => formatDuration(props.duration),
   },
   {
     key: 'service-count',
     title: 'Services',
     propName: 'numServices',
+    renderer: null,
   },
   {
     key: 'depth',
     title: 'Depth',
     propName: 'maxDepth',
+    renderer: null,
   },
   {
     key: 'span-count',
     title: 'Total Spans',
     propName: 'numSpans',
+    renderer: null,
   },
 ];
 
-export default function TracePageHeader(props) {
+export default function TracePageHeader(props: TracePageHeaderProps) {
   const { traceID, name, slimView, onSlimViewClicked, updateTextFilter, textFilter } = props;
 
   if (!traceID) {
@@ -59,7 +85,7 @@ export default function TracePageHeader(props) {
       <div className="flex">
         <div className="flex-auto">
           <h2>
-            <a onClick={onSlimViewClicked}>
+            <a onClick={onSlimViewClicked} role="switch" aria-checked={!slimView}>
               <i
                 className={`ui icon angle double ${slimView ? 'right' : 'down'}`}
                 style={{ float: 'none' }}
@@ -96,31 +122,26 @@ export default function TracePageHeader(props) {
           </div>
         </div>
       </div>
-      {!slimView &&
+      {!slimView && (
         <div>
-          {HEADER_ITEMS.map(({ renderer, propName, title, key }) =>
-            <div className="inline-block mr1" key={key}>
-              <strong>
-                {title}:{' '}
-              </strong>
-              {propName ? props[propName] : renderer(props)}
-            </div>
-          )}
-        </div>}
+          {HEADER_ITEMS.map(({ renderer, propName, title, key }) => {
+            let value: ?React.Node;
+            if (propName) {
+              value = props[propName];
+            } else if (renderer) {
+              value = renderer(props);
+            } else {
+              throw new Error('Invalid HEADER_ITEM configuration');
+            }
+            return (
+              <div className="inline-block mr1" key={key}>
+                {title}:
+                <strong>{value}</strong>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </header>
   );
 }
-
-TracePageHeader.propTypes = {
-  duration: PropTypes.number, // eslint-disable-line react/no-unused-prop-types
-  maxDepth: PropTypes.number, // eslint-disable-line react/no-unused-prop-types
-  name: PropTypes.string,
-  numServices: PropTypes.number, // eslint-disable-line react/no-unused-prop-types
-  numSpans: PropTypes.number, // eslint-disable-line react/no-unused-prop-types
-  onSlimViewClicked: PropTypes.func,
-  slimView: PropTypes.bool,
-  textFilter: PropTypes.string,
-  timestamp: PropTypes.number, // eslint-disable-line react/no-unused-prop-types
-  traceID: PropTypes.string,
-  updateTextFilter: PropTypes.func.isRequired,
-};

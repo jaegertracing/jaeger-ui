@@ -21,17 +21,20 @@ import dagre from 'dagre';
 cydagre(cytoscape, dagre);
 
 export default class DAG extends React.Component {
-  static get propTypes() {
-    return {
-      serviceCalls: PropTypes.arrayOf(
-        PropTypes.shape({
-          parent: PropTypes.string,
-          child: PropTypes.string,
-          callCount: PropTypes.number,
-        })
-      ),
-    };
-  }
+  static propTypes = {
+    serviceCalls: PropTypes.arrayOf(
+      PropTypes.shape({
+        parent: PropTypes.string,
+        child: PropTypes.string,
+        callCount: PropTypes.number,
+      })
+    ),
+  };
+
+  static defaultProps = {
+    serviceCalls: [],
+  };
+
   componentDidMount() {
     const { serviceCalls } = this.props;
     const nodeMap = {};

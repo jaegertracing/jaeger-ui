@@ -51,7 +51,9 @@ export default function renderIntoCanvas(
     if (width < MIN_WIDTH) {
       width = MIN_WIDTH;
     }
-    ctx.fillStyle = `rgba(${getFillColor(serviceName).concat(ALPHA).join()})`;
+    ctx.fillStyle = `rgba(${getFillColor(serviceName)
+      .concat(ALPHA)
+      .join()})`;
     ctx.fillRect(x, i * itemYChange, width, itemHeight);
   }
 }
