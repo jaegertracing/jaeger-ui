@@ -40,7 +40,7 @@ limitations under the License.
 .detail-row-expanded-accent::before,
 .detail-row-expanded-accent::after {
   border-color: inherit;
-  content: " ";
+  content: ' ';
   position: absolute;
   height: 100%;
 }
@@ -54,7 +54,5 @@ limitations under the License.
   border: 1px solid #d3d3d3;
   border-left: 1px solid #bbb;
   border-top: 3px solid;
-  box-shadow:
-    inset 0 16px 20px -20px rgba(0,0,0,0.45),
-    inset 0 -12px 20px -20px rgba(0,0,0,0.45);
+  box-shadow: inset 0 16px 20px -20px rgba(0, 0, 0, 0.45), inset 0 -12px 20px -20px rgba(0, 0, 0, 0.45);
 }

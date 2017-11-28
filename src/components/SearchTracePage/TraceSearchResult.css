@@ -15,19 +15,19 @@ limitations under the License.
 */
 
 .ui.header.trace-search-result--duration {
-  color: #11939A;
+  color: #11939a;
 }
 
 .trace-search-result:hover .ui.header.trace-search-result--duration {
-  color: #00474E;
+  color: #00474e;
 }
 
 .trace-search-result--spans {
-	display: inline-block;
-	margin-right: 0.5em;
+  display: inline-block;
+  margin-right: 0.5em;
 }
 
 .trace-search-result--erred-spans {
-	color: #c00;
-	display: inline-block;
+  color: #c00;
+  display: inline-block;
 }

@@ -39,8 +39,8 @@ export type Accessors = {
 };
 
 interface Scroller {
-  scrollTo: number => void,
-  scrollBy: (number, ?boolean) => void,
+  scrollTo: number => void;
+  scrollBy: (number, ?boolean) => void;
 }
 
 /**
@@ -104,6 +104,7 @@ export default class ScrollManager {
     const isUp = direction < 0;
     const position = xrs.getRowPosition(rowIndex);
     if (!position) {
+      // eslint-disable-next-line no-console
       console.warn('Invalid row index');
       return;
     }

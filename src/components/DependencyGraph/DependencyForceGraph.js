@@ -65,9 +65,11 @@ export default class DependencyForceGraph extends Component {
 
     return (
       <div
-        ref={/* istanbul ignore next */ c => {
-          this.container = c;
-        }}
+        ref={
+          /* istanbul ignore next */ c => {
+            this.container = c;
+          }
+        }
         style={{ position: 'relative' }}
       >
         <InteractiveForceGraph
@@ -91,7 +93,7 @@ export default class DependencyForceGraph extends Component {
           nodeAttrs={['orphan']}
           highlightDependencies
         >
-          {nodes.map(({ labelStyle, labelClass, showLabel, opacity, fill, ...node }) =>
+          {nodes.map(({ labelStyle, labelClass, showLabel, opacity, fill, ...node }) => (
             <ForceGraphNode
               key={node.id}
               node={node}
@@ -101,10 +103,10 @@ export default class DependencyForceGraph extends Component {
               opacity={opacity}
               fill={fill}
             />
-          )}
-          {links.map(({ opacity, ...link }) =>
+          ))}
+          {links.map(({ opacity, ...link }) => (
             <ForceGraphLink key={`${link.source}=>${link.target}`} opacity={opacity} link={link} />
-          )}
+          ))}
         </InteractiveForceGraph>
       </div>
     );

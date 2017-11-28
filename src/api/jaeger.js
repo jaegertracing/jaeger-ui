@@ -32,11 +32,9 @@ function getJSON(url, query) {
         .then(({ errors = [] }) => {
           throw new Error(errors.length > 0 ? errors[0].msg : 'An unknown error occurred.');
         })
-        .catch(
-          (/* err */) => {
-            throw new Error('Bad JSON returned from the Jaeger Query Service.');
-          }
-        );
+        .catch((/* err */) => {
+          throw new Error('Bad JSON returned from the Jaeger Query Service.');
+        });
     }
     return response.json();
   });

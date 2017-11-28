@@ -63,7 +63,7 @@ limitations under the License.
   bottom: 0;
   left: -8px;
   right: -5px;
-  content: " ";
+  content: ' ';
 }
 
 .TimelineColumnResizer--wrapper.isDraggingLeft > .TimelineColumnResizer--dragger::before,
@@ -81,7 +81,7 @@ limitations under the License.
 .TimelineColumnResizer--gripIcon::before,
 .TimelineColumnResizer--gripIcon::after {
   position: absolute;
-  content: " ";
+  content: ' ';
   top: -15px;
   bottom: 3px;
   right: 8px;

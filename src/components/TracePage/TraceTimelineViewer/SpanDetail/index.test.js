@@ -31,7 +31,10 @@ describe('<SpanDetail>', () => {
 
   // use `transformTraceData` on a fake trace to get a fully processed span
   const span = transformTraceData(traceGenerator.trace({ numberOfSpans: 1 })).spans[0];
-  const detailState = new DetailState().toggleLogs().toggleProcess().toggleTags();
+  const detailState = new DetailState()
+    .toggleLogs()
+    .toggleProcess()
+    .toggleTags();
   const traceStartTime = 5;
   const props = {
     detailState,

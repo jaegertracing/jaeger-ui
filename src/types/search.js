@@ -19,12 +19,12 @@
  */
 export type TraceSummary = {
   /**
-  * Duration of trace in milliseconds.
-  */
+   * Duration of trace in milliseconds.
+   */
   duration: number,
   /**
-  * Start time of trace in milliseconds.
-  */
+   * Start time of trace in milliseconds.
+   */
   timestamp: number,
   traceName: string,
   traceID: string,

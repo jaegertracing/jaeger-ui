@@ -25,11 +25,11 @@ limitations under the License.
 
 .noselect {
   -webkit-touch-callout: none; /* iOS Safari */
-    -webkit-user-select: none; /* Chrome/Safari/Opera */
-     -khtml-user-select: none; /* Konqueror */
-       -moz-user-select: none; /* Firefox */
-        -ms-user-select: none; /* Internet Explorer/Edge */
-            user-select: none; /* Non-prefixed version, currently
+  -webkit-user-select: none; /* Chrome/Safari/Opera */
+  -khtml-user-select: none; /* Konqueror */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* Internet Explorer/Edge */
+  user-select: none; /* Non-prefixed version, currently
                                   not supported by any browser */
 }
 
@@ -38,23 +38,23 @@ limitations under the License.
 }
 
 .json-markup {
-	line-height: 17px;
-	font-size: 13px;
-	font-family: monospace;
-	white-space: pre;
+  line-height: 17px;
+  font-size: 13px;
+  font-family: monospace;
+  white-space: pre;
 }
 .json-markup-key {
-	font-weight: bold;
+  font-weight: bold;
 }
 .json-markup-bool {
-	color: firebrick;
+  color: firebrick;
 }
 .json-markup-string {
-	color: teal;
+  color: teal;
 }
 .json-markup-null {
-	color: gray;
+  color: gray;
 }
 .json-markup-number {
-	color: blue;
+  color: blue;
 }

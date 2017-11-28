@@ -28,16 +28,22 @@ import DependencyForceGraph from './DependencyForceGraph';
 import DAG from './DAG';
 
 export default class DependencyGraphPage extends Component {
-  static get propTypes() {
-    return {
-      dependencies: PropTypes.any,
-      fetchDependencies: PropTypes.func.isRequired,
-      nodes: nodesPropTypes,
-      links: linksPropTypes,
-      loading: PropTypes.bool,
-      error: PropTypes.object,
-    };
-  }
+  static propTypes = {
+    // eslint-disable-next-line react/forbid-prop-types
+    dependencies: PropTypes.any.isRequired,
+    fetchDependencies: PropTypes.func.isRequired,
+    nodes: nodesPropTypes,
+    links: linksPropTypes,
+    loading: PropTypes.bool.isRequired,
+    // eslint-disable-next-line react/forbid-prop-types
+    error: PropTypes.object,
+  };
+
+  static defaultProps = {
+    nodes: null,
+    links: null,
+    error: null,
+  };
 
   constructor(props) {
     super(props);
@@ -85,14 +91,14 @@ export default class DependencyGraphPage extends Component {
     return (
       <div className="my2">
         <Menu tabular>
-          {GRAPH_TYPE_OPTIONS.map(option =>
+          {GRAPH_TYPE_OPTIONS.map(option => (
             <Menu.Item
               active={graphType === option.type}
               key={option.type}
               name={option.name}
               onClick={() => this.handleGraphTypeChange(option.type)}
             />
-          )}
+          ))}
         </Menu>
         <div
           style={{

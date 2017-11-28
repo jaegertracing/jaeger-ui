@@ -32,11 +32,7 @@ describe('<ListView>', () => {
   function Item(props) {
     // eslint-disable-next-line react/prop-types
     const { children, ...rest } = props;
-    return (
-      <div {...rest}>
-        {children}
-      </div>
-    );
+    return <div {...rest}>{children}</div>;
   }
 
   function renderItem(itemKey, styles, itemIndex, attrs) {

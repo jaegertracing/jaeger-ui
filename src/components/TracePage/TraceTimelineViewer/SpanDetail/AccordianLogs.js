@@ -46,9 +46,9 @@ export default function AccordianLogs(props: AccordianLogsProps) {
         <i className={`u-no-float ${isOpen ? 'down' : 'right'} angle double icon`} />
         Logs ({logs.length})
       </a>
-      {isOpen &&
+      {isOpen && (
         <div>
-          {_sortBy(logs, 'timestamp').map((log, i) =>
+          {_sortBy(logs, 'timestamp').map((log, i) => (
             <AccordianKeyValues
               // `i` is necessary in the key because timestamps can repeat
               // eslint-disable-next-line react/no-array-index-key
@@ -59,11 +59,12 @@ export default function AccordianLogs(props: AccordianLogsProps) {
               label={`${formatDuration(log.timestamp - timestamp)}`}
               onToggle={() => onItemToggle(log)}
             />
-          )}
+          ))}
           <small className="AccordianLogs--footer">
             **Log timestamps are relative to the start time of the full trace.
           </small>
-        </div>}
+        </div>
+      )}
     </div>
   );
 }
