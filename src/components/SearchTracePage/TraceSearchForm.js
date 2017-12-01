@@ -72,7 +72,58 @@ export function convertQueryParamsToFormDates({ start, end }) {
   };
 }
 
-export function TraceSearchFormComponent(props) {
+export function submitForm(fields, searchTraces) {
+  const {
+    resultsLimit,
+    service,
+    startDate,
+    startDateTime,
+    endDate,
+    endDateTime,
+    operation,
+    tags,
+    minDuration,
+    maxDuration,
+    lookback,
+  } = fields;
+  // Note: traceID is ignored when the form is submitted
+  store.set('lastSearch', { service, operation });
+
+  let start;
+  let end;
+  if (lookback !== 'custom') {
+    const unit = lookback[1];
+    const now = new Date();
+    start =
+      moment(now)
+        .subtract(parseInt(lookback, 10), unit)
+        .valueOf() * 1000;
+    end = moment(now).valueOf() * 1000;
+  } else {
+    const times = getUnixTimeStampInMSFromForm({
+      startDate,
+      startDateTime,
+      endDate,
+      endDateTime,
+    });
+    start = times.start;
+    end = times.end;
+  }
+
+  searchTraces({
+    service,
+    operation: operation !== 'all' ? operation : undefined,
+    limit: resultsLimit,
+    lookback,
+    start,
+    end,
+    tag: tagsToQuery(tags) || undefined,
+    minDuration: minDuration || null,
+    maxDuration: maxDuration || null,
+  });
+}
+
+export function TraceSearchFormImpl(props) {
   const { selectedService = '-', selectedLookback, handleSubmit, submitting, services } = props;
   const selectedServicePayload = services.find(s => s.name === selectedService);
   const operationsForService = (selectedServicePayload && selectedServicePayload.operations) || [];
@@ -129,7 +180,7 @@ export function TraceSearchFormComponent(props) {
         </div>
 
         {selectedLookback === 'custom' && (
-          <div className="search-form--start-time field">
+          <div className="search-form--start-time field js-test-start-input">
             <label htmlFor="service">Start Time</label>
             <div>
               <div className="ui input">
@@ -143,7 +194,7 @@ export function TraceSearchFormComponent(props) {
         )}
 
         {selectedLookback === 'custom' && (
-          <div className="search-form--end-time field">
+          <div className="search-form--end-time field js-test-end-input">
             <label htmlFor="service">End time</label>
             <div>
               <div className="ui input">
@@ -177,7 +228,11 @@ export function TraceSearchFormComponent(props) {
             <Field name="resultsLimit" component="input" type="number" placeholder="Limit Results" />
           </div>
         </div>
-        <button className="ui button" type="submit" disabled={submitting || noSelectedService}>
+        <button
+          className="ui button js-test-submit-btn"
+          type="submit"
+          disabled={submitting || noSelectedService}
+        >
           Find Traces
         </button>
       </form>
@@ -185,7 +240,7 @@ export function TraceSearchFormComponent(props) {
   );
 }
 
-TraceSearchFormComponent.propTypes = {
+TraceSearchFormImpl.propTypes = {
   handleSubmit: PropTypes.func.isRequired,
   submitting: PropTypes.bool,
   services: PropTypes.arrayOf(
@@ -198,7 +253,7 @@ TraceSearchFormComponent.propTypes = {
   selectedLookback: PropTypes.string,
 };
 
-TraceSearchFormComponent.defaultProps = {
+TraceSearchFormImpl.defaultProps = {
   services: [],
   submitting: false,
   selectedService: null,
@@ -207,7 +262,7 @@ TraceSearchFormComponent.defaultProps = {
 
 export const searchSideBarFormSelector = formValueSelector('searchSideBar');
 
-const mapStateToProps = state => {
+export function mapStateToProps(state) {
   const {
     service,
     limit,
@@ -279,66 +334,17 @@ const mapStateToProps = state => {
     selectedService: searchSideBarFormSelector(state, 'service'),
     selectedLookback: searchSideBarFormSelector(state, 'lookback'),
   };
-};
+}
 
-const mapDispatchToProps = dispatch => {
+function mapDispatchToProps(dispatch) {
   const { searchTraces } = bindActionCreators(jaegerApiActions, dispatch);
   return {
-    onSubmit: fields => {
-      const {
-        resultsLimit,
-        service,
-        startDate,
-        startDateTime,
-        endDate,
-        endDateTime,
-        operation,
-        tags,
-        minDuration,
-        maxDuration,
-        lookback,
-      } = fields;
-      // Note: traceID is ignored when the form is submitted
-
-      store.set('lastSearch', { service, operation });
-
-      let start;
-      let end;
-      if (lookback !== 'custom') {
-        const unit = lookback.split('').pop();
-        start =
-          moment()
-            .subtract(parseInt(lookback, 10), unit)
-            .valueOf() * 1000;
-        end = moment().valueOf() * 1000;
-      } else {
-        const times = getUnixTimeStampInMSFromForm({
-          startDate,
-          startDateTime,
-          endDate,
-          endDateTime,
-        });
-        start = times.start;
-        end = times.end;
-      }
-
-      searchTraces({
-        service,
-        operation: operation !== 'all' ? operation : undefined,
-        limit: resultsLimit,
-        lookback,
-        start,
-        end,
-        tag: tagsToQuery(tags) || undefined,
-        minDuration: minDuration || null,
-        maxDuration: maxDuration || null,
-      });
-    },
+    onSubmit: fields => submitForm(fields, searchTraces),
   };
-};
+}
 
 export default connect(mapStateToProps, mapDispatchToProps)(
   reduxForm({
     form: 'searchSideBar',
-  })(TraceSearchFormComponent)
+  })(TraceSearchFormImpl)
 );
