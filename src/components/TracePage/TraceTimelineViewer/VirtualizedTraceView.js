@@ -65,7 +65,8 @@ type VirtualizedTraceViewProps = {
   trace: Trace,
 };
 
-const DEFAULT_HEIGHTS = {
+// export for tests
+export const DEFAULT_HEIGHTS = {
   bar: 21,
   detail: 169,
   detailWithLogs: 223,
@@ -176,7 +177,7 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
       find(nextTrace, nextTextFilter);
     }
     if (trace !== nextTrace || childrenHiddenIDs !== nextHiddenIDs || detailStates !== nextDetailStates) {
-      this.rowStates = generateRowStates(nextTrace.spans, nextHiddenIDs, nextDetailStates);
+      this.rowStates = nextTrace ? generateRowStates(nextTrace.spans, nextHiddenIDs, nextDetailStates) : [];
     }
     if (currentViewRangeTime !== nextViewRangeTime) {
       this.clippingCssClasses = getCssClasses(nextViewRangeTime);
@@ -410,6 +411,7 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
   }
 }
 
+/* istanbul ignore next */
 function mapStateToProps(state, ownProps) {
   const traceTimeline = state.traceTimeline;
   return {
@@ -418,6 +420,7 @@ function mapStateToProps(state, ownProps) {
   };
 }
 
+/* istanbul ignore next */
 function mapDispatchToProps(dispatch) {
   return bindActionCreators(actions, dispatch);
 }

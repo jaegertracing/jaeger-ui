@@ -12,12 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-const BLUE = '#3683bb';
-const LIGHT_BLUE = '#6eafd4';
-const RED = '#e45629';
-const ORANGE = '#fb8d46';
-const GREEN = '#37a257';
+/* eslint-disable import/first */
+jest.mock('cytoscape');
 
-const colors = [BLUE, LIGHT_BLUE, RED, ORANGE, GREEN];
+import React from 'react';
+import { mount } from 'enzyme';
 
-export default colors;
+import DAG from './DAG';
+
+describe('<DAG>', () => {
+  it('does not explode', () => {
+    const serviceCalls = [
+      {
+        callCount: 1,
+        child: 'child-id',
+        parent: 'parent-id',
+      },
+    ];
+    expect(mount(<DAG serviceCalls={serviceCalls} />)).toBeDefined();
+  });
+});

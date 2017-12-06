@@ -19,9 +19,7 @@ import React from 'react';
 import { shallow } from 'enzyme';
 import moment from 'moment';
 import queryString from 'query-string';
-
-// use `require` so statement is not hoised above `jest.mock(...)`
-const store = require('store');
+import store from 'store';
 
 import {
   convertQueryParamsToFormDates,
@@ -38,9 +36,14 @@ function makeDateParams(dateOffset = 0) {
   date.setDate(date.getDate() + dateOffset || 0);
   date.setSeconds(0);
   date.setMilliseconds(0);
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  const dateStr = [date.getFullYear(), '-', month < 10 ? '0' : '', month, '-', day < 10 ? '0' : '', day].join(
+    ''
+  );
   return {
     date,
-    dateStr: date.toISOString().slice(0, 10),
+    dateStr,
     dateTimeStr: date.toTimeString().slice(0, 5),
   };
 }

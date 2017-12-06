@@ -88,7 +88,8 @@
   "jest": {
     "collectCoverageFrom": [
       "src/**/*.js",
-      "!src/utils/DraggableManager/demo/*.js"
+      "!src/utils/DraggableManager/demo/*.js",
+      "!src/demo/**/*.js"
     ]
   },
   "prettier": {

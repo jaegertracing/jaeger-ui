@@ -12,34 +12,155 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+jest.mock('redux-form', () => {
+  function reduxForm() {
+    return component => component;
+  }
+  function formValueSelector() {
+    return () => null;
+  }
+  const Field = () => <div />;
+  return { Field, formValueSelector, reduxForm };
+});
+
+jest.mock('react-router-dom');
+jest.mock('store');
+
+/* eslint-disable import/first */
 import React from 'react';
-import { shallow } from 'enzyme';
+import { shallow, mount } from 'enzyme';
+import store from 'store';
 
-import SearchTracePage from './index';
-/* eslint-disable */
+import SearchTracePage, { mapStateToProps } from './index';
 import TraceResultsScatterPlot from './TraceResultsScatterPlot';
-/* eslint-enable */
+import TraceSearchForm from './TraceSearchForm';
+import TraceSearchResult from './TraceSearchResult';
+import traceGenerator from '../../demo/trace-generators';
+import { MOST_RECENT } from '../../model/order-by';
+import transformTraceData from '../../model/transform-trace-data';
 
-const SCATTER_PLOT = 'SCATTER_PLOT';
-const defaultProps = {
-  sortTracesBy: 'LONGEST_FIRST',
-  traceResultsChartType: SCATTER_PLOT,
-  traceResults: [{ traceID: 'a', spans: [], processes: {} }, { traceID: 'b', spans: [], processes: {} }],
-  numberOfTraceResults: 0,
-  maxTraceDuration: 100,
-};
+describe('<SearchTracePage>', () => {
+  let wrapper;
+  let traceResults;
+  let props;
 
-it('should show default message when there are no results', () => {
-  const wrapper = shallow(<SearchTracePage {...defaultProps} traceResults={[]} />);
-  expect(wrapper.find('.trace-search--no-results').length).toBe(1);
+  beforeEach(() => {
+    traceResults = [{ traceID: 'a', spans: [], processes: {} }, { traceID: 'b', spans: [], processes: {} }];
+    props = {
+      traceResults,
+      isHomepage: false,
+      loadingServices: false,
+      loadingTraces: false,
+      maxTraceDuration: 100,
+      numberOfTraceResults: traceResults.length,
+      services: null,
+      sortTracesBy: MOST_RECENT,
+      urlQueryParams: { service: 'svc-a' },
+      // actions
+      fetchServiceOperations: jest.fn(),
+      fetchServices: jest.fn(),
+      searchTraces: jest.fn(),
+    };
+    wrapper = shallow(<SearchTracePage {...props} />);
+  });
+
+  it('searches for traces if `service` or `traceID` are in the query string', () => {
+    wrapper = mount(<SearchTracePage {...props} />);
+    expect(props.searchTraces.mock.calls.length).toBe(1);
+  });
+
+  it('loads the services and operations if a service is stored', () => {
+    const oldFn = store.get;
+    store.get = jest.fn(() => ({ service: 'svc-b' }));
+    wrapper = mount(<SearchTracePage {...props} />);
+    expect(props.fetchServices.mock.calls.length).toBe(1);
+    expect(props.fetchServiceOperations.mock.calls.length).toBe(1);
+    store.get = oldFn;
+  });
+
+  describe('loading', () => {
+    it('shows a loading indicator if loading services', () => {
+      wrapper.setProps({ loadingServices: true });
+      expect(wrapper.find('.js-test-search-loader').length).toBe(1);
+    });
+
+    it('shows a loading indicator if loading traces', () => {
+      wrapper.setProps({ loadingTraces: true });
+      expect(wrapper.find('.js-test-traces-loader').length).toBe(1);
+    });
+  });
+
+  it('shows a search form when services are loaded', () => {
+    const services = [{ name: 'svc-a', operations: ['op-a'] }];
+    wrapper.setProps({ services });
+    expect(wrapper.find(TraceSearchForm).length).toBe(1);
+  });
+
+  it('shows an error message if there is an error message', () => {
+    wrapper.setProps({ errorMessage: 'big-error' });
+    expect(wrapper.find('.js-test-error-message').length).toBe(1);
+  });
+
+  it('shows the logo prior to searching', () => {
+    wrapper.setProps({ isHomepage: true, traceResults: [] });
+    expect(wrapper.find('.js-test-logo').length).toBe(1);
+  });
+
+  it('shows the "no results" message when the search result is empty', () => {
+    wrapper.setProps({ traceResults: [] });
+    expect(wrapper.find('.js-test-no-results').length).toBe(1);
+  });
+
+  describe('search finished with results', () => {
+    it('shows a scatter plot', () => {
+      expect(wrapper.find(TraceResultsScatterPlot).length).toBe(1);
+    });
+
+    it('shows the results filter form', () => {
+      expect(wrapper.find('TraceResultsFilterFormImpl').length).toBe(1);
+    });
+
+    it('shows a result entry for each trace', () => {
+      expect(wrapper.find(TraceSearchResult).length).toBe(traceResults.length);
+    });
+  });
 });
 
-it('renders the a SCATTER_PLOT chart', () => {
-  const wrapper = shallow(<SearchTracePage {...defaultProps} traceResultsChartType={SCATTER_PLOT} />);
-  expect(wrapper.find(TraceResultsScatterPlot).length).toBe(1);
-});
+describe('mapStateToProps()', () => {
+  it('converts state to the necessary props', () => {
+    const trace = transformTraceData(traceGenerator.trace({}));
+    const stateTrace = { traces: [trace], loading: false, error: null };
+    const stateServices = {
+      loading: false,
+      services: ['svc-a'],
+      operationsForService: {},
+      error: null,
+    };
+    const state = {
+      router: { location: { search: '' } },
+      trace: stateTrace,
+      services: stateServices,
+    };
 
-it('shows loader when loading', () => {
-  const wrapper = shallow(<SearchTracePage {...defaultProps} loading />);
-  expect(wrapper.find('.loader').length).toBe(1);
+    const { maxTraceDuration, traceResults, numberOfTraceResults, ...rest } = mapStateToProps(state);
+    expect(traceResults.length).toBe(stateTrace.traces.length);
+    expect(traceResults[0].traceID).toBe(trace.traceID);
+    expect(maxTraceDuration).toBe(trace.duration / 1000);
+
+    expect(rest).toEqual({
+      isHomepage: true,
+      // the redux-form `formValueSelector` mock returns `null` for "sortBy"
+      sortTracesBy: null,
+      urlQueryParams: {},
+      services: [
+        {
+          name: stateServices.services[0],
+          operations: [],
+        },
+      ],
+      loadingTraces: false,
+      loadingServices: false,
+      errorMessage: '',
+    });
+  });
 });
