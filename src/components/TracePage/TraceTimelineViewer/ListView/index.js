@@ -265,6 +265,7 @@ export default class ListView extends React.Component<ListViewProps> {
     const useRoot = this.props.windowScroller;
     // funky if statement is to satisfy flow
     if (!useRoot) {
+      /* istanbul ignore next */
       if (!this._wrapperElm) {
         this._viewHeight = -1;
         this._startIndex = 0;
@@ -301,8 +302,6 @@ export default class ListView extends React.Component<ListViewProps> {
         ? this._endIndex + this.props.viewBufferMin
         : this.props.dataLength - 1;
     if (maxStart < this._startIndexDrawn || minEnd > this._endIndexDrawn) {
-      // console.time('force update');
-      // setTimeout(() => console.timeEnd('force update'), 0);
       this.forceUpdate();
     }
   };
