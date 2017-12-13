@@ -18,25 +18,51 @@ import queryString from 'query-string';
 
 import prefixUrl from '../utils/prefix-url';
 
+function getMessageFromError(errData, status) {
+  if (errData.code != null && errData.msg != null) {
+    if (errData.code === status) {
+      return errData.msg;
+    }
+    return `${errData.code} - ${errData.msg}`;
+  }
+  try {
+    return JSON.stringify(errData);
+  } catch (_) {
+    return String(errData);
+  }
+}
+
 function getJSON(url, query) {
   return fetch(`${url}${query ? `?${queryString.stringify(query)}` : ''}`, {
     credentials: 'include',
   }).then(response => {
-    if (response.status >= 400) {
-      if (response.status === 404) {
-        throw new Error('Resource not found in the Jaeger Query Service.');
-      }
-
-      return response
-        .json()
-        .then(({ errors = [] }) => {
-          throw new Error(errors.length > 0 ? errors[0].msg : 'An unknown error occurred.');
-        })
-        .catch((/* err */) => {
-          throw new Error('Bad JSON returned from the Jaeger Query Service.');
-        });
+    if (response.status < 400) {
+      return response.json();
     }
-    return response.json();
+    return response.text().then(bodyText => {
+      let data;
+      let errorMessage;
+      try {
+        data = JSON.parse(bodyText);
+      } catch (_) {
+        data = null;
+      }
+      if (data && Array.isArray(data.errors) && data.errors.length) {
+        errorMessage = data.errors.map(err => getMessageFromError(err, response.status)).join('; ');
+      } else {
+        errorMessage = bodyText || `${response.status} - ${response.statusText}`;
+      }
+      if (typeof message === 'string') {
+        errorMessage = errorMessage.trim();
+      }
+      const error = new Error(`HTTP Error: ${errorMessage}`);
+      error.httpStatus = response.status;
+      error.httpStatusText = response.statusText;
+      error.httpBody = bodyText;
+      error.httpUrl = url;
+      error.httpQuery = typeof query === 'string' ? query : queryString.stringify(query);
+      throw error;
+    });
   });
 }
 
