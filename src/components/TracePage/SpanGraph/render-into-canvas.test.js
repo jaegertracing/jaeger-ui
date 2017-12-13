@@ -17,7 +17,11 @@ import _range from 'lodash/range';
 import renderIntoCanvas, { ALPHA, CV_WIDTH, MIN_TOTAL_HEIGHT, MIN_WIDTH } from './render-into-canvas';
 
 describe('renderIntoCanvas()', () => {
-  const basicItem = { valueWidth: 100, valueOffset: 50, serviceName: 'some-name' };
+  const basicItem = {
+    valueWidth: 100,
+    valueOffset: 50,
+    serviceName: 'some-name',
+  };
 
   class CanvasContext {
     constructor() {

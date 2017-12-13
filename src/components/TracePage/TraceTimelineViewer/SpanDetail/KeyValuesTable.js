@@ -40,7 +40,11 @@ export default function KeyValuesTable(props: KeyValuesTableProps) {
           {data.map((row, i) => {
             const jsonTable = (
               // eslint-disable-next-line react/no-danger
-              <div dangerouslySetInnerHTML={{ __html: jsonMarkup(parseOrPass(row.value)) }} />
+              <div
+                dangerouslySetInnerHTML={{
+                  __html: jsonMarkup(parseOrPass(row.value)),
+                }}
+              />
             );
             return (
               // `i` is necessary in the key because row.key can repeat

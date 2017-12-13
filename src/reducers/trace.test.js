@@ -33,7 +33,9 @@ it('trace reducer should handle a successful FETCH_TRACE', () => {
     payload: { data: [generatedTrace] },
     meta: { id: traceID },
   });
-  expect(state.traces).toEqual({ [traceID]: transformTraceData(generatedTrace) });
+  expect(state.traces).toEqual({
+    [traceID]: transformTraceData(generatedTrace),
+  });
   expect(state.loading).toBe(false);
 });
 
@@ -55,6 +57,8 @@ it('trace reducer should handle a successful SEARCH_TRACES', () => {
     payload: { data: [generatedTrace] },
     meta: { query: 'whatever' },
   });
-  expect(state.traces).toEqual({ [traceID]: transformTraceData(generatedTrace) });
+  expect(state.traces).toEqual({
+    [traceID]: transformTraceData(generatedTrace),
+  });
   expect(state.loading).toBe(false);
 });

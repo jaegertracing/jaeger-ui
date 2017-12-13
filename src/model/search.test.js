@@ -104,10 +104,22 @@ describe('sortTraces()', () => {
   const idMinSpans = 4;
   const idMaxSpans = 2;
   const rawTraces = [
-    { ...transformTraceData(traceGenerator.trace({ numberOfSpans: 3 })), traceID: 1 },
-    { ...transformTraceData(traceGenerator.trace({ numberOfSpans: 100 })), traceID: idMaxSpans },
-    { ...transformTraceData(traceGenerator.trace({ numberOfSpans: 5 })), traceID: 3 },
-    { ...transformTraceData(traceGenerator.trace({ numberOfSpans: 1 })), traceID: idMinSpans },
+    {
+      ...transformTraceData(traceGenerator.trace({ numberOfSpans: 3 })),
+      traceID: 1,
+    },
+    {
+      ...transformTraceData(traceGenerator.trace({ numberOfSpans: 100 })),
+      traceID: idMaxSpans,
+    },
+    {
+      ...transformTraceData(traceGenerator.trace({ numberOfSpans: 5 })),
+      traceID: 3,
+    },
+    {
+      ...transformTraceData(traceGenerator.trace({ numberOfSpans: 1 })),
+      traceID: idMinSpans,
+    },
   ];
   const { traces } = getTraceSummaries(rawTraces);
 
