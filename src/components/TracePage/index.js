@@ -30,7 +30,7 @@ import SpanGraph from './SpanGraph';
 import TracePageHeader from './TracePageHeader';
 import TraceTimelineViewer from './TraceTimelineViewer';
 import type { ViewRange, ViewRangeTimeUpdate } from './types';
-import NotFound from '../App/NotFound';
+import ErrorMessage from '../common/ErrorMessage';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import { getTraceName } from '../../model/trace-viewer';
 import type { Trace } from '../../types';
@@ -96,7 +96,10 @@ export default class TracePage extends React.PureComponent<TracePageProps, Trace
       },
     };
     this._headerElm = null;
-    this._scrollManager = new ScrollManager(props.trace, { scrollBy, scrollTo });
+    this._scrollManager = new ScrollManager(props.trace, {
+      scrollBy,
+      scrollTo,
+    });
   }
 
   componentDidMount() {
@@ -143,7 +146,10 @@ export default class TracePage extends React.PureComponent<TracePageProps, Trace
     cancelScroll();
     if (this._scrollManager) {
       this._scrollManager.destroy();
-      this._scrollManager = new ScrollManager(undefined, { scrollBy, scrollTo });
+      this._scrollManager = new ScrollManager(undefined, {
+        scrollBy,
+        scrollTo,
+      });
     }
   }
 
@@ -219,7 +225,13 @@ export default class TracePage extends React.PureComponent<TracePageProps, Trace
     }
 
     if (trace instanceof Error) {
-      return <NotFound error={trace} />;
+      return (
+        <section className="ui container">
+          <div className="ui basic segment">
+            <ErrorMessage error={trace} />
+          </div>
+        </section>
+      );
     }
 
     const { duration, processes, spans, startTime, traceID } = trace;
