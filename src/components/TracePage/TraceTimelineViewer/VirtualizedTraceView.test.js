@@ -13,13 +13,13 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { shallow, mount } from 'enzyme';
 
 import ListView from './ListView';
 import SpanBarRow from './SpanBarRow';
 import DetailState from './SpanDetail/DetailState';
 import SpanDetailRow from './SpanDetailRow';
-import { VirtualizedTraceViewImpl } from './VirtualizedTraceView';
+import { DEFAULT_HEIGHTS, VirtualizedTraceViewImpl } from './VirtualizedTraceView';
 import traceGenerator from '../../../demo/trace-generators';
 import transformTraceData from '../../../model/transform-trace-data';
 
@@ -72,6 +72,12 @@ describe('<VirtualizedTraceViewImpl>', () => {
     return spans;
   }
 
+  function updateSpan(srcTrace, spanIndex, update) {
+    const span = { ...srcTrace.spans[spanIndex], ...update };
+    const spans = [...srcTrace.spans.slice(0, spanIndex), span, ...srcTrace.spans.slice(spanIndex + 1)];
+    return { ...srcTrace, spans };
+  }
+
   beforeEach(() => {
     Object.keys(props).forEach(key => {
       if (typeof props[key] === 'function') {
@@ -83,6 +89,11 @@ describe('<VirtualizedTraceViewImpl>', () => {
   });
 
   it('renders without exploding', () => {
+    expect(wrapper).toBeDefined();
+  });
+
+  it('renders when a trace is not set', () => {
+    wrapper.setProps({ trace: null });
     expect(wrapper).toBeDefined();
   });
 
@@ -272,6 +283,30 @@ describe('<VirtualizedTraceViewImpl>', () => {
     });
   });
 
+  describe('getRowHeight()', () => {
+    it('returns the expected height for non-detail rows', () => {
+      expect(instance.getRowHeight(0)).toBe(DEFAULT_HEIGHTS.bar);
+    });
+
+    it('returns the expected height for detail rows that do not have logs', () => {
+      expandRow(0);
+      expect(instance.getRowHeight(1)).toBe(DEFAULT_HEIGHTS.detail);
+    });
+
+    it('returns the expected height for detail rows that do have logs', () => {
+      const logs = [
+        {
+          timestamp: Date.now(),
+          fields: traceGenerator.tags(),
+        },
+      ];
+      const altTrace = updateSpan(trace, 0, { logs });
+      expandRow(0);
+      wrapper.setProps({ trace: altTrace });
+      expect(instance.getRowHeight(1)).toBe(DEFAULT_HEIGHTS.detailWithLogs);
+    });
+  });
+
   describe('renderRow()', () => {
     it('renders a SpanBarRow when it is not a detail', () => {
       const span = trace.spans[1];
@@ -299,6 +334,20 @@ describe('<VirtualizedTraceViewImpl>', () => {
           />
         )
       ).toBe(true);
+    });
+
+    it('renders a SpanBarRow with a RPC span if the row is collapsed and a client span', () => {
+      const clientTags = [{ key: 'span.kind', value: 'client' }, ...trace.spans[0].tags];
+      const serverTags = [{ key: 'span.kind', value: 'server' }, ...trace.spans[1].tags];
+      let altTrace = updateSpan(trace, 0, { tags: clientTags });
+      altTrace = updateSpan(altTrace, 1, { tags: serverTags });
+      const childrenHiddenIDs = new Set([altTrace.spans[0].spanID]);
+      wrapper.setProps({ childrenHiddenIDs, trace: altTrace });
+
+      const rowWrapper = mount(instance.renderRow('some-key', {}, 0, {}));
+      const spanBarRow = rowWrapper.find(SpanBarRow);
+      expect(spanBarRow.length).toBe(1);
+      expect(spanBarRow.prop('rpc')).toBeDefined();
     });
 
     it('renders a SpanDetailRow when it is a detail', () => {

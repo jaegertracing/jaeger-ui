@@ -32,7 +32,8 @@ type PageProps = {
   config: Config,
 };
 
-class Page extends React.Component<PageProps> {
+// export for tests
+export class PageImpl extends React.Component<PageProps> {
   props: PageProps;
 
   componentDidMount() {
@@ -61,10 +62,11 @@ class Page extends React.Component<PageProps> {
   }
 }
 
-function mapStateToProps(state, ownProps) {
+// export for tests
+export function mapStateToProps(state: { config: Config, router: { location: Location } }, ownProps: any) {
   const { config } = state;
   const { location } = state.router;
   return { ...ownProps, config, location };
 }
 
-export default withRouter(connect(mapStateToProps)(Page));
+export default withRouter(connect(mapStateToProps)(PageImpl));

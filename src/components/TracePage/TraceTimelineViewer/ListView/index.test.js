@@ -55,8 +55,6 @@ describe('<ListView>', () => {
     viewBuffer: 10,
     viewBufferMin: 5,
     windowScroller: false,
-    // eslint-disable-next-line no-return-assign
-    ref: c => (instance = c),
   };
 
   describe('shallow tests', () => {
@@ -95,29 +93,83 @@ describe('<ListView>', () => {
   });
 
   describe('mount tests', () => {
-    beforeEach(() => {
-      wrapper = mount(
-        <div style={{ height: '150px', overflow: 'auto', position: 'relative' }}>
-          <ListView {...props} />
-        </div>
-      );
-    });
+    describe('accessor functions', () => {
+      const clientHeight = 2;
+      const scrollTop = 3;
 
-    it('renders without exploding', () => {
-      expect(wrapper).toBeDefined();
+      let oldRender;
+      let oldInitWrapper;
+      const initWrapperMock = jest.fn(elm => {
+        if (elm != null) {
+          // jsDom requires `defineProperties` instead of just setting the props
+          Object.defineProperties(elm, {
+            clientHeight: {
+              get: () => clientHeight,
+            },
+            scrollTop: {
+              get: () => scrollTop,
+            },
+          });
+        }
+        oldInitWrapper.call(this, elm);
+      });
+
+      beforeAll(() => {
+        oldRender = ListView.prototype.render;
+        // `_initWrapper` is not on the prototype, so it needs to be mocked
+        // on each instance, use `render()` as a hook to do that
+        ListView.prototype.render = function altRender() {
+          if (this._initWrapper !== initWrapperMock) {
+            oldInitWrapper = this._initWrapper;
+            this._initWrapper = initWrapperMock;
+          }
+          return oldRender.call(this);
+        };
+      });
+
+      afterAll(() => {
+        ListView.prototype.render = oldRender;
+      });
+
+      beforeEach(() => {
+        initWrapperMock.mockClear();
+        wrapper = mount(<ListView {...props} />);
+        instance = wrapper.instance();
+      });
+
+      it('getViewHeight() returns the viewHeight', () => {
+        expect(instance.getViewHeight()).toBe(clientHeight);
+      });
+
+      it('getBottomVisibleIndex() returns a number', () => {
+        const n = instance.getBottomVisibleIndex();
+        expect(isNaN(n)).toBe(false);
+        expect(n).toEqual(expect.any(Number));
+      });
+
+      it('getTopVisibleIndex() returns a number', () => {
+        const n = instance.getTopVisibleIndex();
+        expect(isNaN(n)).toBe(false);
+        expect(n).toEqual(expect.any(Number));
+      });
+
+      it('getRowPosition() returns a number', () => {
+        const { height, y } = instance.getRowPosition(2);
+        expect(height).toEqual(expect.any(Number));
+        expect(y).toEqual(expect.any(Number));
+      });
     });
 
     describe('windowScroller', () => {
       let windowAddListenerSpy;
+      let windowRmListenerSpy;
 
       beforeEach(() => {
         windowAddListenerSpy = jest.spyOn(window, 'addEventListener');
+        windowRmListenerSpy = jest.spyOn(window, 'removeEventListener');
         const wsProps = { ...props, windowScroller: true };
-        wrapper = mount(
-          <div style={{ height: '150px', overflow: 'auto', position: 'relative' }}>
-            <ListView {...wsProps} />
-          </div>
-        );
+        wrapper = mount(<ListView {...wsProps} />);
+        instance = wrapper.instance();
       });
 
       afterEach(() => {
@@ -127,6 +179,12 @@ describe('<ListView>', () => {
       it('adds the onScroll listener to the window element after the component mounts', () => {
         expect(windowAddListenerSpy).toHaveBeenCalled();
         expect(windowAddListenerSpy).toHaveBeenLastCalledWith('scroll', instance._onScroll);
+      });
+
+      it('removes the onScroll listener from window when unmounting', () => {
+        expect(windowRmListenerSpy.mock.calls).toEqual([]);
+        wrapper.unmount();
+        expect(windowRmListenerSpy.mock.calls).toEqual([['scroll', instance._onScroll]]);
       });
 
       it('calls _positionList when the document is scrolled', async () => {

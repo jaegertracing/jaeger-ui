@@ -53,20 +53,12 @@ export default function KeyboardShortcutsHelp() {
   const rows = [];
   Object.keys(kbdMappings).forEach(title => {
     const keyConfigs = convertKeys(kbdMappings[title]);
-    const configs = keyConfigs.map(config =>
+    const configs = keyConfigs.map(config => (
       <tr key={String(config)}>
-        <td>
-          {config.map(s =>
-            <kbd key={s}>
-              {s}
-            </kbd>
-          )}
-        </td>
-        <td>
-          {descriptions[title]}
-        </td>
+        <td>{config.map(s => <kbd key={s}>{s}</kbd>)}</td>
+        <td>{descriptions[title]}</td>
       </tr>
-    );
+    ));
     rows.push(...configs);
   });
   return (
@@ -87,9 +79,7 @@ export default function KeyboardShortcutsHelp() {
                 <th>Description</th>
               </tr>
             </thead>
-            <tbody>
-              {rows}
-            </tbody>
+            <tbody>{rows}</tbody>
           </table>
         </Modal.Description>
       </Modal.Content>

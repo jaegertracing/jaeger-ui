@@ -14,9 +14,103 @@
 
 import React from 'react';
 import { shallow } from 'enzyme';
+import { Menu } from 'semantic-ui-react';
 
-import DependencyGraphPage from './index';
+import DAG from './DAG';
+import DependencyForceGraph from './DependencyForceGraph';
+import DependencyGraph, { GRAPH_TYPES, mapDispatchToProps, mapStateToProps } from './index';
 
-it('DependencyGraphPage does not explode', () => {
-  shallow(<DependencyGraphPage fetchDependencies={() => {}} />);
+const childId = 'boomya';
+const parentId = 'elder-one';
+const callCount = 1;
+const dependencies = [
+  {
+    callCount,
+    child: childId,
+    parent: parentId,
+  },
+];
+const state = {
+  dependencies: {
+    dependencies,
+    error: null,
+    loading: false,
+  },
+};
+
+const props = mapStateToProps(state);
+
+describe('<DependencyGraph>', () => {
+  let wrapper;
+
+  beforeEach(() => {
+    wrapper = shallow(<DependencyGraph {...props} fetchDependencies={() => {}} />);
+  });
+
+  it('does not explode', () => {
+    expect(wrapper.length).toBe(1);
+  });
+
+  it('shows a loading indicator when loading data', () => {
+    expect(wrapper.find('.loader').length).toBe(0);
+    wrapper.setProps({ loading: true });
+    expect(wrapper.find('.loader').length).toBe(1);
+  });
+
+  it('shows an error message when passed error information', () => {
+    const error = {};
+    expect(wrapper.find({ error: expect.anything() }).length).toBe(0);
+    wrapper.setProps({ error });
+    expect(wrapper.find({ error }).length).toBe(1);
+  });
+
+  it('shows a message where there is nothing to visualize', () => {
+    wrapper.setProps({ links: null, nodes: null });
+    const matchTest = expect.stringMatching(/no.*?found/i);
+    expect(wrapper.text()).toEqual(matchTest);
+  });
+
+  describe('graph types', () => {
+    it('renders a menu with options for the graph types', () => {
+      expect(wrapper.find(Menu).length).toBe(1);
+      expect(wrapper.find(Menu.Item).length).toBe(Object.keys(GRAPH_TYPES).length);
+      expect(wrapper.find({ name: GRAPH_TYPES.FORCE_DIRECTED.name }).length).toBe(1);
+      expect(wrapper.find({ name: GRAPH_TYPES.DAG.name }).length).toBe(1);
+    });
+
+    it('renders a force graph when FORCE_GRAPH is the selected type', () => {
+      const menuItem = wrapper.find({ name: GRAPH_TYPES.FORCE_DIRECTED.name });
+      expect(menuItem.length).toBe(1);
+      menuItem.simulate('click');
+      expect(wrapper.state('graphType')).toBe(GRAPH_TYPES.FORCE_DIRECTED.type);
+      expect(wrapper.find(DependencyForceGraph).length).toBe(1);
+    });
+
+    it('renders a DAG graph when DAG is the selected type', () => {
+      const forceMenuItem = wrapper.find({ name: GRAPH_TYPES.DAG.name });
+      expect(forceMenuItem.length).toBe(1);
+      forceMenuItem.simulate('click');
+      expect(wrapper.state('graphType')).toBe(GRAPH_TYPES.DAG.type);
+      expect(wrapper.find(DAG).length).toBe(1);
+    });
+  });
+});
+
+describe('mapStateToProps()', () => {
+  it('refines state to generate the props', () => {
+    expect(mapStateToProps(state)).toEqual({
+      ...state.dependencies,
+      nodes: [
+        expect.objectContaining({ callCount, orphan: false, id: parentId }),
+        expect.objectContaining({ callCount, orphan: false, id: childId }),
+      ],
+      links: [{ callCount, source: parentId, target: childId, value: 1 }],
+    });
+  });
+});
+
+describe('mapDispatchToProps()', () => {
+  it('providers the `fetchDependencies` prop', () => {
+    expect(mapDispatchToProps({})).toEqual({ fetchDependencies: expect.any(Function) });
+  });
 });
