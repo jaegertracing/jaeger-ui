@@ -233,7 +233,9 @@ export default class TracePage extends React.PureComponent<TracePageProps, Trace
       return (
         <section className="ui container">
           <div className="ui basic segment">
-            <ErrorMessage error={trace} />
+            <div className="ui message">
+              <ErrorMessage error={trace} />
+            </div>
           </div>
         </section>
       );

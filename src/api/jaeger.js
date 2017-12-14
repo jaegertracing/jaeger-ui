@@ -41,11 +41,14 @@ function getJSON(url, query) {
     }
     return response.text().then(bodyText => {
       let data;
+      let bodyTextFmt;
       let errorMessage;
       try {
         data = JSON.parse(bodyText);
+        bodyTextFmt = JSON.stringify(data, null, 2);
       } catch (_) {
         data = null;
+        bodyTextFmt = null;
       }
       if (data && Array.isArray(data.errors) && data.errors.length) {
         errorMessage = data.errors.map(err => getMessageFromError(err, response.status)).join('; ');
@@ -58,7 +61,7 @@ function getJSON(url, query) {
       const error = new Error(`HTTP Error: ${errorMessage}`);
       error.httpStatus = response.status;
       error.httpStatusText = response.statusText;
-      error.httpBody = bodyText;
+      error.httpBody = bodyTextFmt || bodyText;
       error.httpUrl = url;
       error.httpQuery = typeof query === 'string' ? query : queryString.stringify(query);
       throw error;

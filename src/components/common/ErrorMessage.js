@@ -35,7 +35,7 @@ function ErrorAttr({ name, value }: { name: string, value: any }) {
   return (
     <tr>
       <td className="ErrorMessage--attr">{name}</td>
-      <td>{value}</td>
+      <td className="ErrorMessage--value">{value}</td>
     </tr>
   );
 }
@@ -52,19 +52,21 @@ export default function ErrorMessage({ error }: ErrorMessageProps) {
     );
   }
   const { message, httpStatus, httpStatusText, httpUrl, httpQuery, httpBody } = error;
-  const bodyExcerpt = httpBody && httpBody.length > 125 ? `${httpBody.slice(0, 125)}...` : httpBody;
+  const bodyExcerpt = httpBody && httpBody.length > 1024 ? `${httpBody.slice(0, 1021).trim()}...` : httpBody;
   return (
-    <div className="ErrorMessage ui red message">
-      <h3>{message}</h3>
-      <table>
-        <tbody>
-          {httpStatus && <ErrorAttr name="Status" value={httpStatus} />}
-          {httpStatusText && <ErrorAttr name="Status text" value={httpStatusText} />}
-          {httpUrl && <ErrorAttr name="URL" value={httpUrl} />}
-          {httpQuery && <ErrorAttr name="Query" value={httpQuery} />}
-          {bodyExcerpt && <ErrorAttr name="Response body" value={bodyExcerpt} />}
-        </tbody>
-      </table>
+    <div className="ErrorMessage">
+      <h3 className="ErrorMessage--msg">{message}</h3>
+      <div className="ErrorMessage--details">
+        <table>
+          <tbody>
+            {httpStatus && <ErrorAttr name="Status" value={httpStatus} />}
+            {httpStatusText && <ErrorAttr name="Status text" value={httpStatusText} />}
+            {httpUrl && <ErrorAttr name="URL" value={httpUrl} />}
+            {httpQuery && <ErrorAttr name="Query" value={httpQuery} />}
+            {bodyExcerpt && <ErrorAttr name="Response body" value={bodyExcerpt} />}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
