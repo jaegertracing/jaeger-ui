@@ -19,15 +19,14 @@ import { debounce } from 'lodash';
 
 import { nodesPropTypes, linksPropTypes } from '../../propTypes/dependencies';
 
-const chargeStrength = ({ radius = 5, orphan }) => (orphan ? -20 * radius : -12 * radius);
+// export for tests
+export const chargeStrength = ({ radius = 5, orphan }) => (orphan ? -20 * radius : -12 * radius);
 
 export default class DependencyForceGraph extends Component {
-  static get propTypes() {
-    return {
-      nodes: nodesPropTypes.isRequired,
-      links: linksPropTypes.isRequired,
-    };
-  }
+  static propTypes = {
+    nodes: nodesPropTypes.isRequired,
+    links: linksPropTypes.isRequired,
+  };
 
   constructor(props) {
     super(props);
@@ -39,7 +38,7 @@ export default class DependencyForceGraph extends Component {
     };
   }
 
-  componentDidMount() {
+  componentWillMount() {
     this.onResize();
     this.debouncedResize = debounce((...args) => this.onResize(...args), 50);
     window.addEventListener('resize', this.debouncedResize);

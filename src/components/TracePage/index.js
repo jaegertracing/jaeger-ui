@@ -20,6 +20,7 @@ import _mapValues from 'lodash/mapValues';
 import _maxBy from 'lodash/maxBy';
 import _values from 'lodash/values';
 import { connect } from 'react-redux';
+import type { Match } from 'react-router-dom';
 import { bindActionCreators } from 'redux';
 
 import type { CombokeysHandler, ShortcutCallbacks } from './keyboard-shortcuts';
@@ -51,11 +52,13 @@ type TracePageState = {
   viewRange: ViewRange,
 };
 
-const VIEW_MIN_RANGE = 0.01;
+// export for tests
+export const VIEW_MIN_RANGE = 0.01;
 const VIEW_CHANGE_BASE = 0.005;
 const VIEW_CHANGE_FAST = 0.05;
 
-const shortcutConfig = {
+// export for tests
+export const shortcutConfig = {
   panLeft: [-VIEW_CHANGE_BASE, -VIEW_CHANGE_BASE],
   panLeftFast: [-VIEW_CHANGE_FAST, -VIEW_CHANGE_FAST],
   panRight: [VIEW_CHANGE_BASE, VIEW_CHANGE_BASE],
@@ -66,7 +69,8 @@ const shortcutConfig = {
   zoomOutFast: [-VIEW_CHANGE_FAST, VIEW_CHANGE_FAST],
 };
 
-function makeShortcutCallbacks(adjRange): ShortcutCallbacks {
+// export for tests
+export function makeShortcutCallbacks(adjRange: (number, number) => void): ShortcutCallbacks {
   function getHandler([startChange, endChange]): CombokeysHandler {
     return function combokeyHandler(event: SyntheticKeyboardEvent<any>) {
       event.preventDefault();
@@ -105,6 +109,7 @@ export default class TracePage extends React.PureComponent<TracePageProps, Trace
   componentDidMount() {
     this.ensureTraceFetched();
     this.updateViewRangeTime(0, 1);
+    /* istanbul ignore if */
     if (!this._scrollManager) {
       throw new Error('Invalid state - scrollManager is unset');
     }
@@ -279,13 +284,18 @@ export default class TracePage extends React.PureComponent<TracePageProps, Trace
   }
 }
 
-function mapStateToProps(state, ownProps) {
+// export for tests
+export function mapStateToProps(
+  state: { trace: { loading: boolean, traces: { [string]: Trace } } },
+  ownProps: { match: Match }
+) {
   const { id } = ownProps.match.params;
-  const trace = state.trace.traces[id];
+  const trace = id ? state.trace.traces[id] : null;
   return { id, trace, loading: state.trace.loading };
 }
 
-function mapDispatchToProps(dispatch) {
+// export for tests
+export function mapDispatchToProps(dispatch: Function) {
   const { fetchTrace } = bindActionCreators(jaegerApiActions, dispatch);
   return { fetchTrace };
 }

@@ -74,6 +74,19 @@ describe('ScrollManager', () => {
       expect(manager._scrollPast).toThrow();
     });
 
+    it('is a noop if an invalid rowPosition is returned by the accessors', () => {
+      // eslint-disable-next-line no-console
+      const oldWarn = console.warn;
+      // eslint-disable-next-line no-console
+      console.warn = () => {};
+      manager._scrollPast(null, null);
+      expect(accessors.getRowPosition.mock.calls.length).toBe(1);
+      expect(accessors.getViewHeight.mock.calls.length).toBe(0);
+      expect(scrollTo.mock.calls.length).toBe(0);
+      // eslint-disable-next-line no-console
+      console.warn = oldWarn;
+    });
+
     it('scrolls up with direction is `-1`', () => {
       const y = 10;
       const expectTo = y - 0.5 * accessors.getViewHeight();
@@ -148,38 +161,90 @@ describe('ScrollManager', () => {
       expect(scrollPastMock).lastCalledWith(4, -1);
     });
 
-    it('skips spans that are hidden because their parent is collapsed', () => {
-      const getRefs = spanID => [{ refType: 'CHILD_OF', spanID }];
-      // change spans so 0 and 4 are top-level and their children are collapsed
-      const spans = trace.spans;
-      let parentID;
-      for (let i = 0; i < spans.length; i++) {
-        switch (i) {
-          case 0:
-          case 4:
-            parentID = spans[i].spanID;
-            break;
-          default:
-            spans[i].references = getRefs(parentID);
-        }
+    describe('scrollToNextVisibleSpan() and scrollToPrevVisibleSpan()', () => {
+      function getRefs(spanID) {
+        return [{ refType: 'CHILD_OF', spanID }];
       }
-      accessors.getTopRowIndexVisible.mockReturnValue(trace.spans.length - 1);
-      accessors.getBottomRowIndexVisible.mockReturnValue(0);
-      accessors.getCollapsedChildren.mockReturnValue(new Set([spans[0].spanID, spans[4].spanID]));
-      manager.scrollToNextVisibleSpan();
-      expect(scrollPastMock).lastCalledWith(4, 1);
-      manager.scrollToPrevVisibleSpan();
-      expect(scrollPastMock).lastCalledWith(4, -1);
+
+      beforeEach(() => {
+        // change spans so 0 and 4 are top-level and their children are collapsed
+        const spans = trace.spans;
+        let parentID;
+        for (let i = 0; i < spans.length; i++) {
+          switch (i) {
+            case 0:
+            case 4:
+              parentID = spans[i].spanID;
+              break;
+            default:
+              spans[i].references = getRefs(parentID);
+          }
+        }
+        // set which spans are "in-view" and which have collapsed children
+        accessors.getTopRowIndexVisible.mockReturnValue(trace.spans.length - 1);
+        accessors.getBottomRowIndexVisible.mockReturnValue(0);
+        accessors.getCollapsedChildren.mockReturnValue(new Set([spans[0].spanID, spans[4].spanID]));
+      });
+
+      it('skips spans that are hidden because their parent is collapsed', () => {
+        manager.scrollToNextVisibleSpan();
+        expect(scrollPastMock).lastCalledWith(4, 1);
+        manager.scrollToPrevVisibleSpan();
+        expect(scrollPastMock).lastCalledWith(4, -1);
+      });
+
+      it('ignores references with unknown types', () => {
+        // modify spans[2] so that it has an unknown refType
+        const spans = trace.spans;
+        spans[2].references = [{ refType: 'OTHER' }];
+        manager.scrollToNextVisibleSpan();
+        expect(scrollPastMock).lastCalledWith(2, 1);
+        manager.scrollToPrevVisibleSpan();
+        expect(scrollPastMock).lastCalledWith(4, -1);
+      });
+
+      it('handles more than one level of ancestry', () => {
+        // modify spans[2] so that it has an unknown refType
+        const spans = trace.spans;
+        spans[2].references = getRefs(spans[1].spanID);
+        manager.scrollToNextVisibleSpan();
+        expect(scrollPastMock).lastCalledWith(4, 1);
+        manager.scrollToPrevVisibleSpan();
+        expect(scrollPastMock).lastCalledWith(4, -1);
+      });
     });
   });
 
-  it('scrolls down by ~viewHeight when scrollPageDown is invoked', () => {
-    manager.scrollPageDown();
-    expect(scrollBy).lastCalledWith(0.95 * accessors.getViewHeight(), true);
+  describe('scrollPageDown() and scrollPageUp()', () => {
+    it('scrolls by +/~ viewHeight when invoked', () => {
+      manager.scrollPageDown();
+      expect(scrollBy).lastCalledWith(0.95 * accessors.getViewHeight(), true);
+      manager.scrollPageUp();
+      expect(scrollBy).lastCalledWith(-0.95 * accessors.getViewHeight(), true);
+    });
+
+    it('is a no-op if _accessors or _scroller is not defined', () => {
+      manager._accessors = null;
+      manager.scrollPageDown();
+      manager.scrollPageUp();
+      expect(scrollBy.mock.calls.length).toBe(0);
+      manager._accessors = accessors;
+      manager._scroller = null;
+      manager.scrollPageDown();
+      manager.scrollPageUp();
+      expect(scrollBy.mock.calls.length).toBe(0);
+    });
   });
 
-  it('scrolls up by ~viewHeight when scrollPageUp is invoked', () => {
-    manager.scrollPageUp();
-    expect(scrollBy).lastCalledWith(-0.95 * accessors.getViewHeight(), true);
+  describe('destroy()', () => {
+    it('disposes', () => {
+      expect(manager._trace).toBeDefined();
+      expect(manager._accessors).toBeDefined();
+      expect(manager._scroller).toBeDefined();
+      manager.destroy();
+      expect(manager._trace).not.toBeDefined();
+      expect(manager._accessors).not.toBeDefined();
+      expect(manager._scroller).not.toBeDefined();
+    });
   });
 });

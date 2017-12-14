@@ -38,27 +38,29 @@ import prefixUrl from '../../utils/prefix-url';
 /**
  * Contains the dropdown to sort and filter trace search results
  */
-let TraceResultsFilterForm = () => (
-  <div className="ui form">
-    <div className="field inline">
-      <label htmlFor="traceResultsSortBy">Sort</label>
-      <Field name="sortBy" id="traceResultsSortBy" className="ui dropdown" component="select">
-        <option value={orderBy.MOST_RECENT}>Most Recent</option>
-        <option value={orderBy.LONGEST_FIRST}>Longest First</option>
-        <option value={orderBy.SHORTEST_FIRST}>Shortest First</option>
-        <option value={orderBy.MOST_SPANS}>Most Spans</option>
-        <option value={orderBy.LEAST_SPANS}>Least Spans</option>
-      </Field>
+function TraceResultsFilterFormImpl() {
+  return (
+    <div className="ui form">
+      <div className="field inline">
+        <label htmlFor="traceResultsSortBy">Sort</label>
+        <Field name="sortBy" id="traceResultsSortBy" className="ui dropdown" component="select">
+          <option value={orderBy.MOST_RECENT}>Most Recent</option>
+          <option value={orderBy.LONGEST_FIRST}>Longest First</option>
+          <option value={orderBy.SHORTEST_FIRST}>Shortest First</option>
+          <option value={orderBy.MOST_SPANS}>Most Spans</option>
+          <option value={orderBy.LEAST_SPANS}>Least Spans</option>
+        </Field>
+      </div>
     </div>
-  </div>
-);
+  );
+}
 
-TraceResultsFilterForm = reduxForm({
+const TraceResultsFilterForm = reduxForm({
   form: 'traceResultsFilters',
   initialValues: {
     sortBy: orderBy.MOST_RECENT,
   },
-})(TraceResultsFilterForm);
+})(TraceResultsFilterFormImpl);
 
 const traceResultsFiltersFormSelector = formValueSelector('traceResultsFilters');
 
@@ -96,16 +98,16 @@ export default class SearchTracePage extends Component {
               <TraceSearchForm services={services} />
             ) : (
               <div className="m1">
-                <div className="ui active centered inline loader" />
+                <div className="ui active centered inline loader js-test-search-loader" />
               </div>
             )}
           </div>
         </div>
         <div className="twelve wide column padded">
-          {loadingTraces && <div className="ui active centered inline loader" />}
+          {loadingTraces && <div className="ui active centered inline loader js-test-traces-loader" />}
           {errors &&
             !loadingTraces && (
-              <div className="ui message">
+              <div className="ui message js-test-error-message">
                 <h2>There was an error querying for traces:</h2>
                 {errors.map(err => <ErrorMessage key={err.message} error={err} />)}
               </div>
@@ -114,7 +116,7 @@ export default class SearchTracePage extends Component {
             !hasTraceResults && (
               <div className="ui middle aligned center aligned grid" style={{ marginTop: 100 }}>
                 <div className="column">
-                  <img alt="presentation" src={JaegerLogo} width="400" />
+                  <img className="js-test-logo" alt="presentation" src={JaegerLogo} width="400" />
                 </div>
               </div>
             )}
@@ -122,7 +124,9 @@ export default class SearchTracePage extends Component {
             !hasTraceResults &&
             !loadingTraces &&
             !errors && (
-              <div className="ui message trace-search--no-results">No trace results. Try another query.</div>
+              <div className="ui message trace-search--no-results js-test-no-results">
+                No trace results. Try another query.
+              </div>
             )}
           {hasTraceResults &&
             !loadingTraces && (
@@ -139,7 +143,7 @@ export default class SearchTracePage extends Component {
                           name: t.traceName,
                         }))}
                         onValueClick={t => {
-                          this.props.history.push(`/trace/${t.traceID}`);
+                          this.props.history.push(prefixUrl(`/trace/${t.traceID}`));
                         }}
                       />
                     </div>
@@ -231,7 +235,8 @@ const stateServicesXformer = getLastXformCacher(stateServices => {
   return { loadingServices, services, serviceError };
 });
 
-function mapStateToProps(state) {
+// export to test
+export function mapStateToProps(state) {
   const query = queryString.parse(state.router.location.search);
   const isHomepage = !Object.keys(query).length;
   const { traces, maxDuration, traceError, loadingTraces } = stateTraceXformer(state.trace);

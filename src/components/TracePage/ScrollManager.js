@@ -98,6 +98,7 @@ export default class ScrollManager {
 
   _scrollPast(rowIndex: number, direction: 1 | -1) {
     const xrs = this._accessors;
+    /* istanbul ignore next */
     if (!xrs) {
       throw new Error('Accessors not set');
     }
@@ -121,6 +122,7 @@ export default class ScrollManager {
 
   _scrollToVisibleSpan(direction: 1 | -1) {
     const xrs = this._accessors;
+    /* istanbul ignore next */
     if (!xrs) {
       throw new Error('Accessors not set');
     }

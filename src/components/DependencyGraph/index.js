@@ -27,6 +27,12 @@ import { nodesPropTypes, linksPropTypes } from '../../propTypes/dependencies';
 import DependencyForceGraph from './DependencyForceGraph';
 import DAG from './DAG';
 
+// export for tests
+export const GRAPH_TYPES = {
+  FORCE_DIRECTED: { type: 'FORCE_DIRECTED', name: 'Force Directed Graph' },
+  DAG: { type: 'DAG', name: 'DAG' },
+};
+
 export default class DependencyGraphPage extends Component {
   static propTypes = {
     // eslint-disable-next-line react/forbid-prop-types
@@ -51,7 +57,7 @@ export default class DependencyGraphPage extends Component {
       graphType: 'FORCE_DIRECTED',
     };
   }
-  componentDidMount() {
+  componentWillMount() {
     this.props.fetchDependencies();
   }
 
@@ -83,10 +89,10 @@ export default class DependencyGraphPage extends Component {
       );
     }
 
-    const GRAPH_TYPE_OPTIONS = [{ type: 'FORCE_DIRECTED', name: 'Force Directed Graph' }];
+    const GRAPH_TYPE_OPTIONS = [GRAPH_TYPES.FORCE_DIRECTED];
 
     if (dependencies.length <= 100) {
-      GRAPH_TYPE_OPTIONS.push({ type: 'DAG', name: 'DAG' });
+      GRAPH_TYPE_OPTIONS.push(GRAPH_TYPES.DAG);
     }
     return (
       <div className="my2">
@@ -119,8 +125,8 @@ export default class DependencyGraphPage extends Component {
   }
 }
 
-// export connected component separately
-function mapStateToProps(state) {
+// export for tests
+export function mapStateToProps(state) {
   const { dependencies, error, loading } = state.dependencies;
   let links;
   let nodes;
@@ -132,7 +138,8 @@ function mapStateToProps(state) {
   return { loading, error, nodes, links, dependencies };
 }
 
-function mapDispatchToProps(dispatch) {
+// export for tests
+export function mapDispatchToProps(dispatch) {
   const { fetchDependencies } = bindActionCreators(jaegerApiActions, dispatch);
   return { fetchDependencies };
 }

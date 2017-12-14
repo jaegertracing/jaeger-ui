@@ -40,6 +40,56 @@ describe('TraceTimelineViewer/duck', () => {
     expect(state.detailStates).toEqual(new Map());
   });
 
+  it('sets the span column width', () => {
+    const n = 0.5;
+    let width = store.getState().spanNameColumnWidth;
+    expect(width).toBeGreaterThanOrEqual(0);
+    expect(width).toBeLessThanOrEqual(1);
+    const action = actions.setSpanNameColumnWidth(n);
+    store.dispatch(action);
+    width = store.getState().spanNameColumnWidth;
+    expect(width).toBe(n);
+  });
+
+  it('retains all state when setting to the same traceID', () => {
+    const state = store.getState();
+    const action = actions.setTrace(trace.traceID);
+    store.dispatch(action);
+    expect(store.getState()).toBe(state);
+  });
+
+  it('retains only the spanNameColumnWidth when changing traceIDs', () => {
+    let action;
+    const width = 0.5;
+    const id = 'some-id';
+    const { spanID, uniqueText } = searchSetup;
+
+    action = actions.childrenToggle(id);
+    store.dispatch(action);
+    action = actions.detailToggle(id);
+    store.dispatch(action);
+    action = actions.find(trace, uniqueText);
+    store.dispatch(action);
+    action = actions.setSpanNameColumnWidth(width);
+    store.dispatch(action);
+
+    let state = store.getState();
+    expect(state.traceID).toBe(trace.traceID);
+    expect(state.findMatchesIDs).toEqual(new Set([spanID]));
+    expect(state.childrenHiddenIDs).not.toEqual(new Set());
+    expect(state.detailStates).not.toEqual(new Map());
+    expect(state.spanNameColumnWidth).toBe(width);
+
+    action = actions.setTrace(id);
+    store.dispatch(action);
+    state = store.getState();
+    expect(state.traceID).toBe(id);
+    expect(state.findMatchesIDs).toBe(null);
+    expect(state.childrenHiddenIDs).toEqual(new Set());
+    expect(state.detailStates).toEqual(new Map());
+    expect(state.spanNameColumnWidth).toBe(width);
+  });
+
   describe('toggles children and details', () => {
     const parentID = trace.spans[0].spanID;
     const tests = [
