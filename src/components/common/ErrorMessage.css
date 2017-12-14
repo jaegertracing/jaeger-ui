@@ -15,10 +15,28 @@ limitations under the License.
 */
 
 .ErrorMessage {
+  margin-top: 2.5em;
+  position: relative;
   word-wrap: break-word;
   word-break: break-word;
 }
 
+.ErrorMessage--msg {
+  color: #c00;
+}
+
+.ErrorMessage--details {
+  overflow: auto;
+}
+
 .ErrorMessage--attr {
-  font-weight: bold;
+  padding-bottom: 0.5em;
+  padding-right: 1em;
+  vertical-align: top;
+  white-space: nowrap;
+}
+
+.ErrorMessage--value {
+  font-family: monospace;
+  white-space: pre;
 }
