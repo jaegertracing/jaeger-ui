@@ -236,7 +236,7 @@ export default class TracePage extends React.PureComponent<TracePageProps, Trace
           <TracePageHeader
             duration={duration}
             maxDepth={maxSpanDepth}
-            name={getTraceName(spans, processes)}
+            name={getTraceName(spans)}
             numServices={numberOfServices}
             numSpans={spans.length}
             slimView={slimView}
