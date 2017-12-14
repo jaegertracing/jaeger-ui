@@ -18,7 +18,8 @@ import queryString from 'query-string';
 
 import prefixUrl from '../utils/prefix-url';
 
-function getMessageFromError(errData, status) {
+// export for tests
+export function getMessageFromError(errData, status) {
   if (errData.code != null && errData.msg != null) {
     if (errData.code === status) {
       return errData.msg;
@@ -55,7 +56,7 @@ function getJSON(url, query) {
       } else {
         errorMessage = bodyText || `${response.status} - ${response.statusText}`;
       }
-      if (typeof message === 'string') {
+      if (typeof errorMessage === 'string') {
         errorMessage = errorMessage.trim();
       }
       const error = new Error(`HTTP Error: ${errorMessage}`);
