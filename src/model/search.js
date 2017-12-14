@@ -39,9 +39,8 @@ export function getTraceSummary(trace: Trace): TraceSummary {
   let numErrorSpans = 0;
   // serviceName -> { name, numberOfSpans }
   const serviceMap = {};
-
   for (let i = 0; i < spans.length; i++) {
-    const { duration, processID, spanID, startTime, tags } = spans[i];
+    const { duration, processID, references, startTime, tags } = spans[i];
     // time bounds of trace
     minTs = minTs > startTime ? startTime : minTs;
     maxTs = maxTs < startTime + duration ? startTime + duration : maxTs;
@@ -61,8 +60,7 @@ export function getTraceSummary(trace: Trace): TraceSummary {
       };
       serviceMap[serviceName] = svcData;
     }
-    // trace name
-    if (spanID === traceID) {
+    if (!references || !references.length) {
       const { operationName } = spans[i];
       traceName = `${svcData.name}: ${operationName}`;
     }
