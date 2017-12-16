@@ -25,7 +25,12 @@ type SpanWithProcess = SpanData & { process: Process };
  * NOTE: Mutates `data` - Transform the HTTP response data into the form the app
  * generally requires.
  */
-export default function transfromTraceData(data: TraceData & { spans: SpanWithProcess[] }): Trace {
+export default function transfromTraceData(data: TraceData & { spans: SpanWithProcess[] }): ?Trace {
+  const traceID = data.traceID.toLowerCase();
+  if (!traceID) {
+    return null;
+  }
+
   let traceEndTime = 0;
   let traceStartTime = Number.MAX_SAFE_INTEGER;
   const spanIdCounts = new Map();
@@ -87,11 +92,11 @@ export default function transfromTraceData(data: TraceData & { spans: SpanWithPr
   });
   return {
     spans,
+    traceID,
     // can't use spread operator for intersection types
     // repl: https://goo.gl/4Z23MJ
     // issue: https://github.com/facebook/flow/issues/1511
     processes: data.processes,
-    traceID: data.traceID,
     duration: traceEndTime - traceStartTime,
     startTime: traceStartTime,
     endTime: traceEndTime,
