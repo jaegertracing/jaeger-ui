@@ -8,7 +8,9 @@
   "devDependencies": {
     "babel-eslint": "^7.2.3",
     "bluebird": "^3.5.0",
-    "enzyme": "^2.9.1",
+    "enzyme": "^3.2.0",
+    "enzyme-adapter-react-16": "^1.1.0",
+    "enzyme-to-json": "^3.3.0",
     "eslint": "^4.5.0",
     "eslint-config-airbnb": "^15.1.0",
     "eslint-config-prettier": "^2.3.0",
@@ -46,10 +48,10 @@
     "moment": "^2.18.1",
     "prop-types": "^15.5.10",
     "query-string": "^5.0.0",
-    "react": "^15.6.1",
+    "react": "^16.0.0",
     "react-addons-perf": "^15.4.2",
     "react-dimensions": "^1.3.0",
-    "react-dom": "^15.6.1",
+    "react-dom": "^16.0.0",
     "react-ga": "^2.2.0",
     "react-helmet": "^5.1.3",
     "react-metrics": "^2.3.2",
@@ -89,6 +91,7 @@
     "collectCoverageFrom": [
       "src/**/*.js",
       "!src/utils/DraggableManager/demo/*.js",
+      "!src/utils/test/**/*.js",
       "!src/demo/**/*.js"
     ]
   },
