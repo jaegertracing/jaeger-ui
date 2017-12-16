@@ -26,10 +26,11 @@ type SpanWithProcess = SpanData & { process: Process };
  * generally requires.
  */
 export default function transfromTraceData(data: TraceData & { spans: SpanWithProcess[] }): ?Trace {
-  const traceID = data.traceID.toLowerCase();
+  let { traceID } = data;
   if (!traceID) {
     return null;
   }
+  traceID = traceID.toLowerCase();
 
   let traceEndTime = 0;
   let traceStartTime = Number.MAX_SAFE_INTEGER;
