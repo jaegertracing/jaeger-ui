@@ -19,6 +19,7 @@ import moment from 'moment';
 
 import { formatDuration } from '../../utils/date';
 import TraceServiceTag from './TraceServiceTag';
+import FALLBACK_TRACE_NAME from '../../constants/fallback-trace-name';
 
 import './TraceSearchResult.css';
 
@@ -36,7 +37,7 @@ export default function TraceSearchResult({ trace, durationPercent = 100 }) {
           background: getBackgroundStyle(durationPercent),
         }}
       >
-        <span className="trace-search-result--traceName left">{traceName}</span>
+        <span className="trace-search-result--traceName left">{traceName || FALLBACK_TRACE_NAME}</span>
         <span className="trace-search-result--duration right">{formatDuration(duration * 1000)}</span>
       </div>
       <div className="p1">
