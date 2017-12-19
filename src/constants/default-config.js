@@ -14,7 +14,13 @@
 
 import deepFreeze from 'deep-freeze';
 
+import { FALLBACK_DAG_MAX_NUM_SERVICES } from './index';
+
 export default deepFreeze({
+  dependencies: {
+    dagMaxNumServices: FALLBACK_DAG_MAX_NUM_SERVICES,
+    menuEnabled: true,
+  },
   menu: [
     {
       label: 'About Jaeger',
@@ -46,5 +52,11 @@ export default deepFreeze({
       ],
     },
   ],
-  dependenciesMenuEnabled: true,
 });
+
+export const deprecations = [
+  {
+    formerKey: 'dependenciesMenuEnabled',
+    currentKey: 'dependencies.menuEnabled',
+  },
+];
