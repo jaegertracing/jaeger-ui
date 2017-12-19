@@ -211,26 +211,35 @@ describe('<TracePage>', () => {
     let spanGraph;
     let timeline;
 
+    function refreshWrappers() {
+      header = wrapper.find(TracePageHeader);
+      spanGraph = wrapper.find(SpanGraph);
+      timeline = wrapper.find(TraceTimelineViewer);
+    }
+
     beforeEach(() => {
       wrapper = mount(<TracePage {...defaultProps} />);
       // use the method directly because it is a `ref` prop
       wrapper.instance().setHeaderHeight({ clientHeight: 1 });
-      header = wrapper.find(TracePageHeader);
-      spanGraph = wrapper.find(SpanGraph);
-      timeline = wrapper.find(TraceTimelineViewer);
+      wrapper.update();
+      refreshWrappers();
     });
 
     it('propagates headerHeight changes', () => {
       const h = 100;
-      const section = wrapper.find('section[style]');
       const { setHeaderHeight } = wrapper.instance();
       // use the method directly because it is a `ref` prop
       setHeaderHeight({ clientHeight: h });
+      wrapper.update();
+      let sections = wrapper.find('section');
+      expect(sections.length).toBe(2);
+      const section = sections.at(1);
       expect(section.prop('style')).toEqual({ paddingTop: h });
       expect(section.containsMatchingElement(<TraceTimelineViewer />)).toBe(true);
       setHeaderHeight(null);
-      expect(section.prop('style')).not.toBeDefined();
-      expect(section.containsMatchingElement(<TraceTimelineViewer />)).toBe(false);
+      wrapper.update();
+      sections = wrapper.find('section');
+      expect(sections.length).toBe(1);
     });
 
     it('propagates textFilter changes', () => {
@@ -238,6 +247,8 @@ describe('<TracePage>', () => {
       const { updateTextFilter } = header.props();
       expect(header.prop('textFilter')).toBe('');
       updateTextFilter(s);
+      wrapper.update();
+      refreshWrappers();
       expect(header.prop('textFilter')).toBe(s);
       expect(timeline.prop('textFilter')).toBe(s);
     });
@@ -247,8 +258,10 @@ describe('<TracePage>', () => {
       expect(header.prop('slimView')).toBe(false);
       expect(spanGraph.type()).toBeDefined();
       onSlimViewClicked(true);
+      wrapper.update();
+      refreshWrappers();
       expect(header.prop('slimView')).toBe(true);
-      expect(spanGraph.type()).not.toBeDefined();
+      expect(spanGraph.length).toBe(0);
     });
 
     it('propagates viewRange changes', () => {
@@ -261,10 +274,14 @@ describe('<TracePage>', () => {
       expect(spanGraph.prop('viewRange')).toEqual(viewRange);
       expect(timeline.prop('viewRange')).toEqual(viewRange);
       updateNextViewRangeTime({ cursor });
+      wrapper.update();
+      refreshWrappers();
       viewRange.time.cursor = cursor;
       expect(spanGraph.prop('viewRange')).toEqual(viewRange);
       expect(timeline.prop('viewRange')).toEqual(viewRange);
       updateViewRangeTime(...current);
+      wrapper.update();
+      refreshWrappers();
       viewRange.time = { current };
       expect(spanGraph.prop('viewRange')).toEqual(viewRange);
       expect(timeline.prop('viewRange')).toEqual(viewRange);

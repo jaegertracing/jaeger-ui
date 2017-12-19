@@ -26,7 +26,8 @@ it('<TraceResultsScatterPlot /> should render base case correctly', () => {
         { x: Date.now() - 1000, y: 2, traceID: 2 },
         { x: Date.now(), y: 3, traceID: 3 },
       ]}
-    />
+    />,
+    { disableLifecycleMethods: true }
   );
   expect(wrapper).toBeTruthy();
 });
