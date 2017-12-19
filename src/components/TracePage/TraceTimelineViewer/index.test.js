@@ -36,6 +36,7 @@ describe('<TraceTimelineViewer>', () => {
         getState() {
           return { traceTimeline: { spanNameColumnWidth: 0.25 } };
         },
+        subscribe() {},
       },
     },
   };

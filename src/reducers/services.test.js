@@ -72,10 +72,10 @@ it('should handle a failed services fetch', () => {
     payload: error,
   });
   expect(state).toEqual({
+    error,
     services: [],
     operationsForService: {},
     loading: false,
-    error: error.message,
   });
 });
 

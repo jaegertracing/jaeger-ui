@@ -15,6 +15,7 @@
 // limitations under the License.
 
 import React from 'react';
+import _get from 'lodash/get';
 import { Link } from 'react-router-dom';
 import { Dropdown, Menu } from 'semantic-ui-react';
 
@@ -64,7 +65,7 @@ const NAV_LINKS = [
   },
 ];
 
-if (getConfig().dependenciesMenuEnabled) {
+if (_get(getConfig(), 'dependencies.menuEnabled')) {
   NAV_LINKS.push({
     key: 'dependencies',
     to: prefixUrl('/dependencies'),

@@ -93,6 +93,7 @@ describe('<TimelineColumnResizer>', () => {
     instance._dragManager.isDragging = () => true;
     instance._handleDragUpdate({ value: props.min });
     instance.forceUpdate();
+    wrapper.update();
     expect(wrapper.find('.isDraggingLeft').length + wrapper.find('.isDraggingRight').length).toBe(1);
     expect(wrapper.find('.TimelineColumnResizer--dragger').prop('style').right).toBeDefined();
   });
