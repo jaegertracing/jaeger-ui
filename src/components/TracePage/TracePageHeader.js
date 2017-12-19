@@ -18,7 +18,7 @@ import * as React from 'react';
 import { Dropdown, Menu } from 'semantic-ui-react';
 
 import KeyboardShortcutsHelp from './KeyboardShortcutsHelp';
-import FALLBACK_TRACE_NAME from '../../constants/fallback-trace-name';
+import { FALLBACK_TRACE_NAME } from '../../constants';
 import { formatDatetime, formatDuration } from '../../utils/date';
 
 type TracePageHeaderProps = {
