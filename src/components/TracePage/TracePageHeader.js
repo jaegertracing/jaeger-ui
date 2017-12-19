@@ -18,6 +18,7 @@ import * as React from 'react';
 import { Dropdown, Menu } from 'semantic-ui-react';
 
 import KeyboardShortcutsHelp from './KeyboardShortcutsHelp';
+import FALLBACK_TRACE_NAME from '../../constants/fallback-trace-name';
 import { formatDatetime, formatDuration } from '../../utils/date';
 
 type TracePageHeaderProps = {
@@ -91,7 +92,7 @@ export default function TracePageHeader(props: TracePageHeaderProps) {
                 style={{ float: 'none' }}
               />
             </a>
-            {name}
+            {name || FALLBACK_TRACE_NAME}
           </h2>
         </div>
         <div className="inline-block mr1">

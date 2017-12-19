@@ -3,7 +3,16 @@
   "version": "0.0.1",
   "main": "src/index.js",
   "license": "MIT",
-  "proxy": "http://localhost:16686",
+  "proxy": {
+    "/api": {
+        "target": "http://localhost:16686",
+        "logLevel": "silent",
+        "secure": false,
+        "changeOrigin": true,
+        "ws": true,
+        "xfwd": true
+    }
+  },
   "homepage": null,
   "devDependencies": {
     "babel-eslint": "^7.2.3",

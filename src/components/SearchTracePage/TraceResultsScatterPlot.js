@@ -19,6 +19,7 @@ import dimensions from 'react-dimensions';
 import { XYPlot, XAxis, YAxis, MarkSeries, Hint } from 'react-vis';
 import { compose, withState, withProps } from 'recompose';
 
+import FALLBACK_TRACE_NAME from '../../constants/fallback-trace-name';
 import { formatDuration } from '../../utils/date';
 
 import './react-vis.css';
@@ -47,7 +48,7 @@ function TraceResultsScatterPlotBase(props) {
         />
         {overValue && (
           <Hint value={overValue}>
-            <h4 className="scatter-plot-hint">{overValue.name || '¯\\_(ツ)_/¯'}</h4>
+            <h4 className="scatter-plot-hint">{overValue.name || FALLBACK_TRACE_NAME}</h4>
           </Hint>
         )}
       </XYPlot>
