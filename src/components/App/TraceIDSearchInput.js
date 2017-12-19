@@ -16,9 +16,11 @@ import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { withRouter } from 'react-router-dom';
 
+import prefixUrl from '../../utils/prefix-url';
+
 class TraceIDSearchInput extends Component {
   goToTrace(e) {
-    this.props.history.push(`/trace/${this.traceIDInput.value}`);
+    this.props.history.push(prefixUrl(`/trace/${this.traceIDInput.value}`));
     e.preventDefault();
     return false;
   }

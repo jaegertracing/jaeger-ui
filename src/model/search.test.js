@@ -51,7 +51,7 @@ describe('getTraceSummary()', () => {
         {
           traceID: 'main-id',
           processID: 'pid0',
-          spanID: 'main-id',
+          spanID: 'span-id-0',
           operationName: 'op0',
           startTime: 1502221240933000,
           duration: 236857,
@@ -65,6 +65,7 @@ describe('getTraceSummary()', () => {
           startTime: 1502221241144382,
           duration: 25305,
           tags: [],
+          references: [{ refType: 'CHILD_OF', traceID: 'main-id', spanID: 'span-id-0' }],
         },
       ],
       duration: 236857,

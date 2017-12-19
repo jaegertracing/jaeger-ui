@@ -20,7 +20,7 @@ import _mapValues from 'lodash/mapValues';
 import _maxBy from 'lodash/maxBy';
 import _values from 'lodash/values';
 import { connect } from 'react-redux';
-import type { Match } from 'react-router-dom';
+import type { RouterHistory, Match } from 'react-router-dom';
 import { bindActionCreators } from 'redux';
 
 import type { CombokeysHandler, ShortcutCallbacks } from './keyboard-shortcuts';
@@ -35,14 +35,16 @@ import ErrorMessage from '../common/ErrorMessage';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import { getTraceName } from '../../model/trace-viewer';
 import type { Trace } from '../../types';
+import prefixUrl from '../../utils/prefix-url';
 
 import './index.css';
 
 type TracePageProps = {
   fetchTrace: string => void,
-  trace: ?Trace,
-  loading: boolean,
+  history: RouterHistory,
   id: string,
+  loading: boolean,
+  trace: ?Trace,
 };
 
 type TracePageState = {
@@ -211,6 +213,11 @@ export default class TracePage extends React.PureComponent<TracePageProps, Trace
     const { fetchTrace, trace, id, loading } = this.props;
     if (!trace && !loading) {
       fetchTrace(id);
+      return;
+    }
+    const { history } = this.props;
+    if (id && id !== id.toLowerCase()) {
+      history.push(prefixUrl(`/trace/${id.toLowerCase()}`));
     }
   }
 
@@ -250,7 +257,7 @@ export default class TracePage extends React.PureComponent<TracePageProps, Trace
           <TracePageHeader
             duration={duration}
             maxDepth={maxSpanDepth}
-            name={getTraceName(spans, processes)}
+            name={getTraceName(spans)}
             numServices={numberOfServices}
             numSpans={spans.length}
             slimView={slimView}
