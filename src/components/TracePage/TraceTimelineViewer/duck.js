@@ -65,10 +65,7 @@ const fullActions = createActions({
   [actionTypes.DETAIL_TAGS_TOGGLE]: spanID => ({ spanID }),
   [actionTypes.DETAIL_PROCESS_TOGGLE]: spanID => ({ spanID }),
   [actionTypes.DETAIL_LOGS_TOGGLE]: spanID => ({ spanID }),
-  [actionTypes.DETAIL_LOG_ITEM_TOGGLE]: (spanID, logItem) => ({
-    logItem,
-    spanID,
-  }),
+  [actionTypes.DETAIL_LOG_ITEM_TOGGLE]: (spanID, logItem) => ({ logItem, spanID }),
   [actionTypes.FIND]: (trace, searchText) => ({ searchText, trace }),
 });
 

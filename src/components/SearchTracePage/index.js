@@ -28,7 +28,6 @@ import * as jaegerApiActions from '../../actions/jaeger-api';
 import TraceSearchForm from './TraceSearchForm';
 import TraceSearchResult from './TraceSearchResult';
 import TraceResultsScatterPlot from './TraceResultsScatterPlot';
-import ErrorMessage from '../common/ErrorMessage';
 import * as orderBy from '../../model/order-by';
 import { sortTraces, getTraceSummaries } from '../../model/search';
 import { getPercentageOfDuration } from '../../utils/date';
@@ -79,7 +78,7 @@ export default class SearchTracePage extends Component {
 
   render() {
     const {
-      errors,
+      errorMessage,
       isHomepage,
       loadingServices,
       loadingTraces,
@@ -105,11 +104,11 @@ export default class SearchTracePage extends Component {
         </div>
         <div className="twelve wide column padded">
           {loadingTraces && <div className="ui active centered inline loader js-test-traces-loader" />}
-          {errors &&
+          {errorMessage &&
             !loadingTraces && (
-              <div className="ui message js-test-error-message">
-                <h2>There was an error querying for traces:</h2>
-                {errors.map(err => <ErrorMessage key={err.message} error={err} />)}
+              <div className="ui message red trace-search--error js-test-error-message">
+                There was an error querying for traces:<br />
+                {errorMessage}
               </div>
             )}
           {isHomepage &&
@@ -123,7 +122,7 @@ export default class SearchTracePage extends Component {
           {!isHomepage &&
             !hasTraceResults &&
             !loadingTraces &&
-            !errors && (
+            !errorMessage && (
               <div className="ui message trace-search--no-results js-test-no-results">
                 No trace results. Try another query.
               </div>
@@ -206,11 +205,7 @@ SearchTracePage.propTypes = {
   }),
   fetchServiceOperations: PropTypes.func,
   fetchServices: PropTypes.func,
-  errors: PropTypes.arrayOf(
-    PropTypes.shape({
-      message: PropTypes.string,
-    })
-  ),
+  errorMessage: PropTypes.string,
 };
 
 const stateTraceXformer = getLastXformCacher(stateTrace => {
@@ -241,27 +236,21 @@ export function mapStateToProps(state) {
   const isHomepage = !Object.keys(query).length;
   const { traces, maxDuration, traceError, loadingTraces } = stateTraceXformer(state.trace);
   const { loadingServices, services, serviceError } = stateServicesXformer(state.services);
-  const errors = [];
-  if (traceError) {
-    errors.push(traceError);
-  }
-  if (serviceError) {
-    errors.push(serviceError);
-  }
+  const errorMessage = serviceError || traceError ? `${serviceError || ''} ${traceError || ''}` : '';
   const sortBy = traceResultsFiltersFormSelector(state, 'sortBy');
   sortTraces(traces, sortBy);
 
   return {
     isHomepage,
+    sortTracesBy: sortBy,
+    traceResults: traces,
+    numberOfTraceResults: traces.length,
+    maxTraceDuration: maxDuration,
+    urlQueryParams: query,
     services,
     loadingTraces,
     loadingServices,
-    errors: errors.length ? errors : null,
-    maxTraceDuration: maxDuration,
-    numberOfTraceResults: traces.length,
-    sortTracesBy: sortBy,
-    traceResults: traces,
-    urlQueryParams: query,
+    errorMessage,
   };
 }
 

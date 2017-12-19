@@ -59,11 +59,7 @@ export default function AccordianKeyValues(props: AccordianKeyValuesProps) {
   const { compact, data, highContrast, isOpen, label, onToggle } = props;
   const isEmpty = !Array.isArray(data) || !data.length;
   const iconCls = cx(
-    {
-      minus: isOpen,
-      plus: !isOpen,
-      'AccordianKeyValues--emptyArtifact': isEmpty,
-    },
+    { minus: isOpen, plus: !isOpen, 'AccordianKeyValues--emptyArtifact': isEmpty },
     'square outline icon'
   );
   return (

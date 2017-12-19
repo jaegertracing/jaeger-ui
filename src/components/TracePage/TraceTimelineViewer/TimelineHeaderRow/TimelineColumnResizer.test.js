@@ -49,9 +49,7 @@ describe('<TimelineColumnResizer>', () => {
 
   describe('uses DraggableManager', () => {
     it('handles mouse down on the dragger', () => {
-      const dragger = wrapper.find({
-        onMouseDown: instance._dragManager.handleMouseDown,
-      });
+      const dragger = wrapper.find({ onMouseDown: instance._dragManager.handleMouseDown });
       expect(dragger.length).toBe(1);
       expect(dragger.is('.TimelineColumnResizer--dragger')).toBe(true);
     });

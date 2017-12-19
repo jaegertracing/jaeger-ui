@@ -76,10 +76,7 @@ describe('<TimelineViewingLayer>', () => {
       const left = 10;
       const width = 100;
       instance._root.getBoundingClientRect = () => ({ left, width });
-      expect(instance._getDraggingBounds()).toEqual({
-        width,
-        clientXLeft: left,
-      });
+      expect(instance._getDraggingBounds()).toEqual({ width, clientXLeft: left });
     });
 
     it('updates viewRange.time.cursor via _draggerReframe._onMouseMove', () => {
@@ -104,10 +101,7 @@ describe('<TimelineViewingLayer>', () => {
 
     it('handles drag move via _draggerReframe._onDragMove', () => {
       const anchor = 0.25;
-      const viewRangeTime = {
-        ...props.viewRangeTime,
-        reframe: { anchor, shift: Math.random() },
-      };
+      const viewRangeTime = { ...props.viewRangeTime, reframe: { anchor, shift: Math.random() } };
       const value = 0.5;
       const shift = mapFromSubRange(viewStart, viewEnd, value);
       // make sure `anchor` is already present on the props
@@ -124,10 +118,7 @@ describe('<TimelineViewingLayer>', () => {
       const value = 0.5;
       const shift = mapFromSubRange(viewStart, viewEnd, value);
       const anchor = 0.25;
-      const viewRangeTime = {
-        ...props.viewRangeTime,
-        reframe: { anchor, shift: Math.random() },
-      };
+      const viewRangeTime = { ...props.viewRangeTime, reframe: { anchor, shift: Math.random() } };
       wrapper.setProps({ viewRangeTime });
       instance._draggerReframe._onDragEnd({ manager, value });
       expect(manager.resetBounds.mock.calls).toEqual([[]]);
@@ -153,19 +144,13 @@ describe('<TimelineViewingLayer>', () => {
       viewRangeTime = { ...baseViewRangeTime, shiftEnd: cursor };
       wrapper.setProps({ viewRangeTime });
       expect(wrapper.find('.TimelineViewingLayer--cursorGuide').length).toBe(0);
-      viewRangeTime = {
-        ...baseViewRangeTime,
-        reframe: { anchor: cursor, shift: cursor },
-      };
+      viewRangeTime = { ...baseViewRangeTime, reframe: { anchor: cursor, shift: cursor } };
       wrapper.setProps({ viewRangeTime });
       expect(wrapper.find('.TimelineViewingLayer--cursorGuide').length).toBe(0);
     });
 
     it('renders the reframe dragging', () => {
-      const viewRangeTime = {
-        ...props.viewRangeTime,
-        reframe: { anchor: viewStart, shift: viewEnd },
-      };
+      const viewRangeTime = { ...props.viewRangeTime, reframe: { anchor: viewStart, shift: viewEnd } };
       wrapper.setProps({ viewRangeTime });
       expect(wrapper.find('.isDraggingRight.isReframeDrag').length).toBe(1);
     });

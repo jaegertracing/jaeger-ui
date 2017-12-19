@@ -51,7 +51,7 @@ function searchDone(state, { payload }) {
 }
 
 function searchErred(state, action) {
-  const error = action.payload;
+  const error = action.payload.message;
   return { ...state, error, loading: false, traces: [] };
 }
 

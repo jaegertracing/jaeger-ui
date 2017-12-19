@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/* eslint-disable import/first */
+import traceGenerator from '../demo/trace-generators';
+import JaegerAPI from './jaeger';
+
+const generatedTraces = traceGenerator.traces({ traces: 5 });
 jest.mock('isomorphic-fetch', () =>
   jest.fn(() =>
     Promise.resolve({
@@ -23,12 +26,7 @@ jest.mock('isomorphic-fetch', () =>
   )
 );
 
-import fetchMock from 'isomorphic-fetch';
-
-import traceGenerator from '../demo/trace-generators';
-import JaegerAPI, { getMessageFromError } from './jaeger';
-
-const generatedTraces = traceGenerator.traces({ traces: 5 });
+const fetchMock = require('isomorphic-fetch');
 
 it('fetchTrace() should fetch with the id', () => {
   fetchMock.mockClear();
@@ -48,70 +46,18 @@ it('fetchTrace() should resolve the whole response', () => {
   return JaegerAPI.fetchTrace('trace-id').then(resp => expect(resp.data).toBe(generatedTraces));
 });
 
-it('fetchTrace() throws an error on a >= 400 status code', done => {
-  const status = 400;
-  const statusText = 'some-status';
-  const msg = 'some-message';
-  const errorData = { errors: [{ msg, code: status }] };
-
+it('fetchTrace() should reject with a bad status code', () => {
   fetchMock.mockReturnValue(
     Promise.resolve({
-      status,
-      statusText,
-      text: () => Promise.resolve(JSON.stringify(errorData)),
+      status: 400,
+      json: () => Promise.resolve({ data: null }),
     })
   );
-  JaegerAPI.fetchTrace('trace-id').catch(err => {
-    expect(err.message).toMatch(msg);
-    expect(err.httpStatus).toBe(status);
-    expect(err.httpStatusText).toBe(statusText);
-    done();
-  });
-});
 
-it('fetchTrace() throws an useful error derived from a text payload', done => {
-  const status = 400;
-  const statusText = 'some-status';
-  const errorData = 'this is some error message';
-
-  fetchMock.mockReturnValue(
-    Promise.resolve({
-      status,
-      statusText,
-      text: () => Promise.resolve(errorData),
-    })
+  JaegerAPI.fetchTrace('trace-id').then(
+    () => new Error(),
+    err => {
+      expect(err instanceof Error).toBeTruthy();
+    }
   );
-  JaegerAPI.fetchTrace('trace-id').catch(err => {
-    expect(err.message).toMatch(errorData);
-    expect(err.httpStatus).toBe(status);
-    expect(err.httpStatusText).toBe(statusText);
-    done();
-  });
-});
-
-describe('getMessageFromError()', () => {
-  describe('{ code, msg } error data', () => {
-    const data = { code: 1, msg: 'some-message' };
-
-    it('ignores code if it is the same as `status` arg', () => {
-      expect(getMessageFromError(data, 1)).toBe(data.msg);
-    });
-
-    it('returns`$code - $msg` when code is novel', () => {
-      const rv = getMessageFromError(data, -1);
-      expect(rv).toBe(`${data.code} - ${data.msg}`);
-    });
-  });
-  describe('other data formats', () => {
-    it('stringifies the value, when possible', () => {
-      const data = ['abc'];
-      expect(getMessageFromError(data)).toBe(JSON.stringify(data));
-    });
-
-    it('returns the string, otherwise', () => {
-      const data = {};
-      data.data = data;
-      expect(getMessageFromError(data)).toBe(String(data));
-    });
-  });
 });

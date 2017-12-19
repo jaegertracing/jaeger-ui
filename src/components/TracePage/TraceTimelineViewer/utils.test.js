@@ -27,56 +27,28 @@ import traceGenerator from '../../../demo/trace-generators';
 describe('TraceTimelineViewer/utils', () => {
   describe('getViewedBounds()', () => {
     it('works for the full range', () => {
-      const args = {
-        min: 1,
-        max: 2,
-        start: 1,
-        end: 2,
-        viewStart: 0,
-        viewEnd: 1,
-      };
+      const args = { min: 1, max: 2, start: 1, end: 2, viewStart: 0, viewEnd: 1 };
       const { start, end } = getViewedBounds(args);
       expect(start).toBe(0);
       expect(end).toBe(1);
     });
 
     it('works for a sub-range with a full view', () => {
-      const args = {
-        min: 1,
-        max: 2,
-        start: 1.25,
-        end: 1.75,
-        viewStart: 0,
-        viewEnd: 1,
-      };
+      const args = { min: 1, max: 2, start: 1.25, end: 1.75, viewStart: 0, viewEnd: 1 };
       const { start, end } = getViewedBounds(args);
       expect(start).toBe(0.25);
       expect(end).toBe(0.75);
     });
 
     it('works for a sub-range that fills the view', () => {
-      const args = {
-        min: 1,
-        max: 2,
-        start: 1.25,
-        end: 1.75,
-        viewStart: 0.25,
-        viewEnd: 0.75,
-      };
+      const args = { min: 1, max: 2, start: 1.25, end: 1.75, viewStart: 0.25, viewEnd: 0.75 };
       const { start, end } = getViewedBounds(args);
       expect(start).toBe(0);
       expect(end).toBe(1);
     });
 
     it('works for a sub-range that within a sub-view', () => {
-      const args = {
-        min: 100,
-        max: 200,
-        start: 130,
-        end: 170,
-        viewStart: 0.1,
-        viewEnd: 0.9,
-      };
+      const args = { min: 100, max: 200, start: 130, end: 170, viewStart: 0.1, viewEnd: 0.9 };
       const { start, end } = getViewedBounds(args);
       expect(start).toBe(0.25);
       expect(end).toBe(0.75);
@@ -93,18 +65,8 @@ describe('TraceTimelineViewer/utils', () => {
     });
 
     const spanTypeTestCases = [
-      {
-        fn: isClientSpan,
-        name: 'isClientSpan',
-        key: 'span.kind',
-        value: 'client',
-      },
-      {
-        fn: isServerSpan,
-        name: 'isServerSpan',
-        key: 'span.kind',
-        value: 'server',
-      },
+      { fn: isClientSpan, name: 'isClientSpan', key: 'span.kind', value: 'client' },
+      { fn: isServerSpan, name: 'isServerSpan', key: 'span.kind', value: 'server' },
       { fn: isErrorSpan, name: 'isErrorSpan', key: 'error', value: true },
       { fn: isErrorSpan, name: 'isErrorSpan', key: 'error', value: 'true' },
     ];

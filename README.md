@@ -78,8 +78,8 @@ See the [deployment guide](http://jaeger.readthedocs.io/en/latest/deployment/#ui
 [doc]: http://jaeger.readthedocs.org/en/latest/
 [ci-img]: https://travis-ci.org/jaegertracing/jaeger-ui.svg?branch=master
 [ci]: https://travis-ci.org/jaegertracing/jaeger-ui
-[cov-img]: https://codecov.io/gh/jaegertracing/jaeger-ui/branch/master/graph/badge.svg
-[cov]: https://codecov.io/gh/jaegertracing/jaeger-ui
+[cov-img]: https://coveralls.io/repos/jaegertracing/jaeger-ui/badge.svg?branch=master
+[cov]: https://coveralls.io/github/jaegertracing/jaeger-ui?branch=master
 [aio-docs]: http://jaeger.readthedocs.io/en/latest/getting_started/
 [fossa-img]: https://app.fossa.io/api/projects/git%2Bgithub.com%2Fjaegertracing%2Fjaeger-ui.svg?type=shield
 [fossa]: https://app.fossa.io/projects/git%2Bgithub.com%2Fjaegertracing%2Fjaeger-ui?ref=badge_shield

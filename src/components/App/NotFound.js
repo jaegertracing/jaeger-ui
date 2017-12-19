@@ -17,7 +17,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-import ErrorMessage from '../common/ErrorMessage';
 import prefixUrl from '../../utils/prefix-url';
 
 type NotFoundProps = {
@@ -27,11 +26,16 @@ type NotFoundProps = {
 export default function NotFound({ error }: NotFoundProps) {
   return (
     <section className="ui container">
-      <div className="ui basic segment">
+      <div className="ui center aligned basic segment">
         <div className="ui center aligned basic segment">
-          <h1>Error</h1>
+          <h1>{'404'}</h1>
+          <p>{"Looks like you tried to access something that doesn't exist."}</p>
         </div>
-        {error && <ErrorMessage error={error} />}
+        {error && (
+          <div className="ui red message">
+            <p>{String(error)}</p>
+          </div>
+        )}
         <div className="ui center aligned basic segment">
           <Link to={prefixUrl('/')}>{'Back home'}</Link>
         </div>

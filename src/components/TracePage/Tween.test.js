@@ -185,11 +185,7 @@ describe('Tween', () => {
     });
 
     it('releases references to callbacks', () => {
-      const tween = new Tween({
-        ...baseOptions,
-        onComplete: () => {},
-        onUpdate: () => {},
-      });
+      const tween = new Tween({ ...baseOptions, onComplete: () => {}, onUpdate: () => {} });
       tween.cancel();
       expect(tween.callbackComplete).toBe(undefined);
       expect(tween.callbackUpdate).toBe(undefined);

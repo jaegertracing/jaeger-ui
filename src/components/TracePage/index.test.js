@@ -35,7 +35,7 @@ import { cancel as cancelScroll } from './scroll-page';
 import SpanGraph from './SpanGraph';
 import TracePageHeader from './TracePageHeader';
 import TraceTimelineViewer from './TraceTimelineViewer';
-import ErrorMessage from '../common/ErrorMessage';
+import NotFound from '../App/NotFound';
 import traceGenerator from '../../demo/trace-generators';
 import transformTraceData from '../../model/transform-trace-data';
 
@@ -94,7 +94,7 @@ describe('<TracePage>', () => {
 
   it('renders an error message when given an error', () => {
     wrapper.setProps({ trace: new Error('some-error') });
-    expect(wrapper.find(ErrorMessage).length).toBe(1);
+    expect(wrapper.find(NotFound).length).toBe(1);
   });
 
   it('renders a loading indicator when loading', () => {
