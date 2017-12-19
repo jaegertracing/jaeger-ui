@@ -62,7 +62,7 @@ describe('<SpanBarRow>', () => {
   it('escalates detail toggling', () => {
     const { onDetailToggled } = props;
     expect(onDetailToggled.mock.calls.length).toBe(0);
-    wrapper.find('.span-view').prop('onClick')();
+    wrapper.find('div.span-view').prop('onClick')();
     expect(onDetailToggled.mock.calls).toEqual([[spanID]]);
   });
 
