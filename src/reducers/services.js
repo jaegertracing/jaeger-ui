@@ -36,11 +36,14 @@ function fetchServicesDone(state, { payload }) {
 }
 
 function fetchServicesErred(state, { payload: error }) {
-  return { ...state, error: error.message, loading: false, services: [] };
+  return { ...state, error, loading: false, services: [] };
 }
 
 function fetchOpsStarted(state, { meta: { serviceName } }) {
-  const operationsForService = { ...state.operationsForService, [serviceName]: [] };
+  const operationsForService = {
+    ...state.operationsForService,
+    [serviceName]: [],
+  };
   return { ...state, operationsForService };
 }
 
@@ -49,7 +52,10 @@ function fetchOpsDone(state, { meta, payload }) {
   if (Array.isArray(operations)) {
     operations.sort(baseStringComparator);
   }
-  const operationsForService = { ...state.operationsForService, [meta.serviceName]: operations || [] };
+  const operationsForService = {
+    ...state.operationsForService,
+    [meta.serviceName]: operations || [],
+  };
   return { ...state, operationsForService };
 }
 
