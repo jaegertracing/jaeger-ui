@@ -26,7 +26,7 @@ import * as jaegerApiActions from '../../actions/jaeger-api';
 import { nodesPropTypes, linksPropTypes } from '../../propTypes/dependencies';
 import { formatDependenciesAsNodesAndLinks } from '../../selectors/dependencies';
 import getConfig from '../../utils/config/get-config';
-import fallbackDagMaxNumServices from '../../constants/fallback-dag-max-num-services';
+import { FALLBACK_DAG_MAX_NUM_SERVICES } from '../../constants';
 
 import './DependencyGraph.css';
 
@@ -36,7 +36,8 @@ export const GRAPH_TYPES = {
   DAG: { type: 'DAG', name: 'DAG' },
 };
 
-const dagMaxNumServices = _get(getConfig(), 'dependencies.dagMaxNumServices') || fallbackDagMaxNumServices;
+const dagMaxNumServices =
+  _get(getConfig(), 'dependencies.dagMaxNumServices') || FALLBACK_DAG_MAX_NUM_SERVICES;
 
 export default class DependencyGraphPage extends Component {
   static propTypes = {
