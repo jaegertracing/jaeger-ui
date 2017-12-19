@@ -23,17 +23,18 @@ export function cancelAnimationFrame(id) {
 }
 
 export function polyfill(target, msElapse = DEFAULT_ELAPSE) {
-  if (!target.requestAnimationFrame) {
+  const _target = target || global;
+  if (!_target.requestAnimationFrame) {
     if (msElapse === DEFAULT_ELAPSE) {
       // eslint-disable-next-line no-param-reassign
-      target.requestAnimationFrame = requestAnimationFrame;
+      _target.requestAnimationFrame = requestAnimationFrame;
     } else {
       // eslint-disable-next-line no-param-reassign, no-shadow
-      target.requestAnimationFrame = callback => setTimeout(callback, msElapse);
+      _target.requestAnimationFrame = callback => setTimeout(callback, msElapse);
     }
   }
-  if (!target.cancelAnimationFrame) {
+  if (!_target.cancelAnimationFrame) {
     // eslint-disable-next-line no-param-reassign
-    target.cancelAnimationFrame = cancelAnimationFrame;
+    _target.cancelAnimationFrame = cancelAnimationFrame;
   }
 }

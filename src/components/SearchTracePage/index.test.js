@@ -65,11 +65,12 @@ describe('<SearchTracePage>', () => {
   });
 
   it('searches for traces if `service` or `traceID` are in the query string', () => {
-    wrapper = mount(<SearchTracePage {...props} />);
     expect(props.searchTraces.mock.calls.length).toBe(1);
   });
 
   it('loads the services and operations if a service is stored', () => {
+    props.fetchServices.mockClear();
+    props.fetchServiceOperations.mockClear();
     const oldFn = store.get;
     store.get = jest.fn(() => ({ service: 'svc-b' }));
     wrapper = mount(<SearchTracePage {...props} />);

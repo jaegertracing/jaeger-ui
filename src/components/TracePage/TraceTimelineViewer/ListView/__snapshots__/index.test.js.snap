@@ -1,578 +1,101 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`<ListView> shallow tests matches a snapshot 1`] = `
-ShallowWrapper {
-  "complexSelector": ComplexSelector {
-    "buildPredicate": [Function],
-    "childrenOfNode": [Function],
-    "findWhereUnwrapped": [Function],
-  },
-  "length": 1,
-  "node": <div
-    onScroll={[Function]}
+<div
+  onScroll={[Function]}
+  style={
+    Object {
+      "height": "100%",
+      "overflowY": "auto",
+      "position": "relative",
+    }
+  }
+>
+  <div
     style={
       Object {
-        "height": "100%",
-        "overflowY": "auto",
+        "height": 1640,
         "position": "relative",
       }
     }
   >
     <div
+      className="SomeClassName"
       style={
         Object {
-          "height": 1640,
-          "position": "relative",
+          "margin": 0,
+          "padding": 0,
+          "position": "absolute",
+          "top": 0,
         }
       }
     >
-      <div
-        className="SomeClassName"
+      <Item
+        data-item-key="0"
+        key="0"
         style={
           Object {
-            "margin": 0,
-            "padding": 0,
+            "height": 2,
             "position": "absolute",
             "top": 0,
           }
         }
       >
-        <Item
-          data-item-key="0"
-          style={
-            Object {
-              "height": 2,
-              "position": "absolute",
-              "top": 0,
-            }
-          }
-        >
-          0
-        </Item>
-        <Item
-          data-item-key="1"
-          style={
-            Object {
-              "height": 4,
-              "position": "absolute",
-              "top": 2,
-            }
-          }
-        >
-          1
-        </Item>
-        <Item
-          data-item-key="2"
-          style={
-            Object {
-              "height": 6,
-              "position": "absolute",
-              "top": 6,
-            }
-          }
-        >
-          2
-        </Item>
-        <Item
-          data-item-key="3"
-          style={
-            Object {
-              "height": 8,
-              "position": "absolute",
-              "top": 12,
-            }
-          }
-        >
-          3
-        </Item>
-        <Item
-          data-item-key="4"
-          style={
-            Object {
-              "height": 10,
-              "position": "absolute",
-              "top": 20,
-            }
-          }
-        >
-          4
-        </Item>
-      </div>
-    </div>
-  </div>,
-  "nodes": Array [
-    <div
-      onScroll={[Function]}
-      style={
-        Object {
-          "height": "100%",
-          "overflowY": "auto",
-          "position": "relative",
-        }
-      }
-    >
-      <div
+        0
+      </Item>
+      <Item
+        data-item-key="1"
+        key="1"
         style={
           Object {
-            "height": 1640,
-            "position": "relative",
+            "height": 4,
+            "position": "absolute",
+            "top": 2,
           }
         }
       >
-        <div
-          className="SomeClassName"
-          style={
-            Object {
-              "margin": 0,
-              "padding": 0,
-              "position": "absolute",
-              "top": 0,
-            }
+        1
+      </Item>
+      <Item
+        data-item-key="2"
+        key="2"
+        style={
+          Object {
+            "height": 6,
+            "position": "absolute",
+            "top": 6,
           }
-        >
-          <Item
-            data-item-key="0"
-            style={
-              Object {
-                "height": 2,
-                "position": "absolute",
-                "top": 0,
-              }
-            }
-          >
-            0
-          </Item>
-          <Item
-            data-item-key="1"
-            style={
-              Object {
-                "height": 4,
-                "position": "absolute",
-                "top": 2,
-              }
-            }
-          >
-            1
-          </Item>
-          <Item
-            data-item-key="2"
-            style={
-              Object {
-                "height": 6,
-                "position": "absolute",
-                "top": 6,
-              }
-            }
-          >
-            2
-          </Item>
-          <Item
-            data-item-key="3"
-            style={
-              Object {
-                "height": 8,
-                "position": "absolute",
-                "top": 12,
-              }
-            }
-          >
-            3
-          </Item>
-          <Item
-            data-item-key="4"
-            style={
-              Object {
-                "height": 10,
-                "position": "absolute",
-                "top": 20,
-              }
-            }
-          >
-            4
-          </Item>
-        </div>
-      </div>
-    </div>,
-  ],
-  "options": Object {},
-  "renderer": ReactShallowRenderer {
-    "_instance": ShallowComponentWrapper {
-      "_calledComponentWillUnmount": false,
-      "_compositeType": 0,
-      "_context": Object {},
-      "_currentElement": <ListView
-        dataLength={40}
-        getIndexFromKey={[Function]}
-        getKeyFromIndex={[Function]}
-        initialDraw={5}
-        itemHeightGetter={[Function]}
-        itemRenderer={[Function]}
-        itemsWrapperClassName="SomeClassName"
-        viewBuffer={10}
-        viewBufferMin={5}
-        windowScroller={false}
-      />,
-      "_debugID": 3,
-      "_hostContainerInfo": null,
-      "_hostParent": null,
-      "_instance": ListView {
-        "_endIndex": 0,
-        "_endIndexDrawn": 4,
-        "_getHeight": [Function],
-        "_htmlElm": <html>
-          <head />
-          <body />
-        </html>,
-        "_htmlTopOffset": -1,
-        "_initItemHolder": [Function],
-        "_initWrapper": [Function],
-        "_isScrolledOrResized": false,
-        "_itemHolderElm": undefined,
-        "_knownHeights": Map {},
-        "_onScroll": [Function],
-        "_positionList": [Function],
-        "_reactInternalInstance": [Circular],
-        "_scanItemHeights": [Function],
-        "_scrollTop": -1,
-        "_startIndex": 0,
-        "_startIndexDrawn": 0,
-        "_viewHeight": -1,
-        "_windowScrollListenerAdded": false,
-        "_wrapperElm": undefined,
-        "_yPositions": Positions {
-          "bufferLen": 200,
-          "dataLen": 40,
-          "heights": Array [
-            2,
-            4,
-            6,
-            8,
-            10,
-            12,
-            14,
-            16,
-            18,
-            20,
-            22,
-            24,
-            26,
-            28,
-            30,
-            32,
-            34,
-            36,
-            38,
-            40,
-            42,
-            44,
-            46,
-            48,
-            50,
-            52,
-            54,
-            56,
-            58,
-            60,
-            62,
-            64,
-            66,
-            68,
-            70,
-            72,
-            74,
-            76,
-            78,
-            80,
-          ],
-          "lastI": 39,
-          "ys": Array [
-            0,
-            2,
-            6,
-            12,
-            20,
-            30,
-            42,
-            56,
-            72,
-            90,
-            110,
-            132,
-            156,
-            182,
-            210,
-            240,
-            272,
-            306,
-            342,
-            380,
-            420,
-            462,
-            506,
-            552,
-            600,
-            650,
-            702,
-            756,
-            812,
-            870,
-            930,
-            992,
-            1056,
-            1122,
-            1190,
-            1260,
-            1332,
-            1406,
-            1482,
-            1560,
-            1640,
-          ],
-        },
-        "context": Object {},
-        "getBottomVisibleIndex": [Function],
-        "getRowPosition": [Function],
-        "getTopVisibleIndex": [Function],
-        "getViewHeight": [Function],
-        "props": Object {
-          "dataLength": 40,
-          "getIndexFromKey": [Function],
-          "getKeyFromIndex": [Function],
-          "initialDraw": 5,
-          "itemHeightGetter": [Function],
-          "itemRenderer": [Function],
-          "itemsWrapperClassName": "SomeClassName",
-          "viewBuffer": 10,
-          "viewBufferMin": 5,
-          "windowScroller": false,
-        },
-        "refs": Object {},
-        "state": null,
-        "updater": Object {
-          "enqueueCallback": [Function],
-          "enqueueCallbackInternal": [Function],
-          "enqueueElementInternal": [Function],
-          "enqueueForceUpdate": [Function],
-          "enqueueReplaceState": [Function],
-          "enqueueSetState": [Function],
-          "isMounted": [Function],
-          "validateCallback": [Function],
-        },
-      },
-      "_mountOrder": 2,
-      "_pendingCallbacks": null,
-      "_pendingElement": null,
-      "_pendingForceUpdate": false,
-      "_pendingReplaceState": false,
-      "_pendingStateQueue": null,
-      "_renderedComponent": NoopInternalComponent {
-        "_currentElement": <div
-          onScroll={[Function]}
-          style={
-            Object {
-              "height": "100%",
-              "overflowY": "auto",
-              "position": "relative",
-            }
+        }
+      >
+        2
+      </Item>
+      <Item
+        data-item-key="3"
+        key="3"
+        style={
+          Object {
+            "height": 8,
+            "position": "absolute",
+            "top": 12,
           }
-        >
-          <div
-            style={
-              Object {
-                "height": 1640,
-                "position": "relative",
-              }
-            }
-          >
-            <div
-              className="SomeClassName"
-              style={
-                Object {
-                  "margin": 0,
-                  "padding": 0,
-                  "position": "absolute",
-                  "top": 0,
-                }
-              }
-            >
-              <Item
-                data-item-key="0"
-                style={
-                  Object {
-                    "height": 2,
-                    "position": "absolute",
-                    "top": 0,
-                  }
-                }
-              >
-                0
-              </Item>
-              <Item
-                data-item-key="1"
-                style={
-                  Object {
-                    "height": 4,
-                    "position": "absolute",
-                    "top": 2,
-                  }
-                }
-              >
-                1
-              </Item>
-              <Item
-                data-item-key="2"
-                style={
-                  Object {
-                    "height": 6,
-                    "position": "absolute",
-                    "top": 6,
-                  }
-                }
-              >
-                2
-              </Item>
-              <Item
-                data-item-key="3"
-                style={
-                  Object {
-                    "height": 8,
-                    "position": "absolute",
-                    "top": 12,
-                  }
-                }
-              >
-                3
-              </Item>
-              <Item
-                data-item-key="4"
-                style={
-                  Object {
-                    "height": 10,
-                    "position": "absolute",
-                    "top": 20,
-                  }
-                }
-              >
-                4
-              </Item>
-            </div>
-          </div>
-        </div>,
-        "_debugID": 4,
-        "_renderedOutput": <div
-          onScroll={[Function]}
-          style={
-            Object {
-              "height": "100%",
-              "overflowY": "auto",
-              "position": "relative",
-            }
+        }
+      >
+        3
+      </Item>
+      <Item
+        data-item-key="4"
+        key="4"
+        style={
+          Object {
+            "height": 10,
+            "position": "absolute",
+            "top": 20,
           }
-        >
-          <div
-            style={
-              Object {
-                "height": 1640,
-                "position": "relative",
-              }
-            }
-          >
-            <div
-              className="SomeClassName"
-              style={
-                Object {
-                  "margin": 0,
-                  "padding": 0,
-                  "position": "absolute",
-                  "top": 0,
-                }
-              }
-            >
-              <Item
-                data-item-key="0"
-                style={
-                  Object {
-                    "height": 2,
-                    "position": "absolute",
-                    "top": 0,
-                  }
-                }
-              >
-                0
-              </Item>
-              <Item
-                data-item-key="1"
-                style={
-                  Object {
-                    "height": 4,
-                    "position": "absolute",
-                    "top": 2,
-                  }
-                }
-              >
-                1
-              </Item>
-              <Item
-                data-item-key="2"
-                style={
-                  Object {
-                    "height": 6,
-                    "position": "absolute",
-                    "top": 6,
-                  }
-                }
-              >
-                2
-              </Item>
-              <Item
-                data-item-key="3"
-                style={
-                  Object {
-                    "height": 8,
-                    "position": "absolute",
-                    "top": 12,
-                  }
-                }
-              >
-                3
-              </Item>
-              <Item
-                data-item-key="4"
-                style={
-                  Object {
-                    "height": 10,
-                    "position": "absolute",
-                    "top": 20,
-                  }
-                }
-              >
-                4
-              </Item>
-            </div>
-          </div>
-        </div>,
-      },
-      "_renderedNodeType": 0,
-      "_rootNodeID": 0,
-      "_topLevelWrapper": null,
-      "_updateBatchNumber": null,
-      "_warnedAboutRefsInRender": false,
-    },
-    "getRenderOutput": [Function],
-    "render": [Function],
-  },
-  "root": [Circular],
-  "unrendered": <ListView
-    dataLength={40}
-    getIndexFromKey={[Function]}
-    getKeyFromIndex={[Function]}
-    initialDraw={5}
-    itemHeightGetter={[Function]}
-    itemRenderer={[Function]}
-    itemsWrapperClassName="SomeClassName"
-    viewBuffer={10}
-    viewBufferMin={5}
-    windowScroller={false}
-  />,
-}
+        }
+      >
+        4
+      </Item>
+    </div>
+  </div>
+</div>
 `;
