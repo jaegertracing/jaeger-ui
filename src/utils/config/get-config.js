@@ -14,11 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import _get from 'lodash/get';
-import _has from 'lodash/has';
-import _set from 'lodash/set';
-import _unset from 'lodash/unset';
-
+import processDeprecation from './process-deprecation';
 import defaultConfig, { deprecations } from '../../constants/default-config';
 
 let haveWarnedFactoryFn = false;
@@ -41,36 +37,7 @@ export default function getConfig() {
   const embedded = getJaegerUiConfig();
   // check for deprecated config values
   if (embedded && Array.isArray(deprecations)) {
-    deprecations.forEach(deprecation => {
-      const { formerKey, currentKey } = deprecation;
-      if (_has(embedded, formerKey)) {
-        let isTransfered = false;
-        let isIgnored = false;
-        if (!_has(embedded, currentKey)) {
-          // the new key is not set so transfer the value at the old key
-          const value = _get(embedded, formerKey);
-          _set(embedded, currentKey, value);
-          isTransfered = true;
-        } else {
-          isIgnored = true;
-        }
-        _unset(embedded, formerKey);
-        if (!haveWarnedDeprecations) {
-          // eslint-disable-next-line no-console
-          console.warn(`"${formerKey}" is deprecated, instead use "${currentKey}"`);
-          if (isTransfered) {
-            // eslint-disable-next-line no-console
-            console.warn(`The value at "${formerKey}" has been moved to "${currentKey}"`);
-          }
-          if (isIgnored) {
-            // eslint-disable-next-line no-console
-            console.warn(
-              `The value at "${formerKey}" is being ignored in favor of the value at "${currentKey}"`
-            );
-          }
-        }
-      }
-    });
+    deprecations.forEach(deprecation => processDeprecation(embedded, deprecation, !haveWarnedDeprecations));
     haveWarnedDeprecations = true;
   }
   return { ...defaultConfig, ...embedded };
