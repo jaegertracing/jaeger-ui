@@ -17,9 +17,9 @@ import React from 'react';
 import { sortBy } from 'lodash';
 import moment from 'moment';
 
-import { formatDuration } from '../../utils/date';
 import TraceServiceTag from './TraceServiceTag';
-import FALLBACK_TRACE_NAME from '../../constants/fallback-trace-name';
+import { FALLBACK_TRACE_NAME } from '../../constants';
+import { formatDuration } from '../../utils/date';
 
 import './TraceSearchResult.css';
 

@@ -14,11 +14,11 @@
 
 import deepFreeze from 'deep-freeze';
 
-import fallbackDagMaxNumServices from './fallback-dag-max-num-services';
+import { FALLBACK_DAG_MAX_NUM_SERVICES } from './index';
 
 export default deepFreeze({
   dependencies: {
-    dagMaxNumServices: fallbackDagMaxNumServices,
+    dagMaxNumServices: FALLBACK_DAG_MAX_NUM_SERVICES,
     menuEnabled: true,
   },
   menu: [

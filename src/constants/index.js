@@ -12,4 +12,5 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export default 100;
+export const FALLBACK_DAG_MAX_NUM_SERVICES = 100;
+export const FALLBACK_TRACE_NAME = '<cannot-find-trace-name>';
