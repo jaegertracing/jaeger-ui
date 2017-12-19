@@ -97,7 +97,7 @@ describe('<SearchTracePage>', () => {
   });
 
   it('shows an error message if there is an error message', () => {
-    wrapper.setProps({ errorMessage: 'big-error' });
+    wrapper.setProps({ errors: [{ message: 'big-error' }] });
     expect(wrapper.find('.js-test-error-message').length).toBe(1);
   });
 
@@ -160,7 +160,7 @@ describe('mapStateToProps()', () => {
       ],
       loadingTraces: false,
       loadingServices: false,
-      errorMessage: '',
+      errors: null,
     });
   });
 });
