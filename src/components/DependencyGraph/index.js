@@ -13,25 +13,30 @@
 // limitations under the License.
 
 import PropTypes from 'prop-types';
+import _get from 'lodash/get';
 import React, { Component } from 'react';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 import { Menu } from 'semantic-ui-react';
 
-import './DependencyGraph.css';
-import * as jaegerApiActions from '../../actions/jaeger-api';
-import { formatDependenciesAsNodesAndLinks } from '../../selectors/dependencies';
-import NotFound from '../App/NotFound';
-import { nodesPropTypes, linksPropTypes } from '../../propTypes/dependencies';
-
-import DependencyForceGraph from './DependencyForceGraph';
 import DAG from './DAG';
+import DependencyForceGraph from './DependencyForceGraph';
+import NotFound from '../App/NotFound';
+import * as jaegerApiActions from '../../actions/jaeger-api';
+import { nodesPropTypes, linksPropTypes } from '../../propTypes/dependencies';
+import { formatDependenciesAsNodesAndLinks } from '../../selectors/dependencies';
+import getConfig from '../../utils/config/get-config';
+import fallbackDagMaxNumServices from '../../constants/fallback-dag-max-num-services';
+
+import './DependencyGraph.css';
 
 // export for tests
 export const GRAPH_TYPES = {
   FORCE_DIRECTED: { type: 'FORCE_DIRECTED', name: 'Force Directed Graph' },
   DAG: { type: 'DAG', name: 'DAG' },
 };
+
+const dagMaxNumServices = _get(getConfig(), 'dependencies.dagMaxNumServices') || fallbackDagMaxNumServices;
 
 export default class DependencyGraphPage extends Component {
   static propTypes = {
@@ -91,7 +96,7 @@ export default class DependencyGraphPage extends Component {
 
     const GRAPH_TYPE_OPTIONS = [GRAPH_TYPES.FORCE_DIRECTED];
 
-    if (dependencies.length <= 100) {
+    if (dependencies.length <= dagMaxNumServices) {
       GRAPH_TYPE_OPTIONS.push(GRAPH_TYPES.DAG);
     }
     return (

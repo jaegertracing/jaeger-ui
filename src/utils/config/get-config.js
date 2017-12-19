@@ -14,9 +14,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import defaultConfig from '../../constants/default-config';
+import _get from 'lodash/get';
+import _has from 'lodash/has';
+import _set from 'lodash/set';
+import _unset from 'lodash/unset';
 
-let haveWarned = false;
+import defaultConfig, { deprecations } from '../../constants/default-config';
+
+let haveWarnedFactoryFn = false;
+let haveWarnedDeprecations = false;
 
 /**
  * Merge the embedded config from the query service (if present) with the
@@ -25,13 +31,47 @@ let haveWarned = false;
 export default function getConfig() {
   const getJaegerUiConfig = window.getJaegerUiConfig;
   if (typeof getJaegerUiConfig !== 'function') {
-    if (!haveWarned) {
+    if (!haveWarnedFactoryFn) {
       // eslint-disable-next-line no-console
       console.warn('Embedded config not available');
-      haveWarned = true;
+      haveWarnedFactoryFn = true;
     }
     return { ...defaultConfig };
   }
-  const embedded = getJaegerUiConfig() || {};
+  const embedded = getJaegerUiConfig();
+  // check for deprecated config values
+  if (embedded && Array.isArray(deprecations)) {
+    deprecations.forEach(deprecation => {
+      const { formerKey, currentKey } = deprecation;
+      if (_has(embedded, formerKey)) {
+        let isTransfered = false;
+        let isIgnored = false;
+        if (!_has(embedded, currentKey)) {
+          // the new key is not set so transfer the value at the old key
+          const value = _get(embedded, formerKey);
+          _set(embedded, currentKey, value);
+          isTransfered = true;
+        } else {
+          isIgnored = true;
+        }
+        _unset(embedded, formerKey);
+        if (!haveWarnedDeprecations) {
+          // eslint-disable-next-line no-console
+          console.warn(`"${formerKey}" is deprecated, instead use "${currentKey}"`);
+          if (isTransfered) {
+            // eslint-disable-next-line no-console
+            console.warn(`The value at "${formerKey}" has been moved to "${currentKey}"`);
+          }
+          if (isIgnored) {
+            // eslint-disable-next-line no-console
+            console.warn(
+              `The value at "${formerKey}" is being ignored in favor of the value at "${currentKey}"`
+            );
+          }
+        }
+      }
+    });
+    haveWarnedDeprecations = true;
+  }
   return { ...defaultConfig, ...embedded };
 }

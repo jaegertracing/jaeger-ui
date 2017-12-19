@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,18 +12,4 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export type ConfigMenuItem = {
-  label: string,
-  url: string,
-};
-
-export type ConfigMenuGroup = {
-  label: string,
-  items: ConfigMenuItem[],
-};
-
-export type Config = {
-  dependencies?: { dagMaxServicesLen?: number, menuEnabled?: boolean },
-  gaTrackingID?: ?string,
-  menu: (ConfigMenuGroup | ConfigMenuItem)[],
-};
+export default 100;
