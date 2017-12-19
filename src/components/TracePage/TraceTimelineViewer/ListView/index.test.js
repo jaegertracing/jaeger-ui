@@ -19,6 +19,21 @@ import { mount, shallow } from 'enzyme';
 import ListView from './index';
 import { polyfill as polyfillAnimationFrame } from '../../../../utils/test/requestAnimationFrame';
 
+// Util to get list of all callbacks added to an event emitter by event type.
+// jest adds "error" event listeners to window, this util makes it easier to
+// ignore those calls.
+function getListenersByType(mockFn) {
+  const rv = {};
+  mockFn.calls.forEach(([eventType, callback]) => {
+    if (!rv[eventType]) {
+      rv[eventType] = [callback];
+    } else {
+      rv[eventType].push(callback);
+    }
+  });
+  return rv;
+}
+
 describe('<ListView>', () => {
   // polyfill window.requestAnimationFrame (and cancel) into jsDom's window
   polyfillAnimationFrame(window);
@@ -177,14 +192,17 @@ describe('<ListView>', () => {
       });
 
       it('adds the onScroll listener to the window element after the component mounts', () => {
-        expect(windowAddListenerSpy).toHaveBeenCalled();
-        expect(windowAddListenerSpy).toHaveBeenLastCalledWith('scroll', instance._onScroll);
+        const eventListeners = getListenersByType(windowAddListenerSpy.mock);
+        expect(eventListeners.scroll).toEqual([instance._onScroll]);
       });
 
       it('removes the onScroll listener from window when unmounting', () => {
-        expect(windowRmListenerSpy.mock.calls).toEqual([]);
+        // jest adds "error" event listeners to window, ignore those calls
+        let eventListeners = getListenersByType(windowRmListenerSpy.mock);
+        expect(eventListeners.scroll).not.toBeDefined();
         wrapper.unmount();
-        expect(windowRmListenerSpy.mock.calls).toEqual([['scroll', instance._onScroll]]);
+        eventListeners = getListenersByType(windowRmListenerSpy.mock);
+        expect(eventListeners.scroll).toEqual([instance._onScroll]);
       });
 
       it('calls _positionList when the document is scrolled', async () => {

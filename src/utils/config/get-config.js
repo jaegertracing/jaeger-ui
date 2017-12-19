@@ -14,9 +14,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import defaultConfig from '../../constants/default-config';
+import processDeprecation from './process-deprecation';
+import defaultConfig, { deprecations } from '../../constants/default-config';
 
-let haveWarned = false;
+let haveWarnedFactoryFn = false;
+let haveWarnedDeprecations = false;
 
 /**
  * Merge the embedded config from the query service (if present) with the
@@ -25,13 +27,18 @@ let haveWarned = false;
 export default function getConfig() {
   const getJaegerUiConfig = window.getJaegerUiConfig;
   if (typeof getJaegerUiConfig !== 'function') {
-    if (!haveWarned) {
+    if (!haveWarnedFactoryFn) {
       // eslint-disable-next-line no-console
       console.warn('Embedded config not available');
-      haveWarned = true;
+      haveWarnedFactoryFn = true;
     }
     return { ...defaultConfig };
   }
-  const embedded = getJaegerUiConfig() || {};
+  const embedded = getJaegerUiConfig();
+  // check for deprecated config values
+  if (embedded && Array.isArray(deprecations)) {
+    deprecations.forEach(deprecation => processDeprecation(embedded, deprecation, !haveWarnedDeprecations));
+    haveWarnedDeprecations = true;
+  }
   return { ...defaultConfig, ...embedded };
 }

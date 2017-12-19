@@ -19,7 +19,7 @@ import dimensions from 'react-dimensions';
 import { XYPlot, XAxis, YAxis, MarkSeries, Hint } from 'react-vis';
 import { compose, withState, withProps } from 'recompose';
 
-import FALLBACK_TRACE_NAME from '../../constants/fallback-trace-name';
+import { FALLBACK_TRACE_NAME } from '../../constants';
 import { formatDuration } from '../../utils/date';
 
 import './react-vis.css';
