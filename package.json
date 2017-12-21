@@ -5,12 +5,12 @@
   "license": "MIT",
   "proxy": {
     "/api": {
-        "target": "http://localhost:16686",
-        "logLevel": "silent",
-        "secure": false,
-        "changeOrigin": true,
-        "ws": true,
-        "xfwd": true
+      "target": "http://localhost:16686",
+      "logLevel": "silent",
+      "secure": false,
+      "changeOrigin": true,
+      "ws": true,
+      "xfwd": true
     }
   },
   "homepage": null,
@@ -54,6 +54,7 @@
     "jest": "^21.2.1",
     "json-markup": "^1.1.0",
     "lodash": "^4.17.4",
+    "logfmt": "^1.2.0",
     "moment": "^2.18.1",
     "prop-types": "^15.5.10",
     "query-string": "^5.0.0",
