@@ -43,7 +43,7 @@ export default function AccordianLogs(props: AccordianLogsProps) {
         onClick={onToggle}
         role="switch"
       >
-        <i className={`u-no-float ${isOpen ? 'down' : 'right'} angle double icon`} />
+        <i className={`u-no-float ${isOpen ? 'minus' : 'plus'} square outline icon`} />
         <span className="AccordianLogs--header">Logs ({logs.length})</span>
       </a>
       {isOpen && (
