@@ -13,12 +13,15 @@
 // limitations under the License.
 
 import React from 'react';
+import logfmtParser from 'logfmt/lib/logfmt_parser';
+import { stringify as logfmtStringify } from 'logfmt/lib/stringify';
 import moment from 'moment';
 import PropTypes from 'prop-types';
 import queryString from 'query-string';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import { Field, reduxForm, formValueSelector } from 'redux-form';
+import { Popup } from 'semantic-ui-react';
 import store from 'store';
 
 import SearchDropdownInput from './SearchDropdownInput';
@@ -34,11 +37,20 @@ export function getUnixTimeStampInMSFromForm({ startDate, startDateTime, endDate
   };
 }
 
-export function tagsToQuery(tags) {
+export function convTagsLogfmt(tags) {
   if (!tags) {
     return null;
   }
-  return tags.split('|');
+  const data = logfmtParser.parse(tags);
+  Object.keys(data).forEach(key => {
+    const value = data[key];
+    // make sure all values are strings
+    // https://github.com/jaegertracing/jaeger/issues/550#issuecomment-352850811
+    if (typeof value !== 'string') {
+      data[key] = String(value);
+    }
+  });
+  return JSON.stringify(data);
 }
 
 export function traceIDsToQuery(traceIDs) {
@@ -117,7 +129,7 @@ export function submitForm(fields, searchTraces) {
     lookback,
     start,
     end,
-    tag: tagsToQuery(tags) || undefined,
+    tags: convTagsLogfmt(tags) || undefined,
     minDuration: minDuration || null,
     maxDuration: maxDuration || null,
   });
@@ -128,6 +140,7 @@ export function TraceSearchFormImpl(props) {
   const selectedServicePayload = services.find(s => s.name === selectedService);
   const operationsForService = (selectedServicePayload && selectedServicePayload.operations) || [];
   const noSelectedService = selectedService === '-' || !selectedService;
+  // const tagInfoIcon = <i className="info circle icon" />;
   return (
     <div className="search-form">
       <form className="ui form" onSubmit={handleSubmit}>
@@ -154,14 +167,24 @@ export function TraceSearchFormImpl(props) {
         )}
 
         <div className="search-form--tags field">
-          <label htmlFor="tags">Tags</label>
-          <div className="ui input">
-            <Field
-              name="tags"
-              type="text"
-              component="input"
-              placeholder="http.status_code:400|http.status_code:200"
+          <label htmlFor="tags">
+            Tags{' '}
+            <Popup
+              on="click"
+              trigger={<i className="info circle icon grey" />}
+              content={
+                <span>
+                  Values should be in the{' '}
+                  <a href="https://brandur.org/logfmt" rel="noopener noreferrer" target="_blank">
+                    logfmt
+                  </a>{' '}
+                  format
+                </span>
+              }
             />
+          </label>
+          <div className="ui input">
+            <Field name="tags" type="text" component="input" placeholder="http.status_code=200 error=true" />
           </div>
         </div>
 
@@ -270,6 +293,7 @@ export function mapStateToProps(state) {
     end,
     operation,
     tag: tagParams,
+    tags: logfmtTags,
     maxDuration,
     minDuration,
     lookback,
@@ -307,8 +331,49 @@ export function mapStateToProps(state) {
   } = convertQueryParamsToFormDates({ start, end });
 
   let tags;
+  // continue to parse tagParams to remain backward compatible with older URLs
+  // but, parse to logfmt format instead of the former "key:value|k2:v2"
   if (tagParams) {
-    tags = tagParams instanceof Array ? tagParams.join('|') : tagParams;
+    // eslint-disable-next-line no-inner-declarations
+    function convFormerTag(accum, value) {
+      const parts = value.split(':', 2);
+      const key = parts[0];
+      if (key) {
+        // eslint-disable-next-line no-param-reassign
+        accum[key] = parts[1] == null ? 'null' : parts[1];
+        return true;
+      }
+      return false;
+    }
+
+    let data;
+    if (Array.isArray(tagParams)) {
+      data = tagParams.reduce((accum, str) => {
+        convFormerTag(accum, str);
+        return accum;
+      }, {});
+    } else if (typeof tagParams === 'string') {
+      const target = {};
+      data = convFormerTag(target, tagParams) ? target : null;
+    }
+    if (data) {
+      try {
+        tags = logfmtStringify(data);
+      } catch (_) {
+        tags = 'Parse Error';
+      }
+    } else {
+      tags = 'Parse Error';
+    }
+  }
+  if (logfmtTags) {
+    let data;
+    try {
+      data = JSON.parse(logfmtTags);
+      tags = logfmtStringify(data);
+    } catch (_) {
+      tags = 'Parse Error';
+    }
   }
   let traceIDs;
   if (traceIDParams) {
