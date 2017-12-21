@@ -12,11 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import getConfig from '../utils/config/get-config';
+import { getQuerySvcConfig, getUiConfig } from '../utils/config';
 
 export default function reduceConfig(state) {
   if (state === undefined) {
-    return getConfig();
+    return {
+      queryService: getQuerySvcConfig(),
+      ui: getUiConfig(),
+    };
   }
   return state;
 }

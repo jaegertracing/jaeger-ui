@@ -15,6 +15,7 @@
 // limitations under the License.
 
 import * as React from 'react';
+import _get from 'lodash/get';
 import Helmet from 'react-helmet';
 import { connect } from 'react-redux';
 import type { Location } from 'react-router-dom';
@@ -51,7 +52,7 @@ export class PageImpl extends React.Component<PageProps> {
 
   render() {
     const { children, config } = this.props;
-    const menu = config && config.menu;
+    const menu = _get(config, 'ui.menu');
     return (
       <section className="jaeger-ui-page" id="jaeger-ui">
         <Helmet title="Jaeger UI" />

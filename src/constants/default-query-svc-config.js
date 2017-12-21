@@ -12,18 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import ReactGA from 'react-ga';
+import deepFreeze from 'deep-freeze';
 
-import { getUiConfig } from './config';
+export default deepFreeze({
+  pathPrefix: null,
+});
 
-export function init() {
-  const config = getUiConfig();
-  if (process.env.NODE_ENV === 'production' && config.gaTrackingID) {
-    ReactGA.initialize(config.gaTrackingID);
-  }
-}
-
-export function trackPageView(pathname, search) {
-  const pagePath = search ? `${pathname}?${search}` : pathname;
-  ReactGA.pageview(pagePath);
-}
+export const deprecations = [];

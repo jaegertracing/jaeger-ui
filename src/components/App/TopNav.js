@@ -21,7 +21,7 @@ import { Dropdown, Menu } from 'semantic-ui-react';
 
 import TraceIDSearchInput from './TraceIDSearchInput';
 import type { ConfigMenuItem, ConfigMenuGroup } from '../../types/config';
-import getConfig from '../../utils/config/get-config';
+import { getUiConfig } from '../../utils/config';
 import prefixUrl from '../../utils/prefix-url';
 
 import './TopNav.css';
@@ -65,7 +65,7 @@ const NAV_LINKS = [
   },
 ];
 
-if (_get(getConfig(), 'dependencies.menuEnabled')) {
+if (_get(getUiConfig(), 'dependencies.menuEnabled')) {
   NAV_LINKS.push({
     key: 'dependencies',
     to: prefixUrl('/dependencies'),

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { homepage } from '../../package.json';
+import { getQuerySvcConfig } from './config';
 
 // strip the domain, first slash and trailing slash (if present)
 const rx = new RegExp('^(?:https?://[^/]+)?/?(.*?)/?$', 'i');
@@ -40,7 +40,7 @@ export function deriveAndSetPrefix(value) {
   return prefix;
 }
 
-deriveAndSetPrefix(homepage);
+deriveAndSetPrefix(getQuerySvcConfig().pathPrefix);
 
 /**
  * Add the URL prefix, derived from `homepage` in `package.json`, to the URL
