@@ -28,6 +28,8 @@ import SearchDropdownInput from './SearchDropdownInput';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import { formatDate, formatTime } from '../../utils/date';
 
+import './TraceSearchForm.css';
+
 export function getUnixTimeStampInMSFromForm({ startDate, startDateTime, endDate, endDateTime }) {
   const start = `${startDate} ${startDateTime}`;
   const end = `${endDate} ${endDateTime}`;
@@ -140,7 +142,6 @@ export function TraceSearchFormImpl(props) {
   const selectedServicePayload = services.find(s => s.name === selectedService);
   const operationsForService = (selectedServicePayload && selectedServicePayload.operations) || [];
   const noSelectedService = selectedService === '-' || !selectedService;
-  // const tagInfoIcon = <i className="info circle icon" />;
   return (
     <div className="search-form">
       <form className="ui form" onSubmit={handleSubmit}>
@@ -171,15 +172,25 @@ export function TraceSearchFormImpl(props) {
             Tags{' '}
             <Popup
               on="click"
+              wide="very"
               trigger={<i className="info circle icon grey" />}
               content={
-                <span>
-                  Values should be in the{' '}
-                  <a href="https://brandur.org/logfmt" rel="noopener noreferrer" target="_blank">
-                    logfmt
-                  </a>{' '}
-                  format
-                </span>
+                <div>
+                  <h5>
+                    Values should be in the{' '}
+                    <a href="https://brandur.org/logfmt" rel="noopener noreferrer" target="_blank">
+                      logfmt
+                    </a>{' '}
+                    format.
+                  </h5>
+                  <ul className="SearchForm--tagsHintInfo">
+                    <li>Use space for conjunctions</li>
+                    <li>Values containing whitespace should be enclosed in quotes</li>
+                  </ul>
+                  <code className="SearchForm--tagsHintEg">
+                    error=true db.statement=&quot;select * from User&quot;
+                  </code>
+                </div>
               }
             />
           </label>
@@ -340,7 +351,7 @@ export function mapStateToProps(state) {
       const key = parts[0];
       if (key) {
         // eslint-disable-next-line no-param-reassign
-        accum[key] = parts[1] == null ? 'null' : parts[1];
+        accum[key] = parts[1] == null ? '' : parts[1];
         return true;
       }
       return false;
