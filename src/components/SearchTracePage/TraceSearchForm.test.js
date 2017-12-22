@@ -23,10 +23,10 @@ import store from 'store';
 
 import {
   convertQueryParamsToFormDates,
+  convTagsLogfmt,
   getUnixTimeStampInMSFromForm,
   mapStateToProps,
   submitForm,
-  tagsToQuery,
   traceIDsToQuery,
   TraceSearchFormImpl as TraceSearchForm,
 } from './TraceSearchForm';
@@ -93,10 +93,26 @@ describe('conversion utils', () => {
     });
   });
 
-  describe('tagsToQuery()', () => {
-    it('splits on "|"', () => {
-      const strs = ['a', 'b', 'c'];
-      expect(tagsToQuery(strs.join('|'))).toEqual(strs);
+  describe('convTagsLogfmt()', () => {
+    it('converts logfmt formatted string to JSON', () => {
+      const input = 'http.status_code=404 span.kind=client key="with a long value"';
+      const target = JSON.stringify({
+        'http.status_code': '404',
+        'span.kind': 'client',
+        key: 'with a long value',
+      });
+      expect(convTagsLogfmt(input)).toBe(target);
+    });
+
+    // https://github.com/jaegertracing/jaeger/issues/550#issuecomment-352850811
+    it('converts all values to strings', () => {
+      const input = 'aBoolKey error=true num=9';
+      const target = JSON.stringify({
+        aBoolKey: 'true',
+        error: 'true',
+        num: '9',
+      });
+      expect(convTagsLogfmt(input)).toBe(target);
     });
   });
 
@@ -110,7 +126,7 @@ describe('conversion utils', () => {
 
 describe('submitForm()', () => {
   const LOOKBACK_VALUE = 2;
-  const LOOKBACK_UNIT = 'd';
+  const LOOKBACK_UNIT = 's';
   let searchTraces;
   let fields;
 
@@ -121,7 +137,6 @@ describe('submitForm()', () => {
       operation: 'op-a',
       resultsLimit: 20,
       service: 'svc-a',
-      tags: 'a|b',
     };
   });
 
@@ -142,7 +157,7 @@ describe('submitForm()', () => {
       const { start, end } = calls[0][0];
       const diffMs = (Number(end) - Number(start)) / 1000;
       const duration = moment.duration(diffMs);
-      expect(duration.asDays()).toBe(LOOKBACK_VALUE);
+      expect(duration.asSeconds()).toBe(LOOKBACK_VALUE);
     });
 
     it('processes form dates when `lookback` is "custom"', () => {
@@ -165,7 +180,7 @@ describe('submitForm()', () => {
     });
   });
 
-  describe('`fields.tag`', () => {
+  describe('`fields.tags`', () => {
     it('is ignored when `fields.tags` is falsy', () => {
       fields.tags = undefined;
       submitForm(fields, searchTraces);
@@ -175,14 +190,19 @@ describe('submitForm()', () => {
       expect(tag).toBe(undefined);
     });
 
-    it('is parsed `fields.tags` is truthy', () => {
-      const tagStrs = ['a', 'b'];
-      fields.tags = tagStrs.join('|');
+    it('is parsed when `fields.tags` is truthy', () => {
+      const input = 'http.status_code=404 span.kind=client key="with a long value"';
+      const target = JSON.stringify({
+        'http.status_code': '404',
+        'span.kind': 'client',
+        key: 'with a long value',
+      });
+      fields.tags = input;
       submitForm(fields, searchTraces);
       const { calls } = searchTraces.mock;
       expect(calls.length).toBe(1);
-      const { tag } = calls[0][0];
-      expect(tag).toEqual(tagStrs);
+      const { tags } = calls[0][0];
+      expect(tags).toEqual(target);
     });
   });
 
@@ -271,36 +291,52 @@ describe('mapStateToProps()', () => {
     store.get = oldStoreGet;
   });
 
-  it('derives values from `state.router.location.search` when available', () => {
-    const { date: startSrc, dateStr: startDate, dateTimeStr: startDateTime } = makeDateParams(-1);
-    const { date: endSrc, dateStr: endDate, dateTimeStr: endDateTime } = makeDateParams(0);
-    const common = {
-      lookback: '2h',
-      maxDuration: null,
-      minDuration: null,
-      operation: 'Driver::findNearest',
-      service: 'driver',
-    };
-    const params = {
-      ...common,
-      end: `${endSrc.valueOf()}000`,
-      limit: '999',
-      start: `${startSrc.valueOf()}000`,
-      tag: ['error:true', 'span.kind:client'],
-    };
-    const expected = {
-      ...common,
-      endDate,
-      endDateTime,
-      startDate,
-      startDateTime,
-      resultsLimit: params.limit,
-      tags: params.tag.join('|'),
-      traceIDs: null,
-    };
+  describe('deriving values from `state.router.location.search`', () => {
+    let params;
+    let expected;
 
-    state.router.location.search = queryString.stringify(params);
-    expect(mapStateToProps(state).initialValues).toEqual(expected);
+    beforeEach(() => {
+      const { date: startSrc, dateStr: startDate, dateTimeStr: startDateTime } = makeDateParams(-1);
+      const { date: endSrc, dateStr: endDate, dateTimeStr: endDateTime } = makeDateParams(0);
+      const tagsJSON = '{"error":"true","span.kind":"client"}';
+      const tagsLogfmt = 'error=true span.kind=client';
+      const common = {
+        lookback: '2h',
+        maxDuration: null,
+        minDuration: null,
+        operation: 'Driver::findNearest',
+        service: 'driver',
+      };
+      params = {
+        ...common,
+        end: `${endSrc.valueOf()}000`,
+        limit: '999',
+        start: `${startSrc.valueOf()}000`,
+        tags: tagsJSON,
+      };
+      expected = {
+        ...common,
+        endDate,
+        endDateTime,
+        startDate,
+        startDateTime,
+        resultsLimit: params.limit,
+        tags: tagsLogfmt,
+        traceIDs: null,
+      };
+    });
+
+    it('derives values when available', () => {
+      state.router.location.search = queryString.stringify(params);
+      expect(mapStateToProps(state).initialValues).toEqual(expected);
+    });
+
+    it('parses `tag` values in the former format to logfmt', () => {
+      delete params.tags;
+      params.tag = ['error:true', 'span.kind:client'];
+      state.router.location.search = queryString.stringify(params);
+      expect(mapStateToProps(state).initialValues).toEqual(expected);
+    });
   });
 
   it('fallsback to default values', () => {
