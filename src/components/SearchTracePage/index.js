@@ -116,7 +116,7 @@ export default class SearchTracePage extends Component {
             !hasTraceResults && (
               <div className="ui middle aligned center aligned grid" style={{ marginTop: 100 }}>
                 <div className="column">
-                  <img className="js-test-logo" alt="presentation" src={JaegerLogo} width="400" />
+                  <img className="js-test-logo" alt="presentation" src={prefixUrl(JaegerLogo)} width="400" />
                 </div>
               </div>
             )}
