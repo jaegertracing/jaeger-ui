@@ -82,12 +82,12 @@
     "tween-functions": "^1.2.0"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "start": "react-app-rewired start",
     "start:docs": "REACT_APP_DEMO=true react-scripts start",
-    "build": "react-scripts build",
+    "build": "react-app-rewired build",
     "eject": "react-scripts eject",
-    "test": "CI=1 react-scripts test --env=jsdom --color",
-    "test-dev": "react-scripts test --env=jsdom",
+    "test": "CI=1 react-app-rewired test --env=jsdom --color",
+    "test-dev": "react-app-rewired test --env=jsdom",
     "coverage": "npm run test -- --coverage",
     "lint": "npm run eslint && npm run prettier && npm run flow && npm run check-license",
     "eslint": "eslint src",
