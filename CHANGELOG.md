@@ -1,14 +1,55 @@
 # Changes merged into master
 
 
+### [#147](https://github.com/jaegertracing/jaeger-ui/pull/147) Use logfmt for search tag input format
+
+- Fix [#145](https://github.com/jaegertracing/jaeger-ui/issues/145) - Support logfmt for tags text input in the search form
+- Fix [#11](https://github.com/jaegertracing/jaeger-ui/issues/11) - Document allowed operators on tag search
+
+
+### [#143](https://github.com/jaegertracing/jaeger-ui/pull/143) Add a config value for the DAG cutoff
+
+- Fix [#130](https://github.com/jaegertracing/jaeger-ui/issues/130) - Why maximum dependency length is set to 100 in DAG?
+
+
+### [#141](https://github.com/jaegertracing/jaeger-ui/pull/141) `package.json#proxy` should proxy all `/api` requests
+
+- Fix [#139](https://github.com/jaegertracing/jaeger-ui/issues/139) - Anyone konw how to open 16686 port?
+
+
+### [#140](https://github.com/jaegertracing/jaeger-ui/pull/140) Encode service names in API calls
+
+- Fix [#138](https://github.com/jaegertracing/jaeger-ui/issues/138) - Cannot find operations if there is '/' char in serviceName
+
+
+### [#136](https://github.com/jaegertracing/jaeger-ui/pull/136) Fix endless trace HTTP requests
+
+- Fix [#128](https://github.com/jaegertracing/jaeger-ui/issues/128) - When trace id is invalid, Jaeger UI send this request forever
+
+
+### [#134](https://github.com/jaegertracing/jaeger-ui/pull/134) Fix trace name resolution
+
+- Fix [#117](https://github.com/jaegertracing/jaeger-ui/issues/117) - traceName relies on traceID to equal spanID
+- Fix [#129](https://github.com/jaegertracing/jaeger-ui/issues/129) - ¯\_(ツ)_/¯ is not very clear
+
+
+### [#133](https://github.com/jaegertracing/jaeger-ui/pull/133) Better HTTP error messages
+
+
+### [#122](https://github.com/jaegertracing/jaeger-ui/pull/122) Make dependencies tab configurable
+
+
+### [#120](https://github.com/jaegertracing/jaeger-ui/pull/120) Add keyboard shortcut help modal
+
+
 ### [#118](https://github.com/jaegertracing/jaeger-ui/pull/118) Handle `FOLLOWS_FROM` reference type
 
-Fix issue processing `FOLLOWS_FROM` references to parent spans. Fixes [#115](https://github.com/jaegertracing/jaeger-ui/issues/115).
+- Fix [#115](https://github.com/jaegertracing/jaeger-ui/issues/115) - Rendering traces with spans containing a 'FOLLOWS_FROM' reference seems broken
 
 
 ### [#110](https://github.com/jaegertracing/jaeger-ui/pull/110) Fix browser back button not working correctly
 
-Fix bug causing browser back button to not work correctly. Fixes [#94](https://github.com/jaegertracing/jaeger-ui/issues/94).
+- Fix [#94](https://github.com/jaegertracing/jaeger-ui/issues/94) - Browser back button not working correctly
 
 
 ### [#107](https://github.com/jaegertracing/jaeger-ui/pull/107) Embed UI config
