@@ -104,7 +104,12 @@ export default function TracePageHeader(props: TracePageHeaderProps) {
               <Dropdown.Menu>
                 <Dropdown.Item>
                   <a rel="noopener noreferrer" target="_blank" href={`/api/traces/${traceID}`}>
-                    View Trace JSON
+                    Trace JSON
+                  </a>
+                </Dropdown.Item>
+                <Dropdown.Item>
+                  <a rel="noopener noreferrer" target="_blank" href={`/api/traces/${traceID}/?raw=true`}>
+                    Trace JSON (unadjusted)
                   </a>
                 </Dropdown.Item>
               </Dropdown.Menu>
