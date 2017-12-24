@@ -15,23 +15,21 @@
       // Jaeger UI config data is embedded by the query-service. This is
       // later merged with defaults into the redux `state.config` via
       // src/utils/config#getUiConfig. The default provided by the query
-      // service should be an empty object or it can leave `DEFAULT_UI_CONFIG`
-      // unchanged.
+      // service should be an empty object or it can leave
+      // `__INJECTED_UI_CONFIG__` unchanged.
       function getJaegerUiConfig() {
-        const DEFAULT_UI_CONFIG = null;
-        const JAEGER_UI_CONFIG = DEFAULT_UI_CONFIG;
-        return JAEGER_UI_CONFIG;
+        const __INJECTED_UI_CONFIG__ = null;
+        return __INJECTED_UI_CONFIG__;
       }
 
       // Query-service config data is embedded by the query-service. This is
       // later merged with defaults into the redux `state.config.queryService`
       // via src/utils/config#getQuerySvcConfig. The default provided by the
       // query service should be an empty object or it can leave
-      // `DEFAULT_QS_CONFIG` unchanged.
+      // `__INJECTED_QS_CONFIG__` unchanged.
       function getJaegerQuerySvcConfig() {
-        const DEFAULT_QS_CONFIG = null;
-        const JAEGER_QS_CONFIG = DEFAULT_QS_CONFIG;
-        return JAEGER_QS_CONFIG;
+        const __INJECTED_QS_CONFIG__ = null;
+        return __INJECTED_QS_CONFIG__;
       }
     </script>
   </head>
