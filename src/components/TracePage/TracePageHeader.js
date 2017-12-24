@@ -20,6 +20,7 @@ import { Dropdown, Menu } from 'semantic-ui-react';
 import KeyboardShortcutsHelp from './KeyboardShortcutsHelp';
 import { FALLBACK_TRACE_NAME } from '../../constants';
 import { formatDatetime, formatDuration } from '../../utils/date';
+import prefixUrl from '../../utils/prefix-url';
 
 type TracePageHeaderProps = {
   traceID: string,
@@ -103,8 +104,17 @@ export default function TracePageHeader(props: TracePageHeaderProps) {
             <Dropdown text="View Options" className="item">
               <Dropdown.Menu>
                 <Dropdown.Item>
-                  <a rel="noopener noreferrer" target="_blank" href={`/api/traces/${traceID}`}>
-                    View Trace JSON
+                  <a rel="noopener noreferrer" target="_blank" href={prefixUrl(`/api/traces/${traceID}`)}>
+                    Trace JSON
+                  </a>
+                </Dropdown.Item>
+                <Dropdown.Item>
+                  <a
+                    rel="noopener noreferrer"
+                    target="_blank"
+                    href={prefixUrl(`/api/traces/${traceID}?raw=true`)}
+                  >
+                    Trace JSON (unadjusted)
                   </a>
                 </Dropdown.Item>
               </Dropdown.Menu>
