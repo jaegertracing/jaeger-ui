@@ -68,14 +68,14 @@ export function convertQueryParamsToFormDates({ start, end }) {
   let queryEndDate;
   let queryEndDateTime;
   if (end) {
-    const endUnix = moment(parseInt(end.replace('000', ''), 10));
-    queryEndDate = formatDate(endUnix * 1000);
-    queryEndDateTime = formatTime(endUnix * 1000);
+    const endUnixNs = parseInt(end, 10);
+    queryEndDate = formatDate(endUnixNs);
+    queryEndDateTime = formatTime(endUnixNs);
   }
   if (start) {
-    const startUnix = moment(parseInt(start.replace('000', ''), 10));
-    queryStartDate = formatDate(startUnix * 1000);
-    queryStartDateTime = formatTime(startUnix * 1000);
+    const startUnixNs = parseInt(start, 10);
+    queryStartDate = formatDate(startUnixNs);
+    queryStartDateTime = formatTime(startUnixNs);
   }
 
   return {
