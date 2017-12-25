@@ -142,6 +142,7 @@ export function TraceSearchFormImpl(props) {
   const selectedServicePayload = services.find(s => s.name === selectedService);
   const operationsForService = (selectedServicePayload && selectedServicePayload.operations) || [];
   const noSelectedService = selectedService === '-' || !selectedService;
+  const tz = selectedLookback === 'custom' ? new Date().toTimeString().replace(/^.*?GMT/, 'UTC') : null;
   return (
     <div className="search-form">
       <form className="ui form" onSubmit={handleSubmit}>
@@ -173,7 +174,7 @@ export function TraceSearchFormImpl(props) {
             <Popup
               on="click"
               wide="very"
-              trigger={<i className="info circle icon grey" />}
+              trigger={<i className="SearchForm--hintTrigger info circle icon grey" />}
               content={
                 <div>
                   <h5>
@@ -215,7 +216,15 @@ export function TraceSearchFormImpl(props) {
 
         {selectedLookback === 'custom' && (
           <div className="search-form--start-time field js-test-start-input">
-            <label htmlFor="service">Start Time</label>
+            <label htmlFor="service">
+              Start Time{' '}
+              <Popup
+                on="click"
+                wide="very"
+                trigger={<i className="SearchForm--hintTrigger info circle icon grey" />}
+                content={<h5>Times are expressed in {tz} timezone</h5>}
+              />
+            </label>
             <div>
               <div className="ui input">
                 <Field name="startDate" component="input" type="date" placeholder="Start Date" />
@@ -229,7 +238,15 @@ export function TraceSearchFormImpl(props) {
 
         {selectedLookback === 'custom' && (
           <div className="search-form--end-time field js-test-end-input">
-            <label htmlFor="service">End time</label>
+            <label htmlFor="service">
+              End time{' '}
+              <Popup
+                on="click"
+                wide="very"
+                trigger={<i className="SearchForm--hintTrigger info circle icon grey" />}
+                content={<h5>Times are expressed in {tz} timezone</h5>}
+              />
+            </label>
             <div>
               <div className="ui input">
                 <Field name="endDate" component="input" type="date" placeholder="End Date" />
