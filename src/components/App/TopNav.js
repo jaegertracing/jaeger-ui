@@ -15,9 +15,9 @@
 // limitations under the License.
 
 import React from 'react';
+import { Dropdown, Icon, Menu } from 'antd';
 import _get from 'lodash/get';
 import { Link } from 'react-router-dom';
-import { Dropdown, Menu } from 'semantic-ui-react';
 
 import TraceIDSearchInput from './TraceIDSearchInput';
 import type { ConfigMenuItem, ConfigMenuGroup } from '../../types/config';
@@ -39,28 +39,33 @@ function CustomNavItem({ label, url }: ConfigMenuItem) {
 }
 
 function CustomNavDropdown({ label, items }: ConfigMenuGroup) {
+  const menuItems = (
+    <Menu>
+      {items.map(item => {
+        const { label: itemLabel, url } = item;
+        return (
+          <Menu.Item key={itemLabel}>
+            <a href={url} target="_blank" rel="noopener noreferrer">
+              {itemLabel}
+            </a>
+          </Menu.Item>
+        );
+      })}
+    </Menu>
+  );
   return (
-    <Dropdown text={label} pointing className="link item">
-      <Dropdown.Menu>
-        {items.map(item => {
-          const { label: itemLabel, url } = item;
-          return (
-            <Dropdown.Item key={itemLabel}>
-              <a href={url} className="ui TopNav--DropdownItem" target="_blank">
-                {itemLabel}
-              </a>
-            </Dropdown.Item>
-          );
-        })}
-      </Dropdown.Menu>
+    <Dropdown overlay={menuItems} placement="bottomRight">
+      <a>
+        {label} <Icon type="down" />
+      </a>
     </Dropdown>
   );
 }
 
 const NAV_LINKS = [
   {
-    key: 'search',
     to: prefixUrl('/search'),
+    key: 'search',
     text: 'Search',
   },
 ];
@@ -77,27 +82,45 @@ export default function TopNav(props: TopNavProps) {
   const { menuConfig } = props;
   const menuItems = Array.isArray(menuConfig) ? menuConfig : [];
   return (
-    <Menu inverted className="TopNav">
-      <Link to={prefixUrl('/')} className="header item">
-        Jaeger UI
-      </Link>
-      <div className="ui input">
-        <TraceIDSearchInput />
-      </div>
-      {NAV_LINKS.map(({ key, to, text }) => (
-        <Link key={key} to={to} className="item">
-          {text}
-        </Link>
-      ))}
-      <div className="right menu">
+    <div>
+      <style>
+        {`
+        .right { float: right; }
+      `}
+      </style>
+
+      <Menu theme="dark" mode="horizontal" selectable={false} className="u-right">
         {menuItems.map(item => {
           if (item.items) {
-            return <CustomNavDropdown key={item.label} {...item} />;
+            return (
+              <Menu.Item key={item.label}>
+                <CustomNavDropdown key={item.label} {...item} />
+              </Menu.Item>
+            );
           }
-          return <CustomNavItem key={item.label} {...item} />;
+          return (
+            <Menu.Item key="itemLabel">
+              <a href={item.url} target="_blank" rel="noopener noreferrer">
+                {item.label}
+              </a>
+            </Menu.Item>
+          );
         })}
-      </div>
-    </Menu>
+      </Menu>
+      <Menu theme="dark" mode="horizontal" selectable={false}>
+        <Menu.Item>
+          <Link to={prefixUrl('/')}>Jaeger UI</Link>
+        </Menu.Item>
+        <Menu.Item>
+          <TraceIDSearchInput />
+        </Menu.Item>
+        {NAV_LINKS.map(({ key, to, text }) => (
+          <Menu.Item key={key}>
+            <Link to={to}>{text}</Link>
+          </Menu.Item>
+        ))}
+      </Menu>
+    </div>
   );
 }
 

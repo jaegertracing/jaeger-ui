@@ -59,11 +59,11 @@ export default function ErrorMessage({ error }: ErrorMessageProps) {
       <div className="ErrorMessage--details">
         <table>
           <tbody>
-            {httpStatus && <ErrorAttr name="Status" value={httpStatus} />}
-            {httpStatusText && <ErrorAttr name="Status text" value={httpStatusText} />}
-            {httpUrl && <ErrorAttr name="URL" value={httpUrl} />}
-            {httpQuery && <ErrorAttr name="Query" value={httpQuery} />}
-            {bodyExcerpt && <ErrorAttr name="Response body" value={bodyExcerpt} />}
+            {httpStatus ? <ErrorAttr name="Status" value={httpStatus} /> : null}
+            {httpStatusText ? <ErrorAttr name="Status text" value={httpStatusText} /> : null}
+            {httpUrl ? <ErrorAttr name="URL" value={httpUrl} /> : null}
+            {httpQuery ? <ErrorAttr name="Query" value={httpQuery} /> : null}
+            {bodyExcerpt ? <ErrorAttr name="Response body" value={bodyExcerpt} /> : null}
           </tbody>
         </table>
       </div>

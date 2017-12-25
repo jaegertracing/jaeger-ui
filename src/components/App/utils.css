@@ -14,18 +14,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-.Page--topNav {
-  height: auto;
-  line-height: normal;
-  padding: 0;
-  position: fixed;
-  width: 100%;
+.u-cursor-pointer {
+  cursor: pointer;
 }
 
-.Page--content {
-  padding-top: 50px;
+.u-no-float {
+  float: none;
 }
 
-.Page--footer {
-  text-align: center;
+.u-right {
+  float: right;
 }

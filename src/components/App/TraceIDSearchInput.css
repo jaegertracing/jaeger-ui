@@ -14,18 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-.Page--topNav {
-  height: auto;
-  line-height: normal;
-  padding: 0;
-  position: fixed;
-  width: 100%;
-}
-
-.Page--content {
-  padding-top: 50px;
-}
-
-.Page--footer {
-  text-align: center;
+.TraceIDSearchInput--form {
+  line-height: inherit;
 }

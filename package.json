@@ -16,6 +16,7 @@
   "homepage": null,
   "devDependencies": {
     "babel-eslint": "^7.2.3",
+    "babel-plugin-import": "^1.6.3",
     "bluebird": "^3.5.0",
     "enzyme": "^3.2.0",
     "enzyme-adapter-react-16": "^1.1.0",
@@ -29,13 +30,17 @@
     "eslint-plugin-jsx-a11y": "^6.0.2",
     "eslint-plugin-react": "^7.2.1",
     "husky": "^0.14.3",
+    "less-vars-to-js": "^1.2.1",
     "lint-staged": "^4.0.3",
     "prettier": "^1.5.3",
+    "react-app-rewire-less": "^2.1.0",
+    "react-app-rewired": "^1.4.0",
     "react-scripts": "^1.0.11",
     "react-test-renderer": "^15.6.1",
     "sinon": "^3.2.1"
   },
   "dependencies": {
+    "antd": "^3.0.3",
     "basscss": "^8.0.3",
     "chance": "^1.0.10",
     "classnames": "^2.2.5",
@@ -83,12 +88,12 @@
     "tween-functions": "^1.2.0"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "start": "react-app-rewired start",
     "start:docs": "REACT_APP_DEMO=true react-scripts start",
-    "build": "react-scripts build",
+    "build": "react-app-rewired build",
     "eject": "react-scripts eject",
-    "test": "CI=1 react-scripts test --env=jsdom --color",
-    "test-dev": "react-scripts test --env=jsdom",
+    "test": "CI=1 react-app-rewired test --env=jsdom --color",
+    "test-dev": "react-app-rewired test --env=jsdom",
     "coverage": "npm run test -- --coverage",
     "lint": "npm run eslint && npm run prettier && npm run flow && npm run check-license",
     "eslint": "eslint src",
