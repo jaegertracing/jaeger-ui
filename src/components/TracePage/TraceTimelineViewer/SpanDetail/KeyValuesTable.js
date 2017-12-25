@@ -19,12 +19,15 @@ import jsonMarkup from 'json-markup';
 
 import './KeyValuesTable.css';
 
-function parseOrPass(value) {
+function parseIfJson(value) {
   try {
-    return JSON.parse(value);
-  } catch (_) {
-    return value;
-  }
+    const data = JSON.parse(value);
+    if (data && typeof data === 'object') {
+      return data;
+    }
+    // eslint-disable-next-line no-empty
+  } catch (_) {}
+  return value;
 }
 
 type KeyValuesTableProps = {
@@ -40,7 +43,7 @@ export default function KeyValuesTable(props: KeyValuesTableProps) {
           {data.map((row, i) => {
             const jsonTable = (
               // eslint-disable-next-line react/no-danger
-              <div dangerouslySetInnerHTML={{ __html: jsonMarkup(parseOrPass(row.value)) }} />
+              <div dangerouslySetInnerHTML={{ __html: jsonMarkup(parseIfJson(row.value)) }} />
             );
             return (
               // `i` is necessary in the key because row.key can repeat
