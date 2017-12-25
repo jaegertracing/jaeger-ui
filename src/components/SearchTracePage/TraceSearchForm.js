@@ -222,7 +222,7 @@ export function TraceSearchFormImpl(props) {
                 on="click"
                 wide="very"
                 trigger={<i className="SearchForm--hintTrigger info circle icon grey" />}
-                content={<h5>Times are expressed in {tz} timezone and converted to UTC</h5>}
+                content={<h5>Times are expressed in {tz} timezone</h5>}
               />
             </label>
             <div>
@@ -244,7 +244,7 @@ export function TraceSearchFormImpl(props) {
                 on="click"
                 wide="very"
                 trigger={<i className="SearchForm--hintTrigger info circle icon grey" />}
-                content={<h5>Times are expressed in {tz} timezone and converted to UTC</h5>}
+                content={<h5>Times are expressed in {tz} timezone</h5>}
               />
             </label>
             <div>
