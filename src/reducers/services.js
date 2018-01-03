@@ -15,7 +15,7 @@
 import { handleActions } from 'redux-actions';
 
 import { fetchServices, fetchServiceOperations as fetchOps } from '../actions/jaeger-api';
-import { baseStringComparator } from '../utils/sort';
+import { localeStringComparator } from '../utils/sort';
 
 const initialState = {
   // `services` initial value of `null` indicates they haven't yet been loaded
@@ -31,7 +31,7 @@ function fetchStarted(state) {
 
 function fetchServicesDone(state, { payload }) {
   const services = payload.data || [];
-  services.sort(baseStringComparator);
+  services.sort(localeStringComparator);
   return { ...state, services, error: null, loading: false };
 }
 
@@ -50,7 +50,7 @@ function fetchOpsStarted(state, { meta: { serviceName } }) {
 function fetchOpsDone(state, { meta, payload }) {
   const { data: operations } = payload;
   if (Array.isArray(operations)) {
-    operations.sort(baseStringComparator);
+    operations.sort(localeStringComparator);
   }
   const operationsForService = {
     ...state.operationsForService,

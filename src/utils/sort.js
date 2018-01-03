@@ -12,11 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export function baseStringComparator(itemA, itemB) {
-  return itemA.localeCompare(itemB, 'en', { sensitivity: 'base' });
-}
-
-export function stringSortComparator(itemA, itemB) {
+export function localeStringComparator(itemA, itemB) {
   return itemA.localeCompare(itemB);
 }
 
