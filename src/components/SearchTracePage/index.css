@@ -14,19 +14,20 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-.Page--topNav {
-  height: auto;
-  line-height: normal;
-  padding: 0;
-  position: fixed;
-  width: 100%;
-  z-index: 1;
+.SearchTracePage--column {
+  padding: 1rem 0.5rem;
 }
 
-.Page--content {
-  padding-top: 50px;
+.SearchTracePage--column:first-child {
+  padding-left: 1rem;
 }
 
-.Page--footer {
-  text-align: center;
+.SearchTracePage--column:last-child {
+  padding-right: 1rem;
+}
+
+.SearchTracePage--find {
+  background-color: #f5f5f5;
+  border: 1px solid #e6e6e6;
+  padding: 1rem;
 }

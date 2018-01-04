@@ -1,3 +1,5 @@
+// @flow
+
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,20 +15,18 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
 
-import TraceServiceTag from './TraceServiceTag';
-
-it('<SearchTracePage /> tests', () => {
-  const wrapper = shallow(
-    <TraceServiceTag
-      service={{
-        name: 'Service A',
-        numberOfSpans: 1,
-      }}
-    />
-  );
-  const labelText = wrapper.find('.ui.label').first();
-
-  expect(labelText.text()).toBe('Service A (1)');
-});
+export default function reduxFormFieldAdapter(AntInputComponent, onChangeAdapter) {
+  return function _reduxFormFieldAdapter(props) {
+    const { input: { value, onChange }, children, ...rest } = props;
+    return (
+      <AntInputComponent
+        value={value}
+        onChange={onChangeAdapter ? (...args) => onChange(onChangeAdapter(...args)) : onChange}
+        {...rest}
+      >
+        {children}
+      </AntInputComponent>
+    );
+  };
+}

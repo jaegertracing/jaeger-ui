@@ -14,19 +14,18 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-.Page--topNav {
-  height: auto;
-  line-height: normal;
-  padding: 0;
-  position: fixed;
-  width: 100%;
-  z-index: 1;
+.SearchForm--hintTrigger {
+  cursor: pointer;
 }
 
-.Page--content {
-  padding-top: 50px;
+.SearchForm--tagsHintTitle {
+  margin-top: 0.5em;
 }
 
-.Page--footer {
-  text-align: center;
+.SearchForm--tagsHintInfo {
+  padding-left: 1.7em;
+}
+
+.SearchForm--tagsHintEg {
+  color: teal;
 }

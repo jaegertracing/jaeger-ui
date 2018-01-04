@@ -28,8 +28,8 @@ import {
   mapStateToProps,
   submitForm,
   traceIDsToQuery,
-  TraceSearchFormImpl as TraceSearchForm,
-} from './TraceSearchForm';
+  SearchFormImpl as SearchForm,
+} from './SearchForm';
 
 function makeDateParams(dateOffset = 0) {
   const date = new Date();
@@ -231,16 +231,16 @@ describe('submitForm()', () => {
   });
 });
 
-describe('<TraceSearchForm>', () => {
+describe('<SearchForm>', () => {
   let wrapper;
   beforeEach(() => {
-    wrapper = shallow(<TraceSearchForm {...defaultProps} />);
+    wrapper = shallow(<SearchForm {...defaultProps} />);
   });
 
   it('shows operations only when a service is selected', () => {
     expect(wrapper.find('.search-form--operation').length).toBe(0);
 
-    wrapper = shallow(<TraceSearchForm {...defaultProps} selectedService="svcA" />);
+    wrapper = shallow(<SearchForm {...defaultProps} selectedService="svcA" />);
     expect(wrapper.find('.search-form--operation').length).toBe(1);
   });
 
@@ -249,14 +249,14 @@ describe('<TraceSearchForm>', () => {
       return [compWrapper.find('.js-test-start-input').length, compWrapper.find('.js-test-end-input').length];
     }
     expect(getDateFieldLengths(wrapper)).toEqual([0, 0]);
-    wrapper = shallow(<TraceSearchForm {...defaultProps} selectedLookback="custom" />);
+    wrapper = shallow(<SearchForm {...defaultProps} selectedLookback="custom" />);
     expect(getDateFieldLengths(wrapper)).toEqual([1, 1]);
   });
 
   it('disables the submit button when a service is not selected', () => {
     let btn = wrapper.find('.js-test-submit-btn');
     expect(btn.prop('disabled')).toBeTruthy();
-    wrapper = shallow(<TraceSearchForm {...defaultProps} selectedService="svcA" />);
+    wrapper = shallow(<SearchForm {...defaultProps} selectedService="svcA" />);
     btn = wrapper.find('.js-test-submit-btn');
     expect(btn.prop('disabled')).toBeFalsy();
   });

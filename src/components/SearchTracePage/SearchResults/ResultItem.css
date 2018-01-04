@@ -14,19 +14,36 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-.Page--topNav {
-  height: auto;
-  line-height: normal;
-  padding: 0;
-  position: fixed;
-  width: 100%;
-  z-index: 1;
+.ResultItem {
+  border: 1px solid #e6e6e6;
+  background: #fbfbfb;
 }
 
-.Page--content {
-  padding-top: 50px;
+.ResultItem:hover {
+  background: #f5f5f5;
+  border-color: #d8d8d8;
 }
 
-.Page--footer {
-  text-align: center;
+.ResultItem--title {
+  background: #ececec;
+  border-bottom: 1px solid #d8d8d8;
+  padding: 0.5rem;
+  position: relative;
+}
+
+.ResultItem--durationBar {
+  background: #d7e7ea;
+  bottom: 0;
+  left: 0;
+  position: absolute;
+  top: 0;
+}
+
+.ResultItem:hover > * > .ResultItem--durationBar {
+  background: #c5dde0;
+}
+
+.ResultItem--serviceTag {
+  border-left-width: 15px;
+  margin: 0;
 }

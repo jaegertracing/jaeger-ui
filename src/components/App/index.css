@@ -18,14 +18,6 @@ limitations under the License.
   height: 100%;
 }
 
-.u-no-float {
-  float: none;
-}
-
-.u-cursor-pointer {
-  cursor: pointer;
-}
-
 /* override semantic UI webkit scrollbar styling (keep the other scroll styling) */
 body ::-webkit-scrollbar {
   -webkit-appearance: none;
@@ -39,43 +31,6 @@ a {
 
 a:hover {
   color: #00474e;
-  cursor: pointer;
-}
-
-.clearfix:after {
-  content: ' ';
-  visibility: hidden;
-  display: block;
-  height: 0;
-  clear: both;
-}
-
-.pull-left {
-  float: left;
-}
-
-.pull-right {
-  float: right;
-}
-
-.hard {
-  padding: 0 !important;
-}
-
-.soft {
-  padding: 1rem !important;
-}
-
-.flush {
-  margin: 0 !important;
-}
-
-.push {
-  margin: 1rem !important;
-}
-
-.overflow-x {
-  overflow-x: scroll;
 }
 
 .ui.compact.table td {

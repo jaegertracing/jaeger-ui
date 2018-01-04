@@ -14,14 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-.SearchForm--hintTrigger {
-  cursor: pointer;
+.LoadingIndicator {
+  font-size: 36px;
 }
 
-.SearchForm--tagsHintInfo {
-  padding-left: 1.7em;
-}
-
-.SearchForm--tagsHintEg {
-  color: teal;
+.LoadingIndicator--centered {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
 }

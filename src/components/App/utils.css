@@ -18,10 +18,52 @@ limitations under the License.
   cursor: pointer;
 }
 
+.u-pos-rel {
+  position: relative;
+}
+
+.u-inline-b {
+  display: inline-block;
+}
+
 .u-no-float {
   float: none;
 }
 
+.u-left {
+  float: left;
+}
+
 .u-right {
   float: right;
+}
+
+.u-pad {
+  padding: 1rem;
+}
+
+.u-pad-sm {
+  padding: 0.5rem;
+}
+
+.u-space-nil {
+  margin: 0;
+}
+
+.u-space-v {
+  margin-bottom: 1rem;
+  margin-top: 1rem;
+}
+
+.u-space-xs {
+  margin: 0.25rem;
+}
+
+.u-tx-right {
+  text-align: right;
+}
+
+.u-list-reset {
+  list-style: none;
+  padding-left: 0;
 }

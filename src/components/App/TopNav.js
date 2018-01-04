@@ -83,12 +83,6 @@ export default function TopNav(props: TopNavProps) {
   const menuItems = Array.isArray(menuConfig) ? menuConfig : [];
   return (
     <div>
-      <style>
-        {`
-        .right { float: right; }
-      `}
-      </style>
-
       <Menu theme="dark" mode="horizontal" selectable={false} className="u-right">
         {menuItems.map(item => {
           if (item.items) {

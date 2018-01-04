@@ -1,3 +1,5 @@
+// @flow
+
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,22 +14,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import React from 'react';
-import { shallow } from 'enzyme';
+/* eslint-disable import/no-extraneous-dependencies */
 
-import TraceResultsScatterPlot from './TraceResultsScatterPlot';
+import * as React from 'react';
+import VirtualizedSelect from 'react-virtualized-select';
 
-it('<TraceResultsScatterPlot /> should render base case correctly', () => {
-  const wrapper = shallow(
-    <TraceResultsScatterPlot
-      data={[
-        { x: Date.now() - 3000, y: 1, traceID: 1 },
-        { x: Date.now() - 2000, y: 2, traceID: 2 },
-        { x: Date.now() - 1000, y: 2, traceID: 2 },
-        { x: Date.now(), y: 3, traceID: 3 },
-      ]}
-    />,
-    { disableLifecycleMethods: true }
-  );
-  expect(wrapper).toBeTruthy();
-});
+import 'react-select/dist/react-select.css';
+import 'react-virtualized/styles.css';
+import 'react-virtualized-select/styles.css';
+
+import './VirtSelect.css';
+
+export default function VirtSelect(props: {}) {
+  return <VirtualizedSelect className="VirtSelect" {...props} />;
+}

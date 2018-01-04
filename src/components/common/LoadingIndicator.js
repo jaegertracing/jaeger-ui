@@ -1,3 +1,5 @@
+// @flow
+
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,22 +14,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import PropTypes from 'prop-types';
 import React from 'react';
-import colorGenerator from '../../utils/color-generator';
+import { Icon } from 'antd';
 
-export default function TraceServiceTag({ service }) {
-  const { name, numberOfSpans } = service;
-  return (
-    <div className="ui mini label" style={{ borderLeft: `5px solid ${colorGenerator.getColorByKey(name)}` }}>
-      {name} ({numberOfSpans})
-    </div>
-  );
+import './LoadingIndicator.css';
+
+export default function LoadingIndicator(props) {
+  const { centered, className, ...rest } = props;
+  const cls = `LoadingIndicator ${centered ? 'LoadingIndicator--centered' : ''} ${className || ''}`;
+  return <Icon type="loading" className={cls} {...rest} />;
 }
-
-TraceServiceTag.propTypes = {
-  service: PropTypes.shape({
-    name: PropTypes.string.isRequired,
-    numberOfSpans: PropTypes.number.isRequired,
-  }).isRequired,
-};
