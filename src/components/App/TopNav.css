@@ -14,18 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-.TopNav {
-  /* !important is to override styles from semantic UI */
-  border-radius: 0 !important;
-  margin: 0 !important;
-  padding: 5px;
-  position: fixed;
-  width: 100%;
-  z-index: 1000;
-}
-
-.TopNav--DropdownItem {
-  display: block;
-  margin: -1em;
-  padding: 1em;
+.TopNav--menu > .TopNav--menuItem[aria-selected='true'] {
+  background: teal;
 }

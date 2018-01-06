@@ -27,15 +27,22 @@ import prefixUrl from '../../utils/prefix-url';
 import './TopNav.css';
 
 type TopNavProps = {
+  activeKey: string,
   menuConfig: (ConfigMenuItem | ConfigMenuGroup)[],
 };
 
-function CustomNavItem({ label, url }: ConfigMenuItem) {
-  return (
-    <a href={url} className="header item" target="_blank">
-      {label}
-    </a>
-  );
+const NAV_LINKS = [
+  {
+    to: prefixUrl('/search'),
+    text: 'Search',
+  },
+];
+
+if (_get(getConfig(), 'dependencies.menuEnabled')) {
+  NAV_LINKS.push({
+    to: prefixUrl('/dependencies'),
+    text: 'Dependencies',
+  });
 }
 
 function CustomNavDropdown({ label, items }: ConfigMenuGroup) {
@@ -62,28 +69,12 @@ function CustomNavDropdown({ label, items }: ConfigMenuGroup) {
   );
 }
 
-const NAV_LINKS = [
-  {
-    to: prefixUrl('/search'),
-    key: 'search',
-    text: 'Search',
-  },
-];
-
-if (_get(getConfig(), 'dependencies.menuEnabled')) {
-  NAV_LINKS.push({
-    key: 'dependencies',
-    to: prefixUrl('/dependencies'),
-    text: 'Dependencies',
-  });
-}
-
 export default function TopNav(props: TopNavProps) {
-  const { menuConfig } = props;
+  const { activeKey, menuConfig } = props;
   const menuItems = Array.isArray(menuConfig) ? menuConfig : [];
   return (
     <div>
-      <Menu theme="dark" mode="horizontal" selectable={false} className="u-right">
+      <Menu theme="dark" mode="horizontal" selectable={false} className="u-right" selectedKeys={[activeKey]}>
         {menuItems.map(item => {
           if (item.items) {
             return (
@@ -101,15 +92,21 @@ export default function TopNav(props: TopNavProps) {
           );
         })}
       </Menu>
-      <Menu theme="dark" mode="horizontal" selectable={false}>
+      <Menu
+        className="TopNav--menu"
+        theme="dark"
+        mode="horizontal"
+        selectable={false}
+        selectedKeys={[activeKey]}
+      >
         <Menu.Item>
           <Link to={prefixUrl('/')}>Jaeger UI</Link>
         </Menu.Item>
         <Menu.Item>
           <TraceIDSearchInput />
         </Menu.Item>
-        {NAV_LINKS.map(({ key, to, text }) => (
-          <Menu.Item key={key}>
+        {NAV_LINKS.map(({ to, text }) => (
+          <Menu.Item key={to} className="TopNav--menuItem">
             <Link to={to}>{text}</Link>
           </Menu.Item>
         ))}
@@ -122,6 +119,4 @@ TopNav.defaultProps = {
   menuConfig: [],
 };
 
-// exported for tests
-TopNav.CustomNavItem = CustomNavItem;
 TopNav.CustomNavDropdown = CustomNavDropdown;

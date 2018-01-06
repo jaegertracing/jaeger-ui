@@ -53,14 +53,14 @@ export class PageImpl extends React.Component<PageProps> {
   }
 
   render() {
-    const { children, config } = this.props;
+    const { children, config, location } = this.props;
     const menu = config && config.menu;
     return (
       <div>
         <Helmet title="Jaeger UI" />
         <Layout>
           <Header className="Page--topNav">
-            <TopNav menuConfig={menu} />
+            <TopNav activeKey={location.pathname} menuConfig={menu} />
           </Header>
           <Content className="Page--content">{children}</Content>
           <Footer className="Page--footer">
