@@ -14,10 +14,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import React from 'react';
+import * as React from 'react';
 
-export default function reduxFormFieldAdapter(AntInputComponent, onChangeAdapter) {
-  return function _reduxFormFieldAdapter(props) {
+export default function reduxFormFieldAdapter(
+  AntInputComponent: Class<React.Component<*, *>>,
+  onChangeAdapter: () => void
+) {
+  return function _reduxFormFieldAdapter(props: any) {
     const { input: { value, onChange }, children, ...rest } = props;
     return (
       <AntInputComponent

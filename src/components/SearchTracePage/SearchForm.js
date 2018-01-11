@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,33 +31,10 @@ import reduxFormFieldAdapter from '../../utils/redux-form-field-adapter';
 
 import './SearchForm.css';
 
-type SearchFormProps = {
-  handleSubmit: () => void,
-  selectedLookback: ?string,
-  selectedService: ?string,
-  services: {
-    name: string,
-    operations: string[],
-  }[],
-  submitting: boolean,
-};
-
-type DatesFromForm = {
-  startDate: string,
-  startDateTime: string,
-  endDate: string,
-  endDateTime: string,
-};
-
 const FormItem = Form.Item;
 const Option = Select.Option;
 
-export function getUnixTimeStampInMSFromForm({
-  startDate,
-  startDateTime,
-  endDate,
-  endDateTime,
-}: DatesFromForm) {
+export function getUnixTimeStampInMSFromForm({ startDate, startDateTime, endDate, endDateTime }) {
   const start = `${startDate} ${startDateTime}`;
   const end = `${endDate} ${endDateTime}`;
   return {
@@ -68,7 +43,7 @@ export function getUnixTimeStampInMSFromForm({
   };
 }
 
-export function convTagsLogfmt(tags: string) {
+export function convTagsLogfmt(tags) {
   if (!tags) {
     return null;
   }
@@ -84,14 +59,14 @@ export function convTagsLogfmt(tags: string) {
   return JSON.stringify(data);
 }
 
-export function traceIDsToQuery(traceIDs: string) {
+export function traceIDsToQuery(traceIDs) {
   if (!traceIDs) {
     return null;
   }
   return traceIDs.split(',');
 }
 
-export function convertQueryParamsToFormDates({ start, end }: { start: string, end: string }) {
+export function convertQueryParamsToFormDates({ start, end }) {
   let queryStartDate;
   let queryStartDateTime;
   let queryEndDate;
@@ -115,7 +90,7 @@ export function convertQueryParamsToFormDates({ start, end }: { start: string, e
   };
 }
 
-export function submitForm(fields: { [string]: string }, searchTraces: ({}) => void) {
+export function submitForm(fields, searchTraces) {
   const {
     resultsLimit,
     service,
@@ -166,7 +141,7 @@ export function submitForm(fields: { [string]: string }, searchTraces: ({}) => v
   });
 }
 
-export function SearchFormImpl(props: SearchFormProps) {
+export function SearchFormImpl(props) {
   const { handleSubmit, selectedLookback, selectedService = '-', services, submitting: disabled } = props;
   const selectedServicePayload = services.find(s => s.name === selectedService);
   const opsForSvc = (selectedServicePayload && selectedServicePayload.operations) || [];

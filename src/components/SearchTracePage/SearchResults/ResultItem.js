@@ -23,9 +23,17 @@ import { FALLBACK_TRACE_NAME } from '../../../constants';
 import colorGenerator from '../../../utils/color-generator';
 import { formatDuration, formatRelativeDate } from '../../../utils/date';
 
+import type { TraceSummary } from '../../../types/search';
+
 import './ResultItem.css';
 
-export default function ResultItem({ trace, durationPercent = 100 }) {
+export default function ResultItem({
+  trace,
+  durationPercent = 100,
+}: {
+  trace: TraceSummary,
+  durationPercent: number,
+}) {
   const { duration, services, timestamp, numberOfErredSpans, numberOfSpans, traceName } = trace;
   const mDate = moment(timestamp);
   const timeStr = mDate.format('h:mm:ss a');

@@ -19,8 +19,18 @@ import { Icon } from 'antd';
 
 import './LoadingIndicator.css';
 
-export default function LoadingIndicator(props) {
+type LoadingIndicatorProps = {
+  centered?: boolean,
+  className?: string,
+};
+
+export default function LoadingIndicator(props: LoadingIndicatorProps) {
   const { centered, className, ...rest } = props;
   const cls = `LoadingIndicator ${centered ? 'LoadingIndicator--centered' : ''} ${className || ''}`;
   return <Icon type="loading" className={cls} {...rest} />;
 }
+
+LoadingIndicator.defaultProps = {
+  centered: false,
+  className: undefined,
+};

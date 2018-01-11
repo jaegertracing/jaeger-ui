@@ -20,8 +20,8 @@ import { Divider } from 'antd';
 import './LabeledList.css';
 
 type LabeledListProps = {
-  className: ?string,
-  dividerClassName: ?string,
+  className?: string,
+  dividerClassName?: string,
   items: { key: string, label: React.Node, value: React.Node }[],
 };
 
@@ -46,3 +46,8 @@ export default function LabeledList(props: LabeledListProps) {
     </ul>
   );
 }
+
+LabeledList.defaultProps = {
+  className: undefined,
+  dividerClassName: undefined,
+};

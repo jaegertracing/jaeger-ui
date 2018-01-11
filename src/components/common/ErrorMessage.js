@@ -19,7 +19,7 @@ import React from 'react';
 import './ErrorMessage.css';
 
 type ErrorMessageProps = {
-  className: ?string,
+  className?: string,
   error:
     | string
     | {
@@ -71,3 +71,7 @@ export default function ErrorMessage({ className, error }: ErrorMessageProps) {
     </div>
   );
 }
+
+ErrorMessage.defaultProps = {
+  className: undefined,
+};
