@@ -14,16 +14,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-.VirtualizedTraceView--spans {
-  padding-top: 38px;
-  /* position: relative;
-  z-index: 1; */
-}
-
-.VirtualizedTraceView--rowsWrapper {
-  width: 100%;
-}
-
-.VirtualizedTraceView--row {
-  width: 100%;
+.DependencyGraph--graphWrapper {
+  bottom: 1rem;
+  left: 1rem;
+  overflow: hidden;
+  position: fixed;
+  right: 1rem;
+  top: 120px;
 }

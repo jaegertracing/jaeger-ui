@@ -14,12 +14,27 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+.AccordianLogs {
+  border: 1px solid #d8d8d8;
+}
+
 .AccordianLogs--header {
-  font-size: 1rem;
+  background: #e4e4e4;
+  color: inherit;
+  display: block;
+  padding: 0.25rem 0.5rem;
+}
+
+.AccordianLogs--header:hover {
+  background: #dadada;
+}
+
+.AccordianLogs--content {
+  background: #f0f0f0;
+  border-top: 1px solid #d8d8d8;
+  padding: 0.5rem 0.5rem 0.25rem 0.5rem;
 }
 
 .AccordianLogs--footer {
-  color: #888;
-  display: block;
-  margin: 0.3em 0 -0.75em;
+  color: #999;
 }

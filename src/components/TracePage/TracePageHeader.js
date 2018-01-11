@@ -15,12 +15,17 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Dropdown, Menu } from 'semantic-ui-react';
+import { Button, Dropdown, Icon, Input, Menu } from 'antd';
+import { IoChevronDown, IoChevronRight } from 'react-icons/lib/io';
+import { Link } from 'react-router-dom';
 
 import KeyboardShortcutsHelp from './KeyboardShortcutsHelp';
+import LabeledList from '../common/LabeledList';
 import { FALLBACK_TRACE_NAME } from '../../constants';
 import { formatDatetime, formatDuration } from '../../utils/date';
 import prefixUrl from '../../utils/prefix-url';
+
+import './TracePageHeader.css';
 
 type TracePageHeaderProps = {
   traceID: string,
@@ -76,83 +81,101 @@ export const HEADER_ITEMS = [
 ];
 
 export default function TracePageHeader(props: TracePageHeaderProps) {
-  const { traceID, name, slimView, onSlimViewClicked, updateTextFilter, textFilter } = props;
+  const {
+    duration,
+    maxDepth,
+    numSpans,
+    timestamp,
+    numServices,
+    traceID,
+    name,
+    slimView,
+    onSlimViewClicked,
+    updateTextFilter,
+    textFilter,
+  } = props;
 
   if (!traceID) {
     return null;
   }
 
+  const viewMenu = (
+    <Menu>
+      <Menu.Item>
+        <Link to={prefixUrl(`/api/traces/${traceID}`)} rel="noopener noreferrer" target="_blank">
+          Trace JSON
+        </Link>
+      </Menu.Item>
+      <Menu.Item>
+        <Link to={prefixUrl(`/api/traces/${traceID}?raw=true`)} rel="noopener noreferrer" target="_blank">
+          Trace JSON (unadjusted)
+        </Link>
+      </Menu.Item>
+    </Menu>
+  );
+
+  const overviewItems = [
+    {
+      key: 'start',
+      label: 'Trace Start:',
+      value: formatDatetime(timestamp),
+    },
+    {
+      key: 'duration',
+      label: 'Duration:',
+      value: formatDuration(duration),
+    },
+    {
+      key: 'svc-count',
+      label: 'Services:',
+      value: numServices,
+    },
+    {
+      key: 'depth',
+      label: 'Depth:',
+      value: maxDepth,
+    },
+    {
+      key: 'span-count',
+      label: 'Total Spans:',
+      value: numSpans,
+    },
+  ];
+
   return (
-    <header className="mb1">
-      <div className="flex">
-        <div className="flex-auto">
-          <h2>
-            <a onClick={onSlimViewClicked} role="switch" aria-checked={!slimView}>
-              <i
-                className={`ui icon angle double ${slimView ? 'right' : 'down'}`}
-                style={{ float: 'none' }}
-              />
-            </a>
+    <header>
+      <div className="TracePageHeader--titleRow">
+        <a
+          className="u-flex-auto u-space-right-sm"
+          onClick={onSlimViewClicked}
+          role="switch"
+          aria-checked={!slimView}
+        >
+          <h1 className="TracePageHeader--title">
+            {slimView ? (
+              <IoChevronRight className="u-space-right-sm" />
+            ) : (
+              <IoChevronDown className="u-space-right-sm" />
+            )}
             {name || FALLBACK_TRACE_NAME}
-          </h2>
-        </div>
-        <div className="inline-block mr1">
-          <KeyboardShortcutsHelp />
-        </div>
-        <div className="mr1">
-          <Menu>
-            <Dropdown text="View Options" className="item">
-              <Dropdown.Menu>
-                <Dropdown.Item>
-                  <a rel="noopener noreferrer" target="_blank" href={prefixUrl(`/api/traces/${traceID}`)}>
-                    Trace JSON
-                  </a>
-                </Dropdown.Item>
-                <Dropdown.Item>
-                  <a
-                    rel="noopener noreferrer"
-                    target="_blank"
-                    href={prefixUrl(`/api/traces/${traceID}?raw=true`)}
-                  >
-                    Trace JSON (unadjusted)
-                  </a>
-                </Dropdown.Item>
-              </Dropdown.Menu>
-            </Dropdown>
-          </Menu>
-        </div>
-        <div className="inline-block">
-          <div className="ui input">
-            <input
-              id="trace-page__text-filter"
-              type="text"
-              defaultValue={textFilter}
-              placeholder="Search..."
-              onChange={event => updateTextFilter(event.target.value)}
-            />
-          </div>
+          </h1>
+        </a>
+        <KeyboardShortcutsHelp className="u-space-right-sm" />
+        <Dropdown overlay={viewMenu}>
+          <Button className="u-space-right-sm">
+            View Options <Icon type="down" />
+          </Button>
+        </Dropdown>
+        <div className="u-space-right-sm">
+          <Input
+            name="search"
+            placeholder="Search..."
+            onChange={event => updateTextFilter(event.target.value)}
+            defaultValue={textFilter}
+          />
         </div>
       </div>
-      {!slimView && (
-        <div>
-          {HEADER_ITEMS.map(({ renderer, propName, title, key }) => {
-            let value: ?React.Node;
-            if (propName) {
-              value = props[propName];
-            } else if (renderer) {
-              value = renderer(props);
-            } else {
-              throw new Error('Invalid HEADER_ITEM configuration');
-            }
-            return (
-              <div className="inline-block mr1" key={key}>
-                {title}:
-                <strong>{value}</strong>
-              </div>
-            );
-          })}
-        </div>
-      )}
+      {!slimView && <LabeledList className="TracePageHeader--overviewItems" items={overviewItems} />}
     </header>
   );
 }

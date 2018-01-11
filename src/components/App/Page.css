@@ -16,17 +16,12 @@ limitations under the License.
 
 .Page--topNav {
   height: auto;
-  line-height: normal;
   padding: 0;
   position: fixed;
   width: 100%;
-  z-index: 1;
+  z-index: 3;
 }
 
 .Page--content {
-  padding-top: 50px;
-}
-
-.Page--footer {
-  text-align: center;
+  padding-top: 47px;
 }

@@ -57,7 +57,6 @@ export default class SearchTracePage extends Component {
       loadingServices,
       loadingTraces,
       maxTraceDuration,
-      numberOfTraceResults,
       services,
       traceResults,
     } = this.props;
@@ -74,19 +73,19 @@ export default class SearchTracePage extends Component {
             </div>
           </Col>
           <Col span={18} className="SearchTracePage--column">
-            {/* {loadingTraces && <LoadingIndicator />} */}
             {showErrors && (
-              <div className="ui message js-test-error-message">
+              <div className="js-test-error-message">
                 <h2>There was an error querying for traces:</h2>
                 {errors.map(err => <ErrorMessage key={err.message} error={err} />)}
               </div>
             )}
             {showLogo && (
-              <div className="ui middle aligned center aligned grid" style={{ marginTop: 100 }}>
-                <div className="column">
-                  <img className="js-test-logo" alt="presentation" src={JaegerLogo} width="400" />
-                </div>
-              </div>
+              <img
+                className="SearchTracePage--logo js-test-logo"
+                alt="presentation"
+                src={JaegerLogo}
+                width="400"
+              />
             )}
             {!showErrors &&
               !showLogo && (
@@ -108,7 +107,6 @@ SearchTracePage.propTypes = {
   isHomepage: PropTypes.bool,
   // eslint-disable-next-line react/forbid-prop-types
   traceResults: PropTypes.array,
-  numberOfTraceResults: PropTypes.number,
   maxTraceDuration: PropTypes.number,
   loadingServices: PropTypes.bool,
   loadingTraces: PropTypes.bool,

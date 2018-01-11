@@ -166,17 +166,6 @@ export function submitForm(fields: { [string]: string }, searchTraces: ({}) => v
   });
 }
 
-// function reduxFormFieldAdapter(AntComponent, onChangeAdapter) {
-//   return function _reduxFormFieldAdapter(props) {
-//     const { input: { value, onChange }, children, ...rest } = props;
-//     return (
-//       <AntComponent value={value} onChange={onChangeAdapter ? (...args) => onChange(onChangeAdapter(...args)) : onChange} {...rest}>
-//         {children}
-//       </AntComponent>
-//     );
-//   }
-// }
-
 export function SearchFormImpl(props: SearchFormProps) {
   const { handleSubmit, selectedLookback, selectedService = '-', services, submitting: disabled } = props;
   const selectedServicePayload = services.find(s => s.name === selectedService);

@@ -31,3 +31,8 @@ limitations under the License.
   border: 1px solid #e6e6e6;
   padding: 1rem;
 }
+
+.SearchTracePage--logo {
+  display: block;
+  margin: 13rem auto 0 auto;
+}

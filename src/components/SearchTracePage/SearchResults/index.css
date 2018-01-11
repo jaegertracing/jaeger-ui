@@ -14,15 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-.SearchResults--loader {
-  margin-top: 13rem;
-}
-
-.SearchResults--empty {
-  background-color: #f5f5f5;
-  border-color: #e6e6e6;
-}
-
 .SearchResults--header {
   border: 1px solid #e6e6e6;
   color: rgba(0, 0, 0, 0.85);

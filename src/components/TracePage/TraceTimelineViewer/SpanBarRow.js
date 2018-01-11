@@ -15,6 +15,7 @@
 // limitations under the License.
 
 import * as React from 'react';
+import { IoAlert, IoArrowRightA } from 'react-icons/lib/io';
 
 import TimelineRow from './TimelineRow';
 import SpanTreeOffset from './SpanTreeOffset';
@@ -120,7 +121,7 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
               level={depth + 1}
               hasChildren={isParent}
               childrenVisible={isChildrenExpanded}
-              onClick={this._childrenToggle}
+              onClick={isParent ? this._childrenToggle : null}
             />
             <a
               className={`span-name ${isDetailExpanded ? 'is-detail-expanded' : ''}`}
@@ -133,17 +134,17 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
               <span
                 className={`span-svc-name ${isParent && !isChildrenExpanded ? 'is-children-collapsed' : ''}`}
               >
-                {showErrorIcon && <i aria-hidden="true" className="icon warning circle red" />}
+                {showErrorIcon && <IoAlert className="SpanBarRow--errorIcon" />}
                 {serviceName}{' '}
                 {rpc && (
                   <span>
-                    <i className="long arrow right icon" style={{ float: 'none' }} />
-                    <i className="circle icon" style={{ color: rpc.color }} />
+                    <IoArrowRightA />{' '}
+                    <i className="SpanBarRow--rpcColorMarker" style={{ background: rpc.color }} />
                     {rpc.serviceName}
                   </span>
                 )}
               </span>
-              <span className="endpoint-name mb1 pl1 h6">{rpc ? rpc.operationName : operationName}</span>
+              <small className="endpoint-name">{rpc ? rpc.operationName : operationName}</small>
             </a>
           </div>
         </TimelineRow.Cell>

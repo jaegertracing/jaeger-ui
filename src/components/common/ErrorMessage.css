@@ -15,18 +15,22 @@ limitations under the License.
 */
 
 .ErrorMessage {
-  margin-top: 2.5em;
+  background: #f5f5f5;
+  border: 1px solid #e6e6e6;
   position: relative;
-  word-wrap: break-word;
   word-break: break-word;
+  word-wrap: break-word;
 }
 
 .ErrorMessage--msg {
   color: #c00;
+  margin: 0;
+  padding: 1rem;
 }
 
 .ErrorMessage--details {
   overflow: auto;
+  padding: 0 1rem 1rem 1rem;
 }
 
 .ErrorMessage--attr {

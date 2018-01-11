@@ -26,16 +26,10 @@ type NotFoundProps = {
 
 export default function NotFound({ error }: NotFoundProps) {
   return (
-    <section className="ui container">
-      <div className="ui basic segment">
-        <div className="ui center aligned basic segment">
-          <h1>Error</h1>
-        </div>
-        {error && <ErrorMessage error={error} />}
-        <div className="ui center aligned basic segment">
-          <Link to={prefixUrl('/')}>{'Back home'}</Link>
-        </div>
-      </div>
+    <section className="u-space">
+      <h1>Error</h1>
+      {error && <ErrorMessage error={error} />}
+      <Link to={prefixUrl('/')}>{'Back home'}</Link>
     </section>
   );
 }

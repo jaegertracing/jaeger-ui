@@ -21,7 +21,6 @@ limitations under the License.
   right: 0;
   top: 0;
   overflow: hidden;
-  opacity: 0.5;
   z-index: 0;
 }
 
@@ -34,8 +33,8 @@ limitations under the License.
   border-radius: 3px;
   min-width: 2px;
   position: absolute;
-  height: 50%;
-  top: 25%;
+  height: 36%;
+  top: 32%;
 }
 
 .SpanBar--rpc {
@@ -46,6 +45,7 @@ limitations under the License.
 }
 
 .SpanBar--label {
+  color: #aaa;
   font-size: 12px;
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   line-height: 1em;
@@ -60,4 +60,9 @@ limitations under the License.
 
 .SpanBar--label.is-left {
   right: 100%;
+}
+
+.span-row.is-expanded .SpanBar--label,
+.span-row:hover .SpanBar--label {
+  color: #000;
 }

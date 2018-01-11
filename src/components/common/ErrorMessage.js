@@ -19,6 +19,7 @@ import React from 'react';
 import './ErrorMessage.css';
 
 type ErrorMessageProps = {
+  className: ?string,
   error:
     | string
     | {
@@ -40,23 +41,23 @@ function ErrorAttr({ name, value }: { name: string, value: any }) {
   );
 }
 
-export default function ErrorMessage({ error }: ErrorMessageProps) {
+export default function ErrorMessage({ className, error }: ErrorMessageProps) {
   if (!error) {
     return null;
   }
   if (typeof error === 'string') {
     return (
-      <div className="ErrorMessage ui red message">
-        <p>{error}</p>
+      <div className={`ErrorMessage ${className || ''}`}>
+        <h3 className="ErrorMessage--msg">{error}</h3>
       </div>
     );
   }
   const { message, httpStatus, httpStatusText, httpUrl, httpQuery, httpBody } = error;
   const bodyExcerpt = httpBody && httpBody.length > 1024 ? `${httpBody.slice(0, 1021).trim()}...` : httpBody;
   return (
-    <div className="ErrorMessage">
-      <h3 className="ErrorMessage--msg">{message}</h3>
-      <div className="ErrorMessage--details">
+    <div className={`ErrorMessage ${className || ''}`}>
+      <h2 className="ErrorMessage--msg">{message}</h2>
+      <div className="ErrorMessage--details u-simple-scrollbars">
         <table>
           <tbody>
             {httpStatus ? <ErrorAttr name="Status" value={httpStatus} /> : null}

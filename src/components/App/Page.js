@@ -33,7 +33,7 @@ type PageProps = {
   config: Config,
 };
 
-const { Header, Content, Footer } = Layout;
+const { Header, Content } = Layout;
 
 // export for tests
 export class PageImpl extends React.Component<PageProps> {
@@ -63,9 +63,6 @@ export class PageImpl extends React.Component<PageProps> {
             <TopNav activeKey={location.pathname} menuConfig={menu} />
           </Header>
           <Content className="Page--content">{children}</Content>
-          <Footer className="Page--footer">
-            “Ghosts are nothing if not capricious.” ― William Gibson, Neuromancer
-          </Footer>
         </Layout>
       </div>
     );

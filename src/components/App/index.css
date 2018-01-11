@@ -14,15 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#jaeger-ui-root {
-  height: 100%;
-}
-
-/* override semantic UI webkit scrollbar styling (keep the other scroll styling) */
-body ::-webkit-scrollbar {
-  -webkit-appearance: none;
-  width: 7px;
-  height: 7px;
+/* Ant's default font-family, Helvetica Neue For Number, is inconcistent in thickness for a given weight */
+.font-reset,
+html > body {
+  font-family: 'Helvetica Neue', Helvetica, 'Segoe UI', Roboto, Arial, sans-serif;
 }
 
 a {
@@ -31,28 +26,4 @@ a {
 
 a:hover {
   color: #00474e;
-}
-
-.ui.compact.table td {
-  padding: 0.2em 0.5em;
-}
-
-.ui.table td.light-grey {
-  background-color: #f1f1f1;
-}
-
-.ui.table,
-.ui.table thead tr:first-child > th:last-child,
-.ui.table thead tr:first-child > th:first-child {
-  border-radius: 0;
-}
-
-.ui.table thead th {
-  background-color: #f1f1f1;
-}
-
-.ui.sortable.table thead th.sorted,
-.ui.sortable.table thead th:hover,
-.ui.sortable.table thead th.sorted:hover {
-  background-color: #d6d6d5;
 }

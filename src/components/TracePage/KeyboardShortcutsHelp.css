@@ -14,11 +14,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-.KeyboardShortcutsHelp kbd {
+.KeyboardShortcutsHelp--cta {
+  font-size: 1.2rem;
+  margin: 0 -7px;
+}
+
+.KeyboardShortcutsHelp--table kbd {
   background: #f5f5f5;
   border: 1px solid #e8e8e8;
   border-bottom: 1px solid #ddd;
   color: #000;
   margin-right: 0.4em;
+  font-family: monospace;
   padding: 0.25em 0.3em;
 }

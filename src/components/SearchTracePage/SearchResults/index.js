@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import React from 'react';
-import { Card, Form, Select } from 'antd';
+import { Select } from 'antd';
 import { Field, reduxForm, formValueSelector } from 'redux-form';
 import { Link } from 'react-router-dom';
 
@@ -66,12 +66,10 @@ export const sortFormSelector = formValueSelector('traceResultsSort');
 export default function SearchResults(props: SearchResultsProps) {
   const { goToTrace, loading, maxTraceDuration, traces } = props;
   if (loading) {
-    return <LoadingIndicator className="SearchResults--loader" centered />;
+    return <LoadingIndicator className="u-space-top-vast" centered />;
   }
   if (!Array.isArray(traces) || !traces.length) {
-    return (
-      <Card className="SearchResults--empty js-test-no-results">No trace results. Try another query.</Card>
-    );
+    return <div className="u-simple-card js-test-no-results">No trace results. Try another query.</div>;
   }
   return (
     <div>

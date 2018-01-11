@@ -14,6 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+.span-row.is-filtered-out {
+  opacity: 0.2;
+}
+
 .span-name-column {
   position: relative;
   text-overflow: ellipsis;
@@ -36,7 +40,8 @@ limitations under the License.
 }
 
 .span-name-wrapper {
-  background: #fafafa;
+  background: #f8f8f8;
+  line-height: 27px;
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -44,7 +49,7 @@ limitations under the License.
 .span-name-wrapper:hover {
   border-right: 1px solid #bbb;
   float: left;
-  min-width: 100%;
+  min-width: calc(100% + 1px);
   overflow: visible;
 }
 
@@ -59,12 +64,42 @@ limitations under the License.
 }
 
 .span-name {
-  border-left: 4px solid;
   color: #000;
   cursor: pointer;
-  display: inline;
+  display: inline-block;
   outline: none;
+  padding-left: 4px;
   padding-right: 0.25em;
+  position: relative;
+}
+
+.span-name::before {
+  content: ' ';
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 0;
+  border-left: 4px solid;
+  border-left-color: inherit;
+}
+
+.span-name.is-detail-expanded::before {
+  bottom: 0;
+}
+
+/* This is so the hit area of the span-name extends the rest of the width of the span-name column */
+.span-name::after {
+  background: transparent;
+  bottom: 0;
+  content: ' ';
+  left: 0;
+  position: absolute;
+  top: 0;
+  width: 1000px;
+}
+
+.span-name:focus {
+  text-decoration: none;
 }
 
 .endpoint-name {
@@ -76,7 +111,7 @@ limitations under the License.
 }
 
 .span-svc-name {
-  padding: 0.5rem;
+  padding: 0 0.25rem 0 0.5rem;
   font-size: 1.05em;
 }
 
@@ -111,4 +146,24 @@ limitations under the License.
   background-image: linear-gradient(to left, rgba(25, 25, 25, 0.25), rgba(32, 32, 32, 0));
   right: 0%;
   z-index: 1;
+}
+
+.SpanBarRow--errorIcon {
+  background: #db2828;
+  border-radius: 6.5px;
+  color: #fff;
+  font-size: 0.85em;
+  margin-right: 0.25rem;
+  padding: 1px;
+}
+
+.SpanBarRow--rpcColorMarker {
+  border-radius: 6.5px;
+  display: inline-block;
+  font-size: 0.85em;
+  height: 1em;
+  margin-right: 0.25rem;
+  padding: 1px;
+  width: 1em;
+  vertical-align: middle;
 }

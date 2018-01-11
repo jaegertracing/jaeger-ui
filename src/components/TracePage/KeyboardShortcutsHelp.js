@@ -15,11 +15,17 @@
 // limitations under the License.
 
 import React from 'react';
-import { Button, Modal } from 'semantic-ui-react';
+import { Button, Modal, Table } from 'antd';
 
 import { kbdMappings } from './keyboard-shortcuts';
 
 import './KeyboardShortcutsHelp.css';
+
+type KeyboardShortcutsHelpProps = {
+  className: ?string,
+};
+
+const { Column } = Table;
 
 const symbolConv = {
   up: '↑',
@@ -49,40 +55,45 @@ function convertKeys(keyConfig: string | string[]): string[][] {
   return config.map(str => str.split('+').map(part => symbolConv[part] || part.toUpperCase()));
 }
 
-export default function KeyboardShortcutsHelp() {
-  const rows = [];
+function helpModal() {
+  const data = [];
   Object.keys(kbdMappings).forEach(title => {
     const keyConfigs = convertKeys(kbdMappings[title]);
-    const configs = keyConfigs.map(config => (
-      <tr key={String(config)}>
-        <td>{config.map(s => <kbd key={s}>{s}</kbd>)}</td>
-        <td>{descriptions[title]}</td>
-      </tr>
-    ));
-    rows.push(...configs);
+    data.push(
+      ...keyConfigs.map(config => ({
+        key: String(config),
+        kbds: config.map(s => <kbd key={s}>{s}</kbd>),
+        description: descriptions[title],
+      }))
+    );
   });
-  return (
-    <Modal
-      trigger={
-        <Button basic compact size="tiny">
-          <h3>⌘</h3>
-        </Button>
-      }
+
+  const content = (
+    <Table
+      className="KeyboardShortcutsHelp--table"
+      dataSource={data}
+      bordered
+      size="middle"
+      pagination={false}
     >
-      <Modal.Header>Keyboard Shortcuts</Modal.Header>
-      <Modal.Content>
-        <Modal.Description>
-          <table className="KeyboardShortcutsHelp ui celled table">
-            <thead>
-              <tr>
-                <th>Key(s)</th>
-                <th>Description</th>
-              </tr>
-            </thead>
-            <tbody>{rows}</tbody>
-          </table>
-        </Modal.Description>
-      </Modal.Content>
-    </Modal>
+      <Column title="Key(s)" dataIndex="kbds" key="kbds" />
+      <Column title="Description" dataIndex="description" key="description" />
+    </Table>
+  );
+
+  Modal.info({
+    content,
+    maskClosable: true,
+    title: 'Keyboard Shortcuts',
+    width: '50%',
+  });
+}
+
+export default function KeyboardShortcutsHelp(props: KeyboardShortcutsHelpProps) {
+  const { className } = props;
+  return (
+    <Button className={className} onClick={helpModal}>
+      <span className="KeyboardShortcutsHelp--cta">⌘</span>
+    </Button>
   );
 }

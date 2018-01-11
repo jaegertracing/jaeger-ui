@@ -34,8 +34,8 @@ type KeyValuesTableProps = {
 export default function KeyValuesTable(props: KeyValuesTableProps) {
   const { data } = props;
   return (
-    <div className="KeyValueTable">
-      <table className="ui very striped compact table">
+    <div className="KeyValueTable u-simple-scrollbars">
+      <table className="u-width-100">
         <tbody className="KeyValueTable--body">
           {data.map((row, i) => {
             const jsonTable = (

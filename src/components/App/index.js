@@ -28,7 +28,7 @@ import configureStore from '../../utils/configure-store';
 import prefixUrl from '../../utils/prefix-url';
 
 import './index.css';
-import './utils.css';
+import '../common/utils.css';
 
 const history = createHistory();
 

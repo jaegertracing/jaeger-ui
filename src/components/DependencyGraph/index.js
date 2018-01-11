@@ -12,23 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import PropTypes from 'prop-types';
-import _get from 'lodash/get';
 import React, { Component } from 'react';
+import { Tabs } from 'antd';
+import _get from 'lodash/get';
+import PropTypes from 'prop-types';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
-import { Menu } from 'semantic-ui-react';
 
 import DAG from './DAG';
 import DependencyForceGraph from './DependencyForceGraph';
-import NotFound from '../App/NotFound';
+import ErrorMessage from '../common/ErrorMessage';
+import LoadingIndicator from '../common/LoadingIndicator';
 import * as jaegerApiActions from '../../actions/jaeger-api';
+import { FALLBACK_DAG_MAX_NUM_SERVICES } from '../../constants';
 import { nodesPropTypes, linksPropTypes } from '../../propTypes/dependencies';
 import { formatDependenciesAsNodesAndLinks } from '../../selectors/dependencies';
 import getConfig from '../../utils/config/get-config';
-import { FALLBACK_DAG_MAX_NUM_SERVICES } from '../../constants';
 
 import './DependencyGraph.css';
+
+const TabPane = Tabs.TabPane;
 
 // export for tests
 export const GRAPH_TYPES = {
@@ -67,32 +70,20 @@ export default class DependencyGraphPage extends Component {
     this.props.fetchDependencies();
   }
 
-  handleGraphTypeChange(graphType) {
-    this.setState({ graphType });
-  }
+  handleGraphTypeChange = graphType => this.setState({ graphType });
 
   render() {
     const { nodes, links, error, dependencies, loading } = this.props;
     const { graphType } = this.state;
     if (loading) {
-      return (
-        <div className="m1">
-          <div className="ui active centered inline loader" />
-        </div>
-      );
+      return <LoadingIndicator className="u-space-top-vast" centered />;
     }
     if (error) {
-      return <NotFound error={error} />;
+      return <ErrorMessage className="u-space" error={error} />;
     }
 
     if (!nodes || !links) {
-      return (
-        <div className="m1">
-          <div className="ui warning message">
-            <div className="header">No service dependencies found.</div>
-          </div>
-        </div>
-      );
+      return <div className="u-simple-card u-space">No service dependencies found.</div>;
     }
 
     const GRAPH_TYPE_OPTIONS = [GRAPH_TYPES.FORCE_DIRECTED];
@@ -100,33 +91,23 @@ export default class DependencyGraphPage extends Component {
     if (dependencies.length <= dagMaxNumServices) {
       GRAPH_TYPE_OPTIONS.push(GRAPH_TYPES.DAG);
     }
+
     return (
-      <div className="my2">
-        <Menu tabular>
-          {GRAPH_TYPE_OPTIONS.map(option => (
-            <Menu.Item
-              active={graphType === option.type}
-              key={option.type}
-              name={option.name}
-              onClick={() => this.handleGraphTypeChange(option.type)}
-            />
-          ))}
-        </Menu>
-        <div
-          style={{
-            position: 'absolute',
-            bottom: 0,
-            right: 15,
-            left: 15,
-            top: 120,
-            overflow: 'hidden',
-            background: 'whitesmoke',
-          }}
-        >
-          {graphType === 'FORCE_DIRECTED' && <DependencyForceGraph nodes={nodes} links={links} />}
-          {graphType === 'DAG' && <DAG serviceCalls={dependencies} />}
-        </div>
-      </div>
+      <Tabs
+        onChange={this.handleGraphTypeChange}
+        activeKey={graphType}
+        type="card"
+        tabBarStyle={{ background: '#f5f5f5', padding: '1rem 1rem 0 1rem' }}
+      >
+        {GRAPH_TYPE_OPTIONS.map(opt => (
+          <TabPane className="u-pos-rel" tab={opt.name} key={opt.type}>
+            <div className="DependencyGraph--graphWrapper">
+              {opt.type === 'FORCE_DIRECTED' && <DependencyForceGraph nodes={nodes} links={links} />}
+              {opt.type === 'DAG' && <DAG serviceCalls={dependencies} />}
+            </div>
+          </TabPane>
+        ))}
+      </Tabs>
     );
   }
 }
