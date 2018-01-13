@@ -22,3 +22,13 @@ limitations under the License.
   right: 1rem;
   top: 120px;
 }
+
+.rv-force__node {
+  fill: #11939a;
+  cursor: pointer;
+}
+
+.rv-force__label {
+  user-select: none;
+  pointer-events: none;
+}

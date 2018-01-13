@@ -32,9 +32,8 @@ import { shallow, mount } from 'enzyme';
 import store from 'store';
 
 import SearchTracePage, { mapStateToProps } from './index';
-import TraceResultsScatterPlot from './TraceResultsScatterPlot';
-import TraceSearchForm from './TraceSearchForm';
-import TraceSearchResult from './TraceSearchResult';
+import SearchForm from './SearchForm';
+import LoadingIndicator from '../common/LoadingIndicator';
 import traceGenerator from '../../demo/trace-generators';
 import { MOST_RECENT } from '../../model/order-by';
 import transformTraceData from '../../model/transform-trace-data';
@@ -79,22 +78,15 @@ describe('<SearchTracePage>', () => {
     store.get = oldFn;
   });
 
-  describe('loading', () => {
-    it('shows a loading indicator if loading services', () => {
-      wrapper.setProps({ loadingServices: true });
-      expect(wrapper.find('.js-test-search-loader').length).toBe(1);
-    });
-
-    it('shows a loading indicator if loading traces', () => {
-      wrapper.setProps({ loadingTraces: true });
-      expect(wrapper.find('.js-test-traces-loader').length).toBe(1);
-    });
+  it('shows a loading indicator if loading services', () => {
+    wrapper.setProps({ loadingServices: true });
+    expect(wrapper.find(LoadingIndicator).length).toBe(1);
   });
 
   it('shows a search form when services are loaded', () => {
     const services = [{ name: 'svc-a', operations: ['op-a'] }];
     wrapper.setProps({ services });
-    expect(wrapper.find(TraceSearchForm).length).toBe(1);
+    expect(wrapper.find(SearchForm).length).toBe(1);
   });
 
   it('shows an error message if there is an error message', () => {
@@ -105,25 +97,6 @@ describe('<SearchTracePage>', () => {
   it('shows the logo prior to searching', () => {
     wrapper.setProps({ isHomepage: true, traceResults: [] });
     expect(wrapper.find('.js-test-logo').length).toBe(1);
-  });
-
-  it('shows the "no results" message when the search result is empty', () => {
-    wrapper.setProps({ traceResults: [] });
-    expect(wrapper.find('.js-test-no-results').length).toBe(1);
-  });
-
-  describe('search finished with results', () => {
-    it('shows a scatter plot', () => {
-      expect(wrapper.find(TraceResultsScatterPlot).length).toBe(1);
-    });
-
-    it('shows the results filter form', () => {
-      expect(wrapper.find('TraceResultsFilterFormImpl').length).toBe(1);
-    });
-
-    it('shows a result entry for each trace', () => {
-      expect(wrapper.find(TraceSearchResult).length).toBe(traceResults.length);
-    });
   });
 });
 

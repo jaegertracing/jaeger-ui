@@ -17,6 +17,7 @@ import sinon from 'sinon';
 import { shallow, mount } from 'enzyme';
 
 import TracePageHeader, { HEADER_ITEMS } from './TracePageHeader';
+import * as markers from './TracePageHeader.markers';
 
 describe('<TracePageHeader>', () => {
   const defaultProps = {
@@ -42,8 +43,8 @@ describe('<TracePageHeader>', () => {
   });
 
   it('renders the trace title', () => {
-    const h2 = wrapper.find('h2').first();
-    expect(h2.contains(defaultProps.name)).toBeTruthy();
+    const h1 = wrapper.find('h1').first();
+    expect(h1.contains(defaultProps.name)).toBeTruthy();
   });
 
   it('renders the header items', () => {
@@ -53,15 +54,15 @@ describe('<TracePageHeader>', () => {
     });
   });
 
-  it('calls the context updateTextFilter() function for onChange of the input', () => {
+  it('calls updateTextFilter() function for onChange of the input', () => {
     const updateTextFilter = sinon.spy();
     const props = { ...defaultProps, updateTextFilter };
     wrapper = shallow(<TracePageHeader {...props} />);
     const event = { target: { value: 'my new value' } };
     wrapper
-      .find('#trace-page__text-filter')
+      .find(`[data-test="${markers.IN_TRACE_SEARCH}"]`)
       .first()
-      .prop('onChange')(event);
+      .simulate('change', event);
     expect(updateTextFilter.calledWith('my new value')).toBeTruthy();
   });
 });

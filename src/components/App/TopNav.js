@@ -84,7 +84,7 @@ export default function TopNav(props: TopNavProps) {
             );
           }
           return (
-            <Menu.Item key="itemLabel">
+            <Menu.Item key={item.label}>
               <a href={item.url} target="_blank" rel="noopener noreferrer">
                 {item.label}
               </a>

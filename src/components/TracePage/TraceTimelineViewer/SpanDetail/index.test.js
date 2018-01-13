@@ -23,6 +23,7 @@ import AccordianLogs from './AccordianLogs';
 import DetailState from './DetailState';
 import SpanDetail from './index';
 import { formatDuration } from '../utils';
+import LabeledList from '../../../common/LabeledList';
 import traceGenerator from '../../../../demo/trace-generators';
 import transformTraceData from '../../../../model/transform-trace-data';
 
@@ -70,23 +71,22 @@ describe('<SpanDetail>', () => {
   });
 
   it('shows the operation name', () => {
-    expect(wrapper.find('h3').text()).toBe(span.operationName);
+    expect(wrapper.find('h2').text()).toBe(span.operationName);
   });
 
   it('lists the service name, duration and start time', () => {
-    const words = ['Service', 'Duration', 'Start Time'];
-    const strongs = wrapper.find('strong');
-    expect(strongs.length).toBe(3);
-    strongs.forEach((strong, i) => {
-      expect(strong.text()).toEqual(expect.stringContaining(words[i]));
-    });
-    expect(formatDuration.mock.calls).toEqual([[span.duration], [span.relativeStartTime]]);
+    const words = ['Duration:', 'Service:', 'Start Time:'];
+    const overview = wrapper.find(LabeledList);
+    expect(
+      overview
+        .prop('items')
+        .map(item => item.label)
+        .sort()
+    ).toEqual(words);
   });
 
   it('renders the span tags', () => {
-    const target = (
-      <AccordianKeyValues data={span.tags} highContrast label="Tags" isOpen={detailState.isTagsOpen} />
-    );
+    const target = <AccordianKeyValues data={span.tags} label="Tags" isOpen={detailState.isTagsOpen} />;
     expect(wrapper.containsMatchingElement(target)).toBe(true);
     wrapper.find({ data: span.tags }).simulate('toggle');
     expect(props.tagsToggle).toHaveBeenLastCalledWith(span.spanID);
@@ -94,12 +94,7 @@ describe('<SpanDetail>', () => {
 
   it('renders the process tags', () => {
     const target = (
-      <AccordianKeyValues
-        data={span.process.tags}
-        highContrast
-        label="Process"
-        isOpen={detailState.isProcessOpen}
-      />
+      <AccordianKeyValues data={span.process.tags} label="Process" isOpen={detailState.isProcessOpen} />
     );
     expect(wrapper.containsMatchingElement(target)).toBe(true);
     wrapper.find({ data: span.process.tags }).simulate('toggle');

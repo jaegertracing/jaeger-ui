@@ -18,6 +18,7 @@ import React from 'react';
 import cx from 'classnames';
 import { IoIosArrowDown, IoIosArrowRight } from 'react-icons/lib/io';
 
+import * as markers from './AccordianKeyValues.markers';
 import KeyValuesTable from './KeyValuesTable';
 
 import './AccordianKeyValues.css';
@@ -71,8 +72,8 @@ export default function AccordianKeyValues(props: AccordianKeyValuesProps) {
         onClick={isEmpty ? null : onToggle}
         role="switch"
       >
-        <strong>
-          {isOpen ? <IoIosArrowDown className={iconCls} /> : <IoIosArrowRight className={iconCls} />}
+        {isOpen ? <IoIosArrowDown className={iconCls} /> : <IoIosArrowRight className={iconCls} />}
+        <strong data-test={markers.LABEL}>
           {label}
           {isOpen || ':'}
         </strong>

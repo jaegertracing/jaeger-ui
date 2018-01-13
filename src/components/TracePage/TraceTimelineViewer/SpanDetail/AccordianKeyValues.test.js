@@ -16,6 +16,7 @@ import React from 'react';
 import { shallow } from 'enzyme';
 
 import AccordianKeyValues, { KeyValuesSummary } from './AccordianKeyValues';
+import * as markers from './AccordianKeyValues.markers';
 import KeyValuesTable from './KeyValuesTable';
 
 const tags = [{ key: 'span.kind', value: 'client' }, { key: 'omg', value: 'mos-def' }];
@@ -67,11 +68,11 @@ describe('<AccordianKeyValues>', () => {
 
   it('renders without exploding', () => {
     expect(wrapper).toBeDefined();
-    expect(wrapper.find('.AccordianKeyValues').length).toBe(1);
+    expect(wrapper.exists()).toBe(true);
   });
 
   it('renders the label', () => {
-    const header = wrapper.find('.AccordianKeyValues--header strong');
+    const header = wrapper.find(`[data-test="${markers.LABEL}"]`);
     expect(header.length).toBe(1);
     expect(header.text()).toBe(`${props.label}:`);
   });

@@ -30,6 +30,7 @@ import {
   traceIDsToQuery,
   SearchFormImpl as SearchForm,
 } from './SearchForm';
+import * as markers from './SearchForm.markers';
 
 function makeDateParams(dateOffset = 0) {
   const date = new Date();
@@ -237,16 +238,20 @@ describe('<SearchForm>', () => {
     wrapper = shallow(<SearchForm {...defaultProps} />);
   });
 
-  it('shows operations only when a service is selected', () => {
-    expect(wrapper.find('.search-form--operation').length).toBe(0);
-
+  it('enables operations only when a service is selected', () => {
+    let ops = wrapper.find('[placeholder="Select An Operation"]');
+    expect(ops.prop('props').disabled).toBe(true);
     wrapper = shallow(<SearchForm {...defaultProps} selectedService="svcA" />);
-    expect(wrapper.find('.search-form--operation').length).toBe(1);
+    ops = wrapper.find('[placeholder="Select An Operation"]');
+    expect(ops.prop('props').disabled).toBe(false);
   });
 
   it('shows custom date inputs when `props.selectedLookback` is "custom"', () => {
     function getDateFieldLengths(compWrapper) {
-      return [compWrapper.find('.js-test-start-input').length, compWrapper.find('.js-test-end-input').length];
+      return [
+        compWrapper.find('[placeholder="Start Date"]').length,
+        compWrapper.find('[placeholder="End Date"]').length,
+      ];
     }
     expect(getDateFieldLengths(wrapper)).toEqual([0, 0]);
     wrapper = shallow(<SearchForm {...defaultProps} selectedLookback="custom" />);
@@ -254,10 +259,10 @@ describe('<SearchForm>', () => {
   });
 
   it('disables the submit button when a service is not selected', () => {
-    let btn = wrapper.find('.js-test-submit-btn');
+    let btn = wrapper.find(`[data-test="${markers.SUBMIT_BTN}"]`);
     expect(btn.prop('disabled')).toBeTruthy();
     wrapper = shallow(<SearchForm {...defaultProps} selectedService="svcA" />);
-    btn = wrapper.find('.js-test-submit-btn');
+    btn = wrapper.find(`[data-test="${markers.SUBMIT_BTN}"]`);
     expect(btn.prop('disabled')).toBeFalsy();
   });
 });

@@ -24,6 +24,7 @@ import { bindActionCreators } from 'redux';
 import { Field, reduxForm, formValueSelector } from 'redux-form';
 import store from 'store';
 
+import * as markers from './SearchForm.markers';
 import VirtSelect from '../common/VirtSelect';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import { formatDate, formatTime } from '../../utils/date';
@@ -333,7 +334,7 @@ export function SearchFormImpl(props) {
         />
       </FormItem>
 
-      <Button htmlType="submit" disabled={disabled || noSelectedService}>
+      <Button htmlType="submit" disabled={disabled || noSelectedService} data-test={markers.SUBMIT_BTN}>
         Find Traces
       </Button>
     </Form>

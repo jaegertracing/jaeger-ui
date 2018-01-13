@@ -20,6 +20,7 @@ import TopNav from './TopNav';
 
 describe('<TopNav>', () => {
   const labelGitHub = 'GitHub';
+  const githubUrl = 'https://github.com/uber/jaeger';
   const labelAbout = 'About Jaeger';
   const dropdownItems = [
     {
@@ -36,7 +37,7 @@ describe('<TopNav>', () => {
     menuConfig: [
       {
         label: labelGitHub,
-        url: 'https://github.com/uber/jaeger',
+        url: githubUrl,
       },
       {
         label: labelAbout,
@@ -70,27 +71,16 @@ describe('<TopNav>', () => {
 
   describe('renders the custom menu', () => {
     it('renders the top-level item', () => {
-      const item = wrapper.find(TopNav.CustomNavItem);
+      const item = wrapper.find(`[href="${githubUrl}"]`);
       expect(item.length).toBe(1);
-      expect(item.prop('label')).toBe(labelGitHub);
+      expect(item.text()).toMatch(labelGitHub);
     });
 
-    describe('renders the nested menu items', () => {
-      it('renders the <CustomNavDropdown> component', () => {
-        const item = wrapper.find(TopNav.CustomNavDropdown);
-        expect(item.length).toBe(1);
-        expect(item.prop('label')).toBe(labelAbout);
-        expect(item.prop('items')).toBe(dropdownItems);
-      });
-
-      it('the <CustomNavDropdown> renders the links', () => {
-        const dropdown = shallow(<TopNav.CustomNavDropdown label={labelAbout} items={dropdownItems} />);
-        const links = dropdown.find('a');
-        expect(links.length).toBe(2);
-        const linkTexts = links.map(node => node.text()).sort();
-        const expectTexts = dropdownItems.map(item => item.label).sort();
-        expect(expectTexts).toEqual(linkTexts);
-      });
+    it('renders the nested menu items', () => {
+      const item = wrapper.find(TopNav.CustomNavDropdown);
+      expect(item.length).toBe(1);
+      expect(item.prop('label')).toBe(labelAbout);
+      expect(item.prop('items')).toBe(dropdownItems);
     });
   });
 });

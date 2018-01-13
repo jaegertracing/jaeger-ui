@@ -13,10 +13,11 @@
 // limitations under the License.
 
 import React from 'react';
+import { Tag } from 'antd';
 import { shallow } from 'enzyme';
 
-import TraceSearchResult from './TraceSearchResult';
-import TraceServiceTag from './TraceServiceTag';
+import ResultItem from './ResultItem';
+import * as markers from './ResultItem.markers';
 
 const testTraceProps = {
   duration: 100,
@@ -31,21 +32,22 @@ const testTraceProps = {
   numberOfSpans: 5,
 };
 
-it('<TraceSearchResult /> should render base case correctly', () => {
-  const wrapper = shallow(<TraceSearchResult trace={testTraceProps} durationPercent={50} />);
+it('<ResultItem /> should render base case correctly', () => {
+  const wrapper = shallow(<ResultItem trace={testTraceProps} durationPercent={50} />);
 
   const numberOfSpanText = wrapper
-    .find('.trace-search-result--spans')
+    .find(`[data-test="${markers.NUM_SPANS}"]`)
     .first()
+    .render()
     .text();
-  const numberOfServicesTags = wrapper.find(TraceServiceTag).length;
-  expect(numberOfSpanText).toBe('5 spans');
+  const numberOfServicesTags = wrapper.find(`[data-test="${markers.SERVICE_TAGS}"]`).find(Tag).length;
+  expect(numberOfSpanText).toBe('5 Spans');
   expect(numberOfServicesTags).toBe(1);
 });
 
-it('<TraceSearchResult /> should not render any ServiceTags when there are no services', () => {
+it('<ResultItem /> should not render any ServiceTags when there are no services', () => {
   const wrapper = shallow(
-    <TraceSearchResult
+    <ResultItem
       trace={{
         ...testTraceProps,
         services: [],
@@ -53,6 +55,6 @@ it('<TraceSearchResult /> should not render any ServiceTags when there are no se
       durationPercent={50}
     />
   );
-  const numberOfServicesTags = wrapper.find(TraceServiceTag).length;
+  const numberOfServicesTags = wrapper.find(`[data-test="${markers.SERVICE_TAGS}"]`).find(Tag).length;
   expect(numberOfServicesTags).toBe(0);
 });

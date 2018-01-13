@@ -36,6 +36,7 @@ import SpanGraph from './SpanGraph';
 import TracePageHeader from './TracePageHeader';
 import TraceTimelineViewer from './TraceTimelineViewer';
 import ErrorMessage from '../common/ErrorMessage';
+import LoadingIndicator from '../common/LoadingIndicator';
 import traceGenerator from '../../demo/trace-generators';
 import transformTraceData from '../../model/transform-trace-data';
 
@@ -99,7 +100,7 @@ describe('<TracePage>', () => {
 
   it('renders a loading indicator when loading', () => {
     wrapper.setProps({ trace: null, loading: true });
-    const loading = wrapper.find('.loader');
+    const loading = wrapper.find(LoadingIndicator);
     expect(loading.length).toBe(1);
   });
 
@@ -232,14 +233,14 @@ describe('<TracePage>', () => {
       setHeaderHeight({ clientHeight: h });
       wrapper.update();
       let sections = wrapper.find('section');
-      expect(sections.length).toBe(2);
-      const section = sections.at(1);
+      expect(sections.length).toBe(1);
+      const section = sections.first();
       expect(section.prop('style')).toEqual({ paddingTop: h });
       expect(section.containsMatchingElement(<TraceTimelineViewer />)).toBe(true);
       setHeaderHeight(null);
       wrapper.update();
       sections = wrapper.find('section');
-      expect(sections.length).toBe(1);
+      expect(sections.length).toBe(0);
     });
 
     it('propagates textFilter changes', () => {

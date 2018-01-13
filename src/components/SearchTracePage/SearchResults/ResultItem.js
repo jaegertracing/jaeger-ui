@@ -19,6 +19,7 @@ import { Col, Divider, Row, Tag } from 'antd';
 import { sortBy } from 'lodash';
 import moment from 'moment';
 
+import * as markers from './ResultItem.markers';
 import { FALLBACK_TRACE_NAME } from '../../../constants';
 import colorGenerator from '../../../utils/color-generator';
 import { formatDuration, formatRelativeDate } from '../../../utils/date';
@@ -47,7 +48,7 @@ export default function ResultItem({
       </div>
       <Row>
         <Col span={4} className="u-pad-sm">
-          <Tag className="u-space-xs">
+          <Tag className="u-space-xs" data-test={markers.NUM_SPANS}>
             {numberOfSpans} Span{numberOfSpans > 1 && 's'}
           </Tag>
           {Boolean(numberOfErredSpans) && (
@@ -57,7 +58,7 @@ export default function ResultItem({
           )}
         </Col>
         <Col span={16} className="u-pad-sm">
-          <ul className="u-list-reset">
+          <ul className="u-list-reset" data-test={markers.SERVICE_TAGS}>
             {sortBy(services, s => s.name).map(service => {
               const { name, numberOfSpans: count } = service;
               return (

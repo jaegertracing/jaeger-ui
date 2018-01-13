@@ -1,3 +1,5 @@
+// TODO: @ flow
+
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,6 +19,7 @@ import { Select } from 'antd';
 import { Field, reduxForm, formValueSelector } from 'redux-form';
 import { Link } from 'react-router-dom';
 
+import * as markers from './index.markers';
 import ResultItem from './ResultItem';
 import ScatterPlot from './ScatterPlot';
 import LoadingIndicator from '../../common/LoadingIndicator';
@@ -69,7 +72,11 @@ export default function SearchResults(props: SearchResultsProps) {
     return <LoadingIndicator className="u-space-top-vast" centered />;
   }
   if (!Array.isArray(traces) || !traces.length) {
-    return <div className="u-simple-card js-test-no-results">No trace results. Try another query.</div>;
+    return (
+      <div className="u-simple-card" data-test={markers.NO_RESULTS}>
+        No trace results. Try another query.
+      </div>
+    );
   }
   return (
     <div>

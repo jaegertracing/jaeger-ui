@@ -29,7 +29,7 @@ import { nodesPropTypes, linksPropTypes } from '../../propTypes/dependencies';
 import { formatDependenciesAsNodesAndLinks } from '../../selectors/dependencies';
 import getConfig from '../../utils/config/get-config';
 
-import './DependencyGraph.css';
+import './index.css';
 
 const TabPane = Tabs.TabPane;
 

@@ -19,6 +19,7 @@ import { Button, Dropdown, Icon, Input, Menu } from 'antd';
 import { IoChevronDown, IoChevronRight } from 'react-icons/lib/io';
 import { Link } from 'react-router-dom';
 
+import * as markers from './TracePageHeader.markers';
 import KeyboardShortcutsHelp from './KeyboardShortcutsHelp';
 import LabeledList from '../common/LabeledList';
 import { FALLBACK_TRACE_NAME } from '../../constants';
@@ -172,6 +173,7 @@ export default function TracePageHeader(props: TracePageHeaderProps) {
             placeholder="Search..."
             onChange={event => updateTextFilter(event.target.value)}
             defaultValue={textFilter}
+            data-test={markers.IN_TRACE_SEARCH}
           />
         </div>
       </div>
