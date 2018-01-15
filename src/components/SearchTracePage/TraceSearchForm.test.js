@@ -150,14 +150,24 @@ describe('submitForm()', () => {
   });
 
   describe('`fields.lookback`', () => {
+    function getCalledDuration(mock) {
+      const { start, end } = mock.calls[0][0];
+      const diffMs = (Number(end) - Number(start)) / 1000;
+      return moment.duration(diffMs);
+    }
+
     it('subtracts `lookback` from `fields.end`', () => {
       submitForm(fields, searchTraces);
-      const { calls } = searchTraces.mock;
-      expect(calls.length).toBe(1);
-      const { start, end } = calls[0][0];
-      const diffMs = (Number(end) - Number(start)) / 1000;
-      const duration = moment.duration(diffMs);
-      expect(duration.asSeconds()).toBe(LOOKBACK_VALUE);
+      expect(searchTraces).toHaveBeenCalledTimes(1);
+      expect(getCalledDuration(searchTraces.mock).asSeconds()).toBe(LOOKBACK_VALUE);
+    });
+
+    it('parses `lookback` double digit options', () => {
+      const lookbackDoubleDigitValue = 12;
+      fields.lookback = `${lookbackDoubleDigitValue}h`;
+      submitForm(fields, searchTraces);
+      expect(searchTraces).toHaveBeenCalledTimes(1);
+      expect(getCalledDuration(searchTraces.mock).asHours()).toBe(lookbackDoubleDigitValue);
     });
 
     it('processes form dates when `lookback` is "custom"', () => {

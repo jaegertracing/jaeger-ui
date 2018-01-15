@@ -106,7 +106,7 @@ export function submitForm(fields, searchTraces) {
   let start;
   let end;
   if (lookback !== 'custom') {
-    const unit = lookback[1];
+    const unit = lookback.substr(-1);
     const now = new Date();
     start =
       moment(now)
