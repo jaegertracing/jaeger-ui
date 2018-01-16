@@ -35,6 +35,10 @@ import './SearchForm.css';
 const FormItem = Form.Item;
 const Option = Select.Option;
 
+const AdaptedInput = reduxFormFieldAdapter(Input);
+const AdaptedSelect = reduxFormFieldAdapter(Select);
+const AdaptedVirtualSelect = reduxFormFieldAdapter(VirtSelect, option => option.value);
+
 export function getUnixTimeStampInMSFromForm({ startDate, startDateTime, endDate, endDateTime }) {
   const start = `${startDate} ${startDateTime}`;
   const end = `${endDate} ${endDateTime}`;
@@ -153,7 +157,7 @@ export function SearchFormImpl(props) {
       <FormItem label="Service">
         <Field
           name="service"
-          component={reduxFormFieldAdapter(VirtSelect, option => option.value)}
+          component={AdaptedVirtualSelect}
           placeholder="Select A Service"
           props={{
             disabled,
@@ -167,7 +171,7 @@ export function SearchFormImpl(props) {
       <FormItem label="Operation">
         <Field
           name="operation"
-          component={reduxFormFieldAdapter(VirtSelect, option => option.value)}
+          component={AdaptedVirtualSelect}
           placeholder="Select An Operation"
           props={{
             clearable: false,
@@ -213,18 +217,14 @@ export function SearchFormImpl(props) {
       >
         <Field
           name="tags"
-          component={reduxFormFieldAdapter(Input)}
+          component={AdaptedInput}
           placeholder="http.status_code=200 error=true"
           props={{ disabled }}
         />
       </FormItem>
 
       <FormItem label="Lookback">
-        <Field
-          name="lookback"
-          component={reduxFormFieldAdapter(Select)}
-          props={{ disabled, defaultValue: '1h' }}
-        >
+        <Field name="lookback" component={AdaptedSelect} props={{ disabled, defaultValue: '1h' }}>
           <Option value="1h">Last Hour</Option>
           <Option value="2h">Last 2 Hours</Option>
           <Option value="3h">Last 3 Hours</Option>
@@ -259,16 +259,11 @@ export function SearchFormImpl(props) {
           <Field
             name="startDate"
             type="date"
-            component={reduxFormFieldAdapter(Input)}
+            component={AdaptedInput}
             placeholder="Start Date"
             props={{ disabled }}
           />
-          <Field
-            name="startDateTime"
-            type="time"
-            component={reduxFormFieldAdapter(Input)}
-            props={{ disabled }}
-          />
+          <Field name="startDateTime" type="time" component={AdaptedInput} props={{ disabled }} />
         </FormItem>,
 
         <FormItem
@@ -293,42 +288,32 @@ export function SearchFormImpl(props) {
           <Field
             name="endDate"
             type="date"
-            component={reduxFormFieldAdapter(Input)}
+            component={AdaptedInput}
             placeholder="End Date"
             props={{ disabled }}
           />
-          <Field
-            name="endDateTime"
-            type="time"
-            component={reduxFormFieldAdapter(Input)}
-            props={{ disabled }}
-          />
+          <Field name="endDateTime" type="time" component={AdaptedInput} props={{ disabled }} />
         </FormItem>,
       ]}
 
       <FormItem label="Min Duration">
         <Field
           name="minDuration"
-          component={reduxFormFieldAdapter(Input)}
+          component={AdaptedInput}
           placeholder="e.g. 1.2s, 100ms, 500us"
           props={{ disabled }}
         />
       </FormItem>
 
       <FormItem label="Max Duration">
-        <Field
-          name="maxDuration"
-          component={reduxFormFieldAdapter(Input)}
-          placeholder="e.g. 1.1s"
-          props={{ disabled }}
-        />
+        <Field name="maxDuration" component={AdaptedInput} placeholder="e.g. 1.1s" props={{ disabled }} />
       </FormItem>
 
       <FormItem label="Limit Results">
         <Field
           name="resultsLimit"
           type="number"
-          component={reduxFormFieldAdapter(Input)}
+          component={AdaptedInput}
           placeholder="Limit Results"
           props={{ disabled, min: 1, max: 1500 }}
         />
