@@ -16,8 +16,6 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { document } from 'global';
 
-// import 'basscss/css/basscss.css';
-
 import JaegerUIApp from './components/App';
 import { init as initTracking } from './utils/metrics';
 

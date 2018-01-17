@@ -41,7 +41,6 @@
   },
   "dependencies": {
     "antd": "^3.0.3",
-    "basscss": "^8.0.3",
     "chance": "^1.0.10",
     "classnames": "^2.2.5",
     "combokeys": "^3.0.0",
@@ -84,8 +83,6 @@
     "redux-form": "^7.0.3",
     "redux-promise-middleware": "^4.3.0",
     "reselect": "^3.0.1",
-    "semantic-ui-css": "^2.2.12",
-    "semantic-ui-react": "^0.71.4",
     "store": "^2.0.12",
     "tween-functions": "^1.2.0"
   },

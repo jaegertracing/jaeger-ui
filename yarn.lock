@@ -1138,66 +1138,6 @@ base64-js@^1.0.2:
   version "1.2.1"
   resolved "https://registry.yarnpkg.com/base64-js/-/base64-js-1.2.1.tgz#a91947da1f4a516ea38e5b4ec0ec3773675e0886"
 
-basscss-align@^1.0.2:
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/basscss-align/-/basscss-align-1.0.2.tgz#294aa689d6f99da86e4af4c5c2892870855c1c37"
-
-basscss-border@^4.0.2:
-  version "4.0.2"
-  resolved "https://registry.yarnpkg.com/basscss-border/-/basscss-border-4.0.2.tgz#14b4506329b90cb14abe5f4d3473e9fe9202df2e"
-
-basscss-flexbox@^1.0.1:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/basscss-flexbox/-/basscss-flexbox-1.0.1.tgz#f64bc7607f97a7dfab74c1e011e1a77ad734f83a"
-
-basscss-grid@^2.0.0:
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/basscss-grid/-/basscss-grid-2.0.0.tgz#6f4c3198e786a38529f8362bc3b3bce5254c1369"
-
-basscss-hide@^1.0.1:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/basscss-hide/-/basscss-hide-1.0.1.tgz#34bc138bba867c6c49ab8682a610ef495e47d750"
-
-basscss-layout@^3.1.0:
-  version "3.1.0"
-  resolved "https://registry.yarnpkg.com/basscss-layout/-/basscss-layout-3.1.0.tgz#f9f392e480da66657d9fe5de9ca4c07c579c3a4e"
-
-basscss-margin@^1.0.7:
-  version "1.0.7"
-  resolved "https://registry.yarnpkg.com/basscss-margin/-/basscss-margin-1.0.7.tgz#5a92d8cda98ef391c73a15ede97b34b48886417c"
-
-basscss-padding@^1.1.3:
-  version "1.1.3"
-  resolved "https://registry.yarnpkg.com/basscss-padding/-/basscss-padding-1.1.3.tgz#69db799414e6dd58bed83776952cc299e2e6874e"
-
-basscss-position@^2.0.3:
-  version "2.0.3"
-  resolved "https://registry.yarnpkg.com/basscss-position/-/basscss-position-2.0.3.tgz#467180a1f8f386e9072ed8d08294d2a6e0ba4305"
-
-basscss-type-scale@^1.0.5:
-  version "1.0.5"
-  resolved "https://registry.yarnpkg.com/basscss-type-scale/-/basscss-type-scale-1.0.5.tgz#23bf5e41c9d142c8061cf9829ccf23e9b3258ec7"
-
-basscss-typography@^3.0.3:
-  version "3.0.3"
-  resolved "https://registry.yarnpkg.com/basscss-typography/-/basscss-typography-3.0.3.tgz#182cf43df7c4ebed02750dc748041cbadff60d43"
-
-basscss@^8.0.3:
-  version "8.0.3"
-  resolved "https://registry.yarnpkg.com/basscss/-/basscss-8.0.3.tgz#720607254e89d363cd8d46b3aefa01d3c2b91363"
-  dependencies:
-    basscss-align "^1.0.2"
-    basscss-border "^4.0.2"
-    basscss-flexbox "^1.0.1"
-    basscss-grid "^2.0.0"
-    basscss-hide "^1.0.1"
-    basscss-layout "^3.1.0"
-    basscss-margin "^1.0.7"
-    basscss-padding "^1.1.3"
-    basscss-position "^2.0.3"
-    basscss-type-scale "^1.0.5"
-    basscss-typography "^3.0.3"
-
 batch@0.6.1:
   version "0.6.1"
   resolved "https://registry.yarnpkg.com/batch/-/batch-0.6.1.tgz#dc34314f4e679318093fc760272525f94bf25c16"
@@ -1560,7 +1500,7 @@ clap@^1.0.9:
   dependencies:
     chalk "^1.1.3"
 
-classnames@2.x, classnames@^2.1.5, classnames@^2.2.0, classnames@^2.2.1, classnames@^2.2.3, classnames@^2.2.4, classnames@^2.2.5, classnames@~2.2.0:
+classnames@2.x, classnames@^2.2.0, classnames@^2.2.1, classnames@^2.2.3, classnames@^2.2.4, classnames@^2.2.5, classnames@~2.2.0:
   version "2.2.5"
   resolved "https://registry.yarnpkg.com/classnames/-/classnames-2.2.5.tgz#fb3801d453467649ef3603c7d61a02bd129bde6d"
 
@@ -4660,10 +4600,6 @@ jest@^21.2.1:
   dependencies:
     jest-cli "^21.2.1"
 
-jquery@x.*:
-  version "3.2.1"
-  resolved "https://registry.yarnpkg.com/jquery/-/jquery-3.2.1.tgz#5c4d9de652af6cd0a770154a631bba12b015c787"
-
 js-base64@^2.1.9:
   version "2.1.9"
   resolved "https://registry.yarnpkg.com/js-base64/-/js-base64-2.1.9.tgz#f0e80ae039a4bd654b5f281fc93f04a914a7fcce"
@@ -6308,12 +6244,6 @@ promise@^7.1.1:
   dependencies:
     asap "~2.0.3"
 
-prop-types@15.5.8:
-  version "15.5.8"
-  resolved "https://registry.yarnpkg.com/prop-types/-/prop-types-15.5.8.tgz#6b7b2e141083be38c8595aa51fc55775c7199394"
-  dependencies:
-    fbjs "^0.8.9"
-
 prop-types@15.x, prop-types@^15.5.7, prop-types@^15.6.0:
   version "15.6.0"
   resolved "https://registry.yarnpkg.com/prop-types/-/prop-types-15.6.0.tgz#ceaf083022fc46b4a35f69e13ef75aed0d639856"
@@ -7556,22 +7486,6 @@ selfsigned@^1.9.1:
   resolved "https://registry.yarnpkg.com/selfsigned/-/selfsigned-1.10.1.tgz#bf8cb7b83256c4551e31347c6311778db99eec52"
   dependencies:
     node-forge "0.6.33"
-
-semantic-ui-css@^2.2.12:
-  version "2.2.12"
-  resolved "https://registry.yarnpkg.com/semantic-ui-css/-/semantic-ui-css-2.2.12.tgz#afc462e5bb4f8a0dcfe3dca11274499a997490dd"
-  dependencies:
-    jquery x.*
-
-semantic-ui-react@^0.71.4:
-  version "0.71.4"
-  resolved "https://registry.yarnpkg.com/semantic-ui-react/-/semantic-ui-react-0.71.4.tgz#998b4f91a145df1480f3e20a15e7d59b494ee407"
-  dependencies:
-    babel-runtime "^6.22.0"
-    classnames "^2.1.5"
-    debug "^2.6.3"
-    lodash "^4.17.2"
-    prop-types "15.5.8"
 
 semver-diff@^2.0.0:
   version "2.1.0"
