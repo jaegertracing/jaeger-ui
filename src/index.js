@@ -19,15 +19,6 @@ import { document } from 'global';
 import JaegerUIApp from './components/App';
 import { init as initTracking } from './utils/metrics';
 
-/* istanbul ignore if */
-if (process.env.NODE_ENV === 'development') {
-  require.ensure(['global/window', 'react-addons-perf'], require => {
-    const window = require('global/window');
-    // eslint-disable-next-line import/no-extraneous-dependencies
-    window.Perf = require('react-addons-perf');
-  });
-}
-
 initTracking();
 
 const UI_ROOT_ID = 'jaeger-ui-root';
