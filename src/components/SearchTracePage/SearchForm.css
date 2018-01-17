@@ -14,8 +14,21 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+.SearchForm--labelCount {
+  color: #999;
+}
+
 .SearchForm--hintTrigger {
+  border: 1px solid #999;
+  border-radius: 100px;
+  color: #999;
   cursor: pointer;
+  padding: 1px;
+}
+
+.SearchForm--hintTrigger:hover {
+  color: #000;
+  border-color: #000;
 }
 
 .SearchForm--tagsHintTitle {

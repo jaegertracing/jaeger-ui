@@ -13,12 +13,13 @@
 // limitations under the License.
 
 import React from 'react';
-import { Form, Input, Button, Icon, Popover, Select } from 'antd';
+import { Form, Input, Button, Popover, Select } from 'antd';
 import logfmtParser from 'logfmt/lib/logfmt_parser';
 import { stringify as logfmtStringify } from 'logfmt/lib/stringify';
 import moment from 'moment';
 import PropTypes from 'prop-types';
 import queryString from 'query-string';
+import { IoHelp } from 'react-icons/lib/io';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import { Field, reduxForm, formValueSelector } from 'redux-form';
@@ -154,7 +155,13 @@ export function SearchFormImpl(props) {
   const tz = selectedLookback === 'custom' ? new Date().toTimeString().replace(/^.*?GMT/, 'UTC') : null;
   return (
     <Form layout="vertical" onSubmit={handleSubmit}>
-      <FormItem label="Service">
+      <FormItem
+        label={
+          <span>
+            Service <span className="SearchForm--labelCount">({services.length})</span>
+          </span>
+        }
+      >
         <Field
           name="service"
           component={AdaptedVirtualSelect}
@@ -167,8 +174,13 @@ export function SearchFormImpl(props) {
           }}
         />
       </FormItem>
-
-      <FormItem label="Operation">
+      <FormItem
+        label={
+          <span>
+            Operation <span className="SearchForm--labelCount">({opsForSvc ? opsForSvc.length : 0})</span>
+          </span>
+        }
+      >
         <Field
           name="operation"
           component={AdaptedVirtualSelect}
@@ -210,7 +222,7 @@ export function SearchFormImpl(props) {
                 </div>
               }
             >
-              <Icon type="question-circle-o" className="SearchForm--hintTrigger" />
+              <IoHelp className="SearchForm--hintTrigger" />
             </Popover>
           </div>
         }
@@ -251,7 +263,7 @@ export function SearchFormImpl(props) {
                   </h3>
                 }
               >
-                <Icon type="question-circle-o" className="SearchForm--hintTrigger" />
+                <IoHelp className="SearchForm--hintTrigger" />
               </Popover>
             </div>
           }
@@ -280,7 +292,7 @@ export function SearchFormImpl(props) {
                   </h3>
                 }
               >
-                <Icon type="question-circle-o" className="SearchForm--hintTrigger" />
+                <IoHelp className="SearchForm--hintTrigger" />
               </Popover>
             </div>
           }
