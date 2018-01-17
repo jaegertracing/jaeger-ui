@@ -16,7 +16,8 @@
 
 import React from 'react';
 import _sortBy from 'lodash/sortBy';
-import { IoIosArrowDown, IoIosArrowRight } from 'react-icons/lib/io';
+import IoIosArrowDown from 'react-icons/lib/io/ios-arrow-down';
+import IoIosArrowRight from 'react-icons/lib/io/ios-arrow-right';
 
 import AccordianKeyValues from './AccordianKeyValues';
 import { formatDuration } from '../utils';

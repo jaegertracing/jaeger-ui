@@ -16,7 +16,8 @@
 
 import * as React from 'react';
 import { Button, Dropdown, Icon, Input, Menu } from 'antd';
-import { IoChevronDown, IoChevronRight } from 'react-icons/lib/io';
+import IoChevronDown from 'react-icons/lib/io/chevron-down';
+import IoChevronRight from 'react-icons/lib/io/chevron-right';
 import { Link } from 'react-router-dom';
 
 import * as markers from './TracePageHeader.markers';

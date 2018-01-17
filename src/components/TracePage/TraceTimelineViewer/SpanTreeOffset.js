@@ -15,7 +15,8 @@
 // limitations under the License.
 
 import React from 'react';
-import { IoIosArrowDown, IoChevronRight } from 'react-icons/lib/io';
+import IoChevronRight from 'react-icons/lib/io/chevron-right';
+import IoIosArrowDown from 'react-icons/lib/io/ios-arrow-down';
 
 import './SpanTreeOffset.css';
 

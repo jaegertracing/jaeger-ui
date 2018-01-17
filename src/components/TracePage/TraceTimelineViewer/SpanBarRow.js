@@ -15,7 +15,8 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { IoAlert, IoArrowRightA } from 'react-icons/lib/io';
+import IoAlert from 'react-icons/lib/io/alert';
+import IoArrowRightA from 'react-icons/lib/io/arrow-right-a';
 
 import TimelineRow from './TimelineRow';
 import SpanTreeOffset from './SpanTreeOffset';

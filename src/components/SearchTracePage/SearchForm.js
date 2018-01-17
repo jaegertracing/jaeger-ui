@@ -19,7 +19,7 @@ import { stringify as logfmtStringify } from 'logfmt/lib/stringify';
 import moment from 'moment';
 import PropTypes from 'prop-types';
 import queryString from 'query-string';
-import { IoHelp } from 'react-icons/lib/io';
+import IoHelp from 'react-icons/lib/io/help';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import { Field, reduxForm, formValueSelector } from 'redux-form';

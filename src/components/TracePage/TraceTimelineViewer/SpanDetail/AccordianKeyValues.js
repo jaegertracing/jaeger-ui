@@ -16,7 +16,8 @@
 
 import React from 'react';
 import cx from 'classnames';
-import { IoIosArrowDown, IoIosArrowRight } from 'react-icons/lib/io';
+import IoIosArrowDown from 'react-icons/lib/io/ios-arrow-down';
+import IoIosArrowRight from 'react-icons/lib/io/ios-arrow-right';
 
 import * as markers from './AccordianKeyValues.markers';
 import KeyValuesTable from './KeyValuesTable';
