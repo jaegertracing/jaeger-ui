@@ -29,10 +29,8 @@ type SpanTreeOffsetProps = {
 
 export default function SpanTreeOffset(props: SpanTreeOffsetProps) {
   const { level, hasChildren, childrenVisible, onClick } = props;
-  // const className = hasChildren ? 'span-kids-toggle' : '';
   const wrapperProps = hasChildren ? { onClick, role: 'switch', 'aria-checked': childrenVisible } : null;
   const icon = hasChildren && (childrenVisible ? <IoIosArrowDown /> : <IoChevronRight />);
-  // <span className="span-kids-toggle" onClick={onClick} role="switch" aria-checked={childrenVisible}>
   return (
     <span className={`SpanTreeOffset ${hasChildren ? 'is-parent' : ''}`} {...wrapperProps}>
       <span style={{ paddingLeft: `${level * 20}px` }} />
