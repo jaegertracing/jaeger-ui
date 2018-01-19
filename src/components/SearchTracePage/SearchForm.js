@@ -38,7 +38,7 @@ const Option = Select.Option;
 
 const AdaptedInput = reduxFormFieldAdapter(Input);
 const AdaptedSelect = reduxFormFieldAdapter(Select);
-const AdaptedVirtualSelect = reduxFormFieldAdapter(VirtSelect, option => option.value);
+const AdaptedVirtualSelect = reduxFormFieldAdapter(VirtSelect, option => (option ? option.value : null));
 
 export function getUnixTimeStampInMSFromForm({ startDate, startDateTime, endDate, endDateTime }) {
   const start = `${startDate} ${startDateTime}`;
