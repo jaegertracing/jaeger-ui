@@ -17,6 +17,7 @@
 /* eslint-disable import/no-extraneous-dependencies */
 
 import * as React from 'react';
+import { Icon } from 'antd';
 import VirtualizedSelect from 'react-virtualized-select';
 
 import 'react-select/dist/react-select.css';
@@ -25,6 +26,68 @@ import 'react-virtualized-select/styles.css';
 
 import './VirtSelect.css';
 
+type RenderOptionArgs = {
+  focusedOption: {},
+  focusOption: ({}) => void,
+  key: string,
+  labelKey: string,
+  option: { [string]: any },
+  selectValue: ({}) => void,
+  style: {},
+  valueArray: ?({}[]),
+};
+
+type RenderArrowArgs = {
+  isOpen: boolean,
+};
+
+function renderOption({
+  focusedOption,
+  focusOption,
+  key,
+  labelKey,
+  option,
+  selectValue,
+  style,
+  valueArray,
+}: RenderOptionArgs) {
+  const className = ['VirtSelect--option'];
+  if (option === focusedOption) {
+    className.push('is-focused');
+  }
+  if (option.disabled) {
+    className.push('is-disabled');
+  }
+  if (valueArray && valueArray.indexOf(option) >= 0) {
+    className.push('is-selected');
+  }
+  if (option.className) {
+    className.push(option.className);
+  }
+  const events = option.disabled
+    ? {}
+    : {
+        onClick: () => selectValue(option),
+        onMouseEnter: () => focusOption(option),
+      };
+  return (
+    <div className={className.join(' ')} key={key} style={style} title={option.title} {...events}>
+      {option[labelKey]}
+    </div>
+  );
+}
+
+function renderArrow({ isOpen }: RenderArrowArgs) {
+  return <Icon className={`VirtSelect--arrow ${isOpen ? 'is-open' : ''}`} type="down" />;
+}
+
 export default function VirtSelect(props: {}) {
-  return <VirtualizedSelect className="VirtSelect" {...props} />;
+  return (
+    <VirtualizedSelect
+      className="VirtSelect"
+      arrowRenderer={renderArrow}
+      optionRenderer={renderOption}
+      {...props}
+    />
+  );
 }

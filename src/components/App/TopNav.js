@@ -24,8 +24,6 @@ import type { ConfigMenuItem, ConfigMenuGroup } from '../../types/config';
 import getConfig from '../../utils/config/get-config';
 import prefixUrl from '../../utils/prefix-url';
 
-import './TopNav.css';
-
 type TopNavProps = {
   activeKey: string,
   menuConfig: (ConfigMenuItem | ConfigMenuGroup)[],
@@ -92,13 +90,7 @@ export default function TopNav(props: TopNavProps) {
           );
         })}
       </Menu>
-      <Menu
-        className="TopNav--menu"
-        theme="dark"
-        mode="horizontal"
-        selectable={false}
-        selectedKeys={[activeKey]}
-      >
+      <Menu theme="dark" mode="horizontal" selectable={false} selectedKeys={[activeKey]}>
         <Menu.Item>
           <Link to={prefixUrl('/')}>Jaeger UI</Link>
         </Menu.Item>
@@ -106,7 +98,7 @@ export default function TopNav(props: TopNavProps) {
           <TraceIDSearchInput />
         </Menu.Item>
         {NAV_LINKS.map(({ to, text }) => (
-          <Menu.Item key={to} className="TopNav--menuItem">
+          <Menu.Item key={to}>
             <Link to={to}>{text}</Link>
           </Menu.Item>
         ))}
