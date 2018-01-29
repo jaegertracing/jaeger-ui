@@ -12,22 +12,5 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import React from 'react';
-import { shallow } from 'enzyme';
-
-import TraceResultsScatterPlot from './TraceResultsScatterPlot';
-
-it('<TraceResultsScatterPlot /> should render base case correctly', () => {
-  const wrapper = shallow(
-    <TraceResultsScatterPlot
-      data={[
-        { x: Date.now() - 3000, y: 1, traceID: 1 },
-        { x: Date.now() - 2000, y: 2, traceID: 2 },
-        { x: Date.now() - 1000, y: 2, traceID: 2 },
-        { x: Date.now(), y: 3, traceID: 3 },
-      ]}
-    />,
-    { disableLifecycleMethods: true }
-  );
-  expect(wrapper).toBeTruthy();
-});
+// eslint-disable-next-line import/prefer-default-export
+export const SUBMIT_BTN = 'submit-btn';

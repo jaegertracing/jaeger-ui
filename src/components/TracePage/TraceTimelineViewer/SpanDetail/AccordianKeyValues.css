@@ -14,33 +14,28 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-.AccordianKeyValues {
-  margin: 0.3em 0;
-  text-overflow: ellipsis;
-}
-
-.AccordianKeyValues.is-compact {
-  margin: 0;
-}
-
 .AccordianKeyValues--header {
   cursor: pointer;
   overflow: hidden;
-  margin: 0 1px;
   padding: 0.25em 0.1em;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.AccordianKeyValues--header:not(.is-empty):hover {
-  background: #eee;
+.AccordianKeyValues--header:hover {
+  background: #e8e8e8;
+}
+
+.AccordianKeyValues--header.is-empty {
+  background: none;
+  cursor: initial;
 }
 
 .AccordianKeyValues--header.is-high-contrast:not(.is-empty):hover {
   background: #ddd;
 }
 
-.AccordianKeyValues--emptyArtifact {
+.AccordianKeyValues--emptyIcon {
   color: #aaa;
 }
 
@@ -53,6 +48,13 @@ limitations under the License.
 .AccordianKeyValues--summaryItem {
   display: inline;
   margin-left: 0.7em;
+  padding-right: 0.5rem;
+  border-right: 1px solid #ddd;
+}
+
+.AccordianKeyValues--summaryItem:last-child {
+  padding-right: 0;
+  border-right: none;
 }
 
 .AccordianKeyValues--summaryLabel {
@@ -60,6 +62,6 @@ limitations under the License.
 }
 
 .AccordianKeyValues--summaryDelim {
-  color: #aaa;
-  padding: 0 0.1em;
+  color: #bbb;
+  padding: 0 0.2em;
 }

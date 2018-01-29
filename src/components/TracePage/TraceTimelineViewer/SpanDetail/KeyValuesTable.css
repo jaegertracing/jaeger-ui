@@ -15,22 +15,27 @@ limitations under the License.
 */
 
 .KeyValueTable {
+  background: #fff;
   border: 1px solid #ddd;
   margin-bottom: 0.7em;
-  max-height: 300px;
+  max-height: 450px;
   overflow: auto;
-}
-
-/* border is on .KeyValueTable instead (the wrapper) */
-.KeyValueTable > .ui.table {
-  border: none;
 }
 
 .KeyValueTable--body {
   vertical-align: baseline;
 }
 
+.KeyValueTable--body > tr > td {
+  padding: 0.25rem 0.5rem;
+}
+
+.KeyValueTable--body > tr:nth-child(2n) > td {
+  background: #f5f5f5;
+}
+
 .KeyValueTable--keyColumn {
-  width: 150px;
   color: #888;
+  white-space: pre;
+  width: 125px;
 }

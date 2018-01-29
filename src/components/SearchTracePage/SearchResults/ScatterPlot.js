@@ -19,13 +19,13 @@ import dimensions from 'react-dimensions';
 import { XYPlot, XAxis, YAxis, MarkSeries, Hint } from 'react-vis';
 import { compose, withState, withProps } from 'recompose';
 
-import { FALLBACK_TRACE_NAME } from '../../constants';
-import { formatDuration } from '../../utils/date';
+import { FALLBACK_TRACE_NAME } from '../../../constants';
+import { formatDuration } from '../../../utils/date';
 
 import './react-vis.css';
-import './TraceResultsScatterPlot.css';
+import './ScatterPlot.css';
 
-function TraceResultsScatterPlotBase(props) {
+function ScatterPlotImpl(props) {
   const { data, containerWidth, onValueClick, overValue, onValueOver, onValueOut } = props;
   return (
     <div className="TraceResultsScatterPlot">
@@ -64,7 +64,7 @@ const valueShape = PropTypes.shape({
   name: PropTypes.string,
 });
 
-TraceResultsScatterPlotBase.propTypes = {
+ScatterPlotImpl.propTypes = {
   containerWidth: PropTypes.number,
   data: PropTypes.arrayOf(valueShape).isRequired,
   overValue: valueShape,
@@ -73,17 +73,17 @@ TraceResultsScatterPlotBase.propTypes = {
   onValueOver: PropTypes.func.isRequired,
 };
 
-TraceResultsScatterPlotBase.defaultProps = {
+ScatterPlotImpl.defaultProps = {
   containerWidth: null,
   overValue: null,
 };
 
-const TraceResultsScatterPlot = compose(
+const ScatterPlot = compose(
   withState('overValue', 'setOverValue', null),
   withProps(({ setOverValue }) => ({
     onValueOver: value => setOverValue(value),
     onValueOut: () => setOverValue(null),
   }))
-)(TraceResultsScatterPlotBase);
+)(ScatterPlotImpl);
 
-export default dimensions()(TraceResultsScatterPlot);
+export default dimensions()(ScatterPlot);

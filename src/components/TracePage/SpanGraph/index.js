@@ -84,9 +84,9 @@ export default class SpanGraph extends React.PureComponent<SpanGraphProps, SpanG
     }
     const { items } = this.state;
     return (
-      <div>
+      <div className="ub-px2">
         <TickLabels numTicks={TIMELINE_TICK_INTERVAL} duration={trace.duration} />
-        <div className="relative">
+        <div className="ub-relative">
           <CanvasSpanGraph valueWidth={trace.duration} items={items} />
           <ViewingLayer
             viewRange={viewRange}

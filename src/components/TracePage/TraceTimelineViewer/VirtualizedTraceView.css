@@ -15,9 +15,9 @@ limitations under the License.
 */
 
 .VirtualizedTraceView--spans {
-  padding-top: 40px;
-  position: relative;
-  z-index: 1;
+  padding-top: 38px;
+  /* position: relative;
+  z-index: 1; */
 }
 
 .VirtualizedTraceView--rowsWrapper {

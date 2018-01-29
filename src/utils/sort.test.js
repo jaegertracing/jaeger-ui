@@ -16,16 +16,15 @@ import sinon from 'sinon';
 
 import * as sortUtils from './sort';
 
-it('baseStringComparator() provides a case-insensitive sort', () => {
+it('localeStringComparator() provides a case-insensitive sort', () => {
   const arr = ['Z', 'ab', 'AC'];
   expect(arr.slice().sort()).toEqual(['AC', 'Z', 'ab']);
-  expect(arr.slice().sort(sortUtils.baseStringComparator)).toEqual(['ab', 'AC', 'Z']);
+  expect(arr.slice().sort(sortUtils.localeStringComparator)).toEqual(['ab', 'AC', 'Z']);
 });
 
-it('stringSortComparator() should properly sort a list of strings', () => {
+it('localeStringComparator() should properly sort a list of strings', () => {
   const arr = ['allen', 'Gustav', 'paul', 'Tim', 'abernathy', 'tucker', 'Steve', 'mike', 'John', 'Paul'];
-
-  expect(arr.sort(sortUtils.stringSortComparator)).toEqual([
+  expect(arr.sort(sortUtils.localeStringComparator)).toEqual([
     'abernathy',
     'allen',
     'Gustav',

@@ -15,6 +15,8 @@
 // limitations under the License.
 
 import React from 'react';
+import IoChevronRight from 'react-icons/lib/io/chevron-right';
+import IoIosArrowDown from 'react-icons/lib/io/ios-arrow-down';
 
 import './SpanTreeOffset.css';
 
@@ -27,14 +29,12 @@ type SpanTreeOffsetProps = {
 
 export default function SpanTreeOffset(props: SpanTreeOffsetProps) {
   const { level, hasChildren, childrenVisible, onClick } = props;
-  const className = hasChildren ? 'span-kids-toggle' : '';
-  const icon = hasChildren ? (
-    <i className={`span-tree-toggle-icon icon square ${childrenVisible ? 'outline minus' : 'plus'}`} />
-  ) : null;
+  const wrapperProps = hasChildren ? { onClick, role: 'switch', 'aria-checked': childrenVisible } : null;
+  const icon = hasChildren && (childrenVisible ? <IoIosArrowDown /> : <IoChevronRight />);
   return (
-    <span className={className} onClick={onClick} role="switch" aria-checked={childrenVisible}>
-      <span className="span-tree-offset" style={{ paddingLeft: `${level * 20}px` }} />
-      {icon}
+    <span className={`SpanTreeOffset ${hasChildren ? 'is-parent' : ''}`} {...wrapperProps}>
+      <span style={{ paddingLeft: `${level * 20}px` }} />
+      {icon && <span className="SpanTreeOffset--iconWrapper">{icon}</span>}
     </span>
   );
 }

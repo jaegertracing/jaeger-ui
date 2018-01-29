@@ -15,13 +15,13 @@ limitations under the License.
 */
 
 .TickLabels {
-  height: 1.25rem;
+  height: 1rem;
   position: relative;
 }
 
 .TickLabels--label {
   color: #717171;
-  font-size: 0.8rem;
+  font-size: 0.7rem;
   position: absolute;
   user-select: none;
 }

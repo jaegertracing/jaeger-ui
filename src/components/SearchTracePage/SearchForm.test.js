@@ -28,8 +28,9 @@ import {
   mapStateToProps,
   submitForm,
   traceIDsToQuery,
-  TraceSearchFormImpl as TraceSearchForm,
-} from './TraceSearchForm';
+  SearchFormImpl as SearchForm,
+} from './SearchForm';
+import * as markers from './SearchForm.markers';
 
 function makeDateParams(dateOffset = 0) {
   const date = new Date();
@@ -241,33 +242,37 @@ describe('submitForm()', () => {
   });
 });
 
-describe('<TraceSearchForm>', () => {
+describe('<SearchForm>', () => {
   let wrapper;
   beforeEach(() => {
-    wrapper = shallow(<TraceSearchForm {...defaultProps} />);
+    wrapper = shallow(<SearchForm {...defaultProps} />);
   });
 
-  it('shows operations only when a service is selected', () => {
-    expect(wrapper.find('.search-form--operation').length).toBe(0);
-
-    wrapper = shallow(<TraceSearchForm {...defaultProps} selectedService="svcA" />);
-    expect(wrapper.find('.search-form--operation').length).toBe(1);
+  it('enables operations only when a service is selected', () => {
+    let ops = wrapper.find('[placeholder="Select An Operation"]');
+    expect(ops.prop('props').disabled).toBe(true);
+    wrapper = shallow(<SearchForm {...defaultProps} selectedService="svcA" />);
+    ops = wrapper.find('[placeholder="Select An Operation"]');
+    expect(ops.prop('props').disabled).toBe(false);
   });
 
   it('shows custom date inputs when `props.selectedLookback` is "custom"', () => {
     function getDateFieldLengths(compWrapper) {
-      return [compWrapper.find('.js-test-start-input').length, compWrapper.find('.js-test-end-input').length];
+      return [
+        compWrapper.find('[placeholder="Start Date"]').length,
+        compWrapper.find('[placeholder="End Date"]').length,
+      ];
     }
     expect(getDateFieldLengths(wrapper)).toEqual([0, 0]);
-    wrapper = shallow(<TraceSearchForm {...defaultProps} selectedLookback="custom" />);
+    wrapper = shallow(<SearchForm {...defaultProps} selectedLookback="custom" />);
     expect(getDateFieldLengths(wrapper)).toEqual([1, 1]);
   });
 
   it('disables the submit button when a service is not selected', () => {
-    let btn = wrapper.find('.js-test-submit-btn');
+    let btn = wrapper.find(`[data-test="${markers.SUBMIT_BTN}"]`);
     expect(btn.prop('disabled')).toBeTruthy();
-    wrapper = shallow(<TraceSearchForm {...defaultProps} selectedService="svcA" />);
-    btn = wrapper.find('.js-test-submit-btn');
+    wrapper = shallow(<SearchForm {...defaultProps} selectedService="svcA" />);
+    btn = wrapper.find(`[data-test="${markers.SUBMIT_BTN}"]`);
     expect(btn.prop('disabled')).toBeFalsy();
   });
 });

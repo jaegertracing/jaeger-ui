@@ -1,3 +1,5 @@
+// @flow
+
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,37 +14,38 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
+import * as React from 'react';
+import { Form, Input } from 'antd';
 import { withRouter } from 'react-router-dom';
+
+import type { RouterHistory } from 'react-router-dom';
 
 import prefixUrl from '../../utils/prefix-url';
 
-class TraceIDSearchInput extends Component {
-  goToTrace(e) {
-    this.props.history.push(prefixUrl(`/trace/${this.traceIDInput.value}`));
-    e.preventDefault();
-    return false;
-  }
+import './TraceIDSearchInput.css';
+
+type Props = {
+  history: RouterHistory,
+};
+
+class TraceIDSearchInput extends React.PureComponent<Props> {
+  props: Props;
+
+  goToTrace = event => {
+    event.preventDefault();
+    const value = event.target.elements.idInput.value;
+    if (value) {
+      this.props.history.push(prefixUrl(`/trace/${value}`));
+    }
+  };
+
   render() {
     return (
-      <form onSubmit={e => this.goToTrace(e)}>
-        <input
-          type="text"
-          placeholder="Lookup by Trace ID..."
-          ref={input => {
-            this.traceIDInput = input;
-          }}
-        />
-      </form>
+      <Form layout="horizontal" onSubmit={this.goToTrace} className="TraceIDSearchInput--form">
+        <Input name="idInput" placeholder="Lookup by Trace ID..." />
+      </Form>
     );
   }
 }
-
-TraceIDSearchInput.propTypes = {
-  history: PropTypes.shape({
-    push: PropTypes.func,
-  }).isRequired,
-};
 
 export default withRouter(TraceIDSearchInput);
