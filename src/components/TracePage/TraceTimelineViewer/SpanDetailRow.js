@@ -73,7 +73,7 @@ export default class SpanDetailRow extends React.PureComponent<SpanDetailRowProp
           </span>
         </TimelineRow.Cell>
         <TimelineRow.Cell width={1 - columnDivision}>
-          <div className="p2 detail-info-wrapper" style={{ borderTopColor: color }}>
+          <div className="detail-info-wrapper" style={{ borderTopColor: color }}>
             <SpanDetail
               detailState={detailState}
               logItemToggle={logItemToggle}

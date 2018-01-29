@@ -14,14 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-.SearchForm--hintTrigger {
-  cursor: pointer;
-}
-
-.SearchForm--tagsHintInfo {
-  padding-left: 1.7em;
-}
-
-.SearchForm--tagsHintEg {
-  color: teal;
+.TraceIDSearchInput--form {
+  line-height: inherit;
 }

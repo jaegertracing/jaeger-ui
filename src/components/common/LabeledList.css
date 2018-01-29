@@ -14,20 +14,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-.ui.header.trace-search-result--duration {
-  color: #11939a;
+.LabeledList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
-.trace-search-result:hover .ui.header.trace-search-result--duration {
-  color: #00474e;
-}
-
-.trace-search-result--spans {
+.LabeledList--item {
   display: inline-block;
-  margin-right: 0.5em;
 }
 
-.trace-search-result--erred-spans {
-  color: #c00;
-  display: inline-block;
+.LabeledList--label {
+  color: #999;
+  margin-right: 0.25rem;
 }

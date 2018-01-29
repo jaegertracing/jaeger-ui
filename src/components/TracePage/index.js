@@ -32,6 +32,7 @@ import TracePageHeader from './TracePageHeader';
 import TraceTimelineViewer from './TraceTimelineViewer';
 import type { ViewRange, ViewRangeTimeUpdate } from './types';
 import ErrorMessage from '../common/ErrorMessage';
+import LoadingIndicator from '../common/LoadingIndicator';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import { getTraceName } from '../../model/trace-viewer';
 import type { Trace } from '../../types';
@@ -222,38 +223,20 @@ export default class TracePage extends React.PureComponent<TracePageProps, Trace
   }
 
   render() {
-    const { id, loading, trace } = this.props;
+    const { loading, trace } = this.props;
     const { slimView, headerHeight, textFilter, viewRange } = this.state;
-
     if (!trace) {
-      if (loading) {
-        return (
-          <div className="m1">
-            <div className="ui active centered inline loader" />
-          </div>
-        );
-      }
-      return <section />;
+      return loading ? <LoadingIndicator className="u-mt-vast" centered /> : <section />;
     }
-
     if (trace instanceof Error) {
-      return (
-        <section className="ui container">
-          <div className="ui basic segment">
-            <div className="ui message">
-              <ErrorMessage error={trace} />
-            </div>
-          </div>
-        </section>
-      );
+      return <ErrorMessage className="ub-m3" error={trace} />;
     }
-
     const { duration, processes, spans, startTime, traceID } = trace;
     const maxSpanDepth = _maxBy(spans, 'depth').depth + 1;
     const numberOfServices = new Set(_values(processes).map(p => p.serviceName)).size;
     return (
-      <div className="trace-page" id={`jaeger-trace-${id}`}>
-        <section className="trace-page-header-section" ref={this.setHeaderHeight}>
+      <div>
+        <div className="Tracepage--headerSection" ref={this.setHeaderHeight}>
           <TracePageHeader
             duration={duration}
             maxDepth={maxSpanDepth}
@@ -275,9 +258,9 @@ export default class TracePage extends React.PureComponent<TracePageProps, Trace
               updateViewRangeTime={this.updateViewRangeTime}
             />
           )}
-        </section>
+        </div>
         {headerHeight && (
-          <section className="trace-timeline-section" style={{ paddingTop: headerHeight }}>
+          <section style={{ paddingTop: headerHeight }}>
             <TraceTimelineViewer
               registerAccessors={this._scrollManager.setAccessors}
               textFilter={textFilter}

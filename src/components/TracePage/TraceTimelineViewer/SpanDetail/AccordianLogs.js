@@ -16,6 +16,8 @@
 
 import React from 'react';
 import _sortBy from 'lodash/sortBy';
+import IoIosArrowDown from 'react-icons/lib/io/ios-arrow-down';
+import IoIosArrowRight from 'react-icons/lib/io/ios-arrow-right';
 
 import AccordianKeyValues from './AccordianKeyValues';
 import { formatDuration } from '../utils';
@@ -36,24 +38,26 @@ export default function AccordianLogs(props: AccordianLogsProps) {
   const { isOpen, logs, openedItems, onItemToggle, onToggle, timestamp } = props;
 
   return (
-    <div className="ui segment">
+    <div className="AccordianLogs">
       <a
-        className="u-cursor-pointer ui top attached label"
+        className={`AccordianLogs--header ${isOpen ? 'is-open' : ''}`}
         aria-checked={isOpen}
         onClick={onToggle}
         role="switch"
       >
-        <i className={`u-no-float ${isOpen ? 'minus' : 'plus'} square outline icon`} />
-        <span className="AccordianLogs--header">Logs ({logs.length})</span>
+        {isOpen ? <IoIosArrowDown className="u-align-icon" /> : <IoIosArrowRight className="u-align-icon" />}
+        <strong>Logs</strong> ({logs.length})
       </a>
       {isOpen && (
-        <div>
+        <div className="AccordianLogs--content">
           {_sortBy(logs, 'timestamp').map((log, i) => (
             <AccordianKeyValues
               // `i` is necessary in the key because timestamps can repeat
               // eslint-disable-next-line react/no-array-index-key
               key={`${log.timestamp}-${i}`}
-              compact
+              className={i < logs.length - 1 ? 'ub-mb1' : null}
+              // compact
+              highContrast
               isOpen={openedItems.has(log)}
               data={log.fields || []}
               label={`${formatDuration(log.timestamp - timestamp)}`}
@@ -61,7 +65,7 @@ export default function AccordianLogs(props: AccordianLogsProps) {
             />
           ))}
           <small className="AccordianLogs--footer">
-            **Log timestamps are relative to the start time of the full trace.
+            Log timestamps are relative to the start time of the full trace.
           </small>
         </div>
       )}

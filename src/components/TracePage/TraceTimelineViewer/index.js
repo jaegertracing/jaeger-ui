@@ -24,7 +24,6 @@ import type { Accessors } from '../ScrollManager';
 import type { ViewRange, ViewRangeTimeUpdate } from '../types';
 import type { Trace } from '../../../types';
 
-import './grid.css';
 import './index.css';
 
 type TraceTimelineViewerProps = {
@@ -50,7 +49,7 @@ function TraceTimelineViewer(props: TraceTimelineViewerProps) {
   const { setSpanNameColumnWidth, updateNextViewRangeTime, updateViewRangeTime, viewRange, ...rest } = props;
   const { spanNameColumnWidth, trace } = rest;
   return (
-    <div className="trace-timeline-viewer">
+    <div className="TraceTimelineViewer">
       <TimelineHeaderRow
         duration={trace.duration}
         nameColumnWidth={spanNameColumnWidth}

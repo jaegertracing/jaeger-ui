@@ -14,21 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-.trace-page {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-
-.trace-page-header-section {
+.Tracepage--headerSection {
   background: #fff;
-  border-bottom: 1px solid #bbb;
-  padding: 0.5em 0.5em 0 0.5em;
+  border-bottom: 1px solid #d8d8d8;
   position: fixed;
   width: 100%;
   z-index: 3;
-}
-
-.trace-timeline-section {
-  border-top: 1px solid #999;
 }

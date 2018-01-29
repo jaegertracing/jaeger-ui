@@ -12,22 +12,5 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import PropTypes from 'prop-types';
-import React from 'react';
-import colorGenerator from '../../utils/color-generator';
-
-export default function TraceServiceTag({ service }) {
-  const { name, numberOfSpans } = service;
-  return (
-    <div className="ui mini label" style={{ borderLeft: `5px solid ${colorGenerator.getColorByKey(name)}` }}>
-      {name} ({numberOfSpans})
-    </div>
-  );
-}
-
-TraceServiceTag.propTypes = {
-  service: PropTypes.shape({
-    name: PropTypes.string.isRequired,
-    numberOfSpans: PropTypes.number.isRequired,
-  }).isRequired,
-};
+// eslint-disable-next-line import/prefer-default-export
+export const LABEL = 'label';

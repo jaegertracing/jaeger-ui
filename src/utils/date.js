@@ -17,6 +17,9 @@ import _ from 'lodash';
 
 import { toFloatPrecision } from './number';
 
+const TODAY = 'Today';
+const YESTERDAY = 'Yesterday';
+
 export const STANDARD_DATE_FORMAT = 'YYYY-MM-DD';
 export const STANDARD_TIME_FORMAT = 'HH:mm';
 export const STANDARD_DATETIME_FORMAT = 'LLL';
@@ -97,4 +100,23 @@ export function formatDuration(duration, inputUnit = 'microseconds') {
     d /= 1000;
   }
   return _.round(d, 2) + units;
+}
+
+export function formatRelativeDate(value) {
+  const m = !(value instanceof moment) ? moment(value) : value;
+  const dt = new Date();
+  if (dt.getFullYear() !== m.year()) {
+    return m.format('MMM D, YYYY');
+  }
+  const mMonth = m.month();
+  const mDate = m.date();
+  const date = dt.getDate();
+  if (mMonth === dt.getMonth() && mDate === date) {
+    return TODAY;
+  }
+  dt.setDate(date - 1);
+  if (mMonth === dt.getMonth() && mDate === dt.getDate()) {
+    return YESTERDAY;
+  }
+  return m.format('MMM D');
 }

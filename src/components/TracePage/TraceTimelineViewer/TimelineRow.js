@@ -48,7 +48,7 @@ function TimelineRowCell(props: TimelineRowCellProps) {
   const widthPercent = `${width * 100}%`;
   const mergedStyle = { ...style, flexBasis: widthPercent, maxWidth: widthPercent };
   return (
-    <div className={`relative ${className}`} style={mergedStyle} {...rest}>
+    <div className={`ub-relative ${className}`} style={mergedStyle} {...rest}>
       {children}
     </div>
   );

@@ -16,13 +16,16 @@
 
 import React from 'react';
 import cx from 'classnames';
+import IoIosArrowDown from 'react-icons/lib/io/ios-arrow-down';
+import IoIosArrowRight from 'react-icons/lib/io/ios-arrow-right';
 
+import * as markers from './AccordianKeyValues.markers';
 import KeyValuesTable from './KeyValuesTable';
 
 import './AccordianKeyValues.css';
 
 type AccordianKeyValuesProps = {
-  compact?: boolean,
+  className: ?string,
   data: { key: string, value: any }[],
   highContrast?: boolean,
   isOpen: boolean,
@@ -56,14 +59,11 @@ KeyValuesSummary.defaultProps = {
 };
 
 export default function AccordianKeyValues(props: AccordianKeyValuesProps) {
-  const { compact, data, highContrast, isOpen, label, onToggle } = props;
+  const { className, data, highContrast, isOpen, label, onToggle } = props;
   const isEmpty = !Array.isArray(data) || !data.length;
-  const iconCls = cx(
-    { minus: isOpen, plus: !isOpen, 'AccordianKeyValues--emptyArtifact': isEmpty },
-    'square outline icon'
-  );
+  const iconCls = cx('u-align-icon', { 'AccordianKeyValues--emptyIcon': isEmpty });
   return (
-    <div className={cx('AccordianKeyValues', { 'is-compact': compact })}>
+    <div className={cx(className, 'u-tx-ellipsis')}>
       <div
         className={cx('AccordianKeyValues--header', {
           'is-empty': isEmpty,
@@ -73,10 +73,10 @@ export default function AccordianKeyValues(props: AccordianKeyValuesProps) {
         onClick={isEmpty ? null : onToggle}
         role="switch"
       >
-        <strong>
-          <i className={iconCls} />
+        {isOpen ? <IoIosArrowDown className={iconCls} /> : <IoIosArrowRight className={iconCls} />}
+        <strong data-test={markers.LABEL}>
           {label}
-          :
+          {isOpen || ':'}
         </strong>
         {!isOpen && <KeyValuesSummary data={data} />}
       </div>
@@ -86,6 +86,5 @@ export default function AccordianKeyValues(props: AccordianKeyValuesProps) {
 }
 
 AccordianKeyValues.defaultProps = {
-  compact: false,
   highContrast: false,
 };

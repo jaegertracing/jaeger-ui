@@ -13,12 +13,13 @@
 // limitations under the License.
 
 import React from 'react';
+import { Tabs } from 'antd';
 import { shallow } from 'enzyme';
-import { Menu } from 'semantic-ui-react';
 
 import DAG from './DAG';
 import DependencyForceGraph from './DependencyForceGraph';
 import DependencyGraph, { GRAPH_TYPES, mapDispatchToProps, mapStateToProps } from './index';
+import LoadingIndicator from '../common/LoadingIndicator';
 
 const childId = 'boomya';
 const parentId = 'elder-one';
@@ -52,9 +53,9 @@ describe('<DependencyGraph>', () => {
   });
 
   it('shows a loading indicator when loading data', () => {
-    expect(wrapper.find('.loader').length).toBe(0);
+    expect(wrapper.find(LoadingIndicator).length).toBe(0);
     wrapper.setProps({ loading: true });
-    expect(wrapper.find('.loader').length).toBe(1);
+    expect(wrapper.find(LoadingIndicator).length).toBe(1);
   });
 
   it('shows an error message when passed error information', () => {
@@ -72,24 +73,19 @@ describe('<DependencyGraph>', () => {
 
   describe('graph types', () => {
     it('renders a menu with options for the graph types', () => {
-      expect(wrapper.find(Menu).length).toBe(1);
-      expect(wrapper.find(Menu.Item).length).toBe(Object.keys(GRAPH_TYPES).length);
-      expect(wrapper.find({ name: GRAPH_TYPES.FORCE_DIRECTED.name }).length).toBe(1);
-      expect(wrapper.find({ name: GRAPH_TYPES.DAG.name }).length).toBe(1);
+      expect(wrapper.find(Tabs.TabPane).length).toBe(Object.keys(GRAPH_TYPES).length);
+      expect(wrapper.find({ tab: GRAPH_TYPES.FORCE_DIRECTED.name }).length).toBe(1);
+      expect(wrapper.find({ tab: GRAPH_TYPES.DAG.name }).length).toBe(1);
     });
 
     it('renders a force graph when FORCE_GRAPH is the selected type', () => {
-      const menuItem = wrapper.find({ name: GRAPH_TYPES.FORCE_DIRECTED.name });
-      expect(menuItem.length).toBe(1);
-      menuItem.simulate('click');
+      wrapper.simulate('change', GRAPH_TYPES.FORCE_DIRECTED.type);
       expect(wrapper.state('graphType')).toBe(GRAPH_TYPES.FORCE_DIRECTED.type);
       expect(wrapper.find(DependencyForceGraph).length).toBe(1);
     });
 
     it('renders a DAG graph when DAG is the selected type', () => {
-      const forceMenuItem = wrapper.find({ name: GRAPH_TYPES.DAG.name });
-      expect(forceMenuItem.length).toBe(1);
-      forceMenuItem.simulate('click');
+      wrapper.simulate('change', GRAPH_TYPES.DAG.type);
       expect(wrapper.state('graphType')).toBe(GRAPH_TYPES.DAG.type);
       expect(wrapper.find(DAG).length).toBe(1);
     });

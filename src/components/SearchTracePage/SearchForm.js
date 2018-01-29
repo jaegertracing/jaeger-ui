@@ -13,22 +13,32 @@
 // limitations under the License.
 
 import React from 'react';
+import { Form, Input, Button, Popover, Select } from 'antd';
 import logfmtParser from 'logfmt/lib/logfmt_parser';
 import { stringify as logfmtStringify } from 'logfmt/lib/stringify';
 import moment from 'moment';
 import PropTypes from 'prop-types';
 import queryString from 'query-string';
+import IoHelp from 'react-icons/lib/io/help';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import { Field, reduxForm, formValueSelector } from 'redux-form';
-import { Popup } from 'semantic-ui-react';
 import store from 'store';
 
-import SearchDropdownInput from './SearchDropdownInput';
+import * as markers from './SearchForm.markers';
+import VirtSelect from '../common/VirtSelect';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import { formatDate, formatTime } from '../../utils/date';
+import reduxFormFieldAdapter from '../../utils/redux-form-field-adapter';
 
-import './TraceSearchForm.css';
+import './SearchForm.css';
+
+const FormItem = Form.Item;
+const Option = Select.Option;
+
+const AdaptedInput = reduxFormFieldAdapter(Input);
+const AdaptedSelect = reduxFormFieldAdapter(Select);
+const AdaptedVirtualSelect = reduxFormFieldAdapter(VirtSelect, option => (option ? option.value : null));
 
 export function getUnixTimeStampInMSFromForm({ startDate, startDateTime, endDate, endDateTime }) {
   const start = `${startDate} ${startDateTime}`;
@@ -137,161 +147,198 @@ export function submitForm(fields, searchTraces) {
   });
 }
 
-export function TraceSearchFormImpl(props) {
-  const { selectedService = '-', selectedLookback, handleSubmit, submitting, services } = props;
+export function SearchFormImpl(props) {
+  const { handleSubmit, selectedLookback, selectedService = '-', services, submitting: disabled } = props;
   const selectedServicePayload = services.find(s => s.name === selectedService);
-  const operationsForService = (selectedServicePayload && selectedServicePayload.operations) || [];
+  const opsForSvc = (selectedServicePayload && selectedServicePayload.operations) || [];
   const noSelectedService = selectedService === '-' || !selectedService;
   const tz = selectedLookback === 'custom' ? new Date().toTimeString().replace(/^.*?GMT/, 'UTC') : null;
   return (
-    <div className="search-form">
-      <form className="ui form" onSubmit={handleSubmit}>
-        <div className="search-form--service field">
-          <label htmlFor="service">Service</label>
-          <Field
-            id="service"
-            name="service"
-            component={SearchDropdownInput}
-            className="ui dropdown"
-            items={services.concat({ name: '-' }).map(v => ({ text: v.name, value: v.name, key: v.name }))}
-          />
-        </div>
+    <Form layout="vertical" onSubmit={handleSubmit}>
+      <FormItem
+        label={
+          <span>
+            Service <span className="SearchForm--labelCount">({services.length})</span>
+          </span>
+        }
+      >
+        <Field
+          name="service"
+          component={AdaptedVirtualSelect}
+          placeholder="Select A Service"
+          props={{
+            disabled,
+            clearable: false,
+            options: services.map(v => ({ label: v.name, value: v.name })),
+            required: true,
+          }}
+        />
+      </FormItem>
+      <FormItem
+        label={
+          <span>
+            Operation <span className="SearchForm--labelCount">({opsForSvc ? opsForSvc.length : 0})</span>
+          </span>
+        }
+      >
+        <Field
+          name="operation"
+          component={AdaptedVirtualSelect}
+          placeholder="Select An Operation"
+          props={{
+            clearable: false,
+            disabled: disabled || noSelectedService,
+            options: ['all'].concat(opsForSvc).map(v => ({ label: v, value: v })),
+            required: true,
+          }}
+        />
+      </FormItem>
 
-        {!noSelectedService && (
-          <div className="search-form--operation field">
-            <Field
-              name="operation"
-              component={SearchDropdownInput}
-              className="ui dropdown"
-              items={operationsForService.concat('all').map(op => ({ text: op, value: op, key: op }))}
-            />
-          </div>
-        )}
-
-        <div className="search-form--tags field">
-          <label htmlFor="tags">
+      <FormItem
+        label={
+          <div>
             Tags{' '}
-            <Popup
-              on="click"
-              wide="very"
-              trigger={<i className="SearchForm--hintTrigger info circle icon grey" />}
+            <Popover
+              placement="topLeft"
+              trigger="click"
+              title={[
+                <h3 key="title" className="SearchForm--tagsHintTitle">
+                  Values should be in the{' '}
+                  <a href="https://brandur.org/logfmt" rel="noopener noreferrer" target="_blank">
+                    logfmt
+                  </a>{' '}
+                  format.
+                </h3>,
+                <ul key="info" className="SearchForm--tagsHintInfo">
+                  <li>Use space for conjunctions</li>
+                  <li>Values containing whitespace should be enclosed in quotes</li>
+                </ul>,
+              ]}
               content={
                 <div>
-                  <h5>
-                    Values should be in the{' '}
-                    <a href="https://brandur.org/logfmt" rel="noopener noreferrer" target="_blank">
-                      logfmt
-                    </a>{' '}
-                    format.
-                  </h5>
-                  <ul className="SearchForm--tagsHintInfo">
-                    <li>Use space for conjunctions</li>
-                    <li>Values containing whitespace should be enclosed in quotes</li>
-                  </ul>
                   <code className="SearchForm--tagsHintEg">
                     error=true db.statement=&quot;select * from User&quot;
                   </code>
                 </div>
               }
-            />
-          </label>
-          <div className="ui input">
-            <Field name="tags" type="text" component="input" placeholder="http.status_code=200 error=true" />
+            >
+              <IoHelp className="SearchForm--hintTrigger" />
+            </Popover>
           </div>
-        </div>
+        }
+      >
+        <Field
+          name="tags"
+          component={AdaptedInput}
+          placeholder="http.status_code=200 error=true"
+          props={{ disabled }}
+        />
+      </FormItem>
 
-        <div className="search-form--lookback field">
-          <label htmlFor="lookback">Lookback</label>
-          <Field name="lookback" className="ui dropdown" component="select">
-            <option value="1h">Last Hour</option>
-            <option value="2h">Last 2 Hours</option>
-            <option value="3h">Last 3 Hours</option>
-            <option value="6h">Last 6 Hours</option>
-            <option value="12h">Last 12 Hours</option>
-            <option value="24h">Last 24 Hours</option>
-            <option value="2d">Last 2 Days</option>
-            <option value="custom">Custom Time Range</option>
-          </Field>
-        </div>
+      <FormItem label="Lookback">
+        <Field name="lookback" component={AdaptedSelect} props={{ disabled, defaultValue: '1h' }}>
+          <Option value="1h">Last Hour</Option>
+          <Option value="2h">Last 2 Hours</Option>
+          <Option value="3h">Last 3 Hours</Option>
+          <Option value="6h">Last 6 Hours</Option>
+          <Option value="12h">Last 12 Hours</Option>
+          <Option value="24h">Last 24 Hours</Option>
+          <Option value="2d">Last 2 Days</Option>
+          <Option value="custom">Custom Time Range</Option>
+        </Field>
+      </FormItem>
 
-        {selectedLookback === 'custom' && (
-          <div className="search-form--start-time field js-test-start-input">
-            <label htmlFor="service">
+      {selectedLookback === 'custom' && [
+        <FormItem
+          key="start"
+          label={
+            <div>
               Start Time{' '}
-              <Popup
-                on="click"
-                wide="very"
-                trigger={<i className="SearchForm--hintTrigger info circle icon grey" />}
-                content={<h5>Times are expressed in {tz} timezone</h5>}
-              />
-            </label>
-            <div>
-              <div className="ui input">
-                <Field name="startDate" component="input" type="date" placeholder="Start Date" />
-              </div>
-              <div className="ui input">
-                <Field name="startDateTime" component="input" type="time" />
-              </div>
+              <Popover
+                placement="topLeft"
+                trigger="click"
+                content={
+                  <h3 key="title" className="SearchForm--tagsHintTitle">
+                    Times are expressed in {tz}
+                  </h3>
+                }
+              >
+                <IoHelp className="SearchForm--hintTrigger" />
+              </Popover>
             </div>
-          </div>
-        )}
-
-        {selectedLookback === 'custom' && (
-          <div className="search-form--end-time field js-test-end-input">
-            <label htmlFor="service">
-              End time{' '}
-              <Popup
-                on="click"
-                wide="very"
-                trigger={<i className="SearchForm--hintTrigger info circle icon grey" />}
-                content={<h5>Times are expressed in {tz} timezone</h5>}
-              />
-            </label>
-            <div>
-              <div className="ui input">
-                <Field name="endDate" component="input" type="date" placeholder="End Date" />
-              </div>
-              <div className="ui input">
-                <Field name="endDateTime" component="input" type="time" />
-              </div>
-            </div>
-          </div>
-        )}
-
-        <div className="two fields">
-          <div className="field">
-            <label htmlFor="minDuration">Min Duration</label>
-            <div className="ui input">
-              <Field name="minDuration" component="input" type="text" placeholder="e.g. 1.2s, 100ms, 500us" />
-            </div>
-          </div>
-          <div className="field">
-            <label htmlFor="maxDuration">Max Duration</label>
-            <div className="ui input">
-              <Field name="maxDuration" component="input" type="text" placeholder="e.g. 1.1s" />
-            </div>
-          </div>
-        </div>
-
-        <div className="search-form--limit field">
-          <label htmlFor="resultsLimit">Limit Results</label>
-          <div className="ui input">
-            <Field name="resultsLimit" component="input" type="number" placeholder="Limit Results" />
-          </div>
-        </div>
-        <button
-          className="ui button js-test-submit-btn"
-          type="submit"
-          disabled={submitting || noSelectedService}
+          }
         >
-          Find Traces
-        </button>
-      </form>
-    </div>
+          <Field
+            name="startDate"
+            type="date"
+            component={AdaptedInput}
+            placeholder="Start Date"
+            props={{ disabled }}
+          />
+          <Field name="startDateTime" type="time" component={AdaptedInput} props={{ disabled }} />
+        </FormItem>,
+
+        <FormItem
+          key="end"
+          label={
+            <div>
+              End Time{' '}
+              <Popover
+                placement="topLeft"
+                trigger="click"
+                content={
+                  <h3 key="title" className="SearchForm--tagsHintTitle">
+                    Times are expressed in {tz}
+                  </h3>
+                }
+              >
+                <IoHelp className="SearchForm--hintTrigger" />
+              </Popover>
+            </div>
+          }
+        >
+          <Field
+            name="endDate"
+            type="date"
+            component={AdaptedInput}
+            placeholder="End Date"
+            props={{ disabled }}
+          />
+          <Field name="endDateTime" type="time" component={AdaptedInput} props={{ disabled }} />
+        </FormItem>,
+      ]}
+
+      <FormItem label="Min Duration">
+        <Field
+          name="minDuration"
+          component={AdaptedInput}
+          placeholder="e.g. 1.2s, 100ms, 500us"
+          props={{ disabled }}
+        />
+      </FormItem>
+
+      <FormItem label="Max Duration">
+        <Field name="maxDuration" component={AdaptedInput} placeholder="e.g. 1.1s" props={{ disabled }} />
+      </FormItem>
+
+      <FormItem label="Limit Results">
+        <Field
+          name="resultsLimit"
+          type="number"
+          component={AdaptedInput}
+          placeholder="Limit Results"
+          props={{ disabled, min: 1, max: 1500 }}
+        />
+      </FormItem>
+
+      <Button htmlType="submit" disabled={disabled || noSelectedService} data-test={markers.SUBMIT_BTN}>
+        Find Traces
+      </Button>
+    </Form>
   );
 }
 
-TraceSearchFormImpl.propTypes = {
+SearchFormImpl.propTypes = {
   handleSubmit: PropTypes.func.isRequired,
   submitting: PropTypes.bool,
   services: PropTypes.arrayOf(
@@ -304,7 +351,7 @@ TraceSearchFormImpl.propTypes = {
   selectedLookback: PropTypes.string,
 };
 
-TraceSearchFormImpl.defaultProps = {
+SearchFormImpl.defaultProps = {
   services: [],
   submitting: false,
   selectedService: null,
@@ -439,5 +486,5 @@ function mapDispatchToProps(dispatch) {
 export default connect(mapStateToProps, mapDispatchToProps)(
   reduxForm({
     form: 'searchSideBar',
-  })(TraceSearchFormImpl)
+  })(SearchFormImpl)
 );
