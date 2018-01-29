@@ -14,109 +14,20 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-.u-cursor-pointer {
-  cursor: pointer;
-}
-
-.u-pos-rel {
-  position: relative;
-}
-
-.u-flex-centered {
-  display: flex;
-  align-items: center;
-}
-
-.u-flex-auto {
-  flex: 1 1 auto;
-}
-
-.u-inline-b {
-  display: inline-block;
-}
-
-.u-no-float {
-  float: none;
-}
-
-.u-left {
-  float: left;
-}
-
-.u-right {
-  float: right;
-}
-
 .u-width-100 {
   width: 100%;
 }
 
-.u-pad {
-  padding: 1rem;
-}
-
-.u-pad-sm {
-  padding: 0.5rem;
-}
-
-.u-pad-h-sm {
-  padding-left: 0.5rem;
-  padding-right: 0.5rem;
-}
-
-.u-space-nil {
-  margin: 0;
-}
-
-.u-space-xs {
-  margin: 0.25rem;
-}
-
-.u-space {
-  margin: 1rem;
-}
-
-.u-space-btm-xs {
-  margin-bottom: 0.25rem;
-}
-
-.u-space-left-sm {
-  margin-left: 0.5rem;
-}
-
-.u-space-right-xs {
-  margin-right: 0.25rem;
-}
-
-.u-space-right-sm {
-  margin-right: 0.5rem;
-}
-
-.u-space-top-vast {
+.u-mt-vast {
   margin-top: 13rem;
 }
 
-.u-space-v {
-  margin-bottom: 1rem;
-  margin-top: 1rem;
-}
-
-.u-space-v-xs {
-  margin-bottom: 0.25rem;
-  margin-top: 0.25rem;
-}
-
-.u-tx-right {
-  text-align: right;
+.u-cursor-pointer {
+  cursor: pointer;
 }
 
 .u-tx-ellipsis {
   text-overflow: ellipsis;
-}
-
-.u-list-reset {
-  list-style: none;
-  padding-left: 0;
 }
 
 .u-align-icon {

@@ -76,14 +76,14 @@ export default class DependencyGraphPage extends Component {
     const { nodes, links, error, dependencies, loading } = this.props;
     const { graphType } = this.state;
     if (loading) {
-      return <LoadingIndicator className="u-space-top-vast" centered />;
+      return <LoadingIndicator className="u-mt-vast" centered />;
     }
     if (error) {
-      return <ErrorMessage className="u-space" error={error} />;
+      return <ErrorMessage className="ub-m3" error={error} />;
     }
 
     if (!nodes || !links) {
-      return <div className="u-simple-card u-space">No service dependencies found.</div>;
+      return <div className="u-simple-card ub-m3">No service dependencies found.</div>;
     }
 
     const GRAPH_TYPE_OPTIONS = [GRAPH_TYPES.FORCE_DIRECTED];
@@ -100,7 +100,7 @@ export default class DependencyGraphPage extends Component {
         tabBarStyle={{ background: '#f5f5f5', padding: '1rem 1rem 0 1rem' }}
       >
         {GRAPH_TYPE_OPTIONS.map(opt => (
-          <TabPane className="u-pos-rel" tab={opt.name} key={opt.type}>
+          <TabPane className="ub-relelative" tab={opt.name} key={opt.type}>
             <div className="DependencyGraph--graphWrapper">
               {opt.type === 'FORCE_DIRECTED' && <DependencyForceGraph nodes={nodes} links={links} />}
               {opt.type === 'DAG' && <DAG serviceCalls={dependencies} />}

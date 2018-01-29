@@ -57,11 +57,11 @@ export default function SpanDetail(props: SpanDetailProps) {
   ];
   return (
     <div>
-      <div className="u-flex-centered">
-        <h2 className="u-flex-auto u-space-nil">{operationName}</h2>
+      <div className="ub-flex ub-items-center">
+        <h2 className="ub-flex-auto ub-m0">{operationName}</h2>
         <LabeledList dividerClassName="SpanDetail--divider" items={overviewItems} />
       </div>
-      <Divider className="SpanDetail--divider u-space-v-xs" />
+      <Divider className="SpanDetail--divider ub-my1" />
       <div>
         <div>
           <AccordianKeyValues
@@ -72,7 +72,7 @@ export default function SpanDetail(props: SpanDetailProps) {
           />
           {process.tags && (
             <AccordianKeyValues
-              className="u-space-btm-xs"
+              className="ub-mb1"
               data={process.tags}
               label="Process"
               isOpen={isProcessOpen}

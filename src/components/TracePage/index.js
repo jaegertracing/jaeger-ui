@@ -226,10 +226,10 @@ export default class TracePage extends React.PureComponent<TracePageProps, Trace
     const { loading, trace } = this.props;
     const { slimView, headerHeight, textFilter, viewRange } = this.state;
     if (!trace) {
-      return loading ? <LoadingIndicator className="u-space-top-vast" centered /> : <section />;
+      return loading ? <LoadingIndicator className="u-mt-vast" centered /> : <section />;
     }
     if (trace instanceof Error) {
-      return <ErrorMessage className="u-space" error={trace} />;
+      return <ErrorMessage className="ub-m3" error={trace} />;
     }
     const { duration, processes, spans, startTime, traceID } = trace;
     const maxSpanDepth = _maxBy(spans, 'depth').depth + 1;

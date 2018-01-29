@@ -83,7 +83,8 @@
     "redux-promise-middleware": "^4.3.0",
     "reselect": "^3.0.1",
     "store": "^2.0.12",
-    "tween-functions": "^1.2.0"
+    "tween-functions": "^1.2.0",
+    "u-basscss": "2.0.0"
   },
   "scripts": {
     "start": "react-app-rewired start",

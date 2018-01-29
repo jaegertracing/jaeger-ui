@@ -55,7 +55,7 @@ export default function AccordianLogs(props: AccordianLogsProps) {
               // `i` is necessary in the key because timestamps can repeat
               // eslint-disable-next-line react/no-array-index-key
               key={`${log.timestamp}-${i}`}
-              className={i < logs.length - 1 ? 'u-space-btm-xs' : null}
+              className={i < logs.length - 1 ? 'ub-mb1' : null}
               // compact
               highContrast
               isOpen={openedItems.has(log)}

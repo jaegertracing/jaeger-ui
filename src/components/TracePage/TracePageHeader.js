@@ -147,28 +147,19 @@ export default function TracePageHeader(props: TracePageHeaderProps) {
   return (
     <header>
       <div className="TracePageHeader--titleRow">
-        <a
-          className="u-flex-auto u-space-right-sm"
-          onClick={onSlimViewClicked}
-          role="switch"
-          aria-checked={!slimView}
-        >
+        <a className="ub-flex-auto ub-mr2" onClick={onSlimViewClicked} role="switch" aria-checked={!slimView}>
           <h1 className="TracePageHeader--title">
-            {slimView ? (
-              <IoChevronRight className="u-space-right-sm" />
-            ) : (
-              <IoChevronDown className="u-space-right-sm" />
-            )}
+            {slimView ? <IoChevronRight className="ub-mr2" /> : <IoChevronDown className="ub-mr2" />}
             {name || FALLBACK_TRACE_NAME}
           </h1>
         </a>
-        <KeyboardShortcutsHelp className="u-space-right-sm" />
+        <KeyboardShortcutsHelp className="ub-mr2" />
         <Dropdown overlay={viewMenu}>
-          <Button className="u-space-right-sm">
+          <Button className="ub-mr2">
             View Options <Icon type="down" />
           </Button>
         </Dropdown>
-        <div className="u-space-right-sm">
+        <div className="ub-mr2">
           <Input
             name="search"
             placeholder="Search..."

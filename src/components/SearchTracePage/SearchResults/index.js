@@ -44,7 +44,7 @@ const Option = Select.Option;
  */
 function SelectSortImpl() {
   return (
-    <label className="u-right">
+    <label className="ub-right">
       Sort:{' '}
       <Field name="sortBy" component={reduxFormFieldAdapter(Select)}>
         <Option value={orderBy.MOST_RECENT}>Most Recent</Option>
@@ -69,7 +69,7 @@ export const sortFormSelector = formValueSelector('traceResultsSort');
 export default function SearchResults(props: SearchResultsProps) {
   const { goToTrace, loading, maxTraceDuration, traces } = props;
   if (loading) {
-    return <LoadingIndicator className="u-space-top-vast" centered />;
+    return <LoadingIndicator className="u-mt-vast" centered />;
   }
   if (!Array.isArray(traces) || !traces.length) {
     return (
@@ -82,7 +82,7 @@ export default function SearchResults(props: SearchResultsProps) {
     <div>
       <div>
         <div className="SearchResults--header">
-          <div className="u-pad">
+          <div className="ub-p3">
             <ScatterPlot
               data={traces.map(t => ({
                 x: t.timestamp,
@@ -98,16 +98,16 @@ export default function SearchResults(props: SearchResultsProps) {
           </div>
           <div className="SearchResults--headerOverview">
             <SelectSort />
-            <h2 className="u-space-nil">
+            <h2 className="ub-m0">
               {traces.length} Trace{traces.length > 1 && 's'}
             </h2>
           </div>
         </div>
       </div>
       <div>
-        <ul className="u-list-reset">
+        <ul className="ub-list-reset">
           {traces.map(trace => (
-            <li className="u-space-v" key={trace.traceID}>
+            <li className="ub-my3" key={trace.traceID}>
               <Link to={prefixUrl(`/trace/${trace.traceID}`)} className="SearchResults--resultLink">
                 <ResultItem
                   trace={trace}

@@ -43,26 +43,26 @@ export default function ResultItem({
     <div className="ResultItem">
       <div className="ResultItem--title clearfix">
         <span className="ResultItem--durationBar" style={{ width: `${durationPercent}%` }} />
-        <span className="u-right u-pos-rel">{formatDuration(duration * 1000)}</span>
-        <h3 className="u-space-nil u-pos-rel">{traceName || FALLBACK_TRACE_NAME}</h3>
+        <span className="ub-right ub-relative">{formatDuration(duration * 1000)}</span>
+        <h3 className="ub-m0 ub-relative">{traceName || FALLBACK_TRACE_NAME}</h3>
       </div>
       <Row>
-        <Col span={4} className="u-pad-sm">
-          <Tag className="u-space-xs" data-test={markers.NUM_SPANS}>
+        <Col span={4} className="ub-p2">
+          <Tag className="ub-m1" data-test={markers.NUM_SPANS}>
             {numberOfSpans} Span{numberOfSpans > 1 && 's'}
           </Tag>
           {Boolean(numberOfErredSpans) && (
-            <Tag className="u-space-xs" color="red">
+            <Tag className="ub-m1" color="red">
               {numberOfErredSpans} Error{numberOfErredSpans > 1 && 's'}
             </Tag>
           )}
         </Col>
-        <Col span={16} className="u-pad-sm">
-          <ul className="u-list-reset" data-test={markers.SERVICE_TAGS}>
+        <Col span={16} className="ub-p2">
+          <ul className="ub-list-reset" data-test={markers.SERVICE_TAGS}>
             {sortBy(services, s => s.name).map(service => {
               const { name, numberOfSpans: count } = service;
               return (
-                <li key={name} className="u-inline-b u-space-xs">
+                <li key={name} className="ub-inline-block ub-m1">
                   <Tag
                     className="ResultItem--serviceTag"
                     style={{ borderLeftColor: colorGenerator.getColorByKey(name) }}
@@ -74,7 +74,7 @@ export default function ResultItem({
             })}
           </ul>
         </Col>
-        <Col span={4} className="u-pad-sm u-tx-right">
+        <Col span={4} className="ub-p3 ub-tx-right">
           {formatRelativeDate(timestamp)}
           <Divider type="vertical" />
           {timeStr.slice(0, -3)}&nbsp;{timeStr.slice(-2)}

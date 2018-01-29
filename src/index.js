@@ -12,12 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+/* eslint-disable import/first */
+
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { document } from 'global';
 
 import JaegerUIApp from './components/App';
 import { init as initTracking } from './utils/metrics';
+
+import 'u-basscss/css/layout.css';
+import 'u-basscss/css/margin.css';
+import 'u-basscss/css/position.css';
+import 'u-basscss/css/typography.css';
 
 initTracking();
 
