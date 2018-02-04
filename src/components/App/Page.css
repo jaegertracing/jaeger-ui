@@ -14,11 +14,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-.jaeger-ui-page {
-  height: 100%;
+.Page--topNav {
+  height: auto;
+  padding: 0;
+  position: fixed;
+  width: 100%;
+  z-index: 3;
 }
 
-.jaeger-ui--content {
-  height: 100%;
-  padding-top: 50px;
+.Page--content {
+  padding-top: 47px;
 }

@@ -22,15 +22,19 @@ limitations under the License.
   position: absolute;
   height: 100%;
   width: 1px;
-  background: #d3d3d3;
+  background: #d8d8d8;
 }
+
+.Ticks--tick:last-child {
+  width: 0;
+}
+
 .Ticks--tickLabel {
-  bottom: 0.5rem;
-  left: 5px;
+  left: 0.25rem;
   position: absolute;
 }
 
 .Ticks--tickLabel.isEndAnchor {
   left: initial;
-  right: 5px;
+  right: 0.25rem;
 }

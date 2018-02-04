@@ -1,3 +1,5 @@
+// @flow
+
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,20 +15,22 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { Icon } from 'antd';
 
-import TraceServiceTag from './TraceServiceTag';
+import './LoadingIndicator.css';
 
-it('<SearchTracePage /> tests', () => {
-  const wrapper = shallow(
-    <TraceServiceTag
-      service={{
-        name: 'Service A',
-        numberOfSpans: 1,
-      }}
-    />
-  );
-  const labelText = wrapper.find('.ui.label').first();
+type LoadingIndicatorProps = {
+  centered?: boolean,
+  className?: string,
+};
 
-  expect(labelText.text()).toBe('Service A (1)');
-});
+export default function LoadingIndicator(props: LoadingIndicatorProps) {
+  const { centered, className, ...rest } = props;
+  const cls = `LoadingIndicator ${centered ? 'LoadingIndicator--centered' : ''} ${className || ''}`;
+  return <Icon type="loading" className={cls} {...rest} />;
+}
+
+LoadingIndicator.defaultProps = {
+  centered: false,
+  className: undefined,
+};

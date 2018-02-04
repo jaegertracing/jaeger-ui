@@ -23,13 +23,14 @@ import store from 'store';
 
 import {
   convertQueryParamsToFormDates,
+  convTagsLogfmt,
   getUnixTimeStampInMSFromForm,
   mapStateToProps,
   submitForm,
-  tagsToQuery,
   traceIDsToQuery,
-  TraceSearchFormImpl as TraceSearchForm,
-} from './TraceSearchForm';
+  SearchFormImpl as SearchForm,
+} from './SearchForm';
+import * as markers from './SearchForm.markers';
 
 function makeDateParams(dateOffset = 0) {
   const date = new Date();
@@ -93,10 +94,26 @@ describe('conversion utils', () => {
     });
   });
 
-  describe('tagsToQuery()', () => {
-    it('splits on "|"', () => {
-      const strs = ['a', 'b', 'c'];
-      expect(tagsToQuery(strs.join('|'))).toEqual(strs);
+  describe('convTagsLogfmt()', () => {
+    it('converts logfmt formatted string to JSON', () => {
+      const input = 'http.status_code=404 span.kind=client key="with a long value"';
+      const target = JSON.stringify({
+        'http.status_code': '404',
+        'span.kind': 'client',
+        key: 'with a long value',
+      });
+      expect(convTagsLogfmt(input)).toBe(target);
+    });
+
+    // https://github.com/jaegertracing/jaeger/issues/550#issuecomment-352850811
+    it('converts all values to strings', () => {
+      const input = 'aBoolKey error=true num=9';
+      const target = JSON.stringify({
+        aBoolKey: 'true',
+        error: 'true',
+        num: '9',
+      });
+      expect(convTagsLogfmt(input)).toBe(target);
     });
   });
 
@@ -110,7 +127,7 @@ describe('conversion utils', () => {
 
 describe('submitForm()', () => {
   const LOOKBACK_VALUE = 2;
-  const LOOKBACK_UNIT = 'd';
+  const LOOKBACK_UNIT = 's';
   let searchTraces;
   let fields;
 
@@ -121,7 +138,6 @@ describe('submitForm()', () => {
       operation: 'op-a',
       resultsLimit: 20,
       service: 'svc-a',
-      tags: 'a|b',
     };
   });
 
@@ -135,14 +151,24 @@ describe('submitForm()', () => {
   });
 
   describe('`fields.lookback`', () => {
+    function getCalledDuration(mock) {
+      const { start, end } = mock.calls[0][0];
+      const diffMs = (Number(end) - Number(start)) / 1000;
+      return moment.duration(diffMs);
+    }
+
     it('subtracts `lookback` from `fields.end`', () => {
       submitForm(fields, searchTraces);
-      const { calls } = searchTraces.mock;
-      expect(calls.length).toBe(1);
-      const { start, end } = calls[0][0];
-      const diffMs = (Number(end) - Number(start)) / 1000;
-      const duration = moment.duration(diffMs);
-      expect(duration.asDays()).toBe(LOOKBACK_VALUE);
+      expect(searchTraces).toHaveBeenCalledTimes(1);
+      expect(getCalledDuration(searchTraces.mock).asSeconds()).toBe(LOOKBACK_VALUE);
+    });
+
+    it('parses `lookback` double digit options', () => {
+      const lookbackDoubleDigitValue = 12;
+      fields.lookback = `${lookbackDoubleDigitValue}h`;
+      submitForm(fields, searchTraces);
+      expect(searchTraces).toHaveBeenCalledTimes(1);
+      expect(getCalledDuration(searchTraces.mock).asHours()).toBe(lookbackDoubleDigitValue);
     });
 
     it('processes form dates when `lookback` is "custom"', () => {
@@ -165,7 +191,7 @@ describe('submitForm()', () => {
     });
   });
 
-  describe('`fields.tag`', () => {
+  describe('`fields.tags`', () => {
     it('is ignored when `fields.tags` is falsy', () => {
       fields.tags = undefined;
       submitForm(fields, searchTraces);
@@ -175,14 +201,19 @@ describe('submitForm()', () => {
       expect(tag).toBe(undefined);
     });
 
-    it('is parsed `fields.tags` is truthy', () => {
-      const tagStrs = ['a', 'b'];
-      fields.tags = tagStrs.join('|');
+    it('is parsed when `fields.tags` is truthy', () => {
+      const input = 'http.status_code=404 span.kind=client key="with a long value"';
+      const target = JSON.stringify({
+        'http.status_code': '404',
+        'span.kind': 'client',
+        key: 'with a long value',
+      });
+      fields.tags = input;
       submitForm(fields, searchTraces);
       const { calls } = searchTraces.mock;
       expect(calls.length).toBe(1);
-      const { tag } = calls[0][0];
-      expect(tag).toEqual(tagStrs);
+      const { tags } = calls[0][0];
+      expect(tags).toEqual(target);
     });
   });
 
@@ -211,33 +242,37 @@ describe('submitForm()', () => {
   });
 });
 
-describe('<TraceSearchForm>', () => {
+describe('<SearchForm>', () => {
   let wrapper;
   beforeEach(() => {
-    wrapper = shallow(<TraceSearchForm {...defaultProps} />);
+    wrapper = shallow(<SearchForm {...defaultProps} />);
   });
 
-  it('shows operations only when a service is selected', () => {
-    expect(wrapper.find('.search-form--operation').length).toBe(0);
-
-    wrapper = shallow(<TraceSearchForm {...defaultProps} selectedService="svcA" />);
-    expect(wrapper.find('.search-form--operation').length).toBe(1);
+  it('enables operations only when a service is selected', () => {
+    let ops = wrapper.find('[placeholder="Select An Operation"]');
+    expect(ops.prop('props').disabled).toBe(true);
+    wrapper = shallow(<SearchForm {...defaultProps} selectedService="svcA" />);
+    ops = wrapper.find('[placeholder="Select An Operation"]');
+    expect(ops.prop('props').disabled).toBe(false);
   });
 
   it('shows custom date inputs when `props.selectedLookback` is "custom"', () => {
     function getDateFieldLengths(compWrapper) {
-      return [compWrapper.find('.js-test-start-input').length, compWrapper.find('.js-test-end-input').length];
+      return [
+        compWrapper.find('[placeholder="Start Date"]').length,
+        compWrapper.find('[placeholder="End Date"]').length,
+      ];
     }
     expect(getDateFieldLengths(wrapper)).toEqual([0, 0]);
-    wrapper = shallow(<TraceSearchForm {...defaultProps} selectedLookback="custom" />);
+    wrapper = shallow(<SearchForm {...defaultProps} selectedLookback="custom" />);
     expect(getDateFieldLengths(wrapper)).toEqual([1, 1]);
   });
 
   it('disables the submit button when a service is not selected', () => {
-    let btn = wrapper.find('.js-test-submit-btn');
+    let btn = wrapper.find(`[data-test="${markers.SUBMIT_BTN}"]`);
     expect(btn.prop('disabled')).toBeTruthy();
-    wrapper = shallow(<TraceSearchForm {...defaultProps} selectedService="svcA" />);
-    btn = wrapper.find('.js-test-submit-btn');
+    wrapper = shallow(<SearchForm {...defaultProps} selectedService="svcA" />);
+    btn = wrapper.find(`[data-test="${markers.SUBMIT_BTN}"]`);
     expect(btn.prop('disabled')).toBeFalsy();
   });
 });
@@ -271,36 +306,52 @@ describe('mapStateToProps()', () => {
     store.get = oldStoreGet;
   });
 
-  it('derives values from `state.router.location.search` when available', () => {
-    const { date: startSrc, dateStr: startDate, dateTimeStr: startDateTime } = makeDateParams(-1);
-    const { date: endSrc, dateStr: endDate, dateTimeStr: endDateTime } = makeDateParams(0);
-    const common = {
-      lookback: '2h',
-      maxDuration: null,
-      minDuration: null,
-      operation: 'Driver::findNearest',
-      service: 'driver',
-    };
-    const params = {
-      ...common,
-      end: `${endSrc.valueOf()}000`,
-      limit: '999',
-      start: `${startSrc.valueOf()}000`,
-      tag: ['error:true', 'span.kind:client'],
-    };
-    const expected = {
-      ...common,
-      endDate,
-      endDateTime,
-      startDate,
-      startDateTime,
-      resultsLimit: params.limit,
-      tags: params.tag.join('|'),
-      traceIDs: null,
-    };
+  describe('deriving values from `state.router.location.search`', () => {
+    let params;
+    let expected;
 
-    state.router.location.search = queryString.stringify(params);
-    expect(mapStateToProps(state).initialValues).toEqual(expected);
+    beforeEach(() => {
+      const { date: startSrc, dateStr: startDate, dateTimeStr: startDateTime } = makeDateParams(-1);
+      const { date: endSrc, dateStr: endDate, dateTimeStr: endDateTime } = makeDateParams(0);
+      const tagsJSON = '{"error":"true","span.kind":"client"}';
+      const tagsLogfmt = 'error=true span.kind=client';
+      const common = {
+        lookback: '2h',
+        maxDuration: null,
+        minDuration: null,
+        operation: 'Driver::findNearest',
+        service: 'driver',
+      };
+      params = {
+        ...common,
+        end: `${endSrc.valueOf()}000`,
+        limit: '999',
+        start: `${startSrc.valueOf()}000`,
+        tags: tagsJSON,
+      };
+      expected = {
+        ...common,
+        endDate,
+        endDateTime,
+        startDate,
+        startDateTime,
+        resultsLimit: params.limit,
+        tags: tagsLogfmt,
+        traceIDs: null,
+      };
+    });
+
+    it('derives values when available', () => {
+      state.router.location.search = queryString.stringify(params);
+      expect(mapStateToProps(state).initialValues).toEqual(expected);
+    });
+
+    it('parses `tag` values in the former format to logfmt', () => {
+      delete params.tags;
+      params.tag = ['error:true', 'span.kind:client'];
+      state.router.location.search = queryString.stringify(params);
+      expect(mapStateToProps(state).initialValues).toEqual(expected);
+    });
   });
 
   it('fallsback to default values', () => {

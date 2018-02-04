@@ -14,22 +14,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-.span-kids-toggle {
-  cursor: pointer;
+.SpanTreeOffset {
   color: #000;
   position: relative;
 }
 
-.span-kids-toggle:hover {
+.SpanTreeOffset.is-parent:hover {
   background-color: #e8e8e8;
+  cursor: pointer;
 }
 
-.span-tree-offset {
-  display: inline-block;
-  height: 1em;
-}
-
-.span-tree-toggle-icon {
+.SpanTreeOffset--iconWrapper {
   position: absolute;
-  right: 0;
+  right: 0.25rem;
 }

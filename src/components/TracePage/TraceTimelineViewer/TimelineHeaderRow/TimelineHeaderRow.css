@@ -15,9 +15,10 @@ limitations under the License.
 */
 
 .TimelineHeaderRow {
-  background: #e8e8e8;
-  border-bottom: 1px solid #ccc;
+  background: #ececec;
+  border-bottom: 1px solid #d8d8d8;
   height: 38px;
+  line-height: 38px;
   overflow: hidden;
   position: fixed;
   width: 100%;
@@ -26,8 +27,7 @@ limitations under the License.
 
 .TimelineHeaderRow--title {
   overflow: hidden;
-  padding: 0.5rem;
-  padding-right: 0.1rem;
+  margin: 0 0.75rem 0 0.5rem;
   text-overflow: ellipsis;
   white-space: nowrap;
 }

@@ -18,8 +18,6 @@ import { Provider } from 'react-redux';
 import { Route, Redirect, Switch } from 'react-router-dom';
 import { ConnectedRouter } from 'react-router-redux';
 
-import 'semantic-ui-css/semantic.min.css';
-
 import NotFound from './NotFound';
 import Page from './Page';
 import { ConnectedDependencyGraphPage } from '../DependencyGraph';
@@ -29,7 +27,8 @@ import JaegerAPI, { DEFAULT_API_ROOT } from '../../api/jaeger';
 import configureStore from '../../utils/configure-store';
 import prefixUrl from '../../utils/prefix-url';
 
-import './App.css';
+import './index.css';
+import '../common/utils.css';
 
 const history = createHistory();
 

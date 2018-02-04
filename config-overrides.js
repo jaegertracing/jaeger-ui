@@ -12,19 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// eslint-disable-next-line import/no-extraneous-dependencies
-const webpack = require('webpack');
+const fs = require('fs');
+const { injectBabelPlugin } = require('react-app-rewired');
+const rewireLess = require('react-app-rewire-less');
+const lessToJs = require('less-vars-to-js');
 
-module.exports = function override(config, env) {
-  if (env === 'production') {
-    config.plugins.push(
-      // prevent code-splitting to allow the URL path-prefix for the site to be
-      // configurable at runtime
-      // https://github.com/jaegertracing/jaeger-ui/issues/42
-      new webpack.optimize.LimitChunkCountPlugin({
-        maxChunks: 1,
-      })
-    );
-  }
+// convert the Ant Design var overrides to JS
+const loadedVarOverrides = fs.readFileSync('config-overrides-ant-variables.less', 'utf8');
+const modifyVars = lessToJs(loadedVarOverrides);
+
+module.exports = function override(_config, env) {
+  let config = _config;
+  config = injectBabelPlugin(['import', { libraryName: 'antd', style: true }], config);
+  config = rewireLess.withLoaderOptions({ modifyVars })(config, env);
   return config;
 };

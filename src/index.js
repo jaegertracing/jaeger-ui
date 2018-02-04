@@ -12,23 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+/* eslint-disable import/first */
+
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { document } from 'global';
 
-import 'basscss/css/basscss.css';
-
 import JaegerUIApp from './components/App';
 import { init as initTracking } from './utils/metrics';
 
-/* istanbul ignore if */
-if (process.env.NODE_ENV === 'development') {
-  require.ensure(['global/window', 'react-addons-perf'], require => {
-    const window = require('global/window');
-    // eslint-disable-next-line import/no-extraneous-dependencies
-    window.Perf = require('react-addons-perf');
-  });
-}
+import 'u-basscss/css/layout.css';
+import 'u-basscss/css/margin.css';
+import 'u-basscss/css/position.css';
+import 'u-basscss/css/typography.css';
 
 initTracking();
 

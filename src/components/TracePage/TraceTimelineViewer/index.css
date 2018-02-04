@@ -14,27 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-.span-row.is-filtered-out,
-.detail-row.is-filtered-out {
-  opacity: 0.2;
-}
-
-.trace-timeline-viewer {
+.TraceTimelineViewer {
   border-bottom: 1px solid #bbb;
-}
-
-.noselect {
-  -webkit-touch-callout: none; /* iOS Safari */
-  -webkit-user-select: none; /* Chrome/Safari/Opera */
-  -khtml-user-select: none; /* Konqueror */
-  -moz-user-select: none; /* Firefox */
-  -ms-user-select: none; /* Internet Explorer/Edge */
-  user-select: none; /* Non-prefixed version, currently
-                                  not supported by any browser */
-}
-
-.TraceView__header {
-  font-weight: bold;
 }
 
 .json-markup {

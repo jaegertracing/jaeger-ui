@@ -15,6 +15,7 @@
 // limitations under the License.
 
 import * as React from 'react';
+import { Layout } from 'antd';
 import _get from 'lodash/get';
 import Helmet from 'react-helmet';
 import { connect } from 'react-redux';
@@ -32,6 +33,8 @@ type PageProps = {
   children: React.Node,
   config: Config,
 };
+
+const { Header, Content } = Layout;
 
 // export for tests
 export class PageImpl extends React.Component<PageProps> {
@@ -51,14 +54,18 @@ export class PageImpl extends React.Component<PageProps> {
   }
 
   render() {
-    const { children, config } = this.props;
+    const { children, config, location } = this.props;
     const menu = _get(config, 'ui.menu');
     return (
-      <section className="jaeger-ui-page" id="jaeger-ui">
+      <div>
         <Helmet title="Jaeger UI" />
-        <TopNav menuConfig={menu} />
-        <div className="jaeger-ui--content">{children}</div>
-      </section>
+        <Layout>
+          <Header className="Page--topNav">
+            <TopNav activeKey={location.pathname} menuConfig={menu} />
+          </Header>
+          <Content className="Page--content">{children}</Content>
+        </Layout>
+      </div>
     );
   }
 }

@@ -13,11 +13,13 @@
 // limitations under the License.
 
 import React from 'react';
+import { Divider } from 'antd';
 
 import AccordianKeyValues from './AccordianKeyValues';
 import AccordianLogs from './AccordianLogs';
 import DetailState from './DetailState';
 import { formatDuration } from '../utils';
+import LabeledList from '../../../common/LabeledList';
 import type { Log, Span } from '../../../../types';
 
 import './index.css';
@@ -36,39 +38,42 @@ export default function SpanDetail(props: SpanDetailProps) {
   const { detailState, logItemToggle, logsToggle, processToggle, span, tagsToggle, traceStartTime } = props;
   const { isTagsOpen, isProcessOpen, logs: logsState } = detailState;
   const { operationName, process, duration, relativeStartTime, spanID, logs, tags } = span;
+  const overviewItems = [
+    {
+      key: 'svc',
+      label: 'Service:',
+      value: process.serviceName,
+    },
+    {
+      key: 'duration',
+      label: 'Duration:',
+      value: formatDuration(duration),
+    },
+    {
+      key: 'start',
+      label: 'Start Time:',
+      value: formatDuration(relativeStartTime),
+    },
+  ];
   return (
     <div>
-      <div>
-        <h3 className="mb1">{operationName}</h3>
-        <div>
-          <div className="inline-block mr1">
-            <strong>Service: </strong>
-            <span>{process.serviceName}</span>
-          </div>
-          <div className="inline-block mr1">
-            <strong>Duration: </strong>
-            <span>{formatDuration(duration)}</span>
-          </div>
-          <div className="inline-block mr1">
-            <strong>Start Time: </strong>
-            <span>{formatDuration(relativeStartTime)}</span>
-          </div>
-        </div>
-        <hr />
+      <div className="ub-flex ub-items-center">
+        <h2 className="ub-flex-auto ub-m0">{operationName}</h2>
+        <LabeledList dividerClassName="SpanDetail--divider" items={overviewItems} />
       </div>
+      <Divider className="SpanDetail--divider ub-my1" />
       <div>
         <div>
           <AccordianKeyValues
             data={tags}
-            highContrast
             label="Tags"
             isOpen={isTagsOpen}
             onToggle={() => tagsToggle(spanID)}
           />
           {process.tags && (
             <AccordianKeyValues
+              className="ub-mb1"
               data={process.tags}
-              highContrast
               label="Process"
               isOpen={isProcessOpen}
               onToggle={() => processToggle(spanID)}

@@ -13,56 +13,25 @@
 // limitations under the License.
 
 import React, { Component } from 'react';
+import { Col, Row } from 'antd';
 import _values from 'lodash/values';
 import PropTypes from 'prop-types';
 import queryString from 'query-string';
 import { connect } from 'react-redux';
-import { Link } from 'react-router-dom';
 import { bindActionCreators } from 'redux';
-import { Field, reduxForm, formValueSelector } from 'redux-form';
 import store from 'store';
 
-import JaegerLogo from '../../img/jaeger-logo.svg';
-
 import * as jaegerApiActions from '../../actions/jaeger-api';
-import TraceSearchForm from './TraceSearchForm';
-import TraceSearchResult from './TraceSearchResult';
-import TraceResultsScatterPlot from './TraceResultsScatterPlot';
+import SearchForm from './SearchForm';
+import SearchResults, { sortFormSelector } from './SearchResults';
 import ErrorMessage from '../common/ErrorMessage';
-import * as orderBy from '../../model/order-by';
+import LoadingIndicator from '../common/LoadingIndicator';
 import { sortTraces, getTraceSummaries } from '../../model/search';
-import { getPercentageOfDuration } from '../../utils/date';
 import getLastXformCacher from '../../utils/get-last-xform-cacher';
 import prefixUrl from '../../utils/prefix-url';
 
-/**
- * Contains the dropdown to sort and filter trace search results
- */
-function TraceResultsFilterFormImpl() {
-  return (
-    <div className="ui form">
-      <div className="field inline">
-        <label htmlFor="traceResultsSortBy">Sort</label>
-        <Field name="sortBy" id="traceResultsSortBy" className="ui dropdown" component="select">
-          <option value={orderBy.MOST_RECENT}>Most Recent</option>
-          <option value={orderBy.LONGEST_FIRST}>Longest First</option>
-          <option value={orderBy.SHORTEST_FIRST}>Shortest First</option>
-          <option value={orderBy.MOST_SPANS}>Most Spans</option>
-          <option value={orderBy.LEAST_SPANS}>Least Spans</option>
-        </Field>
-      </div>
-    </div>
-  );
-}
-
-const TraceResultsFilterForm = reduxForm({
-  form: 'traceResultsFilters',
-  initialValues: {
-    sortBy: orderBy.MOST_RECENT,
-  },
-})(TraceResultsFilterFormImpl);
-
-const traceResultsFiltersFormSelector = formValueSelector('traceResultsFilters');
+import './index.css';
+import JaegerLogo from '../../img/jaeger-logo.svg';
 
 export default class SearchTracePage extends Component {
   componentDidMount() {
@@ -77,6 +46,10 @@ export default class SearchTracePage extends Component {
     }
   }
 
+  goToTrace = traceID => {
+    this.props.history.push(prefixUrl(`/trace/${traceID}`));
+  };
+
   render() {
     const {
       errors,
@@ -84,99 +57,47 @@ export default class SearchTracePage extends Component {
       loadingServices,
       loadingTraces,
       maxTraceDuration,
-      numberOfTraceResults,
       services,
       traceResults,
     } = this.props;
     const hasTraceResults = traceResults && traceResults.length > 0;
+    const showErrors = errors && !loadingTraces;
+    const showLogo = isHomepage && !hasTraceResults && !loadingTraces && !errors;
     return (
-      <div className="trace-search ui grid padded">
-        <div className="four wide column">
-          <div className="ui tertiary segment" style={{ background: 'whitesmoke' }}>
-            <h3>Find Traces</h3>
-            {!loadingServices && services ? (
-              <TraceSearchForm services={services} />
-            ) : (
-              <div className="m1">
-                <div className="ui active centered inline loader js-test-search-loader" />
-              </div>
-            )}
-          </div>
-        </div>
-        <div className="twelve wide column padded">
-          {loadingTraces && <div className="ui active centered inline loader js-test-traces-loader" />}
-          {errors &&
-            !loadingTraces && (
-              <div className="ui message js-test-error-message">
+      <div>
+        <Row>
+          <Col span={6} className="SearchTracePage--column">
+            <div className="SearchTracePage--find">
+              <h2>Find Traces</h2>
+              {!loadingServices && services ? <SearchForm services={services} /> : <LoadingIndicator />}
+            </div>
+          </Col>
+          <Col span={18} className="SearchTracePage--column">
+            {showErrors && (
+              <div className="js-test-error-message">
                 <h2>There was an error querying for traces:</h2>
                 {errors.map(err => <ErrorMessage key={err.message} error={err} />)}
               </div>
             )}
-          {isHomepage &&
-            !hasTraceResults && (
-              <div className="ui middle aligned center aligned grid" style={{ marginTop: 100 }}>
-                <div className="column">
-                  <img className="js-test-logo" alt="presentation" src={prefixUrl(JaegerLogo)} width="400" />
-                </div>
-              </div>
+            {showLogo && (
+              <img
+                className="SearchTracePage--logo js-test-logo"
+                alt="presentation"
+                src={prefixUrl(JaegerLogo)}
+                width="400"
+              />
             )}
-          {!isHomepage &&
-            !hasTraceResults &&
-            !loadingTraces &&
-            !errors && (
-              <div className="ui message trace-search--no-results js-test-no-results">
-                No trace results. Try another query.
-              </div>
-            )}
-          {hasTraceResults &&
-            !loadingTraces && (
-              <div>
-                <div>
-                  <div style={{ border: '1px solid #e6e6e6' }}>
-                    <div className="p2">
-                      <TraceResultsScatterPlot
-                        data={traceResults.map(t => ({
-                          x: t.timestamp,
-                          y: t.duration,
-                          traceID: t.traceID,
-                          size: t.numberOfSpans,
-                          name: t.traceName,
-                        }))}
-                        onValueClick={t => {
-                          this.props.history.push(prefixUrl(`/trace/${t.traceID}`));
-                        }}
-                      />
-                    </div>
-                    <div className="p2 clearfix" style={{ backgroundColor: 'whitesmoke' }}>
-                      <div className="left">
-                        <span>
-                          {numberOfTraceResults} Trace
-                          {numberOfTraceResults > 1 && 's'}
-                        </span>
-                      </div>
-                      <div className="right">
-                        <TraceResultsFilterForm />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div>
-                  <ul className="list-reset">
-                    {traceResults.map(trace => (
-                      <li key={trace.traceID} className="my1">
-                        <Link to={prefixUrl(`/trace/${trace.traceID}`)}>
-                          <TraceSearchResult
-                            trace={trace}
-                            durationPercent={getPercentageOfDuration(trace.duration, maxTraceDuration)}
-                          />
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            )}
-        </div>
+            {!showErrors &&
+              !showLogo && (
+                <SearchResults
+                  goToTrace={this.goToTrace}
+                  loading={loadingTraces}
+                  maxTraceDuration={maxTraceDuration}
+                  traces={traceResults}
+                />
+              )}
+          </Col>
+        </Row>
       </div>
     );
   }
@@ -186,7 +107,6 @@ SearchTracePage.propTypes = {
   isHomepage: PropTypes.bool,
   // eslint-disable-next-line react/forbid-prop-types
   traceResults: PropTypes.array,
-  numberOfTraceResults: PropTypes.number,
   maxTraceDuration: PropTypes.number,
   loadingServices: PropTypes.bool,
   loadingTraces: PropTypes.bool,
@@ -248,7 +168,7 @@ export function mapStateToProps(state) {
   if (serviceError) {
     errors.push(serviceError);
   }
-  const sortBy = traceResultsFiltersFormSelector(state, 'sortBy');
+  const sortBy = sortFormSelector(state, 'sortBy');
   sortTraces(traces, sortBy);
 
   return {
@@ -258,7 +178,6 @@ export function mapStateToProps(state) {
     loadingServices,
     errors: errors.length ? errors : null,
     maxTraceDuration: maxDuration,
-    numberOfTraceResults: traces.length,
     sortTracesBy: sortBy,
     traceResults: traces,
     urlQueryParams: query,
