@@ -67,9 +67,9 @@ type VirtualizedTraceViewProps = {
 
 // export for tests
 export const DEFAULT_HEIGHTS = {
-  bar: 21,
-  detail: 169,
-  detailWithLogs: 223,
+  bar: 28,
+  detail: 161,
+  detailWithLogs: 197,
 };
 
 const NUM_TICKS = 5;
