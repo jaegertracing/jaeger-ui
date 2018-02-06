@@ -139,6 +139,12 @@ const stateTraceXformer = getLastXformCacher(stateTrace => {
   return { traces, maxDuration, traceError, loadingTraces };
 });
 
+const sortedTracesXformer = getLastXformCacher((traces, sortBy) => {
+  const traceResults = traces.slice();
+  sortTraces(traceResults, sortBy);
+  return traceResults;
+});
+
 const stateServicesXformer = getLastXformCacher(stateServices => {
   const {
     loading: loadingServices,
@@ -169,17 +175,16 @@ export function mapStateToProps(state) {
     errors.push(serviceError);
   }
   const sortBy = sortFormSelector(state, 'sortBy');
-  sortTraces(traces, sortBy);
-
+  const traceResults = sortedTracesXformer(traces, sortBy);
   return {
     isHomepage,
     services,
+    traceResults,
     loadingTraces,
     loadingServices,
     errors: errors.length ? errors : null,
     maxTraceDuration: maxDuration,
     sortTracesBy: sortBy,
-    traceResults: traces,
     urlQueryParams: query,
   };
 }
