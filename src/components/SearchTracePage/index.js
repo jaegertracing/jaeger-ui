@@ -83,7 +83,7 @@ export default class SearchTracePage extends Component {
               <img
                 className="SearchTracePage--logo js-test-logo"
                 alt="presentation"
-                src={prefixUrl(JaegerLogo)}
+                src={JaegerLogo}
                 width="400"
               />
             )}
