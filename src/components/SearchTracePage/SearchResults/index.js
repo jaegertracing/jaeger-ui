@@ -14,7 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import React from 'react';
+import * as React from 'react';
 import { Select } from 'antd';
 import { Field, reduxForm, formValueSelector } from 'redux-form';
 import { Link } from 'react-router-dom';
@@ -66,58 +66,62 @@ const SelectSort = reduxForm({
 
 export const sortFormSelector = formValueSelector('traceResultsSort');
 
-export default function SearchResults(props: SearchResultsProps) {
-  const { goToTrace, loading, maxTraceDuration, traces } = props;
-  if (loading) {
-    return <LoadingIndicator className="u-mt-vast" centered />;
-  }
-  if (!Array.isArray(traces) || !traces.length) {
+export default class SearchResults extends React.PureComponent<SearchResultsProps> {
+  props: SearchResultsProps;
+
+  render() {
+    const { goToTrace, loading, maxTraceDuration, traces } = this.props;
+    if (loading) {
+      return <LoadingIndicator className="u-mt-vast" centered />;
+    }
+    if (!Array.isArray(traces) || !traces.length) {
+      return (
+        <div className="u-simple-card" data-test={markers.NO_RESULTS}>
+          No trace results. Try another query.
+        </div>
+      );
+    }
     return (
-      <div className="u-simple-card" data-test={markers.NO_RESULTS}>
-        No trace results. Try another query.
+      <div>
+        <div>
+          <div className="SearchResults--header">
+            <div className="ub-p3">
+              <ScatterPlot
+                data={traces.map(t => ({
+                  x: t.timestamp,
+                  y: t.duration,
+                  traceID: t.traceID,
+                  size: t.numberOfSpans,
+                  name: t.traceName,
+                }))}
+                onValueClick={t => {
+                  goToTrace(t.traceID);
+                }}
+              />
+            </div>
+            <div className="SearchResults--headerOverview">
+              <SelectSort />
+              <h2 className="ub-m0">
+                {traces.length} Trace{traces.length > 1 && 's'}
+              </h2>
+            </div>
+          </div>
+        </div>
+        <div>
+          <ul className="ub-list-reset">
+            {traces.map(trace => (
+              <li className="ub-my3" key={trace.traceID}>
+                <Link to={prefixUrl(`/trace/${trace.traceID}`)} className="SearchResults--resultLink">
+                  <ResultItem
+                    trace={trace}
+                    durationPercent={getPercentageOfDuration(trace.duration, maxTraceDuration)}
+                  />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
     );
   }
-  return (
-    <div>
-      <div>
-        <div className="SearchResults--header">
-          <div className="ub-p3">
-            <ScatterPlot
-              data={traces.map(t => ({
-                x: t.timestamp,
-                y: t.duration,
-                traceID: t.traceID,
-                size: t.numberOfSpans,
-                name: t.traceName,
-              }))}
-              onValueClick={t => {
-                goToTrace(t.traceID);
-              }}
-            />
-          </div>
-          <div className="SearchResults--headerOverview">
-            <SelectSort />
-            <h2 className="ub-m0">
-              {traces.length} Trace{traces.length > 1 && 's'}
-            </h2>
-          </div>
-        </div>
-      </div>
-      <div>
-        <ul className="ub-list-reset">
-          {traces.map(trace => (
-            <li className="ub-my3" key={trace.traceID}>
-              <Link to={prefixUrl(`/trace/${trace.traceID}`)} className="SearchResults--resultLink">
-                <ResultItem
-                  trace={trace}
-                  durationPercent={getPercentageOfDuration(trace.duration, maxTraceDuration)}
-                />
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </div>
-  );
 }

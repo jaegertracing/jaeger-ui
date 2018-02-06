@@ -21,8 +21,10 @@ import { document } from 'global';
 import JaegerUIApp from './components/App';
 import { init as initTracking } from './utils/metrics';
 
+import 'u-basscss/css/flexbox.css';
 import 'u-basscss/css/layout.css';
 import 'u-basscss/css/margin.css';
+import 'u-basscss/css/padding.css';
 import 'u-basscss/css/position.css';
 import 'u-basscss/css/typography.css';
 
