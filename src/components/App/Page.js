@@ -23,7 +23,7 @@ import { withRouter } from 'react-router-dom';
 
 import TopNav from './TopNav';
 import type { Config } from '../../types/config';
-import { trackPageView } from '../../utils/metrics';
+import { trackPageView } from '../../utils/tracking';
 
 import './Page.css';
 

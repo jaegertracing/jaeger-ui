@@ -19,7 +19,7 @@ import ReactDOM from 'react-dom';
 import { document } from 'global';
 
 import JaegerUIApp from './components/App';
-import { init as initTracking } from './utils/metrics';
+import { context as trackingContext } from './utils/tracking';
 
 import 'u-basscss/css/flexbox.css';
 import 'u-basscss/css/layout.css';
@@ -28,11 +28,15 @@ import 'u-basscss/css/padding.css';
 import 'u-basscss/css/position.css';
 import 'u-basscss/css/typography.css';
 
-initTracking();
-
 const UI_ROOT_ID = 'jaeger-ui-root';
 
 /* istanbul ignore if */
 if (document && process.env.NODE_ENV !== 'test') {
-  ReactDOM.render(<JaegerUIApp />, document.getElementById(UI_ROOT_ID));
+  if (trackingContext) {
+    trackingContext.context(() => {
+      ReactDOM.render(<JaegerUIApp />, document.getElementById(UI_ROOT_ID));
+    });
+  } else {
+    ReactDOM.render(<JaegerUIApp />, document.getElementById(UI_ROOT_ID));
+  }
 }
