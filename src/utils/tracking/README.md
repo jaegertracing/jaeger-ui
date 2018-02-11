@@ -144,10 +144,11 @@ cc{.SpanTreeOffset.is-parent >.SpanTreeOffset--iconWrapper}
 
 Indicates:
 
-* The error message is: `Error: Houston we have a problem`
-* The error occurred on the trace page
-* The error occurred 18 seconds into the session
-* The build was generated from commit `8c50c6c` with two modified files and one untracked file
+* `! Houston...` - The error message is `Error: Houston we have a problem`
+* `trace` - The error occurred on the trace page
+* `18` - The error occurred 18 seconds into the session
+* `8c50c6c 2f +34 -56 1?` - The build was generated from commit `8c50c6c` with two modified files and one
+  untracked file
 * The sequence of events indicated by the breadcrumbs is (oldest to most recent):
   * On the first page of the session
     * `[tr|404]` - A HTTP call to fetch a trace returned a `404` status code
