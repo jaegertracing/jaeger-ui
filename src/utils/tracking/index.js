@@ -133,11 +133,24 @@ export function trackEvent(data: EventData) {
 }
 
 function trackRavenError(ravenData: RavenTransportOptions) {
-  const { message, ...gaData } = convRavenToGa(ravenData);
+  console.log('trace raven error:', ravenData);
+  let converted;
+  try {
+    converted = convRavenToGa(ravenData);
+    // const { message, ...gaData } = convRavenToGa(ravenData);
+  } catch (err) {
+    console.error(err);
+    throw err;
+  }
+  const { message, ...gaData } = converted;
   if (isDebugMode) {
     Object.keys(gaData).forEach(key => {
       // eslint-disable-next-line no-console
-      console.log(key);
+      let valueLen = '';
+      if (typeof gaData[key] === 'string') {
+        valueLen = `- value length: ${gaData[key].length}`;
+      }
+      console.log(key, valueLen);
       // eslint-disable-next-line no-console
       console.log(gaData[key]);
     });
