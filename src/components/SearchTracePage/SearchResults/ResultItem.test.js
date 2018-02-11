@@ -32,7 +32,7 @@ const testTraceProps = {
   numberOfSpans: 5,
 };
 
-fit('<ResultItem /> should render base case correctly', () => {
+it('<ResultItem /> should render base case correctly', () => {
   const wrapper = shallow(<ResultItem trace={testTraceProps} durationPercent={50} />);
 
   const numberOfSpanText = wrapper
