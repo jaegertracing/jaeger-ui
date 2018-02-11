@@ -298,7 +298,6 @@ function getLabel(message, page, duration, git, breadcrumbs) {
 // Convert the Raven exception data to something that can be sent to Google
 // Analytics. See <./README.md> for details.
 export default function convRavenToGa({ data }: RavenTransportOptions) {
-  console.log(data);
   const { message, stack } = convException(data.exception.values[0]);
   const url = truncate(data.request.url.replace(origin, ''), 50);
   const { word: page } = getSym(NAV_SYMBOLS, url);
