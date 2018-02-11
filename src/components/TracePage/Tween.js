@@ -35,7 +35,7 @@ export default class Tween {
   from: number;
   requestID: ?number;
   startTime: number;
-  timeoutID: ?number;
+  timeoutID: ?TimeoutID;
   to: number;
 
   constructor({ duration, from, to, delay, onUpdate, onComplete }: TweenOptions) {
