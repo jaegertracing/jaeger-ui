@@ -31,7 +31,9 @@ export default function configureStore(history) {
       applyMiddleware(
         ...[...Object.keys(jaegerMiddlewares).map(key => jaegerMiddlewares[key]), routerMiddleware(history)]
       ),
-      window && window.devToolsExtension ? window.devToolsExtension() : noop => noop
+      process.env.NODE_ENV !== 'production' && window && window.devToolsExtension
+        ? window.devToolsExtension()
+        : noop => noop
     )
   );
 }

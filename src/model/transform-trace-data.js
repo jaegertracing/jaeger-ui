@@ -85,10 +85,20 @@ export default function transfromTraceData(data: TraceData & { spans: SpanWithPr
       return;
     }
     spans.push({
-      ...span,
       relativeStartTime: span.startTime - traceStartTime,
       depth: depth - 1,
       hasChildren: node.children.length > 0,
+      // spread fails with union types
+      duration: span.duration,
+      logs: span.logs,
+      operationName: span.operationName,
+      process: span.process,
+      processID: span.processID,
+      references: span.references,
+      spanID: span.spanID,
+      startTime: span.startTime,
+      tags: span.tags,
+      traceID: span.traceID,
     });
   });
   return {
