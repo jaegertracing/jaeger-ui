@@ -4,7 +4,31 @@ Page-views and errors are tracked in production when a GA tracking ID is provide
 [documentation](http://jaeger.readthedocs.io/en/latest/deployment/#ui-configuration) for details on the UI
 config.
 
-The page-view tracking is pretty basic. The error tracking is described, below.
+The page-view tracking is pretty basic, so details aren't provided. The GA tracking is configured with [App Tracking](https://developers.google.com/analytics/devguides/collection/analyticsjs/field-reference#apptracking) data. These fields, described [below](#app-tracking), can be used as a secondary dimension when viewing event data in GA. The error tracking is described, [below](#error-tracking).
+
+## App Tracking
+
+The following fields are sent for each GA session:
+
+* [Application Name](https://developers.google.com/analytics/devguides/collection/analyticsjs/field-reference#appName)
+  * Set to `Jaeger UI`
+* [Application ID](https://developers.google.com/analytics/devguides/collection/analyticsjs/field-reference#appId)
+  * Set to `github.com/jaegertracing/jaeger-ui`
+* [Application Version](https://developers.google.com/analytics/devguides/collection/analyticsjs/field-reference#appVersion)
+  * Example: `0.0.1 | github.com/jaegertracing/jaeger-ui | 8c50c6c | 2f +2 -12 | master`
+  * A dynamic value set to: `<version> | <git remote> | <short SHA> | <diff shortstat> | <branch name>`
+  * Truncated to 96 characters
+  * **version** - `package.json#version`
+  * **git remote** - `git remote get-url --push origin`, normalized
+  * **short SHA** - `git branch --points-at HEAD --format="%(objectname:short)"`
+  * **diff shortstat** - A compacted `git diff-index --shortstat HEAD`
+    * E.g. `2f +3 -4 5?`
+    * 2 modified files, having
+    * 3 insertions and
+    * 4 deletions
+    * 5 untracked files
+  * **branch name** - `$ git branch --points-at HEAD --format="%(refname:short)"`
+    * `(detached)` is used when HEAD is detached because the SHA is already noted
 
 ## Error Tracking
 
