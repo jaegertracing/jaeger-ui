@@ -54,6 +54,15 @@ function truncate(str, len, front = false) {
   return str;
 }
 
+// Replace newlines with "|" and collapse whitespace to " "
+function collapseWhitespace(value) {
+  return value
+    .trim()
+    .replace(/\n/g, '|')
+    .replace(/\s\s+/g, ' ')
+    .trim();
+}
+
 // shorten URLs to eitehr a short code or a word
 function getSym(syms, str) {
   for (let i = 0; i < syms.length; i++) {
@@ -64,6 +73,39 @@ function getSym(syms, str) {
   }
   warn(`Unable to find symbol for: "${str}"`);
   return UNKONWN_SYM;
+}
+
+// Convert an error message to a shorter string with the first "error" removed,
+// a leading "! " added, and the first ":" replaced with "!".
+//
+//   Error: Houston we have a problem
+//     ! Houston we have a problem
+//
+//   Error: HTTP Error: Fetch failed
+//     ! HTTP Error: Fetch failed
+//
+//   TypeError: Awful things are happening
+//     ! Type! Awful things are happening
+//
+//   The real error message
+//     ! The real error message
+function convErrorMessage(message, maxLen = 0) {
+  let msg = collapseWhitespace(message);
+  const parts = ['! '];
+  const j = msg.indexOf(':');
+  if (j > -1) {
+    const start = msg
+      .slice(0, j)
+      .replace(/error/i, '')
+      .trim();
+    if (start) {
+      parts.push(start, '! ');
+    }
+    msg = msg.slice(j + 1);
+  }
+  parts.push(msg.trim());
+  const rv = parts.join('');
+  return maxLen ? truncate(rv, maxLen) : parts.join('');
 }
 
 // Convert an exception to the error message and a compacted stack trace. The
@@ -82,11 +124,10 @@ function getSym(syms, str) {
 //      cFn
 //      dFn
 function convException(errValue) {
-  const type = errValue.type.replace(/error/gi, '');
-  const message = truncate(`${type}! ${errValue.value}`, 149);
+  const message = convErrorMessage(`${errValue.type}: ${errValue.value}`, 149);
   const frames = errValue.stacktrace.frames.map(fr => {
     const filename = fr.filename.replace(origin, '').replace(/^\/static\/js\//i, '');
-    const fn = fr.function;
+    const fn = collapseWhitespace(fr.function);
     return { filename, fn };
   });
   const joiner = [];
@@ -242,12 +283,8 @@ function convBreadcrumbs(crumbs) {
       }
 
       case 'sentry': {
-        let msg = c.message;
-        const j = msg.indexOf(':');
-        let start = msg.slice(0, j);
-        start = start.replace(/error/i, '');
-        msg = `${onNewLine ? '' : '\n'}${truncate(`${start ? '! ' : ''}${start}!${msg.slice(j + 1)}`, 58)}\n`;
-        joiner.push(msg);
+        const msg = convErrorMessage(c.message, 58);
+        joiner.push(`${onNewLine ? '' : '\n'}${msg}\n`);
         onNewLine = true;
         break;
       }
