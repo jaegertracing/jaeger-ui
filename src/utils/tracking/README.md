@@ -4,7 +4,10 @@ Page-views and errors are tracked in production when a GA tracking ID is provide
 [documentation](http://jaeger.readthedocs.io/en/latest/deployment/#ui-configuration) for details on the UI
 config.
 
-The page-view tracking is pretty basic, so details aren't provided. The GA tracking is configured with [App Tracking](https://developers.google.com/analytics/devguides/collection/analyticsjs/field-reference#apptracking) data. These fields, described [below](#app-tracking), can be used as a secondary dimension when viewing event data in GA. The error tracking is described, [below](#error-tracking).
+The page-view tracking is pretty basic, so details aren't provided. The GA tracking is configured with
+[App Tracking](https://developers.google.com/analytics/devguides/collection/analyticsjs/field-reference#apptracking)
+data. These fields, described [below](#app-tracking), can be used as a secondary dimension when viewing event
+data in GA. The error tracking is described, [below](#error-tracking).
 
 ## App Tracking
 

@@ -40,6 +40,7 @@ const isTruish = value => Boolean(value) && value !== '0' && value !== 'false';
 
 const isProd = process.env.NODE_ENV === 'production';
 const isDev = process.env.NODE_ENV === 'development';
+const isTest = process.env.NODE_ENV === 'test';
 
 // In test mode if development and envvar REACT_APP_GA_DEBUG is true-ish
 const isDebugMode =
@@ -47,31 +48,10 @@ const isDebugMode =
   isTruish(queryString.parse(_get(window, 'location.search'))['ga-debug']);
 
 const config = getConfig();
-// enable for debug or if in prod with a GA ID
-const isGaEnabled = isDebugMode || (isProd && Boolean(config.gaTrackingID));
+// enable for tests, debug or if in prod with a GA ID
+const isGaEnabled = isTest || isDebugMode || (isProd && Boolean(config.gaTrackingID));
 
-let appVersion;
-if (process.env.REACT_APP_VSN_STATE) {
-  try {
-    appVersion = JSON.parse(process.env.REACT_APP_VSN_STATE);
-    const joiner = [appVersion.objName];
-    if (appVersion.changed.hasChanged) {
-      joiner.push(appVersion.changed.pretty);
-    }
-    appVersion.shortPretty = joiner.join(' ');
-  } catch (_) {
-    appVersion = {
-      pretty: process.env.REACT_APP_VSN_STATE,
-      shortPretty: process.env.REACT_APP_VSN_STATE,
-    };
-  }
-} else {
-  appVersion = {
-    pretty: 'unknown',
-    shortPretty: 'unknown',
-  };
-}
-
+/* istanbul ignore next */
 function logTrackingCalls() {
   const calls = ReactGA.testModeAPI.calls;
   for (let i = 0; i < calls.length; i++) {
@@ -95,8 +75,9 @@ export function trackError(description: string) {
   if (isGaEnabled) {
     let msg = description;
     if (!/^jaeger/i.test(msg)) {
-      msg = `jaeger/${msg}`.slice(0, 149);
+      msg = `jaeger/${msg}`;
     }
+    msg = msg.slice(0, 149);
     ReactGA.exception({ description: msg, fatal: false });
     if (isDebugMode) {
       logTrackingCalls();
@@ -116,9 +97,7 @@ export function trackEvent(data: EventData) {
       category = category.slice(0, EVENT_LENGTHS.category);
     }
     event.category = category;
-    if (data.action) {
-      event.action = data.action.slice(0, EVENT_LENGTHS.action);
-    }
+    event.action = data.action ? data.action.slice(0, EVENT_LENGTHS.action) : 'jaeger/action';
     if (data.label) {
       event.label = data.label.slice(0, EVENT_LENGTHS.label);
     }
@@ -133,21 +112,25 @@ export function trackEvent(data: EventData) {
 }
 
 function trackRavenError(ravenData: RavenTransportOptions) {
-  const { message, ...gaData } = convRavenToGa(ravenData);
+  const data = convRavenToGa(ravenData);
   if (isDebugMode) {
-    Object.keys(gaData).forEach(key => {
+    /* istanbul ignore next */
+    Object.keys(data).forEach(key => {
+      if (key === 'message') {
+        return;
+      }
       let valueLen = '';
-      if (typeof gaData[key] === 'string') {
-        valueLen = `- value length: ${gaData[key].length}`;
+      if (typeof data[key] === 'string') {
+        valueLen = `- value length: ${data[key].length}`;
       }
       // eslint-disable-next-line no-console
       console.log(key, valueLen);
       // eslint-disable-next-line no-console
-      console.log(gaData[key]);
+      console.log(data[key]);
     });
   }
-  trackError(message);
-  trackEvent(gaData);
+  trackError(data.message);
+  trackEvent(data);
 }
 
 // Tracking needs to be initialized when this file is imported, e.g. early in
@@ -155,13 +138,32 @@ function trackRavenError(ravenData: RavenTransportOptions) {
 // like `fetch()`, and generate breadcrumbs from them.
 
 if (isGaEnabled) {
-  const abbr = appVersion.pretty.length > 99 ? `${appVersion.pretty.slice(0, 96)}...` : appVersion.pretty;
-  const gaConfig = { testMode: isDebugMode, titleCase: false };
+  let versionShort;
+  let versionLong;
+  if (process.env.REACT_APP_VSN_STATE) {
+    try {
+      const data = JSON.parse(process.env.REACT_APP_VSN_STATE);
+      const joiner = [data.objName];
+      if (data.changed.hasChanged) {
+        joiner.push(data.changed.pretty);
+      }
+      versionShort = joiner.join(' ');
+      versionLong = data.pretty;
+    } catch (_) {
+      versionShort = process.env.REACT_APP_VSN_STATE;
+      versionLong = process.env.REACT_APP_VSN_STATE;
+    }
+    versionLong = versionLong.length > 99 ? `${versionLong.slice(0, 96)}...` : versionLong;
+  } else {
+    versionShort = 'unknown';
+    versionLong = 'unknown';
+  }
+  const gaConfig = { testMode: isTest || isDebugMode, titleCase: false };
   ReactGA.initialize(config.gaTrackingID || 'debug-mode', gaConfig);
   ReactGA.set({
     appId: 'github.com/jaegertracing/jaeger-ui',
     appName: 'Jaeger UI',
-    appVersion: abbr,
+    appVersion: versionLong,
   });
   const ravenConfig = {
     autoBreadcrumbs: {
@@ -174,8 +176,8 @@ if (isGaEnabled) {
     transport: trackRavenError,
     tags: {},
   };
-  if (appVersion.shortPretty && appVersion.shortPretty !== 'unknown') {
-    ravenConfig.tags.git = appVersion.shortPretty;
+  if (versionShort && versionShort !== 'unknown') {
+    ravenConfig.tags.git = versionShort;
   }
   Raven.config('https://fakedsn@omg.com/1', ravenConfig).install();
   window.onunhandledrejection = function trackRejectedPromise(evt) {
