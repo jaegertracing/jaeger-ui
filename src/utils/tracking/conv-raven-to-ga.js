@@ -127,7 +127,7 @@ function convException(errValue) {
   const message = convErrorMessage(`${errValue.type}: ${errValue.value}`, 149);
   const frames = errValue.stacktrace.frames.map(fr => {
     const filename = fr.filename.replace(origin, '').replace(/^\/static\/js\//i, '');
-    const fn = collapseWhitespace(fr.function);
+    const fn = collapseWhitespace(fr.function || '??');
     return { filename, fn };
   });
   const joiner = [];
@@ -339,7 +339,7 @@ export default function convRavenToGa({ data }: RavenTransportOptions) {
   const url = truncate(data.request.url.replace(origin, ''), 50);
   const { word: page } = getSym(NAV_SYMBOLS, url);
   const value = Math.round(data.extra['session:duration'] / 1000);
-  const category = `jaeger/${page}/error`;
+  const category = `jaeger/error/${page}`;
   let action = [message, data.tags.git, url, '', stack].filter(v => v != null).join('\n');
   action = truncate(action, 499);
   const label = getLabel(message, page, value, data.tags.git, data.breadcrumbs.values);
