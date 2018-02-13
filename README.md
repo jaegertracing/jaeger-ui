@@ -1,5 +1,4 @@
-[![ReadTheDocs][doc-img]][doc] [![Build Status][ci-img]][ci] [![Coverage Status][cov-img]][cov]
-[![FOSSA Status][fossa-img]][fossa]
+[![ReadTheDocs][doc-img]][doc] [![Build Status][ci-img]][ci] [![Coverage Status][cov-img]][cov] [![FOSSA Status][fossa-img]][fossa]
 
 # Jaeger UI
 
@@ -36,8 +35,7 @@ npm install
 yarn
 ```
 
-Make sure you have the Jaeger Query service running on http://localhost:16686. For example, you can run Jaeger
-all-in-one Docker image as descibed in the [documentation][aio-docs].
+Make sure you have the Jaeger Query service running on http://localhost:16686. For example, you can run Jaeger all-in-one Docker image as descibed in the [documentation][aio-docs].
 
 If you don't have it running locally, then tunnel to the correct host and port.
 
@@ -71,8 +69,7 @@ npm run build
 
 ## UI Configuration
 
-See the [deployment guide](http://jaeger.readthedocs.io/en/latest/deployment/#ui-configuration) for details on
-configuring Google Analytics tracking and menu customizations.
+See the [deployment guide](http://jaeger.readthedocs.io/en/latest/deployment/#ui-configuration) for details on configuring Google Analytics tracking and menu customizations.
 
 [doc-img]: https://readthedocs.org/projects/jaeger/badge/?version=latest
 [doc]: http://jaeger.readthedocs.org/en/latest/

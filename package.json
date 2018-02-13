@@ -100,7 +100,8 @@
     "lint": "npm run eslint && npm run prettier && npm run flow && npm run check-license",
     "eslint": "eslint src",
     "check-license": "./scripts/check-license.sh",
-    "prettier": "prettier --write 'src/**/*.{css,js,json,md}' '*.{css,js,json,md}'",
+    "prettier":
+      "prettier --write 'src/**/*.{css,js,json}' '*.{css,js,json}' && prettier --write --print-width 999999 'src/**/*.md' '*.md'",
     "flow": "glow",
     "precommit": "lint-staged"
   },
