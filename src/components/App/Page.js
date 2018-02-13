@@ -16,6 +16,7 @@
 
 import * as React from 'react';
 import { Layout } from 'antd';
+import _get from 'lodash/get';
 import Helmet from 'react-helmet';
 import { connect } from 'react-redux';
 import type { Location } from 'react-router-dom';
@@ -54,7 +55,7 @@ export class PageImpl extends React.Component<PageProps> {
 
   render() {
     const { children, config, location } = this.props;
-    const menu = config && config.menu;
+    const menu = _get(config, 'ui.menu');
     return (
       <div>
         <Helmet title="Jaeger UI" />

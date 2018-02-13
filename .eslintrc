@@ -47,16 +47,17 @@
     }],
 
     /* import */
-    "import/prefer-default-export": 1,
-    "import/no-named-default": 0,
     "import/extensions": 0,
-
-    "new-cap": [2, {
-      "capIsNewExceptions": [
-        "Immutable.Map",
-        "Immutable.List",
-        "Immutable.Set"
-      ]
-    }]
+    "import/no-extraneous-dependencies": [
+      "error",
+      {
+        "devDependencies": [
+          "**/*.test.js",
+          "*.js"
+        ]
+      }
+    ],
+    "import/no-named-default": 0,
+    "import/prefer-default-export": 1
   }
 }

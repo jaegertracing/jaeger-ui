@@ -12,17 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/* eslint-disable import/no-extraneous-dependencies */
-
 const fs = require('fs');
 const { injectBabelPlugin } = require('react-app-rewired');
 const rewireLess = require('react-app-rewire-less');
 const lessToJs = require('less-vars-to-js');
 
-// Read the less file in as string
+// convert the Ant Design var overrides to JS
 const loadedVarOverrides = fs.readFileSync('config-overrides-ant-variables.less', 'utf8');
-
-// Pass in file contents
 const modifyVars = lessToJs(loadedVarOverrides);
 
 module.exports = function override(_config, env) {
