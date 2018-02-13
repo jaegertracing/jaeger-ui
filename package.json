@@ -98,8 +98,9 @@
     "lint": "npm run eslint && npm run prettier && npm run flow && npm run check-license",
     "eslint": "eslint src",
     "check-license": "./scripts/check-license.sh",
-    "prettier": "prettier --write 'src/**/*.{js,json,css}'",
-    "flow": "flow; test $? -eq 0 -o $? -eq 2",
+    "prettier":
+      "prettier --write 'src/**/*.{css,js,json}' '*.{css,js,json}' && prettier --write --print-width 999999 'src/**/*.md' '*.md'",
+    "flow": "glow",
     "precommit": "lint-staged"
   },
   "jest": {
@@ -116,6 +117,7 @@
     "trailingComma": "es5"
   },
   "lint-staged": {
-    "*.{css,js,json}": ["npm run prettier", "npm run check-license", "npm run test", "git add"]
+    "*.{css,js,json}": ["npm run lint", "npm run test", "git add"],
+    "*.md": ["npm run prettier", "git add"]
   }
 }

@@ -2,41 +2,28 @@
 
 We'd love your help!
 
-Jaeger is [Apache 2.0 licensed](LICENSE) and accepts contributions via GitHub
-pull requests. This document outlines some of the conventions on development
-workflow, commit message formatting, contact points and other resources to make
-it easier to get your contribution accepted.
+Jaeger is [Apache 2.0 licensed](LICENSE) and accepts contributions via GitHub pull requests. This document outlines some of the conventions on development workflow, commit message formatting, contact points and other resources to make it easier to get your contribution accepted.
 
 We gratefully welcome improvements to documentation as well as to code.
 
 # Certificate of Origin
 
-By contributing to this project you agree to the [Developer Certificate of
-Origin](https://developercertificate.org/) (DCO). This document was created
-by the Linux Kernel community and is a simple statement that you, as a
-contributor, have the legal right to make the contribution. See the [DCO](DCO)
-file for details.
+By contributing to this project you agree to the [Developer Certificate of Origin](https://developercertificate.org/) (DCO). This document was created by the Linux Kernel community and is a simple statement that you, as a contributor, have the legal right to make the contribution. See the [DCO](DCO) file for details.
 
 ## Making A Change
 
-*Before making any significant changes, please [open an
-issue](https://github.com/jaegertracing/jaeger-ui/issues).* Discussing your proposed
-changes ahead of time will make the contribution process smooth for everyone.
+_Before making any significant changes, please [open an issue](https://github.com/jaegertracing/jaeger-ui/issues)._ Discussing your proposed changes ahead of time will make the contribution process smooth for everyone.
 
-Once we've discussed your changes and you've got your code ready, make sure
-that tests are passing and open your pull request. Your PR is most likely
-to be accepted if it:
+Once we've discussed your changes and you've got your code ready, make sure that tests are passing and open your pull request. Your PR is most likely to be accepted if it:
 
 * Includes tests for new functionality.
 * References the original issue in description, e.g. "Resolves #123".
-* Has a [good commit
-  message](http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html).
+* Has a [good commit message](http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html).
 * Each commit must be signed by the author ([see below](#sign-your-work)).
 
 ## License
 
-By contributing your code, you agree to license your contribution under the terms
-of the [Apache License](LICENSE).
+By contributing your code, you agree to license your contribution under the terms of the [Apache License](LICENSE).
 
 If you are adding a new file it should have a header like below.
 
@@ -58,11 +45,7 @@ If you are adding a new file it should have a header like below.
 
 ## Sign your work
 
-The sign-off is a simple line at the end of the explanation for the
-patch, which certifies that you wrote it or otherwise have the right to
-pass it on as an open-source patch.  The rules are pretty simple: if you
-can certify the below (from
-[developercertificate.org](http://developercertificate.org/)):
+The sign-off is a simple line at the end of the explanation for the patch, which certifies that you wrote it or otherwise have the right to pass it on as an open-source patch. The rules are pretty simple: if you can certify the below (from [developercertificate.org](http://developercertificate.org/)):
 
 ```
 Developer Certificate of Origin
@@ -122,12 +105,8 @@ git config --add alias.c "commit -s"
 
 Prefer to use [flow](https://flow.org/) for new code.
 
-We use [`prettier`](https://prettier.io/), an "opinionated" code formatter. It
-can be applied to both JavaScript and CSS source files via `yarn prettier`.
+We use [`prettier`](https://prettier.io/), an "opinionated" code formatter. It can be applied to both JavaScript and CSS source files via `yarn prettier`.
 
-Then, most issues will be caught by the linter, which can be applied via `yarn
-eslint`.
+Then, most issues will be caught by the linter, which can be applied via `yarn eslint`.
 
-Finally, we generally adhere to the
-[Airbnb Style Guide](https://github.com/airbnb/javascript), with exceptions as
-noted in our `.eslintrc`.
+Finally, we generally adhere to the [Airbnb Style Guide](https://github.com/airbnb/javascript), with exceptions as noted in our `.eslintrc`.

@@ -35,8 +35,7 @@ npm install
 yarn
 ```
 
-Make sure you have the Jaeger Query service running on http://localhost:16686.
-For example, you can run Jaeger all-in-one Docker image as descibed in the [documentation][aio-docs].
+Make sure you have the Jaeger Query service running on http://localhost:16686. For example, you can run Jaeger all-in-one Docker image as descibed in the [documentation][aio-docs].
 
 If you don't have it running locally, then tunnel to the correct host and port.
 
@@ -52,13 +51,12 @@ npm start
 
 #### Commands
 
-| Command | Description |
-| ------- | ----------- |
-| `npm start` | Starts development server with hot reloading and api proxy. |
-| `npm test` | Runs all the tests |
-| `npm run lint` | Lint the project (eslint, prettier, flow) |
-| `npm run build` | Runs production build. Outputs files to `/dist`. |
-
+| Command         | Description                                                 |
+| --------------- | ----------------------------------------------------------- |
+| `npm start`     | Starts development server with hot reloading and api proxy. |
+| `npm test`      | Runs all the tests                                          |
+| `npm run lint`  | Lint the project (eslint, prettier, flow)                   |
+| `npm run build` | Runs production build. Outputs files to `/dist`.            |
 
 ## Build
 
@@ -68,7 +66,6 @@ Running build will output all the static files to the `./dist` folder:
 npm install
 npm run build
 ```
-
 
 ## UI Configuration
 
