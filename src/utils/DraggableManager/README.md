@@ -68,7 +68,7 @@ Note: Not all handlers are always necessary. See "Mouse events need to be piped 
       console.log('position along the width: ', localX / width);
     }}
   />
-</div>;
+</div>
 ```
 
 In other words, DraggableManager instances convert the data to the relevant context. (The "relevant context" is, naturally, varies... see the `getBounds()` constructor parameter below).
@@ -107,15 +107,20 @@ For instance, if implementing a draggable divider (see `DividerDemo.js` and the 
 ```jsx
 <div className="DividerDemo--realm">
   <div className="DividerDemo--divider" onMouseDown={this._dragManager.handleMouseDown} />
-</div>;
+</div>
 ```
 
 But, if implementing the ability to drag a sub-range (see `RegionDemo.js` and the bottom of demo gif), you generally want to show a vertical line at the mouse cursor until the dragging starts (`onMouseDown`), then you want to draw the region being dragged. So, the `onMouseMove`, `onMouseLeave` and `onMouseDown` handlers are necessary:
 
 ```jsx
-<div className="RegionDemo--realm" onMouseDown={this._dragManager.handleMouseDown} onMouseMove={this._dragManager.handleMouseMove} onMouseLeave={this._dragManager.handleMouseMove}>
+<div
+  className="RegionDemo--realm"
+  onMouseDown={this._dragManager.handleMouseDown}
+  onMouseMove={this._dragManager.handleMouseMove}
+  onMouseLeave={this._dragManager.handleMouseMove}
+>
   {/* Draw visuals for the currently dragged range, otherwise empty */}
-</div>;
+</div>
 ```
 
 ### `getBounds()` constructor parameter
