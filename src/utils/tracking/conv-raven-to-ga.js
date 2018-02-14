@@ -340,9 +340,9 @@ export default function convRavenToGa({ data }: RavenTransportOptions) {
   const { word: page } = getSym(NAV_SYMBOLS, url);
   const value = Math.round(data.extra['session:duration'] / 1000);
   const category = `jaeger/${page}/error`;
-  let action = [message, data.tags.git, url, '', stack].filter(v => v != null).join('\n');
+  let action = [message, data.tags && data.tags.git, url, '', stack].filter(v => v != null).join('\n');
   action = truncate(action, 499);
-  const label = getLabel(message, page, value, data.tags.git, data.breadcrumbs.values);
+  const label = getLabel(message, page, value, data.tags && data.tags.git, data.breadcrumbs.values);
   return {
     message,
     category,

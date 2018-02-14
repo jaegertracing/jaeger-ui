@@ -16,15 +16,16 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { document } from 'global';
 
+import JaegerUIApp from './components/App';
+import { context as trackingContext } from './utils/tracking';
+
+/* eslint-disable import/first */
 import 'u-basscss/css/flexbox.css';
 import 'u-basscss/css/layout.css';
 import 'u-basscss/css/margin.css';
 import 'u-basscss/css/padding.css';
 import 'u-basscss/css/position.css';
 import 'u-basscss/css/typography.css';
-
-import JaegerUIApp from './components/App';
-import { context as trackingContext } from './utils/tracking';
 
 const UI_ROOT_ID = 'jaeger-ui-root';
 

@@ -15,16 +15,10 @@
 /* eslint-disable no-console, import/first */
 
 jest.mock('./process-deprecation');
-jest.mock('../../constants/default-config', () => {
-  const actual = require.requireActual('../../constants/default-config');
-  // make sure there are deprecations
-  const deprecations = [{ currentKey: 'current.key', formerKey: 'former.key' }];
-  return { default: actual.default, deprecations };
-});
 
-import getConfig from './get-config';
+import getConfig, { getConfigValue } from './get-config';
 import processDeprecation from './process-deprecation';
-import defaultConfig from '../../constants/default-config';
+import defaultConfig, { deprecations } from '../../constants/default-config';
 
 describe('getConfig()', () => {
   let oldWarn;
@@ -63,25 +57,68 @@ describe('getConfig()', () => {
       window.getJaegerUiConfig = getJaegerUiConfig;
     });
 
+    it('returns the default config when the embedded config is `null`', () => {
+      embedded = null;
+      expect(getConfig()).toEqual(defaultConfig);
+    });
+
     it('merges the defaultConfig with the embedded config ', () => {
       embedded = { novel: 'prop' };
       expect(getConfig()).toEqual({ ...defaultConfig, ...embedded });
     });
 
-    it('gives precedence to the embedded config', () => {
-      embedded = {};
-      Object.keys(defaultConfig).forEach(key => {
-        embedded[key] = key;
+    describe('overwriting precedence and merging', () => {
+      describe('fields not in __mergeFields', () => {
+        it('gives precedence to the embedded config', () => {
+          const mergeFields = new Set(defaultConfig.__mergeFields);
+          const keys = Object.keys(defaultConfig).filter(k => !mergeFields.has(k));
+          embedded = {};
+          keys.forEach(key => {
+            embedded[key] = key;
+          });
+          expect(getConfig()).toEqual({ ...defaultConfig, ...embedded });
+        });
       });
-      expect(getConfig()).toEqual(embedded);
+
+      describe('fields in __mergeFields', () => {
+        it('gives precedence to non-objects in embedded', () => {
+          embedded = {};
+          defaultConfig.__mergeFields.forEach((k, i) => {
+            embedded[k] = i ? true : null;
+          });
+          expect(getConfig()).toEqual({ ...defaultConfig, ...embedded });
+        });
+
+        it('merges object values', () => {
+          embedded = {};
+          const key = defaultConfig.__mergeFields[0];
+          if (!key) {
+            throw new Error('invalid __mergeFields');
+          }
+          embedded[key] = { a: true, b: false };
+          const expected = { ...defaultConfig, ...embedded };
+          expected[key] = { ...defaultConfig[key], ...embedded[key] };
+          expect(getConfig()).toEqual(expected);
+        });
+      });
     });
 
     it('processes deprecations every time `getConfig` is invoked', () => {
       processDeprecation.mockClear();
       getConfig();
-      expect(processDeprecation.mock.calls.length).toBe(1);
+      expect(processDeprecation.mock.calls.length).toBe(deprecations.length);
       getConfig();
-      expect(processDeprecation.mock.calls.length).toBe(2);
+      expect(processDeprecation.mock.calls.length).toBe(2 * deprecations.length);
     });
+  });
+});
+
+describe('getConfigValue(...)', () => {
+  it('returns embedded paths, e.g. "a.b"', () => {
+    expect(getConfigValue('dependencies.menuEnabled')).toBe(true);
+  });
+
+  it('handles non-existent paths"', () => {
+    expect(getConfigValue('not.a.real.path')).toBe(undefined);
   });
 });

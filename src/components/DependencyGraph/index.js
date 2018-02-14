@@ -14,7 +14,6 @@
 
 import React, { Component } from 'react';
 import { Tabs } from 'antd';
-import _get from 'lodash/get';
 import PropTypes from 'prop-types';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
@@ -27,7 +26,7 @@ import * as jaegerApiActions from '../../actions/jaeger-api';
 import { FALLBACK_DAG_MAX_NUM_SERVICES } from '../../constants';
 import { nodesPropTypes, linksPropTypes } from '../../propTypes/dependencies';
 import { formatDependenciesAsNodesAndLinks } from '../../selectors/dependencies';
-import getConfig from '../../utils/config/get-config';
+import { getConfigValue } from '../../utils/config/get-config';
 
 import './index.css';
 
@@ -39,8 +38,7 @@ export const GRAPH_TYPES = {
   DAG: { type: 'DAG', name: 'DAG' },
 };
 
-const dagMaxNumServices =
-  _get(getConfig(), 'dependencies.dagMaxNumServices') || FALLBACK_DAG_MAX_NUM_SERVICES;
+const dagMaxNumServices = getConfigValue('dependencies.dagMaxNumServices') || FALLBACK_DAG_MAX_NUM_SERVICES;
 
 export default class DependencyGraphPage extends Component {
   static propTypes = {
