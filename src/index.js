@@ -29,13 +29,10 @@ import 'u-basscss/css/typography.css';
 
 const UI_ROOT_ID = 'jaeger-ui-root';
 
-/* istanbul ignore if */
-if (document && process.env.NODE_ENV !== 'test') {
-  if (trackingContext) {
-    trackingContext.context(() => {
-      ReactDOM.render(<JaegerUIApp />, document.getElementById(UI_ROOT_ID));
-    });
-  } else {
+if (trackingContext) {
+  trackingContext.context(() => {
     ReactDOM.render(<JaegerUIApp />, document.getElementById(UI_ROOT_ID));
-  }
+  });
+} else {
+  ReactDOM.render(<JaegerUIApp />, document.getElementById(UI_ROOT_ID));
 }

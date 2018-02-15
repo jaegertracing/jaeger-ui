@@ -18,7 +18,7 @@
 
 import prefixUrl from '../prefix-url';
 
-const UNKONWN_SYM = { sym: '??', word: '??' };
+const UNKNOWN_SYM = { sym: '??', word: '??' };
 
 const NAV_SYMBOLS = [
   { sym: 'dp', word: 'dependencies', rx: /^\/dep/i },
@@ -72,7 +72,7 @@ function getSym(syms, str) {
     }
   }
   warn(`Unable to find symbol for: "${str}"`);
-  return UNKONWN_SYM;
+  return UNKNOWN_SYM;
 }
 
 // Convert an error message to a shorter string with the first "error" removed,
