@@ -16,12 +16,11 @@
 
 import React from 'react';
 import { Dropdown, Icon, Menu } from 'antd';
-import _get from 'lodash/get';
 import { Link } from 'react-router-dom';
 
 import TraceIDSearchInput from './TraceIDSearchInput';
 import type { ConfigMenuItem, ConfigMenuGroup } from '../../types/config';
-import getConfig from '../../utils/config/get-config';
+import { getConfigValue } from '../../utils/config/get-config';
 import prefixUrl from '../../utils/prefix-url';
 
 type TopNavProps = {
@@ -36,7 +35,7 @@ const NAV_LINKS = [
   },
 ];
 
-if (_get(getConfig(), 'dependencies.menuEnabled')) {
+if (getConfigValue('dependencies.menuEnabled')) {
   NAV_LINKS.push({
     to: prefixUrl('/dependencies'),
     text: 'Dependencies',

@@ -12,18 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import ReactGA from 'react-ga';
+import convRavenToGa from './conv-raven-to-ga';
+import { RAVEN_PAYLOAD, RAVEN_TO_GA } from './fixtures';
 
-import getConfig from './config/get-config';
-
-export function init() {
-  const config = getConfig();
-  if (process.env.NODE_ENV === 'production' && config.gaTrackingID) {
-    ReactGA.initialize(config.gaTrackingID);
-  }
-}
-
-export function trackPageView(pathname, search) {
-  const pagePath = search ? `${pathname}?${search}` : pathname;
-  ReactGA.pageview(pagePath);
-}
+describe('convRavenToGa()', () => {
+  it('converts the raven-js payload to { category, action, label, value }', () => {
+    const data = convRavenToGa(RAVEN_PAYLOAD);
+    expect(data).toEqual(RAVEN_TO_GA);
+  });
+});

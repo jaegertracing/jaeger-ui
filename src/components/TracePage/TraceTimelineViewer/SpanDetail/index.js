@@ -59,7 +59,11 @@ export default function SpanDetail(props: SpanDetailProps) {
     <div>
       <div className="ub-flex ub-items-center">
         <h2 className="ub-flex-auto ub-m0">{operationName}</h2>
-        <LabeledList dividerClassName="SpanDetail--divider" items={overviewItems} />
+        <LabeledList
+          className="ub-tx-right-align"
+          dividerClassName="SpanDetail--divider"
+          items={overviewItems}
+        />
       </div>
       <Divider className="SpanDetail--divider ub-my1" />
       <div>

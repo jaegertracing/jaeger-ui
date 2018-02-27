@@ -14,13 +14,13 @@
 
 /* eslint-disable import/first */
 jest.mock('./TopNav', () => () => <div />);
-jest.mock('../../utils/metrics');
+jest.mock('../../utils/tracking');
 
 import React from 'react';
 import { mount } from 'enzyme';
 
 import { mapStateToProps, PageImpl as Page } from './Page';
-import { trackPageView } from '../../utils/metrics';
+import { trackPageView } from '../../utils/tracking';
 
 describe('mapStateToProps()', () => {
   it('maps state to props', () => {
