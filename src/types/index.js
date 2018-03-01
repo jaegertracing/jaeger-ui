@@ -20,11 +20,8 @@
 
 type KeyValuePair = {
   key: string,
-  type: string,
-  value: string,
+  value: any,
 };
-
-export type Tag = KeyValuePair;
 
 export type Log = {
   timestamp: number,
@@ -33,7 +30,7 @@ export type Log = {
 
 export type Process = {
   serviceName: string,
-  tags: Array<Tag>,
+  tags: Array<KeyValuePair>,
 };
 
 export type SpanReference = {
@@ -50,7 +47,7 @@ export type SpanData = {
   startTime: number,
   duration: number,
   logs: Array<Log>,
-  tags: Array<Tag>,
+  tags: Array<KeyValuePair>,
   references: Array<SpanReference>,
 };
 

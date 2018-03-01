@@ -49,7 +49,7 @@ const isDebugMode =
 
 const config = getConfig();
 // enable for tests, debug or if in prod with a GA ID
-const isGaEnabled = isTest || isDebugMode || (isProd && Boolean(config.gaTrackingID));
+export const isGaEnabled = isTest || isDebugMode || (isProd && Boolean(config.gaTrackingID));
 
 /* istanbul ignore next */
 function logTrackingCalls() {

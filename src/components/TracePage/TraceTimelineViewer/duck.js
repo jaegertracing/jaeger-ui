@@ -45,7 +45,7 @@ export function newInitialState({ spanNameColumnWidth = null, traceID = null } =
   };
 }
 
-const actionTypes = generateActionTypes('@jaeger-ui/trace-timeline-viewer', [
+export const actionTypes = generateActionTypes('@jaeger-ui/trace-timeline-viewer', [
   'SET_TRACE',
   'SET_SPAN_NAME_COLUMN_WIDTH',
   'CHILDREN_TOGGLE',

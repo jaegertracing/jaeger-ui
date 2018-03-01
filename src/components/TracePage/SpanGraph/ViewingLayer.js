@@ -28,7 +28,7 @@ import './ViewingLayer.css';
 type ViewingLayerProps = {
   height: number,
   numTicks: number,
-  updateViewRangeTime: (number, number) => void,
+  updateViewRangeTime: (number, number, ?string) => void,
   updateNextViewRangeTime: ViewRangeTimeUpdate => void,
   viewRange: ViewRange,
 };
@@ -188,7 +188,7 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
     const anchor = time.reframe ? time.reframe.anchor : value;
     const [start, end] = value < anchor ? [value, anchor] : [anchor, value];
     manager.resetBounds();
-    this.props.updateViewRangeTime(start, end);
+    this.props.updateViewRangeTime(start, end, 'minimap');
   };
 
   _handleScrubberEnterLeave = ({ type }: DraggingUpdate) => {
@@ -220,7 +220,7 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
     }
     manager.resetBounds();
     this.setState({ preventCursorLine: false });
-    this.props.updateViewRangeTime(...update);
+    this.props.updateViewRangeTime(update[0], update[1], 'minimap');
   };
 
   /**

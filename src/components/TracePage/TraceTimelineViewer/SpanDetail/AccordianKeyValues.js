@@ -25,7 +25,7 @@ import KeyValuesTable from './KeyValuesTable';
 import './AccordianKeyValues.css';
 
 type AccordianKeyValuesProps = {
-  className: ?string,
+  className?: ?string,
   data: { key: string, value: any }[],
   highContrast?: boolean,
   isOpen: boolean,
@@ -86,5 +86,6 @@ export default function AccordianKeyValues(props: AccordianKeyValuesProps) {
 }
 
 AccordianKeyValues.defaultProps = {
+  className: null,
   highContrast: false,
 };

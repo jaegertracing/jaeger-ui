@@ -30,7 +30,7 @@ type TimelineHeaderRowProps = {
   numTicks: number,
   onColummWidthChange: number => void,
   updateNextViewRangeTime: ViewRangeTimeUpdate => void,
-  updateViewRangeTime: (number, number) => void,
+  updateViewRangeTime: (number, number, ?string) => void,
   viewRangeTime: ViewRangeTime,
 };
 

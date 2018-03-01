@@ -29,7 +29,10 @@ export default function configureStore(history) {
     }),
     compose(
       applyMiddleware(
-        ...[...Object.keys(jaegerMiddlewares).map(key => jaegerMiddlewares[key]), routerMiddleware(history)]
+        ...Object.keys(jaegerMiddlewares)
+          .map(key => jaegerMiddlewares[key])
+          .filter(Boolean),
+        routerMiddleware(history)
       ),
       process.env.NODE_ENV !== 'production' && window && window.devToolsExtension
         ? window.devToolsExtension()
