@@ -17,7 +17,7 @@
 import { trackEvent } from '../../utils/tracking';
 
 const altViewCtx = 'jaeger/ux/trace/alt-view';
-const slimHeaderCtx = 'jaeger/ux/trace/slim-header';
+export const slimHeaderCtx = 'jaeger/ux/trace/slim-header';
 
 export function trackAltView() {
   trackEvent({

@@ -19,37 +19,38 @@ import { trackEvent } from '../../../../utils/tracking';
 
 const baseContext = 'jaeger/ux/trace/timeline';
 
-const tagsContext = `${baseContext}/tags`;
-const processContext = `${baseContext}/process`;
-const logsContext = `${baseContext}/logs`;
-const logsItemContext = `${baseContext}/logs/item`;
+// export for tests
+export const tagsContext = `${baseContext}/tags`;
+export const processContext = `${baseContext}/process`;
+export const logsContext = `${baseContext}/logs`;
+export const logsItemContext = `${baseContext}/logs/item`;
 
 function getCmd(isOpen: boolean) {
   return isOpen ? 'open' : 'close';
 }
 
-export function logs(isOpen: boolean) {
+function logs(isOpen: boolean) {
   trackEvent({
     category: logsContext,
     action: getCmd(isOpen),
   });
 }
 
-export function logsItem(isOpen: boolean) {
+function logsItem(isOpen: boolean) {
   trackEvent({
     category: logsItemContext,
     action: getCmd(isOpen),
   });
 }
 
-export function process(isOpen: boolean) {
+function process(isOpen: boolean) {
   trackEvent({
     category: processContext,
     action: getCmd(isOpen),
   });
 }
 
-export function tags(isOpen: boolean) {
+function tags(isOpen: boolean) {
   trackEvent({
     category: tagsContext,
     action: getCmd(isOpen),
