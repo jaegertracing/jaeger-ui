@@ -14,6 +14,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import _get from 'lodash/get';
+
 import processDeprecation from './process-deprecation';
 import defaultConfig, { deprecations } from '../../constants/default-config';
 
@@ -35,10 +37,26 @@ export default function getConfig() {
     return { ...defaultConfig };
   }
   const embedded = getJaegerUiConfig();
+  if (!embedded) {
+    return { ...defaultConfig };
+  }
   // check for deprecated config values
-  if (embedded && Array.isArray(deprecations)) {
+  if (Array.isArray(deprecations)) {
     deprecations.forEach(deprecation => processDeprecation(embedded, deprecation, !haveWarnedDeprecations));
     haveWarnedDeprecations = true;
   }
-  return { ...defaultConfig, ...embedded };
+  const rv = { ...defaultConfig, ...embedded };
+  // __mergeFields config values should be merged instead of fully replaced
+  const keys = defaultConfig.__mergeFields || [];
+  for (let i = 0; i < keys.length; i++) {
+    const key = keys[i];
+    if (typeof embedded[key] === 'object' && embedded[key] !== null) {
+      rv[key] = { ...defaultConfig[key], ...embedded[key] };
+    }
+  }
+  return rv;
+}
+
+export function getConfigValue(path: string) {
+  return _get(getConfig(), path);
 }

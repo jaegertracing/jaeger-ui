@@ -1,5 +1,21 @@
 #!/usr/bin/env node
 
+// Copyright (c) 2017 Uber Technologies, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+// See the comment on `getVersion(..)` for details on what this script does.
+
 const spawnSync = require('child_process').spawnSync;
 
 const version = require('../package.json').version;
@@ -54,6 +70,36 @@ function getChanged(shortstat, status) {
   return rv;
 }
 
+// This util function, which can be used via the CLI or as a module, outputs
+// a JSON blob indicating the git state of a repo. It defaults to checking the
+// repo at ".", but accepts a working directory.
+//
+// The output is along the lines of the following:
+//
+//     {
+//       "version": "0.0.1",
+//       "remote": "github.com/jaegertracing/jaeger-ui",
+//       "objName": "64fbc13",
+//       "changed": {
+//         "hasChanged": true,
+//         "files": 1,
+//         "insertions": 21,
+//         "deletions": 0,
+//         "untracked": 0,
+//         "pretty": "1f +21"
+//       },
+//       "refName": "issue-39-track-js-errors",
+//       "pretty": "0.0.1 | github.com/jaegertracing/jaeger-ui | 64fbc13 | 1f +21 | issue-39-track-js-errors"
+//     }
+//
+// * version: The package.json version
+// * remote: The git remote URL (normalized)
+// * objName: The short SHA
+// * changed: Indicates any changes in the repo
+//     * changed.pretty: formatted as "2f +3 -4 5?", which indicates two modified
+//       files having three insertions, 4 deletions, and 5 untracked files
+// * refName: The name of the current branch, "(detached)" when the head is detached
+// * pretty: A human-readable representation of the above fields
 function getVersion(cwd) {
   const opts = { cwd, encoding: 'utf8' };
   const url = spawnSync('git', ['remote', 'get-url', '--push', 'origin'], opts).stdout;

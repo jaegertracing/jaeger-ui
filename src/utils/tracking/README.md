@@ -1,13 +1,8 @@
 # Google Analytics (GA) Tracking In Jaeger UI
 
-Page-views and errors are tracked in production when a GA tracking ID is provided in the UI config. See the
-[documentation](http://jaeger.readthedocs.io/en/latest/deployment/#ui-configuration) for details on the UI
-config.
+Page-views and errors are tracked in production when a GA tracking ID is provided in the UI config and error tracking is not disabled via the UI config. See the [documentation](http://jaeger.readthedocs.io/en/latest/deployment/#ui-configuration) for details on the UI config.
 
-The page-view tracking is pretty basic, so details aren't provided. The GA tracking is configured with
-[App Tracking](https://developers.google.com/analytics/devguides/collection/analyticsjs/field-reference#apptracking)
-data. These fields, described [below](#app-tracking), can be used as a secondary dimension when viewing event
-data in GA. The error tracking is described, [below](#error-tracking).
+The page-view tracking is pretty basic, so details aren't provided. The GA tracking is configured with [App Tracking](https://developers.google.com/analytics/devguides/collection/analyticsjs/field-reference#apptracking) data. These fields, described [below](#app-tracking), can be used as a secondary dimension when viewing event data in GA. The error tracking is described, [below](#error-tracking).
 
 ## App Tracking
 
@@ -35,9 +30,7 @@ The following fields are sent for each GA session:
 
 ## Error Tracking
 
-Raven.js is used to capture error data ([GitHub](https://github.com/getsentry/raven-js),
-[docs](https://docs.sentry.io/clients/javascript/)). Once captured, the error data is transformed and sent to
-GA.
+Raven.js is used to capture error data ([GitHub](https://github.com/getsentry/raven-js), [docs](https://docs.sentry.io/clients/javascript/)). Once captured, the error data is transformed and sent to GA.
 
 ### How Are Errors Being Tracked In GA?
 
@@ -46,18 +39,12 @@ For every error we learn of, two GA calls are issued:
 * An [exception](https://developers.google.com/analytics/devguides/collection/analyticsjs/exceptions)
 * An [event](https://developers.google.com/analytics/devguides/collection/analyticsjs/events)
 
-GA exception tracking is pretty minimal, allowing just a
-[150 byte string](https://developers.google.com/analytics/devguides/collection/analyticsjs/field-reference#exDescription).
-So, in addition to the exception, an event with additional data is also issued.
+GA exception tracking is pretty minimal, allowing just a [150 byte string](https://developers.google.com/analytics/devguides/collection/analyticsjs/field-reference#exDescription). So, in addition to the exception, an event with additional data is also issued.
 
-* [Category](https://developers.google.com/analytics/devguides/collection/analyticsjs/field-reference#eventCategory) -
-  The page type the error occurred on
-* [Action](https://developers.google.com/analytics/devguides/collection/analyticsjs/field-reference#eventAction) -
-  Error information with a compacted stack trace (sans sourcemaps, at this time)
-* [Label](https://developers.google.com/analytics/devguides/collection/analyticsjs/field-reference#eventLabel) -
-  A compact form of the breadcrumbs
-* [Value](https://developers.google.com/analytics/devguides/collection/analyticsjs/field-reference#eventValue) -
-  The duration of the session when the error occurred (in seconds)
+* [Category](https://developers.google.com/analytics/devguides/collection/analyticsjs/field-reference#eventCategory) - The page type the error occurred on
+* [Action](https://developers.google.com/analytics/devguides/collection/analyticsjs/field-reference#eventAction) - Error information with a compacted stack trace (sans sourcemaps, at this time)
+* [Label](https://developers.google.com/analytics/devguides/collection/analyticsjs/field-reference#eventLabel) - A compact form of the breadcrumbs
+* [Value](https://developers.google.com/analytics/devguides/collection/analyticsjs/field-reference#eventValue) - The duration of the session when the error occurred (in seconds)
 
 #### Event: Category - Which Page
 
@@ -108,11 +95,9 @@ e.exports                     # function `e.exports` in chunk.6b341ae2.js
 HTMLBodyElement.r             # also in chunk.6b341ae2.js
 ```
 
-The `+33 -56` means there are 33 inserted lines and 56 deleted lines in the edits made to the two tracked
-files.
+The `+33 -56` means there are 33 inserted lines and 56 deleted lines in the edits made to the two tracked files.
 
-Note: The git status is determined when the build is generated or when `yarn start` is initially executed to
-start the dev server.
+Note: The git status is determined when the build is generated or when `yarn start` is initially executed to start the dev server.
 
 #### Event: Label - Breadcrumbs
 
@@ -150,8 +135,7 @@ Indicates:
 * `! Houston...` - The error message is `Error: Houston we have a problem`
 * `trace` - The error occurred on the trace page
 * `18` - The error occurred 18 seconds into the session
-* `8c50c6c 2f +34 -56 1?` - The build was generated from commit `8c50c6c` with two modified files and one
-  untracked file
+* `8c50c6c 2f +34 -56 1?` - The build was generated from commit `8c50c6c` with two modified files and one untracked file
 * The sequence of events indicated by the breadcrumbs is (oldest to most recent):
   * On the first page of the session
     * `[tr|404]` - A HTTP call to fetch a trace returned a `404` status code
@@ -166,15 +150,11 @@ Indicates:
     * `c3` - 3 click UI interactions
   * `tr` - Next, on a trace page
     * `cc` - 2 clicks
-      * `c{.SpanTree...}` - The second click is the last UI breadcrumb, so it is shown with a CSS selector
-        related to the click event target. The CSS selector is "related" instead of "identifying" because it's
-        been simplified.
+      * `c{.SpanTree...}` - The second click is the last UI breadcrumb, so it is shown with a CSS selector related to the click event target. The CSS selector is "related" instead of "identifying" because it's been simplified.
     * `! test-sentry` - An error with the message `Error: test-sentry`
     * The error being tracked occurred — implicit as the next event
 
-The cryptic encoding for the breadcrumbs is used to fit as much of the event history into the 500 characters
-as possible. It might turn out that fewer events with more details is preferable. In which case, the payload
-will be adjusted. For now, the encoding is:
+The cryptic encoding for the breadcrumbs is used to fit as much of the event history into the 500 characters as possible. It might turn out that fewer events with more details is preferable. In which case, the payload will be adjusted. For now, the encoding is:
 
 * `[sym]` - A fetch to `sym` resulted in a `200` status code, possible values for `sym` are:
   * `svc` - Fetch the services for the search page
@@ -185,8 +165,7 @@ will be adjusted. For now, the encoding is:
   * `??` - Unknown fetch (should not happen)
 * `[sym|NNN]` - The status code was `NNN`, omitted for `200` status codes
 * `\n\nsym\n` - Navigation to `sym`
-  * Page navigation tokens are on their own line and have an empty line above them, e.g. empty lines separate
-    events that occurred on different pages
+  * Page navigation tokens are on their own line and have an empty line above them, e.g. empty lines separate events that occurred on different pages
   * `sym` indicates the type of page, valid values are:
     * `dp` - Dependencies page
     * `tr` - Trace page
@@ -197,10 +176,8 @@ will be adjusted. For now, the encoding is:
 * `c` or `i` - Indicates a user interaction
   * `c` is click
   * `i` is input
-  * `cN` - Indicates `c` occurred `N` consecutive times, e.g. 3 clicks would be `c3` and `i2` is two input
-    breadcrumbs
-  * `c{selector}` - Indicates `c` was the last UI breadcrumb, and the CSS selector `selector` describes the
-    event target
+  * `cN` - Indicates `c` occurred `N` consecutive times, e.g. 3 clicks would be `c3` and `i2` is two input breadcrumbs
+  * `c{selector}` - Indicates `c` was the last UI breadcrumb, and the CSS selector `selector` describes the event target
     * Takes for the form `i{selector}` for input events
 * `! <some message>` - A previous error that was tracked, truncated to 58 characters
   * The first occurrence of `/error/i` is removed
@@ -219,8 +196,7 @@ You get a lot for free when using Raven.js:
   * [Previous errors](https://github.com/getsentry/raven-js/blob/master/src/raven.js#L1872)
   * Some [UI events](https://github.com/getsentry/raven-js/blob/master/src/raven.js#L870) (click and input)
   * [URL changes](https://github.com/getsentry/raven-js/blob/master/src/raven.js#L945)
-* Stack traces are
-  [normalized](https://github.com/getsentry/raven-js/blob/f8eec063c95f70d8978f895284946bd278748d97/vendor/TraceKit/tracekit.js)
+* Stack traces are [normalized](https://github.com/getsentry/raven-js/blob/f8eec063c95f70d8978f895284946bd278748d97/vendor/TraceKit/tracekit.js)
 * Some global handlers are added
 
 Implementing the above from scratch would require substantial effort. Meanwhile, Raven.js is well tested.

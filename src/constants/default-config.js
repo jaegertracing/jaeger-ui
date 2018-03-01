@@ -16,47 +16,62 @@ import deepFreeze from 'deep-freeze';
 
 import { FALLBACK_DAG_MAX_NUM_SERVICES } from './index';
 
-export default deepFreeze({
-  dependencies: {
-    dagMaxNumServices: FALLBACK_DAG_MAX_NUM_SERVICES,
-    menuEnabled: true,
-  },
-  menu: [
+export default deepFreeze(
+  Object.defineProperty(
     {
-      label: 'About Jaeger',
-      items: [
+      dependencies: {
+        dagMaxNumServices: FALLBACK_DAG_MAX_NUM_SERVICES,
+        menuEnabled: true,
+      },
+      tracking: {
+        gaID: null,
+        trackErrors: true,
+      },
+      menu: [
         {
-          label: 'GitHub',
-          url: 'https://github.com/uber/jaeger',
-        },
-        {
-          label: 'Docs',
-          url: 'http://jaeger.readthedocs.io/en/latest/',
-        },
-        {
-          label: 'Twitter',
-          url: 'https://twitter.com/JaegerTracing',
-        },
-        {
-          label: 'Discussion Group',
-          url: 'https://groups.google.com/forum/#!forum/jaeger-tracing',
-        },
-        {
-          label: 'Gitter.im',
-          url: 'https://gitter.im/jaegertracing/Lobby',
-        },
-        {
-          label: 'Blog',
-          url: 'https://medium.com/jaegertracing/',
+          label: 'About Jaeger',
+          items: [
+            {
+              label: 'GitHub',
+              url: 'https://github.com/uber/jaeger',
+            },
+            {
+              label: 'Docs',
+              url: 'http://jaeger.readthedocs.io/en/latest/',
+            },
+            {
+              label: 'Twitter',
+              url: 'https://twitter.com/JaegerTracing',
+            },
+            {
+              label: 'Discussion Group',
+              url: 'https://groups.google.com/forum/#!forum/jaeger-tracing',
+            },
+            {
+              label: 'Gitter.im',
+              url: 'https://gitter.im/jaegertracing/Lobby',
+            },
+            {
+              label: 'Blog',
+              url: 'https://medium.com/jaegertracing/',
+            },
+          ],
         },
       ],
     },
-  ],
-});
+    // fields that should be individually merged vs wholesale replaced
+    '__mergeFields',
+    { value: ['tracking', 'dependencies'] }
+  )
+);
 
 export const deprecations = [
   {
     formerKey: 'dependenciesMenuEnabled',
     currentKey: 'dependencies.menuEnabled',
+  },
+  {
+    formerKey: 'gaTrackingID',
+    currentKey: 'tracking.gaID',
   },
 ];

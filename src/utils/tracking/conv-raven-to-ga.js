@@ -18,7 +18,7 @@
 
 import prefixUrl from '../prefix-url';
 
-const UNKONWN_SYM = { sym: '??', word: '??' };
+const UNKNOWN_SYM = { sym: '??', word: '??' };
 
 const NAV_SYMBOLS = [
   { sym: 'dp', word: 'dependencies', rx: /^\/dep/i },
@@ -72,7 +72,7 @@ function getSym(syms, str) {
     }
   }
   warn(`Unable to find symbol for: "${str}"`);
-  return UNKONWN_SYM;
+  return UNKNOWN_SYM;
 }
 
 // Convert an error message to a shorter string with the first "error" removed,
@@ -240,6 +240,9 @@ function compressCssSelector(selector) {
 // events. This ordering was kept because it's easier to see which page events
 // occurred on.
 function convBreadcrumbs(crumbs) {
+  if (!Array.isArray(crumbs) || !crumbs.length) {
+    return '';
+  }
   // the last UI breadcrumb has the CSS selector included
   let iLastUi = -1;
   for (let i = crumbs.length - 1; i >= 0; i--) {
@@ -335,14 +338,15 @@ function getLabel(message, page, duration, git, breadcrumbs) {
 // Convert the Raven exception data to something that can be sent to Google
 // Analytics. See <./README.md> for details.
 export default function convRavenToGa({ data }: RavenTransportOptions) {
-  const { message, stack } = convException(data.exception.values[0]);
-  const url = truncate(data.request.url.replace(origin, ''), 50);
+  const { breadcrumbs, exception, extra, request, tags } = data;
+  const { message, stack } = convException(exception.values[0]);
+  const url = truncate(request.url.replace(origin, ''), 50);
   const { word: page } = getSym(NAV_SYMBOLS, url);
-  const value = Math.round(data.extra['session:duration'] / 1000);
-  const category = `jaeger/error/${page}`;
-  let action = [message, data.tags.git, url, '', stack].filter(v => v != null).join('\n');
+  const value = Math.round(extra['session:duration'] / 1000);
+  const category = `jaeger/${page}/error`;
+  let action = [message, tags && tags.git, url, '', stack].filter(v => v != null).join('\n');
   action = truncate(action, 499);
-  const label = getLabel(message, page, value, data.tags.git, data.breadcrumbs.values);
+  const label = getLabel(message, page, value, tags && tags.git, breadcrumbs && breadcrumbs.values);
   return {
     message,
     category,

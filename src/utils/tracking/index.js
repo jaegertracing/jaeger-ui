@@ -48,8 +48,10 @@ const isDebugMode =
   isTruish(queryString.parse(_get(window, 'location.search'))['ga-debug']);
 
 const config = getConfig();
+const gaID = _get(config, 'tracking.gaID');
 // enable for tests, debug or if in prod with a GA ID
-export const isGaEnabled = isTest || isDebugMode || (isProd && Boolean(config.gaTrackingID));
+export const isGaEnabled = isTest || isDebugMode || (isProd && Boolean(gaID));
+const isErrorsEnabled = isDebugMode || (isGaEnabled && Boolean(_get(config, 'tracking.trackErrors')));
 
 /* istanbul ignore next */
 function logTrackingCalls() {
@@ -159,33 +161,35 @@ if (isGaEnabled) {
     versionLong = 'unknown';
   }
   const gaConfig = { testMode: isTest || isDebugMode, titleCase: false };
-  ReactGA.initialize(config.gaTrackingID || 'debug-mode', gaConfig);
+  ReactGA.initialize(gaID || 'debug-mode', gaConfig);
   ReactGA.set({
     appId: 'github.com/jaegertracing/jaeger-ui',
     appName: 'Jaeger UI',
     appVersion: versionLong,
   });
-  const ravenConfig = {
-    autoBreadcrumbs: {
-      xhr: true,
-      console: false,
-      dom: true,
-      location: true,
-    },
-    environment: process.env.NODE_ENV || 'unkonwn',
-    transport: trackRavenError,
-    tags: {},
-  };
-  if (versionShort && versionShort !== 'unknown') {
-    ravenConfig.tags.git = versionShort;
+  if (isErrorsEnabled) {
+    const ravenConfig = {
+      autoBreadcrumbs: {
+        xhr: true,
+        console: false,
+        dom: true,
+        location: true,
+      },
+      environment: process.env.NODE_ENV || 'unkonwn',
+      transport: trackRavenError,
+      tags: {},
+    };
+    if (versionShort && versionShort !== 'unknown') {
+      ravenConfig.tags.git = versionShort;
+    }
+    Raven.config('https://fakedsn@omg.com/1', ravenConfig).install();
+    window.onunhandledrejection = function trackRejectedPromise(evt) {
+      Raven.captureException(evt.reason);
+    };
   }
-  Raven.config('https://fakedsn@omg.com/1', ravenConfig).install();
-  window.onunhandledrejection = function trackRejectedPromise(evt) {
-    Raven.captureException(evt.reason);
-  };
   if (isDebugMode) {
     logTrackingCalls();
   }
 }
 
-export const context = isGaEnabled ? Raven : null;
+export const context = isErrorsEnabled ? Raven : null;
