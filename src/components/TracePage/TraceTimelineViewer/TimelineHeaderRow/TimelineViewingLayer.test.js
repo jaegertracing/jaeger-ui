@@ -122,7 +122,7 @@ describe('<TimelineViewingLayer>', () => {
       wrapper.setProps({ viewRangeTime });
       instance._draggerReframe._onDragEnd({ manager, value });
       expect(manager.resetBounds.mock.calls).toEqual([[]]);
-      expect(props.updateViewRangeTime.mock.calls).toEqual([[anchor, shift]]);
+      expect(props.updateViewRangeTime.mock.calls).toEqual([[anchor, shift, 'timeline-header']]);
     });
   });
 
