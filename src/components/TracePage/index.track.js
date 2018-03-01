@@ -18,12 +18,14 @@ import _throttle from 'lodash/throttle';
 
 import { trackEvent } from '../../utils/tracking';
 
-const rangeContext = 'jaeger/ux/trace/range';
-const filterContext = 'jaeger/ux/trace/range';
+// export for tests
+export const rangeContext = 'jaeger/ux/trace/range';
+export const filterContext = 'jaeger/ux/trace/range';
 
+// export for tests
 export const FILTER_SET = 'set';
 export const FILTER_CLEAR = 'clear';
-
+// export for tests
 export const RANGE_REFRAME = 'reframe';
 export const RANGE_SCROLL = 'scroll';
 export const RANGE_SHIFT = 'shift';
