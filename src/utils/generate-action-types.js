@@ -27,7 +27,10 @@
  *                      to assign as the corresponding values.
  * @returns {{[string]: string}}
  */
-export default function generateActionTypes(commonPrefix: string, topLevelTypes: string[]) {
+export default function generateActionTypes(
+  commonPrefix: string,
+  topLevelTypes: string[]
+): { [string]: string } {
   const rv = {};
   topLevelTypes.forEach(type => {
     const fullType = `${commonPrefix}/${type}`;

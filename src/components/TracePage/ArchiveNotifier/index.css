@@ -14,26 +14,21 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-.TracePageHeader--titleRow {
-  align-items: center;
-  display: flex;
+.ArchiveNotifier--errorNotification {
+  position: absolute;
+  right: 0;
+  width: 650px;
 }
 
-.TracePageHeader--title {
-  margin: 0;
-  padding: 0.25rem 0.5rem;
+.ArchiveNotifier--errorIcon,
+.ArchiveNotifier--doneIcon {
+  font-size: 30px;
 }
 
-.TracePageHeader--title:hover {
-  background: #f5f5f5;
+.ArchiveNotifier--errorIcon {
+  color: #c00;
 }
 
-.TracePageHeader--overviewItems {
-  padding: 0 0.5rem 0.25rem 0.5rem;
-}
-
-.TracePageHeader--archiveIcon {
-  display: flex;
-  font-size: 1.2em;
-  margin-top: 0.15rem;
+.ArchiveNotifier--doneIcon {
+  color: teal;
 }

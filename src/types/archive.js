@@ -14,22 +14,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export type ConfigMenuItem = {
-  label: string,
-  url: string,
+import type { ApiError } from './api-error';
+
+export type TraceArchive = {
+  isLoading?: boolean,
+  isArchived?: boolean,
+  isError?: boolean,
+  error?: ApiError,
+  isAcknowledged?: boolean,
 };
 
-export type ConfigMenuGroup = {
-  label: string,
-  items: ConfigMenuItem[],
-};
-
-export type Config = {
-  archiveEnabled: ?boolean,
-  dependencies?: { dagMaxServicesLen?: number, menuEnabled?: boolean },
-  tracking?: {
-    gaID: ?string,
-    trackErrors: ?boolean,
-  },
-  menu: (ConfigMenuGroup | ConfigMenuItem)[],
+export type TracesArchive = {
+  [string]: TraceArchive,
 };

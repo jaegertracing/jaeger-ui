@@ -32,14 +32,18 @@ describe('<ErrorMessage>', () => {
   });
 
   it('renders a message when passed a string', () => {
-    expect(wrapper.text()).toMatch(error);
+    const msg = wrapper.find('Message');
+    expect(msg.length).toBe(1);
+    expect(msg.shallow().text()).toMatch(error);
   });
 
   describe('rendering more complex errors', () => {
     it('renders the error message', () => {
       error = new Error('another-error');
       wrapper.setProps({ error });
-      expect(wrapper.text()).toMatch(error.message);
+      const msg = wrapper.find('Message');
+      expect(msg.length).toBe(1);
+      expect(msg.shallow().text()).toMatch(error.message);
     });
 
     it('renders HTTP related data from the error', () => {
@@ -52,11 +56,14 @@ describe('<ErrorMessage>', () => {
         httpBody: 'value-httpBody',
       };
       wrapper.setProps({ error });
+      const details = wrapper.find('Details');
+      expect(details.length).toBe(1);
+      const detailsWrapper = details.shallow();
       Object.keys(error).forEach(key => {
         if (key === 'message') {
           return;
         }
-        const errorAttr = wrapper.find(`ErrorAttr[value="${error[key]}"]`);
+        const errorAttr = detailsWrapper.find(`ErrorAttr[value="${error[key]}"]`);
         expect(errorAttr.length).toBe(1);
       });
     });

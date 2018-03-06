@@ -19,6 +19,7 @@ import { FALLBACK_DAG_MAX_NUM_SERVICES } from './index';
 export default deepFreeze(
   Object.defineProperty(
     {
+      archiveEnabled: false,
       dependencies: {
         dagMaxNumServices: FALLBACK_DAG_MAX_NUM_SERVICES,
         menuEnabled: true,

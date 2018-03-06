@@ -21,6 +21,12 @@ export const fetchTrace = createAction(
   id => ({ id })
 );
 
+export const archiveTrace = createAction(
+  '@JAEGER_API/ARCHIVE_TRACE',
+  id => JaegerAPI.archiveTrace(id),
+  id => ({ id })
+);
+
 export const searchTraces = createAction(
   '@JAEGER_API/SEARCH_TRACES',
   query => JaegerAPI.searchTraces(query),
