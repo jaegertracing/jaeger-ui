@@ -19,14 +19,14 @@ import { trackEvent } from '../../utils/tracking';
 const altViewCtx = 'jaeger/ux/trace/alt-view';
 export const slimHeaderCtx = 'jaeger/ux/trace/slim-header';
 
-export function trackAltView() {
+export function trackAltViewOpen() {
   trackEvent({
     category: altViewCtx,
     action: 'open',
   });
 }
 
-export function trackSlimHeader(isOpen: boolean) {
+export function trackSlimHeaderToggle(isOpen: boolean) {
   trackEvent({
     category: slimHeaderCtx,
     action: isOpen ? 'open' : 'close',

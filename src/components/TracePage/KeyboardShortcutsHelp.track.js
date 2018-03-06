@@ -18,7 +18,7 @@ import { trackEvent } from '../../utils/tracking';
 
 const context = 'jaeger/ux/trace/kbd-modal';
 
-export default function trackKbdHelpModal() {
+export default function trackKbdHelpModalOpen() {
   trackEvent({
     category: context,
     action: 'open',

@@ -30,7 +30,7 @@ import { cancel as cancelScroll, scrollBy, scrollTo } from './scroll-page';
 import ScrollManager from './ScrollManager';
 import SpanGraph from './SpanGraph';
 import TracePageHeader from './TracePageHeader';
-import { trackSlimHeader } from './TracePageHeader.track';
+import { trackSlimHeaderToggle } from './TracePageHeader.track';
 import TraceTimelineViewer from './TraceTimelineViewer';
 import type { ViewRange, ViewRangeTimeUpdate } from './types';
 import ErrorMessage from '../common/ErrorMessage';
@@ -215,7 +215,7 @@ export default class TracePage extends React.PureComponent<TracePageProps, Trace
 
   toggleSlimView = () => {
     const { slimView } = this.state;
-    trackSlimHeader(slimView);
+    trackSlimHeaderToggle(slimView);
     this.setState({ slimView: !slimView });
   };
 

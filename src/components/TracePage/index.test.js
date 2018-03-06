@@ -37,7 +37,7 @@ import { reset as resetShortcuts } from './keyboard-shortcuts';
 import { cancel as cancelScroll } from './scroll-page';
 import SpanGraph from './SpanGraph';
 import TracePageHeader from './TracePageHeader';
-import { trackSlimHeader } from './TracePageHeader.track';
+import { trackSlimHeaderToggle } from './TracePageHeader.track';
 import TraceTimelineViewer from './TraceTimelineViewer';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
@@ -312,10 +312,10 @@ describe('<TracePage>', () => {
 
     it('tracks setting the header to slim-view', () => {
       const { onSlimViewClicked } = header.props();
-      trackSlimHeader.mockReset();
+      trackSlimHeaderToggle.mockReset();
       onSlimViewClicked(true);
       onSlimViewClicked(false);
-      expect(trackSlimHeader.mock.calls).toEqual([[false], [true]]);
+      expect(trackSlimHeaderToggle.mock.calls).toEqual([[false], [true]]);
     });
 
     it('tracks setting or clearing the filter', () => {

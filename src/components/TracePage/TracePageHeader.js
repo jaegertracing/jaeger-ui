@@ -21,7 +21,7 @@ import IoChevronRight from 'react-icons/lib/io/chevron-right';
 import { Link } from 'react-router-dom';
 
 import * as markers from './TracePageHeader.markers';
-import { trackAltView } from './TracePageHeader.track';
+import { trackAltViewOpen } from './TracePageHeader.track';
 import KeyboardShortcutsHelp from './KeyboardShortcutsHelp';
 import LabeledList from '../common/LabeledList';
 import { FALLBACK_TRACE_NAME } from '../../constants';
@@ -109,7 +109,7 @@ export default function TracePageHeader(props: TracePageHeaderProps) {
           to={prefixUrl(`/api/traces/${traceID}`)}
           rel="noopener noreferrer"
           target="_blank"
-          onClick={trackAltView}
+          onClick={trackAltViewOpen}
         >
           Trace JSON
         </Link>
@@ -119,7 +119,7 @@ export default function TracePageHeader(props: TracePageHeaderProps) {
           to={prefixUrl(`/api/traces/${traceID}?raw=true`)}
           rel="noopener noreferrer"
           target="_blank"
-          onClick={trackAltView}
+          onClick={trackAltViewOpen}
         >
           Trace JSON (unadjusted)
         </Link>
