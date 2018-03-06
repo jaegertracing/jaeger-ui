@@ -1,5 +1,21 @@
 # Changes merged into master
 
+### [#194](https://github.com/jaegertracing/jaeger-ui/pull/194) Support archiving traces, enabled via UI config
+
+* Fix [#7](https://github.com/jaegertracing/jaeger-ui/issues/7) - Add support to "archive traces"
+
+### [#192](https://github.com/jaegertracing/jaeger-ui/pull/192) Change fallback trace name to be more informative
+
+* Fix [#190](https://github.com/jaegertracing/jaeger-ui/issues/190) - Change `cannot-find-trace-name` to `trace-without-root-span`
+
+### [#189](https://github.com/jaegertracing/jaeger-ui/pull/189) Track JS errors in GA
+
+* Fix [#39](https://github.com/jaegertracing/jaeger-ui/issues/39) - Log js client side errors in our server side logs
+
+### [#179](https://github.com/jaegertracing/jaeger-ui/pull/179) Resolve perf issues on the search page
+
+* Fix [#178](https://github.com/jaegertracing/jaeger-ui/issues/178) - Performance regression - Search page
+
 ### [#169](https://github.com/jaegertracing/jaeger-ui/pull/169) Use Ant Design instead of Semantic UI
 
 * Fix [#164](https://github.com/jaegertracing/jaeger-ui/issues/164) - Use Ant Design instead of Semantic UI
