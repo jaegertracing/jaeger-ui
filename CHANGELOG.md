@@ -1,9 +1,5 @@
 # Changes merged into master
 
-### [#194](https://github.com/jaegertracing/jaeger-ui/pull/194) Support archiving traces, enabled via UI config
-
-* Fix [#7](https://github.com/jaegertracing/jaeger-ui/issues/7) - Add support to "archive traces"
-
 ### [#192](https://github.com/jaegertracing/jaeger-ui/pull/192) Change fallback trace name to be more informative
 
 * Fix [#190](https://github.com/jaegertracing/jaeger-ui/issues/190) - Change `cannot-find-trace-name` to `trace-without-root-span`
