@@ -14,8 +14,25 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+@keyframes LoadingIndicator--colorAnim {
+  /*
+  rgb(0, 128, 128) == teal
+  rgba(0, 128, 128, 0.3) == #bedfdf
+  */
+  from {
+    color: #bedfdf;
+  }
+  to {
+    color: teal;
+  }
+}
+
 .LoadingIndicator {
+  animation: LoadingIndicator--colorAnim 1s infinite alternate;
   font-size: 36px;
+  /* outline / stroke the loading indicator */
+  text-shadow: -0.5px 0 rgba(0, 128, 128, 0.6), 0 0.5px rgba(0, 128, 128, 0.6), 0.5px 0 rgba(0, 128, 128, 0.6),
+    0 -0.5px rgba(0, 128, 128, 0.6);
 }
 
 .LoadingIndicator--centered {
