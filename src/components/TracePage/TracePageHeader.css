@@ -33,7 +33,6 @@ limitations under the License.
 }
 
 .TracePageHeader--archiveIcon {
-  display: flex;
-  font-size: 1.2em;
-  margin-top: 0.15rem;
+  font-size: 1.78em;
+  margin-right: 0.15em;
 }

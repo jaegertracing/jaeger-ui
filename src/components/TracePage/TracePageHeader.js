@@ -18,6 +18,7 @@ import * as React from 'react';
 import { Button, Dropdown, Icon, Input, Menu } from 'antd';
 import IoChevronDown from 'react-icons/lib/io/chevron-down';
 import IoChevronRight from 'react-icons/lib/io/chevron-right';
+import IoIosFilingOutline from 'react-icons/lib/io/ios-filing-outline';
 import { Link } from 'react-router-dom';
 
 import * as markers from './TracePageHeader.markers';
@@ -173,8 +174,8 @@ export default function TracePageHeader(props: TracePageHeaderProps) {
           </Button>
         </Dropdown>
         {archiveButtonVisible && (
-          <Button className="ub-mr2 ub-flex" onClick={onArchiveClicked}>
-            <Icon type="clock-circle-o" className="TracePageHeader--archiveIcon" />
+          <Button className="ub-mr2 ub-flex ub-items-center" onClick={onArchiveClicked}>
+            <IoIosFilingOutline className="TracePageHeader--archiveIcon" />
             Archive Trace
           </Button>
         )}
