@@ -71,6 +71,10 @@ npm run build
 
 See the [deployment guide](http://jaeger.readthedocs.io/en/latest/deployment/#ui-configuration) for details on configuring Google Analytics tracking and menu customizations.
 
+## License
+
+[Apache 2.0 License](./LICENSE).
+
 [doc-img]: https://readthedocs.org/projects/jaeger/badge/?version=latest
 [doc]: http://jaeger.readthedocs.org/en/latest/
 [ci-img]: https://travis-ci.org/jaegertracing/jaeger-ui.svg?branch=master
