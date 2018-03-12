@@ -30,7 +30,10 @@ const isErrorTag = ({ key, value }) => key === 'error' && (value === true || val
  * @param trace Trace data in the format sent over the wire.
  * @return {TraceSummary} Summary of the trace data for use in the search results.
  */
-export function getTraceSummary(trace: Trace): TraceSummary {
+export function getTraceSummary(trace: Trace | Error): ?TraceSummary {
+  if (trace instanceof Error) {
+    return null;
+  }
   const { processes, spans, traceID } = trace;
 
   let traceName = '';
@@ -83,7 +86,7 @@ export function getTraceSummary(trace: Trace): TraceSummary {
  * @return {TraceSummaries} The `{ traces, maxDuration }` value.
  */
 export function getTraceSummaries(_traces: Trace[]): TraceSummaries {
-  const traces = _traces.map(getTraceSummary);
+  const traces = _traces.map(getTraceSummary).filter(Boolean);
   const maxDuration = Math.max(..._map(traces, 'duration'));
   return { maxDuration, traces };
 }
