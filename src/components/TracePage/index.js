@@ -23,7 +23,7 @@ import { connect } from 'react-redux';
 import type { RouterHistory, Match } from 'react-router-dom';
 import { bindActionCreators } from 'redux';
 
-import * as track from './index.track';
+import { trackFilter, trackRange } from './index.track';
 import type { CombokeysHandler, ShortcutCallbacks } from './keyboard-shortcuts';
 import { init as initShortcuts, reset as resetShortcuts } from './keyboard-shortcuts';
 import { cancel as cancelScroll, scrollBy, scrollTo } from './scroll-page';
@@ -193,14 +193,13 @@ export default class TracePage extends React.PureComponent<TracePageProps, Trace
   };
 
   updateTextFilter = (textFilter: ?string) => {
-    track.trackFilter(textFilter);
+    trackFilter(textFilter);
     this.setState({ textFilter });
   };
 
   updateViewRangeTime = (start: number, end: number, trackSrc?: string) => {
     if (trackSrc) {
-      const trackCmd = track.getRangeCmd([start, end], this.state.viewRange.time.current);
-      track.trackRange(trackCmd, trackSrc);
+      trackRange(trackSrc, [start, end], this.state.viewRange.time.current);
     }
     const time = { current: [start, end] };
     const viewRange = { ...this.state.viewRange, time };
@@ -215,7 +214,7 @@ export default class TracePage extends React.PureComponent<TracePageProps, Trace
 
   toggleSlimView = () => {
     const { slimView } = this.state;
-    trackSlimHeaderToggle(slimView);
+    trackSlimHeaderToggle(!slimView);
     this.setState({ slimView: !slimView });
   };
 

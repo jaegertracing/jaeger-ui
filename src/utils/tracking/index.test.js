@@ -13,7 +13,11 @@
 // limitations under the License.
 
 /* eslint-disable import/first */
-jest.mock('./conv-raven-to-ga', () => () => ({ message: 'jaeger/a' }));
+jest.mock('./conv-raven-to-ga', () => () => ({
+  category: 'jaeger/a',
+  action: 'some-action',
+  message: 'jaeger/a',
+}));
 
 jest.mock('./index', () => {
   process.env.REACT_APP_VSN_STATE = '{}';
@@ -56,7 +60,7 @@ describe('tracking', () => {
     it('tracks an error', () => {
       tracking.trackError('a');
       expect(calls).toEqual([
-        ['send', { hitType: 'exception', exDescription: jasmine.any(String), exFatal: false }],
+        ['send', { hitType: 'exception', exDescription: expect.any(String), exFatal: false }],
       ]);
     });
 
@@ -76,30 +80,33 @@ describe('tracking', () => {
 
   describe('trackEvent', () => {
     it('tracks an event', () => {
-      tracking.trackEvent({ value: 10 });
+      const category = 'jaeger/some-category';
+      const action = 'some-action';
+      tracking.trackEvent(category, action);
       expect(calls).toEqual([
         [
           'send',
           {
             hitType: 'event',
-            eventCategory: jasmine.any(String),
-            eventAction: jasmine.any(String),
-            eventValue: 10,
+            eventCategory: category,
+            eventAction: action,
           },
         ],
       ]);
     });
 
     it('prepends "jaeger/" to the category, if needed', () => {
-      tracking.trackEvent({ category: 'a' });
+      const category = 'some-category';
+      const action = 'some-action';
+      tracking.trackEvent(category, action);
       expect(calls).toEqual([
-        ['send', { hitType: 'event', eventCategory: 'jaeger/a', eventAction: jasmine.any(String) }],
+        ['send', { hitType: 'event', eventCategory: `jaeger/${category}`, eventAction: action }],
       ]);
     });
 
     it('truncates values, if needed', () => {
       const str = `jaeger/${getStr(600)}`;
-      tracking.trackEvent({ category: str, action: str, label: str });
+      tracking.trackEvent(str, str, str);
       expect(calls).toEqual([
         [
           'send',
@@ -117,8 +124,8 @@ describe('tracking', () => {
   it('converting raven-js errors', () => {
     window.onunhandledrejection({ reason: new Error('abc') });
     expect(calls).toEqual([
-      ['send', { hitType: 'exception', exDescription: jasmine.any(String), exFatal: false }],
-      ['send', { hitType: 'event', eventCategory: jasmine.any(String), eventAction: jasmine.any(String) }],
+      ['send', { hitType: 'exception', exDescription: expect.any(String), exFatal: false }],
+      ['send', { hitType: 'event', eventCategory: expect.any(String), eventAction: expect.any(String) }],
     ]);
   });
 });

@@ -14,13 +14,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { trackEvent } from '../../utils/tracking';
+import { OPEN } from '../../utils/tracking/common';
+import getEventTracker from '../../utils/tracking/get-event-tracker';
 
-const context = 'jaeger/ux/trace/kbd-modal';
+const CATEGORY = 'jaeger/ux/trace/kbd-modal';
 
-export default function trackKbdHelpModalOpen() {
-  trackEvent({
-    category: context,
-    action: 'open',
-  });
-}
+export default getEventTracker(CATEGORY, OPEN);

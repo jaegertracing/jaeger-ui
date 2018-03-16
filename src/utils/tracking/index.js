@@ -22,13 +22,6 @@ import Raven from 'raven-js';
 import convRavenToGa from './conv-raven-to-ga';
 import getConfig from '../config/get-config';
 
-type EventData = {
-  category: string,
-  action?: string,
-  label?: string,
-  value?: number,
-};
-
 const EVENT_LENGTHS = {
   action: 499,
   category: 149,
@@ -87,24 +80,30 @@ export function trackError(description: string) {
   }
 }
 
-export function trackEvent(data: EventData) {
+export function trackEvent(
+  category: string,
+  action: string,
+  labelOrValue?: ?string | ?number,
+  value?: ?number
+) {
   if (isGaEnabled) {
     const event = {};
-    let category = data.category;
-    if (!category) {
-      category = 'jaeger/event';
-    } else if (!/^jaeger/i.test(category)) {
-      category = `jaeger/${category}`.slice(0, EVENT_LENGTHS.category);
+    if (!/^jaeger/i.test(category)) {
+      event.category = `jaeger/${category}`.slice(0, EVENT_LENGTHS.category);
     } else {
-      category = category.slice(0, EVENT_LENGTHS.category);
+      event.category = category.slice(0, EVENT_LENGTHS.category);
     }
-    event.category = category;
-    event.action = data.action ? data.action.slice(0, EVENT_LENGTHS.action) : 'jaeger/action';
-    if (data.label) {
-      event.label = data.label.slice(0, EVENT_LENGTHS.label);
+    event.action = action.slice(0, EVENT_LENGTHS.action);
+    if (labelOrValue != null) {
+      if (typeof labelOrValue === 'string') {
+        event.label = labelOrValue.slice(0, EVENT_LENGTHS.action);
+      } else {
+        // value should be an int
+        event.value = Math.round(labelOrValue);
+      }
     }
-    if (data.value != null) {
-      event.value = Number(data.value);
+    if (value != null) {
+      event.value = Math.round(value);
     }
     ReactGA.event(event);
     if (isDebugMode) {
@@ -114,25 +113,9 @@ export function trackEvent(data: EventData) {
 }
 
 function trackRavenError(ravenData: RavenTransportOptions) {
-  const data = convRavenToGa(ravenData);
-  if (isDebugMode) {
-    /* istanbul ignore next */
-    Object.keys(data).forEach(key => {
-      if (key === 'message') {
-        return;
-      }
-      let valueLen = '';
-      if (typeof data[key] === 'string') {
-        valueLen = `- value length: ${data[key].length}`;
-      }
-      // eslint-disable-next-line no-console
-      console.log(key, valueLen);
-      // eslint-disable-next-line no-console
-      console.log(data[key]);
-    });
-  }
-  trackError(data.message);
-  trackEvent(data);
+  const { message, category, action, label, value } = convRavenToGa(ravenData);
+  trackError(message);
+  trackEvent(category, action, label, value);
 }
 
 // Tracking needs to be initialized when this file is imported, e.g. early in

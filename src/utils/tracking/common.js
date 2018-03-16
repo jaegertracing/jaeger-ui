@@ -14,19 +14,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { actionTypes as types } from './duck';
-import { trackEvent } from '../../../utils/tracking';
+export const OPEN = 'open';
+export const CLOSE = 'close';
 
-const context = 'jaeger/ux/trace/timeline/row';
-
-export default function trackRow(isOpen: boolean) {
-  trackEvent({
-    category: context,
-    action: isOpen ? 'open' : 'close',
-  });
+export function getToggleValue(value: any) {
+  return value ? CLOSE : OPEN;
 }
-
-export const middlewareHooks = {
-  [types.DETAIL_TOGGLE]: (store, action) =>
-    trackRow(!store.getState().traceTimeline.detailStates.has(action.payload.spanID)),
-};

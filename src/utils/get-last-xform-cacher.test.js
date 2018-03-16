@@ -24,7 +24,7 @@ beforeEach(() => {
 });
 
 it('returns a function', () => {
-  expect(cacher).toEqual(jasmine.any(Function));
+  expect(cacher).toEqual(expect.any(Function));
 });
 
 it('handles the first invocation where nothing is cached', () => {

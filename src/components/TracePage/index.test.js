@@ -315,7 +315,7 @@ describe('<TracePage>', () => {
       trackSlimHeaderToggle.mockReset();
       onSlimViewClicked(true);
       onSlimViewClicked(false);
-      expect(trackSlimHeaderToggle.mock.calls).toEqual([[false], [true]]);
+      expect(trackSlimHeaderToggle.mock.calls).toEqual([[true], [false]]);
     });
 
     it('tracks setting or clearing the filter', () => {
@@ -327,12 +327,12 @@ describe('<TracePage>', () => {
     });
 
     it('tracks changes to the viewRange', () => {
+      const src = 'some-source';
       const { updateViewRangeTime } = spanGraph.props();
-      track.getRangeCmd = jest.fn(() => track.RANGE_REFRAME);
       track.trackRange.mockClear();
       const range = [0.25, 0.75];
-      updateViewRangeTime(...range, 'some-source');
-      expect(track.getRangeCmd.mock.calls).toEqual([[range, [0, 1]]]);
+      updateViewRangeTime(...range, src);
+      expect(track.trackRange.mock.calls).toEqual([[src, range, [0, 1]]]);
     });
   });
 });

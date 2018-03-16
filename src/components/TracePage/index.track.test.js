@@ -20,13 +20,12 @@ jest.mock('../../utils/tracking');
 import _throttle from 'lodash/throttle';
 
 import {
-  FILTER_CLEAR,
-  FILTER_SET,
-  filterContext,
-  getRangeCmd,
-  RANGE_REFRAME,
-  RANGE_SHIFT,
-  rangeContext,
+  ACTION_FILTER_CLEAR,
+  ACTION_FILTER_SET,
+  ACTION_RANGE_REFRAME,
+  ACTION_RANGE_SHIFT,
+  CATEGORY_FILTER,
+  CATEGORY_RANGE,
   trackFilter,
   trackRange,
 } from './index.track';
@@ -41,8 +40,8 @@ describe('trackFilter', () => {
     const calls = _throttle.mock.calls;
     expect(calls.length).toBe(2);
     expect(calls).toEqual([
-      [jasmine.any(Function), 750, { leading: false }],
-      [jasmine.any(Function), 750, { leading: false }],
+      [expect.any(Function), 750, { leading: false }],
+      [expect.any(Function), 750, { leading: false }],
     ]);
   });
 
@@ -50,77 +49,14 @@ describe('trackFilter', () => {
     expect(trackEvent.mock.calls.length).toBe(0);
     trackFilter('abc');
     expect(trackEvent.mock.calls.length).toBe(1);
-    expect(trackEvent.mock.calls[0]).toEqual([
-      {
-        category: filterContext,
-        action: FILTER_SET,
-      },
-    ]);
+    expect(trackEvent.mock.calls[0]).toEqual([CATEGORY_FILTER, ACTION_FILTER_SET]);
   });
 
   it('tracks filter clear when clearing the value', () => {
     expect(trackEvent.mock.calls.length).toBe(0);
     trackFilter();
     expect(trackEvent.mock.calls.length).toBe(1);
-    expect(trackEvent.mock.calls[0]).toEqual([
-      {
-        category: filterContext,
-        action: FILTER_CLEAR,
-      },
-    ]);
-  });
-});
-
-describe('getRangeCmd', () => {
-  const cases = [
-    {
-      msg: 'returns shift if start is unchanged',
-      rangeType: RANGE_SHIFT,
-      args: [[0, 0.5], [0, 0.6]],
-    },
-    {
-      msg: 'returns shift if end is unchanged',
-      rangeType: RANGE_SHIFT,
-      args: [[0, 0.5], [0.1, 0.5]],
-    },
-    {
-      msg: 'returns shift if increasing start and end by same amount',
-      rangeType: RANGE_SHIFT,
-      args: [[0.25, 0.75], [0.5, 1]],
-    },
-    {
-      msg: 'returns shift if decreasing start and end by same amount',
-      rangeType: RANGE_SHIFT,
-      args: [[0.25, 0.75], [0, 0.5]],
-    },
-    {
-      msg: 'returns reframe if increasing start and end by different amounts',
-      rangeType: RANGE_REFRAME,
-      args: [[0.25, 0.75], [0.35, 1]],
-    },
-    {
-      msg: 'returns reframe if decreasing start and end by different amounts',
-      rangeType: RANGE_REFRAME,
-      args: [[0.25, 0.75], [0, 0.65]],
-    },
-    {
-      msg: 'returns reframe when widening to a superset',
-      rangeType: RANGE_REFRAME,
-      args: [[0.25, 0.75], [0, 1]],
-    },
-    {
-      msg: 'returns reframe when contracting to a subset',
-      rangeType: RANGE_REFRAME,
-      args: [[0.25, 0.75], [0.45, 0.55]],
-    },
-  ];
-
-  cases.forEach(_case => {
-    const { msg, rangeType, args } = _case;
-    it(msg, () => {
-      const rv = getRangeCmd(...args);
-      expect(rv).toBe(rangeType);
-    });
+    expect(trackEvent.mock.calls[0]).toEqual([CATEGORY_FILTER, ACTION_FILTER_CLEAR]);
   });
 });
 
@@ -129,23 +65,73 @@ describe('trackRange', () => {
     trackEvent.mockClear();
   });
 
-  it('does nothing if given an invalid command', () => {
-    expect(trackEvent.mock.calls.length).toBe(0);
-    trackRange('invalid-command', 'abc');
-    expect(trackEvent.mock.calls.length).toBe(0);
-  });
+  const cases = [
+    {
+      msg: 'returns shift if start is unchanged',
+      rangeType: ACTION_RANGE_SHIFT,
+      source: `${Math.random()}`,
+      from: [0, 0.5],
+      to: [0, 0.6],
+    },
+    {
+      msg: 'returns shift if end is unchanged',
+      rangeType: ACTION_RANGE_SHIFT,
+      source: `${Math.random()}`,
+      from: [0, 0.5],
+      to: [0.1, 0.5],
+    },
+    {
+      msg: 'returns shift if increasing start and end by same amount',
+      rangeType: ACTION_RANGE_SHIFT,
+      source: `${Math.random()}`,
+      from: [0.25, 0.75],
+      to: [0.5, 1],
+    },
+    {
+      msg: 'returns shift if decreasing start and end by same amount',
+      rangeType: ACTION_RANGE_SHIFT,
+      source: `${Math.random()}`,
+      from: [0.25, 0.75],
+      to: [0, 0.5],
+    },
+    {
+      msg: 'returns reframe if increasing start and end by different amounts',
+      rangeType: ACTION_RANGE_REFRAME,
+      source: `${Math.random()}`,
+      from: [0.25, 0.75],
+      to: [0.35, 1],
+    },
+    {
+      msg: 'returns reframe if decreasing start and end by different amounts',
+      rangeType: ACTION_RANGE_REFRAME,
+      source: `${Math.random()}`,
+      from: [0.25, 0.75],
+      to: [0, 0.65],
+    },
+    {
+      msg: 'returns reframe when widening to a superset',
+      rangeType: ACTION_RANGE_REFRAME,
+      source: `${Math.random()}`,
+      from: [0.25, 0.75],
+      to: [0, 1],
+    },
+    {
+      msg: 'returns reframe when contracting to a subset',
+      rangeType: ACTION_RANGE_REFRAME,
+      source: `${Math.random()}`,
+      from: [0.25, 0.75],
+      to: [0.45, 0.55],
+    },
+  ];
 
-  it('tracks the given context, command and source', () => {
-    const source = 'some-source';
-    expect(trackEvent.mock.calls.length).toBe(0);
-    trackRange(RANGE_SHIFT, source);
-    expect(trackEvent.mock.calls.length).toBe(1);
-    expect(trackEvent.mock.calls[0]).toEqual([
-      {
-        category: rangeContext,
-        action: RANGE_SHIFT,
-        label: source,
-      },
-    ]);
+  cases.forEach(_case => {
+    const { msg, rangeType, source, from, to } = _case;
+
+    it(msg, () => {
+      expect(trackEvent.mock.calls.length).toBe(0);
+      trackRange(source, from, to);
+      expect(trackEvent.mock.calls.length).toBe(1);
+      expect(trackEvent.mock.calls[0]).toEqual([CATEGORY_RANGE, rangeType, source]);
+    });
   });
 });
