@@ -12,38 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import prefixUrl, { deriveAndSetPrefix } from './prefix-url';
+/* eslint-disable import/first */
 
-describe('deriveAndSetPrefix()', () => {
-  const targetPrefix = '/some/prefix';
-  const homepages = [
-    '/some/prefix',
-    'some/prefix',
-    '/some/prefix/',
-    'http://my.example.com/some/prefix',
-    'https://my.example.com/some/prefix/',
-  ];
+jest.mock('../site-prefix', () => `${global.location.origin}/a/site/prefix/`);
 
-  homepages.forEach(s => {
-    it(`parses "${s}" correctly`, () => {
-      expect(deriveAndSetPrefix(s)).toBe(targetPrefix);
-    });
-  });
-});
+import prefixUrl from './prefix-url';
+
+const PATH_PREFIX = '/a/site/prefix';
 
 describe('prefixUrl()', () => {
-  beforeAll(() => {
-    deriveAndSetPrefix('/some/prefix');
-  });
-
   const tests = [
-    { source: undefined, target: '/some/prefix' },
-    { source: null, target: '/some/prefix' },
-    { source: '', target: '/some/prefix' },
-    { source: '/', target: '/some/prefix/' },
-    { source: '/a', target: '/some/prefix/a' },
-    { source: '/a/', target: '/some/prefix/a/' },
-    { source: '/a/b', target: '/some/prefix/a/b' },
+    { source: undefined, target: PATH_PREFIX },
+    { source: null, target: PATH_PREFIX },
+    { source: '', target: PATH_PREFIX },
+    { source: '/', target: `${PATH_PREFIX}/` },
+    { source: '/a', target: `${PATH_PREFIX}/a` },
+    { source: '/a/', target: `${PATH_PREFIX}/a/` },
+    { source: '/a/b', target: `${PATH_PREFIX}/a/b` },
   ];
 
   tests.forEach(({ source, target }) => {

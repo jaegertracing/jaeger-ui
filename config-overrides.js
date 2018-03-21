@@ -20,7 +20,7 @@ const rewireLess = require('react-app-rewire-less');
 const lessToJs = require('less-vars-to-js');
 
 // Read the less file in as string
-const loadedVarOverrides = fs.readFileSync('config-overrides-ant-variables.less', 'utf8');
+const loadedVarOverrides = fs.readFileSync('config-overrides-antd-vars.less', 'utf8');
 
 // Pass in file contents
 const modifyVars = lessToJs(loadedVarOverrides);

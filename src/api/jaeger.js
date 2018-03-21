@@ -92,22 +92,4 @@ const JaegerAPI = {
   },
 };
 
-/* istanbul ignore next */
-function getMock(fnName, ...rest) {
-  return new Promise(resolve => {
-    require.ensure(['../demo/jaeger-mock'], require => {
-      resolve(require('../demo/jaeger-mock').default[fnName](...rest));
-    });
-  });
-}
-
-/* istanbul ignore if */
-if (process.env.REACT_APP_DEMO === 'true') {
-  Object.keys(JaegerAPI).forEach(key => {
-    if (typeof JaegerAPI[key] === 'function') {
-      JaegerAPI[key] = (...args) => getMock(key, ...args);
-    }
-  });
-}
-
 export default JaegerAPI;
