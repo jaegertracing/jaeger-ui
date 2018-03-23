@@ -15,8 +15,8 @@
 // limitations under the License.
 
 import { OPEN } from '../../utils/tracking/common';
-import getEventTracker from '../../utils/tracking/get-event-tracker';
+import { trackEvent } from '../../utils/tracking';
 
 const CATEGORY = 'jaeger/ux/trace/kbd-modal';
 
-export default getEventTracker(CATEGORY, OPEN);
+export default trackEvent.bind(null, CATEGORY, OPEN);

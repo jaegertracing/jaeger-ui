@@ -16,7 +16,7 @@
 
 import _throttle from 'lodash/throttle';
 
-import getEventTracker from '../../utils/tracking/get-event-tracker';
+import { trackEvent } from '../../utils/tracking';
 
 // export for tests
 export const CATEGORY_RANGE = 'jaeger/ux/trace/range';
@@ -28,17 +28,17 @@ export const ACTION_FILTER_CLEAR = 'clear';
 export const ACTION_RANGE_REFRAME = 'reframe';
 export const ACTION_RANGE_SHIFT = 'shift';
 
-const trackFilterSet = _throttle(getEventTracker(CATEGORY_FILTER, ACTION_FILTER_SET), 750, {
+const trackFilterSet = _throttle(trackEvent.bind(null, CATEGORY_FILTER, ACTION_FILTER_SET), 750, {
   leading: false,
 });
 
-const trackFilterClear = _throttle(getEventTracker(CATEGORY_FILTER, ACTION_FILTER_CLEAR), 750, {
+const trackFilterClear = _throttle(trackEvent.bind(null, CATEGORY_FILTER, ACTION_FILTER_CLEAR), 750, {
   leading: false,
 });
 
 export const trackFilter = (value: any) => (value ? trackFilterSet() : trackFilterClear());
 
-function getRangeAction(_: string, current: [number, number], next: [number, number]) {
+function getRangeAction(current: [number, number], next: [number, number]) {
   const [curStart, curEnd] = current;
   const [nxStart, nxEnd] = next;
   if (curStart === nxStart || curEnd === nxEnd) {
@@ -52,4 +52,7 @@ function getRangeAction(_: string, current: [number, number], next: [number, num
   return ACTION_RANGE_REFRAME;
 }
 
-export const trackRange = getEventTracker(CATEGORY_RANGE, getRangeAction, String);
+export function trackRange(source: string, current: [number, number], next: [number, number]) {
+  const action = getRangeAction(current, next);
+  trackEvent(CATEGORY_RANGE, action, source);
+}

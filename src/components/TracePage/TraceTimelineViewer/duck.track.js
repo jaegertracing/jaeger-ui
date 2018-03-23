@@ -14,14 +14,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import _get from 'lodash/get';
-
 import type { Store } from 'redux';
 
 import { actionTypes as types } from './duck';
 import { trackEvent } from '../../../utils/tracking';
 import { getToggleValue } from '../../../utils/tracking/common';
-import getEventTracker from '../../../utils/tracking/get-event-tracker';
 
 const ACTION_RESIZE = 'resize';
 
@@ -32,26 +29,8 @@ export const CATEGORY_PROCESS = `${CATEGORY_BASE}/process`;
 export const CATEGORY_LOGS = `${CATEGORY_BASE}/logs`;
 export const CATEGORY_LOGS_ITEM = `${CATEGORY_BASE}/logs/item`;
 export const CATEGORY_COLUMN = `${CATEGORY_BASE}/column`;
-export const CATEGORY_PARENT = `${CATEGORY_BASE}parent`;
+export const CATEGORY_PARENT = `${CATEGORY_BASE}/parent`;
 export const CATEGORY_ROW = `${CATEGORY_BASE}/row`;
-
-const isLogItemOpen = (openedItems, reduxAction) => openedItems.has(reduxAction.payload.logItem);
-
-function getDetailStateConverter(detailPath, transformer: (...any) => boolean = Boolean) {
-  return function getAction(store, reduxAction) {
-    const { spanID } = reduxAction.payload;
-    const detail = store.getState().traceTimeline.detailStates.get(spanID);
-    const detailItem = _get(detail, detailPath);
-    return getToggleValue(transformer(detailItem, reduxAction));
-  };
-}
-
-const getColumnWidth = (_, action): number => Math.round(action.payload.width * 1000);
-
-function getDetailRowToggleAction(store, action) {
-  const detailIsOpen = store.getState().traceTimeline.detailStates.has(action.payload.spanID);
-  return getToggleValue(detailIsOpen);
-}
 
 function trackParent(store: Store, action: any) {
   const st = store.getState();
@@ -64,15 +43,26 @@ function trackParent(store: Store, action: any) {
   }
 }
 
+const logs = (isOpen: boolean) => trackEvent(CATEGORY_LOGS, getToggleValue(isOpen));
+const logsItem = (isOpen: boolean) => trackEvent(CATEGORY_LOGS_ITEM, getToggleValue(isOpen));
+const process = (isOpen: boolean) => trackEvent(CATEGORY_PROCESS, getToggleValue(isOpen));
+const tags = (isOpen: boolean) => trackEvent(CATEGORY_TAGS, getToggleValue(isOpen));
+const detailRow = (isOpen: boolean) => trackEvent(CATEGORY_ROW, getToggleValue(isOpen));
+const columnWidth = (_, action) =>
+  trackEvent(CATEGORY_COLUMN, ACTION_RESIZE, Math.round(action.payload.width * 1000));
+
+const getDetail = (store, action) => store.getState().traceTimeline.detailStates.get(action.payload.spanID);
+
 export const middlewareHooks = {
   [types.CHILDREN_TOGGLE]: trackParent,
-  [types.DETAIL_TOGGLE]: getEventTracker(CATEGORY_ROW, getDetailRowToggleAction),
-  [types.DETAIL_TAGS_TOGGLE]: getEventTracker(CATEGORY_TAGS, getDetailStateConverter('isTagsOpen')),
-  [types.DETAIL_PROCESS_TOGGLE]: getEventTracker(CATEGORY_PROCESS, getDetailStateConverter('isProcessOpen')),
-  [types.DETAIL_LOGS_TOGGLE]: getEventTracker(CATEGORY_LOGS, getDetailStateConverter('logs.isOpen')),
-  [types.DETAIL_LOG_ITEM_TOGGLE]: getEventTracker(
-    CATEGORY_LOGS_ITEM,
-    getDetailStateConverter('logs.openedItems', isLogItemOpen)
-  ),
-  [types.SET_SPAN_NAME_COLUMN_WIDTH]: getEventTracker(CATEGORY_COLUMN, ACTION_RESIZE, getColumnWidth),
+  [types.DETAIL_TOGGLE]: (store, action) => detailRow(Boolean(getDetail(store, action))),
+  [types.DETAIL_TAGS_TOGGLE]: (store, action) => tags(getDetail(store, action).isTagsOpen),
+  [types.DETAIL_PROCESS_TOGGLE]: (store, action) => process(getDetail(store, action).isProcessOpen),
+  [types.DETAIL_LOGS_TOGGLE]: (store, action) => logs(getDetail(store, action).logs.isOpen),
+  [types.DETAIL_LOG_ITEM_TOGGLE]: (store, action) => {
+    const detail = getDetail(store, action);
+    const { logItem } = action.payload;
+    logsItem(detail.logs.openedItems.has(logItem));
+  },
+  [types.SET_SPAN_NAME_COLUMN_WIDTH]: columnWidth,
 };
