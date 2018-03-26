@@ -15,8 +15,6 @@ limitations under the License.
 */
 
 .ErrorMessage {
-  background: #f5f5f5;
-  border: 1px solid #e6e6e6;
   position: relative;
   word-break: break-word;
   word-wrap: break-word;
@@ -25,22 +23,42 @@ limitations under the License.
 .ErrorMessage--msg {
   color: #c00;
   margin: 0;
-  padding: 1rem;
+  padding-bottom: 1rem;
 }
 
 .ErrorMessage--details {
+  background: #f5f5f5;
+  border: 1px solid #e6e6e6;
   overflow: auto;
-  padding: 0 1rem 1rem 1rem;
+}
+
+.ErrorMessage--detailsTable {
+  min-width: 100%;
+}
+
+.ErrorMessage--detailItem:nth-child(2n) > .ErrorMessage--attr,
+.ErrorMessage--detailItem:nth-child(2n) > .ErrorMessage--value {
+  background-color: #f0f0f0;
+  border-bottom: 1px solid #e8e8e8;
+  border-top: 1px solid #e8e8e8;
+}
+
+/* dont have extra borders on the bottom row */
+.ErrorMessage--detailItem:last-child > .ErrorMessage--attr,
+.ErrorMessage--detailItem:last-child > .ErrorMessage--value {
+  border-bottom: none;
 }
 
 .ErrorMessage--attr {
-  padding-bottom: 0.5em;
-  padding-right: 1em;
+  color: rgba(0, 0, 0, 0.45);
+  padding: 0.5em;
   vertical-align: top;
   white-space: nowrap;
 }
 
 .ErrorMessage--value {
+  color: rgba(0, 0, 0, 0.8);
   font-family: monospace;
+  padding: 0.5em;
   white-space: pre;
 }

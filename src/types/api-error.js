@@ -14,22 +14,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export type ConfigMenuItem = {
-  label: string,
-  url: string,
-};
-
-export type ConfigMenuGroup = {
-  label: string,
-  items: ConfigMenuItem[],
-};
-
-export type Config = {
-  archiveEnabled: ?boolean,
-  dependencies?: { dagMaxServicesLen?: number, menuEnabled?: boolean },
-  tracking?: {
-    gaID: ?string,
-    trackErrors: ?boolean,
-  },
-  menu: (ConfigMenuGroup | ConfigMenuItem)[],
-};
+export type ApiError =
+  | string
+  | {
+      message: string,
+      httpStatus?: any,
+      httpStatusText?: string,
+      httpUrl?: string,
+      httpQuery?: string,
+      httpBody?: string,
+    };
