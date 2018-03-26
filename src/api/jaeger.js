@@ -33,10 +33,11 @@ export function getMessageFromError(errData, status) {
   }
 }
 
-function getJSON(url, query) {
-  return fetch(`${url}${query ? `?${queryString.stringify(query)}` : ''}`, {
-    credentials: 'include',
-  }).then(response => {
+function getJSON(url, options = {}) {
+  const { query = null, ...init } = options;
+  init.credentials = 'same-origin';
+  const queryStr = query ? `?${queryString.stringify(query)}` : '';
+  return fetch(`${url}${queryStr}`, init).then(response => {
     if (response.status < 400) {
       return response.json();
     }
@@ -78,8 +79,11 @@ const JaegerAPI = {
   fetchTrace(id) {
     return getJSON(`${this.apiRoot}traces/${id}`);
   },
+  archiveTrace(id) {
+    return getJSON(`${this.apiRoot}archive/${id}`, { method: 'POST' });
+  },
   searchTraces(query) {
-    return getJSON(`${this.apiRoot}traces`, query);
+    return getJSON(`${this.apiRoot}traces`, { query });
   },
   fetchServices() {
     return getJSON(`${this.apiRoot}services`);
@@ -88,26 +92,8 @@ const JaegerAPI = {
     return getJSON(`${this.apiRoot}services/${encodeURIComponent(serviceName)}/operations`);
   },
   fetchDependencies(endTs = new Date().getTime(), lookback = DEFAULT_DEPENDENCY_LOOKBACK) {
-    return getJSON(`${this.apiRoot}dependencies`, { endTs, lookback });
+    return getJSON(`${this.apiRoot}dependencies`, { query: { endTs, lookback } });
   },
 };
-
-/* istanbul ignore next */
-function getMock(fnName, ...rest) {
-  return new Promise(resolve => {
-    require.ensure(['../demo/jaeger-mock'], require => {
-      resolve(require('../demo/jaeger-mock').default[fnName](...rest));
-    });
-  });
-}
-
-/* istanbul ignore if */
-if (process.env.REACT_APP_DEMO === 'true') {
-  Object.keys(JaegerAPI).forEach(key => {
-    if (typeof JaegerAPI[key] === 'function') {
-      JaegerAPI[key] = (...args) => getMock(key, ...args);
-    }
-  });
-}
 
 export default JaegerAPI;

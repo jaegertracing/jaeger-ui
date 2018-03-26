@@ -25,7 +25,11 @@ export type ConfigMenuGroup = {
 };
 
 export type Config = {
+  archiveEnabled: ?boolean,
   dependencies?: { dagMaxServicesLen?: number, menuEnabled?: boolean },
-  gaTrackingID?: ?string,
+  tracking?: {
+    gaID: ?string,
+    trackErrors: ?boolean,
+  },
   menu: (ConfigMenuGroup | ConfigMenuItem)[],
 };

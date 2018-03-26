@@ -79,11 +79,18 @@ export function getTraceSummary(trace: Trace): TraceSummary {
 /**
  * Transforms `Trace` values into `TraceSummary` values and finds the max duration of the traces.
  *
- * @param  {Trace} _traces The trace data in the format from the HTTP request.
+ * @param  {(Trace | Error)[]} _traces The trace data in the format from the HTTP request.
  * @return {TraceSummaries} The `{ traces, maxDuration }` value.
  */
-export function getTraceSummaries(_traces: Trace[]): TraceSummaries {
-  const traces = _traces.map(getTraceSummary);
+export function getTraceSummaries(_traces: (Trace | Error)[]): TraceSummaries {
+  const traces = _traces
+    .map(item => {
+      if (item instanceof Error) {
+        return null;
+      }
+      return getTraceSummary(item);
+    })
+    .filter(Boolean);
   const maxDuration = Math.max(..._map(traces, 'duration'));
   return { maxDuration, traces };
 }

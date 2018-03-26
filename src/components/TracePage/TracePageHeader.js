@@ -18,6 +18,7 @@ import * as React from 'react';
 import { Button, Dropdown, Icon, Input, Menu } from 'antd';
 import IoChevronDown from 'react-icons/lib/io/chevron-down';
 import IoChevronRight from 'react-icons/lib/io/chevron-right';
+import IoIosFilingOutline from 'react-icons/lib/io/ios-filing-outline';
 import { Link } from 'react-router-dom';
 
 import * as markers from './TracePageHeader.markers';
@@ -37,6 +38,8 @@ type TracePageHeaderProps = {
   onSlimViewClicked: () => void,
   updateTextFilter: string => void,
   textFilter: ?string,
+  archiveButtonVisible: boolean,
+  onArchiveClicked: () => void,
   // these props are used by the `HEADER_ITEMS`
   // eslint-disable-next-line react/no-unused-prop-types
   timestamp: number,
@@ -85,6 +88,8 @@ export const HEADER_ITEMS = [
 
 export default function TracePageHeader(props: TracePageHeaderProps) {
   const {
+    archiveButtonVisible,
+    onArchiveClicked,
     duration,
     maxDepth,
     numSpans,
@@ -159,17 +164,12 @@ export default function TracePageHeader(props: TracePageHeaderProps) {
     <header>
       <div className="TracePageHeader--titleRow">
         <a className="ub-flex-auto ub-mr2" onClick={onSlimViewClicked} role="switch" aria-checked={!slimView}>
-          <h1 className="TracePageHeader--title">
+          <h1 className="TracePageHeader--title ub-flex ub-items-center">
             {slimView ? <IoChevronRight className="ub-mr2" /> : <IoChevronDown className="ub-mr2" />}
             {name || FALLBACK_TRACE_NAME}
           </h1>
         </a>
         <KeyboardShortcutsHelp className="ub-mr2" />
-        <Dropdown overlay={viewMenu}>
-          <Button className="ub-mr2">
-            View Options <Icon type="down" />
-          </Button>
-        </Dropdown>
         <div className="ub-mr2">
           <Input
             name="search"
@@ -179,6 +179,17 @@ export default function TracePageHeader(props: TracePageHeaderProps) {
             data-test={markers.IN_TRACE_SEARCH}
           />
         </div>
+        <Dropdown overlay={viewMenu}>
+          <Button className="ub-mr2">
+            View Options <Icon type="down" />
+          </Button>
+        </Dropdown>
+        {archiveButtonVisible && (
+          <Button className="ub-mr2 ub-flex ub-items-center" onClick={onArchiveClicked}>
+            <IoIosFilingOutline className="TracePageHeader--archiveIcon" />
+            Archive Trace
+          </Button>
+        )}
       </div>
       {!slimView && <LabeledList className="TracePageHeader--overviewItems" items={overviewItems} />}
     </header>

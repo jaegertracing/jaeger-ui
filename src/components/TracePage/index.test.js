@@ -339,7 +339,11 @@ describe('<TracePage>', () => {
 
 describe('mapDispatchToProps()', () => {
   it('creates the actions correctly', () => {
-    expect(mapDispatchToProps(() => {})).toEqual({ fetchTrace: expect.any(Function) });
+    expect(mapDispatchToProps(() => {})).toEqual({
+      fetchTrace: expect.any(Function),
+      acknowledgeArchive: expect.any(Function),
+      archiveTrace: expect.any(Function),
+    });
   });
 });
 
@@ -354,6 +358,10 @@ describe('mapStateToProps()', () => {
           [id]: trace,
         },
       },
+      config: {
+        archiveEnabled: false,
+      },
+      archive: {},
     };
     const ownProps = {
       match: {
@@ -365,6 +373,8 @@ describe('mapStateToProps()', () => {
       id,
       trace,
       loading: state.trace.loading,
+      archiveEnabled: false,
+      archiveTraceState: undefined,
     });
   });
 });

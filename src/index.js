@@ -12,6 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// site-prefix.js must be the first import of the main webpack entrypoint
+// becaue it configures the webpack publicPath.
+/* eslint-disable import/first */
+import './site-prefix';
+
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { document } from 'global';

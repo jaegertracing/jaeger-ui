@@ -14,60 +14,94 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import React from 'react';
+import * as React from 'react';
+
+import type { ApiError } from '../../types/api-error';
 
 import './ErrorMessage.css';
 
 type ErrorMessageProps = {
   className?: string,
-  error:
-    | string
-    | {
-        message: string,
-        httpStatus?: any,
-        httpStatusText?: string,
-        httpUrl?: string,
-        httpQuery?: string,
-        httpBody?: string,
-      },
+  error: ApiError,
+};
+
+type SubPartProps = {
+  className?: string,
+  error: ApiError,
+  wrap?: boolean,
 };
 
 function ErrorAttr({ name, value }: { name: string, value: any }) {
   return (
-    <tr>
+    <tr className="ErrorMessage--detailItem">
       <td className="ErrorMessage--attr">{name}</td>
       <td className="ErrorMessage--value">{value}</td>
     </tr>
   );
 }
 
+function Message(props: SubPartProps) {
+  const { className, error, wrap } = props;
+  let msg: React.Node;
+  if (typeof error === 'string') {
+    msg = <h3 className="ErrorMessage--msg">{error}</h3>;
+  } else {
+    msg = <h3 className="ErrorMessage--msg">{error.message}</h3>;
+  }
+  if (wrap) {
+    return <div className={`ErrorMessage ${className || ''}`}>{msg}</div>;
+  }
+  return msg;
+}
+
+Message.defaultProps = {
+  className: undefined,
+  wrap: false,
+};
+
+function Details(props: SubPartProps) {
+  const { className, error, wrap } = props;
+  if (typeof error === 'string') {
+    return null;
+  }
+  const { httpStatus, httpStatusText, httpUrl, httpQuery, httpBody } = error;
+  const bodyExcerpt = httpBody && httpBody.length > 1024 ? `${httpBody.slice(0, 1021).trim()}...` : httpBody;
+  const details = (
+    <div className="ErrorMessage--details u-simple-scrollbars">
+      <table className="ErrorMessage--detailsTable">
+        <tbody>
+          {httpStatus ? <ErrorAttr name="Status" value={httpStatus} /> : null}
+          {httpStatusText ? <ErrorAttr name="Status text" value={httpStatusText} /> : null}
+          {httpUrl ? <ErrorAttr name="URL" value={httpUrl} /> : null}
+          {httpQuery ? <ErrorAttr name="Query" value={httpQuery} /> : null}
+          {bodyExcerpt ? <ErrorAttr name="Response body" value={bodyExcerpt} /> : null}
+        </tbody>
+      </table>
+    </div>
+  );
+
+  if (wrap) {
+    return <div className={`ErrorMessage ${className || ''}`}>{details}</div>;
+  }
+  return details;
+}
+
+Details.defaultProps = {
+  className: undefined,
+  wrap: false,
+};
+
 export default function ErrorMessage({ className, error }: ErrorMessageProps) {
   if (!error) {
     return null;
   }
   if (typeof error === 'string') {
-    return (
-      <div className={`ErrorMessage ${className || ''}`}>
-        <h3 className="ErrorMessage--msg">{error}</h3>
-      </div>
-    );
+    return <Message className={className} error={error} wrap />;
   }
-  const { message, httpStatus, httpStatusText, httpUrl, httpQuery, httpBody } = error;
-  const bodyExcerpt = httpBody && httpBody.length > 1024 ? `${httpBody.slice(0, 1021).trim()}...` : httpBody;
   return (
     <div className={`ErrorMessage ${className || ''}`}>
-      <h2 className="ErrorMessage--msg">{message}</h2>
-      <div className="ErrorMessage--details u-simple-scrollbars">
-        <table>
-          <tbody>
-            {httpStatus ? <ErrorAttr name="Status" value={httpStatus} /> : null}
-            {httpStatusText ? <ErrorAttr name="Status text" value={httpStatusText} /> : null}
-            {httpUrl ? <ErrorAttr name="URL" value={httpUrl} /> : null}
-            {httpQuery ? <ErrorAttr name="Query" value={httpQuery} /> : null}
-            {bodyExcerpt ? <ErrorAttr name="Response body" value={bodyExcerpt} /> : null}
-          </tbody>
-        </table>
-      </div>
+      <Message error={error} />
+      <Details error={error} />
     </div>
   );
 }
@@ -75,3 +109,6 @@ export default function ErrorMessage({ className, error }: ErrorMessageProps) {
 ErrorMessage.defaultProps = {
   className: undefined,
 };
+
+ErrorMessage.Message = Message;
+ErrorMessage.Details = Details;

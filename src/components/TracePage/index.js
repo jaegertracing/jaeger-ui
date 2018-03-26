@@ -23,6 +23,8 @@ import { connect } from 'react-redux';
 import type { RouterHistory, Match } from 'react-router-dom';
 import { bindActionCreators } from 'redux';
 
+import ArchiveNotifier from './ArchiveNotifier';
+import { actions as archiveActions } from './ArchiveNotifier/duck';
 import { trackFilter, trackRange } from './index.track';
 import type { CombokeysHandler, ShortcutCallbacks } from './keyboard-shortcuts';
 import { init as initShortcuts, reset as resetShortcuts } from './keyboard-shortcuts';
@@ -38,11 +40,17 @@ import LoadingIndicator from '../common/LoadingIndicator';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import { getTraceName } from '../../model/trace-viewer';
 import type { Trace } from '../../types';
+import type { TraceArchive, TracesArchive } from '../../types/archive';
+import type { Config } from '../../types/config';
 import prefixUrl from '../../utils/prefix-url';
 
 import './index.css';
 
 type TracePageProps = {
+  archiveEnabled: boolean,
+  archiveTraceState: ?TraceArchive,
+  archiveTrace: string => void,
+  acknowledgeArchive: string => void,
   fetchTrace: string => void,
   history: RouterHistory,
   id: string,
@@ -218,6 +226,16 @@ export default class TracePage extends React.PureComponent<TracePageProps, Trace
     this.setState({ slimView: !slimView });
   };
 
+  archiveTrace = () => {
+    const { id, archiveTrace } = this.props;
+    archiveTrace(id);
+  };
+
+  acknowledgeArchive = () => {
+    const { id, acknowledgeArchive } = this.props;
+    acknowledgeArchive(id);
+  };
+
   ensureTraceFetched() {
     const { fetchTrace, trace, id, loading } = this.props;
     if (!trace && !loading) {
@@ -231,7 +249,7 @@ export default class TracePage extends React.PureComponent<TracePageProps, Trace
   }
 
   render() {
-    const { loading, trace } = this.props;
+    const { archiveEnabled, archiveTraceState, loading, trace } = this.props;
     const { slimView, headerHeight, textFilter, viewRange } = this.state;
     if (!trace) {
       return loading ? <LoadingIndicator className="u-mt-vast" centered /> : <section />;
@@ -244,6 +262,9 @@ export default class TracePage extends React.PureComponent<TracePageProps, Trace
     const numberOfServices = new Set(_values(processes).map(p => p.serviceName)).size;
     return (
       <div>
+        {archiveEnabled && (
+          <ArchiveNotifier acknowledge={this.acknowledgeArchive} archivedState={archiveTraceState} />
+        )}
         <div className="Tracepage--headerSection" ref={this.setHeaderHeight}>
           <TracePageHeader
             duration={duration}
@@ -257,6 +278,8 @@ export default class TracePage extends React.PureComponent<TracePageProps, Trace
             onSlimViewClicked={this.toggleSlimView}
             textFilter={textFilter}
             updateTextFilter={this.updateTextFilter}
+            archiveButtonVisible={archiveEnabled}
+            onArchiveClicked={this.archiveTrace}
           />
           {!slimView && (
             <SpanGraph
@@ -286,18 +309,21 @@ export default class TracePage extends React.PureComponent<TracePageProps, Trace
 
 // export for tests
 export function mapStateToProps(
-  state: { trace: { loading: boolean, traces: { [string]: Trace } } },
+  state: { archive: TracesArchive, config: Config, trace: { loading: boolean, traces: { [string]: Trace } } },
   ownProps: { match: Match }
 ) {
   const { id } = ownProps.match.params;
   const trace = id ? state.trace.traces[id] : null;
-  return { id, trace, loading: state.trace.loading };
+  const archiveTraceState = id ? state.archive[id] : null;
+  const archiveEnabled = Boolean(state.config.archiveEnabled);
+  return { archiveEnabled, archiveTraceState, id, trace, loading: state.trace.loading };
 }
 
 // export for tests
 export function mapDispatchToProps(dispatch: Function) {
   const { fetchTrace } = bindActionCreators(jaegerApiActions, dispatch);
-  return { fetchTrace };
+  const { archiveTrace, acknowledge: acknowledgeArchive } = bindActionCreators(archiveActions, dispatch);
+  return { acknowledgeArchive, archiveTrace, fetchTrace };
 }
 
 export const ConnectedTracePage = connect(mapStateToProps, mapDispatchToProps)(TracePage);

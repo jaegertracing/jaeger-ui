@@ -1,3 +1,5 @@
+// @flow
+
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,5 +14,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export const FALLBACK_DAG_MAX_NUM_SERVICES = 100;
-export const FALLBACK_TRACE_NAME = '<trace-without-root-span>';
+export type ApiError =
+  | string
+  | {
+      message: string,
+      httpStatus?: any,
+      httpStatusText?: string,
+      httpUrl?: string,
+      httpQuery?: string,
+      httpBody?: string,
+    };
