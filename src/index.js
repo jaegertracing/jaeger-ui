@@ -24,6 +24,7 @@ import { document } from 'global';
 import JaegerUIApp from './components/App';
 import { context as trackingContext } from './utils/tracking';
 
+// these need to go after the App import
 /* eslint-disable import/first */
 import 'u-basscss/css/flexbox.css';
 import 'u-basscss/css/layout.css';

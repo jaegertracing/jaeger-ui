@@ -33,7 +33,7 @@ type TraceTimelineViewerProps = {
   textFilter: ?string,
   trace: Trace,
   updateNextViewRangeTime: ViewRangeTimeUpdate => void,
-  updateViewRangeTime: (number, number) => void,
+  updateViewRangeTime: (number, number, ?string) => void,
   viewRange: ViewRange,
 };
 

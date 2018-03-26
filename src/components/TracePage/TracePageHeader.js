@@ -22,6 +22,7 @@ import IoIosFilingOutline from 'react-icons/lib/io/ios-filing-outline';
 import { Link } from 'react-router-dom';
 
 import * as markers from './TracePageHeader.markers';
+import { trackAltViewOpen } from './TracePageHeader.track';
 import KeyboardShortcutsHelp from './KeyboardShortcutsHelp';
 import LabeledList from '../common/LabeledList';
 import { FALLBACK_TRACE_NAME } from '../../constants';
@@ -109,12 +110,22 @@ export default function TracePageHeader(props: TracePageHeaderProps) {
   const viewMenu = (
     <Menu>
       <Menu.Item>
-        <Link to={prefixUrl(`/api/traces/${traceID}`)} rel="noopener noreferrer" target="_blank">
+        <Link
+          to={prefixUrl(`/api/traces/${traceID}`)}
+          rel="noopener noreferrer"
+          target="_blank"
+          onClick={trackAltViewOpen}
+        >
           Trace JSON
         </Link>
       </Menu.Item>
       <Menu.Item>
-        <Link to={prefixUrl(`/api/traces/${traceID}?raw=true`)} rel="noopener noreferrer" target="_blank">
+        <Link
+          to={prefixUrl(`/api/traces/${traceID}?raw=true`)}
+          rel="noopener noreferrer"
+          target="_blank"
+          onClick={trackAltViewOpen}
+        >
           Trace JSON (unadjusted)
         </Link>
       </Menu.Item>

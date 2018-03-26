@@ -25,12 +25,14 @@ import { bindActionCreators } from 'redux';
 
 import ArchiveNotifier from './ArchiveNotifier';
 import { actions as archiveActions } from './ArchiveNotifier/duck';
+import { trackFilter, trackRange } from './index.track';
 import type { CombokeysHandler, ShortcutCallbacks } from './keyboard-shortcuts';
 import { init as initShortcuts, reset as resetShortcuts } from './keyboard-shortcuts';
 import { cancel as cancelScroll, scrollBy, scrollTo } from './scroll-page';
 import ScrollManager from './ScrollManager';
 import SpanGraph from './SpanGraph';
 import TracePageHeader from './TracePageHeader';
+import { trackSlimHeaderToggle } from './TracePageHeader.track';
 import TraceTimelineViewer from './TraceTimelineViewer';
 import type { ViewRange, ViewRangeTimeUpdate } from './types';
 import ErrorMessage from '../common/ErrorMessage';
@@ -130,7 +132,7 @@ export default class TracePage extends React.PureComponent<TracePageProps, Trace
       scrollToNextVisibleSpan,
       scrollToPrevVisibleSpan,
     } = this._scrollManager;
-    const adjViewRange = (a: number, b: number) => this._adjustViewRange(a, b);
+    const adjViewRange = (a: number, b: number) => this._adjustViewRange(a, b, 'kbd');
     const shortcutCallbacks = makeShortcutCallbacks(adjViewRange);
     shortcutCallbacks.scrollPageDown = scrollPageDown;
     shortcutCallbacks.scrollPageUp = scrollPageUp;
@@ -169,7 +171,7 @@ export default class TracePage extends React.PureComponent<TracePageProps, Trace
     }
   }
 
-  _adjustViewRange(startChange: number, endChange: number) {
+  _adjustViewRange(startChange: number, endChange: number, trackSrc: string) {
     const [viewStart, viewEnd] = this.state.viewRange.time.current;
     let start = _clamp(viewStart + startChange, 0, 0.99);
     let end = _clamp(viewEnd + endChange, 0.01, 1);
@@ -184,7 +186,7 @@ export default class TracePage extends React.PureComponent<TracePageProps, Trace
         end = center + VIEW_MIN_RANGE / 2;
       }
     }
-    this.updateViewRangeTime(start, end);
+    this.updateViewRangeTime(start, end, trackSrc);
   }
 
   setHeaderHeight = (elm: ?Element) => {
@@ -199,10 +201,14 @@ export default class TracePage extends React.PureComponent<TracePageProps, Trace
   };
 
   updateTextFilter = (textFilter: ?string) => {
+    trackFilter(textFilter);
     this.setState({ textFilter });
   };
 
-  updateViewRangeTime = (start: number, end: number) => {
+  updateViewRangeTime = (start: number, end: number, trackSrc?: string) => {
+    if (trackSrc) {
+      trackRange(trackSrc, [start, end], this.state.viewRange.time.current);
+    }
     const time = { current: [start, end] };
     const viewRange = { ...this.state.viewRange, time };
     this.setState({ viewRange });
@@ -215,7 +221,9 @@ export default class TracePage extends React.PureComponent<TracePageProps, Trace
   };
 
   toggleSlimView = () => {
-    this.setState({ slimView: !this.state.slimView });
+    const { slimView } = this.state;
+    trackSlimHeaderToggle(!slimView);
+    this.setState({ slimView: !slimView });
   };
 
   archiveTrace = () => {

@@ -18,6 +18,7 @@ import React from 'react';
 import { Button, Modal, Table } from 'antd';
 
 import { kbdMappings } from './keyboard-shortcuts';
+import track from './KeyboardShortcutsHelp.track';
 
 import './KeyboardShortcutsHelp.css';
 
@@ -56,13 +57,14 @@ function convertKeys(keyConfig: string | string[]): string[][] {
 }
 
 function helpModal() {
+  track();
   const data = [];
   Object.keys(kbdMappings).forEach(title => {
     const keyConfigs = convertKeys(kbdMappings[title]);
     data.push(
       ...keyConfigs.map(config => ({
         key: String(config),
-        kbds: config.map(s => <kbd key={s}>{s}</kbd>),
+        kbds: <kbd>{config.join(' ')}</kbd>,
         description: descriptions[title],
       }))
     );

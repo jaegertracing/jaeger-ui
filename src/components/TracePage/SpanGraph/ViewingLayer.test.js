@@ -141,7 +141,7 @@ describe('<SpanGraph>', () => {
           wrapper.instance()._handleReframeDragEnd({ manager, value });
           expect(manager.resetBounds.mock.calls).toEqual([[]]);
           const calls = props.updateViewRangeTime.mock.calls;
-          expect(calls).toEqual([[value, value]]);
+          expect(calls).toEqual([[value, value, 'minimap']]);
         });
 
         it('handles dragged left (anchor is greater)', () => {
@@ -154,7 +154,7 @@ describe('<SpanGraph>', () => {
 
           expect(manager.resetBounds.mock.calls).toEqual([[]]);
           const calls = props.updateViewRangeTime.mock.calls;
-          expect(calls).toEqual([[value, anchor]]);
+          expect(calls).toEqual([[value, anchor, 'minimap']]);
         });
 
         it('handles dragged right (anchor is less)', () => {
@@ -167,7 +167,7 @@ describe('<SpanGraph>', () => {
 
           expect(manager.resetBounds.mock.calls).toEqual([[]]);
           const calls = props.updateViewRangeTime.mock.calls;
-          expect(calls).toEqual([[anchor, value]]);
+          expect(calls).toEqual([[anchor, value, 'minimap']]);
         });
       });
     });
@@ -251,7 +251,7 @@ describe('<SpanGraph>', () => {
           instance._handleScrubberDragEnd(_case.dragUpdate);
           expect(wrapper.state('preventCursorLine')).toBe(false);
           expect(manager.resetBounds.mock.calls).toEqual([[]]);
-          expect(props.updateViewRangeTime).lastCalledWith(..._case.viewRangeUpdate);
+          expect(props.updateViewRangeTime).lastCalledWith(..._case.viewRangeUpdate, 'minimap');
         });
       });
     });

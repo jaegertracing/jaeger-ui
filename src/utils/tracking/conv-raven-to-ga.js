@@ -127,7 +127,7 @@ function convException(errValue) {
   const message = convErrorMessage(`${errValue.type}: ${errValue.value}`, 149);
   const frames = errValue.stacktrace.frames.map(fr => {
     const filename = fr.filename.replace(origin, '').replace(/^\/static\/js\//i, '');
-    const fn = collapseWhitespace(fr.function);
+    const fn = collapseWhitespace(fr.function || '??');
     return { filename, fn };
   });
   const joiner = [];

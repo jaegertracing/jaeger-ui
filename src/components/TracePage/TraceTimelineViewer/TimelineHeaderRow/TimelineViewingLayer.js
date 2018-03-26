@@ -31,7 +31,7 @@ type TimelineViewingLayerProps = {
    */
   boundsInvalidator: ?any,
   updateNextViewRangeTime: ViewRangeTimeUpdate => void,
-  updateViewRangeTime: (number, number) => void,
+  updateViewRangeTime: (number, number, ?string) => void,
   viewRangeTime: ViewRangeTime,
 };
 
@@ -179,7 +179,7 @@ export default class TimelineViewingLayer extends React.PureComponent<TimelineVi
     const anchor = reframe ? reframe.anchor : shift;
     const [start, end] = shift < anchor ? [shift, anchor] : [anchor, shift];
     manager.resetBounds();
-    this.props.updateViewRangeTime(start, end);
+    this.props.updateViewRangeTime(start, end, 'timeline-header');
   };
 
   render() {

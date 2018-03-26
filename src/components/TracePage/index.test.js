@@ -12,13 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+/* eslint-disable import/first */
+jest.mock('./index.track');
 jest.mock('./keyboard-shortcuts');
 jest.mock('./scroll-page');
 // mock these to enable mount()
 jest.mock('./SpanGraph');
+jest.mock('./TracePageHeader.track');
 jest.mock('./TraceTimelineViewer');
 
-/* eslint-disable import/first */
 import React from 'react';
 import sinon from 'sinon';
 import { shallow, mount } from 'enzyme';
@@ -30,10 +32,12 @@ import TracePage, {
   shortcutConfig,
   VIEW_MIN_RANGE,
 } from './index';
+import * as track from './index.track';
 import { reset as resetShortcuts } from './keyboard-shortcuts';
 import { cancel as cancelScroll } from './scroll-page';
 import SpanGraph from './SpanGraph';
 import TracePageHeader from './TracePageHeader';
+import { trackSlimHeaderToggle } from './TracePageHeader.track';
 import TraceTimelineViewer from './TraceTimelineViewer';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
@@ -286,6 +290,49 @@ describe('<TracePage>', () => {
       viewRange.time = { current };
       expect(spanGraph.prop('viewRange')).toEqual(viewRange);
       expect(timeline.prop('viewRange')).toEqual(viewRange);
+    });
+  });
+
+  describe('GA tracking', () => {
+    let header;
+    let spanGraph;
+
+    function refreshWrappers() {
+      header = wrapper.find(TracePageHeader);
+      spanGraph = wrapper.find(SpanGraph);
+    }
+
+    beforeEach(() => {
+      wrapper = mount(<TracePage {...defaultProps} />);
+      // use the method directly because it is a `ref` prop
+      wrapper.instance().setHeaderHeight({ clientHeight: 1 });
+      wrapper.update();
+      refreshWrappers();
+    });
+
+    it('tracks setting the header to slim-view', () => {
+      const { onSlimViewClicked } = header.props();
+      trackSlimHeaderToggle.mockReset();
+      onSlimViewClicked(true);
+      onSlimViewClicked(false);
+      expect(trackSlimHeaderToggle.mock.calls).toEqual([[true], [false]]);
+    });
+
+    it('tracks setting or clearing the filter', () => {
+      const { updateTextFilter } = header.props();
+      track.trackFilter.mockClear();
+      updateTextFilter('abc');
+      updateTextFilter('');
+      expect(track.trackFilter.mock.calls).toEqual([['abc'], ['']]);
+    });
+
+    it('tracks changes to the viewRange', () => {
+      const src = 'some-source';
+      const { updateViewRangeTime } = spanGraph.props();
+      track.trackRange.mockClear();
+      const range = [0.25, 0.75];
+      updateViewRangeTime(...range, src);
+      expect(track.trackRange.mock.calls).toEqual([[src, range, [0, 1]]]);
     });
   });
 });
