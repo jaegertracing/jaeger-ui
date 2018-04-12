@@ -18,6 +18,7 @@ import _get from 'lodash/get';
 
 import processDeprecation from './process-deprecation';
 import defaultConfig, { deprecations } from '../../constants/default-config';
+import type { Config } from '../../types/config';
 
 let haveWarnedFactoryFn = false;
 let haveWarnedDeprecations = false;
@@ -26,7 +27,7 @@ let haveWarnedDeprecations = false;
  * Merge the embedded config from the query service (if present) with the
  * default config from `../../constants/default-config`.
  */
-export default function getConfig() {
+export default function getConfig(): Config {
   const getJaegerUiConfig = window.getJaegerUiConfig;
   if (typeof getJaegerUiConfig !== 'function') {
     if (!haveWarnedFactoryFn) {

@@ -21,6 +21,7 @@ import { Link } from 'react-router-dom';
 import TraceIDSearchInput from './TraceIDSearchInput';
 import type { ConfigMenuItem, ConfigMenuGroup } from '../../types/config';
 import { getConfigValue } from '../../utils/config/get-config';
+import { menuItems as pluginMenuItems } from '../../utils/plugins';
 import prefixUrl from '../../utils/prefix-url';
 
 type TopNavProps = {
@@ -28,7 +29,7 @@ type TopNavProps = {
   menuConfig: (ConfigMenuItem | ConfigMenuGroup)[],
 };
 
-const NAV_LINKS = [
+const leftItems = [
   {
     to: prefixUrl('/search'),
     text: 'Search',
@@ -36,7 +37,7 @@ const NAV_LINKS = [
 ];
 
 if (getConfigValue('dependencies.menuEnabled')) {
-  NAV_LINKS.push({
+  leftItems.push({
     to: prefixUrl('/dependencies'),
     text: 'Dependencies',
   });
@@ -68,11 +69,11 @@ function CustomNavDropdown({ label, items }: ConfigMenuGroup) {
 
 export default function TopNav(props: TopNavProps) {
   const { activeKey, menuConfig } = props;
-  const menuItems = Array.isArray(menuConfig) ? menuConfig : [];
+  const rightItems = Array.isArray(menuConfig) ? menuConfig : [];
   return (
     <div>
       <Menu theme="dark" mode="horizontal" selectable={false} className="ub-right" selectedKeys={[activeKey]}>
-        {menuItems.map(item => {
+        {rightItems.map(item => {
           if (item.items) {
             return (
               <Menu.Item key={item.label}>
@@ -96,7 +97,7 @@ export default function TopNav(props: TopNavProps) {
         <Menu.Item>
           <TraceIDSearchInput />
         </Menu.Item>
-        {NAV_LINKS.map(({ to, text }) => (
+        {[...leftItems, ...pluginMenuItems].map(({ to, text }) => (
           <Menu.Item key={to}>
             <Link to={to}>{text}</Link>
           </Menu.Item>

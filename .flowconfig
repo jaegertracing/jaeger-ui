@@ -1,9 +1,8 @@
 [ignore]
-# node_module packages that have a .flowconfig in conflict with this file
-<PROJECT_ROOT>/node_modules/uber-licence
-<PROJECT_ROOT>/node_modules/redux-form
-<PROJECT_ROOT>/node_modules/react-motion
 <PROJECT_ROOT>/node_modules/draft-js
+<PROJECT_ROOT>/node_modules/react-motion
+<PROJECT_ROOT>/node_modules/redux-form
+<PROJECT_ROOT>/node_modules/uber-licence
 
 [include]
 

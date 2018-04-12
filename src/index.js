@@ -23,6 +23,7 @@ import { document } from 'global';
 
 import JaegerUIApp from './components/App';
 import { context as trackingContext } from './utils/tracking';
+import { loadPlugins } from './utils/plugins';
 
 // these need to go after the App import
 /* eslint-disable import/first */
@@ -35,10 +36,12 @@ import 'u-basscss/css/typography.css';
 
 const UI_ROOT_ID = 'jaeger-ui-root';
 
-if (trackingContext) {
-  trackingContext.context(() => {
+loadPlugins().then(() => {
+  if (trackingContext) {
+    trackingContext.context(() => {
+      ReactDOM.render(<JaegerUIApp />, document.getElementById(UI_ROOT_ID));
+    });
+  } else {
     ReactDOM.render(<JaegerUIApp />, document.getElementById(UI_ROOT_ID));
-  });
-} else {
-  ReactDOM.render(<JaegerUIApp />, document.getElementById(UI_ROOT_ID));
-}
+  }
+});

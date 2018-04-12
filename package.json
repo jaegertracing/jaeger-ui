@@ -85,6 +85,8 @@
     "redux-promise-middleware": "^4.3.0",
     "reselect": "^3.0.1",
     "store": "^2.0.12",
+    "systemjs": "^0.21.2",
+    "systemjs-plugin-css": "^0.1.37",
     "tween-functions": "^1.2.0",
     "u-basscss": "2.0.0"
   },

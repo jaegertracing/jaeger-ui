@@ -25,8 +25,37 @@ const loadedVarOverrides = fs.readFileSync('config-overrides-antd-vars.less', 'u
 // Pass in file contents
 const modifyVars = lessToJs(loadedVarOverrides);
 
+const systemJsRegex = /node_modules\/systemjs(\/|-)/;
+
+// SystemJS workes with `module`, `exports`, `defines`, `require`, `import`
+// and does not play well with webpack, so it should not be parsed by webpack.
+// Further, SystemJS has no dependencies, so it's ok for webpack to include
+// SystemJS without parsing it for dependencies.
+function addNoParse(config) {
+  const m = config.module;
+  const noParse = m.noParse;
+  if (!noParse) {
+    m.noParse = systemJsRegex;
+    return config;
+  }
+  if (Array.isArray(noParse)) {
+    m.noParse = noParse.concat(systemJsRegex);
+    return config;
+  }
+  if (typeof noParse === 'function') {
+    m.noParse = value => noParse(value) || systemJsRegex.test(value);
+    return config;
+  }
+  if (noParse instanceof RegExp) {
+    m.noParse = [noParse, systemJsRegex];
+    return config;
+  }
+  throw new Error(`unrecognized value for module.noParse: ${noParse}`);
+}
+
 module.exports = function override(_config, env) {
   let config = _config;
+  config = addNoParse(config);
   config = injectBabelPlugin(['import', { libraryName: 'antd', style: true }], config);
   config = rewireLess.withLoaderOptions({ modifyVars })(config, env);
   return config;

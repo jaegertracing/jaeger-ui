@@ -14,6 +14,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+type FormatVersion = '0.0.0';
+
 export type ConfigMenuItem = {
   label: string,
   url: string,
@@ -24,12 +26,19 @@ export type ConfigMenuGroup = {
   items: ConfigMenuItem[],
 };
 
+export type ConfigPluginItem = {
+  js?: string,
+  css?: string,
+};
+
 export type Config = {
-  archiveEnabled: ?boolean,
+  formatVersion?: FormatVersion,
+  archiveEnabled?: boolean,
   dependencies?: { dagMaxServicesLen?: number, menuEnabled?: boolean },
+  menu?: (ConfigMenuGroup | ConfigMenuItem)[],
+  plugins?: ConfigPluginItem[],
   tracking?: {
     gaID: ?string,
     trackErrors: ?boolean,
   },
-  menu: (ConfigMenuGroup | ConfigMenuItem)[],
 };

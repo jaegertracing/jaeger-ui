@@ -25,6 +25,7 @@ import { ConnectedSearchTracePage } from '../SearchTracePage';
 import { ConnectedTracePage } from '../TracePage';
 import JaegerAPI, { DEFAULT_API_ROOT } from '../../api/jaeger';
 import configureStore from '../../utils/configure-store';
+import { routes as pluginRoutes } from '../../utils/plugins';
 import prefixUrl from '../../utils/prefix-url';
 
 import './index.css';
@@ -45,6 +46,9 @@ export default class JaegerUIApp extends Component {
         <ConnectedRouter history={history}>
           <Page>
             <Switch>
+              {pluginRoutes.map(config => (
+                <Route key={config.path} path={prefixUrl(config.path)} component={config.component} />
+              ))}
               <Route path={prefixUrl('/search')} component={ConnectedSearchTracePage} />
               <Route path={prefixUrl('/trace/:id')} component={ConnectedTracePage} />
               <Route path={prefixUrl('/dependencies')} component={ConnectedDependencyGraphPage} />
