@@ -2,7 +2,7 @@
   "name": "jaeger-ui",
   "version": "0.0.1",
   "main": "src/index.js",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "proxy": {
     "/api": {
       "target": "http://localhost:16686",
