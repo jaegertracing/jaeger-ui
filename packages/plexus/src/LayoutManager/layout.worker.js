@@ -1,28 +1,31 @@
-import viz from 'viz.js';
+// Copyright (c) 2017 Uber Technologies, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 import getLayout from './getLayout';
 
 let currentMeta;
 
-function onMessage(event) {
-  // const { meta, source, options } = event.data;
+function handleMessage(event) {
   const { meta, edges, vertices } = event.data;
-  console.log(event);
   currentMeta = meta;
-  // debugger;
-  // const result = viz(source, options);
-  let message;
   const { layoutError, ...result } = getLayout(meta.phase, edges, vertices);
-  if (layoutError) {
-    message = { meta, type: 'layout-error', ...result }
-  } else {
-    message = { meta, type: `${meta.phase}-result`, ...result };
-  }
-  self.postMessage(message);
+  const type = layoutError ? 'layout-error' : meta.phase;
+  self.postMessage({ meta, type, ...result });
   currentMeta = null;
 }
 
-function onError(errorType, event) {
+function handleError(errorType, event) {
   const { colno, error, filename, lineno, message: eventMessage } = event.data;
   const { code, message, name, stack } = error || {};
   this.postMessage({
@@ -35,47 +38,10 @@ function onError(errorType, event) {
       lineno,
       message: eventMessage,
       error: error && { code, message, name, stack },
-    }
+    },
   });
 }
 
-// /**
-//  * @param {PromiseRejectionEvent} event
-//  */
-// function onUnhandledRejection(event) {
-//   const errorMessage = { errorType: 'unhandledrejection' };
-//   if (event.reason instanceof Error) {
-//     const { code, message, name, stack } = event.reason;
-//     errorMessage.error = { code, message, name, stack };
-//     errorMessage.message = message;
-//   } else if (typeof event.reason === 'string') {
-//     errorMessage.message = event.reason;
-//   } else {
-//     errorMessage.message = String(event.reason);
-//   }
-//   this.postMessage({
-//     errorMessage,
-//     type: 'error',
-//     meta: currentMeta,
-//   });
-// }
-
-self.onmessage = onMessage;
-self.onerror = onError.bind(null, 'error');
-self.onmessageerror = onError.bind(null, 'messageerror');
-// self.onunhandledrejection = onUnhandledRejection;
-
-
-// import Coordinator from './Coordinator';
-
-// function dispose(coordinator) {
-//   self.removeEventListener('message', coordinator.onLayoutMessage);
-//   self.removeEventListener('messageerror', coordinator.onLocalError);
-//   self.removeEventListener('error', coordinator.onLocalError);
-// }
-
-// const coordinator = new Coordinator(self.postMessage, () => dispose(coordinator));
-
-// self.addEventListener('message', coordinator.onLayoutMessage);
-// self.addEventListener('messageerror', coordinator.onLocalError);
-// self.addEventListener('error', coordinator.onLocalError);
+self.onmessage = handleMessage;
+self.onerror = handleError.bind(null, 'error');
+self.onmessageerror = handleError.bind(null, 'messageerror');

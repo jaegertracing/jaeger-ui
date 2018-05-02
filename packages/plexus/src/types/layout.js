@@ -1,44 +1,22 @@
-export type LayoutOptions = {
-  useDotEdges?: boolean,
-  maxWorkers?: number,
-  workerEdgeThreshold?: number,
-  // TODO(joe): finish options implementation
-  // memory?: number | {
-  //   total?: numnber,
-  //   oomRetyGrowth?: number,
-  //   oomRetries?: number,
-  // },
-  // gvAttributes?: {
-  //   graph?: {
-  //     config: { [string]: string },
-  //     replace?: boolean,
-  //   },
-  //   node?: {
-  //     config: { [string]: string },
-  //     replace?: boolean,
-  //   },
-  //   edge?: {
-  //     config: { [string]: string },
-  //     replace?: boolean,
-  //   },
-  // },
-};
+// @flow
 
-// export type InputVertex = {
-//   key: string | number,
-//   height: number,
-//   width: number,
-// };
+// Copyright (c) 2017 Uber Technologies, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
-// export type InputEdge = {
-//   from: string | number,
-//   to: string | number,
-//   isBidirectional?: boolean,
-// };
+export type VertexKey = string | number;
 
-type VertexKey = string | number;
-
-type Vertex = {
+export type Vertex = {
   key: VertexKey,
   top?: number,
   left?: number,
@@ -46,7 +24,7 @@ type Vertex = {
   height: number,
 };
 
-type Edge = {
+export type Edge = {
   from: VertexKey,
   to: VertexKey,
   isBidirectional?: boolean,

@@ -1,63 +1,24 @@
 // @flow
 
-import type { Edge, Vertex, VertexKey } from '../types/layout';
+// Copyright (c) 2017 Uber Technologies, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
-const GRAPH_HEADER = `digraph G {
-  graph[sep=0.5, splines=true, overlap=false, rankdir=LR, ranksep=1.8, nodesep=0.5];
-  node [shape=box, fixedsize=true, label="", color="_", fillcolor="_"];
-  edge [arrowhead=none, arrowtail=none];`;
-
-const GRAPH_FOOTER = `}`;
+import type { Edge, Vertex } from '../../types/layout';
 
 const FLAG_MAPPINGS = {
   bidir: 'isBidirectional',
 };
-
-
-function makeEdge(head: VertexKey, tails: VertexKey[], isBidirectional: boolean = false) {
-  const bidir = isBidirectional ? ' [style="bidir", dir=both]' : '';
-  if (!Array.isArray(tails)) {
-    return `"${head}"->"${tails}"${bidir};`;
-  }
-  const tailStrs = tails.map(tail => `"${tail}"`);
-  return `"${head}"->{ ${tailStrs.join(' ')} };`;
-}
-
-export function toDot(edges: Edge[], vertices: Vertex[]) {
-  console.log(edges);
-  const bidirectional: Edge[] = [];
-  const fromTo: Map<VertexKey, VertexKey[]> = new Map();
-  edges.forEach(edge => {
-    console.log(edge.isBidirectional, edge)
-    if (edge.isBidirectional) {
-      bidirectional.push(edge);
-      return;
-    }
-    const tails = fromTo.get(edge.from) || [];
-    tails.push(edge.to);
-    fromTo.set(edge.from, tails);
-  });
-  console.log(bidirectional)
-  const nodeStrs = vertices.map(vertex => `"${vertex.key}" [height=${vertex.height.toFixed(9)},width=${vertex.width.toFixed(9)}];`);
-  const bidirStrs = bidirectional.map(edge => makeEdge(edge.from, edge.to, true));
-  const edgeStrs: string[] = [];
-  fromTo.forEach((tails, from) => {
-    edgeStrs.push(makeEdge(from, tails));
-  })
-  // console.log([...fromTo])
-  // const edgeStrs = [...fromTo.entries()].map(([from, tails]) => console.log(from, tails) || makeEdge(from, tails));
-  return [
-    GRAPH_HEADER,
-    '  ', nodeStrs.join('\n  '),
-    '  ', bidirStrs.join('\n  '),
-    '  ', edgeStrs.join('\n  '),
-    GRAPH_FOOTER
-  ].join('\n  ');
-}
-
-// function nextSpace(str, i) {
-//   return str.indexOf(' ', i);
-// }
 
 function throwMalformedPlain(str: string, i: number) {
   throw new Error(`Malformed plain output: ${str.slice(i - 100, i + 100)}`);
@@ -99,6 +60,19 @@ function parseNumbers(count: number, str: string, startIndex: number, boundary?:
   return { values, end: ci };
 }
 
+function parseGraph(str: string, startIndex: number) {
+  // skip "graph "
+  const i = startIndex + 6;
+  const { values: [scale, width], end: widthEnd } = parseNumbers(2, str, i);
+  const { value: height, end } = parseNumber(str, widthEnd + 1, '\n');
+  return {
+    end,
+    height,
+    scale,
+    width,
+  };
+}
+
 function parseNode(str: string, startIndex: number) {
   // skip "node "
   const i = startIndex + 5;
@@ -115,19 +89,6 @@ function parseNode(str: string, startIndex: number) {
   };
 }
 
-function parseGraph(str: string, startIndex: number) {
-  // skip "graph "
-  const i = startIndex + 6;
-  const { values: [scale, width], end: widthEnd } = parseNumbers(2, str, i);
-  const { value: height, end } = parseNumber(str, widthEnd + 1, '\n');
-  return {
-    end,
-    height,
-    scale,
-    width,
-  };
-}
-
 function parseEdge(str: string, startIndex: number) {
   // skip "edge "
   const i = startIndex + 5;
@@ -136,23 +97,29 @@ function parseEdge(str: string, startIndex: number) {
   const { value: pointCount, end: endPtCount } = parseNumber(str, toEnd + 1);
   const { values: flatPoints, end: pointsEnd } = parseNumbers(pointCount * 2, str, endPtCount + 1);
   const { value: flags, end: flagsEnd } = parseString(str, pointsEnd + 1);
-  const points: [number, number][] = [];
+  const pathPoints: [number, number][] = [];
   for (let pi = 0; pi < flatPoints.length; pi += 2) {
-    points.push([flatPoints[pi], flatPoints[pi + 1]]);
+    pathPoints.push([flatPoints[pi], flatPoints[pi + 1]]);
   }
-  const edgeFlags = flags.split(',').reduce((accum, flag) => {
+  const edgeFlags = {};
+  flags.split(',').forEach(flag => {
     const name = FLAG_MAPPINGS[flag];
-    return name ? { ...accum, [name]: true } : accum;
-  }, {});
+    if (name) {
+      edgeFlags[name] = true;
+    }
+  });
   return {
-    from,
-    to,
-    ...edgeFlags,
+    edge: {
+      from,
+      pathPoints,
+      to,
+      ...edgeFlags,
+    },
     end: str.indexOf('\n', flagsEnd + 1),
   };
 }
 
-export function fromPlain(str: string, parseEdges?: boolean = false) {
+export default function convPlain(str: string, parseEdges?: boolean = false) {
   const edges: Edge[] = [];
   const vertices: Vertex[] = [];
   let i = 0;
@@ -174,7 +141,7 @@ export function fromPlain(str: string, parseEdges?: boolean = false) {
         i = str.indexOf('\n', i) + 1;
         continue;
       }
-      const { end, ...edge } = parseEdge(str, i);
+      const { end, edge } = parseEdge(str, i);
       edges.push(edge);
       i = end + 1;
       continue;
@@ -183,4 +150,3 @@ export function fromPlain(str: string, parseEdges?: boolean = false) {
   }
   return { graph, vertices, edges: parseEdges ? edges : null };
 }
-

@@ -1,9 +1,22 @@
 // @flow
 
-// import type { ErrorMessage, InputEdge, InputVertex, Layout, LayoutOptions, LayoutResult, OutputEdge, OutputVertex, Positions } from '../types/layout';
-import type { Edge, Vertex, Layout, LayoutOptions, LayoutResult, Positions } from '../types/layout';
+// Copyright (c) 2017 Uber Technologies, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
-// import coordinatorWorker from './coordinator.worker';
+import type { LayoutUpdate } from './types';
+import type { Edge, Vertex, Layout, PendingLayoutResult, Positions } from '../types/layout';
+
 import Coordinator from './Coordinator';
 
 type PendingResult = {
@@ -16,54 +29,20 @@ type PendingResult = {
 export default class LayoutManager {
   layoutId: number;
   isDisposed: boolean;
-  options: ?LayoutOptions;
   coordinator: Coordinator;
   pendingResult: ?PendingResult;
 
-  constructor(options?: LayoutOptions) {
+  constructor() {
     this.layoutId = 0;
-    this.options = options;
-    // this.coordinator = new CoordinatorWorker();
-    // this.coordinator = coordinatorWorker();
-    this.coordinator = new Coordinator(console.log, () => { });
-    // this.coordinator.onmessage = this._onMessage;
-    // this.coordinator.onerror = this._onError;
+    this.coordinator = new Coordinator(this._handleUpdate);
     this.isDisposed = false;
     this.pendingResult = null;
   }
 
-  _onError = (event: MessageEvent) => {
-    console.error(event);
-  };
-
-  _onMessage = (event: MessageEvent) => {
-    // const { type, ...data } = event.data;
-    // if (type === 'error') {
-    //   console.error(data);
-    //   return;
-    // }
-    // if (type === 'result') {
-    //   const { id } = data;
-    //   const { resolveLayout } = this.pendingResult || {};
-    //   if (id === this.layoutId && resolveLayout) {
-    //     const { edges, vertices } = data;
-    //     console.log('result', data);
-    //     resolveLayout({ isCancelled: false, edges, vertices });
-    //     this.pendingResult = null;
-    //   }
-    //   return;
-    // }
-  };
-
-  getLayout(
-    vertices: Vertex[],
-    edges: Edge[],
-    options?: LayoutOptions
-  ): LayoutResult {
+  getLayout(vertices: Vertex[], edges: Edge[]): PendingLayoutResult {
     if (this.isDisposed) {
       throw new Error('LayoutManager has been disposed');
     }
-
     if (this.pendingResult) {
       const pending = this.pendingResult;
       if (!pending.isPositionsResolved && pending.resolvePositions) {
@@ -77,17 +56,7 @@ export default class LayoutManager {
     }
     this.layoutId++;
     const id = this.layoutId;
-    this.options = options || this.options;
-    // this.coordinator.postMessage({
-    //   layout: {
-    //     edges,
-    //     id,
-    //     vertices,
-    //     options: this.options,
-    //   },
-    //   type: 'layout',
-    // });
-    this.coordinator.getLayout(id, edges, vertices, this.options);
+    this.coordinator.getLayout(id, edges, vertices);
     this.pendingResult = { id, isPositionsResolved: false };
     const positions: Promise<Positions> = new Promise(resolve => {
       if (this.pendingResult && id === this.pendingResult.id) {
@@ -106,4 +75,49 @@ export default class LayoutManager {
     // TODO(joe): finish implementing
     this.isDisposed = true;
   }
+
+  _handleUpdate = (data: LayoutUpdate) => {
+    if (this.isDisposed) {
+      return;
+    }
+    const { layoutId, type } = data;
+    const pendingResult = this.pendingResult;
+    if (!pendingResult || layoutId !== pendingResult.id) {
+      return;
+    }
+    if (type === 'positions') {
+      const { isPositionsResolved, resolvePositions } = pendingResult;
+      if (isPositionsResolved) {
+        console.warn('Duplicate positiosn update', data);
+        return;
+      }
+      const { vertices } = data;
+      if (!vertices || !resolvePositions) {
+        // make flow happy
+        throw new Error('Invalid state');
+      }
+      pendingResult.isPositionsResolved = true;
+      resolvePositions({
+        vertices,
+        isCancelled: false,
+      });
+      return;
+    }
+    if (type === 'edges') {
+      const { resolveLayout } = pendingResult;
+      const { edges, vertices } = data;
+      if (!edges || !vertices || !resolveLayout) {
+        // make flow happy
+        throw new Error('Invalid state');
+      }
+      this.pendingResult = null;
+      resolveLayout({
+        edges,
+        vertices,
+        isCancelled: false,
+      });
+      return;
+    }
+    throw new Error('Unrecognized update type');
+  };
 }
