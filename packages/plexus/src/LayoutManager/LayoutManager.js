@@ -43,17 +43,7 @@ export default class LayoutManager {
     if (this.isDisposed) {
       throw new Error('LayoutManager has been disposed');
     }
-    if (this.pendingResult) {
-      const pending = this.pendingResult;
-      if (!pending.isPositionsResolved && pending.resolvePositions) {
-        pending.resolvePositions({ isCancelled: true });
-        pending.isPositionsResolved = true;
-      }
-      if (pending.resolveLayout) {
-        pending.resolveLayout({ isCancelled: true });
-      }
-      this.pendingResult = null;
-    }
+    this._cancelPending();
     this.layoutId++;
     const id = this.layoutId;
     this.coordinator.getLayout(id, edges, vertices);
@@ -72,8 +62,29 @@ export default class LayoutManager {
   }
 
   dispose() {
-    // TODO(joe): finish implementing
+    if (this.isDisposed) {
+      return;
+    }
+    this._cancelPending();
+    this.coordinator.dispose();
     this.isDisposed = true;
+  }
+
+  _cancelPending() {
+    if (this.isDisposed) {
+      return;
+    }
+    const pending = this.pendingResult;
+    if (pending) {
+      if (!pending.isPositionsResolved && pending.resolvePositions) {
+        pending.resolvePositions({ isCancelled: true });
+        pending.isPositionsResolved = true;
+      }
+      if (pending.resolveLayout) {
+        pending.resolveLayout({ isCancelled: true });
+      }
+      this.pendingResult = null;
+    }
   }
 
   _handleUpdate = (data: LayoutUpdate) => {

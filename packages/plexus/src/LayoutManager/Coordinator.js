@@ -223,20 +223,10 @@ export default class Coordinator {
       return;
     }
     if (type === 'positions') {
-      const { vertices } = workerMessage;
-      if (!vertices) {
-        console.error('Malformed worker message', event);
-        return;
-      }
       this._processPositionsResult(workerMessage);
       return;
     }
     if (type === 'edges') {
-      const { edges } = workerMessage;
-      if (!edges) {
-        console.error('Malformed worker message', event);
-        return;
-      }
       this._processEdgesResult(workerMessage);
       return;
     }

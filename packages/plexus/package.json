@@ -2,8 +2,8 @@
   "name": "plexus",
   "version": "0.0.0",
   "description": "Direct Graph React component",
-  "main": "umd/JaegerPlexus.js",
-  "files": ["css", "es", "lib", "umd"],
+  "main": "umd/plexus.js",
+  "files": ["css", "umd"],
   "scripts": {
     "build": "nwb build-react-component",
     "clean": "nwb clean-module && nwb clean-demo",
