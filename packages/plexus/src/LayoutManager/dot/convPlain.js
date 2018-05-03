@@ -14,6 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { GraphAttrs } from '../types';
 import type { Edge, Vertex } from '../../types/layout';
 
 const FLAG_MAPPINGS = {
@@ -34,7 +35,11 @@ function parseString(str: string, startIndex: number) {
   };
 }
 
-function parseNumber(str: string, startIndex: number, boundary?: string = ' ') {
+function parseNumber(
+  str: string,
+  startIndex: number,
+  boundary?: string = ' '
+): { value: number, end: number } {
   const end = str.indexOf(boundary, startIndex);
   if (end < startIndex) {
     throwMalformedPlain(str, startIndex);
@@ -45,7 +50,12 @@ function parseNumber(str: string, startIndex: number, boundary?: string = ' ') {
   };
 }
 
-function parseNumbers(count: number, str: string, startIndex: number, boundary?: string = ' ') {
+function parseNumbers(
+  count: number,
+  str: string,
+  startIndex: number,
+  boundary?: string = ' '
+): { values: number[], end: number } {
   const values: number[] = [];
   let ci = startIndex;
   let i = count;
@@ -60,16 +70,18 @@ function parseNumbers(count: number, str: string, startIndex: number, boundary?:
   return { values, end: ci };
 }
 
-function parseGraph(str: string, startIndex: number) {
+function parseGraph(str: string, startIndex: number): { end: number, graph: GraphAttrs } {
   // skip "graph "
   const i = startIndex + 6;
   const { values: [scale, width], end: widthEnd } = parseNumbers(2, str, i);
   const { value: height, end } = parseNumber(str, widthEnd + 1, '\n');
   return {
     end,
-    height,
-    scale,
-    width,
+    graph: {
+      height,
+      scale,
+      width,
+    },
   };
 }
 
@@ -126,7 +138,7 @@ export default function convPlain(str: string, parseEdges?: boolean = false) {
   if (str[0] !== 'g') {
     throwMalformedPlain(str, i);
   }
-  const { end: graphEnd, ...graph } = parseGraph(str, i);
+  const { end: graphEnd, graph } = parseGraph(str, i);
   i = graphEnd + 1;
   // stop when the "stop" line is hit
   while (str[i] !== 's') {

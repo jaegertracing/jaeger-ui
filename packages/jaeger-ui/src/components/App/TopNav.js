@@ -72,14 +72,16 @@ export default function TopNav(props: TopNavProps) {
   return (
     <div>
       <Menu theme="dark" mode="horizontal" selectable={false} className="ub-right" selectedKeys={[activeKey]}>
-        {menuItems.map(item => {
-          if (item.items) {
+        {menuItems.map(m => {
+          if (m.items != null) {
+            const group = ((m: any): ConfigMenuGroup);
             return (
-              <Menu.Item key={item.label}>
-                <CustomNavDropdown key={item.label} {...item} />
+              <Menu.Item key={group.label}>
+                <CustomNavDropdown key={group.label} {...group} />
               </Menu.Item>
             );
           }
+          const item = ((m: any): ConfigMenuItem);
           return (
             <Menu.Item key={item.label}>
               <a href={item.url} target="_blank" rel="noopener noreferrer">
