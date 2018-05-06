@@ -17,30 +17,54 @@ import * as React from 'react';
 import { render } from 'react-dom';
 
 // import large from './data-large.ignore';
-import { colored, getColorNodeLabel, setOnColorEdge, setOnColorNode } from './data-small';
+import { varied, colored, getColorNodeLabel, setOnColorEdge, setOnColorNode } from './data-small';
 import { DirectedGraph, LayoutManager } from '../../src';
 
 import './index.css';
 
 const addAnAttr = () => ({ 'data-rando': Math.random() });
 
-function Demo() {
-  return (
-    <div>
-      <h1>plexus Demo</h1>
-      <DirectedGraph
-        layoutManager={new LayoutManager()}
-        getNodeLabel={getColorNodeLabel}
-        setOnEdgePath={setOnColorEdge}
-        setOnNode={setOnColorNode}
-        setOnEdgesContainer={addAnAttr}
-        setOnNodesContainer={addAnAttr}
-        setOnRoot={addAnAttr}
-        {...colored}
-      />
-      {/* <DirectedGraph layoutManager={new LayoutManager()} {...large} /> */}
-    </div>
-  );
+class Demo extends React.Component {
+  state = {
+    data: colored,
+    colorData: true,
+  };
+
+  constructor(props) {
+    super(props);
+    this.layoutManager = new LayoutManager();
+  }
+
+  handleClick = () => {
+    const { colorData } = this.state;
+    this.setState({
+      colorData: !colorData,
+      data: colorData ? varied : colored,
+    });
+  };
+
+  render() {
+    const { data, colorData } = this.state;
+    return (
+      <div>
+        <h1>
+          <a href="#" onClick={this.handleClick}>
+            plexus Demo
+          </a>
+        </h1>
+        <DirectedGraph
+          layoutManager={this.layoutManager}
+          getNodeLabel={colorData ? getColorNodeLabel : null}
+          setOnEdgePath={colorData ? setOnColorEdge : null}
+          setOnNode={colorData ? setOnColorNode : null}
+          setOnEdgesContainer={addAnAttr}
+          setOnNodesContainer={addAnAttr}
+          setOnRoot={addAnAttr}
+          {...data}
+        />
+      </div>
+    );
+  }
 }
 
 render(<Demo />, document.querySelector('#demo'));

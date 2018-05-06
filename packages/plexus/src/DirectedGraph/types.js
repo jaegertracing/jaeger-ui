@@ -42,9 +42,12 @@ export type DirectedGraphProps = {
 };
 
 export type DirectedGraphState = {
+  edges: Edge[],
   layoutEdges: ?(LayoutEdge[]),
   layoutGraph: ?LayoutGraph,
   layoutPhase: number,
   layoutVertices: ?(LayoutVertex[]),
   sizeVertices: ?(SizeVertex[]),
+  vertexRefs: { current: ?HTMLElement }[],
+  vertices: Vertex[],
 };

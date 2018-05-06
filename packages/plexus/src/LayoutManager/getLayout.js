@@ -32,6 +32,7 @@ function isCloseEnough(a: number, b: number) {
 
 function getVerticesValidity(input: (SizeVertex | LayoutVertex)[], output: LayoutVertex[]) {
   const inputHash: { [string]: SizeVertex | LayoutVertex } = {};
+  console.log(input);
   input.forEach(v => {
     inputHash[String(v.vertex.key)] = v;
   });

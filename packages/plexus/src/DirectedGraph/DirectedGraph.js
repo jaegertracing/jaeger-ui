@@ -74,21 +74,42 @@ export default class DirectedGraph extends React.PureComponent<DirectedGraphProp
   };
 
   state = {
+    edges: [],
     layoutPhase: PHASE_NO_DATA,
     sizeVertices: null,
     layoutEdges: null,
     layoutGraph: null,
     layoutVertices: null,
+    vertexRefs: [],
+    vertices: [],
   };
+
+  static getDerivedStateFromProps(nextProps: DirectedGraphProps, prevState: DirectedGraphState) {
+    const { edges: nxEdges, vertices: nxVertices } = nextProps;
+    const { edges: stEdges, vertices: stVertices } = prevState;
+    if (nxEdges === stEdges && nxVertices === stVertices) {
+      return null;
+    }
+    return {
+      layoutPhase: PHASE_CALC_SIZES,
+      edges: nxEdges,
+      vertices: nxVertices,
+      vertexRefs: nxVertices.map(React.createRef),
+      sizeVertices: null,
+      layoutEdges: null,
+      layoutGraph: null,
+      layoutVertices: null,
+    };
+  }
 
   constructor(props: DirectedGraphProps) {
     super(props);
     const { edges, vertices } = props;
     if (Array.isArray(edges) && edges.length && Array.isArray(vertices) && vertices.length) {
       this.state.layoutPhase = PHASE_CALC_SIZES;
-      this.vertexRefs = vertices.map(React.createRef);
-    } else {
-      this.vertexRefs = [];
+      this.state.edges = edges;
+      this.state.vertices = vertices;
+      this.state.vertexRefs = vertices.map(React.createRef);
     }
   }
 
@@ -96,18 +117,25 @@ export default class DirectedGraph extends React.PureComponent<DirectedGraphProp
     this._setSizeVertices();
   }
 
+  componentDidUpdate() {
+    const { layoutPhase } = this.state;
+    if (layoutPhase === PHASE_CALC_SIZES) {
+      this._setSizeVertices();
+    }
+  }
+
   _setSizeVertices() {
     const { edges, layoutManager, vertices } = this.props;
-    const sizeVertices = this.vertexRefs
+    const sizeVertices = this.state.vertexRefs
       .map((ref, i) => {
         const { current } = ref;
         if (!current) {
           return null;
         }
         return {
-          height: current.clientHeight,
+          height: current.offsetHeight,
           vertex: vertices[i],
-          width: current.clientWidth,
+          width: current.offsetWidth,
         };
       })
       .filter(Boolean);
@@ -128,33 +156,34 @@ export default class DirectedGraph extends React.PureComponent<DirectedGraphProp
   }
 
   _renderVertices() {
-    const refs = this.vertexRefs;
     const { classNamePrefix, getNodeLabel, setOnNode, vertices } = this.props;
+    const { vertexRefs } = this.state;
+    const _getLabel = getNodeLabel != null ? getNodeLabel : defaultGetNodeLabel;
     return vertices.map((v, i) => (
       <Node
         key={v.key}
-        ref={refs[i]}
+        ref={vertexRefs[i]}
         hidden
         classNamePrefix={classNamePrefix}
-        label={getNodeLabel(v)}
+        label={_getLabel(v)}
         {...setOnNode && setOnNode(v)}
       />
     ));
   }
 
   _renderLayoutVertices() {
-    const refs = this.vertexRefs;
-    const { classNamePrefix, getNodeLabel, setOnNode } = this.props;
-    const { layoutVertices } = this.state;
+    const { layoutVertices, vertexRefs } = this.state;
     if (!layoutVertices) {
       return null;
     }
+    const { classNamePrefix, getNodeLabel, setOnNode } = this.props;
+    const _getLabel = getNodeLabel != null ? getNodeLabel : defaultGetNodeLabel;
     return layoutVertices.map((lv, i) => (
       <Node
         key={lv.vertex.key}
-        ref={refs[i]}
+        ref={vertexRefs[i]}
         classNamePrefix={classNamePrefix}
-        label={getNodeLabel(lv.vertex)}
+        label={_getLabel(lv.vertex)}
         left={lv.left}
         top={lv.top}
         {...setOnNode && setOnNode(lv.vertex)}
