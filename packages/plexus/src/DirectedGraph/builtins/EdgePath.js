@@ -50,9 +50,9 @@ const D_CMDS = ['M', 'C'];
 // }
 
 export default function EdgePath(props: Props) {
-  const { markerEnd, pathPoints } = props;
+  const { markerEnd, pathPoints, ...rest } = props;
   const d = pathPoints.map((pt, i) => `${D_CMDS[i] || ''}${pt.join(',')}`).join(' ');
-  return <path d={d} fill="none" stroke="black" strokeWidth="2" markerEnd={markerEnd} />;
+  return <path d={d} fill="none" stroke="black" strokeWidth="2" markerEnd={markerEnd} {...rest} />;
 
   // gradient stroke
   // const d = props.pathPoints.map(renderPathPoint).join(' ');

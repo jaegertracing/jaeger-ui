@@ -15,8 +15,6 @@ limitations under the License.
 */
 
 .plexus-Node {
-  background-color: #f0f0f0;
-  padding: 1rem 0.4rem;
   position: absolute;
   white-space: pre;
 }

@@ -14,17 +14,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import React from 'react';
+import { default as DirectedGraph } from './DirectedGraph';
+import { default as LayoutManager } from './LayoutManager';
 
-import input from './input.fixture';
-import DirectedGraph from './DirectedGraph';
-import LayoutManager from './LayoutManager';
-
-export default function() {
-  return (
-    <div>
-      <h2>Welcome to React components</h2>
-      <DirectedGraph {...input} layoutManager={new LayoutManager()} />
-    </div>
-  );
-}
+export default { DirectedGraph, LayoutManager };
+export { default as DirectedGraph } from './DirectedGraph';
+export { default as LayoutManager } from './LayoutManager';

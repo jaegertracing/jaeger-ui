@@ -28,7 +28,7 @@
     "lint": "npm run eslint && npm run prettier && npm run flow && npm run check-license",
     "precommit": "lint-staged",
     "prettier":
-      "prettier --write '{.,scripts}/*.{js,json,md}' 'packages/*/src/**/*.{css,js,json,md}' 'packages/*/*.{css,js,json,md}'",
+      "prettier --write '{.,scripts}/*.{js,json,md}' 'packages/*/{src,demo/src}/**/*.{css,js,json,md}' 'packages/*/*.{css,js,json,md}'",
     "test": "lerna run test"
   },
   "prettier": {

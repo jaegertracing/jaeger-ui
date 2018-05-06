@@ -129,41 +129,41 @@ export default class DirectedGraph extends React.PureComponent<DirectedGraphProp
 
   _renderVertices() {
     const refs = this.vertexRefs;
-    const { classNamePrefix, getNodeLabel, vertices } = this.props;
-    const style = { visibility: 'hidden' };
+    const { classNamePrefix, getNodeLabel, setOnNode, vertices } = this.props;
     return vertices.map((v, i) => (
       <Node
         key={v.key}
         ref={refs[i]}
+        hidden
         classNamePrefix={classNamePrefix}
-        style={style}
         label={getNodeLabel(v)}
+        {...setOnNode && setOnNode(v)}
       />
     ));
   }
 
   _renderLayoutVertices() {
     const refs = this.vertexRefs;
-    const { classNamePrefix, getNodeLabel } = this.props;
+    const { classNamePrefix, getNodeLabel, setOnNode } = this.props;
     const { layoutVertices } = this.state;
     if (!layoutVertices) {
       return null;
     }
-    return layoutVertices.map((lv, i) => {
-      const style = { transform: `translate(${lv.left}px,${lv.top}px)` };
-      return (
-        <Node
-          key={lv.vertex.key}
-          ref={refs[i]}
-          classNamePrefix={classNamePrefix}
-          style={style}
-          label={getNodeLabel(lv.vertex)}
-        />
-      );
-    });
+    return layoutVertices.map((lv, i) => (
+      <Node
+        key={lv.vertex.key}
+        ref={refs[i]}
+        classNamePrefix={classNamePrefix}
+        label={getNodeLabel(lv.vertex)}
+        left={lv.left}
+        top={lv.top}
+        {...setOnNode && setOnNode(lv.vertex)}
+      />
+    ));
   }
 
   _renderLayoutEdges() {
+    const { setOnEdgePath } = this.props;
     const { layoutEdges } = this.state;
     if (!layoutEdges) {
       return null;
@@ -173,23 +173,35 @@ export default class DirectedGraph extends React.PureComponent<DirectedGraphProp
         key={`${edge.edge.from}\v${edge.edge.to}`}
         pathPoints={edge.pathPoints}
         markerEnd={arrow.iriRef}
+        {...setOnEdgePath && setOnEdgePath(edge.edge)}
       />
     ));
   }
 
   render() {
-    const { classNamePrefix } = this.props;
+    const { classNamePrefix, setOnEdgesContainer, setOnNodesContainer, setOnRoot } = this.props;
     const { layoutPhase: phase, layoutGraph } = this.state;
     const havePosition = phase >= PHASE_CALC_EDGES;
     const haveEdges = phase === PHASE_DONE;
+    const nodesContainerCls = `${classNamePrefix}-DirectedGraph--nodeContainer`;
+    const nodesContainerProps: Object = (setOnNodesContainer && setOnNodesContainer(layoutGraph)) || {};
+    if (nodesContainerProps.className) {
+      nodesContainerProps.className = `${nodesContainerCls} ${nodesContainerProps.className}`;
+    } else {
+      nodesContainerProps.className = nodesContainerCls;
+    }
     return (
-      <div>
-        <div className={`${classNamePrefix}-DirectedGraph--nodeContainer`}>
+      <div {...setOnRoot && setOnRoot(layoutGraph)}>
+        <div {...nodesContainerProps}>
           {havePosition ? this._renderLayoutVertices() : this._renderVertices()}
         </div>
         {layoutGraph &&
           haveEdges && (
-            <EdgesContainer height={layoutGraph.height} width={layoutGraph.width}>
+            <EdgesContainer
+              {...setOnEdgesContainer && setOnEdgesContainer(layoutGraph)}
+              height={layoutGraph.height}
+              width={layoutGraph.width}
+            >
               {arrow.defs}
               {this._renderLayoutEdges()}
             </EdgesContainer>

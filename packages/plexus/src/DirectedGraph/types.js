@@ -32,6 +32,12 @@ export type DirectedGraphProps = {
   getEdgeLabel: Edge => string | React.Node,
   getNodeLabel: Vertex => string | React.Node,
   layoutManager: ILayoutManager,
+  // setOnEdgeArrow
+  setOnEdgePath: ?(Edge) => {},
+  setOnEdgesContainer: ?(?LayoutGraph) => {},
+  setOnNode: ?(Vertex) => {},
+  setOnNodesContainer: ?(?LayoutGraph) => {},
+  setOnRoot: ?(?LayoutGraph) => {},
   vertices: Vertex[],
 };
 

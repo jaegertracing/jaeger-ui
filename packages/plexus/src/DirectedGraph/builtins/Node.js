@@ -20,19 +20,33 @@ import './Node.css';
 
 type Props = {
   classNamePrefix: string,
+  hidden?: boolean,
   label: string | React.Node,
-  style: ?{ [string]: any },
+  left?: number,
+  top?: number,
 };
 
 function Node(props: Props, ref: any) {
-  const { classNamePrefix, label, style } = props;
-  const className = `${classNamePrefix}-Node`;
+  const { classNamePrefix, hidden, label, left, top, ...rest } = props;
+  const p: Object = rest;
+  p.style = {
+    ...p.style,
+    transform: left == null || top == null ? undefined : `translate(${left}px,${top}px)`,
+    visibility: hidden ? 'hidden' : 'visible',
+  };
+  p.className = `${classNamePrefix}-Node ${p.className || ''}`;
   return (
-    <div ref={ref} className={className} style={style}>
+    <div ref={ref} {...p}>
       {label}
     </div>
   );
 }
+
+Node.defaultProps = {
+  hidden: false,
+  left: null,
+  top: null,
+};
 
 // ghetto fabulous cast because the 16.3 API is not in flow yet
 // https://github.com/facebook/flow/issues/6103

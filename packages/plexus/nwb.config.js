@@ -24,7 +24,7 @@ module.exports = function nwbConfig() {
     type: 'react-component',
     npm: {
       esModules: false,
-      cjs: false,
+      cjs: true,
       umd: {
         global: 'JaegerPlexus',
         externals: {
@@ -43,8 +43,7 @@ module.exports = function nwbConfig() {
     devServer: { hot: false },
     webpack: {
       extractText: {
-        filename:
-          process.env.NODE_ENV === 'production' ? `plexus.[id].[contenthash:8].css` : 'plexus.[id].css',
+        filename: process.env.NODE_ENV === 'production' ? `plexus.[contenthash:8].css` : 'plexus.css',
       },
       extra: {
         devtool: 'source-map',

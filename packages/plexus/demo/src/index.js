@@ -12,18 +12,35 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import React, {Component} from 'react'
-import {render} from 'react-dom'
+import * as React from 'react';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { render } from 'react-dom';
 
-import Example from '../../src'
+// import large from './data-large.ignore';
+import { colored, getColorNodeLabel, setOnColorEdge, setOnColorNode } from './data-small';
+import { DirectedGraph, LayoutManager } from '../../src';
 
-class Demo extends Component {
-  render() {
-    return <div>
+import './index.css';
+
+const addAnAttr = () => ({ 'data-rando': Math.random() });
+
+function Demo() {
+  return (
+    <div>
       <h1>plexus Demo</h1>
-      <Example/>
+      <DirectedGraph
+        layoutManager={new LayoutManager()}
+        getNodeLabel={getColorNodeLabel}
+        setOnEdgePath={setOnColorEdge}
+        setOnNode={setOnColorNode}
+        setOnEdgesContainer={addAnAttr}
+        setOnNodesContainer={addAnAttr}
+        setOnRoot={addAnAttr}
+        {...colored}
+      />
+      {/* <DirectedGraph layoutManager={new LayoutManager()} {...large} /> */}
     </div>
-  }
+  );
 }
 
-render(<Demo/>, document.querySelector('#demo'))
+render(<Demo />, document.querySelector('#demo'));
