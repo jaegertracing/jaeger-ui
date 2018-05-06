@@ -40,7 +40,12 @@ module.exports = function nwbConfig() {
         return cfg;
       },
     },
+    devServer: { hot: false },
     webpack: {
+      extractText: {
+        filename:
+          process.env.NODE_ENV === 'production' ? `plexus.[id].[contenthash:8].css` : 'plexus.[id].css',
+      },
       extra: {
         devtool: 'source-map',
         module: {

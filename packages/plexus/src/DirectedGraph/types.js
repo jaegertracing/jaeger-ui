@@ -14,17 +14,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import React from 'react';
+import * as React from 'react';
 
-import input from './input.fixture';
-import DirectedGraph from './DirectedGraph';
-import LayoutManager from './LayoutManager';
+import type {
+  Edge,
+  ILayoutManager,
+  LayoutEdge,
+  LayoutGraph,
+  LayoutVertex,
+  SizeVertex,
+  Vertex,
+} from '../types/layout';
 
-export default function() {
-  return (
-    <div>
-      <h2>Welcome to React components</h2>
-      <DirectedGraph {...input} layoutManager={new LayoutManager()} />
-    </div>
-  );
-}
+export type DirectedGraphProps = {
+  classNamePrefix: string,
+  edges: Edge[],
+  getEdgeLabel: Edge => string | React.Node,
+  getNodeLabel: Vertex => string | React.Node,
+  layoutManager: ILayoutManager,
+  vertices: Vertex[],
+};
+
+export type DirectedGraphState = {
+  layoutEdges: ?(LayoutEdge[]),
+  layoutGraph: ?LayoutGraph,
+  layoutPhase: number,
+  layoutVertices: ?(LayoutVertex[]),
+  sizeVertices: ?(SizeVertex[]),
+};

@@ -14,8 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { GraphAttrs } from '../types';
-import type { Edge, Vertex } from '../../types/layout';
+import type { LayoutEdge, LayoutGraph, LayoutVertex } from '../../types/layout';
 
 const FLAG_MAPPINGS = {
   bidir: 'isBidirectional',
@@ -70,7 +69,7 @@ function parseNumbers(
   return { values, end: ci };
 }
 
-function parseGraph(str: string, startIndex: number): { end: number, graph: GraphAttrs } {
+function parseGraph(str: string, startIndex: number): { end: number, graph: LayoutGraph } {
   // skip "graph "
   const i = startIndex + 6;
   const { values: [scale, width], end: widthEnd } = parseNumbers(2, str, i);
@@ -92,11 +91,13 @@ function parseNode(str: string, startIndex: number) {
   const { values, end } = parseNumbers(4, str, keyEnd + 1);
   const [left, top, width, height] = values;
   return {
-    height,
-    key,
-    left,
-    top,
-    width,
+    vertex: {
+      vertex: { key },
+      height,
+      left,
+      top,
+      width,
+    },
     end: str.indexOf('\n', end + 1),
   };
 }
@@ -122,18 +123,16 @@ function parseEdge(str: string, startIndex: number) {
   });
   return {
     edge: {
-      from,
+      edge: { from, to, ...edgeFlags },
       pathPoints,
-      to,
-      ...edgeFlags,
     },
     end: str.indexOf('\n', flagsEnd + 1),
   };
 }
 
 export default function convPlain(str: string, parseEdges?: boolean = false) {
-  const edges: Edge[] = [];
-  const vertices: Vertex[] = [];
+  const edges: LayoutEdge[] = [];
+  const vertices: LayoutVertex[] = [];
   let i = 0;
   if (str[0] !== 'g') {
     throwMalformedPlain(str, i);
@@ -143,8 +142,8 @@ export default function convPlain(str: string, parseEdges?: boolean = false) {
   // stop when the "stop" line is hit
   while (str[i] !== 's') {
     if (str[i] === 'n') {
-      const { end, ...node } = parseNode(str, i);
-      vertices.push(node);
+      const { end, vertex } = parseNode(str, i);
+      vertices.push(vertex);
       i = end + 1;
       continue;
     }

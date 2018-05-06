@@ -14,17 +14,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import React from 'react';
+import * as React from 'react';
 
-import input from './input.fixture';
-import DirectedGraph from './DirectedGraph';
-import LayoutManager from './LayoutManager';
+type Props = {
+  children: React.Node,
+  height: number,
+  width: number,
+};
 
-export default function() {
+export default function EdgesContainer(props: Props) {
+  const { children, height, width, ...rest } = props;
   return (
-    <div>
-      <h2>Welcome to React components</h2>
-      <DirectedGraph {...input} layoutManager={new LayoutManager()} />
-    </div>
+    <svg height={height} width={width} xmlns="http://www.w3.org/2000/svg" {...rest}>
+      {children}
+    </svg>
   );
 }

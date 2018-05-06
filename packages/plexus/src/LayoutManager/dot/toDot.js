@@ -14,7 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Edge, Vertex, VertexKey } from '../../types/layout';
+import type { Edge, LayoutVertex, SizeVertex, VertexKey } from '../../types/layout';
 
 const GRAPH_HEADER = `digraph G {
   graph[sep=0.5, splines=true, overlap=false, rankdir=LR, ranksep=1.8, nodesep=0.5];
@@ -23,13 +23,14 @@ const GRAPH_HEADER = `digraph G {
 
 const GRAPH_FOOTER = `}`;
 
-function makeNode(vertex: Vertex) {
-  const { height, key, left, top, width } = vertex;
+function makeNode(v: SizeVertex | LayoutVertex) {
+  const { vertex, height, width } = v;
   let pos = '';
-  if (left != null && top != null) {
+  if (v.left != null && v.top != null) {
+    const { left, top } = ((v: any): LayoutVertex);
     pos = `,pos="${left.toFixed(5)},${top.toFixed(5)}!"`;
   }
-  return `"${key}" [height=${height.toFixed(5)},width=${width.toFixed(5)}${pos}];`;
+  return `"${vertex.key}" [height=${height.toFixed(5)},width=${width.toFixed(5)}${pos}];`;
 }
 
 function makeEdge(head: VertexKey, tails: VertexKey | VertexKey[], isBidirectional: boolean = false) {
@@ -41,7 +42,7 @@ function makeEdge(head: VertexKey, tails: VertexKey | VertexKey[], isBidirection
   return `"${head}"->{ ${tailStrs.join(' ')} };`;
 }
 
-export default function toDot(edges: Edge[], vertices: Vertex[]) {
+export default function toDot(edges: Edge[], vertices: (SizeVertex | LayoutVertex)[]) {
   const bidirectional: Edge[] = [];
   const fromTo: Map<VertexKey, VertexKey[]> = new Map();
   edges.forEach(edge => {

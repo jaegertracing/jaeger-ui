@@ -14,8 +14,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { LayoutUpdate } from './types';
-import type { Edge, Vertex, Layout, PendingLayoutResult, Positions } from '../types/layout';
+import type { EdgesUpdate, LayoutUpdate } from './types';
+import type {
+  Edge,
+  ILayoutManager,
+  Layout,
+  PendingLayoutResult,
+  Positions,
+  SizeVertex,
+} from '../types/layout';
 
 import Coordinator from './Coordinator';
 
@@ -26,7 +33,7 @@ type PendingResult = {
   resolveLayout?: Layout => void,
 };
 
-export default class LayoutManager {
+export default class LayoutManager implements ILayoutManager {
   layoutId: number;
   isDisposed: boolean;
   coordinator: Coordinator;
@@ -39,7 +46,7 @@ export default class LayoutManager {
     this.pendingResult = null;
   }
 
-  getLayout(vertices: Vertex[], edges: Edge[]): PendingLayoutResult {
+  getLayout(edges: Edge[], vertices: SizeVertex[]): PendingLayoutResult {
     if (this.isDisposed) {
       throw new Error('LayoutManager has been disposed');
     }
@@ -102,13 +109,14 @@ export default class LayoutManager {
         console.warn('Duplicate positiosn update', data);
         return;
       }
-      const { vertices } = data;
+      const { graph, vertices } = data;
       if (!vertices || !resolvePositions) {
         // make flow happy
         throw new Error('Invalid state');
       }
       pendingResult.isPositionsResolved = true;
       resolvePositions({
+        graph,
         vertices,
         isCancelled: false,
       });
@@ -116,7 +124,7 @@ export default class LayoutManager {
     }
     if (type === 'edges') {
       const { resolveLayout } = pendingResult;
-      const { edges, vertices } = data;
+      const { edges, graph, vertices } = ((data: any): EdgesUpdate);
       if (!edges || !vertices || !resolveLayout) {
         // make flow happy
         throw new Error('Invalid state');
@@ -124,6 +132,7 @@ export default class LayoutManager {
       this.pendingResult = null;
       resolveLayout({
         edges,
+        graph,
         vertices,
         isCancelled: false,
       });

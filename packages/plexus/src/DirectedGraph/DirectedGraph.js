@@ -1,0 +1,200 @@
+// @flow
+
+// Copyright (c) 2017 Uber Technologies, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+import * as React from 'react';
+
+import * as arrow from './builtins/EdgeArrow';
+import EdgePath from './builtins/EdgePath';
+import EdgesContainer from './builtins/EdgesContainer';
+import Node from './builtins/Node';
+import type { DirectedGraphProps, DirectedGraphState } from './types';
+import type { Edge, Vertex } from '../types/layout';
+
+import './DirectedGraph.css';
+
+const PHASE_NO_DATA = 0;
+const PHASE_CALC_SIZES = 1;
+const PHASE_CALC_POSITIONS = 2;
+const PHASE_CALC_EDGES = 3;
+const PHASE_DONE = 4;
+
+function defaultGetEdgeLabel(
+  edge: Edge,
+  from: Vertex,
+  to: Vertex,
+  getNodeLabel: Vertex => string | React.Node
+) {
+  const { label } = edge;
+  if (label != null) {
+    if (typeof label === 'string' || React.isValidElement(label)) {
+      return label;
+    }
+    return String(label);
+  }
+  return (
+    <React.Fragment>
+      {getNodeLabel(from)} → {getNodeLabel(to)}
+    </React.Fragment>
+  );
+}
+
+function defaultGetNodeLabel(vertex: Vertex) {
+  const { label } = vertex;
+  if (label != null) {
+    if (typeof label === 'string' || React.isValidElement(label)) {
+      return label;
+    }
+    return String(label);
+  }
+  return String(vertex.key);
+}
+
+export default class DirectedGraph extends React.PureComponent<DirectedGraphProps, DirectedGraphState> {
+  // ref API defs in flow seem to be a WIP
+  // https://github.com/facebook/flow/issues/6103
+  vertexRefs: { current: ?HTMLElement }[];
+
+  static defaultProps = {
+    classNamePrefix: 'plexus',
+    getEdgeLabel: defaultGetEdgeLabel,
+    getNodeLabel: defaultGetNodeLabel,
+  };
+
+  state = {
+    layoutPhase: PHASE_NO_DATA,
+    sizeVertices: null,
+    layoutEdges: null,
+    layoutGraph: null,
+    layoutVertices: null,
+  };
+
+  constructor(props: DirectedGraphProps) {
+    super(props);
+    const { edges, vertices } = props;
+    if (Array.isArray(edges) && edges.length && Array.isArray(vertices) && vertices.length) {
+      this.state.layoutPhase = PHASE_CALC_SIZES;
+      this.vertexRefs = vertices.map(React.createRef);
+    } else {
+      this.vertexRefs = [];
+    }
+  }
+
+  componentDidMount() {
+    this._setSizeVertices();
+  }
+
+  _setSizeVertices() {
+    const { edges, layoutManager, vertices } = this.props;
+    const sizeVertices = this.vertexRefs
+      .map((ref, i) => {
+        const { current } = ref;
+        if (!current) {
+          return null;
+        }
+        return {
+          height: current.clientHeight,
+          vertex: vertices[i],
+          width: current.clientWidth,
+        };
+      })
+      .filter(Boolean);
+    const { positions, layout } = layoutManager.getLayout(edges, sizeVertices);
+    positions.then(({ isCancelled, graph: layoutGraph, vertices: layoutVertices }) => {
+      if (isCancelled) {
+        return;
+      }
+      this.setState({ layoutGraph, layoutVertices, layoutPhase: PHASE_CALC_EDGES });
+    });
+    layout.then(({ isCancelled, edges: layoutEdges, graph: layoutGraph, vertices: layoutVertices }) => {
+      if (isCancelled) {
+        return;
+      }
+      this.setState({ layoutEdges, layoutGraph, layoutVertices, layoutPhase: PHASE_DONE });
+    });
+    this.setState({ sizeVertices, layoutPhase: PHASE_CALC_POSITIONS });
+  }
+
+  _renderVertices() {
+    const refs = this.vertexRefs;
+    const { classNamePrefix, getNodeLabel, vertices } = this.props;
+    const style = { visibility: 'hidden' };
+    return vertices.map((v, i) => (
+      <Node
+        key={v.key}
+        ref={refs[i]}
+        classNamePrefix={classNamePrefix}
+        style={style}
+        label={getNodeLabel(v)}
+      />
+    ));
+  }
+
+  _renderLayoutVertices() {
+    const refs = this.vertexRefs;
+    const { classNamePrefix, getNodeLabel } = this.props;
+    const { layoutVertices } = this.state;
+    if (!layoutVertices) {
+      return null;
+    }
+    return layoutVertices.map((lv, i) => {
+      const style = { transform: `translate(${lv.left}px,${lv.top}px)` };
+      return (
+        <Node
+          key={lv.vertex.key}
+          ref={refs[i]}
+          classNamePrefix={classNamePrefix}
+          style={style}
+          label={getNodeLabel(lv.vertex)}
+        />
+      );
+    });
+  }
+
+  _renderLayoutEdges() {
+    const { layoutEdges } = this.state;
+    if (!layoutEdges) {
+      return null;
+    }
+    return layoutEdges.map(edge => (
+      <EdgePath
+        key={`${edge.edge.from}\v${edge.edge.to}`}
+        pathPoints={edge.pathPoints}
+        markerEnd={arrow.iriRef}
+      />
+    ));
+  }
+
+  render() {
+    const { classNamePrefix } = this.props;
+    const { layoutPhase: phase, layoutGraph } = this.state;
+    const havePosition = phase >= PHASE_CALC_EDGES;
+    const haveEdges = phase === PHASE_DONE;
+    return (
+      <div>
+        <div className={`${classNamePrefix}-DirectedGraph--nodeContainer`}>
+          {havePosition ? this._renderLayoutVertices() : this._renderVertices()}
+        </div>
+        {layoutGraph &&
+          haveEdges && (
+            <EdgesContainer height={layoutGraph.height} width={layoutGraph.width}>
+              {arrow.defs}
+              {this._renderLayoutEdges()}
+            </EdgesContainer>
+          )}
+      </div>
+    );
+  }
+}

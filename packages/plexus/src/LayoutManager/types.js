@@ -14,13 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Edge, Vertex } from '../types/layout';
-
-export type GraphAttrs = {
-  height: number,
-  scale: number,
-  width: number,
-};
+import type { LayoutEdge, LayoutGraph, LayoutVertex } from '../types/layout';
 
 type LayoutWorkerMeta = {
   layoutId: number,
@@ -30,17 +24,27 @@ type LayoutWorkerMeta = {
 
 export type WorkerMessage = {
   type: 'positions' | 'edges' | 'layout-error' | 'error',
-  meta: LayoutWorkerMeta,
-  edges?: Edge[],
+  edges?: LayoutEdge[],
   errorMessage?: any,
+  graph?: LayoutGraph,
   layoutErrorMessage?: string,
-  vertices?: Vertex[],
-  graph?: { height: number, scale: number, width: number },
+  meta: LayoutWorkerMeta,
+  vertices?: LayoutVertex[],
 };
 
-export type LayoutUpdate = {
-  type: 'positions' | 'edges',
+export type PositionsUpdate = {
+  type: 'positions',
   layoutId: number,
-  edges?: Edge[],
-  vertices?: Vertex[],
+  graph: LayoutGraph,
+  vertices: LayoutVertex[],
 };
+
+export type EdgesUpdate = {
+  type: 'edges',
+  layoutId: number,
+  graph: LayoutGraph,
+  edges: LayoutEdge[],
+  vertices: LayoutVertex[],
+};
+
+export type LayoutUpdate = PositionsUpdate | EdgesUpdate;

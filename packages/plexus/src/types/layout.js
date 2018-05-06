@@ -14,35 +14,68 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import * as React from 'react';
+
+export type LayoutGraph = {
+  height: number,
+  scale: number,
+  width: number,
+};
+
 export type VertexKey = string | number;
 
 export type Vertex = {
   key: VertexKey,
-  top?: number,
-  left?: number,
+  label?: string | React.Node,
+  data?: any,
+};
+
+export type SizeVertex = {
+  vertex: Vertex,
   width: number,
   height: number,
+};
+
+export type LayoutVertex = {
+  vertex: Vertex,
+  height: number,
+  left: number,
+  top: number,
+  width: number,
 };
 
 export type Edge = {
   from: VertexKey,
   to: VertexKey,
   isBidirectional?: boolean,
-  pathPoints?: [number, number][],
+  label?: string | React.Node,
+  data?: any,
+};
+
+export type LayoutEdge = {
+  edge: Edge,
+  pathPoints: [number, number][],
 };
 
 export type Positions = {
   isCancelled: boolean,
-  vertices?: Vertex[],
+  graph?: LayoutGraph,
+  vertices?: LayoutVertex[],
 };
 
 export type Layout = {
   isCancelled: boolean,
-  edges?: Edge[],
-  vertices?: Vertex[],
+  edges?: LayoutEdge[],
+  graph?: LayoutGraph,
+  vertices?: LayoutVertex[],
 };
 
 export type PendingLayoutResult = {
   positions: Promise<Positions>,
   layout: Promise<Layout>,
 };
+
+export interface ILayoutManager {
+  getLayout(edges: Edge[], vertices: SizeVertex[]): PendingLayoutResult;
+  dispose(): void;
+}

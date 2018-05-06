@@ -14,24 +14,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { GraphAttrs, LayoutUpdate, WorkerMessage } from './types';
-import type { Edge, Vertex } from '../types/layout';
+import type { LayoutUpdate, WorkerMessage } from './types';
+import type { Edge, LayoutGraph, LayoutVertex, SizeVertex } from '../types/layout';
 import type { ErrorEvent } from '../types/ErrorEvent';
 
 import * as convCoord from './dot/conv-coord';
 import workerFactory from './layout.worker';
+import { matchEdges, matchVertices } from './match-inputs';
 
 type CurrentLayout = {
   id: number,
   input: {
     edges: Edge[],
-    vertices: Vertex[],
+    vertices: SizeVertex[],
+  },
+  cleaned: {
+    edges: Edge[],
+    vertices: SizeVertex[],
   },
   result: {
     // TODO(joe): split edge calculations
-    // edges: Edge[],
-    graph?: GraphAttrs,
-    vertices: Vertex[],
+    // edges: LayoutEdge[],
+    graph?: LayoutGraph,
+    vertices: LayoutVertex[],
   },
   status: {
     edgesWorkers?: ?Set<number>,
@@ -41,6 +46,22 @@ type CurrentLayout = {
 };
 
 type LayoutWorker = Worker & { id: number };
+
+function cleanInput(srcEdges: Edge[], srcVertices: SizeVertex[]) {
+  // edges: Edge[], vertices: SizeVertex[]
+  const edges = srcEdges.map(({ from, to, isBidirectional }) => ({ from, to, isBidirectional }));
+  // const edges = srcEdges.map(edge => {
+  //   //({ from, to, bidirectional })
+  //   const { from, to } = edge;
+  //   const rv = { from, to };
+  //   if (edge.bidirectional != null) {
+  //     rv.bidirectional = edge.bidirectional;
+  //   }
+  //   return rv;
+  // });
+  const vertices = srcVertices.map(({ vertex: { key }, ...rest }) => ({ vertex: { key }, ...rest }));
+  return { edges, vertices };
+}
 
 function killWorker(worker: LayoutWorker) {
   const w = worker;
@@ -82,7 +103,7 @@ export default class Coordinator {
     this.busyWorkers = [];
   }
 
-  getLayout(id: number, edges: Edge[], vertices: Vertex[]) {
+  getLayout(id: number, edges: Edge[], vertices: SizeVertex[]) {
     if (this.isDisposed) {
       console.error('Coordinator is diposed');
       return;
@@ -91,7 +112,8 @@ export default class Coordinator {
     this.busyWorkers.length = 0;
     this.currentLayout = {
       id,
-      input: { edges, vertices: vertices.map(convCoord.vertexToDot) },
+      input: { edges, vertices },
+      cleaned: cleanInput(edges, vertices.map(convCoord.vertexToDot)),
       result: { edges: [], vertices: [] },
       status: { phase: 'not-started' },
     };
@@ -127,7 +149,7 @@ export default class Coordinator {
   }
 
   _getPositions() {
-    const { id, input, status } = this.currentLayout || {};
+    const { id, cleaned, status } = this.currentLayout || {};
     if (id == null) {
       throw new Error('_getPositions called without a current layout');
     }
@@ -136,18 +158,18 @@ export default class Coordinator {
     status.phase = 'positions';
     status.positionsWorker = worker.id;
     worker.postMessage({
-      edges: input.edges,
+      edges: cleaned.edges,
       meta: {
         layoutId: id,
         workerId: worker.id,
         phase: 'positions',
       },
-      vertices: input.vertices,
+      vertices: cleaned.vertices,
     });
   }
 
   _getEdges() {
-    const { id, input, result, status } = this.currentLayout || {};
+    const { id, cleaned, result, status } = this.currentLayout || {};
     if (id == null) {
       throw new Error('_getEdges called without a current layout');
     }
@@ -160,7 +182,7 @@ export default class Coordinator {
     // TODO(joe): split edge calculation
     status.edgesWorkers = new Set([worker.id]);
     worker.postMessage({
-      edges: input.edges,
+      edges: cleaned.edges,
       meta: {
         layoutId: id,
         workerId: worker.id,
@@ -241,7 +263,7 @@ export default class Coordinator {
     }
     const { graph, meta, vertices } = workerMessage;
     const { workerId } = meta;
-    const { result, status } = layout;
+    const { input, result, status } = layout;
     const { phase, positionsWorker } = status;
     let msg = '';
     if (phase !== 'positions') {
@@ -264,11 +286,14 @@ export default class Coordinator {
     status.positionsWorker = null;
     result.graph = graph;
     result.vertices = vertices;
-    const mapVertex = convCoord.vertexToPixels.bind(null, graph);
+    const adjVertexCoords = convCoord.vertexToPixels.bind(null, graph);
+    let adjVertices = vertices.map(adjVertexCoords);
+    adjVertices = matchVertices(input.vertices, adjVertices);
     this.callback({
       type: 'positions',
       layoutId: layout.id,
-      vertices: vertices.map(mapVertex),
+      graph: convCoord.graphToPixels(graph),
+      vertices: adjVertices,
     });
     this._getEdges();
   }
@@ -281,7 +306,7 @@ export default class Coordinator {
     }
     const { edges, graph, meta, vertices } = workerMessage;
     const { workerId } = meta;
-    const { status } = layout;
+    const { input, status } = layout;
     const { phase, edgesWorkers } = status;
     let msg = '';
     if (phase !== 'edges') {
@@ -304,13 +329,18 @@ export default class Coordinator {
     status.edgesWorkers = null;
     status.phase = 'done';
     this.currentLayout = null;
-    const mapEdge = convCoord.edgeToPixels.bind(null, graph);
-    const mapVertex = convCoord.vertexToPixels.bind(null, graph);
+    const adjEdgeCoords = convCoord.edgeToPixels.bind(null, graph);
+    const adjVertexCoords = convCoord.vertexToPixels.bind(null, graph);
+    let adjEdges = edges.map(adjEdgeCoords);
+    adjEdges = matchEdges(input.edges, adjEdges);
+    let adjVertices = vertices.map(adjVertexCoords);
+    adjVertices = matchVertices(input.vertices, adjVertices);
     this.callback({
       type: 'edges',
       layoutId: layout.id,
-      edges: edges.map(mapEdge),
-      vertices: vertices.map(mapVertex),
+      graph: convCoord.graphToPixels(graph),
+      edges: adjEdges,
+      vertices: adjVertices,
     });
   }
 }

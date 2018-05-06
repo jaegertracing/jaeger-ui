@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,17 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import React from 'react';
-
-import input from './input.fixture';
 import DirectedGraph from './DirectedGraph';
-import LayoutManager from './LayoutManager';
 
-export default function() {
-  return (
-    <div>
-      <h2>Welcome to React components</h2>
-      <DirectedGraph {...input} layoutManager={new LayoutManager()} />
-    </div>
-  );
-}
+export default DirectedGraph;

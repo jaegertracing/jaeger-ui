@@ -14,17 +14,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import React from 'react';
+import * as React from 'react';
 
-import input from './input.fixture';
-import DirectedGraph from './DirectedGraph';
-import LayoutManager from './LayoutManager';
+import './Node.css';
 
-export default function() {
+type Props = {
+  classNamePrefix: string,
+  label: string | React.Node,
+  style: ?{ [string]: any },
+};
+
+function Node(props: Props, ref: any) {
+  const { classNamePrefix, label, style } = props;
+  const className = `${classNamePrefix}-Node`;
   return (
-    <div>
-      <h2>Welcome to React components</h2>
-      <DirectedGraph {...input} layoutManager={new LayoutManager()} />
+    <div ref={ref} className={className} style={style}>
+      {label}
     </div>
   );
 }
+
+// ghetto fabulous cast because the 16.3 API is not in flow yet
+// https://github.com/facebook/flow/issues/6103
+export default (React: any).forwardRef(Node);

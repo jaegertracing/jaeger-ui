@@ -14,39 +14,45 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { GraphAttrs } from '../types';
-import type { Edge, Vertex } from '../../types/layout';
+import type { LayoutEdge, LayoutGraph, LayoutVertex, SizeVertex } from '../../types/layout';
 
 const round = Math.round;
 
 const DPI = 72;
 
-export function vertexToDot(vertex: Vertex) {
+export function vertexToDot(v: SizeVertex) {
   // expect only width and height for going to dot
-  const { key, height, width } = vertex;
+  const { vertex, height, width } = v;
   return {
-    key,
+    vertex,
     height: height / DPI,
     width: width / DPI,
   };
 }
 
-export function edgeToPixels(graph: GraphAttrs, edge: Edge): Edge {
+export function edgeToPixels(graph: LayoutGraph, e: LayoutEdge): LayoutEdge {
   const { height: h } = graph;
-  const { from, to, isBidirectional, pathPoints } = edge;
+  const { edge, pathPoints } = e;
   return {
-    from,
-    to,
-    ...(isBidirectional ? { isBidirectional } : null),
+    edge,
     pathPoints: pathPoints && pathPoints.map(pt => [round(pt[0] * DPI), round((h - pt[1]) * DPI)]),
   };
 }
 
-export function vertexToPixels(graph: GraphAttrs, vertex: Vertex): Vertex {
-  const { height: h } = graph;
-  const { key, height, left, top, width } = vertex;
+export function graphToPixels(graph: LayoutGraph) {
+  const { height, scale, width } = graph;
   return {
-    key,
+    scale,
+    height: height * DPI,
+    width: width * DPI,
+  };
+}
+
+export function vertexToPixels(graph: LayoutGraph, v: LayoutVertex): LayoutVertex {
+  const { height: h } = graph;
+  const { vertex, height, left, top, width } = v;
+  return {
+    vertex,
     height: round(height * DPI),
     left: left != null ? round((left - width * 0.5) * DPI) : left,
     top: top != null ? round((h - top - height * 0.5) * DPI) : top,
