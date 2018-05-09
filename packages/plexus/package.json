@@ -1,15 +1,15 @@
 {
-  "name": "plexus",
+  "name": "@jaegertracing/plexus",
   "version": "0.0.0",
   "description": "Direct Graph React component",
   "main": "umd/plexus.js",
-  "files": ["css", "umd"],
+  "files": ["lib", "umd"],
   "scripts": {
     "build": "nwb build-react-component",
     "clean": "nwb clean-module && nwb clean-demo",
     "start": "nwb serve-react-demo",
     "test": "echo 'NO TESTS YET'",
-    "test:coverage": "nwb test-react --coverage",
+    "coverage": "echo 'NO TESTS YET'",
     "test:dev": "nwb test-react --server"
   },
   "dependencies": {
@@ -25,8 +25,8 @@
     "worker-loader": "^1.1.1"
   },
   "author": "",
-  "homepage": "",
+  "homepage": "https://github.com/jaegertracing/jaeger-ui",
   "license": "Apache-2.0",
-  "repository": "",
+  "repository": "https://github.com/jaegertracing/jaeger-ui.git",
   "keywords": ["react-component"]
 }
