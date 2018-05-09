@@ -2,7 +2,7 @@
   "name": "@jaegertracing/plexus",
   "version": "0.0.0",
   "description": "Direct Graph React component",
-  "main": "umd/plexus.js",
+  "main": "umd/@jaegertracing/plexus.js",
   "files": ["lib", "umd"],
   "scripts": {
     "build": "nwb build-react-component",
