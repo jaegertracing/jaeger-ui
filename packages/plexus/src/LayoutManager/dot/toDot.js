@@ -17,7 +17,7 @@
 import type { Edge, LayoutVertex, SizeVertex, VertexKey } from '../../types/layout';
 
 const GRAPH_HEADER = `digraph G {
-  graph[sep=0.5, splines=true, overlap=false, rankdir=LR, ranksep=1.8, nodesep=0.5];
+  graph[sep=0.5, splines=true, overlap=false, rankdir=LR, ranksep=3, nodesep=1.5];
   node [shape=box, fixedsize=true, label="", color="_", fillcolor="_"];
   edge [arrowhead=none, arrowtail=none];`;
 
