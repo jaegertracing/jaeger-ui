@@ -16,8 +16,6 @@
 
 import * as React from 'react';
 
-import './Node.css';
-
 type Props = {
   classNamePrefix: string,
   hidden?: boolean,
@@ -31,6 +29,7 @@ function Node(props: Props, ref: any) {
   const p: Object = rest;
   p.style = {
     ...p.style,
+    position: 'absolute',
     transform: left == null || top == null ? undefined : `translate(${left}px,${top}px)`,
     visibility: hidden ? 'hidden' : 'visible',
   };

@@ -23,8 +23,6 @@ import Node from './builtins/Node';
 import type { DirectedGraphProps, DirectedGraphState } from './types';
 import type { Edge, Vertex } from '../types/layout';
 
-import './DirectedGraph.css';
-
 const PHASE_NO_DATA = 0;
 const PHASE_CALC_SIZES = 1;
 const PHASE_CALC_POSITIONS = 2;
@@ -214,6 +212,7 @@ export default class DirectedGraph extends React.PureComponent<DirectedGraphProp
     const haveEdges = phase === PHASE_DONE;
     const nodesContainerCls = `${classNamePrefix}-DirectedGraph--nodeContainer`;
     const nodesContainerProps: Object = (setOnNodesContainer && setOnNodesContainer(layoutGraph)) || {};
+    nodesContainerProps.style = { ...nodesContainerProps.style, position: 'relative' };
     if (nodesContainerProps.className) {
       nodesContainerProps.className = `${nodesContainerCls} ${nodesContainerProps.className}`;
     } else {
