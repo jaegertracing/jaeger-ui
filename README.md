@@ -21,16 +21,16 @@ git clone https://github.com/jaegertracing/jaeger-ui.git
 cd jaeger-ui
 ```
 
-Use the recommended npm and Node versions: (defined in [.nvmrc](./.nvmrc) file):
+Use the recommended Node versions: (defined in [.nvmrc](./.nvmrc) file):
 
 ```
 nvm use
 ```
 
-Install dependencies via `npm` or `yarn`:
+Install dependencies via `yarn`:
 
 ```
-npm install
+yarn install
 # or
 yarn
 ```
@@ -46,25 +46,25 @@ ssh -fN -L 16686:$BACKEND_HOST:$BACKEND_PORT $BACKEND_PORT
 Start the development server with hot loading:
 
 ```
-npm start
+cd packages/jaeger-ui && yarn start
 ```
 
 #### Commands
 
-| Command         | Description                                                 |
-| --------------- | ----------------------------------------------------------- |
-| `npm start`     | Starts development server with hot reloading and api proxy. |
-| `npm test`      | Runs all the tests                                          |
-| `npm run lint`  | Lint the project (eslint, prettier, flow)                   |
-| `npm run build` | Runs production build. Outputs files to `/dist`.            |
+| Command                               | Description                                                         |
+| ------------------------------------- | ------------------------------------------------------------------- |
+| `cd packages/jaeger-ui && yarn start` | Starts development server with hot reloading and api proxy.         |
+| `yarn test`                           | Run all the tests                                                   |
+| `yarn lint`                           | Lint the project (eslint, prettier, flow)                           |
+| `yarn build`                          | Runs production build. Outputs files to `packages/jaeger-ui/build`. |
 
 ## Build
 
-Running build will output all the static files to the `./dist` folder:
+Running build will output all the static files to the `packages/jaeger-ui/build` folder:
 
 ```
-npm install
-npm run build
+yarn install
+yarn build
 ```
 
 ## UI Configuration
