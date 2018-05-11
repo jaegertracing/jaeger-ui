@@ -14,3 +14,6 @@ coverage
 .DS_Store
 npm-debug.log
 .vscode
+.idea
+yarn-error.log
+lerna-debug.log
