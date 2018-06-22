@@ -26,11 +26,11 @@ import { Field, reduxForm, formValueSelector } from 'redux-form';
 import store from 'store';
 
 import * as markers from './SearchForm.markers';
+import { trackFormInput } from './SearchForm.track';
 import VirtSelect from '../common/VirtSelect';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import { formatDate, formatTime } from '../../utils/date';
 import reduxFormFieldAdapter from '../../utils/redux-form-field-adapter';
-import { trackFormInput } from './SearchForm.track';
 import { DEFAULT_OPERATION, DEFAULT_LIMIT, DEFAULT_LOOKBACK } from '../../constants/search-form';
 
 import './SearchForm.css';

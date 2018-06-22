@@ -16,17 +16,4 @@ export const DEFAULT_OPERATION = 'all';
 export const DEFAULT_LOOKBACK = '1h';
 export const DEFAULT_LIMIT = 20;
 
-export const ACTION_SET = 'set';
-export const ACTION_CLEAR = 'clear';
-export const ACTION_DEFAULT = 'default';
-
 export const FORM_CHANGE_ACTION_TYPE = '@@redux-form/CHANGE';
-export const CATEGORY_SORTBY = `jaeger/ux/search/results/sortby`;
-
-export const FORM_CATEGORY_BASE = 'jaeger/ux/search/form';
-export const CATEGORY_OPERATION = `${FORM_CATEGORY_BASE}/operation`;
-export const CATEGORY_LOOKBACK = `${FORM_CATEGORY_BASE}/lookback`;
-export const CATEGORY_TAGS = `${FORM_CATEGORY_BASE}/tags`;
-export const CATEGORY_MIN_DURATION = `${FORM_CATEGORY_BASE}/min_duration`;
-export const CATEGORY_MAX_DURATION = `${FORM_CATEGORY_BASE}/max_duration`;
-export const CATEGORY_LIMIT = `${FORM_CATEGORY_BASE}/limit`;

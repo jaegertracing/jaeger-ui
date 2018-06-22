@@ -15,8 +15,9 @@
 /* eslint-disable import/first */
 jest.mock('../../utils/tracking');
 
-import { middlewareHooks, trackFormInput } from './SearchForm.track';
 import {
+  middlewareHooks,
+  trackFormInput,
   CATEGORY_LIMIT,
   CATEGORY_LOOKBACK,
   CATEGORY_MAX_DURATION,
@@ -24,8 +25,8 @@ import {
   CATEGORY_OPERATION,
   CATEGORY_SORTBY,
   CATEGORY_TAGS,
-  FORM_CHANGE_ACTION_TYPE,
-} from '../../constants/search-form';
+} from './SearchForm.track';
+import { FORM_CHANGE_ACTION_TYPE } from '../../constants/search-form';
 import { trackEvent } from '../../utils/tracking';
 
 describe('GA tracking', () => {
