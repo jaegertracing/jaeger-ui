@@ -15,16 +15,45 @@
 // limitations under the License.
 
 import type { Store } from 'redux';
+import * as constants from '../../constants/search-form';
 import { trackEvent } from '../../utils/tracking';
 
-export const CATEGORY_BASE = 'jaeger/ux/trace/search';
-export const CATEGORY_SORTBY = `${CATEGORY_BASE}/sortby`;
-export const FORM_CHANGE_ACTION_TYPE = '@@redux-form/CHANGE';
+export function trackFormInput(
+  resultsLimit: number,
+  operation: string,
+  tags: any,
+  minDuration: number,
+  maxDuration: number,
+  lookback: string
+) {
+  trackEvent(
+    constants.CATEGORY_OPERATION,
+    operation === constants.DEFAULT_OPERATION ? constants.ACTION_DEFAULT : constants.ACTION_SET,
+    operation
+  );
+  trackEvent(
+    constants.CATEGORY_LIMIT,
+    resultsLimit === constants.DEFAULT_LIMIT ? constants.ACTION_DEFAULT : constants.ACTION_SET,
+    resultsLimit
+  );
+  trackEvent(
+    constants.CATEGORY_MAX_DURATION,
+    maxDuration ? constants.ACTION_SET : constants.ACTION_CLEAR,
+    maxDuration
+  );
+  trackEvent(
+    constants.CATEGORY_MIN_DURATION,
+    minDuration ? constants.ACTION_SET : constants.ACTION_CLEAR,
+    minDuration
+  );
+  trackEvent(constants.CATEGORY_TAGS, tags ? constants.ACTION_SET : constants.ACTION_CLEAR, tags);
+  trackEvent(constants.CATEGORY_LOOKBACK, lookback);
+}
 
 export const middlewareHooks = {
-  [FORM_CHANGE_ACTION_TYPE]: (store: Store, action: any) => {
+  [constants.FORM_CHANGE_ACTION_TYPE]: (store: Store, action: any) => {
     if (action.meta.form === 'sortBy') {
-      trackEvent(CATEGORY_SORTBY, action.payload);
+      trackEvent(constants.CATEGORY_SORTBY, action.payload);
     }
   },
 };

@@ -30,10 +30,10 @@ import VirtSelect from '../common/VirtSelect';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import { formatDate, formatTime } from '../../utils/date';
 import reduxFormFieldAdapter from '../../utils/redux-form-field-adapter';
+import { trackFormInput } from './SearchForm.track';
+import { DEFAULT_OPERATION, DEFAULT_LIMIT, DEFAULT_LOOKBACK } from '../../constants/search-form';
 
 import './SearchForm.css';
-import { trackEvent } from '../../utils/tracking';
-import { CATEGORY_BASE } from './SearchForm.track';
 
 const FormItem = Form.Item;
 const Option = Select.Option;
@@ -41,21 +41,6 @@ const Option = Select.Option;
 const AdaptedInput = reduxFormFieldAdapter(Input);
 const AdaptedSelect = reduxFormFieldAdapter(Select);
 const AdaptedVirtualSelect = reduxFormFieldAdapter(VirtSelect, option => (option ? option.value : null));
-
-const DEFAULT_OPERATION = 'all';
-const DEFAULT_LOOKBACK = '1h';
-const DEFAULT_LIMIT = 20;
-
-const ACTION_SET = 'set';
-const ACTION_CLEAR = 'clear';
-const ACTION_DEFAULT = 'default';
-
-export const CATEGORY_OPERATION = `${CATEGORY_BASE}/operation`;
-export const CATEGORY_LOOKBACK = `${CATEGORY_BASE}/lookback`;
-export const CATEGORY_TAGS = `${CATEGORY_BASE}/tags`;
-export const CATEGORY_MIN_DURATION = `${CATEGORY_BASE}/min_duration`;
-export const CATEGORY_MAX_DURATION = `${CATEGORY_BASE}/max_duration`;
-export const CATEGORY_LIMIT = `${CATEGORY_BASE}/limit`;
 
 export function getUnixTimeStampInMSFromForm({ startDate, startDateTime, endDate, endDateTime }) {
   const start = `${startDate} ${startDateTime}`;
@@ -111,15 +96,6 @@ export function convertQueryParamsToFormDates({ start, end }) {
     queryEndDate,
     queryEndDateTime,
   };
-}
-
-function trackFormInput(resultsLimit, operation, tags, minDuration, maxDuration, lookback) {
-  trackEvent(CATEGORY_OPERATION, operation === DEFAULT_OPERATION ? ACTION_DEFAULT : ACTION_SET, operation);
-  trackEvent(CATEGORY_LIMIT, resultsLimit === DEFAULT_LIMIT ? ACTION_DEFAULT : ACTION_SET, resultsLimit);
-  trackEvent(CATEGORY_TAGS, tags ? ACTION_SET : ACTION_CLEAR, tags);
-  trackEvent(CATEGORY_MAX_DURATION, maxDuration ? ACTION_SET : ACTION_CLEAR, maxDuration);
-  trackEvent(CATEGORY_MIN_DURATION, minDuration ? ACTION_SET : ACTION_CLEAR, minDuration);
-  trackEvent(CATEGORY_LOOKBACK, lookback);
 }
 
 export function submitForm(fields, searchTraces) {

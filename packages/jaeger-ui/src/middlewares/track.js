@@ -14,8 +14,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { middlewareHooks as timelineHooks } from '../components/TracePage/TraceTimelineViewer/duck.track';
 import { middlewareHooks as searchHooks } from '../components/SearchTracePage/SearchForm.track';
+import { middlewareHooks as timelineHooks } from '../components/TracePage/TraceTimelineViewer/duck.track';
 import { isGaEnabled } from '../utils/tracking';
 
 const middlewareHooks = { ...timelineHooks, ...searchHooks };

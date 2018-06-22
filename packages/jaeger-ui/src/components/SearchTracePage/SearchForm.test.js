@@ -14,14 +14,12 @@
 
 /* eslint-disable import/first */
 jest.mock('store');
-jest.mock('../../utils/tracking');
 
 import React from 'react';
 import { shallow } from 'enzyme';
 import moment from 'moment';
 import queryString from 'query-string';
 import store from 'store';
-import { trackEvent } from '../../utils/tracking';
 
 import {
   convertQueryParamsToFormDates,
@@ -31,12 +29,6 @@ import {
   submitForm,
   traceIDsToQuery,
   SearchFormImpl as SearchForm,
-  CATEGORY_OPERATION,
-  CATEGORY_LIMIT,
-  CATEGORY_TAGS,
-  CATEGORY_MAX_DURATION,
-  CATEGORY_MIN_DURATION,
-  CATEGORY_LOOKBACK,
 } from './SearchForm';
 import * as markers from './SearchForm.markers';
 
@@ -147,7 +139,6 @@ describe('submitForm()', () => {
       resultsLimit: 20,
       service: 'svc-a',
     };
-    trackEvent.mockClear();
   });
 
   it('ignores `fields.operation` when it is "all"', () => {
@@ -248,22 +239,6 @@ describe('submitForm()', () => {
       expect(minDuration).toBe(null);
       expect(maxDuration).toBe(null);
     });
-  });
-
-  it('sends form input to GA', () => {
-    submitForm(fields, searchTraces);
-    expect(trackEvent.mock.calls.length).toBe(6);
-    const categoriesTracked = trackEvent.mock.calls.map(call => call[0]).sort();
-    expect(categoriesTracked).toEqual(
-      [
-        CATEGORY_OPERATION,
-        CATEGORY_LIMIT,
-        CATEGORY_TAGS,
-        CATEGORY_MAX_DURATION,
-        CATEGORY_MIN_DURATION,
-        CATEGORY_LOOKBACK,
-      ].sort()
-    );
   });
 });
 
