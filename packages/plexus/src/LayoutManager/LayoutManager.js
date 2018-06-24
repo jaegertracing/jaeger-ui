@@ -15,14 +15,7 @@
 // limitations under the License.
 
 import type { EdgesUpdate, LayoutUpdate } from './types';
-import type {
-  Edge,
-  ILayoutManager,
-  Layout,
-  PendingLayoutResult,
-  Positions,
-  SizeVertex,
-} from '../types/layout';
+import type { Edge, Layout, PendingLayoutResult, Positions, SizeVertex } from '../types/layout';
 
 import Coordinator from './Coordinator';
 
@@ -33,23 +26,18 @@ type PendingResult = {
   resolveLayout?: Layout => void,
 };
 
-export default class LayoutManager implements ILayoutManager {
+export default class LayoutManager {
   layoutId: number;
-  isDisposed: boolean;
   coordinator: Coordinator;
   pendingResult: ?PendingResult;
 
   constructor() {
     this.layoutId = 0;
     this.coordinator = new Coordinator(this._handleUpdate);
-    this.isDisposed = false;
     this.pendingResult = null;
   }
 
   getLayout(edges: Edge[], vertices: SizeVertex[]): PendingLayoutResult {
-    if (this.isDisposed) {
-      throw new Error('LayoutManager has been disposed');
-    }
     this._cancelPending();
     this.layoutId++;
     const id = this.layoutId;
@@ -68,19 +56,12 @@ export default class LayoutManager implements ILayoutManager {
     return { layout, positions };
   }
 
-  dispose() {
-    if (this.isDisposed) {
-      return;
-    }
+  stopAndRelease() {
     this._cancelPending();
-    this.coordinator.dispose();
-    this.isDisposed = true;
+    this.coordinator.stopAndRelease();
   }
 
   _cancelPending() {
-    if (this.isDisposed) {
-      return;
-    }
     const pending = this.pendingResult;
     if (pending) {
       if (!pending.isPositionsResolved && pending.resolvePositions) {
@@ -95,9 +76,6 @@ export default class LayoutManager implements ILayoutManager {
   }
 
   _handleUpdate = (data: LayoutUpdate) => {
-    if (this.isDisposed) {
-      return;
-    }
     const { layoutId, type } = data;
     const pendingResult = this.pendingResult;
     if (!pendingResult || layoutId !== pendingResult.id) {

@@ -16,22 +16,16 @@
 
 import * as React from 'react';
 
-import type {
-  Edge,
-  ILayoutManager,
-  LayoutEdge,
-  LayoutGraph,
-  LayoutVertex,
-  SizeVertex,
-  Vertex,
-} from '../types/layout';
+import type { Edge, LayoutEdge, LayoutGraph, LayoutVertex, SizeVertex, Vertex } from '../types/layout';
+
+import LayoutManager from '../LayoutManager';
 
 export type DirectedGraphProps = {
   classNamePrefix: string,
   edges: Edge[],
   getEdgeLabel: Edge => string | React.Node,
   getNodeLabel: Vertex => string | React.Node,
-  layoutManager: ILayoutManager,
+  layoutManager: LayoutManager,
   // setOnEdgeArrow
   setOnEdgePath: ?(Edge) => {},
   setOnEdgesContainer: ?(?LayoutGraph) => {},

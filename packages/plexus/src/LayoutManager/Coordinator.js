@@ -48,17 +48,7 @@ type CurrentLayout = {
 type LayoutWorker = Worker & { id: number };
 
 function cleanInput(srcEdges: Edge[], srcVertices: SizeVertex[]) {
-  // edges: Edge[], vertices: SizeVertex[]
   const edges = srcEdges.map(({ from, to, isBidirectional }) => ({ from, to, isBidirectional }));
-  // const edges = srcEdges.map(edge => {
-  //   //({ from, to, bidirectional })
-  //   const { from, to } = edge;
-  //   const rv = { from, to };
-  //   if (edge.bidirectional != null) {
-  //     rv.bidirectional = edge.bidirectional;
-  //   }
-  //   return rv;
-  // });
   const vertices = srcVertices.map(({ vertex: { key }, ...rest }) => ({ vertex: { key }, ...rest }));
   return { edges, vertices };
 }
@@ -89,7 +79,6 @@ function findAndRemoveWorker(lists: LayoutWorker[][], worker: LayoutWorker) {
 export default class Coordinator {
   currentLayout: ?CurrentLayout;
   nextWorkerId: number;
-  isDisposed: boolean;
   idleWorkers: LayoutWorker[];
   busyWorkers: LayoutWorker[];
   callback: LayoutUpdate => void;
@@ -98,16 +87,11 @@ export default class Coordinator {
     this.callback = callback;
     this.currentLayout = null;
     this.nextWorkerId = 1;
-    this.isDisposed = false;
     this.idleWorkers = [this._initWorker()];
     this.busyWorkers = [];
   }
 
   getLayout(id: number, edges: Edge[], vertices: SizeVertex[]) {
-    if (this.isDisposed) {
-      console.error('Coordinator is diposed');
-      return;
-    }
     this.busyWorkers.forEach(killWorker);
     this.busyWorkers.length = 0;
     this.currentLayout = {
@@ -120,13 +104,12 @@ export default class Coordinator {
     this._getPositions();
   }
 
-  dispose() {
+  stopAndRelease() {
     this.idleWorkers.forEach(killWorker);
     this.idleWorkers.length = 0;
     this.busyWorkers.forEach(killWorker);
     this.busyWorkers.length = 0;
     this.currentLayout = null;
-    this.isDisposed = true;
   }
 
   _initWorker() {

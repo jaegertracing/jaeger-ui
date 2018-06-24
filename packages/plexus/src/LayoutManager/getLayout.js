@@ -32,7 +32,6 @@ function isCloseEnough(a: number, b: number) {
 
 function getVerticesValidity(input: (SizeVertex | LayoutVertex)[], output: LayoutVertex[]) {
   const inputHash: { [string]: SizeVertex | LayoutVertex } = {};
-  console.log(input);
   input.forEach(v => {
     inputHash[String(v.vertex.key)] = v;
   });
@@ -76,7 +75,6 @@ export default function getLayout(
   inVertices: (SizeVertex | LayoutVertex)[]
 ) {
   const dot = toDot(inEdges, inVertices);
-  console.log(dot);
   const options = { engine: phase === 'positions' ? 'dot' : 'neato', format: 'plain' };
   const plainOut = viz(dot, options);
   const { edges, graph, vertices } = convPlain(plainOut, phase === 'edges');

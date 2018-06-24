@@ -74,8 +74,3 @@ export type PendingLayoutResult = {
   positions: Promise<Positions>,
   layout: Promise<Layout>,
 };
-
-export interface ILayoutManager {
-  getLayout(edges: Edge[], vertices: SizeVertex[]): PendingLayoutResult;
-  dispose(): void;
-}
