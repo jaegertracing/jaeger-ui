@@ -1,39 +1,28 @@
 <!--
-If you are reporting a new issue, please make sure that we do not have any
-duplicates already open. You can ensure this by searching the issue list for
-this repository. If there is a duplicate, please close your issue and add a
-comment to the existing issue instead.
+Welcome to the Jaeger project! 👋🎉
 
-If you suspect your issue is a bug, please edit your issue description to
-include the BUG REPORT INFORMATION shown below. If you fail to provide this
-information within 7 days, we cannot debug your issue and will close it. We
-will, however, reopen it if you later provide the information.
-
----------------------------------------------------
-BUG REPORT INFORMATION
----------------------------------------------------
-Use the commands below to provide key information from your environment:
-You do NOT have to include this information if this is a FEATURE REQUEST
+- Please search for existing issues to avoid creating duplicate bugs/feature requests.
+- Please be respectful and considerate of others when commenting on issues.
+- Please provide as much information as possible so we all understand the issue.
+- If you only have a question, you may get a faster response by asking in
+    - our chat room https://gitter.im/jaegertracing/Lobby, or
+    - the forum https://groups.google.com/d/forum/jaeger-tracing
+    (but please don't double post)
 -->
 
-**Description**
+## Requirement - what kind of business use case are you trying to solve?
 
-<!--
-Briefly describe the problem you are having in a few paragraphs.
--->
+<!-- required section -->
 
-**Steps to reproduce the issue:**
-1.
-2.
-3.
+## Problem - what in Jaeger blocks you from solving the requirement?
 
-**Describe the results you received:**
+<!-- required section -->
+<!-- If possible, describe the impact of the problem. -->
 
+## Proposal - what do you suggest to solve the problem or improve the existing situation?
 
-**Describe the results you expected:**
+<!-- It's ok if you don't have one. -->
 
+## Any open questions to address
 
-**Additional information you deem important (e.g. issue happens only occasionally):**
-
-
-**Additional environment details (Browser, etc.):**
+<!-- Questions that should be answered before proceeding with implementation. -->
