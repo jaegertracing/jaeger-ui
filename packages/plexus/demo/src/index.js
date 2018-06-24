@@ -16,13 +16,16 @@ import * as React from 'react';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { render } from 'react-dom';
 
-// import large from './data-large.ignore';
+import largeDg, { getNodeLabel as getLargeNodeLabel } from './data-large';
+import { edges as dagEdges, vertices as dagVertices } from './data-dag';
 import { varied, colored, getColorNodeLabel, setOnColorEdge, setOnColorNode } from './data-small';
 import { DirectedGraph, LayoutManager } from '../../src';
 
 import './index.css';
 
 const addAnAttr = () => ({ 'data-rando': Math.random() });
+
+const addNodeDemoCss = () => ({ className: 'Node' });
 
 class Demo extends React.Component {
   state = {
@@ -33,6 +36,8 @@ class Demo extends React.Component {
   constructor(props) {
     super(props);
     this.layoutManager = new LayoutManager();
+    this.dagLayoutManager = new LayoutManager();
+    this.largeLayoutManager = new LayoutManager();
   }
 
   handleClick = () => {
@@ -52,6 +57,7 @@ class Demo extends React.Component {
             plexus Demo
           </a>
         </h1>
+        <h1>Small graph with data driven rendering</h1>
         <DirectedGraph
           layoutManager={this.layoutManager}
           getNodeLabel={colorData ? getColorNodeLabel : null}
@@ -61,6 +67,20 @@ class Demo extends React.Component {
           setOnNodesContainer={addAnAttr}
           setOnRoot={addAnAttr}
           {...data}
+        />
+        <h1>Medium DAG</h1>
+        <DirectedGraph
+          layoutManager={this.dagLayoutManager}
+          setOnNode={addNodeDemoCss}
+          edges={dagEdges}
+          vertices={dagVertices}
+        />
+        <h1>Larger directd graph with cycles</h1>
+        <DirectedGraph
+          layoutManager={this.largeLayoutManager}
+          getNodeLabel={getLargeNodeLabel}
+          setOnNode={addNodeDemoCss}
+          {...largeDg}
         />
       </div>
     );
