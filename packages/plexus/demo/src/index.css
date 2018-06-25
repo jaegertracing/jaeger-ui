@@ -1,0 +1,10 @@
+html {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.Node {
+  background: #eee;
+  border: 1px solid #ddd;
+  line-height: 1.4;
+  padding: 0.3em 0.5em;
+}
