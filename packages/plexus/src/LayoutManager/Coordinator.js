@@ -86,7 +86,7 @@ export default class Coordinator {
   constructor(callback: LayoutUpdate => void) {
     this.callback = callback;
     this.currentLayout = null;
-    this.nextWorkerId = 1;
+    this.nextWorkerId = 0;
     this.idleWorkers = [this._initWorker()];
     this.busyWorkers = [];
   }
