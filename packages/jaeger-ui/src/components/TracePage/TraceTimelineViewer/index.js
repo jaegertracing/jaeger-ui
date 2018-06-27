@@ -22,13 +22,17 @@ import TimelineHeaderRow from './TimelineHeaderRow';
 import VirtualizedTraceView from './VirtualizedTraceView';
 import type { Accessors } from '../ScrollManager';
 import type { ViewRange, ViewRangeTimeUpdate } from '../types';
-import type { Trace } from '../../../types';
+import type { Span, Trace } from '../../../types';
 
 import './index.css';
 
 type TraceTimelineViewerProps = {
   registerAccessors: Accessors => void,
   setSpanNameColumnWidth: number => void,
+  collapseAll: (Span[]) => void,
+  collapseOne: (Span[]) => void,
+  expandAll: () => void,
+  expandOne: (Span[]) => void,
   spanNameColumnWidth: number,
   textFilter: ?string,
   trace: Trace,
@@ -47,14 +51,19 @@ const NUM_TICKS = 5;
  */
 function TraceTimelineViewer(props: TraceTimelineViewerProps) {
   const { setSpanNameColumnWidth, updateNextViewRangeTime, updateViewRangeTime, viewRange, ...rest } = props;
-  const { spanNameColumnWidth, trace } = rest;
+  const { spanNameColumnWidth, trace, expandAll, collapseAll, expandOne, collapseOne } = rest;
   return (
     <div className="TraceTimelineViewer">
       <TimelineHeaderRow
         duration={trace.duration}
         nameColumnWidth={spanNameColumnWidth}
         numTicks={NUM_TICKS}
+        onCollapseAll={collapseAll}
+        onCollapseOne={collapseOne}
         onColummWidthChange={setSpanNameColumnWidth}
+        onExpandAll={expandAll}
+        onExpandOne={expandOne}
+        spans={trace.spans}
         viewRangeTime={viewRange.time}
         updateNextViewRangeTime={updateNextViewRangeTime}
         updateViewRangeTime={updateViewRangeTime}
@@ -74,7 +83,23 @@ function mapDispatchToProps(dispatch) {
     const action = actions.setSpanNameColumnWidth(...args);
     return dispatch(action);
   };
-  return { setSpanNameColumnWidth };
+  const expandAll = () => {
+    const action = actions.expandAll();
+    return dispatch(action);
+  };
+  const expandOne = spans => {
+    const action = actions.expandOne(spans);
+    return dispatch(action);
+  };
+  const collapseAll = spans => {
+    const action = actions.collapseAll(spans);
+    return dispatch(action);
+  };
+  const collapseOne = spans => {
+    const action = actions.collapseOne(spans);
+    return dispatch(action);
+  };
+  return { setSpanNameColumnWidth, expandAll, expandOne, collapseAll, collapseOne };
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(TraceTimelineViewer);

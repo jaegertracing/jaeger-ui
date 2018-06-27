@@ -14,21 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-.TimelineHeaderRow {
-  background: #ececec;
-  border-bottom: 1px solid #d8d8d8;
-  height: 38px;
-  line-height: 38px;
-  overflow: hidden;
-  position: fixed;
-  width: 100%;
-  z-index: 2;
+.TimelineCollapser {
+  float: right;
+  margin: 0 0.8rem 0 0;
+  display: inline-block;
 }
 
-.TimelineHeaderRow--title {
-  display: inline-block;
-  overflow: hidden;
-  margin: 0 0 0 0.5rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.TimelineCollapser > * {
+  margin-right: 0.3rem;
+  transform: rotate(90deg);
 }
