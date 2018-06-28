@@ -26,10 +26,12 @@ import { Field, reduxForm, formValueSelector } from 'redux-form';
 import store from 'store';
 
 import * as markers from './SearchForm.markers';
+import { trackFormInput } from './SearchForm.track';
 import VirtSelect from '../common/VirtSelect';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import { formatDate, formatTime } from '../../utils/date';
 import reduxFormFieldAdapter from '../../utils/redux-form-field-adapter';
+import { DEFAULT_OPERATION, DEFAULT_LIMIT, DEFAULT_LOOKBACK } from '../../constants/search-form';
 
 import './SearchForm.css';
 
@@ -134,9 +136,11 @@ export function submitForm(fields, searchTraces) {
     end = times.end;
   }
 
+  trackFormInput(resultsLimit, operation, tags, minDuration, maxDuration, lookback);
+
   searchTraces({
     service,
-    operation: operation !== 'all' ? operation : undefined,
+    operation: operation !== DEFAULT_OPERATION ? operation : undefined,
     limit: resultsLimit,
     lookback,
     start,
@@ -459,13 +463,13 @@ export function mapStateToProps(state) {
     destroyOnUnmount: false,
     initialValues: {
       service: service || lastSearchService || '-',
-      resultsLimit: limit || 20,
-      lookback: lookback || '1h',
+      resultsLimit: limit || DEFAULT_LIMIT,
+      lookback: lookback || DEFAULT_LOOKBACK,
       startDate: queryStartDate || today,
       startDateTime: queryStartDateTime || '00:00',
       endDate: queryEndDate || today,
       endDateTime: queryEndDateTime || currentTime,
-      operation: operation || lastSearchOperation || 'all',
+      operation: operation || lastSearchOperation || DEFAULT_OPERATION,
       tags,
       minDuration: minDuration || null,
       maxDuration: maxDuration || null,
