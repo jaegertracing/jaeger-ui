@@ -14,7 +14,6 @@
 
 import React, { Component } from 'react';
 import { Col, Row } from 'antd';
-import _values from 'lodash/values';
 import PropTypes from 'prop-types';
 import queryString from 'query-string';
 import { connect } from 'react-redux';
@@ -22,6 +21,7 @@ import { bindActionCreators } from 'redux';
 import store from 'store';
 
 import * as jaegerApiActions from '../../actions/jaeger-api';
+import { actions as traceDiffActions } from '../TraceDiff/duck';
 import SearchForm from './SearchForm';
 import SearchResults, { sortFormSelector } from './SearchResults';
 import ErrorMessage from '../common/ErrorMessage';
@@ -52,11 +52,14 @@ export default class SearchTracePage extends Component {
 
   render() {
     const {
+      addComparison,
       errors,
       isHomepage,
       loadingServices,
       loadingTraces,
       maxTraceDuration,
+      removeComparison,
+      selectedForComparison,
       services,
       traceResults,
     } = this.props;
@@ -90,9 +93,12 @@ export default class SearchTracePage extends Component {
             {!showErrors &&
               !showLogo && (
                 <SearchResults
+                  addComparison={addComparison}
                   goToTrace={this.goToTrace}
                   loading={loadingTraces}
                   maxTraceDuration={maxTraceDuration}
+                  removeComparison={removeComparison}
+                  selectedForComparison={selectedForComparison}
                   traces={traceResults}
                 />
               )}
@@ -107,6 +113,9 @@ SearchTracePage.propTypes = {
   isHomepage: PropTypes.bool,
   // eslint-disable-next-line react/forbid-prop-types
   traceResults: PropTypes.array,
+  selectedForComparison: PropTypes.array,
+  addComparison: PropTypes.func,
+  removeComparison: PropTypes.func,
   maxTraceDuration: PropTypes.number,
   loadingServices: PropTypes.bool,
   loadingTraces: PropTypes.bool,
@@ -134,9 +143,16 @@ SearchTracePage.propTypes = {
 };
 
 const stateTraceXformer = getLastXformCacher(stateTrace => {
-  const { traces: traceMap, loading: loadingTraces, error: traceError } = stateTrace;
-  const { traces, maxDuration } = getTraceSummaries(_values(traceMap));
+  const { traces: traceMap, loading: loadingTraces, error: traceError, searchResults } = stateTrace;
+  const { traces, maxDuration } = getTraceSummaries(searchResults.map(traceID => traceMap[traceID]));
   return { traces, maxDuration, traceError, loadingTraces };
+});
+
+const stateTraceDiffXformer = getLastXformCacher((stateTrace, stateTraceDiff) => {
+  const { traces: traceMap } = stateTrace;
+  const { selectedForComparison: ids } = stateTraceDiff;
+  const { traces: selectedForComparison } = getTraceSummaries(ids.map(traceID => traceMap[traceID]));
+  return { selectedForComparison };
 });
 
 const sortedTracesXformer = getLastXformCacher((traces, sortBy) => {
@@ -166,6 +182,7 @@ export function mapStateToProps(state) {
   const query = queryString.parse(state.router.location.search);
   const isHomepage = !Object.keys(query).length;
   const { traces, maxDuration, traceError, loadingTraces } = stateTraceXformer(state.trace);
+  const { selectedForComparison } = stateTraceDiffXformer(state.trace, state.traceDiff);
   const { loadingServices, services, serviceError } = stateServicesXformer(state.services);
   const errors = [];
   if (traceError) {
@@ -178,10 +195,11 @@ export function mapStateToProps(state) {
   const traceResults = sortedTracesXformer(traces, sortBy);
   return {
     isHomepage,
+    loadingServices,
+    loadingTraces,
+    selectedForComparison,
     services,
     traceResults,
-    loadingTraces,
-    loadingServices,
     errors: errors.length ? errors : null,
     maxTraceDuration: maxDuration,
     sortTracesBy: sortBy,
@@ -194,9 +212,12 @@ function mapDispatchToProps(dispatch) {
     jaegerApiActions,
     dispatch
   );
+  const { addComparison, removeComparison } = bindActionCreators(traceDiffActions, dispatch);
   return {
+    addComparison,
     fetchServiceOperations,
     fetchServices,
+    removeComparison,
     searchTraces,
   };
 }

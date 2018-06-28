@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import React from 'react';
+import * as React from 'react';
 import { Form, Input, Button, Popover, Select } from 'antd';
 import logfmtParser from 'logfmt/lib/logfmt_parser';
 import { stringify as logfmtStringify } from 'logfmt/lib/stringify';
@@ -147,120 +147,86 @@ export function submitForm(fields, searchTraces) {
   });
 }
 
-export function SearchFormImpl(props) {
-  const { handleSubmit, selectedLookback, selectedService = '-', services, submitting: disabled } = props;
-  const selectedServicePayload = services.find(s => s.name === selectedService);
-  const opsForSvc = (selectedServicePayload && selectedServicePayload.operations) || [];
-  const noSelectedService = selectedService === '-' || !selectedService;
-  const tz = selectedLookback === 'custom' ? new Date().toTimeString().replace(/^.*?GMT/, 'UTC') : null;
-  return (
-    <Form layout="vertical" onSubmit={handleSubmit}>
-      <FormItem
-        label={
-          <span>
-            Service <span className="SearchForm--labelCount">({services.length})</span>
-          </span>
-        }
-      >
-        <Field
-          name="service"
-          component={AdaptedVirtualSelect}
-          placeholder="Select A Service"
-          props={{
-            disabled,
-            clearable: false,
-            options: services.map(v => ({ label: v.name, value: v.name })),
-            required: true,
-          }}
-        />
-      </FormItem>
-      <FormItem
-        label={
-          <span>
-            Operation <span className="SearchForm--labelCount">({opsForSvc ? opsForSvc.length : 0})</span>
-          </span>
-        }
-      >
-        <Field
-          name="operation"
-          component={AdaptedVirtualSelect}
-          placeholder="Select An Operation"
-          props={{
-            clearable: false,
-            disabled: disabled || noSelectedService,
-            options: ['all'].concat(opsForSvc).map(v => ({ label: v, value: v })),
-            required: true,
-          }}
-        />
-      </FormItem>
-
-      <FormItem
-        label={
-          <div>
-            Tags{' '}
-            <Popover
-              placement="topLeft"
-              trigger="click"
-              title={[
-                <h3 key="title" className="SearchForm--tagsHintTitle">
-                  Values should be in the{' '}
-                  <a href="https://brandur.org/logfmt" rel="noopener noreferrer" target="_blank">
-                    logfmt
-                  </a>{' '}
-                  format.
-                </h3>,
-                <ul key="info" className="SearchForm--tagsHintInfo">
-                  <li>Use space for conjunctions</li>
-                  <li>Values containing whitespace should be enclosed in quotes</li>
-                </ul>,
-              ]}
-              content={
-                <div>
-                  <code className="SearchForm--tagsHintEg">
-                    error=true db.statement=&quot;select * from User&quot;
-                  </code>
-                </div>
-              }
-            >
-              <IoHelp className="SearchForm--hintTrigger" />
-            </Popover>
-          </div>
-        }
-      >
-        <Field
-          name="tags"
-          component={AdaptedInput}
-          placeholder="http.status_code=200 error=true"
-          props={{ disabled }}
-        />
-      </FormItem>
-
-      <FormItem label="Lookback">
-        <Field name="lookback" component={AdaptedSelect} props={{ disabled, defaultValue: '1h' }}>
-          <Option value="1h">Last Hour</Option>
-          <Option value="2h">Last 2 Hours</Option>
-          <Option value="3h">Last 3 Hours</Option>
-          <Option value="6h">Last 6 Hours</Option>
-          <Option value="12h">Last 12 Hours</Option>
-          <Option value="24h">Last 24 Hours</Option>
-          <Option value="2d">Last 2 Days</Option>
-          <Option value="custom">Custom Time Range</Option>
-        </Field>
-      </FormItem>
-
-      {selectedLookback === 'custom' && [
+export class SearchFormImpl extends React.PureComponent {
+  render() {
+    const {
+      handleSubmit,
+      selectedLookback,
+      selectedService = '-',
+      services,
+      submitting: disabled,
+    } = this.props;
+    const selectedServicePayload = services.find(s => s.name === selectedService);
+    const opsForSvc = (selectedServicePayload && selectedServicePayload.operations) || [];
+    const noSelectedService = selectedService === '-' || !selectedService;
+    const tz = selectedLookback === 'custom' ? new Date().toTimeString().replace(/^.*?GMT/, 'UTC') : null;
+    return (
+      <Form layout="vertical" onSubmit={handleSubmit}>
         <FormItem
-          key="start"
+          label={
+            <span>
+              Service <span className="SearchForm--labelCount">({services.length})</span>
+            </span>
+          }
+        >
+          <Field
+            name="service"
+            component={AdaptedVirtualSelect}
+            placeholder="Select A Service"
+            props={{
+              disabled,
+              clearable: false,
+              options: services.map(v => ({ label: v.name, value: v.name })),
+              required: true,
+            }}
+          />
+        </FormItem>
+        <FormItem
+          label={
+            <span>
+              Operation <span className="SearchForm--labelCount">({opsForSvc ? opsForSvc.length : 0})</span>
+            </span>
+          }
+        >
+          <Field
+            name="operation"
+            component={AdaptedVirtualSelect}
+            placeholder="Select An Operation"
+            props={{
+              clearable: false,
+              disabled: disabled || noSelectedService,
+              options: ['all'].concat(opsForSvc).map(v => ({ label: v, value: v })),
+              required: true,
+            }}
+          />
+        </FormItem>
+
+        <FormItem
           label={
             <div>
-              Start Time{' '}
+              Tags{' '}
               <Popover
                 placement="topLeft"
                 trigger="click"
-                content={
+                title={[
                   <h3 key="title" className="SearchForm--tagsHintTitle">
-                    Times are expressed in {tz}
-                  </h3>
+                    Values should be in the{' '}
+                    <a href="https://brandur.org/logfmt" rel="noopener noreferrer" target="_blank">
+                      logfmt
+                    </a>{' '}
+                    format.
+                  </h3>,
+                  <ul key="info" className="SearchForm--tagsHintInfo">
+                    <li>Use space for conjunctions</li>
+                    <li>Values containing whitespace should be enclosed in quotes</li>
+                  </ul>,
+                ]}
+                content={
+                  <div>
+                    <code className="SearchForm--tagsHintEg">
+                      error=true db.statement=&quot;select * from User&quot;
+                    </code>
+                  </div>
                 }
               >
                 <IoHelp className="SearchForm--hintTrigger" />
@@ -269,73 +235,115 @@ export function SearchFormImpl(props) {
           }
         >
           <Field
-            name="startDate"
-            type="date"
+            name="tags"
             component={AdaptedInput}
-            placeholder="Start Date"
+            placeholder="http.status_code=200 error=true"
             props={{ disabled }}
           />
-          <Field name="startDateTime" type="time" component={AdaptedInput} props={{ disabled }} />
-        </FormItem>,
+        </FormItem>
 
-        <FormItem
-          key="end"
-          label={
-            <div>
-              End Time{' '}
-              <Popover
-                placement="topLeft"
-                trigger="click"
-                content={
-                  <h3 key="title" className="SearchForm--tagsHintTitle">
-                    Times are expressed in {tz}
-                  </h3>
-                }
-              >
-                <IoHelp className="SearchForm--hintTrigger" />
-              </Popover>
-            </div>
-          }
-        >
+        <FormItem label="Lookback">
+          <Field name="lookback" component={AdaptedSelect} props={{ disabled, defaultValue: '1h' }}>
+            <Option value="1h">Last Hour</Option>
+            <Option value="2h">Last 2 Hours</Option>
+            <Option value="3h">Last 3 Hours</Option>
+            <Option value="6h">Last 6 Hours</Option>
+            <Option value="12h">Last 12 Hours</Option>
+            <Option value="24h">Last 24 Hours</Option>
+            <Option value="2d">Last 2 Days</Option>
+            <Option value="custom">Custom Time Range</Option>
+          </Field>
+        </FormItem>
+
+        {selectedLookback === 'custom' && [
+          <FormItem
+            key="start"
+            label={
+              <div>
+                Start Time{' '}
+                <Popover
+                  placement="topLeft"
+                  trigger="click"
+                  content={
+                    <h3 key="title" className="SearchForm--tagsHintTitle">
+                      Times are expressed in {tz}
+                    </h3>
+                  }
+                >
+                  <IoHelp className="SearchForm--hintTrigger" />
+                </Popover>
+              </div>
+            }
+          >
+            <Field
+              name="startDate"
+              type="date"
+              component={AdaptedInput}
+              placeholder="Start Date"
+              props={{ disabled }}
+            />
+            <Field name="startDateTime" type="time" component={AdaptedInput} props={{ disabled }} />
+          </FormItem>,
+
+          <FormItem
+            key="end"
+            label={
+              <div>
+                End Time{' '}
+                <Popover
+                  placement="topLeft"
+                  trigger="click"
+                  content={
+                    <h3 key="title" className="SearchForm--tagsHintTitle">
+                      Times are expressed in {tz}
+                    </h3>
+                  }
+                >
+                  <IoHelp className="SearchForm--hintTrigger" />
+                </Popover>
+              </div>
+            }
+          >
+            <Field
+              name="endDate"
+              type="date"
+              component={AdaptedInput}
+              placeholder="End Date"
+              props={{ disabled }}
+            />
+            <Field name="endDateTime" type="time" component={AdaptedInput} props={{ disabled }} />
+          </FormItem>,
+        ]}
+
+        <FormItem label="Min Duration">
           <Field
-            name="endDate"
-            type="date"
+            name="minDuration"
             component={AdaptedInput}
-            placeholder="End Date"
+            placeholder="e.g. 1.2s, 100ms, 500us"
             props={{ disabled }}
           />
-          <Field name="endDateTime" type="time" component={AdaptedInput} props={{ disabled }} />
-        </FormItem>,
-      ]}
+        </FormItem>
 
-      <FormItem label="Min Duration">
-        <Field
-          name="minDuration"
-          component={AdaptedInput}
-          placeholder="e.g. 1.2s, 100ms, 500us"
-          props={{ disabled }}
-        />
-      </FormItem>
+        <FormItem label="Max Duration">
+          <Field name="maxDuration" component={AdaptedInput} placeholder="e.g. 1.1s" props={{ disabled }} />
+        </FormItem>
 
-      <FormItem label="Max Duration">
-        <Field name="maxDuration" component={AdaptedInput} placeholder="e.g. 1.1s" props={{ disabled }} />
-      </FormItem>
+        <FormItem label="Limit Results">
+          <Field
+            name="resultsLimit"
+            type="number"
+            component={AdaptedInput}
+            placeholder="Limit Results"
+            props={{ disabled, min: 1, max: 1500 }}
+          />
+        </FormItem>
 
-      <FormItem label="Limit Results">
-        <Field
-          name="resultsLimit"
-          type="number"
-          component={AdaptedInput}
-          placeholder="Limit Results"
-          props={{ disabled, min: 1, max: 1500 }}
-        />
-      </FormItem>
-
-      <Button htmlType="submit" disabled={disabled || noSelectedService} data-test={markers.SUBMIT_BTN}>
-        Find Traces
-      </Button>
-    </Form>
-  );
+        <Button htmlType="submit" disabled={disabled || noSelectedService} data-test={markers.SUBMIT_BTN}>
+          Find Traces
+        </Button>
+      </Form>
+    );
+  }
 }
 
 SearchFormImpl.propTypes = {

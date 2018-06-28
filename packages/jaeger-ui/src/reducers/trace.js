@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import keyBy from 'lodash/keyBy';
 import { handleActions } from 'redux-actions';
 
 import { fetchTrace, searchTraces } from '../actions/jaeger-api';
@@ -22,9 +21,10 @@ const initialState = {
   traces: {},
   loading: false,
   error: null,
+  searchResults: [],
 };
 
-function fetchStarted(state) {
+function fetchTraceStarted(state) {
   return { ...state, loading: true };
 }
 
@@ -44,24 +44,37 @@ function fetchTraceErred(state, { meta, payload }) {
   return { ...state, traces, loading: false };
 }
 
+function fetchSearchStarted(state) {
+  return { ...state, loading: true, searchResults: [] };
+}
+
 function searchDone(state, { payload }) {
   const processed = payload.data.map(transformTraceData);
-  const traces = keyBy(processed, 'traceID');
-  return { ...state, traces, error: null, loading: false };
+  const resultTraces = {};
+  const searchResults = [];
+  for (let i = 0; i < processed.length; i++) {
+    const trace = processed[i];
+    const traceID = trace.traceID;
+    resultTraces[traceID] = trace;
+    searchResults.push(traceID);
+  }
+  const traces = { ...state.traces, ...resultTraces };
+  return { ...state, searchResults, traces, error: null, loading: false };
 }
 
 function searchErred(state, action) {
   const error = action.payload;
-  return { ...state, error, loading: false, traces: [] };
+  const searchResults = [];
+  return { ...state, error, searchResults, loading: false };
 }
 
 export default handleActions(
   {
-    [`${fetchTrace}_PENDING`]: fetchStarted,
+    [`${fetchTrace}_PENDING`]: fetchTraceStarted,
     [`${fetchTrace}_FULFILLED`]: fetchTraceDone,
     [`${fetchTrace}_REJECTED`]: fetchTraceErred,
 
-    [`${searchTraces}_PENDING`]: fetchStarted,
+    [`${searchTraces}_PENDING`]: fetchSearchStarted,
     [`${searchTraces}_FULFILLED`]: searchDone,
     [`${searchTraces}_REJECTED`]: searchErred,
   },

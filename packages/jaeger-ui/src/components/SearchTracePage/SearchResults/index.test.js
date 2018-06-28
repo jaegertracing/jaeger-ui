@@ -33,6 +33,7 @@ describe('<SearchResults>', () => {
       goToTrace: () => {},
       loading: false,
       maxTraceDuration: 1,
+      selectedForComparison: [],
     };
     wrapper = shallow(<SearchResults {...props} />);
   });

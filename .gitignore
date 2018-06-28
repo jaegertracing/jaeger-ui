@@ -15,3 +15,4 @@ coverage
 npm-debug.log
 .vscode
 yarn-error.log
+lerna-debug.log

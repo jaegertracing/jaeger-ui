@@ -17,8 +17,8 @@
 import * as React from 'react';
 import { Select } from 'antd';
 import { Field, reduxForm, formValueSelector } from 'redux-form';
-import { Link } from 'react-router-dom';
 
+import DiffSelection from './DiffSelection';
 import * as markers from './index.markers';
 import ResultItem from './ResultItem';
 import ScatterPlot from './ScatterPlot';
@@ -28,13 +28,18 @@ import { getPercentageOfDuration } from '../../../utils/date';
 import prefixUrl from '../../../utils/prefix-url';
 import reduxFormFieldAdapter from '../../../utils/redux-form-field-adapter';
 
+import type { TraceSummary } from '../../../types/search';
+
 import './index.css';
 
 type SearchResultsProps = {
+  addComparison: string => void,
   goToTrace: string => void,
   loading: boolean,
   maxTraceDuration: number,
-  traces: {}[],
+  removeComparison: string => void,
+  selectedForComparison: TraceSummary[],
+  traces: TraceSummary[],
 };
 
 const Option = Select.Option;
@@ -69,18 +74,40 @@ export const sortFormSelector = formValueSelector('traceResultsSort');
 export default class SearchResults extends React.PureComponent<SearchResultsProps> {
   props: SearchResultsProps;
 
+  toggleComparison = (traceID: string, remove: boolean) => {
+    const { addComparison, removeComparison } = this.props;
+    if (remove) {
+      removeComparison(traceID);
+    } else {
+      addComparison(traceID);
+    }
+  };
+
   render() {
-    const { goToTrace, loading, maxTraceDuration, traces } = this.props;
+    const { loading, selectedForComparison, traces } = this.props;
+    const diffSelection = (
+      <DiffSelection toggleComparison={this.toggleComparison} traces={selectedForComparison} />
+    );
     if (loading) {
-      return <LoadingIndicator className="u-mt-vast" centered />;
+      return (
+        <React.Fragment>
+          {selectedForComparison.length > 0 && diffSelection}
+          <LoadingIndicator className="u-mt-vast" centered />;
+        </React.Fragment>
+      );
     }
     if (!Array.isArray(traces) || !traces.length) {
       return (
-        <div className="u-simple-card" data-test={markers.NO_RESULTS}>
-          No trace results. Try another query.
-        </div>
+        <React.Fragment>
+          {selectedForComparison.length > 0 && diffSelection}
+          <div className="u-simple-card" data-test={markers.NO_RESULTS}>
+            No trace results. Try another query.
+          </div>
+        </React.Fragment>
       );
     }
+    const { goToTrace, maxTraceDuration } = this.props;
+    const comparingSet = new Set(selectedForComparison.map(tr => tr.traceID));
     return (
       <div>
         <div>
@@ -108,15 +135,17 @@ export default class SearchResults extends React.PureComponent<SearchResultsProp
           </div>
         </div>
         <div>
+          {diffSelection}
           <ul className="ub-list-reset">
             {traces.map(trace => (
               <li className="ub-my3" key={trace.traceID}>
-                <Link to={prefixUrl(`/trace/${trace.traceID}`)} className="SearchResults--resultLink">
-                  <ResultItem
-                    trace={trace}
-                    durationPercent={getPercentageOfDuration(trace.duration, maxTraceDuration)}
-                  />
-                </Link>
+                <ResultItem
+                  durationPercent={getPercentageOfDuration(trace.duration, maxTraceDuration)}
+                  isSelectedForComparison={comparingSet.has(trace.traceID)}
+                  linkTo={prefixUrl(`/trace/${trace.traceID}`)}
+                  toggleComparison={this.toggleComparison}
+                  trace={trace}
+                />
               </li>
             ))}
           </ul>
