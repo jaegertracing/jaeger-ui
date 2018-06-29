@@ -16,7 +16,7 @@
 
 import React from 'react';
 
-import { Tooltip } from 'antd';
+import { Tooltip, Icon } from 'antd';
 
 import './TimelineCollapser.css';
 import type { Span } from '../../../../types';
@@ -37,16 +37,16 @@ export default function TimelineCollapser(props: CollapserProps) {
   return (
     <span className="TimelineCollapser">
       <Tooltip title="Expand +1">
-        <span className="anticon anticon-right" onClick={_onExpandOne} role={'button'} />
+        <Icon type="right" onClick={_onExpandOne} />
       </Tooltip>
       <Tooltip title="Collapse +1">
-        <span className="anticon anticon-left" onClick={_onCollapseOne} role={'button'} />
+        <Icon type="left" onClick={_onCollapseOne} />
       </Tooltip>
       <Tooltip title="Expand All">
-        <span className="anticon anticon-double-right" onClick={onExpandAll} role={'button'} />
+        <Icon type="double-right" onClick={onExpandAll} />
       </Tooltip>
       <Tooltip title="Collapse All">
-        <span className="anticon anticon-double-left" onClick={_onCollapseAll} role={'button'} />
+        <Icon type="double-left" onClick={_onCollapseAll} />
       </Tooltip>
     </span>
   );
