@@ -84,9 +84,6 @@ class TraceTimelineViewer extends React.PureComponent<TraceTimelineViewerProps> 
     } = this.props;
     const { spanNameColumnWidth, trace } = rest;
 
-    console.log(updateNextViewRangeTime);
-    console.log(this.collapseAll);
-
     return (
       <div className="TraceTimelineViewer">
         <TimelineHeaderRow
