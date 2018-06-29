@@ -16,6 +16,7 @@
 
 import React from 'react';
 import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
 
 import { actions } from './duck';
 import TimelineHeaderRow from './TimelineHeaderRow';
@@ -49,28 +50,63 @@ const NUM_TICKS = 5;
  * re-render the ListView every time the cursor is moved on the trace minimap
  * or `TimelineHeaderRow`.
  */
-function TraceTimelineViewer(props: TraceTimelineViewerProps) {
-  const { setSpanNameColumnWidth, updateNextViewRangeTime, updateViewRangeTime, viewRange, ...rest } = props;
-  const { spanNameColumnWidth, trace, expandAll, collapseAll, expandOne, collapseOne } = rest;
-  return (
-    <div className="TraceTimelineViewer">
-      <TimelineHeaderRow
-        duration={trace.duration}
-        nameColumnWidth={spanNameColumnWidth}
-        numTicks={NUM_TICKS}
-        onCollapseAll={collapseAll}
-        onCollapseOne={collapseOne}
-        onColummWidthChange={setSpanNameColumnWidth}
-        onExpandAll={expandAll}
-        onExpandOne={expandOne}
-        spans={trace.spans}
-        viewRangeTime={viewRange.time}
-        updateNextViewRangeTime={updateNextViewRangeTime}
-        updateViewRangeTime={updateViewRangeTime}
-      />
-      <VirtualizedTraceView {...rest} currentViewRangeTime={viewRange.time.current} />
-    </div>
-  );
+class TraceTimelineViewer extends React.PureComponent<TraceTimelineViewerProps> {
+  props: TraceTimelineViewerProps;
+
+  constructor(props: TraceTimelineViewerProps) {
+    super(props);
+    this.props = props;
+  }
+
+  collapseAll = () => {
+    this.props.collapseAll(this.props.trace.spans);
+  };
+
+  collapseOne = () => {
+    this.props.collapseOne(this.props.trace.spans);
+  };
+
+  expandAll = () => {
+    this.props.expandAll();
+  };
+
+  expandOne = () => {
+    this.props.expandOne(this.props.trace.spans);
+  };
+
+  render() {
+    const {
+      setSpanNameColumnWidth,
+      updateNextViewRangeTime,
+      updateViewRangeTime,
+      viewRange,
+      ...rest
+    } = this.props;
+    const { spanNameColumnWidth, trace } = rest;
+
+    console.log(updateNextViewRangeTime);
+    console.log(this.collapseAll);
+
+    return (
+      <div className="TraceTimelineViewer">
+        <TimelineHeaderRow
+          duration={trace.duration}
+          nameColumnWidth={spanNameColumnWidth}
+          numTicks={NUM_TICKS}
+          onCollapseAll={this.collapseAll}
+          onCollapseOne={this.collapseOne}
+          onColummWidthChange={setSpanNameColumnWidth}
+          onExpandAll={this.expandAll}
+          onExpandOne={this.expandOne}
+          spans={trace.spans}
+          viewRangeTime={viewRange.time}
+          updateNextViewRangeTime={updateNextViewRangeTime}
+          updateViewRangeTime={updateViewRangeTime}
+        />
+        <VirtualizedTraceView {...rest} currentViewRangeTime={viewRange.time.current} />
+      </div>
+    );
+  }
 }
 
 function mapStateToProps(state, ownProps) {
@@ -79,26 +115,10 @@ function mapStateToProps(state, ownProps) {
 }
 
 function mapDispatchToProps(dispatch) {
-  const setSpanNameColumnWidth = (...args) => {
-    const action = actions.setSpanNameColumnWidth(...args);
-    return dispatch(action);
-  };
-  const expandAll = () => {
-    const action = actions.expandAll();
-    return dispatch(action);
-  };
-  const expandOne = spans => {
-    const action = actions.expandOne(spans);
-    return dispatch(action);
-  };
-  const collapseAll = spans => {
-    const action = actions.collapseAll(spans);
-    return dispatch(action);
-  };
-  const collapseOne = spans => {
-    const action = actions.collapseOne(spans);
-    return dispatch(action);
-  };
+  const { setSpanNameColumnWidth, expandAll, expandOne, collapseAll, collapseOne } = bindActionCreators(
+    actions,
+    dispatch
+  );
   return { setSpanNameColumnWidth, expandAll, expandOne, collapseAll, collapseOne };
 }
 

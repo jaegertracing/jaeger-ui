@@ -19,34 +19,29 @@ import React from 'react';
 import { Tooltip, Icon } from 'antd';
 
 import './TimelineCollapser.css';
-import type { Span } from '../../../../types';
 
 type CollapserProps = {
-  onCollapseAll: (Span[]) => void,
-  onCollapseOne: (Span[]) => void,
-  onExpandOne: (Span[]) => void,
+  onCollapseAll: () => void,
+  onCollapseOne: () => void,
+  onExpandOne: () => void,
   onExpandAll: () => void,
-  spans: Span[],
 };
 
 export default function TimelineCollapser(props: CollapserProps) {
-  const { onExpandAll, onExpandOne, onCollapseAll, onCollapseOne, spans } = props;
-  const _onCollapseAll = () => onCollapseAll(spans);
-  const _onExpandOne = () => onExpandOne(spans);
-  const _onCollapseOne = () => onCollapseOne(spans);
+  const { onExpandAll, onExpandOne, onCollapseAll, onCollapseOne } = props;
   return (
     <span className="TimelineCollapser">
       <Tooltip title="Expand +1">
-        <Icon type="right" onClick={_onExpandOne} />
+        <Icon type="right" onClick={onExpandOne} />
       </Tooltip>
       <Tooltip title="Collapse +1">
-        <Icon type="left" onClick={_onCollapseOne} />
+        <Icon type="left" onClick={onCollapseOne} />
       </Tooltip>
       <Tooltip title="Expand All">
         <Icon type="double-right" onClick={onExpandAll} />
       </Tooltip>
       <Tooltip title="Collapse All">
-        <Icon type="double-left" onClick={_onCollapseAll} />
+        <Icon type="double-left" onClick={onCollapseAll} />
       </Tooltip>
     </span>
   );
