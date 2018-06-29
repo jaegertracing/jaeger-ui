@@ -22,5 +22,8 @@ limitations under the License.
 
 .TimelineCollapserBtn {
   margin-right: 0.3rem;
+}
+
+.ExpandBtn {
   transform: rotate(90deg);
 }
