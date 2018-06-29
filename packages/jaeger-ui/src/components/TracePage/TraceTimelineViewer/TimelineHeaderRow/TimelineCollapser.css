@@ -20,7 +20,7 @@ limitations under the License.
   display: inline-block;
 }
 
-.TimelineCollapser > * {
+.TimelineCollapserBtn {
   margin-right: 0.3rem;
   transform: rotate(90deg);
 }
