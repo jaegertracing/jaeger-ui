@@ -42,6 +42,7 @@ export default function renderIntoCanvas(
     itemHeight = 1 / (MIN_TOTAL_HEIGHT / items.length);
   }
   const ctx = canvas.getContext('2d');
+  const fillCache: Map<string,?string> = new Map();
   for (let i = 0; i < items.length; i++) {
     const { valueWidth, valueOffset, serviceName } = items[i];
     // eslint-disable-next-line no-bitwise
@@ -51,9 +52,16 @@ export default function renderIntoCanvas(
     if (width < MIN_WIDTH) {
       width = MIN_WIDTH;
     }
-    ctx.fillStyle = `rgba(${getFillColor(serviceName)
-      .concat(ALPHA)
-      .join()})`;
+    let fillStyle = fillCache.get(serviceName);
+    if (fillStyle) {
+      ctx.fillStyle = fillStyle;
+    } else {
+      fillStyle = `rgba(${getFillColor(serviceName)
+        .concat(ALPHA)
+        .join()})`;
+      fillCache.set(serviceName, fillStyle);
+      ctx.fillStyle = fillStyle;
+    }
     ctx.fillRect(x, i * itemYChange, width, itemHeight);
   }
 }
