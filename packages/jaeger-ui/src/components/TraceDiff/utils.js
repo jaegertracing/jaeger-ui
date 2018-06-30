@@ -18,10 +18,17 @@ import queryString from 'query-string';
 
 import prefixUrl from '../../utils/prefix-url';
 
+export function getValidState(state: { a?: ?string, b?: ?string, cohort: string[] }) {
+  const { a: stA, b: stB, cohort: stCohort } = state;
+  const cohortSet = new Set([].concat(stA, stB, stCohort || []).filter(Boolean));
+  const cohort: string[] = Array.from(cohortSet);
+  const a = cohort[0];
+  const b = cohort[1];
+  return { a, b, cohort };
+}
+
 export function getDiffUrl(state: { a?: ?string, b?: ?string, cohort: string[] }) {
-  const { cohort } = state;
-  const a = state.a || cohort[0];
-  const b = state.b || cohort[1];
+  const { a, b, cohort } = getValidState(state);
   const search = queryString.stringify({ b, cohort });
   return prefixUrl(`/trace/${a}:diff?${search}`);
 }

@@ -37,6 +37,7 @@ export const actionTypes = generateActionTypes('@jaeger-ui/trace-diff', [
   'COHORT_REMOVE_TRACE',
   'DIFF_SET_A',
   'DIFF_SET_B',
+  'FORCE_STATE',
 ]);
 
 const fullActions = createActions({
@@ -44,6 +45,7 @@ const fullActions = createActions({
   [actionTypes.COHORT_REMOVE_TRACE]: traceID => ({ traceID }),
   [actionTypes.DIFF_SET_A]: traceID => ({ traceID }),
   [actionTypes.DIFF_SET_B]: traceID => ({ traceID }),
+  [actionTypes.FORCE_STATE]: newState => ({ newState }),
 });
 
 export const actions = fullActions.jaegerUi.traceDiff;
@@ -79,12 +81,17 @@ function diffSetB(state, { payload }) {
   return { ...state, b };
 }
 
+function forceState(state, { payload }) {
+  return payload.newState;
+}
+
 export default handleActions(
   {
     [actionTypes.COHORT_ADD_TRACE]: cohortAddTrace,
     [actionTypes.COHORT_REMOVE_TRACE]: cohortRemoveTrace,
     [actionTypes.DIFF_SET_A]: diffSetA,
     [actionTypes.DIFF_SET_B]: diffSetB,
+    [actionTypes.FORCE_STATE]: forceState,
   },
   newInitialState()
 );

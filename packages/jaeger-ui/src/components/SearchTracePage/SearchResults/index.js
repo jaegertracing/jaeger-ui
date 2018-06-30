@@ -28,17 +28,18 @@ import { getPercentageOfDuration } from '../../../utils/date';
 import prefixUrl from '../../../utils/prefix-url';
 import reduxFormFieldAdapter from '../../../utils/redux-form-field-adapter';
 
-import type { TraceSummary } from '../../../types/search';
+import type { FetchedTrace } from '../../../types';
 
 import './index.css';
 
 type SearchResultsProps = {
   cohortAddTrace: string => void,
   cohortRemoveTrace: string => void,
-  diffCohort: TraceSummary[],
+  diffCohort: FetchedTrace[],
   goToTrace: string => void,
   loading: boolean,
   maxTraceDuration: number,
+  skipMessage?: boolean,
   traces: TraceSummary[],
 };
 
@@ -84,7 +85,7 @@ export default class SearchResults extends React.PureComponent<SearchResultsProp
   };
 
   render() {
-    const { loading, diffCohort, traces } = this.props;
+    const { loading, diffCohort, skipMessage, traces } = this.props;
     const diffSelection = <DiffSelection toggleComparison={this.toggleComparison} traces={diffCohort} />;
     if (loading) {
       return (
@@ -95,6 +96,12 @@ export default class SearchResults extends React.PureComponent<SearchResultsProp
       );
     }
     if (!Array.isArray(traces) || !traces.length) {
+      if (skipMessage && !diffCohort.length) {
+        return null;
+      }
+      if (skipMessage && diffCohort.length) {
+        return diffSelection;
+      }
       return (
         <React.Fragment>
           {diffCohort.length > 0 && diffSelection}
@@ -105,7 +112,7 @@ export default class SearchResults extends React.PureComponent<SearchResultsProp
       );
     }
     const { goToTrace, maxTraceDuration } = this.props;
-    const comparingSet = new Set(diffCohort.map(tr => tr.traceID));
+    const cohortIds = new Set(diffCohort.map(datum => datum.id));
     return (
       <div>
         <div>
@@ -113,10 +120,10 @@ export default class SearchResults extends React.PureComponent<SearchResultsProp
             <div className="ub-p3">
               <ScatterPlot
                 data={traces.map(t => ({
-                  x: t.timestamp,
+                  x: t.startTime,
                   y: t.duration,
                   traceID: t.traceID,
-                  size: t.numberOfSpans,
+                  size: t.spans.length,
                   name: t.traceName,
                 }))}
                 onValueClick={t => {
@@ -139,7 +146,7 @@ export default class SearchResults extends React.PureComponent<SearchResultsProp
               <li className="ub-my3" key={trace.traceID}>
                 <ResultItem
                   durationPercent={getPercentageOfDuration(trace.duration, maxTraceDuration)}
-                  isSelectedForComparison={comparingSet.has(trace.traceID)}
+                  isInDiffCohort={cohortIds.has(trace.traceID)}
                   linkTo={prefixUrl(`/trace/${trace.traceID}`)}
                   toggleComparison={this.toggleComparison}
                   trace={trace}

@@ -35,8 +35,12 @@ limitations under the License.
     0 -0.5px rgba(0, 128, 128, 0.6);
 }
 
-.LoadingIndicator--centered {
+.LoadingIndicator.is-centered {
   display: block;
   margin-left: auto;
   margin-right: auto;
+}
+
+.LoadingIndicator.is-small {
+  font-size: 0.7em;
 }

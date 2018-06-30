@@ -26,33 +26,37 @@ import ResultItemTitle from './ResultItemTitle';
 import colorGenerator from '../../../utils/color-generator';
 import { formatRelativeDate } from '../../../utils/date';
 
-import type { TraceSummary } from '../../../types/search';
+import type { Trace } from '../../../types/trace';
 
 import './ResultItem.css';
 
 type Props = {
   durationPercent: number,
-  isSelectedForComparison: boolean,
+  isInDiffCohort: boolean,
   linkTo: string,
   toggleComparison: string => void,
-  trace: TraceSummary,
+  trace: Trace,
 };
+
+const isErrorTag = ({ key, value }) => key === 'error' && (value === true || value === 'true');
 
 export default class ResultItem extends React.PureComponent<Props> {
   props: Props;
 
   render() {
-    const { durationPercent, isSelectedForComparison, linkTo, toggleComparison, trace } = this.props;
-    const { duration, services, timestamp, numberOfErredSpans, numberOfSpans, traceName, traceID } = trace;
-    const mDate = moment(timestamp);
+    const { durationPercent, isInDiffCohort, linkTo, toggleComparison, trace } = this.props;
+    const { duration, services, startTime, spans, traceName, traceID } = trace;
+    const mDate = moment(startTime / 1000);
     const timeStr = mDate.format('h:mm:ss a');
     const fromNow = mDate.fromNow();
+    const numSpans = spans.length;
+    const numErredSpans = spans.filter(sp => sp.tags.some(isErrorTag)).length;
     return (
       <div className="ResultItem">
         <ResultItemTitle
           duration={duration}
           durationPercent={durationPercent}
-          isSelectedForComparison={isSelectedForComparison}
+          isInDiffCohort={isInDiffCohort}
           linkTo={linkTo}
           toggleComparison={toggleComparison}
           traceID={traceID}
@@ -62,11 +66,11 @@ export default class ResultItem extends React.PureComponent<Props> {
           <Row>
             <Col span={4} className="ub-p2">
               <Tag className="ub-m1" data-test={markers.NUM_SPANS}>
-                {numberOfSpans} Span{numberOfSpans > 1 && 's'}
+                {numSpans} Span{numSpans > 1 && 's'}
               </Tag>
-              {Boolean(numberOfErredSpans) && (
+              {Boolean(numErredSpans) && (
                 <Tag className="ub-m1" color="red">
-                  {numberOfErredSpans} Error{numberOfErredSpans > 1 && 's'}
+                  {numErredSpans} Error{numErredSpans > 1 && 's'}
                 </Tag>
               )}
             </Col>
@@ -88,7 +92,7 @@ export default class ResultItem extends React.PureComponent<Props> {
               </ul>
             </Col>
             <Col span={4} className="ub-p3 ub-tx-right-align">
-              {formatRelativeDate(timestamp)}
+              {formatRelativeDate(startTime / 1000)}
               <Divider type="vertical" />
               {timeStr.slice(0, -3)}&nbsp;{timeStr.slice(-2)}
               <br />

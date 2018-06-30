@@ -27,7 +27,7 @@ import SearchResults, { sortFormSelector } from './SearchResults';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
 import { fetchedState } from '../../constants';
-import { sortTraces, getTraceSummaries } from '../../model/search';
+import { sortTraces } from '../../model/search';
 import getLastXformCacher from '../../utils/get-last-xform-cacher';
 import prefixUrl from '../../utils/prefix-url';
 
@@ -36,9 +36,20 @@ import JaegerLogo from '../../img/jaeger-logo.svg';
 
 export default class SearchTracePage extends Component {
   componentDidMount() {
-    const { searchTraces, urlQueryParams, fetchServices, fetchServiceOperations } = this.props;
+    const {
+      diffCohort,
+      fetchMultipleTraces,
+      searchTraces,
+      urlQueryParams,
+      fetchServices,
+      fetchServiceOperations,
+    } = this.props;
     if (urlQueryParams.service || urlQueryParams.traceID) {
       searchTraces(urlQueryParams);
+    }
+    const needForDiffs = diffCohort.filter(ft => ft.state == null).map(ft => ft.id);
+    if (needForDiffs.length) {
+      fetchMultipleTraces(needForDiffs);
     }
     fetchServices();
     const { service } = store.get('lastSearch') || {};
@@ -83,6 +94,18 @@ export default class SearchTracePage extends Component {
                 {errors.map(err => <ErrorMessage key={err.message} error={err} />)}
               </div>
             )}
+            {!showErrors && (
+              <SearchResults
+                cohortAddTrace={cohortAddTrace}
+                goToTrace={this.goToTrace}
+                loading={loadingTraces}
+                maxTraceDuration={maxTraceDuration}
+                cohortRemoveTrace={cohortRemoveTrace}
+                diffCohort={diffCohort}
+                skipMessage={isHomepage}
+                traces={traceResults}
+              />
+            )}
             {showLogo && (
               <img
                 className="SearchTracePage--logo js-test-logo"
@@ -91,18 +114,6 @@ export default class SearchTracePage extends Component {
                 width="400"
               />
             )}
-            {!showErrors &&
-              !showLogo && (
-                <SearchResults
-                  cohortAddTrace={cohortAddTrace}
-                  goToTrace={this.goToTrace}
-                  loading={loadingTraces}
-                  maxTraceDuration={maxTraceDuration}
-                  cohortRemoveTrace={cohortRemoveTrace}
-                  diffCohort={diffCohort}
-                  traces={traceResults}
-                />
-              )}
           </Col>
         </Row>
       </div>
@@ -134,6 +145,7 @@ SearchTracePage.propTypes = {
   history: PropTypes.shape({
     push: PropTypes.func,
   }),
+  fetchMultipleTraces: PropTypes.func,
   fetchServiceOperations: PropTypes.func,
   fetchServices: PropTypes.func,
   errors: PropTypes.arrayOf(
@@ -147,14 +159,15 @@ const stateTraceXformer = getLastXformCacher(stateTrace => {
   const { traces: traceMap, search } = stateTrace;
   const { results, state, error: traceError } = search;
   const loadingTraces = state === fetchedState.LOADING;
-  const { traces, maxDuration } = getTraceSummaries(results.map(id => traceMap[id].data));
+  const traces = results.map(id => traceMap[id].data);
+  const maxDuration = Math.max.apply(null, traces.map(tr => tr.duration));
   return { traces, maxDuration, traceError, loadingTraces };
 });
 
 const stateTraceDiffXformer = getLastXformCacher((stateTrace, stateTraceDiff) => {
-  const { traces: traceMap } = stateTrace;
+  const { traces } = stateTrace;
   const { cohort } = stateTraceDiff;
-  return getTraceSummaries(cohort.map(id => traceMap[id].data)).traces;
+  return cohort.map(id => traces[id] || { id });
 });
 
 const sortedTracesXformer = getLastXformCacher((traces, sortBy) => {
@@ -210,7 +223,7 @@ export function mapStateToProps(state) {
 }
 
 function mapDispatchToProps(dispatch) {
-  const { searchTraces, fetchServices, fetchServiceOperations } = bindActionCreators(
+  const { fetchMultipleTraces, fetchServiceOperations, fetchServices, searchTraces } = bindActionCreators(
     jaegerApiActions,
     dispatch
   );
@@ -218,6 +231,7 @@ function mapDispatchToProps(dispatch) {
   return {
     cohortAddTrace,
     cohortRemoveTrace,
+    fetchMultipleTraces,
     fetchServiceOperations,
     fetchServices,
     searchTraces,

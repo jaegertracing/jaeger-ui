@@ -42,7 +42,7 @@ export default function renderIntoCanvas(
     itemHeight = 1 / (MIN_TOTAL_HEIGHT / items.length);
   }
   const ctx = canvas.getContext('2d');
-  const fillCache: Map<string,?string> = new Map();
+  const fillCache: Map<string, ?string> = new Map();
   for (let i = 0; i < items.length; i++) {
     const { valueWidth, valueOffset, serviceName } = items[i];
     // eslint-disable-next-line no-bitwise

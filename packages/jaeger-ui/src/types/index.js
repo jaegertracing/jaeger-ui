@@ -21,12 +21,13 @@ import type { Trace } from './trace';
 import type { TraceDiffState } from './trace-diff';
 import type { TraceTimeline } from './trace-timeline';
 
-export type FetchState = 'FETCH_DONE' | 'FETCH_ERROR' | 'FETCH_LOADING';
+export type FetchedState = 'FETCH_DONE' | 'FETCH_ERROR' | 'FETCH_LOADING';
 
 export type FetchedTrace = {
   data?: Trace,
   error?: ApiError,
-  state: FetchState,
+  id: string,
+  state?: FetchedState,
 };
 
 export type ReduxState = {
@@ -49,7 +50,7 @@ export type ReduxState = {
     search: {
       error?: ApiError,
       results: string[],
-      state?: FetchState,
+      state?: FetchedState,
     },
   },
   traceDiff: TraceDiffState,

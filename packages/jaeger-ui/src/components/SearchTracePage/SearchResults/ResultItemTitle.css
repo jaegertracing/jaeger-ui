@@ -35,6 +35,15 @@ limitations under the License.
   border-color: #ccc;
 }
 
+.ResultItemTitle--title {
+  margin: 0;
+  position: relative;
+}
+
+.ResultItemTitle--title.is-error {
+  color: #c00;
+}
+
 .ResultItemTitle--idExcerpt {
   color: #888;
   font-weight: normal;

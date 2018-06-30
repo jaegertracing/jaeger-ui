@@ -76,6 +76,8 @@ export default function transfromTraceData(data: TraceData & { spans: SpanWithPr
   // siblings are sorted by start time
   const tree = getTraceSpanIdsAsTree(data);
   const spans: Span[] = [];
+  const svcCounts: { [string]: number } = {};
+  let traceName = '';
 
   tree.walk((spanID, node, depth) => {
     if (spanID === '__root__') {
@@ -84,6 +86,11 @@ export default function transfromTraceData(data: TraceData & { spans: SpanWithPr
     const span: ?SpanWithProcess = spanMap.get(spanID);
     if (!span) {
       return;
+    }
+    const { serviceName } = span.process;
+    svcCounts[serviceName] = (svcCounts[serviceName] || 0) + 1;
+    if (!span.references || !span.references.length) {
+      traceName = `${serviceName}: ${span.operationName}`;
     }
     spans.push({
       relativeStartTime: span.startTime - traceStartTime,
@@ -102,9 +109,12 @@ export default function transfromTraceData(data: TraceData & { spans: SpanWithPr
       traceID: span.traceID,
     });
   });
+  const services = Object.keys(svcCounts).map(name => ({ name, numberOfSpans: svcCounts[name] }));
   return {
+    services,
     spans,
     traceID,
+    traceName,
     // can't use spread operator for intersection types
     // repl: https://goo.gl/4Z23MJ
     // issue: https://github.com/facebook/flow/issues/1511

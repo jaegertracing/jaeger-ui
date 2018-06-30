@@ -19,14 +19,14 @@ import transformTraceData from '../model/transform-trace-data';
 import traceReducer from '../reducers/trace';
 
 const trace = traceGenerator.trace({ numberOfSpans: 1 });
-const { traceID } = trace;
+const { traceID: id } = trace;
 
 it('trace reducer should set loading true on a fetch', () => {
   const state = traceReducer(undefined, {
     type: `${jaegerApiActions.fetchTrace}_PENDING`,
-    meta: { id: traceID },
+    meta: { id },
   });
-  const outcome = { [traceID]: { state: fetchedState.LOADING } };
+  const outcome = { [id]: { id, state: fetchedState.LOADING } };
   expect(state.traces).toEqual(outcome);
 });
 
@@ -34,9 +34,9 @@ it('trace reducer should handle a successful FETCH_TRACE', () => {
   const state = traceReducer(undefined, {
     type: `${jaegerApiActions.fetchTrace}_FULFILLED`,
     payload: { data: [trace] },
-    meta: { id: traceID },
+    meta: { id },
   });
-  expect(state.traces).toEqual({ [traceID]: { data: transformTraceData(trace), state: fetchedState.DONE } });
+  expect(state.traces).toEqual({ [id]: { id, data: transformTraceData(trace), state: fetchedState.DONE } });
 });
 
 it('trace reducer should handle a failed FETCH_TRACE', () => {
@@ -44,10 +44,10 @@ it('trace reducer should handle a failed FETCH_TRACE', () => {
   const state = traceReducer(undefined, {
     type: `${jaegerApiActions.fetchTrace}_REJECTED`,
     payload: error,
-    meta: { id: traceID },
+    meta: { id },
   });
-  expect(state.traces).toEqual({ [traceID]: { error, state: fetchedState.ERROR } });
-  expect(state.traces[traceID].error).toBe(error);
+  expect(state.traces).toEqual({ [id]: { error, id, state: fetchedState.ERROR } });
+  expect(state.traces[id].error).toBe(error);
 });
 
 it('trace reducer should handle a successful SEARCH_TRACES', () => {
@@ -58,14 +58,15 @@ it('trace reducer should handle a successful SEARCH_TRACES', () => {
   });
   const outcome = {
     traces: {
-      [traceID]: {
+      [id]: {
+        id,
         data: transformTraceData(trace),
         state: fetchedState.DONE,
       },
     },
     search: {
       state: fetchedState.DONE,
-      results: [traceID],
+      results: [id],
     },
   };
   expect(state).toEqual(outcome);

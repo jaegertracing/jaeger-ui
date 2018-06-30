@@ -14,7 +14,7 @@
 
 import { handleActions } from 'redux-actions';
 
-import { fetchTrace, searchTraces } from '../actions/jaeger-api';
+import { fetchTrace, fetchMultipleTraces, searchTraces } from '../actions/jaeger-api';
 import { fetchedState } from '../constants';
 import transformTraceData from '../model/transform-trace-data';
 
@@ -27,7 +27,7 @@ const initialState = {
 
 function fetchTraceStarted(state, { meta }) {
   const { id } = meta;
-  const traces = { ...state.traces, [id]: { state: fetchedState.LOADING } };
+  const traces = { ...state.traces, [id]: { id, state: fetchedState.LOADING } };
   return { ...state, traces };
 }
 
@@ -36,9 +36,9 @@ function fetchTraceDone(state, { meta, payload }) {
   const data = transformTraceData(payload.data[0]);
   let trace;
   if (!data) {
-    trace = { state: fetchedState.ERROR, error: new Error('Invalid trace data recieved.') };
+    trace = { id, state: fetchedState.ERROR, error: new Error('Invalid trace data recieved.') };
   } else {
-    trace = { data, state: fetchedState.DONE };
+    trace = { data, id, state: fetchedState.DONE };
   }
   const traces = { ...state.traces, [id]: trace };
   return { ...state, traces };
@@ -46,8 +46,43 @@ function fetchTraceDone(state, { meta, payload }) {
 
 function fetchTraceErred(state, { meta, payload }) {
   const { id } = meta;
-  const trace = { error: payload, state: fetchedState.ERROR };
+  const trace = { id, error: payload, state: fetchedState.ERROR };
   const traces = { ...state.traces, [id]: trace };
+  return { ...state, traces };
+}
+
+function fetchMultipleTracesStarted(state, { meta }) {
+  const { ids } = meta;
+  const traces = { ...state.traces };
+  ids.forEach(id => {
+    traces[id] = { id, state: fetchedState.LOADING };
+  });
+  return { ...state, traces };
+}
+
+function fetchMultipleTracesDone(state, { payload }) {
+  const traces = { ...state.traces };
+  payload.data.forEach(raw => {
+    const data = transformTraceData(raw);
+    traces[data.traceID] = { data, id: data.traceID, state: fetchedState.DONE };
+  });
+  if (payload.errors) {
+    payload.errors.forEach(err => {
+      const { msg, traceID } = err;
+      const error = new Error(`Error: ${msg} - ${traceID}`);
+      traces[traceID] = { error, id: traceID, state: fetchedState.ERROR };
+    });
+  }
+  return { ...state, traces };
+}
+
+function fetchMultipleTracesErred(state, { meta, payload }) {
+  const { ids } = meta;
+  const traces = { ...state.traces };
+  const error = payload;
+  ids.forEach(id => {
+    traces[id] = { error, id, state: fetchedState.ERROR };
+  });
   return { ...state, traces };
 }
 
@@ -66,7 +101,7 @@ function searchDone(state, { payload }) {
   for (let i = 0; i < processed.length; i++) {
     const data = processed[i];
     const id = data.traceID;
-    resultTraces[id] = { data, state: fetchedState.DONE };
+    resultTraces[id] = { data, id, state: fetchedState.DONE };
     results.push(id);
   }
   const traces = { ...state.traces, ...resultTraces };
@@ -84,6 +119,10 @@ export default handleActions(
     [`${fetchTrace}_PENDING`]: fetchTraceStarted,
     [`${fetchTrace}_FULFILLED`]: fetchTraceDone,
     [`${fetchTrace}_REJECTED`]: fetchTraceErred,
+
+    [`${fetchMultipleTraces}_PENDING`]: fetchMultipleTracesStarted,
+    [`${fetchMultipleTraces}_FULFILLED`]: fetchMultipleTracesDone,
+    [`${fetchMultipleTraces}_REJECTED`]: fetchMultipleTracesErred,
 
     [`${searchTraces}_PENDING`]: fetchSearchStarted,
     [`${searchTraces}_FULFILLED`]: searchDone,

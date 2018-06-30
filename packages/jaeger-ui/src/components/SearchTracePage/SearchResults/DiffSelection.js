@@ -20,14 +20,15 @@ import { Link } from 'react-router-dom';
 
 import ResultItemTitle from './ResultItemTitle';
 import { getDiffUrl } from '../../TraceDiff/utils';
+import { fetchedState } from '../../../constants';
 
-import type { TraceSummary } from '../../../types/search';
+import type { FetchedTrace } from '../../../types';
 
 import './DiffSelection.css';
 
 type Props = {
   toggleComparison: (string, boolean) => void,
-  traces: TraceSummary[],
+  traces: FetchedTrace[],
 };
 
 const CTA_MESSAGE = <h2 className="ub-m0">Compare traces by selecting result items</h2>;
@@ -37,13 +38,10 @@ export default class DiffSelection extends React.PureComponent<Props> {
 
   render() {
     const { toggleComparison, traces } = this.props;
-    let compareHref = null;
-    if (traces.length > 1) {
-      const cohort = traces.map(tr => tr.traceID);
-      compareHref = getDiffUrl({ cohort });
-    }
+    const cohort = traces.filter(ft => ft.state !== fetchedState.ERROR).map(ft => ft.id);
+    const compareHref = cohort.length > 1 ? getDiffUrl({ cohort }) : null;
     const compareBtn = (
-      <Button className="ub-right" disabled={traces.length < 2} type="primary">
+      <Button className="ub-right" disabled={cohort.length < 2} type="primary">
         Compare Traces
       </Button>
     );
@@ -51,23 +49,28 @@ export default class DiffSelection extends React.PureComponent<Props> {
       <div className={`DiffSelection ${traces.length ? 'is-non-empty' : ''} ub-mb3`}>
         {traces.length > 0 && (
           <div className="DiffSelection--selectedItems">
-            {traces.map(trace => (
-              <ResultItemTitle
-                key={trace.traceID}
-                duration={trace.duration}
-                isSelectedForComparison
-                toggleComparison={toggleComparison}
-                traceID={trace.traceID}
-                traceName={trace.traceName}
-              />
-            ))}
+            {traces.map(fetchedTrace => {
+              const { data = {}, error, id, state } = fetchedTrace;
+              return (
+                <ResultItemTitle
+                  key={id}
+                  duration={data.duration}
+                  error={error}
+                  isInDiffCohort
+                  state={state}
+                  toggleComparison={toggleComparison}
+                  traceID={id}
+                  traceName={data.traceName}
+                />
+              );
+            })}
           </div>
         )}
         <div className="DiffSelection--message">
           {traces.length > 0 ? (
             <React.Fragment>
               {compareHref ? <Link to={compareHref}>{compareBtn}</Link> : compareBtn}
-              <h2 className="ub-m0">{traces.length} Selected for comparison</h2>
+              <h2 className="ub-m0">{cohort.length} Selected for comparison</h2>
             </React.Fragment>
           ) : (
             CTA_MESSAGE

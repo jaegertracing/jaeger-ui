@@ -111,7 +111,7 @@ describe('mapStateToProps()', () => {
         state: fetchedState.DONE,
       },
       traces: {
-        [trace.traceID]: { data: trace, state: fetchedState.DONE },
+        [trace.traceID]: { id: trace.traceID, data: trace, state: fetchedState.DONE },
       },
     };
     const stateServices = {
@@ -134,9 +134,10 @@ describe('mapStateToProps()', () => {
     );
     expect(traceResults.length).toBe(stateTrace.search.results.length);
     expect(traceResults[0].traceID).toBe(trace.traceID);
-    expect(maxTraceDuration).toBe(trace.duration / 1000);
+    expect(maxTraceDuration).toBe(trace.duration);
     expect(diffCohort.length).toBe(state.traceDiff.cohort.length);
-    expect(diffCohort[0].traceID).toBe(trace.traceID);
+    expect(diffCohort[0].id).toBe(trace.traceID);
+    expect(diffCohort[0].data.traceID).toBe(trace.traceID);
 
     expect(rest).toEqual({
       isHomepage: true,
