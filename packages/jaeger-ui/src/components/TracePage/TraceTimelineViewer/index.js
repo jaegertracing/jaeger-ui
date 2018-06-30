@@ -22,7 +22,7 @@ import TimelineHeaderRow from './TimelineHeaderRow';
 import VirtualizedTraceView from './VirtualizedTraceView';
 import type { Accessors } from '../ScrollManager';
 import type { ViewRange, ViewRangeTimeUpdate } from '../types';
-import type { Trace } from '../../../types';
+import type { Trace } from '../../../types/trace';
 
 import './index.css';
 

@@ -17,7 +17,8 @@
 import _isEqual from 'lodash/isEqual';
 
 import { getTraceSpanIdsAsTree } from '../selectors/trace';
-import type { Process, Span, SpanData, Trace, TraceData } from '../types';
+
+import type { Process, Span, SpanData, Trace, TraceData } from '../types/trace';
 
 type SpanWithProcess = SpanData & { process: Process };
 

@@ -33,12 +33,12 @@ import type { TraceSummary } from '../../../types/search';
 import './index.css';
 
 type SearchResultsProps = {
-  addComparison: string => void,
+  cohortAddTrace: string => void,
+  cohortRemoveTrace: string => void,
+  diffCohort: TraceSummary[],
   goToTrace: string => void,
   loading: boolean,
   maxTraceDuration: number,
-  removeComparison: string => void,
-  selectedForComparison: TraceSummary[],
   traces: TraceSummary[],
 };
 
@@ -75,23 +75,21 @@ export default class SearchResults extends React.PureComponent<SearchResultsProp
   props: SearchResultsProps;
 
   toggleComparison = (traceID: string, remove: boolean) => {
-    const { addComparison, removeComparison } = this.props;
+    const { cohortAddTrace, cohortRemoveTrace } = this.props;
     if (remove) {
-      removeComparison(traceID);
+      cohortRemoveTrace(traceID);
     } else {
-      addComparison(traceID);
+      cohortAddTrace(traceID);
     }
   };
 
   render() {
-    const { loading, selectedForComparison, traces } = this.props;
-    const diffSelection = (
-      <DiffSelection toggleComparison={this.toggleComparison} traces={selectedForComparison} />
-    );
+    const { loading, diffCohort, traces } = this.props;
+    const diffSelection = <DiffSelection toggleComparison={this.toggleComparison} traces={diffCohort} />;
     if (loading) {
       return (
         <React.Fragment>
-          {selectedForComparison.length > 0 && diffSelection}
+          {diffCohort.length > 0 && diffSelection}
           <LoadingIndicator className="u-mt-vast" centered />;
         </React.Fragment>
       );
@@ -99,7 +97,7 @@ export default class SearchResults extends React.PureComponent<SearchResultsProp
     if (!Array.isArray(traces) || !traces.length) {
       return (
         <React.Fragment>
-          {selectedForComparison.length > 0 && diffSelection}
+          {diffCohort.length > 0 && diffSelection}
           <div className="u-simple-card" data-test={markers.NO_RESULTS}>
             No trace results. Try another query.
           </div>
@@ -107,7 +105,7 @@ export default class SearchResults extends React.PureComponent<SearchResultsProp
       );
     }
     const { goToTrace, maxTraceDuration } = this.props;
-    const comparingSet = new Set(selectedForComparison.map(tr => tr.traceID));
+    const comparingSet = new Set(diffCohort.map(tr => tr.traceID));
     return (
       <div>
         <div>

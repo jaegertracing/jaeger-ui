@@ -32,7 +32,7 @@ import {
   spanContainsErredSpan,
 } from './utils';
 import type { Accessors } from '../ScrollManager';
-import type { Log, Span, Trace } from '../../../types';
+import type { Log, Span, Trace } from '../../../types/trace';
 import colorGenerator from '../../../utils/color-generator';
 
 import './VirtualizedTraceView.css';

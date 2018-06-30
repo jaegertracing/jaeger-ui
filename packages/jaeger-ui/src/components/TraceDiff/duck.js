@@ -19,72 +19,72 @@ import { createActions, handleActions } from 'redux-actions';
 import generateActionTypes from '../../utils/generate-action-types';
 
 // traceDiff {
-//   selectedForComparison: id[],
 //   a: id,
 //   b: id
+//   cohort: id[],
 // }
 
 export function newInitialState() {
   return {
-    selectedForComparison: [],
+    cohort: [],
     a: null,
     b: null,
   };
 }
 
 export const actionTypes = generateActionTypes('@jaeger-ui/trace-diff', [
-  'ADD_COMPARISON',
-  'REMOVE_COMPARISON',
-  'SET_A',
-  'SET_B',
+  'COHORT_ADD_TRACE',
+  'COHORT_REMOVE_TRACE',
+  'DIFF_SET_A',
+  'DIFF_SET_B',
 ]);
 
 const fullActions = createActions({
-  [actionTypes.ADD_COMPARISON]: traceID => ({ traceID }),
-  [actionTypes.REMOVE_COMPARISON]: traceID => ({ traceID }),
-  [actionTypes.SET_A]: traceID => ({ traceID }),
-  [actionTypes.SET_B]: traceID => ({ traceID }),
+  [actionTypes.COHORT_ADD_TRACE]: traceID => ({ traceID }),
+  [actionTypes.COHORT_REMOVE_TRACE]: traceID => ({ traceID }),
+  [actionTypes.DIFF_SET_A]: traceID => ({ traceID }),
+  [actionTypes.DIFF_SET_B]: traceID => ({ traceID }),
 });
 
 export const actions = fullActions.jaegerUi.traceDiff;
 
-function addComparison(state, { payload }) {
+function cohortAddTrace(state, { payload }) {
   const { traceID } = payload;
-  const selectedForComparison = state.selectedForComparison.slice();
-  if (selectedForComparison.indexOf(traceID) >= 0) {
+  const cohort = state.cohort.slice();
+  if (cohort.indexOf(traceID) >= 0) {
     return state;
   }
-  selectedForComparison.push(traceID);
-  return { ...state, selectedForComparison };
+  cohort.push(traceID);
+  return { ...state, cohort };
 }
 
-function removeComparison(state, { payload }) {
+function cohortRemoveTrace(state, { payload }) {
   const { traceID } = payload;
-  const selectedForComparison = state.selectedForComparison.slice();
-  const i = selectedForComparison.indexOf(traceID);
+  const cohort = state.cohort.slice();
+  const i = cohort.indexOf(traceID);
   if (i < 0) {
     return state;
   }
-  selectedForComparison.splice(i, 1);
-  return { ...state, selectedForComparison };
+  cohort.splice(i, 1);
+  return { ...state, cohort };
 }
 
-function setA(state, { payload }) {
+function diffSetA(state, { payload }) {
   const a = payload.traceID;
   return { ...state, a };
 }
 
-function setB(state, { payload }) {
+function diffSetB(state, { payload }) {
   const b = payload.traceID;
   return { ...state, b };
 }
 
 export default handleActions(
   {
-    [actionTypes.ADD_COMPARISON]: addComparison,
-    [actionTypes.REMOVE_COMPARISON]: removeComparison,
-    [actionTypes.SET_A]: setA,
-    [actionTypes.SET_B]: setB,
+    [actionTypes.COHORT_ADD_TRACE]: cohortAddTrace,
+    [actionTypes.COHORT_REMOVE_TRACE]: cohortRemoveTrace,
+    [actionTypes.DIFF_SET_A]: diffSetA,
+    [actionTypes.DIFF_SET_B]: diffSetB,
   },
   newInitialState()
 );

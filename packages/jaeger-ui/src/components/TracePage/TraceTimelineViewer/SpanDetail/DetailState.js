@@ -14,7 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Log } from '../../../../types';
+import type { Log } from '../../../../types/trace';
 
 /**
  * Which items of a {@link SpanDetail} component are expanded.

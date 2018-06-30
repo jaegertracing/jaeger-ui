@@ -20,7 +20,7 @@ import CanvasSpanGraph from './CanvasSpanGraph';
 import TickLabels from './TickLabels';
 import ViewingLayer from './ViewingLayer';
 import type { ViewRange, ViewRangeTimeUpdate } from '../types';
-import type { Span, Trace } from '../../../types';
+import type { Span, Trace } from '../../../types/trace';
 
 const TIMELINE_TICK_INTERVAL = 4;
 

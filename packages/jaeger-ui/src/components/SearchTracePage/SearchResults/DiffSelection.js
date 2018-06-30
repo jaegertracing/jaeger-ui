@@ -16,8 +16,10 @@
 
 import * as React from 'react';
 import { Button } from 'antd';
+import { Link } from 'react-router-dom';
 
 import ResultItemTitle from './ResultItemTitle';
+import { getDiffUrl } from '../../TraceDiff/utils';
 
 import type { TraceSummary } from '../../../types/search';
 
@@ -35,6 +37,16 @@ export default class DiffSelection extends React.PureComponent<Props> {
 
   render() {
     const { toggleComparison, traces } = this.props;
+    let compareHref = null;
+    if (traces.length > 1) {
+      const cohort = traces.map(tr => tr.traceID);
+      compareHref = getDiffUrl({ cohort });
+    }
+    const compareBtn = (
+      <Button className="ub-right" disabled={traces.length < 2} type="primary">
+        Compare Traces
+      </Button>
+    );
     return (
       <div className={`DiffSelection ${traces.length ? 'is-non-empty' : ''} ub-mb3`}>
         {traces.length > 0 && (
@@ -54,9 +66,7 @@ export default class DiffSelection extends React.PureComponent<Props> {
         <div className="DiffSelection--message">
           {traces.length > 0 ? (
             <React.Fragment>
-              <Button className="ub-right" disabled={traces.length < 2} type="primary">
-                Compare Traces
-              </Button>
+              {compareHref ? <Link to={compareHref}>{compareBtn}</Link> : compareBtn}
               <h2 className="ub-m0">{traces.length} Selected for comparison</h2>
             </React.Fragment>
           ) : (

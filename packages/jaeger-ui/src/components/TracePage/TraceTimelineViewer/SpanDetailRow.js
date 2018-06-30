@@ -20,7 +20,7 @@ import SpanDetail from './SpanDetail';
 import DetailState from './SpanDetail/DetailState';
 import SpanTreeOffset from './SpanTreeOffset';
 import TimelineRow from './TimelineRow';
-import type { Log, Span } from '../../../types';
+import type { Log, Span } from '../../../types/trace';
 
 import './SpanDetailRow.css';
 

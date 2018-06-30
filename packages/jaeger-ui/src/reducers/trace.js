@@ -15,57 +15,68 @@
 import { handleActions } from 'redux-actions';
 
 import { fetchTrace, searchTraces } from '../actions/jaeger-api';
+import { fetchedState } from '../constants';
 import transformTraceData from '../model/transform-trace-data';
 
 const initialState = {
   traces: {},
-  loading: false,
-  error: null,
-  searchResults: [],
+  search: {
+    results: [],
+  },
 };
 
-function fetchTraceStarted(state) {
-  return { ...state, loading: true };
+function fetchTraceStarted(state, { meta }) {
+  const { id } = meta;
+  const traces = { ...state.traces, [id]: { state: fetchedState.LOADING } };
+  return { ...state, traces };
 }
 
 function fetchTraceDone(state, { meta, payload }) {
-  const trace = transformTraceData(payload.data[0]);
-  let traces;
-  if (!trace) {
-    traces = { ...state.traces, [meta.id]: new Error('Invalid trace data recieved.') };
+  const { id } = meta;
+  const data = transformTraceData(payload.data[0]);
+  let trace;
+  if (!data) {
+    trace = { state: fetchedState.ERROR, error: new Error('Invalid trace data recieved.') };
   } else {
-    traces = { ...state.traces, [trace.traceID]: trace };
+    trace = { data, state: fetchedState.DONE };
   }
-  return { ...state, traces, loading: false };
+  const traces = { ...state.traces, [id]: trace };
+  return { ...state, traces };
 }
 
 function fetchTraceErred(state, { meta, payload }) {
-  const traces = { ...state.traces, [meta.id]: payload };
-  return { ...state, traces, loading: false };
+  const { id } = meta;
+  const trace = { error: payload, state: fetchedState.ERROR };
+  const traces = { ...state.traces, [id]: trace };
+  return { ...state, traces };
 }
 
 function fetchSearchStarted(state) {
-  return { ...state, loading: true, searchResults: [] };
+  const search = {
+    results: [],
+    state: fetchedState.LOADING,
+  };
+  return { ...state, search };
 }
 
 function searchDone(state, { payload }) {
   const processed = payload.data.map(transformTraceData);
   const resultTraces = {};
-  const searchResults = [];
+  const results = [];
   for (let i = 0; i < processed.length; i++) {
-    const trace = processed[i];
-    const traceID = trace.traceID;
-    resultTraces[traceID] = trace;
-    searchResults.push(traceID);
+    const data = processed[i];
+    const id = data.traceID;
+    resultTraces[id] = { data, state: fetchedState.DONE };
+    results.push(id);
   }
   const traces = { ...state.traces, ...resultTraces };
-  return { ...state, searchResults, traces, error: null, loading: false };
+  const search = { results, state: fetchedState.DONE };
+  return { ...state, search, traces };
 }
 
-function searchErred(state, action) {
-  const error = action.payload;
-  const searchResults = [];
-  return { ...state, error, searchResults, loading: false };
+function searchErred(state, { payload }) {
+  const search = { error: payload, results: [], state: fetchedState.ERROR };
+  return { ...state, search };
 }
 
 export default handleActions(

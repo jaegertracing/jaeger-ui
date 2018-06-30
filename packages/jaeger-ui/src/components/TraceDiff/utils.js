@@ -1,3 +1,5 @@
+// @flow
+
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,15 +14,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export const FALLBACK_DAG_MAX_NUM_SERVICES = 100;
-export const FALLBACK_TRACE_NAME = '<trace-without-root-span>';
+import queryString from 'query-string';
 
-export const FETCH_DONE = 'FETCH_DONE';
-export const FETCH_ERROR = 'FETCH_ERROR';
-export const FETCH_LOADING = 'FETCH_LOADING';
+import prefixUrl from '../../utils/prefix-url';
 
-export const fetchedState = {
-  DONE: FETCH_DONE,
-  ERROR: FETCH_ERROR,
-  LOADING: FETCH_LOADING,
-};
+export function getDiffUrl(state: { a?: ?string, b?: ?string, cohort: string[] }) {
+  const { cohort } = state;
+  const a = state.a || cohort[0];
+  const b = state.b || cohort[1];
+  const search = queryString.stringify({ b, cohort });
+  return prefixUrl(`/trace/${a}:diff?${search}`);
+}

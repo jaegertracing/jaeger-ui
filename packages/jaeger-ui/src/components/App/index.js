@@ -22,6 +22,7 @@ import NotFound from './NotFound';
 import Page from './Page';
 import { ConnectedDependencyGraphPage } from '../DependencyGraph';
 import { ConnectedSearchTracePage } from '../SearchTracePage';
+import TraceDiff from '../TraceDiff';
 import { ConnectedTracePage } from '../TracePage';
 import JaegerAPI, { DEFAULT_API_ROOT } from '../../api/jaeger';
 import configureStore from '../../utils/configure-store';
@@ -46,6 +47,7 @@ export default class JaegerUIApp extends Component {
           <Page>
             <Switch>
               <Route path={prefixUrl('/search')} component={ConnectedSearchTracePage} />
+              <Route path={prefixUrl('/trace/:a\\:diff')} component={TraceDiff} />
               <Route path={prefixUrl('/trace/:id')} component={ConnectedTracePage} />
               <Route path={prefixUrl('/dependencies')} component={ConnectedDependencyGraphPage} />
               <Redirect exact path="/" to={prefixUrl('/search')} />

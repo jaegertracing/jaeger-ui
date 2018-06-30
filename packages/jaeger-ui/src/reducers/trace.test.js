@@ -12,29 +12,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as jaegerApiActions from '../../src/actions/jaeger-api';
-import traceReducer from '../../src/reducers/trace';
-import traceGenerator from '../../src/demo/trace-generators';
-import transformTraceData from '../../src/model/transform-trace-data';
+import * as jaegerApiActions from '../actions/jaeger-api';
+import { fetchedState } from '../constants';
+import traceGenerator from '../demo/trace-generators';
+import transformTraceData from '../model/transform-trace-data';
+import traceReducer from '../reducers/trace';
 
-const generatedTrace = traceGenerator.trace({ numberOfSpans: 1 });
-const { traceID } = generatedTrace;
+const trace = traceGenerator.trace({ numberOfSpans: 1 });
+const { traceID } = trace;
 
 it('trace reducer should set loading true on a fetch', () => {
   const state = traceReducer(undefined, {
     type: `${jaegerApiActions.fetchTrace}_PENDING`,
+    meta: { id: traceID },
   });
-  expect(state.loading).toBe(true);
+  const outcome = { [traceID]: { state: fetchedState.LOADING } };
+  expect(state.traces).toEqual(outcome);
 });
 
 it('trace reducer should handle a successful FETCH_TRACE', () => {
   const state = traceReducer(undefined, {
     type: `${jaegerApiActions.fetchTrace}_FULFILLED`,
-    payload: { data: [generatedTrace] },
+    payload: { data: [trace] },
     meta: { id: traceID },
   });
-  expect(state.traces).toEqual({ [traceID]: transformTraceData(generatedTrace) });
-  expect(state.loading).toBe(false);
+  expect(state.traces).toEqual({ [traceID]: { data: transformTraceData(trace), state: fetchedState.DONE } });
 });
 
 it('trace reducer should handle a failed FETCH_TRACE', () => {
@@ -44,17 +46,27 @@ it('trace reducer should handle a failed FETCH_TRACE', () => {
     payload: error,
     meta: { id: traceID },
   });
-  expect(state.traces).toEqual({ [traceID]: error });
-  expect(state.traces[traceID]).toBe(error);
-  expect(state.loading).toBe(false);
+  expect(state.traces).toEqual({ [traceID]: { error, state: fetchedState.ERROR } });
+  expect(state.traces[traceID].error).toBe(error);
 });
 
 it('trace reducer should handle a successful SEARCH_TRACES', () => {
   const state = traceReducer(undefined, {
     type: `${jaegerApiActions.searchTraces}_FULFILLED`,
-    payload: { data: [generatedTrace] },
+    payload: { data: [trace] },
     meta: { query: 'whatever' },
   });
-  expect(state.traces).toEqual({ [traceID]: transformTraceData(generatedTrace) });
-  expect(state.loading).toBe(false);
+  const outcome = {
+    traces: {
+      [traceID]: {
+        data: transformTraceData(trace),
+        state: fetchedState.DONE,
+      },
+    },
+    search: {
+      state: fetchedState.DONE,
+      results: [traceID],
+    },
+  };
+  expect(state).toEqual(outcome);
 });

@@ -34,6 +34,7 @@ import store from 'store';
 import SearchTracePage, { mapStateToProps } from './index';
 import SearchForm from './SearchForm';
 import LoadingIndicator from '../common/LoadingIndicator';
+import { fetchedState } from '../../constants';
 import traceGenerator from '../../demo/trace-generators';
 import { MOST_RECENT } from '../../model/order-by';
 import transformTraceData from '../../model/transform-trace-data';
@@ -51,7 +52,7 @@ describe('<SearchTracePage>', () => {
       loadingServices: false,
       loadingTraces: false,
       maxTraceDuration: 100,
-      selectedForComparison: [],
+      diffCohort: [],
       numberOfTraceResults: traceResults.length,
       services: null,
       sortTracesBy: MOST_RECENT,
@@ -105,10 +106,13 @@ describe('mapStateToProps()', () => {
   it('converts state to the necessary props', () => {
     const trace = transformTraceData(traceGenerator.trace({}));
     const stateTrace = {
-      error: null,
-      loading: false,
-      searchResults: [trace.traceID],
-      traces: { [trace.traceID]: trace },
+      search: {
+        results: [trace.traceID],
+        state: fetchedState.DONE,
+      },
+      traces: {
+        [trace.traceID]: { data: trace, state: fetchedState.DONE },
+      },
     };
     const stateServices = {
       loading: false,
@@ -120,23 +124,19 @@ describe('mapStateToProps()', () => {
       router: { location: { search: '' } },
       trace: stateTrace,
       traceDiff: {
-        selectedForComparison: [trace.traceID],
+        cohort: [trace.traceID],
       },
       services: stateServices,
     };
 
-    const {
-      maxTraceDuration,
-      traceResults,
-      selectedForComparison,
-      numberOfTraceResults,
-      ...rest
-    } = mapStateToProps(state);
-    expect(traceResults.length).toBe(stateTrace.searchResults.length);
+    const { maxTraceDuration, traceResults, diffCohort, numberOfTraceResults, ...rest } = mapStateToProps(
+      state
+    );
+    expect(traceResults.length).toBe(stateTrace.search.results.length);
     expect(traceResults[0].traceID).toBe(trace.traceID);
     expect(maxTraceDuration).toBe(trace.duration / 1000);
-    expect(selectedForComparison.length).toBe(state.traceDiff.selectedForComparison.length);
-    expect(selectedForComparison[0].traceID).toBe(trace.traceID);
+    expect(diffCohort.length).toBe(state.traceDiff.cohort.length);
+    expect(diffCohort[0].traceID).toBe(trace.traceID);
 
     expect(rest).toEqual({
       isHomepage: true,

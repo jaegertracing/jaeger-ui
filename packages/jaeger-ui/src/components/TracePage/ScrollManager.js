@@ -14,7 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Span, Trace } from '../../types';
+import type { Span, Trace } from '../../types/trace';
 
 /**
  * `Accessors` is necessary because `ScrollManager` needs to be created by

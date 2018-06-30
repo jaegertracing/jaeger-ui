@@ -18,8 +18,9 @@ import _map from 'lodash/map';
 import _values from 'lodash/values';
 
 import { LEAST_SPANS, LONGEST_FIRST, MOST_RECENT, MOST_SPANS, SHORTEST_FIRST } from './order-by';
-import type { Trace } from '../types';
+
 import type { TraceSummaries, TraceSummary } from '../types/search';
+import type { Trace } from '../types/trace';
 
 const isErrorTag = ({ key, value }) => key === 'error' && (value === true || value === 'true');
 
