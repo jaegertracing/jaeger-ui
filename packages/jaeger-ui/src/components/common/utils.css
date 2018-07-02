@@ -18,12 +18,20 @@ limitations under the License.
   width: 100%;
 }
 
+.u-flex-1 {
+  flex: 1;
+}
+
 .u-mt-vast {
   margin-top: 13rem;
 }
 
 .u-cursor-pointer {
   cursor: pointer;
+}
+
+.u-tx-muted {
+  color: #aaa;
 }
 
 .u-tx-ellipsis {

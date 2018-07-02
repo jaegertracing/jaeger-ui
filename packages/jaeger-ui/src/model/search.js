@@ -25,13 +25,6 @@ const comparators = {
   [MOST_SPANS]: (a, b) => +(b.spans.length > a.spans.length) || +(a.spans.length === b.spans.length) - 1,
   [LEAST_SPANS]: (a, b) => +(a.spans.length > b.spans.length) || +(a.spans.length === b.spans.length) - 1,
 };
-// const comparators = {
-//   [MOST_RECENT]: (a, b) => +(b.timestamp > a.timestamp) || +(a.timestamp === b.timestamp) - 1,
-//   [SHORTEST_FIRST]: (a, b) => +(a.duration > b.duration) || +(a.duration === b.duration) - 1,
-//   [LONGEST_FIRST]: (a, b) => +(b.duration > a.duration) || +(a.duration === b.duration) - 1,
-//   [MOST_SPANS]: (a, b) => +(b.numberOfSpans > a.numberOfSpans) || +(a.numberOfSpans === b.numberOfSpans) - 1,
-//   [LEAST_SPANS]: (a, b) => +(a.numberOfSpans > b.numberOfSpans) || +(a.numberOfSpans === b.numberOfSpans) - 1,
-// };
 
 /**
  * Sorts `Trace[]`, in place.

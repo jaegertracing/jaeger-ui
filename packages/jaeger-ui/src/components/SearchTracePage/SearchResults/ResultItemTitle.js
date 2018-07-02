@@ -18,8 +18,8 @@ import * as React from 'react';
 import { Checkbox } from 'antd';
 import { Link } from 'react-router-dom';
 
-import LoadingIndicator from '../../common/LoadingIndicator';
-import { FALLBACK_TRACE_NAME, fetchedState } from '../../../constants';
+import TraceName from '../../common/TraceName';
+import { fetchedState } from '../../../constants';
 import { formatDuration } from '../../../utils/date';
 
 import type { FetchedState } from '../../../types';
@@ -72,31 +72,19 @@ export default class ResultItemTitle extends React.PureComponent<Props> {
       wrapperProps.to = linkTo;
     }
     const isErred = state === fetchedState.ERROR;
-    let title = traceName || FALLBACK_TRACE_NAME;
-    let errorCssClass = '';
-    if (isErred) {
-      errorCssClass = 'is-error';
-      if (error) {
-        title = typeof error === 'string' ? error : error.message || String(error);
-      }
-      if (!title) {
-        title = 'Error: Unknown error';
-      }
-    } else if (state === fetchedState.LOADING) {
-      title = <LoadingIndicator small />;
-    }
     return (
       <div className="ResultItemTitle">
         <Checkbox
           className="ResultItemTitle--item ub-flex-none"
-          onChange={!isErred ? this.toggleComparison : undefined}
           checked={!isErred && isInDiffCohort}
+          disabled={isErred}
+          onChange={this.toggleComparison}
         />
         <WrapperComponent {...wrapperProps}>
           <span className="ResultItemTitle--durationBar" style={{ width: `${durationPercent}%` }} />
           {duration != null && <span className="ub-right ub-relative">{formatDuration(duration)}</span>}
-          <h3 className={`ResultItemTitle--title ${errorCssClass}`}>
-            {title}
+          <h3 className="ResultItemTitle--title">
+            <TraceName error={error} state={state} traceName={traceName} />
             <small className="ResultItemTitle--idExcerpt">{traceID.slice(0, 7)}</small>
           </h3>
         </WrapperComponent>

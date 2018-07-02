@@ -102,11 +102,12 @@ export function formatDuration(duration, inputUnit = 'microseconds') {
   return _.round(d, 2) + units;
 }
 
-export function formatRelativeDate(value) {
+export function formatRelativeDate(value, fullMonthName = false) {
   const m = !(value instanceof moment) ? moment(value) : value;
+  const monthFormat = fullMonthName ? 'MMMM' : 'MMM';
   const dt = new Date();
   if (dt.getFullYear() !== m.year()) {
-    return m.format('MMM D, YYYY');
+    return m.format(`${monthFormat} D, YYYY`);
   }
   const mMonth = m.month();
   const mDate = m.date();
@@ -118,5 +119,5 @@ export function formatRelativeDate(value) {
   if (mMonth === dt.getMonth() && mDate === dt.getDate()) {
     return YESTERDAY;
   }
-  return m.format('MMM D');
+  return m.format(`${monthFormat} D`);
 }

@@ -19,9 +19,11 @@ import queryString from 'query-string';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 
-import type { Match } from 'react-router-dom';
+import type { Match, RouterHistory } from 'react-router-dom';
 
 import { actions as diffActions } from './duck';
+import { getDiffUrl } from './utils';
+import TraceDiffHeader from './TraceDiffHeader';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 
 import type { FetchedTrace, ReduxState } from '../../types';
@@ -31,8 +33,10 @@ type Props = {
   a: ?string,
   b: ?string,
   cohort: string[],
+  fetchMultipleTraces: (string[]) => void,
   forceState: TraceDiffState => void,
-  tracesData: { [string]: ?FetchedTrace },
+  history: RouterHistory,
+  tracesData: Map<string, ?FetchedTrace>,
   traceDiffState: TraceDiffState,
 };
 
@@ -59,26 +63,65 @@ export class TraceDiffImpl extends React.PureComponent<Props> {
   props: Props;
 
   componentDidMount() {
-    const { a, b, cohort, forceState, traceDiffState } = this.props;
-    syncStates({ a, b, cohort }, traceDiffState, forceState);
+    this.processProps();
   }
 
+  componentDidUpdate() {
+    this.processProps();
+  }
+
+  processProps() {
+    const { a, b, cohort, fetchMultipleTraces, forceState, tracesData, traceDiffState } = this.props;
+    syncStates({ a, b, cohort }, traceDiffState, forceState);
+    const cohortData = cohort.map(id => tracesData.get(id) || { id, state: null });
+    const needForDiffs = cohortData.filter(ft => ft.state == null).map(ft => ft.id);
+    if (needForDiffs.length) {
+      fetchMultipleTraces(needForDiffs);
+    }
+  }
+
+  diffSetUrl(change: { newA?: ?string, newB?: ?string }) {
+    const { newA, newB } = change;
+    const { a, b, cohort, history } = this.props;
+    const url = getDiffUrl({ a: newA || a, b: newB || b, cohort });
+    history.push(url);
+  }
+
+  diffSetA = (id: string) => {
+    const newA = id.toLowerCase();
+    this.diffSetUrl({ newA });
+  };
+
+  diffSetB = (id: string) => {
+    const newB = id.toLowerCase();
+    this.diffSetUrl({ newB });
+  };
+
   render() {
-    const { tracesData } = this.props;
-    console.log(this.props, tracesData);
-    return 'hgello';
+    const { a, b, cohort, tracesData } = this.props;
+    const traceA = a ? tracesData.get(a) || { id: a } : null;
+    const traceB = b ? tracesData.get(b) || { id: b } : null;
+    const cohortData: FetchedTrace[] = cohort.map(id => tracesData.get(id) || { id });
+    return (
+      <TraceDiffHeader
+        a={traceA}
+        b={traceB}
+        cohort={cohortData}
+        diffSetA={this.diffSetA}
+        diffSetB={this.diffSetB}
+      />
+    );
   }
 }
 
 // TODO(joe): simplify but do not invalidate the URL
-// export for tests
 export function mapStateToProps(state: ReduxState, ownProps: { match: Match }) {
   const { a } = ownProps.match.params;
   const { b, cohort: origCohort = [] } = queryString.parse(state.router.location.search);
   const fullCohortSet: Set<string> = new Set([].concat(a, b, origCohort).filter(Boolean));
   const cohort: string[] = Array.from(fullCohortSet);
   const { traces } = state.trace;
-  const kvPairs = cohort.map(id => [id, traces[id]]);
+  const kvPairs = cohort.map(id => [id, traces[id] || { id, state: null }]);
   const tracesData: Map<string, ?FetchedTrace> = new Map(kvPairs);
   return {
     a,
@@ -91,9 +134,9 @@ export function mapStateToProps(state: ReduxState, ownProps: { match: Match }) {
 
 // export for tests
 export function mapDispatchToProps(dispatch: Function) {
-  const { fetchTrace } = bindActionCreators(jaegerApiActions, dispatch);
-  const actions = bindActionCreators(diffActions, dispatch);
-  return { ...actions, fetchTrace };
+  const { fetchMultipleTraces } = bindActionCreators(jaegerApiActions, dispatch);
+  const { forceState } = bindActionCreators(diffActions, dispatch);
+  return { fetchMultipleTraces, forceState };
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(TraceDiffImpl);
