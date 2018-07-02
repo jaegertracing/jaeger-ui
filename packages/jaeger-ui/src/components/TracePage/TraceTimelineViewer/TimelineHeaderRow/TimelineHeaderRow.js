@@ -22,7 +22,6 @@ import TimelineViewingLayer from './TimelineViewingLayer';
 import Ticks from '../Ticks';
 import TimelineRow from '../TimelineRow';
 import type { ViewRangeTime, ViewRangeTimeUpdate } from '../../types';
-import type { Span } from '../../../../types';
 
 import './TimelineHeaderRow.css';
 
@@ -35,7 +34,6 @@ type TimelineHeaderRowProps = {
   onColummWidthChange: number => void,
   onExpandAll: () => void,
   onExpandOne: () => void,
-  spans: Span[],
   updateNextViewRangeTime: ViewRangeTimeUpdate => void,
   updateViewRangeTime: (number, number, ?string) => void,
   viewRangeTime: ViewRangeTime,
@@ -51,7 +49,6 @@ export default function TimelineHeaderRow(props: TimelineHeaderRowProps) {
     onColummWidthChange,
     onExpandAll,
     onExpandOne,
-    spans,
     updateViewRangeTime,
     updateNextViewRangeTime,
     viewRangeTime,
@@ -66,7 +63,6 @@ export default function TimelineHeaderRow(props: TimelineHeaderRowProps) {
           onExpandAll={onExpandAll}
           onCollapseOne={onCollapseOne}
           onExpandOne={onExpandOne}
-          spans={spans}
         />
       </TimelineRow.Cell>
       <TimelineRow.Cell width={1 - nameColumnWidth}>
