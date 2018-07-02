@@ -95,7 +95,6 @@ class TraceTimelineViewer extends React.PureComponent<TraceTimelineViewerProps> 
           onColummWidthChange={setSpanNameColumnWidth}
           onExpandAll={this.expandAll}
           onExpandOne={this.expandOne}
-          spans={trace.spans}
           viewRangeTime={viewRange.time}
           updateNextViewRangeTime={updateNextViewRangeTime}
           updateViewRangeTime={updateViewRangeTime}

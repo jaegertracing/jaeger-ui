@@ -110,12 +110,12 @@ function shouldDisableCollapse(allSpans, hiddenSpansIds) {
   return allParentSpans.length === hiddenSpansIds.size;
 }
 
-function expandAll(state) {
+export function expandAll(state) {
   const childrenHiddenIDs = new Set();
   return { ...state, childrenHiddenIDs };
 }
 
-function collapseAll(state, { payload }) {
+export function collapseAll(state, { payload }) {
   const { spans } = payload;
   if (shouldDisableCollapse(spans, state.childrenHiddenIDs)) {
     return state;
@@ -129,7 +129,7 @@ function collapseAll(state, { payload }) {
   return { ...state, childrenHiddenIDs };
 }
 
-function collapseOne(state, { payload }) {
+export function collapseOne(state, { payload }) {
   const { spans } = payload;
   if (shouldDisableCollapse(spans, state.childrenHiddenIDs)) {
     return state;
@@ -148,7 +148,7 @@ function collapseOne(state, { payload }) {
   return { ...state, childrenHiddenIDs };
 }
 
-function expandOne(state, { payload }) {
+export function expandOne(state, { payload }) {
   const { spans } = payload;
   if (state.childrenHiddenIDs.size === 0) {
     return state;
