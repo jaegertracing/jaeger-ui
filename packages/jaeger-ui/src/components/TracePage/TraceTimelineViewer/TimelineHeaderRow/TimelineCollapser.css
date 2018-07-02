@@ -15,9 +15,10 @@ limitations under the License.
 */
 
 .TimelineCollapser {
-  float: right;
-  margin: 0 0.8rem 0 0;
+  float: left;
+  margin: 0 0 0 0.15rem;
   display: inline-block;
+  border-right: 1px solid #ccc;
 }
 
 .TimelineCollapserBtn {

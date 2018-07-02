@@ -57,13 +57,13 @@ export default function TimelineHeaderRow(props: TimelineHeaderRowProps) {
   return (
     <TimelineRow className="TimelineHeaderRow">
       <TimelineRow.Cell width={nameColumnWidth}>
-        <h3 className="TimelineHeaderRow--title">Service &amp; Operation</h3>
         <TimelineCollapser
           onCollapseAll={onCollapseAll}
           onExpandAll={onExpandAll}
           onCollapseOne={onCollapseOne}
           onExpandOne={onExpandOne}
         />
+        <h3 className="TimelineHeaderRow--title">Service &amp; Operation</h3>
       </TimelineRow.Cell>
       <TimelineRow.Cell width={1 - nameColumnWidth}>
         <TimelineViewingLayer
