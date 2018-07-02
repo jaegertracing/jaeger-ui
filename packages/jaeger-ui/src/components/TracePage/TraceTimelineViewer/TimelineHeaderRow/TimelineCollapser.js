@@ -16,7 +16,7 @@
 
 import React from 'react';
 
-import { Popover, Icon } from 'antd';
+import { Tooltip, Icon } from 'antd';
 
 import './TimelineCollapser.css';
 
@@ -29,34 +29,20 @@ type CollapserProps = {
 
 export default function TimelineCollapser(props: CollapserProps) {
   const { onExpandAll, onExpandOne, onCollapseAll, onCollapseOne } = props;
-  const content = (
-    <div>
-      <Icon type="right" onClick={onExpandOne} className="TimelineCollapserBtn ExpandBtn" />
-      <a onClick={onExpandOne} role="button">
-        Expand +1
-      </a>
-      <br />
-      <Icon type="right" onClick={onCollapseOne} className="TimelineCollapserBtn" />
-      <a onClick={onCollapseOne} role="button">
-        Collapse +1
-      </a>
-      <br />
-      <Icon type="double-right" onClick={onExpandAll} className="TimelineCollapserBtn ExpandBtn" />
-      <a onClick={onExpandAll} role="button">
-        Expand All
-      </a>
-      <br />
-      <Icon type="double-right" onClick={onCollapseAll} className="TimelineCollapserBtn" />
-      <a onClick={onCollapseAll} role="button">
-        Collapse All
-      </a>
-    </div>
-  );
   return (
     <span className="TimelineCollapser">
-      <Popover placement="rightBottom" content={content} title="Expand/Collapse" trigger="hover">
-        <Icon type="double-right" className="TimelineCollapserBtn ExpandBtn" />
-      </Popover>
+      <Tooltip title="Expand +1">
+        <Icon type="right" onClick={onExpandOne} className="TimelineCollapserBtn ExpandBtn" />
+      </Tooltip>
+      <Tooltip title="Collapse +1">
+        <Icon type="right" onClick={onCollapseOne} className="TimelineCollapserBtn" />
+      </Tooltip>
+      <Tooltip title="Expand All">
+        <Icon type="double-right" onClick={onExpandAll} className="TimelineCollapserBtn ExpandBtn" />
+      </Tooltip>
+      <Tooltip title="Collapse All">
+        <Icon type="double-right" onClick={onCollapseAll} className="TimelineCollapserBtn" />
+      </Tooltip>
     </span>
   );
 }
