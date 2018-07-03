@@ -50,13 +50,8 @@ const NUM_TICKS = 5;
  * re-render the ListView every time the cursor is moved on the trace minimap
  * or `TimelineHeaderRow`.
  */
-class TraceTimelineViewer extends React.PureComponent<TraceTimelineViewerProps> {
+export class TraceTimelineViewerImpl extends React.PureComponent<TraceTimelineViewerProps> {
   props: TraceTimelineViewerProps;
-
-  constructor(props: TraceTimelineViewerProps) {
-    super(props);
-    this.props = props;
-  }
 
   collapseAll = () => {
     this.props.collapseAll(this.props.trace.spans);
@@ -118,4 +113,4 @@ function mapDispatchToProps(dispatch) {
   return { setSpanNameColumnWidth, expandAll, expandOne, collapseAll, collapseOne };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(TraceTimelineViewer);
+export default connect(mapStateToProps, mapDispatchToProps)(TraceTimelineViewerImpl);
