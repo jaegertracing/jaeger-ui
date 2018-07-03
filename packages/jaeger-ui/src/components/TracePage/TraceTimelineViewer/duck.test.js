@@ -155,9 +155,9 @@ describe('TraceTimelineViewer/duck', () => {
         resultant: new Set(),
       },
       {
-        msg: 'collapse all',
+        msg: 'collapse all, no-op',
         action: collapseAll,
-        initial: oneSpanCollapsed,
+        initial: allSpansCollapsed,
         resultant: allSpansCollapsed,
       },
       {
@@ -167,10 +167,16 @@ describe('TraceTimelineViewer/duck', () => {
         resultant: oneLevelCollapsed,
       },
       {
-        msg: 'collapse one',
+        msg: 'expand one, one collapsed',
+        action: expandOne,
+        initial: oneSpanCollapsed,
+        resultant: new Set(),
+      },
+      {
+        msg: 'collapse one, no-op',
         action: collapseOne,
-        initial: new Set(),
-        resultant: oneLevelCollapsed,
+        initial: allSpansCollapsed,
+        resultant: allSpansCollapsed,
       },
     ];
 
@@ -180,6 +186,41 @@ describe('TraceTimelineViewer/duck', () => {
       it(msg, () => {
         const { childrenHiddenIDs } = action({ childrenHiddenIDs: initial }, { payload: { spans } });
         expect(childrenHiddenIDs).toEqual(resultant);
+      });
+    });
+
+    const dispatchTests = [
+      {
+        msg: 'expand all, no-op',
+        action: actions.expandAll(),
+        resultant: new Set(),
+      },
+      {
+        msg: 'collapse all',
+        action: actions.collapseAll(spans),
+        resultant: allSpansCollapsed,
+      },
+      {
+        msg: 'expand one, no-op',
+        action: actions.expandOne(spans),
+        resultant: new Set(),
+      },
+      {
+        msg: 'collapse one',
+        action: actions.collapseOne(spans),
+        resultant: oneLevelCollapsed,
+      },
+    ];
+
+    dispatchTests.forEach(info => {
+      const { msg, action, resultant } = info;
+
+      it(msg, () => {
+        const st0 = store.getState();
+        store.dispatch(action);
+        const st1 = store.getState();
+        expect(st0.childrenHiddenIDs).toEqual(new Set());
+        expect(st1.childrenHiddenIDs).toEqual(resultant);
       });
     });
   });
