@@ -30,6 +30,7 @@ type AccordianKeyValuesProps = {
   highContrast?: boolean,
   isOpen: boolean,
   label: string,
+  linksGetter: ({ key: string, value: any }[], number) => { url: string, text: string }[],
   onToggle: () => void,
 };
 
@@ -59,7 +60,7 @@ KeyValuesSummary.defaultProps = {
 };
 
 export default function AccordianKeyValues(props: AccordianKeyValuesProps) {
-  const { className, data, highContrast, isOpen, label, onToggle } = props;
+  const { className, data, highContrast, isOpen, label, linksGetter, onToggle } = props;
   const isEmpty = !Array.isArray(data) || !data.length;
   const iconCls = cx('u-align-icon', { 'AccordianKeyValues--emptyIcon': isEmpty });
   return (
@@ -80,7 +81,7 @@ export default function AccordianKeyValues(props: AccordianKeyValuesProps) {
         </strong>
         {!isOpen && <KeyValuesSummary data={data} />}
       </div>
-      {isOpen && <KeyValuesTable data={data} />}
+      {isOpen && <KeyValuesTable data={data} linksGetter={linksGetter} />}
     </div>
   );
 }

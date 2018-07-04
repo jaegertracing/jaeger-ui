@@ -30,10 +30,12 @@ type SpanDetailRowProps = {
   detailState: DetailState,
   onDetailToggled: string => void,
   isFilteredOut: boolean,
+  linksGetter: (number, { key: string, value: any }[], number) => { url: string, text: string }[],
   logItemToggle: (string, Log) => void,
   logsToggle: string => void,
   processToggle: string => void,
   span: Span,
+  spanIndex: number,
   tagsToggle: string => void,
   traceStartTime: number,
 };
@@ -44,6 +46,9 @@ export default class SpanDetailRow extends React.PureComponent<SpanDetailRowProp
   _detailToggle = () => {
     this.props.onDetailToggled(this.props.span.spanID);
   };
+
+  _linksGetter = (items: { key: string, value: any }[], itemIndex: number) =>
+    this.props.linksGetter(this.props.spanIndex, items, itemIndex);
 
   render() {
     const {
@@ -76,6 +81,7 @@ export default class SpanDetailRow extends React.PureComponent<SpanDetailRowProp
           <div className="detail-info-wrapper" style={{ borderTopColor: color }}>
             <SpanDetail
               detailState={detailState}
+              linksGetter={this._linksGetter}
               logItemToggle={logItemToggle}
               logsToggle={logsToggle}
               processToggle={processToggle}

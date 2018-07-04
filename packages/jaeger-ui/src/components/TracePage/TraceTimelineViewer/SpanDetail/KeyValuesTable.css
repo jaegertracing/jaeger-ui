@@ -39,3 +39,13 @@ limitations under the License.
   white-space: pre;
   width: 125px;
 }
+
+.KeyValueTable--link {
+  display: block;
+  position: relative;
+}
+
+.KeyValueTable--linkIcon {
+  position: absolute;
+  right: 0px;
+}
