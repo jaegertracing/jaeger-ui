@@ -21,6 +21,7 @@ import { bindActionCreators } from 'redux';
 import { actions } from './duck';
 import TimelineHeaderRow from './TimelineHeaderRow';
 import VirtualizedTraceView from './VirtualizedTraceView';
+import { merge as mergeShortcuts } from '../keyboard-shortcuts';
 import type { Accessors } from '../ScrollManager';
 import type { ViewRange, ViewRangeTimeUpdate } from '../types';
 import type { Span, Trace } from '../../../types';
@@ -52,6 +53,15 @@ const NUM_TICKS = 5;
  */
 export class TraceTimelineViewerImpl extends React.PureComponent<TraceTimelineViewerProps> {
   props: TraceTimelineViewerProps;
+
+  componentDidMount() {
+    mergeShortcuts({
+      collapseAll: this.collapseAll,
+      expandAll: this.expandAll,
+      collapseOne: this.collapseOne,
+      expandOne: this.expandOne,
+    });
+  }
 
   collapseAll = () => {
     this.props.collapseAll(this.props.trace.spans);

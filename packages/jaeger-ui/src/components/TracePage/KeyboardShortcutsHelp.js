@@ -49,6 +49,10 @@ const descriptions = {
   zoomInFast: 'Zoom in — Large',
   zoomOut: 'Zoom out',
   zoomOutFast: 'Zoom out — Large',
+  collapseAll: 'Collapse All',
+  expandAll: 'Expand All',
+  collapseOne: 'Collapse One',
+  expandOne: 'Expand One',
 };
 
 function convertKeys(keyConfig: string | string[]): string[][] {
