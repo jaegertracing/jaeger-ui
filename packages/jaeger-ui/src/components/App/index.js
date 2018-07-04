@@ -47,7 +47,7 @@ export default class JaegerUIApp extends Component {
           <Page>
             <Switch>
               <Route path={prefixUrl('/search')} component={ConnectedSearchTracePage} />
-              <Route path={prefixUrl('/trace/:a\\:diff')} component={TraceDiff} />
+              <Route path={prefixUrl('/trace/:a?\\:diff')} component={TraceDiff} />
               <Route path={prefixUrl('/trace/:id')} component={ConnectedTracePage} />
               <Route path={prefixUrl('/dependencies')} component={ConnectedDependencyGraphPage} />
               <Redirect exact path="/" to={prefixUrl('/search')} />

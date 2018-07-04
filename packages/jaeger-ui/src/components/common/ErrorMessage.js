@@ -22,6 +22,8 @@ import './ErrorMessage.css';
 
 type ErrorMessageProps = {
   className?: string,
+  detailClassName?: string,
+  messageClassName?: string,
   error: ApiError,
 };
 
@@ -29,6 +31,7 @@ type SubPartProps = {
   className?: string,
   error: ApiError,
   wrap?: boolean,
+  wrapperClassName?: string,
 };
 
 function ErrorAttr({ name, value }: { name: string, value: any }) {
@@ -41,15 +44,16 @@ function ErrorAttr({ name, value }: { name: string, value: any }) {
 }
 
 function Message(props: SubPartProps) {
-  const { className, error, wrap } = props;
+  const { className, error, wrap, wrapperClassName } = props;
+  const cssClass = `ErrorMessage--msg ${className || ''}`;
   let msg: React.Node;
   if (typeof error === 'string') {
-    msg = <h3 className="ErrorMessage--msg">{error}</h3>;
+    msg = <h3 className={cssClass}>{error}</h3>;
   } else {
-    msg = <h3 className="ErrorMessage--msg">{error.message}</h3>;
+    msg = <h3 className={cssClass}>{error.message}</h3>;
   }
   if (wrap) {
-    return <div className={`ErrorMessage ${className || ''}`}>{msg}</div>;
+    return <div className={`ErrorMessage ${wrapperClassName || ''}`}>{msg}</div>;
   }
   return msg;
 }
@@ -57,17 +61,18 @@ function Message(props: SubPartProps) {
 Message.defaultProps = {
   className: undefined,
   wrap: false,
+  wrapperClassName: undefined,
 };
 
 function Details(props: SubPartProps) {
-  const { className, error, wrap } = props;
+  const { className, error, wrap, wrapperClassName } = props;
   if (typeof error === 'string') {
     return null;
   }
   const { httpStatus, httpStatusText, httpUrl, httpQuery, httpBody } = error;
   const bodyExcerpt = httpBody && httpBody.length > 1024 ? `${httpBody.slice(0, 1021).trim()}...` : httpBody;
   const details = (
-    <div className="ErrorMessage--details u-simple-scrollbars">
+    <div className={`ErrorMessage--details ${className || ''} u-simple-scrollbars`}>
       <table className="ErrorMessage--detailsTable">
         <tbody>
           {httpStatus ? <ErrorAttr name="Status" value={httpStatus} /> : null}
@@ -81,7 +86,7 @@ function Details(props: SubPartProps) {
   );
 
   if (wrap) {
-    return <div className={`ErrorMessage ${className || ''}`}>{details}</div>;
+    return <div className={`ErrorMessage ${wrapperClassName || ''}`}>{details}</div>;
   }
   return details;
 }
@@ -89,25 +94,33 @@ function Details(props: SubPartProps) {
 Details.defaultProps = {
   className: undefined,
   wrap: false,
+  wrapperClassName: undefined,
 };
 
-export default function ErrorMessage({ className, error }: ErrorMessageProps) {
+export default function ErrorMessage({
+  className,
+  detailClassName,
+  error,
+  messageClassName,
+}: ErrorMessageProps) {
   if (!error) {
     return null;
   }
   if (typeof error === 'string') {
-    return <Message className={className} error={error} wrap />;
+    return <Message className={messageClassName} error={error} wrapperClassName={className} wrap />;
   }
   return (
     <div className={`ErrorMessage ${className || ''}`}>
-      <Message error={error} />
-      <Details error={error} />
+      <Message error={error} className={messageClassName} />
+      <Details error={error} className={detailClassName} />
     </div>
   );
 }
 
 ErrorMessage.defaultProps = {
   className: undefined,
+  detailClassName: undefined,
+  messageClassName: undefined,
 };
 
 ErrorMessage.Message = Message;

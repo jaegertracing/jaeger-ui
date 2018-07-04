@@ -14,27 +14,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-.TraecDiffHeader {
-  background: #fff;
-  border-bottom: 1px solid #d8d8d8;
-  display: flex;
-  flex: 0;
-  position: relative;
-  z-index: 1;
-}
-
-.TraecDiffHeader--labelItem,
-.TraecDiffHeader--labelItem-darkened {
-  align-items: center;
-  border-right: 1px solid #d8d8d8;
-  display: flex;
-  padding: 0 1.25rem;
-}
-
-.TraecDiffHeader--labelItem-darkened {
-  background: #eee;
-}
-
-.TraceDiffHeader--popover .ant-popover-inner-content {
-  padding: 0;
+.TraceDiff--graphWrapper {
+  background: #f2f2f2;
+  bottom: 0;
+  left: 0;
+  position: fixed;
+  right: 0;
+  top: 0;
 }

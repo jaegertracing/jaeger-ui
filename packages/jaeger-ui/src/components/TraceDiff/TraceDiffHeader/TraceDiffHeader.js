@@ -37,7 +37,6 @@ export default class TraceDiffHeader extends React.PureComponent<Props> {
   props: Props;
 
   render() {
-    console.log(this.props);
     const { a, b, cohort, diffSetA, diffSetB } = this.props;
     const { data: aData = {}, id: aId, state: aState, error: aError } = a || {};
     const { data: bData = {}, id: bId, state: bState, error: bError } = b || {};

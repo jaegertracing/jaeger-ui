@@ -1,6 +1,6 @@
 // @flow
 
-// Copyright (c) 2017 Uber Technologies, Inc.
+// Copyright (c) 2018 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,17 +14,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export const TOP_NAV_HEIGHT = 47;
+import type { Span } from '../../types/trace';
 
-export const FALLBACK_DAG_MAX_NUM_SERVICES = 100;
-export const FALLBACK_TRACE_NAME = '<trace-without-root-span>';
+export type NodeID = string;
 
-export const FETCH_DONE = 'FETCH_DONE';
-export const FETCH_ERROR = 'FETCH_ERROR';
-export const FETCH_LOADING = 'FETCH_LOADING';
-
-export const fetchedState = {
-  DONE: FETCH_DONE,
-  ERROR: FETCH_ERROR,
-  LOADING: FETCH_LOADING,
+export type DenseSpan = {
+  span: Span,
+  id: string,
+  service: string,
+  operation: string,
+  tags: { [string]: any },
+  parentID: ?string,
+  skipToChild: boolean,
+  children: Set<string>,
 };

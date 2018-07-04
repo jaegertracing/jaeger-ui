@@ -1,6 +1,6 @@
 // @flow
 
-// Copyright (c) 2017 Uber Technologies, Inc.
+// Copyright (c) 2018 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,11 +23,15 @@ import type { Match, RouterHistory } from 'react-router-dom';
 
 import { actions as diffActions } from './duck';
 import { getDiffUrl } from './utils';
+import TraceDiffGraph from './TraceDiffGraph';
 import TraceDiffHeader from './TraceDiffHeader';
 import * as jaegerApiActions from '../../actions/jaeger-api';
+import { TOP_NAV_HEIGHT } from '../../constants';
 
 import type { FetchedTrace, ReduxState } from '../../types';
 import type { TraceDiffState } from '../../types/trace-diff';
+
+import './TraceDiff.css';
 
 type Props = {
   a: ?string,
@@ -38,6 +42,10 @@ type Props = {
   history: RouterHistory,
   tracesData: Map<string, ?FetchedTrace>,
   traceDiffState: TraceDiffState,
+};
+
+type State = {
+  graphTopOffset: number,
 };
 
 function syncStates(urlSt, reduxSt, forceState) {
@@ -59,15 +67,41 @@ function syncStates(urlSt, reduxSt, forceState) {
   }
 }
 
-export class TraceDiffImpl extends React.PureComponent<Props> {
+export class TraceDiffImpl extends React.PureComponent<Props, State> {
   props: Props;
+  headerWrapperElm: ?Element;
+
+  constructor() {
+    super();
+    this.headerWrapperElm = null;
+    this.state = {
+      graphTopOffset: TOP_NAV_HEIGHT,
+    };
+  }
 
   componentDidMount() {
     this.processProps();
   }
 
   componentDidUpdate() {
+    this.setGraphTopOffset();
     this.processProps();
+  }
+
+  headerWrapperRef = (elm: ?Element) => {
+    this.headerWrapperElm = elm;
+    this.setGraphTopOffset();
+  };
+
+  setGraphTopOffset() {
+    if (this.headerWrapperElm) {
+      const graphTopOffset = TOP_NAV_HEIGHT + this.headerWrapperElm.clientHeight;
+      if (this.state.graphTopOffset !== graphTopOffset) {
+        this.setState({ graphTopOffset });
+      }
+    } else {
+      this.setState({ graphTopOffset: TOP_NAV_HEIGHT });
+    }
   }
 
   processProps() {
@@ -99,17 +133,26 @@ export class TraceDiffImpl extends React.PureComponent<Props> {
 
   render() {
     const { a, b, cohort, tracesData } = this.props;
+    const { graphTopOffset } = this.state;
     const traceA = a ? tracesData.get(a) || { id: a } : null;
     const traceB = b ? tracesData.get(b) || { id: b } : null;
     const cohortData: FetchedTrace[] = cohort.map(id => tracesData.get(id) || { id });
     return (
-      <TraceDiffHeader
-        a={traceA}
-        b={traceB}
-        cohort={cohortData}
-        diffSetA={this.diffSetA}
-        diffSetB={this.diffSetB}
-      />
+      <React.Fragment>
+        <div key="header" ref={this.headerWrapperRef}>
+          <TraceDiffHeader
+            key="header"
+            a={traceA}
+            b={traceB}
+            cohort={cohortData}
+            diffSetA={this.diffSetA}
+            diffSetB={this.diffSetB}
+          />
+        </div>
+        <div key="graph" className="TraceDiff--graphWrapper" style={{ top: graphTopOffset }}>
+          <TraceDiffGraph a={traceA} b={traceB} />
+        </div>
+      </React.Fragment>
     );
   }
 }

@@ -15,7 +15,7 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Table } from 'antd';
+import { Table, Tag } from 'antd';
 
 import RelativeDate from '../../common/RelativeDate';
 import TraceName from '../../common/TraceName';
@@ -83,9 +83,9 @@ export default class CohortTable extends React.PureComponent<Props> {
             return (
               <React.Fragment>
                 {label != null && (
-                  <strong key="lbl" className="ub-mr2">
+                  <Tag key="lbl" className="ub-bold" color="#139999">
                     {label}
-                  </strong>
+                  </Tag>
                 )}
                 <TraceName
                   key="name"
