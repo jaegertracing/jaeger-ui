@@ -31,6 +31,22 @@ function parseIfJson(value) {
   return value;
 }
 
+function markupAsDiv(markup) {
+  // eslint-disable-next-line react/no-danger
+  return <div dangerouslySetInnerHTML={{ __html: markup }} />;
+}
+
+function markupAsSpan(markup) {
+  // eslint-disable-next-line react/no-danger
+  return (
+    <span
+      dangerouslySetInnerHTML={{
+        __html: markup.replace(/^<div /i, '<span ').replace(/<\/div>$/i, '</span>'),
+      }}
+    />
+  );
+}
+
 type KeyValuesTableProps = {
   data: { key: string, value: any }[],
   linksGetter: ?({ key: string, value: any }[], number) => { url: string, text: string }[],
@@ -43,24 +59,16 @@ export default function KeyValuesTable(props: KeyValuesTableProps) {
       <table className="u-width-100">
         <tbody className="KeyValueTable--body">
           {data.map((row, i) => {
-            const jsonTable = (
-              // eslint-disable-next-line react/no-danger
-              <div dangerouslySetInnerHTML={{ __html: jsonMarkup(parseIfJson(row.value)) }} />
-            );
-            let valueMarkup = jsonTable;
+            const markup = jsonMarkup(parseIfJson(row.value));
             const links = linksGetter ? linksGetter(data, i) : null;
+            let valueMarkup;
             if (links && links.length === 1) {
               valueMarkup = (
-                <a
-                  className="KeyValueTable--link"
-                  href={links[0].url}
-                  title={links[0].text}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <Icon className="KeyValueTable--linkIcon" type="export" />
-                  {jsonTable}
-                </a>
+                <div>
+                  <a href={links[0].url} title={links[0].text} target="_blank" rel="noopener noreferrer">
+                    {markupAsSpan(markup)} <Icon className="KeyValueTable--linkIcon" type="export" />
+                  </a>
+                </div>
               );
             } else if (links && links.length > 1) {
               const menuItems = (
@@ -80,13 +88,16 @@ export default function KeyValuesTable(props: KeyValuesTableProps) {
                 </Menu>
               );
               valueMarkup = (
-                <Dropdown overlay={menuItems} placement="bottomRight" trigger={['click']}>
-                  <a className="KeyValueTable--link">
-                    <Icon className="KeyValueTable--linkIcon" type="profile" />
-                    {jsonTable}
-                  </a>
-                </Dropdown>
+                <div>
+                  <Dropdown overlay={menuItems} placement="bottomRight" trigger={['click']}>
+                    <a>
+                      {markupAsSpan(markup)} <Icon className="KeyValueTable--linkIcon" type="profile" />
+                    </a>
+                  </Dropdown>
+                </div>
               );
+            } else {
+              valueMarkup = markupAsDiv(markup);
             }
             return (
               // `i` is necessary in the key because row.key can repeat
