@@ -14,6 +14,7 @@
 
 import React from 'react';
 import { shallow } from 'enzyme';
+import { Dropdown, Icon } from 'antd';
 
 import KeyValuesTable from './KeyValuesTable';
 
@@ -37,5 +38,61 @@ describe('<KeyValuesTable>', () => {
     trs.forEach((tr, i) => {
       expect(tr.find('.KeyValueTable--keyColumn').text()).toMatch(data[i].key);
     });
+  });
+
+  it('renders a single link correctly', () => {
+    wrapper.setProps({
+      linksGetter: (array, i) =>
+        array[i].key === 'span.kind'
+          ? [
+              {
+                url: `http://example.com/?kind=${encodeURIComponent(array[i].value)}`,
+                text: `More info about ${array[i].value}`,
+              },
+            ]
+          : [],
+    });
+
+    const anchor = wrapper.find('a');
+    expect(anchor).toHaveLength(1);
+    expect(anchor.prop('href')).toBe('http://example.com/?kind=client');
+    expect(anchor.prop('title')).toBe('More info about client');
+    expect(anchor.find(Icon)).toHaveLength(1);
+    expect(
+      anchor
+        .closest('tr')
+        .find('td')
+        .first()
+        .text()
+    ).toBe('span.kind');
+  });
+
+  it('renders multiple links correctly', () => {
+    wrapper.setProps({
+      linksGetter: (array, i) =>
+        array[i].key === 'span.kind'
+          ? [
+              { url: `http://example.com/1?kind=${encodeURIComponent(array[i].value)}`, text: 'Example 1' },
+              { url: `http://example.com/2?kind=${encodeURIComponent(array[i].value)}`, text: 'Example 2' },
+            ]
+          : [],
+    });
+    const dropdown = wrapper.find(Dropdown);
+    const menu = shallow(dropdown.prop('overlay'));
+    const anchors = menu.find('a');
+    expect(anchors).toHaveLength(2);
+    const firstAnchor = anchors.first();
+    expect(firstAnchor.prop('href')).toBe('http://example.com/1?kind=client');
+    expect(firstAnchor.text()).toBe('Example 1');
+    const secondAnchor = anchors.last();
+    expect(secondAnchor.prop('href')).toBe('http://example.com/2?kind=client');
+    expect(secondAnchor.text()).toBe('Example 2');
+    expect(
+      dropdown
+        .closest('tr')
+        .find('td')
+        .first()
+        .text()
+    ).toBe('span.kind');
   });
 });
