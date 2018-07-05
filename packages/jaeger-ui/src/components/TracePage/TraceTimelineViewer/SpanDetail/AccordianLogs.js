@@ -27,7 +27,7 @@ import './AccordianLogs.css';
 
 type AccordianLogsProps = {
   isOpen: boolean,
-  linksGetter: ({ key: string, value: any }[], number) => { url: string, text: string }[],
+  linksGetter: ?({ key: string, value: any }[], number) => { url: string, text: string }[],
   logs: Log[],
   onItemToggle: Log => void,
   onToggle: () => void,

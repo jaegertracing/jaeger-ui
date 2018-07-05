@@ -28,7 +28,7 @@ import './index.css';
 
 type SpanDetailProps = {
   detailState: DetailState,
-  linksGetter: ({ key: string, value: any }[], number) => { url: string, text: string }[],
+  linksGetter: ?({ key: string, value: any }[], number) => { url: string, text: string }[],
   logItemToggle: (string, Log) => void,
   logsToggle: string => void,
   processToggle: string => void,

@@ -72,6 +72,7 @@ describe('<SpanDetailRow>', () => {
     const spanDetail = (
       <SpanDetail
         detailState={props.detailState}
+        linksGetter={null}
         logItemToggle={props.logItemToggle}
         logsToggle={props.logsToggle}
         processToggle={props.processToggle}

@@ -33,7 +33,7 @@ function parseIfJson(value) {
 
 type KeyValuesTableProps = {
   data: { key: string, value: any }[],
-  linksGetter: ({ key: string, value: any }[], number) => { url: string, text: string }[],
+  linksGetter: ?({ key: string, value: any }[], number) => { url: string, text: string }[],
 };
 
 export default function KeyValuesTable(props: KeyValuesTableProps) {

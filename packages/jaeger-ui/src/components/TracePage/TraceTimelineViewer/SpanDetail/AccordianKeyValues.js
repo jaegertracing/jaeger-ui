@@ -30,7 +30,7 @@ type AccordianKeyValuesProps = {
   highContrast?: boolean,
   isOpen: boolean,
   label: string,
-  linksGetter: ({ key: string, value: any }[], number) => { url: string, text: string }[],
+  linksGetter: ?({ key: string, value: any }[], number) => { url: string, text: string }[],
   onToggle: () => void,
 };
 
