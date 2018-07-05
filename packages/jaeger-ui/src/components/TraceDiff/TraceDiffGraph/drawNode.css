@@ -1,0 +1,81 @@
+/*
+Copyright (c) 2017 Uber Technologies, Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+.DiffNode {
+  background: #fff;
+  border: 1px solid #bbb;
+  box-shadow: 0 0px 3px rgba(0, 0, 0, 0.2);
+}
+
+.DiffNode.is-changed {
+  color: rgba(0, 0, 0, 0.85);
+}
+
+.DiffNode.is-more {
+  border-color: #00c;
+}
+
+.DiffNode.is-added {
+  background: #f5f5ff;
+}
+
+.DiffNode.is-less {
+  border-color: #c00;
+}
+
+.DiffNode.is-removed {
+  background: #fff5f5;
+}
+
+.DiffNode--metricCell {
+  border: 1px solid #ddd;
+  padding: 0.3rem 0.5rem;
+}
+
+.DiffNode--metricCell.is-same {
+  color: #999;
+  padding: 0 0.7rem;
+}
+
+.DiffNode--metricCell.is-changed {
+  font-weight: 500;
+}
+
+.DiffNode--metricCell.is-more {
+  background: #eef;
+  border-color: #00c;
+}
+
+.DiffNode--metricCell.is-added {
+  color: #00c;
+}
+
+.DiffNode--metricCell.is-less {
+  background: #fee;
+  border-color: #c00;
+}
+
+.DiffNode--metricCell.is-removed {
+  color: #c00;
+}
+
+.DiffNode--metricSymbol {
+  margin: 0 0.1em;
+}
+
+.DiffNode--labelCell {
+  padding: 0.3rem 0.5rem;
+}

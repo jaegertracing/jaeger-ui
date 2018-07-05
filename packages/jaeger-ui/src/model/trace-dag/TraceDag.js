@@ -20,27 +20,60 @@ import DenseTrace from './DenseTrace';
 import type { NodeID } from './types';
 import type { Trace } from '../../types/trace';
 
-export default class TraceDag {
-  denseTrace: DenseTrace;
-  nodesMap: Map<NodeID, ?DagNode>;
-  rootIDs: Set<NodeID>;
+type DiffCounts = {
+  a: number,
+  b: number,
+};
 
-  constructor(trace: Trace) {
-    console.time('traceDag ctor');
-    this.denseTrace = new DenseTrace(trace);
-    this.nodesMap = new Map();
-    this.rootIDs = new Set();
-    [...this.denseTrace.rootIDs].forEach(id => this._addDenseSpan(id));
-    console.timeEnd('traceDag ctor');
+export default class TraceDag<T = void> {
+  static newFromTrace(trace: Trace) {
+    const dt: TraceDag<> = new TraceDag();
+    dt._initFromTrace(trace);
+    return dt;
   }
 
-  _getDagNode(service: string, operation: string, parentID?: ?NodeID) {
+  static diff(a: TraceDag<any>, b: TraceDag<any>) {
+    const dt: TraceDag<DiffCounts> = new TraceDag();
+    let key = 'a';
+
+    function pushDagNode(src: DagNode<any>) {
+      const node = dt._getDagNode(src.service, src.operation, src.parentID, { a: 0, b: 0 });
+      const { data } = node;
+      data[key] = src.count;
+      node.count = data.b - data.a;
+      if (!node.parentID) {
+        dt.rootIDs.add(node.id);
+      }
+    }
+    key = 'a';
+    [...a.nodesMap.values()].forEach(pushDagNode);
+    key = 'b';
+    [...b.nodesMap.values()].forEach(pushDagNode);
+    return dt;
+  }
+
+  denseTrace: ?DenseTrace;
+  nodesMap: Map<NodeID, DagNode<T>>;
+  rootIDs: Set<NodeID>;
+
+  constructor() {
+    this.denseTrace = null;
+    this.nodesMap = new Map();
+    this.rootIDs = new Set();
+  }
+
+  _initFromTrace(trace: Trace, data: T) {
+    this.denseTrace = new DenseTrace(trace);
+    [...this.denseTrace.rootIDs].forEach(id => this._addDenseSpan(id, null, data));
+  }
+
+  _getDagNode(service: string, operation: string, parentID?: ?NodeID, data: T): DagNode<T> {
     const nodeID = DagNode.getID(service, operation, parentID);
     let node = this.nodesMap.get(nodeID);
     if (node) {
       return node;
     }
-    node = new DagNode(service, operation, parentID);
+    node = new DagNode(service, operation, parentID, data);
     this.nodesMap.set(nodeID, node);
     if (!parentID) {
       this.rootIDs.add(nodeID);
@@ -53,8 +86,8 @@ export default class TraceDag {
     return node;
   }
 
-  _addDenseSpan(spanID: string, parentNodeID?: ?NodeID) {
-    const denseSpan = this.denseTrace.denseSpansMap.get(spanID);
+  _addDenseSpan(spanID: string, parentNodeID?: ?NodeID, data: T) {
+    const denseSpan = this.denseTrace && this.denseTrace.denseSpansMap.get(spanID);
     if (!denseSpan) {
       console.warn(`Missing dense span: ${spanID}`);
       return;
@@ -62,12 +95,13 @@ export default class TraceDag {
     const { children, operation, service, skipToChild } = denseSpan;
     let nodeID: ?string = null;
     if (!skipToChild) {
-      const node = this._getDagNode(service, operation, parentNodeID);
-      node.denseSpansIds.add(spanID);
+      const node = this._getDagNode(service, operation, parentNodeID, data);
+      // node.denseSpansIds.add(spanID);
+      node.count++;
       nodeID = node.id;
     } else {
       nodeID = parentNodeID;
     }
-    [...children].forEach(id => this._addDenseSpan(id, nodeID));
+    [...children].forEach(id => this._addDenseSpan(id, nodeID, data));
   }
 }

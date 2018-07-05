@@ -17,6 +17,7 @@ limitations under the License.
 .TraecDiffHeader {
   background: #fff;
   border-bottom: 1px solid #d8d8d8;
+  box-shadow: 0 2px 5px 0px rgba(0, 0, 0, 0.35);
   display: flex;
   flex: 0;
   position: relative;

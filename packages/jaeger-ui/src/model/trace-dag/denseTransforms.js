@@ -26,7 +26,7 @@ import type { DenseSpan } from './types';
 //     -	set self.service = self-tag peer.service
 function fixLeafService(denseSpan: DenseSpan, map: Map<string, ?DenseSpan>) {
   const { children, operation, parentID, tags } = denseSpan;
-  const parent = parentID && map.get(parentID);
+  const parent = parentID != null && map.get(parentID);
   const kind = tags[tagKeys.SPAN_KIND];
   const peerSvc = tags[tagKeys.PEER_SERVICE];
   if (!parent || children.size > 0 || kind !== 'client' || !peerSvc) {
@@ -47,7 +47,7 @@ function fixLeafService(denseSpan: DenseSpan, map: Map<string, ?DenseSpan>) {
 //     -	set parent.skipToChild = true
 function skipClient(denseSpan: DenseSpan, map: Map<string, ?DenseSpan>) {
   const { parentID, service, tags } = denseSpan;
-  const parent = parentID && map.get(parentID);
+  const parent = parentID != null && map.get(parentID);
   if (!parent) {
     return;
   }
@@ -66,7 +66,7 @@ function skipClient(denseSpan: DenseSpan, map: Map<string, ?DenseSpan>) {
 //     - fix self.operation
 function fixHttpOperation(denseSpan: DenseSpan, map: Map<string, ?DenseSpan>) {
   const { parentID, operation, service, tags } = denseSpan;
-  const parent = parentID && map.get(parentID);
+  const parent = parentID != null && map.get(parentID);
   if (!parent) {
     return;
   }
@@ -84,8 +84,52 @@ function fixHttpOperation(denseSpan: DenseSpan, map: Map<string, ?DenseSpan>) {
   }
 }
 
+// -	if span
+//     - has no tags
+//     - has only one child
+//     - parent.process === self.process
+//     - set self.skipToChild = true
+function skipAnnotationSpans(denseSpan: DenseSpan, map: Map<string, ?DenseSpan>) {
+  const { children, parentID, span } = denseSpan;
+  if (children.size !== 1 || span.tags.length !== 0) {
+    return;
+  }
+  const parent = parentID != null && map.get(parentID);
+  const childID = [...children][0];
+  const child = childID != null && map.get(childID);
+  if (!parent || !child) {
+    return;
+  }
+  // eslint-disable-next-line no-param-reassign
+  denseSpan.skipToChild = parent.span.processID === span.processID;
+}
+
+// -	if span
+//     - is a client span
+//     - has only one child
+//     - the child is a server span
+//     - parent.span.processID === self.span.processID
+//     - set parent.skipToChild = true
+function skipClientSpans(denseSpan: DenseSpan, map: Map<string, ?DenseSpan>) {
+  const { children, parentID, span, tags } = denseSpan;
+  if (children.size !== 1 || tags[tagKeys.SPAN_KIND] !== 'client') {
+    return;
+  }
+  const parent = parentID != null && map.get(parentID);
+  const childID = [...children][0];
+  const child = childID != null && map.get(childID);
+  if (!parent || !child) {
+    return;
+  }
+  // eslint-disable-next-line no-param-reassign
+  denseSpan.skipToChild =
+    child.tags[tagKeys.SPAN_KIND] === 'client' && parent.span.processID === span.processID;
+}
+
 export default function denseTransforms(denseSpan: DenseSpan, map: Map<string, ?DenseSpan>) {
   fixLeafService(denseSpan, map);
   skipClient(denseSpan, map);
   fixHttpOperation(denseSpan, map);
+  skipAnnotationSpans(denseSpan, map);
+  skipClientSpans(denseSpan, map);
 }
