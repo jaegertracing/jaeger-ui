@@ -37,14 +37,9 @@ function markupAsDiv(markup) {
 }
 
 function markupAsSpan(markup) {
+  const spanMarkup = markup.replace(/^<div /i, '<span ').replace(/<\/div>$/i, '</span>');
   // eslint-disable-next-line react/no-danger
-  return (
-    <span
-      dangerouslySetInnerHTML={{
-        __html: markup.replace(/^<div /i, '<span ').replace(/<\/div>$/i, '</span>'),
-      }}
-    />
-  );
+  return <span dangerouslySetInnerHTML={{ __html: spanMarkup }} />;
 }
 
 type KeyValuesTableProps = {
