@@ -16,6 +16,14 @@
 
 import type { LayoutEdge, LayoutGraph, LayoutVertex } from '../types/layout';
 
+export type WorkType = 'dot-only' | 'positions' | 'edges';
+export type Phase = 'not-started' | 'dot-only' | 'positions' | 'edges' | 'done';
+
+export type LayoutOptions = {
+  totalMemory?: number,
+  useDotEdges?: boolean,
+};
+
 type LayoutWorkerMeta = {
   layoutId: number,
   workerId: number,
@@ -23,7 +31,7 @@ type LayoutWorkerMeta = {
 };
 
 export type WorkerMessage = {
-  type: 'positions' | 'edges' | 'layout-error' | 'error',
+  type: WorkType | 'layout-error',
   edges?: LayoutEdge[],
   errorMessage?: any,
   graph?: LayoutGraph,
@@ -32,19 +40,19 @@ export type WorkerMessage = {
   vertices?: LayoutVertex[],
 };
 
-export type PositionsUpdate = {
+export type NodesUpdate = {
   type: 'positions',
   layoutId: number,
   graph: LayoutGraph,
   vertices: LayoutVertex[],
 };
 
-export type EdgesUpdate = {
-  type: 'edges',
+export type LayoutUpdate = {
+  type: 'done',
   layoutId: number,
   graph: LayoutGraph,
   edges: LayoutEdge[],
   vertices: LayoutVertex[],
 };
 
-export type LayoutUpdate = PositionsUpdate | EdgesUpdate;
+export type Update = NodesUpdate | LayoutUpdate;

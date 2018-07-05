@@ -17,9 +17,9 @@ import getLayout from './getLayout';
 let currentMeta;
 
 function handleMessage(event) {
-  const { meta, edges, vertices } = event.data;
+  const { edges, meta, options, vertices } = event.data;
   currentMeta = meta;
-  const { layoutError, ...result } = getLayout(meta.phase, edges, vertices);
+  const { layoutError, ...result } = getLayout(meta.phase, edges, vertices, options);
   const type = layoutError ? 'layout-error' : meta.phase;
   self.postMessage({ meta, type, ...result });
   currentMeta = null;

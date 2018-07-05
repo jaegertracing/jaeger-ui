@@ -36,7 +36,7 @@ class Demo extends React.Component {
   constructor(props) {
     super(props);
     this.layoutManager = new LayoutManager();
-    this.dagLayoutManager = new LayoutManager();
+    this.dagLayoutManager = new LayoutManager({ useDotEdges: true });
     this.largeLayoutManager = new LayoutManager();
   }
 

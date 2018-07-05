@@ -16,10 +16,11 @@
 
 import viz from 'viz.js';
 
-import type { Edge, LayoutVertex, SizeVertex } from '../types/layout';
-
 import convPlain from './dot/convPlain';
 import toDot from './dot/toDot';
+
+import type { LayoutOptions } from './types';
+import type { Edge, LayoutVertex, SizeVertex } from '../types/layout';
 
 const SHIFT_THRESHOLD = 0.015;
 const VALIDITY_OK = 'VALIDITY_OK';
@@ -70,14 +71,16 @@ function getVerticesValidity(input: (SizeVertex | LayoutVertex)[], output: Layou
 }
 
 export default function getLayout(
-  phase: 'positions' | 'edges',
+  phase: 'positions' | 'edges' | 'dot-only',
   inEdges: Edge[],
-  inVertices: (SizeVertex | LayoutVertex)[]
+  inVertices: (SizeVertex | LayoutVertex)[],
+  layoutOptions: LayoutOptions
 ) {
   const dot = toDot(inEdges, inVertices);
-  const options = { engine: phase === 'positions' ? 'dot' : 'neato', format: 'plain' };
+  const { totalMemory } = layoutOptions || {};
+  const options = { totalMemory, engine: phase === 'edges' ? 'neato' : 'dot', format: 'plain' };
   const plainOut = viz(dot, options);
-  const { edges, graph, vertices } = convPlain(plainOut, phase === 'edges');
+  const { edges, graph, vertices } = convPlain(plainOut, phase !== 'positions');
   const { validity, message } = getVerticesValidity(inVertices, vertices);
   if (validity === VALIDITY_ERROR) {
     return {
