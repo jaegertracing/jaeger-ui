@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { processTemplate } from './link-patterns';
+import { processTemplate, createTestFunction } from './link-patterns';
 
 describe('processTemplate()', () => {
   it('correctly replaces variables', () => {
@@ -69,10 +69,72 @@ describe('processTemplate()', () => {
   });
 });
 
+describe('createTestFunction()', () => {
+  it('accepts a string', () => {
+    const testFn = createTestFunction('myValue');
+    expect(testFn('myValue')).toBe(true);
+    expect(testFn('myFirstValue')).toBe(false);
+    expect(testFn('mySecondValue')).toBe(false);
+    expect(testFn('otherValue')).toBe(false);
+  });
+
+  it('accepts an array', () => {
+    const testFn = createTestFunction(['myFirstValue', 'mySecondValue']);
+    expect(testFn('myValue')).toBe(false);
+    expect(testFn('myFirstValue')).toBe(true);
+    expect(testFn('mySecondValue')).toBe(true);
+    expect(testFn('otherValue')).toBe(false);
+  });
+
+  it('accepts a regular expression', () => {
+    const testFn = createTestFunction(/^my.*Value$/);
+    expect(testFn('myValue')).toBe(true);
+    expect(testFn('myFirstValue')).toBe(true);
+    expect(testFn('mySecondValue')).toBe(true);
+    expect(testFn('otherValue')).toBe(false);
+  });
+
+  it('accepts a function', () => {
+    const mockCallback = jest.fn();
+    mockCallback
+      .mockReturnValueOnce(true)
+      .mockReturnValueOnce(false)
+      .mockReturnValueOnce(true)
+      .mockReturnValue(false);
+    const testFn = createTestFunction(mockCallback);
+    expect(testFn('myValue')).toBe(true);
+    expect(mockCallback).toHaveBeenCalledTimes(1);
+    expect(mockCallback).toHaveBeenCalledWith('myValue');
+    expect(testFn('myFirstValue')).toBe(false);
+    expect(mockCallback).toHaveBeenCalledTimes(2);
+    expect(mockCallback).toHaveBeenCalledWith('myFirstValue');
+    expect(testFn('mySecondValue')).toBe(true);
+    expect(mockCallback).toHaveBeenCalledTimes(3);
+    expect(mockCallback).toHaveBeenCalledWith('mySecondValue');
+    expect(testFn('otherValue')).toBe(false);
+    expect(mockCallback).toHaveBeenCalledTimes(4);
+    expect(mockCallback).toHaveBeenCalledWith('otherValue');
+  });
+
+  it('accepts undefined', () => {
+    const testFn = createTestFunction();
+    expect(testFn('myValue')).toBe(true);
+    expect(testFn('myFirstValue')).toBe(true);
+    expect(testFn('mySecondValue')).toBe(true);
+    expect(testFn('otherValue')).toBe(true);
+  });
+
+  it('rejects unknown values', () => {
+    expect(() => createTestFunction({})).toThrow();
+    expect(() => createTestFunction(true)).toThrow();
+    expect(() => createTestFunction(false)).toThrow();
+    expect(() => createTestFunction(0)).toThrow();
+    expect(() => createTestFunction(5)).toThrow();
+  });
+});
+
 // TODO:
 /*
-describe('createTestFunction()', () => {});
-
 describe('processLinkPattern()', () => {});
 
 describe('getParameterInArray()', () => {});
@@ -82,4 +144,6 @@ describe('getParameterInAncestor()', () => {});
 describe('callTemplate()', () => {});
 
 describe('computeLinks()', () => {});
+
+describe('getLinks()', () => {});
 */

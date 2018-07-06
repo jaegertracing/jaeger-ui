@@ -63,10 +63,10 @@ export function createTestFunction(entry) {
   if (entry instanceof RegExp) {
     return arg => entry.test(arg);
   }
-  if (entry instanceof Function) {
+  if (typeof entry === 'function') {
     return entry;
   }
-  if (!entry) {
+  if (entry == null) {
     return () => true;
   }
   throw new Error(`Invalid value: ${entry}`);
