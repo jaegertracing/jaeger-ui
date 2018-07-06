@@ -18,6 +18,8 @@ import {
   getParameterInArray,
   getParameterInAncestor,
   callTemplate,
+  processLinkPattern,
+  computeLinks,
 } from './link-patterns';
 
 describe('processTemplate()', () => {
@@ -295,11 +297,44 @@ describe('callTemplate()', () => {
   });
 });
 
-// TODO:
-/*
-describe('processLinkPattern()', () => {});
+describe('computeLinks()', () => {
+  const linkPatterns = [
+    {
+      type: 'tags',
+      key: 'myKey',
+      // eslint-disable-next-line no-template-curly-in-string
+      url: 'http://example.com/?myKey=${myKey}',
+      // eslint-disable-next-line no-template-curly-in-string
+      text: 'first link (${myKey})',
+    },
+    {
+      key: 'myOtherKey',
+      // eslint-disable-next-line no-template-curly-in-string
+      url: 'http://example.com/?myKey=${myOtherKey}&myKey=${myKey}',
+      // eslint-disable-next-line no-template-curly-in-string
+      text: 'second link (${myOtherKey})',
+    },
+  ].map(processLinkPattern);
 
-describe('computeLinks()', () => {});
+  const trace = {
+    spans: [
+      { depth: 0, process: {}, tags: [{ key: 'myKey', value: 'valueOfMyKey' }] },
+      { depth: 1, process: {}, logs: [{ fields: [{ key: 'myOtherKey', value: 'valueOfMy+Other+Key' }] }] },
+    ],
+  };
 
-describe('getLinks()', () => {});
-*/
+  it('correctly computes links', () => {
+    expect(computeLinks(linkPatterns, trace, 0, trace.spans[0].tags, 0)).toEqual([
+      {
+        url: 'http://example.com/?myKey=valueOfMyKey',
+        text: 'first link (valueOfMyKey)',
+      },
+    ]);
+    expect(computeLinks(linkPatterns, trace, 1, trace.spans[1].logs[0].fields, 0)).toEqual([
+      {
+        url: 'http://example.com/?myKey=valueOfMy%2BOther%2BKey&myKey=valueOfMyKey',
+        text: 'second link (valueOfMy+Other+Key)',
+      },
+    ]);
+  });
+});
