@@ -12,7 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { processTemplate, createTestFunction, getParameterInArray } from './link-patterns';
+import {
+  processTemplate,
+  createTestFunction,
+  getParameterInArray,
+  getParameterInAncestor,
+} from './link-patterns';
 
 describe('processTemplate()', () => {
   it('correctly replaces variables', () => {
@@ -151,11 +156,129 @@ describe('getParameterInArray()', () => {
   });
 });
 
+describe('getParameterInAncestor()', () => {
+  const spans = [
+    {
+      depth: 0,
+      process: {
+        tags: [
+          { key: 'a', value: 'a7' },
+          { key: 'b', value: 'b7' },
+          { key: 'c', value: 'c7' },
+          { key: 'd', value: 'd7' },
+          { key: 'e', value: 'e7' },
+          { key: 'f', value: 'f7' },
+          { key: 'g', value: 'g7' },
+          { key: 'h', value: 'h7' },
+        ],
+      },
+      tags: [
+        { key: 'a', value: 'a6' },
+        { key: 'b', value: 'b6' },
+        { key: 'c', value: 'c6' },
+        { key: 'd', value: 'd6' },
+        { key: 'e', value: 'e6' },
+        { key: 'f', value: 'f6' },
+        { key: 'g', value: 'g6' },
+      ],
+    },
+    {
+      depth: 1,
+      process: {
+        tags: [
+          { key: 'a', value: 'a5' },
+          { key: 'b', value: 'b5' },
+          { key: 'c', value: 'c5' },
+          { key: 'd', value: 'd5' },
+          { key: 'e', value: 'e5' },
+          { key: 'f', value: 'f5' },
+        ],
+      },
+      tags: [
+        { key: 'a', value: 'a4' },
+        { key: 'b', value: 'b4' },
+        { key: 'c', value: 'c4' },
+        { key: 'd', value: 'd4' },
+        { key: 'e', value: 'e4' },
+      ],
+    },
+    {
+      depth: 1,
+      process: {
+        tags: [
+          { key: 'a', value: 'a3' },
+          { key: 'b', value: 'b3' },
+          { key: 'c', value: 'c3' },
+          { key: 'd', value: 'd3' },
+        ],
+      },
+      tags: [{ key: 'a', value: 'a2' }, { key: 'b', value: 'b2' }, { key: 'c', value: 'c2' }],
+    },
+    {
+      depth: 2,
+      process: {
+        tags: [{ key: 'a', value: 'a1' }, { key: 'b', value: 'b1' }],
+      },
+      tags: [{ key: 'a', value: 'a0' }],
+    },
+  ];
+
+  it('uses current span tags', () => {
+    expect(getParameterInAncestor('a', spans, 3)).toEqual({ key: 'a', value: 'a0' });
+    expect(getParameterInAncestor('a', spans, 2)).toEqual({ key: 'a', value: 'a2' });
+    expect(getParameterInAncestor('a', spans, 1)).toEqual({ key: 'a', value: 'a4' });
+    expect(getParameterInAncestor('a', spans, 0)).toEqual({ key: 'a', value: 'a6' });
+  });
+
+  it('uses current span process tags', () => {
+    expect(getParameterInAncestor('b', spans, 3)).toEqual({ key: 'b', value: 'b1' });
+    expect(getParameterInAncestor('d', spans, 2)).toEqual({ key: 'd', value: 'd3' });
+    expect(getParameterInAncestor('f', spans, 1)).toEqual({ key: 'f', value: 'f5' });
+    expect(getParameterInAncestor('h', spans, 0)).toEqual({ key: 'h', value: 'h7' });
+  });
+
+  it('uses parent span tags', () => {
+    expect(getParameterInAncestor('c', spans, 3)).toEqual({ key: 'c', value: 'c2' });
+    expect(getParameterInAncestor('e', spans, 2)).toEqual({ key: 'e', value: 'e6' });
+    expect(getParameterInAncestor('f', spans, 2)).toEqual({ key: 'f', value: 'f6' });
+    expect(getParameterInAncestor('g', spans, 2)).toEqual({ key: 'g', value: 'g6' });
+    expect(getParameterInAncestor('g', spans, 1)).toEqual({ key: 'g', value: 'g6' });
+  });
+
+  it('uses parent span process tags', () => {
+    expect(getParameterInAncestor('d', spans, 3)).toEqual({ key: 'd', value: 'd3' });
+    expect(getParameterInAncestor('h', spans, 2)).toEqual({ key: 'h', value: 'h7' });
+    expect(getParameterInAncestor('h', spans, 1)).toEqual({ key: 'h', value: 'h7' });
+  });
+
+  it('uses grand-parent span tags', () => {
+    expect(getParameterInAncestor('e', spans, 3)).toEqual({ key: 'e', value: 'e6' });
+    expect(getParameterInAncestor('f', spans, 3)).toEqual({ key: 'f', value: 'f6' });
+    expect(getParameterInAncestor('g', spans, 3)).toEqual({ key: 'g', value: 'g6' });
+  });
+
+  it('uses grand-parent process tags', () => {
+    expect(getParameterInAncestor('h', spans, 3)).toEqual({ key: 'h', value: 'h7' });
+  });
+
+  it('returns undefined when the entry cannot be found', () => {
+    expect(getParameterInAncestor('i', spans, 3)).toBeUndefined();
+  });
+
+  it('does not break if some tags are not defined', () => {
+    const spansWithUndefinedTags = [
+      {
+        depth: 0,
+        process: {},
+      },
+    ];
+    expect(getParameterInAncestor('a', spansWithUndefinedTags, 0)).toBeUndefined();
+  });
+});
+
 // TODO:
 /*
 describe('processLinkPattern()', () => {});
-
-describe('getParameterInAncestor()', () => {});
 
 describe('callTemplate()', () => {});
 
