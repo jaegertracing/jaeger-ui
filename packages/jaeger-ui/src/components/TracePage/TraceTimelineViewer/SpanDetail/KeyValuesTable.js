@@ -31,17 +31,6 @@ function parseIfJson(value) {
   return value;
 }
 
-function markupAsDiv(markup) {
-  // eslint-disable-next-line react/no-danger
-  return <div dangerouslySetInnerHTML={{ __html: markup }} />;
-}
-
-function markupAsSpan(markup) {
-  const spanMarkup = markup.replace(/^<div /i, '<span ').replace(/<\/div>$/i, '</span>');
-  // eslint-disable-next-line react/no-danger
-  return <span dangerouslySetInnerHTML={{ __html: spanMarkup }} />;
-}
-
 type KeyValuesTableProps = {
   data: { key: string, value: any }[],
   linksGetter: ?({ key: string, value: any }[], number) => { url: string, text: string }[],
@@ -54,14 +43,18 @@ export default function KeyValuesTable(props: KeyValuesTableProps) {
       <table className="u-width-100">
         <tbody className="KeyValueTable--body">
           {data.map((row, i) => {
-            const markup = jsonMarkup(parseIfJson(row.value));
+            const markup = {
+              __html: jsonMarkup(parseIfJson(row.value)),
+            };
+            // eslint-disable-next-line react/no-danger
+            const jsonTable = <div className="ub-inline-block" dangerouslySetInnerHTML={markup} />;
             const links = linksGetter ? linksGetter(data, i) : null;
             let valueMarkup;
             if (links && links.length === 1) {
               valueMarkup = (
                 <div>
                   <a href={links[0].url} title={links[0].text} target="_blank" rel="noopener noreferrer">
-                    {markupAsSpan(markup)} <Icon className="KeyValueTable--linkIcon" type="export" />
+                    {jsonTable} <Icon className="KeyValueTable--linkIcon" type="export" />
                   </a>
                 </div>
               );
@@ -86,13 +79,13 @@ export default function KeyValuesTable(props: KeyValuesTableProps) {
                 <div>
                   <Dropdown overlay={menuItems} placement="bottomRight" trigger={['click']}>
                     <a>
-                      {markupAsSpan(markup)} <Icon className="KeyValueTable--linkIcon" type="profile" />
+                      {jsonTable} <Icon className="KeyValueTable--linkIcon" type="profile" />
                     </a>
                   </Dropdown>
                 </div>
               );
             } else {
-              valueMarkup = markupAsDiv(markup);
+              valueMarkup = jsonTable;
             }
             return (
               // `i` is necessary in the key because row.key can repeat

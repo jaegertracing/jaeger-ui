@@ -40,6 +40,11 @@ limitations under the License.
   width: 125px;
 }
 
+.KeyValueTable--body > tr > td {
+  padding: 0.25rem 0.5rem;
+  vertical-align: top;
+}
+
 .KeyValueTable--linkIcon {
   vertical-align: middle;
   font-weight: bold;
