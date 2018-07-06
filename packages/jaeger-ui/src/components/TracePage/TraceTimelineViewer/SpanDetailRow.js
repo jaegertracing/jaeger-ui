@@ -58,7 +58,6 @@ export default class SpanDetailRow extends React.PureComponent<SpanDetailRowProp
       columnDivision,
       detailState,
       isFilteredOut,
-      linksGetter,
       logItemToggle,
       logsToggle,
       processToggle,
@@ -84,7 +83,7 @@ export default class SpanDetailRow extends React.PureComponent<SpanDetailRowProp
           <div className="detail-info-wrapper" style={{ borderTopColor: color }}>
             <SpanDetail
               detailState={detailState}
-              linksGetter={linksGetter ? this._linksGetter : null}
+              linksGetter={this._linksGetter}
               logItemToggle={logItemToggle}
               logsToggle={logsToggle}
               processToggle={processToggle}
