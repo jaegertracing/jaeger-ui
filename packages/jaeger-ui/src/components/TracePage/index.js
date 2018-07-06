@@ -27,7 +27,7 @@ import ArchiveNotifier from './ArchiveNotifier';
 import { actions as archiveActions } from './ArchiveNotifier/duck';
 import { trackFilter, trackRange } from './index.track';
 import type { CombokeysHandler, ShortcutCallbacks } from './keyboard-shortcuts';
-import { init as initShortcuts, reset as resetShortcuts } from './keyboard-shortcuts';
+import { merge as mergeShortcuts, reset as resetShortcuts } from './keyboard-shortcuts';
 import { cancel as cancelScroll, scrollBy, scrollTo } from './scroll-page';
 import ScrollManager from './ScrollManager';
 import SpanGraph from './SpanGraph';
@@ -117,6 +117,7 @@ export default class TracePage extends React.PureComponent<TracePageProps, Trace
       scrollBy,
       scrollTo,
     });
+    resetShortcuts();
   }
 
   componentDidMount() {
@@ -138,7 +139,7 @@ export default class TracePage extends React.PureComponent<TracePageProps, Trace
     shortcutCallbacks.scrollPageUp = scrollPageUp;
     shortcutCallbacks.scrollToNextVisibleSpan = scrollToNextVisibleSpan;
     shortcutCallbacks.scrollToPrevVisibleSpan = scrollToPrevVisibleSpan;
-    initShortcuts(shortcutCallbacks);
+    mergeShortcuts(shortcutCallbacks);
   }
 
   componentWillReceiveProps(nextProps: TracePageProps) {
