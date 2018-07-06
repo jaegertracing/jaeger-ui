@@ -32,16 +32,16 @@ export default function TimelineCollapser(props: CollapserProps) {
   return (
     <span className="TimelineCollapser">
       <Tooltip title="Expand +1">
-        <Icon type="right" onClick={onExpandOne} className="TimelineCollapserBtn ExpandBtn" />
+        <Icon type="right" onClick={onExpandOne} className="TimelineCollapser--btn-expand" />
       </Tooltip>
       <Tooltip title="Collapse +1">
-        <Icon type="right" onClick={onCollapseOne} className="TimelineCollapserBtn" />
+        <Icon type="right" onClick={onCollapseOne} className="TimelineCollapser--btn" />
       </Tooltip>
       <Tooltip title="Expand All">
-        <Icon type="double-right" onClick={onExpandAll} className="TimelineCollapserBtn ExpandBtn" />
+        <Icon type="double-right" onClick={onExpandAll} className="TimelineCollapser--btn-expand" />
       </Tooltip>
       <Tooltip title="Collapse All">
-        <Icon type="double-right" onClick={onCollapseAll} className="TimelineCollapserBtn" />
+        <Icon type="double-right" onClick={onCollapseAll} className="TimelineCollapser--btn" />
       </Tooltip>
     </span>
   );

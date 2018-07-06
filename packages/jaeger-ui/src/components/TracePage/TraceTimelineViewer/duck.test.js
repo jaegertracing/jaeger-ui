@@ -147,6 +147,7 @@ describe('TraceTimelineViewer/duck', () => {
     const allSpansCollapsed = new Set([0, 1, 3]);
     const oneLevelCollapsed = new Set([1, 3]);
 
+    // Tests for corner cases of reducers
     const tests = [
       {
         msg: 'expand all',
@@ -178,6 +179,12 @@ describe('TraceTimelineViewer/duck', () => {
         initial: allSpansCollapsed,
         resultant: allSpansCollapsed,
       },
+      {
+        msg: 'collapse one, one collapsed',
+        action: collapseOne,
+        initial: oneSpanCollapsed,
+        resultant: oneLevelCollapsed,
+      },
     ];
 
     tests.forEach(info => {
@@ -189,6 +196,7 @@ describe('TraceTimelineViewer/duck', () => {
       });
     });
 
+    // Tests to verify correct behaviour of actions
     const dispatchTests = [
       {
         msg: 'expand all, no-op',

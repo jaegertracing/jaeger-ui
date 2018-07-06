@@ -20,10 +20,11 @@ limitations under the License.
   display: inline-block;
 }
 
-.TimelineCollapserBtn {
+.TimelineCollapser--btn,
+.TimelineCollapser--btn-expand {
   margin-right: 0.3rem;
 }
 
-.ExpandBtn {
+.TimelineCollapser--btn-expand {
   transform: rotate(90deg);
 }
