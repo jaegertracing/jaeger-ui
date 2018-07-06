@@ -17,6 +17,7 @@ import {
   createTestFunction,
   getParameterInArray,
   getParameterInAncestor,
+  callTemplate,
 } from './link-patterns';
 
 describe('processTemplate()', () => {
@@ -276,11 +277,27 @@ describe('getParameterInAncestor()', () => {
   });
 });
 
+describe('callTemplate()', () => {
+  it('correctly calls the template', () => {
+    const template = {
+      parameters: ['myKey', 'otherKey'],
+      template: jest.fn(),
+    };
+    template.template.mockReturnValue('ok');
+    expect(
+      callTemplate(template, {
+        otherKey: 'valueForOtherKey',
+        myKey: 'forMyKey',
+      })
+    ).toBe('ok');
+    expect(template.template).toHaveBeenCalledTimes(1);
+    expect(template.template).toHaveBeenCalledWith('forMyKey', 'valueForOtherKey');
+  });
+});
+
 // TODO:
 /*
 describe('processLinkPattern()', () => {});
-
-describe('callTemplate()', () => {});
 
 describe('computeLinks()', () => {});
 
