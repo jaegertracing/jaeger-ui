@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { processTemplate, createTestFunction } from './link-patterns';
+import { processTemplate, createTestFunction, getParameterInArray } from './link-patterns';
 
 describe('processTemplate()', () => {
   it('correctly replaces variables', () => {
@@ -133,11 +133,27 @@ describe('createTestFunction()', () => {
   });
 });
 
+describe('getParameterInArray()', () => {
+  const data = [{ key: 'mykey', value: 'ok' }, { key: 'otherkey', value: 'v' }];
+
+  it('returns an entry that is present', () => {
+    expect(getParameterInArray('mykey', data)).toBe(data[0]);
+    expect(getParameterInArray('otherkey', data)).toBe(data[1]);
+  });
+
+  it('returns undefined when the entry cannot be found', () => {
+    expect(getParameterInArray('myotherkey', data)).toBeUndefined();
+  });
+
+  it('returns undefined when there is no array', () => {
+    expect(getParameterInArray('otherkey')).toBeUndefined();
+    expect(getParameterInArray('otherkey', null)).toBeUndefined();
+  });
+});
+
 // TODO:
 /*
 describe('processLinkPattern()', () => {});
-
-describe('getParameterInArray()', () => {});
 
 describe('getParameterInAncestor()', () => {});
 

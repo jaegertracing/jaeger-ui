@@ -98,7 +98,7 @@ export function getParameterInArray(name, array) {
   if (array) {
     return array.find(entry => entry.key === name);
   }
-  return null;
+  return undefined;
 }
 
 export function getParameterInAncestor(name, spans, startSpanIndex) {
@@ -114,7 +114,7 @@ export function getParameterInAncestor(name, spans, startSpanIndex) {
       }
     }
   }
-  return null;
+  return undefined;
 }
 
 export function callTemplate(template, data) {
