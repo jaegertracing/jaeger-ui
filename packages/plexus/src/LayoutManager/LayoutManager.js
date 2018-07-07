@@ -15,15 +15,22 @@
 // limitations under the License.
 
 import type { LayoutUpdate, LayoutOptions, Update } from './types';
-import type { Edge, Layout, PendingLayoutResult, Positions, SizeVertex } from '../types/layout';
+import type {
+  Cancelled,
+  Edge,
+  LayoutDone,
+  PendingLayoutResult,
+  PositionsDone,
+  SizeVertex,
+} from '../types/layout';
 
 import Coordinator from './Coordinator';
 
 type PendingResult = {
   id: number,
   isPositionsResolved: boolean,
-  resolvePositions?: Positions => void,
-  resolveLayout?: Layout => void,
+  resolvePositions?: (Cancelled | PositionsDone) => void,
+  resolveLayout?: (Cancelled | LayoutDone) => void,
 };
 
 export default class LayoutManager {
@@ -45,12 +52,12 @@ export default class LayoutManager {
     const id = this.layoutId;
     this.coordinator.getLayout(id, edges, vertices, this.options);
     this.pendingResult = { id, isPositionsResolved: false };
-    const positions: Promise<Positions> = new Promise(resolve => {
+    const positions: Promise<Cancelled | PositionsDone> = new Promise(resolve => {
       if (this.pendingResult && id === this.pendingResult.id) {
         this.pendingResult.resolvePositions = resolve;
       }
     });
-    const layout: Promise<Layout> = new Promise(resolve => {
+    const layout: Promise<Cancelled | LayoutDone> = new Promise(resolve => {
       if (this.pendingResult && id === this.pendingResult.id) {
         this.pendingResult.resolveLayout = resolve;
       }

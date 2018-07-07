@@ -23,7 +23,10 @@ import { DirectedGraph, LayoutManager } from '../../src';
 
 import './index.css';
 
+const { semanticStrokeWidth } = DirectedGraph.propsFactories.edgePath;
+
 const addAnAttr = () => ({ 'data-rando': Math.random() });
+const setOnRoot = () => ({ className: 'DemoGraph--' });
 
 const addNodeDemoCss = () => ({ className: 'Node' });
 
@@ -58,30 +61,39 @@ class Demo extends React.Component {
           </a>
         </h1>
         <h1>Small graph with data driven rendering</h1>
-        <DirectedGraph
-          layoutManager={this.layoutManager}
-          getNodeLabel={colorData ? getColorNodeLabel : null}
-          setOnEdgePath={colorData ? setOnColorEdge : null}
-          setOnNode={colorData ? setOnColorNode : null}
-          setOnEdgesContainer={addAnAttr}
-          setOnNodesContainer={addAnAttr}
-          setOnRoot={addAnAttr}
-          {...data}
-        />
+        <div className="DemoGraph">
+          <DirectedGraph
+            layoutManager={this.layoutManager}
+            getNodeLabel={colorData ? getColorNodeLabel : null}
+            setOnEdgePath={colorData ? setOnColorEdge : null}
+            setOnNode={colorData ? setOnColorNode : null}
+            setOnEdgesContainer={addAnAttr}
+            setOnNodesContainer={addAnAttr}
+            setOnRoot={setOnRoot}
+            {...data}
+          />
+        </div>
         <h1>Medium DAG</h1>
-        <DirectedGraph
-          layoutManager={this.dagLayoutManager}
-          setOnNode={addNodeDemoCss}
-          edges={dagEdges}
-          vertices={dagVertices}
-        />
+        <div className="DemoGraph">
+          <DirectedGraph
+            layoutManager={this.dagLayoutManager}
+            setOnNode={addNodeDemoCss}
+            setOnEdgePath={semanticStrokeWidth}
+            setOnRoot={setOnRoot}
+            edges={dagEdges}
+            vertices={dagVertices}
+          />
+        </div>
         <h1>Larger directd graph with cycles</h1>
-        <DirectedGraph
-          layoutManager={this.largeLayoutManager}
-          getNodeLabel={getLargeNodeLabel}
-          setOnNode={addNodeDemoCss}
-          {...largeDg}
-        />
+        <div className="DemoGraph">
+          <DirectedGraph
+            layoutManager={this.largeLayoutManager}
+            getNodeLabel={getLargeNodeLabel}
+            setOnNode={addNodeDemoCss}
+            setOnRoot={setOnRoot}
+            {...largeDg}
+          />
+        </div>
       </div>
     );
   }

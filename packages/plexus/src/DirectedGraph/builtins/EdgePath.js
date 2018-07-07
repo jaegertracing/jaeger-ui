@@ -38,6 +38,7 @@ const D_CMDS = ['M', 'C'];
 //   return props.enclose ? <defs>{strokeDef}</defs> : strokeDef;
 // }
 
+// NOTE: This function is necessary for gradient stroke
 // function renderPathPoint(pt, i) {
 //   let [x, y] = pt;
 //   if (i === 0) {

@@ -2,6 +2,14 @@ html {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+.DemoGraph {
+  border: 1px solid blue;
+  overflow: hidden;
+  height: 500px;
+  width: 800px;
+  position: relative;
+}
+
 .Node {
   background: #eee;
   border: 1px solid #ddd;

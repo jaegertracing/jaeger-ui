@@ -15,19 +15,36 @@
 // limitations under the License.
 
 import * as React from 'react';
+import { select } from 'd3-selection';
+import { zoom, zoomIdentity, zoomTransform as getTransform } from 'd3-zoom';
 
 import * as arrow from './builtins/EdgeArrow';
 import EdgePath from './builtins/EdgePath';
 import EdgesContainer from './builtins/EdgesContainer';
 import Node from './builtins/Node';
-import type { DirectedGraphProps, DirectedGraphState } from './types';
-import type { Edge, Vertex } from '../types/layout';
+import * as setOnEdge from './set-on/edge-path';
+import {
+  constrainZoom,
+  DEFAULT_SCALE_EXTENT,
+  fitWithinContainer,
+  getScaleExtent,
+  getZoomStyle,
+} from './transform-utils';
+
+import type { D3Transform, DirectedGraphProps, DirectedGraphState } from './types';
+import type { Cancelled, Edge, LayoutDone, PositionsDone, Vertex } from '../types/layout';
 
 const PHASE_NO_DATA = 0;
 const PHASE_CALC_SIZES = 1;
 const PHASE_CALC_POSITIONS = 2;
 const PHASE_CALC_EDGES = 3;
 const PHASE_DONE = 4;
+
+const WRAPPER_STYLE = {
+  height: '100%',
+  overflow: 'hidden',
+  width: '100%',
+};
 
 function defaultGetEdgeLabel(
   edge: Edge,
@@ -49,7 +66,8 @@ function defaultGetEdgeLabel(
   );
 }
 
-function defaultGetNodeLabel(vertex: Vertex) {
+// eslint-disable-next-line no-unused-vars
+function defaultGetNodeLabel(vertex: Vertex, _: DirectedGraphState) {
   const { label } = vertex;
   if (label != null) {
     if (typeof label === 'string' || React.isValidElement(label)) {
@@ -63,7 +81,14 @@ function defaultGetNodeLabel(vertex: Vertex) {
 export default class DirectedGraph extends React.PureComponent<DirectedGraphProps, DirectedGraphState> {
   // ref API defs in flow seem to be a WIP
   // https://github.com/facebook/flow/issues/6103
-  vertexRefs: { current: ?HTMLElement }[];
+  rootRef: { current: HTMLDivElement | null };
+  rootSelection: any;
+  vertexRefs: { current: HTMLElement | null }[];
+  zoom: any;
+
+  static propsFactories = {
+    edgePath: setOnEdge,
+  };
 
   static defaultProps = {
     classNamePrefix: 'plexus',
@@ -80,6 +105,7 @@ export default class DirectedGraph extends React.PureComponent<DirectedGraphProp
     layoutVertices: null,
     vertexRefs: [],
     vertices: [],
+    zoomTransform: zoomIdentity,
   };
 
   static getDerivedStateFromProps(nextProps: DirectedGraphProps, prevState: DirectedGraphState) {
@@ -109,10 +135,16 @@ export default class DirectedGraph extends React.PureComponent<DirectedGraphProp
       this.state.vertices = vertices;
       this.state.vertexRefs = vertices.map(React.createRef);
     }
+    this.rootRef = React.createRef();
+    this.zoom = zoom()
+      .scaleExtent(DEFAULT_SCALE_EXTENT)
+      .constrain(this._constrainZoom)
+      .on('zoom', this._onZoomed);
   }
 
   componentDidMount() {
     this._setSizeVertices();
+    this.rootSelection = select(this.rootRef.current);
   }
 
   componentDidUpdate() {
@@ -121,6 +153,49 @@ export default class DirectedGraph extends React.PureComponent<DirectedGraphProp
       this._setSizeVertices();
     }
   }
+
+  _onPositionsDone = (result: Cancelled | PositionsDone) => {
+    if (!result.isCancelled) {
+      const { graph: layoutGraph, vertices: layoutVertices } = result;
+      this.setState({ layoutGraph, layoutVertices, layoutPhase: PHASE_CALC_EDGES });
+    }
+  };
+
+  _onLayoutDone = (result: Cancelled | LayoutDone) => {
+    const root = this.rootRef.current;
+    if (result.isCancelled || !root) {
+      return;
+    }
+    const { edges: layoutEdges, graph: layoutGraph, vertices: layoutVertices } = result;
+    const { height, width } = root.getBoundingClientRect();
+
+    const scaleExtent = getScaleExtent(layoutGraph.width, layoutGraph.height, width, height);
+    const zoomTransform = fitWithinContainer(layoutGraph.width, layoutGraph.height, width, height);
+    this.zoom.scaleExtent(scaleExtent);
+    this.rootSelection.call(this.zoom);
+    // set the initial transform
+    this.zoom.transform(this.rootSelection, zoomTransform);
+    this.setState({ layoutEdges, layoutGraph, layoutVertices, zoomTransform, layoutPhase: PHASE_DONE });
+  };
+
+  _onZoomed = () => {
+    const root = this.rootRef.current;
+    if (!root) {
+      return;
+    }
+    const zoomTransform = getTransform(root);
+    this.setState({ zoomTransform });
+  };
+
+  _constrainZoom = (transform: D3Transform, extent: [[number, number], [number, number]]) => {
+    const [, [vw, vh]] = extent;
+    const { height: h, width: w } = this.state.layoutGraph || {};
+    if (h == null || w == null) {
+      // for flow
+      return transform;
+    }
+    return constrainZoom(transform, w, h, vw, vh);
+  };
 
   _setSizeVertices() {
     const { edges, layoutManager, vertices } = this.props;
@@ -138,18 +213,8 @@ export default class DirectedGraph extends React.PureComponent<DirectedGraphProp
       })
       .filter(Boolean);
     const { positions, layout } = layoutManager.getLayout(edges, sizeVertices);
-    positions.then(({ isCancelled, graph: layoutGraph, vertices: layoutVertices }) => {
-      if (isCancelled) {
-        return;
-      }
-      this.setState({ layoutGraph, layoutVertices, layoutPhase: PHASE_CALC_EDGES });
-    });
-    layout.then(({ isCancelled, edges: layoutEdges, graph: layoutGraph, vertices: layoutVertices }) => {
-      if (isCancelled) {
-        return;
-      }
-      this.setState({ layoutEdges, layoutGraph, layoutVertices, layoutPhase: PHASE_DONE });
-    });
+    positions.then(this._onPositionsDone);
+    layout.then(this._onLayoutDone);
     this.setState({ sizeVertices, layoutPhase: PHASE_CALC_POSITIONS });
   }
 
@@ -163,8 +228,8 @@ export default class DirectedGraph extends React.PureComponent<DirectedGraphProp
         ref={vertexRefs[i]}
         hidden
         classNamePrefix={classNamePrefix}
-        label={_getLabel(v)}
-        {...setOnNode && setOnNode(v)}
+        label={_getLabel(v, this.state)}
+        {...setOnNode && setOnNode(v, this.state)}
       />
     ));
   }
@@ -181,10 +246,10 @@ export default class DirectedGraph extends React.PureComponent<DirectedGraphProp
         key={lv.vertex.key}
         ref={vertexRefs[i]}
         classNamePrefix={classNamePrefix}
-        label={_getLabel(lv.vertex)}
+        label={_getLabel(lv.vertex, this.state)}
         left={lv.left}
         top={lv.top}
-        {...setOnNode && setOnNode(lv.vertex)}
+        {...setOnNode && setOnNode(lv.vertex, this.state)}
       />
     ));
   }
@@ -200,40 +265,51 @@ export default class DirectedGraph extends React.PureComponent<DirectedGraphProp
         key={`${edge.edge.from}\v${edge.edge.to}`}
         pathPoints={edge.pathPoints}
         markerEnd={arrow.iriRef}
-        {...setOnEdgePath && setOnEdgePath(edge.edge)}
+        {...setOnEdgePath && setOnEdgePath(edge.edge, this.state)}
       />
     ));
   }
 
   render() {
     const { classNamePrefix, setOnEdgesContainer, setOnNodesContainer, setOnRoot } = this.props;
-    const { layoutPhase: phase, layoutGraph } = this.state;
+    const { layoutPhase: phase, layoutGraph, zoomTransform } = this.state;
+
     const havePosition = phase >= PHASE_CALC_EDGES;
     const haveEdges = phase === PHASE_DONE;
+    const wrapperCls = `${classNamePrefix}-DirectedGraph--wrapper`;
     const nodesContainerCls = `${classNamePrefix}-DirectedGraph--nodeContainer`;
-    const nodesContainerProps: Object = (setOnNodesContainer && setOnNodesContainer(layoutGraph)) || {};
+    const nodesContainerProps: Object = (setOnNodesContainer && setOnNodesContainer(this.state)) || {};
+    const rootProps: Object = (setOnRoot && setOnRoot(this.state)) || {};
+
     nodesContainerProps.style = { ...nodesContainerProps.style, position: 'relative' };
     if (nodesContainerProps.className) {
       nodesContainerProps.className = `${nodesContainerCls} ${nodesContainerProps.className}`;
     } else {
       nodesContainerProps.className = nodesContainerCls;
     }
+    rootProps.style = {
+      ...rootProps.style,
+      ...getZoomStyle(zoomTransform),
+    };
+
     return (
-      <div {...setOnRoot && setOnRoot(layoutGraph)}>
-        <div {...nodesContainerProps}>
-          {havePosition ? this._renderLayoutVertices() : this._renderVertices()}
+      <div className={wrapperCls} style={WRAPPER_STYLE} ref={this.rootRef}>
+        <div {...rootProps}>
+          <div {...nodesContainerProps}>
+            {havePosition ? this._renderLayoutVertices() : this._renderVertices()}
+          </div>
+          {layoutGraph &&
+            haveEdges && (
+              <EdgesContainer
+                {...setOnEdgesContainer && setOnEdgesContainer(this.state)}
+                height={layoutGraph.height}
+                width={layoutGraph.width}
+              >
+                {arrow.defs}
+                {this._renderLayoutEdges()}
+              </EdgesContainer>
+            )}
         </div>
-        {layoutGraph &&
-          haveEdges && (
-            <EdgesContainer
-              {...setOnEdgesContainer && setOnEdgesContainer(layoutGraph)}
-              height={layoutGraph.height}
-              width={layoutGraph.width}
-            >
-              {arrow.defs}
-              {this._renderLayoutEdges()}
-            </EdgesContainer>
-          )}
       </div>
     );
   }
