@@ -15,9 +15,11 @@ limitations under the License.
 */
 
 .DiffNode {
-  background: #fff;
+  background: #e4e4e4;
   border: 1px solid #bbb;
   box-shadow: 0 0px 3px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  white-space: pre;
 }
 
 .DiffNode.is-changed {
@@ -25,19 +27,25 @@ limitations under the License.
 }
 
 .DiffNode.is-more {
-  border-color: #00c;
+  border-color: #1d39c4;
+  background: #85a5ff;
 }
 
 .DiffNode.is-added {
-  background: #f5f5ff;
+  background: #1616cc;
+  border: none;
+  color: #fff;
 }
 
 .DiffNode.is-less {
-  border-color: #c00;
+  border-color: #cf1322;
+  background: #ffa39e;
 }
 
 .DiffNode.is-removed {
-  background: #fff5f5;
+  background: #cc1616;
+  border: none;
+  color: #fff;
 }
 
 .DiffNode--metricCell {
@@ -46,6 +54,7 @@ limitations under the License.
 }
 
 .DiffNode--metricCell.is-same {
+  border: 1px solid #999;
   color: #999;
   padding: 0 0.7rem;
 }
@@ -55,21 +64,25 @@ limitations under the License.
 }
 
 .DiffNode--metricCell.is-more {
+  border-color: #1d39c4;
   background: #eef;
-  border-color: #00c;
 }
 
 .DiffNode--metricCell.is-added {
+  background: #eef;
+  border-color: #00c;
   color: #00c;
 }
 
 .DiffNode--metricCell.is-less {
+  border-color: #cf1322;
   background: #fee;
-  border-color: #c00;
 }
 
 .DiffNode--metricCell.is-removed {
   color: #c00;
+  background: #fee;
+  border-color: #c00;
 }
 
 .DiffNode--metricSymbol {
@@ -78,4 +91,25 @@ limitations under the License.
 
 .DiffNode--labelCell {
   padding: 0.3rem 0.5rem;
+}
+
+/* Tweak the popover aesthetics - unfortunate but necessary */
+
+.DiffNode--popover .ant-popover-inner-content {
+  padding: 0;
+  position: relative;
+}
+
+.DiffNode--popover.is-same .ant-popover-arrow {
+  background: #ccc;
+}
+
+.DiffNode--popover.is-more .ant-popover-arrow,
+.DiffNode--popover.is-added .ant-popover-arrow {
+  background: #00c;
+}
+
+.DiffNode--popover.is-less .ant-popover-arrow,
+.DiffNode--popover.is-removed .ant-popover-arrow {
+  background: #c00;
 }

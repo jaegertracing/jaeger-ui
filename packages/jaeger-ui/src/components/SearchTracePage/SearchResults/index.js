@@ -91,7 +91,7 @@ export default class SearchResults extends React.PureComponent<SearchResultsProp
       return (
         <React.Fragment>
           {diffCohort.length > 0 && diffSelection}
-          <LoadingIndicator className="u-mt-vast" centered />;
+          <LoadingIndicator className="u-mt-vast" centered />
         </React.Fragment>
       );
     }

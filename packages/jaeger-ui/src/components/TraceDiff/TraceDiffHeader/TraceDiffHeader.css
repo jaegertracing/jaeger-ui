@@ -36,6 +36,7 @@ limitations under the License.
   background: #eee;
 }
 
+/* Unfortunate but necessary */
 .TraceDiffHeader--popover .ant-popover-inner-content {
   padding: 0;
 }

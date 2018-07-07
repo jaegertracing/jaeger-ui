@@ -33,10 +33,10 @@ type Props = {
   b: ?FetchedTrace,
 };
 
-// this CSS class screws up THE node measuring, so only apply when the layout
-// is done, i.e. when `dimensions` is non-null
+const { semanticStrokeWidth } = DirectedGraph.propsFactories.edgePath;
+
 const rootCssClass = { className: 'TraceDiffGraph--plexusRoot' };
-const setOnRoot = dimensions => (dimensions ? rootCssClass : null);
+const setOnRoot = () => rootCssClass;
 
 export default class TraceDiffGraph extends React.PureComponent<Props> {
   props: Props;
@@ -83,7 +83,7 @@ export default class TraceDiffGraph extends React.PureComponent<Props> {
     const aData = a.data;
     const bData = b.data;
     if (!aData || !bData) {
-      return <div className="TraceDiffGraph" />;
+      return <div className="TraceDiffGraph--graphWrapper" />;
     }
     const aTraceDag = TraceDag.newFromTrace(aData);
     const bTraceDag = TraceDag.newFromTrace(bData);
@@ -91,10 +91,11 @@ export default class TraceDiffGraph extends React.PureComponent<Props> {
     const { edges, vertices } = convPlexus(diffDag.nodesMap);
 
     return (
-      <div className="TraceDiffGraph u-simple-scrollbars">
+      <div className="TraceDiffGraph--graphWrapper u-simple-scrollbars">
         <DirectedGraph
           layoutManager={this.layoutManager}
           getNodeLabel={drawNode}
+          setOnEdgePath={semanticStrokeWidth}
           setOnRoot={setOnRoot}
           edges={edges}
           vertices={vertices}

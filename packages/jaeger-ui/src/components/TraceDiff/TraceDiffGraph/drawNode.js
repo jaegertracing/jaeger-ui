@@ -15,6 +15,7 @@
 // limitations under the License.
 
 import * as React from 'react';
+import { Popover } from 'antd';
 import cx from 'classnames';
 
 import type { PVertex } from '../../../model/trace-dag/types';
@@ -37,39 +38,45 @@ class DiffNode extends React.PureComponent<Props> {
   render() {
     const { a, b, operation, service } = this.props;
     const isSame = a === b;
-    const classNames = cx({
+    const className = cx({
       'is-same': isSame,
       'is-changed': !isSame,
-      'is-more': b > a,
+      'is-more': b > a && a > 0,
       'is-added': a === 0,
-      'is-less': b < a,
+      'is-less': a > b && b > 0,
       'is-removed': b === 0,
     });
     const chgSign = a < b ? '+' : '-';
-    return (
-      <table className={`DiffNode ${classNames}`}>
+    const table = (
+      <table className={`DiffNode ${className}`}>
         <tbody>
           <tr>
-            <td className={`DiffNode--metricCell ${classNames}`} rowSpan={isSame ? 2 : 1}>
+            <td className={`DiffNode--metricCell ${className}`} rowSpan={isSame ? 2 : 1}>
               {isSame ? null : <span className="DiffNode--metricSymbol">{chgSign}</span>}
               {isSame ? a : abs(b - a)}
             </td>
-            <td className={`DiffNode--labelCell ${classNames}`}>
+            <td className={`DiffNode--labelCell ${className}`}>
               <strong>{service}</strong>
             </td>
           </tr>
           <tr>
             {isSame ? null : (
-              <td className={`DiffNode--metricCell ${classNames}`}>
+              <td className={`DiffNode--metricCell ${className}`}>
                 <span className="DiffNode--metricSymbol">{chgSign}</span>
                 {a === 0 || b === 0 ? 100 : abs((a - b) / max(a, b) * 100).toFixed(0)}
                 <span className="DiffNode--metricSymbol">%</span>
               </td>
             )}
-            <td className={`DiffNode--labelCell ${classNames}`}>{operation}</td>
+            <td className={`DiffNode--labelCell ${className}`}>{operation}</td>
           </tr>
         </tbody>
       </table>
+    );
+
+    return (
+      <Popover overlayClassName={`DiffNode--popover ${className}`} mouseEnterDelay={0.25} content={table}>
+        {table}
+      </Popover>
     );
   }
 }

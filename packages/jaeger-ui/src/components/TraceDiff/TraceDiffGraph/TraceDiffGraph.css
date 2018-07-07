@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-.TraceDiffGraph {
+.TraceDiffGraph--graphWrapper {
   bottom: 0;
   left: 0;
   overflow: auto;
@@ -24,7 +24,14 @@ limitations under the License.
 }
 
 .TraceDiffGraph--errorsWrapper {
-  margin: 5rem 3.5rem;
+  background: #eee;
+  bottom: 0;
+  left: 0;
+  overflow: auto;
+  padding: 5rem 3.5rem;
+  position: absolute;
+  right: 0;
+  top: 0;
 }
 
 .TraceDiffGraph--errorMessage {

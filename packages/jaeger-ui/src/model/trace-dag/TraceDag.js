@@ -96,7 +96,6 @@ export default class TraceDag<T = void> {
     let nodeID: ?string = null;
     if (!skipToChild) {
       const node = this._getDagNode(service, operation, parentNodeID, data);
-      // node.denseSpansIds.add(spanID);
       node.count++;
       nodeID = node.id;
     } else {
