@@ -40,6 +40,8 @@ export type DirectedGraphProps = {
   getEdgeLabel: (Edge, DirectedGraphState) => string | React.Node,
   getNodeLabel: (Vertex, DirectedGraphState) => string | React.Node,
   layoutManager: LayoutManager,
+  minimap: boolean,
+  minimapClassName: string,
   // setOnEdgeArrow
   setOnEdgePath: ?(Edge, DirectedGraphState) => {},
   setOnEdgesContainer: ?(DirectedGraphState) => {},

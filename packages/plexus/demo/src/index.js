@@ -76,6 +76,8 @@ class Demo extends React.Component {
         <h1>Medium DAG</h1>
         <div className="DemoGraph">
           <DirectedGraph
+            minimap
+            minimapClassName="Demo--miniMap"
             layoutManager={this.dagLayoutManager}
             setOnNode={addNodeDemoCss}
             setOnEdgePath={semanticStrokeWidth}
@@ -87,6 +89,8 @@ class Demo extends React.Component {
         <h1>Larger directd graph with cycles</h1>
         <div className="DemoGraph">
           <DirectedGraph
+            minimap
+            minimapClassName="Demo--miniMap"
             layoutManager={this.largeLayoutManager}
             getNodeLabel={getLargeNodeLabel}
             setOnNode={addNodeDemoCss}

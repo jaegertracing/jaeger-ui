@@ -24,7 +24,7 @@ const SCALE_MARGIN = 0.05;
 
 export const DEFAULT_SCALE_EXTENT = Object.freeze([SCALE_MIN, SCALE_MAX]);
 
-function boundValue(min, max, value) {
+function boundValue(min: number, max: number, value: number) {
   if (value < min) {
     return min;
   }

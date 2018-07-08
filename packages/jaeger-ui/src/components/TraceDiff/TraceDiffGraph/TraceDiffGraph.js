@@ -93,6 +93,8 @@ export default class TraceDiffGraph extends React.PureComponent<Props> {
     return (
       <div className="TraceDiffGraph--graphWrapper u-simple-scrollbars">
         <DirectedGraph
+          minimap
+          minimapClassName="TraceDiffGraph--miniMap"
           layoutManager={this.layoutManager}
           getNodeLabel={drawNode}
           setOnEdgePath={semanticStrokeWidth}

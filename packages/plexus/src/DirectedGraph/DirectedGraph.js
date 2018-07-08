@@ -22,6 +22,7 @@ import * as arrow from './builtins/EdgeArrow';
 import EdgePath from './builtins/EdgePath';
 import EdgesContainer from './builtins/EdgesContainer';
 import Node from './builtins/Node';
+import MiniMap from './MiniMap';
 import * as setOnEdge from './set-on/edge-path';
 import {
   constrainZoom,
@@ -94,6 +95,8 @@ export default class DirectedGraph extends React.PureComponent<DirectedGraphProp
     classNamePrefix: 'plexus',
     getEdgeLabel: defaultGetEdgeLabel,
     getNodeLabel: defaultGetNodeLabel,
+    minimap: false,
+    minimapClassName: '',
   };
 
   state = {
@@ -167,7 +170,7 @@ export default class DirectedGraph extends React.PureComponent<DirectedGraphProp
       return;
     }
     const { edges: layoutEdges, graph: layoutGraph, vertices: layoutVertices } = result;
-    const { height, width } = root.getBoundingClientRect();
+    const { clientHeight: height, clientWidth: width } = root;
 
     const scaleExtent = getScaleExtent(layoutGraph.width, layoutGraph.height, width, height);
     const zoomTransform = fitWithinContainer(layoutGraph.width, layoutGraph.height, width, height);
@@ -195,6 +198,18 @@ export default class DirectedGraph extends React.PureComponent<DirectedGraphProp
       return transform;
     }
     return constrainZoom(transform, w, h, vw, vh);
+  };
+
+  _resetZoom = () => {
+    const root = this.rootRef.current;
+    const layoutGraph = this.state.layoutGraph;
+    if (!root || !layoutGraph) {
+      return;
+    }
+    const { clientHeight: height, clientWidth: width } = root;
+    const zoomTransform = fitWithinContainer(layoutGraph.width, layoutGraph.height, width, height);
+    this.zoom.transform(this.rootSelection, zoomTransform);
+    this.setState({ zoomTransform });
   };
 
   _setSizeVertices() {
@@ -271,8 +286,16 @@ export default class DirectedGraph extends React.PureComponent<DirectedGraphProp
   }
 
   render() {
-    const { classNamePrefix, setOnEdgesContainer, setOnNodesContainer, setOnRoot } = this.props;
+    const {
+      classNamePrefix,
+      minimap,
+      minimapClassName,
+      setOnEdgesContainer,
+      setOnNodesContainer,
+      setOnRoot,
+    } = this.props;
     const { layoutPhase: phase, layoutGraph, zoomTransform } = this.state;
+    const { current: rootElm } = this.rootRef;
 
     const havePosition = phase >= PHASE_CALC_EDGES;
     const haveEdges = phase === PHASE_DONE;
@@ -280,6 +303,8 @@ export default class DirectedGraph extends React.PureComponent<DirectedGraphProp
     const nodesContainerCls = `${classNamePrefix}-DirectedGraph--nodeContainer`;
     const nodesContainerProps: Object = (setOnNodesContainer && setOnNodesContainer(this.state)) || {};
     const rootProps: Object = (setOnRoot && setOnRoot(this.state)) || {};
+    // console.warn(this.zoom.extent());
+    // const [, [vw, vh]] = haveEdges ? this.zoom.extent() : [null,[0, 0]];
 
     nodesContainerProps.style = { ...nodesContainerProps.style, position: 'relative' };
     if (nodesContainerProps.className) {
@@ -310,6 +335,20 @@ export default class DirectedGraph extends React.PureComponent<DirectedGraphProp
               </EdgesContainer>
             )}
         </div>
+        {minimap &&
+          layoutGraph &&
+          rootElm && (
+            <MiniMap
+              className={minimapClassName}
+              classNamePrefix={classNamePrefix}
+              contentHeight={layoutGraph.height}
+              contentWidth={layoutGraph.width}
+              viewAll={this._resetZoom}
+              viewportHeight={rootElm.clientHeight}
+              viewportWidth={rootElm.clientWidth}
+              {...zoomTransform}
+            />
+          )}
       </div>
     );
   }
