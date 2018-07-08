@@ -94,6 +94,7 @@ export default class TraceDiffGraph extends React.PureComponent<Props> {
       <div className="TraceDiffGraph--graphWrapper u-simple-scrollbars">
         <DirectedGraph
           minimap
+          zoom
           minimapClassName="TraceDiffGraph--miniMap"
           layoutManager={this.layoutManager}
           getNodeLabel={drawNode}

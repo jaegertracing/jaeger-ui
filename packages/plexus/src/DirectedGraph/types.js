@@ -22,6 +22,9 @@ import LayoutManager from '../LayoutManager';
 
 export type D3Transform = { k: number, x: number, y: number };
 
+// TODO(joe): Optimize by removing DirectedGraphState from the node
+// and edge rendering
+
 export type DirectedGraphState = {
   edges: Edge[],
   layoutEdges: ?(LayoutEdge[]),
@@ -31,10 +34,12 @@ export type DirectedGraphState = {
   sizeVertices: ?(SizeVertex[]),
   vertexRefs: { current: ?HTMLElement }[],
   vertices: Vertex[],
-  zoomTransform: ?D3Transform,
+  zoomEnabled: boolean,
+  zoomTransform: D3Transform,
 };
 
 export type DirectedGraphProps = {
+  className: string,
   classNamePrefix: string,
   edges: Edge[],
   getEdgeLabel: (Edge, DirectedGraphState) => string | React.Node,
@@ -49,4 +54,5 @@ export type DirectedGraphProps = {
   setOnNodesContainer: ?(DirectedGraphState) => {},
   setOnRoot: ?(DirectedGraphState) => {},
   vertices: Vertex[],
+  zoom: boolean,
 };

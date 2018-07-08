@@ -16,7 +16,7 @@
 
 import * as React from 'react';
 import { select } from 'd3-selection';
-import { zoom, zoomIdentity, zoomTransform as getTransform } from 'd3-zoom';
+import { zoom as d3Zoom, zoomIdentity, zoomTransform as getTransform } from 'd3-zoom';
 
 import * as arrow from './builtins/EdgeArrow';
 import EdgePath from './builtins/EdgePath';
@@ -41,7 +41,7 @@ const PHASE_CALC_POSITIONS = 2;
 const PHASE_CALC_EDGES = 3;
 const PHASE_DONE = 4;
 
-const WRAPPER_STYLE = {
+const WRAPPER_STYLE_ZOOM = {
   height: '100%',
   overflow: 'hidden',
   width: '100%',
@@ -92,11 +92,14 @@ export default class DirectedGraph extends React.PureComponent<DirectedGraphProp
   };
 
   static defaultProps = {
+    className: '',
     classNamePrefix: 'plexus',
     getEdgeLabel: defaultGetEdgeLabel,
     getNodeLabel: defaultGetNodeLabel,
     minimap: false,
     minimapClassName: '',
+    zoom: false,
+    zoomTransform: zoomIdentity,
   };
 
   state = {
@@ -108,20 +111,24 @@ export default class DirectedGraph extends React.PureComponent<DirectedGraphProp
     layoutVertices: null,
     vertexRefs: [],
     vertices: [],
+    zoomEnabled: false,
     zoomTransform: zoomIdentity,
   };
 
   static getDerivedStateFromProps(nextProps: DirectedGraphProps, prevState: DirectedGraphState) {
-    const { edges: nxEdges, vertices: nxVertices } = nextProps;
-    const { edges: stEdges, vertices: stVertices } = prevState;
-    if (nxEdges === stEdges && nxVertices === stVertices) {
+    const { edges, vertices, zoom: zoomEnabled } = nextProps;
+    const { edges: stEdges, vertices: stVertices, zoomEnabled: stZoomEnabled } = prevState;
+    if (zoomEnabled !== stZoomEnabled) {
+      throw new Error('Zoom cannot be toggled');
+    }
+    if (edges === stEdges && vertices === stVertices) {
       return null;
     }
     return {
+      edges,
+      vertices,
       layoutPhase: PHASE_CALC_SIZES,
-      edges: nxEdges,
-      vertices: nxVertices,
-      vertexRefs: nxVertices.map(React.createRef),
+      vertexRefs: vertices.map(React.createRef),
       sizeVertices: null,
       layoutEdges: null,
       layoutGraph: null,
@@ -131,18 +138,21 @@ export default class DirectedGraph extends React.PureComponent<DirectedGraphProp
 
   constructor(props: DirectedGraphProps) {
     super(props);
-    const { edges, vertices } = props;
+    const { edges, vertices, zoom: zoomEnabled } = props;
     if (Array.isArray(edges) && edges.length && Array.isArray(vertices) && vertices.length) {
       this.state.layoutPhase = PHASE_CALC_SIZES;
       this.state.edges = edges;
       this.state.vertices = vertices;
       this.state.vertexRefs = vertices.map(React.createRef);
     }
+    this.state.zoomEnabled = zoomEnabled;
     this.rootRef = React.createRef();
-    this.zoom = zoom()
-      .scaleExtent(DEFAULT_SCALE_EXTENT)
-      .constrain(this._constrainZoom)
-      .on('zoom', this._onZoomed);
+    if (zoomEnabled) {
+      this.zoom = d3Zoom()
+        .scaleExtent(DEFAULT_SCALE_EXTENT)
+        .constrain(this._constrainZoom)
+        .on('zoom', this._onZoomed);
+    }
   }
 
   componentDidMount() {
@@ -169,15 +179,18 @@ export default class DirectedGraph extends React.PureComponent<DirectedGraphProp
     if (result.isCancelled || !root) {
       return;
     }
+    const { zoomEnabled } = this.state;
     const { edges: layoutEdges, graph: layoutGraph, vertices: layoutVertices } = result;
     const { clientHeight: height, clientWidth: width } = root;
-
-    const scaleExtent = getScaleExtent(layoutGraph.width, layoutGraph.height, width, height);
-    const zoomTransform = fitWithinContainer(layoutGraph.width, layoutGraph.height, width, height);
-    this.zoom.scaleExtent(scaleExtent);
-    this.rootSelection.call(this.zoom);
-    // set the initial transform
-    this.zoom.transform(this.rootSelection, zoomTransform);
+    let zoomTransform = zoomIdentity;
+    if (zoomEnabled) {
+      const scaleExtent = getScaleExtent(layoutGraph.width, layoutGraph.height, width, height);
+      zoomTransform = fitWithinContainer(layoutGraph.width, layoutGraph.height, width, height);
+      this.zoom.scaleExtent(scaleExtent);
+      this.rootSelection.call(this.zoom);
+      // set the initial transform
+      this.zoom.transform(this.rootSelection, zoomTransform);
+    }
     this.setState({ layoutEdges, layoutGraph, layoutVertices, zoomTransform, layoutPhase: PHASE_DONE });
   };
 
@@ -287,6 +300,7 @@ export default class DirectedGraph extends React.PureComponent<DirectedGraphProp
 
   render() {
     const {
+      className,
       classNamePrefix,
       minimap,
       minimapClassName,
@@ -294,17 +308,15 @@ export default class DirectedGraph extends React.PureComponent<DirectedGraphProp
       setOnNodesContainer,
       setOnRoot,
     } = this.props;
-    const { layoutPhase: phase, layoutGraph, zoomTransform } = this.state;
+    const { layoutPhase: phase, layoutGraph, zoomEnabled, zoomTransform } = this.state;
     const { current: rootElm } = this.rootRef;
-
     const havePosition = phase >= PHASE_CALC_EDGES;
     const haveEdges = phase === PHASE_DONE;
-    const wrapperCls = `${classNamePrefix}-DirectedGraph--wrapper`;
+
+    const wrapperCls = `${classNamePrefix}-DirectedGraph--wrapper ${className}`;
     const nodesContainerCls = `${classNamePrefix}-DirectedGraph--nodeContainer`;
     const nodesContainerProps: Object = (setOnNodesContainer && setOnNodesContainer(this.state)) || {};
     const rootProps: Object = (setOnRoot && setOnRoot(this.state)) || {};
-    // console.warn(this.zoom.extent());
-    // const [, [vw, vh]] = haveEdges ? this.zoom.extent() : [null,[0, 0]];
 
     nodesContainerProps.style = { ...nodesContainerProps.style, position: 'relative' };
     if (nodesContainerProps.className) {
@@ -314,11 +326,11 @@ export default class DirectedGraph extends React.PureComponent<DirectedGraphProp
     }
     rootProps.style = {
       ...rootProps.style,
-      ...getZoomStyle(zoomTransform),
+      ...(zoomEnabled ? getZoomStyle(zoomTransform) : null),
     };
 
     return (
-      <div className={wrapperCls} style={WRAPPER_STYLE} ref={this.rootRef}>
+      <div className={wrapperCls} style={zoomEnabled ? WRAPPER_STYLE_ZOOM : null} ref={this.rootRef}>
         <div {...rootProps}>
           <div {...nodesContainerProps}>
             {havePosition ? this._renderLayoutVertices() : this._renderVertices()}
@@ -335,7 +347,8 @@ export default class DirectedGraph extends React.PureComponent<DirectedGraphProp
               </EdgesContainer>
             )}
         </div>
-        {minimap &&
+        {zoomEnabled &&
+          minimap &&
           layoutGraph &&
           rootElm && (
             <MiniMap

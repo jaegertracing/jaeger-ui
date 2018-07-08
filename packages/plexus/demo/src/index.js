@@ -18,7 +18,13 @@ import { render } from 'react-dom';
 
 import largeDg, { getNodeLabel as getLargeNodeLabel } from './data-large';
 import { edges as dagEdges, vertices as dagVertices } from './data-dag';
-import { varied, colored, getColorNodeLabel, setOnColorEdge, setOnColorNode } from './data-small';
+import {
+  varied,
+  colored as colorData,
+  getColorNodeLabel,
+  setOnColorEdge,
+  setOnColorNode,
+} from './data-small';
 import { DirectedGraph, LayoutManager } from '../../src';
 
 import './index.css';
@@ -31,73 +37,71 @@ const setOnRoot = () => ({ className: 'DemoGraph--' });
 const addNodeDemoCss = () => ({ className: 'Node' });
 
 class Demo extends React.Component {
-  state = {
-    data: colored,
-    colorData: true,
-  };
-
   constructor(props) {
     super(props);
     this.layoutManager = new LayoutManager();
     this.dagLayoutManager = new LayoutManager({ useDotEdges: true });
-    this.largeLayoutManager = new LayoutManager();
+    this.largeDotLayoutManager = new LayoutManager({ useDotEdges: true });
+    this.largeNeatoLayoutManager = new LayoutManager();
   }
-
-  handleClick = () => {
-    const { colorData } = this.state;
-    this.setState({
-      colorData: !colorData,
-      data: colorData ? varied : colored,
-    });
-  };
-
+  // http://localhost:3001/
   render() {
-    const { data, colorData } = this.state;
     return (
       <div>
-        <h1>
-          <a href="#" onClick={this.handleClick}>
-            plexus Demo
-          </a>
-        </h1>
         <h1>Small graph with data driven rendering</h1>
-        <div className="DemoGraph">
-          <DirectedGraph
-            layoutManager={this.layoutManager}
-            getNodeLabel={colorData ? getColorNodeLabel : null}
-            setOnEdgePath={colorData ? setOnColorEdge : null}
-            setOnNode={colorData ? setOnColorNode : null}
-            setOnEdgesContainer={addAnAttr}
-            setOnNodesContainer={addAnAttr}
-            setOnRoot={setOnRoot}
-            {...data}
-          />
+        <DirectedGraph
+          className="DemoGraph--wrapper"
+          getNodeLabel={colorData ? getColorNodeLabel : null}
+          layoutManager={this.layoutManager}
+          setOnEdgePath={colorData ? setOnColorEdge : null}
+          setOnEdgesContainer={addAnAttr}
+          setOnNode={colorData ? setOnColorNode : null}
+          setOnNodesContainer={addAnAttr}
+          setOnRoot={setOnRoot}
+          {...colorData}
+        />
+        <h1>Larger directd graph with cycles - dot edges</h1>
+        <div>
+          <div className="DemoGraph">
+            <DirectedGraph
+              zoom
+              minimap
+              className="DemoGraph--wrapper"
+              getNodeLabel={getLargeNodeLabel}
+              layoutManager={this.largeDotLayoutManager}
+              minimapClassName="Demo--miniMap"
+              setOnNode={addNodeDemoCss}
+              setOnRoot={setOnRoot}
+              {...largeDg}
+            />
+          </div>
+        </div>
+        <h1>Larger directd graph with cycles - neato edges</h1>
+        <div>
+          <div className="DemoGraph">
+            <DirectedGraph
+              zoom
+              minimap
+              className="DemoGraph--wrapper"
+              getNodeLabel={getLargeNodeLabel}
+              layoutManager={this.largeNeatoLayoutManager}
+              minimapClassName="Demo--miniMap"
+              setOnNode={addNodeDemoCss}
+              setOnRoot={setOnRoot}
+              {...largeDg}
+            />
+          </div>
         </div>
         <h1>Medium DAG</h1>
-        <div className="DemoGraph">
-          <DirectedGraph
-            minimap
-            minimapClassName="Demo--miniMap"
-            layoutManager={this.dagLayoutManager}
-            setOnNode={addNodeDemoCss}
-            setOnEdgePath={semanticStrokeWidth}
-            setOnRoot={setOnRoot}
-            edges={dagEdges}
-            vertices={dagVertices}
-          />
-        </div>
-        <h1>Larger directd graph with cycles</h1>
-        <div className="DemoGraph">
-          <DirectedGraph
-            minimap
-            minimapClassName="Demo--miniMap"
-            layoutManager={this.largeLayoutManager}
-            getNodeLabel={getLargeNodeLabel}
-            setOnNode={addNodeDemoCss}
-            setOnRoot={setOnRoot}
-            {...largeDg}
-          />
-        </div>
+        <DirectedGraph
+          className="DemoGraph--wrapper"
+          edges={dagEdges}
+          layoutManager={this.dagLayoutManager}
+          setOnEdgePath={semanticStrokeWidth}
+          setOnNode={addNodeDemoCss}
+          setOnRoot={setOnRoot}
+          vertices={dagVertices}
+        />
       </div>
     );
   }

@@ -10,11 +10,14 @@ html {
   position: relative;
 }
 
+.DemoGraph--wrapper {
+  background: #f8f8f8;
+}
+
 .Node {
-  background: #eee;
-  border: 1px solid #ddd;
-  line-height: 1.4;
-  padding: 0.3em 0.5em;
+  background: #ddd;
+  border: 1px solid #bbb;
+  padding: 0.8em 1.25em;
 }
 
 /* DAG minimap */
