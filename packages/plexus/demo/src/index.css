@@ -10,14 +10,24 @@ html {
   position: relative;
 }
 
-.DemoGraph--wrapper {
-  background: #f8f8f8;
+.DemoGraph--dag {
+  background: #999;
+  stroke-width: 1.7;
 }
 
-.Node {
-  background: #ddd;
-  border: 1px solid #bbb;
+.DemoGraph--dag.is-small {
+  stroke-width: 1;
+}
+
+.DemoGraph--node {
+  background: #fff;
+  border: 1px solid #666;
+  box-shadow: 0 0 7px 1px rgba(0, 0, 0, 0.4);
   padding: 0.8em 1.25em;
+}
+
+.DemoGraph--dag.is-small .DemoGraph--nodeLabel {
+  opacity: 0;
 }
 
 /* DAG minimap */

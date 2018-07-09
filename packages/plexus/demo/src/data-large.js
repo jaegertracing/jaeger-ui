@@ -489,7 +489,7 @@ export default {
 export function getNodeLabel(vertex) {
   const [svc, op] = vertex.key.split('::', 2);
   return (
-    <span>
+    <span className="DemoGraph--nodeLabel">
       <strong>{svc}</strong>
       <br />
       {op}

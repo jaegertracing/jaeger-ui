@@ -38,9 +38,16 @@ limitations under the License.
   font-size: 1.8rem;
 }
 
-.TraceDiffGraph--plexusRoot {
-  float: left;
-  padding: 3rem;
+.TraceDiffGraph--dag {
+  stroke-width: 1.7;
+}
+
+.TraceDiffGraph--dag.is-small {
+  stroke-width: 0.7;
+}
+
+.TraceDiffGraph--dag.is-small .DiffNode--labelCell {
+  opacity: 0;
 }
 
 /* DAG minimap */

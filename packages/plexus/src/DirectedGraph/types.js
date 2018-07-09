@@ -22,9 +22,6 @@ import LayoutManager from '../LayoutManager';
 
 export type D3Transform = { k: number, x: number, y: number };
 
-// TODO(joe): Optimize by removing DirectedGraphState from the node
-// and edge rendering
-
 export type DirectedGraphState = {
   edges: Edge[],
   layoutEdges: ?(LayoutEdge[]),
@@ -32,27 +29,27 @@ export type DirectedGraphState = {
   layoutPhase: number,
   layoutVertices: ?(LayoutVertex[]),
   sizeVertices: ?(SizeVertex[]),
-  vertexRefs: { current: ?HTMLElement }[],
+  vertexRefs: { current: HTMLElement | null }[],
   vertices: Vertex[],
   zoomEnabled: boolean,
   zoomTransform: D3Transform,
 };
 
 export type DirectedGraphProps = {
+  arrowScaleDampener: number,
   className: string,
   classNamePrefix: string,
   edges: Edge[],
-  getEdgeLabel: (Edge, DirectedGraphState) => string | React.Node,
-  getNodeLabel: (Vertex, DirectedGraphState) => string | React.Node,
+  // getEdgeLabel: ?(Edge) => string | React.Node,
+  getNodeLabel: ?(Vertex) => string | React.Node,
   layoutManager: LayoutManager,
   minimap: boolean,
   minimapClassName: string,
-  // setOnEdgeArrow
-  setOnEdgePath: ?(Edge, DirectedGraphState) => {},
-  setOnEdgesContainer: ?(DirectedGraphState) => {},
-  setOnNode: ?(Vertex, DirectedGraphState) => {},
-  setOnNodesContainer: ?(DirectedGraphState) => {},
-  setOnRoot: ?(DirectedGraphState) => {},
+  setOnEdgePath: ?(Edge) => ?Object,
+  setOnEdgesContainer: ?(DirectedGraphState) => ?Object,
+  setOnNode: ?(Vertex) => ?Object,
+  setOnNodesContainer: ?(DirectedGraphState) => ?Object,
+  setOnRoot: ?(DirectedGraphState) => ?Object,
   vertices: Vertex[],
   zoom: boolean,
 };

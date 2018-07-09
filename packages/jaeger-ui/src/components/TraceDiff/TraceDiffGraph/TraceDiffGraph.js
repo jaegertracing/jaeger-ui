@@ -33,10 +33,7 @@ type Props = {
   b: ?FetchedTrace,
 };
 
-const { semanticStrokeWidth } = DirectedGraph.propsFactories.edgePath;
-
-const rootCssClass = { className: 'TraceDiffGraph--plexusRoot' };
-const setOnRoot = () => rootCssClass;
+const { classNameIsSmall } = DirectedGraph.propsFactories;
 
 export default class TraceDiffGraph extends React.PureComponent<Props> {
   props: Props;
@@ -95,11 +92,12 @@ export default class TraceDiffGraph extends React.PureComponent<Props> {
         <DirectedGraph
           minimap
           zoom
+          arrowScaleDampener={0.45}
+          className="TraceDiffGraph--dag"
           minimapClassName="TraceDiffGraph--miniMap"
           layoutManager={this.layoutManager}
           getNodeLabel={drawNode}
-          setOnEdgePath={semanticStrokeWidth}
-          setOnRoot={setOnRoot}
+          setOnRoot={classNameIsSmall}
           edges={edges}
           vertices={vertices}
         />

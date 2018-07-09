@@ -18,19 +18,19 @@ import type { DirectedGraphState } from '../types';
 
 const STROKE_MAX = 4.2;
 const STROKE_MIN = 2;
-const PROPS_MAX = { strokeWidth: STROKE_MAX };
-const PROPS_MIN = { strokeWidth: STROKE_MIN };
+const STROKE_SPREAD = STROKE_MAX - STROKE_MIN;
+const PROPS_MAX = { style: { strokeWidth: STROKE_MAX } };
+const PROPS_MIN = { style: { strokeWidth: STROKE_MIN } };
 
 const THRESHOLD_MAX = 0.1;
 const THRESHOLD_MIN = 0.6;
 const THRESHOLD_SPREAD = THRESHOLD_MIN - THRESHOLD_MAX;
 
-const cache: { [string]: { strokeWidth: string } } = {};
+const cache: { [string]: { style: { strokeWidth: string } } } = {};
 let lastK = -Number.MIN_VALUE;
 let lastProps = STROKE_MIN;
 
-// eslint-disable-next-line import/prefer-default-export
-export function semanticStrokeWidth(_: any, graphState: DirectedGraphState) {
+export default function scaledStrokeWidth(graphState: DirectedGraphState) {
   const { k } = graphState.zoomTransform || {};
   if (k === lastK) {
     return lastProps;
@@ -41,8 +41,8 @@ export function semanticStrokeWidth(_: any, graphState: DirectedGraphState) {
   } else if (k < THRESHOLD_MAX) {
     props = PROPS_MAX;
   } else {
-    const strokeWidth = (STROKE_MIN + STROKE_MAX * (THRESHOLD_MIN - k) / THRESHOLD_SPREAD).toFixed(1);
-    props = cache[strokeWidth] || (cache[strokeWidth] = { strokeWidth });
+    const strokeWidth = (STROKE_MIN + STROKE_SPREAD * (THRESHOLD_MIN - k) / THRESHOLD_SPREAD).toFixed(1);
+    props = cache[strokeWidth] || (cache[strokeWidth] = { style: { strokeWidth } });
   }
   lastK = k;
   lastProps = props;

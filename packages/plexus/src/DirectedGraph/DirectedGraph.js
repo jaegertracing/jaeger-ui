@@ -18,22 +18,25 @@ import * as React from 'react';
 import { select } from 'd3-selection';
 import { zoom as d3Zoom, zoomIdentity, zoomTransform as getTransform } from 'd3-zoom';
 
-import * as arrow from './builtins/EdgeArrow';
-import EdgePath from './builtins/EdgePath';
+import EdgeArrowDef from './builtins/EdgeArrowDef';
 import EdgesContainer from './builtins/EdgesContainer';
-import Node from './builtins/Node';
+import PureEdges from './builtins/PureEdges';
+import PureNodes from './builtins/PureNodes';
 import MiniMap from './MiniMap';
-import * as setOnEdge from './set-on/edge-path';
+import classNameIsSmall from './prop-factories/classNameIsSmall';
+import mergePropSetters, { mergeClassNameAndStyle } from './prop-factories/mergePropSetters';
+import scaledStrokeWidth from './prop-factories/scaledStrokeWidth';
 import {
   constrainZoom,
   DEFAULT_SCALE_EXTENT,
   fitWithinContainer,
   getScaleExtent,
+  getZoomAttr,
   getZoomStyle,
 } from './transform-utils';
 
 import type { D3Transform, DirectedGraphProps, DirectedGraphState } from './types';
-import type { Cancelled, Edge, LayoutDone, PositionsDone, Vertex } from '../types/layout';
+import type { Cancelled, LayoutDone, PositionsDone, Vertex } from '../types/layout';
 
 const PHASE_NO_DATA = 0;
 const PHASE_CALC_SIZES = 1;
@@ -41,34 +44,16 @@ const PHASE_CALC_POSITIONS = 2;
 const PHASE_CALC_EDGES = 3;
 const PHASE_DONE = 4;
 
-const WRAPPER_STYLE_ZOOM = {
+const STYLE_WRAPPER_ZOOM = {
   height: '100%',
   overflow: 'hidden',
   width: '100%',
 };
 
-function defaultGetEdgeLabel(
-  edge: Edge,
-  from: Vertex,
-  to: Vertex,
-  getNodeLabel: Vertex => string | React.Node
-) {
-  const { label } = edge;
-  if (label != null) {
-    if (typeof label === 'string' || React.isValidElement(label)) {
-      return label;
-    }
-    return String(label);
-  }
-  return (
-    <React.Fragment>
-      {getNodeLabel(from)} → {getNodeLabel(to)}
-    </React.Fragment>
-  );
-}
+let idCounter = 0;
 
 // eslint-disable-next-line no-unused-vars
-function defaultGetNodeLabel(vertex: Vertex, _: DirectedGraphState) {
+function defaultGetNodeLabel(vertex: Vertex) {
   const { label } = vertex;
   if (label != null) {
     if (typeof label === 'string' || React.isValidElement(label)) {
@@ -80,6 +65,8 @@ function defaultGetNodeLabel(vertex: Vertex, _: DirectedGraphState) {
 }
 
 export default class DirectedGraph extends React.PureComponent<DirectedGraphProps, DirectedGraphState> {
+  arrowId: string;
+  arrowIriRef: string;
   // ref API defs in flow seem to be a WIP
   // https://github.com/facebook/flow/issues/6103
   rootRef: { current: HTMLDivElement | null };
@@ -88,13 +75,16 @@ export default class DirectedGraph extends React.PureComponent<DirectedGraphProp
   zoom: any;
 
   static propsFactories = {
-    edgePath: setOnEdge,
+    classNameIsSmall,
+    mergePropSetters,
+    scaledStrokeWidth,
   };
 
   static defaultProps = {
+    arrowScaleDampener: undefined,
     className: '',
     classNamePrefix: 'plexus',
-    getEdgeLabel: defaultGetEdgeLabel,
+    // getEdgeLabel: defaultGetEdgeLabel,
     getNodeLabel: defaultGetNodeLabel,
     minimap: false,
     minimapClassName: '',
@@ -146,6 +136,10 @@ export default class DirectedGraph extends React.PureComponent<DirectedGraphProp
       this.state.vertexRefs = vertices.map(React.createRef);
     }
     this.state.zoomEnabled = zoomEnabled;
+    const idBase = `plexus--DirectedGraph--${idCounter}`;
+    idCounter += 1;
+    this.arrowId = EdgeArrowDef.getId(idBase);
+    this.arrowIriRef = EdgeArrowDef.getIriRef(idBase);
     this.rootRef = React.createRef();
     if (zoomEnabled) {
       this.zoom = d3Zoom()
@@ -230,14 +224,13 @@ export default class DirectedGraph extends React.PureComponent<DirectedGraphProp
     const sizeVertices = this.state.vertexRefs
       .map((ref, i) => {
         const { current } = ref;
-        if (!current) {
-          return null;
-        }
-        return {
-          height: current.offsetHeight,
-          vertex: vertices[i],
-          width: current.offsetWidth,
-        };
+        return !current
+          ? null
+          : {
+              height: current.offsetHeight,
+              vertex: vertices[i],
+              width: current.offsetWidth,
+            };
       })
       .filter(Boolean);
     const { positions, layout } = layoutManager.getLayout(edges, sizeVertices);
@@ -248,114 +241,84 @@ export default class DirectedGraph extends React.PureComponent<DirectedGraphProp
 
   _renderVertices() {
     const { classNamePrefix, getNodeLabel, setOnNode, vertices } = this.props;
-    const { vertexRefs } = this.state;
-    const _getLabel = getNodeLabel != null ? getNodeLabel : defaultGetNodeLabel;
-    return vertices.map((v, i) => (
-      <Node
-        key={v.key}
-        ref={vertexRefs[i]}
-        hidden
-        classNamePrefix={classNamePrefix}
-        label={_getLabel(v, this.state)}
-        {...setOnNode && setOnNode(v, this.state)}
-      />
-    ));
-  }
-
-  _renderLayoutVertices() {
     const { layoutVertices, vertexRefs } = this.state;
-    if (!layoutVertices) {
-      return null;
-    }
-    const { classNamePrefix, getNodeLabel, setOnNode } = this.props;
-    const _getLabel = getNodeLabel != null ? getNodeLabel : defaultGetNodeLabel;
-    return layoutVertices.map((lv, i) => (
-      <Node
-        key={lv.vertex.key}
-        ref={vertexRefs[i]}
+    return (
+      <PureNodes
         classNamePrefix={classNamePrefix}
-        label={_getLabel(lv.vertex, this.state)}
-        left={lv.left}
-        top={lv.top}
-        {...setOnNode && setOnNode(lv.vertex, this.state)}
+        getNodeLabel={getNodeLabel || defaultGetNodeLabel}
+        layoutVertices={layoutVertices}
+        setOnNode={setOnNode}
+        vertexRefs={vertexRefs}
+        vertices={vertices}
       />
-    ));
+    );
   }
 
-  _renderLayoutEdges() {
+  _renderEdges() {
     const { setOnEdgePath } = this.props;
     const { layoutEdges } = this.state;
-    if (!layoutEdges) {
-      return null;
-    }
-    return layoutEdges.map(edge => (
-      <EdgePath
-        key={`${edge.edge.from}\v${edge.edge.to}`}
-        pathPoints={edge.pathPoints}
-        markerEnd={arrow.iriRef}
-        {...setOnEdgePath && setOnEdgePath(edge.edge, this.state)}
-      />
-    ));
+    return (
+      layoutEdges && (
+        <PureEdges setOnEdgePath={setOnEdgePath} layoutEdges={layoutEdges} arrowIriRef={this.arrowIriRef} />
+      )
+    );
   }
 
   render() {
     const {
+      arrowScaleDampener,
       className,
       classNamePrefix,
-      minimap,
+      minimap: minimapEnabled,
       minimapClassName,
       setOnEdgesContainer,
       setOnNodesContainer,
       setOnRoot,
     } = this.props;
     const { layoutPhase: phase, layoutGraph, zoomEnabled, zoomTransform } = this.state;
+    const { height, width } = layoutGraph || {};
     const { current: rootElm } = this.rootRef;
-    const havePosition = phase >= PHASE_CALC_EDGES;
     const haveEdges = phase === PHASE_DONE;
 
-    const wrapperCls = `${classNamePrefix}-DirectedGraph--wrapper ${className}`;
-    const nodesContainerCls = `${classNamePrefix}-DirectedGraph--nodeContainer`;
-    const nodesContainerProps: Object = (setOnNodesContainer && setOnNodesContainer(this.state)) || {};
-    const rootProps: Object = (setOnRoot && setOnRoot(this.state)) || {};
-
-    nodesContainerProps.style = { ...nodesContainerProps.style, position: 'relative' };
-    if (nodesContainerProps.className) {
-      nodesContainerProps.className = `${nodesContainerCls} ${nodesContainerProps.className}`;
-    } else {
-      nodesContainerProps.className = nodesContainerCls;
-    }
-    rootProps.style = {
-      ...rootProps.style,
-      ...(zoomEnabled ? getZoomStyle(zoomTransform) : null),
-    };
+    const nodesContainerProps = mergeClassNameAndStyle(
+      (setOnNodesContainer && setOnNodesContainer(this.state)) || {},
+      {
+        style: { ...(zoomEnabled ? getZoomStyle(zoomTransform) : null), position: 'relative' },
+        className: `${classNamePrefix}-DirectedGraph--nodeContainer`,
+      }
+    );
+    const rootProps = mergeClassNameAndStyle((setOnRoot && setOnRoot(this.state)) || {}, {
+      style: zoomEnabled ? STYLE_WRAPPER_ZOOM : null,
+      className: `${classNamePrefix}-DirectedGraph ${className}`,
+    });
 
     return (
-      <div className={wrapperCls} style={zoomEnabled ? WRAPPER_STYLE_ZOOM : null} ref={this.rootRef}>
-        <div {...rootProps}>
-          <div {...nodesContainerProps}>
-            {havePosition ? this._renderLayoutVertices() : this._renderVertices()}
-          </div>
-          {layoutGraph &&
-            haveEdges && (
-              <EdgesContainer
-                {...setOnEdgesContainer && setOnEdgesContainer(this.state)}
-                height={layoutGraph.height}
-                width={layoutGraph.width}
-              >
-                {arrow.defs}
-                {this._renderLayoutEdges()}
-              </EdgesContainer>
-            )}
-        </div>
+      <div {...rootProps} ref={this.rootRef}>
+        <div {...nodesContainerProps}>{this._renderVertices()}</div>
+        {layoutGraph &&
+          haveEdges && (
+            <EdgesContainer
+              {...setOnEdgesContainer && setOnEdgesContainer(this.state)}
+              height={height}
+              width={width}
+            >
+              <EdgeArrowDef
+                id={this.arrowId}
+                scaleDampener={arrowScaleDampener}
+                zoomScale={zoomEnabled ? zoomTransform.k : null}
+              />
+              <g transform={zoomEnabled ? getZoomAttr(zoomTransform) : null}>{this._renderEdges()}</g>
+            </EdgesContainer>
+          )}
         {zoomEnabled &&
-          minimap &&
+          minimapEnabled &&
           layoutGraph &&
           rootElm && (
             <MiniMap
               className={minimapClassName}
               classNamePrefix={classNamePrefix}
-              contentHeight={layoutGraph.height}
-              contentWidth={layoutGraph.width}
+              contentHeight={height}
+              contentWidth={width}
               viewAll={this._resetZoom}
               viewportHeight={rootElm.clientHeight}
               viewportWidth={rootElm.clientWidth}

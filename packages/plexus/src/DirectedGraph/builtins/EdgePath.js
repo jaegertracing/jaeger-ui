@@ -16,10 +16,12 @@
 
 import * as React from 'react';
 
-type Props = {
-  markerEnd: string,
-  pathPoints: [number, number][],
-};
+type Props =
+  | Object
+  | {
+      markerEnd: string,
+      pathPoints: [number, number][],
+    };
 
 const D_CMDS = ['M', 'C'];
 
@@ -50,12 +52,21 @@ const D_CMDS = ['M', 'C'];
 //   return `${D_CMDS[i] || ''}${x},${y}`;
 // }
 
-export default function EdgePath(props: Props) {
-  const { markerEnd, pathPoints, ...rest } = props;
-  const d = pathPoints.map((pt, i) => `${D_CMDS[i] || ''}${pt.join(',')}`).join(' ');
-  return <path d={d} fill="none" stroke="black" strokeWidth="2" markerEnd={markerEnd} {...rest} />;
+export default class EdgePath extends React.PureComponent<Props> {
+  props: Props;
 
-  // gradient stroke
-  // const d = props.pathPoints.map(renderPathPoint).join(' ');
-  // return <path d={d} fill="none" stroke={strokeReference} strokeWidth="2" />;
+  render() {
+    const { markerEnd, pathPoints, ...rest } = this.props;
+    const d = pathPoints.map((pt, i) => `${D_CMDS[i] || ''}${pt.join(',')}`).join(' ');
+    return (
+      <path
+        d={d}
+        fill="none"
+        stroke="#000"
+        vectorEffect="non-scaling-stroke"
+        markerEnd={markerEnd}
+        {...rest}
+      />
+    );
+  }
 }

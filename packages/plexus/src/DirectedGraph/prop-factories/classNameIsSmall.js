@@ -1,6 +1,6 @@
 // @flow
 
-// Copyright (c) 2017 Uber Technologies, Inc.
+// Copyright (c) 2018 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,15 +14,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as React from 'react';
+import type { DirectedGraphState } from '../types';
 
-const id = 'edgeArrow';
-export const iriRef = `url(#${id})`;
+const SCALE_THRESHOLD_SMALL = 0.29;
 
-export const arrowDef = (
-  <marker id={id} markerWidth="8" markerHeight="8" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
-    <path d="M0,0 L0,6 L9,3 z" fill="#000" />
-  </marker>
-);
-
-export const defs = <defs>{arrowDef}</defs>;
+export default function classNameIsSmall(graphState: DirectedGraphState) {
+  const { k } = graphState.zoomTransform || {};
+  if (k <= SCALE_THRESHOLD_SMALL) {
+    return { className: 'is-small' };
+  }
+  return null;
+}

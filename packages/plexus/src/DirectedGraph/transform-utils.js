@@ -80,3 +80,11 @@ export function getZoomStyle(transform: ?D3Transform) {
     transformOrigin: '0 0',
   };
 }
+
+export function getZoomAttr(transform: ?D3Transform) {
+  if (!transform) {
+    return null;
+  }
+  const { x, y, k } = transform;
+  return `translate(${x},${y}) scale(${k})`;
+}
