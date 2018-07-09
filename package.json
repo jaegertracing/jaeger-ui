@@ -1,5 +1,6 @@
 {
   "private": true,
+  "license": "Apache-2.0",
   "devDependencies": {
     "babel-eslint": "^7.2.3",
     "eslint": "^4.5.0",
@@ -10,6 +11,7 @@
     "eslint-plugin-import": "^2.7.0",
     "eslint-plugin-jsx-a11y": "^6.0.2",
     "eslint-plugin-react": "^7.2.1",
+    "flow-bin": "^0.71.0",
     "glow": "^1.2.2",
     "husky": "^0.14.3",
     "lerna": "^2.10.2",
@@ -26,7 +28,7 @@
     "lint": "npm run eslint && npm run prettier && npm run flow && npm run check-license",
     "precommit": "lint-staged",
     "prettier":
-      "prettier --write '{.,scripts}/*.{js,json,md}' 'packages/*/src/**/*.{css,js,json,md}' 'packages/*/*.{css,js,json,md}'",
+      "prettier --write '{.,scripts}/*.{js,json,md}' 'packages/*/{src,demo/src}/**/*.{css,js,json,md}' 'packages/*/*.{css,js,json,md}'",
     "test": "lerna run test"
   },
   "prettier": {

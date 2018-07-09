@@ -3,6 +3,7 @@
 .*/node_modules/redux-form/.*
 .*/node_modules/react-motion/.*
 .*/node_modules/draft-js/.*
+.*/node_modules/nwb/.*
 
 [include]
 
@@ -12,4 +13,4 @@
 [options]
 
 [version]
-0.64.0
+0.71.0
