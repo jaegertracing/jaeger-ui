@@ -1,5 +1,9 @@
 # Changes merged into master
 
+### [#221](https://github.com/jaegertracing/jaeger-ui/pull/221) Timeline Expand and Collapse Features
+
+* Partially addresses [#160](https://github.com/jaegertracing/jaeger-ui/issues/160) - Heuristics for collapsing spans
+
 ### [#191](https://github.com/jaegertracing/jaeger-ui/pull/191) Add GA event tracking for actions in trace view
 
 * Partially addresses [#157](https://github.com/jaegertracing/jaeger-ui/issues/157) - Enhanced Google Analytics integration

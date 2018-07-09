@@ -27,19 +27,24 @@ type CombokeysType = {
 };
 
 export type ShortcutCallbacks = {
-  scrollPageDown: CombokeysHandler,
-  scrollPageUp: CombokeysHandler,
-  scrollToNextVisibleSpan: CombokeysHandler,
-  scrollToPrevVisibleSpan: CombokeysHandler,
+  scrollPageDown?: CombokeysHandler,
+  scrollPageUp?: CombokeysHandler,
+  scrollToNextVisibleSpan?: CombokeysHandler,
+  scrollToPrevVisibleSpan?: CombokeysHandler,
   // view range
-  panLeft: CombokeysHandler,
-  panLeftFast: CombokeysHandler,
-  panRight: CombokeysHandler,
-  panRightFast: CombokeysHandler,
-  zoomIn: CombokeysHandler,
-  zoomInFast: CombokeysHandler,
-  zoomOut: CombokeysHandler,
-  zoomOutFast: CombokeysHandler,
+  panLeft?: CombokeysHandler,
+  panLeftFast?: CombokeysHandler,
+  panRight?: CombokeysHandler,
+  panRightFast?: CombokeysHandler,
+  zoomIn?: CombokeysHandler,
+  zoomInFast?: CombokeysHandler,
+  zoomOut?: CombokeysHandler,
+  zoomOutFast?: CombokeysHandler,
+  // collapse/expand
+  collapseAll?: CombokeysHandler,
+  expandAll?: CombokeysHandler,
+  collapseOne?: CombokeysHandler,
+  expandOne?: CombokeysHandler,
 };
 
 export const kbdMappings = {
@@ -55,6 +60,10 @@ export const kbdMappings = {
   zoomInFast: 'shift+up',
   zoomOut: 'down',
   zoomOutFast: 'shift+down',
+  collapseAll: ']',
+  expandAll: '[',
+  collapseOne: 'p',
+  expandOne: 'o',
 };
 
 let instance: ?CombokeysType;
@@ -66,11 +75,13 @@ function getInstance(): CombokeysType {
   return instance;
 }
 
-export function init(callbacks: ShortcutCallbacks) {
-  const combokeys = getInstance();
-  combokeys.reset();
-  Object.keys(kbdMappings).forEach(name => {
-    combokeys.bind(kbdMappings[name], callbacks[name]);
+export function merge(callbacks: ShortcutCallbacks) {
+  const inst = getInstance();
+  Object.keys(callbacks).forEach(name => {
+    const keysHandler = callbacks[name];
+    if (keysHandler) {
+      inst.bind(kbdMappings[name], keysHandler);
+    }
   });
 }
 

@@ -15,9 +15,10 @@
 import React from 'react';
 import { shallow } from 'enzyme';
 
-import TraceTimelineViewer from './index';
+import TraceTimelineViewer, { TraceTimelineViewerImpl } from './index';
 import traceGenerator from '../../../demo/trace-generators';
 import transformTraceData from '../../../model/transform-trace-data';
+import TimelineHeaderRow from './TimelineHeaderRow';
 
 describe('<TraceTimelineViewer>', () => {
   const trace = transformTraceData(traceGenerator.trace({}));
@@ -29,6 +30,11 @@ describe('<TraceTimelineViewer>', () => {
         current: [0, 1],
       },
     },
+    spanNameColumnWidth: 0.5,
+    expandAll: jest.fn(),
+    collapseAll: jest.fn(),
+    expandOne: jest.fn(),
+    collapseOne: jest.fn(),
   };
   const options = {
     context: {
@@ -37,17 +43,33 @@ describe('<TraceTimelineViewer>', () => {
           return { traceTimeline: { spanNameColumnWidth: 0.25 } };
         },
         subscribe() {},
+        dispatch() {},
       },
     },
   };
 
   let wrapper;
+  let connectedWrapper;
 
   beforeEach(() => {
-    wrapper = shallow(<TraceTimelineViewer {...props} />, options);
+    wrapper = shallow(<TraceTimelineViewerImpl {...props} />, options);
+    connectedWrapper = shallow(<TraceTimelineViewer {...props} />, options);
   });
 
   it('it does not explode', () => {
     expect(wrapper).toBeDefined();
+    expect(connectedWrapper).toBeDefined();
+  });
+
+  it('it sets up actions', () => {
+    const headerRow = wrapper.find(TimelineHeaderRow);
+    headerRow.props().onCollapseAll();
+    headerRow.props().onExpandAll();
+    headerRow.props().onExpandOne();
+    headerRow.props().onCollapseOne();
+    expect(props.collapseAll.mock.calls.length).toBe(1);
+    expect(props.expandAll.mock.calls.length).toBe(1);
+    expect(props.expandOne.mock.calls.length).toBe(1);
+    expect(props.collapseOne.mock.calls.length).toBe(1);
   });
 });

@@ -19,6 +19,7 @@ import TimelineHeaderRow from './TimelineHeaderRow';
 import TimelineColumnResizer from './TimelineColumnResizer';
 import TimelineViewingLayer from './TimelineViewingLayer';
 import Ticks from '../Ticks';
+import TimelineCollapser from './TimelineCollapser';
 
 describe('<TimelineHeaderRow>', () => {
   let wrapper;
@@ -28,7 +29,11 @@ describe('<TimelineHeaderRow>', () => {
     nameColumnWidth,
     duration: 1234,
     numTicks: 5,
+    onCollapseAll: () => {},
+    onCollapseOne: () => {},
     onColummWidthChange: () => {},
+    onExpandAll: () => {},
+    onExpandOne: () => {},
     updateNextViewRangeTime: () => {},
     updateViewRangeTime: () => {},
     viewRangeTime: {
@@ -88,6 +93,18 @@ describe('<TimelineHeaderRow>', () => {
         onChange={props.onColummWidthChange}
         min={0.15}
         max={0.85}
+      />
+    );
+    expect(wrapper.containsMatchingElement(elm)).toBe(true);
+  });
+
+  it('renders the TimelineCollapser', () => {
+    const elm = (
+      <TimelineCollapser
+        onCollapseAll={props.onCollapseAll}
+        onExpandAll={props.onExpandAll}
+        onCollapseOne={props.onCollapseOne}
+        onExpandOne={props.onExpandOne}
       />
     );
     expect(wrapper.containsMatchingElement(elm)).toBe(true);
