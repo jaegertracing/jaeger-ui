@@ -15,11 +15,15 @@ limitations under the License.
 */
 
 .DiffNode {
-  background: #e4e4e4;
-  border: 1px solid #bbb;
+  background: #bbb;
+  border: 1px solid #999;
   box-shadow: 0 0px 3px rgba(0, 0, 0, 0.2);
   cursor: pointer;
   white-space: pre;
+}
+
+.TraceDiffGraph--dag.is-small .DiffNode > tbody {
+  opacity: 0;
 }
 
 .DiffNode.is-changed {
@@ -55,7 +59,6 @@ limitations under the License.
 
 .DiffNode--metricCell.is-same {
   border: 1px solid #999;
-  color: #999;
   padding: 0 0.7rem;
 }
 

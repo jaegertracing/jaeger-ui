@@ -35,6 +35,16 @@ type Props = {
 
 const { classNameIsSmall } = DirectedGraph.propsFactories;
 
+function setOnEdgesContainer(state: Object) {
+  const { zoomTransform } = state;
+  if (!zoomTransform) {
+    return null;
+  }
+  const { k } = zoomTransform;
+  const opacity = 0.1 + k * 0.9;
+  return { style: { opacity } };
+}
+
 export default class TraceDiffGraph extends React.PureComponent<Props> {
   props: Props;
 
@@ -42,7 +52,7 @@ export default class TraceDiffGraph extends React.PureComponent<Props> {
 
   constructor(props: Props) {
     super(props);
-    this.layoutManager = new LayoutManager({ useDotEdges: true });
+    this.layoutManager = new LayoutManager({ useDotEdges: true, splines: 'polyline' });
   }
 
   componentWillUnmount() {
@@ -92,12 +102,13 @@ export default class TraceDiffGraph extends React.PureComponent<Props> {
         <DirectedGraph
           minimap
           zoom
-          arrowScaleDampener={0.45}
+          arrowScaleDampener={0}
           className="TraceDiffGraph--dag"
           minimapClassName="TraceDiffGraph--miniMap"
           layoutManager={this.layoutManager}
           getNodeLabel={drawNode}
           setOnRoot={classNameIsSmall}
+          setOnEdgesContainer={setOnEdgesContainer}
           edges={edges}
           vertices={vertices}
         />

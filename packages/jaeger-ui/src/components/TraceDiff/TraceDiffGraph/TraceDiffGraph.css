@@ -46,10 +46,6 @@ limitations under the License.
   stroke-width: 0.7;
 }
 
-.TraceDiffGraph--dag.is-small .DiffNode--labelCell {
-  opacity: 0;
-}
-
 /* DAG minimap */
 
 .TraceDiffGraph--miniMap {
