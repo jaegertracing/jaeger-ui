@@ -34,6 +34,11 @@ class Demo extends React.Component {
     this.layoutManager = new LayoutManager();
     this.dagLayoutManager = new LayoutManager({ useDotEdges: true });
     this.largeDotLayoutManager = new LayoutManager({ useDotEdges: true });
+    this.largeDotPolylineLayoutManager = new LayoutManager({
+      useDotEdges: true,
+      splines: 'polyline',
+      ranksep: 8,
+    });
     this.largeNeatoLayoutManager = new LayoutManager();
   }
   render() {
@@ -66,6 +71,23 @@ class Demo extends React.Component {
               className="DemoGraph--dag"
               getNodeLabel={getLargeNodeLabel}
               layoutManager={this.largeNeatoLayoutManager}
+              minimapClassName="Demo--miniMap"
+              setOnNode={setNodeClassName}
+              setOnRoot={classNameIsSmall}
+              {...largeDg}
+            />
+          </div>
+        </div>
+        <h1>Directed graph with cycles - dot edges - polylines</h1>
+        <div>
+          <div className="DemoGraph">
+            <DirectedGraph
+              zoom
+              minimap
+              arrowScaleDampener={0.8}
+              className="DemoGraph--dag"
+              getNodeLabel={getLargeNodeLabel}
+              layoutManager={this.largeDotPolylineLayoutManager}
               minimapClassName="Demo--miniMap"
               setOnNode={setNodeClassName}
               setOnRoot={classNameIsSmall}

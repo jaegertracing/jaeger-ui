@@ -14,20 +14,35 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { LayoutOptions } from '../types';
 import type { Edge, LayoutVertex, SizeVertex, VertexKey } from '../../types/layout';
 
-const GRAPH_HEADER = `digraph G {
-  graph[sep=0.5, splines=true, overlap=false, rankdir=LR, ranksep=5, nodesep=1.5];
+const GRAPH_FOOTER = `}`;
+
+const DEFAULT_GRAPH_ATTRS = {
+  nodesep: 1.5,
+  rankdir: 'LR',
+  ranksep: 5,
+  sep: 0.5,
+  splines: 'true',
+};
+
+function makeGraphWrapper(options?: ?LayoutOptions) {
+  const { nodesep, rankdir, ranksep, sep, splines } = { ...DEFAULT_GRAPH_ATTRS, ...options };
+  return `digraph G {
+  graph[nodesep=${nodesep.toFixed(3)}, rankdir=${rankdir}, ranksep=${ranksep.toFixed(3)}, sep=${sep.toFixed(
+    3
+  )}, splines=${splines}];
   node [shape=box, fixedsize=true, label="", color="_", fillcolor="_"];
   edge [arrowhead=none, arrowtail=none];`;
-
-const GRAPH_FOOTER = `}`;
+}
 
 function makeNode(v: SizeVertex | LayoutVertex) {
   const { vertex, height, width } = v;
   let pos = '';
-  if (v.left != null && v.top != null) {
-    const { left, top } = ((v: any): LayoutVertex);
+  const left = v.left || null;
+  const top = v.top || null;
+  if (left != null && top != null) {
     pos = `,pos="${left.toFixed(5)},${top.toFixed(5)}!"`;
   }
   return `"${vertex.key}" [height=${height.toFixed(5)},width=${width.toFixed(5)}${pos}];`;
@@ -42,7 +57,11 @@ function makeEdge(head: VertexKey, tails: VertexKey | VertexKey[], isBidirection
   return `"${head}"->{ ${tailStrs.join(' ')} };`;
 }
 
-export default function toDot(edges: Edge[], vertices: (SizeVertex | LayoutVertex)[]) {
+export default function toDot(
+  edges: Edge[],
+  vertices: (SizeVertex | LayoutVertex)[],
+  options?: ?LayoutOptions
+) {
   const bidirectional: Edge[] = [];
   const fromTo: Map<VertexKey, VertexKey[]> = new Map();
   edges.forEach(edge => {
@@ -61,7 +80,7 @@ export default function toDot(edges: Edge[], vertices: (SizeVertex | LayoutVerte
     edgeStrs.push(makeEdge(from, tails));
   });
   return [
-    GRAPH_HEADER,
+    makeGraphWrapper(options),
     '  ',
     nodeStrs.join('\n  '),
     '  ',

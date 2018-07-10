@@ -30,19 +30,19 @@ export type Vertex = {
   data?: any,
 };
 
-export type SizeVertex = {
+export type SizeVertex = {|
   vertex: Vertex,
   width: number,
   height: number,
-};
+|};
 
-export type LayoutVertex = {
+export type LayoutVertex = {|
   vertex: Vertex,
   height: number,
   left: number,
   top: number,
   width: number,
-};
+|};
 
 export type Edge = {
   from: VertexKey,

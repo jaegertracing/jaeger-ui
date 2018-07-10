@@ -76,7 +76,7 @@ export default function getLayout(
   inVertices: (SizeVertex | LayoutVertex)[],
   layoutOptions: LayoutOptions
 ) {
-  const dot = toDot(inEdges, inVertices);
+  const dot = toDot(inEdges, inVertices, layoutOptions);
   const { totalMemory } = layoutOptions || {};
   const options = { totalMemory, engine: phase === 'edges' ? 'neato' : 'dot', format: 'plain' };
   const plainOut = viz(dot, options);

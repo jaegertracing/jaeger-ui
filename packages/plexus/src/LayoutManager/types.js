@@ -22,6 +22,11 @@ export type Phase = 'not-started' | 'dot-only' | 'positions' | 'edges' | 'done';
 export type LayoutOptions = {
   totalMemory?: number,
   useDotEdges?: boolean,
+  splines?: string,
+  sep?: number,
+  rankdir?: 'TB' | 'LR' | 'BT' | 'RL',
+  ranksep?: number,
+  nodesep?: number,
 };
 
 type LayoutWorkerMeta = {

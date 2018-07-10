@@ -44,10 +44,15 @@ const PHASE_CALC_POSITIONS = 2;
 const PHASE_CALC_EDGES = 3;
 const PHASE_DONE = 4;
 
-const STYLE_WRAPPER_ZOOM = {
+const WRAPPER_STYLE_ZOOM = {
   height: '100%',
   overflow: 'hidden',
+  position: 'relative',
   width: '100%',
+};
+
+const WRAPPER_STYLE = {
+  position: 'relative',
 };
 
 let idCounter = 0;
@@ -283,18 +288,22 @@ export default class DirectedGraph extends React.PureComponent<DirectedGraphProp
     const nodesContainerProps = mergeClassNameAndStyle(
       (setOnNodesContainer && setOnNodesContainer(this.state)) || {},
       {
-        style: { ...(zoomEnabled ? getZoomStyle(zoomTransform) : null), position: 'relative' },
+        style: {
+          ...(zoomEnabled ? getZoomStyle(zoomTransform) : null),
+          position: 'absolute',
+          top: 0,
+          left: 0,
+        },
         className: `${classNamePrefix}-DirectedGraph--nodeContainer`,
       }
     );
     const rootProps = mergeClassNameAndStyle((setOnRoot && setOnRoot(this.state)) || {}, {
-      style: zoomEnabled ? STYLE_WRAPPER_ZOOM : null,
+      style: zoomEnabled ? WRAPPER_STYLE_ZOOM : WRAPPER_STYLE,
       className: `${classNamePrefix}-DirectedGraph ${className}`,
     });
 
     return (
       <div {...rootProps} ref={this.rootRef}>
-        <div {...nodesContainerProps}>{this._renderVertices()}</div>
         {layoutGraph &&
           haveEdges && (
             <EdgesContainer
@@ -310,6 +319,7 @@ export default class DirectedGraph extends React.PureComponent<DirectedGraphProp
               <g transform={zoomEnabled ? getZoomAttr(zoomTransform) : null}>{this._renderEdges()}</g>
             </EdgesContainer>
           )}
+        <div {...nodesContainerProps}>{this._renderVertices()}</div>
         {zoomEnabled &&
           minimapEnabled &&
           layoutGraph &&
