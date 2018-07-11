@@ -16,10 +16,10 @@ limitations under the License.
 
 .DiffNode {
   background: #bbb;
-  border: 1px solid #999;
+  border: 1px solid #777;
   box-shadow: 0 0px 3px rgba(0, 0, 0, 0.2);
   cursor: pointer;
-  white-space: pre;
+  white-space: nowrap;
 }
 
 .TraceDiffGraph--dag.is-small .DiffNode > tbody {
@@ -31,18 +31,18 @@ limitations under the License.
 }
 
 .DiffNode.is-more {
-  border-color: #1d39c4;
-  background: #85a5ff;
+  background: #78d539;
+  border-color: #2a8f04;
 }
 
 .DiffNode.is-added {
-  background: #1616cc;
+  background: #2a8f04;
   border: none;
   color: #fff;
 }
 
 .DiffNode.is-less {
-  border-color: #cf1322;
+  border-color: #cc1616;
   background: #ffa39e;
 }
 
@@ -53,39 +53,17 @@ limitations under the License.
 }
 
 .DiffNode--metricCell {
-  border: 1px solid #ddd;
   padding: 0.3rem 0.5rem;
-}
-
-.DiffNode--metricCell.is-same {
-  border: 1px solid #999;
-  padding: 0 0.7rem;
+  background: rgba(255, 255, 255, 0.3);
 }
 
 .DiffNode--metricCell.is-changed {
   font-weight: 500;
 }
 
-.DiffNode--metricCell.is-more {
-  border-color: #1d39c4;
-  background: #eef;
-}
-
-.DiffNode--metricCell.is-added {
-  background: #eef;
-  border-color: #00c;
-  color: #00c;
-}
-
-.DiffNode--metricCell.is-less {
-  border-color: #cf1322;
-  background: #fee;
-}
-
+.DiffNode--metricCell.is-added,
 .DiffNode--metricCell.is-removed {
-  color: #c00;
-  background: #fee;
-  border-color: #c00;
+  background: rgba(0, 0, 0, 0.2);
 }
 
 .DiffNode--metricSymbol {
@@ -93,7 +71,7 @@ limitations under the License.
 }
 
 .DiffNode--labelCell {
-  padding: 0.3rem 0.5rem;
+  padding: 0.3rem 0.5rem 0.3rem 0.75rem;
 }
 
 /* Tweak the popover aesthetics - unfortunate but necessary */
@@ -104,15 +82,15 @@ limitations under the License.
 }
 
 .DiffNode--popover.is-same .ant-popover-arrow {
-  background: #ccc;
+  background: #777;
 }
 
 .DiffNode--popover.is-more .ant-popover-arrow,
 .DiffNode--popover.is-added .ant-popover-arrow {
-  background: #00c;
+  background: #2a8f04;
 }
 
 .DiffNode--popover.is-less .ant-popover-arrow,
 .DiffNode--popover.is-removed .ant-popover-arrow {
-  background: #c00;
+  background: #cc1616;
 }
