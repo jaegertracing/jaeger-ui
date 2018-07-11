@@ -25,12 +25,5 @@ const { Search } = Input;
 
 export default function TraceIdInput(props: Props) {
   const { selectTrace } = props;
-  return (
-    <div>
-      Select by Trace ID
-      <div className="ub-ml2 ub-inline-block">
-        <Search enterButton="Compare" onSearch={selectTrace} />
-      </div>
-    </div>
-  );
+  return <Search addonBefore="Select by Trace ID" enterButton onSearch={selectTrace} />;
 }

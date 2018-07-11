@@ -17,3 +17,8 @@ limitations under the License.
 .CohortTable--traceName {
   color: rgba(0, 0, 0, 0.85);
 }
+
+.CohortTable--needMoreMsg {
+  border-radius: 4px;
+  padding: 1rem;
+}

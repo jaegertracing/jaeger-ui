@@ -98,7 +98,7 @@ export default class TraceDiffGraph extends React.PureComponent<Props> {
     const { edges, vertices } = convPlexus(diffDag.nodesMap);
 
     return (
-      <div className="TraceDiffGraph--graphWrapper u-simple-scrollbars">
+      <div className="TraceDiffGraph--graphWrapper">
         <DirectedGraph
           minimap
           zoom

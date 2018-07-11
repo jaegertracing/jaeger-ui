@@ -33,11 +33,47 @@ type Props = {
   diffSetB: string => void,
 };
 
-export default class TraceDiffHeader extends React.PureComponent<Props> {
+type State = {
+  tableVisible: ?('a' | 'b'),
+};
+
+export default class TraceDiffHeader extends React.PureComponent<Props, State> {
   props: Props;
 
+  _toggleTableA: boolean => void;
+  _toggleTableB: boolean => void;
+  _diffSetA: string => void;
+  _diffSetB: string => void;
+
+  state = {
+    tableVisible: null,
+  };
+
+  constructor(props: Props) {
+    super(props);
+    this._toggleTableA = this._toggleTable.bind(this, 'a');
+    this._toggleTableB = this._toggleTable.bind(this, 'b');
+    this._diffSetA = this._diffSetTrace.bind(this, 'a');
+    this._diffSetB = this._diffSetTrace.bind(this, 'b');
+  }
+
+  _toggleTable(which: 'a' | 'b', visible: boolean) {
+    const tableVisible = visible ? which : null;
+    this.setState({ tableVisible });
+  }
+
+  _diffSetTrace(which: 'a' | 'b', id: string) {
+    if (which === 'a') {
+      this.props.diffSetA(id);
+    } else {
+      this.props.diffSetB(id);
+    }
+    this.setState({ tableVisible: null });
+  }
+
   render() {
-    const { a, b, cohort, diffSetA, diffSetB } = this.props;
+    const { a, b, cohort } = this.props;
+    const { tableVisible } = this.state;
     const { data: aData = {}, id: aId, state: aState, error: aError } = a || {};
     const { data: bData = {}, id: bId, state: bState, error: bError } = b || {};
     const selection = {
@@ -45,10 +81,10 @@ export default class TraceDiffHeader extends React.PureComponent<Props> {
       [bId || '__']: { label: 'B' },
     };
     const cohortTableA = (
-      <CohortTable cohort={cohort} current={aId} selectTrace={diffSetA} selection={selection} />
+      <CohortTable cohort={cohort} current={aId} selectTrace={this._diffSetA} selection={selection} />
     );
     const cohortTableB = (
-      <CohortTable cohort={cohort} current={bId} selectTrace={diffSetB} selection={selection} />
+      <CohortTable cohort={cohort} current={bId} selectTrace={this._diffSetB} selection={selection} />
     );
     return (
       <header className="TraecDiffHeader">
@@ -59,8 +95,10 @@ export default class TraceDiffHeader extends React.PureComponent<Props> {
           overlayClassName="TraceDiffHeader--popover"
           trigger="click"
           placement="bottomLeft"
-          title={<TraceIdInput selectTrace={diffSetA} />}
+          title={<TraceIdInput selectTrace={this._diffSetA} />}
           content={cohortTableA}
+          visible={tableVisible === 'a'}
+          onVisibleChange={this._toggleTableA}
         >
           <div className="ub-flex u-flex-1">
             <TraceHeader
@@ -83,9 +121,11 @@ export default class TraceDiffHeader extends React.PureComponent<Props> {
         <Popover
           overlayClassName="TraceDiffHeader--popover"
           trigger="click"
-          placement="bottomRight"
-          title={<TraceIdInput selectTrace={diffSetB} />}
+          placement="bottomLeft"
+          title={<TraceIdInput selectTrace={this._diffSetB} />}
           content={cohortTableB}
+          visible={tableVisible === 'b'}
+          onVisibleChange={this._toggleTableB}
         >
           <div className="ub-flex u-flex-1">
             <TraceHeader

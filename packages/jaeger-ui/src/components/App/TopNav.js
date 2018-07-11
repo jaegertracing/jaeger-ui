@@ -16,7 +16,7 @@
 
 import React from 'react';
 import { Dropdown, Icon, Menu } from 'antd';
-import { Link } from 'react-router-dom';
+import { Link, matchPath } from 'react-router-dom';
 
 import TraceIDSearchInput from './TraceIDSearchInput';
 import type { ConfigMenuItem, ConfigMenuGroup } from '../../types/config';
@@ -31,13 +31,20 @@ type TopNavProps = {
 const NAV_LINKS = [
   {
     to: prefixUrl('/search'),
+    path: prefixUrl('/search'),
     text: 'Search',
+  },
+  {
+    to: prefixUrl('/trace/:diff'),
+    path: prefixUrl('/trace/:a?\\:diff'),
+    text: 'Compare',
   },
 ];
 
 if (getConfigValue('dependencies.menuEnabled')) {
   NAV_LINKS.push({
     to: prefixUrl('/dependencies'),
+    path: prefixUrl('/dependencies'),
     text: 'Dependencies',
   });
 }
@@ -98,11 +105,16 @@ export default function TopNav(props: TopNavProps) {
         <Menu.Item>
           <TraceIDSearchInput />
         </Menu.Item>
-        {NAV_LINKS.map(({ to, text }) => (
-          <Menu.Item key={to}>
-            <Link to={to}>{text}</Link>
-          </Menu.Item>
-        ))}
+        {NAV_LINKS.map(({ path, to, text }) => {
+          const key = matchPath(activeKey, { path, exact: true, strict: true, component: <div /> })
+            ? activeKey
+            : to;
+          return (
+            <Menu.Item key={key}>
+              <Link to={to}>{text}</Link>
+            </Menu.Item>
+          );
+        })}
       </Menu>
     </div>
   );

@@ -42,6 +42,12 @@ const defaultRowSelection = {
   type: 'radio',
 };
 
+const NEED_MORE_TRACES_MESSAGE = (
+  <h3 key="msg" className="CohortTable--needMoreMsg">
+    Enter a Trace ID or perform a search and select from the results.
+  </h3>
+);
+
 export default class CohortTable extends React.PureComponent<Props> {
   props: Props;
 
@@ -63,8 +69,15 @@ export default class CohortTable extends React.PureComponent<Props> {
       selectedRowKeys: current ? [current] : [],
     };
 
-    return (
-      <Table size="middle" dataSource={cohort} rowKey="id" pagination={false} rowSelection={rowSelection}>
+    return [
+      <Table
+        key="table"
+        size="middle"
+        dataSource={cohort}
+        rowKey="id"
+        pagination={false}
+        rowSelection={rowSelection}
+      >
         <Column
           key="traceID"
           title=""
@@ -115,7 +128,8 @@ export default class CohortTable extends React.PureComponent<Props> {
           render={(value, record) => record.state === fetchedState.DONE && formatDuration(value)}
         />
         <Column title="Spans" dataIndex="data.spans.length" key="address" />
-      </Table>
-    );
+      </Table>,
+      cohort.length < 2 && NEED_MORE_TRACES_MESSAGE,
+    ];
   }
 }
