@@ -19,7 +19,7 @@ import { Button } from 'antd';
 import { Link } from 'react-router-dom';
 
 import ResultItemTitle from './ResultItemTitle';
-import { getDiffUrl } from '../../TraceDiff/utils';
+import { getUrl } from '../../TraceDiff/url';
 import { fetchedState } from '../../../constants';
 
 import type { FetchedTrace } from '../../../types';
@@ -39,7 +39,7 @@ export default class DiffSelection extends React.PureComponent<Props> {
   render() {
     const { toggleComparison, traces } = this.props;
     const cohort = traces.filter(ft => ft.state !== fetchedState.ERROR).map(ft => ft.id);
-    const compareHref = cohort.length > 1 ? getDiffUrl({ cohort }) : null;
+    const compareHref = cohort.length > 1 ? getUrl({ cohort }) : null;
     const compareBtn = (
       <Button className="ub-right" disabled={cohort.length < 2} type="primary">
         Compare Traces

@@ -31,7 +31,7 @@ import React from 'react';
 import { shallow, mount } from 'enzyme';
 import store from 'store';
 
-import SearchTracePage, { mapStateToProps } from './index';
+import { SearchTracePageImpl as SearchTracePage, mapStateToProps } from './index';
 import SearchForm from './SearchForm';
 import LoadingIndicator from '../common/LoadingIndicator';
 import { fetchedState } from '../../constants';

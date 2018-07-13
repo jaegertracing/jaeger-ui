@@ -24,16 +24,12 @@ import { trackPageView } from '../../utils/tracking';
 
 describe('mapStateToProps()', () => {
   it('maps state to props', () => {
+    const pathname = 'a-pathname';
+    const search = 'a-search';
     const state = {
-      config: {},
-      router: { location: {} },
+      router: { location: { pathname, search } },
     };
-    const ownProps = { a: {} };
-    expect(mapStateToProps(state, ownProps)).toEqual({
-      config: state.config,
-      location: state.router.location,
-      a: ownProps.a,
-    });
+    expect(mapStateToProps(state)).toEqual({ pathname, search });
   });
 });
 
@@ -44,11 +40,8 @@ describe('<Page>', () => {
   beforeEach(() => {
     trackPageView.mockReset();
     props = {
-      location: {
-        pathname: String(Math.random()),
-        search: String(Math.random()),
-      },
-      config: { menu: [] },
+      pathname: String(Math.random()),
+      search: String(Math.random()),
     };
     wrapper = mount(<Page {...props} />);
   });
@@ -58,14 +51,14 @@ describe('<Page>', () => {
   });
 
   it('tracks an initial page-view', () => {
-    const { pathname, search } = props.location;
+    const { pathname, search } = props;
     expect(trackPageView.mock.calls).toEqual([[pathname, search]]);
   });
 
   it('tracks a pageView when the location changes', () => {
     trackPageView.mockReset();
-    const location = { pathname: 'le-path', search: 'searching' };
-    wrapper.setProps({ location });
-    expect(trackPageView.mock.calls).toEqual([[location.pathname, location.search]]);
+    props = { pathname: 'le-path', search: 'searching' };
+    wrapper.setProps(props);
+    expect(trackPageView.mock.calls).toEqual([[props.pathname, props.search]]);
   });
 });

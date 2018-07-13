@@ -14,6 +14,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { ContextRouter } from 'react-router-dom';
+
 import type { ApiError } from './api-error';
 import type { TracesArchive } from './archive';
 import type { Config } from './config';
@@ -38,13 +40,13 @@ export type ReduxState = {
     loading: boolean,
     error: ?ApiError,
   },
-  router: any,
   services: {
     services: ?(string[]),
     operationsForService: { [string]: string[] },
     loading: boolean,
     error: ?ApiError,
   },
+  router: ContextRouter,
   trace: {
     traces: { [string]: FetchedTrace },
     search: {

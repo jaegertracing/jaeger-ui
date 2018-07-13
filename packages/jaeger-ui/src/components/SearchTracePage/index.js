@@ -34,7 +34,8 @@ import prefixUrl from '../../utils/prefix-url';
 import './index.css';
 import JaegerLogo from '../../img/jaeger-logo.svg';
 
-export default class SearchTracePage extends Component {
+// export for tests
+export class SearchTracePageImpl extends Component {
   componentDidMount() {
     const {
       diffCohort,
@@ -121,7 +122,7 @@ export default class SearchTracePage extends Component {
   }
 }
 
-SearchTracePage.propTypes = {
+SearchTracePageImpl.propTypes = {
   isHomepage: PropTypes.bool,
   // eslint-disable-next-line react/forbid-prop-types
   traceResults: PropTypes.array,
@@ -237,4 +238,5 @@ function mapDispatchToProps(dispatch) {
     searchTraces,
   };
 }
-export const ConnectedSearchTracePage = connect(mapStateToProps, mapDispatchToProps)(SearchTracePage);
+
+export default connect(mapStateToProps, mapDispatchToProps)(SearchTracePageImpl);

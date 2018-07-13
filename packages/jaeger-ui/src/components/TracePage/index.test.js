@@ -25,11 +25,12 @@ import React from 'react';
 import sinon from 'sinon';
 import { shallow, mount } from 'enzyme';
 
-import TracePage, {
+import {
   makeShortcutCallbacks,
   mapDispatchToProps,
   mapStateToProps,
   shortcutConfig,
+  TracePageImpl as TracePage,
   VIEW_MIN_RANGE,
 } from './index';
 import * as track from './index.track';

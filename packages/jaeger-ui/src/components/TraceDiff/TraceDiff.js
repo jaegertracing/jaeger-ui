@@ -22,7 +22,7 @@ import { bindActionCreators } from 'redux';
 import type { Match, RouterHistory } from 'react-router-dom';
 
 import { actions as diffActions } from './duck';
-import { getDiffUrl } from './utils';
+import { getUrl } from './url';
 import TraceDiffGraph from './TraceDiffGraph';
 import TraceDiffHeader from './TraceDiffHeader';
 import * as jaegerApiActions from '../../actions/jaeger-api';
@@ -117,7 +117,7 @@ export class TraceDiffImpl extends React.PureComponent<Props, State> {
   diffSetUrl(change: { newA?: ?string, newB?: ?string }) {
     const { newA, newB } = change;
     const { a, b, cohort, history } = this.props;
-    const url = getDiffUrl({ a: newA || a, b: newB || b, cohort });
+    const url = getUrl({ a: newA || a, b: newB || b, cohort });
     history.push(url);
   }
 
@@ -159,8 +159,8 @@ export class TraceDiffImpl extends React.PureComponent<Props, State> {
 
 // TODO(joe): simplify but do not invalidate the URL
 export function mapStateToProps(state: ReduxState, ownProps: { match: Match }) {
-  const { a } = ownProps.match.params;
-  const { b, cohort: origCohort = [] } = queryString.parse(state.router.location.search);
+  const { a, b } = ownProps.match.params;
+  const { cohort: origCohort = [] } = queryString.parse(state.router.location.search);
   const fullCohortSet: Set<string> = new Set([].concat(a, b, origCohort).filter(Boolean));
   const cohort: string[] = Array.from(fullCohortSet);
   const { traces } = state.trace;

@@ -20,10 +20,14 @@ import { ConnectedRouter } from 'react-router-redux';
 
 import NotFound from './NotFound';
 import Page from './Page';
-import { ConnectedDependencyGraphPage } from '../DependencyGraph';
-import { ConnectedSearchTracePage } from '../SearchTracePage';
+import DependencyGraph from '../DependencyGraph';
+import { ROUTE_PATH as dependenciesPath } from '../DependencyGraph/url';
+import SearchTracePage from '../SearchTracePage';
+import { ROUTE_PATH as searchPath } from '../SearchTracePage/url';
 import TraceDiff from '../TraceDiff';
-import { ConnectedTracePage } from '../TracePage';
+import { ROUTE_PATH as traceDiffPath } from '../TraceDiff/url';
+import TracePage from '../TracePage';
+import { ROUTE_PATH as tracePath } from '../TracePage/url';
 import JaegerAPI, { DEFAULT_API_ROOT } from '../../api/jaeger';
 import configureStore from '../../utils/configure-store';
 import prefixUrl from '../../utils/prefix-url';
@@ -46,13 +50,15 @@ export default class JaegerUIApp extends Component {
         <ConnectedRouter history={history}>
           <Page>
             <Switch>
-              <Route path={prefixUrl('/search')} component={ConnectedSearchTracePage} />
-              <Route path={prefixUrl('/trace/:a?\\:diff')} component={TraceDiff} />
-              <Route path={prefixUrl('/trace/:id')} component={ConnectedTracePage} />
-              <Route path={prefixUrl('/dependencies')} component={ConnectedDependencyGraphPage} />
-              <Redirect exact path="/" to={prefixUrl('/search')} />
-              <Redirect exact path={prefixUrl()} to={prefixUrl('/search')} />
-              <Redirect exact path={prefixUrl('/')} to={prefixUrl('/search')} />
+              <Route path={searchPath} component={SearchTracePage} />
+              <Route path={traceDiffPath} component={TraceDiff} />
+              <Route path={tracePath} component={TracePage} />
+              <Route path={dependenciesPath} component={DependencyGraph} />
+
+              <Redirect exact path="/" to={searchPath} />
+              <Redirect exact path={prefixUrl()} to={searchPath} />
+              <Redirect exact path={prefixUrl('/')} to={searchPath} />
+
               <Route component={NotFound} />
             </Switch>
           </Page>

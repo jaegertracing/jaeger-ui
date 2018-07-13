@@ -22,47 +22,44 @@ import type { Location } from 'react-router-dom';
 import { withRouter } from 'react-router-dom';
 
 import TopNav from './TopNav';
-import type { Config } from '../../types/config';
 import { trackPageView } from '../../utils/tracking';
 
 import './Page.css';
 
-type PageProps = {
-  location: Location,
+type Props = {
+  pathname: string,
+  search: string,
   children: React.Node,
-  config: Config,
 };
 
 const { Header, Content } = Layout;
 
 // export for tests
-export class PageImpl extends React.Component<PageProps> {
-  props: PageProps;
+export class PageImpl extends React.Component<Props> {
+  props: Props;
 
   componentDidMount() {
-    const { pathname, search } = this.props.location;
+    const { pathname, search } = this.props;
     trackPageView(pathname, search);
   }
 
-  componentWillReceiveProps(nextProps: PageProps) {
-    const { pathname, search } = this.props.location;
-    const { pathname: nextPathname, search: nextSearch } = nextProps.location;
+  componentWillReceiveProps(nextProps: Props) {
+    const { pathname, search } = this.props;
+    const { pathname: nextPathname, search: nextSearch } = nextProps;
     if (pathname !== nextPathname || search !== nextSearch) {
       trackPageView(nextPathname, nextSearch);
     }
   }
 
   render() {
-    const { children, config, location } = this.props;
-    const menu = config && config.menu;
     return (
       <div>
         <Helmet title="Jaeger UI" />
         <Layout>
           <Header className="Page--topNav">
-            <TopNav activeKey={location.pathname} menuConfig={menu} />
+            <TopNav />
           </Header>
-          <Content className="Page--content">{children}</Content>
+          <Content className="Page--content">{this.props.children}</Content>
         </Layout>
       </div>
     );
@@ -70,10 +67,10 @@ export class PageImpl extends React.Component<PageProps> {
 }
 
 // export for tests
-export function mapStateToProps(state: { config: Config, router: { location: Location } }, ownProps: any) {
-  const { config } = state;
-  const { location } = state.router;
-  return { ...ownProps, config, location };
+export function mapStateToProps(state: { router: { location: Location } }) {
+  const { pathname, search } = state.router.location;
+  return { pathname, search };
 }
 
+// export default withRouter(connect(mapStateToProps)(PageImpl));
 export default withRouter(connect(mapStateToProps)(PageImpl));

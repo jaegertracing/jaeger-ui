@@ -19,8 +19,8 @@ import { createActions, handleActions } from 'redux-actions';
 import generateActionTypes from '../../utils/generate-action-types';
 
 // traceDiff {
-//   a: id,
-//   b: id
+//   a: ?id,
+//   b: ?id
 //   cohort: id[],
 // }
 
@@ -68,7 +68,9 @@ function cohortRemoveTrace(state, { payload }) {
     return state;
   }
   cohort.splice(i, 1);
-  return { ...state, cohort };
+  const a = state.a === traceID ? null : state.a;
+  const b = state.b === traceID ? null : state.b;
+  return { ...state, a, b, cohort };
 }
 
 function diffSetA(state, { payload }) {
