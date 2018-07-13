@@ -81,7 +81,7 @@ export default class Coordinator {
     this.callback = callback;
     this.currentLayout = null;
     this.nextWorkerId = 0;
-    this.idleWorkers = [this._initWorker()];
+    this.idleWorkers = [];
     this.busyWorkers = [];
   }
 
