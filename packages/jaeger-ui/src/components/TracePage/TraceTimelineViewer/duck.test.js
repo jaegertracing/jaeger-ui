@@ -14,7 +14,7 @@
 
 import { createStore } from 'redux';
 
-import reducer, { actions, newInitialState } from './duck';
+import reducer, { actions, newInitialState, collapseAll, collapseOne, expandAll, expandOne } from './duck';
 import DetailState from './SpanDetail/DetailState';
 import transformTraceData from '../../../model/transform-trace-data';
 import traceGenerator from '../../../demo/trace-generators';
@@ -125,6 +125,110 @@ describe('TraceTimelineViewer/duck', () => {
         const st2 = store.getState();
         expect(st1[propName]).toEqual(resultant);
         expect(st2[propName]).toEqual(initial);
+      });
+    });
+  });
+
+  describe('expands and collapses all spans', () => {
+    // 0
+    // - 1
+    // --- 2
+    // - 3
+    // --- 4
+    const spans = [
+      { spanID: 0, depth: 0, hasChildren: true },
+      { spanID: 1, depth: 1, hasChildren: true },
+      { spanID: 2, depth: 2, hasChildren: false },
+      { spanID: 3, depth: 1, hasChildren: true },
+      { spanID: 4, depth: 2, hasChildren: false },
+    ];
+
+    const oneSpanCollapsed = new Set([1]);
+    const allSpansCollapsed = new Set([0, 1, 3]);
+    const oneLevelCollapsed = new Set([1, 3]);
+
+    // Tests for corner cases of reducers
+    const tests = [
+      {
+        msg: 'expand all',
+        action: expandAll,
+        initial: allSpansCollapsed,
+        resultant: new Set(),
+      },
+      {
+        msg: 'collapse all, no-op',
+        action: collapseAll,
+        initial: allSpansCollapsed,
+        resultant: allSpansCollapsed,
+      },
+      {
+        msg: 'expand one',
+        action: expandOne,
+        initial: allSpansCollapsed,
+        resultant: oneLevelCollapsed,
+      },
+      {
+        msg: 'expand one, one collapsed',
+        action: expandOne,
+        initial: oneSpanCollapsed,
+        resultant: new Set(),
+      },
+      {
+        msg: 'collapse one, no-op',
+        action: collapseOne,
+        initial: allSpansCollapsed,
+        resultant: allSpansCollapsed,
+      },
+      {
+        msg: 'collapse one, one collapsed',
+        action: collapseOne,
+        initial: oneSpanCollapsed,
+        resultant: oneLevelCollapsed,
+      },
+    ];
+
+    tests.forEach(info => {
+      const { msg, action, initial, resultant } = info;
+
+      it(msg, () => {
+        const { childrenHiddenIDs } = action({ childrenHiddenIDs: initial }, { payload: { spans } });
+        expect(childrenHiddenIDs).toEqual(resultant);
+      });
+    });
+
+    // Tests to verify correct behaviour of actions
+    const dispatchTests = [
+      {
+        msg: 'expand all, no-op',
+        action: actions.expandAll(),
+        resultant: new Set(),
+      },
+      {
+        msg: 'collapse all',
+        action: actions.collapseAll(spans),
+        resultant: allSpansCollapsed,
+      },
+      {
+        msg: 'expand one, no-op',
+        action: actions.expandOne(spans),
+        resultant: new Set(),
+      },
+      {
+        msg: 'collapse one',
+        action: actions.collapseOne(spans),
+        resultant: oneLevelCollapsed,
+      },
+    ];
+
+    dispatchTests.forEach(info => {
+      const { msg, action, resultant } = info;
+
+      it(msg, () => {
+        const st0 = store.getState();
+        store.dispatch(action);
+        const st1 = store.getState();
+        expect(st0.childrenHiddenIDs).toEqual(new Set());
+        expect(st1.childrenHiddenIDs).toEqual(resultant);
       });
     });
   });

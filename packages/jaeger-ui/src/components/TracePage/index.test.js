@@ -140,12 +140,13 @@ describe('<TracePage>', () => {
   });
 
   it('performs misc cleanup when unmounting', () => {
+    resetShortcuts.mockReset();
     wrapper = shallow(<TracePage {...defaultProps} trace={null} />);
     const scrollManager = wrapper.instance()._scrollManager;
     scrollManager.destroy = jest.fn();
     wrapper.unmount();
     expect(scrollManager.destroy.mock.calls).toEqual([[]]);
-    expect(resetShortcuts.mock.calls).toEqual([[]]);
+    expect(resetShortcuts.mock.calls).toEqual([[], []]);
     expect(cancelScroll.mock.calls).toEqual([[]]);
   });
 

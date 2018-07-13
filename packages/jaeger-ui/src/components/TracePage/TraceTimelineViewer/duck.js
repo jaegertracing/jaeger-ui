@@ -49,6 +49,10 @@ export const actionTypes = generateActionTypes('@jaeger-ui/trace-timeline-viewer
   'SET_TRACE',
   'SET_SPAN_NAME_COLUMN_WIDTH',
   'CHILDREN_TOGGLE',
+  'EXPAND_ALL',
+  'COLLAPSE_ALL',
+  'EXPAND_ONE',
+  'COLLAPSE_ONE',
   'DETAIL_TOGGLE',
   'DETAIL_TAGS_TOGGLE',
   'DETAIL_PROCESS_TOGGLE',
@@ -61,6 +65,10 @@ const fullActions = createActions({
   [actionTypes.SET_TRACE]: traceID => ({ traceID }),
   [actionTypes.SET_SPAN_NAME_COLUMN_WIDTH]: width => ({ width }),
   [actionTypes.CHILDREN_TOGGLE]: spanID => ({ spanID }),
+  [actionTypes.EXPAND_ALL]: () => ({}),
+  [actionTypes.EXPAND_ONE]: spans => ({ spans }),
+  [actionTypes.COLLAPSE_ALL]: spans => ({ spans }),
+  [actionTypes.COLLAPSE_ONE]: spans => ({ spans }),
   [actionTypes.DETAIL_TOGGLE]: spanID => ({ spanID }),
   [actionTypes.DETAIL_TAGS_TOGGLE]: spanID => ({ spanID }),
   [actionTypes.DETAIL_PROCESS_TOGGLE]: spanID => ({ spanID }),
@@ -94,6 +102,70 @@ function childrenToggle(state, { payload }) {
   } else {
     childrenHiddenIDs.add(spanID);
   }
+  return { ...state, childrenHiddenIDs };
+}
+
+function shouldDisableCollapse(allSpans, hiddenSpansIds) {
+  const allParentSpans = allSpans.filter(s => s.hasChildren);
+  return allParentSpans.length === hiddenSpansIds.size;
+}
+
+export function expandAll(state) {
+  const childrenHiddenIDs = new Set();
+  return { ...state, childrenHiddenIDs };
+}
+
+export function collapseAll(state, { payload }) {
+  const { spans } = payload;
+  if (shouldDisableCollapse(spans, state.childrenHiddenIDs)) {
+    return state;
+  }
+  const childrenHiddenIDs = spans.reduce((res, s) => {
+    if (s.hasChildren) {
+      res.add(s.spanID);
+    }
+    return res;
+  }, new Set());
+  return { ...state, childrenHiddenIDs };
+}
+
+export function collapseOne(state, { payload }) {
+  const { spans } = payload;
+  if (shouldDisableCollapse(spans, state.childrenHiddenIDs)) {
+    return state;
+  }
+  let nearestCollapsedAncestor;
+  const childrenHiddenIDs = spans.reduce((res, curSpan) => {
+    if (nearestCollapsedAncestor && curSpan.depth <= nearestCollapsedAncestor.depth) {
+      res.add(nearestCollapsedAncestor.spanID);
+      nearestCollapsedAncestor = curSpan;
+    } else if (curSpan.hasChildren && !res.has(curSpan.spanID)) {
+      nearestCollapsedAncestor = curSpan;
+    }
+    return res;
+  }, new Set(state.childrenHiddenIDs));
+  childrenHiddenIDs.add(nearestCollapsedAncestor.spanID);
+  return { ...state, childrenHiddenIDs };
+}
+
+export function expandOne(state, { payload }) {
+  const { spans } = payload;
+  if (state.childrenHiddenIDs.size === 0) {
+    return state;
+  }
+  let prevExpandedDepth = -1;
+  let expandNextHiddenSpan = true;
+  const childrenHiddenIDs = spans.reduce((res, s) => {
+    if (s.depth <= prevExpandedDepth) {
+      expandNextHiddenSpan = true;
+    }
+    if (expandNextHiddenSpan && res.has(s.spanID)) {
+      res.delete(s.spanID);
+      expandNextHiddenSpan = false;
+      prevExpandedDepth = s.depth;
+    }
+    return res;
+  }, new Set(state.childrenHiddenIDs));
   return { ...state, childrenHiddenIDs };
 }
 
@@ -149,6 +221,10 @@ export default handleActions(
     [actionTypes.SET_TRACE]: setTrace,
     [actionTypes.SET_SPAN_NAME_COLUMN_WIDTH]: setColumnWidth,
     [actionTypes.CHILDREN_TOGGLE]: childrenToggle,
+    [actionTypes.EXPAND_ALL]: expandAll,
+    [actionTypes.EXPAND_ONE]: expandOne,
+    [actionTypes.COLLAPSE_ALL]: collapseAll,
+    [actionTypes.COLLAPSE_ONE]: collapseOne,
     [actionTypes.DETAIL_TOGGLE]: detailToggle,
     [actionTypes.DETAIL_TAGS_TOGGLE]: detailTagsToggle,
     [actionTypes.DETAIL_PROCESS_TOGGLE]: detailProcessToggle,
