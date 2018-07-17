@@ -18,6 +18,7 @@ jest.mock('../../../utils/tracking');
 import DetailState from './SpanDetail/DetailState';
 import * as track from './duck.track';
 import { actionTypes as types } from './duck';
+import { fetchedState } from '../../../constants';
 import { trackEvent } from '../../../utils/tracking';
 
 describe('middlewareHooks', () => {
@@ -30,7 +31,9 @@ describe('middlewareHooks', () => {
     trace: {
       traces: {
         [traceID]: {
-          spans: [{ spanID, depth: spanDepth }],
+          id: traceID,
+          data: { spans: [{ spanID, depth: spanDepth }] },
+          state: fetchedState.DONE,
         },
       },
     },
