@@ -4,6 +4,10 @@
 
 Visualize distributed tracing with Jaeger.
 
+![Trace Search](https://www.jaegertracing.io/img/traces-ss.png)
+  
+![Trace Details](https://www.jaegertracing.io/img/trace-detail-ss.png)
+
 ## Contributing
 
 See [CONTRIBUTING](./CONTRIBUTING.md).
