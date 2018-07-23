@@ -29,7 +29,8 @@
     "precommit": "lint-staged",
     "prettier":
       "prettier --write '{.,scripts}/*.{js,json,md}' 'packages/*/{src,demo/src}/**/*.{css,js,json,md}' 'packages/*/*.{css,js,json,md}'",
-    "test": "lerna run test"
+    "test": "lerna run test",
+    "start": "cd packages/jaeger-ui && yarn start"
   },
   "prettier": {
     "printWidth": 110,
