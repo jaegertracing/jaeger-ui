@@ -14,7 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import React from 'react';
+import * as React from 'react';
 import jsonMarkup from 'json-markup';
 import { Dropdown, Icon, Menu } from 'antd';
 
@@ -30,6 +30,24 @@ function parseIfJson(value) {
   } catch (_) {}
   return value;
 }
+
+const LinkValue = (props: { href: string, title?: string, children: React.Node }) => (
+  <a href={props.href} title={props.title} target="_blank" rel="noopener noreferrer">
+    {props.children} <Icon className="KeyValueTable--linkIcon" type="export" />
+  </a>
+);
+
+const linkValueList = (links: { url: string, text: string }[]) => (
+  <Menu>
+    {links.map(({ text, url }, index) => (
+      // `index` is necessary in the key because url can repeat
+      // eslint-disable-next-line react/no-array-index-key
+      <Menu.Item key={`${url}-${index}`}>
+        <LinkValue href={url}>{text}</LinkValue>
+      </Menu.Item>
+    ))}
+  </Menu>
+);
 
 type KeyValuesTableProps = {
   data: { key: string, value: any }[],
@@ -53,31 +71,15 @@ export default function KeyValuesTable(props: KeyValuesTableProps) {
             if (links && links.length === 1) {
               valueMarkup = (
                 <div>
-                  <a href={links[0].url} title={links[0].text} target="_blank" rel="noopener noreferrer">
-                    {jsonTable} <Icon className="KeyValueTable--linkIcon" type="export" />
-                  </a>
+                  <LinkValue href={links[0].url} title={links[0].text}>
+                    {jsonTable}
+                  </LinkValue>
                 </div>
               );
             } else if (links && links.length > 1) {
-              const menuItems = (
-                <Menu>
-                  {links.map((link, index) => {
-                    const { text, url } = link;
-                    return (
-                      // `index` is necessary in the key because url can repeat
-                      // eslint-disable-next-line react/no-array-index-key
-                      <Menu.Item key={`${url}-${index}`}>
-                        <a href={url} target="_blank" rel="noopener noreferrer">
-                          {text}
-                        </a>
-                      </Menu.Item>
-                    );
-                  })}
-                </Menu>
-              );
               valueMarkup = (
                 <div>
-                  <Dropdown overlay={menuItems} placement="bottomRight" trigger={['click']}>
+                  <Dropdown overlay={linkValueList(links)} placement="bottomRight" trigger={['click']}>
                     <a>
                       {jsonTable} <Icon className="KeyValueTable--linkIcon" type="profile" />
                     </a>
@@ -101,3 +103,5 @@ export default function KeyValuesTable(props: KeyValuesTableProps) {
     </div>
   );
 }
+
+KeyValuesTable.LinkValue = LinkValue;

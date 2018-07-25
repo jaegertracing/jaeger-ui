@@ -14,7 +14,7 @@
 
 import React from 'react';
 import { shallow } from 'enzyme';
-import { Dropdown, Icon } from 'antd';
+import { Dropdown } from 'antd';
 
 import KeyValuesTable from './KeyValuesTable';
 
@@ -53,11 +53,10 @@ describe('<KeyValuesTable>', () => {
           : [],
     });
 
-    const anchor = wrapper.find('a');
+    const anchor = wrapper.find(KeyValuesTable.LinkValue);
     expect(anchor).toHaveLength(1);
     expect(anchor.prop('href')).toBe('http://example.com/?kind=client');
     expect(anchor.prop('title')).toBe('More info about client');
-    expect(anchor.find(Icon)).toHaveLength(1);
     expect(
       anchor
         .closest('tr')
@@ -79,14 +78,14 @@ describe('<KeyValuesTable>', () => {
     });
     const dropdown = wrapper.find(Dropdown);
     const menu = shallow(dropdown.prop('overlay'));
-    const anchors = menu.find('a');
+    const anchors = menu.find(KeyValuesTable.LinkValue);
     expect(anchors).toHaveLength(2);
     const firstAnchor = anchors.first();
     expect(firstAnchor.prop('href')).toBe('http://example.com/1?kind=client');
-    expect(firstAnchor.text()).toBe('Example 1');
+    expect(firstAnchor.children().text()).toBe('Example 1');
     const secondAnchor = anchors.last();
     expect(secondAnchor.prop('href')).toBe('http://example.com/2?kind=client');
-    expect(secondAnchor.text()).toBe('Example 2');
+    expect(secondAnchor.children().text()).toBe('Example 2');
     expect(
       dropdown
         .closest('tr')
