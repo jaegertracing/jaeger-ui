@@ -135,12 +135,14 @@ describe('TraceTimelineViewer/duck', () => {
     // --- 2
     // - 3
     // --- 4
+    // - 5
     const spans = [
       { spanID: 0, depth: 0, hasChildren: true },
       { spanID: 1, depth: 1, hasChildren: true },
       { spanID: 2, depth: 2, hasChildren: false },
       { spanID: 3, depth: 1, hasChildren: true },
       { spanID: 4, depth: 2, hasChildren: false },
+      { spanID: 5, depth: 1, hasChildren: false },
     ];
 
     const oneSpanCollapsed = new Set([1]);
