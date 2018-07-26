@@ -19,6 +19,7 @@ import {
   getParameterInAncestor,
   processLinkPattern,
   computeLinks,
+  createGetLinks,
 } from './link-patterns';
 
 describe('processTemplate()', () => {
@@ -327,5 +328,57 @@ describe('computeLinks()', () => {
         text: 'second link (valueOfMy+Other+Key)',
       },
     ]);
+  });
+});
+
+describe('getLinks()', () => {
+  const linkPatterns = [
+    {
+      key: 'mySpecialKey',
+      // eslint-disable-next-line no-template-curly-in-string
+      url: 'http://example.com/?mySpecialKey=${mySpecialKey}',
+      // eslint-disable-next-line no-template-curly-in-string
+      text: 'special key link (${mySpecialKey})',
+    },
+  ].map(processLinkPattern);
+  const template = jest.spyOn(linkPatterns[0].url, 'template');
+
+  const trace = {
+    spans: [{ depth: 0, process: {}, tags: [{ key: 'mySpecialKey', value: 'valueOfMyKey' }] }],
+  };
+
+  let cache;
+
+  beforeEach(() => {
+    cache = new WeakMap();
+    template.mockClear();
+  });
+
+  it('does not access the cache if there is no link pattern', () => {
+    cache.get = jest.fn();
+    const getLinks = createGetLinks([], cache);
+    expect(getLinks(trace, 0, trace.spans[0].tags, 0)).toEqual([]);
+    expect(cache.get).not.toHaveBeenCalled();
+  });
+
+  it('returns the result from the cache', () => {
+    const result = [];
+    cache.set(trace.spans[0].tags[0], result);
+    const getLinks = createGetLinks(linkPatterns, cache);
+    expect(getLinks(trace, 0, trace.spans[0].tags, 0)).toBe(result);
+    expect(template).not.toHaveBeenCalled();
+  });
+
+  it('adds the result to the cache', () => {
+    const getLinks = createGetLinks(linkPatterns, cache);
+    const result = getLinks(trace, 0, trace.spans[0].tags, 0);
+    expect(template).toHaveBeenCalledTimes(1);
+    expect(result).toEqual([
+      {
+        url: 'http://example.com/?mySpecialKey=valueOfMyKey',
+        text: 'special key link (valueOfMyKey)',
+      },
+    ]);
+    expect(cache.get(trace.spans[0].tags[0])).toBe(result);
   });
 });

@@ -38,10 +38,7 @@ function stringSupplant(str, encodeFn: any => string, map) {
   return str.replace(parameterRegExp, (_, name) => encodeFn(map[name]));
 }
 
-export function processTemplate(
-  template: any,
-  encodeFn: any => string
-): ProcessedTemplate {
+export function processTemplate(template: any, encodeFn: any => string): ProcessedTemplate {
   if (typeof template !== 'string') {
     /*
 
@@ -194,23 +191,25 @@ export function computeLinks(
   return result;
 }
 
-const linkPatterns = (getConfigValue('linkPatterns') || []).map(processLinkPattern).filter(Boolean);
-const alreadyComputed = new WeakMap();
-
-export default function getLinks(
-  trace: Trace,
-  spanIndex: number,
-  items: { key: string, value: any }[],
-  itemIndex: number
+export function createGetLinks(
+  linkPatterns: ProcessedLinkPattern[],
+  cache: WeakMap<{ key: string, value: any }, { url: string, text: string }[]>
 ) {
-  if (linkPatterns.length === 0) {
-    return [];
-  }
-  const item = items[itemIndex];
-  let result = alreadyComputed.get(item);
-  if (!result) {
-    result = computeLinks(linkPatterns, trace, spanIndex, items, itemIndex);
-    alreadyComputed.set(item, result);
-  }
-  return result;
+  return (trace: Trace, spanIndex: number, items: { key: string, value: any }[], itemIndex: number) => {
+    if (linkPatterns.length === 0) {
+      return [];
+    }
+    const item = items[itemIndex];
+    let result = cache.get(item);
+    if (!result) {
+      result = computeLinks(linkPatterns, trace, spanIndex, items, itemIndex);
+      cache.set(item, result);
+    }
+    return result;
+  };
 }
+
+export default createGetLinks(
+  (getConfigValue('linkPatterns') || []).map(processLinkPattern).filter(Boolean),
+  new WeakMap()
+);
