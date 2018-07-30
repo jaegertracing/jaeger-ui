@@ -18,17 +18,14 @@ import { createActions, handleActions } from 'redux-actions';
 
 import generateActionTypes from '../../utils/generate-action-types';
 
-// traceDiff {
-//   a: ?id,
-//   b: ?id
-//   cohort: id[],
-// }
-
 export function newInitialState() {
   return {
-    cohort: [],
     a: null,
     b: null,
+    cohort: [],
+    metric: null,
+    scale: null,
+    scaleOn: null,
   };
 }
 

@@ -25,6 +25,7 @@ import { actions as diffActions } from './duck';
 import { getUrl } from './url';
 import TraceDiffGraph from './TraceDiffGraph';
 import TraceDiffHeader from './TraceDiffHeader';
+import TraceDiffSettings from './TraceDiffSettings';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import { TOP_NAV_HEIGHT } from '../../constants';
 
@@ -40,6 +41,10 @@ type Props = {
   fetchMultipleTraces: (string[]) => void,
   forceState: TraceDiffState => void,
   history: RouterHistory,
+  metric: ?string,
+  scale: ?string,
+  scaleOn: ?string,
+  showSettings: boolean,
   tracesData: Map<string, ?FetchedTrace>,
   traceDiffState: TraceDiffState,
 };
@@ -49,8 +54,8 @@ type State = {
 };
 
 function syncStates(urlSt, reduxSt, forceState) {
-  const { a: urlA, b: urlB } = urlSt;
-  const { a: reduxA, b: reduxB } = reduxSt;
+  const { a: urlA, b: urlB, metric: metricA, scale: scaleA, scaleOn: scaleOnA } = urlSt;
+  const { a: reduxA, b: reduxB, metric: metricB, scale: scaleB, scaleOn: scaleOnB } = reduxSt;
   if (urlA !== reduxA || urlB !== reduxB) {
     forceState(urlSt);
     return;
@@ -63,6 +68,17 @@ function syncStates(urlSt, reduxSt, forceState) {
   }
   const needSync = Array.from(urlCohort).some(id => !reduxCohort.has(id));
   if (needSync) {
+    forceState(urlSt);
+    return;
+  }
+  if (metricA !== metricB) {
+    forceState(urlSt);
+    return;
+  }
+  if (scaleA !== scaleB) {
+    forceState(urlSt);
+  }
+  if (scaleOnA !== scaleOnB) {
     forceState(urlSt);
   }
 }
@@ -105,8 +121,19 @@ export class TraceDiffImpl extends React.PureComponent<Props, State> {
   }
 
   processProps() {
-    const { a, b, cohort, fetchMultipleTraces, forceState, tracesData, traceDiffState } = this.props;
-    syncStates({ a, b, cohort }, traceDiffState, forceState);
+    const {
+      a,
+      b,
+      cohort,
+      metric,
+      fetchMultipleTraces,
+      forceState,
+      scale,
+      scaleOn,
+      tracesData,
+      traceDiffState,
+    } = this.props;
+    syncStates({ a, b, cohort, metric, scale, scaleOn }, traceDiffState, forceState);
     const cohortData = cohort.map(id => tracesData.get(id) || { id, state: null });
     const needForDiffs = cohortData.filter(ft => ft.state == null).map(ft => ft.id);
     if (needForDiffs.length) {
@@ -116,8 +143,8 @@ export class TraceDiffImpl extends React.PureComponent<Props, State> {
 
   diffSetUrl(change: { newA?: ?string, newB?: ?string }) {
     const { newA, newB } = change;
-    const { a, b, cohort, history } = this.props;
-    const url = getUrl({ a: newA || a, b: newB || b, cohort });
+    const { a, b, cohort, metric, history, scale, scaleOn } = this.props;
+    const url = getUrl({ a: newA || a, b: newB || b, cohort, metric, scale, scaleOn });
     history.push(url);
   }
 
@@ -132,7 +159,7 @@ export class TraceDiffImpl extends React.PureComponent<Props, State> {
   };
 
   render() {
-    const { a, b, cohort, tracesData } = this.props;
+    const { a, b, cohort, history, metric, scale, scaleOn, showSettings, tracesData } = this.props;
     const { graphTopOffset } = this.state;
     const traceA = a ? tracesData.get(a) || { id: a } : null;
     const traceB = b ? tracesData.get(b) || { id: b } : null;
@@ -150,8 +177,19 @@ export class TraceDiffImpl extends React.PureComponent<Props, State> {
           />
         </div>
         <div key="graph" className="TraceDiff--graphWrapper" style={{ top: graphTopOffset }}>
-          <TraceDiffGraph a={traceA} b={traceB} />
+          <TraceDiffGraph a={traceA} b={traceB} metric={metric} scale={scale} scaleOn={scaleOn} />
         </div>
+        {showSettings && (
+          <TraceDiffSettings
+            a={a}
+            b={b}
+            cohort={cohort}
+            metric={metric}
+            scale={scale}
+            scaleOn={scaleOn}
+            pushUrl={history.push}
+          />
+        )}
       </React.Fragment>
     );
   }
@@ -160,7 +198,9 @@ export class TraceDiffImpl extends React.PureComponent<Props, State> {
 // TODO(joe): simplify but do not invalidate the URL
 export function mapStateToProps(state: ReduxState, ownProps: { match: Match }) {
   const { a, b } = ownProps.match.params;
-  const { cohort: origCohort = [] } = queryString.parse(state.router.location.search);
+  const { duration, cohort: origCohort = [], metric, scale, scaleOn } = queryString.parse(
+    state.router.location.search
+  );
   const fullCohortSet: Set<string> = new Set([].concat(a, b, origCohort).filter(Boolean));
   const cohort: string[] = Array.from(fullCohortSet);
   const { traces } = state.trace;
@@ -170,7 +210,11 @@ export function mapStateToProps(state: ReduxState, ownProps: { match: Match }) {
     a,
     b,
     cohort,
+    metric,
+    scale,
+    scaleOn,
     tracesData,
+    showSettings: duration !== undefined || metric !== undefined,
     traceDiffState: state.traceDiff,
   };
 }

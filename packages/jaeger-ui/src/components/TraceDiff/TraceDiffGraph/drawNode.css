@@ -26,6 +26,8 @@ limitations under the License.
   opacity: 0;
 }
 
+/* Default styling of nodes is for structural diff */
+
 .DiffNode.is-changed {
   color: rgba(0, 0, 0, 0.85);
 }
@@ -52,6 +54,67 @@ limitations under the License.
   color: #fff;
 }
 
+/* Color of text when interpolating node background colors */
+
+.DiffNode.is-dark-text {
+  color: rgba(0, 0, 0, 0.85);
+}
+
+.DiffNode.is-light-text {
+  color: #fff;
+}
+
+/* DiffNode styling for comparing durations */
+
+/* added
+    stroke: #1d39c4;
+    fill: #8E9FDE;
+
+removed
+    fill: #ff85c0;
+    stroke-width: 3;
+    stroke: #ff0095; */
+
+.DiffNode.is-duration-diff.is-more {
+  /* background: #78d539; */
+  background: unset;
+  /* border-color: #2a8f04; */
+  border: 1px solid #777;
+}
+
+.DiffNode.is-duration-diff.is-added {
+  /* background: #2a8f04; */
+  background: #8e9fde;
+  border-color: #1d39c4;
+  /* color: #fff; */
+  background: none;
+  /* color: transparent; */
+  color: rgba(0, 0, 0, 0.65);
+  background: #fff;
+  border: 1px solid #ccc;
+}
+
+.DiffNode.is-duration-diff.is-less {
+  background: unset;
+  /* border-color: #cc1616; */
+  /* border: none; */
+  border: 1px solid #777;
+}
+
+.DiffNode.is-duration-diff.is-removed {
+  /* background: #cc1616; */
+  background: #eb2f96;
+  border: none;
+  /* color: #fff; */
+  background: none;
+  /* color: transparent; */
+  color: rgba(0, 0, 0, 0.65);
+  background: #fff;
+  border: 1px solid #ccc;
+}
+
+/* Metric cell */
+
 .DiffNode--metricCell {
   padding: 0.3rem 0.5rem;
   background: rgba(255, 255, 255, 0.3);
@@ -64,6 +127,32 @@ limitations under the License.
 .DiffNode--metricCell.is-added,
 .DiffNode--metricCell.is-removed {
   background: rgba(0, 0, 0, 0.2);
+}
+
+.DiffNode--metricCell.is-duration-diff.is-added,
+.DiffNode--metricCell.is-duration-diff.is-removed {
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid #bbb;
+  border-top: none;
+  border-bottom: none;
+}
+
+.TraceDiffGraph--dag.is-small .DiffNode--metricCell.is-duration-diff.is-added,
+.TraceDiffGraph--dag.is-small .DiffNode--metricCell.is-duration-diff.is-removed {
+  border: none;
+  border-bottom: none;
+}
+
+.DiffNode--metricCell.is-duration-diff.is-secondary {
+  background: none;
+}
+
+.DiffNode--metricCell.is-duration-diff.is-added.is-secondary {
+  background: #1d39c410;
+}
+
+.DiffNode--metricCell.is-duration-diff.is-removed.is-secondary {
+  background: #ef07e710;
 }
 
 .DiffNode--metricSymbol {

@@ -27,6 +27,7 @@ import type { FetchedTrace } from '../../../types';
 import './DiffSelection.css';
 
 type Props = {
+  metric: ?string,
   toggleComparison: (string, boolean) => void,
   traces: FetchedTrace[],
 };
@@ -37,9 +38,9 @@ export default class DiffSelection extends React.PureComponent<Props> {
   props: Props;
 
   render() {
-    const { toggleComparison, traces } = this.props;
+    const { metric, toggleComparison, traces } = this.props;
     const cohort = traces.filter(ft => ft.state !== fetchedState.ERROR).map(ft => ft.id);
-    const compareHref = cohort.length > 1 ? getUrl({ cohort }) : null;
+    const compareHref = cohort.length > 1 ? getUrl({ cohort, metric }) : null;
     const compareBtn = (
       <Button className="ub-right" disabled={cohort.length < 2} type="primary">
         Compare Traces

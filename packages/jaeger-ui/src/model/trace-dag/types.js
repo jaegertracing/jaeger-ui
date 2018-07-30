@@ -31,9 +31,9 @@ export type DenseSpan = {
   children: Set<string>,
 };
 
-export type PVertex<T> = {
+export type PVertex = {
   key: string | number,
-  data: DagNode<T>,
+  data: DagNode,
 };
 
 export type PEdge = {

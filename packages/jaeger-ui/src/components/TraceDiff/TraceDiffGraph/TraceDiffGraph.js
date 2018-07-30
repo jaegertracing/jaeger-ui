@@ -17,13 +17,18 @@
 import * as React from 'react';
 import { DirectedGraph, LayoutManager } from '@jaegertracing/plexus';
 
-import drawNode from './drawNode';
+// import drawNode from './drawNode';
+import { getNodeDrawer } from './drawNode';
+import getColorInterpolator from './getColorInterpolator';
 import ErrorMessage from '../../common/ErrorMessage';
 import LoadingIndicator from '../../common/LoadingIndicator';
 import { fetchedState } from '../../../constants';
 import convPlexus from '../../../model/trace-dag/convPlexus';
 import TraceDag from '../../../model/trace-dag/TraceDag';
 
+// import type { DiffMembers } from '../../../model/trace-dag/DagNode';
+// import type { PVertex } from '../../../model/trace-dag/types';
+// import type { TraceDiffState } from '../../../types/trace-diff';
 import type { FetchedTrace } from '../../../types';
 
 import './TraceDiffGraph.css';
@@ -31,6 +36,9 @@ import './TraceDiffGraph.css';
 type Props = {
   a: ?FetchedTrace,
   b: ?FetchedTrace,
+  metric: ?string,
+  scale: ?string,
+  scaleOn: ?string,
 };
 
 const { classNameIsSmall } = DirectedGraph.propsFactories;
@@ -49,18 +57,24 @@ export default class TraceDiffGraph extends React.PureComponent<Props> {
   props: Props;
 
   layoutManager: LayoutManager;
+  // nodeFactory: (vertex: PVertex<DiffMembers>) => React.Node;
 
   constructor(props: Props) {
     super(props);
     this.layoutManager = new LayoutManager({ useDotEdges: true, splines: 'polyline' });
   }
 
+  // componentWillMount() {
+  //   const { metric } = this.props;
+  //   // this.nodeFactory = getNodeDrawer(metric);
+  // }
+
   componentWillUnmount() {
     this.layoutManager.stopAndRelease();
   }
 
   render() {
-    const { a, b } = this.props;
+    const { a, b, metric, scale, scaleOn } = this.props;
     if (!a || !b) {
       return <h1 className="u-mt-vast u-tx-muted ub-tx-center">At least two Traces are needed</h1>;
     }
@@ -95,8 +109,9 @@ export default class TraceDiffGraph extends React.PureComponent<Props> {
     const aTraceDag = TraceDag.newFromTrace(aData);
     const bTraceDag = TraceDag.newFromTrace(bData);
     const diffDag = TraceDag.diff(aTraceDag, bTraceDag);
+    const getColor = getColorInterpolator(metric, scale, scaleOn, diffDag.nodesMap);
     const { edges, vertices } = convPlexus(diffDag.nodesMap);
-
+    const nodeFactory = getNodeDrawer(metric, scaleOn, getColor);
     return (
       <div className="TraceDiffGraph--graphWrapper">
         <DirectedGraph
@@ -106,7 +121,7 @@ export default class TraceDiffGraph extends React.PureComponent<Props> {
           className="TraceDiffGraph--dag"
           minimapClassName="TraceDiffGraph--miniMap"
           layoutManager={this.layoutManager}
-          getNodeLabel={drawNode}
+          getNodeLabel={nodeFactory}
           setOnRoot={classNameIsSmall}
           setOnEdgesContainer={setOnEdgesContainer}
           edges={edges}

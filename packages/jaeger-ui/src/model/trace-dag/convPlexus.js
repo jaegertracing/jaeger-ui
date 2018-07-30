@@ -16,10 +16,11 @@
 
 import DagNode from './DagNode';
 
+// import type { DiffMembers } from './DagNode';
 import type { NodeID, PEdge, PVertex } from './types';
 
-export default function convPlexus<T>(nodesMap: Map<NodeID, DagNode<T>>) {
-  const vertices: PVertex<T>[] = [];
+export default function convPlexus(nodesMap: Map<NodeID, DagNode>) {
+  const vertices: PVertex[] = [];
   const edges: PEdge[] = [];
   const ids = [...nodesMap.keys()];
   const keyMap: Map<string, ?number> = new Map(ids.map((id: NodeID, i: number) => [id, i]));
@@ -32,7 +33,7 @@ export default function convPlexus<T>(nodesMap: Map<NodeID, DagNode<T>>) {
     }
     vertices.push({
       key: i,
-      label: `${dagNode.count} | ${dagNode.operation}`,
+      // label: `${dagNode.count} | ${dagNode.operation}`,
       data: dagNode,
     });
     const parentKey = dagNode.parentID && keyMap.get(dagNode.parentID);

@@ -36,6 +36,7 @@ type SearchResultsProps = {
   cohortAddTrace: string => void,
   cohortRemoveTrace: string => void,
   diffCohort: FetchedTrace[],
+  diffMetric: ?string,
   goToTrace: string => void,
   loading: boolean,
   maxTraceDuration: number,
@@ -85,8 +86,10 @@ export default class SearchResults extends React.PureComponent<SearchResultsProp
   };
 
   render() {
-    const { loading, diffCohort, skipMessage, traces } = this.props;
-    const diffSelection = <DiffSelection toggleComparison={this.toggleComparison} traces={diffCohort} />;
+    const { loading, diffCohort, diffMetric, skipMessage, traces } = this.props;
+    const diffSelection = (
+      <DiffSelection toggleComparison={this.toggleComparison} traces={diffCohort} metric={diffMetric} />
+    );
     if (loading) {
       return (
         <React.Fragment>

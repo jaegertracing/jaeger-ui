@@ -14,9 +14,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { NodeID } from './types';
+import type { DenseSpan, NodeID } from './types';
 
-export default class DagNode<T = void> {
+// export type DiffMembers = {
+//   a: ?DagNode<any>,
+//   b: ?DagNode<any>,
+// };
+
+export default class DagNode {
   static getID(service: string, operation: string, parentID?: ?string): NodeID {
     const name = `${service}\t${operation}`;
     return parentID ? `${parentID}\n${name}` : name;
@@ -26,17 +31,32 @@ export default class DagNode<T = void> {
   operation: string;
   parentID: ?NodeID;
   id: NodeID;
-  count: number;
+  // count: number;
+  members: DenseSpan[];
   children: Set<NodeID>;
-  data: T;
+  data: {
+    a: ?DagNode,
+    b: ?DagNode,
+  };
 
-  constructor(service: string, operation: string, parentID?: ?NodeID, data: T) {
+  constructor(service: string, operation: string, parentID?: ?NodeID) {
     this.service = service;
     this.operation = operation;
     this.parentID = parentID;
     this.id = DagNode.getID(service, operation, parentID);
-    this.count = 0;
+    // this.count = 0;
+    this.members = [];
     this.children = new Set();
-    this.data = data;
+    this.data = { a: null, b: null };
   }
 }
+
+export type DiffMembers = {
+  a: ?DagNode,
+  b: ?DagNode,
+};
+
+// export type DiffMembers = {
+//   a: ?DagNode<any>,
+//   b: ?DagNode<any>,
+// };

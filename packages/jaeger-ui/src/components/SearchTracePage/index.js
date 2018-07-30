@@ -68,6 +68,7 @@ export class SearchTracePageImpl extends Component {
       cohortAddTrace,
       cohortRemoveTrace,
       diffCohort,
+      diffMetric,
       errors,
       isHomepage,
       loadingServices,
@@ -103,6 +104,7 @@ export class SearchTracePageImpl extends Component {
                 maxTraceDuration={maxTraceDuration}
                 cohortRemoveTrace={cohortRemoveTrace}
                 diffCohort={diffCohort}
+                diffMetric={diffMetric}
                 skipMessage={isHomepage}
                 traces={traceResults}
               />
@@ -127,6 +129,7 @@ SearchTracePageImpl.propTypes = {
   // eslint-disable-next-line react/forbid-prop-types
   traceResults: PropTypes.array,
   diffCohort: PropTypes.array,
+  diffMetric: PropTypes.string,
   cohortAddTrace: PropTypes.func,
   cohortRemoveTrace: PropTypes.func,
   maxTraceDuration: PropTypes.number,
@@ -167,8 +170,11 @@ const stateTraceXformer = getLastXformCacher(stateTrace => {
 
 const stateTraceDiffXformer = getLastXformCacher((stateTrace, stateTraceDiff) => {
   const { traces } = stateTrace;
-  const { cohort } = stateTraceDiff;
-  return cohort.map(id => traces[id] || { id });
+  const { cohort, metric } = stateTraceDiff;
+  return {
+    metric,
+    cohort: cohort.map(id => traces[id] || { id }),
+  };
 });
 
 const sortedTracesXformer = getLastXformCacher((traces, sortBy) => {
@@ -198,7 +204,7 @@ export function mapStateToProps(state) {
   const query = queryString.parse(state.router.location.search);
   const isHomepage = !Object.keys(query).length;
   const { traces, maxDuration, traceError, loadingTraces } = stateTraceXformer(state.trace);
-  const diffCohort = stateTraceDiffXformer(state.trace, state.traceDiff);
+  const { cohort: diffCohort, metric: diffMetric } = stateTraceDiffXformer(state.trace, state.traceDiff);
   const { loadingServices, services, serviceError } = stateServicesXformer(state.services);
   const errors = [];
   if (traceError) {
@@ -211,6 +217,7 @@ export function mapStateToProps(state) {
   const traceResults = sortedTracesXformer(traces, sortBy);
   return {
     diffCohort,
+    diffMetric,
     isHomepage,
     loadingServices,
     loadingTraces,

@@ -28,8 +28,19 @@ export function matches(path: string) {
   return Boolean(matchPath(path, ROUTE_MATCHER));
 }
 
-export function getUrl(state?: ?{ a?: ?string, b?: ?string, cohort: string[] }) {
-  const { a, b, cohort } = getValidState(state);
-  const search = queryString.stringify({ cohort });
+export function getUrl(state?: Object) {
+  const { metric, scale, scaleOn } = state || {};
+  const { a, b, cohort } = getValidState({ cohort: [], ...state });
+  const params: Object = { cohort };
+  if (metric) {
+    params.metric = metric;
+  }
+  if (scale) {
+    params.scale = scale;
+  }
+  if (scaleOn) {
+    params.scaleOn = scaleOn;
+  }
+  const search = queryString.stringify(params);
   return prefixUrl(`/trace/${a || ''}...${b || ''}${search ? '?' : ''}${search}`);
 }

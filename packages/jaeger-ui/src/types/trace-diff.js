@@ -18,4 +18,7 @@ export type TraceDiffState = {
   a: ?string,
   b: ?string,
   cohort: string[],
+  metric: ?string,
+  scale: ?string,
+  scaleOn: ?string,
 };
