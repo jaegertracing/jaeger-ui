@@ -17,8 +17,8 @@
 import type { NodeID } from './types';
 
 export default class DagNode<T = void> {
-  static getID(service: string, operation: string, parentID?: ?string): NodeID {
-    const name = `${service}\t${operation}`;
+  static getID(service: string, operation: string, hasChildren: boolean, parentID?: ?string): NodeID {
+    const name = `${service}\t${operation}${hasChildren ? '' : '\t__LEAF__'}`;
     return parentID ? `${parentID}\n${name}` : name;
   }
 
@@ -30,11 +30,11 @@ export default class DagNode<T = void> {
   children: Set<NodeID>;
   data: T;
 
-  constructor(service: string, operation: string, parentID?: ?NodeID, data: T) {
+  constructor(service: string, operation: string, hasChildren: boolean, parentID?: ?NodeID, data: T) {
     this.service = service;
     this.operation = operation;
     this.parentID = parentID;
-    this.id = DagNode.getID(service, operation, parentID);
+    this.id = DagNode.getID(service, operation, hasChildren, parentID);
     this.count = 0;
     this.children = new Set();
     this.data = data;

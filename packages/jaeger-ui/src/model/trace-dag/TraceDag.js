@@ -37,7 +37,10 @@ export default class TraceDag<T = void> {
     let key = 'a';
 
     function pushDagNode(src: DagNode<any>) {
-      const node = dt._getDagNode(src.service, src.operation, src.parentID, { a: 0, b: 0 });
+      const node = dt._getDagNode(src.service, src.operation, src.children.size > 0, src.parentID, {
+        a: 0,
+        b: 0,
+      });
       const { data } = node;
       data[key] = src.count;
       node.count = data.b - data.a;
@@ -67,13 +70,19 @@ export default class TraceDag<T = void> {
     [...this.denseTrace.rootIDs].forEach(id => this._addDenseSpan(id, null, data));
   }
 
-  _getDagNode(service: string, operation: string, parentID?: ?NodeID, data: T): DagNode<T> {
-    const nodeID = DagNode.getID(service, operation, parentID);
+  _getDagNode(
+    service: string,
+    operation: string,
+    hasChildren: boolean,
+    parentID?: ?NodeID,
+    data: T
+  ): DagNode<T> {
+    const nodeID = DagNode.getID(service, operation, hasChildren, parentID);
     let node = this.nodesMap.get(nodeID);
     if (node) {
       return node;
     }
-    node = new DagNode(service, operation, parentID, data);
+    node = new DagNode(service, operation, hasChildren, parentID, data);
     this.nodesMap.set(nodeID, node);
     if (!parentID) {
       this.rootIDs.add(nodeID);
@@ -95,7 +104,7 @@ export default class TraceDag<T = void> {
     const { children, operation, service, skipToChild } = denseSpan;
     let nodeID: ?string = null;
     if (!skipToChild) {
-      const node = this._getDagNode(service, operation, parentNodeID, data);
+      const node = this._getDagNode(service, operation, children.size > 0, parentNodeID, data);
       node.count++;
       nodeID = node.id;
     } else {
