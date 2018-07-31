@@ -138,7 +138,9 @@ export function collapseOne(state, { payload }) {
   const childrenHiddenIDs = spans.reduce((res, curSpan) => {
     if (nearestCollapsedAncestor && curSpan.depth <= nearestCollapsedAncestor.depth) {
       res.add(nearestCollapsedAncestor.spanID);
-      nearestCollapsedAncestor = curSpan;
+      if (curSpan.hasChildren) {
+        nearestCollapsedAncestor = curSpan;
+      }
     } else if (curSpan.hasChildren && !res.has(curSpan.spanID)) {
       nearestCollapsedAncestor = curSpan;
     }

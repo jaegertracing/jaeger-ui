@@ -4,6 +4,10 @@
 
 Visualize distributed tracing with Jaeger.
 
+|              Trace Search              |             Trace Details              |
+| :------------------------------------: | :------------------------------------: |
+| ![Trace Search](./media/ss_search.png) | ![Trace Details](./media/ss_trace.png) |
+
 ## Contributing
 
 See [CONTRIBUTING](./CONTRIBUTING.md).
@@ -46,17 +50,17 @@ ssh -fN -L 16686:$BACKEND_HOST:$BACKEND_PORT $BACKEND_PORT
 Start the development server with hot loading:
 
 ```
-cd packages/jaeger-ui && yarn start
+yarn start
 ```
 
 #### Commands
 
-| Command                               | Description                                                         |
-| ------------------------------------- | ------------------------------------------------------------------- |
-| `cd packages/jaeger-ui && yarn start` | Starts development server with hot reloading and api proxy.         |
-| `yarn test`                           | Run all the tests                                                   |
-| `yarn lint`                           | Lint the project (eslint, prettier, flow)                           |
-| `yarn build`                          | Runs production build. Outputs files to `packages/jaeger-ui/build`. |
+| Command      | Description                                                         |
+| ------------ | ------------------------------------------------------------------- |
+| `yarn start` | Starts development server with hot reloading and api proxy.         |
+| `yarn test`  | Run all the tests                                                   |
+| `yarn lint`  | Lint the project (eslint, prettier, flow)                           |
+| `yarn build` | Runs production build. Outputs files to `packages/jaeger-ui/build`. |
 
 ## Build
 
