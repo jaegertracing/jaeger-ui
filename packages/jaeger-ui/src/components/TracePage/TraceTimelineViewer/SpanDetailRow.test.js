@@ -33,7 +33,6 @@ describe('<SpanDetailRow>', () => {
     logsToggle: jest.fn(),
     processToggle: jest.fn(),
     span: { spanID, depth: 3 },
-    spanIndex: 4,
     tagsToggle: jest.fn(),
     traceStartTime: 1000,
   };
@@ -87,7 +86,7 @@ describe('<SpanDetailRow>', () => {
     expect(wrapper.contains(spanDetail)).toBe(true);
   });
 
-  it('adds spanIndex when calling linksGetter', () => {
+  it('adds span when calling linksGetter', () => {
     const spanDetail = wrapper.find(SpanDetail);
     const linksGetter = spanDetail.prop('linksGetter');
     const tags = [{ key: 'myKey', value: 'myValue' }];
@@ -96,6 +95,6 @@ describe('<SpanDetailRow>', () => {
     const result = linksGetter(tags, 0);
     expect(result).toBe(linksGetterResponse);
     expect(props.linksGetter).toHaveBeenCalledTimes(1);
-    expect(props.linksGetter).toHaveBeenCalledWith(props.spanIndex, tags, 0);
+    expect(props.linksGetter).toHaveBeenCalledWith(props.span, tags, 0);
   });
 });

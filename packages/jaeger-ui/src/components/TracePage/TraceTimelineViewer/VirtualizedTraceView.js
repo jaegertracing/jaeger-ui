@@ -265,13 +265,12 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
     return DEFAULT_HEIGHTS.detail;
   };
 
-  linksGetter = (spanIndex: number, items: KeyValuePair[], itemIndex: number) =>
-    getLinks(this.props.trace, spanIndex, items, itemIndex);
+  linksGetter = (span: Span, items: KeyValuePair[], itemIndex: number) => getLinks(span, items, itemIndex);
 
   renderRow = (key: string, style: Style, index: number, attrs: {}) => {
     const { isDetail, span, spanIndex } = this.rowStates[index];
     return isDetail
-      ? this.renderSpanDetailRow(span, spanIndex, key, style, attrs)
+      ? this.renderSpanDetailRow(span, key, style, attrs)
       : this.renderSpanBarRow(span, spanIndex, key, style, attrs);
   };
 
@@ -356,7 +355,7 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
     );
   }
 
-  renderSpanDetailRow(span: Span, spanIndex: number, key: string, style: Style, attrs: {}) {
+  renderSpanDetailRow(span: Span, key: string, style: Style, attrs: {}) {
     const { spanID } = span;
     const { serviceName } = span.process;
     const {
@@ -389,7 +388,6 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
           logsToggle={detailLogsToggle}
           processToggle={detailProcessToggle}
           span={span}
-          spanIndex={spanIndex}
           tagsToggle={detailTagsToggle}
           traceStartTime={trace.startTime}
         />

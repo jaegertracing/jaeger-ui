@@ -21,6 +21,21 @@ import type { Process, Span, SpanData, Trace, TraceData } from '../types';
 
 type SpanWithProcess = SpanData & { process: Process };
 
+export function addSpanReferences(spans: Span[]) {
+  const spansMap = new Map();
+  spans.forEach(span => spansMap.set(span.spanID, span));
+  spans.forEach(span => {
+    span.references.forEach(ref => {
+      const refSpan = spansMap.get(ref.spanID);
+      if (refSpan) {
+        // eslint-disable-next-line no-param-reassign
+        ref.span = refSpan;
+      }
+    });
+  });
+  return spans;
+}
+
 /**
  * NOTE: Mutates `data` - Transform the HTTP response data into the form the app
  * generally requires.
@@ -101,6 +116,9 @@ export default function transfromTraceData(data: TraceData & { spans: SpanWithPr
       traceID: span.traceID,
     });
   });
+
+  addSpanReferences(spans);
+
   return {
     spans,
     traceID,

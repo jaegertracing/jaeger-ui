@@ -16,7 +16,8 @@
 
 import _uniq from 'lodash/uniq';
 import { getConfigValue } from '../utils/config/get-config';
-import type { Span, Trace, Link, KeyValuePair } from '../types';
+import { getParent } from './span';
+import type { Span, Link, KeyValuePair } from '../types';
 
 const parameterRegExp = /#\{([^{}]*)\}/g;
 
@@ -122,18 +123,15 @@ export function getParameterInArray(name: string, array: KeyValuePair[]) {
   return undefined;
 }
 
-export function getParameterInAncestor(name: string, spans: Span[], startSpanIndex: number) {
-  let currentSpan = { depth: spans[startSpanIndex].depth + 1 };
-  for (let spanIndex = startSpanIndex; spanIndex >= 0 && currentSpan.depth > 0; spanIndex--) {
-    const nextSpan = spans[spanIndex];
-    if (nextSpan.depth < currentSpan.depth) {
-      currentSpan = nextSpan;
-      const result =
-        getParameterInArray(name, currentSpan.tags) || getParameterInArray(name, currentSpan.process.tags);
-      if (result) {
-        return result;
-      }
+export function getParameterInAncestor(name: string, span: Span) {
+  let currentSpan = span;
+  while (currentSpan) {
+    const result =
+      getParameterInArray(name, currentSpan.tags) || getParameterInArray(name, currentSpan.process.tags);
+    if (result) {
+      return result;
     }
+    currentSpan = getParent(currentSpan);
   }
   return undefined;
 }
@@ -144,13 +142,11 @@ function callTemplate(template, data) {
 
 export function computeLinks(
   linkPatterns: ProcessedLinkPattern[],
-  trace: Trace,
-  spanIndex: number,
+  span: Span,
   items: KeyValuePair[],
   itemIndex: number
 ) {
   const item = items[itemIndex];
-  const span = trace.spans[spanIndex];
   let type = 'logs';
   const processTags = span.process.tags === items;
   if (processTags) {
@@ -169,7 +165,7 @@ export function computeLinks(
         if (!entry && !processTags) {
           // do not look in ancestors for process tags because the same object may appear in different places in the hierarchy
           // and the cache in getLinks uses that object as a key
-          entry = getParameterInAncestor(parameter, trace.spans, spanIndex);
+          entry = getParameterInAncestor(parameter, span);
         }
         if (entry) {
           parameterValues[parameter] = entry.value;
@@ -194,14 +190,14 @@ export function computeLinks(
 }
 
 export function createGetLinks(linkPatterns: ProcessedLinkPattern[], cache: WeakMap<KeyValuePair, Link[]>) {
-  return (trace: Trace, spanIndex: number, items: KeyValuePair[], itemIndex: number) => {
+  return (span: Span, items: KeyValuePair[], itemIndex: number) => {
     if (linkPatterns.length === 0) {
       return [];
     }
     const item = items[itemIndex];
     let result = cache.get(item);
     if (!result) {
-      result = computeLinks(linkPatterns, trace, spanIndex, items, itemIndex);
+      result = computeLinks(linkPatterns, span, items, itemIndex);
       cache.set(item, result);
     }
     return result;
