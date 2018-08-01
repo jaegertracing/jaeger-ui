@@ -21,13 +21,13 @@ import IoIosArrowRight from 'react-icons/lib/io/ios-arrow-right';
 
 import AccordianKeyValues from './AccordianKeyValues';
 import { formatDuration } from '../utils';
-import type { Log } from '../../../../types';
+import type { Log, KeyValuePair, Link } from '../../../../types';
 
 import './AccordianLogs.css';
 
 type AccordianLogsProps = {
   isOpen: boolean,
-  linksGetter: ?({ key: string, value: any }[], number) => { url: string, text: string }[],
+  linksGetter: ?(KeyValuePair[], number) => Link[],
   logs: Log[],
   onItemToggle: Log => void,
   onToggle: () => void,

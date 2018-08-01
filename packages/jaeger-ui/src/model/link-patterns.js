@@ -16,26 +16,39 @@
 
 import _uniq from 'lodash/uniq';
 import { getConfigValue } from '../utils/config/get-config';
-import type { Span, Trace } from '../types';
+import type { Span, Trace, Link, KeyValuePair } from '../types';
 
 const parameterRegExp = /\$\{([^{}]*)\}/g;
 
 type ProcessedTemplate = {
   parameters: string[],
-  template: (data: { [parameter: string]: any }) => string,
+  template: ({ [string]: mixed }) => string,
+};
+
+type ProcessedLinkPattern = {
+  object: any,
+  type: string => boolean,
+  key: string => boolean,
+  value: any => boolean,
+  url: ProcessedTemplate,
+  text: ProcessedTemplate,
+  parameters: string[],
 };
 
 function getParamNames(str) {
-  const names = [];
+  const names = new Set();
   str.replace(parameterRegExp, (match, name) => {
-    names.push(name);
+    names.add(name);
     return match;
   });
-  return _uniq(names);
+  return Array.from(names);
 }
 
 function stringSupplant(str, encodeFn: any => string, map) {
-  return str.replace(parameterRegExp, (_, name) => encodeFn(map[name]));
+  return str.replace(parameterRegExp, (_, name) => {
+    const value = map[name];
+    return value == null ? '' : encodeFn(value);
+  });
 }
 
 export function processTemplate(template: any, encodeFn: any => string): ProcessedTemplate {
@@ -82,16 +95,6 @@ export function createTestFunction(entry: any) {
 
 const identity = a => a;
 
-type ProcessedLinkPattern = {
-  object: any,
-  type: string => boolean,
-  key: string => boolean,
-  value: any => boolean,
-  url: ProcessedTemplate,
-  text: ProcessedTemplate,
-  parameters: string[],
-};
-
 export function processLinkPattern(pattern: any): ?ProcessedLinkPattern {
   try {
     const url = processTemplate(pattern.url, encodeURIComponent);
@@ -112,7 +115,7 @@ export function processLinkPattern(pattern: any): ?ProcessedLinkPattern {
   }
 }
 
-export function getParameterInArray(name: string, array: { key: string, value: any }[]) {
+export function getParameterInArray(name: string, array: KeyValuePair[]) {
   if (array) {
     return array.find(entry => entry.key === name);
   }
@@ -143,7 +146,7 @@ export function computeLinks(
   linkPatterns: ProcessedLinkPattern[],
   trace: Trace,
   spanIndex: number,
-  items: { key: string, value: any }[],
+  items: KeyValuePair[],
   itemIndex: number
 ) {
   const item = items[itemIndex];
@@ -160,15 +163,15 @@ export function computeLinks(
   const result = [];
   linkPatterns.forEach(pattern => {
     if (pattern.type(type) && pattern.key(item.key) && pattern.value(item.value)) {
-      let parameterValues = {};
-      pattern.parameters.every(parameter => {
+      const parameterValues = {};
+      const allParameters = pattern.parameters.every(parameter => {
         let entry = getParameterInArray(parameter, items);
         if (!entry && !processTags) {
           // do not look in ancestors for process tags because the same object may appear in different places in the hierarchy
           // and the cache in getLinks uses that object as a key
           entry = getParameterInAncestor(parameter, trace.spans, spanIndex);
         }
-        if (entry && parameterValues) {
+        if (entry) {
           parameterValues[parameter] = entry.value;
           return true;
         }
@@ -177,10 +180,9 @@ export function computeLinks(
           `Skipping link pattern, missing parameter ${parameter} for key ${item.key} in ${type}.`,
           pattern.object
         );
-        parameterValues = null;
         return false;
       });
-      if (parameterValues) {
+      if (allParameters) {
         result.push({
           url: callTemplate(pattern.url, parameterValues),
           text: callTemplate(pattern.text, parameterValues),
@@ -191,11 +193,8 @@ export function computeLinks(
   return result;
 }
 
-export function createGetLinks(
-  linkPatterns: ProcessedLinkPattern[],
-  cache: WeakMap<{ key: string, value: any }, { url: string, text: string }[]>
-) {
-  return (trace: Trace, spanIndex: number, items: { key: string, value: any }[], itemIndex: number) => {
+export function createGetLinks(linkPatterns: ProcessedLinkPattern[], cache: WeakMap<KeyValuePair, Link[]>) {
+  return (trace: Trace, spanIndex: number, items: KeyValuePair[], itemIndex: number) => {
     if (linkPatterns.length === 0) {
       return [];
     }

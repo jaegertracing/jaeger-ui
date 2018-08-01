@@ -18,9 +18,14 @@
  * All timestamps are in microseconds
  */
 
-type KeyValuePair = {
+export type KeyValuePair = {
   key: string,
   value: any,
+};
+
+export type Link = {
+  url: string,
+  text: string,
 };
 
 export type Log = {

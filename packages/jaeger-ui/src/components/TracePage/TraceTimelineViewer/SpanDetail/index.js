@@ -22,13 +22,13 @@ import AccordianLogs from './AccordianLogs';
 import DetailState from './DetailState';
 import { formatDuration } from '../utils';
 import LabeledList from '../../../common/LabeledList';
-import type { Log, Span } from '../../../../types';
+import type { Log, Span, KeyValuePair, Link } from '../../../../types';
 
 import './index.css';
 
 type SpanDetailProps = {
   detailState: DetailState,
-  linksGetter: ?({ key: string, value: any }[], number) => { url: string, text: string }[],
+  linksGetter: ?(KeyValuePair[], number) => Link[],
   logItemToggle: (string, Log) => void,
   logsToggle: string => void,
   processToggle: string => void,

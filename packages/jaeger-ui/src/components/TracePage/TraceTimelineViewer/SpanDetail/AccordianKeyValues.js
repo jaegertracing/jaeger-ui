@@ -21,21 +21,22 @@ import IoIosArrowRight from 'react-icons/lib/io/ios-arrow-right';
 
 import * as markers from './AccordianKeyValues.markers';
 import KeyValuesTable from './KeyValuesTable';
+import type { KeyValuePair, Link } from '../../../../types';
 
 import './AccordianKeyValues.css';
 
 type AccordianKeyValuesProps = {
   className?: ?string,
-  data: { key: string, value: any }[],
+  data: KeyValuePair[],
   highContrast?: boolean,
   isOpen: boolean,
   label: string,
-  linksGetter: ?({ key: string, value: any }[], number) => { url: string, text: string }[],
+  linksGetter: ?(KeyValuePair[], number) => Link[],
   onToggle: () => void,
 };
 
 // export for tests
-export function KeyValuesSummary(props: { data?: { key: string, value: any }[] }) {
+export function KeyValuesSummary(props: { data?: KeyValuePair[] }) {
   const { data } = props;
   if (!Array.isArray(data) || !data.length) {
     return null;

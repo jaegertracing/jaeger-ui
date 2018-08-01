@@ -20,7 +20,7 @@ import SpanDetail from './SpanDetail';
 import DetailState from './SpanDetail/DetailState';
 import SpanTreeOffset from './SpanTreeOffset';
 import TimelineRow from './TimelineRow';
-import type { Log, Span } from '../../../types';
+import type { Log, Span, KeyValuePair, Link } from '../../../types';
 
 import './SpanDetailRow.css';
 
@@ -30,7 +30,7 @@ type SpanDetailRowProps = {
   detailState: DetailState,
   onDetailToggled: string => void,
   isFilteredOut: boolean,
-  linksGetter: ?(number, { key: string, value: any }[], number) => { url: string, text: string }[],
+  linksGetter: ?(number, KeyValuePair[], number) => Link[],
   logItemToggle: (string, Log) => void,
   logsToggle: string => void,
   processToggle: string => void,
@@ -47,7 +47,7 @@ export default class SpanDetailRow extends React.PureComponent<SpanDetailRowProp
     this.props.onDetailToggled(this.props.span.spanID);
   };
 
-  _linksGetter = (items: { key: string, value: any }[], itemIndex: number) => {
+  _linksGetter = (items: KeyValuePair[], itemIndex: number) => {
     const { linksGetter, spanIndex } = this.props;
     return linksGetter ? linksGetter(spanIndex, items, itemIndex) : [];
   };

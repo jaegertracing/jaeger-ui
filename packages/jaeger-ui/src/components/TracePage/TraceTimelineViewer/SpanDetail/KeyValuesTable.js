@@ -17,6 +17,7 @@
 import * as React from 'react';
 import jsonMarkup from 'json-markup';
 import { Dropdown, Icon, Menu } from 'antd';
+import type { KeyValuePair, Link } from '../../../../types';
 
 import './KeyValuesTable.css';
 
@@ -37,7 +38,7 @@ const LinkValue = (props: { href: string, title?: string, children: React.Node }
   </a>
 );
 
-const linkValueList = (links: { url: string, text: string }[]) => (
+const linkValueList = (links: Link[]) => (
   <Menu>
     {links.map(({ text, url }, index) => (
       // `index` is necessary in the key because url can repeat
@@ -50,8 +51,8 @@ const linkValueList = (links: { url: string, text: string }[]) => (
 );
 
 type KeyValuesTableProps = {
-  data: { key: string, value: any }[],
-  linksGetter: ?({ key: string, value: any }[], number) => { url: string, text: string }[],
+  data: KeyValuePair[],
+  linksGetter: ?(KeyValuePair[], number) => Link[],
 };
 
 export default function KeyValuesTable(props: KeyValuesTableProps) {
