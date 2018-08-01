@@ -25,8 +25,7 @@ import {
 describe('processTemplate()', () => {
   it('correctly replaces variables', () => {
     const processedTemplate = processTemplate(
-      // eslint-disable-next-line no-template-curly-in-string
-      'this is a test with ${oneVariable}${anotherVariable} and the same ${oneVariable}',
+      'this is a test with #{oneVariable}#{anotherVariable} and the same #{oneVariable}',
       a => a
     );
     expect(processedTemplate.parameters).toEqual(['oneVariable', 'anotherVariable']);
@@ -37,8 +36,7 @@ describe('processTemplate()', () => {
 
   it('correctly uses the encoding function', () => {
     const processedTemplate = processTemplate(
-      // eslint-disable-next-line no-template-curly-in-string
-      'this is a test with ${oneVariable}${anotherVariable} and the same ${oneVariable}',
+      'this is a test with #{oneVariable}#{anotherVariable} and the same #{oneVariable}',
       e => `/${e}\\`
     );
     expect(processedTemplate.parameters).toEqual(['oneVariable', 'anotherVariable']);
@@ -294,17 +292,13 @@ describe('computeLinks()', () => {
     {
       type: 'tags',
       key: 'myKey',
-      // eslint-disable-next-line no-template-curly-in-string
-      url: 'http://example.com/?myKey=${myKey}',
-      // eslint-disable-next-line no-template-curly-in-string
-      text: 'first link (${myKey})',
+      url: 'http://example.com/?myKey=#{myKey}',
+      text: 'first link (#{myKey})',
     },
     {
       key: 'myOtherKey',
-      // eslint-disable-next-line no-template-curly-in-string
-      url: 'http://example.com/?myKey=${myOtherKey}&myKey=${myKey}',
-      // eslint-disable-next-line no-template-curly-in-string
-      text: 'second link (${myOtherKey})',
+      url: 'http://example.com/?myKey=#{myOtherKey}&myKey=#{myKey}',
+      text: 'second link (#{myOtherKey})',
     },
   ].map(processLinkPattern);
 
@@ -335,10 +329,8 @@ describe('getLinks()', () => {
   const linkPatterns = [
     {
       key: 'mySpecialKey',
-      // eslint-disable-next-line no-template-curly-in-string
-      url: 'http://example.com/?mySpecialKey=${mySpecialKey}',
-      // eslint-disable-next-line no-template-curly-in-string
-      text: 'special key link (${mySpecialKey})',
+      url: 'http://example.com/?mySpecialKey=#{mySpecialKey}',
+      text: 'special key link (#{mySpecialKey})',
     },
   ].map(processLinkPattern);
   const template = jest.spyOn(linkPatterns[0].url, 'template');

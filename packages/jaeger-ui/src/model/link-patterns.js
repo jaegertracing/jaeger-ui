@@ -18,7 +18,7 @@ import _uniq from 'lodash/uniq';
 import { getConfigValue } from '../utils/config/get-config';
 import type { Span, Trace, Link, KeyValuePair } from '../types';
 
-const parameterRegExp = /\$\{([^{}]*)\}/g;
+const parameterRegExp = /#\{([^{}]*)\}/g;
 
 type ProcessedTemplate = {
   parameters: string[],
