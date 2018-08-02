@@ -21,21 +21,6 @@ import type { Process, Span, SpanData, Trace, TraceData } from '../types';
 
 type SpanWithProcess = SpanData & { process: Process };
 
-export function addSpanReferences(spans: Span[]) {
-  const spansMap = new Map();
-  spans.forEach(span => spansMap.set(span.spanID, span));
-  spans.forEach(span => {
-    span.references.forEach(ref => {
-      const refSpan = spansMap.get(ref.spanID);
-      if (refSpan) {
-        // eslint-disable-next-line no-param-reassign
-        ref.span = refSpan;
-      }
-    });
-  });
-  return spans;
-}
-
 /**
  * NOTE: Mutates `data` - Transform the HTTP response data into the form the app
  * generally requires.
@@ -95,29 +80,22 @@ export default function transfromTraceData(data: TraceData & { spans: SpanWithPr
     if (spanID === '__root__') {
       return;
     }
-    const span: ?SpanWithProcess = spanMap.get(spanID);
+    const span: ?Span = (spanMap.get(spanID): any);
     if (!span) {
       return;
     }
-    spans.push({
-      relativeStartTime: span.startTime - traceStartTime,
-      depth: depth - 1,
-      hasChildren: node.children.length > 0,
-      // spread fails with union types
-      duration: span.duration,
-      logs: span.logs,
-      operationName: span.operationName,
-      process: span.process,
-      processID: span.processID,
-      references: span.references,
-      spanID: span.spanID,
-      startTime: span.startTime,
-      tags: span.tags,
-      traceID: span.traceID,
+    span.relativeStartTime = span.startTime - traceStartTime;
+    span.depth = depth - 1;
+    span.hasChildren = node.children.length > 0;
+    span.references.forEach(ref => {
+      const refSpan: ?Span = (spanMap.get(ref.spanID): any);
+      if (refSpan) {
+        // eslint-disable-next-line no-param-reassign
+        ref.span = refSpan;
+      }
     });
+    spans.push(span);
   });
-
-  addSpanReferences(spans);
 
   return {
     spans,
