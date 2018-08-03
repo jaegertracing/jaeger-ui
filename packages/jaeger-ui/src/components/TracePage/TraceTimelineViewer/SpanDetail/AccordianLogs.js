@@ -21,12 +21,13 @@ import IoIosArrowRight from 'react-icons/lib/io/ios-arrow-right';
 
 import AccordianKeyValues from './AccordianKeyValues';
 import { formatDuration } from '../utils';
-import type { Log } from '../../../../types';
+import type { Log, KeyValuePair, Link } from '../../../../types';
 
 import './AccordianLogs.css';
 
 type AccordianLogsProps = {
   isOpen: boolean,
+  linksGetter: ?(KeyValuePair[], number) => Link[],
   logs: Log[],
   onItemToggle: Log => void,
   onToggle: () => void,
@@ -35,7 +36,7 @@ type AccordianLogsProps = {
 };
 
 export default function AccordianLogs(props: AccordianLogsProps) {
-  const { isOpen, logs, openedItems, onItemToggle, onToggle, timestamp } = props;
+  const { isOpen, linksGetter, logs, openedItems, onItemToggle, onToggle, timestamp } = props;
 
   return (
     <div className="AccordianLogs">
@@ -59,6 +60,7 @@ export default function AccordianLogs(props: AccordianLogsProps) {
               // compact
               highContrast
               isOpen={openedItems.has(log)}
+              linksGetter={linksGetter}
               data={log.fields || []}
               label={`${formatDuration(log.timestamp - timestamp)}`}
               onToggle={() => onItemToggle(log)}

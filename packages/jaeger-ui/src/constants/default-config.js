@@ -24,6 +24,7 @@ export default deepFreeze(
         dagMaxNumServices: FALLBACK_DAG_MAX_NUM_SERVICES,
         menuEnabled: true,
       },
+      linkPatterns: [],
       tracking: {
         gaID: null,
         trackErrors: true,

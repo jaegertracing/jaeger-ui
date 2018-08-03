@@ -31,8 +31,9 @@ import {
   isErrorSpan,
   spanContainsErredSpan,
 } from './utils';
+import getLinks from '../../../model/link-patterns';
 import type { Accessors } from '../ScrollManager';
-import type { Log, Span, Trace } from '../../../types';
+import type { Log, Span, Trace, KeyValuePair } from '../../../types';
 import colorGenerator from '../../../utils/color-generator';
 
 import './VirtualizedTraceView.css';
@@ -264,6 +265,8 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
     return DEFAULT_HEIGHTS.detail;
   };
 
+  linksGetter = (span: Span, items: KeyValuePair[], itemIndex: number) => getLinks(span, items, itemIndex);
+
   renderRow = (key: string, style: Style, index: number, attrs: {}) => {
     const { isDetail, span, spanIndex } = this.rowStates[index];
     return isDetail
@@ -380,6 +383,7 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
           onDetailToggled={detailToggle}
           detailState={detailState}
           isFilteredOut={isFilteredOut}
+          linksGetter={this.linksGetter}
           logItemToggle={detailLogItemToggle}
           logsToggle={detailLogsToggle}
           processToggle={detailProcessToggle}

@@ -14,8 +14,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import React from 'react';
+import * as React from 'react';
 import jsonMarkup from 'json-markup';
+import { Dropdown, Icon, Menu } from 'antd';
+import type { KeyValuePair, Link } from '../../../../types';
 
 import './KeyValuesTable.css';
 
@@ -30,27 +32,70 @@ function parseIfJson(value) {
   return value;
 }
 
+const LinkValue = (props: { href: string, title?: string, children: React.Node }) => (
+  <a href={props.href} title={props.title} target="_blank" rel="noopener noreferrer">
+    {props.children} <Icon className="KeyValueTable--linkIcon" type="export" />
+  </a>
+);
+
+const linkValueList = (links: Link[]) => (
+  <Menu>
+    {links.map(({ text, url }, index) => (
+      // `index` is necessary in the key because url can repeat
+      // eslint-disable-next-line react/no-array-index-key
+      <Menu.Item key={`${url}-${index}`}>
+        <LinkValue href={url}>{text}</LinkValue>
+      </Menu.Item>
+    ))}
+  </Menu>
+);
+
 type KeyValuesTableProps = {
-  data: { key: string, value: any }[],
+  data: KeyValuePair[],
+  linksGetter: ?(KeyValuePair[], number) => Link[],
 };
 
 export default function KeyValuesTable(props: KeyValuesTableProps) {
-  const { data } = props;
+  const { data, linksGetter } = props;
   return (
     <div className="KeyValueTable u-simple-scrollbars">
       <table className="u-width-100">
         <tbody className="KeyValueTable--body">
           {data.map((row, i) => {
-            const jsonTable = (
-              // eslint-disable-next-line react/no-danger
-              <div dangerouslySetInnerHTML={{ __html: jsonMarkup(parseIfJson(row.value)) }} />
-            );
+            const markup = {
+              __html: jsonMarkup(parseIfJson(row.value)),
+            };
+            // eslint-disable-next-line react/no-danger
+            const jsonTable = <div className="ub-inline-block" dangerouslySetInnerHTML={markup} />;
+            const links = linksGetter ? linksGetter(data, i) : null;
+            let valueMarkup;
+            if (links && links.length === 1) {
+              valueMarkup = (
+                <div>
+                  <LinkValue href={links[0].url} title={links[0].text}>
+                    {jsonTable}
+                  </LinkValue>
+                </div>
+              );
+            } else if (links && links.length > 1) {
+              valueMarkup = (
+                <div>
+                  <Dropdown overlay={linkValueList(links)} placement="bottomRight" trigger={['click']}>
+                    <a>
+                      {jsonTable} <Icon className="KeyValueTable--linkIcon" type="profile" />
+                    </a>
+                  </Dropdown>
+                </div>
+              );
+            } else {
+              valueMarkup = jsonTable;
+            }
             return (
               // `i` is necessary in the key because row.key can repeat
               // eslint-disable-next-line react/no-array-index-key
               <tr key={`${row.key}-${i}`}>
                 <td className="KeyValueTable--keyColumn">{row.key}</td>
-                <td>{jsonTable}</td>
+                <td>{valueMarkup}</td>
               </tr>
             );
           })}
@@ -59,3 +104,5 @@ export default function KeyValuesTable(props: KeyValuesTableProps) {
     </div>
   );
 }
+
+KeyValuesTable.LinkValue = LinkValue;
