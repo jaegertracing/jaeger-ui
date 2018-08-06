@@ -18,9 +18,14 @@
  * All timestamps are in microseconds
  */
 
-type KeyValuePair = {
+export type KeyValuePair = {
   key: string,
   value: any,
+};
+
+export type Link = {
+  url: string,
+  text: string,
 };
 
 export type Log = {
@@ -35,6 +40,8 @@ export type Process = {
 
 export type SpanReference = {
   refType: 'CHILD_OF' | 'FOLLOWS_FROM',
+  // eslint-disable-next-line no-use-before-define
+  span: ?Span,
   spanID: string,
   traceID: string,
 };

@@ -27,6 +27,7 @@ describe('<SpanDetailRow>', () => {
     columnDivision: 0.5,
     detailState: new DetailState(),
     onDetailToggled: jest.fn(),
+    linksGetter: jest.fn(),
     isFilteredOut: false,
     logItemToggle: jest.fn(),
     logsToggle: jest.fn(),
@@ -40,6 +41,7 @@ describe('<SpanDetailRow>', () => {
 
   beforeEach(() => {
     props.onDetailToggled.mockReset();
+    props.linksGetter.mockReset();
     props.logItemToggle.mockReset();
     props.logsToggle.mockReset();
     props.processToggle.mockReset();
@@ -72,6 +74,7 @@ describe('<SpanDetailRow>', () => {
     const spanDetail = (
       <SpanDetail
         detailState={props.detailState}
+        linksGetter={wrapper.instance()._linksGetter}
         logItemToggle={props.logItemToggle}
         logsToggle={props.logsToggle}
         processToggle={props.processToggle}
@@ -81,5 +84,17 @@ describe('<SpanDetailRow>', () => {
       />
     );
     expect(wrapper.contains(spanDetail)).toBe(true);
+  });
+
+  it('adds span when calling linksGetter', () => {
+    const spanDetail = wrapper.find(SpanDetail);
+    const linksGetter = spanDetail.prop('linksGetter');
+    const tags = [{ key: 'myKey', value: 'myValue' }];
+    const linksGetterResponse = {};
+    props.linksGetter.mockReturnValueOnce(linksGetterResponse);
+    const result = linksGetter(tags, 0);
+    expect(result).toBe(linksGetterResponse);
+    expect(props.linksGetter).toHaveBeenCalledTimes(1);
+    expect(props.linksGetter).toHaveBeenCalledWith(props.span, tags, 0);
   });
 });

@@ -83,7 +83,7 @@ export default function transfromTraceData(data: TraceData & { spans: SpanWithPr
     if (spanID === '__root__') {
       return;
     }
-    const span: ?SpanWithProcess = spanMap.get(spanID);
+    const span: ?Span = (spanMap.get(spanID): any);
     if (!span) {
       return;
     }
@@ -92,22 +92,17 @@ export default function transfromTraceData(data: TraceData & { spans: SpanWithPr
     if (!span.references || !span.references.length) {
       traceName = `${serviceName}: ${span.operationName}`;
     }
-    spans.push({
-      relativeStartTime: span.startTime - traceStartTime,
-      depth: depth - 1,
-      hasChildren: node.children.length > 0,
-      // spread fails with union types
-      duration: span.duration,
-      logs: span.logs,
-      operationName: span.operationName,
-      process: span.process,
-      processID: span.processID,
-      references: span.references,
-      spanID: span.spanID,
-      startTime: span.startTime,
-      tags: span.tags,
-      traceID: span.traceID,
+    span.relativeStartTime = span.startTime - traceStartTime;
+    span.depth = depth - 1;
+    span.hasChildren = node.children.length > 0;
+    span.references.forEach(ref => {
+      const refSpan: ?Span = (spanMap.get(ref.spanID): any);
+      if (refSpan) {
+        // eslint-disable-next-line no-param-reassign
+        ref.span = refSpan;
+      }
     });
+    spans.push(span);
   });
   const services = Object.keys(svcCounts).map(name => ({ name, numberOfSpans: svcCounts[name] }));
   return {

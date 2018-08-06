@@ -22,12 +22,13 @@ import AccordianLogs from './AccordianLogs';
 import DetailState from './DetailState';
 import { formatDuration } from '../utils';
 import LabeledList from '../../../common/LabeledList';
-import type { Log, Span } from '../../../../types/trace';
+import type { Log, Span, KeyValuePair, Link } from '../../../../types/trace';
 
 import './index.css';
 
 type SpanDetailProps = {
   detailState: DetailState,
+  linksGetter: ?(KeyValuePair[], number) => Link[],
   logItemToggle: (string, Log) => void,
   logsToggle: string => void,
   processToggle: string => void,
@@ -37,7 +38,16 @@ type SpanDetailProps = {
 };
 
 export default function SpanDetail(props: SpanDetailProps) {
-  const { detailState, logItemToggle, logsToggle, processToggle, span, tagsToggle, traceStartTime } = props;
+  const {
+    detailState,
+    linksGetter,
+    logItemToggle,
+    logsToggle,
+    processToggle,
+    span,
+    tagsToggle,
+    traceStartTime,
+  } = props;
   const { isTagsOpen, isProcessOpen, logs: logsState } = detailState;
   const { operationName, process, duration, relativeStartTime, spanID, logs, tags } = span;
   const overviewItems = [
@@ -73,6 +83,7 @@ export default function SpanDetail(props: SpanDetailProps) {
           <AccordianKeyValues
             data={tags}
             label="Tags"
+            linksGetter={linksGetter}
             isOpen={isTagsOpen}
             onToggle={() => tagsToggle(spanID)}
           />
@@ -81,6 +92,7 @@ export default function SpanDetail(props: SpanDetailProps) {
               className="ub-mb1"
               data={process.tags}
               label="Process"
+              linksGetter={linksGetter}
               isOpen={isProcessOpen}
               onToggle={() => processToggle(spanID)}
             />
@@ -89,6 +101,7 @@ export default function SpanDetail(props: SpanDetailProps) {
         {logs &&
           logs.length > 0 && (
             <AccordianLogs
+              linksGetter={linksGetter}
               logs={logs}
               isOpen={logsState.isOpen}
               openedItems={logsState.openedItems}
