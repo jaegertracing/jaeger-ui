@@ -29,7 +29,7 @@
     "sinon": "^3.2.1"
   },
   "dependencies": {
-    "@jaegertracing/plexus": "0.0.1-dev.2",
+    "@jaegertracing/plexus": "0.0.1-dev.3",
     "antd": "^3.0.3",
     "chance": "^1.0.10",
     "classnames": "^2.2.5",

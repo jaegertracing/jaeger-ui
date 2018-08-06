@@ -297,6 +297,13 @@ export default class DirectedGraph extends React.PureComponent<DirectedGraphProp
         className: `${classNamePrefix}-DirectedGraph--nodeContainer`,
       }
     );
+    const edgesContainerProps = mergeClassNameAndStyle(
+      (setOnEdgesContainer && setOnEdgesContainer(this.state)) || {},
+      {
+        style: { minHeight: '100%', minWidth: '100%' },
+        className: `${classNamePrefix}-DirectedGraph--nodeContainer`,
+      }
+    );
     const rootProps = mergeClassNameAndStyle((setOnRoot && setOnRoot(this.state)) || {}, {
       style: zoomEnabled ? WRAPPER_STYLE_ZOOM : WRAPPER_STYLE,
       className: `${classNamePrefix}-DirectedGraph ${className}`,
@@ -306,11 +313,7 @@ export default class DirectedGraph extends React.PureComponent<DirectedGraphProp
       <div {...rootProps} ref={this.rootRef}>
         {layoutGraph &&
           haveEdges && (
-            <EdgesContainer
-              {...setOnEdgesContainer && setOnEdgesContainer(this.state)}
-              height={height}
-              width={width}
-            >
+            <EdgesContainer {...edgesContainerProps} height={height} width={width}>
               <EdgeArrowDef
                 id={this.arrowId}
                 scaleDampener={arrowScaleDampener}

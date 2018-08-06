@@ -25,8 +25,14 @@ import './index.css';
 
 const { classNameIsSmall } = DirectedGraph.propsFactories;
 
+const ROOT_STYLE = { style: { float: 'left' } };
+const setLargeRootStyle = () => ROOT_STYLE;
 const addAnAttr = () => ({ 'data-rando': Math.random() });
-const setNodeClassName = () => ({ className: 'DemoGraph--node' });
+const setNodeClassName = vertex => ({
+  className: 'DemoGraph--node',
+  // eslint-disable-next-line no-console
+  onClick: () => console.log(vertex.key),
+});
 
 class Demo extends React.Component {
   constructor(props) {
@@ -41,6 +47,7 @@ class Demo extends React.Component {
     });
     this.largeNeatoLayoutManager = new LayoutManager();
   }
+
   render() {
     return (
       <div>
@@ -97,7 +104,7 @@ class Demo extends React.Component {
         </div>
         <h1>Small graph with data driven rendering</h1>
         <DirectedGraph
-          className="DemoGraph--da-g"
+          className="DemoGraph--dag"
           getNodeLabel={colorData ? getColorNodeLabel : null}
           layoutManager={this.layoutManager}
           setOnEdgePath={colorData ? setOnColorEdge : null}
@@ -112,6 +119,7 @@ class Demo extends React.Component {
           edges={dagEdges}
           layoutManager={this.dagLayoutManager}
           setOnNode={setNodeClassName}
+          setOnRoot={setLargeRootStyle}
           vertices={dagVertices}
         />
       </div>

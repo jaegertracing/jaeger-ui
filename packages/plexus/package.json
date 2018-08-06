@@ -1,6 +1,6 @@
 {
   "name": "@jaegertracing/plexus",
-  "version": "0.0.1-dev.2",
+  "version": "0.0.1-dev.3",
   "description": "Direct Graph React component",
   "main": "umd/@jaegertracing/plexus.js",
   "files": ["lib", "umd"],

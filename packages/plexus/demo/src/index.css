@@ -3,7 +3,8 @@ html {
 }
 
 .DemoGraph {
-  border: 1px solid blue;
+  border: 1px solid #666;
+  cursor: move;
   overflow: hidden;
   height: 500px;
   width: 800px;
@@ -11,19 +12,26 @@ html {
 }
 
 .DemoGraph--dag {
-  background: #999;
+  background: #f0f0f0;
   stroke-width: 1.7;
 }
 
 .DemoGraph--dag.is-small {
-  stroke-width: 1;
+  stroke-width: 0.85;
 }
 
 .DemoGraph--node {
-  background: #fff;
-  border: 1px solid #666;
+  background: #bbb;
+  border: 1px solid #999;
   box-shadow: 0 0 7px 1px rgba(0, 0, 0, 0.4);
+  cursor: pointer;
   padding: 0.8em 1.25em;
+}
+
+.DemoGraph--node:hover {
+  background: #666;
+  color: #fff;
+  border-color: #333;
 }
 
 .DemoGraph--dag.is-small .DemoGraph--nodeLabel {
