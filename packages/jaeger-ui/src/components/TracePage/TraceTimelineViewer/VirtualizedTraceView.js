@@ -56,13 +56,11 @@ type VirtualizedTraceViewProps = {
   detailStates: Map<string, ?DetailState>,
   detailTagsToggle: string => void,
   detailToggle: string => void,
-  find: (?Trace, ?string) => void,
   findMatchesIDs: Set<string>,
   registerAccessors: Accessors => void,
   setSpanNameColumnWidth: number => void,
   setTrace: (?string) => void,
   spanNameColumnWidth: number,
-  textFilter: ?string,
   trace: Trace,
 };
 
@@ -142,40 +140,23 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
     this.clippingCssClasses = getCssClasses(currentViewRangeTime);
     this.rowStates = generateRowStates(trace.spans, childrenHiddenIDs, detailStates);
 
-    const { find, setTrace, textFilter } = props;
+    const { setTrace } = props;
     const traceID = trace ? trace.traceID : null;
     setTrace(traceID);
-    if (textFilter) {
-      find(trace, textFilter);
-    }
   }
 
   componentWillUpdate(nextProps: VirtualizedTraceViewProps) {
-    const {
-      childrenHiddenIDs,
-      detailStates,
-      registerAccessors,
-      textFilter,
-      trace,
-      currentViewRangeTime,
-    } = this.props;
+    const { childrenHiddenIDs, detailStates, registerAccessors, trace, currentViewRangeTime } = this.props;
     const {
       currentViewRangeTime: nextViewRangeTime,
       childrenHiddenIDs: nextHiddenIDs,
       detailStates: nextDetailStates,
-      find,
       registerAccessors: nextRegisterAccessors,
       setTrace,
-      textFilter: nextTextFilter,
       trace: nextTrace,
     } = nextProps;
     if (trace !== nextTrace) {
       setTrace(nextTrace ? nextTrace.traceID : null);
-      if (nextTextFilter) {
-        find(nextTrace, nextTextFilter);
-      }
-    } else if (textFilter !== nextTextFilter) {
-      find(nextTrace, nextTextFilter);
     }
     if (trace !== nextTrace || childrenHiddenIDs !== nextHiddenIDs || detailStates !== nextDetailStates) {
       this.rowStates = nextTrace ? generateRowStates(nextTrace.spans, nextHiddenIDs, nextDetailStates) : [];

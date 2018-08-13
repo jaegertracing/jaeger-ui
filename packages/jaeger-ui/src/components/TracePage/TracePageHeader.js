@@ -15,13 +15,12 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Button, Dropdown, Icon, Input, Menu } from 'antd';
+import { Button, Dropdown, Icon, Menu } from 'antd';
 import IoChevronDown from 'react-icons/lib/io/chevron-down';
 import IoChevronRight from 'react-icons/lib/io/chevron-right';
 import IoIosFilingOutline from 'react-icons/lib/io/ios-filing-outline';
 import { Link } from 'react-router-dom';
 
-import * as markers from './TracePageHeader.markers';
 import { trackAltViewOpen } from './TracePageHeader.track';
 import KeyboardShortcutsHelp from './KeyboardShortcutsHelp';
 import LabeledList from '../common/LabeledList';
@@ -30,6 +29,7 @@ import { formatDatetime, formatDuration } from '../../utils/date';
 import prefixUrl from '../../utils/prefix-url';
 
 import './TracePageHeader.css';
+import TracePageSearchBar from './TracePageSearchBar';
 
 type TracePageHeaderProps = {
   traceID: string,
@@ -37,7 +37,10 @@ type TracePageHeaderProps = {
   slimView: boolean,
   onSlimViewClicked: () => void,
   updateTextFilter: string => void,
-  textFilter: ?string,
+  textFilter: string,
+  prevResult: () => void,
+  nextResult: () => void,
+  resultCount: number,
   archiveButtonVisible: boolean,
   onArchiveClicked: () => void,
   // these props are used by the `HEADER_ITEMS`
@@ -101,6 +104,9 @@ export default function TracePageHeader(props: TracePageHeaderProps) {
     onSlimViewClicked,
     updateTextFilter,
     textFilter,
+    prevResult,
+    nextResult,
+    resultCount,
   } = props;
 
   if (!traceID) {
@@ -170,13 +176,13 @@ export default function TracePageHeader(props: TracePageHeaderProps) {
           </h1>
         </a>
         <KeyboardShortcutsHelp className="ub-mr2" />
-        <div className="ub-mr2">
-          <Input
-            name="search"
-            placeholder="Search..."
-            onChange={event => updateTextFilter(event.target.value)}
-            defaultValue={textFilter}
-            data-test={markers.IN_TRACE_SEARCH}
+        <div className="ub-flex-auto ub-mr2 TracePageHeader--search">
+          <TracePageSearchBar
+            updateTextFilter={updateTextFilter}
+            textFilter={textFilter}
+            prevResult={prevResult}
+            nextResult={nextResult}
+            resultCount={resultCount}
           />
         </div>
         <Dropdown overlay={viewMenu}>

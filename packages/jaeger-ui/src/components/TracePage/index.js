@@ -46,6 +46,7 @@ import type { FetchedTrace, ReduxState } from '../../types';
 import type { TraceArchive } from '../../types/archive';
 
 import './index.css';
+import getFilteredSpans from './TraceTimelineViewer/get-filtered-spans';
 
 type TracePageProps = {
   archiveEnabled: boolean,
@@ -61,7 +62,8 @@ type TracePageProps = {
 type TracePageState = {
   headerHeight: ?number,
   slimView: boolean,
-  textFilter: ?string,
+  textFilter: string,
+  findMatchesIDs: Set<string>,
   viewRange: ViewRange,
 };
 
@@ -204,10 +206,20 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
     }
   };
 
-  updateTextFilter = (textFilter: ?string) => {
+  updateTextFilter = (textFilter: string) => {
     trackFilter(textFilter);
     this.setState({ textFilter });
+    const findMatchesIDs = getFilteredSpans(this.props.trace, textFilter.trim());
+    this.setState({ findMatchesIDs });
   };
+
+  prevResult = () => this._scrollManager.scrollToPrevVisibleSpan();
+
+  nextResult = () => this._scrollManager.scrollToNextVisibleSpan();
+
+  resultCount = () => this.state.findMatchesIDs.size;
+
+  searchResults = () => (this.state.textFilter ? this.state.findMatchesIDs : null);
 
   updateViewRangeTime = (start: number, end: number, trackSrc?: string) => {
     if (trackSrc) {
@@ -282,6 +294,9 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
             traceID={traceID}
             onSlimViewClicked={this.toggleSlimView}
             textFilter={textFilter}
+            prevResult={this.prevResult}
+            nextResult={this.nextResult}
+            resultCount={this.resultCount()}
             updateTextFilter={this.updateTextFilter}
             archiveButtonVisible={archiveEnabled}
             onArchiveClicked={this.archiveTrace}
@@ -299,7 +314,7 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
           <section style={{ paddingTop: headerHeight }}>
             <TraceTimelineViewer
               registerAccessors={this._scrollManager.setAccessors}
-              textFilter={textFilter}
+              findMatchesIDs={this.searchResults()}
               trace={data}
               updateNextViewRangeTime={this.updateNextViewRangeTime}
               updateViewRangeTime={this.updateViewRangeTime}
