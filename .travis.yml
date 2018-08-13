@@ -2,6 +2,8 @@ language: node_js
 node_js:
   - '6'
 cache: yarn
+install:
+  - yarn install --frozen-lockfile
 script:
   - yarn lint
   - yarn coverage
