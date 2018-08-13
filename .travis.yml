@@ -2,6 +2,10 @@ language: node_js
 node_js:
   - '6'
 cache: yarn
+before_install:
+  # update yarn - travis is using an old version
+  # https://yarnpkg.com/en/docs/install#alternatives-stable
+  - curl -o- -L https://yarnpkg.com/install.sh | bash
 install:
   - yarn install --frozen-lockfile
 script:
