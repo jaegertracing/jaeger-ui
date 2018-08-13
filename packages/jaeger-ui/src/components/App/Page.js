@@ -72,5 +72,4 @@ export function mapStateToProps(state: { router: { location: Location } }) {
   return { pathname, search };
 }
 
-// export default withRouter(connect(mapStateToProps)(PageImpl));
 export default withRouter(connect(mapStateToProps)(PageImpl));

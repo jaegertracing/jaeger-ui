@@ -96,18 +96,14 @@ export default class SearchResults extends React.PureComponent<SearchResultsProp
       );
     }
     if (!Array.isArray(traces) || !traces.length) {
-      if (skipMessage && !diffCohort.length) {
-        return null;
-      }
-      if (skipMessage && diffCohort.length) {
-        return diffSelection;
-      }
       return (
         <React.Fragment>
           {diffCohort.length > 0 && diffSelection}
-          <div className="u-simple-card" data-test={markers.NO_RESULTS}>
-            No trace results. Try another query.
-          </div>
+          {!skipMessage && (
+            <div className="u-simple-card" data-test={markers.NO_RESULTS}>
+              No trace results. Try another query.
+            </div>
+          )}
         </React.Fragment>
       );
     }

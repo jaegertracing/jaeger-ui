@@ -132,10 +132,10 @@ describe('mapStateToProps()', () => {
     const { maxTraceDuration, traceResults, diffCohort, numberOfTraceResults, ...rest } = mapStateToProps(
       state
     );
-    expect(traceResults.length).toBe(stateTrace.search.results.length);
+    expect(traceResults).toHaveLength(stateTrace.search.results.length);
     expect(traceResults[0].traceID).toBe(trace.traceID);
     expect(maxTraceDuration).toBe(trace.duration);
-    expect(diffCohort.length).toBe(state.traceDiff.cohort.length);
+    expect(diffCohort).toHaveLength(state.traceDiff.cohort.length);
     expect(diffCohort[0].id).toBe(trace.traceID);
     expect(diffCohort[0].data.traceID).toBe(trace.traceID);
 

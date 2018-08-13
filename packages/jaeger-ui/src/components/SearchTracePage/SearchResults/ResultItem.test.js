@@ -30,13 +30,13 @@ it('<ResultItem /> should render base case correctly', () => {
     .first()
     .render()
     .text();
-  const numberOfServicesTags = wrapper.find(`[data-test="${markers.SERVICE_TAGS}"]`).find(Tag).length;
+  const serviceTags = wrapper.find(`[data-test="${markers.SERVICE_TAGS}"]`).find(Tag);
   expect(numberOfSpanText).toBe(`${trace.spans.length} Spans`);
-  expect(numberOfServicesTags).toBe(trace.services.length);
+  expect(serviceTags).toHaveLength(trace.services.length);
 });
 
 it('<ResultItem /> should not render any ServiceTags when there are no services', () => {
   const wrapper = shallow(<ResultItem trace={{ ...trace, services: [] }} durationPercent={50} />);
-  const numberOfServicesTags = wrapper.find(`[data-test="${markers.SERVICE_TAGS}"]`).find(Tag).length;
-  expect(numberOfServicesTags).toBe(0);
+  const serviceTags = wrapper.find(`[data-test="${markers.SERVICE_TAGS}"]`).find(Tag);
+  expect(serviceTags).toHaveLength(0);
 });
