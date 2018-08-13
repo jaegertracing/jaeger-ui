@@ -78,7 +78,7 @@
   },
   "scripts": {
     "build": "REACT_APP_VSN_STATE=$(../../scripts/get-tracking-version.js) react-app-rewired build",
-    "coverage": "npm run test -- --coverage",
+    "coverage": "yarn run test -- --coverage",
     "start:ga-debug":
       "REACT_APP_GA_DEBUG=1 REACT_APP_VSN_STATE=$(../../scripts/get-tracking-version.js) react-app-rewired start",
     "start": "react-app-rewired start",

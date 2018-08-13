@@ -25,7 +25,7 @@
     "coverage": "lerna run coverage",
     "eslint": "eslint 'scripts/*.js' 'packages/*/src/**/*.js' 'packages/*/*.js'",
     "flow": "glow",
-    "lint": "npm run eslint && npm run prettier && npm run flow && npm run check-license",
+    "lint": "yarn run eslint && yarn run prettier && yarn run flow && yarn run check-license",
     "precommit": "lint-staged",
     "prepare": "lerna run --stream --sort prepublishOnly",
     "prettier":
@@ -40,7 +40,7 @@
     "trailingComma": "es5"
   },
   "lint-staged": {
-    "*.{css,js,json}": ["npm run lint", "npm run test", "git add"],
-    "*.md": ["npm run prettier", "git add"]
+    "*.{css,js,json}": ["yarn run lint", "yarn run test", "git add"],
+    "*.md": ["yarn run prettier", "git add"]
   }
 }
