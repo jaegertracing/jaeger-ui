@@ -21,15 +21,15 @@ import IoChevronRight from 'react-icons/lib/io/chevron-right';
 import IoIosFilingOutline from 'react-icons/lib/io/ios-filing-outline';
 import { Link } from 'react-router-dom';
 
-import { trackAltViewOpen } from './TracePageHeader.track';
 import KeyboardShortcutsHelp from './KeyboardShortcutsHelp';
+import { trackAltViewOpen } from './TracePageHeader.track';
+import TracePageSearchBar from './TracePageSearchBar';
 import LabeledList from '../common/LabeledList';
 import { FALLBACK_TRACE_NAME } from '../../constants';
 import { formatDatetime, formatDuration } from '../../utils/date';
 import prefixUrl from '../../utils/prefix-url';
 
 import './TracePageHeader.css';
-import TracePageSearchBar from './TracePageSearchBar';
 
 type TracePageHeaderProps = {
   traceID: string,
