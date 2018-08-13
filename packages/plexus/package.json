@@ -7,9 +7,10 @@
   "scripts": {
     "build": "nwb build-react-component",
     "clean": "nwb clean-module && nwb clean-demo",
+    "coverage": "echo 'NO TESTS YET'",
+    "prepublishOnly": "nwb build-react-component --no-demo",
     "start": "nwb serve-react-demo",
     "test": "echo 'NO TESTS YET'",
-    "coverage": "echo 'NO TESTS YET'",
     "test:dev": "nwb test-react --server"
   },
   "dependencies": {
