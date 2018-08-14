@@ -14,7 +14,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+.TracePageSearchBar {
+  max-width: 20rem;
+}
+
 .TracePageSearchBar--bar {
   display: flex;
   max-width: 20rem;
+}
+
+.TracePageSearchBar--count {
+  opacity: 0.6;
 }

@@ -176,15 +176,13 @@ export default function TracePageHeader(props: TracePageHeaderProps) {
           </h1>
         </a>
         <KeyboardShortcutsHelp className="ub-mr2" />
-        <div className="ub-flex-auto ub-mr2 TracePageHeader--search">
-          <TracePageSearchBar
-            updateTextFilter={updateTextFilter}
-            textFilter={textFilter}
-            prevResult={prevResult}
-            nextResult={nextResult}
-            resultCount={resultCount}
-          />
-        </div>
+        <TracePageSearchBar
+          updateTextFilter={updateTextFilter}
+          textFilter={textFilter}
+          prevResult={prevResult}
+          nextResult={nextResult}
+          resultCount={resultCount}
+        />
         <Dropdown overlay={viewMenu}>
           <Button className="ub-mr2">
             View Options <Icon type="down" />

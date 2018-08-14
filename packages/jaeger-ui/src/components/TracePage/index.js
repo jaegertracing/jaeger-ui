@@ -36,6 +36,7 @@ import TraceTimelineViewer from './TraceTimelineViewer';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
 import * as jaegerApiActions from '../../actions/jaeger-api';
+import { filterSpansForText } from '../../selectors/span';
 import { fetchedState } from '../../constants';
 import { getTraceName } from '../../model/trace-viewer';
 import prefixUrl from '../../utils/prefix-url';
@@ -46,7 +47,6 @@ import type { FetchedTrace, ReduxState } from '../../types';
 import type { TraceArchive } from '../../types/archive';
 
 import './index.css';
-import getFilteredSpans from './TraceTimelineViewer/get-filtered-spans';
 
 type TracePageProps = {
   archiveEnabled: boolean,
@@ -63,7 +63,7 @@ type TracePageState = {
   headerHeight: ?number,
   slimView: boolean,
   textFilter: string,
-  findMatchesIDs: Set<string>,
+  findMatchesIDs: ?Set<string>,
   viewRange: ViewRange,
 };
 
@@ -109,6 +109,7 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
       headerHeight: null,
       slimView: false,
       textFilter: '',
+      findMatchesIDs: null,
       viewRange: {
         time: {
           current: [0, 1],
@@ -207,19 +208,20 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
   };
 
   updateTextFilter = (textFilter: string) => {
+    let findMatchesIDs;
+    if (textFilter.trim()) {
+      const matches = filterSpansForText({
+        text: textFilter.trim(),
+        spans: this.props.trace ? this.props.trace.spans : null,
+      });
+      findMatchesIDs = new Set(matches.map(span => span.spanID));
+    } else {
+      findMatchesIDs = null;
+    }
     trackFilter(textFilter);
     this.setState({ textFilter });
-    const findMatchesIDs = getFilteredSpans(this.props.trace, textFilter.trim());
     this.setState({ findMatchesIDs });
   };
-
-  prevResult = () => this._scrollManager.scrollToPrevVisibleSpan();
-
-  nextResult = () => this._scrollManager.scrollToNextVisibleSpan();
-
-  resultCount = () => this.state.findMatchesIDs.size;
-
-  searchResults = () => (this.state.textFilter ? this.state.findMatchesIDs : null);
 
   updateViewRangeTime = (start: number, end: number, trackSrc?: string) => {
     if (trackSrc) {
@@ -294,9 +296,9 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
             traceID={traceID}
             onSlimViewClicked={this.toggleSlimView}
             textFilter={textFilter}
-            prevResult={this.prevResult}
-            nextResult={this.nextResult}
-            resultCount={this.resultCount()}
+            prevResult={this._scrollManager.scrollToPrevVisibleSpan}
+            nextResult={this._scrollManager.scrollToNextVisibleSpan}
+            resultCount={this.state.findMatchesIDs ? this.state.findMatchesIDs.size : 0}
             updateTextFilter={this.updateTextFilter}
             archiveButtonVisible={archiveEnabled}
             onArchiveClicked={this.archiveTrace}
@@ -314,7 +316,7 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
           <section style={{ paddingTop: headerHeight }}>
             <TraceTimelineViewer
               registerAccessors={this._scrollManager.setAccessors}
-              findMatchesIDs={this.searchResults()}
+              findMatchesIDs={this.state.findMatchesIDs}
               trace={data}
               updateNextViewRangeTime={this.updateNextViewRangeTime}
               updateViewRangeTime={this.updateViewRangeTime}

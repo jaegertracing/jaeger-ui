@@ -17,7 +17,7 @@
 import * as React from 'react';
 import { Button, Input } from 'antd';
 
-import * as markers from './TracePageHeader.markers';
+import * as markers from './TracePageSearchBar.markers';
 
 import './TracePageSearchBar.css';
 
@@ -29,49 +29,33 @@ type TracePageSearchBarProps = {
   resultCount: number,
 };
 
-type TracePageSearchBarState = {
-  textFilter: ?string,
-};
+export default function TracePageSearchBar(props: TracePageSearchBarProps) {
+  const { prevResult, nextResult, resultCount, updateTextFilter, textFilter } = props;
 
-export default class TracePageSearchBar extends React.PureComponent<
-  TracePageSearchBarProps,
-  TracePageSearchBarState
-> {
-  props: TracePageSearchBarProps;
-  state: TracePageSearchBarState;
+  const count = textFilter ? (
+    <span className="TracePageSearchBar--count">{resultCount.toString()}</span>
+  ) : null;
 
-  constructor(props: TracePageSearchBarProps) {
-    super(props);
-    this.state = {
-      textFilter: props.textFilter,
-    };
-  }
+  const updateFilter = event => updateTextFilter(event.target.value);
+  const clearFilter = () => updateTextFilter('');
 
-  updateTextFilter = (textFilter: string) => {
-    this.props.updateTextFilter(textFilter);
-    this.setState({ textFilter });
-  };
-
-  render() {
-    const { prevResult, nextResult, resultCount } = this.props;
-
-    const count = this.state.textFilter ? <span>{resultCount.toString()}</span> : null;
-
-    return (
+  return (
+    <div className="ub-flex-auto ub-mr2 TracePageSearchBar">
+      {/* style inline because compact overwrites the display */}
       <Input.Group compact style={{ display: 'flex' }}>
-        <Input // ^ inline because compact overwrites the display
+        <Input
           name="search"
           className="TracePageSearchBar--bar ub-flex-auto"
           placeholder="Search..."
-          onChange={event => this.updateTextFilter(event.target.value)}
-          value={this.state.textFilter}
+          onChange={updateFilter}
+          value={textFilter}
           data-test={markers.IN_TRACE_SEARCH}
           suffix={count}
         />
-        <Button disabled={!this.state.textFilter} icon="up" onClick={prevResult} />
-        <Button disabled={!this.state.textFilter} icon="down" onClick={nextResult} />
-        <Button disabled={!this.state.textFilter} icon="close" onClick={() => this.updateTextFilter('')} />
+        <Button disabled={!textFilter} icon="up" onClick={prevResult} />
+        <Button disabled={!textFilter} icon="down" onClick={nextResult} />
+        <Button disabled={!textFilter} icon="close" onClick={clearFilter} />
       </Input.Group>
-    );
-  }
+    </div>
+  );
 }
