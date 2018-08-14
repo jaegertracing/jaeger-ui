@@ -17,7 +17,8 @@ import sinon from 'sinon';
 import { shallow, mount } from 'enzyme';
 
 import TracePageHeader, { HEADER_ITEMS } from './TracePageHeader';
-// import * as markers from './TracePageSearchBar.markers';
+import * as markers from './TracePageSearchBar.markers';
+import TracePageSearchBar from './TracePageSearchBar';
 
 describe('<TracePageHeader>', () => {
   const defaultProps = {
@@ -56,13 +57,19 @@ describe('<TracePageHeader>', () => {
 
   it('calls updateTextFilter() function for onChange of the input', () => {
     const updateTextFilter = sinon.spy();
-    const props = { ...defaultProps, updateTextFilter };
-    wrapper = shallow(<TracePageHeader {...props} />);
-    // const event = { target: { value: 'my new value' } };
-    //   wrapper
-    //     .find(`[data-test="${markers.IN_TRACE_SEARCH}"]`)
-    //     .first()
-    //     .simulate('change', event);
-    //   expect(updateTextFilter.calledWith('my new value')).toBeTruthy();
+    const searchBarProps = {
+      updateTextFilter,
+      textFilter: defaultProps.textFilter,
+      prevResult: () => {},
+      nextResult: () => {},
+      resultCount: 0,
+    };
+    wrapper = shallow(<TracePageSearchBar {...searchBarProps} />);
+    const event = { target: { value: 'my new value' } };
+    wrapper
+      .find(`[data-test="${markers.IN_TRACE_SEARCH}"]`)
+      .first()
+      .simulate('change', event);
+    expect(updateTextFilter.calledWith('my new value')).toBeTruthy();
   });
 });
