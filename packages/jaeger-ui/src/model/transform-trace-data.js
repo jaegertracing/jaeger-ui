@@ -17,7 +17,8 @@
 import _isEqual from 'lodash/isEqual';
 
 import { getTraceSpanIdsAsTree } from '../selectors/trace';
-import type { Process, Span, SpanData, Trace, TraceData } from '../types';
+
+import type { Process, Span, SpanData, Trace, TraceData } from '../types/trace';
 
 type SpanWithProcess = SpanData & { process: Process };
 
@@ -75,6 +76,8 @@ export default function transfromTraceData(data: TraceData & { spans: SpanWithPr
   // siblings are sorted by start time
   const tree = getTraceSpanIdsAsTree(data);
   const spans: Span[] = [];
+  const svcCounts: { [string]: number } = {};
+  let traceName = '';
 
   tree.walk((spanID, node, depth) => {
     if (spanID === '__root__') {
@@ -83,6 +86,11 @@ export default function transfromTraceData(data: TraceData & { spans: SpanWithPr
     const span: ?Span = (spanMap.get(spanID): any);
     if (!span) {
       return;
+    }
+    const { serviceName } = span.process;
+    svcCounts[serviceName] = (svcCounts[serviceName] || 0) + 1;
+    if (!span.references || !span.references.length) {
+      traceName = `${serviceName}: ${span.operationName}`;
     }
     span.relativeStartTime = span.startTime - traceStartTime;
     span.depth = depth - 1;
@@ -96,10 +104,12 @@ export default function transfromTraceData(data: TraceData & { spans: SpanWithPr
     });
     spans.push(span);
   });
-
+  const services = Object.keys(svcCounts).map(name => ({ name, numberOfSpans: svcCounts[name] }));
   return {
+    services,
     spans,
     traceID,
+    traceName,
     // can't use spread operator for intersection types
     // repl: https://goo.gl/4Z23MJ
     // issue: https://github.com/facebook/flow/issues/1511

@@ -16,37 +16,45 @@
 
 import * as React from 'react';
 
-type Props = {
-  classNamePrefix: string,
-  hidden?: boolean,
-  label: string | React.Node,
-  left?: number,
-  top?: number,
-};
+type Props =
+  | Object
+  | {
+      classNamePrefix: string,
+      forwardedRef: any,
+      hidden?: boolean,
+      labelFactory: Function,
+      left?: number,
+      top?: number,
+      vertex: any,
+    };
 
-function Node(props: Props, ref: any) {
-  const { classNamePrefix, hidden, label, left, top, ...rest } = props;
-  const p: Object = rest;
-  p.style = {
-    ...p.style,
-    position: 'absolute',
-    transform: left == null || top == null ? undefined : `translate(${left}px,${top}px)`,
-    visibility: hidden ? 'hidden' : 'visible',
+class Node extends React.PureComponent<Props> {
+  props: Props;
+
+  static defaultProps = {
+    hidden: false,
+    left: null,
+    top: null,
   };
-  p.className = `${classNamePrefix}-Node ${p.className || ''}`;
-  return (
-    <div ref={ref} {...p}>
-      {label}
-    </div>
-  );
-}
 
-Node.defaultProps = {
-  hidden: false,
-  left: null,
-  top: null,
-};
+  render() {
+    const { classNamePrefix, hidden, labelFactory, vertex, left, top, forwardedRef, ...rest } = this.props;
+    const p: Object = rest;
+    p.style = {
+      ...p.style,
+      position: 'absolute',
+      transform: left == null || top == null ? undefined : `translate(${left}px,${top}px)`,
+      visibility: hidden ? 'hidden' : undefined,
+    };
+    p.className = `${classNamePrefix}-Node ${p.className || ''}`;
+    return (
+      <div ref={forwardedRef} {...p}>
+        {labelFactory(vertex)}
+      </div>
+    );
+  }
+}
 
 // ghetto fabulous cast because the 16.3 API is not in flow yet
 // https://github.com/facebook/flow/issues/6103
-export default (React: any).forwardRef(Node);
+export default (React: any).forwardRef((props, ref) => <Node {...props} forwardedRef={ref} />);

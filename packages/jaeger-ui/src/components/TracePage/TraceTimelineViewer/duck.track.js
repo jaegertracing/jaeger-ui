@@ -37,7 +37,8 @@ function trackParent(store: Store, action: any) {
   const { spanID } = action.payload;
   const traceID = st.traceTimeline.traceID;
   const isHidden = st.traceTimeline.childrenHiddenIDs.has(spanID);
-  const span = st.trace.traces[traceID].spans.find(sp => sp.spanID === spanID);
+  const trace = st.trace.traces[traceID].data;
+  const span = trace.spans.find(sp => sp.spanID === spanID);
   if (span) {
     trackEvent(CATEGORY_PARENT, getToggleValue(!isHidden), span.depth);
   }

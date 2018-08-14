@@ -31,9 +31,10 @@ import React from 'react';
 import { shallow, mount } from 'enzyme';
 import store from 'store';
 
-import SearchTracePage, { mapStateToProps } from './index';
+import { SearchTracePageImpl as SearchTracePage, mapStateToProps } from './index';
 import SearchForm from './SearchForm';
 import LoadingIndicator from '../common/LoadingIndicator';
+import { fetchedState } from '../../constants';
 import traceGenerator from '../../demo/trace-generators';
 import { MOST_RECENT } from '../../model/order-by';
 import transformTraceData from '../../model/transform-trace-data';
@@ -51,6 +52,7 @@ describe('<SearchTracePage>', () => {
       loadingServices: false,
       loadingTraces: false,
       maxTraceDuration: 100,
+      diffCohort: [],
       numberOfTraceResults: traceResults.length,
       services: null,
       sortTracesBy: MOST_RECENT,
@@ -103,7 +105,15 @@ describe('<SearchTracePage>', () => {
 describe('mapStateToProps()', () => {
   it('converts state to the necessary props', () => {
     const trace = transformTraceData(traceGenerator.trace({}));
-    const stateTrace = { traces: [trace], loading: false, error: null };
+    const stateTrace = {
+      search: {
+        results: [trace.traceID],
+        state: fetchedState.DONE,
+      },
+      traces: {
+        [trace.traceID]: { id: trace.traceID, data: trace, state: fetchedState.DONE },
+      },
+    };
     const stateServices = {
       loading: false,
       services: ['svc-a'],
@@ -113,13 +123,21 @@ describe('mapStateToProps()', () => {
     const state = {
       router: { location: { search: '' } },
       trace: stateTrace,
+      traceDiff: {
+        cohort: [trace.traceID],
+      },
       services: stateServices,
     };
 
-    const { maxTraceDuration, traceResults, numberOfTraceResults, ...rest } = mapStateToProps(state);
-    expect(traceResults.length).toBe(stateTrace.traces.length);
+    const { maxTraceDuration, traceResults, diffCohort, numberOfTraceResults, ...rest } = mapStateToProps(
+      state
+    );
+    expect(traceResults).toHaveLength(stateTrace.search.results.length);
     expect(traceResults[0].traceID).toBe(trace.traceID);
-    expect(maxTraceDuration).toBe(trace.duration / 1000);
+    expect(maxTraceDuration).toBe(trace.duration);
+    expect(diffCohort).toHaveLength(state.traceDiff.cohort.length);
+    expect(diffCohort[0].id).toBe(trace.traceID);
+    expect(diffCohort[0].data.traceID).toBe(trace.traceID);
 
     expect(rest).toEqual({
       isHomepage: true,

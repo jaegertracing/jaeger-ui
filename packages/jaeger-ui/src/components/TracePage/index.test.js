@@ -25,11 +25,12 @@ import React from 'react';
 import sinon from 'sinon';
 import { shallow, mount } from 'enzyme';
 
-import TracePage, {
+import {
   makeShortcutCallbacks,
   mapDispatchToProps,
   mapStateToProps,
   shortcutConfig,
+  TracePageImpl as TracePage,
   VIEW_MIN_RANGE,
 } from './index';
 import * as track from './index.track';
@@ -41,6 +42,7 @@ import { trackSlimHeaderToggle } from './TracePageHeader.track';
 import TraceTimelineViewer from './TraceTimelineViewer';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
+import { fetchedState } from '../../constants';
 import traceGenerator from '../../demo/trace-generators';
 import transformTraceData from '../../model/transform-trace-data';
 
@@ -72,7 +74,7 @@ describe('<TracePage>', () => {
 
   const trace = transformTraceData(traceGenerator.trace({}));
   const defaultProps = {
-    trace,
+    trace: { data: trace, state: fetchedState.DONE },
     fetchTrace() {},
     id: trace.traceID,
   };
@@ -91,10 +93,10 @@ describe('<TracePage>', () => {
     expect(wrapper.find(SpanGraph).length).toBe(1);
   });
 
-  it('renders an empty page when not provided a trace', () => {
+  it('renders a a loading indicator when not provided a fetched trace', () => {
     wrapper.setProps({ trace: null });
-    const isEmpty = wrapper.matchesElement(<section />);
-    expect(isEmpty).toBe(true);
+    const loading = wrapper.find(LoadingIndicator);
+    expect(loading.length).toBe(1);
   });
 
   it('renders an error message when given an error', () => {
@@ -126,7 +128,7 @@ describe('<TracePage>', () => {
     // mount because `.componentDidUpdate()`
     wrapper = mount(<TracePage {...defaultProps} />);
     wrapper.setState({ viewRange: { time: [0.2, 0.8] } });
-    wrapper.setProps({ trace: altTrace });
+    wrapper.setProps({ id: altTrace.traceID, trace: { data: altTrace, state: fetchedState.DONE } });
     expect(wrapper.state('viewRange')).toEqual({ time: { current: [0, 1] } });
   });
 
@@ -134,7 +136,7 @@ describe('<TracePage>', () => {
     wrapper = shallow(<TracePage {...defaultProps} trace={null} />);
     const scrollManager = wrapper.instance()._scrollManager;
     scrollManager.setTrace = jest.fn();
-    wrapper.setProps({ trace });
+    wrapper.setProps({ trace: { data: trace } });
     expect(scrollManager.setTrace.mock.calls).toEqual([[trace]]);
   });
 
@@ -354,9 +356,8 @@ describe('mapStateToProps()', () => {
     const trace = {};
     const state = {
       trace: {
-        loading: false,
         traces: {
-          [id]: trace,
+          [id]: { data: trace, state: fetchedState.DONE },
         },
       },
       config: {
@@ -372,10 +373,9 @@ describe('mapStateToProps()', () => {
     const props = mapStateToProps(state, ownProps);
     expect(props).toEqual({
       id,
-      trace,
-      loading: state.trace.loading,
       archiveEnabled: false,
       archiveTraceState: undefined,
+      trace: { data: {}, state: fetchedState.DONE },
     });
   });
 });

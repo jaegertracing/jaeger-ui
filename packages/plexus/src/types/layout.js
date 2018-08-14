@@ -30,19 +30,19 @@ export type Vertex = {
   data?: any,
 };
 
-export type SizeVertex = {
+export type SizeVertex = {|
   vertex: Vertex,
   width: number,
   height: number,
-};
+|};
 
-export type LayoutVertex = {
+export type LayoutVertex = {|
   vertex: Vertex,
   height: number,
   left: number,
   top: number,
   width: number,
-};
+|};
 
 export type Edge = {
   from: VertexKey,
@@ -57,11 +57,29 @@ export type LayoutEdge = {
   pathPoints: [number, number][],
 };
 
-export type Positions = {
-  isCancelled: boolean,
-  graph?: LayoutGraph,
-  vertices?: LayoutVertex[],
+export type Cancelled = {
+  isCancelled: true,
 };
+
+export type PositionsDone = {
+  isCancelled: false,
+  graph: LayoutGraph,
+  vertices: LayoutVertex[],
+};
+
+export type LayoutDone = {
+  isCancelled: false,
+  edges: LayoutEdge[],
+  graph: LayoutGraph,
+  vertices: LayoutVertex[],
+};
+
+// export type Positions = {
+// export type Positions = {
+//   isCancelled: boolean,
+//   graph?: LayoutGraph,
+//   vertices?: LayoutVertex[],
+// };
 
 export type Layout = {
   isCancelled: boolean,
@@ -71,6 +89,6 @@ export type Layout = {
 };
 
 export type PendingLayoutResult = {
-  positions: Promise<Positions>,
-  layout: Promise<Layout>,
+  positions: Promise<PositionsDone | Cancelled>,
+  layout: Promise<LayoutDone | Cancelled>,
 };

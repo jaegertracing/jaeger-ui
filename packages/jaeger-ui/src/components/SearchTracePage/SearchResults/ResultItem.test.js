@@ -18,43 +18,25 @@ import { shallow } from 'enzyme';
 
 import ResultItem from './ResultItem';
 import * as markers from './ResultItem.markers';
+import traceGenerator from '../../../demo/trace-generators';
+import transformTraceData from '../../../model/transform-trace-data';
 
-const testTraceProps = {
-  duration: 100,
-  services: [
-    {
-      name: 'Service A',
-      numberOfSpans: 2,
-      percentOfTrace: 50,
-    },
-  ],
-  startTime: Date.now(),
-  numberOfSpans: 5,
-};
+const trace = transformTraceData(traceGenerator.trace({}));
 
 it('<ResultItem /> should render base case correctly', () => {
-  const wrapper = shallow(<ResultItem trace={testTraceProps} durationPercent={50} />);
-
+  const wrapper = shallow(<ResultItem trace={trace} durationPercent={50} />);
   const numberOfSpanText = wrapper
     .find(`[data-test="${markers.NUM_SPANS}"]`)
     .first()
     .render()
     .text();
-  const numberOfServicesTags = wrapper.find(`[data-test="${markers.SERVICE_TAGS}"]`).find(Tag).length;
-  expect(numberOfSpanText).toBe('5 Spans');
-  expect(numberOfServicesTags).toBe(1);
+  const serviceTags = wrapper.find(`[data-test="${markers.SERVICE_TAGS}"]`).find(Tag);
+  expect(numberOfSpanText).toBe(`${trace.spans.length} Spans`);
+  expect(serviceTags).toHaveLength(trace.services.length);
 });
 
 it('<ResultItem /> should not render any ServiceTags when there are no services', () => {
-  const wrapper = shallow(
-    <ResultItem
-      trace={{
-        ...testTraceProps,
-        services: [],
-      }}
-      durationPercent={50}
-    />
-  );
-  const numberOfServicesTags = wrapper.find(`[data-test="${markers.SERVICE_TAGS}"]`).find(Tag).length;
-  expect(numberOfServicesTags).toBe(0);
+  const wrapper = shallow(<ResultItem trace={{ ...trace, services: [] }} durationPercent={50} />);
+  const serviceTags = wrapper.find(`[data-test="${markers.SERVICE_TAGS}"]`).find(Tag);
+  expect(serviceTags).toHaveLength(0);
 });

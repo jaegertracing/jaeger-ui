@@ -16,75 +16,90 @@
 
 import * as React from 'react';
 import { Col, Divider, Row, Tag } from 'antd';
+import { Link } from 'react-router-dom';
+
 import { sortBy } from 'lodash';
 import moment from 'moment';
 
 import * as markers from './ResultItem.markers';
-import { FALLBACK_TRACE_NAME } from '../../../constants';
+import ResultItemTitle from './ResultItemTitle';
 import colorGenerator from '../../../utils/color-generator';
-import { formatDuration, formatRelativeDate } from '../../../utils/date';
+import { formatRelativeDate } from '../../../utils/date';
 
-import type { TraceSummary } from '../../../types/search';
+import type { Trace } from '../../../types/trace';
 
 import './ResultItem.css';
 
 type Props = {
-  trace: TraceSummary,
   durationPercent: number,
+  isInDiffCohort: boolean,
+  linkTo: string,
+  toggleComparison: string => void,
+  trace: Trace,
 };
+
+const isErrorTag = ({ key, value }) => key === 'error' && (value === true || value === 'true');
 
 export default class ResultItem extends React.PureComponent<Props> {
   props: Props;
 
   render() {
-    const { durationPercent, trace } = this.props;
-    const { duration, services, timestamp, numberOfErredSpans, numberOfSpans, traceName } = trace;
-    const mDate = moment(timestamp);
+    const { durationPercent, isInDiffCohort, linkTo, toggleComparison, trace } = this.props;
+    const { duration, services, startTime, spans, traceName, traceID } = trace;
+    const mDate = moment(startTime / 1000);
     const timeStr = mDate.format('h:mm:ss a');
     const fromNow = mDate.fromNow();
+    const numSpans = spans.length;
+    const numErredSpans = spans.filter(sp => sp.tags.some(isErrorTag)).length;
     return (
       <div className="ResultItem">
-        <div className="ResultItem--title clearfix">
-          <span className="ResultItem--durationBar" style={{ width: `${durationPercent}%` }} />
-          <span className="ub-right ub-relative">{formatDuration(duration * 1000)}</span>
-          <h3 className="ub-m0 ub-relative">{traceName || FALLBACK_TRACE_NAME}</h3>
-        </div>
-        <Row>
-          <Col span={4} className="ub-p2">
-            <Tag className="ub-m1" data-test={markers.NUM_SPANS}>
-              {numberOfSpans} Span{numberOfSpans > 1 && 's'}
-            </Tag>
-            {Boolean(numberOfErredSpans) && (
-              <Tag className="ub-m1" color="red">
-                {numberOfErredSpans} Error{numberOfErredSpans > 1 && 's'}
+        <ResultItemTitle
+          duration={duration}
+          durationPercent={durationPercent}
+          isInDiffCohort={isInDiffCohort}
+          linkTo={linkTo}
+          toggleComparison={toggleComparison}
+          traceID={traceID}
+          traceName={traceName}
+        />
+        <Link to={linkTo}>
+          <Row>
+            <Col span={4} className="ub-p2">
+              <Tag className="ub-m1" data-test={markers.NUM_SPANS}>
+                {numSpans} Span{numSpans > 1 && 's'}
               </Tag>
-            )}
-          </Col>
-          <Col span={16} className="ub-p2">
-            <ul className="ub-list-reset" data-test={markers.SERVICE_TAGS}>
-              {sortBy(services, s => s.name).map(service => {
-                const { name, numberOfSpans: count } = service;
-                return (
-                  <li key={name} className="ub-inline-block ub-m1">
-                    <Tag
-                      className="ResultItem--serviceTag"
-                      style={{ borderLeftColor: colorGenerator.getColorByKey(name) }}
-                    >
-                      {name} ({count})
-                    </Tag>
-                  </li>
-                );
-              })}
-            </ul>
-          </Col>
-          <Col span={4} className="ub-p3 ub-tx-right-align">
-            {formatRelativeDate(timestamp)}
-            <Divider type="vertical" />
-            {timeStr.slice(0, -3)}&nbsp;{timeStr.slice(-2)}
-            <br />
-            <small>{fromNow}</small>
-          </Col>
-        </Row>
+              {Boolean(numErredSpans) && (
+                <Tag className="ub-m1" color="red">
+                  {numErredSpans} Error{numErredSpans > 1 && 's'}
+                </Tag>
+              )}
+            </Col>
+            <Col span={16} className="ub-p2">
+              <ul className="ub-list-reset" data-test={markers.SERVICE_TAGS}>
+                {sortBy(services, s => s.name).map(service => {
+                  const { name, numberOfSpans: count } = service;
+                  return (
+                    <li key={name} className="ub-inline-block ub-m1">
+                      <Tag
+                        className="ResultItem--serviceTag"
+                        style={{ borderLeftColor: colorGenerator.getColorByKey(name) }}
+                      >
+                        {name} ({count})
+                      </Tag>
+                    </li>
+                  );
+                })}
+              </ul>
+            </Col>
+            <Col span={4} className="ub-p3 ub-tx-right-align">
+              {formatRelativeDate(startTime / 1000)}
+              <Divider type="vertical" />
+              {timeStr.slice(0, -3)}&nbsp;{timeStr.slice(-2)}
+              <br />
+              <small>{fromNow}</small>
+            </Col>
+          </Row>
+        </Link>
       </div>
     );
   }

@@ -16,5 +16,4 @@ npm-debug.log
 .vscode
 .idea
 yarn-error.log
-
-lerna-debug\.log
+lerna-debug.log

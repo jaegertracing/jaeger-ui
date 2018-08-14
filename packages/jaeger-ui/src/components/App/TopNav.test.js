@@ -16,7 +16,7 @@ import React from 'react';
 import { shallow } from 'enzyme';
 import { Link } from 'react-router-dom';
 
-import TopNav from './TopNav';
+import { TopNavImpl as TopNav } from './TopNav';
 
 describe('<TopNav>', () => {
   const labelGitHub = 'GitHub';
@@ -34,16 +34,21 @@ describe('<TopNav>', () => {
   ];
 
   const defaultProps = {
-    menuConfig: [
-      {
-        label: labelGitHub,
-        url: githubUrl,
-      },
-      {
-        label: labelAbout,
-        items: dropdownItems,
-      },
-    ],
+    config: {
+      menu: [
+        {
+          label: labelGitHub,
+          url: githubUrl,
+        },
+        {
+          label: labelAbout,
+          items: dropdownItems,
+        },
+      ],
+    },
+    router: {
+      location: { location: { pathname: 'some-path ' } },
+    },
   };
 
   let wrapper;

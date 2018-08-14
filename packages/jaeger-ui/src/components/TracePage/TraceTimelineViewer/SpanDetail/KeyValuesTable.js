@@ -17,7 +17,7 @@
 import * as React from 'react';
 import jsonMarkup from 'json-markup';
 import { Dropdown, Icon, Menu } from 'antd';
-import type { KeyValuePair, Link } from '../../../../types';
+import type { KeyValuePair, Link } from '../../../../types/trace';
 
 import './KeyValuesTable.css';
 

@@ -18,12 +18,20 @@ limitations under the License.
   width: 100%;
 }
 
+.u-flex-1 {
+  flex: 1;
+}
+
 .u-mt-vast {
   margin-top: 13rem;
 }
 
 .u-cursor-pointer {
   cursor: pointer;
+}
+
+.u-tx-muted {
+  color: #aaa;
 }
 
 .u-tx-ellipsis {
@@ -60,14 +68,13 @@ limitations under the License.
 }
 
 .u-simple-scrollbars::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.15);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.u-simple-scrollbars:hover::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.35);
 }
 
 .u-simple-scrollbars::-webkit-scrollbar-thumb:window-inactive {
   background: rgba(0, 0, 0, 0.15);
-}
-
-.u-simple-scrollbars::-webkit-scrollbar-thumb:hover {
-  background: rgba(128, 135, 139, 0.8);
-  background: rgba(0, 0, 0, 0.4);
 }

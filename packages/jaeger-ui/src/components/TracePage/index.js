@@ -26,7 +26,6 @@ import { bindActionCreators } from 'redux';
 import ArchiveNotifier from './ArchiveNotifier';
 import { actions as archiveActions } from './ArchiveNotifier/duck';
 import { trackFilter, trackRange } from './index.track';
-import type { CombokeysHandler, ShortcutCallbacks } from './keyboard-shortcuts';
 import { merge as mergeShortcuts, reset as resetShortcuts } from './keyboard-shortcuts';
 import { cancel as cancelScroll, scrollBy, scrollTo } from './scroll-page';
 import ScrollManager from './ScrollManager';
@@ -34,15 +33,17 @@ import SpanGraph from './SpanGraph';
 import TracePageHeader from './TracePageHeader';
 import { trackSlimHeaderToggle } from './TracePageHeader.track';
 import TraceTimelineViewer from './TraceTimelineViewer';
-import type { ViewRange, ViewRangeTimeUpdate } from './types';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
 import * as jaegerApiActions from '../../actions/jaeger-api';
+import { fetchedState } from '../../constants';
 import { getTraceName } from '../../model/trace-viewer';
-import type { Trace } from '../../types';
-import type { TraceArchive, TracesArchive } from '../../types/archive';
-import type { Config } from '../../types/config';
 import prefixUrl from '../../utils/prefix-url';
+
+import type { CombokeysHandler, ShortcutCallbacks } from './keyboard-shortcuts';
+import type { ViewRange, ViewRangeTimeUpdate } from './types';
+import type { FetchedTrace, ReduxState } from '../../types';
+import type { TraceArchive } from '../../types/archive';
 
 import './index.css';
 
@@ -54,8 +55,7 @@ type TracePageProps = {
   fetchTrace: string => void,
   history: RouterHistory,
   id: string,
-  loading: boolean,
-  trace: ?Trace,
+  trace: ?FetchedTrace,
 };
 
 type TracePageState = {
@@ -93,7 +93,8 @@ export function makeShortcutCallbacks(adjRange: (number, number) => void): Short
   return _mapValues(shortcutConfig, getHandler);
 }
 
-export default class TracePage extends React.PureComponent<TracePageProps, TracePageState> {
+// export for tests
+export class TracePageImpl extends React.PureComponent<TracePageProps, TracePageState> {
   props: TracePageProps;
   state: TracePageState;
 
@@ -113,7 +114,8 @@ export default class TracePage extends React.PureComponent<TracePageProps, Trace
       },
     };
     this._headerElm = null;
-    this._scrollManager = new ScrollManager(props.trace, {
+    const { trace } = props;
+    this._scrollManager = new ScrollManager(trace && trace.data, {
       scrollBy,
       scrollTo,
     });
@@ -144,18 +146,19 @@ export default class TracePage extends React.PureComponent<TracePageProps, Trace
 
   componentWillReceiveProps(nextProps: TracePageProps) {
     if (this._scrollManager) {
-      this._scrollManager.setTrace(nextProps.trace);
+      const { trace } = nextProps;
+      this._scrollManager.setTrace(trace && trace.data);
     }
   }
 
-  componentDidUpdate({ trace: prevTrace }: TracePageProps) {
-    const { trace } = this.props;
+  componentDidUpdate({ id: prevID }: TracePageProps) {
+    const { id, trace } = this.props;
     this.setHeaderHeight(this._headerElm);
     if (!trace) {
       this.ensureTraceFetched();
       return;
     }
-    if (!(trace instanceof Error) && (!prevTrace || prevTrace.traceID !== trace.traceID)) {
+    if (prevID !== id) {
       this.updateViewRangeTime(0, 1);
     }
   }
@@ -238,8 +241,8 @@ export default class TracePage extends React.PureComponent<TracePageProps, Trace
   };
 
   ensureTraceFetched() {
-    const { fetchTrace, trace, id, loading } = this.props;
-    if (!trace && !loading) {
+    const { fetchTrace, trace, id } = this.props;
+    if (!trace) {
       fetchTrace(id);
       return;
     }
@@ -250,15 +253,16 @@ export default class TracePage extends React.PureComponent<TracePageProps, Trace
   }
 
   render() {
-    const { archiveEnabled, archiveTraceState, loading, trace } = this.props;
+    const { archiveEnabled, archiveTraceState, trace } = this.props;
     const { slimView, headerHeight, textFilter, viewRange } = this.state;
-    if (!trace) {
-      return loading ? <LoadingIndicator className="u-mt-vast" centered /> : <section />;
+    if (!trace || trace.state === fetchedState.LOADING) {
+      return <LoadingIndicator className="u-mt-vast" centered />;
     }
-    if (trace instanceof Error) {
-      return <ErrorMessage className="ub-m3" error={trace} />;
+    const { data } = trace;
+    if (trace.state === fetchedState.ERROR || !data) {
+      return <ErrorMessage className="ub-m3" error={trace.error || 'Unknown error'} />;
     }
-    const { duration, processes, spans, startTime, traceID } = trace;
+    const { duration, processes, spans, startTime, traceID } = data;
     const maxSpanDepth = _maxBy(spans, 'depth').depth + 1;
     const numberOfServices = new Set(_values(processes).map(p => p.serviceName)).size;
     return (
@@ -284,7 +288,7 @@ export default class TracePage extends React.PureComponent<TracePageProps, Trace
           />
           {!slimView && (
             <SpanGraph
-              trace={trace}
+              trace={data}
               viewRange={viewRange}
               updateNextViewRangeTime={this.updateNextViewRangeTime}
               updateViewRangeTime={this.updateViewRangeTime}
@@ -296,7 +300,7 @@ export default class TracePage extends React.PureComponent<TracePageProps, Trace
             <TraceTimelineViewer
               registerAccessors={this._scrollManager.setAccessors}
               textFilter={textFilter}
-              trace={trace}
+              trace={data}
               updateNextViewRangeTime={this.updateNextViewRangeTime}
               updateViewRangeTime={this.updateViewRangeTime}
               viewRange={viewRange}
@@ -309,15 +313,12 @@ export default class TracePage extends React.PureComponent<TracePageProps, Trace
 }
 
 // export for tests
-export function mapStateToProps(
-  state: { archive: TracesArchive, config: Config, trace: { loading: boolean, traces: { [string]: Trace } } },
-  ownProps: { match: Match }
-) {
+export function mapStateToProps(state: ReduxState, ownProps: { match: Match }) {
   const { id } = ownProps.match.params;
   const trace = id ? state.trace.traces[id] : null;
   const archiveTraceState = id ? state.archive[id] : null;
   const archiveEnabled = Boolean(state.config.archiveEnabled);
-  return { archiveEnabled, archiveTraceState, id, trace, loading: state.trace.loading };
+  return { archiveEnabled, archiveTraceState, id, trace };
 }
 
 // export for tests
@@ -327,4 +328,4 @@ export function mapDispatchToProps(dispatch: Function) {
   return { acknowledgeArchive, archiveTrace, fetchTrace };
 }
 
-export const ConnectedTracePage = connect(mapStateToProps, mapDispatchToProps)(TracePage);
+export default connect(mapStateToProps, mapDispatchToProps)(TracePageImpl);

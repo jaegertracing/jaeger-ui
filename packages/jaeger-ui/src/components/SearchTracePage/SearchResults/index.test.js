@@ -29,10 +29,11 @@ describe('<SearchResults>', () => {
   beforeEach(() => {
     traces = [{ traceID: 'a', spans: [], processes: {} }, { traceID: 'b', spans: [], processes: {} }];
     props = {
-      traces,
+      diffCohort: [],
       goToTrace: () => {},
       loading: false,
       maxTraceDuration: 1,
+      traces,
     };
     wrapper = shallow(<SearchResults {...props} />);
   });

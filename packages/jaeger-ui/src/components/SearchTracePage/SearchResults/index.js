@@ -17,8 +17,8 @@
 import * as React from 'react';
 import { Select } from 'antd';
 import { Field, reduxForm, formValueSelector } from 'redux-form';
-import { Link } from 'react-router-dom';
 
+import DiffSelection from './DiffSelection';
 import * as markers from './index.markers';
 import ResultItem from './ResultItem';
 import ScatterPlot from './ScatterPlot';
@@ -28,13 +28,19 @@ import { getPercentageOfDuration } from '../../../utils/date';
 import prefixUrl from '../../../utils/prefix-url';
 import reduxFormFieldAdapter from '../../../utils/redux-form-field-adapter';
 
+import type { FetchedTrace } from '../../../types';
+
 import './index.css';
 
 type SearchResultsProps = {
+  cohortAddTrace: string => void,
+  cohortRemoveTrace: string => void,
+  diffCohort: FetchedTrace[],
   goToTrace: string => void,
   loading: boolean,
   maxTraceDuration: number,
-  traces: {}[],
+  skipMessage?: boolean,
+  traces: TraceSummary[],
 };
 
 const Option = Select.Option;
@@ -69,18 +75,40 @@ export const sortFormSelector = formValueSelector('traceResultsSort');
 export default class SearchResults extends React.PureComponent<SearchResultsProps> {
   props: SearchResultsProps;
 
+  toggleComparison = (traceID: string, remove: boolean) => {
+    const { cohortAddTrace, cohortRemoveTrace } = this.props;
+    if (remove) {
+      cohortRemoveTrace(traceID);
+    } else {
+      cohortAddTrace(traceID);
+    }
+  };
+
   render() {
-    const { goToTrace, loading, maxTraceDuration, traces } = this.props;
+    const { loading, diffCohort, skipMessage, traces } = this.props;
+    const diffSelection = <DiffSelection toggleComparison={this.toggleComparison} traces={diffCohort} />;
     if (loading) {
-      return <LoadingIndicator className="u-mt-vast" centered />;
+      return (
+        <React.Fragment>
+          {diffCohort.length > 0 && diffSelection}
+          <LoadingIndicator className="u-mt-vast" centered />
+        </React.Fragment>
+      );
     }
     if (!Array.isArray(traces) || !traces.length) {
       return (
-        <div className="u-simple-card" data-test={markers.NO_RESULTS}>
-          No trace results. Try another query.
-        </div>
+        <React.Fragment>
+          {diffCohort.length > 0 && diffSelection}
+          {!skipMessage && (
+            <div className="u-simple-card" data-test={markers.NO_RESULTS}>
+              No trace results. Try another query.
+            </div>
+          )}
+        </React.Fragment>
       );
     }
+    const { goToTrace, maxTraceDuration } = this.props;
+    const cohortIds = new Set(diffCohort.map(datum => datum.id));
     return (
       <div>
         <div>
@@ -88,10 +116,10 @@ export default class SearchResults extends React.PureComponent<SearchResultsProp
             <div className="ub-p3">
               <ScatterPlot
                 data={traces.map(t => ({
-                  x: t.timestamp,
+                  x: t.startTime,
                   y: t.duration,
                   traceID: t.traceID,
-                  size: t.numberOfSpans,
+                  size: t.spans.length,
                   name: t.traceName,
                 }))}
                 onValueClick={t => {
@@ -108,15 +136,17 @@ export default class SearchResults extends React.PureComponent<SearchResultsProp
           </div>
         </div>
         <div>
+          {diffSelection}
           <ul className="ub-list-reset">
             {traces.map(trace => (
               <li className="ub-my3" key={trace.traceID}>
-                <Link to={prefixUrl(`/trace/${trace.traceID}`)} className="SearchResults--resultLink">
-                  <ResultItem
-                    trace={trace}
-                    durationPercent={getPercentageOfDuration(trace.duration, maxTraceDuration)}
-                  />
-                </Link>
+                <ResultItem
+                  durationPercent={getPercentageOfDuration(trace.duration, maxTraceDuration)}
+                  isInDiffCohort={cohortIds.has(trace.traceID)}
+                  linkTo={prefixUrl(`/trace/${trace.traceID}`)}
+                  toggleComparison={this.toggleComparison}
+                  trace={trace}
+                />
               </li>
             ))}
           </ul>

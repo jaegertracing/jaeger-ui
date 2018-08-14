@@ -21,7 +21,7 @@ import IoIosArrowRight from 'react-icons/lib/io/ios-arrow-right';
 
 import AccordianKeyValues from './AccordianKeyValues';
 import { formatDuration } from '../utils';
-import type { Log, KeyValuePair, Link } from '../../../../types';
+import type { Log, KeyValuePair, Link } from '../../../../types/trace';
 
 import './AccordianLogs.css';
 

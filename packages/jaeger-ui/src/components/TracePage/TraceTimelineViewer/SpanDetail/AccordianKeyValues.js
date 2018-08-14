@@ -21,7 +21,7 @@ import IoIosArrowRight from 'react-icons/lib/io/ios-arrow-right';
 
 import * as markers from './AccordianKeyValues.markers';
 import KeyValuesTable from './KeyValuesTable';
-import type { KeyValuePair, Link } from '../../../../types';
+import type { KeyValuePair, Link } from '../../../../types/trace';
 
 import './AccordianKeyValues.css';
 

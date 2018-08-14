@@ -20,20 +20,7 @@ import type { Edge, LayoutEdge, LayoutGraph, LayoutVertex, SizeVertex, Vertex } 
 
 import LayoutManager from '../LayoutManager';
 
-export type DirectedGraphProps = {
-  classNamePrefix: string,
-  edges: Edge[],
-  getEdgeLabel: Edge => string | React.Node,
-  getNodeLabel: Vertex => string | React.Node,
-  layoutManager: LayoutManager,
-  // setOnEdgeArrow
-  setOnEdgePath: ?(Edge) => {},
-  setOnEdgesContainer: ?(?LayoutGraph) => {},
-  setOnNode: ?(Vertex) => {},
-  setOnNodesContainer: ?(?LayoutGraph) => {},
-  setOnRoot: ?(?LayoutGraph) => {},
-  vertices: Vertex[],
-};
+export type D3Transform = { k: number, x: number, y: number };
 
 export type DirectedGraphState = {
   edges: Edge[],
@@ -42,6 +29,27 @@ export type DirectedGraphState = {
   layoutPhase: number,
   layoutVertices: ?(LayoutVertex[]),
   sizeVertices: ?(SizeVertex[]),
-  vertexRefs: { current: ?HTMLElement }[],
+  vertexRefs: { current: HTMLElement | null }[],
   vertices: Vertex[],
+  zoomEnabled: boolean,
+  zoomTransform: D3Transform,
+};
+
+export type DirectedGraphProps = {
+  arrowScaleDampener: number,
+  className: string,
+  classNamePrefix: string,
+  edges: Edge[],
+  // getEdgeLabel: ?(Edge) => string | React.Node,
+  getNodeLabel: ?(Vertex) => string | React.Node,
+  layoutManager: LayoutManager,
+  minimap: boolean,
+  minimapClassName: string,
+  setOnEdgePath: ?(Edge) => ?Object,
+  setOnEdgesContainer: ?(DirectedGraphState) => ?Object,
+  setOnNode: ?(Vertex) => ?Object,
+  setOnNodesContainer: ?(DirectedGraphState) => ?Object,
+  setOnRoot: ?(DirectedGraphState) => ?Object,
+  vertices: Vertex[],
+  zoom: boolean,
 };

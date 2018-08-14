@@ -14,7 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Span } from '../types';
+import type { Span } from '../types/trace';
 
 /**
  * Searches the span.references to find 'CHILD_OF' reference type or returns null.

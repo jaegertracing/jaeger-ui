@@ -13,12 +13,11 @@
 // limitations under the License.
 
 import promiseMiddleware from 'redux-promise-middleware';
-import queryString from 'query-string';
 import { change } from 'redux-form';
 import { replace } from 'react-router-redux';
 
 import { searchTraces, fetchServiceOperations } from '../actions/jaeger-api';
-import prefixUrl from '../utils/prefix-url';
+import { getUrl as getSearchUrl } from '../components/SearchTracePage/url';
 
 export { default as trackMiddleware } from './track';
 
@@ -40,7 +39,7 @@ export const loadOperationsForServiceMiddleware = store => next => action => {
 
 export const historyUpdateMiddleware = store => next => action => {
   if (action.type === String(searchTraces)) {
-    const url = prefixUrl(`/search?${queryString.stringify(action.meta.query)}`);
+    const url = getSearchUrl(action.meta.query);
     store.dispatch(replace(url));
   }
   next(action);

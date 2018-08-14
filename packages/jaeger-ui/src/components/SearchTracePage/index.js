@@ -14,7 +14,6 @@
 
 import React, { Component } from 'react';
 import { Col, Row } from 'antd';
-import _values from 'lodash/values';
 import PropTypes from 'prop-types';
 import queryString from 'query-string';
 import { connect } from 'react-redux';
@@ -22,22 +21,36 @@ import { bindActionCreators } from 'redux';
 import store from 'store';
 
 import * as jaegerApiActions from '../../actions/jaeger-api';
+import { actions as traceDiffActions } from '../TraceDiff/duck';
 import SearchForm from './SearchForm';
 import SearchResults, { sortFormSelector } from './SearchResults';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
-import { sortTraces, getTraceSummaries } from '../../model/search';
+import { fetchedState } from '../../constants';
+import { sortTraces } from '../../model/search';
 import getLastXformCacher from '../../utils/get-last-xform-cacher';
 import prefixUrl from '../../utils/prefix-url';
 
 import './index.css';
 import JaegerLogo from '../../img/jaeger-logo.svg';
 
-export default class SearchTracePage extends Component {
+// export for tests
+export class SearchTracePageImpl extends Component {
   componentDidMount() {
-    const { searchTraces, urlQueryParams, fetchServices, fetchServiceOperations } = this.props;
+    const {
+      diffCohort,
+      fetchMultipleTraces,
+      searchTraces,
+      urlQueryParams,
+      fetchServices,
+      fetchServiceOperations,
+    } = this.props;
     if (urlQueryParams.service || urlQueryParams.traceID) {
       searchTraces(urlQueryParams);
+    }
+    const needForDiffs = diffCohort.filter(ft => ft.state == null).map(ft => ft.id);
+    if (needForDiffs.length) {
+      fetchMultipleTraces(needForDiffs);
     }
     fetchServices();
     const { service } = store.get('lastSearch') || {};
@@ -52,6 +65,9 @@ export default class SearchTracePage extends Component {
 
   render() {
     const {
+      cohortAddTrace,
+      cohortRemoveTrace,
+      diffCohort,
       errors,
       isHomepage,
       loadingServices,
@@ -79,6 +95,18 @@ export default class SearchTracePage extends Component {
                 {errors.map(err => <ErrorMessage key={err.message} error={err} />)}
               </div>
             )}
+            {!showErrors && (
+              <SearchResults
+                cohortAddTrace={cohortAddTrace}
+                goToTrace={this.goToTrace}
+                loading={loadingTraces}
+                maxTraceDuration={maxTraceDuration}
+                cohortRemoveTrace={cohortRemoveTrace}
+                diffCohort={diffCohort}
+                skipMessage={isHomepage}
+                traces={traceResults}
+              />
+            )}
             {showLogo && (
               <img
                 className="SearchTracePage--logo js-test-logo"
@@ -87,15 +115,6 @@ export default class SearchTracePage extends Component {
                 width="400"
               />
             )}
-            {!showErrors &&
-              !showLogo && (
-                <SearchResults
-                  goToTrace={this.goToTrace}
-                  loading={loadingTraces}
-                  maxTraceDuration={maxTraceDuration}
-                  traces={traceResults}
-                />
-              )}
           </Col>
         </Row>
       </div>
@@ -103,10 +122,13 @@ export default class SearchTracePage extends Component {
   }
 }
 
-SearchTracePage.propTypes = {
+SearchTracePageImpl.propTypes = {
   isHomepage: PropTypes.bool,
   // eslint-disable-next-line react/forbid-prop-types
   traceResults: PropTypes.array,
+  diffCohort: PropTypes.array,
+  cohortAddTrace: PropTypes.func,
+  cohortRemoveTrace: PropTypes.func,
   maxTraceDuration: PropTypes.number,
   loadingServices: PropTypes.bool,
   loadingTraces: PropTypes.bool,
@@ -124,6 +146,7 @@ SearchTracePage.propTypes = {
   history: PropTypes.shape({
     push: PropTypes.func,
   }),
+  fetchMultipleTraces: PropTypes.func,
   fetchServiceOperations: PropTypes.func,
   fetchServices: PropTypes.func,
   errors: PropTypes.arrayOf(
@@ -134,9 +157,18 @@ SearchTracePage.propTypes = {
 };
 
 const stateTraceXformer = getLastXformCacher(stateTrace => {
-  const { traces: traceMap, loading: loadingTraces, error: traceError } = stateTrace;
-  const { traces, maxDuration } = getTraceSummaries(_values(traceMap));
+  const { traces: traceMap, search } = stateTrace;
+  const { results, state, error: traceError } = search;
+  const loadingTraces = state === fetchedState.LOADING;
+  const traces = results.map(id => traceMap[id].data);
+  const maxDuration = Math.max.apply(null, traces.map(tr => tr.duration));
   return { traces, maxDuration, traceError, loadingTraces };
+});
+
+const stateTraceDiffXformer = getLastXformCacher((stateTrace, stateTraceDiff) => {
+  const { traces } = stateTrace;
+  const { cohort } = stateTraceDiff;
+  return cohort.map(id => traces[id] || { id });
 });
 
 const sortedTracesXformer = getLastXformCacher((traces, sortBy) => {
@@ -166,6 +198,7 @@ export function mapStateToProps(state) {
   const query = queryString.parse(state.router.location.search);
   const isHomepage = !Object.keys(query).length;
   const { traces, maxDuration, traceError, loadingTraces } = stateTraceXformer(state.trace);
+  const diffCohort = stateTraceDiffXformer(state.trace, state.traceDiff);
   const { loadingServices, services, serviceError } = stateServicesXformer(state.services);
   const errors = [];
   if (traceError) {
@@ -177,11 +210,12 @@ export function mapStateToProps(state) {
   const sortBy = sortFormSelector(state, 'sortBy');
   const traceResults = sortedTracesXformer(traces, sortBy);
   return {
+    diffCohort,
     isHomepage,
+    loadingServices,
+    loadingTraces,
     services,
     traceResults,
-    loadingTraces,
-    loadingServices,
     errors: errors.length ? errors : null,
     maxTraceDuration: maxDuration,
     sortTracesBy: sortBy,
@@ -190,14 +224,19 @@ export function mapStateToProps(state) {
 }
 
 function mapDispatchToProps(dispatch) {
-  const { searchTraces, fetchServices, fetchServiceOperations } = bindActionCreators(
+  const { fetchMultipleTraces, fetchServiceOperations, fetchServices, searchTraces } = bindActionCreators(
     jaegerApiActions,
     dispatch
   );
+  const { cohortAddTrace, cohortRemoveTrace } = bindActionCreators(traceDiffActions, dispatch);
   return {
+    cohortAddTrace,
+    cohortRemoveTrace,
+    fetchMultipleTraces,
     fetchServiceOperations,
     fetchServices,
     searchTraces,
   };
 }
-export const ConnectedSearchTracePage = connect(mapStateToProps, mapDispatchToProps)(SearchTracePage);
+
+export default connect(mapStateToProps, mapDispatchToProps)(SearchTracePageImpl);

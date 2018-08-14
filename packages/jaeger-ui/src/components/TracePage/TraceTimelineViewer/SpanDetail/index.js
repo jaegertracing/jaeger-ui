@@ -22,7 +22,7 @@ import AccordianLogs from './AccordianLogs';
 import DetailState from './DetailState';
 import { formatDuration } from '../utils';
 import LabeledList from '../../../common/LabeledList';
-import type { Log, Span, KeyValuePair, Link } from '../../../../types';
+import type { Log, Span, KeyValuePair, Link } from '../../../../types/trace';
 
 import './index.css';
 

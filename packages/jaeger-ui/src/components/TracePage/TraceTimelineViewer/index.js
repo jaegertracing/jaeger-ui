@@ -22,9 +22,10 @@ import { actions } from './duck';
 import TimelineHeaderRow from './TimelineHeaderRow';
 import VirtualizedTraceView from './VirtualizedTraceView';
 import { merge as mergeShortcuts } from '../keyboard-shortcuts';
+
 import type { Accessors } from '../ScrollManager';
 import type { ViewRange, ViewRangeTimeUpdate } from '../types';
-import type { Span, Trace } from '../../../types';
+import type { Span, Trace } from '../../../types/trace';
 
 import './index.css';
 

@@ -14,34 +14,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { LayoutUpdate, WorkerMessage } from './types';
-import type { Edge, LayoutGraph, LayoutVertex, SizeVertex } from '../types/layout';
-import type { ErrorEvent } from '../types/ErrorEvent';
-
 import * as convCoord from './dot/conv-coord';
 import workerFactory from './layout.worker';
 import { matchEdges, matchVertices } from './match-inputs';
 
+import type { LayoutOptions, Phase, Update, WorkerMessage, WorkType } from './types';
+import type { Edge, LayoutVertex, SizeVertex } from '../types/layout';
+import type { ErrorEvent } from '../types/ErrorEvent';
+
 type CurrentLayout = {
+  cleaned: {
+    edges: Edge[],
+    vertices: SizeVertex[],
+  },
   id: number,
   input: {
     edges: Edge[],
     vertices: SizeVertex[],
   },
-  cleaned: {
-    edges: Edge[],
-    vertices: SizeVertex[],
-  },
-  result: {
-    // TODO(joe): split edge calculations
-    // edges: LayoutEdge[],
-    graph?: LayoutGraph,
-    vertices: LayoutVertex[],
-  },
+  options: ?LayoutOptions,
   status: {
-    edgesWorkers?: ?Set<number>,
-    phase: 'not-started' | 'positions' | 'edges' | 'done',
-    positionsWorker?: ?number,
+    workerId?: ?number,
+    phase: Phase,
   },
 };
 
@@ -81,27 +75,30 @@ export default class Coordinator {
   nextWorkerId: number;
   idleWorkers: LayoutWorker[];
   busyWorkers: LayoutWorker[];
-  callback: LayoutUpdate => void;
+  callback: Update => void;
 
-  constructor(callback: LayoutUpdate => void) {
+  constructor(callback: Update => void) {
     this.callback = callback;
     this.currentLayout = null;
     this.nextWorkerId = 0;
-    this.idleWorkers = [this._initWorker()];
+    this.idleWorkers = [];
     this.busyWorkers = [];
   }
 
-  getLayout(id: number, edges: Edge[], vertices: SizeVertex[]) {
+  getLayout(id: number, edges: Edge[], vertices: SizeVertex[], options: ?LayoutOptions) {
     this.busyWorkers.forEach(killWorker);
     this.busyWorkers.length = 0;
+    const cleaned = cleanInput(edges, vertices.map(convCoord.vertexToDot));
     this.currentLayout = {
+      cleaned,
       id,
+      options,
       input: { edges, vertices },
-      cleaned: cleanInput(edges, vertices.map(convCoord.vertexToDot)),
-      result: { edges: [], vertices: [] },
       status: { phase: 'not-started' },
     };
-    this._getPositions();
+    const isDotOnly = Boolean(options && options.useDotEdges);
+    const phase = isDotOnly ? 'dot-only' : 'positions';
+    this._postWork(phase, cleaned.edges, cleaned.vertices);
   }
 
   stopAndRelease() {
@@ -131,72 +128,39 @@ export default class Coordinator {
     }
   }
 
-  _getPositions() {
-    const { id, cleaned, status } = this.currentLayout || {};
+  _postWork(phase: Phase, edges: Edge[], vertices: SizeVertex[] | LayoutVertex[]) {
+    const { id, options, status } = this.currentLayout || {};
     if (id == null) {
-      throw new Error('_getPositions called without a current layout');
+      throw new Error('_startWork called without a current layout');
     }
     const worker = this.idleWorkers.pop() || this._initWorker();
     this.busyWorkers.push(worker);
-    status.phase = 'positions';
-    status.positionsWorker = worker.id;
+    status.phase = phase;
+    status.workerId = worker.id;
     worker.postMessage({
-      edges: cleaned.edges,
+      options,
+      edges,
+      vertices,
       meta: {
+        phase,
         layoutId: id,
         workerId: worker.id,
-        phase: 'positions',
       },
-      vertices: cleaned.vertices,
-    });
-  }
-
-  _getEdges() {
-    const { id, cleaned, result, status } = this.currentLayout || {};
-    if (id == null) {
-      throw new Error('_getEdges called without a current layout');
-    }
-    if (!result.vertices) {
-      throw new Error('_getEdges called without known positions');
-    }
-    const worker = this.idleWorkers.pop() || this._initWorker();
-    this.busyWorkers.push(worker);
-    status.phase = 'edges';
-    // TODO(joe): split edge calculation
-    status.edgesWorkers = new Set([worker.id]);
-    worker.postMessage({
-      edges: cleaned.edges,
-      meta: {
-        layoutId: id,
-        workerId: worker.id,
-        phase: 'edges',
-      },
-      vertices: result.vertices,
     });
   }
 
   _handleVizWorkerError = (event: ErrorEvent) => {
     const target = (event: any).target;
     const worker = (target: LayoutWorker);
-    let list;
-    let i = this.busyWorkers.indexOf(worker);
-    if (i >= 0) {
-      list = this.busyWorkers;
+    const { ok } = findAndRemoveWorker([this.busyWorkers, this.idleWorkers], worker);
+    if (ok) {
+      console.error('Viz worker onerror');
+      console.error(event);
+      killWorker(worker);
     } else {
-      i = this.idleWorkers.indexOf(worker);
-      if (i >= 0) {
-        list = this.idleWorkers;
-      }
-    }
-    if (!list) {
       console.error('Viz worker onerror from unknown viz worker');
       console.error(event);
-      return;
     }
-    list.splice(i, 1);
-    killWorker(worker);
-    console.error('Viz worker onerror');
-    console.error(event);
   };
 
   _handleVizWorkerMessageError = (event: MessageEvent) => {
@@ -227,61 +191,14 @@ export default class Coordinator {
       console.error('layout-error', event);
       return;
     }
-    if (type === 'positions') {
-      this._processPositionsResult(workerMessage);
-      return;
-    }
-    if (type === 'edges') {
-      this._processEdgesResult(workerMessage);
+    if (type === 'positions' || type === 'edges' || type === 'dot-only') {
+      this._processResult(type, workerMessage);
       return;
     }
     console.error(`Unknown worker message type: ${type}`, event);
   };
 
-  _processPositionsResult(workerMessage: WorkerMessage) {
-    const layout = this.currentLayout;
-    if (!layout) {
-      // make flow happy - this is already checked and should not happen
-      return;
-    }
-    const { graph, meta, vertices } = workerMessage;
-    const { workerId } = meta;
-    const { input, result, status } = layout;
-    const { phase, positionsWorker } = status;
-    let msg = '';
-    if (phase !== 'positions') {
-      msg = 'but not in phase positions';
-    }
-    if (!msg && positionsWorker == null) {
-      msg = 'but have no worker in status';
-    }
-    if (!msg && positionsWorker !== workerId) {
-      msg = 'but got message from the wrong worker';
-    }
-    if (msg) {
-      console.error(`Have positions results, ${msg}`);
-      return;
-    }
-    if (!graph || !vertices) {
-      console.error('Have positions results, but recieved invalid result data');
-      return;
-    }
-    status.positionsWorker = null;
-    result.graph = graph;
-    result.vertices = vertices;
-    const adjVertexCoords = convCoord.vertexToPixels.bind(null, graph);
-    let adjVertices = vertices.map(adjVertexCoords);
-    adjVertices = matchVertices(input.vertices, adjVertices);
-    this.callback({
-      type: 'positions',
-      layoutId: layout.id,
-      graph: convCoord.graphToPixels(graph),
-      vertices: adjVertices,
-    });
-    this._getEdges();
-  }
-
-  _processEdgesResult(workerMessage: WorkerMessage) {
+  _processResult(phase: WorkType, workerMessage: WorkerMessage) {
     const layout = this.currentLayout;
     if (!layout) {
       // make flow happy - this is already checked and should not happen
@@ -289,41 +206,46 @@ export default class Coordinator {
     }
     const { edges, graph, meta, vertices } = workerMessage;
     const { workerId } = meta;
-    const { input, status } = layout;
-    const { phase, edgesWorkers } = status;
-    let msg = '';
-    if (phase !== 'edges') {
-      msg = 'but not in phase edges';
-    }
-    if (!msg && edgesWorkers == null) {
-      msg = 'but have no worker(s) in status';
-    }
-    if (!msg && edgesWorkers && !edgesWorkers.has(workerId)) {
-      msg = 'but got message from the wrong worker';
-    }
-    if (msg) {
-      console.error(`Have edges results, ${msg}`);
+    const { cleaned, input, status } = layout;
+    const { phase: stPhase, workerId: stWorkerId } = status;
+
+    if (phase !== stPhase || workerId !== stWorkerId) {
+      console.error(`Have work results, but in an invalid state`);
       return;
     }
-    if (!edges || !graph || !vertices) {
-      console.error('Have edges results, but recieved invalid result data');
+    if (!vertices || !graph || (phase !== 'positions' && !edges)) {
+      console.error('Have work results, but recieved invalid result data');
       return;
     }
-    status.edgesWorkers = null;
-    status.phase = 'done';
-    this.currentLayout = null;
-    const adjEdgeCoords = convCoord.edgeToPixels.bind(null, graph);
+
     const adjVertexCoords = convCoord.vertexToPixels.bind(null, graph);
-    let adjEdges = edges.map(adjEdgeCoords);
-    adjEdges = matchEdges(input.edges, adjEdges);
     let adjVertices = vertices.map(adjVertexCoords);
     adjVertices = matchVertices(input.vertices, adjVertices);
-    this.callback({
-      type: 'edges',
-      layoutId: layout.id,
-      graph: convCoord.graphToPixels(graph),
-      edges: adjEdges,
-      vertices: adjVertices,
-    });
+    const adjGraph = convCoord.graphToPixels(graph);
+
+    if (phase === 'positions' || phase === 'dot-only') {
+      this.callback({
+        type: 'positions',
+        layoutId: layout.id,
+        graph: adjGraph,
+        vertices: adjVertices,
+      });
+    }
+    // phase is either edges or dot-only
+    if (edges) {
+      const adjEdgeCoords = convCoord.edgeToPixels.bind(null, graph);
+      let adjEdges = edges.map(adjEdgeCoords);
+      adjEdges = matchEdges(input.edges, adjEdges);
+      this.callback({
+        type: 'done',
+        layoutId: layout.id,
+        graph: adjGraph,
+        edges: adjEdges,
+        vertices: adjVertices,
+      });
+    }
+    if (phase === 'positions') {
+      this._postWork('edges', cleaned.edges, vertices);
+    }
   }
 }

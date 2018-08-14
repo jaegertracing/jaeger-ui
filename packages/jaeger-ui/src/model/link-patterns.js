@@ -17,7 +17,7 @@
 import _uniq from 'lodash/uniq';
 import { getConfigValue } from '../utils/config/get-config';
 import { getParent } from './span';
-import type { Span, Link, KeyValuePair } from '../types';
+import type { Span, Link, KeyValuePair } from '../types/trace';
 
 const parameterRegExp = /#\{([^{}]*)\}/g;
 

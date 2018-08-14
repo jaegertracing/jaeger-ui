@@ -33,7 +33,7 @@ import {
 } from './utils';
 import getLinks from '../../../model/link-patterns';
 import type { Accessors } from '../ScrollManager';
-import type { Log, Span, Trace, KeyValuePair } from '../../../types';
+import type { Log, Span, Trace, KeyValuePair } from '../../../types/trace';
 import colorGenerator from '../../../utils/color-generator';
 
 import './VirtualizedTraceView.css';

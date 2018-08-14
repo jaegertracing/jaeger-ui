@@ -14,65 +14,47 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/**
- * All timestamps are in microseconds
- */
+import type { ContextRouter } from 'react-router-dom';
 
-export type KeyValuePair = {
-  key: string,
-  value: any,
+import type { ApiError } from './api-error';
+import type { TracesArchive } from './archive';
+import type { Config } from './config';
+import type { Trace } from './trace';
+import type { TraceDiffState } from './trace-diff';
+import type { TraceTimeline } from './trace-timeline';
+
+export type FetchedState = 'FETCH_DONE' | 'FETCH_ERROR' | 'FETCH_LOADING';
+
+export type FetchedTrace = {
+  data?: Trace,
+  error?: ApiError,
+  id: string,
+  state?: FetchedState,
 };
 
-export type Link = {
-  url: string,
-  text: string,
-};
-
-export type Log = {
-  timestamp: number,
-  fields: Array<KeyValuePair>,
-};
-
-export type Process = {
-  serviceName: string,
-  tags: Array<KeyValuePair>,
-};
-
-export type SpanReference = {
-  refType: 'CHILD_OF' | 'FOLLOWS_FROM',
-  // eslint-disable-next-line no-use-before-define
-  span: ?Span,
-  spanID: string,
-  traceID: string,
-};
-
-export type SpanData = {
-  spanID: string,
-  traceID: string,
-  processID: string,
-  operationName: string,
-  startTime: number,
-  duration: number,
-  logs: Array<Log>,
-  tags: Array<KeyValuePair>,
-  references: Array<SpanReference>,
-};
-
-export type Span = SpanData & {
-  depth: number,
-  hasChildren: boolean,
-  process: Process,
-  relativeStartTime: number,
-};
-
-export type TraceData = {
-  processes: { [string]: Process },
-  traceID: string,
-};
-
-export type Trace = TraceData & {
-  duration: number,
-  endTime: number,
-  spans: Span[],
-  startTime: number,
+export type ReduxState = {
+  archive: TracesArchive,
+  config: Config,
+  dependencies: {
+    dependencies: { parent: string, child: string, callCount: number }[],
+    loading: boolean,
+    error: ?ApiError,
+  },
+  services: {
+    services: ?(string[]),
+    operationsForService: { [string]: string[] },
+    loading: boolean,
+    error: ?ApiError,
+  },
+  router: ContextRouter,
+  trace: {
+    traces: { [string]: FetchedTrace },
+    search: {
+      error?: ApiError,
+      results: string[],
+      state?: FetchedState,
+    },
+  },
+  traceDiff: TraceDiffState,
+  traceTimeline: TraceTimeline,
 };

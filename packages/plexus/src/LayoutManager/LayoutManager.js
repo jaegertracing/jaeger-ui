@@ -14,24 +14,33 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { EdgesUpdate, LayoutUpdate } from './types';
-import type { Edge, Layout, PendingLayoutResult, Positions, SizeVertex } from '../types/layout';
+import type { LayoutUpdate, LayoutOptions, Update } from './types';
+import type {
+  Cancelled,
+  Edge,
+  LayoutDone,
+  PendingLayoutResult,
+  PositionsDone,
+  SizeVertex,
+} from '../types/layout';
 
 import Coordinator from './Coordinator';
 
 type PendingResult = {
   id: number,
   isPositionsResolved: boolean,
-  resolvePositions?: Positions => void,
-  resolveLayout?: Layout => void,
+  resolvePositions?: (Cancelled | PositionsDone) => void,
+  resolveLayout?: (Cancelled | LayoutDone) => void,
 };
 
 export default class LayoutManager {
   layoutId: number;
   coordinator: Coordinator;
   pendingResult: ?PendingResult;
+  options: ?LayoutOptions;
 
-  constructor() {
+  constructor(options: ?LayoutOptions) {
+    this.options = options;
     this.layoutId = 0;
     this.coordinator = new Coordinator(this._handleUpdate);
     this.pendingResult = null;
@@ -41,14 +50,14 @@ export default class LayoutManager {
     this._cancelPending();
     this.layoutId++;
     const id = this.layoutId;
-    this.coordinator.getLayout(id, edges, vertices);
+    this.coordinator.getLayout(id, edges, vertices, this.options);
     this.pendingResult = { id, isPositionsResolved: false };
-    const positions: Promise<Positions> = new Promise(resolve => {
+    const positions: Promise<Cancelled | PositionsDone> = new Promise(resolve => {
       if (this.pendingResult && id === this.pendingResult.id) {
         this.pendingResult.resolvePositions = resolve;
       }
     });
-    const layout: Promise<Layout> = new Promise(resolve => {
+    const layout: Promise<Cancelled | LayoutDone> = new Promise(resolve => {
       if (this.pendingResult && id === this.pendingResult.id) {
         this.pendingResult.resolveLayout = resolve;
       }
@@ -75,7 +84,7 @@ export default class LayoutManager {
     }
   }
 
-  _handleUpdate = (data: LayoutUpdate) => {
+  _handleUpdate = (data: Update) => {
     const { layoutId, type } = data;
     const pendingResult = this.pendingResult;
     if (!pendingResult || layoutId !== pendingResult.id) {
@@ -98,11 +107,9 @@ export default class LayoutManager {
         vertices,
         isCancelled: false,
       });
-      return;
-    }
-    if (type === 'edges') {
+    } else if (type === 'done') {
       const { resolveLayout } = pendingResult;
-      const { edges, graph, vertices } = ((data: any): EdgesUpdate);
+      const { edges, graph, vertices } = ((data: any): LayoutUpdate);
       if (!edges || !vertices || !resolveLayout) {
         // make flow happy
         throw new Error('Invalid state');
@@ -114,8 +121,8 @@ export default class LayoutManager {
         vertices,
         isCancelled: false,
       });
-      return;
+    } else {
+      throw new Error('Unrecognized update type');
     }
-    throw new Error('Unrecognized update type');
   };
 }

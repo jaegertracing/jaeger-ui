@@ -18,69 +18,109 @@ import { render } from 'react-dom';
 
 import largeDg, { getNodeLabel as getLargeNodeLabel } from './data-large';
 import { edges as dagEdges, vertices as dagVertices } from './data-dag';
-import { varied, colored, getColorNodeLabel, setOnColorEdge, setOnColorNode } from './data-small';
+import { colored as colorData, getColorNodeLabel, setOnColorEdge, setOnColorNode } from './data-small';
 import { DirectedGraph, LayoutManager } from '../../src';
 
 import './index.css';
 
-const addAnAttr = () => ({ 'data-rando': Math.random() });
+const { classNameIsSmall } = DirectedGraph.propsFactories;
 
-const addNodeDemoCss = () => ({ className: 'Node' });
+const ROOT_STYLE = { style: { float: 'left' } };
+const setLargeRootStyle = () => ROOT_STYLE;
+const addAnAttr = () => ({ 'data-rando': Math.random() });
+const setNodeClassName = vertex => ({
+  className: 'DemoGraph--node',
+  // eslint-disable-next-line no-console
+  onClick: () => console.log(vertex.key),
+});
 
 class Demo extends React.Component {
-  state = {
-    data: colored,
-    colorData: true,
-  };
-
   constructor(props) {
     super(props);
     this.layoutManager = new LayoutManager();
-    this.dagLayoutManager = new LayoutManager();
-    this.largeLayoutManager = new LayoutManager();
+    this.dagLayoutManager = new LayoutManager({ useDotEdges: true });
+    this.largeDotLayoutManager = new LayoutManager({ useDotEdges: true });
+    this.largeDotPolylineLayoutManager = new LayoutManager({
+      useDotEdges: true,
+      splines: 'polyline',
+      ranksep: 8,
+    });
+    this.largeNeatoLayoutManager = new LayoutManager();
   }
 
-  handleClick = () => {
-    const { colorData } = this.state;
-    this.setState({
-      colorData: !colorData,
-      data: colorData ? varied : colored,
-    });
-  };
-
   render() {
-    const { data, colorData } = this.state;
     return (
       <div>
-        <h1>
-          <a href="#" onClick={this.handleClick}>
-            plexus Demo
-          </a>
-        </h1>
+        <h1>Directed graph with cycles - dot edges</h1>
+        <div>
+          <div className="DemoGraph">
+            <DirectedGraph
+              zoom
+              minimap
+              arrowScaleDampener={0.8}
+              className="DemoGraph--dag"
+              getNodeLabel={getLargeNodeLabel}
+              layoutManager={this.largeDotLayoutManager}
+              minimapClassName="Demo--miniMap"
+              setOnNode={setNodeClassName}
+              setOnRoot={classNameIsSmall}
+              {...largeDg}
+            />
+          </div>
+        </div>
+        <h1>Directed graph with cycles - neato edges</h1>
+        <div>
+          <div className="DemoGraph">
+            <DirectedGraph
+              zoom
+              minimap
+              arrowScaleDampener={0.8}
+              className="DemoGraph--dag"
+              getNodeLabel={getLargeNodeLabel}
+              layoutManager={this.largeNeatoLayoutManager}
+              minimapClassName="Demo--miniMap"
+              setOnNode={setNodeClassName}
+              setOnRoot={classNameIsSmall}
+              {...largeDg}
+            />
+          </div>
+        </div>
+        <h1>Directed graph with cycles - dot edges - polylines</h1>
+        <div>
+          <div className="DemoGraph">
+            <DirectedGraph
+              zoom
+              minimap
+              arrowScaleDampener={0.8}
+              className="DemoGraph--dag"
+              getNodeLabel={getLargeNodeLabel}
+              layoutManager={this.largeDotPolylineLayoutManager}
+              minimapClassName="Demo--miniMap"
+              setOnNode={setNodeClassName}
+              setOnRoot={classNameIsSmall}
+              {...largeDg}
+            />
+          </div>
+        </div>
         <h1>Small graph with data driven rendering</h1>
         <DirectedGraph
-          layoutManager={this.layoutManager}
+          className="DemoGraph--dag"
           getNodeLabel={colorData ? getColorNodeLabel : null}
+          layoutManager={this.layoutManager}
           setOnEdgePath={colorData ? setOnColorEdge : null}
-          setOnNode={colorData ? setOnColorNode : null}
           setOnEdgesContainer={addAnAttr}
+          setOnNode={colorData ? setOnColorNode : null}
           setOnNodesContainer={addAnAttr}
-          setOnRoot={addAnAttr}
-          {...data}
+          {...colorData}
         />
         <h1>Medium DAG</h1>
         <DirectedGraph
-          layoutManager={this.dagLayoutManager}
-          setOnNode={addNodeDemoCss}
+          className="DemoGraph--dag"
           edges={dagEdges}
+          layoutManager={this.dagLayoutManager}
+          setOnNode={setNodeClassName}
+          setOnRoot={setLargeRootStyle}
           vertices={dagVertices}
-        />
-        <h1>Larger directd graph with cycles</h1>
-        <DirectedGraph
-          layoutManager={this.largeLayoutManager}
-          getNodeLabel={getLargeNodeLabel}
-          setOnNode={addNodeDemoCss}
-          {...largeDg}
         />
       </div>
     );

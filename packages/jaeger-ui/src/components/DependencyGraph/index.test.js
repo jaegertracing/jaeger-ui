@@ -18,7 +18,12 @@ import { shallow } from 'enzyme';
 
 import DAG from './DAG';
 import DependencyForceGraph from './DependencyForceGraph';
-import DependencyGraph, { GRAPH_TYPES, mapDispatchToProps, mapStateToProps } from './index';
+import {
+  DependencyGraphPageImpl as DependencyGraph,
+  GRAPH_TYPES,
+  mapDispatchToProps,
+  mapStateToProps,
+} from './index';
 import LoadingIndicator from '../common/LoadingIndicator';
 
 const childId = 'boomya';
