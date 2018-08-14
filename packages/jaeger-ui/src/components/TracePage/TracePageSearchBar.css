@@ -26,3 +26,11 @@ limitations under the License.
 .TracePageSearchBar--count {
   opacity: 0.6;
 }
+
+.TracePageSearchBar--btn {
+  transition: 0.5s;
+}
+
+.TracePageSearchBar--btn-hide {
+  opacity: 0.5;
+}

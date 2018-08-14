@@ -39,6 +39,8 @@ export default function TracePageSearchBar(props: TracePageSearchBarProps) {
   const updateFilter = event => updateTextFilter(event.target.value);
   const clearFilter = () => updateTextFilter('');
 
+  const btnClass = `TracePageSearchBar--btn${textFilter ? '' : ' TracePageSearchBar--btn-hide'}`;
+
   return (
     <div className="ub-flex-auto ub-mr2 TracePageSearchBar">
       {/* style inline because compact overwrites the display */}
@@ -52,9 +54,9 @@ export default function TracePageSearchBar(props: TracePageSearchBarProps) {
           data-test={markers.IN_TRACE_SEARCH}
           suffix={count}
         />
-        <Button disabled={!textFilter} icon="up" onClick={prevResult} />
-        <Button disabled={!textFilter} icon="down" onClick={nextResult} />
-        <Button disabled={!textFilter} icon="close" onClick={clearFilter} />
+        <Button className={btnClass} disabled={!textFilter} icon="up" onClick={prevResult} />
+        <Button className={btnClass} disabled={!textFilter} icon="down" onClick={nextResult} />
+        <Button className={btnClass} disabled={!textFilter} icon="close" onClick={clearFilter} />
       </Input.Group>
     </div>
   );
