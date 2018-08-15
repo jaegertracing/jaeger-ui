@@ -258,7 +258,6 @@ describe('<TracePage>', () => {
       wrapper.update();
       refreshWrappers();
       expect(header.prop('textFilter')).toBe(s);
-      expect(timeline.prop('textFilter')).toBe(s);
     });
 
     it('propagates slimView changes', () => {
