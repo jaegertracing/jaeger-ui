@@ -39,7 +39,7 @@ export default function TracePageSearchBar(props: TracePageSearchBarProps) {
   const updateFilter = event => updateTextFilter(event.target.value);
   const clearFilter = () => updateTextFilter('');
 
-  const btnClass = `TracePageSearchBar--btn${textFilter ? '' : ' TracePageSearchBar--btn-hide'}`;
+  const btnClass = `TracePageSearchBar--btn${textFilter ? '' : ' is-disabled'}`;
 
   return (
     <div className="ub-flex-auto ub-mr2 TracePageSearchBar">

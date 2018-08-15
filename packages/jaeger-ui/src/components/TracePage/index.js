@@ -163,6 +163,7 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
     }
     if (prevID !== id) {
       this.updateViewRangeTime(0, 1);
+      this.updateTextFilter('');
     }
   }
 
@@ -219,8 +220,7 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
       findMatchesIDs = null;
     }
     trackFilter(textFilter);
-    this.setState({ textFilter });
-    this.setState({ findMatchesIDs });
+    this.setState({ textFilter, findMatchesIDs });
   };
 
   updateViewRangeTime = (start: number, end: number, trackSrc?: string) => {
@@ -268,7 +268,7 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
 
   render() {
     const { archiveEnabled, archiveTraceState, trace } = this.props;
-    const { slimView, headerHeight, textFilter, viewRange } = this.state;
+    const { slimView, headerHeight, textFilter, viewRange, findMatchesIDs } = this.state;
     if (!trace || trace.state === fetchedState.LOADING) {
       return <LoadingIndicator className="u-mt-vast" centered />;
     }
@@ -298,7 +298,7 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
             textFilter={textFilter}
             prevResult={this._scrollManager.scrollToPrevVisibleSpan}
             nextResult={this._scrollManager.scrollToNextVisibleSpan}
-            resultCount={this.state.findMatchesIDs ? this.state.findMatchesIDs.size : 0}
+            resultCount={findMatchesIDs ? findMatchesIDs.size : 0}
             updateTextFilter={this.updateTextFilter}
             archiveButtonVisible={archiveEnabled}
             onArchiveClicked={this.archiveTrace}
@@ -316,7 +316,7 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
           <section style={{ paddingTop: headerHeight }}>
             <TraceTimelineViewer
               registerAccessors={this._scrollManager.setAccessors}
-              findMatchesIDs={this.state.findMatchesIDs}
+              findMatchesIDs={findMatchesIDs}
               trace={data}
               updateNextViewRangeTime={this.updateNextViewRangeTime}
               updateViewRangeTime={this.updateViewRangeTime}

@@ -31,6 +31,6 @@ limitations under the License.
   transition: 0.5s;
 }
 
-.TracePageSearchBar--btn-hide {
+.TracePageSearchBar--btn.is-disabled {
   opacity: 0.5;
 }
