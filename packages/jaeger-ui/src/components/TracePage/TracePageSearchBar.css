@@ -28,7 +28,7 @@ limitations under the License.
 }
 
 .TracePageSearchBar--btn {
-  transition: 0.5s;
+  transition: 0.2s;
 }
 
 .TracePageSearchBar--btn.is-disabled {

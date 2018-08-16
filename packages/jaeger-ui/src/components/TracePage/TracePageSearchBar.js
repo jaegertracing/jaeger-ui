@@ -26,18 +26,21 @@ type TracePageSearchBarProps = {
   textFilter: string,
   prevResult: () => void,
   nextResult: () => void,
+  clearSearch: () => void,
   resultCount: number,
 };
 
-export default function TracePageSearchBar(props: TracePageSearchBarProps) {
-  const { prevResult, nextResult, resultCount, updateTextFilter, textFilter } = props;
+function TracePageSearchBar(props: TracePageSearchBarProps, ref: any) {
+  const { prevResult, nextResult, clearSearch, resultCount, updateTextFilter, textFilter } = props;
 
   const count = textFilter ? (
     <span className="TracePageSearchBar--count">{resultCount.toString()}</span>
   ) : null;
 
   const updateFilter = event => updateTextFilter(event.target.value);
-  const clearFilter = () => updateTextFilter('');
+  const onKeyDown = e => {
+    if (e.keyCode === 27) clearSearch();
+  };
 
   const btnClass = `TracePageSearchBar--btn${textFilter ? '' : ' is-disabled'}`;
 
@@ -53,11 +56,18 @@ export default function TracePageSearchBar(props: TracePageSearchBarProps) {
           value={textFilter}
           data-test={markers.IN_TRACE_SEARCH}
           suffix={count}
+          ref={ref}
+          onKeyDown={onKeyDown}
+          onPressEnter={nextResult}
         />
         <Button className={btnClass} disabled={!textFilter} icon="up" onClick={prevResult} />
         <Button className={btnClass} disabled={!textFilter} icon="down" onClick={nextResult} />
-        <Button className={btnClass} disabled={!textFilter} icon="close" onClick={clearFilter} />
+        <Button className={btnClass} disabled={!textFilter} icon="close" onClick={clearSearch} />
       </Input.Group>
     </div>
   );
 }
+
+// ghetto fabulous cast because the 16.3 API is not in flow yet
+// https://github.com/facebook/flow/issues/6103
+export default (React: any).forwardRef(TracePageSearchBar);

@@ -45,6 +45,9 @@ export type ShortcutCallbacks = {
   expandAll?: CombokeysHandler,
   collapseOne?: CombokeysHandler,
   expandOne?: CombokeysHandler,
+  // search
+  searchSpans?: CombokeysHandler,
+  clearSearch?: CombokeysHandler,
 };
 
 export const kbdMappings = {
@@ -64,6 +67,8 @@ export const kbdMappings = {
   expandAll: '[',
   collapseOne: 'p',
   expandOne: 'o',
+  searchSpans: 'ctrl+b',
+  clearSearch: 'escape',
 };
 
 let instance: ?CombokeysType;

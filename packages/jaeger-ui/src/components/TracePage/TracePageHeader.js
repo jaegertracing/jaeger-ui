@@ -40,6 +40,7 @@ type TracePageHeaderProps = {
   textFilter: string,
   prevResult: () => void,
   nextResult: () => void,
+  clearSearch: () => void,
   resultCount: number,
   archiveButtonVisible: boolean,
   onArchiveClicked: () => void,
@@ -89,7 +90,7 @@ export const HEADER_ITEMS = [
   },
 ];
 
-export default function TracePageHeader(props: TracePageHeaderProps) {
+function TracePageHeader(props: TracePageHeaderProps, ref: any) {
   const {
     archiveButtonVisible,
     onArchiveClicked,
@@ -106,6 +107,7 @@ export default function TracePageHeader(props: TracePageHeaderProps) {
     textFilter,
     prevResult,
     nextResult,
+    clearSearch,
     resultCount,
   } = props;
 
@@ -181,7 +183,9 @@ export default function TracePageHeader(props: TracePageHeaderProps) {
           textFilter={textFilter}
           prevResult={prevResult}
           nextResult={nextResult}
+          clearSearch={clearSearch}
           resultCount={resultCount}
+          ref={ref}
         />
         <Dropdown overlay={viewMenu}>
           <Button className="ub-mr2">
@@ -199,3 +203,7 @@ export default function TracePageHeader(props: TracePageHeaderProps) {
     </header>
   );
 }
+
+// ghetto fabulous cast because the 16.3 API is not in flow yet
+// https://github.com/facebook/flow/issues/6103
+export default (React: any).forwardRef(TracePageHeader);

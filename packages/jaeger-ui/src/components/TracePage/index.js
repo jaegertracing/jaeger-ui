@@ -101,6 +101,7 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
   state: TracePageState;
 
   _headerElm: ?Element;
+  _searchBar: any;
   _scrollManager: ScrollManager;
 
   constructor(props: TracePageProps) {
@@ -122,6 +123,7 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
       scrollBy,
       scrollTo,
     });
+    this._searchBar = React.createRef();
     resetShortcuts();
   }
 
@@ -144,6 +146,8 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
     shortcutCallbacks.scrollPageUp = scrollPageUp;
     shortcutCallbacks.scrollToNextVisibleSpan = scrollToNextVisibleSpan;
     shortcutCallbacks.scrollToPrevVisibleSpan = scrollToPrevVisibleSpan;
+    shortcutCallbacks.clearSearch = this.clearSearch;
+    shortcutCallbacks.searchSpans = this.focusOnSearchBar;
     mergeShortcuts(shortcutCallbacks);
   }
 
@@ -163,7 +167,7 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
     }
     if (prevID !== id) {
       this.updateViewRangeTime(0, 1);
-      this.updateTextFilter('');
+      this.clearSearch();
     }
   }
 
@@ -221,6 +225,15 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
     }
     trackFilter(textFilter);
     this.setState({ textFilter, findMatchesIDs });
+  };
+
+  clearSearch = () => {
+    this.updateTextFilter('');
+    this._searchBar.current.blur();
+  };
+
+  focusOnSearchBar = () => {
+    this._searchBar.current.focus();
   };
 
   updateViewRangeTime = (start: number, end: number, trackSrc?: string) => {
@@ -298,10 +311,12 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
             textFilter={textFilter}
             prevResult={this._scrollManager.scrollToPrevVisibleSpan}
             nextResult={this._scrollManager.scrollToNextVisibleSpan}
+            clearSearch={this.clearSearch}
             resultCount={findMatchesIDs ? findMatchesIDs.size : 0}
             updateTextFilter={this.updateTextFilter}
             archiveButtonVisible={archiveEnabled}
             onArchiveClicked={this.archiveTrace}
+            ref={this._searchBar}
           />
           {!slimView && (
             <SpanGraph
