@@ -215,9 +215,10 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
   updateTextFilter = (textFilter: string) => {
     let findMatchesIDs;
     if (textFilter.trim()) {
+      const { trace } = this.props;
       const matches = filterSpansForText({
         text: textFilter.trim(),
-        spans: this.props.trace ? this.props.trace.spans : null,
+        spans: trace && trace.data && trace.data.spans,
       });
       findMatchesIDs = new Set(matches.map(span => span.spanID));
     } else {
