@@ -276,7 +276,7 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
     const color = colorGenerator.getColorByKey(serviceName);
     const isCollapsed = childrenHiddenIDs.has(spanID);
     const isDetailExpanded = detailStates.has(spanID);
-    const isFilteredOut = Boolean(findMatchesIDs) && !findMatchesIDs.has(spanID);
+    const isMatchingFilter = Boolean(findMatchesIDs) && findMatchesIDs.has(spanID);
     const showErrorIcon = isErrorSpan(span) || (isCollapsed && spanContainsErredSpan(trace.spans, spanIndex));
     const viewBounds = getViewedBounds({
       min: trace.startTime,
@@ -319,7 +319,7 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
           label={formatDuration(span.duration)}
           isChildrenExpanded={!isCollapsed}
           isDetailExpanded={isDetailExpanded}
-          isFilteredOut={isFilteredOut}
+          isMatchingFilter={isMatchingFilter}
           isParent={span.hasChildren}
           numTicks={NUM_TICKS}
           onDetailToggled={detailToggle}
@@ -346,7 +346,6 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
       detailStates,
       detailTagsToggle,
       detailToggle,
-      findMatchesIDs,
       spanNameColumnWidth,
       trace,
     } = this.props;
@@ -355,7 +354,6 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
       return null;
     }
     const color = colorGenerator.getColorByKey(serviceName);
-    const isFilteredOut = Boolean(findMatchesIDs) && !findMatchesIDs.has(spanID);
     return (
       <div className="VirtualizedTraceView--row" key={key} style={{ ...style, zIndex: 1 }} {...attrs}>
         <SpanDetailRow
@@ -363,7 +361,6 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
           columnDivision={spanNameColumnWidth}
           onDetailToggled={detailToggle}
           detailState={detailState}
-          isFilteredOut={isFilteredOut}
           linksGetter={this.linksGetter}
           logItemToggle={detailLogItemToggle}
           logsToggle={detailLogsToggle}

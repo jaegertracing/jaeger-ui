@@ -14,8 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-.span-row.is-filtered-out {
-  opacity: 0.2;
+.span-row.is-matching-filter {
+  background-color: #fffce4;
 }
 
 .span-name-column {
@@ -130,13 +130,27 @@ limitations under the License.
   outline: 1px solid #ddd;
 }
 
+.span-row.is-matching-filter:hover .span-view {
+  background-color: #fff3d7;
+  outline: 1px solid #ddd;
+}
+
 .span-row.is-expanded .span-view {
   background: #f8f8f8;
   outline: 1px solid #ddd;
 }
 
+.span-row.is-expanded.is-matching-filter .span-view {
+  background: #fff3d7;
+  outline: 1px solid #ddd;
+}
+
 .span-row.is-expanded:hover .span-view {
   background: #eee;
+}
+
+.span-row.is-expanded.is-matching-filter:hover .span-view {
+  background: #ffeccf;
 }
 
 .span-row.clipping-right .span-view::before {

@@ -32,7 +32,7 @@ type SpanBarRowProps = {
   depth: number,
   isChildrenExpanded: boolean,
   isDetailExpanded: boolean,
-  isFilteredOut: boolean,
+  isMatchingFilter: boolean,
   isParent: boolean,
   label: string,
   onDetailToggled: string => void,
@@ -85,7 +85,7 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
       depth,
       isChildrenExpanded,
       isDetailExpanded,
-      isFilteredOut,
+      isMatchingFilter,
       isParent,
       label,
       numTicks,
@@ -113,7 +113,7 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
           span-row
           ${className || ''}
           ${isDetailExpanded ? 'is-expanded' : ''}
-          ${isFilteredOut ? 'is-filtered-out' : ''}
+          ${isMatchingFilter ? 'is-matching-filter' : ''}
         `}
       >
         <TimelineRow.Cell className="span-name-column" width={columnDivision}>

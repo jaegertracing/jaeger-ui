@@ -295,7 +295,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
             depth={span.depth}
             isChildrenExpanded
             isDetailExpanded={false}
-            isFilteredOut={false}
+            isMatchingFilter={false}
             isParent={span.hasChildren}
             numTicks={5}
             onDetailToggled={props.detailToggle}
@@ -335,7 +335,6 @@ describe('<VirtualizedTraceViewImpl>', () => {
             columnDivision={props.spanNameColumnWidth}
             onDetailToggled={props.detailToggle}
             detailState={detailState}
-            isFilteredOut={false}
             logItemToggle={props.detailLogItemToggle}
             logsToggle={props.detailLogsToggle}
             processToggle={props.detailProcessToggle}
