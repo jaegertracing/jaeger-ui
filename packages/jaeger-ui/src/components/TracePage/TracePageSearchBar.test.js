@@ -13,11 +13,10 @@
 // limitations under the License.
 
 import React from 'react';
-import sinon from 'sinon';
 import { shallow } from 'enzyme';
 
 import * as markers from './TracePageSearchBar.markers';
-import TracePageSearchBar from './TracePageSearchBar';
+import { TracePageSearchBarFn as TracePageSearchBar } from './TracePageSearchBar';
 
 describe('<TracePageSearchBar>', () => {
   const defaultProps = {
@@ -35,7 +34,7 @@ describe('<TracePageSearchBar>', () => {
   });
 
   it('calls updateTextFilter() function for onChange of the input', () => {
-    const updateTextFilter = sinon.spy();
+    const updateTextFilter = jest.fn();
     const props = { ...defaultProps, updateTextFilter };
     wrapper = shallow(<TracePageSearchBar {...props} />);
     const event = { target: { value: 'my new value' } };
@@ -43,7 +42,7 @@ describe('<TracePageSearchBar>', () => {
       .find(`[data-test="${markers.IN_TRACE_SEARCH}"]`)
       .first()
       .simulate('change', event);
-    expect(updateTextFilter.calledWith('my new value')).toBeTruthy();
+    expect(updateTextFilter.mock.calls.length).toBe(1);
   });
 
   it('renders the search bar', () => {

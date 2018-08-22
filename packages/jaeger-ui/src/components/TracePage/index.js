@@ -22,6 +22,7 @@ import _values from 'lodash/values';
 import { connect } from 'react-redux';
 import type { RouterHistory, Match } from 'react-router-dom';
 import { bindActionCreators } from 'redux';
+import { Input } from 'antd';
 
 import ArchiveNotifier from './ArchiveNotifier';
 import { actions as archiveActions } from './ArchiveNotifier/duck';
@@ -101,7 +102,7 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
   state: TracePageState;
 
   _headerElm: ?Element;
-  _searchBar: any;
+  _searchBar: { current: Input | null };
   _scrollManager: ScrollManager;
 
   constructor(props: TracePageProps) {
@@ -230,11 +231,11 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
 
   clearSearch = () => {
     this.updateTextFilter('');
-    this._searchBar.current.blur();
+    if (this._searchBar.current) this._searchBar.current.blur();
   };
 
   focusOnSearchBar = () => {
-    this._searchBar.current.focus();
+    if (this._searchBar.current) this._searchBar.current.focus();
   };
 
   updateViewRangeTime = (start: number, end: number, trackSrc?: string) => {

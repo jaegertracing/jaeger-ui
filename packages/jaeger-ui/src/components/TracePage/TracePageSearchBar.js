@@ -28,14 +28,21 @@ type TracePageSearchBarProps = {
   nextResult: () => void,
   clearSearch: () => void,
   resultCount: number,
+  forwardedRef: { current: Input | null },
 };
 
-function TracePageSearchBar(props: TracePageSearchBarProps, ref: any) {
-  const { prevResult, nextResult, clearSearch, resultCount, updateTextFilter, textFilter } = props;
+export function TracePageSearchBarFn(props: TracePageSearchBarProps) {
+  const {
+    prevResult,
+    nextResult,
+    clearSearch,
+    resultCount,
+    updateTextFilter,
+    textFilter,
+    forwardedRef,
+  } = props;
 
-  const count = textFilter ? (
-    <span className="TracePageSearchBar--count">{resultCount.toString()}</span>
-  ) : null;
+  const count = textFilter ? <span className="TracePageSearchBar--count">{resultCount}</span> : null;
 
   const updateFilter = event => updateTextFilter(event.target.value);
   const onKeyDown = e => {
@@ -56,7 +63,7 @@ function TracePageSearchBar(props: TracePageSearchBarProps, ref: any) {
           value={textFilter}
           data-test={markers.IN_TRACE_SEARCH}
           suffix={count}
-          ref={ref}
+          ref={forwardedRef}
           onKeyDown={onKeyDown}
           onPressEnter={nextResult}
         />
@@ -70,4 +77,6 @@ function TracePageSearchBar(props: TracePageSearchBarProps, ref: any) {
 
 // ghetto fabulous cast because the 16.3 API is not in flow yet
 // https://github.com/facebook/flow/issues/6103
-export default (React: any).forwardRef(TracePageSearchBar);
+export default (React: any).forwardRef((props, ref) => (
+  <TracePageSearchBarFn {...props} forwardedRef={ref} />
+));

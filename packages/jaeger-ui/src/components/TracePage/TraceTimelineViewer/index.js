@@ -36,7 +36,7 @@ type TraceTimelineViewerProps = {
   collapseOne: (Span[]) => void,
   expandAll: () => void,
   expandOne: (Span[]) => void,
-  findMatchesIDs: Set<string>,
+  findMatchesIDs: ?Set<string>,
   spanNameColumnWidth: number,
   trace: Trace,
   updateNextViewRangeTime: ViewRangeTimeUpdate => void,

@@ -15,7 +15,7 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Button, Dropdown, Icon, Menu } from 'antd';
+import { Button, Dropdown, Icon, Input, Menu } from 'antd';
 import IoChevronDown from 'react-icons/lib/io/chevron-down';
 import IoChevronRight from 'react-icons/lib/io/chevron-right';
 import IoIosFilingOutline from 'react-icons/lib/io/ios-filing-outline';
@@ -41,6 +41,7 @@ type TracePageHeaderProps = {
   prevResult: () => void,
   nextResult: () => void,
   clearSearch: () => void,
+  forwardedRef: { current: Input | null },
   resultCount: number,
   archiveButtonVisible: boolean,
   onArchiveClicked: () => void,
@@ -90,7 +91,7 @@ export const HEADER_ITEMS = [
   },
 ];
 
-function TracePageHeader(props: TracePageHeaderProps, ref: any) {
+export function TracePageHeaderFn(props: TracePageHeaderProps) {
   const {
     archiveButtonVisible,
     onArchiveClicked,
@@ -109,6 +110,7 @@ function TracePageHeader(props: TracePageHeaderProps, ref: any) {
     nextResult,
     clearSearch,
     resultCount,
+    forwardedRef,
   } = props;
 
   if (!traceID) {
@@ -185,7 +187,7 @@ function TracePageHeader(props: TracePageHeaderProps, ref: any) {
           nextResult={nextResult}
           clearSearch={clearSearch}
           resultCount={resultCount}
-          ref={ref}
+          ref={forwardedRef}
         />
         <Dropdown overlay={viewMenu}>
           <Button className="ub-mr2">
@@ -206,4 +208,4 @@ function TracePageHeader(props: TracePageHeaderProps, ref: any) {
 
 // ghetto fabulous cast because the 16.3 API is not in flow yet
 // https://github.com/facebook/flow/issues/6103
-export default (React: any).forwardRef(TracePageHeader);
+export default (React: any).forwardRef((props, ref) => <TracePageHeaderFn {...props} forwardedRef={ref} />);

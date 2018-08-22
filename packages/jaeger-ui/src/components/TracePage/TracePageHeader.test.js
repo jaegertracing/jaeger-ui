@@ -15,7 +15,7 @@
 import React from 'react';
 import { shallow, mount } from 'enzyme';
 
-import TracePageHeader, { HEADER_ITEMS } from './TracePageHeader';
+import { TracePageHeaderFn as TracePageHeader, HEADER_ITEMS } from './TracePageHeader';
 
 describe('<TracePageHeader>', () => {
   const defaultProps = {
