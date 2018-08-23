@@ -117,7 +117,7 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
         `}
       >
         <TimelineRow.Cell className="span-name-column" width={columnDivision}>
-          <div className="span-name-wrapper">
+          <div className={`span-name-wrapper ${isMatchingFilter ? 'is-matching-filter' : ''}`}>
             <SpanTreeOffset
               level={depth + 1}
               hasChildren={isParent}
