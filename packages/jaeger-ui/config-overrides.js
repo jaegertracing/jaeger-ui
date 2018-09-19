@@ -29,5 +29,14 @@ module.exports = function override(_config, env) {
   let config = _config;
   config = injectBabelPlugin(['import', { libraryName: 'antd', style: true }], config);
   config = rewireLess.withLoaderOptions({ modifyVars })(config, env);
+  // Rules
+  config.module.rules.push({
+    test: /\.js$/,
+    exclude: /node_modules/,
+    loader: 'babel-loader',
+    query: {
+      presets: ['react-app'],
+    },
+  });
   return config;
 };

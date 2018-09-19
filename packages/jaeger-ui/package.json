@@ -1,5 +1,5 @@
 {
-  "private": true,
+  "private": false,
   "name": "jaeger-ui",
   "version": "0.0.1",
   "main": "src/index.js",
@@ -31,6 +31,7 @@
   "dependencies": {
     "@jaegertracing/plexus": "0.0.1-dev.3",
     "antd": "^3.0.3",
+    "babel-preset-react-app": "^3.1.2",
     "chance": "^1.0.10",
     "classnames": "^2.2.5",
     "combokeys": "^3.0.0",
@@ -79,8 +80,7 @@
   "scripts": {
     "build": "REACT_APP_VSN_STATE=$(../../scripts/get-tracking-version.js) react-app-rewired build",
     "coverage": "yarn run test -- --coverage",
-    "start:ga-debug":
-      "REACT_APP_GA_DEBUG=1 REACT_APP_VSN_STATE=$(../../scripts/get-tracking-version.js) react-app-rewired start",
+    "start:ga-debug": "REACT_APP_GA_DEBUG=1 REACT_APP_VSN_STATE=$(../../scripts/get-tracking-version.js) react-app-rewired start",
     "start": "react-app-rewired start",
     "test-dev": "react-app-rewired test --env=jsdom",
     "test": "CI=1 react-app-rewired test --env=jsdom --color"
