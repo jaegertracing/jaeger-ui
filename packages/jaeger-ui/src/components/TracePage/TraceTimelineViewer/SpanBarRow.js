@@ -15,10 +15,11 @@
 // limitations under the License.
 
 import * as React from 'react';
+import { TimelineRow } from '@jaegertracing/ui-kit';
+
 import IoAlert from 'react-icons/lib/io/alert';
 import IoArrowRightA from 'react-icons/lib/io/arrow-right-a';
 
-import TimelineRow from './TimelineRow';
 import SpanTreeOffset from './SpanTreeOffset';
 import SpanBar from './SpanBar';
 import Ticks from './Ticks';

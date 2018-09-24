@@ -1,0 +1,52 @@
+{
+  "name": "@jaegertracing/ui-kit",
+  "version": "0.0.1-dev.1",
+  "description": "UI-Kit for Jaeger-UI",
+  "main": "build/index.js",
+  "peerDependencies": {
+    "react": "^15.5.4"
+  },
+  "scripts": {
+    "test": "jest",
+    "start": "webpack --watch",
+    "build": "webpack"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.24.1",
+    "babel-core": "^6.24.1",
+    "babel-loader": "^7.0.0",
+    "babel-plugin-import": "^1.6.3",
+    "babel-plugin-transform-object-rest-spread": "^6.23.0",
+    "babel-plugin-transform-react-jsx": "^6.24.1",
+    "babel-preset-env": "^1.5.1",
+    "css-loader": "^1.0.0",
+    "enzyme": "^3.2.0",
+    "enzyme-adapter-react-16": "^1.1.0",
+    "enzyme-to-json": "^3.3.0",
+    "identity-obj-proxy": "^3.0.0",
+    "style-loader": "^0.23.0"
+  },
+  "dependencies": {
+    "antd": "^3.0.3",
+    "deep-freeze": "^0.0.1",
+    "jest": "^21.2.1",
+    "lodash": "^4.17.4",
+    "moment": "^2.18.1",
+    "prop-types": "^15.5.10",
+    "react": "^16.3.2",
+    "react-router-dom": "^4.1.2",
+    "recompose": "^0.25.0"
+  },
+  "jest": {
+    "setupTestFrameworkScriptFile": "./src/setupTests.js",
+    "collectCoverageFrom": ["src/**/*.js"],
+    "moduleNameMapper": {
+      "\\.(css|less)$": "identity-obj-proxy"
+    }
+  },
+  "author": "",
+  "homepage": "https://github.com/jaegertracing/jaeger-ui",
+  "license": "Apache-2.0",
+  "repository": "https://github.com/jaegertracing/jaeger-ui.git",
+  "keywords": ["react-component"]
+}
