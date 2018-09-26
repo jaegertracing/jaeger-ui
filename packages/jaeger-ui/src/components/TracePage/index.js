@@ -22,6 +22,7 @@ import _values from 'lodash/values';
 import { connect } from 'react-redux';
 import type { RouterHistory, Match } from 'react-router-dom';
 import { bindActionCreators } from 'redux';
+import { Input } from 'antd';
 
 import ArchiveNotifier from './ArchiveNotifier';
 import { actions as archiveActions } from './ArchiveNotifier/duck';
@@ -36,6 +37,7 @@ import TraceTimelineViewer from './TraceTimelineViewer';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
 import * as jaegerApiActions from '../../actions/jaeger-api';
+import { filterSpansForText } from '../../selectors/span';
 import { fetchedState } from '../../constants';
 import { getTraceName } from '../../model/trace-viewer';
 import prefixUrl from '../../utils/prefix-url';
@@ -61,7 +63,8 @@ type TracePageProps = {
 type TracePageState = {
   headerHeight: ?number,
   slimView: boolean,
-  textFilter: ?string,
+  textFilter: string,
+  findMatchesIDs: ?Set<string>,
   viewRange: ViewRange,
 };
 
@@ -99,6 +102,7 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
   state: TracePageState;
 
   _headerElm: ?Element;
+  _searchBar: { current: Input | null };
   _scrollManager: ScrollManager;
 
   constructor(props: TracePageProps) {
@@ -107,6 +111,7 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
       headerHeight: null,
       slimView: false,
       textFilter: '',
+      findMatchesIDs: null,
       viewRange: {
         time: {
           current: [0, 1],
@@ -119,6 +124,7 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
       scrollBy,
       scrollTo,
     });
+    this._searchBar = React.createRef();
     resetShortcuts();
   }
 
@@ -141,6 +147,8 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
     shortcutCallbacks.scrollPageUp = scrollPageUp;
     shortcutCallbacks.scrollToNextVisibleSpan = scrollToNextVisibleSpan;
     shortcutCallbacks.scrollToPrevVisibleSpan = scrollToPrevVisibleSpan;
+    shortcutCallbacks.clearSearch = this.clearSearch;
+    shortcutCallbacks.searchSpans = this.focusOnSearchBar;
     mergeShortcuts(shortcutCallbacks);
   }
 
@@ -160,6 +168,7 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
     }
     if (prevID !== id) {
       this.updateViewRangeTime(0, 1);
+      this.clearSearch();
     }
   }
 
@@ -204,9 +213,29 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
     }
   };
 
-  updateTextFilter = (textFilter: ?string) => {
+  updateTextFilter = (textFilter: string) => {
+    let findMatchesIDs;
+    if (textFilter.trim()) {
+      const { trace } = this.props;
+      const matches = filterSpansForText({
+        text: textFilter.trim(),
+        spans: trace && trace.data && trace.data.spans,
+      });
+      findMatchesIDs = new Set(matches.map(span => span.spanID));
+    } else {
+      findMatchesIDs = null;
+    }
     trackFilter(textFilter);
-    this.setState({ textFilter });
+    this.setState({ textFilter, findMatchesIDs });
+  };
+
+  clearSearch = () => {
+    this.updateTextFilter('');
+    if (this._searchBar.current) this._searchBar.current.blur();
+  };
+
+  focusOnSearchBar = () => {
+    if (this._searchBar.current) this._searchBar.current.focus();
   };
 
   updateViewRangeTime = (start: number, end: number, trackSrc?: string) => {
@@ -254,7 +283,7 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
 
   render() {
     const { archiveEnabled, archiveTraceState, trace } = this.props;
-    const { slimView, headerHeight, textFilter, viewRange } = this.state;
+    const { slimView, headerHeight, textFilter, viewRange, findMatchesIDs } = this.state;
     if (!trace || trace.state === fetchedState.LOADING) {
       return <LoadingIndicator className="u-mt-vast" centered />;
     }
@@ -282,9 +311,14 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
             traceID={traceID}
             onSlimViewClicked={this.toggleSlimView}
             textFilter={textFilter}
+            prevResult={this._scrollManager.scrollToPrevVisibleSpan}
+            nextResult={this._scrollManager.scrollToNextVisibleSpan}
+            clearSearch={this.clearSearch}
+            resultCount={findMatchesIDs ? findMatchesIDs.size : 0}
             updateTextFilter={this.updateTextFilter}
             archiveButtonVisible={archiveEnabled}
             onArchiveClicked={this.archiveTrace}
+            ref={this._searchBar}
           />
           {!slimView && (
             <SpanGraph
@@ -299,7 +333,7 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
           <section style={{ paddingTop: headerHeight }}>
             <TraceTimelineViewer
               registerAccessors={this._scrollManager.setAccessors}
-              textFilter={textFilter}
+              findMatchesIDs={findMatchesIDs}
               trace={data}
               updateNextViewRangeTime={this.updateNextViewRangeTime}
               updateViewRangeTime={this.updateViewRangeTime}

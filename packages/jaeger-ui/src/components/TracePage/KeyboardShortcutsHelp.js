@@ -53,6 +53,8 @@ const descriptions = {
   expandAll: 'Expand All',
   collapseOne: 'Collapse One Level',
   expandOne: 'Expand One Level',
+  searchSpans: 'Search Spans',
+  clearSearch: 'Clear Search',
 };
 
 function convertKeys(keyConfig: string | string[]): string[][] {

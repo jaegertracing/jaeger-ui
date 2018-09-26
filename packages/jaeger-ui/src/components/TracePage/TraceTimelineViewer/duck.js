@@ -14,7 +14,6 @@
 
 import { createActions, handleActions } from 'redux-actions';
 
-import getFilteredSpans from './get-filtered-spans';
 import DetailState from './SpanDetail/DetailState';
 import generateActionTypes from '../../../utils/generate-action-types';
 
@@ -31,7 +30,6 @@ import generateActionTypes from '../../../utils/generate-action-types';
 //   traceID: string,
 //   spanNameColumnWidth:
 //   childrenHiddenIDs: Set<spanID>,
-//   findMatches: ?Set<spanID>,
 //   detailStates: Map<spanID, DetailState>
 // }
 
@@ -41,7 +39,6 @@ export function newInitialState({ spanNameColumnWidth = null, traceID = null } =
     spanNameColumnWidth: spanNameColumnWidth || 0.25,
     childrenHiddenIDs: new Set(),
     detailStates: new Map(),
-    findMatchesIDs: null,
   };
 }
 
@@ -58,7 +55,6 @@ export const actionTypes = generateActionTypes('@jaeger-ui/trace-timeline-viewer
   'DETAIL_PROCESS_TOGGLE',
   'DETAIL_LOGS_TOGGLE',
   'DETAIL_LOG_ITEM_TOGGLE',
-  'FIND',
 ]);
 
 const fullActions = createActions({
@@ -74,7 +70,6 @@ const fullActions = createActions({
   [actionTypes.DETAIL_PROCESS_TOGGLE]: spanID => ({ spanID }),
   [actionTypes.DETAIL_LOGS_TOGGLE]: spanID => ({ spanID }),
   [actionTypes.DETAIL_LOG_ITEM_TOGGLE]: (spanID, logItem) => ({ logItem, spanID }),
-  [actionTypes.FIND]: (trace, searchText) => ({ searchText, trace }),
 });
 
 export const actions = fullActions.jaegerUi.traceTimelineViewer;
@@ -211,13 +206,6 @@ function detailLogItemToggle(state, { payload }) {
   return { ...state, detailStates };
 }
 
-function find(state, { payload }) {
-  const { searchText, trace } = payload;
-  const needle = searchText ? searchText.trim() : null;
-  const findMatchesIDs = needle ? getFilteredSpans(trace, needle) : null;
-  return { ...state, findMatchesIDs };
-}
-
 export default handleActions(
   {
     [actionTypes.SET_TRACE]: setTrace,
@@ -232,7 +220,6 @@ export default handleActions(
     [actionTypes.DETAIL_PROCESS_TOGGLE]: detailProcessToggle,
     [actionTypes.DETAIL_LOGS_TOGGLE]: detailLogsToggle,
     [actionTypes.DETAIL_LOG_ITEM_TOGGLE]: detailLogItemToggle,
-    [actionTypes.FIND]: find,
   },
   newInitialState()
 );

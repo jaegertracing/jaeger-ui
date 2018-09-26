@@ -21,9 +21,9 @@ import IoChevronRight from 'react-icons/lib/io/chevron-right';
 import IoIosFilingOutline from 'react-icons/lib/io/ios-filing-outline';
 import { Link } from 'react-router-dom';
 
-import * as markers from './TracePageHeader.markers';
-import { trackAltViewOpen } from './TracePageHeader.track';
 import KeyboardShortcutsHelp from './KeyboardShortcutsHelp';
+import { trackAltViewOpen } from './TracePageHeader.track';
+import TracePageSearchBar from './TracePageSearchBar';
 import LabeledList from '../common/LabeledList';
 import { FALLBACK_TRACE_NAME } from '../../constants';
 import { formatDatetime, formatDuration } from '../../utils/date';
@@ -37,7 +37,12 @@ type TracePageHeaderProps = {
   slimView: boolean,
   onSlimViewClicked: () => void,
   updateTextFilter: string => void,
-  textFilter: ?string,
+  textFilter: string,
+  prevResult: () => void,
+  nextResult: () => void,
+  clearSearch: () => void,
+  forwardedRef: { current: Input | null },
+  resultCount: number,
   archiveButtonVisible: boolean,
   onArchiveClicked: () => void,
   // these props are used by the `HEADER_ITEMS`
@@ -86,7 +91,7 @@ export const HEADER_ITEMS = [
   },
 ];
 
-export default function TracePageHeader(props: TracePageHeaderProps) {
+export function TracePageHeaderFn(props: TracePageHeaderProps) {
   const {
     archiveButtonVisible,
     onArchiveClicked,
@@ -101,6 +106,11 @@ export default function TracePageHeader(props: TracePageHeaderProps) {
     onSlimViewClicked,
     updateTextFilter,
     textFilter,
+    prevResult,
+    nextResult,
+    clearSearch,
+    resultCount,
+    forwardedRef,
   } = props;
 
   if (!traceID) {
@@ -170,15 +180,15 @@ export default function TracePageHeader(props: TracePageHeaderProps) {
           </h1>
         </a>
         <KeyboardShortcutsHelp className="ub-mr2" />
-        <div className="ub-mr2">
-          <Input
-            name="search"
-            placeholder="Search..."
-            onChange={event => updateTextFilter(event.target.value)}
-            defaultValue={textFilter}
-            data-test={markers.IN_TRACE_SEARCH}
-          />
-        </div>
+        <TracePageSearchBar
+          updateTextFilter={updateTextFilter}
+          textFilter={textFilter}
+          prevResult={prevResult}
+          nextResult={nextResult}
+          clearSearch={clearSearch}
+          resultCount={resultCount}
+          ref={forwardedRef}
+        />
         <Dropdown overlay={viewMenu}>
           <Button className="ub-mr2">
             View Options <Icon type="down" />
@@ -195,3 +205,7 @@ export default function TracePageHeader(props: TracePageHeaderProps) {
     </header>
   );
 }
+
+// ghetto fabulous cast because the 16.3 API is not in flow yet
+// https://github.com/facebook/flow/issues/6103
+export default (React: any).forwardRef((props, ref) => <TracePageHeaderFn {...props} forwardedRef={ref} />);

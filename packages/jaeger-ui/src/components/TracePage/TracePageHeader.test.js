@@ -13,11 +13,9 @@
 // limitations under the License.
 
 import React from 'react';
-import sinon from 'sinon';
 import { shallow, mount } from 'enzyme';
 
-import TracePageHeader, { HEADER_ITEMS } from './TracePageHeader';
-import * as markers from './TracePageHeader.markers';
+import { TracePageHeaderFn as TracePageHeader, HEADER_ITEMS } from './TracePageHeader';
 
 describe('<TracePageHeader>', () => {
   const defaultProps = {
@@ -52,17 +50,5 @@ describe('<TracePageHeader>', () => {
       expect(item.contains(HEADER_ITEMS[i].title)).toBeTruthy();
       expect(item.contains(HEADER_ITEMS[i].renderer(defaultProps.trace))).toBeTruthy();
     });
-  });
-
-  it('calls updateTextFilter() function for onChange of the input', () => {
-    const updateTextFilter = sinon.spy();
-    const props = { ...defaultProps, updateTextFilter };
-    wrapper = shallow(<TracePageHeader {...props} />);
-    const event = { target: { value: 'my new value' } };
-    wrapper
-      .find(`[data-test="${markers.IN_TRACE_SEARCH}"]`)
-      .first()
-      .simulate('change', event);
-    expect(updateTextFilter.calledWith('my new value')).toBeTruthy();
   });
 });
