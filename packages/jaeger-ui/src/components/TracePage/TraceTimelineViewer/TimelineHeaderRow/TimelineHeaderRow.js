@@ -15,12 +15,13 @@
 // limitations under the License.
 
 import * as React from 'react';
+import { TimelineRow } from '@jaegertracing/ui-kit';
 
 import TimelineCollapser from './TimelineCollapser';
 import TimelineColumnResizer from './TimelineColumnResizer';
 import TimelineViewingLayer from './TimelineViewingLayer';
 import Ticks from '../Ticks';
-import TimelineRow from '../TimelineRow';
+
 import type { ViewRangeTime, ViewRangeTimeUpdate } from '../../types';
 
 import './TimelineHeaderRow.css';

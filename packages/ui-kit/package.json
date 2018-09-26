@@ -1,0 +1,37 @@
+{
+  "name": "@jaegertracing/ui-kit",
+  "version": "0.0.1-dev.1",
+  "description": "ui-kit React component",
+  "main": "umd/@jaegertracing/ui-kit.js",
+  "files": [
+    "css",
+    "lib",
+    "umd"
+  ],
+  "scripts": {
+    "build": "nwb build-react-component --copy-files",
+    "clean": "nwb clean-module && nwb clean-demo",
+    "coverage": "echo 'NO TESTS YET'",
+    "prepublishOnly": "nwb build-react-component --no-demo",
+    "start": "nwb serve-react-demo",
+    "test": "echo 'NO TESTS YET'",
+    "test:dev": "nwb test-react --server"
+  },
+  "dependencies": {},
+  "peerDependencies": {
+    "react": "16.x"
+  },
+  "devDependencies": {
+    "nwb": "0.21.x",
+    "react": "^16.3.2",
+    "react-dom": "^16.3.2",
+    "worker-loader": "^1.1.1"
+  },
+  "author": "",
+  "homepage": "https://github.com/jaegertracing/jaeger-ui",
+  "license": "Apache-2.0",
+  "repository": "https://github.com/jaegertracing/jaeger-ui.git",
+  "keywords": [
+    "react-component"
+  ]
+}
