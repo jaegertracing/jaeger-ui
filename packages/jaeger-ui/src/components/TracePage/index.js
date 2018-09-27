@@ -37,6 +37,7 @@ import TraceTimelineViewer from './TraceTimelineViewer';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
 import * as jaegerApiActions from '../../actions/jaeger-api';
+import { filterSpansForText } from '../../selectors/span';
 import { fetchedState } from '../../constants';
 import { getTraceName } from '../../model/trace-viewer';
 import prefixUrl from '../../utils/prefix-url';
@@ -213,7 +214,7 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
     }
   };
 
-  filterSpans: string => ?Set<string> = (textFilter: string) => {
+  filterSpans: (string => ?Set<string>) = (textFilter: string) => {
     const spans = this.props.trace && this.props.trace.data && this.props.trace.data.spans;
     if (!spans) return null;
 
