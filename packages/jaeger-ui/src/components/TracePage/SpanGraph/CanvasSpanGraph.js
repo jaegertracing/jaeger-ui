@@ -16,7 +16,7 @@
 
 import * as React from 'react';
 
-import renderIntoCanvas, { CV_WIDTH } from './render-into-canvas';
+import renderIntoCanvas from './render-into-canvas';
 import colorGenerator from '../../../utils/color-generator';
 
 import './CanvasSpanGraph.css';
@@ -57,13 +57,6 @@ export default class CanvasSpanGraph extends React.PureComponent<CanvasSpanGraph
   }
 
   render() {
-    return (
-      <canvas
-        className="CanvasSpanGraph"
-        ref={this._setCanvasRef}
-        width={CV_WIDTH}
-        height={this.props.items.length}
-      />
-    );
+    return <canvas className="CanvasSpanGraph" ref={this._setCanvasRef} />;
   }
 }
