@@ -37,7 +37,6 @@ import TraceTimelineViewer from './TraceTimelineViewer';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
 import * as jaegerApiActions from '../../actions/jaeger-api';
-import { filterSpansForText } from '../../selectors/span';
 import { fetchedState } from '../../constants';
 import { getTraceName } from '../../model/trace-viewer';
 import prefixUrl from '../../utils/prefix-url';
