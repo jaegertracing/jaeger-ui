@@ -15,10 +15,12 @@
 // limitations under the License.
 
 // exported for tests
-export const CV_WIDTH = 4000;
-export const MIN_WIDTH = 16;
+export const BG_COLOR = '#f5f5f5';
+export const ITEM_ALPHA = 0.8;
+export const MIN_ITEM_HEIGHT = 2;
+export const MAX_TOTAL_HEIGHT = 200;
+export const MIN_ITEM_WIDTH = 10;
 export const MIN_TOTAL_HEIGHT = 60;
-export const ALPHA = 0.8;
 
 export default function renderIntoCanvas(
   canvas: HTMLCanvasElement,
@@ -26,42 +28,35 @@ export default function renderIntoCanvas(
   totalValueWidth: number,
   getFillColor: string => [number, number, number]
 ) {
-  // eslint-disable-next-line no-param-reassign
-  canvas.width = CV_WIDTH;
-  let itemHeight = 1;
-  let itemYChange = 1;
-  if (items.length < MIN_TOTAL_HEIGHT) {
-    // eslint-disable-next-line no-param-reassign
-    canvas.height = MIN_TOTAL_HEIGHT;
-    itemHeight = MIN_TOTAL_HEIGHT / items.length;
-    itemYChange = MIN_TOTAL_HEIGHT / items.length;
-  } else {
-    // eslint-disable-next-line no-param-reassign
-    canvas.height = items.length;
-    itemYChange = 1;
-    itemHeight = 1 / (MIN_TOTAL_HEIGHT / items.length);
-  }
-  const ctx = canvas.getContext('2d');
   const fillCache: Map<string, ?string> = new Map();
+  const cHeight =
+    items.length < MIN_TOTAL_HEIGHT ? MIN_TOTAL_HEIGHT : Math.min(items.length, MAX_TOTAL_HEIGHT);
+  const cWidth = window.innerWidth * 2;
+  // eslint-disable-next-line no-param-reassign
+  canvas.width = cWidth;
+  // eslint-disable-next-line no-param-reassign
+  canvas.height = cHeight;
+  const itemHeight = Math.max(MIN_ITEM_HEIGHT, cHeight / items.length);
+  const itemYChange = cHeight / items.length;
+
+  const ctx = canvas.getContext('2d', { alpha: false });
+  ctx.fillStyle = BG_COLOR;
+  ctx.fillRect(0, 0, cWidth, cHeight);
   for (let i = 0; i < items.length; i++) {
     const { valueWidth, valueOffset, serviceName } = items[i];
-    // eslint-disable-next-line no-bitwise
-    const x = (valueOffset / totalValueWidth * CV_WIDTH) | 0;
-    // eslint-disable-next-line no-bitwise
-    let width = (valueWidth / totalValueWidth * CV_WIDTH) | 0;
-    if (width < MIN_WIDTH) {
-      width = MIN_WIDTH;
+    const x = valueOffset / totalValueWidth * cWidth;
+    let width = valueWidth / totalValueWidth * cWidth;
+    if (width < MIN_ITEM_WIDTH) {
+      width = MIN_ITEM_WIDTH;
     }
     let fillStyle = fillCache.get(serviceName);
-    if (fillStyle) {
-      ctx.fillStyle = fillStyle;
-    } else {
+    if (!fillStyle) {
       fillStyle = `rgba(${getFillColor(serviceName)
-        .concat(ALPHA)
+        .concat(ITEM_ALPHA)
         .join()})`;
       fillCache.set(serviceName, fillStyle);
-      ctx.fillStyle = fillStyle;
     }
+    ctx.fillStyle = fillStyle;
     ctx.fillRect(x, i * itemYChange, width, itemHeight);
   }
 }
