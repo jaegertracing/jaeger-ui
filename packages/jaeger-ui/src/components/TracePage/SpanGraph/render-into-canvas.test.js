@@ -14,7 +14,24 @@
 
 import _range from 'lodash/range';
 
-import renderIntoCanvas, { ALPHA, CV_WIDTH, MIN_TOTAL_HEIGHT, MIN_WIDTH } from './render-into-canvas';
+import renderIntoCanvas, {
+  BG_COLOR,
+  ITEM_ALPHA,
+  MIN_ITEM_HEIGHT,
+  MAX_TOTAL_HEIGHT,
+  MIN_ITEM_WIDTH,
+  MIN_TOTAL_HEIGHT,
+} from './render-into-canvas';
+
+const getCanvasWidth = () => window.innerWidth * 2;
+const getBgFillRect = items => ({
+  fillStyle: BG_COLOR,
+  height:
+    !items || items.length < MIN_TOTAL_HEIGHT ? MIN_TOTAL_HEIGHT : Math.min(MAX_TOTAL_HEIGHT, items.length),
+  width: getCanvasWidth(),
+  x: 0,
+  y: 0,
+});
 
 describe('renderIntoCanvas()', () => {
   const basicItem = { valueWidth: 100, valueOffset: 50, serviceName: 'some-name' };
@@ -72,7 +89,7 @@ describe('renderIntoCanvas()', () => {
     const canvas = new Canvas();
     expect(canvas.width !== canvas.width).toBe(true);
     renderIntoCanvas(canvas, [basicItem], 150, getColorFactory());
-    expect(canvas.width).toBe(CV_WIDTH);
+    expect(canvas.width).toBe(getCanvasWidth());
   });
 
   describe('when there are limited number of items', () => {
@@ -81,6 +98,18 @@ describe('renderIntoCanvas()', () => {
       expect(canvas.height !== canvas.height).toBe(true);
       renderIntoCanvas(canvas, [basicItem], 150, getColorFactory());
       expect(canvas.height).toBe(MIN_TOTAL_HEIGHT);
+    });
+
+    it('draws the background', () => {
+      const expectedDrawing = [getBgFillRect()];
+      const canvas = new Canvas();
+      const items = [];
+      const totalValueWidth = 4000;
+      const getFillColor = getColorFactory();
+      renderIntoCanvas(canvas, items, totalValueWidth, getFillColor);
+      expect(canvas.getContext.mock.calls).toEqual([['2d', { alpha: false }]]);
+      expect(canvas.contexts.length).toBe(1);
+      expect(canvas.contexts[0].fillRectAccumulator).toEqual(expectedDrawing);
     });
 
     it('draws the map', () => {
@@ -95,19 +124,24 @@ describe('renderIntoCanvas()', () => {
         { input: items[1].serviceName, output: [1, 1, 1] },
         { input: items[2].serviceName, output: [2, 2, 2] },
       ];
-      const expectedDrawings = items.map((item, i) => {
-        const { valueWidth: width, valueOffset: x } = item;
-        const color = expectedColors[i].output;
-        const fillStyle = `rgba(${color.concat(ALPHA).join()})`;
-        const height = MIN_TOTAL_HEIGHT / items.length;
-        const y = height * i;
-        return { fillStyle, height, width, x, y };
-      });
+      const expectedDrawings = [
+        getBgFillRect(),
+        ...items.map((item, i) => {
+          const { valueWidth, valueOffset } = item;
+          const color = expectedColors[i].output;
+          const fillStyle = `rgba(${color.concat(ITEM_ALPHA).join()})`;
+          const height = MIN_TOTAL_HEIGHT / items.length;
+          const width = valueWidth / totalValueWidth * getCanvasWidth();
+          const x = valueOffset / totalValueWidth * getCanvasWidth();
+          const y = height * i;
+          return { fillStyle, height, width, x, y };
+        }),
+      ];
       const canvas = new Canvas();
       const getFillColor = getColorFactory();
       renderIntoCanvas(canvas, items, totalValueWidth, getFillColor);
       expect(getFillColor.inputOutput).toEqual(expectedColors);
-      expect(canvas.getContext.mock.calls).toEqual([['2d']]);
+      expect(canvas.getContext.mock.calls).toEqual([['2d', { alpha: false }]]);
       expect(canvas.contexts.length).toBe(1);
       expect(canvas.contexts[0].fillRectAccumulator).toEqual(expectedDrawings);
     });
@@ -132,25 +166,28 @@ describe('renderIntoCanvas()', () => {
         valueOffset: i,
         serviceName: `service-name-${i}`,
       }));
-      const itemHeight = 1 / (MIN_TOTAL_HEIGHT / items.length);
       const expectedColors = items.map((item, i) => ({
         input: item.serviceName,
         output: [i, i, i],
       }));
-      const expectedDrawings = items.map((item, i) => {
-        const { valueWidth, valueOffset: x } = item;
-        const width = Math.max(valueWidth, MIN_WIDTH);
-        const color = expectedColors[i].output;
-        const fillStyle = `rgba(${color.concat(ALPHA).join()})`;
-        const height = itemHeight;
-        const y = i;
-        return { fillStyle, height, width, x, y };
-      });
+      const expectedDrawings = [
+        getBgFillRect(items),
+        ...items.map((item, i) => {
+          const { valueWidth, valueOffset } = item;
+          const color = expectedColors[i].output;
+          const fillStyle = `rgba(${color.concat(ITEM_ALPHA).join()})`;
+          const height = MIN_ITEM_HEIGHT;
+          const width = Math.max(MIN_ITEM_WIDTH, valueWidth / totalValueWidth * getCanvasWidth());
+          const x = valueOffset / totalValueWidth * getCanvasWidth();
+          const y = MAX_TOTAL_HEIGHT / items.length * i;
+          return { fillStyle, height, width, x, y };
+        }),
+      ];
       const canvas = new Canvas();
       const getFillColor = getColorFactory();
       renderIntoCanvas(canvas, items, totalValueWidth, getFillColor);
       expect(getFillColor.inputOutput).toEqual(expectedColors);
-      expect(canvas.getContext.mock.calls).toEqual([['2d']]);
+      expect(canvas.getContext.mock.calls).toEqual([['2d', { alpha: false }]]);
       expect(canvas.contexts.length).toBe(1);
       expect(canvas.contexts[0].fillRectAccumulator).toEqual(expectedDrawings);
     });
