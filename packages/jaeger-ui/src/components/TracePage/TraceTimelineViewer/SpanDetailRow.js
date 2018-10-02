@@ -15,11 +15,11 @@
 // limitations under the License.
 
 import React from 'react';
+import { TimelineRow } from '@jaegertracing/ui-kit';
 
 import SpanDetail from './SpanDetail';
 import DetailState from './SpanDetail/DetailState';
 import SpanTreeOffset from './SpanTreeOffset';
-import TimelineRow from './TimelineRow';
 import type { Log, Span, KeyValuePair, Link } from '../../../types/trace';
 
 import './SpanDetailRow.css';
