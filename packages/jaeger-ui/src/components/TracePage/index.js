@@ -20,6 +20,7 @@ import _mapValues from 'lodash/mapValues';
 import _maxBy from 'lodash/maxBy';
 import _values from 'lodash/values';
 import { connect } from 'react-redux';
+import queryString from 'query-string';
 import type { RouterHistory, Match } from 'react-router-dom';
 import { bindActionCreators } from 'redux';
 import { Input } from 'antd';
@@ -32,6 +33,7 @@ import { cancel as cancelScroll, scrollBy, scrollTo } from './scroll-page';
 import ScrollManager from './ScrollManager';
 import SpanGraph from './SpanGraph';
 import TracePageHeader from './TracePageHeader';
+import TracePageHeaderEmbed from './TracePageHeaderEmbed';
 import { trackSlimHeaderToggle } from './TracePageHeader.track';
 import TraceTimelineViewer from './TraceTimelineViewer';
 import ErrorMessage from '../common/ErrorMessage';
@@ -40,6 +42,7 @@ import * as jaegerApiActions from '../../actions/jaeger-api';
 import { fetchedState } from '../../constants';
 import { getTraceName } from '../../model/trace-viewer';
 import prefixUrl from '../../utils/prefix-url';
+import { isEmbed } from '../../utils/embedded';
 
 import type { CombokeysHandler, ShortcutCallbacks } from './keyboard-shortcuts';
 import type { ViewRange, ViewRangeTimeUpdate } from './types';
@@ -56,8 +59,13 @@ type TracePageProps = {
   acknowledgeArchive: string => void,
   fetchTrace: string => void,
   history: RouterHistory,
+  searchParams: string,
   id: string,
   trace: ?FetchedTrace,
+  embed?: boolean,
+  enableDetails?: boolean,
+  mapCollapsed?: boolean,
+  fromSearch?: string,
 };
 
 type TracePageState = {
@@ -326,8 +334,21 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
     }
   }
 
+  goFullView = () => {
+    window.open(prefixUrl(`/trace/${this.props.id.toLowerCase()}`), '_blank');
+  };
+
   render() {
-    const { archiveEnabled, archiveTraceState, trace } = this.props;
+    const {
+      archiveEnabled,
+      archiveTraceState,
+      trace,
+      embed,
+      mapCollapsed,
+      enableDetails,
+      searchParams,
+      fromSearch,
+    } = this.props;
     const { slimView, headerHeight, textFilter, viewRange, findMatchesIDs } = this.state;
     if (!trace || trace.state === fetchedState.LOADING) {
       return <LoadingIndicator className="u-mt-vast" centered />;
@@ -339,33 +360,46 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
     const { duration, processes, spans, startTime, traceID } = data;
     const maxSpanDepth = _maxBy(spans, 'depth').depth + 1;
     const numberOfServices = new Set(_values(processes).map(p => p.serviceName)).size;
+    const tracePageProps = {
+      duration,
+      maxDepth: maxSpanDepth,
+      name: getTraceName(spans),
+      numServices: numberOfServices,
+      numSpans: spans.length,
+      slimView,
+      timestamp: startTime,
+      traceID,
+      onSlimViewClicked: this.toggleSlimView,
+      textFilter,
+      prevResult: this._scrollManager.scrollToPrevVisibleSpan,
+      nextResult: this._scrollManager.scrollToNextVisibleSpan,
+      clearSearch: this.clearSearch,
+      resultCount: findMatchesIDs ? findMatchesIDs.size : 0,
+      updateTextFilter: this.updateTextFilter,
+      archiveButtonVisible: archiveEnabled,
+      onArchiveClicked: this.archiveTrace,
+      ref: this._searchBar,
+    };
+
+    const tracePageEmbedProps = {
+      searchParams,
+      fromSearch,
+      enableDetails,
+      onGoFullViewClicked: this.goFullView,
+    };
+
     return (
       <div>
         {archiveEnabled && (
           <ArchiveNotifier acknowledge={this.acknowledgeArchive} archivedState={archiveTraceState} />
         )}
         <div className="Tracepage--headerSection" ref={this.setHeaderHeight}>
-          <TracePageHeader
-            duration={duration}
-            maxDepth={maxSpanDepth}
-            name={getTraceName(spans)}
-            numServices={numberOfServices}
-            numSpans={spans.length}
-            slimView={slimView}
-            timestamp={startTime}
-            traceID={traceID}
-            onSlimViewClicked={this.toggleSlimView}
-            textFilter={textFilter}
-            prevResult={this._scrollManager.scrollToPrevVisibleSpan}
-            nextResult={this._scrollManager.scrollToNextVisibleSpan}
-            clearSearch={this.clearSearch}
-            resultCount={findMatchesIDs ? findMatchesIDs.size : 0}
-            updateTextFilter={this.updateTextFilter}
-            archiveButtonVisible={archiveEnabled}
-            onArchiveClicked={this.archiveTrace}
-            ref={this._searchBar}
-          />
-          {!slimView && (
+          {embed ? (
+            <TracePageHeaderEmbed {...tracePageProps} {...tracePageEmbedProps} />
+          ) : (
+            <TracePageHeader {...tracePageProps} />
+          )}
+          {((!slimView && !embed) || (embed && !mapCollapsed)) && (
             <SpanGraph
               trace={data}
               viewRange={viewRange}
@@ -397,7 +431,17 @@ export function mapStateToProps(state: ReduxState, ownProps: { match: Match }) {
   const trace = id ? state.trace.traces[id] : null;
   const archiveTraceState = id ? state.archive[id] : null;
   const archiveEnabled = Boolean(state.config.archiveEnabled);
-  return { archiveEnabled, archiveTraceState, id, trace };
+  const { enableDetails, fromSearch, mapCollapsed } = queryString.parse(state.router.location.search);
+  return {
+    archiveEnabled,
+    archiveTraceState,
+    id,
+    trace,
+    embed: isEmbed(state.router.location.search),
+    enableDetails: enableDetails !== undefined,
+    mapCollapsed: mapCollapsed !== undefined,
+    fromSearch,
+  };
 }
 
 // export for tests

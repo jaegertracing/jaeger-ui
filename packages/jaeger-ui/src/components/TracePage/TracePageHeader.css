@@ -19,7 +19,15 @@ limitations under the License.
   display: flex;
 }
 
-.TracePageHeader--title {
+.TracePageHeader--titleRowEmbed {
+  align-items: center;
+  background-color: #ececec;
+  border-bottom: 1px solid #d8d8d8;
+  display: flex;
+}
+
+.TracePageHeader--title,
+.TracePageHeader--titleEmbed {
   margin: 0;
   padding: 0.25rem 0.5rem;
 }
