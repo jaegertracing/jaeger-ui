@@ -30,7 +30,7 @@
   },
   "dependencies": {
     "@jaegertracing/plexus": "0.0.1-dev.3",
-    "antd": "^3.0.3",
+    "antd": "3.8.0",
     "chance": "^1.0.10",
     "classnames": "^2.2.5",
     "combokeys": "^3.0.0",
