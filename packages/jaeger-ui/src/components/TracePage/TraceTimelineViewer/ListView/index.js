@@ -391,9 +391,10 @@ export default class ListView extends React.Component<ListViewProps> {
     const { dataLength, getKeyFromIndex, initialDraw, itemRenderer, viewBuffer, viewBufferMin } = this.props;
     const heightGetter = this._getHeight;
     const items = [];
-
     let start;
     let end;
+
+    this._yPositions.profileData(dataLength);
 
     if (!this._wrapperElm) {
       start = 0;
@@ -417,7 +418,6 @@ export default class ListView extends React.Component<ListViewProps> {
       }
     }
 
-    this._yPositions.profileData(dataLength);
     this._yPositions.calcHeights(end, heightGetter, start || -1);
     this._startIndexDrawn = start;
     this._endIndexDrawn = end;

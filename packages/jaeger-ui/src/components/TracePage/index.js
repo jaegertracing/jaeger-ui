@@ -213,7 +213,7 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
     }
   };
 
-  filterSpans: (string => ?Set<string>) = (textFilter: string) => {
+  filterSpans = (textFilter: string) => {
     const spans = this.props.trace && this.props.trace.data && this.props.trace.data.spans;
     if (!spans) return null;
 
@@ -258,7 +258,9 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
       span.logs.some(log => isTextInKeyValues(log.fields)) ||
       isTextInKeyValues(span.process.tags);
 
-    return new Set(spans.filter(isSpanAMatch).map((span: Span) => span.spanID));
+    // declare as const because need to disambiguate the type
+    const rv: Set<string> = new Set(spans.filter(isSpanAMatch).map((span: Span) => span.spanID));
+    return rv;
   };
 
   updateTextFilter = (textFilter: string) => {

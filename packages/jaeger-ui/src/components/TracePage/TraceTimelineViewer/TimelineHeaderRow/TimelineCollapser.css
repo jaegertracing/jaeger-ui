@@ -15,9 +15,14 @@ limitations under the License.
 */
 
 .TimelineCollapser {
-  float: right;
-  margin: 0 0.8rem 0 0;
-  display: inline-block;
+  align-items: center;
+  display: flex;
+  flex: none;
+  justify-content: center;
+}
+
+.TimelineCollapser--tooltipTitle {
+  white-space: pre;
 }
 
 .TimelineCollapser--btn,
