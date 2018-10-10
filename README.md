@@ -44,7 +44,7 @@ Make sure you have the Jaeger Query service running on http://localhost:16686. F
 If you don't have it running locally, then tunnel to the correct host and port.
 
 ```
-ssh -fN -L 16686:$BACKEND_HOST:$BACKEND_PORT $BACKEND_PORT
+ssh -fN -L 16686:$BACKEND_HOST:$BACKEND_PORT $BACKEND_HOST
 ```
 
 Start the development server with hot loading:
