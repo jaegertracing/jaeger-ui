@@ -29,7 +29,6 @@ type SpanDetailRowProps = {
   columnDivision: number,
   detailState: DetailState,
   onDetailToggled: string => void,
-  isFilteredOut: boolean,
   linksGetter: ?(Span, KeyValuePair[], number) => Link[],
   logItemToggle: (string, Log) => void,
   logsToggle: string => void,
@@ -56,7 +55,6 @@ export default class SpanDetailRow extends React.PureComponent<SpanDetailRowProp
       color,
       columnDivision,
       detailState,
-      isFilteredOut,
       logItemToggle,
       logsToggle,
       processToggle,
@@ -65,7 +63,7 @@ export default class SpanDetailRow extends React.PureComponent<SpanDetailRowProp
       traceStartTime,
     } = this.props;
     return (
-      <TimelineRow className={`detail-row ${isFilteredOut ? 'is-filtered-out' : ''}`}>
+      <TimelineRow className={`detail-row`}>
         <TimelineRow.Cell width={columnDivision}>
           <SpanTreeOffset level={span.depth + 1} />
           <span>
