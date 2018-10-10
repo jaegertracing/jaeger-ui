@@ -37,7 +37,6 @@ import TraceTimelineViewer from './TraceTimelineViewer';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
 import * as jaegerApiActions from '../../actions/jaeger-api';
-import { filterSpansForText } from '../../selectors/span';
 import { fetchedState } from '../../constants';
 import { getTraceName } from '../../model/trace-viewer';
 import prefixUrl from '../../utils/prefix-url';
@@ -45,6 +44,7 @@ import prefixUrl from '../../utils/prefix-url';
 import type { CombokeysHandler, ShortcutCallbacks } from './keyboard-shortcuts';
 import type { ViewRange, ViewRangeTimeUpdate } from './types';
 import type { FetchedTrace, ReduxState } from '../../types';
+import type { KeyValuePair, Span } from '../../types/trace';
 import type { TraceArchive } from '../../types/archive';
 
 import './index.css';
@@ -213,15 +213,58 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
     }
   };
 
+  filterSpans: (string => ?Set<string>) = (textFilter: string) => {
+    const spans = this.props.trace && this.props.trace.data && this.props.trace.data.spans;
+    if (!spans) return null;
+
+    // if a span field includes at least one filter in includeFilters, the span is a match
+    const includeFilters = [];
+
+    // values with keys that include text in any one of the excludeKeys will be ignored
+    const excludeKeys = [];
+
+    // split textFilter by whitespace, remove empty strings, and extract includeFilters and excludeKeys
+    textFilter
+      .split(' ')
+      .map(s => s.trim())
+      .filter(s => s)
+      .forEach(w => {
+        if (w[0] === '-') {
+          excludeKeys.push(w.substr(1).toLowerCase());
+        } else {
+          includeFilters.push(w.toLowerCase());
+        }
+      });
+
+    const isTextInFilters = (filters: Array<string>, text: string) =>
+      filters.some(filter => text.toLowerCase().includes(filter));
+
+    const isTextInKeyValues = (kvs: Array<KeyValuePair>) =>
+      kvs
+        ? kvs.some(kv => {
+            // ignore checking key and value for a match if key is in excludeKeys
+            if (isTextInFilters(excludeKeys, kv.key)) return false;
+            // match if key or value matches an item in includeFilters
+            return (
+              isTextInFilters(includeFilters, kv.key) || isTextInFilters(includeFilters, kv.value.toString())
+            );
+          })
+        : false;
+
+    const isSpanAMatch = (span: Span) =>
+      isTextInFilters(includeFilters, span.operationName) ||
+      isTextInFilters(includeFilters, span.process.serviceName) ||
+      isTextInKeyValues(span.tags) ||
+      span.logs.some(log => isTextInKeyValues(log.fields)) ||
+      isTextInKeyValues(span.process.tags);
+
+    return new Set(spans.filter(isSpanAMatch).map((span: Span) => span.spanID));
+  };
+
   updateTextFilter = (textFilter: string) => {
     let findMatchesIDs;
     if (textFilter.trim()) {
-      const { trace } = this.props;
-      const matches = filterSpansForText({
-        text: textFilter.trim(),
-        spans: trace && trace.data && trace.data.spans,
-      });
-      findMatchesIDs = new Set(matches.map(span => span.spanID));
+      findMatchesIDs = this.filterSpans(textFilter);
     } else {
       findMatchesIDs = null;
     }
