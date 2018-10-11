@@ -15,7 +15,6 @@
 // limitations under the License.
 
 import React from 'react';
-
 import { Tooltip, Icon } from 'antd';
 
 import './TimelineCollapser.css';
@@ -27,22 +26,38 @@ type CollapserProps = {
   onExpandAll: () => void,
 };
 
-export default function TimelineCollapser(props: CollapserProps) {
-  const { onExpandAll, onExpandOne, onCollapseAll, onCollapseOne } = props;
-  return (
-    <span className="TimelineCollapser">
-      <Tooltip title="Expand +1">
-        <Icon type="right" onClick={onExpandOne} className="TimelineCollapser--btn-expand" />
-      </Tooltip>
-      <Tooltip title="Collapse +1">
-        <Icon type="right" onClick={onCollapseOne} className="TimelineCollapser--btn" />
-      </Tooltip>
-      <Tooltip title="Expand All">
-        <Icon type="double-right" onClick={onExpandAll} className="TimelineCollapser--btn-expand" />
-      </Tooltip>
-      <Tooltip title="Collapse All">
-        <Icon type="double-right" onClick={onCollapseAll} className="TimelineCollapser--btn" />
-      </Tooltip>
-    </span>
-  );
+function getTitle(value: string) {
+  return <span className="TimelineCollapser--tooltipTitle">{value}</span>;
+}
+
+export default class TimelineCollapser extends React.PureComponent<CollapserProps> {
+  props: CollapserProps;
+  containerRef: { current: HTMLDivElement | null };
+
+  constructor(props: CollapserProps) {
+    super(props);
+    this.containerRef = React.createRef();
+  }
+
+  getContainer = () => this.containerRef.current;
+
+  render() {
+    const { onExpandAll, onExpandOne, onCollapseAll, onCollapseOne } = this.props;
+    return (
+      <div className="TimelineCollapser" ref={this.containerRef}>
+        <Tooltip title={getTitle('Expand +1')} getPopupContainer={this.getContainer}>
+          <Icon type="right" onClick={onExpandOne} className="TimelineCollapser--btn-expand" />
+        </Tooltip>
+        <Tooltip title={getTitle('Collapse +1')} getPopupContainer={this.getContainer}>
+          <Icon type="right" onClick={onCollapseOne} className="TimelineCollapser--btn" />
+        </Tooltip>
+        <Tooltip title={getTitle('Expand All')} getPopupContainer={this.getContainer}>
+          <Icon type="double-right" onClick={onExpandAll} className="TimelineCollapser--btn-expand" />
+        </Tooltip>
+        <Tooltip title={getTitle('Collapse All')} getPopupContainer={this.getContainer}>
+          <Icon type="double-right" onClick={onCollapseAll} className="TimelineCollapser--btn" />
+        </Tooltip>
+      </div>
+    );
+  }
 }

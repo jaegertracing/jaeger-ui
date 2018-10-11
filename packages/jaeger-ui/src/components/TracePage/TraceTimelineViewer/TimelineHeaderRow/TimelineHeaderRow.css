@@ -19,16 +19,15 @@ limitations under the License.
   border-bottom: 1px solid #d8d8d8;
   height: 38px;
   line-height: 38px;
-  overflow: hidden;
   position: fixed;
   width: 100%;
-  z-index: 2;
+  z-index: 4;
 }
 
 .TimelineHeaderRow--title {
-  display: inline-block;
+  flex: 1;
   overflow: hidden;
-  margin: 0 0 0 0.5rem;
+  margin: 0;
   text-overflow: ellipsis;
   white-space: nowrap;
 }

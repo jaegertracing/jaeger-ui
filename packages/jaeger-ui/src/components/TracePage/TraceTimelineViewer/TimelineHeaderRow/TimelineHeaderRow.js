@@ -56,7 +56,7 @@ export default function TimelineHeaderRow(props: TimelineHeaderRowProps) {
   const [viewStart, viewEnd] = viewRangeTime.current;
   return (
     <TimelineRow className="TimelineHeaderRow">
-      <TimelineRow.Cell width={nameColumnWidth}>
+      <TimelineRow.Cell className="ub-flex ub-px2" width={nameColumnWidth}>
         <h3 className="TimelineHeaderRow--title">Service &amp; Operation</h3>
         <TimelineCollapser
           onCollapseAll={onCollapseAll}
