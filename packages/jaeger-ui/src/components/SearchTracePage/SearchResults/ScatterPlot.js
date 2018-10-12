@@ -37,7 +37,7 @@ function ScatterPlotImpl(props) {
         height={200}
       >
         <XAxis title="Time" tickTotal={4} tickFormat={t => moment(t).format('hh:mm:ss a')} />
-        <YAxis title="Duration" tickTotal={3} tickFormat={t => formatDuration(t, 'milliseconds')} />
+        <YAxis title="Duration" tickTotal={3} tickFormat={t => formatDuration(t)} />
         <MarkSeries
           sizeRange={[3, 10]}
           opacity={0.5}

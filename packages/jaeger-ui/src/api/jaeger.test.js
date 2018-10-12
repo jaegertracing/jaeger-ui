@@ -28,7 +28,7 @@ import fetchMock from 'isomorphic-fetch';
 import traceGenerator from '../demo/trace-generators';
 import JaegerAPI, { getMessageFromError } from './jaeger';
 
-const generatedTraces = traceGenerator.traces({ traces: 5 });
+const generatedTraces = traceGenerator.traces({ numberOfTraces: 5 });
 
 it('fetchTrace() should fetch with the id', () => {
   fetchMock.mockClear();
