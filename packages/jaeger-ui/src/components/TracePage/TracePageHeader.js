@@ -15,7 +15,7 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Button, Dropdown, Icon, Input, Menu } from 'antd';
+import { Button, Dropdown, Input, Menu, Icon } from 'antd';
 import IoChevronDown from 'react-icons/lib/io/chevron-down';
 import IoChevronRight from 'react-icons/lib/io/chevron-right';
 import IoIosFilingOutline from 'react-icons/lib/io/ios-filing-outline';
@@ -35,7 +35,9 @@ type TracePageHeaderProps = {
   traceID: string,
   name: String,
   slimView: boolean,
+  traceGraphView: boolean,
   onSlimViewClicked: () => void,
+  onTraceGraphViewClicked: () => void,
   updateTextFilter: string => void,
   textFilter: string,
   prevResult: () => void,
@@ -103,7 +105,9 @@ export function TracePageHeaderFn(props: TracePageHeaderProps) {
     traceID,
     name,
     slimView,
+    traceGraphView,
     onSlimViewClicked,
+    onTraceGraphViewClicked,
     updateTextFilter,
     textFilter,
     prevResult,
@@ -119,6 +123,9 @@ export function TracePageHeaderFn(props: TracePageHeaderProps) {
 
   const viewMenu = (
     <Menu>
+      <Menu.Item>
+        <a onClick={onTraceGraphViewClicked}>{traceGraphView ? 'Trace Timeline' : 'Trace Graph'}</a>
+      </Menu.Item>
       <Menu.Item>
         <Link
           to={prefixUrl(`/api/traces/${traceID}?prettyPrint=true`)}
@@ -189,12 +196,12 @@ export function TracePageHeaderFn(props: TracePageHeaderProps) {
           resultCount={resultCount}
           ref={forwardedRef}
         />
+
         <Dropdown overlay={viewMenu}>
-          <Button className="ub-mr2">
-            View Options <Icon type="down" />
+          <Button className="ub-mr2" onClick={onTraceGraphViewClicked}>
+            {traceGraphView ? 'Trace Graph' : 'Trace Timeline'} <Icon type="down" />
           </Button>
         </Dropdown>
-
         {archiveButtonVisible && (
           <Button className="ub-mr2 ub-flex ub-items-center" onClick={onArchiveClicked}>
             <IoIosFilingOutline className="TracePageHeader--archiveIcon" />
