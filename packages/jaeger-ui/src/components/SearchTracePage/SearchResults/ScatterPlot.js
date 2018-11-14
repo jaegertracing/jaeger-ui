@@ -90,4 +90,6 @@ const ScatterPlot = compose(
   }))
 )(ScatterPlotImpl);
 
+export { ScatterPlotImpl };
+
 export default dimensions()(ScatterPlot);

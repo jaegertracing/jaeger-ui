@@ -13,9 +13,44 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { mount, shallow } from 'enzyme';
+import { XAxis, YAxis } from 'react-vis';
 
-import ScatterPlot from './ScatterPlot';
+import ScatterPlot, { ScatterPlotImpl } from './ScatterPlot';
+import { ONE_MILLISECOND } from '../../../utils/date';
+
+const generateTimestamp = (hours, minutes, seconds) => {
+  const UTCMilliseconds = new Date(2018, 10, 13, hours, minutes, seconds).getTime();
+
+  return UTCMilliseconds * ONE_MILLISECOND;
+};
+
+const sampleData = [
+  {
+    x: generateTimestamp(22, 10, 17),
+    y: 1,
+    traceID: '576b0c2330db100b',
+    size: 1,
+  },
+  {
+    x: generateTimestamp(22, 10, 22),
+    y: 2,
+    traceID: '6fb42ddd88f4b4f2',
+    size: 1,
+  },
+  {
+    x: generateTimestamp(22, 10, 46),
+    y: 77707,
+    traceID: '1f7185d56ef5dc07',
+    size: 3,
+  },
+  {
+    x: generateTimestamp(22, 11, 6),
+    y: 80509,
+    traceID: '21ba1f993ceddd8f',
+    size: 3,
+  },
+];
 
 it('<ScatterPlot /> should render base case correctly', () => {
   const wrapper = shallow(
@@ -30,4 +65,45 @@ it('<ScatterPlot /> should render base case correctly', () => {
     { disableLifecycleMethods: true }
   );
   expect(wrapper).toBeTruthy();
+});
+
+it('<ScatterPlotImpl /> should render X axis correctly', () => {
+  const wrapper = mount(
+    <ScatterPlotImpl
+      containerWidth={1200}
+      containerHeight={200}
+      data={sampleData}
+      onValueClick={() => null}
+      onValueOut={() => null}
+      onValueOver={() => null}
+    />
+  );
+
+  const xAxisText = wrapper.find(XAxis).text();
+
+  expect(xAxisText).toContain('10:10:20 pm');
+  expect(xAxisText).toContain('10:10:30 pm');
+  expect(xAxisText).toContain('10:10:40 pm');
+  expect(xAxisText).toContain('10:10:50 pm');
+  expect(xAxisText).toContain('10:11:00 pm');
+});
+
+it('<ScatterPlotImpl /> should render Y axis correctly', () => {
+  const wrapper = mount(
+    <ScatterPlotImpl
+      containerWidth={1200}
+      containerHeight={200}
+      data={sampleData}
+      onValueClick={() => null}
+      onValueOut={() => null}
+      onValueOver={() => null}
+    />
+  );
+
+  const yAxisText = wrapper.find(YAxis).text();
+
+  expect(yAxisText).toContain('20ms');
+  expect(yAxisText).toContain('40ms');
+  expect(yAxisText).toContain('60ms');
+  expect(yAxisText).toContain('80ms');
 });
