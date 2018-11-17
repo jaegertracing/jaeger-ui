@@ -56,10 +56,11 @@ function CustomNavDropdown({ label, items }: ConfigMenuGroup) {
   const menuItems = (
     <Menu>
       {items.map(item => {
-        const { label: itemLabel, url } = item;
-        return (
+        const { label: itemLabel, url, openInSameTab } = item;
+        const target = openInSameTab ? "_self" : "_blank";
+          return (
           <Menu.Item key={itemLabel}>
-            <a href={url} target="_blank" rel="noopener noreferrer">
+            <a href={url} target={target} rel="noopener noreferrer">
               {itemLabel}
             </a>
           </Menu.Item>
@@ -93,9 +94,10 @@ export function TopNavImpl(props: Props) {
             );
           }
           const item = ((m: any): ConfigMenuItem);
+          const target = item.openInSameTab ? "_self" : "_blank";
           return (
             <Menu.Item key={item.label}>
-              <a href={item.url} target="_blank" rel="noopener noreferrer">
+              <a href={item.url} target={target} rel="noopener noreferrer">
                 {item.label}
               </a>
             </Menu.Item>

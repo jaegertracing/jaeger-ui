@@ -30,6 +30,7 @@ describe('<TopNav>', () => {
     {
       label: 'Twitter',
       url: 'https://twitter.com/JaegerTracing',
+      openInSameTab: true,
     },
   ];
 
@@ -39,6 +40,7 @@ describe('<TopNav>', () => {
         {
           label: labelGitHub,
           url: githubUrl,
+          openInSameTab: true,
         },
         {
           label: labelAbout,
@@ -86,6 +88,12 @@ describe('<TopNav>', () => {
       expect(item.length).toBe(1);
       expect(item.prop('label')).toBe(labelAbout);
       expect(item.prop('items')).toBe(dropdownItems);
+    });
+
+    it('adds target=_self to top-level item', () => {
+        const item = wrapper.find(`[href="${githubUrl}"]`);
+        expect(item.length).toBe(1);
+        expect(item.find(`[target="_self"]`).length).toBe(1);
     });
   });
 });
