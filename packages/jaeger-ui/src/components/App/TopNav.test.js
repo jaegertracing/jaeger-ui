@@ -21,6 +21,7 @@ import { TopNavImpl as TopNav } from './TopNav';
 describe('<TopNav>', () => {
   const labelGitHub = 'GitHub';
   const githubUrl = 'https://github.com/uber/jaeger';
+  const blogUrl = 'https://medium.com/jaegertracing/';
   const labelAbout = 'About Jaeger';
   const dropdownItems = [
     {
@@ -41,6 +42,10 @@ describe('<TopNav>', () => {
           label: labelGitHub,
           url: githubUrl,
           openInSameTab: true,
+        },
+        {
+          label: 'Blog',
+          url: blogUrl,
         },
         {
           label: labelAbout,
@@ -94,6 +99,12 @@ describe('<TopNav>', () => {
         const item = wrapper.find(`[href="${githubUrl}"]`);
         expect(item.length).toBe(1);
         expect(item.find(`[target="_self"]`).length).toBe(1);
+    });
+
+    it('sets target=_blank by default', () => {
+        const item = wrapper.find(`[href="${blogUrl}"]`);
+        expect(item.length).toBe(1);
+        expect(item.find(`[target="_blank"]`).length).toBe(1);
     });
   });
 });
