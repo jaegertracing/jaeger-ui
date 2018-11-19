@@ -55,14 +55,11 @@ if (getConfigValue('dependencies.menuEnabled')) {
 function CustomNavDropdown({ label, items }: ConfigMenuGroup) {
   const menuItems = (
     <Menu>
-      {items.map(item => {
-        const { label: itemLabel, url, openInSameTab } = item;
-        const target = openInSameTab ? "_self" : "_blank";
+      {items.map(i => {
+        const item = ((i: any): ConfigMenuItem);
           return (
-          <Menu.Item key={itemLabel}>
-            <a href={url} target={target} rel="noopener noreferrer">
-              {itemLabel}
-            </a>
+          <Menu.Item key={item.label}>
+            {getItemLink(item)}
           </Menu.Item>
         );
       })}
@@ -94,12 +91,9 @@ export function TopNavImpl(props: Props) {
             );
           }
           const item = ((m: any): ConfigMenuItem);
-          const target = item.openInSameTab ? "_self" : "_blank";
           return (
             <Menu.Item key={item.label}>
-              <a href={item.url} target={target} rel="noopener noreferrer">
-                {item.label}
-              </a>
+              {getItemLink(item)}
             </Menu.Item>
           );
         })}
@@ -122,6 +116,15 @@ export function TopNavImpl(props: Props) {
         })}
       </Menu>
     </div>
+  );
+}
+
+function getItemLink(item: ConfigMenuItem) {
+  const target = item.openInSameTab ? "_self" : "_blank";
+  return (
+    <a href={item.url} target={target} rel="noopener noreferrer">
+      {item.label}
+    </a>
   );
 }
 
