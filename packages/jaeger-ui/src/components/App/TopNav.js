@@ -52,6 +52,15 @@ if (getConfigValue('dependencies.menuEnabled')) {
   });
 }
 
+function getItemLink(item: ConfigMenuItem) {
+  const target = item.openInSameTab ? "_self" : "_blank";
+  return (
+    <a href={item.url} target={target} rel="noopener noreferrer">
+      {item.label}
+    </a>
+  );
+}
+
 function CustomNavDropdown({ label, items }: ConfigMenuGroup) {
   const menuItems = (
     <Menu>
@@ -116,15 +125,6 @@ export function TopNavImpl(props: Props) {
         })}
       </Menu>
     </div>
-  );
-}
-
-function getItemLink(item: ConfigMenuItem) {
-  const target = item.openInSameTab ? "_self" : "_blank";
-  return (
-    <a href={item.url} target={target} rel="noopener noreferrer">
-      {item.label}
-    </a>
   );
 }
 
