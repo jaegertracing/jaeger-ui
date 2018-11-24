@@ -66,8 +66,7 @@ export class SearchTracePageImpl extends Component {
   };
 
   getSearchURL = () => {
-    const urlQuery = this.props.query;
-    delete urlQuery.embed;
+    const { embed: _, ...urlQuery } = this.props.query;
     return `/search?${queryString.stringify(urlQuery)}`;
   };
 
