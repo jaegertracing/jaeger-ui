@@ -15,27 +15,21 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Button, Dropdown, Icon, Input, Menu } from 'antd';
-import IoChevronDown from 'react-icons/lib/io/chevron-down';
-import IoChevronRight from 'react-icons/lib/io/chevron-right';
-import IoIosFilingOutline from 'react-icons/lib/io/ios-filing-outline';
-import { Link } from 'react-router-dom';
+import { Input, Button } from 'antd';
+import IoChevronLeft from 'react-icons/lib/io/chevron-left';
 
-import KeyboardShortcutsHelp from './KeyboardShortcutsHelp';
-import { trackAltViewOpen } from './TracePageHeader.track';
 import TracePageSearchBar from './TracePageSearchBar';
 import LabeledList from '../common/LabeledList';
 import { FALLBACK_TRACE_NAME } from '../../constants';
 import { formatDatetime, formatDuration } from '../../utils/date';
-import prefixUrl from '../../utils/prefix-url';
+import { VERSION_API } from '../../utils/embedded';
 
 import './TracePageHeader.css';
 
-type TracePageHeaderProps = {
+type TracePageHeaderEmbedProps = {
   traceID: string,
   name: String,
   slimView: boolean,
-  onSlimViewClicked: () => void,
   updateTextFilter: string => void,
   textFilter: string,
   prevResult: () => void,
@@ -43,8 +37,9 @@ type TracePageHeaderProps = {
   clearSearch: () => void,
   forwardedRef: { current: Input | null },
   resultCount: number,
-  archiveButtonVisible: boolean,
-  onArchiveClicked: () => void,
+  fromSearch: string,
+  onGoFullViewClicked: () => void,
+  enableDetails: boolean,
   // these props are used by the `HEADER_ITEMS`
   // eslint-disable-next-line react/no-unused-prop-types
   timestamp: number,
@@ -63,13 +58,13 @@ export const HEADER_ITEMS = [
     key: 'timestamp',
     title: 'Trace Start',
     propName: null,
-    renderer: (props: TracePageHeaderProps) => formatDatetime(props.timestamp),
+    renderer: (props: TracePageHeaderEmbedProps) => formatDatetime(props.timestamp),
   },
   {
     key: 'duration',
     title: 'Duration',
     propName: null,
-    renderer: (props: TracePageHeaderProps) => formatDuration(props.duration),
+    renderer: (props: TracePageHeaderEmbedProps) => formatDuration(props.duration),
   },
   {
     key: 'service-count',
@@ -91,10 +86,8 @@ export const HEADER_ITEMS = [
   },
 ];
 
-export function TracePageHeaderFn(props: TracePageHeaderProps) {
+export function TracePageHeaderEmbedFn(props: TracePageHeaderEmbedProps) {
   const {
-    archiveButtonVisible,
-    onArchiveClicked,
     duration,
     maxDepth,
     numSpans,
@@ -103,7 +96,7 @@ export function TracePageHeaderFn(props: TracePageHeaderProps) {
     traceID,
     name,
     slimView,
-    onSlimViewClicked,
+    onGoFullViewClicked,
     updateTextFilter,
     textFilter,
     prevResult,
@@ -111,36 +104,13 @@ export function TracePageHeaderFn(props: TracePageHeaderProps) {
     clearSearch,
     resultCount,
     forwardedRef,
+    enableDetails,
+    fromSearch,
   } = props;
 
   if (!traceID) {
     return null;
   }
-
-  const viewMenu = (
-    <Menu>
-      <Menu.Item>
-        <Link
-          to={prefixUrl(`/api/traces/${traceID}?prettyPrint=true`)}
-          rel="noopener noreferrer"
-          target="_blank"
-          onClick={trackAltViewOpen}
-        >
-          Trace JSON
-        </Link>
-      </Menu.Item>
-      <Menu.Item>
-        <Link
-          to={prefixUrl(`/api/traces/${traceID}?raw=true&prettyPrint=true`)}
-          rel="noopener noreferrer"
-          target="_blank"
-          onClick={trackAltViewOpen}
-        >
-          Trace JSON (unadjusted)
-        </Link>
-      </Menu.Item>
-    </Menu>
-  );
 
   const overviewItems = [
     {
@@ -172,14 +142,16 @@ export function TracePageHeaderFn(props: TracePageHeaderProps) {
 
   return (
     <header>
-      <div className="TracePageHeader--titleRow">
-        <a className="ub-flex-auto ub-mr2" onClick={onSlimViewClicked} role="switch" aria-checked={!slimView}>
-          <h1 className="TracePageHeader--title ub-flex ub-items-center">
-            {slimView ? <IoChevronRight className="ub-mr2" /> : <IoChevronDown className="ub-mr2" />}
-            {name || FALLBACK_TRACE_NAME}
-          </h1>
-        </a>
-        <KeyboardShortcutsHelp className="ub-mr2" />
+      <div className="TracePageHeader--titleRowEmbed">
+        {fromSearch !== undefined &&
+          fromSearch !== '' && (
+            <Button className="ub-mr2 ub-items-center" href={`${fromSearch}&embed=${VERSION_API}`}>
+              <IoChevronLeft className="ub-mr2" />Go back
+            </Button>
+          )}
+        <h1 className="TracePageHeader--titleEmbed ub-flex-auto ub-mr2 ub-items-center">
+          {name || FALLBACK_TRACE_NAME}
+        </h1>
         <TracePageSearchBar
           updateTextFilter={updateTextFilter}
           textFilter={textFilter}
@@ -189,24 +161,18 @@ export function TracePageHeaderFn(props: TracePageHeaderProps) {
           resultCount={resultCount}
           ref={forwardedRef}
         />
-        <Dropdown overlay={viewMenu}>
-          <Button className="ub-mr2">
-            View Options <Icon type="down" />
-          </Button>
-        </Dropdown>
-
-        {archiveButtonVisible && (
-          <Button className="ub-mr2 ub-flex ub-items-center" onClick={onArchiveClicked}>
-            <IoIosFilingOutline className="TracePageHeader--archiveIcon" />
-            Archive Trace
-          </Button>
-        )}
+        <Button className="ub-mr2 ub-items-center" icon="export" onClick={onGoFullViewClicked}>
+          View Trace
+        </Button>
       </div>
-      {!slimView && <LabeledList className="TracePageHeader--overviewItems" items={overviewItems} />}
+      {enableDetails &&
+        !slimView && <LabeledList className="TracePageHeader--overviewItems" items={overviewItems} />}
     </header>
   );
 }
 
 // ghetto fabulous cast because the 16.3 API is not in flow yet
 // https://github.com/facebook/flow/issues/6103
-export default (React: any).forwardRef((props, ref) => <TracePageHeaderFn {...props} forwardedRef={ref} />);
+export default (React: any).forwardRef((props, ref) => (
+  <TracePageHeaderEmbedFn {...props} forwardedRef={ref} />
+));

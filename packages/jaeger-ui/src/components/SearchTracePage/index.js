@@ -30,6 +30,7 @@ import { fetchedState } from '../../constants';
 import { sortTraces } from '../../model/search';
 import getLastXformCacher from '../../utils/get-last-xform-cacher';
 import prefixUrl from '../../utils/prefix-url';
+import { isEmbed } from '../../utils/embedded';
 
 import './index.css';
 import JaegerLogo from '../../img/jaeger-logo.svg';
@@ -60,7 +61,13 @@ export class SearchTracePageImpl extends Component {
   }
 
   goToTrace = traceID => {
-    this.props.history.push(prefixUrl(`/trace/${traceID}`));
+    const url = this.props.embed ? `/trace/${traceID}?embed` : `/trace/${traceID}`;
+    this.props.history.push(prefixUrl(url));
+  };
+
+  getSearchURL = () => {
+    const { embed: _, ...urlQuery } = this.props.query;
+    return `/search?${queryString.stringify(urlQuery)}`;
   };
 
   render() {
@@ -75,6 +82,8 @@ export class SearchTracePageImpl extends Component {
       maxTraceDuration,
       services,
       traceResults,
+      embed,
+      hideGraph,
     } = this.props;
     const hasTraceResults = traceResults && traceResults.length > 0;
     const showErrors = errors && !loadingTraces;
@@ -82,13 +91,15 @@ export class SearchTracePageImpl extends Component {
     return (
       <div>
         <Row>
-          <Col span={6} className="SearchTracePage--column">
-            <div className="SearchTracePage--find">
-              <h2>Find Traces</h2>
-              {!loadingServices && services ? <SearchForm services={services} /> : <LoadingIndicator />}
-            </div>
-          </Col>
-          <Col span={18} className="SearchTracePage--column">
+          {!embed && (
+            <Col span={6} className="SearchTracePage--column">
+              <div className="SearchTracePage--find">
+                <h2>Find Traces</h2>
+                {!loadingServices && services ? <SearchForm services={services} /> : <LoadingIndicator />}
+              </div>
+            </Col>
+          )}
+          <Col span={!embed ? 18 : 24} className="SearchTracePage--column">
             {showErrors && (
               <div className="js-test-error-message">
                 <h2>There was an error querying for traces:</h2>
@@ -104,17 +115,21 @@ export class SearchTracePageImpl extends Component {
                 cohortRemoveTrace={cohortRemoveTrace}
                 diffCohort={diffCohort}
                 skipMessage={isHomepage}
+                getSearchURL={this.getSearchURL}
                 traces={traceResults}
+                embed={embed}
+                hideGraph={hideGraph}
               />
             )}
-            {showLogo && (
-              <img
-                className="SearchTracePage--logo js-test-logo"
-                alt="presentation"
-                src={JaegerLogo}
-                width="400"
-              />
-            )}
+            {showLogo &&
+              !embed && (
+                <img
+                  className="SearchTracePage--logo js-test-logo"
+                  alt="presentation"
+                  src={JaegerLogo}
+                  width="400"
+                />
+              )}
           </Col>
         </Row>
       </div>
@@ -123,7 +138,10 @@ export class SearchTracePageImpl extends Component {
 }
 
 SearchTracePageImpl.propTypes = {
+  query: PropTypes.object,
   isHomepage: PropTypes.bool,
+  embed: PropTypes.bool,
+  hideGraph: PropTypes.bool,
   // eslint-disable-next-line react/forbid-prop-types
   traceResults: PropTypes.array,
   diffCohort: PropTypes.array,
@@ -196,6 +214,7 @@ const stateServicesXformer = getLastXformCacher(stateServices => {
 // export to test
 export function mapStateToProps(state) {
   const query = queryString.parse(state.router.location.search);
+  const { hideGraph } = queryString.parse(state.router.location.search);
   const isHomepage = !Object.keys(query).length;
   const { traces, maxDuration, traceError, loadingTraces } = stateTraceXformer(state.trace);
   const diffCohort = stateTraceDiffXformer(state.trace, state.traceDiff);
@@ -210,7 +229,10 @@ export function mapStateToProps(state) {
   const sortBy = sortFormSelector(state, 'sortBy');
   const traceResults = sortedTracesXformer(traces, sortBy);
   return {
+    query,
     diffCohort,
+    embed: isEmbed(state.router.location.search),
+    hideGraph: hideGraph !== undefined,
     isHomepage,
     loadingServices,
     loadingTraces,

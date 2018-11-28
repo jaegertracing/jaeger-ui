@@ -20,7 +20,7 @@ import Helmet from 'react-helmet';
 import { connect } from 'react-redux';
 import type { Location } from 'react-router-dom';
 import { withRouter } from 'react-router-dom';
-
+import { isEmbed } from '../../utils/embedded';
 import TopNav from './TopNav';
 import { trackPageView } from '../../utils/tracking';
 
@@ -56,10 +56,12 @@ export class PageImpl extends React.Component<Props> {
       <div>
         <Helmet title="Jaeger UI" />
         <Layout>
-          <Header className="Page--topNav">
-            <TopNav />
-          </Header>
-          <Content className="Page--content">{this.props.children}</Content>
+          {!isEmbed(this.props.search) && (
+            <Header className="Page--topNav">
+              <TopNav />
+            </Header>
+          )}
+          <Content className={!isEmbed(this.props.search) && 'Page--content'}>{this.props.children}</Content>
         </Layout>
       </div>
     );

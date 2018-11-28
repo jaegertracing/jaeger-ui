@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import queryString from 'query-string';
+
 jest.mock('redux-form', () => {
   function reduxForm() {
     return component => component;
@@ -48,6 +50,7 @@ describe('<SearchTracePage>', () => {
     traceResults = [{ traceID: 'a', spans: [], processes: {} }, { traceID: 'b', spans: [], processes: {} }];
     props = {
       traceResults,
+      embed: false,
       isHomepage: false,
       loadingServices: false,
       loadingTraces: false,
@@ -80,6 +83,12 @@ describe('<SearchTracePage>', () => {
     store.get = oldFn;
   });
 
+  it('return the searchpath if call getSearchURL', () => {
+    const query = "end=1542906238737000&limit=20&lookback=1h&maxDuration&minDuration&service=productpage&start=1542902638737000"
+    wrapper = mount(<SearchTracePage {...props} query={query}/>);
+    expect(wrapper.instance().getSearchURL()).toBe(`/search?${queryString.stringify(query)}`);
+  });
+
   it('shows a loading indicator if loading services', () => {
     wrapper.setProps({ loadingServices: true });
     expect(wrapper.find(LoadingIndicator).length).toBe(1);
@@ -99,6 +108,16 @@ describe('<SearchTracePage>', () => {
   it('shows the logo prior to searching', () => {
     wrapper.setProps({ isHomepage: true, traceResults: [] });
     expect(wrapper.find('.js-test-logo').length).toBe(1);
+  });
+
+  it('hide SearchForm if is embed', () => {
+    wrapper.setProps({ embed: true });
+    expect(wrapper.find(SearchForm).length).toBe(0);
+  });
+
+  it('hide logo if is embed', () => {
+    wrapper.setProps({ embed: true });
+    expect(wrapper.find('.js-test-logo').length).toBe(0);
   });
 });
 
@@ -140,6 +159,9 @@ describe('mapStateToProps()', () => {
     expect(diffCohort[0].data.traceID).toBe(trace.traceID);
 
     expect(rest).toEqual({
+      embed: false,
+      hideGraph: false,
+      query: {},
       isHomepage: true,
       // the redux-form `formValueSelector` mock returns `null` for "sortBy"
       sortTracesBy: null,

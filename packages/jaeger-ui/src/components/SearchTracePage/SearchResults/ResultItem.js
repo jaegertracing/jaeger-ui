@@ -36,6 +36,7 @@ type Props = {
   linkTo: string,
   toggleComparison: string => void,
   trace: Trace,
+  disableComparision: boolean,
 };
 
 const isErrorTag = ({ key, value }) => key === 'error' && (value === true || value === 'true');
@@ -44,7 +45,14 @@ export default class ResultItem extends React.PureComponent<Props> {
   props: Props;
 
   render() {
-    const { durationPercent, isInDiffCohort, linkTo, toggleComparison, trace } = this.props;
+    const {
+      disableComparision,
+      durationPercent,
+      isInDiffCohort,
+      linkTo,
+      toggleComparison,
+      trace,
+    } = this.props;
     const { duration, services, startTime, spans, traceName, traceID } = trace;
     const mDate = moment(startTime / 1000);
     const timeStr = mDate.format('h:mm:ss a');
@@ -61,6 +69,7 @@ export default class ResultItem extends React.PureComponent<Props> {
           toggleComparison={toggleComparison}
           traceID={traceID}
           traceName={traceName}
+          disableComparision={disableComparision}
         />
         <Link to={linkTo}>
           <Row>
