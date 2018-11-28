@@ -30,7 +30,7 @@ import { fetchedState } from '../../constants';
 import { sortTraces } from '../../model/search';
 import getLastXformCacher from '../../utils/get-last-xform-cacher';
 import prefixUrl from '../../utils/prefix-url';
-import { isEmbed } from '../../utils/embedded';
+import { isEmbed, VERSION_API } from '../../utils/embedded';
 
 import './index.css';
 import JaegerLogo from '../../img/jaeger-logo.svg';
@@ -61,7 +61,9 @@ export class SearchTracePageImpl extends Component {
   }
 
   goToTrace = traceID => {
-    const url = this.props.embed ? `/trace/${traceID}?embed` : `/trace/${traceID}`;
+    const url = this.props.embed
+      ? `/trace/${traceID}?embed=${VERSION_API}&fromSearch=${encodeURIComponent(this.getSearchURL())}`
+      : `/trace/${traceID}`;
     this.props.history.push(prefixUrl(url));
   };
 
