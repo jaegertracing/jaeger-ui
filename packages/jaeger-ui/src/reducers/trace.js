@@ -86,8 +86,10 @@ function fetchMultipleTracesErred(state, { meta, payload }) {
   return { ...state, traces };
 }
 
-function fetchSearchStarted(state) {
+function fetchSearchStarted(state, { meta }) {
+  const { query } = meta;
   const search = {
+    query,
     results: [],
     state: fetchedState.LOADING,
   };
@@ -105,12 +107,12 @@ function searchDone(state, { payload }) {
     results.push(id);
   }
   const traces = { ...state.traces, ...resultTraces };
-  const search = { results, state: fetchedState.DONE };
+  const search = { ...state.search, results, state: fetchedState.DONE };
   return { ...state, search, traces };
 }
 
 function searchErred(state, { payload }) {
-  const search = { error: payload, results: [], state: fetchedState.ERROR };
+  const search = { ...state.search, error: payload, results: [], state: fetchedState.ERROR };
   return { ...state, search };
 }
 

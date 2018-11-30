@@ -13,7 +13,6 @@
 // limitations under the License.
 
 /* eslint-disable import/first */
-import prefixUrl from '../../utils/prefix-url';
 
 jest.mock('./index.track');
 jest.mock('./keyboard-shortcuts');
@@ -153,21 +152,38 @@ describe('<TracePage>', () => {
     expect(cancelScroll.mock.calls).toEqual([[]]);
   });
 
-  it('no render TracePageHeader if queryparam embed', () => {
-    wrapper.setProps({ embed: true });
-    expect(wrapper.find(TracePageHeader).length).toBe(0);
-  });
+  describe('embed mode', () => {
+    let embedded;
+    beforeEach(() => {
+      embedded = {
+        timeline: {
+          showMap: false,
+          showDetails: false,
+        },
+      };
+      wrapper.setProps({ embedded });
+    });
 
-  it('collapse map if queryparam mapCollapsed', () => {
-    wrapper.setProps({ mapCollapsed: true, embed: true });
-    expect(wrapper.find(SpanGraph).length).toBe(0);
-  });
+    it('no render TracePageHeader if queryparam embed', () => {
+      expect(wrapper.find(TracePageHeader).length).toBe(0);
+    });
 
-  it('open a window when goFullView is called', () => {
-    wrapper.setProps({ id: '12345' });
-    global.open = jest.fn();
-    wrapper.instance().goFullView();
-    expect(global.open).toBeCalledWith(prefixUrl('/trace/12345'), '_blank');
+    it('collapses the minimap by default', () => {
+      expect(wrapper.find(SpanGraph).length).toBe(0);
+    });
+
+    it('shows the minimap when the embed parameter is true', () => {
+      wrapper.setProps({
+        embedded: { timeline: { showMap: true, showDetails: false } },
+      });
+      expect(wrapper.find(SpanGraph).length).toBe(1);
+    });
+
+    it('open a window when goFullView is called', () => {
+      wrapper.setProps({ id: '12345' });
+      const hasLinkOut = wrapper.find({ linkToStandalone: '/trace/12345' }).length > 0;
+      expect(hasLinkOut).toBe(true);
+    });
   });
 
   describe('_adjustViewRange()', () => {
@@ -369,10 +385,18 @@ describe('mapDispatchToProps()', () => {
 });
 
 describe('mapStateToProps()', () => {
-  it('maps state to props correctly', () => {
-    const id = 'abc';
-    const trace = {};
-    const state = {
+  const id = 'abc';
+  const trace = {};
+  const embedded = Math.random();
+  const ownProps = {
+    match: {
+      params: { id },
+    },
+  };
+  let state;
+  beforeEach(() => {
+    state = {
+      embedded,
       trace: {
         traces: {
           [id]: { data: trace, state: fetchedState.DONE },
@@ -388,56 +412,27 @@ describe('mapStateToProps()', () => {
       },
       archive: {},
     };
-    const ownProps = {
-      match: {
-        params: { id },
-      },
-    };
+  });
+  it('maps state to props correctly', () => {
     const props = mapStateToProps(state, ownProps);
     expect(props).toEqual({
       id,
+      embedded,
       archiveEnabled: false,
-      embed: false,
-      enableDetails: false,
-      fromSearch: undefined,
-      mapCollapsed: false,
+      fromSearch: false,
       archiveTraceState: undefined,
       trace: { data: {}, state: fetchedState.DONE },
     });
   });
 
-  it('maps state to props correctly with query embed', () => {
-    const id = 'abc';
-    const trace = {};
-    const state = {
-      trace: {
-        traces: {
-          [id]: { data: trace, state: fetchedState.DONE },
-        },
-      },
-      router: {
-        location: {
-          search: 'embed=v0&enableDetails&mapCollapsed&fromSearch=%2Fsearch%3Fend%3D1542902040794000%26limit%3D20%26lookback%3D1h%26maxDuration%26minDuration%26service%3Dproductpage%26start%3D1542898440794000',
-        },
-      },
-      config: {
-        archiveEnabled: false,
-      },
-      archive: {},
-    };
-    const ownProps = {
-      match: {
-        params: { id },
-      },
-    };
+  it('propagates fromSearch correctly', () => {
+    state.router.location.state = { fromSearch: true };
     const props = mapStateToProps(state, ownProps);
     expect(props).toEqual({
       id,
+      embedded,
       archiveEnabled: false,
-      embed: true,
-      enableDetails: true,
-      fromSearch: '/search?end=1542902040794000&limit=20&lookback=1h&maxDuration&minDuration&service=productpage&start=1542898440794000',
-      mapCollapsed: true,
+      fromSearch: true,
       archiveTraceState: undefined,
       trace: { data: {}, state: fetchedState.DONE },
     });

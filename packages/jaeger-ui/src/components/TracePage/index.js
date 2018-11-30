@@ -15,15 +15,15 @@
 // limitations under the License.
 
 import * as React from 'react';
+import { Input } from 'antd';
 import _clamp from 'lodash/clamp';
 import _mapValues from 'lodash/mapValues';
 import _maxBy from 'lodash/maxBy';
 import _values from 'lodash/values';
 import { connect } from 'react-redux';
-import queryString from 'query-string';
-import type { RouterHistory, Match } from 'react-router-dom';
 import { bindActionCreators } from 'redux';
-import { Input } from 'antd';
+
+import type { Location, Match, RouterHistory } from 'react-router-dom';
 
 import ArchiveNotifier from './ArchiveNotifier';
 import { actions as archiveActions } from './ArchiveNotifier/duck';
@@ -33,39 +33,37 @@ import { cancel as cancelScroll, scrollBy, scrollTo } from './scroll-page';
 import ScrollManager from './ScrollManager';
 import SpanGraph from './SpanGraph';
 import TracePageHeader from './TracePageHeader';
-import TracePageHeaderEmbed from './TracePageHeaderEmbed';
 import { trackSlimHeaderToggle } from './TracePageHeader.track';
+import TracePageHeaderEmbed from './TracePageHeaderEmbed';
 import TraceTimelineViewer from './TraceTimelineViewer';
+import { getLocation, getUrl } from './url';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import { fetchedState } from '../../constants';
 import { getTraceName } from '../../model/trace-viewer';
-import prefixUrl from '../../utils/prefix-url';
-import { isEmbed } from '../../utils/embedded';
 
 import type { CombokeysHandler, ShortcutCallbacks } from './keyboard-shortcuts';
 import type { ViewRange, ViewRangeTimeUpdate } from './types';
 import type { FetchedTrace, ReduxState } from '../../types';
-import type { KeyValuePair, Span } from '../../types/trace';
 import type { TraceArchive } from '../../types/archive';
+import type { EmbeddedState } from '../../types/embedded';
+import type { KeyValuePair, Span } from '../../types/trace';
 
 import './index.css';
 
 type TracePageProps = {
-  archiveEnabled: boolean,
-  archiveTraceState: ?TraceArchive,
-  archiveTrace: string => void,
   acknowledgeArchive: string => void,
+  archiveEnabled: boolean,
+  archiveTrace: string => void,
+  archiveTraceState: ?TraceArchive,
+  embedded: null | EmbeddedState,
   fetchTrace: string => void,
+  fromSearch: boolean,
   history: RouterHistory,
-  searchParams: string,
   id: string,
+  location: Location,
   trace: ?FetchedTrace,
-  embed?: boolean,
-  enableDetails?: boolean,
-  mapCollapsed?: boolean,
-  fromSearch?: string,
 };
 
 type TracePageState = {
@@ -323,32 +321,19 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
   };
 
   ensureTraceFetched() {
-    const { fetchTrace, trace, id } = this.props;
+    const { fetchTrace, location, trace, id } = this.props;
     if (!trace) {
       fetchTrace(id);
       return;
     }
     const { history } = this.props;
     if (id && id !== id.toLowerCase()) {
-      history.push(prefixUrl(`/trace/${id.toLowerCase()}`));
+      history.replace(getLocation(id.toLowerCase(), location.state));
     }
   }
 
-  goFullView = () => {
-    window.open(prefixUrl(`/trace/${this.props.id.toLowerCase()}`), '_blank');
-  };
-
   render() {
-    const {
-      archiveEnabled,
-      archiveTraceState,
-      trace,
-      embed,
-      mapCollapsed,
-      enableDetails,
-      searchParams,
-      fromSearch,
-    } = this.props;
+    const { archiveEnabled, archiveTraceState, embedded, fromSearch, id, trace } = this.props;
     const { slimView, headerHeight, textFilter, viewRange, findMatchesIDs } = this.state;
     if (!trace || trace.state === fetchedState.LOADING) {
       return <LoadingIndicator className="u-mt-vast" centered />;
@@ -360,7 +345,7 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
     const { duration, processes, spans, startTime, traceID } = data;
     const maxSpanDepth = _maxBy(spans, 'depth').depth + 1;
     const numberOfServices = new Set(_values(processes).map(p => p.serviceName)).size;
-    const tracePageProps = {
+    const headerProps = {
       duration,
       maxDepth: maxSpanDepth,
       name: getTraceName(spans),
@@ -381,12 +366,13 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
       ref: this._searchBar,
     };
 
-    const tracePageEmbedProps = {
-      searchParams,
+    const headerEmbeddedProps = {
       fromSearch,
-      enableDetails,
-      onGoFullViewClicked: this.goFullView,
+      showDetails: embedded && embedded.timeline.showDetails,
+      linkToStandalone: getUrl(id),
     };
+
+    const showMap = embedded ? embedded.timeline.showMap : !slimView;
 
     return (
       <div>
@@ -394,12 +380,12 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
           <ArchiveNotifier acknowledge={this.acknowledgeArchive} archivedState={archiveTraceState} />
         )}
         <div className="Tracepage--headerSection" ref={this.setHeaderHeight}>
-          {embed ? (
-            <TracePageHeaderEmbed {...tracePageProps} {...tracePageEmbedProps} />
+          {embedded ? (
+            <TracePageHeaderEmbed {...headerProps} {...headerEmbeddedProps} />
           ) : (
-            <TracePageHeader {...tracePageProps} />
+            <TracePageHeader {...headerProps} />
           )}
-          {((!slimView && !embed) || (embed && !mapCollapsed)) && (
+          {showMap && (
             <SpanGraph
               trace={data}
               viewRange={viewRange}
@@ -428,18 +414,18 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
 // export for tests
 export function mapStateToProps(state: ReduxState, ownProps: { match: Match }) {
   const { id } = ownProps.match.params;
+  const { archive, config, embedded, router } = state;
   const trace = id ? state.trace.traces[id] : null;
-  const archiveTraceState = id ? state.archive[id] : null;
-  const archiveEnabled = Boolean(state.config.archiveEnabled);
-  const { enableDetails, fromSearch, mapCollapsed } = queryString.parse(state.router.location.search);
+  const archiveTraceState = id ? archive[id] : null;
+  const archiveEnabled = Boolean(config.archiveEnabled);
+  const { state: locationState } = router.location;
+  const fromSearch = Boolean(locationState && locationState.fromSearch);
   return {
     archiveEnabled,
     archiveTraceState,
+    embedded,
     id,
     trace,
-    embed: isEmbed(state.router.location.search),
-    enableDetails: enableDetails !== undefined,
-    mapCollapsed: mapCollapsed !== undefined,
     fromSearch,
   };
 }

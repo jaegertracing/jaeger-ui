@@ -14,17 +14,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import prefixUrl from '../../utils/prefix-url';
+type EmbeddedStateV0 = {
+  version: 'v0',
+  searchHideGraph: boolean,
+  timeline: {
+    showMap: boolean,
+    showDetails: boolean,
+  },
+};
 
-export const ROUTE_PATH = prefixUrl('/trace/:id');
-
-export function getUrl(id: string) {
-  return prefixUrl(`/trace/${id}`);
-}
-
-export function getLocation(id: string, state: ?Object) {
-  return {
-    state,
-    pathname: prefixUrl(`/trace/${id}`),
-  };
-}
+export type EmbeddedState = EmbeddedStateV0;

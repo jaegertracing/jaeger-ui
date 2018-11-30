@@ -54,8 +54,8 @@ describe('<SearchResults>', () => {
     expect(wrapper.find(ScatterPlot).length).toBe(0);
   });
 
-  it('hide DiffSelection if is an embedded component', () => {
-    wrapper.setProps({ embed: true, getSearchURL: () => 'SEARCH_URL' });
+  it('hide DiffSelection when disableComparisions = true', () => {
+    wrapper.setProps({ disableComparisions: true });
     expect(wrapper.find(DiffSelection).length).toBe(0);
   });
 

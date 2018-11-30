@@ -53,9 +53,8 @@ describe('<TracePageHeaderEmbed>', () => {
     });
   });
 
-  it('show details if queryparam enableDetails', () => {
-    wrapper.setProps({ enableDetails: true });
+  it('show details if showDetails is true', () => {
+    wrapper.setProps({ showDetails: true });
     expect(wrapper.find(LabeledList).length).toBe(1);
   });
-
 });

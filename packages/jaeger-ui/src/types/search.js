@@ -14,6 +14,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+export type SearchQuery = {
+  end: number,
+  limit: number,
+  lookback: string,
+  maxDuration: null | string,
+  minDuration: null | string,
+  operation: ?string,
+  service: string,
+  start: number,
+  tags: ?string,
+};
+
 /**
  * Type used to summarize traces for the search page.
  */

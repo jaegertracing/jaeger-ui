@@ -15,21 +15,22 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Input, Button } from 'antd';
+import { Input } from 'antd';
 import IoChevronLeft from 'react-icons/lib/io/chevron-left';
+import { Link } from 'react-router-dom';
 
 import TracePageSearchBar from './TracePageSearchBar';
 import LabeledList from '../common/LabeledList';
+import NewWindowIcon from '../common/NewWindowIcon';
+import { getUrl as getSearchUrl } from '../SearchTracePage/url';
 import { FALLBACK_TRACE_NAME } from '../../constants';
 import { formatDatetime, formatDuration } from '../../utils/date';
-import { VERSION_API } from '../../utils/embedded';
 
 import './TracePageHeader.css';
 
 type TracePageHeaderEmbedProps = {
   traceID: string,
   name: String,
-  slimView: boolean,
   updateTextFilter: string => void,
   textFilter: string,
   prevResult: () => void,
@@ -37,9 +38,9 @@ type TracePageHeaderEmbedProps = {
   clearSearch: () => void,
   forwardedRef: { current: Input | null },
   resultCount: number,
-  fromSearch: string,
-  onGoFullViewClicked: () => void,
-  enableDetails: boolean,
+  fromSearch: boolean,
+  linkToStandalone: string,
+  showDetails: boolean,
   // these props are used by the `HEADER_ITEMS`
   // eslint-disable-next-line react/no-unused-prop-types
   timestamp: number,
@@ -88,24 +89,23 @@ export const HEADER_ITEMS = [
 
 export function TracePageHeaderEmbedFn(props: TracePageHeaderEmbedProps) {
   const {
-    duration,
-    maxDepth,
-    numSpans,
-    timestamp,
-    numServices,
-    traceID,
-    name,
-    slimView,
-    onGoFullViewClicked,
-    updateTextFilter,
-    textFilter,
-    prevResult,
-    nextResult,
     clearSearch,
-    resultCount,
+    duration,
     forwardedRef,
-    enableDetails,
     fromSearch,
+    linkToStandalone,
+    maxDepth,
+    name,
+    nextResult,
+    numServices,
+    numSpans,
+    prevResult,
+    resultCount,
+    showDetails,
+    textFilter,
+    timestamp,
+    traceID,
+    updateTextFilter,
   } = props;
 
   if (!traceID) {
@@ -143,12 +143,12 @@ export function TracePageHeaderEmbedFn(props: TracePageHeaderEmbedProps) {
   return (
     <header>
       <div className="TracePageHeader--titleRowEmbed">
-        {fromSearch !== undefined &&
-          fromSearch !== '' && (
-            <Button className="ub-mr2 ub-items-center" href={`${fromSearch}&embed=${VERSION_API}`}>
-              <IoChevronLeft className="ub-mr2" />Go back
-            </Button>
-          )}
+        {fromSearch && (
+          <Link className="u-tx-inherit ub-nowrap ub-mx3" to={getSearchUrl()}>
+            <IoChevronLeft className="ub-mr2" />
+            Go back
+          </Link>
+        )}
         <h1 className="TracePageHeader--titleEmbed ub-flex-auto ub-mr2 ub-items-center">
           {name || FALLBACK_TRACE_NAME}
         </h1>
@@ -161,12 +161,16 @@ export function TracePageHeaderEmbedFn(props: TracePageHeaderEmbedProps) {
           resultCount={resultCount}
           ref={forwardedRef}
         />
-        <Button className="ub-mr2 ub-items-center" icon="export" onClick={onGoFullViewClicked}>
-          View Trace
-        </Button>
+        <Link
+          className="u-tx-inherit ub-nowrap ub-mr2 ub-ml2"
+          to={linkToStandalone}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <NewWindowIcon />
+        </Link>
       </div>
-      {enableDetails &&
-        !slimView && <LabeledList className="TracePageHeader--overviewItems" items={overviewItems} />}
+      {showDetails && <LabeledList className="TracePageHeader--overviewItems" items={overviewItems} />}
     </header>
   );
 }

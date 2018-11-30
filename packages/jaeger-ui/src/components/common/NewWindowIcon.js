@@ -14,17 +14,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import prefixUrl from '../../utils/prefix-url';
+import React from 'react';
+import IoAndroidOpen from 'react-icons/lib/io/android-open';
 
-export const ROUTE_PATH = prefixUrl('/trace/:id');
+import './NewWindowIcon.css';
 
-export function getUrl(id: string) {
-  return prefixUrl(`/trace/${id}`);
+type Props = {
+  className?: string,
+};
+
+export default function NewWindowIcon(props: Props) {
+  const { className, ...rest } = props;
+  const cls = `NewWindowIcon ${className || ''}`;
+  return <IoAndroidOpen className={cls} {...rest} />;
 }
 
-export function getLocation(id: string, state: ?Object) {
-  return {
-    state,
-    pathname: prefixUrl(`/trace/${id}`),
-  };
-}
+NewWindowIcon.defaultProps = {
+  className: undefined,
+};

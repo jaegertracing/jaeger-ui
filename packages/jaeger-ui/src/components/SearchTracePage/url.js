@@ -28,6 +28,6 @@ export function matches(path: string) {
 }
 
 export function getUrl(query?: ?Object) {
-  const search = query ? queryString.stringify(query) : '';
-  return prefixUrl(`/search?${search}`);
+  const search = query ? `?${queryString.stringify(query)}` : '';
+  return prefixUrl(`/search${search}`);
 }
