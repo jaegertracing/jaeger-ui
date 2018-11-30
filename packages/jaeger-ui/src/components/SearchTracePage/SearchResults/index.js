@@ -128,7 +128,7 @@ export default class SearchResults extends React.PureComponent<SearchResultsProp
       <div>
         <div>
           <div className="SearchResults--header">
-            {!hideGraph && (
+            {(!embed || !hideGraph) && (
               <div className="ub-p3">
                 <ScatterPlot
                   data={traces.map(t => ({
