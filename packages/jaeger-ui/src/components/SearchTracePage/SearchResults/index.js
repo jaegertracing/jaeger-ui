@@ -15,7 +15,7 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Select } from 'antd';
+import { Select, Button } from 'antd';
 import { Field, reduxForm, formValueSelector } from 'redux-form';
 
 import DiffSelection from './DiffSelection';
@@ -27,6 +27,7 @@ import * as orderBy from '../../../model/order-by';
 import { getPercentageOfDuration } from '../../../utils/date';
 import prefixUrl from '../../../utils/prefix-url';
 import reduxFormFieldAdapter from '../../../utils/redux-form-field-adapter';
+import { VERSION_API } from '../../../utils/embedded';
 
 import type { FetchedTrace } from '../../../types';
 
@@ -37,7 +38,10 @@ type SearchResultsProps = {
   cohortRemoveTrace: string => void,
   diffCohort: FetchedTrace[],
   goToTrace: string => void,
+  embed?: boolean,
+  hideGraph?: boolean,
   loading: boolean,
+  getSearchURL: () => string,
   maxTraceDuration: number,
   skipMessage?: boolean,
   traces: TraceSummary[],
@@ -85,8 +89,20 @@ export default class SearchResults extends React.PureComponent<SearchResultsProp
   };
 
   render() {
-    const { loading, diffCohort, skipMessage, traces } = this.props;
-    const diffSelection = <DiffSelection toggleComparison={this.toggleComparison} traces={diffCohort} />;
+    const {
+      loading,
+      diffCohort,
+      skipMessage,
+      traces,
+      goToTrace,
+      embed,
+      hideGraph,
+      getSearchURL,
+      maxTraceDuration,
+    } = this.props;
+    const diffSelection = !embed && (
+      <DiffSelection toggleComparison={this.toggleComparison} traces={diffCohort} />
+    );
     if (loading) {
       return (
         <React.Fragment>
@@ -107,28 +123,41 @@ export default class SearchResults extends React.PureComponent<SearchResultsProp
         </React.Fragment>
       );
     }
-    const { goToTrace, maxTraceDuration } = this.props;
     const cohortIds = new Set(diffCohort.map(datum => datum.id));
     return (
       <div>
         <div>
           <div className="SearchResults--header">
-            <div className="ub-p3">
-              <ScatterPlot
-                data={traces.map(t => ({
-                  x: t.startTime,
-                  y: t.duration,
-                  traceID: t.traceID,
-                  size: t.spans.length,
-                  name: t.traceName,
-                }))}
-                onValueClick={t => {
-                  goToTrace(t.traceID);
-                }}
-              />
-            </div>
+            {(!embed || !hideGraph) && (
+              <div className="ub-p3">
+                <ScatterPlot
+                  data={traces.map(t => ({
+                    x: t.startTime,
+                    y: t.duration,
+                    traceID: t.traceID,
+                    size: t.spans.length,
+                    name: t.traceName,
+                  }))}
+                  onValueClick={t => {
+                    goToTrace(t.traceID);
+                  }}
+                />
+              </div>
+            )}
             <div className="SearchResults--headerOverview">
               <SelectSort />
+              {embed && (
+                <label className="ub-right">
+                  <Button
+                    className="ub-mr2 ub-items-center"
+                    icon="export"
+                    target="_blank"
+                    href={getSearchURL()}
+                  >
+                    View Results
+                  </Button>
+                </label>
+              )}
               <h2 className="ub-m0">
                 {traces.length} Trace{traces.length > 1 && 's'}
               </h2>
@@ -143,9 +172,16 @@ export default class SearchResults extends React.PureComponent<SearchResultsProp
                 <ResultItem
                   durationPercent={getPercentageOfDuration(trace.duration, maxTraceDuration)}
                   isInDiffCohort={cohortIds.has(trace.traceID)}
-                  linkTo={prefixUrl(`/trace/${trace.traceID}`)}
+                  linkTo={prefixUrl(
+                    embed
+                      ? `/trace/${trace.traceID}?embed=${VERSION_API}&fromSearch=${encodeURIComponent(
+                          getSearchURL()
+                        )}`
+                      : `/trace/${trace.traceID}`
+                  )}
                   toggleComparison={this.toggleComparison}
                   trace={trace}
+                  disableComparision={embed}
                 />
               </li>
             ))}

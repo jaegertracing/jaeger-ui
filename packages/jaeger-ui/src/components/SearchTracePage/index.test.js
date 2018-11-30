@@ -28,6 +28,7 @@ jest.mock('store');
 
 /* eslint-disable import/first */
 import React from 'react';
+import queryString from 'query-string';
 import { shallow, mount } from 'enzyme';
 import store from 'store';
 
@@ -38,6 +39,7 @@ import { fetchedState } from '../../constants';
 import traceGenerator from '../../demo/trace-generators';
 import { MOST_RECENT } from '../../model/order-by';
 import transformTraceData from '../../model/transform-trace-data';
+import { VERSION_API } from '../../utils/embedded';
 
 describe('<SearchTracePage>', () => {
   let wrapper;
@@ -48,6 +50,7 @@ describe('<SearchTracePage>', () => {
     traceResults = [{ traceID: 'a', spans: [], processes: {} }, { traceID: 'b', spans: [], processes: {} }];
     props = {
       traceResults,
+      embed: false,
       isHomepage: false,
       loadingServices: false,
       loadingTraces: false,
@@ -80,6 +83,33 @@ describe('<SearchTracePage>', () => {
     store.get = oldFn;
   });
 
+  it('return the searchpath if call getSearchURL', () => {
+    const query =
+      'end=1542906238737000&limit=20&lookback=1h&maxDuration&minDuration&service=productpage&start=1542902638737000';
+    wrapper = mount(<SearchTracePage {...props} query={query} />);
+    expect(wrapper.instance().getSearchURL()).toBe(`/search?${queryString.stringify(query)}`);
+  });
+
+  it('Push to history the correct url when goToTrace', () => {
+    const query =
+      'end=1542906238737000&limit=20&lookback=1h&maxDuration&minDuration&service=productpage&start=1542902638737000';
+    const historyMock = { push: jest.fn() };
+    const traceID = '15810714d6a27450';
+    wrapper = mount(<SearchTracePage {...props} history={historyMock} query={query} />);
+    wrapper.instance().goToTrace(traceID);
+    expect(historyMock.push.mock.calls.length).toBe(1);
+    expect(historyMock.push.mock.calls[0][0]).toBe(`/trace/${traceID}`);
+
+    // Embed Mode
+    wrapper.setProps({ embed: true });
+    wrapper.instance().goToTrace(traceID);
+    expect(historyMock.push.mock.calls[1][0]).toBe(
+      `/trace/${traceID}?embed=${VERSION_API}&fromSearch=${encodeURIComponent(
+        wrapper.instance().getSearchURL()
+      )}`
+    );
+  });
+
   it('shows a loading indicator if loading services', () => {
     wrapper.setProps({ loadingServices: true });
     expect(wrapper.find(LoadingIndicator).length).toBe(1);
@@ -99,6 +129,16 @@ describe('<SearchTracePage>', () => {
   it('shows the logo prior to searching', () => {
     wrapper.setProps({ isHomepage: true, traceResults: [] });
     expect(wrapper.find('.js-test-logo').length).toBe(1);
+  });
+
+  it('hide SearchForm if is embed', () => {
+    wrapper.setProps({ embed: true });
+    expect(wrapper.find(SearchForm).length).toBe(0);
+  });
+
+  it('hide logo if is embed', () => {
+    wrapper.setProps({ embed: true });
+    expect(wrapper.find('.js-test-logo').length).toBe(0);
   });
 });
 
@@ -140,6 +180,9 @@ describe('mapStateToProps()', () => {
     expect(diffCohort[0].data.traceID).toBe(trace.traceID);
 
     expect(rest).toEqual({
+      embed: false,
+      hideGraph: false,
+      query: {},
       isHomepage: true,
       // the redux-form `formValueSelector` mock returns `null` for "sortBy"
       sortTracesBy: null,

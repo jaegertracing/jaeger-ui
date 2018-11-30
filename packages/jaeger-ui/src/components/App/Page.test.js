@@ -61,4 +61,23 @@ describe('<Page>', () => {
     wrapper.setProps(props);
     expect(trackPageView.mock.calls).toEqual([[props.pathname, props.search]]);
   });
+
+  describe('Page embedded', () => {
+    beforeEach(() => {
+      trackPageView.mockReset();
+      props = {
+        pathname: String(Math.random()),
+        search: 'embed=v0&hideGraph',
+      };
+      wrapper = mount(<Page {...props} />);
+    });
+
+    it('does not explode', () => {
+      expect(wrapper).toBeDefined();
+    });
+
+    it('does not render Header', () => {
+      expect(wrapper.find('Header').length).toBe(0);
+    });
+  });
 });
