@@ -75,18 +75,18 @@ yarn build
 
 ## UI Configuration
 
-See the [deployment guide](http://jaeger.readthedocs.io/en/latest/deployment/#ui-configuration) for details on configuring Google Analytics tracking and menu customizations.
+See the [deployment guide](https://www.jaegertracing.io/docs/latest/deployment/#ui-configuration) for details on configuring Google Analytics tracking and menu customizations.
 
 ## License
 
 [Apache 2.0 License](./LICENSE).
 
 [doc-img]: https://readthedocs.org/projects/jaeger/badge/?version=latest
-[doc]: http://jaeger.readthedocs.org/en/latest/
+[doc]: https://www.jaegertracing.io/docs/latest/
 [ci-img]: https://travis-ci.org/jaegertracing/jaeger-ui.svg?branch=master
 [ci]: https://travis-ci.org/jaegertracing/jaeger-ui
 [cov-img]: https://codecov.io/gh/jaegertracing/jaeger-ui/branch/master/graph/badge.svg
 [cov]: https://codecov.io/gh/jaegertracing/jaeger-ui
-[aio-docs]: http://jaeger.readthedocs.io/en/latest/getting_started/
+[aio-docs]: https://www.jaegertracing.io/docs/latest/getting-started/
 [fossa-img]: https://app.fossa.io/api/projects/git%2Bgithub.com%2Fjaegertracing%2Fjaeger-ui.svg?type=shield
 [fossa]: https://app.fossa.io/projects/git%2Bgithub.com%2Fjaegertracing%2Fjaeger-ui?ref=badge_shield
