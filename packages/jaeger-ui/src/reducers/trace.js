@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import _isEqual from 'lodash/isEqual';
 import { handleActions } from 'redux-actions';
 
 import { fetchTrace, fetchMultipleTraces, searchTraces } from '../actions/jaeger-api';
@@ -21,6 +22,7 @@ import transformTraceData from '../model/transform-trace-data';
 const initialState = {
   traces: {},
   search: {
+    query: null,
     results: [],
   },
 };
@@ -96,7 +98,10 @@ function fetchSearchStarted(state, { meta }) {
   return { ...state, search };
 }
 
-function searchDone(state, { payload }) {
+function searchDone(state, { meta, payload }) {
+  if (!_isEqual(state.search.query, meta.query)) {
+    return state;
+  }
   const processed = payload.data.map(transformTraceData);
   const resultTraces = {};
   const results = [];
@@ -111,7 +116,10 @@ function searchDone(state, { payload }) {
   return { ...state, search, traces };
 }
 
-function searchErred(state, { payload }) {
+function searchErred(state, { meta, payload }) {
+  if (!_isEqual(state.search.query, meta.query)) {
+    return state;
+  }
   const search = { ...state.search, error: payload, results: [], state: fetchedState.ERROR };
   return { ...state, search };
 }

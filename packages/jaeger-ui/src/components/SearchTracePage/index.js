@@ -133,7 +133,6 @@ export class SearchTracePageImpl extends Component {
     );
   }
 }
-
 SearchTracePageImpl.propTypes = {
   isHomepage: PropTypes.bool,
   // eslint-disable-next-line react/forbid-prop-types
@@ -153,7 +152,7 @@ SearchTracePageImpl.propTypes = {
   }),
   queryOfResults: PropTypes.shape({
     service: PropTypes.string,
-    limit: PropTypes.oneOf(PropTypes.string, PropTypes.number),
+    limit: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   }),
   services: PropTypes.arrayOf(
     PropTypes.shape({
