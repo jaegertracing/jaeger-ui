@@ -55,7 +55,7 @@ const Option = Select.Option;
  */
 function SelectSortImpl() {
   return (
-    <label className="-ub-right">
+    <label>
       Sort:{' '}
       <Field name="sortBy" component={reduxFormFieldAdapter(Select)}>
         <Option value={orderBy.MOST_RECENT}>Most Recent</Option>
