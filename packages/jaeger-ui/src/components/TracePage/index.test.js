@@ -417,7 +417,8 @@ describe('mapStateToProps()', () => {
       },
       router: {
         location: {
-          search: 'embed=v0&enableDetails&mapCollapsed&fromSearch=%2Fsearch%3Fend%3D1542902040794000%26limit%3D20%26lookback%3D1h%26maxDuration%26minDuration%26service%3Dproductpage%26start%3D1542898440794000',
+          search:
+            'embed=v0&enableDetails&mapCollapsed&fromSearch=%2Fsearch%3Fend%3D1542902040794000%26limit%3D20%26lookback%3D1h%26maxDuration%26minDuration%26service%3Dproductpage%26start%3D1542898440794000',
         },
       },
       config: {
@@ -436,7 +437,8 @@ describe('mapStateToProps()', () => {
       archiveEnabled: false,
       embed: true,
       enableDetails: true,
-      fromSearch: '/search?end=1542902040794000&limit=20&lookback=1h&maxDuration&minDuration&service=productpage&start=1542898440794000',
+      fromSearch:
+        '/search?end=1542902040794000&limit=20&lookback=1h&maxDuration&minDuration&service=productpage&start=1542898440794000',
       mapCollapsed: true,
       archiveTraceState: undefined,
       trace: { data: {}, state: fetchedState.DONE },

@@ -16,6 +16,7 @@
 
 import * as React from 'react';
 import cx from 'classnames';
+import { Button } from 'antd';
 
 import GraphTicks from './GraphTicks';
 import Scrubber from './Scrubber';
@@ -224,7 +225,18 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
   };
 
   /**
-   * Randers the difference between where the drag started and the current
+   * Resets the zoom to fully zoomed out.
+   *
+   * @param {Syntheticevent<HTMLButtonElement>} event - Click event created by clicking on button.
+   */
+  _resetTimeZoomClickHandler = (event: SyntheticEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    event.preventDefault();
+    this.props.updateViewRangeTime(0, 1);
+  };
+
+  /**
+   * Renders the difference between where the drag started and the current
    * position, e.g. the red or blue highlight.
    *
    * @returns React.Node[]
@@ -276,6 +288,11 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
 
     return (
       <div aria-hidden className="ViewingLayer" style={{ height }}>
+        {(viewStart !== 0 || viewEnd !== 1) && (
+          <Button onClick={this._resetTimeZoomClickHandler} className="viewRangeTimeResetButton">
+            Reset Selection
+          </Button>
+        )}
         <svg
           height={height}
           className="ViewingLayer--graph"

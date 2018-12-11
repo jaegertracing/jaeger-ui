@@ -255,6 +255,37 @@ describe('<SpanGraph>', () => {
         });
       });
     });
+
+    describe('.viewRangeTimeResetButton', () => {
+      it('should render viewRangeResetButton if props.viewRange.time.current[0] !== 0', () => {
+        expect(wrapper.find('.viewRangeTimeResetButton').length).toBe(0);
+        wrapper.setProps({ viewRange: { time: { current: [0.1, 1] } } });
+        expect(wrapper.find('.viewRangeTimeResetButton').length).toBe(1);
+      });
+
+      it('should render viewRangeResetButton if props.viewRange.time.current[1] !== 1', () => {
+        expect(wrapper.find('.viewRangeTimeResetButton').length).toBe(0);
+        wrapper.setProps({ viewRange: { time: { current: [0, 0.9] } } });
+        expect(wrapper.find('.viewRangeTimeResetButton').length).toBe(1);
+      });
+
+      it('should call props.updateViewRangeTime and handle click event when clicked', () => {
+        wrapper.setProps({ viewRange: { time: { current: [0.1, 0.9] } } });
+        const viewRangeTimeResetButton = wrapper.find('.viewRangeTimeResetButton');
+        // If the test fails on the following expect statement, this may be a false negative caused
+        // by a regression to rendering.
+        expect(viewRangeTimeResetButton.length).toBe(1);
+
+        const mockEvent = {
+          preventDefault: jest.fn(),
+          stopPropagation: jest.fn(),
+        };
+        viewRangeTimeResetButton.simulate('click', mockEvent);
+        expect(mockEvent.preventDefault).toHaveBeenCalledTimes(1);
+        expect(mockEvent.stopPropagation).toHaveBeenCalledTimes(1);
+        expect(props.updateViewRangeTime).lastCalledWith(0, 1);
+      });
+    });
   });
 
   it('renders a <GraphTicks />', () => {
