@@ -40,6 +40,19 @@ limitations under the License.
   width: 125px;
 }
 
+.KeyValueTable--copyColumn {
+  text-align: right;
+}
+
+.KeyValueTable--copyIcon {
+  visibility: hidden;
+  cursor: copy;
+}
+
+tr:hover > .KeyValueTable--copyColumn > .KeyValueTable--copyIcon {
+  visibility: unset;
+}
+
 .KeyValueTable--body > tr > td {
   padding: 0.25rem 0.5rem;
   vertical-align: top;

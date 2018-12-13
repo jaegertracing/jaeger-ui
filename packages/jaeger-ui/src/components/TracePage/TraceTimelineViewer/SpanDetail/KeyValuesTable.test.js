@@ -15,6 +15,7 @@
 import React from 'react';
 import { shallow } from 'enzyme';
 import { Dropdown } from 'antd';
+import { CopyToClipboard } from 'react-copy-to-clipboard';
 
 import KeyValuesTable from './KeyValuesTable';
 
@@ -37,6 +38,16 @@ describe('<KeyValuesTable>', () => {
     expect(trs.length).toBe(data.length);
     trs.forEach((tr, i) => {
       expect(tr.find('.KeyValueTable--keyColumn').text()).toMatch(data[i].key);
+    });
+  });
+
+  it('renders a Copy icon for each data element', () => {
+    const trs = wrapper.find('tr');
+    expect(trs.length).toBe(data.length);
+    trs.forEach((tr, i) => {
+      const copyColumn = tr.find('.KeyValueTable--copyColumn');
+      expect(copyColumn.find(CopyToClipboard).prop('text')).toBe(JSON.stringify(data[i], null, 2));
+      expect(copyColumn.find({ type: 'copy' }).length).toBe(1);
     });
   });
 
