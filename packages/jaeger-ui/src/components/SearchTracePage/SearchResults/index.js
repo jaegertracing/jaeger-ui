@@ -41,7 +41,7 @@ type SearchResultsProps = {
   cohortAddTrace: string => void,
   cohortRemoveTrace: string => void,
   diffCohort: FetchedTrace[],
-  disableComparisions: boolean,
+  disableComparisons: boolean,
   goToTrace: string => void,
   hideGraph: boolean,
   loading: boolean,
@@ -96,7 +96,7 @@ export default class SearchResults extends React.PureComponent<SearchResultsProp
   render() {
     const {
       diffCohort,
-      disableComparisions,
+      disableComparisons,
       goToTrace,
       hideGraph,
       loading,
@@ -106,7 +106,7 @@ export default class SearchResults extends React.PureComponent<SearchResultsProp
       skipMessage,
       traces,
     } = this.props;
-    const diffSelection = !disableComparisions && (
+    const diffSelection = !disableComparisons && (
       <DiffSelection toggleComparison={this.toggleComparison} traces={diffCohort} />
     );
     if (loading) {
@@ -180,7 +180,7 @@ export default class SearchResults extends React.PureComponent<SearchResultsProp
                   linkTo={getLocation(trace.traceID, { fromSearch: searchUrl })}
                   toggleComparison={this.toggleComparison}
                   trace={trace}
-                  disableComparision={disableComparisions}
+                  disableComparision={disableComparisons}
                 />
               </li>
             ))}

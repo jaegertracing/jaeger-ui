@@ -54,8 +54,8 @@ describe('<SearchResults>', () => {
     expect(wrapper.find(ScatterPlot).length).toBe(0);
   });
 
-  it('hide DiffSelection when disableComparisions = true', () => {
-    wrapper.setProps({ disableComparisions: true });
+  it('hide DiffSelection when disableComparisons = true', () => {
+    wrapper.setProps({ disableComparisons: true });
     expect(wrapper.find(DiffSelection).length).toBe(0);
   });
 
