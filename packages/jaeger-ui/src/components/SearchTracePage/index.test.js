@@ -40,6 +40,7 @@ import { MOST_RECENT } from '../../model/order-by';
 import transformTraceData from '../../model/transform-trace-data';
 
 describe('<SearchTracePage>', () => {
+  const queryOfResults = {};
   let wrapper;
   let traceResults;
   let props;
@@ -47,13 +48,13 @@ describe('<SearchTracePage>', () => {
   beforeEach(() => {
     traceResults = [{ traceID: 'a', spans: [], processes: {} }, { traceID: 'b', spans: [], processes: {} }];
     props = {
+      queryOfResults,
       traceResults,
-      embed: false,
+      diffCohort: [],
       isHomepage: false,
       loadingServices: false,
       loadingTraces: false,
       maxTraceDuration: 100,
-      diffCohort: [],
       numberOfTraceResults: traceResults.length,
       services: null,
       sortTracesBy: MOST_RECENT,
@@ -91,7 +92,7 @@ describe('<SearchTracePage>', () => {
     expect(historyPush.mock.calls.length).toBe(1);
     expect(historyPush.mock.calls[0][0]).toEqual({
       pathname: `/trace/${traceID}`,
-      state: { fromSearch: true },
+      state: { fromSearch: queryOfResults },
     });
   });
 

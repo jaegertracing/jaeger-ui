@@ -16,7 +16,7 @@ limitations under the License.
 
 .SearchResults--header {
   border: 1px solid #e6e6e6;
-  color: rgba(0, 0, 0, 0.85);
+  color: var(--tx-color-title);
   margin-bottom: 1.25rem;
 }
 

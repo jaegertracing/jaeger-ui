@@ -80,7 +80,7 @@ export default function TraceHeader(props: Props) {
         <span>
           {traceID ? (
             <React.Fragment>
-              <TraceName key="name" traceName={traceName} error={error} state={state} breakable />{' '}
+              <TraceName key="name" traceName={traceName} error={error} state={state} />{' '}
               <small key="id" className="u-tx-muted">
                 {(traceID || '').slice(0, 7)}
               </small>

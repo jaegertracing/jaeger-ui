@@ -1,3 +1,5 @@
+// @flow
+
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,14 +14,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import queryString from 'query-string';
+import { getToggleValue, OPEN } from '../../../utils/tracking/common';
+import { trackEvent } from '../../../utils/tracking';
 
-export const VERSION_API = 'v0';
+const CATEGORY_ALT_VIEW = 'jaeger/ux/trace/alt-view';
+const CATEGORY_SLIM_HEADER = 'jaeger/ux/trace/slim-header';
 
-export function isEmbed(query: string) {
-  const { embed } = queryString.parse(query);
-  if (embed === VERSION_API) {
-    return true;
-  }
-  return false;
-}
+// use a closure instead of bind to prevent forwarding any arguments to trackEvent()
+export const trackAltViewOpen = () => trackEvent(CATEGORY_ALT_VIEW, OPEN);
+
+export const trackSlimHeaderToggle = (isOpen: boolean) =>
+  trackEvent(CATEGORY_SLIM_HEADER, getToggleValue(isOpen));

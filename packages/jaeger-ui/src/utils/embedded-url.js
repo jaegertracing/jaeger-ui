@@ -26,13 +26,15 @@ export const VERSION_0 = 'v0';
 
 // uiEmbed=v0
 // uiSearchHideGraph=1
-// uiTimelineHideMap
-// uiTimelineHideDetails
+// uiTimelineCollapseTitle=1
+// uiTimelineHideMinimap=1
+// uiTimelineHideSummary=1
 const STATE_PARAMS_V0 = {
   searchHideGraph: 'uiSearchHideGraph',
   timeline: {
-    showDetails: 'uiTimelineShowDetails',
-    showMap: 'uiTimelineShowMap',
+    collapseTitle: 'uiTimelineCollapseTitle',
+    hideMinimap: 'uiTimelineHideMinimap',
+    hideSummary: 'uiTimelineHideSummary',
   },
 };
 
@@ -47,14 +49,15 @@ export function getEmbeddedState(search: string): null | EmbeddedState {
     version: VERSION_0,
     searchHideGraph: rest[STATE_PARAMS_V0.searchHideGraph] === VALUE_ENABLED,
     timeline: {
-      showDetails: rest[STATE_PARAMS_V0.timeline.showDetails] === VALUE_ENABLED,
-      showMap: rest[STATE_PARAMS_V0.timeline.showMap] === VALUE_ENABLED,
+      collapseTitle: rest[STATE_PARAMS_V0.timeline.collapseTitle] === VALUE_ENABLED,
+      hideMinimap: rest[STATE_PARAMS_V0.timeline.hideMinimap] === VALUE_ENABLED,
+      hideSummary: rest[STATE_PARAMS_V0.timeline.hideSummary] === VALUE_ENABLED,
     },
   };
 }
 
 export function stripEmbeddedState(state: Object): Object {
-  const { uiEmbed, ...rv } = state;
+  const { uiEmbed, ...rv } = state || {};
   if (uiEmbed === VERSION_0) {
     PARAM_KEYS_V0.forEach(Reflect.deleteProperty.bind(null, rv));
   }

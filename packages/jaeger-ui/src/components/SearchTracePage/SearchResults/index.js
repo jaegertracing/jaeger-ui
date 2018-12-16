@@ -23,14 +23,17 @@ import DiffSelection from './DiffSelection';
 import * as markers from './index.markers';
 import ResultItem from './ResultItem';
 import ScatterPlot from './ScatterPlot';
+import { getUrl } from '../url';
 import LoadingIndicator from '../../common/LoadingIndicator';
 import NewWindowIcon from '../../common/NewWindowIcon';
 import { getLocation } from '../../TracePage/url';
 import * as orderBy from '../../../model/order-by';
 import { getPercentageOfDuration } from '../../../utils/date';
+import { stripEmbeddedState } from '../../../utils/embedded-url';
 import reduxFormFieldAdapter from '../../../utils/redux-form-field-adapter';
 
 import type { FetchedTrace } from '../../../types';
+import type { SearchQuery } from '../../../types/search';
 
 import './index.css';
 
@@ -41,9 +44,10 @@ type SearchResultsProps = {
   disableComparisions: boolean,
   goToTrace: string => void,
   hideGraph: boolean,
-  linkToStandalone: ?string,
   loading: boolean,
   maxTraceDuration: number,
+  queryOfResults: SearchQuery,
+  showStandaloneLink: boolean,
   skipMessage?: boolean,
   traces: TraceSummary[],
 };
@@ -95,9 +99,10 @@ export default class SearchResults extends React.PureComponent<SearchResultsProp
       disableComparisions,
       goToTrace,
       hideGraph,
-      linkToStandalone,
       loading,
       maxTraceDuration,
+      queryOfResults,
+      showStandaloneLink,
       skipMessage,
       traces,
     } = this.props;
@@ -125,6 +130,7 @@ export default class SearchResults extends React.PureComponent<SearchResultsProp
       );
     }
     const cohortIds = new Set(diffCohort.map(datum => datum.id));
+    const searchUrl = getUrl(stripEmbeddedState(queryOfResults));
     return (
       <div>
         <div>
@@ -150,10 +156,10 @@ export default class SearchResults extends React.PureComponent<SearchResultsProp
                 {traces.length} Trace{traces.length > 1 && 's'}
               </h2>
               <SelectSort />
-              {linkToStandalone && (
+              {showStandaloneLink && (
                 <Link
                   className="u-tx-inherit ub-nowrap ub-ml3"
-                  to={linkToStandalone}
+                  to={searchUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
@@ -171,7 +177,7 @@ export default class SearchResults extends React.PureComponent<SearchResultsProp
                 <ResultItem
                   durationPercent={getPercentageOfDuration(trace.duration, maxTraceDuration)}
                   isInDiffCohort={cohortIds.has(trace.traceID)}
-                  linkTo={getLocation(trace.traceID, { fromSearch: true })}
+                  linkTo={getLocation(trace.traceID, { fromSearch: searchUrl })}
                   toggleComparison={this.toggleComparison}
                   trace={trace}
                   disableComparision={disableComparisions}

@@ -14,14 +14,4 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { getToggleValue, OPEN } from '../../utils/tracking/common';
-import { trackEvent } from '../../utils/tracking';
-
-const CATEGORY_ALT_VIEW = 'jaeger/ux/trace/alt-view';
-const CATEGORY_SLIM_HEADER = 'jaeger/ux/trace/slim-header';
-
-// use a closure instead of bind to prevent forwarding any arguments to trackEvent()
-export const trackAltViewOpen = () => trackEvent(CATEGORY_ALT_VIEW, OPEN);
-
-export const trackSlimHeaderToggle = (isOpen: boolean) =>
-  trackEvent(CATEGORY_SLIM_HEADER, getToggleValue(isOpen));
+export { default } from './TracePageHeader';

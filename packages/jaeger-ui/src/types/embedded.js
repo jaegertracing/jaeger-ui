@@ -18,8 +18,9 @@ type EmbeddedStateV0 = {
   version: 'v0',
   searchHideGraph: boolean,
   timeline: {
-    showMap: boolean,
-    showDetails: boolean,
+    collapseTitle: boolean,
+    hideMinimap: boolean,
+    hideSummary: boolean,
   },
 };
 

@@ -19,6 +19,12 @@ import { matchPath } from 'react-router-dom';
 
 import prefixUrl from '../../utils/prefix-url';
 
+import type { SearchQuery } from '../../types/search';
+
+function eqEq(a: ?(string | number), b: ?(string | number)) {
+  return (a == null && b == null) || String(a) === String(b);
+}
+
 export const ROUTE_PATH = prefixUrl('/search');
 
 const ROUTE_MATCHER = { path: ROUTE_PATH, strict: true, exact: true };
@@ -30,4 +36,21 @@ export function matches(path: string) {
 export function getUrl(query?: ?Object) {
   const search = query ? `?${queryString.stringify(query)}` : '';
   return prefixUrl(`/search${search}`);
+}
+
+export function isSameQuery(a: SearchQuery, b: SearchQuery) {
+  if (Boolean(a) !== Boolean(b)) {
+    return false;
+  }
+  return (
+    eqEq(a.end, b.end) &&
+    eqEq(a.limit, b.limit) &&
+    eqEq(a.lookback, b.lookback) &&
+    eqEq(a.maxDuration, b.maxDuration) &&
+    eqEq(a.minDuration, b.minDuration) &&
+    eqEq(a.operation, b.operation) &&
+    eqEq(a.service, b.service) &&
+    eqEq(a.start, b.start) &&
+    eqEq(a.tags, b.tags)
+  );
 }

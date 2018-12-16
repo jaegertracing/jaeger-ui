@@ -14,8 +14,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { OPEN } from '../../utils/tracking/common';
-import { trackEvent } from '../../utils/tracking';
+import { OPEN } from '../../../utils/tracking/common';
+import { trackEvent } from '../../../utils/tracking';
 
 const CATEGORY = 'jaeger/ux/trace/kbd-modal';
 

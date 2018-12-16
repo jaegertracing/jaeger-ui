@@ -14,7 +14,6 @@
 
 import React, { Component } from 'react';
 import { Col, Row } from 'antd';
-import _isEqual from 'lodash/isEqual';
 import PropTypes from 'prop-types';
 import queryString from 'query-string';
 import { connect } from 'react-redux';
@@ -23,7 +22,7 @@ import store from 'store';
 
 import SearchForm from './SearchForm';
 import SearchResults, { sortFormSelector } from './SearchResults';
-import { getUrl } from './url';
+import { isSameQuery } from './url';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
@@ -31,7 +30,6 @@ import { getLocation as getTraceLocation } from '../TracePage/url';
 import { actions as traceDiffActions } from '../TraceDiff/duck';
 import { fetchedState } from '../../constants';
 import { sortTraces } from '../../model/search';
-import { stripEmbeddedState } from '../../utils/embedded-url';
 import getLastXformCacher from '../../utils/get-last-xform-cacher';
 
 import './index.css';
@@ -50,7 +48,7 @@ export class SearchTracePageImpl extends Component {
       searchTraces,
       urlQueryParams,
     } = this.props;
-    if (!isHomepage && urlQueryParams && !_isEqual(urlQueryParams, queryOfResults)) {
+    if (!isHomepage && urlQueryParams && !isSameQuery(urlQueryParams, queryOfResults)) {
       searchTraces(urlQueryParams);
     }
     const needForDiffs = diffCohort.filter(ft => ft.state == null).map(ft => ft.id);
@@ -65,7 +63,8 @@ export class SearchTracePageImpl extends Component {
   }
 
   goToTrace = traceID => {
-    this.props.history.push(getTraceLocation(traceID, { fromSearch: true }));
+    const { queryOfResults } = this.props;
+    this.props.history.push(getTraceLocation(traceID, { fromSearch: queryOfResults }));
   };
 
   render() {
@@ -81,7 +80,7 @@ export class SearchTracePageImpl extends Component {
       maxTraceDuration,
       services,
       traceResults,
-      urlQueryParams,
+      queryOfResults,
     } = this.props;
     const hasTraceResults = traceResults && traceResults.length > 0;
     const showErrors = errors && !loadingTraces;
@@ -112,9 +111,10 @@ export class SearchTracePageImpl extends Component {
                 disableComparisions={embedded}
                 goToTrace={this.goToTrace}
                 hideGraph={embedded && embedded.searchHideGraph}
-                linkToStandalone={embedded && getUrl(urlQueryParams)}
                 loading={loadingTraces}
                 maxTraceDuration={maxTraceDuration}
+                queryOfResults={queryOfResults}
+                showStandaloneLink={Boolean(embedded)}
                 skipMessage={isHomepage}
                 traces={traceResults}
               />
@@ -215,8 +215,7 @@ const stateServicesXformer = getLastXformCacher(stateServices => {
 // export to test
 export function mapStateToProps(state) {
   const { embedded, router, services: stServices, traceDiff } = state;
-  const rawQuery = queryString.parse(router.location.search);
-  const query = stripEmbeddedState(rawQuery);
+  const query = queryString.parse(router.location.search);
   const isHomepage = !Object.keys(query).length;
   const { query: queryOfResults, traces, maxDuration, traceError, loadingTraces } = stateTraceXformer(
     state.trace

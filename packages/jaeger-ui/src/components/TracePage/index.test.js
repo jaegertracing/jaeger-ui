@@ -18,8 +18,8 @@ jest.mock('./index.track');
 jest.mock('./keyboard-shortcuts');
 jest.mock('./scroll-page');
 // mock these to enable mount()
-jest.mock('./SpanGraph');
-jest.mock('./TracePageHeader.track');
+jest.mock('./TracePageHeader/SpanGraph');
+jest.mock('./TracePageHeader/TracePageHeader.track');
 jest.mock('./TraceTimelineViewer');
 
 import React from 'react';
@@ -37,9 +37,9 @@ import {
 import * as track from './index.track';
 import { reset as resetShortcuts } from './keyboard-shortcuts';
 import { cancel as cancelScroll } from './scroll-page';
-import SpanGraph from './SpanGraph';
+import SpanGraph from './TracePageHeader/SpanGraph';
 import TracePageHeader from './TracePageHeader';
-import { trackSlimHeaderToggle } from './TracePageHeader.track';
+import { trackSlimHeaderToggle } from './TracePageHeader/TracePageHeader.track';
 import TraceTimelineViewer from './TraceTimelineViewer';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
@@ -88,10 +88,6 @@ describe('<TracePage>', () => {
 
   it.skip('renders a <TracePageHeader>', () => {
     expect(wrapper.find(TracePageHeader).get(0)).toBeTruthy();
-  });
-
-  it('renders a <SpanGraph>', () => {
-    expect(wrapper.find(SpanGraph).length).toBe(1);
   });
 
   it('renders a a loading indicator when not provided a fetched trace', () => {
@@ -150,40 +146,6 @@ describe('<TracePage>', () => {
     expect(scrollManager.destroy.mock.calls).toEqual([[]]);
     expect(resetShortcuts.mock.calls).toEqual([[], []]);
     expect(cancelScroll.mock.calls).toEqual([[]]);
-  });
-
-  describe('embed mode', () => {
-    let embedded;
-    beforeEach(() => {
-      embedded = {
-        timeline: {
-          showMap: false,
-          showDetails: false,
-        },
-      };
-      wrapper.setProps({ embedded });
-    });
-
-    it('no render TracePageHeader if queryparam embed', () => {
-      expect(wrapper.find(TracePageHeader).length).toBe(0);
-    });
-
-    it('collapses the minimap by default', () => {
-      expect(wrapper.find(SpanGraph).length).toBe(0);
-    });
-
-    it('shows the minimap when the embed parameter is true', () => {
-      wrapper.setProps({
-        embedded: { timeline: { showMap: true, showDetails: false } },
-      });
-      expect(wrapper.find(SpanGraph).length).toBe(1);
-    });
-
-    it('open a window when goFullView is called', () => {
-      wrapper.setProps({ id: '12345' });
-      const hasLinkOut = wrapper.find({ linkToStandalone: '/trace/12345' }).length > 0;
-      expect(hasLinkOut).toBe(true);
-    });
   });
 
   describe('_adjustViewRange()', () => {
@@ -419,21 +381,22 @@ describe('mapStateToProps()', () => {
       id,
       embedded,
       archiveEnabled: false,
-      fromSearch: false,
       archiveTraceState: undefined,
+      searchUrl: null,
       trace: { data: {}, state: fetchedState.DONE },
     });
   });
 
   it('propagates fromSearch correctly', () => {
-    state.router.location.state = { fromSearch: true };
+    const fakeUrl = 'fake-url';
+    state.router.location.state = { fromSearch: fakeUrl };
     const props = mapStateToProps(state, ownProps);
     expect(props).toEqual({
       id,
       embedded,
       archiveEnabled: false,
-      fromSearch: true,
       archiveTraceState: undefined,
+      searchUrl: fakeUrl,
       trace: { data: {}, state: fetchedState.DONE },
     });
   });

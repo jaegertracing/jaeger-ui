@@ -16,7 +16,7 @@ limitations under the License.
 
 .TimelineHeaderRow {
   background: #ececec;
-  border-bottom: 1px solid #d8d8d8;
+  border-bottom: 1px solid #ccc;
   height: 38px;
   line-height: 38px;
   position: fixed;

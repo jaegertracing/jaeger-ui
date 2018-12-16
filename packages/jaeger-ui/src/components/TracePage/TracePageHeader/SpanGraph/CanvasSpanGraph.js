@@ -17,7 +17,7 @@
 import * as React from 'react';
 
 import renderIntoCanvas from './render-into-canvas';
-import colorGenerator from '../../../utils/color-generator';
+import colorGenerator from '../../../../utils/color-generator';
 
 import './CanvasSpanGraph.css';
 
