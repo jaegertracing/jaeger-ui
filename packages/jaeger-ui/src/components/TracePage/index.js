@@ -50,6 +50,8 @@ import type { FetchedTrace, ReduxState } from '../../types';
 import type { KeyValuePair, Span } from '../../types/trace';
 import type { TraceArchive } from '../../types/archive';
 
+import TraceGraph from './TraceGraph/TraceGraph';
+
 import './index.css';
 
 type TracePageProps = {
@@ -71,6 +73,7 @@ type TracePageProps = {
 type TracePageState = {
   headerHeight: ?number,
   slimView: boolean,
+  traceGraphView: boolean,
   textFilter: string,
   findMatchesIDs: ?Set<string>,
   viewRange: ViewRange,
@@ -118,6 +121,7 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
     this.state = {
       headerHeight: null,
       slimView: false,
+      traceGraphView: false,
       textFilter: '',
       findMatchesIDs: null,
       viewRange: {
@@ -312,6 +316,11 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
     this.setState({ slimView: !slimView });
   };
 
+  toggleTraceGraphView = () => {
+    const { traceGraphView } = this.state;
+    this.setState({ traceGraphView: !traceGraphView });
+  };
+
   archiveTrace = () => {
     const { id, archiveTrace } = this.props;
     archiveTrace(id);
@@ -349,7 +358,7 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
       searchParams,
       fromSearch,
     } = this.props;
-    const { slimView, headerHeight, textFilter, viewRange, findMatchesIDs } = this.state;
+    const { slimView, traceGraphView, headerHeight, textFilter, viewRange, findMatchesIDs } = this.state;
     if (!trace || trace.state === fetchedState.LOADING) {
       return <LoadingIndicator className="u-mt-vast" centered />;
     }
@@ -367,9 +376,11 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
       numServices: numberOfServices,
       numSpans: spans.length,
       slimView,
+      traceGraphView,
       timestamp: startTime,
       traceID,
       onSlimViewClicked: this.toggleSlimView,
+      onTraceGraphViewClicked: this.toggleTraceGraphView,
       textFilter,
       prevResult: this._scrollManager.scrollToPrevVisibleSpan,
       nextResult: this._scrollManager.scrollToNextVisibleSpan,
@@ -399,7 +410,7 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
           ) : (
             <TracePageHeader {...tracePageProps} />
           )}
-          {((!slimView && !embed) || (embed && !mapCollapsed)) && (
+          {((!slimView && !embed && !traceGraphView) || (embed && !mapCollapsed)) && (
             <SpanGraph
               trace={data}
               viewRange={viewRange}
@@ -408,18 +419,23 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
             />
           )}
         </div>
-        {headerHeight && (
-          <section style={{ paddingTop: headerHeight }}>
-            <TraceTimelineViewer
-              registerAccessors={this._scrollManager.setAccessors}
-              findMatchesIDs={findMatchesIDs}
-              trace={data}
-              updateNextViewRangeTime={this.updateNextViewRangeTime}
-              updateViewRangeTime={this.updateViewRangeTime}
-              viewRange={viewRange}
-            />
-          </section>
-        )}
+        {headerHeight &&
+          (traceGraphView ? (
+            <section style={{ paddingTop: headerHeight }}>
+              <TraceGraph headerHeight={headerHeight} trace={data} />
+            </section>
+          ) : (
+            <section style={{ paddingTop: headerHeight }}>
+              <TraceTimelineViewer
+                registerAccessors={this._scrollManager.setAccessors}
+                findMatchesIDs={findMatchesIDs}
+                trace={data}
+                updateNextViewRangeTime={this.updateNextViewRangeTime}
+                updateViewRangeTime={this.updateViewRangeTime}
+                viewRange={viewRange}
+              />
+            </section>
+          ))}
       </div>
     );
   }

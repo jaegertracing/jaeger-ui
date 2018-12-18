@@ -14,7 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { NodeID } from './types';
+import type { NodeID, DenseSpan } from './types';
 
 export default class DagNode<T = void> {
   static getID(service: string, operation: string, hasChildren: boolean, parentID?: ?string): NodeID {
@@ -27,6 +27,7 @@ export default class DagNode<T = void> {
   parentID: ?NodeID;
   id: NodeID;
   count: number;
+  members: DenseSpan[];
   children: Set<NodeID>;
   data: T;
 
@@ -36,7 +37,12 @@ export default class DagNode<T = void> {
     this.parentID = parentID;
     this.id = DagNode.getID(service, operation, hasChildren, parentID);
     this.count = 0;
+    this.members = [];
     this.children = new Set();
     this.data = data;
+  }
+
+  addMember(member: DenseSpan) {
+    this.members.push(member);
   }
 }
