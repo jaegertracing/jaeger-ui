@@ -14,10 +14,15 @@
 
 /* eslint-disable import/no-extraneous-dependencies */
 
+const path = require('path');
 const fs = require('fs');
 const { injectBabelPlugin } = require('react-app-rewired');
 const rewireLess = require('react-app-rewire-less');
 const lessToJs = require('less-vars-to-js');
+const rewireBabelLoader = require('react-app-rewire-babel-loader');
+
+const appDirectory = fs.realpathSync(process.cwd());
+const resolveApp = relativePath => path.resolve(appDirectory, relativePath);
 
 // Read the less file in as string
 const loadedVarOverrides = fs.readFileSync('config-overrides-antd-vars.less', 'utf8');
@@ -29,5 +34,6 @@ module.exports = function override(_config, env) {
   let config = _config;
   config = injectBabelPlugin(['import', { libraryName: 'antd', style: true }], config);
   config = rewireLess.withLoaderOptions({ modifyVars })(config, env);
+  config = rewireBabelLoader.include(config, resolveApp('../../node_modules/drange'));
   return config;
 };
