@@ -19,6 +19,7 @@ import IoAlert from 'react-icons/lib/io/alert';
 import IoArrowRightA from 'react-icons/lib/io/arrow-right-a';
 
 import TimelineRow from './TimelineRow';
+import type { Span } from '../../../types/trace';
 import SpanTreeOffset from './SpanTreeOffset';
 import SpanBar from './SpanBar';
 import Ticks from './Ticks';
@@ -48,6 +49,7 @@ type SpanBarRowProps = {
   },
   serviceName: string,
   showErrorIcon: boolean,
+  span: Span,
   spanID: string,
   viewEnd: number,
   viewStart: number,
@@ -93,6 +95,7 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
       rpc,
       serviceName,
       showErrorIcon,
+      span,
       viewEnd,
       viewStart,
     } = this.props;
@@ -122,6 +125,7 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
               level={depth + 1}
               hasChildren={isParent}
               childrenVisible={isChildrenExpanded}
+              span={span}
               onClick={isParent ? this._childrenToggle : null}
             />
             <a

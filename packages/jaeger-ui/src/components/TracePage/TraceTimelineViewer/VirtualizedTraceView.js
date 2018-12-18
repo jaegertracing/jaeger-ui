@@ -328,6 +328,7 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
           rpc={rpc}
           serviceName={span.process.serviceName}
           showErrorIcon={showErrorIcon}
+          span={span}
           spanID={spanID}
           viewEnd={viewBounds.end}
           viewStart={viewBounds.start}

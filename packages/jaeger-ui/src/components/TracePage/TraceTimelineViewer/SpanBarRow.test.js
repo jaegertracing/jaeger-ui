@@ -16,6 +16,9 @@ import React from 'react';
 import { mount } from 'enzyme';
 
 import SpanBarRow from './SpanBarRow';
+import SpanTreeOffset from './SpanTreeOffset';
+
+jest.mock('./SpanTreeOffset');
 
 describe('<SpanBarRow>', () => {
   const spanID = 'some-id';
@@ -69,7 +72,7 @@ describe('<SpanBarRow>', () => {
   it('escalates children toggling', () => {
     const { onChildrenToggled } = props;
     expect(onChildrenToggled.mock.calls.length).toBe(0);
-    wrapper.find('SpanTreeOffset').prop('onClick')();
+    wrapper.find(SpanTreeOffset).prop('onClick')();
     expect(onChildrenToggled.mock.calls).toEqual([[spanID]]);
   });
 });

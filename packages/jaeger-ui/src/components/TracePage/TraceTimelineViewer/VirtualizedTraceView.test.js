@@ -11,7 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
 import React from 'react';
 import { shallow, mount } from 'enzyme';
 
@@ -22,6 +21,8 @@ import SpanDetailRow from './SpanDetailRow';
 import { DEFAULT_HEIGHTS, VirtualizedTraceViewImpl } from './VirtualizedTraceView';
 import traceGenerator from '../../../demo/trace-generators';
 import transformTraceData from '../../../model/transform-trace-data';
+
+jest.mock('./SpanTreeOffset');
 
 describe('<VirtualizedTraceViewImpl>', () => {
   let wrapper;

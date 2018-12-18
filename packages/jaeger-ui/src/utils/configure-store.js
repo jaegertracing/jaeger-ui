@@ -19,6 +19,7 @@ import { window } from 'global';
 import traceDiff from '../components/TraceDiff/duck';
 import archive from '../components/TracePage/ArchiveNotifier/duck';
 import traceTimeline from '../components/TracePage/TraceTimelineViewer/duck';
+import hoverSpanIds from '../components/TracePage/TraceTimelineViewer/SpanTreeOffsetDuck';
 import jaegerReducers from '../reducers';
 import * as jaegerMiddlewares from '../middlewares';
 
@@ -27,6 +28,7 @@ export default function configureStore(history) {
     combineReducers({
       ...jaegerReducers,
       archive,
+      hoverSpanIds,
       traceDiff,
       traceTimeline,
       router: routerReducer,
