@@ -14,9 +14,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as React from 'react';
-import cx from 'classnames';
 import { Button } from 'antd';
+import cx from 'classnames';
+import * as React from 'react';
 
 import GraphTicks from './GraphTicks';
 import Scrubber from './Scrubber';
@@ -226,12 +226,8 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
 
   /**
    * Resets the zoom to fully zoomed out.
-   *
-   * @param {Syntheticevent<HTMLButtonElement>} event - Click event created by clicking on button.
    */
-  _resetTimeZoomClickHandler = (event: SyntheticEvent<HTMLButtonElement>) => {
-    event.stopPropagation();
-    event.preventDefault();
+  _resetTimeZoomClickHandler = () => {
     this.props.updateViewRangeTime(0, 1);
   };
 
@@ -289,7 +285,7 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
     return (
       <div aria-hidden className="ViewingLayer" style={{ height }}>
         {(viewStart !== 0 || viewEnd !== 1) && (
-          <Button onClick={this._resetTimeZoomClickHandler} className="viewRangeTimeResetButton">
+          <Button onClick={this._resetTimeZoomClickHandler} className="ViewingLayer--resetZoom">
             Reset Selection
           </Button>
         )}

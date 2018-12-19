@@ -63,7 +63,7 @@ limitations under the License.
   user-select: none;
 }
 
-.viewRangeTimeResetButton {
+.ViewingLayer--resetZoom {
   display: none;
   position: absolute;
   right: 1%;
@@ -71,6 +71,6 @@ limitations under the License.
   z-index: 1;
 }
 
-.ViewingLayer:hover > .viewRangeTimeResetButton {
+.ViewingLayer:hover > .ViewingLayer--resetZoom {
   display: unset;
 }

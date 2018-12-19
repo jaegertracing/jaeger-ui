@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import React from 'react';
 import { shallow } from 'enzyme';
+import React from 'react';
 
+import { updateTypes } from '../../../utils/DraggableManager';
+import { polyfill as polyfillAnimationFrame } from '../../../utils/test/requestAnimationFrame';
 import GraphTicks from './GraphTicks';
 import Scrubber from './Scrubber';
 import ViewingLayer, { dragTypes } from './ViewingLayer';
-import { updateTypes } from '../../../utils/DraggableManager';
-import { polyfill as polyfillAnimationFrame } from '../../../utils/test/requestAnimationFrame';
 
 function getViewRange(viewStart, viewEnd) {
   return {
@@ -256,33 +256,35 @@ describe('<SpanGraph>', () => {
       });
     });
 
-    describe('.viewRangeTimeResetButton', () => {
-      it('should render viewRangeResetButton if props.viewRange.time.current[0] !== 0', () => {
-        expect(wrapper.find('.viewRangeTimeResetButton').length).toBe(0);
+    describe('.ViewingLayer--resetZoom', () => {
+      it('should not render .ViewingLayer--resetZoom if props.viewRange.time.current = [0,1]', () => {
+        expect(wrapper.find('.ViewingLayer--resetZoom').length).toBe(0);
+        wrapper.setProps({ viewRange: { time: { current: [0, 1] } } });
+        expect(wrapper.find('.ViewingLayer--resetZoom').length).toBe(0);
+      });
+
+      it('should render ViewingLayer--resetZoom if props.viewRange.time.current[0] !== 0', () => {
+        // If the test fails on the following expect statement, this may be a false negative
+        expect(wrapper.find('.ViewingLayer--resetZoom').length).toBe(0);
         wrapper.setProps({ viewRange: { time: { current: [0.1, 1] } } });
-        expect(wrapper.find('.viewRangeTimeResetButton').length).toBe(1);
+        expect(wrapper.find('.ViewingLayer--resetZoom').length).toBe(1);
       });
 
-      it('should render viewRangeResetButton if props.viewRange.time.current[1] !== 1', () => {
-        expect(wrapper.find('.viewRangeTimeResetButton').length).toBe(0);
+      it('should render ViewingLayer--resetZoom if props.viewRange.time.current[1] !== 1', () => {
+        // If the test fails on the following expect statement, this may be a false negative
+        expect(wrapper.find('.ViewingLayer--resetZoom').length).toBe(0);
         wrapper.setProps({ viewRange: { time: { current: [0, 0.9] } } });
-        expect(wrapper.find('.viewRangeTimeResetButton').length).toBe(1);
+        expect(wrapper.find('.ViewingLayer--resetZoom').length).toBe(1);
       });
 
-      it('should call props.updateViewRangeTime and handle click event when clicked', () => {
+      it('should call props.updateViewRangeTime when clicked', () => {
         wrapper.setProps({ viewRange: { time: { current: [0.1, 0.9] } } });
-        const viewRangeTimeResetButton = wrapper.find('.viewRangeTimeResetButton');
+        const resetZoomButton = wrapper.find('.ViewingLayer--resetZoom');
         // If the test fails on the following expect statement, this may be a false negative caused
         // by a regression to rendering.
-        expect(viewRangeTimeResetButton.length).toBe(1);
+        expect(resetZoomButton.length).toBe(1);
 
-        const mockEvent = {
-          preventDefault: jest.fn(),
-          stopPropagation: jest.fn(),
-        };
-        viewRangeTimeResetButton.simulate('click', mockEvent);
-        expect(mockEvent.preventDefault).toHaveBeenCalledTimes(1);
-        expect(mockEvent.stopPropagation).toHaveBeenCalledTimes(1);
+        resetZoomButton.simulate('click');
         expect(props.updateViewRangeTime).lastCalledWith(0, 1);
       });
     });
