@@ -48,6 +48,7 @@ type TracePageHeaderEmbedProps = {
   nextResult: () => void,
   onArchiveClicked: () => void,
   onSlimViewClicked: () => void,
+  onTraceGraphViewClicked: () => void,
   prevResult: () => void,
   resultCount: number,
   showArchiveButton: boolean,
@@ -58,6 +59,7 @@ type TracePageHeaderEmbedProps = {
   textFilter: string,
   toSearch: string | null,
   trace: Trace,
+  traceGraphView: boolean,
   updateNextViewRangeTime: ViewRangeTimeUpdate => void,
   updateTextFilter: string => void,
   updateViewRangeTime: (number, number) => void,
@@ -103,6 +105,7 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps) {
     nextResult,
     onArchiveClicked,
     onSlimViewClicked,
+    onTraceGraphViewClicked,
     prevResult,
     resultCount,
     showArchiveButton,
@@ -113,6 +116,7 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps) {
     textFilter,
     toSearch,
     trace,
+    traceGraphView,
     updateNextViewRangeTime,
     updateTextFilter,
     updateViewRangeTime,
@@ -172,7 +176,13 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps) {
           ref={forwardedRef}
         />
 
-        {showViewOptions && <AltViewOptions traceID={trace.traceID} />}
+        {showViewOptions && (
+          <AltViewOptions
+            onTraceGraphViewClicked={onTraceGraphViewClicked}
+            traceGraphView={traceGraphView}
+            traceID={trace.traceID}
+          />
+        )}
         {showArchiveButton && (
           <Button className="ub-mr2 ub-flex ub-items-center" onClick={onArchiveClicked}>
             <IoIosFilingOutline className="TracePageHeader--archiveIcon" />

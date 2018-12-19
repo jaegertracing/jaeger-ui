@@ -22,13 +22,18 @@ import { trackAltViewOpen } from './TracePageHeader.track';
 import prefixUrl from '../../../utils/prefix-url';
 
 type Props = {
+  onTraceGraphViewClicked: () => void,
+  traceGraphView: boolean,
   traceID: string,
 };
 
 export default function AltViewOptions(props: Props) {
-  const { traceID } = props;
+  const { onTraceGraphViewClicked, traceGraphView, traceID } = props;
   const menu = (
     <Menu>
+      <Menu.Item>
+        <a onClick={onTraceGraphViewClicked}>{traceGraphView ? 'Trace Timeline' : 'Trace Graph'}</a>
+      </Menu.Item>
       <Menu.Item>
         <Link
           to={prefixUrl(`/api/traces/${traceID}?prettyPrint=true`)}
@@ -53,8 +58,8 @@ export default function AltViewOptions(props: Props) {
   );
   return (
     <Dropdown overlay={menu}>
-      <Button className="ub-mr2">
-        View Options <Icon type="down" />
+      <Button className="ub-mr2" onClick={onTraceGraphViewClicked}>
+        {traceGraphView ? 'Trace Graph' : 'Trace Timeline'} <Icon type="down" />
       </Button>
     </Dropdown>
   );

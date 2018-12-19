@@ -29,6 +29,7 @@ import { trackFilter, trackRange } from './index.track';
 import { merge as mergeShortcuts, reset as resetShortcuts } from './keyboard-shortcuts';
 import { cancel as cancelScroll, scrollBy, scrollTo } from './scroll-page';
 import ScrollManager from './ScrollManager';
+import TraceGraph from './TraceGraph/TraceGraph';
 import { trackSlimHeaderToggle } from './TracePageHeader/TracePageHeader.track';
 import TracePageHeader from './TracePageHeader';
 import TraceTimelineViewer from './TraceTimelineViewer';
@@ -65,6 +66,7 @@ type TracePageState = {
   findMatchesIDs: ?Set<string>,
   headerHeight: ?number,
   slimView: boolean,
+  traceGraphView: boolean,
   textFilter: string,
   viewRange: ViewRange,
 };
@@ -110,10 +112,11 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
     super(props);
     const { embedded, trace } = props;
     this.state = {
+      findMatchesIDs: null,
       headerHeight: null,
       slimView: Boolean(embedded && embedded.timeline.collapseTitle),
       textFilter: '',
-      findMatchesIDs: null,
+      traceGraphView: false,
       viewRange: {
         time: {
           current: [0, 1],
@@ -305,6 +308,11 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
     this.setState({ slimView: !slimView });
   };
 
+  toggleTraceGraphView = () => {
+    const { traceGraphView } = this.state;
+    this.setState({ traceGraphView: !traceGraphView });
+  };
+
   archiveTrace = () => {
     const { id, archiveTrace } = this.props;
     archiveTrace(id);
@@ -329,7 +337,7 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
 
   render() {
     const { archiveEnabled, archiveTraceState, embedded, id, searchUrl, trace } = this.props;
-    const { slimView, headerHeight, textFilter, viewRange, findMatchesIDs } = this.state;
+    const { slimView, traceGraphView, headerHeight, textFilter, viewRange, findMatchesIDs } = this.state;
     if (!trace || trace.state === fetchedState.LOADING) {
       return <LoadingIndicator className="u-mt-vast" centered />;
     }
@@ -342,15 +350,17 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
     const headerProps = {
       slimView,
       textFilter,
+      traceGraphView,
       viewRange,
       canCollapse: !embedded || !embedded.timeline.hideSummary || !embedded.timeline.hideMinimap,
       clearSearch: this.clearSearch,
-      hideMap: Boolean(embedded && embedded.timeline.hideMinimap),
+      hideMap: Boolean(traceGraphView || (embedded && embedded.timeline.hideMinimap)),
       hideSummary: Boolean(embedded && embedded.timeline.hideSummary),
       linkToStandalone: getUrl(id),
       nextResult: this._scrollManager.scrollToNextVisibleSpan,
       onArchiveClicked: this.archiveTrace,
       onSlimViewClicked: this.toggleSlimView,
+      onTraceGraphViewClicked: this.toggleTraceGraphView,
       prevResult: this._scrollManager.scrollToPrevVisibleSpan,
       ref: this._searchBar,
       resultCount: findMatchesIDs ? findMatchesIDs.size : 0,
@@ -373,18 +383,23 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
         <div className="Tracepage--headerSection" ref={this.setHeaderHeight}>
           <TracePageHeader {...headerProps} />
         </div>
-        {headerHeight && (
-          <section style={{ paddingTop: headerHeight }}>
-            <TraceTimelineViewer
-              registerAccessors={this._scrollManager.setAccessors}
-              findMatchesIDs={findMatchesIDs}
-              trace={data}
-              updateNextViewRangeTime={this.updateNextViewRangeTime}
-              updateViewRangeTime={this.updateViewRangeTime}
-              viewRange={viewRange}
-            />
-          </section>
-        )}
+        {headerHeight &&
+          (traceGraphView ? (
+            <section style={{ paddingTop: headerHeight }}>
+              <TraceGraph headerHeight={headerHeight} trace={data} />
+            </section>
+          ) : (
+            <section style={{ paddingTop: headerHeight }}>
+              <TraceTimelineViewer
+                registerAccessors={this._scrollManager.setAccessors}
+                findMatchesIDs={findMatchesIDs}
+                trace={data}
+                updateNextViewRangeTime={this.updateNextViewRangeTime}
+                updateViewRangeTime={this.updateViewRangeTime}
+                viewRange={viewRange}
+              />
+            </section>
+          ))}
       </div>
     );
   }
