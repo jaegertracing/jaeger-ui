@@ -19,6 +19,7 @@ import AltViewOptions from './AltViewOptions';
 import KeyboardShortcutsHelp from './KeyboardShortcutsHelp';
 import SpanGraph from './SpanGraph';
 import { TracePageHeaderFn as TracePageHeader, HEADER_ITEMS } from './TracePageHeader';
+import LabeledList from '../../common/LabeledList';
 import traceGenerator from '../../../demo/trace-generators';
 import { getTraceName } from '../../../model/trace-viewer';
 import transformTraceData from '../../../model/transform-trace-data';
@@ -67,13 +68,15 @@ describe('<TracePageHeader>', () => {
 
   describe('observes the visibility toggles for various UX elements', () => {
     it('hides the minimap when hideMap === true', () => {
+      expect(wrapper.find(SpanGraph).length).toBe(1);
       wrapper.setProps({ hideMap: true });
       expect(wrapper.find(SpanGraph).length).toBe(0);
     });
 
-    it('hides the summary when hideSummary === true', () => {
+    fit('hides the summary when hideSummary === true', () => {
+      expect(wrapper.find(LabeledList).length).toBe(1);
       wrapper.setProps({ hideSummary: true });
-      expect(wrapper.find('.horizontal .item').length).toBe(0);
+      expect(wrapper.find(LabeledList).length).toBe(0);
     });
 
     it('toggles the archive button', () => {

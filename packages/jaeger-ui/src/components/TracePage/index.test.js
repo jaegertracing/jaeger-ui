@@ -347,12 +347,12 @@ describe('mapDispatchToProps()', () => {
 });
 
 describe('mapStateToProps()', () => {
-  const id = 'abc';
+  const traceID = 'trace-id';
   const trace = {};
-  const embedded = Math.random();
+  const embedded = 'a-faux-embedded-config';
   const ownProps = {
     match: {
-      params: { id },
+      params: { id: traceID },
     },
   };
   let state;
@@ -361,7 +361,7 @@ describe('mapStateToProps()', () => {
       embedded,
       trace: {
         traces: {
-          [id]: { data: trace, state: fetchedState.DONE },
+          [traceID]: { data: trace, state: fetchedState.DONE },
         },
       },
       router: {
@@ -378,7 +378,7 @@ describe('mapStateToProps()', () => {
   it('maps state to props correctly', () => {
     const props = mapStateToProps(state, ownProps);
     expect(props).toEqual({
-      id,
+      id: traceID,
       embedded,
       archiveEnabled: false,
       archiveTraceState: undefined,
@@ -392,7 +392,7 @@ describe('mapStateToProps()', () => {
     state.router.location.state = { fromSearch: fakeUrl };
     const props = mapStateToProps(state, ownProps);
     expect(props).toEqual({
-      id,
+      id: traceID,
       embedded,
       archiveEnabled: false,
       archiveTraceState: undefined,

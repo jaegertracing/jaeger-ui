@@ -61,7 +61,7 @@ describe('fetch multiple traces', () => {
   const { traceID: idB } = traceB;
 
   it('sets loading to true for all pending IDs', () => {
-    const traces = { preExisting: Math.random() };
+    const traces = { preExisting: 'this-trace-is-pre-existing' };
     const state = traceReducer(
       { traces },
       {
@@ -79,7 +79,7 @@ describe('fetch multiple traces', () => {
 
   describe('handles a successful request', () => {
     it('transforms and saves all trace data', () => {
-      const traces = { preExisting: Math.random() };
+      const traces = { preExisting: 'this-trace-is-pre-existing' };
       const state = traceReducer(
         { traces },
         {
@@ -98,7 +98,7 @@ describe('fetch multiple traces', () => {
     it('saves all error data', () => {
       const msg = 'a-message';
       const traceID = 'a-trace-id';
-      const traces = { preExisting: Math.random() };
+      const traces = { preExisting: 'this-trace-is-pre-existing' };
       const state = traceReducer(
         { traces },
         {
@@ -116,7 +116,7 @@ describe('fetch multiple traces', () => {
 
   it('handles a failed request', () => {
     const error = 'error-info';
-    const traces = { preExisting: Math.random() };
+    const traces = { preExisting: 'this-trace-is-pre-existing' };
     const state = traceReducer(
       { traces },
       {
