@@ -17,7 +17,7 @@ import React from 'react';
 import IoChevronRight from 'react-icons/lib/io/chevron-right';
 import IoIosArrowDown from 'react-icons/lib/io/ios-arrow-down';
 
-import { UnconnectedSpanTreeOffset } from './SpanTreeOffset';
+import { mapDispatchToProps, mapStateToProps, UnconnectedSpanTreeOffset } from './SpanTreeOffset';
 
 describe('SpanTreeOffset', () => {
   const ownSpanID = 'ownSpanID';
@@ -42,7 +42,7 @@ describe('SpanTreeOffset', () => {
       },
     ],
   };
-  const specialRootId = 'root';
+  const specialRootID = 'root';
   let props;
   let wrapper;
 
@@ -73,19 +73,19 @@ describe('SpanTreeOffset', () => {
       wrapper = shallow(<UnconnectedSpanTreeOffset {...props} />);
       const indentGuides = wrapper.find('.SpanTreeOffset--indentGuide');
       expect(indentGuides.length).toBe(1);
-      expect(indentGuides.prop('data--ancestor-id')).toBe('root');
+      expect(indentGuides.prop('data--ancestor-id')).toBe(specialRootID);
     });
 
     it('should render one .SpanTreeOffset--indentGuide per ancestor span, plus one for entire trace', () => {
       const indentGuides = wrapper.find('.SpanTreeOffset--indentGuide');
       expect(indentGuides.length).toBe(3);
-      expect(indentGuides.at(0).prop('data--ancestor-id')).toBe(specialRootId);
+      expect(indentGuides.at(0).prop('data--ancestor-id')).toBe(specialRootID);
       expect(indentGuides.at(1).prop('data--ancestor-id')).toBe(rootSpanID);
       expect(indentGuides.at(2).prop('data--ancestor-id')).toBe(parentSpanID);
     });
 
     it('should add .activeMouseover className to correct indentGuide', () => {
-      props.hoverSpanIds = new Set(['parentSpanID']);
+      props.hoverSpanIds = new Set([parentSpanID]);
       wrapper = shallow(<UnconnectedSpanTreeOffset {...props} />);
       const activeMouseoverIndentGuide = wrapper.find('.activeMouseover');
       expect(activeMouseoverIndentGuide.length).toBe(1);
@@ -93,30 +93,30 @@ describe('SpanTreeOffset', () => {
     });
 
     it('should call props.addSpanId on mouse enter', () => {
-      wrapper.find({ 'data--ancestor-id': 'parentSpanID' }).simulate('mouseenter', {});
+      wrapper.find({ 'data--ancestor-id': parentSpanID }).simulate('mouseenter', {});
       expect(props.addSpanId).toHaveBeenCalledTimes(1);
       expect(props.addSpanId).toHaveBeenCalledWith(parentSpanID);
     });
 
     it('should not call props.addSpanId on mouse enter if mouse came from a indentGuide with the same ancestorId', () => {
-      wrapper.find({ 'data--ancestor-id': 'parentSpanID' }).simulate('mouseenter', {
+      wrapper.find({ 'data--ancestor-id': parentSpanID }).simulate('mouseenter', {
         relatedTarget: {
-          getAttribute: () => 'parentSpanID',
+          getAttribute: () => parentSpanID,
         },
       });
       expect(props.addSpanId).not.toHaveBeenCalled();
     });
 
     it('should call props.removeSpanId on mouse leave', () => {
-      wrapper.find({ 'data--ancestor-id': 'parentSpanID' }).simulate('mouseleave', {});
+      wrapper.find({ 'data--ancestor-id': parentSpanID }).simulate('mouseleave', {});
       expect(props.removeSpanId).toHaveBeenCalledTimes(1);
       expect(props.removeSpanId).toHaveBeenCalledWith(parentSpanID);
     });
 
     it('should not call props.removeSpanId on mouse out if mouse leaves to a indentGuide with the same ancestorId', () => {
-      wrapper.find({ 'data--ancestor-id': 'parentSpanID' }).simulate('mouseleave', {
+      wrapper.find({ 'data--ancestor-id': parentSpanID }).simulate('mouseleave', {
         relatedTarget: {
-          getAttribute: () => 'parentSpanID',
+          getAttribute: () => parentSpanID,
         },
       });
       expect(props.removeSpanId).not.toHaveBeenCalled();
@@ -155,6 +155,37 @@ describe('SpanTreeOffset', () => {
       wrapper.find('.SpanTreeOffset--iconWrapper').simulate('mouseleave', {});
       expect(props.removeSpanId).toHaveBeenCalledTimes(1);
       expect(props.removeSpanId).toHaveBeenCalledWith(ownSpanID);
+    });
+  });
+
+  describe('mapDispatchToProps()', () => {
+    it('creates the actions correctly', () => {
+      expect(mapDispatchToProps(() => {})).toEqual({
+        addSpanId: expect.any(Function),
+        removeSpanId: expect.any(Function),
+      });
+    });
+  });
+
+  describe('mapStateToProps()', () => {
+    it('maps state to props correctly', () => {
+      const hoverSpanIds = new Set([parentSpanID]);
+      const state = {
+        hoverSpanIds: {
+          hoverSpanIds,
+        },
+      };
+      const ownProps = {
+        span: {
+          spanDataKey: 'spanDataValue',
+        },
+      };
+      const mappedProps = mapStateToProps(state, ownProps);
+      expect(mappedProps).toEqual({
+        hoverSpanIds,
+        ...ownProps,
+      });
+      expect(mappedProps.hoverSpanIds).toBe(hoverSpanIds);
     });
   });
 });

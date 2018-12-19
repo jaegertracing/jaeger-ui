@@ -19,6 +19,7 @@ import type { ContextRouter } from 'react-router-dom';
 import type { ApiError } from './api-error';
 import type { TracesArchive } from './archive';
 import type { Config } from './config';
+import type { HoverSpanIds } from './hover-span-ids';
 import type { Trace } from './trace';
 import type { TraceDiffState } from './trace-diff';
 import type { TraceTimeline } from './trace-timeline';
@@ -40,13 +41,14 @@ export type ReduxState = {
     loading: boolean,
     error: ?ApiError,
   },
+  hoverSpanIds: HoverSpanIds,
+  router: ContextRouter,
   services: {
     services: ?(string[]),
     operationsForService: { [string]: string[] },
     loading: boolean,
     error: ?ApiError,
   },
-  router: ContextRouter,
   trace: {
     traces: { [string]: FetchedTrace },
     search: {

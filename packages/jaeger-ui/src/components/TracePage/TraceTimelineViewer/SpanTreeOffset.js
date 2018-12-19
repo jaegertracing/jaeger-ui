@@ -14,28 +14,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import PropTypes from 'prop-types';
-import React from 'react';
-import { connect } from 'react-redux';
-import { bindActionCreators } from 'redux';
-import IoChevronRight from 'react-icons/lib/io/chevron-right';
-import IoIosArrowDown from 'react-icons/lib/io/ios-arrow-down';
 import cx from 'classnames';
 import _get from 'lodash/get';
 import _find from 'lodash/find';
+import PropTypes from 'prop-types';
+import React from 'react';
+import IoChevronRight from 'react-icons/lib/io/chevron-right';
+import IoIosArrowDown from 'react-icons/lib/io/ios-arrow-down';
+import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
 
+import type { ReduxState } from '../../../types/index';
 import type { Span } from '../../../types/trace';
 import { actions } from './SpanTreeOffsetDuck';
 import './SpanTreeOffset.css';
 
-type SpanTreeOffsetProps = {
+type SpanTreeOffsetOwnProps = {
   addSpanId: string => void,
-  hoverSpanIds: Set<string>,
   removeSpanId: string => void,
   hasChildren: boolean,
   childrenVisible: boolean,
   span: Span,
   onClick: ?() => void,
+};
+
+type SpanTreeOffsetProps = SpanTreeOffsetOwnProps & {
+  hoverSpanIds: Set<string>,
 };
 
 export class UnconnectedSpanTreeOffset extends React.PureComponent<SpanTreeOffsetProps> {
@@ -146,12 +150,12 @@ export class UnconnectedSpanTreeOffset extends React.PureComponent<SpanTreeOffse
   }
 }
 
-function mapStateToProps(state, ownProps) {
+export function mapStateToProps(state: ReduxState, ownProps: SpanTreeOffsetOwnProps): SpanTreeOffsetProps {
   const hoverSpanIds = state.hoverSpanIds.hoverSpanIds;
   return { hoverSpanIds, ...ownProps };
 }
 
-function mapDispatchToProps(dispatch) {
+export function mapDispatchToProps(dispatch: Function) {
   const { addSpanId, removeSpanId } = bindActionCreators(actions, dispatch);
   return { addSpanId, removeSpanId };
 }
