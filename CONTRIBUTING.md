@@ -6,7 +6,7 @@ Jaeger is [Apache 2.0 licensed](LICENSE) and accepts contributions via GitHub pu
 
 We gratefully welcome improvements to documentation as well as to code.
 
-# Certificate of Origin
+## Certificate of Origin
 
 By contributing to this project you agree to the [Developer Certificate of Origin](https://developercertificate.org/) (DCO). This document was created by the Linux Kernel community and is a simple statement that you, as a contributor, have the legal right to make the contribution. See the [DCO](DCO) file for details.
 
@@ -108,12 +108,42 @@ git config --add alias.amend "commit -s --amend"
 git config --add alias.c "commit -s"
 ```
 
-# Style Guide
+## Code style
 
-Prefer to use [flow](https://flow.org/) for new code.
+### Tooling
 
-We use [`prettier`](https://prettier.io/), an "opinionated" code formatter. It can be applied to both JavaScript and CSS source files via `yarn prettier`.
+[Flow](https://flow.org/) should be used in all new files. And, consider adding it to existing files, if you're modifying the file, substantially.
 
-Then, most issues will be caught by the linter, which can be applied via `yarn eslint`.
+We use [`prettier`](https://prettier.io/) to automatically format code. `yarn prettier` will run `prettier` on the entire repo. `prettier` is executed as part of `yarn lint` and as a precommit hook.
 
-Finally, we generally adhere to the [Airbnb Style Guide](https://github.com/airbnb/javascript), with exceptions as noted in our `.eslintrc`.
+For the most part, we adhere to the [Airbnb Style Guide](https://github.com/airbnb/javascript), with a few exceptions. This is generally enforced by [ESLint](https://eslint.org/).
+
+### Code
+
+#### Imports
+
+Please sort imports alphabetically by the string portion of the statement, with packages going above the relative imports. Please separate package imports from relative imports by a blank line. And, please have 'react' above the other package imports.
+
+Please import types after the packages and local imports, respectively.
+
+```
+import z from 'a';
+import b from 'b';
+
+import type { Z } from 'a';
+import type { B } from 'b';
+
+import zz from './a';
+import bb from './b';
+import aa from '../a';
+
+import type { ZZ } from './a';
+import type { BB } from './b';
+import type { AA } from '../a';
+
+import './some.css';
+```
+
+#### Naming
+
+Please use `Props` and `State` as the type name for a component's props and state when the type is defined in the same file as the component.
