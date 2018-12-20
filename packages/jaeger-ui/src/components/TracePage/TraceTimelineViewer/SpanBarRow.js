@@ -17,28 +17,30 @@
 import * as React from 'react';
 import IoAlert from 'react-icons/lib/io/alert';
 import IoArrowRightA from 'react-icons/lib/io/arrow-right-a';
-
+import _groupBy from 'lodash/groupBy';
+import _values from 'lodash/values';
 import TimelineRow from './TimelineRow';
 import SpanTreeOffset from './SpanTreeOffset';
 import SpanBar from './SpanBar';
 import Ticks from './Ticks';
+import type { Span, Trace } from '../../../types/trace';
+import colorGenerator from '../../../utils/color-generator';
+import { formatDuration } from './utils';
 
 import './SpanBarRow.css';
 
 type SpanBarRowProps = {
   className: string,
-  color: string,
   columnDivision: number,
-  depth: number,
-  isChildrenExpanded: boolean,
+  isCollapsed: boolean,
   isDetailExpanded: boolean,
   isMatchingFilter: boolean,
-  isParent: boolean,
-  label: string,
   onDetailToggled: string => void,
   onChildrenToggled: string => void,
-  operationName: string,
   numTicks: number,
+  getViewedBounds: (number, number) => { start: number, end: number },
+  trace: Trace,
+  span: Span,
   rpc: ?{
     viewStart: number,
     viewEnd: number,
@@ -46,11 +48,7 @@ type SpanBarRowProps = {
     operationName: string,
     serviceName: string,
   },
-  serviceName: string,
   showErrorIcon: boolean,
-  spanID: string,
-  viewEnd: number,
-  viewStart: number,
 };
 
 /**
@@ -70,32 +68,36 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
   };
 
   _detailToggle = () => {
-    this.props.onDetailToggled(this.props.spanID);
+    this.props.onDetailToggled(this.props.span.spanID);
   };
 
   _childrenToggle = () => {
-    this.props.onChildrenToggled(this.props.spanID);
+    this.props.onChildrenToggled(this.props.span.spanID);
   };
 
   render() {
     const {
       className,
-      color,
       columnDivision,
-      depth,
-      isChildrenExpanded,
+      isCollapsed,
       isDetailExpanded,
       isMatchingFilter,
-      isParent,
-      label,
       numTicks,
-      operationName,
+      getViewedBounds,
+      trace,
+      span,
       rpc,
-      serviceName,
       showErrorIcon,
-      viewEnd,
-      viewStart,
     } = this.props;
+
+    const { serviceName } = span.process;
+    const color = colorGenerator.getColorByKey(serviceName);
+    const viewBounds = getViewedBounds(span.startTime, span.startTime + span.duration);
+    const viewStart = viewBounds.start;
+    const viewEnd = viewBounds.end;
+
+    const label = formatDuration(span.duration);
+    const operationName = span.operationName;
 
     const labelDetail = `${serviceName}::${operationName}`;
     let longLabel;
@@ -107,6 +109,13 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
       longLabel = `${label} | ${labelDetail}`;
       hintSide = 'right';
     }
+
+    const logs = _values(
+      _groupBy(span.logs.map(l => ({ view: getViewedBounds(l.timestamp, l.timestamp), log: l })), v =>
+        Math.floor(v.view.start * 100)
+      )
+    ).map(v => ({ view: v[0].view, logs: v.map(l => l.log), start: trace.startTime }));
+
     return (
       <TimelineRow
         className={`
@@ -119,10 +128,10 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
         <TimelineRow.Cell className="span-name-column" width={columnDivision}>
           <div className={`span-name-wrapper ${isMatchingFilter ? 'is-matching-filter' : ''}`}>
             <SpanTreeOffset
-              level={depth + 1}
-              hasChildren={isParent}
-              childrenVisible={isChildrenExpanded}
-              onClick={isParent ? this._childrenToggle : null}
+              level={span.depth + 1}
+              hasChildren={span.hasChildren}
+              childrenVisible={!isCollapsed}
+              onClick={span.hasChildren ? this._childrenToggle : null}
             />
             <a
               className={`span-name ${isDetailExpanded ? 'is-detail-expanded' : ''}`}
@@ -133,7 +142,7 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
               tabIndex="0"
             >
               <span
-                className={`span-svc-name ${isParent && !isChildrenExpanded ? 'is-children-collapsed' : ''}`}
+                className={`span-svc-name ${span.hasChildren && isCollapsed ? 'is-children-collapsed' : ''}`}
               >
                 {showErrorIcon && <IoAlert className="SpanBarRow--errorIcon" />}
                 {serviceName}{' '}
@@ -164,6 +173,7 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
             shortLabel={label}
             longLabel={longLabel}
             hintSide={hintSide}
+            logs={logs}
           />
         </TimelineRow.Cell>
       </TimelineRow>

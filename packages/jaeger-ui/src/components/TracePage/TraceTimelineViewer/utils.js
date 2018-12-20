@@ -38,6 +38,17 @@ export function getViewedBounds({ min, max, start, end, viewStart, viewEnd }) {
   };
 }
 
+export function createViewedBoundsFunc({ min, max, viewStart, viewEnd }) {
+  const duration = max - min;
+  const viewMin = min + viewStart * duration;
+  const viewMax = max - (1 - viewEnd) * duration;
+  const viewWindow = viewMax - viewMin;
+  return (start, end) => ({
+    start: (start - viewMin) / viewWindow,
+    end: (end - viewMin) / viewWindow,
+  });
+}
+
 /**
  * Returns `true` if the `span` has a tag matching `key` = `value`.
  *
