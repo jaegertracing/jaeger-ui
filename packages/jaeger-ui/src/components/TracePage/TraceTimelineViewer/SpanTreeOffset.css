@@ -38,13 +38,13 @@ limitations under the License.
   background-color: lightgrey;
 }
 
-.SpanTreeOffset--indentGuide.activeMouseover {
+.SpanTreeOffset--indentGuide.is-active {
   /* The size of the indentGuide is based off of the iconWrapper */
   padding-right: calc(0.5rem + 11px);
   border-left: 0px;
 }
 
-.SpanTreeOffset--indentGuide.activeMouseover:before {
+.SpanTreeOffset--indentGuide.is-active:before {
   content: '';
   padding-left: 3px;
   background-color: darkgrey;

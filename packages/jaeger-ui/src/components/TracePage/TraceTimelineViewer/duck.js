@@ -35,26 +35,29 @@ import generateActionTypes from '../../../utils/generate-action-types';
 
 export function newInitialState({ spanNameColumnWidth = null, traceID = null } = {}) {
   return {
-    traceID,
-    spanNameColumnWidth: spanNameColumnWidth || 0.25,
     childrenHiddenIDs: new Set(),
     detailStates: new Map(),
+    hoverSpanIds: new Set(),
+    spanNameColumnWidth: spanNameColumnWidth || 0.25,
+    traceID,
   };
 }
 
 export const actionTypes = generateActionTypes('@jaeger-ui/trace-timeline-viewer', [
-  'SET_TRACE',
-  'SET_SPAN_NAME_COLUMN_WIDTH',
+  'ADD_HOVER_SPAN_ID',
   'CHILDREN_TOGGLE',
-  'EXPAND_ALL',
   'COLLAPSE_ALL',
-  'EXPAND_ONE',
   'COLLAPSE_ONE',
   'DETAIL_TOGGLE',
   'DETAIL_TAGS_TOGGLE',
   'DETAIL_PROCESS_TOGGLE',
   'DETAIL_LOGS_TOGGLE',
   'DETAIL_LOG_ITEM_TOGGLE',
+  'EXPAND_ALL',
+  'EXPAND_ONE',
+  'REMOVE_HOVER_SPAN_ID',
+  'SET_SPAN_NAME_COLUMN_WIDTH',
+  'SET_TRACE',
 ]);
 
 const fullActions = createActions({
@@ -70,6 +73,8 @@ const fullActions = createActions({
   [actionTypes.DETAIL_PROCESS_TOGGLE]: spanID => ({ spanID }),
   [actionTypes.DETAIL_LOGS_TOGGLE]: spanID => ({ spanID }),
   [actionTypes.DETAIL_LOG_ITEM_TOGGLE]: (spanID, logItem) => ({ logItem, spanID }),
+  [actionTypes.ADD_HOVER_SPAN_ID]: spanID => ({ spanID }),
+  [actionTypes.REMOVE_HOVER_SPAN_ID]: spanID => ({ spanID }),
 });
 
 export const actions = fullActions.jaegerUi.traceTimelineViewer;
@@ -206,6 +211,22 @@ function detailLogItemToggle(state, { payload }) {
   return { ...state, detailStates };
 }
 
+function addHoverSpanId(state, { payload }) {
+  const { spanID } = payload;
+  const newHoverSpanIds = new Set(state.hoverSpanIds);
+  newHoverSpanIds.add(spanID);
+
+  return { ...state, hoverSpanIds: newHoverSpanIds };
+}
+
+function removeHoverSpanId(state, { payload }) {
+  const { spanID } = payload;
+  const newHoverSpanIds = new Set(state.hoverSpanIds);
+  newHoverSpanIds.delete(spanID);
+
+  return { ...state, hoverSpanIds: newHoverSpanIds };
+}
+
 export default handleActions(
   {
     [actionTypes.SET_TRACE]: setTrace,
@@ -220,6 +241,8 @@ export default handleActions(
     [actionTypes.DETAIL_PROCESS_TOGGLE]: detailProcessToggle,
     [actionTypes.DETAIL_LOGS_TOGGLE]: detailLogsToggle,
     [actionTypes.DETAIL_LOG_ITEM_TOGGLE]: detailLogItemToggle,
+    [actionTypes.ADD_HOVER_SPAN_ID]: addHoverSpanId,
+    [actionTypes.REMOVE_HOVER_SPAN_ID]: removeHoverSpanId,
   },
   newInitialState()
 );

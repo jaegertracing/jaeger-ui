@@ -286,4 +286,45 @@ describe('TraceTimelineViewer/duck', () => {
     store.dispatch(actions.detailLogItemToggle(id, logItem));
     expect(store.getState().detailStates.get(id)).toEqual(toggledDetail);
   });
+
+  describe('hoverSpanIds', () => {
+    const existingSpanId = 'existingSpanId';
+    const newSpanId = 'newSpanId';
+
+    it('the initial state has an empty set of hoverSpanIds', () => {
+      const state = store.getState();
+      expect(state.hoverSpanIds).toEqual(new Set());
+    });
+
+    it('adds a spanID to an initial state', () => {
+      const action = actions.addHoverSpanId(newSpanId);
+      store.dispatch(action);
+      expect(store.getState().hoverSpanIds).toEqual(new Set([newSpanId]));
+    });
+
+    it('adds a spanID to a populated state', () => {
+      store = createStore(reducer, {
+        hoverSpanIds: new Set([existingSpanId]),
+      });
+      const action = actions.addHoverSpanId(newSpanId);
+      store.dispatch(action);
+      expect(store.getState().hoverSpanIds).toEqual(new Set([existingSpanId, newSpanId]));
+    });
+
+    it('should not error when removing a spanID from an initial state', () => {
+      const action = actions.removeHoverSpanId(newSpanId);
+      store.dispatch(action);
+      expect(store.getState().hoverSpanIds).toEqual(new Set());
+    });
+
+    it('remove a spanID from a populated state', () => {
+      const secondExistingSpanId = 'secondExistingSpanId';
+      store = createStore(reducer, {
+        hoverSpanIds: new Set([existingSpanId, secondExistingSpanId]),
+      });
+      const action = actions.removeHoverSpanId(existingSpanId);
+      store.dispatch(action);
+      expect(store.getState().hoverSpanIds).toEqual(new Set([secondExistingSpanId]));
+    });
+  });
 });

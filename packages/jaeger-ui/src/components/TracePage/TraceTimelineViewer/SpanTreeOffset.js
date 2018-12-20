@@ -17,46 +17,35 @@
 import cx from 'classnames';
 import _get from 'lodash/get';
 import _find from 'lodash/find';
-import PropTypes from 'prop-types';
 import React from 'react';
 import IoChevronRight from 'react-icons/lib/io/chevron-right';
 import IoIosArrowDown from 'react-icons/lib/io/ios-arrow-down';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 
+import { actions } from './duck';
+
 import type { ReduxState } from '../../../types/index';
 import type { Span } from '../../../types/trace';
-import { actions } from './SpanTreeOffsetDuck';
+
 import './SpanTreeOffset.css';
 
-type SpanTreeOffsetOwnProps = {
-  addSpanId: string => void,
-  removeSpanId: string => void,
+type SpanTreeOffsetOwnPropsType = {
+  addHoverSpanId: string => void,
+  removeHoverSpanId: string => void,
   hasChildren: boolean,
   childrenVisible: boolean,
   span: Span,
   onClick: ?() => void,
 };
 
-type SpanTreeOffsetProps = SpanTreeOffsetOwnProps & {
+type SpanTreeOffsetPropsType = SpanTreeOffsetOwnPropsType & {
   hoverSpanIds: Set<string>,
 };
 
-export class UnconnectedSpanTreeOffset extends React.PureComponent<SpanTreeOffsetProps> {
+export class UnconnectedSpanTreeOffset extends React.PureComponent<SpanTreeOffsetPropsType> {
   ancestorIds: string[];
-
-  static propTypes = {
-    addSpanId: PropTypes.func.isRequired,
-    childrenVisible: PropTypes.bool,
-    hasChildren: PropTypes.bool,
-    hoverSpanIds: PropTypes.instanceOf(Set).isRequired,
-    onClick: PropTypes.func,
-    removeSpanId: PropTypes.func.isRequired,
-    span: PropTypes.shape({
-      spanID: PropTypes.string.isRequired,
-      references: PropTypes.array.isRequired,
-    }).isRequired,
-  };
+  props: SpanTreeOffsetPropsType;
 
   static defaultProps = {
     childrenVisible: false,
@@ -64,23 +53,23 @@ export class UnconnectedSpanTreeOffset extends React.PureComponent<SpanTreeOffse
     onClick: null,
   };
 
-  constructor(props: SpanTreeOffsetProps) {
+  constructor(props: SpanTreeOffsetPropsType) {
     super(props);
 
-    const tempAncestorIds: string[] = [];
+    this.ancestorIds = [];
     let currentSpan: Span = props.span;
     while (currentSpan) {
       currentSpan = _get(_find(currentSpan.references, { refType: 'CHILD_OF' }), 'span');
       if (currentSpan) {
-        tempAncestorIds.push(currentSpan.spanID);
+        this.ancestorIds.push(currentSpan.spanID);
       }
     }
 
     // Some traces have multiple root-level spans, this connects them all under one guideline and adds the
     // necessary padding for the collapse icon on root-level spans.
-    tempAncestorIds.push('root');
+    this.ancestorIds.push('root');
 
-    this.ancestorIds = tempAncestorIds.reverse();
+    this.ancestorIds.reverse();
   }
 
   /**
@@ -91,13 +80,13 @@ export class UnconnectedSpanTreeOffset extends React.PureComponent<SpanTreeOffse
    *     the element the user is now hovering.
    * @param {string} ancestorId - The span id that the user was hovering over.
    */
-  handleMouseLeave = (event: any, ancestorId: string) => {
+  handleMouseLeave = (event: SyntheticMouseEvent<HTMLSpanElement>, ancestorId: string) => {
     if (
-      !event.relatedTarget ||
-      !event.relatedTarget.getAttribute ||
+      !(event.relatedTarget instanceof HTMLSpanElement) ||
+      // !event.relatedTarget.getAttribute ||
       event.relatedTarget.getAttribute('data--ancestor-id') !== ancestorId
     ) {
-      this.props.removeSpanId(ancestorId);
+      this.props.removeHoverSpanId(ancestorId);
     }
   };
 
@@ -109,13 +98,16 @@ export class UnconnectedSpanTreeOffset extends React.PureComponent<SpanTreeOffse
    *     the last element the user was hovering.
    * @param {string} ancestorId - The span id that the user is now hovering over.
    */
-  handleMouseEnter = (event: any, ancestorId: string) => {
+  handleMouseEnter = (
+    event: SyntheticMouseEvent<HTMLSpanElement> & { relatedTarget?: { getAttribute: string => string } },
+    ancestorId: string
+  ) => {
     if (
-      !event.relatedTarget ||
-      !event.relatedTarget.getAttribute ||
+      !(event.relatedTarget instanceof HTMLSpanElement) ||
+      // !event.relatedTarget.getAttribute ||
       event.relatedTarget.getAttribute('data--ancestor-id') !== ancestorId
     ) {
-      this.props.addSpanId(ancestorId);
+      this.props.addHoverSpanId(ancestorId);
     }
   };
 
@@ -129,7 +121,7 @@ export class UnconnectedSpanTreeOffset extends React.PureComponent<SpanTreeOffse
           <span
             key={ancestorId}
             className={cx('SpanTreeOffset--indentGuide', {
-              activeMouseover: this.props.hoverSpanIds.has(ancestorId),
+              'is-active': this.props.hoverSpanIds.has(ancestorId),
             })}
             data--ancestor-id={ancestorId}
             onMouseEnter={event => this.handleMouseEnter(event, ancestorId)}
@@ -150,14 +142,17 @@ export class UnconnectedSpanTreeOffset extends React.PureComponent<SpanTreeOffse
   }
 }
 
-export function mapStateToProps(state: ReduxState, ownProps: SpanTreeOffsetOwnProps): SpanTreeOffsetProps {
-  const hoverSpanIds = state.hoverSpanIds.hoverSpanIds;
+export function mapStateToProps(
+  state: ReduxState,
+  ownProps: SpanTreeOffsetOwnPropsType
+): SpanTreeOffsetPropsType {
+  const hoverSpanIds = state.traceTimeline.hoverSpanIds;
   return { hoverSpanIds, ...ownProps };
 }
 
 export function mapDispatchToProps(dispatch: Function) {
-  const { addSpanId, removeSpanId } = bindActionCreators(actions, dispatch);
-  return { addSpanId, removeSpanId };
+  const { addHoverSpanId, removeHoverSpanId } = bindActionCreators(actions, dispatch);
+  return { addHoverSpanId, removeHoverSpanId };
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(UnconnectedSpanTreeOffset);
