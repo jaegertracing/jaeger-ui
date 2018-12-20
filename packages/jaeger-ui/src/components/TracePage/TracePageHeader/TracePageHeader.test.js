@@ -73,7 +73,7 @@ describe('<TracePageHeader>', () => {
       expect(wrapper.find(SpanGraph).length).toBe(0);
     });
 
-    fit('hides the summary when hideSummary === true', () => {
+    it('hides the summary when hideSummary === true', () => {
       expect(wrapper.find(LabeledList).length).toBe(1);
       wrapper.setProps({ hideSummary: true });
       expect(wrapper.find(LabeledList).length).toBe(0);
