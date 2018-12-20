@@ -20,7 +20,7 @@ import { withRouter } from 'react-router-dom';
 
 import type { RouterHistory } from 'react-router-dom';
 
-import prefixUrl from '../../utils/prefix-url';
+import { getUrl } from '../../components/TracePage/url';
 
 import './TraceIDSearchInput.css';
 
@@ -35,7 +35,7 @@ class TraceIDSearchInput extends React.PureComponent<Props> {
     event.preventDefault();
     const value = event.target.elements.idInput.value;
     if (value) {
-      this.props.history.push(prefixUrl(`/trace/${value}`));
+      this.props.history.push(getUrl(value));
     }
   };
 

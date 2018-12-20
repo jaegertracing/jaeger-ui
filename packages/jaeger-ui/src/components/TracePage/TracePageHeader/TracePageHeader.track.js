@@ -1,3 +1,5 @@
+// @flow
+
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,21 +14,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as embedded from './index';
+import { getToggleValue, OPEN } from '../../../utils/tracking/common';
+import { trackEvent } from '../../../utils/tracking';
 
-describe('isEmbed', () => {
-  it('query request a embed component', () => {
-    const query = 'embed=v0&hideGraph&mapCollapsed';
-    expect(embedded.isEmbed(query)).toBeTruthy();
-  });
+const CATEGORY_ALT_VIEW = 'jaeger/ux/trace/alt-view';
+const CATEGORY_SLIM_HEADER = 'jaeger/ux/trace/slim-header';
 
-  it('query request a embed component with an icorrect version', () => {
-    const query = 'embed=v1&hideGraph&mapCollapsed';
-    expect(embedded.isEmbed(query)).toBeFalsy();
-  });
+// use a closure instead of bind to prevent forwarding any arguments to trackEvent()
+export const trackAltViewOpen = () => trackEvent(CATEGORY_ALT_VIEW, OPEN);
 
-  it('query not request a embed component', () => {
-    const query = 'hideGraph&mapCollapsed';
-    expect(embedded.isEmbed(query)).toBeFalsy();
-  });
-});
+export const trackSlimHeaderToggle = (isOpen: boolean) =>
+  trackEvent(CATEGORY_SLIM_HEADER, getToggleValue(isOpen));
