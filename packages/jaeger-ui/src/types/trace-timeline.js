@@ -22,5 +22,5 @@ export type TraceTimeline = {
   childrenHiddenIDs: Set<string>,
   findMatches: ?Set<string>,
   detailStates: Map<string, DetailState>,
-  hoverSpanIds: Set<string>,
+  hoverIndentGuideIds: Set<string>,
 };

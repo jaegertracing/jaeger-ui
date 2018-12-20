@@ -57,5 +57,4 @@ describe('<TracePageHeaderEmbed>', () => {
     wrapper.setProps({ enableDetails: true });
     expect(wrapper.find(LabeledList).length).toBe(1);
   });
-
 });

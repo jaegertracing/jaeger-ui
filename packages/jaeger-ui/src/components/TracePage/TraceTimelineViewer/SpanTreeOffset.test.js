@@ -48,9 +48,9 @@ describe('SpanTreeOffset', () => {
 
   beforeEach(() => {
     props = {
-      addHoverSpanId: jest.fn(),
-      hoverSpanIds: new Set(),
-      removeHoverSpanId: jest.fn(),
+      addHoverIndentGuideId: jest.fn(),
+      hoverIndentGuideIds: new Set(),
+      removeHoverIndentGuideId: jest.fn(),
       span: spanWithTwoAncestors,
     };
     wrapper = shallow(<UnconnectedSpanTreeOffset {...props} />);
@@ -85,41 +85,41 @@ describe('SpanTreeOffset', () => {
     });
 
     it('should add .is-active to correct indentGuide', () => {
-      props.hoverSpanIds = new Set([parentSpanID]);
+      props.hoverIndentGuideIds = new Set([parentSpanID]);
       wrapper = shallow(<UnconnectedSpanTreeOffset {...props} />);
       const activeIndentGuide = wrapper.find('.is-active');
       expect(activeIndentGuide.length).toBe(1);
       expect(activeIndentGuide.prop('data--ancestor-id')).toBe(parentSpanID);
     });
 
-    it('should call props.addHoverSpanId on mouse enter', () => {
+    it('should call props.addHoverIndentGuideId on mouse enter', () => {
       wrapper.find({ 'data--ancestor-id': parentSpanID }).simulate('mouseenter', {});
-      expect(props.addHoverSpanId).toHaveBeenCalledTimes(1);
-      expect(props.addHoverSpanId).toHaveBeenCalledWith(parentSpanID);
+      expect(props.addHoverIndentGuideId).toHaveBeenCalledTimes(1);
+      expect(props.addHoverIndentGuideId).toHaveBeenCalledWith(parentSpanID);
     });
 
-    it('should not call props.addHoverSpanId on mouse enter if mouse came from a indentGuide with the same ancestorId', () => {
+    it('should not call props.addHoverIndentGuideId on mouse enter if mouse came from a indentGuide with the same ancestorId', () => {
       const relatedTarget = document.createElement('span');
       relatedTarget.getAttribute = () => parentSpanID;
       wrapper.find({ 'data--ancestor-id': parentSpanID }).simulate('mouseenter', {
         relatedTarget,
       });
-      expect(props.addHoverSpanId).not.toHaveBeenCalled();
+      expect(props.addHoverIndentGuideId).not.toHaveBeenCalled();
     });
 
-    it('should call props.removeHoverSpanId on mouse leave', () => {
+    it('should call props.removeHoverIndentGuideId on mouse leave', () => {
       wrapper.find({ 'data--ancestor-id': parentSpanID }).simulate('mouseleave', {});
-      expect(props.removeHoverSpanId).toHaveBeenCalledTimes(1);
-      expect(props.removeHoverSpanId).toHaveBeenCalledWith(parentSpanID);
+      expect(props.removeHoverIndentGuideId).toHaveBeenCalledTimes(1);
+      expect(props.removeHoverIndentGuideId).toHaveBeenCalledWith(parentSpanID);
     });
 
-    it('should not call props.removeHoverSpanId on mouse leave if mouse leaves to a indentGuide with the same ancestorId', () => {
+    it('should not call props.removeHoverIndentGuideId on mouse leave if mouse leaves to a indentGuide with the same ancestorId', () => {
       const relatedTarget = document.createElement('span');
       relatedTarget.getAttribute = () => parentSpanID;
       wrapper.find({ 'data--ancestor-id': parentSpanID }).simulate('mouseleave', {
         relatedTarget,
       });
-      expect(props.removeHoverSpanId).not.toHaveBeenCalled();
+      expect(props.removeHoverIndentGuideId).not.toHaveBeenCalled();
     });
   });
 
@@ -145,34 +145,34 @@ describe('SpanTreeOffset', () => {
       expect(wrapper.find(IoIosArrowDown).length).toBe(1);
     });
 
-    it('should call props.addHoverSpanId on mouse enter', () => {
+    it('should call props.addHoverIndentGuideId on mouse enter', () => {
       wrapper.find('.SpanTreeOffset--iconWrapper').simulate('mouseenter', {});
-      expect(props.addHoverSpanId).toHaveBeenCalledTimes(1);
-      expect(props.addHoverSpanId).toHaveBeenCalledWith(ownSpanID);
+      expect(props.addHoverIndentGuideId).toHaveBeenCalledTimes(1);
+      expect(props.addHoverIndentGuideId).toHaveBeenCalledWith(ownSpanID);
     });
 
-    it('should call props.removeHoverSpanId on mouse leave', () => {
+    it('should call props.removeHoverIndentGuideId on mouse leave', () => {
       wrapper.find('.SpanTreeOffset--iconWrapper').simulate('mouseleave', {});
-      expect(props.removeHoverSpanId).toHaveBeenCalledTimes(1);
-      expect(props.removeHoverSpanId).toHaveBeenCalledWith(ownSpanID);
+      expect(props.removeHoverIndentGuideId).toHaveBeenCalledTimes(1);
+      expect(props.removeHoverIndentGuideId).toHaveBeenCalledWith(ownSpanID);
     });
   });
 
   describe('mapDispatchToProps()', () => {
     it('creates the actions correctly', () => {
       expect(mapDispatchToProps(() => {})).toEqual({
-        addHoverSpanId: expect.any(Function),
-        removeHoverSpanId: expect.any(Function),
+        addHoverIndentGuideId: expect.any(Function),
+        removeHoverIndentGuideId: expect.any(Function),
       });
     });
   });
 
   describe('mapStateToProps()', () => {
     it('maps state to props correctly', () => {
-      const hoverSpanIds = new Set([parentSpanID]);
+      const hoverIndentGuideIds = new Set([parentSpanID]);
       const state = {
         traceTimeline: {
-          hoverSpanIds,
+          hoverIndentGuideIds,
         },
       };
       const ownProps = {
@@ -182,10 +182,10 @@ describe('SpanTreeOffset', () => {
       };
       const mappedProps = mapStateToProps(state, ownProps);
       expect(mappedProps).toEqual({
-        hoverSpanIds,
+        hoverIndentGuideIds,
         ...ownProps,
       });
-      expect(mappedProps.hoverSpanIds).toBe(hoverSpanIds);
+      expect(mappedProps.hoverIndentGuideIds).toBe(hoverIndentGuideIds);
     });
   });
 });

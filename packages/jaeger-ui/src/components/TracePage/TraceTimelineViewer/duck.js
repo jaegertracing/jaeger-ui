@@ -37,14 +37,14 @@ export function newInitialState({ spanNameColumnWidth = null, traceID = null } =
   return {
     childrenHiddenIDs: new Set(),
     detailStates: new Map(),
-    hoverSpanIds: new Set(),
+    hoverIndentGuideIds: new Set(),
     spanNameColumnWidth: spanNameColumnWidth || 0.25,
     traceID,
   };
 }
 
 export const actionTypes = generateActionTypes('@jaeger-ui/trace-timeline-viewer', [
-  'ADD_HOVER_SPAN_ID',
+  'ADD_HOVER_INDENT_GUIDE_ID',
   'CHILDREN_TOGGLE',
   'COLLAPSE_ALL',
   'COLLAPSE_ONE',
@@ -55,7 +55,7 @@ export const actionTypes = generateActionTypes('@jaeger-ui/trace-timeline-viewer
   'DETAIL_LOG_ITEM_TOGGLE',
   'EXPAND_ALL',
   'EXPAND_ONE',
-  'REMOVE_HOVER_SPAN_ID',
+  'REMOVE_HOVER_INDENT_GUIDE_ID',
   'SET_SPAN_NAME_COLUMN_WIDTH',
   'SET_TRACE',
 ]);
@@ -73,8 +73,8 @@ const fullActions = createActions({
   [actionTypes.DETAIL_PROCESS_TOGGLE]: spanID => ({ spanID }),
   [actionTypes.DETAIL_LOGS_TOGGLE]: spanID => ({ spanID }),
   [actionTypes.DETAIL_LOG_ITEM_TOGGLE]: (spanID, logItem) => ({ logItem, spanID }),
-  [actionTypes.ADD_HOVER_SPAN_ID]: spanID => ({ spanID }),
-  [actionTypes.REMOVE_HOVER_SPAN_ID]: spanID => ({ spanID }),
+  [actionTypes.ADD_HOVER_INDENT_GUIDE_ID]: spanID => ({ spanID }),
+  [actionTypes.REMOVE_HOVER_INDENT_GUIDE_ID]: spanID => ({ spanID }),
 });
 
 export const actions = fullActions.jaegerUi.traceTimelineViewer;
@@ -211,20 +211,20 @@ function detailLogItemToggle(state, { payload }) {
   return { ...state, detailStates };
 }
 
-function addHoverSpanId(state, { payload }) {
+function addHoverIndentGuideId(state, { payload }) {
   const { spanID } = payload;
-  const newHoverSpanIds = new Set(state.hoverSpanIds);
-  newHoverSpanIds.add(spanID);
+  const newHoverIndentGuideIds = new Set(state.hoverIndentGuideIds);
+  newHoverIndentGuideIds.add(spanID);
 
-  return { ...state, hoverSpanIds: newHoverSpanIds };
+  return { ...state, hoverIndentGuideIds: newHoverIndentGuideIds };
 }
 
-function removeHoverSpanId(state, { payload }) {
+function removeHoverIndentGuideId(state, { payload }) {
   const { spanID } = payload;
-  const newHoverSpanIds = new Set(state.hoverSpanIds);
-  newHoverSpanIds.delete(spanID);
+  const newHoverIndentGuideIds = new Set(state.hoverIndentGuideIds);
+  newHoverIndentGuideIds.delete(spanID);
 
-  return { ...state, hoverSpanIds: newHoverSpanIds };
+  return { ...state, hoverIndentGuideIds: newHoverIndentGuideIds };
 }
 
 export default handleActions(
@@ -241,8 +241,8 @@ export default handleActions(
     [actionTypes.DETAIL_PROCESS_TOGGLE]: detailProcessToggle,
     [actionTypes.DETAIL_LOGS_TOGGLE]: detailLogsToggle,
     [actionTypes.DETAIL_LOG_ITEM_TOGGLE]: detailLogItemToggle,
-    [actionTypes.ADD_HOVER_SPAN_ID]: addHoverSpanId,
-    [actionTypes.REMOVE_HOVER_SPAN_ID]: removeHoverSpanId,
+    [actionTypes.ADD_HOVER_INDENT_GUIDE_ID]: addHoverIndentGuideId,
+    [actionTypes.REMOVE_HOVER_INDENT_GUIDE_ID]: removeHoverIndentGuideId,
   },
   newInitialState()
 );
