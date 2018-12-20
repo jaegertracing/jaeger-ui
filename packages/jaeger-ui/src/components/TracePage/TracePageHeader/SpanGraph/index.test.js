@@ -19,9 +19,9 @@ import CanvasSpanGraph from './CanvasSpanGraph';
 import SpanGraph from './index';
 import TickLabels from './TickLabels';
 import ViewingLayer from './ViewingLayer';
-import traceGenerator from '../../../../src/demo/trace-generators';
-import transformTraceData from '../../../model/transform-trace-data';
-import { polyfill as polyfillAnimationFrame } from '../../../utils/test/requestAnimationFrame';
+import traceGenerator from '../../../../demo/trace-generators';
+import transformTraceData from '../../../../model/transform-trace-data';
+import { polyfill as polyfillAnimationFrame } from '../../../../utils/test/requestAnimationFrame';
 
 describe('<SpanGraph>', () => {
   polyfillAnimationFrame(window);

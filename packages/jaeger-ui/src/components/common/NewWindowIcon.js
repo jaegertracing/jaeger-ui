@@ -1,6 +1,6 @@
 // @flow
 
-// Copyright (c) 2017 Uber Technologies, Inc.
+// Copyright (c) 2018 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,14 +14,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { getToggleValue, OPEN } from '../../utils/tracking/common';
-import { trackEvent } from '../../utils/tracking';
+import React from 'react';
+import IoAndroidOpen from 'react-icons/lib/io/android-open';
 
-const CATEGORY_ALT_VIEW = 'jaeger/ux/trace/alt-view';
-const CATEGORY_SLIM_HEADER = 'jaeger/ux/trace/slim-header';
+import './NewWindowIcon.css';
 
-// use a closure instead of bind to prevent forwarding any arguments to trackEvent()
-export const trackAltViewOpen = () => trackEvent(CATEGORY_ALT_VIEW, OPEN);
+type Props = {
+  className?: string,
+};
 
-export const trackSlimHeaderToggle = (isOpen: boolean) =>
-  trackEvent(CATEGORY_SLIM_HEADER, getToggleValue(isOpen));
+export default function NewWindowIcon(props: Props) {
+  const { className, ...rest } = props;
+  const cls = `NewWindowIcon ${className || ''}`;
+  return <IoAndroidOpen className={cls} {...rest} />;
+}
+
+NewWindowIcon.defaultProps = {
+  className: undefined,
+};

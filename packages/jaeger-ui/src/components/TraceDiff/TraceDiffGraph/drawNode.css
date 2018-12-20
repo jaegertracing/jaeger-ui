@@ -27,7 +27,7 @@ limitations under the License.
 }
 
 .DiffNode.is-changed {
-  color: rgba(0, 0, 0, 0.85);
+  color: var(--tx-color-title);
 }
 
 .DiffNode.is-more {

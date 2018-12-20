@@ -16,6 +16,8 @@
 
 import Combokeys from 'combokeys';
 
+import keyboardMappings from './keyboard-mappings';
+
 export type CombokeysHandler =
   | (() => void)
   | ((SyntheticKeyboardEvent<any>) => void)
@@ -50,27 +52,6 @@ export type ShortcutCallbacks = {
   clearSearch?: CombokeysHandler,
 };
 
-export const kbdMappings = {
-  scrollPageDown: 's',
-  scrollPageUp: 'w',
-  scrollToNextVisibleSpan: 'f',
-  scrollToPrevVisibleSpan: 'b',
-  panLeft: ['a', 'left'],
-  panLeftFast: ['shift+a', 'shift+left'],
-  panRight: ['d', 'right'],
-  panRightFast: ['shift+d', 'shift+right'],
-  zoomIn: 'up',
-  zoomInFast: 'shift+up',
-  zoomOut: 'down',
-  zoomOutFast: 'shift+down',
-  collapseAll: ']',
-  expandAll: '[',
-  collapseOne: 'p',
-  expandOne: 'o',
-  searchSpans: 'ctrl+b',
-  clearSearch: 'escape',
-};
-
 let instance: ?CombokeysType;
 
 function getInstance(): CombokeysType {
@@ -85,7 +66,7 @@ export function merge(callbacks: ShortcutCallbacks) {
   Object.keys(callbacks).forEach(name => {
     const keysHandler = callbacks[name];
     if (keysHandler) {
-      inst.bind(kbdMappings[name], keysHandler);
+      inst.bind(keyboardMappings[name].binding, keysHandler);
     }
   });
 }

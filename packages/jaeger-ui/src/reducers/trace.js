@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import _isEqual from 'lodash/isEqual';
 import { handleActions } from 'redux-actions';
 
 import { fetchTrace, fetchMultipleTraces, searchTraces } from '../actions/jaeger-api';
@@ -21,6 +22,7 @@ import transformTraceData from '../model/transform-trace-data';
 const initialState = {
   traces: {},
   search: {
+    query: null,
     results: [],
   },
 };
@@ -86,15 +88,20 @@ function fetchMultipleTracesErred(state, { meta, payload }) {
   return { ...state, traces };
 }
 
-function fetchSearchStarted(state) {
+function fetchSearchStarted(state, { meta }) {
+  const { query } = meta;
   const search = {
+    query,
     results: [],
     state: fetchedState.LOADING,
   };
   return { ...state, search };
 }
 
-function searchDone(state, { payload }) {
+function searchDone(state, { meta, payload }) {
+  if (!_isEqual(state.search.query, meta.query)) {
+    return state;
+  }
   const processed = payload.data.map(transformTraceData);
   const resultTraces = {};
   const results = [];
@@ -105,12 +112,15 @@ function searchDone(state, { payload }) {
     results.push(id);
   }
   const traces = { ...state.traces, ...resultTraces };
-  const search = { results, state: fetchedState.DONE };
+  const search = { ...state.search, results, state: fetchedState.DONE };
   return { ...state, search, traces };
 }
 
-function searchErred(state, { payload }) {
-  const search = { error: payload, results: [], state: fetchedState.ERROR };
+function searchErred(state, { meta, payload }) {
+  if (!_isEqual(state.search.query, meta.query)) {
+    return state;
+  }
+  const search = { ...state.search, error: payload, results: [], state: fetchedState.ERROR };
   return { ...state, search };
 }
 
