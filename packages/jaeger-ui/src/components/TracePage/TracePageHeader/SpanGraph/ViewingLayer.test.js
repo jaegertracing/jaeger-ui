@@ -18,8 +18,8 @@ import { shallow } from 'enzyme';
 import GraphTicks from './GraphTicks';
 import Scrubber from './Scrubber';
 import ViewingLayer, { dragTypes } from './ViewingLayer';
-import { updateTypes } from '../../../utils/DraggableManager';
-import { polyfill as polyfillAnimationFrame } from '../../../utils/test/requestAnimationFrame';
+import { updateTypes } from '../../../../utils/DraggableManager';
+import { polyfill as polyfillAnimationFrame } from '../../../../utils/test/requestAnimationFrame';
 
 function getViewRange(viewStart, viewEnd) {
   return {

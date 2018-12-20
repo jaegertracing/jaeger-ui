@@ -15,7 +15,7 @@
 // limitations under the License.
 
 // exported for tests
-export const BG_COLOR = '#f5f5f5';
+export const BG_COLOR = '#fff';
 export const ITEM_ALPHA = 0.8;
 export const MIN_ITEM_HEIGHT = 2;
 export const MAX_TOTAL_HEIGHT = 200;

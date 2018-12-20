@@ -40,7 +40,7 @@ limitations under the License.
 }
 
 .TraecDiffHeader--traceTitleChevron {
-  color: rgba(0, 0, 0, 0.85);
+  color: var(--tx-color-title);
   font-size: 0.75em;
   margin-right: 0.75em;
   position: absolute;

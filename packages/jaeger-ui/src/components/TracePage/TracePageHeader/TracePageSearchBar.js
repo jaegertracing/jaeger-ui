@@ -52,7 +52,7 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps) {
   const btnClass = `TracePageSearchBar--btn${textFilter ? '' : ' is-disabled'}`;
 
   return (
-    <div className="ub-flex-auto ub-mr2 TracePageSearchBar">
+    <div className="ub-flex-auto ub-mx2 TracePageSearchBar">
       {/* style inline because compact overwrites the display */}
       <Input.Group compact style={{ display: 'flex' }}>
         <Input

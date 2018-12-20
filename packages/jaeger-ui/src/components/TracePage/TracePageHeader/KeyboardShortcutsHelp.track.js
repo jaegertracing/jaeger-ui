@@ -1,3 +1,5 @@
+// @flow
+
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,14 +14,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import queryString from 'query-string';
+import { OPEN } from '../../../utils/tracking/common';
+import { trackEvent } from '../../../utils/tracking';
 
-export const VERSION_API = 'v0';
+const CATEGORY = 'jaeger/ux/trace/kbd-modal';
 
-export function isEmbed(query: string) {
-  const { embed } = queryString.parse(query);
-  if (embed === VERSION_API) {
-    return true;
-  }
-  return false;
-}
+export default trackEvent.bind(null, CATEGORY, OPEN);
