@@ -14,22 +14,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { Popover } from 'antd';
+import cx from 'classnames';
 import * as React from 'react';
+
+import './redux-form-field-adapter.css';
 
 export default function reduxFormFieldAdapter(
   AntInputComponent: Class<React.Component<*, *>>,
   onChangeAdapter: () => void
 ) {
   return function _reduxFormFieldAdapter(props: any) {
-    const { input: { value, onChange }, children, ...rest } = props;
+    // inputRest includes necessary props such as onBlur and value
+    const { input: { onChange, ...inputRest }, children, ...rest } = props;
+    const isInvalid = rest.meta.touched && !!rest.meta.error;
     return (
-      <AntInputComponent
-        value={value}
-        onChange={onChangeAdapter ? (...args) => onChange(onChangeAdapter(...args)) : onChange}
-        {...rest}
-      >
-        {children}
-      </AntInputComponent>
+      <Popover placement={'bottomLeft'} visible={isInvalid} {...rest.meta.error}>
+        <AntInputComponent
+          className={cx({ 'is-invalid': isInvalid })}
+          onChange={onChangeAdapter ? (...args) => onChange(onChangeAdapter(...args)) : onChange}
+          {...inputRest}
+          {...rest}
+        >
+          {children}
+        </AntInputComponent>
+      </Popover>
     );
   };
 }

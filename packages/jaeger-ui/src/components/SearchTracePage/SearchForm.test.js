@@ -29,6 +29,7 @@ import {
   submitForm,
   traceIDsToQuery,
   SearchFormImpl as SearchForm,
+  validateDurationFields,
 } from './SearchForm';
 import * as markers from './SearchForm.markers';
 
@@ -274,6 +275,36 @@ describe('<SearchForm>', () => {
     wrapper = shallow(<SearchForm {...defaultProps} selectedService="svcA" />);
     btn = wrapper.find(`[data-test="${markers.SUBMIT_BTN}"]`);
     expect(btn.prop('disabled')).toBeFalsy();
+  });
+
+  it('disables the submit button when the form has invalid data', () => {
+    wrapper = shallow(<SearchForm {...defaultProps} selectedService="svcA" />);
+    let btn = wrapper.find(`[data-test="${markers.SUBMIT_BTN}"]`);
+    // If this test fails on the following expect statement, this may be a false negative caused by a separate
+    // regression.
+    expect(btn.prop('disabled')).toBeFalsy();
+    wrapper.setProps({ invalid: true });
+    btn = wrapper.find(`[data-test="${markers.SUBMIT_BTN}"]`);
+    expect(btn.prop('disabled')).toBeTruthy();
+  });
+});
+
+describe('validation', () => {
+  it('should return `undefined` if the value is falsy', () => {
+    expect(validateDurationFields('')).toBeUndefined();
+    expect(validateDurationFields(null)).toBeUndefined();
+    expect(validateDurationFields(undefined)).toBeUndefined();
+  });
+
+  it('should return Popover-compliant error object if the value is a populated string that does not adhere to expected format', () => {
+    expect(validateDurationFields('100')).toEqual({
+      content: 'Please enter a number followed by a duration unit, e.g. 1.2s, 100ms, 500us',
+      title: 'Please match the requested format.',
+    });
+  });
+
+  it('should return `undefined` if the value is a populated string that adheres to expected format', () => {
+    expect(validateDurationFields('100ms')).toBeUndefined();
   });
 });
 
