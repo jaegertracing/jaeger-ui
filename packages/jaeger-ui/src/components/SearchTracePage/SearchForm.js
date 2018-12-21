@@ -375,7 +375,7 @@ export class SearchFormImpl extends React.PureComponent {
 
 SearchFormImpl.propTypes = {
   handleSubmit: PropTypes.func.isRequired,
-  invalid: PropTypes.boolean,
+  invalid: PropTypes.bool,
   submitting: PropTypes.bool,
   services: PropTypes.arrayOf(
     PropTypes.shape({
