@@ -121,7 +121,18 @@ describe('<KeyValuesTable>', () => {
       expect(wrapper.state().copiedRows.has(data[indexToCopy])).toBe(true);
     });
 
-    it('should add correct data entry to state when icon is clicked', () => {
+    it('should remove correct data entry to state when tooltip hides', () => {
+      wrapper.setState({ copiedRows: new Set(data) });
+      wrapper
+        .find('tr')
+        .at(indexToCopy)
+        .find(Tooltip)
+        .prop('onVisibleChange')(false);
+      expect(wrapper.state().copiedRows.size).toBe(data.length - 1);
+      expect(wrapper.state().copiedRows.has(data[indexToCopy])).toBe(false);
+    });
+
+    it('should render correct tooltip title for each row', () => {
       wrapper.setState({ copiedRows: new Set([data[indexToCopy]]) });
       const tooltips = wrapper.find(Tooltip);
       tooltips.forEach((tooltip, i) =>
