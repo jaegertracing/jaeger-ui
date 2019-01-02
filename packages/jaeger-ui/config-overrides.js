@@ -13,27 +13,38 @@
 // limitations under the License.
 
 /* eslint-disable import/no-extraneous-dependencies */
-
-const path = require('path');
 const fs = require('fs');
 const { injectBabelPlugin } = require('react-app-rewired');
 const rewireLess = require('react-app-rewire-less');
 const lessToJs = require('less-vars-to-js');
-const rewireBabelLoader = require('react-app-rewire-babel-loader');
 
-const appDirectory = fs.realpathSync(process.cwd());
-const resolveApp = relativePath => path.resolve(appDirectory, relativePath);
-
-// Read the less file in as string
+// Convert less vars to JS
 const loadedVarOverrides = fs.readFileSync('config-overrides-antd-vars.less', 'utf8');
-
-// Pass in file contents
 const modifyVars = lessToJs(loadedVarOverrides);
 
-module.exports = function override(_config, env) {
+function webpack(_config, env) {
   let config = _config;
-  config = injectBabelPlugin(['import', { libraryName: 'antd', style: true }], config);
-  config = rewireLess.withLoaderOptions({ modifyVars })(config, env);
-  config = rewireBabelLoader.include(config, resolveApp('../../node_modules/drange'));
+  config = rewireLess.withLoaderOptions({
+    modifyVars,
+    javascriptEnabled: true,
+  })(config, env);
+  config = injectBabelPlugin(
+    ['import', { libraryName: 'antd', style: true, libraryDirectory: 'lib' }],
+    config
+  );
   return config;
-};
+}
+
+// Don't use react-app-rewired/scripts/utils/babelTransform.js for the jest
+// transform - it has an issue with automatically loading decorators.
+function jest(config) {
+  const _config = config;
+  Object.keys(_config.transform).forEach(key => {
+    if (_config.transform[key].endsWith('babelTransform.js')) {
+      _config.transform[key] = require.resolve('./jest-babel-transform.js');
+    }
+  });
+  return config;
+}
+
+module.exports = { jest, webpack };
