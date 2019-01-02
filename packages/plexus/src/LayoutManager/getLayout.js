@@ -43,7 +43,10 @@ function getVerticesValidity(input: (SizeVertex | LayoutVertex)[], output: Layou
     const { vertex: { key }, height, left, top, width } = output[i];
     const src = inputHash[String(key)];
     if (!src) {
-      return { validity: VALIDITY_ERROR, message: `Extra vertex found: ${key}` };
+      return {
+        validity: VALIDITY_ERROR,
+        message: `Extra vertex found: ${key}`,
+      };
     }
     if (!isCloseEnough(src.height, height) || !isCloseEnough(src.width, width)) {
       return {
@@ -65,7 +68,10 @@ function getVerticesValidity(input: (SizeVertex | LayoutVertex)[], output: Layou
   const missingKeys = Object.keys(inputHash);
   if (missingKeys.length !== 0) {
     const word = missingKeys.length > 1 ? 'vertices' : 'vertex';
-    return { validity: VALIDITY_ERROR, message: `Missing ${word}: ${missingKeys.join(', ')}` };
+    return {
+      validity: VALIDITY_ERROR,
+      message: `Missing ${word}: ${missingKeys.join(', ')}`,
+    };
   }
   return warn || { validity: VALIDITY_OK, message: null };
 }
@@ -78,7 +84,11 @@ export default function getLayout(
 ) {
   const dot = toDot(inEdges, inVertices, layoutOptions);
   const { totalMemory } = layoutOptions || {};
-  const options = { totalMemory, engine: phase === 'edges' ? 'neato' : 'dot', format: 'plain' };
+  const options = {
+    totalMemory,
+    engine: phase === 'edges' ? 'neato' : 'dot',
+    format: 'plain',
+  };
   const plainOut = viz(dot, options);
   const { edges, graph, vertices } = convPlain(plainOut, phase !== 'positions');
   const { validity, message } = getVerticesValidity(inVertices, vertices);

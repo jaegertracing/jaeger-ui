@@ -16,21 +16,42 @@ import * as React from 'react';
 
 export const varied = {
   vertices: [
-    { key: 'string key 0', data: { value: new Date(), message: 'vertex w a string key that has spaces' } },
+    {
+      key: 'string key 0',
+      data: {
+        value: new Date(),
+        message: 'vertex w a string key that has spaces',
+      },
+    },
     {
       key: 1,
       label: 'Key is the number 1Key is the number 1Key',
-      data: { err: new Error(9), message: 'vertex with a number key and a string label' },
+      data: {
+        err: new Error(9),
+        message: 'vertex with a number key and a string label',
+      },
     },
-    { key: '2', label: <h3>OMG an H3</h3>, data: { message: 'label is an H3 React element' } },
+    {
+      key: '2',
+      label: <h3>OMG an H3</h3>,
+      data: { message: 'label is an H3 React element' },
+    },
     {
       key: 33,
       label: 'Key is the number 1Key is the number 1Key',
-      data: { value: /abc/, message: 'data contains a RegExp and the node lacks a label' },
+      data: {
+        value: /abc/,
+        message: 'data contains a RegExp and the node lacks a label',
+      },
     },
   ],
   edges: [
-    { from: 'string key 0', to: 1, label: 'The Great Edge Label', data: 'Edge with a string label' },
+    {
+      from: 'string key 0',
+      to: 1,
+      label: 'The Great Edge Label',
+      data: 'Edge with a string label',
+    },
     {
       from: 'string key 0',
       to: '2',
@@ -54,7 +75,12 @@ export const colored = {
     { key: 33, data: 'teal' },
   ],
   edges: [
-    { from: 'string key 0', to: 1, label: 'The Great Edge Label', data: '#c00' },
+    {
+      from: 'string key 0',
+      to: 1,
+      label: 'The Great Edge Label',
+      data: '#c00',
+    },
     {
       from: 'string key 0',
       to: '2',

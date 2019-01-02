@@ -69,7 +69,9 @@ export default class ResultItemTitle extends React.PureComponent<Props> {
     } = this.props;
     // Use a div when the ResultItemTitle doesn't link to anything
     let WrapperComponent = 'div';
-    const wrapperProps: { [string]: string } = { className: 'ResultItemTitle--item ub-flex-auto' };
+    const wrapperProps: { [string]: string } = {
+      className: 'ResultItemTitle--item ub-flex-auto',
+    };
     if (linkTo) {
       WrapperComponent = Link;
       wrapperProps.to = linkTo;

@@ -50,7 +50,11 @@ describe('<SearchResults>', () => {
   });
 
   it('hide scatter plot if queryparam hideGraph', () => {
-    wrapper.setProps({ hideGraph: true, embed: true, getSearchURL: () => 'SEARCH_URL' });
+    wrapper.setProps({
+      hideGraph: true,
+      embed: true,
+      getSearchURL: () => 'SEARCH_URL',
+    });
     expect(wrapper.find(ScatterPlot).length).toBe(0);
   });
 

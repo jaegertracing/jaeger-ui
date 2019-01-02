@@ -34,7 +34,11 @@ const getBgFillRect = items => ({
 });
 
 describe('renderIntoCanvas()', () => {
-  const basicItem = { valueWidth: 100, valueOffset: 50, serviceName: 'some-name' };
+  const basicItem = {
+    valueWidth: 100,
+    valueOffset: 50,
+    serviceName: 'some-name',
+  };
 
   class CanvasContext {
     constructor() {

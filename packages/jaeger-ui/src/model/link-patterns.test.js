@@ -29,9 +29,12 @@ describe('processTemplate()', () => {
       a => a
     );
     expect(processedTemplate.parameters).toEqual(['oneVariable', 'anotherVariable']);
-    expect(processedTemplate.template({ oneVariable: 'MYFIRSTVAR', anotherVariable: 'SECOND' })).toBe(
-      'this is a test with MYFIRSTVARSECOND and the same MYFIRSTVAR'
-    );
+    expect(
+      processedTemplate.template({
+        oneVariable: 'MYFIRSTVAR',
+        anotherVariable: 'SECOND',
+      })
+    ).toBe('this is a test with MYFIRSTVARSECOND and the same MYFIRSTVAR');
   });
 
   it('correctly uses the encoding function', () => {
@@ -40,9 +43,12 @@ describe('processTemplate()', () => {
       e => `/${e}\\`
     );
     expect(processedTemplate.parameters).toEqual(['oneVariable', 'anotherVariable']);
-    expect(processedTemplate.template({ oneVariable: 'MYFIRSTVAR', anotherVariable: 'SECOND' })).toBe(
-      'this is a test with /MYFIRSTVAR\\/SECOND\\ and the same /MYFIRSTVAR\\'
-    );
+    expect(
+      processedTemplate.template({
+        oneVariable: 'MYFIRSTVAR',
+        anotherVariable: 'SECOND',
+      })
+    ).toBe('this is a test with /MYFIRSTVAR\\/SECOND\\ and the same /MYFIRSTVAR\\');
   });
 
   /*
@@ -253,41 +259,101 @@ describe('getParameterInAncestor()', () => {
   ];
 
   it('uses current span tags', () => {
-    expect(getParameterInAncestor('a', spans[3])).toEqual({ key: 'a', value: 'a0' });
-    expect(getParameterInAncestor('a', spans[2])).toEqual({ key: 'a', value: 'a2' });
-    expect(getParameterInAncestor('a', spans[1])).toEqual({ key: 'a', value: 'a4' });
-    expect(getParameterInAncestor('a', spans[0])).toEqual({ key: 'a', value: 'a6' });
+    expect(getParameterInAncestor('a', spans[3])).toEqual({
+      key: 'a',
+      value: 'a0',
+    });
+    expect(getParameterInAncestor('a', spans[2])).toEqual({
+      key: 'a',
+      value: 'a2',
+    });
+    expect(getParameterInAncestor('a', spans[1])).toEqual({
+      key: 'a',
+      value: 'a4',
+    });
+    expect(getParameterInAncestor('a', spans[0])).toEqual({
+      key: 'a',
+      value: 'a6',
+    });
   });
 
   it('uses current span process tags', () => {
-    expect(getParameterInAncestor('b', spans[3])).toEqual({ key: 'b', value: 'b1' });
-    expect(getParameterInAncestor('d', spans[2])).toEqual({ key: 'd', value: 'd3' });
-    expect(getParameterInAncestor('f', spans[1])).toEqual({ key: 'f', value: 'f5' });
-    expect(getParameterInAncestor('h', spans[0])).toEqual({ key: 'h', value: 'h7' });
+    expect(getParameterInAncestor('b', spans[3])).toEqual({
+      key: 'b',
+      value: 'b1',
+    });
+    expect(getParameterInAncestor('d', spans[2])).toEqual({
+      key: 'd',
+      value: 'd3',
+    });
+    expect(getParameterInAncestor('f', spans[1])).toEqual({
+      key: 'f',
+      value: 'f5',
+    });
+    expect(getParameterInAncestor('h', spans[0])).toEqual({
+      key: 'h',
+      value: 'h7',
+    });
   });
 
   it('uses parent span tags', () => {
-    expect(getParameterInAncestor('c', spans[3])).toEqual({ key: 'c', value: 'c2' });
-    expect(getParameterInAncestor('e', spans[2])).toEqual({ key: 'e', value: 'e6' });
-    expect(getParameterInAncestor('f', spans[2])).toEqual({ key: 'f', value: 'f6' });
-    expect(getParameterInAncestor('g', spans[2])).toEqual({ key: 'g', value: 'g6' });
-    expect(getParameterInAncestor('g', spans[1])).toEqual({ key: 'g', value: 'g6' });
+    expect(getParameterInAncestor('c', spans[3])).toEqual({
+      key: 'c',
+      value: 'c2',
+    });
+    expect(getParameterInAncestor('e', spans[2])).toEqual({
+      key: 'e',
+      value: 'e6',
+    });
+    expect(getParameterInAncestor('f', spans[2])).toEqual({
+      key: 'f',
+      value: 'f6',
+    });
+    expect(getParameterInAncestor('g', spans[2])).toEqual({
+      key: 'g',
+      value: 'g6',
+    });
+    expect(getParameterInAncestor('g', spans[1])).toEqual({
+      key: 'g',
+      value: 'g6',
+    });
   });
 
   it('uses parent span process tags', () => {
-    expect(getParameterInAncestor('d', spans[3])).toEqual({ key: 'd', value: 'd3' });
-    expect(getParameterInAncestor('h', spans[2])).toEqual({ key: 'h', value: 'h7' });
-    expect(getParameterInAncestor('h', spans[1])).toEqual({ key: 'h', value: 'h7' });
+    expect(getParameterInAncestor('d', spans[3])).toEqual({
+      key: 'd',
+      value: 'd3',
+    });
+    expect(getParameterInAncestor('h', spans[2])).toEqual({
+      key: 'h',
+      value: 'h7',
+    });
+    expect(getParameterInAncestor('h', spans[1])).toEqual({
+      key: 'h',
+      value: 'h7',
+    });
   });
 
   it('uses grand-parent span tags', () => {
-    expect(getParameterInAncestor('e', spans[3])).toEqual({ key: 'e', value: 'e6' });
-    expect(getParameterInAncestor('f', spans[3])).toEqual({ key: 'f', value: 'f6' });
-    expect(getParameterInAncestor('g', spans[3])).toEqual({ key: 'g', value: 'g6' });
+    expect(getParameterInAncestor('e', spans[3])).toEqual({
+      key: 'e',
+      value: 'e6',
+    });
+    expect(getParameterInAncestor('f', spans[3])).toEqual({
+      key: 'f',
+      value: 'f6',
+    });
+    expect(getParameterInAncestor('g', spans[3])).toEqual({
+      key: 'g',
+      value: 'g6',
+    });
   });
 
   it('uses grand-parent process tags', () => {
-    expect(getParameterInAncestor('h', spans[3])).toEqual({ key: 'h', value: 'h7' });
+    expect(getParameterInAncestor('h', spans[3])).toEqual({
+      key: 'h',
+      value: 'h7',
+    });
   });
 
   it('returns undefined when the entry cannot be found', () => {
@@ -322,7 +388,11 @@ describe('computeLinks()', () => {
 
   const spans = [
     { depth: 0, process: {}, tags: [{ key: 'myKey', value: 'valueOfMyKey' }] },
-    { depth: 1, process: {}, logs: [{ fields: [{ key: 'myOtherKey', value: 'valueOfMy+Other+Key' }] }] },
+    {
+      depth: 1,
+      process: {},
+      logs: [{ fields: [{ key: 'myOtherKey', value: 'valueOfMy+Other+Key' }] }],
+    },
   ];
   spans[1].references = [
     {
@@ -357,7 +427,11 @@ describe('getLinks()', () => {
   ].map(processLinkPattern);
   const template = jest.spyOn(linkPatterns[0].url, 'template');
 
-  const span = { depth: 0, process: {}, tags: [{ key: 'mySpecialKey', value: 'valueOfMyKey' }] };
+  const span = {
+    depth: 0,
+    process: {},
+    tags: [{ key: 'mySpecialKey', value: 'valueOfMyKey' }],
+  };
 
   let cache;
 

@@ -64,7 +64,9 @@ describe('scroll-by', () => {
 
       it('is additive when an in-progress scroll is the same direction', () => {
         const yDelta = 10;
-        const spec = expect.objectContaining({ to: window.scrollY + 2 * yDelta });
+        const spec = expect.objectContaining({
+          to: window.scrollY + 2 * yDelta,
+        });
         scrollBy(yDelta);
         scrollBy(yDelta, true);
         expect(Tween.mock.calls.length).toBe(2);

@@ -41,12 +41,22 @@ export function scrollBy(yDelta: number, appendToLast: ?boolean = false) {
     }
   }
   const to = targetFrom + yDelta;
-  lastTween = new Tween({ to, duration: DURATION_MS, from: scrollY, onUpdate: _onTweenUpdate });
+  lastTween = new Tween({
+    to,
+    duration: DURATION_MS,
+    from: scrollY,
+    onUpdate: _onTweenUpdate,
+  });
 }
 
 export function scrollTo(y: number) {
   const { scrollY } = window;
-  lastTween = new Tween({ duration: DURATION_MS, from: scrollY, to: y, onUpdate: _onTweenUpdate });
+  lastTween = new Tween({
+    duration: DURATION_MS,
+    from: scrollY,
+    to: y,
+    onUpdate: _onTweenUpdate,
+  });
 }
 
 export function cancel() {

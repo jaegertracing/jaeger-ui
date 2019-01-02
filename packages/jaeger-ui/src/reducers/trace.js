@@ -38,7 +38,11 @@ function fetchTraceDone(state, { meta, payload }) {
   const data = transformTraceData(payload.data[0]);
   let trace;
   if (!data) {
-    trace = { id, state: fetchedState.ERROR, error: new Error('Invalid trace data recieved.') };
+    trace = {
+      id,
+      state: fetchedState.ERROR,
+      error: new Error('Invalid trace data recieved.'),
+    };
   } else {
     trace = { data, id, state: fetchedState.DONE };
   }
@@ -120,7 +124,12 @@ function searchErred(state, { meta, payload }) {
   if (!_isEqual(state.search.query, meta.query)) {
     return state;
   }
-  const search = { ...state.search, error: payload, results: [], state: fetchedState.ERROR };
+  const search = {
+    ...state.search,
+    error: payload,
+    results: [],
+    state: fetchedState.ERROR,
+  };
   return { ...state, search };
 }
 

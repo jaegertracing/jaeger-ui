@@ -52,7 +52,10 @@ export default class TraceDiffGraph extends React.PureComponent<Props> {
 
   constructor(props: Props) {
     super(props);
-    this.layoutManager = new LayoutManager({ useDotEdges: true, splines: 'polyline' });
+    this.layoutManager = new LayoutManager({
+      useDotEdges: true,
+      splines: 'polyline',
+    });
   }
 
   componentWillUnmount() {

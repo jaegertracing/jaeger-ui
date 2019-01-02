@@ -198,7 +198,12 @@ describe('DraggableManager', () => {
     });
 
     it('throws an error for invalid event types', () => {
-      expect(() => instance.handleMouseDown({ ...baseMouseEvt, type: 'invalid-event-type' })).toThrow();
+      expect(() =>
+        instance.handleMouseDown({
+          ...baseMouseEvt,
+          type: 'invalid-event-type',
+        })
+      ).toThrow();
     });
 
     describe('mousedown', () => {

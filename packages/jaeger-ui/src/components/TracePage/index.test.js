@@ -125,7 +125,10 @@ describe('<TracePage>', () => {
     // mount because `.componentDidUpdate()`
     wrapper = mount(<TracePage {...defaultProps} />);
     wrapper.setState({ viewRange: { time: [0.2, 0.8] } });
-    wrapper.setProps({ id: altTrace.traceID, trace: { data: altTrace, state: fetchedState.DONE } });
+    wrapper.setProps({
+      id: altTrace.traceID,
+      trace: { data: altTrace, state: fetchedState.DONE },
+    });
     expect(wrapper.state('viewRange')).toEqual({ time: { current: [0, 1] } });
   });
 

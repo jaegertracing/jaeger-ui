@@ -36,7 +36,13 @@ function cleanBranchNames(pointsAt) {
 }
 
 function getChanged(shortstat, status) {
-  const rv = { hasChanged: false, files: 0, insertions: 0, deletions: 0, untracked: 0 };
+  const rv = {
+    hasChanged: false,
+    files: 0,
+    insertions: 0,
+    deletions: 0,
+    untracked: 0,
+  };
   const joiner = [];
   const regex = /(\d+) (.)/g;
   let match = regex.exec(shortstat);

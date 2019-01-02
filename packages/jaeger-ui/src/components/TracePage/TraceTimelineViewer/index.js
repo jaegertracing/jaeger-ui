@@ -121,7 +121,13 @@ function mapDispatchToProps(dispatch) {
     actions,
     dispatch
   );
-  return { setSpanNameColumnWidth, expandAll, expandOne, collapseAll, collapseOne };
+  return {
+    setSpanNameColumnWidth,
+    expandAll,
+    expandOne,
+    collapseAll,
+    collapseOne,
+  };
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(TraceTimelineViewerImpl);

@@ -63,7 +63,9 @@ KeyValuesSummary.defaultProps = {
 export default function AccordianKeyValues(props: AccordianKeyValuesProps) {
   const { className, data, highContrast, isOpen, label, linksGetter, onToggle } = props;
   const isEmpty = !Array.isArray(data) || !data.length;
-  const iconCls = cx('u-align-icon', { 'AccordianKeyValues--emptyIcon': isEmpty });
+  const iconCls = cx('u-align-icon', {
+    'AccordianKeyValues--emptyIcon': isEmpty,
+  });
   return (
     <div className={cx(className, 'u-tx-ellipsis')}>
       <div

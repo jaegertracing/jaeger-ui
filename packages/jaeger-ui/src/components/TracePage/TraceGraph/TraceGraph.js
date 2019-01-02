@@ -156,7 +156,10 @@ export default class TraceGraph extends React.PureComponent<Props, State> {
       showHelp: false,
       mode: MODE_SERVICE,
     };
-    this.layoutManager = new LayoutManager({ useDotEdges: true, splines: 'polyline' });
+    this.layoutManager = new LayoutManager({
+      useDotEdges: true,
+      splines: 'polyline',
+    });
   }
 
   componentWillUnmount() {

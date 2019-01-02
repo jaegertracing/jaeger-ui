@@ -103,6 +103,9 @@ export default class Tween {
       return { done: true, value: this.to };
     }
     // mid-tween
-    return { done: false, value: ease.easeOutQuint(t, this.from, this.to, this.duration) };
+    return {
+      done: false,
+      value: ease.easeOutQuint(t, this.from, this.to, this.duration),
+    };
   }
 }

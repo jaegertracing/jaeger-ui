@@ -68,7 +68,12 @@ function archiveErred(state: TracesArchive, { meta, payload }: ArchiveAction) {
     // make flow happy
     throw new Error('Invalid state, missing API error details');
   }
-  const traceArchive = { error: payload, isArchived: false, isError: true, isAcknowledged: false };
+  const traceArchive = {
+    error: payload,
+    isArchived: false,
+    isError: true,
+    isAcknowledged: false,
+  };
   return { ...state, [meta.id]: traceArchive };
 }
 

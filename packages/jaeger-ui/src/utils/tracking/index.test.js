@@ -60,7 +60,14 @@ describe('tracking', () => {
     it('tracks an error', () => {
       tracking.trackError('a');
       expect(calls).toEqual([
-        ['send', { hitType: 'exception', exDescription: expect.any(String), exFatal: false }],
+        [
+          'send',
+          {
+            hitType: 'exception',
+            exDescription: expect.any(String),
+            exFatal: false,
+          },
+        ],
       ]);
     });
 
@@ -73,7 +80,14 @@ describe('tracking', () => {
       const str = `jaeger/${getStr(200)}`;
       tracking.trackError(str);
       expect(calls).toEqual([
-        ['send', { hitType: 'exception', exDescription: str.slice(0, 149), exFatal: false }],
+        [
+          'send',
+          {
+            hitType: 'exception',
+            exDescription: str.slice(0, 149),
+            exFatal: false,
+          },
+        ],
       ]);
     });
   });
@@ -100,7 +114,14 @@ describe('tracking', () => {
       const action = 'some-action';
       tracking.trackEvent(category, action);
       expect(calls).toEqual([
-        ['send', { hitType: 'event', eventCategory: `jaeger/${category}`, eventAction: action }],
+        [
+          'send',
+          {
+            hitType: 'event',
+            eventCategory: `jaeger/${category}`,
+            eventAction: action,
+          },
+        ],
       ]);
     });
 
@@ -124,8 +145,22 @@ describe('tracking', () => {
   it('converting raven-js errors', () => {
     window.onunhandledrejection({ reason: new Error('abc') });
     expect(calls).toEqual([
-      ['send', { hitType: 'exception', exDescription: expect.any(String), exFatal: false }],
-      ['send', { hitType: 'event', eventCategory: expect.any(String), eventAction: expect.any(String) }],
+      [
+        'send',
+        {
+          hitType: 'exception',
+          exDescription: expect.any(String),
+          exFatal: false,
+        },
+      ],
+      [
+        'send',
+        {
+          hitType: 'event',
+          eventCategory: expect.any(String),
+          eventAction: expect.any(String),
+        },
+      ],
     ]);
   });
 });

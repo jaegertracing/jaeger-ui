@@ -42,8 +42,15 @@ type CurrentLayout = {
 type LayoutWorker = Worker & { id: number };
 
 function cleanInput(srcEdges: Edge[], srcVertices: SizeVertex[]) {
-  const edges = srcEdges.map(({ from, to, isBidirectional }) => ({ from, to, isBidirectional }));
-  const vertices = srcVertices.map(({ vertex: { key }, ...rest }) => ({ vertex: { key }, ...rest }));
+  const edges = srcEdges.map(({ from, to, isBidirectional }) => ({
+    from,
+    to,
+    isBidirectional,
+  }));
+  const vertices = srcVertices.map(({ vertex: { key }, ...rest }) => ({
+    vertex: { key },
+    ...rest,
+  }));
   return { edges, vertices };
 }
 

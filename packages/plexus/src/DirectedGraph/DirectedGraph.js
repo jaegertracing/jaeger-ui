@@ -169,7 +169,11 @@ export default class DirectedGraph extends React.PureComponent<DirectedGraphProp
   _onPositionsDone = (result: Cancelled | PositionsDone) => {
     if (!result.isCancelled) {
       const { graph: layoutGraph, vertices: layoutVertices } = result;
-      this.setState({ layoutGraph, layoutVertices, layoutPhase: PHASE_CALC_EDGES });
+      this.setState({
+        layoutGraph,
+        layoutVertices,
+        layoutPhase: PHASE_CALC_EDGES,
+      });
     }
   };
 
@@ -190,7 +194,13 @@ export default class DirectedGraph extends React.PureComponent<DirectedGraphProp
       // set the initial transform
       this.zoom.transform(this.rootSelection, zoomTransform);
     }
-    this.setState({ layoutEdges, layoutGraph, layoutVertices, zoomTransform, layoutPhase: PHASE_DONE });
+    this.setState({
+      layoutEdges,
+      layoutGraph,
+      layoutVertices,
+      zoomTransform,
+      layoutPhase: PHASE_DONE,
+    });
   };
 
   _onZoomed = () => {

@@ -28,7 +28,10 @@ const DEFAULT_GRAPH_ATTRS = {
 };
 
 function makeGraphWrapper(options?: ?LayoutOptions) {
-  const { nodesep, rankdir, ranksep, sep, splines } = { ...DEFAULT_GRAPH_ATTRS, ...options };
+  const { nodesep, rankdir, ranksep, sep, splines } = {
+    ...DEFAULT_GRAPH_ATTRS,
+    ...options,
+  };
   return `digraph G {
   graph[nodesep=${nodesep.toFixed(3)}, rankdir=${rankdir}, ranksep=${ranksep.toFixed(3)}, sep=${sep.toFixed(
     3

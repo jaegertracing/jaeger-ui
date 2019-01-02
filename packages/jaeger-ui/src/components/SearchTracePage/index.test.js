@@ -137,7 +137,11 @@ describe('mapStateToProps()', () => {
         state: fetchedState.DONE,
       },
       traces: {
-        [trace.traceID]: { id: trace.traceID, data: trace, state: fetchedState.DONE },
+        [trace.traceID]: {
+          id: trace.traceID,
+          data: trace,
+          state: fetchedState.DONE,
+        },
       },
     };
     const stateServices = {

@@ -91,7 +91,9 @@ export default class ResultItem extends React.PureComponent<Props> {
                     <li key={name} className="ub-inline-block ub-m1">
                       <Tag
                         className="ResultItem--serviceTag"
-                        style={{ borderLeftColor: colorGenerator.getColorByKey(name) }}
+                        style={{
+                          borderLeftColor: colorGenerator.getColorByKey(name),
+                        }}
                       >
                         {name} ({count})
                       </Tag>

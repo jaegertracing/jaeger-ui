@@ -104,7 +104,10 @@ export default function transfromTraceData(data: TraceData & { spans: SpanWithPr
     });
     spans.push(span);
   });
-  const services = Object.keys(svcCounts).map(name => ({ name, numberOfSpans: svcCounts[name] }));
+  const services = Object.keys(svcCounts).map(name => ({
+    name,
+    numberOfSpans: svcCounts[name],
+  }));
   return {
     services,
     spans,

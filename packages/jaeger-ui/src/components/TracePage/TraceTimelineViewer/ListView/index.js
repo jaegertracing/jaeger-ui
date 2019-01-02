@@ -176,8 +176,9 @@ export default class ListView extends React.Component<ListViewProps> {
     // _knownHeights is (item-key -> observed height) of list items
     this._knownHeights = new Map();
 
-    this._startIndexDrawn = 2 ** 20;
-    this._endIndexDrawn = -(2 ** 20);
+    // eslint-disable-next-line no-bitwise
+    this._startIndexDrawn = 1 << 20;
+    this._endIndexDrawn = -this._startIndexDrawn;
     this._startIndex = 0;
     this._endIndex = 0;
     this._viewHeight = -1;

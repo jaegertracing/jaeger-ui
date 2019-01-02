@@ -41,7 +41,9 @@ describe('fetch a trace', () => {
       payload: { data: [trace] },
       meta: { id },
     });
-    expect(state.traces).toEqual({ [id]: { id, data: transformTraceData(trace), state: fetchedState.DONE } });
+    expect(state.traces).toEqual({
+      [id]: { id, data: transformTraceData(trace), state: fetchedState.DONE },
+    });
   });
 
   it('handles a failed FETCH_TRACE', () => {
@@ -51,7 +53,9 @@ describe('fetch a trace', () => {
       payload: error,
       meta: { id },
     });
-    expect(state.traces).toEqual({ [id]: { error, id, state: fetchedState.ERROR } });
+    expect(state.traces).toEqual({
+      [id]: { error, id, state: fetchedState.ERROR },
+    });
     expect(state.traces[id].error).toBe(error);
   });
 });
@@ -90,7 +94,11 @@ describe('fetch multiple traces', () => {
       const outcome = {
         ...traces,
         [id]: { id, data: transformTraceData(trace), state: fetchedState.DONE },
-        [idB]: { id: idB, data: transformTraceData(traceB), state: fetchedState.DONE },
+        [idB]: {
+          id: idB,
+          data: transformTraceData(traceB),
+          state: fetchedState.DONE,
+        },
       };
       expect(state.traces).toEqual(outcome);
     });
@@ -108,7 +116,11 @@ describe('fetch multiple traces', () => {
       );
       const outcome = {
         ...traces,
-        [traceID]: { id: traceID, error: expect.any(Error), state: fetchedState.ERROR },
+        [traceID]: {
+          id: traceID,
+          error: expect.any(Error),
+          state: fetchedState.ERROR,
+        },
       };
       expect(state.traces).toEqual(outcome);
     });

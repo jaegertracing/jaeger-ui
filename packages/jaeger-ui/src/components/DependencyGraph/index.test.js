@@ -112,6 +112,8 @@ describe('mapStateToProps()', () => {
 
 describe('mapDispatchToProps()', () => {
   it('providers the `fetchDependencies` prop', () => {
-    expect(mapDispatchToProps({})).toEqual({ fetchDependencies: expect.any(Function) });
+    expect(mapDispatchToProps({})).toEqual({
+      fetchDependencies: expect.any(Function),
+    });
   });
 });
