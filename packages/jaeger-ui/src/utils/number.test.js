@@ -27,9 +27,10 @@ it('toFloatPrecision() should work for greater-than-0 numbers', () => {
 
 it('toFloatPrecision() should work for less-than-0 numbers', () => {
   expect(numberUtils.toFloatPrecision(0.24, 1)).toBe(0.2);
-  expect(numberUtils.toFloatPrecision(-0.026, 1)).toBe(0);
   expect(numberUtils.toFloatPrecision(0.51, 1)).toBe(0.5);
   expect(numberUtils.toFloatPrecision(-0.307, 2)).toBe(-0.31);
+  // Had an issue with expect(-0).toBe(0) failing
+  expect(numberUtils.toFloatPrecision(-0.026, 1)).toBeCloseTo(0);
 });
 
 it('toFloatPrecision() should work for e-notation numbers', () => {

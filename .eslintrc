@@ -49,14 +49,6 @@
     /* import */
     "import/prefer-default-export": 1,
     "import/no-named-default": 0,
-    "import/extensions": 0,
-
-    "new-cap": [2, {
-      "capIsNewExceptions": [
-        "Immutable.Map",
-        "Immutable.List",
-        "Immutable.Set"
-      ]
-    }]
+    "import/extensions": 0
   }
 }
