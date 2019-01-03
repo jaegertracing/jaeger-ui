@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import React from 'react';
 import { shallow } from 'enzyme';
+import React from 'react';
 
 import GraphTicks from './GraphTicks';
 import Scrubber from './Scrubber';
@@ -253,6 +253,39 @@ describe('<SpanGraph>', () => {
           expect(manager.resetBounds.mock.calls).toEqual([[]]);
           expect(props.updateViewRangeTime).lastCalledWith(..._case.viewRangeUpdate, 'minimap');
         });
+      });
+    });
+
+    describe('.ViewingLayer--resetZoom', () => {
+      it('should not render .ViewingLayer--resetZoom if props.viewRange.time.current = [0,1]', () => {
+        expect(wrapper.find('.ViewingLayer--resetZoom').length).toBe(0);
+        wrapper.setProps({ viewRange: { time: { current: [0, 1] } } });
+        expect(wrapper.find('.ViewingLayer--resetZoom').length).toBe(0);
+      });
+
+      it('should render ViewingLayer--resetZoom if props.viewRange.time.current[0] !== 0', () => {
+        // If the test fails on the following expect statement, this may be a false negative
+        expect(wrapper.find('.ViewingLayer--resetZoom').length).toBe(0);
+        wrapper.setProps({ viewRange: { time: { current: [0.1, 1] } } });
+        expect(wrapper.find('.ViewingLayer--resetZoom').length).toBe(1);
+      });
+
+      it('should render ViewingLayer--resetZoom if props.viewRange.time.current[1] !== 1', () => {
+        // If the test fails on the following expect statement, this may be a false negative
+        expect(wrapper.find('.ViewingLayer--resetZoom').length).toBe(0);
+        wrapper.setProps({ viewRange: { time: { current: [0, 0.9] } } });
+        expect(wrapper.find('.ViewingLayer--resetZoom').length).toBe(1);
+      });
+
+      it('should call props.updateViewRangeTime when clicked', () => {
+        wrapper.setProps({ viewRange: { time: { current: [0.1, 0.9] } } });
+        const resetZoomButton = wrapper.find('.ViewingLayer--resetZoom');
+        // If the test fails on the following expect statement, this may be a false negative caused
+        // by a regression to rendering.
+        expect(resetZoomButton.length).toBe(1);
+
+        resetZoomButton.simulate('click');
+        expect(props.updateViewRangeTime).lastCalledWith(0, 1);
       });
     });
   });
