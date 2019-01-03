@@ -61,3 +61,15 @@ limitations under the License.
   top: 0;
   user-select: none;
 }
+
+.ViewingLayer--resetZoom {
+  display: none;
+  position: absolute;
+  right: 1%;
+  top: 10%;
+  z-index: 1;
+}
+
+.ViewingLayer:hover > .ViewingLayer--resetZoom {
+  display: unset;
+}
