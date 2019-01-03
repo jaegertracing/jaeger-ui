@@ -20,25 +20,39 @@ import * as React from 'react';
 
 import './redux-form-field-adapter.css';
 
-export default function reduxFormFieldAdapter(
+export default function reduxFormFieldAdapter({
+  AntInputComponent,
+  onChangeAdapter,
+  isValidatedInput = false,
+}: {
   AntInputComponent: Class<React.Component<*, *>>,
-  onChangeAdapter: () => void
-) {
+  onChangeAdapter: () => void,
+  isValidatedInput: boolean,
+}) {
   return function _reduxFormFieldAdapter(props: any) {
-    // inputRest includes necessary props such as onBlur and value
-    const { input: { onChange, ...inputRest }, children, ...rest } = props;
-    const isInvalid = rest.meta.touched && !!rest.meta.error;
-    return (
+    const { input: { onBlur, onChange, onFocus, value }, children, ...rest } = props;
+    const isInvalid = !rest.meta.active && Boolean(rest.meta.error);
+    const content = (
+      <AntInputComponent
+        className={cx({
+          'is-invalid': isInvalid,
+          'AdaptedReduxFormField--isValidatedInput': isValidatedInput,
+        })}
+        onBlur={isValidatedInput ? onBlur : null}
+        onFocus={isValidatedInput ? onFocus : null}
+        onChange={onChangeAdapter ? (...args) => onChange(onChangeAdapter(...args)) : onChange}
+        value={value}
+        {...rest}
+      >
+        {children}
+      </AntInputComponent>
+    );
+    return isValidatedInput ? (
       <Popover placement={'bottomLeft'} visible={isInvalid} {...rest.meta.error}>
-        <AntInputComponent
-          className={cx({ 'is-invalid': isInvalid })}
-          onChange={onChangeAdapter ? (...args) => onChange(onChangeAdapter(...args)) : onChange}
-          {...inputRest}
-          {...rest}
-        >
-          {children}
-        </AntInputComponent>
+        {content}
       </Popover>
+    ) : (
+      content
     );
   };
 }

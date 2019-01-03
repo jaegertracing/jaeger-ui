@@ -38,9 +38,12 @@ import './SearchForm.css';
 const FormItem = Form.Item;
 const Option = Select.Option;
 
-const AdaptedInput = reduxFormFieldAdapter(Input);
-const AdaptedSelect = reduxFormFieldAdapter(Select);
-const AdaptedVirtualSelect = reduxFormFieldAdapter(VirtSelect, option => (option ? option.value : null));
+const AdaptedInput = reduxFormFieldAdapter({ AntInputComponent: Input, isValidatedInput: true });
+const AdaptedSelect = reduxFormFieldAdapter({ AntInputComponent: Select });
+const AdaptedVirtualSelect = reduxFormFieldAdapter({
+  AntInputComponent: VirtSelect,
+  onChangeAdapter: option => (option ? option.value : null),
+});
 
 export function getUnixTimeStampInMSFromForm({ startDate, startDateTime, endDate, endDateTime }) {
   const start = `${startDate} ${startDateTime}`;

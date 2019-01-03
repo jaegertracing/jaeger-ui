@@ -19,7 +19,6 @@ import React from 'react';
 import reduxFormFieldAdapter from './redux-form-field-adapter';
 
 describe('reduxFormFieldAdapter', () => {
-  const AdaptedInput = reduxFormFieldAdapter(Input);
   const input = {
     onChange: function onChange() {},
     onBlur: function onBlur() {},
@@ -34,27 +33,38 @@ describe('reduxFormFieldAdapter', () => {
   beforeEach(() => {
     meta = {
       error: null,
-      touched: false,
+      active: false,
     };
   });
 
-  it('should render as expected when there is not an error', () => {
-    const wrapper = shallow(<AdaptedInput input={input} meta={meta} />);
-    expect(wrapper).toMatchSnapshot();
+  describe('not validated input', () => {
+    const AdaptedInput = reduxFormFieldAdapter({ AntInputComponent: Input });
+    it('should render as expected', () => {
+      const wrapper = shallow(<AdaptedInput input={input} meta={meta} />);
+      expect(wrapper).toMatchSnapshot();
+    });
   });
 
-  it('should render Popover as invisible if there is an error but the field has not been touched', () => {
-    meta.error = error;
-    const wrapper = shallow(<AdaptedInput input={input} meta={meta} />);
-    expect(wrapper.find(Popover).prop('visible')).toBeFalsy();
-    expect(wrapper).toMatchSnapshot();
-  });
+  describe('validate input', () => {
+    const AdaptedInput = reduxFormFieldAdapter({ AntInputComponent: Input, isValidatedInput: true });
+    it('should render as expected when there is not an error', () => {
+      const wrapper = shallow(<AdaptedInput input={input} meta={meta} />);
+      expect(wrapper).toMatchSnapshot();
+    });
 
-  it('should render Popover as visible if there is an error and the field has been touched', () => {
-    meta.error = error;
-    meta.touched = true;
-    const wrapper = shallow(<AdaptedInput input={input} meta={meta} />);
-    expect(wrapper.find(Popover).prop('visible')).toBeTruthy();
-    expect(wrapper).toMatchSnapshot();
+    it('should render Popover as invisible if there is an error but the field is active', () => {
+      meta.error = error;
+      meta.active = true;
+      const wrapper = shallow(<AdaptedInput input={input} meta={meta} />);
+      expect(wrapper.find(Popover).prop('visible')).toBeFalsy();
+      expect(wrapper).toMatchSnapshot();
+    });
+
+    it('should render Popover as visible if there is an error and the field is not active', () => {
+      meta.error = error;
+      const wrapper = shallow(<AdaptedInput input={input} meta={meta} />);
+      expect(wrapper.find(Popover).prop('visible')).toBeTruthy();
+      expect(wrapper).toMatchSnapshot();
+    });
   });
 });

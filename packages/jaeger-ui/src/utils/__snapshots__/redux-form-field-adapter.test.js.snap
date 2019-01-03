@@ -1,6 +1,25 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`reduxFormFieldAdapter should render Popover as invisible if there is an error but the field has not been touched 1`] = `
+exports[`reduxFormFieldAdapter not validated input should render as expected 1`] = `
+<Input
+  className=""
+  disabled={false}
+  meta={
+    Object {
+      "active": false,
+      "error": null,
+    }
+  }
+  onBlur={null}
+  onChange={[Function]}
+  onFocus={null}
+  prefixCls="ant-input"
+  type="text"
+  value="inputValue"
+/>
+`;
+
+exports[`reduxFormFieldAdapter validate input should render Popover as invisible if there is an error but the field is active 1`] = `
 <Popover
   content="error content"
   mouseEnterDelay={0.1}
@@ -14,15 +33,15 @@ exports[`reduxFormFieldAdapter should render Popover as invisible if there is an
   visible={false}
 >
   <Input
-    className=""
+    className="AdaptedReduxFormField--isValidatedInput"
     disabled={false}
     meta={
       Object {
+        "active": true,
         "error": Object {
           "content": "error content",
           "title": "error title",
         },
-        "touched": false,
       }
     }
     onBlur={[Function]}
@@ -34,7 +53,7 @@ exports[`reduxFormFieldAdapter should render Popover as invisible if there is an
 </Popover>
 `;
 
-exports[`reduxFormFieldAdapter should render Popover as visible if there is an error and the field has been touched 1`] = `
+exports[`reduxFormFieldAdapter validate input should render Popover as visible if there is an error and the field is not active 1`] = `
 <Popover
   content="error content"
   mouseEnterDelay={0.1}
@@ -48,15 +67,15 @@ exports[`reduxFormFieldAdapter should render Popover as visible if there is an e
   visible={true}
 >
   <Input
-    className="is-invalid"
+    className="is-invalid AdaptedReduxFormField--isValidatedInput"
     disabled={false}
     meta={
       Object {
+        "active": false,
         "error": Object {
           "content": "error content",
           "title": "error title",
         },
-        "touched": true,
       }
     }
     onBlur={[Function]}
@@ -68,7 +87,7 @@ exports[`reduxFormFieldAdapter should render Popover as visible if there is an e
 </Popover>
 `;
 
-exports[`reduxFormFieldAdapter should render as expected when there is not an error 1`] = `
+exports[`reduxFormFieldAdapter validate input should render as expected when there is not an error 1`] = `
 <Popover
   mouseEnterDelay={0.1}
   mouseLeaveDelay={0.1}
@@ -80,12 +99,12 @@ exports[`reduxFormFieldAdapter should render as expected when there is not an er
   visible={false}
 >
   <Input
-    className=""
+    className="AdaptedReduxFormField--isValidatedInput"
     disabled={false}
     meta={
       Object {
+        "active": false,
         "error": null,
-        "touched": false,
       }
     }
     onBlur={[Function]}
