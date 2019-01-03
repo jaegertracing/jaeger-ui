@@ -20,17 +20,17 @@ import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import store from 'store';
 
-import * as jaegerApiActions from '../../actions/jaeger-api';
-import { actions as traceDiffActions } from '../TraceDiff/duck';
 import SearchForm from './SearchForm';
 import SearchResults, { sortFormSelector } from './SearchResults';
+import { isSameQuery } from './url';
+import * as jaegerApiActions from '../../actions/jaeger-api';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
+import { getLocation as getTraceLocation } from '../TracePage/url';
+import { actions as traceDiffActions } from '../TraceDiff/duck';
 import { fetchedState } from '../../constants';
 import { sortTraces } from '../../model/search';
 import getLastXformCacher from '../../utils/get-last-xform-cacher';
-import prefixUrl from '../../utils/prefix-url';
-import { isEmbed, VERSION_API } from '../../utils/embedded';
 
 import './index.css';
 import JaegerLogo from '../../img/jaeger-logo.svg';
@@ -41,12 +41,14 @@ export class SearchTracePageImpl extends Component {
     const {
       diffCohort,
       fetchMultipleTraces,
+      fetchServiceOperations,
+      fetchServices,
+      isHomepage,
+      queryOfResults,
       searchTraces,
       urlQueryParams,
-      fetchServices,
-      fetchServiceOperations,
     } = this.props;
-    if (urlQueryParams.service || urlQueryParams.traceID) {
+    if (!isHomepage && urlQueryParams && !isSameQuery(urlQueryParams, queryOfResults)) {
       searchTraces(urlQueryParams);
     }
     const needForDiffs = diffCohort.filter(ft => ft.state == null).map(ft => ft.id);
@@ -61,15 +63,8 @@ export class SearchTracePageImpl extends Component {
   }
 
   goToTrace = traceID => {
-    const url = this.props.embed
-      ? `/trace/${traceID}?embed=${VERSION_API}&fromSearch=${encodeURIComponent(this.getSearchURL())}`
-      : `/trace/${traceID}`;
-    this.props.history.push(prefixUrl(url));
-  };
-
-  getSearchURL = () => {
-    const { embed: _, ...urlQuery } = this.props.query;
-    return `/search?${queryString.stringify(urlQuery)}`;
+    const { queryOfResults } = this.props;
+    this.props.history.push(getTraceLocation(traceID, { fromSearch: queryOfResults }));
   };
 
   render() {
@@ -77,6 +72,7 @@ export class SearchTracePageImpl extends Component {
       cohortAddTrace,
       cohortRemoveTrace,
       diffCohort,
+      embedded,
       errors,
       isHomepage,
       loadingServices,
@@ -84,8 +80,7 @@ export class SearchTracePageImpl extends Component {
       maxTraceDuration,
       services,
       traceResults,
-      embed,
-      hideGraph,
+      queryOfResults,
     } = this.props;
     const hasTraceResults = traceResults && traceResults.length > 0;
     const showErrors = errors && !loadingTraces;
@@ -93,7 +88,7 @@ export class SearchTracePageImpl extends Component {
     return (
       <div>
         <Row>
-          {!embed && (
+          {!embedded && (
             <Col span={6} className="SearchTracePage--column">
               <div className="SearchTracePage--find">
                 <h2>Find Traces</h2>
@@ -101,7 +96,7 @@ export class SearchTracePageImpl extends Component {
               </div>
             </Col>
           )}
-          <Col span={!embed ? 18 : 24} className="SearchTracePage--column">
+          <Col span={!embedded ? 18 : 24} className="SearchTracePage--column">
             {showErrors && (
               <div className="js-test-error-message">
                 <h2>There was an error querying for traces:</h2>
@@ -111,50 +106,53 @@ export class SearchTracePageImpl extends Component {
             {!showErrors && (
               <SearchResults
                 cohortAddTrace={cohortAddTrace}
-                goToTrace={this.goToTrace}
-                loading={loadingTraces}
-                maxTraceDuration={maxTraceDuration}
                 cohortRemoveTrace={cohortRemoveTrace}
                 diffCohort={diffCohort}
+                disableComparisons={embedded}
+                goToTrace={this.goToTrace}
+                hideGraph={embedded && embedded.searchHideGraph}
+                loading={loadingTraces}
+                maxTraceDuration={maxTraceDuration}
+                queryOfResults={queryOfResults}
+                showStandaloneLink={Boolean(embedded)}
                 skipMessage={isHomepage}
-                getSearchURL={this.getSearchURL}
                 traces={traceResults}
-                embed={embed}
-                hideGraph={hideGraph}
               />
             )}
-            {showLogo &&
-              !embed && (
-                <img
-                  className="SearchTracePage--logo js-test-logo"
-                  alt="presentation"
-                  src={JaegerLogo}
-                  width="400"
-                />
-              )}
+            {showLogo && (
+              <img
+                className="SearchTracePage--logo js-test-logo"
+                alt="presentation"
+                src={JaegerLogo}
+                width="400"
+              />
+            )}
           </Col>
         </Row>
       </div>
     );
   }
 }
-
 SearchTracePageImpl.propTypes = {
-  query: PropTypes.object,
   isHomepage: PropTypes.bool,
-  embed: PropTypes.bool,
-  hideGraph: PropTypes.bool,
   // eslint-disable-next-line react/forbid-prop-types
   traceResults: PropTypes.array,
   diffCohort: PropTypes.array,
   cohortAddTrace: PropTypes.func,
   cohortRemoveTrace: PropTypes.func,
+  embedded: PropTypes.shape({
+    searchHideGraph: PropTypes.bool,
+  }),
   maxTraceDuration: PropTypes.number,
   loadingServices: PropTypes.bool,
   loadingTraces: PropTypes.bool,
   urlQueryParams: PropTypes.shape({
     service: PropTypes.string,
     limit: PropTypes.string,
+  }),
+  queryOfResults: PropTypes.shape({
+    service: PropTypes.string,
+    limit: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   }),
   services: PropTypes.arrayOf(
     PropTypes.shape({
@@ -178,11 +176,12 @@ SearchTracePageImpl.propTypes = {
 
 const stateTraceXformer = getLastXformCacher(stateTrace => {
   const { traces: traceMap, search } = stateTrace;
-  const { results, state, error: traceError } = search;
+  const { query, results, state, error: traceError } = search;
+
   const loadingTraces = state === fetchedState.LOADING;
   const traces = results.map(id => traceMap[id].data);
   const maxDuration = Math.max.apply(null, traces.map(tr => tr.duration));
-  return { traces, maxDuration, traceError, loadingTraces };
+  return { traces, maxDuration, traceError, loadingTraces, query };
 });
 
 const stateTraceDiffXformer = getLastXformCacher((stateTrace, stateTraceDiff) => {
@@ -215,12 +214,14 @@ const stateServicesXformer = getLastXformCacher(stateServices => {
 
 // export to test
 export function mapStateToProps(state) {
-  const query = queryString.parse(state.router.location.search);
-  const { hideGraph } = queryString.parse(state.router.location.search);
+  const { embedded, router, services: stServices, traceDiff } = state;
+  const query = queryString.parse(router.location.search);
   const isHomepage = !Object.keys(query).length;
-  const { traces, maxDuration, traceError, loadingTraces } = stateTraceXformer(state.trace);
-  const diffCohort = stateTraceDiffXformer(state.trace, state.traceDiff);
-  const { loadingServices, services, serviceError } = stateServicesXformer(state.services);
+  const { query: queryOfResults, traces, maxDuration, traceError, loadingTraces } = stateTraceXformer(
+    state.trace
+  );
+  const diffCohort = stateTraceDiffXformer(state.trace, traceDiff);
+  const { loadingServices, services, serviceError } = stateServicesXformer(stServices);
   const errors = [];
   if (traceError) {
     errors.push(traceError);
@@ -231,10 +232,9 @@ export function mapStateToProps(state) {
   const sortBy = sortFormSelector(state, 'sortBy');
   const traceResults = sortedTracesXformer(traces, sortBy);
   return {
-    query,
+    queryOfResults,
     diffCohort,
-    embed: isEmbed(state.router.location.search),
-    hideGraph: hideGraph !== undefined,
+    embedded,
     isHomepage,
     loadingServices,
     loadingTraces,
@@ -243,7 +243,7 @@ export function mapStateToProps(state) {
     errors: errors.length ? errors : null,
     maxTraceDuration: maxDuration,
     sortTracesBy: sortBy,
-    urlQueryParams: query,
+    urlQueryParams: Object.keys(query).length > 0 ? query : null,
   };
 }
 

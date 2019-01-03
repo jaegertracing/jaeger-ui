@@ -16,13 +16,15 @@ limitations under the License.
 
 .SearchResults--header {
   border: 1px solid #e6e6e6;
-  color: rgba(0, 0, 0, 0.85);
+  color: var(--tx-color-title);
   margin-bottom: 1.25rem;
 }
 
 .SearchResults--headerOverview {
+  align-items: center;
   background-color: #f5f5f5;
   border-top: 1px solid #e6e6e6;
+  display: flex;
   padding: 1rem;
 }
 

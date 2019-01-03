@@ -20,9 +20,10 @@ import * as React from 'react';
 
 import GraphTicks from './GraphTicks';
 import Scrubber from './Scrubber';
-import type { ViewRange, ViewRangeTimeUpdate } from '../types';
-import type { DraggableBounds, DraggingUpdate } from '../../../utils/DraggableManager';
-import DraggableManager, { updateTypes } from '../../../utils/DraggableManager';
+import DraggableManager, { updateTypes } from '../../../../utils/DraggableManager';
+
+import type { ViewRange, ViewRangeTimeUpdate } from '../../types';
+import type { DraggableBounds, DraggingUpdate } from '../../../../utils/DraggableManager';
 
 import './ViewingLayer.css';
 

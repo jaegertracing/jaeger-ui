@@ -19,6 +19,7 @@ limitations under the License.
   display: flex;
   flex: none;
   justify-content: center;
+  margin-right: 0.5rem;
 }
 
 .TimelineCollapser--tooltipTitle {
@@ -27,7 +28,15 @@ limitations under the License.
 
 .TimelineCollapser--btn,
 .TimelineCollapser--btn-expand {
+  color: rgba(0, 0, 0, 0.5);
+  cursor: pointer;
   margin-right: 0.3rem;
+  padding: 0.1rem;
+}
+
+.TimelineCollapser--btn:hover,
+.TimelineCollapser--btn-expand:hover {
+  color: rgba(0, 0, 0, 0.85);
 }
 
 .TimelineCollapser--btn-expand {

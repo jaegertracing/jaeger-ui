@@ -14,17 +14,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import prefixUrl from '../../utils/prefix-url';
+import _get from 'lodash/get';
 
-export const ROUTE_PATH = prefixUrl('/trace/:id');
+import { getEmbeddedState } from '../utils/embedded-url';
 
-export function getUrl(id: string) {
-  return prefixUrl(`/trace/${id}`);
-}
+import type { EmbeddedState } from '../types/embedded';
 
-export function getLocation(id: string, state: ?Object) {
-  return {
-    state,
-    pathname: prefixUrl(`/trace/${id}`),
-  };
+export default function embeddedConfig(state: ?EmbeddedState) {
+  if (state === undefined) {
+    const search = _get(window, 'location.search');
+    return search ? getEmbeddedState(search) : null;
+  }
+  return state;
 }

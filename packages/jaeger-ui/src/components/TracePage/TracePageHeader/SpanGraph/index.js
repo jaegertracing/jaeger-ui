@@ -19,8 +19,8 @@ import * as React from 'react';
 import CanvasSpanGraph from './CanvasSpanGraph';
 import TickLabels from './TickLabels';
 import ViewingLayer from './ViewingLayer';
-import type { ViewRange, ViewRangeTimeUpdate } from '../types';
-import type { Span, Trace } from '../../../types/trace';
+import type { ViewRange, ViewRangeTimeUpdate } from '../../types';
+import type { Span, Trace } from '../../../../types/trace';
 
 const TIMELINE_TICK_INTERVAL = 4;
 
@@ -84,7 +84,7 @@ export default class SpanGraph extends React.PureComponent<SpanGraphProps, SpanG
     }
     const { items } = this.state;
     return (
-      <div className="ub-px2">
+      <div className="ub-pb2 ub-px2">
         <TickLabels numTicks={TIMELINE_TICK_INTERVAL} duration={trace.duration} />
         <div className="ub-relative">
           <CanvasSpanGraph valueWidth={trace.duration} items={items} />

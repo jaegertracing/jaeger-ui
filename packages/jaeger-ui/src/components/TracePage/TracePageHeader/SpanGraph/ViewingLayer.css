@@ -15,10 +15,9 @@ limitations under the License.
 */
 
 .ViewingLayer {
+  cursor: vertical-text;
   position: relative;
   z-index: 1;
-  margin-bottom: 0.5em;
-  cursor: vertical-text;
 }
 
 .ViewingLayer--graph {

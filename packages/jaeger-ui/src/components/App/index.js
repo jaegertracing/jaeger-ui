@@ -32,8 +32,9 @@ import JaegerAPI, { DEFAULT_API_ROOT } from '../../api/jaeger';
 import configureStore from '../../utils/configure-store';
 import prefixUrl from '../../utils/prefix-url';
 
-import './index.css';
+import '../common/vars.css';
 import '../common/utils.css';
+import './index.css';
 
 const history = createHistory();
 
