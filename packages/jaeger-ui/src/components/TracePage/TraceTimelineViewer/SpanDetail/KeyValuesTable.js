@@ -136,7 +136,7 @@ export default class KeyValuesTable extends React.PureComponent<KeyValuesTablePr
                       arrowPointAtCenter
                       mouseLeaveDelay={0.5}
                       onVisibleChange={visible => this.handleTooltipVisibilityChange(row, visible)}
-                      placement={'left'}
+                      placement="left"
                       title={tooltipTitle}
                     >
                       <CopyToClipboard text={JSON.stringify(row, null, 2)}>

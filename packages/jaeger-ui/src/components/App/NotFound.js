@@ -29,7 +29,7 @@ export default function NotFound({ error }: NotFoundProps) {
     <section className="ub-m3">
       <h1>Error</h1>
       {error && <ErrorMessage error={error} />}
-      <Link to={prefixUrl('/')}>{'Back home'}</Link>
+      <Link to={prefixUrl('/')}>Back home</Link>
     </section>
   );
 }
