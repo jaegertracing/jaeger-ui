@@ -19,18 +19,19 @@ import React from 'react';
 import reduxFormFieldAdapter from './redux-form-field-adapter';
 
 describe('reduxFormFieldAdapter', () => {
-  const input = {
-    onChange: function onChange() {},
-    onBlur: function onBlur() {},
-    value: 'inputValue',
-  };
   const error = {
     content: 'error content',
     title: 'error title',
   };
+  let input;
   let meta;
 
   beforeEach(() => {
+    input = {
+      onChange: function onChange() {},
+      onBlur: function onBlur() {},
+      value: 'inputValue',
+    };
     meta = {
       error: null,
       active: false,
@@ -65,6 +66,30 @@ describe('reduxFormFieldAdapter', () => {
       const wrapper = shallow(<AdaptedInput input={input} meta={meta} />);
       expect(wrapper.find(Popover).prop('visible')).toBeTruthy();
       expect(wrapper).toMatchSnapshot();
+    });
+  });
+
+  describe('onChangeAdapter', () => {
+    it('should use input.onChange when adapter is not provided', () => {
+      const AdaptedInput = reduxFormFieldAdapter({ AntInputComponent: Input });
+      const wrapper = shallow(<AdaptedInput input={input} meta={meta} />);
+      expect(wrapper.find(Input).prop('onChange')).toBe(input.onChange);
+    });
+
+    it('should call input.onChange with result of adapter when adapter is provided', () => {
+      const onChangeMockInput = 'onChangeMockInput';
+      const onChangeAdapterMockReturnValue = 'onChangeAdapterMockReturnValue';
+      const onChangeAdapter = jest.fn().mockReturnValue(onChangeAdapterMockReturnValue);
+      const onChangeSpy = jest.fn();
+      input.onChange = onChangeSpy;
+      const AdaptedInput = reduxFormFieldAdapter({ AntInputComponent: Input, onChangeAdapter });
+      const wrapper = shallow(<AdaptedInput input={input} meta={meta} />);
+
+      const renderedOnChangeFn = wrapper.find(Input).prop('onChange');
+      expect(renderedOnChangeFn).not.toBe(input.onChange);
+      renderedOnChangeFn(onChangeMockInput);
+      expect(onChangeAdapter).toHaveBeenCalledWith(onChangeMockInput);
+      expect(onChangeSpy).toHaveBeenCalledWith(onChangeAdapterMockReturnValue);
     });
   });
 });
