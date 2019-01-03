@@ -128,7 +128,7 @@ export default class KeyValuesTable extends React.PureComponent<KeyValuesTablePr
               return (
                 // `i` is necessary in the key because row.key can repeat
                 // eslint-disable-next-line react/no-array-index-key
-                <tr key={`${row.key}-${i}`}>
+                <tr className="KeyValueTable--row" key={`${row.key}-${i}`}>
                   <td className="KeyValueTable--keyColumn">{row.key}</td>
                   <td>{valueMarkup}</td>
                   <td className="KeyValueTable--copyColumn">

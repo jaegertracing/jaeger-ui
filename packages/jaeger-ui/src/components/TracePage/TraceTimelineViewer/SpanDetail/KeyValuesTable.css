@@ -26,11 +26,11 @@ limitations under the License.
   vertical-align: baseline;
 }
 
-.KeyValueTable--body > tr > td {
+.KeyValueTable--row > td {
   padding: 0.25rem 0.5rem;
 }
 
-.KeyValueTable--body > tr:nth-child(2n) > td {
+.KeyValueTable--row:nth-child(2n) > td {
   background: #f5f5f5;
 }
 
@@ -48,11 +48,11 @@ limitations under the License.
   visibility: hidden;
 }
 
-tr:hover > .KeyValueTable--copyColumn > .KeyValueTable--copyIcon {
+.KeyValueTable--row:hover > .KeyValueTable--copyColumn > .KeyValueTable--copyIcon {
   visibility: unset;
 }
 
-.KeyValueTable--body > tr > td {
+.KeyValueTable--row > td {
   padding: 0.25rem 0.5rem;
   vertical-align: top;
 }
