@@ -48,7 +48,7 @@ export default function reduxFormFieldAdapter({
       </AntInputComponent>
     );
     return isValidatedInput ? (
-      <Popover placement={'bottomLeft'} visible={isInvalid} {...rest.meta.error}>
+      <Popover placement="bottomLeft" visible={isInvalid} {...rest.meta.error}>
         {content}
       </Popover>
     ) : (
