@@ -10,7 +10,7 @@
     "eslint-plugin-flowtype": "^2.35.0",
     "eslint-plugin-import": "^2.7.0",
     "eslint-plugin-jsx-a11y": "^6.0.2",
-    "eslint-plugin-react": "^7.2.1",
+    "eslint-plugin-react": "^7.12.2",
     "flow-bin": "^0.71.0",
     "glow": "^1.2.2",
     "husky": "^0.14.3",
