@@ -293,19 +293,15 @@ describe('<VirtualizedTraceViewImpl>', () => {
           <SpanBarRow
             className={instance.clippingCssClasses}
             columnDivision={props.spanNameColumnWidth}
-            depth={span.depth}
             isChildrenExpanded
             isDetailExpanded={false}
             isMatchingFilter={false}
-            isParent={span.hasChildren}
             numTicks={5}
             onDetailToggled={props.detailToggle}
             onChildrenToggled={props.childrenToggle}
-            operationName={span.operationName}
             rpc={undefined}
-            serviceName={span.process.serviceName}
             showErrorIcon={false}
-            spanID={span.spanID}
+            span={span}
           />
         )
       ).toBe(true);

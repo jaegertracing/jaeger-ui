@@ -23,16 +23,12 @@ jest.mock('./SpanTreeOffset');
 describe('<SpanBarRow>', () => {
   const spanID = 'some-id';
   const props = {
-    spanID,
     className: 'a-class-name',
     color: 'color-a',
     columnDivision: '0.5',
-    depth: 3,
     isChildrenExpanded: true,
     isDetailExpanded: false,
     isFilteredOut: false,
-    isParent: true,
-    label: 'omg-awesome-label',
     onDetailToggled: jest.fn(),
     onChildrenToggled: jest.fn(),
     operationName: 'op-name',
@@ -44,8 +40,15 @@ describe('<SpanBarRow>', () => {
       operationName: 'rpc-op-name',
       serviceName: 'rpc-service-name',
     },
-    serviceName: 'service-name',
     showErrorIcon: false,
+    span: {
+      duration: 'test-duration',
+      hasChildren: true,
+      process: {
+        serviceName: 'service-name',
+      },
+      spanID,
+    },
     viewEnd: 1,
     viewStart: 0,
   };
