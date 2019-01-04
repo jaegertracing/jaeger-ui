@@ -63,7 +63,7 @@ export default class SpanDetailRow extends React.PureComponent<SpanDetailRowProp
       traceStartTime,
     } = this.props;
     return (
-      <TimelineRow className={`detail-row`}>
+      <TimelineRow className="detail-row">
         <TimelineRow.Cell width={columnDivision}>
           <SpanTreeOffset span={span} />
           <span>

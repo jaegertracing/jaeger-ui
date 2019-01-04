@@ -19,10 +19,21 @@ limitations under the License.
   margin: 0 -7px;
 }
 
+.KeyboardShortcutsHelp--table {
+  background-color: #fafafa;
+  max-height: 500px;
+  overflow: auto;
+}
+
+.KeyboardShortcutsHelp--oddRow {
+  background-color: #f6f6f6;
+}
+
 .KeyboardShortcutsHelp--table kbd {
-  background: #f5f5f5;
-  border: 1px solid #e8e8e8;
-  border-bottom: 1px solid #ddd;
+  background: #f0f0f0;
+  border-bottom: 1px solid #bbb;
+  border-radius: 3px;
+  border: 1px solid #d4d4d4;
   color: #000;
   font-family: monospace;
   padding: 0.25em 0.3em;

@@ -26,15 +26,14 @@ import type { ApiError } from '../../types/api-error';
 import './TraceName.css';
 
 type Props = {
-  breakable?: boolean,
   className?: string,
-  error: ?ApiError,
-  state: ?FetchedState,
-  traceName: ?string,
+  error?: ?ApiError,
+  state?: ?FetchedState,
+  traceName?: ?string,
 };
 
 export default function TraceName(props: Props) {
-  const { breakable, className, error, state, traceName } = props;
+  const { className, error, state, traceName } = props;
   const isErred = state === fetchedState.ERROR;
   let title = traceName || FALLBACK_TRACE_NAME;
   let errorCssClass = '';
@@ -52,12 +51,14 @@ export default function TraceName(props: Props) {
     title = <LoadingIndicator small />;
   } else {
     const text = traceName || FALLBACK_TRACE_NAME;
-    title = breakable ? <BreakableText text={text} /> : text;
+    title = <BreakableText text={text} />;
   }
   return <span className={`TraceName ${errorCssClass} ${className || ''}`}>{title}</span>;
 }
 
 TraceName.defaultProps = {
-  breakable: false,
   className: '',
+  error: null,
+  state: null,
+  traceName: null,
 };

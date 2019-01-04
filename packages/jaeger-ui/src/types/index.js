@@ -19,6 +19,8 @@ import type { ContextRouter } from 'react-router-dom';
 import type { ApiError } from './api-error';
 import type { TracesArchive } from './archive';
 import type { Config } from './config';
+import type { EmbeddedState } from './embedded';
+import type { SearchQuery } from './search';
 import type { Trace } from './trace';
 import type { TraceDiffState } from './trace-diff';
 import type { TraceTimeline } from './trace-timeline';
@@ -40,6 +42,7 @@ export type ReduxState = {
     loading: boolean,
     error: ?ApiError,
   },
+  embedded: EmbeddedState,
   router: ContextRouter,
   services: {
     services: ?(string[]),
@@ -53,6 +56,7 @@ export type ReduxState = {
       error?: ApiError,
       results: string[],
       state?: FetchedState,
+      query?: SearchQuery,
     },
   },
   traceDiff: TraceDiffState,
