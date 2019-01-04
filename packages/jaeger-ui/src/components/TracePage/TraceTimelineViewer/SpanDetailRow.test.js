@@ -20,6 +20,8 @@ import SpanDetail from './SpanDetail';
 import DetailState from './SpanDetail/DetailState';
 import SpanTreeOffset from './SpanTreeOffset';
 
+jest.mock('./SpanTreeOffset');
+
 describe('<SpanDetailRow>', () => {
   const spanID = 'some-id';
   const props = {
@@ -61,7 +63,7 @@ describe('<SpanDetailRow>', () => {
   });
 
   it('renders the span tree offset', () => {
-    const spanTreeOffset = <SpanTreeOffset level={props.span.depth + 1} />;
+    const spanTreeOffset = <SpanTreeOffset span={props.span} />;
     expect(wrapper.contains(spanTreeOffset)).toBe(true);
   });
 
