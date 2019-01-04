@@ -38,12 +38,13 @@ import './SearchForm.css';
 const FormItem = Form.Item;
 const Option = Select.Option;
 
-const AdaptedInput = reduxFormFieldAdapter({ AntInputComponent: Input, isValidatedInput: true });
+const AdaptedInput = reduxFormFieldAdapter({ AntInputComponent: Input });
 const AdaptedSelect = reduxFormFieldAdapter({ AntInputComponent: Select });
 const AdaptedVirtualSelect = reduxFormFieldAdapter({
   AntInputComponent: VirtSelect,
   onChangeAdapter: option => (option ? option.value : null),
 });
+const ValidatedAdaptedInput = reduxFormFieldAdapter({ AntInputComponent: Input, isValidatedInput: true });
 
 export function getUnixTimeStampInMSFromForm({ startDate, startDateTime, endDate, endDateTime }) {
   const start = `${startDate} ${startDateTime}`;
@@ -337,7 +338,7 @@ export class SearchFormImpl extends React.PureComponent {
         <FormItem label="Min Duration">
           <Field
             name="minDuration"
-            component={AdaptedInput}
+            component={ValidatedAdaptedInput}
             placeholder={placeholderDurationFields}
             props={{ disabled }}
             validate={validateDurationFields}
@@ -347,7 +348,7 @@ export class SearchFormImpl extends React.PureComponent {
         <FormItem label="Max Duration">
           <Field
             name="maxDuration"
-            component={AdaptedInput}
+            component={ValidatedAdaptedInput}
             placeholder={placeholderDurationFields}
             props={{ disabled }}
             validate={validateDurationFields}
