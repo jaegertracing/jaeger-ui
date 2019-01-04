@@ -14,14 +14,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as React from 'react';
+import { Button } from 'antd';
 import cx from 'classnames';
+import * as React from 'react';
 
 import GraphTicks from './GraphTicks';
 import Scrubber from './Scrubber';
-import type { ViewRange, ViewRangeTimeUpdate } from '../types';
-import type { DraggableBounds, DraggingUpdate } from '../../../utils/DraggableManager';
-import DraggableManager, { updateTypes } from '../../../utils/DraggableManager';
+import DraggableManager, { updateTypes } from '../../../../utils/DraggableManager';
+
+import type { ViewRange, ViewRangeTimeUpdate } from '../../types';
+import type { DraggableBounds, DraggingUpdate } from '../../../../utils/DraggableManager';
 
 import './ViewingLayer.css';
 
@@ -224,7 +226,14 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
   };
 
   /**
-   * Randers the difference between where the drag started and the current
+   * Resets the zoom to fully zoomed out.
+   */
+  _resetTimeZoomClickHandler = () => {
+    this.props.updateViewRangeTime(0, 1);
+  };
+
+  /**
+   * Renders the difference between where the drag started and the current
    * position, e.g. the red or blue highlight.
    *
    * @returns React.Node[]
@@ -276,6 +285,11 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
 
     return (
       <div aria-hidden className="ViewingLayer" style={{ height }}>
+        {(viewStart !== 0 || viewEnd !== 1) && (
+          <Button onClick={this._resetTimeZoomClickHandler} className="ViewingLayer--resetZoom">
+            Reset Selection
+          </Button>
+        )}
         <svg
           height={height}
           className="ViewingLayer--graph"

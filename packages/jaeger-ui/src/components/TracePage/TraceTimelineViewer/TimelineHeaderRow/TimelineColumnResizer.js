@@ -92,11 +92,14 @@ export default class TimelineColumnResizer extends React.PureComponent<
   render() {
     let left;
     let draggerStyle;
-    let wrapperCls = '';
+    let isDraggingCls = '';
+    const { position } = this.props;
     const { dragPosition } = this.state;
+    left = `${position * 100}%`;
+    const gripStyle = { left };
+
     if (this._dragManager.isDragging() && this._rootElm && dragPosition != null) {
-      const { position } = this.props;
-      wrapperCls = cx({
+      isDraggingCls = cx({
         isDraggingLeft: dragPosition < position,
         isDraggingRight: dragPosition > position,
       });
@@ -110,21 +113,17 @@ export default class TimelineColumnResizer extends React.PureComponent<
       const draggerRight = `calc(${(1 - Math.max(position, dragPosition)) * 100}% - 1px)`;
       draggerStyle = { left: draggerLeft, right: draggerRight };
     } else {
-      const { position } = this.props;
-      left = `${position * 100}%`;
-      draggerStyle = { left };
+      draggerStyle = gripStyle;
     }
     return (
-      <div className="TimelineColumnResizer" ref={this._setRootElm}>
-        <div className={`TimelineColumnResizer--wrapper ${wrapperCls}`} style={{ left }}>
-          <div className="TimelineColumnResizer--gripIcon" />
-          <div
-            aria-hidden
-            className="TimelineColumnResizer--dragger"
-            onMouseDown={this._dragManager.handleMouseDown}
-            style={draggerStyle}
-          />
-        </div>
+      <div className={`TimelineColumnResizer ${isDraggingCls}`} ref={this._setRootElm}>
+        <div className="TimelineColumnResizer--gripIcon" style={gripStyle} />
+        <div
+          aria-hidden
+          className="TimelineColumnResizer--dragger"
+          onMouseDown={this._dragManager.handleMouseDown}
+          style={draggerStyle}
+        />
       </div>
     );
   }

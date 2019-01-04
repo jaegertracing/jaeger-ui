@@ -16,12 +16,14 @@ import { reducer as formReducer } from 'redux-form';
 
 import config from './config';
 import dependencies from './dependencies';
+import embedded from './embedded';
 import services from './services';
 import trace from './trace';
 
 export default {
   config,
   dependencies,
+  embedded,
   services,
   trace,
   form: formReducer,

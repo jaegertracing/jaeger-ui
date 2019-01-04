@@ -16,20 +16,24 @@
 
 import * as React from 'react';
 import { Layout } from 'antd';
+import cx from 'classnames';
 import Helmet from 'react-helmet';
 import { connect } from 'react-redux';
-import type { Location } from 'react-router-dom';
 import { withRouter } from 'react-router-dom';
-import { isEmbed } from '../../utils/embedded';
+
 import TopNav from './TopNav';
 import { trackPageView } from '../../utils/tracking';
+
+import type { ReduxState } from '../../types';
+import type { EmbeddedState } from '../../types/embedded';
 
 import './Page.css';
 
 type Props = {
+  children: React.Node,
+  embedded: EmbeddedState,
   pathname: string,
   search: string,
-  children: React.Node,
 };
 
 const { Header, Content } = Layout;
@@ -52,16 +56,18 @@ export class PageImpl extends React.Component<Props> {
   }
 
   render() {
+    const { embedded } = this.props;
+    const contentCls = cx({ 'Page--content': !embedded });
     return (
       <div>
         <Helmet title="Jaeger UI" />
         <Layout>
-          {!isEmbed(this.props.search) && (
+          {!embedded && (
             <Header className="Page--topNav">
               <TopNav />
             </Header>
           )}
-          <Content className={!isEmbed(this.props.search) && 'Page--content'}>{this.props.children}</Content>
+          <Content className={contentCls}>{this.props.children}</Content>
         </Layout>
       </div>
     );
@@ -69,9 +75,10 @@ export class PageImpl extends React.Component<Props> {
 }
 
 // export for tests
-export function mapStateToProps(state: { router: { location: Location } }) {
+export function mapStateToProps(state: ReduxState) {
+  const { embedded } = state;
   const { pathname, search } = state.router.location;
-  return { pathname, search };
+  return { embedded, pathname, search };
 }
 
 export default withRouter(connect(mapStateToProps)(PageImpl));
