@@ -28,9 +28,9 @@
     "lint": "yarn run prettier-lint && yarn run eslint && yarn run flow && yarn run check-license",
     "prepare": "lerna run --stream --sort prepublishOnly",
     "prettier":
-      "prettier --write '{.,scripts}/*.{js,json,md}' 'packages/*/{src,demo/src}/**/*.{css,js,json,md}' 'packages/*/*.{css,js,json,md}'",
+      "prettier --write '{.,scripts}/*.{js,json,md}' 'packages/*/{src,demo/src}/**/!(react-vis).{css,js,json,md}' 'packages/*/*.{css,js,json,md}'",
     "prettier-lint":
-      "prettier --list-different '{.,scripts}/*.{js,json,md}' 'packages/*/{src,demo/src}/**/*.{css,js,json,md}' 'packages/*/*.{css,js,json,md}'",
+      "prettier --list-different '{.,scripts}/*.{js,json,md}' 'packages/*/{src,demo/src}/**/!(react-vis).{css,js,json,md}' 'packages/*/*.{css,js,json,md}'",
     "test": "lerna run test",
     "start": "cd packages/jaeger-ui && yarn start"
   },
