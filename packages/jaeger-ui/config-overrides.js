@@ -22,6 +22,24 @@ const lessToJs = require('less-vars-to-js');
 const loadedVarOverrides = fs.readFileSync('config-overrides-antd-vars.less', 'utf8');
 const modifyVars = lessToJs(loadedVarOverrides);
 
+function useEslintRc(config) {
+  const { rules } = config.module;
+  const preRule = rules.find(rule => rule.enforce === 'pre');
+  if (!preRule) {
+    throw new Error('Unable to find estlint rule, pre');
+  }
+  const use = Array.isArray(preRule.use) ? preRule.use[0] : null;
+  if (!use) {
+    throw new Error('Unable to find estlint rule, use');
+  }
+  const isEslintRule = /node_modules\/eslint-loader\//.test(use.loader);
+  if (!isEslintRule || !use.options) {
+    throw new Error('Unable to find estlint rule, eslint loader');
+  }
+  use.options.useEslintrc = true;
+  return config;
+}
+
 function webpack(_config, env) {
   let config = _config;
   config = rewireLess.withLoaderOptions({
@@ -32,6 +50,7 @@ function webpack(_config, env) {
     ['import', { libraryName: 'antd', style: true, libraryDirectory: 'lib' }],
     config
   );
+  useEslintRc(config);
   return config;
 }
 

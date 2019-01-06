@@ -13,9 +13,8 @@
     "eslint-plugin-react": "^7.12.2",
     "flow-bin": "^0.71.0",
     "glow": "^1.2.2",
-    "husky": "^0.14.3",
+    "husky": "1.3.1",
     "lerna": "^2.10.2",
-    "lint-staged": "^7.0.4",
     "prettier": "^1.10.2",
     "rxjs-compat": "6.3.3"
   },
@@ -26,11 +25,12 @@
     "coverage": "lerna run coverage",
     "eslint": "eslint 'scripts/*.js' 'packages/*/src/**/*.js' 'packages/*/*.js'",
     "flow": "glow",
-    "lint": "yarn run eslint && yarn run prettier && yarn run flow && yarn run check-license",
-    "precommit": "lint-staged",
+    "lint": "yarn run prettier-lint && yarn run eslint && yarn run flow && yarn run check-license",
     "prepare": "lerna run --stream --sort prepublishOnly",
     "prettier":
       "prettier --write '{.,scripts}/*.{js,json,md}' 'packages/*/{src,demo/src}/**/*.{css,js,json,md}' 'packages/*/*.{css,js,json,md}'",
+    "prettier-lint":
+      "prettier --list-different '{.,scripts}/*.{js,json,md}' 'packages/*/{src,demo/src}/**/*.{css,js,json,md}' 'packages/*/*.{css,js,json,md}'",
     "test": "lerna run test",
     "start": "cd packages/jaeger-ui && yarn start"
   },
@@ -40,8 +40,9 @@
     "singleQuote": true,
     "trailingComma": "es5"
   },
-  "lint-staged": {
-    "*.{css,js,json}": ["yarn run lint", "yarn run test", "git add"],
-    "*.md": ["yarn run prettier", "git add"]
+  "husky": {
+    "hooks": {
+      "pre-commit": "yarn run lint && yarn run test"
+    }
   }
 }
