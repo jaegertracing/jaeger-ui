@@ -82,6 +82,7 @@
   "jest": {
     "collectCoverageFrom": [
       "src/**/*.js",
+      "!src/setup*.js",
       "!src/utils/DraggableManager/demo/*.js",
       "!src/utils/test/**/*.js",
       "!src/demo/**/*.js"
