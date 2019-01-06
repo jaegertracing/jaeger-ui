@@ -17,7 +17,7 @@
 export type ConfigMenuItem = {
   label: string,
   url: string,
-  openInSameTab: boolean,
+  anchorTarget?: '_self' | '_blank' | '_parent' | '_top',
 };
 
 export type ConfigMenuGroup = {

@@ -53,27 +53,18 @@ if (getConfigValue('dependencies.menuEnabled')) {
 }
 
 function getItemLink(item: ConfigMenuItem) {
-  const target = item.openInSameTab ? "_self" : "_blank";
+  const { label, anchorTarget, url } = item;
   return (
-    <a href={item.url} target={target} rel="noopener noreferrer">
-      {item.label}
-    </a>
+    <Menu.Item key={label}>
+      <a href={url} target={anchorTarget || '_blank'} rel="noopener noreferrer">
+        {label}
+      </a>
+    </Menu.Item>
   );
 }
 
 function CustomNavDropdown({ label, items }: ConfigMenuGroup) {
-  const menuItems = (
-    <Menu>
-      {items.map(i => {
-        const item = ((i: any): ConfigMenuItem);
-          return (
-          <Menu.Item key={item.label}>
-            {getItemLink(item)}
-          </Menu.Item>
-        );
-      })}
-    </Menu>
-  );
+  const menuItems = <Menu>{items.map(getItemLink)}</Menu>;
   return (
     <Dropdown overlay={menuItems} placement="bottomRight">
       <a>
@@ -91,18 +82,13 @@ export function TopNavImpl(props: Props) {
     <div>
       <Menu theme="dark" mode="horizontal" selectable={false} className="ub-right" selectedKeys={[pathname]}>
         {menuItems.map(m => {
-          if (m.items != null) {
-            const group = ((m: any): ConfigMenuGroup);
-            return (
-              <Menu.Item key={group.label}>
-                <CustomNavDropdown key={group.label} {...group} />
-              </Menu.Item>
-            );
+          if (!m.items) {
+            return getItemLink(m);
           }
-          const item = ((m: any): ConfigMenuItem);
+          const group = ((m: any): ConfigMenuGroup);
           return (
-            <Menu.Item key={item.label}>
-              {getItemLink(item)}
+            <Menu.Item key={group.label}>
+              <CustomNavDropdown key={group.label} {...group} />
             </Menu.Item>
           );
         })}

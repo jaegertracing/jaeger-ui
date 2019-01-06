@@ -31,9 +31,14 @@ describe('<TopNav>', () => {
     {
       label: 'Twitter',
       url: 'https://twitter.com/JaegerTracing',
-      openInSameTab: true,
+      anchorTarget: '_self',
     },
   ];
+
+  const configMenuGroup = {
+    label: labelAbout,
+    items: dropdownItems,
+  };
 
   const defaultProps = {
     config: {
@@ -41,16 +46,13 @@ describe('<TopNav>', () => {
         {
           label: labelGitHub,
           url: githubUrl,
-          openInSameTab: true,
+          anchorTarget: '_self',
         },
         {
           label: 'Blog',
           url: blogUrl,
         },
-        {
-          label: labelAbout,
-          items: dropdownItems,
-        },
+        configMenuGroup,
       ],
     },
     router: {
@@ -96,15 +98,30 @@ describe('<TopNav>', () => {
     });
 
     it('adds target=_self to top-level item', () => {
-        const item = wrapper.find(`[href="${githubUrl}"]`);
-        expect(item.length).toBe(1);
-        expect(item.find(`[target="_self"]`).length).toBe(1);
+      const item = wrapper.find(`[href="${githubUrl}"]`);
+      expect(item.length).toBe(1);
+      expect(item.find(`[target="_self"]`).length).toBe(1);
     });
 
     it('sets target=_blank by default', () => {
-        const item = wrapper.find(`[href="${blogUrl}"]`);
-        expect(item.length).toBe(1);
-        expect(item.find(`[target="_blank"]`).length).toBe(1);
+      const item = wrapper.find(`[href="${blogUrl}"]`);
+      expect(item.length).toBe(1);
+      expect(item.find(`[target="_blank"]`).length).toBe(1);
+    });
+
+    describe('<CustomNavDropdown>', () => {
+      beforeEach(() => {
+        wrapper = shallow(<TopNav.CustomNavDropdown {...configMenuGroup} />);
+      });
+
+      it('renders sub-memu items', () => {
+        const subMenu = shallow(wrapper.find('Dropdown').props().overlay);
+        dropdownItems.forEach(itemConfig => {
+          const item = subMenu.find(`[href="${itemConfig.url}"]`);
+          expect(item.length).toBe(1);
+          expect(item.prop('target')).toBe(itemConfig.anchorTarget || '_blank');
+        });
+      });
     });
   });
 });
