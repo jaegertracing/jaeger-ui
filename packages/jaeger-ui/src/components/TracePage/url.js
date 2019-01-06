@@ -21,3 +21,10 @@ export const ROUTE_PATH = prefixUrl('/trace/:id');
 export function getUrl(id: string) {
   return prefixUrl(`/trace/${id}`);
 }
+
+export function getLocation(id: string, state: ?Object) {
+  return {
+    state,
+    pathname: prefixUrl(`/trace/${id}`),
+  };
+}

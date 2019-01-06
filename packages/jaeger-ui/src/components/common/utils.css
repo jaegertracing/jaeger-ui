@@ -34,6 +34,10 @@ limitations under the License.
   color: #aaa;
 }
 
+.u-tx-inherit {
+  color: inherit;
+}
+
 .u-tx-ellipsis {
   text-overflow: ellipsis;
 }

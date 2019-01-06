@@ -24,6 +24,32 @@ limitations under the License.
   cursor: pointer;
 }
 
+.SpanTreeOffset--indentGuide {
+  /* The size of the indentGuide is based off of the iconWrapper */
+  padding-right: calc(0.5rem + 12px);
+  height: 100%;
+  border-left: 1px solid transparent;
+  display: inline-flex;
+}
+
+.SpanTreeOffset--indentGuide:before {
+  content: '';
+  padding-left: 1px;
+  background-color: lightgrey;
+}
+
+.SpanTreeOffset--indentGuide.is-active {
+  /* The size of the indentGuide is based off of the iconWrapper */
+  padding-right: calc(0.5rem + 11px);
+  border-left: 0px;
+}
+
+.SpanTreeOffset--indentGuide.is-active:before {
+  content: '';
+  padding-left: 3px;
+  background-color: darkgrey;
+}
+
 .SpanTreeOffset--iconWrapper {
   position: absolute;
   right: 0.25rem;

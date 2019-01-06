@@ -37,6 +37,7 @@ type Props = {
   toggleComparison: (string, boolean) => void,
   traceID: string,
   traceName: string,
+  disableComparision?: boolean,
 };
 
 export default class ResultItemTitle extends React.PureComponent<Props> {
@@ -64,7 +65,9 @@ export default class ResultItemTitle extends React.PureComponent<Props> {
       state,
       traceID,
       traceName,
+      disableComparision,
     } = this.props;
+    // Use a div when the ResultItemTitle doesn't link to anything
     let WrapperComponent = 'div';
     const wrapperProps: { [string]: string } = { className: 'ResultItemTitle--item ub-flex-auto' };
     if (linkTo) {
@@ -74,12 +77,14 @@ export default class ResultItemTitle extends React.PureComponent<Props> {
     const isErred = state === fetchedState.ERROR;
     return (
       <div className="ResultItemTitle">
-        <Checkbox
-          className="ResultItemTitle--item ub-flex-none"
-          checked={!isErred && isInDiffCohort}
-          disabled={isErred}
-          onChange={this.toggleComparison}
-        />
+        {!disableComparision && (
+          <Checkbox
+            className="ResultItemTitle--item ub-flex-none"
+            checked={!isErred && isInDiffCohort}
+            disabled={isErred}
+            onChange={this.toggleComparison}
+          />
+        )}
         <WrapperComponent {...wrapperProps}>
           <span className="ResultItemTitle--durationBar" style={{ width: `${durationPercent}%` }} />
           {duration != null && <span className="ub-right ub-relative">{formatDuration(duration)}</span>}

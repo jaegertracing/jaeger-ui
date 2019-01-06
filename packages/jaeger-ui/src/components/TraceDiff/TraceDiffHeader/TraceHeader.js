@@ -76,11 +76,11 @@ export default function TraceHeader(props: Props) {
   const AttrsComponent = state === fetchedState.DONE ? Attrs : EmptyAttrs;
   return (
     <div className="TraecDiffHeader--traceHeader">
-      <h1 className={`TraecDiffHeader--traceTitle`}>
+      <h1 className="TraecDiffHeader--traceTitle">
         <span>
           {traceID ? (
             <React.Fragment>
-              <TraceName key="name" traceName={traceName} error={error} state={state} breakable />{' '}
+              <TraceName key="name" traceName={traceName} error={error} state={state} />{' '}
               <small key="id" className="u-tx-muted">
                 {(traceID || '').slice(0, 7)}
               </small>

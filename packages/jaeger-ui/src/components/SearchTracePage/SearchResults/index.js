@@ -16,19 +16,24 @@
 
 import * as React from 'react';
 import { Select } from 'antd';
+import { Link } from 'react-router-dom';
 import { Field, reduxForm, formValueSelector } from 'redux-form';
 
 import DiffSelection from './DiffSelection';
 import * as markers from './index.markers';
 import ResultItem from './ResultItem';
 import ScatterPlot from './ScatterPlot';
+import { getUrl } from '../url';
 import LoadingIndicator from '../../common/LoadingIndicator';
+import NewWindowIcon from '../../common/NewWindowIcon';
+import { getLocation } from '../../TracePage/url';
 import * as orderBy from '../../../model/order-by';
 import { getPercentageOfDuration } from '../../../utils/date';
-import prefixUrl from '../../../utils/prefix-url';
+import { stripEmbeddedState } from '../../../utils/embedded-url';
 import reduxFormFieldAdapter from '../../../utils/redux-form-field-adapter';
 
 import type { FetchedTrace } from '../../../types';
+import type { SearchQuery } from '../../../types/search';
 
 import './index.css';
 
@@ -36,9 +41,13 @@ type SearchResultsProps = {
   cohortAddTrace: string => void,
   cohortRemoveTrace: string => void,
   diffCohort: FetchedTrace[],
+  disableComparisons: boolean,
   goToTrace: string => void,
+  hideGraph: boolean,
   loading: boolean,
   maxTraceDuration: number,
+  queryOfResults: SearchQuery,
+  showStandaloneLink: boolean,
   skipMessage?: boolean,
   traces: TraceSummary[],
 };
@@ -50,9 +59,9 @@ const Option = Select.Option;
  */
 function SelectSortImpl() {
   return (
-    <label className="ub-right">
+    <label>
       Sort:{' '}
-      <Field name="sortBy" component={reduxFormFieldAdapter(Select)}>
+      <Field name="sortBy" component={reduxFormFieldAdapter({ AntInputComponent: Select })}>
         <Option value={orderBy.MOST_RECENT}>Most Recent</Option>
         <Option value={orderBy.LONGEST_FIRST}>Longest First</Option>
         <Option value={orderBy.SHORTEST_FIRST}>Shortest First</Option>
@@ -85,8 +94,21 @@ export default class SearchResults extends React.PureComponent<SearchResultsProp
   };
 
   render() {
-    const { loading, diffCohort, skipMessage, traces } = this.props;
-    const diffSelection = <DiffSelection toggleComparison={this.toggleComparison} traces={diffCohort} />;
+    const {
+      diffCohort,
+      disableComparisons,
+      goToTrace,
+      hideGraph,
+      loading,
+      maxTraceDuration,
+      queryOfResults,
+      showStandaloneLink,
+      skipMessage,
+      traces,
+    } = this.props;
+    const diffSelection = !disableComparisons && (
+      <DiffSelection toggleComparison={this.toggleComparison} traces={diffCohort} />
+    );
     if (loading) {
       return (
         <React.Fragment>
@@ -107,31 +129,43 @@ export default class SearchResults extends React.PureComponent<SearchResultsProp
         </React.Fragment>
       );
     }
-    const { goToTrace, maxTraceDuration } = this.props;
     const cohortIds = new Set(diffCohort.map(datum => datum.id));
+    const searchUrl = getUrl(stripEmbeddedState(queryOfResults));
     return (
       <div>
         <div>
           <div className="SearchResults--header">
-            <div className="ub-p3">
-              <ScatterPlot
-                data={traces.map(t => ({
-                  x: t.startTime,
-                  y: t.duration,
-                  traceID: t.traceID,
-                  size: t.spans.length,
-                  name: t.traceName,
-                }))}
-                onValueClick={t => {
-                  goToTrace(t.traceID);
-                }}
-              />
-            </div>
+            {!hideGraph && (
+              <div className="ub-p3">
+                <ScatterPlot
+                  data={traces.map(t => ({
+                    x: t.startTime,
+                    y: t.duration,
+                    traceID: t.traceID,
+                    size: t.spans.length,
+                    name: t.traceName,
+                  }))}
+                  onValueClick={t => {
+                    goToTrace(t.traceID);
+                  }}
+                />
+              </div>
+            )}
             <div className="SearchResults--headerOverview">
-              <SelectSort />
-              <h2 className="ub-m0">
+              <h2 className="ub-m0 u-flex-1">
                 {traces.length} Trace{traces.length > 1 && 's'}
               </h2>
+              <SelectSort />
+              {showStandaloneLink && (
+                <Link
+                  className="u-tx-inherit ub-nowrap ub-ml3"
+                  to={searchUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <NewWindowIcon />
+                </Link>
+              )}
             </div>
           </div>
         </div>
@@ -143,9 +177,10 @@ export default class SearchResults extends React.PureComponent<SearchResultsProp
                 <ResultItem
                   durationPercent={getPercentageOfDuration(trace.duration, maxTraceDuration)}
                   isInDiffCohort={cohortIds.has(trace.traceID)}
-                  linkTo={prefixUrl(`/trace/${trace.traceID}`)}
+                  linkTo={getLocation(trace.traceID, { fromSearch: searchUrl })}
                   toggleComparison={this.toggleComparison}
                   trace={trace}
+                  disableComparision={disableComparisons}
                 />
               </li>
             ))}

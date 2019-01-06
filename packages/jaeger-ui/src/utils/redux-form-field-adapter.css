@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2017 Uber Technologies, Inc.
+Copyright (c) 2018 Uber Technologies, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,25 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-.TracePageHeader--titleRow {
-  align-items: center;
-  display: flex;
-}
-
-.TracePageHeader--title {
-  margin: 0;
-  padding: 0.25rem 0.5rem;
-}
-
-.TracePageHeader--title:hover {
-  background: #f5f5f5;
-}
-
-.TracePageHeader--overviewItems {
-  padding: 0 0.5rem 0.25rem 0.5rem;
-}
-
-.TracePageHeader--archiveIcon {
-  font-size: 1.78em;
-  margin-right: 0.15em;
+.AdaptedReduxFormField--isValidatedInput.is-invalid {
+  background: #fff9f8;
+  border: 1px solid #c00;
 }

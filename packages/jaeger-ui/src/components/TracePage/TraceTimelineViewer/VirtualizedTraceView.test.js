@@ -11,7 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
 import React from 'react';
 import { shallow, mount } from 'enzyme';
 
@@ -22,6 +21,8 @@ import SpanDetailRow from './SpanDetailRow';
 import { DEFAULT_HEIGHTS, VirtualizedTraceViewImpl } from './VirtualizedTraceView';
 import traceGenerator from '../../../demo/trace-generators';
 import transformTraceData from '../../../model/transform-trace-data';
+
+jest.mock('./SpanTreeOffset');
 
 describe('<VirtualizedTraceViewImpl>', () => {
   let wrapper;
@@ -292,19 +293,15 @@ describe('<VirtualizedTraceViewImpl>', () => {
           <SpanBarRow
             className={instance.clippingCssClasses}
             columnDivision={props.spanNameColumnWidth}
-            depth={span.depth}
             isChildrenExpanded
             isDetailExpanded={false}
             isMatchingFilter={false}
-            isParent={span.hasChildren}
             numTicks={5}
             onDetailToggled={props.detailToggle}
             onChildrenToggled={props.childrenToggle}
-            operationName={span.operationName}
             rpc={undefined}
-            serviceName={span.process.serviceName}
             showErrorIcon={false}
-            spanID={span.spanID}
+            span={span}
           />
         )
       ).toBe(true);

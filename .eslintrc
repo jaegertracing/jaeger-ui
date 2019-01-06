@@ -27,6 +27,7 @@
     "jsx-a11y/interactive-supports-focus": 0,
 
     /* react */
+    "react/jsx-curly-brace-presence": [2, 'never'],
     "react/jsx-filename-extension": 0,
     "react/forbid-prop-types": 1,
     "react/require-default-props": 1,

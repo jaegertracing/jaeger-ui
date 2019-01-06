@@ -37,7 +37,6 @@ describe('<TimelineColumnResizer>', () => {
   it('renders without exploding', () => {
     expect(wrapper).toBeDefined();
     expect(wrapper.find('.TimelineColumnResizer').length).toBe(1);
-    expect(wrapper.find('.TimelineColumnResizer--wrapper').length).toBe(1);
     expect(wrapper.find('.TimelineColumnResizer--gripIcon').length).toBe(1);
     expect(wrapper.find('.TimelineColumnResizer--dragger').length).toBe(1);
   });

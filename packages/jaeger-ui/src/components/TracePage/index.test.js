@@ -13,12 +13,13 @@
 // limitations under the License.
 
 /* eslint-disable import/first */
+
 jest.mock('./index.track');
 jest.mock('./keyboard-shortcuts');
 jest.mock('./scroll-page');
 // mock these to enable mount()
-jest.mock('./SpanGraph');
-jest.mock('./TracePageHeader.track');
+jest.mock('./TracePageHeader/SpanGraph');
+jest.mock('./TracePageHeader/TracePageHeader.track');
 jest.mock('./TraceTimelineViewer');
 
 import React from 'react';
@@ -36,9 +37,9 @@ import {
 import * as track from './index.track';
 import { reset as resetShortcuts } from './keyboard-shortcuts';
 import { cancel as cancelScroll } from './scroll-page';
-import SpanGraph from './SpanGraph';
+import SpanGraph from './TracePageHeader/SpanGraph';
 import TracePageHeader from './TracePageHeader';
-import { trackSlimHeaderToggle } from './TracePageHeader.track';
+import { trackSlimHeaderToggle } from './TracePageHeader/TracePageHeader.track';
 import TraceTimelineViewer from './TraceTimelineViewer';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
@@ -87,10 +88,6 @@ describe('<TracePage>', () => {
 
   it.skip('renders a <TracePageHeader>', () => {
     expect(wrapper.find(TracePageHeader).get(0)).toBeTruthy();
-  });
-
-  it('renders a <SpanGraph>', () => {
-    expect(wrapper.find(SpanGraph).length).toBe(1);
   });
 
   it('renders a a loading indicator when not provided a fetched trace', () => {
@@ -350,13 +347,26 @@ describe('mapDispatchToProps()', () => {
 });
 
 describe('mapStateToProps()', () => {
-  it('maps state to props correctly', () => {
-    const id = 'abc';
-    const trace = {};
-    const state = {
+  const traceID = 'trace-id';
+  const trace = {};
+  const embedded = 'a-faux-embedded-config';
+  const ownProps = {
+    match: {
+      params: { id: traceID },
+    },
+  };
+  let state;
+  beforeEach(() => {
+    state = {
+      embedded,
       trace: {
         traces: {
-          [id]: { data: trace, state: fetchedState.DONE },
+          [traceID]: { data: trace, state: fetchedState.DONE },
+        },
+      },
+      router: {
+        location: {
+          search: '',
         },
       },
       config: {
@@ -364,16 +374,29 @@ describe('mapStateToProps()', () => {
       },
       archive: {},
     };
-    const ownProps = {
-      match: {
-        params: { id },
-      },
-    };
+  });
+  it('maps state to props correctly', () => {
     const props = mapStateToProps(state, ownProps);
     expect(props).toEqual({
-      id,
+      id: traceID,
+      embedded,
       archiveEnabled: false,
       archiveTraceState: undefined,
+      searchUrl: null,
+      trace: { data: {}, state: fetchedState.DONE },
+    });
+  });
+
+  it('propagates fromSearch correctly', () => {
+    const fakeUrl = 'fake-url';
+    state.router.location.state = { fromSearch: fakeUrl };
+    const props = mapStateToProps(state, ownProps);
+    expect(props).toEqual({
+      id: traceID,
+      embedded,
+      archiveEnabled: false,
+      archiveTraceState: undefined,
+      searchUrl: fakeUrl,
       trace: { data: {}, state: fetchedState.DONE },
     });
   });

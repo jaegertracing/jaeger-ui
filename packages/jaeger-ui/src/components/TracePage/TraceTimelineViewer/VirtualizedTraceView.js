@@ -24,13 +24,7 @@ import ListView from './ListView';
 import SpanBarRow from './SpanBarRow';
 import DetailState from './SpanDetail/DetailState';
 import SpanDetailRow from './SpanDetailRow';
-import {
-  findServerChildSpan,
-  formatDuration,
-  getViewedBounds,
-  isErrorSpan,
-  spanContainsErredSpan,
-} from './utils';
+import { findServerChildSpan, getViewedBounds, isErrorSpan, spanContainsErredSpan } from './utils';
 import getLinks from '../../../model/link-patterns';
 import type { Accessors } from '../ScrollManager';
 import type { Log, Span, Trace, KeyValuePair } from '../../../types/trace';
@@ -315,20 +309,15 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
           className={this.clippingCssClasses}
           color={color}
           columnDivision={spanNameColumnWidth}
-          depth={span.depth}
-          label={formatDuration(span.duration)}
           isChildrenExpanded={!isCollapsed}
           isDetailExpanded={isDetailExpanded}
           isMatchingFilter={isMatchingFilter}
-          isParent={span.hasChildren}
           numTicks={NUM_TICKS}
           onDetailToggled={detailToggle}
           onChildrenToggled={childrenToggle}
-          operationName={span.operationName}
           rpc={rpc}
-          serviceName={span.process.serviceName}
           showErrorIcon={showErrorIcon}
-          spanID={spanID}
+          span={span}
           viewEnd={viewBounds.end}
           viewStart={viewBounds.start}
         />

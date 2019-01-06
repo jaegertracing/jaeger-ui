@@ -40,6 +40,7 @@ import { MOST_RECENT } from '../../model/order-by';
 import transformTraceData from '../../model/transform-trace-data';
 
 describe('<SearchTracePage>', () => {
+  const queryOfResults = {};
   let wrapper;
   let traceResults;
   let props;
@@ -47,12 +48,13 @@ describe('<SearchTracePage>', () => {
   beforeEach(() => {
     traceResults = [{ traceID: 'a', spans: [], processes: {} }, { traceID: 'b', spans: [], processes: {} }];
     props = {
+      queryOfResults,
       traceResults,
+      diffCohort: [],
       isHomepage: false,
       loadingServices: false,
       loadingTraces: false,
       maxTraceDuration: 100,
-      diffCohort: [],
       numberOfTraceResults: traceResults.length,
       services: null,
       sortTracesBy: MOST_RECENT,
@@ -80,6 +82,20 @@ describe('<SearchTracePage>', () => {
     store.get = oldFn;
   });
 
+  it('goToTrace pushes the trace URL with {fromSearch: true} to history', () => {
+    const traceID = '15810714d6a27450';
+    const query = 'some-query';
+    const historyPush = jest.fn();
+    const historyMock = { push: historyPush };
+    wrapper = mount(<SearchTracePage {...props} history={historyMock} query={query} />);
+    wrapper.instance().goToTrace(traceID);
+    expect(historyPush.mock.calls.length).toBe(1);
+    expect(historyPush.mock.calls[0][0]).toEqual({
+      pathname: `/trace/${traceID}`,
+      state: { fromSearch: queryOfResults },
+    });
+  });
+
   it('shows a loading indicator if loading services', () => {
     wrapper.setProps({ loadingServices: true });
     expect(wrapper.find(LoadingIndicator).length).toBe(1);
@@ -99,6 +115,16 @@ describe('<SearchTracePage>', () => {
   it('shows the logo prior to searching', () => {
     wrapper.setProps({ isHomepage: true, traceResults: [] });
     expect(wrapper.find('.js-test-logo').length).toBe(1);
+  });
+
+  it('hide SearchForm if is embed', () => {
+    wrapper.setProps({ embed: true });
+    expect(wrapper.find(SearchForm).length).toBe(0);
+  });
+
+  it('hide logo if is embed', () => {
+    wrapper.setProps({ embed: true });
+    expect(wrapper.find('.js-test-logo').length).toBe(0);
   });
 });
 
@@ -140,10 +166,12 @@ describe('mapStateToProps()', () => {
     expect(diffCohort[0].data.traceID).toBe(trace.traceID);
 
     expect(rest).toEqual({
+      embedded: undefined,
+      queryOfResults: undefined,
       isHomepage: true,
       // the redux-form `formValueSelector` mock returns `null` for "sortBy"
       sortTracesBy: null,
-      urlQueryParams: {},
+      urlQueryParams: null,
       services: [
         {
           name: stateServices.services[0],
