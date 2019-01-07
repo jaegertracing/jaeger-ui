@@ -45,7 +45,7 @@ function webpack(_config) {
     modifyVars,
     javascriptEnabled: true,
   })(config);
-  config = addBabelPlugin(['import', { libraryName: 'antd', style: true, libraryDirectory: 'lib' }])(config);
+  config = addBabelPlugin(['import', { libraryName: 'antd', style: true }])(config);
   useEslintRc(config);
   return config;
 }
