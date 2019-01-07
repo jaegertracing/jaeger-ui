@@ -18,6 +18,7 @@ import * as React from 'react';
 import { DirectedGraph, LayoutManager } from '@jaegertracing/plexus';
 
 import drawNode from './drawNode';
+import GraphSearch from './GraphSearch';
 import ErrorMessage from '../../common/ErrorMessage';
 import LoadingIndicator from '../../common/LoadingIndicator';
 import { fetchedState } from '../../../constants';
@@ -112,6 +113,7 @@ export default class TraceDiffGraph extends React.PureComponent<Props> {
           edges={edges}
           vertices={vertices}
         />
+        <GraphSearch />
       </div>
     );
   }

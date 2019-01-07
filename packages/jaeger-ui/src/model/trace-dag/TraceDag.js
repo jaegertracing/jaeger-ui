@@ -43,6 +43,7 @@ export default class TraceDag<T = void> {
       });
       const { data } = node;
       data[key] = src.count;
+      node.members.push(...src.members);
       node.count = data.b - data.a;
       if (!node.parentID) {
         dt.rootIDs.add(node.id);

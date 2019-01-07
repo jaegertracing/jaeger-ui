@@ -52,6 +52,12 @@ limitations under the License.
   color: #fff;
 }
 
+.DiffNode.is-graph-search-match {
+  outline-style: solid;
+  outline-color: green;
+  outline-width: 1px;
+}
+
 .DiffNode--metricCell {
   padding: 0.3rem 0.5rem;
   background: rgba(255, 255, 255, 0.3);

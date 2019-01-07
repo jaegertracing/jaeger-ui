@@ -17,14 +17,22 @@
 import * as React from 'react';
 import { Popover } from 'antd';
 import cx from 'classnames';
+import _map from 'lodash/map';
+import _memoize from 'lodash/memoize';
+import queryString from 'query-string';
+import { connect } from 'react-redux';
 
+import filterSpans from '../../../utils/filter-spans';
 import type { PVertex } from '../../../model/trace-dag/types';
+import type { ReduxState } from '../../../types/index';
 
 import './drawNode.css';
 
 type Props = {
   a: number,
   b: number,
+  graphSearch?: string,
+  members: any[],
   operation: string,
   service: string,
 };
@@ -34,9 +42,18 @@ const max = Math.max;
 
 class DiffNode extends React.PureComponent<Props> {
   props: Props;
+  filterSpans: typeof filterSpans;
+  static defaultProps = {
+    graphSearch: '',
+  };
+
+  constructor(props: Props) {
+    super(props);
+    this.filterSpans = _memoize(filterSpans);
+  }
 
   render() {
-    const { a, b, operation, service } = this.props;
+    const { a, b, graphSearch, operation, service } = this.props;
     const isSame = a === b;
     const className = cx({
       'is-same': isSame,
@@ -45,6 +62,7 @@ class DiffNode extends React.PureComponent<Props> {
       'is-added': a === 0,
       'is-less': a > b && b > 0,
       'is-removed': b === 0,
+      'is-graph-search-match': this.filterSpans(graphSearch, _map(this.props.members, 'span')).size,
     });
     const chgSign = a < b ? '+' : '-';
     const table = (
@@ -81,7 +99,15 @@ class DiffNode extends React.PureComponent<Props> {
   }
 }
 
+// TODO: This mapStateToProps is duplicative in three components
+export function mapStateToProps(state: ReduxState): { graphSearch?: string } {
+  const { graphSearch } = queryString.parse(state.router.location.search);
+  return { graphSearch };
+}
+
+const ConnectedDiffNode = connect(mapStateToProps)(DiffNode);
+
 export default function drawNode<T>(vertex: PVertex<T>) {
-  const { data, operation, service } = vertex.data;
-  return <DiffNode {...data} operation={operation} service={service} />;
+  const { data, members, operation, service } = vertex.data;
+  return <ConnectedDiffNode {...data} members={members} operation={operation} service={service} />;
 }

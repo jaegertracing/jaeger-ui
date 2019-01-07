@@ -16,9 +16,17 @@
 
 import * as React from 'react';
 import { Popover } from 'antd';
+import cx from 'classnames';
+import _map from 'lodash/map';
+import _memoize from 'lodash/memoize';
+import queryString from 'query-string';
+import { connect } from 'react-redux';
+
+import filterSpans from '../../../utils/filter-spans';
 import colorGenerator from '../../../utils/color-generator';
 
 import type { PVertex } from '../../../model/trace-dag/types';
+import type { ReduxState } from '../../../types/index';
 
 import './OpNode.css';
 
@@ -32,6 +40,8 @@ type Props = {
   operation: string,
   service: string,
   mode: string,
+  graphSearch?: string,
+  members: any[],
 };
 
 export const MODE_SERVICE = 'service';
@@ -63,9 +73,29 @@ export function round2(percent: number) {
 
 export default class OpNode extends React.PureComponent<Props> {
   props: Props;
+  filterSpans: typeof filterSpans;
+  static defaultProps = {
+    graphSearch: '',
+  };
+
+  constructor(props: Props) {
+    super(props);
+    this.filterSpans = _memoize(filterSpans);
+  }
 
   render() {
-    const { count, errors, time, percent, selfTime, percentSelfTime, operation, service, mode } = this.props;
+    const {
+      count,
+      errors,
+      time,
+      percent,
+      selfTime,
+      percentSelfTime,
+      operation,
+      service,
+      mode,
+      graphSearch,
+    } = this.props;
 
     // Spans over 20 % time are full red - we have probably to reconsider better approach
     let backgroundColor;
@@ -81,8 +111,12 @@ export default class OpNode extends React.PureComponent<Props> {
         .join();
     }
 
+    const className = cx('OpNode', `OpNode--mode-${mode}`, {
+      'is-graph-search-match': this.filterSpans(graphSearch, _map(this.props.members, 'span')).size,
+    });
+
     const table = (
-      <table className={`OpNode OpNode--mode-${mode}`} cellSpacing="0">
+      <table className={className} cellSpacing="0">
         <tbody
           style={{
             background: `rgba(${backgroundColor})`,
@@ -118,9 +152,18 @@ export default class OpNode extends React.PureComponent<Props> {
   }
 }
 
+export function mapStateToProps(state: ReduxState): { graphSearch?: string } {
+  const { graphSearch } = queryString.parse(state.router.location.search);
+  return { graphSearch };
+}
+
+const ConnectedOpNode = connect(mapStateToProps)(OpNode);
+
 export function getNodeDrawer(mode: string) {
   return function drawNode<T>(vertex: PVertex<T>) {
-    const { data, operation, service } = vertex.data;
-    return <OpNode {...data} mode={mode} operation={operation} service={service} />;
+    const { data, members, operation, service } = vertex.data;
+    return (
+      <ConnectedOpNode {...data} members={members} mode={mode} operation={operation} service={service} />
+    );
   };
 }
