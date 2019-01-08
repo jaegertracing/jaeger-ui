@@ -23,9 +23,9 @@ import queryString from 'query-string';
 
 import type { Location, RouterHistory } from 'react-router-dom';
 
-import prefixUrl from '../../../utils/prefix-url';
+import prefixUrl from '../../utils/prefix-url';
 
-import type { ReduxState } from '../../../types/index';
+import type { ReduxState } from '../../types/index';
 
 import './GraphSearch.css';
 

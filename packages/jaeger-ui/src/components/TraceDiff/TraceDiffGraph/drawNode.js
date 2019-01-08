@@ -20,13 +20,12 @@ import cx from 'classnames';
 import _get from 'lodash/get';
 import _map from 'lodash/map';
 import _memoize from 'lodash/memoize';
-import queryString from 'query-string';
 import { connect } from 'react-redux';
 
+import { mapStateToProps } from '../../common/GraphSearch';
 import filterSpans from '../../../utils/filter-spans';
 
 import type { PVertex, DenseSpan } from '../../../model/trace-dag/types';
-import type { ReduxState } from '../../../types/index';
 
 import './drawNode.css';
 
@@ -99,12 +98,6 @@ class DiffNode extends React.PureComponent<Props> {
       </Popover>
     );
   }
-}
-
-// TODO: This mapStateToProps is duplicative in three components
-export function mapStateToProps(state: ReduxState): { graphSearch?: string } {
-  const { graphSearch } = queryString.parse(state.router.location.search);
-  return { graphSearch };
 }
 
 const ConnectedDiffNode = connect(mapStateToProps)(DiffNode);

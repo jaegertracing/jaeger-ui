@@ -18,8 +18,8 @@ import * as React from 'react';
 import { DirectedGraph, LayoutManager } from '@jaegertracing/plexus';
 
 import drawNode from './drawNode';
-import GraphSearch from './GraphSearch';
 import ErrorMessage from '../../common/ErrorMessage';
+import GraphSearch from '../../common/GraphSearch';
 import LoadingIndicator from '../../common/LoadingIndicator';
 import { fetchedState } from '../../../constants';
 import convPlexus from '../../../model/trace-dag/convPlexus';

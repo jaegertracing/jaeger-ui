@@ -20,14 +20,13 @@ import cx from 'classnames';
 import _get from 'lodash/get';
 import _map from 'lodash/map';
 import _memoize from 'lodash/memoize';
-import queryString from 'query-string';
 import { connect } from 'react-redux';
 
+import { mapStateToProps } from '../../common/GraphSearch';
 import filterSpans from '../../../utils/filter-spans';
 import colorGenerator from '../../../utils/color-generator';
 
 import type { PVertex, DenseSpan } from '../../../model/trace-dag/types';
-import type { ReduxState } from '../../../types/index';
 
 import './OpNode.css';
 
@@ -151,11 +150,6 @@ export default class OpNode extends React.PureComponent<Props> {
       </Popover>
     );
   }
-}
-
-export function mapStateToProps(state: ReduxState): { graphSearch?: string } {
-  const { graphSearch } = queryString.parse(state.router.location.search);
-  return { graphSearch };
 }
 
 const ConnectedOpNode = connect(mapStateToProps)(OpNode);
