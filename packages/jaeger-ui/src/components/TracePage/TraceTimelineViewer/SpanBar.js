@@ -15,7 +15,10 @@
 // limitations under the License.
 
 import React from 'react';
+import { Popover } from 'antd';
 import { onlyUpdateForKeys, compose, withState, withProps } from 'recompose';
+import type { Log } from '../../../types/trace';
+import AccordianLogs from './SpanDetail/AccordianLogs';
 
 import './SpanBar.css';
 
@@ -33,6 +36,7 @@ type SpanBarProps = {
   },
   setLongLabel: () => void,
   setShortLabel: () => void,
+  logs: { view: { start: number, end: number }, logs: Log[], start: number }[],
 };
 
 function toPercent(value: number) {
@@ -40,7 +44,18 @@ function toPercent(value: number) {
 }
 
 function SpanBar(props: SpanBarProps) {
-  const { viewEnd, viewStart, color, label, hintSide, onClick, setLongLabel, setShortLabel, rpc } = props;
+  const {
+    viewEnd,
+    viewStart,
+    color,
+    label,
+    hintSide,
+    onClick,
+    setLongLabel,
+    setShortLabel,
+    rpc,
+    logs,
+  } = props;
 
   return (
     <div
@@ -60,6 +75,29 @@ function SpanBar(props: SpanBarProps) {
         }}
       >
         <div className={`SpanBar--label is-${hintSide}`}>{label}</div>
+      </div>
+      <div>
+        {logs.map(l => (
+          <Popover
+            key={l.view.start}
+            arrowPointAtCenter
+            overlayClassName="SpanBar--logHint"
+            placement="topLeft"
+            content={
+              <AccordianLogs
+                logs={l.logs}
+                linksGetter={null}
+                isOpen
+                openedItems={new Set([])}
+                onToggle={() => {}}
+                onItemToggle={() => {}}
+                timestamp={l.start}
+              />
+            }
+          >
+            <div className="SpanBar--logMarker" style={{ left: toPercent(l.view.start) }} />
+          </Popover>
+        ))}
       </div>
       {rpc && (
         <div

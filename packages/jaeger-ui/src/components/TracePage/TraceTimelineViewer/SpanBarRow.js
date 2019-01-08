@@ -18,13 +18,15 @@ import * as React from 'react';
 import IoAlert from 'react-icons/lib/io/alert';
 import IoArrowRightA from 'react-icons/lib/io/arrow-right-a';
 
+import _groupBy from 'lodash/groupBy';
+import _values from 'lodash/values';
 import TimelineRow from './TimelineRow';
 import { formatDuration } from './utils';
 import SpanTreeOffset from './SpanTreeOffset';
 import SpanBar from './SpanBar';
 import Ticks from './Ticks';
 
-import type { Span } from '../../../types/trace';
+import type { Span, Trace } from '../../../types/trace';
 
 import './SpanBarRow.css';
 
@@ -46,9 +48,9 @@ type SpanBarRowProps = {
     serviceName: string,
   },
   showErrorIcon: boolean,
+  getViewedBounds: (number, number) => { start: number, end: number },
+  trace: Trace,
   span: Span,
-  viewEnd: number,
-  viewStart: number,
 };
 
 /**
@@ -86,12 +88,15 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
       numTicks,
       rpc,
       showErrorIcon,
+      getViewedBounds,
+      trace,
       span,
-      viewEnd,
-      viewStart,
     } = this.props;
     const { duration, hasChildren: isParent, operationName, process: { serviceName } } = span;
     const label = formatDuration(duration);
+    const viewBounds = getViewedBounds(span.startTime, span.startTime + span.duration);
+    const viewStart = viewBounds.start;
+    const viewEnd = viewBounds.end;
 
     const labelDetail = `${serviceName}::${operationName}`;
     let longLabel;
@@ -103,6 +108,13 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
       longLabel = `${label} | ${labelDetail}`;
       hintSide = 'right';
     }
+
+    const logs = _values(
+      _groupBy(span.logs.map(l => ({ view: getViewedBounds(l.timestamp, l.timestamp), log: l })), v =>
+        Math.floor(v.view.start * 100)
+      )
+    ).map(v => ({ view: v[0].view, logs: v.map(l => l.log), start: trace.startTime }));
+
     return (
       <TimelineRow
         className={`
@@ -159,6 +171,7 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
             shortLabel={label}
             longLabel={longLabel}
             hintSide={hintSide}
+            logs={logs}
           />
         </TimelineRow.Cell>
       </TimelineRow>
