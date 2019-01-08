@@ -17,13 +17,15 @@
 import * as React from 'react';
 import { Popover } from 'antd';
 import cx from 'classnames';
+import _get from 'lodash/get';
 import _map from 'lodash/map';
 import _memoize from 'lodash/memoize';
 import queryString from 'query-string';
 import { connect } from 'react-redux';
 
 import filterSpans from '../../../utils/filter-spans';
-import type { PVertex } from '../../../model/trace-dag/types';
+
+import type { PVertex, DenseSpan } from '../../../model/trace-dag/types';
 import type { ReduxState } from '../../../types/index';
 
 import './drawNode.css';
@@ -31,8 +33,8 @@ import './drawNode.css';
 type Props = {
   a: number,
   b: number,
-  graphSearch?: string,
-  members: any[],
+  graphSearch: string,
+  members: DenseSpan[],
   operation: string,
   service: string,
 };
@@ -62,7 +64,7 @@ class DiffNode extends React.PureComponent<Props> {
       'is-added': a === 0,
       'is-less': a > b && b > 0,
       'is-removed': b === 0,
-      'is-graph-search-match': this.filterSpans(graphSearch, _map(this.props.members, 'span')).size,
+      'is-graph-search-match': _get(this.filterSpans(graphSearch, _map(this.props.members, 'span')), 'size'),
     });
     const chgSign = a < b ? '+' : '-';
     const table = (

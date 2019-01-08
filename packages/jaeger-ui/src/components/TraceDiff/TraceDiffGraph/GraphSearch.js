@@ -36,7 +36,7 @@ type propsType = {
 };
 
 type stateType = {
-  ownInputValue: string,
+  ownInputValue: ?string,
 };
 
 export class UnconnectedGraphSearch extends React.PureComponent<propsType, stateType> {
@@ -48,12 +48,22 @@ export class UnconnectedGraphSearch extends React.PureComponent<propsType, state
   constructor(props: propsType) {
     super(props);
     this.state = {
-      ownInputValue: '',
+      ownInputValue: null,
     };
     this.inputRef = null;
   }
 
-  handleIconClick = () => this.inputRef && this.inputRef.focus();
+  handleIconClick = () => {
+    if (this.inputRef) {
+      this.inputRef.focus();
+    }
+    this.updateGraphSearchQueryParam.flush();
+  };
+
+  handleInputBlur = () => {
+    this.updateGraphSearchQueryParam.flush();
+    this.setState({ ownInputValue: null });
+  };
 
   handleInputChange = (evt: SyntheticInputEvent<HTMLInputElement>) => {
     const { value } = evt.target;
@@ -71,16 +81,19 @@ export class UnconnectedGraphSearch extends React.PureComponent<propsType, state
       queryParams.graphSearch = graphSearchQueryParam;
     }
     this.props.history.replace(prefixUrl(`?${queryString.stringify(queryParams)}`));
-  }, 350);
+  }, 250);
 
   render() {
+    const inputValue =
+      typeof this.state.ownInputValue === 'string' ? this.state.ownInputValue : this.props.graphSearch;
     return (
       <div className="GraphSearch">
         <Input
           className="GraphSearch--input"
+          onBlur={this.handleInputBlur}
           onChange={this.handleInputChange}
           ref={this.registerInputRef}
-          value={this.state.ownInputValue || this.props.graphSearch}
+          value={inputValue}
         />
         <Icon className="GraphSearch--icon" onClick={this.handleIconClick} type="search" />
       </div>

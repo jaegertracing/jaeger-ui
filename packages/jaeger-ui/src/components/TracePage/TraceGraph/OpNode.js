@@ -17,6 +17,7 @@
 import * as React from 'react';
 import { Popover } from 'antd';
 import cx from 'classnames';
+import _get from 'lodash/get';
 import _map from 'lodash/map';
 import _memoize from 'lodash/memoize';
 import queryString from 'query-string';
@@ -25,7 +26,7 @@ import { connect } from 'react-redux';
 import filterSpans from '../../../utils/filter-spans';
 import colorGenerator from '../../../utils/color-generator';
 
-import type { PVertex } from '../../../model/trace-dag/types';
+import type { PVertex, DenseSpan } from '../../../model/trace-dag/types';
 import type { ReduxState } from '../../../types/index';
 
 import './OpNode.css';
@@ -40,8 +41,8 @@ type Props = {
   operation: string,
   service: string,
   mode: string,
-  graphSearch?: string,
-  members: any[],
+  graphSearch: string,
+  members: DenseSpan[],
 };
 
 export const MODE_SERVICE = 'service';
@@ -112,7 +113,7 @@ export default class OpNode extends React.PureComponent<Props> {
     }
 
     const className = cx('OpNode', `OpNode--mode-${mode}`, {
-      'is-graph-search-match': this.filterSpans(graphSearch, _map(this.props.members, 'span')).size,
+      'is-graph-search-match': _get(this.filterSpans(graphSearch, _map(this.props.members, 'span')), 'size'),
     });
 
     const table = (
