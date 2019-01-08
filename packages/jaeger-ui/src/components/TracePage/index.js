@@ -46,7 +46,6 @@ import type { ViewRange, ViewRangeTimeUpdate } from './types';
 import type { FetchedTrace, ReduxState } from '../../types';
 import type { TraceArchive } from '../../types/archive';
 import type { EmbeddedState } from '../../types/embedded';
-// import type { KeyValuePair, Span } from '../../types/trace';
 
 import './index.css';
 

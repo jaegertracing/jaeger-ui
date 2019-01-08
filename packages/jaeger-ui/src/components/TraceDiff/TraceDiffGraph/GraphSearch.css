@@ -15,13 +15,15 @@ limitations under the License.
 */
 
 .GraphSearch {
+  border: solid 1px #a9a9a9;
+  border-radius: 21px;
+  bottom: 20px;
+  cursor: auto;
+  display: flex;
+  padding: 5px;
   position: absolute;
   right: 20px;
-  bottom: 20px;
-  display: flex;
-  border: solid 1px darkgrey;
-  padding: 5px;
-  border-radius: 20px;
+  z-index: 1;
 }
 
 .GraphSearch--input {
@@ -38,5 +40,6 @@ limitations under the License.
 }
 
 .GraphSearch--icon {
+  cursor: pointer;
   font-size: 32px;
 }

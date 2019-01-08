@@ -27,9 +27,10 @@ limitations under the License.
 .OpNode th {
   border: none;
 }
+
 .OpNode.is-graph-search-match {
   outline-style: solid;
-  outline-color: green;
+  outline-color: #080;
   outline-width: 1px;
 }
 

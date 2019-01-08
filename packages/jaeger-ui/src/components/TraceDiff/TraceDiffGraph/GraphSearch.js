@@ -21,7 +21,7 @@ import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
 import queryString from 'query-string';
 
-import type { Location, /* Match, */ RouterHistory } from 'react-router-dom';
+import type { Location, RouterHistory } from 'react-router-dom';
 
 import prefixUrl from '../../../utils/prefix-url';
 
@@ -82,13 +82,7 @@ export class UnconnectedGraphSearch extends React.PureComponent<propsType, state
           ref={this.registerInputRef}
           value={this.state.ownInputValue || this.props.graphSearch}
         />
-        <Icon
-          className="GraphSearch--icon"
-          height="2em"
-          width="2em"
-          onClick={this.handleIconClick}
-          type="search"
-        />
+        <Icon className="GraphSearch--icon" onClick={this.handleIconClick} type="search" />
       </div>
     );
   }

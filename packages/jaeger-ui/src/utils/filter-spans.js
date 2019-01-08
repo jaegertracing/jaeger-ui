@@ -13,10 +13,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { /* KeyValuePair, */ Span } from '../types/trace';
+import type { Span } from '../types/trace';
 
-export default function filterSpans(textFilter: string, spans: Span) {
-  // const spans = this.props.trace && this.props.trace.data && this.props.trace.data.spans;
+export default function filterSpans(textFilter: string, spans: ?Span) {
   if (!spans) return null;
 
   // if a span field includes at least one filter in includeFilters, the span is a match
