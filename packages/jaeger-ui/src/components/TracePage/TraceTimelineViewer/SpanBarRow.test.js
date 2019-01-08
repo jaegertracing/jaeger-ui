@@ -41,6 +41,10 @@ describe('<SpanBarRow>', () => {
       serviceName: 'rpc-service-name',
     },
     showErrorIcon: false,
+    getViewedBounds: () => [0, 1],
+    trace: {
+      startTime: 0,
+    },
     span: {
       duration: 'test-duration',
       hasChildren: true,
@@ -48,9 +52,8 @@ describe('<SpanBarRow>', () => {
         serviceName: 'service-name',
       },
       spanID,
+      logs: [],
     },
-    viewEnd: 1,
-    viewStart: 0,
   };
 
   let wrapper;

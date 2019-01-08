@@ -33,6 +33,7 @@ describe('<SpanBar>', () => {
       viewEnd: 0.75,
       color: '#000',
     },
+    logs: [],
   };
 
   it('renders without exploding', () => {
