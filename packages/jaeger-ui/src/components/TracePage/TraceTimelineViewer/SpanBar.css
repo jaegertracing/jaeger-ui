@@ -66,3 +66,35 @@ limitations under the License.
 .span-row:hover .SpanBar--label {
   color: #000;
 }
+
+.SpanBar--logMarker {
+  background-color: rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+  height: 60%;
+  min-width: 1px;
+  position: absolute;
+  top: 20%;
+}
+
+.SpanBar--logMarker:hover {
+  background-color: #000;
+}
+
+.SpanBar--logMarker::before,
+.SpanBar--logMarker::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  border: 1px solid transparent;
+}
+
+.SpanBar--logMarker::after {
+  left: 0;
+}
+
+/* Tweak the popover aesthetics - unfortunate but necessary */
+.SpanBar--logHint .ant-popover-inner-content {
+  padding: 0.25rem;
+}

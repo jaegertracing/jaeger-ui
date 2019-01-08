@@ -15,7 +15,7 @@
 // limitations under the License.
 
 import React from 'react';
-import { Tooltip } from 'antd';
+import { Popover } from 'antd';
 import { onlyUpdateForKeys, compose, withState, withProps } from 'recompose';
 import type { Log } from '../../../types/trace';
 import AccordianLogs from './SpanDetail/AccordianLogs';
@@ -78,9 +78,12 @@ function SpanBar(props: SpanBarProps) {
       </div>
       <div>
         {logs.map(l => (
-          <Tooltip
+          <Popover
             key={l.view.start}
-            title={
+            arrowPointAtCenter
+            overlayClassName="SpanBar--logHint"
+            placement="topLeft"
+            content={
               <AccordianLogs
                 logs={l.logs}
                 linksGetter={null}
@@ -92,15 +95,8 @@ function SpanBar(props: SpanBarProps) {
               />
             }
           >
-            <div
-              className="SpanBar--bar"
-              style={{
-                background: 'black',
-                left: toPercent(l.view.start),
-                width: toPercent(l.view.end - l.view.start),
-              }}
-            />
-          </Tooltip>
+            <div className="SpanBar--logMarker" style={{ left: toPercent(l.view.start) }} />
+          </Popover>
         ))}
       </div>
       {rpc && (
