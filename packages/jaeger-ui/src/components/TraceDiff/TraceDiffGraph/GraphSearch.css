@@ -18,4 +18,25 @@ limitations under the License.
   position: absolute;
   right: 20px;
   bottom: 20px;
+  display: flex;
+  border: solid 1px darkgrey;
+  padding: 5px;
+  border-radius: 20px;
+}
+
+.GraphSearch--input {
+  width: 300px;
+  transition: ease 1s;
+  margin: 0px 3px;
+}
+
+.GraphSearch:not(:hover) > .GraphSearch--input:not(:focus) {
+  border: none;
+  padding: 0px;
+  width: 0;
+  margin: 0px;
+}
+
+.GraphSearch--icon {
+  font-size: 32px;
 }

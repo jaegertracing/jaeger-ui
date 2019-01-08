@@ -16,6 +16,7 @@
 
 import * as React from 'react';
 import { Icon, Input } from 'antd';
+import _debounce from 'lodash/debounce';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
 import queryString from 'query-string';
@@ -34,26 +35,64 @@ type propsType = {
   location: Location,
 };
 
-export function UnconnectedGraphSearch(props: propsType) {
-  function inputOnChange(evt) {
-    const { graphSearch, ...queryParams } = queryString.parse(props.location.search);
-    const { value } = evt.target;
-    if (value) {
-      queryParams.graphSearch = value;
-    }
-    props.history.replace(prefixUrl(`?${queryString.stringify(queryParams)}`));
-  }
-  return (
-    <div className="GraphSearch">
-      <Input onChange={inputOnChange} value={props.graphSearch} />
-      <Icon type="search" />
-    </div>
-  );
-}
-
-UnconnectedGraphSearch.defaultProps = {
-  graphSearch: null,
+type stateType = {
+  ownInputValue: string,
 };
+
+export class UnconnectedGraphSearch extends React.PureComponent<propsType, stateType> {
+  inputRef: ?Input;
+  static defaultProps = {
+    graphSearch: null,
+  };
+
+  constructor(props: propsType) {
+    super(props);
+    this.state = {
+      ownInputValue: '',
+    };
+    this.inputRef = null;
+  }
+
+  handleIconClick = () => this.inputRef && this.inputRef.focus();
+
+  handleInputChange = (evt: SyntheticInputEvent<HTMLInputElement>) => {
+    const { value } = evt.target;
+    this.updateGraphSearchQueryParam(value);
+    this.setState({ ownInputValue: value });
+  };
+
+  registerInputRef = (ref: ?Input) => {
+    this.inputRef = ref;
+  };
+
+  updateGraphSearchQueryParam = _debounce((graphSearchQueryParam: ?string) => {
+    const { graphSearch, ...queryParams } = queryString.parse(this.props.location.search);
+    if (graphSearchQueryParam) {
+      queryParams.graphSearch = graphSearchQueryParam;
+    }
+    this.props.history.replace(prefixUrl(`?${queryString.stringify(queryParams)}`));
+  }, 350);
+
+  render() {
+    return (
+      <div className="GraphSearch">
+        <Input
+          className="GraphSearch--input"
+          onChange={this.handleInputChange}
+          ref={this.registerInputRef}
+          value={this.state.ownInputValue || this.props.graphSearch}
+        />
+        <Icon
+          className="GraphSearch--icon"
+          height="2em"
+          width="2em"
+          onClick={this.handleIconClick}
+          type="search"
+        />
+      </div>
+    );
+  }
+}
 
 export function mapStateToProps(state: ReduxState): { graphSearch?: string } {
   const { graphSearch } = queryString.parse(state.router.location.search);
