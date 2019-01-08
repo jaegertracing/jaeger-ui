@@ -13,36 +13,31 @@
 // limitations under the License.
 
 /**
- * Given a range (`min`, `max`), finds the position of a sub-range (`start`,
- * `end`) factoring in a zoom (`viewStart`, `viewEnd`). The result is returned
- * as a `{ start, end }` object with values ranging in [0, 1].
+ * Given a range (`min`, `max`) and factoring in a zoom (`viewStart`, `viewEnd`)
+ * a function is created that will find the position of a sub-range (`start`, `end`).
+ * The calling the generated method will return the result as a `{ start, end }`
+ * object with values ranging in [0, 1].
  *
  * @param  {number} min       The start of the outer range.
  * @param  {number} max       The end of the outer range.
- * @param  {number} start     The start of the sub-range.
- * @param  {number} end       The end of the sub-range.
  * @param  {number} viewStart The start of the zoom, on a range of [0, 1],
  *                            relative to the `min`, `max`.
  * @param  {number} viewEnd   The end of the zoom, on a range of [0, 1],
  *                            relative to the `min`, `max`.
- * @return {Object}           The resultant range.
+ * @returns {(number, number) => Object} Created view bounds function
  */
-export function getViewedBounds({ min, max, start, end, viewStart, viewEnd }) {
-  const duration = max - min;
-  const viewMin = min + viewStart * duration;
-  const viewMax = max - (1 - viewEnd) * duration;
-  const viewWindow = viewMax - viewMin;
-  return {
-    start: (start - viewMin) / viewWindow,
-    end: (end - viewMin) / viewWindow,
-  };
-}
-
 export function createViewedBoundsFunc({ min, max, viewStart, viewEnd }) {
   const duration = max - min;
   const viewMin = min + viewStart * duration;
   const viewMax = max - (1 - viewEnd) * duration;
   const viewWindow = viewMax - viewMin;
+
+  /**
+   * View bounds function
+   * @param  {number} start     The start of the sub-range.
+   * @param  {number} end       The end of the sub-range.
+   * @return {Object}           The resultant range.
+   */
   return (start, end) => ({
     start: (start - viewMin) / viewWindow,
     end: (end - viewMin) / viewWindow,
