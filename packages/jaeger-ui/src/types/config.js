@@ -17,6 +17,7 @@
 export type ConfigMenuItem = {
   label: string,
   url: string,
+  anchorTarget?: '_self' | '_blank' | '_parent' | '_top',
 };
 
 export type ConfigMenuGroup = {
