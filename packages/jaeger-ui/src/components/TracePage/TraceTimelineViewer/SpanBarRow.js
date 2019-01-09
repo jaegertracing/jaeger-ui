@@ -18,8 +18,6 @@ import * as React from 'react';
 import IoAlert from 'react-icons/lib/io/alert';
 import IoArrowRightA from 'react-icons/lib/io/arrow-right-a';
 
-import _groupBy from 'lodash/groupBy';
-import _values from 'lodash/values';
 import TimelineRow from './TimelineRow';
 import { formatDuration } from './utils';
 import SpanTreeOffset from './SpanTreeOffset';
@@ -109,12 +107,6 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
       hintSide = 'right';
     }
 
-    const logs = _values(
-      _groupBy(span.logs.map(l => ({ view: getViewedBounds(l.timestamp, l.timestamp), log: l })), v =>
-        Math.floor(v.view.start * 100)
-      )
-    ).map(v => ({ view: v[0].view, logs: v.map(l => l.log) }));
-
     return (
       <TimelineRow
         className={`
@@ -167,12 +159,13 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
             rpc={rpc}
             viewStart={viewStart}
             viewEnd={viewEnd}
+            getViewedBounds={getViewedBounds}
             color={color}
             shortLabel={label}
             longLabel={longLabel}
             hintSide={hintSide}
             trace={trace}
-            logs={logs}
+            span={span}
           />
         </TimelineRow.Cell>
       </TimelineRow>

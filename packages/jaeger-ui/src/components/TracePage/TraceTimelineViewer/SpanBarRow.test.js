@@ -14,7 +14,6 @@
 
 import React from 'react';
 import { mount } from 'enzyme';
-import { Popover } from 'antd';
 
 import SpanBarRow from './SpanBarRow';
 import SpanTreeOffset from './SpanTreeOffset';
@@ -42,19 +41,7 @@ describe('<SpanBarRow>', () => {
       serviceName: 'rpc-service-name',
     },
     showErrorIcon: false,
-    getViewedBounds: s => {
-      // Log entries
-      if (s === 10) {
-        return { start: 0.1, end: 0.1 };
-      } else if (s === 20) {
-        return { start: 0.2, end: 0.2 };
-      }
-      // Span value
-      return { start: 0, end: 1 };
-    },
-    trace: {
-      startTime: 0,
-    },
+    getViewedBounds: () => ({ start: 0, end: 1 }),
     span: {
       duration: 'test-duration',
       hasChildren: true,
@@ -62,23 +49,7 @@ describe('<SpanBarRow>', () => {
         serviceName: 'service-name',
       },
       spanID,
-      logs: [
-        {
-          timestamp: 10,
-          fields: [{ key: 'message', value: 'oh the log message' }, { key: 'something', value: 'else' }],
-        },
-        {
-          timestamp: 10,
-          fields: [
-            { key: 'message', value: 'oh the second log message' },
-            { key: 'something', value: 'different' },
-          ],
-        },
-        {
-          timestamp: 20,
-          fields: [{ key: 'message', value: 'oh the next log message' }, { key: 'more', value: 'stuff' }],
-        },
-      ],
+      logs: [],
     },
   };
 
@@ -106,10 +77,5 @@ describe('<SpanBarRow>', () => {
     expect(onChildrenToggled.mock.calls.length).toBe(0);
     wrapper.find(SpanTreeOffset).prop('onClick')();
     expect(onChildrenToggled.mock.calls).toEqual([[spanID]]);
-  });
-
-  it('log markers count', () => {
-    // 3 log entries, two grouped together with the same timestamp
-    expect(wrapper.find(Popover).length).toEqual(2);
   });
 });

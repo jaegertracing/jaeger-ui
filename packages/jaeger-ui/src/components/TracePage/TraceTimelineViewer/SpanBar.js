@@ -16,8 +16,11 @@
 
 import React from 'react';
 import { Popover } from 'antd';
+import _groupBy from 'lodash/groupBy';
+import _values from 'lodash/values';
+
 import { onlyUpdateForKeys, compose, withState, withProps } from 'recompose';
-import type { Log, Trace } from '../../../types/trace';
+import type { Span, Trace } from '../../../types/trace';
 import AccordianLogs from './SpanDetail/AccordianLogs';
 
 import './SpanBar.css';
@@ -29,6 +32,7 @@ type SpanBarProps = {
   onClick: (SyntheticMouseEvent<any>) => void,
   viewEnd: number,
   viewStart: number,
+  getViewedBounds: (number, number) => { start: number, end: number },
   rpc: {
     viewStart: number,
     viewEnd: number,
@@ -37,7 +41,7 @@ type SpanBarProps = {
   setLongLabel: () => void,
   setShortLabel: () => void,
   trace: Trace,
-  logs: { view: { start: number, end: number }, logs: Log[] }[],
+  span: Span,
 };
 
 function toPercent(value: number) {
@@ -48,6 +52,7 @@ function SpanBar(props: SpanBarProps) {
   const {
     viewEnd,
     viewStart,
+    getViewedBounds,
     color,
     label,
     hintSide,
@@ -56,7 +61,7 @@ function SpanBar(props: SpanBarProps) {
     setShortLabel,
     rpc,
     trace,
-    logs,
+    span,
   } = props;
 
   return (
@@ -79,15 +84,19 @@ function SpanBar(props: SpanBarProps) {
         <div className={`SpanBar--label is-${hintSide}`}>{label}</div>
       </div>
       <div>
-        {logs.map(l => (
+        {_values(
+          _groupBy(span.logs.map(l => ({ view: getViewedBounds(l.timestamp, l.timestamp), log: l })), v =>
+            Math.floor(v.view.start * 100)
+          )
+        ).map(v => (
           <Popover
-            key={l.view.start}
+            key={v[0].view.start}
             arrowPointAtCenter
             overlayClassName="SpanBar--logHint"
             placement="topLeft"
             content={
               <AccordianLogs
-                logs={l.logs}
+                logs={v.map(l => l.log)}
                 linksGetter={null}
                 isOpen
                 openedItems={new Set([])}
@@ -97,7 +106,7 @@ function SpanBar(props: SpanBarProps) {
               />
             }
           >
-            <div className="SpanBar--logMarker" style={{ left: toPercent(l.view.start) }} />
+            <div className="SpanBar--logMarker" style={{ left: toPercent(v[0].view.start) }} />
           </Popover>
         ))}
       </div>
