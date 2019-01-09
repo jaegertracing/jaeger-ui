@@ -114,7 +114,7 @@ describe('<TopNav>', () => {
         wrapper = shallow(<TopNav.CustomNavDropdown {...configMenuGroup} />);
       });
 
-      it('renders sub-memu items', () => {
+      it('renders sub-menu items', () => {
         const subMenu = shallow(wrapper.find('Dropdown').props().overlay);
         dropdownItems.forEach(itemConfig => {
           const item = subMenu.find(`[href="${itemConfig.url}"]`);
