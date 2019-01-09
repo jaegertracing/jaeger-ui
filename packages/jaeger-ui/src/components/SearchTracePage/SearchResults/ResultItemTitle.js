@@ -44,6 +44,7 @@ export default class ResultItemTitle extends React.PureComponent<Props> {
   props: Props;
 
   static defaultProps = {
+    disableComparision: false,
     durationPercent: 0,
     error: undefined,
     state: fetchedState.DONE,
