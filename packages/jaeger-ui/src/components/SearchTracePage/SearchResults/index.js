@@ -84,6 +84,8 @@ export const sortFormSelector = formValueSelector('traceResultsSort');
 export default class SearchResults extends React.PureComponent<SearchResultsProps> {
   props: SearchResultsProps;
 
+  static defaultProps = { skipMessage: false };
+
   toggleComparison = (traceID: string, remove: boolean) => {
     const { cohortAddTrace, cohortRemoveTrace } = this.props;
     if (remove) {

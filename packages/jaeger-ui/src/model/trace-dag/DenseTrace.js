@@ -37,6 +37,7 @@ function convSpans(spans: Span[]) {
     if (references && references.length) {
       const { refType, spanID } = references[0];
       if (refType !== 'CHILD_OF' && refType !== 'FOLLOWS_FROM') {
+        // eslint-disable-next-line no-console
         console.warn(`Unrecognized ref type: ${refType}`);
       } else {
         parentID = spanID;

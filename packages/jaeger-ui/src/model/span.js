@@ -21,6 +21,7 @@ import type { Span } from '../types/trace';
  * @param  {Span} span The span whose parent is to be returned.
  * @return {Span|null} The parent span if there is one, null otherwise.
  */
+// eslint-disable-next-line import/prefer-default-export
 export function getParent(span: Span) {
   const parentRef = span.references ? span.references.find(ref => ref.refType === 'CHILD_OF') : null;
   return parentRef ? parentRef.span : null;
