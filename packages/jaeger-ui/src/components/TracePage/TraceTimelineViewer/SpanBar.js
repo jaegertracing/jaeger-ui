@@ -17,7 +17,7 @@
 import React from 'react';
 import { Popover } from 'antd';
 import { onlyUpdateForKeys, compose, withState, withProps } from 'recompose';
-import type { Log } from '../../../types/trace';
+import type { Log, Trace } from '../../../types/trace';
 import AccordianLogs from './SpanDetail/AccordianLogs';
 
 import './SpanBar.css';
@@ -36,7 +36,8 @@ type SpanBarProps = {
   },
   setLongLabel: () => void,
   setShortLabel: () => void,
-  logs: { view: { start: number, end: number }, logs: Log[], start: number }[],
+  trace: Trace,
+  logs: { view: { start: number, end: number }, logs: Log[] }[],
 };
 
 function toPercent(value: number) {
@@ -54,6 +55,7 @@ function SpanBar(props: SpanBarProps) {
     setLongLabel,
     setShortLabel,
     rpc,
+    trace,
     logs,
   } = props;
 
@@ -91,7 +93,7 @@ function SpanBar(props: SpanBarProps) {
                 openedItems={new Set([])}
                 onToggle={() => {}}
                 onItemToggle={() => {}}
-                timestamp={l.start}
+                timestamp={trace.startTime}
               />
             }
           >

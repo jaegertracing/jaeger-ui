@@ -113,7 +113,7 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
       _groupBy(span.logs.map(l => ({ view: getViewedBounds(l.timestamp, l.timestamp), log: l })), v =>
         Math.floor(v.view.start * 100)
       )
-    ).map(v => ({ view: v[0].view, logs: v.map(l => l.log), start: trace.startTime }));
+    ).map(v => ({ view: v[0].view, logs: v.map(l => l.log) }));
 
     return (
       <TimelineRow
@@ -171,6 +171,7 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
             shortLabel={label}
             longLabel={longLabel}
             hintSide={hintSide}
+            trace={trace}
             logs={logs}
           />
         </TimelineRow.Cell>
