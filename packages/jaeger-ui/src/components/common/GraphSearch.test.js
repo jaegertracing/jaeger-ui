@@ -149,10 +149,9 @@ describe('GraphSearch', () => {
     it('focuses input', () => {
       // Mount is necessary for refs to be registered
       wrapper = mount(<UnconnectedGraphSearch {...props} />);
-      const focusMock = jest.spyOn(wrapper.instance().inputRef, 'focus');
-      expect(focusMock).toHaveBeenCalledTimes(0);
+      const focusSpy = jest.spyOn(wrapper.instance().inputRef, 'focus');
       wrapper.find(Icon).simulate('click');
-      expect(focusMock).toHaveBeenCalledTimes(1);
+      expect(focusSpy).toHaveBeenCalledTimes(1);
     });
 
     it('triggers pending queryParameter updates', () => {
