@@ -101,7 +101,7 @@ describe('SpanTreeOffset', () => {
 
     it('does not call props.addHoverIndentGuideId on mouse enter if mouse came from a indentGuide with the same ancestorId', () => {
       const relatedTarget = document.createElement('span');
-      relatedTarget.dataset = { ancestorId: parentSpanID };
+      relatedTarget.dataset.ancestorId = parentSpanID;
       wrapper.find({ 'data-ancestor-id': parentSpanID }).simulate('mouseenter', {
         relatedTarget,
       });
@@ -116,7 +116,7 @@ describe('SpanTreeOffset', () => {
 
     it('does not call props.removeHoverIndentGuideId on mouse leave if mouse leaves to a indentGuide with the same ancestorId', () => {
       const relatedTarget = document.createElement('span');
-      relatedTarget.dataset = { ancestorId: parentSpanID };
+      relatedTarget.dataset.ancestorId = parentSpanID;
       wrapper.find({ 'data-ancestor-id': parentSpanID }).simulate('mouseleave', {
         relatedTarget,
       });

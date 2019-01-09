@@ -13,27 +13,41 @@
 // limitations under the License.
 
 /* eslint-disable import/no-extraneous-dependencies */
-
-const path = require('path');
 const fs = require('fs');
-const { injectBabelPlugin } = require('react-app-rewired');
-const rewireLess = require('react-app-rewire-less');
+const { addBabelPlugin, addLessLoader } = require('customize-cra');
 const lessToJs = require('less-vars-to-js');
-const rewireBabelLoader = require('react-app-rewire-babel-loader');
 
-const appDirectory = fs.realpathSync(process.cwd());
-const resolveApp = relativePath => path.resolve(appDirectory, relativePath);
+function useEslintRc(config) {
+  const { rules } = config.module;
+  const preRule = rules.find(rule => rule.enforce === 'pre');
+  if (!preRule) {
+    throw new Error('Unable to find estlint rule, pre');
+  }
+  const use = Array.isArray(preRule.use) ? preRule.use[0] : null;
+  if (!use) {
+    throw new Error('Unable to find estlint rule, use');
+  }
+  const isEslintRule = /node_modules\/eslint-loader\//.test(use.loader);
+  if (!isEslintRule || !use.options) {
+    throw new Error('Unable to find estlint rule, eslint loader');
+  }
+  use.options.useEslintrc = true;
+  return config;
+}
 
-// Read the less file in as string
+// Convert less vars to JS
 const loadedVarOverrides = fs.readFileSync('config-overrides-antd-vars.less', 'utf8');
-
-// Pass in file contents
 const modifyVars = lessToJs(loadedVarOverrides);
 
-module.exports = function override(_config, env) {
+function webpack(_config) {
   let config = _config;
-  config = injectBabelPlugin(['import', { libraryName: 'antd', style: true }], config);
-  config = rewireLess.withLoaderOptions({ modifyVars })(config, env);
-  config = rewireBabelLoader.include(config, resolveApp('../../node_modules/drange'));
+  config = addLessLoader({
+    modifyVars,
+    javascriptEnabled: true,
+  })(config);
+  config = addBabelPlugin(['import', { libraryName: 'antd', style: true }])(config);
+  useEslintRc(config);
   return config;
-};
+}
+
+module.exports = { webpack };

@@ -42,9 +42,6 @@ module.exports = function nwbConfig() {
     },
     devServer: { hot: false },
     webpack: {
-      extractText: {
-        filename: process.env.NODE_ENV === 'production' ? `plexus.[contenthash:8].css` : 'plexus.css',
-      },
       extra: {
         devtool: 'source-map',
         module: {
@@ -54,7 +51,11 @@ module.exports = function nwbConfig() {
               use: [
                 {
                   loader: require.resolve('worker-loader'),
-                  options: { inline: true, fallback: false, name: '[name].[hash:8].js' },
+                  options: {
+                    inline: true,
+                    fallback: false,
+                    name: '[name].[hash:8].js',
+                  },
                 },
               ],
             },

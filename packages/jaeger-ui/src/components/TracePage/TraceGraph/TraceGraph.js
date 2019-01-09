@@ -328,7 +328,7 @@ export default class TraceGraph extends React.PureComponent<Props, State> {
                 title="Help"
                 bordered={false}
                 extra={
-                  <a onClick={this.closeSidebar}>
+                  <a onClick={this.closeSidebar} role="button">
                     <Icon type="close" />
                   </a>
                 }

@@ -39,6 +39,10 @@ export const LinkValue = (props: { href: string, title?: string, children: React
   </a>
 );
 
+LinkValue.defaultProps = {
+  title: '',
+};
+
 const linkValueList = (links: Link[]) => (
   <Menu>
     {links.map(({ text, url }, index) => (

@@ -13,7 +13,6 @@
 // limitations under the License.
 
 import React from 'react';
-import Bluebird from 'bluebird';
 import { mount, shallow } from 'enzyme';
 
 import ListView from './index';
@@ -205,14 +204,16 @@ describe('<ListView>', () => {
         expect(eventListeners.scroll).toEqual([instance._onScroll]);
       });
 
-      it('calls _positionList when the document is scrolled', async () => {
+      it('calls _positionList when the document is scrolled', done => {
         const event = new Event('scroll');
         const fn = jest.spyOn(instance, '_positionList');
         expect(instance._isScrolledOrResized).toBe(false);
         window.dispatchEvent(event);
         expect(instance._isScrolledOrResized).toBe(true);
-        await Bluebird.resolve().delay(0);
-        expect(fn).toHaveBeenCalled();
+        window.requestAnimationFrame(() => {
+          expect(fn).toHaveBeenCalled();
+          done();
+        });
       });
 
       it('uses the root HTML element to determine if the view has changed', () => {
