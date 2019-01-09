@@ -15,6 +15,7 @@
 import React from 'react';
 import { shallow } from 'enzyme';
 
+import GraphSearch from '../../common/GraphSearch';
 import transformTraceData from '../../../model/transform-trace-data';
 
 import TraceGraph, { setOnEdgePath } from './TraceGraph';
@@ -43,13 +44,13 @@ describe('<TraceGraph>', () => {
     wrapper = shallow(<TraceGraph {...props} />);
   });
 
-  it('it does not explode', () => {
+  it('does not explode', () => {
     expect(wrapper).toBeDefined();
     expect(wrapper.find('.TraceGraph--menu').length).toBe(1);
     expect(wrapper.find('Button').length).toBe(3);
   });
 
-  it('it calculates TraceGraph', () => {
+  it('calculates TraceGraph', () => {
     const traceDag = wrapper.instance().calculateTraceDag();
     expect(traceDag.nodesMap.size).toBe(9);
     const nodes = [...traceDag.nodesMap.values()];
@@ -68,14 +69,14 @@ describe('<TraceGraph>', () => {
     assertData(nodes, 'service1', 'op7', 2, 0, 17, 1.7, 17);
   });
 
-  it('it may show no traces', () => {
+  it('may show no traces', () => {
     const props = {};
     wrapper = shallow(<TraceGraph {...props} />);
     expect(wrapper).toBeDefined();
     expect(wrapper.find('h1').text()).toBe('No trace found');
   });
 
-  it('it toggle nodeMode to time', () => {
+  it('toggles nodeMode to time', () => {
     const mode = MODE_SERVICE;
     wrapper.setState({ mode });
     wrapper.instance().toggleNodeMode(MODE_TIME);
@@ -83,7 +84,7 @@ describe('<TraceGraph>', () => {
     expect(modeState).toEqual(MODE_TIME);
   });
 
-  it('it validates button nodeMode change click', () => {
+  it('validates button nodeMode change click', () => {
     const toggleNodeMode = jest.spyOn(wrapper.instance(), 'toggleNodeMode');
     const btnService = wrapper.find('.TraceGraph--btn-service');
     expect(btnService.length).toBe(1);
@@ -99,25 +100,29 @@ describe('<TraceGraph>', () => {
     expect(toggleNodeMode).toHaveBeenCalledWith(MODE_SELFTIME);
   });
 
-  it('it shows help', () => {
+  it('shows help', () => {
     const showHelp = false;
     wrapper.setState({ showHelp });
     wrapper.instance().showHelp();
     expect(wrapper.state('showHelp')).toBe(true);
   });
 
-  it('it hides help', () => {
+  it('hides help', () => {
     const showHelp = true;
     wrapper.setState({ showHelp });
     wrapper.instance().closeSidebar();
     expect(wrapper.state('showHelp')).toBe(false);
   });
 
-  it('it uses stroke-dash edges for followsFrom', () => {
+  it('uses stroke-dash edges for followsFrom', () => {
     const edge = { from: 0, to: 1, followsFrom: true };
     expect(setOnEdgePath(edge)).toEqual({ strokeDasharray: 4 });
 
     const edge2 = { from: 0, to: 1, followsFrom: false };
     expect(setOnEdgePath(edge2)).toEqual({});
+  });
+
+  it('renders <GraphSearch />', () => {
+    expect(wrapper.find(GraphSearch).length).toBe(1);
   });
 });

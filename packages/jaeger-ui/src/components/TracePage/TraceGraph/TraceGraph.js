@@ -20,7 +20,6 @@ import { DirectedGraph, LayoutManager } from '@jaegertracing/plexus';
 import DRange from 'drange';
 
 import { getNodeDrawer, MODE_SERVICE, MODE_TIME, MODE_SELFTIME, HELP_TABLE } from './OpNode';
-// TODO: Location implies only used by diff, need to move
 import GraphSearch from '../../common/GraphSearch';
 import convPlexus from '../../../model/trace-dag/convPlexus';
 import TraceDag from '../../../model/trace-dag/TraceDag';

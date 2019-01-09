@@ -14,8 +14,12 @@
 
 import React from 'react';
 import { shallow } from 'enzyme';
+import _map from 'lodash/map';
 
 import OpNode, { getNodeDrawer, MODE_SERVICE, MODE_TIME, MODE_SELFTIME } from './OpNode';
+import filterSpansMock from '../../../utils/filter-spans';
+
+jest.mock('../../../utils/filter-spans');
 
 describe('<OpNode>', () => {
   let wrapper;
@@ -27,23 +31,25 @@ describe('<OpNode>', () => {
     props = {
       count: 5,
       errors: 0,
-      time: 200000,
-      percent: 7.89,
-      selfTime: 180000,
-      percentSelfTime: 90,
+      graphSearch: 'graphSearch',
+      members: [{ span: { spanID: 'memberSpanID0' } }, { span: { spanID: 'memberSpanID1' } }],
       operation: 'op1',
+      percent: 7.89,
+      percentSelfTime: 90,
+      selfTime: 180000,
       service: 'service1',
+      time: 200000,
     };
     wrapper = shallow(<OpNode {...props} mode={mode} />);
   });
 
-  it('it does not explode', () => {
+  it('does not explode', () => {
     expect(wrapper).toBeDefined();
     expect(wrapper.find('.OpNode').length).toBe(1);
     expect(wrapper.find('.OpNode--mode-service').length).toBe(1);
   });
 
-  it('it renders OpNode', () => {
+  it('renders OpNode', () => {
     expect(wrapper.find('.OpNode--count').text()).toBe('5 / 0');
     expect(wrapper.find('.OpNode--time').text()).toBe('200 ms (7.89 %)');
     expect(wrapper.find('.OpNode--avg').text()).toBe('40 ms');
@@ -52,7 +58,7 @@ describe('<OpNode>', () => {
     expect(wrapper.find('.OpNode--service').text()).toBe('service1');
   });
 
-  it('it switches mode', () => {
+  it('switches mode', () => {
     mode = MODE_SERVICE;
     wrapper = shallow(<OpNode {...props} mode={mode} />);
     expect(wrapper.find('.OpNode--mode-service').length).toBe(1);
@@ -72,8 +78,17 @@ describe('<OpNode>', () => {
     expect(wrapper.find('.OpNode--mode-selftime').length).toBe(1);
   });
 
+  it('updates class when it matches search', () => {
+    const graphSearch = 'newGraphSearchToTriggerRender';
+    expect(wrapper.find('.is-graph-search-match').length).toBe(0);
+    filterSpansMock.mockReturnValue({ size: 1 });
+    wrapper.setProps({ graphSearch });
+    expect(wrapper.find('.is-graph-search-match').length).toBe(1);
+    expect(filterSpansMock).toHaveBeenLastCalledWith(graphSearch, _map(props.members, 'span'));
+  });
+
   describe('getNodeDrawer()', () => {
-    it('it creates OpNode', () => {
+    it('creates OpNode', () => {
       const vertex = {
         data: {
           service: 'service1',
