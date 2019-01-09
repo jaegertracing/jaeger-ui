@@ -19,9 +19,12 @@ import IoAlert from 'react-icons/lib/io/alert';
 import IoArrowRightA from 'react-icons/lib/io/arrow-right-a';
 
 import TimelineRow from './TimelineRow';
+import { formatDuration } from './utils';
 import SpanTreeOffset from './SpanTreeOffset';
 import SpanBar from './SpanBar';
 import Ticks from './Ticks';
+
+import type { Span } from '../../../types/trace';
 
 import './SpanBarRow.css';
 
@@ -29,15 +32,11 @@ type SpanBarRowProps = {
   className: string,
   color: string,
   columnDivision: number,
-  depth: number,
   isChildrenExpanded: boolean,
   isDetailExpanded: boolean,
   isMatchingFilter: boolean,
-  isParent: boolean,
-  label: string,
   onDetailToggled: string => void,
   onChildrenToggled: string => void,
-  operationName: string,
   numTicks: number,
   rpc: ?{
     viewStart: number,
@@ -46,9 +45,8 @@ type SpanBarRowProps = {
     operationName: string,
     serviceName: string,
   },
-  serviceName: string,
   showErrorIcon: boolean,
-  spanID: string,
+  span: Span,
   viewEnd: number,
   viewStart: number,
 };
@@ -70,11 +68,11 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
   };
 
   _detailToggle = () => {
-    this.props.onDetailToggled(this.props.spanID);
+    this.props.onDetailToggled(this.props.span.spanID);
   };
 
   _childrenToggle = () => {
-    this.props.onChildrenToggled(this.props.spanID);
+    this.props.onChildrenToggled(this.props.span.spanID);
   };
 
   render() {
@@ -82,20 +80,18 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
       className,
       color,
       columnDivision,
-      depth,
       isChildrenExpanded,
       isDetailExpanded,
       isMatchingFilter,
-      isParent,
-      label,
       numTicks,
-      operationName,
       rpc,
-      serviceName,
       showErrorIcon,
+      span,
       viewEnd,
       viewStart,
     } = this.props;
+    const { duration, hasChildren: isParent, operationName, process: { serviceName } } = span;
+    const label = formatDuration(duration);
 
     const labelDetail = `${serviceName}::${operationName}`;
     let longLabel;
@@ -119,9 +115,8 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
         <TimelineRow.Cell className="span-name-column" width={columnDivision}>
           <div className={`span-name-wrapper ${isMatchingFilter ? 'is-matching-filter' : ''}`}>
             <SpanTreeOffset
-              level={depth + 1}
-              hasChildren={isParent}
               childrenVisible={isChildrenExpanded}
+              span={span}
               onClick={isParent ? this._childrenToggle : null}
             />
             <a

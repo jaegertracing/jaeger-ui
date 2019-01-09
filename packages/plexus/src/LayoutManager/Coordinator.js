@@ -14,6 +14,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+/* eslint-disable no-console */
+
 import * as convCoord from './dot/conv-coord';
 import workerFactory from './layout.worker';
 import { matchEdges, matchVertices } from './match-inputs';

@@ -61,7 +61,7 @@ function SelectSortImpl() {
   return (
     <label>
       Sort:{' '}
-      <Field name="sortBy" component={reduxFormFieldAdapter(Select)}>
+      <Field name="sortBy" component={reduxFormFieldAdapter({ AntInputComponent: Select })}>
         <Option value={orderBy.MOST_RECENT}>Most Recent</Option>
         <Option value={orderBy.LONGEST_FIRST}>Longest First</Option>
         <Option value={orderBy.SHORTEST_FIRST}>Shortest First</Option>
@@ -83,6 +83,8 @@ export const sortFormSelector = formValueSelector('traceResultsSort');
 
 export default class SearchResults extends React.PureComponent<SearchResultsProps> {
   props: SearchResultsProps;
+
+  static defaultProps = { skipMessage: false };
 
   toggleComparison = (traceID: string, remove: boolean) => {
     const { cohortAddTrace, cohortRemoveTrace } = this.props;

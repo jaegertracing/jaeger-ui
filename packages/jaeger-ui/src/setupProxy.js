@@ -1,6 +1,4 @@
-// @flow
-
-// Copyright (c) 2017 Uber Technologies, Inc.
+// Copyright (c) 2019 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,13 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import DetailState from '../components/TracePage/TraceTimelineViewer/SpanDetail/DetailState';
+// eslint-disable-next-line import/no-extraneous-dependencies
+const proxy = require('http-proxy-middleware');
 
-export type TraceTimeline = {
-  traceID: ?string,
-  spanNameColumnWidth: number,
-  childrenHiddenIDs: Set<string>,
-  findMatches: ?Set<string>,
-  detailStates: Map<string, DetailState>,
-  hoverIndentGuideIds: Set<string>,
+module.exports = function setupProxy(app) {
+  app.use(
+    proxy('/api', {
+      target: 'http://localhost:16686',
+      logLevel: 'silent',
+      secure: false,
+      changeOrigin: true,
+      ws: true,
+      xfwd: true,
+    })
+  );
 };

@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+/* eslint-disable react/require-default-props */
+
 import React, { Component } from 'react';
 import { Col, Row } from 'antd';
 import PropTypes from 'prop-types';
@@ -137,6 +139,7 @@ SearchTracePageImpl.propTypes = {
   isHomepage: PropTypes.bool,
   // eslint-disable-next-line react/forbid-prop-types
   traceResults: PropTypes.array,
+  // eslint-disable-next-line react/forbid-prop-types
   diffCohort: PropTypes.array,
   cohortAddTrace: PropTypes.func,
   cohortRemoveTrace: PropTypes.func,
