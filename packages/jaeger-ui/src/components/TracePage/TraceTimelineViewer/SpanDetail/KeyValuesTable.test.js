@@ -14,8 +14,9 @@
 
 import React from 'react';
 import { shallow } from 'enzyme';
-import { Dropdown, Icon, Tooltip } from 'antd';
-import { CopyToClipboard } from 'react-copy-to-clipboard';
+import { Dropdown } from 'antd';
+
+import CopyIcon from '../../../common/copy-icon';
 
 import KeyValuesTable, { LinkValue } from './KeyValuesTable';
 
@@ -96,49 +97,12 @@ describe('<KeyValuesTable>', () => {
     ).toBe('span.kind');
   });
 
-  describe('CopyIcon', () => {
-    const indexToCopy = 1;
-
-    it('should render a Copy icon with <CopyToClipboard /> and <Tooltip /> for each data element', () => {
-      const trs = wrapper.find('tr');
-      expect(trs.length).toBe(data.length);
-      trs.forEach((tr, i) => {
-        const copyColumn = tr.find('.KeyValueTable--copyColumn');
-        expect(copyColumn.find(CopyToClipboard).prop('text')).toBe(JSON.stringify(data[i], null, 2));
-        expect(copyColumn.find(Tooltip).length).toBe(1);
-        expect(copyColumn.find({ type: 'copy' }).length).toBe(1);
-      });
-    });
-
-    it('should add correct data entry to state when icon is clicked', () => {
-      expect(wrapper.state().copiedRows.size).toBe(0);
-      wrapper
-        .find('tr')
-        .at(indexToCopy)
-        .find(Icon)
-        .simulate('click');
-      expect(wrapper.state().copiedRows.size).toBe(1);
-      expect(wrapper.state().copiedRows.has(data[indexToCopy])).toBe(true);
-    });
-
-    it('should remove correct data entry to state when tooltip hides', () => {
-      wrapper.setState({ copiedRows: new Set(data) });
-      wrapper
-        .find('tr')
-        .at(indexToCopy)
-        .find(Tooltip)
-        .prop('onVisibleChange')(false);
-      expect(wrapper.state().copiedRows.size).toBe(data.length - 1);
-      expect(wrapper.state().copiedRows.has(data[indexToCopy])).toBe(false);
-    });
-
-    it('should render correct tooltip title for each row', () => {
-      wrapper.setState({ copiedRows: new Set([data[indexToCopy]]) });
-      const tooltips = wrapper.find(Tooltip);
-      tooltips.forEach((tooltip, i) =>
-        expect(tooltip.prop('title')).toBe(i === indexToCopy ? 'Copied' : 'Copy JSON')
-      );
-      expect.assertions(data.length);
+  it('renders a <CopyIcon /> with correct copyText for each data element', () => {
+    const copyIcons = wrapper.find(CopyIcon);
+    expect(copyIcons.length).toBe(data.length);
+    copyIcons.forEach((copyColumn, i) => {
+      expect(copyColumn.prop('copyText')).toBe(JSON.stringify(data[i], null, 2));
+      expect(copyColumn.prop('tooltipTitle')).toBe('Copy JSON');
     });
   });
 });

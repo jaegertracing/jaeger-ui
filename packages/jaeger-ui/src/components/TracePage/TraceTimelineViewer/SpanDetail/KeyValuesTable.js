@@ -16,8 +16,10 @@
 
 import * as React from 'react';
 import jsonMarkup from 'json-markup';
-import { Dropdown, Icon, Menu, Tooltip } from 'antd';
-import { CopyToClipboard } from 'react-copy-to-clipboard';
+import { Dropdown, Icon, Menu } from 'antd';
+
+import CopyIcon from '../../../common/copy-icon';
+
 import type { KeyValuePair, Link } from '../../../../types/trace';
 
 import './KeyValuesTable.css';
@@ -60,104 +62,58 @@ type KeyValuesTableProps = {
   linksGetter: ?(KeyValuePair[], number) => Link[],
 };
 
-type KeyValuesTableState = {
-  copiedRows: Set<KeyValuePair>,
-};
-
-export default class KeyValuesTable extends React.PureComponent<KeyValuesTableProps, KeyValuesTableState> {
-  props: KeyValuesTableProps;
-
-  constructor(props: KeyValuesTableProps) {
-    super(props);
-
-    this.state = {
-      copiedRows: new Set(),
-    };
-  }
-
-  handleCopyIconClick = (row: KeyValuePair) => {
-    const newCopiedRows = new Set(this.state.copiedRows);
-    newCopiedRows.add(row);
-    this.setState({
-      copiedRows: newCopiedRows,
-    });
-  };
-
-  handleTooltipVisibilityChange = (row: KeyValuePair, visible: boolean) => {
-    if (!visible && this.state.copiedRows.has(row)) {
-      const newCopiedRows = new Set(this.state.copiedRows);
-      newCopiedRows.delete(row);
-      this.setState({
-        copiedRows: newCopiedRows,
-      });
-    }
-  };
-
-  render() {
-    const { data, linksGetter } = this.props;
-    return (
-      <div className="KeyValueTable u-simple-scrollbars">
-        <table className="u-width-100">
-          <tbody className="KeyValueTable--body">
-            {data.map((row, i) => {
-              const tooltipTitle = this.state.copiedRows.has(row) ? 'Copied' : 'Copy JSON';
-              const markup = {
-                __html: jsonMarkup(parseIfJson(row.value)),
-              };
-              // eslint-disable-next-line react/no-danger
-              const jsonTable = <div className="ub-inline-block" dangerouslySetInnerHTML={markup} />;
-              const links = linksGetter ? linksGetter(data, i) : null;
-              let valueMarkup;
-              if (links && links.length === 1) {
-                valueMarkup = (
-                  <div>
-                    <LinkValue href={links[0].url} title={links[0].text}>
-                      {jsonTable}
-                    </LinkValue>
-                  </div>
-                );
-              } else if (links && links.length > 1) {
-                valueMarkup = (
-                  <div>
-                    <Dropdown overlay={linkValueList(links)} placement="bottomRight" trigger={['click']}>
-                      <a>
-                        {jsonTable} <Icon className="KeyValueTable--linkIcon" type="profile" />
-                      </a>
-                    </Dropdown>
-                  </div>
-                );
-              } else {
-                valueMarkup = jsonTable;
-              }
-              return (
-                // `i` is necessary in the key because row.key can repeat
-                // eslint-disable-next-line react/no-array-index-key
-                <tr className="KeyValueTable--row" key={`${row.key}-${i}`}>
-                  <td className="KeyValueTable--keyColumn">{row.key}</td>
-                  <td>{valueMarkup}</td>
-                  <td className="KeyValueTable--copyColumn">
-                    <Tooltip
-                      arrowPointAtCenter
-                      mouseLeaveDelay={0.5}
-                      onVisibleChange={visible => this.handleTooltipVisibilityChange(row, visible)}
-                      placement="left"
-                      title={tooltipTitle}
-                    >
-                      <CopyToClipboard text={JSON.stringify(row, null, 2)}>
-                        <Icon
-                          className="KeyValueTable--copyIcon"
-                          onClick={() => this.handleCopyIconClick(row)}
-                          type="copy"
-                        />
-                      </CopyToClipboard>
-                    </Tooltip>
-                  </td>
-                </tr>
+export default function KeyValuesTable(props: KeyValuesTableProps) {
+  const { data, linksGetter } = props;
+  return (
+    <div className="KeyValueTable u-simple-scrollbars">
+      <table className="u-width-100">
+        <tbody className="KeyValueTable--body">
+          {data.map((row, i) => {
+            const markup = {
+              __html: jsonMarkup(parseIfJson(row.value)),
+            };
+            // eslint-disable-next-line react/no-danger
+            const jsonTable = <div className="ub-inline-block" dangerouslySetInnerHTML={markup} />;
+            const links = linksGetter ? linksGetter(data, i) : null;
+            let valueMarkup;
+            if (links && links.length === 1) {
+              valueMarkup = (
+                <div>
+                  <LinkValue href={links[0].url} title={links[0].text}>
+                    {jsonTable}
+                  </LinkValue>
+                </div>
               );
-            })}
-          </tbody>
-        </table>
-      </div>
-    );
-  }
+            } else if (links && links.length > 1) {
+              valueMarkup = (
+                <div>
+                  <Dropdown overlay={linkValueList(links)} placement="bottomRight" trigger={['click']}>
+                    <a>
+                      {jsonTable} <Icon className="KeyValueTable--linkIcon" type="profile" />
+                    </a>
+                  </Dropdown>
+                </div>
+              );
+            } else {
+              valueMarkup = jsonTable;
+            }
+            return (
+              // `i` is necessary in the key because row.key can repeat
+              // eslint-disable-next-line react/no-array-index-key
+              <tr className="KeyValueTable--row" key={`${row.key}-${i}`}>
+                <td className="KeyValueTable--keyColumn">{row.key}</td>
+                <td>{valueMarkup}</td>
+                <td className="KeyValueTable--copyColumn">
+                  <div className="KeyValueTable--copyIcon">
+                    <CopyIcon copyText={JSON.stringify(row, null, 2)} tooltipTitle="Copy JSON" />
+                  </div>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
 }
+// }
