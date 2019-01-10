@@ -52,19 +52,18 @@ export default class CopyIcon extends React.PureComponent<propsType, stateType> 
   };
 
   render() {
-    return (<Tooltip
-      arrowPointAtCenter
-      mouseLeaveDelay={0.5}
-      onVisibleChange={this.handleTooltipVisibilityChange}
-      placement="left"
-      title={this.state.hasCopied ? 'Copied' : this.props.tooltipTitle}
-    >
-      <CopyToClipboard text={this.props.copyText}>
-        <Icon
-          onClick={this.handleCopyIconClick}
-          type="copy"
-        />
-      </CopyToClipboard>
-    </Tooltip>);
+    return (
+      <Tooltip
+        arrowPointAtCenter
+        mouseLeaveDelay={0.5}
+        onVisibleChange={this.handleTooltipVisibilityChange}
+        placement="left"
+        title={this.state.hasCopied ? 'Copied' : this.props.tooltipTitle}
+      >
+        <CopyToClipboard text={this.props.copyText}>
+          <Icon onClick={this.handleCopyIconClick} type="copy" />
+        </CopyToClipboard>
+      </Tooltip>
+    );
   }
 }

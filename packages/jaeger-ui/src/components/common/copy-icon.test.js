@@ -35,25 +35,19 @@ describe('<CopyIcon />', () => {
 
   it('updates state when icon is clicked', () => {
     expect(wrapper.state().hasCopied).toBe(false);
-    wrapper
-      .find(Icon)
-      .simulate('click');
+    wrapper.find(Icon).simulate('click');
     expect(wrapper.state().hasCopied).toBe(true);
   });
 
   it('updates state when tooltip hides', () => {
     wrapper.setState({ hasCopied: true });
-    wrapper
-      .find(Tooltip)
-      .prop('onVisibleChange')(false);
+    wrapper.find(Tooltip).prop('onVisibleChange')(false);
     expect(wrapper.state().hasCopied).toBe(false);
   });
 
   it('persists state when tooltip opens', () => {
     wrapper.setState({ hasCopied: true });
-    wrapper
-      .find(Tooltip)
-      .prop('onVisibleChange')(true);
+    wrapper.find(Tooltip).prop('onVisibleChange')(true);
     expect(wrapper.state().hasCopied).toBe(true);
   });
 });
