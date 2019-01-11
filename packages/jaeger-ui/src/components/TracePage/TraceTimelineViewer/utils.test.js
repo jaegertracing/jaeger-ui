@@ -48,7 +48,7 @@ describe('TraceTimelineViewer/utils', () => {
     });
 
     it('works for a sub-range that within a sub-view', () => {
-      const args = { min: 100, max: 200, start: 130, end: 170, viewStart: 0.1, viewEnd: 0.9 };
+      const args = { min: 100, max: 200, viewStart: 0.1, viewEnd: 0.9 };
       const { start, end } = createViewedBoundsFunc(args)(130, 170);
       expect(start).toBe(0.25);
       expect(end).toBe(0.75);

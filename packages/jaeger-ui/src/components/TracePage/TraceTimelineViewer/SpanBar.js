@@ -18,10 +18,12 @@ import React from 'react';
 import { Popover } from 'antd';
 import _groupBy from 'lodash/groupBy';
 import _values from 'lodash/values';
-
 import { onlyUpdateForKeys, compose, withState, withProps } from 'recompose';
-import type { Span, Trace } from '../../../types/trace';
+
 import AccordianLogs from './SpanDetail/AccordianLogs';
+
+import type { ViewedBoundsFunctionType } from './utils';
+import type { Span } from '../../../types/trace';
 
 import './SpanBar.css';
 
@@ -32,7 +34,7 @@ type SpanBarProps = {
   onClick: (SyntheticMouseEvent<any>) => void,
   viewEnd: number,
   viewStart: number,
-  getViewedBounds: (number, number) => { start: number, end: number },
+  getViewedBounds: ViewedBoundsFunctionType,
   rpc: {
     viewStart: number,
     viewEnd: number,
@@ -40,7 +42,7 @@ type SpanBarProps = {
   },
   setLongLabel: () => void,
   setShortLabel: () => void,
-  trace: Trace,
+  traceStartTime: number,
   span: Span,
 };
 
@@ -60,7 +62,7 @@ function SpanBar(props: SpanBarProps) {
     setLongLabel,
     setShortLabel,
     rpc,
-    trace,
+    traceStartTime,
     span,
   } = props;
 
@@ -102,7 +104,7 @@ function SpanBar(props: SpanBarProps) {
                 openedItems={new Set([])}
                 onToggle={() => {}}
                 onItemToggle={() => {}}
-                timestamp={trace.startTime}
+                timestamp={traceStartTime}
               />
             }
           >

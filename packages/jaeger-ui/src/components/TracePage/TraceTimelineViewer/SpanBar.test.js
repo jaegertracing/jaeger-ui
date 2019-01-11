@@ -43,9 +43,7 @@ describe('<SpanBar>', () => {
       viewEnd: 0.75,
       color: '#000',
     },
-    trace: {
-      startTime: 0,
-    },
+    tracestartTime: 0,
     span: {
       logs: [
         {

@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+export type ViewedBoundsFunctionType = (number, number) => { start: number, end: number };
 /**
  * Given a range (`min`, `max`) and factoring in a zoom (`viewStart`, `viewEnd`)
  * a function is created that will find the position of a sub-range (`start`, `end`).

@@ -24,7 +24,8 @@ import SpanTreeOffset from './SpanTreeOffset';
 import SpanBar from './SpanBar';
 import Ticks from './Ticks';
 
-import type { Span, Trace } from '../../../types/trace';
+import type { ViewedBoundsFunctionType } from './utils';
+import type { Span } from '../../../types/trace';
 
 import './SpanBarRow.css';
 
@@ -46,8 +47,8 @@ type SpanBarRowProps = {
     serviceName: string,
   },
   showErrorIcon: boolean,
-  getViewedBounds: (number, number) => { start: number, end: number },
-  trace: Trace,
+  getViewedBounds: ViewedBoundsFunctionType,
+  traceStartTime: number,
   span: Span,
 };
 
@@ -87,7 +88,7 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
       rpc,
       showErrorIcon,
       getViewedBounds,
-      trace,
+      traceStartTime,
       span,
     } = this.props;
     const { duration, hasChildren: isParent, operationName, process: { serviceName } } = span;
@@ -164,7 +165,7 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
             shortLabel={label}
             longLabel={longLabel}
             hintSide={hintSide}
-            trace={trace}
+            traceStartTime={traceStartTime}
             span={span}
           />
         </TimelineRow.Cell>

@@ -26,9 +26,11 @@ import DetailState from './SpanDetail/DetailState';
 import SpanDetailRow from './SpanDetailRow';
 import { createViewedBoundsFunc, findServerChildSpan, isErrorSpan, spanContainsErredSpan } from './utils';
 import getLinks from '../../../model/link-patterns';
+import colorGenerator from '../../../utils/color-generator';
+
+import type { ViewedBoundsFunctionType } from './utils';
 import type { Accessors } from '../ScrollManager';
 import type { Log, Span, Trace, KeyValuePair } from '../../../types/trace';
-import colorGenerator from '../../../utils/color-generator';
 
 import './VirtualizedTraceView.css';
 
@@ -125,7 +127,7 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
   clippingCssClasses: string;
   listView: ?ListView;
   rowStates: RowState[];
-  getViewedBounds: (number, number) => { start: number, end: number };
+  getViewedBounds: ViewedBoundsFunctionType;
 
   constructor(props: VirtualizedTraceViewProps) {
     super(props);
@@ -316,7 +318,7 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
           rpc={rpc}
           showErrorIcon={showErrorIcon}
           getViewedBounds={this.getViewedBounds}
-          trace={trace}
+          traceStartTime={trace.startTime}
           span={span}
         />
       </div>
