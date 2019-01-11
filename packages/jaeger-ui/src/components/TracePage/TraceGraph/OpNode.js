@@ -16,6 +16,8 @@
 
 import * as React from 'react';
 import { Popover } from 'antd';
+
+import CopyIcon from '../../common/copy-icon';
 import colorGenerator from '../../../utils/color-generator';
 
 import type { PVertex } from '../../../model/trace-dag/types';
@@ -94,6 +96,9 @@ export default class OpNode extends React.PureComponent<Props> {
             </td>
             <td className="OpNode--labelCell OpNode--service">
               <strong>{service}</strong>
+              <span className="OpNode--copyIcon">
+                <CopyIcon copyText={`${service} ${operation}`} tooltipTitle="Copy label" />
+              </span>
             </td>
             <td className="OpNode--metricCell OpNode--avg">{round2(time / 1000 / count)} ms</td>
           </tr>

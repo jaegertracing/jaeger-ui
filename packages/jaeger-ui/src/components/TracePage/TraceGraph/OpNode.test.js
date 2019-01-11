@@ -16,6 +16,7 @@ import React from 'react';
 import { shallow } from 'enzyme';
 
 import OpNode, { getNodeDrawer, MODE_SERVICE, MODE_TIME, MODE_SELFTIME } from './OpNode';
+import CopyIcon from '../../common/copy-icon';
 
 describe('<OpNode>', () => {
   let wrapper;
@@ -49,7 +50,12 @@ describe('<OpNode>', () => {
     expect(wrapper.find('.OpNode--avg').text()).toBe('40 ms');
     expect(wrapper.find('.OpNode--selfTime').text()).toBe('180 ms (90 %)');
     expect(wrapper.find('.OpNode--op').text()).toBe('op1');
-    expect(wrapper.find('.OpNode--service').text()).toBe('service1');
+    expect(
+      wrapper
+        .find('.OpNode--service')
+        .find('strong')
+        .text()
+    ).toBe('service1');
   });
 
   it('it switches mode', () => {
@@ -70,6 +76,13 @@ describe('<OpNode>', () => {
     expect(wrapper.find('.OpNode--mode-service').length).toBe(0);
     expect(wrapper.find('.OpNode--mode-time').length).toBe(0);
     expect(wrapper.find('.OpNode--mode-selftime').length).toBe(1);
+  });
+
+  it('renders a copy icon', () => {
+    const copyIcon = wrapper.find(CopyIcon);
+    expect(copyIcon.length).toBe(1);
+    expect(copyIcon.prop('copyText')).toBe(`${props.service} ${props.operation}`);
+    expect(copyIcon.prop('tooltipTitle')).toBe('Copy label');
   });
 
   describe('getNodeDrawer()', () => {

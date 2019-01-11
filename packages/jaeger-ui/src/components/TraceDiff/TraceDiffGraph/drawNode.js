@@ -18,6 +18,8 @@ import * as React from 'react';
 import { Popover } from 'antd';
 import cx from 'classnames';
 
+import CopyIcon from '../../common/copy-icon';
+
 import type { PVertex } from '../../../model/trace-dag/types';
 
 import './drawNode.css';
@@ -57,6 +59,9 @@ class DiffNode extends React.PureComponent<Props> {
             </td>
             <td className={`DiffNode--labelCell ${className}`}>
               <strong>{service}</strong>
+              <span className="DiffNode--copyIcon">
+                <CopyIcon copyText={`${service} ${operation}`} tooltipTitle="Copy label" />
+              </span>
             </td>
           </tr>
           <tr>
