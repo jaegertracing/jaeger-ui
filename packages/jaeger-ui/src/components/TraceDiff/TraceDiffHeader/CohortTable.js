@@ -17,6 +17,7 @@
 import * as React from 'react';
 import { Table, Tag } from 'antd';
 
+import TraceTimelineLink from './TraceTimelineLink';
 import RelativeDate from '../../common/RelativeDate';
 import TraceName from '../../common/TraceName';
 import { fetchedState } from '../../../constants';
@@ -128,6 +129,13 @@ export default class CohortTable extends React.PureComponent<Props> {
           render={(value, record) => record.state === fetchedState.DONE && formatDuration(value)}
         />
         <Column title="Spans" dataIndex="data.spans.length" key="address" />
+        <Column
+          title="Link"
+          className="CohortTable--linkColumn"
+          dataIndex="data.traceID"
+          key="link"
+          render={value => <TraceTimelineLink traceID={value} />}
+        />
       </Table>,
       cohort.length < 2 && NEED_MORE_TRACES_MESSAGE,
     ];

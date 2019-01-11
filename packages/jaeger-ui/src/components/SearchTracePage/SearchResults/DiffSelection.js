@@ -57,7 +57,9 @@ export default class DiffSelection extends React.PureComponent<Props> {
                   duration={data.duration}
                   error={error}
                   isInDiffCohort
+                  linkTo={`/trace/${id}`}
                   state={state}
+                  targetBlank
                   toggleComparison={toggleComparison}
                   traceID={id}
                   traceName={data.traceName}

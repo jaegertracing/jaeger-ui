@@ -17,6 +17,7 @@
 import * as React from 'react';
 import IoChevronDown from 'react-icons/lib/io/chevron-down';
 
+import TraceTimelineLink from './TraceTimelineLink';
 import RelativeDate from '../../common/RelativeDate';
 import TraceName from '../../common/TraceName';
 import { fetchedState } from '../../../constants';
@@ -82,8 +83,11 @@ export default function TraceHeader(props: Props) {
             <React.Fragment>
               <TraceName key="name" traceName={traceName} error={error} state={state} />{' '}
               <small key="id" className="u-tx-muted">
-                {(traceID || '').slice(0, 7)}
+                {traceID.slice(0, 7)}
               </small>
+              <span className="TraceDiffHeader--link">
+                <TraceTimelineLink traceID={traceID} />
+              </span>
             </React.Fragment>
           ) : (
             <span className="u-tx-muted">Select a Trace...</span>

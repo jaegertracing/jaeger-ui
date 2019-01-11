@@ -1,0 +1,97 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TraceHeader renders as expected 1`] = `
+<div
+  className="TraecDiffHeader--traceHeader"
+>
+  <h1
+    className="TraecDiffHeader--traceTitle"
+  >
+    <span>
+      <React.Fragment>
+        <TraceName
+          className=""
+          error={
+            Object {
+              "errorKey": "errorValue",
+            }
+          }
+          key="name"
+          state={null}
+          traceName="trace name"
+        />
+         
+        <small
+          className="u-tx-muted"
+          key="id"
+        >
+          trace-i
+        </small>
+        <span
+          className="TraceDiffHeader--link"
+        >
+          <TraceTimelineLink
+            traceID="trace-id"
+          />
+        </span>
+      </React.Fragment>
+    </span>
+    <IoChevronDown
+      className="TraecDiffHeader--traceTitleChevron"
+    />
+  </h1>
+  <EmptyAttrs
+    duration={700}
+    startTime={null}
+    totalSpans={null}
+  />
+</div>
+`;
+
+exports[`TraceHeader renders populated attrs component when props.state === fetchedState.DONE 1`] = `
+<div
+  className="TraecDiffHeader--traceHeader"
+>
+  <h1
+    className="TraecDiffHeader--traceTitle"
+  >
+    <span>
+      <React.Fragment>
+        <TraceName
+          className=""
+          error={
+            Object {
+              "errorKey": "errorValue",
+            }
+          }
+          key="name"
+          state="FETCH_DONE"
+          traceName="trace name"
+        />
+         
+        <small
+          className="u-tx-muted"
+          key="id"
+        >
+          trace-i
+        </small>
+        <span
+          className="TraceDiffHeader--link"
+        >
+          <TraceTimelineLink
+            traceID="trace-id"
+          />
+        </span>
+      </React.Fragment>
+    </span>
+    <IoChevronDown
+      className="TraecDiffHeader--traceTitleChevron"
+    />
+  </h1>
+  <Attrs
+    duration={700}
+    startTime={150}
+    totalSpans={50}
+  />
+</div>
+`;
