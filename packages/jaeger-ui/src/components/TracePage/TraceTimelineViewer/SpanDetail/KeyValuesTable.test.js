@@ -100,9 +100,9 @@ describe('<KeyValuesTable>', () => {
   it('renders a <CopyIcon /> with correct copyText for each data element', () => {
     const copyIcons = wrapper.find(CopyIcon);
     expect(copyIcons.length).toBe(data.length);
-    copyIcons.forEach((copyColumn, i) => {
-      expect(copyColumn.prop('copyText')).toBe(JSON.stringify(data[i], null, 2));
-      expect(copyColumn.prop('tooltipTitle')).toBe('Copy JSON');
+    copyIcons.forEach((copyIcon, i) => {
+      expect(copyIcon.prop('copyText')).toBe(JSON.stringify(data[i], null, 2));
+      expect(copyIcon.prop('tooltipTitle')).toBe('Copy JSON');
     });
   });
 });

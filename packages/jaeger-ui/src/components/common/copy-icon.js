@@ -37,7 +37,7 @@ export default class CopyIcon extends React.PureComponent<propsType, stateType> 
     };
   }
 
-  handleCopyIconClick = () => {
+  handleClick = () => {
     this.setState({
       hasCopied: true,
     });
@@ -61,7 +61,7 @@ export default class CopyIcon extends React.PureComponent<propsType, stateType> 
         title={this.state.hasCopied ? 'Copied' : this.props.tooltipTitle}
       >
         <CopyToClipboard text={this.props.copyText}>
-          <Icon onClick={this.handleCopyIconClick} type="copy" />
+          <Icon onClick={this.handleClick} type="copy" />
         </CopyToClipboard>
       </Tooltip>
     );
