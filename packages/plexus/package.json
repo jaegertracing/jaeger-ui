@@ -22,7 +22,7 @@
     "react": "16.x"
   },
   "devDependencies": {
-    "nwb": "0.21.x",
+    "nwb": "0.23.0",
     "react": "^16.3.2",
     "react-dom": "^16.3.2",
     "worker-loader": "^1.1.1"

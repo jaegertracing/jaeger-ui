@@ -1,6 +1,4 @@
-// @flow
-
-// Copyright (c) 2017 Uber Technologies, Inc.
+// Copyright (c) 2019 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,23 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export type ConfigMenuItem = {
-  label: string,
-  url: string,
-  anchorTarget?: '_self' | '_blank' | '_parent' | '_top',
-};
+// eslint-disable-next-line import/no-extraneous-dependencies
+const proxy = require('http-proxy-middleware');
 
-export type ConfigMenuGroup = {
-  label: string,
-  items: ConfigMenuItem[],
-};
-
-export type Config = {
-  archiveEnabled: ?boolean,
-  dependencies?: { dagMaxServicesLen?: number, menuEnabled?: boolean },
-  tracking?: {
-    gaID: ?string,
-    trackErrors: ?boolean,
-  },
-  menu: (ConfigMenuGroup | ConfigMenuItem)[],
+module.exports = function setupProxy(app) {
+  app.use(
+    proxy('/api', {
+      target: 'http://localhost:16686',
+      logLevel: 'silent',
+      secure: false,
+      changeOrigin: true,
+      ws: true,
+      xfwd: true,
+    })
+  );
 };

@@ -27,7 +27,7 @@
     "jsx-a11y/interactive-supports-focus": 0,
 
     /* react */
-    "react/jsx-curly-brace-presence": [2, 'never'],
+    "react/jsx-curly-brace-presence": ["error", "never"],
     "react/jsx-filename-extension": 0,
     "react/forbid-prop-types": 1,
     "react/require-default-props": 1,
@@ -50,14 +50,6 @@
     /* import */
     "import/prefer-default-export": 1,
     "import/no-named-default": 0,
-    "import/extensions": 0,
-
-    "new-cap": [2, {
-      "capIsNewExceptions": [
-        "Immutable.Map",
-        "Immutable.List",
-        "Immutable.Set"
-      ]
-    }]
+    "import/extensions": 0
   }
 }

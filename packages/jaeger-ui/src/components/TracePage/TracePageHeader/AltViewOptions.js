@@ -32,7 +32,9 @@ export default function AltViewOptions(props: Props) {
   const menu = (
     <Menu>
       <Menu.Item>
-        <a onClick={onTraceGraphViewClicked}>{traceGraphView ? 'Trace Timeline' : 'Trace Graph'}</a>
+        <a onClick={onTraceGraphViewClicked} role="button">
+          {traceGraphView ? 'Trace Timeline' : 'Trace Graph'}
+        </a>
       </Menu.Item>
       <Menu.Item>
         <Link
