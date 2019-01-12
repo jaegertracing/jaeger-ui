@@ -1,4 +1,69 @@
-# Changes merged into master
+# Releases
+
+## Next (unreleased)
+
+### Enhancements
+
+* **Embedded mode:** Revisions to search and trace detail embed mode ([@tiffon](https://github.com/tiffon) in [#286](https://github.com/jaegertracing/jaeger-ui/pull/286))
+
+  * This release establishes our commitment to the `uiEmbed=v0` API
+  * A big thanks to [@aljesusg](https://github.com/aljesusg) for getting this off the ground in [#263](https://github.com/jaegertracing/jaeger-ui/pull/263)! :tada:
+
+* **Trace detail:** Add a TraceGraph to the TracePage ([@copa2](https://github.com/copa2) in [#276](https://github.com/jaegertracing/jaeger-ui/pull/276))
+
+  * Stability: Experimental – See [#293](https://github.com/jaegertracing/jaeger-ui/issues/293) for discussion.
+  * Big thanks to [@copa2](https://github.com/copa2) for the contribution! :tada:
+  * **We would love to hear feedback!**
+
+* **Trace detail:** Add a copy icon to entries in KeyValuesTable ([#204](https://github.com/jaegertracing/jaeger-ui/issues/204)) ([@everett980](https://github.com/everett980) in [#292](https://github.com/jaegertracing/jaeger-ui/pull/292))
+
+* **Trace detail:** Add a Button to Reset Viewing Layer Zoom ([#215](https://github.com/jaegertracing/jaeger-ui/issues/215)) ([@everett980](https://github.com/everett980) in [#290](https://github.com/jaegertracing/jaeger-ui/pull/290))
+
+* **Trace detail:** Add indent guides to trace timeline view ([#172](https://github.com/jaegertracing/jaeger-ui/issues/172)) ([@everett980](https://github.com/everett980) in [#297](https://github.com/jaegertracing/jaeger-ui/pull/297))
+
+* **Search:** Add popover and prevent submit if duration params are invalid ([#244](https://github.com/jaegertracing/jaeger-ui/issues/244)) ([@everett980](https://github.com/everett980) in [#291](https://github.com/jaegertracing/jaeger-ui/pull/291))
+
+* **Menu configuration:** Ability to open additional menu links in same tab (Resolves [#275](https://github.com/jaegertracing/jaeger-ui/issues/275)) ([@zablvit](https://github.com/zablvit) in [#278](https://github.com/jaegertracing/jaeger-ui/pull/278))
+
+### Fixes
+
+* **Trace detail:** Fix [#269](https://github.com/jaegertracing/jaeger-ui/issues/269) - Fix column resizer overlays trace header ([@tiffon](https://github.com/tiffon) in [#280](https://github.com/jaegertracing/jaeger-ui/pull/280))
+
+### Chores & Maintenance
+
+* **Dev docs:** Update a few links to the new website ([@ledor473](https://github.com/ledor473) in [#287](https://github.com/jaegertracing/jaeger-ui/pull/287))
+
+* **Jaeger UI codebase:** Update create-react-app to 2.1.2 ([@tiffon](https://github.com/tiffon) in [#302](https://github.com/jaegertracing/jaeger-ui/pull/302))
+
+## Changes released in Jaeger 1.8.2 and earlier
+
+These changes are listed in chronological order by the date they were merged into master.
+
+### [#263](https://github.com/jaegertracing/jaeger-ui/pull/263) Embedded components (SearchTraces and Tracepage ) ([@aljesusg](https://github.com/aljesusg))
+
+### [#274](https://github.com/jaegertracing/jaeger-ui/pull/274) Fix rendering X axis in TraceResultsScatterPlot - pass milliseconds to moment.js ([@istrel](https://github.com/istrel))
+
+### [#266](https://github.com/jaegertracing/jaeger-ui/pull/266) Use correct duration format for scatter plot ([@tiffon](https://github.com/tiffon))
+
+### [#264](https://github.com/jaegertracing/jaeger-ui/pull/264) Fix collapse all issues ([@tiffon](https://github.com/tiffon))
+
+### [#265](https://github.com/jaegertracing/jaeger-ui/pull/265) Fix Readme Error for setup local jaeger service ([@clyang82](https://github.com/clyang82))
+
+### [#238](https://github.com/jaegertracing/jaeger-ui/pull/238) Span Search - Highlight search results ([@davit-y](https://github.com/davit-y))
+
+### [#237](https://github.com/jaegertracing/jaeger-ui/pull/237) Span Search - Improve search logic ([@davit-y](https://github.com/davit-y))
+
+### [#257](https://github.com/jaegertracing/jaeger-ui/pull/257) Use a sanely sized canvas for the span mini-map ([@tiffon](https://github.com/tiffon))
+
+### [#234](https://github.com/jaegertracing/jaeger-ui/pull/234) Span Search - Add result count, navigation and clear buttons ([@davit-y](https://github.com/davit-y))
+
+### [#228](https://github.com/jaegertracing/jaeger-ui/pull/228) Trace diffs ([@tiffon](https://github.com/tiffon))
+
+### [#223](https://github.com/jaegertracing/jaeger-ui/pull/223) Add links to make values in tags or log properties clickable ([@divdavem](https://github.com/divdavem))
+
+### [#230](https://github.com/jaegertracing/jaeger-ui/pull/230) Fix CollapseOne action ([@yuribit](https://github.com/yuribit))
+
+### [#224](https://github.com/jaegertracing/jaeger-ui/pull/224) Directed graph React component ([@tiffon](https://github.com/tiffon))
 
 ### [#221](https://github.com/jaegertracing/jaeger-ui/pull/221) Timeline Expand and Collapse Features
 
