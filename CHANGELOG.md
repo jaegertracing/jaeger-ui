@@ -33,6 +33,8 @@
 
 * **Dev docs:** Update a few links to the new website ([@ledor473](https://github.com/ledor473) in [#287](https://github.com/jaegertracing/jaeger-ui/pull/287))
 
+* **Codebase:** Update create-react-app to 2.1.2 ([@tiffon](https://github.com/tiffon) in [#302](https://github.com/jaegertracing/jaeger-ui/pull/302))
+
 ## Changes merged into master
 
 The rest of the changes are in chronological order.
