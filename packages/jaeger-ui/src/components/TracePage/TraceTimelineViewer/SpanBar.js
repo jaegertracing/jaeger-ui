@@ -85,7 +85,12 @@ function SpanBar(props: SpanBarProps) {
       >
         <div className={`SpanBar--label is-${hintSide}`}>{label}</div>
       </div>
-      <div>
+      <div
+        aria-hidden
+        onClick={ev => {
+          ev.stopPropagation();
+        }}
+      >
         {_values(
           _groupBy(span.logs.map(l => ({ view: getViewedBounds(l.timestamp, l.timestamp), log: l })), v =>
             Math.floor(v.view.start * 100)
