@@ -16,7 +16,7 @@ import filterSpans from './filter-spans';
 
 describe('filterSpans', () => {
   // span0 contains strings that end in 0 or 1
-  const spanID0 = 'spanID0';
+  const spanID0 = 'span-id-0';
   const span0 = {
     spanID: spanID0,
     operationName: 'operationName0',
@@ -60,7 +60,7 @@ describe('filterSpans', () => {
   };
   // span2 contains strings that end in 1 or 2, for overlap with span0
   // KVs in span2 have different numbers for key and value to facilitate excludesKey testing
-  const spanID2 = 'spanID2';
+  const spanID2 = 'span-id-2';
   const span2 = {
     spanID: spanID2,
     operationName: 'operationName2',
@@ -106,6 +106,12 @@ describe('filterSpans', () => {
 
   it('should return `null` if spans is falsy', () => {
     expect(filterSpans('operationName', null)).toBe(null);
+  });
+
+  it('should return spans whose spanID exactly match a filter', () => {
+    expect(filterSpans('spanID', spans)).toEqual(new Set([]));
+    expect(filterSpans(spanID0, spans)).toEqual(new Set([spanID0]));
+    expect(filterSpans(spanID2, spans)).toEqual(new Set([spanID2]));
   });
 
   it('should return spans whose operationName match a filter', () => {

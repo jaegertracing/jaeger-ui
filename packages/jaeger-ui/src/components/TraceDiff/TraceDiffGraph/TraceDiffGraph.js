@@ -15,12 +15,13 @@
 // limitations under the License.
 
 import * as React from 'react';
+import { Icon, Input } from 'antd';
 import { DirectedGraph, LayoutManager } from '@jaegertracing/plexus';
 
 import drawNode from './drawNode';
 import ErrorMessage from '../../common/ErrorMessage';
-import GraphSearch from '../../common/GraphSearch';
 import LoadingIndicator from '../../common/LoadingIndicator';
+import UIFindInput from '../../common/UIFindInput';
 import { fetchedState } from '../../../constants';
 import convPlexus from '../../../model/trace-dag/convPlexus';
 import TraceDag from '../../../model/trace-dag/TraceDag';
@@ -48,17 +49,23 @@ function setOnEdgesContainer(state: Object) {
 
 export default class TraceDiffGraph extends React.PureComponent<Props> {
   props: Props;
+  _uiFindInputRef: { current: Input | null };
 
   layoutManager: LayoutManager;
 
   constructor(props: Props) {
     super(props);
     this.layoutManager = new LayoutManager({ useDotEdges: true, splines: 'polyline' });
+    this._uiFindInputRef = React.createRef();
   }
 
   componentWillUnmount() {
     this.layoutManager.stopAndRelease();
   }
+
+  handleIconClick = () => {
+    if (this._uiFindInputRef.current) this._uiFindInputRef.current.focus();
+  };
 
   render() {
     const { a, b } = this.props;
@@ -113,7 +120,13 @@ export default class TraceDiffGraph extends React.PureComponent<Props> {
           edges={edges}
           vertices={vertices}
         />
-        <GraphSearch />
+        <div className="TraceDiffGraph--uiFind">
+          <UIFindInput
+            forwardedRef={this._uiFindInputRef}
+            inputProps={{ className: 'TraceDiffGraph--uiFind--input' }}
+          />
+          <Icon className="TraceDiffGraph--uiFind--icon" onClick={this.handleIconClick} type="search" />
+        </div>
       </div>
     );
   }

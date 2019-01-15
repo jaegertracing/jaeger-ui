@@ -15,7 +15,6 @@
 import React from 'react';
 import { shallow } from 'enzyme';
 
-import GraphSearch from '../../common/GraphSearch';
 import transformTraceData from '../../../model/transform-trace-data';
 
 import TraceGraph, { setOnEdgePath } from './TraceGraph';
@@ -120,9 +119,5 @@ describe('<TraceGraph>', () => {
 
     const edge2 = { from: 0, to: 1, followsFrom: false };
     expect(setOnEdgePath(edge2)).toEqual({});
-  });
-
-  it('renders <GraphSearch />', () => {
-    expect(wrapper.find(GraphSearch).length).toBe(1);
   });
 });

@@ -31,7 +31,7 @@ describe('<OpNode>', () => {
     props = {
       count: 5,
       errors: 0,
-      graphSearch: 'graphSearch',
+      uiFind: 'uiFind',
       members: [{ span: { spanID: 'memberSpanID0' } }, { span: { spanID: 'memberSpanID1' } }],
       operation: 'op1',
       percent: 7.89,
@@ -79,12 +79,12 @@ describe('<OpNode>', () => {
   });
 
   it('updates class when it matches search', () => {
-    const graphSearch = 'newGraphSearchToTriggerRender';
-    expect(wrapper.find('.is-graph-search-match').length).toBe(0);
+    const uiFind = 'newUIFindToTriggerRender';
+    expect(wrapper.find('.is-ui-find-match').length).toBe(0);
     filterSpansMock.mockReturnValue({ size: 1 });
-    wrapper.setProps({ graphSearch });
-    expect(wrapper.find('.is-graph-search-match').length).toBe(1);
-    expect(filterSpansMock).toHaveBeenLastCalledWith(graphSearch, _map(props.members, 'span'));
+    wrapper.setProps({ uiFind });
+    expect(wrapper.find('.is-ui-find-match').length).toBe(1);
+    expect(filterSpansMock).toHaveBeenLastCalledWith(uiFind, _map(props.members, 'span'));
   });
 
   describe('getNodeDrawer()', () => {

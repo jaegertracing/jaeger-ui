@@ -47,6 +47,37 @@ limitations under the License.
   stroke-width: 0.7;
 }
 
+/* Find within diff */
+.TraceDiffGraph--uiFind {
+  border: solid 1px #a9a9a9;
+  border-radius: 21px;
+  bottom: 20px;
+  cursor: auto;
+  display: flex;
+  padding: 5px;
+  position: absolute;
+  right: 20px;
+  z-index: 1;
+}
+
+.TraceDiffGraph--uiFind--input {
+  width: 300px;
+  transition: ease 1s;
+  margin: 0px 3px;
+}
+
+.TraceDiffGraph--uiFind:not(:hover) > .TraceDiffGraph--uiFind--input:not(:focus) {
+  border: none;
+  padding: 0px;
+  width: 0;
+  margin: 0px;
+}
+
+.TraceDiffGraph--uiFind--icon {
+  cursor: pointer;
+  font-size: 32px;
+}
+
 /* DAG minimap */
 
 .TraceDiffGraph--miniMap {
