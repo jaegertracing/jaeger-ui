@@ -18,11 +18,11 @@ import * as React from 'react';
 import { Button, Input } from 'antd';
 
 import * as markers from './TracePageSearchBar.markers';
+import UIFindInput from '../../common/UIFindInput';
 
 import './TracePageSearchBar.css';
 
 type TracePageSearchBarProps = {
-  updateTextFilter: string => void,
   textFilter: string,
   prevResult: () => void,
   nextResult: () => void,
@@ -37,36 +37,31 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps) {
     nextResult,
     clearSearch,
     resultCount,
-    updateTextFilter,
     textFilter,
-    forwardedRef,
+    // forwardedRef,
   } = props;
 
   const count = textFilter ? <span className="TracePageSearchBar--count">{resultCount}</span> : null;
 
+  /*
   const updateFilter = event => updateTextFilter(event.target.value);
   const onKeyDown = e => {
     if (e.keyCode === 27) clearSearch();
   };
+  */
 
   const btnClass = `TracePageSearchBar--btn${textFilter ? '' : ' is-disabled'}`;
+  const uiFindInputInputProps = {
+    'data-test': markers.IN_TRACE_SEARCH,
+    placeholder: 'Search...',
+    suffix: count,
+  };
 
   return (
     <div className="ub-flex-auto ub-mx2 TracePageSearchBar">
       {/* style inline because compact overwrites the display */}
       <Input.Group compact style={{ display: 'flex' }}>
-        <Input
-          name="search"
-          className="TracePageSearchBar--bar ub-flex-auto"
-          placeholder="Search..."
-          onChange={updateFilter}
-          value={textFilter}
-          data-test={markers.IN_TRACE_SEARCH}
-          suffix={count}
-          ref={forwardedRef}
-          onKeyDown={onKeyDown}
-          onPressEnter={nextResult}
-        />
+        <UIFindInput inputProps={uiFindInputInputProps} />
         <Button className={btnClass} disabled={!textFilter} icon="up" onClick={prevResult} />
         <Button className={btnClass} disabled={!textFilter} icon="down" onClick={nextResult} />
         <Button className={btnClass} disabled={!textFilter} icon="close" onClick={clearSearch} />
@@ -80,3 +75,18 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps) {
 export default (React: any).forwardRef((props, ref) => (
   <TracePageSearchBarFn {...props} forwardedRef={ref} />
 ));
+
+/*
+ *
+        <Input
+          name="search"
+          className="TracePageSearchBar--bar ub-flex-auto"
+          placeholder="Search..."
+          onChange={updateFilter}
+          value={textFilter}
+          suffix={count}
+          ref={forwardedRef}
+          onKeyDown={onKeyDown}
+          onPressEnter={nextResult}
+        />
+        */

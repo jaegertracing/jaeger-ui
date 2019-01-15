@@ -31,7 +31,10 @@ limitations under the License.
 }
 
 .SpanDetail--debugValue {
+  background-color: inherit;
+  border: none;
   color: #888;
+  cursor: pointer;
 }
 
 .SpanDetail--debugValue:hover {

@@ -31,7 +31,7 @@ limitations under the License.
 .OpNode.is-graph-search-match {
   outline-style: solid;
   outline-color: #080;
-  outline-width: 1px;
+  outline-width: 2px;
 }
 
 .OpMode--mode-service {

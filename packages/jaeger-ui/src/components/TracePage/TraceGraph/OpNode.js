@@ -22,7 +22,7 @@ import _map from 'lodash/map';
 import _memoize from 'lodash/memoize';
 import { connect } from 'react-redux';
 
-import { mapStateToProps } from '../../common/GraphSearch';
+import { extractUIFindFromState } from '../../common/UIFindInput';
 import filterSpans from '../../../utils/filter-spans';
 import colorGenerator from '../../../utils/color-generator';
 
@@ -40,7 +40,7 @@ type Props = {
   operation: string,
   service: string,
   mode: string,
-  graphSearch: string,
+  uiFind: string,
   members: DenseSpan[],
 };
 
@@ -75,7 +75,7 @@ export default class OpNode extends React.PureComponent<Props> {
   props: Props;
   filterSpans: typeof filterSpans;
   static defaultProps = {
-    graphSearch: '',
+    uiFind: '',
   };
 
   constructor(props: Props) {
@@ -94,7 +94,7 @@ export default class OpNode extends React.PureComponent<Props> {
       operation,
       service,
       mode,
-      graphSearch,
+      uiFind,
     } = this.props;
 
     // Spans over 20 % time are full red - we have probably to reconsider better approach
@@ -112,7 +112,7 @@ export default class OpNode extends React.PureComponent<Props> {
     }
 
     const className = cx('OpNode', `OpNode--mode-${mode}`, {
-      'is-graph-search-match': _get(this.filterSpans(graphSearch, _map(this.props.members, 'span')), 'size'),
+      'is-graph-search-match': _get(this.filterSpans(uiFind, _map(this.props.members, 'span')), 'size'),
     });
 
     const table = (
@@ -152,7 +152,7 @@ export default class OpNode extends React.PureComponent<Props> {
   }
 }
 
-const ConnectedOpNode = connect(mapStateToProps)(OpNode);
+const ConnectedOpNode = connect(extractUIFindFromState)(OpNode);
 
 export function getNodeDrawer(mode: string) {
   return function drawNode<T>(vertex: PVertex<T>) {

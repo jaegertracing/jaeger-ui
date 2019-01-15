@@ -25,10 +25,12 @@ import SpanBarRow from './SpanBarRow';
 import DetailState from './SpanDetail/DetailState';
 import SpanDetailRow from './SpanDetailRow';
 import { findServerChildSpan, getViewedBounds, isErrorSpan, spanContainsErredSpan } from './utils';
+import { extractUIFindFromState } from '../../common/UIFindInput';
 import getLinks from '../../../model/link-patterns';
+import colorGenerator from '../../../utils/color-generator';
+
 import type { Accessors } from '../ScrollManager';
 import type { Log, Span, Trace, KeyValuePair } from '../../../types/trace';
-import colorGenerator from '../../../utils/color-generator';
 
 import './VirtualizedTraceView.css';
 
@@ -53,9 +55,10 @@ type VirtualizedTraceViewProps = {
   findMatchesIDs: Set<string>,
   registerAccessors: Accessors => void,
   setSpanNameColumnWidth: number => void,
-  setTrace: (?string) => void,
+  setTrace: (?Trace, ?string) => void,
   spanNameColumnWidth: number,
   trace: Trace,
+  uiFind: ?string,
 };
 
 // export for tests
@@ -134,9 +137,8 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
     this.clippingCssClasses = getCssClasses(currentViewRangeTime);
     this.rowStates = generateRowStates(trace.spans, childrenHiddenIDs, detailStates);
 
-    const { setTrace } = props;
-    const traceID = trace ? trace.traceID : null;
-    setTrace(traceID);
+    const { setTrace, uiFind } = props;
+    setTrace(trace, uiFind);
   }
 
   componentWillUpdate(nextProps: VirtualizedTraceViewProps) {
@@ -150,7 +152,7 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
       trace: nextTrace,
     } = nextProps;
     if (trace !== nextTrace) {
-      setTrace(nextTrace ? nextTrace.traceID : null);
+      setTrace(nextTrace /* ? nextTrace.traceID : null */);
     }
     if (trace !== nextTrace || childrenHiddenIDs !== nextHiddenIDs || detailStates !== nextDetailStates) {
       this.rowStates = nextTrace ? generateRowStates(nextTrace.spans, nextHiddenIDs, nextDetailStates) : [];
@@ -383,11 +385,10 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
 }
 
 /* istanbul ignore next */
-function mapStateToProps(state, ownProps) {
-  const traceTimeline = state.traceTimeline;
+function mapStateToProps(state) {
   return {
-    ...traceTimeline,
-    ...ownProps,
+    ...extractUIFindFromState(state),
+    ...state.traceTimeline,
   };
 }
 

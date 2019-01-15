@@ -16,7 +16,6 @@
 
 import cx from 'classnames';
 import _get from 'lodash/get';
-import _find from 'lodash/find';
 import React from 'react';
 import IoChevronRight from 'react-icons/lib/io/chevron-right';
 import IoIosArrowDown from 'react-icons/lib/io/ios-arrow-down';
@@ -24,6 +23,7 @@ import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 
 import { actions } from './duck';
+import spanAncestorIds from '../../../utils/span-ancestor-ids';
 
 import type { ReduxState } from '../../../types/index';
 import type { Span } from '../../../types/trace';
@@ -33,6 +33,7 @@ import './SpanTreeOffset.css';
 type SpanTreeOffsetPropsType = {
   addHoverIndentGuideId: string => void,
   childrenVisible: boolean,
+  hideIcon: ?true,
   hoverIndentGuideIds: Set<string>,
   onClick: ?() => void,
   removeHoverIndentGuideId: string => void,
@@ -51,14 +52,7 @@ export class UnconnectedSpanTreeOffset extends React.PureComponent<SpanTreeOffse
   constructor(props: SpanTreeOffsetPropsType) {
     super(props);
 
-    this.ancestorIds = [];
-    let currentSpan: Span = props.span;
-    while (currentSpan) {
-      currentSpan = _get(_find(currentSpan.references, { refType: 'CHILD_OF' }), 'span');
-      if (currentSpan) {
-        this.ancestorIds.push(currentSpan.spanID);
-      }
-    }
+    this.ancestorIds = spanAncestorIds(props.span);
 
     // Some traces have multiple root-level spans, this connects them all under one guideline and adds the
     // necessary padding for the collapse icon on root-level spans.
@@ -105,10 +99,10 @@ export class UnconnectedSpanTreeOffset extends React.PureComponent<SpanTreeOffse
   };
 
   render() {
-    const { childrenVisible, onClick, span } = this.props;
+    const { childrenVisible, hideIcon, onClick, span } = this.props;
     const { hasChildren, spanID } = span;
     const wrapperProps = hasChildren ? { onClick, role: 'switch', 'aria-checked': childrenVisible } : null;
-    const icon = hasChildren && (childrenVisible ? <IoIosArrowDown /> : <IoChevronRight />);
+    const icon = !hideIcon && hasChildren && (childrenVisible ? <IoIosArrowDown /> : <IoChevronRight />);
     return (
       <span className={`SpanTreeOffset ${hasChildren ? 'is-parent' : ''}`} {...wrapperProps}>
         {this.ancestorIds.map(ancestorId => (

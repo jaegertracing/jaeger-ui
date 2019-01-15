@@ -22,7 +22,7 @@ import _map from 'lodash/map';
 import _memoize from 'lodash/memoize';
 import { connect } from 'react-redux';
 
-import { mapStateToProps } from '../../common/GraphSearch';
+import { extractUIFindFromState } from '../../common/UIFindInput';
 import filterSpans from '../../../utils/filter-spans';
 
 import type { PVertex, DenseSpan } from '../../../model/trace-dag/types';
@@ -32,7 +32,7 @@ import './drawNode.css';
 type Props = {
   a: number,
   b: number,
-  graphSearch: string,
+  uiFind: string,
   members: DenseSpan[],
   operation: string,
   service: string,
@@ -45,7 +45,7 @@ class DiffNode extends React.PureComponent<Props> {
   props: Props;
   filterSpans: typeof filterSpans;
   static defaultProps = {
-    graphSearch: '',
+    uiFind: '',
   };
 
   constructor(props: Props) {
@@ -54,7 +54,7 @@ class DiffNode extends React.PureComponent<Props> {
   }
 
   render() {
-    const { a, b, graphSearch, operation, service } = this.props;
+    const { a, b, uiFind, operation, service } = this.props;
     const isSame = a === b;
     const className = cx({
       'is-same': isSame,
@@ -63,7 +63,7 @@ class DiffNode extends React.PureComponent<Props> {
       'is-added': a === 0,
       'is-less': a > b && b > 0,
       'is-removed': b === 0,
-      'is-graph-search-match': _get(this.filterSpans(graphSearch, _map(this.props.members, 'span')), 'size'),
+      'is-graph-search-match': _get(this.filterSpans(uiFind, _map(this.props.members, 'span')), 'size'),
     });
     const chgSign = a < b ? '+' : '-';
     const table = (
@@ -100,7 +100,7 @@ class DiffNode extends React.PureComponent<Props> {
   }
 }
 
-const ConnectedDiffNode = connect(mapStateToProps)(DiffNode);
+const ConnectedDiffNode = connect(extractUIFindFromState)(DiffNode);
 
 export default function drawNode<T>(vertex: PVertex<T>) {
   const { data, members, operation, service } = vertex.data;

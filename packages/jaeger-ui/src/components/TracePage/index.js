@@ -19,6 +19,7 @@ import { Input } from 'antd';
 import _clamp from 'lodash/clamp';
 import _get from 'lodash/get';
 import _mapValues from 'lodash/mapValues';
+import _memoize from 'lodash/memoize';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 
@@ -26,7 +27,7 @@ import type { Location, Match, RouterHistory } from 'react-router-dom';
 
 import ArchiveNotifier from './ArchiveNotifier';
 import { actions as archiveActions } from './ArchiveNotifier/duck';
-import { trackFilter, trackRange } from './index.track';
+import { trackRange } from './index.track';
 import { merge as mergeShortcuts, reset as resetShortcuts } from './keyboard-shortcuts';
 import { cancel as cancelScroll, scrollBy, scrollTo } from './scroll-page';
 import ScrollManager from './ScrollManager';
@@ -37,9 +38,11 @@ import TraceTimelineViewer from './TraceTimelineViewer';
 import { getLocation, getUrl } from './url';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
+import { extractUIFindFromState } from '../common/UIFindInput';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import { fetchedState } from '../../constants';
 import filterSpans from '../../utils/filter-spans';
+import updateUIFind from '../../utils/update-ui-find';
 
 import type { CombokeysHandler, ShortcutCallbacks } from './keyboard-shortcuts';
 import type { ViewRange, ViewRangeTimeUpdate } from './types';
@@ -61,14 +64,13 @@ type TracePageProps = {
   location: Location,
   searchUrl: null | string,
   trace: ?FetchedTrace,
+  uiFind: ?string,
 };
 
 type TracePageState = {
-  findMatchesIDs: ?Set<string>,
   headerHeight: ?number,
   slimView: boolean,
   traceGraphView: boolean,
-  textFilter: string,
   viewRange: ViewRange,
 };
 
@@ -106,6 +108,7 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
   state: TracePageState;
 
   _headerElm: ?Element;
+  filterSpans: typeof filterSpans;
   _searchBar: { current: Input | null };
   _scrollManager: ScrollManager;
 
@@ -113,10 +116,8 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
     super(props);
     const { embedded, trace } = props;
     this.state = {
-      findMatchesIDs: null,
       headerHeight: null,
       slimView: Boolean(embedded && embedded.timeline.collapseTitle),
-      textFilter: '',
       traceGraphView: false,
       viewRange: {
         time: {
@@ -125,6 +126,11 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
       },
     };
     this._headerElm = null;
+    this.filterSpans = _memoize(
+      filterSpans,
+      textFilter =>
+        `${textFilter} ${_get(this.props.trace, 'id')} ${_get(this.props.trace, 'data.spans.length')}`
+    );
     this._scrollManager = new ScrollManager(trace && trace.data, {
       scrollBy,
       scrollTo,
@@ -218,20 +224,14 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
     }
   };
 
-  updateTextFilter = (textFilter: string) => {
-    let findMatchesIDs;
-    if (textFilter.trim()) {
-      findMatchesIDs = filterSpans(textFilter, _get(this.props, 'trace.data.spans'));
-    } else {
-      findMatchesIDs = null;
-    }
-    trackFilter(textFilter);
-    this.setState({ textFilter, findMatchesIDs });
-  };
-
   clearSearch = () => {
-    this.updateTextFilter('');
-    if (this._searchBar.current) this._searchBar.current.blur();
+    const { history, location } = this.props;
+    const arg = {
+      history,
+      location,
+    };
+    // flow does not allow omitting optional kwargs when using an object literal.
+    updateUIFind(arg);
   };
 
   focusOnSearchBar = () => {
@@ -287,8 +287,16 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
   }
 
   render() {
-    const { archiveEnabled, archiveTraceState, embedded, id, searchUrl, trace } = this.props;
-    const { slimView, traceGraphView, headerHeight, textFilter, viewRange, findMatchesIDs } = this.state;
+    const {
+      archiveEnabled,
+      archiveTraceState,
+      embedded,
+      id,
+      searchUrl,
+      uiFind: textFilter,
+      trace,
+    } = this.props;
+    const { slimView, traceGraphView, headerHeight, viewRange } = this.state;
     if (!trace || trace.state === fetchedState.LOADING) {
       return <LoadingIndicator className="u-mt-vast" centered />;
     }
@@ -297,6 +305,7 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
       return <ErrorMessage className="ub-m3" error={trace.error || 'Unknown error'} />;
     }
 
+    const findMatchesIDs = this.filterSpans(textFilter || '', _get(trace, 'data.spans'));
     const isEmbedded = Boolean(embedded);
     const headerProps = {
       slimView,
@@ -322,7 +331,6 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
       toSearch: searchUrl,
       trace: data,
       updateNextViewRangeTime: this.updateNextViewRangeTime,
-      updateTextFilter: this.updateTextFilter,
       updateViewRangeTime: this.updateViewRangeTime,
     };
 
@@ -366,7 +374,9 @@ export function mapStateToProps(state: ReduxState, ownProps: { match: Match }) {
   const archiveEnabled = Boolean(config.archiveEnabled);
   const { state: locationState } = router.location;
   const searchUrl = (locationState && locationState.fromSearch) || null;
+
   return {
+    ...extractUIFindFromState(state),
     archiveEnabled,
     archiveTraceState,
     embedded,

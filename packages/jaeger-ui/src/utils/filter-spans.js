@@ -57,7 +57,8 @@ export default function filterSpans(textFilter: string, spans: ?(Span[])) {
     isTextInFilters(includeFilters, span.process.serviceName) ||
     isTextInKeyValues(span.tags) ||
     span.logs.some(log => isTextInKeyValues(log.fields)) ||
-    isTextInKeyValues(span.process.tags);
+    isTextInKeyValues(span.process.tags) ||
+    includeFilters.some(filter => filter === span.spanID);
 
   // declare as const because need to disambiguate the type
   const rv: Set<string> = new Set(spans.filter(isSpanAMatch).map((span: Span) => span.spanID));

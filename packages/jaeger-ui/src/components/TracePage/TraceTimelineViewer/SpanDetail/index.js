@@ -15,38 +15,52 @@
 // limitations under the License.
 
 import React from 'react';
-import { Divider } from 'antd';
+import { Divider, Tooltip } from 'antd';
+import cx from 'classnames';
+import { connect } from 'react-redux';
+import { withRouter } from 'react-router-dom';
+
+import type { Location, RouterHistory } from 'react-router-dom';
 
 import AccordianKeyValues from './AccordianKeyValues';
 import AccordianLogs from './AccordianLogs';
 import DetailState from './DetailState';
 import { formatDuration } from '../utils';
 import LabeledList from '../../../common/LabeledList';
+import { extractUIFindFromState } from '../../../common/UIFindInput';
+import updateUIFind from '../../../../utils/update-ui-find';
+
 import type { Log, Span, KeyValuePair, Link } from '../../../../types/trace';
 
 import './index.css';
 
 type SpanDetailProps = {
   detailState: DetailState,
+  history: RouterHistory,
   linksGetter: ?(KeyValuePair[], number) => Link[],
+  location: Location,
   logItemToggle: (string, Log) => void,
   logsToggle: string => void,
   processToggle: string => void,
   span: Span,
   tagsToggle: string => void,
   traceStartTime: number,
+  uiFind: string,
 };
 
-export default function SpanDetail(props: SpanDetailProps) {
+export function UnconnectedSpanDetail(props: SpanDetailProps) {
   const {
     detailState,
+    history,
     linksGetter,
+    location,
     logItemToggle,
     logsToggle,
     processToggle,
     span,
     tagsToggle,
     traceStartTime,
+    uiFind = '',
   } = props;
   const { isTagsOpen, isProcessOpen, logs: logsState } = detailState;
   const { operationName, process, duration, relativeStartTime, spanID, logs, tags } = span;
@@ -67,6 +81,17 @@ export default function SpanDetail(props: SpanDetailProps) {
       value: formatDuration(relativeStartTime),
     },
   ];
+
+  const addSpanIDToSearch = () => {
+    if (!uiFind.includes(spanID)) {
+      updateUIFind({
+        history,
+        location,
+        uiFind: cx(uiFind, spanID),
+      });
+    }
+  };
+
   return (
     <div>
       <div className="ub-flex ub-items-center">
@@ -112,10 +137,16 @@ export default function SpanDetail(props: SpanDetailProps) {
           )}
 
         <small className="SpanDetail--debugInfo">
-          <span className="SpanDetail--debugLabel" data-label="SpanID:" />{' '}
-          <span className="SpanDetail--debugValue">{spanID}</span>
+          <Tooltip title="Click ID to add to filter">
+            <span className="SpanDetail--debugLabel" data-label="SpanID:" />{' '}
+            <button className="SpanDetail--debugValue" onClick={addSpanIDToSearch}>
+              {spanID}
+            </button>
+          </Tooltip>
         </small>
       </div>
     </div>
   );
 }
+
+export default withRouter(connect(extractUIFindFromState)(UnconnectedSpanDetail));
