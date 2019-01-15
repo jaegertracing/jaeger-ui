@@ -33,7 +33,7 @@ import './SpanTreeOffset.css';
 type SpanTreeOffsetPropsType = {
   addHoverIndentGuideId: string => void,
   childrenVisible: boolean,
-  hideIcon: ?true,
+  hideIcon?: true,
   hoverIndentGuideIds: Set<string>,
   onClick: ?() => void,
   removeHoverIndentGuideId: string => void,
@@ -46,6 +46,7 @@ export class UnconnectedSpanTreeOffset extends React.PureComponent<SpanTreeOffse
 
   static defaultProps = {
     childrenVisible: false,
+    hideIcon: null,
     onClick: null,
   };
 

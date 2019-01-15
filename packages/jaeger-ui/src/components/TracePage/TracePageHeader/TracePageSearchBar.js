@@ -32,27 +32,15 @@ type TracePageSearchBarProps = {
 };
 
 export function TracePageSearchBarFn(props: TracePageSearchBarProps) {
-  const {
-    prevResult,
-    nextResult,
-    clearSearch,
-    resultCount,
-    textFilter,
-    // forwardedRef,
-  } = props;
+  const { prevResult, nextResult, clearSearch, forwardedRef, resultCount, textFilter } = props;
 
   const count = textFilter ? <span className="TracePageSearchBar--count">{resultCount}</span> : null;
-
-  /*
-  const updateFilter = event => updateTextFilter(event.target.value);
-  const onKeyDown = e => {
-    if (e.keyCode === 27) clearSearch();
-  };
-  */
 
   const btnClass = `TracePageSearchBar--btn${textFilter ? '' : ' is-disabled'}`;
   const uiFindInputInputProps = {
     'data-test': markers.IN_TRACE_SEARCH,
+    className: 'TracePageSearchBar--bar ub-flex-auto',
+    name: 'search',
     placeholder: 'Search...',
     suffix: count,
   };
@@ -61,7 +49,7 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps) {
     <div className="ub-flex-auto ub-mx2 TracePageSearchBar">
       {/* style inline because compact overwrites the display */}
       <Input.Group compact style={{ display: 'flex' }}>
-        <UIFindInput inputProps={uiFindInputInputProps} />
+        <UIFindInput inputProps={uiFindInputInputProps} forwardedRef={forwardedRef} />
         <Button className={btnClass} disabled={!textFilter} icon="up" onClick={prevResult} />
         <Button className={btnClass} disabled={!textFilter} icon="down" onClick={nextResult} />
         <Button className={btnClass} disabled={!textFilter} icon="close" onClick={clearSearch} />
@@ -75,18 +63,3 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps) {
 export default (React: any).forwardRef((props, ref) => (
   <TracePageSearchBarFn {...props} forwardedRef={ref} />
 ));
-
-/*
- *
-        <Input
-          name="search"
-          className="TracePageSearchBar--bar ub-flex-auto"
-          placeholder="Search..."
-          onChange={updateFilter}
-          value={textFilter}
-          suffix={count}
-          ref={forwardedRef}
-          onKeyDown={onKeyDown}
-          onPressEnter={nextResult}
-        />
-        */

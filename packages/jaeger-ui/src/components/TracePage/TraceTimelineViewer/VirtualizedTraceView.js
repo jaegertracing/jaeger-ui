@@ -133,11 +133,10 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
     super(props);
     // keep "prop derivations" on the instance instead of calculating in
     // `.render()` to avoid recalculating in every invocation of `.renderRow()`
-    const { currentViewRangeTime, childrenHiddenIDs, detailStates, trace } = props;
+    const { currentViewRangeTime, childrenHiddenIDs, detailStates, setTrace, trace, uiFind } = props;
     this.clippingCssClasses = getCssClasses(currentViewRangeTime);
     this.rowStates = generateRowStates(trace.spans, childrenHiddenIDs, detailStates);
 
-    const { setTrace, uiFind } = props;
     setTrace(trace, uiFind);
   }
 
@@ -152,7 +151,7 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
       trace: nextTrace,
     } = nextProps;
     if (trace !== nextTrace) {
-      setTrace(nextTrace /* ? nextTrace.traceID : null */);
+      setTrace(nextTrace);
     }
     if (trace !== nextTrace || childrenHiddenIDs !== nextHiddenIDs || detailStates !== nextDetailStates) {
       this.rowStates = nextTrace ? generateRowStates(nextTrace.spans, nextHiddenIDs, nextDetailStates) : [];

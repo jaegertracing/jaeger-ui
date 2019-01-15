@@ -52,7 +52,7 @@ limitations under the License.
   color: #fff;
 }
 
-.DiffNode.is-graph-search-match {
+.DiffNode.is-ui-find-match {
   outline-style: solid;
   outline-color: #080;
   outline-width: 2px;

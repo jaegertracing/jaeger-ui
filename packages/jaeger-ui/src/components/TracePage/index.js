@@ -108,7 +108,7 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
   state: TracePageState;
 
   _headerElm: ?Element;
-  filterSpans: typeof filterSpans;
+  _filterSpans: typeof filterSpans;
   _searchBar: { current: Input | null };
   _scrollManager: ScrollManager;
 
@@ -126,8 +126,10 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
       },
     };
     this._headerElm = null;
-    this.filterSpans = _memoize(
+    this._filterSpans = _memoize(
       filterSpans,
+      // Do not use the memo if the filter text or trace has changed.
+      // trace.data.spans is populated after the initial render via mutation.
       textFilter =>
         `${textFilter} ${_get(this.props.trace, 'id')} ${_get(this.props.trace, 'data.spans.length')}`
     );
@@ -232,6 +234,7 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
     };
     // flow does not allow omitting optional kwargs when using an object literal.
     updateUIFind(arg);
+    if (this._searchBar.current) this._searchBar.current.blur();
   };
 
   focusOnSearchBar = () => {
@@ -305,7 +308,7 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
       return <ErrorMessage className="ub-m3" error={trace.error || 'Unknown error'} />;
     }
 
-    const findMatchesIDs = this.filterSpans(textFilter || '', _get(trace, 'data.spans'));
+    const findMatchesIDs = this._filterSpans(textFilter || '', _get(trace, 'data.spans'));
     const isEmbedded = Boolean(embedded);
     const headerProps = {
       slimView,

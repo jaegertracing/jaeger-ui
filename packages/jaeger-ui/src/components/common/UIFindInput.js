@@ -15,7 +15,8 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { /* Icon, */ Input } from 'antd';
+import { Input } from 'antd';
+import cx from 'classnames';
 import _debounce from 'lodash/debounce';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
@@ -28,10 +29,10 @@ import updateUIFind from '../../utils/update-ui-find';
 import type { ReduxState } from '../../types/index';
 
 type propsType = {
-  inputProps?: Object,
+  forwardedRef?: { current: Input | null },
+  inputProps: Object,
   history: RouterHistory,
   location: Location,
-  registerUIFindInputRef?: () => void,
   uiFind?: string,
 };
 
@@ -41,8 +42,8 @@ type stateType = {
 
 export class UnconnectedUIFindInput extends React.PureComponent<propsType, stateType> {
   static defaultProps = {
+    forwardedRef: null,
     inputProps: {},
-    registerUIFindInputRef: null,
     uiFind: null,
   };
 
@@ -64,26 +65,27 @@ export class UnconnectedUIFindInput extends React.PureComponent<propsType, state
     this.setState({ ownInputValue: value });
   };
 
-  updateUIFindQueryParam = _debounce((uiFindQueryParam: ?string) => {
+  updateUIFindQueryParam = _debounce((uiFind: ?string) => {
     const { history, location } = this.props;
-    const arg = {
+    updateUIFind({
       location,
       history,
-      uiFind: uiFindQueryParam,
-    };
-    updateUIFind(arg);
+      uiFind,
+    });
   }, 250);
 
   render() {
     const inputValue =
       typeof this.state.ownInputValue === 'string' ? this.state.ownInputValue : this.props.uiFind;
+    const className = cx('UIFind--input', this.props.inputProps.className);
+
     return (
       <Input
         {...this.props.inputProps}
-        className="UIFind--input"
+        className={className}
         onBlur={this.handleInputBlur}
         onChange={this.handleInputChange}
-        ref={this.props.registerUIFindInputRef}
+        ref={this.props.forwardedRef}
         value={inputValue}
       />
     );

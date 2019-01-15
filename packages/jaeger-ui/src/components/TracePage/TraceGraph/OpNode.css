@@ -28,7 +28,7 @@ limitations under the License.
   border: none;
 }
 
-.OpNode.is-graph-search-match {
+.OpNode.is-ui-find-match {
   outline-style: solid;
   outline-color: #080;
   outline-width: 2px;

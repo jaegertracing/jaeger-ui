@@ -112,7 +112,7 @@ export default class OpNode extends React.PureComponent<Props> {
     }
 
     const className = cx('OpNode', `OpNode--mode-${mode}`, {
-      'is-graph-search-match': _get(this.filterSpans(uiFind, _map(this.props.members, 'span')), 'size'),
+      'is-ui-find-match': _get(this.filterSpans(uiFind, _map(this.props.members, 'span')), 'size'),
     });
 
     const table = (

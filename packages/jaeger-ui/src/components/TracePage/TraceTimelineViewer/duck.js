@@ -15,8 +15,8 @@
 import { createActions, handleActions } from 'redux-actions';
 
 import DetailState from './SpanDetail/DetailState';
-import generateActionTypes from '../../../utils/generate-action-types';
 import filterSpans from '../../../utils/filter-spans';
+import generateActionTypes from '../../../utils/generate-action-types';
 import spanAncestorIds from '../../../utils/span-ancestor-ids';
 
 // DetailState {
@@ -63,7 +63,7 @@ export const actionTypes = generateActionTypes('@jaeger-ui/trace-timeline-viewer
 ]);
 
 const fullActions = createActions({
-  [actionTypes.SET_TRACE]: (trace, uiFind) => ({ uiFind, trace }),
+  [actionTypes.SET_TRACE]: (trace, uiFind) => ({ trace, uiFind }),
   [actionTypes.SET_SPAN_NAME_COLUMN_WIDTH]: width => ({ width }),
   [actionTypes.CHILDREN_TOGGLE]: spanID => ({ spanID }),
   [actionTypes.EXPAND_ALL]: () => ({}),
@@ -91,6 +91,7 @@ function setTrace(state, { payload }) {
   const { spanNameColumnWidth } = state;
   const newStateValues = { spanNameColumnWidth, traceID };
 
+  // If there is a filter, collapse all rows except the path(s) to match(es) and show details for match(es)
   if (uiFind) {
     const spansMap = new Map();
 

@@ -149,7 +149,7 @@ describe('filterSpans', () => {
     expect(filterSpans('logFieldValue2', spans)).toEqual(new Set([spanID2]));
   });
 
-  it('should exclude span whose logs have a field whosekv.value or kv.key match a filter if the key matches an excludeKey', () => {
+  it('should exclude span whose logs have a field whose kv.value or kv.key match a filter if the key matches an excludeKey', () => {
     expect(filterSpans('logFieldValue1 -logFieldKey2', spans)).toEqual(new Set([spanID0]));
     expect(filterSpans('logFieldValue1 -logFieldKey1', spans)).toEqual(new Set([spanID2]));
   });

@@ -22,22 +22,22 @@ import UIFindInput from './UIFindInput';
 import './GraphSearch.css';
 
 export default class UnconnectedGraphSearch extends React.PureComponent<{}> {
-  uiFindInputRef: ?Input;
+  _uiFindInputRef: { current: Input | null };
+
+  constructor(props: {}) {
+    super(props);
+
+    this._uiFindInputRef = React.createRef();
+  }
 
   handleIconClick = () => {
-    if (this.uiFindInputRef) {
-      this.uiFindInputRef.focus();
-    }
-  };
-
-  registerUIFindInputRef = (ref: ?Input) => {
-    this.uiFindInputRef = ref;
+    if (this._uiFindInputRef.current) this._uiFindInputRef.current.focus();
   };
 
   render() {
     return (
       <div className="GraphSearch">
-        <UIFindInput registerUIFindInputRef={this.registerUIFindInputRef} />
+        <UIFindInput forwardedRef={this._uiFindInputRef} />
         <Icon className="GraphSearch--icon" onClick={this.handleIconClick} type="search" />
       </div>
     );

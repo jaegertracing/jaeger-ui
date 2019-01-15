@@ -63,7 +63,7 @@ class DiffNode extends React.PureComponent<Props> {
       'is-added': a === 0,
       'is-less': a > b && b > 0,
       'is-removed': b === 0,
-      'is-graph-search-match': _get(this.filterSpans(uiFind, _map(this.props.members, 'span')), 'size'),
+      'is-ui-find-match': _get(this.filterSpans(uiFind, _map(this.props.members, 'span')), 'size'),
     });
     const chgSign = a < b ? '+' : '-';
     const table = (
