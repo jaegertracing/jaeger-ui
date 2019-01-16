@@ -28,7 +28,7 @@ import updateUIFind from '../../utils/update-ui-find';
 
 import type { ReduxState } from '../../types/index';
 
-type propsType = {
+type PropsType = {
   forwardedRef?: { current: Input | null },
   inputProps: Object,
   history: RouterHistory,
@@ -36,23 +36,20 @@ type propsType = {
   uiFind?: string,
 };
 
-type stateType = {
+type StateType = {
   ownInputValue: ?string,
 };
 
-export class UnconnectedUIFindInput extends React.PureComponent<propsType, stateType> {
+export class UnconnectedUIFindInput extends React.PureComponent<PropsType, StateType> {
   static defaultProps = {
     forwardedRef: null,
     inputProps: {},
     uiFind: null,
   };
 
-  constructor(props: propsType) {
-    super(props);
-    this.state = {
-      ownInputValue: null,
-    };
-  }
+  state = {
+    ownInputValue: null,
+  };
 
   handleInputBlur = () => {
     this.updateUIFindQueryParam.flush();
