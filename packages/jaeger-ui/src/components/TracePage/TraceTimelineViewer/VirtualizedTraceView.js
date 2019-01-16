@@ -149,9 +149,10 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
       registerAccessors: nextRegisterAccessors,
       setTrace,
       trace: nextTrace,
+      uiFind,
     } = nextProps;
     if (trace !== nextTrace) {
-      setTrace(nextTrace);
+      setTrace(nextTrace, uiFind);
     }
     if (trace !== nextTrace || childrenHiddenIDs !== nextHiddenIDs || detailStates !== nextDetailStates) {
       this.rowStates = nextTrace ? generateRowStates(nextTrace.spans, nextHiddenIDs, nextDetailStates) : [];

@@ -63,7 +63,7 @@ describe('<SpanDetailRow>', () => {
   });
 
   it('renders the span tree offset', () => {
-    const spanTreeOffset = <SpanTreeOffset span={props.span} />;
+    const spanTreeOffset = <SpanTreeOffset hideIcon span={props.span} />;
     expect(wrapper.contains(spanTreeOffset)).toBe(true);
   });
 

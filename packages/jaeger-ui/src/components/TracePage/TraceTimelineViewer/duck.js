@@ -105,8 +105,8 @@ function setTrace(state, { payload }) {
 
     filterSpans(uiFind, spans).forEach(spanID => {
       const span = spansMap.get(spanID);
-      spanAncestorIds(span).forEach(ancestorID => newStateValues.childrenHiddenIDs.delete(ancestorID));
       newStateValues.detailStates.set(spanID, new DetailState());
+      spanAncestorIds(span).forEach(ancestorID => newStateValues.childrenHiddenIDs.delete(ancestorID));
     });
   }
 

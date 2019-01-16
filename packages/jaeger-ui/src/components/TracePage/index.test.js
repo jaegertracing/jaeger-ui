@@ -17,6 +17,8 @@
 jest.mock('./index.track');
 jest.mock('./keyboard-shortcuts');
 jest.mock('./scroll-page');
+jest.mock('../../utils/filter-spans');
+jest.mock('../../utils/update-ui-find');
 // mock these to enable mount()
 jest.mock('./TracePageHeader/SpanGraph');
 jest.mock('./TracePageHeader/TracePageHeader.track');
@@ -46,6 +48,8 @@ import LoadingIndicator from '../common/LoadingIndicator';
 import { fetchedState } from '../../constants';
 import traceGenerator from '../../demo/trace-generators';
 import transformTraceData from '../../model/transform-trace-data';
+import filterSpansSpy from '../../utils/filter-spans';
+import updateUIFindSpy from '../../utils/update-ui-find';
 
 describe('makeShortcutCallbacks()', () => {
   let adjRange;
@@ -75,15 +79,77 @@ describe('<TracePage>', () => {
 
   const trace = transformTraceData(traceGenerator.trace({}));
   const defaultProps = {
-    trace: { data: trace, state: fetchedState.DONE },
     fetchTrace() {},
     id: trace.traceID,
+    history: {
+      replace: () => {},
+    },
+    location: {
+      search: null,
+    },
+    trace: { data: trace, state: fetchedState.DONE },
   };
+  const notDefaultPropsId = `not ${defaultProps.id}`;
 
   let wrapper;
 
+  beforeAll(() => {
+    filterSpansSpy.mockReturnValue(new Set());
+  });
+
   beforeEach(() => {
     wrapper = shallow(<TracePage {...defaultProps} />);
+    filterSpansSpy.mockClear();
+    updateUIFindSpy.mockClear();
+  });
+
+  describe('clearSearch', () => {
+    it('calls updateUIFind with expected kwargs when clearing search', () => {
+      expect(updateUIFindSpy).not.toHaveBeenCalled();
+      wrapper.setProps({ id: notDefaultPropsId });
+      expect(updateUIFindSpy).toHaveBeenCalledWith({
+        history: defaultProps.history,
+        location: defaultProps.location,
+      });
+    });
+
+    it('blurs _searchBar.current when _searchBar.current exists', () => {
+      const blur = jest.fn();
+      wrapper.instance()._searchBar.current = {
+        blur,
+      };
+      wrapper.setProps({ id: notDefaultPropsId });
+      expect(blur).toHaveBeenCalledTimes(1);
+    });
+
+    it('handles null _searchBar.current', () => {
+      expect(wrapper.instance()._searchBar.current).toBe(null);
+      wrapper.setProps({ id: notDefaultPropsId });
+    });
+  });
+
+  it('uses props.uiFind, props.trace.traceID, and props.trace.spans.length to create filterSpans memo cache key', () => {
+    expect(filterSpansSpy).toHaveBeenCalledTimes(0);
+
+    const uiFind = 'uiFind';
+    wrapper.setProps({ uiFind });
+    // changing props.id is used to trigger renders without invalidating memo cache key
+    wrapper.setProps({ id: notDefaultPropsId });
+    expect(filterSpansSpy).toHaveBeenCalledTimes(1);
+    expect(filterSpansSpy).toHaveBeenLastCalledWith(uiFind, defaultProps.trace.data.spans);
+
+    const newTrace = { ...defaultProps.trace, traceID: `not-${defaultProps.trace.traceID}` };
+    wrapper.setProps({ trace: newTrace });
+    wrapper.setProps({ id: defaultProps.id });
+    expect(filterSpansSpy).toHaveBeenCalledTimes(2);
+    expect(filterSpansSpy).toHaveBeenLastCalledWith(uiFind, newTrace.data.spans);
+
+    // Mutating props is not advised, but emulates behavior done somewhere else
+    newTrace.data.spans.splice(0, newTrace.data.spans.length / 2);
+    wrapper.setProps({ id: notDefaultPropsId });
+    wrapper.setProps({ id: defaultProps.id });
+    expect(filterSpansSpy).toHaveBeenCalledTimes(3);
+    expect(filterSpansSpy).toHaveBeenLastCalledWith(uiFind, newTrace.data.spans);
   });
 
   it.skip('renders a <TracePageHeader>', () => {

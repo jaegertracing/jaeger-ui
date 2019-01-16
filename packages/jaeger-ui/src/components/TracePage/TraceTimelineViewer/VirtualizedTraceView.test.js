@@ -30,7 +30,6 @@ describe('<VirtualizedTraceViewImpl>', () => {
 
   const trace = transformTraceData(traceGenerator.trace({ numberOfSpans: 10 }));
   const props = {
-    trace,
     childrenHiddenIDs: new Set(),
     childrenToggle: jest.fn(),
     currentViewRangeTime: [0.25, 0.75],
@@ -45,6 +44,8 @@ describe('<VirtualizedTraceViewImpl>', () => {
     setSpanNameColumnWidth: jest.fn(),
     setTrace: jest.fn(),
     spanNameColumnWidth: 0.5,
+    trace,
+    uiFind: 'uiFind',
   };
 
   function expandRow(rowIndex) {
@@ -101,12 +102,12 @@ describe('<VirtualizedTraceViewImpl>', () => {
   });
 
   it('sets the trace for global state.traceTimeline', () => {
-    expect(props.setTrace.mock.calls).toEqual([[trace.traceID]]);
+    expect(props.setTrace.mock.calls).toEqual([[trace, props.uiFind]]);
     props.setTrace.mockReset();
     const traceID = 'some-other-id';
     const _trace = { ...trace, traceID };
     wrapper.setProps({ trace: _trace });
-    expect(props.setTrace.mock.calls).toEqual([[traceID]]);
+    expect(props.setTrace.mock.calls).toEqual([[_trace, props.uiFind]]);
   });
 
   describe('props.registerAccessors', () => {

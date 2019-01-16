@@ -131,7 +131,7 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
       // Do not use the memo if the filter text or trace has changed.
       // trace.data.spans is populated after the initial render via mutation.
       textFilter =>
-        `${textFilter} ${_get(this.props.trace, 'id')} ${_get(this.props.trace, 'data.spans.length')}`
+        `${textFilter} ${_get(this.props.trace, 'traceID')} ${_get(this.props.trace, 'data.spans.length')}`
     );
     this._scrollManager = new ScrollManager(trace && trace.data, {
       scrollBy,
@@ -228,11 +228,11 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
 
   clearSearch = () => {
     const { history, location } = this.props;
+    // flow does not allow omitting optional kwargs when using an object literal.
     const arg = {
       history,
       location,
     };
-    // flow does not allow omitting optional kwargs when using an object literal.
     updateUIFind(arg);
     if (this._searchBar.current) this._searchBar.current.blur();
   };
