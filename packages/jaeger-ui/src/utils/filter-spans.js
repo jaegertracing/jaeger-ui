@@ -26,9 +26,8 @@ export default function filterSpans(textFilter: string, spans: ?(Span[])) {
 
   // split textFilter by whitespace, remove empty strings, and extract includeFilters and excludeKeys
   textFilter
-    .split(' ')
-    .map(s => s.trim())
-    .filter(s => s)
+    .split(/\s+/)
+    .filter(Boolean)
     .forEach(w => {
       if (w[0] === '-') {
         excludeKeys.push(w.substr(1).toLowerCase());
