@@ -44,7 +44,8 @@ type AttrsProps = {
   totalSpans: ?number,
 };
 
-function EmptyAttrs() {
+// exported for tests
+export function EmptyAttrs() {
   return (
     <ul className="TraecDiffHeader--traceAttributes">
       <li className="TraecDiffHeader--traceAttr">&nbsp;</li>
@@ -52,7 +53,8 @@ function EmptyAttrs() {
   );
 }
 
-function Attrs(props: AttrsProps) {
+// exported for tests
+export function Attrs(props: AttrsProps) {
   const { startTime, duration, totalSpans } = props;
   return (
     <ul className="TraecDiffHeader--traceAttributes">

@@ -15,7 +15,7 @@
 import * as React from 'react';
 import { shallow } from 'enzyme';
 
-import TraceHeader from './TraceHeader';
+import TraceHeader, { Attrs, EmptyAttrs } from './TraceHeader';
 import { fetchedState } from '../../../constants';
 
 describe('TraceHeader', () => {
@@ -49,5 +49,21 @@ describe('TraceHeader', () => {
       traceID: null,
     });
     expect(wrapper.find('.u-tx-muted').text()).toBe('Select a Trace...');
+  });
+
+  describe('EmptyAttrs', () => {
+    it('renders as expected', () => {
+      expect(shallow(<EmptyAttrs />)).toMatchSnapshot();
+    });
+  });
+
+  describe('Attrs', () => {
+    it('renders as expected when provided props', () => {
+      expect(shallow(<Attrs duration={700} startTime={150} totalSpans={50} />)).toMatchSnapshot();
+    });
+
+    it('Attrs renders as expected when missing props', () => {
+      expect(shallow(<Attrs />)).toMatchSnapshot();
+    });
   });
 });
