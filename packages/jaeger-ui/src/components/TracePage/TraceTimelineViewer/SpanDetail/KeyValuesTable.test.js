@@ -14,11 +14,33 @@
 
 import React from 'react';
 import { shallow } from 'enzyme';
-import { Dropdown } from 'antd';
+import { Dropdown, Icon } from 'antd';
 
 import CopyIcon from '../../../common/CopyIcon';
 
 import KeyValuesTable, { LinkValue } from './KeyValuesTable';
+
+describe('LinkValue', () => {
+  const title = 'titleValue';
+  const href = 'hrefValue';
+  const childrenText = 'childrenTextValue';
+  const wrapper = shallow(
+    <LinkValue href={href} title={title}>
+      {childrenText}
+    </LinkValue>
+  );
+
+  it('renders as expected', () => {
+    expect(wrapper.find('a').prop('href')).toBe(href);
+    expect(wrapper.find('a').prop('title')).toBe(title);
+    expect(wrapper.find('a').text()).toMatch(/childrenText/);
+  });
+
+  it('renders correct Icon', () => {
+    expect(wrapper.find(Icon).hasClass('KeyValueTable--linkIcon')).toBe(true);
+    expect(wrapper.find(Icon).prop('type')).toBe('export');
+  });
+});
 
 describe('<KeyValuesTable>', () => {
   let wrapper;

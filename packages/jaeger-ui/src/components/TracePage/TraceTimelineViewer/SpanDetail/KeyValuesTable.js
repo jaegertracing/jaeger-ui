@@ -26,10 +26,7 @@ import './KeyValuesTable.css';
 
 function parseIfJson(value) {
   try {
-    const data = JSON.parse(value);
-    if (data && typeof data === 'object') {
-      return data;
-    }
+    return JSON.parse(value);
     // eslint-disable-next-line no-empty
   } catch (_) {}
   return value;
@@ -118,4 +115,3 @@ export default function KeyValuesTable(props: KeyValuesTableProps) {
     </div>
   );
 }
-// }
