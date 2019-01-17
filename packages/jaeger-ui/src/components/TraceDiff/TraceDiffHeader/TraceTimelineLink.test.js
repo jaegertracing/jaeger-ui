@@ -20,7 +20,11 @@ import NewWindowIcon from '../../common/NewWindowIcon.js';
 
 describe('TraceTimelinkLink', () => {
   const traceID = 'test-trace-id';
-  const wrapper = shallow(<TraceTimelineLink traceID={traceID} />);
+  let wrapper;
+
+  beforeEach(() => {
+    wrapper = shallow(<TraceTimelineLink traceID={traceID} />);
+  });
 
   it('renders the NewWindowIcon', () => {
     expect(wrapper.find(NewWindowIcon).length).toBe(1);
@@ -28,6 +32,12 @@ describe('TraceTimelinkLink', () => {
 
   it('links to the given trace', () => {
     expect(wrapper.find('a').prop('href')).toBe(`/trace/${traceID}`);
+  });
+
+  it('adds given className to link', () => {
+    const className = 'classNameValue';
+    wrapper.setProps({ className });
+    expect(wrapper.find('a').hasClass(className)).toBe(true);
   });
 
   it('stops event propagation', () => {
