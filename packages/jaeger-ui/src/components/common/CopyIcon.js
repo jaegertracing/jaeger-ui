@@ -19,23 +19,23 @@ import * as React from 'react';
 import { Icon, Tooltip } from 'antd';
 import { CopyToClipboard } from 'react-copy-to-clipboard';
 
-type propsType = {
+type PropsType = {
+  className?: string,
   copyText: string,
   tooltipTitle: string,
 };
 
-type stateType = {
+type StateType = {
   hasCopied: boolean,
 };
 
-export default class CopyIcon extends React.PureComponent<propsType, stateType> {
-  constructor(props: propsType) {
-    super(props);
-
-    this.state = {
-      hasCopied: false,
-    };
-  }
+export default class CopyIcon extends React.PureComponent<PropsType, StateType> {
+  static defaultProps = {
+    className: null,
+  };
+  state = {
+    hasCopied: false,
+  };
 
   handleClick = () => {
     this.setState({
@@ -44,7 +44,7 @@ export default class CopyIcon extends React.PureComponent<propsType, stateType> 
   };
 
   handleTooltipVisibilityChange = (visible: boolean) => {
-    if (!visible) {
+    if (!visible && this.state.hasCopied) {
       this.setState({
         hasCopied: false,
       });
@@ -61,7 +61,7 @@ export default class CopyIcon extends React.PureComponent<propsType, stateType> 
         title={this.state.hasCopied ? 'Copied' : this.props.tooltipTitle}
       >
         <CopyToClipboard text={this.props.copyText}>
-          <Icon onClick={this.handleClick} type="copy" />
+          <Icon className={this.props.className} onClick={this.handleClick} type="copy" />
         </CopyToClipboard>
       </Tooltip>
     );

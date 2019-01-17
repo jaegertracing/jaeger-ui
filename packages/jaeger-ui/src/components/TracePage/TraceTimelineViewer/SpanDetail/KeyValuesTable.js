@@ -18,7 +18,7 @@ import * as React from 'react';
 import jsonMarkup from 'json-markup';
 import { Dropdown, Icon, Menu } from 'antd';
 
-import CopyIcon from '../../../common/copy-icon';
+import CopyIcon from '../../../common/CopyIcon';
 
 import type { KeyValuePair, Link } from '../../../../types/trace';
 
@@ -104,9 +104,11 @@ export default function KeyValuesTable(props: KeyValuesTableProps) {
                 <td className="KeyValueTable--keyColumn">{row.key}</td>
                 <td>{valueMarkup}</td>
                 <td className="KeyValueTable--copyColumn">
-                  <div className="KeyValueTable--copyIcon">
-                    <CopyIcon copyText={JSON.stringify(row, null, 2)} tooltipTitle="Copy JSON" />
-                  </div>
+                  <CopyIcon
+                    className="KeyValueTable--copyIcon"
+                    copyText={JSON.stringify(row, null, 2)}
+                    tooltipTitle="Copy JSON"
+                  />
                 </td>
               </tr>
             );

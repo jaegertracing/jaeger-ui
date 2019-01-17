@@ -72,16 +72,13 @@ limitations under the License.
 
 .DiffNode--labelCell {
   padding: 0.3rem 0.5rem 0.3rem 0.75rem;
+  display: flex;
+  justify-content: space-between;
 }
 
 .DiffNode--popover .DiffNode--copyIcon,
 .DiffNode:not(:hover) .DiffNode--copyIcon {
   display: none;
-}
-
-.DiffNode--labelCell {
-  display: flex;
-  justify-content: space-between;
 }
 
 /* Tweak the popover aesthetics - unfortunate but necessary */

@@ -16,7 +16,7 @@ import React from 'react';
 import { shallow } from 'enzyme';
 import { Dropdown } from 'antd';
 
-import CopyIcon from '../../../common/copy-icon';
+import CopyIcon from '../../../common/CopyIcon';
 
 import KeyValuesTable, { LinkValue } from './KeyValuesTable';
 

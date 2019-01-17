@@ -16,7 +16,7 @@ import React from 'react';
 import { shallow } from 'enzyme';
 
 import OpNode, { getNodeDrawer, MODE_SERVICE, MODE_TIME, MODE_SELFTIME } from './OpNode';
-import CopyIcon from '../../common/copy-icon';
+import CopyIcon from '../../common/CopyIcon';
 
 describe('<OpNode>', () => {
   let wrapper;
