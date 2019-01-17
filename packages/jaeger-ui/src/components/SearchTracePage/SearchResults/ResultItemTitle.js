@@ -34,7 +34,7 @@ type Props = {
   isInDiffCohort: boolean,
   linkTo: ?string,
   state: ?FetchedState,
-  targetBlank: ?boolean,
+  targetBlank?: boolean,
   toggleComparison: (string, boolean) => void,
   traceID: string,
   traceName: string,

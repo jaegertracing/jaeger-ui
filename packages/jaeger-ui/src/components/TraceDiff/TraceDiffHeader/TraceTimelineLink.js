@@ -15,9 +15,14 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Icon } from 'antd';
 
-type propsType = {
+import { getUrl } from '../../TracePage/url';
+import NewWindowIcon from '../../common/NewWindowIcon.js';
+
+import './TraceTimelineLink.css';
+
+type PropsType = {
+  className?: string | null,
   traceID: string,
 };
 
@@ -25,10 +30,20 @@ function stopPropagation(event: SyntheticMouseEvent<HTMLAnchorElement>) {
   event.stopPropagation();
 }
 
-export default function TraceTimelineLink({ traceID }: propsType) {
+export default function TraceTimelineLink({ className, traceID }: PropsType) {
   return (
-    <a href={`/trace/${traceID}`} onClick={stopPropagation} rel="noopener noreferrer" target="_blank">
-      <Icon type="link" />
+    <a
+      className={className}
+      href={getUrl(traceID)}
+      onClick={stopPropagation}
+      rel="noopener noreferrer"
+      target="_blank"
+    >
+      <NewWindowIcon className="TraceTimelineLink--icon" />
     </a>
   );
 }
+
+TraceTimelineLink.defaultProps = {
+  className: null,
+};

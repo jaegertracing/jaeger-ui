@@ -14,16 +14,16 @@
 
 import * as React from 'react';
 import { shallow } from 'enzyme';
-import { Icon } from 'antd';
 
 import TraceTimelineLink from './TraceTimelineLink';
+import NewWindowIcon from '../../common/NewWindowIcon.js';
 
 describe('TraceTimelinkLink', () => {
   const traceID = 'test-trace-id';
   const wrapper = shallow(<TraceTimelineLink traceID={traceID} />);
 
-  it('renders the correct icon', () => {
-    expect(wrapper.find(Icon).prop('type')).toBe('link');
+  it('renders the NewWindowIcon', () => {
+    expect(wrapper.find(NewWindowIcon).length).toBe(1);
   });
 
   it('links to the given trace', () => {

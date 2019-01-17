@@ -115,7 +115,7 @@ export default class CohortTable extends React.PureComponent<Props> {
         <Column
           title="Date"
           dataIndex="data.startTime"
-          key="lastName"
+          key="startTime"
           render={(value, record) =>
             record.state === fetchedState.DONE && (
               <RelativeDate fullMonthName includeTime value={value / 1000} />
@@ -125,13 +125,13 @@ export default class CohortTable extends React.PureComponent<Props> {
         <Column
           title="Duration"
           dataIndex="data.duration"
-          key="age"
+          key="duration"
           render={(value, record) => record.state === fetchedState.DONE && formatDuration(value)}
         />
-        <Column title="Spans" dataIndex="data.spans.length" key="address" />
+        <Column title="Spans" dataIndex="data.spans.length" key="spans" />
         <Column
           title="Link"
-          className="CohortTable--linkColumn"
+          className="ub-tx-center"
           dataIndex="data.traceID"
           key="link"
           render={value => <TraceTimelineLink traceID={value} />}

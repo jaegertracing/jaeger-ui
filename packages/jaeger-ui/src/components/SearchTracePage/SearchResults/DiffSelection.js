@@ -20,6 +20,7 @@ import { Link } from 'react-router-dom';
 
 import ResultItemTitle from './ResultItemTitle';
 import { getUrl } from '../../TraceDiff/url';
+import { getUrl as getTracePageUrl } from '../../TracePage/url';
 import { fetchedState } from '../../../constants';
 
 import type { FetchedTrace } from '../../../types';
@@ -57,7 +58,7 @@ export default class DiffSelection extends React.PureComponent<Props> {
                   duration={data.duration}
                   error={error}
                   isInDiffCohort
-                  linkTo={`/trace/${id}`}
+                  linkTo={getTracePageUrl(id)}
                   state={state}
                   targetBlank
                   toggleComparison={toggleComparison}

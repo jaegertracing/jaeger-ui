@@ -27,13 +27,10 @@ exports[`TraceHeader renders as expected 1`] = `
         >
           trace-i
         </small>
-        <span
+        <TraceTimelineLink
           className="TraceDiffHeader--link"
-        >
-          <TraceTimelineLink
-            traceID="trace-id"
-          />
-        </span>
+          traceID="trace-id"
+        />
       </React.Fragment>
     </span>
     <IoChevronDown
@@ -75,13 +72,10 @@ exports[`TraceHeader renders populated attrs component when props.state === fetc
         >
           trace-i
         </small>
-        <span
+        <TraceTimelineLink
           className="TraceDiffHeader--link"
-        >
-          <TraceTimelineLink
-            traceID="trace-id"
-          />
-        </span>
+          traceID="trace-id"
+        />
       </React.Fragment>
     </span>
     <IoChevronDown
