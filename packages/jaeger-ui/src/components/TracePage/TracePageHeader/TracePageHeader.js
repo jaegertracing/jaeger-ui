@@ -196,7 +196,7 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps) {
             target="_blank"
             rel="noopener noreferrer"
           >
-            <NewWindowIcon />
+            <NewWindowIcon isLarge />
           </Link>
         )}
       </div>
