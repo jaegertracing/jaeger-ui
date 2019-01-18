@@ -44,12 +44,8 @@ limitations under the License.
   text-align: right;
 }
 
-.KeyValueTable--copyIcon {
-  visibility: hidden;
-}
-
-.KeyValueTable--row:hover > .KeyValueTable--copyColumn > .KeyValueTable--copyIcon {
-  visibility: unset;
+.KeyValueTable--row:not(:hover) > .KeyValueTable--copyColumn > .KeyValueTable--copyIcon {
+  display: none;
 }
 
 .KeyValueTable--row > td {
