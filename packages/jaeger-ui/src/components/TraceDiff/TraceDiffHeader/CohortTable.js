@@ -130,7 +130,6 @@ export default class CohortTable extends React.PureComponent<Props> {
         />
         <Column title="Spans" dataIndex="data.spans.length" key="spans" />
         <Column
-          title="Link"
           className="ub-tx-center"
           dataIndex="data.traceID"
           key="link"

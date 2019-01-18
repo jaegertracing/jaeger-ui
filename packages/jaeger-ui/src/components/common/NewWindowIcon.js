@@ -15,20 +15,21 @@
 // limitations under the License.
 
 import React from 'react';
+import cx from 'classnames';
 import IoAndroidOpen from 'react-icons/lib/io/android-open';
 
 import './NewWindowIcon.css';
 
 type Props = {
-  className?: string,
+  isLarge?: boolean,
 };
 
 export default function NewWindowIcon(props: Props) {
-  const { className, ...rest } = props;
-  const cls = `NewWindowIcon ${className || ''}`;
+  const { isLarge, ...rest } = props;
+  const cls = cx('NewWindowIcon', { 'is-large': isLarge });
   return <IoAndroidOpen className={cls} {...rest} />;
 }
 
 NewWindowIcon.defaultProps = {
-  className: undefined,
+  isLarge: false,
 };

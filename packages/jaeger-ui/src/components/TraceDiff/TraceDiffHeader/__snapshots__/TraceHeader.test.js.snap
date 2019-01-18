@@ -106,30 +106,28 @@ exports[`TraceHeader renders as expected 1`] = `
     className="TraecDiffHeader--traceTitle"
   >
     <span>
-      <React.Fragment>
-        <TraceName
-          className=""
-          error={
-            Object {
-              "errorKey": "errorValue",
-            }
+      <TraceName
+        className=""
+        error={
+          Object {
+            "errorKey": "errorValue",
           }
-          key="name"
-          state={null}
-          traceName="trace name"
-        />
-         
-        <small
-          className="u-tx-muted"
-          key="id"
-        >
-          trace-i
-        </small>
-        <TraceTimelineLink
-          className="TraceDiffHeader--link"
-          traceID="trace-id"
-        />
-      </React.Fragment>
+        }
+        key="name"
+        state={null}
+        traceName="trace name"
+      />
+       
+      <small
+        className="u-tx-muted ub-pr2"
+        key="id"
+      >
+        trace-i
+      </small>
+      <TraceTimelineLink
+        className={null}
+        traceID="trace-id"
+      />
     </span>
     <IoChevronDown
       className="TraecDiffHeader--traceTitleChevron"
@@ -151,30 +149,28 @@ exports[`TraceHeader renders populated attrs component when props.state === fetc
     className="TraecDiffHeader--traceTitle"
   >
     <span>
-      <React.Fragment>
-        <TraceName
-          className=""
-          error={
-            Object {
-              "errorKey": "errorValue",
-            }
+      <TraceName
+        className=""
+        error={
+          Object {
+            "errorKey": "errorValue",
           }
-          key="name"
-          state="FETCH_DONE"
-          traceName="trace name"
-        />
-         
-        <small
-          className="u-tx-muted"
-          key="id"
-        >
-          trace-i
-        </small>
-        <TraceTimelineLink
-          className="TraceDiffHeader--link"
-          traceID="trace-id"
-        />
-      </React.Fragment>
+        }
+        key="name"
+        state="FETCH_DONE"
+        traceName="trace name"
+      />
+       
+      <small
+        className="u-tx-muted ub-pr2"
+        key="id"
+      >
+        trace-i
+      </small>
+      <TraceTimelineLink
+        className={null}
+        traceID="trace-id"
+      />
     </span>
     <IoChevronDown
       className="TraecDiffHeader--traceTitleChevron"

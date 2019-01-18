@@ -84,10 +84,10 @@ export default function TraceHeader(props: Props) {
           {traceID ? (
             <React.Fragment>
               <TraceName key="name" traceName={traceName} error={error} state={state} />{' '}
-              <small key="id" className="u-tx-muted">
+              <small key="id" className="u-tx-muted ub-pr2">
                 {traceID.slice(0, 7)}
               </small>
-              <TraceTimelineLink className="TraceDiffHeader--link" traceID={traceID} />
+              <TraceTimelineLink traceID={traceID} />
             </React.Fragment>
           ) : (
             <span className="u-tx-muted">Select a Trace...</span>

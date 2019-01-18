@@ -85,10 +85,12 @@ describe('ResultItemTitle', () => {
       expect(wrapper.find(Link).length).toBe(0);
     });
 
-    it('<Link> targets _blank when targetBlank is true', () => {
+    it('<Link> targets _blank and sets rel when targetBlank is true', () => {
       expect(wrapper.find(Link).prop('target')).toBeUndefined();
+      expect(wrapper.find(Link).prop('rel')).toBeUndefined();
       wrapper.setProps({ targetBlank: true });
       expect(wrapper.find(Link).prop('target')).toBe('_blank');
+      expect(wrapper.find(Link).prop('rel')).toBe('noopener noreferrer');
     });
 
     it('hides formated duration when duration is not provided', () => {

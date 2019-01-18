@@ -17,6 +17,7 @@ import { shallow } from 'enzyme';
 
 import DiffSelection, { CTA_MESSAGE } from './DiffSelection.js';
 import ResultItemTitle from './ResultItemTitle';
+import { fetchedState } from '../../../constants';
 
 describe('DiffSelection', () => {
   const toggleComparison = () => {};
@@ -28,17 +29,19 @@ describe('DiffSelection', () => {
         traceName: 'trace-name-0',
       },
       error: new Error('error-0'),
-      state: {
-        stateKey: 'stateValue0',
-      },
+      state: fetchedState.DONE,
     },
     {
       id: 'trace-id-1',
       // deliberately missing data to test default
       error: new Error('error-1'),
-      state: {
-        stateKey: 'stateValue1',
-      },
+      state: fetchedState.DONE,
+    },
+    {
+      id: 'trace-id-2',
+      // deliberately missing data to test default
+      error: new Error('error-2'),
+      state: fetchedState.ERROR,
     },
   ];
 

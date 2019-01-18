@@ -79,6 +79,7 @@ export default class ResultItemTitle extends React.PureComponent<Props> {
       wrapperProps.to = linkTo;
       if (targetBlank) {
         wrapperProps.target = '_blank';
+        wrapperProps.rel = 'noopener noreferrer';
       }
     }
     const isErred = state === fetchedState.ERROR;

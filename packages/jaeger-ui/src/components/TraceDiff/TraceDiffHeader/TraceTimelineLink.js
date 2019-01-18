@@ -19,8 +19,6 @@ import * as React from 'react';
 import { getUrl } from '../../TracePage/url';
 import NewWindowIcon from '../../common/NewWindowIcon.js';
 
-import './TraceTimelineLink.css';
-
 type PropsType = {
   className?: string | null,
   traceID: string,
@@ -39,7 +37,7 @@ export default function TraceTimelineLink({ className, traceID }: PropsType) {
       rel="noopener noreferrer"
       target="_blank"
     >
-      <NewWindowIcon className="TraceTimelineLink--icon" />
+      <NewWindowIcon />
     </a>
   );
 }
