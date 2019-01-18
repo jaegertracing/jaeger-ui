@@ -32,7 +32,7 @@ type Props = {
   traces: FetchedTrace[],
 };
 
-// Exported for tsets
+// Exported for tests
 export const CTA_MESSAGE = <h2 className="ub-m0">Compare traces by selecting result items</h2>;
 
 export default class DiffSelection extends React.PureComponent<Props> {

@@ -20,7 +20,6 @@ import { getUrl } from '../../TracePage/url';
 import NewWindowIcon from '../../common/NewWindowIcon.js';
 
 type PropsType = {
-  className?: string | null,
   traceID: string,
 };
 
@@ -28,20 +27,10 @@ function stopPropagation(event: SyntheticMouseEvent<HTMLAnchorElement>) {
   event.stopPropagation();
 }
 
-export default function TraceTimelineLink({ className, traceID }: PropsType) {
+export default function TraceTimelineLink({ traceID }: PropsType) {
   return (
-    <a
-      className={className}
-      href={getUrl(traceID)}
-      onClick={stopPropagation}
-      rel="noopener noreferrer"
-      target="_blank"
-    >
+    <a href={getUrl(traceID)} onClick={stopPropagation} rel="noopener noreferrer" target="_blank">
       <NewWindowIcon />
     </a>
   );
 }
-
-TraceTimelineLink.defaultProps = {
-  className: null,
-};

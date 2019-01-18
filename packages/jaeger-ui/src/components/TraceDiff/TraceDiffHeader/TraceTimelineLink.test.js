@@ -34,12 +34,6 @@ describe('TraceTimelineLink', () => {
     expect(wrapper.find('a').prop('href')).toBe(`/trace/${traceID}`);
   });
 
-  it('adds given className to link', () => {
-    const className = 'classNameValue';
-    wrapper.setProps({ className });
-    expect(wrapper.find('a').hasClass(className)).toBe(true);
-  });
-
   it('stops event propagation', () => {
     const stopPropagation = jest.fn();
     wrapper.find('a').simulate('click', { stopPropagation });
