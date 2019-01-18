@@ -18,7 +18,7 @@ import { shallow } from 'enzyme';
 import TraceTimelineLink from './TraceTimelineLink';
 import NewWindowIcon from '../../common/NewWindowIcon.js';
 
-describe('TraceTimelinkLink', () => {
+describe('TraceTimelineLink', () => {
   const traceID = 'test-trace-id';
   let wrapper;
 

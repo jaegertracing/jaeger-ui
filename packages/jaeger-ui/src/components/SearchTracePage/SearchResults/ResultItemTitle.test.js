@@ -79,7 +79,7 @@ describe('ResultItemTitle', () => {
   });
 
   describe('WrapperComponent', () => {
-    it('render <Link> when linkTo is provided', () => {
+    it('renders <Link> when linkTo is provided', () => {
       expect(wrapper.find(Link).length).toBe(1);
       wrapper.setProps({ linkTo: null });
       expect(wrapper.find(Link).length).toBe(0);
