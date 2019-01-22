@@ -34,6 +34,7 @@ type Props = {
   isInDiffCohort: boolean,
   linkTo: ?string,
   state: ?FetchedState,
+  targetBlank?: boolean,
   toggleComparison: (string, boolean) => void,
   traceID: string,
   traceName: string,
@@ -47,8 +48,9 @@ export default class ResultItemTitle extends React.PureComponent<Props> {
     disableComparision: false,
     durationPercent: 0,
     error: undefined,
-    state: fetchedState.DONE,
     linkTo: null,
+    targetBlank: false,
+    state: fetchedState.DONE,
   };
 
   toggleComparison = () => {
@@ -58,15 +60,16 @@ export default class ResultItemTitle extends React.PureComponent<Props> {
 
   render() {
     const {
+      disableComparision,
       duration,
       durationPercent,
       error,
       isInDiffCohort,
       linkTo,
       state,
+      targetBlank,
       traceID,
       traceName,
-      disableComparision,
     } = this.props;
     // Use a div when the ResultItemTitle doesn't link to anything
     let WrapperComponent = 'div';
@@ -74,6 +77,10 @@ export default class ResultItemTitle extends React.PureComponent<Props> {
     if (linkTo) {
       WrapperComponent = Link;
       wrapperProps.to = linkTo;
+      if (targetBlank) {
+        wrapperProps.target = '_blank';
+        wrapperProps.rel = 'noopener noreferrer';
+      }
     }
     const isErred = state === fetchedState.ERROR;
     return (

@@ -46,6 +46,16 @@ limitations under the License.
   padding: 0.3rem 0.5rem 0.3rem 0.75rem;
 }
 
+.OpNode--popover .OpNode--copyIcon,
+.OpNode:not(:hover) .OpNode--copyIcon {
+  display: none;
+}
+
+.OpNode--service {
+  display: flex;
+  justify-content: space-between;
+}
+
 /* Tweak the popover aesthetics - unfortunate but necessary */
 
 .OpNode--popover .ant-popover-inner-content {
