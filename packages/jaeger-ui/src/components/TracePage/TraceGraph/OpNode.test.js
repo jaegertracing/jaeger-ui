@@ -17,6 +17,7 @@ import { shallow } from 'enzyme';
 import _map from 'lodash/map';
 
 import OpNode, { getNodeDrawer, MODE_SERVICE, MODE_TIME, MODE_SELFTIME } from './OpNode';
+import CopyIcon from '../../common/CopyIcon';
 import filterSpansMock from '../../../utils/filter-spans';
 
 jest.mock('../../../utils/filter-spans');
@@ -55,7 +56,12 @@ describe('<OpNode>', () => {
     expect(wrapper.find('.OpNode--avg').text()).toBe('40 ms');
     expect(wrapper.find('.OpNode--selfTime').text()).toBe('180 ms (90 %)');
     expect(wrapper.find('.OpNode--op').text()).toBe('op1');
-    expect(wrapper.find('.OpNode--service').text()).toBe('service1');
+    expect(
+      wrapper
+        .find('.OpNode--service')
+        .find('strong')
+        .text()
+    ).toBe('service1');
   });
 
   it('switches mode', () => {
@@ -85,6 +91,13 @@ describe('<OpNode>', () => {
     wrapper.setProps({ uiFind });
     expect(wrapper.find('.is-ui-find-match').length).toBe(1);
     expect(filterSpansMock).toHaveBeenLastCalledWith(uiFind, _map(props.members, 'span'));
+  });
+
+  it('renders a copy icon', () => {
+    const copyIcon = wrapper.find(CopyIcon);
+    expect(copyIcon.length).toBe(1);
+    expect(copyIcon.prop('copyText')).toBe(`${props.service} ${props.operation}`);
+    expect(copyIcon.prop('tooltipTitle')).toBe('Copy label');
   });
 
   describe('getNodeDrawer()', () => {
