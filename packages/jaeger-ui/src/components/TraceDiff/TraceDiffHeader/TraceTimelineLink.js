@@ -1,6 +1,6 @@
 // @flow
 
-// Copyright (c) 2018 Uber Technologies, Inc.
+// Copyright (c) 2019 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,22 +14,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import React from 'react';
-import cx from 'classnames';
-import IoAndroidOpen from 'react-icons/lib/io/android-open';
+import * as React from 'react';
 
-import './NewWindowIcon.css';
+import { getUrl } from '../../TracePage/url';
+import NewWindowIcon from '../../common/NewWindowIcon.js';
 
-type Props = {
-  isLarge?: boolean,
+type PropsType = {
+  traceID: string,
 };
 
-export default function NewWindowIcon(props: Props) {
-  const { isLarge, ...rest } = props;
-  const cls = cx('NewWindowIcon', { 'is-large': isLarge });
-  return <IoAndroidOpen className={cls} {...rest} />;
+function stopPropagation(event: SyntheticMouseEvent<HTMLAnchorElement>) {
+  event.stopPropagation();
 }
 
-NewWindowIcon.defaultProps = {
-  isLarge: false,
-};
+export default function TraceTimelineLink({ traceID }: PropsType) {
+  return (
+    <a href={getUrl(traceID)} onClick={stopPropagation} rel="noopener noreferrer" target="_blank">
+      <NewWindowIcon />
+    </a>
+  );
+}

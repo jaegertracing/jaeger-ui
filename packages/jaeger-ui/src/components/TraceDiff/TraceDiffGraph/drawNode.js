@@ -22,6 +22,7 @@ import _map from 'lodash/map';
 import _memoize from 'lodash/memoize';
 import { connect } from 'react-redux';
 
+import CopyIcon from '../../common/CopyIcon';
 import { extractUIFindFromState } from '../../common/UIFindInput';
 import filterSpans from '../../../utils/filter-spans';
 
@@ -76,6 +77,11 @@ class DiffNode extends React.PureComponent<Props> {
             </td>
             <td className={`DiffNode--labelCell ${className}`}>
               <strong>{service}</strong>
+              <CopyIcon
+                className="DiffNode--copyIcon"
+                copyText={`${service} ${operation}`}
+                tooltipTitle="Copy label"
+              />
             </td>
           </tr>
           <tr>

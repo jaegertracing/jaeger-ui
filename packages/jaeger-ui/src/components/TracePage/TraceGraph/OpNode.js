@@ -22,9 +22,10 @@ import _map from 'lodash/map';
 import _memoize from 'lodash/memoize';
 import { connect } from 'react-redux';
 
+import CopyIcon from '../../common/CopyIcon';
 import { extractUIFindFromState } from '../../common/UIFindInput';
-import filterSpans from '../../../utils/filter-spans';
 import colorGenerator from '../../../utils/color-generator';
+import filterSpans from '../../../utils/filter-spans';
 
 import type { PVertex, DenseSpan } from '../../../model/trace-dag/types';
 
@@ -128,6 +129,11 @@ export default class OpNode extends React.PureComponent<Props> {
             </td>
             <td className="OpNode--labelCell OpNode--service">
               <strong>{service}</strong>
+              <CopyIcon
+                className="OpNode--copyIcon"
+                copyText={`${service} ${operation}`}
+                tooltipTitle="Copy label"
+              />
             </td>
             <td className="OpNode--metricCell OpNode--avg">{round2(time / 1000 / count)} ms</td>
           </tr>

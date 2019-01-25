@@ -165,7 +165,7 @@ export default class SearchResults extends React.PureComponent<SearchResultsProp
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <NewWindowIcon />
+                  <NewWindowIcon isLarge />
                 </Link>
               )}
             </div>

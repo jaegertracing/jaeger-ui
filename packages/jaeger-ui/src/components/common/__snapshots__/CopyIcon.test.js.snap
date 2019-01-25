@@ -1,0 +1,25 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`<CopyIcon /> renders as expected 1`] = `
+<Tooltip
+  arrowPointAtCenter={true}
+  autoAdjustOverflow={true}
+  mouseEnterDelay={0.1}
+  mouseLeaveDelay={0.5}
+  onVisibleChange={[Function]}
+  placement="left"
+  prefixCls="ant-tooltip"
+  title="tooltipTitleValue"
+  transitionName="zoom-big-fast"
+>
+  <CopyToClipboard
+    text="copyTextValue"
+  >
+    <Icon
+      className="classNameValue"
+      onClick={[Function]}
+      type="copy"
+    />
+  </CopyToClipboard>
+</Tooltip>
+`;
