@@ -76,10 +76,9 @@ export default class TraceDiffHeader extends React.PureComponent<Props, State> {
     const { tableVisible } = this.state;
     const { data: aData = {}, id: aId, state: aState, error: aError } = a || {};
     const { data: bData = {}, id: bId, state: bState, error: bError } = b || {};
-    const selection = {
-      [aId || '_']: { label: 'A' },
-      [bId || '__']: { label: 'B' },
-    };
+    const selection = {};
+    if (aId) selection[aId] = { label: 'A' };
+    if (bId) selection[bId] = { label: 'B' };
     const cohortTableA = (
       <CohortTable cohort={cohort} current={aId} selectTrace={this._diffSetA} selection={selection} />
     );

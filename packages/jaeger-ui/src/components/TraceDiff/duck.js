@@ -52,21 +52,21 @@ export const actions = fullActions.jaegerUi.traceDiff;
 
 function cohortAddTrace(state, { payload }) {
   const { traceID } = payload;
-  const cohort = state.cohort.slice();
-  if (cohort.indexOf(traceID) >= 0) {
+  if (state.cohort.indexOf(traceID) >= 0) {
     return state;
   }
+  const cohort = state.cohort.slice();
   cohort.push(traceID);
   return { ...state, cohort };
 }
 
 function cohortRemoveTrace(state, { payload }) {
   const { traceID } = payload;
-  const cohort = state.cohort.slice();
-  const i = cohort.indexOf(traceID);
+  const i = state.cohort.indexOf(traceID);
   if (i < 0) {
     return state;
   }
+  const cohort = state.cohort.slice();
   cohort.splice(i, 1);
   const a = state.a === traceID ? null : state.a;
   const b = state.b === traceID ? null : state.b;

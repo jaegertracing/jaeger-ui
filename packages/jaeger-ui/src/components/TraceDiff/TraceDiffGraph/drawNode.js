@@ -42,7 +42,7 @@ type Props = {
 const abs = Math.abs;
 const max = Math.max;
 
-class DiffNode extends React.PureComponent<Props> {
+export class DiffNode extends React.PureComponent<Props> {
   props: Props;
   filterSpans: typeof filterSpans;
   static defaultProps = {
