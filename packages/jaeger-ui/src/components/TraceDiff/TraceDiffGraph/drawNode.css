@@ -54,8 +54,23 @@ limitations under the License.
 
 .DiffNode.is-ui-find-match {
   outline-style: solid;
-  outline-color: #080;
+  outline-color: #050;
   outline-width: 2px;
+  position: relative;
+}
+
+.DiffNode.is-ui-find-match:before {
+  position: absolute;
+  bottom: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  content: '';
+  outline-style: solid;
+  outline-color: #0d0;
+  outline-width: 6px;
+  z-index: -1;
+  box-shadow: 0 0 12px 6px #0d0;
 }
 
 .DiffNode--metricCell {

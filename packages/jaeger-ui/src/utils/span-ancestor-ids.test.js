@@ -12,9 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/*
-  props.;
-  */
 import spanAncestorIdsSpy from './span-ancestor-ids';
 
 describe('spanAncestorIdsSpy', () => {
@@ -22,38 +19,98 @@ describe('spanAncestorIdsSpy', () => {
     expect(spanAncestorIdsSpy(null)).toEqual([]);
   });
 
-  it('should return an empty array if span has no CHILD_OF references', () => {
+  it('should return an empty array if span has no references', () => {
     const span = {
       spanID: 'parentlessSpanID',
-      references: [
-        {
-          refType: 'NOT_CHILD_OF',
-          span: {
-            spanID: 'notAParentSpanID',
-            references: [],
-          },
-        },
-      ],
+      references: [],
     };
 
     expect(spanAncestorIdsSpy(span)).toEqual([]);
   });
 
-  it('should return all spanIDs following CHILD_OF reference of parents', () => {
+  it('should return all unique spanIDs from all references up to the root span', () => {
     const ownSpanID = 'ownSpanID';
-    const parentSpanID = 'parentSpanID';
+    const firstParentSpanID = 'firstParentSpanID';
+    const firstParentFirstGrandparentSpanID = 'firstParentFirstGrandparentSpanID';
+    const firstParentSecondGrandparentSpanID = 'firstParentSecondGrandparentSpanID';
+    const secondParentSpanID = 'secondParentSpanID';
+    const secondParentFirstGrandparentSpanID = 'secondParentFirstGrandparentSpanID';
+    const secondParentSecondGrandparentSpanID = 'secondParentSecondGrandparentSpanID';
+    const secondParentGreatGrandParentId = 'secondParentGreatGrandParentId';
     const rootSpanID = 'rootSpanID';
     const span = {
       references: [
         {
-          refType: 'CHILD_OF',
           span: {
-            spanID: parentSpanID,
+            spanID: firstParentSpanID,
             references: [
               {
-                refType: 'CHILD_OF',
                 span: {
-                  spanID: rootSpanID,
+                  spanID: firstParentFirstGrandparentSpanID,
+                  references: [
+                    {
+                      span: {
+                        spanID: rootSpanID,
+                      },
+                    },
+                  ],
+                },
+              },
+              {
+                span: {
+                  spanID: firstParentSecondGrandparentSpanID,
+                  references: [
+                    {
+                      span: {
+                        spanID: rootSpanID,
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        },
+        {
+          span: {
+            spanID: secondParentSpanID,
+            references: [
+              {
+                span: {
+                  spanID: secondParentFirstGrandparentSpanID,
+                  references: [
+                    {
+                      span: {
+                        spanID: secondParentGreatGrandParentId,
+                        references: [
+                          {
+                            span: {
+                              spanID: rootSpanID,
+                            },
+                          },
+                        ],
+                      },
+                    },
+                  ],
+                },
+              },
+              {
+                span: {
+                  spanID: secondParentSecondGrandparentSpanID,
+                  references: [
+                    {
+                      span: {
+                        spanID: secondParentGreatGrandParentId,
+                        references: [
+                          {
+                            span: {
+                              spanID: rootSpanID,
+                            },
+                          },
+                        ],
+                      },
+                    },
+                  ],
                 },
               },
             ],
@@ -63,6 +120,15 @@ describe('spanAncestorIdsSpy', () => {
       spanID: ownSpanID,
     };
 
-    expect(spanAncestorIdsSpy(span)).toEqual([parentSpanID, rootSpanID]);
+    expect(spanAncestorIdsSpy(span)).toEqual([
+      firstParentSpanID,
+      secondParentSpanID,
+      firstParentFirstGrandparentSpanID,
+      firstParentSecondGrandparentSpanID,
+      secondParentFirstGrandparentSpanID,
+      secondParentSecondGrandparentSpanID,
+      rootSpanID,
+      secondParentGreatGrandParentId,
+    ]);
   });
 });
