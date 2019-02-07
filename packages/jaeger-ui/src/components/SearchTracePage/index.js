@@ -24,7 +24,7 @@ import store from 'store';
 
 import SearchForm from './SearchForm';
 import SearchResults, { sortFormSelector } from './SearchResults';
-import { isSameQuery } from './url';
+import { isSameQuery, getUrl } from './url';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
@@ -33,6 +33,7 @@ import { actions as traceDiffActions } from '../TraceDiff/duck';
 import { fetchedState } from '../../constants';
 import { sortTraces } from '../../model/search';
 import getLastXformCacher from '../../utils/get-last-xform-cacher';
+import { stripEmbeddedState } from '../../utils/embedded-url';
 
 import './index.css';
 import JaegerLogo from '../../img/jaeger-logo.svg';
@@ -66,7 +67,8 @@ export class SearchTracePageImpl extends Component {
 
   goToTrace = traceID => {
     const { queryOfResults } = this.props;
-    this.props.history.push(getTraceLocation(traceID, { fromSearch: queryOfResults }));
+    const searchUrl = getUrl(stripEmbeddedState(queryOfResults));
+    this.props.history.push(getTraceLocation(traceID, { fromSearch: searchUrl }));
   };
 
   render() {
