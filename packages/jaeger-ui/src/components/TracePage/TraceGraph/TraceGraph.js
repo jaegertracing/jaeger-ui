@@ -84,6 +84,10 @@ function setOnEdgesContainer(state: Object) {
   return { style: { opacity } };
 }
 
+function setOnNodesContainer() {
+  return { style: { zIndex: -1 } };
+}
+
 const HELP_CONTENT = (
   <div className="TraceGraph--help-content">
     {HELP_TABLE}
@@ -267,6 +271,7 @@ export default class TraceGraph extends React.PureComponent<Props, State> {
           setOnRoot={classNameIsSmall}
           setOnEdgePath={setOnEdgePath}
           setOnEdgesContainer={setOnEdgesContainer}
+          setOnNodesContainer={setOnNodesContainer}
           edges={ev.edges}
           vertices={ev.vertices}
         />

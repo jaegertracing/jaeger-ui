@@ -44,7 +44,11 @@ function setOnEdgesContainer(state: Object) {
   }
   const { k } = zoomTransform;
   const opacity = 0.1 + k * 0.9;
-  return { style: { opacity } };
+  return { style: { opacity, zIndex: 1 } };
+}
+
+function setOnNodesContainer() {
+  return { style: { zIndex: -1 } };
 }
 
 export default class TraceDiffGraph extends React.PureComponent<Props> {
@@ -117,6 +121,7 @@ export default class TraceDiffGraph extends React.PureComponent<Props> {
           getNodeLabel={drawNode}
           setOnRoot={classNameIsSmall}
           setOnEdgesContainer={setOnEdgesContainer}
+          setOnNodesContainer={setOnNodesContainer}
           edges={edges}
           vertices={vertices}
         />
