@@ -15,7 +15,7 @@
 /* eslint-disable react/require-default-props */
 
 import React, { Component } from 'react';
-import { Col, Row } from 'antd';
+import { Col, Row, Tabs } from 'antd';
 import PropTypes from 'prop-types';
 import queryString from 'query-string';
 import { connect } from 'react-redux';
@@ -26,6 +26,7 @@ import SearchForm from './SearchForm';
 import SearchResults, { sortFormSelector } from './SearchResults';
 import { isSameQuery, getUrl } from './url';
 import * as jaegerApiActions from '../../actions/jaeger-api';
+import * as fileReaderActions from '../../actions/file-reader-api';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
 import { getLocation as getTraceLocation } from '../TracePage/url';
@@ -34,9 +35,12 @@ import { fetchedState } from '../../constants';
 import { sortTraces } from '../../model/search';
 import getLastXformCacher from '../../utils/get-last-xform-cacher';
 import { stripEmbeddedState } from '../../utils/embedded-url';
+import FileLoader from './FileLoader';
 
 import './index.css';
 import JaegerLogo from '../../img/jaeger-logo.svg';
+
+const TabPane = Tabs.TabPane;
 
 // export for tests
 export class SearchTracePageImpl extends Component {
@@ -85,6 +89,7 @@ export class SearchTracePageImpl extends Component {
       services,
       traceResults,
       queryOfResults,
+      loadJsonTraces,
     } = this.props;
     const hasTraceResults = traceResults && traceResults.length > 0;
     const showErrors = errors && !loadingTraces;
@@ -95,8 +100,14 @@ export class SearchTracePageImpl extends Component {
           {!embedded && (
             <Col span={6} className="SearchTracePage--column">
               <div className="SearchTracePage--find">
-                <h2>Find Traces</h2>
-                {!loadingServices && services ? <SearchForm services={services} /> : <LoadingIndicator />}
+                <Tabs size="large">
+                  <TabPane tab="Find Traces" key="searchForm">
+                    {!loadingServices && services ? <SearchForm services={services} /> : <LoadingIndicator />}
+                  </TabPane>
+                  <TabPane tab="JSON File" key="fileLoader">
+                    <FileLoader loadJsonTraces={loadJsonTraces} />
+                  </TabPane>
+                </Tabs>
               </div>
             </Col>
           )}
@@ -177,6 +188,7 @@ SearchTracePageImpl.propTypes = {
       message: PropTypes.string,
     })
   ),
+  loadJsonTraces: PropTypes.func,
 };
 
 const stateTraceXformer = getLastXformCacher(stateTrace => {
@@ -257,6 +269,7 @@ function mapDispatchToProps(dispatch) {
     jaegerApiActions,
     dispatch
   );
+  const { loadJsonTraces } = bindActionCreators(fileReaderActions, dispatch);
   const { cohortAddTrace, cohortRemoveTrace } = bindActionCreators(traceDiffActions, dispatch);
   return {
     cohortAddTrace,
@@ -265,6 +278,7 @@ function mapDispatchToProps(dispatch) {
     fetchServiceOperations,
     fetchServices,
     searchTraces,
+    loadJsonTraces,
   };
 }
 
