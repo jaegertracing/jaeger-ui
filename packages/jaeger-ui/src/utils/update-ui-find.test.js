@@ -15,9 +15,7 @@
 import queryString from 'query-string';
 
 import updateUIFind from './update-ui-find';
-import prefixUrlSpy from './prefix-url';
-
-jest.mock('./prefix-url');
+import * as trackFilter from '../components/TracePage/index.track';
 
 describe('updateUIFind', () => {
   const existingUIFind = 'existingUIFind';
@@ -34,21 +32,29 @@ describe('updateUIFind', () => {
   const queryStringStringifySpy = jest
     .spyOn(queryString, 'stringify')
     .mockReturnValue(queryStringStringifySpyMockReturnValue);
-  const prefixUrlSpyMockReturnValue = 'prefixUrlSpyMockReturnValue';
-  prefixUrlSpy.mockReturnValue(prefixUrlSpyMockReturnValue);
 
   const history = {
     replace: replaceMock,
   };
   const location = {
+    pathname: '/trace/traceID',
     search: 'location.search',
   };
+  const expectedReplaceMockArgument = {
+    ...location,
+    search: `?${queryStringStringifySpyMockReturnValue}`,
+  };
+  let trackFilterSpy;
+
+  beforeAll(() => {
+    trackFilterSpy = jest.spyOn(trackFilter, 'trackFilter');
+  });
 
   beforeEach(() => {
     replaceMock.mockReset();
+    trackFilterSpy.mockClear();
     queryStringParseSpy.mockClear();
     queryStringStringifySpy.mockClear();
-    prefixUrlSpy.mockClear();
   });
 
   it('adds truthy graphSearch to existing params', () => {
@@ -62,8 +68,8 @@ describe('updateUIFind', () => {
       uiFind: newUIFind,
       [unrelatedQueryParamName]: unrelatedQueryParamValue,
     });
-    expect(prefixUrlSpy).toHaveBeenCalledWith(`?${queryStringStringifySpyMockReturnValue}`);
-    expect(replaceMock).toHaveBeenCalledWith(prefixUrlSpyMockReturnValue);
+    expect(trackFilterSpy).toHaveBeenCalledWith(newUIFind);
+    expect(replaceMock).toHaveBeenCalledWith(expectedReplaceMockArgument);
   });
 
   it('omits falsy graphSearch from query params', () => {
@@ -76,8 +82,8 @@ describe('updateUIFind', () => {
     expect(queryStringStringifySpy).toHaveBeenCalledWith({
       [unrelatedQueryParamName]: unrelatedQueryParamValue,
     });
-    expect(prefixUrlSpy).toHaveBeenCalledWith(`?${queryStringStringifySpyMockReturnValue}`);
-    expect(replaceMock).toHaveBeenCalledWith(prefixUrlSpyMockReturnValue);
+    expect(trackFilterSpy).toHaveBeenCalledWith('');
+    expect(replaceMock).toHaveBeenCalledWith(expectedReplaceMockArgument);
   });
 
   it('omits absent graphSearch from query params', () => {
@@ -89,7 +95,7 @@ describe('updateUIFind', () => {
     expect(queryStringStringifySpy).toHaveBeenCalledWith({
       [unrelatedQueryParamName]: unrelatedQueryParamValue,
     });
-    expect(prefixUrlSpy).toHaveBeenCalledWith(`?${queryStringStringifySpyMockReturnValue}`);
-    expect(replaceMock).toHaveBeenCalledWith(prefixUrlSpyMockReturnValue);
+    expect(trackFilterSpy).toHaveBeenCalledWith(undefined);
+    expect(replaceMock).toHaveBeenCalledWith(expectedReplaceMockArgument);
   });
 });

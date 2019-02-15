@@ -18,7 +18,6 @@ import queryString from 'query-string';
 
 import type { Location, RouterHistory } from 'react-router-dom';
 
-import prefixUrl from './prefix-url';
 import { trackFilter } from '../components/TracePage/index.track';
 
 export default function updateUIFind({
@@ -35,5 +34,8 @@ export default function updateUIFind({
   if (uiFind) {
     queryParams.uiFind = uiFind;
   }
-  history.replace(prefixUrl(`?${queryString.stringify(queryParams)}`));
+  history.replace({
+    ...location,
+    search: `?${queryString.stringify(queryParams)}`,
+  });
 }

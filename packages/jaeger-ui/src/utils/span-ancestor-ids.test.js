@@ -15,111 +15,111 @@
 import spanAncestorIdsSpy from './span-ancestor-ids';
 
 describe('spanAncestorIdsSpy', () => {
+  const ownSpanID = 'ownSpanID';
+  const firstParentSpanID = 'firstParentSpanID';
+  const firstParentFirstGrandparentSpanID = 'firstParentFirstGrandparentSpanID';
+  const firstParentSecondGrandparentSpanID = 'firstParentSecondGrandparentSpanID';
+  const secondParentSpanID = 'secondParentSpanID';
+  const secondParentFirstGrandparentSpanID = 'secondParentFirstGrandparentSpanID';
+  const secondParentSecondGrandparentSpanID = 'secondParentSecondGrandparentSpanID';
+  const secondParentGreatGrandParentId = 'secondParentGreatGrandParentId';
+  const rootSpanID = 'rootSpanID';
+  const span = {
+    references: [
+      {
+        span: {
+          spanID: firstParentSpanID,
+          references: [
+            {
+              span: {
+                spanID: firstParentFirstGrandparentSpanID,
+                references: [
+                  {
+                    span: {
+                      spanID: rootSpanID,
+                    },
+                  },
+                ],
+              },
+            },
+            {
+              span: {
+                spanID: firstParentSecondGrandparentSpanID,
+                references: [
+                  {
+                    span: {
+                      spanID: rootSpanID,
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      },
+      {
+        span: {
+          spanID: secondParentSpanID,
+          references: [
+            {
+              span: {
+                spanID: secondParentFirstGrandparentSpanID,
+                references: [
+                  {
+                    span: {
+                      spanID: secondParentGreatGrandParentId,
+                      references: [
+                        {
+                          span: {
+                            spanID: rootSpanID,
+                          },
+                        },
+                      ],
+                    },
+                  },
+                ],
+              },
+            },
+            {
+              span: {
+                spanID: secondParentSecondGrandparentSpanID,
+                references: [
+                  {
+                    span: {
+                      spanID: secondParentGreatGrandParentId,
+                      references: [
+                        {
+                          span: {
+                            spanID: rootSpanID,
+                          },
+                        },
+                      ],
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      },
+    ],
+    spanID: ownSpanID,
+  };
+
   it('should return an empty array if given falsy span', () => {
     expect(spanAncestorIdsSpy(null)).toEqual([]);
   });
 
   it('should return an empty array if span has no references', () => {
-    const span = {
+    const spanWithoutReferences = {
       spanID: 'parentlessSpanID',
       references: [],
     };
 
-    expect(spanAncestorIdsSpy(span)).toEqual([]);
+    expect(spanAncestorIdsSpy(spanWithoutReferences)).toEqual([]);
   });
 
   it('should return all unique spanIDs from all references up to the root span', () => {
-    const ownSpanID = 'ownSpanID';
-    const firstParentSpanID = 'firstParentSpanID';
-    const firstParentFirstGrandparentSpanID = 'firstParentFirstGrandparentSpanID';
-    const firstParentSecondGrandparentSpanID = 'firstParentSecondGrandparentSpanID';
-    const secondParentSpanID = 'secondParentSpanID';
-    const secondParentFirstGrandparentSpanID = 'secondParentFirstGrandparentSpanID';
-    const secondParentSecondGrandparentSpanID = 'secondParentSecondGrandparentSpanID';
-    const secondParentGreatGrandParentId = 'secondParentGreatGrandParentId';
-    const rootSpanID = 'rootSpanID';
-    const span = {
-      references: [
-        {
-          span: {
-            spanID: firstParentSpanID,
-            references: [
-              {
-                span: {
-                  spanID: firstParentFirstGrandparentSpanID,
-                  references: [
-                    {
-                      span: {
-                        spanID: rootSpanID,
-                      },
-                    },
-                  ],
-                },
-              },
-              {
-                span: {
-                  spanID: firstParentSecondGrandparentSpanID,
-                  references: [
-                    {
-                      span: {
-                        spanID: rootSpanID,
-                      },
-                    },
-                  ],
-                },
-              },
-            ],
-          },
-        },
-        {
-          span: {
-            spanID: secondParentSpanID,
-            references: [
-              {
-                span: {
-                  spanID: secondParentFirstGrandparentSpanID,
-                  references: [
-                    {
-                      span: {
-                        spanID: secondParentGreatGrandParentId,
-                        references: [
-                          {
-                            span: {
-                              spanID: rootSpanID,
-                            },
-                          },
-                        ],
-                      },
-                    },
-                  ],
-                },
-              },
-              {
-                span: {
-                  spanID: secondParentSecondGrandparentSpanID,
-                  references: [
-                    {
-                      span: {
-                        spanID: secondParentGreatGrandParentId,
-                        references: [
-                          {
-                            span: {
-                              spanID: rootSpanID,
-                            },
-                          },
-                        ],
-                      },
-                    },
-                  ],
-                },
-              },
-            ],
-          },
-        },
-      ],
-      spanID: ownSpanID,
-    };
-
     expect(spanAncestorIdsSpy(span)).toEqual([
       firstParentSpanID,
       secondParentSpanID,
@@ -130,5 +130,18 @@ describe('spanAncestorIdsSpy', () => {
       rootSpanID,
       secondParentGreatGrandParentId,
     ]);
+  });
+
+  it('should handles references without a span', () => {
+    const emptyReferencesSpanID = 'emptyReferencesSpanID';
+    const spanWithEmptyReferences = {
+      spanID: emptyReferencesSpanID,
+      references: [{}, null, 'incorrectlyDefinedReferenceSpanID'],
+    };
+    const spanWithSomeEmptyReferences = {
+      ...span,
+      references: [{ span: spanWithEmptyReferences }],
+    };
+    expect(spanAncestorIdsSpy(spanWithSomeEmptyReferences)).toEqual([emptyReferencesSpanID]);
   });
 });

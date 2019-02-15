@@ -21,7 +21,7 @@ import type { Span } from '../types/trace';
 export default function spanAncestorIds(span: ?Span): string[] {
   const ancestors: Span[] = _map(span && span.references, 'span');
   for (let i = 0; i < ancestors.length; i++) {
-    ancestors.push(..._map(ancestors[i].references, 'span'));
+    ancestors.push(..._map(ancestors[i].references, 'span').filter(Boolean));
   }
   return Array.from(new Set(_map(ancestors, 'spanID')));
 }

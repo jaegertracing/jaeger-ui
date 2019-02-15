@@ -2,7 +2,6 @@
 
 exports[`UIFind rendering renders as expected 1`] = `
 <Input
-  className="UIFind--input"
   disabled={false}
   onBlur={[Function]}
   onChange={[Function]}

@@ -15,7 +15,7 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Icon, Input } from 'antd';
+import { Icon } from 'antd';
 import { DirectedGraph, LayoutManager } from '@jaegertracing/plexus';
 
 import drawNode from './drawNode';
@@ -44,32 +44,21 @@ function setOnEdgesContainer(state: Object) {
   }
   const { k } = zoomTransform;
   const opacity = 0.1 + k * 0.9;
-  return { style: { opacity, zIndex: 1 } };
-}
-
-function setOnNodesContainer() {
-  return { style: { zIndex: -1 } };
+  return { style: { opacity, zIndex: 1, position: 'absolute', pointerEvents: 'none' } };
 }
 
 export default class TraceDiffGraph extends React.PureComponent<Props> {
   props: Props;
-  _uiFindInputRef: { current: Input | null };
-
   layoutManager: LayoutManager;
 
   constructor(props: Props) {
     super(props);
     this.layoutManager = new LayoutManager({ useDotEdges: true, splines: 'polyline' });
-    this._uiFindInputRef = React.createRef();
   }
 
   componentWillUnmount() {
     this.layoutManager.stopAndRelease();
   }
-
-  handleIconClick = () => {
-    if (this._uiFindInputRef.current) this._uiFindInputRef.current.focus();
-  };
 
   render() {
     const { a, b } = this.props;
@@ -121,16 +110,15 @@ export default class TraceDiffGraph extends React.PureComponent<Props> {
           getNodeLabel={drawNode}
           setOnRoot={classNameIsSmall}
           setOnEdgesContainer={setOnEdgesContainer}
-          setOnNodesContainer={setOnNodesContainer}
+          setOnNodesContainer={null /* setOnNodesContainer */}
           edges={edges}
           vertices={vertices}
         />
         <div className="TraceDiffGraph--uiFind">
-          <UIFindInput
-            forwardedRef={this._uiFindInputRef}
-            inputProps={{ className: 'TraceDiffGraph--uiFind--input' }}
-          />
-          <Icon className="TraceDiffGraph--uiFind--icon" onClick={this.handleIconClick} type="search" />
+          <UIFindInput inputProps={{ className: 'TraceDiffGraph--uiFind--input', id: 'uiFind--input' }} />
+          <label htmlFor="uiFind--input">
+            <Icon className="TraceDiffGraph--uiFind--icon" type="search" />
+          </label>
         </div>
       </div>
     );

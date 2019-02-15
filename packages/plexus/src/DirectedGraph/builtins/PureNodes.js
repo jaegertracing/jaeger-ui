@@ -27,13 +27,14 @@ type Props = {
   setOnNode: ?(Vertex) => ?Object,
   vertexRefs: { current: HTMLElement | null }[],
   vertices: Vertex[],
+  nodeScale: number,
 };
 
 export default class PureEdges extends React.PureComponent<Props> {
   props: Props;
 
   _renderVertices() {
-    const { classNamePrefix, getNodeLabel, setOnNode, vertices, vertexRefs } = this.props;
+    const { classNamePrefix, getNodeLabel, setOnNode, vertices, vertexRefs, nodeScale } = this.props;
     return vertices.map((v, i) => (
       <Node
         key={v.key}
@@ -42,13 +43,14 @@ export default class PureEdges extends React.PureComponent<Props> {
         classNamePrefix={classNamePrefix}
         labelFactory={getNodeLabel}
         vertex={v}
+        nodeScale={nodeScale}
         {...setOnNode && setOnNode(v)}
       />
     ));
   }
 
   _renderLayoutVertices() {
-    const { classNamePrefix, getNodeLabel, setOnNode, layoutVertices, vertexRefs } = this.props;
+    const { classNamePrefix, getNodeLabel, setOnNode, layoutVertices, vertexRefs, nodeScale } = this.props;
     if (!layoutVertices) {
       return null;
     }
@@ -61,6 +63,7 @@ export default class PureEdges extends React.PureComponent<Props> {
         vertex={lv.vertex}
         left={lv.left}
         top={lv.top}
+        nodeScale={nodeScale}
         {...setOnNode && setOnNode(lv.vertex)}
       />
     ));

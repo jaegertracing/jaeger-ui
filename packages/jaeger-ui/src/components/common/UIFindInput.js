@@ -16,7 +16,6 @@
 
 import * as React from 'react';
 import { Input } from 'antd';
-import cx from 'classnames';
 import _debounce from 'lodash/debounce';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
@@ -74,12 +73,10 @@ export class UnconnectedUIFindInput extends React.PureComponent<PropsType, State
   render() {
     const inputValue =
       typeof this.state.ownInputValue === 'string' ? this.state.ownInputValue : this.props.uiFind;
-    const className = cx('UIFind--input', this.props.inputProps.className);
 
     return (
       <Input
         {...this.props.inputProps}
-        className={className}
         onBlur={this.handleInputBlur}
         onChange={this.handleInputChange}
         ref={this.props.forwardedRef}
