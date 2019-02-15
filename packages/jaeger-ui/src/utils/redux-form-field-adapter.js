@@ -20,7 +20,7 @@ import * as React from 'react';
 
 import './redux-form-field-adapter.css';
 
-const noop = () => { };
+const noop = () => {};
 
 export default function reduxFormFieldAdapter({
   AntInputComponent,
