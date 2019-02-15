@@ -17,7 +17,6 @@
 import React from 'react';
 import { Popover } from 'antd';
 import _groupBy from 'lodash/groupBy';
-import _values from 'lodash/values';
 import { onlyUpdateForKeys, compose, withState, withProps } from 'recompose';
 
 import AccordianLogs from './SpanDetail/AccordianLogs';
@@ -47,7 +46,7 @@ type SpanBarProps = {
 };
 
 function toPercent(value: number) {
-  return `${value * 100}%`;
+  return `${(value * 100).toFixed(1)}%`;
 }
 
 function SpanBar(props: SpanBarProps) {
@@ -65,6 +64,10 @@ function SpanBar(props: SpanBarProps) {
     traceStartTime,
     span,
   } = props;
+  // group logs based on timestamps
+  const logGroups = _groupBy(span.logs, log =>
+    toPercent(getViewedBounds(log.timestamp, log.timestamp).start)
+  );
 
   return (
     <div
@@ -85,35 +88,23 @@ function SpanBar(props: SpanBarProps) {
       >
         <div className={`SpanBar--label is-${hintSide}`}>{label}</div>
       </div>
-      <div
-        aria-hidden
-        onClick={ev => {
-          ev.stopPropagation();
-        }}
-      >
-        {_values(
-          _groupBy(span.logs.map(l => ({ view: getViewedBounds(l.timestamp, l.timestamp), log: l })), v =>
-            Math.floor(v.view.start * 100)
-          )
-        ).map(v => (
+      <div>
+        {Object.keys(logGroups).map(positionKey => (
           <Popover
-            key={v[0].view.start}
+            key={positionKey}
             arrowPointAtCenter
             overlayClassName="SpanBar--logHint"
             placement="topLeft"
             content={
               <AccordianLogs
-                logs={v.map(l => l.log)}
-                linksGetter={null}
+                interactive={false}
                 isOpen
-                openedItems={new Set([])}
-                onToggle={() => {}}
-                onItemToggle={() => {}}
+                logs={logGroups[positionKey]}
                 timestamp={traceStartTime}
               />
             }
           >
-            <div className="SpanBar--logMarker" style={{ left: toPercent(v[0].view.start) }} />
+            <div className="SpanBar--logMarker" style={{ left: positionKey }} />
           </Popover>
         ))}
       </div>

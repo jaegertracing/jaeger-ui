@@ -94,6 +94,10 @@ limitations under the License.
   left: 0;
 }
 
+.SpanBar--logHint {
+  pointer-events: none;
+}
+
 /* Tweak the popover aesthetics - unfortunate but necessary */
 .SpanBar--logHint .ant-popover-inner-content {
   padding: 0.25rem;
