@@ -56,15 +56,15 @@ const WRAPPER_STYLE = {
 let idCounter = 0;
 
 // eslint-disable-next-line no-unused-vars
-function defaultGetNodeLabel(TVertex: TVertex) {
-  const { label } = TVertex;
+function defaultGetNodeLabel(vertex: TVertex) {
+  const { label } = vertex;
   if (label != null) {
     if (typeof label === 'string' || React.isValidElement(label)) {
       return label;
     }
     return String(label);
   }
-  return String(TVertex.key);
+  return String(vertex.key);
 }
 
 export default class DirectedGraph extends React.PureComponent<TDirectedGraphProps, TDirectedGraphState> {
