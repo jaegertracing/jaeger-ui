@@ -4,6 +4,8 @@
 .*/node_modules/react-motion/.*
 .*/node_modules/draft-js/.*
 .*/node_modules/nwb/.*
+.*/packages/jaeger-ui/node_modules/.cache/.*
+.*/packages/plexus/src/.*
 
 [include]
 

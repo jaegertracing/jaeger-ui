@@ -45,7 +45,7 @@ To use a DraggableManager instance, relevant mouse events should be piped to the
 
 ```html
 <div className="DividerDemo--realm">
-  <div className="DividerDemo--divider" onMouseDown={this._dragManager.handleMouseDown} />
+  <div className="DividerDemo--divider" onMouseDown="{this._dragManager.handleMouseDown}" />
 </div>
 ```
 

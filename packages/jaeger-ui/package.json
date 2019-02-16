@@ -5,6 +5,16 @@
   "main": "src/index.js",
   "license": "Apache-2.0",
   "homepage": ".",
+  "workspaces": {
+    "nohoist": [
+      "customize-cra",
+      "customize-cra/**",
+      "react-scripts",
+      "react-scripts/**",
+      "react-app-rewired",
+      "react-app-rewired/**"
+    ]
+  },
   "devDependencies": {
     "babel-plugin-import": "1.11.0",
     "bluebird": "^3.5.0",
@@ -23,7 +33,7 @@
     "source-map-explorer": "^1.6.0"
   },
   "dependencies": {
-    "@jaegertracing/plexus": "0.0.1-dev.3",
+    "@jaegertracing/plexus": "0.0.1-dev.4",
     "antd": "3.8.0",
     "chance": "^1.0.10",
     "classnames": "^2.2.5",

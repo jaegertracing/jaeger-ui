@@ -1,5 +1,6 @@
 {
   "private": true,
+  "name": "jaeger-ui-monorepo",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
@@ -24,7 +25,17 @@
     "prettier": "^1.10.2",
     "rxjs-compat": "6.3.3"
   },
-  "workspaces": ["packages/*"],
+  "workspaces": {
+    "packages": ["packages/*"],
+    "nohoist": [
+      "**/customize-cra",
+      "**/customize-cra/**",
+      "**/react-scripts",
+      "**/react-scripts/**",
+      "**/react-app-rewired",
+      "**/react-app-rewired/**"
+    ]
+  },
   "scripts": {
     "build": "lerna run build",
     "check-license": "./scripts/check-license.sh",
@@ -35,9 +46,9 @@
     "prepare": "lerna run --stream --sort prepublishOnly",
     "prettier-comment": "https://github.com/yarnpkg/yarn/issues/6300",
     "prettier":
-      "./node_modules/prettier/bin-prettier.js --write '{.,scripts}/*.{js,json,md}' 'packages/*/{src,demo/src}/**/!(react-vis).{css,js,json,md}' 'packages/*/*.{css,js,json,md}'",
+      "./node_modules/prettier/bin-prettier.js --write '{.,scripts}/*.{js,json,md,ts,tsx}' 'packages/*/{src,demo/src}/**/!(react-vis).{css,js,json,md,ts,tsx}' 'packages/*/*.{css,js,json,md,ts,tsx}'",
     "prettier-lint":
-      "./node_modules/prettier/bin-prettier.js --list-different '{.,scripts}/*.{js,json,md}' 'packages/*/{src,demo/src}/**/!(react-vis).{css,js,json,md}' 'packages/*/*.{css,js,json,md}'",
+      "./node_modules/prettier/bin-prettier.js --list-different '{.,scripts}/*.{js,json,md,ts,tsx}' 'packages/*/{src,demo/src}/**/!(react-vis).{css,js,json,md,ts,tsx}' 'packages/*/*.{css,js,json,md,ts,tsx}'",
     "test": "lerna run test",
     "start": "cd packages/jaeger-ui && yarn start"
   },
