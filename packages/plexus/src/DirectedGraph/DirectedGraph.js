@@ -246,7 +246,7 @@ export default class DirectedGraph extends React.PureComponent<DirectedGraphProp
 
   _renderVertices() {
     const { classNamePrefix, getNodeLabel, setOnNode, vertices } = this.props;
-    const { layoutVertices, vertexRefs, zoomTransform } = this.state;
+    const { layoutVertices, vertexRefs } = this.state;
     return (
       <PureNodes
         classNamePrefix={classNamePrefix}
@@ -255,7 +255,6 @@ export default class DirectedGraph extends React.PureComponent<DirectedGraphProp
         setOnNode={setOnNode}
         vertexRefs={vertexRefs}
         vertices={vertices}
-        nodeScale={zoomTransform.k}
       />
     );
   }

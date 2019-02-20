@@ -55,7 +55,9 @@ limitations under the License.
 .DiffNode.is-ui-find-match {
   outline-style: solid;
   outline-color: #4c4840;
-  outline-width: 2px;
+  outline-width: inherit;
+  box-shadow: inherit;
+  color: #fff3d7;
 }
 
 .DiffNode--metricCell {

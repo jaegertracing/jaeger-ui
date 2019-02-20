@@ -26,7 +26,6 @@ type Props =
       left?: number,
       top?: number,
       vertex: any,
-      nodeScale: number,
     };
 
 class Node extends React.PureComponent<Props> {
@@ -39,17 +38,7 @@ class Node extends React.PureComponent<Props> {
   };
 
   render() {
-    const {
-      classNamePrefix,
-      hidden,
-      forwardedRef,
-      labelFactory,
-      left,
-      nodeScale,
-      top,
-      vertex,
-      ...rest
-    } = this.props;
+    const { classNamePrefix, hidden, labelFactory, vertex, left, top, forwardedRef, ...rest } = this.props;
     const p: Object = rest;
     p.style = {
       ...p.style,
@@ -60,7 +49,7 @@ class Node extends React.PureComponent<Props> {
     p.className = `${classNamePrefix}-Node ${p.className || ''}`;
     return (
       <div ref={forwardedRef} {...p}>
-        {labelFactory(vertex, { nodeScale })}
+        {labelFactory(vertex)}
       </div>
     );
   }

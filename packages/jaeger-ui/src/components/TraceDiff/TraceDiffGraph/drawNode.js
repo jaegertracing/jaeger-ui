@@ -21,7 +21,6 @@ import _get from 'lodash/get';
 import _map from 'lodash/map';
 import _memoize from 'lodash/memoize';
 import { connect } from 'react-redux';
-import debounceRender from 'react-debounce-render';
 
 import CopyIcon from '../../common/CopyIcon';
 import { extractUIFindFromState } from '../../common/UIFindInput';
@@ -36,7 +35,6 @@ type Props = {
   b: number,
   uiFind: string,
   members: DenseSpan[],
-  meta?: Object,
   operation: string,
   service: string,
 };
@@ -58,7 +56,7 @@ class DiffNode extends React.PureComponent<Props> {
   }
 
   render() {
-    const { a, b, uiFind, meta, operation, service } = this.props;
+    const { a, b, uiFind, /* meta, */ operation, service } = this.props;
     const isSame = a === b;
     const isUiFindMatch = _get(this.filterSpans(uiFind, _map(this.props.members, 'span')), 'size');
     const className = cx({
@@ -70,62 +68,49 @@ class DiffNode extends React.PureComponent<Props> {
       'is-removed': b === 0,
       'is-ui-find-match': isUiFindMatch,
     });
-    const matchSize = 1 + 1 / _get(meta, 'nodeScale', 1);
-    const style = isUiFindMatch
-      ? {
-          boxShadow: `0 0 ${2 * matchSize}px ${4 * matchSize}px #fff3d7`,
-          outlineWidth: `${matchSize}px`,
-        }
-      : {};
     const chgSign = a < b ? '+' : '-';
-    const tbody = (
-      <tbody>
-        <tr>
-          <td className={`DiffNode--metricCell ${className}`} rowSpan={isSame ? 2 : 1}>
-            {isSame ? null : <span className="DiffNode--metricSymbol">{chgSign}</span>}
-            {isSame ? a : abs(b - a)}
-          </td>
-          <td className={`DiffNode--labelCell ${className}`}>
-            <strong>{service}</strong>
-            <CopyIcon
-              className="DiffNode--copyIcon"
-              copyText={`${service} ${operation}`}
-              tooltipTitle="Copy label"
-            />
-          </td>
-        </tr>
-        <tr>
-          {isSame ? null : (
-            <td className={`DiffNode--metricCell ${className}`}>
-              <span className="DiffNode--metricSymbol">{chgSign}</span>
-              {a === 0 || b === 0 ? 100 : abs((a - b) / max(a, b) * 100).toFixed(0)}
-              <span className="DiffNode--metricSymbol">%</span>
+    const table = (
+      <table className={`DiffNode ${className}`}>
+        <tbody>
+          <tr>
+            <td className={`DiffNode--metricCell ${className}`} rowSpan={isSame ? 2 : 1}>
+              {isSame ? null : <span className="DiffNode--metricSymbol">{chgSign}</span>}
+              {isSame ? a : abs(b - a)}
             </td>
-          )}
-          <td className={`DiffNode--labelCell ${className}`}>{operation}</td>
-        </tr>
-      </tbody>
-    );
-    const table = <table className={`DiffNode ${className}`}>{tbody}</table>;
-    const styledTable = (
-      <table className={`DiffNode ${className}`} style={style}>
-        {tbody}
+            <td className={`DiffNode--labelCell ${className}`}>
+              <strong>{service}</strong>
+              <CopyIcon
+                className="DiffNode--copyIcon"
+                copyText={`${service} ${operation}`}
+                tooltipTitle="Copy label"
+              />
+            </td>
+          </tr>
+          <tr>
+            {isSame ? null : (
+              <td className={`DiffNode--metricCell ${className}`}>
+                <span className="DiffNode--metricSymbol">{chgSign}</span>
+                {a === 0 || b === 0 ? 100 : abs((a - b) / max(a, b) * 100).toFixed(0)}
+                <span className="DiffNode--metricSymbol">%</span>
+              </td>
+            )}
+            <td className={`DiffNode--labelCell ${className}`}>{operation}</td>
+          </tr>
+        </tbody>
       </table>
     );
 
     return (
       <Popover overlayClassName={`DiffNode--popover ${className}`} mouseEnterDelay={0.25} content={table}>
-        {styledTable}
+        {table}
       </Popover>
     );
   }
 }
 
-const ConnectedDiffNode = debounceRender(connect(extractUIFindFromState)(DiffNode), 1);
+const ConnectedDiffNode = connect(extractUIFindFromState)(DiffNode);
 
-export default function drawNode<T>(vertex: PVertex<T>, meta?: Object) {
+export default function drawNode<T>(vertex: PVertex<T>) {
   const { data, members, operation, service } = vertex.data;
-  return (
-    <ConnectedDiffNode {...data} members={members} meta={meta} operation={operation} service={service} />
-  );
+  return <ConnectedDiffNode {...data} members={members} operation={operation} service={service} />;
 }

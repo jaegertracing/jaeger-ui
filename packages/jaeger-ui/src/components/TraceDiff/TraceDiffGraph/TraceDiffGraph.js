@@ -17,6 +17,7 @@
 import * as React from 'react';
 import { Icon } from 'antd';
 import { DirectedGraph, LayoutManager } from '@jaegertracing/plexus';
+import _get from 'lodash/get';
 
 import drawNode from './drawNode';
 import ErrorMessage from '../../common/ErrorMessage';
@@ -45,6 +46,26 @@ function setOnEdgesContainer(state: Object) {
   const { k } = zoomTransform;
   const opacity = 0.1 + k * 0.9;
   return { style: { opacity, zIndex: 1, position: 'absolute', pointerEvents: 'none' } };
+}
+
+function setOnNodesContainer(state: Object) {
+  const { zoomTransform } = state;
+  const matchSize = 1 + 1 / _get(zoomTransform, 'k', 1);
+  return {
+    style: {
+      boxShadow: `0 0 ${2 * matchSize}px ${4 * matchSize}px`,
+      outlineWidth: `${matchSize}px`,
+    },
+  };
+}
+
+function setOnNode() {
+  return {
+    style: {
+      boxShadow: 'inherit',
+      color: 'transparent',
+    },
+  };
 }
 
 export default class TraceDiffGraph extends React.PureComponent<Props> {
@@ -110,7 +131,8 @@ export default class TraceDiffGraph extends React.PureComponent<Props> {
           getNodeLabel={drawNode}
           setOnRoot={classNameIsSmall}
           setOnEdgesContainer={setOnEdgesContainer}
-          setOnNodesContainer={null /* setOnNodesContainer */}
+          setOnNodesContainer={setOnNodesContainer}
+          setOnNode={setOnNode}
           edges={edges}
           vertices={vertices}
         />
