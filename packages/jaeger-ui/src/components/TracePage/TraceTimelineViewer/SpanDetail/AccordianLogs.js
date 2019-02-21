@@ -14,7 +14,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import React from 'react';
+import * as React from 'react';
+import cx from 'classnames';
 import _sortBy from 'lodash/sortBy';
 import IoIosArrowDown from 'react-icons/lib/io/ios-arrow-down';
 import IoIosArrowRight from 'react-icons/lib/io/ios-arrow-right';
@@ -26,29 +27,40 @@ import type { Log, KeyValuePair, Link } from '../../../../types/trace';
 import './AccordianLogs.css';
 
 type AccordianLogsProps = {
+  interactive?: boolean,
   isOpen: boolean,
-  linksGetter: ?(KeyValuePair[], number) => Link[],
+  linksGetter?: ?(KeyValuePair[], number) => Link[],
   logs: Log[],
-  onItemToggle: Log => void,
-  onToggle: () => void,
-  openedItems: Set<Log>,
+  onItemToggle?: Log => void,
+  onToggle?: () => void,
+  openedItems?: Set<Log>,
   timestamp: number,
 };
 
 export default function AccordianLogs(props: AccordianLogsProps) {
-  const { isOpen, linksGetter, logs, openedItems, onItemToggle, onToggle, timestamp } = props;
+  const { interactive, isOpen, linksGetter, logs, openedItems, onItemToggle, onToggle, timestamp } = props;
+  let arrow: React.Node | null = null;
+  let HeaderComponent = 'span';
+  let headerProps: Object | null = null;
+  if (interactive) {
+    arrow = isOpen ? (
+      <IoIosArrowDown className="u-align-icon" />
+    ) : (
+      <IoIosArrowRight className="u-align-icon" />
+    );
+    HeaderComponent = 'a';
+    headerProps = {
+      'aria-checked': isOpen,
+      onClick: onToggle,
+      role: 'switch',
+    };
+  }
 
   return (
     <div className="AccordianLogs">
-      <a
-        className={`AccordianLogs--header ${isOpen ? 'is-open' : ''}`}
-        aria-checked={isOpen}
-        onClick={onToggle}
-        role="switch"
-      >
-        {isOpen ? <IoIosArrowDown className="u-align-icon" /> : <IoIosArrowRight className="u-align-icon" />}
-        <strong>Logs</strong> ({logs.length})
-      </a>
+      <HeaderComponent className={cx('AccordianLogs--header', { 'is-open': isOpen })} {...headerProps}>
+        {arrow} <strong>Logs</strong> ({logs.length})
+      </HeaderComponent>
       {isOpen && (
         <div className="AccordianLogs--content">
           {_sortBy(logs, 'timestamp').map((log, i) => (
@@ -57,13 +69,13 @@ export default function AccordianLogs(props: AccordianLogsProps) {
               // eslint-disable-next-line react/no-array-index-key
               key={`${log.timestamp}-${i}`}
               className={i < logs.length - 1 ? 'ub-mb1' : null}
-              // compact
-              highContrast
-              isOpen={openedItems.has(log)}
-              linksGetter={linksGetter}
               data={log.fields || []}
+              highContrast
+              interactive={interactive}
+              isOpen={openedItems ? openedItems.has(log) : false}
               label={`${formatDuration(log.timestamp - timestamp)}`}
-              onToggle={() => onItemToggle(log)}
+              linksGetter={linksGetter}
+              onToggle={interactive && onItemToggle ? () => onItemToggle(log) : null}
             />
           ))}
           <small className="AccordianLogs--footer">
@@ -74,3 +86,11 @@ export default function AccordianLogs(props: AccordianLogsProps) {
     </div>
   );
 }
+
+AccordianLogs.defaultProps = {
+  interactive: true,
+  linksGetter: undefined,
+  onItemToggle: undefined,
+  onToggle: undefined,
+  openedItems: undefined,
+};

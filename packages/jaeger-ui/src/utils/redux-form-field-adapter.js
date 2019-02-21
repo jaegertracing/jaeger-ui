@@ -20,6 +20,8 @@ import * as React from 'react';
 
 import './redux-form-field-adapter.css';
 
+const noop = () => {};
+
 export default function reduxFormFieldAdapter({
   AntInputComponent,
   onChangeAdapter,
@@ -38,8 +40,8 @@ export default function reduxFormFieldAdapter({
           'is-invalid': isInvalid,
           'AdaptedReduxFormField--isValidatedInput': isValidatedInput,
         })}
-        onBlur={isValidatedInput ? onBlur : null}
-        onFocus={isValidatedInput ? onFocus : null}
+        onBlur={isValidatedInput && onBlur ? onBlur : noop}
+        onFocus={isValidatedInput && onFocus ? onFocus : noop}
         onChange={onChangeAdapter ? (...args) => onChange(onChangeAdapter(...args)) : onChange}
         value={value}
         {...rest}
