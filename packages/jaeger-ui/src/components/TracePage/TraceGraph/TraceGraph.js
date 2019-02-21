@@ -22,6 +22,11 @@ import DRange from 'drange';
 import { getNodeDrawer, MODE_SERVICE, MODE_TIME, MODE_SELFTIME, HELP_TABLE } from './OpNode';
 import convPlexus from '../../../model/trace-dag/convPlexus';
 import TraceDag from '../../../model/trace-dag/TraceDag';
+import {
+  setOnEdgesContainer,
+  setOnNodesContainer,
+  setOnNode,
+} from '../../TraceDiff/TraceDiffGraph/TraceDiffGraph';
 
 import type { Trace, Span, KeyValuePair } from '../../../types/trace';
 
@@ -72,20 +77,6 @@ export function isError(tags: Array<KeyValuePair>) {
     }
   }
   return false;
-}
-
-function setOnEdgesContainer(state: Object) {
-  const { zoomTransform } = state;
-  if (!zoomTransform) {
-    return null;
-  }
-  const { k } = zoomTransform;
-  const opacity = 0.1 + k * 0.9;
-  return { style: { opacity } };
-}
-
-function setOnNodesContainer() {
-  return { style: { zIndex: -1 } };
 }
 
 const HELP_CONTENT = (
@@ -272,6 +263,7 @@ export default class TraceGraph extends React.PureComponent<Props, State> {
           setOnEdgePath={setOnEdgePath}
           setOnEdgesContainer={setOnEdgesContainer}
           setOnNodesContainer={setOnNodesContainer}
+          setOnNode={setOnNode}
           edges={ev.edges}
           vertices={ev.vertices}
         />

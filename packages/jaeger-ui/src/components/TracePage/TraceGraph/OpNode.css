@@ -22,6 +22,10 @@ limitations under the License.
   border-collapse: separate;
 }
 
+.OpNode--body {
+  color: rgba(0, 0, 0, 0.65);
+}
+
 .OpNode td,
 .OpNode th {
   border: none;
@@ -29,9 +33,10 @@ limitations under the License.
 
 .OpNode.is-ui-find-match {
   outline-style: solid;
-  outline-color: #050;
-  outline-width: 2px;
-  box-shadow: 0 0 4px 8px #0d0;
+  outline-color: #4c4840;
+  outline-width: inherit;
+  box-shadow: inherit;
+  color: #fff3d7;
 }
 
 .OpMode--mode-service {
@@ -54,7 +59,7 @@ limitations under the License.
 
 .OpNode--popover .OpNode--copyIcon,
 .OpNode:not(:hover) .OpNode--copyIcon {
-  display: none;
+  color: transparent;
 }
 
 .OpNode--service {

@@ -27,7 +27,7 @@ import { formatDuration } from '../utils';
 import LabeledList from '../../../common/LabeledList';
 import traceGenerator from '../../../../demo/trace-generators';
 import transformTraceData from '../../../../model/transform-trace-data';
-import updateUIFindSpy from '../../../../utils/update-ui-find';
+import updateUiFindSpy from '../../../../utils/update-ui-find';
 
 jest.mock('../../../../utils/update-ui-find');
 
@@ -69,7 +69,7 @@ describe('<SpanDetail>', () => {
     props.processToggle.mockReset();
     props.logsToggle.mockReset();
     props.logItemToggle.mockReset();
-    updateUIFindSpy.mockReset();
+    updateUiFindSpy.mockReset();
     wrapper = shallow(<UnconnectedSpanDetail {...props} />);
   });
 
@@ -126,20 +126,20 @@ describe('<SpanDetail>', () => {
     expect(props.logItemToggle).toHaveBeenLastCalledWith(span.spanID, somethingUniq);
   });
 
-  it('calls updateUIFind with expected kwargs when the spanID is clicked', () => {
+  it('calls updateUiFind with expected kwargs when the spanID is clicked', () => {
     const spanIDButton = wrapper.find('button');
     spanIDButton.simulate('click');
-    expect(updateUIFindSpy).toHaveBeenCalledWith({
+    expect(updateUiFindSpy).toHaveBeenCalledWith({
       history: props.history,
       location: props.location,
       uiFind: cx(props.uiFind, props.span.spanID),
     });
   });
 
-  it('does not call updateUIFind when the spanID is clicked and already exists in props.uiFind', () => {
+  it('does not call updateUiFind when the spanID is clicked and already exists in props.uiFind', () => {
     wrapper.setProps({ uiFind: cx(props.uiFind, props.span.spanID) });
     const spanIDButton = wrapper.find('button');
     spanIDButton.simulate('click');
-    expect(updateUIFindSpy).not.toHaveBeenCalled();
+    expect(updateUiFindSpy).not.toHaveBeenCalled();
   });
 });

@@ -14,18 +14,18 @@
 
 import queryString from 'query-string';
 
-import updateUIFind from './update-ui-find';
+import updateUiFind from './update-ui-find';
 import * as trackFilter from '../components/TracePage/index.track';
 
-describe('updateUIFind', () => {
-  const existingUIFind = 'existingUIFind';
-  const newUIFind = 'newUIFind';
+describe('updateUiFind', () => {
+  const existingUiFind = 'existingUiFind';
+  const newUiFind = 'newUiFind';
   const unrelatedQueryParamName = 'unrelatedQueryParamName';
   const unrelatedQueryParamValue = 'unrelatedQueryParamValue';
 
   const replaceMock = jest.fn();
   const queryStringParseSpy = jest.spyOn(queryString, 'parse').mockReturnValue({
-    uiFind: existingUIFind,
+    uiFind: existingUiFind,
     [unrelatedQueryParamName]: unrelatedQueryParamValue,
   });
   const queryStringStringifySpyMockReturnValue = 'queryStringStringifySpyMockReturnValue';
@@ -58,22 +58,22 @@ describe('updateUIFind', () => {
   });
 
   it('adds truthy graphSearch to existing params', () => {
-    updateUIFind({
+    updateUiFind({
       history,
       location,
-      uiFind: newUIFind,
+      uiFind: newUiFind,
     });
     expect(queryStringParseSpy).toHaveBeenCalledWith(location.search);
     expect(queryStringStringifySpy).toHaveBeenCalledWith({
-      uiFind: newUIFind,
+      uiFind: newUiFind,
       [unrelatedQueryParamName]: unrelatedQueryParamValue,
     });
-    expect(trackFilterSpy).toHaveBeenCalledWith(newUIFind);
+    expect(trackFilterSpy).toHaveBeenCalledWith(newUiFind);
     expect(replaceMock).toHaveBeenCalledWith(expectedReplaceMockArgument);
   });
 
   it('omits falsy graphSearch from query params', () => {
-    updateUIFind({
+    updateUiFind({
       history,
       location,
       uiFind: '',
@@ -87,7 +87,7 @@ describe('updateUIFind', () => {
   });
 
   it('omits absent graphSearch from query params', () => {
-    updateUIFind({
+    updateUiFind({
       history,
       location,
     });

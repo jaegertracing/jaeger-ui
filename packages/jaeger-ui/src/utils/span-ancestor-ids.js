@@ -18,10 +18,15 @@ import _map from 'lodash/map';
 
 import type { Span } from '../types/trace';
 
+function getReferences(span: Span): Span[] {
+  return _map(span && span.references, 'span').filter(Boolean);
+}
+
 export default function spanAncestorIds(span: ?Span): string[] {
-  const ancestors: Span[] = _map(span && span.references, 'span');
+  if (!span) return [];
+  const ancestors: Span[] = getReferences(span);
   for (let i = 0; i < ancestors.length; i++) {
-    ancestors.push(..._map(ancestors[i].references, 'span').filter(Boolean));
+    ancestors.push(...getReferences(ancestors[i]));
   }
   return Array.from(new Set(_map(ancestors, 'spanID')));
 }

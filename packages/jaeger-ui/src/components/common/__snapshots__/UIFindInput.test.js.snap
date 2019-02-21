@@ -1,11 +1,12 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`UIFind rendering renders as expected 1`] = `
+exports[`UiFind rendering renders as expected 1`] = `
 <Input
   disabled={false}
   onBlur={[Function]}
   onChange={[Function]}
   prefixCls="ant-input"
+  suffix={null}
   type="text"
   value={null}
 />

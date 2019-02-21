@@ -27,8 +27,8 @@ import AccordianLogs from './AccordianLogs';
 import DetailState from './DetailState';
 import { formatDuration } from '../utils';
 import LabeledList from '../../../common/LabeledList';
-import { extractUIFindFromState } from '../../../common/UIFindInput';
-import updateUIFind from '../../../../utils/update-ui-find';
+import { extractUiFindFromState } from '../../../common/UiFindInput';
+import updateUiFind from '../../../../utils/update-ui-find';
 
 import type { Log, Span, KeyValuePair, Link } from '../../../../types/trace';
 
@@ -84,7 +84,7 @@ export function UnconnectedSpanDetail(props: SpanDetailProps) {
 
   const addSpanIDToSearch = () => {
     if (!uiFind.includes(spanID)) {
-      updateUIFind({
+      updateUiFind({
         history,
         location,
         uiFind: cx(uiFind, spanID),
@@ -149,4 +149,4 @@ export function UnconnectedSpanDetail(props: SpanDetailProps) {
   );
 }
 
-export default withRouter(connect(extractUIFindFromState)(UnconnectedSpanDetail));
+export default withRouter(connect(extractUiFindFromState)(UnconnectedSpanDetail));

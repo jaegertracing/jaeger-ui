@@ -25,7 +25,7 @@ import SpanBarRow from './SpanBarRow';
 import DetailState from './SpanDetail/DetailState';
 import SpanDetailRow from './SpanDetailRow';
 import { findServerChildSpan, getViewedBounds, isErrorSpan, spanContainsErredSpan } from './utils';
-import { extractUIFindFromState } from '../../common/UIFindInput';
+import { extractUiFindFromState } from '../../common/UiFindInput';
 import getLinks from '../../../model/link-patterns';
 import colorGenerator from '../../../utils/color-generator';
 
@@ -387,7 +387,7 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
 /* istanbul ignore next */
 function mapStateToProps(state) {
   return {
-    ...extractUIFindFromState(state),
+    ...extractUiFindFromState(state),
     ...state.traceTimeline,
   };
 }

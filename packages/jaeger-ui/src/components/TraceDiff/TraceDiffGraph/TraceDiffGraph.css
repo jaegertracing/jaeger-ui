@@ -50,12 +50,12 @@ limitations under the License.
 
 /* Find within diff */
 .TraceDiffGraph--uiFind {
-  border: solid 1px #a9a9a9;
-  border-radius: 21px;
+  border: 1px solid #777;
+  border-radius: 0;
+  border-color: #aaa;
+  background: #cccccc;
+  padding-left: 5px;
   bottom: 20px;
-  cursor: auto;
-  display: flex;
-  padding: 5px;
   position: absolute;
   right: 20px;
   z-index: 1;
@@ -64,19 +64,8 @@ limitations under the License.
 .TraceDiffGraph--uiFind--input {
   width: 300px;
   transition: ease 1s;
-  margin: 0px 3px;
-}
-
-.TraceDiffGraph--uiFind:not(:hover) > .TraceDiffGraph--uiFind--input:not(:focus) {
-  border: none;
-  padding: 0px;
-  width: 0;
-  margin: 0px;
-}
-
-.TraceDiffGraph--uiFind--icon {
-  cursor: pointer;
-  font-size: 32px;
+  margin-left: 3px;
+  border-radius: 0px;
 }
 
 /* DAG minimap */

@@ -49,7 +49,7 @@ import { fetchedState } from '../../constants';
 import traceGenerator from '../../demo/trace-generators';
 import transformTraceData from '../../model/transform-trace-data';
 import filterSpansSpy from '../../utils/filter-spans';
-import updateUIFindSpy from '../../utils/update-ui-find';
+import updateUiFindSpy from '../../utils/update-ui-find';
 
 describe('makeShortcutCallbacks()', () => {
   let adjRange;
@@ -100,14 +100,14 @@ describe('<TracePage>', () => {
   beforeEach(() => {
     wrapper = shallow(<TracePage {...defaultProps} />);
     filterSpansSpy.mockClear();
-    updateUIFindSpy.mockClear();
+    updateUiFindSpy.mockClear();
   });
 
   describe('clearSearch', () => {
-    it('calls updateUIFind with expected kwargs when clearing search', () => {
-      expect(updateUIFindSpy).not.toHaveBeenCalled();
+    it('calls updateUiFind with expected kwargs when clearing search', () => {
+      expect(updateUiFindSpy).not.toHaveBeenCalled();
       wrapper.setProps({ id: notDefaultPropsId });
-      expect(updateUIFindSpy).toHaveBeenCalledWith({
+      expect(updateUiFindSpy).toHaveBeenCalledWith({
         history: defaultProps.history,
         location: defaultProps.location,
       });

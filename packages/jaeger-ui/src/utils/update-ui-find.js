@@ -20,7 +20,7 @@ import type { Location, RouterHistory } from 'react-router-dom';
 
 import { trackFilter } from '../components/TracePage/index.track';
 
-export default function updateUIFind({
+export default function updateUiFind({
   history,
   location,
   uiFind,

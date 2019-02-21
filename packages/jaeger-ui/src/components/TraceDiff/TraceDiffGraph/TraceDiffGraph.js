@@ -15,14 +15,14 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Icon } from 'antd';
 import { DirectedGraph, LayoutManager } from '@jaegertracing/plexus';
 import _get from 'lodash/get';
+import _map from 'lodash/map';
 
 import drawNode from './drawNode';
 import ErrorMessage from '../../common/ErrorMessage';
 import LoadingIndicator from '../../common/LoadingIndicator';
-import UIFindInput from '../../common/UIFindInput';
+import UiFindInput from '../../common/UiFindInput';
 import { fetchedState } from '../../../constants';
 import convPlexus from '../../../model/trace-dag/convPlexus';
 import TraceDag from '../../../model/trace-dag/TraceDag';
@@ -38,7 +38,7 @@ type Props = {
 
 const { classNameIsSmall } = DirectedGraph.propsFactories;
 
-function setOnEdgesContainer(state: Object) {
+export function setOnEdgesContainer(state: Object) {
   const { zoomTransform } = state;
   if (!zoomTransform) {
     return null;
@@ -48,7 +48,7 @@ function setOnEdgesContainer(state: Object) {
   return { style: { opacity, zIndex: 1, position: 'absolute', pointerEvents: 'none' } };
 }
 
-function setOnNodesContainer(state: Object) {
+export function setOnNodesContainer(state: Object) {
   const { zoomTransform } = state;
   const matchSize = 1 + 1 / _get(zoomTransform, 'k', 1);
   return {
@@ -60,9 +60,10 @@ function setOnNodesContainer(state: Object) {
   };
 }
 
-function setOnNode() {
+export function setOnNode() {
   return {
     style: {
+      outlineWidth: 'inherit',
       boxShadow: 'inherit',
     },
   };
@@ -118,6 +119,7 @@ export default class TraceDiffGraph extends React.PureComponent<Props> {
     const bTraceDag = TraceDag.newFromTrace(bData);
     const diffDag = TraceDag.diff(aTraceDag, bTraceDag);
     const { edges, vertices } = convPlexus(diffDag.nodesMap);
+    const spansArray = _map(_map(vertices, 'data.members'), member => _map(member, 'span'));
 
     return (
       <div className="TraceDiffGraph--graphWrapper">
@@ -137,10 +139,13 @@ export default class TraceDiffGraph extends React.PureComponent<Props> {
           vertices={vertices}
         />
         <div className="TraceDiffGraph--uiFind">
-          <UIFindInput inputProps={{ className: 'TraceDiffGraph--uiFind--input', id: 'uiFind--input' }} />
           <label htmlFor="uiFind--input">
-            <Icon className="TraceDiffGraph--uiFind--icon" type="search" />
+            <span>Find</span>
           </label>
+          <UiFindInput
+            spansArray={spansArray}
+            inputProps={{ className: 'TraceDiffGraph--uiFind--input', id: 'uiFind--input' }}
+          />
         </div>
       </div>
     );

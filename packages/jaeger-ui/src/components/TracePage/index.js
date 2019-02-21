@@ -38,11 +38,11 @@ import TraceTimelineViewer from './TraceTimelineViewer';
 import { getLocation, getUrl } from './url';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
-import { extractUIFindFromState } from '../common/UIFindInput';
+import { extractUiFindFromState } from '../common/UiFindInput';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import { fetchedState } from '../../constants';
 import filterSpans from '../../utils/filter-spans';
-import updateUIFind from '../../utils/update-ui-find';
+import updateUiFind from '../../utils/update-ui-find';
 
 import type { CombokeysHandler, ShortcutCallbacks } from './keyboard-shortcuts';
 import type { ViewRange, ViewRangeTimeUpdate } from './types';
@@ -233,7 +233,7 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
       history,
       location,
     };
-    updateUIFind(arg);
+    updateUiFind(arg);
     if (this._searchBar.current) this._searchBar.current.blur();
   };
 
@@ -379,7 +379,7 @@ export function mapStateToProps(state: ReduxState, ownProps: { match: Match }) {
   const searchUrl = (locationState && locationState.fromSearch) || null;
 
   return {
-    ...extractUIFindFromState(state),
+    ...extractUiFindFromState(state),
     archiveEnabled,
     archiveTraceState,
     embedded,

@@ -85,7 +85,7 @@ describe('<OpNode>', () => {
   });
 
   it('updates class when it matches search', () => {
-    const uiFind = 'newUIFindToTriggerRender';
+    const uiFind = 'newUiFindToTriggerRender';
     expect(wrapper.find('.is-ui-find-match').length).toBe(0);
     filterSpansMock.mockReturnValue({ size: 1 });
     wrapper.setProps({ uiFind });

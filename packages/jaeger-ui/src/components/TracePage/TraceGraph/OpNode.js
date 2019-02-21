@@ -23,7 +23,7 @@ import _memoize from 'lodash/memoize';
 import { connect } from 'react-redux';
 
 import CopyIcon from '../../common/CopyIcon';
-import { extractUIFindFromState } from '../../common/UIFindInput';
+import { extractUiFindFromState } from '../../common/UiFindInput';
 import colorGenerator from '../../../utils/color-generator';
 import filterSpans from '../../../utils/filter-spans';
 
@@ -119,6 +119,7 @@ export default class OpNode extends React.PureComponent<Props> {
     const table = (
       <table className={className} cellSpacing="0">
         <tbody
+          className="OpNode--body"
           style={{
             background: `rgba(${backgroundColor})`,
           }}
@@ -158,7 +159,7 @@ export default class OpNode extends React.PureComponent<Props> {
   }
 }
 
-const ConnectedOpNode = connect(extractUIFindFromState)(OpNode);
+const ConnectedOpNode = connect(extractUiFindFromState)(OpNode);
 
 export function getNodeDrawer(mode: string) {
   return function drawNode<T>(vertex: PVertex<T>) {

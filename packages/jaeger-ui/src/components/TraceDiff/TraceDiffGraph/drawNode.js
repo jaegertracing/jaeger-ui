@@ -23,7 +23,7 @@ import _memoize from 'lodash/memoize';
 import { connect } from 'react-redux';
 
 import CopyIcon from '../../common/CopyIcon';
-import { extractUIFindFromState } from '../../common/UIFindInput';
+import { extractUiFindFromState } from '../../common/UiFindInput';
 import filterSpans from '../../../utils/filter-spans';
 
 import type { PVertex, DenseSpan } from '../../../model/trace-dag/types';
@@ -108,7 +108,7 @@ class DiffNode extends React.PureComponent<Props> {
   }
 }
 
-const ConnectedDiffNode = connect(extractUIFindFromState)(DiffNode);
+const ConnectedDiffNode = connect(extractUiFindFromState)(DiffNode);
 
 export default function drawNode<T>(vertex: PVertex<T>) {
   const { data, members, operation, service } = vertex.data;

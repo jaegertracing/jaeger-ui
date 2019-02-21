@@ -17,7 +17,7 @@ import { shallow } from 'enzyme';
 
 import * as markers from './TracePageSearchBar.markers';
 import { TracePageSearchBarFn as TracePageSearchBar } from './TracePageSearchBar';
-import UIFindInput from '../../common/UIFindInput';
+import UiFindInput from '../../common/UiFindInput';
 
 describe('<TracePageSearchBar>', () => {
   const defaultProps = {
@@ -36,10 +36,10 @@ describe('<TracePageSearchBar>', () => {
   });
 
   describe('truthy textFilter', () => {
-    it('renders UIFindInput with correct props', () => {
-      const renderedUIFindInput = wrapper.find(UIFindInput);
-      const suffix = shallow(renderedUIFindInput.prop('inputProps').suffix);
-      expect(renderedUIFindInput.prop('inputProps')).toEqual(
+    it('renders UiFindInput with correct props', () => {
+      const renderedUiFindInput = wrapper.find(UiFindInput);
+      const suffix = shallow(renderedUiFindInput.prop('inputProps').suffix);
+      expect(renderedUiFindInput.prop('inputProps')).toEqual(
         expect.objectContaining({
           'data-test': markers.IN_TRACE_SEARCH,
           className: 'TracePageSearchBar--bar ub-flex-auto',
@@ -49,7 +49,7 @@ describe('<TracePageSearchBar>', () => {
       );
       expect(suffix.hasClass('TracePageSearchBar--count')).toBe(true);
       expect(suffix.text()).toBe(String(defaultProps.resultCount));
-      expect(renderedUIFindInput.prop('forwardedRef')).toBe(defaultProps.forwardedRef);
+      expect(renderedUiFindInput.prop('forwardedRef')).toBe(defaultProps.forwardedRef);
     });
 
     it('renders buttons', () => {
@@ -71,8 +71,8 @@ describe('<TracePageSearchBar>', () => {
       wrapper.setProps({ textFilter: '' });
     });
 
-    it('renders UIFindInput with correct props', () => {
-      expect(wrapper.find(UIFindInput).prop('inputProps').suffix).toBe(null);
+    it('renders UiFindInput with correct props', () => {
+      expect(wrapper.find(UiFindInput).prop('inputProps').suffix).toBe(null);
     });
 
     it('renders buttons', () => {
