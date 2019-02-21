@@ -67,7 +67,7 @@ limitations under the License.
 
 .span-row.is-expanded .span-name-wrapper {
   background: #f0f0f0;
-  outline: 1px solid #ddd;
+  box-shadow: 0 1px 0 #ddd;
 }
 
 .span-row.is-expanded .span-name-wrapper.is-matching-filter {
