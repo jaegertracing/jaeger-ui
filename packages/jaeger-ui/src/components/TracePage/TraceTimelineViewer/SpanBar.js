@@ -65,9 +65,11 @@ function SpanBar(props: SpanBarProps) {
     span,
   } = props;
   // group logs based on timestamps
-  const logGroups = _groupBy(span.logs, log =>
-    toPercent(getViewedBounds(log.timestamp, log.timestamp).start)
-  );
+  const logGroups = _groupBy(span.logs, log => {
+    const posPercent = getViewedBounds(log.timestamp, log.timestamp).start;
+    // round to the nearest 0.2%
+    return toPercent(Math.round(posPercent * 500) / 500);
+  });
 
   return (
     <div
