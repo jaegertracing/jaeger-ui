@@ -17,16 +17,20 @@ limitations under the License.
 .DiffNode {
   background: #bbb;
   border: 1px solid #777;
-  box-shadow: 0 0px 3px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 0px 3px 3px rgba(0, 0, 0, 0.2);
   cursor: pointer;
   white-space: nowrap;
 }
 
-.TraceDiffGraph--dag.is-small .DiffNode > tbody {
+.DiffNode--body {
+  color: rgba(0, 0, 0, 0.65);
+}
+
+.TraceDiffGraph--dag.is-small .DiffNode--body {
   opacity: 0;
 }
 
-.DiffNode.is-changed {
+.DiffNode--body.is-changed {
   color: var(--tx-color-title);
 }
 
@@ -38,6 +42,9 @@ limitations under the License.
 .DiffNode.is-added {
   background: #2a8f04;
   border: none;
+}
+
+.DiffNode--body.is-added {
   color: #fff;
 }
 
@@ -49,6 +56,9 @@ limitations under the License.
 .DiffNode.is-removed {
   background: #cc1616;
   border: none;
+}
+
+.DiffNode--body.is-removed {
   color: #fff;
 }
 
@@ -58,6 +68,10 @@ limitations under the License.
   outline-width: inherit;
   box-shadow: inherit;
   color: #fff3d7;
+}
+
+.DiffNode--popover .DiffNode.is-ui-find-match {
+  outline-width: 2px;
 }
 
 .DiffNode--metricCell {
@@ -86,7 +100,7 @@ limitations under the License.
 
 .DiffNode--popover .DiffNode--copyIcon,
 .DiffNode:not(:hover) .DiffNode--copyIcon {
-  display: none;
+  color: transparent;
 }
 
 /* Tweak the popover aesthetics - unfortunate but necessary */

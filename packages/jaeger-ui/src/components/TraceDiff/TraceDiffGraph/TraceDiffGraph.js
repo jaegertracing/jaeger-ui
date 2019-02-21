@@ -55,6 +55,7 @@ function setOnNodesContainer(state: Object) {
     style: {
       boxShadow: `0 0 ${2 * matchSize}px ${4 * matchSize}px`,
       outlineWidth: `${matchSize}px`,
+      color: 'transparent',
     },
   };
 }
@@ -63,7 +64,6 @@ function setOnNode() {
   return {
     style: {
       boxShadow: 'inherit',
-      color: 'transparent',
     },
   };
 }

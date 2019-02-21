@@ -56,7 +56,7 @@ class DiffNode extends React.PureComponent<Props> {
   }
 
   render() {
-    const { a, b, uiFind, /* meta, */ operation, service } = this.props;
+    const { a, b, uiFind, operation, service } = this.props;
     const isSame = a === b;
     const isUiFindMatch = _get(this.filterSpans(uiFind, _map(this.props.members, 'span')), 'size');
     const className = cx({
@@ -71,7 +71,7 @@ class DiffNode extends React.PureComponent<Props> {
     const chgSign = a < b ? '+' : '-';
     const table = (
       <table className={`DiffNode ${className}`}>
-        <tbody>
+        <tbody className={`DiffNode--body ${className}`}>
           <tr>
             <td className={`DiffNode--metricCell ${className}`} rowSpan={isSame ? 2 : 1}>
               {isSame ? null : <span className="DiffNode--metricSymbol">{chgSign}</span>}
