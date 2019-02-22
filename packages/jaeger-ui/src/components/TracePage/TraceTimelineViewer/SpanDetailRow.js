@@ -65,7 +65,7 @@ export default class SpanDetailRow extends React.PureComponent<SpanDetailRowProp
     return (
       <TimelineRow className="detail-row">
         <TimelineRow.Cell width={columnDivision}>
-          <SpanTreeOffset span={span} showChildrenStatus={false} />
+          <SpanTreeOffset span={span} showChildrenIcon={false} />
           <span>
             <span
               className="detail-row-expanded-accent"
