@@ -92,7 +92,7 @@ describe('<SearchTracePage>', () => {
     expect(historyPush.mock.calls.length).toBe(1);
     expect(historyPush.mock.calls[0][0]).toEqual({
       pathname: `/trace/${traceID}`,
-      state: { fromSearch: queryOfResults },
+      state: { fromSearch: '/search?' },
     });
   });
 

@@ -14,6 +14,7 @@
 
 import React from 'react';
 import { mount } from 'enzyme';
+import { Popover } from 'antd';
 
 import SpanBar from './SpanBar';
 
@@ -28,10 +29,39 @@ describe('<SpanBar>', () => {
     hintSide: 'right',
     viewEnd: 1,
     viewStart: 0,
+    getViewedBounds: s => {
+      // Log entries
+      if (s === 10) {
+        return { start: 0.1, end: 0.1 };
+      } else if (s === 20) {
+        return { start: 0.2, end: 0.2 };
+      }
+      return { error: 'error' };
+    },
     rpc: {
       viewStart: 0.25,
       viewEnd: 0.75,
       color: '#000',
+    },
+    tracestartTime: 0,
+    span: {
+      logs: [
+        {
+          timestamp: 10,
+          fields: [{ key: 'message', value: 'oh the log message' }, { key: 'something', value: 'else' }],
+        },
+        {
+          timestamp: 10,
+          fields: [
+            { key: 'message', value: 'oh the second log message' },
+            { key: 'something', value: 'different' },
+          ],
+        },
+        {
+          timestamp: 20,
+          fields: [{ key: 'message', value: 'oh the next log message' }, { key: 'more', value: 'stuff' }],
+        },
+      ],
     },
   };
 
@@ -45,5 +75,11 @@ describe('<SpanBar>', () => {
     expect(labelElm.text()).toBe(longLabel);
     onMouseOut();
     expect(labelElm.text()).toBe(shortLabel);
+  });
+
+  it('log markers count', () => {
+    // 3 log entries, two grouped together with the same timestamp
+    const wrapper = mount(<SpanBar {...props} />);
+    expect(wrapper.find(Popover).length).toEqual(2);
   });
 });

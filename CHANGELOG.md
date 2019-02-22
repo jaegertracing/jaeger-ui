@@ -1,5 +1,19 @@
 # Releases
 
+## Next (Unreleased)
+
+### Enhancements
+
+* **Trace detail:** Log Markers on Spans ([Fix #119](https://github.com/jaegertracing/jaeger-ui/issues/119)) ([@sfriberg](https://github.com/sfriberg) in [#309](https://github.com/jaegertracing/jaeger-ui/pull/309))
+
+## v1.0.1 (February 15, 2019)
+
+### Fixes
+
+* **Trace detail:** Fix [#323](https://github.com/jaegertracing/jaeger-ui/issues/323) - Browser back button of trace page not working if plot is clicked ([@tacigar](https://github.com/tacigar) in [#324](https://github.com/jaegertracing/jaeger-ui/pull/324))
+
+* **Search:** Fix [#325](https://github.com/jaegertracing/jaeger-ui/issues/325) - JS errors on search form dropdowns ([@tiffon](https://github.com/tiffon) in [#329](https://github.com/jaegertracing/jaeger-ui/pull/329))
+
 ## v1.0.0 (January 18, 2019)
 
 ### Enhancements
