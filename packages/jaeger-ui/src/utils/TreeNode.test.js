@@ -264,3 +264,30 @@ it('walk() should iterate over every item once in the right order', () => {
 
   treeRoot.walk(value => expect(value).toBe(++i));
 });
+
+it('walk() should iterate over every item and compute the right deep on each node', () => {
+  /**
+   *     C0
+   *    /
+   *   B0 – C1
+   *  /
+   * A – B1 – C2
+   *      \
+   *      C3 – D
+   */
+
+  const nodeA = new TreeNode('A');
+  const nodeB0 = new TreeNode('B0');
+  const nodeB1 = new TreeNode('B1');
+  const nodeC3 = new TreeNode('C3');
+  const depthMap = { A: 0, B0: 1, B1: 1, C0: 2, C1: 2, C2: 2, C3: 2, D: 3 };
+  nodeA.addChild(nodeB0);
+  nodeA.addChild(nodeB0);
+  nodeA.addChild(nodeB1);
+  nodeB0.addChild('C0');
+  nodeB0.addChild('C1');
+  nodeB1.addChild('C2');
+  nodeB1.addChild(nodeC3);
+  nodeC3.addChild('D');
+  nodeA.walk((value, node, depth) => expect(depth).toBe(depthMap[value]));
+});

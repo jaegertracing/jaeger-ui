@@ -14,7 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import React from 'react';
+import * as React from 'react';
 import cx from 'classnames';
 import IoIosArrowDown from 'react-icons/lib/io/ios-arrow-down';
 import IoIosArrowRight from 'react-icons/lib/io/ios-arrow-right';
@@ -29,10 +29,11 @@ type AccordianKeyValuesProps = {
   className?: ?string,
   data: KeyValuePair[],
   highContrast?: boolean,
+  interactive?: boolean,
   isOpen: boolean,
   label: string,
   linksGetter: ?(KeyValuePair[], number) => Link[],
-  onToggle: () => void,
+  onToggle: null | (() => void),
 };
 
 // export for tests
@@ -61,9 +62,20 @@ KeyValuesSummary.defaultProps = {
 };
 
 export default function AccordianKeyValues(props: AccordianKeyValuesProps) {
-  const { className, data, highContrast, isOpen, label, linksGetter, onToggle } = props;
+  const { className, data, highContrast, interactive, isOpen, label, linksGetter, onToggle } = props;
   const isEmpty = !Array.isArray(data) || !data.length;
   const iconCls = cx('u-align-icon', { 'AccordianKeyValues--emptyIcon': isEmpty });
+  let arrow: React.Node | null = null;
+  let headerProps: Object | null = null;
+  if (interactive) {
+    arrow = isOpen ? <IoIosArrowDown className={iconCls} /> : <IoIosArrowRight className={iconCls} />;
+    headerProps = {
+      'aria-checked': isOpen,
+      onClick: isEmpty ? null : onToggle,
+      role: 'switch',
+    };
+  }
+
   return (
     <div className={cx(className, 'u-tx-ellipsis')}>
       <div
@@ -71,11 +83,9 @@ export default function AccordianKeyValues(props: AccordianKeyValuesProps) {
           'is-empty': isEmpty,
           'is-high-contrast': highContrast,
         })}
-        aria-checked={isOpen}
-        onClick={isEmpty ? null : onToggle}
-        role="switch"
+        {...headerProps}
       >
-        {isOpen ? <IoIosArrowDown className={iconCls} /> : <IoIosArrowRight className={iconCls} />}
+        {arrow}
         <strong data-test={markers.LABEL}>
           {label}
           {isOpen || ':'}
@@ -90,4 +100,6 @@ export default function AccordianKeyValues(props: AccordianKeyValuesProps) {
 AccordianKeyValues.defaultProps = {
   className: null,
   highContrast: false,
+  interactive: true,
+  onToggle: null,
 };
