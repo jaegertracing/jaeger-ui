@@ -33,7 +33,7 @@ type AccordianKeyValuesProps = {
   isOpen: boolean,
   label: string,
   linksGetter: ?(KeyValuePair[], number) => Link[],
-  onToggle: null | (() => void),
+  onToggle?: null | (() => void),
 };
 
 // export for tests
