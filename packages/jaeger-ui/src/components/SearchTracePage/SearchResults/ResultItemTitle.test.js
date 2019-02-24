@@ -26,6 +26,7 @@ describe('ResultItemTitle', () => {
     durationPercent: 10,
     isInDiffCohort: true,
     linkTo: 'linkToValue',
+    state: fetchedState.DONE,
     toggleComparison: jest.fn(),
     traceID: 'trace-id-longer-than-8',
     traceName: 'traceNameValue',

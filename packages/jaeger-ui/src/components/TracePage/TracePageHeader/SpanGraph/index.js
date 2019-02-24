@@ -22,10 +22,11 @@ import ViewingLayer from './ViewingLayer';
 import type { ViewRange, ViewRangeTimeUpdate } from '../../types';
 import type { Span, Trace } from '../../../../types/trace';
 
+const DEFAULT_HEIGHT = 60;
 const TIMELINE_TICK_INTERVAL = 4;
 
 type SpanGraphProps = {
-  height: number,
+  height?: number,
   trace: Trace,
   viewRange: ViewRange,
   updateViewRangeTime: (number, number) => void,
@@ -57,7 +58,7 @@ export default class SpanGraph extends React.PureComponent<SpanGraphProps, SpanG
   state: SpanGraphState;
 
   static defaultProps = {
-    height: 60,
+    height: DEFAULT_HEIGHT,
   };
 
   constructor(props: SpanGraphProps) {
@@ -91,7 +92,7 @@ export default class SpanGraph extends React.PureComponent<SpanGraphProps, SpanG
           <ViewingLayer
             viewRange={viewRange}
             numTicks={TIMELINE_TICK_INTERVAL}
-            height={height}
+            height={height || DEFAULT_HEIGHT}
             updateViewRangeTime={updateViewRangeTime}
             updateNextViewRangeTime={updateNextViewRangeTime}
           />

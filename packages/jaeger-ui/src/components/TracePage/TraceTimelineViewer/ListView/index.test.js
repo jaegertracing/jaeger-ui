@@ -62,6 +62,8 @@ describe('<ListView>', () => {
 
   const props = {
     dataLength: DATA_LENGTH,
+    getIndexFromKey: Number,
+    getKeyFromIndex: String,
     initialDraw: 5,
     itemHeightGetter: getHeight,
     itemRenderer: renderItem,
@@ -157,13 +159,13 @@ describe('<ListView>', () => {
 
       it('getBottomVisibleIndex() returns a number', () => {
         const n = instance.getBottomVisibleIndex();
-        expect(isNaN(n)).toBe(false);
+        expect(Number.isNaN(n)).toBe(false);
         expect(n).toEqual(expect.any(Number));
       });
 
       it('getTopVisibleIndex() returns a number', () => {
         const n = instance.getTopVisibleIndex();
-        expect(isNaN(n)).toBe(false);
+        expect(Number.isNaN(n)).toBe(false);
         expect(n).toEqual(expect.any(Number));
       });
 

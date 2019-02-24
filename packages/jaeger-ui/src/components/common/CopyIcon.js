@@ -30,9 +30,12 @@ type StateType = {
 };
 
 export default class CopyIcon extends React.PureComponent<PropsType, StateType> {
+  props: PropsType;
+
   static defaultProps = {
     className: null,
   };
+
   state = {
     hasCopied: false,
   };

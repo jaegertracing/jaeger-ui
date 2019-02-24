@@ -1,43 +1,36 @@
-// declare module "worker*";
-// declare module "worker/LeDiv/viz-wrapper.worker";
+// Copyright (c) 2019 Uber Technologies, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
-// declare module "worker/LeDiv/viz-wrapper.worker" {
-//   class WebpackWorker extends Worker {
-//     constructor();
-//   }
-//   export default WebpackWorker;
-// }
+// Note: These type defs cannot be in the typings/index.d.ts file (due to
+// TypeScript automagic?).
 
-// declare module "worker-loader?inline&fallback=false!./viz-wrapper.worker" {
-//   class WebpackWorker extends Worker {
-//     constructor();
-//   }
-//   export default WebpackWorker;
-// }
-
-// declare module "*.worker" {
-//   class WebpackWorker extends Worker {
-//     constructor();
-//   }
-//   export default WebpackWorker;
-// }
-
+// The webpack config (via neutrino.rc.js) has "worker" as an alias for
+// <project_root>/src. Thus, all TS files imported as "worker/*" are acutally
+// local files. They should be web-worker files. The following custom type-def
+// allows them to be treated as `Worker`s.
 declare module "worker/*" {
   class WebpackWorker extends Worker {
     id: number;
     constructor();
+    // `onmessageerror` is missing from the TypeScript type def for workers
+    // https://html.spec.whatwg.org/multipage/workers.html#dedicated-workers-and-the-worker-interface
     onmessageerror: ((this: Worker, ev: MessageEvent) => any) | null;
   }
   export default WebpackWorker;
 }
 
-// declare module "worker-loader*" {
-//   class WebpackWorker extends Worker {
-//     constructor();
-//   }
-//   export default WebpackWorker;
-// }
-
-declare module "viz.js" {
+// Type def for the viz.js module, which doesn't ship with TypeScript types.
+declare module "viz.js/*" {
   export default function viz(dot: string, options?: {}): string;
 }

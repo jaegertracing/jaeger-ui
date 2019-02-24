@@ -16,8 +16,9 @@
 
 import React from 'react';
 
-import type { DraggableBounds, DraggingUpdate } from '../../DraggableManager';
-import DraggableManager from '../../DraggableManager';
+import DraggableManager from '..';
+
+import type { DraggableBounds, DraggingUpdate } from '..';
 
 import './RegionDemo.css';
 

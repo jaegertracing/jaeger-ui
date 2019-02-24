@@ -21,16 +21,14 @@ import { TLayoutVertex, TVertex } from '../../types/layout';
 
 type Props = {
   classNamePrefix: string;
-  getNodeLabel: ((vertex: TVertex) => React.ReactNode) | void;
-  layoutVertices: TLayoutVertex[] | void;
-  setOnNode: TPropsFactoryFn<TVertex> | void;
+  getNodeLabel: ((vertex: TVertex) => React.ReactNode) | null;
+  layoutVertices: TLayoutVertex[] | null;
+  setOnNode: TPropsFactoryFn<TVertex> | null;
   vertexRefs: { current: HTMLElement | null }[];
   vertices: TVertex[];
 };
 
 export default class PureEdges extends React.PureComponent<Props> {
-  props: Props;
-
   _renderVertices() {
     const { classNamePrefix, getNodeLabel, setOnNode, vertices, vertexRefs } = this.props;
     return vertices.map((v, i) => (

@@ -14,9 +14,7 @@
 
 import * as React from 'react';
 
-import { TObjectOfAny } from '../types';
-
-type Props = TObjectOfAny & {
+type Props = Record<string, any> & {
   markerEnd: string;
   pathPoints: [number, number][];
 };
@@ -51,8 +49,6 @@ const D_CMDS = ['M', 'C'];
 // }
 
 export default class EdgePath extends React.PureComponent<Props> {
-  props: Props;
-
   render() {
     const { markerEnd, pathPoints, ...rest } = this.props;
     const d = pathPoints.map((pt, i) => `${D_CMDS[i] || ''}${pt.join(',')}`).join(' ');

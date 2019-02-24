@@ -16,8 +16,8 @@
 
 import * as React from 'react';
 
-import BreakableText from '../common/BreakableText';
-import LoadingIndicator from '../common/LoadingIndicator';
+import BreakableText from './BreakableText';
+import LoadingIndicator from './LoadingIndicator';
 import { fetchedState, FALLBACK_TRACE_NAME } from '../../constants';
 
 import type { FetchedState } from '../../types';

@@ -39,7 +39,7 @@ type ListViewProps = {
   /**
    * Number of items to draw and add to the DOM, initially.
    */
-  initialDraw: number,
+  initialDraw?: number,
   /**
    * The parent provides fallback height measurements when there is not a
    * rendered element to measure.
@@ -79,6 +79,8 @@ type ListViewProps = {
    */
   windowScroller?: boolean,
 };
+
+const DEFAULT_INITIAL_DRAW = 300;
 
 /**
  * Virtualized list view component, for the most part, only renders the window
@@ -154,18 +156,8 @@ export default class ListView extends React.Component<ListViewProps> {
   _itemHolderElm: ?HTMLElement;
 
   static defaultProps = {
-    /**
-     * E.g.`str => Number(str)`
-     */
-    getIndexFromKey: Number,
-    /**
-     * E.g.`num => String(num)`
-     */
-    getKeyFromIndex: String,
-    initialDraw: 300,
+    initialDraw: DEFAULT_INITIAL_DRAW,
     itemsWrapperClassName: '',
-    viewBuffer: 90,
-    viewBufferMin: 30,
     windowScroller: false,
   };
 
@@ -388,7 +380,14 @@ export default class ListView extends React.Component<ListViewProps> {
   };
 
   render() {
-    const { dataLength, getKeyFromIndex, initialDraw, itemRenderer, viewBuffer, viewBufferMin } = this.props;
+    const {
+      dataLength,
+      getKeyFromIndex,
+      initialDraw = DEFAULT_INITIAL_DRAW,
+      itemRenderer,
+      viewBuffer,
+      viewBufferMin,
+    } = this.props;
     const heightGetter = this._getHeight;
     const items = [];
     let start;

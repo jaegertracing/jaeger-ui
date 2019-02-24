@@ -41,9 +41,6 @@ const modifyVars = lessToJs(loadedVarOverrides);
 
 function webpack(_config) {
   let config = _config;
-  // const resolvedPath = require.resolve('react-scripts/config/paths');
-  // console.log(require.resolve('react-scripts/config/paths'))
-  // require.cache[resolvedPath].exports = require('react-scripts/config/paths');
   config = addLessLoader({
     modifyVars,
     javascriptEnabled: true,

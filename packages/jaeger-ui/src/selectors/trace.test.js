@@ -25,8 +25,8 @@ import {
   getSpanTimestamp,
 } from './span';
 import * as traceSelectors from './trace';
-import traceGenerator from '../../src/demo/trace-generators';
-import { numberSortComparator } from '../../src/utils/sort';
+import traceGenerator from '../demo/trace-generators';
+import { numberSortComparator } from '../utils/sort';
 
 const generatedTrace = traceGenerator.trace({ numberOfSpans: 45 });
 

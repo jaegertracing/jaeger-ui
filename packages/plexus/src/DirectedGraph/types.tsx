@@ -19,17 +19,15 @@ import { TEdge, TLayoutEdge, TLayoutGraph, TLayoutVertex, TSizeVertex, TVertex }
 
 import LayoutManager from '../LayoutManager';
 
-export type TObjectOfAny = { [key: string]: any };
-
-export type TPropsFactoryFn<TInput> = (value: TInput) => TObjectOfAny | void;
+export type TPropsFactoryFn<TInput> = (value: TInput) => Record<string, any> | null;
 
 export type TDirectedGraphState = {
   edges: TEdge[];
-  layoutEdges: TLayoutEdge[] | void;
-  layoutGraph: TLayoutGraph | void;
+  layoutEdges: TLayoutEdge[] | null;
+  layoutGraph: TLayoutGraph | null;
   layoutPhase: number;
-  layoutVertices: TLayoutVertex[] | void;
-  sizeVertices: TSizeVertex[] | void;
+  layoutVertices: TLayoutVertex[] | null;
+  sizeVertices: TSizeVertex[] | null;
   // vertexRefs: { current: HTMLElement | null }[],
   vertexRefs: React.RefObject<HTMLElement>[];
   vertices: TVertex[];
@@ -43,15 +41,15 @@ export type TDirectedGraphProps = {
   classNamePrefix: string;
   edges: TEdge[];
   // getEdgeLabel: ?(TEdge) => React.Node,
-  getNodeLabel: ((vtx: TVertex) => React.ReactNode) | void;
+  getNodeLabel: ((vtx: TVertex) => React.ReactNode) | null;
   layoutManager: LayoutManager;
   minimap: boolean;
   minimapClassName: string;
-  setOnEdgePath: TPropsFactoryFn<TEdge> | void;
-  setOnEdgesContainer: TPropsFactoryFn<TDirectedGraphState> | void;
-  setOnNode: TPropsFactoryFn<TVertex> | void;
-  setOnNodesContainer: TPropsFactoryFn<TDirectedGraphState> | void;
-  setOnRoot: TPropsFactoryFn<TDirectedGraphState> | void;
+  setOnEdgePath: TPropsFactoryFn<TEdge> | null;
+  setOnEdgesContainer: TPropsFactoryFn<TDirectedGraphState> | null;
+  setOnNode: TPropsFactoryFn<TVertex> | null;
+  setOnNodesContainer: TPropsFactoryFn<TDirectedGraphState> | null;
+  setOnRoot: TPropsFactoryFn<TDirectedGraphState> | null;
   vertices: TVertex[];
   zoom: boolean;
 };

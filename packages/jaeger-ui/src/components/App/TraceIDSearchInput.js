@@ -20,7 +20,7 @@ import { withRouter } from 'react-router-dom';
 
 import type { RouterHistory } from 'react-router-dom';
 
-import { getUrl } from '../../components/TracePage/url';
+import { getUrl } from '../TracePage/url';
 
 import './TraceIDSearchInput.css';
 

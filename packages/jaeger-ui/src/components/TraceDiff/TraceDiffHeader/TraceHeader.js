@@ -101,9 +101,5 @@ export default function TraceHeader(props: Props) {
 }
 
 TraceHeader.defaultProps = {
-  startTime: null,
-  duration: null,
   error: undefined,
-  state: undefined,
-  totalSpans: null,
 };

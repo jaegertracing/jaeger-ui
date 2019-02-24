@@ -22,12 +22,10 @@ import { TEdge, TLayoutEdge } from '../../types/layout';
 type TProps = {
   arrowIriRef: string;
   layoutEdges: TLayoutEdge[];
-  setOnEdgePath: TPropsFactoryFn<TEdge> | void;
+  setOnEdgePath: TPropsFactoryFn<TEdge> | null;
 };
 
 export default class PureEdges extends React.PureComponent<TProps> {
-  props: TProps;
-
   render() {
     const { arrowIriRef, layoutEdges, setOnEdgePath } = this.props;
     return layoutEdges.map(edge => (

@@ -32,9 +32,9 @@ import './SpanTreeOffset.css';
 
 type SpanTreeOffsetPropsType = {
   addHoverIndentGuideId: string => void,
-  childrenVisible: boolean,
+  childrenVisible?: boolean,
   hoverIndentGuideIds: Set<string>,
-  onClick: ?() => void,
+  onClick?: ?() => void,
   removeHoverIndentGuideId: string => void,
   span: Span,
 };

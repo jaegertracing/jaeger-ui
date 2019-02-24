@@ -13,14 +13,16 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { render } from 'react-dom';
-// import LeDiv from './components/LeDiv';
-import { LeDiv } from '../src';
 
-// import { LeDiv } from '../build';
+import { TVertex } from '../../types/layout';
 
-const root = document.getElementById('root');
-console.log('a s')
-render((
-  <LeDiv />
-), root);
+export default function defaultGetNodeLabel(vertex: TVertex) {
+  const { label } = vertex;
+  if (label != null) {
+    if (typeof label === 'string' || React.isValidElement(label)) {
+      return label;
+    }
+    return String(label);
+  }
+  return String(vertex.key);
+}

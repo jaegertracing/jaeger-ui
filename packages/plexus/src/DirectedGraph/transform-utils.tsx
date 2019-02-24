@@ -29,7 +29,7 @@ function boundValue(min: number, max: number, value: number) {
   return value > max ? max : value;
 }
 
-function getFittedScale(width, height, viewWidth, viewHeight) {
+function getFittedScale(width: number, height: number, viewWidth: number, viewHeight: number) {
   return Math.max(
     SCALE_MIN,
     Math.min((1 - SCALE_MARGIN) * viewWidth / width, (1 - SCALE_MARGIN) * viewHeight / height, SCALE_MAX)
@@ -81,7 +81,7 @@ export function getZoomStyle(transform: ZoomTransform | void) {
 
 export function getZoomAttr(transform: ZoomTransform | void) {
   if (!transform) {
-    return null;
+    return undefined;
   }
   const { x, y, k } = transform;
   return `translate(${x},${y}) scale(${k})`;

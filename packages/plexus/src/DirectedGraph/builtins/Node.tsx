@@ -14,9 +14,7 @@
 
 import * as React from 'react';
 
-import { TObjectOfAny } from '../types';
-
-type Props = TObjectOfAny & {
+type Props = Record<string, any> & {
   classNamePrefix: string;
   children?: React.ReactNode;
   forwardedRef: any;
@@ -28,8 +26,6 @@ type Props = TObjectOfAny & {
 };
 
 class Node extends React.PureComponent<Props> {
-  props: Props;
-
   static defaultProps = {
     hidden: false,
     left: null,
@@ -38,7 +34,7 @@ class Node extends React.PureComponent<Props> {
 
   render() {
     const { classNamePrefix, hidden, labelFactory, vertex, left, top, forwardedRef, ...rest } = this.props;
-    const p: TObjectOfAny = rest;
+    const p: Record<string, any> = rest;
     p.style = {
       ...p.style,
       position: 'absolute',
@@ -56,4 +52,5 @@ class Node extends React.PureComponent<Props> {
 
 // ghetto fabulous cast because the 16.3 API is not in flow yet
 // https://github.com/facebook/flow/issues/6103
+// eslint-disable-next-line react/no-multi-comp
 export default React.forwardRef<{}, Props>((props, ref) => <Node {...props} forwardedRef={ref} />);

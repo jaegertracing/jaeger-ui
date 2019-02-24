@@ -15,6 +15,8 @@
 /* eslint-disable no-console */
 
 import * as convCoord from './dot/conv-coord';
+// TODO @ts-ignore
+// eslint-disable-next-line import/order, import/no-unresolved
 import LayoutWorker from 'worker/LayoutManager/layout.worker';
 import { matchEdges, matchVertices } from './match-inputs';
 
@@ -41,7 +43,7 @@ type CurrentLayout = {
   };
   options: TLayoutOptions | void;
   status: {
-    workerId?: number | void;
+    workerId?: number | null;
     phase: ECoordinatorPhase;
   };
 };
@@ -79,7 +81,7 @@ function findAndRemoveWorker(lists: LayoutWorker[][], worker: LayoutWorker) {
 }
 
 export default class Coordinator {
-  currentLayout: CurrentLayout | void;
+  currentLayout: CurrentLayout | null;
   nextWorkerId: number;
   idleWorkers: LayoutWorker[];
   busyWorkers: LayoutWorker[];

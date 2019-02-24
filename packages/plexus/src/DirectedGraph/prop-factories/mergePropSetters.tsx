@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { TObjectOfAny, TPropsFactoryFn } from '../types';
+import { TPropsFactoryFn } from '../types';
 
-function merge(a: TObjectOfAny, b: TObjectOfAny) {
+function merge(a: Record<string, any>, b: Record<string, any>) {
   // eslint-disable-next-line prefer-const
   let { className, style, ...rest } = a;
   const { className: bClassName, style: bStyle, ...bRest } = b;
@@ -29,7 +29,7 @@ function merge(a: TObjectOfAny, b: TObjectOfAny) {
   return { className, style, ...rest, ...bRest };
 }
 
-export function mergeClassNameAndStyle(...objs: Object[]) {
+export function mergeClassNameAndStyle(...objs: Record<string, any>[]) {
   return objs.reduce(merge);
 }
 

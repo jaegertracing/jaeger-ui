@@ -33,8 +33,6 @@ export default class DependencyForceGraph extends Component {
     this.state = {
       width: window.innerWidth,
       height: window.innerHeight,
-      top: 0,
-      left: 0,
     };
   }
 

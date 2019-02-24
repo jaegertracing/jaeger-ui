@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { fetchDependencies } from '../actions/jaeger-api';
-import reducer from '../../src/reducers/dependencies';
+import reducer from './dependencies';
 
 const initialState = reducer(undefined, {});
 

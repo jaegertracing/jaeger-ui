@@ -72,8 +72,6 @@ function getClassNames(props: Props) {
 }
 
 export default class MiniMap extends React.PureComponent<Props> {
-  props: Props;
-
   static defaultProps = {
     className: '',
     classNamePrefix: 'plexus',

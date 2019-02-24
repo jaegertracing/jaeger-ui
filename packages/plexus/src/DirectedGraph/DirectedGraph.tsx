@@ -16,6 +16,7 @@ import * as React from 'react';
 import { select } from 'd3-selection';
 import { zoom as d3Zoom, zoomIdentity, zoomTransform as getTransform, ZoomTransform } from 'd3-zoom';
 
+import defaultGetNodeLabel from './builtins/defaultGetNodeLabel';
 import EdgeArrowDef from './builtins/EdgeArrowDef';
 import EdgesContainer from './builtins/EdgesContainer';
 import PureEdges from './builtins/PureEdges';
@@ -34,7 +35,7 @@ import {
 } from './transform-utils';
 
 import { TDirectedGraphProps, TDirectedGraphState } from './types';
-import { TCancelled, TLayoutDone, TPositionsDone, TVertex } from '../types/layout';
+import { TCancelled, TLayoutDone, TPositionsDone, TSizeVertex } from '../types/layout';
 
 const PHASE_NO_DATA = 0;
 const PHASE_CALC_SIZES = 1;
@@ -55,27 +56,21 @@ const WRAPPER_STYLE = {
 
 let idCounter = 0;
 
-// eslint-disable-next-line no-unused-vars
-function defaultGetNodeLabel(vertex: TVertex) {
-  const { label } = vertex;
-  if (label != null) {
-    if (typeof label === 'string' || React.isValidElement(label)) {
-      return label;
-    }
-    return String(label);
+function createHtmlRefs(length: number) {
+  const rv: React.RefObject<HTMLElement>[] = [];
+  for (let i = 0; i < length; i++) {
+    rv.push(React.createRef<HTMLElement>());
   }
-  return String(vertex.key);
+  return rv;
 }
 
 export default class DirectedGraph extends React.PureComponent<TDirectedGraphProps, TDirectedGraphState> {
-  props: TDirectedGraphProps;
   arrowId: string;
   arrowIriRef: string;
   // ref API defs in flow seem to be a WIP
   // https://github.com/facebook/flow/issues/6103
   rootRef: { current: HTMLDivElement | null };
   rootSelection: any;
-  vertexRefs: { current: HTMLElement | null }[];
   zoom: any;
 
   static propsFactories = {
@@ -122,7 +117,7 @@ export default class DirectedGraph extends React.PureComponent<TDirectedGraphPro
       edges,
       vertices,
       layoutPhase: PHASE_CALC_SIZES,
-      vertexRefs: vertices.map(React.createRef),
+      vertexRefs: createHtmlRefs(vertices.length),
       sizeVertices: null,
       layoutEdges: null,
       layoutGraph: null,
@@ -137,7 +132,7 @@ export default class DirectedGraph extends React.PureComponent<TDirectedGraphPro
       this.state.layoutPhase = PHASE_CALC_SIZES;
       this.state.edges = edges;
       this.state.vertices = vertices;
-      this.state.vertexRefs = vertices.map(() => React.createRef<HTMLElement>());
+      this.state.vertexRefs = createHtmlRefs(vertices.length);
     }
     this.state.zoomEnabled = zoomEnabled;
     const idBase = `plexus--DirectedGraph--${idCounter}`;
@@ -227,18 +222,19 @@ export default class DirectedGraph extends React.PureComponent<TDirectedGraphPro
 
   _setSizeVertices() {
     const { edges, layoutManager, vertices } = this.props;
-    const sizeVertices = this.state.vertexRefs
-      .map((ref, i) => {
-        const { current } = ref;
-        return !current
-          ? null
-          : {
-              height: current.offsetHeight,
-              vertex: vertices[i],
-              width: current.offsetWidth,
-            };
-      })
-      .filter(Boolean);
+    const sizeVertices: TSizeVertex[] = [];
+    this.state.vertexRefs.forEach((ref, i) => {
+      const { current } = ref;
+      // use a `.forEach` with a guard on `current` because TypeScript doesn't
+      // like `.filter(Boolean)`
+      if (current) {
+        sizeVertices.push({
+          height: current.offsetHeight,
+          vertex: vertices[i],
+          width: current.offsetWidth,
+        });
+      }
+    });
     const { positions, layout } = layoutManager.getLayout(edges, sizeVertices);
     positions.then(this._onPositionsDone);
     layout.then(this._onLayoutDone);
@@ -282,7 +278,7 @@ export default class DirectedGraph extends React.PureComponent<TDirectedGraphPro
       setOnRoot,
     } = this.props;
     const { layoutPhase: phase, layoutGraph, zoomEnabled, zoomTransform } = this.state;
-    const { height = null, width = null } = layoutGraph || {};
+    const { height = 0, width = 0 } = layoutGraph || {};
     const { current: rootElm } = this.rootRef;
     const haveEdges = phase === PHASE_DONE;
 
@@ -320,7 +316,7 @@ export default class DirectedGraph extends React.PureComponent<TDirectedGraphPro
                 scaleDampener={arrowScaleDampener}
                 zoomScale={zoomEnabled ? zoomTransform.k : null}
               />
-              <g transform={zoomEnabled ? getZoomAttr(zoomTransform) : null}>{this._renderEdges()}</g>
+              <g transform={zoomEnabled ? getZoomAttr(zoomTransform) : undefined}>{this._renderEdges()}</g>
             </EdgesContainer>
           )}
         <div {...nodesContainerProps}>{this._renderVertices()}</div>

@@ -65,6 +65,7 @@ export class DependencyGraphPageImpl extends Component {
       graphType: 'FORCE_DIRECTED',
     };
   }
+
   componentWillMount() {
     this.props.fetchDependencies();
   }

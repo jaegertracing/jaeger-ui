@@ -17,12 +17,10 @@ import * as React from 'react';
 type Props = {
   id: string;
   scaleDampener: number;
-  zoomScale?: number | void;
+  zoomScale?: number | null;
 };
 
 export default class EdgeArrowDef extends React.PureComponent<Props> {
-  props: Props;
-
   static defaultProps = {
     zoomScale: null,
     scaleDampener: 0.6,

@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import viz from 'viz.js';
+import viz from 'viz.js/viz.js';
 
 import convPlain from './dot/convPlain';
 import toDot from './dot/toDot';
 
-import { EWorkerPhase, TLayoutOptions, TWorkerOutputMessage } from './types';
+import { EWorkerPhase, TLayoutOptions } from './types';
 import { TEdge, TLayoutVertex, TSizeVertex } from '../types/layout';
 
 enum EValidity {
@@ -33,7 +33,7 @@ type TValidityError = {
 
 type TValidityOk = {
   validity: EValidity.Ok;
-  message: void;
+  message: null;
 };
 
 type TValidityWarn = {
@@ -44,9 +44,6 @@ type TValidityWarn = {
 type TVerticesValidity = TValidityError | TValidityOk | TValidityWarn;
 
 const SHIFT_THRESHOLD = 0.015;
-const VALIDITY_OK = 'VALIDITY_OK';
-const VALIDITY_WARN = 'VALIDITY_WARN';
-const VALIDITY_ERROR = 'VALIDITY_ERROR';
 
 function isCloseEnough(a: number, b: number) {
   return Math.abs(a - b) / b < SHIFT_THRESHOLD;
