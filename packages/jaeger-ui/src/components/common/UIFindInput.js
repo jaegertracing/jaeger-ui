@@ -79,11 +79,13 @@ export class UnconnectedUiFindInput extends React.PureComponent<PropsType, State
   render() {
     const inputValue =
       typeof this.state.ownInputValue === 'string' ? this.state.ownInputValue : this.props.uiFind;
-    const suffix: number | null =
+    const suffix: string | null =
       this.props.uiFind && this.props.spansArray
-        ? _filter(this.props.spansArray, spans =>
-            _get(filterSpans(this.props.uiFind /* inputValue */ || '', spans), 'size', 0)
-          ).length
+        ? String(
+            _filter(this.props.spansArray, spans =>
+              _get(filterSpans(this.props.uiFind /* inputValue */ || '', spans), 'size', 0)
+            ).length
+          )
         : null;
 
     return (
