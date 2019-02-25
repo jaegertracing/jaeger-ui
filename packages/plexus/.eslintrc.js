@@ -12,11 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// This file configures eslint for TypeScript, which will be used for this
+// directory and all subdirectories.
+
 module.exports = {
   parser: '@typescript-eslint/parser',
   parserOptions: {
     project: './tsconfig.json',
-    tsconfigRootDir: './packages/plexus',
+    tsconfigRootDir: '.',
   },
   plugins: ['@typescript-eslint'],
   extends: [

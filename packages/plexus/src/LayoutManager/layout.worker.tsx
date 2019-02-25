@@ -23,14 +23,14 @@ import {
 } from './types';
 
 type TMessageErrorTarget = {
-  onmessageerror: ((this: Worker, ev: MessageEvent) => any) | null;
+  onmessageerror: ((this: Worker, ev: ErrorEvent) => any | void) | null;
 };
 
 // TODO: Use WorkerGlobalScope instead of Worker
 // eslint-disable-next-line no-restricted-globals
 const ctx: Worker & TMessageErrorTarget = self as any;
 
-let currentMeta: TLayoutWorkerMeta | void;
+let currentMeta: TLayoutWorkerMeta | null;
 
 function handleMessage(event: MessageEvent) {
   const { edges, meta, options, vertices } = event.data as TWorkerInputMessage;
@@ -61,4 +61,4 @@ function handleError(errorType: string, event: ErrorEvent) {
 
 ctx.onmessage = handleMessage;
 ctx.onerror = handleError.bind(null, 'error');
-ctx.onmessageerror = handleError.bind(null, 'messageerror');
+ctx.onmessageerror = handleError.bind(ctx, 'messageerror');

@@ -25,12 +25,13 @@ declare module "worker/*" {
     constructor();
     // `onmessageerror` is missing from the TypeScript type def for workers
     // https://html.spec.whatwg.org/multipage/workers.html#dedicated-workers-and-the-worker-interface
-    onmessageerror: ((this: Worker, ev: MessageEvent) => any) | null;
+    onmessageerror: ((this: Worker, event: ErrorEvent) => any | void) | null;
   }
   export default WebpackWorker;
 }
 
-// Type def for the viz.js module, which doesn't ship with TypeScript types.
-declare module "viz.js/*" {
+// Type def for the viz.js module, which doesn't ship with usable TypeScript
+// types.
+declare module "viz.js/viz.js" {
   export default function viz(dot: string, options?: {}): string;
 }

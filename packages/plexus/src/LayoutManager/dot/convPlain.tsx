@@ -14,7 +14,7 @@
 
 import { TLayoutEdge, TLayoutGraph, TLayoutVertex } from '../../types/layout';
 
-const FLAG_MAPPINGS = {
+const FLAG_MAPPINGS: Record<string, string> = {
   bidir: 'isBidirectional',
 };
 
@@ -112,7 +112,7 @@ function parseEdge(str: string, startIndex: number) {
   for (let pi = 0; pi < flatPoints.length; pi += 2) {
     pathPoints.push([flatPoints[pi], flatPoints[pi + 1]]);
   }
-  const edgeFlags = {};
+  const edgeFlags: Record<string, boolean> = {};
   flags.split(',').forEach(flag => {
     const name = FLAG_MAPPINGS[flag];
     if (name) {

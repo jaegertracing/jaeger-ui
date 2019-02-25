@@ -161,8 +161,7 @@ export default class DirectedGraph extends React.PureComponent<TDirectedGraphPro
   }
 
   _onPositionsDone = (result: TCancelled | TPositionsDone) => {
-    // typescript requires the `=== false` check for correct type inference
-    if (result.isCancelled === false) {
+    if (!result.isCancelled) {
       const { graph: layoutGraph, vertices: layoutVertices } = result;
       this.setState({ layoutGraph, layoutVertices, layoutPhase: PHASE_CALC_EDGES });
     }
@@ -170,8 +169,7 @@ export default class DirectedGraph extends React.PureComponent<TDirectedGraphPro
 
   _onLayoutDone = (result: TCancelled | TLayoutDone) => {
     const root = this.rootRef.current;
-    // typescript requires the `=== true` check for correct type inference
-    if (result.isCancelled === true || !root) {
+    if (result.isCancelled || !root) {
       return;
     }
     const { zoomEnabled } = this.state;

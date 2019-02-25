@@ -53,7 +53,7 @@ export type TWorkerInputMessage = {
   type: EWorkerPhase;
   edges: TEdge[];
   meta: TLayoutWorkerMeta;
-  options: TLayoutOptions | void;
+  options: TLayoutOptions | null;
   vertices: TSizeVertex[] | TLayoutVertex[];
 };
 
@@ -68,7 +68,7 @@ export type TWorkerOutputMessage = {
 
 export type TWorkerErrorMessage = {
   errorMessage: any;
-  meta: TLayoutWorkerMeta | void;
+  meta: TLayoutWorkerMeta | null;
   type: EWorkerErrorType.Error;
 };
 

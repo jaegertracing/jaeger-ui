@@ -34,9 +34,16 @@ export function mergeClassNameAndStyle(...objs: Record<string, any>[]) {
 }
 
 export default function mergePropSetters<U>(...fns: TPropsFactoryFn<U>[]): TPropsFactoryFn<U> {
-  return (input: U) =>
-    fns
-      .map(fn => fn(input))
-      .filter(Boolean)
-      .reduce(merge);
+  return (input: U) => {
+    const propsList: Record<string, any>[] = [];
+    for (let i = 0; i < fns.length; i++) {
+      const props = fns[i](input);
+      // TypeScript doesn't believe in `.filter(Boolean)`, so do this manually
+      // http://t.uber.com/joef-ts-strict-filter-boolean
+      if (props) {
+        propsList.push(props);
+      }
+    }
+    return propsList.reduce(merge);
+  };
 }

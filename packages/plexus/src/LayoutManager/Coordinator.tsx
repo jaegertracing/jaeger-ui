@@ -15,7 +15,7 @@
 /* eslint-disable no-console */
 
 import * as convCoord from './dot/conv-coord';
-// TODO @ts-ignore
+// TODO @ts-ignores
 // eslint-disable-next-line import/order, import/no-unresolved
 import LayoutWorker from 'worker/LayoutManager/layout.worker';
 import { matchEdges, matchVertices } from './match-inputs';
@@ -172,7 +172,7 @@ export default class Coordinator {
     }
   };
 
-  _handleVizWorkerMessageError = (event: MessageEvent) => {
+  _handleVizWorkerMessageError = (event: ErrorEvent) => {
     // TODO(joe): something more useful
     const msg = {
       event,

@@ -95,7 +95,7 @@ export default function getLayout(
   phase: EWorkerPhase,
   inEdges: TEdge[],
   inVertices: (TSizeVertex | TLayoutVertex)[],
-  layoutOptions: TLayoutOptions | void
+  layoutOptions: TLayoutOptions | null
 ) {
   const dot = toDot(inEdges, inVertices, layoutOptions);
   const { totalMemory = undefined } = layoutOptions || {};

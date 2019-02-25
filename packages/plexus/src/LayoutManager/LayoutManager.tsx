@@ -34,7 +34,7 @@ type TPendingResult = {
 export default class LayoutManager {
   layoutId: number;
   coordinator: Coordinator;
-  pendingResult: TPendingResult | void;
+  pendingResult: TPendingResult | null;
   options: TLayoutOptions | void;
 
   constructor(options: TLayoutOptions | void) {

@@ -25,7 +25,7 @@ const DEFAULT_GRAPH_ATTRS = {
   splines: 'true',
 };
 
-function makeGraphWrapper(options?: TLayoutOptions | void) {
+function makeGraphWrapper(options?: TLayoutOptions | null) {
   const { nodesep, rankdir, ranksep, sep, splines } = { ...DEFAULT_GRAPH_ATTRS, ...options };
   return `digraph G {
   graph[nodesep=${nodesep.toFixed(3)}, rankdir=${rankdir}, ranksep=${ranksep.toFixed(3)}, sep=${sep.toFixed(
@@ -57,7 +57,7 @@ function makeEdge(head: TVertexKey, tails: TVertexKey | TVertexKey[], isBidirect
 export default function toDot(
   edges: TEdge[],
   vertices: (TSizeVertex | TLayoutVertex)[],
-  options?: TLayoutOptions | void
+  options?: TLayoutOptions | null
 ) {
   const bidirectional: TEdge[] = [];
   const fromTo: Map<TVertexKey, TVertexKey[]> = new Map();

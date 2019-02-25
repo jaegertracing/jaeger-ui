@@ -44,7 +44,8 @@
     "coverage": "lerna run coverage",
     "eslint": "eslint 'scripts/*.{js,ts,tsx}' 'packages/*/src/**/*.{js,ts,tsx}' 'packages/*/*.{js,ts,tsx}'",
     "flow": "glow",
-    "lint": "yarn run prettier-lint && yarn run eslint && yarn run flow && yarn run check-license",
+    "lint":
+      "yarn run prettier-lint && yarn run tsc-lint && yarn run eslint && yarn run flow && yarn run check-license",
     "prepare": "lerna run --stream --sort prepublishOnly",
     "prettier-comment": "https://github.com/yarnpkg/yarn/issues/6300",
     "prettier":
@@ -52,6 +53,8 @@
     "prettier-lint":
       "./node_modules/prettier/bin-prettier.js --list-different '{.,scripts}/*.{js,json,md,ts,tsx}' 'packages/*/{src,demo/src}/**/!(react-vis).{css,js,json,md,ts,tsx}' 'packages/*/*.{css,js,json,md,ts,tsx}'",
     "test": "lerna run test",
+    "tsc-lint": "tsc",
+    "tsc-lint-debug": "tsc --listFiles",
     "start": "cd packages/jaeger-ui && yarn start"
   },
   "prettier": {
