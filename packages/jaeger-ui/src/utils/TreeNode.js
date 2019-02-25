@@ -83,7 +83,18 @@ export default class TreeNode {
   }
 
   walk(fn, depth = 0) {
-    TreeNode.iterFunction(fn, depth)(this);
-    this.children.forEach(child => child.walk(fn, depth + 1));
+    const nodeStack = [];
+    let actualDepth = depth;
+    nodeStack.push({ node: this, depth: actualDepth });
+    while (nodeStack.length) {
+      const { node, depth: nodeDepth } = nodeStack.pop();
+      fn(node.value, node, nodeDepth);
+      actualDepth = nodeDepth + 1;
+      let i = node.children.length - 1;
+      while (i >= 0) {
+        nodeStack.push({ node: node.children[i], depth: actualDepth });
+        i--;
+      }
+    }
   }
 }

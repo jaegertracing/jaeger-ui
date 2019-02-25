@@ -26,7 +26,7 @@ type SpanWithProcess = SpanData & { process: Process };
  * NOTE: Mutates `data` - Transform the HTTP response data into the form the app
  * generally requires.
  */
-export default function transfromTraceData(data: TraceData & { spans: SpanWithProcess[] }): ?Trace {
+export default function transformTraceData(data: TraceData & { spans: SpanWithProcess[] }): ?Trace {
   let { traceID } = data;
   if (!traceID) {
     return null;

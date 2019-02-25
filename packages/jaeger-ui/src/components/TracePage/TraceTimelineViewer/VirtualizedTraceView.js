@@ -24,11 +24,12 @@ import ListView from './ListView';
 import SpanBarRow from './SpanBarRow';
 import DetailState from './SpanDetail/DetailState';
 import SpanDetailRow from './SpanDetailRow';
-import { findServerChildSpan, getViewedBounds, isErrorSpan, spanContainsErredSpan } from './utils';
+import { createViewedBoundsFunc, findServerChildSpan, isErrorSpan, spanContainsErredSpan } from './utils';
 import { extractUiFindFromState } from '../../common/UiFindInput';
 import getLinks from '../../../model/link-patterns';
 import colorGenerator from '../../../utils/color-generator';
 
+import type { ViewedBoundsFunctionType } from './utils';
 import type { Accessors } from '../ScrollManager';
 import type { Log, Span, Trace, KeyValuePair } from '../../../types/trace';
 
@@ -128,6 +129,7 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
   clippingCssClasses: string;
   listView: ?ListView;
   rowStates: RowState[];
+  getViewedBounds: ViewedBoundsFunctionType;
 
   constructor(props: VirtualizedTraceViewProps) {
     super(props);
@@ -135,6 +137,13 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
     // `.render()` to avoid recalculating in every invocation of `.renderRow()`
     const { currentViewRangeTime, childrenHiddenIDs, detailStates, setTrace, trace, uiFind } = props;
     this.clippingCssClasses = getCssClasses(currentViewRangeTime);
+    const [zoomStart, zoomEnd] = currentViewRangeTime;
+    this.getViewedBounds = createViewedBoundsFunc({
+      min: trace.startTime,
+      max: trace.endTime,
+      viewStart: zoomStart,
+      viewEnd: zoomEnd,
+    });
     this.rowStates = generateRowStates(trace.spans, childrenHiddenIDs, detailStates);
 
     setTrace(trace, uiFind);
@@ -159,6 +168,13 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
     }
     if (currentViewRangeTime !== nextViewRangeTime) {
       this.clippingCssClasses = getCssClasses(nextViewRangeTime);
+      const [zoomStart, zoomEnd] = nextViewRangeTime;
+      this.getViewedBounds = createViewedBoundsFunc({
+        min: trace.startTime,
+        max: trace.endTime,
+        viewStart: zoomStart,
+        viewEnd: zoomEnd,
+      });
     }
     if (this.listView && registerAccessors !== nextRegisterAccessors) {
       nextRegisterAccessors(this.getAccessors());
@@ -257,14 +273,12 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
     const {
       childrenHiddenIDs,
       childrenToggle,
-      currentViewRangeTime,
       detailStates,
       detailToggle,
       findMatchesIDs,
       spanNameColumnWidth,
       trace,
     } = this.props;
-    const [zoomStart, zoomEnd] = currentViewRangeTime;
     // to avert flow error
     if (!trace) {
       return null;
@@ -274,28 +288,13 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
     const isDetailExpanded = detailStates.has(spanID);
     const isMatchingFilter = Boolean(findMatchesIDs) && findMatchesIDs.has(spanID);
     const showErrorIcon = isErrorSpan(span) || (isCollapsed && spanContainsErredSpan(trace.spans, spanIndex));
-    const viewBounds = getViewedBounds({
-      min: trace.startTime,
-      max: trace.endTime,
-      start: span.startTime,
-      end: span.startTime + span.duration,
-      viewStart: zoomStart,
-      viewEnd: zoomEnd,
-    });
 
     // Check for direct child "server" span if the span is a "client" span.
     let rpc = null;
     if (isCollapsed) {
       const rpcSpan = findServerChildSpan(trace.spans.slice(spanIndex));
       if (rpcSpan) {
-        const rpcViewBounds = getViewedBounds({
-          min: trace.startTime,
-          max: trace.endTime,
-          start: rpcSpan.startTime,
-          end: rpcSpan.startTime + rpcSpan.duration,
-          viewStart: zoomStart,
-          viewEnd: zoomEnd,
-        });
+        const rpcViewBounds = this.getViewedBounds(rpcSpan.startTime, rpcSpan.startTime + rpcSpan.duration);
         rpc = {
           color: colorGenerator.getColorByKey(rpcSpan.process.serviceName),
           operationName: rpcSpan.operationName,
@@ -319,9 +318,9 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
           onChildrenToggled={childrenToggle}
           rpc={rpc}
           showErrorIcon={showErrorIcon}
+          getViewedBounds={this.getViewedBounds}
+          traceStartTime={trace.startTime}
           span={span}
-          viewEnd={viewBounds.end}
-          viewStart={viewBounds.start}
         />
       </div>
     );
