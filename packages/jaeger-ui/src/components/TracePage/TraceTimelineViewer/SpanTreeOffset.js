@@ -37,7 +37,7 @@ type SpanTreeOffsetPropsType = {
   onClick?: ?() => void,
   removeHoverIndentGuideId: string => void,
   span: Span,
-  showChildrenIcon: boolean,
+  showChildrenIcon?: boolean,
 };
 
 export class UnconnectedSpanTreeOffset extends React.PureComponent<SpanTreeOffsetPropsType> {
