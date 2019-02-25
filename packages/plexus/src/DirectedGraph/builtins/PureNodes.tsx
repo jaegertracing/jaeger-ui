@@ -19,7 +19,7 @@ import Node from './Node';
 import { TPropsFactoryFn } from '../types';
 import { TLayoutVertex, TVertex } from '../../types/layout';
 
-type Props = {
+type TProps = {
   classNamePrefix: string;
   getNodeLabel: ((vertex: TVertex) => React.ReactNode) | null;
   layoutVertices: TLayoutVertex[] | null;
@@ -28,7 +28,7 @@ type Props = {
   vertices: TVertex[];
 };
 
-export default class PureEdges extends React.PureComponent<Props> {
+export default class PureNodes extends React.PureComponent<TProps> {
   _renderVertices() {
     const { classNamePrefix, getNodeLabel, setOnNode, vertices, vertexRefs } = this.props;
     return vertices.map((v, i) => (

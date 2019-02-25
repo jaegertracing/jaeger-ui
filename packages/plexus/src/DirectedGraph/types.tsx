@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Uber Technologies, Inc.
+// Copyright (c) 2019 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,7 +28,6 @@ export type TDirectedGraphState = {
   layoutPhase: number;
   layoutVertices: TLayoutVertex[] | null;
   sizeVertices: TSizeVertex[] | null;
-  // vertexRefs: { current: HTMLElement | null }[],
   vertexRefs: React.RefObject<HTMLElement>[];
   vertices: TVertex[];
   zoomEnabled: boolean;
@@ -40,7 +39,6 @@ export type TDirectedGraphProps = {
   className: string;
   classNamePrefix: string;
   edges: TEdge[];
-  // getEdgeLabel: ?(TEdge) => React.Node,
   getNodeLabel: ((vtx: TVertex) => React.ReactNode) | null;
   layoutManager: LayoutManager;
   minimap: boolean;

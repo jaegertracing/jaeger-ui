@@ -14,7 +14,7 @@
 
 import * as React from 'react';
 
-type Props = Record<string, any> & {
+type TProps = Record<string, any> & {
   classNamePrefix: string;
   children?: React.ReactNode;
   forwardedRef: any;
@@ -25,7 +25,7 @@ type Props = Record<string, any> & {
   vertex: any;
 };
 
-class Node extends React.PureComponent<Props> {
+class Node extends React.PureComponent<TProps> {
   static defaultProps = {
     hidden: false,
     left: null,
@@ -53,4 +53,4 @@ class Node extends React.PureComponent<Props> {
 // ghetto fabulous cast because the 16.3 API is not in flow yet
 // https://github.com/facebook/flow/issues/6103
 // eslint-disable-next-line react/no-multi-comp
-export default React.forwardRef<{}, Props>((props, ref) => <Node {...props} forwardedRef={ref} />);
+export default React.forwardRef<{}, TProps>((props, ref) => <Node {...props} forwardedRef={ref} />);

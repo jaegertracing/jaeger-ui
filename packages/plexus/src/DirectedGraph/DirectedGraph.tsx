@@ -200,7 +200,6 @@ export default class DirectedGraph extends React.PureComponent<TDirectedGraphPro
     const [, [vw, vh]] = extent;
     const { height: h = null, width: w = null } = this.state.layoutGraph || {};
     if (h == null || w == null) {
-      // for flow
       return transform;
     }
     return constrainZoom(transform, w, h, vw, vh);

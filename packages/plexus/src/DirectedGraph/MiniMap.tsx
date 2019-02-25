@@ -17,7 +17,7 @@ import * as React from 'react';
 import resetZoomIcon from './resetZoomIcon';
 
 /* eslint-disable react/no-unused-prop-types */
-type Props = {
+type TProps = {
   classNamePrefix?: string | void;
   className?: string | void;
   contentHeight: number;
@@ -33,7 +33,7 @@ type Props = {
 
 const LENGTH_TARGET_PX = 80;
 
-function getMapSize(props: Props) {
+function getMapSize(props: TProps) {
   const { contentHeight: ch, contentWidth: cw } = props;
   if (ch > cw) {
     return { height: LENGTH_TARGET_PX, width: LENGTH_TARGET_PX * cw / ch };
@@ -41,7 +41,7 @@ function getMapSize(props: Props) {
   return { height: LENGTH_TARGET_PX * ch / cw, width: LENGTH_TARGET_PX };
 }
 
-function getViewTransform(props: Props, displaySize: { width: number; height: number }) {
+function getViewTransform(props: TProps, displaySize: { width: number; height: number }) {
   const { contentHeight: ch, contentWidth: cw, viewportHeight: vh, viewportWidth: vw, k, x, y } = props;
   const { height: dh, width: dw } = displaySize;
   const sch = ch * k;
@@ -59,7 +59,7 @@ function getViewTransform(props: Props, displaySize: { width: number; height: nu
   };
 }
 
-function getClassNames(props: Props) {
+function getClassNames(props: TProps) {
   const { className, classNamePrefix } = props;
   const base = `${classNamePrefix || 'plexus'}-MiniMap`;
   return {
@@ -71,7 +71,7 @@ function getClassNames(props: Props) {
   };
 }
 
-export default class MiniMap extends React.PureComponent<Props> {
+export default class MiniMap extends React.PureComponent<TProps> {
   static defaultProps = {
     className: '',
     classNamePrefix: 'plexus',
