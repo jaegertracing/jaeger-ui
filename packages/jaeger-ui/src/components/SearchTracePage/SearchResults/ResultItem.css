@@ -25,6 +25,19 @@ limitations under the License.
 }
 
 .ResultItem--serviceTag {
-  border-left-width: 15px;
-  margin: 0;
+  background: #fff;
+  border-left: 15px solid transparent;
+  border-radius: 4px;
+  box-shadow: 0 0 1px rgba(0, 0, 0, 0.5);
+  color: rgba(0, 0, 0, 0.65);
+  display: inline-block;
+  font-size: 0.9em;
+  line-height: 1;
+  margin: 0.3em 0.35em;
+  padding: 0.3em;
+}
+
+.ResultItem--serviceCount {
+  font-size: 0.9em;
+  padding-left: 0.2em;
 }

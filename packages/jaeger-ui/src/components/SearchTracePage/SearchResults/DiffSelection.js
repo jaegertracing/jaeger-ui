@@ -48,7 +48,7 @@ export default class DiffSelection extends React.PureComponent<Props> {
       </Button>
     );
     return (
-      <div className={`DiffSelection ${traces.length ? 'is-non-empty' : ''} ub-mb3`}>
+      <div className={`DiffSelection ${traces.length ? 'is-non-empty' : ''}`}>
         {traces.length > 0 && (
           <div className="DiffSelection--selectedItems">
             {traces.map(fetchedTrace => {

@@ -14,7 +14,7 @@
 import React from 'react';
 import { shallow, mount } from 'enzyme';
 
-import ListView from './ListView';
+import ListView from '../../common/ListView';
 import SpanBarRow from './SpanBarRow';
 import DetailState from './SpanDetail/DetailState';
 import SpanDetailRow from './SpanDetailRow';

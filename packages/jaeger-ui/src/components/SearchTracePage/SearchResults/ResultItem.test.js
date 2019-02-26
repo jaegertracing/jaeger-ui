@@ -13,7 +13,6 @@
 // limitations under the License.
 
 import React from 'react';
-import { Tag } from 'antd';
 import { shallow } from 'enzyme';
 
 import ResultItem from './ResultItem';
@@ -30,13 +29,13 @@ it('<ResultItem /> should render base case correctly', () => {
     .first()
     .render()
     .text();
-  const serviceTags = wrapper.find(`[data-test="${markers.SERVICE_TAGS}"]`).find(Tag);
+  const serviceTags = wrapper.find(`[data-test="${markers.SERVICE_TAGS}"]`).find('li');
   expect(numberOfSpanText).toBe(`${trace.spans.length} Spans`);
   expect(serviceTags).toHaveLength(trace.services.length);
 });
 
 it('<ResultItem /> should not render any ServiceTags when there are no services', () => {
   const wrapper = shallow(<ResultItem trace={{ ...trace, services: [] }} durationPercent={50} />);
-  const serviceTags = wrapper.find(`[data-test="${markers.SERVICE_TAGS}"]`).find(Tag);
+  const serviceTags = wrapper.find(`[data-test="${markers.SERVICE_TAGS}"]`).find('li');
   expect(serviceTags).toHaveLength(0);
 });

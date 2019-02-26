@@ -60,55 +60,56 @@ export default class ResultItem extends React.PureComponent<Props> {
     const numSpans = spans.length;
     const numErredSpans = spans.filter(sp => sp.tags.some(isErrorTag)).length;
     return (
-      <div className="ResultItem">
-        <ResultItemTitle
-          duration={duration}
-          durationPercent={durationPercent}
-          isInDiffCohort={isInDiffCohort}
-          linkTo={linkTo}
-          toggleComparison={toggleComparison}
-          traceID={traceID}
-          traceName={traceName}
-          disableComparision={disableComparision}
-        />
-        <Link to={linkTo}>
-          <Row>
-            <Col span={4} className="ub-p2">
-              <Tag className="ub-m1" data-test={markers.NUM_SPANS}>
-                {numSpans} Span{numSpans > 1 && 's'}
-              </Tag>
-              {Boolean(numErredSpans) && (
-                <Tag className="ub-m1" color="red">
-                  {numErredSpans} Error{numErredSpans > 1 && 's'}
+      <div className="ub-pt3">
+        <div className="ResultItem">
+          <ResultItemTitle
+            duration={duration}
+            durationPercent={durationPercent}
+            isInDiffCohort={isInDiffCohort}
+            linkTo={linkTo}
+            toggleComparison={toggleComparison}
+            traceID={traceID}
+            traceName={traceName}
+            disableComparision={disableComparision}
+          />
+          <Link to={linkTo}>
+            <Row>
+              <Col span={4} className="ub-p2">
+                <Tag className="ub-m1" data-test={markers.NUM_SPANS}>
+                  {numSpans} Span{numSpans > 1 && 's'}
                 </Tag>
-              )}
-            </Col>
-            <Col span={16} className="ub-p2">
-              <ul className="ub-list-reset" data-test={markers.SERVICE_TAGS}>
-                {sortBy(services, s => s.name).map(service => {
-                  const { name, numberOfSpans: count } = service;
-                  return (
-                    <li key={name} className="ub-inline-block ub-m1">
-                      <Tag
+                {Boolean(numErredSpans) && (
+                  <Tag className="ub-m1" color="red">
+                    {numErredSpans} Error{numErredSpans > 1 && 's'}
+                  </Tag>
+                )}
+              </Col>
+              <Col span={16} className="ub-p2">
+                <ul className="ub-list-reset" data-test={markers.SERVICE_TAGS}>
+                  {sortBy(services, s => s.name).map(service => {
+                    const { name, numberOfSpans: count } = service;
+                    return (
+                      <li
+                        key={name}
                         className="ResultItem--serviceTag"
                         style={{ borderLeftColor: colorGenerator.getColorByKey(name) }}
                       >
-                        {name} ({count})
-                      </Tag>
-                    </li>
-                  );
-                })}
-              </ul>
-            </Col>
-            <Col span={4} className="ub-p3 ub-tx-right-align">
-              {formatRelativeDate(startTime / 1000)}
-              <Divider type="vertical" />
-              {timeStr.slice(0, -3)}&nbsp;{timeStr.slice(-2)}
-              <br />
-              <small>{fromNow}</small>
-            </Col>
-          </Row>
-        </Link>
+                        {name} <span className="ResultItem--serviceCount">({count})</span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </Col>
+              <Col span={4} className="ub-p3 ub-tx-right-align">
+                {formatRelativeDate(startTime / 1000)}
+                <Divider type="vertical" />
+                {timeStr.slice(0, -3)}&nbsp;{timeStr.slice(-2)}
+                <br />
+                <small>{fromNow}</small>
+              </Col>
+            </Row>
+          </Link>
+        </div>
       </div>
     );
   }

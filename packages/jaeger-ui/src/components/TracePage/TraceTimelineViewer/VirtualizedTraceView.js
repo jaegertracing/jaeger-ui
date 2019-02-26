@@ -23,7 +23,7 @@ import { withRouter } from 'react-router-dom';
 import type { Location, RouterHistory } from 'react-router-dom';
 
 import { actions } from './duck';
-import ListView from './ListView';
+import ListView from '../../common/ListView';
 import SpanBarRow from './SpanBarRow';
 import DetailState from './SpanDetail/DetailState';
 import SpanDetailRow from './SpanDetailRow';

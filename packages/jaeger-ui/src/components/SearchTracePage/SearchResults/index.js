@@ -18,6 +18,7 @@ import * as React from 'react';
 import { Select } from 'antd';
 import { Link } from 'react-router-dom';
 import { Field, reduxForm, formValueSelector } from 'redux-form';
+import memoizeOne from 'memoize-one';
 
 import DiffSelection from './DiffSelection';
 import * as markers from './index.markers';
@@ -36,6 +37,7 @@ import type { FetchedTrace } from '../../../types';
 import type { SearchQuery } from '../../../types/search';
 
 import './index.css';
+import ListView from '../../common/ListView';
 
 type SearchResultsProps = {
   cohortAddTrace: string => void,
@@ -83,8 +85,10 @@ export const sortFormSelector = formValueSelector('traceResultsSort');
 
 export default class SearchResults extends React.PureComponent<SearchResultsProps> {
   props: SearchResultsProps;
-
   static defaultProps = { skipMessage: false };
+
+  searchUrl = memoizeOne(queryOfResults => getUrl(stripEmbeddedState(queryOfResults)));
+  cohortIds = memoizeOne(diffCohort => new Set(diffCohort.map(datum => datum.id)));
 
   toggleComparison = (traceID: string, remove: boolean) => {
     const { cohortAddTrace, cohortRemoveTrace } = this.props;
@@ -95,6 +99,36 @@ export default class SearchResults extends React.PureComponent<SearchResultsProp
     }
   };
 
+  getKeyFromIndex = (index: number) => this.props.traces[index].traceID;
+
+  getIndexFromKey = (key: string) => {
+    const size = this.props.traces.length;
+    for (let i = 0; i < size; ++i) {
+      if (this.props.traces[i].traceID === key) {
+        return i;
+      }
+    }
+    return -1;
+  };
+
+  renderRow = (key: string, style: Style, index: number, attrs: {}) => {
+    const trace = this.props.traces[index];
+    const { disableComparisons, maxTraceDuration, queryOfResults, diffCohort } = this.props;
+
+    return (
+      <div className="u-width-100" key={key} style={style} {...attrs}>
+        <ResultItem
+          durationPercent={getPercentageOfDuration(trace.duration, maxTraceDuration)}
+          isInDiffCohort={this.cohortIds(diffCohort).has(trace.traceID)}
+          linkTo={getLocation(trace.traceID, { fromSearch: this.searchUrl(queryOfResults) })}
+          toggleComparison={this.toggleComparison}
+          trace={trace}
+          disableComparision={disableComparisons}
+        />
+      </div>
+    );
+  };
+
   render() {
     const {
       diffCohort,
@@ -102,7 +136,6 @@ export default class SearchResults extends React.PureComponent<SearchResultsProp
       goToTrace,
       hideGraph,
       loading,
-      maxTraceDuration,
       queryOfResults,
       showStandaloneLink,
       skipMessage,
@@ -131,7 +164,7 @@ export default class SearchResults extends React.PureComponent<SearchResultsProp
         </React.Fragment>
       );
     }
-    const cohortIds = new Set(diffCohort.map(datum => datum.id));
+
     const searchUrl = getUrl(stripEmbeddedState(queryOfResults));
     return (
       <div>
@@ -173,20 +206,18 @@ export default class SearchResults extends React.PureComponent<SearchResultsProp
         </div>
         <div>
           {diffSelection}
-          <ul className="ub-list-reset">
-            {traces.map(trace => (
-              <li className="ub-my3" key={trace.traceID}>
-                <ResultItem
-                  durationPercent={getPercentageOfDuration(trace.duration, maxTraceDuration)}
-                  isInDiffCohort={cohortIds.has(trace.traceID)}
-                  linkTo={getLocation(trace.traceID, { fromSearch: searchUrl })}
-                  toggleComparison={this.toggleComparison}
-                  trace={trace}
-                  disableComparision={disableComparisons}
-                />
-              </li>
-            ))}
-          </ul>
+          <ListView
+            dataLength={this.props.traces.length}
+            itemHeightGetter={() => 155}
+            itemRenderer={this.renderRow}
+            viewBuffer={20}
+            viewBufferMin={10}
+            initialDraw={50}
+            itemsWrapperClassName="u-width-100"
+            getKeyFromIndex={this.getKeyFromIndex}
+            getIndexFromKey={this.getIndexFromKey}
+            windowScroller
+          />
         </div>
       </div>
     );

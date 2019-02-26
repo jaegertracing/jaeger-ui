@@ -17,10 +17,10 @@ import { shallow } from 'enzyme';
 
 import SearchResults from '.';
 import * as markers from './index.markers';
-import ResultItem from './ResultItem';
 import ScatterPlot from './ScatterPlot';
 import DiffSelection from './DiffSelection.js';
 import LoadingIndicator from '../../common/LoadingIndicator';
+import ListView from '../../common/ListView';
 
 describe('<SearchResults>', () => {
   let wrapper;
@@ -65,7 +65,7 @@ describe('<SearchResults>', () => {
     });
 
     it('shows a result entry for each trace', () => {
-      expect(wrapper.find(ResultItem).length).toBe(traces.length);
+      expect(wrapper.find(ListView)).toBeDefined();
     });
   });
 });
