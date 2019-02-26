@@ -6,7 +6,9 @@ exports[`drawNode diffNode renders as expected when props.a and props.b are the 
     <table
       className="DiffNode is-same"
     >
-      <tbody>
+      <tbody
+        className="DiffNode--body is-same"
+      >
         <tr>
           <td
             className="DiffNode--metricCell is-same"
@@ -49,7 +51,9 @@ exports[`drawNode diffNode renders as expected when props.a and props.b are the 
   <table
     className="DiffNode is-same"
   >
-    <tbody>
+    <tbody
+      className="DiffNode--body is-same"
+    >
       <tr>
         <td
           className="DiffNode--metricCell is-same"
@@ -88,7 +92,9 @@ exports[`drawNode diffNode renders as expected when props.a is 0 1`] = `
     <table
       className="DiffNode is-changed is-added"
     >
-      <tbody>
+      <tbody
+        className="DiffNode--body is-changed is-added"
+      >
         <tr>
           <td
             className="DiffNode--metricCell is-changed is-added"
@@ -151,7 +157,9 @@ exports[`drawNode diffNode renders as expected when props.a is 0 1`] = `
   <table
     className="DiffNode is-changed is-added"
   >
-    <tbody>
+    <tbody
+      className="DiffNode--body is-changed is-added"
+    >
       <tr>
         <td
           className="DiffNode--metricCell is-changed is-added"
@@ -210,7 +218,9 @@ exports[`drawNode diffNode renders as expected when props.a is less than props.b
     <table
       className="DiffNode is-changed is-more"
     >
-      <tbody>
+      <tbody
+        className="DiffNode--body is-changed is-more"
+      >
         <tr>
           <td
             className="DiffNode--metricCell is-changed is-more"
@@ -273,7 +283,9 @@ exports[`drawNode diffNode renders as expected when props.a is less than props.b
   <table
     className="DiffNode is-changed is-more"
   >
-    <tbody>
+    <tbody
+      className="DiffNode--body is-changed is-more"
+    >
       <tr>
         <td
           className="DiffNode--metricCell is-changed is-more"
@@ -332,7 +344,9 @@ exports[`drawNode diffNode renders as expected when props.a is more than props.b
     <table
       className="DiffNode is-changed is-less"
     >
-      <tbody>
+      <tbody
+        className="DiffNode--body is-changed is-less"
+      >
         <tr>
           <td
             className="DiffNode--metricCell is-changed is-less"
@@ -395,7 +409,9 @@ exports[`drawNode diffNode renders as expected when props.a is more than props.b
   <table
     className="DiffNode is-changed is-less"
   >
-    <tbody>
+    <tbody
+      className="DiffNode--body is-changed is-less"
+    >
       <tr>
         <td
           className="DiffNode--metricCell is-changed is-less"
@@ -454,7 +470,9 @@ exports[`drawNode diffNode renders as expected when props.b is 0 1`] = `
     <table
       className="DiffNode is-changed is-removed"
     >
-      <tbody>
+      <tbody
+        className="DiffNode--body is-changed is-removed"
+      >
         <tr>
           <td
             className="DiffNode--metricCell is-changed is-removed"
@@ -517,7 +535,9 @@ exports[`drawNode diffNode renders as expected when props.b is 0 1`] = `
   <table
     className="DiffNode is-changed is-removed"
   >
-    <tbody>
+    <tbody
+      className="DiffNode--body is-changed is-removed"
+    >
       <tr>
         <td
           className="DiffNode--metricCell is-changed is-removed"
@@ -576,7 +596,9 @@ exports[`drawNode diffNode renders as expected when props.members matches props.
     <table
       className="DiffNode is-same is-ui-find-match"
     >
-      <tbody>
+      <tbody
+        className="DiffNode--body is-same is-ui-find-match"
+      >
         <tr>
           <td
             className="DiffNode--metricCell is-same is-ui-find-match"
@@ -619,7 +641,9 @@ exports[`drawNode diffNode renders as expected when props.members matches props.
   <table
     className="DiffNode is-same is-ui-find-match"
   >
-    <tbody>
+    <tbody
+      className="DiffNode--body is-same is-ui-find-match"
+    >
       <tr>
         <td
           className="DiffNode--metricCell is-same is-ui-find-match"

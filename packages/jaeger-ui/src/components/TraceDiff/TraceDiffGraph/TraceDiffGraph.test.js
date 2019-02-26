@@ -14,10 +14,9 @@
 
 import * as React from 'react';
 import { shallow } from 'enzyme';
-import { Icon } from 'antd';
-import { DirectedGraph } from '@jaegertracing/plexus';
+import _mapValues from 'lodash/mapValues';
 
-import TraceDiffGraph from './TraceDiffGraph';
+import TraceDiffGraph, { setOnNodesContainer, setOnEdgesContainer, setOnNode } from './TraceDiffGraph';
 import ErrorMessage from '../../common/ErrorMessage';
 import LoadingIndicator from '../../common/LoadingIndicator';
 import { fetchedState } from '../../../constants';
@@ -154,27 +153,7 @@ describe('TraceDiffGraph', () => {
     expect(layoutManager).toHaveBeenCalledTimes(1);
   });
 
-  it('handles absent uiFindInput', () => {
-    expect(wrapper.instance()._uiFindInputRef.current).toBe(null);
-    wrapper.find(Icon).simulate('click');
-  });
-
-  it('focuses uiFindInput when present', () => {
-    const focus = jest.fn();
-    wrapper.instance()._uiFindInputRef.current = {
-      focus,
-    };
-    wrapper.find(Icon).simulate('click');
-    expect(focus).toHaveBeenCalledTimes(1);
-  });
-
   describe('setOnEdgesContainer', () => {
-    let setOnEdgesContainer;
-
-    beforeEach(() => {
-      setOnEdgesContainer = wrapper.find(DirectedGraph).prop('setOnEdgesContainer');
-    });
-
     it('returns null if zoomTransform kwarg is falsy', () => {
       expect(setOnEdgesContainer({ zoomTransform: null })).toBe(null);
       expect(setOnEdgesContainer({ zoomTransform: undefined })).toBe(null);
@@ -186,6 +165,59 @@ describe('TraceDiffGraph', () => {
       expect(setOnEdgesContainer({ zoomTransform: { k: 0.5 } }).style.opacity).toBe(0.55);
       expect(setOnEdgesContainer({ zoomTransform: { k: 0.7 } }).style.opacity).toBe(0.73);
       expect(setOnEdgesContainer({ zoomTransform: { k: 1.0 } }).style.opacity).toBe(1);
+    });
+  });
+
+  describe('setOnNodesContainer', () => {
+    function stringPxCountToNumber(stringPx) {
+      return Number.parseInt(stringPx.split('px')[0], 10);
+    }
+
+    function getComputedSizes(k) {
+      const { style } = setOnNodesContainer({ zoomTransform: k != undefined ? { k } : undefined }); // eslint-disable-line eqeqeq
+      const [, , boxShadowBlurRadius, boxShadowSpreadRadius] = style.boxShadow.split(' ');
+      return {
+        outlineWidth: stringPxCountToNumber(style.outlineWidth),
+        boxShadowBlurRadius: stringPxCountToNumber(boxShadowBlurRadius),
+        boxShadowSpreadRadius: stringPxCountToNumber(boxShadowSpreadRadius),
+      };
+    }
+    const sizeIdentity = {
+      outlineWidth: 2,
+      boxShadowBlurRadius: 4,
+      boxShadowSpreadRadius: 8,
+    };
+
+    it('defaults style object with box-shadow size and outlineWidth off of 2 if zoomTransform.k is not provided', () => {
+      expect(getComputedSizes(null)).toEqual(sizeIdentity);
+      expect(getComputedSizes(undefined)).toEqual(sizeIdentity);
+    });
+
+    it('calculates style object with box-shadow size and outlineWidth at default size if zoomTransform.k is 1', () => {
+      expect(getComputedSizes(1)).toEqual(sizeIdentity);
+    });
+
+    it('calculates style object with box-shadow size and outlineWidth 150% as large if zoomTransform.k is .5', () => {
+      expect(getComputedSizes(0.5)).toEqual(_mapValues(sizeIdentity, x => x * 1.5));
+    });
+
+    it('calculates style object with box-shadow size and outlineWidth twice as large if zoomTransform.k is .33', () => {
+      expect(getComputedSizes(0.33)).toEqual(_mapValues(sizeIdentity, x => x * 2));
+    });
+
+    it('calculates style object with box-shadow size and outlineWidth 250% as large if zoomTransform.k is .25', () => {
+      expect(getComputedSizes(0.25)).toEqual(_mapValues(sizeIdentity, x => x * 2.5));
+    });
+  });
+
+  describe('setOnNode', () => {
+    it("inherits container's boxShadow and outlineWidth", () => {
+      expect(setOnNode()).toEqual({
+        style: {
+          boxShadow: 'inherit',
+          outlineWidth: 'inherit',
+        },
+      });
     });
   });
 });
