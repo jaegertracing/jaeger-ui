@@ -111,8 +111,8 @@ describe('SpanTreeOffset', () => {
       expect(wrapper.find(IoIosArrowDown).length).toBe(0);
     });
 
-    it('does not render icon if props.span.hasChildren and hideIcon are true', () => {
-      wrapper.setProps({ hideIcon: true });
+    it('does not render icon if props.span.hasChildren is true and showChildrenIcon is false', () => {
+      wrapper.setProps({ showChildrenIcon: false });
       expect(wrapper.find(IoChevronRight).length).toBe(0);
       expect(wrapper.find(IoIosArrowDown).length).toBe(0);
     });

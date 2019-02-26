@@ -18,14 +18,14 @@ import { Input } from 'antd';
 import debounceMock from 'lodash/debounce';
 import queryString from 'query-string';
 
-import { UnconnectedUIFindInput, extractUIFindFromState } from './UIFindInput';
-import updateUIFindSpy from '../../utils/update-ui-find';
+import { UnconnectedUiFindInput, extractUiFindFromState } from './UiFindInput';
+import updateUiFindSpy from '../../utils/update-ui-find';
 
 jest.mock('lodash/debounce');
 
 jest.mock('../../utils/update-ui-find');
 
-describe('UIFind', () => {
+describe('UiFind', () => {
   const flushMock = jest.fn();
   const queryStringParseSpy = jest.spyOn(queryString, 'parse');
 
@@ -54,7 +54,7 @@ describe('UIFind', () => {
 
   beforeEach(() => {
     flushMock.mockReset();
-    wrapper = shallow(<UnconnectedUIFindInput {...props} />);
+    wrapper = shallow(<UnconnectedUiFindInput {...props} />);
   });
 
   describe('rendering', () => {
@@ -82,9 +82,9 @@ describe('UIFind', () => {
       expect(wrapper.state('ownInputValue')).toBe(newValue);
     });
 
-    it('calls updateUIFind with correct kwargs', () => {
+    it('calls updateUiFind with correct kwargs', () => {
       wrapper.find(Input).simulate('change', { target: { value: newValue } });
-      expect(updateUIFindSpy).toHaveBeenLastCalledWith({
+      expect(updateUiFindSpy).toHaveBeenLastCalledWith({
         history: props.history,
         location: props.location,
         uiFind: newValue,
@@ -106,14 +106,14 @@ describe('UIFind', () => {
     });
   });
 
-  describe('extractUIFindFromState', () => {
+  describe('extractUiFindFromState', () => {
     beforeAll(() => {
       queryStringParseSpy.mockReturnValue({ uiFind });
     });
 
     it('returns uiFind from parsed state.router.location.search', () => {
       const reduxStateValue = 'state.router.location.search';
-      const result = extractUIFindFromState({
+      const result = extractUiFindFromState({
         router: {
           location: {
             search: reduxStateValue,

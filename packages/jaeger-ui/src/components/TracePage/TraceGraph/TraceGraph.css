@@ -32,6 +32,10 @@ limitations under the License.
   display: flex;
 }
 
+.TraceGraph--dag {
+  background: #ddd;
+}
+
 .TraceGraph--sidebar-container {
   display: flex;
   z-index: 1;

@@ -167,13 +167,14 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps) {
         )}
         {showShortcutsHelp && <KeyboardShortcutsHelp className="ub-mr2" />}
         <TracePageSearchBar
-          updateTextFilter={updateTextFilter}
-          textFilter={textFilter}
-          prevResult={prevResult}
-          nextResult={nextResult}
           clearSearch={clearSearch}
-          resultCount={resultCount}
+          nextResult={nextResult}
+          prevResult={prevResult}
           ref={forwardedRef}
+          resultCount={resultCount}
+          textFilter={textFilter}
+          traceGraphView={traceGraphView}
+          updateTextFilter={updateTextFilter}
         />
 
         {showViewOptions && (

@@ -15,13 +15,14 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Icon, Input } from 'antd';
 import { DirectedGraph, LayoutManager } from '@jaegertracing/plexus';
+import _get from 'lodash/get';
+import _map from 'lodash/map';
 
 import drawNode from './drawNode';
 import ErrorMessage from '../../common/ErrorMessage';
 import LoadingIndicator from '../../common/LoadingIndicator';
-import UIFindInput from '../../common/UIFindInput';
+import UiFindInput from '../../common/UiFindInput';
 import { fetchedState } from '../../../constants';
 import convPlexus from '../../../model/trace-dag/convPlexus';
 import TraceDag from '../../../model/trace-dag/TraceDag';
@@ -37,35 +38,49 @@ type Props = {
 
 const { classNameIsSmall } = DirectedGraph.propsFactories;
 
-function setOnEdgesContainer(state: Object) {
+export function setOnEdgesContainer(state: Object) {
   const { zoomTransform } = state;
   if (!zoomTransform) {
     return null;
   }
   const { k } = zoomTransform;
   const opacity = 0.1 + k * 0.9;
-  return { style: { opacity } };
+  return { style: { opacity, zIndex: 1, position: 'absolute', pointerEvents: 'none' } };
+}
+
+export function setOnNodesContainer(state: Object) {
+  const { zoomTransform } = state;
+  const matchSize = 1 + 1 / _get(zoomTransform, 'k', 1);
+  return {
+    style: {
+      boxShadow: `0 0 ${2 * matchSize}px ${4 * matchSize}px`,
+      outlineWidth: `${matchSize}px`,
+      color: 'transparent',
+    },
+  };
+}
+
+export function setOnNode() {
+  return {
+    style: {
+      outlineWidth: 'inherit',
+      boxShadow: 'inherit',
+    },
+  };
 }
 
 export default class TraceDiffGraph extends React.PureComponent<Props> {
   props: Props;
-  _uiFindInputRef: { current: Input | null };
-
   layoutManager: LayoutManager;
 
   constructor(props: Props) {
     super(props);
     this.layoutManager = new LayoutManager({ useDotEdges: true, splines: 'polyline' });
-    this._uiFindInputRef = React.createRef();
   }
 
   componentWillUnmount() {
     this.layoutManager.stopAndRelease();
   }
-
-  handleIconClick = () => {
-    if (this._uiFindInputRef.current) this._uiFindInputRef.current.focus();
-  };
 
   render() {
     const { a, b } = this.props;
@@ -104,6 +119,7 @@ export default class TraceDiffGraph extends React.PureComponent<Props> {
     const bTraceDag = TraceDag.newFromTrace(bData);
     const diffDag = TraceDag.diff(aTraceDag, bTraceDag);
     const { edges, vertices } = convPlexus(diffDag.nodesMap);
+    const spansArray = _map(_map(vertices, 'data.members'), member => _map(member, 'span'));
 
     return (
       <div className="TraceDiffGraph--graphWrapper">
@@ -117,15 +133,19 @@ export default class TraceDiffGraph extends React.PureComponent<Props> {
           getNodeLabel={drawNode}
           setOnRoot={classNameIsSmall}
           setOnEdgesContainer={setOnEdgesContainer}
+          setOnNodesContainer={setOnNodesContainer}
+          setOnNode={setOnNode}
           edges={edges}
           vertices={vertices}
         />
         <div className="TraceDiffGraph--uiFind">
-          <UIFindInput
-            forwardedRef={this._uiFindInputRef}
-            inputProps={{ className: 'TraceDiffGraph--uiFind--input' }}
+          <label htmlFor="uiFind--input">
+            <span>Find</span>
+          </label>
+          <UiFindInput
+            spansArray={spansArray}
+            inputProps={{ className: 'TraceDiffGraph--uiFind--input', id: 'uiFind--input' }}
           />
-          <Icon className="TraceDiffGraph--uiFind--icon" onClick={this.handleIconClick} type="search" />
         </div>
       </div>
     );

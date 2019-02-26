@@ -38,6 +38,7 @@ type SpanTreeOffsetPropsType = {
   onClick: ?() => void,
   removeHoverIndentGuideId: string => void,
   span: Span,
+  showChildrenIcon: boolean,
 };
 
 export class UnconnectedSpanTreeOffset extends React.PureComponent<SpanTreeOffsetPropsType> {
@@ -48,6 +49,7 @@ export class UnconnectedSpanTreeOffset extends React.PureComponent<SpanTreeOffse
     childrenVisible: false,
     hideIcon: null,
     onClick: null,
+    showChildrenIcon: true,
   };
 
   constructor(props: SpanTreeOffsetPropsType) {
@@ -100,10 +102,11 @@ export class UnconnectedSpanTreeOffset extends React.PureComponent<SpanTreeOffse
   };
 
   render() {
-    const { childrenVisible, hideIcon, onClick, span } = this.props;
+    const { childrenVisible, onClick, showChildrenIcon, span } = this.props;
     const { hasChildren, spanID } = span;
     const wrapperProps = hasChildren ? { onClick, role: 'switch', 'aria-checked': childrenVisible } : null;
-    const icon = !hideIcon && hasChildren && (childrenVisible ? <IoIosArrowDown /> : <IoChevronRight />);
+    const icon =
+      showChildrenIcon && hasChildren && (childrenVisible ? <IoIosArrowDown /> : <IoChevronRight />);
     return (
       <span className={`SpanTreeOffset ${hasChildren ? 'is-parent' : ''}`} {...wrapperProps}>
         {this.ancestorIds.map(ancestorId => (

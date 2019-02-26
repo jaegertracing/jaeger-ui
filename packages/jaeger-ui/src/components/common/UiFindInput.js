@@ -16,23 +16,27 @@
 
 import * as React from 'react';
 import { Input } from 'antd';
-import cx from 'classnames';
 import _debounce from 'lodash/debounce';
+import _filter from 'lodash/filter';
+import _get from 'lodash/get';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
 import queryString from 'query-string';
 
 import type { Location, RouterHistory } from 'react-router-dom';
 
-import updateUIFind from '../../utils/update-ui-find';
+import filterSpans from '../../utils/filter-spans';
+import updateUiFind from '../../utils/update-ui-find';
 
 import type { ReduxState } from '../../types/index';
+import type { Span } from '../../types/trace';
 
 type PropsType = {
   forwardedRef?: { current: Input | null },
   inputProps: Object,
   history: RouterHistory,
   location: Location,
+  spansArray?: Span[][],
   uiFind?: string,
 };
 
@@ -40,10 +44,11 @@ type StateType = {
   ownInputValue: ?string,
 };
 
-export class UnconnectedUIFindInput extends React.PureComponent<PropsType, StateType> {
+export class UnconnectedUiFindInput extends React.PureComponent<PropsType, StateType> {
   static defaultProps = {
     forwardedRef: null,
     inputProps: {},
+    spansArray: [],
     uiFind: null,
   };
 
@@ -52,19 +57,19 @@ export class UnconnectedUIFindInput extends React.PureComponent<PropsType, State
   };
 
   handleInputBlur = () => {
-    this.updateUIFindQueryParam.flush();
+    this.updateUiFindQueryParam.flush();
     this.setState({ ownInputValue: null });
   };
 
   handleInputChange = (evt: SyntheticInputEvent<HTMLInputElement>) => {
     const { value } = evt.target;
-    this.updateUIFindQueryParam(value);
+    this.updateUiFindQueryParam(value);
     this.setState({ ownInputValue: value });
   };
 
-  updateUIFindQueryParam = _debounce((uiFind: ?string) => {
+  updateUiFindQueryParam = _debounce((uiFind: ?string) => {
     const { history, location } = this.props;
-    updateUIFind({
+    updateUiFind({
       location,
       history,
       uiFind,
@@ -74,12 +79,19 @@ export class UnconnectedUIFindInput extends React.PureComponent<PropsType, State
   render() {
     const inputValue =
       typeof this.state.ownInputValue === 'string' ? this.state.ownInputValue : this.props.uiFind;
-    const className = cx('UIFind--input', this.props.inputProps.className);
+    const suffix: string | null =
+      this.props.uiFind && this.props.spansArray
+        ? String(
+            _filter(this.props.spansArray, spans =>
+              _get(filterSpans(this.props.uiFind /* inputValue */ || '', spans), 'size', 0)
+            ).length
+          )
+        : null;
 
     return (
       <Input
+        suffix={suffix}
         {...this.props.inputProps}
-        className={className}
         onBlur={this.handleInputBlur}
         onChange={this.handleInputChange}
         ref={this.props.forwardedRef}
@@ -89,9 +101,9 @@ export class UnconnectedUIFindInput extends React.PureComponent<PropsType, State
   }
 }
 
-export function extractUIFindFromState(state: ReduxState): { uiFind?: string } {
+export function extractUiFindFromState(state: ReduxState): { uiFind?: string } {
   const { uiFind } = queryString.parse(state.router.location.search);
   return { uiFind };
 }
 
-export default withRouter(connect(extractUIFindFromState)(UnconnectedUIFindInput));
+export default withRouter(connect(extractUiFindFromState)(UnconnectedUiFindInput));

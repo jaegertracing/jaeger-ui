@@ -23,7 +23,7 @@ import _memoize from 'lodash/memoize';
 import { connect } from 'react-redux';
 
 import CopyIcon from '../../common/CopyIcon';
-import { extractUIFindFromState } from '../../common/UIFindInput';
+import { extractUiFindFromState } from '../../common/UiFindInput';
 import filterSpans from '../../../utils/filter-spans';
 
 import type { PVertex, DenseSpan } from '../../../model/trace-dag/types';
@@ -47,6 +47,7 @@ export class DiffNode extends React.PureComponent<Props> {
   filterSpans: typeof filterSpans;
   static defaultProps = {
     uiFind: '',
+    meta: {},
   };
 
   constructor(props: Props) {
@@ -57,6 +58,7 @@ export class DiffNode extends React.PureComponent<Props> {
   render() {
     const { a, b, uiFind, operation, service } = this.props;
     const isSame = a === b;
+    const isUiFindMatch = _get(this.filterSpans(uiFind, _map(this.props.members, 'span')), 'size');
     const className = cx({
       'is-same': isSame,
       'is-changed': !isSame,
@@ -64,12 +66,12 @@ export class DiffNode extends React.PureComponent<Props> {
       'is-added': a === 0,
       'is-less': a > b && b > 0,
       'is-removed': b === 0,
-      'is-ui-find-match': _get(this.filterSpans(uiFind, _map(this.props.members, 'span')), 'size'),
+      'is-ui-find-match': isUiFindMatch,
     });
     const chgSign = a < b ? '+' : '-';
     const table = (
       <table className={`DiffNode ${className}`}>
-        <tbody>
+        <tbody className={`DiffNode--body ${className}`}>
           <tr>
             <td className={`DiffNode--metricCell ${className}`} rowSpan={isSame ? 2 : 1}>
               {isSame ? null : <span className="DiffNode--metricSymbol">{chgSign}</span>}
@@ -106,7 +108,7 @@ export class DiffNode extends React.PureComponent<Props> {
   }
 }
 
-const ConnectedDiffNode = connect(extractUIFindFromState)(DiffNode);
+const ConnectedDiffNode = connect(extractUiFindFromState)(DiffNode);
 
 export default function drawNode<T>(vertex: PVertex<T>) {
   const { data, members, operation, service } = vertex.data;

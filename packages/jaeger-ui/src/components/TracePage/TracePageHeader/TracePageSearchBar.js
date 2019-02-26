@@ -18,7 +18,7 @@ import * as React from 'react';
 import { Button, Input } from 'antd';
 
 import * as markers from './TracePageSearchBar.markers';
-import UIFindInput from '../../common/UIFindInput';
+import UiFindInput from '../../common/UiFindInput';
 
 import './TracePageSearchBar.css';
 
@@ -29,10 +29,19 @@ type TracePageSearchBarProps = {
   clearSearch: () => void,
   resultCount: number,
   forwardedRef: { current: Input | null },
+  traceGraphView: boolean,
 };
 
 export function TracePageSearchBarFn(props: TracePageSearchBarProps) {
-  const { prevResult, nextResult, clearSearch, forwardedRef, resultCount, textFilter } = props;
+  const {
+    prevResult,
+    nextResult,
+    clearSearch,
+    forwardedRef,
+    resultCount,
+    textFilter,
+    traceGraphView,
+  } = props;
 
   const count = textFilter ? <span className="TracePageSearchBar--count">{resultCount}</span> : null;
 
@@ -49,9 +58,19 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps) {
     <div className="ub-flex-auto ub-mx2 TracePageSearchBar">
       {/* style inline because compact overwrites the display */}
       <Input.Group compact style={{ display: 'flex' }}>
-        <UIFindInput inputProps={uiFindInputInputProps} forwardedRef={forwardedRef} />
-        <Button className={btnClass} disabled={!textFilter} icon="up" onClick={prevResult} />
-        <Button className={btnClass} disabled={!textFilter} icon="down" onClick={nextResult} />
+        <UiFindInput inputProps={uiFindInputInputProps} forwardedRef={forwardedRef} />
+        <Button
+          className={btnClass}
+          disabled={traceGraphView || !textFilter}
+          icon="up"
+          onClick={prevResult}
+        />
+        <Button
+          className={btnClass}
+          disabled={traceGraphView || !textFilter}
+          icon="down"
+          onClick={nextResult}
+        />
         <Button className={btnClass} disabled={!textFilter} icon="close" onClick={clearSearch} />
       </Input.Group>
     </div>
