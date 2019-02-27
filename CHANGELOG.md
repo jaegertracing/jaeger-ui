@@ -6,6 +6,8 @@
 
 * **Trace detail:** Log Markers on Spans ([Fix #119](https://github.com/jaegertracing/jaeger-ui/issues/119)) ([@sfriberg](https://github.com/sfriberg) in [#309](https://github.com/jaegertracing/jaeger-ui/pull/309))
 
+* **Search:** Load trace(s) from a JSON file ([Fix #214](https://github.com/jaegertracing/jaeger-ui/issues/214)) ([@yuribit](https://github.com/yuribit) in [#327](https://github.com/jaegertracing/jaeger-ui/pull/327))
+
 ## v1.0.1 (February 15, 2019)
 
 ### Fixes
