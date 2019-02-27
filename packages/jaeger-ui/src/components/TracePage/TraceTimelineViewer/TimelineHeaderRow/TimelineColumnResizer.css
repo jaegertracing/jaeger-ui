@@ -31,9 +31,10 @@ limitations under the License.
   border-left: 2px solid transparent;
   cursor: col-resize;
   height: 5000px;
+  margin-left: -1px;
   position: absolute;
   top: 0;
-  width: 5px;
+  width: 1px;
 }
 
 .TimelineColumnResizer--dragger:hover {
@@ -61,7 +62,7 @@ limitations under the License.
   top: 0;
   bottom: 0;
   left: -8px;
-  right: -5px;
+  right: 0;
   content: ' ';
 }
 

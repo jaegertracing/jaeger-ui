@@ -1,3 +1,5 @@
+// @flow
+
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,30 +14,45 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { Span } from '../../../types/trace';
+
+export type ViewedBoundsFunctionType = (number, number) => { start: number, end: number };
 /**
- * Given a range (`min`, `max`), finds the position of a sub-range (`start`,
- * `end`) factoring in a zoom (`viewStart`, `viewEnd`). The result is returned
- * as a `{ start, end }` object with values ranging in [0, 1].
+ * Given a range (`min`, `max`) and factoring in a zoom (`viewStart`, `viewEnd`)
+ * a function is created that will find the position of a sub-range (`start`, `end`).
+ * The calling the generated method will return the result as a `{ start, end }`
+ * object with values ranging in [0, 1].
  *
  * @param  {number} min       The start of the outer range.
  * @param  {number} max       The end of the outer range.
- * @param  {number} start     The start of the sub-range.
- * @param  {number} end       The end of the sub-range.
  * @param  {number} viewStart The start of the zoom, on a range of [0, 1],
  *                            relative to the `min`, `max`.
  * @param  {number} viewEnd   The end of the zoom, on a range of [0, 1],
  *                            relative to the `min`, `max`.
- * @return {Object}           The resultant range.
+ * @returns {(number, number) => Object} Created view bounds function
  */
-export function getViewedBounds({ min, max, start, end, viewStart, viewEnd }) {
+export function createViewedBoundsFunc(viewRange: {
+  min: number,
+  max: number,
+  viewStart: number,
+  viewEnd: number,
+}) {
+  const { min, max, viewStart, viewEnd } = viewRange;
   const duration = max - min;
   const viewMin = min + viewStart * duration;
   const viewMax = max - (1 - viewEnd) * duration;
   const viewWindow = viewMax - viewMin;
-  return {
+
+  /**
+   * View bounds function
+   * @param  {number} start     The start of the sub-range.
+   * @param  {number} end       The end of the sub-range.
+   * @return {Object}           The resultant range.
+   */
+  return (start: number, end: number) => ({
     start: (start - viewMin) / viewWindow,
     end: (end - viewMin) / viewWindow,
-  };
+  });
 }
 
 /**
@@ -47,7 +64,7 @@ export function getViewedBounds({ min, max, start, end, viewStart, viewEnd }) {
  *                        items.
  * @return {boolean}      True if a match was found.
  */
-export function spanHasTag(key, value, span) {
+export function spanHasTag(key: string, value: any, span: Span) {
   if (!Array.isArray(span.tags) || !span.tags.length) {
     return false;
   }
@@ -59,7 +76,7 @@ export const isServerSpan = spanHasTag.bind(null, 'span.kind', 'server');
 
 const isErrorBool = spanHasTag.bind(null, 'error', true);
 const isErrorStr = spanHasTag.bind(null, 'error', 'true');
-export const isErrorSpan = span => isErrorBool(span) || isErrorStr(span);
+export const isErrorSpan = (span: Span) => isErrorBool(span) || isErrorStr(span);
 
 /**
  * Returns `true` if at least one of the descendants of the `parentSpanIndex`
@@ -72,7 +89,7 @@ export const isErrorSpan = span => isErrorBool(span) || isErrorStr(span);
  *                                         the parent span will be checked.
  * @return     {boolean}  Returns `true` if a descendant contains an error tag.
  */
-export function spanContainsErredSpan(spans, parentSpanIndex) {
+export function spanContainsErredSpan(spans: Span[], parentSpanIndex: number) {
   const { depth } = spans[parentSpanIndex];
   let i = parentSpanIndex + 1;
   for (; i < spans.length && spans[i].depth > depth; i++) {
@@ -86,7 +103,7 @@ export function spanContainsErredSpan(spans, parentSpanIndex) {
 /**
  * Expects the first span to be the parent span.
  */
-export function findServerChildSpan(spans) {
+export function findServerChildSpan(spans: Span[]) {
   if (spans.length <= 1 || !isClientSpan(spans[0])) {
     return false;
   }

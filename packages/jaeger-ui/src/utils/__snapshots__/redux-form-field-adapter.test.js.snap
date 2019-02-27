@@ -10,9 +10,9 @@ exports[`reduxFormFieldAdapter not validated input should render as expected 1`]
       "error": null,
     }
   }
-  onBlur={null}
+  onBlur={[Function]}
   onChange={[Function]}
-  onFocus={null}
+  onFocus={[Function]}
   prefixCls="ant-input"
   type="text"
   value="inputValue"
@@ -46,6 +46,7 @@ exports[`reduxFormFieldAdapter validate input should render Popover as invisible
     }
     onBlur={[Function]}
     onChange={[Function]}
+    onFocus={[Function]}
     prefixCls="ant-input"
     type="text"
     value="inputValue"
@@ -80,6 +81,7 @@ exports[`reduxFormFieldAdapter validate input should render Popover as visible i
     }
     onBlur={[Function]}
     onChange={[Function]}
+    onFocus={[Function]}
     prefixCls="ant-input"
     type="text"
     value="inputValue"
@@ -109,6 +111,7 @@ exports[`reduxFormFieldAdapter validate input should render as expected when the
     }
     onBlur={[Function]}
     onChange={[Function]}
+    onFocus={[Function]}
     prefixCls="ant-input"
     type="text"
     value="inputValue"
