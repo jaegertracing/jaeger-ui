@@ -13,46 +13,44 @@
 // limitations under the License.
 
 import isPromise from 'is-promise';
-import sinon from 'sinon';
 
 import fileReader from './fileReader.js';
 
-it('readJsonFile returns a promise', () => {
-  const fileList = { data: {}, filename: 'whatever' };
+describe('fileReader.readJsonFile', () => {
+  it('returns a promise', () => {
+    const promise = fileReader.readJsonFile({ rando: true });
+    // prevent the unhandled rejection warning
+    promise.catch(() => {});
+    expect(isPromise(promise)).toBeTruthy();
+  });
 
-  const promise = fileReader.readJsonFile(fileList);
-  expect(isPromise(promise)).toBeTruthy();
-});
+  it('rejects when given an invalid file', () => {
+    const p = fileReader.readJsonFile({ rando: true });
+    return expect(p).rejects.toMatchObject(expect.any(Error));
+  });
 
-it('readJsonFile fails to load a fail', async () => {
-  expect.assertions(1);
-  const fileList = { data: {}, filename: 'whatever' };
-  try {
-    await fileReader.readJsonFile(fileList);
-  } catch (e) {
-    expect(true).toBeTruthy();
-  }
-});
+  it('does not throw when given an invalid file', () => {
+    let threw = false;
+    try {
+      const p = fileReader.readJsonFile({ rando: true });
+      // prevent the unhandled rejection warning
+      p.catch(() => {});
+    } catch (_) {
+      threw = true;
+    }
+    return expect(threw).toBe(false);
+  });
 
-it('readJsonFile fails when fileList is wrong', async () => {
-  expect.assertions(2);
+  it('loads JSON data, successfully', () => {
+    const obj = { ok: true };
+    const file = new File([JSON.stringify(obj)], 'foo.json');
+    const p = fileReader.readJsonFile({ file });
+    return expect(p).resolves.toMatchObject(obj);
+  });
 
-  const mock = sinon.mock(window);
-  const called = mock.expects('FileReader').once();
-  const fileList = {
-    action: '',
-    filename: 'file',
-    file: { uid: '1234' },
-    data: {},
-    headers: {},
-    withCredentials: false,
-  };
-
-  try {
-    await fileReader.readJsonFile(fileList);
-  } catch (e) {
-    expect(true).toBeTruthy();
-    expect(called.verify()).toBeTruthy();
-  }
-  mock.restore();
+  it('rejects on malform JSON', () => {
+    const file = new File(['not-json'], 'foo.json');
+    const p = fileReader.readJsonFile({ file });
+    return expect(p).rejects.toMatchObject(expect.any(Error));
+  });
 });

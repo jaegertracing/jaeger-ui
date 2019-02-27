@@ -101,7 +101,7 @@ export class SearchTracePageImpl extends Component {
             <Col span={6} className="SearchTracePage--column">
               <div className="SearchTracePage--find">
                 <Tabs size="large">
-                  <TabPane tab="Find Traces" key="searchForm">
+                  <TabPane tab="Search" key="searchForm">
                     {!loadingServices && services ? <SearchForm services={services} /> : <LoadingIndicator />}
                   </TabPane>
                   <TabPane tab="JSON File" key="fileLoader">

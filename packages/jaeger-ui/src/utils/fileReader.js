@@ -19,14 +19,31 @@ const fileReader = {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => {
-        if (typeof reader.result === 'string') {
-          return resolve(JSON.parse(reader.result));
+        if (typeof reader.result !== 'string') {
+          reject(new Error('Invalid result type'));
+          return;
         }
-        return reject('Invalid result type');
+        try {
+          resolve(JSON.parse(reader.result));
+        } catch (error) {
+          reject(new Error(`Error parsing JSON: ${error.message}`));
+        }
       };
-      reader.onerror = reject;
-      reader.onabort = reject;
-      reader.readAsText(fileList.file);
+      reader.onerror = () => {
+        // eslint-disable-next-line no-console
+        const errMessage = reader.error ? `: ${String(reader.error)}` : '';
+        reject(new Error(`Error reading the JSON file${errMessage}`));
+      };
+      reader.onabort = () => {
+        // eslint-disable-next-line no-console
+        reject(new Error(`Reading the JSON file has been aborted`));
+      };
+      try {
+        reader.readAsText(fileList.file);
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        reject(new Error(`Error reading the JSON file: ${error.message}`));
+      }
     });
   },
 };

@@ -23,6 +23,8 @@ it('loadJsonTraces should return a promise', () => {
 
   const { payload } = fileReaderActions.loadJsonTraces(fileList);
   expect(isPromise(payload)).toBeTruthy();
+  // prevent the unhandled rejection warnings
+  payload.catch(() => {});
 });
 
 it('loadJsonTraces should call readJsonFile', () => {
