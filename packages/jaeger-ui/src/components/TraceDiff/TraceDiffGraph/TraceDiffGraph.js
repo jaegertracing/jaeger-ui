@@ -18,22 +18,27 @@ import * as React from 'react';
 import { DirectedGraph, LayoutManager } from '@jaegertracing/plexus';
 import _get from 'lodash/get';
 import _map from 'lodash/map';
+import { connect } from 'react-redux';
 
 import drawNode from './drawNode';
 import ErrorMessage from '../../common/ErrorMessage';
 import LoadingIndicator from '../../common/LoadingIndicator';
-import UiFindInput from '../../common/UiFindInput';
+import UiFindInput, { extractUiFindFromState } from '../../common/UiFindInput';
 import { fetchedState } from '../../../constants';
 import convPlexus from '../../../model/trace-dag/convPlexus';
 import TraceDag from '../../../model/trace-dag/TraceDag';
+import filterSpans from '../../../utils/filter-spans';
 
+import type { PVertex } from '../../../model/trace-dag/types';
 import type { FetchedTrace } from '../../../types';
+import type { Trace } from '../../../types/trace';
 
 import './TraceDiffGraph.css';
 
 type Props = {
   a: ?FetchedTrace,
   b: ?FetchedTrace,
+  uiFind?: string,
 };
 
 const { classNameIsSmall } = DirectedGraph.propsFactories;
@@ -69,9 +74,50 @@ export function setOnNode() {
   };
 }
 
-export default class TraceDiffGraph extends React.PureComponent<Props> {
+let lastUiFind: string;
+let lastVertices: PVertex<Object>[];
+let uiFindVertexKeys: Set<number | string>;
+
+export function getUiFindVertexKeys(uiFind: string, vertices: PVertex<Object>[]) {
+  if (uiFind === lastUiFind && vertices === lastVertices && uiFindVertexKeys) {
+    return uiFindVertexKeys;
+  }
+  const newVertexKeys: Set<number | string> = new Set();
+  vertices.forEach(({ key, data: { members } }) => {
+    if (_get(filterSpans(uiFind, _map(members, 'span')), 'size')) {
+      newVertexKeys.add(key);
+    }
+  });
+  lastUiFind = uiFind;
+  lastVertices = vertices;
+  uiFindVertexKeys = newVertexKeys;
+  return newVertexKeys;
+}
+
+let lastAData: ?Trace;
+let lastBData: ?Trace;
+let edgesAndVertices: ?Object;
+
+function getEdgesAndVertices(aData, bData): Object {
+  if (aData === lastAData && bData === lastBData && edgesAndVertices) {
+    return edgesAndVertices;
+  }
+  lastAData = aData;
+  lastBData = bData;
+  const aTraceDag = TraceDag.newFromTrace(aData);
+  const bTraceDag = TraceDag.newFromTrace(bData);
+  const diffDag = TraceDag.diff(aTraceDag, bTraceDag);
+  edgesAndVertices = convPlexus(diffDag.nodesMap);
+  return edgesAndVertices;
+}
+
+class TraceDiffGraph extends React.PureComponent<Props> {
   props: Props;
   layoutManager: LayoutManager;
+
+  static defaultProps = {
+    uiFind: '',
+  };
 
   constructor(props: Props) {
     super(props);
@@ -83,7 +129,12 @@ export default class TraceDiffGraph extends React.PureComponent<Props> {
   }
 
   render() {
-    const { a, b } = this.props;
+    const {
+      a,
+      b,
+      // Flow requires `= ''` because it does not interpret defaultProps
+      uiFind = '',
+    } = this.props;
     if (!a || !b) {
       return <h1 className="u-mt-vast u-tx-muted ub-tx-center">At least two Traces are needed</h1>;
     }
@@ -115,11 +166,8 @@ export default class TraceDiffGraph extends React.PureComponent<Props> {
     if (!aData || !bData) {
       return <div className="TraceDiffGraph--graphWrapper" />;
     }
-    const aTraceDag = TraceDag.newFromTrace(aData);
-    const bTraceDag = TraceDag.newFromTrace(bData);
-    const diffDag = TraceDag.diff(aTraceDag, bTraceDag);
-    const { edges, vertices } = convPlexus(diffDag.nodesMap);
-    const spansArray = _map(_map(vertices, 'data.members'), member => _map(member, 'span'));
+    const { edges, vertices } = getEdgesAndVertices(aData, bData);
+    const keys = getUiFindVertexKeys(uiFind, vertices);
 
     return (
       <div className="TraceDiffGraph--graphWrapper">
@@ -130,7 +178,7 @@ export default class TraceDiffGraph extends React.PureComponent<Props> {
           className="TraceDiffGraph--dag"
           minimapClassName="TraceDiffGraph--miniMap"
           layoutManager={this.layoutManager}
-          getNodeLabel={drawNode}
+          getNodeLabel={drawNode(keys)}
           setOnRoot={classNameIsSmall}
           setOnEdgesContainer={setOnEdgesContainer}
           setOnNodesContainer={setOnNodesContainer}
@@ -138,16 +186,18 @@ export default class TraceDiffGraph extends React.PureComponent<Props> {
           edges={edges}
           vertices={vertices}
         />
-        <div className="TraceDiffGraph--uiFind">
-          <label htmlFor="uiFind--input">
-            <span>Find</span>
-          </label>
+        <label className="TraceDiffGraph--uiFind">
+          <span>Find</span>
           <UiFindInput
-            spansArray={spansArray}
-            inputProps={{ className: 'TraceDiffGraph--uiFind--input', id: 'uiFind--input' }}
+            inputProps={{
+              className: 'TraceDiffGraph--uiFind--input',
+              suffix: uiFind.length && String(keys.size),
+            }}
           />
-        </div>
+        </label>
       </div>
     );
   }
 }
+
+export default connect(extractUiFindFromState)(TraceDiffGraph);

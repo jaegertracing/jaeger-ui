@@ -54,7 +54,7 @@ function killWorker(worker: LayoutWorker) {
   // to make flow happy
   const noop = () => {};
   w.onmessage = noop;
-  // $FlowFixMe - https://github.com/facebook/flow/issues/6191
+  // $FlowIgnore - https://github.com/facebook/flow/issues/6191
   w.onmessageerror = noop;
   w.onerror = noop;
   w.terminate();

@@ -17,17 +17,11 @@
 import * as React from 'react';
 import { Popover } from 'antd';
 import cx from 'classnames';
-import _get from 'lodash/get';
-import _map from 'lodash/map';
-import _memoize from 'lodash/memoize';
-import { connect } from 'react-redux';
 
 import CopyIcon from '../../common/CopyIcon';
-import { extractUiFindFromState } from '../../common/UiFindInput';
 import colorGenerator from '../../../utils/color-generator';
-import filterSpans from '../../../utils/filter-spans';
 
-import type { PVertex, DenseSpan } from '../../../model/trace-dag/types';
+import type { PVertex } from '../../../model/trace-dag/types';
 
 import './OpNode.css';
 
@@ -41,8 +35,7 @@ type Props = {
   operation: string,
   service: string,
   mode: string,
-  uiFind: string,
-  members: DenseSpan[],
+  isUiFindMatch: boolean,
 };
 
 export const MODE_SERVICE = 'service';
@@ -72,100 +65,93 @@ export function round2(percent: number) {
   return Math.round(percent * 100) / 100;
 }
 
-export default class OpNode extends React.PureComponent<Props> {
-  props: Props;
-  filterSpans: typeof filterSpans;
-  static defaultProps = {
-    uiFind: '',
-  };
+export default function OpNode(props: Props) {
+  const {
+    count,
+    errors,
+    time,
+    percent,
+    selfTime,
+    percentSelfTime,
+    operation,
+    service,
+    mode,
+    // uiFind,
+    isUiFindMatch,
+  } = props;
 
-  constructor(props: Props) {
-    super(props);
-    this.filterSpans = _memoize(filterSpans);
+  // Spans over 20 % time are full red - we have probably to reconsider better approach
+  let backgroundColor;
+  if (mode === MODE_TIME) {
+    const percentBoosted = Math.min(percent / 20, 1);
+    backgroundColor = [255, 0, 0, percentBoosted].join();
+  } else if (mode === MODE_SELFTIME) {
+    backgroundColor = [255, 0, 0, percentSelfTime / 100].join();
+  } else {
+    backgroundColor = colorGenerator
+      .getRgbColorByKey(service)
+      .concat(0.8)
+      .join();
   }
 
-  render() {
-    const {
-      count,
-      errors,
-      time,
-      percent,
-      selfTime,
-      percentSelfTime,
-      operation,
-      service,
-      mode,
-      uiFind,
-    } = this.props;
+  const className = cx('OpNode', `OpNode--mode-${mode}`, {
+    'is-ui-find-match': isUiFindMatch,
+  });
 
-    // Spans over 20 % time are full red - we have probably to reconsider better approach
-    let backgroundColor;
-    if (mode === MODE_TIME) {
-      const percentBoosted = Math.min(percent / 20, 1);
-      backgroundColor = [255, 0, 0, percentBoosted].join();
-    } else if (mode === MODE_SELFTIME) {
-      backgroundColor = [255, 0, 0, percentSelfTime / 100].join();
-    } else {
-      backgroundColor = colorGenerator
-        .getRgbColorByKey(service)
-        .concat(0.8)
-        .join();
-    }
+  const table = (
+    <table className={className} cellSpacing="0">
+      <tbody
+        className="OpNode--body"
+        style={{
+          background: `rgba(${backgroundColor})`,
+        }}
+      >
+        <tr>
+          <td className="OpNode--metricCell OpNode--count">
+            {count} / {errors}
+          </td>
+          <td className="OpNode--labelCell OpNode--service">
+            <strong>{service}</strong>
+            <CopyIcon
+              className="OpNode--copyIcon"
+              copyText={`${service} ${operation}`}
+              tooltipTitle="Copy label"
+            />
+          </td>
+          <td className="OpNode--metricCell OpNode--avg">{round2(time / 1000 / count)} ms</td>
+        </tr>
+        <tr>
+          <td className="OpNode--metricCell OpNode--time">
+            {time / 1000} ms ({round2(percent)} %)
+          </td>
+          <td className="OpNode--labelCell OpNode--op">{operation}</td>
+          <td className="OpNode--metricCell OpNode--selfTime">
+            {selfTime / 1000} ms ({round2(percentSelfTime)} %)
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  );
 
-    const className = cx('OpNode', `OpNode--mode-${mode}`, {
-      'is-ui-find-match': _get(this.filterSpans(uiFind, _map(this.props.members, 'span')), 'size'),
-    });
-
-    const table = (
-      <table className={className} cellSpacing="0">
-        <tbody
-          className="OpNode--body"
-          style={{
-            background: `rgba(${backgroundColor})`,
-          }}
-        >
-          <tr>
-            <td className="OpNode--metricCell OpNode--count">
-              {count} / {errors}
-            </td>
-            <td className="OpNode--labelCell OpNode--service">
-              <strong>{service}</strong>
-              <CopyIcon
-                className="OpNode--copyIcon"
-                copyText={`${service} ${operation}`}
-                tooltipTitle="Copy label"
-              />
-            </td>
-            <td className="OpNode--metricCell OpNode--avg">{round2(time / 1000 / count)} ms</td>
-          </tr>
-          <tr>
-            <td className="OpNode--metricCell OpNode--time">
-              {time / 1000} ms ({round2(percent)} %)
-            </td>
-            <td className="OpNode--labelCell OpNode--op">{operation}</td>
-            <td className="OpNode--metricCell OpNode--selfTime">
-              {selfTime / 1000} ms ({round2(percentSelfTime)} %)
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    );
-
-    return (
-      <Popover overlayClassName="OpNode--popover" mouseEnterDelay={0.25} content={table}>
-        {table}
-      </Popover>
-    );
-  }
+  return (
+    <Popover overlayClassName="OpNode--popover" mouseEnterDelay={0.25} content={table}>
+      {table}
+    </Popover>
+  );
 }
 
-const ConnectedOpNode = connect(extractUiFindFromState)(OpNode);
-
-export function getNodeDrawer(mode: string) {
+export function getNodeDrawer(mode: string, uiFindVertexKeys: Set<number | string>) {
   return function drawNode<T>(vertex: PVertex<T>) {
     const { data, members, operation, service } = vertex.data;
     return (
-      <ConnectedOpNode {...data} members={members} mode={mode} operation={operation} service={service} />
+      <OpNode
+        {...data}
+        isUiFindMatch={uiFindVertexKeys.has(vertex.key)}
+        smembers={members}
+        mode={mode}
+        operation={operation}
+        service={service}
+      />
     );
   };
 }

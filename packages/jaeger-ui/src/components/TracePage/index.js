@@ -31,6 +31,7 @@ import { trackRange } from './index.track';
 import { merge as mergeShortcuts, reset as resetShortcuts } from './keyboard-shortcuts';
 import { cancel as cancelScroll, scrollBy, scrollTo } from './scroll-page';
 import ScrollManager from './ScrollManager';
+import calculateTraceDagEV from './TraceGraph/calculateTraceDagEV';
 import TraceGraph from './TraceGraph/TraceGraph';
 import { trackSlimHeaderToggle } from './TracePageHeader/TracePageHeader.track';
 import TracePageHeader from './TracePageHeader';
@@ -40,6 +41,7 @@ import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
 import { extractUiFindFromState } from '../common/UiFindInput';
 import * as jaegerApiActions from '../../actions/jaeger-api';
+import { getUiFindVertexKeys } from '../TraceDiff/TraceDiffGraph/TraceDiffGraph';
 import { fetchedState } from '../../constants';
 import filterSpans from '../../utils/filter-spans';
 import updateUiFind from '../../utils/update-ui-find';
@@ -111,6 +113,7 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
   _filterSpans: typeof filterSpans;
   _searchBar: { current: Input | null };
   _scrollManager: ScrollManager;
+  traceDagEV: Object;
 
   constructor(props: TracePageProps) {
     super(props);
@@ -264,6 +267,9 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
 
   toggleTraceGraphView = () => {
     const { traceGraphView } = this.state;
+    if (this.props.trace && this.props.trace.data) {
+      this.traceDagEV = calculateTraceDagEV(this.props.trace.data);
+    }
     this.setState({ traceGraphView: !traceGraphView });
   };
 
@@ -308,7 +314,10 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
       return <ErrorMessage className="ub-m3" error={trace.error || 'Unknown error'} />;
     }
 
-    const findMatchesIDs = this._filterSpans(textFilter || '', _get(trace, 'data.spans'));
+    // $FlowIgnore because flow believes Set<string> cannot be assigned to Set<string | number>
+    const findMatches: Set<string | number> = traceGraphView
+      ? getUiFindVertexKeys(textFilter || '', this.traceDagEV.vertices)
+      : this._filterSpans(textFilter || '', _get(trace, 'data.spans'));
     const isEmbedded = Boolean(embedded);
     const headerProps = {
       slimView,
@@ -326,7 +335,7 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
       onTraceGraphViewClicked: this.toggleTraceGraphView,
       prevResult: this._scrollManager.scrollToPrevVisibleSpan,
       ref: this._searchBar,
-      resultCount: findMatchesIDs ? findMatchesIDs.size : 0,
+      resultCount: findMatches ? findMatches.size : 0,
       showArchiveButton: !isEmbedded && archiveEnabled,
       showShortcutsHelp: !isEmbedded,
       showStandaloneLink: isEmbedded,
@@ -348,13 +357,13 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
         {headerHeight &&
           (traceGraphView ? (
             <section style={{ paddingTop: headerHeight }}>
-              <TraceGraph headerHeight={headerHeight} trace={data} />
+              <TraceGraph headerHeight={headerHeight} ev={this.traceDagEV} uiFindVertexKeys={findMatches} />
             </section>
           ) : (
             <section style={{ paddingTop: headerHeight }}>
               <TraceTimelineViewer
                 registerAccessors={this._scrollManager.setAccessors}
-                findMatchesIDs={findMatchesIDs}
+                findMatchesIDs={findMatches}
                 trace={data}
                 updateNextViewRangeTime={this.updateNextViewRangeTime}
                 updateViewRangeTime={this.updateViewRangeTime}

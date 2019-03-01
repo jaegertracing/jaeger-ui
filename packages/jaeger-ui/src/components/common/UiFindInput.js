@@ -17,15 +17,12 @@
 import * as React from 'react';
 import { Input } from 'antd';
 import _debounce from 'lodash/debounce';
-import _filter from 'lodash/filter';
-import _get from 'lodash/get';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
 import queryString from 'query-string';
 
 import type { Location, RouterHistory } from 'react-router-dom';
 
-import filterSpans from '../../utils/filter-spans';
 import updateUiFind from '../../utils/update-ui-find';
 
 import type { ReduxState } from '../../types/index';
@@ -79,18 +76,9 @@ export class UnconnectedUiFindInput extends React.PureComponent<PropsType, State
   render() {
     const inputValue =
       typeof this.state.ownInputValue === 'string' ? this.state.ownInputValue : this.props.uiFind;
-    const suffix: string | null =
-      this.props.uiFind && this.props.spansArray
-        ? String(
-            _filter(this.props.spansArray, spans =>
-              _get(filterSpans(this.props.uiFind /* inputValue */ || '', spans), 'size', 0)
-            ).length
-          )
-        : null;
 
     return (
       <Input
-        suffix={suffix}
         {...this.props.inputProps}
         onBlur={this.handleInputBlur}
         onChange={this.handleInputChange}
