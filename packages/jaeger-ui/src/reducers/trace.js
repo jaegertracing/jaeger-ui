@@ -16,6 +16,7 @@ import _isEqual from 'lodash/isEqual';
 import { handleActions } from 'redux-actions';
 
 import { fetchTrace, fetchMultipleTraces, searchTraces } from '../actions/jaeger-api';
+import { loadJsonTraces } from '../actions/file-reader-api';
 import { fetchedState } from '../constants';
 import transformTraceData from '../model/transform-trace-data';
 
@@ -124,6 +125,31 @@ function searchErred(state, { meta, payload }) {
   return { ...state, search };
 }
 
+function loadJsonStarted(state) {
+  const { search } = state;
+  return { ...state, search: { ...search, state: fetchedState.LOADING } };
+}
+
+function loadJsonDone(state, { payload }) {
+  const processed = payload.data.map(transformTraceData);
+  const resultTraces = {};
+  const results = new Set(state.search.results);
+  for (let i = 0; i < processed.length; i++) {
+    const data = processed[i];
+    const id = data.traceID;
+    resultTraces[id] = { data, id, state: fetchedState.DONE };
+    results.add(id);
+  }
+  const traces = { ...state.traces, ...resultTraces };
+  const search = { ...state.search, results: Array.from(results), state: fetchedState.DONE };
+  return { ...state, search, traces };
+}
+
+function loadJsonErred(state, { payload }) {
+  const search = { error: payload, results: [], state: fetchedState.ERROR };
+  return { ...state, search };
+}
+
 export default handleActions(
   {
     [`${fetchTrace}_PENDING`]: fetchTraceStarted,
@@ -137,6 +163,10 @@ export default handleActions(
     [`${searchTraces}_PENDING`]: fetchSearchStarted,
     [`${searchTraces}_FULFILLED`]: searchDone,
     [`${searchTraces}_REJECTED`]: searchErred,
+
+    [`${loadJsonTraces}_PENDING`]: loadJsonStarted,
+    [`${loadJsonTraces}_FULFILLED`]: loadJsonDone,
+    [`${loadJsonTraces}_REJECTED`]: loadJsonErred,
   },
   initialState
 );
