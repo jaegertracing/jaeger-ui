@@ -1,6 +1,6 @@
 # Releases
 
-## v1.0.2 (March 3, 2019)
+## v1.1.0 (March 3, 2019)
 
 ### Enhancements
 
@@ -12,7 +12,7 @@
 
 * **Trace detail:** Hide child status icon on SpanTreeOffset used in SpanDetailRow component ([Fix #328](https://github.com/jaegertracing/jaeger-ui/issues/328)) ([@rubenvp8510](https://github.com/rubenvp8510) in [#334](https://github.com/jaegertracing/jaeger-ui/pull/334))
 
-* **Data munging:** Optimize tree walk to avoid too depth function call stack ([Fix #320](https://github.com/jaegertracing/jaeger-ui/issues/320)) ([@rubenvp8510](https://github.com/rubenvp8510) in [#326](https://github.com/jaegertracing/jaeger-ui/pull/326))
+* **Data munging:** Optimize tree walk to avoid excessive function call depth ([Fix #320](https://github.com/jaegertracing/jaeger-ui/issues/320)) ([@rubenvp8510](https://github.com/rubenvp8510) in [#326](https://github.com/jaegertracing/jaeger-ui/pull/326))
 
 ### Chores & Maintenance
 
