@@ -1,12 +1,22 @@
 # Releases
 
-## Next (Unreleased)
+## v1.1.0 (March 3, 2019)
 
 ### Enhancements
 
-* **Trace detail:** Log Markers on Spans ([Fix #119](https://github.com/jaegertracing/jaeger-ui/issues/119)) ([@sfriberg](https://github.com/sfriberg) in [#309](https://github.com/jaegertracing/jaeger-ui/pull/309))
+* **Trace detail:** Log Markers on spans ([Fix #119](https://github.com/jaegertracing/jaeger-ui/issues/119)) ([@sfriberg](https://github.com/sfriberg) in [#309](https://github.com/jaegertracing/jaeger-ui/pull/309))
 
 * **Search:** Load trace(s) from a JSON file ([Fix #214](https://github.com/jaegertracing/jaeger-ui/issues/214)) ([@yuribit](https://github.com/yuribit) in [#327](https://github.com/jaegertracing/jaeger-ui/pull/327))
+
+### Fixes
+
+* **Trace detail:** Hide child status icon on SpanTreeOffset used in SpanDetailRow component ([Fix #328](https://github.com/jaegertracing/jaeger-ui/issues/328)) ([@rubenvp8510](https://github.com/rubenvp8510) in [#334](https://github.com/jaegertracing/jaeger-ui/pull/334))
+
+* **Data munging:** Optimize tree walk to avoid excessive function call depth ([Fix #320](https://github.com/jaegertracing/jaeger-ui/issues/320)) ([@rubenvp8510](https://github.com/rubenvp8510) in [#326](https://github.com/jaegertracing/jaeger-ui/pull/326))
+
+### Chores & Maintenance
+
+* **Code quality:** Fix a typo in transform-trace-data.js ([@bhavin192](https://github.com/bhavin192) in [#332](https://github.com/jaegertracing/jaeger-ui/pull/332))
 
 ## v1.0.1 (February 15, 2019)
 
