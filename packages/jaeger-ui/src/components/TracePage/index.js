@@ -296,15 +296,7 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
   }
 
   render() {
-    const {
-      archiveEnabled,
-      archiveTraceState,
-      embedded,
-      id,
-      searchUrl,
-      uiFind: textFilter,
-      trace,
-    } = this.props;
+    const { archiveEnabled, archiveTraceState, embedded, id, searchUrl, uiFind, trace } = this.props;
     const { slimView, traceGraphView, headerHeight, viewRange } = this.state;
     if (!trace || trace.state === fetchedState.LOADING) {
       return <LoadingIndicator className="u-mt-vast" centered />;
@@ -316,12 +308,12 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
 
     // $FlowIgnore because flow believes Set<string> cannot be assigned to Set<string | number>
     const findMatches: Set<string | number> = traceGraphView
-      ? getUiFindVertexKeys(textFilter || '', this.traceDagEV.vertices)
-      : this._filterSpans(textFilter || '', _get(trace, 'data.spans'));
+      ? getUiFindVertexKeys(uiFind || '', this.traceDagEV.vertices)
+      : this._filterSpans(uiFind || '', _get(trace, 'data.spans'));
     const isEmbedded = Boolean(embedded);
     const headerProps = {
       slimView,
-      textFilter,
+      textFilter: uiFind,
       traceGraphView,
       viewRange,
       canCollapse: !embedded || !embedded.timeline.hideSummary || !embedded.timeline.hideMinimap,
@@ -357,7 +349,12 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
         {headerHeight &&
           (traceGraphView ? (
             <section style={{ paddingTop: headerHeight }}>
-              <TraceGraph headerHeight={headerHeight} ev={this.traceDagEV} uiFindVertexKeys={findMatches} />
+              <TraceGraph
+                headerHeight={headerHeight}
+                ev={this.traceDagEV}
+                uiFind={uiFind || ''}
+                uiFindVertexKeys={findMatches}
+              />
             </section>
           ) : (
             <section style={{ paddingTop: headerHeight }}>

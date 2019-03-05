@@ -68,7 +68,7 @@ describe('updateUiFind', () => {
       uiFind: newUiFind,
       [unrelatedQueryParamName]: unrelatedQueryParamValue,
     });
-    expect(trackFilterSpy).toHaveBeenCalledWith(newUiFind);
+    expect(trackFilterSpy).not.toHaveBeenCalled();
     expect(replaceMock).toHaveBeenCalledWith(expectedReplaceMockArgument);
   });
 
@@ -82,7 +82,7 @@ describe('updateUiFind', () => {
     expect(queryStringStringifySpy).toHaveBeenCalledWith({
       [unrelatedQueryParamName]: unrelatedQueryParamValue,
     });
-    expect(trackFilterSpy).toHaveBeenCalledWith('');
+    expect(trackFilterSpy).not.toHaveBeenCalled();
     expect(replaceMock).toHaveBeenCalledWith(expectedReplaceMockArgument);
   });
 
@@ -95,7 +95,28 @@ describe('updateUiFind', () => {
     expect(queryStringStringifySpy).toHaveBeenCalledWith({
       [unrelatedQueryParamName]: unrelatedQueryParamValue,
     });
-    expect(trackFilterSpy).toHaveBeenCalledWith(undefined);
+    expect(trackFilterSpy).not.toHaveBeenCalled();
     expect(replaceMock).toHaveBeenCalledWith(expectedReplaceMockArgument);
+  });
+
+  describe('trackFilter enabled', () => {
+    it('tracks undefined when uiFind value is omitted', () => {
+      updateUiFind({
+        history,
+        location,
+        trackUpdate: true,
+      });
+      expect(trackFilterSpy).toHaveBeenCalledWith(undefined);
+    });
+
+    it('tracks given value', () => {
+      updateUiFind({
+        history,
+        location,
+        uiFind: newUiFind,
+        trackUpdate: true,
+      });
+      expect(trackFilterSpy).toHaveBeenCalledWith(newUiFind);
+    });
   });
 });

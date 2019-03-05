@@ -16,6 +16,7 @@
 
 import * as React from 'react';
 import { Card, Icon, Button, Tooltip } from 'antd';
+import cx from 'classnames';
 import { DirectedGraph, LayoutManager } from '@jaegertracing/plexus';
 
 import { getNodeDrawer, MODE_SERVICE, MODE_TIME, MODE_SELFTIME, HELP_TABLE } from './OpNode';
@@ -30,6 +31,7 @@ import './TraceGraph.css';
 type Props = {
   headerHeight: number,
   ev: Object,
+  uiFind: string,
   uiFindVertexKeys: Set<number | string>,
 };
 type State = {
@@ -134,22 +136,16 @@ export default class TraceGraph extends React.PureComponent<Props, State> {
   };
 
   render() {
-    const { ev, headerHeight, uiFindVertexKeys } = this.props;
+    const { ev, headerHeight, uiFind, uiFindVertexKeys } = this.props;
     const { showHelp, mode } = this.state;
     if (!ev) {
       return <h1 className="u-mt-vast u-tx-muted ub-tx-center">No trace found</h1>;
     }
 
-    // Caching edges/vertices so that DirectedGraph is not redrawn
-    /*
-    let ev = this.cache;
-    if (!ev) {
-      this.cache = ev;
-    }
-    */
+    const wrapperClassName = cx('TraceGraph--graphWrapper', { uiFind });
 
     return (
-      <div className="TraceGraph--graphWrapper" style={{ paddingTop: headerHeight + 49 }}>
+      <div className={wrapperClassName} style={{ paddingTop: headerHeight + 49 }}>
         <DirectedGraph
           minimap
           zoom

@@ -44,12 +44,12 @@ describe('<TracePageSearchBar>', () => {
           'data-test': markers.IN_TRACE_SEARCH,
           className: 'TracePageSearchBar--bar ub-flex-auto',
           name: 'search',
-          placeholder: 'Search...',
         })
       );
       expect(suffix.hasClass('TracePageSearchBar--count')).toBe(true);
       expect(suffix.text()).toBe(String(defaultProps.resultCount));
       expect(renderedUiFindInput.prop('forwardedRef')).toBe(defaultProps.forwardedRef);
+      expect(renderedUiFindInput.prop('trackUpdate')).toBe(true);
     });
 
     it('renders buttons', () => {

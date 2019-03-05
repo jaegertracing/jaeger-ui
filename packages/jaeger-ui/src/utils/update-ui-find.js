@@ -23,14 +23,18 @@ import { trackFilter } from '../components/TracePage/index.track';
 export default function updateUiFind({
   history,
   location,
+  trackUpdate = false,
   uiFind,
 }: {
   history: RouterHistory,
   location: Location,
+  trackUpdate?: boolean,
   uiFind?: ?string,
 }) {
   const { uiFind: omittedOldValue, ...queryParams } = queryString.parse(location.search);
-  trackFilter(uiFind);
+  if (trackUpdate) {
+    trackFilter(uiFind);
+  }
   if (uiFind) {
     queryParams.uiFind = uiFind;
   }

@@ -16,6 +16,7 @@
 
 import * as React from 'react';
 import { DirectedGraph, LayoutManager } from '@jaegertracing/plexus';
+import cx from 'classnames';
 import _get from 'lodash/get';
 import { connect } from 'react-redux';
 
@@ -50,12 +51,10 @@ export function setOnEdgesContainer(state: Object) {
 
 export function setOnNodesContainer(state: Object) {
   const { zoomTransform } = state;
-  const matchSize = 1 + 1 / _get(zoomTransform, 'k', 1);
+  const matchSize = 8 + 4 / _get(zoomTransform, 'k', 1);
   return {
     style: {
-      boxShadow: `0 0 ${2 * matchSize}px ${4 * matchSize}px`,
-      outlineWidth: `${matchSize}px`,
-      color: 'transparent',
+      outline: `transparent solid ${matchSize}px`,
     },
   };
 }
@@ -63,8 +62,7 @@ export function setOnNodesContainer(state: Object) {
 export function setOnNode() {
   return {
     style: {
-      outlineWidth: 'inherit',
-      boxShadow: 'inherit',
+      outline: 'inherit',
     },
   };
 }
@@ -126,6 +124,7 @@ class TraceDiffGraph extends React.PureComponent<Props> {
     }
     const { edges, vertices } = getEdgesAndVertices(aData, bData);
     const keys = getUiFindVertexKeys(uiFind, vertices);
+    const dagClassName = cx('TraceDiffGraph--dag', { uiFind });
 
     return (
       <div className="TraceDiffGraph--graphWrapper">
@@ -133,7 +132,7 @@ class TraceDiffGraph extends React.PureComponent<Props> {
           minimap
           zoom
           arrowScaleDampener={0}
-          className="TraceDiffGraph--dag"
+          className={dagClassName}
           minimapClassName="TraceDiffGraph--miniMap"
           layoutManager={this.layoutManager}
           getNodeLabel={drawNode(keys)}
@@ -144,15 +143,12 @@ class TraceDiffGraph extends React.PureComponent<Props> {
           edges={edges}
           vertices={vertices}
         />
-        <label className="TraceDiffGraph--uiFind">
-          <span>Find</span>
-          <UiFindInput
-            inputProps={{
-              className: 'TraceDiffGraph--uiFind--input',
-              suffix: uiFind.length && String(keys.size),
-            }}
-          />
-        </label>
+        <UiFindInput
+          inputProps={{
+            className: 'TraceDiffGraph--uiFind',
+            suffix: uiFind.length && String(keys.size),
+          }}
+        />
       </div>
     );
   }

@@ -29,10 +29,11 @@ limitations under the License.
   position: absolute;
   right: 0;
   top: 0;
+  transition: background 0.5s ease;
   display: flex;
 }
 
-.TraceGraph--dag {
+.TraceGraph--graphWrapper.uiFind {
   background: #ddd;
 }
 
@@ -43,8 +44,7 @@ limitations under the License.
 
 .TraceGraph--menu {
   cursor: pointer;
-  padding-right: 1rem;
-  padding-top: 1rem;
+  padding: 0.8rem;
 }
 
 .TraceGraph--menu > li {

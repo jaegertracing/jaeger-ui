@@ -26,14 +26,13 @@ import type { Location, RouterHistory } from 'react-router-dom';
 import updateUiFind from '../../utils/update-ui-find';
 
 import type { ReduxState } from '../../types/index';
-import type { Span } from '../../types/trace';
 
 type PropsType = {
   forwardedRef?: { current: Input | null },
   inputProps: Object,
   history: RouterHistory,
   location: Location,
-  spansArray?: Span[][],
+  trackUpdate?: boolean,
   uiFind?: string,
 };
 
@@ -45,7 +44,7 @@ export class UnconnectedUiFindInput extends React.PureComponent<PropsType, State
   static defaultProps = {
     forwardedRef: null,
     inputProps: {},
-    spansArray: [],
+    trackUpdate: false,
     uiFind: null,
   };
 
@@ -65,10 +64,11 @@ export class UnconnectedUiFindInput extends React.PureComponent<PropsType, State
   };
 
   updateUiFindQueryParam = _debounce((uiFind: ?string) => {
-    const { history, location } = this.props;
+    const { history, location, trackUpdate } = this.props;
     updateUiFind({
       location,
       history,
+      trackUpdate,
       uiFind,
     });
   }, 250);
@@ -79,6 +79,7 @@ export class UnconnectedUiFindInput extends React.PureComponent<PropsType, State
 
     return (
       <Input
+        placeholder="Find..."
         {...this.props.inputProps}
         onBlur={this.handleInputBlur}
         onChange={this.handleInputChange}
