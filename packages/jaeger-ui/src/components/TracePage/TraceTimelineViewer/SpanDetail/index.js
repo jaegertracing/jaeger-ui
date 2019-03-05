@@ -16,51 +16,40 @@
 
 import React from 'react';
 import { Divider, Tooltip } from 'antd';
-import cx from 'classnames';
-import { connect } from 'react-redux';
-import { withRouter } from 'react-router-dom';
-
-import type { Location, RouterHistory } from 'react-router-dom';
 
 import AccordianKeyValues from './AccordianKeyValues';
 import AccordianLogs from './AccordianLogs';
 import DetailState from './DetailState';
 import { formatDuration } from '../utils';
 import LabeledList from '../../../common/LabeledList';
-import { extractUiFindFromState } from '../../../common/UiFindInput';
-import updateUiFind from '../../../../utils/update-ui-find';
 
 import type { Log, Span, KeyValuePair, Link } from '../../../../types/trace';
 
 import './index.css';
 
 type SpanDetailProps = {
+  addToUiFind: string => void,
   detailState: DetailState,
-  history: RouterHistory,
   linksGetter: ?(KeyValuePair[], number) => Link[],
-  location: Location,
   logItemToggle: (string, Log) => void,
   logsToggle: string => void,
   processToggle: string => void,
   span: Span,
   tagsToggle: string => void,
   traceStartTime: number,
-  uiFind: string,
 };
 
-export function UnconnectedSpanDetail(props: SpanDetailProps) {
+export default function SpanDetail(props: SpanDetailProps) {
   const {
+    addToUiFind,
     detailState,
-    history,
     linksGetter,
-    location,
     logItemToggle,
     logsToggle,
     processToggle,
     span,
     tagsToggle,
     traceStartTime,
-    uiFind = '',
   } = props;
   const { isTagsOpen, isProcessOpen, logs: logsState } = detailState;
   const { operationName, process, duration, relativeStartTime, spanID, logs, tags } = span;
@@ -81,16 +70,6 @@ export function UnconnectedSpanDetail(props: SpanDetailProps) {
       value: formatDuration(relativeStartTime),
     },
   ];
-
-  const addSpanIDToSearch = () => {
-    if (!uiFind.includes(spanID)) {
-      updateUiFind({
-        history,
-        location,
-        uiFind: cx(uiFind, spanID),
-      });
-    }
-  };
 
   return (
     <div>
@@ -139,7 +118,7 @@ export function UnconnectedSpanDetail(props: SpanDetailProps) {
         <small className="SpanDetail--debugInfo">
           <Tooltip title="Click ID to add to filter">
             <span className="SpanDetail--debugLabel" data-label="SpanID:" />{' '}
-            <button className="SpanDetail--debugValue" onClick={addSpanIDToSearch}>
+            <button className="SpanDetail--debugValue" onClick={() => addToUiFind(spanID)}>
               {spanID}
             </button>
           </Tooltip>
@@ -148,5 +127,3 @@ export function UnconnectedSpanDetail(props: SpanDetailProps) {
     </div>
   );
 }
-
-export default withRouter(connect(extractUiFindFromState)(UnconnectedSpanDetail));

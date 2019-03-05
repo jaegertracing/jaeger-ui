@@ -17,19 +17,15 @@ jest.mock('../utils');
 
 import React from 'react';
 import { shallow } from 'enzyme';
-import cx from 'classnames';
 
 import AccordianKeyValues from './AccordianKeyValues';
 import AccordianLogs from './AccordianLogs';
 import DetailState from './DetailState';
-import { UnconnectedSpanDetail } from './index';
+import SpanDetail from './index';
 import { formatDuration } from '../utils';
 import LabeledList from '../../../common/LabeledList';
 import traceGenerator from '../../../../demo/trace-generators';
 import transformTraceData from '../../../../model/transform-trace-data';
-import updateUiFindSpy from '../../../../utils/update-ui-find';
-
-jest.mock('../../../../utils/update-ui-find');
 
 describe('<SpanDetail>', () => {
   let wrapper;
@@ -41,8 +37,8 @@ describe('<SpanDetail>', () => {
     .toggleProcess()
     .toggleTags();
   const traceStartTime = 5;
-  const uiFind = 'uiFind';
   const props = {
+    addToUiFind: jest.fn(),
     detailState,
     span,
     traceStartTime,
@@ -50,7 +46,6 @@ describe('<SpanDetail>', () => {
     logsToggle: jest.fn(),
     processToggle: jest.fn(),
     tagsToggle: jest.fn(),
-    uiFind,
   };
   span.logs = [
     {
@@ -69,8 +64,8 @@ describe('<SpanDetail>', () => {
     props.processToggle.mockReset();
     props.logsToggle.mockReset();
     props.logItemToggle.mockReset();
-    updateUiFindSpy.mockReset();
-    wrapper = shallow(<UnconnectedSpanDetail {...props} />);
+    props.addToUiFind.mockReset();
+    wrapper = shallow(<SpanDetail {...props} />);
   });
 
   it('renders without exploding', () => {
@@ -126,20 +121,9 @@ describe('<SpanDetail>', () => {
     expect(props.logItemToggle).toHaveBeenLastCalledWith(span.spanID, somethingUniq);
   });
 
-  it('calls updateUiFind with expected kwargs when the spanID is clicked', () => {
+  it('calls addToUiFind when the spanID is clicked', () => {
     const spanIDButton = wrapper.find('button');
     spanIDButton.simulate('click');
-    expect(updateUiFindSpy).toHaveBeenCalledWith({
-      history: props.history,
-      location: props.location,
-      uiFind: cx(props.uiFind, props.span.spanID),
-    });
-  });
-
-  it('does not call updateUiFind when the spanID is clicked and already exists in props.uiFind', () => {
-    wrapper.setProps({ uiFind: cx(props.uiFind, props.span.spanID) });
-    const spanIDButton = wrapper.find('button');
-    spanIDButton.simulate('click');
-    expect(updateUiFindSpy).not.toHaveBeenCalled();
+    expect(props.addToUiFind).toHaveBeenCalledWith(props.span.spanID);
   });
 });

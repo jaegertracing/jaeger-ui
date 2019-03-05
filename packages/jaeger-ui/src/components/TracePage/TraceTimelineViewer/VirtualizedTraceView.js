@@ -18,6 +18,9 @@ import * as React from 'react';
 import cx from 'classnames';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
+import { withRouter } from 'react-router-dom';
+
+import type { Location, RouterHistory } from 'react-router-dom';
 
 import { actions } from './duck';
 import ListView from './ListView';
@@ -28,6 +31,7 @@ import { createViewedBoundsFunc, findServerChildSpan, isErrorSpan, spanContainsE
 import { extractUiFindFromState } from '../../common/UiFindInput';
 import getLinks from '../../../model/link-patterns';
 import colorGenerator from '../../../utils/color-generator';
+import updateUiFind from '../../../utils/update-ui-find';
 
 import type { ViewedBoundsFunctionType } from './utils';
 import type { Accessors } from '../ScrollManager';
@@ -54,6 +58,8 @@ type VirtualizedTraceViewProps = {
   detailTagsToggle: string => void,
   detailToggle: string => void,
   findMatchesIDs: Set<string>,
+  history: RouterHistory,
+  location: Location,
   registerAccessors: Accessors => void,
   setSpanNameColumnWidth: number => void,
   setTrace: (?Trace, ?string) => void,
@@ -180,6 +186,17 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
       nextRegisterAccessors(this.getAccessors());
     }
   }
+
+  addToUiFind = (addition: string) => {
+    const { uiFind, history, location } = this.props;
+    if (!uiFind || !uiFind.includes(addition)) {
+      updateUiFind({
+        history,
+        location,
+        uiFind: cx(uiFind, addition),
+      });
+    }
+  };
 
   getAccessors() {
     const lv = this.listView;
@@ -347,6 +364,7 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
     return (
       <div className="VirtualizedTraceView--row" key={key} style={{ ...style, zIndex: 1 }} {...attrs}>
         <SpanDetailRow
+          addToUiFind={this.addToUiFind}
           color={color}
           columnDivision={spanNameColumnWidth}
           onDetailToggled={detailToggle}
@@ -396,4 +414,4 @@ function mapDispatchToProps(dispatch) {
   return bindActionCreators(actions, dispatch);
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(VirtualizedTraceViewImpl);
+export default withRouter(connect(mapStateToProps, mapDispatchToProps)(VirtualizedTraceViewImpl));
