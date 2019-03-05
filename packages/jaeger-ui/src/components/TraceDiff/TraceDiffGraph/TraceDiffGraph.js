@@ -17,21 +17,16 @@
 import * as React from 'react';
 import { DirectedGraph, LayoutManager } from '@jaegertracing/plexus';
 import _get from 'lodash/get';
-import _map from 'lodash/map';
 import { connect } from 'react-redux';
 
 import drawNode from './drawNode';
+import { getUiFindVertexKeys, getEdgesAndVertices } from './traceDiffGraphUtils';
 import ErrorMessage from '../../common/ErrorMessage';
 import LoadingIndicator from '../../common/LoadingIndicator';
 import UiFindInput, { extractUiFindFromState } from '../../common/UiFindInput';
 import { fetchedState } from '../../../constants';
-import convPlexus from '../../../model/trace-dag/convPlexus';
-import TraceDag from '../../../model/trace-dag/TraceDag';
-import filterSpans from '../../../utils/filter-spans';
 
-import type { PVertex } from '../../../model/trace-dag/types';
 import type { FetchedTrace } from '../../../types';
-import type { Trace } from '../../../types/trace';
 
 import './TraceDiffGraph.css';
 
@@ -72,43 +67,6 @@ export function setOnNode() {
       boxShadow: 'inherit',
     },
   };
-}
-
-let lastUiFind: string;
-let lastVertices: PVertex<Object>[];
-let uiFindVertexKeys: Set<number | string>;
-
-export function getUiFindVertexKeys(uiFind: string, vertices: PVertex<Object>[]) {
-  if (uiFind === lastUiFind && vertices === lastVertices && uiFindVertexKeys) {
-    return uiFindVertexKeys;
-  }
-  const newVertexKeys: Set<number | string> = new Set();
-  vertices.forEach(({ key, data: { members } }) => {
-    if (_get(filterSpans(uiFind, _map(members, 'span')), 'size')) {
-      newVertexKeys.add(key);
-    }
-  });
-  lastUiFind = uiFind;
-  lastVertices = vertices;
-  uiFindVertexKeys = newVertexKeys;
-  return newVertexKeys;
-}
-
-let lastAData: ?Trace;
-let lastBData: ?Trace;
-let edgesAndVertices: ?Object;
-
-function getEdgesAndVertices(aData, bData): Object {
-  if (aData === lastAData && bData === lastBData && edgesAndVertices) {
-    return edgesAndVertices;
-  }
-  lastAData = aData;
-  lastBData = bData;
-  const aTraceDag = TraceDag.newFromTrace(aData);
-  const bTraceDag = TraceDag.newFromTrace(bData);
-  const diffDag = TraceDag.diff(aTraceDag, bTraceDag);
-  edgesAndVertices = convPlexus(diffDag.nodesMap);
-  return edgesAndVertices;
 }
 
 class TraceDiffGraph extends React.PureComponent<Props> {

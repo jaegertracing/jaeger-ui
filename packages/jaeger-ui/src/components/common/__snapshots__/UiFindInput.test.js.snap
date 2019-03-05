@@ -6,7 +6,6 @@ exports[`UiFind rendering renders as expected 1`] = `
   onBlur={[Function]}
   onChange={[Function]}
   prefixCls="ant-input"
-  suffix={null}
   type="text"
   value={null}
 />

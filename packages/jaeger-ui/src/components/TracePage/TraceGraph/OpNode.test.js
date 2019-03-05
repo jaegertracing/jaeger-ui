@@ -14,13 +14,9 @@
 
 import React from 'react';
 import { shallow } from 'enzyme';
-import _map from 'lodash/map';
 
 import OpNode, { getNodeDrawer, MODE_SERVICE, MODE_TIME, MODE_SELFTIME } from './OpNode';
 import CopyIcon from '../../common/CopyIcon';
-import filterSpansMock from '../../../utils/filter-spans';
-
-jest.mock('../../../utils/filter-spans');
 
 describe('<OpNode>', () => {
   let wrapper;
@@ -32,8 +28,7 @@ describe('<OpNode>', () => {
     props = {
       count: 5,
       errors: 0,
-      uiFind: 'uiFind',
-      members: [{ span: { spanID: 'memberSpanID0' } }, { span: { spanID: 'memberSpanID1' } }],
+      isUiFindMatch: false,
       operation: 'op1',
       percent: 7.89,
       percentSelfTime: 90,
@@ -85,12 +80,8 @@ describe('<OpNode>', () => {
   });
 
   it('updates class when it matches search', () => {
-    const uiFind = 'newUiFindToTriggerRender';
-    expect(wrapper.find('.is-ui-find-match').length).toBe(0);
-    filterSpansMock.mockReturnValue({ size: 1 });
-    wrapper.setProps({ uiFind });
+    wrapper.setProps({ isUiFindMatch: true });
     expect(wrapper.find('.is-ui-find-match').length).toBe(1);
-    expect(filterSpansMock).toHaveBeenLastCalledWith(uiFind, _map(props.members, 'span'));
   });
 
   it('renders a copy icon', () => {
@@ -101,17 +92,30 @@ describe('<OpNode>', () => {
   });
 
   describe('getNodeDrawer()', () => {
+    const key = 'key test value';
+    const vertex = {
+      data: {
+        service: 'service1',
+        operation: 'op1',
+        data: {},
+      },
+      key,
+    };
+
     it('creates OpNode', () => {
-      const vertex = {
-        data: {
-          service: 'service1',
-          operation: 'op1',
-          data: {},
-        },
-      };
-      const drawNode = getNodeDrawer(MODE_SERVICE);
+      const drawNode = getNodeDrawer(MODE_SERVICE, new Set());
       const opNode = drawNode(vertex);
       expect(opNode.type === 'OpNode');
+      expect(opNode.props.isUiFindMatch).toBe(false);
+      expect(opNode.props.mode).toBe(MODE_SERVICE);
+    });
+
+    it('creates OpNode that matches uiFind', () => {
+      const drawNode = getNodeDrawer(MODE_TIME, new Set([key]));
+      const opNode = drawNode(vertex);
+      expect(opNode.type === 'OpNode');
+      expect(opNode.props.isUiFindMatch).toBe(true);
+      expect(opNode.props.mode).toBe(MODE_TIME);
     });
   });
 });
