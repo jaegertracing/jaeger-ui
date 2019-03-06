@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import * as jaegerApiActions from '../actions/jaeger-api';
+import * as fileReaderActions from '../actions/file-reader-api';
 import { fetchedState } from '../constants';
 import traceGenerator from '../demo/trace-generators';
 import transformTraceData from '../model/transform-trace-data';
@@ -207,5 +208,57 @@ describe('search traces', () => {
       );
       expect(state.search).toEqual({ query });
     });
+  });
+});
+
+describe('load json traces', () => {
+  it('handles a pending load json request', () => {
+    const state = traceReducer(
+      { search: { results: [id] } },
+      {
+        type: `${fileReaderActions.loadJsonTraces}${ACTION_POSTFIX_PENDING}`,
+      }
+    );
+    const outcome = {
+      results: [id],
+      state: fetchedState.LOADING,
+    };
+    expect(state.search).toEqual(outcome);
+  });
+
+  it('handles a successful load json request', () => {
+    const state = traceReducer(undefined, {
+      type: `${fileReaderActions.loadJsonTraces}${ACTION_POSTFIX_FULFILLED}`,
+      payload: { data: [trace] },
+    });
+    const outcome = {
+      traces: {
+        [id]: {
+          id,
+          data: transformTraceData(trace),
+          state: fetchedState.DONE,
+        },
+      },
+      search: {
+        query: null,
+        state: fetchedState.DONE,
+        results: [id],
+      },
+    };
+    expect(state).toEqual(outcome);
+  });
+
+  it('handles a failed load json request', () => {
+    const error = 'some-error';
+    const state = traceReducer(undefined, {
+      type: `${fileReaderActions.loadJsonTraces}${ACTION_POSTFIX_REJECTED}`,
+      payload: error,
+    });
+    const outcome = {
+      error,
+      results: [],
+      state: fetchedState.ERROR,
+    };
+    expect(state.search).toEqual(outcome);
   });
 });

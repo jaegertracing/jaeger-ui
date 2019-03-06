@@ -20,9 +20,6 @@ limitations under the License.
   cursor: pointer;
   white-space: nowrap;
   border-collapse: separate;
-}
-
-.OpNode--body {
   color: rgba(0, 0, 0, 0.65);
 }
 
@@ -32,11 +29,12 @@ limitations under the License.
 }
 
 .OpNode.is-ui-find-match {
-  outline-style: solid;
-  outline-color: #4c4840;
-  outline-width: inherit;
-  box-shadow: inherit;
-  color: #fff3d7;
+  outline: inherit;
+  outline-color: #fff3d7;
+}
+
+.OpNode--popover .OpNode.is-ui-find-match {
+  outline: #fff3d7 solid 3px;
 }
 
 .OpMode--mode-service {

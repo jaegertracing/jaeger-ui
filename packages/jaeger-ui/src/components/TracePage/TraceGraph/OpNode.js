@@ -17,17 +17,11 @@
 import * as React from 'react';
 import { Popover } from 'antd';
 import cx from 'classnames';
-import _get from 'lodash/get';
-import _map from 'lodash/map';
-import _memoize from 'lodash/memoize';
-import { connect } from 'react-redux';
 
 import CopyIcon from '../../common/CopyIcon';
-import { extractUiFindFromState } from '../../common/UiFindInput';
 import colorGenerator from '../../../utils/color-generator';
-import filterSpans from '../../../utils/filter-spans';
 
-import type { PVertex, DenseSpan } from '../../../model/trace-dag/types';
+import type { PVertex } from '../../../model/trace-dag/types';
 
 import './OpNode.css';
 
@@ -41,8 +35,7 @@ type Props = {
   operation: string,
   service: string,
   mode: string,
-  uiFind: string,
-  members: DenseSpan[],
+  isUiFindMatch: boolean,
 };
 
 export const MODE_SERVICE = 'service';
@@ -73,17 +66,6 @@ export function round2(percent: number) {
 }
 
 export default class OpNode extends React.PureComponent<Props> {
-  props: Props;
-  filterSpans: typeof filterSpans;
-  static defaultProps = {
-    uiFind: '',
-  };
-
-  constructor(props: Props) {
-    super(props);
-    this.filterSpans = _memoize(filterSpans);
-  }
-
   render() {
     const {
       count,
@@ -95,7 +77,7 @@ export default class OpNode extends React.PureComponent<Props> {
       operation,
       service,
       mode,
-      uiFind,
+      isUiFindMatch,
     } = this.props;
 
     // Spans over 20 % time are full red - we have probably to reconsider better approach
@@ -113,7 +95,7 @@ export default class OpNode extends React.PureComponent<Props> {
     }
 
     const className = cx('OpNode', `OpNode--mode-${mode}`, {
-      'is-ui-find-match': _get(this.filterSpans(uiFind, _map(this.props.members, 'span')), 'size'),
+      'is-ui-find-match': isUiFindMatch,
     });
 
     const table = (
@@ -159,13 +141,17 @@ export default class OpNode extends React.PureComponent<Props> {
   }
 }
 
-const ConnectedOpNode = connect(extractUiFindFromState)(OpNode);
-
-export function getNodeDrawer(mode: string) {
+export function getNodeDrawer(mode: string, uiFindVertexKeys: Set<number | string>) {
   return function drawNode<T>(vertex: PVertex<T>) {
-    const { data, members, operation, service } = vertex.data;
+    const { data, operation, service } = vertex.data;
     return (
-      <ConnectedOpNode {...data} members={members} mode={mode} operation={operation} service={service} />
+      <OpNode
+        {...data}
+        isUiFindMatch={uiFindVertexKeys.has(vertex.key)}
+        mode={mode}
+        operation={operation}
+        service={service}
+      />
     );
   };
 }

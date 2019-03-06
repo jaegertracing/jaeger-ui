@@ -14,19 +14,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import _filter from 'lodash/filter';
+import _find from 'lodash/find';
+import _get from 'lodash/get';
 import _map from 'lodash/map';
 
 import type { Span } from '../types/trace';
 
-function getReferences(span: Span): Span[] {
-  return _map(span && span.references, 'span').filter(Boolean);
+function getFirstAncestor(span: Span): ?Span {
+  const referencesWithASpan = _filter(span.references, 'span.spanID');
+  const firstAncestorSpan = _find(
+    referencesWithASpan,
+    ({ refType }) => refType === 'CHILD_OF' || refType === 'FOLLOWS_FROM'
+  );
+  return _get(firstAncestorSpan, 'span');
 }
 
 export default function spanAncestorIds(span: ?Span): string[] {
   if (!span) return [];
-  const ancestors: Span[] = getReferences(span);
-  for (let i = 0; i < ancestors.length; i++) {
-    ancestors.push(...getReferences(ancestors[i]));
+  const ancestors: Span[] = [];
+  let ref = getFirstAncestor(span);
+  while (ref) {
+    ancestors.push(ref);
+    ref = getFirstAncestor(ref);
   }
   return Array.from(new Set(_map(ancestors, 'spanID')));
 }

@@ -11,6 +11,7 @@
 ./flow-typed/npm
 
 [options]
+suppress_comment= \\(.\\|\n\\)*\\$FlowIgnore
 
 [version]
 0.71.0

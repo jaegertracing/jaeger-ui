@@ -50,7 +50,6 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps) {
     'data-test': markers.IN_TRACE_SEARCH,
     className: 'TracePageSearchBar--bar ub-flex-auto',
     name: 'search',
-    placeholder: 'Search...',
     suffix: count,
   };
 
@@ -58,7 +57,7 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps) {
     <div className="ub-flex-auto ub-mx2 TracePageSearchBar">
       {/* style inline because compact overwrites the display */}
       <Input.Group compact style={{ display: 'flex' }}>
-        <UiFindInput inputProps={uiFindInputInputProps} forwardedRef={forwardedRef} />
+        <UiFindInput inputProps={uiFindInputInputProps} forwardedRef={forwardedRef} trackUpdate />
         <Button
           className={btnClass}
           disabled={traceGraphView || !textFilter}

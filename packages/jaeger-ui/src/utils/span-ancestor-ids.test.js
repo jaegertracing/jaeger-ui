@@ -20,9 +20,6 @@ describe('spanAncestorIdsSpy', () => {
   const firstParentFirstGrandparentSpanID = 'firstParentFirstGrandparentSpanID';
   const firstParentSecondGrandparentSpanID = 'firstParentSecondGrandparentSpanID';
   const secondParentSpanID = 'secondParentSpanID';
-  const secondParentFirstGrandparentSpanID = 'secondParentFirstGrandparentSpanID';
-  const secondParentSecondGrandparentSpanID = 'secondParentSecondGrandparentSpanID';
-  const secondParentGreatGrandParentId = 'secondParentGreatGrandParentId';
   const rootSpanID = 'rootSpanID';
   const span = {
     references: [
@@ -41,6 +38,7 @@ describe('spanAncestorIdsSpy', () => {
                   },
                 ],
               },
+              refType: 'not an ancestor ref type',
             },
             {
               span: {
@@ -50,67 +48,32 @@ describe('spanAncestorIdsSpy', () => {
                     span: {
                       spanID: rootSpanID,
                     },
+                    refType: 'FOLLOWS_FROM',
                   },
                 ],
               },
+              refType: 'CHILD_OF',
             },
           ],
         },
+        refType: 'CHILD_OF',
       },
       {
         span: {
           spanID: secondParentSpanID,
-          references: [
-            {
-              span: {
-                spanID: secondParentFirstGrandparentSpanID,
-                references: [
-                  {
-                    span: {
-                      spanID: secondParentGreatGrandParentId,
-                      references: [
-                        {
-                          span: {
-                            spanID: rootSpanID,
-                          },
-                        },
-                      ],
-                    },
-                  },
-                ],
-              },
-            },
-            {
-              span: {
-                spanID: secondParentSecondGrandparentSpanID,
-                references: [
-                  {
-                    span: {
-                      spanID: secondParentGreatGrandParentId,
-                      references: [
-                        {
-                          span: {
-                            spanID: rootSpanID,
-                          },
-                        },
-                      ],
-                    },
-                  },
-                ],
-              },
-            },
-          ],
         },
+        refType: 'CHILD_OF',
       },
     ],
     spanID: ownSpanID,
   };
+  const expectedAncestorIds = [firstParentSpanID, firstParentSecondGrandparentSpanID, rootSpanID];
 
-  it('should return an empty array if given falsy span', () => {
+  it('returns an empty array if given falsy span', () => {
     expect(spanAncestorIdsSpy(null)).toEqual([]);
   });
 
-  it('should return an empty array if span has no references', () => {
+  it('returns an empty array if span has no references', () => {
     const spanWithoutReferences = {
       spanID: 'parentlessSpanID',
       references: [],
@@ -119,29 +82,15 @@ describe('spanAncestorIdsSpy', () => {
     expect(spanAncestorIdsSpy(spanWithoutReferences)).toEqual([]);
   });
 
-  it('should return all unique spanIDs from all references up to the root span', () => {
-    expect(spanAncestorIdsSpy(span)).toEqual([
-      firstParentSpanID,
-      secondParentSpanID,
-      firstParentFirstGrandparentSpanID,
-      firstParentSecondGrandparentSpanID,
-      secondParentFirstGrandparentSpanID,
-      secondParentSecondGrandparentSpanID,
-      rootSpanID,
-      secondParentGreatGrandParentId,
-    ]);
+  it('returns all unique spanIDs from first valid CHILD_OF or FOLLOWS_FROM reference up to the root span', () => {
+    expect(spanAncestorIdsSpy(span)).toEqual(expectedAncestorIds);
   });
 
-  it('should handles references without a span', () => {
-    const emptyReferencesSpanID = 'emptyReferencesSpanID';
-    const spanWithEmptyReferences = {
-      spanID: emptyReferencesSpanID,
-      references: [{}, null, 'incorrectlyDefinedReferenceSpanID'],
-    };
+  it('ignores references without a span', () => {
     const spanWithSomeEmptyReferences = {
       ...span,
-      references: [{ span: spanWithEmptyReferences }],
+      references: [{ refType: 'CHILD_OF' }, { refType: 'FOLLOWS_FROM', span: {} }, ...span.references],
     };
-    expect(spanAncestorIdsSpy(spanWithSomeEmptyReferences)).toEqual([emptyReferencesSpanID]);
+    expect(spanAncestorIdsSpy(spanWithSomeEmptyReferences)).toEqual(expectedAncestorIds);
   });
 });
