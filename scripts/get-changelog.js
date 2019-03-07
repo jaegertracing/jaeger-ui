@@ -43,7 +43,7 @@ function compareMergedDates(a, b) {
 }
 
 function getPrData(document) {
-  const wrapper = document.querySelector('[aria-label="Issues"]');
+  const wrapper = document.querySelector('[aria-label="Issues"][role="group"]');
   const issues = [].slice.call(wrapper.querySelectorAll('.js-issue-row'));
   const okIssues = issues.filter(elm => !elm.querySelector('[aria-label*="Closed"]'));
   return okIssues.map(getData);
