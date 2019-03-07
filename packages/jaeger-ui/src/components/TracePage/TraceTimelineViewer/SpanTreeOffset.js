@@ -16,7 +16,6 @@
 
 import cx from 'classnames';
 import _get from 'lodash/get';
-import _find from 'lodash/find';
 import React from 'react';
 import IoChevronRight from 'react-icons/lib/io/chevron-right';
 import IoIosArrowDown from 'react-icons/lib/io/ios-arrow-down';
@@ -54,14 +53,7 @@ export class UnconnectedSpanTreeOffset extends React.PureComponent<SpanTreeOffse
     super(props);
 
     this.ancestorIds = [];
-    let currentSpan: Span = props.span;
-    while (currentSpan) {
-      currentSpan = _get(_find(currentSpan.references, { refType: 'CHILD_OF' }), 'span');
-      if (currentSpan) {
-        this.ancestorIds.push(currentSpan.spanID);
-      }
-    }
-
+    this.computeAncestors(props.span);
     // Some traces have multiple root-level spans, this connects them all under one guideline and adds the
     // necessary padding for the collapse icon on root-level spans.
     this.ancestorIds.push('root');
@@ -105,6 +97,19 @@ export class UnconnectedSpanTreeOffset extends React.PureComponent<SpanTreeOffse
       this.props.addHoverIndentGuideId(ancestorId);
     }
   };
+
+  computeAncestors(rootSpan: Span) {
+    let currentSpan: Span = rootSpan;
+    while (currentSpan && Array.isArray(currentSpan.references) && currentSpan.references.length) {
+      const { refType, span } = currentSpan.references[0] || {};
+      if (span && (refType === 'FOLLOWS_FROM' || refType === 'CHILD_OF')) {
+        this.ancestorIds.push(span.spanID);
+        currentSpan = span;
+      } else {
+        break;
+      }
+    }
+  }
 
   render() {
     const { showChildrenIcon, childrenVisible, onClick, span } = this.props;

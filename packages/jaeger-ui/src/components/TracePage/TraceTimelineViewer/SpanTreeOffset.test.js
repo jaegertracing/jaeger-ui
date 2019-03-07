@@ -43,6 +43,7 @@ describe('SpanTreeOffset', () => {
     ],
     spanID: ownSpanID,
   };
+
   const specialRootID = 'root';
   let props;
   let wrapper;
@@ -75,6 +76,35 @@ describe('SpanTreeOffset', () => {
       const indentGuides = wrapper.find('.SpanTreeOffset--indentGuide');
       expect(indentGuides.length).toBe(1);
       expect(indentGuides.prop('data-ancestor-id')).toBe(specialRootID);
+    });
+
+    it('renders one .SpanTreeOffset--indentGuide per ancestor span, plus one for entire trace, including FOLLOWS_FROM', () => {
+      props.span = {
+        hasChildren: false,
+        references: [
+          {
+            refType: 'FOLLOWS_FROM',
+            span: {
+              spanID: parentSpanID,
+              references: [
+                {
+                  refType: 'CHILD_OF',
+                  span: {
+                    spanID: rootSpanID,
+                  },
+                },
+              ],
+            },
+          },
+        ],
+        spanID: ownSpanID,
+      };
+      wrapper = shallow(<UnconnectedSpanTreeOffset {...props} />);
+      const indentGuides = wrapper.find('.SpanTreeOffset--indentGuide');
+      expect(indentGuides.length).toBe(3);
+      expect(indentGuides.at(0).prop('data-ancestor-id')).toBe(specialRootID);
+      expect(indentGuides.at(1).prop('data-ancestor-id')).toBe(rootSpanID);
+      expect(indentGuides.at(2).prop('data-ancestor-id')).toBe(parentSpanID);
     });
 
     it('renders one .SpanTreeOffset--indentGuide per ancestor span, plus one for entire trace', () => {
