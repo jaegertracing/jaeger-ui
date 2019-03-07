@@ -96,5 +96,5 @@ module.exports = neutrino => {
   // treated as external modules, so using "worker" as an alias for
   // <package_root>/src allows TS to see local workers as a file in an external
   // package.
-  neutrino.config.resolve.alias.set('worker', join(__dirname, 'src'));
+  neutrino.config.resolve.alias.set('worker-alias', join(__dirname, 'src'));
 };

@@ -16,5 +16,4 @@ import { default as DirectedGraph } from './DirectedGraph';
 import { default as LayoutManager } from './LayoutManager';
 
 export default { DirectedGraph, LayoutManager };
-export { default as DirectedGraph } from './DirectedGraph';
-export { default as LayoutManager } from './LayoutManager';
+export { DirectedGraph, LayoutManager };

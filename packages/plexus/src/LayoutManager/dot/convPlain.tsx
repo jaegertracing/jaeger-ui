@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { TLayoutEdge, TLayoutGraph, TLayoutVertex } from '../../types/layout';
+import { TLayoutEdge, TLayoutGraph, TLayoutVertex } from '../../types';
 
 const FLAG_MAPPINGS: Record<string, string> = {
   bidir: 'isBidirectional',

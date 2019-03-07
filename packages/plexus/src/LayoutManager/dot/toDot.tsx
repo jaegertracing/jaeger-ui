@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { TLayoutOptions } from '../types';
-import { TEdge, TLayoutVertex, TSizeVertex, TVertexKey } from '../../types/layout';
+import { TEdge, TLayoutVertex, TSizeVertex, TVertexKey } from '../../types';
 
 const GRAPH_FOOTER = `}`;
 

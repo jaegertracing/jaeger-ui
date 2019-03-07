@@ -15,7 +15,7 @@
 import * as React from 'react';
 import { ZoomTransform } from 'd3-zoom';
 
-import { TEdge, TLayoutEdge, TLayoutGraph, TLayoutVertex, TSizeVertex, TVertex } from '../types/layout';
+import { TEdge, TLayoutEdge, TLayoutGraph, TLayoutVertex, TSizeVertex, TVertex } from '../types';
 
 import LayoutManager from '../LayoutManager';
 
@@ -30,24 +30,24 @@ export type TDirectedGraphState = {
   sizeVertices: TSizeVertex[] | null;
   vertexRefs: React.RefObject<HTMLElement>[];
   vertices: TVertex[];
-  zoomEnabled: boolean;
-  zoomTransform: ZoomTransform;
+  zoomEnabled?: boolean;
+  zoomTransform?: ZoomTransform;
 };
 
 export type TDirectedGraphProps = {
-  arrowScaleDampener: number;
-  className: string;
-  classNamePrefix: string;
+  arrowScaleDampener?: number;
+  className?: string;
+  classNamePrefix?: string;
   edges: TEdge[];
-  getNodeLabel: ((vtx: TVertex) => React.ReactNode) | null;
+  getNodeLabel?: ((vtx: TVertex) => React.ReactNode) | null;
   layoutManager: LayoutManager;
-  minimap: boolean;
-  minimapClassName: string;
-  setOnEdgePath: TPropsFactoryFn<TEdge> | null;
-  setOnEdgesContainer: TPropsFactoryFn<TDirectedGraphState> | null;
-  setOnNode: TPropsFactoryFn<TVertex> | null;
-  setOnNodesContainer: TPropsFactoryFn<TDirectedGraphState> | null;
-  setOnRoot: TPropsFactoryFn<TDirectedGraphState> | null;
+  minimap?: boolean;
+  minimapClassName?: string;
+  setOnEdgePath?: TPropsFactoryFn<TEdge> | null;
+  setOnEdgesContainer?: TPropsFactoryFn<TDirectedGraphState> | null;
+  setOnNode?: TPropsFactoryFn<TVertex> | null;
+  setOnNodesContainer?: TPropsFactoryFn<TDirectedGraphState> | null;
+  setOnRoot?: TPropsFactoryFn<TDirectedGraphState> | null;
   vertices: TVertex[];
-  zoom: boolean;
+  zoom?: boolean;
 };

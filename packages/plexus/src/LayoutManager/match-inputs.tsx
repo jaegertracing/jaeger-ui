@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { TEdge, TLayoutEdge, TLayoutVertex, TSizeVertex, TVertex } from '../types/layout';
+import { TEdge, TLayoutEdge, TLayoutVertex, TSizeVertex, TVertex } from '../types';
 
 export function matchEdges(input: TEdge[], output: TLayoutEdge[]): TLayoutEdge[] {
   const map: { [key: string]: TEdge } = {};

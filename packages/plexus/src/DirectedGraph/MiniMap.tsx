@@ -25,9 +25,9 @@ type TProps = {
   viewAll: () => void;
   viewportHeight: number;
   viewportWidth: number;
-  k: number;
-  x: number;
-  y: number;
+  k?: number;
+  x?: number;
+  y?: number;
 };
 /* eslint-enable react/no-unused-prop-types */
 
@@ -42,7 +42,15 @@ function getMapSize(props: TProps) {
 }
 
 function getViewTransform(props: TProps, displaySize: { width: number; height: number }) {
-  const { contentHeight: ch, contentWidth: cw, viewportHeight: vh, viewportWidth: vw, k, x, y } = props;
+  const {
+    contentHeight: ch,
+    contentWidth: cw,
+    viewportHeight: vh,
+    viewportWidth: vw,
+    k = 1,
+    x = 1,
+    y = 1,
+  } = props;
   const { height: dh, width: dw } = displaySize;
   const sch = ch * k;
   const scw = cw * k;
@@ -71,25 +79,25 @@ function getClassNames(props: TProps) {
   };
 }
 
-export default class MiniMap extends React.PureComponent<TProps> {
-  static defaultProps = {
-    className: '',
-    classNamePrefix: 'plexus',
-  };
-
-  render() {
-    const css = getClassNames(this.props);
-    const mapSize = getMapSize(this.props);
-    const activeXform = getViewTransform(this.props, mapSize);
-    return (
-      <div className={css.root}>
-        <div className={`${css.item} ${css.map}`} style={mapSize}>
-          <div className={css.mapActive} style={{ ...activeXform, ...mapSize }} />
-        </div>
-        <div className={`${css.item} ${css.button}`} onClick={this.props.viewAll} role="button">
-          {resetZoomIcon}
-        </div>
+function MiniMap(props: TProps) {
+  const css = getClassNames(props);
+  const mapSize = getMapSize(props);
+  const activeXform = getViewTransform(props, mapSize);
+  return (
+    <div className={css.root}>
+      <div className={`${css.item} ${css.map}`} style={mapSize}>
+        <div className={css.mapActive} style={{ ...activeXform, ...mapSize }} />
       </div>
-    );
-  }
+      <div className={`${css.item} ${css.button}`} onClick={props.viewAll} role="button">
+        {resetZoomIcon}
+      </div>
+    </div>
+  );
 }
+
+MiniMap.defaultProps = {
+  className: '',
+  classNamePrefix: 'plexus',
+};
+
+export default React.memo(MiniMap);

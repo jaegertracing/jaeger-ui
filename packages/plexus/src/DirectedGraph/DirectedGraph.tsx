@@ -35,7 +35,7 @@ import {
 } from './transform-utils';
 
 import { TDirectedGraphProps, TDirectedGraphState } from './types';
-import { TCancelled, TLayoutDone, TPositionsDone, TSizeVertex } from '../types/layout';
+import { TCancelled, TLayoutDone, TPositionsDone, TSizeVertex } from '../types';
 
 const PHASE_NO_DATA = 0;
 const PHASE_CALC_SIZES = 1;
@@ -311,7 +311,7 @@ export default class DirectedGraph extends React.PureComponent<TDirectedGraphPro
               <EdgeArrowDef
                 id={this.arrowId}
                 scaleDampener={arrowScaleDampener}
-                zoomScale={zoomEnabled ? zoomTransform.k : null}
+                zoomScale={zoomEnabled && zoomTransform ? zoomTransform.k : null}
               />
               <g transform={zoomEnabled ? getZoomAttr(zoomTransform) : undefined}>{this._renderEdges()}</g>
             </EdgesContainer>

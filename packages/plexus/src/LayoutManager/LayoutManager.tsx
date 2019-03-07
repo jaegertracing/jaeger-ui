@@ -13,14 +13,7 @@
 // limitations under the License.
 
 import { ECoordinatorPhase, TLayoutOptions, TUpdate } from './types';
-import {
-  TCancelled,
-  TEdge,
-  TLayoutDone,
-  TPendingLayoutResult,
-  TPositionsDone,
-  TSizeVertex,
-} from '../types/layout';
+import { TCancelled, TEdge, TLayoutDone, TPendingLayoutResult, TPositionsDone, TSizeVertex } from '../types';
 
 import Coordinator from './Coordinator';
 

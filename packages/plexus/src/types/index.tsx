@@ -39,10 +39,6 @@ export type TLayoutVertex = TSizeVertex & {
   top: number;
 };
 
-// export type TEdgeLite = {
-
-// }
-
 export type TEdge = {
   from: TVertexKey;
   to: TVertexKey;

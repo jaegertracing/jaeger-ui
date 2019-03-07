@@ -19,7 +19,7 @@
 // <project_root>/src. Thus, all TS files imported as "worker/*" are acutally
 // local files. They should be web-worker files. The following custom type-def
 // allows them to be treated as `Worker`s.
-declare module "worker/*" {
+declare module "worker-alias/*" {
   class WebpackWorker extends Worker {
     id: number;
     constructor();

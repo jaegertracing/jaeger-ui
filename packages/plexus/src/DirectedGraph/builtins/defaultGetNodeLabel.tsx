@@ -14,7 +14,7 @@
 
 import * as React from 'react';
 
-import { TVertex } from '../../types/layout';
+import { TVertex } from '../../types';
 
 export default function defaultGetNodeLabel(vertex: TVertex) {
   const { label } = vertex;

@@ -18,7 +18,7 @@ import convPlain from './dot/convPlain';
 import toDot from './dot/toDot';
 
 import { EWorkerPhase, TLayoutOptions } from './types';
-import { TEdge, TLayoutVertex, TSizeVertex } from '../types/layout';
+import { TEdge, TLayoutVertex, TSizeVertex } from '../types';
 
 enum EValidity {
   Ok = 'Ok',

@@ -17,13 +17,13 @@ import * as React from 'react';
 import Node from './Node';
 
 import { TPropsFactoryFn } from '../types';
-import { TLayoutVertex, TVertex } from '../../types/layout';
+import { TLayoutVertex, TVertex } from '../../types';
 
 type TProps = {
-  classNamePrefix: string;
+  classNamePrefix?: string | null;
   getNodeLabel: ((vertex: TVertex) => React.ReactNode) | null;
   layoutVertices: TLayoutVertex[] | null;
-  setOnNode: TPropsFactoryFn<TVertex> | null;
+  setOnNode?: TPropsFactoryFn<TVertex> | null;
   vertexRefs: { current: HTMLElement | null }[];
   vertices: TVertex[];
 };
