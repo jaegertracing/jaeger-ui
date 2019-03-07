@@ -31,7 +31,8 @@ describe('SpanTreeOffset', () => {
   let wrapper;
 
   beforeEach(() => {
-    spanAncestorIdsSpy.mockReturnValue([parentSpanID, rootSpanID]);
+    // Mock implementation instead of Mock return value so that each call returns a new array (like normal)
+    spanAncestorIdsSpy.mockImplementation(() => [parentSpanID, rootSpanID]);
     props = {
       addHoverIndentGuideId: jest.fn(),
       hoverIndentGuideIds: new Set(),

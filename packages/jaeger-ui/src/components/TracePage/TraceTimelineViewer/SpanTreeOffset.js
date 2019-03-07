@@ -56,7 +56,6 @@ export class UnconnectedSpanTreeOffset extends React.PureComponent<SpanTreeOffse
     super(props);
 
     this.ancestorIds = spanAncestorIds(props.span);
-
     // Some traces have multiple root-level spans, this connects them all under one guideline and adds the
     // necessary padding for the collapse icon on root-level spans.
     this.ancestorIds.push('root');
