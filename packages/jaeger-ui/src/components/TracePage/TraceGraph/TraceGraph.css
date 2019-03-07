@@ -33,7 +33,7 @@ limitations under the License.
   display: flex;
 }
 
-.TraceGraph--graphWrapper.uiFind {
+.TraceGraph--graphWrapper.is-uiFind-mode {
   background: #ddd;
 }
 

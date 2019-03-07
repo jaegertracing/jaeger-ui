@@ -18,7 +18,6 @@ limitations under the License.
   background: #bbb;
   border: 1px solid #777;
   box-shadow: 0 0px 3px 1px rgba(0, 0, 0, 0.2);
-  color: rgba(0, 0, 0, 0.65);
   cursor: pointer;
   white-space: nowrap;
 }
@@ -43,15 +42,15 @@ limitations under the License.
   color: #fff;
 }
 
+.DiffNode.is-less {
+  border-color: #cc1616;
+  background: #ffa39e;
+}
+
 .DiffNode.is-removed {
   background: #cc1616;
   border: none;
   color: #fff;
-}
-
-.DiffNode.is-less {
-  border-color: #cc1616;
-  background: #ffa39e;
 }
 
 .TraceDiffGraph--dag.is-small .DiffNode--body {

@@ -17,15 +17,15 @@
 import * as React from 'react';
 import { DirectedGraph, LayoutManager } from '@jaegertracing/plexus';
 import cx from 'classnames';
-import _get from 'lodash/get';
 import { connect } from 'react-redux';
 
-import drawNode from './drawNode';
+import drawNodeGenerator from './drawNode';
 import { getUiFindVertexKeys, getEdgesAndVertices } from './traceDiffGraphUtils';
 import ErrorMessage from '../../common/ErrorMessage';
 import LoadingIndicator from '../../common/LoadingIndicator';
 import UiFindInput, { extractUiFindFromState } from '../../common/UiFindInput';
 import { fetchedState } from '../../../constants';
+import { setOnEdgesContainer, setOnNodesContainer, setOnNode } from '../../../utils/plexus/set-on-graph';
 
 import type { FetchedTrace } from '../../../types';
 
@@ -38,34 +38,6 @@ type Props = {
 };
 
 const { classNameIsSmall } = DirectedGraph.propsFactories;
-
-export function setOnEdgesContainer(state: Object) {
-  const { zoomTransform } = state;
-  if (!zoomTransform) {
-    return null;
-  }
-  const { k } = zoomTransform;
-  const opacity = 0.1 + k * 0.9;
-  return { style: { opacity, zIndex: 1, position: 'absolute', pointerEvents: 'none' } };
-}
-
-export function setOnNodesContainer(state: Object) {
-  const { zoomTransform } = state;
-  const matchSize = 8 + 4 / _get(zoomTransform, 'k', 1);
-  return {
-    style: {
-      outline: `transparent solid ${matchSize}px`,
-    },
-  };
-}
-
-export function setOnNode() {
-  return {
-    style: {
-      outline: 'inherit',
-    },
-  };
-}
 
 class TraceDiffGraph extends React.PureComponent<Props> {
   props: Props;
@@ -124,7 +96,7 @@ class TraceDiffGraph extends React.PureComponent<Props> {
     }
     const { edges, vertices } = getEdgesAndVertices(aData, bData);
     const keys = getUiFindVertexKeys(uiFind, vertices);
-    const dagClassName = cx('TraceDiffGraph--dag', { uiFind });
+    const dagClassName = cx('TraceDiffGraph--dag', { 'is-uiFind-mode': uiFind });
 
     return (
       <div className="TraceDiffGraph--graphWrapper">
@@ -135,7 +107,7 @@ class TraceDiffGraph extends React.PureComponent<Props> {
           className={dagClassName}
           minimapClassName="TraceDiffGraph--miniMap"
           layoutManager={this.layoutManager}
-          getNodeLabel={drawNode(keys)}
+          getNodeLabel={drawNodeGenerator(keys)}
           setOnRoot={classNameIsSmall}
           setOnEdgesContainer={setOnEdgesContainer}
           setOnNodesContainer={setOnNodesContainer}

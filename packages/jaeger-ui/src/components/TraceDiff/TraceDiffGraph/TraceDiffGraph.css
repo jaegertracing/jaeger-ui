@@ -44,7 +44,7 @@ limitations under the License.
   stroke-width: 1.2;
 }
 
-.TraceDiffGraph--dag.uiFind {
+.TraceDiffGraph--dag.is-uiFind-mode {
   background: #ddd;
 }
 

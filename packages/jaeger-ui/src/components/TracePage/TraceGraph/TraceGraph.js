@@ -20,11 +20,7 @@ import cx from 'classnames';
 import { DirectedGraph, LayoutManager } from '@jaegertracing/plexus';
 
 import { getNodeDrawer, MODE_SERVICE, MODE_TIME, MODE_SELFTIME, HELP_TABLE } from './OpNode';
-import {
-  setOnEdgesContainer,
-  setOnNodesContainer,
-  setOnNode,
-} from '../../TraceDiff/TraceDiffGraph/TraceDiffGraph';
+import { setOnEdgesContainer, setOnNodesContainer, setOnNode } from '../../../utils/plexus/set-on-graph';
 
 import './TraceGraph.css';
 
@@ -142,7 +138,7 @@ export default class TraceGraph extends React.PureComponent<Props, State> {
       return <h1 className="u-mt-vast u-tx-muted ub-tx-center">No trace found</h1>;
     }
 
-    const wrapperClassName = cx('TraceGraph--graphWrapper', { uiFind });
+    const wrapperClassName = cx('TraceGraph--graphWrapper', { 'is-uiFind-mode': uiFind });
 
     return (
       <div className={wrapperClassName} style={{ paddingTop: headerHeight + 49 }}>

@@ -29,6 +29,7 @@ let lastVertices: PVertex<Trace>[];
 let uiFindVertexKeys: ?vertexKeys;
 
 export function getUiFindVertexKeys(uiFind: string, vertices: PVertex<Trace>[]): vertexKeys {
+  if (!uiFind) return new Set();
   if (uiFind === lastUiFind && vertices === lastVertices && uiFindVertexKeys) {
     return uiFindVertexKeys;
   }
