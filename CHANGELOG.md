@@ -1,5 +1,11 @@
 # Releases
 
+## Next (unreleased)
+
+### Chores & Maintenance
+
+* **Jaeger UI codebase:** `plexus` package changed to use TypeScript instead of Flow (Partially addresses [#306](https://github.com/jaegertracing/jaeger-ui/issues/306)) ([@tiffon](https://github.com/tiffon) in [#331](https://github.com/jaegertracing/jaeger-ui/pull/331))
+
 ## v1.1.0 (March 3, 2019)
 
 ### Enhancements
