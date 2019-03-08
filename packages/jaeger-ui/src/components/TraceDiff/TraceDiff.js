@@ -48,22 +48,22 @@ type State = {
   graphTopOffset: number,
 };
 
-function syncStates(urlSt, reduxSt, forceState) {
-  const { a: urlA, b: urlB } = urlSt;
-  const { a: reduxA, b: reduxB } = reduxSt;
+function syncStates(urlValues, reduxValues, forceState) {
+  const { a: urlA, b: urlB } = urlValues;
+  const { a: reduxA, b: reduxB } = reduxValues;
   if (urlA !== reduxA || urlB !== reduxB) {
-    forceState(urlSt);
+    forceState(urlValues);
     return;
   }
-  const urlCohort = new Set(urlSt.cohort || []);
-  const reduxCohort = new Set(reduxSt.cohort || []);
+  const urlCohort = new Set(urlValues.cohort);
+  const reduxCohort = new Set(reduxValues.cohort || []);
   if (urlCohort.size !== reduxCohort.size) {
-    forceState(urlSt);
+    forceState(urlValues);
     return;
   }
   const needSync = Array.from(urlCohort).some(id => !reduxCohort.has(id));
   if (needSync) {
-    forceState(urlSt);
+    forceState(urlValues);
   }
 }
 
