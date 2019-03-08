@@ -56,7 +56,7 @@ exports[`TraceDiff render renders as expected 1`] = `
       }
     }
   >
-    <TraceDiffGraph
+    <Connect(UnconnectedTraceDiffGraph)
       a={
         Object {
           "id": "trace-id-a",

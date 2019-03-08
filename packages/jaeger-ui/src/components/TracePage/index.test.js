@@ -269,6 +269,7 @@ describe('<TracePage>', () => {
 
     describe('calculates hideMap correctly', () => {
       it('is true if on traceGraphView', () => {
+        wrapper.instance().traceDagEV = { vertices: [], nodes: [] };
         wrapper.setState({ traceGraphView: true });
         expect(wrapper.find(TracePageHeader).prop('hideMap')).toBe(true);
       });

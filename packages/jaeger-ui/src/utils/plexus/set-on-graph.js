@@ -1,6 +1,6 @@
 // @flow
 
-// Copyright (c) 2018 Uber Technologies, Inc.
+// Copyright (c) 2019 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
 import _get from 'lodash/get';
 
 const BASE_MATCH_SIZE = 8;
-const SCALABLE_MATCH_SIZE = 8;
+const SCALABLE_MATCH_SIZE = 4;
 
 export function setOnEdgesContainer(state: Object) {
   const { zoomTransform } = state;

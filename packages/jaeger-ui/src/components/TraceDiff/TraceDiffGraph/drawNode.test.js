@@ -14,12 +14,8 @@
 
 import React from 'react';
 import { shallow } from 'enzyme';
-import _map from 'lodash/map';
 
-import drawNode, { DiffNode } from './drawNode';
-import filterSpansMock from '../../../utils/filter-spans';
-
-jest.mock('../../../utils/filter-spans');
+import drawNodeGenerator, { DiffNode } from './drawNode';
 
 describe('drawNode', () => {
   const members = [
@@ -49,7 +45,6 @@ describe('drawNode', () => {
     let wrapper;
 
     beforeEach(() => {
-      filterSpansMock.mockClear();
       wrapper = shallow(<DiffNode {...props} />);
     });
 
@@ -77,33 +72,40 @@ describe('drawNode', () => {
       expect(wrapper).toMatchSnapshot();
     });
 
-    it('renders as expected when props.members matches props.uiFind', () => {
-      const uiFind = 'uiFindValue';
-      filterSpansMock.mockReturnValue({ size: 1 });
-      wrapper.setProps({ uiFind });
+    it('renders as expected when props.isUiFindMatch is true', () => {
+      wrapper.setProps({ isUiFindMatch: true });
       expect(wrapper).toMatchSnapshot();
-      expect(filterSpansMock).toHaveBeenLastCalledWith(uiFind, _map(props.members, 'span'));
     });
   });
 
   describe('drawNode function', () => {
-    it('extracts values from vertex.data', () => {
-      const dataKey = 'data-key';
-      const dataValue = 'data-value';
-      const drawNodeResult = drawNode({
+    const dataKey = 'data-key';
+    const dataValue = 'data-value';
+    const key = 'vertex key';
+    const vertex = {
+      data: {
         data: {
-          data: {
-            [dataKey]: dataValue,
-          },
-          members,
-          operation,
-          service,
+          [dataKey]: dataValue,
         },
-      });
+        members,
+        operation,
+        service,
+      },
+      key,
+    };
+
+    it('extracts values from vertex.data', () => {
+      const drawNodeResult = drawNodeGenerator(new Set())(vertex);
       expect(drawNodeResult.props[dataKey]).toBe(dataValue);
+      expect(drawNodeResult.props.isUiFindMatch).toBe(false);
       expect(drawNodeResult.props.members).toBe(members);
       expect(drawNodeResult.props.operation).toBe(operation);
       expect(drawNodeResult.props.service).toBe(service);
+    });
+
+    it('passes isUiFindMatch as true if key is in set', () => {
+      const drawNodeResult = drawNodeGenerator(new Set([key]))(vertex);
+      expect(drawNodeResult.props.isUiFindMatch).toBe(true);
     });
   });
 });

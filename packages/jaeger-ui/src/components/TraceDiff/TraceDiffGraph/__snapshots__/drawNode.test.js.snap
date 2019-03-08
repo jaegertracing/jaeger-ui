@@ -7,7 +7,7 @@ exports[`drawNode diffNode renders as expected when props.a and props.b are the 
       className="DiffNode is-same"
     >
       <tbody
-        className="DiffNode--body is-same"
+        className="DiffNode--body"
       >
         <tr>
           <td
@@ -52,7 +52,7 @@ exports[`drawNode diffNode renders as expected when props.a and props.b are the 
     className="DiffNode is-same"
   >
     <tbody
-      className="DiffNode--body is-same"
+      className="DiffNode--body"
     >
       <tr>
         <td
@@ -93,7 +93,7 @@ exports[`drawNode diffNode renders as expected when props.a is 0 1`] = `
       className="DiffNode is-changed is-added"
     >
       <tbody
-        className="DiffNode--body is-changed is-added"
+        className="DiffNode--body"
       >
         <tr>
           <td
@@ -158,7 +158,7 @@ exports[`drawNode diffNode renders as expected when props.a is 0 1`] = `
     className="DiffNode is-changed is-added"
   >
     <tbody
-      className="DiffNode--body is-changed is-added"
+      className="DiffNode--body"
     >
       <tr>
         <td
@@ -219,7 +219,7 @@ exports[`drawNode diffNode renders as expected when props.a is less than props.b
       className="DiffNode is-changed is-more"
     >
       <tbody
-        className="DiffNode--body is-changed is-more"
+        className="DiffNode--body"
       >
         <tr>
           <td
@@ -284,7 +284,7 @@ exports[`drawNode diffNode renders as expected when props.a is less than props.b
     className="DiffNode is-changed is-more"
   >
     <tbody
-      className="DiffNode--body is-changed is-more"
+      className="DiffNode--body"
     >
       <tr>
         <td
@@ -345,7 +345,7 @@ exports[`drawNode diffNode renders as expected when props.a is more than props.b
       className="DiffNode is-changed is-less"
     >
       <tbody
-        className="DiffNode--body is-changed is-less"
+        className="DiffNode--body"
       >
         <tr>
           <td
@@ -410,7 +410,7 @@ exports[`drawNode diffNode renders as expected when props.a is more than props.b
     className="DiffNode is-changed is-less"
   >
     <tbody
-      className="DiffNode--body is-changed is-less"
+      className="DiffNode--body"
     >
       <tr>
         <td
@@ -471,7 +471,7 @@ exports[`drawNode diffNode renders as expected when props.b is 0 1`] = `
       className="DiffNode is-changed is-removed"
     >
       <tbody
-        className="DiffNode--body is-changed is-removed"
+        className="DiffNode--body"
       >
         <tr>
           <td
@@ -536,7 +536,7 @@ exports[`drawNode diffNode renders as expected when props.b is 0 1`] = `
     className="DiffNode is-changed is-removed"
   >
     <tbody
-      className="DiffNode--body is-changed is-removed"
+      className="DiffNode--body"
     >
       <tr>
         <td
@@ -590,14 +590,14 @@ exports[`drawNode diffNode renders as expected when props.b is 0 1`] = `
 </Popover>
 `;
 
-exports[`drawNode diffNode renders as expected when props.members matches props.uiFind 1`] = `
+exports[`drawNode diffNode renders as expected when props.isUiFindMatch is true 1`] = `
 <Popover
   content={
     <table
       className="DiffNode is-same is-ui-find-match"
     >
       <tbody
-        className="DiffNode--body is-same is-ui-find-match"
+        className="DiffNode--body"
       >
         <tr>
           <td
@@ -642,7 +642,7 @@ exports[`drawNode diffNode renders as expected when props.members matches props.
     className="DiffNode is-same is-ui-find-match"
   >
     <tbody
-      className="DiffNode--body is-same is-ui-find-match"
+      className="DiffNode--body"
     >
       <tr>
         <td

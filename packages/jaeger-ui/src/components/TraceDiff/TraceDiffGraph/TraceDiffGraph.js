@@ -39,7 +39,7 @@ type Props = {
 
 const { classNameIsSmall } = DirectedGraph.propsFactories;
 
-class TraceDiffGraph extends React.PureComponent<Props> {
+export class UnconnectedTraceDiffGraph extends React.PureComponent<Props> {
   props: Props;
   layoutManager: LayoutManager;
 
@@ -126,4 +126,4 @@ class TraceDiffGraph extends React.PureComponent<Props> {
   }
 }
 
-export default connect(extractUiFindFromState)(TraceDiffGraph);
+export default connect(extractUiFindFromState)(UnconnectedTraceDiffGraph);
