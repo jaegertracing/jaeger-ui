@@ -22,14 +22,12 @@ import { colored as colorData, getColorNodeLabel, setOnColorEdge, setOnColorNode
 import { DirectedGraph, LayoutManager } from '../../src';
 import { TVertex } from '../../src/types';
 
-// const { TVertex } = types;
-
 import './index.css';
 
 const { classNameIsSmall } = DirectedGraph.propsFactories;
 
 const addAnAttr = () => ({ 'data-rando': Math.random() });
-const setNodeClassName = (vertex: TVertex) => ({
+const setOnNode = (vertex: TVertex) => ({
   className: 'DemoGraph--node',
   // eslint-disable-next-line no-console
   onClick: () => console.log(vertex.key),
@@ -49,7 +47,7 @@ function Demo() {
             getNodeLabel={getLargeNodeLabel}
             layoutManager={new LayoutManager({ useDotEdges: true })}
             minimapClassName="Demo--miniMap"
-            setOnNode={setNodeClassName}
+            setOnNode={setOnNode}
             setOnRoot={classNameIsSmall}
             {...largeDg}
           />
@@ -66,7 +64,7 @@ function Demo() {
             getNodeLabel={getLargeNodeLabel}
             layoutManager={new LayoutManager()}
             minimapClassName="Demo--miniMap"
-            setOnNode={setNodeClassName}
+            setOnNode={setOnNode}
             setOnRoot={classNameIsSmall}
             {...largeDg}
           />
@@ -89,7 +87,7 @@ function Demo() {
               })
             }
             minimapClassName="Demo--miniMap"
-            setOnNode={setNodeClassName}
+            setOnNode={setOnNode}
             setOnRoot={classNameIsSmall}
             {...largeDg}
           />
@@ -113,7 +111,7 @@ function Demo() {
           edges={dagEdges}
           layoutManager={new LayoutManager({ useDotEdges: true })}
           minimapClassName="Demo--miniMap"
-          setOnNode={setNodeClassName}
+          setOnNode={setOnNode}
           vertices={dagVertices}
           minimap
           zoom

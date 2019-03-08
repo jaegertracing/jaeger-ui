@@ -16,7 +16,7 @@ The TypeScript package (e.g. `typescript`) is **not for compiling** TypeScript s
 
 ### Workspaces
 
-[Create React App](https://facebook.github.io/create-react-app/) (CRA) is used as the build-tooling for the Jaeger UI website. In 2.1.2+ CRA introduced a guard for the `start`, `build` and `test` scripts which checks the version of NPM packages available to make sure they're consistent with CRA's expectations ([reference](https://github.com/facebook/create-react-app/blob/dea19fdb30c2e896ed8ac75b68a612b0b92b2406/packages/react-scripts/scripts/utils/verifyPackageTree.js#L23-L29)). This process checks `node_modules` in parent directors and errors if an unexpected package version is encountered.
+[Create React App](https://facebook.github.io/create-react-app/) (CRA) is used as the build-tooling for the Jaeger UI website. In 2.1.2+ CRA introduced a guard for the `start`, `build` and `test` scripts which checks the version of NPM packages available to make sure they're consistent with CRA's expectations ([reference](https://github.com/facebook/create-react-app/blob/dea19fdb30c2e896ed8ac75b68a612b0b92b2406/packages/react-scripts/scripts/utils/verifyPackageTree.js#L23-L29)). This process checks `node_modules` in parent directories and errors if an unexpected package version is encountered.
 
 To avoid a world of pain, the [`nohoist`](https://yarnpkg.com/blog/2018/02/15/nohoist/#scope-private) feature of `yarn` workspaces is leveraged. CRA and it's dependencies are local to `./packages/jaeger-ui/node_modules` instead of `./node_modules`, i.e. they're not hoisted. This ensures CRA is using the packages it expects to use.
 
@@ -30,7 +30,7 @@ Unfortunately, the CRA check is not savvy to `yarn` workspaces and errors even t
 
 #### `eslint`
 
-This applies ESLint to the repo, as a whole. The TypeScript linting has a distinct configuration, which is a descendent of `./.eslintrc.js`. See **TODO(joe)** TypeScript, above.
+This applies ESLint to the repo, as a whole. The TypeScript linting has a distinct configuration, which is a descendent of `./.eslintrc.js`. See [TypeScript](#typescript), above.
 
 #### `lint`
 
@@ -56,7 +56,7 @@ Runs after the top-level `yarn install`. This ensures `./packages/plexus` builds
 
 #### `tsc-lint`, `tsc-lint-debug`
 
-`tsc` is run with the [`--noEmit`](https://www.typescriptlang.org/docs/handbook/compiler-options.html) option to bolster linting of TypeScript files. See **TODO(joe)** TypeScript, above.
+`tsc` is run with the [`--noEmit`](https://www.typescriptlang.org/docs/handbook/compiler-options.html) option to bolster linting of TypeScript files. See [TypeScript](#typescript), above.
 
 `tsc-lint-debug` is for diagnosing problems with linking, resolving files, or aliases in TypeScript code. It lists the files involved in the compilation.
 
@@ -76,13 +76,13 @@ Being phased out.
 
 ## `.travis.yml`
 
-Currently `./packages/plexus` doesn't have any tests... But, when it does, `.travis.yml` needs to be updated to send coverage info for all `./packages/*` to codecov.io.
+Currently `./packages/plexus` doesn't have any tests... But, when it does, `.travis.yml` needs to be updated to send coverage info for all `./packages/*` to codecov.io. ([Ticket](https://github.com/jaegertracing/jaeger-ui/issues/340))
 
 [`yarn install --frozen-lockfile`](https://yarnpkg.com/lang/en/docs/cli/install/#toc-yarn-install-frozen-lockfile) ensures installs in CI fail if they would typically mutate the lockfile.
 
 ## `lerna.json`
 
-We should probably audit our use of `lerna` to make sure a) it's necessary and b) it's idiomatic if it is necessary. We have ended up relying quite a bit on `yarn` workspaces, which has reduced the relevance of `lerna`.
+We should probably audit our use of `lerna` to make sure a) it's necessary and b) it's idiomatic if it is necessary. We have ended up relying quite a bit on `yarn` workspaces, which has reduced the relevance of `lerna`. ([Ticket](https://github.com/jaegertracing/jaeger-ui/issues/341))
 
 ## `tsconfig.json`
 

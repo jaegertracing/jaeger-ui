@@ -30,7 +30,7 @@ Executed after `yarn install` is run in the project root.
 
 #### `viz.js@1.8.1`
 
-This specific version of [viz.js](https://github.com/mdaines/viz.js) is used to avoid a regression. Meanwhile, [looks like `2.x.x`](https://github.com/mdaines/viz.js/issues/120#issuecomment-389281407) has recovered a lot of ground.
+This specific version of [viz.js](https://github.com/mdaines/viz.js) is used to avoid a regression. Meanwhile, [looks like `2.x.x`](https://github.com/mdaines/viz.js/issues/120#issuecomment-389281407) has recovered a lot of ground; [GitHub ticket](https://github.com/jaegertracing/jaeger-ui/issues/339) to upgrade.
 
 #### `worker-loader`
 
@@ -42,7 +42,7 @@ TypeScript is compiled through Babel via [`@babel/preset-typescript`](https://ba
 
 #### `jest@23.6.0`
 
-Jest is not actually be used, yet. Present as a placeholder.
+Jest is not actually be used, yet. Present as a placeholder. ([Ticket](https://github.com/jaegertracing/jaeger-ui/issues/340))
 
 ## `.eslintrc.js`
 
