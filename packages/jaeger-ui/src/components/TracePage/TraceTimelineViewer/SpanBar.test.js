@@ -33,7 +33,8 @@ describe('<SpanBar>', () => {
       // Log entries
       if (s === 10) {
         return { start: 0.1, end: 0.1 };
-      } else if (s === 20) {
+      }
+      if (s === 20) {
         return { start: 0.2, end: 0.2 };
       }
       return { error: 'error' };

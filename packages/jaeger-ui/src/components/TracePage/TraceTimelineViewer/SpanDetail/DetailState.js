@@ -33,21 +33,25 @@ export default class DetailState {
       openedItems: logs && logs.openedItems ? new Set(logs.openedItems) : new Set(),
     };
   }
+
   toggleTags() {
     const next = new DetailState(this);
     next.isTagsOpen = !this.isTagsOpen;
     return next;
   }
+
   toggleProcess() {
     const next = new DetailState(this);
     next.isProcessOpen = !this.isProcessOpen;
     return next;
   }
+
   toggleLogs() {
     const next = new DetailState(this);
     next.logs.isOpen = !this.logs.isOpen;
     return next;
   }
+
   toggleLogItem(logItem: Log) {
     const next = new DetailState(this);
     if (next.logs.openedItems.has(logItem)) {

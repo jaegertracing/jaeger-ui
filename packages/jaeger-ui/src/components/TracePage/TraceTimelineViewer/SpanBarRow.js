@@ -30,7 +30,7 @@ import type { Span } from '../../../types/trace';
 import './SpanBarRow.css';
 
 type SpanBarRowProps = {
-  className: string,
+  className?: string,
   color: string,
   columnDivision: number,
   isChildrenExpanded: boolean,
@@ -39,7 +39,7 @@ type SpanBarRowProps = {
   onDetailToggled: string => void,
   onChildrenToggled: string => void,
   numTicks: number,
-  rpc: ?{
+  rpc?: ?{
     viewStart: number,
     viewEnd: number,
     color: string,

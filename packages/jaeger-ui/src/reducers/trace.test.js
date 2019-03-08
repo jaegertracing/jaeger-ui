@@ -17,7 +17,7 @@ import * as fileReaderActions from '../actions/file-reader-api';
 import { fetchedState } from '../constants';
 import traceGenerator from '../demo/trace-generators';
 import transformTraceData from '../model/transform-trace-data';
-import traceReducer from '../reducers/trace';
+import traceReducer from './trace';
 
 const ACTION_POSTFIX_FULFILLED = '_FULFILLED';
 const ACTION_POSTFIX_PENDING = '_PENDING';

@@ -75,6 +75,7 @@ export class ColorGenerator {
     }
     return i;
   }
+
   /**
    * Will assign a color to an arbitrary key.
    * If the key has been used already, it will

@@ -1,0 +1,26 @@
+{
+  "compileOnSave": true,
+  "compilerOptions": {
+    "target": "es2016",
+    "lib": ["es2017", "dom", "dom.iterable", "webworker"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "preserve"
+  },
+  "include": [
+    // TODO(joef)
+    "packages/plexus/demo",
+    "packages/plexus/src",
+    // easier to add `./typings` here than deal with typeRoots, paths, etc.
+    "typings"
+  ]
+}

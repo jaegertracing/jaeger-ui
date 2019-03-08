@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { fetchServices, fetchServiceOperations } from '../../src/actions/jaeger-api';
-import serviceReducer from '../../src/reducers/services';
+import { fetchServices, fetchServiceOperations } from '../actions/jaeger-api';
+import serviceReducer from './services';
 
 const initialState = serviceReducer(undefined, {});
 
