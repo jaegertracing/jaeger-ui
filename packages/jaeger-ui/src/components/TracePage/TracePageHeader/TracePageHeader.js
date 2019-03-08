@@ -173,7 +173,7 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps) {
           ref={forwardedRef}
           resultCount={resultCount}
           textFilter={textFilter}
-          traceGraphView={traceGraphView}
+          navigable={!traceGraphView}
           updateTextFilter={updateTextFilter}
         />
 

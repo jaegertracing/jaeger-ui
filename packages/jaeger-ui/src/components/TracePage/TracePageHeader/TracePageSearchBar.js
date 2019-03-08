@@ -16,6 +16,7 @@
 
 import * as React from 'react';
 import { Button, Input } from 'antd';
+import cx from 'classnames';
 
 import * as markers from './TracePageSearchBar.markers';
 import UiFindInput from '../../common/UiFindInput';
@@ -29,23 +30,17 @@ type TracePageSearchBarProps = {
   clearSearch: () => void,
   resultCount: number,
   forwardedRef: { current: Input | null },
-  traceGraphView: boolean,
+  navigable: boolean,
 };
 
 export function TracePageSearchBarFn(props: TracePageSearchBarProps) {
-  const {
-    prevResult,
-    nextResult,
-    clearSearch,
-    forwardedRef,
-    resultCount,
-    textFilter,
-    traceGraphView,
-  } = props;
+  const { clearSearch, forwardedRef, navigable, nextResult, prevResult, resultCount, textFilter } = props;
 
   const count = textFilter ? <span className="TracePageSearchBar--count">{resultCount}</span> : null;
 
-  const btnClass = `TracePageSearchBar--btn${textFilter ? '' : ' is-disabled'}`;
+  const navigationBtnDisabled = !navigable || !textFilter;
+  const navigationBtnClass = cx('TracePageSearchBar--btn', { 'is-disabled': navigationBtnDisabled });
+  const btnClass = cx('TracePageSearchBar--btn', { 'is-disabled': !textFilter });
   const uiFindInputInputProps = {
     'data-test': markers.IN_TRACE_SEARCH,
     className: 'TracePageSearchBar--bar ub-flex-auto',
@@ -59,14 +54,14 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps) {
       <Input.Group compact style={{ display: 'flex' }}>
         <UiFindInput inputProps={uiFindInputInputProps} forwardedRef={forwardedRef} trackUpdate />
         <Button
-          className={btnClass}
-          disabled={traceGraphView || !textFilter}
+          className={navigationBtnClass}
+          disabled={navigationBtnDisabled}
           icon="up"
           onClick={prevResult}
         />
         <Button
-          className={btnClass}
-          disabled={traceGraphView || !textFilter}
+          className={navigationBtnClass}
+          disabled={navigationBtnDisabled}
           icon="down"
           onClick={nextResult}
         />

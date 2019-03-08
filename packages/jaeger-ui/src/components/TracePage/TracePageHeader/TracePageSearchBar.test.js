@@ -22,11 +22,11 @@ import UiFindInput from '../../common/UiFindInput';
 describe('<TracePageSearchBar>', () => {
   const defaultProps = {
     forwardedRef: React.createRef(),
+    navigable: true,
     nextResult: () => {},
     prevResult: () => {},
     resultCount: 0,
     textFilter: 'something',
-    updateTextFilter: () => {},
   };
 
   let wrapper;
@@ -63,6 +63,17 @@ describe('<TracePageSearchBar>', () => {
       expect(wrapper.find('Button[icon="up"]').prop('onClick')).toBe(defaultProps.prevResult);
       expect(wrapper.find('Button[icon="down"]').prop('onClick')).toBe(defaultProps.nextResult);
       expect(wrapper.find('Button[icon="close"]').prop('onClick')).toBe(defaultProps.clearSearch);
+    });
+
+    it('disables navigation buttons when not navigable', () => {
+      wrapper.setProps({ navigable: false });
+      const buttons = wrapper.find('Button');
+      expect(buttons.length).toBe(3);
+      buttons.forEach((button, i) => {
+        expect(button.hasClass('TracePageSearchBar--btn')).toBe(true);
+        expect(button.hasClass('is-disabled')).toBe(i !== 2);
+        expect(button.prop('disabled')).toBe(i !== 2);
+      });
     });
   });
 

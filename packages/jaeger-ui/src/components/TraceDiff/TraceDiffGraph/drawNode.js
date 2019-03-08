@@ -51,7 +51,7 @@ export class DiffNode extends React.PureComponent<Props> {
     const chgSign = a < b ? '+' : '-';
     const table = (
       <table className={`DiffNode ${className}`}>
-        <tbody className={`DiffNode--body ${className}`}>
+        <tbody className="DiffNode--body">
           <tr>
             <td className={`DiffNode--metricCell ${className}`} rowSpan={isSame ? 2 : 1}>
               {isSame ? null : <span className="DiffNode--metricSymbol">{chgSign}</span>}
