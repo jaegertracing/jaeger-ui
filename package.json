@@ -27,6 +27,9 @@
     "rxjs-compat": "6.4.0",
     "typescript": "3.3.3333"
   },
+  "resolutions": {
+    "**/lodash": "4.17.11"
+  },
   "workspaces": {
     "packages": ["packages/*"],
     "nohoist": [
