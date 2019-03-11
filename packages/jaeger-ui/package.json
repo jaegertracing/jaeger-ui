@@ -34,6 +34,7 @@
   },
   "dependencies": {
     "@jaegertracing/plexus": "0.0.1-dev.4",
+    "@types/react-router-dom": "^4.3.1",
     "antd": "3.8.0",
     "chance": "^1.0.10",
     "classnames": "^2.2.5",
@@ -79,6 +80,7 @@
     "reselect": "^3.0.1",
     "store": "^2.0.12",
     "tween-functions": "^1.2.0",
+    "typescript": "^3.3.3333",
     "u-basscss": "2.0.0"
   },
   "scripts": {
