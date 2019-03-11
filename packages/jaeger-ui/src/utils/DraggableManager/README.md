@@ -43,7 +43,7 @@ For the purposes of handling mouse events related to the intended dragging funct
 
 To use a DraggableManager instance, relevant mouse events should be piped to the above handlers:
 
-```html
+```jsx
 <div className="DividerDemo--realm">
   <div className="DividerDemo--divider" onMouseDown={this._dragManager.handleMouseDown} />
 </div>

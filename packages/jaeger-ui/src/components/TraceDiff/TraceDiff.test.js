@@ -349,7 +349,8 @@ describe('TraceDiff', () => {
       bindActionCreatorsSpy = jest.spyOn(redux, 'bindActionCreators').mockImplementation(actions => {
         if (actions === jaegerApiActions) {
           return { fetchMultipleTraces: fetchMultipleTracesMock };
-        } else if (actions === diffActions) {
+        }
+        if (actions === diffActions) {
           return { forceState: forceStateMock };
         }
         return {};

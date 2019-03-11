@@ -118,7 +118,7 @@ export default function SpanDetail(props: SpanDetailProps) {
         <small className="SpanDetail--debugInfo">
           <Tooltip title="Click ID to add to filter">
             <span className="SpanDetail--debugLabel" data-label="SpanID:" />{' '}
-            <button className="SpanDetail--debugValue" onClick={() => addToUiFind(spanID)}>
+            <button className="SpanDetail--debugValue" type="button" onClick={() => addToUiFind(spanID)}>
               {spanID}
             </button>
           </Tooltip>

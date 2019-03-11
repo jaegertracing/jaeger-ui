@@ -50,7 +50,7 @@ function getPrData(document) {
 }
 
 function getMergedPrs(page) {
-  const _page = page == null || isNaN(page) ? 1 : Number(page);
+  const _page = page == null || Number.isNaN(page) ? 1 : Number(page);
   const url = URL_PARTS.join(_page);
   return (
     fetch(url)
@@ -65,7 +65,7 @@ function getMergedPrs(page) {
 }
 
 function getChangelog(pages) {
-  const _pages = pages == null || isNaN(pages) ? 1 : Number(pages);
+  const _pages = pages == null || Number.isNaN(pages) ? 1 : Number(pages);
   const promises = [];
   for (let i = 1; i <= _pages; i++) {
     promises.push(getMergedPrs(i));

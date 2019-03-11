@@ -29,7 +29,7 @@ And the cloud that took the form
 Of a demon in my view—"
 3/17/1829`;
 
-module.exports.RAVEN_PAYLOAD = deepFreeze({
+export const RAVEN_PAYLOAD = deepFreeze({
   data: {
     request: {
       url: 'http://localhost/trace/565c1f00385ebd0b',
@@ -212,7 +212,7 @@ tr
 ! Type! A very long message that will be truncated and re~
 cic2i2i{.LabeledList.TracePageHeader--overviewItems}`;
 
-module.exports.RAVEN_TO_GA = deepFreeze({
+export const RAVEN_TO_GA = deepFreeze({
   action,
   label,
   message: '! test-sentry',

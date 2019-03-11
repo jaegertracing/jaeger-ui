@@ -29,11 +29,11 @@ import './ResultItemTitle.css';
 
 type Props = {
   duration: number,
-  durationPercent: number,
+  durationPercent?: number,
   error?: ApiError,
   isInDiffCohort: boolean,
   linkTo: ?string,
-  state: ?FetchedState,
+  state?: ?FetchedState,
   targetBlank?: boolean,
   toggleComparison: (string, boolean) => void,
   traceID: string,
@@ -41,16 +41,17 @@ type Props = {
   disableComparision?: boolean,
 };
 
+const DEFAULT_DURATION_PERCENT = 0;
+
 export default class ResultItemTitle extends React.PureComponent<Props> {
   props: Props;
 
   static defaultProps = {
     disableComparision: false,
-    durationPercent: 0,
+    durationPercent: DEFAULT_DURATION_PERCENT,
     error: undefined,
-    linkTo: null,
+    state: undefined,
     targetBlank: false,
-    state: fetchedState.DONE,
   };
 
   toggleComparison = () => {
@@ -94,7 +95,10 @@ export default class ResultItemTitle extends React.PureComponent<Props> {
           />
         )}
         <WrapperComponent {...wrapperProps}>
-          <span className="ResultItemTitle--durationBar" style={{ width: `${durationPercent}%` }} />
+          <span
+            className="ResultItemTitle--durationBar"
+            style={{ width: `${durationPercent || DEFAULT_DURATION_PERCENT}%` }}
+          />
           {duration != null && <span className="ub-right ub-relative">{formatDuration(duration)}</span>}
           <h3 className="ResultItemTitle--title">
             <TraceName error={error} state={state} traceName={traceName} />

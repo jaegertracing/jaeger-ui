@@ -18,7 +18,7 @@ import _minBy from 'lodash/minBy';
 import * as orderBy from './order-by';
 import { sortTraces } from './search';
 import traceGenerator from '../demo/trace-generators';
-import transformTraceData from '../model/transform-trace-data';
+import transformTraceData from './transform-trace-data';
 
 describe('sortTraces()', () => {
   const idMinSpans = 4;

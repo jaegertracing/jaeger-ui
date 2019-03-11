@@ -143,7 +143,8 @@ export default class Positions {
 
     if (this.ys.length < 2 || yValue < this.ys[1]) {
       return 0;
-    } else if (yValue > this.ys[imax]) {
+    }
+    if (yValue > this.ys[imax]) {
       return imax;
     }
     let i;

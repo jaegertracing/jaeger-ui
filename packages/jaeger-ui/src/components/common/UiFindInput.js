@@ -29,7 +29,7 @@ import type { ReduxState } from '../../types/index';
 
 type PropsType = {
   forwardedRef?: { current: Input | null },
-  inputProps: Object,
+  inputProps?: Object,
   history: RouterHistory,
   location: Location,
   trackFindFunction?: (?string) => void,

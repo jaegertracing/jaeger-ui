@@ -107,11 +107,7 @@ exports[`TraceDiffHeader handles absent a & b 1`] = `
     <div
       className="ub-flex u-flex-1"
     >
-      <TraceHeader
-        duration={null}
-        startTime={null}
-        totalSpans={null}
-      />
+      <TraceHeader />
     </div>
   </Popover>
   <div
@@ -226,11 +222,7 @@ exports[`TraceDiffHeader handles absent a & b 1`] = `
     <div
       className="ub-flex u-flex-1"
     >
-      <TraceHeader
-        duration={null}
-        startTime={null}
-        totalSpans={null}
-      />
+      <TraceHeader />
     </div>
   </Popover>
 </header>
@@ -349,11 +341,7 @@ exports[`TraceDiffHeader handles absent a 1`] = `
     <div
       className="ub-flex u-flex-1"
     >
-      <TraceHeader
-        duration={null}
-        startTime={null}
-        totalSpans={null}
-      />
+      <TraceHeader />
     </div>
   </Popover>
   <div
@@ -732,11 +720,7 @@ exports[`TraceDiffHeader handles absent b 1`] = `
     <div
       className="ub-flex u-flex-1"
     >
-      <TraceHeader
-        duration={null}
-        startTime={null}
-        totalSpans={null}
-      />
+      <TraceHeader />
     </div>
   </Popover>
 </header>

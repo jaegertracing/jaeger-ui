@@ -134,8 +134,6 @@ exports[`TraceHeader renders as expected 1`] = `
   </h1>
   <EmptyAttrs
     duration={700}
-    startTime={null}
-    totalSpans={null}
   />
 </div>
 `;
