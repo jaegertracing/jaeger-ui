@@ -113,7 +113,8 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
   _filterSpans: typeof filterSpans;
   _searchBar: { current: Input | null };
   _scrollManager: ScrollManager;
-  traceDagEV: Object;
+  // TODO: use convPlexus type (everett JAG-343)
+  traceDagEV: ?Object;
 
   constructor(props: TracePageProps) {
     super(props);
@@ -308,7 +309,7 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
 
     // $FlowIgnore because flow believes Set<string> cannot be assigned to Set<string | number>
     const findMatches: Set<string | number> = traceGraphView
-      ? getUiFindVertexKeys(uiFind || '', this.traceDagEV.vertices)
+      ? getUiFindVertexKeys(uiFind || '', _get(this.traceDagEV, 'vertices', []))
       : this._filterSpans(uiFind || '', _get(trace, 'data.spans'));
     const isEmbedded = Boolean(embedded);
     const headerProps = {

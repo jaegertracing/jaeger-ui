@@ -26,7 +26,7 @@ import './TraceGraph.css';
 
 type Props = {
   headerHeight: number,
-  ev: Object,
+  ev?: ?Object,
   uiFind: string,
   uiFindVertexKeys: Set<number | string>,
 };
@@ -105,6 +105,10 @@ export default class TraceGraph extends React.PureComponent<Props, State> {
   cache: any;
 
   layoutManager: LayoutManager;
+
+  static defaultProps = {
+    ev: null,
+  };
 
   constructor(props: Props) {
     super(props);

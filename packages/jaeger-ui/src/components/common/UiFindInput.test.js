@@ -87,18 +87,19 @@ describe('UiFind', () => {
       expect(updateUiFindSpy).toHaveBeenLastCalledWith({
         history: props.history,
         location: props.location,
-        trackUpdate: false,
+        trackFindFunction: null,
         uiFind: newValue,
       });
     });
 
     it('calls updateUiFind with correct kwargs with tracking enabled', () => {
-      wrapper.setProps({ trackUpdate: true });
+      const trackFindFunction = function trackFindFunction() {};
+      wrapper.setProps({ trackFindFunction });
       wrapper.find(Input).simulate('change', { target: { value: newValue } });
       expect(updateUiFindSpy).toHaveBeenLastCalledWith({
         history: props.history,
         location: props.location,
-        trackUpdate: true,
+        trackFindFunction,
         uiFind: newValue,
       });
     });

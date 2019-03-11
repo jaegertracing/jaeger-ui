@@ -19,6 +19,7 @@ import { Button, Input } from 'antd';
 import cx from 'classnames';
 
 import * as markers from './TracePageSearchBar.markers';
+import { trackFilter } from '../index.track';
 import UiFindInput from '../../common/UiFindInput';
 
 import './TracePageSearchBar.css';
@@ -52,7 +53,11 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps) {
     <div className="ub-flex-auto ub-mx2 TracePageSearchBar">
       {/* style inline because compact overwrites the display */}
       <Input.Group compact style={{ display: 'flex' }}>
-        <UiFindInput inputProps={uiFindInputInputProps} forwardedRef={forwardedRef} trackUpdate />
+        <UiFindInput
+          inputProps={uiFindInputInputProps}
+          forwardedRef={forwardedRef}
+          trackFindFunction={trackFilter}
+        />
         <Button
           className={navigationBtnClass}
           disabled={navigationBtnDisabled}

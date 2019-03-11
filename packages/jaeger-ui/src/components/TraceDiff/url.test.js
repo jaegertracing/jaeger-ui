@@ -44,12 +44,12 @@ describe('TraceDiff/url', () => {
 
   describe('getUrl', () => {
     it('handles an empty state', () => {
-      expect(getUrl()).toEqual('/trace/...');
+      expect(getUrl()).toBe('/trace/...');
     });
 
     it('handles a single traceId', () => {
       const cohort = ['first'];
-      expect(getUrl({ cohort })).toEqual(`/trace/${cohort[0]}...?cohort=${cohort[0]}`);
+      expect(getUrl({ cohort })).toBe(`/trace/${cohort[0]}...?cohort=${cohort[0]}`);
     });
 
     it('handles multiple traceIds', () => {

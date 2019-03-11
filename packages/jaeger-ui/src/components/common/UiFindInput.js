@@ -32,7 +32,7 @@ type PropsType = {
   inputProps: Object,
   history: RouterHistory,
   location: Location,
-  trackUpdate?: boolean,
+  trackFindFunction?: (?string) => void,
   uiFind?: string,
 };
 
@@ -44,7 +44,7 @@ export class UnconnectedUiFindInput extends React.PureComponent<PropsType, State
   static defaultProps = {
     forwardedRef: null,
     inputProps: {},
-    trackUpdate: false,
+    trackFindFunction: null,
     uiFind: null,
   };
 
@@ -64,11 +64,11 @@ export class UnconnectedUiFindInput extends React.PureComponent<PropsType, State
   };
 
   updateUiFindQueryParam = _debounce((uiFind: ?string) => {
-    const { history, location, trackUpdate } = this.props;
+    const { history, location, trackFindFunction } = this.props;
     updateUiFind({
       location,
       history,
-      trackUpdate,
+      trackFindFunction,
       uiFind,
     });
   }, 250);

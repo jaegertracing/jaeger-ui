@@ -65,8 +65,15 @@ describe('CohortTable', () => {
    * @param {Object} [specifiedProps={}] - Props to set that are different from props defined above.
    * @returns {Object} - New wrapper.
    */
-  function setProps(specifiedProps = {}) {
+  function updateWrapper(specifiedProps = {}) {
     wrapper = shallow(<CohortTable {...props} {...specifiedProps} />);
+  }
+
+  function getRowRenderer(dataIndex, fromData = true) {
+    return wrapper
+      .find(Column)
+      .find(`[dataIndex="${fromData ? 'data.' : ''}${dataIndex}"]`)
+      .prop('render');
   }
 
   beforeAll(() => {
@@ -76,7 +83,7 @@ describe('CohortTable', () => {
   beforeEach(() => {
     selectTrace.mockReset();
     formatDurationSpy.mockReset();
-    setProps();
+    updateWrapper();
   });
 
   it('renders as expected', () => {
@@ -95,7 +102,7 @@ describe('CohortTable', () => {
     });
 
     it('defaults selectedRowKeys to empty array', () => {
-      setProps({ current: undefined });
+      updateWrapper({ current: undefined });
       updateRowSelection();
       expect(rowSelection.selectedRowKeys).toEqual([]);
     });
@@ -114,7 +121,7 @@ describe('CohortTable', () => {
     });
 
     it('calculates checkbox props for selected but not current record without error', () => {
-      setProps({
+      updateWrapper({
         selection: {
           ...props.selecetion,
           [cohort[1].id]: {
@@ -132,26 +139,19 @@ describe('CohortTable', () => {
   });
 
   it('renders shortened id', () => {
-    const idRenderer = wrapper
-      .find(Column)
-      .find('[dataIndex="id"]')
-      .prop('render');
+    const idRenderer = getRowRenderer('id', false);
     const traceID = 'trace-id-longer-than-eight-characters';
     const renderedId = shallow(idRenderer(traceID));
-    expect(renderedId.hasClass('u-tx-muted')).toBe(true);
     expect(renderedId.text()).toBe(traceID.slice(0, 7));
   });
 
   it('renders TraceName fragment when given complete data', () => {
-    const traceNameColumnRenderer = wrapper
-      .find(Column)
-      .find('[dataIndex="data.traceName"]')
-      .prop('render');
+    const traceNameColumnRenderer = getRowRenderer('traceName');
     const testTrace = cohort[0];
     const { id, error, state, data: { traceName } } = testTrace;
     const renderedTraceNameColumn = shallow(
       // traceNameRenderer returns a React Fragment, wrapper div helps enzyme
-      <div className="enzymeHelperDiv">{traceNameColumnRenderer('unused argument', testTrace)}</div>
+      <div>{traceNameColumnRenderer('unused argument', testTrace)}</div>
     );
 
     const tag = renderedTraceNameColumn.find(Tag);
@@ -170,14 +170,11 @@ describe('CohortTable', () => {
   });
 
   it('renders TraceName fragment when given minimal data', () => {
-    const traceNameColumnRenderer = wrapper
-      .find(Column)
-      .find('[dataIndex="data.traceName"]')
-      .prop('render');
+    const traceNameColumnRenderer = getRowRenderer('traceName');
     const testTrace = cohort[1];
     const renderedTraceNameColumn = shallow(
       // traceNameRenderer returns a React Fragment, wrapper div helps enzyme
-      <div className="enzymeHelperDiv">{traceNameColumnRenderer('unused argument', testTrace)}</div>
+      <div>{traceNameColumnRenderer('unused argument', testTrace)}</div>
     );
 
     expect(renderedTraceNameColumn.find(Tag).length).toBe(0);
@@ -185,10 +182,7 @@ describe('CohortTable', () => {
   });
 
   it('renders date iff record state is fetchedState.DONE', () => {
-    const dateRenderer = wrapper
-      .find(Column)
-      .find('[dataIndex="data.startTime"]')
-      .prop('render');
+    const dateRenderer = getRowRenderer('startTime');
     const date = 1548689901403;
 
     expect(dateRenderer(date, { state: fetchedState.ERROR })).toBe(false);
@@ -202,10 +196,7 @@ describe('CohortTable', () => {
   });
 
   it('renders duration iff record state is fetchedState.DONE', () => {
-    const durationRenderer = wrapper
-      .find(Column)
-      .find('[dataIndex="data.duration"]')
-      .prop('render');
+    const durationRenderer = getRowRenderer('duration');
     const duration = 150;
     const formatDurationSpyMockReturnValue = 'formatDurationSpyMockReturnValue';
     formatDurationSpy.mockReturnValue(formatDurationSpyMockReturnValue);
@@ -219,10 +210,7 @@ describe('CohortTable', () => {
   });
 
   it('renders link', () => {
-    const linkRenderer = wrapper
-      .find(Column)
-      .find('[dataIndex="data.traceID"]')
-      .prop('render');
+    const linkRenderer = getRowRenderer('traceID');
     const traceID = 'trace-id';
     const renderedLink = linkRenderer(traceID);
     expect(renderedLink.type).toBe(TraceTimelineLink);
@@ -233,9 +221,9 @@ describe('CohortTable', () => {
 
   it('renders NEED_MORE_TRACES_MESSAGE if cohort is too small', () => {
     expect(wrapper.contains(NEED_MORE_TRACES_MESSAGE)).toBe(false);
-    setProps({ cohort: cohort.slice(0, 1) });
+    updateWrapper({ cohort: cohort.slice(0, 1) });
     expect(wrapper.contains(NEED_MORE_TRACES_MESSAGE)).toBe(true);
-    setProps({ cohort: [] });
+    updateWrapper({ cohort: [] });
     expect(wrapper.contains(NEED_MORE_TRACES_MESSAGE)).toBe(true);
   });
 });

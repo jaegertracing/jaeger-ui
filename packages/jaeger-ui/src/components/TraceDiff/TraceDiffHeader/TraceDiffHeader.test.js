@@ -99,7 +99,16 @@ describe('TraceDiffHeader', () => {
 
   let wrapper;
 
+  function getPopoverProp(popoverIndex, propName) {
+    return wrapper
+      .find(Popover)
+      .at(popoverIndex)
+      .prop(propName);
+  }
+
   beforeEach(() => {
+    diffSetA.mockReset();
+    diffSetB.mockReset();
     wrapper = shallow(<TraceDiffHeader {...props} />);
   });
 
@@ -132,107 +141,49 @@ describe('TraceDiffHeader', () => {
     expect(popovers.length).toBe(2);
     popovers.forEach(popover => expect(popover.prop('visible')).toBe(false));
 
-    wrapper
-      .find(Popover)
-      .at(0)
-      .prop('onVisibleChange')(true);
-    expect(
-      wrapper
-        .find(Popover)
-        .at(0)
-        .prop('visible')
-    ).toBe(true);
-    expect(
-      wrapper
-        .find(Popover)
-        .at(1)
-        .prop('visible')
-    ).toBe(false);
+    getPopoverProp(0, 'onVisibleChange')(true);
+    expect(getPopoverProp(0, 'visible')).toBe(true);
+    expect(getPopoverProp(1, 'visible')).toBe(false);
 
-    wrapper
-      .find(Popover)
-      .at(1)
-      .prop('onVisibleChange')(true);
-    expect(
-      wrapper
-        .find(Popover)
-        .at(0)
-        .prop('visible')
-    ).toBe(false);
-    expect(
-      wrapper
-        .find(Popover)
-        .at(1)
-        .prop('visible')
-    ).toBe(true);
+    getPopoverProp(1, 'onVisibleChange')(true);
+    expect(getPopoverProp(0, 'visible')).toBe(false);
+    expect(getPopoverProp(1, 'visible')).toBe(true);
 
     // repeat onVisibleChange call to test that visibility remains correct
-    wrapper
-      .find(Popover)
-      .at(1)
-      .prop('onVisibleChange')(true);
-    expect(
-      wrapper
-        .find(Popover)
-        .at(0)
-        .prop('visible')
-    ).toBe(false);
-    expect(
-      wrapper
-        .find(Popover)
-        .at(1)
-        .prop('visible')
-    ).toBe(true);
+    getPopoverProp(1, 'onVisibleChange')(true);
+    expect(getPopoverProp(0, 'visible')).toBe(false);
+    expect(getPopoverProp(1, 'visible')).toBe(true);
 
-    wrapper
-      .find(Popover)
-      .at(1)
-      .prop('onVisibleChange')(false);
+    getPopoverProp(1, 'onVisibleChange')(false);
     wrapper.find(Popover).forEach(popover => expect(popover.prop('visible')).toBe(false));
   });
 
-  it('creates bound functions to set a & b and passes them to Popover JSX props correctly', () => {
-    const cohortTableASelectionID = 'cohortTableASelectionID';
-    const traceIdInputASelectionID = 'traceIdInputASelectionID';
-    expect(props.diffSetA).not.toHaveBeenCalled();
-    const cohortTableBSelectionID = 'cohortTableBSelectionID';
-    const traceIdInputBSelectionID = 'traceIdInputBSelectionID';
-    expect(props.diffSetB).not.toHaveBeenCalled();
+  describe('bound functions to set a & b and passes them to Popover JSX props correctly', () => {
+    const shouldCall = {
+      a: diffSetA,
+      b: diffSetB,
+    };
+    const shouldNotCall = {
+      a: diffSetB,
+      b: diffSetA,
+    };
 
-    wrapper.setState({ tableVisible: 'a' });
-    wrapper
-      .find(Popover)
-      .at(0)
-      .prop('content')
-      .props.selectTrace(cohortTableASelectionID);
-    expect(props.diffSetA).toHaveBeenLastCalledWith(cohortTableASelectionID);
-    expect(wrapper.state().tableVisible).toBe(null);
+    ['a', 'b'].forEach(aOrB => {
+      ['title', 'content'].forEach(popoverSection => {
+        it(`sets trace ${aOrB} from popover ${popoverSection}`, () => {
+          const selectTraceArgument = `aOrB: ${aOrB}, popoverSection: ${popoverSection}`;
+          wrapper.setState({ tableVisible: aOrB });
+          wrapper
+            .find(Popover)
+            .at(Number(aOrB === 'b'))
+            .prop(popoverSection)
+            .props.selectTrace(selectTraceArgument);
 
-    wrapper.setState({ tableVisible: 'a' });
-    wrapper
-      .find(Popover)
-      .at(0)
-      .prop('title')
-      .props.selectTrace(traceIdInputASelectionID);
-    expect(props.diffSetA).toHaveBeenLastCalledWith(traceIdInputASelectionID);
-    expect(wrapper.state().tableVisible).toBe(null);
-
-    wrapper.setState({ tableVisible: 'b' });
-    wrapper
-      .find(Popover)
-      .at(1)
-      .prop('content')
-      .props.selectTrace(cohortTableBSelectionID);
-    expect(props.diffSetB).toHaveBeenLastCalledWith(cohortTableBSelectionID);
-    expect(wrapper.state().tableVisible).toBe(null);
-
-    wrapper.setState({ tableVisible: 'b' });
-    wrapper
-      .find(Popover)
-      .at(1)
-      .prop('title')
-      .props.selectTrace(traceIdInputBSelectionID);
-    expect(props.diffSetB).toHaveBeenLastCalledWith(traceIdInputBSelectionID);
-    expect(wrapper.state().tableVisible).toBe(null);
+          expect(shouldCall[aOrB]).toHaveBeenCalledWith(selectTraceArgument);
+          expect(shouldNotCall[aOrB]).not.toHaveBeenCalled();
+          expect(wrapper.state().tableVisible).toBe(null);
+        });
+      });
+    });
   });
 });

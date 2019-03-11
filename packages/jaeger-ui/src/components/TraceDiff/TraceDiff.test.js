@@ -14,6 +14,7 @@
 
 import * as React from 'react';
 import { shallow } from 'enzyme';
+import queryString from 'query-string';
 import * as redux from 'redux';
 
 import { mapStateToProps, mapDispatchToProps, TraceDiffImpl } from './TraceDiff';
@@ -234,7 +235,7 @@ describe('TraceDiff', () => {
     const makeTestReduxState = ({ cohortIds = defaultCohortIds } = {}) => ({
       router: {
         location: {
-          search: cohortIds.reduce((search, curr, i) => `${search}${i ? '&' : '?'}cohort=${curr}`, ''),
+          search: queryString.stringify({ cohort: cohortIds }),
         },
       },
       trace: {

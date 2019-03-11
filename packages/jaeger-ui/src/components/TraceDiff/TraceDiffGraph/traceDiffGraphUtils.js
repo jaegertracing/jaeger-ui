@@ -22,13 +22,13 @@ import filterSpans from '../../../utils/filter-spans';
 import type { PVertex } from '../../../model/trace-dag/types';
 import type { Trace } from '../../../types/trace';
 
-export type vertexKeys = Set<number | string>;
+export type TVertexKeys = Set<number | string>;
 
 let lastUiFind: string;
 let lastVertices: PVertex<Trace>[];
-let uiFindVertexKeys: ?vertexKeys;
+let uiFindVertexKeys: ?TVertexKeys;
 
-export function getUiFindVertexKeys(uiFind: string, vertices: PVertex<Trace>[]): vertexKeys {
+export function getUiFindVertexKeys(uiFind: string, vertices: PVertex<Trace>[]): TVertexKeys {
   if (!uiFind) return new Set();
   if (uiFind === lastUiFind && vertices === lastVertices && uiFindVertexKeys) {
     return uiFindVertexKeys;
@@ -47,6 +47,7 @@ export function getUiFindVertexKeys(uiFind: string, vertices: PVertex<Trace>[]):
 
 let lastAData: ?Trace;
 let lastBData: ?Trace;
+// TODO: use convPlexus type (everett JAG-343)
 let edgesAndVertices: ?Object;
 
 export function getEdgesAndVertices(aData: Trace, bData: Trace) {

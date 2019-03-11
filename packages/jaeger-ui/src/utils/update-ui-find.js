@@ -18,22 +18,20 @@ import queryString from 'query-string';
 
 import type { Location, RouterHistory } from 'react-router-dom';
 
-import { trackFilter } from '../components/TracePage/index.track';
-
 export default function updateUiFind({
   history,
   location,
-  trackUpdate = false,
+  trackFindFunction,
   uiFind,
 }: {
   history: RouterHistory,
   location: Location,
-  trackUpdate?: boolean,
+  trackFindFunction?: (?string) => void,
   uiFind?: ?string,
 }) {
   const { uiFind: omittedOldValue, ...queryParams } = queryString.parse(location.search);
-  if (trackUpdate) {
-    trackFilter(uiFind);
+  if (trackFindFunction) {
+    trackFindFunction(uiFind);
   }
   if (uiFind) {
     queryParams.uiFind = uiFind;

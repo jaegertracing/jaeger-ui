@@ -18,7 +18,7 @@ describe('Set on graph utils', () => {
   describe('setOnNodesContainer', () => {
     function getComputedWidth(k) {
       const { style } = setOnNodesContainer({ zoomTransform: k != undefined ? { k } : undefined }); // eslint-disable-line eqeqeq
-      return Number.parseInt(style.outline.split(' ')[2].split('px')[0], 10);
+      return Number.parseInt(style.outline.replace(/[^.\d]/g, ''), 10);
     }
 
     const SIZE_IDENTITY = 12;

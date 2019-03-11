@@ -62,11 +62,9 @@ limitations under the License.
 }
 
 .TraceDiffGraph--uiFind > .ant-input {
-  border: 1px solid #777;
+  border: 1px solid #aaa;
   border-radius: 0;
-  border-color: #aaa;
   box-shadow: 0 0 2px 2px #ccc;
-  border-radius: 0;
 }
 
 /* DAG minimap */

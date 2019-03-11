@@ -15,7 +15,6 @@
 import queryString from 'query-string';
 
 import updateUiFind from './update-ui-find';
-import * as trackFilter from '../components/TracePage/index.track';
 
 describe('updateUiFind', () => {
   const existingUiFind = 'existingUiFind';
@@ -44,15 +43,11 @@ describe('updateUiFind', () => {
     ...location,
     search: `?${queryStringStringifySpyMockReturnValue}`,
   };
-  let trackFilterSpy;
-
-  beforeAll(() => {
-    trackFilterSpy = jest.spyOn(trackFilter, 'trackFilter');
-  });
+  const trackFindFunction = jest.fn();
 
   beforeEach(() => {
     replaceMock.mockReset();
-    trackFilterSpy.mockClear();
+    trackFindFunction.mockClear();
     queryStringParseSpy.mockClear();
     queryStringStringifySpy.mockClear();
   });
@@ -68,7 +63,6 @@ describe('updateUiFind', () => {
       uiFind: newUiFind,
       [unrelatedQueryParamName]: unrelatedQueryParamValue,
     });
-    expect(trackFilterSpy).not.toHaveBeenCalled();
     expect(replaceMock).toHaveBeenCalledWith(expectedReplaceMockArgument);
   });
 
@@ -82,7 +76,6 @@ describe('updateUiFind', () => {
     expect(queryStringStringifySpy).toHaveBeenCalledWith({
       [unrelatedQueryParamName]: unrelatedQueryParamValue,
     });
-    expect(trackFilterSpy).not.toHaveBeenCalled();
     expect(replaceMock).toHaveBeenCalledWith(expectedReplaceMockArgument);
   });
 
@@ -95,28 +88,27 @@ describe('updateUiFind', () => {
     expect(queryStringStringifySpy).toHaveBeenCalledWith({
       [unrelatedQueryParamName]: unrelatedQueryParamValue,
     });
-    expect(trackFilterSpy).not.toHaveBeenCalled();
     expect(replaceMock).toHaveBeenCalledWith(expectedReplaceMockArgument);
   });
 
-  describe('trackFilter enabled', () => {
+  describe('trackFindFunction provided', () => {
     it('tracks undefined when uiFind value is omitted', () => {
       updateUiFind({
         history,
         location,
-        trackUpdate: true,
+        trackFindFunction,
       });
-      expect(trackFilterSpy).toHaveBeenCalledWith(undefined);
+      expect(trackFindFunction).toHaveBeenCalledWith(undefined);
     });
 
     it('tracks given value', () => {
       updateUiFind({
         history,
         location,
+        trackFindFunction,
         uiFind: newUiFind,
-        trackUpdate: true,
       });
-      expect(trackFilterSpy).toHaveBeenCalledWith(newUiFind);
+      expect(trackFindFunction).toHaveBeenCalledWith(newUiFind);
     });
   });
 });
