@@ -35,7 +35,7 @@ export default function Ticks(props: TicksProps) {
     labels = [];
     const viewingDuration = (endTime || 0) - (startTime || 0);
     for (let i = 0; i < numTicks; i++) {
-      const durationAtTick = startTime + (i / (numTicks - 1)) * viewingDuration;
+      const durationAtTick = startTime + i / (numTicks - 1) * viewingDuration;
       labels.push(formatDuration(durationAtTick));
     }
   }

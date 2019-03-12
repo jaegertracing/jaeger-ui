@@ -414,9 +414,4 @@ function mapDispatchToProps(dispatch) {
   return bindActionCreators(actions, dispatch);
 }
 
-export default withRouter(
-  connect(
-    mapStateToProps,
-    mapDispatchToProps
-  )(VirtualizedTraceViewImpl)
-);
+export default withRouter(connect(mapStateToProps, mapDispatchToProps)(VirtualizedTraceViewImpl));

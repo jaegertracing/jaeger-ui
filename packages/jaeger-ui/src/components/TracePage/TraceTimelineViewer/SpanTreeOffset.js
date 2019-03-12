@@ -141,7 +141,4 @@ export function mapDispatchToProps(dispatch: Function) {
   return { addHoverIndentGuideId, removeHoverIndentGuideId };
 }
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(UnconnectedSpanTreeOffset);
+export default connect(mapStateToProps, mapDispatchToProps)(UnconnectedSpanTreeOffset);

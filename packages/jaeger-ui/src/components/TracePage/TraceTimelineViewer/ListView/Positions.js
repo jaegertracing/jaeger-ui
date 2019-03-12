@@ -192,6 +192,6 @@ export default class Positions {
       return known | 0;
     }
     // eslint-disable-next-line no-bitwise
-    return ((known / (this.lastI + 1)) * this.heights.length) | 0;
+    return (known / (this.lastI + 1) * this.heights.length) | 0;
   }
 }

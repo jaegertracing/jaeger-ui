@@ -59,7 +59,7 @@
     "logfmt": "^1.2.0",
     "moment": "^2.18.1",
     "prop-types": "^15.5.10",
-    "query-string": "^5.0.0",
+    "query-string": "^6.3.0",
     "raven-js": "^3.22.1",
     "react": "^16.3.2",
     "react-copy-to-clipboard": "^5.0.1",
@@ -70,7 +70,7 @@
     "react-icons": "2.2.7",
     "react-metrics": "^2.3.2",
     "react-redux": "^5.0.6",
-    "react-router-dom": "^4.1.2",
+    "react-router-dom": "^4.3.1",
     "react-router-redux": "5.0.0-alpha.6",
     "react-virtualized-select": "^3.1.0",
     "react-vis": "^1.7.2",
@@ -91,7 +91,8 @@
     "analyze": "source-map-explorer build/static/js/main.*",
     "build": "REACT_APP_VSN_STATE=$(../../scripts/get-tracking-version.js) react-app-rewired build",
     "coverage": "yarn run test -- --coverage",
-    "start:ga-debug": "REACT_APP_GA_DEBUG=1 REACT_APP_VSN_STATE=$(../../scripts/get-tracking-version.js) react-app-rewired start",
+    "start:ga-debug":
+      "REACT_APP_GA_DEBUG=1 REACT_APP_VSN_STATE=$(../../scripts/get-tracking-version.js) react-app-rewired start",
     "start": "react-app-rewired start",
     "test-dev": "react-app-rewired test --env=jsdom",
     "test": "CI=1 react-app-rewired test --env=jsdom --color"
@@ -105,10 +106,5 @@
       "!src/demo/**/*.js"
     ]
   },
-  "browserslist": [
-    ">0.5%",
-    "not dead",
-    "not ie <= 11",
-    "not op_mini all"
-  ]
+  "browserslist": [">0.5%", "not dead", "not ie <= 11", "not op_mini all"]
 }

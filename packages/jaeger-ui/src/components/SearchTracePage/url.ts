@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2018 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,9 +17,9 @@ import { matchPath } from 'react-router-dom';
 
 import prefixUrl from '../../utils/prefix-url';
 
-import type { SearchQuery } from '../../types/search';
+import { SearchQuery } from '../../types/search'; // eslint-disable-line no-unused-vars
 
-function eqEq(a: ?(string | number), b: ?(string | number)) {
+function eqEq(a: string | number | null | undefined, b: string | number | null | undefined) {
   return (a == null && b == null) || String(a) === String(b);
 }
 
@@ -33,7 +31,7 @@ export function matches(path: string) {
   return Boolean(matchPath(path, ROUTE_MATCHER));
 }
 
-export function getUrl(query?: ?Object) {
+export function getUrl(query?: Object | null | undefined) {
   const search = query ? `?${queryString.stringify(query)}` : '';
   return prefixUrl(`/search${search}`);
 }

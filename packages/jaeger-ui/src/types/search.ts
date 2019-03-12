@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,15 +13,15 @@
 // limitations under the License.
 
 export type SearchQuery = {
-  end: number | string,
-  limit: number | string,
-  lookback: string,
-  maxDuration: null | string,
-  minDuration: null | string,
-  operation: ?string,
-  service: string,
-  start: number | string,
-  tags: ?string,
+  end: number | string;
+  limit: number | string;
+  lookback: string;
+  maxDuration: null | string;
+  minDuration: null | string;
+  operation: string | null | undefined;
+  service: string;
+  start: number | string;
+  tags: string | null | undefined;
 };
 
 /**
@@ -33,22 +31,22 @@ export type TraceSummary = {
   /**
    * Duration of trace in milliseconds.
    */
-  duration: number,
+  duration: number;
   /**
    * Start time of trace in milliseconds.
    */
-  timestamp: number,
-  traceName: string,
-  traceID: string,
-  numberOfErredSpans: number,
-  numberOfSpans: number,
-  services: { name: string, numberOfSpans: number }[],
+  timestamp: number;
+  traceName: string;
+  traceID: string;
+  numberOfErredSpans: number;
+  numberOfSpans: number;
+  services: { name: string; numberOfSpans: number }[];
 };
 
 export type TraceSummaries = {
   /**
    * Duration of longest trace in `traces` in milliseconds.
    */
-  maxDuration: number,
-  traces: TraceSummary[],
+  maxDuration: number;
+  traces: TraceSummary[];
 };

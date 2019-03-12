@@ -32,11 +32,7 @@ export default function reduxFormFieldAdapter({
   isValidatedInput: boolean,
 }) {
   return function _reduxFormFieldAdapter(props: any) {
-    const {
-      input: { onBlur, onChange, onFocus, value },
-      children,
-      ...rest
-    } = props;
+    const { input: { onBlur, onChange, onFocus, value }, children, ...rest } = props;
     const isInvalid = !rest.meta.active && Boolean(rest.meta.error);
     const content = (
       <AntInputComponent

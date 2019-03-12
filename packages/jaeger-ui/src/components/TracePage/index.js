@@ -400,7 +400,4 @@ export function mapDispatchToProps(dispatch: Function) {
   return { acknowledgeArchive, archiveTrace, fetchTrace };
 }
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(TracePageImpl);
+export default connect(mapStateToProps, mapDispatchToProps)(TracePageImpl);

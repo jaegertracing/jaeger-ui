@@ -314,10 +314,10 @@ describe('TraceDiff', () => {
 
     // This test may false negative if previous tests are failing
     it('builds tracesData Map from cohort and state.trace.traces', () => {
-      const {
-        tracesData,
-        cohort: { length: expectedSize },
-      } = mapStateToProps(makeTestReduxState(), getOwnProps());
+      const { tracesData, cohort: { length: expectedSize } } = mapStateToProps(
+        makeTestReduxState(),
+        getOwnProps()
+      );
       defaultCohortIds.forEach(id => {
         expect(tracesData.get(id)).toEqual({
           id,

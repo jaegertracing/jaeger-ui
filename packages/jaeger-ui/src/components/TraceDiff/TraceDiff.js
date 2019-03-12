@@ -182,7 +182,4 @@ export function mapDispatchToProps(dispatch: Function) {
   return { fetchMultipleTraces, forceState };
 }
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(TraceDiffImpl);
+export default connect(mapStateToProps, mapDispatchToProps)(TraceDiffImpl);

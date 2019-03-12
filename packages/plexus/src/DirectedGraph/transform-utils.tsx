@@ -32,7 +32,7 @@ function boundValue(min: number, max: number, value: number) {
 function getFittedScale(width: number, height: number, viewWidth: number, viewHeight: number) {
   return Math.max(
     SCALE_MIN,
-    Math.min(((1 - SCALE_MARGIN) * viewWidth) / width, ((1 - SCALE_MARGIN) * viewHeight) / height, SCALE_MAX)
+    Math.min((1 - SCALE_MARGIN) * viewWidth / width, (1 - SCALE_MARGIN) * viewHeight / height, SCALE_MAX)
   );
 }
 

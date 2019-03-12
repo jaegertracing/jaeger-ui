@@ -39,7 +39,7 @@ export default function scaledStrokeWidth(graphState: TDirectedGraphState) {
   } else if (k < THRESHOLD_MAX) {
     props = PROPS_MAX;
   } else {
-    const strokeWidth = (STROKE_MIN + (STROKE_SPREAD * (THRESHOLD_MIN - k)) / THRESHOLD_SPREAD).toFixed(1);
+    const strokeWidth = (STROKE_MIN + STROKE_SPREAD * (THRESHOLD_MIN - k) / THRESHOLD_SPREAD).toFixed(1);
     props = cache[strokeWidth] || (cache[strokeWidth] = { style: { strokeWidth } });
   }
   lastK = k;

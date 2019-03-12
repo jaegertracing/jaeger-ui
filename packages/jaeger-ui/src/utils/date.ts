@@ -34,7 +34,7 @@ export const DEFAULT_MS_PRECISION = Math.log10(ONE_MILLISECOND);
  * @return {number} 0-100 percentage
  */
 export function getPercentageOfDuration(duration: number, totalDuration: number) {
-  return (duration / totalDuration) * 100;
+  return duration / totalDuration * 100;
 }
 
 const quantizeDuration = (duration: number, floatPrecision: number, conversionFactor: number) =>
