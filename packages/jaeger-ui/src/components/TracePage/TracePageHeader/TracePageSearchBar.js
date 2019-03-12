@@ -16,59 +16,60 @@
 
 import * as React from 'react';
 import { Button, Input } from 'antd';
+import cx from 'classnames';
 
 import * as markers from './TracePageSearchBar.markers';
+import { trackFilter } from '../index.track';
+import UiFindInput from '../../common/UiFindInput';
 
 import './TracePageSearchBar.css';
 
 type TracePageSearchBarProps = {
-  updateTextFilter: string => void,
   textFilter: string,
   prevResult: () => void,
   nextResult: () => void,
   clearSearch: () => void,
   resultCount: number,
   forwardedRef: { current: Input | null },
+  navigable: boolean,
 };
 
 export function TracePageSearchBarFn(props: TracePageSearchBarProps) {
-  const {
-    prevResult,
-    nextResult,
-    clearSearch,
-    resultCount,
-    updateTextFilter,
-    textFilter,
-    forwardedRef,
-  } = props;
+  const { clearSearch, forwardedRef, navigable, nextResult, prevResult, resultCount, textFilter } = props;
 
   const count = textFilter ? <span className="TracePageSearchBar--count">{resultCount}</span> : null;
 
-  const updateFilter = event => updateTextFilter(event.target.value);
-  const onKeyDown = e => {
-    if (e.keyCode === 27) clearSearch();
+  const navigationBtnDisabled = !navigable || !textFilter;
+  const navigationBtnClass = cx('TracePageSearchBar--btn', { 'is-disabled': navigationBtnDisabled });
+  const btnClass = cx('TracePageSearchBar--btn', { 'is-disabled': !textFilter });
+  const uiFindInputInputProps = {
+    'data-test': markers.IN_TRACE_SEARCH,
+    className: 'TracePageSearchBar--bar ub-flex-auto',
+    name: 'search',
+    suffix: count,
   };
-
-  const btnClass = `TracePageSearchBar--btn${textFilter ? '' : ' is-disabled'}`;
 
   return (
     <div className="ub-flex-auto ub-mx2 TracePageSearchBar">
       {/* style inline because compact overwrites the display */}
       <Input.Group compact style={{ display: 'flex' }}>
-        <Input
-          name="search"
-          className="TracePageSearchBar--bar ub-flex-auto"
-          placeholder="Search..."
-          onChange={updateFilter}
-          value={textFilter}
-          data-test={markers.IN_TRACE_SEARCH}
-          suffix={count}
-          ref={forwardedRef}
-          onKeyDown={onKeyDown}
-          onPressEnter={nextResult}
+        <UiFindInput
+          inputProps={uiFindInputInputProps}
+          forwardedRef={forwardedRef}
+          trackFindFunction={trackFilter}
         />
-        <Button className={btnClass} disabled={!textFilter} icon="up" onClick={prevResult} />
-        <Button className={btnClass} disabled={!textFilter} icon="down" onClick={nextResult} />
+        <Button
+          className={navigationBtnClass}
+          disabled={navigationBtnDisabled}
+          icon="up"
+          onClick={prevResult}
+        />
+        <Button
+          className={navigationBtnClass}
+          disabled={navigationBtnDisabled}
+          icon="down"
+          onClick={nextResult}
+        />
         <Button className={btnClass} disabled={!textFilter} icon="close" onClick={clearSearch} />
       </Input.Group>
     </div>

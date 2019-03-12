@@ -40,11 +40,31 @@ limitations under the License.
 }
 
 .TraceDiffGraph--dag {
+  transition: background 0.5s ease;
   stroke-width: 1.2;
+}
+
+.TraceDiffGraph--dag.is-uiFind-mode {
+  background: #ddd;
 }
 
 .TraceDiffGraph--dag.is-small {
   stroke-width: 0.7;
+}
+
+/* Find within diff */
+.TraceDiffGraph--uiFind {
+  bottom: 20px;
+  position: absolute;
+  right: 20px;
+  width: 300px;
+  z-index: 1;
+}
+
+.TraceDiffGraph--uiFind > .ant-input {
+  border: 1px solid #aaa;
+  border-radius: 0;
+  box-shadow: 0 0 2px 2px #ccc;
 }
 
 /* DAG minimap */

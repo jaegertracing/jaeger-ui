@@ -25,6 +25,7 @@ import type { Log, Span, KeyValuePair, Link } from '../../../types/trace';
 import './SpanDetailRow.css';
 
 type SpanDetailRowProps = {
+  addToUiFind: string => void,
   color: string,
   columnDivision: number,
   detailState: DetailState,
@@ -52,6 +53,7 @@ export default class SpanDetailRow extends React.PureComponent<SpanDetailRowProp
 
   render() {
     const {
+      addToUiFind,
       color,
       columnDivision,
       detailState,
@@ -79,6 +81,7 @@ export default class SpanDetailRow extends React.PureComponent<SpanDetailRowProp
         <TimelineRow.Cell width={1 - columnDivision}>
           <div className="detail-info-wrapper" style={{ borderTopColor: color }}>
             <SpanDetail
+              addToUiFind={addToUiFind}
               detailState={detailState}
               linksGetter={this._linksGetter}
               logItemToggle={logItemToggle}

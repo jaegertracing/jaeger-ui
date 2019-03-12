@@ -18,6 +18,9 @@ import * as React from 'react';
 import cx from 'classnames';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
+import { withRouter } from 'react-router-dom';
+
+import type { Location, RouterHistory } from 'react-router-dom';
 
 import { actions } from './duck';
 import ListView from './ListView';
@@ -25,8 +28,10 @@ import SpanBarRow from './SpanBarRow';
 import DetailState from './SpanDetail/DetailState';
 import SpanDetailRow from './SpanDetailRow';
 import { createViewedBoundsFunc, findServerChildSpan, isErrorSpan, spanContainsErredSpan } from './utils';
+import { extractUiFindFromState } from '../../common/UiFindInput';
 import getLinks from '../../../model/link-patterns';
 import colorGenerator from '../../../utils/color-generator';
+import updateUiFind from '../../../utils/update-ui-find';
 
 import type { ViewedBoundsFunctionType } from './utils';
 import type { Accessors } from '../ScrollManager';
@@ -53,11 +58,14 @@ type VirtualizedTraceViewProps = {
   detailTagsToggle: string => void,
   detailToggle: string => void,
   findMatchesIDs: Set<string>,
+  history: RouterHistory,
+  location: Location,
   registerAccessors: Accessors => void,
   setSpanNameColumnWidth: number => void,
-  setTrace: (?string) => void,
+  setTrace: (?Trace, ?string) => void,
   spanNameColumnWidth: number,
   trace: Trace,
+  uiFind: ?string,
 };
 
 // export for tests
@@ -133,7 +141,7 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
     super(props);
     // keep "prop derivations" on the instance instead of calculating in
     // `.render()` to avoid recalculating in every invocation of `.renderRow()`
-    const { currentViewRangeTime, childrenHiddenIDs, detailStates, trace } = props;
+    const { currentViewRangeTime, childrenHiddenIDs, detailStates, setTrace, trace, uiFind } = props;
     this.clippingCssClasses = getCssClasses(currentViewRangeTime);
     const [zoomStart, zoomEnd] = currentViewRangeTime;
     this.getViewedBounds = createViewedBoundsFunc({
@@ -144,9 +152,7 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
     });
     this.rowStates = generateRowStates(trace.spans, childrenHiddenIDs, detailStates);
 
-    const { setTrace } = props;
-    const traceID = trace ? trace.traceID : null;
-    setTrace(traceID);
+    setTrace(trace, uiFind);
   }
 
   componentWillUpdate(nextProps: VirtualizedTraceViewProps) {
@@ -158,9 +164,10 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
       registerAccessors: nextRegisterAccessors,
       setTrace,
       trace: nextTrace,
+      uiFind,
     } = nextProps;
     if (trace !== nextTrace) {
-      setTrace(nextTrace ? nextTrace.traceID : null);
+      setTrace(nextTrace, uiFind);
     }
     if (trace !== nextTrace || childrenHiddenIDs !== nextHiddenIDs || detailStates !== nextDetailStates) {
       this.rowStates = nextTrace ? generateRowStates(nextTrace.spans, nextHiddenIDs, nextDetailStates) : [];
@@ -179,6 +186,17 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
       nextRegisterAccessors(this.getAccessors());
     }
   }
+
+  addToUiFind = (addition: string) => {
+    const { uiFind, history, location } = this.props;
+    if (!uiFind || !uiFind.includes(addition)) {
+      updateUiFind({
+        history,
+        location,
+        uiFind: cx(uiFind, addition),
+      });
+    }
+  };
 
   getAccessors() {
     const lv = this.listView;
@@ -346,6 +364,7 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
     return (
       <div className="VirtualizedTraceView--row" key={key} style={{ ...style, zIndex: 1 }} {...attrs}>
         <SpanDetailRow
+          addToUiFind={this.addToUiFind}
           color={color}
           columnDivision={spanNameColumnWidth}
           onDetailToggled={detailToggle}
@@ -383,11 +402,10 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
 }
 
 /* istanbul ignore next */
-function mapStateToProps(state, ownProps) {
-  const traceTimeline = state.traceTimeline;
+function mapStateToProps(state) {
   return {
-    ...traceTimeline,
-    ...ownProps,
+    ...extractUiFindFromState(state),
+    ...state.traceTimeline,
   };
 }
 
@@ -396,4 +414,4 @@ function mapDispatchToProps(dispatch) {
   return bindActionCreators(actions, dispatch);
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(VirtualizedTraceViewImpl);
+export default withRouter(connect(mapStateToProps, mapDispatchToProps)(VirtualizedTraceViewImpl));

@@ -17,13 +17,14 @@ limitations under the License.
 .DiffNode {
   background: #bbb;
   border: 1px solid #777;
-  box-shadow: 0 0px 3px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 0px 3px 1px rgba(0, 0, 0, 0.2);
   cursor: pointer;
   white-space: nowrap;
 }
 
-.TraceDiffGraph--dag.is-small .DiffNode > tbody {
-  opacity: 0;
+.DiffNode.is-ui-find-match {
+  outline: inherit;
+  outline-color: #fff3d7;
 }
 
 .DiffNode.is-changed {
@@ -52,6 +53,14 @@ limitations under the License.
   color: #fff;
 }
 
+.TraceDiffGraph--dag.is-small .DiffNode--body {
+  opacity: 0;
+}
+
+.DiffNode--popover .DiffNode.is-ui-find-match {
+  outline: #fff3d7 solid 3px;
+}
+
 .DiffNode--metricCell {
   padding: 0.3rem 0.5rem;
   background: rgba(255, 255, 255, 0.3);
@@ -78,7 +87,7 @@ limitations under the License.
 
 .DiffNode--popover .DiffNode--copyIcon,
 .DiffNode:not(:hover) .DiffNode--copyIcon {
-  display: none;
+  color: transparent;
 }
 
 /* Tweak the popover aesthetics - unfortunate but necessary */

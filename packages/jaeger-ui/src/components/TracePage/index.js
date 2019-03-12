@@ -17,7 +17,9 @@
 import * as React from 'react';
 import { Input } from 'antd';
 import _clamp from 'lodash/clamp';
+import _get from 'lodash/get';
 import _mapValues from 'lodash/mapValues';
+import _memoize from 'lodash/memoize';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 
@@ -25,10 +27,11 @@ import type { Location, Match, RouterHistory } from 'react-router-dom';
 
 import ArchiveNotifier from './ArchiveNotifier';
 import { actions as archiveActions } from './ArchiveNotifier/duck';
-import { trackFilter, trackRange } from './index.track';
+import { trackRange } from './index.track';
 import { merge as mergeShortcuts, reset as resetShortcuts } from './keyboard-shortcuts';
 import { cancel as cancelScroll, scrollBy, scrollTo } from './scroll-page';
 import ScrollManager from './ScrollManager';
+import calculateTraceDagEV from './TraceGraph/calculateTraceDagEV';
 import TraceGraph from './TraceGraph/TraceGraph';
 import { trackSlimHeaderToggle } from './TracePageHeader/TracePageHeader.track';
 import TracePageHeader from './TracePageHeader';
@@ -36,15 +39,18 @@ import TraceTimelineViewer from './TraceTimelineViewer';
 import { getLocation, getUrl } from './url';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
+import { extractUiFindFromState } from '../common/UiFindInput';
 import * as jaegerApiActions from '../../actions/jaeger-api';
+import { getUiFindVertexKeys } from '../TraceDiff/TraceDiffGraph/traceDiffGraphUtils';
 import { fetchedState } from '../../constants';
+import filterSpans from '../../utils/filter-spans';
+import updateUiFind from '../../utils/update-ui-find';
 
 import type { CombokeysHandler, ShortcutCallbacks } from './keyboard-shortcuts';
 import type { ViewRange, ViewRangeTimeUpdate } from './types';
 import type { FetchedTrace, ReduxState } from '../../types';
 import type { TraceArchive } from '../../types/archive';
 import type { EmbeddedState } from '../../types/embedded';
-import type { KeyValuePair, Span } from '../../types/trace';
 
 import './index.css';
 
@@ -60,14 +66,13 @@ type TracePageProps = {
   location: Location,
   searchUrl: null | string,
   trace: ?FetchedTrace,
+  uiFind: ?string,
 };
 
 type TracePageState = {
-  findMatchesIDs: ?Set<string>,
   headerHeight: ?number,
   slimView: boolean,
   traceGraphView: boolean,
-  textFilter: string,
   viewRange: ViewRange,
 };
 
@@ -105,17 +110,18 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
   state: TracePageState;
 
   _headerElm: ?Element;
+  _filterSpans: typeof filterSpans;
   _searchBar: { current: Input | null };
   _scrollManager: ScrollManager;
+  // TODO: use convPlexus type (everett JAG-343)
+  traceDagEV: ?Object;
 
   constructor(props: TracePageProps) {
     super(props);
     const { embedded, trace } = props;
     this.state = {
-      findMatchesIDs: null,
       headerHeight: null,
       slimView: Boolean(embedded && embedded.timeline.collapseTitle),
-      textFilter: '',
       traceGraphView: false,
       viewRange: {
         time: {
@@ -124,6 +130,13 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
       },
     };
     this._headerElm = null;
+    this._filterSpans = _memoize(
+      filterSpans,
+      // Do not use the memo if the filter text or trace has changed.
+      // trace.data.spans is populated after the initial render via mutation.
+      textFilter =>
+        `${textFilter} ${_get(this.props.trace, 'traceID')} ${_get(this.props.trace, 'data.spans.length')}`
+    );
     this._scrollManager = new ScrollManager(trace && trace.data, {
       scrollBy,
       scrollTo,
@@ -217,69 +230,14 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
     }
   };
 
-  filterSpans = (textFilter: string) => {
-    const spans = this.props.trace && this.props.trace.data && this.props.trace.data.spans;
-    if (!spans) return null;
-
-    // if a span field includes at least one filter in includeFilters, the span is a match
-    const includeFilters = [];
-
-    // values with keys that include text in any one of the excludeKeys will be ignored
-    const excludeKeys = [];
-
-    // split textFilter by whitespace, remove empty strings, and extract includeFilters and excludeKeys
-    textFilter
-      .split(' ')
-      .map(s => s.trim())
-      .filter(s => s)
-      .forEach(w => {
-        if (w[0] === '-') {
-          excludeKeys.push(w.substr(1).toLowerCase());
-        } else {
-          includeFilters.push(w.toLowerCase());
-        }
-      });
-
-    const isTextInFilters = (filters: Array<string>, text: string) =>
-      filters.some(filter => text.toLowerCase().includes(filter));
-
-    const isTextInKeyValues = (kvs: Array<KeyValuePair>) =>
-      kvs
-        ? kvs.some(kv => {
-            // ignore checking key and value for a match if key is in excludeKeys
-            if (isTextInFilters(excludeKeys, kv.key)) return false;
-            // match if key or value matches an item in includeFilters
-            return (
-              isTextInFilters(includeFilters, kv.key) || isTextInFilters(includeFilters, kv.value.toString())
-            );
-          })
-        : false;
-
-    const isSpanAMatch = (span: Span) =>
-      isTextInFilters(includeFilters, span.operationName) ||
-      isTextInFilters(includeFilters, span.process.serviceName) ||
-      isTextInKeyValues(span.tags) ||
-      span.logs.some(log => isTextInKeyValues(log.fields)) ||
-      isTextInKeyValues(span.process.tags);
-
-    // declare as const because need to disambiguate the type
-    const rv: Set<string> = new Set(spans.filter(isSpanAMatch).map((span: Span) => span.spanID));
-    return rv;
-  };
-
-  updateTextFilter = (textFilter: string) => {
-    let findMatchesIDs;
-    if (textFilter.trim()) {
-      findMatchesIDs = this.filterSpans(textFilter);
-    } else {
-      findMatchesIDs = null;
-    }
-    trackFilter(textFilter);
-    this.setState({ textFilter, findMatchesIDs });
-  };
-
   clearSearch = () => {
-    this.updateTextFilter('');
+    const { history, location } = this.props;
+    // flow does not allow omitting optional kwargs when using an object literal.
+    const arg = {
+      history,
+      location,
+    };
+    updateUiFind(arg);
     if (this._searchBar.current) this._searchBar.current.blur();
   };
 
@@ -307,6 +265,9 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
 
   toggleTraceGraphView = () => {
     const { traceGraphView } = this.state;
+    if (this.props.trace && this.props.trace.data) {
+      this.traceDagEV = calculateTraceDagEV(this.props.trace.data);
+    }
     this.setState({ traceGraphView: !traceGraphView });
   };
 
@@ -333,8 +294,8 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
   }
 
   render() {
-    const { archiveEnabled, archiveTraceState, embedded, id, searchUrl, trace } = this.props;
-    const { slimView, traceGraphView, headerHeight, textFilter, viewRange, findMatchesIDs } = this.state;
+    const { archiveEnabled, archiveTraceState, embedded, id, searchUrl, uiFind, trace } = this.props;
+    const { slimView, traceGraphView, headerHeight, viewRange } = this.state;
     if (!trace || trace.state === fetchedState.LOADING) {
       return <LoadingIndicator className="u-mt-vast" centered />;
     }
@@ -343,10 +304,14 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
       return <ErrorMessage className="ub-m3" error={trace.error || 'Unknown error'} />;
     }
 
+    // $FlowIgnore because flow believes Set<string> cannot be assigned to Set<string | number>
+    const findMatches: Set<string | number> = traceGraphView
+      ? getUiFindVertexKeys(uiFind || '', _get(this.traceDagEV, 'vertices', []))
+      : this._filterSpans(uiFind || '', _get(trace, 'data.spans'));
     const isEmbedded = Boolean(embedded);
     const headerProps = {
       slimView,
-      textFilter,
+      textFilter: uiFind,
       traceGraphView,
       viewRange,
       canCollapse: !embedded || !embedded.timeline.hideSummary || !embedded.timeline.hideMinimap,
@@ -360,7 +325,7 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
       onTraceGraphViewClicked: this.toggleTraceGraphView,
       prevResult: this._scrollManager.scrollToPrevVisibleSpan,
       ref: this._searchBar,
-      resultCount: findMatchesIDs ? findMatchesIDs.size : 0,
+      resultCount: findMatches ? findMatches.size : 0,
       showArchiveButton: !isEmbedded && archiveEnabled,
       showShortcutsHelp: !isEmbedded,
       showStandaloneLink: isEmbedded,
@@ -368,7 +333,6 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
       toSearch: searchUrl,
       trace: data,
       updateNextViewRangeTime: this.updateNextViewRangeTime,
-      updateTextFilter: this.updateTextFilter,
       updateViewRangeTime: this.updateViewRangeTime,
     };
 
@@ -383,13 +347,18 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
         {headerHeight &&
           (traceGraphView ? (
             <section style={{ paddingTop: headerHeight }}>
-              <TraceGraph headerHeight={headerHeight} trace={data} />
+              <TraceGraph
+                headerHeight={headerHeight}
+                ev={this.traceDagEV}
+                uiFind={uiFind || ''}
+                uiFindVertexKeys={findMatches}
+              />
             </section>
           ) : (
             <section style={{ paddingTop: headerHeight }}>
               <TraceTimelineViewer
                 registerAccessors={this._scrollManager.setAccessors}
-                findMatchesIDs={findMatchesIDs}
+                findMatchesIDs={findMatches}
                 trace={data}
                 updateNextViewRangeTime={this.updateNextViewRangeTime}
                 updateViewRangeTime={this.updateViewRangeTime}
@@ -412,7 +381,9 @@ export function mapStateToProps(state: ReduxState, ownProps: { match: Match }) {
   const archiveEnabled = Boolean(config.archiveEnabled);
   const { state: locationState } = router.location;
   const searchUrl = (locationState && locationState.fromSearch) || null;
+
   return {
+    ...extractUiFindFromState(state),
     archiveEnabled,
     archiveTraceState,
     embedded,

@@ -179,6 +179,19 @@ export default class ScrollManager {
     if (!nextSpanIndex || nextSpanIndex === boundary) {
       // might as well scroll to the top or bottom
       nextSpanIndex = boundary - direction;
+
+      // If there are hidden children, scroll to the last visible span
+      if (childrenAreHidden) {
+        let isFallbackHidden: ?boolean;
+        do {
+          const { isHidden, parentIDs } = isSpanHidden(spans[nextSpanIndex], childrenAreHidden, spansMap);
+          if (isHidden) {
+            childrenAreHidden.add(...parentIDs);
+            nextSpanIndex--;
+          }
+          isFallbackHidden = isHidden;
+        } while (isFallbackHidden);
+      }
     }
     const nextRow = xrs.mapSpanIndexToRowIndex(nextSpanIndex);
     this._scrollPast(nextRow, direction);

@@ -28,23 +28,24 @@ describe('<OpNode>', () => {
     props = {
       count: 5,
       errors: 0,
-      time: 200000,
-      percent: 7.89,
-      selfTime: 180000,
-      percentSelfTime: 90,
+      isUiFindMatch: false,
       operation: 'op1',
+      percent: 7.89,
+      percentSelfTime: 90,
+      selfTime: 180000,
       service: 'service1',
+      time: 200000,
     };
     wrapper = shallow(<OpNode {...props} mode={mode} />);
   });
 
-  it('it does not explode', () => {
+  it('does not explode', () => {
     expect(wrapper).toBeDefined();
     expect(wrapper.find('.OpNode').length).toBe(1);
     expect(wrapper.find('.OpNode--mode-service').length).toBe(1);
   });
 
-  it('it renders OpNode', () => {
+  it('renders OpNode', () => {
     expect(wrapper.find('.OpNode--count').text()).toBe('5 / 0');
     expect(wrapper.find('.OpNode--time').text()).toBe('200 ms (7.89 %)');
     expect(wrapper.find('.OpNode--avg').text()).toBe('40 ms');
@@ -58,7 +59,7 @@ describe('<OpNode>', () => {
     ).toBe('service1');
   });
 
-  it('it switches mode', () => {
+  it('switches mode', () => {
     mode = MODE_SERVICE;
     wrapper = shallow(<OpNode {...props} mode={mode} />);
     expect(wrapper.find('.OpNode--mode-service').length).toBe(1);
@@ -78,6 +79,11 @@ describe('<OpNode>', () => {
     expect(wrapper.find('.OpNode--mode-selftime').length).toBe(1);
   });
 
+  it('updates class when it matches search', () => {
+    wrapper.setProps({ isUiFindMatch: true });
+    expect(wrapper.find('.is-ui-find-match').length).toBe(1);
+  });
+
   it('renders a copy icon', () => {
     const copyIcon = wrapper.find(CopyIcon);
     expect(copyIcon.length).toBe(1);
@@ -86,17 +92,30 @@ describe('<OpNode>', () => {
   });
 
   describe('getNodeDrawer()', () => {
-    it('it creates OpNode', () => {
-      const vertex = {
-        data: {
-          service: 'service1',
-          operation: 'op1',
-          data: {},
-        },
-      };
-      const drawNode = getNodeDrawer(MODE_SERVICE);
+    const key = 'key test value';
+    const vertex = {
+      data: {
+        service: 'service1',
+        operation: 'op1',
+        data: {},
+      },
+      key,
+    };
+
+    it('creates OpNode', () => {
+      const drawNode = getNodeDrawer(MODE_SERVICE, new Set());
       const opNode = drawNode(vertex);
       expect(opNode.type === 'OpNode');
+      expect(opNode.props.isUiFindMatch).toBe(false);
+      expect(opNode.props.mode).toBe(MODE_SERVICE);
+    });
+
+    it('creates OpNode that matches uiFind', () => {
+      const drawNode = getNodeDrawer(MODE_TIME, new Set([key]));
+      const opNode = drawNode(vertex);
+      expect(opNode.type === 'OpNode');
+      expect(opNode.props.isUiFindMatch).toBe(true);
+      expect(opNode.props.mode).toBe(MODE_TIME);
     });
   });
 });

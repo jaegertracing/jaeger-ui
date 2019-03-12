@@ -20,12 +20,20 @@ limitations under the License.
   cursor: pointer;
   white-space: nowrap;
   border-collapse: separate;
-  border-radius: 2px;
 }
 
 .OpNode td,
 .OpNode th {
   border: none;
+}
+
+.OpNode.is-ui-find-match {
+  outline: inherit;
+  outline-color: #fff3d7;
+}
+
+.OpNode--popover .OpNode.is-ui-find-match {
+  outline: #fff3d7 solid 3px;
 }
 
 .OpMode--mode-service {
@@ -48,7 +56,7 @@ limitations under the License.
 
 .OpNode--popover .OpNode--copyIcon,
 .OpNode:not(:hover) .OpNode--copyIcon {
-  display: none;
+  color: transparent;
 }
 
 .OpNode--service {
