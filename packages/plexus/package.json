@@ -4,7 +4,9 @@
   "version": "0.0.1-dev.4",
   "description": "Direct Graph React component",
   "main": "build/index.js",
-  "files": ["build"],
+  "files": [
+    "build"
+  ],
   "devDependencies": {
     "@babel/preset-react": "7.0.0",
     "@babel/preset-typescript": "7.1.0",

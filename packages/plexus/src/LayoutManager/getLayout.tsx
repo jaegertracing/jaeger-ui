@@ -61,7 +61,13 @@ function getVerticesValidity(
   let warn: TVerticesValidity | void;
 
   for (let i = 0; i < output.length; i++) {
-    const { vertex: { key }, height, left, top, width } = output[i];
+    const {
+      vertex: { key },
+      height,
+      left,
+      top,
+      width,
+    } = output[i];
     const src = inputHash[String(key)];
     if (!src) {
       return { validity: EValidity.Error, message: `Extra vertex found: ${key}` };

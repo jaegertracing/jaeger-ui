@@ -26,6 +26,12 @@ module.exports = {
     },
   },
   extends: ['react-app', 'airbnb', 'prettier', 'prettier/flowtype', 'prettier/react'],
+  overrides: [
+    {
+      files: ['*.ts', '*.tsx'],
+      parser: '@typescript-eslint/parser',
+    },
+  ],
   rules: {
     /* general */
     'arrow-parens': [1, 'as-needed'],

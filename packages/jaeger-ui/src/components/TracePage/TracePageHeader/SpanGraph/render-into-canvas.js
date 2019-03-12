@@ -44,8 +44,8 @@ export default function renderIntoCanvas(
   ctx.fillRect(0, 0, cWidth, cHeight);
   for (let i = 0; i < items.length; i++) {
     const { valueWidth, valueOffset, serviceName } = items[i];
-    const x = valueOffset / totalValueWidth * cWidth;
-    let width = valueWidth / totalValueWidth * cWidth;
+    const x = (valueOffset / totalValueWidth) * cWidth;
+    let width = (valueWidth / totalValueWidth) * cWidth;
     if (width < MIN_ITEM_WIDTH) {
       width = MIN_ITEM_WIDTH;
     }

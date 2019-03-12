@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import moment from 'moment';
-import _ from 'lodash';
+import _round from 'lodash/round';
 
 import { toFloatPrecision } from './number';
 
@@ -33,18 +33,18 @@ export const DEFAULT_MS_PRECISION = Math.log10(ONE_MILLISECOND);
  * @param {number} totalDuration
  * @return {number} 0-100 percentage
  */
-export function getPercentageOfDuration(duration, totalDuration) {
-  return duration / totalDuration * 100;
+export function getPercentageOfDuration(duration: number, totalDuration: number) {
+  return (duration / totalDuration) * 100;
 }
 
-const quantizeDuration = (duration, floatPrecision, conversionFactor) =>
+const quantizeDuration = (duration: number, floatPrecision: number, conversionFactor: number) =>
   toFloatPrecision(duration / conversionFactor, floatPrecision) * conversionFactor;
 
 /**
  * @param {number} duration (in microseconds)
  * @return {string} formatted, unit-labelled string with time in milliseconds
  */
-export function formatDate(duration) {
+export function formatDate(duration: number) {
   return moment(duration / ONE_MILLISECOND).format(STANDARD_DATE_FORMAT);
 }
 
@@ -52,7 +52,7 @@ export function formatDate(duration) {
  * @param {number} duration (in microseconds)
  * @return {string} formatted, unit-labelled string with time in milliseconds
  */
-export function formatTime(duration) {
+export function formatTime(duration: number) {
   return moment(duration / ONE_MILLISECOND).format(STANDARD_TIME_FORMAT);
 }
 
@@ -60,7 +60,7 @@ export function formatTime(duration) {
  * @param {number} duration (in microseconds)
  * @return {string} formatted, unit-labelled string with time in milliseconds
  */
-export function formatDatetime(duration) {
+export function formatDatetime(duration: number) {
   return moment(duration / ONE_MILLISECOND).format(STANDARD_DATETIME_FORMAT);
 }
 
@@ -68,7 +68,7 @@ export function formatDatetime(duration) {
  * @param {number} duration (in microseconds)
  * @return {string} formatted, unit-labelled string with time in milliseconds
  */
-export function formatMillisecondTime(duration) {
+export function formatMillisecondTime(duration: number) {
   const targetDuration = quantizeDuration(duration, DEFAULT_MS_PRECISION, ONE_MILLISECOND);
   return `${moment.duration(targetDuration / ONE_MILLISECOND).asMilliseconds()}ms`;
 }
@@ -77,7 +77,7 @@ export function formatMillisecondTime(duration) {
  * @param {number} duration (in microseconds)
  * @return {string} formatted, unit-labelled string with time in seconds
  */
-export function formatSecondTime(duration) {
+export function formatSecondTime(duration: number) {
   const targetDuration = quantizeDuration(duration, DEFAULT_MS_PRECISION, ONE_SECOND);
   return `${moment.duration(targetDuration / ONE_MILLISECOND).asSeconds()}s`;
 }
@@ -89,7 +89,7 @@ export function formatSecondTime(duration) {
  * 5000ms => 5s
  * 1000μs => 1ms
  */
-export function formatDuration(duration, inputUnit = 'microseconds') {
+export function formatDuration(duration: number, inputUnit: string = 'microseconds'): string {
   let d = duration;
   if (inputUnit === 'microseconds') {
     d = duration / 1000;
@@ -99,11 +99,11 @@ export function formatDuration(duration, inputUnit = 'microseconds') {
     units = 's';
     d /= 1000;
   }
-  return _.round(d, 2) + units;
+  return _round(d, 2) + units;
 }
 
-export function formatRelativeDate(value, fullMonthName = false) {
-  const m = !(value instanceof moment) ? moment(value) : value;
+export function formatRelativeDate(value: any, fullMonthName: boolean = false) {
+  const m = moment.isMoment(value) ? value : moment(value);
   const monthFormat = fullMonthName ? 'MMMM' : 'MMM';
   const dt = new Date();
   if (dt.getFullYear() !== m.year()) {

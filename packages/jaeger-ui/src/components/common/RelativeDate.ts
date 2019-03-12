@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,14 +17,14 @@ import moment from 'moment';
 import { formatRelativeDate } from '../../utils/date';
 
 type Props = {
-  fullMonthName: ?boolean,
-  includeTime: ?boolean,
-  value: number | Date | any,
+  fullMonthName: boolean | undefined | null;
+  includeTime: boolean | undefined | null;
+  value: number | Date | any;
 };
 
 export default function RelativeDate(props: Props) {
   const { value, includeTime, fullMonthName } = props;
-  const m = !(value instanceof moment) ? moment(value) : value;
+  const m = moment.isMoment(value) ? value : moment(value);
   const dateStr = formatRelativeDate(m, Boolean(fullMonthName));
   const timeStr = includeTime ? `, ${m.format('h:mm:ss a')}` : '';
   return `${dateStr}${timeStr}`;

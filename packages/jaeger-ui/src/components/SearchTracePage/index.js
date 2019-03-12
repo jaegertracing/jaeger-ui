@@ -115,7 +115,9 @@ export class SearchTracePageImpl extends Component {
             {showErrors && (
               <div className="js-test-error-message">
                 <h2>There was an error querying for traces:</h2>
-                {errors.map(err => <ErrorMessage key={err.message} error={err} />)}
+                {errors.map(err => (
+                  <ErrorMessage key={err.message} error={err} />
+                ))}
               </div>
             )}
             {!showErrors && (
@@ -282,4 +284,7 @@ function mapDispatchToProps(dispatch) {
   };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(SearchTracePageImpl);
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(SearchTracePageImpl);

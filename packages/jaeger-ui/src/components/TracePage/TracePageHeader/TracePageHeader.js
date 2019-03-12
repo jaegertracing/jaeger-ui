@@ -201,15 +201,14 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps) {
         )}
       </div>
       {summaryItems && <LabeledList className="TracePageHeader--overviewItems" items={summaryItems} />}
-      {!hideMap &&
-        !slimView && (
-          <SpanGraph
-            trace={trace}
-            viewRange={viewRange}
-            updateNextViewRangeTime={updateNextViewRangeTime}
-            updateViewRangeTime={updateViewRangeTime}
-          />
-        )}
+      {!hideMap && !slimView && (
+        <SpanGraph
+          trace={trace}
+          viewRange={viewRange}
+          updateNextViewRangeTime={updateNextViewRangeTime}
+          updateViewRangeTime={updateViewRangeTime}
+        />
+      )}
     </header>
   );
 }

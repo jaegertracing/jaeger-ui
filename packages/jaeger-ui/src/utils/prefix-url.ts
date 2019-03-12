@@ -14,7 +14,7 @@
 
 import sitePrefix from '../site-prefix';
 
-const origin = process.env.NODE_ENV === 'test' ? global.location.origin : window.location.origin;
+const origin = process.env.NODE_ENV === 'test' ? (global as any).location.origin : window.location.origin;
 /**
  * Generate the URL prefix from `sitePrefix` and use it for all subsequent calls
  * to `prefixUrl()`. `sitePrefix` should be an absolute URL, e.g. with an origin.
@@ -34,7 +34,7 @@ const pathPrefix = sitePrefix.replace(rx, '');
  * @param {string} value The URL to have the prefix added to.
  * @return {string} The resultant URL.
  */
-export default function prefixUrl(value) {
+export default function prefixUrl(value?: string) {
   const s = value == null ? '' : String(value);
   return `${pathPrefix}${s}`;
 }
