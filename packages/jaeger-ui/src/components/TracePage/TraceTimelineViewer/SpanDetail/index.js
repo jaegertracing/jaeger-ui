@@ -15,18 +15,20 @@
 // limitations under the License.
 
 import React from 'react';
-import { Divider } from 'antd';
+import { Divider, Tooltip } from 'antd';
 
 import AccordianKeyValues from './AccordianKeyValues';
 import AccordianLogs from './AccordianLogs';
 import DetailState from './DetailState';
 import { formatDuration } from '../utils';
 import LabeledList from '../../../common/LabeledList';
+
 import type { Log, Span, KeyValuePair, Link } from '../../../../types/trace';
 
 import './index.css';
 
 type SpanDetailProps = {
+  addToUiFind: string => void,
   detailState: DetailState,
   linksGetter: ?(KeyValuePair[], number) => Link[],
   logItemToggle: (string, Log) => void,
@@ -39,6 +41,7 @@ type SpanDetailProps = {
 
 export default function SpanDetail(props: SpanDetailProps) {
   const {
+    addToUiFind,
     detailState,
     linksGetter,
     logItemToggle,
@@ -67,6 +70,7 @@ export default function SpanDetail(props: SpanDetailProps) {
       value: formatDuration(relativeStartTime),
     },
   ];
+
   return (
     <div>
       <div className="ub-flex ub-items-center">
@@ -111,8 +115,12 @@ export default function SpanDetail(props: SpanDetailProps) {
         )}
 
         <small className="SpanDetail--debugInfo">
-          <span className="SpanDetail--debugLabel" data-label="SpanID:" />{' '}
-          <span className="SpanDetail--debugValue">{spanID}</span>
+          <Tooltip title="Click ID to add to filter">
+            <span className="SpanDetail--debugLabel" data-label="SpanID:" />{' '}
+            <button className="SpanDetail--debugValue" type="button" onClick={() => addToUiFind(spanID)}>
+              {spanID}
+            </button>
+          </Tooltip>
         </small>
       </div>
     </div>

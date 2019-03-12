@@ -15,7 +15,9 @@
 import { createActions, handleActions } from 'redux-actions';
 
 import DetailState from './SpanDetail/DetailState';
+import filterSpans from '../../../utils/filter-spans';
 import generateActionTypes from '../../../utils/generate-action-types';
+import spanAncestorIds from '../../../utils/span-ancestor-ids';
 
 // DetailState {
 //   isTagsOpen: bool,
@@ -33,13 +35,13 @@ import generateActionTypes from '../../../utils/generate-action-types';
 //   detailStates: Map<spanID, DetailState>
 // }
 
-export function newInitialState({ spanNameColumnWidth = null, traceID = null } = {}) {
+export function newInitialState() {
   return {
     childrenHiddenIDs: new Set(),
     detailStates: new Map(),
     hoverIndentGuideIds: new Set(),
-    spanNameColumnWidth: spanNameColumnWidth || 0.25,
-    traceID,
+    spanNameColumnWidth: 0.25,
+    traceID: null,
   };
 }
 
@@ -61,7 +63,7 @@ export const actionTypes = generateActionTypes('@jaeger-ui/trace-timeline-viewer
 ]);
 
 const fullActions = createActions({
-  [actionTypes.SET_TRACE]: traceID => ({ traceID }),
+  [actionTypes.SET_TRACE]: (trace, uiFind) => ({ trace, uiFind }),
   [actionTypes.SET_SPAN_NAME_COLUMN_WIDTH]: width => ({ width }),
   [actionTypes.CHILDREN_TOGGLE]: spanID => ({ spanID }),
   [actionTypes.EXPAND_ALL]: () => ({}),
@@ -80,13 +82,35 @@ const fullActions = createActions({
 export const actions = fullActions.jaegerUi.traceTimelineViewer;
 
 function setTrace(state, { payload }) {
-  const { traceID } = payload;
+  const { uiFind, trace } = payload;
+  const { traceID, spans } = trace;
   if (traceID === state.traceID) {
     return state;
   }
   // preserve spanNameColumnWidth when resetting state
   const { spanNameColumnWidth } = state;
-  return newInitialState({ spanNameColumnWidth, traceID });
+  const newStateValues = { spanNameColumnWidth, traceID };
+
+  // If there is a filter, collapse all rows except the path(s) to match(es) and show details for match(es)
+  if (uiFind) {
+    const spansMap = new Map();
+
+    newStateValues.childrenHiddenIDs = new Set();
+    newStateValues.detailStates = new Map();
+
+    spans.forEach(span => {
+      spansMap.set(span.spanID, span);
+      newStateValues.childrenHiddenIDs.add(span.spanID);
+    });
+
+    filterSpans(uiFind, spans).forEach(spanID => {
+      const span = spansMap.get(spanID);
+      newStateValues.detailStates.set(spanID, new DetailState());
+      spanAncestorIds(span).forEach(ancestorID => newStateValues.childrenHiddenIDs.delete(ancestorID));
+    });
+  }
+
+  return Object.assign(newInitialState(), newStateValues);
 }
 
 function setColumnWidth(state, { payload }) {

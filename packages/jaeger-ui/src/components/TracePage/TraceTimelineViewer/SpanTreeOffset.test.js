@@ -18,93 +18,40 @@ import IoChevronRight from 'react-icons/lib/io/chevron-right';
 import IoIosArrowDown from 'react-icons/lib/io/ios-arrow-down';
 
 import { mapDispatchToProps, mapStateToProps, UnconnectedSpanTreeOffset } from './SpanTreeOffset';
+import spanAncestorIdsSpy from '../../../utils/span-ancestor-ids';
+
+jest.mock('../../../utils/span-ancestor-ids');
 
 describe('SpanTreeOffset', () => {
   const ownSpanID = 'ownSpanID';
   const parentSpanID = 'parentSpanID';
   const rootSpanID = 'rootSpanID';
-  const spanWithTwoAncestors = {
-    hasChildren: false,
-    references: [
-      {
-        refType: 'CHILD_OF',
-        span: {
-          spanID: parentSpanID,
-          references: [
-            {
-              refType: 'CHILD_OF',
-              span: {
-                spanID: rootSpanID,
-              },
-            },
-          ],
-        },
-      },
-    ],
-    spanID: ownSpanID,
-  };
-
   const specialRootID = 'root';
   let props;
   let wrapper;
 
   beforeEach(() => {
+    // Mock implementation instead of Mock return value so that each call returns a new array (like normal)
+    spanAncestorIdsSpy.mockImplementation(() => [parentSpanID, rootSpanID]);
     props = {
       addHoverIndentGuideId: jest.fn(),
       hoverIndentGuideIds: new Set(),
       removeHoverIndentGuideId: jest.fn(),
-      span: spanWithTwoAncestors,
+      span: {
+        hasChildren: false,
+        spanID: ownSpanID,
+      },
     };
     wrapper = shallow(<UnconnectedSpanTreeOffset {...props} />);
   });
 
   describe('.SpanTreeOffset--indentGuide', () => {
     it('renders only one .SpanTreeOffset--indentGuide for entire trace if span has no ancestors', () => {
-      props.span = {
-        spanID: 'parentlessSpanID',
-        references: [
-          {
-            refType: 'NOT_CHILD_OF',
-            span: {
-              spanID: 'notAParentSpanID',
-              references: [],
-            },
-          },
-        ],
-      };
+      spanAncestorIdsSpy.mockReturnValue([]);
       wrapper = shallow(<UnconnectedSpanTreeOffset {...props} />);
       const indentGuides = wrapper.find('.SpanTreeOffset--indentGuide');
       expect(indentGuides.length).toBe(1);
       expect(indentGuides.prop('data-ancestor-id')).toBe(specialRootID);
-    });
-
-    it('renders one .SpanTreeOffset--indentGuide per ancestor span, plus one for entire trace, including FOLLOWS_FROM', () => {
-      props.span = {
-        hasChildren: false,
-        references: [
-          {
-            refType: 'FOLLOWS_FROM',
-            span: {
-              spanID: parentSpanID,
-              references: [
-                {
-                  refType: 'CHILD_OF',
-                  span: {
-                    spanID: rootSpanID,
-                  },
-                },
-              ],
-            },
-          },
-        ],
-        spanID: ownSpanID,
-      };
-      wrapper = shallow(<UnconnectedSpanTreeOffset {...props} />);
-      const indentGuides = wrapper.find('.SpanTreeOffset--indentGuide');
-      expect(indentGuides.length).toBe(3);
-      expect(indentGuides.at(0).prop('data-ancestor-id')).toBe(specialRootID);
-      expect(indentGuides.at(1).prop('data-ancestor-id')).toBe(rootSpanID);
-      expect(indentGuides.at(2).prop('data-ancestor-id')).toBe(parentSpanID);
     });
 
     it('renders one .SpanTreeOffset--indentGuide per ancestor span, plus one for entire trace', () => {
@@ -161,6 +108,12 @@ describe('SpanTreeOffset', () => {
 
     it('does not render icon if props.span.hasChildren is false', () => {
       wrapper.setProps({ span: { ...props.span, hasChildren: false } });
+      expect(wrapper.find(IoChevronRight).length).toBe(0);
+      expect(wrapper.find(IoIosArrowDown).length).toBe(0);
+    });
+
+    it('does not render icon if props.span.hasChildren is true and showChildrenIcon is false', () => {
+      wrapper.setProps({ showChildrenIcon: false });
       expect(wrapper.find(IoChevronRight).length).toBe(0);
       expect(wrapper.find(IoIosArrowDown).length).toBe(0);
     });

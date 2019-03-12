@@ -17,14 +17,17 @@ import { shallow } from 'enzyme';
 
 import * as markers from './TracePageSearchBar.markers';
 import { TracePageSearchBarFn as TracePageSearchBar } from './TracePageSearchBar';
+import { trackFilter } from '../index.track';
+import UiFindInput from '../../common/UiFindInput';
 
 describe('<TracePageSearchBar>', () => {
   const defaultProps = {
-    updateTextFilter: () => {},
-    textFilter: 'something',
-    prevResult: () => {},
+    forwardedRef: React.createRef(),
+    navigable: true,
     nextResult: () => {},
+    prevResult: () => {},
     resultCount: 0,
+    textFilter: 'something',
   };
 
   let wrapper;
@@ -33,23 +36,65 @@ describe('<TracePageSearchBar>', () => {
     wrapper = shallow(<TracePageSearchBar {...defaultProps} />);
   });
 
-  it('calls updateTextFilter() function for onChange of the input', () => {
-    const updateTextFilter = jest.fn();
-    const props = { ...defaultProps, updateTextFilter };
-    wrapper = shallow(<TracePageSearchBar {...props} />);
-    const event = { target: { value: 'my new value' } };
-    wrapper
-      .find(`[data-test="${markers.IN_TRACE_SEARCH}"]`)
-      .first()
-      .simulate('change', event);
-    expect(updateTextFilter.mock.calls.length).toBe(1);
+  describe('truthy textFilter', () => {
+    it('renders UiFindInput with correct props', () => {
+      const renderedUiFindInput = wrapper.find(UiFindInput);
+      const suffix = shallow(renderedUiFindInput.prop('inputProps').suffix);
+      expect(renderedUiFindInput.prop('inputProps')).toEqual(
+        expect.objectContaining({
+          'data-test': markers.IN_TRACE_SEARCH,
+          className: 'TracePageSearchBar--bar ub-flex-auto',
+          name: 'search',
+        })
+      );
+      expect(suffix.hasClass('TracePageSearchBar--count')).toBe(true);
+      expect(suffix.text()).toBe(String(defaultProps.resultCount));
+      expect(renderedUiFindInput.prop('forwardedRef')).toBe(defaultProps.forwardedRef);
+      expect(renderedUiFindInput.prop('trackFindFunction')).toBe(trackFilter);
+    });
+
+    it('renders buttons', () => {
+      const buttons = wrapper.find('Button');
+      expect(buttons.length).toBe(3);
+      buttons.forEach(button => {
+        expect(button.hasClass('TracePageSearchBar--btn')).toBe(true);
+        expect(button.hasClass('is-disabled')).toBe(false);
+        expect(button.prop('disabled')).toBe(false);
+      });
+      expect(wrapper.find('Button[icon="up"]').prop('onClick')).toBe(defaultProps.prevResult);
+      expect(wrapper.find('Button[icon="down"]').prop('onClick')).toBe(defaultProps.nextResult);
+      expect(wrapper.find('Button[icon="close"]').prop('onClick')).toBe(defaultProps.clearSearch);
+    });
+
+    it('disables navigation buttons when not navigable', () => {
+      wrapper.setProps({ navigable: false });
+      const buttons = wrapper.find('Button');
+      expect(buttons.length).toBe(3);
+      buttons.forEach((button, i) => {
+        expect(button.hasClass('TracePageSearchBar--btn')).toBe(true);
+        expect(button.hasClass('is-disabled')).toBe(i !== 2);
+        expect(button.prop('disabled')).toBe(i !== 2);
+      });
+    });
   });
 
-  it('renders the search bar', () => {
-    expect(wrapper.find('Input').length).toBe(1);
-  });
+  describe('falsy textFilter', () => {
+    beforeEach(() => {
+      wrapper.setProps({ textFilter: '' });
+    });
 
-  it('renders the buttons', () => {
-    expect(wrapper.find('Button').length).toBe(3);
+    it('renders UiFindInput with correct props', () => {
+      expect(wrapper.find(UiFindInput).prop('inputProps').suffix).toBe(null);
+    });
+
+    it('renders buttons', () => {
+      const buttons = wrapper.find('Button');
+      expect(buttons.length).toBe(3);
+      buttons.forEach(button => {
+        expect(button.hasClass('TracePageSearchBar--btn')).toBe(true);
+        expect(button.hasClass('is-disabled')).toBe(true);
+        expect(button.prop('disabled')).toBe(true);
+      });
+    });
   });
 });

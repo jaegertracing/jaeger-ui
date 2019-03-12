@@ -16,6 +16,7 @@
 
 import * as React from 'react';
 import { Popover } from 'antd';
+import cx from 'classnames';
 
 import CopyIcon from '../../common/CopyIcon';
 import colorGenerator from '../../../utils/color-generator';
@@ -34,6 +35,7 @@ type Props = {
   operation: string,
   service: string,
   mode: string,
+  isUiFindMatch: boolean,
 };
 
 export const MODE_SERVICE = 'service';
@@ -64,10 +66,19 @@ export function round2(percent: number) {
 }
 
 export default class OpNode extends React.PureComponent<Props> {
-  props: Props;
-
   render() {
-    const { count, errors, time, percent, selfTime, percentSelfTime, operation, service, mode } = this.props;
+    const {
+      count,
+      errors,
+      time,
+      percent,
+      selfTime,
+      percentSelfTime,
+      operation,
+      service,
+      mode,
+      isUiFindMatch,
+    } = this.props;
 
     // Spans over 20 % time are full red - we have probably to reconsider better approach
     let backgroundColor;
@@ -83,9 +94,14 @@ export default class OpNode extends React.PureComponent<Props> {
         .join();
     }
 
+    const className = cx('OpNode', `OpNode--mode-${mode}`, {
+      'is-ui-find-match': isUiFindMatch,
+    });
+
     const table = (
-      <table className={`OpNode OpNode--mode-${mode}`} cellSpacing="0">
+      <table className={className} cellSpacing="0">
         <tbody
+          className="OpNode--body"
           style={{
             background: `rgba(${backgroundColor})`,
           }}
@@ -125,9 +141,17 @@ export default class OpNode extends React.PureComponent<Props> {
   }
 }
 
-export function getNodeDrawer(mode: string) {
+export function getNodeDrawer(mode: string, uiFindVertexKeys: Set<number | string>) {
   return function drawNode<T>(vertex: PVertex<T>) {
     const { data, operation, service } = vertex.data;
-    return <OpNode {...data} mode={mode} operation={operation} service={service} />;
+    return (
+      <OpNode
+        {...data}
+        isUiFindMatch={uiFindVertexKeys.has(vertex.key)}
+        mode={mode}
+        operation={operation}
+        service={service}
+      />
+    );
   };
 }

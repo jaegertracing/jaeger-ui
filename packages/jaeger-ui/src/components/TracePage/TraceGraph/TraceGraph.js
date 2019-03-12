@@ -16,29 +16,19 @@
 
 import * as React from 'react';
 import { Card, Icon, Button, Tooltip } from 'antd';
+import cx from 'classnames';
 import { DirectedGraph, LayoutManager } from '@jaegertracing/plexus';
-import DRange from 'drange';
 
 import { getNodeDrawer, MODE_SERVICE, MODE_TIME, MODE_SELFTIME, HELP_TABLE } from './OpNode';
-import convPlexus from '../../../model/trace-dag/convPlexus';
-import TraceDag from '../../../model/trace-dag/TraceDag';
-
-import type { Trace, Span, KeyValuePair } from '../../../types/trace';
+import { setOnEdgesContainer, setOnNodesContainer, setOnNode } from '../../../utils/plexus/set-on-graph';
 
 import './TraceGraph.css';
 
-type SumSpan = {
-  count: number,
-  errors: number,
-  time: number,
-  percent: number,
-  selfTime: number,
-  percentSelfTime: number,
-};
-
 type Props = {
   headerHeight: number,
-  trace: Trace,
+  ev?: ?Object,
+  uiFind: string,
+  uiFindVertexKeys: Set<number | string>,
 };
 type State = {
   showHelp: boolean,
@@ -49,39 +39,6 @@ const { classNameIsSmall } = DirectedGraph.propsFactories;
 
 export function setOnEdgePath(e: any) {
   return e.followsFrom ? { strokeDasharray: 4 } : {};
-}
-
-function extendFollowsFrom(edges: any, nodes: any) {
-  return edges.map(e => {
-    let hasChildOf = true;
-    if (typeof e.to === 'number') {
-      const n = nodes[e.to];
-      hasChildOf = n.members.some(
-        m => m.span.references && m.span.references.some(r => r.refType === 'CHILD_OF')
-      );
-    }
-    return { ...e, followsFrom: !hasChildOf };
-  });
-}
-
-export function isError(tags: Array<KeyValuePair>) {
-  if (tags) {
-    const errorTag = tags.find(t => t.key === 'error');
-    if (errorTag) {
-      return errorTag.value;
-    }
-  }
-  return false;
-}
-
-function setOnEdgesContainer(state: Object) {
-  const { zoomTransform } = state;
-  if (!zoomTransform) {
-    return null;
-  }
-  const { k } = zoomTransform;
-  const opacity = 0.1 + k * 0.9;
-  return { style: { opacity } };
 }
 
 const HELP_CONTENT = (
@@ -145,10 +102,13 @@ export default class TraceGraph extends React.PureComponent<Props, State> {
   props: Props;
   state: State;
 
-  parentChildOfMap: { [string]: Span[] };
   cache: any;
 
   layoutManager: LayoutManager;
+
+  static defaultProps = {
+    ev: null,
+  };
 
   constructor(props: Props) {
     super(props);
@@ -161,68 +121,6 @@ export default class TraceGraph extends React.PureComponent<Props, State> {
 
   componentWillUnmount() {
     this.layoutManager.stopAndRelease();
-  }
-
-  calculateTraceDag(): TraceDag<SumSpan> {
-    const traceDag: TraceDag<SumSpan> = new TraceDag();
-    traceDag._initFromTrace(this.props.trace, {
-      count: 0,
-      errors: 0,
-      time: 0,
-      percent: 0,
-      selfTime: 0,
-      percentSelfTime: 0,
-    });
-
-    traceDag.nodesMap.forEach(n => {
-      const ntime = n.members.reduce((p, m) => p + m.span.duration, 0);
-      const numErrors = n.members.reduce((p, m) => (p + isError(m.span.tags) ? 1 : 0), 0);
-      const childDurationsDRange = n.members.reduce((p, m) => {
-        // Using DRange to handle overlapping spans (fork-join)
-        const cdr = new DRange(m.span.startTime, m.span.startTime + m.span.duration).intersect(
-          this.getChildOfDrange(m.span.spanID)
-        );
-        return p + cdr.length;
-      }, 0);
-      const stime = ntime - childDurationsDRange;
-      const nd = {
-        count: n.members.length,
-        errors: numErrors,
-        time: ntime,
-        percent: (100 / this.props.trace.duration) * ntime,
-        selfTime: stime,
-        percentSelfTime: (100 / ntime) * stime,
-      };
-      // eslint-disable-next-line no-param-reassign
-      n.data = nd;
-    });
-    return traceDag;
-  }
-
-  getChildOfDrange(parentID: string): number {
-    const childrenDrange = new DRange();
-    this.getChildOfSpans(parentID).forEach(s => {
-      // -1 otherwise it will take for each child a micro (incluse,exclusive)
-      childrenDrange.add(s.startTime, s.startTime + (s.duration <= 0 ? 0 : s.duration - 1));
-    });
-    return childrenDrange;
-  }
-
-  getChildOfSpans(parentID: string): Span[] {
-    if (!this.parentChildOfMap) {
-      this.parentChildOfMap = {};
-      this.props.trace.spans.forEach(s => {
-        if (s.references) {
-          // Filter for CHILD_OF we don't want to calculate FOLLOWS_FROM (prod-cons)
-          const parentIDs = s.references.filter(r => r.refType === 'CHILD_OF').map(r => r.spanID);
-          parentIDs.forEach((pID: string) => {
-            this.parentChildOfMap[pID] = this.parentChildOfMap[pID] || [];
-            this.parentChildOfMap[pID].push(s);
-          });
-        }
-      });
-    }
-    return this.parentChildOfMap[parentID] || [];
   }
 
   toggleNodeMode(newMode: string) {
@@ -238,24 +136,16 @@ export default class TraceGraph extends React.PureComponent<Props, State> {
   };
 
   render() {
-    const { headerHeight, trace } = this.props;
+    const { ev, headerHeight, uiFind, uiFindVertexKeys } = this.props;
     const { showHelp, mode } = this.state;
-    if (!trace) {
+    if (!ev) {
       return <h1 className="u-mt-vast u-tx-muted ub-tx-center">No trace found</h1>;
     }
 
-    // Caching edges/vertices so that DirectedGraph is not redrawn
-    let ev = this.cache;
-    if (!ev) {
-      const traceDag = this.calculateTraceDag();
-      const nodes = [...traceDag.nodesMap.values()];
-      ev = convPlexus(traceDag.nodesMap);
-      ev.edges = extendFollowsFrom(ev.edges, nodes);
-      this.cache = ev;
-    }
+    const wrapperClassName = cx('TraceGraph--graphWrapper', { 'is-uiFind-mode': uiFind });
 
     return (
-      <div className="TraceGraph--graphWrapper" style={{ paddingTop: headerHeight + 49 }}>
+      <div className={wrapperClassName} style={{ paddingTop: headerHeight + 49 }}>
         <DirectedGraph
           minimap
           zoom
@@ -263,10 +153,12 @@ export default class TraceGraph extends React.PureComponent<Props, State> {
           className="TraceGraph--dag"
           minimapClassName="TraceGraph--miniMap"
           layoutManager={this.layoutManager}
-          getNodeLabel={getNodeDrawer(mode)}
+          getNodeLabel={getNodeDrawer(mode, uiFindVertexKeys)}
           setOnRoot={classNameIsSmall}
           setOnEdgePath={setOnEdgePath}
           setOnEdgesContainer={setOnEdgesContainer}
+          setOnNodesContainer={setOnNodesContainer}
+          setOnNode={setOnNode}
           edges={ev.edges}
           vertices={ev.vertices}
         />

@@ -38,6 +38,7 @@ describe('<SpanDetail>', () => {
     .toggleTags();
   const traceStartTime = 5;
   const props = {
+    addToUiFind: jest.fn(),
     detailState,
     span,
     traceStartTime,
@@ -63,6 +64,7 @@ describe('<SpanDetail>', () => {
     props.processToggle.mockReset();
     props.logsToggle.mockReset();
     props.logItemToggle.mockReset();
+    props.addToUiFind.mockReset();
     wrapper = shallow(<SpanDetail {...props} />);
   });
 
@@ -117,5 +119,11 @@ describe('<SpanDetail>', () => {
     accordianLogs.simulate('itemToggle', somethingUniq);
     expect(props.logsToggle).toHaveBeenLastCalledWith(span.spanID);
     expect(props.logItemToggle).toHaveBeenLastCalledWith(span.spanID, somethingUniq);
+  });
+
+  it('calls addToUiFind when the spanID is clicked', () => {
+    const spanIDButton = wrapper.find('button');
+    spanIDButton.simulate('click');
+    expect(props.addToUiFind).toHaveBeenCalledWith(props.span.spanID);
   });
 });

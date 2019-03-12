@@ -27,6 +27,7 @@ import './drawNode.css';
 type Props = {
   a: number,
   b: number,
+  isUiFindMatch: boolean,
   operation: string,
   service: string,
 };
@@ -34,11 +35,9 @@ type Props = {
 const abs = Math.abs;
 const max = Math.max;
 
-class DiffNode extends React.PureComponent<Props> {
-  props: Props;
-
+export class DiffNode extends React.PureComponent<Props> {
   render() {
-    const { a, b, operation, service } = this.props;
+    const { a, b, isUiFindMatch, operation, service } = this.props;
     const isSame = a === b;
     const className = cx({
       'is-same': isSame,
@@ -47,11 +46,12 @@ class DiffNode extends React.PureComponent<Props> {
       'is-added': a === 0,
       'is-less': a > b && b > 0,
       'is-removed': b === 0,
+      'is-ui-find-match': isUiFindMatch,
     });
     const chgSign = a < b ? '+' : '-';
     const table = (
       <table className={`DiffNode ${className}`}>
-        <tbody>
+        <tbody className="DiffNode--body">
           <tr>
             <td className={`DiffNode--metricCell ${className}`} rowSpan={isSame ? 2 : 1}>
               {isSame ? null : <span className="DiffNode--metricSymbol">{chgSign}</span>}
@@ -88,7 +88,21 @@ class DiffNode extends React.PureComponent<Props> {
   }
 }
 
-export default function drawNode<T>(vertex: PVertex<T>) {
-  const { data, operation, service } = vertex.data;
-  return <DiffNode {...data} operation={operation} service={service} />;
+function drawNode<T>(vertex: PVertex<T>, keys: Set<number | string>) {
+  const { data, members, operation, service } = vertex.data;
+  return (
+    <DiffNode
+      {...data}
+      isUiFindMatch={keys.has(vertex.key)}
+      members={members}
+      operation={operation}
+      service={service}
+    />
+  );
+}
+
+export default function drawNodeGenerator(keys: Set<number | string>) {
+  return function drawVertex<T>(vertex: PVertex<T>) {
+    return drawNode(vertex, keys);
+  };
 }

@@ -23,6 +23,7 @@ import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 
 import { actions } from './duck';
+import spanAncestorIds from '../../../utils/span-ancestor-ids';
 
 import type { ReduxState } from '../../../types/index';
 import type { Span } from '../../../types/trace';
@@ -52,8 +53,7 @@ export class UnconnectedSpanTreeOffset extends React.PureComponent<SpanTreeOffse
   constructor(props: SpanTreeOffsetPropsType) {
     super(props);
 
-    this.ancestorIds = [];
-    this.computeAncestors(props.span);
+    this.ancestorIds = spanAncestorIds(props.span);
     // Some traces have multiple root-level spans, this connects them all under one guideline and adds the
     // necessary padding for the collapse icon on root-level spans.
     this.ancestorIds.push('root');
@@ -98,21 +98,8 @@ export class UnconnectedSpanTreeOffset extends React.PureComponent<SpanTreeOffse
     }
   };
 
-  computeAncestors(rootSpan: Span) {
-    let currentSpan: Span = rootSpan;
-    while (currentSpan && Array.isArray(currentSpan.references) && currentSpan.references.length) {
-      const { refType, span } = currentSpan.references[0] || {};
-      if (span && (refType === 'FOLLOWS_FROM' || refType === 'CHILD_OF')) {
-        this.ancestorIds.push(span.spanID);
-        currentSpan = span;
-      } else {
-        break;
-      }
-    }
-  }
-
   render() {
-    const { showChildrenIcon, childrenVisible, onClick, span } = this.props;
+    const { childrenVisible, onClick, showChildrenIcon, span } = this.props;
     const { hasChildren, spanID } = span;
     const wrapperProps = hasChildren ? { onClick, role: 'switch', 'aria-checked': childrenVisible } : null;
     const icon =
