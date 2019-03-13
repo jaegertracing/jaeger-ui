@@ -276,12 +276,15 @@ export default class ListView extends React.Component<ListViewProps> {
     this._endIndex = this._yPositions.findFloorIndex(yEnd, this._getHeight);
   }
 
+  _forceUpdate = () => {
+    this.forceUpdate();
+  };
+
   /**
    * Checked to see if the currently rendered items are sufficient, if not,
    * force an update to trigger more items to be rendered.
    */
   _positionList = () => {
-    this._isScrolledOrResized = false;
     if (!this._wrapperElm) {
       return;
     }
@@ -296,6 +299,7 @@ export default class ListView extends React.Component<ListViewProps> {
     if (maxStart < this._startIndexDrawn || minEnd > this._endIndexDrawn) {
       this.forceUpdate();
     }
+    this._isScrolledOrResized = false;
   };
 
   _initWrapper = (elm: HTMLElement) => {
@@ -360,7 +364,7 @@ export default class ListView extends React.Component<ListViewProps> {
       const imin = getIndexFromKey(lowDirtyKey);
       const imax = highDirtyKey === lowDirtyKey ? imin : getIndexFromKey(highDirtyKey);
       this._yPositions.calcHeights(imax, this._getHeight, imin);
-      this.forceUpdate();
+      window.requestAnimationFrame(this._forceUpdate);
     }
   };
 

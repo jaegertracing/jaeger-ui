@@ -15,7 +15,6 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Col, Divider, Row, Tag } from 'antd';
 import { Link } from 'react-router-dom';
 
 import { sortBy } from 'lodash';
@@ -73,18 +72,18 @@ export default class ResultItem extends React.PureComponent<Props> {
             disableComparision={disableComparision}
           />
           <Link to={linkTo}>
-            <Row>
-              <Col span={4} className="ub-p2">
-                <Tag className="ub-m1" data-test={markers.NUM_SPANS}>
+            <div className="ant-row">
+              <div className="ant-col-4 ub-p2">
+                <div className="ant-tag ub-m1" data-test={markers.NUM_SPANS}>
                   {numSpans} Span{numSpans > 1 && 's'}
-                </Tag>
+                </div>
                 {Boolean(numErredSpans) && (
-                  <Tag className="ub-m1" color="red">
+                  <div className="ant-tag ant-tag-red ub-m1">
                     {numErredSpans} Error{numErredSpans > 1 && 's'}
-                  </Tag>
+                  </div>
                 )}
-              </Col>
-              <Col span={16} className="ub-p2">
+              </div>
+              <div className="ant-col-16 ub-p2">
                 <ul className="ub-list-reset" data-test={markers.SERVICE_TAGS}>
                   {sortBy(services, s => s.name).map(service => {
                     const { name, numberOfSpans: count } = service;
@@ -99,15 +98,15 @@ export default class ResultItem extends React.PureComponent<Props> {
                     );
                   })}
                 </ul>
-              </Col>
-              <Col span={4} className="ub-p3 ub-tx-right-align">
+              </div>
+              <div className="ant-col-4 ub-p3 ub-tx-right-align">
                 {formatRelativeDate(startTime / 1000)}
-                <Divider type="vertical" />
+                <div className="ant-divider ant-divider-vertical" />
                 {timeStr.slice(0, -3)}&nbsp;{timeStr.slice(-2)}
                 <br />
                 <small>{fromNow}</small>
-              </Col>
-            </Row>
+              </div>
+            </div>
           </Link>
         </div>
       </div>
