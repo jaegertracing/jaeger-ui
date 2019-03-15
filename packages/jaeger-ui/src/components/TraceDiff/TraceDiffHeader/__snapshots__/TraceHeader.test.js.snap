@@ -107,14 +107,12 @@ exports[`TraceHeader renders as expected 1`] = `
   >
     <span>
       <TraceName
-        className=""
         error={
           Object {
             "errorKey": "errorValue",
           }
         }
         key="name"
-        state={null}
         traceName="trace name"
       />
        
@@ -147,7 +145,6 @@ exports[`TraceHeader renders populated attrs component when props.state === fetc
   >
     <span>
       <TraceName
-        className=""
         error={
           Object {
             "errorKey": "errorValue",

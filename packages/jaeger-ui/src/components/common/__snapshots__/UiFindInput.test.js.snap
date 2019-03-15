@@ -2,6 +2,7 @@
 
 exports[`UiFind rendering renders as expected 1`] = `
 <Input
+  autosize={true}
   disabled={false}
   onBlur={[Function]}
   onChange={[Function]}

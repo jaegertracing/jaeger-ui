@@ -87,7 +87,7 @@ describe('UiFind', () => {
       expect(updateUiFindSpy).toHaveBeenLastCalledWith({
         history: props.history,
         location: props.location,
-        trackFindFunction: null,
+        trackFindFunction: undefined,
         uiFind: newValue,
       });
     });

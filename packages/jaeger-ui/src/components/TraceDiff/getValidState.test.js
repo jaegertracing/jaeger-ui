@@ -19,14 +19,6 @@ describe('getValidState', () => {
   const b = 'b string';
   const cohort = ['first string', 'second string', 'third string'];
 
-  it('handles absent argument', () => {
-    expect(getValidState()).toEqual({
-      a: undefined,
-      b: undefined,
-      cohort: [],
-    });
-  });
-
   it('uses cohort kwarg when a and b are missing', () => {
     expect(getValidState({ cohort })).toEqual({
       a: cohort[0],

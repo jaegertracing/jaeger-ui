@@ -44,7 +44,7 @@ describe('TraceDiff/url', () => {
 
   describe('getUrl', () => {
     it('handles an empty state', () => {
-      expect(getUrl()).toBe('/trace/...');
+      expect(getUrl({})).toBe('/trace/...');
     });
 
     it('handles a single traceId', () => {

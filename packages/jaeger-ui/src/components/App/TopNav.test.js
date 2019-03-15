@@ -58,6 +58,7 @@ describe('<TopNav>', () => {
     router: {
       location: { location: { pathname: 'some-path ' } },
     },
+    traceDiff: {},
   };
 
   let wrapper;
