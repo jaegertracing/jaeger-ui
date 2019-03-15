@@ -210,9 +210,9 @@ export default class SearchResults extends React.PureComponent<SearchResultsProp
             dataLength={this.props.traces.length}
             itemHeightGetter={() => 155}
             itemRenderer={this.renderRow}
-            viewBuffer={20}
-            viewBufferMin={10}
-            initialDraw={40}
+            viewBuffer={5}
+            viewBufferMin={5}
+            initialDraw={15}
             itemsWrapperClassName="u-width-100"
             getKeyFromIndex={this.getKeyFromIndex}
             getIndexFromKey={this.getIndexFromKey}
