@@ -1,6 +1,4 @@
-// @flow
-
-// Copyright (c) 2019 Uber Technologies, Inc.
+// Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,23 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as React from 'react';
+export const DEFAULT_OPERATION = 'all' as 'all';
+export const DEFAULT_LOOKBACK = '1h' as '1h';
+export const DEFAULT_LIMIT = 20 as 20;
 
-import { getUrl } from '../../TracePage/url';
-import NewWindowIcon from '../../common/NewWindowIcon';
-
-type PropsType = {
-  traceID: string,
-};
-
-function stopPropagation(event: SyntheticMouseEvent<HTMLAnchorElement>) {
-  event.stopPropagation();
-}
-
-export default function TraceTimelineLink({ traceID }: PropsType) {
-  return (
-    <a href={getUrl(traceID)} onClick={stopPropagation} rel="noopener noreferrer" target="_blank">
-      <NewWindowIcon />
-    </a>
-  );
-}
+export const FORM_CHANGE_ACTION_TYPE = '@@redux-form/CHANGE' as '@@redux-form/CHANGE';

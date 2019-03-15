@@ -16,25 +16,25 @@
 
 import * as React from 'react';
 
-import type { ApiError } from '../../types/api-error';
+import { ApiError } from '../../types/api-error'; // eslint-disable-line no-unused-vars
 
 import './ErrorMessage.css';
 
 type ErrorMessageProps = {
-  className?: string,
-  detailClassName?: string,
-  messageClassName?: string,
-  error: ApiError,
+  className?: string;
+  detailClassName?: string;
+  messageClassName?: string;
+  error: ApiError;
 };
 
 type SubPartProps = {
-  className?: string,
-  error: ApiError,
-  wrap?: boolean,
-  wrapperClassName?: string,
+  className?: string;
+  error: ApiError;
+  wrap?: boolean;
+  wrapperClassName?: string;
 };
 
-function ErrorAttr({ name, value }: { name: string, value: any }) {
+function ErrorAttr({ name, value }: { name: string; value: any }) {
   return (
     <tr className="ErrorMessage--detailItem">
       <td className="ErrorMessage--attr">{name}</td>
@@ -46,12 +46,12 @@ function ErrorAttr({ name, value }: { name: string, value: any }) {
 function Message(props: SubPartProps) {
   const { className, error, wrap, wrapperClassName } = props;
   const cssClass = `ErrorMessage--msg ${className || ''}`;
-  let msg: React.Node;
-  if (typeof error === 'string') {
-    msg = <h3 className={cssClass}>{error}</h3>;
-  } else {
-    msg = <h3 className={cssClass}>{error.message}</h3>;
-  }
+  const msg =
+    typeof error === 'string' ? (
+      <h3 className={cssClass}>{error}</h3>
+    ) : (
+      <h3 className={cssClass}>{error.message}</h3>
+    );
   if (wrap) {
     return <div className={`ErrorMessage ${wrapperClassName || ''}`}>{msg}</div>;
   }

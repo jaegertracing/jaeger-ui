@@ -26,19 +26,27 @@ import 'react-virtualized-select/styles.css';
 
 import './VirtSelect.css';
 
+/*
+type option = {
+  disabled: boolean,
+  className: string,
+  [key: string]: any,
+}
+
 type RenderOptionArgs = {
-  focusedOption: {},
-  focusOption: ({}) => void,
+  focusedOption: option,
+  focusOption: (obj: Object) => void,
   key: string,
   labelKey: string,
-  option: { [string]: any },
-  selectValue: ({}) => void,
-  style: {},
-  valueArray: ?({}[]),
+  option: option,
+  selectValue: (obj: Object) => void,
+  style: object,
+  valueArray: object[] | null | undefined,
 };
+ */
 
 type RenderArrowArgs = {
-  isOpen: boolean,
+  isOpen: boolean;
 };
 
 function renderOption({
@@ -50,7 +58,10 @@ function renderOption({
   selectValue,
   style,
   valueArray,
-}: RenderOptionArgs) {
+}: // react-Virtualized-select is deprecated and I cannot unravel its types
+// maybe time to use react-select which supports async
+// TODO discuss 👆
+any) /* RenderOptionArgs) \*\/: JSX.Element */ {
   const className = ['VirtSelect--option'];
   if (option === focusedOption) {
     className.push('is-focused');
@@ -81,7 +92,7 @@ function renderArrow({ isOpen }: RenderArrowArgs) {
   return <Icon className={`VirtSelect--arrow ${isOpen ? 'is-open' : ''}`} type="down" />;
 }
 
-export default function VirtSelect(props: {}) {
+export default function VirtSelect(props: object) {
   return (
     <VirtualizedSelect
       className="VirtSelect"

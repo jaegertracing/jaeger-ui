@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,9 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export default function getValidState(state?: ?{ a?: ?string, b?: ?string, cohort: string[] }) {
-  const { a: stA, b: stB, cohort: stCohort } = state || {};
-  const cohortSet = new Set([].concat(stA, stB, stCohort || []).filter(Boolean));
+import TNullable from '../../types/nullable'; // eslint-disable-line no-unused-vars
+import { TraceDiffState } from '../../types/trace-diff'; // eslint-disable-line no-unused-vars
+
+export default function getValidState(state: TraceDiffState) {
+  const { a: stA, b: stB, cohort: stCohort } = state;
+  const cohortSet = new Set(
+    ([] as (string | TNullable)[])
+      .concat(stA, stB, stCohort)
+      .filter((str: string | TNullable): str is string => Boolean(str))
+  );
   const cohort: string[] = Array.from(cohortSet);
   const a = cohort[0];
   const b = cohort[1];

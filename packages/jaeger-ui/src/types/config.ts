@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,13 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import DetailState from '../components/TracePage/TraceTimelineViewer/SpanDetail/DetailState';
+import TNullable from './nullable'; // eslint-disable-line no-unused-vars
 
-export type TraceTimeline = {
-  traceID: ?string,
-  spanNameColumnWidth: number,
-  childrenHiddenIDs: Set<string>,
-  findMatches: ?Set<string>,
-  detailStates: Map<string, DetailState>,
-  hoverIndentGuideIds: Set<string>,
+export type ConfigMenuItem = {
+  label: string;
+  url: string;
+  anchorTarget?: '_self' | '_blank' | '_parent' | '_top';
+};
+
+export type ConfigMenuGroup = {
+  label: string;
+  items: ConfigMenuItem[];
+};
+
+export type Config = {
+  archiveEnabled: boolean | TNullable;
+  dependencies?: { dagMaxServicesLen?: number; menuEnabled?: boolean };
+  tracking?: {
+    gaID: string | TNullable;
+    trackErrors: boolean | TNullable;
+  };
+  menu: (ConfigMenuGroup | ConfigMenuItem)[];
 };

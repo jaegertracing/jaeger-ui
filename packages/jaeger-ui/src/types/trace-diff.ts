@@ -1,3 +1,5 @@
+// @flow
+
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,8 +14,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export const DEFAULT_OPERATION = 'all';
-export const DEFAULT_LOOKBACK = '1h';
-export const DEFAULT_LIMIT = 20;
+import TNullable from './nullable'; // eslint-disable-line no-unused-vars
 
-export const FORM_CHANGE_ACTION_TYPE = '@@redux-form/CHANGE';
+// eslint-disable-next-line import/prefer-default-export
+export type TraceDiffState = {
+  a: string | TNullable;
+  b: string | TNullable;
+  cohort: string[];
+};

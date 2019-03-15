@@ -1,6 +1,6 @@
 // @flow
 
-// Copyright (c) 2017 Uber Technologies, Inc.
+// Copyright (c) 2018 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,23 +14,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export type ConfigMenuItem = {
-  label: string,
-  url: string,
-  anchorTarget?: '_self' | '_blank' | '_parent' | '_top',
+type EmbeddedStateV0 = {
+  version: 'v0';
+  searchHideGraph: boolean;
+  timeline: {
+    collapseTitle: boolean;
+    hideMinimap: boolean;
+    hideSummary: boolean;
+  };
 };
 
-export type ConfigMenuGroup = {
-  label: string,
-  items: ConfigMenuItem[],
-};
-
-export type Config = {
-  archiveEnabled: ?boolean,
-  dependencies?: { dagMaxServicesLen?: number, menuEnabled?: boolean },
-  tracking?: {
-    gaID: ?string,
-    trackErrors: ?boolean,
-  },
-  menu: (ConfigMenuGroup | ConfigMenuItem)[],
-};
+export type EmbeddedState = EmbeddedStateV0; // eslint-disable-line import/prefer-default-export

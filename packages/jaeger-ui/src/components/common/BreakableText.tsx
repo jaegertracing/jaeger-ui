@@ -21,12 +21,16 @@ import './BreakableText.css';
 const WORD_RX = /\W*\w+\W*/g;
 
 type Props = {
-  text: string,
-  className?: string,
-  wordRegexp?: RegExp,
+  text: string;
+  className?: string;
+  wordRegexp?: RegExp;
 };
 
-export default function BreakableText(props: Props) {
+// TODO typescript doesn't understand text or null as react nodes
+// https://github.com/Microsoft/TypeScript/issues/21699
+export default function BreakableText(
+  props: Props
+): any /* React.ReactNode /* React.ReactElement | React.ReactElement[] \*\/ */ {
   const { className, text, wordRegexp = WORD_RX } = props;
   if (!text) {
     return typeof text === 'string' ? text : null;

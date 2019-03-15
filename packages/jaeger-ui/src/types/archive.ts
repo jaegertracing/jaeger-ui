@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,13 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export type ApiError =
-  | string
-  | {
-      message: string,
-      httpStatus?: any,
-      httpStatusText?: string,
-      httpUrl?: string,
-      httpQuery?: string,
-      httpBody?: string,
-    };
+import { ApiError } from './api-error'; // eslint-disable-line no-unused-vars
+
+export type TraceArchive = {
+  isLoading?: boolean;
+  isArchived?: boolean;
+  isError?: boolean;
+  error?: ApiError;
+  isAcknowledged?: boolean;
+};
+
+export type TracesArchive = Record<string, TraceArchive>;

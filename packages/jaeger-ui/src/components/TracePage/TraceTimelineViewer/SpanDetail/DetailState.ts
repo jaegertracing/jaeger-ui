@@ -14,7 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Log } from '../../../../types/trace';
+import { Log } from '../../../../types/trace'; // eslint-disable-line no-unused-vars
 
 /**
  * Which items of a {@link SpanDetail} component are expanded.
@@ -22,10 +22,10 @@ import type { Log } from '../../../../types/trace';
 export default class DetailState {
   isTagsOpen: boolean;
   isProcessOpen: boolean;
-  logs: { isOpen: boolean, openedItems: Set<Log> };
+  logs: { isOpen: boolean; openedItems: Set<Log> };
 
   constructor(oldState?: DetailState) {
-    const { isTagsOpen, isProcessOpen, logs } = oldState || {};
+    const { isTagsOpen, isProcessOpen, logs }: DetailState | Record<string, undefined> = oldState || {};
     this.isTagsOpen = Boolean(isTagsOpen);
     this.isProcessOpen = Boolean(isProcessOpen);
     this.logs = {

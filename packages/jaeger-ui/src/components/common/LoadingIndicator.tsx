@@ -14,8 +14,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export type TraceDiffState = {
-  a: ?string,
-  b: ?string,
-  cohort: string[],
+import React from 'react';
+import { Icon } from 'antd';
+
+import './LoadingIndicator.css';
+
+type LoadingIndicatorProps = {
+  centered?: boolean;
+  className?: string;
+  small?: boolean;
+};
+
+export default function LoadingIndicator(props: LoadingIndicatorProps) {
+  const { centered, className, small, ...rest } = props;
+  const cls = `
+    LoadingIndicator
+    ${centered ? 'is-centered' : ''}
+    ${small ? 'is-small' : ''}
+    ${className || ''}
+  `;
+  return <Icon type="loading" className={cls} {...rest} />;
+}
+
+LoadingIndicator.defaultProps = {
+  centered: false,
+  className: undefined,
+  small: false,
 };

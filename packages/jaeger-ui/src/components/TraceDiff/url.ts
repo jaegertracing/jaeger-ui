@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2018 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,6 +16,7 @@ import queryString from 'query-string';
 import { matchPath } from 'react-router-dom';
 
 import getValidState from './getValidState';
+import { TraceDiffState } from '../../types/trace-diff'; // eslint-disable-line no-unused-vars
 import prefixUrl from '../../utils/prefix-url';
 
 export const ROUTE_PATH = prefixUrl('/trace/:a?\\.\\.\\.:b?');
@@ -28,7 +27,7 @@ export function matches(path: string) {
   return Boolean(matchPath(path, ROUTE_MATCHER));
 }
 
-export function getUrl(state?: ?{ a?: ?string, b?: ?string, cohort: string[] }) {
+export function getUrl(state: TraceDiffState) {
   const { a, b, cohort } = getValidState(state);
   const search = queryString.stringify({ cohort });
   return prefixUrl(`/trace/${a || ''}...${b || ''}${search ? '?' : ''}${search}`);

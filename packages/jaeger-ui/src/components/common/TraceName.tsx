@@ -20,22 +20,23 @@ import BreakableText from './BreakableText';
 import LoadingIndicator from './LoadingIndicator';
 import { fetchedState, FALLBACK_TRACE_NAME } from '../../constants';
 
-import type { FetchedState } from '../../types';
-import type { ApiError } from '../../types/api-error';
+import { FetchedState } from '../../types'; // eslint-disable-line no-unused-vars
+import { ApiError } from '../../types/api-error'; // eslint-disable-line no-unused-vars
 
 import './TraceName.css';
 
 type Props = {
-  className?: string,
-  error?: ?ApiError,
-  state?: ?FetchedState,
-  traceName?: ?string,
+  className?: string;
+  // TODO nullable type
+  error?: ApiError | undefined | null;
+  state?: FetchedState | undefined | null;
+  traceName?: string | undefined | null;
 };
 
 export default function TraceName(props: Props) {
   const { className, error, state, traceName } = props;
   const isErred = state === fetchedState.ERROR;
-  let title = traceName || FALLBACK_TRACE_NAME;
+  let title: string | React.ReactNode = traceName || FALLBACK_TRACE_NAME;
   let errorCssClass = '';
   if (isErred) {
     errorCssClass = 'is-error';
@@ -46,19 +47,13 @@ export default function TraceName(props: Props) {
     if (!titleStr) {
       titleStr = 'Error: Unknown error';
     }
+    title = titleStr;
     title = <BreakableText text={titleStr} />;
   } else if (state === fetchedState.LOADING) {
     title = <LoadingIndicator small />;
   } else {
-    const text = traceName || FALLBACK_TRACE_NAME;
+    const text: string = String(traceName || FALLBACK_TRACE_NAME);
     title = <BreakableText text={text} />;
   }
   return <span className={`TraceName ${errorCssClass} ${className || ''}`}>{title}</span>;
 }
-
-TraceName.defaultProps = {
-  className: '',
-  error: null,
-  state: null,
-  traceName: null,
-};

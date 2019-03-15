@@ -17,23 +17,21 @@
 import * as React from 'react';
 
 import { Icon, Tooltip } from 'antd';
-import { CopyToClipboard } from 'react-copy-to-clipboard';
+import CopyToClipboard from 'react-copy-to-clipboard';
 
 type PropsType = {
-  className?: string,
-  copyText: string,
-  tooltipTitle: string,
+  className?: string;
+  copyText: string;
+  tooltipTitle: string;
 };
 
 type StateType = {
-  hasCopied: boolean,
+  hasCopied: boolean;
 };
 
 export default class CopyIcon extends React.PureComponent<PropsType, StateType> {
-  props: PropsType;
-
-  static defaultProps = {
-    className: null,
+  static defaultProps: Partial<PropsType> = {
+    className: undefined,
   };
 
   state = {

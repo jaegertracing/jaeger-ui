@@ -1,6 +1,6 @@
 // @flow
 
-// Copyright (c) 2017 Uber Technologies, Inc.
+// Copyright (c) 2018 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,16 +14,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { ApiError } from './api-error';
+import React from 'react';
+import cx from 'classnames';
+import IoAndroidOpen from 'react-icons/lib/io/android-open';
 
-export type TraceArchive = {
-  isLoading?: boolean,
-  isArchived?: boolean,
-  isError?: boolean,
-  error?: ApiError,
-  isAcknowledged?: boolean,
+import './NewWindowIcon.css';
+
+type Props = {
+  isLarge?: boolean;
 };
 
-export type TracesArchive = {
-  [string]: TraceArchive,
+export default function NewWindowIcon(props: Props) {
+  const { isLarge, ...rest } = props;
+  const cls = cx('NewWindowIcon', { 'is-large': isLarge });
+  return <IoAndroidOpen className={cls} {...rest} />;
+}
+
+NewWindowIcon.defaultProps = {
+  isLarge: false,
 };

@@ -14,14 +14,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-type EmbeddedStateV0 = {
-  version: 'v0',
-  searchHideGraph: boolean,
-  timeline: {
-    collapseTitle: boolean,
-    hideMinimap: boolean,
-    hideSummary: boolean,
-  },
-};
-
-export type EmbeddedState = EmbeddedStateV0;
+export const HTTP_METHOD = 'http.method' as 'http.method';
+export const PEER_SERVICE = 'peer.service' as 'peer.service';
+export const SPAN_KIND = 'span.kind' as 'span.kind';

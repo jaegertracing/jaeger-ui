@@ -1,6 +1,4 @@
-// @flow
-
-// Copyright (c) 2018 Uber Technologies, Inc.
+// Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,6 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export const HTTP_METHOD = 'http.method';
-export const PEER_SERVICE = 'peer.service';
-export const SPAN_KIND = 'span.kind';
+export type ApiError =  // eslint-disable-line import/prefer-default-export
+  | string
+  | {
+      message: string;
+      httpStatus?: any;
+      httpStatusText?: string;
+      httpUrl?: string;
+      httpQuery?: string;
+      httpBody?: string;
+    };

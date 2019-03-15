@@ -14,30 +14,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import React from 'react';
-import { Icon } from 'antd';
+export const TOP_NAV_HEIGHT = 47 as 47;
 
-import './LoadingIndicator.css';
+export const FALLBACK_DAG_MAX_NUM_SERVICES = 100 as 100;
+export const FALLBACK_TRACE_NAME = '<trace-without-root-span>' as '<trace-without-root-span>';
 
-type LoadingIndicatorProps = {
-  centered?: boolean,
-  className?: string,
-  small?: boolean,
-};
+export const FETCH_DONE = 'FETCH_DONE' as 'FETCH_DONE';
+export const FETCH_ERROR = 'FETCH_ERROR' as 'FETCH_ERROR';
+export const FETCH_LOADING = 'FETCH_LOADING' as 'FETCH_LOADING';
 
-export default function LoadingIndicator(props: LoadingIndicatorProps) {
-  const { centered, className, small, ...rest } = props;
-  const cls = `
-    LoadingIndicator
-    ${centered ? 'is-centered' : ''}
-    ${small ? 'is-small' : ''}
-    ${className || ''}
-  `;
-  return <Icon type="loading" className={cls} {...rest} />;
-}
-
-LoadingIndicator.defaultProps = {
-  centered: false,
-  className: undefined,
-  small: false,
+export const fetchedState = {
+  DONE: FETCH_DONE,
+  ERROR: FETCH_ERROR,
+  LOADING: FETCH_LOADING,
 };
