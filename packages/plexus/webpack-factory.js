@@ -43,7 +43,7 @@ function makeBaseConfig() {
       rules: [
         {
           //
-          // Note: This `pre` is crucial (and not at all obvious)
+          // Note: This `pre` is crucial (and not exactly obvious)
           //
           enforce: 'pre',
           test: extensionsRx,

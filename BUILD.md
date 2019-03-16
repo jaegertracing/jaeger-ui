@@ -14,7 +14,7 @@ ESLint is being used to lint the repo, as a whole. Within `./packages/plexus` (f
 
 In the project root, `typescript` is used to bolster the linting of TypeScript files. `tsc` catches quite a few issues that ESLint does not pick up on.
 
-In `./packages/plexus`, `typescript` is used to generate type declarations for the ES module build. See [`./packages/plexus/BUILD.md`](packages/plexus/BUILD.md#TODO) for details.
+In `./packages/plexus`, `typescript` is used to generate type declarations for the ES module build. See [`./packages/plexus/BUILD.md`](packages/plexus/BUILD.md#typescript---emitdeclarationonly) for details.
 
 ### Workspaces
 

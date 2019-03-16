@@ -122,4 +122,3 @@ function Demo() {
 }
 
 render(<Demo />, document.querySelector('#root'));
-console.log('yar');
