@@ -33,7 +33,7 @@
     "source-map-explorer": "^1.6.0"
   },
   "dependencies": {
-    "@jaegertracing/plexus": "0.0.1-dev.4",
+    "@jaegertracing/plexus": "0.0.2-dev.0",
     "antd": "3.8.0",
     "chance": "^1.0.10",
     "classnames": "^2.2.5",

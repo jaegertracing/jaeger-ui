@@ -79,7 +79,7 @@ function getClassNames(props: TProps) {
   };
 }
 
-function MiniMap(props: TProps) {
+export function MiniMap(props: TProps) {
   const css = getClassNames(props);
   const mapSize = getMapSize(props);
   const activeXform = getViewTransform(props, mapSize);

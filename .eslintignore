@@ -1,2 +1,3 @@
-build/**/*.js
-coverage/**/*.js
+build
+coverage
+packages/plexus/src/LayoutManager/layout.worker*js*

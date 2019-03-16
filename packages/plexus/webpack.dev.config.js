@@ -12,14 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/* eslint-disable @typescript-eslint/no-var-requires */
-const { join } = require('path');
-const neutrino = require('neutrino');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const factory = require('./webpack-factory');
 
-const config = neutrino().webpack();
-const folder = config.mode === 'development' ? join('demo', 'src') : 'src';
-config.entry = {
-  index: join(__dirname, folder, 'index'),
-};
-
-module.exports = [config];
+module.exports = factory('development');
