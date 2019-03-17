@@ -14,7 +14,7 @@
 
 import sitePrefix from '../site-prefix';
 
-const origin = process.env.NODE_ENV === 'test' ? (global as any).location.origin : window.location.origin;
+const origin = process.env.NODE_ENV === 'test' ? global.location.origin : window.location.origin;
 /**
  * Generate the URL prefix from `sitePrefix` and use it for all subsequent calls
  * to `prefixUrl()`. `sitePrefix` should be an absolute URL, e.g. with an origin.

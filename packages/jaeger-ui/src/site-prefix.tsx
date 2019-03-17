@@ -20,16 +20,10 @@ if (!baseNode && process.env.NODE_ENV !== 'test') {
   throw new Error('<base> element not found');
 }
 
-const sitePrefix = baseNode ? baseNode.href : `${(global as any).location.origin}/`;
+const sitePrefix = baseNode ? baseNode.href : `${global.location.origin}/`;
 
 // Configure the webpack publicPath to match the <base>:
 // https://webpack.js.org/guides/public-path/#on-the-fly
-declare global {
-  interface Window {
-    // eslint-disable-next-line camelcase
-    __webpack_public_path__: string;
-  }
-}
 // eslint-disable-next-line camelcase
 window.__webpack_public_path__ = sitePrefix;
 

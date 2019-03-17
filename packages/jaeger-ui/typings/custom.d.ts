@@ -12,8 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// For jest tests
-declare const global: any;
+// For jest
+declare const global: {
+  location: Location;
+}
+
+// For setting the site-prefix
+declare interface Window {
+  // eslint-disable-next-line camelcase
+  __webpack_public_path__: string;
+}
 
 // For inlined envvars
 declare const process: {
