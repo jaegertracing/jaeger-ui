@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+type THeightGetter = (index: number) => number;
 
 /**
  * Keeps track of the height and y-position for anything sequenctial where
@@ -68,7 +68,7 @@ export default class Positions {
    * via the `forcedLastI` parameter.
    * @param {number=} forcedLastI
    */
-  calcHeights(max: number, heightGetter: number => number, forcedLastI?: number) {
+  calcHeights(max: number, heightGetter: THeightGetter, forcedLastI?: number) {
     if (forcedLastI != null) {
       this.lastI = forcedLastI;
     }
@@ -96,7 +96,7 @@ export default class Positions {
   /**
    * Verify the height and y-values from `lastI` up to `yValue`.
    */
-  calcYs(yValue: number, heightGetter: number => number) {
+  calcYs(yValue: number, heightGetter: THeightGetter) {
     while ((this.ys[this.lastI] == null || yValue > this.ys[this.lastI]) && this.lastI < this.dataLen - 1) {
       this.calcHeights(this.lastI, heightGetter);
     }
@@ -109,7 +109,7 @@ export default class Positions {
    * known, recalculate subsequent y values, but don't confirm the heights of
    * those items, just update based on the difference.
    */
-  confirmHeight(_i: number, heightGetter: number => number) {
+  confirmHeight(_i: number, heightGetter: THeightGetter) {
     let i = _i;
     if (i > this.lastI) {
       this.calcHeights(i, heightGetter);
@@ -135,7 +135,7 @@ export default class Positions {
    * array) that is prior to the y-value; e.g. map from y-value to index in
    * `.ys`.
    */
-  findFloorIndex(yValue: number, heightGetter: number => number): number {
+  findFloorIndex(yValue: number, heightGetter: THeightGetter): number {
     this.calcYs(yValue, heightGetter);
 
     let imin = 0;
@@ -173,7 +173,7 @@ export default class Positions {
    *
    * @returns {{ height: number, y: number }}
    */
-  getRowPosition(index: number, heightGetter: number => number) {
+  getRowPosition(index: number, heightGetter: THeightGetter) {
     this.confirmHeight(index, heightGetter);
     return {
       height: this.heights[index],
