@@ -23,6 +23,7 @@
     "isomorphic-fetch": "2.2.1",
     "jsdom": "13.2.0",
     "lerna": "3.13.0",
+    "npm-run-all": "4.1.5",
     "prettier": "1.10.2",
     "rxjs-compat": "6.4.0",
     "typescript": "3.3.3333"
@@ -46,11 +47,11 @@
     "build": "lerna run build",
     "check-license": "./scripts/check-license.sh",
     "coverage": "lerna run coverage",
-    "eslint": "eslint 'scripts/*.{js,ts,tsx}' 'packages/*/src/**/*.{js,ts,tsx}' 'packages/*/*.{js,ts,tsx}'",
+    "eslint":
+      "eslint --cache 'scripts/*.{js,ts,tsx}' 'packages/*/src/**/*.{js,ts,tsx}' 'packages/*/*.{js,ts,tsx}'",
     "flow-comment": "echo 'disable flow as it dislikes typescript'",
     "flow": "exit 0 || glow",
-    "lint":
-      "yarn run prettier-lint && yarn run tsc-lint && yarn run eslint && yarn run flow && yarn run check-license",
+    "lint": "npm-run-all -ln --parallel prettier-lint tsc-lint eslint flow check-license",
     "prepare": "lerna run --stream --sort prepublishOnly",
     "prettier-comment": "https://github.com/yarnpkg/yarn/issues/6300",
     "prettier":
@@ -70,7 +71,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "yarn run lint && yarn run test"
+      "pre-commit": "npm-run-all -ln --parallel lint test"
     }
   }
 }
