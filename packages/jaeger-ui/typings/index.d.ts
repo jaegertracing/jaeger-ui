@@ -12,14 +12,4 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Note: This is used by create-react-app (CRA) and it will overwrite values it
-// doesn't like (and remove commented out fields, in the process)
-{
-  "extends": "../../tsconfig",
-  "compilerOptions": {
-    // Required by CRA
-    "isolatedModules": true
-  },
-  "exclude": ["src/**/*.js"],
-  "include": ["src", "typings"]
-}
+/// <reference path="custom.d.ts" />

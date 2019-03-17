@@ -21,7 +21,7 @@ module.exports = {
   settings: {
     'import/resolver': {
       node: {
-        extensions: ['.js', 'json', '.ts', '.tsx'],
+        extensions: ['.js', 'json', '.tsx'],
       },
     },
   },
@@ -30,6 +30,15 @@ module.exports = {
     {
       files: ['*.ts', '*.tsx'],
       parser: '@typescript-eslint/parser',
+      parserOptions: {
+        project: './tsconfig.json',
+        tsconfigRootDir: '.',
+      },
+      plugins: ['@typescript-eslint'],
+      rules: {
+        'no-unused-vars': 0,
+        '@typescript-eslint/no-unused-vars': 1,
+      },
     },
   ],
   rules: {

@@ -12,14 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Note: This is used by create-react-app (CRA) and it will overwrite values it
-// doesn't like (and remove commented out fields, in the process)
+// This file is necessary because create-react-app (CRA) requires
+// isolatedModules to be true but for linting we need it to be false. We run
+// tsc-lint from the project root, but packages have their own tsconfig for
+// the lint so the typings from one package doesn't pollute other packages.
+// For that to work, project references are used
+// (https://www.typescriptlang.org/docs/handbook/project-references.html) which
+// requires `composite: true` and `isolatedModules: false`.
 {
-  "extends": "../../tsconfig",
+  "extends": "./tsconfig",
   "compilerOptions": {
-    // Required by CRA
-    "isolatedModules": true
-  },
-  "exclude": ["src/**/*.js"],
-  "include": ["src", "typings"]
+    "isolatedModules": false,
+    "composite": true
+  }
 }

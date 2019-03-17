@@ -28,7 +28,8 @@
     "typescript": "3.3.3333"
   },
   "resolutions": {
-    "**/lodash": "4.17.11"
+    "**/lodash": "4.17.11",
+    "**/cheerio/parse5": "^4.0.0"
   },
   "workspaces": {
     "packages": ["packages/*"],
@@ -57,7 +58,7 @@
     "prettier-lint":
       "./node_modules/prettier/bin-prettier.js --list-different '{.,scripts}/*.{js,json,md,ts,tsx}' 'packages/*/{src,demo/src}/**/!(react-vis).{css,js,json,md,ts,tsx}' 'packages/*/*.{css,js,json,md,ts,tsx}'",
     "test": "lerna run test",
-    "tsc-lint": "tsc",
+    "tsc-lint": "tsc --build",
     "tsc-lint-debug": "tsc --listFiles",
     "start": "cd packages/jaeger-ui && yarn start"
   },
