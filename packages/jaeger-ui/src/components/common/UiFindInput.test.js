@@ -110,7 +110,7 @@ describe('UiFind', () => {
       wrapper.setState({ ownInputValue });
       expect(wrapper.state('ownInputValue')).toBe(ownInputValue);
       wrapper.find(Input).simulate('blur');
-      expect(wrapper.state('ownInputValue')).toBe(null);
+      expect(wrapper.state('ownInputValue')).toBe(undefined);
     });
 
     it('triggers pending queryParameter updates', () => {

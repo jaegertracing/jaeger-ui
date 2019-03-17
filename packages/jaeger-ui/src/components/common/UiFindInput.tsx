@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2019 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,10 +15,9 @@
 import * as React from 'react';
 import { Input } from 'antd';
 import _debounce from 'lodash/debounce';
-import _isString from 'lodash/isString';
+import queryString from 'query-string';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
-import queryString from 'query-string';
 
 import { History as RouterHistory, Location } from 'history'; // eslint-disable-line no-unused-vars
 
@@ -45,7 +42,7 @@ type extractUiFindFromStateReturn = {
 type PropsType = OwnPropsType & extractUiFindFromStateReturn;
 
 type StateType = {
-  ownInputValue: string | null;
+  ownInputValue: string | undefined;
 };
 
 export class UnconnectedUiFindInput extends React.PureComponent<PropsType, StateType> {
@@ -57,12 +54,12 @@ export class UnconnectedUiFindInput extends React.PureComponent<PropsType, State
   };
 
   state = {
-    ownInputValue: null,
+    ownInputValue: undefined,
   };
 
   handleInputBlur = () => {
     this.updateUiFindQueryParam.flush();
-    this.setState({ ownInputValue: null });
+    this.setState({ ownInputValue: undefined });
   };
 
   handleInputChange = (evt: React.ChangeEvent<HTMLInputElement>) => {
@@ -82,15 +79,12 @@ export class UnconnectedUiFindInput extends React.PureComponent<PropsType, State
   }, 250);
 
   render() {
-    // TODO: typescript should know that inputValue is a string
-    const inputValue = (_isString(this.state.ownInputValue)
-      ? this.state.ownInputValue
-      : this.props.uiFind) as string | undefined;
+    const inputValue = this.state.ownInputValue ? this.state.ownInputValue : this.props.uiFind;
 
     // TODO: check autosize true/false
     return (
       <Input
-        autosize
+        autosize={null}
         placeholder="Find..."
         {...this.props.inputProps}
         onBlur={this.handleInputBlur}
