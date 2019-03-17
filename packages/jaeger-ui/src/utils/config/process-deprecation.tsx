@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,10 +17,10 @@ import _has from 'lodash/has';
 import _set from 'lodash/set';
 import _unset from 'lodash/unset';
 
-type Deprecation = {
-  formerKey: string,
-  currentKey: string,
-};
+interface IDeprecation {
+  formerKey: string;
+  currentKey: string;
+}
 
 /**
  * Processes a deprecated config property with respect to a configuration.
@@ -36,7 +34,11 @@ type Deprecation = {
  * - The value at the deprecated config property is moved to the new property
  * - The value at the deprecated config property is ignored in favor of the value at the new property
  */
-export default function processDeprecation(config: {}, deprecation: Deprecation, issueWarning: boolean) {
+export default function processDeprecation(
+  config: Record<string, any>,
+  deprecation: IDeprecation,
+  issueWarning: boolean
+) {
   const { formerKey, currentKey } = deprecation;
   if (_has(config, formerKey)) {
     let isTransfered = false;

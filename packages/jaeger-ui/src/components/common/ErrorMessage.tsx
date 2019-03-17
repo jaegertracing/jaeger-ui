@@ -16,7 +16,7 @@
 
 import * as React from 'react';
 
-import { ApiError } from '../../types/api-error'; // eslint-disable-line no-unused-vars
+import { ApiError } from '../../types/api-error';
 
 import './ErrorMessage.css';
 

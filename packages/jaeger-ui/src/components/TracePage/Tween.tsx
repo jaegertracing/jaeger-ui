@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,29 +14,36 @@
 
 import ease from 'tween-functions';
 
-type TweenCallback = ({ done: boolean, value: number }) => void;
+import { TNil } from '../../types';
 
-type TweenOptions = {
-  delay?: number,
-  duration: number,
-  from: number,
-  onComplete?: TweenCallback,
-  onUpdate?: TweenCallback,
-  to: number,
+interface ITweenState {
+  done: boolean;
+  value: number;
+}
+
+type TTweenCallback = (state: ITweenState) => void;
+
+type TTweenOptions = {
+  delay?: number;
+  duration: number;
+  from: number;
+  onComplete?: TTweenCallback;
+  onUpdate?: TTweenCallback;
+  to: number;
 };
 
 export default class Tween {
-  callbackComplete: ?TweenCallback;
-  callbackUpdate: ?TweenCallback;
-  delay: number;
+  callbackComplete: TTweenCallback | TNil;
+  callbackUpdate: TTweenCallback | TNil;
+  delay: number | TNil;
   duration: number;
   from: number;
-  requestID: ?number;
+  requestID: number | TNil;
   startTime: number;
-  timeoutID: ?TimeoutID;
+  timeoutID: number | TNil;
   to: number;
 
-  constructor({ duration, from, to, delay, onUpdate, onComplete }: TweenOptions) {
+  constructor({ duration, from, to, delay, onUpdate, onComplete }: TTweenOptions) {
     this.startTime = Date.now() + (delay || 0);
     this.duration = duration;
     this.from = from;
@@ -92,7 +97,7 @@ export default class Tween {
     this.callbackUpdate = undefined;
   }
 
-  getCurrent(): { done: boolean, value: number } {
+  getCurrent(): ITweenState {
     const t = Date.now() - this.startTime;
     if (t <= 0) {
       // still in the delay period

@@ -17,7 +17,7 @@ import { matchPath } from 'react-router-dom';
 
 import prefixUrl from '../../utils/prefix-url';
 
-import { SearchQuery } from '../../types/search'; // eslint-disable-line no-unused-vars
+import { SearchQuery } from '../../types/search';
 
 function eqEq(a: string | number | null | undefined, b: string | number | null | undefined) {
   return (a == null && b == null) || String(a) === String(b);

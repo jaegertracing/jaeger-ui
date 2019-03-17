@@ -15,18 +15,20 @@
 // limitations under the License.
 
 // TODO: Everett is this correct? Can't find ContextRouter
-import { Router } from 'react-router-dom'; // eslint-disable-line no-unused-vars
-import { History as RouterHistory, Location } from 'history'; // eslint-disable-line no-unused-vars
+import { Router } from 'react-router-dom';
+import { Location } from 'history';
 
-import { ApiError } from './api-error'; // eslint-disable-line no-unused-vars
-import { TracesArchive } from './archive'; // eslint-disable-line no-unused-vars
-import { Config } from './config'; // eslint-disable-line no-unused-vars
-import { EmbeddedState } from './embedded'; // eslint-disable-line no-unused-vars
-import TNullable from './nullable'; // eslint-disable-line no-unused-vars
-import { SearchQuery } from './search'; // eslint-disable-line no-unused-vars
-import { Trace } from './trace'; // eslint-disable-line no-unused-vars
-import { TraceDiffState } from './trace-diff'; // eslint-disable-line no-unused-vars
-import { TraceTimeline } from './trace-timeline'; // eslint-disable-line no-unused-vars
+import { ApiError } from './api-error';
+import { TracesArchive } from './archive';
+import { Config } from './config';
+import { EmbeddedState } from './embedded';
+import TNullable from './nullable';
+import { SearchQuery } from './search';
+import { Trace } from './trace';
+import { TraceDiffState } from './trace-diff';
+import { TraceTimeline } from './trace-timeline';
+
+export type TNil = null | undefined;
 
 export type FetchedState = 'FETCH_DONE' | 'FETCH_ERROR' | 'FETCH_LOADING';
 

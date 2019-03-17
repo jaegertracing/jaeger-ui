@@ -20,8 +20,8 @@ import BreakableText from './BreakableText';
 import LoadingIndicator from './LoadingIndicator';
 import { fetchedState, FALLBACK_TRACE_NAME } from '../../constants';
 
-import { FetchedState } from '../../types'; // eslint-disable-line no-unused-vars
-import { ApiError } from '../../types/api-error'; // eslint-disable-line no-unused-vars
+import { FetchedState } from '../../types';
+import { ApiError } from '../../types/api-error';
 
 import './TraceName.css';
 

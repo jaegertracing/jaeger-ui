@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -37,31 +35,26 @@ const COLORS_HEX = [
   '#776E57',
 ];
 
-function mapHexToRgb(colors): [number, number, number][] {
-  const hexRegex = /\w\w/g;
-  return colors.map(s => {
-    const _s = s.slice(1);
-    const rv: number[] = [];
-    let match = hexRegex.exec(_s);
-    while (match) {
-      const hex = match[0];
-      const b10 = parseInt(hex, 16);
-      rv.push(b10);
-      match = hexRegex.exec(_s);
-    }
-    return Object.freeze((rv: any));
-  });
+// TS needs the precise return type
+function strToRgb(s: string): [number, number, number] {
+  if (s.length !== 7) {
+    return [0, 0, 0];
+  }
+  const r = s.slice(1, 3);
+  const g = s.slice(3, 5);
+  const b = s.slice(5);
+  return [parseInt(r, 16), parseInt(g, 16), parseInt(b, 16)];
 }
 
 export class ColorGenerator {
   colorsHex: string[];
   colorsRgb: [number, number, number][];
-  cache: Map<string, ?number>;
+  cache: Map<string, number>;
   currentIdx: number;
 
   constructor(colorsHex: string[] = COLORS_HEX) {
     this.colorsHex = colorsHex;
-    this.colorsRgb = mapHexToRgb(colorsHex);
+    this.colorsRgb = colorsHex.map(strToRgb);
     this.cache = new Map();
     this.currentIdx = 0;
   }
@@ -80,9 +73,6 @@ export class ColorGenerator {
    * Will assign a color to an arbitrary key.
    * If the key has been used already, it will
    * use the same color.
-   *
-   * @param  {String} key Key name
-   * @return {String} HEX Color
    */
   getColorByKey(key: string) {
     const i = this._getColorIndex(key);

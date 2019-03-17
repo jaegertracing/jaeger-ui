@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import TNullable from '../../types/nullable'; // eslint-disable-line no-unused-vars
-import { TraceDiffState } from '../../types/trace-diff'; // eslint-disable-line no-unused-vars
+import TNullable from '../../types/nullable';
+import { TraceDiffState } from '../../types/trace-diff';
 
 export default function getValidState(state: TraceDiffState) {
   const { a: stA, b: stB, cohort: stCohort } = state;

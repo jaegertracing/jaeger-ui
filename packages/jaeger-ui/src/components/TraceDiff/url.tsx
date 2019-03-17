@@ -16,7 +16,7 @@ import queryString from 'query-string';
 import { matchPath } from 'react-router-dom';
 
 import getValidState from './getValidState';
-import { TraceDiffState } from '../../types/trace-diff'; // eslint-disable-line no-unused-vars
+import { TraceDiffState } from '../../types/trace-diff';
 import prefixUrl from '../../utils/prefix-url';
 
 export const ROUTE_PATH = prefixUrl('/trace/:a?\\.\\.\\.:b?');

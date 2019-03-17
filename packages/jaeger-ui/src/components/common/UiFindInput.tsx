@@ -19,11 +19,11 @@ import queryString from 'query-string';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
 
-import { History as RouterHistory, Location } from 'history'; // eslint-disable-line no-unused-vars
+import { History as RouterHistory, Location } from 'history';
 
 import updateUiFind from '../../utils/update-ui-find';
 
-import { ReduxState } from '../../types/index'; // eslint-disable-line no-unused-vars
+import { ReduxState } from '../../types/index';
 
 type OwnPropsType = {
   forwardedRef?: { current: Input | null };

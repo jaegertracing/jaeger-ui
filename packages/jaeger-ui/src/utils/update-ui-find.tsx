@@ -16,10 +16,9 @@
 
 import queryString from 'query-string';
 
-import { History as RouterHistory, Location } from 'history'; // eslint-disable-line no-unused-vars
-// import { Location, RouterHistory } from 'react-router-dom';
+import { History as RouterHistory, Location } from 'history';
 
-import TNullable from '../types/nullable'; // eslint-disable-line no-unused-vars
+import TNullable from '../types/nullable';
 
 export default function updateUiFind({
   history,
@@ -32,6 +31,7 @@ export default function updateUiFind({
   trackFindFunction?: (uiFind: string | TNullable) => void;
   uiFind?: string | TNullable;
 }) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { uiFind: omittedOldValue, ...queryParams } = queryString.parse(location.search);
   if (trackFindFunction) {
     trackFindFunction(uiFind);

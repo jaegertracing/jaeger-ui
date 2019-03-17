@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,24 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-type TimeCursorUpdate = {
-  cursor: ?number,
-};
+import { TNil } from '../../types';
 
-type TimeReframeUpdate = {
+interface TimeCursorUpdate {
+  cursor: number | TNil;
+}
+
+interface TimeReframeUpdate {
   reframe: {
-    anchor: number,
-    shift: number,
-  },
-};
+    anchor: number;
+    shift: number;
+  };
+}
 
-type TimeShiftEndUpdate = {
-  shiftEnd: number,
-};
+interface TimeShiftEndUpdate {
+  shiftEnd: number;
+}
 
-type TimeShiftStartUpdate = {
-  shiftStart: number,
-};
+interface TimeShiftStartUpdate {
+  shiftStart: number;
+}
 
 export type ViewRangeTimeUpdate =
   | TimeCursorUpdate
@@ -39,17 +39,17 @@ export type ViewRangeTimeUpdate =
   | TimeShiftEndUpdate
   | TimeShiftStartUpdate;
 
-export type ViewRangeTime = {
-  current: [number, number],
-  cursor?: ?number,
+export interface ViewRangeTime {
+  current: [number, number];
+  cursor?: number | TNil;
   reframe?: {
-    anchor: number,
-    shift: number,
-  },
-  shiftEnd?: number,
-  shiftStart?: number,
-};
+    anchor: number;
+    shift: number;
+  };
+  shiftEnd?: number;
+  shiftStart?: number;
+}
 
-export type ViewRange = {
-  time: ViewRangeTime,
-};
+export interface ViewRange {
+  time: ViewRangeTime;
+}

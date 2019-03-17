@@ -14,7 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import TNullable from './nullable'; // eslint-disable-line no-unused-vars
+import TNullable from './nullable';
 
 // eslint-disable-next-line import/prefer-default-export
 export type TraceDiffState = {

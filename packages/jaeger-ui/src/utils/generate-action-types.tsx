@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,8 +28,8 @@
 export default function generateActionTypes(
   commonPrefix: string,
   topLevelTypes: string[]
-): { [string]: string } {
-  const rv = {};
+): Record<string, string> {
+  const rv: Record<string, string> = {};
   topLevelTypes.forEach(type => {
     const fullType = `${commonPrefix}/${type}`;
     rv[type] = fullType;

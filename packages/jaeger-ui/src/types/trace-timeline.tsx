@@ -14,8 +14,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import DetailState from '../components/TracePage/TraceTimelineViewer/SpanDetail/DetailState'; // eslint-disable-line no-unused-vars
-import TNullable from './nullable'; // eslint-disable-line no-unused-vars
+import DetailState from '../components/TracePage/TraceTimelineViewer/SpanDetail/DetailState';
+import TNullable from './nullable';
 
 // eslint-disable-next-line import/prefer-default-export
 export type TraceTimeline = {
