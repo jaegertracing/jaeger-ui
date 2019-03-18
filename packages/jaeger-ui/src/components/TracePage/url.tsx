@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2018 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,13 +14,15 @@
 
 import prefixUrl from '../../utils/prefix-url';
 
+import { TNil } from '../../types';
+
 export const ROUTE_PATH = prefixUrl('/trace/:id');
 
 export function getUrl(id: string) {
   return prefixUrl(`/trace/${id}`);
 }
 
-export function getLocation(id: string, state: ?Object) {
+export function getLocation(id: string, state: Record<string, any> | TNil) {
   return {
     state,
     pathname: prefixUrl(`/trace/${id}`),

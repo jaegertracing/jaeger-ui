@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,24 +14,24 @@
 
 import * as React from 'react';
 import { Form, Input } from 'antd';
-import { withRouter } from 'react-router-dom';
-
-import type { RouterHistory } from 'react-router-dom';
+import { RouteComponentProps, Router as RouterHistory, withRouter } from 'react-router-dom';
 
 import { getUrl } from '../TracePage/url';
 
 import './TraceIDSearchInput.css';
 
-type Props = {
-  history: RouterHistory,
+type Props = RouteComponentProps<any> & {
+  history: RouterHistory;
 };
 
 class TraceIDSearchInput extends React.PureComponent<Props> {
-  props: Props;
+  // prettier-ignore
+  props!: Props;
 
-  goToTrace = event => {
+  goToTrace = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const value = event.target.elements.idInput.value;
+    const target = event.target as any;
+    const value = target.elements.idInput.value;
     if (value) {
       this.props.history.push(getUrl(value));
     }
@@ -42,7 +40,7 @@ class TraceIDSearchInput extends React.PureComponent<Props> {
   render() {
     return (
       <Form layout="horizontal" onSubmit={this.goToTrace} className="TraceIDSearchInput--form">
-        <Input name="idInput" placeholder="Lookup by Trace ID..." />
+        <Input autosize={null} name="idInput" placeholder="Lookup by Trace ID..." />
       </Form>
     );
   }
