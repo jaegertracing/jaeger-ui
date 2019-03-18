@@ -20,8 +20,7 @@ import TraceName from '../../common/TraceName';
 import { fetchedState } from '../../../constants';
 import { formatDuration } from '../../../utils/date';
 
-import { FetchedState } from '../../../types';
-import TNullable from '../../../types/nullable';
+import { FetchedState, TNil } from '../../../types';
 import { ApiError } from '../../../types/api-error';
 
 import './ResultItemTitle.css';
@@ -31,8 +30,8 @@ type Props = {
   durationPercent?: number;
   error?: ApiError;
   isInDiffCohort: boolean;
-  linkTo: string | TNullable;
-  state?: FetchedState | TNullable;
+  linkTo: string | TNil;
+  state?: FetchedState | TNil;
   targetBlank?: boolean;
   toggleComparison: (traceID: string, isInDiffCohort: boolean) => void;
   traceID: string;

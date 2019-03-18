@@ -16,7 +16,7 @@ import queryString from 'query-string';
 
 import { History as RouterHistory, Location } from 'history';
 
-import TNullable from '../types/nullable';
+import { TNil } from '../types';
 
 export default function updateUiFind({
   history,
@@ -26,8 +26,8 @@ export default function updateUiFind({
 }: {
   history: RouterHistory;
   location: Location;
-  trackFindFunction?: (uiFind: string | TNullable) => void;
-  uiFind?: string | TNullable;
+  trackFindFunction?: (uiFind: string | TNil) => void;
+  uiFind?: string | TNil;
 }) {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { uiFind: omittedOldValue, ...queryParams } = queryString.parse(location.search);

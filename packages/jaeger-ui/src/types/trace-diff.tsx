@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import TNullable from './nullable';
+import { TNil } from '.';
 
 // eslint-disable-next-line import/prefer-default-export
 export type TraceDiffState = {
-  a: string | TNullable;
-  b: string | TNullable;
+  a: string | TNil;
+  b: string | TNil;
   cohort: string[];
 };

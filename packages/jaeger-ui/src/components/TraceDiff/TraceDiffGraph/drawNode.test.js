@@ -18,18 +18,6 @@ import { shallow } from 'enzyme';
 import drawNodeGenerator, { DiffNode } from './drawNode';
 
 describe('drawNode', () => {
-  const members = [
-    {
-      span: {
-        spanID: 'members-span-id-0',
-      },
-    },
-    {
-      span: {
-        spanID: 'members-span-id-1',
-      },
-    },
-  ];
   const operation = 'operationName';
   const service = 'serviceName';
   describe('diffNode', () => {
@@ -37,7 +25,6 @@ describe('drawNode', () => {
     const props = {
       a: defaultCount,
       b: defaultCount,
-      members,
       operation,
       service,
     };
@@ -87,7 +74,6 @@ describe('drawNode', () => {
         data: {
           [dataKey]: dataValue,
         },
-        members,
         operation,
         service,
       },
@@ -98,7 +84,6 @@ describe('drawNode', () => {
       const drawNodeResult = drawNodeGenerator(new Set())(vertex);
       expect(drawNodeResult.props[dataKey]).toBe(dataValue);
       expect(drawNodeResult.props.isUiFindMatch).toBe(false);
-      expect(drawNodeResult.props.members).toBe(members);
       expect(drawNodeResult.props.operation).toBe(operation);
       expect(drawNodeResult.props.service).toBe(service);
     });

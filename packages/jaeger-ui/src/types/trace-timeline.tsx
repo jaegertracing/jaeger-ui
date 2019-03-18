@@ -13,14 +13,14 @@
 // limitations under the License.
 
 import DetailState from '../components/TracePage/TraceTimelineViewer/SpanDetail/DetailState';
-import TNullable from './nullable';
+import { TNil } from '.';
 
 // eslint-disable-next-line import/prefer-default-export
 export type TraceTimeline = {
-  traceID: string | TNullable;
+  traceID: string | TNil;
   spanNameColumnWidth: number;
   childrenHiddenIDs: Set<string>;
-  findMatches: Set<string> | TNullable;
+  findMatches: Set<string> | TNil;
   detailStates: Map<string, DetailState>;
   hoverIndentGuideIds: Set<string>;
 };

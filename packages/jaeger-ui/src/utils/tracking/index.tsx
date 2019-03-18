@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,6 +19,7 @@ import Raven from 'raven-js';
 
 import convRavenToGa from './conv-raven-to-ga';
 import getConfig from '../config/get-config';
+import { TNil } from '../../types';
 
 const EVENT_LENGTHS = {
   action: 499,
@@ -29,7 +28,7 @@ const EVENT_LENGTHS = {
 };
 
 // Util so "0" and "false" become false
-const isTruish = value => Boolean(value) && value !== '0' && value !== 'false';
+const isTruish = (value?: string | string[]) => Boolean(value) && value !== '0' && value !== 'false';
 
 const isProd = process.env.NODE_ENV === 'production';
 const isDev = process.env.NODE_ENV === 'development';
@@ -56,7 +55,7 @@ function logTrackingCalls() {
   calls.length = 0;
 }
 
-export function trackPageView(pathname: string, search: ?string) {
+export function trackPageView(pathname: string, search: string | TNil) {
   if (isGaEnabled) {
     const pagePath = search ? `${pathname}${search}` : pathname;
     ReactGA.pageview(pagePath);
@@ -83,17 +82,21 @@ export function trackError(description: string) {
 export function trackEvent(
   category: string,
   action: string,
-  labelOrValue?: ?string | ?number,
-  value?: ?number
+  labelOrValue?: string | number | TNil,
+  value?: number | TNil
 ) {
   if (isGaEnabled) {
-    const event = {};
-    if (!/^jaeger/i.test(category)) {
-      event.category = `jaeger/${category}`.slice(0, EVENT_LENGTHS.category);
-    } else {
-      event.category = category.slice(0, EVENT_LENGTHS.category);
-    }
-    event.action = action.slice(0, EVENT_LENGTHS.action);
+    const event: {
+      action: string;
+      category: string;
+      label?: string;
+      value?: number;
+    } = {
+      category: !/^jaeger/i.test(category)
+        ? `jaeger/${category}`.slice(0, EVENT_LENGTHS.category)
+        : category.slice(0, EVENT_LENGTHS.category),
+      action: action.slice(0, EVENT_LENGTHS.action),
+    };
     if (labelOrValue != null) {
       if (typeof labelOrValue === 'string') {
         event.label = labelOrValue.slice(0, EVENT_LENGTHS.action);
@@ -112,7 +115,8 @@ export function trackEvent(
   }
 }
 
-function trackRavenError(ravenData: RavenTransportOptions) {
+function trackRavenError(ravenData: any /* RavenTransportOptions */) {
+  // TODO: Everett raven types
   const { message, category, action, label, value } = convRavenToGa(ravenData);
   trackError(message);
   trackEvent(category, action, label, value);
@@ -163,7 +167,7 @@ if (isGaEnabled) {
       tags: {},
     };
     if (versionShort && versionShort !== 'unknown') {
-      ravenConfig.tags.git = versionShort;
+      (ravenConfig.tags as { git: string }).git = versionShort; // TODO: Everett raven types
     }
     Raven.config('https://fakedsn@omg.com/1', ravenConfig).install();
     window.onunhandledrejection = function trackRejectedPromise(evt) {

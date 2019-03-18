@@ -18,17 +18,16 @@ import BreakableText from './BreakableText';
 import LoadingIndicator from './LoadingIndicator';
 import { fetchedState, FALLBACK_TRACE_NAME } from '../../constants';
 
-import { FetchedState } from '../../types';
-import TNullable from '../../types/nullable';
+import { FetchedState, TNil } from '../../types';
 import { ApiError } from '../../types/api-error';
 
 import './TraceName.css';
 
 type Props = {
   className?: string;
-  error?: ApiError | TNullable;
-  state?: FetchedState | TNullable;
-  traceName?: string | TNullable;
+  error?: ApiError | TNil;
+  state?: FetchedState | TNil;
+  traceName?: string | TNil;
 };
 
 export default function TraceName(props: Props) {

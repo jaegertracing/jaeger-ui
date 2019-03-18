@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import TNullable from './nullable';
+import { TNil } from '.';
 
 export type ConfigMenuItem = {
   label: string;
@@ -26,11 +26,11 @@ export type ConfigMenuGroup = {
 };
 
 export type Config = {
-  archiveEnabled: boolean | TNullable;
+  archiveEnabled: boolean | TNil;
   dependencies?: { dagMaxServicesLen?: number; menuEnabled?: boolean };
   tracking?: {
-    gaID: string | TNullable;
-    trackErrors: boolean | TNullable;
+    gaID: string | TNil;
+    trackErrors: boolean | TNil;
   };
   menu: (ConfigMenuGroup | ConfigMenuItem)[];
 };

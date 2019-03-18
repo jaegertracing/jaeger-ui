@@ -1,4 +1,3 @@
-// @flow
 // Copyright (c) 2019 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,16 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { KeyValuePair, Span } from '../types/trace';
+import { KeyValuePair, Span } from '../types/trace';
+import { TNil } from '../types';
 
-export default function filterSpans(textFilter: string, spans: ?(Span[])) {
+export default function filterSpans(textFilter: string, spans: Span[] | TNil) {
   if (!spans) return null;
 
   // if a span field includes at least one filter in includeFilters, the span is a match
-  const includeFilters = [];
+  const includeFilters: string[] = [];
 
   // values with keys that include text in any one of the excludeKeys will be ignored
-  const excludeKeys = [];
+  const excludeKeys: string[] = [];
 
   // split textFilter by whitespace, remove empty strings, and extract includeFilters and excludeKeys
   textFilter

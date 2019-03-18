@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2019 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,7 +17,8 @@ import _get from 'lodash/get';
 const BASE_MATCH_SIZE = 8;
 const SCALABLE_MATCH_SIZE = 4;
 
-export function setOnEdgesContainer(state: Object) {
+// TODO: get state type from @plexus
+export function setOnEdgesContainer(state: { zoomTransform?: { k: number } }) {
   const { zoomTransform } = state;
   if (!zoomTransform) {
     return null;
@@ -29,7 +28,7 @@ export function setOnEdgesContainer(state: Object) {
   return { style: { opacity, zIndex: 1, position: 'absolute', pointerEvents: 'none' } };
 }
 
-export function setOnNodesContainer(state: Object) {
+export function setOnNodesContainer(state: { zoomTransform?: { k: number } }) {
   const { zoomTransform } = state;
   const matchSize = BASE_MATCH_SIZE + SCALABLE_MATCH_SIZE / _get(zoomTransform, 'k', 1);
   return {

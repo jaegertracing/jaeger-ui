@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2018 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +18,7 @@ import cx from 'classnames';
 
 import CopyIcon from '../../common/CopyIcon';
 
-import type { PVertex } from '../../../model/trace-dag/types';
+import { PVertex } from '../../../model/trace-dag/types';
 
 import './drawNode.css';
 
@@ -89,16 +87,8 @@ export class DiffNode extends React.PureComponent<Props> {
 }
 
 function drawNode<T>(vertex: PVertex<T>, keys: Set<number | string>) {
-  const { data, members, operation, service } = vertex.data;
-  return (
-    <DiffNode
-      {...data}
-      isUiFindMatch={keys.has(vertex.key)}
-      members={members}
-      operation={operation}
-      service={service}
-    />
-  );
+  const { data, operation, service } = vertex.data;
+  return <DiffNode {...data} isUiFindMatch={keys.has(vertex.key)} operation={operation} service={service} />;
 }
 
 export default function drawNodeGenerator(keys: Set<number | string>) {

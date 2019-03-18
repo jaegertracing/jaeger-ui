@@ -20,7 +20,6 @@ import { ApiError } from './api-error';
 import { TracesArchive } from './archive';
 import { Config } from './config';
 import { EmbeddedState } from './embedded';
-import TNullable from './nullable';
 import { SearchQuery } from './search';
 import { Trace } from './trace';
 import { TraceDiffState } from './trace-diff';
@@ -43,17 +42,17 @@ export type ReduxState = {
   dependencies: {
     dependencies: { parent: string; child: string; callCount: number }[];
     loading: boolean;
-    error: ApiError | TNullable;
+    error: ApiError | TNil;
   };
   embedded: EmbeddedState;
   router: Router & {
     location: Location;
   };
   services: {
-    services: (string[]) | TNullable;
+    services: (string[]) | TNil;
     operationsForService: Record<string, string[]>;
     loading: boolean;
-    error: ApiError | TNullable;
+    error: ApiError | TNil;
   };
   trace: {
     traces: Record<string, FetchedTrace>;

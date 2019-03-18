@@ -12,15 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import TNullable from '../../types/nullable';
+import { TNil } from '../../types';
 import { TraceDiffState } from '../../types/trace-diff';
 
 export default function getValidState(state: TraceDiffState) {
   const { a: stA, b: stB, cohort: stCohort } = state;
   const cohortSet = new Set(
-    ([] as (string | TNullable)[])
+    ([] as (string | TNil)[])
       .concat(stA, stB, stCohort)
-      .filter((str: string | TNullable): str is string => Boolean(str))
+      .filter((str: string | TNil): str is string => Boolean(str))
   );
   const cohort: string[] = Array.from(cohortSet);
   const a = cohort[0];

@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Uber Technologies, Inc.
+// Copyright (c) 2018 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,6 +12,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-type TNullable = null | undefined;
+import DagNode from './DagNode';
 
-export default TNullable; // eslint-disable-line no-undef
+import { Span } from '../../types/trace';
+import { TNil } from '../../types';
+
+export type NodeID = string;
+
+export type DenseSpan = {
+  span: Span;
+  id: string;
+  service: string;
+  operation: string;
+  tags: Record<string, any>;
+  parentID: string | TNil;
+  skipToChild: boolean;
+  children: Set<string>;
+};
+
+export type PVertex<T> = {
+  key: string | number;
+  data: DagNode<T>;
+};
+
+export type PEdge = {
+  from: string | number;
+  to: string | number;
+};

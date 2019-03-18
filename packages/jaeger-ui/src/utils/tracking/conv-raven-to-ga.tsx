@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -44,7 +42,7 @@ const warn = console.warn.bind(console);
 const origin = window.location.origin + prefixUrl('');
 
 // truncate and use "~" instead of ellipsis bc it's shorter
-function truncate(str, len, front = false) {
+function truncate(str: string, len: number, front: boolean = false) {
   if (str.length > len) {
     if (!front) {
       return `${str.slice(0, len - 1)}~`;
@@ -55,7 +53,7 @@ function truncate(str, len, front = false) {
 }
 
 // Replace newlines with "|" and collapse whitespace to " "
-function collapseWhitespace(value) {
+function collapseWhitespace(value: string) {
   return value
     .trim()
     .replace(/\n/g, '|')
@@ -64,7 +62,7 @@ function collapseWhitespace(value) {
 }
 
 // shorten URLs to eitehr a short code or a word
-function getSym(syms, str) {
+function getSym(syms: typeof NAV_SYMBOLS | typeof FETCH_SYMBOLS, str: string) {
   for (let i = 0; i < syms.length; i++) {
     const { rx } = syms[i];
     if (rx.test(str)) {
@@ -89,7 +87,7 @@ function getSym(syms, str) {
 //
 //   The real error message
 //     ! The real error message
-function convErrorMessage(message, maxLen = 0) {
+function convErrorMessage(message: string, maxLen: number = 0) {
   let msg = collapseWhitespace(message);
   const parts = ['! '];
   const j = msg.indexOf(':');
@@ -123,7 +121,18 @@ function convErrorMessage(message, maxLen = 0) {
 //      > chunk.js
 //      cFn
 //      dFn
-function convException(errValue) {
+//
+interface IConvException {
+  type: string;
+  value: number;
+  stacktrace: {
+    frames: {
+      filename: string;
+      function: string;
+    }[];
+  };
+}
+function convException(errValue: IConvException) {
   const message = convErrorMessage(`${errValue.type}: ${errValue.value}`, 149);
   const frames = errValue.stacktrace.frames.map(fr => {
     const filename = fr.filename.replace(origin, '').replace(/^\/static\/js\//i, '');
@@ -165,7 +174,12 @@ function convNav(to: string) {
 //    "tr" - fetch a trace
 //    "dp" - fetch the dependency data
 // And, "NNN" is a non-200 status code.
-function convFetch(data: { url: string, status_code: number }) {
+type TCrumbData = {
+  url: string;
+  status_code: number;
+  to: string;
+};
+function convFetch(data: TCrumbData) {
   const { url, status_code } = data;
   const statusStr = status_code === 200 ? '' : `|${status_code}`;
   const sym = getSym(FETCH_SYMBOLS, url);
@@ -200,7 +214,7 @@ function convFetch(data: { url: string, status_code: number }) {
 //
 //    a.ub-flex-auto.ub-mr2 > h1.TracePageHeader--title
 //      => .TracePageHeader--title
-function compressCssSelector(selector) {
+function compressCssSelector(selector: string) {
   return (
     selector
       // cut dangling dots, "div. > div" to "div > div"
@@ -239,7 +253,13 @@ function compressCssSelector(selector) {
 // The chronological ordering of the breadcrumbs is older events precede newer
 // events. This ordering was kept because it's easier to see which page events
 // occurred on.
-function convBreadcrumbs(crumbs) {
+interface ICrumb {
+  category: string;
+  data: TCrumbData;
+  message: string;
+  selector: string;
+}
+function convBreadcrumbs(crumbs: ICrumb[]) {
   if (!Array.isArray(crumbs) || !crumbs.length) {
     return '';
   }
@@ -329,7 +349,7 @@ function convBreadcrumbs(crumbs) {
 
 // Create the GA label value from the message, page, duration, git info, and
 // breadcrumbs. See <./README.md> for details.
-function getLabel(message, page, duration, git, breadcrumbs) {
+function getLabel(message: string, page: string, duration: number, git: string, breadcrumbs: ICrumb[]) {
   const header = [message, page, duration, git, ''].filter(v => v != null).join('\n');
   const crumbs = convBreadcrumbs(breadcrumbs);
   return `${header}\n${truncate(crumbs, 498 - header.length, true)}`;
@@ -337,7 +357,8 @@ function getLabel(message, page, duration, git, breadcrumbs) {
 
 // Convert the Raven exception data to something that can be sent to Google
 // Analytics. See <./README.md> for details.
-export default function convRavenToGa({ data }: RavenTransportOptions) {
+export default function convRavenToGa({ data }: any /* RavenTransportOptions */) {
+  // TODO: Everett figure out input type
   const { breadcrumbs, exception, extra, request, tags } = data;
   const { message, stack } = convException(exception.values[0]);
   const url = truncate(request.url.replace(origin, ''), 50);

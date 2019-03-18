@@ -12,16 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { TNil } from '.';
+
 export type SearchQuery = {
   end: number | string;
   limit: number | string;
   lookback: string;
   maxDuration: null | string;
   minDuration: null | string;
-  operation: string | null | undefined;
+  operation: string | TNil;
   service: string;
   start: number | string;
-  tags: string | null | undefined;
+  tags: string | TNil;
 };
 
 /**

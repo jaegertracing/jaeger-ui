@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2018 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,11 +13,16 @@
 // limitations under the License.
 
 import _flatMap from 'lodash/flatMap';
+import _forEach from 'lodash/forEach';
 import queryString from 'query-string';
 
-import type { EmbeddedState } from '../types/embedded';
+import { EmbeddedState } from '../types/embedded';
 
-const getStrings = value => (typeof value === 'string' ? value : _flatMap(value, getStrings));
+function getStrings(value: string): string;
+function getStrings(value: object): object;
+function getStrings(value: string | object): string | object {
+  return typeof value === 'string' ? value : _flatMap(value, getStrings);
+}
 
 const VALUE_ENABLED = '1';
 export const VERSION_0 = 'v0';
@@ -56,10 +59,11 @@ export function getEmbeddedState(search: string): null | EmbeddedState {
   };
 }
 
-export function stripEmbeddedState(state: Object): Object {
-  const { uiEmbed, ...rv } = state || {};
+export function stripEmbeddedState(state: Record<string, any>): Object {
+  const { uiEmbed = undefined, ...rv } = state;
   if (uiEmbed === VERSION_0) {
-    PARAM_KEYS_V0.forEach(Reflect.deleteProperty.bind(null, rv));
+    // TODO: Everett: this seems weird
+    _forEach(PARAM_KEYS_V0, Reflect.deleteProperty.bind(null, rv));
   }
   return rv;
 }

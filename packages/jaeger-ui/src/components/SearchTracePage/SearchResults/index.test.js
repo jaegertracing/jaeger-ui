@@ -19,7 +19,7 @@ import SearchResults from '.';
 import * as markers from './index.markers';
 import ResultItem from './ResultItem';
 import ScatterPlot from './ScatterPlot';
-import DiffSelection from './DiffSelection.js';
+import DiffSelection from './DiffSelection';
 import LoadingIndicator from '../../common/LoadingIndicator';
 
 describe('<SearchResults>', () => {
@@ -34,6 +34,7 @@ describe('<SearchResults>', () => {
       goToTrace: () => {},
       loading: false,
       maxTraceDuration: 1,
+      queryOfResults: {},
       traces,
     };
     wrapper = shallow(<SearchResults {...props} />);
