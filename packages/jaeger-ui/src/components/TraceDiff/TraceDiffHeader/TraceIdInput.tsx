@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,4 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export { default } from './TraceDiffHeader';
+import * as React from 'react';
+import { Input } from 'antd';
+
+type Props = {
+  selectTrace: (traceID: string) => void,
+};
+
+const { Search } = Input;
+
+export default function TraceIdInput(props: Props) {
+  const { selectTrace } = props;
+  return <Search addonBefore="Select by Trace ID" enterButton onSearch={selectTrace} />;
+}

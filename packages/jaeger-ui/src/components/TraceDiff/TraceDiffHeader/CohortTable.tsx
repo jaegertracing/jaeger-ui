@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,24 +21,22 @@ import TraceName from '../../common/TraceName';
 import { fetchedState } from '../../../constants';
 import { formatDuration } from '../../../utils/date';
 
-import type { FetchedTrace } from '../../../types';
+import { FetchedTrace, TNil } from '../../../types';
 
 import './CohortTable.css';
 
 type Props = {
-  selection: {
-    [string]: { label: string },
-  },
-  current: ?string,
+  selection: Record<string, { label: string }>,
+  current: string | TNil,
   cohort: FetchedTrace[],
-  selectTrace: string => void,
+  selectTrace: (traceID: string) => void,
 };
 
 const { Column } = Table;
 
 const defaultRowSelection = {
   hideDefaultSelections: true,
-  type: 'radio',
+  type: 'radio' as 'radio',
 };
 
 export const NEED_MORE_TRACES_MESSAGE = (
@@ -50,8 +46,6 @@ export const NEED_MORE_TRACES_MESSAGE = (
 );
 
 export default class CohortTable extends React.PureComponent<Props> {
-  props: Props;
-
   getCheckboxProps = (record: FetchedTrace) => {
     const { current, selection } = this.props;
     const { id, state } = record;
@@ -66,7 +60,8 @@ export default class CohortTable extends React.PureComponent<Props> {
     const rowSelection = {
       ...defaultRowSelection,
       getCheckboxProps: this.getCheckboxProps,
-      onChange: ids => selectTrace(ids[0]),
+      // TODO: Antd Table believes onChange can be called with a string or number, but that seems wrong
+      onChange: (ids: number[] | string[]) => selectTrace(ids[0] as string),
       selectedRowKeys: current ? [current] : [],
     };
 
@@ -90,10 +85,10 @@ export default class CohortTable extends React.PureComponent<Props> {
           title="Service &amp; Operation"
           sortOrder="descend"
           dataIndex="data.traceName"
-          render={(_, record) => {
+          render={(_, record: FetchedTrace) => {
             const { data, error, id, state } = record;
-            const { traceName } = data || {};
-            const { label } = selection[id] || {};
+            const { traceName = undefined } = data || {};
+            const { label = undefined } = selection[id] || {};
             return (
               <React.Fragment>
                 {label != null && (
@@ -116,7 +111,7 @@ export default class CohortTable extends React.PureComponent<Props> {
           title="Date"
           dataIndex="data.startTime"
           key="startTime"
-          render={(value, record) =>
+          render={(value, record: FetchedTrace) =>
             record.state === fetchedState.DONE && (
               <RelativeDate fullMonthName includeTime value={value / 1000} />
             )
@@ -126,7 +121,7 @@ export default class CohortTable extends React.PureComponent<Props> {
           title="Duration"
           dataIndex="data.duration"
           key="duration"
-          render={(value, record) => record.state === fetchedState.DONE && formatDuration(value)}
+          render={(value, record: FetchedTrace) => record.state === fetchedState.DONE && formatDuration(value)}
         />
         <Column title="Spans" dataIndex="data.spans.length" key="spans" />
         <Column

@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2019 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,7 +21,7 @@ type PropsType = {
   traceID: string,
 };
 
-function stopPropagation(event: SyntheticMouseEvent<HTMLAnchorElement>) {
+function stopPropagation(event: React.MouseEvent<HTMLAnchorElement>) {
   event.stopPropagation();
 }
 

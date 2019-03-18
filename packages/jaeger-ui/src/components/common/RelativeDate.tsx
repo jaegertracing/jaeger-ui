@@ -22,7 +22,9 @@ type Props = {
   value: number | Date | any;
 };
 
-export default function RelativeDate(props: Props) {
+// TODO typescript doesn't understand text or null as react nodes
+// https://github.com/Microsoft/TypeScript/issues/21699
+export default function RelativeDate(props: Props): any {
   const { value, includeTime, fullMonthName } = props;
   const m = moment.isMoment(value) ? value : moment(value);
   const dateStr = formatRelativeDate(m, Boolean(fullMonthName));

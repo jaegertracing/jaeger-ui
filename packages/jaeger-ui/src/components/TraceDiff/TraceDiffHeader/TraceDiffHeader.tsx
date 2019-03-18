@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,29 +19,27 @@ import CohortTable from './CohortTable';
 import TraceHeader from './TraceHeader';
 import TraceIdInput from './TraceIdInput';
 
-import type { FetchedTrace } from '../../../types';
+import { FetchedTrace, TNil } from '../../../types';
 
 import './TraceDiffHeader.css';
 
 type Props = {
-  a: ?FetchedTrace,
-  b: ?FetchedTrace,
+  a: FetchedTrace | TNil,
+  b: FetchedTrace | TNil,
   cohort: FetchedTrace[],
-  diffSetA: string => void,
-  diffSetB: string => void,
+  diffSetA: (traceId: string) => void,
+  diffSetB: (traceId: string) => void,
 };
 
 type State = {
-  tableVisible: ?('a' | 'b'),
+  tableVisible: ('a' | 'b') | null,
 };
 
 export default class TraceDiffHeader extends React.PureComponent<Props, State> {
-  props: Props;
-
-  _toggleTableA: boolean => void;
-  _toggleTableB: boolean => void;
-  _diffSetA: string => void;
-  _diffSetB: string => void;
+  _toggleTableA: (showTable: boolean) => void;
+  _toggleTableB: (showTable: boolean) => void;
+  _diffSetA: (traceID: string) => void;
+  _diffSetB: (traceID: string) => void;
 
   state = {
     tableVisible: null,
@@ -74,9 +70,9 @@ export default class TraceDiffHeader extends React.PureComponent<Props, State> {
   render() {
     const { a, b, cohort } = this.props;
     const { tableVisible } = this.state;
-    const { data: aData = {}, id: aId, state: aState, error: aError } = a || {};
-    const { data: bData = {}, id: bId, state: bState, error: bError } = b || {};
-    const selection = {};
+    const { data: aData = undefined, id: aId = undefined, state: aState = undefined, error: aError = undefined } = a || {};
+    const { data: bData = undefined, id: bId = undefined, state: bState = undefined, error: bError = undefined } = b || {};
+    const selection: Record<string, { label: 'A' | 'B' }> = {};
     if (aId) selection[aId] = { label: 'A' };
     if (bId) selection[bId] = { label: 'B' };
     const cohortTableA = (
@@ -101,13 +97,13 @@ export default class TraceDiffHeader extends React.PureComponent<Props, State> {
         >
           <div className="ub-flex u-flex-1">
             <TraceHeader
-              duration={aData.duration}
+              duration={aData && aData.duration}
               error={aError}
-              startTime={aData.startTime}
+              startTime={aData && aData.startTime}
               state={aState}
-              totalSpans={aData.spans && aData.spans.length}
+              totalSpans={aData && aData.spans && aData.spans.length}
               traceID={aId}
-              traceName={aData.traceName}
+              traceName={aData && aData.traceName}
             />
           </div>
         </Popover>
@@ -128,13 +124,13 @@ export default class TraceDiffHeader extends React.PureComponent<Props, State> {
         >
           <div className="ub-flex u-flex-1">
             <TraceHeader
-              duration={bData.duration}
+              duration={bData && bData.duration}
               error={bError}
-              startTime={bData.startTime}
+              startTime={bData && bData.startTime}
               state={bState}
-              totalSpans={bData.spans && bData.spans.length}
+              totalSpans={bData && bData.spans && bData.spans.length}
               traceID={bId}
-              traceName={bData.traceName}
+              traceName={bData && bData.traceName}
             />
           </div>
         </Popover>

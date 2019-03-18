@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,25 +21,25 @@ import TraceName from '../../common/TraceName';
 import { fetchedState } from '../../../constants';
 import { formatDuration } from '../../../utils/date';
 
-import type { FetchedState } from '../../../types';
-import type { ApiError } from '../../../types/api-error';
+import { FetchedState, TNil } from '../../../types';
+import { ApiError } from '../../../types/api-error';
 
 import './TraceHeader.css';
 
 type Props = {
-  duration: ?number,
+  duration: number | TNil,
   error?: ApiError,
-  startTime: ?number,
-  state: ?FetchedState,
-  traceID: ?string,
-  traceName: ?string,
-  totalSpans: ?number,
+  startTime: number | TNil,
+  state: FetchedState | TNil,
+  traceID: string | TNil,
+  traceName: string | TNil,
+  totalSpans: number | TNil,
 };
 
 type AttrsProps = {
-  startTime: ?number,
-  duration: ?number,
-  totalSpans: ?number,
+  startTime: number | TNil,
+  duration: number | TNil,
+  totalSpans: number | TNil,
 };
 
 // exported for tests
