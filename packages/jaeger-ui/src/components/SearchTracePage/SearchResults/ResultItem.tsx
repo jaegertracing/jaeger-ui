@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,24 +24,22 @@ import ResultItemTitle from './ResultItemTitle';
 import colorGenerator from '../../../utils/color-generator';
 import { formatRelativeDate } from '../../../utils/date';
 
-import type { Trace } from '../../../types/trace';
+import { KeyValuePair, Trace } from '../../../types/trace';
 
 import './ResultItem.css';
 
 type Props = {
-  durationPercent: number,
-  isInDiffCohort: boolean,
-  linkTo: string,
-  toggleComparison: string => void,
-  trace: Trace,
-  disableComparision: boolean,
+  durationPercent: number;
+  isInDiffCohort: boolean;
+  linkTo: string;
+  toggleComparison: (traceID: string) => void;
+  trace: Trace;
+  disableComparision: boolean;
 };
 
-const isErrorTag = ({ key, value }) => key === 'error' && (value === true || value === 'true');
+const isErrorTag = ({ key, value }: KeyValuePair) => key === 'error' && (value === true || value === 'true');
 
 export default class ResultItem extends React.PureComponent<Props> {
-  props: Props;
-
   render() {
     const {
       disableComparision,

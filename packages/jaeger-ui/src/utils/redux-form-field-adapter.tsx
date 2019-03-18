@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,9 +25,9 @@ export default function reduxFormFieldAdapter({
   onChangeAdapter,
   isValidatedInput = false,
 }: {
-  AntInputComponent: Class<React.Component<*, *>>,
-  onChangeAdapter: () => void,
-  isValidatedInput: boolean,
+  AntInputComponent: React.ComponentType;
+  onChangeAdapter: (evt: React.ChangeEvent) => any;
+  isValidatedInput: boolean;
 }) {
   return function _reduxFormFieldAdapter(props: any) {
     const { input: { onBlur, onChange, onFocus, value }, children, ...rest } = props;
@@ -42,7 +40,7 @@ export default function reduxFormFieldAdapter({
         })}
         onBlur={isValidatedInput && onBlur ? onBlur : noop}
         onFocus={isValidatedInput && onFocus ? onFocus : noop}
-        onChange={onChangeAdapter ? (...args) => onChange(onChangeAdapter(...args)) : onChange}
+        onChange={onChangeAdapter ? (arg: React.ChangeEvent) => onChange(onChangeAdapter(arg)) : onChange}
         value={value}
         {...rest}
       >

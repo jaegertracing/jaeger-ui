@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,31 +20,30 @@ import TraceName from '../../common/TraceName';
 import { fetchedState } from '../../../constants';
 import { formatDuration } from '../../../utils/date';
 
-import type { FetchedState } from '../../../types';
-import type { ApiError } from '../../../types/api-error';
+import { FetchedState } from '../../../types';
+import TNullable from '../../../types/nullable';
+import { ApiError } from '../../../types/api-error';
 
 import './ResultItemTitle.css';
 
 type Props = {
-  duration: number,
-  durationPercent?: number,
-  error?: ApiError,
-  isInDiffCohort: boolean,
-  linkTo: ?string,
-  state?: ?FetchedState,
-  targetBlank?: boolean,
-  toggleComparison: (string, boolean) => void,
-  traceID: string,
-  traceName: string,
-  disableComparision?: boolean,
+  duration?: number;
+  durationPercent?: number;
+  error?: ApiError;
+  isInDiffCohort: boolean;
+  linkTo: string | TNullable;
+  state?: FetchedState | TNullable;
+  targetBlank?: boolean;
+  toggleComparison: (traceID: string, isInDiffCohort: boolean) => void;
+  traceID: string;
+  traceName?: string;
+  disableComparision?: boolean;
 };
 
 const DEFAULT_DURATION_PERCENT = 0;
 
 export default class ResultItemTitle extends React.PureComponent<Props> {
-  props: Props;
-
-  static defaultProps = {
+  static defaultProps: Partial<Props> = {
     disableComparision: false,
     durationPercent: DEFAULT_DURATION_PERCENT,
     error: undefined,
@@ -73,11 +70,11 @@ export default class ResultItemTitle extends React.PureComponent<Props> {
       traceName,
     } = this.props;
     // Use a div when the ResultItemTitle doesn't link to anything
-    let WrapperComponent = 'div';
-    const wrapperProps: { [string]: string } = { className: 'ResultItemTitle--item ub-flex-auto' };
+    let WrapperComponent: string | typeof Link = 'div';
+    const wrapperProps: Record<string, string> = { className: 'ResultItemTitle--item ub-flex-auto' };
     if (linkTo) {
-      WrapperComponent = Link;
       wrapperProps.to = linkTo;
+      WrapperComponent = Link;
       if (targetBlank) {
         wrapperProps.target = '_blank';
         wrapperProps.rel = 'noopener noreferrer';
@@ -94,7 +91,10 @@ export default class ResultItemTitle extends React.PureComponent<Props> {
             onChange={this.toggleComparison}
           />
         )}
-        <WrapperComponent {...wrapperProps}>
+        {/* <WrapperComponent to={linkTo || ''} {...wrapperProps}> */}
+        {/* <WrapperComponent {...wrapperProps}> */}
+        {/* TODO: Everett figure out how to ensure type is correct */}
+        <WrapperComponent {...wrapperProps as { [key: string]: any; to: string }}>
           <span
             className="ResultItemTitle--durationBar"
             style={{ width: `${durationPercent || DEFAULT_DURATION_PERCENT}%` }}

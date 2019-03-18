@@ -23,27 +23,26 @@ import { getUrl } from '../../TraceDiff/url';
 import { getUrl as getTracePageUrl } from '../../TracePage/url';
 import { fetchedState } from '../../../constants';
 
-import type { FetchedTrace } from '../../../types';
+import { FetchedTrace } from '../../../types';
 
 import './DiffSelection.css';
 
 type Props = {
-  toggleComparison: (string, boolean) => void,
-  traces: FetchedTrace[],
+  toggleComparison: (traceID: string, isInDiffCohort: boolean) => void;
+  traces: FetchedTrace[];
 };
 
 // Exported for tests
 export const CTA_MESSAGE = <h2 className="ub-m0">Compare traces by selecting result items</h2>;
 
 export default class DiffSelection extends React.PureComponent<Props> {
-  props: Props;
-
   render() {
     const { toggleComparison, traces } = this.props;
     const cohort = traces.filter(ft => ft.state !== fetchedState.ERROR).map(ft => ft.id);
-    const compareHref = cohort.length > 1 ? getUrl({ cohort }) : null;
+    // TODO
+    const compareHref = cohort.length > 1 ? getUrl({ a: undefined, b: undefined, cohort }) : null;
     const compareBtn = (
-      <Button className="ub-right" disabled={cohort.length < 2} type="primary">
+      <Button className="ub-right" disabled={cohort.length < 2} htmlType="button" type="primary">
         Compare Traces
       </Button>
     );
@@ -52,11 +51,11 @@ export default class DiffSelection extends React.PureComponent<Props> {
         {traces.length > 0 && (
           <div className="DiffSelection--selectedItems">
             {traces.map(fetchedTrace => {
-              const { data = {}, error, id, state } = fetchedTrace;
+              const { data, error, id, state } = fetchedTrace;
               return (
                 <ResultItemTitle
                   key={id}
-                  duration={data.duration}
+                  duration={data && data.duration}
                   error={error}
                   isInDiffCohort
                   linkTo={getTracePageUrl(id)}
@@ -64,7 +63,7 @@ export default class DiffSelection extends React.PureComponent<Props> {
                   targetBlank
                   toggleComparison={toggleComparison}
                   traceID={id}
-                  traceName={data.traceName}
+                  traceName={data && data.traceName}
                 />
               );
             })}

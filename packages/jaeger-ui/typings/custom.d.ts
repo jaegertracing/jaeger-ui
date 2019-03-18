@@ -17,10 +17,11 @@ declare const global: {
   location: Location;
 }
 
-// For setting the site-prefix
 declare interface Window {
-  // eslint-disable-next-line camelcase
-  __webpack_public_path__: string;
+  // For setting the site-prefix
+  __webpack_public_path__: string; // eslint-disable-line camelcase
+  // For getting ui config
+  getJaegerUiConfig?: () => Record<string, any>;
 }
 
 // For inlined envvars

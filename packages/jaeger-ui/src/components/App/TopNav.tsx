@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,6 +14,7 @@
 
 import React from 'react';
 import { Dropdown, Icon, Menu } from 'antd';
+import _has from 'lodash/has';
 import { connect } from 'react-redux';
 import { Link, withRouter } from 'react-router-dom';
 
@@ -26,8 +25,8 @@ import * as diffUrl from '../TraceDiff/url';
 import { getConfigValue } from '../../utils/config/get-config';
 import prefixUrl from '../../utils/prefix-url';
 
-import type { ReduxState } from '../../types';
-import type { ConfigMenuItem, ConfigMenuGroup } from '../../types/config';
+import { ReduxState } from '../../types';
+import { ConfigMenuItem, ConfigMenuGroup } from '../../types/config';
 
 type Props = ReduxState;
 
@@ -74,6 +73,10 @@ function CustomNavDropdown({ label, items }: ConfigMenuGroup) {
   );
 }
 
+function isItem(itemOrGroup: ConfigMenuItem | ConfigMenuGroup): itemOrGroup is ConfigMenuItem {
+  return !_has(itemOrGroup, 'items');
+}
+
 export function TopNavImpl(props: Props) {
   const { config, router } = props;
   const { pathname } = router.location;
@@ -82,13 +85,12 @@ export function TopNavImpl(props: Props) {
     <div>
       <Menu theme="dark" mode="horizontal" selectable={false} className="ub-right" selectedKeys={[pathname]}>
         {menuItems.map(m => {
-          if (!m.items) {
+          if (isItem(m)) {
             return getItemLink(m);
           }
-          const group = ((m: any): ConfigMenuGroup);
           return (
-            <Menu.Item key={group.label}>
-              <CustomNavDropdown key={group.label} {...group} />
+            <Menu.Item key={m.label}>
+              <CustomNavDropdown key={m.label} {...m} />
             </Menu.Item>
           );
         })}
@@ -113,10 +115,6 @@ export function TopNavImpl(props: Props) {
     </div>
   );
 }
-
-TopNavImpl.defaultProps = {
-  menuConfig: [],
-};
 
 TopNavImpl.CustomNavDropdown = CustomNavDropdown;
 
