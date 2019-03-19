@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2019 The Jaeger Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,20 +14,14 @@
 
 import DRange from 'drange';
 
+import { TEdge } from '@jaegertracing/plexus/lib/types';
 import convPlexus from '../../../model/trace-dag/convPlexus';
 import TraceDag from '../../../model/trace-dag/TraceDag';
-import type { Trace, Span, KeyValuePair } from '../../../types/trace';
+import DagNode from '../../../model/trace-dag/DagNode';
+import { Trace, Span, KeyValuePair } from '../../../types/trace';
+import { TSumSpan } from './types';
 
-type SumSpan = {
-  count: number,
-  errors: number,
-  time: number,
-  percent: number,
-  selfTime: number,
-  percentSelfTime: number,
-};
-
-let parentChildOfMap: { [string]: Span[] };
+let parentChildOfMap: Record<string, Span[]>;
 
 export function isError(tags: Array<KeyValuePair>) {
   if (tags) {
@@ -41,7 +33,7 @@ export function isError(tags: Array<KeyValuePair>) {
   return false;
 }
 
-function extendFollowsFrom(edges: any, nodes: any) {
+function extendFollowsFrom(edges: TEdge[], nodes: DagNode<TSumSpan>[]) {
   return edges.map(e => {
     let hasChildOf = true;
     if (typeof e.to === 'number') {
@@ -71,7 +63,7 @@ function getChildOfSpans(parentID: string, trace: Trace): Span[] {
   return parentChildOfMap[parentID] || [];
 }
 
-function getChildOfDrange(parentID: string, trace: Trace): number {
+function getChildOfDrange(parentID: string, trace: Trace) {
   const childrenDrange = new DRange();
   getChildOfSpans(parentID, trace).forEach(s => {
     // -1 otherwise it will take for each child a micro (incluse,exclusive)
@@ -80,8 +72,8 @@ function getChildOfDrange(parentID: string, trace: Trace): number {
   return childrenDrange;
 }
 
-export function calculateTraceDag(trace: Trace): TraceDag<SumSpan> {
-  const traceDag: TraceDag<SumSpan> = new TraceDag();
+export function calculateTraceDag(trace: Trace): TraceDag<TSumSpan> {
+  const traceDag: TraceDag<TSumSpan> = new TraceDag();
   traceDag._initFromTrace(trace, {
     count: 0,
     errors: 0,

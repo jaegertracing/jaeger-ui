@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2018 The Jaeger Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,21 +19,22 @@ import cx from 'classnames';
 import CopyIcon from '../../common/CopyIcon';
 import colorGenerator from '../../../utils/color-generator';
 
-import type { PVertex } from '../../../model/trace-dag/types';
+import TDagVertex from '../../../model/trace-dag/types/TDagVertex';
+import { TSumSpan } from './types';
 
 import './OpNode.css';
 
 type Props = {
-  count: number,
-  errors: number,
-  time: number,
-  percent: number,
-  selfTime: number,
-  percentSelfTime: number,
-  operation: string,
-  service: string,
-  mode: string,
-  isUiFindMatch: boolean,
+  count: number;
+  errors: number;
+  time: number;
+  percent: number;
+  selfTime: number;
+  percentSelfTime: number;
+  operation: string;
+  service: string;
+  mode: string;
+  isUiFindMatch: boolean;
 };
 
 export const MODE_SERVICE = 'service';
@@ -142,7 +141,7 @@ export default class OpNode extends React.PureComponent<Props> {
 }
 
 export function getNodeDrawer(mode: string, uiFindVertexKeys: Set<number | string>) {
-  return function drawNode<T>(vertex: PVertex<T>) {
+  return function drawNode(vertex: TDagVertex<TSumSpan>) {
     const { data, operation, service } = vertex.data;
     return (
       <OpNode
