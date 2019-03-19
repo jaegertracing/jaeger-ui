@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2019 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,9 +15,10 @@
 import _find from 'lodash/find';
 import _get from 'lodash/get';
 
-import type { Span } from '../types/trace';
+import { TNil } from '../types';
+import { Span } from '../types/trace';
 
-function getFirstAncestor(span: Span): ?Span {
+function getFirstAncestor(span: Span): Span | TNil {
   return _get(
     _find(
       span.references,
@@ -29,7 +28,7 @@ function getFirstAncestor(span: Span): ?Span {
   );
 }
 
-export default function spanAncestorIds(span: ?Span): string[] {
+export default function spanAncestorIds(span: Span | TNil): string[] {
   if (!span) return [];
   const ancestorIDs: Set<string> = new Set();
   let ref = getFirstAncestor(span);
