@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,19 +16,19 @@ import * as React from 'react';
 
 import renderIntoCanvas from './render-into-canvas';
 import colorGenerator from '../../../../utils/color-generator';
+import { TNil } from '../../../../types';
 
 import './CanvasSpanGraph.css';
 
 type CanvasSpanGraphProps = {
-  items: { valueWidth: number, valueOffset: number, serviceName: string }[],
-  valueWidth: number,
+  items: { valueWidth: number; valueOffset: number; serviceName: string }[];
+  valueWidth: number;
 };
 
-const getColor: string => [number, number, number] = str => colorGenerator.getRgbColorByKey(str);
+const getColor = (hex: string) => colorGenerator.getRgbColorByKey(hex);
 
 export default class CanvasSpanGraph extends React.PureComponent<CanvasSpanGraphProps> {
-  props: CanvasSpanGraphProps;
-  _canvasElm: ?HTMLCanvasElement;
+  _canvasElm: HTMLCanvasElement | TNil;
 
   constructor(props: CanvasSpanGraphProps) {
     super(props);
@@ -45,7 +43,7 @@ export default class CanvasSpanGraph extends React.PureComponent<CanvasSpanGraph
     this._draw();
   }
 
-  _setCanvasRef = (elm: ?HTMLCanvasElement) => {
+  _setCanvasRef = (elm: HTMLCanvasElement | TNil) => {
     this._canvasElm = elm;
   };
 
