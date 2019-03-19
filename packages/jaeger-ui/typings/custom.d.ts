@@ -33,4 +33,5 @@ declare const process: {
   }
 }
 
+declare module 'json-markup';
 declare module 'tween-functions';

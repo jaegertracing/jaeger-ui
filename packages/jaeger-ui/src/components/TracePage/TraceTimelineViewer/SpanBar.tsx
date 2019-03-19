@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,28 +19,28 @@ import { onlyUpdateForKeys, compose, withState, withProps } from 'recompose';
 
 import AccordianLogs from './SpanDetail/AccordianLogs';
 
-import type { ViewedBoundsFunctionType } from './utils';
-import type { Span } from '../../../types/trace';
+import { ViewedBoundsFunctionType } from './utils';
+import { Span } from '../../../types/trace';
 
 import './SpanBar.css';
 
 type SpanBarProps = {
-  color: string,
-  hintSide: string,
-  label: string,
-  onClick: (SyntheticMouseEvent<any>) => void,
-  viewEnd: number,
-  viewStart: number,
-  getViewedBounds: ViewedBoundsFunctionType,
+  color: string;
+  hintSide: string;
+  label: string;
+  onClick: (evt: React.MouseEvent<any>) => void;
+  viewEnd: number;
+  viewStart: number;
+  getViewedBounds: ViewedBoundsFunctionType;
   rpc: {
-    viewStart: number,
-    viewEnd: number,
-    color: string,
-  },
-  setLongLabel: () => void,
-  setShortLabel: () => void,
-  traceStartTime: number,
-  span: Span,
+    viewStart: number;
+    viewEnd: number;
+    color: string;
+  };
+  setLongLabel: () => void;
+  setShortLabel: () => void;
+  traceStartTime: number;
+  span: Span;
 };
 
 function toPercent(value: number) {
@@ -124,11 +122,21 @@ function SpanBar(props: SpanBarProps) {
   );
 }
 
-export default compose(
-  withState('label', 'setLabel', props => props.shortLabel),
-  withProps(({ setLabel, shortLabel, longLabel }) => ({
-    setLongLabel: () => setLabel(longLabel),
-    setShortLabel: () => setLabel(shortLabel),
-  })),
+export default compose<SpanBarProps, { label: string }>(
+  withState('label', 'setLabel', (props: { shortLabel: string }) => props.shortLabel),
+  withProps(
+    ({
+      setLabel,
+      shortLabel,
+      longLabel,
+    }: {
+      setLabel: (label: string) => void;
+      shortLabel: string;
+      longLabel: string;
+    }) => ({
+      setLongLabel: () => setLabel(longLabel),
+      setShortLabel: () => setLabel(shortLabel),
+    })
+  ),
   onlyUpdateForKeys(['label', 'rpc', 'viewStart', 'viewEnd'])
 )(SpanBar);

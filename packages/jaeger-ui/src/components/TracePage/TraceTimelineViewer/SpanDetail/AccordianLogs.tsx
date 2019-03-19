@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,25 +20,27 @@ import IoIosArrowRight from 'react-icons/lib/io/ios-arrow-right';
 
 import AccordianKeyValues from './AccordianKeyValues';
 import { formatDuration } from '../utils';
-import type { Log, KeyValuePair, Link } from '../../../../types/trace';
+import { TNil } from '../../../../types';
+import { Log, KeyValuePair, Link } from '../../../../types/trace';
 
 import './AccordianLogs.css';
 
 type AccordianLogsProps = {
-  interactive?: boolean,
-  isOpen: boolean,
-  linksGetter?: ?(KeyValuePair[], number) => Link[],
-  logs: Log[],
-  onItemToggle?: Log => void,
-  onToggle?: () => void,
-  openedItems?: Set<Log>,
-  timestamp: number,
+  interactive?: boolean;
+  isOpen: boolean;
+  linksGetter: ((pairs: KeyValuePair[], index: number) => Link[]) | TNil;
+  logs: Log[];
+  onItemToggle?: (log: Log) => void;
+  onToggle?: () => void;
+  openedItems?: Set<Log>;
+  timestamp: number;
 };
 
 export default function AccordianLogs(props: AccordianLogsProps) {
   const { interactive, isOpen, linksGetter, logs, openedItems, onItemToggle, onToggle, timestamp } = props;
-  let arrow: React.Node | null = null;
-  let HeaderComponent = 'span';
+  let arrow: React.ReactNode | null = null;
+  // TODO: Everett dynamic tags
+  let HeaderComponent: any = 'span';
   let headerProps: Object | null = null;
   if (interactive) {
     arrow = isOpen ? (

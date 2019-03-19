@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,19 +19,20 @@ import IoIosArrowRight from 'react-icons/lib/io/ios-arrow-right';
 
 import * as markers from './AccordianKeyValues.markers';
 import KeyValuesTable from './KeyValuesTable';
-import type { KeyValuePair, Link } from '../../../../types/trace';
+import { TNil } from '../../../../types';
+import { KeyValuePair, Link } from '../../../../types/trace';
 
 import './AccordianKeyValues.css';
 
 type AccordianKeyValuesProps = {
-  className?: ?string,
-  data: KeyValuePair[],
-  highContrast?: boolean,
-  interactive?: boolean,
-  isOpen: boolean,
-  label: string,
-  linksGetter: ?(KeyValuePair[], number) => Link[],
-  onToggle?: null | (() => void),
+  className?: string | TNil;
+  data: KeyValuePair[];
+  highContrast?: boolean;
+  interactive?: boolean;
+  isOpen: boolean;
+  label: string;
+  linksGetter: ((pairs: KeyValuePair[], index: number) => Link[]) | TNil;
+  onToggle?: null | (() => void);
 };
 
 // export for tests
@@ -65,7 +64,7 @@ export default function AccordianKeyValues(props: AccordianKeyValuesProps) {
   const { className, data, highContrast, interactive, isOpen, label, linksGetter, onToggle } = props;
   const isEmpty = !Array.isArray(data) || !data.length;
   const iconCls = cx('u-align-icon', { 'AccordianKeyValues--emptyIcon': isEmpty });
-  let arrow: React.Node | null = null;
+  let arrow: React.ReactNode | null = null;
   let headerProps: Object | null = null;
   if (interactive) {
     arrow = isOpen ? <IoIosArrowDown className={iconCls} /> : <IoIosArrowRight className={iconCls} />;

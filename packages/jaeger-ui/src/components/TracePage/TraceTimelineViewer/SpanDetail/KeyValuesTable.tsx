@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,11 +18,12 @@ import { Dropdown, Icon, Menu } from 'antd';
 
 import CopyIcon from '../../../common/CopyIcon';
 
-import type { KeyValuePair, Link } from '../../../../types/trace';
+import { TNil } from '../../../../types';
+import { KeyValuePair, Link } from '../../../../types/trace';
 
 import './KeyValuesTable.css';
 
-function parseIfJson(value) {
+function parseIfJson(value: any) {
   try {
     return JSON.parse(value);
     // eslint-disable-next-line no-empty
@@ -32,7 +31,7 @@ function parseIfJson(value) {
   return value;
 }
 
-export const LinkValue = (props: { href: string, title?: string, children: React.Node }) => (
+export const LinkValue = (props: { href: string; title?: string; children: React.ReactNode }) => (
   <a href={props.href} title={props.title} target="_blank" rel="noopener noreferrer">
     {props.children} <Icon className="KeyValueTable--linkIcon" type="export" />
   </a>
@@ -55,8 +54,8 @@ const linkValueList = (links: Link[]) => (
 );
 
 type KeyValuesTableProps = {
-  data: KeyValuePair[],
-  linksGetter: ?(KeyValuePair[], number) => Link[],
+  data: KeyValuePair[];
+  linksGetter: ((pairs: KeyValuePair[], index: number) => Link[]) | TNil;
 };
 
 export default function KeyValuesTable(props: KeyValuesTableProps) {
