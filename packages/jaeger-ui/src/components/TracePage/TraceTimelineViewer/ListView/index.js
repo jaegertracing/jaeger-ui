@@ -440,15 +440,13 @@ export default class ListView extends React.Component<ListViewProps> {
       onScroll?: Function,
     };
     const wrapperProps: wrapperPropsT = {
-      style: {
-        overflowY: 'auto',
-        position: 'relative',
-        height: '100%',
-      },
+      style: { position: 'relative' },
       ref: this._initWrapper,
     };
     if (!this.props.windowScroller) {
       wrapperProps.onScroll = this._onScroll;
+      wrapperProps.style.height = '100%';
+      wrapperProps.style.overflowY = 'scroll';
     }
     const scrollerStyle = {
       position: 'relative',
