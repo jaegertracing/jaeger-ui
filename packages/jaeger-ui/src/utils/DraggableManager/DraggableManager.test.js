@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import DraggableManager from './DraggableManager';
-import updateTypes from './update-types';
+import EUpdateTypes from './EUpdateTypes';
 
 describe('DraggableManager', () => {
   const baseClientX = 100;
@@ -154,19 +154,19 @@ describe('DraggableManager', () => {
           type: 'mouseenter',
           handler: instance.handleMouseEnter,
           callback: ctorOpts.onMouseEnter,
-          updateType: updateTypes.MOUSE_ENTER,
+          updateType: EUpdateTypes.MouseEnter,
         },
         {
           type: 'mousemove',
           handler: instance.handleMouseMove,
           callback: ctorOpts.onMouseMove,
-          updateType: updateTypes.MOUSE_MOVE,
+          updateType: EUpdateTypes.MouseMove,
         },
         {
           type: 'mouseleave',
           handler: instance.handleMouseLeave,
           callback: ctorOpts.onMouseLeave,
-          updateType: updateTypes.MOUSE_LEAVE,
+          updateType: EUpdateTypes.MouseLeave,
         },
       ];
 
@@ -274,19 +274,19 @@ describe('DraggableManager', () => {
           type: 'mousedown',
           handler: instance.handleMouseDown,
           callback: ctorOpts.onDragStart,
-          updateType: updateTypes.DRAG_START,
+          updateType: EUpdateTypes.DragStart,
         },
         {
           type: 'mousemove',
           handler: instance._handleDragEvent,
           callback: ctorOpts.onDragMove,
-          updateType: updateTypes.DRAG_MOVE,
+          updateType: EUpdateTypes.DragMove,
         },
         {
           type: 'mouseup',
           handler: instance._handleDragEvent,
           callback: ctorOpts.onDragEnd,
-          updateType: updateTypes.DRAG_END,
+          updateType: EUpdateTypes.DragEnd,
         },
       ];
 

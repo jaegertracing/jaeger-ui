@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,34 +14,35 @@
 
 import _get from 'lodash/get';
 
-import updateTypes from './update-types';
-import type { DraggableBounds, DraggingUpdate } from './types';
+import EUpdateTypes from './EUpdateTypes';
+import { DraggableBounds, DraggingUpdate } from './types';
+import { TNil } from '../../types';
 
 const LEFT_MOUSE_BUTTON = 0;
 
 type DraggableManagerOptions = {
-  getBounds: (?string) => DraggableBounds,
-  onMouseEnter?: DraggingUpdate => void,
-  onMouseLeave?: DraggingUpdate => void,
-  onMouseMove?: DraggingUpdate => void,
-  onDragStart?: DraggingUpdate => void,
-  onDragMove?: DraggingUpdate => void,
-  onDragEnd?: DraggingUpdate => void,
-  resetBoundsOnResize?: boolean,
-  tag?: string,
+  getBounds: (tag: string | TNil) => DraggableBounds;
+  onMouseEnter?: (update: DraggingUpdate) => void;
+  onMouseLeave?: (update: DraggingUpdate) => void;
+  onMouseMove?: (update: DraggingUpdate) => void;
+  onDragStart?: (update: DraggingUpdate) => void;
+  onDragMove?: (update: DraggingUpdate) => void;
+  onDragEnd?: (update: DraggingUpdate) => void;
+  resetBoundsOnResize?: boolean;
+  tag?: string;
 };
 
 export default class DraggableManager {
   // cache the last known DraggableBounds (invalidate via `#resetBounds())
-  _bounds: ?DraggableBounds;
+  _bounds: DraggableBounds | TNil;
   _isDragging: boolean;
   // optional callbacks for various dragging events
-  _onMouseEnter: ?(DraggingUpdate) => void;
-  _onMouseLeave: ?(DraggingUpdate) => void;
-  _onMouseMove: ?(DraggingUpdate) => void;
-  _onDragStart: ?(DraggingUpdate) => void;
-  _onDragMove: ?(DraggingUpdate) => void;
-  _onDragEnd: ?(DraggingUpdate) => void;
+  _onMouseEnter: ((update: DraggingUpdate) => void) | TNil;
+  _onMouseLeave: ((update: DraggingUpdate) => void) | TNil;
+  _onMouseMove: ((update: DraggingUpdate) => void) | TNil;
+  _onDragStart: ((update: DraggingUpdate) => void) | TNil;
+  _onDragMove: ((update: DraggingUpdate) => void) | TNil;
+  _onDragEnd: ((update: DraggingUpdate) => void) | TNil;
   // whether to reset the bounds on window resize
   _resetBoundsOnResize: boolean;
 
@@ -54,16 +53,16 @@ export default class DraggableManager {
    * the range the current drag can span to. It also establishes the left offset
    * to adjust `clientX` by (from the `MouseEvent`s).
    */
-  getBounds: (?string) => DraggableBounds;
+  getBounds: (tag: string | TNil) => DraggableBounds;
 
   // convenience data
-  tag: ?string;
+  tag: string | TNil;
 
   // handlers for integration with DOM elements
-  handleMouseEnter: (SyntheticMouseEvent<any>) => void;
-  handleMouseMove: (SyntheticMouseEvent<any>) => void;
-  handleMouseLeave: (SyntheticMouseEvent<any>) => void;
-  handleMouseDown: (SyntheticMouseEvent<any>) => void;
+  handleMouseEnter: (event: React.MouseEvent<any>) => void;
+  handleMouseMove: (event: React.MouseEvent<any>) => void;
+  handleMouseLeave: (event: React.MouseEvent<any>) => void;
+  handleMouseDown: (event: React.MouseEvent<any>) => void;
 
   constructor({ getBounds, tag, resetBoundsOnResize = true, ...rest }: DraggableManagerOptions) {
     this.handleMouseDown = this._handleDragEvent;
@@ -142,21 +141,21 @@ export default class DraggableManager {
     this._bounds = undefined;
   };
 
-  _handleMinorMouseEvent = (event: SyntheticMouseEvent<any>) => {
+  _handleMinorMouseEvent = (event: React.MouseEvent<any>) => {
     const { button, clientX, type: eventType } = event;
     if (this._isDragging || button !== LEFT_MOUSE_BUTTON) {
       return;
     }
-    let type = '';
-    let handler: ?(DraggingUpdate) => void;
+    let type: EUpdateTypes | null = null;
+    let handler: ((update: DraggingUpdate) => void) | TNil;
     if (eventType === 'mouseenter') {
-      type = updateTypes.MOUSE_ENTER;
+      type = EUpdateTypes.MouseEnter;
       handler = this._onMouseEnter;
     } else if (eventType === 'mouseleave') {
-      type = updateTypes.MOUSE_LEAVE;
+      type = EUpdateTypes.MouseLeave;
       handler = this._onMouseLeave;
     } else if (eventType === 'mousemove') {
-      type = updateTypes.MOUSE_MOVE;
+      type = EUpdateTypes.MouseMove;
       handler = this._onMouseMove;
     } else {
       throw new Error(`invalid event type: ${eventType}`);
@@ -175,10 +174,10 @@ export default class DraggableManager {
     });
   };
 
-  _handleDragEvent = (event: SyntheticMouseEvent<any>) => {
+  _handleDragEvent = (event: MouseEvent | React.MouseEvent<any>) => {
     const { button, clientX, type: eventType } = event;
-    let type = '';
-    let handler: ?(DraggingUpdate) => void;
+    let type: EUpdateTypes | null = null;
+    let handler: ((update: DraggingUpdate) => void) | TNil;
     if (eventType === 'mousedown') {
       if (this._isDragging || button !== LEFT_MOUSE_BUTTON) {
         return;
@@ -191,20 +190,20 @@ export default class DraggableManager {
       }
       this._isDragging = true;
 
-      type = updateTypes.DRAG_START;
+      type = EUpdateTypes.DragStart;
       handler = this._onDragStart;
     } else if (eventType === 'mousemove') {
       if (!this._isDragging) {
         return;
       }
-      type = updateTypes.DRAG_MOVE;
+      type = EUpdateTypes.DragMove;
       handler = this._onDragMove;
     } else if (eventType === 'mouseup') {
       if (!this._isDragging) {
         return;
       }
       this._stopDragging();
-      type = updateTypes.DRAG_END;
+      type = EUpdateTypes.DragEnd;
       handler = this._onDragEnd;
     } else {
       throw new Error(`invalid event type: ${eventType}`);

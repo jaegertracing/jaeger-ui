@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,23 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import DraggableManager from './DraggableManager';
-import updateTypes from './update-types';
+import * as React from 'react';
 
-export type UpdateType = $Keys<typeof updateTypes>;
+import DraggableManager from './DraggableManager';
+import EUpdateTypes from './EUpdateTypes';
+import { TNil } from '../../types';
 
 export type DraggableBounds = {
-  clientXLeft: number,
-  maxValue?: number,
-  minValue?: number,
-  width: number,
+  clientXLeft: number;
+  maxValue?: number;
+  minValue?: number;
+  width: number;
 };
 
 export type DraggingUpdate = {
-  event: SyntheticMouseEvent<any>,
-  manager: DraggableManager,
-  tag: ?string,
-  type: UpdateType,
-  value: number,
-  x: number,
+  event: React.MouseEvent<any> | MouseEvent;
+  manager: DraggableManager;
+  tag: string | TNil;
+  type: EUpdateTypes;
+  value: number;
+  x: number;
 };

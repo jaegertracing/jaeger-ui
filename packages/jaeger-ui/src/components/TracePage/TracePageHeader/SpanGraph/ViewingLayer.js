@@ -20,7 +20,7 @@ import * as React from 'react';
 
 import GraphTicks from './GraphTicks';
 import Scrubber from './Scrubber';
-import DraggableManager, { updateTypes } from '../../../../utils/DraggableManager';
+import DraggableManager, { EUpdateTypes } from '../../../../utils/DraggableManager';
 
 import type { ViewRange, ViewRangeTimeUpdate } from '../../types';
 import type { DraggableBounds, DraggingUpdate } from '../../../../utils/DraggableManager';
@@ -194,12 +194,12 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
   };
 
   _handleScrubberEnterLeave = ({ type }: DraggingUpdate) => {
-    const preventCursorLine = type === updateTypes.MOUSE_ENTER;
+    const preventCursorLine = type === EUpdateTypes.MouseEnter;
     this.setState({ preventCursorLine });
   };
 
   _handleScrubberDragUpdate = ({ event, tag, type, value }: DraggingUpdate) => {
-    if (type === updateTypes.DRAG_START) {
+    if (type === EUpdateTypes.DragStart) {
       event.stopPropagation();
     }
     if (tag === dragTypes.SHIFT_START) {

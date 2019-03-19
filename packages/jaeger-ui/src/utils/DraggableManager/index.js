@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,5 +13,5 @@
 // limitations under the License.
 
 export * from './types';
-export { default as updateTypes } from './update-types';
+export { default as EUpdateTypes } from './EUpdateTypes';
 export { default } from './DraggableManager';

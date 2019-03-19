@@ -27,7 +27,7 @@ import * as jaegerApiActions from '../../actions/jaeger-api';
 import { TOP_NAV_HEIGHT } from '../../constants';
 import { FetchedTrace, TNil, ReduxState } from '../../types';
 import TTraceDiffState from '../../types/TTraceDiffState';
-import pluxkTruthy from '../../utils/ts/pluckTruthy';
+import pluckTruthy from '../../utils/ts/pluckTruthy';
 
 import './TraceDiff.css';
 
@@ -166,7 +166,7 @@ export class TraceDiffImpl extends React.PureComponent<TStateProps & TDispatchPr
 export function mapStateToProps(state: ReduxState, ownProps: { match: match<TDiffRouteParams> }) {
   const { a, b } = ownProps.match.params;
   const { cohort: origCohort = [] } = queryString.parse(state.router.location.search);
-  const fullCohortSet: Set<string> = new Set(pluxkTruthy([a, b].concat(origCohort)));
+  const fullCohortSet: Set<string> = new Set(pluckTruthy([a, b].concat(origCohort)));
   const cohort: string[] = Array.from(fullCohortSet);
   const { traces } = state.trace;
   const kvPairs = cohort.map<[string, FetchedTrace]>(id => [id, traces[id] || { id, state: null }]);
