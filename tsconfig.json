@@ -17,10 +17,10 @@
     "jsx": "preserve"
   },
   "include": [
-    // TODO(joef)
     "packages/plexus/demo",
     "packages/plexus/src",
     // easier to add `./typings` here than deal with typeRoots, paths, etc.
     "typings"
-  ]
+  ],
+  "exclude": ["./packages/plexus/src/LayoutManager/layout.worker.bundled.js"]
 }

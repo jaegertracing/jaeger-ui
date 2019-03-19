@@ -12,11 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Note: These type defs cannot be in the typings/index.d.ts file (due to
-// TypeScript automagic?).
-
-// Type def for the viz.js module, which doesn't ship with usable TypeScript
-// types.
-declare module "viz.js/viz.js" {
-  export default function viz(dot: string, options?: {}): string;
+{
+  "compilerOptions": {
+    "target": "es2016",
+    "lib": ["es2017", "dom", "dom.iterable", "webworker"],
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "jsx": "preserve",
+    "outDir": "lib"
+  },
+  "include": [
+    "src",
+    // easier to add `./typings` here than deal with typeRoots, paths, etc.
+    "../../typings"
+  ]
 }
