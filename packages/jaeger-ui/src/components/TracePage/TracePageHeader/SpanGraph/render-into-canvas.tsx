@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { TNil } from '../../../../types';
+
 // exported for tests
 export const BG_COLOR = '#fff';
 export const ITEM_ALPHA = 0.8;
@@ -24,11 +24,11 @@ export const MIN_TOTAL_HEIGHT = 60;
 
 export default function renderIntoCanvas(
   canvas: HTMLCanvasElement,
-  items: { valueWidth: number, valueOffset: number, serviceName: string }[],
+  items: { valueWidth: number; valueOffset: number; serviceName: string }[],
   totalValueWidth: number,
-  getFillColor: string => [number, number, number]
+  getFillColor: (serviceName: string) => [number, number, number]
 ) {
-  const fillCache: Map<string, ?string> = new Map();
+  const fillCache: Map<string, string | TNil> = new Map();
   const cHeight =
     items.length < MIN_TOTAL_HEIGHT ? MIN_TOTAL_HEIGHT : Math.min(items.length, MAX_TOTAL_HEIGHT);
   const cWidth = window.innerWidth * 2;
@@ -39,7 +39,7 @@ export default function renderIntoCanvas(
   const itemHeight = Math.max(MIN_ITEM_HEIGHT, cHeight / items.length);
   const itemYChange = cHeight / items.length;
 
-  const ctx = canvas.getContext('2d', { alpha: false });
+  const ctx = canvas.getContext('2d', { alpha: false }) as CanvasRenderingContext2D;
   ctx.fillStyle = BG_COLOR;
   ctx.fillRect(0, 0, cWidth, cHeight);
   for (let i = 0; i < items.length; i++) {

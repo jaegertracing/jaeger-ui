@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,11 +18,11 @@ import cx from 'classnames';
 import './Scrubber.css';
 
 type ScrubberProps = {
-  isDragging: boolean,
-  position: number,
-  onMouseDown: (SyntheticMouseEvent<any>) => void,
-  onMouseEnter: (SyntheticMouseEvent<any>) => void,
-  onMouseLeave: (SyntheticMouseEvent<any>) => void,
+  isDragging: boolean;
+  position: number;
+  onMouseDown: (evt: React.MouseEvent<any>) => void;
+  onMouseEnter: (evt: React.MouseEvent<any>) => void;
+  onMouseLeave: (evt: React.MouseEvent<any>) => void;
 };
 
 export default function Scrubber({

@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,7 +17,7 @@ import React from 'react';
 import './GraphTicks.css';
 
 type GraphTicksProps = {
-  numTicks: number,
+  numTicks: number;
 };
 
 export default function GraphTicks(props: GraphTicksProps) {
