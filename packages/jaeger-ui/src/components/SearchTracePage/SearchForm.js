@@ -215,7 +215,7 @@ export class SearchFormImpl extends React.PureComponent {
             props={{
               clearable: false,
               disabled: disabled || noSelectedService,
-              options: ['all'].concat(opsForSvc).map(v => ({ label: v, value: v })),
+              options: ['all'].concat(opsForSvc).map(v => ({ label: v, value: v, title: v })),
               required: true,
             }}
           />
