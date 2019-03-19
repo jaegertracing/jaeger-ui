@@ -24,7 +24,7 @@ import updateUiFind from '../../utils/update-ui-find';
 import { ReduxState } from '../../types/index';
 
 type TOwnProps = RouteComponentProps<any> & {
-  forwardedRef?: { current: Input | null };
+  forwardedRef?: React.Ref<Input>;
   inputProps: Record<string, any>;
   history: RouterHistory;
   location: Location;
@@ -32,12 +32,6 @@ type TOwnProps = RouteComponentProps<any> & {
   // todo
   trackFindFunction?: (str: string | null | undefined) => void;
 };
-
-type TUiFind = { uiFind?: string };
-
-// type TExtractUiFindFromStateReturn = {
-//   uiFind?: string;
-// };
 
 type TProps = TOwnProps & { uiFind?: string };
 

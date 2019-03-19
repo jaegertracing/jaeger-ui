@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2018 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,13 +23,13 @@ import UiFindInput from '../../common/UiFindInput';
 import './TracePageSearchBar.css';
 
 type TracePageSearchBarProps = {
-  textFilter: string,
-  prevResult: () => void,
-  nextResult: () => void,
-  clearSearch: () => void,
-  resultCount: number,
-  forwardedRef: { current: Input | null },
-  navigable: boolean,
+  textFilter: string;
+  prevResult: () => void;
+  nextResult: () => void;
+  clearSearch: () => void;
+  forwardedRef: React.Ref<Input>;
+  resultCount: number;
+  navigable: boolean;
 };
 
 export function TracePageSearchBarFn(props: TracePageSearchBarProps) {
@@ -61,23 +59,29 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps) {
         <Button
           className={navigationBtnClass}
           disabled={navigationBtnDisabled}
+          htmlType="button"
           icon="up"
           onClick={prevResult}
         />
         <Button
           className={navigationBtnClass}
           disabled={navigationBtnDisabled}
+          htmlType="button"
           icon="down"
           onClick={nextResult}
         />
-        <Button className={btnClass} disabled={!textFilter} icon="close" onClick={clearSearch} />
+        <Button
+          className={btnClass}
+          disabled={!textFilter}
+          htmlType="button"
+          icon="close"
+          onClick={clearSearch}
+        />
       </Input.Group>
     </div>
   );
 }
 
-// ghetto fabulous cast because the 16.3 API is not in flow yet
-// https://github.com/facebook/flow/issues/6103
-export default (React: any).forwardRef((props, ref) => (
+export default React.forwardRef((props: TracePageSearchBarProps, ref: React.Ref<Input>) => (
   <TracePageSearchBarFn {...props} forwardedRef={ref} />
 ));
