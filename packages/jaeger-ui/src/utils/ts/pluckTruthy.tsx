@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Note: This is used by create-react-app (CRA) and it will overwrite values it
-// doesn't like (and remove commented out fields, in the process)
-{
-  "extends": "../../tsconfig",
-  "compilerOptions": {
-    // Required by CRA
-    "isolatedModules": true
-  },
-  "exclude": ["src/**/*.js"],
-  "include": ["src/**/*.tsx", "typings"]
+// Because TypeScript doesn't believe in Array#filter(Boolean)
+export default function pluckTruthy<T>(values: (T | any)[]): T[] {
+  const rv: T[] = [];
+  for (let i = 0; i < values.length; i++) {
+    const value = values[i];
+    if (value) {
+      rv.push(value);
+    }
+  }
+  return rv;
 }

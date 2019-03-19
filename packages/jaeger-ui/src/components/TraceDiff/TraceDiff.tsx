@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2018 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,40 +13,51 @@
 // limitations under the License.
 
 import * as React from 'react';
+import { History as RouterHistory } from 'history';
 import queryString from 'query-string';
 import { connect } from 'react-redux';
-import { bindActionCreators } from 'redux';
-
-import type { Match, RouterHistory } from 'react-router-dom';
+import { match } from 'react-router-dom';
+import { bindActionCreators, Dispatch } from 'redux';
 
 import { actions as diffActions } from './duck';
-import { getUrl } from './url';
+import { getUrl, TDiffRouteParams } from './url';
 import TraceDiffGraph from './TraceDiffGraph';
 import TraceDiffHeader from './TraceDiffHeader';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import { TOP_NAV_HEIGHT } from '../../constants';
-
-import type { FetchedTrace, ReduxState } from '../../types';
-import type { TraceDiffState } from '../../types/TTraceDiffState';
+import { FetchedTrace, TNil, ReduxState } from '../../types';
+import TTraceDiffState from '../../types/TTraceDiffState';
+import pluxkTruthy from '../../utils/ts/pluckTruthy';
 
 import './TraceDiff.css';
 
-type Props = {
-  a: ?string,
-  b: ?string,
-  cohort: string[],
-  fetchMultipleTraces: (string[]) => void,
-  forceState: TraceDiffState => void,
-  history: RouterHistory,
-  tracesData: Map<string, ?FetchedTrace>,
-  traceDiffState: TraceDiffState,
+type TStateProps = {
+  a: string | undefined;
+  b: string | undefined;
+  cohort: string[];
+  tracesData: Map<string, FetchedTrace>;
+  traceDiffState: TTraceDiffState;
 };
 
-type State = {
-  graphTopOffset: number,
+type TDispatchProps = {
+  fetchMultipleTraces: (ids: string[]) => void;
+  forceState: (state: TTraceDiffState) => void;
 };
 
-function syncStates(urlValues, reduxValues, forceState) {
+type TOwnProps = {
+  history: RouterHistory;
+  match: match<TDiffRouteParams>;
+};
+
+type TState = {
+  graphTopOffset: number;
+};
+
+function syncStates(
+  urlValues: TTraceDiffState,
+  reduxValues: TTraceDiffState,
+  forceState: (newState: TTraceDiffState) => void
+) {
   const { a: urlA, b: urlB } = urlValues;
   const { a: reduxA, b: reduxB } = reduxValues;
   if (urlA !== reduxA || urlB !== reduxB) {
@@ -67,17 +76,11 @@ function syncStates(urlValues, reduxValues, forceState) {
   }
 }
 
-export class TraceDiffImpl extends React.PureComponent<Props, State> {
-  props: Props;
-  headerWrapperElm: ?Element;
-
-  constructor() {
-    super();
-    this.headerWrapperElm = null;
-    this.state = {
-      graphTopOffset: TOP_NAV_HEIGHT,
-    };
-  }
+// export class TraceDiffImpl extends React.PureComponent<Props, State> {
+export class TraceDiffImpl extends React.PureComponent<TStateProps & TDispatchProps & TOwnProps, TState> {
+  state = {
+    graphTopOffset: TOP_NAV_HEIGHT,
+  };
 
   componentDidMount() {
     this.processProps();
@@ -88,7 +91,9 @@ export class TraceDiffImpl extends React.PureComponent<Props, State> {
     this.processProps();
   }
 
-  headerWrapperRef = (elm: ?Element) => {
+  headerWrapperElm: HTMLDivElement | TNil = null;
+
+  headerWrapperRef = (elm: HTMLDivElement | TNil) => {
     this.headerWrapperElm = elm;
     this.setGraphTopOffset();
   };
@@ -114,7 +119,7 @@ export class TraceDiffImpl extends React.PureComponent<Props, State> {
     }
   }
 
-  diffSetUrl(change: { newA?: ?string, newB?: ?string }) {
+  diffSetUrl(change: { newA?: string | TNil; newB?: string | TNil }) {
     const { newA, newB } = change;
     const { a, b, cohort, history } = this.props;
     const url = getUrl({ a: newA || a, b: newB || b, cohort });
@@ -158,14 +163,14 @@ export class TraceDiffImpl extends React.PureComponent<Props, State> {
 }
 
 // TODO(joe): simplify but do not invalidate the URL
-export function mapStateToProps(state: ReduxState, ownProps: { match: Match }) {
+export function mapStateToProps(state: ReduxState, ownProps: { match: match<TDiffRouteParams> }) {
   const { a, b } = ownProps.match.params;
   const { cohort: origCohort = [] } = queryString.parse(state.router.location.search);
-  const fullCohortSet: Set<string> = new Set([].concat(a, b, origCohort).filter(Boolean));
+  const fullCohortSet: Set<string> = new Set(pluxkTruthy([a, b].concat(origCohort)));
   const cohort: string[] = Array.from(fullCohortSet);
   const { traces } = state.trace;
-  const kvPairs = cohort.map(id => [id, traces[id] || { id, state: null }]);
-  const tracesData: Map<string, ?FetchedTrace> = new Map(kvPairs);
+  const kvPairs = cohort.map<[string, FetchedTrace]>(id => [id, traces[id] || { id, state: null }]);
+  const tracesData: Map<string, FetchedTrace> = new Map(kvPairs);
   return {
     a,
     b,
@@ -176,10 +181,12 @@ export function mapStateToProps(state: ReduxState, ownProps: { match: Match }) {
 }
 
 // export for tests
-export function mapDispatchToProps(dispatch: Function) {
+export function mapDispatchToProps(dispatch: Dispatch<any>) {
   const { fetchMultipleTraces } = bindActionCreators(jaegerApiActions, dispatch);
   const { forceState } = bindActionCreators(diffActions, dispatch);
   return { fetchMultipleTraces, forceState };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(TraceDiffImpl);
+export default connect<TStateProps, TDispatchProps, TOwnProps>(mapStateToProps, mapDispatchToProps)(
+  TraceDiffImpl
+);

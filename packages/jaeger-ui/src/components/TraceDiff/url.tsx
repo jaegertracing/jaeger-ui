@@ -19,6 +19,11 @@ import getValidState from './getValidState';
 import TTraceDiffState from '../../types/TTraceDiffState';
 import prefixUrl from '../../utils/prefix-url';
 
+export type TDiffRouteParams = {
+  a?: string | undefined;
+  b?: string | undefined;
+};
+
 export const ROUTE_PATH = prefixUrl('/trace/:a?\\.\\.\\.:b?');
 
 const ROUTE_MATCHER = { path: ROUTE_PATH, strict: true, exact: true };
