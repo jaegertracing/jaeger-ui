@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export default {
+const keyboardMappings: Record<string, { binding: string | string[]; label: string }> = {
   scrollPageDown: { binding: 's', label: 'Scroll down' },
   scrollPageUp: { binding: 'w', label: 'Scroll up' },
   scrollToNextVisibleSpan: { binding: 'f', label: 'Scroll to the next visible span' },
@@ -32,3 +32,5 @@ export default {
   searchSpans: { binding: 'ctrl+b', label: 'Search Spans' },
   clearSearch: { binding: 'escape', label: 'Clear Search' },
 };
+
+export default keyboardMappings;

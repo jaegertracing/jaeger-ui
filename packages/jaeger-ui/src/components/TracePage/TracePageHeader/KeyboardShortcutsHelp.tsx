@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,16 +21,16 @@ import track from './KeyboardShortcutsHelp.track';
 import './KeyboardShortcutsHelp.css';
 
 type Props = {
-  className: ?string,
+  className: string;
 };
 
 type State = {
-  visible: boolean,
+  visible: boolean;
 };
 
 const { Column } = Table;
 
-const SYMBOL_CONV = {
+const SYMBOL_CONV: Record<string, string> = {
   up: '↑',
   right: '→',
   down: '↓',
@@ -51,14 +49,14 @@ const padLeft = (text: string) => <span className="ub-pl4">{text}</span>;
 const padRight = (text: string) => <span className="ub-pr4">{text}</span>;
 const getRowClass = (_: any, index: number) => (index % 2 > 0 ? ODD_ROW_CLASS : '');
 
-let kbdTable: React.Node | null = null;
+let kbdTable: React.ReactNode | null = null;
 
 function getHelpModal() {
   track();
   if (kbdTable) {
     return kbdTable;
   }
-  const data = [];
+  const data: { key: string; kbds: any; description: string }[] = [];
   Object.keys(keyboardMappings).forEach(handle => {
     const { binding, label } = keyboardMappings[handle];
     const keyConfigs = convertKeys(binding);
@@ -88,8 +86,6 @@ function getHelpModal() {
 }
 
 export default class KeyboardShortcutsHelp extends React.PureComponent<Props, State> {
-  props: Props;
-
   state = {
     visible: false,
   };
@@ -102,10 +98,11 @@ export default class KeyboardShortcutsHelp extends React.PureComponent<Props, St
     const { className } = this.props;
     return (
       <React.Fragment>
-        <Button className={className} onClick={this.onCtaClicked}>
+        <Button className={className} htmlType="button" onClick={this.onCtaClicked}>
           <span className="KeyboardShortcutsHelp--cta">⌘</span>
         </Button>
         <Modal
+          align={undefined}
           title="Keyboard Shortcuts"
           visible={this.state.visible}
           onOk={this.onCloserClicked}

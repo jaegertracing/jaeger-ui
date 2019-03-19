@@ -27,12 +27,11 @@ type TracePageSearchBarProps = {
   prevResult: () => void;
   nextResult: () => void;
   clearSearch: () => void;
-  forwardedRef: React.Ref<Input>;
   resultCount: number;
   navigable: boolean;
 };
 
-export function TracePageSearchBarFn(props: TracePageSearchBarProps) {
+export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwardedRef: React.Ref<Input> }) {
   const { clearSearch, forwardedRef, navigable, nextResult, prevResult, resultCount, textFilter } = props;
 
   const count = textFilter ? <span className="TracePageSearchBar--count">{resultCount}</span> : null;

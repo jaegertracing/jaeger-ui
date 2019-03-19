@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 The Jaeger Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Span } from '../types/trace';
+import { Span } from '../types/trace';
 
 /**
  * Searches the span.references to find 'CHILD_OF' reference type or returns null.

@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2018 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,9 +20,9 @@ import { trackAltViewOpen } from './TracePageHeader.track';
 import prefixUrl from '../../../utils/prefix-url';
 
 type Props = {
-  onTraceGraphViewClicked: () => void,
-  traceGraphView: boolean,
-  traceID: string,
+  onTraceGraphViewClicked: () => void;
+  traceGraphView: boolean;
+  traceID: string;
 };
 
 export default function AltViewOptions(props: Props) {
@@ -60,7 +58,7 @@ export default function AltViewOptions(props: Props) {
   );
   return (
     <Dropdown overlay={menu}>
-      <Button className="ub-mr2" onClick={onTraceGraphViewClicked}>
+      <Button className="ub-mr2" htmlType="button" onClick={onTraceGraphViewClicked}>
         {traceGraphView ? 'Trace Graph' : 'Trace Timeline'} <Icon type="down" />
       </Button>
     </Dropdown>

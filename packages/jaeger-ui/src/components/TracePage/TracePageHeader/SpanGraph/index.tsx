@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,18 +17,18 @@ import * as React from 'react';
 import CanvasSpanGraph from './CanvasSpanGraph';
 import TickLabels from './TickLabels';
 import ViewingLayer from './ViewingLayer';
-import type { ViewRange, ViewRangeTimeUpdate } from '../../types';
-import type { Span, Trace } from '../../../../types/trace';
+import { ViewRange, ViewRangeTimeUpdate } from '../../types';
+import { Span, Trace } from '../../../../types/trace';
 
 const DEFAULT_HEIGHT = 60;
 const TIMELINE_TICK_INTERVAL = 4;
 
 type SpanGraphProps = {
-  height?: number,
-  trace: Trace,
-  viewRange: ViewRange,
-  updateViewRangeTime: (number, number) => void,
-  updateNextViewRangeTime: ViewRangeTimeUpdate => void,
+  height?: number;
+  trace: Trace;
+  viewRange: ViewRange;
+  updateViewRangeTime: (start: number, end: number) => void;
+  updateNextViewRangeTime: (nextUpdate: ViewRangeTimeUpdate) => void;
 };
 
 /**
@@ -39,10 +37,10 @@ type SpanGraphProps = {
  */
 type SpanGraphState = {
   items: {
-    valueOffset: number,
-    valueWidth: number,
-    serviceName: string,
-  }[],
+    valueOffset: number;
+    valueWidth: number;
+    serviceName: string;
+  }[];
 };
 
 function getItem(span: Span) {
@@ -54,7 +52,6 @@ function getItem(span: Span) {
 }
 
 export default class SpanGraph extends React.PureComponent<SpanGraphProps, SpanGraphState> {
-  props: SpanGraphProps;
   state: SpanGraphState;
 
   static defaultProps = {

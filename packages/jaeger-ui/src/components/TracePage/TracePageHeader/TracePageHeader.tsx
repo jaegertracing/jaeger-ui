@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,6 +14,7 @@
 
 import * as React from 'react';
 import { Button, Input } from 'antd';
+import _get from 'lodash/get';
 import _maxBy from 'lodash/maxBy';
 import _values from 'lodash/values';
 import IoAndroidArrowBack from 'react-icons/lib/io/android-arrow-back';
@@ -33,37 +32,36 @@ import TraceName from '../../common/TraceName';
 import { getTraceName } from '../../../model/trace-viewer';
 import { formatDatetime, formatDuration } from '../../../utils/date';
 
-import type { ViewRange, ViewRangeTimeUpdate } from '../types';
-import type { Trace } from '../../../types/trace';
+import { ViewRange, ViewRangeTimeUpdate } from '../types';
+import { Trace } from '../../../types/trace';
 
 import './TracePageHeader.css';
 
 type TracePageHeaderEmbedProps = {
-  canCollapse: boolean,
-  clearSearch: () => void,
-  forwardedRef: { current: Input | null },
-  hideMap: boolean,
-  hideSummary: boolean,
-  linkToStandalone: string,
-  nextResult: () => void,
-  onArchiveClicked: () => void,
-  onSlimViewClicked: () => void,
-  onTraceGraphViewClicked: () => void,
-  prevResult: () => void,
-  resultCount: number,
-  showArchiveButton: boolean,
-  showShortcutsHelp: boolean,
-  showStandaloneLink: boolean,
-  showViewOptions: boolean,
-  slimView: boolean,
-  textFilter: string,
-  toSearch: string | null,
-  trace: Trace,
-  traceGraphView: boolean,
-  updateNextViewRangeTime: ViewRangeTimeUpdate => void,
-  updateTextFilter: string => void,
-  updateViewRangeTime: (number, number) => void,
-  viewRange: ViewRange,
+  canCollapse: boolean;
+  clearSearch: () => void;
+  hideMap: boolean;
+  hideSummary: boolean;
+  linkToStandalone: string;
+  nextResult: () => void;
+  onArchiveClicked: () => void;
+  onSlimViewClicked: () => void;
+  onTraceGraphViewClicked: () => void;
+  prevResult: () => void;
+  resultCount: number;
+  showArchiveButton: boolean;
+  showShortcutsHelp: boolean;
+  showStandaloneLink: boolean;
+  showViewOptions: boolean;
+  slimView: boolean;
+  textFilter: string;
+  toSearch: string | null;
+  trace: Trace;
+  traceGraphView: boolean;
+  updateNextViewRangeTime: (update: ViewRangeTimeUpdate) => void;
+  updateTextFilter: (filter: string) => void;
+  updateViewRangeTime: (start: number, end: number) => void;
+  viewRange: ViewRange;
 };
 
 export const HEADER_ITEMS = [
@@ -85,7 +83,7 @@ export const HEADER_ITEMS = [
   {
     key: 'depth',
     label: 'Depth',
-    renderer: (trace: Trace) => _maxBy(trace.spans, 'depth').depth + 1,
+    renderer: (trace: Trace) => _get(_maxBy(trace.spans, 'depth'), 'depth', 0) + 1,
   },
   {
     key: 'span-count',
@@ -94,7 +92,7 @@ export const HEADER_ITEMS = [
   },
 ];
 
-export function TracePageHeaderFn(props: TracePageHeaderEmbedProps) {
+export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwardedRef: React.Ref<Input> }) {
   const {
     canCollapse,
     clearSearch,
@@ -174,7 +172,6 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps) {
           resultCount={resultCount}
           textFilter={textFilter}
           navigable={!traceGraphView}
-          updateTextFilter={updateTextFilter}
         />
 
         {showViewOptions && (
@@ -185,7 +182,7 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps) {
           />
         )}
         {showArchiveButton && (
-          <Button className="ub-mr2 ub-flex ub-items-center" onClick={onArchiveClicked}>
+          <Button className="ub-mr2 ub-flex ub-items-center" htmlType="button" onClick={onArchiveClicked}>
             <IoIosFilingOutline className="TracePageHeader--archiveIcon" />
             Archive Trace
           </Button>
@@ -217,4 +214,7 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps) {
 
 // ghetto fabulous cast because the 16.3 API is not in flow yet
 // https://github.com/facebook/flow/issues/6103
-export default (React: any).forwardRef((props, ref) => <TracePageHeaderFn {...props} forwardedRef={ref} />);
+// TODO: Discuss, is React.forwardRef necessary?
+export default React.forwardRef((props: TracePageHeaderEmbedProps, ref: React.Ref<Input>) => (
+  <TracePageHeaderFn {...props} forwardedRef={ref} />
+));
