@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,15 +17,15 @@ import * as React from 'react';
 import './TimelineRow.css';
 
 type TimelineRowProps = {
-  children: React.Node,
-  className?: string,
+  children: React.ReactNode;
+  className?: string;
 };
 
 type TimelineRowCellProps = {
-  children: React.Node,
-  className?: string,
-  width: number,
-  style?: Object,
+  children: React.ReactNode;
+  className?: string;
+  width: number;
+  style?: Object;
 };
 
 export default function TimelineRow(props: TimelineRowProps) {

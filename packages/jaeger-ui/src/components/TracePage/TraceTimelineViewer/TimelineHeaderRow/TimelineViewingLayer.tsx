@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,9 +15,9 @@
 import * as React from 'react';
 import cx from 'classnames';
 
-import type { ViewRangeTime, ViewRangeTimeUpdate } from '../../types';
-import type { DraggableBounds, DraggingUpdate } from '../../../../utils/DraggableManager';
-import DraggableManager from '../../../../utils/DraggableManager';
+import { ViewRangeTime, ViewRangeTimeUpdate } from '../../types';
+import { TNil } from '../../../../types';
+import DraggableManager, { DraggableBounds, DraggingUpdate } from '../../../../utils/DraggableManager';
 
 import './TimelineViewingLayer.css';
 
@@ -29,18 +27,32 @@ type TimelineViewingLayerProps = {
    * bounds for dragging need to be recalculated. In practice, the name column
    * width serves fine for this.
    */
-  boundsInvalidator: ?any,
-  updateNextViewRangeTime: ViewRangeTimeUpdate => void,
-  updateViewRangeTime: (number, number, ?string) => void,
-  viewRangeTime: ViewRangeTime,
+  boundsInvalidator: any | null | undefined;
+  updateNextViewRangeTime: (update: ViewRangeTimeUpdate) => void;
+  updateViewRangeTime: (start: number, end: number, source?: string) => void;
+  viewRangeTime: ViewRangeTime;
 };
+
+type TDraggingLeftLayout = {
+  isDraggingLeft: boolean;
+  left: string;
+  width: string;
+};
+
+type TOutOfViewLayout = {
+  isOutOfView: true;
+};
+
+function isOutOfView(layout: TDraggingLeftLayout | TOutOfViewLayout): layout is TOutOfViewLayout {
+  return Reflect.has(layout, 'isOutOfView');
+}
 
 /**
  * Map from a sub range to the greater view range, e.g, when the view range is
  * the middle half ([0.25, 0.75]), a value of 0.25 befomes 3/8.
  * @returns {number}
  */
-function mapFromViewSubRange(viewStart, viewEnd, value) {
+function mapFromViewSubRange(viewStart: number, viewEnd: number, value: number) {
   return viewStart + value * (viewEnd - viewStart);
 }
 
@@ -49,7 +61,7 @@ function mapFromViewSubRange(viewStart, viewEnd, value) {
  * the middle half ([0.25, 0.75]), a value of 3/8 becomes 1/4.
  * @returns {number}
  */
-function mapToViewSubRange(viewStart, viewEnd, value) {
+function mapToViewSubRange(viewStart: number, viewEnd: number, value: number) {
   return (value - viewStart) / (viewEnd - viewStart);
 }
 
@@ -59,10 +71,7 @@ function mapToViewSubRange(viewStart, viewEnd, value) {
  * `reframe` on `props.viewRangeTime`, not by the current state of the
  * component. So, it reflects in-progress dragging from the span minimap.
  */
-function getNextViewLayout(
-  start: number,
-  position: number
-): { isDraggingLeft: boolean, left: string, width: string } | { isOutOfView: true } {
+function getNextViewLayout(start: number, position: number): TDraggingLeftLayout | TOutOfViewLayout {
   let [left, right] = start < position ? [start, position] : [position, start];
   if (left >= 1 || right <= 0) {
     return { isOutOfView: true };
@@ -89,11 +98,11 @@ function getMarkers(
   from: number,
   to: number,
   isShift: boolean
-): React.Node {
+): React.ReactNode {
   const mappedFrom = mapToViewSubRange(viewStart, viewEnd, from);
   const mappedTo = mapToViewSubRange(viewStart, viewEnd, to);
   const layout = getNextViewLayout(mappedFrom, mappedTo);
-  if (layout.isOutOfView) {
+  if (isOutOfView(layout)) {
     return null;
   }
   const { isDraggingLeft, left, width } = layout;
@@ -112,10 +121,8 @@ function getMarkers(
  * modifying it.
  */
 export default class TimelineViewingLayer extends React.PureComponent<TimelineViewingLayerProps> {
-  props: TimelineViewingLayerProps;
-
   _draggerReframe: DraggableManager;
-  _root: ?Element;
+  _root: Element | TNil;
 
   constructor(props: TimelineViewingLayerProps) {
     super(props);
@@ -141,7 +148,7 @@ export default class TimelineViewingLayer extends React.PureComponent<TimelineVi
     this._draggerReframe.dispose();
   }
 
-  _setRoot = (elm: ?Element) => {
+  _setRoot = (elm: Element | TNil) => {
     this._root = elm;
   };
 
@@ -187,7 +194,7 @@ export default class TimelineViewingLayer extends React.PureComponent<TimelineVi
     const { current, cursor, reframe, shiftEnd, shiftStart } = viewRangeTime;
     const [viewStart, viewEnd] = current;
     const haveNextTimeRange = reframe != null || shiftEnd != null || shiftStart != null;
-    let cusrorPosition: ?string;
+    let cusrorPosition: string | TNil;
     if (!haveNextTimeRange && cursor != null && cursor >= viewStart && cursor <= viewEnd) {
       cusrorPosition = `${mapToViewSubRange(viewStart, viewEnd, cursor) * 100}%`;
     }

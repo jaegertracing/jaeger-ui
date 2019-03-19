@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,10 +18,10 @@ import { Tooltip, Icon } from 'antd';
 import './TimelineCollapser.css';
 
 type CollapserProps = {
-  onCollapseAll: () => void,
-  onCollapseOne: () => void,
-  onExpandOne: () => void,
-  onExpandAll: () => void,
+  onCollapseAll: () => void;
+  onCollapseOne: () => void;
+  onExpandOne: () => void;
+  onExpandAll: () => void;
 };
 
 function getTitle(value: string) {
@@ -31,7 +29,6 @@ function getTitle(value: string) {
 }
 
 export default class TimelineCollapser extends React.PureComponent<CollapserProps> {
-  props: CollapserProps;
   containerRef: { current: HTMLDivElement | null };
 
   constructor(props: CollapserProps) {
@@ -39,7 +36,7 @@ export default class TimelineCollapser extends React.PureComponent<CollapserProp
     this.containerRef = React.createRef();
   }
 
-  getContainer = () => this.containerRef.current;
+  getContainer = () => this.containerRef.current as HTMLDivElement;
 
   render() {
     const { onExpandAll, onExpandOne, onCollapseAll, onCollapseOne } = this.props;

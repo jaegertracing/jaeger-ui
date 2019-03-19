@@ -59,7 +59,6 @@ type TracePageHeaderEmbedProps = {
   trace: Trace;
   traceGraphView: boolean;
   updateNextViewRangeTime: (update: ViewRangeTimeUpdate) => void;
-  updateTextFilter: (filter: string) => void;
   updateViewRangeTime: (start: number, end: number) => void;
   viewRange: ViewRange;
 };
@@ -116,7 +115,6 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
     trace,
     traceGraphView,
     updateNextViewRangeTime,
-    updateTextFilter,
     updateViewRangeTime,
     viewRange,
   } = props;

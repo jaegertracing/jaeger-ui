@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,22 +19,22 @@ import TimelineColumnResizer from './TimelineColumnResizer';
 import TimelineViewingLayer from './TimelineViewingLayer';
 import Ticks from '../Ticks';
 import TimelineRow from '../TimelineRow';
-import type { ViewRangeTime, ViewRangeTimeUpdate } from '../../types';
+import { ViewRangeTime, ViewRangeTimeUpdate } from '../../types';
 
 import './TimelineHeaderRow.css';
 
 type TimelineHeaderRowProps = {
-  duration: number,
-  nameColumnWidth: number,
-  numTicks: number,
-  onCollapseAll: () => void,
-  onCollapseOne: () => void,
-  onColummWidthChange: number => void,
-  onExpandAll: () => void,
-  onExpandOne: () => void,
-  updateNextViewRangeTime: ViewRangeTimeUpdate => void,
-  updateViewRangeTime: (number, number, ?string) => void,
-  viewRangeTime: ViewRangeTime,
+  duration: number;
+  nameColumnWidth: number;
+  numTicks: number;
+  onCollapseAll: () => void;
+  onCollapseOne: () => void;
+  onColummWidthChange: (width: number) => void;
+  onExpandAll: () => void;
+  onExpandOne: () => void;
+  updateNextViewRangeTime: (update: ViewRangeTimeUpdate) => void;
+  updateViewRangeTime: (start: number, end: number, source?: string) => void;
+  viewRangeTime: ViewRangeTime;
 };
 
 export default function TimelineHeaderRow(props: TimelineHeaderRowProps) {

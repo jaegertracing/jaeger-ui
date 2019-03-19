@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,31 +15,30 @@
 import * as React from 'react';
 import cx from 'classnames';
 
-import type { DraggableBounds, DraggingUpdate } from '../../../../utils/DraggableManager';
-import DraggableManager from '../../../../utils/DraggableManager';
+import { TNil } from '../../../../types';
+import DraggableManager, { DraggableBounds, DraggingUpdate } from '../../../../utils/DraggableManager';
 
 import './TimelineColumnResizer.css';
 
 type TimelineColumnResizerProps = {
-  min: number,
-  max: number,
-  onChange: number => void,
-  position: number,
+  min: number;
+  max: number;
+  onChange: (newSize: number) => void;
+  position: number;
 };
 
 type TimelineColumnResizerState = {
-  dragPosition: ?number,
+  dragPosition: number | TNil;
 };
 
 export default class TimelineColumnResizer extends React.PureComponent<
   TimelineColumnResizerProps,
   TimelineColumnResizerState
 > {
-  props: TimelineColumnResizerProps;
   state: TimelineColumnResizerState;
 
   _dragManager: DraggableManager;
-  _rootElm: ?Element;
+  _rootElm: Element | TNil;
 
   constructor(props: TimelineColumnResizerProps) {
     super(props);
@@ -61,7 +58,7 @@ export default class TimelineColumnResizer extends React.PureComponent<
     this._dragManager.dispose();
   }
 
-  _setRootElm = (elm: ?Element) => {
+  _setRootElm = (elm: Element | TNil) => {
     this._rootElm = elm;
   };
 
