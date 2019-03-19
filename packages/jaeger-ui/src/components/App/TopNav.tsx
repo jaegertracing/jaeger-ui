@@ -16,19 +16,18 @@ import React from 'react';
 import { Dropdown, Icon, Menu } from 'antd';
 import _has from 'lodash/has';
 import { connect } from 'react-redux';
-import { Link, withRouter } from 'react-router-dom';
+import { RouteComponentProps, Link, withRouter } from 'react-router-dom';
 
 import TraceIDSearchInput from './TraceIDSearchInput';
 import * as dependencies from '../DependencyGraph/url';
 import * as searchUrl from '../SearchTracePage/url';
 import * as diffUrl from '../TraceDiff/url';
+import { ReduxState } from '../../types';
+import { ConfigMenuItem, ConfigMenuGroup } from '../../types/config';
 import { getConfigValue } from '../../utils/config/get-config';
 import prefixUrl from '../../utils/prefix-url';
 
-import { ReduxState } from '../../types';
-import { ConfigMenuItem, ConfigMenuGroup } from '../../types/config';
-
-type Props = ReduxState;
+type Props = RouteComponentProps<any> & ReduxState;
 
 const NAV_LINKS = [
   {
@@ -118,7 +117,7 @@ export function TopNavImpl(props: Props) {
 
 TopNavImpl.CustomNavDropdown = CustomNavDropdown;
 
-function mapStateToProps(state: Props) {
+function mapStateToProps(state: ReduxState) {
   return state;
 }
 

@@ -17,8 +17,8 @@ import { Popover } from 'antd';
 import cx from 'classnames';
 
 import CopyIcon from '../../common/CopyIcon';
-
-import { DiffCounts, PVertex } from '../../../model/trace-dag/types';
+import { DiffCounts } from '../../../model/trace-dag/types';
+import TDagVertex from '../../../model/trace-dag/types/TDagVertex';
 
 import './drawNode.css';
 
@@ -86,13 +86,13 @@ export class DiffNode extends React.PureComponent<Props> {
   }
 }
 
-function drawNode(vertex: PVertex<DiffCounts>, keys: Set<number | string>) {
+function drawNode(vertex: TDagVertex<DiffCounts>, keys: Set<number | string>) {
   const { data, operation, service } = vertex.data;
   return <DiffNode {...data} isUiFindMatch={keys.has(vertex.key)} operation={operation} service={service} />;
 }
 
 export default function drawNodeGenerator(keys: Set<number | string>) {
-  return function drawVertex(vertex: PVertex<DiffCounts>) {
+  return function drawVertex(vertex: TDagVertex<DiffCounts>) {
     return drawNode(vertex, keys);
   };
 }

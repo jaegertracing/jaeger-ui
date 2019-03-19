@@ -12,10 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import DagNode from './DagNode';
-
-import { Span } from '../../types/trace';
-import { TNil } from '../../types';
+import { Span } from '../../../types/trace';
+import { TNil } from '../../../types';
 
 export type NodeID = string;
 
@@ -33,15 +31,4 @@ export type DenseSpan = {
   parentID: string | TNil;
   skipToChild: boolean;
   children: Set<string>;
-};
-
-export type PVertex<T> = {
-  data: DagNode<T>;
-  key: string | number;
-  label?: string;
-};
-
-export type PEdge = {
-  from: string | number;
-  to: string | number;
 };

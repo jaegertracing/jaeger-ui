@@ -25,9 +25,6 @@ type Props = RouteComponentProps<any> & {
 };
 
 class TraceIDSearchInput extends React.PureComponent<Props> {
-  // prettier-ignore
-  props!: Props;
-
   goToTrace = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const target = event.target as any;

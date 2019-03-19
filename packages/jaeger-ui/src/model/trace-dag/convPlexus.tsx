@@ -12,12 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { TEdge } from '@jaegertracing/plexus/lib/types';
+
 import DagNode from './DagNode';
-import { NodeID, PEdge, PVertex } from './types';
+import { NodeID } from './types';
+import TDagVertex from './types/TDagVertex';
 
 export default function convPlexus<T>(nodesMap: Map<NodeID, DagNode<T>>) {
-  const vertices: PVertex<T>[] = [];
-  const edges: PEdge[] = [];
+  const vertices: TDagVertex<T>[] = [];
+  const edges: TEdge[] = [];
   const ids = [...nodesMap.keys()];
   const keyMap: Map<string, number> = new Map(ids.map((id: NodeID, i: number): [string, number] => [id, i]));
   for (let i = 0; i < ids.length; i++) {

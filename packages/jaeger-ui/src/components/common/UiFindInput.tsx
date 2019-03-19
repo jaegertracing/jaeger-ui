@@ -14,20 +14,18 @@
 
 import * as React from 'react';
 import { Input } from 'antd';
+import { History as RouterHistory, Location } from 'history';
 import _debounce from 'lodash/debounce';
 import queryString from 'query-string';
 import { connect } from 'react-redux';
-import { withRouter } from 'react-router-dom';
-
-import { History as RouterHistory, Location } from 'history';
+import { RouteComponentProps, withRouter } from 'react-router-dom';
 
 import updateUiFind from '../../utils/update-ui-find';
-
 import { ReduxState } from '../../types/index';
 
-type OwnPropsType = {
+type TOwnProps = RouteComponentProps<any> & {
   forwardedRef?: { current: Input | null };
-  inputProps?: Object;
+  inputProps: Record<string, any>;
   history: RouterHistory;
   location: Location;
   match: any;
@@ -35,18 +33,20 @@ type OwnPropsType = {
   trackFindFunction?: (str: string | null | undefined) => void;
 };
 
-type extractUiFindFromStateReturn = {
-  uiFind?: string;
-};
+type TUiFind = { uiFind?: string };
 
-type PropsType = OwnPropsType & extractUiFindFromStateReturn;
+// type TExtractUiFindFromStateReturn = {
+//   uiFind?: string;
+// };
+
+type TProps = TOwnProps & { uiFind?: string };
 
 type StateType = {
   ownInputValue: string | undefined;
 };
 
-export class UnconnectedUiFindInput extends React.PureComponent<PropsType, StateType> {
-  static defaultProps: Partial<PropsType> = {
+export class UnconnectedUiFindInput extends React.PureComponent<TProps, StateType> {
+  static defaultProps: Partial<TProps> = {
     forwardedRef: undefined,
     inputProps: {},
     trackFindFunction: undefined,
@@ -96,7 +96,7 @@ export class UnconnectedUiFindInput extends React.PureComponent<PropsType, State
   }
 }
 
-export function extractUiFindFromState(state: ReduxState): extractUiFindFromStateReturn {
+export function extractUiFindFromState(state: ReduxState): { uiFind?: string } {
   // TODO: Handle the fact that uiFind could be an array of strings
   const { uiFind }: { uiFind?: string } = queryString.parse(state.router.location.search);
   return { uiFind };

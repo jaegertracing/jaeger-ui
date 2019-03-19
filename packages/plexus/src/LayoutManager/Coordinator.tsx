@@ -26,6 +26,7 @@ import {
   TLayoutOptions,
   TUpdate,
   TWorkerErrorMessage,
+  TWorkerInputMessage,
   TWorkerOutputMessage,
 } from './types';
 import { TEdge, TLayoutEdge, TLayoutVertex, TSizeVertex } from '../types';
@@ -40,7 +41,7 @@ type TCurrentLayout = {
     edges: TEdge[];
     vertices: TSizeVertex[];
   };
-  options: TLayoutOptions | void;
+  options: TLayoutOptions | null;
   status: {
     workerId?: number | null;
     phase: ECoordinatorPhase;
@@ -79,14 +80,14 @@ function findAndRemoveWorker(lists: LayoutWorker[][], worker: LayoutWorker) {
   return { ok: false };
 }
 
-export default class Coordinator {
+export default class Coordinator<T> {
   currentLayout: TCurrentLayout | null;
   nextWorkerId: number;
   idleWorkers: LayoutWorker[];
   busyWorkers: LayoutWorker[];
-  callback: (update: TUpdate) => void;
+  callback: (update: TUpdate<T>) => void;
 
-  constructor(callback: (update: TUpdate) => void) {
+  constructor(callback: (update: TUpdate<T>) => void) {
     this.callback = callback;
     this.currentLayout = null;
     this.nextWorkerId = 0;
@@ -94,20 +95,21 @@ export default class Coordinator {
     this.busyWorkers = [];
   }
 
-  getLayout(id: number, edges: TEdge[], vertices: TSizeVertex[], options: TLayoutOptions | void) {
+  getLayout(id: number, inEdges: TEdge[], inVertices: TSizeVertex[], options: TLayoutOptions | void) {
     this.busyWorkers.forEach(killWorker);
     this.busyWorkers.length = 0;
-    const cleaned = cleanInput(edges, vertices.map(convCoord.vertexToDot));
+    const { edges, vertices: _vertices } = cleanInput(inEdges, inVertices);
+    const vertices = _vertices.map(convCoord.vertexToDot);
     this.currentLayout = {
-      cleaned,
       id,
-      options,
-      input: { edges, vertices },
+      cleaned: { edges, vertices },
+      options: options || null,
+      input: { edges: inEdges, vertices: inVertices },
       status: { phase: ECoordinatorPhase.NotStarted },
     };
     const isDotOnly = Boolean(options && options.useDotEdges);
     const phase = isDotOnly ? EWorkerPhase.DotOnly : EWorkerPhase.Positions;
-    this._postWork(phase, cleaned.edges, cleaned.vertices);
+    this._postWork(phase, edges, vertices);
   }
 
   stopAndRelease() {
@@ -146,7 +148,7 @@ export default class Coordinator {
     this.busyWorkers.push(worker);
     status.phase = phase as any;
     status.workerId = worker.id;
-    worker.postMessage({
+    const message: TWorkerInputMessage = {
       options,
       edges,
       vertices,
@@ -155,7 +157,8 @@ export default class Coordinator {
         layoutId: id,
         workerId: worker.id,
       },
-    });
+    };
+    worker.postMessage(message);
   }
 
   _handleVizWorkerError = (event: ErrorEvent) => {
@@ -233,8 +236,8 @@ export default class Coordinator {
     }
 
     const adjVertexCoords = convCoord.vertexToPixels.bind(null, graph);
-    let adjVertices = vertices.map<TLayoutVertex>(adjVertexCoords);
-    adjVertices = matchVertices(input.vertices, adjVertices);
+    const adjCleanVertices = vertices.map<TLayoutVertex>(adjVertexCoords);
+    const adjVertices = matchVertices(input.vertices, adjCleanVertices);
     const adjGraph = convCoord.graphToPixels(graph);
 
     if (phase === EWorkerPhase.Positions || phase === EWorkerPhase.DotOnly) {

@@ -18,7 +18,7 @@ const round = Math.round;
 
 const DPI = 72;
 
-export function vertexToDot(v: TSizeVertex) {
+export function vertexToDot(v: TSizeVertex): TSizeVertex {
   // expect only width and height for going to dot
   const { vertex, height, width } = v;
   return {

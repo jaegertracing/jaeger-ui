@@ -22,19 +22,18 @@ export type TLayoutGraph = {
 
 export type TVertexKey = string | number;
 
-export type TVertex = {
+export type TVertex<T = {}> = T & {
   key: TVertexKey;
   label?: React.ReactNode;
-  data?: any;
 };
 
-export type TSizeVertex = {
-  vertex: TVertex;
+export type TSizeVertex<T = any> = {
+  vertex: TVertex<T>;
   width: number;
   height: number;
 };
 
-export type TLayoutVertex = TSizeVertex & {
+export type TLayoutVertex<T = any> = TSizeVertex<T> & {
   left: number;
   top: number;
 };
@@ -56,20 +55,20 @@ export type TCancelled = {
   isCancelled: true;
 };
 
-export type TPositionsDone = {
+export type TPositionsDone<T = any> = {
   isCancelled: false;
   graph: TLayoutGraph;
-  vertices: TLayoutVertex[];
+  vertices: TLayoutVertex<T>[];
 };
 
-export type TLayoutDone = {
+export type TLayoutDone<T = any> = {
   isCancelled: false;
   edges: TLayoutEdge[];
   graph: TLayoutGraph;
-  vertices: TLayoutVertex[];
+  vertices: TLayoutVertex<T>[];
 };
 
-export type TPendingLayoutResult = {
-  positions: Promise<TPositionsDone | TCancelled>;
-  layout: Promise<TLayoutDone | TCancelled>;
+export type TPendingLayoutResult<T = any> = {
+  positions: Promise<TPositionsDone<T> | TCancelled>;
+  layout: Promise<TLayoutDone<T> | TCancelled>;
 };
