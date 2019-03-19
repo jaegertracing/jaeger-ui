@@ -27,19 +27,19 @@ import { ApiError } from '../../../types/api-error';
 import './TraceHeader.css';
 
 type Props = {
-  duration: number | TNil,
-  error?: ApiError,
-  startTime: number | TNil,
-  state: FetchedState | TNil,
-  traceID: string | TNil,
-  traceName: string | TNil,
-  totalSpans: number | TNil,
+  duration: number | TNil;
+  error?: ApiError;
+  startTime: number | TNil;
+  state: FetchedState | TNil;
+  traceID: string | TNil;
+  traceName: string | TNil;
+  totalSpans: number | TNil;
 };
 
 type AttrsProps = {
-  startTime: number | TNil,
-  duration: number | TNil,
-  totalSpans: number | TNil,
+  startTime: number | TNil;
+  duration: number | TNil;
+  totalSpans: number | TNil;
 };
 
 // exported for tests

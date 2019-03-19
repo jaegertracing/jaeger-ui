@@ -24,15 +24,15 @@ import { FetchedTrace, TNil } from '../../../types';
 import './TraceDiffHeader.css';
 
 type Props = {
-  a: FetchedTrace | TNil,
-  b: FetchedTrace | TNil,
-  cohort: FetchedTrace[],
-  diffSetA: (traceId: string) => void,
-  diffSetB: (traceId: string) => void,
+  a: FetchedTrace | TNil;
+  b: FetchedTrace | TNil;
+  cohort: FetchedTrace[];
+  diffSetA: (traceId: string) => void;
+  diffSetB: (traceId: string) => void;
 };
 
 type State = {
-  tableVisible: ('a' | 'b') | null,
+  tableVisible: ('a' | 'b') | null;
 };
 
 export default class TraceDiffHeader extends React.PureComponent<Props, State> {
@@ -70,8 +70,20 @@ export default class TraceDiffHeader extends React.PureComponent<Props, State> {
   render() {
     const { a, b, cohort } = this.props;
     const { tableVisible } = this.state;
-    const { data: aData = undefined, id: aId = undefined, state: aState = undefined, error: aError = undefined } = a || {};
-    const { data: bData = undefined, id: bId = undefined, state: bState = undefined, error: bError = undefined } = b || {};
+    const {
+      data: aData = undefined,
+      id: aId = undefined,
+      state: aState = undefined,
+      error: aError = undefined,
+    } =
+      a || {};
+    const {
+      data: bData = undefined,
+      id: bId = undefined,
+      state: bState = undefined,
+      error: bError = undefined,
+    } =
+      b || {};
     const selection: Record<string, { label: 'A' | 'B' }> = {};
     if (aId) selection[aId] = { label: 'A' };
     if (bId) selection[bId] = { label: 'B' };

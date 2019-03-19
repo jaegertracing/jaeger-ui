@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2018 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,25 +14,20 @@
 
 import DagNode from './DagNode';
 import DenseTrace from './DenseTrace';
-
-import type { NodeID } from './types';
-import type { Trace } from '../../types/trace';
-
-type DiffCounts = {
-  a: number,
-  b: number,
-};
+import { DiffCounts, NodeID } from './types';
+import { TNil } from '../../types';
+import { Trace } from '../../types/trace';
 
 export default class TraceDag<T = void> {
   static newFromTrace(trace: Trace) {
-    const dt: TraceDag<> = new TraceDag();
-    dt._initFromTrace(trace);
+    const dt: TraceDag<any> = new TraceDag();
+    dt._initFromTrace(trace, undefined);
     return dt;
   }
 
   static diff(a: TraceDag<any>, b: TraceDag<any>) {
     const dt: TraceDag<DiffCounts> = new TraceDag();
-    let key = 'a';
+    let key: 'a' | 'b' = 'a';
 
     function pushDagNode(src: DagNode<any>) {
       const node = dt._getDagNode(src.service, src.operation, src.children.size > 0, src.parentID, {
@@ -56,7 +49,7 @@ export default class TraceDag<T = void> {
     return dt;
   }
 
-  denseTrace: ?DenseTrace;
+  denseTrace: DenseTrace | null;
   nodesMap: Map<NodeID, DagNode<T>>;
   rootIDs: Set<NodeID>;
 
@@ -75,15 +68,15 @@ export default class TraceDag<T = void> {
     service: string,
     operation: string,
     hasChildren: boolean,
-    parentID?: ?NodeID,
+    parentID: NodeID | TNil,
     data: T
   ): DagNode<T> {
     const nodeID = DagNode.getID(service, operation, hasChildren, parentID);
-    let node = this.nodesMap.get(nodeID);
-    if (node) {
-      return node;
+    const existing = this.nodesMap.get(nodeID);
+    if (existing) {
+      return existing;
     }
-    node = new DagNode(service, operation, hasChildren, parentID, data);
+    const node = new DagNode(service, operation, hasChildren, parentID, data);
     this.nodesMap.set(nodeID, node);
     if (!parentID) {
       this.rootIDs.add(nodeID);
@@ -96,7 +89,7 @@ export default class TraceDag<T = void> {
     return node;
   }
 
-  _addDenseSpan(spanID: string, parentNodeID?: ?NodeID, data: T) {
+  _addDenseSpan(spanID: string, parentNodeID: NodeID | TNil, data: T) {
     const denseSpan = this.denseTrace && this.denseTrace.denseSpansMap.get(spanID);
     if (!denseSpan) {
       // eslint-disable-next-line no-console
@@ -104,7 +97,7 @@ export default class TraceDag<T = void> {
       return;
     }
     const { children, operation, service, skipToChild } = denseSpan;
-    let nodeID: ?string = null;
+    let nodeID: string | TNil = null;
     if (!skipToChild) {
       const node = this._getDagNode(service, operation, children.size > 0, parentNodeID, data);
       node.count++;

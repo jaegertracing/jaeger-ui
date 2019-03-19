@@ -19,6 +19,11 @@ import { TNil } from '../../types';
 
 export type NodeID = string;
 
+export type DiffCounts = {
+  a: number;
+  b: number;
+};
+
 export type DenseSpan = {
   span: Span;
   id: string;
@@ -31,8 +36,9 @@ export type DenseSpan = {
 };
 
 export type PVertex<T> = {
-  key: string | number;
   data: DagNode<T>;
+  key: string | number;
+  label?: string;
 };
 
 export type PEdge = {

@@ -16,7 +16,7 @@ import * as React from 'react';
 import { Input } from 'antd';
 
 type Props = {
-  selectTrace: (traceID: string) => void,
+  selectTrace: (traceID: string) => void;
 };
 
 const { Search } = Input;

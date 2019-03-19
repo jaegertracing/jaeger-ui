@@ -18,16 +18,16 @@ import cx from 'classnames';
 
 import CopyIcon from '../../common/CopyIcon';
 
-import { PVertex } from '../../../model/trace-dag/types';
+import { DiffCounts, PVertex } from '../../../model/trace-dag/types';
 
 import './drawNode.css';
 
 type Props = {
-  a: number,
-  b: number,
-  isUiFindMatch: boolean,
-  operation: string,
-  service: string,
+  a: number;
+  b: number;
+  isUiFindMatch: boolean;
+  operation: string;
+  service: string;
 };
 
 const abs = Math.abs;
@@ -86,13 +86,13 @@ export class DiffNode extends React.PureComponent<Props> {
   }
 }
 
-function drawNode<T>(vertex: PVertex<T>, keys: Set<number | string>) {
+function drawNode(vertex: PVertex<DiffCounts>, keys: Set<number | string>) {
   const { data, operation, service } = vertex.data;
   return <DiffNode {...data} isUiFindMatch={keys.has(vertex.key)} operation={operation} service={service} />;
 }
 
 export default function drawNodeGenerator(keys: Set<number | string>) {
-  return function drawVertex<T>(vertex: PVertex<T>) {
+  return function drawVertex(vertex: PVertex<DiffCounts>) {
     return drawNode(vertex, keys);
   };
 }

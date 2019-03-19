@@ -18,7 +18,7 @@ import { getUrl } from '../../TracePage/url';
 import NewWindowIcon from '../../common/NewWindowIcon';
 
 type PropsType = {
-  traceID: string,
+  traceID: string;
 };
 
 function stopPropagation(event: React.MouseEvent<HTMLAnchorElement>) {

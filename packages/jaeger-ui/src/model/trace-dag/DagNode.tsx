@@ -14,24 +14,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { NodeID, DenseSpan } from './types';
+import { NodeID, DenseSpan } from './types';
+import { TNil } from '../../types';
 
 export default class DagNode<T = void> {
-  static getID(service: string, operation: string, hasChildren: boolean, parentID?: ?string): NodeID {
+  static getID(service: string, operation: string, hasChildren: boolean, parentID?: string | TNil): NodeID {
     const name = `${service}\t${operation}${hasChildren ? '' : '\t__LEAF__'}`;
     return parentID ? `${parentID}\n${name}` : name;
   }
 
   service: string;
   operation: string;
-  parentID: ?NodeID;
+  parentID: NodeID | TNil;
   id: NodeID;
   count: number;
   members: DenseSpan[];
   children: Set<NodeID>;
   data: T;
 
-  constructor(service: string, operation: string, hasChildren: boolean, parentID?: ?NodeID, data: T) {
+  constructor(service: string, operation: string, hasChildren: boolean, parentID: NodeID | TNil, data: T) {
     this.service = service;
     this.operation = operation;
     this.parentID = parentID;

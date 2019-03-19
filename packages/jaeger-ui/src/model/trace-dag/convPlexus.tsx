@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2018 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,14 +13,13 @@
 // limitations under the License.
 
 import DagNode from './DagNode';
-
-import type { NodeID, PEdge, PVertex } from './types';
+import { NodeID, PEdge, PVertex } from './types';
 
 export default function convPlexus<T>(nodesMap: Map<NodeID, DagNode<T>>) {
   const vertices: PVertex<T>[] = [];
   const edges: PEdge[] = [];
   const ids = [...nodesMap.keys()];
-  const keyMap: Map<string, ?number> = new Map(ids.map((id: NodeID, i: number) => [id, i]));
+  const keyMap: Map<string, number> = new Map(ids.map((id: NodeID, i: number): [string, number] => [id, i]));
   for (let i = 0; i < ids.length; i++) {
     const id = ids[i];
     const dagNode = nodesMap.get(id);

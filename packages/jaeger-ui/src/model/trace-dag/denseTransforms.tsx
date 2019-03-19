@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2018 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,9 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { DenseSpan } from './types';
 import * as tagKeys from '../../constants/tag-keys';
-
-import type { DenseSpan } from './types';
 
 // -	if span
 //     -	is client span
@@ -24,7 +21,7 @@ import type { DenseSpan } from './types';
 //     -	has parent.operation startsWith self-tag peer.service
 //     -	has parent.operation endsWith self.operation
 //     -	set self.service = self-tag peer.service
-function fixLeafService(denseSpan: DenseSpan, map: Map<string, ?DenseSpan>) {
+function fixLeafService(denseSpan: DenseSpan, map: Map<string, DenseSpan>) {
   const { children, operation, parentID, tags } = denseSpan;
   const parent = parentID != null && map.get(parentID);
   const kind = tags[tagKeys.SPAN_KIND];
@@ -45,7 +42,7 @@ function fixLeafService(denseSpan: DenseSpan, map: Map<string, ?DenseSpan>) {
 //     -	parent has one child (self)
 //     -	(parent.operation OR parent-tag peer.service) startsWith self.service
 //     -	set parent.skipToChild = true
-function skipClient(denseSpan: DenseSpan, map: Map<string, ?DenseSpan>) {
+function skipClient(denseSpan: DenseSpan, map: Map<string, DenseSpan>) {
   const { parentID, service, tags } = denseSpan;
   const parent = parentID != null && map.get(parentID);
   if (!parent) {
@@ -64,7 +61,7 @@ function skipClient(denseSpan: DenseSpan, map: Map<string, ?DenseSpan>) {
 //     -	has operation === tag http.method
 //     -	(parent.operation OR parent-tag peer.service) startsWith self.service
 //     - fix self.operation
-function fixHttpOperation(denseSpan: DenseSpan, map: Map<string, ?DenseSpan>) {
+function fixHttpOperation(denseSpan: DenseSpan, map: Map<string, DenseSpan>) {
   const { parentID, operation, service, tags } = denseSpan;
   const parent = parentID != null && map.get(parentID);
   if (!parent) {
@@ -89,7 +86,7 @@ function fixHttpOperation(denseSpan: DenseSpan, map: Map<string, ?DenseSpan>) {
 //     - has only one child
 //     - parent.process === self.process
 //     - set self.skipToChild = true
-function skipAnnotationSpans(denseSpan: DenseSpan, map: Map<string, ?DenseSpan>) {
+function skipAnnotationSpans(denseSpan: DenseSpan, map: Map<string, DenseSpan>) {
   const { children, parentID, span } = denseSpan;
   if (children.size !== 1 || span.tags.length !== 0) {
     return;
@@ -110,7 +107,7 @@ function skipAnnotationSpans(denseSpan: DenseSpan, map: Map<string, ?DenseSpan>)
 //     - the child is a server span
 //     - parent.span.processID === self.span.processID
 //     - set parent.skipToChild = true
-function skipClientSpans(denseSpan: DenseSpan, map: Map<string, ?DenseSpan>) {
+function skipClientSpans(denseSpan: DenseSpan, map: Map<string, DenseSpan>) {
   const { children, parentID, span, tags } = denseSpan;
   if (children.size !== 1 || tags[tagKeys.SPAN_KIND] !== 'client') {
     return;
@@ -126,7 +123,7 @@ function skipClientSpans(denseSpan: DenseSpan, map: Map<string, ?DenseSpan>) {
     child.tags[tagKeys.SPAN_KIND] === 'client' && parent.span.processID === span.processID;
 }
 
-export default function denseTransforms(denseSpan: DenseSpan, map: Map<string, ?DenseSpan>) {
+export default function denseTransforms(denseSpan: DenseSpan, map: Map<string, DenseSpan>) {
   fixLeafService(denseSpan, map);
   skipClient(denseSpan, map);
   fixHttpOperation(denseSpan, map);

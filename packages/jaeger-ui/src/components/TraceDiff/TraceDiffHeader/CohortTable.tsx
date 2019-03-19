@@ -26,10 +26,10 @@ import { FetchedTrace, TNil } from '../../../types';
 import './CohortTable.css';
 
 type Props = {
-  selection: Record<string, { label: string }>,
-  current: string | TNil,
-  cohort: FetchedTrace[],
-  selectTrace: (traceID: string) => void,
+  selection: Record<string, { label: string }>;
+  current: string | TNil;
+  cohort: FetchedTrace[];
+  selectTrace: (traceID: string) => void;
 };
 
 const { Column } = Table;
@@ -121,7 +121,9 @@ export default class CohortTable extends React.PureComponent<Props> {
           title="Duration"
           dataIndex="data.duration"
           key="duration"
-          render={(value, record: FetchedTrace) => record.state === fetchedState.DONE && formatDuration(value)}
+          render={(value, record: FetchedTrace) =>
+            record.state === fetchedState.DONE && formatDuration(value)
+          }
         />
         <Column title="Spans" dataIndex="data.spans.length" key="spans" />
         <Column
