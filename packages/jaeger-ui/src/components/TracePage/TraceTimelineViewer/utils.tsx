@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Span } from '../../../types/trace';
+import { Span } from '../../../types/trace';
 
-export type ViewedBoundsFunctionType = (number, number) => { start: number, end: number };
+export type ViewedBoundsFunctionType = (start: number, end: number) => { start: number; end: number };
 /**
  * Given a range (`min`, `max`) and factoring in a zoom (`viewStart`, `viewEnd`)
  * a function is created that will find the position of a sub-range (`start`, `end`).
@@ -32,10 +30,10 @@ export type ViewedBoundsFunctionType = (number, number) => { start: number, end:
  * @returns {(number, number) => Object} Created view bounds function
  */
 export function createViewedBoundsFunc(viewRange: {
-  min: number,
-  max: number,
-  viewStart: number,
-  viewEnd: number,
+  min: number;
+  max: number;
+  viewStart: number;
+  viewEnd: number;
 }) {
   const { min, max, viewStart, viewEnd } = viewRange;
   const duration = max - min;

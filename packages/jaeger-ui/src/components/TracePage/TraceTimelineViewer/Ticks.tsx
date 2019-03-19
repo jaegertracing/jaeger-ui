@@ -17,29 +17,30 @@
 import * as React from 'react';
 
 import { formatDuration } from './utils';
+import { TNil } from '../../../types';
 
 import './Ticks.css';
 
 type TicksProps = {
-  endTime?: ?number,
-  numTicks: number,
-  showLabels?: ?boolean,
-  startTime?: ?number,
+  endTime?: number | TNil;
+  numTicks: number;
+  showLabels?: boolean | TNil;
+  startTime?: number | TNil;
 };
 
 export default function Ticks(props: TicksProps) {
   const { endTime, numTicks, showLabels, startTime } = props;
 
-  let labels: string[];
+  let labels: undefined | string[];
   if (showLabels) {
     labels = [];
     const viewingDuration = (endTime || 0) - (startTime || 0);
     for (let i = 0; i < numTicks; i++) {
-      const durationAtTick = startTime + i / (numTicks - 1) * viewingDuration;
+      const durationAtTick = (startTime || 0) + i / (numTicks - 1) * viewingDuration;
       labels.push(formatDuration(durationAtTick));
     }
   }
-  const ticks: React.Node[] = [];
+  const ticks: React.ReactNode[] = [];
   for (let i = 0; i < numTicks; i++) {
     const portion = i / (numTicks - 1);
     ticks.push(
