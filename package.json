@@ -30,7 +30,7 @@
   },
   "resolutions": {
     "**/lodash": "4.17.11",
-    "**/cheerio/parse5": "^4.0.0"
+    "**/cheerio/parse5": "4.0.0"
   },
   "workspaces": {
     "packages": ["packages/*"],

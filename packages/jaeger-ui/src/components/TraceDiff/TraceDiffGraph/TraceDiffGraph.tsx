@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2018 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,21 +24,19 @@ import LoadingIndicator from '../../common/LoadingIndicator';
 import UiFindInput, { extractUiFindFromState } from '../../common/UiFindInput';
 import { fetchedState } from '../../../constants';
 import { setOnEdgesContainer, setOnNodesContainer, setOnNode } from '../../../utils/plexus/set-on-graph';
-
-import type { FetchedTrace } from '../../../types';
+import { FetchedTrace, TNil } from '../../../types';
 
 import './TraceDiffGraph.css';
 
 type Props = {
-  a: ?FetchedTrace,
-  b: ?FetchedTrace,
-  uiFind?: string,
+  a: FetchedTrace | TNil;
+  b: FetchedTrace | TNil;
+  uiFind?: string;
 };
 
 const { classNameIsSmall } = DirectedGraph.propsFactories;
 
 export class UnconnectedTraceDiffGraph extends React.PureComponent<Props> {
-  props: Props;
   layoutManager: LayoutManager;
 
   static defaultProps = {
@@ -97,6 +93,10 @@ export class UnconnectedTraceDiffGraph extends React.PureComponent<Props> {
     const { edges, vertices } = getEdgesAndVertices(aData, bData);
     const keys = getUiFindVertexKeys(uiFind, vertices);
     const dagClassName = cx('TraceDiffGraph--dag', { 'is-uiFind-mode': uiFind });
+    const inputProps: Record<string, any> = {
+      className: 'TraceDiffGraph--uiFind',
+      suffix: uiFind.length && String(keys.size),
+    };
 
     return (
       <div className="TraceDiffGraph--graphWrapper">
@@ -115,12 +115,7 @@ export class UnconnectedTraceDiffGraph extends React.PureComponent<Props> {
           edges={edges}
           vertices={vertices}
         />
-        <UiFindInput
-          inputProps={{
-            className: 'TraceDiffGraph--uiFind',
-            suffix: uiFind.length && String(keys.size),
-          }}
-        />
+        <UiFindInput inputProps={inputProps} />
       </div>
     );
   }

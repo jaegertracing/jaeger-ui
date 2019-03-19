@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import DetailState from '../components/TracePage/TraceTimelineViewer/SpanDetail/DetailState';
-import { TNil } from '.';
+import TNil from './TNil';
 
 // eslint-disable-next-line import/prefer-default-export
 export type TraceTimeline = {

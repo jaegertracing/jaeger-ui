@@ -29,7 +29,7 @@ import * as jaegerApiActions from '../../actions/jaeger-api';
 import { TOP_NAV_HEIGHT } from '../../constants';
 
 import type { FetchedTrace, ReduxState } from '../../types';
-import type { TraceDiffState } from '../../types/trace-diff';
+import type { TraceDiffState } from '../../types/TTraceDiffState';
 
 import './TraceDiff.css';
 

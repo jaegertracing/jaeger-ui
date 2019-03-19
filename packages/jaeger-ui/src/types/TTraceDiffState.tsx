@@ -12,11 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { TNil } from '.';
+import TNil from './TNil';
 
-// eslint-disable-next-line import/prefer-default-export
-export type TraceDiffState = {
+type TTraceDiffState = {
   a: string | TNil;
   b: string | TNil;
   cohort: string[];
 };
+
+// eslint-disable-next-line no-undef
+export default TTraceDiffState;

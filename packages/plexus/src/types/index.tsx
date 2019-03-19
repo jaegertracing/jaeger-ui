@@ -22,7 +22,7 @@ export type TLayoutGraph = {
 
 export type TVertexKey = string | number;
 
-export type TVertex<T = {}> = T & {
+export type TVertex<T = any> = T & {
   key: TVertexKey;
   label?: React.ReactNode;
 };

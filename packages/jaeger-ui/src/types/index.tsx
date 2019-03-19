@@ -21,11 +21,12 @@ import { TracesArchive } from './archive';
 import { Config } from './config';
 import { EmbeddedState } from './embedded';
 import { SearchQuery } from './search';
+import TNil from './TNil';
 import { Trace } from './trace';
-import { TraceDiffState } from './trace-diff';
+import TTraceDiffState from './TTraceDiffState';
 import { TraceTimeline } from './trace-timeline';
 
-export type TNil = null | undefined;
+export type TNil = TNil;
 
 export type FetchedState = 'FETCH_DONE' | 'FETCH_ERROR' | 'FETCH_LOADING';
 
@@ -63,6 +64,6 @@ export type ReduxState = {
       query?: SearchQuery;
     };
   };
-  traceDiff: TraceDiffState;
+  traceDiff: TTraceDiffState;
   traceTimeline: TraceTimeline;
 };

@@ -1,6 +1,4 @@
-// @flow
-
-// Copyright (c) 2017 Uber Technologies, Inc.
+// Copyright (c) 2019 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,4 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export { default } from './TraceDiffGraph';
+type TNil = null | undefined;
+
+// eslint-disable-next-line no-undef
+export default TNil;

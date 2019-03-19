@@ -19,11 +19,12 @@ import memoizeOne from 'memoize-one';
 
 import convPlexus from '../../../model/trace-dag/convPlexus';
 import TraceDag from '../../../model/trace-dag/TraceDag';
+import { DiffCounts } from '../../../model/trace-dag/types';
 import TDagVertex from '../../../model/trace-dag/types/TDagVertex';
 import { Trace } from '../../../types/trace';
 import filterSpans from '../../../utils/filter-spans';
 
-function getUiFindVertexKeysFn<T = void>(uiFind: string, vertices: TDagVertex<T>[]): Set<TVertexKey> {
+function getUiFindVertexKeysFn(uiFind: string, vertices: TDagVertex<any>[]): Set<TVertexKey> {
   if (!uiFind) return new Set();
   const newVertexKeys: Set<number | string> = new Set();
   vertices.forEach(({ key, data: { members } }) => {
@@ -40,7 +41,7 @@ function getEdgesAndVerticesFn(aData: Trace, bData: Trace) {
   const aTraceDag = TraceDag.newFromTrace(aData);
   const bTraceDag = TraceDag.newFromTrace(bData);
   const diffDag = TraceDag.diff(aTraceDag, bTraceDag);
-  return convPlexus(diffDag.nodesMap);
+  return convPlexus<DiffCounts>(diffDag.nodesMap);
 }
 
 export const getEdgesAndVertices = memoizeOne(getEdgesAndVerticesFn);

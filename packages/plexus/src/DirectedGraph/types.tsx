@@ -34,12 +34,12 @@ export type TDirectedGraphState = {
   zoomTransform?: ZoomTransform;
 };
 
-export type TDirectedGraphProps = {
+export type TDirectedGraphProps<T> = {
   arrowScaleDampener?: number;
   className?: string;
   classNamePrefix?: string;
   edges: TEdge[];
-  getNodeLabel?: ((vtx: TVertex) => React.ReactNode) | null;
+  getNodeLabel?: ((vtx: TVertex<T>) => React.ReactNode) | null;
   layoutManager: LayoutManager;
   minimap?: boolean;
   minimapClassName?: string;

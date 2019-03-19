@@ -16,7 +16,7 @@ import queryString from 'query-string';
 import { matchPath } from 'react-router-dom';
 
 import getValidState from './getValidState';
-import { TraceDiffState } from '../../types/trace-diff';
+import TTraceDiffState from '../../types/TTraceDiffState';
 import prefixUrl from '../../utils/prefix-url';
 
 export const ROUTE_PATH = prefixUrl('/trace/:a?\\.\\.\\.:b?');
@@ -27,7 +27,7 @@ export function matches(path: string) {
   return Boolean(matchPath(path, ROUTE_MATCHER));
 }
 
-export function getUrl(state: TraceDiffState) {
+export function getUrl(state: TTraceDiffState) {
   const { a, b, cohort } = getValidState(state);
   const search = queryString.stringify({ cohort });
   return prefixUrl(`/trace/${a || ''}...${b || ''}${search ? '?' : ''}${search}`);
