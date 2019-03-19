@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,26 +18,29 @@ import * as React from 'react';
 
 import GraphTicks from './GraphTicks';
 import Scrubber from './Scrubber';
-import DraggableManager, { EUpdateTypes } from '../../../../utils/DraggableManager';
-
-import type { ViewRange, ViewRangeTimeUpdate } from '../../types';
-import type { DraggableBounds, DraggingUpdate } from '../../../../utils/DraggableManager';
+import { ViewRange, ViewRangeTimeUpdate } from '../../types';
+import { TNil } from '../../../../types';
+import DraggableManager, {
+  DraggableBounds,
+  DraggingUpdate,
+  EUpdateTypes,
+} from '../../../../utils/DraggableManager';
 
 import './ViewingLayer.css';
 
 type ViewingLayerProps = {
-  height: number,
-  numTicks: number,
-  updateViewRangeTime: (number, number, ?string) => void,
-  updateNextViewRangeTime: ViewRangeTimeUpdate => void,
-  viewRange: ViewRange,
+  height: number;
+  numTicks: number;
+  updateViewRangeTime: (start: number, end: number, type?: string | TNil) => void;
+  updateNextViewRangeTime: (update: ViewRangeTimeUpdate) => void;
+  viewRange: ViewRange;
 };
 
 type ViewingLayerState = {
   /**
    * Cursor line should not be drawn when the mouse is over the scrubber handle.
    */
-  preventCursorLine: boolean,
+  preventCursorLine: boolean;
 };
 
 /**
@@ -81,10 +82,9 @@ function getNextViewLayout(start: number, position: number) {
  * handles showing the current view range and handles mouse UX for modifying it.
  */
 export default class ViewingLayer extends React.PureComponent<ViewingLayerProps, ViewingLayerState> {
-  props: ViewingLayerProps;
   state: ViewingLayerState;
 
-  _root: ?Element;
+  _root: Element | TNil;
 
   /**
    * `_draggerReframe` handles clicking and dragging on the `ViewingLayer` to
@@ -149,11 +149,11 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
     this._draggerStart.dispose();
   }
 
-  _setRoot = (elm: ?Element) => {
+  _setRoot = (elm: SVGElement | TNil) => {
     this._root = elm;
   };
 
-  _getDraggingBounds = (tag: ?string): DraggableBounds => {
+  _getDraggingBounds = (tag: string | TNil): DraggableBounds => {
     if (!this._root) {
       throw new Error('invalid state');
     }
@@ -278,7 +278,7 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
     if (viewEnd) {
       rightInactive = 100 - viewEnd * 100;
     }
-    let cursorPosition: ?string;
+    let cursorPosition: string | undefined;
     if (!haveNextTimeRange && cursor != null && !preventCursorLine) {
       cursorPosition = `${cursor * 100}%`;
     }
@@ -286,7 +286,11 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
     return (
       <div aria-hidden className="ViewingLayer" style={{ height }}>
         {(viewStart !== 0 || viewEnd !== 1) && (
-          <Button onClick={this._resetTimeZoomClickHandler} className="ViewingLayer--resetZoom">
+          <Button
+            onClick={this._resetTimeZoomClickHandler}
+            className="ViewingLayer--resetZoom"
+            htmlType="button"
+          >
             Reset Selection
           </Button>
         )}
