@@ -12,7 +12,9 @@ ESLint is being used to lint the repo, as a whole. Within `./packages/plexus` (f
 
 #### `typescript`
 
-The TypeScript package (e.g. `typescript`) is **not for compiling** TypeScript source but is included for the purpose of bolstering the linting of TypeScript files. `tsc` catches quite a few issues that ESLint does not pick up on.
+In the project root, `typescript` is used to bolster the linting of TypeScript files. `tsc` catches quite a few issues that ESLint does not pick up on.
+
+In `./packages/plexus`, `typescript` is used to generate type declarations for the ES module build. See [`./packages/plexus/BUILD.md`](packages/plexus/BUILD.md#typescript---emitdeclarationonly) for details.
 
 ### Workspaces
 
@@ -66,7 +68,7 @@ Runs the `lint` and `test` scripts.
 
 ## `.eslintrc.js`
 
-Pretty basic. Needs to be cleaned up. The `airbnb` configuration needs to be updated.
+Pretty basic.
 
 Note: This configuration is extended by `./packages/plexus/.eslintrc.js`.
 
@@ -96,16 +98,14 @@ A few notable [compiler settings](http://www.typescriptlang.org/docs/handbook/co
   * [dom.iterable](https://github.com/Microsoft/TypeScript/blob/master/lib/lib.dom.iterable.d.ts)
   * [webworker](https://github.com/Microsoft/TypeScript/blob/master/lib/lib.webworker.d.ts)
 * `skipLibCheck` - Maybe worth reevaluating in the future
-* `strict` - Very important
+* `strict` - Important
 * `noEmit` - We're using this for linting, after all
 * `include` - We've included `./typgings` here because it turned out to be a lot simpler than configuring `types`, `typeRoots` and `paths`
 
 ## `typings/{custom.d.ts, index.d.ts}`
 
-This is relevant for `./packages/plexus/src/LayoutManager/layout.worker.js` and the `viz.js` package.
+This is relevant for `./packages/plexus/src/LayoutManager/getLayout.tsx` and the `viz.js` package.
 
 I wasn't able to get much in the line of error messaging, so I'm pretty vague on this.
 
-The version of `viz.js` in use (1.8.1) ships with an `index.d.ts` file, but it has some issues. I was able to define alternate type declarations for `viz.js` in `./typings/custom.d.ts` and referring `./typings/index.d.ts` to `./typings/custom.d.ts`. I also changed the import for `viz.js` to `viz.js/viz.js`, which is importing it's main file, directly, instead of implicitly.
-
-For `./packages/plexus/src/LayoutManager/layout.worker.js`, webpack (in `./packages/plexus`) is set up to use the [`worker-loader`](https://github.com/webpack-contrib/worker-loader) to load the file. This converts it to a `WebWorker` by instantiating the `WebWorker` with the source as a `Blob`. Consequently, `layout.worker.js` is implemented in the context of a `WorkerGlobalScope` but consumed as if it's a regular class that extends `Worker`. To deal with this mismatch, a **webpack alias** was created mapping `worker-alias/` to `./packages/plexus/src`. This allowed a type declaration to be defined for `worker-alias/*` as a subclass of `Worker`.
+The version of `viz.js` in use (1.8.1) ships with an `index.d.ts` file, but it has some issues. `./typings/custom.d.ts` defines an alternate type declaration for `viz.js` by targeting `viz.js/viz.js`. It was necessary use `./typings/index.d.ts` to refer to `./typings/custom.d.ts`. Then, importing the modules main file, which is `viz.js/viz.js`, will use the alternate type declaration.

@@ -69,14 +69,6 @@ export type TLayoutDone = {
   vertices: TLayoutVertex[];
 };
 
-// TODO(joe): delete if this is not needed
-// export type TLayout = {
-//   isCancelled: boolean,
-//   edges?: TLayoutEdge[],
-//   graph?: TLayoutGraph,
-//   vertices?: TLayoutVertex[],
-// };
-
 export type TPendingLayoutResult = {
   positions: Promise<TPositionsDone | TCancelled>;
   layout: Promise<TLayoutDone | TCancelled>;

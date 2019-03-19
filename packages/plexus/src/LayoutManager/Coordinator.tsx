@@ -17,7 +17,7 @@
 import * as convCoord from './dot/conv-coord';
 import { matchEdges, matchVertices } from './match-inputs';
 // eslint-disable-next-line import/order, import/no-unresolved
-import LayoutWorker from 'worker-alias/LayoutManager/layout.worker';
+import LayoutWorker from './layout.worker.bundled';
 
 import {
   ECoordinatorPhase,
