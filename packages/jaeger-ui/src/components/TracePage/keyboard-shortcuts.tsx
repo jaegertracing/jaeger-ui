@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,51 +12,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import * as React from 'react';
 import Combokeys from 'combokeys';
 
 import keyboardMappings from './keyboard-mappings';
 
 export type CombokeysHandler =
   | (() => void)
-  | ((SyntheticKeyboardEvent<any>) => void)
-  | ((SyntheticKeyboardEvent<any>, string) => void);
-
-type CombokeysType = {
-  bind: (string | string[], CombokeysHandler) => void,
-  reset: () => void,
-};
+  | ((event: React.KeyboardEvent<any>) => void)
+  | ((event: React.KeyboardEvent<any>, s: string) => void);
 
 export type ShortcutCallbacks = {
-  scrollPageDown?: CombokeysHandler,
-  scrollPageUp?: CombokeysHandler,
-  scrollToNextVisibleSpan?: CombokeysHandler,
-  scrollToPrevVisibleSpan?: CombokeysHandler,
-  // view range
-  panLeft?: CombokeysHandler,
-  panLeftFast?: CombokeysHandler,
-  panRight?: CombokeysHandler,
-  panRightFast?: CombokeysHandler,
-  zoomIn?: CombokeysHandler,
-  zoomInFast?: CombokeysHandler,
-  zoomOut?: CombokeysHandler,
-  zoomOutFast?: CombokeysHandler,
-  // collapse/expand
-  collapseAll?: CombokeysHandler,
-  expandAll?: CombokeysHandler,
-  collapseOne?: CombokeysHandler,
-  expandOne?: CombokeysHandler,
-  // search
-  searchSpans?: CombokeysHandler,
-  clearSearch?: CombokeysHandler,
+  [name: string]: CombokeysHandler;
 };
 
-let instance: ?CombokeysType;
+let instance: Combokeys | undefined;
 
-function getInstance(): CombokeysType {
-  if (!instance) {
-    instance = new Combokeys(document.body);
+function getInstance(): Combokeys {
+  if (instance) {
+    return instance;
   }
-  return instance;
+  const local = new Combokeys(document.body);
+  instance = local;
+  return local;
 }
 
 export function merge(callbacks: ShortcutCallbacks) {
