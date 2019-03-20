@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2018 The Jaeger Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,20 +17,21 @@ import { Card, Icon, Button, Tooltip } from 'antd';
 import cx from 'classnames';
 import { DirectedGraph, LayoutManager } from '@jaegertracing/plexus';
 
+import { TEv } from './types';
 import { getNodeDrawer, MODE_SERVICE, MODE_TIME, MODE_SELFTIME, HELP_TABLE } from './OpNode';
 import { setOnEdgesContainer, setOnNodesContainer, setOnNode } from '../../../utils/plexus/set-on-graph';
 
 import './TraceGraph.css';
 
 type Props = {
-  headerHeight: number,
-  ev?: ?Object,
-  uiFind: string,
-  uiFindVertexKeys: Set<number | string>,
+  headerHeight: number;
+  ev?: TEv;
+  uiFind: string;
+  uiFindVertexKeys: Set<number | string>;
 };
 type State = {
-  showHelp: boolean,
-  mode: string,
+  showHelp: boolean;
+  mode: string;
 };
 
 const { classNameIsSmall } = DirectedGraph.propsFactories;
@@ -45,11 +44,11 @@ const HELP_CONTENT = (
   <div className="TraceGraph--help-content">
     {HELP_TABLE}
     <div>
-      <table width="100%">
+      <table>
         <tbody>
           <tr>
             <td>
-              <Button shape="circle" size="small">
+              <Button htmlType="button" shape="circle" size="small">
                 S
               </Button>
             </td>
@@ -58,7 +57,7 @@ const HELP_CONTENT = (
           </tr>
           <tr>
             <td>
-              <Button shape="circle" size="small">
+              <Button htmlType="button" shape="circle" size="small">
                 T
               </Button>
             </td>
@@ -67,7 +66,7 @@ const HELP_CONTENT = (
           </tr>
           <tr>
             <td>
-              <Button shape="circle" size="small">
+              <Button htmlType="button" shape="circle" size="small">
                 ST
               </Button>
             </td>
@@ -99,7 +98,6 @@ const HELP_CONTENT = (
 );
 
 export default class TraceGraph extends React.PureComponent<Props, State> {
-  props: Props;
   state: State;
 
   cache: any;
@@ -179,6 +177,7 @@ export default class TraceGraph extends React.PureComponent<Props, State> {
               <Tooltip placement="left" title="Service">
                 <Button
                   className="TraceGraph--btn-service"
+                  htmlType="button"
                   shape="circle"
                   size="small"
                   onClick={() => this.toggleNodeMode(MODE_SERVICE)}
@@ -191,6 +190,7 @@ export default class TraceGraph extends React.PureComponent<Props, State> {
               <Tooltip placement="left" title="Time">
                 <Button
                   className="TraceGraph--btn-time"
+                  htmlType="button"
                   shape="circle"
                   size="small"
                   onClick={() => this.toggleNodeMode(MODE_TIME)}
@@ -203,6 +203,7 @@ export default class TraceGraph extends React.PureComponent<Props, State> {
               <Tooltip placement="left" title="Selftime">
                 <Button
                   className="TraceGraph--btn-selftime"
+                  htmlType="button"
                   shape="circle"
                   size="small"
                   onClick={() => this.toggleNodeMode(MODE_SELFTIME)}
