@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,28 +18,28 @@ import SpanDetail from './SpanDetail';
 import DetailState from './SpanDetail/DetailState';
 import SpanTreeOffset from './SpanTreeOffset';
 import TimelineRow from './TimelineRow';
-import type { Log, Span, KeyValuePair, Link } from '../../../types/trace';
+
+import { TNil } from '../../../types';
+import { Log, Span, KeyValuePair, Link } from '../../../types/trace';
 
 import './SpanDetailRow.css';
 
 type SpanDetailRowProps = {
-  addToUiFind: string => void,
-  color: string,
-  columnDivision: number,
-  detailState: DetailState,
-  onDetailToggled: string => void,
-  linksGetter: ?(Span, KeyValuePair[], number) => Link[],
-  logItemToggle: (string, Log) => void,
-  logsToggle: string => void,
-  processToggle: string => void,
-  span: Span,
-  tagsToggle: string => void,
-  traceStartTime: number,
+  addToUiFind: (spanID: string) => void;
+  color: string;
+  columnDivision: number;
+  detailState: DetailState;
+  onDetailToggled: (spanID: string) => void;
+  linksGetter: ((span: Span, links: KeyValuePair[], index: number) => Link[]) | TNil;
+  logItemToggle: (spanID: string, log: Log) => void;
+  logsToggle: (spanID: string) => void;
+  processToggle: (spanID: string) => void;
+  span: Span;
+  tagsToggle: (spanID: string) => void;
+  traceStartTime: number;
 };
 
 export default class SpanDetailRow extends React.PureComponent<SpanDetailRowProps> {
-  props: SpanDetailRowProps;
-
   _detailToggle = () => {
     this.props.onDetailToggled(this.props.span.spanID);
   };

@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,6 +15,7 @@
 import * as React from 'react';
 
 import Positions from './Positions';
+import { TNil } from '../../../../types';
 
 /**
  * @typedef
@@ -25,35 +24,41 @@ type ListViewProps = {
   /**
    * Number of elements in the list.
    */
-  dataLength: number,
+  dataLength: number;
   /**
    * Convert item index (number) to the key (string). ListView uses both indexes
    * and keys to handle the addtion of new rows.
    */
-  getIndexFromKey: string => number,
+  getIndexFromKey: (key: string) => number;
   /**
    * Convert item key (string) to the index (number). ListView uses both indexes
    * and keys to handle the addtion of new rows.
    */
-  getKeyFromIndex: number => string,
+  getKeyFromIndex: (index: number) => string;
   /**
    * Number of items to draw and add to the DOM, initially.
    */
-  initialDraw?: number,
+  initialDraw?: number;
   /**
    * The parent provides fallback height measurements when there is not a
    * rendered element to measure.
    */
-  itemHeightGetter: (number, string) => number,
+  itemHeightGetter: (index: number, key: string) => number;
   /**
    * Function that renders an item; rendered items are added directly to the
    * DOM, they are not wrapped in list item wrapper HTMLElement.
    */
-  itemRenderer: (string, {}, number, {}) => React.Node,
+  // itemRenderer(itemKey, style, i, attrs)
+  itemRenderer: (
+    itemKey: string,
+    style: Record<string, string | number>,
+    index: number,
+    attributes: Record<string, string>
+  ) => React.ReactNode;
   /**
    * `className` for the HTMLElement that holds the items.
    */
-  itemsWrapperClassName?: string,
+  itemsWrapperClassName?: string;
   /**
    * When adding new items to the DOM, this is the number of items to add above
    * and below the current view. E.g. if list is 100 items and is srcolled
@@ -61,13 +66,13 @@ type ListViewProps = {
    * items is rendered, it will render items `46 - viewBuffer` to
    * `55 + viewBuffer`.
    */
-  viewBuffer: number,
+  viewBuffer: number;
   /**
    * The minimum number of items offscreen in either direction; e.g. at least
    * `viewBuffer` number of items must be off screen above and below the
    * current view, or more items will be rendered.
    */
-  viewBufferMin: number,
+  viewBufferMin: number;
   /**
    * When `true`, expect `_wrapperElm` to have `overflow: visible` and to,
    * essentially, be tall to the point the entire page will will end up
@@ -77,7 +82,7 @@ type ListViewProps = {
    * - Ref: https://bvaughn.github.io/react-virtualized/#/components/WindowScroller
    * - Ref:https://github.com/bvaughn/react-virtualized/blob/497e2a1942529560681d65a9ef9f5e9c9c9a49ba/docs/WindowScroller.md
    */
-  windowScroller?: boolean,
+  windowScroller?: boolean;
 };
 
 const DEFAULT_INITIAL_DRAW = 300;
@@ -98,7 +103,6 @@ const DEFAULT_INITIAL_DRAW = 300;
  * @class ListView
  */
 export default class ListView extends React.Component<ListViewProps> {
-  props: ListViewProps;
   /**
    * Keeps track of the height and y-value of items, by item index, in the
    * ListView.
@@ -149,11 +153,11 @@ export default class ListView extends React.Component<ListViewProps> {
   /**
    * HTMLElement holding the scroller.
    */
-  _wrapperElm: ?HTMLElement;
+  _wrapperElm: HTMLElement | TNil;
   /**
    * HTMLElement holding the rendered items.
    */
-  _itemHolderElm: ?HTMLElement;
+  _itemHolderElm: HTMLElement | TNil;
 
   static defaultProps = {
     initialDraw: DEFAULT_INITIAL_DRAW,
@@ -179,7 +183,7 @@ export default class ListView extends React.Component<ListViewProps> {
     this._htmlTopOffset = -1;
     this._windowScrollListenerAdded = false;
     // _htmlElm is only relevant if props.windowScroller is true
-    this._htmlElm = (document.documentElement: any);
+    this._htmlElm = document.documentElement as any;
     this._wrapperElm = undefined;
     this._itemHolderElm = undefined;
   }
@@ -222,7 +226,7 @@ export default class ListView extends React.Component<ListViewProps> {
    */
   getTopVisibleIndex = (): number => this._yPositions.findFloorIndex(this._scrollTop, this._getHeight);
 
-  getRowPosition = (index: number): { height: number, y: number } =>
+  getRowPosition = (index: number): { height: number; y: number } =>
     this._yPositions.getRowPosition(index, this._getHeight);
 
   /**
@@ -298,14 +302,14 @@ export default class ListView extends React.Component<ListViewProps> {
     }
   };
 
-  _initWrapper = (elm: HTMLElement) => {
+  _initWrapper = (elm: HTMLElement | TNil) => {
     this._wrapperElm = elm;
-    if (!this.props.windowScroller) {
-      this._viewHeight = elm && elm.clientHeight;
+    if (!this.props.windowScroller && elm) {
+      this._viewHeight = elm.clientHeight;
     }
   };
 
-  _initItemHolder = (elm: HTMLElement) => {
+  _initItemHolder = (elm: HTMLElement | TNil) => {
     this._itemHolderElm = elm;
     this._scanItemHeights();
   };
@@ -330,7 +334,7 @@ export default class ListView extends React.Component<ListViewProps> {
     const nodes = this._itemHolderElm.childNodes;
     const max = nodes.length;
     for (let i = 0; i < max; i++) {
-      const node: HTMLElement = (nodes[i]: any);
+      const node: HTMLElement = nodes[i] as any;
       // use `.getAttribute(...)` instead of `.dataset` for jest / JSDOM
       const itemKey = node.getAttribute('data-item-key');
       if (!itemKey) {
@@ -435,9 +439,9 @@ export default class ListView extends React.Component<ListViewProps> {
     }
 
     type wrapperPropsT = {
-      style: { [string]: string },
-      ref: Function,
-      onScroll?: Function,
+      style: Record<string, string>;
+      ref: React.Ref<HTMLDivElement>;
+      onScroll?: () => void;
     };
     const wrapperProps: wrapperPropsT = {
       style: { position: 'relative' },
@@ -449,7 +453,7 @@ export default class ListView extends React.Component<ListViewProps> {
       wrapperProps.style.overflowY = 'auto';
     }
     const scrollerStyle = {
-      position: 'relative',
+      position: 'relative' as 'relative',
       height: this._yPositions.getEstimatedHeight(),
     };
     return (
@@ -463,7 +467,7 @@ export default class ListView extends React.Component<ListViewProps> {
               padding: 0,
             }}
             className={this.props.itemsWrapperClassName}
-            ref={(this._initItemHolder: Function)}
+            ref={this._initItemHolder}
           >
             {items}
           </div>

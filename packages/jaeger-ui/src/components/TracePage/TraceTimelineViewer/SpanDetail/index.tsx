@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,20 +21,21 @@ import DetailState from './DetailState';
 import { formatDuration } from '../utils';
 import LabeledList from '../../../common/LabeledList';
 
-import type { Log, Span, KeyValuePair, Link } from '../../../../types/trace';
+import { TNil } from '../../../../types';
+import { Log, Span, KeyValuePair, Link } from '../../../../types/trace';
 
 import './index.css';
 
 type SpanDetailProps = {
-  addToUiFind: string => void,
-  detailState: DetailState,
-  linksGetter: ?(KeyValuePair[], number) => Link[],
-  logItemToggle: (string, Log) => void,
-  logsToggle: string => void,
-  processToggle: string => void,
-  span: Span,
-  tagsToggle: string => void,
-  traceStartTime: number,
+  addToUiFind: (spanID: string) => void;
+  detailState: DetailState;
+  linksGetter: ((links: KeyValuePair[], index: number) => Link[]) | TNil;
+  logItemToggle: (spanID: string, log: Log) => void;
+  logsToggle: (spanID: string) => void;
+  processToggle: (spanID: string) => void;
+  span: Span;
+  tagsToggle: (spanID: string) => void;
+  traceStartTime: number;
 };
 
 export default function SpanDetail(props: SpanDetailProps) {

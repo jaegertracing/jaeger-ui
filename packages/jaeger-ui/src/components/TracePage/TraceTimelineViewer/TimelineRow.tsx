@@ -21,12 +21,12 @@ type TimelineRowProps = {
   className?: string;
 };
 
-type TimelineRowCellProps = {
+interface TimelineRowCellProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   className?: string;
   width: number;
   style?: Object;
-};
+}
 
 export default function TimelineRow(props: TimelineRowProps) {
   const { children, className = '', ...rest } = props;

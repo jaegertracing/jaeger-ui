@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,37 +17,39 @@ import IoAlert from 'react-icons/lib/io/alert';
 import IoArrowRightA from 'react-icons/lib/io/arrow-right-a';
 
 import TimelineRow from './TimelineRow';
-import { formatDuration } from './utils';
+import { formatDuration, ViewedBoundsFunctionType } from './utils';
 import SpanTreeOffset from './SpanTreeOffset';
 import SpanBar from './SpanBar';
 import Ticks from './Ticks';
 
-import type { ViewedBoundsFunctionType } from './utils';
-import type { Span } from '../../../types/trace';
+import { TNil } from '../../../types';
+import { Span } from '../../../types/trace';
 
 import './SpanBarRow.css';
 
 type SpanBarRowProps = {
-  className?: string,
-  color: string,
-  columnDivision: number,
-  isChildrenExpanded: boolean,
-  isDetailExpanded: boolean,
-  isMatchingFilter: boolean,
-  onDetailToggled: string => void,
-  onChildrenToggled: string => void,
-  numTicks: number,
-  rpc?: ?{
-    viewStart: number,
-    viewEnd: number,
-    color: string,
-    operationName: string,
-    serviceName: string,
-  },
-  showErrorIcon: boolean,
-  getViewedBounds: ViewedBoundsFunctionType,
-  traceStartTime: number,
-  span: Span,
+  className?: string;
+  color: string;
+  columnDivision: number;
+  isChildrenExpanded: boolean;
+  isDetailExpanded: boolean;
+  isMatchingFilter: boolean;
+  onDetailToggled: (spanID: string) => void;
+  onChildrenToggled: (spanID: string) => void;
+  numTicks: number;
+  rpc?:
+    | {
+        viewStart: number;
+        viewEnd: number;
+        color: string;
+        operationName: string;
+        serviceName: string;
+      }
+    | TNil;
+  showErrorIcon: boolean;
+  getViewedBounds: ViewedBoundsFunctionType;
+  traceStartTime: number;
+  span: Span;
 };
 
 /**
@@ -61,8 +61,6 @@ type SpanBarRowProps = {
  * performance than the stateless function.
  */
 export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
-  props: SpanBarRowProps;
-
   static defaultProps = {
     className: '',
     rpc: null,
@@ -122,7 +120,7 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
             <SpanTreeOffset
               childrenVisible={isChildrenExpanded}
               span={span}
-              onClick={isParent ? this._childrenToggle : null}
+              onClick={isParent ? this._childrenToggle : undefined}
             />
             <a
               className={`span-name ${isDetailExpanded ? 'is-detail-expanded' : ''}`}
@@ -130,7 +128,7 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
               onClick={this._detailToggle}
               role="switch"
               style={{ borderColor: color }}
-              tabIndex="0"
+              tabIndex={0}
             >
               <span
                 className={`span-svc-name ${isParent && !isChildrenExpanded ? 'is-children-collapsed' : ''}`}

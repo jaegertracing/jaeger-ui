@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,33 +18,32 @@ import React from 'react';
 import IoChevronRight from 'react-icons/lib/io/chevron-right';
 import IoIosArrowDown from 'react-icons/lib/io/ios-arrow-down';
 import { connect } from 'react-redux';
-import { bindActionCreators } from 'redux';
+import { bindActionCreators, Dispatch } from 'redux';
 
 import { actions } from './duck';
 import spanAncestorIds from '../../../utils/span-ancestor-ids';
 
-import type { ReduxState } from '../../../types/index';
-import type { Span } from '../../../types/trace';
+import { ReduxState } from '../../../types/index';
+import { Span } from '../../../types/trace';
 
 import './SpanTreeOffset.css';
 
 type SpanTreeOffsetPropsType = {
-  addHoverIndentGuideId: string => void,
-  childrenVisible?: boolean,
-  hoverIndentGuideIds: Set<string>,
-  onClick?: ?() => void,
-  removeHoverIndentGuideId: string => void,
-  span: Span,
-  showChildrenIcon?: boolean,
+  addHoverIndentGuideId: (spanID: string) => void;
+  childrenVisible?: boolean;
+  hoverIndentGuideIds: Set<string>;
+  onClick?: () => void;
+  removeHoverIndentGuideId: (spanID: string) => void;
+  span: Span;
+  showChildrenIcon?: boolean;
 };
 
 export class UnconnectedSpanTreeOffset extends React.PureComponent<SpanTreeOffsetPropsType> {
   ancestorIds: string[];
-  props: SpanTreeOffsetPropsType;
 
   static defaultProps = {
     childrenVisible: false,
-    onClick: null,
+    onClick: undefined,
     showChildrenIcon: true,
   };
 
@@ -69,7 +66,7 @@ export class UnconnectedSpanTreeOffset extends React.PureComponent<SpanTreeOffse
    *     the element the user is now hovering.
    * @param {string} ancestorId - The span id that the user was hovering over.
    */
-  handleMouseLeave = (event: SyntheticMouseEvent<HTMLSpanElement>, ancestorId: string) => {
+  handleMouseLeave = (event: React.MouseEvent<HTMLSpanElement>, ancestorId: string) => {
     if (
       !(event.relatedTarget instanceof HTMLSpanElement) ||
       _get(event, 'relatedTarget.dataset.ancestorId') !== ancestorId
@@ -86,10 +83,7 @@ export class UnconnectedSpanTreeOffset extends React.PureComponent<SpanTreeOffse
    *     the last element the user was hovering.
    * @param {string} ancestorId - The span id that the user is now hovering over.
    */
-  handleMouseEnter = (
-    event: SyntheticMouseEvent<HTMLSpanElement> & { relatedTarget?: { getAttribute: string => string } },
-    ancestorId: string
-  ) => {
+  handleMouseEnter = (event: React.MouseEvent<HTMLSpanElement>, ancestorId: string) => {
     if (
       !(event.relatedTarget instanceof HTMLSpanElement) ||
       _get(event, 'relatedTarget.dataset.ancestorId') !== ancestorId
@@ -136,7 +130,8 @@ export function mapStateToProps(state: ReduxState): { hoverIndentGuideIds: Set<s
   return { hoverIndentGuideIds };
 }
 
-export function mapDispatchToProps(dispatch: Function) {
+// TODO: Don't `Dispatch<any>`
+export function mapDispatchToProps(dispatch: Dispatch<any>) {
   const { addHoverIndentGuideId, removeHoverIndentGuideId } = bindActionCreators(actions, dispatch);
   return { addHoverIndentGuideId, removeHoverIndentGuideId };
 }

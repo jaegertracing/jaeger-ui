@@ -20,34 +20,46 @@ import { onlyUpdateForKeys, compose, withState, withProps } from 'recompose';
 import AccordianLogs from './SpanDetail/AccordianLogs';
 
 import { ViewedBoundsFunctionType } from './utils';
+import { TNil } from '../../../types';
 import { Span } from '../../../types/trace';
 
 import './SpanBar.css';
 
-type SpanBarProps = {
+type TCommonProps = {
   color: string;
   hintSide: string;
-  label: string;
-  onClick: (evt: React.MouseEvent<any>) => void;
+  // onClick: (evt: React.MouseEvent<any>) => void;
+  onClick?: (evt: React.MouseEvent<any>) => void;
   viewEnd: number;
   viewStart: number;
   getViewedBounds: ViewedBoundsFunctionType;
-  rpc: {
-    viewStart: number;
-    viewEnd: number;
-    color: string;
-  };
-  setLongLabel: () => void;
-  setShortLabel: () => void;
+  rpc:
+    | {
+        viewStart: number;
+        viewEnd: number;
+        color: string;
+      }
+    | TNil;
   traceStartTime: number;
   span: Span;
 };
+
+type TInnerProps = {
+  label: string;
+  setLongLabel: () => void;
+  setShortLabel: () => void;
+} & TCommonProps;
+
+type TOuterProps = {
+  longLabel: string;
+  shortLabel: string;
+} & TCommonProps;
 
 function toPercent(value: number) {
   return `${(value * 100).toFixed(1)}%`;
 }
 
-function SpanBar(props: SpanBarProps) {
+function SpanBar(props: TInnerProps) {
   const {
     viewEnd,
     viewStart,
@@ -122,7 +134,7 @@ function SpanBar(props: SpanBarProps) {
   );
 }
 
-export default compose<SpanBarProps, { label: string }>(
+export default compose<TInnerProps, TOuterProps>(
   withState('label', 'setLabel', (props: { shortLabel: string }) => props.shortLabel),
   withProps(
     ({
