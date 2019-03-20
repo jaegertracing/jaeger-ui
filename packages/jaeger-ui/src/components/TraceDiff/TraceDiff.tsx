@@ -187,6 +187,7 @@ export function mapDispatchToProps(dispatch: Dispatch<any>) {
   return { fetchMultipleTraces, forceState };
 }
 
-export default connect<TStateProps, TDispatchProps, TOwnProps>(mapStateToProps, mapDispatchToProps)(
-  TraceDiffImpl
-);
+export default connect<TStateProps, TDispatchProps, TOwnProps, ReduxState>(
+  mapStateToProps,
+  mapDispatchToProps
+)(TraceDiffImpl);

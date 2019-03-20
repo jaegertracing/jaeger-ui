@@ -21,7 +21,7 @@ import drawNodeGenerator from './drawNode';
 import { getUiFindVertexKeys, getEdgesAndVertices } from './traceDiffGraphUtils';
 import ErrorMessage from '../../common/ErrorMessage';
 import LoadingIndicator from '../../common/LoadingIndicator';
-import UiFindInput, { extractUiFindFromState } from '../../common/UiFindInput';
+import UiFindInput, { extractUiFindFromState, TExtractUiFindFromStateReturn } from '../../common/UiFindInput';
 import { fetchedState } from '../../../constants';
 import { setOnEdgesContainer, setOnNodesContainer, setOnNode } from '../../../utils/plexus/set-on-graph';
 import { FetchedTrace, TNil } from '../../../types';
@@ -31,8 +31,7 @@ import './TraceDiffGraph.css';
 type Props = {
   a: FetchedTrace | TNil;
   b: FetchedTrace | TNil;
-  uiFind?: string;
-};
+} & TExtractUiFindFromStateReturn;
 
 const { classNameIsSmall } = DirectedGraph.propsFactories;
 

@@ -21,7 +21,7 @@ import { connect } from 'react-redux';
 import { RouteComponentProps, withRouter } from 'react-router-dom';
 
 import updateUiFind from '../../utils/update-ui-find';
-import { ReduxState } from '../../types/index';
+import { TNil, ReduxState } from '../../types/index';
 
 type TOwnProps = RouteComponentProps<any> & {
   forwardedRef?: React.Ref<Input>;
@@ -30,10 +30,14 @@ type TOwnProps = RouteComponentProps<any> & {
   location: Location;
   match: any;
   // todo
-  trackFindFunction?: (str: string | null | undefined) => void;
+  trackFindFunction?: (str: string | TNil) => void;
 };
 
-type TProps = TOwnProps & { uiFind?: string };
+export type TExtractUiFindFromStateReturn = {
+  uiFind: string | undefined;
+};
+
+type TProps = TOwnProps & TExtractUiFindFromStateReturn;
 
 type StateType = {
   ownInputValue: string | undefined;
@@ -90,7 +94,7 @@ export class UnconnectedUiFindInput extends React.PureComponent<TProps, StateTyp
   }
 }
 
-export function extractUiFindFromState(state: ReduxState): { uiFind?: string } {
+export function extractUiFindFromState(state: ReduxState): TExtractUiFindFromStateReturn {
   // TODO: Handle the fact that uiFind could be an array of strings
   const { uiFind }: { uiFind?: string } = queryString.parse(state.router.location.search);
   return { uiFind };

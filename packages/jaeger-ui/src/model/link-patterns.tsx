@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 The Jaeger Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,26 +15,27 @@
 import _uniq from 'lodash/uniq';
 import { getConfigValue } from '../utils/config/get-config';
 import { getParent } from './span';
-import type { Span, Link, KeyValuePair } from '../types/trace';
+import { TNil } from '../types';
+import { Span, Link, KeyValuePair } from '../types/trace';
 
 const parameterRegExp = /#\{([^{}]*)\}/g;
 
 type ProcessedTemplate = {
-  parameters: string[],
-  template: ({ [string]: mixed }) => string,
+  parameters: string[];
+  template: (template: { [key: string]: any }) => string;
 };
 
 type ProcessedLinkPattern = {
-  object: any,
-  type: string => boolean,
-  key: string => boolean,
-  value: any => boolean,
-  url: ProcessedTemplate,
-  text: ProcessedTemplate,
-  parameters: string[],
+  object: any;
+  type: (link: string) => boolean;
+  key: (link: string) => boolean;
+  value: (value: any) => boolean;
+  url: ProcessedTemplate;
+  text: ProcessedTemplate;
+  parameters: string[];
 };
 
-function getParamNames(str) {
+function getParamNames(str: string) {
   const names = new Set();
   str.replace(parameterRegExp, (match, name) => {
     names.add(name);
@@ -45,14 +44,14 @@ function getParamNames(str) {
   return Array.from(names);
 }
 
-function stringSupplant(str, encodeFn: any => string, map) {
+function stringSupplant(str: string, encodeFn: (unencoded: any) => string, map: Record<string, any>) {
   return str.replace(parameterRegExp, (_, name) => {
     const value = map[name];
     return value == null ? '' : encodeFn(value);
   });
 }
 
-export function processTemplate(template: any, encodeFn: any => string): ProcessedTemplate {
+export function processTemplate(template: any, encodeFn: (unencoded: any) => string): ProcessedTemplate {
   if (typeof template !== 'string') {
     /*
 
@@ -94,9 +93,9 @@ export function createTestFunction(entry: any) {
   throw new Error(`Invalid value: ${entry}`);
 }
 
-const identity = a => a;
+const identity = (a: any): typeof a => a;
 
-export function processLinkPattern(pattern: any): ?ProcessedLinkPattern {
+export function processLinkPattern(pattern: any): ProcessedLinkPattern | TNil {
   try {
     const url = processTemplate(pattern.url, encodeURIComponent);
     const text = processTemplate(pattern.text, identity);
@@ -124,7 +123,7 @@ export function getParameterInArray(name: string, array: KeyValuePair[]) {
 }
 
 export function getParameterInAncestor(name: string, span: Span) {
-  let currentSpan = span;
+  let currentSpan: Span | TNil = span;
   while (currentSpan) {
     const result =
       getParameterInArray(name, currentSpan.tags) || getParameterInArray(name, currentSpan.process.tags);
@@ -136,7 +135,7 @@ export function getParameterInAncestor(name: string, span: Span) {
   return undefined;
 }
 
-function callTemplate(template, data) {
+function callTemplate(template: ProcessedTemplate, data: any) {
   return template.template(data);
 }
 
@@ -156,10 +155,10 @@ export function computeLinks(
   if (spanTags) {
     type = 'tags';
   }
-  const result = [];
+  const result: { url: string; text: string }[] = [];
   linkPatterns.forEach(pattern => {
     if (pattern.type(type) && pattern.key(item.key) && pattern.value(item.value)) {
-      const parameterValues = {};
+      const parameterValues: Record<string, any> = {};
       const allParameters = pattern.parameters.every(parameter => {
         let entry = getParameterInArray(parameter, items);
         if (!entry && !processTags) {

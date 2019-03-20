@@ -17,10 +17,10 @@ import TNil from './TNil';
 
 // eslint-disable-next-line import/prefer-default-export
 export type TraceTimeline = {
-  traceID: string | TNil;
-  spanNameColumnWidth: number;
   childrenHiddenIDs: Set<string>;
-  findMatches: Set<string> | TNil;
   detailStates: Map<string, DetailState>;
+  findMatches: Set<string> | TNil;
   hoverIndentGuideIds: Set<string>;
+  spanNameColumnWidth: number;
+  traceID: string | TNil;
 };

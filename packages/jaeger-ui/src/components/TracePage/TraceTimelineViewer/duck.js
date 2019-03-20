@@ -253,20 +253,20 @@ function removeHoverIndentGuideId(state, { payload }) {
 
 export default handleActions(
   {
-    [actionTypes.SET_TRACE]: setTrace,
-    [actionTypes.SET_SPAN_NAME_COLUMN_WIDTH]: setColumnWidth,
+    [actionTypes.ADD_HOVER_INDENT_GUIDE_ID]: addHoverIndentGuideId,
     [actionTypes.CHILDREN_TOGGLE]: childrenToggle,
-    [actionTypes.EXPAND_ALL]: expandAll,
-    [actionTypes.EXPAND_ONE]: expandOne,
     [actionTypes.COLLAPSE_ALL]: collapseAll,
     [actionTypes.COLLAPSE_ONE]: collapseOne,
-    [actionTypes.DETAIL_TOGGLE]: detailToggle,
-    [actionTypes.DETAIL_TAGS_TOGGLE]: detailTagsToggle,
-    [actionTypes.DETAIL_PROCESS_TOGGLE]: detailProcessToggle,
     [actionTypes.DETAIL_LOGS_TOGGLE]: detailLogsToggle,
     [actionTypes.DETAIL_LOG_ITEM_TOGGLE]: detailLogItemToggle,
-    [actionTypes.ADD_HOVER_INDENT_GUIDE_ID]: addHoverIndentGuideId,
+    [actionTypes.DETAIL_PROCESS_TOGGLE]: detailProcessToggle,
+    [actionTypes.DETAIL_TAGS_TOGGLE]: detailTagsToggle,
+    [actionTypes.DETAIL_TOGGLE]: detailToggle,
+    [actionTypes.EXPAND_ALL]: expandAll,
+    [actionTypes.EXPAND_ONE]: expandOne,
     [actionTypes.REMOVE_HOVER_INDENT_GUIDE_ID]: removeHoverIndentGuideId,
+    [actionTypes.SET_SPAN_NAME_COLUMN_WIDTH]: setColumnWidth,
+    [actionTypes.SET_TRACE]: setTrace,
   },
   newInitialState()
 );

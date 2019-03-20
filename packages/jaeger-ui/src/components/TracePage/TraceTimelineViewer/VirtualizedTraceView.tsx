@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,56 +15,66 @@
 import * as React from 'react';
 import cx from 'classnames';
 import { connect } from 'react-redux';
-import { bindActionCreators } from 'redux';
-import { withRouter } from 'react-router-dom';
+import { bindActionCreators, Dispatch } from 'redux';
+import { withRouter, RouteComponentProps } from 'react-router-dom';
 
-import type { Location, RouterHistory } from 'react-router-dom';
+// import { History as RouterHistory, Location } from 'history';
 
 import { actions } from './duck';
 import ListView from './ListView';
 import SpanBarRow from './SpanBarRow';
 import DetailState from './SpanDetail/DetailState';
 import SpanDetailRow from './SpanDetailRow';
-import { createViewedBoundsFunc, findServerChildSpan, isErrorSpan, spanContainsErredSpan } from './utils';
-import { extractUiFindFromState } from '../../common/UiFindInput';
+import {
+  createViewedBoundsFunc,
+  findServerChildSpan,
+  isErrorSpan,
+  spanContainsErredSpan,
+  ViewedBoundsFunctionType,
+} from './utils';
+import { extractUiFindFromState, TExtractUiFindFromStateReturn } from '../../common/UiFindInput';
 import getLinks from '../../../model/link-patterns';
 import colorGenerator from '../../../utils/color-generator';
 import updateUiFind from '../../../utils/update-ui-find';
 
-import type { ViewedBoundsFunctionType } from './utils';
-import type { Accessors } from '../ScrollManager';
-import type { Log, Span, Trace, KeyValuePair } from '../../../types/trace';
+import { Accessors } from '../ScrollManager';
+import { TNil, ReduxState } from '../../../types';
+import { Log, Span, Trace, KeyValuePair } from '../../../types/trace';
+import { TraceTimeline } from '../../../types/trace-timeline';
 
 import './VirtualizedTraceView.css';
 
-type Style = { [string]: string | number };
+type Style = Record<string, string | number>;
 
 type RowState = {
-  isDetail: boolean,
-  span: Span,
-  spanIndex: number,
+  isDetail: boolean;
+  span: Span;
+  spanIndex: number;
 };
 
-type VirtualizedTraceViewProps = {
-  childrenHiddenIDs: Set<string>,
-  childrenToggle: string => void,
-  currentViewRangeTime: [number, number],
-  detailLogItemToggle: (string, Log) => void,
-  detailLogsToggle: string => void,
-  detailProcessToggle: string => void,
-  detailStates: Map<string, ?DetailState>,
-  detailTagsToggle: string => void,
-  detailToggle: string => void,
-  findMatchesIDs: Set<string>,
-  history: RouterHistory,
-  location: Location,
-  registerAccessors: Accessors => void,
-  setSpanNameColumnWidth: number => void,
-  setTrace: (?Trace, ?string) => void,
-  spanNameColumnWidth: number,
-  trace: Trace,
-  uiFind: ?string,
+type VirtualizedTraceViewOwnProps = {
+  currentViewRangeTime: [number, number];
+  findMatchesIDs: Set<string>;
+  registerAccessors: (accesors: Accessors) => void;
+  trace: Trace;
 };
+
+type TDispatchProps = {
+  childrenToggle: (spanID: string) => void;
+  detailLogItemToggle: (spanID: string, log: Log) => void;
+  detailLogsToggle: (spanID: string) => void;
+  detailProcessToggle: (spanID: string) => void;
+  detailTagsToggle: (spanID: string) => void;
+  detailToggle: (spanID: string) => void;
+  setSpanNameColumnWidth: (width: number) => void;
+  setTrace: (trace: Trace | TNil, uiFind: string | TNil) => void;
+};
+
+type VirtualizedTraceViewProps = VirtualizedTraceViewOwnProps &
+  TDispatchProps &
+  TExtractUiFindFromStateReturn &
+  TraceTimeline &
+  RouteComponentProps;
 
 // export for tests
 export const DEFAULT_HEIGHTS = {
@@ -78,9 +86,9 @@ export const DEFAULT_HEIGHTS = {
 const NUM_TICKS = 5;
 
 function generateRowStates(
-  spans: ?(Span[]),
+  spans: Span[] | TNil,
   childrenHiddenIDs: Set<string>,
-  detailStates: Map<string, ?DetailState>
+  detailStates: Map<string, DetailState | TNil>
 ): RowState[] {
   if (!spans) {
     return [];
@@ -130,10 +138,8 @@ function getCssClasses(currentViewRange: [number, number]) {
 
 // export from tests
 export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTraceViewProps> {
-  props: VirtualizedTraceViewProps;
-
   clippingCssClasses: string;
-  listView: ?ListView;
+  listView: ListView | TNil;
   rowStates: RowState[];
   getViewedBounds: ViewedBoundsFunctionType;
 
@@ -235,7 +241,7 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
     throw new Error(`unable to find row for span index: ${index}`);
   };
 
-  setListView = (listView: ?ListView) => {
+  setListView = (listView: ListView | TNil) => {
     const isChanged = this.listView !== listView;
     this.listView = listView;
     if (listView && isChanged) {
@@ -402,7 +408,7 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
 }
 
 /* istanbul ignore next */
-function mapStateToProps(state) {
+function mapStateToProps(state: ReduxState): TraceTimeline & TExtractUiFindFromStateReturn {
   return {
     ...extractUiFindFromState(state),
     ...state.traceTimeline,
@@ -410,8 +416,15 @@ function mapStateToProps(state) {
 }
 
 /* istanbul ignore next */
-function mapDispatchToProps(dispatch) {
+function mapDispatchToProps(dispatch: Dispatch<any>): TDispatchProps {
   return bindActionCreators(actions, dispatch);
 }
 
-export default withRouter(connect(mapStateToProps, mapDispatchToProps)(VirtualizedTraceViewImpl));
+export default withRouter(
+  connect<
+    TraceTimeline & TExtractUiFindFromStateReturn,
+    TDispatchProps,
+    VirtualizedTraceViewOwnProps,
+    ReduxState
+  >(mapStateToProps, mapDispatchToProps)(VirtualizedTraceViewImpl)
+);
