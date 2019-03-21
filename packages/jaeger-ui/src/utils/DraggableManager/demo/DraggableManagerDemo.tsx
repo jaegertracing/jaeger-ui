@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,25 +16,20 @@ import React from 'react';
 
 import DividerDemo from './DividerDemo';
 import RegionDemo from './RegionDemo';
+import { TNil } from '../../../types';
 
 import './DraggableManagerDemo.css';
 
-type DraggableManagerDemoProps = {};
-
-type DraggableManagerDemoState = {
-  dividerPosition: number,
-  regionCursor: ?number,
-  regionDragging: ?[number, number],
+export type DraggableManagerDemoState = {
+  dividerPosition: number;
+  regionCursor: number | TNil;
+  regionDragging: [number, number] | TNil;
 };
 
-export default class DraggableManagerDemo extends React.PureComponent<
-  DraggableManagerDemoProps,
-  DraggableManagerDemoState
-> {
-  props: DraggableManagerDemoProps;
+export default class DraggableManagerDemo extends React.PureComponent<{}, DraggableManagerDemoState> {
   state: DraggableManagerDemoState;
 
-  constructor(props: DraggableManagerDemoProps) {
+  constructor(props: {}) {
     super(props);
     this.state = {
       dividerPosition: 0.25,

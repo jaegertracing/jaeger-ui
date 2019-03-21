@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,23 +14,21 @@
 
 import React from 'react';
 
+import { DraggableBounds, DraggingUpdate } from '..';
 import DraggableManager from '../DraggableManager';
-
-import type { DraggableBounds, DraggingUpdate } from '..';
+import TNil from '../../../types/TNil';
 
 import './DividerDemo.css';
 
 type DividerDemoProps = {
-  position: number,
-  updateState: ({}) => void,
+  position: number;
+  updateState: (udpate: { dividerPosition: number }) => void;
 };
 
 export default class DividerDemo extends React.PureComponent<DividerDemoProps> {
-  props: DividerDemoProps;
-
   _dragManager: DraggableManager;
 
-  _realmElm: ?Element;
+  _realmElm: HTMLElement | TNil;
 
   constructor(props: DividerDemoProps) {
     super(props);
@@ -47,7 +43,7 @@ export default class DividerDemo extends React.PureComponent<DividerDemoProps> {
     });
   }
 
-  _setRealm = (elm: ?Element) => {
+  _setRealm = (elm: HTMLElement | TNil) => {
     this._realmElm = elm;
   };
 

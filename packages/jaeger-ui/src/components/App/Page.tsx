@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,35 +17,32 @@ import { Layout } from 'antd';
 import cx from 'classnames';
 import Helmet from 'react-helmet';
 import { connect } from 'react-redux';
-import { withRouter } from 'react-router-dom';
+import { RouteComponentProps, withRouter } from 'react-router-dom';
 
 import TopNav from './TopNav';
+import { ReduxState } from '../../types';
+import { EmbeddedState } from '../../types/embedded';
 import { trackPageView } from '../../utils/tracking';
-
-import type { ReduxState } from '../../types';
-import type { EmbeddedState } from '../../types/embedded';
 
 import './Page.css';
 
-type Props = {
-  children: React.Node,
-  embedded: EmbeddedState,
-  pathname: string,
-  search: string,
+type TProps = RouteComponentProps<any> & {
+  children: React.ReactNode;
+  embedded: EmbeddedState;
+  pathname: string;
+  search: string;
 };
 
 const { Header, Content } = Layout;
 
 // export for tests
-export class PageImpl extends React.Component<Props> {
-  props: Props;
-
+export class PageImpl extends React.Component<TProps> {
   componentDidMount() {
     const { pathname, search } = this.props;
     trackPageView(pathname, search);
   }
 
-  componentWillReceiveProps(nextProps: Props) {
+  componentWillReceiveProps(nextProps: TProps) {
     const { pathname, search } = this.props;
     const { pathname: nextPathname, search: nextSearch } = nextProps;
     if (pathname !== nextPathname || search !== nextSearch) {

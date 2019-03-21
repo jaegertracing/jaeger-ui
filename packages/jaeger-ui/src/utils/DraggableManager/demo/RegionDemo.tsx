@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,24 +14,26 @@
 
 import React from 'react';
 
-import DraggableManager from '..';
-
-import type { DraggableBounds, DraggingUpdate } from '..';
+import DraggableManager, { DraggableBounds, DraggingUpdate } from '..';
+import { TNil } from '../../../types';
 
 import './RegionDemo.css';
 
+type TUpdate = {
+  regionCursor?: number | null;
+  regionDragging?: number[] | null;
+};
+
 type RegionDemoProps = {
-  regionCursor: ?number,
-  regionDragging: ?[number, number],
-  updateState: ({}) => void,
+  regionCursor: number | TNil;
+  regionDragging: [number, number] | TNil;
+  updateState: (update: TUpdate) => void;
 };
 
 export default class RegionDemo extends React.PureComponent<RegionDemoProps> {
-  props: RegionDemoProps;
-
   _dragManager: DraggableManager;
 
-  _realmElm: ?Element;
+  _realmElm: HTMLElement | TNil;
 
   constructor(props: RegionDemoProps) {
     super(props);
@@ -50,7 +50,7 @@ export default class RegionDemo extends React.PureComponent<RegionDemoProps> {
     });
   }
 
-  _setRealm = (elm: ?Element) => {
+  _setRealm = (elm: HTMLElement | TNil) => {
     this._realmElm = elm;
   };
 
