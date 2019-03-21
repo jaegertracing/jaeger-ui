@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,14 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { Action } from 'redux-actions';
+import { Dispatch, Store } from 'react-redux';
+
 import { middlewareHooks as searchHooks } from '../components/SearchTracePage/SearchForm.track';
 import { middlewareHooks as timelineHooks } from '../components/TracePage/TraceTimelineViewer/duck.track';
 import { isGaEnabled } from '../utils/tracking';
+import { ReduxState } from '../types';
 
-const middlewareHooks = { ...timelineHooks, ...searchHooks };
+type TMiddlewareFn = (store: Store<ReduxState>, action: Action<any>) => void;
 
-function trackingMiddleware(store: { getState: () => any }) {
-  return function inner(next: any => void) {
+const middlewareHooks: { [actionType: string]: TMiddlewareFn } = { ...timelineHooks, ...searchHooks };
+
+function trackingMiddleware(store: Store<ReduxState>) {
+  return function inner(next: Dispatch<ReduxState>) {
     return function core(action: any) {
       const { type } = action;
       if (typeof middlewareHooks[type] === 'function') {
