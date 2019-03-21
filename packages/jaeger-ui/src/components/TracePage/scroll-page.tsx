@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,19 +16,19 @@ import Tween from './Tween';
 
 const DURATION_MS = 350;
 
-let lastTween: ?Tween;
+let lastTween: Tween | void;
 
 // TODO(joe): this util can be modified a bit to be generalized (e.g. take in
 // an element as a parameter and use scrollTop instead of window.scrollTo)
 
-function _onTweenUpdate({ done, value }: { done: boolean, value: number }) {
+function _onTweenUpdate({ done, value }: { done: boolean; value: number }) {
   window.scrollTo(window.scrollX, value);
   if (done) {
-    lastTween = null;
+    lastTween = undefined;
   }
 }
 
-export function scrollBy(yDelta: number, appendToLast: ?boolean = false) {
+export function scrollBy(yDelta: number, appendToLast: boolean = false) {
   const { scrollY } = window;
   let targetFrom = scrollY;
   if (appendToLast && lastTween) {
