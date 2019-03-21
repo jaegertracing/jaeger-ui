@@ -23,9 +23,9 @@ import { TraceArchive } from '../../../types/archive';
 
 import './index.css';
 
-enum NotifiedState {
-  Progress = 'NotifiedState.Progress',
-  Outcome = 'NotifiedState.Outcome',
+enum ENotifiedState {
+  Progress = 'ENotifiedState.Progress',
+  Outcome = 'ENotifiedState.Outcome',
 }
 
 // const NOTIFIED_PROGRESS = 'NOTIFIED_PROGRESS';
@@ -41,7 +41,7 @@ type Props = {
 };
 
 type State = {
-  notifiedState: NotifiedState | null;
+  notifiedState: ENotifiedState | null;
 };
 
 function getNextNotifiedState(props: Props) {
@@ -50,21 +50,21 @@ function getNextNotifiedState(props: Props) {
     return null;
   }
   if (archivedState.isLoading) {
-    return NotifiedState.Progress;
+    return ENotifiedState.Progress;
   }
-  return archivedState.isAcknowledged ? null : NotifiedState.Outcome;
+  return archivedState.isAcknowledged ? null : ENotifiedState.Outcome;
 }
 
-function updateNotification(oldState: NotifiedState | null, nextState: NotifiedState | null, props: Props) {
+function updateNotification(oldState: ENotifiedState | null, nextState: ENotifiedState | null, props: Props) {
   if (oldState === nextState) {
     return;
   }
   if (oldState) {
     notification.close(oldState);
   }
-  if (nextState === NotifiedState.Progress) {
+  if (nextState === ENotifiedState.Progress) {
     notification.info({
-      key: NotifiedState.Progress,
+      key: ENotifiedState.Progress,
       description: null,
       duration: 0,
       icon: <Icon type="loading" />,
@@ -73,11 +73,11 @@ function updateNotification(oldState: NotifiedState | null, nextState: NotifiedS
     return;
   }
   const { acknowledge, archivedState } = props;
-  if (nextState === NotifiedState.Outcome) {
+  if (nextState === ENotifiedState.Outcome) {
     if (archivedState && archivedState.error) {
       const error = typeof archivedState.error === 'string' ? archivedState.error : archivedState.error;
       notification.warn({
-        key: NotifiedState.Outcome,
+        key: ENotifiedState.Outcome,
         className: 'ArchiveNotifier--errorNotification',
         message: <ErrorMessage.Message error={error} wrap />,
         description: <ErrorMessage.Details error={error} wrap />,
@@ -87,7 +87,7 @@ function updateNotification(oldState: NotifiedState | null, nextState: NotifiedS
       });
     } else if (archivedState && archivedState.isArchived) {
       notification.success({
-        key: NotifiedState.Outcome,
+        key: ENotifiedState.Outcome,
         description: null,
         duration: null,
         icon: <Icon type="clock-circle-o" className="ArchiveNotifier--doneIcon" />,
@@ -100,7 +100,7 @@ function updateNotification(oldState: NotifiedState | null, nextState: NotifiedS
   }
 }
 
-function processProps(notifiedState: NotifiedState | null, props: Props) {
+function processProps(notifiedState: ENotifiedState | null, props: Props) {
   const nxNotifiedState = getNextNotifiedState(props);
   updateNotification(notifiedState, nxNotifiedState, props);
   return nxNotifiedState;

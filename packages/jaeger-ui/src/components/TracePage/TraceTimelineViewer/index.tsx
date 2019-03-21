@@ -27,13 +27,16 @@ import { Span, Trace } from '../../../types/trace';
 
 import './index.css';
 
-type TraceTimelineViewerProps = {
-  registerAccessors: (accessors: Accessors) => void;
+type TDispatchProps = {
   setSpanNameColumnWidth: (width: number) => void;
   collapseAll: (spans: Span[]) => void;
   collapseOne: (spans: Span[]) => void;
   expandAll: () => void;
   expandOne: (spans: Span[]) => void;
+};
+
+type TProps = TDispatchProps & {
+  registerAccessors: (accessors: Accessors) => void;
   findMatchesIDs: Set<string> | TNil;
   spanNameColumnWidth: number;
   trace: Trace;
@@ -50,7 +53,7 @@ const NUM_TICKS = 5;
  * re-render the ListView every time the cursor is moved on the trace minimap
  * or `TimelineHeaderRow`.
  */
-export class TraceTimelineViewerImpl extends React.PureComponent<TraceTimelineViewerProps> {
+export class TraceTimelineViewerImpl extends React.PureComponent<TProps> {
   componentDidMount() {
     mergeShortcuts({
       collapseAll: this.collapseAll,
@@ -112,7 +115,7 @@ function mapStateToProps(state: ReduxState) {
   return { spanNameColumnWidth };
 }
 
-function mapDispatchToProps(dispatch: Dispatch<ReduxState>) {
+function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
   const { setSpanNameColumnWidth, expandAll, expandOne, collapseAll, collapseOne } = bindActionCreators(
     actions,
     dispatch

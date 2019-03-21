@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Uber Technologies, Inc.
+// Copyright (c) 2018 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,15 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import DetailState from '../components/TracePage/TraceTimelineViewer/SpanDetail/DetailState';
-import TNil from './TNil';
+import _get from 'lodash/get';
 
-// eslint-disable-next-line import/prefer-default-export
-export type TraceTimeline = {
-  childrenHiddenIDs: Set<string>;
-  detailStates: Map<string, DetailState>;
-  findMatches: Set<string> | TNil;
-  hoverIndentGuideIds: Set<string>;
-  spanNameColumnWidth: number;
-  traceID: string | TNil;
-};
+import { EmbeddedState } from '../types/embedded';
+import { getEmbeddedState } from '../utils/embedded-url';
+
+export default function embeddedConfig(state: EmbeddedState | undefined) {
+  if (state === undefined) {
+    const search = _get(window, 'location.search');
+    return search ? getEmbeddedState(search) : null;
+  }
+  return state;
+}

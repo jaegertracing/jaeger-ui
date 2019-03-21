@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,8 +15,8 @@
 import _isEqual from 'lodash/isEqual';
 
 import { getTraceSpanIdsAsTree } from '../selectors/trace';
-
-import type { Process, Span, SpanData, Trace, TraceData } from '../types/trace';
+import { Process, Span, SpanData, Trace, TraceData } from '../types/trace';
+import TreeNode from '../utils/TreeNode';
 
 type SpanWithProcess = SpanData & { process: Process };
 
@@ -26,7 +24,7 @@ type SpanWithProcess = SpanData & { process: Process };
  * NOTE: Mutates `data` - Transform the HTTP response data into the form the app
  * generally requires.
  */
-export default function transformTraceData(data: TraceData & { spans: SpanWithProcess[] }): ?Trace {
+export default function transformTraceData(data: TraceData & { spans: SpanWithProcess[] }): Trace | null {
   let { traceID } = data;
   if (!traceID) {
     return null;
@@ -36,7 +34,7 @@ export default function transformTraceData(data: TraceData & { spans: SpanWithPr
   let traceEndTime = 0;
   let traceStartTime = Number.MAX_SAFE_INTEGER;
   const spanIdCounts = new Map();
-  const spanMap = new Map();
+  const spanMap = new Map<string, SpanWithProcess>();
   // filter out spans with empty start times
   // eslint-disable-next-line no-param-reassign
   data.spans = data.spans.filter(span => Boolean(span.startTime));
@@ -76,14 +74,14 @@ export default function transformTraceData(data: TraceData & { spans: SpanWithPr
   // siblings are sorted by start time
   const tree = getTraceSpanIdsAsTree(data);
   const spans: Span[] = [];
-  const svcCounts: { [string]: number } = {};
+  const svcCounts: Record<string, number> = {};
   let traceName = '';
 
-  tree.walk((spanID, node, depth) => {
+  tree.walk((spanID: string, node: TreeNode, depth: number = 0) => {
     if (spanID === '__root__') {
       return;
     }
-    const span: ?Span = (spanMap.get(spanID): any);
+    const span = spanMap.get(spanID) as Span;
     if (!span) {
       return;
     }
@@ -96,7 +94,7 @@ export default function transformTraceData(data: TraceData & { spans: SpanWithPr
     span.depth = depth - 1;
     span.hasChildren = node.children.length > 0;
     span.references.forEach(ref => {
-      const refSpan: ?Span = (spanMap.get(ref.spanID): any);
+      const refSpan = spanMap.get(ref.spanID) as Span;
       if (refSpan) {
         // eslint-disable-next-line no-param-reassign
         ref.span = refSpan;

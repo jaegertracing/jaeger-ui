@@ -212,47 +212,47 @@ describe('TraceTimelineViewer/duck', () => {
     const tests = [
       {
         msg: 'expand all',
-        action: expandAll,
+        reducerFn: expandAll,
         initial: allSpansCollapsed,
         resultant: new Set(),
       },
       {
         msg: 'collapse all, no-op',
-        action: collapseAll,
+        reducerFn: collapseAll,
         initial: allSpansCollapsed,
         resultant: allSpansCollapsed,
       },
       {
         msg: 'expand one',
-        action: expandOne,
+        reducerFn: expandOne,
         initial: allSpansCollapsed,
         resultant: oneLevelCollapsed,
       },
       {
         msg: 'expand one, one collapsed',
-        action: expandOne,
+        reducerFn: expandOne,
         initial: oneSpanCollapsed,
         resultant: new Set(),
       },
       {
         msg: 'collapse one, no-op',
-        action: collapseOne,
+        reducerFn: collapseOne,
         initial: allSpansCollapsed,
         resultant: allSpansCollapsed,
       },
       {
         msg: 'collapse one, one collapsed',
-        action: collapseOne,
+        reducerFn: collapseOne,
         initial: oneSpanCollapsed,
         resultant: oneLevelCollapsed,
       },
     ];
 
     tests.forEach(info => {
-      const { msg, action, initial, resultant } = info;
+      const { msg, reducerFn, initial, resultant } = info;
 
       it(msg, () => {
-        const { childrenHiddenIDs } = action({ childrenHiddenIDs: initial }, { payload: { spans } });
+        const { childrenHiddenIDs } = reducerFn({ childrenHiddenIDs: initial }, { spans });
         expect(childrenHiddenIDs).toEqual(resultant);
       });
     });

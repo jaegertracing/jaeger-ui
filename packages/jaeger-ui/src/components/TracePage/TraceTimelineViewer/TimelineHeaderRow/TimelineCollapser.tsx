@@ -29,16 +29,15 @@ function getTitle(value: string) {
 }
 
 export default class TimelineCollapser extends React.PureComponent<CollapserProps> {
-  containerRef: React.Ref<HTMLDivElement>;
+  containerRef: React.RefObject<HTMLDivElement>;
 
   constructor(props: CollapserProps) {
     super(props);
     this.containerRef = React.createRef();
   }
 
-  // getContainer = () => this.containerRef.current as HTMLDivElement;
-  // TODO: Everett shouldn't need to cast
-  getContainer = () => (this.containerRef as unknown) as HTMLDivElement;
+  // TODO: Something less hacky than createElement to help TypeScript / AntD
+  getContainer = () => this.containerRef.current || document.createElement('div');
 
   render() {
     const { onExpandAll, onExpandOne, onCollapseAll, onCollapseOne } = this.props;

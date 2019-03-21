@@ -16,7 +16,9 @@ import { KeyValuePair, Span } from '../types/trace';
 import { TNil } from '../types';
 
 export default function filterSpans(textFilter: string, spans: Span[] | TNil) {
-  if (!spans) return null;
+  if (!spans) {
+    return null;
+  }
 
   // if a span field includes at least one filter in includeFilters, the span is a match
   const includeFilters: string[] = [];

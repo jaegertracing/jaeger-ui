@@ -24,7 +24,7 @@ import { SearchQuery } from './search';
 import TNil from './TNil';
 import { Trace } from './trace';
 import TTraceDiffState from './TTraceDiffState';
-import { TraceTimeline } from './trace-timeline';
+import TTraceTimeline from './TTraceTimeline';
 
 export type TNil = TNil;
 
@@ -65,5 +65,5 @@ export type ReduxState = {
     };
   };
   traceDiff: TTraceDiffState;
-  traceTimeline: TraceTimeline;
+  traceTimeline: TTraceTimeline;
 };

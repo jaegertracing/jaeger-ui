@@ -12,33 +12,35 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import React from 'react';
 import cx from 'classnames';
 import _get from 'lodash/get';
-import React from 'react';
 import IoChevronRight from 'react-icons/lib/io/chevron-right';
 import IoIosArrowDown from 'react-icons/lib/io/ios-arrow-down';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
 
 import { actions } from './duck';
-import spanAncestorIds from '../../../utils/span-ancestor-ids';
-
-import { ReduxState } from '../../../types/index';
+import { ReduxState } from '../../../types';
 import { Span } from '../../../types/trace';
+import spanAncestorIds from '../../../utils/span-ancestor-ids';
 
 import './SpanTreeOffset.css';
 
-type SpanTreeOffsetPropsType = {
+type TDispatchProps = {
   addHoverIndentGuideId: (spanID: string) => void;
+  removeHoverIndentGuideId: (spanID: string) => void;
+};
+
+type TProps = TDispatchProps & {
   childrenVisible?: boolean;
   hoverIndentGuideIds: Set<string>;
   onClick?: () => void;
-  removeHoverIndentGuideId: (spanID: string) => void;
   span: Span;
   showChildrenIcon?: boolean;
 };
 
-export class UnconnectedSpanTreeOffset extends React.PureComponent<SpanTreeOffsetPropsType> {
+export class UnconnectedSpanTreeOffset extends React.PureComponent<TProps> {
   ancestorIds: string[];
 
   static defaultProps = {
@@ -47,7 +49,7 @@ export class UnconnectedSpanTreeOffset extends React.PureComponent<SpanTreeOffse
     showChildrenIcon: true,
   };
 
-  constructor(props: SpanTreeOffsetPropsType) {
+  constructor(props: TProps) {
     super(props);
 
     this.ancestorIds = spanAncestorIds(props.span);
@@ -126,12 +128,11 @@ export class UnconnectedSpanTreeOffset extends React.PureComponent<SpanTreeOffse
 }
 
 export function mapStateToProps(state: ReduxState): { hoverIndentGuideIds: Set<string> } {
-  const hoverIndentGuideIds = state.traceTimeline.hoverIndentGuideIds;
+  const { hoverIndentGuideIds } = state.traceTimeline;
   return { hoverIndentGuideIds };
 }
 
-// TODO: Don't `Dispatch<any>`
-export function mapDispatchToProps(dispatch: Dispatch<any>) {
+export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
   const { addHoverIndentGuideId, removeHoverIndentGuideId } = bindActionCreators(actions, dispatch);
   return { addHoverIndentGuideId, removeHoverIndentGuideId };
 }

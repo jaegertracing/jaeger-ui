@@ -1,6 +1,4 @@
-// @flow
-
-// Copyright (c) 2018 Uber Technologies, Inc.
+// Copyright (c) 2019 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,16 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import _get from 'lodash/get';
+import { Action } from 'redux-actions';
 
-import { getEmbeddedState } from '../utils/embedded-url';
-
-import type { EmbeddedState } from '../types/embedded';
-
-export default function embeddedConfig(state: ?EmbeddedState) {
-  if (state === undefined) {
-    const search = _get(window, 'location.search');
-    return search ? getEmbeddedState(search) : null;
-  }
-  return state;
+export default function guardReducer<TState, TPayload>(fn: (state: TState, value: TPayload) => TState) {
+  return function reducer(state: TState, { payload }: Action<TPayload>) {
+    if (!payload) {
+      return state;
+    }
+    return fn(state, payload);
+  };
 }

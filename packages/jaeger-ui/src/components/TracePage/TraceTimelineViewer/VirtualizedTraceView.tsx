@@ -39,7 +39,7 @@ import colorGenerator from '../../../utils/color-generator';
 import updateUiFind from '../../../utils/update-ui-find';
 import { TNil, ReduxState } from '../../../types';
 import { Log, Span, Trace, KeyValuePair } from '../../../types/trace';
-import { TraceTimeline } from '../../../types/trace-timeline';
+import TTraceTimeline from '../../../types/TTraceTimeline';
 
 import './VirtualizedTraceView.css';
 
@@ -49,7 +49,7 @@ type RowState = {
   spanIndex: number;
 };
 
-type VirtualizedTraceViewOwnProps = {
+type TVirtualizedTraceViewOwnProps = {
   currentViewRangeTime: [number, number];
   findMatchesIDs: Set<string> | TNil;
   registerAccessors: (accesors: Accessors) => void;
@@ -67,10 +67,10 @@ type TDispatchProps = {
   setTrace: (trace: Trace | TNil, uiFind: string | TNil) => void;
 };
 
-type VirtualizedTraceViewProps = VirtualizedTraceViewOwnProps &
+type VirtualizedTraceViewProps = TVirtualizedTraceViewOwnProps &
   TDispatchProps &
   TExtractUiFindFromStateReturn &
-  TraceTimeline &
+  TTraceTimeline &
   RouteComponentProps;
 
 // export for tests
@@ -405,7 +405,7 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
 }
 
 /* istanbul ignore next */
-function mapStateToProps(state: ReduxState): TraceTimeline & TExtractUiFindFromStateReturn {
+function mapStateToProps(state: ReduxState): TTraceTimeline & TExtractUiFindFromStateReturn {
   return {
     ...extractUiFindFromState(state),
     ...state.traceTimeline,
@@ -413,15 +413,15 @@ function mapStateToProps(state: ReduxState): TraceTimeline & TExtractUiFindFromS
 }
 
 /* istanbul ignore next */
-function mapDispatchToProps(dispatch: Dispatch<any>): TDispatchProps {
-  return bindActionCreators(actions, dispatch);
+function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
+  return bindActionCreators(actions, dispatch) as any;
 }
 
 export default withRouter(
   connect<
-    TraceTimeline & TExtractUiFindFromStateReturn,
+    TTraceTimeline & TExtractUiFindFromStateReturn,
     TDispatchProps,
-    VirtualizedTraceViewOwnProps,
+    TVirtualizedTraceViewOwnProps,
     ReduxState
   >(mapStateToProps, mapDispatchToProps)(VirtualizedTraceViewImpl)
 );

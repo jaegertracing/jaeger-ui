@@ -17,10 +17,16 @@ import * as React from 'react';
 import Positions from './Positions';
 import { TNil } from '../../../../types';
 
+type TWrapperProps = {
+  style: React.CSSProperties;
+  ref: (elm: HTMLDivElement) => void;
+  onScroll?: () => void;
+};
+
 /**
  * @typedef
  */
-type ListViewProps = {
+type TListViewProps = {
   /**
    * Number of elements in the list.
    */
@@ -102,7 +108,7 @@ const DEFAULT_INITIAL_DRAW = 300;
  * @export
  * @class ListView
  */
-export default class ListView extends React.Component<ListViewProps> {
+export default class ListView extends React.Component<TListViewProps> {
   /**
    * Keeps track of the height and y-value of items, by item index, in the
    * ListView.
@@ -165,7 +171,7 @@ export default class ListView extends React.Component<ListViewProps> {
     windowScroller: false,
   };
 
-  constructor(props: ListViewProps) {
+  constructor(props: TListViewProps) {
     super(props);
 
     this._yPositions = new Positions(200);
@@ -437,13 +443,7 @@ export default class ListView extends React.Component<ListViewProps> {
       const attrs = { 'data-item-key': itemKey };
       items.push(itemRenderer(itemKey, style, i, attrs));
     }
-
-    type wrapperPropsT = {
-      style: Record<string, string>;
-      ref: React.Ref<HTMLDivElement>;
-      onScroll?: () => void;
-    };
-    const wrapperProps: wrapperPropsT = {
+    const wrapperProps: TWrapperProps = {
       style: { position: 'relative' },
       ref: this._initWrapper,
     };

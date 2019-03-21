@@ -12,14 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { createActions, handleActions, Action } from 'redux-actions';
+import { Action, ActionFunctionAny, createActions, handleActions } from 'redux-actions';
 
 import TTraceDiffState from '../../types/TTraceDiffState';
 import generateActionTypes from '../../utils/generate-action-types';
+import guardReducer from '../../utils/guardReducer';
 
+// payloads
 type TTraceIdValue = { traceID: string };
-
 type TNewStateValue = { newState: TTraceDiffState };
+type TTraceDiffActions = {
+  [actionName: string]: ActionFunctionAny<Action<TTraceIdValue | TNewStateValue>>;
+};
 
 export function newInitialState(): TTraceDiffState {
   return {
@@ -45,13 +49,9 @@ const fullActions = createActions<TTraceIdValue | TNewStateValue>({
   [actionTypes.FORCE_STATE]: (newState: TTraceDiffState) => ({ newState }),
 });
 
-export const actions = (fullActions as any).jaegerUi.traceDiff;
+export const actions = (fullActions as any).jaegerUi.traceDiff as TTraceDiffActions;
 
-function cohortAddTrace(state: TTraceDiffState, { payload }: Action<TTraceIdValue>): TTraceDiffState {
-  if (!payload) {
-    return state;
-  }
-  const { traceID } = payload;
+function cohortAddTrace(state: TTraceDiffState, { traceID }: TTraceIdValue) {
   if (state.cohort.indexOf(traceID) >= 0) {
     return state;
   }
@@ -60,11 +60,7 @@ function cohortAddTrace(state: TTraceDiffState, { payload }: Action<TTraceIdValu
   return { ...state, cohort };
 }
 
-function cohortRemoveTrace(state: TTraceDiffState, { payload }: Action<TTraceIdValue>): TTraceDiffState {
-  if (!payload) {
-    return state;
-  }
-  const { traceID } = payload;
+function cohortRemoveTrace(state: TTraceDiffState, { traceID }: TTraceIdValue) {
   const i = state.cohort.indexOf(traceID);
   if (i < 0) {
     return state;
@@ -76,36 +72,25 @@ function cohortRemoveTrace(state: TTraceDiffState, { payload }: Action<TTraceIdV
   return { ...state, a, b, cohort };
 }
 
-function diffSetA(state: TTraceDiffState, { payload }: Action<TTraceIdValue>): TTraceDiffState {
-  if (!payload) {
-    return state;
-  }
-  const a = payload.traceID;
-  return { ...state, a };
+function diffSetA(state: TTraceDiffState, { traceID }: TTraceIdValue): TTraceDiffState {
+  return { ...state, a: traceID };
 }
 
-function diffSetB(state: TTraceDiffState, { payload }: Action<TTraceIdValue>): TTraceDiffState {
-  if (!payload) {
-    return state;
-  }
-  const b = payload.traceID;
-  return { ...state, b };
+function diffSetB(state: TTraceDiffState, { traceID }: TTraceIdValue): TTraceDiffState {
+  return { ...state, b: traceID };
 }
 
-function forceState(state: TTraceDiffState, { payload }: Action<TNewStateValue>): TTraceDiffState {
-  if (!payload) {
-    return state;
-  }
-  return payload.newState;
+function forceState(state: TTraceDiffState, { newState }: TNewStateValue) {
+  return newState;
 }
 
 export default handleActions<TTraceDiffState>(
   {
-    [actionTypes.COHORT_ADD_TRACE]: cohortAddTrace,
-    [actionTypes.COHORT_REMOVE_TRACE]: cohortRemoveTrace,
-    [actionTypes.DIFF_SET_A]: diffSetA,
-    [actionTypes.DIFF_SET_B]: diffSetB,
-    [actionTypes.FORCE_STATE]: forceState,
+    [actionTypes.COHORT_ADD_TRACE]: guardReducer(cohortAddTrace),
+    [actionTypes.COHORT_REMOVE_TRACE]: guardReducer(cohortRemoveTrace),
+    [actionTypes.DIFF_SET_A]: guardReducer(diffSetA),
+    [actionTypes.DIFF_SET_B]: guardReducer(diffSetB),
+    [actionTypes.FORCE_STATE]: guardReducer(forceState),
   },
   newInitialState()
 );
