@@ -14,25 +14,25 @@
 
 import isPromise from 'is-promise';
 
-import fileReader from './fileReader.js';
+import readJsonFile from './readJsonFile';
 
 describe('fileReader.readJsonFile', () => {
   it('returns a promise', () => {
-    const promise = fileReader.readJsonFile({ rando: true });
+    const promise = readJsonFile({ rando: true });
     // prevent the unhandled rejection warning
     promise.catch(() => {});
     expect(isPromise(promise)).toBeTruthy();
   });
 
   it('rejects when given an invalid file', () => {
-    const p = fileReader.readJsonFile({ rando: true });
+    const p = readJsonFile({ rando: true });
     return expect(p).rejects.toMatchObject(expect.any(Error));
   });
 
   it('does not throw when given an invalid file', () => {
     let threw = false;
     try {
-      const p = fileReader.readJsonFile({ rando: true });
+      const p = readJsonFile({ rando: true });
       // prevent the unhandled rejection warning
       p.catch(() => {});
     } catch (_) {
@@ -44,13 +44,13 @@ describe('fileReader.readJsonFile', () => {
   it('loads JSON data, successfully', () => {
     const obj = { ok: true };
     const file = new File([JSON.stringify(obj)], 'foo.json');
-    const p = fileReader.readJsonFile({ file });
+    const p = readJsonFile({ file });
     return expect(p).resolves.toMatchObject(obj);
   });
 
   it('rejects on malform JSON', () => {
     const file = new File(['not-json'], 'foo.json');
-    const p = fileReader.readJsonFile({ file });
+    const p = readJsonFile({ file });
     return expect(p).rejects.toMatchObject(expect.any(Error));
   });
 });

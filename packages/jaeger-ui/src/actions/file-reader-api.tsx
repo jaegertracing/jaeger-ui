@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2019 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,11 +13,12 @@
 // limitations under the License.
 
 import { createAction } from 'redux-actions';
-import fileReader from '../utils/fileReader';
+
+import readJsonFile from '../utils/readJsonFile';
 
 // eslint-disable-next-line import/prefer-default-export
 export const loadJsonTraces = createAction(
   '@FILE_READER_API/LOAD_JSON',
-  fileList => fileReader.readJsonFile(fileList),
+  fileList => readJsonFile(fileList),
   fileList => ({ fileList })
 );

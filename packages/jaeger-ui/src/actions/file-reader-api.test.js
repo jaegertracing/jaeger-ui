@@ -12,29 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import sinon from 'sinon';
-import isPromise from 'is-promise';
-
 import * as fileReaderActions from './file-reader-api';
-import fileReader from '../utils/fileReader';
+import readJsonFile from '../utils/readJsonFile';
 
-it('loadJsonTraces should return a promise', () => {
-  const fileList = { data: {}, filename: 'whatever' };
+jest.mock('../utils/readJsonFile');
 
-  const { payload } = fileReaderActions.loadJsonTraces(fileList);
-  expect(isPromise(payload)).toBeTruthy();
-  // prevent the unhandled rejection warnings
-  payload.catch(() => {});
-});
+describe('actions/file-reader-api', () => {
+  beforeEach(() => {
+    readJsonFile.mockReset();
+  });
 
-it('loadJsonTraces should call readJsonFile', () => {
-  const fileList = { data: {}, filename: 'whatever' };
-  const mock = sinon.mock(fileReader);
-  const called = mock
-    .expects('readJsonFile')
-    .once()
-    .withExactArgs(fileList);
-  fileReaderActions.loadJsonTraces(fileList);
-  expect(called.verify()).toBeTruthy();
-  mock.restore();
+  it('loadJsonTraces calls readJsonFile', () => {
+    const arg = 'example-arg';
+    fileReaderActions.loadJsonTraces(arg);
+    expect(readJsonFile.mock.calls).toEqual([[arg]]);
+  });
 });
