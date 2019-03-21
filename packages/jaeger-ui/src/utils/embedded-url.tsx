@@ -13,14 +13,13 @@
 // limitations under the License.
 
 import _flatMap from 'lodash/flatMap';
-import _forEach from 'lodash/forEach';
 import queryString from 'query-string';
 
 import { EmbeddedState } from '../types/embedded';
 
 function getStrings(value: string): string;
-function getStrings(value: object): object;
-function getStrings(value: string | object): string | object {
+function getStrings(value: object): string[];
+function getStrings(value: string | object): string | string[] {
   return typeof value === 'string' ? value : _flatMap(value, getStrings);
 }
 
@@ -59,11 +58,10 @@ export function getEmbeddedState(search: string): null | EmbeddedState {
   };
 }
 
-export function stripEmbeddedState(state: Record<string, any>): Object {
+export function stripEmbeddedState(state: Record<string, any>) {
   const { uiEmbed = undefined, ...rv } = state;
   if (uiEmbed === VERSION_0) {
-    // TODO: Everett: this seems weird
-    _forEach(PARAM_KEYS_V0, Reflect.deleteProperty.bind(null, rv));
+    PARAM_KEYS_V0.forEach(Reflect.deleteProperty.bind(null, rv));
   }
   return rv;
 }

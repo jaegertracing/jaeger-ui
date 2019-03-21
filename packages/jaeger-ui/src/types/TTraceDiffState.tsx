@@ -15,8 +15,8 @@
 import TNil from './TNil';
 
 type TTraceDiffState = {
-  a: string | TNil;
-  b: string | TNil;
+  a?: string | TNil;
+  b?: string | TNil;
   cohort: string[];
 };
 

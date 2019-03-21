@@ -13,6 +13,7 @@
 // limitations under the License.
 
 /* eslint-disable camelcase */
+import { RavenTransportOptions } from 'raven-js';
 
 import prefixUrl from '../prefix-url';
 
@@ -357,8 +358,7 @@ function getLabel(message: string, page: string, duration: number, git: string, 
 
 // Convert the Raven exception data to something that can be sent to Google
 // Analytics. See <./README.md> for details.
-export default function convRavenToGa({ data }: any /* RavenTransportOptions */) {
-  // TODO: Everett figure out input type
+export default function convRavenToGa({ data }: RavenTransportOptions) {
   const { breadcrumbs, exception, extra, request, tags } = data;
   const { message, stack } = convException(exception.values[0]);
   const url = truncate(request.url.replace(origin, ''), 50);

@@ -33,7 +33,7 @@ export function matches(path: string) {
 }
 
 export function getUrl(state: TTraceDiffState) {
-  const { a, b, cohort } = getValidState(state);
+  const { a = undefined, b = undefined, cohort } = getValidState(state);
   const search = queryString.stringify({ cohort });
   return prefixUrl(`/trace/${a || ''}...${b || ''}${search ? '?' : ''}${search}`);
 }

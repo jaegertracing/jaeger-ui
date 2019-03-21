@@ -15,7 +15,7 @@
 import * as React from 'react';
 import cx from 'classnames';
 
-import { ViewRangeTime, ViewRangeTimeUpdate } from '../../types';
+import { TUpdateViewRangeTimeFunction, ViewRangeTime, ViewRangeTimeUpdate } from '../../types';
 import { TNil } from '../../../../types';
 import DraggableManager, { DraggableBounds, DraggingUpdate } from '../../../../utils/DraggableManager';
 
@@ -29,7 +29,7 @@ type TimelineViewingLayerProps = {
    */
   boundsInvalidator: any | null | undefined;
   updateNextViewRangeTime: (update: ViewRangeTimeUpdate) => void;
-  updateViewRangeTime: (start: number, end: number, source?: string) => void;
+  updateViewRangeTime: TUpdateViewRangeTimeFunction;
   viewRangeTime: ViewRangeTime;
 };
 

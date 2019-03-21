@@ -90,9 +90,7 @@ export default class ResultItemTitle extends React.PureComponent<Props> {
             onChange={this.toggleComparison}
           />
         )}
-        {/* <WrapperComponent to={linkTo || ''} {...wrapperProps}> */}
-        {/* <WrapperComponent {...wrapperProps}> */}
-        {/* TODO: Everett figure out how to ensure type is correct */}
+        {/* TODO: Shouldn't need cast */}
         <WrapperComponent {...wrapperProps as { [key: string]: any; to: string }}>
           <span
             className="ResultItemTitle--durationBar"

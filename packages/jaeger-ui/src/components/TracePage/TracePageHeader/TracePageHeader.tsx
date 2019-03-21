@@ -26,7 +26,7 @@ import AltViewOptions from './AltViewOptions';
 import KeyboardShortcutsHelp from './KeyboardShortcutsHelp';
 import SpanGraph from './SpanGraph';
 import TracePageSearchBar from './TracePageSearchBar';
-import { ViewRange, ViewRangeTimeUpdate } from '../types';
+import { TUpdateViewRangeTimeFunction, ViewRange, ViewRangeTimeUpdate } from '../types';
 import LabeledList from '../../common/LabeledList';
 import NewWindowIcon from '../../common/NewWindowIcon';
 import TraceName from '../../common/TraceName';
@@ -59,7 +59,7 @@ type TracePageHeaderEmbedProps = {
   trace: Trace;
   traceGraphView: boolean;
   updateNextViewRangeTime: (update: ViewRangeTimeUpdate) => void;
-  updateViewRangeTime: (start: number, end: number) => void;
+  updateViewRangeTime: TUpdateViewRangeTimeFunction;
   viewRange: ViewRange;
 };
 
@@ -210,9 +210,6 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
   );
 }
 
-// ghetto fabulous cast because the 16.3 API is not in flow yet
-// https://github.com/facebook/flow/issues/6103
-// TODO: Discuss, is React.forwardRef necessary?
 export default React.forwardRef((props: TracePageHeaderEmbedProps, ref: React.Ref<Input>) => (
   <TracePageHeaderFn {...props} forwardedRef={ref} />
 ));

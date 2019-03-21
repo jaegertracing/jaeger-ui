@@ -16,6 +16,7 @@ import * as React from 'react';
 import { Input } from 'antd';
 import { History as RouterHistory, Location } from 'history';
 import _debounce from 'lodash/debounce';
+import _isString from 'lodash/isString';
 import queryString from 'query-string';
 import { connect } from 'react-redux';
 import { RouteComponentProps, withRouter } from 'react-router-dom';
@@ -29,7 +30,6 @@ type TOwnProps = RouteComponentProps<any> & {
   history: RouterHistory;
   location: Location;
   match: any;
-  // todo
   trackFindFunction?: (str: string | TNil) => void;
 };
 
@@ -77,9 +77,8 @@ export class UnconnectedUiFindInput extends React.PureComponent<TProps, StateTyp
   }, 250);
 
   render() {
-    const inputValue = this.state.ownInputValue ? this.state.ownInputValue : this.props.uiFind;
+    const inputValue = _isString(this.state.ownInputValue) ? this.state.ownInputValue : this.props.uiFind;
 
-    // TODO: check autosize true/false
     return (
       <Input
         autosize={null}
@@ -95,8 +94,8 @@ export class UnconnectedUiFindInput extends React.PureComponent<TProps, StateTyp
 }
 
 export function extractUiFindFromState(state: ReduxState): TExtractUiFindFromStateReturn {
-  // TODO: Handle the fact that uiFind could be an array of strings
-  const { uiFind }: { uiFind?: string } = queryString.parse(state.router.location.search);
+  const { uiFind: uiFindFromUrl } = queryString.parse(state.router.location.search);
+  const uiFind = Array.isArray(uiFindFromUrl) ? uiFindFromUrl.join(' ') : uiFindFromUrl;
   return { uiFind };
 }
 

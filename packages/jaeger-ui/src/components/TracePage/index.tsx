@@ -40,7 +40,7 @@ import { TEv } from './TraceGraph/types';
 import { trackSlimHeaderToggle } from './TracePageHeader/TracePageHeader.track';
 import TracePageHeader from './TracePageHeader';
 import TraceTimelineViewer from './TraceTimelineViewer';
-import { ViewRange, ViewRangeTimeUpdate } from './types';
+import { TUpdateViewRangeTimeFunction, ViewRange, ViewRangeTimeUpdate } from './types';
 import { getLocation, getUrl } from './url';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
@@ -254,7 +254,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
     if (this._searchBar.current) this._searchBar.current.focus();
   };
 
-  updateViewRangeTime = (start: number, end: number, trackSrc?: string) => {
+  updateViewRangeTime: TUpdateViewRangeTimeFunction = (start: number, end: number, trackSrc?: string) => {
     if (trackSrc) {
       trackRange(trackSrc, [start, end], this.state.viewRange.time.current);
     }

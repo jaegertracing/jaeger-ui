@@ -15,7 +15,7 @@
 import _get from 'lodash/get';
 import queryString from 'query-string';
 import ReactGA from 'react-ga';
-import Raven from 'raven-js';
+import Raven, { RavenOptions, RavenTransportOptions } from 'raven-js';
 
 import convRavenToGa from './conv-raven-to-ga';
 import getConfig from '../config/get-config';
@@ -115,8 +115,7 @@ export function trackEvent(
   }
 }
 
-function trackRavenError(ravenData: any /* RavenTransportOptions */) {
-  // TODO: Everett raven types
+function trackRavenError(ravenData: RavenTransportOptions) {
   const { message, category, action, label, value } = convRavenToGa(ravenData);
   trackError(message);
   trackEvent(category, action, label, value);
@@ -155,7 +154,7 @@ if (isGaEnabled) {
     appVersion: versionLong,
   });
   if (isErrorsEnabled) {
-    const ravenConfig = {
+    const ravenConfig: RavenOptions = {
       autoBreadcrumbs: {
         xhr: true,
         console: false,
@@ -164,10 +163,11 @@ if (isGaEnabled) {
       },
       environment: process.env.NODE_ENV || 'unkonwn',
       transport: trackRavenError,
-      tags: {},
     };
     if (versionShort && versionShort !== 'unknown') {
-      (ravenConfig.tags as { git: string }).git = versionShort; // TODO: Everett raven types
+      ravenConfig.tags = {
+        git: versionShort,
+      };
     }
     Raven.config('https://fakedsn@omg.com/1', ravenConfig).install();
     window.onunhandledrejection = function trackRejectedPromise(evt) {

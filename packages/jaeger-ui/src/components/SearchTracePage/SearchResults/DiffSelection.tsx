@@ -37,8 +37,7 @@ export default class DiffSelection extends React.PureComponent<Props> {
   render() {
     const { toggleComparison, traces } = this.props;
     const cohort = traces.filter(ft => ft.state !== fetchedState.ERROR).map(ft => ft.id);
-    // TODO
-    const compareHref = cohort.length > 1 ? getUrl({ a: undefined, b: undefined, cohort }) : null;
+    const compareHref = cohort.length > 1 ? getUrl({ cohort }) : null;
     const compareBtn = (
       <Button className="ub-right" disabled={cohort.length < 2} htmlType="button" type="primary">
         Compare Traces

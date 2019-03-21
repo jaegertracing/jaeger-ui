@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// TODO: Everett is this correct? Can't find ContextRouter
 import { Router } from 'react-router-dom';
 import { Location } from 'history';
 
