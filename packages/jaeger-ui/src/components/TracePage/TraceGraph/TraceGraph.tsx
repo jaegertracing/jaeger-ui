@@ -19,15 +19,16 @@ import { DirectedGraph, LayoutManager } from '@jaegertracing/plexus';
 
 import { TEv } from './types';
 import { getNodeDrawer, MODE_SERVICE, MODE_TIME, MODE_SELFTIME, HELP_TABLE } from './OpNode';
+import { TNil } from '../../../types';
 import { setOnEdgesContainer, setOnNodesContainer, setOnNode } from '../../../utils/plexus/set-on-graph';
 
 import './TraceGraph.css';
 
 type Props = {
   headerHeight: number;
-  ev?: TEv;
-  uiFind: string;
-  uiFindVertexKeys: Set<number | string>;
+  ev?: TEv | TNil;
+  uiFind: string | TNil;
+  uiFindVertexKeys: Set<number | string> | TNil;
 };
 type State = {
   showHelp: boolean;

@@ -16,11 +16,11 @@ import * as React from 'react';
 import { Popover } from 'antd';
 import cx from 'classnames';
 
-import CopyIcon from '../../common/CopyIcon';
-import colorGenerator from '../../../utils/color-generator';
-
-import TDagVertex from '../../../model/trace-dag/types/TDagVertex';
 import { TSumSpan } from './types';
+import CopyIcon from '../../common/CopyIcon';
+import TDagVertex from '../../../model/trace-dag/types/TDagVertex';
+import { TNil } from '../../../types';
+import colorGenerator from '../../../utils/color-generator';
 
 import './OpNode.css';
 
@@ -140,13 +140,13 @@ export default class OpNode extends React.PureComponent<Props> {
   }
 }
 
-export function getNodeDrawer(mode: string, uiFindVertexKeys: Set<number | string>) {
+export function getNodeDrawer(mode: string, uiFindVertexKeys: Set<number | string> | TNil) {
   return function drawNode(vertex: TDagVertex<TSumSpan>) {
     const { data, operation, service } = vertex.data;
     return (
       <OpNode
         {...data}
-        isUiFindMatch={uiFindVertexKeys.has(vertex.key)}
+        isUiFindMatch={uiFindVertexKeys ? uiFindVertexKeys.has(vertex.key) : false}
         mode={mode}
         operation={operation}
         service={service}

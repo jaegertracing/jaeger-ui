@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,26 +14,33 @@
 
 import * as React from 'react';
 import { Input } from 'antd';
+import { Location, History as RouterHistory } from 'history';
 import _clamp from 'lodash/clamp';
 import _get from 'lodash/get';
 import _mapValues from 'lodash/mapValues';
 import _memoize from 'lodash/memoize';
-import { connect } from 'react-redux';
+import { connect, Dispatch } from 'react-redux';
+import { match as Match } from 'react-router-dom';
 import { bindActionCreators } from 'redux';
-
-import type { Location, Match, RouterHistory } from 'react-router-dom';
 
 import ArchiveNotifier from './ArchiveNotifier';
 import { actions as archiveActions } from './ArchiveNotifier/duck';
 import { trackRange } from './index.track';
-import { merge as mergeShortcuts, reset as resetShortcuts } from './keyboard-shortcuts';
+import {
+  CombokeysHandler,
+  merge as mergeShortcuts,
+  reset as resetShortcuts,
+  ShortcutCallbacks,
+} from './keyboard-shortcuts';
 import { cancel as cancelScroll, scrollBy, scrollTo } from './scroll-page';
 import ScrollManager from './ScrollManager';
 import calculateTraceDagEV from './TraceGraph/calculateTraceDagEV';
 import TraceGraph from './TraceGraph/TraceGraph';
+import { TEv } from './TraceGraph/types';
 import { trackSlimHeaderToggle } from './TracePageHeader/TracePageHeader.track';
 import TracePageHeader from './TracePageHeader';
 import TraceTimelineViewer from './TraceTimelineViewer';
+import { ViewRange, ViewRangeTimeUpdate } from './types';
 import { getLocation, getUrl } from './url';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
@@ -43,37 +48,43 @@ import { extractUiFindFromState } from '../common/UiFindInput';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import { getUiFindVertexKeys } from '../TraceDiff/TraceDiffGraph/traceDiffGraphUtils';
 import { fetchedState } from '../../constants';
+import { FetchedTrace, ReduxState, TNil } from '../../types';
+import { TraceArchive } from '../../types/archive';
+import { EmbeddedState } from '../../types/embedded';
 import filterSpans from '../../utils/filter-spans';
 import updateUiFind from '../../utils/update-ui-find';
 
-import type { CombokeysHandler, ShortcutCallbacks } from './keyboard-shortcuts';
-import type { ViewRange, ViewRangeTimeUpdate } from './types';
-import type { FetchedTrace, ReduxState } from '../../types';
-import type { TraceArchive } from '../../types/archive';
-import type { EmbeddedState } from '../../types/embedded';
-
 import './index.css';
 
-type TracePageProps = {
-  acknowledgeArchive: string => void,
-  archiveEnabled: boolean,
-  archiveTrace: string => void,
-  archiveTraceState: ?TraceArchive,
-  embedded: null | EmbeddedState,
-  fetchTrace: string => void,
-  history: RouterHistory,
-  id: string,
-  location: Location,
-  searchUrl: null | string,
-  trace: ?FetchedTrace,
-  uiFind: ?string,
+type TDispatchProps = {
+  acknowledgeArchive: (id: string) => void;
+  archiveTrace: (id: string) => void;
+  fetchTrace: (id: string) => void;
 };
 
-type TracePageState = {
-  headerHeight: ?number,
-  slimView: boolean,
-  traceGraphView: boolean,
-  viewRange: ViewRange,
+type TOwnProps = {
+  history: RouterHistory;
+  location: Location;
+  match: Match<{ id: string }>;
+};
+
+type TReduxProps = {
+  archiveEnabled: boolean;
+  archiveTraceState: TraceArchive | TNil;
+  embedded: null | EmbeddedState;
+  id: string;
+  searchUrl: null | string;
+  trace: FetchedTrace | TNil;
+  uiFind: string | TNil;
+};
+
+type TProps = TDispatchProps & TOwnProps & TReduxProps;
+
+type TState = {
+  headerHeight: number | TNil;
+  slimView: boolean;
+  traceGraphView: boolean;
+  viewRange: ViewRange;
 };
 
 // export for tests
@@ -94,9 +105,9 @@ export const shortcutConfig = {
 };
 
 // export for tests
-export function makeShortcutCallbacks(adjRange: (number, number) => void): ShortcutCallbacks {
-  function getHandler([startChange, endChange]): CombokeysHandler {
-    return function combokeyHandler(event: SyntheticKeyboardEvent<any>) {
+export function makeShortcutCallbacks(adjRange: (start: number, end: number) => void): ShortcutCallbacks {
+  function getHandler([startChange, endChange]: [number, number]): CombokeysHandler {
+    return function combokeyHandler(event: React.KeyboardEvent<HTMLElement>) {
       event.preventDefault();
       adjRange(startChange, endChange);
     };
@@ -105,18 +116,16 @@ export function makeShortcutCallbacks(adjRange: (number, number) => void): Short
 }
 
 // export for tests
-export class TracePageImpl extends React.PureComponent<TracePageProps, TracePageState> {
-  props: TracePageProps;
-  state: TracePageState;
+export class TracePageImpl extends React.PureComponent<TProps, TState> {
+  state: TState;
 
-  _headerElm: ?Element;
+  _headerElm: HTMLElement | TNil;
   _filterSpans: typeof filterSpans;
-  _searchBar: { current: Input | null };
+  _searchBar: React.RefObject<Input>;
   _scrollManager: ScrollManager;
-  // TODO: use convPlexus type (everett JAG-343)
-  traceDagEV: ?Object;
+  traceDagEV: TEv | TNil;
 
-  constructor(props: TracePageProps) {
+  constructor(props: TProps) {
     super(props);
     const { embedded, trace } = props;
     this.state = {
@@ -169,14 +178,14 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
     mergeShortcuts(shortcutCallbacks);
   }
 
-  componentWillReceiveProps(nextProps: TracePageProps) {
+  componentWillReceiveProps(nextProps: TProps) {
     if (this._scrollManager) {
       const { trace } = nextProps;
       this._scrollManager.setTrace(trace && trace.data);
     }
   }
 
-  componentDidUpdate({ id: prevID }: TracePageProps) {
+  componentDidUpdate({ id: prevID }: TProps) {
     const { id, trace } = this.props;
     this.setHeaderHeight(this._headerElm);
     if (!trace) {
@@ -219,7 +228,7 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
     this.updateViewRangeTime(start, end, trackSrc);
   }
 
-  setHeaderHeight = (elm: ?Element) => {
+  setHeaderHeight = (elm: HTMLElement | TNil) => {
     this._headerElm = elm;
     if (elm) {
       if (this.state.headerHeight !== elm.clientHeight) {
@@ -249,12 +258,13 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
     if (trackSrc) {
       trackRange(trackSrc, [start, end], this.state.viewRange.time.current);
     }
-    const time = { current: [start, end] };
-    this.setState((state: TracePageState) => ({ viewRange: { ...state.viewRange, time } }));
+    const current: [number, number] = [start, end];
+    const time = { current };
+    this.setState((state: TState) => ({ viewRange: { ...state.viewRange, time } }));
   };
 
   updateNextViewRangeTime = (update: ViewRangeTimeUpdate) => {
-    this.setState((state: TracePageState) => ({ viewRange: { ...state.viewRange, ...update } }));
+    this.setState((state: TState) => ({ viewRange: { ...state.viewRange, ...update } }));
   };
 
   toggleSlimView = () => {
@@ -305,9 +315,20 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
     }
 
     // $FlowIgnore because flow believes Set<string> cannot be assigned to Set<string | number>
-    const findMatches: Set<string | number> = traceGraphView
-      ? getUiFindVertexKeys(uiFind || '', _get(this.traceDagEV, 'vertices', []))
-      : this._filterSpans(uiFind || '', _get(trace, 'data.spans'));
+    let findCount = 0;
+    let graphFindMatches;
+    let spanFindMatches;
+    if (uiFind) {
+      if (traceGraphView) {
+        graphFindMatches = getUiFindVertexKeys(uiFind, _get(this.traceDagEV, 'vertices', []));
+        findCount = graphFindMatches ? graphFindMatches.size : 0;
+      } else {
+        spanFindMatches = this._filterSpans(uiFind, _get(trace, 'data.spans'));
+        findCount = spanFindMatches ? spanFindMatches.size : 0;
+      }
+    }
+    //  =  ?  : null;
+    // const spanFindMatches = !traceGraphView ? this._filterSpans(uiFind || '', _get(trace, 'data.spans')) : null;
     const isEmbedded = Boolean(embedded);
     const headerProps = {
       slimView,
@@ -325,7 +346,7 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
       onTraceGraphViewClicked: this.toggleTraceGraphView,
       prevResult: this._scrollManager.scrollToPrevVisibleSpan,
       ref: this._searchBar,
-      resultCount: findMatches ? findMatches.size : 0,
+      resultCount: findCount,
       showArchiveButton: !isEmbedded && archiveEnabled,
       showShortcutsHelp: !isEmbedded,
       showStandaloneLink: isEmbedded,
@@ -350,15 +371,15 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
               <TraceGraph
                 headerHeight={headerHeight}
                 ev={this.traceDagEV}
-                uiFind={uiFind || ''}
-                uiFindVertexKeys={findMatches}
+                uiFind={uiFind}
+                uiFindVertexKeys={graphFindMatches}
               />
             </section>
           ) : (
             <section style={{ paddingTop: headerHeight }}>
               <TraceTimelineViewer
                 registerAccessors={this._scrollManager.setAccessors}
-                findMatchesIDs={findMatches}
+                findMatchesIDs={spanFindMatches}
                 trace={data}
                 updateNextViewRangeTime={this.updateNextViewRangeTime}
                 updateViewRangeTime={this.updateViewRangeTime}
@@ -372,7 +393,7 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
 }
 
 // export for tests
-export function mapStateToProps(state: ReduxState, ownProps: { match: Match }) {
+export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxProps {
   const { id } = ownProps.match.params;
   const { archive, config, embedded, router } = state;
   const { traces } = state.trace;
@@ -394,7 +415,7 @@ export function mapStateToProps(state: ReduxState, ownProps: { match: Match }) {
 }
 
 // export for tests
-export function mapDispatchToProps(dispatch: Function) {
+export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
   const { fetchTrace } = bindActionCreators(jaegerApiActions, dispatch);
   const { archiveTrace, acknowledge: acknowledgeArchive } = bindActionCreators(archiveActions, dispatch);
   return { acknowledgeArchive, archiveTrace, fetchTrace };

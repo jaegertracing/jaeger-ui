@@ -19,11 +19,12 @@ import cx from 'classnames';
 import * as markers from './TracePageSearchBar.markers';
 import { trackFilter } from '../index.track';
 import UiFindInput from '../../common/UiFindInput';
+import { TNil } from '../../../types';
 
 import './TracePageSearchBar.css';
 
 type TracePageSearchBarProps = {
-  textFilter: string;
+  textFilter: string | TNil;
   prevResult: () => void;
   nextResult: () => void;
   clearSearch: () => void;

@@ -26,14 +26,14 @@ import AltViewOptions from './AltViewOptions';
 import KeyboardShortcutsHelp from './KeyboardShortcutsHelp';
 import SpanGraph from './SpanGraph';
 import TracePageSearchBar from './TracePageSearchBar';
+import { ViewRange, ViewRangeTimeUpdate } from '../types';
 import LabeledList from '../../common/LabeledList';
 import NewWindowIcon from '../../common/NewWindowIcon';
 import TraceName from '../../common/TraceName';
 import { getTraceName } from '../../../model/trace-viewer';
-import { formatDatetime, formatDuration } from '../../../utils/date';
-
-import { ViewRange, ViewRangeTimeUpdate } from '../types';
+import { TNil } from '../../../types';
 import { Trace } from '../../../types/trace';
+import { formatDatetime, formatDuration } from '../../../utils/date';
 
 import './TracePageHeader.css';
 
@@ -54,7 +54,7 @@ type TracePageHeaderEmbedProps = {
   showStandaloneLink: boolean;
   showViewOptions: boolean;
   slimView: boolean;
-  textFilter: string;
+  textFilter: string | TNil;
   toSearch: string | null;
   trace: Trace;
   traceGraphView: boolean;
