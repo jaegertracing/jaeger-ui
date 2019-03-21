@@ -18,24 +18,30 @@ import * as React from 'react';
 import { Icon, notification } from 'antd';
 
 import ErrorMessage from '../../common/ErrorMessage';
-import type { TraceArchive } from '../../../types/archive';
+import { TNil } from '../../../types';
+import { TraceArchive } from '../../../types/archive';
 
 import './index.css';
 
-const NOTIFIED_PROGRESS = 'NOTIFIED_PROGRESS';
-const NOTIFIED_OUTCOME = 'NOTIFIED_OUTCOME';
+enum NotifiedState {
+  Progress = 'NotifiedState.Progress',
+  Outcome = 'NotifiedState.Outcome',
+}
 
-type NotifiedState = 'NOTIFIED_PROGRESS' | 'NOTIFIED_OUTCOME' | null;
+// const NOTIFIED_PROGRESS = 'NOTIFIED_PROGRESS';
+// const NOTIFIED_OUTCOME = 'NOTIFIED_OUTCOME';
+
+// type NotifiedState = 'NOTIFIED_PROGRESS' | 'NOTIFIED_OUTCOME' | null;
 
 type Props = {
   // eslint-disable-next-line react/no-unused-prop-types
-  archivedState: ?TraceArchive,
+  archivedState: TraceArchive | TNil;
   // eslint-disable-next-line react/no-unused-prop-types
-  acknowledge: () => void,
+  acknowledge: () => void;
 };
 
 type State = {
-  notifiedState: NotifiedState,
+  notifiedState: NotifiedState | null;
 };
 
 function getNextNotifiedState(props: Props) {
@@ -44,33 +50,34 @@ function getNextNotifiedState(props: Props) {
     return null;
   }
   if (archivedState.isLoading) {
-    return NOTIFIED_PROGRESS;
+    return NotifiedState.Progress;
   }
-  return archivedState.isAcknowledged ? null : NOTIFIED_OUTCOME;
+  return archivedState.isAcknowledged ? null : NotifiedState.Outcome;
 }
 
-function updateNotification(oldState: NotifiedState, nextState: NotifiedState, props: Props) {
+function updateNotification(oldState: NotifiedState | null, nextState: NotifiedState | null, props: Props) {
   if (oldState === nextState) {
     return;
   }
   if (oldState) {
     notification.close(oldState);
   }
-  if (nextState === NOTIFIED_PROGRESS) {
+  if (nextState === NotifiedState.Progress) {
     notification.info({
-      key: NOTIFIED_PROGRESS,
-      message: 'Archiving trace...',
-      icon: <Icon type="loading" />,
+      key: NotifiedState.Progress,
+      description: null,
       duration: 0,
+      icon: <Icon type="loading" />,
+      message: 'Archiving trace...',
     });
     return;
   }
   const { acknowledge, archivedState } = props;
-  if (nextState === NOTIFIED_OUTCOME) {
+  if (nextState === NotifiedState.Outcome) {
     if (archivedState && archivedState.error) {
       const error = typeof archivedState.error === 'string' ? archivedState.error : archivedState.error;
       notification.warn({
-        key: NOTIFIED_OUTCOME,
+        key: NotifiedState.Outcome,
         className: 'ArchiveNotifier--errorNotification',
         message: <ErrorMessage.Message error={error} wrap />,
         description: <ErrorMessage.Details error={error} wrap />,
@@ -80,10 +87,11 @@ function updateNotification(oldState: NotifiedState, nextState: NotifiedState, p
       });
     } else if (archivedState && archivedState.isArchived) {
       notification.success({
-        key: NOTIFIED_OUTCOME,
-        message: 'This trace has been archived.',
-        icon: <Icon type="clock-circle-o" className="ArchiveNotifier--doneIcon" />,
+        key: NotifiedState.Outcome,
+        description: null,
         duration: null,
+        icon: <Icon type="clock-circle-o" className="ArchiveNotifier--doneIcon" />,
+        message: 'This trace has been archived.',
         onClose: acknowledge,
       });
     } else {
@@ -92,15 +100,13 @@ function updateNotification(oldState: NotifiedState, nextState: NotifiedState, p
   }
 }
 
-function processProps(notifiedState: NotifiedState, props: Props) {
+function processProps(notifiedState: NotifiedState | null, props: Props) {
   const nxNotifiedState = getNextNotifiedState(props);
   updateNotification(notifiedState, nxNotifiedState, props);
   return nxNotifiedState;
 }
 
 export default class ArchiveNotifier extends React.PureComponent<Props, State> {
-  props: Props;
-
   constructor(props: Props) {
     super(props);
     const notifiedState = processProps(null, props);
