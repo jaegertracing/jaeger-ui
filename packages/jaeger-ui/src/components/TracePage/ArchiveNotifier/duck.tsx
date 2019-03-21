@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,18 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { createActions, handleActions } from 'redux-actions';
+import { createActions, handleActions, ActionFunctionAny } from 'redux-actions';
 
 import { archiveTrace } from '../../../actions/jaeger-api';
-import type { ApiError } from '../../../types/api-error';
-import type { TracesArchive } from '../../../types/archive';
+import { ApiError } from '../../../types/api-error';
+import { TracesArchive } from '../../../types/archive';
 import generateActionTypes from '../../../utils/generate-action-types';
 
 type ArchiveAction = {
   meta: {
-    id: string,
-  },
-  payload?: ApiError | string,
+    id: string;
+  };
+  payload?: ApiError | string;
 };
 
 const initialState: TracesArchive = {};
@@ -36,9 +34,10 @@ const fullActions = createActions({
   [actionTypes.ACKNOWLEDGE]: traceID => traceID,
 });
 
-export const actions = { ...fullActions.jaegerUi.archiveTrace, archiveTrace };
-
-// reducers
+export const actions: { [actionType: string]: ActionFunctionAny<any> } = {
+  ...(fullActions as any).jaegerUi.archiveTrace,
+  archiveTrace,
+};
 
 function acknowledge(state: TracesArchive, { payload }: ArchiveAction) {
   const traceID = typeof payload === 'string' ? payload : null;
