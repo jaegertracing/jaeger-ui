@@ -32,19 +32,16 @@ import {
   spanContainsErredSpan,
   ViewedBoundsFunctionType,
 } from './utils';
+import { Accessors } from '../ScrollManager';
 import { extractUiFindFromState, TExtractUiFindFromStateReturn } from '../../common/UiFindInput';
 import getLinks from '../../../model/link-patterns';
 import colorGenerator from '../../../utils/color-generator';
 import updateUiFind from '../../../utils/update-ui-find';
-
-import { Accessors } from '../ScrollManager';
 import { TNil, ReduxState } from '../../../types';
 import { Log, Span, Trace, KeyValuePair } from '../../../types/trace';
 import { TraceTimeline } from '../../../types/trace-timeline';
 
 import './VirtualizedTraceView.css';
-
-type Style = Record<string, string | number>;
 
 type RowState = {
   isDetail: boolean;
@@ -54,7 +51,7 @@ type RowState = {
 
 type VirtualizedTraceViewOwnProps = {
   currentViewRangeTime: [number, number];
-  findMatchesIDs: Set<string>;
+  findMatchesIDs: Set<string> | TNil;
   registerAccessors: (accesors: Accessors) => void;
   trace: Trace;
 };
@@ -283,14 +280,14 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
 
   linksGetter = (span: Span, items: KeyValuePair[], itemIndex: number) => getLinks(span, items, itemIndex);
 
-  renderRow = (key: string, style: Style, index: number, attrs: {}) => {
+  renderRow = (key: string, style: React.CSSProperties, index: number, attrs: {}) => {
     const { isDetail, span, spanIndex } = this.rowStates[index];
     return isDetail
       ? this.renderSpanDetailRow(span, key, style, attrs)
       : this.renderSpanBarRow(span, spanIndex, key, style, attrs);
   };
 
-  renderSpanBarRow(span: Span, spanIndex: number, key: string, style: Style, attrs: {}) {
+  renderSpanBarRow(span: Span, spanIndex: number, key: string, style: React.CSSProperties, attrs: {}) {
     const { spanID } = span;
     const { serviceName } = span.process;
     const {
@@ -309,7 +306,7 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
     const color = colorGenerator.getColorByKey(serviceName);
     const isCollapsed = childrenHiddenIDs.has(spanID);
     const isDetailExpanded = detailStates.has(spanID);
-    const isMatchingFilter = Boolean(findMatchesIDs) && findMatchesIDs.has(spanID);
+    const isMatchingFilter = findMatchesIDs ? findMatchesIDs.has(spanID) : false;
     const showErrorIcon = isErrorSpan(span) || (isCollapsed && spanContainsErredSpan(trace.spans, spanIndex));
 
     // Check for direct child "server" span if the span is a "client" span.
@@ -349,7 +346,7 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
     );
   }
 
-  renderSpanDetailRow(span: Span, key: string, style: Style, attrs: {}) {
+  renderSpanDetailRow(span: Span, key: string, style: React.CSSProperties, attrs: {}) {
     const { spanID } = span;
     const { serviceName } = span.process;
     const {

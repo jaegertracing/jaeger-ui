@@ -14,10 +14,8 @@
 
 import { TEdge } from '@jaegertracing/plexus/lib/types';
 
-import DagNode from '../../../model/trace-dag/DagNode';
 import TDagVertex from '../../../model/trace-dag/types/TDagVertex';
 
-// eslint-disable-next-line import/prefer-default-export
 export type TSumSpan = {
   count: number;
   errors: number;

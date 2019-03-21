@@ -1,5 +1,3 @@
-// @flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,32 +14,32 @@
 
 import React from 'react';
 import { connect } from 'react-redux';
-import { bindActionCreators } from 'redux';
+import { bindActionCreators, Dispatch } from 'redux';
 
 import { actions } from './duck';
 import TimelineHeaderRow from './TimelineHeaderRow';
 import VirtualizedTraceView from './VirtualizedTraceView';
 import { merge as mergeShortcuts } from '../keyboard-shortcuts';
-
-import type { Accessors } from '../ScrollManager';
-import type { ViewRange, ViewRangeTimeUpdate } from '../types';
-import type { Span, Trace } from '../../../types/trace';
+import { Accessors } from '../ScrollManager';
+import { ViewRange, ViewRangeTimeUpdate } from '../types';
+import { TNil, ReduxState } from '../../../types';
+import { Span, Trace } from '../../../types/trace';
 
 import './index.css';
 
 type TraceTimelineViewerProps = {
-  registerAccessors: Accessors => void,
-  setSpanNameColumnWidth: number => void,
-  collapseAll: (Span[]) => void,
-  collapseOne: (Span[]) => void,
-  expandAll: () => void,
-  expandOne: (Span[]) => void,
-  findMatchesIDs: ?Set<string>,
-  spanNameColumnWidth: number,
-  trace: Trace,
-  updateNextViewRangeTime: ViewRangeTimeUpdate => void,
-  updateViewRangeTime: (number, number, ?string) => void,
-  viewRange: ViewRange,
+  registerAccessors: (accessors: Accessors) => void;
+  setSpanNameColumnWidth: (width: number) => void;
+  collapseAll: (spans: Span[]) => void;
+  collapseOne: (spans: Span[]) => void;
+  expandAll: () => void;
+  expandOne: (spans: Span[]) => void;
+  findMatchesIDs: Set<string> | TNil;
+  spanNameColumnWidth: number;
+  trace: Trace;
+  updateNextViewRangeTime: (update: ViewRangeTimeUpdate) => void;
+  updateViewRangeTime: (start: number, end: number, tag?: string) => void;
+  viewRange: ViewRange;
 };
 
 const NUM_TICKS = 5;
@@ -53,8 +51,6 @@ const NUM_TICKS = 5;
  * or `TimelineHeaderRow`.
  */
 export class TraceTimelineViewerImpl extends React.PureComponent<TraceTimelineViewerProps> {
-  props: TraceTimelineViewerProps;
-
   componentDidMount() {
     mergeShortcuts({
       collapseAll: this.collapseAll,
@@ -111,12 +107,12 @@ export class TraceTimelineViewerImpl extends React.PureComponent<TraceTimelineVi
   }
 }
 
-function mapStateToProps(state, ownProps) {
+function mapStateToProps(state: ReduxState) {
   const spanNameColumnWidth = state.traceTimeline.spanNameColumnWidth;
-  return { spanNameColumnWidth, ...ownProps };
+  return { spanNameColumnWidth };
 }
 
-function mapDispatchToProps(dispatch) {
+function mapDispatchToProps(dispatch: Dispatch<ReduxState>) {
   const { setSpanNameColumnWidth, expandAll, expandOne, collapseAll, collapseOne } = bindActionCreators(
     actions,
     dispatch
