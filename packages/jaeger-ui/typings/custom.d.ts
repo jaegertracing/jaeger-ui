@@ -33,4 +33,14 @@ declare const process: {
   }
 }
 
+declare module 'combokeys' {
+  export default class Combokeys {
+    constructor(element: HTMLElement);
+    bind: (binding: string | string[], handler: CombokeysHandler) => void;
+    reset: () => void;
+  }
+}
+
+declare module 'react-helmet';
+declare module 'json-markup';
 declare module 'tween-functions';

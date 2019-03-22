@@ -33,6 +33,8 @@ interface TimeShiftStartUpdate {
   shiftStart: number;
 }
 
+export type TUpdateViewRangeTimeFunction = (start: number, end: number, trackSrc?: string) => void;
+
 export type ViewRangeTimeUpdate =
   | TimeCursorUpdate
   | TimeReframeUpdate

@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// eslint-disable-next-line import/prefer-default-export
+import { TEdge } from '@jaegertracing/plexus/lib/types';
+
+import TDagVertex from '../../../model/trace-dag/types/TDagVertex';
+
 export type TSumSpan = {
   count: number;
   errors: number;
@@ -20,4 +23,9 @@ export type TSumSpan = {
   percent: number;
   selfTime: number;
   percentSelfTime: number;
+};
+
+export type TEv = {
+  edges: TEdge[];
+  vertices: TDagVertex<TSumSpan>[];
 };

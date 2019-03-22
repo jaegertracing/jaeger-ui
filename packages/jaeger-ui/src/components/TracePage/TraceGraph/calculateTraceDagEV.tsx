@@ -19,7 +19,7 @@ import convPlexus from '../../../model/trace-dag/convPlexus';
 import TraceDag from '../../../model/trace-dag/TraceDag';
 import DagNode from '../../../model/trace-dag/DagNode';
 import { Trace, Span, KeyValuePair } from '../../../types/trace';
-import { TSumSpan } from './types';
+import { TSumSpan, TEv } from './types';
 
 let parentChildOfMap: Record<string, Span[]>;
 
@@ -108,7 +108,7 @@ export function calculateTraceDag(trace: Trace): TraceDag<TSumSpan> {
   return traceDag;
 }
 
-export default function calculateTraceDagEV(trace: Trace) {
+export default function calculateTraceDagEV(trace: Trace): TEv {
   const traceDag = calculateTraceDag(trace);
   const nodes = [...traceDag.nodesMap.values()];
   const ev = convPlexus(traceDag.nodesMap);

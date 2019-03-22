@@ -20,6 +20,5 @@
     // Required by CRA
     "isolatedModules": true
   },
-  "exclude": ["src/**/*.js"],
   "include": ["src/**/*.tsx", "typings"]
 }

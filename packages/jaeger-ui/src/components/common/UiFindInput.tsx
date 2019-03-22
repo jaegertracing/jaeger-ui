@@ -16,30 +16,28 @@ import * as React from 'react';
 import { Input } from 'antd';
 import { History as RouterHistory, Location } from 'history';
 import _debounce from 'lodash/debounce';
+import _isString from 'lodash/isString';
 import queryString from 'query-string';
 import { connect } from 'react-redux';
 import { RouteComponentProps, withRouter } from 'react-router-dom';
 
 import updateUiFind from '../../utils/update-ui-find';
-import { ReduxState } from '../../types/index';
+import { TNil, ReduxState } from '../../types/index';
 
 type TOwnProps = RouteComponentProps<any> & {
-  forwardedRef?: { current: Input | null };
+  forwardedRef?: React.Ref<Input>;
   inputProps: Record<string, any>;
   history: RouterHistory;
   location: Location;
   match: any;
-  // todo
-  trackFindFunction?: (str: string | null | undefined) => void;
+  trackFindFunction?: (str: string | TNil) => void;
 };
 
-type TUiFind = { uiFind?: string };
+export type TExtractUiFindFromStateReturn = {
+  uiFind: string | undefined;
+};
 
-// type TExtractUiFindFromStateReturn = {
-//   uiFind?: string;
-// };
-
-type TProps = TOwnProps & { uiFind?: string };
+type TProps = TOwnProps & TExtractUiFindFromStateReturn;
 
 type StateType = {
   ownInputValue: string | undefined;
@@ -79,9 +77,8 @@ export class UnconnectedUiFindInput extends React.PureComponent<TProps, StateTyp
   }, 250);
 
   render() {
-    const inputValue = this.state.ownInputValue ? this.state.ownInputValue : this.props.uiFind;
+    const inputValue = _isString(this.state.ownInputValue) ? this.state.ownInputValue : this.props.uiFind;
 
-    // TODO: check autosize true/false
     return (
       <Input
         autosize={null}
@@ -96,9 +93,9 @@ export class UnconnectedUiFindInput extends React.PureComponent<TProps, StateTyp
   }
 }
 
-export function extractUiFindFromState(state: ReduxState): { uiFind?: string } {
-  // TODO: Handle the fact that uiFind could be an array of strings
-  const { uiFind }: { uiFind?: string } = queryString.parse(state.router.location.search);
+export function extractUiFindFromState(state: ReduxState): TExtractUiFindFromStateReturn {
+  const { uiFind: uiFindFromUrl } = queryString.parse(state.router.location.search);
+  const uiFind = Array.isArray(uiFindFromUrl) ? uiFindFromUrl.join(' ') : uiFindFromUrl;
   return { uiFind };
 }
 
