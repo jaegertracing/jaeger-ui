@@ -14,6 +14,7 @@
 
 import _get from 'lodash/get';
 import _map from 'lodash/map';
+import memoizeOne from 'memoize-one';
 
 import convPlexus from '../../../model/trace-dag/convPlexus';
 import TraceDag from '../../../model/trace-dag/TraceDag';
@@ -24,41 +25,20 @@ import type { Trace } from '../../../types/trace';
 
 export type TVertexKeys = Set<number | string>;
 
-let lastUiFind: string;
-let lastVertices: PVertex<Trace>[];
-let uiFindVertexKeys: ?TVertexKeys;
-
-export function getUiFindVertexKeys(uiFind: string, vertices: PVertex<Trace>[]): TVertexKeys {
+export const getUiFindVertexKeys = memoizeOne((uiFind: string, vertices: PVertex<Trace>[]): TVertexKeys => {
   if (!uiFind) return new Set();
-  if (uiFind === lastUiFind && vertices === lastVertices && uiFindVertexKeys) {
-    return uiFindVertexKeys;
-  }
   const newVertexKeys: Set<number | string> = new Set();
   vertices.forEach(({ key, data: { members } }) => {
     if (_get(filterSpans(uiFind, _map(members, 'span')), 'size')) {
       newVertexKeys.add(key);
     }
   });
-  lastUiFind = uiFind;
-  lastVertices = vertices;
-  uiFindVertexKeys = newVertexKeys;
   return newVertexKeys;
-}
+});
 
-let lastAData: ?Trace;
-let lastBData: ?Trace;
-// TODO: use convPlexus type (everett JAG-343)
-let edgesAndVertices: ?Object;
-
-export function getEdgesAndVertices(aData: Trace, bData: Trace) {
-  if (aData === lastAData && bData === lastBData && edgesAndVertices) {
-    return edgesAndVertices;
-  }
-  lastAData = aData;
-  lastBData = bData;
+export const getEdgesAndVertices = memoizeOne((aData: Trace, bData: Trace) => {
   const aTraceDag = TraceDag.newFromTrace(aData);
   const bTraceDag = TraceDag.newFromTrace(bData);
   const diffDag = TraceDag.diff(aTraceDag, bTraceDag);
-  edgesAndVertices = convPlexus(diffDag.nodesMap);
-  return edgesAndVertices;
-}
+  return convPlexus(diffDag.nodesMap);
+});
