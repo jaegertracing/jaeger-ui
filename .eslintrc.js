@@ -25,7 +25,7 @@ module.exports = {
       },
     },
   },
-  extends: ['react-app', 'airbnb', 'prettier', 'prettier/flowtype', 'prettier/react'],
+  extends: ['react-app', 'airbnb', 'prettier', 'prettier/react'],
   overrides: [
     {
       files: ['*.ts', '*.tsx'],
