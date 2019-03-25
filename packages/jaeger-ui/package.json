@@ -65,7 +65,7 @@
     "json-markup": "^1.1.0",
     "lodash": "^4.17.4",
     "logfmt": "^1.2.0",
-    "memoize-one": "5.0.0",
+    "memoize-one": "^5.0.0",
     "moment": "^2.18.1",
     "prop-types": "^15.5.10",
     "query-string": "^6.3.0",
