@@ -530,7 +530,7 @@ describe('<TracePage>', () => {
       updateNextViewRangeTime({ cursor });
       wrapper.update();
       refreshWrappers();
-      viewRange.cursor = cursor;
+      viewRange.time.cursor = cursor;
       expect(spanGraph.prop('viewRange')).toEqual(viewRange);
       expect(timeline.prop('viewRange')).toEqual(viewRange);
       updateViewRangeTime(...current);

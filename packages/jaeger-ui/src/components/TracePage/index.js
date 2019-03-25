@@ -254,7 +254,10 @@ export class TracePageImpl extends React.PureComponent<TracePageProps, TracePage
   };
 
   updateNextViewRangeTime = (update: ViewRangeTimeUpdate) => {
-    this.setState((state: TracePageState) => ({ viewRange: { ...state.viewRange, ...update } }));
+    this.setState((state: TracePageState) => {
+      const time = { ...state.viewRange.time, ...update };
+      return { viewRange: { ...state.viewRange, time } };
+    });
   };
 
   toggleSlimView = () => {
