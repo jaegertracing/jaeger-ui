@@ -34,8 +34,6 @@ exports[`ResultItemTitle renders as expected 1`] = `
       className="ResultItemTitle--title"
     >
       <TraceName
-        className=""
-        error={null}
         state="FETCH_DONE"
         traceName="traceNameValue"
       />

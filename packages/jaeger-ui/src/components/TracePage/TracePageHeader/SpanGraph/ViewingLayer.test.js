@@ -18,7 +18,7 @@ import React from 'react';
 import GraphTicks from './GraphTicks';
 import Scrubber from './Scrubber';
 import ViewingLayer, { dragTypes } from './ViewingLayer';
-import { updateTypes } from '../../../../utils/DraggableManager';
+import { EUpdateTypes } from '../../../../utils/DraggableManager';
 import { polyfill as polyfillAnimationFrame } from '../../../../utils/test/requestAnimationFrame';
 
 function getViewRange(viewStart, viewEnd) {
@@ -174,12 +174,12 @@ describe('<SpanGraph>', () => {
 
     describe('scrubber', () => {
       it('prevents the cursor from being drawn on scrubber mouseover', () => {
-        wrapper.instance()._handleScrubberEnterLeave({ type: updateTypes.MOUSE_ENTER });
+        wrapper.instance()._handleScrubberEnterLeave({ type: EUpdateTypes.MouseEnter });
         expect(wrapper.state('preventCursorLine')).toBe(true);
       });
 
       it('prevents the cursor from being drawn on scrubber mouseleave', () => {
-        wrapper.instance()._handleScrubberEnterLeave({ type: updateTypes.MOUSE_LEAVE });
+        wrapper.instance()._handleScrubberEnterLeave({ type: EUpdateTypes.MouseLeave });
         expect(wrapper.state('preventCursorLine')).toBe(false);
       });
 
@@ -188,7 +188,7 @@ describe('<SpanGraph>', () => {
           const stopPropagation = jest.fn();
           const update = {
             event: { stopPropagation },
-            type: updateTypes.DRAG_START,
+            type: EUpdateTypes.DragStart,
           };
           wrapper.instance()._handleScrubberDragUpdate(update);
           expect(stopPropagation.mock.calls).toEqual([[]]);
@@ -202,7 +202,7 @@ describe('<SpanGraph>', () => {
               dragUpdate: {
                 value,
                 tag: dragTypes.SHIFT_START,
-                type: updateTypes.DRAG_MOVE,
+                type: EUpdateTypes.DragMove,
               },
               viewRangeUpdate: { shiftStart: value },
             },
@@ -210,7 +210,7 @@ describe('<SpanGraph>', () => {
               dragUpdate: {
                 value,
                 tag: dragTypes.SHIFT_END,
-                type: updateTypes.DRAG_MOVE,
+                type: EUpdateTypes.DragMove,
               },
               viewRangeUpdate: { shiftEnd: value },
             },

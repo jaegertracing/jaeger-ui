@@ -28,8 +28,8 @@ export function matchEdges(input: TEdge[], output: TLayoutEdge[]): TLayoutEdge[]
   });
 }
 
-export function matchVertices(input: TSizeVertex[], output: TLayoutVertex[]): TLayoutVertex[] {
-  const map: { [key: string]: TVertex } = {};
+export function matchVertices<T>(input: TSizeVertex<T>[], output: TLayoutVertex<{}>[]): TLayoutVertex<T>[] {
+  const map: { [key: string]: TVertex<T> } = {};
   input.forEach(sv => {
     map[String(sv.vertex.key)] = sv.vertex;
   });

@@ -64,7 +64,10 @@ function createHtmlRefs(length: number) {
   return rv;
 }
 
-export default class DirectedGraph extends React.PureComponent<TDirectedGraphProps, TDirectedGraphState> {
+export default class DirectedGraph<T> extends React.PureComponent<
+  TDirectedGraphProps<T>,
+  TDirectedGraphState
+> {
   arrowId: string;
   arrowIriRef: string;
   // ref API defs in flow seem to be a WIP
@@ -104,7 +107,7 @@ export default class DirectedGraph extends React.PureComponent<TDirectedGraphPro
     zoomTransform: zoomIdentity,
   };
 
-  static getDerivedStateFromProps(nextProps: TDirectedGraphProps, prevState: TDirectedGraphState) {
+  static getDerivedStateFromProps<T>(nextProps: TDirectedGraphProps<T>, prevState: TDirectedGraphState) {
     const { edges, vertices, zoom: zoomEnabled } = nextProps;
     const { edges: stEdges, vertices: stVertices, zoomEnabled: stZoomEnabled } = prevState;
     if (zoomEnabled !== stZoomEnabled) {
@@ -125,7 +128,7 @@ export default class DirectedGraph extends React.PureComponent<TDirectedGraphPro
     };
   }
 
-  constructor(props: TDirectedGraphProps) {
+  constructor(props: TDirectedGraphProps<T>) {
     super(props);
     const { edges, vertices, zoom: zoomEnabled } = props;
     if (Array.isArray(edges) && edges.length && Array.isArray(vertices) && vertices.length) {

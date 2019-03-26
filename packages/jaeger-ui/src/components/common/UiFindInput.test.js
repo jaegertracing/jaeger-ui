@@ -62,15 +62,21 @@ describe('UiFind', () => {
       expect(wrapper).toMatchSnapshot();
     });
 
-    it('renders props.uiFind when state.ownInputValue is `null`', () => {
+    it('renders props.uiFind when state.ownInputValue is `undefined`', () => {
       wrapper.setProps({ uiFind });
       expect(wrapper.find(Input).prop('value')).toBe(uiFind);
     });
 
-    it('renders state.ownInputValue when it is not `null` regardless of props.uiFind', () => {
+    it('renders state.ownInputValue when it is not `undefined` regardless of props.uiFind', () => {
       wrapper.setProps({ uiFind });
       wrapper.setState({ ownInputValue });
       expect(wrapper.find(Input).prop('value')).toBe(ownInputValue);
+    });
+
+    it('renders state.ownInputValue when it is an empty string props.uiFind is populated', () => {
+      wrapper.setProps({ uiFind });
+      wrapper.setState({ ownInputValue: '' });
+      expect(wrapper.find(Input).prop('value')).toBe('');
     });
   });
 
@@ -87,7 +93,7 @@ describe('UiFind', () => {
       expect(updateUiFindSpy).toHaveBeenLastCalledWith({
         history: props.history,
         location: props.location,
-        trackFindFunction: null,
+        trackFindFunction: undefined,
         uiFind: newValue,
       });
     });
@@ -110,7 +116,7 @@ describe('UiFind', () => {
       wrapper.setState({ ownInputValue });
       expect(wrapper.state('ownInputValue')).toBe(ownInputValue);
       wrapper.find(Input).simulate('blur');
-      expect(wrapper.state('ownInputValue')).toBe(null);
+      expect(wrapper.state('ownInputValue')).toBe(undefined);
     });
 
     it('triggers pending queryParameter updates', () => {
@@ -120,12 +126,13 @@ describe('UiFind', () => {
   });
 
   describe('extractUiFindFromState', () => {
-    beforeAll(() => {
+    const reduxStateValue = 'state.router.location.search';
+
+    beforeEach(() => {
       queryStringParseSpy.mockReturnValue({ uiFind });
     });
 
     it('returns uiFind from parsed state.router.location.search', () => {
-      const reduxStateValue = 'state.router.location.search';
       const result = extractUiFindFromState({
         router: {
           location: {
@@ -136,6 +143,21 @@ describe('UiFind', () => {
       expect(queryStringParseSpy).toHaveBeenCalledWith(reduxStateValue);
       expect(result).toEqual({
         uiFind,
+      });
+    });
+
+    it('handles multiple uiFinds from parsed state.router.location.search', () => {
+      queryStringParseSpy.mockReturnValue({ uiFind: [uiFind, reduxStateValue] });
+      const result = extractUiFindFromState({
+        router: {
+          location: {
+            search: reduxStateValue,
+          },
+        },
+      });
+      expect(queryStringParseSpy).toHaveBeenCalledWith(reduxStateValue);
+      expect(result).toEqual({
+        uiFind: `${uiFind} ${reduxStateValue}`,
       });
     });
   });

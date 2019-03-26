@@ -19,16 +19,16 @@ import Node from './Node';
 import { TPropsFactoryFn } from '../types';
 import { TLayoutVertex, TVertex } from '../../types';
 
-type TProps = {
+type TProps<T> = {
   classNamePrefix?: string | null;
-  getNodeLabel: ((vertex: TVertex) => React.ReactNode) | null;
+  getNodeLabel: ((vertex: TVertex<T>) => React.ReactNode) | null;
   layoutVertices: TLayoutVertex[] | null;
   setOnNode?: TPropsFactoryFn<TVertex> | null;
   vertexRefs: { current: HTMLElement | null }[];
   vertices: TVertex[];
 };
 
-export default class PureNodes extends React.PureComponent<TProps> {
+export default class PureNodes<T> extends React.PureComponent<TProps<T>> {
   _renderVertices() {
     const { classNamePrefix, getNodeLabel, setOnNode, vertices, vertexRefs } = this.props;
     return vertices.map((v, i) => (

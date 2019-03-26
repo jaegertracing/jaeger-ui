@@ -13,22 +13,22 @@
     "eslint-config-airbnb": "17.1.0",
     "eslint-config-prettier": "4.0.0",
     "eslint-config-react-app": "3.0.7",
-    "eslint-plugin-flowtype": "3.4.2",
+    "eslint-plugin-flowtype": "^3.4.2",
     "eslint-plugin-import": "2.16.0",
     "eslint-plugin-jsx-a11y": "6.2.1",
     "eslint-plugin-react": "7.12.4",
-    "flow-bin": "0.71.0",
-    "glow": "^1.2.2",
     "husky": "1.3.1",
     "isomorphic-fetch": "2.2.1",
     "jsdom": "13.2.0",
     "lerna": "3.13.0",
+    "npm-run-all": "4.1.5",
     "prettier": "1.10.2",
     "rxjs-compat": "6.4.0",
     "typescript": "3.3.3333"
   },
   "resolutions": {
-    "**/lodash": "4.17.11"
+    "**/lodash": "4.17.11",
+    "**/cheerio/parse5": "4.0.0"
   },
   "workspaces": {
     "packages": ["packages/*"],
@@ -45,10 +45,9 @@
     "build": "lerna run build",
     "check-license": "./scripts/check-license.sh",
     "coverage": "lerna run coverage",
-    "eslint": "eslint 'scripts/*.{js,ts,tsx}' 'packages/*/src/**/*.{js,ts,tsx}' 'packages/*/*.{js,ts,tsx}'",
-    "flow": "glow",
-    "lint":
-      "yarn run prettier-lint && yarn run tsc-lint && yarn run eslint && yarn run flow && yarn run check-license",
+    "eslint":
+      "eslint --cache 'scripts/*.{js,ts,tsx}' 'packages/*/src/**/*.{js,ts,tsx}' 'packages/*/*.{js,ts,tsx}'",
+    "lint": "npm-run-all -ln --parallel prettier-lint tsc-lint eslint check-license",
     "prepare": "lerna run --stream --sort prepublishOnly",
     "prettier-comment": "https://github.com/yarnpkg/yarn/issues/6300",
     "prettier":
@@ -56,7 +55,7 @@
     "prettier-lint":
       "./node_modules/prettier/bin-prettier.js --list-different '{.,scripts}/*.{js,json,md,ts,tsx}' 'packages/*/{src,demo/src}/**/!(layout.worker.bundled|react-vis).{css,js,json,md,ts,tsx}' 'packages/*/*.{css,js,json,md,ts,tsx}'",
     "test": "lerna run test",
-    "tsc-lint": "tsc",
+    "tsc-lint": "tsc --build",
     "tsc-lint-debug": "tsc --listFiles",
     "start": "cd packages/jaeger-ui && yarn start"
   },
@@ -68,7 +67,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "yarn run lint && yarn run test"
+      "pre-commit": "npm-run-all -ln --parallel lint test"
     }
   }
 }

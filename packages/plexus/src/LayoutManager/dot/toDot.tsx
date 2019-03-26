@@ -35,7 +35,7 @@ function makeGraphWrapper(options?: TLayoutOptions | null) {
   edge [arrowhead=none, arrowtail=none];`;
 }
 
-function makeNode(v: TSizeVertex | TLayoutVertex) {
+function makeNode(v: TLayoutVertex | TSizeVertex) {
   const { vertex, height, width } = v;
   let pos = '';
   if ('left' in v && 'top' in v) {
@@ -56,7 +56,7 @@ function makeEdge(head: TVertexKey, tails: TVertexKey | TVertexKey[], isBidirect
 
 export default function toDot(
   edges: TEdge[],
-  vertices: (TSizeVertex | TLayoutVertex)[],
+  vertices: (TLayoutVertex | TSizeVertex)[],
   options?: TLayoutOptions | null
 ) {
   const bidirectional: TEdge[] = [];

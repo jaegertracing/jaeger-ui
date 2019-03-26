@@ -16,7 +16,7 @@ import * as React from 'react';
 import { shallow } from 'enzyme';
 
 import TraceTimelineLink from './TraceTimelineLink';
-import NewWindowIcon from '../../common/NewWindowIcon.js';
+import NewWindowIcon from '../../common/NewWindowIcon';
 
 describe('TraceTimelineLink', () => {
   const traceID = 'test-trace-id';

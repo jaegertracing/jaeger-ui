@@ -61,7 +61,7 @@ yarn start
 | ------------ | ------------------------------------------------------------------- |
 | `yarn start` | Starts development server with hot reloading and api proxy.         |
 | `yarn test`  | Run all the tests                                                   |
-| `yarn lint`  | Lint the project (eslint, prettier, flow)                           |
+| `yarn lint`  | Lint the project (eslint, prettier, typescript)                     |
 | `yarn build` | Runs production build. Outputs files to `packages/jaeger-ui/build`. |
 
 ## Build

@@ -110,7 +110,7 @@ git config --add alias.c "commit -s"
 
 # Style guide
 
-Prefer to use [flow](https://flow.org/) for new code.
+Use [typescript](https://www.typescriptlang.org/) for new code. Check types via `yarn tsc-lint`.
 
 We use [`prettier`](https://prettier.io/), an "opinionated" code formatter. It can be applied to both JavaScript and CSS source files via `yarn prettier`.
 

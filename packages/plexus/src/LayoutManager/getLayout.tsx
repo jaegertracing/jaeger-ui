@@ -50,7 +50,7 @@ function isCloseEnough(a: number, b: number) {
 }
 
 function getVerticesValidity(
-  input: (TSizeVertex | TLayoutVertex)[],
+  input: TSizeVertex[] | TLayoutVertex[],
   output: TLayoutVertex[]
 ): TVerticesValidity {
   const inputHash: { [key: string]: TSizeVertex | TLayoutVertex } = {};
@@ -94,7 +94,7 @@ function getVerticesValidity(
 export default function getLayout(
   phase: EWorkerPhase,
   inEdges: TEdge[],
-  inVertices: (TSizeVertex | TLayoutVertex)[],
+  inVertices: TSizeVertex[] | TLayoutVertex[],
   layoutOptions: TLayoutOptions | null
 ) {
   const dot = toDot(inEdges, inVertices, layoutOptions);

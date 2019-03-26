@@ -17,17 +17,17 @@ import { TCancelled, TEdge, TLayoutDone, TPendingLayoutResult, TPositionsDone, T
 
 import Coordinator from './Coordinator';
 
-type TPendingResult = {
+type TPendingResult<T> = {
   id: number;
   isPositionsResolved: boolean;
-  resolvePositions?: (result: TCancelled | TPositionsDone) => void;
-  resolveLayout?: (result: TCancelled | TLayoutDone) => void;
+  resolvePositions?: (result: TCancelled | TPositionsDone<T>) => void;
+  resolveLayout?: (result: TCancelled | TLayoutDone<T>) => void;
 };
 
-export default class LayoutManager {
+export default class LayoutManager<T = {}> {
   layoutId: number;
-  coordinator: Coordinator;
-  pendingResult: TPendingResult | null;
+  coordinator: Coordinator<T>;
+  pendingResult: TPendingResult<T> | null;
   options: TLayoutOptions | void;
 
   constructor(options: TLayoutOptions | void) {
@@ -75,7 +75,7 @@ export default class LayoutManager {
     }
   }
 
-  _handleUpdate = (data: TUpdate) => {
+  _handleUpdate = (data: TUpdate<T>) => {
     const pendingResult = this.pendingResult;
     if (!pendingResult || data.layoutId !== pendingResult.id) {
       return;

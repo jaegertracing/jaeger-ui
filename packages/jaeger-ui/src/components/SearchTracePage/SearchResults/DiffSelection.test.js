@@ -15,7 +15,7 @@
 import React from 'react';
 import { shallow } from 'enzyme';
 
-import DiffSelection, { CTA_MESSAGE } from './DiffSelection.js';
+import DiffSelection, { CTA_MESSAGE } from './DiffSelection';
 import ResultItemTitle from './ResultItemTitle';
 import { fetchedState } from '../../../constants';
 
