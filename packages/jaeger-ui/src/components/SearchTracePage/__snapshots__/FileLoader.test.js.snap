@@ -20,7 +20,7 @@ exports[`<FileLoader /> matches the snapshot 1`] = `
   <p
     className="ant-upload-hint"
   >
-    Support JSON files containig one or more traces.
+    JSON files containing one or more traces are supported.
   </p>
 </Dragger>
 `;
