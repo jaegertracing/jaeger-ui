@@ -52,6 +52,7 @@ type RowState = {
 type TVirtualizedTraceViewOwnProps = {
   currentViewRangeTime: [number, number];
   findMatchesIDs: Set<string> | TNil;
+  scrollToFirstVisibleSpan: () => void;
   registerAccessors: (accesors: Accessors) => void;
   trace: Trace;
 };
@@ -156,6 +157,10 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
     this.rowStates = generateRowStates(trace.spans, childrenHiddenIDs, detailStates);
 
     setTrace(trace, uiFind);
+  }
+
+  componentDidMount() {
+    setTimeout(this.props.scrollToFirstVisibleSpan);
   }
 
   componentWillUpdate(nextProps: VirtualizedTraceViewProps) {

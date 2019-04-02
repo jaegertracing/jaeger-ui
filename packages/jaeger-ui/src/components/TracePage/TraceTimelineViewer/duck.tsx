@@ -68,47 +68,38 @@ export const actionTypes = generateActionTypes('@jaeger-ui/trace-timeline-viewer
   'DETAIL_LOG_ITEM_TOGGLE',
   'EXPAND_ALL',
   'EXPAND_ONE',
+  'FOCUS_UI_FIND',
   'REMOVE_HOVER_INDENT_GUIDE_ID',
   'SET_SPAN_NAME_COLUMN_WIDTH',
   'SET_TRACE',
 ]);
 
 const fullActions = createActions<TActionTypes>({
-  [actionTypes.SET_TRACE]: (trace: Trace, uiFind: string | TNil) => ({ trace, uiFind }),
-  [actionTypes.SET_SPAN_NAME_COLUMN_WIDTH]: (width: number) => ({ width }),
+  [actionTypes.ADD_HOVER_INDENT_GUIDE_ID]: (spanID: string) => ({ spanID }),
   [actionTypes.CHILDREN_TOGGLE]: (spanID: string) => ({ spanID }),
-  [actionTypes.EXPAND_ALL]: () => ({}),
-  [actionTypes.EXPAND_ONE]: (spans: Span[]) => ({ spans }),
   [actionTypes.COLLAPSE_ALL]: (spans: Span[]) => ({ spans }),
   [actionTypes.COLLAPSE_ONE]: (spans: Span[]) => ({ spans }),
-  [actionTypes.DETAIL_TOGGLE]: (spanID: string) => ({ spanID }),
-  [actionTypes.DETAIL_TAGS_TOGGLE]: (spanID: string) => ({ spanID }),
-  [actionTypes.DETAIL_PROCESS_TOGGLE]: (spanID: string) => ({ spanID }),
-  [actionTypes.DETAIL_LOGS_TOGGLE]: (spanID: string) => ({ spanID }),
   [actionTypes.DETAIL_LOG_ITEM_TOGGLE]: (spanID: string, logItem: Log) => ({ logItem, spanID }),
-  [actionTypes.ADD_HOVER_INDENT_GUIDE_ID]: (spanID: string) => ({ spanID }),
+  [actionTypes.DETAIL_LOGS_TOGGLE]: (spanID: string) => ({ spanID }),
+  [actionTypes.EXPAND_ALL]: () => ({}),
+  [actionTypes.EXPAND_ONE]: (spans: Span[]) => ({ spans }),
+  [actionTypes.DETAIL_PROCESS_TOGGLE]: (spanID: string) => ({ spanID }),
+  [actionTypes.DETAIL_TAGS_TOGGLE]: (spanID: string) => ({ spanID }),
+  [actionTypes.DETAIL_TOGGLE]: (spanID: string) => ({ spanID }),
+  [actionTypes.FOCUS_UI_FIND]: (trace: Trace, uiFind: string | TNil) => ({ trace, uiFind }),
   [actionTypes.REMOVE_HOVER_INDENT_GUIDE_ID]: (spanID: string) => ({ spanID }),
+  [actionTypes.SET_SPAN_NAME_COLUMN_WIDTH]: (width: number) => ({ width }),
+  [actionTypes.SET_TRACE]: (trace: Trace, uiFind: string | TNil) => ({ trace, uiFind }),
 });
 
 export const actions = (fullActions as any).jaegerUi.traceTimelineViewer as TTimelineViewerActions;
 
-function setTrace(state: TTraceTimeline, { uiFind, trace }: TTraceUiFindValue) {
-  const { traceID, spans } = trace;
-  if (traceID === state.traceID) {
-    return state;
-  }
-  const { spanNameColumnWidth } = state;
-
-  if (!uiFind) {
-    // No filter, so we're done
-    return { ...newInitialState(), spanNameColumnWidth, traceID };
-  }
-  // There is a filter, so collapse all rows except matches and their ancestors; show details for matches
+function calculateHiddenIdsAndDetailStates(uiFind: string, spans: Span[]) {
   const spansMap = new Map();
   const childrenHiddenIDs = new Set();
   const detailStates = new Map();
 
-  spans.forEach((span: Span) => {
+  spans.forEach(span => {
     spansMap.set(span.spanID, span);
     childrenHiddenIDs.add(span.spanID);
   });
@@ -121,12 +112,36 @@ function setTrace(state: TTraceTimeline, { uiFind, trace }: TTraceUiFindValue) {
     });
   }
   return {
-    ...newInitialState(),
-    spanNameColumnWidth,
     childrenHiddenIDs,
     detailStates,
-    traceID,
   };
+}
+
+function focusUiFind(state: TTraceTimeline, { uiFind, trace }: TTraceUiFindValue) {
+  if (!uiFind) return state;
+  return {
+    ...state,
+    ...calculateHiddenIdsAndDetailStates(uiFind, trace.spans),
+  };
+}
+
+
+function setTrace(state: TTraceTimeline, { uiFind, trace }: TTraceUiFindValue) {
+  const { traceID, spans } = trace;
+  if (traceID === state.traceID) {
+    return state;
+  }
+  const { spanNameColumnWidth } = state;
+  const newState = { ...newInitialState(), spanNameColumnWidth, traceID };
+
+  if (uiFind) {
+    Object.assign(
+      newState,
+      calculateHiddenIdsAndDetailStates(uiFind, spans),
+    );
+  }
+
+  return newState;
 }
 
 function setColumnWidth(state: TTraceTimeline, { width }: TWidthValue): TTraceTimeline {
@@ -278,6 +293,7 @@ export default handleActions(
     [actionTypes.DETAIL_TOGGLE]: guardReducer(detailToggle),
     [actionTypes.EXPAND_ALL]: guardReducer(expandAll),
     [actionTypes.EXPAND_ONE]: guardReducer(expandOne),
+    [actionTypes.FOCUS_UI_FIND]: guardReducer(focusUiFind),
     [actionTypes.REMOVE_HOVER_INDENT_GUIDE_ID]: guardReducer(removeHoverIndentGuideId),
     [actionTypes.SET_SPAN_NAME_COLUMN_WIDTH]: guardReducer(setColumnWidth),
     [actionTypes.SET_TRACE]: guardReducer(setTrace),

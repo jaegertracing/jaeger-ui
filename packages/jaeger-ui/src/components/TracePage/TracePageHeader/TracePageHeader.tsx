@@ -40,6 +40,7 @@ import './TracePageHeader.css';
 type TracePageHeaderEmbedProps = {
   canCollapse: boolean;
   clearSearch: () => void;
+  focusUiFind: () => void;
   hideMap: boolean;
   hideSummary: boolean;
   linkToStandalone: string;
@@ -95,6 +96,7 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
   const {
     canCollapse,
     clearSearch,
+    focusUiFind,
     forwardedRef,
     hideMap,
     hideSummary,
@@ -164,6 +166,7 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
         {showShortcutsHelp && <KeyboardShortcutsHelp className="ub-mr2" />}
         <TracePageSearchBar
           clearSearch={clearSearch}
+          focusUiFind={focusUiFind}
           nextResult={nextResult}
           prevResult={prevResult}
           ref={forwardedRef}

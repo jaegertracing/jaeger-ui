@@ -40,6 +40,7 @@ import { TEv } from './TraceGraph/types';
 import { trackSlimHeaderToggle } from './TracePageHeader/TracePageHeader.track';
 import TracePageHeader from './TracePageHeader';
 import TraceTimelineViewer from './TraceTimelineViewer';
+import { actions as timelineActions } from './TraceTimelineViewer/duck';
 import { TUpdateViewRangeTimeFunction, ViewRange, ViewRangeTimeUpdate } from './types';
 import { getLocation, getUrl } from './url';
 import ErrorMessage from '../common/ErrorMessage';
@@ -49,6 +50,7 @@ import * as jaegerApiActions from '../../actions/jaeger-api';
 import { getUiFindVertexKeys } from '../TraceDiff/TraceDiffGraph/traceDiffGraphUtils';
 import { fetchedState } from '../../constants';
 import { FetchedTrace, ReduxState, TNil } from '../../types';
+import { Trace } from '../../types/trace';
 import { TraceArchive } from '../../types/archive';
 import { EmbeddedState } from '../../types/embedded';
 import filterSpans from '../../utils/filter-spans';
@@ -60,6 +62,7 @@ type TDispatchProps = {
   acknowledgeArchive: (id: string) => void;
   archiveTrace: (id: string) => void;
   fetchTrace: (id: string) => void;
+  focusUiFind: (trace: Trace, uiFind: string | TNil) => void;
 };
 
 type TOwnProps = {
@@ -307,7 +310,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
   }
 
   render() {
-    const { archiveEnabled, archiveTraceState, embedded, id, searchUrl, uiFind, trace } = this.props;
+    const { archiveEnabled, archiveTraceState, embedded, focusUiFind, id, searchUrl, uiFind, trace } = this.props;
     const { slimView, traceGraphView, headerHeight, viewRange } = this.state;
     if (!trace || trace.state === fetchedState.LOADING) {
       return <LoadingIndicator className="u-mt-vast" centered />;
@@ -317,7 +320,6 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
       return <ErrorMessage className="ub-m3" error={trace.error || 'Unknown error'} />;
     }
 
-    // $FlowIgnore because flow believes Set<string> cannot be assigned to Set<string | number>
     let findCount = 0;
     let graphFindMatches;
     let spanFindMatches;
@@ -330,10 +332,15 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
         findCount = spanFindMatches ? spanFindMatches.size : 0;
       }
     }
-    //  =  ?  : null;
-    // const spanFindMatches = !traceGraphView ? this._filterSpans(uiFind || '', _get(trace, 'data.spans')) : null;
+
     const isEmbedded = Boolean(embedded);
     const headerProps = {
+      focusUiFind: () => {
+        if (trace.data) {
+          focusUiFind(trace.data, uiFind);
+          setTimeout(this._scrollManager.scrollToFirstVisibleSpan);
+        }
+      },
       slimView,
       textFilter: uiFind,
       traceGraphView,
@@ -382,6 +389,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
             <section style={{ paddingTop: headerHeight }}>
               <TraceTimelineViewer
                 registerAccessors={this._scrollManager.setAccessors}
+                scrollToFirstVisibleSpan={this._scrollManager.scrollToFirstVisibleSpan}
                 findMatchesIDs={spanFindMatches}
                 trace={data}
                 updateNextViewRangeTime={this.updateNextViewRangeTime}
@@ -421,7 +429,8 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
 export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
   const { fetchTrace } = bindActionCreators(jaegerApiActions, dispatch);
   const { archiveTrace, acknowledge: acknowledgeArchive } = bindActionCreators(archiveActions, dispatch);
-  return { acknowledgeArchive, archiveTrace, fetchTrace };
+  const { focusUiFind } = bindActionCreators(timelineActions, dispatch);
+  return { acknowledgeArchive, archiveTrace, fetchTrace, focusUiFind };
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(TracePageImpl);

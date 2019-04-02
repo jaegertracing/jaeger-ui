@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import React from 'react';
-import { Divider, Tooltip } from 'antd';
+import { Button, Divider, Tooltip } from 'antd';
 
 import AccordianKeyValues from './AccordianKeyValues';
 import AccordianLogs from './AccordianLogs';
@@ -113,13 +113,11 @@ export default function SpanDetail(props: SpanDetailProps) {
               timestamp={traceStartTime}
             />
           )}
-
         <small className="SpanDetail--debugInfo">
-          <Tooltip title="Click ID to add to filter">
-            <span className="SpanDetail--debugLabel" data-label="SpanID:" />{' '}
-            <button className="SpanDetail--debugValue" type="button" onClick={() => addToUiFind(spanID)}>
-              {spanID}
-            </button>
+          <span className="SpanDetail--debugLabel" data-label="SpanID:" />{' '}
+          {spanID}
+          <Tooltip placement="topRight" title="Click to add to filter for deep linking">
+            <Button className="SpanDetail--debugValue" htmlType="button" icon="down" onClick={() => addToUiFind(spanID)}/>
           </Tooltip>
         </small>
       </div>
