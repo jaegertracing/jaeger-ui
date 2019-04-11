@@ -309,8 +309,25 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
     }
   }
 
+  focusUiFind = () => {
+    const { trace, focusUiFind, uiFind } = this.props;
+    if (trace && trace.data) {
+      this._scrollManager.scrollToFirstVisibleSpan();
+      focusUiFind(trace.data, uiFind);
+    }
+  };
+
   render() {
-    const { archiveEnabled, archiveTraceState, embedded, focusUiFind, id, searchUrl, uiFind, trace } = this.props;
+    const {
+      archiveEnabled,
+      archiveTraceState,
+      embedded,
+      focusUiFind,
+      id,
+      searchUrl,
+      uiFind,
+      trace,
+    } = this.props;
     const { slimView, traceGraphView, headerHeight, viewRange } = this.state;
     if (!trace || trace.state === fetchedState.LOADING) {
       return <LoadingIndicator className="u-mt-vast" centered />;
@@ -335,12 +352,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
 
     const isEmbedded = Boolean(embedded);
     const headerProps = {
-      focusUiFind: () => {
-        if (trace.data) {
-          focusUiFind(trace.data, uiFind);
-          setTimeout(this._scrollManager.scrollToFirstVisibleSpan);
-        }
-      },
+      focusUiFind: this.focusUiFind,
       slimView,
       textFilter: uiFind,
       traceGraphView,

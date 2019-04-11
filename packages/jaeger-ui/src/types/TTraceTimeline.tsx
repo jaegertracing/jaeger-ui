@@ -16,8 +16,8 @@ import DetailState from '../components/TracePage/TraceTimelineViewer/SpanDetail/
 import TNil from './TNil';
 
 type TTraceTimeline = {
-  childrenHiddenIDs: Set<string>;
-  detailStates: Map<string, DetailState>;
+  childrenHiddenIDs: Set<string> & { needToScroll?: true };
+  detailStates: Map<string, DetailState> & { needToScroll?: true };
   hoverIndentGuideIds: Set<string>;
   spanNameColumnWidth: number;
   traceID: string | TNil;

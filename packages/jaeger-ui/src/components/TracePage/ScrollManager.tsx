@@ -135,7 +135,9 @@ export default class ScrollManager {
     }
     const { duration, spans, startTime: traceStartTime } = this._trace;
     const isUp = direction < 0;
-    const boundaryRow = _isUndefined(startRow) ? (isUp ? xrs.getTopRowIndexVisible() : xrs.getBottomRowIndexVisible()): startRow;
+    const boundaryRow = _isUndefined(startRow)
+      ? isUp ? xrs.getTopRowIndexVisible() : xrs.getBottomRowIndexVisible()
+      : startRow;
     console.log(boundaryRow);
     const spanIndex = xrs.mapRowIndexToSpanIndex(boundaryRow);
     if ((spanIndex === 0 && isUp) || (spanIndex === spans.length - 1 && !isUp)) {

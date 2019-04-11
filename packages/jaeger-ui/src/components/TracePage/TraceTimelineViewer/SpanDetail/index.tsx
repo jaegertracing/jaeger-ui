@@ -114,10 +114,14 @@ export default function SpanDetail(props: SpanDetailProps) {
             />
           )}
         <small className="SpanDetail--debugInfo">
-          <span className="SpanDetail--debugLabel" data-label="SpanID:" />{' '}
-          {spanID}
+          <span className="SpanDetail--debugLabel" data-label="SpanID:" /> {spanID}
           <Tooltip placement="topRight" title="Click to add to filter for deep linking">
-            <Button className="SpanDetail--debugValue" htmlType="button" icon="down" onClick={() => addToUiFind(spanID)}/>
+            <Button
+              className="SpanDetail--debugValue"
+              htmlType="button"
+              icon="down"
+              onClick={() => addToUiFind(spanID)}
+            />
           </Tooltip>
         </small>
       </div>

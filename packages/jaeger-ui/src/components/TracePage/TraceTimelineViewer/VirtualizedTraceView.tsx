@@ -159,10 +159,6 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
     setTrace(trace, uiFind);
   }
 
-  componentDidMount() {
-    setTimeout(this.props.scrollToFirstVisibleSpan);
-  }
-
   componentWillUpdate(nextProps: VirtualizedTraceViewProps) {
     const { childrenHiddenIDs, detailStates, registerAccessors, trace, currentViewRangeTime } = this.props;
     const {
@@ -192,6 +188,22 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
     }
     if (this.listView && registerAccessors !== nextRegisterAccessors) {
       nextRegisterAccessors(this.getAccessors());
+    }
+  }
+
+  componentDidUpdate(prevProps: VirtualizedTraceViewProps) {
+    const {
+      detailStates: currDetailStates,
+      childrenHiddenIDs: currChildrenHiddenIds,
+      scrollToFirstVisibleSpan,
+    } = this.props;
+    const { detailStates: prevDetailStates, childrenHiddenIDs: prevChildrenHiddenIds } = prevProps;
+
+    if (
+      (currChildrenHiddenIds.needToScroll && currChildrenHiddenIds !== prevChildrenHiddenIds) ||
+      (currDetailStates.needToScroll && currDetailStates !== prevDetailStates)
+    ) {
+      scrollToFirstVisibleSpan();
     }
   }
 

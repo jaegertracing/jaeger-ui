@@ -96,8 +96,8 @@ export const actions = (fullActions as any).jaegerUi.traceTimelineViewer as TTim
 
 function calculateHiddenIdsAndDetailStates(uiFind: string, spans: Span[]) {
   const spansMap = new Map();
-  const childrenHiddenIDs = new Set();
-  const detailStates = new Map();
+  const childrenHiddenIDs: Set<string> & { needToScroll?: true } = new Set();
+  const detailStates: Map<string, DetailState> & { needToScroll?: true } = new Map();
 
   spans.forEach(span => {
     spansMap.set(span.spanID, span);
@@ -110,6 +110,8 @@ function calculateHiddenIdsAndDetailStates(uiFind: string, spans: Span[]) {
       detailStates.set(spanID, new DetailState());
       spanAncestorIds(span).forEach(ancestorID => childrenHiddenIDs.delete(ancestorID));
     });
+    childrenHiddenIDs.needToScroll = true;
+    detailStates.needToScroll = true;
   }
   return {
     childrenHiddenIDs,
@@ -125,7 +127,6 @@ function focusUiFind(state: TTraceTimeline, { uiFind, trace }: TTraceUiFindValue
   };
 }
 
-
 function setTrace(state: TTraceTimeline, { uiFind, trace }: TTraceUiFindValue) {
   const { traceID, spans } = trace;
   if (traceID === state.traceID) {
@@ -135,10 +136,7 @@ function setTrace(state: TTraceTimeline, { uiFind, trace }: TTraceUiFindValue) {
   const newState = { ...newInitialState(), spanNameColumnWidth, traceID };
 
   if (uiFind) {
-    Object.assign(
-      newState,
-      calculateHiddenIdsAndDetailStates(uiFind, spans),
-    );
+    Object.assign(newState, calculateHiddenIdsAndDetailStates(uiFind, spans));
   }
 
   return newState;
