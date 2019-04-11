@@ -41,6 +41,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
     detailToggle: jest.fn(),
     findMatchesIDs: null,
     registerAccessors: jest.fn(),
+    scrollToFirstVisibleSpan: jest.fn(),
     setSpanNameColumnWidth: jest.fn(),
     setTrace: jest.fn(),
     spanNameColumnWidth: 0.5,
@@ -341,6 +342,36 @@ describe('<VirtualizedTraceViewImpl>', () => {
           />
         )
       ).toBe(true);
+    });
+  });
+
+  describe('handles needToScroll', () => {
+    beforeEach(() => {
+      props.scrollToFirstVisibleSpan.mockReset();
+    });
+
+    [[Set, 'childrenHiddenIDs'], [Map, 'detailStates']].forEach(([ConstructorFn, propName]) => {
+      it(`calls props.scrollToFirstVisibleSpan if ${propName} changes and ${propName}.needToScroll is true`, () => {
+        expect(props.scrollToFirstVisibleSpan).not.toHaveBeenCalled();
+
+        const collectionThatNeedsToScroll = new ConstructorFn();
+        collectionThatNeedsToScroll.needToScroll = true;
+
+        wrapper.setProps({ [propName]: collectionThatNeedsToScroll });
+        expect(props.scrollToFirstVisibleSpan).toHaveBeenCalledTimes(1);
+
+        wrapper.setProps({ [propName]: collectionThatNeedsToScroll });
+        expect(props.scrollToFirstVisibleSpan).toHaveBeenCalledTimes(1);
+
+        const differentCollectionThatAlsoNeedsToScroll = new ConstructorFn();
+        differentCollectionThatAlsoNeedsToScroll.needToScroll = true;
+        wrapper.setProps({ [propName]: differentCollectionThatAlsoNeedsToScroll });
+        expect(props.scrollToFirstVisibleSpan).toHaveBeenCalledTimes(2);
+
+        const differentCollectionThatDoesNotNeedToScroll = new ConstructorFn();
+        wrapper.setProps({ [propName]: differentCollectionThatDoesNotNeedToScroll });
+        expect(props.scrollToFirstVisibleSpan).toHaveBeenCalledTimes(2);
+      });
     });
   });
 });
