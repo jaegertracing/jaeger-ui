@@ -12,10 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import _get from 'lodash/get';
-import _findIndex from 'lodash/findIndex';
-import _isUndefined from 'lodash/isUndefined';
-
 import { TNil } from '../../types';
 import { Span, SpanReference, Trace } from '../../types/trace';
 
@@ -135,11 +131,8 @@ export default class ScrollManager {
     }
     const { duration, spans, startTime: traceStartTime } = this._trace;
     const isUp = direction < 0;
-    const boundaryRow = _isUndefined(startRow)
-      ? isUp ? xrs.getTopRowIndexVisible() : xrs.getBottomRowIndexVisible()
-      : startRow;
-    console.log(boundaryRow);
-    const spanIndex = xrs.mapRowIndexToSpanIndex(boundaryRow);
+    const boundaryRow = isUp ? xrs.getTopRowIndexVisible() : xrs.getBottomRowIndexVisible();
+    const spanIndex = xrs.mapRowIndexToSpanIndex(startRow != null ? startRow : boundaryRow);
     if ((spanIndex === 0 && isUp) || (spanIndex === spans.length - 1 && !isUp)) {
       return;
     }

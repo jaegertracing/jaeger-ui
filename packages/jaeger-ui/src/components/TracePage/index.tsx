@@ -62,7 +62,7 @@ type TDispatchProps = {
   acknowledgeArchive: (id: string) => void;
   archiveTrace: (id: string) => void;
   fetchTrace: (id: string) => void;
-  focusUiFind: (trace: Trace, uiFind: string | TNil) => void;
+  focusUiFindMatches: (trace: Trace, uiFind: string | TNil) => void;
 };
 
 type TOwnProps = {
@@ -309,11 +309,11 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
     }
   }
 
-  focusUiFind = () => {
-    const { trace, focusUiFind, uiFind } = this.props;
+  focusUiFindMatches = () => {
+    const { trace, focusUiFindMatches, uiFind } = this.props;
     if (trace && trace.data) {
       this._scrollManager.scrollToFirstVisibleSpan();
-      focusUiFind(trace.data, uiFind);
+      focusUiFindMatches(trace.data, uiFind);
     }
   };
 
@@ -322,7 +322,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
       archiveEnabled,
       archiveTraceState,
       embedded,
-      focusUiFind,
+      focusUiFindMatches,
       id,
       searchUrl,
       uiFind,
@@ -352,7 +352,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
 
     const isEmbedded = Boolean(embedded);
     const headerProps = {
-      focusUiFind: this.focusUiFind,
+      focusUiFindMatches: this.focusUiFindMatches,
       slimView,
       textFilter: uiFind,
       traceGraphView,
@@ -441,8 +441,8 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
 export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
   const { fetchTrace } = bindActionCreators(jaegerApiActions, dispatch);
   const { archiveTrace, acknowledge: acknowledgeArchive } = bindActionCreators(archiveActions, dispatch);
-  const { focusUiFind } = bindActionCreators(timelineActions, dispatch);
-  return { acknowledgeArchive, archiveTrace, fetchTrace, focusUiFind };
+  const { focusUiFindMatches } = bindActionCreators(timelineActions, dispatch);
+  return { acknowledgeArchive, archiveTrace, fetchTrace, focusUiFindMatches };
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(TracePageImpl);

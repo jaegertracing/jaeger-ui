@@ -55,7 +55,7 @@ describe('<TracePageSearchBar>', () => {
 
     it('renders buttons', () => {
       const buttons = wrapper.find('Button');
-      expect(buttons.length).toBe(3);
+      expect(buttons.length).toBe(4);
       buttons.forEach(button => {
         expect(button.hasClass('TracePageSearchBar--btn')).toBe(true);
         expect(button.hasClass('is-disabled')).toBe(false);
@@ -66,15 +66,11 @@ describe('<TracePageSearchBar>', () => {
       expect(wrapper.find('Button[icon="close"]').prop('onClick')).toBe(defaultProps.clearSearch);
     });
 
-    it('disables navigation buttons when not navigable', () => {
+    it('hides navigation buttons when not navigable', () => {
       wrapper.setProps({ navigable: false });
-      const buttons = wrapper.find('Button');
-      expect(buttons.length).toBe(3);
-      buttons.forEach((button, i) => {
-        expect(button.hasClass('TracePageSearchBar--btn')).toBe(true);
-        expect(button.hasClass('is-disabled')).toBe(i !== 2);
-        expect(button.prop('disabled')).toBe(i !== 2);
-      });
+      const button = wrapper.find('Button');
+      expect(button.length).toBe(1);
+      expect(button.prop('icon')).toBe('close');
     });
   });
 
@@ -89,7 +85,7 @@ describe('<TracePageSearchBar>', () => {
 
     it('renders buttons', () => {
       const buttons = wrapper.find('Button');
-      expect(buttons.length).toBe(3);
+      expect(buttons.length).toBe(4);
       buttons.forEach(button => {
         expect(button.hasClass('TracePageSearchBar--btn')).toBe(true);
         expect(button.hasClass('is-disabled')).toBe(true);

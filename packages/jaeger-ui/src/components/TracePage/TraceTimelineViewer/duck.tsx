@@ -68,7 +68,7 @@ export const actionTypes = generateActionTypes('@jaeger-ui/trace-timeline-viewer
   'DETAIL_LOG_ITEM_TOGGLE',
   'EXPAND_ALL',
   'EXPAND_ONE',
-  'FOCUS_UI_FIND',
+  'FOCUS_UI_FIND_MATCHES',
   'REMOVE_HOVER_INDENT_GUIDE_ID',
   'SET_SPAN_NAME_COLUMN_WIDTH',
   'SET_TRACE',
@@ -86,7 +86,7 @@ const fullActions = createActions<TActionTypes>({
   [actionTypes.DETAIL_PROCESS_TOGGLE]: (spanID: string) => ({ spanID }),
   [actionTypes.DETAIL_TAGS_TOGGLE]: (spanID: string) => ({ spanID }),
   [actionTypes.DETAIL_TOGGLE]: (spanID: string) => ({ spanID }),
-  [actionTypes.FOCUS_UI_FIND]: (trace: Trace, uiFind: string | TNil) => ({ trace, uiFind }),
+  [actionTypes.FOCUS_UI_FIND_MATCHES]: (trace: Trace, uiFind: string | TNil) => ({ trace, uiFind }),
   [actionTypes.REMOVE_HOVER_INDENT_GUIDE_ID]: (spanID: string) => ({ spanID }),
   [actionTypes.SET_SPAN_NAME_COLUMN_WIDTH]: (width: number) => ({ width }),
   [actionTypes.SET_TRACE]: (trace: Trace, uiFind: string | TNil) => ({ trace, uiFind }),
@@ -104,7 +104,7 @@ function calculateHiddenIdsAndDetailStates(uiFind: string, spans: Span[]) {
     childrenHiddenIDs.add(span.spanID);
   });
   const matchedSpanIds = filterSpans(uiFind, spans);
-  if (matchedSpanIds) {
+  if (matchedSpanIds && matchedSpanIds.size) {
     matchedSpanIds.forEach(spanID => {
       const span = spansMap.get(spanID);
       detailStates.set(spanID, new DetailState());
@@ -119,7 +119,7 @@ function calculateHiddenIdsAndDetailStates(uiFind: string, spans: Span[]) {
   };
 }
 
-function focusUiFind(state: TTraceTimeline, { uiFind, trace }: TTraceUiFindValue) {
+function focusUiFindMatches(state: TTraceTimeline, { uiFind, trace }: TTraceUiFindValue) {
   if (!uiFind) return state;
   return {
     ...state,
@@ -133,13 +133,11 @@ function setTrace(state: TTraceTimeline, { uiFind, trace }: TTraceUiFindValue) {
     return state;
   }
   const { spanNameColumnWidth } = state;
-  const newState = { ...newInitialState(), spanNameColumnWidth, traceID };
 
-  if (uiFind) {
-    Object.assign(newState, calculateHiddenIdsAndDetailStates(uiFind, spans));
-  }
-
-  return newState;
+  return Object.assign(
+    { ...newInitialState(), spanNameColumnWidth, traceID },
+    uiFind ? calculateHiddenIdsAndDetailStates(uiFind, spans) : null
+  );
 }
 
 function setColumnWidth(state: TTraceTimeline, { width }: TWidthValue): TTraceTimeline {
@@ -291,7 +289,7 @@ export default handleActions(
     [actionTypes.DETAIL_TOGGLE]: guardReducer(detailToggle),
     [actionTypes.EXPAND_ALL]: guardReducer(expandAll),
     [actionTypes.EXPAND_ONE]: guardReducer(expandOne),
-    [actionTypes.FOCUS_UI_FIND]: guardReducer(focusUiFind),
+    [actionTypes.FOCUS_UI_FIND_MATCHES]: guardReducer(focusUiFindMatches),
     [actionTypes.REMOVE_HOVER_INDENT_GUIDE_ID]: guardReducer(removeHoverIndentGuideId),
     [actionTypes.SET_SPAN_NAME_COLUMN_WIDTH]: guardReducer(setColumnWidth),
     [actionTypes.SET_TRACE]: guardReducer(setTrace),

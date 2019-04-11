@@ -16,6 +16,7 @@
 jest.mock('../utils');
 
 import React from 'react';
+import { Button } from 'antd';
 import { shallow } from 'enzyme';
 
 import AccordianKeyValues from './AccordianKeyValues';
@@ -122,7 +123,7 @@ describe('<SpanDetail>', () => {
   });
 
   it('calls addToUiFind when the spanID is clicked', () => {
-    const spanIDButton = wrapper.find('button');
+    const spanIDButton = wrapper.find(Button);
     spanIDButton.simulate('click');
     expect(props.addToUiFind).toHaveBeenCalledWith(props.span.spanID);
   });

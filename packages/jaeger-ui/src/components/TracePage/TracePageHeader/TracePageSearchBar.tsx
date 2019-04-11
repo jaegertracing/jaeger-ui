@@ -28,7 +28,7 @@ type TracePageSearchBarProps = {
   prevResult: () => void;
   nextResult: () => void;
   clearSearch: () => void;
-  focusUiFind: () => void;
+  focusUiFindMatches: () => void;
   resultCount: number;
   navigable: boolean;
 };
@@ -36,7 +36,7 @@ type TracePageSearchBarProps = {
 export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwardedRef: React.Ref<Input> }) {
   const {
     clearSearch,
-    focusUiFind,
+    focusUiFindMatches,
     forwardedRef,
     navigable,
     nextResult,
@@ -47,8 +47,7 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwarde
 
   const count = textFilter ? <span className="TracePageSearchBar--count">{resultCount}</span> : null;
 
-  const navigationBtnDisabled = !navigable || !textFilter;
-  const navigationBtnClass = cx('TracePageSearchBar--btn', { 'is-disabled': navigationBtnDisabled });
+  const navigationBtnClass = cx('TracePageSearchBar--btn', { 'is-disabled': !textFilter });
   const btnClass = cx('TracePageSearchBar--btn', { 'is-disabled': !textFilter });
   const uiFindInputInputProps = {
     'data-test': markers.IN_TRACE_SEARCH,
@@ -66,27 +65,31 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwarde
           forwardedRef={forwardedRef}
           trackFindFunction={trackFilter}
         />
-        <Button
-          className={navigationBtnClass}
-          disabled={navigationBtnDisabled}
-          htmlType="button"
-          icon="up"
-          onClick={prevResult}
-        />
-        <Button
-          className={navigationBtnClass}
-          disabled={navigationBtnDisabled}
-          htmlType="button"
-          icon="down"
-          onClick={nextResult}
-        />
-        <Button
-          className={navigationBtnClass}
-          disabled={navigationBtnDisabled}
-          htmlType="button"
-          icon="search"
-          onClick={focusUiFind}
-        />
+        {navigable && (
+          <>
+            <Button
+              className={navigationBtnClass}
+              disabled={!textFilter}
+              htmlType="button"
+              icon="up"
+              onClick={prevResult}
+            />
+            <Button
+              className={navigationBtnClass}
+              disabled={!textFilter}
+              htmlType="button"
+              icon="down"
+              onClick={nextResult}
+            />
+            <Button
+              className={navigationBtnClass}
+              disabled={!textFilter}
+              htmlType="button"
+              icon="search"
+              onClick={focusUiFindMatches}
+            />
+          </>
+        )}
         <Button
           className={btnClass}
           disabled={!textFilter}

@@ -581,9 +581,10 @@ describe('<TracePage>', () => {
 describe('mapDispatchToProps()', () => {
   it('creates the actions correctly', () => {
     expect(mapDispatchToProps(() => {})).toEqual({
-      fetchTrace: expect.any(Function),
       acknowledgeArchive: expect.any(Function),
       archiveTrace: expect.any(Function),
+      fetchTrace: expect.any(Function),
+      focusUiFindMatches: expect.any(Function),
     });
   });
 });
