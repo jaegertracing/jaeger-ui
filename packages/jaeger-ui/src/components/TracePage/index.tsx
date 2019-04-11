@@ -318,16 +318,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
   };
 
   render() {
-    const {
-      archiveEnabled,
-      archiveTraceState,
-      embedded,
-      focusUiFindMatches,
-      id,
-      searchUrl,
-      uiFind,
-      trace,
-    } = this.props;
+    const { archiveEnabled, archiveTraceState, embedded, id, searchUrl, uiFind, trace } = this.props;
     const { slimView, traceGraphView, headerHeight, viewRange } = this.state;
     if (!trace || trace.state === fetchedState.LOADING) {
       return <LoadingIndicator className="u-mt-vast" centered />;
