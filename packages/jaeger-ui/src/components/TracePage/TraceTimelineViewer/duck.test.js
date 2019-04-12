@@ -392,13 +392,18 @@ describe('TraceTimelineViewer/duck', () => {
   it('toggles a log item', () => {
     const logItem = 'hello-log-item';
     const id = trace.spans[0].spanID;
+    const secondID = trace.spans[1].spanID;
     const baseDetail = new DetailState();
     const toggledDetail = baseDetail.toggleLogItem(logItem);
 
     store.dispatch(actions.detailToggle(id));
+    store.dispatch(actions.detailToggle(secondID));
+    const secondDetail = store.getState().detailStates.get(secondID);
     expect(store.getState().detailStates.get(id)).toEqual(baseDetail);
+
     store.dispatch(actions.detailLogItemToggle(id, logItem));
     expect(store.getState().detailStates.get(id)).toEqual(toggledDetail);
+    expect(store.getState().detailStates.get(secondID)).toBe(secondDetail);
   });
 
   describe('hoverIndentGuideIds', () => {

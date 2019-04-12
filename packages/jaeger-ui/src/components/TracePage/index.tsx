@@ -182,10 +182,8 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
   }
 
   componentWillReceiveProps(nextProps: TProps) {
-    if (this._scrollManager) {
-      const { trace } = nextProps;
-      this._scrollManager.setTrace(trace && trace.data);
-    }
+    const { trace } = nextProps;
+    this._scrollManager.setTrace(trace && trace.data);
   }
 
   componentDidUpdate({ id: prevID }: TProps) {
@@ -204,13 +202,11 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
   componentWillUnmount() {
     resetShortcuts();
     cancelScroll();
-    if (this._scrollManager) {
-      this._scrollManager.destroy();
-      this._scrollManager = new ScrollManager(undefined, {
-        scrollBy,
-        scrollTo,
-      });
-    }
+    this._scrollManager.destroy();
+    this._scrollManager = new ScrollManager(undefined, {
+      scrollBy,
+      scrollTo,
+    });
   }
 
   _adjustViewRange(startChange: number, endChange: number, trackSrc: string) {

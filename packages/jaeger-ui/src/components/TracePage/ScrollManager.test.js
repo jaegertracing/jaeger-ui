@@ -21,7 +21,6 @@ import ScrollManager from './ScrollManager';
 const SPAN_HEIGHT = 2;
 
 function getTrace() {
-  let nextSpanID = 0;
   const spans = [];
   const trace = {
     spans,
@@ -29,7 +28,7 @@ function getTrace() {
     startTime: 1000,
   };
   for (let i = 0; i < 10; i++) {
-    spans.push({ duration: 1, startTime: 1000, spanID: nextSpanID++ });
+    spans.push({ duration: 1, startTime: 1000, spanID: i + 1 });
   }
   return trace;
 }
@@ -106,6 +105,9 @@ describe('ScrollManager', () => {
   });
 
   describe('_scrollToVisibleSpan()', () => {
+    function getRefs(spanID) {
+      return [{ refType: 'CHILD_OF', spanID }];
+    }
     let scrollPastMock;
 
     beforeEach(() => {
@@ -142,7 +144,7 @@ describe('ScrollManager', () => {
 
     it('skips spans that are out of view', () => {
       trace.spans[4].startTime = trace.startTime + trace.duration * 0.5;
-      accessors.getViewRange = jest.fn(() => [0.4, 0.6]);
+      accessors.getViewRange = () => [0.4, 0.6];
       accessors.getTopRowIndexVisible.mockReturnValue(trace.spans.length - 1);
       accessors.getBottomRowIndexVisible.mockReturnValue(0);
       manager._scrollToVisibleSpan(1);
@@ -154,18 +156,41 @@ describe('ScrollManager', () => {
     it('skips spans that do not match the text search', () => {
       accessors.getTopRowIndexVisible.mockReturnValue(trace.spans.length - 1);
       accessors.getBottomRowIndexVisible.mockReturnValue(0);
-      accessors.getSearchedSpanIDs = jest.fn(() => new Set([trace.spans[4].spanID]));
+      accessors.getSearchedSpanIDs = () => new Set([trace.spans[4].spanID]);
       manager._scrollToVisibleSpan(1);
       expect(scrollPastMock).lastCalledWith(4, 1);
       manager._scrollToVisibleSpan(-1);
       expect(scrollPastMock).lastCalledWith(4, -1);
     });
 
-    describe('scrollToNextVisibleSpan() and scrollToPrevVisibleSpan()', () => {
-      function getRefs(spanID) {
-        return [{ refType: 'CHILD_OF', spanID }];
-      }
+    it('scrolls to boundary when scrolling away from closest spanID in findMatches', () => {
+      const closetFindMatchesSpanID = 4;
+      accessors.getTopRowIndexVisible.mockReturnValue(closetFindMatchesSpanID - 1);
+      accessors.getBottomRowIndexVisible.mockReturnValue(closetFindMatchesSpanID + 1);
+      accessors.getSearchedSpanIDs = () => new Set([trace.spans[closetFindMatchesSpanID].spanID]);
 
+      manager._scrollToVisibleSpan(1);
+      expect(scrollPastMock).lastCalledWith(trace.spans.length - 1, 1);
+
+      manager._scrollToVisibleSpan(-1);
+      expect(scrollPastMock).lastCalledWith(0, -1);
+    });
+
+    it('scrolls to last visible row when boundary is hidden', () => {
+      const parentOfLastRowWithHiddenChildrenIndex = trace.spans.length - 2;
+      accessors.getBottomRowIndexVisible.mockReturnValue(0);
+      accessors.getCollapsedChildren = () =>
+        new Set([trace.spans[parentOfLastRowWithHiddenChildrenIndex].spanID]);
+      accessors.getSearchedSpanIDs = () => new Set([trace.spans[0].spanID]);
+      trace.spans[trace.spans.length - 1].references = getRefs(
+        trace.spans[parentOfLastRowWithHiddenChildrenIndex].spanID
+      );
+
+      manager._scrollToVisibleSpan(1);
+      expect(scrollPastMock).lastCalledWith(parentOfLastRowWithHiddenChildrenIndex, 1);
+    });
+
+    describe('scrollToNextVisibleSpan() and scrollToPrevVisibleSpan()', () => {
       beforeEach(() => {
         // change spans so 0 and 4 are top-level and their children are collapsed
         const spans = trace.spans;
@@ -211,6 +236,17 @@ describe('ScrollManager', () => {
         expect(scrollPastMock).lastCalledWith(4, 1);
         manager.scrollToPrevVisibleSpan();
         expect(scrollPastMock).lastCalledWith(4, -1);
+      });
+    });
+
+    describe('scrollToFirstVisibleSpan', () => {
+      beforeEach(() => {
+        jest.spyOn(manager, '_scrollToVisibleSpan').mockImplementationOnce();
+      });
+
+      it('calls _scrollToVisibleSpan searching downwards from first span', () => {
+        manager.scrollToFirstVisibleSpan();
+        expect(manager._scrollToVisibleSpan).toHaveBeenCalledWith(1, 0);
       });
     });
   });

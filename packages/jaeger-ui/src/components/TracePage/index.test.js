@@ -42,12 +42,14 @@ import * as track from './index.track';
 import ArchiveNotifier from './ArchiveNotifier';
 import { reset as resetShortcuts } from './keyboard-shortcuts';
 import { cancel as cancelScroll } from './scroll-page';
+import * as calculateTraceDagEV from './TraceGraph/calculateTraceDagEV';
 import SpanGraph from './TracePageHeader/SpanGraph';
 import TracePageHeader from './TracePageHeader';
 import { trackSlimHeaderToggle } from './TracePageHeader/TracePageHeader.track';
 import TraceTimelineViewer from './TraceTimelineViewer';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
+import * as getUiFindVertexKeys from '../TraceDiff/TraceDiffGraph/traceDiffGraphUtils';
 import { fetchedState } from '../../constants';
 import traceGenerator from '../../demo/trace-generators';
 import transformTraceData from '../../model/transform-trace-data';
@@ -84,6 +86,7 @@ describe('<TracePage>', () => {
   const defaultProps = {
     acknowledgeArchive: () => {},
     fetchTrace() {},
+    focusUiFindMatches: jest.fn(),
     id: trace.traceID,
     history: {
       replace: () => {},
@@ -129,6 +132,32 @@ describe('<TracePage>', () => {
     it('handles null _searchBar.current', () => {
       expect(wrapper.instance()._searchBar.current).toBe(null);
       wrapper.setProps({ id: notDefaultPropsId });
+    });
+  });
+
+  describe('focusUiFindMatches', () => {
+    let scrollToFirstVisibleSpanSpy;
+
+    beforeEach(() => {
+      scrollToFirstVisibleSpanSpy = jest.spyOn(wrapper.instance()._scrollManager, 'scrollToFirstVisibleSpan');
+      scrollToFirstVisibleSpanSpy.mockReset();
+      defaultProps.focusUiFindMatches.mockReset();
+    });
+
+    it('calls _scrollManager.scrollToFirstVisibleSpan and props.focusUiFindMatches with props.trace.data and uiFind when props.trace.data is present', () => {
+      const uiFind = 'test ui find';
+      wrapper.setProps({ uiFind });
+      wrapper.find(TracePageHeader).prop('focusUiFindMatches')();
+      expect(defaultProps.focusUiFindMatches).toHaveBeenCalledWith(defaultProps.trace.data, uiFind);
+      expect(scrollToFirstVisibleSpanSpy).toHaveBeenCalled();
+    });
+
+    it('handles when props.trace.data is absent', () => {
+      const propFn = wrapper.find(TracePageHeader).prop('focusUiFindMatches');
+      wrapper.setProps({ trace: {} });
+      propFn();
+      expect(defaultProps.focusUiFindMatches).not.toHaveBeenCalled();
+      expect(scrollToFirstVisibleSpanSpy).not.toHaveBeenCalled();
     });
   });
 
@@ -331,7 +360,17 @@ describe('<TracePage>', () => {
     });
 
     describe('resultCount', () => {
-      it('is the size of findMatchesIDs when available', () => {
+      let getUiFindVertexKeysSpy;
+
+      beforeAll(() => {
+        getUiFindVertexKeysSpy = jest.spyOn(getUiFindVertexKeys, 'getUiFindVertexKeys');
+      });
+
+      beforeEach(() => {
+        getUiFindVertexKeysSpy.mockReset();
+      });
+
+      it('is the size of spanFindMatches when available', () => {
         expect(wrapper.find(TracePageHeader).prop('resultCount')).toBe(0);
 
         const size = 20;
@@ -340,9 +379,26 @@ describe('<TracePage>', () => {
         expect(wrapper.find(TracePageHeader).prop('resultCount')).toBe(size);
       });
 
-      it('defaults to 0', () => {
-        filterSpansSpy.mockReturnValueOnce(null);
+      it('is the size of graphFindMatches when available', () => {
+        expect(wrapper.find(TracePageHeader).prop('resultCount')).toBe(0);
+
+        const size = 30;
+        getUiFindVertexKeysSpy.mockReturnValueOnce({ size });
+        wrapper.setState({ traceGraphView: true });
         wrapper.setProps({ uiFind: 'new ui find to bust memo' });
+        expect(wrapper.find(TracePageHeader).prop('resultCount')).toBe(size);
+      });
+
+      it('defaults to 0', () => {
+        // falsy uiFind for base case
+        wrapper.setProps({ uiFind: '' });
+        expect(wrapper.find(TracePageHeader).prop('resultCount')).toBe(0);
+
+        filterSpansSpy.mockReturnValueOnce(null);
+        wrapper.setProps({ uiFind: 'truthy uiFind' });
+        expect(wrapper.find(TracePageHeader).prop('resultCount')).toBe(0);
+
+        wrapper.setState({ traceGraphView: true });
         expect(wrapper.find(TracePageHeader).prop('resultCount')).toBe(0);
       });
     });
@@ -458,12 +514,17 @@ describe('<TracePage>', () => {
     let header;
     let spanGraph;
     let timeline;
+    let calculateTraceDagEVSpy;
 
     function refreshWrappers() {
       header = wrapper.find(TracePageHeader);
       spanGraph = wrapper.find(SpanGraph);
       timeline = wrapper.find(TraceTimelineViewer);
     }
+
+    beforeAll(() => {
+      calculateTraceDagEVSpy = jest.spyOn(calculateTraceDagEV, 'default');
+    });
 
     beforeEach(() => {
       wrapper = mount(<TracePage {...defaultProps} />);
@@ -488,6 +549,15 @@ describe('<TracePage>', () => {
       wrapper.update();
       sections = wrapper.find('section');
       expect(sections.length).toBe(0);
+    });
+
+    it('initializes slimView correctly', () => {
+      expect(wrapper.state('slimView')).toBe(false);
+      // Empty trace avoids this spec from evaluating TracePageHeader's consumption of slimView
+      wrapper = mount(
+        <TracePage {...defaultProps} trace={{}} embedded={{ timeline: { collapseTitle: true } }} />
+      );
+      expect(wrapper.state('slimView')).toBe(true);
     });
 
     it('propagates slimView changes', () => {
@@ -516,6 +586,11 @@ describe('<TracePage>', () => {
       wrapper.update();
       refreshWrappers();
       expect(header.prop('traceGraphView')).toBe(true);
+      expect(calculateTraceDagEVSpy).toHaveBeenCalledWith(defaultProps.trace.data);
+
+      wrapper.setProps({ trace: {} });
+      onTraceGraphViewClicked();
+      expect(calculateTraceDagEVSpy).toHaveBeenCalledTimes(1);
     });
 
     it('propagates viewRange changes', () => {
