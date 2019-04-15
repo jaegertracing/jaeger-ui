@@ -15,6 +15,7 @@
 import * as React from 'react';
 import { Button, Input } from 'antd';
 import cx from 'classnames';
+import IoAndroidLocate from 'react-icons/lib/io/android-locate';
 
 import * as markers from './TracePageSearchBar.markers';
 import { trackFilter } from '../index.track';
@@ -47,7 +48,6 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwarde
 
   const count = textFilter ? <span className="TracePageSearchBar--count">{resultCount}</span> : null;
 
-  const navigationBtnClass = cx('TracePageSearchBar--btn', { 'is-disabled': !textFilter });
   const btnClass = cx('TracePageSearchBar--btn', { 'is-disabled': !textFilter });
   const uiFindInputInputProps = {
     'data-test': markers.IN_TRACE_SEARCH,
@@ -57,9 +57,9 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwarde
   };
 
   return (
-    <div className="ub-flex-auto ub-mx2 TracePageSearchBar">
+    <div className="TracePageSearchBar">
       {/* style inline because compact overwrites the display */}
-      <Input.Group compact style={{ display: 'flex' }}>
+      <Input.Group className="TracePageSearchBar--InputGroup" compact style={{ display: 'flex' }}>
         <UiFindInput
           inputProps={uiFindInputInputProps}
           forwardedRef={forwardedRef}
@@ -68,25 +68,26 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwarde
         {navigable && (
           <>
             <Button
-              className={navigationBtnClass}
+              className={cx(btnClass, 'ant-btn-icon-only')}
+              disabled={!textFilter}
+              htmlType="button"
+              onClick={focusUiFindMatches}
+            >
+              <IoAndroidLocate />
+            </Button>
+            <Button
+              className={btnClass}
               disabled={!textFilter}
               htmlType="button"
               icon="up"
               onClick={prevResult}
             />
             <Button
-              className={navigationBtnClass}
+              className={btnClass}
               disabled={!textFilter}
               htmlType="button"
               icon="down"
               onClick={nextResult}
-            />
-            <Button
-              className={navigationBtnClass}
-              disabled={!textFilter}
-              htmlType="button"
-              icon="search"
-              onClick={focusUiFindMatches}
             />
           </>
         )}

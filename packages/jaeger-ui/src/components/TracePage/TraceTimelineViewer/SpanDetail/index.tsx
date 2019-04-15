@@ -14,6 +14,7 @@
 
 import React from 'react';
 import { Button, Divider, Tooltip } from 'antd';
+import ZoomIn from 'react-icons/lib/ti/zoom-in';
 
 import AccordianKeyValues from './AccordianKeyValues';
 import AccordianLogs from './AccordianLogs';
@@ -117,11 +118,12 @@ export default function SpanDetail(props: SpanDetailProps) {
           <span className="SpanDetail--debugLabel" data-label="SpanID:" /> {spanID}
           <Tooltip placement="topRight" title="Click to add to filter for deep linking">
             <Button
-              className="SpanDetail--debugValue"
+              className="SpanDetail--debugValue ant-btn-icon-only"
               htmlType="button"
-              icon="down"
               onClick={() => addToUiFind(spanID)}
-            />
+            >
+              <ZoomIn size="1.4em" />
+            </Button>
           </Tooltip>
         </small>
       </div>
