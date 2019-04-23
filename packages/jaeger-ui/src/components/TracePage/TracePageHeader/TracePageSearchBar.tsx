@@ -68,7 +68,7 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwarde
         {navigable && (
           <>
             <Button
-              className={cx(btnClass, 'ant-btn-icon-only')}
+              className={cx(btnClass, 'locate-btn')}
               disabled={!textFilter}
               htmlType="button"
               onClick={focusUiFindMatches}

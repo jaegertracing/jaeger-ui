@@ -111,15 +111,13 @@ describe('TraceTimelineViewer/duck', () => {
     });
 
     it('indicates the need to scroll iff there are uiFindMatches', () => {
-      expect(state.detailStates.needToScroll).toBe(true);
-      expect(state.childrenHiddenIDs.needToScroll).toBe(true);
+      expect(state.shouldScrollToFirstUiFindMatch).toBe(true);
 
       filterSpansSpy.mockReturnValue(new Set());
       const singleSpecStore = createStore(reducer, newInitialState());
       singleSpecStore.dispatch(action);
       const singleSpecState = singleSpecStore.getState();
-      expect(singleSpecState.detailStates.needToScroll).toBeUndefined();
-      expect(singleSpecState.childrenHiddenIDs.needToScroll).toBeUndefined();
+      expect(singleSpecState.shouldScrollToFirstUiFindMatch).toBe(false);
     });
 
     it('returns existing state if uiFind is falsy', () => {
@@ -138,6 +136,10 @@ describe('TraceTimelineViewer/duck', () => {
   });
 
   describe('setTrace', () => {
+    beforeEach(() => {
+      filterSpansSpy.mockClear();
+    });
+
     const setTraceAction = actions.setTrace(trace);
 
     it('retains all state when setting to the same traceID', () => {
@@ -175,22 +177,37 @@ describe('TraceTimelineViewer/duck', () => {
 
     it('calls calculateHiddenIdsAndDetailStates iff a truthy uiFind is provided', () => {
       store.dispatch(setTraceAction);
-      let state = store.getState();
-      expect(state.childrenHiddenIDs).toEqual(new Set());
+      expect(filterSpansSpy).not.toHaveBeenCalled();
 
-      store.dispatch(actions.setTrace(trace, null));
-      state = store.getState();
-      expect(state.childrenHiddenIDs).toEqual(new Set());
+      store.dispatch(actions.setTrace(Object.assign({}, trace, { traceID: `${trace.traceID}_1` }), null));
+      expect(filterSpansSpy).not.toHaveBeenCalled();
 
-      store.dispatch(actions.setTrace(trace, undefined));
-      state = store.getState();
-      expect(state.childrenHiddenIDs).toEqual(new Set());
+      store.dispatch(actions.setTrace(Object.assign({}, trace, { traceID: `${trace.traceID}_2` }), ''));
+      expect(filterSpansSpy).not.toHaveBeenCalled();
 
-      store.dispatch(actions.setTrace(trace, 'truthy uiFind string'));
-      state = store.getState();
-      expect(state.childrenHiddenIDs).toEqual(new Set());
+      store.dispatch(
+        actions.setTrace(Object.assign({}, trace, { traceID: `${trace.traceID}_3` }), 'truthy uiFind string')
+      );
+      expect(filterSpansSpy).toHaveBeenCalledTimes(1);
     });
-    // describe('calls focus sometmisth', () => {
+  });
+
+  describe('clearShouldScrollToFirstUiFindMatch', () => {
+    const clearShouldScrollToFirstUiFindMatchAction = actions.clearShouldScrollToFirstUiFindMatch();
+
+    it('returns existing state if current state does not indicate need to scroll', () => {
+      const state = store.getState();
+      store.dispatch(clearShouldScrollToFirstUiFindMatchAction);
+      expect(store.getState()).toBe(state);
+    });
+
+    it('sets state.shouldScrollToFirstUiFindMatch to false if it is currently true', () => {
+      const state = store.getState();
+      state.shouldScrollToFirstUiFindMatch = true;
+      expect(store.getState().shouldScrollToFirstUiFindMatch).toBe(true);
+      store.dispatch(clearShouldScrollToFirstUiFindMatchAction);
+      expect(store.getState().shouldScrollToFirstUiFindMatch).toBe(false);
+    });
   });
 
   describe('toggles children and details', () => {

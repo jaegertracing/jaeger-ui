@@ -59,6 +59,7 @@ type TVirtualizedTraceViewOwnProps = {
 
 type TDispatchProps = {
   childrenToggle: (spanID: string) => void;
+  clearShouldScrollToFirstUiFindMatch: () => void;
   detailLogItemToggle: (spanID: string, log: Log) => void;
   detailLogsToggle: (spanID: string) => void;
   detailProcessToggle: (spanID: string) => void;
@@ -135,6 +136,7 @@ function getCssClasses(currentViewRange: [number, number]) {
 }
 
 // export from tests
+// eslint-disable-next-line react/no-redundant-should-component-update
 export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTraceViewProps> {
   clippingCssClasses: string;
   listView: ListView | TNil;
@@ -157,6 +159,25 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
     this.rowStates = generateRowStates(trace.spans, childrenHiddenIDs, detailStates);
 
     setTrace(trace, uiFind);
+  }
+
+  shouldComponentUpdate(nextProps: VirtualizedTraceViewProps) {
+    if (
+      !nextProps.shouldScrollToFirstUiFindMatch &&
+      nextProps.shouldScrollToFirstUiFindMatch !== this.props.shouldScrollToFirstUiFindMatch
+    ) {
+      const nextPropKeys = Object.keys(nextProps);
+      for (let i = 0; i < nextPropKeys.length; i += 1) {
+        if (
+          nextProps[nextPropKeys[i] as keyof VirtualizedTraceViewProps] !==
+            this.props[nextPropKeys[i] as keyof VirtualizedTraceViewProps] &&
+          nextPropKeys[i] !== 'shouldScrollToFirstUiFindMatch'
+        )
+          return true;
+      }
+      return false;
+    }
+    return true;
   }
 
   componentWillUpdate(nextProps: VirtualizedTraceViewProps) {
@@ -191,19 +212,15 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
     }
   }
 
-  componentDidUpdate(prevProps: VirtualizedTraceViewProps) {
+  componentDidUpdate() {
     const {
-      detailStates: currDetailStates,
-      childrenHiddenIDs: currChildrenHiddenIds,
+      shouldScrollToFirstUiFindMatch,
+      clearShouldScrollToFirstUiFindMatch,
       scrollToFirstVisibleSpan,
     } = this.props;
-    const { detailStates: prevDetailStates, childrenHiddenIDs: prevChildrenHiddenIds } = prevProps;
-
-    if (
-      (currChildrenHiddenIds.needToScroll && currChildrenHiddenIds !== prevChildrenHiddenIds) ||
-      (currDetailStates.needToScroll && currDetailStates !== prevDetailStates)
-    ) {
+    if (shouldScrollToFirstUiFindMatch) {
       scrollToFirstVisibleSpan();
+      clearShouldScrollToFirstUiFindMatch();
     }
   }
 
@@ -431,7 +448,7 @@ function mapStateToProps(state: ReduxState): TTraceTimeline & TExtractUiFindFrom
 
 /* istanbul ignore next */
 function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
-  return bindActionCreators(actions, dispatch) as any;
+  return (bindActionCreators(actions, dispatch) as any) as TDispatchProps;
 }
 
 export default withRouter(

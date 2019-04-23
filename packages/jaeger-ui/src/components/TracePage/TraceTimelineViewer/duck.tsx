@@ -51,6 +51,7 @@ export function newInitialState(): TTraceTimeline {
     childrenHiddenIDs: new Set(),
     detailStates: new Map(),
     hoverIndentGuideIds: new Set(),
+    shouldScrollToFirstUiFindMatch: false,
     spanNameColumnWidth: 0.25,
     traceID: null,
   };
@@ -59,6 +60,7 @@ export function newInitialState(): TTraceTimeline {
 export const actionTypes = generateActionTypes('@jaeger-ui/trace-timeline-viewer', [
   'ADD_HOVER_INDENT_GUIDE_ID',
   'CHILDREN_TOGGLE',
+  'CLEAR_SHOULD_SCROLL_TO_FIRST_UI_FIND_MATCH',
   'COLLAPSE_ALL',
   'COLLAPSE_ONE',
   'DETAIL_TOGGLE',
@@ -77,6 +79,7 @@ export const actionTypes = generateActionTypes('@jaeger-ui/trace-timeline-viewer
 const fullActions = createActions<TActionTypes>({
   [actionTypes.ADD_HOVER_INDENT_GUIDE_ID]: (spanID: string) => ({ spanID }),
   [actionTypes.CHILDREN_TOGGLE]: (spanID: string) => ({ spanID }),
+  [actionTypes.CLEAR_SHOULD_SCROLL_TO_FIRST_UI_FIND_MATCH]: () => ({}),
   [actionTypes.COLLAPSE_ALL]: (spans: Span[]) => ({ spans }),
   [actionTypes.COLLAPSE_ONE]: (spans: Span[]) => ({ spans }),
   [actionTypes.DETAIL_LOG_ITEM_TOGGLE]: (spanID: string, logItem: Log) => ({ logItem, spanID }),
@@ -96,8 +99,9 @@ export const actions = (fullActions as any).jaegerUi.traceTimelineViewer as TTim
 
 function calculateHiddenIdsAndDetailStates(uiFind: string, spans: Span[]) {
   const spansMap = new Map();
-  const childrenHiddenIDs: Set<string> & { needToScroll?: true } = new Set();
-  const detailStates: Map<string, DetailState> & { needToScroll?: true } = new Map();
+  const childrenHiddenIDs: Set<string> = new Set();
+  const detailStates: Map<string, DetailState> = new Map();
+  let shouldScrollToFirstUiFindMatch: boolean = false;
 
   spans.forEach(span => {
     spansMap.set(span.spanID, span);
@@ -110,12 +114,12 @@ function calculateHiddenIdsAndDetailStates(uiFind: string, spans: Span[]) {
       detailStates.set(spanID, new DetailState());
       spanAncestorIds(span).forEach(ancestorID => childrenHiddenIDs.delete(ancestorID));
     });
-    childrenHiddenIDs.needToScroll = true;
-    detailStates.needToScroll = true;
+    shouldScrollToFirstUiFindMatch = true;
   }
   return {
     childrenHiddenIDs,
     detailStates,
+    shouldScrollToFirstUiFindMatch,
   };
 }
 
@@ -125,6 +129,13 @@ function focusUiFindMatches(state: TTraceTimeline, { uiFind, trace }: TTraceUiFi
     ...state,
     ...calculateHiddenIdsAndDetailStates(uiFind, trace.spans),
   };
+}
+
+function clearShouldScrollToFirstUiFindMatch(state: TTraceTimeline) {
+  if (state.shouldScrollToFirstUiFindMatch) {
+    return { ...state, shouldScrollToFirstUiFindMatch: false };
+  }
+  return state;
 }
 
 function setTrace(state: TTraceTimeline, { uiFind, trace }: TTraceUiFindValue) {
@@ -280,6 +291,9 @@ export default handleActions(
   {
     [actionTypes.ADD_HOVER_INDENT_GUIDE_ID]: guardReducer(addHoverIndentGuideId),
     [actionTypes.CHILDREN_TOGGLE]: guardReducer(childrenToggle),
+    [actionTypes.CLEAR_SHOULD_SCROLL_TO_FIRST_UI_FIND_MATCH]: guardReducer(
+      clearShouldScrollToFirstUiFindMatch
+    ),
     [actionTypes.COLLAPSE_ALL]: guardReducer(collapseAll),
     [actionTypes.COLLAPSE_ONE]: guardReducer(collapseOne),
     [actionTypes.DETAIL_LOGS_TOGGLE]: guardReducer(detailLogsToggle),

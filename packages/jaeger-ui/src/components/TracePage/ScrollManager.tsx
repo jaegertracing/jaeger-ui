@@ -131,8 +131,15 @@ export default class ScrollManager {
     }
     const { duration, spans, startTime: traceStartTime } = this._trace;
     const isUp = direction < 0;
-    const boundaryRow = isUp ? xrs.getTopRowIndexVisible() : xrs.getBottomRowIndexVisible();
-    const spanIndex = xrs.mapRowIndexToSpanIndex(startRow != null ? startRow : boundaryRow);
+    let boundaryRow: number;
+    if (startRow != null) {
+      boundaryRow = startRow;
+    } else if (isUp) {
+      boundaryRow = xrs.getTopRowIndexVisible();
+    } else {
+      boundaryRow = xrs.getBottomRowIndexVisible();
+    }
+    const spanIndex = xrs.mapRowIndexToSpanIndex(boundaryRow);
     if ((spanIndex === 0 && isUp) || (spanIndex === spans.length - 1 && !isUp)) {
       return;
     }

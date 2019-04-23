@@ -32,6 +32,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
   const props = {
     childrenHiddenIDs: new Set(),
     childrenToggle: jest.fn(),
+    clearShouldScrollToFirstUiFindMatch: jest.fn(),
     currentViewRangeTime: [0.25, 0.75],
     detailLogItemToggle: jest.fn(),
     detailLogsToggle: jest.fn(),
@@ -44,6 +45,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
     scrollToFirstVisibleSpan: jest.fn(),
     setSpanNameColumnWidth: jest.fn(),
     setTrace: jest.fn(),
+    shouldScrollToFirstUiFindMatch: false,
     spanNameColumnWidth: 0.5,
     trace,
     uiFind: 'uiFind',
@@ -345,32 +347,46 @@ describe('<VirtualizedTraceViewImpl>', () => {
     });
   });
 
-  describe('handles needToScroll', () => {
+  describe('shouldScrollToFirstUiFindMatch', () => {
+    const propsWithTruthShouldScrollToFirstUiFindMatch = { ...props, shouldScrollToFirstUiFindMatch: true };
+
     beforeEach(() => {
       props.scrollToFirstVisibleSpan.mockReset();
+      props.clearShouldScrollToFirstUiFindMatch.mockReset();
     });
 
-    [[Set, 'childrenHiddenIDs'], [Map, 'detailStates']].forEach(([ConstructorFn, propName]) => {
-      it(`calls props.scrollToFirstVisibleSpan if ${propName} changes and ${propName}.needToScroll is true`, () => {
-        expect(props.scrollToFirstVisibleSpan).not.toHaveBeenCalled();
+    it('calls props.scrollToFirstVisibleSpan if shouldScrollToFirstUiFindMatch is true', () => {
+      expect(props.scrollToFirstVisibleSpan).not.toHaveBeenCalled();
+      expect(props.clearShouldScrollToFirstUiFindMatch).not.toHaveBeenCalled();
 
-        const collectionThatNeedsToScroll = new ConstructorFn();
-        collectionThatNeedsToScroll.needToScroll = true;
+      wrapper.setProps(propsWithTruthShouldScrollToFirstUiFindMatch);
+      expect(props.scrollToFirstVisibleSpan).toHaveBeenCalledTimes(1);
+      expect(props.clearShouldScrollToFirstUiFindMatch).toHaveBeenCalledTimes(1);
+    });
 
-        wrapper.setProps({ [propName]: collectionThatNeedsToScroll });
-        expect(props.scrollToFirstVisibleSpan).toHaveBeenCalledTimes(1);
+    describe('shouldComponentUpdate', () => {
+      it('returns true if props.shouldScrollToFirstUiFindMatch is unchanged', () => {
+        expect(wrapper.instance().shouldComponentUpdate(props)).toBe(true);
+      });
 
-        wrapper.setProps({ [propName]: collectionThatNeedsToScroll });
-        expect(props.scrollToFirstVisibleSpan).toHaveBeenCalledTimes(1);
+      it('returns true if props.shouldScrollToFirstUiFindMatch changes to true', () => {
+        expect(wrapper.instance().shouldComponentUpdate(propsWithTruthShouldScrollToFirstUiFindMatch)).toBe(
+          true
+        );
+      });
 
-        const differentCollectionThatAlsoNeedsToScroll = new ConstructorFn();
-        differentCollectionThatAlsoNeedsToScroll.needToScroll = true;
-        wrapper.setProps({ [propName]: differentCollectionThatAlsoNeedsToScroll });
-        expect(props.scrollToFirstVisibleSpan).toHaveBeenCalledTimes(2);
+      it('returns true if props.shouldScrollToFirstUiFindMatch changes to false and another props change', () => {
+        const propsWithOtherDifferenceAndTrueshouldScrollToFirstUiFindMatch = {
+          ...propsWithTruthShouldScrollToFirstUiFindMatch,
+          clearShouldScrollToFirstUiFindMatch: () => {},
+        };
+        wrapper.setProps(propsWithOtherDifferenceAndTrueshouldScrollToFirstUiFindMatch);
+        expect(wrapper.instance().shouldComponentUpdate(props)).toBe(true);
+      });
 
-        const differentCollectionThatDoesNotNeedToScroll = new ConstructorFn();
-        wrapper.setProps({ [propName]: differentCollectionThatDoesNotNeedToScroll });
-        expect(props.scrollToFirstVisibleSpan).toHaveBeenCalledTimes(2);
+      it('returns false if props.shouldScrollToFirstUiFindMatch changes to false and no other props change', () => {
+        wrapper.setProps(propsWithTruthShouldScrollToFirstUiFindMatch);
+        expect(wrapper.instance().shouldComponentUpdate(props)).toBe(false);
       });
     });
   });
