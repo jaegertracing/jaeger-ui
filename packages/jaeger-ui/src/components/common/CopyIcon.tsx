@@ -14,12 +14,16 @@
 
 import * as React from 'react';
 
-import { Icon, Tooltip } from 'antd';
+import { Tooltip, Button } from 'antd';
+import { TooltipPlacement } from 'antd/lib/tooltip/index';
+
 import CopyToClipboard from 'react-copy-to-clipboard';
 
 type PropsType = {
   className?: string;
   copyText: string;
+  icon?: string;
+  placement?: TooltipPlacement;
   tooltipTitle: string;
 };
 
@@ -30,6 +34,8 @@ type StateType = {
 export default class CopyIcon extends React.PureComponent<PropsType, StateType> {
   static defaultProps: Partial<PropsType> = {
     className: undefined,
+    icon: 'copy',
+    placement: 'left',
   };
 
   state = {
@@ -56,11 +62,16 @@ export default class CopyIcon extends React.PureComponent<PropsType, StateType> 
         arrowPointAtCenter
         mouseLeaveDelay={0.5}
         onVisibleChange={this.handleTooltipVisibilityChange}
-        placement="left"
+        placement={this.props.placement}
         title={this.state.hasCopied ? 'Copied' : this.props.tooltipTitle}
       >
         <CopyToClipboard text={this.props.copyText}>
-          <Icon className={this.props.className} onClick={this.handleClick} type="copy" />
+          <Button
+            className={this.props.className}
+            htmlType="button"
+            onClick={this.handleClick}
+            icon={this.props.icon}
+          />
         </CopyToClipboard>
       </Tooltip>
     );

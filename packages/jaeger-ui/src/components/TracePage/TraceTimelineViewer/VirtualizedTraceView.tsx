@@ -36,7 +36,6 @@ import { Accessors } from '../ScrollManager';
 import { extractUiFindFromState, TExtractUiFindFromStateReturn } from '../../common/UiFindInput';
 import getLinks from '../../../model/link-patterns';
 import colorGenerator from '../../../utils/color-generator';
-import updateUiFind from '../../../utils/update-ui-find';
 import { TNil, ReduxState } from '../../../types';
 import { Log, Span, Trace, KeyValuePair } from '../../../types/trace';
 import TTraceTimeline from '../../../types/TTraceTimeline';
@@ -224,17 +223,6 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
     }
   }
 
-  addToUiFind = (addition: string) => {
-    const { uiFind, history, location } = this.props;
-    if (!uiFind || !uiFind.includes(addition)) {
-      updateUiFind({
-        history,
-        location,
-        uiFind: cx(uiFind, addition),
-      });
-    }
-  };
-
   getAccessors() {
     const lv = this.listView;
     if (!lv) {
@@ -401,7 +389,6 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
     return (
       <div className="VirtualizedTraceView--row" key={key} style={{ ...style, zIndex: 1 }} {...attrs}>
         <SpanDetailRow
-          addToUiFind={this.addToUiFind}
           color={color}
           columnDivision={spanNameColumnWidth}
           onDetailToggled={detailToggle}

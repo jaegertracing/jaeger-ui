@@ -14,7 +14,7 @@
 
 import React from 'react';
 import { shallow } from 'enzyme';
-import { Icon, Tooltip } from 'antd';
+import { Button, Tooltip } from 'antd';
 
 import CopyIcon from './CopyIcon';
 
@@ -34,9 +34,9 @@ describe('<CopyIcon />', () => {
     expect(wrapper).toMatchSnapshot();
   });
 
-  it('updates state when icon is clicked', () => {
+  it('updates state when clicked', () => {
     expect(wrapper.state().hasCopied).toBe(false);
-    wrapper.find(Icon).simulate('click');
+    wrapper.find(Button).simulate('click');
     expect(wrapper.state().hasCopied).toBe(true);
   });
 

@@ -13,13 +13,13 @@
 // limitations under the License.
 
 import React from 'react';
-import { Button, Divider, Tooltip } from 'antd';
-import ZoomIn from 'react-icons/lib/ti/zoom-in';
+import { Divider } from 'antd';
 
 import AccordianKeyValues from './AccordianKeyValues';
 import AccordianLogs from './AccordianLogs';
 import DetailState from './DetailState';
 import { formatDuration } from '../utils';
+import CopyIcon from '../../../common/CopyIcon';
 import LabeledList from '../../../common/LabeledList';
 
 import { TNil } from '../../../../types';
@@ -28,7 +28,6 @@ import { Log, Span, KeyValuePair, Link } from '../../../../types/trace';
 import './index.css';
 
 type SpanDetailProps = {
-  addToUiFind: (spanID: string) => void;
   detailState: DetailState;
   linksGetter: ((links: KeyValuePair[], index: number) => Link[]) | TNil;
   logItemToggle: (spanID: string, log: Log) => void;
@@ -41,7 +40,6 @@ type SpanDetailProps = {
 
 export default function SpanDetail(props: SpanDetailProps) {
   const {
-    addToUiFind,
     detailState,
     linksGetter,
     logItemToggle,
@@ -70,6 +68,7 @@ export default function SpanDetail(props: SpanDetailProps) {
       value: formatDuration(relativeStartTime),
     },
   ];
+  const deepLinkCopyText = `${window.location.origin}${window.location.pathname}?uiFind=${spanID}`;
 
   return (
     <div>
@@ -116,15 +115,12 @@ export default function SpanDetail(props: SpanDetailProps) {
           )}
         <small className="SpanDetail--debugInfo">
           <span className="SpanDetail--debugLabel" data-label="SpanID:" /> {spanID}
-          <Tooltip placement="topRight" title="Click to add to filter for deep linking">
-            <Button
-              className="SpanDetail--debugValue ant-btn-icon-only"
-              htmlType="button"
-              onClick={() => addToUiFind(spanID)}
-            >
-              <ZoomIn size="1.4em" />
-            </Button>
-          </Tooltip>
+          <CopyIcon
+            copyText={deepLinkCopyText}
+            icon="link"
+            placement="top"
+            tooltipTitle="Copy deep link to this span"
+          />
         </small>
       </div>
     </div>

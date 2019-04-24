@@ -15,10 +15,15 @@ exports[`<CopyIcon /> renders as expected 1`] = `
   <CopyToClipboard
     text="copyTextValue"
   >
-    <Icon
+    <Button
+      block={false}
       className="classNameValue"
+      ghost={false}
+      htmlType="button"
+      icon="copy"
+      loading={false}
       onClick={[Function]}
-      type="copy"
+      prefixCls="ant-btn"
     />
   </CopyToClipboard>
 </Tooltip>
