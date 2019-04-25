@@ -348,7 +348,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
   });
 
   describe('shouldScrollToFirstUiFindMatch', () => {
-    const propsWithTruthShouldScrollToFirstUiFindMatch = { ...props, shouldScrollToFirstUiFindMatch: true };
+    const propsWithTrueShouldScrollToFirstUiFindMatch = { ...props, shouldScrollToFirstUiFindMatch: true };
 
     beforeEach(() => {
       props.scrollToFirstVisibleSpan.mockReset();
@@ -359,25 +359,21 @@ describe('<VirtualizedTraceViewImpl>', () => {
       expect(props.scrollToFirstVisibleSpan).not.toHaveBeenCalled();
       expect(props.clearShouldScrollToFirstUiFindMatch).not.toHaveBeenCalled();
 
-      wrapper.setProps(propsWithTruthShouldScrollToFirstUiFindMatch);
+      wrapper.setProps(propsWithTrueShouldScrollToFirstUiFindMatch);
       expect(props.scrollToFirstVisibleSpan).toHaveBeenCalledTimes(1);
       expect(props.clearShouldScrollToFirstUiFindMatch).toHaveBeenCalledTimes(1);
     });
 
     describe('shouldComponentUpdate', () => {
-      it('returns true if props.shouldScrollToFirstUiFindMatch is unchanged', () => {
-        expect(wrapper.instance().shouldComponentUpdate(props)).toBe(true);
-      });
-
       it('returns true if props.shouldScrollToFirstUiFindMatch changes to true', () => {
-        expect(wrapper.instance().shouldComponentUpdate(propsWithTruthShouldScrollToFirstUiFindMatch)).toBe(
+        expect(wrapper.instance().shouldComponentUpdate(propsWithTrueShouldScrollToFirstUiFindMatch)).toBe(
           true
         );
       });
 
       it('returns true if props.shouldScrollToFirstUiFindMatch changes to false and another props change', () => {
         const propsWithOtherDifferenceAndTrueshouldScrollToFirstUiFindMatch = {
-          ...propsWithTruthShouldScrollToFirstUiFindMatch,
+          ...propsWithTrueShouldScrollToFirstUiFindMatch,
           clearShouldScrollToFirstUiFindMatch: () => {},
         };
         wrapper.setProps(propsWithOtherDifferenceAndTrueshouldScrollToFirstUiFindMatch);
@@ -385,7 +381,11 @@ describe('<VirtualizedTraceViewImpl>', () => {
       });
 
       it('returns false if props.shouldScrollToFirstUiFindMatch changes to false and no other props change', () => {
-        wrapper.setProps(propsWithTruthShouldScrollToFirstUiFindMatch);
+        wrapper.setProps(propsWithTrueShouldScrollToFirstUiFindMatch);
+        expect(wrapper.instance().shouldComponentUpdate(props)).toBe(false);
+      });
+
+      it('returns false if all props are unchanged', () => {
         expect(wrapper.instance().shouldComponentUpdate(props)).toBe(false);
       });
     });

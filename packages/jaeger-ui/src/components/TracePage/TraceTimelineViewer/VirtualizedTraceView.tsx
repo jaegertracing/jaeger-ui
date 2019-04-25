@@ -135,8 +135,7 @@ function getCssClasses(currentViewRange: [number, number]) {
 }
 
 // export from tests
-// eslint-disable-next-line react/no-redundant-should-component-update
-export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTraceViewProps> {
+export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceViewProps> {
   clippingCssClasses: string;
   listView: ListView | TNil;
   rowStates: RowState[];
@@ -161,22 +160,17 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
   }
 
   shouldComponentUpdate(nextProps: VirtualizedTraceViewProps) {
-    if (
-      !nextProps.shouldScrollToFirstUiFindMatch &&
-      nextProps.shouldScrollToFirstUiFindMatch !== this.props.shouldScrollToFirstUiFindMatch
-    ) {
-      const nextPropKeys = Object.keys(nextProps);
-      for (let i = 0; i < nextPropKeys.length; i += 1) {
-        if (
-          nextProps[nextPropKeys[i] as keyof VirtualizedTraceViewProps] !==
-            this.props[nextPropKeys[i] as keyof VirtualizedTraceViewProps] &&
-          nextPropKeys[i] !== 'shouldScrollToFirstUiFindMatch'
-        )
+    const nextPropKeys = Object.keys(nextProps) as (keyof VirtualizedTraceViewProps)[];
+    for (let i = 0; i < nextPropKeys.length; i += 1) {
+      if (nextProps[nextPropKeys[i]] !== this.props[nextPropKeys[i]]) {
+        if (nextPropKeys[i] === 'shouldScrollToFirstUiFindMatch') {
+          if (nextProps[nextPropKeys[i]]) return true;
+        } else {
           return true;
+        }
       }
-      return false;
     }
-    return true;
+    return false;
   }
 
   componentWillUpdate(nextProps: VirtualizedTraceViewProps) {
