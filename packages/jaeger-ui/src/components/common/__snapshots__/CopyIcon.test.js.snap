@@ -12,19 +12,15 @@ exports[`<CopyIcon /> renders as expected 1`] = `
   title="tooltipTitleValue"
   transitionName="zoom-big-fast"
 >
-  <CopyToClipboard
-    text="copyTextValue"
-  >
-    <Button
-      block={false}
-      className="classNameValue"
-      ghost={false}
-      htmlType="button"
-      icon="copy"
-      loading={false}
-      onClick={[Function]}
-      prefixCls="ant-btn"
-    />
-  </CopyToClipboard>
+  <Button
+    block={false}
+    className="classNameValue CopyIcon"
+    ghost={false}
+    htmlType="button"
+    icon="copy"
+    loading={false}
+    onClick={[Function]}
+    prefixCls="ant-btn"
+  />
 </Tooltip>
 `;

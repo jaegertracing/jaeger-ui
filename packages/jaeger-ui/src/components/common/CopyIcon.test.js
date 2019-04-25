@@ -15,8 +15,11 @@
 import React from 'react';
 import { shallow } from 'enzyme';
 import { Button, Tooltip } from 'antd';
+import * as copy from 'copy-to-clipboard';
 
 import CopyIcon from './CopyIcon';
+
+jest.mock('copy-to-clipboard');
 
 describe('<CopyIcon />', () => {
   const props = {
@@ -24,9 +27,15 @@ describe('<CopyIcon />', () => {
     copyText: 'copyTextValue',
     tooltipTitle: 'tooltipTitleValue',
   };
+  let copySpy;
   let wrapper;
 
+  beforeAll(() => {
+    copySpy = jest.spyOn(copy, 'default');
+  });
+
   beforeEach(() => {
+    copySpy.mockReset();
     wrapper = shallow(<CopyIcon {...props} />);
   });
 
@@ -34,10 +43,13 @@ describe('<CopyIcon />', () => {
     expect(wrapper).toMatchSnapshot();
   });
 
-  it('updates state when clicked', () => {
+  it('updates state and copies when clicked', () => {
     expect(wrapper.state().hasCopied).toBe(false);
+    expect(copySpy).not.toHaveBeenCalled();
+
     wrapper.find(Button).simulate('click');
     expect(wrapper.state().hasCopied).toBe(true);
+    expect(copySpy).toHaveBeenCalledWith(props.copyText);
   });
 
   it('updates state when tooltip hides and state.hasCopied is true', () => {

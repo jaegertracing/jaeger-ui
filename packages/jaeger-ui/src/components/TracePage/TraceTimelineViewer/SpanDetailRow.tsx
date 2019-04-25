@@ -19,7 +19,6 @@ import DetailState from './SpanDetail/DetailState';
 import SpanTreeOffset from './SpanTreeOffset';
 import TimelineRow from './TimelineRow';
 
-import { TNil } from '../../../types';
 import { Log, Span, KeyValuePair, Link } from '../../../types/trace';
 
 import './SpanDetailRow.css';
@@ -29,7 +28,7 @@ type SpanDetailRowProps = {
   columnDivision: number;
   detailState: DetailState;
   onDetailToggled: (spanID: string) => void;
-  linksGetter: ((span: Span, links: KeyValuePair[], index: number) => Link[]) | TNil;
+  linksGetter: (span: Span, links: KeyValuePair[], index: number) => Link[];
   logItemToggle: (spanID: string, log: Log) => void;
   logsToggle: (spanID: string) => void;
   processToggle: (spanID: string) => void;
@@ -45,7 +44,7 @@ export default class SpanDetailRow extends React.PureComponent<SpanDetailRowProp
 
   _linksGetter = (items: KeyValuePair[], itemIndex: number) => {
     const { linksGetter, span } = this.props;
-    return linksGetter ? linksGetter(span, items, itemIndex) : [];
+    return linksGetter(span, items, itemIndex);
   };
 
   render() {
