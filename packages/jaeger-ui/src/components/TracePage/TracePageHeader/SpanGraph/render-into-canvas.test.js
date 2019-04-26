@@ -21,6 +21,7 @@ import renderIntoCanvas, {
   MAX_TOTAL_HEIGHT,
   MIN_ITEM_WIDTH,
   MIN_TOTAL_HEIGHT,
+  MAX_ITEM_HEIGHT,
 } from './render-into-canvas';
 
 const getCanvasWidth = () => window.innerWidth * 2;
@@ -124,16 +125,19 @@ describe('renderIntoCanvas()', () => {
         { input: items[1].serviceName, output: [1, 1, 1] },
         { input: items[2].serviceName, output: [2, 2, 2] },
       ];
+      const cHeight =
+        items.length < MIN_TOTAL_HEIGHT ? MIN_TOTAL_HEIGHT : Math.min(items.length, MAX_TOTAL_HEIGHT);
+
       const expectedDrawings = [
         getBgFillRect(),
         ...items.map((item, i) => {
           const { valueWidth, valueOffset } = item;
           const color = expectedColors[i].output;
           const fillStyle = `rgba(${color.concat(ITEM_ALPHA).join()})`;
-          const height = MIN_TOTAL_HEIGHT / items.length;
+          const height = Math.min(MAX_ITEM_HEIGHT, Math.max(MIN_ITEM_HEIGHT, cHeight / items.length));
           const width = valueWidth / totalValueWidth * getCanvasWidth();
           const x = valueOffset / totalValueWidth * getCanvasWidth();
-          const y = height * i;
+          const y = cHeight / items.length * i;
           return { fillStyle, height, width, x, y };
         }),
       ];
