@@ -59,7 +59,7 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwarde
   return (
     <div className="TracePageSearchBar">
       {/* style inline because compact overwrites the display */}
-      <Input.Group className="TracePageSearchBar--InputGroup" compact style={{ display: 'flex' }}>
+      <Input.Group className="ub-justify-end" compact style={{ display: 'flex' }}>
         <UiFindInput
           inputProps={uiFindInputInputProps}
           forwardedRef={forwardedRef}
@@ -68,7 +68,7 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwarde
         {navigable && (
           <>
             <Button
-              className={cx(btnClass, 'locate-btn')}
+              className={cx(btnClass, 'TracePageSearchBar--locateBtn')}
               disabled={!textFilter}
               htmlType="button"
               onClick={focusUiFindMatches}

@@ -136,20 +136,15 @@ describe('<TracePage>', () => {
   });
 
   describe('focusUiFindMatches', () => {
-    let scrollToFirstVisibleSpanSpy;
-
     beforeEach(() => {
-      scrollToFirstVisibleSpanSpy = jest.spyOn(wrapper.instance()._scrollManager, 'scrollToFirstVisibleSpan');
-      scrollToFirstVisibleSpanSpy.mockReset();
       defaultProps.focusUiFindMatches.mockReset();
     });
 
-    it('calls _scrollManager.scrollToFirstVisibleSpan and props.focusUiFindMatches with props.trace.data and uiFind when props.trace.data is present', () => {
+    it('calls props.focusUiFindMatches with props.trace.data and uiFind when props.trace.data is present', () => {
       const uiFind = 'test ui find';
       wrapper.setProps({ uiFind });
       wrapper.find(TracePageHeader).prop('focusUiFindMatches')();
       expect(defaultProps.focusUiFindMatches).toHaveBeenCalledWith(defaultProps.trace.data, uiFind);
-      expect(scrollToFirstVisibleSpanSpy).toHaveBeenCalled();
     });
 
     it('handles when props.trace.data is absent', () => {
@@ -157,7 +152,6 @@ describe('<TracePage>', () => {
       wrapper.setProps({ trace: {} });
       propFn();
       expect(defaultProps.focusUiFindMatches).not.toHaveBeenCalled();
-      expect(scrollToFirstVisibleSpanSpy).not.toHaveBeenCalled();
     });
   });
 

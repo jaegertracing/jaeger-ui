@@ -160,9 +160,11 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
   }
 
   shouldComponentUpdate(nextProps: VirtualizedTraceViewProps) {
+    // If any prop updates, VirtualizedTraceViewImpl should update.
     const nextPropKeys = Object.keys(nextProps) as (keyof VirtualizedTraceViewProps)[];
     for (let i = 0; i < nextPropKeys.length; i += 1) {
       if (nextProps[nextPropKeys[i]] !== this.props[nextPropKeys[i]]) {
+        // Unless the only change was props.shouldScrollToFirstUiFindMatch changing to false.
         if (nextPropKeys[i] === 'shouldScrollToFirstUiFindMatch') {
           if (nextProps[nextPropKeys[i]]) return true;
         } else {

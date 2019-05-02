@@ -18,10 +18,6 @@ limitations under the License.
   width: 40%;
 }
 
-.TracePageSearchBar--InputGroup {
-  justify-content: flex-end;
-}
-
 .TracePageSearchBar--bar {
   max-width: 20rem;
   transition: max-width 0.5s;
@@ -44,6 +40,6 @@ limitations under the License.
   opacity: 0.5;
 }
 
-.TracePageSearchBar--btn.locate-btn {
+.TracePageSearchBar--locateBtn {
   padding: 1px 8px 4px;
 }

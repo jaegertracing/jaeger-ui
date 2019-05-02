@@ -97,7 +97,7 @@ const fullActions = createActions<TActionTypes>({
 
 export const actions = (fullActions as any).jaegerUi.traceTimelineViewer as TTimelineViewerActions;
 
-function calculateHiddenIdsAndDetailStates(uiFind: string, spans: Span[]) {
+function calculateFocusedFindRowStates(uiFind: string, spans: Span[]) {
   const spansMap = new Map();
   const childrenHiddenIDs: Set<string> = new Set();
   const detailStates: Map<string, DetailState> = new Map();
@@ -127,7 +127,7 @@ function focusUiFindMatches(state: TTraceTimeline, { uiFind, trace }: TTraceUiFi
   if (!uiFind) return state;
   return {
     ...state,
-    ...calculateHiddenIdsAndDetailStates(uiFind, trace.spans),
+    ...calculateFocusedFindRowStates(uiFind, trace.spans),
   };
 }
 
@@ -147,7 +147,7 @@ function setTrace(state: TTraceTimeline, { uiFind, trace }: TTraceUiFindValue) {
 
   return Object.assign(
     { ...newInitialState(), spanNameColumnWidth, traceID },
-    uiFind ? calculateHiddenIdsAndDetailStates(uiFind, spans) : null
+    uiFind ? calculateFocusedFindRowStates(uiFind, spans) : null
   );
 }
 
