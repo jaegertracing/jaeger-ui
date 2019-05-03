@@ -120,7 +120,7 @@ export default class ScrollManager {
     this._scroller.scrollTo(y);
   }
 
-  _scrollToVisibleSpan(direction: 1 | -1) {
+  _scrollToVisibleSpan(direction: 1 | -1, startRow?: number) {
     const xrs = this._accessors;
     /* istanbul ignore next */
     if (!xrs) {
@@ -131,7 +131,14 @@ export default class ScrollManager {
     }
     const { duration, spans, startTime: traceStartTime } = this._trace;
     const isUp = direction < 0;
-    const boundaryRow = isUp ? xrs.getTopRowIndexVisible() : xrs.getBottomRowIndexVisible();
+    let boundaryRow: number;
+    if (startRow != null) {
+      boundaryRow = startRow;
+    } else if (isUp) {
+      boundaryRow = xrs.getTopRowIndexVisible();
+    } else {
+      boundaryRow = xrs.getBottomRowIndexVisible();
+    }
     const spanIndex = xrs.mapRowIndexToSpanIndex(boundaryRow);
     if ((spanIndex === 0 && isUp) || (spanIndex === spans.length - 1 && !isUp)) {
       return;
@@ -184,7 +191,7 @@ export default class ScrollManager {
 
       // If there are hidden children, scroll to the last visible span
       if (childrenAreHidden) {
-        let isFallbackHidden: boolean | TNil;
+        let isFallbackHidden: boolean;
         do {
           const { isHidden, parentIDs } = isSpanHidden(spans[nextSpanIndex], childrenAreHidden, spansMap);
           if (isHidden) {
@@ -253,6 +260,10 @@ export default class ScrollManager {
    */
   scrollToPrevVisibleSpan = () => {
     this._scrollToVisibleSpan(-1);
+  };
+
+  scrollToFirstVisibleSpan = () => {
+    this._scrollToVisibleSpan(1, 0);
   };
 
   destroy() {

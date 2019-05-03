@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2018 Uber Technologies, Inc.
+Copyright (c) 2019 Uber Technologies, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,32 +14,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-.TracePageSearchBar {
-  width: 40%;
+.CopyIcon,
+.CopyIcon:hover {
+  background-color: transparent;
+  border: none;
+  color: inherit;
+  height: 100%;
+  overflow: hidden;
+  padding: 0px;
 }
 
-.TracePageSearchBar--bar {
-  max-width: 20rem;
-  transition: max-width 0.5s;
-}
-
-.TracePageSearchBar--bar:focus-within {
-  max-width: 100%;
-}
-
-.TracePageSearchBar--count {
-  opacity: 0.6;
-}
-
-.TracePageSearchBar--btn {
-  border-left: none;
-  transition: 0.2s;
-}
-
-.TracePageSearchBar--btn.is-disabled {
-  opacity: 0.5;
-}
-
-.TracePageSearchBar--locateBtn {
-  padding: 1px 8px 4px;
+.CopyIcon:focus {
+  background-color: rgba(255, 255, 255, 0.25);
+  color: inherit;
 }

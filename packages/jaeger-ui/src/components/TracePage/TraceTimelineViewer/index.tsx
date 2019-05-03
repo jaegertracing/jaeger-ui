@@ -38,6 +38,7 @@ type TDispatchProps = {
 type TProps = TDispatchProps & {
   registerAccessors: (accessors: Accessors) => void;
   findMatchesIDs: Set<string> | TNil;
+  scrollToFirstVisibleSpan: () => void;
   spanNameColumnWidth: number;
   trace: Trace;
   updateNextViewRangeTime: (update: ViewRangeTimeUpdate) => void;

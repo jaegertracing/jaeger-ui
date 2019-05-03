@@ -13,12 +13,13 @@
 // limitations under the License.
 
 import React from 'react';
-import { Divider, Tooltip } from 'antd';
+import { Divider } from 'antd';
 
 import AccordianKeyValues from './AccordianKeyValues';
 import AccordianLogs from './AccordianLogs';
 import DetailState from './DetailState';
 import { formatDuration } from '../utils';
+import CopyIcon from '../../../common/CopyIcon';
 import LabeledList from '../../../common/LabeledList';
 
 import { TNil } from '../../../../types';
@@ -27,7 +28,6 @@ import { Log, Span, KeyValuePair, Link } from '../../../../types/trace';
 import './index.css';
 
 type SpanDetailProps = {
-  addToUiFind: (spanID: string) => void;
   detailState: DetailState;
   linksGetter: ((links: KeyValuePair[], index: number) => Link[]) | TNil;
   logItemToggle: (spanID: string, log: Log) => void;
@@ -40,7 +40,6 @@ type SpanDetailProps = {
 
 export default function SpanDetail(props: SpanDetailProps) {
   const {
-    addToUiFind,
     detailState,
     linksGetter,
     logItemToggle,
@@ -69,6 +68,7 @@ export default function SpanDetail(props: SpanDetailProps) {
       value: formatDuration(relativeStartTime),
     },
   ];
+  const deepLinkCopyText = `${window.location.origin}${window.location.pathname}?uiFind=${spanID}`;
 
   return (
     <div>
@@ -113,14 +113,14 @@ export default function SpanDetail(props: SpanDetailProps) {
               timestamp={traceStartTime}
             />
           )}
-
         <small className="SpanDetail--debugInfo">
-          <Tooltip title="Click ID to add to filter">
-            <span className="SpanDetail--debugLabel" data-label="SpanID:" />{' '}
-            <button className="SpanDetail--debugValue" type="button" onClick={() => addToUiFind(spanID)}>
-              {spanID}
-            </button>
-          </Tooltip>
+          <span className="SpanDetail--debugLabel" data-label="SpanID:" /> {spanID}
+          <CopyIcon
+            copyText={deepLinkCopyText}
+            icon="link"
+            placement="topRight"
+            tooltipTitle="Copy deep link to this span"
+          />
         </small>
       </div>
     </div>

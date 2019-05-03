@@ -40,6 +40,7 @@ import './TracePageHeader.css';
 type TracePageHeaderEmbedProps = {
   canCollapse: boolean;
   clearSearch: () => void;
+  focusUiFindMatches: () => void;
   hideMap: boolean;
   hideSummary: boolean;
   linkToStandalone: string;
@@ -95,6 +96,7 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
   const {
     canCollapse,
     clearSearch,
+    focusUiFindMatches,
     forwardedRef,
     hideMap,
     hideSummary,
@@ -161,9 +163,9 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
         ) : (
           title
         )}
-        {showShortcutsHelp && <KeyboardShortcutsHelp className="ub-mr2" />}
         <TracePageSearchBar
           clearSearch={clearSearch}
+          focusUiFindMatches={focusUiFindMatches}
           nextResult={nextResult}
           prevResult={prevResult}
           ref={forwardedRef}
@@ -171,7 +173,7 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
           textFilter={textFilter}
           navigable={!traceGraphView}
         />
-
+        {showShortcutsHelp && <KeyboardShortcutsHelp className="ub-m2" />}
         {showViewOptions && (
           <AltViewOptions
             onTraceGraphViewClicked={onTraceGraphViewClicked}

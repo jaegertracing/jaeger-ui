@@ -32,6 +32,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
   const props = {
     childrenHiddenIDs: new Set(),
     childrenToggle: jest.fn(),
+    clearShouldScrollToFirstUiFindMatch: jest.fn(),
     currentViewRangeTime: [0.25, 0.75],
     detailLogItemToggle: jest.fn(),
     detailLogsToggle: jest.fn(),
@@ -41,8 +42,10 @@ describe('<VirtualizedTraceViewImpl>', () => {
     detailToggle: jest.fn(),
     findMatchesIDs: null,
     registerAccessors: jest.fn(),
+    scrollToFirstVisibleSpan: jest.fn(),
     setSpanNameColumnWidth: jest.fn(),
     setTrace: jest.fn(),
+    shouldScrollToFirstUiFindMatch: false,
     spanNameColumnWidth: 0.5,
     trace,
     uiFind: 'uiFind',
@@ -341,6 +344,50 @@ describe('<VirtualizedTraceViewImpl>', () => {
           />
         )
       ).toBe(true);
+    });
+  });
+
+  describe('shouldScrollToFirstUiFindMatch', () => {
+    const propsWithTrueShouldScrollToFirstUiFindMatch = { ...props, shouldScrollToFirstUiFindMatch: true };
+
+    beforeEach(() => {
+      props.scrollToFirstVisibleSpan.mockReset();
+      props.clearShouldScrollToFirstUiFindMatch.mockReset();
+    });
+
+    it('calls props.scrollToFirstVisibleSpan if shouldScrollToFirstUiFindMatch is true', () => {
+      expect(props.scrollToFirstVisibleSpan).not.toHaveBeenCalled();
+      expect(props.clearShouldScrollToFirstUiFindMatch).not.toHaveBeenCalled();
+
+      wrapper.setProps(propsWithTrueShouldScrollToFirstUiFindMatch);
+      expect(props.scrollToFirstVisibleSpan).toHaveBeenCalledTimes(1);
+      expect(props.clearShouldScrollToFirstUiFindMatch).toHaveBeenCalledTimes(1);
+    });
+
+    describe('shouldComponentUpdate', () => {
+      it('returns true if props.shouldScrollToFirstUiFindMatch changes to true', () => {
+        expect(wrapper.instance().shouldComponentUpdate(propsWithTrueShouldScrollToFirstUiFindMatch)).toBe(
+          true
+        );
+      });
+
+      it('returns true if props.shouldScrollToFirstUiFindMatch changes to false and another props change', () => {
+        const propsWithOtherDifferenceAndTrueshouldScrollToFirstUiFindMatch = {
+          ...propsWithTrueShouldScrollToFirstUiFindMatch,
+          clearShouldScrollToFirstUiFindMatch: () => {},
+        };
+        wrapper.setProps(propsWithOtherDifferenceAndTrueshouldScrollToFirstUiFindMatch);
+        expect(wrapper.instance().shouldComponentUpdate(props)).toBe(true);
+      });
+
+      it('returns false if props.shouldScrollToFirstUiFindMatch changes to false and no other props change', () => {
+        wrapper.setProps(propsWithTrueShouldScrollToFirstUiFindMatch);
+        expect(wrapper.instance().shouldComponentUpdate(props)).toBe(false);
+      });
+
+      it('returns false if all props are unchanged', () => {
+        expect(wrapper.instance().shouldComponentUpdate(props)).toBe(false);
+      });
     });
   });
 });

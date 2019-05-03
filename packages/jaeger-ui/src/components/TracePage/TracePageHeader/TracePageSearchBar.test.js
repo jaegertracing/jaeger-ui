@@ -16,20 +16,20 @@ import React from 'react';
 import { shallow } from 'enzyme';
 
 import * as markers from './TracePageSearchBar.markers';
-import { TracePageSearchBarFn as TracePageSearchBar } from './TracePageSearchBar';
+import DefaultTracePageSearchBar, { TracePageSearchBarFn as TracePageSearchBar } from './TracePageSearchBar';
 import { trackFilter } from '../index.track';
 import UiFindInput from '../../common/UiFindInput';
 
-describe('<TracePageSearchBar>', () => {
-  const defaultProps = {
-    forwardedRef: React.createRef(),
-    navigable: true,
-    nextResult: () => {},
-    prevResult: () => {},
-    resultCount: 0,
-    textFilter: 'something',
-  };
+const defaultProps = {
+  forwardedRef: React.createRef(),
+  navigable: true,
+  nextResult: () => {},
+  prevResult: () => {},
+  resultCount: 0,
+  textFilter: 'something',
+};
 
+describe('<TracePageSearchBar>', () => {
   let wrapper;
 
   beforeEach(() => {
@@ -55,7 +55,7 @@ describe('<TracePageSearchBar>', () => {
 
     it('renders buttons', () => {
       const buttons = wrapper.find('Button');
-      expect(buttons.length).toBe(3);
+      expect(buttons.length).toBe(4);
       buttons.forEach(button => {
         expect(button.hasClass('TracePageSearchBar--btn')).toBe(true);
         expect(button.hasClass('is-disabled')).toBe(false);
@@ -66,15 +66,11 @@ describe('<TracePageSearchBar>', () => {
       expect(wrapper.find('Button[icon="close"]').prop('onClick')).toBe(defaultProps.clearSearch);
     });
 
-    it('disables navigation buttons when not navigable', () => {
+    it('hides navigation buttons when not navigable', () => {
       wrapper.setProps({ navigable: false });
-      const buttons = wrapper.find('Button');
-      expect(buttons.length).toBe(3);
-      buttons.forEach((button, i) => {
-        expect(button.hasClass('TracePageSearchBar--btn')).toBe(true);
-        expect(button.hasClass('is-disabled')).toBe(i !== 2);
-        expect(button.prop('disabled')).toBe(i !== 2);
-      });
+      const button = wrapper.find('Button');
+      expect(button.length).toBe(1);
+      expect(button.prop('icon')).toBe('close');
     });
   });
 
@@ -89,12 +85,21 @@ describe('<TracePageSearchBar>', () => {
 
     it('renders buttons', () => {
       const buttons = wrapper.find('Button');
-      expect(buttons.length).toBe(3);
+      expect(buttons.length).toBe(4);
       buttons.forEach(button => {
         expect(button.hasClass('TracePageSearchBar--btn')).toBe(true);
         expect(button.hasClass('is-disabled')).toBe(true);
         expect(button.prop('disabled')).toBe(true);
       });
     });
+  });
+});
+
+describe('<DefaultTracePageSearchBar>', () => {
+  const { forwardedRef: ref, ...propsWithoutRef } = defaultProps;
+
+  it('forwardsRef correctly', () => {
+    const wrapper = shallow(<DefaultTracePageSearchBar {...propsWithoutRef} ref={ref} />);
+    expect(wrapper.find(TracePageSearchBar).props()).toEqual(defaultProps);
   });
 });
