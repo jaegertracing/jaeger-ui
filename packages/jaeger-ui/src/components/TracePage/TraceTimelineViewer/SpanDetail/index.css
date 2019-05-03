@@ -40,3 +40,21 @@ limitations under the License.
 .SpanDetail--debugValue:hover {
   color: #333;
 }
+.AccordianWarnings {
+  border: 1px solid #d8d8d8;
+}
+.AccordianWarnings > .AccordianText--header > strong {
+  color: #d36c08;
+}
+
+.AccordianWarnings > .AccordianText--header {
+  background: #fff7e6;
+  padding: 0.25rem 0.5rem;
+}
+
+.SpanDetail--warnIcon {
+  background: transparent;
+  color: #ffa500;
+  font-size: 1em;
+  margin-right: 0.2rem;
+}

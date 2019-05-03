@@ -20,6 +20,7 @@ import { shallow } from 'enzyme';
 
 import AccordianKeyValues from './AccordianKeyValues';
 import AccordianLogs from './AccordianLogs';
+import AccordianText from './AccordianText';
 import DetailState from './DetailState';
 import SpanDetail from './index';
 import { formatDuration } from '../utils';
@@ -46,6 +47,7 @@ describe('<SpanDetail>', () => {
     logsToggle: jest.fn(),
     processToggle: jest.fn(),
     tagsToggle: jest.fn(),
+    warningsToggle: jest.fn(),
   };
   span.logs = [
     {
@@ -57,6 +59,8 @@ describe('<SpanDetail>', () => {
       fields: [{ key: 'message', value: 'oh the next log message' }, { key: 'more', value: 'stuff' }],
     },
   ];
+
+  span.warnings = ['Warning 1', 'Warning 2'];
 
   beforeEach(() => {
     formatDuration.mockReset();
@@ -118,6 +122,15 @@ describe('<SpanDetail>', () => {
     accordianLogs.simulate('itemToggle', somethingUniq);
     expect(props.logsToggle).toHaveBeenLastCalledWith(span.spanID);
     expect(props.logItemToggle).toHaveBeenLastCalledWith(span.spanID, somethingUniq);
+  });
+
+  it('renders the warnings', () => {
+    const target = (
+      <AccordianText data={span.warnings} label="Warnings" isOpen={detailState.isWarningsOpen} />
+    );
+    expect(wrapper.containsMatchingElement(target)).toBe(true);
+    wrapper.find({ data: span.warnings }).simulate('toggle');
+    expect(props.warningsToggle).toHaveBeenLastCalledWith(span.spanID);
   });
 
   it('renders CopyIcon with deep link URL', () => {

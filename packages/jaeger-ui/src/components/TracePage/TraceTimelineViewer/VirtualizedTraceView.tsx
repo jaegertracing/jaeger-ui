@@ -61,6 +61,7 @@ type TDispatchProps = {
   clearShouldScrollToFirstUiFindMatch: () => void;
   detailLogItemToggle: (spanID: string, log: Log) => void;
   detailLogsToggle: (spanID: string) => void;
+  detailWarningsToggle: (spanID: string) => void;
   detailProcessToggle: (spanID: string) => void;
   detailTagsToggle: (spanID: string) => void;
   detailToggle: (spanID: string) => void;
@@ -371,6 +372,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
       detailLogItemToggle,
       detailLogsToggle,
       detailProcessToggle,
+      detailWarningsToggle,
       detailStates,
       detailTagsToggle,
       detailToggle,
@@ -393,6 +395,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
           logItemToggle={detailLogItemToggle}
           logsToggle={detailLogsToggle}
           processToggle={detailProcessToggle}
+          warningsToggle={detailWarningsToggle}
           span={span}
           tagsToggle={detailTagsToggle}
           traceStartTime={trace.startTime}
