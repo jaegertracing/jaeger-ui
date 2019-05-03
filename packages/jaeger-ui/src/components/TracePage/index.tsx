@@ -280,9 +280,6 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
     if (this.props.trace && this.props.trace.data) {
       this.traceDagEV = calculateTraceDagEV(this.props.trace.data);
     }
-    if (traceGraphView) {
-      this.focusUiFindMatches();
-    }
     this.setState({ traceGraphView: !traceGraphView });
   };
 
