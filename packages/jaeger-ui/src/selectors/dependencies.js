@@ -38,6 +38,7 @@ export const formatDependenciesAsNodesAndLinks = createSelector(
               target: link.child,
               callCount: link.callCount,
               value: Math.max(Math.sqrt(link.callCount / 10000), 1),
+              target_node_size: Math.max(Math.log(nodeMap[link.child]/1000),3)
             },
           ]);
         }

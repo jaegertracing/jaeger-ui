@@ -13,9 +13,10 @@
 // limitations under the License.
 
 import React, { Component } from 'react';
-import { InteractiveForceGraph, ForceGraphNode, ForceGraphArrowLink } from 'react-vis-force';
+import { InteractiveForceGraph, ForceGraphNode}  from 'react-vis-force';
 import { window } from 'global';
 import { debounce } from 'lodash';
+import {default as JaegerForceGraphArrowLink} from './JaegerForceGraphArrowLink';
 
 import { nodesPropTypes, linksPropTypes } from '../../propTypes/dependencies';
 
@@ -102,7 +103,7 @@ export default class DependencyForceGraph extends Component {
             />
           ))}
           {links.map(({ opacity, ...link }) => (
-            <ForceGraphArrowLink key={`${link.source}=>${link.target}`} opacity={opacity} link={link} />
+            <JaegerForceGraphArrowLink key={`${link.source}=>${link.target}`} opacity={opacity} link={link} />
           ))}
         </InteractiveForceGraph>
       </div>
