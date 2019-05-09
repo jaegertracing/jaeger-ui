@@ -14,10 +14,14 @@
 
 const simpleNodeMaker = label => ({
   operation: `${label}Operation`,
-  service: `${label}service`,
+  service: `${label}Service`,
 });
 
 export const focalNode = simpleNodeMaker('focal');
+export const sameFocalServiceNode = {
+  operation: `not-${focalNode.operation}`,
+  service: focalNode.service,
+};
 
 const pathLengthener = path => {
   const prequels = [];
@@ -47,4 +51,6 @@ export const longSimplePath = pathLengthener([firstNode, beforeNode, focalNode, 
 
 const midNode = simpleNodeMaker('mid');
 
+export const noFocalPath = [firstNode, beforeNode, midNode, afterNode, lastNode];
 export const doubleFocalPath = [firstNode, beforeNode, focalNode, midNode, focalNode, afterNode, lastNode];
+export const almostDoubleFocalPath = [firstNode, beforeNode, sameFocalServiceNode, midNode, focalNode, afterNode, lastNode];

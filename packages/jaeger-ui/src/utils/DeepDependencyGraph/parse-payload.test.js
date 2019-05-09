@@ -23,8 +23,12 @@ import * as testResource from './parse-payload.test.resource';
 
 describe('parse payload', () => {
 
-  function parsedOutputValidator(payload, focalIndices) {
-    const { paths, services } = parsePayload(payload, testResource.focalNode);
+  function parsedOutputValidator(payload, focalIndices, groupOperations = false) {
+    const { focalNode } = testResource;
+    const focalNodeArgument = groupOperations
+      ? { service: focalNode.service }
+      : focalNode;
+    const { paths, services } = parsePayload(payload, focalNodeArgument);
     const serviceNames = Object.keys(services);
     let membersProcessed = 0;
     expect(serviceNames).toEqual(Array.from(new Set(_map(_flatten(payload), 'service'))));
@@ -65,5 +69,20 @@ describe('parse payload', () => {
   it('parses a path that contains the focal node twice', () => {
     const { doubleFocalPath } = testResource;
     parsedOutputValidator([doubleFocalPath], [2]);
+  });
+
+  it('checks both operation and service when calculating focalIdx when both are provided', () => {
+    const { almostDoubleFocalPath } = testResource;
+    parsedOutputValidator([almostDoubleFocalPath], [4]);
+  });
+
+  it('checks only service when calculating focalIdx when only service is provided', () => {
+    const { almostDoubleFocalPath } = testResource;
+    parsedOutputValidator([almostDoubleFocalPath], [2], true);
+  });
+
+  it('throws an error if a path lacks the focalNode', () => {
+    const { simplePath, noFocalPath, doubleFocalPath, focalNode } = testResource;
+    expect(() => parsePayload([simplePath, noFocalPath, doubleFocalPath], focalNode)).toThrowError();
   });
 });
