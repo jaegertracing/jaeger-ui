@@ -12,30 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// const fs = require('fs');
-
 import _filter from 'lodash/filter';
 import _flatten from 'lodash/flatten';
 import _map from 'lodash/map';
 
 import parsePayload from './parse-payload';
-import * as testResource from './parse-payload.test.resource';
+import * as testResources from './parse-payload.test.resources';
 
 describe('parse payload', () => {
-
-  function parsedOutputValidator(payload, focalIndices, groupOperations = false) {
-    const { focalNode } = testResource;
-    const focalNodeArgument = groupOperations
-      ? { service: focalNode.service }
-      : focalNode;
-    const { paths, services } = parsePayload(payload, focalNodeArgument);
+  function parsedOutputValidator({ paths: payload, focalIndices, groupOperations = false }) {
+    const { focalPathElem } = testResources;
+    const focalPathElemArgument = groupOperations ? { service: focalPathElem.service } : focalPathElem;
+    const { paths, services } = parsePayload(payload, focalPathElemArgument);
     const serviceNames = Object.keys(services);
-    let membersProcessed = 0;
+
     expect(serviceNames).toEqual(Array.from(new Set(_map(_flatten(payload), 'service'))));
     serviceNames.forEach(serviceName => {
-      expect(Object.keys(services[serviceName].operations)).toEqual(Array.from(new Set(_map(_filter(_flatten(payload), { service: serviceName}), 'operation'))));
+      expect(Object.keys(services[serviceName].operations)).toEqual(
+        Array.from(new Set(_map(_filter(_flatten(payload), { service: serviceName }), 'operation')))
+      );
     });
 
+    let membersProcessed = 0;
     paths.forEach((path, pathResultIndex) => {
       expect(path.focalIdx).toBe(focalIndices[pathResultIndex]);
       path.members.forEach((member, memberResultIndex) => {
@@ -52,37 +50,37 @@ describe('parse payload', () => {
   }
 
   it('parses an extremely simple payload', () => {
-    const { simplePath } = testResource;
-    parsedOutputValidator([simplePath], [2]);
+    const { simplePath } = testResources;
+    parsedOutputValidator({ paths: [simplePath], focalIndices: [2] });
   });
 
   it('parses a path with multiple operations per service and multiple services per operation', () => {
-    const { longSimplePath } = testResource;
-    parsedOutputValidator([longSimplePath], [6]);
+    const { longSimplePath } = testResources;
+    parsedOutputValidator({ paths: [longSimplePath], focalIndices: [6] });
   });
 
   it('parses a payload with significant overlap between paths', () => {
-    const { simplePath, longSimplePath } = testResource;
-    parsedOutputValidator([simplePath, longSimplePath], [2, 6]);
+    const { simplePath, longSimplePath } = testResources;
+    parsedOutputValidator({ paths: [simplePath, longSimplePath], focalIndices: [2, 6] });
   });
 
-  it('parses a path that contains the focal node twice', () => {
-    const { doubleFocalPath } = testResource;
-    parsedOutputValidator([doubleFocalPath], [2]);
+  it('parses a path that contains the focal path elem twice', () => {
+    const { doubleFocalPath } = testResources;
+    parsedOutputValidator({ paths: [doubleFocalPath], focalIndices: [2] });
   });
 
   it('checks both operation and service when calculating focalIdx when both are provided', () => {
-    const { almostDoubleFocalPath } = testResource;
-    parsedOutputValidator([almostDoubleFocalPath], [4]);
+    const { almostDoubleFocalPath } = testResources;
+    parsedOutputValidator({ paths: [almostDoubleFocalPath], focalIndices: [4] });
   });
 
   it('checks only service when calculating focalIdx when only service is provided', () => {
-    const { almostDoubleFocalPath } = testResource;
-    parsedOutputValidator([almostDoubleFocalPath], [2], true);
+    const { almostDoubleFocalPath } = testResources;
+    parsedOutputValidator({ paths: [almostDoubleFocalPath], focalIndices: [2], groupOperations: true });
   });
 
-  it('throws an error if a path lacks the focalNode', () => {
-    const { simplePath, noFocalPath, doubleFocalPath, focalNode } = testResource;
-    expect(() => parsePayload([simplePath, noFocalPath, doubleFocalPath], focalNode)).toThrowError();
+  it('throws an error if a path lacks the focalPathElem', () => {
+    const { simplePath, noFocalPath, doubleFocalPath, focalPathElem } = testResources;
+    expect(() => parsePayload([simplePath, noFocalPath, doubleFocalPath], focalPathElem)).toThrowError();
   });
 });

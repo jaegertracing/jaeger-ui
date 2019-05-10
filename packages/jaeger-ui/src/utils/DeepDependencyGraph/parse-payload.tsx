@@ -17,51 +17,41 @@ type TPayload = {
   service: string;
 }[][];
 
-type TService = { // de-duped
+type TService = {
   name: string;
   operations: Record<string, TOperation>;
-  /* static service-based data added here later, e.g.: tier, PD link, uOwn link */
-}
+};
 
-type TOperation = { // de-duped
+type TOperation = {
   name: string;
   pathElems: TPathElem[];
   service: TService;
-  /* static operation-based data added here later, e.g.: SLA(?) */
-}
+};
 
-type TPathElem = { // super-duped
+type TPathElem = {
   memberOf: TPath;
   operation: TOperation;
-  pathIdx: number; // in conjunction with focalIdx on TPath this can be used to calculate distance, isFocal, up/down stream
+  pathIdx: number;
   visibilityIdx: number;
-  /* dynamic, path-based, node data added here later, e.g.: contextual error rate */
-}
+};
 
-
-type TPath = { // One TPath per payload path
-  focalIdx: number; // Index of focal node in this path, helps with hops management
+type TPath = {
+  focalIdx: number;
   members: TPathElem[];
-  /* dynamic, path data added here later, e.g.: QPS */
-}
-
-/*
-type TGraphEdge: { // Derived data
-      pathEdges: TPathEdge[];
-}
- */
+};
 
 type TOperationMap = Record<string, TOperation>;
 type TServiceMap = Record<string, TService>;
 
 type TParsedPayload = {
-  // operations: TOperationMap;
   paths: TPath[];
   services: TServiceMap;
-}
+};
 
-export default function parsePayload(payload: TPayload, focalNode: { service: string, operation?: string }): TParsedPayload {
-  // const operationMap: TOperationMap = {};
+export default function parsePayload(
+  payload: TPayload,
+  { service: focalService, operation: focalOperation }: { service: string; operation?: string }
+): TParsedPayload {
   const serviceMap: TServiceMap = {};
   let visibilityIdx = 0;
 
@@ -71,6 +61,7 @@ export default function parsePayload(payload: TPayload, focalNode: { service: st
       focalIdx: -1,
       members: [],
     };
+
     const members = payloadPath.map(({ operation, service }, i) => {
       if (!Reflect.has(serviceMap, service)) {
         serviceMap[service] = {
@@ -91,14 +82,18 @@ export default function parsePayload(payload: TPayload, focalNode: { service: st
         pathIdx: i,
         visibilityIdx: visibilityIdx++,
       };
-      pathElem.operation.pathElems.push(pathElem);
-      if (path.focalIdx === -1 && service === focalNode.service && (focalNode.operation == null || operation == focalNode.operation)) {
-        path.focalIdx = i;
-      }
-
       Object.defineProperty(pathElem, 'distance', {
         get: () => pathElem.pathIdx - pathElem.memberOf.focalIdx,
       });
+      pathElem.operation.pathElems.push(pathElem);
+
+      if (
+        path.focalIdx === -1 &&
+        service === focalService &&
+        (focalOperation == null || operation === focalOperation)
+      ) {
+        path.focalIdx = i;
+      }
 
       return pathElem;
     });
@@ -112,8 +107,7 @@ export default function parsePayload(payload: TPayload, focalNode: { service: st
   });
 
   return {
-    // operations: operationMap,
     paths,
     services: serviceMap,
-  }
+  };
 }
