@@ -40,7 +40,6 @@ type TPath = {
   members: TPathElem[];
 };
 
-type TOperationMap = Record<string, TOperation>;
 type TServiceMap = Record<string, TService>;
 
 type TParsedPayload = {

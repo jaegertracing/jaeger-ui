@@ -18,7 +18,8 @@ const simplePathElemMaker = label => ({
 });
 
 export const focalPathElem = simplePathElemMaker('focal');
-export const sameFocalServicePathElem = {
+
+const sameFocalServicePathElem = {
   operation: `not-${focalPathElem.operation}`,
   service: focalPathElem.service,
 };
@@ -43,6 +44,7 @@ const pathLengthener = path => {
 
 const firstPathElem = simplePathElemMaker('first');
 const beforePathElem = simplePathElemMaker('before');
+const midPathElem = simplePathElemMaker('mid');
 const afterPathElem = simplePathElemMaker('after');
 const lastPathElem = simplePathElemMaker('last');
 
@@ -54,9 +56,6 @@ export const longSimplePath = pathLengthener([
   afterPathElem,
   lastPathElem,
 ]);
-
-const midPathElem = simplePathElemMaker('mid');
-
 export const noFocalPath = [firstPathElem, beforePathElem, midPathElem, afterPathElem, lastPathElem];
 export const doubleFocalPath = [
   firstPathElem,
