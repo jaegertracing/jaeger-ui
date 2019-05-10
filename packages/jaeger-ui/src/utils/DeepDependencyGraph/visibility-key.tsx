@@ -12,42 +12,61 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+/* eslint-disable no-bitwise */
+
 import memoizeOne from 'memoize-one';
 
-const VISIBILITY_KEY_CHUNK_SIZE = 6;
 const VISIBILITY_BUCKET_SIZE = 31;
 
-export const getVisibilityBuckets = memoizeOne((visibilityKey: string): number[] => {
-  const visibilityBuckets: number[] = [];
-  for (let startIdx = 0; startIdx < visibilityKey.length; startIdx += VISIBILITY_KEY_CHUNK_SIZE) {
-    const partial = visibilityKey.substring(startIdx, startIdx + VISIBILITY_KEY_CHUNK_SIZE);
-    visibilityBuckets.push(parseInt(partial, 36));
-  }
-  return visibilityBuckets;
-});
+const getVisibilityBuckets = memoizeOne((visibilityKey: string): number[] =>
+  visibilityKey.split(',').map(partial => parseInt(partial || '0', 36))
+);
+
+function convertIdxToBucketValues(visibilityIdx: number) {
+  const bucketIdx = Math.floor(visibilityIdx / VISIBILITY_BUCKET_SIZE);
+  const digitIdx = visibilityIdx % VISIBILITY_BUCKET_SIZE;
+  const visibilityValue = 1 << digitIdx;
+  const visibilityCompliment = ~visibilityValue;
+  return { bucketIdx, digitIdx, visibilityValue, visibilityCompliment };
+}
 
 export function isVisible(visibilityKey: string, visibilityIdx: number): boolean {
   const visibilityBuckets = getVisibilityBuckets(visibilityKey);
-  const bucketIdx = Math.floor(visibilityIdx / VISIBILITY_BUCKET_SIZE);
-  const digitIdx = visibilityIdx % VISIBILITY_BUCKET_SIZE;
-  // console.log(visibilityBuckets, bucketIdx, digitIdx, 1 << digitIdx);
-  return Boolean(visibilityBuckets[bucketIdx] & (1 << digitIdx));
+  const { bucketIdx, visibilityValue } = convertIdxToBucketValues(visibilityIdx);
+  return Boolean(visibilityBuckets[bucketIdx] & visibilityValue);
 }
 
-export function changeVisibility(visibilityKey: string, showIndices: number[], hideIndices: number[]): string {
+export function changeVisibility({
+  visibilityKey,
+  showIndices,
+  hideIndices,
+}: {
+  visibilityKey: string;
+  showIndices?: number[];
+  hideIndices?: number[];
+}): string {
   const visibilityBuckets = getVisibilityBuckets(visibilityKey).slice();
   const conflictCheck = new Set(showIndices);
-  hideIndices.forEach(hideIdx => {
-    if (conflictCheck.has(hideIdx)) {
-      throw new Error(`Trying to show and hide same visibilityIdx: ${hideIdx} in same change`);
-    }
-    const bucketIdx = Math.floor(hideIdx / VISIBILITY_BUCKET_SIZE);
-    const digitIdx = hideIdx % VISIBILITY_BUCKET_SIZE;
-    const enableValue = 1 << digitIdx;
-    const disableValue  = ~enableValue;
-    visibilityBuckets[bucketIdx] = visibilityBuckets[bucketIdx] & disableValue;
-    // visibilityBuckets[bucketIdx] = visibilityBuckets[bucketIdx] | (1 << digitIdx);
-  });
-  return visibilityBuckets.map(bucket => bucket.toString(36)).join('');
-}
 
+  if (hideIndices) {
+    hideIndices.forEach(hideIdx => {
+      if (conflictCheck.has(hideIdx)) {
+        throw new Error(`Trying to show and hide same visibilityIdx: ${hideIdx} in same change`);
+      }
+      const { bucketIdx, visibilityCompliment } = convertIdxToBucketValues(hideIdx);
+      visibilityBuckets[bucketIdx] &= visibilityCompliment;
+    });
+  }
+
+  if (showIndices) {
+    showIndices.forEach(showIdx => {
+      const { bucketIdx, visibilityValue } = convertIdxToBucketValues(showIdx);
+      visibilityBuckets[bucketIdx] |= visibilityValue;
+    });
+  }
+
+  return visibilityBuckets
+    .map(bucket => bucket.toString(36))
+    .map(value => (value === '0' ? '' : value))
+    .join(',');
+}

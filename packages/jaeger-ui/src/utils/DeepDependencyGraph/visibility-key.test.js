@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { changeVisibility, isVisible } from './visibility-key'
+import { changeVisibility, isVisible } from './visibility-key';
 
 describe('visibility-key', () => {
   describe('isVisible', () => {
@@ -37,18 +37,52 @@ describe('visibility-key', () => {
       expect(isVisible('2', 1)).toBe(true);
       expect(isVisible('2', 37)).toBe(false);
 
-      expect(isVisible('0000001s', 0)).toBe(false);
-      expect(isVisible('0000001s', 1)).toBe(false);
-      expect(isVisible('0000001s', 37)).toBe(true);
+      expect(isVisible(',1s', 0)).toBe(false);
+      expect(isVisible(',1s', 1)).toBe(false);
+      expect(isVisible(',1s', 37)).toBe(true);
 
-      expect(isVisible('0000031s', 0)).toBe(true);
-      expect(isVisible('0000031s', 1)).toBe(true);
-      expect(isVisible('0000031s', 37)).toBe(true);
+      expect(isVisible('3,1s', 0)).toBe(true);
+      expect(isVisible('3,1s', 1)).toBe(true);
+      expect(isVisible('3,1s', 37)).toBe(true);
     });
   });
   describe('changeVisibility', () => {
-    it('hides visible value', () => {
-      expect(changeVisibility('1', [], [0])).toBe('0');
+    describe('hide', () => {
+      it('hides visible value', () => {
+        expect(changeVisibility({ visibilityKey: '3', hideIndices: [0] })).toBe('2');
+      });
+
+      it('omits value if it becomes entirely invisible', () => {
+        expect(changeVisibility({ visibilityKey: '3,1s', hideIndices: [0, 37] })).toBe('2,');
+      });
+    });
+
+    describe('show', () => {
+      it('shows invisible value', () => {
+        expect(changeVisibility({ visibilityKey: '', showIndices: [0] })).toBe('1');
+      });
+
+      it('retains empty value in CSV', () => {
+        expect(changeVisibility({ visibilityKey: ',', showIndices: [0] })).toBe('1,');
+      });
+    });
+
+    describe('show and hide', () => {
+      it('shows and hides values', () => {
+        expect(changeVisibility({ visibilityKey: '1', showIndices: [1], hideIndices: [0] })).toBe('2');
+      });
+
+      it('shows and hides values across multiple buckets', () => {
+        expect(changeVisibility({ visibilityKey: ',1s,', showIndices: [0, 1, 68], hideIndices: [37] })).toBe(
+          '3,,1s'
+        );
+      });
+
+      it('errors when trying to show and hide the same index', () => {
+        expect(() =>
+          changeVisibility({ visibilityKey: '', showIndices: [0], hideIndices: [0] })
+        ).toThrowError();
+      });
     });
   });
 });
