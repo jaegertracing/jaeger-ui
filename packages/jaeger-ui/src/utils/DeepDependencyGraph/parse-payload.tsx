@@ -12,93 +12,101 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-type TPayload = {
+type TDdgPayload = {
   operation: string;
   service: string;
 }[][];
 
-type TService = {
+type TDdgService = {
   name: string;
-  operations: Record<string, TOperation>;
+  operations: Map<string, TDdgOperation>;
 };
 
-type TOperation = {
+type TDdgOperation = {
   name: string;
-  pathElems: TPathElem[];
-  service: TService;
+  pathElems: PathElem[];
+  service: TDdgService;
 };
 
-type TPathElem = {
-  memberOf: TPath;
-  operation: TOperation;
+type TDdgPath = {
+  focalIdx: number;
+  members: PathElem[];
+};
+
+type TDdgServiceMap = Map<string, TDdgService>;
+
+type TDdgParsedPayload = {
+  paths: TDdgPath[];
+  services: TDdgServiceMap;
+};
+
+class PathElem {
+  memberOf: TDdgPath;
+  operation: TDdgOperation;
   pathIdx: number;
   visibilityIdx: number;
-};
 
-type TPath = {
-  focalIdx: number;
-  members: TPathElem[];
-};
+  constructor({ path, operation, pathIdx, visibilityIdx }: {
+    path: TDdgPath;
+    operation: TDdgOperation;
+    pathIdx: number;
+    visibilityIdx: number;
+  }) {
+    this.memberOf = path;
+    this.operation = operation;
+    this.pathIdx = pathIdx;
+    this.visibilityIdx = visibilityIdx;
+    operation.pathElems.push(this);
+  }
 
-type TServiceMap = Record<string, TService>;
+  get distance() {
+    return this.pathIdx - this.memberOf.focalIdx;
+  }
+}
 
-type TParsedPayload = {
-  paths: TPath[];
-  services: TServiceMap;
-};
+type TDdgPathElemsByDistance = Map<number, PathElem>;
 
 export default function parsePayload(
-  payload: TPayload,
+  payload: TDdgPayload,
   { service: focalService, operation: focalOperation }: { service: string; operation?: string }
-): TParsedPayload {
-  const serviceMap: TServiceMap = {};
+): TDdgParsedPayload {
+  const serviceMap: TDdgServiceMap = new Map();
+  const pathElemsByDistance: TDdgPathElemsByDistance = new Map();
   let visibilityIdx = 0;
 
   const paths = payload.map(payloadPath => {
     // path with stand-in values in order to have obj to which to assign memberOf for each pathElem.
-    const path: TPath = {
-      focalIdx: -1,
-      members: [],
-    };
+    const path = {} as TDdgPath;
 
-    const members = payloadPath.map(({ operation, service }, i) => {
-      if (!Reflect.has(serviceMap, service)) {
-        serviceMap[service] = {
-          name: service,
-          operations: {},
-        };
+    const members = payloadPath.map(({ operation: operationName, service: serviceName }, i) => {
+      if (!serviceMap.has(serviceName)) {
+        serviceMap.set(serviceName, {
+          name: serviceName,
+          operations: new Map(),
+        });
       }
-      if (!Reflect.has(serviceMap[service].operations, operation)) {
-        serviceMap[service].operations[operation] = {
-          name: operation,
-          service: serviceMap[service],
+      const service = serviceMap.get(serviceName) as TDdgService;
+      if (!service.operations.has(operationName)) {
+        service.operations.set(operationName, {
+          name: operationName,
+          service: service,
           pathElems: [],
-        };
+        });
       }
-      const pathElem = {
-        memberOf: path,
-        operation: serviceMap[service].operations[operation],
-        pathIdx: i,
-        visibilityIdx: visibilityIdx++,
-      };
-      Object.defineProperty(pathElem, 'distance', {
-        get: () => pathElem.pathIdx - pathElem.memberOf.focalIdx,
-      });
-      pathElem.operation.pathElems.push(pathElem);
-
+      const operation = service.operations.get(operationName) as TDdgOperation;
       if (
-        path.focalIdx === -1 &&
-        service === focalService &&
-        (focalOperation == null || operation === focalOperation)
+        path.focalIdx == null &&
+        serviceName === focalService &&
+        (focalOperation == null || operationName === focalOperation)
       ) {
         path.focalIdx = i;
       }
 
-      return pathElem;
+      return new PathElem({ path, operation, pathIdx: i, visibilityIdx: visibilityIdx++ });
     });
     path.members = members;
 
-    if (path.focalIdx === -1) {
+    if (path.focalIdx == null) {
       throw new Error('A payload path lacked the focalNode');
     }
 
@@ -107,6 +115,7 @@ export default function parsePayload(
 
   return {
     paths,
+,
     services: serviceMap,
   };
 }

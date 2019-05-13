@@ -24,12 +24,11 @@ describe('parse payload', () => {
     const { focalPathElem } = testResources;
     const focalPathElemArgument = groupOperations ? { service: focalPathElem.service } : focalPathElem;
     const { paths, services } = parsePayload(payload, focalPathElemArgument);
-    const serviceNames = Object.keys(services);
 
-    expect(serviceNames).toEqual(Array.from(new Set(_map(_flatten(payload), 'service'))));
-    serviceNames.forEach(serviceName => {
-      expect(Object.keys(services[serviceName].operations)).toEqual(
-        Array.from(new Set(_map(_filter(_flatten(payload), { service: serviceName }), 'operation')))
+    expect(new Set(services.keys())).toEqual(new Set(_map(_flatten(payload), 'service')));
+    services.forEach((service, serviceName) => {
+      expect(new Set(service.operations.keys())).toEqual(
+        new Set(_map(_filter(_flatten(payload), { service: serviceName }), 'operation'))
       );
     });
 
