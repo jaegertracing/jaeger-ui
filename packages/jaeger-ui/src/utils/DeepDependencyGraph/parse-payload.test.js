@@ -32,7 +32,9 @@ describe('parse payload', () => {
       );
     });
 
-    let membersProcessed = 0;
+    const expectedVisibilityIndices = [];
+    const visibilityIndicesToDistance = new Map();
+
     paths.forEach((path, pathResultIndex) => {
       expect(path.focalIdx).toBe(focalIndices[pathResultIndex]);
       path.members.forEach((member, memberResultIndex) => {
@@ -43,8 +45,22 @@ describe('parse payload', () => {
         expect(operation.pathElems.includes(member)).toBe(true);
         expect(operation.service.name).toBe(payload[pathResultIndex][memberResultIndex].service);
         expect(pathIdx).toBe(memberResultIndex);
-        expect(visibilityIdx).toBe(membersProcessed++);
+
+        expectedVisibilityIndices.push(expectedVisibilityIndices.length);
+        visibilityIndicesToDistance.set(visibilityIdx, distance);
       });
+    });
+
+    const orderedVisibilityIndices = Array.from(visibilityIndicesToDistance.keys()).sort((a, b) => a - b);
+    expect(orderedVisibilityIndices).toEqual(expectedVisibilityIndices);
+    let distance = 0;
+    orderedVisibilityIndices.forEach(orderedIdx => {
+      const currentDistance = Math.abs(visibilityIndicesToDistance.get(orderedIdx));
+      if (currentDistance < distance) {
+        throw new Error('Distance did not increase or stay equal as visibilityIdx increased');
+      } else if (currentDistance > distance) {
+        distance = currentDistance;
+      }
     });
   }
 
@@ -56,11 +72,6 @@ describe('parse payload', () => {
   it('parses a path with multiple operations per service and multiple services per operation', () => {
     const { longSimplePath } = testResources;
     parsedOutputValidator({ paths: [longSimplePath], focalIndices: [6] });
-  });
-
-  it('parses a payload with significant overlap between paths', () => {
-    const { simplePath, longSimplePath } = testResources;
-    parsedOutputValidator({ paths: [simplePath, longSimplePath], focalIndices: [2, 6] });
   });
 
   it('parses a path that contains the focal path elem twice', () => {
@@ -76,6 +87,11 @@ describe('parse payload', () => {
   it('checks only service when calculating focalIdx when only service is provided', () => {
     const { almostDoubleFocalPath } = testResources;
     parsedOutputValidator({ paths: [almostDoubleFocalPath], focalIndices: [2], groupOperations: true });
+  });
+
+  it('parses a payload with significant overlap between paths', () => {
+    const { simplePath, longSimplePath, doubleFocalPath, almostDoubleFocalPath } = testResources;
+    parsedOutputValidator({ paths: [simplePath, longSimplePath, doubleFocalPath, almostDoubleFocalPath], focalIndices: [2, 6, 2, 4] });
   });
 
   it('throws an error if a path lacks the focalPathElem', () => {

@@ -35,8 +35,11 @@ type TDdgPath = {
 
 type TDdgServiceMap = Map<string, TDdgService>;
 
+type TDdgPathElemsByDistance = Map<number, PathElem[]>;
+
 type TDdgParsedPayload = {
   paths: TDdgPath[];
+  pathElemsByDistance: TDdgPathElemsByDistance;
   services: TDdgServiceMap;
 };
 
@@ -44,35 +47,46 @@ class PathElem {
   memberOf: TDdgPath;
   operation: TDdgOperation;
   pathIdx: number;
-  visibilityIdx: number;
+  visibilityIdx?: number;
 
-  constructor({ path, operation, pathIdx, visibilityIdx }: {
+  constructor({ path, operation, pathIdx /*, visibilityIdx */ }: {
     path: TDdgPath;
     operation: TDdgOperation;
     pathIdx: number;
-    visibilityIdx: number;
+    // visibilityIdx: number;
   }) {
     this.memberOf = path;
     this.operation = operation;
     this.pathIdx = pathIdx;
-    this.visibilityIdx = visibilityIdx;
+    // this.visibilityIdx = visibilityIdx;
     operation.pathElems.push(this);
   }
 
   get distance() {
     return this.pathIdx - this.memberOf.focalIdx;
   }
-}
 
-type TDdgPathElemsByDistance = Map<number, PathElem>;
+  set visibiliityIdx(visibiliityIdx: number) {
+    this.visibiliityIdx = visibiliityIdx;
+  }
+
+  get visibiliityIdx(): number {
+    if (this.visibiliityIdx == null) {
+      throw new Error('Visibility Index was never set for this PathElem');
+    }
+    return this.visibiliityIdx;
+  }
+}
 
 export default function parsePayload(
   payload: TDdgPayload,
   { service: focalService, operation: focalOperation }: { service: string; operation?: string }
 ): TDdgParsedPayload {
+  let furthestUpstream = 0;
+  let furthestDownstream = 0;
   const serviceMap: TDdgServiceMap = new Map();
   const pathElemsByDistance: TDdgPathElemsByDistance = new Map();
-  let visibilityIdx = 0;
+  // let visibilityIdx = 0;
 
   const paths = payload.map(payloadPath => {
     // path with stand-in values in order to have obj to which to assign memberOf for each pathElem.
@@ -101,21 +115,60 @@ export default function parsePayload(
       ) {
         path.focalIdx = i;
       }
+        /*
+      if (path.focalIdx != null) {
+        if (!pathElemsByDistance.has(
+      }
+         */
 
-      return new PathElem({ path, operation, pathIdx: i, visibilityIdx: visibilityIdx++ });
+      return new PathElem({ path, operation, pathIdx: i /* , visibilityIdx: visibilityIdx++ */ });
     });
-    path.members = members;
-
     if (path.focalIdx == null) {
       throw new Error('A payload path lacked the focalNode');
     }
+    path.members = members;
+
+    members.forEach(member => {
+      if (!pathElemsByDistance.has(member.distance)) {
+        pathElemsByDistance.set(member.distance, []);
+      }
+      (pathElemsByDistance.get(member.distance) as PathElem[]).push(member);
+      if (member.distance < furthestDownstream) {
+        furthestDownstream = member.distance;
+      }
+      if (member.distance > furthestUpstream) {
+        furthestUpstream = member.distance;
+      }
+    });
 
     return path;
   });
 
+  // console.log(pathElemsByDistance);
+  // console.log(furthestUpstream, furthestDownstream);
+
+  let upstream = 1;
+  let downstream = 0;
+  let visibilityIdx = 0;
+  while(upstream <= furthestUpstream || downstream >= furthestDownstream) {
+    // console.log(upstream, downstream);
+    let nextToIndex: PathElem[];
+    if ((Math.abs(downstream) < upstream && downstream >= furthestDownstream) || upstream > furthestUpstream) {
+      nextToIndex = pathElemsByDistance.get(downstream--) as PathElem[];
+    } else {
+      nextToIndex = pathElemsByDistance.get(upstream++) as PathElem[];
+    }
+    // console.log(nextToIndex);
+    nextToIndex.forEach(indexMe => {
+      indexMe.visibilityIdx = visibilityIdx++;
+      // console.log(indexMe);
+    });
+  }
+  // console.log(pathElemsByDistance);
+
   return {
     paths,
-,
+    pathElemsByDistance,
     services: serviceMap,
   };
 }
