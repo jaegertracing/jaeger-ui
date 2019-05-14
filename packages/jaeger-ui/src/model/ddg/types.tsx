@@ -29,6 +29,8 @@ export type TDdgOperation = {
 };
 
 export type TDdgPath = {
+  // This should also be a class so that focalIdx can be a getter as it may change when (en|dis)abling
+  // distinct operations
   focalIdx: number;
   members: PathElem[];
 };
@@ -41,6 +43,7 @@ export type TDdgTransformedDdgData = {
   pathElemsByDistance: TDdgPathElemsByDistance;
   paths: TDdgPath[];
   services: TDdgServiceMap;
+  visibilityIdxToPathElem: Map<number, PathElem>;
 };
 
 export class PathElem {
@@ -75,4 +78,31 @@ export class PathElem {
     }
     return this._visibilityIdx;
   }
+}
+
+  /*
+export type TDdgVertex = {
+  egressEdges: TDdgEdge[];
+  ingressEdges: TDdgEdge[];
+  pathElems: PathElem[];
+}
+   */
+export class DdgVertex {
+  egressEdges: TDdgEdge[];
+  key: string;
+  ingressEdges: TDdgEdge[];
+  // pathElems: PathElem[];
+  pathElems: Set<PathElem>;
+
+  constructor({ key }: { key: string }) {
+    this.egressEdges = [];
+    this.key = key;
+    this.ingressEdges = [];
+    this.pathElems = new Set();
+  }
+}
+
+export type TDdgEdge = {
+  from: DdgVertex;
+  to: DdgVertex;
 }

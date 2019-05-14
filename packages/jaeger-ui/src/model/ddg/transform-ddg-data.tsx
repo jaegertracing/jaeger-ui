@@ -81,9 +81,13 @@ export default function transformDdgData(
   let upstream = 1;
   let downstream = 0;
   let visibilityIdx = 0;
+  const visibilityIdxToPathElem: Map<number, PathElem> = new Map();
+
   function setPathElemVisibilityIdx(pathElem: PathElem) {
+    visibilityIdxToPathElem.set(visibilityIdx, pathElem);
     pathElem.visibilityIdx = visibilityIdx++; // eslint-disable-line no-param-reassign
   }
+
   while (pathElemsByDistance.has(upstream) || pathElemsByDistance.has(downstream)) {
     let nextArrayToIndex: PathElem[];
     if (
@@ -101,5 +105,6 @@ export default function transformDdgData(
     paths,
     pathElemsByDistance,
     services: serviceMap,
+    visibilityIdxToPathElem,
   };
 }

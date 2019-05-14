@@ -23,7 +23,7 @@ describe('transform ddg data', () => {
   function outputValidator({ paths: payload, focalIndices, ignoreFocalOperation = false }) {
     const { focalPathElem } = testResources;
     const focalPathElemArgument = ignoreFocalOperation ? { service: focalPathElem.service } : focalPathElem;
-    const { paths, services } = transformDdgData(payload, focalPathElemArgument);
+    const { paths, services, visibilityIdxToPathElem } = transformDdgData(payload, focalPathElemArgument);
 
     expect(new Set(services.keys())).toEqual(new Set(_map(_flatten(payload), 'service')));
     services.forEach((service, serviceName) => {
@@ -61,6 +61,8 @@ describe('transform ddg data', () => {
       } else if (currentDistance > distance) {
         distance = currentDistance;
       }
+
+      expect(visibilityIdxToPathElem.get(orderedIdx).visibilityIdx).toBe(orderedIdx);
     });
   }
 
