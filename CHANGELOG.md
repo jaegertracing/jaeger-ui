@@ -2,9 +2,41 @@
 
 ## Next (unreleased)
 
+## v1.2.0 (May 14, 2019)
+
+### Enhancements
+
+* **Trace detail:** Limit the thickness of spans in the minimap ([@rubenvp8510](https://github.com/rubenvp8510) in [#372](https://github.com/jaegertracing/jaeger-ui/pull/372))
+
+* **Trace detail:** Improve display of long operation names in Operations list ([@kinghuang](https://github.com/kinghuang) in [#351](https://github.com/jaegertracing/jaeger-ui/pull/351))
+
+* **UI Find:** Scroll to first match on load or on press of new locate icon ([@everett980](https://github.com/everett980) in [#367](https://github.com/jaegertracing/jaeger-ui/pull/367))
+
+* **UI Find:** Move filter state to query param and highlight filter matches on graphs ([@everett980](https://github.com/everett980) in [#310](https://github.com/jaegertracing/jaeger-ui/pull/310))
+
+### Fixes
+
+* **Search:** Fix "containig" typo ([@yurishkuro](https://github.com/yurishkuro) in [#363](https://github.com/jaegertracing/jaeger-ui/pull/363))
+
+* **Trace detail:** Fixes dragging on the minimap in trace timeline ([Fix #354](https://github.com/jaegertracing/jaeger-ui/issues/354)) ([@rubenvp8510](https://github.com/rubenvp8510) in [#357](https://github.com/jaegertracing/jaeger-ui/pull/357))
+
+* **Trace detail:** Remove extra vertical scrollbar in trace timeline view ([Fix #241](https://github.com/jaegertracing/jaeger-ui/issues/241)) in ([@tiffon](https://github.com/tiffon) in [#350](https://github.com/jaegertracing/jaeger-ui/pull/350))
+
+* **Trace detail:** Process FOLLOWS_FROM spans for indent guides in TraceView ([Fix #333](https://github.com/jaegertracing/jaeger-ui/issues/333)) ([@rubenvp8510](https://github.com/rubenvp8510) in [#335](https://github.com/jaegertracing/jaeger-ui/pull/335))
+
+* **Dev docs:** Replace the wrong link for signing commits ([@sosiska](https://github.com/sosiska) in [#346](https://github.com/jaegertracing/jaeger-ui/pull/346))
+
 ### Chores & Maintenance
 
-* **Jaeger UI codebase:** `plexus` package changed to use TypeScript instead of Flow (Partially addresses [#306](https://github.com/jaegertracing/jaeger-ui/issues/306)) ([@tiffon](https://github.com/tiffon) in [#331](https://github.com/jaegertracing/jaeger-ui/pull/331))
+* **TypeScript:** Convert from Flow to Typescript for Jaeger-UI ([@everett980](https://github.com/everett980) in [#359](https://github.com/jaegertracing/jaeger-ui/pull/359))
+
+* **TypeScript:** Export plexus type declarations, remove Neutrino ([@tiffon](https://github.com/tiffon) in [#348](https://github.com/jaegertracing/jaeger-ui/pull/348))
+
+* **TypeScript:** Shift plexus to TypeScript (from flowtypes) (Contributes to [#306](https://github.com/jaegertracing/jaeger-ui/issues/306)) ([@tiffon](https://github.com/tiffon) in [#331](https://github.com/jaegertracing/jaeger-ui/pull/331))
+
+* **Jaeger UI codebase:** Use memoize-one instead of bespoke solutions ([@rubenvp8510](https://github.com/rubenvp8510) in [#353](https://github.com/jaegertracing/jaeger-ui/pull/353))
+
+* **Jaeger UI codebase:** Update lodash to 4.17.11 ([@tiffon](https://github.com/tiffon) in [#343](https://github.com/jaegertracing/jaeger-ui/pull/343))
 
 ## v1.1.0 (March 3, 2019)
 
