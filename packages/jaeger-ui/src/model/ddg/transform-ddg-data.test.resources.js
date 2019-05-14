@@ -49,13 +49,7 @@ const afterPathElem = simplePathElemMaker('after');
 const lastPathElem = simplePathElemMaker('last');
 
 export const simplePath = [firstPathElem, beforePathElem, focalPathElem, afterPathElem, lastPathElem];
-export const longSimplePath = pathLengthener([
-  firstPathElem,
-  beforePathElem,
-  focalPathElem,
-  afterPathElem,
-  lastPathElem,
-]);
+export const longSimplePath = pathLengthener(simplePath);
 export const noFocalPath = [firstPathElem, beforePathElem, midPathElem, afterPathElem, lastPathElem];
 export const doubleFocalPath = [
   firstPathElem,
