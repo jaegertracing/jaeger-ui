@@ -20,9 +20,9 @@ import parsePayload from './parse-payload';
 import * as testResources from './parse-payload.test.resources';
 
 describe('parse payload', () => {
-  function parsedOutputValidator({ paths: payload, focalIndices, groupOperations = false }) {
+  function parsedOutputValidator({ paths: payload, focalIndices, ignoreFocalOperation = false }) {
     const { focalPathElem } = testResources;
-    const focalPathElemArgument = groupOperations ? { service: focalPathElem.service } : focalPathElem;
+    const focalPathElemArgument = ignoreFocalOperation ? { service: focalPathElem.service } : focalPathElem;
     const { paths, services } = parsePayload(payload, focalPathElemArgument);
 
     expect(new Set(services.keys())).toEqual(new Set(_map(_flatten(payload), 'service')));
@@ -86,7 +86,7 @@ describe('parse payload', () => {
 
   it('checks only service when calculating focalIdx when only service is provided', () => {
     const { almostDoubleFocalPath } = testResources;
-    parsedOutputValidator({ paths: [almostDoubleFocalPath], focalIndices: [2], groupOperations: true });
+    parsedOutputValidator({ paths: [almostDoubleFocalPath], focalIndices: [2], ignoreFocalOperation: true });
   });
 
   it('parses a payload with significant overlap between paths', () => {

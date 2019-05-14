@@ -27,13 +27,10 @@ export default function parsePayload(
   payload: TDdgPayload,
   { service: focalService, operation: focalOperation }: { service: string; operation?: string }
 ): TDdgParsedPayload {
-  let furthestUpstream = 0;
-  let furthestDownstream = 0;
   const serviceMap: TDdgServiceMap = new Map();
   const pathElemsByDistance: TDdgPathElemsByDistance = new Map();
 
   const paths = payload.map(payloadPath => {
-    // path with stand-in values in order to have obj to which to assign memberOf for each pathElem.
     const path = {} as TDdgPath;
 
     const members = payloadPath.map(({ operation: operationName, service: serviceName }, i) => {
@@ -44,6 +41,7 @@ export default function parsePayload(
         });
       }
       const service = serviceMap.get(serviceName) as TDdgService;
+
       if (!service.operations.has(operationName)) {
         service.operations.set(operationName, {
           name: operationName,
@@ -52,6 +50,7 @@ export default function parsePayload(
         });
       }
       const operation = service.operations.get(operationName) as TDdgOperation;
+
       if (
         path.focalIdx == null &&
         serviceName === focalService &&
@@ -62,21 +61,17 @@ export default function parsePayload(
 
       return new PathElem({ path, operation, pathIdx: i });
     });
+
     if (path.focalIdx == null) {
       throw new Error('A payload path lacked the focalNode');
     }
-    path.members = members;
 
+    path.members = members;
     members.forEach(member => {
-      if (!pathElemsByDistance.has(member.distance)) {
-        pathElemsByDistance.set(member.distance, []);
-      }
-      (pathElemsByDistance.get(member.distance) as PathElem[]).push(member);
-      if (member.distance < furthestDownstream) {
-        furthestDownstream = member.distance;
-      }
-      if (member.distance > furthestUpstream) {
-        furthestUpstream = member.distance;
+      if (pathElemsByDistance.has(member.distance)) {
+        (pathElemsByDistance.get(member.distance) as PathElem[]).push(member);
+      } else {
+        pathElemsByDistance.set(member.distance, [member]);
       }
     });
 
@@ -89,11 +84,11 @@ export default function parsePayload(
   function setPathElemVisibilityIdx(pathElem: PathElem) {
     pathElem.visibilityIdx = visibilityIdx++; // eslint-disable-line no-param-reassign
   }
-  while (upstream <= furthestUpstream || downstream >= furthestDownstream) {
+  while (pathElemsByDistance.has(upstream) || pathElemsByDistance.has(downstream)) {
     let nextArrayToIndex: PathElem[];
     if (
-      (Math.abs(downstream) < upstream && downstream >= furthestDownstream) ||
-      upstream > furthestUpstream
+      (Math.abs(downstream) < upstream && pathElemsByDistance.has(downstream)) ||
+      !pathElemsByDistance.has(upstream)
     ) {
       nextArrayToIndex = pathElemsByDistance.get(downstream--) as PathElem[];
     } else {
