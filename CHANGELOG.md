@@ -1,18 +1,16 @@
 # Releases
 
-## Next (unreleased)
-
 ## v1.2.0 (May 14, 2019)
 
 ### Enhancements
 
 * **Trace detail:** Limit the thickness of spans in the minimap ([@rubenvp8510](https://github.com/rubenvp8510) in [#372](https://github.com/jaegertracing/jaeger-ui/pull/372))
 
-* **Trace detail:** Improve display of long operation names in Operations list ([@kinghuang](https://github.com/kinghuang) in [#351](https://github.com/jaegertracing/jaeger-ui/pull/351))
+* **UI find:** Scroll to first match on load or on press of new locate icon ([@everett980](https://github.com/everett980) in [#367](https://github.com/jaegertracing/jaeger-ui/pull/367))
 
-* **UI Find:** Scroll to first match on load or on press of new locate icon ([@everett980](https://github.com/everett980) in [#367](https://github.com/jaegertracing/jaeger-ui/pull/367))
+* **UI find:** Move filter state to query param and highlight filter matches on graphs ([@everett980](https://github.com/everett980) in [#310](https://github.com/jaegertracing/jaeger-ui/pull/310))
 
-* **UI Find:** Move filter state to query param and highlight filter matches on graphs ([@everett980](https://github.com/everett980) in [#310](https://github.com/jaegertracing/jaeger-ui/pull/310))
+* **Search:** Improve display of long operation names in Operations list ([@kinghuang](https://github.com/kinghuang) in [#351](https://github.com/jaegertracing/jaeger-ui/pull/351))
 
 ### Fixes
 
