@@ -57,7 +57,7 @@ describe('parse payload', () => {
     orderedVisibilityIndices.forEach(orderedIdx => {
       const currentDistance = Math.abs(visibilityIndicesToDistance.get(orderedIdx));
       if (currentDistance < distance) {
-        throw new Error('Distance did not increase or stay equal as visibilityIdx increased');
+        throw new Error('Net distance did not increase or stay equal as visibilityIdx increased');
       } else if (currentDistance > distance) {
         distance = currentDistance;
       }
@@ -91,7 +91,10 @@ describe('parse payload', () => {
 
   it('parses a payload with significant overlap between paths', () => {
     const { simplePath, longSimplePath, doubleFocalPath, almostDoubleFocalPath } = testResources;
-    parsedOutputValidator({ paths: [simplePath, longSimplePath, doubleFocalPath, almostDoubleFocalPath], focalIndices: [2, 6, 2, 4] });
+    parsedOutputValidator({
+      paths: [simplePath, longSimplePath, doubleFocalPath, almostDoubleFocalPath],
+      focalIndices: [2, 6, 2, 4],
+    });
   });
 
   it('throws an error if a path lacks the focalPathElem', () => {
