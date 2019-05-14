@@ -12,17 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { PathElem } from '.';
+import { PathElem } from './types';
 
 describe('ddg classes', () => {
   describe('PathElem', () => {
+    const preexistingPathElems = ['fillerPathElem0', 'fillerPathElem1'];
+    const testOperation = {};
     const testPath = {
       focalIdx: 5,
     };
-    const testOperation = {};
     const testPathIdx = 3;
     const testVisibilityIdx = 105;
-    const preexistingPathElems = ['fillerPathElem0', 'fillerPathElem1'];
     let pathElem;
 
     beforeEach(() => {

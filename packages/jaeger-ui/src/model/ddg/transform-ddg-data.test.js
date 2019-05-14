@@ -16,14 +16,14 @@ import _filter from 'lodash/filter';
 import _flatten from 'lodash/flatten';
 import _map from 'lodash/map';
 
-import parsePayload from './parse-payload';
-import * as testResources from './parse-payload.test.resources';
+import transformDdgData from './transform-ddg-data';
+import * as testResources from './transform-ddg-data.test.resources';
 
-describe('parse payload', () => {
-  function parsedOutputValidator({ paths: payload, focalIndices, ignoreFocalOperation = false }) {
+describe('transform ddg data', () => {
+  function outputValidator({ paths: payload, focalIndices, ignoreFocalOperation = false }) {
     const { focalPathElem } = testResources;
     const focalPathElemArgument = ignoreFocalOperation ? { service: focalPathElem.service } : focalPathElem;
-    const { paths, services } = parsePayload(payload, focalPathElemArgument);
+    const { paths, services } = transformDdgData(payload, focalPathElemArgument);
 
     expect(new Set(services.keys())).toEqual(new Set(_map(_flatten(payload), 'service')));
     services.forEach((service, serviceName) => {
@@ -64,34 +64,34 @@ describe('parse payload', () => {
     });
   }
 
-  it('parses an extremely simple payload', () => {
+  it('transforms an extremely simple payload', () => {
     const { simplePath } = testResources;
-    parsedOutputValidator({ paths: [simplePath], focalIndices: [2] });
+    outputValidator({ paths: [simplePath], focalIndices: [2] });
   });
 
-  it('parses a path with multiple operations per service and multiple services per operation', () => {
+  it('transforms a path with multiple operations per service and multiple services per operation', () => {
     const { longSimplePath } = testResources;
-    parsedOutputValidator({ paths: [longSimplePath], focalIndices: [6] });
+    outputValidator({ paths: [longSimplePath], focalIndices: [6] });
   });
 
-  it('parses a path that contains the focal path elem twice', () => {
+  it('transforms a path that contains the focal path elem twice', () => {
     const { doubleFocalPath } = testResources;
-    parsedOutputValidator({ paths: [doubleFocalPath], focalIndices: [2] });
+    outputValidator({ paths: [doubleFocalPath], focalIndices: [2] });
   });
 
   it('checks both operation and service when calculating focalIdx when both are provided', () => {
     const { almostDoubleFocalPath } = testResources;
-    parsedOutputValidator({ paths: [almostDoubleFocalPath], focalIndices: [4] });
+    outputValidator({ paths: [almostDoubleFocalPath], focalIndices: [4] });
   });
 
   it('checks only service when calculating focalIdx when only service is provided', () => {
     const { almostDoubleFocalPath } = testResources;
-    parsedOutputValidator({ paths: [almostDoubleFocalPath], focalIndices: [2], ignoreFocalOperation: true });
+    outputValidator({ paths: [almostDoubleFocalPath], focalIndices: [2], ignoreFocalOperation: true });
   });
 
-  it('parses a payload with significant overlap between paths', () => {
+  it('transforms a payload with significant overlap between paths', () => {
     const { simplePath, longSimplePath, doubleFocalPath, almostDoubleFocalPath } = testResources;
-    parsedOutputValidator({
+    outputValidator({
       paths: [simplePath, longSimplePath, doubleFocalPath, almostDoubleFocalPath],
       focalIndices: [2, 6, 2, 4],
     });
@@ -99,6 +99,6 @@ describe('parse payload', () => {
 
   it('throws an error if a path lacks the focalPathElem', () => {
     const { simplePath, noFocalPath, doubleFocalPath, focalPathElem } = testResources;
-    expect(() => parsePayload([simplePath, noFocalPath, doubleFocalPath], focalPathElem)).toThrowError();
+    expect(() => transformDdgData([simplePath, noFocalPath, doubleFocalPath], focalPathElem)).toThrowError();
   });
 });

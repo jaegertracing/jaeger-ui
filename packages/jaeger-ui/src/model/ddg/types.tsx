@@ -37,9 +37,9 @@ export type TDdgServiceMap = Map<string, TDdgService>;
 
 export type TDdgPathElemsByDistance = Map<number, PathElem[]>;
 
-export type TDdgParsedPayload = {
-  paths: TDdgPath[];
+export type TDdgTransformedDdgData = {
   pathElemsByDistance: TDdgPathElemsByDistance;
+  paths: TDdgPath[];
   services: TDdgServiceMap;
 };
 
@@ -53,6 +53,7 @@ export class PathElem {
     this.memberOf = path;
     this.operation = operation;
     this.pathIdx = pathIdx;
+
     operation.pathElems.push(this);
   }
 

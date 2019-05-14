@@ -19,14 +19,14 @@ import {
   TDdgPath,
   TDdgServiceMap,
   TDdgPathElemsByDistance,
-  TDdgParsedPayload,
+  TDdgTransformedDdgData,
   PathElem,
 } from './types';
 
-export default function parsePayload(
+export default function transformDdgData(
   payload: TDdgPayload,
   { service: focalService, operation: focalOperation }: { service: string; operation?: string }
-): TDdgParsedPayload {
+): TDdgTransformedDdgData {
   const serviceMap: TDdgServiceMap = new Map();
   const pathElemsByDistance: TDdgPathElemsByDistance = new Map();
 
