@@ -12,64 +12,65 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {
-  TDdgPayload,
-  TDdgService,
-  TDdgOperation,
-  TDdgPath,
-  TDdgServiceMap,
-  TDdgPathElemsByDistance,
-  TDdgTransformedDdgData,
-  PathElem,
-} from './types';
+import { PathElem, TDdgModel, TDdgPayload, TDdgPath, TDdgPathElemsByDistance, TDdgServiceMap } from './types';
 
 export default function transformDdgData(
   payload: TDdgPayload,
   { service: focalService, operation: focalOperation }: { service: string; operation?: string }
-): TDdgTransformedDdgData {
+): TDdgModel {
   const serviceMap: TDdgServiceMap = new Map();
   const pathElemsByDistance: TDdgPathElemsByDistance = new Map();
 
   const paths = payload.map(payloadPath => {
-    const path = {} as TDdgPath;
+    // Path with stand-in values is necessary for assigning PathElem.memberOf
+    const path: TDdgPath = { focalIdx: -1, members: [] };
 
-    const members = payloadPath.map(({ operation: operationName, service: serviceName }, i) => {
-      if (!serviceMap.has(serviceName)) {
-        serviceMap.set(serviceName, {
+    path.members = payloadPath.map(({ operation: operationName, service: serviceName }, i) => {
+      // Ensure pathElem.service exists, else create it
+      let service = serviceMap.get(serviceName);
+      if (!service) {
+        service = {
           name: serviceName,
           operations: new Map(),
-        });
+        };
+        serviceMap.set(serviceName, service);
       }
-      const service = serviceMap.get(serviceName) as TDdgService;
 
-      if (!service.operations.has(operationName)) {
-        service.operations.set(operationName, {
+      // Ensure service has operation, else add it
+      let operation = service.operations.get(operationName);
+      if (!operation) {
+        operation = {
           name: operationName,
           service,
           pathElems: [],
-        });
+        };
+        service.operations.set(operationName, operation);
       }
-      const operation = service.operations.get(operationName) as TDdgOperation;
 
+      // Set focalIdx to first occurrence of focalNode
       if (
-        path.focalIdx == null &&
+        path.focalIdx === -1 &&
         serviceName === focalService &&
         (focalOperation == null || operationName === focalOperation)
       ) {
         path.focalIdx = i;
       }
 
-      return new PathElem({ path, operation, pathIdx: i });
+      const pathElem = new PathElem({ path, operation, memberIdx: i });
+      operation.pathElems.push(pathElem);
+      return pathElem;
     });
 
-    if (path.focalIdx == null) {
+    if (path.focalIdx === -1) {
       throw new Error('A payload path lacked the focalNode');
     }
 
-    path.members = members;
-    members.forEach(member => {
-      if (pathElemsByDistance.has(member.distance)) {
-        (pathElemsByDistance.get(member.distance) as PathElem[]).push(member);
+    // Track all pathElems by their distance for visibilityIdx assignment and hop management
+    // This needs to be a separate loop as path.focalIdx must be set before distance can be calculated
+    path.members.forEach(member => {
+      const pathElemsAtDistance = pathElemsByDistance.get(member.distance);
+      if (pathElemsAtDistance) {
+        pathElemsAtDistance.push(member);
       } else {
         pathElemsByDistance.set(member.distance, [member]);
       }
@@ -78,6 +79,7 @@ export default function transformDdgData(
     return path;
   });
 
+  // Assign visibility indices such there is a positive, dependent correlation between visibilityIdx and distance
   let upstream = 1;
   let downstream = 0;
   let visibilityIdx = 0;
