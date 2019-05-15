@@ -25,6 +25,7 @@ describe('transform ddg data', () => {
     const focalPathElemArgument = ignoreFocalOperation ? { service: focalPathElem.service } : focalPathElem;
     const { paths, services } = transformDdgData(payload, focalPathElemArgument);
 
+    // Validate all services and operations are captured
     expect(new Set(services.keys())).toEqual(new Set(_map(_flatten(payload), 'service')));
     services.forEach((service, serviceName) => {
       expect(new Set(service.operations.keys())).toEqual(
@@ -35,22 +36,24 @@ describe('transform ddg data', () => {
     const expectedVisibilityIndices = [];
     const visibilityIndicesToDistance = new Map();
 
+    // Validate every pathElem has the correct data
     paths.forEach((path, pathResultIndex) => {
       expect(path.focalIdx).toBe(focalIndices[pathResultIndex]);
       path.members.forEach((member, memberResultIndex) => {
-        const { distance, memberOf, operation, pathIdx, visibilityIdx } = member;
-        expect(distance).toBe(pathIdx - focalIndices[pathResultIndex]);
+        const { distance, memberOf, operation, memberIdx, visibilityIdx } = member;
+        expect(distance).toBe(memberIdx - focalIndices[pathResultIndex]);
         expect(memberOf).toBe(path);
         expect(operation.name).toBe(payload[pathResultIndex][memberResultIndex].operation);
         expect(operation.pathElems.includes(member)).toBe(true);
         expect(operation.service.name).toBe(payload[pathResultIndex][memberResultIndex].service);
-        expect(pathIdx).toBe(memberResultIndex);
+        expect(memberIdx).toBe(memberResultIndex);
 
         expectedVisibilityIndices.push(expectedVisibilityIndices.length);
         visibilityIndicesToDistance.set(visibilityIdx, distance);
       });
     });
 
+    // Validate that visibility indices are concentric
     const orderedVisibilityIndices = Array.from(visibilityIndicesToDistance.keys()).sort((a, b) => a - b);
     expect(orderedVisibilityIndices).toEqual(expectedVisibilityIndices);
     let distance = 0;

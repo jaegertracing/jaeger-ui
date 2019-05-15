@@ -12,6 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import PathElem from './PathElem';
+
+export { default as PathElem } from './PathElem';
+
 export type TDdgPayload = {
   operation: string;
   service: string;
@@ -37,42 +41,8 @@ export type TDdgServiceMap = Map<string, TDdgService>;
 
 export type TDdgPathElemsByDistance = Map<number, PathElem[]>;
 
-export type TDdgTransformedDdgData = {
+export type TDdgModel = {
   pathElemsByDistance: TDdgPathElemsByDistance;
   paths: TDdgPath[];
   services: TDdgServiceMap;
 };
-
-export class PathElem {
-  memberOf: TDdgPath;
-  operation: TDdgOperation;
-  pathIdx: number;
-  private _visibilityIdx?: number;
-
-  constructor({ path, operation, pathIdx }: { path: TDdgPath; operation: TDdgOperation; pathIdx: number }) {
-    this.memberOf = path;
-    this.operation = operation;
-    this.pathIdx = pathIdx;
-
-    operation.pathElems.push(this);
-  }
-
-  get distance() {
-    return this.pathIdx - this.memberOf.focalIdx;
-  }
-
-  set visibilityIdx(visibiliityIdx: number) {
-    if (this._visibilityIdx == null) {
-      this._visibilityIdx = visibiliityIdx;
-    } else {
-      throw new Error('Visibility Index cannot be changed once set');
-    }
-  }
-
-  get visibilityIdx(): number {
-    if (this._visibilityIdx == null) {
-      throw new Error('Visibility Index was never set for this PathElem');
-    }
-    return this._visibilityIdx;
-  }
-}
