@@ -18,6 +18,7 @@ describe('PathElem', () => {
   const testOperation = {};
   const testPath = {
     focalIdx: 5,
+    members: ['member0', 'member1', 'member2', 'member3', 'member4', 'member5'], 
   };
   const testMemberIdx = 3;
   const testVisibilityIdx = 105;
@@ -51,5 +52,14 @@ describe('PathElem', () => {
     expect(() => {
       pathElem.visibilityIdx = testVisibilityIdx;
     }).toThrowError();
+  });
+
+  it('has focalSideNeighbor if distance not 0', () => {
+    expect(pathElem.focalSideNeighbor).toBe(testPath.members[testMemberIdx + 1]);
+  });
+
+  it('has a null focalSideNeighbor if distance is 0', () => {
+    pathElem = new PathElem({ path: testPath, operation: testOperation, memberIdx: testPath.focalIdx });
+    expect(pathElem.focalSideNeighbor).toBe(null);
   });
 });

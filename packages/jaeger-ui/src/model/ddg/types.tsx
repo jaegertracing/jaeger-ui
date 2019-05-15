@@ -57,17 +57,19 @@ export type TDdgVertex = {
   pathElems: PathElem[];
 }
    */
+export type TDdgEdgeIdentifiers = 'egressEdges' | 'ingressEdges';
+
 export class DdgVertex {
-  egressEdges: TDdgEdge[];
+  egressEdges: Map<DdgVertex, TDdgEdge>;
   key: string;
-  ingressEdges: TDdgEdge[];
+  ingressEdges: Map<DdgVertex, TDdgEdge>;
   // pathElems: PathElem[];
   pathElems: Set<PathElem>;
 
   constructor({ key }: { key: string }) {
-    this.egressEdges = [];
+    this.egressEdges = new Map();
     this.key = key;
-    this.ingressEdges = [];
+    this.ingressEdges = new Map();
     this.pathElems = new Set();
   }
 }

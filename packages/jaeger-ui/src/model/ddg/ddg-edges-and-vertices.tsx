@@ -16,9 +16,10 @@ import _map from 'lodash/map';
 
 import { compareVisibilityKeys, changeVisibility } from './visibility-key';
 
-import { PathElem, TDdgEdge, /* TDdgVertex, */ DdgVertex, TDdgTransformedDdgData, TDdgPathElemsByDistance, TDdgPath, TDdgServiceMap } from './types';
+import { PathElem, TDdgEdge, TDdgEdgeKeys, /* TDdgVertex, */ DdgVertex, TDdgModel, TDdgPathElemsByDistance, TDdgPath, TDdgServiceMap } from './types';
 
-export default class ddgEdgesAndVertices {
+// TODO rename file
+export default class DdgEdgesAndVertices {
   lastVisibilityKey: string;
   pathElemsByDistance: TDdgPathElemsByDistance;
   pathElemToVertex: Map<PathElem, DdgVertex>;
@@ -29,57 +30,59 @@ export default class ddgEdgesAndVertices {
   vertices: Map<string, DdgVertex>;
   visibilityIdxToPathElem: Map<number, PathElem>;
 
-  constructor({ ddgData, visibilityKey }: { ddgData: TDdgTransformedDdgData, visibilityKey?: string }) {
-    this.pathElemsByDistance = ddgData.pathElemsByDistance;
-    this.paths = ddgData.paths;
-    this.services = ddgData.services;
-    this.visibilityIdxToPathElem = ddgData.visibilityIdxToPathElem;
+  // flow all wrong
+  constructor({ ddgModel, visibilityKey }: { ddgModel: TDdgModel, visibilityKey: string }) {
+    this.pathElemsByDistance = ddgModel.pathElemsByDistance;
+    this.paths = ddgModel.paths;
+    this.services = ddgModel.services;
+    this.visibilityIdxToPathElem = ddgModel.visibilityIdxToPathElem;
     this.pathElemToVertex = new Map();
     this.edges = new Set();
     this.vertices = new Map();
+    this.lastVisibilityKey = visibilityKey;
 
-    let visibleIndices: number[];
-    if (visibilityKey == null) {
-      visibleIndices = _map(this.pathElemsByDistance.get(0), 'visibilityIdx');
-      this.lastVisibilityKey = changeVisibility({
-        visibilityKey: '',
-        showIndices: visibleIndices,
-      });
-    } else {
-      this.lastVisibilityKey = visibilityKey;
-      visibleIndices = compareVisibilityKeys({ oldVisibilityKey: '', newVisibilityKey: visibilityKey }).added;
-    }
+    const visibleIndices = compareVisibilityKeys({ oldVisibilityKey: '', newVisibilityKey: visibilityKey }).added;
 
     this.showPathElems(visibleIndices);
   }
 
-  showPathElems = (newIndices: number[]) => {
+  private showPathElems = (newIndices: number[]) => {
     newIndices.forEach(newIdx => {
-      const pathElem = this.visibilityIdxToPathElem.get(newIdx) as PathElem;
+      const pathElem = this.visibilityIdxToPathElem.get(newIdx);
+      if (!pathElem) {
+        throw new Error(`Given visibilityIdx: "${newIdx}" that does not exist`);
+      }
       const key = this.getVertexKey(pathElem);
 
-      // This should always be truthy...
-      if (!this.pathElemToVertex.has(pathElem)) {
-        if (!this.vertices.has(key)) {
-          const newVertex = new DdgVertex({ key });
-          this.vertices.set(key, newVertex);
-        }
-        this.pathElemToVertex.set(pathElem, this.vertices.get(key) as DdgVertex);
+      let vertex = this.vertices.get(key);
+      if (!vertex) {
+        vertex = new DdgVertex({ key });
+        this.vertices.set(key, vertex);
       }
-      const vertex = this.vertices.get(key) as DdgVertex;
+
+      this.pathElemToVertex.set(pathElem, vertex);
       vertex.pathElems.add(pathElem);
 
-      if (pathElem.distance) {
-        const precursorPathElem = pathElem.memberOf.members[pathElem.memberOf.focalIdx + pathElem.distance - pathElem.distance / Math.abs(pathElem.distance)];
-        const precursorVertex = this.pathElemToVertex.get(precursorPathElem) as DdgVertex;
+      const connectedPathElem = pathElem.focalSideNeighbor;
+      if (connectedPathElem) {
+        const connectedVertex = this.pathElemToVertex.get(connectedPathElem);
+        if (!connectedVertex) {
+          // TODO: Improve error message
+          throw new Error(`Non-focal pathElem lacks precursorVertex. PathElem: ${JSON.stringify(pathElem, null, 2)}`);
+        }
 
-        if (!vertex.ingressEdges.has(precursorVertex)) {
-          const newEdge = {
-            from: precursorVertex,
-            to: vertex,
-          };
-          vertex.ingressEdges.set(precursorVertex, newEdge);
-          precursorVertex.egressEdges.set(vertex, newEdge);
+        if (!vertex[pathElem.focalSideEdgesKey].has(connectedVertex)) {
+          const newEdge: TDdgEdge = pathElem.focalSideEdgesKey === 'ingressEdges'
+            ? {
+              from: connectedVertex,
+              to: vertex,
+            }
+            : {
+              from: vertex,
+              to: connectedVertex,
+            };
+          vertex[pathElem.focalSideEdgesKey].set(connectedVertex, newEdge);
+          connectedVertex[pathElem.farSideEdgesKey].set(vertex, newEdge);
           this.edges.add(newEdge);
         }
       }
@@ -87,9 +90,16 @@ export default class ddgEdgesAndVertices {
   }
 
   // This function assumes the density is set to PPE with distinct operations
-  getVertexKey = (pathElem: PathElem): string => {
-    return pathElem.memberOf.members
-      .slice(pathElem.memberOf.focalIdx + pathElem.distance, Math.abs(pathElem.distance))
-      .map(({ operation: { name, service } }) => `service.name::name`).join('|');
+  // class property so that it can be aware of density in late-alpha
+  //
+  // might make sense to live on PathElem so that pathElems can be compared when checking how many
+  // inbound/outbound edges are visible for a vertex
+  private getVertexKey = (pathElem: PathElem): string => {
+    const { distance, memberOf } = pathElem;
+    const { focalIdx, members } = memberOf;
+    const startIdx = Math.min(focalIdx, focalIdx + distance);
+
+    return members.slice(startIdx, startIdx + Math.abs(distance) + 1)
+      .map(({ operation }) => `${operation.service.name}::${operation.name}`).join('|');
   }
 }

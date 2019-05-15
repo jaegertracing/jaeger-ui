@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { TDdgOperation, TDdgPath } from './types';
+import { TDdgEdgeIdentifiers, TDdgOperation, TDdgPath } from './types';
 
 export default class PathElem {
   memberIdx: number;
@@ -51,5 +51,18 @@ export default class PathElem {
       throw new Error('Visibility Index was never set for this PathElem');
     }
     return this._visibilityIdx;
+  }
+
+  get focalSideNeighbor(): PathElem | null {
+    if (!this.distance) return null;
+    return this.memberOf.members[this.memberIdx - this.distance / Math.abs(this.distance)];
+  }
+
+  get focalSideEdgesKey(): TDdgEdgeIdentifiers {
+    return this.distance < 0 ? 'egressEdges' : 'ingressEdges';
+  }
+
+  get farSideEdgesKey(): TDdgEdgeIdentifiers {
+    return this.distance > 0 ? 'egressEdges' : 'ingressEdges';
   }
 }
