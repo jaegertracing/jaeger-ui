@@ -19,10 +19,6 @@ limitations under the License.
   overflow: auto;
 }
 
-.TextList-body {
-  vertical-align: baseline;
-}
-
 .TextList--List {
   width: 100%;
   list-style: none;
