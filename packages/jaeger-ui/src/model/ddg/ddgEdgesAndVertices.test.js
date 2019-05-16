@@ -65,17 +65,17 @@ describe('DdgEdgesAndVertices', () => {
     expect(simpleTestDdgEV.vertices.size).toBe(3);
     expect(simpleTestDdgEV.edges.size).toBe(2);
 
-    const downstreamPathElem = simpleTestDdgEV.pathElemsByDistance.get(1)[0];
+    const downstreamPathElem = simpleTestDdgEV.pathElemsByDistance.get(-1)[0];
     const downstreamVertex = simpleTestDdgEV.pathElemToVertex.get(downstreamPathElem);
     const focalVertex = simpleTestDdgEV.pathElemToVertex.get(simpleTestfocalPathElem);
-    const upstreamPathElem = simpleTestDdgEV.pathElemsByDistance.get(-1)[0];
+    const upstreamPathElem = simpleTestDdgEV.pathElemsByDistance.get(1)[0];
     const upstreamVertex = simpleTestDdgEV.pathElemToVertex.get(upstreamPathElem);
 
     expect(upstreamVertex).toBeDefined();
     expect(upstreamVertex.pathElems.size).toBe(1);
     expect(upstreamVertex.pathElems.has(upstreamPathElem)).toBe(true);
-    expect(upstreamVertex.ingressEdges.size).toBe(0);
-    expect(upstreamVertex.egressEdges.size).toBe(1);
+    expect(upstreamVertex.ingressEdges.size).toBe(1);
+    expect(upstreamVertex.egressEdges.size).toBe(0);
 
     expect(focalVertex).toBeDefined();
     expect(focalVertex.pathElems.size).toBe(1);
@@ -86,22 +86,47 @@ describe('DdgEdgesAndVertices', () => {
     expect(downstreamVertex).toBeDefined();
     expect(downstreamVertex.pathElems.size).toBe(1);
     expect(downstreamVertex.pathElems.has(downstreamPathElem)).toBe(true);
-    expect(downstreamVertex.ingressEdges.size).toBe(1);
-    expect(downstreamVertex.egressEdges.size).toBe(0);
+    expect(downstreamVertex.ingressEdges.size).toBe(0);
+    expect(downstreamVertex.egressEdges.size).toBe(1);
 
-    const ingressEdge = focalVertex.ingressEdges.get(upstreamVertex);
-    const egressEdge = focalVertex.egressEdges.get(downstreamVertex);
-    expect(ingressEdge.from).toBe(upstreamVertex);
+    const ingressEdge = focalVertex.ingressEdges.get(downstreamVertex);
+    const egressEdge = focalVertex.egressEdges.get(upstreamVertex);
+    expect(ingressEdge.from).toBe(downstreamVertex);
     expect(ingressEdge.to).toBe(focalVertex);
-    expect(ingressEdge).toBe(upstreamVertex.egressEdges.get(focalVertex));
-    expect(egressEdge).toBe(downstreamVertex.ingressEdges.get(focalVertex));
+    expect(ingressEdge).toBe(downstreamVertex.egressEdges.get(focalVertex));
     expect(egressEdge.from).toBe(focalVertex);
-    expect(egressEdge.to).toBe(downstreamVertex);
+    expect(egressEdge.to).toBe(upstreamVertex);
+    expect(egressEdge).toBe(upstreamVertex.ingressEdges.get(focalVertex));
   });
 
   it('removes vertex and edge', () => {
     simpleTestDdgEV.getEdgesAndVertices('5');
     expect(simpleTestDdgEV.vertices.size).toBe(2);
     expect(simpleTestDdgEV.edges.size).toBe(1);
+
+    const downstreamPathElem = simpleTestDdgEV.pathElemsByDistance.get(-1)[0];
+    const downstreamVertex = simpleTestDdgEV.pathElemToVertex.get(downstreamPathElem);
+    const focalVertex = simpleTestDdgEV.pathElemToVertex.get(simpleTestfocalPathElem);
+    const upstreamPathElem = simpleTestDdgEV.pathElemsByDistance.get(1)[0];
+    const upstreamVertex = simpleTestDdgEV.pathElemToVertex.get(upstreamPathElem);
+
+    expect(upstreamVertex).toBeUndefined();
+
+    expect(focalVertex).toBeDefined();
+    expect(focalVertex.pathElems.size).toBe(1);
+    expect(focalVertex.pathElems.has(simpleTestfocalPathElem)).toBe(true);
+    expect(focalVertex.ingressEdges.size).toBe(1);
+    expect(focalVertex.egressEdges.size).toBe(0);
+
+    expect(downstreamVertex).toBeDefined();
+    expect(downstreamVertex.pathElems.size).toBe(1);
+    expect(downstreamVertex.pathElems.has(downstreamPathElem)).toBe(true);
+    expect(downstreamVertex.ingressEdges.size).toBe(0);
+    expect(downstreamVertex.egressEdges.size).toBe(1);
+
+    const edge = focalVertex.ingressEdges.get(downstreamVertex);
+    expect(edge.from).toBe(downstreamVertex);
+    expect(edge.to).toBe(focalVertex);
+    expect(edge).toBe(downstreamVertex.egressEdges.get(focalVertex));
   });
 });

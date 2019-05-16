@@ -102,12 +102,13 @@ export default class DdgEdgesAndVertices {
         throw new Error(`Given visibilityIdx: "${removeIdx}" that does not exist`);
       }
       const key = this.getVertexKey(pathElem);
+      console.log(key);
       const vertex = this.vertices.get(key);
       if (!vertex) {
         throw new Error(`Attempting to remove PathElem without vertex: ${JSON.stringify(pathElem, null, 2)}`);
       }
 
-      this.visibilityIdxToPathElem.get(removeIdx);
+      this.pathElemToVertex.delete(pathElem);
       vertex.pathElems.delete(pathElem);
       if (vertex.pathElems.size === 0) {
         this.vertices.delete(key);
@@ -125,10 +126,12 @@ export default class DdgEdgesAndVertices {
   }
 
   // This function assumes the density is set to PPE with distinct operations
-  // class property so that it can be aware of density in late-alpha
+  // It is a class property so that it can be aware of density in late-alpha
   //
-  // might make sense to live on PathElem so that pathElems can be compared when checking how many
-  // inbound/outbound edges are visible for a vertex
+  // It might make sense to live on PathElem so that pathElems can be compared when checking how many
+  // inbound/outbound edges are visible for a vertex, but maybe not as vertices could be densitiy-aware and
+  // provide that to this fn. could also be property on pathElem that gets set by addPathElems
+  // tl;dr may move in late-alpha
   private getVertexKey = (pathElem: PathElem): string => {
     const { distance, memberOf } = pathElem;
     const { focalIdx, members } = memberOf;
@@ -141,7 +144,6 @@ export default class DdgEdgesAndVertices {
   // public getEdgesAndVertices = memoizeOne(
   // (visibilityKey: string) => {
   public getEdgesAndVertices = (visibilityKey: string) => {
-      console.log(visibilityKey, this.lastVisibilityKey);
       const { added: addedIndices, removed: removedIndices } = compareVisibilityKeys({ newVisibilityKey: visibilityKey, oldVisibilityKey: this.lastVisibilityKey });
       this.lastVisibilityKey = visibilityKey;
       this.addPathElems(addedIndices);

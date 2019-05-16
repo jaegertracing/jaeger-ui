@@ -35,6 +35,7 @@ export type TDdgOperation = {
 };
 
 export type TDdgPath = {
+  // // that probably won't actually work
   // This could also be a class so that focalIdx can be a getter as it may change when (en|dis)abling
   // distinct operations
   focalIdx: number;

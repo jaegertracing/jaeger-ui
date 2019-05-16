@@ -15,12 +15,12 @@
 import PathElem from './PathElem';
 
 describe('PathElem', () => {
+  const testMemberIdx = 3;
   const testOperation = {};
   const testPath = {
     focalIdx: 5,
     members: ['member0', 'member1', 'member2', 'member3', 'member4', 'member5'], 
   };
-  const testMemberIdx = 3;
   const testVisibilityIdx = 105;
   let pathElem;
 
@@ -29,9 +29,9 @@ describe('PathElem', () => {
   });
 
   it('initializes instance properties', () => {
+    expect(pathElem.memberIdx).toBe(testMemberIdx);
     expect(pathElem.memberOf).toBe(testPath);
     expect(pathElem.operation).toBe(testOperation);
-    expect(pathElem.memberIdx).toBe(testMemberIdx);
   });
 
   it('calculates distance', () => {
@@ -54,7 +54,7 @@ describe('PathElem', () => {
     }).toThrowError();
   });
 
-  it('has focalSideNeighbor if distance not 0', () => {
+  it('has focalSideNeighbor if distance is not 0', () => {
     expect(pathElem.focalSideNeighbor).toBe(testPath.members[testMemberIdx + 1]);
   });
 
