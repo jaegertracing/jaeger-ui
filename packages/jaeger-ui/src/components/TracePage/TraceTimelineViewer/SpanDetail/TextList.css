@@ -30,7 +30,7 @@ limitations under the License.
   margin: 0;
 }
 
-.TextList--List:nth-child(2n) > li {
+.TextList--List > li:nth-child(2n) {
   background: #f5f5f5;
 }
 
