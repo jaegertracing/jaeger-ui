@@ -71,6 +71,10 @@ export function changeVisibility({
     .join(',');
 }
 
+export function createVisibilityKey(visibleIndices: number[]) {
+  return changeVisibility({ visibilityKey: '', showIndices: visibleIndices });
+}
+
 // TODO: determine if memo is even necessary
 // export const compareVisibilityKeys = memoizeOne(function compareVisibilityKeysImpl({
 export function compareVisibilityKeys({
