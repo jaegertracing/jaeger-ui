@@ -16,8 +16,8 @@ import _filter from 'lodash/filter';
 import _flatten from 'lodash/flatten';
 import _map from 'lodash/map';
 
-import transformDdgData from './transform-ddg-data';
-import * as testResources from './transform-ddg-data.test.resources';
+import transformDdgData from './transformDdgData';
+import * as testResources from './transformDdgData.test.resources';
 
 describe('transform ddg data', () => {
   function outputValidator({ paths: payload, focalIndices, ignoreFocalOperation = false }) {
