@@ -12,7 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { PathElem, TDdgModel, TDdgPayload, TDdgPath, TDdgPathElemsByDistance, TDdgServiceMap } from './types';
+import {
+  PathElem,
+  TDdgModel,
+  TDdgPayload,
+  TDdgPayloadEntry,
+  TDdgPath,
+  TDdgPathElemsByDistance,
+  TDdgServiceMap,
+  TDdgVisibilityIdxToPathElem,
+} from './types';
+
+const stringifyPayloadEntry = ({ service, operation }: TDdgPayloadEntry) => `${service}::${operation}`;
 
 export default function transformDdgData(
   payload: TDdgPayload,
@@ -21,87 +32,94 @@ export default function transformDdgData(
   const serviceMap: TDdgServiceMap = new Map();
   const pathElemsByDistance: TDdgPathElemsByDistance = new Map();
 
-  const paths = payload.map(payloadPath => {
-    // Path with stand-in values is necessary for assigning PathElem.memberOf
-    const path: TDdgPath = { focalIdx: -1, members: [] };
+  const paths = payload
+    .slice()
+    .sort((a, b) =>
+      a
+        .map(stringifyPayloadEntry)
+        .join()
+        .localeCompare(b.map(stringifyPayloadEntry).join())
+    )
+    .map(payloadPath => {
+      // Path with stand-in values is necessary for assigning PathElem.memberOf
+      const path: TDdgPath = { focalIdx: -1, members: [] };
 
-    path.members = payloadPath.map(({ operation: operationName, service: serviceName }, i) => {
-      // Ensure pathElem.service exists, else create it
-      let service = serviceMap.get(serviceName);
-      if (!service) {
-        service = {
-          name: serviceName,
-          operations: new Map(),
-        };
-        serviceMap.set(serviceName, service);
+      path.members = payloadPath.map(({ operation: operationName, service: serviceName }, i) => {
+        // Ensure pathElem.service exists, else create it
+        let service = serviceMap.get(serviceName);
+        if (!service) {
+          service = {
+            name: serviceName,
+            operations: new Map(),
+          };
+          serviceMap.set(serviceName, service);
+        }
+
+        // Ensure service has operation, else add it
+        let operation = service.operations.get(operationName);
+        if (!operation) {
+          operation = {
+            name: operationName,
+            service,
+            pathElems: [],
+          };
+          service.operations.set(operationName, operation);
+        }
+
+        // Set focalIdx to first occurrence of focalNode
+        if (
+          path.focalIdx === -1 &&
+          serviceName === focalService &&
+          (focalOperation == null || operationName === focalOperation)
+        ) {
+          path.focalIdx = i;
+        }
+
+        const pathElem = new PathElem({ path, operation, memberIdx: i });
+        operation.pathElems.push(pathElem);
+        return pathElem;
+      });
+
+      if (path.focalIdx === -1) {
+        throw new Error('A payload path lacked the focalNode');
       }
 
-      // Ensure service has operation, else add it
-      let operation = service.operations.get(operationName);
-      if (!operation) {
-        operation = {
-          name: operationName,
-          service,
-          pathElems: [],
-        };
-        service.operations.set(operationName, operation);
-      }
+      // Track all pathElems by their distance for visibilityIdx assignment and hop management
+      // This needs to be a separate loop as path.focalIdx must be set before distance can be calculated
+      path.members.forEach(member => {
+        const pathElemsAtDistance = pathElemsByDistance.get(member.distance);
+        if (pathElemsAtDistance) {
+          pathElemsAtDistance.push(member);
+        } else {
+          pathElemsByDistance.set(member.distance, [member]);
+        }
+      });
 
-      // Set focalIdx to first occurrence of focalNode
-      if (
-        path.focalIdx === -1 &&
-        serviceName === focalService &&
-        (focalOperation == null || operationName === focalOperation)
-      ) {
-        path.focalIdx = i;
-      }
-
-      const pathElem = new PathElem({ path, operation, memberIdx: i });
-      operation.pathElems.push(pathElem);
-      return pathElem;
+      return path;
     });
-
-    if (path.focalIdx === -1) {
-      throw new Error('A payload path lacked the focalNode');
-    }
-
-    // Track all pathElems by their distance for visibilityIdx assignment and hop management
-    // This needs to be a separate loop as path.focalIdx must be set before distance can be calculated
-    path.members.forEach(member => {
-      const pathElemsAtDistance = pathElemsByDistance.get(member.distance);
-      if (pathElemsAtDistance) {
-        pathElemsAtDistance.push(member);
-      } else {
-        pathElemsByDistance.set(member.distance, [member]);
-      }
-    });
-
-    return path;
-  });
 
   // Assign visibility indices such there is a positive, dependent correlation between visibilityIdx and distance
-  let upstream = 1;
   let downstream = 0;
+  let downstreamPathElems: PathElem[] | void;
+  let upstream = 1;
+  let upstreamPathElems: PathElem[] | void;
   let visibilityIdx = 0;
+  const visibilityIdxToPathElem: TDdgVisibilityIdxToPathElem = new Map();
   function setPathElemVisibilityIdx(pathElem: PathElem) {
+    visibilityIdxToPathElem.set(visibilityIdx, pathElem);
     pathElem.visibilityIdx = visibilityIdx++; // eslint-disable-line no-param-reassign
   }
-  while (pathElemsByDistance.has(upstream) || pathElemsByDistance.has(downstream)) {
-    let nextArrayToIndex: PathElem[];
-    if (
-      (Math.abs(downstream) < upstream && pathElemsByDistance.has(downstream)) ||
-      !pathElemsByDistance.has(upstream)
-    ) {
-      nextArrayToIndex = pathElemsByDistance.get(downstream--) as PathElem[];
-    } else {
-      nextArrayToIndex = pathElemsByDistance.get(upstream++) as PathElem[];
-    }
-    nextArrayToIndex.forEach(setPathElemVisibilityIdx);
-  }
+  do {
+    downstreamPathElems = pathElemsByDistance.get(downstream--);
+    upstreamPathElems = pathElemsByDistance.get(upstream++);
+    if (downstreamPathElems) downstreamPathElems.forEach(setPathElemVisibilityIdx);
+    if (upstreamPathElems) upstreamPathElems.forEach(setPathElemVisibilityIdx);
+  } while (downstreamPathElems || upstreamPathElems);
 
   return {
     paths,
     pathElemsByDistance,
     services: serviceMap,
+    visibilityIdxToPathElem,
   };
 }

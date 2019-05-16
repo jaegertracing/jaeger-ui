@@ -16,10 +16,12 @@ import PathElem from './PathElem';
 
 export { default as PathElem } from './PathElem';
 
-export type TDdgPayload = {
+export type TDdgPayloadEntry = {
   operation: string;
   service: string;
-}[][];
+};
+
+export type TDdgPayload = TDdgPayloadEntry[][];
 
 export type TDdgService = {
   name: string;
@@ -40,9 +42,11 @@ export type TDdgPath = {
 export type TDdgServiceMap = Map<string, TDdgService>;
 
 export type TDdgPathElemsByDistance = Map<number, PathElem[]>;
+export type TDdgVisibilityIdxToPathElem = Map<number, PathElem>;
 
 export type TDdgModel = {
   pathElemsByDistance: TDdgPathElemsByDistance;
   paths: TDdgPath[];
   services: TDdgServiceMap;
+  visibilityIdxToPathElem: TDdgVisibilityIdxToPathElem;
 };
