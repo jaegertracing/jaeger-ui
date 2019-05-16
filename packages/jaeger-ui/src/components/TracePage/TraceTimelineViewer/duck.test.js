@@ -380,6 +380,13 @@ describe('TraceTimelineViewer/duck', () => {
         unchecked: new DetailState(),
         checked: baseDetail.toggleLogs(),
       },
+      {
+        msg: 'toggles warnings',
+        action: actions.detailWarningsToggle(id),
+        get: state => state.detailStates.get(id),
+        unchecked: new DetailState(),
+        checked: baseDetail.toggleWarnings(),
+      },
     ];
 
     beforeEach(() => {

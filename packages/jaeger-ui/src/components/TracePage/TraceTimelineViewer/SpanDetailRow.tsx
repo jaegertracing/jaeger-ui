@@ -32,6 +32,7 @@ type SpanDetailRowProps = {
   logItemToggle: (spanID: string, log: Log) => void;
   logsToggle: (spanID: string) => void;
   processToggle: (spanID: string) => void;
+  warningsToggle: (spanID: string) => void;
   span: Span;
   tagsToggle: (spanID: string) => void;
   traceStartTime: number;
@@ -55,6 +56,7 @@ export default class SpanDetailRow extends React.PureComponent<SpanDetailRowProp
       logItemToggle,
       logsToggle,
       processToggle,
+      warningsToggle,
       span,
       tagsToggle,
       traceStartTime,
@@ -81,6 +83,7 @@ export default class SpanDetailRow extends React.PureComponent<SpanDetailRowProp
               logItemToggle={logItemToggle}
               logsToggle={logsToggle}
               processToggle={processToggle}
+              warningsToggle={warningsToggle}
               span={span}
               tagsToggle={tagsToggle}
               traceStartTime={traceStartTime}
