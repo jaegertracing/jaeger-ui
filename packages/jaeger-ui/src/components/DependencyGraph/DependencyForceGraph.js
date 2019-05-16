@@ -60,6 +60,7 @@ export default class DependencyForceGraph extends Component {
   render() {
     const { nodes, links } = this.props;
     const { width, height } = this.state;
+    const nodesMap = new Map(nodes.map(node => [node.id, node]));
 
     return (
       <div
@@ -103,7 +104,12 @@ export default class DependencyForceGraph extends Component {
             />
           ))}
           {links.map(({ opacity, ...link }) => (
-            <JaegerForceGraphArrowLink key={`${link.source}=>${link.target}`} opacity={opacity} link={link} />
+            <JaegerForceGraphArrowLink 
+                key={`${link.source}=>${link.target}`} 
+                opacity={opacity} 
+                link={link}
+                targetRadius={nodesMap.get(link.target).radius}
+            />
           ))}
         </InteractiveForceGraph>
       </div>

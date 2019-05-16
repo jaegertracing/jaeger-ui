@@ -57,30 +57,25 @@ export default class JaegerForceGraphArrowLink extends PureComponent {
   }
 
   render() {
-    const { link, targetRadius, edgeOffset, ...spreadable } = this.props;
+    const { link, targetRadius, edgeOffset: _, ...spreadable } = this.props;
     const id = `arrow-${linkId(link)}`;
     return (
       <g>
         <defs>
           <marker
             id={id}
-            markerWidth={(targetRadius * 3) + 1}
-            markerHeight={(targetRadius * 3) + 1}
-            refX={ targetRadius + link.target_node_size }
-            refY={targetRadius}
+            markerWidth={6}
+            markerHeight={4}
+            refX={ 5 +  link.target_node_size }
+            refY={ 2 }
             orient="auto"
             markerUnits="strokeWidth"
           >
-            {targetRadius > 0 && (
-              <path
-                d={`M0,0 L0,${targetRadius * 2} L${targetRadius * 3},${targetRadius} z`}
-                fill={spreadable.stroke || spreadable.color}
-              />
-            )}
+           {targetRadius > 0 && <path d="M0,0 L0,4 L6,2 z" fill={spreadable.stroke || spreadable.color} />}
           </marker>
         </defs>
 
-        <ForceGraphLink {...spreadable} link={link} edgeOffset={targetRadius} markerEnd={`url(#${id})`} />
+        <ForceGraphLink {...spreadable} link={link} markerEnd={`url(#${id})`} />
       </g>
     );
   }
