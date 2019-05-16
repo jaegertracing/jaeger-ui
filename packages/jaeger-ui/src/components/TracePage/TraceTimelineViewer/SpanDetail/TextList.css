@@ -15,7 +15,6 @@ limitations under the License.
 */
 
 .TextList {
-  background: #fff;
   max-height: 450px;
   overflow: auto;
 }

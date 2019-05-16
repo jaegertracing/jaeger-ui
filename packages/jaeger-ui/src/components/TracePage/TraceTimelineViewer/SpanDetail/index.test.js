@@ -20,7 +20,6 @@ import { shallow } from 'enzyme';
 
 import AccordianKeyValues from './AccordianKeyValues';
 import AccordianLogs from './AccordianLogs';
-import AccordianText from './AccordianText';
 import DetailState from './DetailState';
 import SpanDetail from './index';
 import { formatDuration } from '../utils';
@@ -125,11 +124,9 @@ describe('<SpanDetail>', () => {
   });
 
   it('renders the warnings', () => {
-    const target = (
-      <AccordianText data={span.warnings} label="Warnings" isOpen={detailState.isWarningsOpen} />
-    );
-    expect(wrapper.containsMatchingElement(target)).toBe(true);
-    wrapper.find({ data: span.warnings }).simulate('toggle');
+    const warningElm = wrapper.find({ data: span.warnings });
+    expect(warningElm.length).toBe(1);
+    warningElm.simulate('toggle');
     expect(props.warningsToggle).toHaveBeenLastCalledWith(span.spanID);
   });
 

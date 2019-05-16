@@ -24,15 +24,16 @@ import './AccordianText.css';
 type AccordianTextProps = {
   className?: string | TNil;
   data: string[];
+  headerClassName?: string | TNil;
   highContrast?: boolean;
   interactive?: boolean;
   isOpen: boolean;
-  label: string;
+  label: React.ReactNode;
   onToggle?: null | (() => void);
 };
 
 export default function AccordianText(props: AccordianTextProps) {
-  const { className, data, highContrast, interactive, isOpen, label, onToggle } = props;
+  const { className, data, headerClassName, highContrast, interactive, isOpen, label, onToggle } = props;
   const isEmpty = !Array.isArray(data) || !data.length;
   const iconCls = cx('u-align-icon', { 'AccordianKeyValues--emptyIcon': isEmpty });
   let arrow: React.ReactNode | null = null;
@@ -46,11 +47,12 @@ export default function AccordianText(props: AccordianTextProps) {
     };
   }
   return (
-    <div className={cx(className, 'u-tx-ellipsis')}>
+    <div className={className || ''}>
       <div
-        className={cx('AccordianText--header', {
+        className={cx('AccordianText--header', headerClassName, {
           'is-empty': isEmpty,
           'is-high-contrast': highContrast,
+          'is-open': isOpen,
         })}
         {...headerProps}
       >

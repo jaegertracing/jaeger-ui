@@ -41,20 +41,23 @@ limitations under the License.
   color: #333;
 }
 .AccordianWarnings {
-  border: 1px solid #d8d8d8;
+  background: #fafafa;
+  border: 1px solid #e4e4e4;
+  margin-bottom: 0.25rem;
 }
-.AccordianWarnings > .AccordianText--header > strong {
-  color: #d36c08;
-}
-
-.AccordianWarnings > .AccordianText--header {
+.AccordianWarnings--header {
   background: #fff7e6;
   padding: 0.25rem 0.5rem;
 }
 
-.SpanDetail--warnIcon {
-  background: transparent;
-  color: #ffa500;
-  font-size: 1em;
-  margin-right: 0.2rem;
+.AccordianWarnings--header:hover {
+  background: #ffe7ba;
+}
+
+.AccordianWarnings--header.is-open {
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.AccordianWarnings--label {
+  color: #d36c08;
 }

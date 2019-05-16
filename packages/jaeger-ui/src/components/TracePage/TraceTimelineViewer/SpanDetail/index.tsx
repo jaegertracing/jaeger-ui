@@ -119,8 +119,9 @@ export default function SpanDetail(props: SpanDetailProps) {
         {warnings &&
           warnings.length > 0 && (
             <AccordianText
-              className="AccordianWarnings ub-mb1"
-              label="Warnings"
+              className="AccordianWarnings"
+              headerClassName="AccordianWarnings--header"
+              label={<span className="AccordianWarnings--label">Warnings</span>}
               data={warnings}
               isOpen={isWarningsOpen}
               onToggle={() => warningsToggle(spanID)}

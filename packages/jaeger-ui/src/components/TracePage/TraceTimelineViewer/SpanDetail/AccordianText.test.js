@@ -46,10 +46,10 @@ describe('<AccordianText>', () => {
     expect(header.text()).toBe(props.label);
   });
 
-  it('renders the table instead of the summary when it is expanded', () => {
+  it('renders the content when it is expanded', () => {
     wrapper.setProps({ isOpen: true });
-    const table = wrapper.find(TextList);
-    expect(table.length).toBe(1);
-    expect(table.prop('data')).toBe(warnings);
+    const content = wrapper.find(TextList);
+    expect(content.length).toBe(1);
+    expect(content.prop('data')).toBe(warnings);
   });
 });
