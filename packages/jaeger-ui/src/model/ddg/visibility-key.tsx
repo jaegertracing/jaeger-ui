@@ -71,7 +71,8 @@ export function changeVisibility({
     .join(',');
 }
 
-export function compareVisibilityKeys({
+// TODO: test memo is right or even necessary
+export const compareVisibilityKeys = memoizeOne(function compareVisibilityKeysImpl({
   newVisibilityKey,
   oldVisibilityKey,
 }: {
@@ -92,4 +93,10 @@ export function compareVisibilityKeys({
     }
   }
   return { added, removed };
-}
+}, ([{
+  newVisibilityKey: currNewVisibilityKey,
+  oldVisibilityKey: currOldVisibilityKey,
+}], [{
+  newVisibilityKey: prevNewVisibilityKey,
+  oldVisibilityKey: prevOldVisibilityKey,
+}]) => currNewVisibilityKey === prevNewVisibilityKey && currOldVisibilityKey === prevOldVisibilityKey);

@@ -25,9 +25,11 @@ describe('DdgEdgesAndVertices', () => {
   const simpleTestDdgEV = new DdgEdgesAndVertices({
     ddgModel: simpleDdgModel,
     // TODO: use 7 not 3
-    visibilityKey: '7',
+    // visibilityKey: '7',
     // visibilityKey: '5',
   });
+  simpleTestDdgEV.getEdgesAndVertices('7');
+
   const simpleTestfocalPathElem = simpleTestDdgEV.pathElemsByDistance.get(0)[0];
 
   describe('getVertexKey', () => {
@@ -59,7 +61,7 @@ describe('DdgEdgesAndVertices', () => {
     });
   });
 
-  fit('creates three vertices and two edges for one-path one-hop ddg', () => {
+  it('creates three vertices and two edges for one-path one-hop ddg', () => {
     expect(simpleTestDdgEV.vertices.size).toBe(3);
     expect(simpleTestDdgEV.edges.size).toBe(2);
 
@@ -95,5 +97,11 @@ describe('DdgEdgesAndVertices', () => {
     expect(egressEdge).toBe(downstreamVertex.ingressEdges.get(focalVertex));
     expect(egressEdge.from).toBe(focalVertex);
     expect(egressEdge.to).toBe(downstreamVertex);
+  });
+
+  it('removes vertex and edge', () => {
+    simpleTestDdgEV.getEdgesAndVertices('5');
+    expect(simpleTestDdgEV.vertices.size).toBe(2);
+    expect(simpleTestDdgEV.edges.size).toBe(1);
   });
 });

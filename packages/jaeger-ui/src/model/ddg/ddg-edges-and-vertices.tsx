@@ -13,10 +13,11 @@
 // limitations under the License.
 
 import _map from 'lodash/map';
+import memoizeOne from 'memoize-one';
 
 import { compareVisibilityKeys, changeVisibility } from './visibility-key';
 
-import { PathElem, TDdgEdge, TDdgEdgeKeys, /* TDdgVertex, */ DdgVertex, TDdgModel, TDdgPathElemsByDistance, TDdgPath, TDdgServiceMap } from './types';
+import { PathElem, TDdgEdge, /* TDdgVertex, */ DdgVertex, TDdgModel, TDdgPathElemsByDistance, TDdgPath, TDdgServiceMap } from './types';
 
 // TODO rename file
 export default class DdgEdgesAndVertices {
@@ -31,7 +32,8 @@ export default class DdgEdgesAndVertices {
   visibilityIdxToPathElem: Map<number, PathElem>;
 
   // flow all wrong
-  constructor({ ddgModel, visibilityKey }: { ddgModel: TDdgModel, visibilityKey: string }) {
+  // constructor({ ddgModel, visibilityKey }: { ddgModel: TDdgModel, visibilityKey: string }) {
+  constructor({ ddgModel }: { ddgModel: TDdgModel }) {
     this.pathElemsByDistance = ddgModel.pathElemsByDistance;
     this.paths = ddgModel.paths;
     this.services = ddgModel.services;
@@ -39,14 +41,17 @@ export default class DdgEdgesAndVertices {
     this.pathElemToVertex = new Map();
     this.edges = new Set();
     this.vertices = new Map();
+    /*
     this.lastVisibilityKey = visibilityKey;
 
     const visibleIndices = compareVisibilityKeys({ oldVisibilityKey: '', newVisibilityKey: visibilityKey }).added;
 
     this.showPathElems(visibleIndices);
+    */
+    this.lastVisibilityKey = '';
   }
 
-  private showPathElems = (newIndices: number[]) => {
+  private addPathElems = (newIndices: number[]) => {
     newIndices.forEach(newIdx => {
       const pathElem = this.visibilityIdxToPathElem.get(newIdx);
       if (!pathElem) {
@@ -89,6 +94,36 @@ export default class DdgEdgesAndVertices {
     });
   }
 
+  private removePathElems = (removeIndices: number[]) => {
+    console.log(removeIndices);
+    removeIndices.forEach(removeIdx => {
+      const pathElem = this.visibilityIdxToPathElem.get(removeIdx);
+      if (!pathElem) {
+        throw new Error(`Given visibilityIdx: "${removeIdx}" that does not exist`);
+      }
+      const key = this.getVertexKey(pathElem);
+      const vertex = this.vertices.get(key);
+      if (!vertex) {
+        throw new Error(`Attempting to remove PathElem without vertex: ${JSON.stringify(pathElem, null, 2)}`);
+      }
+
+      this.visibilityIdxToPathElem.get(removeIdx);
+      vertex.pathElems.delete(pathElem);
+      if (vertex.pathElems.size === 0) {
+        this.vertices.delete(key);
+        vertex.egressEdges.forEach((egressEdge, connectedVertex) => {
+          connectedVertex.ingressEdges.delete(vertex);
+          this.edges.delete(egressEdge);
+        });
+
+        vertex.ingressEdges.forEach((ingressEdge, connectedVertex) => {
+          connectedVertex.egressEdges.delete(vertex);
+          this.edges.delete(ingressEdge);
+        });
+      }
+    });
+  }
+
   // This function assumes the density is set to PPE with distinct operations
   // class property so that it can be aware of density in late-alpha
   //
@@ -102,4 +137,21 @@ export default class DdgEdgesAndVertices {
     return members.slice(startIdx, startIdx + Math.abs(distance) + 1)
       .map(({ operation }) => `${operation.service.name}::${operation.name}`).join('|');
   }
+
+  // public getEdgesAndVertices = memoizeOne(
+  // (visibilityKey: string) => {
+  public getEdgesAndVertices = (visibilityKey: string) => {
+      console.log(visibilityKey, this.lastVisibilityKey);
+      const { added: addedIndices, removed: removedIndices } = compareVisibilityKeys({ newVisibilityKey: visibilityKey, oldVisibilityKey: this.lastVisibilityKey });
+      this.lastVisibilityKey = visibilityKey;
+      this.addPathElems(addedIndices);
+      this.removePathElems(removedIndices);
+      return {
+        edges: Array.from(this.edges),
+        vertices: Array.from(this.vertices.values()),
+      };
+  } /*,
+    ([visibilityKey]: string[]) => compareVisibilityKeys({ newVisibilityKey: visibilityKey, oldVisibilityKey: this.lastVisibilityKey }).added.length === 0
+  );
+     */
 }
