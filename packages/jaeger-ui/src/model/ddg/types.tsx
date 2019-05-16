@@ -16,10 +16,12 @@ import PathElem from './PathElem';
 
 export { default as PathElem } from './PathElem';
 
-export type TDdgPayload = {
+export type TDdgPayloadEntry = {
   operation: string;
   service: string;
-}[][];
+};
+
+export type TDdgPayload = TDdgPayloadEntry[][];
 
 export type TDdgService = {
   name: string;
@@ -33,7 +35,7 @@ export type TDdgOperation = {
 };
 
 export type TDdgPath = {
-  // This should also be a class so that focalIdx can be a getter as it may change when (en|dis)abling
+  // This could also be a class so that focalIdx can be a getter as it may change when (en|dis)abling
   // distinct operations
   focalIdx: number;
   members: PathElem[];
@@ -43,11 +45,13 @@ export type TDdgServiceMap = Map<string, TDdgService>;
 
 export type TDdgPathElemsByDistance = Map<number, PathElem[]>;
 
+export type TDdgVisibilityIdxToPathElem = Map<number, PathElem>;
+
 export type TDdgModel = {
   pathElemsByDistance: TDdgPathElemsByDistance;
   paths: TDdgPath[];
   services: TDdgServiceMap;
-  visibilityIdxToPathElem: Map<number, PathElem>;
+  visibilityIdxToPathElem: TDdgVisibilityIdxToPathElem;
 };
 
   /*

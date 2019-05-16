@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as testResources from './transform-ddg-data.test.resources';
-import transformDdgData from './transform-ddg-data';
-import DdgEdgesAndVertices from './ddg-edges-and-vertices';
+import * as testResources from './transformDdgData.test.resources';
+import transformDdgData from './transformDdgData';
+import DdgEdgesAndVertices from './ddgEdgesAndVertices';
 
 describe('DdgEdgesAndVertices', () => {
   // TODO: define in line if not reused

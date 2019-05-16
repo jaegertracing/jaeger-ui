@@ -16,8 +16,8 @@ import _filter from 'lodash/filter';
 import _flatten from 'lodash/flatten';
 import _map from 'lodash/map';
 
-import transformDdgData from './transform-ddg-data';
-import * as testResources from './transform-ddg-data.test.resources';
+import transformDdgData from './transformDdgData';
+import * as testResources from './transformDdgData.test.resources';
 
 describe('transform ddg data', () => {
   function outputValidator({ paths: payload, focalIndices, ignoreFocalOperation = false }) {
@@ -97,9 +97,59 @@ describe('transform ddg data', () => {
   it('transforms a payload with significant overlap between paths', () => {
     const { simplePath, longSimplePath, doubleFocalPath, almostDoubleFocalPath } = testResources;
     outputValidator({
-      paths: [simplePath, longSimplePath, doubleFocalPath, almostDoubleFocalPath],
-      focalIndices: [2, 6, 2, 4],
+      paths: [simplePath, doubleFocalPath, almostDoubleFocalPath, longSimplePath],
+      focalIndices: [2, 2, 4, 6],
     });
+  });
+
+  it('sorts payload paths to ensure stable visibilityIndices', () => {
+    const {
+      focalPathElem,
+      simplePath,
+      longSimplePath,
+      doubleFocalPath,
+      almostDoubleFocalPath,
+    } = testResources;
+    const { visibilityIdxToPathElem: presortedPathsVisibilityIdxToPathElemMap } = transformDdgData(
+      [simplePath, doubleFocalPath, almostDoubleFocalPath, longSimplePath],
+      focalPathElem
+    );
+    const { visibilityIdxToPathElem: unsortedPathsVisibilityIdxToPathElemMap } = transformDdgData(
+      [longSimplePath, almostDoubleFocalPath, simplePath, doubleFocalPath],
+      focalPathElem
+    );
+
+    expect(Array.from(presortedPathsVisibilityIdxToPathElemMap.keys())).toEqual(
+      Array.from(unsortedPathsVisibilityIdxToPathElemMap.keys())
+    );
+    presortedPathsVisibilityIdxToPathElemMap.forEach(
+      (presortedPathsPathElem, presortedPathsVisibilityIdx) => {
+        const {
+          memberIdx: presortedPathsMemberIdx,
+          memberOf: presortedPathsMemberOf,
+          operation: presortedPathsOperation,
+        } = presortedPathsPathElem;
+        const { focalIdx: presortedPathsFocalIdx } = presortedPathsMemberOf;
+        const { name: presortedPathsOperationName, service: presortedService } = presortedPathsOperation;
+        const { name: presortedPathsServiceName } = presortedService;
+
+        const {
+          memberIdx: unsortedPathsMemberIdx,
+          memberOf: unsortedPathsMemberOf,
+          operation: unsortedPathsOperation,
+          visibilityIdx: unsortedPathsVisibilityIdx,
+        } = unsortedPathsVisibilityIdxToPathElemMap.get(presortedPathsVisibilityIdx);
+        const { focalIdx: unsortedPathsFocalIdx } = unsortedPathsMemberOf;
+        const { name: unsortedPathsOperationName, service: unsortedService } = unsortedPathsOperation;
+        const { name: unsortedPathsServiceName } = unsortedService;
+
+        expect(unsortedPathsMemberIdx).toBe(presortedPathsMemberIdx);
+        expect(unsortedPathsFocalIdx).toBe(presortedPathsFocalIdx);
+        expect(unsortedPathsOperationName).toBe(presortedPathsOperationName);
+        expect(unsortedPathsServiceName).toBe(presortedPathsServiceName);
+        expect(unsortedPathsVisibilityIdx).toBe(presortedPathsVisibilityIdx);
+      }
+    );
   });
 
   it('throws an error if a path lacks the focalPathElem', () => {
