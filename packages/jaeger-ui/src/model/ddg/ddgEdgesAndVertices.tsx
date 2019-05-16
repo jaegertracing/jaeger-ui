@@ -17,22 +17,18 @@ import memoizeOne from 'memoize-one';
 
 import { compareVisibilityKeys, changeVisibility } from './visibility-key';
 
-import { PathElem, TDdgEdge, /* TDdgVertex, */ DdgVertex, TDdgModel, TDdgPathElemsByDistance, TDdgPath, TDdgServiceMap } from './types';
+import { PathElem, TDdgEdge, DdgVertex, TDdgModel, TDdgPathElemsByDistance, TDdgPath, TDdgServiceMap } from './types';
 
-// TODO rename file
 export default class DdgEdgesAndVertices {
   lastVisibilityKey: string;
   pathElemsByDistance: TDdgPathElemsByDistance;
   pathElemToVertex: Map<PathElem, DdgVertex>;
   paths: TDdgPath[];
   services: TDdgServiceMap;
-  // edges: TDdgEdge[];
   edges: Set<TDdgEdge>;
   vertices: Map<string, DdgVertex>;
   visibilityIdxToPathElem: Map<number, PathElem>;
 
-  // flow all wrong
-  // constructor({ ddgModel, visibilityKey }: { ddgModel: TDdgModel, visibilityKey: string }) {
   constructor({ ddgModel }: { ddgModel: TDdgModel }) {
     this.pathElemsByDistance = ddgModel.pathElemsByDistance;
     this.paths = ddgModel.paths;
@@ -41,13 +37,6 @@ export default class DdgEdgesAndVertices {
     this.pathElemToVertex = new Map();
     this.edges = new Set();
     this.vertices = new Map();
-    /*
-    this.lastVisibilityKey = visibilityKey;
-
-    const visibleIndices = compareVisibilityKeys({ oldVisibilityKey: '', newVisibilityKey: visibilityKey }).added;
-
-    this.showPathElems(visibleIndices);
-    */
     this.lastVisibilityKey = '';
   }
 
@@ -95,14 +84,12 @@ export default class DdgEdgesAndVertices {
   }
 
   private removePathElems = (removeIndices: number[]) => {
-    console.log(removeIndices);
     removeIndices.forEach(removeIdx => {
       const pathElem = this.visibilityIdxToPathElem.get(removeIdx);
       if (!pathElem) {
         throw new Error(`Given visibilityIdx: "${removeIdx}" that does not exist`);
       }
       const key = this.getVertexKey(pathElem);
-      console.log(key);
       const vertex = this.vertices.get(key);
       if (!vertex) {
         throw new Error(`Attempting to remove PathElem without vertex: ${JSON.stringify(pathElem, null, 2)}`);
@@ -141,19 +128,14 @@ export default class DdgEdgesAndVertices {
       .map(({ operation }) => `${operation.service.name}::${operation.name}`).join('|');
   }
 
-  // public getEdgesAndVertices = memoizeOne(
-  // (visibilityKey: string) => {
   public getEdgesAndVertices = (visibilityKey: string) => {
-      const { added: addedIndices, removed: removedIndices } = compareVisibilityKeys({ newVisibilityKey: visibilityKey, oldVisibilityKey: this.lastVisibilityKey });
-      this.lastVisibilityKey = visibilityKey;
-      this.addPathElems(addedIndices);
-      this.removePathElems(removedIndices);
-      return {
-        edges: Array.from(this.edges),
-        vertices: Array.from(this.vertices.values()),
-      };
-  } /*,
-    ([visibilityKey]: string[]) => compareVisibilityKeys({ newVisibilityKey: visibilityKey, oldVisibilityKey: this.lastVisibilityKey }).added.length === 0
-  );
-     */
+    const { added: addedIndices, removed: removedIndices } = compareVisibilityKeys({ newVisibilityKey: visibilityKey, oldVisibilityKey: this.lastVisibilityKey });
+    this.lastVisibilityKey = visibilityKey;
+    this.addPathElems(addedIndices);
+    this.removePathElems(removedIndices);
+    return {
+      edges: Array.from(this.edges),
+      vertices: Array.from(this.vertices.values()),
+    };
+  }
 }
