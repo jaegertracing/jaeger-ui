@@ -19,7 +19,7 @@ describe('PathElem', () => {
   const testOperation = {};
   const testPath = {
     focalIdx: 5,
-    members: ['member0', 'member1', 'member2', 'member3', 'member4', 'member5'], 
+    members: ['member0', 'member1', 'member2', 'member3', 'member4', 'member5'],
   };
   const testVisibilityIdx = 105;
   let pathElem;

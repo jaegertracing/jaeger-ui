@@ -65,4 +65,6 @@ export default class PathElem {
   get farSideEdgesKey(): TDdgEdgeIdentifiers {
     return this.distance > 0 ? 'egressEdges' : 'ingressEdges';
   }
+
+  // TODO: Define toString function!
 }

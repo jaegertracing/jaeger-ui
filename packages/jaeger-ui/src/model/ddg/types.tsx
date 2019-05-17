@@ -71,4 +71,4 @@ export class DdgVertex {
 export type TDdgEdge = {
   from: DdgVertex;
   to: DdgVertex;
-}
+};

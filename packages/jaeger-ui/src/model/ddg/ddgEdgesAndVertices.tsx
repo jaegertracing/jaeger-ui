@@ -12,12 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import _map from 'lodash/map';
-import memoizeOne from 'memoize-one';
+import { compareVisibilityKeys } from './visibility-key';
 
-import { compareVisibilityKeys, changeVisibility } from './visibility-key';
-
-import { PathElem, TDdgEdge, DdgVertex, TDdgModel, TDdgPathElemsByDistance, TDdgPath, TDdgServiceMap } from './types';
+import {
+  PathElem,
+  TDdgEdge,
+  DdgVertex,
+  TDdgModel,
+  TDdgPathElemsByDistance,
+  TDdgPath,
+  TDdgServiceMap,
+} from './types';
 
 export default class DdgEdgesAndVertices {
   lastVisibilityKey: string;
@@ -61,27 +66,27 @@ export default class DdgEdgesAndVertices {
       if (connectedPathElem) {
         const connectedVertex = this.pathElemToVertex.get(connectedPathElem);
         if (!connectedVertex) {
-          // TODO: Improve error message
-          throw new Error(`Non-focal pathElem lacks precursorVertex. PathElem: ${JSON.stringify(pathElem, null, 2)}`);
+          throw new Error(`Non-focal pathElem lacks connectedVertex. PathElem: ${pathElem}`);
         }
 
         if (!vertex[pathElem.focalSideEdgesKey].has(connectedVertex)) {
-          const newEdge: TDdgEdge = pathElem.focalSideEdgesKey === 'ingressEdges'
-            ? {
-              from: connectedVertex,
-              to: vertex,
-            }
-            : {
-              from: vertex,
-              to: connectedVertex,
-            };
+          const newEdge: TDdgEdge =
+            pathElem.focalSideEdgesKey === 'ingressEdges'
+              ? {
+                  from: connectedVertex,
+                  to: vertex,
+                }
+              : {
+                  from: vertex,
+                  to: connectedVertex,
+                };
           vertex[pathElem.focalSideEdgesKey].set(connectedVertex, newEdge);
           connectedVertex[pathElem.farSideEdgesKey].set(vertex, newEdge);
           this.edges.add(newEdge);
         }
       }
     });
-  }
+  };
 
   private removePathElems = (removeIndices: number[]) => {
     removeIndices.forEach(removeIdx => {
@@ -110,7 +115,7 @@ export default class DdgEdgesAndVertices {
         });
       }
     });
-  }
+  };
 
   // This function assumes the density is set to PPE with distinct operations
   // It is a class property so that it can be aware of density in late-alpha
@@ -124,12 +129,17 @@ export default class DdgEdgesAndVertices {
     const { focalIdx, members } = memberOf;
     const startIdx = Math.min(focalIdx, focalIdx + distance);
 
-    return members.slice(startIdx, startIdx + Math.abs(distance) + 1)
-      .map(({ operation }) => `${operation.service.name}::${operation.name}`).join('|');
-  }
+    return members
+      .slice(startIdx, startIdx + Math.abs(distance) + 1)
+      .map(({ operation }) => `${operation.service.name}::${operation.name}`)
+      .join('|');
+  };
 
   public getEdgesAndVertices = (visibilityKey: string) => {
-    const { added: addedIndices, removed: removedIndices } = compareVisibilityKeys({ newVisibilityKey: visibilityKey, oldVisibilityKey: this.lastVisibilityKey });
+    const { added: addedIndices, removed: removedIndices } = compareVisibilityKeys({
+      newVisibilityKey: visibilityKey,
+      oldVisibilityKey: this.lastVisibilityKey,
+    });
     this.lastVisibilityKey = visibilityKey;
     this.addPathElems(addedIndices);
     this.removePathElems(removedIndices);
@@ -137,5 +147,5 @@ export default class DdgEdgesAndVertices {
       edges: Array.from(this.edges),
       vertices: Array.from(this.vertices.values()),
     };
-  }
+  };
 }

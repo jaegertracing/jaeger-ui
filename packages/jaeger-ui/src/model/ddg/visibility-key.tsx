@@ -83,26 +83,28 @@ export function compareVisibilityKeys({
 }: {
   newVisibilityKey: string;
   oldVisibilityKey: string;
-}): { added: number[], removed: number[] } {
+}): { added: number[]; removed: number[] } {
   const added: number[] = [];
-  const removed: number[] = []; 
+  const removed: number[] = [];
   const oldVisibilityBuckets = getVisibilityBuckets(oldVisibilityKey).slice();
   const newVisibilityBuckets = getVisibilityBuckets(newVisibilityKey).slice();
   for (let i = 0; i < Math.max(oldVisibilityBuckets.length, newVisibilityBuckets.length); i++) {
-    for(let j = 0; j < VISIBILITY_BUCKET_SIZE; j++) {
-      if (newVisibilityBuckets[i] & 1 << j && !(oldVisibilityBuckets[i] & 1 << j)) {
+    for (let j = 0; j < VISIBILITY_BUCKET_SIZE; j++) {
+      if (newVisibilityBuckets[i] & (1 << j) && !(oldVisibilityBuckets[i] & (1 << j))) {
         added.push(i * VISIBILITY_BUCKET_SIZE + j);
-      } else if (oldVisibilityBuckets[i] & 1 << j && !(newVisibilityBuckets[i] & 1 << j)) {
+      } else if (oldVisibilityBuckets[i] & (1 << j) && !(newVisibilityBuckets[i] & (1 << j))) {
         removed.push(i * VISIBILITY_BUCKET_SIZE + j);
       }
     }
   }
   return { added, removed };
-}/*, ([{
+}
+/*
+, ([{
   newVisibilityKey: currNewVisibilityKey,
   oldVisibilityKey: currOldVisibilityKey,
 }], [{
   newVisibilityKey: prevNewVisibilityKey,
   oldVisibilityKey: prevOldVisibilityKey,
 }]) => currNewVisibilityKey === prevNewVisibilityKey && currOldVisibilityKey === prevOldVisibilityKey);
-  */
+*/
