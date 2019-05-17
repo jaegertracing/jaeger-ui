@@ -57,6 +57,7 @@ limitations under the License.
 .OpNode--popover .OpNode--copyIcon,
 .OpNode:not(:hover) .OpNode--copyIcon {
   color: transparent;
+  pointer-events: none;
 }
 
 .OpNode--service {

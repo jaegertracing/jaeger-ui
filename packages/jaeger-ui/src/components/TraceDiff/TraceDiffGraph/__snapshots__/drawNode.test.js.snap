@@ -25,6 +25,8 @@ exports[`drawNode diffNode renders as expected when props.a and props.b are the 
             <CopyIcon
               className="DiffNode--copyIcon"
               copyText="serviceName operationName"
+              icon="copy"
+              placement="left"
               tooltipTitle="Copy label"
             />
           </td>
@@ -70,6 +72,8 @@ exports[`drawNode diffNode renders as expected when props.a and props.b are the 
           <CopyIcon
             className="DiffNode--copyIcon"
             copyText="serviceName operationName"
+            icon="copy"
+            placement="left"
             tooltipTitle="Copy label"
           />
         </td>
@@ -116,6 +120,8 @@ exports[`drawNode diffNode renders as expected when props.a is 0 1`] = `
             <CopyIcon
               className="DiffNode--copyIcon"
               copyText="serviceName operationName"
+              icon="copy"
+              placement="left"
               tooltipTitle="Copy label"
             />
           </td>
@@ -181,6 +187,8 @@ exports[`drawNode diffNode renders as expected when props.a is 0 1`] = `
           <CopyIcon
             className="DiffNode--copyIcon"
             copyText="serviceName operationName"
+            icon="copy"
+            placement="left"
             tooltipTitle="Copy label"
           />
         </td>
@@ -242,6 +250,8 @@ exports[`drawNode diffNode renders as expected when props.a is less than props.b
             <CopyIcon
               className="DiffNode--copyIcon"
               copyText="serviceName operationName"
+              icon="copy"
+              placement="left"
               tooltipTitle="Copy label"
             />
           </td>
@@ -307,6 +317,8 @@ exports[`drawNode diffNode renders as expected when props.a is less than props.b
           <CopyIcon
             className="DiffNode--copyIcon"
             copyText="serviceName operationName"
+            icon="copy"
+            placement="left"
             tooltipTitle="Copy label"
           />
         </td>
@@ -368,6 +380,8 @@ exports[`drawNode diffNode renders as expected when props.a is more than props.b
             <CopyIcon
               className="DiffNode--copyIcon"
               copyText="serviceName operationName"
+              icon="copy"
+              placement="left"
               tooltipTitle="Copy label"
             />
           </td>
@@ -433,6 +447,8 @@ exports[`drawNode diffNode renders as expected when props.a is more than props.b
           <CopyIcon
             className="DiffNode--copyIcon"
             copyText="serviceName operationName"
+            icon="copy"
+            placement="left"
             tooltipTitle="Copy label"
           />
         </td>
@@ -494,6 +510,8 @@ exports[`drawNode diffNode renders as expected when props.b is 0 1`] = `
             <CopyIcon
               className="DiffNode--copyIcon"
               copyText="serviceName operationName"
+              icon="copy"
+              placement="left"
               tooltipTitle="Copy label"
             />
           </td>
@@ -559,6 +577,8 @@ exports[`drawNode diffNode renders as expected when props.b is 0 1`] = `
           <CopyIcon
             className="DiffNode--copyIcon"
             copyText="serviceName operationName"
+            icon="copy"
+            placement="left"
             tooltipTitle="Copy label"
           />
         </td>
@@ -615,6 +635,8 @@ exports[`drawNode diffNode renders as expected when props.isUiFindMatch is true 
             <CopyIcon
               className="DiffNode--copyIcon"
               copyText="serviceName operationName"
+              icon="copy"
+              placement="left"
               tooltipTitle="Copy label"
             />
           </td>
@@ -660,6 +682,8 @@ exports[`drawNode diffNode renders as expected when props.isUiFindMatch is true 
           <CopyIcon
             className="DiffNode--copyIcon"
             copyText="serviceName operationName"
+            icon="copy"
+            placement="left"
             tooltipTitle="Copy label"
           />
         </td>

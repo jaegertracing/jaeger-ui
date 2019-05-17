@@ -14,6 +14,7 @@
 
 import React from 'react';
 import { shallow, mount } from 'enzyme';
+import { Link } from 'react-router-dom';
 
 import AltViewOptions from './AltViewOptions';
 import KeyboardShortcutsHelp from './KeyboardShortcutsHelp';
@@ -108,6 +109,14 @@ describe('<TracePageHeader>', () => {
       props.showViewOptions = false;
       wrapper.setProps(props);
       expect(wrapper.find(AltViewOptions).length).toBe(0);
+    });
+
+    it('renders the link to search', () => {
+      expect(wrapper.find(Link).length).toBe(0);
+
+      const toSearch = 'some-link';
+      wrapper.setProps({ toSearch });
+      expect(wrapper.find({ to: toSearch }).length).toBe(1);
     });
 
     it('toggles the standalone link', () => {

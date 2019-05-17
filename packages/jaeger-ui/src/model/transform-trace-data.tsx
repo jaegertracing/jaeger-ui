@@ -15,10 +15,24 @@
 import _isEqual from 'lodash/isEqual';
 
 import { getTraceSpanIdsAsTree } from '../selectors/trace';
-import { Process, Span, SpanData, Trace, TraceData } from '../types/trace';
+import { KeyValuePair, Process, Span, SpanData, Trace, TraceData } from '../types/trace';
 import TreeNode from '../utils/TreeNode';
 
 type SpanWithProcess = SpanData & { process: Process };
+
+function deduplicateTags(spanTags: Array<KeyValuePair>) {
+  const warningsHash: Map<string, string> = new Map<string, string>();
+  const tags: Array<KeyValuePair> = spanTags.reduce<Array<KeyValuePair>>((uniqueTags, tag) => {
+    if (!uniqueTags.some(t => t.key === tag.key && t.value === tag.value)) {
+      uniqueTags.push(tag);
+    } else {
+      warningsHash.set(`${tag.key}:${tag.value}`, `Duplicate tag "${tag.key}:${tag.value}"`);
+    }
+    return uniqueTags;
+  }, []);
+  const warnings = Array.from(warningsHash.values());
+  return { tags, warnings };
+}
 
 /**
  * NOTE: Mutates `data` - Transform the HTTP response data into the form the app
@@ -93,6 +107,10 @@ export default function transformTraceData(data: TraceData & { spans: SpanWithPr
     span.relativeStartTime = span.startTime - traceStartTime;
     span.depth = depth - 1;
     span.hasChildren = node.children.length > 0;
+    const tagsInfo = deduplicateTags(span.tags);
+    span.tags = tagsInfo.tags;
+    span.warnings = span.warnings || [];
+    span.warnings = span.warnings.concat(tagsInfo.warnings);
     span.references.forEach(ref => {
       const refSpan = spanMap.get(ref.spanID) as Span;
       if (refSpan) {

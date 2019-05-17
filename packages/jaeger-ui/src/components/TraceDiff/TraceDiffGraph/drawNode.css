@@ -88,6 +88,7 @@ limitations under the License.
 .DiffNode--popover .DiffNode--copyIcon,
 .DiffNode:not(:hover) .DiffNode--copyIcon {
   color: transparent;
+  pointer-events: none;
 }
 
 /* Tweak the popover aesthetics - unfortunate but necessary */

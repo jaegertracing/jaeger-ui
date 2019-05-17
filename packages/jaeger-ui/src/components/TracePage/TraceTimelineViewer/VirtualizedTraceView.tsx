@@ -36,7 +36,6 @@ import { Accessors } from '../ScrollManager';
 import { extractUiFindFromState, TExtractUiFindFromStateReturn } from '../../common/UiFindInput';
 import getLinks from '../../../model/link-patterns';
 import colorGenerator from '../../../utils/color-generator';
-import updateUiFind from '../../../utils/update-ui-find';
 import { TNil, ReduxState } from '../../../types';
 import { Log, Span, Trace, KeyValuePair } from '../../../types/trace';
 import TTraceTimeline from '../../../types/TTraceTimeline';
@@ -52,14 +51,17 @@ type RowState = {
 type TVirtualizedTraceViewOwnProps = {
   currentViewRangeTime: [number, number];
   findMatchesIDs: Set<string> | TNil;
+  scrollToFirstVisibleSpan: () => void;
   registerAccessors: (accesors: Accessors) => void;
   trace: Trace;
 };
 
 type TDispatchProps = {
   childrenToggle: (spanID: string) => void;
+  clearShouldScrollToFirstUiFindMatch: () => void;
   detailLogItemToggle: (spanID: string, log: Log) => void;
   detailLogsToggle: (spanID: string) => void;
+  detailWarningsToggle: (spanID: string) => void;
   detailProcessToggle: (spanID: string) => void;
   detailTagsToggle: (spanID: string) => void;
   detailToggle: (spanID: string) => void;
@@ -134,7 +136,7 @@ function getCssClasses(currentViewRange: [number, number]) {
 }
 
 // export from tests
-export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTraceViewProps> {
+export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceViewProps> {
   clippingCssClasses: string;
   listView: ListView | TNil;
   rowStates: RowState[];
@@ -156,6 +158,22 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
     this.rowStates = generateRowStates(trace.spans, childrenHiddenIDs, detailStates);
 
     setTrace(trace, uiFind);
+  }
+
+  shouldComponentUpdate(nextProps: VirtualizedTraceViewProps) {
+    // If any prop updates, VirtualizedTraceViewImpl should update.
+    const nextPropKeys = Object.keys(nextProps) as (keyof VirtualizedTraceViewProps)[];
+    for (let i = 0; i < nextPropKeys.length; i += 1) {
+      if (nextProps[nextPropKeys[i]] !== this.props[nextPropKeys[i]]) {
+        // Unless the only change was props.shouldScrollToFirstUiFindMatch changing to false.
+        if (nextPropKeys[i] === 'shouldScrollToFirstUiFindMatch') {
+          if (nextProps[nextPropKeys[i]]) return true;
+        } else {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   componentWillUpdate(nextProps: VirtualizedTraceViewProps) {
@@ -190,16 +208,17 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
     }
   }
 
-  addToUiFind = (addition: string) => {
-    const { uiFind, history, location } = this.props;
-    if (!uiFind || !uiFind.includes(addition)) {
-      updateUiFind({
-        history,
-        location,
-        uiFind: cx(uiFind, addition),
-      });
+  componentDidUpdate() {
+    const {
+      shouldScrollToFirstUiFindMatch,
+      clearShouldScrollToFirstUiFindMatch,
+      scrollToFirstVisibleSpan,
+    } = this.props;
+    if (shouldScrollToFirstUiFindMatch) {
+      scrollToFirstVisibleSpan();
+      clearShouldScrollToFirstUiFindMatch();
     }
-  };
+  }
 
   getAccessors() {
     const lv = this.listView;
@@ -353,6 +372,7 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
       detailLogItemToggle,
       detailLogsToggle,
       detailProcessToggle,
+      detailWarningsToggle,
       detailStates,
       detailTagsToggle,
       detailToggle,
@@ -367,7 +387,6 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
     return (
       <div className="VirtualizedTraceView--row" key={key} style={{ ...style, zIndex: 1 }} {...attrs}>
         <SpanDetailRow
-          addToUiFind={this.addToUiFind}
           color={color}
           columnDivision={spanNameColumnWidth}
           onDetailToggled={detailToggle}
@@ -376,6 +395,7 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
           logItemToggle={detailLogItemToggle}
           logsToggle={detailLogsToggle}
           processToggle={detailProcessToggle}
+          warningsToggle={detailWarningsToggle}
           span={span}
           tagsToggle={detailTagsToggle}
           traceStartTime={trace.startTime}
@@ -414,7 +434,7 @@ function mapStateToProps(state: ReduxState): TTraceTimeline & TExtractUiFindFrom
 
 /* istanbul ignore next */
 function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
-  return bindActionCreators(actions, dispatch) as any;
+  return (bindActionCreators(actions, dispatch) as any) as TDispatchProps;
 }
 
 export default withRouter(
