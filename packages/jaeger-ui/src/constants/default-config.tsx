@@ -25,10 +25,6 @@ export default deepFreeze(
         menuEnabled: true,
       },
       linkPatterns: [],
-      tracking: {
-        gaID: null,
-        trackErrors: true,
-      },
       menu: [
         {
           label: 'About Jaeger',
@@ -60,10 +56,20 @@ export default deepFreeze(
           ],
         },
       ],
+      search: {
+        maxLookback: {
+          label: '4 Days',
+          value: '3d',
+        },
+      },
+      tracking: {
+        gaID: null,
+        trackErrors: true,
+      },
     },
     // fields that should be individually merged vs wholesale replaced
     '__mergeFields',
-    { value: ['tracking', 'dependencies'] }
+    { value: ['dependencies', 'search', 'tracking'] }
   )
 );
 
