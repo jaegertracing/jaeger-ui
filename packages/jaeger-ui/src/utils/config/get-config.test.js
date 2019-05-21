@@ -22,19 +22,30 @@ import defaultConfig, { deprecations } from '../../constants/default-config';
 
 describe('getConfig()', () => {
   let oldWarn;
+  let oldWindowGetJaegerUiConfig;
   let warnFn;
 
-  beforeEach(() => {
+  beforeAll(() => {
     oldWarn = console.warn;
+    oldWindowGetJaegerUiConfig = window.getJaegerUiConfig;
     warnFn = jest.fn();
     console.warn = warnFn;
   });
 
-  afterEach(() => {
+  beforeEach(() => {
+    warnFn.mockClear();
+  });
+
+  afterAll(() => {
     console.warn = oldWarn;
+    window.getJaegerUiConfig = oldWindowGetJaegerUiConfig;
   });
 
   describe('`window.getJaegerUiConfig` is not a function', () => {
+    beforeAll(() => {
+      window.getJaegerUiConfig = undefined;
+    });
+
     it('warns once', () => {
       getConfig();
       expect(warnFn.mock.calls.length).toBe(1);

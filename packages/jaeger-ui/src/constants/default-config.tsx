@@ -58,8 +58,8 @@ export default deepFreeze(
       ],
       search: {
         maxLookback: {
-          label: '4 Days',
-          value: '3d',
+          label: '2 Days',
+          value: '2d',
         },
       },
       tracking: {

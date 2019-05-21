@@ -14,6 +14,7 @@
 
 import * as React from 'react';
 import { Form, Input, Button, Popover, Select } from 'antd';
+import _memoize from 'lodash/memoize';
 import logfmtParser from 'logfmt/lib/logfmt_parser';
 import { stringify as logfmtStringify } from 'logfmt/lib/stringify';
 import moment from 'moment';
@@ -74,12 +75,14 @@ export function convTagsLogfmt(tags) {
 
 export function lookbackToTimestamp(lookback, from) {
   const unit = lookback.substr(-1);
-  return moment(from)
-    .subtract(parseInt(lookback, 10), unit)
-    .valueOf() * 1000;
+  return (
+    moment(from)
+      .subtract(parseInt(lookback, 10), unit)
+      .valueOf() * 1000
+  );
 }
 
-const lookbackOptions = [
+export const lookbackOptions = [
   {
     label: 'Hour',
     value: '1h',
@@ -138,40 +141,24 @@ const lookbackOptions = [
   },
 ];
 
-export function optionsWithinMaxLookback() {
-  // console.log(lookbackOptions);
-  const maxLookback = getConfigValue('search.maxLookback');
-  const { label: maxLookbackLabel, value: maxLookbackValue } = maxLookback;
-  const now = new Date();
-  const minTimestamp = lookbackToTimestamp(maxLookbackValue, now);
-  const options = lookbackOptions.map(({ label, value }) => {
-    const timeStamp = lookbackToTimestamp(value, now);
-    return timeStamp >= minTimestamp
-      ? {
-        label,
-        timeStamp,
-      }
-      : null
-  }).filter(Boolean);
-  if (options[options.length - 1].timeStamp !== minTimestamp) {
-    options.push({ label: maxLookbackLabel, timeStamp: minTimestamp });
-  }
-  return options.map(({ label, timeStamp }) => (<Option key={timeStamp} value={timeStamp}>Last {label}</Option>));
-
-  /*
-  const maxLookback = getConfigValue('search.maxLookback');
-  const { value: maxLookbackValue } = maxLookback;
-  const now = new Date();
-  const minTimestamp = lookbackToTimestamp(maxLookbackValue, now);
-  const options = lookbackOptions.filter(({ value }) => {
-    return lookbackToTimestamp(value, now) >= minTimestamp;
-  });
-  if (options[options.length - 1].value !== maxLookbackValue) {
-    options.push(maxLookback);
-  }
-  return options.map(({ label, value }) => (<Option key={value} value={value}>Last {label}</Option>));
-  */
-}
+export const optionsWithinMaxLookback = _memoize(
+  () => {
+    const maxLookback = getConfigValue('search.maxLookback');
+    const { value: maxLookbackValue } = maxLookback;
+    const now = new Date();
+    const minTimestamp = lookbackToTimestamp(maxLookbackValue, now);
+    const options = lookbackOptions.filter(({ value }) => lookbackToTimestamp(value, now) >= minTimestamp);
+    if (options[options.length - 1].value !== maxLookbackValue) {
+      options.push(maxLookback);
+    }
+    return options.map(({ label, value }) => (
+      <Option key={value} value={value}>
+        Last {label}
+      </Option>
+    ));
+  },
+  () => getConfigValue('search.maxLookback')
+);
 
 export function traceIDsToQuery(traceIDs) {
   if (!traceIDs) {
@@ -236,8 +223,7 @@ export function submitForm(fields, searchTraces) {
   let end;
   if (lookback !== 'custom') {
     const now = new Date();
-    start = lookback;
-    // start = lookbackToTimestamp(lookback, now)
+    start = lookbackToTimestamp(lookback, now);
     end = moment(now).valueOf() * 1000;
   } else {
     const times = getUnixTimeStampInMSFromForm({
@@ -363,9 +349,7 @@ export class SearchFormImpl extends React.PureComponent {
 
         <FormItem label="Lookback">
           <Field name="lookback" component={AdaptedSelect} props={{ disabled, defaultValue: '1h' }}>
-            { /* lookbackOptions.map(({ label, value }) => (<Option key={value} value={value}>Last {label}</Option>)) */ }
-            { /* <OptionsWithinMaxLookback /> */ }
-            { optionsWithinMaxLookback() }
+            {optionsWithinMaxLookback()}
             <Option value="custom">Custom Time Range</Option>
           </Field>
         </FormItem>

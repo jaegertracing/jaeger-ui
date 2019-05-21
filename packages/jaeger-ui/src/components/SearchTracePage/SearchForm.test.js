@@ -25,13 +25,17 @@ import {
   convertQueryParamsToFormDates,
   convTagsLogfmt,
   getUnixTimeStampInMSFromForm,
+  lookbackOptions,
+  lookbackToTimestamp,
   mapStateToProps,
+  optionsWithinMaxLookback,
   submitForm,
   traceIDsToQuery,
   SearchFormImpl as SearchForm,
   validateDurationFields,
 } from './SearchForm';
 import * as markers from './SearchForm.markers';
+import * as getConfig from '../../utils/config/get-config';
 
 function makeDateParams(dateOffset = 0) {
   const date = new Date();
@@ -122,6 +126,85 @@ describe('conversion utils', () => {
     it('splits on ","', () => {
       const strs = ['a', 'b', 'c'];
       expect(traceIDsToQuery(strs.join(','))).toEqual(strs);
+    });
+  });
+});
+
+describe('lookback utils', () => {
+  describe('lookbackToTimestamp', () => {
+    const hourInMicroseconds = 60 * 60 * 1000 * 1000;
+    const now = new Date();
+    const nowInMicroseconds = moment(now).valueOf() * 1000;
+
+    it('creates timestamp for hours ago', () => {
+      [1, 2, 4, 7].forEach(lookbackNum => {
+        expect(nowInMicroseconds - lookbackToTimestamp(`${lookbackNum}h`, now)).toBe(
+          lookbackNum * hourInMicroseconds
+        );
+      });
+    });
+
+    it('creates timestamp for days ago', () => {
+      [1, 2, 4, 7].forEach(lookbackNum => {
+        expect(nowInMicroseconds - lookbackToTimestamp(`${lookbackNum}d`, now)).toBe(
+          lookbackNum * 24 * hourInMicroseconds
+        );
+      });
+    });
+
+    it('creates timestamp for weeks ago', () => {
+      [1, 2, 4, 7].forEach(lookbackNum => {
+        expect(nowInMicroseconds - lookbackToTimestamp(`${lookbackNum}w`, now)).toBe(
+          lookbackNum * 7 * 24 * hourInMicroseconds
+        );
+      });
+    });
+  });
+
+  describe('optionsWithinMaxLookback', () => {
+    let getConfigValueSpy;
+
+    beforeAll(() => {
+      getConfigValueSpy = jest.spyOn(getConfig, 'getConfigValue');
+    });
+
+    it('memoizes correctly', () => {
+      getConfigValueSpy.mockReturnValue(lookbackOptions[0]);
+      const firstCallOptions = optionsWithinMaxLookback();
+      const secondCallOptions = optionsWithinMaxLookback();
+      getConfigValueSpy.mockReturnValue(lookbackOptions[1]);
+      const thirdCallOptions = optionsWithinMaxLookback();
+      expect(secondCallOptions).toBe(firstCallOptions);
+      expect(thirdCallOptions).not.toBe(firstCallOptions);
+    });
+
+    it('returns options within config.search.maxLookback', () => {
+      const expectedOptionsLength = 8;
+      const expectedOptions = lookbackOptions.slice(0, expectedOptionsLength);
+      getConfigValueSpy.mockReturnValue(lookbackOptions[expectedOptionsLength - 1]);
+      const options = optionsWithinMaxLookback();
+
+      expect(options.length).toBe(expectedOptionsLength);
+      options.forEach(({ props }, i) => {
+        expect(props.value).toBe(expectedOptions[i].value);
+        expect(props.children[1]).toBe(expectedOptions[i].label);
+      });
+    });
+
+    it("includes config.search.maxLookback if it's not part of standard options", () => {
+      const configValue = {
+        label: '4 Days - configValue',
+        value: '4d',
+      };
+      const expectedOptions = [...lookbackOptions.slice(0, 9), configValue];
+      getConfigValueSpy.mockReturnValue(configValue);
+      const options = optionsWithinMaxLookback();
+
+      expect(options.length).toBe(expectedOptions.length);
+      options.forEach(({ props }, i) => {
+        expect(props.value).toBe(expectedOptions[i].value);
+        expect(props.children[1]).toBe(expectedOptions[i].label);
+      });
     });
   });
 });
