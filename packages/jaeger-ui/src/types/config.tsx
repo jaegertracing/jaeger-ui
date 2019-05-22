@@ -26,10 +26,10 @@ export type ConfigMenuGroup = {
 };
 
 export type Config = {
-  archiveEnabled: boolean | TNil;
+  archiveEnabled?: boolean;
   dependencies?: { dagMaxServicesLen?: number; menuEnabled?: boolean };
   menu: (ConfigMenuGroup | ConfigMenuItem)[];
-  search: { maxLookback: { label: string; value: string } };
+  search?: { maxLookback: { label: string; value: string } };
   tracking?: {
     gaID: string | TNil;
     trackErrors: boolean | TNil;
