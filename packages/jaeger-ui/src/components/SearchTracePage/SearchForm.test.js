@@ -134,7 +134,7 @@ describe('lookback utils', () => {
   describe('lookbackToTimestamp', () => {
     const hourInMicroseconds = 60 * 60 * 1000 * 1000;
     const now = new Date();
-    const nowInMicroseconds = moment(now).valueOf() * 1000;
+    const nowInMicroseconds = now * 1000;
 
     it('creates timestamp for hours ago', () => {
       [1, 2, 4, 7].forEach(lookbackNum => {
@@ -195,6 +195,22 @@ describe('lookback utils', () => {
       const configValue = {
         label: '4 Days - configValue',
         value: '4d',
+      };
+      const expectedOptions = [...lookbackOptions.slice(0, 8), configValue];
+      getConfigValueSpy.mockReturnValue(configValue);
+      const options = optionsWithinMaxLookback();
+
+      expect(options.length).toBe(expectedOptions.length);
+      options.forEach(({ props }, i) => {
+        expect(props.value).toBe(expectedOptions[i].value);
+        expect(props.children[1]).toBe(expectedOptions[i].label);
+      });
+    });
+
+    it('uses config.search.maxLookback in place of standard option it is not equal to but is equivalent to', () => {
+      const configValue = {
+        label: '1 Week is functionally equivalent to 7d',
+        value: '1w',
       };
       const expectedOptions = [...lookbackOptions.slice(0, 9), configValue];
       getConfigValueSpy.mockReturnValue(configValue);

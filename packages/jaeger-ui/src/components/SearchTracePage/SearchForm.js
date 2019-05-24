@@ -96,10 +96,6 @@ export const lookbackOptions = [
     value: '3h',
   },
   {
-    label: '4 Hours',
-    value: '4h',
-  },
-  {
     label: '6 Hours',
     value: '6h',
   },
@@ -144,12 +140,22 @@ export const lookbackOptions = [
 export const optionsWithinMaxLookback = _memoize(
   () => {
     const maxLookback = getConfigValue('search.maxLookback');
-    const { value: maxLookbackValue } = maxLookback;
     const now = new Date();
-    const minTimestamp = lookbackToTimestamp(maxLookbackValue, now);
-    const options = lookbackOptions.filter(({ value }) => lookbackToTimestamp(value, now) >= minTimestamp);
-    if (options[options.length - 1].value !== maxLookbackValue) {
-      options.push(maxLookback);
+    const minTimestamp = lookbackToTimestamp(maxLookback.value, now);
+    const lookbackToTimestampMap = new Map();
+    const options = lookbackOptions.filter(({ value }) => {
+      const lookbackTimestamp = lookbackToTimestamp(value, now);
+      lookbackToTimestampMap.set(value, lookbackTimestamp);
+      return lookbackTimestamp >= minTimestamp;
+    });
+    const lastInRangeIndex = options.length - 1;
+    const lastInRangeOption = options[lastInRangeIndex];
+    if (lastInRangeOption.label !== maxLookback.label) {
+      if (lookbackToTimestampMap.get(lastInRangeOption.value) !== minTimestamp) {
+        options.push(maxLookback);
+      } else {
+        options.splice(lastInRangeIndex, 1, maxLookback);
+      }
     }
     return options.map(({ label, value }) => (
       <Option key={value} value={value}>
@@ -224,7 +230,7 @@ export function submitForm(fields, searchTraces) {
   if (lookback !== 'custom') {
     const now = new Date();
     start = lookbackToTimestamp(lookback, now);
-    end = moment(now).valueOf() * 1000;
+    end = now * 1000;
   } else {
     const times = getUnixTimeStampInMSFromForm({
       startDate,
