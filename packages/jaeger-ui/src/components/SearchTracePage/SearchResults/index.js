@@ -46,7 +46,7 @@ type SearchResultsProps = {
   hideGraph: boolean,
   loading: boolean,
   maxTraceDuration: number,
-  queryOfResults: SearchQuery,
+  queryOfResults?: SearchQuery,
   showStandaloneLink: boolean,
   skipMessage?: boolean,
   traces: TraceSummary[],
@@ -84,7 +84,7 @@ export const sortFormSelector = formValueSelector('traceResultsSort');
 export default class SearchResults extends React.PureComponent<SearchResultsProps> {
   props: SearchResultsProps;
 
-  static defaultProps = { skipMessage: false };
+  static defaultProps = { skipMessage: false, queryOfResults: undefined };
 
   toggleComparison = (traceID: string, remove: boolean) => {
     const { cohortAddTrace, cohortRemoveTrace } = this.props;
@@ -132,7 +132,7 @@ export default class SearchResults extends React.PureComponent<SearchResultsProp
       );
     }
     const cohortIds = new Set(diffCohort.map(datum => datum.id));
-    const searchUrl = getUrl(stripEmbeddedState(queryOfResults));
+    const searchUrl = queryOfResults ? getUrl(stripEmbeddedState(queryOfResults)) : getUrl();
     return (
       <div>
         <div>
