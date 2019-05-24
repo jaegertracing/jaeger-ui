@@ -21,14 +21,11 @@ import processDeprecation from './process-deprecation';
 import defaultConfig, { deprecations } from '../../constants/default-config';
 
 describe('getConfig()', () => {
+  const warnFn = jest.fn();
   let oldWarn;
-  let oldWindowGetJaegerUiConfig;
-  let warnFn;
 
   beforeAll(() => {
     oldWarn = console.warn;
-    oldWindowGetJaegerUiConfig = window.getJaegerUiConfig;
-    warnFn = jest.fn();
     console.warn = warnFn;
   });
 
@@ -38,7 +35,6 @@ describe('getConfig()', () => {
 
   afterAll(() => {
     console.warn = oldWarn;
-    window.getJaegerUiConfig = oldWindowGetJaegerUiConfig;
   });
 
   describe('`window.getJaegerUiConfig` is not a function', () => {

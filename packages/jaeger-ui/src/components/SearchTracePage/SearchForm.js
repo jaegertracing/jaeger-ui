@@ -14,10 +14,11 @@
 
 import * as React from 'react';
 import { Form, Input, Button, Popover, Select } from 'antd';
-import _memoize from 'lodash/memoize';
+import _get from 'lodash/get';
 import logfmtParser from 'logfmt/lib/logfmt_parser';
 import { stringify as logfmtStringify } from 'logfmt/lib/stringify';
 import moment from 'moment';
+import memoizeOne from 'memoize-one';
 import PropTypes from 'prop-types';
 import queryString from 'query-string';
 import IoHelp from 'react-icons/lib/io/help';
@@ -31,7 +32,6 @@ import { trackFormInput } from './SearchForm.track';
 import VirtSelect from '../common/VirtSelect';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import { formatDate, formatTime } from '../../utils/date';
-import { getConfigValue } from '../../utils/config/get-config';
 import reduxFormFieldAdapter from '../../utils/redux-form-field-adapter';
 import { DEFAULT_OPERATION, DEFAULT_LIMIT, DEFAULT_LOOKBACK } from '../../constants/search-form';
 
@@ -82,7 +82,7 @@ export function lookbackToTimestamp(lookback, from) {
   );
 }
 
-export const lookbackOptions = [
+const lookbackOptions = [
   {
     label: 'Hour',
     value: '1h',
@@ -137,34 +137,30 @@ export const lookbackOptions = [
   },
 ];
 
-export const optionsWithinMaxLookback = _memoize(
-  () => {
-    const maxLookback = getConfigValue('search.maxLookback');
-    const now = new Date();
-    const minTimestamp = lookbackToTimestamp(maxLookback.value, now);
-    const lookbackToTimestampMap = new Map();
-    const options = lookbackOptions.filter(({ value }) => {
-      const lookbackTimestamp = lookbackToTimestamp(value, now);
-      lookbackToTimestampMap.set(value, lookbackTimestamp);
-      return lookbackTimestamp >= minTimestamp;
-    });
-    const lastInRangeIndex = options.length - 1;
-    const lastInRangeOption = options[lastInRangeIndex];
-    if (lastInRangeOption.label !== maxLookback.label) {
-      if (lookbackToTimestampMap.get(lastInRangeOption.value) !== minTimestamp) {
-        options.push(maxLookback);
-      } else {
-        options.splice(lastInRangeIndex, 1, maxLookback);
-      }
+export const optionsWithinMaxLookback = memoizeOne(maxLookback => {
+  const now = new Date();
+  const minTimestamp = lookbackToTimestamp(maxLookback.value, now);
+  const lookbackToTimestampMap = new Map();
+  const options = lookbackOptions.filter(({ value }) => {
+    const lookbackTimestamp = lookbackToTimestamp(value, now);
+    lookbackToTimestampMap.set(value, lookbackTimestamp);
+    return lookbackTimestamp >= minTimestamp;
+  });
+  const lastInRangeIndex = options.length - 1;
+  const lastInRangeOption = options[lastInRangeIndex];
+  if (lastInRangeOption.label !== maxLookback.label) {
+    if (lookbackToTimestampMap.get(lastInRangeOption.value) !== minTimestamp) {
+      options.push(maxLookback);
+    } else {
+      options.splice(lastInRangeIndex, 1, maxLookback);
     }
-    return options.map(({ label, value }) => (
-      <Option key={value} value={value}>
-        Last {label}
-      </Option>
-    ));
-  },
-  () => getConfigValue('search.maxLookback')
-);
+  }
+  return options.map(({ label, value }) => (
+    <Option key={value} value={value}>
+      Last {label}
+    </Option>
+  ));
+});
 
 export function traceIDsToQuery(traceIDs) {
   if (!traceIDs) {
@@ -262,6 +258,7 @@ export class SearchFormImpl extends React.PureComponent {
     const {
       handleSubmit,
       invalid,
+      searchMaxLookback,
       selectedLookback,
       selectedService = '-',
       services,
@@ -355,7 +352,7 @@ export class SearchFormImpl extends React.PureComponent {
 
         <FormItem label="Lookback">
           <Field name="lookback" component={AdaptedSelect} props={{ disabled, defaultValue: '1h' }}>
-            {optionsWithinMaxLookback()}
+            {optionsWithinMaxLookback(searchMaxLookback)}
             <Option value="custom">Custom Time Range</Option>
           </Field>
         </FormItem>
@@ -466,6 +463,10 @@ SearchFormImpl.propTypes = {
   handleSubmit: PropTypes.func.isRequired,
   invalid: PropTypes.bool,
   submitting: PropTypes.bool,
+  searchMaxLookback: PropTypes.shape({
+    label: PropTypes.string.isRequired,
+    value: PropTypes.string.isRequired,
+  }).isRequired,
   services: PropTypes.arrayOf(
     PropTypes.shape({
       name: PropTypes.string,
@@ -597,6 +598,7 @@ export function mapStateToProps(state) {
       maxDuration: maxDuration || null,
       traceIDs: traceIDs || null,
     },
+    searchMaxLookback: _get(state, 'config.search.maxLookback'),
     selectedService: searchSideBarFormSelector(state, 'service'),
     selectedLookback: searchSideBarFormSelector(state, 'lookback'),
   };
