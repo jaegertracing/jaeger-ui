@@ -71,7 +71,7 @@ export class SearchTracePageImpl extends Component {
 
   goToTrace = traceID => {
     const { queryOfResults } = this.props;
-    const searchUrl = getUrl(stripEmbeddedState(queryOfResults));
+    const searchUrl = queryOfResults ? getUrl(stripEmbeddedState(queryOfResults)) : getUrl();
     this.props.history.push(getTraceLocation(traceID, { fromSearch: searchUrl }));
   };
 
