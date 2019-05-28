@@ -23,7 +23,7 @@ import {
   TDdgVisibilityIdxToPathElem,
 } from './types';
 
-const stringifyPayloadEntry = ({ service, operation }: TDdgPayloadEntry) => `${service}::${operation}`;
+const stringifyPayloadEntry = ({ service, operation }: TDdgPayloadEntry) => `${service}\v${operation}`;
 
 export default function transformDdgData(
   payload: TDdgPayload,
@@ -31,15 +31,25 @@ export default function transformDdgData(
 ): TDdgModel {
   const serviceMap: TDdgServiceMap = new Map();
   const pathElemsByDistance: TDdgPathElemsByDistance = new Map();
+  const pathsComparisonMap: Map<TDdgPayloadEntry[], string> = new Map();
 
   const paths = payload
     .slice()
-    .sort((a, b) =>
-      a
-        .map(stringifyPayloadEntry)
-        .join()
-        .localeCompare(b.map(stringifyPayloadEntry).join())
-    )
+    .sort((a, b) => {
+      let aCompareValue = pathsComparisonMap.get(a);
+      if (!aCompareValue) {
+        aCompareValue = a.map(stringifyPayloadEntry).join();
+        pathsComparisonMap.set(a, aCompareValue);
+      }
+      let bCompareValue = pathsComparisonMap.get(b);
+      if (!bCompareValue) {
+        bCompareValue = b.map(stringifyPayloadEntry).join();
+        pathsComparisonMap.set(b, bCompareValue);
+      }
+      if (aCompareValue > bCompareValue) return 1;
+      if (aCompareValue < bCompareValue) return -1;
+      return 0;
+    })
     .map(payloadPath => {
       // Path with stand-in values is necessary for assigning PathElem.memberOf
       const path: TDdgPath = { focalIdx: -1, members: [] };

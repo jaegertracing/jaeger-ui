@@ -54,6 +54,7 @@ export type SpanData = {
   logs: Array<Log>;
   tags: Array<KeyValuePair>;
   references: Array<SpanReference>;
+  warnings: Array<string> | null;
 };
 
 export type Span = SpanData & {

@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2017 Uber Technologies, Inc.
+Copyright (c) 2019 Uber Technologies, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,29 +14,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-.AccordianLogs {
-  border: 1px solid #d8d8d8;
-  position: relative;
-  margin-bottom: 0.25rem;
-}
-
-.AccordianLogs--header {
-  background: #e4e4e4;
+.CopyIcon,
+.CopyIcon:hover {
+  background-color: transparent;
+  border: none;
   color: inherit;
-  display: block;
-  padding: 0.25rem 0.5rem;
+  height: 100%;
+  overflow: hidden;
+  padding: 0px;
 }
 
-.AccordianLogs--header:hover {
-  background: #dadada;
-}
-
-.AccordianLogs--content {
-  background: #f0f0f0;
-  border-top: 1px solid #d8d8d8;
-  padding: 0.5rem 0.5rem 0.25rem 0.5rem;
-}
-
-.AccordianLogs--footer {
-  color: #999;
+.CopyIcon:focus {
+  background-color: rgba(255, 255, 255, 0.25);
+  color: inherit;
 }

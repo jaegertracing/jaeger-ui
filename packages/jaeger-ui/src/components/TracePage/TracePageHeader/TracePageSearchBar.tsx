@@ -15,6 +15,7 @@
 import * as React from 'react';
 import { Button, Input } from 'antd';
 import cx from 'classnames';
+import IoAndroidLocate from 'react-icons/lib/io/android-locate';
 
 import * as markers from './TracePageSearchBar.markers';
 import { trackFilter } from '../index.track';
@@ -28,17 +29,25 @@ type TracePageSearchBarProps = {
   prevResult: () => void;
   nextResult: () => void;
   clearSearch: () => void;
+  focusUiFindMatches: () => void;
   resultCount: number;
   navigable: boolean;
 };
 
 export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwardedRef: React.Ref<Input> }) {
-  const { clearSearch, forwardedRef, navigable, nextResult, prevResult, resultCount, textFilter } = props;
+  const {
+    clearSearch,
+    focusUiFindMatches,
+    forwardedRef,
+    navigable,
+    nextResult,
+    prevResult,
+    resultCount,
+    textFilter,
+  } = props;
 
   const count = textFilter ? <span className="TracePageSearchBar--count">{resultCount}</span> : null;
 
-  const navigationBtnDisabled = !navigable || !textFilter;
-  const navigationBtnClass = cx('TracePageSearchBar--btn', { 'is-disabled': navigationBtnDisabled });
   const btnClass = cx('TracePageSearchBar--btn', { 'is-disabled': !textFilter });
   const uiFindInputInputProps = {
     'data-test': markers.IN_TRACE_SEARCH,
@@ -48,28 +57,40 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwarde
   };
 
   return (
-    <div className="ub-flex-auto ub-mx2 TracePageSearchBar">
+    <div className="TracePageSearchBar">
       {/* style inline because compact overwrites the display */}
-      <Input.Group compact style={{ display: 'flex' }}>
+      <Input.Group className="ub-justify-end" compact style={{ display: 'flex' }}>
         <UiFindInput
           inputProps={uiFindInputInputProps}
           forwardedRef={forwardedRef}
           trackFindFunction={trackFilter}
         />
-        <Button
-          className={navigationBtnClass}
-          disabled={navigationBtnDisabled}
-          htmlType="button"
-          icon="up"
-          onClick={prevResult}
-        />
-        <Button
-          className={navigationBtnClass}
-          disabled={navigationBtnDisabled}
-          htmlType="button"
-          icon="down"
-          onClick={nextResult}
-        />
+        {navigable && (
+          <>
+            <Button
+              className={cx(btnClass, 'TracePageSearchBar--locateBtn')}
+              disabled={!textFilter}
+              htmlType="button"
+              onClick={focusUiFindMatches}
+            >
+              <IoAndroidLocate />
+            </Button>
+            <Button
+              className={btnClass}
+              disabled={!textFilter}
+              htmlType="button"
+              icon="up"
+              onClick={prevResult}
+            />
+            <Button
+              className={btnClass}
+              disabled={!textFilter}
+              htmlType="button"
+              icon="down"
+              onClick={nextResult}
+            />
+          </>
+        )}
         <Button
           className={btnClass}
           disabled={!textFilter}
