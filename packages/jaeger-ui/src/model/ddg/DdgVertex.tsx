@@ -20,7 +20,7 @@ type TDdgVertex = {
   egressEdges: Map<DdgVertex, DdgEdge>;
   ingressEdges: Map<DdgVertex, DdgEdge>;
   pathElems: Set<PathElem>;
-}
+};
 
 export default class DdgVertex implements TVertex<TDdgVertex> {
   egressEdges: Map<DdgVertex, DdgEdge>;
@@ -35,28 +35,14 @@ export default class DdgVertex implements TVertex<TDdgVertex> {
     this.pathElems = new Set();
   }
 
-  /*
-  private toJSONHelper = () => ({
-    key: this.key,
-    pathElems: this.pathElems,
-  });
-   */
-
   toJSON() {
     type TDigestibleEdges = Record<string, DdgEdge>;
-    // type TDigestibleEdges = Map<string, DdgEdge>;
-    // type TDigestibleEdges = Map<{ key: string, pathElems: Set<PathElem> }, DdgEdge>;
-    // type TDigestibleEdges = Map<ReturnType<this.toJSONHelper>, DdgEdge>;
     const digestibleEgressEdges: TDigestibleEdges = {};
     const digestibleIngressEdges: TDigestibleEdges = {};
     this.egressEdges.forEach((edge, egreesNeighbor) => {
-      // digestibleEgressEdges.set(egreesNeighbor.toJSONHelper(), edge);
-      // digestibleEgressEdges.set(egreesNeighbor.key, edge);
       digestibleEgressEdges[egreesNeighbor.key] = edge;
     });
     this.ingressEdges.forEach((edge, ingreesNeighbor) => {
-      // digestibleIngressEdges.set(ingreesNeighbor.toJSONHelper(), edge);
-      // digestibleIngressEdges.set(ingreesNeighbor.key, edge);
       digestibleIngressEdges[ingreesNeighbor.key] = edge;
     });
     return {
@@ -65,7 +51,7 @@ export default class DdgVertex implements TVertex<TDdgVertex> {
       ingressEdges: digestibleIngressEdges,
       pathElems: this.pathElems,
     };
-  };
+  }
 
   toString() {
     return JSON.stringify(this.toJSON(), null, 2);

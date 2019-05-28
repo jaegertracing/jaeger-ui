@@ -48,9 +48,21 @@ const midPayloadElem = simplePayloadElemMaker('mid');
 const afterPayloadElem = simplePayloadElemMaker('after');
 const lastPayloadElem = simplePayloadElemMaker('last');
 
-export const simplePath = [firstPayloadElem, beforePayloadElem, focalPayloadElem, afterPayloadElem, lastPayloadElem];
+export const simplePath = [
+  firstPayloadElem,
+  beforePayloadElem,
+  focalPayloadElem,
+  afterPayloadElem,
+  lastPayloadElem,
+];
 export const longSimplePath = pathLengthener(simplePath);
-export const noFocalPath = [firstPayloadElem, beforePayloadElem, midPayloadElem, afterPayloadElem, lastPayloadElem];
+export const noFocalPath = [
+  firstPayloadElem,
+  beforePayloadElem,
+  midPayloadElem,
+  afterPayloadElem,
+  lastPayloadElem,
+];
 export const doubleFocalPath = [
   firstPayloadElem,
   beforePayloadElem,
@@ -71,4 +83,7 @@ export const almostDoubleFocalPath = [
 ];
 
 const divergentPayloadElem = simplePayloadElemMaker('divergentPayloadElem');
-export const convergentPaths = [[firstPayloadElem, focalPayloadElem, midPayloadElem, afterPayloadElem, lastPayloadElem], [firstPayloadElem, focalPayloadElem, divergentPayloadElem, afterPayloadElem, lastPayloadElem]];
+export const convergentPaths = [
+  [firstPayloadElem, focalPayloadElem, midPayloadElem, afterPayloadElem, lastPayloadElem],
+  [firstPayloadElem, focalPayloadElem, divergentPayloadElem, afterPayloadElem, lastPayloadElem],
+];

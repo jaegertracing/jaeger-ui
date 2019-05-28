@@ -22,7 +22,9 @@ import * as testResources from './sample-paths.test.resources';
 describe('transform ddg data', () => {
   function outputValidator({ paths: payload, focalIndices, ignoreFocalOperation = false }) {
     const { focalPayloadElem } = testResources;
-    const focalPayloadElemArgument = ignoreFocalOperation ? { service: focalPayloadElem.service } : focalPayloadElem;
+    const focalPayloadElemArgument = ignoreFocalOperation
+      ? { service: focalPayloadElem.service }
+      : focalPayloadElem;
     const { paths, services, visibilityIdxToPathElem } = transformDdgData(payload, focalPayloadElemArgument);
 
     // Validate all services and operations are captured
@@ -162,6 +164,8 @@ describe('transform ddg data', () => {
 
   it('throws an error if a path lacks the focalPayloadElem', () => {
     const { simplePath, noFocalPath, doubleFocalPath, focalPayloadElem } = testResources;
-    expect(() => transformDdgData([simplePath, noFocalPath, doubleFocalPath], focalPayloadElem)).toThrowError();
+    expect(() =>
+      transformDdgData([simplePath, noFocalPath, doubleFocalPath], focalPayloadElem)
+    ).toThrowError();
   });
 });

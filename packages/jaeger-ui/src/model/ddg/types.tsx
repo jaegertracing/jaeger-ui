@@ -54,4 +54,4 @@ export type TDdgModel = {
   visibilityIdxToPathElem: TDdgVisibilityIdxToPathElem;
 };
 
-export type TDdgEdgeIdentifiers = 'egressEdges' | 'ingressEdges';
+export type TDdgEdgeIdentifier = 'egressEdges' | 'ingressEdges';

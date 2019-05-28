@@ -15,21 +15,12 @@
 import { TEdge } from '@jaegertracing/plexus/lib/types';
 import { DdgVertex } from './types';
 
-/*
-type TDdgEdge = {
-  from: DdgVertex;
-  to: DdgVertex;
-}
- */
-
 export default class DdgEdge implements TEdge<{}> {
-  // data: TDdgEdge;
   from: string;
   to: string;
 
-  constructor(arg: { from: DdgVertex, to: DdgVertex }) {
-    // this.data = arg;
+  constructor(arg: { from: DdgVertex; to: DdgVertex }) {
     this.from = arg.from.key;
     this.to = arg.to.key;
   }
-};
+}

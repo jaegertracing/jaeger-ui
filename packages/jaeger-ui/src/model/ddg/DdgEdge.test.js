@@ -22,16 +22,6 @@ describe('DdgEdge', () => {
     expect(testDdgEdge).toEqual({
       from: fromKey,
       to: toKey,
-      /*
-      data: {
-        from: {
-          key: fromKey,
-        },
-        to: {
-          key: toKey,
-        },
-      },
-      */
     });
   });
 });

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import PathElem from './PathElem';
+import { simplePath } from './sample-paths.test.resources';
 
 describe('PathElem', () => {
   const testMemberIdx = 3;
@@ -61,5 +62,50 @@ describe('PathElem', () => {
   it('has a null focalSideNeighbor if distance is 0', () => {
     pathElem = new PathElem({ path: testPath, operation: testOperation, memberIdx: testPath.focalIdx });
     expect(pathElem.focalSideNeighbor).toBe(null);
+  });
+
+  it('has correct farSideEdgesKey and focalSideEdgesKey when upstream', () => {
+    expect(pathElem.farSideEdgesKey).toBe('ingressEdges');
+    expect(pathElem.focalSideEdgesKey).toBe('egressEdges');
+  });
+
+  it('has correct farSideEdgesKey and focalSideEdgesKey when downstream', () => {
+    pathElem = new PathElem({ path: testPath, operation: testOperation, memberIdx: testPath.focalIdx + 1 });
+    expect(pathElem.farSideEdgesKey).toBe('egressEdges');
+    expect(pathElem.focalSideEdgesKey).toBe('ingressEdges');
+  });
+
+  describe('legibility', () => {
+    const operations = simplePath.map(({ operation, service }) => ({
+      name: operation,
+      service: {
+        name: service,
+      },
+    }));
+    const path = {
+      focalIdx: 2,
+    };
+    const members = operations.map((operation, i) => new PathElem({ memberIdx: i, operation, path }));
+    members[2].visibilityIdx = 0;
+    members[3].visibilityIdx = 1;
+    members[1].visibilityIdx = 2;
+    members[4].visibilityIdx = 3;
+    members[0].visibilityIdx = 4;
+    path.members = members;
+    const targetPathElem = path.members[1];
+
+    it('creates consumable JSON', () => {
+      expect(targetPathElem.toJSON()).toMatchSnapshot();
+    });
+
+    it('creates consumable string', () => {
+      expect(targetPathElem.toString()).toBe(JSON.stringify(targetPathElem.toJSON(), null, 2));
+    });
+
+    it('creates informative string tag', () => {
+      expect(Object.prototype.toString.call(targetPathElem)).toEqual(
+        `[object PathElem ${targetPathElem.visibilityIdx}]`
+      );
+    });
   });
 });

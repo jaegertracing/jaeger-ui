@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { TDdgEdgeIdentifiers, TDdgOperation, TDdgPath } from './types';
+import { TDdgEdgeIdentifier, TDdgOperation, TDdgPath } from './types';
 
 export default class PathElem {
   memberIdx: number;
@@ -58,11 +58,11 @@ export default class PathElem {
     return this.memberOf.members[this.memberIdx - this.distance / Math.abs(this.distance)];
   }
 
-  get focalSideEdgesKey(): TDdgEdgeIdentifiers {
+  get focalSideEdgesKey(): TDdgEdgeIdentifier {
     return this.distance < 0 ? 'egressEdges' : 'ingressEdges';
   }
 
-  get farSideEdgesKey(): TDdgEdgeIdentifiers {
+  get farSideEdgesKey(): TDdgEdgeIdentifier {
     return this.distance > 0 ? 'egressEdges' : 'ingressEdges';
   }
 
@@ -71,7 +71,7 @@ export default class PathElem {
     operation: this.operation.name,
     service: this.operation.service.name,
     visibilityIdx: this._visibilityIdx,
-  })
+  });
 
   toJSON() {
     return {

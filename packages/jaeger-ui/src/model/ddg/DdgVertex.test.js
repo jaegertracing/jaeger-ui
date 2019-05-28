@@ -47,16 +47,16 @@ describe('DdgVertex', () => {
   const oneHopDownstreamVertex1 = makeTestVertex(oneHopDownstreamVertexKey1);
   const twoHopDownstreamVertex = makeTestVertex(twoHopDownstreamVertexKey);
 
-  const twoHopToOneHop0UpstreamEdge = makeTestEdge(twoHopUpstreamVertex, oneHopUpstreamVertex0);
-  const oneHop0ToTargetUpstreamEdge = makeTestEdge(oneHopUpstreamVertex0, targetVertex);
-  const targetToOneHop0DownstreamEdge = makeTestEdge(targetVertex, oneHopDownstreamVertex0);
-  const oneHop0ToTwoHopDownstreamEdge = makeTestEdge(oneHopDownstreamVertex0, twoHopDownstreamVertex);
+  makeTestEdge(twoHopUpstreamVertex, oneHopUpstreamVertex0);
+  makeTestEdge(oneHopUpstreamVertex0, targetVertex);
+  makeTestEdge(targetVertex, oneHopDownstreamVertex0);
+  makeTestEdge(oneHopDownstreamVertex0, twoHopDownstreamVertex);
 
-  const oneHop1ToTargetUpstreamEdge = makeTestEdge(oneHopUpstreamVertex1, targetVertex);
-  const targetToOneHop1DownstreamEdge = makeTestEdge(targetVertex, oneHopDownstreamVertex1);
+  makeTestEdge(oneHopUpstreamVertex1, targetVertex);
+  makeTestEdge(targetVertex, oneHopDownstreamVertex1);
 
-  const oneHop1ToSiblingUpstreamEdge = makeTestEdge(oneHopUpstreamVertex1, siblingVertex);
-  const siblingToOneHop1DownstreamEdge = makeTestEdge(siblingVertex, oneHopDownstreamVertex1);
+  makeTestEdge(oneHopUpstreamVertex1, siblingVertex);
+  makeTestEdge(siblingVertex, oneHopDownstreamVertex1);
 
   it('initializes', () => {
     const vertexKey = 'vertex-key';
@@ -66,16 +66,6 @@ describe('DdgVertex', () => {
     expect(testDdgVertex.ingressEdges).toEqual(new Map());
     expect(testDdgVertex.pathElems).toEqual(new Set());
   });
-
-  /*
-  it('creates partial JSON', () => {
-    const partialJSON = targetVertex.toJSONHelper();
-    expect(partialJSON).toEqual({
-      key: targetVertexKey,
-      pathElems: targetVertex.pathElems,
-    });
-  });
-  */
 
   it('creates consumable JSON', () => {
     expect(targetVertex.toJSON()).toMatchSnapshot();

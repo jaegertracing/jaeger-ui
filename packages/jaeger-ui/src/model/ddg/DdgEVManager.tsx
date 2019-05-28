@@ -73,13 +73,13 @@ export default class DdgEVManager {
           const newEdge = new DdgEdge(
             pathElem.focalSideEdgesKey === 'ingressEdges'
               ? {
-                from: connectedVertex,
-                to: vertex,
-              }
+                  from: connectedVertex,
+                  to: vertex,
+                }
               : {
-                from: vertex,
-                to: connectedVertex,
-              }
+                  from: vertex,
+                  to: connectedVertex,
+                }
           );
           vertex[pathElem.focalSideEdgesKey].set(connectedVertex, newEdge);
           connectedVertex[pathElem.farSideEdgesKey].set(vertex, newEdge);
