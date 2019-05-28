@@ -14,6 +14,8 @@
 
 import PathElem from './PathElem';
 
+export { default as DdgEdge } from './DdgEdge';
+export { default as DdgVertex } from './DdgVertex';
 export { default as PathElem } from './PathElem';
 
 export type TDdgPayloadEntry = {
@@ -53,22 +55,3 @@ export type TDdgModel = {
 };
 
 export type TDdgEdgeIdentifiers = 'egressEdges' | 'ingressEdges';
-
-export class DdgVertex {
-  egressEdges: Map<DdgVertex, TDdgEdge>;
-  key: string;
-  ingressEdges: Map<DdgVertex, TDdgEdge>;
-  pathElems: Set<PathElem>;
-
-  constructor({ key }: { key: string }) {
-    this.egressEdges = new Map();
-    this.key = key;
-    this.ingressEdges = new Map();
-    this.pathElems = new Set();
-  }
-}
-
-export type TDdgEdge = {
-  from: DdgVertex;
-  to: DdgVertex;
-};

@@ -16,9 +16,9 @@ import * as testResources from './sample-paths.test.resources';
 import transformDdgData from './transformDdgData';
 import { changeVisibility, createVisibilityKey } from './visibility-key';
 
-import DdgEdgesAndVertices from './ddgEdgesAndVertices';
+import DdgEVManager from './DdgEVManager';
 
-describe('DdgEdgesAndVertices', () => {
+describe('DdgEVManager', () => {
   function validateDdgEV(ddgEV, expectedVertices) {
     let expectedEdgeCount = 0;
     expectedVertices.forEach(
@@ -31,8 +31,7 @@ describe('DdgEdgesAndVertices', () => {
           ddgEV.visibilityIdxToPathElem.get(visibilityIdx)
         );
         const vertex = ddgEV.pathElemToVertex.get(pathElems[0]);
-        // TODO: this should pass
-        // expect(vertex.pathElems).toEqual(new Set(pathElems));
+        expect(vertex.pathElems).toEqual(new Set(pathElems));
 
         expectedEdgeCount += ingressNeighborVisibilityIndices.length;
         ingressNeighborVisibilityIndices.forEach(ingressNeighborVisibilityIdx => {
@@ -42,8 +41,10 @@ describe('DdgEdgesAndVertices', () => {
           const edge = vertex.ingressEdges.get(ingressNeighbor);
           expect(edge).toBeDefined();
           expect(ingressNeighbor.egressEdges.get(vertex)).toBe(edge);
-          expect(edge.to).toBe(vertex);
-          expect(edge.from).toBe(ingressNeighbor);
+          expect(edge.to).toBe(vertex.key);
+          // expect(edge.data.to).toBe(vertex);
+          expect(edge.from).toBe(ingressNeighbor.key);
+          // expect(edge.data.from).toBe(ingressNeighbor);
         });
 
         expectedEdgeCount += egressNeighborVisibilityIndices.length;
@@ -54,8 +55,10 @@ describe('DdgEdgesAndVertices', () => {
           const edge = vertex.egressEdges.get(egressNeighbor);
           expect(edge).toBeDefined();
           expect(egressNeighbor.ingressEdges.get(vertex)).toBe(edge);
-          expect(edge.to).toBe(egressNeighbor);
-          expect(edge.from).toBe(vertex);
+          expect(edge.to).toBe(egressNeighbor.key);
+          // expect(edge.data.to).toBe(egressNeighbor);
+          expect(edge.from).toBe(vertex.key);
+          // expect(edge.data.from).toBe(vertex);
         });
       }
     );
@@ -64,16 +67,16 @@ describe('DdgEdgesAndVertices', () => {
     expect(ddgEV.edges.size).toBe(expectedEdgeCount / 2);
   }
 
-  const simpleDdgModel = transformDdgData([testResources.simplePath], testResources.focalPathElem);
+  const simpleDdgModel = transformDdgData([testResources.simplePath], testResources.focalPayloadElem);
 
   describe('getVertexKey', () => {
-    const simpleTestfocalPathElem = simpleDdgModel.paths[0].members[2];
+    const simpleTestFocalPathElem = simpleDdgModel.paths[0].members[2];
     const expectedKeyEntry = pathElem => `${pathElem.operation.service.name}::${pathElem.operation.name}`;
-    const expectedFocalPathElemKey = expectedKeyEntry(simpleTestfocalPathElem);
-    const emptyDdgEdgesAndVertices = new DdgEdgesAndVertices({ ddgModel: {} });
+    const expectedFocalPathElemKey = expectedKeyEntry(simpleTestFocalPathElem);
+    const emptyDdgEdgesAndVertices = new DdgEVManager({ ddgModel: {} });
 
     it('creates key for focal pathElem', () => {
-      expect(emptyDdgEdgesAndVertices.getVertexKey(simpleTestfocalPathElem)).toBe(expectedFocalPathElemKey);
+      expect(emptyDdgEdgesAndVertices.getVertexKey(simpleTestFocalPathElem)).toBe(expectedFocalPathElemKey);
     });
 
     it('creates key for downstream pathElem', () => {
@@ -102,7 +105,7 @@ describe('DdgEdgesAndVertices', () => {
     const oneHopVisibilityKey = createVisibilityKey([0, 1, 2]);
 
     beforeEach(() => {
-      simpleTestDdgEV = new DdgEdgesAndVertices({
+      simpleTestDdgEV = new DdgEVManager({
         ddgModel: simpleDdgModel,
       });
       simpleTestDdgEV.getEdgesAndVertices(oneHopVisibilityKey);
@@ -152,7 +155,7 @@ describe('DdgEdgesAndVertices', () => {
     });
     const downstreamAndFocalValidationParams = [
       {
-        visibilityIndices: [0],
+        visibilityIndices: [0, 1],
         egressNeighborVisibilityIndices: [2, 3],
         ingressNeighborVisibilityIndices: [4],
       },
@@ -164,8 +167,8 @@ describe('DdgEdgesAndVertices', () => {
     let convergentDdgEV;
 
     beforeEach(() => {
-      const convergentDdgModel = transformDdgData(testResources.convergentPaths, testResources.focalPathElem);
-      convergentDdgEV = new DdgEdgesAndVertices({
+      const convergentDdgModel = transformDdgData(testResources.convergentPaths, testResources.focalPayloadElem);
+      convergentDdgEV = new DdgEVManager({
         ddgModel: convergentDdgModel,
       });
       convergentDdgEV.getEdgesAndVertices(oneHopVisibilityKey);
@@ -297,7 +300,7 @@ describe('DdgEdgesAndVertices', () => {
     });
 
     beforeEach(() => {
-      testDdgEV = new DdgEdgesAndVertices({
+      testDdgEV = new DdgEVManager({
         ddgModel: simpleDdgModel,
       });
     });

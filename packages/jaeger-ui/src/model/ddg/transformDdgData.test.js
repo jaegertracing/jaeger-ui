@@ -21,9 +21,9 @@ import * as testResources from './sample-paths.test.resources';
 
 describe('transform ddg data', () => {
   function outputValidator({ paths: payload, focalIndices, ignoreFocalOperation = false }) {
-    const { focalPathElem } = testResources;
-    const focalPathElemArgument = ignoreFocalOperation ? { service: focalPathElem.service } : focalPathElem;
-    const { paths, services, visibilityIdxToPathElem } = transformDdgData(payload, focalPathElemArgument);
+    const { focalPayloadElem } = testResources;
+    const focalPayloadElemArgument = ignoreFocalOperation ? { service: focalPayloadElem.service } : focalPayloadElem;
+    const { paths, services, visibilityIdxToPathElem } = transformDdgData(payload, focalPayloadElemArgument);
 
     // Validate all services and operations are captured
     expect(new Set(services.keys())).toEqual(new Set(_map(_flatten(payload), 'service')));
@@ -102,9 +102,17 @@ describe('transform ddg data', () => {
     });
   });
 
+  it('handles duplicate paths', () => {
+    const { simplePath } = testResources;
+    outputValidator({
+      paths: [simplePath, simplePath],
+      focalIndices: [2, 2],
+    });
+  });
+
   it('sorts payload paths to ensure stable visibilityIndices', () => {
     const {
-      focalPathElem,
+      focalPayloadElem,
       simplePath,
       longSimplePath,
       doubleFocalPath,
@@ -112,11 +120,11 @@ describe('transform ddg data', () => {
     } = testResources;
     const { visibilityIdxToPathElem: presortedPathsVisibilityIdxToPathElemMap } = transformDdgData(
       [simplePath, doubleFocalPath, almostDoubleFocalPath, longSimplePath],
-      focalPathElem
+      focalPayloadElem
     );
     const { visibilityIdxToPathElem: unsortedPathsVisibilityIdxToPathElemMap } = transformDdgData(
       [longSimplePath, almostDoubleFocalPath, simplePath, doubleFocalPath],
-      focalPathElem
+      focalPayloadElem
     );
 
     expect(Array.from(presortedPathsVisibilityIdxToPathElemMap.keys())).toEqual(
@@ -152,8 +160,8 @@ describe('transform ddg data', () => {
     );
   });
 
-  it('throws an error if a path lacks the focalPathElem', () => {
-    const { simplePath, noFocalPath, doubleFocalPath, focalPathElem } = testResources;
-    expect(() => transformDdgData([simplePath, noFocalPath, doubleFocalPath], focalPathElem)).toThrowError();
+  it('throws an error if a path lacks the focalPayloadElem', () => {
+    const { simplePath, noFocalPath, doubleFocalPath, focalPayloadElem } = testResources;
+    expect(() => transformDdgData([simplePath, noFocalPath, doubleFocalPath], focalPayloadElem)).toThrowError();
   });
 });

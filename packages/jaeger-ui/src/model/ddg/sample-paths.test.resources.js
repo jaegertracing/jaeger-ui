@@ -12,23 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-const simplePathElemMaker = label => ({
+const simplePayloadElemMaker = label => ({
   operation: `${label}Operation`,
   service: `${label}Service`,
 });
 
-export const focalPathElem = simplePathElemMaker('focal');
+export const focalPayloadElem = simplePayloadElemMaker('focal');
 
-const sameFocalServicePathElem = {
-  operation: `not-${focalPathElem.operation}`,
-  service: focalPathElem.service,
+const sameFocalServicePayloadElem = {
+  operation: `not-${focalPayloadElem.operation}`,
+  service: focalPayloadElem.service,
 };
 
 const pathLengthener = path => {
   const prequels = [];
   const sequels = [];
   path.forEach(({ operation, service }) => {
-    if (operation !== focalPathElem.operation && service !== focalPathElem.service) {
+    if (operation !== focalPayloadElem.operation && service !== focalPayloadElem.service) {
       prequels.push({
         operation: `prequel-${operation}`,
         service,
@@ -42,36 +42,33 @@ const pathLengthener = path => {
   return [...prequels, ...path, ...sequels];
 };
 
-const firstPathElem = simplePathElemMaker('first');
-const beforePathElem = simplePathElemMaker('before');
-const midPathElem = simplePathElemMaker('mid');
-const afterPathElem = simplePathElemMaker('after');
-const lastPathElem = simplePathElemMaker('last');
+const firstPayloadElem = simplePayloadElemMaker('first');
+const beforePayloadElem = simplePayloadElemMaker('before');
+const midPayloadElem = simplePayloadElemMaker('mid');
+const afterPayloadElem = simplePayloadElemMaker('after');
+const lastPayloadElem = simplePayloadElemMaker('last');
 
-export const simplePath = [firstPathElem, beforePathElem, focalPathElem, afterPathElem, lastPathElem];
+export const simplePath = [firstPayloadElem, beforePayloadElem, focalPayloadElem, afterPayloadElem, lastPayloadElem];
 export const longSimplePath = pathLengthener(simplePath);
-export const noFocalPath = [firstPathElem, beforePathElem, midPathElem, afterPathElem, lastPathElem];
+export const noFocalPath = [firstPayloadElem, beforePayloadElem, midPayloadElem, afterPayloadElem, lastPayloadElem];
 export const doubleFocalPath = [
-  firstPathElem,
-  beforePathElem,
-  focalPathElem,
-  midPathElem,
-  focalPathElem,
-  afterPathElem,
-  lastPathElem,
+  firstPayloadElem,
+  beforePayloadElem,
+  focalPayloadElem,
+  midPayloadElem,
+  focalPayloadElem,
+  afterPayloadElem,
+  lastPayloadElem,
 ];
 export const almostDoubleFocalPath = [
-  firstPathElem,
-  beforePathElem,
-  sameFocalServicePathElem,
-  midPathElem,
-  focalPathElem,
-  afterPathElem,
-  lastPathElem,
+  firstPayloadElem,
+  beforePayloadElem,
+  sameFocalServicePayloadElem,
+  midPayloadElem,
+  focalPayloadElem,
+  afterPayloadElem,
+  lastPayloadElem,
 ];
 
-const divergentPathElem = simplePathElemMaker('divergentPathElem');
-export const convergentPaths = [
-  [firstPathElem, focalPathElem, midPathElem, afterPathElem, lastPathElem],
-  [firstPathElem, focalPathElem, divergentPathElem, afterPathElem, lastPathElem],
-];
+const divergentPayloadElem = simplePayloadElemMaker('divergentPayloadElem');
+export const convergentPaths = [[firstPayloadElem, focalPayloadElem, midPayloadElem, afterPayloadElem, lastPayloadElem], [firstPayloadElem, focalPayloadElem, divergentPayloadElem, afterPayloadElem, lastPayloadElem]];

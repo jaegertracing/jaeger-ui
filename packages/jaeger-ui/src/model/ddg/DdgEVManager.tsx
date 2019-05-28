@@ -16,7 +16,7 @@ import { compareVisibilityKeys } from './visibility-key';
 
 import {
   PathElem,
-  TDdgEdge,
+  DdgEdge,
   DdgVertex,
   TDdgModel,
   TDdgPathElemsByDistance,
@@ -24,13 +24,13 @@ import {
   TDdgServiceMap,
 } from './types';
 
-export default class DdgEdgesAndVertices {
+export default class DdgEVManager {
   lastVisibilityKey: string;
   pathElemsByDistance: TDdgPathElemsByDistance;
   pathElemToVertex: Map<PathElem, DdgVertex>;
   paths: TDdgPath[];
   services: TDdgServiceMap;
-  edges: Set<TDdgEdge>;
+  edges: Set<DdgEdge>;
   vertices: Map<string, DdgVertex>;
   visibilityIdxToPathElem: Map<number, PathElem>;
 
@@ -70,16 +70,17 @@ export default class DdgEdgesAndVertices {
         }
 
         if (!vertex[pathElem.focalSideEdgesKey].has(connectedVertex)) {
-          const newEdge: TDdgEdge =
+          const newEdge = new DdgEdge(
             pathElem.focalSideEdgesKey === 'ingressEdges'
               ? {
-                  from: connectedVertex,
-                  to: vertex,
-                }
+                from: connectedVertex,
+                to: vertex,
+              }
               : {
-                  from: vertex,
-                  to: connectedVertex,
-                };
+                from: vertex,
+                to: connectedVertex,
+              }
+          );
           vertex[pathElem.focalSideEdgesKey].set(connectedVertex, newEdge);
           connectedVertex[pathElem.farSideEdgesKey].set(vertex, newEdge);
           this.edges.add(newEdge);
@@ -97,7 +98,7 @@ export default class DdgEdgesAndVertices {
       const key = this.getVertexKey(pathElem);
       const vertex = this.vertices.get(key);
       if (!vertex) {
-        throw new Error(`Attempting to remove PathElem without vertex: ${JSON.stringify(pathElem, null, 2)}`);
+        throw new Error(`Attempting to remove PathElem without vertex: ${pathElem}`);
       }
 
       this.pathElemToVertex.delete(pathElem);

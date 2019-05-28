@@ -66,5 +66,28 @@ export default class PathElem {
     return this.distance > 0 ? 'egressEdges' : 'ingressEdges';
   }
 
-  // TODO: Define toString function!
+  private toJSONHelper = () => ({
+    memberIdx: this.memberIdx,
+    operation: this.operation.name,
+    service: this.operation.service.name,
+    visibilityIdx: this._visibilityIdx,
+  })
+
+  toJSON() {
+    return {
+      ...this.toJSONHelper(),
+      memberOf: {
+        focalIdx: this.memberOf.focalIdx,
+        members: this.memberOf.members.map(member => member.toJSONHelper()),
+      },
+    };
+  }
+
+  toString() {
+    return JSON.stringify(this.toJSON(), null, 2);
+  }
+
+  get [Symbol.toStringTag]() {
+    return `PathElem ${this._visibilityIdx}`;
+  }
 }
