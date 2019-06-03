@@ -43,12 +43,12 @@ export type TDdgPath = {
 
 export type TDdgServiceMap = Map<string, TDdgService>;
 
-export type TDdgPathElemsByDistance = Map<number, PathElem[]>;
+export type TDdgDistanceToPathElems = Map<number, PathElem[]>;
 
 export type TDdgVisibilityIdxToPathElem = Map<number, PathElem>;
 
 export type TDdgModel = {
-  pathElemsByDistance: TDdgPathElemsByDistance;
+  distanceToPathElems: TDdgDistanceToPathElems;
   paths: TDdgPath[];
   services: TDdgServiceMap;
   visibilityIdxToPathElem: TDdgVisibilityIdxToPathElem;

@@ -18,7 +18,7 @@ import memoizeOne from 'memoize-one';
 
 const VISIBILITY_BUCKET_SIZE = 31;
 
-const getVisibilityBuckets = memoizeOne((visibilityKey: string): number[] =>
+const getBuckets = memoizeOne((visibilityKey: string): number[] =>
   visibilityKey.split(',').map(partial => parseInt(partial || '0', 36))
 );
 
@@ -31,25 +31,17 @@ function convertIdxToBucketValues(visibilityIdx: number) {
 }
 
 export function isVisible(visibilityKey: string, visibilityIdx: number): boolean {
-  const visibilityBuckets = getVisibilityBuckets(visibilityKey);
+  const visibilityBuckets = getBuckets(visibilityKey);
   const { bucketIdx, visibilityValue } = convertIdxToBucketValues(visibilityIdx);
   return Boolean(visibilityBuckets[bucketIdx] & visibilityValue);
 }
 
-export function changeVisibility({
-  visibilityKey,
-  showIndices,
-  hideIndices,
-}: {
-  visibilityKey: string;
-  showIndices?: number[];
-  hideIndices?: number[];
-}): string {
-  const visibilityBuckets = getVisibilityBuckets(visibilityKey).slice();
-  const conflictCheck = new Set(showIndices);
+export function changeKey({ key, show, hide }: { key: string; show?: number[]; hide?: number[] }): string {
+  const visibilityBuckets = getBuckets(key).slice();
+  const conflictCheck = new Set(show);
 
-  if (hideIndices) {
-    hideIndices.forEach(hideIdx => {
+  if (hide) {
+    hide.forEach(hideIdx => {
       if (conflictCheck.has(hideIdx)) {
         throw new Error(`Trying to show and hide same visibilityIdx: ${hideIdx} in same change`);
       }
@@ -58,8 +50,8 @@ export function changeVisibility({
     });
   }
 
-  if (showIndices) {
-    showIndices.forEach(showIdx => {
+  if (show) {
+    show.forEach(showIdx => {
       const { bucketIdx, visibilityValue } = convertIdxToBucketValues(showIdx);
       visibilityBuckets[bucketIdx] |= visibilityValue;
     });
@@ -71,28 +63,28 @@ export function changeVisibility({
     .join(',');
 }
 
-export function createVisibilityKey(visibleIndices: number[]) {
-  return changeVisibility({ visibilityKey: '', showIndices: visibleIndices });
+export function createKey(visibleIndices: number[]) {
+  return changeKey({ key: '', show: visibleIndices });
 }
 
 // TODO: determine if memo is even necessary
 // export const compareVisibilityKeys = memoizeOne(function compareVisibilityKeysImpl({
-export function compareVisibilityKeys({
-  newVisibilityKey,
-  oldVisibilityKey,
+export function compareKeys({
+  newKey,
+  oldKey,
 }: {
-  newVisibilityKey: string;
-  oldVisibilityKey: string;
+  newKey: string;
+  oldKey: string;
 }): { added: number[]; removed: number[] } {
   const added: number[] = [];
   const removed: number[] = [];
-  const oldVisibilityBuckets = getVisibilityBuckets(oldVisibilityKey).slice();
-  const newVisibilityBuckets = getVisibilityBuckets(newVisibilityKey).slice();
-  for (let i = 0; i < Math.max(oldVisibilityBuckets.length, newVisibilityBuckets.length); i++) {
+  const oldBuckets = getBuckets(oldKey).slice();
+  const newBuckets = getBuckets(newKey).slice();
+  for (let i = 0; i < Math.max(oldBuckets.length, newBuckets.length); i++) {
     for (let j = 0; j < VISIBILITY_BUCKET_SIZE; j++) {
-      if (newVisibilityBuckets[i] & (1 << j) && !(oldVisibilityBuckets[i] & (1 << j))) {
+      if (newBuckets[i] & (1 << j) && !(oldBuckets[i] & (1 << j))) {
         added.push(i * VISIBILITY_BUCKET_SIZE + j);
-      } else if (oldVisibilityBuckets[i] & (1 << j) && !(newVisibilityBuckets[i] & (1 << j))) {
+      } else if (oldBuckets[i] & (1 << j) && !(newBuckets[i] & (1 << j))) {
         removed.push(i * VISIBILITY_BUCKET_SIZE + j);
       }
     }

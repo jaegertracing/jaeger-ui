@@ -12,30 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { compareVisibilityKeys } from './visibility-key';
+import { compareKeys } from './visibility-key';
 
-import { PathElem, DdgEdge, DdgVertex, TDdgModel, TDdgPathElemsByDistance, TDdgServiceMap } from './types';
+import { PathElem, DdgEdge, DdgVertex, TDdgModel } from './types';
 
 export default class DdgEVManager {
-  lastVisibilityKey: string;
-  pathElemsByDistance: TDdgPathElemsByDistance;
-  pathElemToVertex: Map<PathElem, DdgVertex>;
-  services: TDdgServiceMap;
-  edges: Set<DdgEdge>;
-  vertices: Map<string, DdgVertex>;
-  visibilityIdxToPathElem: Map<number, PathElem>;
+  private edges: Set<DdgEdge>;
+  private lastVisibilityKey: string;
+  private pathElemToVertex: Map<PathElem, DdgVertex>;
+  private vertices: Map<string, DdgVertex>;
+  private visibilityIdxToPathElem: Map<number, PathElem>;
 
   constructor({ ddgModel }: { ddgModel: TDdgModel }) {
-    this.pathElemsByDistance = ddgModel.pathElemsByDistance;
-    this.services = ddgModel.services;
-    this.visibilityIdxToPathElem = ddgModel.visibilityIdxToPathElem;
-    this.pathElemToVertex = new Map();
     this.edges = new Set();
-    this.vertices = new Map();
     this.lastVisibilityKey = '';
+    this.pathElemToVertex = new Map();
+    this.vertices = new Map();
+    this.visibilityIdxToPathElem = ddgModel.visibilityIdxToPathElem;
   }
 
-  private addPathElems = (newIndices: number[]) => {
+  private addElems = (newIndices: number[]) => {
     newIndices.forEach(newIdx => {
       const pathElem = this.visibilityIdxToPathElem.get(newIdx);
       if (!pathElem) {
@@ -52,9 +48,9 @@ export default class DdgEVManager {
       this.pathElemToVertex.set(pathElem, vertex);
       vertex.pathElems.add(pathElem);
 
-      const connectedPathElem = pathElem.focalSideNeighbor;
-      if (connectedPathElem) {
-        const connectedVertex = this.pathElemToVertex.get(connectedPathElem);
+      const connectedElem = pathElem.focalSideNeighbor;
+      if (connectedElem) {
+        const connectedVertex = this.pathElemToVertex.get(connectedElem);
         if (!connectedVertex) {
           throw new Error(`Non-focal pathElem lacks connectedVertex. PathElem: ${pathElem}`);
         }
@@ -79,7 +75,7 @@ export default class DdgEVManager {
     });
   };
 
-  private removePathElems = (removeIndices: number[]) => {
+  private removeElems = (removeIndices: number[]) => {
     removeIndices.forEach(removeIdx => {
       const pathElem = this.visibilityIdxToPathElem.get(removeIdx);
       if (!pathElem) {
@@ -126,13 +122,13 @@ export default class DdgEVManager {
   };
 
   public getEdgesAndVertices = (visibilityKey: string) => {
-    const { added: addedIndices, removed: removedIndices } = compareVisibilityKeys({
-      newVisibilityKey: visibilityKey,
-      oldVisibilityKey: this.lastVisibilityKey,
+    const { added, removed } = compareKeys({
+      newKey: visibilityKey,
+      oldKey: this.lastVisibilityKey,
     });
     this.lastVisibilityKey = visibilityKey;
-    this.addPathElems(addedIndices);
-    this.removePathElems(removedIndices);
+    this.removeElems(removed);
+    this.addElems(added);
     return {
       edges: Array.from(this.edges),
       vertices: Array.from(this.vertices.values()),

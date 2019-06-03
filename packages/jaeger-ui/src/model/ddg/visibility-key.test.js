@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { compareVisibilityKeys, changeVisibility, isVisible } from './visibility-key';
+import { compareKeys, changeKey, isVisible } from './visibility-key';
 
 describe('visibility-key', () => {
   describe('isVisible', () => {
@@ -47,102 +47,84 @@ describe('visibility-key', () => {
     });
   });
 
-  describe('changeVisibility', () => {
+  describe('changeKey', () => {
     describe('hide', () => {
       it('hides visible value', () => {
-        expect(changeVisibility({ visibilityKey: '3', hideIndices: [0] })).toBe('2');
+        expect(changeKey({ key: '3', hide: [0] })).toBe('2');
       });
 
       it('omits value if it becomes entirely invisible', () => {
-        expect(changeVisibility({ visibilityKey: '3,1s', hideIndices: [0, 37] })).toBe('2,');
+        expect(changeKey({ key: '3,1s', hide: [0, 37] })).toBe('2,');
       });
     });
 
     describe('show', () => {
       it('shows invisible value', () => {
-        expect(changeVisibility({ visibilityKey: '0', showIndices: [0] })).toBe('1');
+        expect(changeKey({ key: '0', show: [0] })).toBe('1');
       });
 
       it('retains empty value in CSV', () => {
-        expect(changeVisibility({ visibilityKey: ',', showIndices: [0] })).toBe('1,');
+        expect(changeKey({ key: ',', show: [0] })).toBe('1,');
       });
     });
 
     describe('show and hide', () => {
       it('shows and hides values', () => {
-        expect(changeVisibility({ visibilityKey: '1', showIndices: [1], hideIndices: [0] })).toBe('2');
+        expect(changeKey({ key: '1', show: [1], hide: [0] })).toBe('2');
       });
 
       it('shows and hides values across multiple buckets', () => {
-        expect(changeVisibility({ visibilityKey: ',1s,', showIndices: [0, 1, 68], hideIndices: [37] })).toBe(
-          '3,,1s'
-        );
+        expect(changeKey({ key: ',1s,', show: [0, 1, 68], hide: [37] })).toBe('3,,1s');
       });
 
       it('errors when trying to show and hide the same index', () => {
-        expect(() =>
-          changeVisibility({ visibilityKey: '', showIndices: [0], hideIndices: [0] })
-        ).toThrowError();
+        expect(() => changeKey({ key: '', show: [0], hide: [0] })).toThrowError();
       });
     });
   });
 
-  describe('compareVisibilityKeys', () => {
+  describe('compareKeys', () => {
     describe('added', () => {
       it('returns a new value', () => {
-        expect(compareVisibilityKeys({ newVisibilityKey: '3', oldVisibilityKey: '1,1' }).added).toEqual([1]);
+        expect(compareKeys({ newKey: '3', oldKey: '1,1' }).added).toEqual([1]);
       });
 
       it('returns multiple new values in ascending order', () => {
-        expect(compareVisibilityKeys({ newVisibilityKey: '7', oldVisibilityKey: '2' }).added).toEqual([0, 2]);
+        expect(compareKeys({ newKey: '7', oldKey: '2' }).added).toEqual([0, 2]);
       });
 
       it('returns multiple new values accross multiple buckets', () => {
-        expect(compareVisibilityKeys({ newVisibilityKey: '7,1t,4', oldVisibilityKey: '2,1' }).added).toEqual([
-          0,
-          2,
-          37,
-          64,
-        ]);
+        expect(compareKeys({ newKey: '7,1t,4', oldKey: '2,1' }).added).toEqual([0, 2, 37, 64]);
       });
     });
 
     describe('removed', () => {
       it('returns a removed value', () => {
-        expect(compareVisibilityKeys({ newVisibilityKey: '1,1', oldVisibilityKey: '3' }).removed).toEqual([
-          1,
-        ]);
+        expect(compareKeys({ newKey: '1,1', oldKey: '3' }).removed).toEqual([1]);
       });
 
       it('returns multiple removed values in ascending order', () => {
-        expect(compareVisibilityKeys({ newVisibilityKey: '2', oldVisibilityKey: '7' }).removed).toEqual([
-          0,
-          2,
-        ]);
+        expect(compareKeys({ newKey: '2', oldKey: '7' }).removed).toEqual([0, 2]);
       });
 
       it('returns multiple new values across multiple buckets', () => {
-        expect(
-          compareVisibilityKeys({ newVisibilityKey: '2,1', oldVisibilityKey: '7,1t,4' }).removed
-        ).toEqual([0, 2, 37, 64]);
+        expect(compareKeys({ newKey: '2,1', oldKey: '7,1t,4' }).removed).toEqual([0, 2, 37, 64]);
       });
     });
 
     describe('added and removed', () => {
       it('returns added and removed values', () => {
-        expect(compareVisibilityKeys({ newVisibilityKey: '6', oldVisibilityKey: '5' })).toEqual({
+        expect(compareKeys({ newKey: '6', oldKey: '5' })).toEqual({
           added: [1],
           removed: [0],
         });
       });
 
       it('returns added and removed values across multiple buckets', () => {
-        expect(compareVisibilityKeys({ newVisibilityKey: '6,1,,,1,', oldVisibilityKey: '5,,1,1,,' })).toEqual(
-          {
-            added: [1, 31, 124],
-            removed: [0, 62, 93],
-          }
-        );
+        expect(compareKeys({ newKey: '6,1,,,1,', oldKey: '5,,1,1,,' })).toEqual({
+          added: [1, 31, 124],
+          removed: [0, 62, 93],
+        });
       });
     });
   });
