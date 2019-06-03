@@ -14,9 +14,11 @@
 
 import * as React from 'react';
 import { Form, Input, Button, Popover, Select } from 'antd';
+import _get from 'lodash/get';
 import logfmtParser from 'logfmt/lib/logfmt_parser';
 import { stringify as logfmtStringify } from 'logfmt/lib/stringify';
 import moment from 'moment';
+import memoizeOne from 'memoize-one';
 import PropTypes from 'prop-types';
 import queryString from 'query-string';
 import IoHelp from 'react-icons/lib/io/help';
@@ -70,6 +72,95 @@ export function convTagsLogfmt(tags) {
   });
   return JSON.stringify(data);
 }
+
+export function lookbackToTimestamp(lookback, from) {
+  const unit = lookback.substr(-1);
+  return (
+    moment(from)
+      .subtract(parseInt(lookback, 10), unit)
+      .valueOf() * 1000
+  );
+}
+
+const lookbackOptions = [
+  {
+    label: 'Hour',
+    value: '1h',
+  },
+  {
+    label: '2 Hours',
+    value: '2h',
+  },
+  {
+    label: '3 Hours',
+    value: '3h',
+  },
+  {
+    label: '6 Hours',
+    value: '6h',
+  },
+  {
+    label: '12 Hours',
+    value: '12h',
+  },
+  {
+    label: '24 Hours',
+    value: '24h',
+  },
+  {
+    label: '2 Days',
+    value: '2d',
+  },
+  {
+    label: '3 Days',
+    value: '3d',
+  },
+  {
+    label: '5 Days',
+    value: '5d',
+  },
+  {
+    label: '7 Days',
+    value: '7d',
+  },
+  {
+    label: '2 Weeks',
+    value: '2w',
+  },
+  {
+    label: '3 Weeks',
+    value: '3w',
+  },
+  {
+    label: '4 Weeks',
+    value: '4w',
+  },
+];
+
+export const optionsWithinMaxLookback = memoizeOne(maxLookback => {
+  const now = new Date();
+  const minTimestamp = lookbackToTimestamp(maxLookback.value, now);
+  const lookbackToTimestampMap = new Map();
+  const options = lookbackOptions.filter(({ value }) => {
+    const lookbackTimestamp = lookbackToTimestamp(value, now);
+    lookbackToTimestampMap.set(value, lookbackTimestamp);
+    return lookbackTimestamp >= minTimestamp;
+  });
+  const lastInRangeIndex = options.length - 1;
+  const lastInRangeOption = options[lastInRangeIndex];
+  if (lastInRangeOption.label !== maxLookback.label) {
+    if (lookbackToTimestampMap.get(lastInRangeOption.value) !== minTimestamp) {
+      options.push(maxLookback);
+    } else {
+      options.splice(lastInRangeIndex, 1, maxLookback);
+    }
+  }
+  return options.map(({ label, value }) => (
+    <Option key={value} value={value}>
+      Last {label}
+    </Option>
+  ));
+});
 
 export function traceIDsToQuery(traceIDs) {
   if (!traceIDs) {
@@ -133,13 +224,9 @@ export function submitForm(fields, searchTraces) {
   let start;
   let end;
   if (lookback !== 'custom') {
-    const unit = lookback.substr(-1);
     const now = new Date();
-    start =
-      moment(now)
-        .subtract(parseInt(lookback, 10), unit)
-        .valueOf() * 1000;
-    end = moment(now).valueOf() * 1000;
+    start = lookbackToTimestamp(lookback, now);
+    end = now * 1000;
   } else {
     const times = getUnixTimeStampInMSFromForm({
       startDate,
@@ -171,6 +258,7 @@ export class SearchFormImpl extends React.PureComponent {
     const {
       handleSubmit,
       invalid,
+      searchMaxLookback,
       selectedLookback,
       selectedService = '-',
       services,
@@ -264,13 +352,7 @@ export class SearchFormImpl extends React.PureComponent {
 
         <FormItem label="Lookback">
           <Field name="lookback" component={AdaptedSelect} props={{ disabled, defaultValue: '1h' }}>
-            <Option value="1h">Last Hour</Option>
-            <Option value="2h">Last 2 Hours</Option>
-            <Option value="3h">Last 3 Hours</Option>
-            <Option value="6h">Last 6 Hours</Option>
-            <Option value="12h">Last 12 Hours</Option>
-            <Option value="24h">Last 24 Hours</Option>
-            <Option value="2d">Last 2 Days</Option>
+            {optionsWithinMaxLookback(searchMaxLookback)}
             <Option value="custom">Custom Time Range</Option>
           </Field>
         </FormItem>
@@ -381,6 +463,10 @@ SearchFormImpl.propTypes = {
   handleSubmit: PropTypes.func.isRequired,
   invalid: PropTypes.bool,
   submitting: PropTypes.bool,
+  searchMaxLookback: PropTypes.shape({
+    label: PropTypes.string.isRequired,
+    value: PropTypes.string.isRequired,
+  }).isRequired,
   services: PropTypes.arrayOf(
     PropTypes.shape({
       name: PropTypes.string,
@@ -512,6 +598,7 @@ export function mapStateToProps(state) {
       maxDuration: maxDuration || null,
       traceIDs: traceIDs || null,
     },
+    searchMaxLookback: _get(state, 'config.search.maxLookback'),
     selectedService: searchSideBarFormSelector(state, 'service'),
     selectedLookback: searchSideBarFormSelector(state, 'lookback'),
   };
