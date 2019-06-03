@@ -32,8 +32,8 @@ describe('DdgEVManager', () => {
    *     egressNeighborVisibilityIdx.
    * @param {number[]} expectedVertices[].ingressNeighborVisibilityIndices - A single visibilityIdx is
    *     sufficient to define a neighboring vertex. For each ingressNeighborVisibilityIdx, the expectedVertex
-   *     should have an ingressEdge from the expectedVertex to the vertex represented by the
-   *     ingressNeighborVisibilityIdx.
+   *     should have an ingressEdge from the vertex represented by the ingressNeighborVisibilityIdx to the
+   *     expectedVertex.
    */
   function validateDdgEVManager(ddgEVManager, expectedVertices) {
     let expectedEdgeCount = 0;

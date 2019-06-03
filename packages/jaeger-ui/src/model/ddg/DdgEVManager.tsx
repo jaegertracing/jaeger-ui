@@ -14,21 +14,12 @@
 
 import { compareVisibilityKeys } from './visibility-key';
 
-import {
-  PathElem,
-  DdgEdge,
-  DdgVertex,
-  TDdgModel,
-  TDdgPathElemsByDistance,
-  TDdgPath,
-  TDdgServiceMap,
-} from './types';
+import { PathElem, DdgEdge, DdgVertex, TDdgModel, TDdgPathElemsByDistance, TDdgServiceMap } from './types';
 
 export default class DdgEVManager {
   lastVisibilityKey: string;
   pathElemsByDistance: TDdgPathElemsByDistance;
   pathElemToVertex: Map<PathElem, DdgVertex>;
-  paths: TDdgPath[];
   services: TDdgServiceMap;
   edges: Set<DdgEdge>;
   vertices: Map<string, DdgVertex>;
@@ -36,7 +27,6 @@ export default class DdgEVManager {
 
   constructor({ ddgModel }: { ddgModel: TDdgModel }) {
     this.pathElemsByDistance = ddgModel.pathElemsByDistance;
-    this.paths = ddgModel.paths;
     this.services = ddgModel.services;
     this.visibilityIdxToPathElem = ddgModel.visibilityIdxToPathElem;
     this.pathElemToVertex = new Map();
@@ -126,12 +116,11 @@ export default class DdgEVManager {
   // provide that to this fn. could also be property on pathElem that gets set by addPathElems
   // tl;dr may move in late-alpha
   private getVertexKey = (pathElem: PathElem): string => {
-    const { distance, memberOf } = pathElem;
+    const { memberIdx, memberOf } = pathElem;
     const { focalIdx, members } = memberOf;
-    const startIdx = Math.min(focalIdx, focalIdx + distance);
 
     return members
-      .slice(startIdx, startIdx + Math.abs(distance) + 1)
+      .slice(Math.min(focalIdx, memberIdx), Math.max(focalIdx, memberIdx) + 1)
       .map(({ operation }) => `${operation.service.name}::${operation.name}`)
       .join('|');
   };

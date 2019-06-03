@@ -39,11 +39,11 @@ export default class DdgVertex implements TVertex<TDdgVertex> {
     type TDigestibleEdges = Record<string, DdgEdge>;
     const digestibleEgressEdges: TDigestibleEdges = {};
     const digestibleIngressEdges: TDigestibleEdges = {};
-    this.egressEdges.forEach((edge, egreesNeighbor) => {
-      digestibleEgressEdges[egreesNeighbor.key] = edge;
+    this.egressEdges.forEach((edge, egressNeighbor) => {
+      digestibleEgressEdges[egressNeighbor[Symbol.toStringTag]] = edge;
     });
-    this.ingressEdges.forEach((edge, ingreesNeighbor) => {
-      digestibleIngressEdges[ingreesNeighbor.key] = edge;
+    this.ingressEdges.forEach((edge, ingressNeighbor) => {
+      digestibleIngressEdges[ingressNeighbor[Symbol.toStringTag]] = edge;
     });
     return {
       egressEdges: digestibleEgressEdges,

@@ -76,16 +76,22 @@ describe('PathElem', () => {
   });
 
   describe('legibility', () => {
-    const operations = simplePath.map(({ operation, service }) => ({
-      name: operation,
-      service: {
-        name: service,
-      },
-    }));
     const path = {
       focalIdx: 2,
     };
-    const members = operations.map((operation, i) => new PathElem({ memberIdx: i, operation, path }));
+    const members = simplePath.map(
+      ({ operation, service }, i) =>
+        new PathElem({
+          memberIdx: i,
+          operation: {
+            name: operation,
+            service: {
+              name: service,
+            },
+          },
+          path,
+        })
+    );
     members[2].visibilityIdx = 0;
     members[3].visibilityIdx = 1;
     members[1].visibilityIdx = 2;

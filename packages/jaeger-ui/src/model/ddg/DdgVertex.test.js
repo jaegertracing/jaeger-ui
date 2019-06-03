@@ -29,23 +29,14 @@ describe('DdgVertex', () => {
     to.ingressEdges.set(from, edge);
   }
 
-  const twoHopUpstreamVertexKey = 'twoHopUpstreamVertexKey';
-  const oneHopUpstreamVertexKey0 = 'oneHopUpstreamVertexKey0';
-  const oneHopUpstreamVertexKey1 = 'oneHopUpstreamVertexKey1';
-  const targetVertexKey = 'targetVertexKey';
-  const siblingVertexKey = 'siblingVertexKey';
-  const oneHopDownstreamVertexKey0 = 'oneHopDownstreamVertexKey0';
-  const oneHopDownstreamVertexKey1 = 'oneHopDownstreamVertexKey1';
-  const twoHopDownstreamVertexKey = 'twoHopDownstreamVertexKey';
-
-  const twoHopUpstreamVertex = makeTestVertex(twoHopUpstreamVertexKey);
-  const oneHopUpstreamVertex0 = makeTestVertex(oneHopUpstreamVertexKey0);
-  const oneHopUpstreamVertex1 = makeTestVertex(oneHopUpstreamVertexKey1);
-  const targetVertex = makeTestVertex(targetVertexKey);
-  const siblingVertex = makeTestVertex(siblingVertexKey);
-  const oneHopDownstreamVertex0 = makeTestVertex(oneHopDownstreamVertexKey0);
-  const oneHopDownstreamVertex1 = makeTestVertex(oneHopDownstreamVertexKey1);
-  const twoHopDownstreamVertex = makeTestVertex(twoHopDownstreamVertexKey);
+  const twoHopUpstreamVertex = makeTestVertex('twoHopUpstreamVertexKey');
+  const oneHopUpstreamVertex0 = makeTestVertex('oneHopUpstreamVertexKey0');
+  const oneHopUpstreamVertex1 = makeTestVertex('oneHopUpstreamVertexKey1');
+  const targetVertex = makeTestVertex('targetVertexKey');
+  const siblingVertex = makeTestVertex('siblingVertexKey');
+  const oneHopDownstreamVertex0 = makeTestVertex('oneHopDownstreamVertexKey0');
+  const oneHopDownstreamVertex1 = makeTestVertex('oneHopDownstreamVertexKey1');
+  const twoHopDownstreamVertex = makeTestVertex('twoHopDownstreamVertexKey');
 
   makeTestEdge(twoHopUpstreamVertex, oneHopUpstreamVertex0);
   makeTestEdge(oneHopUpstreamVertex0, targetVertex);
@@ -76,6 +67,6 @@ describe('DdgVertex', () => {
   });
 
   it('creates informative string tag', () => {
-    expect(Object.prototype.toString.call(targetVertex)).toEqual(`[object DdgVertex ${targetVertexKey}]`);
+    expect(Object.prototype.toString.call(targetVertex)).toEqual(`[object DdgVertex ${targetVertex.key}]`);
   });
 });
