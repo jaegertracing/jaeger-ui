@@ -13,6 +13,8 @@
 // limitations under the License.
 
 import PathElem from './PathElem';
+import { fetchedState } from '../../constants';
+import { ApiError } from '../../types/api-error';
 
 export { default as DdgEdge } from './DdgEdge';
 export { default as DdgVertex } from './DdgVertex';
@@ -55,3 +57,25 @@ export type TDdgModel = {
 };
 
 export type TDdgEdgeIdentifier = 'egressEdges' | 'ingressEdges';
+
+export type TDdgStateEntry = {
+  state: typeof fetchedState.LOADING;
+} | {
+  error: ApiError;
+  state: typeof fetchedState.ERROR;
+} | {
+  model: TDdgModel;
+  state: typeof fetchedState.DONE;
+  styleStates: Map<number, number>;
+};
+
+export type TDdgState = Record<string, Record<string, Record<string, Record<string, TDdgStateEntry>>>>;
+
+/* eslint-disable no-bitwise */
+export enum StyleStates {
+  None,
+  Hovered,
+  Selected = 1 << 1,
+  Emphasized = 1 << 2,
+}
+/* eslint-enable no-bitwise */
