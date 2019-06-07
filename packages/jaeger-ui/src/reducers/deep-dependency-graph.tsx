@@ -15,26 +15,29 @@
 import _get from 'lodash/get';
 import { handleActions } from 'redux-actions';
 
-import { actionTypes, TAddStyle, TClearStyle } from '../actions/deep-dependency-graph';
+import { actionTypes } from '../actions/deep-dependency-graph';
 import { fetchDeepDependencyGraph } from '../actions/jaeger-api';
 import { fetchedState } from '../constants';
 import { ApiError } from '../types/api-error';
 import transformDdgData from '../model/ddg/transformDdgData';
-import { TDdgPayload, TDdgState, TDdgStateEntry } from '../model/ddg/types';
+import {
+  TDdgActionMeta,
+  TDdgAddStyleAction,
+  TDdgClearStyleAction,
+  TDdgPayload,
+  TDdgState,
+  TDdgStateEntry,
+} from '../model/ddg/types';
 import guardReducer from '../utils/guardReducer';
 
-export type TMeta = {
-  query: {
+function newState(
+  state: TDdgState,
   service: string,
-  operation?: string,
+  operation: string,
   start: number,
   end: number,
-  },
-};
-
-// const initialState: TDdgState = {};
-
-function newState(state: TDdgState, service: string, operation: string, start: number, end: number, value: TDdgStateEntry): TDdgState {
+  value: TDdgStateEntry
+): TDdgState {
   return {
     ...state,
     [service]: {
@@ -50,12 +53,15 @@ function newState(state: TDdgState, service: string, operation: string, start: n
   };
 }
 
-export function addStyleState(state: TDdgState, { meta, payload }: { meta: TMeta, payload: TAddStyle }) {
+export function addStyleState(
+  state: TDdgState,
+  { meta, payload }: { meta: TDdgActionMeta; payload: TDdgAddStyleAction }
+) {
   const { query } = meta;
   const { service, operation = '*', start, end } = query;
   const { visibilityIndices, style } = payload;
-  const stateEntry: TDdgStateEntry = _get(state, [service, operation, start, end]);
-  if (stateEntry.state !== fetchedState.DONE) {
+  const stateEntry: TDdgStateEntry | undefined = _get(state, [service, operation, start, end]);
+  if (!stateEntry || stateEntry.state !== fetchedState.DONE) {
     console.warn('Cannot set style state for unloaded Deep Dependency Graph'); // eslint-disable-line no-console
     return state;
   }
@@ -69,12 +75,15 @@ export function addStyleState(state: TDdgState, { meta, payload }: { meta: TMeta
   });
 }
 
-export function clearStyleState(state: TDdgState, { meta, payload }: { meta: TMeta, payload: TClearStyle }) {
+export function clearStyleState(
+  state: TDdgState,
+  { meta, payload }: { meta: TDdgActionMeta; payload: TDdgClearStyleAction }
+) {
   const { query } = meta;
   const { service, operation = '*', start, end } = query;
   const { visibilityIndices, style } = payload;
-  const stateEntry: TDdgStateEntry = _get(state, [service, operation, start, end]);
-  if (stateEntry.state !== fetchedState.DONE) {
+  const stateEntry: TDdgStateEntry | undefined = _get(state, [service, operation, start, end]);
+  if (!stateEntry || stateEntry.state !== fetchedState.DONE) {
     console.warn('Cannot change style state for unloaded Deep Dependency Graph'); // eslint-disable-line no-console
     return state;
   }
@@ -93,13 +102,16 @@ export function clearStyleState(state: TDdgState, { meta, payload }: { meta: TMe
   });
 }
 
-export function fetchDeepDependencyGraphStarted(state: TDdgState, { meta }: { meta: TMeta }) {
+export function fetchDeepDependencyGraphStarted(state: TDdgState, { meta }: { meta: TDdgActionMeta }) {
   const { query } = meta;
   const { service, operation = '*', start, end } = query;
   return newState(state, service, operation, start, end, { state: fetchedState.LOADING });
 }
 
-export function fetchDeepDependencyGraphDone(state: TDdgState, { meta, payload }: { meta: TMeta, payload: TDdgPayload }) {
+export function fetchDeepDependencyGraphDone(
+  state: TDdgState,
+  { meta, payload }: { meta: TDdgActionMeta; payload: TDdgPayload }
+) {
   const { query } = meta;
   const { service, operation, start, end } = query;
   return newState(state, service, operation || '*', start, end, {
@@ -109,7 +121,10 @@ export function fetchDeepDependencyGraphDone(state: TDdgState, { meta, payload }
   });
 }
 
-export function fetchDeepDependencyGraphErred(state: TDdgState, { meta, payload }: { meta: TMeta, payload: ApiError }) {
+export function fetchDeepDependencyGraphErred(
+  state: TDdgState,
+  { meta, payload }: { meta: TDdgActionMeta; payload: ApiError }
+) {
   const { query } = meta;
   const { service, operation = '*', start, end } = query;
   return newState(state, service, operation, start, end, {
@@ -127,5 +142,5 @@ export default handleActions(
     [actionTypes.ADD_STYLE_STATE]: guardReducer(addStyleState),
     [actionTypes.CLEAR_STYLE_STATE]: guardReducer(clearStyleState),
   },
-  {} // initialState
-)
+  {}
+);

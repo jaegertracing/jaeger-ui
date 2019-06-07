@@ -12,27 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// import { createStore } from 'redux';
-
 import queryString from 'query-string';
 
-import { /* actions, actionTypes, */ extractMeta } from './deep-dependency-graph'
-// import { StyleStates } from '../model/ddg/types';
+import { extractMeta } from './deep-dependency-graph';
 
 describe('deepDependencyGraph actions', () => {
-  /*
-  describe('addStyleState', () => {
-    it('creates action', () => {
-      console.log(actions);
-      expect(actions[actionTypes.ADD_STYLE_STATE]({ visibilityIndices: [2, 4], style: StyleStates.Hovered })).toEqual({
-        type: actionTypes.ADD_STYLE_STATE,
-        payload: {
-          visibilityIndices: [2, 4], style: StyleStates.Hovered
-        },
-      });
-    });
-  });
-  */
   describe('extractMeta', () => {
     const service = 'serviceName';
     const operation = 'operationName';
@@ -57,7 +41,7 @@ describe('deepDependencyGraph actions', () => {
       parseSpy = jest.spyOn(queryString, 'parse');
       warnSpy = jest.spyOn(console, 'warn').mockImplementation();
     });
-      
+
     beforeEach(() => {
       parseSpy.mockReset();
       warnSpy.mockReset();
@@ -71,7 +55,7 @@ describe('deepDependencyGraph actions', () => {
       parseSpy.mockReturnValue(acceptableParams);
       expect(extractMeta()).toEqual({
         query: expectedMeta,
-      });;
+      });
     });
 
     it('handles absent operation', () => {
@@ -87,7 +71,7 @@ describe('deepDependencyGraph actions', () => {
           start: Number.parseInt(start, 10),
           end: Number.parseInt(end, 10),
         },
-      });;
+      });
     });
 
     it('errors on missing required values', () => {

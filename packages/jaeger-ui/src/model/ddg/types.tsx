@@ -58,24 +58,38 @@ export type TDdgModel = {
 
 export type TDdgEdgeIdentifier = 'egressEdges' | 'ingressEdges';
 
-export type TDdgStateEntry = {
-  state: typeof fetchedState.LOADING;
-} | {
-  error: ApiError;
-  state: typeof fetchedState.ERROR;
-} | {
-  model: TDdgModel;
-  state: typeof fetchedState.DONE;
-  styleStates: Map<number, number>;
-};
+export type TDdgStateEntry =
+  | {
+      state: typeof fetchedState.LOADING;
+    }
+  | {
+      error: ApiError;
+      state: typeof fetchedState.ERROR;
+    }
+  | {
+      model: TDdgModel;
+      state: typeof fetchedState.DONE;
+      styleStates: Map<number, number>;
+    };
 
 export type TDdgState = Record<string, Record<string, Record<string, Record<string, TDdgStateEntry>>>>;
 
-/* eslint-disable no-bitwise */
 export enum StyleStates {
   None,
   Hovered,
-  Selected = 1 << 1,
-  Emphasized = 1 << 2,
+  Selected = 1 << 1, // eslint-disable-line no-bitwise
+  Emphasized = 1 << 2, // eslint-disable-line no-bitwise
 }
-/* eslint-enable no-bitwise */
+
+export type TDdgActionMeta = {
+  query: {
+    service: string;
+    operation?: string;
+    start: number;
+    end: number;
+  };
+};
+
+export type TDdgAddStyleAction = { visibilityIndices: number[]; style: number };
+
+export type TDdgClearStyleAction = { visibilityIndices?: number[]; style?: number };

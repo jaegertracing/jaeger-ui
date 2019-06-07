@@ -50,7 +50,7 @@ export const fetchServiceOperations = createAction(
 export const fetchDeepDependencyGraph = createAction(
   '@JAEGER_API/FETCH_DEEP_DEPENDENCY_GRAPH',
   query => JaegerAPI.fetchDeepDependencyGraph(query),
-  query => ({ query }),
+  query => ({ query })
 );
 
 export const fetchDependencies = createAction('@JAEGER_API/FETCH_DEPENDENCIES', () =>
