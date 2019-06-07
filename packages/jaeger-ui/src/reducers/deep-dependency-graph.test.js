@@ -173,32 +173,45 @@ describe('deepDependencyGraph reducers', () => {
   });
 
   describe('managing style', () => {
+    const stylePath = [...targetPath, 'styleStates'];
     const visibilityIndices = [4, 8, 15, 16, 23, 42];
     const emphasizedPayload = {
       visibilityIndices,
       style: StyleStates.Emphasized,
     };
-    const emphasizedStyleStates = new Map();
-    visibilityIndices.forEach(idx => emphasizedStyleStates.set(idx, emphasizedPayload.style));
+    const emphasizedStyleMap = new Map();
+    visibilityIndices.forEach(idx => emphasizedStyleMap.set(idx, emphasizedPayload.style));
 
     const selectedPayload = {
       visibilityIndices,
       style: StyleStates.Selected,
     };
-    const selectedStyleStates = new Map();
-    visibilityIndices.forEach(idx => selectedStyleStates.set(idx, selectedPayload.style));
+    const selectedStyleMap = new Map();
+    visibilityIndices.forEach(idx => selectedStyleMap.set(idx, selectedPayload.style));
 
     const multiPayload = {
       visibilityIndices,
       style: StyleStates.Emphasized | StyleStates.Selected, // eslint-disable-line no-bitwise
     };
-    const multiStyleStates = new Map();
-    visibilityIndices.forEach(idx => multiStyleStates.set(idx, multiPayload.style));
+    const multiStyleMap = new Map();
+    visibilityIndices.forEach(idx => multiStyleMap.set(idx, multiPayload.style));
 
+    let emphasizedStyledState;
+    let emptyDoneState;
+    let multiStyledState;
     let warnSpy;
 
     beforeAll(() => {
       warnSpy = jest.spyOn(console, 'warn').mockImplementation();
+    });
+
+    beforeEach(() => {
+      emptyDoneState = _set(_cloneDeep(existingState), targetPath, {
+        state: fetchedState.DONE,
+        styleStates: new Map(),
+      });
+      emphasizedStyledState = _set(_cloneDeep(emptyDoneState), stylePath, emphasizedStyleMap);
+      multiStyledState = _set(_cloneDeep(emptyDoneState), stylePath, multiStyleMap);
     });
 
     afterAll(() => {
@@ -215,37 +228,25 @@ describe('deepDependencyGraph reducers', () => {
       });
 
       it('adds style to empty style state', () => {
-        const existingDoneState = _set(_cloneDeep(existingState), targetPath, {
-          state: fetchedState.DONE,
-          styleStates: new Map(),
-        });
-        const newState = addStyleState(existingDoneState, { meta, payload: emphasizedPayload });
-        const expected = _set(existingDoneState, [...targetPath, 'styleStates'], emphasizedStyleStates);
+        const newState = addStyleState(emptyDoneState, { meta, payload: emphasizedPayload });
+        const expected = _set(emptyDoneState, stylePath, emphasizedStyleMap);
         expect(newState).toEqual(expected);
       });
 
       it('adds multilpe styles at once', () => {
-        const existingDoneState = _set(_cloneDeep(existingState), targetPath, {
-          state: fetchedState.DONE,
-          styleStates: new Map(),
-        });
-        const newState = addStyleState(existingDoneState, { meta, payload: multiPayload });
-        const expected = _set(existingDoneState, [...targetPath, 'styleStates'], multiStyleStates);
+        const newState = addStyleState(emptyDoneState, { meta, payload: multiPayload });
+        const expected = _set(emptyDoneState, stylePath, multiStyleMap);
         expect(newState).toEqual(expected);
       });
 
       it('adds provided style to existing style', () => {
-        const existingStyledState = _set(_cloneDeep(existingState), targetPath, {
-          state: fetchedState.DONE,
-          styleStates: emphasizedStyleStates,
-        });
-        const newState = addStyleState(existingStyledState, { meta, payload: selectedPayload });
-        const expected = _set(existingStyledState, [...targetPath, 'styleStates'], multiStyleStates);
+        const newState = addStyleState(emphasizedStyledState, { meta, payload: selectedPayload });
+        const expected = _set(emphasizedStyledState, stylePath, multiStyleMap);
         expect(newState).toEqual(expected);
       });
 
       it('handles absent operation', () => {
-        const existingDoneState = _setWith(
+        const operationlessDoneState = _setWith(
           _cloneDeep(existingState),
           operationlessPath,
           {
@@ -254,14 +255,14 @@ describe('deepDependencyGraph reducers', () => {
           },
           Object
         );
-        const newState = addStyleState(existingDoneState, {
+        const newState = addStyleState(operationlessDoneState, {
           meta: metaWithoutOperation,
           payload: emphasizedPayload,
         });
         const expected = _set(
-          existingDoneState,
+          operationlessDoneState,
           [...operationlessPath, 'styleStates'],
-          emphasizedStyleStates
+          emphasizedStyleMap
         );
         expect(newState).toEqual(expected);
       });
@@ -282,52 +283,37 @@ describe('deepDependencyGraph reducers', () => {
       });
 
       it('clears the provided style preserving other style state', () => {
-        const existingStyledState = _set(_cloneDeep(existingState), targetPath, {
-          state: fetchedState.DONE,
-          styleStates: multiStyleStates,
-        });
-        const newState = clearStyleState(existingStyledState, { meta, payload: selectedPayload });
-        const expected = _set(existingStyledState, [...targetPath, 'styleStates'], emphasizedStyleStates);
+        const newState = clearStyleState(multiStyledState, { meta, payload: selectedPayload });
+        const expected = _set(multiStyledState, stylePath, emphasizedStyleMap);
         expect(newState).toEqual(expected);
       });
 
       it('clears provided indices if style is omitted', () => {
-        const existingStyledState = _set(_cloneDeep(existingState), targetPath, {
-          state: fetchedState.DONE,
-          styleStates: multiStyleStates,
-        });
-        const newState = clearStyleState(existingStyledState, {
+        const newState = clearStyleState(multiStyledState, {
           meta,
           payload: { visibilityIndices: partialIndices },
         });
         const expectedMap = new Map([[omittedIdx, multiPayload.style]]);
-        const expected = _set(existingStyledState, [...targetPath, 'styleStates'], expectedMap);
+        const expected = _set(multiStyledState, stylePath, expectedMap);
         expect(newState).toEqual(expected);
       });
 
       it('clears provided style from all indices if visibilityIndices array is omitted', () => {
-        const existingStyledState = _set(_cloneDeep(existingState), targetPath, {
-          state: fetchedState.DONE,
-          styleStates: multiStyleStates,
-        });
-        const newState = clearStyleState(existingStyledState, {
+        const newState = clearStyleState(multiStyledState, {
           meta,
           payload: { style: StyleStates.Selected },
         });
-        const expected = _set(existingStyledState, [...targetPath, 'styleStates'], emphasizedStyleStates);
+        const expected = _set(multiStyledState, stylePath, emphasizedStyleMap);
         expect(newState).toEqual(expected);
       });
 
       it('removes indices that become 0', () => {
-        const mixedStyleStates = new Map(multiStyleStates);
+        const mixedStyleMap = new Map(multiStyleMap);
         for (let i = 0; i < partialIndices.length - 1; i++) {
-          mixedStyleStates.set(partialIndices[i], StyleStates.Emphasized);
+          mixedStyleMap.set(partialIndices[i], StyleStates.Emphasized);
         }
-        const existingStyledState = _set(_cloneDeep(existingState), targetPath, {
-          state: fetchedState.DONE,
-          styleStates: mixedStyleStates,
-        });
-        const newState = clearStyleState(existingStyledState, {
+        const mixedStyledState = _set(_cloneDeep(emptyDoneState), stylePath, mixedStyleMap);
+        const newState = clearStyleState(mixedStyledState, {
           meta,
           payload: { visibilityIndices: partialIndices, style: StyleStates.Emphasized },
         });
@@ -335,45 +321,39 @@ describe('deepDependencyGraph reducers', () => {
           [partialIndices[partialIndices.length - 1], StyleStates.Selected],
           [omittedIdx, multiPayload.style],
         ]);
-        const expected = _set(existingStyledState, [...targetPath, 'styleStates'], expectedMap);
+        const expected = _set(mixedStyledState, stylePath, expectedMap);
         expect(newState).toEqual(expected);
       });
 
       it('does not add previously absent idx if included in payload', () => {
-        const partialStyleStates = new Map();
+        const partialStyleMap = new Map();
         for (let i = 0; i < partialIndices.length; i++) {
-          partialStyleStates.set(partialIndices[i], StyleStates.Emphasized);
+          partialStyleMap.set(partialIndices[i], StyleStates.Emphasized);
         }
-        const existingStyledState = _set(_cloneDeep(existingState), targetPath, {
-          state: fetchedState.DONE,
-          styleStates: partialStyleStates,
-        });
-        const newState = clearStyleState(existingStyledState, {
-          meta,
-          payload: { visibilityIndices, style: StyleStates.Emphasized },
-        });
-        const expected = _set(existingStyledState, [...targetPath, 'styleStates'], new Map());
+        const partiallyStyledState = _set(_cloneDeep(emptyDoneState), stylePath, partialStyleMap);
+        const newState = clearStyleState(partiallyStyledState, { meta, payload: emphasizedPayload });
+        const expected = _set(partiallyStyledState, stylePath, new Map());
         expect(newState).toEqual(expected);
       });
 
       it('handles absent operation', () => {
-        const existingStyledState = _setWith(
+        const operationlessStyledState = _setWith(
           _cloneDeep(existingState),
           operationlessPath,
           {
             state: fetchedState.DONE,
-            styleStates: multiStyleStates,
+            styleStates: multiStyleMap,
           },
           Object
         );
-        const newState = clearStyleState(existingStyledState, {
+        const newState = clearStyleState(operationlessStyledState, {
           meta: metaWithoutOperation,
           payload: selectedPayload,
         });
         const expected = _set(
-          existingStyledState,
+          operationlessStyledState,
           [...operationlessPath, 'styleStates'],
-          emphasizedStyleStates
+          emphasizedStyleMap
         );
         expect(newState).toEqual(expected);
       });

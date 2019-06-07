@@ -29,7 +29,7 @@ export const actionTypes = generateActionTypes('@jaeger-ui/DEEP-DEPENDENCY-GRAPH
 const addStyleState: (kwarg: TDdgAddStyleAction) => TDdgAddStyleAction = _identity;
 const clearStyleState: (kwarg: TDdgClearStyleAction) => TDdgClearStyleAction = _identity;
 
-function unarrayify(arg: string | string[]): string {
+function firstParam(arg: string | string[]): string {
   if (Array.isArray(arg)) {
     const returnVal = arg[0];
     console.warn(`Found multiple query parameters: "${arg}", using "${returnVal}"`); // eslint-disable-line no-console
@@ -51,10 +51,10 @@ export const extractMeta = (): TDdgActionMeta => {
   }
   return {
     query: {
-      service: unarrayify(service),
-      operation: operation && unarrayify(operation),
-      start: Number.parseInt(unarrayify(start), 10),
-      end: Number.parseInt(unarrayify(end), 10),
+      service: firstParam(service),
+      operation: operation && firstParam(operation),
+      start: Number.parseInt(firstParam(start), 10),
+      end: Number.parseInt(firstParam(end), 10),
     },
   };
 };

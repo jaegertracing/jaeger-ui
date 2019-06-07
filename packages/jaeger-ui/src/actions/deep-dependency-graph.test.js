@@ -64,13 +64,9 @@ describe('deepDependencyGraph actions', () => {
         start,
         end,
       });
+      const { operation: _op, ...rest } = expectedMeta;
       expect(extractMeta()).toEqual({
-        query: {
-          service,
-          operation: undefined,
-          start: Number.parseInt(start, 10),
-          end: Number.parseInt(end, 10),
-        },
+        query: rest,
       });
     });
 
@@ -103,7 +99,7 @@ describe('deepDependencyGraph actions', () => {
         ...extraneous,
         ...acceptableParams,
       });
-      expect(extractMeta()).toEqual(expect.not.objectContaining(extraneous));
+      expect(extractMeta().query).toEqual(expect.not.objectContaining(extraneous));
     });
 
     it('handles and warns on duplicate values', () => {
