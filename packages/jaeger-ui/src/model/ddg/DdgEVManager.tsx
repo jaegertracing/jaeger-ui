@@ -12,42 +12,47 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { TEdge } from '@jaegertracing/plexus/lib/types';
+
 import { compareKeys } from './visibility-key';
 
-import { PathElem, DdgEdge, DdgVertex, TDdgModel } from './types';
+import { EDdgEdgeKeys, PathElem, DdgVertex, TDdgModel } from './types';
 
 export default class DdgEVManager {
-  private edges: Set<DdgEdge>;
-  private lastVisibilityKey: string;
+  private edges: Set<TEdge>;
+  private prevVisKey: string;
   private pathElemToVertex: Map<PathElem, DdgVertex>;
   private vertices: Map<string, DdgVertex>;
-  private visibilityIdxToPathElem: Map<number, PathElem>;
+  private visIdxToPathElem: Map<number, PathElem>;
 
   constructor({ ddgModel }: { ddgModel: TDdgModel }) {
     this.edges = new Set();
-    this.lastVisibilityKey = '';
+    this.prevVisKey = '';
     this.pathElemToVertex = new Map();
     this.vertices = new Map();
-    this.visibilityIdxToPathElem = ddgModel.visibilityIdxToPathElem;
+    this.visIdxToPathElem = ddgModel.visIdxToPathElem;
   }
 
   private addElems = (newIndices: number[]) => {
     newIndices.forEach(newIdx => {
-      const pathElem = this.visibilityIdxToPathElem.get(newIdx);
+      // If there is a compatible vertex for this visIdx, use it, else, make a new vertex
+      const pathElem = this.visIdxToPathElem.get(newIdx);
       if (!pathElem) {
         throw new Error(`Given visibilityIdx: "${newIdx}" that does not exist`);
       }
-      const key = this.getVertexKey(pathElem);
 
+      const key = this.getVertexKey(pathElem);
       let vertex = this.vertices.get(key);
       if (!vertex) {
         vertex = new DdgVertex({ key });
         this.vertices.set(key, vertex);
       }
 
+      // Create bi-directional links between the vertex and its PathElms
       this.pathElemToVertex.set(pathElem, vertex);
       vertex.pathElems.add(pathElem);
 
+      // If the newly-visible PathElem is not the focalNode, it needs to be connected to the rest of the graph
       const connectedElem = pathElem.focalSideNeighbor;
       if (connectedElem) {
         const connectedVertex = this.pathElemToVertex.get(connectedElem);
@@ -56,17 +61,16 @@ export default class DdgEVManager {
         }
 
         if (!vertex[pathElem.focalSideEdgesKey].has(connectedVertex)) {
-          const newEdge = new DdgEdge(
-            pathElem.focalSideEdgesKey === 'ingressEdges'
+          const newEdge: TEdge =
+            pathElem.focalSideEdgesKey === EDdgEdgeKeys.ingressEdges
               ? {
-                  from: connectedVertex,
-                  to: vertex,
+                  from: connectedVertex.key,
+                  to: vertex.key,
                 }
               : {
-                  from: vertex,
-                  to: connectedVertex,
-                }
-          );
+                  from: vertex.key,
+                  to: connectedVertex.key,
+                };
           vertex[pathElem.focalSideEdgesKey].set(connectedVertex, newEdge);
           connectedVertex[pathElem.farSideEdgesKey].set(vertex, newEdge);
           this.edges.add(newEdge);
@@ -77,7 +81,8 @@ export default class DdgEVManager {
 
   private removeElems = (removeIndices: number[]) => {
     removeIndices.forEach(removeIdx => {
-      const pathElem = this.visibilityIdxToPathElem.get(removeIdx);
+      // Find the corresponding vertex for this visIdx
+      const pathElem = this.visIdxToPathElem.get(removeIdx);
       if (!pathElem) {
         throw new Error(`Given visibilityIdx: "${removeIdx}" that does not exist`);
       }
@@ -87,8 +92,12 @@ export default class DdgEVManager {
         throw new Error(`Attempting to remove PathElem without vertex: ${pathElem}`);
       }
 
+      // Remove the bi-directional links between the vertex and the now-hidden PathElem
       this.pathElemToVertex.delete(pathElem);
       vertex.pathElems.delete(pathElem);
+
+      // If the last visibile PathElem for this vertex is now hidden, remove the vertex and all edges to and
+      // from this vertex
       if (vertex.pathElems.size === 0) {
         this.vertices.delete(key);
         vertex.egressEdges.forEach((egressEdge, connectedVertex) => {
@@ -117,16 +126,16 @@ export default class DdgEVManager {
 
     return members
       .slice(Math.min(focalIdx, memberIdx), Math.max(focalIdx, memberIdx) + 1)
-      .map(({ operation }) => `${operation.service.name}::${operation.name}`)
-      .join('|');
+      .map(({ operation }) => `${operation.service.name}\t${operation.name}`)
+      .join('\n');
   };
 
-  public getEdgesAndVertices = (visibilityKey: string) => {
+  public getEdgesAndVertices = (visKey: string) => {
     const { added, removed } = compareKeys({
-      newKey: visibilityKey,
-      oldKey: this.lastVisibilityKey,
+      newKey: visKey,
+      oldKey: this.prevVisKey,
     });
-    this.lastVisibilityKey = visibilityKey;
+    this.prevVisKey = visKey;
     this.removeElems(removed);
     this.addElems(added);
     return {

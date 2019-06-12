@@ -14,7 +14,6 @@
 
 import PathElem from './PathElem';
 
-export { default as DdgEdge } from './DdgEdge';
 export { default as DdgVertex } from './DdgVertex';
 export { default as PathElem } from './PathElem';
 
@@ -45,13 +44,16 @@ export type TDdgServiceMap = Map<string, TDdgService>;
 
 export type TDdgDistanceToPathElems = Map<number, PathElem[]>;
 
-export type TDdgVisibilityIdxToPathElem = Map<number, PathElem>;
+export type TDdgVisIdxToPathElem = Map<number, PathElem>;
 
 export type TDdgModel = {
   distanceToPathElems: TDdgDistanceToPathElems;
   paths: TDdgPath[];
   services: TDdgServiceMap;
-  visibilityIdxToPathElem: TDdgVisibilityIdxToPathElem;
+  visIdxToPathElem: TDdgVisIdxToPathElem;
 };
 
-export type TDdgEdgeIdentifier = 'egressEdges' | 'ingressEdges';
+export enum EDdgEdgeKeys {
+  egressEdges = 'egressEdges',
+  ingressEdges = 'ingressEdges',
+}
