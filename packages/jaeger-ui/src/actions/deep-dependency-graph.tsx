@@ -13,9 +13,9 @@
 // limitations under the License.
 
 import _identity from 'lodash/identity';
-import queryString from 'query-string';
 import { createActions } from 'redux-actions';
 
+import extractQuery from '../model/ddg/extractQuery';
 import { TDdgActionMeta, TDdgAddStyleAction, TDdgClearStyleAction } from '../model/ddg/types';
 import generateActionTypes from '../utils/generate-action-types';
 
@@ -29,17 +29,8 @@ export const actionTypes = generateActionTypes('@jaeger-ui/DEEP-DEPENDENCY-GRAPH
 const addStyleState: (kwarg: TDdgAddStyleAction) => TDdgAddStyleAction = _identity;
 const clearStyleState: (kwarg: TDdgClearStyleAction) => TDdgClearStyleAction = _identity;
 
-function firstParam(arg: string | string[]): string {
-  if (Array.isArray(arg)) {
-    const returnVal = arg[0];
-    console.warn(`Found multiple query parameters: "${arg}", using "${returnVal}"`); // eslint-disable-line no-console
-    return returnVal;
-  }
-  return arg;
-}
-
 export const extractMeta = (): TDdgActionMeta => {
-  const { service, operation, start, end } = queryString.parse(window.location.search);
+  const { service, operation, start, end } = extractQuery();
   if (service == null) {
     throw new Error('Service name unavailable when trying to change style state');
   }
@@ -51,10 +42,10 @@ export const extractMeta = (): TDdgActionMeta => {
   }
   return {
     query: {
-      service: firstParam(service),
-      operation: operation && firstParam(operation),
-      start: Number.parseInt(firstParam(start), 10),
-      end: Number.parseInt(firstParam(end), 10),
+      service,
+      operation,
+      start,
+      end,
     },
   };
 };
