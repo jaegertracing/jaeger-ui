@@ -80,7 +80,7 @@ const JaegerAPI = {
     return getJSON(`${this.apiRoot}archive/${id}`, { method: 'POST' });
   },
   fetchDeepDependencyGraph(query) {
-    return getJSON(`$(this.apiRoot}deep-dependency-graph`, { query });
+    return getJSON(`${this.apiRoot}deep-dependency-graph`, { query });
   },
   fetchDependencies(endTs = new Date().getTime(), lookback = DEFAULT_DEPENDENCY_LOOKBACK) {
     return getJSON(`${this.apiRoot}dependencies`, { query: { endTs, lookback } });

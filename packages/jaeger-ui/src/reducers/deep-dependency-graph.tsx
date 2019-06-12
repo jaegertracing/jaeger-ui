@@ -28,7 +28,7 @@ import {
   TDdgState,
   TDdgStateEntry,
 } from '../model/ddg/types';
-import guardReducer from '../utils/guardReducer';
+import { guardReducerWithMeta } from '../utils/guardReducer';
 
 function newState(
   state: TDdgState,
@@ -136,11 +136,11 @@ export function fetchDeepDependencyGraphErred(
 export default handleActions(
   {
     [`${fetchDeepDependencyGraph}_PENDING`]: fetchDeepDependencyGraphStarted,
-    [`${fetchDeepDependencyGraph}_FULFILLED`]: guardReducer(fetchDeepDependencyGraphDone),
-    [`${fetchDeepDependencyGraph}_REJECTED`]: guardReducer(fetchDeepDependencyGraphErred),
+    [`${fetchDeepDependencyGraph}_FULFILLED`]: guardReducerWithMeta<TDdgState, TDdgPayload, TDdgActionMeta>(fetchDeepDependencyGraphDone),
+    [`${fetchDeepDependencyGraph}_REJECTED`]: guardReducerWithMeta<TDdgState, ApiError, TDdgActionMeta>(fetchDeepDependencyGraphErred),
 
-    [actionTypes.ADD_STYLE_STATE]: guardReducer(addStyleState),
-    [actionTypes.CLEAR_STYLE_STATE]: guardReducer(clearStyleState),
+    [actionTypes.ADD_STYLE_STATE]: guardReducerWithMeta<TDdgState, TDdgAddStyleAction, TDdgActionMeta>(addStyleState),
+    [actionTypes.CLEAR_STYLE_STATE]: guardReducerWithMeta<TDdgState, TDdgClearStyleAction, TDdgActionMeta>(clearStyleState),
   },
   {}
 );
