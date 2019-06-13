@@ -65,7 +65,7 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
 
   body = () => {
     const { graphState } = this.props;
-    if (!graphState) return <h1>Put stuff in above</h1>;
+    if (!graphState) return <h1>Enter query above</h1>;
     switch (graphState.state) {
       case fetchedState.DONE:
         return <h1>Loaded</h1>;

@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Uber Technologies, Inc.
+// Copyright (c) 2019 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,10 +27,13 @@ type TExtracted = { service?: string; operation?: string; start?: number; end?: 
 
 export default function extractQuery(search: string = window.location.search): TExtracted {
   const { service, operation, start, end } = queryString.parse(search);
-  const returnVal: TExtracted = {
-    service: service && firstParam(service),
-    operation: operation && firstParam(operation),
-  };
+  const returnVal: TExtracted = {};
+  if (service) {
+    returnVal.service = firstParam(service);
+  }
+  if (operation) {
+    returnVal.operation = firstParam(operation);
+  }
   if (start) {
     returnVal.start = Number.parseInt(firstParam(start), 10);
   }

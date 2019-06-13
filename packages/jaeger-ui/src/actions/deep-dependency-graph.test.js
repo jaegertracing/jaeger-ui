@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import queryString from 'query-string';
+import * as extractQuery from '../model/ddg/extractQuery';
 
 import { extractMeta } from './deep-dependency-graph';
 
@@ -22,96 +22,56 @@ describe('deepDependencyGraph actions', () => {
     const operation = 'operationName';
     const start = '400';
     const end = '900';
-    const acceptableParams = {
-      service,
-      operation,
-      start,
-      end,
-    };
     const expectedMeta = {
       service,
       operation,
       start: Number.parseInt(start, 10),
       end: Number.parseInt(end, 10),
     };
-    let warnSpy;
-    let parseSpy;
+    let querySpy;
 
     beforeAll(() => {
-      parseSpy = jest.spyOn(queryString, 'parse');
-      warnSpy = jest.spyOn(console, 'warn').mockImplementation();
+      querySpy = jest.spyOn(extractQuery, 'default');
     });
 
     beforeEach(() => {
-      parseSpy.mockReset();
-      warnSpy.mockReset();
+      querySpy.mockReset();
     });
 
-    afterAll(() => {
-      warnSpy.mockRestore();
-    });
-
-    it('gets all values from queryString', () => {
-      parseSpy.mockReturnValue(acceptableParams);
+    it('gets all values from extractQuery', () => {
+      querySpy.mockReturnValue(expectedMeta);
       expect(extractMeta()).toEqual({
         query: expectedMeta,
       });
     });
 
     it('handles absent operation', () => {
-      parseSpy.mockReturnValue({
-        service,
-        start,
-        end,
-      });
       const { operation: _op, ...rest } = expectedMeta;
+      querySpy.mockReturnValue(rest);
       expect(extractMeta()).toEqual({
         query: rest,
       });
     });
 
     it('errors on missing required values', () => {
-      parseSpy.mockReturnValue({
+      querySpy.mockReturnValue({
         operation,
         start,
         end,
       });
       expect(extractMeta).toThrowError(/Service name unavailable/);
-      parseSpy.mockReturnValue({
+      querySpy.mockReturnValue({
         service,
         operation,
         end,
       });
       expect(extractMeta).toThrowError(/Start time unavailable/);
-      parseSpy.mockReturnValue({
+      querySpy.mockReturnValue({
         service,
         operation,
         start,
       });
       expect(extractMeta).toThrowError(/End time unavailable/);
-    });
-
-    it('ignores extraneous query parameters', () => {
-      const extraneous = {
-        param: 'value',
-      };
-      parseSpy.mockReturnValue({
-        ...extraneous,
-        ...acceptableParams,
-      });
-      expect(extractMeta().query).toEqual(expect.not.objectContaining(extraneous));
-    });
-
-    it('handles and warns on duplicate values', () => {
-      ['service', 'operation', 'start', 'end'].forEach(param => {
-        const secondParam = `second ${acceptableParams[param]}`;
-        parseSpy.mockReturnValue({
-          ...acceptableParams,
-          [param]: [acceptableParams[param], secondParam],
-        });
-        expect(extractMeta().query[param]).toBe(expectedMeta[param]);
-        expect(warnSpy).toHaveBeenLastCalledWith(expect.stringContaining(secondParam));
-      });
     });
   });
 });
