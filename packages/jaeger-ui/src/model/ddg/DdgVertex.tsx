@@ -12,20 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { TVertex } from '@jaegertracing/plexus/lib/types';
+import { TVertex, TEdge } from '@jaegertracing/plexus/lib/types';
 
-import { DdgEdge, PathElem } from './types';
+import { PathElem } from './types';
 
-type TDdgVertex = {
-  egressEdges: Map<DdgVertex, DdgEdge>;
-  ingressEdges: Map<DdgVertex, DdgEdge>;
+type TDdgVertex = TVertex<{
+  egressEdges: Map<DdgVertex, TEdge>;
+  ingressEdges: Map<DdgVertex, TEdge>;
   pathElems: Set<PathElem>;
-};
+}>;
 
-export default class DdgVertex implements TVertex<TDdgVertex> {
-  egressEdges: Map<DdgVertex, DdgEdge>;
+type TDigestibleEdges = Record<string, TEdge>;
+
+export default class DdgVertex implements TDdgVertex {
+  egressEdges: Map<DdgVertex, TEdge>;
   key: string;
-  ingressEdges: Map<DdgVertex, DdgEdge>;
+  ingressEdges: Map<DdgVertex, TEdge>;
   pathElems: Set<PathElem>;
 
   constructor({ key }: { key: string }) {
@@ -35,8 +37,12 @@ export default class DdgVertex implements TVertex<TDdgVertex> {
     this.pathElems = new Set();
   }
 
+  /* 
+   * Because the edges on a given DdgVertex reference other DdgVertices which in turn reference the initial
+   * DdgVertex, some assistance is necessary when creating error messages. toJSON is called by JSON.stringify
+   * and expected to return a JSON object. To that end, this method uses string keys instead of circular refs.
+   */
   toJSON() {
-    type TDigestibleEdges = Record<string, DdgEdge>;
     const digestibleEgressEdges: TDigestibleEdges = {};
     const digestibleIngressEdges: TDigestibleEdges = {};
     this.egressEdges.forEach((edge, egressNeighbor) => {

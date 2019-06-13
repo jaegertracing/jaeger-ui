@@ -20,7 +20,7 @@ import {
   TDdgPath,
   TDdgDistanceToPathElems,
   TDdgServiceMap,
-  TDdgVisibilityIdxToPathElem,
+  TDdgVisIdxToPathElem,
 } from './types';
 
 const stringifyEntry = ({ service, operation }: TDdgPayloadEntry) => `${service}\v${operation}`;
@@ -31,23 +31,23 @@ export default function transformDdgData(
 ): TDdgModel {
   const serviceMap: TDdgServiceMap = new Map();
   const distanceToPathElems: TDdgDistanceToPathElems = new Map();
-  const pathsComparators: Map<TDdgPayloadEntry[], string> = new Map();
+  const pathCompareValues: Map<TDdgPayloadEntry[], string> = new Map();
 
   const paths = payload
     .slice()
     .sort((a, b) => {
-      let aComparator = pathsComparators.get(a);
-      if (!aComparator) {
-        aComparator = a.map(stringifyEntry).join();
-        pathsComparators.set(a, aComparator);
+      let aCompareValue = pathCompareValues.get(a);
+      if (!aCompareValue) {
+        aCompareValue = a.map(stringifyEntry).join();
+        pathCompareValues.set(a, aCompareValue);
       }
-      let bComparator = pathsComparators.get(b);
-      if (!bComparator) {
-        bComparator = b.map(stringifyEntry).join();
-        pathsComparators.set(b, bComparator);
+      let bCompareValue = pathCompareValues.get(b);
+      if (!bCompareValue) {
+        bCompareValue = b.map(stringifyEntry).join();
+        pathCompareValues.set(b, bCompareValue);
       }
-      if (aComparator > bComparator) return 1;
-      if (aComparator < bComparator) return -1;
+      if (aCompareValue > bCompareValue) return 1;
+      if (aCompareValue < bCompareValue) return -1;
       return 0;
     })
     .map(payloadPath => {
@@ -113,11 +113,11 @@ export default function transformDdgData(
   let downstreamElems: PathElem[] | void;
   let upstream = 1;
   let upstreamElems: PathElem[] | void;
-  let visibilityIdx = 0;
-  const visibilityIdxToPathElem: TDdgVisibilityIdxToPathElem = new Map();
+  let visIdx = 0;
+  const visIdxToPathElem: TDdgVisIdxToPathElem = new Map();
   function setIdx(pathElem: PathElem) {
-    visibilityIdxToPathElem.set(visibilityIdx, pathElem);
-    pathElem.visibilityIdx = visibilityIdx++; // eslint-disable-line no-param-reassign
+    visIdxToPathElem.set(visIdx, pathElem);
+    pathElem.visibilityIdx = visIdx++; // eslint-disable-line no-param-reassign
   }
   do {
     downstreamElems = distanceToPathElems.get(downstream--);
@@ -130,6 +130,6 @@ export default function transformDdgData(
     paths,
     distanceToPathElems,
     services: serviceMap,
-    visibilityIdxToPathElem,
+    visIdxToPathElem,
   };
 }

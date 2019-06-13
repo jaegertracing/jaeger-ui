@@ -25,7 +25,7 @@ describe('transform ddg data', () => {
     const focalPayloadElemArgument = ignoreFocalOperation
       ? { service: focalPayloadElem.service }
       : focalPayloadElem;
-    const { paths, services, visibilityIdxToPathElem } = transformDdgData(payload, focalPayloadElemArgument);
+    const { paths, services, visIdxToPathElem } = transformDdgData(payload, focalPayloadElemArgument);
 
     // Validate all services and operations are captured
     expect(new Set(services.keys())).toEqual(new Set(_map(_flatten(payload), 'service')));
@@ -35,8 +35,8 @@ describe('transform ddg data', () => {
       );
     });
 
-    const expectedVisibilityIndices = [];
-    const visibilityIndicesToDistance = new Map();
+    const expectedVisIndices = [];
+    const visIndicesToDistance = new Map();
 
     // Validate every pathElem has the correct data
     paths.forEach((path, pathResultIndex) => {
@@ -50,24 +50,24 @@ describe('transform ddg data', () => {
         expect(operation.service.name).toBe(payload[pathResultIndex][memberResultIndex].service);
         expect(memberIdx).toBe(memberResultIndex);
 
-        expectedVisibilityIndices.push(expectedVisibilityIndices.length);
-        visibilityIndicesToDistance.set(visibilityIdx, distance);
+        expectedVisIndices.push(expectedVisIndices.length);
+        visIndicesToDistance.set(visibilityIdx, distance);
       });
     });
 
     // Validate that visibility indices are concentric
-    const orderedVisibilityIndices = Array.from(visibilityIndicesToDistance.keys()).sort((a, b) => a - b);
-    expect(orderedVisibilityIndices).toEqual(expectedVisibilityIndices);
+    const orderedVisIndices = Array.from(visIndicesToDistance.keys()).sort((a, b) => a - b);
+    expect(orderedVisIndices).toEqual(expectedVisIndices);
     let distance = 0;
-    orderedVisibilityIndices.forEach(orderedIdx => {
-      const currentDistance = Math.abs(visibilityIndicesToDistance.get(orderedIdx));
+    orderedVisIndices.forEach(orderedIdx => {
+      const currentDistance = Math.abs(visIndicesToDistance.get(orderedIdx));
       if (currentDistance < distance) {
         throw new Error('Net distance did not increase or stay equal as visibilityIdx increased');
       } else if (currentDistance > distance) {
         distance = currentDistance;
       }
 
-      expect(visibilityIdxToPathElem.get(orderedIdx).visibilityIdx).toBe(orderedIdx);
+      expect(visIdxToPathElem.get(orderedIdx).visibilityIdx).toBe(orderedIdx);
     });
   }
 
@@ -120,46 +120,44 @@ describe('transform ddg data', () => {
       doubleFocalPath,
       almostDoubleFocalPath,
     } = testResources;
-    const { visibilityIdxToPathElem: presortedPathsVisibilityIdxToPathElemMap } = transformDdgData(
+    const { visIdxToPathElem: presortedPathsVisIdxToPathElemMap } = transformDdgData(
       [simplePath, doubleFocalPath, almostDoubleFocalPath, longSimplePath],
       focalPayloadElem
     );
-    const { visibilityIdxToPathElem: unsortedPathsVisibilityIdxToPathElemMap } = transformDdgData(
+    const { visIdxToPathElem: unsortedPathsVisIdxToPathElemMap } = transformDdgData(
       [longSimplePath, almostDoubleFocalPath, simplePath, doubleFocalPath],
       focalPayloadElem
     );
 
-    expect(Array.from(presortedPathsVisibilityIdxToPathElemMap.keys())).toEqual(
-      Array.from(unsortedPathsVisibilityIdxToPathElemMap.keys())
+    expect(Array.from(presortedPathsVisIdxToPathElemMap.keys())).toEqual(
+      Array.from(unsortedPathsVisIdxToPathElemMap.keys())
     );
-    presortedPathsVisibilityIdxToPathElemMap.forEach(
-      (presortedPathsPathElem, presortedPathsVisibilityIdx) => {
-        const {
-          memberIdx: presortedPathsMemberIdx,
-          memberOf: presortedPathsMemberOf,
-          operation: presortedPathsOperation,
-        } = presortedPathsPathElem;
-        const { focalIdx: presortedPathsFocalIdx } = presortedPathsMemberOf;
-        const { name: presortedPathsOperationName, service: presortedService } = presortedPathsOperation;
-        const { name: presortedPathsServiceName } = presortedService;
+    presortedPathsVisIdxToPathElemMap.forEach((presortedPathsPathElem, presortedPathsVisIdx) => {
+      const {
+        memberIdx: presortedPathsMemberIdx,
+        memberOf: presortedPathsMemberOf,
+        operation: presortedPathsOperation,
+      } = presortedPathsPathElem;
+      const { focalIdx: presortedPathsFocalIdx } = presortedPathsMemberOf;
+      const { name: presortedPathsOperationName, service: presortedService } = presortedPathsOperation;
+      const { name: presortedPathsServiceName } = presortedService;
 
-        const {
-          memberIdx: unsortedPathsMemberIdx,
-          memberOf: unsortedPathsMemberOf,
-          operation: unsortedPathsOperation,
-          visibilityIdx: unsortedPathsVisibilityIdx,
-        } = unsortedPathsVisibilityIdxToPathElemMap.get(presortedPathsVisibilityIdx);
-        const { focalIdx: unsortedPathsFocalIdx } = unsortedPathsMemberOf;
-        const { name: unsortedPathsOperationName, service: unsortedService } = unsortedPathsOperation;
-        const { name: unsortedPathsServiceName } = unsortedService;
+      const {
+        memberIdx: unsortedPathsMemberIdx,
+        memberOf: unsortedPathsMemberOf,
+        operation: unsortedPathsOperation,
+        visibilityIdx: unsortedPathsVisIdx,
+      } = unsortedPathsVisIdxToPathElemMap.get(presortedPathsVisIdx);
+      const { focalIdx: unsortedPathsFocalIdx } = unsortedPathsMemberOf;
+      const { name: unsortedPathsOperationName, service: unsortedService } = unsortedPathsOperation;
+      const { name: unsortedPathsServiceName } = unsortedService;
 
-        expect(unsortedPathsMemberIdx).toBe(presortedPathsMemberIdx);
-        expect(unsortedPathsFocalIdx).toBe(presortedPathsFocalIdx);
-        expect(unsortedPathsOperationName).toBe(presortedPathsOperationName);
-        expect(unsortedPathsServiceName).toBe(presortedPathsServiceName);
-        expect(unsortedPathsVisibilityIdx).toBe(presortedPathsVisibilityIdx);
-      }
-    );
+      expect(unsortedPathsMemberIdx).toBe(presortedPathsMemberIdx);
+      expect(unsortedPathsFocalIdx).toBe(presortedPathsFocalIdx);
+      expect(unsortedPathsOperationName).toBe(presortedPathsOperationName);
+      expect(unsortedPathsServiceName).toBe(presortedPathsServiceName);
+      expect(unsortedPathsVisIdx).toBe(presortedPathsVisIdx);
+    });
   });
 
   it('throws an error if a path lacks the focalPayloadElem', () => {

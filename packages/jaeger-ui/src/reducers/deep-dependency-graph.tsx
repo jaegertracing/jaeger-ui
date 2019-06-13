@@ -136,11 +136,19 @@ export function fetchDeepDependencyGraphErred(
 export default handleActions(
   {
     [`${fetchDeepDependencyGraph}_PENDING`]: fetchDeepDependencyGraphStarted,
-    [`${fetchDeepDependencyGraph}_FULFILLED`]: guardReducerWithMeta<TDdgState, TDdgPayload, TDdgActionMeta>(fetchDeepDependencyGraphDone),
-    [`${fetchDeepDependencyGraph}_REJECTED`]: guardReducerWithMeta<TDdgState, ApiError, TDdgActionMeta>(fetchDeepDependencyGraphErred),
+    [`${fetchDeepDependencyGraph}_FULFILLED`]: guardReducerWithMeta<TDdgState, TDdgPayload, TDdgActionMeta>(
+      fetchDeepDependencyGraphDone
+    ),
+    [`${fetchDeepDependencyGraph}_REJECTED`]: guardReducerWithMeta<TDdgState, ApiError, TDdgActionMeta>(
+      fetchDeepDependencyGraphErred
+    ),
 
-    [actionTypes.ADD_STYLE_STATE]: guardReducerWithMeta<TDdgState, TDdgAddStyleAction, TDdgActionMeta>(addStyleState),
-    [actionTypes.CLEAR_STYLE_STATE]: guardReducerWithMeta<TDdgState, TDdgClearStyleAction, TDdgActionMeta>(clearStyleState),
+    [actionTypes.ADD_STYLE_STATE]: guardReducerWithMeta<TDdgState, TDdgAddStyleAction, TDdgActionMeta>(
+      addStyleState
+    ),
+    [actionTypes.CLEAR_STYLE_STATE]: guardReducerWithMeta<TDdgState, TDdgClearStyleAction, TDdgActionMeta>(
+      clearStyleState
+    ),
   },
   {}
 );

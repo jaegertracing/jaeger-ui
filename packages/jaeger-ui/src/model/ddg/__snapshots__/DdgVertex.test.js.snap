@@ -3,21 +3,21 @@
 exports[`DdgVertex creates consumable JSON 1`] = `
 Object {
   "egressEdges": Object {
-    "DdgVertex oneHopDownstreamVertexKey0": DdgEdge {
+    "DdgVertex oneHopDownstreamVertexKey0": Object {
       "from": "targetVertexKey",
       "to": "oneHopDownstreamVertexKey0",
     },
-    "DdgVertex oneHopDownstreamVertexKey1": DdgEdge {
+    "DdgVertex oneHopDownstreamVertexKey1": Object {
       "from": "targetVertexKey",
       "to": "oneHopDownstreamVertexKey1",
     },
   },
   "ingressEdges": Object {
-    "DdgVertex oneHopUpstreamVertexKey0": DdgEdge {
+    "DdgVertex oneHopUpstreamVertexKey0": Object {
       "from": "oneHopUpstreamVertexKey0",
       "to": "targetVertexKey",
     },
-    "DdgVertex oneHopUpstreamVertexKey1": DdgEdge {
+    "DdgVertex oneHopUpstreamVertexKey1": Object {
       "from": "oneHopUpstreamVertexKey1",
       "to": "targetVertexKey",
     },
