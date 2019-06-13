@@ -8,15 +8,15 @@ There are three build scenarios and one pre-step common to all of them.
 
 Pre-step:
 
-* Bundle `./src/LayoutManager/layout.worker.tsx` to a UMD module which can initialize a `WebWorker` from a `Blob` URL
+- Bundle `./src/LayoutManager/layout.worker.tsx` to a UMD module which can initialize a `WebWorker` from a `Blob` URL
 
 Build scenarios:
 
-* Production ES modules
-  * **This is the project's default export as `./lib/index.js`.** This build is not bundled and therefore does not use Webpack.
-* Production UMD module
-* Webpack dev server
-  * Runs `./demo/src/index.tsx` which has a few example graphs.
+- Production ES modules
+  - **This is the project's default export as `./lib/index.js`.** This build is not bundled and therefore does not use Webpack.
+- Production UMD module
+- Webpack dev server
+  - Runs `./demo/src/index.tsx` which has a few example graphs.
 
 The pre-step, which they all require, is to bundle `./src/LayoutManager/layout.worker.tsx` via the `worker-loader` Webpack loader.
 
@@ -30,9 +30,9 @@ The production ES module build is not bundled and therefore does not use Webpack
 
 Webpack is used to:
 
-* Bundle `./src/LayoutManager/layout.worker.tsx` so we can have a `WebWorker` without forcing folks to deal with an additional JavaScript asset
-* Bundle the production UMD module
-* Run the Webpack dev server during development
+- Bundle `./src/LayoutManager/layout.worker.tsx` so we can have a `WebWorker` without forcing folks to deal with an additional JavaScript asset
+- Bundle the production UMD module
+- Run the Webpack dev server during development
 
 `./webpack-factory.js` is used to generate the Webpack configurations for each scenario.
 
@@ -72,20 +72,20 @@ class LayoutWorker extends Worker { ... }
 
 ### Scripts
 
-* `build` — Generates the UMD bundle and ES module production builds
-* `prepublishOnly` — Executed after `yarn install` is run in the project root; runs the `build` script
-* `start` — Starts the Webpack dev server and watches all files, including `layout.worker`
+- `build` — Generates the UMD bundle and ES module production builds
+- `prepublishOnly` — Executed after `yarn install` is run in the project root; runs the `build` script
+- `start` — Starts the Webpack dev server and watches all files, including `layout.worker`
 
 The `_tasks/*` scripts are not intended to be run, directly.
 
-* `_tasks/clean/*`
-  * Remove generated files
-* `_tasks/bundle-worker`
-  * Generates the `layout.worker` UMD bundle
-* `_tasks/build/*`
-  * Generates the production ES and UMD builds
-* `_tasks/dev-server`
-  * Starts the Webpack dev server
+- `_tasks/clean/*`
+  - Remove generated files
+- `_tasks/bundle-worker`
+  - Generates the `layout.worker` UMD bundle
+- `_tasks/build/*`
+  - Generates the production ES and UMD builds
+- `_tasks/dev-server`
+  - Starts the Webpack dev server
 
 ### Dependencies (dev and otherwise)
 

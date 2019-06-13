@@ -148,7 +148,12 @@ describe('CohortTable', () => {
   it('renders TraceName fragment when given complete data', () => {
     const traceNameColumnRenderer = getRowRenderer('traceName');
     const testTrace = cohort[0];
-    const { id, error, state, data: { traceName } } = testTrace;
+    const {
+      id,
+      error,
+      state,
+      data: { traceName },
+    } = testTrace;
     const renderedTraceNameColumn = shallow(
       // traceNameRenderer returns a React Fragment, wrapper div helps enzyme
       <div>{traceNameColumnRenderer('unused argument', testTrace)}</div>

@@ -36,9 +36,9 @@ const LENGTH_TARGET_PX = 80;
 function getMapSize(props: TProps) {
   const { contentHeight: ch, contentWidth: cw } = props;
   if (ch > cw) {
-    return { height: LENGTH_TARGET_PX, width: LENGTH_TARGET_PX * cw / ch };
+    return { height: LENGTH_TARGET_PX, width: (LENGTH_TARGET_PX * cw) / ch };
   }
-  return { height: LENGTH_TARGET_PX * ch / cw, width: LENGTH_TARGET_PX };
+  return { height: (LENGTH_TARGET_PX * ch) / cw, width: LENGTH_TARGET_PX };
 }
 
 function getViewTransform(props: TProps, displaySize: { width: number; height: number }) {

@@ -42,10 +42,10 @@ This applies ESLint to the repo, as a whole. The TypeScript linting has a distin
 
 This is an amalgamation of linting scripts that run to make sure things are all-good. It's run in CI (travis) and as part of a pre-commit hook.
 
-* `prettier-lint`
-* `tsc-lint`
-* `eslint`
-* `check-license`
+- `prettier-lint`
+- `tsc-lint`
+- `eslint`
+- `check-license`
 
 #### `prepare`
 
@@ -91,15 +91,15 @@ Used to configure the `tsc-lint` script and, in theory, the IDE (such as VS Code
 
 A few notable [compiler settings](http://www.typescriptlang.org/docs/handbook/compiler-options.html):
 
-* `lib`
-  * [es2017](https://github.com/Microsoft/TypeScript/blob/master/lib/lib.es2017.d.ts)
-  * [dom](https://github.com/Microsoft/TypeScript/blob/master/lib/lib.dom.d.ts)
-  * [dom.iterable](https://github.com/Microsoft/TypeScript/blob/master/lib/lib.dom.iterable.d.ts)
-  * [webworker](https://github.com/Microsoft/TypeScript/blob/master/lib/lib.webworker.d.ts)
-* `skipLibCheck` - Maybe worth reevaluating in the future
-* `strict` - Important
-* `noEmit` - We're using this for linting, after all
-* `include` - We've included `./typgings` here because it turned out to be a lot simpler than configuring `types`, `typeRoots` and `paths`
+- `lib`
+  - [es2017](https://github.com/Microsoft/TypeScript/blob/master/lib/lib.es2017.d.ts)
+  - [dom](https://github.com/Microsoft/TypeScript/blob/master/lib/lib.dom.d.ts)
+  - [dom.iterable](https://github.com/Microsoft/TypeScript/blob/master/lib/lib.dom.iterable.d.ts)
+  - [webworker](https://github.com/Microsoft/TypeScript/blob/master/lib/lib.webworker.d.ts)
+- `skipLibCheck` - Maybe worth reevaluating in the future
+- `strict` - Important
+- `noEmit` - We're using this for linting, after all
+- `include` - We've included `./typgings` here because it turned out to be a lot simpler than configuring `types`, `typeRoots` and `paths`
 
 ## `typings/{custom.d.ts, index.d.ts}`
 
