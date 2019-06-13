@@ -20,15 +20,21 @@ import { EDdgEdgeKeys, PathElem, DdgVertex, TDdgModel } from './types';
 
 export default class DdgEVManager {
   private edges: Set<TEdge>;
+  private edgeToFarSideOfEdgePathElems: Map<TEdge, Set<PathElem>>;
+  private farSideOfEdgePathElemsToEdge: Map<Set<PathElem>, TEdge>;
   private prevVisKey: string;
+  private pathElemToFarSideOfEdgePathElems: Map<PathElem, Set<PathElem>>;
   private pathElemToVertex: Map<PathElem, DdgVertex>;
   private vertices: Map<string, DdgVertex>;
   private visIdxToPathElem: Map<number, PathElem>;
 
   constructor({ ddgModel }: { ddgModel: TDdgModel }) {
     this.edges = new Set();
-    this.prevVisKey = '';
+    this.edgeToFarSideOfEdgePathElems = new Map();
+    this.farSideOfEdgePathElemsToEdge = new Map();
+    this.pathElemToFarSideOfEdgePathElems = new Map();
     this.pathElemToVertex = new Map();
+    this.prevVisKey = '';
     this.vertices = new Map();
     this.visIdxToPathElem = ddgModel.visIdxToPathElem;
   }
@@ -48,7 +54,7 @@ export default class DdgEVManager {
         this.vertices.set(key, vertex);
       }
 
-      // Create bi-directional links between the vertex and its PathElms
+      // Create bi-directional links between the vertex and its PathElems
       this.pathElemToVertex.set(pathElem, vertex);
       vertex.pathElems.add(pathElem);
 
@@ -56,12 +62,17 @@ export default class DdgEVManager {
       const connectedElem = pathElem.focalSideNeighbor;
       if (connectedElem) {
         const connectedVertex = this.pathElemToVertex.get(connectedElem);
+        // If the connectedElem does not have a vertex, then the current pathElem cannot be connected to the
+        // focalNode
         if (!connectedVertex) {
           throw new Error(`Non-focal pathElem lacks connectedVertex. PathElem: ${pathElem}`);
         }
 
-        if (!vertex[pathElem.focalSideEdgesKey].has(connectedVertex)) {
-          const newEdge: TEdge =
+        const edge = vertex[pathElem.focalSideEdgesKey].get(connectedVertex);
+        // If the pathElem is not already connected to its connectedElem (through previously-process pathElems
+        // that share the same edge) create a new edge.
+        if (!edge) {
+          const newEdge =
             pathElem.focalSideEdgesKey === EDdgEdgeKeys.ingressEdges
               ? {
                   from: connectedVertex.key,
@@ -71,9 +82,31 @@ export default class DdgEVManager {
                   from: vertex.key,
                   to: connectedVertex.key,
                 };
+
+          // Add the new edge to the DdgEVManager instance to be returned and rendered later
+          this.edges.add(newEdge);
+
+          // Each endpoint of this new edge should be aware of the other endpoint of the edge
           vertex[pathElem.focalSideEdgesKey].set(connectedVertex, newEdge);
           connectedVertex[pathElem.farSideEdgesKey].set(vertex, newEdge);
-          this.edges.add(newEdge);
+
+          // The pathElem needs to be associated with the new edge so that edges can be removed when hiding
+          // pathElems even if no vertices are removed, which is possible with certain density settings.
+          const farSideOfEdgePathElems = new Set([pathElem]);
+          this.edgeToFarSideOfEdgePathElems.set(newEdge, farSideOfEdgePathElems);
+          this.farSideOfEdgePathElemsToEdge.set(farSideOfEdgePathElems, newEdge);
+          this.pathElemToFarSideOfEdgePathElems.set(pathElem, farSideOfEdgePathElems);
+        } else {
+          const elems = this.edgeToFarSideOfEdgePathElems.get(edge);
+          // If the edge is pre-existing but absent from this map, it must have been erroneously removed.
+          if (!elems) {
+            throw new Error(`Existing edge absent from edge to Set<pathElem> map: ${edge}`);
+          }
+
+          // The pathElem needs to be associated with the pre-existing edge so that edges can be removed when
+          // hiding pathElems even if no vertices are removed, which is possible with certain density settings.
+          elems.add(pathElem);
+          this.pathElemToFarSideOfEdgePathElems.set(pathElem, elems);
         }
       }
     });
@@ -81,7 +114,7 @@ export default class DdgEVManager {
 
   private removeElems = (removeIndices: number[]) => {
     removeIndices.forEach(removeIdx => {
-      // Find the corresponding vertex for this visIdx
+      // Find the corresponding pathElem and vertex for this visIdx
       const pathElem = this.visIdxToPathElem.get(removeIdx);
       if (!pathElem) {
         throw new Error(`Given visibilityIdx: "${removeIdx}" that does not exist`);
@@ -96,19 +129,58 @@ export default class DdgEVManager {
       this.pathElemToVertex.delete(pathElem);
       vertex.pathElems.delete(pathElem);
 
-      // If the last visibile PathElem for this vertex is now hidden, remove the vertex and all edges to and
-      // from this vertex
-      if (vertex.pathElems.size === 0) {
-        this.vertices.delete(key);
-        vertex.egressEdges.forEach((egressEdge, connectedVertex) => {
-          connectedVertex.ingressEdges.delete(vertex);
-          this.edges.delete(egressEdge);
-        });
+      // If this pathElem is not a focalNode pathElem an edge may need to be removed
+      const elems = this.pathElemToFarSideOfEdgePathElems.get(pathElem);
+      if (elems) {
+        this.pathElemToFarSideOfEdgePathElems.delete(pathElem);
+        elems.delete(pathElem);
 
-        vertex.ingressEdges.forEach((ingressEdge, connectedVertex) => {
-          connectedVertex.egressEdges.delete(vertex);
-          this.edges.delete(ingressEdge);
-        });
+        // If the last pathElem for an edge is hidden, the edge needs to be removed
+        if (!elems.size) {
+          const edge = this.farSideOfEdgePathElemsToEdge.get(elems);
+          // If the edge was removed before the last pathElem dependent on it was hidden, something went wrong
+          if (!edge) {
+            throw new Error(`Non-focal node was not connected to graph: ${vertex}`);
+          }
+
+          const connectedElem = pathElem.focalSideNeighbor;
+          // Only non-focalNode pathElems should be farSideOfEdgePathElems, but only focalNode pathElems lack
+          // a focalSideNeighbor
+          if (!connectedElem) {
+            throw new Error(`Focal node had malformed edge: ${JSON.stringify({ edge, pathElem }, null, 2)}`);
+          }
+
+          const connectedVertex = this.pathElemToVertex.get(connectedElem);
+          // If the connectedElem does not have a vertex, then the current pathElem could not have been
+          // connected to the focalNode
+          if (!connectedVertex) {
+            throw new Error(`Non-focal node was not connected to graph: ${vertex}`);
+          }
+
+          // If nothing went wrong, remove the connection between the two vertices...
+          connectedVertex[pathElem.farSideEdgesKey].delete(vertex);
+          vertex[pathElem.focalSideEdgesKey].delete(connectedVertex);
+          this.edges.delete(edge);
+
+          // ...and remove the meta data
+          this.farSideOfEdgePathElemsToEdge.delete(elems);
+          this.edgeToFarSideOfEdgePathElems.delete(edge);
+        }
+
+        // If this pathElem has a truthy distance then it is a non-focalNode and if it was not present in
+        // this.pathElemToFarSideOfEdgePathElems then it could not have been connected to the graph or it was
+        // erroneously removed from this.pathElemToFarSideOfEdgePathElems.
+      } else if (pathElem.distance) {
+        throw new Error(`Non-focal node was not connected to graph: ${vertex}`);
+      }
+
+      // If the last visibile PathElem for this vertex is now hidden, ensure edges have been cleaned up
+      // correctly and remove the vertex
+      if (vertex.pathElems.size === 0) {
+        if (vertex[pathElem.farSideEdgesKey].size || vertex[pathElem.farSideEdgesKey].size) {
+          throw new Error(`Attempting to hide vertex that other vertices are connected to: ${vertex}`);
+        }
+        this.vertices.delete(key);
       }
     });
   };
@@ -131,6 +203,8 @@ export default class DdgEVManager {
   };
 
   public getEdgesAndVertices = (visKey: string) => {
+    // added indices are increasing order, removed are in decreasing order - this ensures that graph remains
+    // valid and rational while iterating through the indices
     const { added, removed } = compareKeys({
       newKey: visKey,
       oldKey: this.prevVisKey,

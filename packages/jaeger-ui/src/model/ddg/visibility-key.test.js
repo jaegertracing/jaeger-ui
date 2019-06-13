@@ -103,12 +103,12 @@ describe('visibility-key', () => {
         expect(compareKeys({ newKey: '1,1', oldKey: '3' }).removed).toEqual([1]);
       });
 
-      it('returns multiple removed values in ascending order', () => {
-        expect(compareKeys({ newKey: '2', oldKey: '7' }).removed).toEqual([0, 2]);
+      it('returns multiple removed values in descending order', () => {
+        expect(compareKeys({ newKey: '2', oldKey: '7' }).removed).toEqual([2, 0]);
       });
 
       it('returns multiple new values across multiple buckets', () => {
-        expect(compareKeys({ newKey: '2,1', oldKey: '7,1t,4' }).removed).toEqual([0, 2, 37, 64]);
+        expect(compareKeys({ newKey: '2,1', oldKey: '7,1t,4' }).removed).toEqual([64, 37, 2, 0]);
       });
     });
 
@@ -123,7 +123,7 @@ describe('visibility-key', () => {
       it('returns added and removed values across multiple buckets', () => {
         expect(compareKeys({ newKey: '6,1,,,1,', oldKey: '5,,1,1,,' })).toEqual({
           added: [1, 31, 124],
-          removed: [0, 62, 93],
+          removed: [93, 62, 0],
         });
       });
     });

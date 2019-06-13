@@ -78,8 +78,8 @@ export function compareKeys({
 }): { added: number[]; removed: number[] } {
   const added: number[] = [];
   const removed: number[] = [];
-  const oldBuckets = getBuckets(oldKey).slice();
-  const newBuckets = getBuckets(newKey).slice();
+  const oldBuckets = getBuckets(oldKey);
+  const newBuckets = getBuckets(newKey);
   for (let i = 0; i < Math.max(oldBuckets.length, newBuckets.length); i++) {
     for (let j = 0; j < VISIBILITY_BUCKET_SIZE; j++) {
       if (newBuckets[i] & (1 << j) && !(oldBuckets[i] & (1 << j))) {
@@ -89,6 +89,9 @@ export function compareKeys({
       }
     }
   }
+  // removed is reversed so that DdgEVManager can collapse the graph inward towaard the focal node, while
+  // added is not reversed so that DdgEVManager can expand the graph outwards from the focal node
+  removed.reverse();
   return { added, removed };
 }
 /*

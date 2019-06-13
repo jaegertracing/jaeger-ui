@@ -40,21 +40,14 @@ export default class DdgVertex implements TDdgVertex {
   /* 
    * Because the edges on a given DdgVertex reference other DdgVertices which in turn reference the initial
    * DdgVertex, some assistance is necessary when creating error messages. toJSON is called by JSON.stringify
-   * and expected to return a JSON object. To that end, this method uses string keys instead of circular refs.
+   * and expected to return a JSON object. To that end, this method uses an array of keys to represent edges
+   * in place of circular references.
    */
   toJSON() {
-    const digestibleEgressEdges: TDigestibleEdges = {};
-    const digestibleIngressEdges: TDigestibleEdges = {};
-    this.egressEdges.forEach((edge, egressNeighbor) => {
-      digestibleEgressEdges[egressNeighbor[Symbol.toStringTag]] = edge;
-    });
-    this.ingressEdges.forEach((edge, ingressNeighbor) => {
-      digestibleIngressEdges[ingressNeighbor[Symbol.toStringTag]] = edge;
-    });
     return {
-      egressEdges: digestibleEgressEdges,
+      egressVertices: Array.from(this.egressEdges.keys()).map(({ key }) => key),
       key: this.key,
-      ingressEdges: digestibleIngressEdges,
+      ingressVertices: Array.from(this.egressEdges.keys()).map(({ key }) => key),
       pathElems: this.pathElems,
     };
   }
