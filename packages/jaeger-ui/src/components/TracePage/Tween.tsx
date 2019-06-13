@@ -57,7 +57,9 @@ export default class Tween {
       this.callbackComplete = onComplete;
       this.callbackUpdate = onUpdate;
       if (delay) {
-        this.timeoutID = setTimeout(this._frameCallback, delay);
+        // @types/node sets the return type of setTieout to NodeJS.Timeout, so prefix
+        // with `window.`
+        this.timeoutID = window.setTimeout(this._frameCallback, delay);
         this.requestID = undefined;
       } else {
         this.requestID = window.requestAnimationFrame(this._frameCallback);

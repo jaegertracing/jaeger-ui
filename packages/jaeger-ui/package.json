@@ -29,7 +29,7 @@
     "react-app-rewired": "2.0.1",
     "react-scripts": "2.1.2",
     "react-test-renderer": "^15.6.1",
-    "sinon": "^3.2.1",
+    "sinon": "7.3.2",
     "source-map-explorer": "^1.6.0"
   },
   "dependencies": {
