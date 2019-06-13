@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { TDdgEdgeIdentifier, TDdgOperation, TDdgPath } from './types';
+import { EDdgEdgeKeys, TDdgOperation, TDdgPath } from './types';
 
 export default class PathElem {
   memberIdx: number;
@@ -58,12 +58,12 @@ export default class PathElem {
     return this.memberOf.members[this.memberIdx - this.distance / Math.abs(this.distance)];
   }
 
-  get focalSideEdgesKey(): TDdgEdgeIdentifier {
-    return this.distance < 0 ? 'egressEdges' : 'ingressEdges';
+  get focalSideEdgesKey(): EDdgEdgeKeys {
+    return this.distance < 0 ? EDdgEdgeKeys.egressEdges : EDdgEdgeKeys.ingressEdges;
   }
 
-  get farSideEdgesKey(): TDdgEdgeIdentifier {
-    return this.distance > 0 ? 'egressEdges' : 'ingressEdges';
+  get farSideEdgesKey(): EDdgEdgeKeys {
+    return this.distance > 0 ? EDdgEdgeKeys.egressEdges : EDdgEdgeKeys.ingressEdges;
   }
 
   private toJSONHelper = () => ({
@@ -73,6 +73,12 @@ export default class PathElem {
     visibilityIdx: this._visibilityIdx,
   });
 
+  /* 
+   * Because the memberOf on a PathElem contains an array of all of its members which in turn all contain
+   * memberOf back to the path, some assistance is necessary when creating error messages. toJSON is called by
+   * JSON.stringify and expected to return a JSON object. To that end, this method simplifies the
+   * representation of the PathElems in memberOf's path.
+   */
   toJSON() {
     return {
       ...this.toJSONHelper(),

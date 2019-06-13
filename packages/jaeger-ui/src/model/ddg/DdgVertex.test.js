@@ -13,7 +13,6 @@
 // limitations under the License.
 
 import DdgVertex from './DdgVertex';
-import { DdgEdge } from './types';
 
 describe('DdgVertex', () => {
   function makeTestVertex(vertexKey) {
@@ -24,7 +23,7 @@ describe('DdgVertex', () => {
   }
 
   function makeTestEdge(from, to) {
-    const edge = new DdgEdge({ from, to });
+    const edge = { from: from.key, to: to.key };
     from.egressEdges.set(to, edge);
     to.ingressEdges.set(from, edge);
   }
