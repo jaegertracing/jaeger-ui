@@ -89,7 +89,12 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
       traceStartTime,
       span,
     } = this.props;
-    const { duration, hasChildren: isParent, operationName, process: { serviceName } } = span;
+    const {
+      duration,
+      hasChildren: isParent,
+      operationName,
+      process: { serviceName },
+    } = span;
     const label = formatDuration(duration);
     const viewBounds = getViewedBounds(span.startTime, span.startTime + span.duration);
     const viewStart = viewBounds.start;

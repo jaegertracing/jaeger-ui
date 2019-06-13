@@ -308,33 +308,29 @@ export default class DirectedGraph<T> extends React.PureComponent<
 
     return (
       <div {...rootProps} ref={this.rootRef}>
-        {layoutGraph &&
-          haveEdges && (
-            <EdgesContainer {...edgesContainerProps} height={height} width={width}>
-              <EdgeArrowDef
-                id={this.arrowId}
-                scaleDampener={arrowScaleDampener}
-                zoomScale={zoomEnabled && zoomTransform ? zoomTransform.k : null}
-              />
-              <g transform={zoomEnabled ? getZoomAttr(zoomTransform) : undefined}>{this._renderEdges()}</g>
-            </EdgesContainer>
-          )}
-        <div {...nodesContainerProps}>{this._renderVertices()}</div>
-        {zoomEnabled &&
-          minimapEnabled &&
-          layoutGraph &&
-          rootElm && (
-            <MiniMap
-              className={minimapClassName}
-              classNamePrefix={classNamePrefix}
-              contentHeight={height}
-              contentWidth={width}
-              viewAll={this._resetZoom}
-              viewportHeight={rootElm.clientHeight}
-              viewportWidth={rootElm.clientWidth}
-              {...zoomTransform}
+        {layoutGraph && haveEdges && (
+          <EdgesContainer {...edgesContainerProps} height={height} width={width}>
+            <EdgeArrowDef
+              id={this.arrowId}
+              scaleDampener={arrowScaleDampener}
+              zoomScale={zoomEnabled && zoomTransform ? zoomTransform.k : null}
             />
-          )}
+            <g transform={zoomEnabled ? getZoomAttr(zoomTransform) : undefined}>{this._renderEdges()}</g>
+          </EdgesContainer>
+        )}
+        <div {...nodesContainerProps}>{this._renderVertices()}</div>
+        {zoomEnabled && minimapEnabled && layoutGraph && rootElm && (
+          <MiniMap
+            className={minimapClassName}
+            classNamePrefix={classNamePrefix}
+            contentHeight={height}
+            contentWidth={width}
+            viewAll={this._resetZoom}
+            viewportHeight={rootElm.clientHeight}
+            viewportWidth={rootElm.clientWidth}
+            {...zoomTransform}
+          />
+        )}
       </div>
     );
   }

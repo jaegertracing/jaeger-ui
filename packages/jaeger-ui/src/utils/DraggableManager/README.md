@@ -4,8 +4,8 @@ In the `src/utils/DraggableManager/demo` folder there is a small project that de
 
 The demo contains two components:
 
-* `DividerDemo`, which occupies the top half of the web page
-* `RegionDemo`, which occupies the bottom half of the web page, as shown in the GIF, below
+- `DividerDemo`, which occupies the top half of the web page
+- `RegionDemo`, which occupies the bottom half of the web page, as shown in the GIF, below
 
 ![GIF of Demo](demo/demo-ux.gif)
 
@@ -19,16 +19,16 @@ What we do with that information is up to us. This is mentioned because you need
 
 DraggableManager instances provide three (and a half) conveniences:
 
-* Handle mouse events related to dragging.
-* Maps `MouseEvent.clientX` from the [client area](https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/clientX) to the local context (yielding `x` (pixels) and `value` (0 -> 1, e.g, `x/width`)).
-* Maintains a sense of state in terms of whether or not the subject DOM element is being dragged. For example, it fires `onMouseMove` callbacks when not being dragged and `onDragMove` when being dragged.
-* Two other minor conveniences (relating to window events)
+- Handle mouse events related to dragging.
+- Maps `MouseEvent.clientX` from the [client area](https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/clientX) to the local context (yielding `x` (pixels) and `value` (0 -> 1, e.g, `x/width`)).
+- Maintains a sense of state in terms of whether or not the subject DOM element is being dragged. For example, it fires `onMouseMove` callbacks when not being dragged and `onDragMove` when being dragged.
+- Two other minor conveniences (relating to window events)
 
 And, DraggableManager instances have two (or three) primary requirements:
 
-* Mouse events need to be piped into it
-* The `getBounds()` constructor parameter must be provided
-* At least some of the callbacks need to be handled
+- Mouse events need to be piped into it
+- The `getBounds()` constructor parameter must be provided
+- At least some of the callbacks need to be handled
 
 ## Conveniences
 
@@ -36,10 +36,10 @@ And, DraggableManager instances have two (or three) primary requirements:
 
 For the purposes of handling mouse events related to the intended dragging functionality, DraggableManager instances expose the following methods (among others):
 
-* `handleMouseEnter`
-* `handleMouseMove`
-* `handleMouseLeave`
-* `handleMouseDown`
+- `handleMouseEnter`
+- `handleMouseMove`
+- `handleMouseLeave`
+- `handleMouseDown`
 
 To use a DraggableManager instance, relevant mouse events should be piped to the above handlers:
 
@@ -77,12 +77,12 @@ In other words, DraggableManager instances convert the data to the relevant cont
 
 The callbacks for DraggableManager instances are:
 
-* onMouseEnter
-* onMouseLeave
-* onMouseMove
-* onDragStart
-* onDragMove
-* onDragEnd
+- onMouseEnter
+- onMouseLeave
+- onMouseMove
+- onDragStart
+- onDragMove
+- onDragEnd
 
 Implicit in the breakdown of the callbacks is the notion that `onDrag*` callbacks are fired when dragging and `onMouse*` callbacks are issued, otherwise.
 
@@ -173,8 +173,8 @@ In the other scenario, `RegionDemo`, we care about showing the red vertical line
 
 The `RegionDemo` is a bit more involved, so, to break down how we handle the callbacks... First, we store the following state (in the parent element, incidentally):
 
-* `regionCursor` is where we draw the cursor indicator (a red vertical line, in the demo).
-* `regionDragging` represents the start (at index `0`) and current position (at index `1`) of the region currently being dragged.
+- `regionCursor` is where we draw the cursor indicator (a red vertical line, in the demo).
+- `regionDragging` represents the start (at index `0`) and current position (at index `1`) of the region currently being dragged.
 
 ```
 {
@@ -185,21 +185,21 @@ The `RegionDemo` is a bit more involved, so, to break down how we handle the cal
 
 Then, we handle the callbacks as follows:
 
-* `onMouseMove`
-  * Set `regionCursor` to `value`
-  * This allows us to draw the red vertical line at the cursor
-* `onMouseLeave`
-  * Set `regionCursor` to `null`
-  * So we know not to draw the red vertical line
-* `onDragStart`
-  * Set `regionDragging` to `[value, value]`
-  * This allows us to draw the dragging region
-* `onDragMove`
-  * Set `regionDragging` to `[regionDragging[0], value]`
-  * Again, for drawing the dragging region. We keep `regionDragging[0]` as-is so we always know where the drag started
-* `onDragEnd`
-  * Set `regionDragging` to `null`, set `regionCursor` to `value`
-  * Setting `regionDragging` to `null` lets us know not to draw the region, and setting `regionCursor` lets us know to draw the cursor right where the user left off
+- `onMouseMove`
+  - Set `regionCursor` to `value`
+  - This allows us to draw the red vertical line at the cursor
+- `onMouseLeave`
+  - Set `regionCursor` to `null`
+  - So we know not to draw the red vertical line
+- `onDragStart`
+  - Set `regionDragging` to `[value, value]`
+  - This allows us to draw the dragging region
+- `onDragMove`
+  - Set `regionDragging` to `[regionDragging[0], value]`
+  - Again, for drawing the dragging region. We keep `regionDragging[0]` as-is so we always know where the drag started
+- `onDragEnd`
+  - Set `regionDragging` to `null`, set `regionCursor` to `value`
+  - Setting `regionDragging` to `null` lets us know not to draw the region, and setting `regionCursor` lets us know to draw the cursor right where the user left off
 
 This is a contrived demo, so `onDragEnd` is kind of boring... Usually we would do something more interesting with the final `x` or `value`.
 

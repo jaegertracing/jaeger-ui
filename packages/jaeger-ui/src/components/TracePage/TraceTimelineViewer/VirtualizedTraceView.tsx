@@ -443,5 +443,8 @@ export default withRouter(
     TDispatchProps,
     TVirtualizedTraceViewOwnProps,
     ReduxState
-  >(mapStateToProps, mapDispatchToProps)(VirtualizedTraceViewImpl)
+  >(
+    mapStateToProps,
+    mapDispatchToProps
+  )(VirtualizedTraceViewImpl)
 );

@@ -70,7 +70,10 @@ function parseNumbers(
 function parseGraph(str: string, startIndex: number): { end: number; graph: TLayoutGraph } {
   // skip "graph "
   const i = startIndex + 6;
-  const { values: [scale, width], end: widthEnd } = parseNumbers(2, str, i);
+  const {
+    values: [scale, width],
+    end: widthEnd,
+  } = parseNumbers(2, str, i);
   const { value: height, end } = parseNumber(str, widthEnd + 1, '\n');
   return {
     end,

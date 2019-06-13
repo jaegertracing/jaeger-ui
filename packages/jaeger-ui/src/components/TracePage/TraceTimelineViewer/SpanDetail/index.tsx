@@ -104,29 +104,27 @@ export default function SpanDetail(props: SpanDetailProps) {
             />
           )}
         </div>
-        {logs &&
-          logs.length > 0 && (
-            <AccordianLogs
-              linksGetter={linksGetter}
-              logs={logs}
-              isOpen={logsState.isOpen}
-              openedItems={logsState.openedItems}
-              onToggle={() => logsToggle(spanID)}
-              onItemToggle={logItem => logItemToggle(spanID, logItem)}
-              timestamp={traceStartTime}
-            />
-          )}
-        {warnings &&
-          warnings.length > 0 && (
-            <AccordianText
-              className="AccordianWarnings"
-              headerClassName="AccordianWarnings--header"
-              label={<span className="AccordianWarnings--label">Warnings</span>}
-              data={warnings}
-              isOpen={isWarningsOpen}
-              onToggle={() => warningsToggle(spanID)}
-            />
-          )}
+        {logs && logs.length > 0 && (
+          <AccordianLogs
+            linksGetter={linksGetter}
+            logs={logs}
+            isOpen={logsState.isOpen}
+            openedItems={logsState.openedItems}
+            onToggle={() => logsToggle(spanID)}
+            onItemToggle={logItem => logItemToggle(spanID, logItem)}
+            timestamp={traceStartTime}
+          />
+        )}
+        {warnings && warnings.length > 0 && (
+          <AccordianText
+            className="AccordianWarnings"
+            headerClassName="AccordianWarnings--header"
+            label={<span className="AccordianWarnings--label">Warnings</span>}
+            data={warnings}
+            isOpen={isWarningsOpen}
+            onToggle={() => warningsToggle(spanID)}
+          />
+        )}
         <small className="SpanDetail--debugInfo">
           <span className="SpanDetail--debugLabel" data-label="SpanID:" /> {spanID}
           <CopyIcon

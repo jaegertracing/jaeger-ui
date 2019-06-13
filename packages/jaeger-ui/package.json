@@ -100,8 +100,7 @@
     "analyze": "source-map-explorer build/static/js/main.*",
     "build": "REACT_APP_VSN_STATE=$(../../scripts/get-tracking-version.js) react-app-rewired build",
     "coverage": "yarn run test -- --coverage",
-    "start:ga-debug":
-      "REACT_APP_GA_DEBUG=1 REACT_APP_VSN_STATE=$(../../scripts/get-tracking-version.js) react-app-rewired start",
+    "start:ga-debug": "REACT_APP_GA_DEBUG=1 REACT_APP_VSN_STATE=$(../../scripts/get-tracking-version.js) react-app-rewired start",
     "start": "react-app-rewired start",
     "test-dev": "react-app-rewired test --env=jsdom",
     "test": "CI=1 react-app-rewired test --env=jsdom --color"
@@ -115,5 +114,10 @@
       "!src/demo/**/*.js"
     ]
   },
-  "browserslist": [">0.5%", "not dead", "not ie <= 11", "not op_mini all"]
+  "browserslist": [
+    ">0.5%",
+    "not dead",
+    "not ie <= 11",
+    "not op_mini all"
+  ]
 }
