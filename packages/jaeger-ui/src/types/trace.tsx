@@ -52,9 +52,9 @@ export type SpanData = {
   startTime: number;
   duration: number;
   logs: Array<Log>;
-  tags: Array<KeyValuePair>;
-  references: Array<SpanReference>;
-  warnings: Array<string> | null;
+  tags?: Array<KeyValuePair>;
+  references?: Array<SpanReference>;
+  warnings?: Array<string> | null;
 };
 
 export type Span = SpanData & {
@@ -62,6 +62,9 @@ export type Span = SpanData & {
   hasChildren: boolean;
   process: Process;
   relativeStartTime: number;
+  tags: NonNullable<SpanData['tags']>;
+  references: NonNullable<SpanData['references']>;
+  warnings: NonNullable<SpanData['warnings']>;
 };
 
 export type TraceData = {
