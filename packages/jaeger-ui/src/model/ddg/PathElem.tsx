@@ -73,7 +73,7 @@ export default class PathElem {
     visibilityIdx: this._visibilityIdx,
   });
 
-  /* 
+  /*
    * Because the memberOf on a PathElem contains an array of all of its members which in turn all contain
    * memberOf back to the path, some assistance is necessary when creating error messages. toJSON is called by
    * JSON.stringify and expected to return a JSON object. To that end, this method simplifies the

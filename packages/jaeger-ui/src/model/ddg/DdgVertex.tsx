@@ -37,7 +37,7 @@ export default class DdgVertex implements TDdgVertex {
     this.pathElems = new Set();
   }
 
-  /* 
+  /*
    * Because the edges on a given DdgVertex reference other DdgVertices which in turn reference the initial
    * DdgVertex, some assistance is necessary when creating error messages. `toJSON` is called by
    * `JSON.stringify` and expected to return a JSON object. To that end, this method uses an array of vertex
