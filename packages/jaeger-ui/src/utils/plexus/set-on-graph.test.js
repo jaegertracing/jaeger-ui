@@ -33,11 +33,11 @@ describe('Set on graph utils', () => {
     });
 
     it('calculates style object with outline width one third larger if zoomTransform.k is .5', () => {
-      expect(getComputedWidth(0.5)).toBe(4 / 3 * SIZE_IDENTITY);
+      expect(getComputedWidth(0.5)).toBe((4 / 3) * SIZE_IDENTITY);
     });
 
     it('calculates style object with outline width two thirds larger if zoomTransform.k is .33', () => {
-      expect(getComputedWidth(0.33)).toBe(5 / 3 * SIZE_IDENTITY);
+      expect(getComputedWidth(0.33)).toBe((5 / 3) * SIZE_IDENTITY);
     });
 
     it('calculates style object with outline width twice as large if zoomTransform.k is .25', () => {

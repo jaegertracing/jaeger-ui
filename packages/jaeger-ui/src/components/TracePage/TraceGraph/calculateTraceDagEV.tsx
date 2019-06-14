@@ -98,9 +98,9 @@ export function calculateTraceDag(trace: Trace): TraceDag<TSumSpan> {
       count: n.members.length,
       errors: numErrors,
       time: ntime,
-      percent: 100 / trace.duration * ntime,
+      percent: (100 / trace.duration) * ntime,
       selfTime: stime,
-      percentSelfTime: 100 / ntime * stime,
+      percentSelfTime: (100 / ntime) * stime,
     };
     // eslint-disable-next-line no-param-reassign
     n.data = nd;

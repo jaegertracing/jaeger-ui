@@ -29,7 +29,7 @@
     "react-app-rewired": "2.0.1",
     "react-scripts": "2.1.2",
     "react-test-renderer": "^15.6.1",
-    "sinon": "^3.2.1",
+    "sinon": "7.3.2",
     "source-map-explorer": "^1.6.0"
   },
   "dependencies": {
@@ -101,8 +101,7 @@
     "analyze": "source-map-explorer build/static/js/main.*",
     "build": "REACT_APP_VSN_STATE=$(../../scripts/get-tracking-version.js) react-app-rewired build",
     "coverage": "yarn run test -- --coverage",
-    "start:ga-debug":
-      "REACT_APP_GA_DEBUG=1 REACT_APP_VSN_STATE=$(../../scripts/get-tracking-version.js) react-app-rewired start",
+    "start:ga-debug": "REACT_APP_GA_DEBUG=1 REACT_APP_VSN_STATE=$(../../scripts/get-tracking-version.js) react-app-rewired start",
     "start": "react-app-rewired start",
     "test-dev": "react-app-rewired test --env=jsdom",
     "test": "CI=1 react-app-rewired test --env=jsdom --color"
@@ -116,5 +115,10 @@
       "!src/demo/**/*.js"
     ]
   },
-  "browserslist": [">0.5%", "not dead", "not ie <= 11", "not op_mini all"]
+  "browserslist": [
+    ">0.5%",
+    "not dead",
+    "not ie <= 11",
+    "not op_mini all"
+  ]
 }

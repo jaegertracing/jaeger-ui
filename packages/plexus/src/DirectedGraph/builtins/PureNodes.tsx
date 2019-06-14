@@ -39,7 +39,7 @@ export default class PureNodes<T> extends React.PureComponent<TProps<T>> {
         classNamePrefix={classNamePrefix}
         labelFactory={getNodeLabel}
         vertex={v}
-        {...setOnNode && setOnNode(v)}
+        {...(setOnNode && setOnNode(v))}
       />
     ));
   }
@@ -58,7 +58,7 @@ export default class PureNodes<T> extends React.PureComponent<TProps<T>> {
         vertex={lv.vertex}
         left={lv.left}
         top={lv.top}
-        {...setOnNode && setOnNode(lv.vertex)}
+        {...(setOnNode && setOnNode(lv.vertex))}
       />
     ));
   }

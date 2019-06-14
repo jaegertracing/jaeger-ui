@@ -68,7 +68,7 @@ export class DiffNode extends React.PureComponent<Props> {
             {isSame ? null : (
               <td className={`DiffNode--metricCell ${className}`}>
                 <span className="DiffNode--metricSymbol">{chgSign}</span>
-                {a === 0 || b === 0 ? 100 : abs((a - b) / max(a, b) * 100).toFixed(0)}
+                {a === 0 || b === 0 ? 100 : abs(((a - b) / max(a, b)) * 100).toFixed(0)}
                 <span className="DiffNode--metricSymbol">%</span>
               </td>
             )}
