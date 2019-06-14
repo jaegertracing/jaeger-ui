@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Uber Technologies, Inc.
+// Copyright (c) 2019 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -21,27 +21,26 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 
-import { ForceGraphLink} from 'react-vis-force';
+import { ForceGraphLink } from 'react-vis-force';
 
- function linkId(link) {
+function linkId(link) {
   return `${link.source.id || link.source}=>${link.target.id || link.target}`;
 }
 
-
-export default class JaegerForceGraphArrowLink extends PureComponent { 
+export default class ForceGraphArrowLink extends PureComponent {
   static get propTypes() {
     return {
       link: PropTypes.shape({
-  source: PropTypes.string.isRequired,
-  target: PropTypes.string.isRequired,
-  value: PropTypes.number,
-}).isRequired,
+        source: PropTypes.string.isRequired,
+        target: PropTypes.string.isRequired,
+        value: PropTypes.number,
+      }).isRequired,
       targetRadius: PropTypes.number,
       edgeOffset: PropTypes.number,
       className: PropTypes.string,
       opacity: PropTypes.number,
       stroke: PropTypes.string,
-      strokeWidth: PropTypes.number
+      strokeWidth: PropTypes.number,
     };
   }
 
@@ -66,12 +65,12 @@ export default class JaegerForceGraphArrowLink extends PureComponent {
             id={id}
             markerWidth={6}
             markerHeight={4}
-            refX={ 5 +  link.target_node_size }
-            refY={ 2 }
+            refX={5 + targetRadius}
+            refY={2}
             orient="auto"
             markerUnits="strokeWidth"
           >
-           {targetRadius > 0 && <path d="M0,0 L0,4 L6,2 z" fill={spreadable.stroke || spreadable.color} />}
+            {targetRadius > 0 && <path d="M0,0 L0,4 L6,2 z" fill={spreadable.stroke || spreadable.color} />}
           </marker>
         </defs>
 
@@ -80,4 +79,3 @@ export default class JaegerForceGraphArrowLink extends PureComponent {
     );
   }
 }
-

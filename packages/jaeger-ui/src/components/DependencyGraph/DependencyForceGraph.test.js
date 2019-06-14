@@ -17,7 +17,7 @@ import { shallow } from 'enzyme';
 import { InteractiveForceGraph, ForceGraphNode } from 'react-vis-force';
 
 import DependencyForceGraph, { chargeStrength } from './DependencyForceGraph';
-import {default as JaegerForceGraphArrowLink} from './JaegerForceGraphArrowLink';
+import ForceGraphArrowLink from './ForceGraphArrowLink';
 
 describe('chargeStrength', () => {
   it('returns a number', () => {
@@ -110,8 +110,8 @@ describe('<DependencyForceGraph>', () => {
       expect(wrapper.find(ForceGraphNode).length).toBe(nodes.length);
     });
 
-    it('renders a <JaegerForceGraphArrowLink> for each link', () => {
-      expect(wrapper.find(JaegerForceGraphArrowLink).length).toBe(links.length);
+    it('renders a <ForceGraphArrowLink> for each link', () => {
+      expect(wrapper.find(ForceGraphArrowLink).length).toBe(links.length);
     });
   });
 });

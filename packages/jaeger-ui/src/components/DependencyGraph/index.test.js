@@ -102,8 +102,8 @@ describe('mapStateToProps()', () => {
     expect(mapStateToProps(state)).toEqual({
       ...state.dependencies,
       nodes: [
-        expect.objectContaining({ callCount, orphan: false, id: parentId , radius: 3}),
-        expect.objectContaining({ callCount, orphan: false, id: childId , radius: 3 }),
+        expect.objectContaining({ callCount, orphan: false, id: parentId, radius: 3 }),
+        expect.objectContaining({ callCount, orphan: false, id: childId, radius: 3 }),
       ],
       links: [{ callCount, source: parentId, target: childId, value: 1, target_node_size: 3 }],
     });
