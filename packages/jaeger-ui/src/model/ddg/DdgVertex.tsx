@@ -39,9 +39,9 @@ export default class DdgVertex implements TDdgVertex {
 
   /* 
    * Because the edges on a given DdgVertex reference other DdgVertices which in turn reference the initial
-   * DdgVertex, some assistance is necessary when creating error messages. toJSON is called by JSON.stringify
-   * and expected to return a JSON object. To that end, this method uses an array of keys to represent edges
-   * in place of circular references.
+   * DdgVertex, some assistance is necessary when creating error messages. `toJSON` is called by
+   * `JSON.stringify` and expected to return a JSON object. To that end, this method uses an array of vertex
+   * keys to represent edges in place of circular references.
    */
   toJSON() {
     return {
@@ -52,10 +52,13 @@ export default class DdgVertex implements TDdgVertex {
     };
   }
 
+  // `toJSON` is called by `JSON.stringify` while `toString` is used by template strings and string concat
   toString() {
     return JSON.stringify(this.toJSON(), null, 2);
   }
 
+  // `[Symbol.toStringTag]` is used when attempting to use an object as a key on an object, where a full
+  // stringified JSON would reduce clarity
   get [Symbol.toStringTag]() {
     return `DdgVertex ${this.key}`;
   }
