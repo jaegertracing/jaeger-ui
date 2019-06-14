@@ -36,14 +36,14 @@ describe('DdgEVManager', () => {
   function validateDdgEVManager(manager, expectedVertices) {
     let expectedEdgeCount = 0;
     expectedVertices.forEach(({ visIndices, ingressNeighbors = [], egressNeighbors = [] }) => {
-      const pathElems = visIndices.map(visIdx => manager.visIdxToPathElem.get(visIdx));
+      const pathElems = visIndices.map(visIdx => manager.visIdxToPathElem[visIdx]);
       const vertex = manager.pathElemToVertex.get(pathElems[0]);
       expect(vertex.pathElems).toEqual(new Set(pathElems));
 
       expect(vertex.egressEdges.size).toBe(egressNeighbors.length);
       expectedEdgeCount += vertex.egressEdges.size;
       egressNeighbors.forEach(egressNeighborIdx => {
-        const egressNeighbor = manager.pathElemToVertex.get(manager.visIdxToPathElem.get(egressNeighborIdx));
+        const egressNeighbor = manager.pathElemToVertex.get(manager.visIdxToPathElem[egressNeighborIdx]);
         const edge = vertex.egressEdges.get(egressNeighbor);
         expect(edge).toBeDefined();
         expect(egressNeighbor.ingressEdges.get(vertex)).toBe(edge);
@@ -54,9 +54,7 @@ describe('DdgEVManager', () => {
       expect(vertex.ingressEdges.size).toBe(ingressNeighbors.length);
       expectedEdgeCount += vertex.ingressEdges.size;
       ingressNeighbors.forEach(ingressNeighborIdx => {
-        const ingressNeighbor = manager.pathElemToVertex.get(
-          manager.visIdxToPathElem.get(ingressNeighborIdx)
-        );
+        const ingressNeighbor = manager.pathElemToVertex.get(manager.visIdxToPathElem[ingressNeighborIdx]);
         const edge = vertex.ingressEdges.get(ingressNeighbor);
         expect(edge).toBeDefined();
         expect(ingressNeighbor.egressEdges.get(vertex)).toBe(edge);
@@ -142,6 +140,12 @@ describe('DdgEVManager', () => {
           egressNeighbors: [0],
         },
       ]);
+    });
+
+    it('removes all vertices', () => {
+      testManager.getEdgesAndVertices('');
+
+      validateDdgEVManager(testManager, []);
     });
   });
 
@@ -289,12 +293,27 @@ describe('DdgEVManager', () => {
         },
       ]);
     });
+
+    it('tracks multiple pathElems associated with a single edge', () => {
+      convergentManager.getEdgesAndVertices(fullKey);
+      const sharedEdgeElem0 = convergentManager.visIdxToPathElem[5];
+      const sharedEdgeElem1 = convergentManager.visIdxToPathElem[4];
+
+      expect(convergentManager.pathElemToFarSideOfEdgePathElems.get(sharedEdgeElem0)).toBe(
+        convergentManager.pathElemToFarSideOfEdgePathElems.get(sharedEdgeElem1)
+      );
+      expect(convergentManager.pathElemToFarSideOfEdgePathElems.get(sharedEdgeElem0).size).toBe(2);
+
+      convergentManager.getEdgesAndVertices(changeKey({ key: fullKey, hide: [4] }));
+      expect(convergentManager.pathElemToFarSideOfEdgePathElems.get(sharedEdgeElem0).size).toBe(1);
+    });
   });
 
-  describe('error handling', () => {
+  describe('error cases', () => {
     let testManager;
     const validIndices = simpleDdgModel.paths[0].members.map(({ visibilityIdx }) => visibilityIdx);
     const fullKey = createKey(validIndices);
+    const allButOneVisible = changeKey({ key: fullKey, hide: [4] });
     const outOfBoundsKey = changeKey({
       key: fullKey,
       show: [validIndices.length],
@@ -324,16 +343,70 @@ describe('DdgEVManager', () => {
     });
 
     it('errors when trying to hide index that was not visible', () => {
-      const allButOneVisible = changeKey({ key: fullKey, hide: [4] });
       testManager.getEdgesAndVertices(allButOneVisible);
       testManager.prevVisKey = fullKey;
       expect(() => testManager.getEdgesAndVertices(allButOneVisible)).toThrowError();
     });
 
     it('errors when trying to show index whose focalSideNeighbor is hidden in the same visibility key change', () => {
-      const allButOneVisible = changeKey({ key: fullKey, hide: [4] });
       testManager.getEdgesAndVertices(allButOneVisible);
       const problematicVisKey = changeKey({ key: allButOneVisible, hide: [2], show: [4] });
+      expect(() => testManager.getEdgesAndVertices(problematicVisKey)).toThrowError();
+    });
+
+    it('errors when trying to add pathElem which would re-use existing edge that lacks farSideOfEdgePathElems metadata', () => {
+      testManager.getEdgesAndVertices(fullKey);
+      testManager.prevVisKey = allButOneVisible;
+      const removeElem = testManager.visIdxToPathElem[4];
+      const elemSet = testManager.pathElemToFarSideOfEdgePathElems.get(removeElem);
+      const existingEdge = testManager.farSideOfEdgePathElemsToEdge.get(elemSet);
+      testManager.edgeToFarSideOfEdgePathElems.delete(existingEdge);
+      expect(() => testManager.getEdgesAndVertices(fullKey)).toThrowError();
+    });
+
+    it('errors when trying to add pathElem which would re-use existing edge that has empty farSideOfEdgePathElems', () => {
+      testManager.getEdgesAndVertices(fullKey);
+      testManager.prevVisKey = allButOneVisible;
+      const removeElem = testManager.visIdxToPathElem[4];
+      const elemSet = testManager.pathElemToFarSideOfEdgePathElems.get(removeElem);
+      elemSet.clear();
+      expect(() => testManager.getEdgesAndVertices(fullKey)).toThrowError();
+    });
+
+    it('errors when trying to hide non-focal pathElem which was preemptively separated from the graph', () => {
+      testManager.getEdgesAndVertices(fullKey);
+      const removeElem = testManager.visIdxToPathElem[4];
+      const elemSet = testManager.pathElemToFarSideOfEdgePathElems.get(removeElem);
+      testManager.farSideOfEdgePathElemsToEdge.delete(elemSet);
+      expect(() => testManager.getEdgesAndVertices('')).toThrowError();
+    });
+
+    it('errors when trying to hide focal pathElem which was a farSideOfEdgePathElem', () => {
+      testManager.getEdgesAndVertices(createKey([0]));
+      const focalPathElem = testManager.visIdxToPathElem[0];
+      const elemSet = new Set([focalPathElem]);
+      testManager.pathElemToFarSideOfEdgePathElems.set(focalPathElem, elemSet);
+      testManager.farSideOfEdgePathElemsToEdge.set(elemSet, {});
+      expect(() => testManager.getEdgesAndVertices('')).toThrowError();
+    });
+
+    it('errors when trying to hide non-focal pathElem whose focalSideNeighbor was hidden', () => {
+      testManager.getEdgesAndVertices(fullKey);
+      testManager.pathElemToVertex.delete(testManager.visIdxToPathElem[2]);
+      const problematicVisKey = changeKey({ key: fullKey, hide: [4] });
+      expect(() => testManager.getEdgesAndVertices(problematicVisKey)).toThrowError();
+    });
+
+    it('errors when trying to hide non-focal pathElem that was not in pathElemToFarSideOfEdgePathElems', () => {
+      testManager.getEdgesAndVertices(fullKey);
+      testManager.pathElemToFarSideOfEdgePathElems.delete(testManager.visIdxToPathElem[4]);
+      const problematicVisKey = changeKey({ key: fullKey, hide: [4] });
+      expect(() => testManager.getEdgesAndVertices(problematicVisKey)).toThrowError();
+    });
+
+    it('errors when trying to hide an index which other pathElems are dependent upon', () => {
+      testManager.getEdgesAndVertices(fullKey);
+      const problematicVisKey = changeKey({ key: fullKey, hide: [2] });
       expect(() => testManager.getEdgesAndVertices(problematicVisKey)).toThrowError();
     });
   });

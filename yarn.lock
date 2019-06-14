@@ -7889,6 +7889,11 @@ lru-cache@^5.1.1:
   dependencies:
     yallist "^3.0.2"
 
+lru-memoize@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/lru-memoize/-/lru-memoize-1.1.0.tgz#073900ad72abdc67a3b455a797c7e94d7103e69a"
+  integrity sha512-klI4QO8wE8V6rl8EwQTZP6vgM0URWN/0OMFdG9E2fJTaWc6Ox+nSTs8cgJ8QNd0We0vX40n+sd6K4cgb+BzXuA==
+
 macos-release@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/macos-release/-/macos-release-2.0.0.tgz#7dddf4caf79001a851eb4fba7fb6034f251276ab"
