@@ -135,9 +135,9 @@ describe('renderIntoCanvas()', () => {
           const color = expectedColors[i].output;
           const fillStyle = `rgba(${color.concat(ITEM_ALPHA).join()})`;
           const height = Math.min(MAX_ITEM_HEIGHT, Math.max(MIN_ITEM_HEIGHT, cHeight / items.length));
-          const width = valueWidth / totalValueWidth * getCanvasWidth();
-          const x = valueOffset / totalValueWidth * getCanvasWidth();
-          const y = cHeight / items.length * i;
+          const width = (valueWidth / totalValueWidth) * getCanvasWidth();
+          const x = (valueOffset / totalValueWidth) * getCanvasWidth();
+          const y = (cHeight / items.length) * i;
           return { fillStyle, height, width, x, y };
         }),
       ];
@@ -181,9 +181,9 @@ describe('renderIntoCanvas()', () => {
           const color = expectedColors[i].output;
           const fillStyle = `rgba(${color.concat(ITEM_ALPHA).join()})`;
           const height = MIN_ITEM_HEIGHT;
-          const width = Math.max(MIN_ITEM_WIDTH, valueWidth / totalValueWidth * getCanvasWidth());
-          const x = valueOffset / totalValueWidth * getCanvasWidth();
-          const y = MAX_TOTAL_HEIGHT / items.length * i;
+          const width = Math.max(MIN_ITEM_WIDTH, (valueWidth / totalValueWidth) * getCanvasWidth());
+          const x = (valueOffset / totalValueWidth) * getCanvasWidth();
+          const y = (MAX_TOTAL_HEIGHT / items.length) * i;
           return { fillStyle, height, width, x, y };
         }),
       ];

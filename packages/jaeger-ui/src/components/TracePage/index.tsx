@@ -431,4 +431,7 @@ export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchPro
   return { acknowledgeArchive, archiveTrace, fetchTrace, focusUiFindMatches };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(TracePageImpl);
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(TracePageImpl);

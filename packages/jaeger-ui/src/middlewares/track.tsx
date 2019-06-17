@@ -36,4 +36,4 @@ function trackingMiddleware(store: Store<ReduxState>) {
   };
 }
 
-export default (isGaEnabled ? trackingMiddleware : undefined);
+export default isGaEnabled ? trackingMiddleware : undefined;

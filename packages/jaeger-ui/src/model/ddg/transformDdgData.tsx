@@ -20,7 +20,6 @@ import {
   TDdgPath,
   TDdgDistanceToPathElems,
   TDdgServiceMap,
-  TDdgVisIdxToPathElem,
 } from './types';
 
 const stringifyEntry = ({ service, operation }: TDdgPayloadEntry) => `${service}\v${operation}`;
@@ -113,11 +112,10 @@ export default function transformDdgData(
   let downstreamElems: PathElem[] | void;
   let upstream = 1;
   let upstreamElems: PathElem[] | void;
-  let visIdx = 0;
-  const visIdxToPathElem: TDdgVisIdxToPathElem = new Map();
+  const visIdxToPathElem: PathElem[] = [];
   function setIdx(pathElem: PathElem) {
-    visIdxToPathElem.set(visIdx, pathElem);
-    pathElem.visibilityIdx = visIdx++; // eslint-disable-line no-param-reassign
+    pathElem.visibilityIdx = visIdxToPathElem.length; // eslint-disable-line no-param-reassign
+    visIdxToPathElem.push(pathElem);
   }
   do {
     downstreamElems = distanceToPathElems.get(downstream--);

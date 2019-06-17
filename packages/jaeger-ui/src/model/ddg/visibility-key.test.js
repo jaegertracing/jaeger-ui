@@ -84,46 +84,46 @@ describe('visibility-key', () => {
   });
 
   describe('compareKeys', () => {
-    describe('added', () => {
+    describe('shown', () => {
       it('returns a new value', () => {
-        expect(compareKeys({ newKey: '3', oldKey: '1,1' }).added).toEqual([1]);
+        expect(compareKeys({ newKey: '3', oldKey: '1,1' }).shown).toEqual([1]);
       });
 
       it('returns multiple new values in ascending order', () => {
-        expect(compareKeys({ newKey: '7', oldKey: '2' }).added).toEqual([0, 2]);
+        expect(compareKeys({ newKey: '7', oldKey: '2' }).shown).toEqual([0, 2]);
       });
 
       it('returns multiple new values accross multiple buckets', () => {
-        expect(compareKeys({ newKey: '7,1t,4', oldKey: '2,1' }).added).toEqual([0, 2, 37, 64]);
+        expect(compareKeys({ newKey: '7,1t,4', oldKey: '2,1' }).shown).toEqual([0, 2, 37, 64]);
       });
     });
 
-    describe('removed', () => {
-      it('returns a removed value', () => {
-        expect(compareKeys({ newKey: '1,1', oldKey: '3' }).removed).toEqual([1]);
+    describe('hidden', () => {
+      it('returns a hidden value', () => {
+        expect(compareKeys({ newKey: '1,1', oldKey: '3' }).hidden).toEqual([1]);
       });
 
-      it('returns multiple removed values in ascending order', () => {
-        expect(compareKeys({ newKey: '2', oldKey: '7' }).removed).toEqual([0, 2]);
+      it('returns multiple hidden values in descending order', () => {
+        expect(compareKeys({ newKey: '2', oldKey: '7' }).hidden).toEqual([2, 0]);
       });
 
       it('returns multiple new values across multiple buckets', () => {
-        expect(compareKeys({ newKey: '2,1', oldKey: '7,1t,4' }).removed).toEqual([0, 2, 37, 64]);
+        expect(compareKeys({ newKey: '2,1', oldKey: '7,1t,4' }).hidden).toEqual([64, 37, 2, 0]);
       });
     });
 
-    describe('added and removed', () => {
-      it('returns added and removed values', () => {
+    describe('shown and hidden', () => {
+      it('returns shown and hidden values', () => {
         expect(compareKeys({ newKey: '6', oldKey: '5' })).toEqual({
-          added: [1],
-          removed: [0],
+          shown: [1],
+          hidden: [0],
         });
       });
 
-      it('returns added and removed values across multiple buckets', () => {
+      it('returns shown and hidden values across multiple buckets', () => {
         expect(compareKeys({ newKey: '6,1,,,1,', oldKey: '5,,1,1,,' })).toEqual({
-          added: [1, 31, 124],
-          removed: [0, 62, 93],
+          shown: [1, 31, 124],
+          hidden: [93, 62, 0],
         });
       });
     });
