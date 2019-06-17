@@ -18,44 +18,45 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import React, { PureComponent } from 'react';
-import PropTypes from 'prop-types';
-
+import * as React from 'react';
 import { ForceGraphLink } from 'react-vis-force';
 
-function linkId(link) {
-  return `${link.source.id || link.source}=>${link.target.id || link.target}`;
+type TLink = {
+  source: string | { id: string };
+  target: string | { id: string };
+  value: number;
+};
+
+type TProps = {
+  className?: string;
+  color?: string;
+  edgeOffset?: number;
+  link: TLink;
+  opacity?: number;
+  stroke?: string;
+  strokeWidth?: number;
+  targetRadius?: number;
+};
+
+function linkId(link: TLink) {
+  const { source, target } = link;
+  const srcId = typeof source === 'string' ? source : source.id;
+  const targetId = typeof target === 'string' ? target : target.id;
+  return `${srcId}=>${targetId}`;
 }
 
-export default class ForceGraphArrowLink extends PureComponent {
-  static get propTypes() {
-    return {
-      link: PropTypes.shape({
-        source: PropTypes.string.isRequired,
-        target: PropTypes.string.isRequired,
-        value: PropTypes.number,
-      }).isRequired,
-      targetRadius: PropTypes.number,
-      edgeOffset: PropTypes.number,
-      className: PropTypes.string,
-      opacity: PropTypes.number,
-      stroke: PropTypes.string,
-      strokeWidth: PropTypes.number,
-    };
-  }
-
-  static get defaultProps() {
-    return {
-      className: '',
-      opacity: 0.6,
-      stroke: '#999',
-      targetRadius: 2,
-      edgeOffset: 2,
-      strokeWidth: 1,
-    };
-  }
+export default class ForceGraphArrowLink extends React.PureComponent<TProps> {
+  static defaultProps = {
+    className: '',
+    edgeOffset: 2,
+    opacity: 0.6,
+    stroke: '#999',
+    strokeWidth: 1,
+    targetRadius: 2,
+  };
 
   render() {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { link, targetRadius, edgeOffset: _, ...spreadable } = this.props;
     const id = `arrow-${linkId(link)}`;
     return (
@@ -65,12 +66,14 @@ export default class ForceGraphArrowLink extends PureComponent {
             id={id}
             markerWidth={6}
             markerHeight={4}
-            refX={5 + targetRadius}
+            refX={5 + (targetRadius || 0)}
             refY={2}
             orient="auto"
             markerUnits="strokeWidth"
           >
-            {targetRadius > 0 && <path d="M0,0 L0,4 L6,2 z" fill={spreadable.stroke || spreadable.color} />}
+            {Number(targetRadius) > 0 && (
+              <path d="M0,0 L0,4 L6,2 z" fill={spreadable.stroke || spreadable.color} />
+            )}
           </marker>
         </defs>
 
