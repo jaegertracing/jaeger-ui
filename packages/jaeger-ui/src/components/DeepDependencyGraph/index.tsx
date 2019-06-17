@@ -50,6 +50,7 @@ type TProps = TDispatchProps & TReduxProps & TOwnProps;
 
 // export for tests
 export class DeepDependencyGraphPageImpl extends Component<TProps> {
+  // houldComponentUpdate is necessary as we don't want the plexus graph to re-render due to a uxStatus change
   shouldComponentUpdate(nextProps: TProps) {
     const updateCauses = [
       'service',
@@ -105,10 +106,10 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
 
 // export for tests
 export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxProps {
-  const { service, operation = '*', start, end } = extractQuery(ownProps.location.search);
+  const { service, operation, start, end } = extractQuery(ownProps.location.search);
   let graphState: TDdgStateEntry | undefined;
   if (service && start && end) {
-    graphState = _get(state, ['deepDependencyGraph', service, operation, start, end]);
+    graphState = _get(state, ['deepDependencyGraph', service, operation || '*', start, end]);
   }
 
   return {
@@ -126,4 +127,7 @@ export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchPro
   return { fetchDeepDependencyGraph };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(DeepDependencyGraphPageImpl);
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(DeepDependencyGraphPageImpl);

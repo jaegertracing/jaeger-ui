@@ -43,13 +43,14 @@ export default class Header extends PureComponent<TProps, TState> {
     super(props);
     this.state = {};
 
-    const { service, operation, end = Date.now(), start } = this.props;
+    const { service, operation, end = Date.now(), start: startProp } = this.props;
+    const start = startProp || end - 60 * 60 * 1000;
     if (service != null && operation != null) {
       this.props.fetchDeepDependencyGraph({
         service,
         operation,
         end,
-        start: start || end - 60 * 60 * 1000,
+        start,
       });
 
       if (end !== this.props.end || start !== this.props.start) {

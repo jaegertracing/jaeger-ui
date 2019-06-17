@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Uber Technologies, Inc.
+// Copyright (c) 2019 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -78,7 +78,7 @@ describe('extractQuery', () => {
     ['service', 'operation', 'start', 'end'].forEach(param => {
       [null, undefined, ''].forEach(falsyPossibility => {
         parseSpy.mockReturnValue({ ...expectedParams, [param]: falsyPossibility });
-        expect(extractQuery()[param]).toBeUndefined();
+        expect(Reflect.has(extractQuery(), param)).toBe(false);
       });
     });
   });

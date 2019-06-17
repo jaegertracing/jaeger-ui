@@ -16,7 +16,6 @@ import * as React from 'react';
 import { shallow } from 'enzyme';
 import cloneDeep from 'lodash/cloneDeep';
 import _set from 'lodash/set';
-import _setWith from 'lodash/setWith';
 
 import { DeepDependencyGraphPageImpl, mapDispatchToProps, mapStateToProps } from '.';
 import ErrorMessage from '../common/ErrorMessage';
@@ -145,23 +144,12 @@ describe('DeepDependencyGraphPage', () => {
       expect(querySpy).toHaveBeenLastCalledWith(search);
     });
 
-    it("defaults operation to '*'", () => {
-      const { operation: _op, ...rest } = expected;
-      querySpy.mockReturnValue(rest);
-      const result = mapStateToProps({}, { location: { search } });
-      expect(result).toEqual({
-        ...rest,
-        operation: '*',
-      });
-      expect(querySpy).toHaveBeenLastCalledWith(search);
-    });
-
-    it('includes graphState iff location.search has service, start, and end', () => {
+    it('includes graphState iff location.search has service, start, end, and optionally operation', () => {
       const graphState = 'testGraphState';
       const graphStateWithoutOp = 'testGraphStateWithoutOp';
       const reduxState = {};
-      _setWith(reduxState, ['deepDependencyGraph', service, operation, start, end], graphState, Object);
-      _setWith(reduxState, ['deepDependencyGraph', service, '*', start, end], graphStateWithoutOp, Object);
+      _set(reduxState, ['deepDependencyGraph', service, operation, start, end], graphState);
+      _set(reduxState, ['deepDependencyGraph', service, '*', start, end], graphStateWithoutOp);
 
       querySpy.mockReturnValue(expected);
       const result = mapStateToProps(reduxState, { location: { search } });
