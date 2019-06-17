@@ -14,12 +14,12 @@
 
 /* eslint-disable no-bitwise */
 
-import memoizeOne from 'memoize-one';
+import memoize from 'lru-memoize';
 
 const VISIBILITY_BUCKET_SIZE = 31;
 
-const getBuckets = memoizeOne((visibilityKey: string): number[] =>
-  visibilityKey.split(',').map(partial => parseInt(partial || '0', 36))
+const getBuckets: (key: string) => number[] = memoize(10)((key: string): number[] =>
+  key.split(',').map(partial => parseInt(partial || '0', 36))
 );
 
 function convertIdxToBucketValues(visibilityIdx: number) {
@@ -37,6 +37,7 @@ export function isVisible(visibilityKey: string, visibilityIdx: number): boolean
 }
 
 export function changeKey({ key, show, hide }: { key: string; show?: number[]; hide?: number[] }): string {
+  // Slice is necessary to avoid mutating value in memo cache
   const visibilityBuckets = getBuckets(key).slice();
   const conflictCheck = new Set(show);
 
@@ -67,36 +68,28 @@ export function createKey(visibleIndices: number[]) {
   return changeKey({ key: '', show: visibleIndices });
 }
 
-// TODO: determine if memo is even necessary
-// export const compareVisibilityKeys = memoizeOne(function compareVisibilityKeysImpl({
 export function compareKeys({
   newKey,
   oldKey,
 }: {
   newKey: string;
   oldKey: string;
-}): { added: number[]; removed: number[] } {
-  const added: number[] = [];
-  const removed: number[] = [];
-  const oldBuckets = getBuckets(oldKey).slice();
-  const newBuckets = getBuckets(newKey).slice();
+}): { shown: number[]; hidden: number[] } {
+  const shown: number[] = [];
+  const hidden: number[] = [];
+  const oldBuckets = getBuckets(oldKey);
+  const newBuckets = getBuckets(newKey);
   for (let i = 0; i < Math.max(oldBuckets.length, newBuckets.length); i++) {
     for (let j = 0; j < VISIBILITY_BUCKET_SIZE; j++) {
       if (newBuckets[i] & (1 << j) && !(oldBuckets[i] & (1 << j))) {
-        added.push(i * VISIBILITY_BUCKET_SIZE + j);
+        shown.push(i * VISIBILITY_BUCKET_SIZE + j);
       } else if (oldBuckets[i] & (1 << j) && !(newBuckets[i] & (1 << j))) {
-        removed.push(i * VISIBILITY_BUCKET_SIZE + j);
+        hidden.push(i * VISIBILITY_BUCKET_SIZE + j);
       }
     }
   }
-  return { added, removed };
+  // hidden is reversed so that DdgEVManager can collapse the graph inward towaard the focal node, while
+  // shown is not reversed so that DdgEVManager can expand the graph outwards from the focal node
+  hidden.reverse();
+  return { shown, hidden };
 }
-/*
-, ([{
-  newVisibilityKey: currNewVisibilityKey,
-  oldVisibilityKey: currOldVisibilityKey,
-}], [{
-  newVisibilityKey: prevNewVisibilityKey,
-  oldVisibilityKey: prevOldVisibilityKey,
-}]) => currNewVisibilityKey === prevNewVisibilityKey && currOldVisibilityKey === prevOldVisibilityKey);
-*/

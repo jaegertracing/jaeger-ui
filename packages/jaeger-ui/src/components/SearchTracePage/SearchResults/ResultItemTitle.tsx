@@ -91,7 +91,7 @@ export default class ResultItemTitle extends React.PureComponent<Props> {
           />
         )}
         {/* TODO: Shouldn't need cast */}
-        <WrapperComponent {...wrapperProps as { [key: string]: any; to: string }}>
+        <WrapperComponent {...(wrapperProps as { [key: string]: any; to: string })}>
           <span
             className="ResultItemTitle--durationBar"
             style={{ width: `${durationPercent || DEFAULT_DURATION_PERCENT}%` }}

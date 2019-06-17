@@ -37,32 +37,28 @@ export default class DdgVertex implements TDdgVertex {
     this.pathElems = new Set();
   }
 
-  /* 
+  /*
    * Because the edges on a given DdgVertex reference other DdgVertices which in turn reference the initial
-   * DdgVertex, some assistance is necessary when creating error messages. toJSON is called by JSON.stringify
-   * and expected to return a JSON object. To that end, this method uses string keys instead of circular refs.
+   * DdgVertex, some assistance is necessary when creating error messages. `toJSON` is called by
+   * `JSON.stringify` and expected to return a JSON object. To that end, this method uses an array of vertex
+   * keys to represent edges in place of circular references.
    */
   toJSON() {
-    const digestibleEgressEdges: TDigestibleEdges = {};
-    const digestibleIngressEdges: TDigestibleEdges = {};
-    this.egressEdges.forEach((edge, egressNeighbor) => {
-      digestibleEgressEdges[egressNeighbor[Symbol.toStringTag]] = edge;
-    });
-    this.ingressEdges.forEach((edge, ingressNeighbor) => {
-      digestibleIngressEdges[ingressNeighbor[Symbol.toStringTag]] = edge;
-    });
     return {
-      egressEdges: digestibleEgressEdges,
+      egressVertices: Array.from(this.egressEdges.keys()).map(({ key }) => key),
       key: this.key,
-      ingressEdges: digestibleIngressEdges,
+      ingressVertices: Array.from(this.egressEdges.keys()).map(({ key }) => key),
       pathElems: this.pathElems,
     };
   }
 
+  // `toJSON` is called by `JSON.stringify` while `toString` is used by template strings and string concat
   toString() {
     return JSON.stringify(this.toJSON(), null, 2);
   }
 
+  // `[Symbol.toStringTag]` is used when attempting to use an object as a key on an object, where a full
+  // stringified JSON would reduce clarity
   get [Symbol.toStringTag]() {
     return `DdgVertex ${this.key}`;
   }

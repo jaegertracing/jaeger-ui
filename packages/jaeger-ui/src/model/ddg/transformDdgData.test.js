@@ -67,7 +67,7 @@ describe('transform ddg data', () => {
         distance = currentDistance;
       }
 
-      expect(visIdxToPathElem.get(orderedIdx).visibilityIdx).toBe(orderedIdx);
+      expect(visIdxToPathElem[orderedIdx].visibilityIdx).toBe(orderedIdx);
     });
   }
 
@@ -147,7 +147,7 @@ describe('transform ddg data', () => {
         memberOf: unsortedPathsMemberOf,
         operation: unsortedPathsOperation,
         visibilityIdx: unsortedPathsVisIdx,
-      } = unsortedPathsVisIdxToPathElemMap.get(presortedPathsVisIdx);
+      } = unsortedPathsVisIdxToPathElemMap[presortedPathsVisIdx];
       const { focalIdx: unsortedPathsFocalIdx } = unsortedPathsMemberOf;
       const { name: unsortedPathsOperationName, service: unsortedService } = unsortedPathsOperation;
       const { name: unsortedPathsServiceName } = unsortedService;

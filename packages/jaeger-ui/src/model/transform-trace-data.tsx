@@ -15,10 +15,8 @@
 import _isEqual from 'lodash/isEqual';
 
 import { getTraceSpanIdsAsTree } from '../selectors/trace';
-import { KeyValuePair, Process, Span, SpanData, Trace, TraceData } from '../types/trace';
+import { KeyValuePair, Span, SpanData, Trace, TraceData } from '../types/trace';
 import TreeNode from '../utils/TreeNode';
-
-type SpanWithProcess = SpanData & { process: Process };
 
 function deduplicateTags(spanTags: Array<KeyValuePair>) {
   const warningsHash: Map<string, string> = new Map<string, string>();
@@ -38,7 +36,7 @@ function deduplicateTags(spanTags: Array<KeyValuePair>) {
  * NOTE: Mutates `data` - Transform the HTTP response data into the form the app
  * generally requires.
  */
-export default function transformTraceData(data: TraceData & { spans: SpanWithProcess[] }): Trace | null {
+export default function transformTraceData(data: TraceData & { spans: SpanData[] }): Trace | null {
   let { traceID } = data;
   if (!traceID) {
     return null;
@@ -48,14 +46,14 @@ export default function transformTraceData(data: TraceData & { spans: SpanWithPr
   let traceEndTime = 0;
   let traceStartTime = Number.MAX_SAFE_INTEGER;
   const spanIdCounts = new Map();
-  const spanMap = new Map<string, SpanWithProcess>();
+  const spanMap = new Map<string, Span>();
   // filter out spans with empty start times
   // eslint-disable-next-line no-param-reassign
   data.spans = data.spans.filter(span => Boolean(span.startTime));
 
   const max = data.spans.length;
   for (let i = 0; i < max; i++) {
-    const span = data.spans[i];
+    const span: Span = data.spans[i] as Span;
     const { startTime, duration, processID } = span;
     //
     let spanID = span.spanID;
@@ -107,9 +105,11 @@ export default function transformTraceData(data: TraceData & { spans: SpanWithPr
     span.relativeStartTime = span.startTime - traceStartTime;
     span.depth = depth - 1;
     span.hasChildren = node.children.length > 0;
+    span.warnings = span.warnings || [];
+    span.tags = span.tags || [];
+    span.references = span.references || [];
     const tagsInfo = deduplicateTags(span.tags);
     span.tags = tagsInfo.tags;
-    span.warnings = span.warnings || [];
     span.warnings = span.warnings.concat(tagsInfo.warnings);
     span.references.forEach(ref => {
       const refSpan = spanMap.get(ref.spanID) as Span;
