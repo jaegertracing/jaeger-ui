@@ -22,8 +22,6 @@ type TDdgVertex = TVertex<{
   pathElems: Set<PathElem>;
 }>;
 
-type TDigestibleEdges = Record<string, TEdge>;
-
 export default class DdgVertex implements TDdgVertex {
   egressEdges: Map<DdgVertex, TEdge>;
   key: string;

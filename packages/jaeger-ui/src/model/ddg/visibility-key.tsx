@@ -22,7 +22,12 @@ import memoize from 'lru-memoize';
 // For more info: https://repl.it/repls/IllfatedMaroonObservation
 const VISIBILITY_BUCKET_SIZE = 31;
 
-// Converts string csv of base36 numbers into array of JavaScript nubers
+/*
+ * Converts string csv of base36 numbers into array of JavaScript nubers.
+ *
+ * @param {string} key - base36 csv visibility key.
+ * @returns {number[]} - JavaScript numbers that contain the same visibility data as the provided key.
+ */
 const getBuckets: (key: string) => number[] = memoize(10)((key: string): number[] =>
   key.split(',').map(partial => parseInt(partial || '0', 36))
 );
@@ -113,8 +118,8 @@ export function createKey(visibleIndices: number[]): string {
  * shown is not reversed so that DdgEVManager can expand the graph outwards from the focal node.
  *
  * @param {object} kwarg - Arguments for changeKey.
- * @param {string} kwarg.oldKey - Some base36 csv key to serve as baseline.
- * @param {string} kwarg.newKey - Some base36 csv key to compare to baseline.
+ * @param {string} kwarg.oldKey - base36 csv key to serve as baseline.
+ * @param {string} kwarg.newKey - base36 csv key to compare to baseline.
  * @returns {object} - Contains shown, an array of indices visible in newKey and not visible in oldKey, and
  *     hiden, an array of indices visible in oldKey and not visible in newKey.
  */
