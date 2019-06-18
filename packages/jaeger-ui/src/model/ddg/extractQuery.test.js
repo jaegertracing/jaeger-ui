@@ -21,17 +21,20 @@ describe('extractQuery', () => {
   const operation = 'operationName';
   const start = '400';
   const end = '900';
+  const visibilityKey = 'visKey';
   const acceptableParams = {
     service,
     operation,
     start,
     end,
+    visibilityKey,
   };
   const expectedParams = {
     service,
     operation,
     start: Number.parseInt(start, 10),
     end: Number.parseInt(end, 10),
+    visibilityKey,
   };
   let warnSpy;
   let parseSpy;
@@ -56,7 +59,7 @@ describe('extractQuery', () => {
   });
 
   it('handles absent values', () => {
-    ['service', 'operation', 'start', 'end'].forEach(param => {
+    ['service', 'operation', 'start', 'end', 'visibilityKey'].forEach(param => {
       const { [param]: unused, ...rest } = expectedParams;
       parseSpy.mockReturnValue(rest);
       expect(extractQuery()).toEqual(rest);
@@ -75,7 +78,7 @@ describe('extractQuery', () => {
   });
 
   it('omits falsy values', () => {
-    ['service', 'operation', 'start', 'end'].forEach(param => {
+    ['service', 'operation', 'start', 'end', 'visibilityKey'].forEach(param => {
       [null, undefined, ''].forEach(falsyPossibility => {
         parseSpy.mockReturnValue({ ...expectedParams, [param]: falsyPossibility });
         expect(Reflect.has(extractQuery(), param)).toBe(false);
@@ -84,7 +87,7 @@ describe('extractQuery', () => {
   });
 
   it('handles and warns on duplicate values', () => {
-    ['service', 'operation', 'start', 'end'].forEach(param => {
+    ['service', 'operation', 'start', 'end', 'visibilityKey'].forEach(param => {
       const secondParam = `second ${acceptableParams[param]}`;
       parseSpy.mockReturnValue({
         ...acceptableParams,

@@ -18,6 +18,7 @@ import cloneDeep from 'lodash/cloneDeep';
 import _set from 'lodash/set';
 
 import { DeepDependencyGraphPageImpl, mapDispatchToProps, mapStateToProps } from '.';
+import Graph from './Graph';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
 import { fetchedState } from '../../constants';
@@ -31,6 +32,7 @@ describe('DeepDependencyGraphPage', () => {
         end: 'testEnd',
         service: 'testService',
         operation: 'testOperation',
+        visibilityKey: 'testVisKey',
         graphState: {
           uxState: new Map(),
           state: fetchedState.DONE,
@@ -55,7 +57,7 @@ describe('DeepDependencyGraphPage', () => {
       });
 
       it('returns true if certain props change', () => {
-        ['service', 'operation', 'start', 'end', 'graphState.state'].forEach(prop => {
+        ['service', 'operation', 'start', 'end', 'visibilityKey', 'graphState.state'].forEach(prop => {
           const newProps = cloneDeep(props);
           _set(newProps, prop, 'new value');
           expect(ddgPageImpl.shouldComponentUpdate(newProps)).toBe(true);
@@ -86,12 +88,8 @@ describe('DeepDependencyGraphPage', () => {
       });
 
       it('renders graph when done', () => {
-        const graphStandin = shallow(
-          <DeepDependencyGraphPageImpl graphState={{ state: fetchedState.DONE }} />
-        )
-          .find('h1')
-          .last();
-        expect(graphStandin.text()).toBe('Loaded');
+        const wrapper = shallow(<DeepDependencyGraphPageImpl graphState={{ state: fetchedState.DONE }} />);
+        expect(wrapper.find(Graph)).toHaveLength(1);
       });
 
       it('renders indication of unknown graphState', () => {

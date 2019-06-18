@@ -20,15 +20,16 @@ import { History as RouterHistory, Location } from 'history';
 import queryString from 'query-string';
 
 import DdgEVManager from '../../model/ddg/DdgEVManager';
-import { TDdgModel } from '../../model/ddg/types';
 import { createKey } from '../../model/ddg/visibility-key';
+
+import { TDdgModel } from '../../model/ddg/types';
 
 type TProps = {
   history: RouterHistory;
   location: Location;
-  ddgModel: TDdgModel,
-  visKey?: string,
-}
+  ddgModel: TDdgModel;
+  visKey?: string;
+};
 
 export default class Graph extends Component<TProps> {
   private ddgEVManager: DdgEVManager;
@@ -40,6 +41,8 @@ export default class Graph extends Component<TProps> {
     this.ddgEVManager = new DdgEVManager({ ddgModel });
     this.layoutManager = new LayoutManager({ useDotEdges: true, splines: 'polyline' });
 
+    // TODO: Discuss if this should be in a componentDidUpdate in case visKey is unset without this component
+    // being re-mounted
     if (!this.props.visKey) {
       const indices = _map(
         _takeWhile(ddgModel.visIdxToPathElem, ({ distance }) => Math.abs(distance) < 3),
@@ -61,14 +64,16 @@ export default class Graph extends Component<TProps> {
     }
     const { edges, vertices } = this.ddgEVManager.getEdgesAndVertices(this.props.visKey);
 
-    return <DirectedGraph
-      minimap
-      zoom
-      arrowScaleDampener={0}
-      minimapClassName="TraceDiffGraph--miniMap"
-      layoutManager={this.layoutManager}
-      edges={edges}
-      vertices={vertices}
-    />
+    return (
+      <DirectedGraph
+        minimap
+        zoom
+        arrowScaleDampener={0}
+        minimapClassName="DeepDependencyGraph--miniMap"
+        layoutManager={this.layoutManager}
+        edges={edges}
+        vertices={vertices}
+      />
+    );
   }
 }

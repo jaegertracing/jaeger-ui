@@ -23,7 +23,13 @@ function firstParam(arg: string | string[]): string {
   return arg;
 }
 
-type TExtracted = { service?: string; operation?: string; start?: number; end?: number, visibilityKey?: string };
+type TExtracted = {
+  service?: string;
+  operation?: string;
+  start?: number;
+  end?: number;
+  visibilityKey?: string;
+};
 
 export default function extractQuery(search: string = window.location.search): TExtracted {
   const { service, operation, start, end, visibilityKey } = queryString.parse(search);

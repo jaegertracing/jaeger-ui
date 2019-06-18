@@ -54,6 +54,8 @@ export default class Header extends PureComponent<TProps, TState> {
       });
 
       if (end !== this.props.end || start !== this.props.start) {
+        // old visibilityKey is not applicable to new ddg, and probably should not have been provided without
+        // start and end params
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { visibilityKey: _vk, ...readOnlyQueryParams } = queryString.parse(this.props.location.search);
         const queryParams = Object.assign({}, readOnlyQueryParams, { start, end });
@@ -68,6 +70,7 @@ export default class Header extends PureComponent<TProps, TState> {
   handleBlur = (name: keyof TState, evt: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = evt.target;
     this.setState({ [name]: undefined });
+    // old visibilityKey is not applicable to new ddg
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { visibilityKey: _vk, ...readOnlyQueryParams } = queryString.parse(this.props.location.search);
     const queryParams = Object.assign({}, readOnlyQueryParams, { [name]: value });
