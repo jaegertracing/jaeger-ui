@@ -97,7 +97,6 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
           history={history}
           location={location}
         />
-        <h1>Deep Dependency Graphs yo</h1>
         {this.body()}
       </div>
     );

@@ -90,7 +90,6 @@ describe('DeepDependencyGraphPage', () => {
           <DeepDependencyGraphPageImpl graphState={{ state: fetchedState.DONE }} />
         )
           .find('h1')
-          .last();
         expect(graphStandin.text()).toBe('Loaded');
       });
 
