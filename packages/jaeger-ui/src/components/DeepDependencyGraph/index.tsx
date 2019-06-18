@@ -18,9 +18,10 @@ import _get from 'lodash/get';
 import { bindActionCreators, Dispatch } from 'redux';
 import { connect } from 'react-redux';
 
+import Header from './Header';
+import Graph from './Graph';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
-import Header from './Header';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import { fetchedState } from '../../constants';
 import extractQuery from '../../model/ddg/extractQuery';
@@ -39,6 +40,7 @@ type TReduxProps = {
   operation?: string;
   service?: string;
   start?: number;
+  visibilityKey?: string
 };
 
 type TOwnProps = {
@@ -57,7 +59,7 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
       'operation',
       'start',
       'end',
-      // TODO: add visibility check once graph is interactable
+      'visibilityKey',
       'graphState.state',
     ];
 
@@ -69,7 +71,14 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
     if (!graphState) return <h1>Enter query above</h1>;
     switch (graphState.state) {
       case fetchedState.DONE:
-        return <h1>Loaded</h1>;
+        return (
+          <Graph
+            ddgModel={graphState.model}
+            history={this.props.history}
+            location={this.props.location}
+            visKey={this.props.visibilityKey}
+          />
+        );
       case fetchedState.LOADING:
         return <LoadingIndicator centered />;
       case fetchedState.ERROR:
@@ -106,7 +115,7 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
 
 // export for tests
 export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxProps {
-  const { service, operation, start, end } = extractQuery(ownProps.location.search);
+  const { service, operation, start, end, visibilityKey } = extractQuery(ownProps.location.search);
   let graphState: TDdgStateEntry | undefined;
   if (service && start && end) {
     graphState = _get(state, ['deepDependencyGraph', service, operation || '*', start, end]);
@@ -117,6 +126,7 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
     operation,
     start,
     end,
+    visibilityKey,
     graphState,
   };
 }

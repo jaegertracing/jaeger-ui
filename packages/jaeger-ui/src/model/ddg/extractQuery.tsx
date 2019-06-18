@@ -23,10 +23,10 @@ function firstParam(arg: string | string[]): string {
   return arg;
 }
 
-type TExtracted = { service?: string; operation?: string; start?: number; end?: number };
+type TExtracted = { service?: string; operation?: string; start?: number; end?: number, visibilityKey?: string };
 
 export default function extractQuery(search: string = window.location.search): TExtracted {
-  const { service, operation, start, end } = queryString.parse(search);
+  const { service, operation, start, end, visibilityKey } = queryString.parse(search);
   const returnVal: TExtracted = {};
   if (service) {
     returnVal.service = firstParam(service);
@@ -39,6 +39,9 @@ export default function extractQuery(search: string = window.location.search): T
   }
   if (end) {
     returnVal.end = Number.parseInt(firstParam(end), 10);
+  }
+  if (visibilityKey) {
+    returnVal.visibilityKey = firstParam(visibilityKey);
   }
   return returnVal;
 }

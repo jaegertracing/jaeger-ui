@@ -54,7 +54,8 @@ export default class Header extends PureComponent<TProps, TState> {
       });
 
       if (end !== this.props.end || start !== this.props.start) {
-        const readOnlyQueryParams = queryString.parse(this.props.location.search);
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { visibilityKey: _vk, ...readOnlyQueryParams } = queryString.parse(this.props.location.search);
         const queryParams = Object.assign({}, readOnlyQueryParams, { start, end });
         this.props.history.replace({
           ...this.props.location,
@@ -67,7 +68,8 @@ export default class Header extends PureComponent<TProps, TState> {
   handleBlur = (name: keyof TState, evt: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = evt.target;
     this.setState({ [name]: undefined });
-    const readOnlyQueryParams = queryString.parse(this.props.location.search);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { visibilityKey: _vk, ...readOnlyQueryParams } = queryString.parse(this.props.location.search);
     const queryParams = Object.assign({}, readOnlyQueryParams, { [name]: value });
     const fetchArg: TState = {
       end: name === 'end' ? +value : this.props.end,
