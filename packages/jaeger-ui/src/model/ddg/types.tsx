@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { TVertex } from '@jaegertracing/plexus/lib/types';
+
 import PathElem from './PathElem';
 
-export { default as DdgVertex } from './DdgVertex';
 export { default as PathElem } from './PathElem';
 
 export type TDdgPayloadEntry = {
@@ -35,12 +36,12 @@ export type TDdgOperation = {
   service: TDdgService;
 };
 
+export type TDdgServiceMap = Map<string, TDdgService>;
+
 export type TDdgPath = {
   focalIdx: number;
   members: PathElem[];
 };
-
-export type TDdgServiceMap = Map<string, TDdgService>;
 
 export type TDdgDistanceToPathElems = Map<number, PathElem[]>;
 
@@ -51,7 +52,4 @@ export type TDdgModel = {
   visIdxToPathElem: PathElem[];
 };
 
-export enum EDdgEdgeKeys {
-  egressEdges = 'egressEdges',
-  ingressEdges = 'ingressEdges',
-}
+export type TDdgVertex = TVertex<{ service: string; operation: string }>;
