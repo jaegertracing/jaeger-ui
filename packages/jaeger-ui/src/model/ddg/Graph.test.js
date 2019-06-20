@@ -26,7 +26,7 @@ describe('Graph', () => {
    * This function takes in a Graph and validates the structure based on the expected vertices.
    *
    * @param {Graph} graph - The Graph to validate.
-   * @param {Object[]} expectedVertices - The vertices that the DdgEvGraph should have.
+   * @param {Object[]} expectedVertices - The vertices that the Graph should have.
    * @param {number[]} expectedVertices[].visIndices - The visibility indices that should all share one
    *     DdgVertex.
    * @param {number[]} expectedVertices[].focalSIdeNeighbors - A single visibilityIdx is sufficient to define a
@@ -44,7 +44,7 @@ describe('Graph', () => {
       // Validate that the common vertex is associated with all of its pathElems
       expect(graph.vertexToPathElems.get(vertex)).toEqual(new Set(pathElems));
 
-      // Validate that there is an edge from the vertex back to each expected focalSideNeighbor
+      // Validate that there is an edge connecting the vertex with each expected focalSideNeighbor
       expectedEdgeCount += focalSideNeighbors.length;
       const focalSideEdges = Array.from(
         new Set(pathElems.map(elem => graph.pathElemToEdge.get(elem)))
@@ -159,7 +159,7 @@ describe('Graph', () => {
       ]);
     });
 
-    it('tracks reuses edge when possible', () => {
+    it('reuses edge when possible', () => {
       const convergentGraph = new Graph({
         ddgModel: convergentModel,
       });
