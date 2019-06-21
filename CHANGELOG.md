@@ -1,5 +1,21 @@
 # Releases
 
+## v1.3.0 (June 21, 2019)
+
+### Enhancements
+
+- **Search:** Make maximum lookback configurable ([@everett980](https://github.com/everett980) in [#384](https://github.com/jaegertracing/jaeger-ui/pull/384))
+
+- **Trace detail:** Deduplicate tags for spans ([@rubenvp8510](https://github.com/rubenvp8510) in [#375](https://github.com/jaegertracing/jaeger-ui/pull/375))
+
+- **Trace detail:** Wrap span tag values ([@epkugelmass](https://github.com/epkugelmass) in [#388](https://github.com/jaegertracing/jaeger-ui/pull/388))
+
+### Fixes
+
+- **Search:** Validate when tags and/or references fields are arrays. ([@rubenvp8510](https://github.com/rubenvp8510) in [#382](https://github.com/jaegertracing/jaeger-ui/pull/382))
+
+- **Search:** Validate when there is no query but a JSON file is loaded ([@rubenvp8510](https://github.com/rubenvp8510) in [#383](https://github.com/jaegertracing/jaeger-ui/pull/383))
+
 ## v1.2.0 (May 14, 2019)
 
 ### Enhancements
