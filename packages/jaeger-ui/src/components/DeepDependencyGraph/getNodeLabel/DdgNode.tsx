@@ -1,0 +1,60 @@
+// Copyright (c) 2019 Uber Technologies, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+import * as React from 'react';
+import cx from 'classnames';
+
+import focalNodeIcon from './focalNodeIcon';
+import { StyleStates } from '../../../model/ddg/types';
+
+import './DdgNode.css';
+
+type TProps = {
+  id: string;
+  service: string;
+  operation: string | null;
+  isFocalNode: boolean;
+  viewModifiers: number;
+  setAsFocalNode: (service: string, operation: string | null) => void;
+  setViewModifier: (id: string, viewModifier: StyleStates, isEnabled: boolean) => void;
+};
+
+export default class Node extends React.PureComponent<TProps> {
+  setAsFocalNode = () => {
+    const { operation, service, setAsFocalNode } = this.props;
+    setAsFocalNode(service, operation);
+  };
+
+  onMouseUx = (event: React.MouseEvent<HTMLElement>) => {
+    const { id, setViewModifier } = this.props;
+    setViewModifier(id, StyleStates.Hovered, event.type === 'mouseover');
+  };
+
+  render() {
+    const { isFocalNode, operation, service } = this.props;
+    return (
+      <div
+        className={cx('DdgNode', { 'is-focalNode': isFocalNode })}
+        onMouseOver={this.onMouseUx}
+        onMouseOut={this.onMouseUx}
+      >
+        {isFocalNode && <div className="DdgNode--focalMarker">{focalNodeIcon}</div>}
+        <div>
+          <h4 className="DdgNode--label">{service}</h4>
+          {operation && <div className="DdgNode--label">{operation}</div>}
+        </div>
+      </div>
+    );
+  }
+}

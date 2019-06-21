@@ -19,6 +19,7 @@ import _takeWhile from 'lodash/takeWhile';
 import { History as RouterHistory, Location } from 'history';
 import queryString from 'query-string';
 
+import getNodeLabel from './getNodeLabel';
 import DdgEVManager from '../../model/ddg/DdgEVManager';
 import { createKey } from '../../model/ddg/visibility-key';
 
@@ -69,10 +70,11 @@ export default class Graph extends Component<TProps> {
         minimap
         zoom
         arrowScaleDampener={0}
-        minimapClassName="DeepDependencyGraph--miniMap"
+        minimapClassName="u-miniMap"
         layoutManager={this.layoutManager}
         edges={edges}
         vertices={vertices}
+        getNodeLabel={getNodeLabel}
       />
     );
   }
