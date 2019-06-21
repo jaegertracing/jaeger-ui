@@ -54,6 +54,8 @@ export type TDdgModel = {
   visIdxToPathElem: PathElem[];
 };
 
+export type TDdgVertex = TVertex<{ service: string; operation: string }>;
+
 export type TDdgStateEntry =
   | {
       state: typeof fetchedState.LOADING;
@@ -70,24 +72,24 @@ export type TDdgStateEntry =
 
 export type TDdgState = Record<string, Record<string, Record<string, Record<string, TDdgStateEntry>>>>;
 
-export enum StyleStates {
+export enum EViewModifier {
   None,
   Hovered,
   Selected,
   Emphasized = 1 << 2, // eslint-disable-line no-bitwise
 }
 
-export type TDdgActionMeta = {
-  query: {
-    service: string;
-    operation?: string;
-    start: number;
-    end: number;
-  };
+export type TDdgRequiredUrlState = {
+  service: string;
+  operation?: string;
+  start: number;
+  end: number;
 };
 
-export type TDdgAddStyleAction = { visibilityIndices: number[]; style: number };
+export type TDdgActionMeta = {
+  query: TDdgRequiredUrlState;
+};
 
-export type TDdgClearStyleAction = { visibilityIndices?: number[]; style?: number };
+export type TDdgAddStylePayload = TDdgRequiredUrlState & { visibilityIndices: number[]; style: number };
 
-export type TDdgVertex = TVertex<{ service: string; operation: string }>;
+export type TDdgClearStylePayload = TDdgRequiredUrlState & { visibilityIndices?: number[]; style?: number };
