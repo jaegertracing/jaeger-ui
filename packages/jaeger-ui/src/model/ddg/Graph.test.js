@@ -12,15 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as testResources from './sample-paths.test.resources';
+import { convergentPaths, focalPayloadElem, simplePath } from './sample-paths.test.resources';
 import transformDdgData from './transformDdgData';
 
 import Graph from './Graph';
 import { encode } from './visibility-codec';
 
 describe('Graph', () => {
-  const convergentModel = transformDdgData(testResources.convergentPaths, testResources.focalPayloadElem);
-  const simpleModel = transformDdgData([testResources.simplePath], testResources.focalPayloadElem);
+  const convergentModel = transformDdgData(convergentPaths, focalPayloadElem);
+  const simpleModel = transformDdgData([simplePath], focalPayloadElem);
 
   /**
    * This function takes in a Graph and validates the structure based on the expected vertices.
@@ -163,11 +163,11 @@ describe('Graph', () => {
       const convergentGraph = new Graph({
         ddgModel: convergentModel,
       });
-      const sharedEdgeElem0 = convergentGraph.visIdxToPathElem[5];
-      const sharedEdgeElem1 = convergentGraph.visIdxToPathElem[4];
+      const sharedEdgeElemA = convergentGraph.visIdxToPathElem[5];
+      const sharedEdgeElemB = convergentGraph.visIdxToPathElem[4];
 
-      expect(convergentGraph.pathElemToEdge.get(sharedEdgeElem0)).toBe(
-        convergentGraph.pathElemToEdge.get(sharedEdgeElem1)
+      expect(convergentGraph.pathElemToEdge.get(sharedEdgeElemA)).toBe(
+        convergentGraph.pathElemToEdge.get(sharedEdgeElemB)
       );
     });
 
@@ -192,7 +192,6 @@ describe('Graph', () => {
     const convergentGraph = new Graph({
       ddgModel: convergentModel,
     });
-    const { convergentPaths } = testResources;
 
     it('returns just focalNode', () => {
       const { edges, vertices } = convergentGraph.getVisible(encode([0]));

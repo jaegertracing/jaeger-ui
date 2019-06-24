@@ -55,7 +55,7 @@ export default class PathElem {
 
   get focalSideNeighbor(): PathElem | null {
     if (!this.distance) return null;
-    return this.memberOf.members[this.memberIdx - this.distance / Math.abs(this.distance)];
+    return this.memberOf.members[this.memberIdx - Math.sign(this.distance)];
   }
 
   private toJSONHelper = () => ({
