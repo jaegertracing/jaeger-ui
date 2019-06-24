@@ -49,10 +49,12 @@ export default class Graph {
       // Link pathElem to its vertex
       this.pathElemToVertex.set(pathElem, vertex);
 
-      // Type cast as its impossible for the vertex to exist without existing in vertexToPathElems map.
-      // Typically this can be avoided by throwing an error if absent, but there is no way to force the error
-      // for testing.
-      const pathElemsForVertex = this.vertexToPathElems.get(vertex) as Set<PathElem>;
+      const pathElemsForVertex = this.vertexToPathElems.get(vertex);
+
+      /* istanbul ignore next */
+      if (!pathElemsForVertex) {
+        throw new Error(`Vertex exists without pathElems, vertex: ${vertex}`);
+      }
 
       // If the newly-visible PathElem is not the focalNode, it needs to be connected to the rest of the graph
       const connectedElem = pathElem.focalSideNeighbor;

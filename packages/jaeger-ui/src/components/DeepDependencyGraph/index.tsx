@@ -25,7 +25,7 @@ import LoadingIndicator from '../common/LoadingIndicator';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import { fetchedState } from '../../constants';
 import extractQuery from '../../model/ddg/extractQuery';
-import { TDdgActionMeta, TDdgStateEntry } from '../../model/ddg/types';
+import { stateKey, TDdgActionMeta, TDdgStateEntry } from '../../model/ddg/types';
 import { ReduxState } from '../../types';
 
 // import './index.css';
@@ -110,7 +110,7 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
   const { service, operation, start, end, visibilityKey } = extractQuery(ownProps.location.search);
   let graphState: TDdgStateEntry | undefined;
   if (service && start && end) {
-    graphState = _get(state, ['deepDependencyGraph', service, operation || '*', start, end]);
+    graphState = _get(state, ['deepDependencyGraph', stateKey(service, operation, start, end)]);
   }
 
   return {
