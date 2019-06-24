@@ -22,6 +22,7 @@ import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
 import { fetchedState } from '../../constants';
 import * as extractQuery from '../../model/ddg/extractQuery';
+import { stateKey } from '../../model/ddg/types';
 
 describe('DeepDependencyGraphPage', () => {
   describe('DeepDependencyGraphPageImpl', () => {
@@ -146,8 +147,12 @@ describe('DeepDependencyGraphPage', () => {
       const graphState = 'testGraphState';
       const graphStateWithoutOp = 'testGraphStateWithoutOp';
       const reduxState = {};
-      _set(reduxState, ['deepDependencyGraph', service, operation, start, end], graphState);
-      _set(reduxState, ['deepDependencyGraph', service, '*', start, end], graphStateWithoutOp);
+      _set(reduxState, ['deepDependencyGraph', stateKey(service, operation, start, end)], graphState);
+      _set(
+        reduxState,
+        ['deepDependencyGraph', stateKey(service, undefined, start, end)],
+        graphStateWithoutOp
+      );
 
       querySpy.mockReturnValue(expected);
       const result = mapStateToProps(reduxState, { location: { search } });
