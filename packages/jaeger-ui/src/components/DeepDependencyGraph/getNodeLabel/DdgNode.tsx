@@ -23,19 +23,19 @@ import { StyleStates } from '../../../model/ddg/types';
 import './DdgNode.css';
 
 type TProps = {
-  id: string;
+  vertexKey: string;
   service: string;
   operation: string | null;
   focalNodeUrl: string | null;
   isFocalNode: boolean;
   viewModifiers: number;
-  setViewModifier: (id: string, viewModifier: StyleStates, isEnabled: boolean) => void;
+  setViewModifier: (vertexKey: string, viewModifier: StyleStates, isEnabled: boolean) => void;
 };
 
 export default class Node extends React.PureComponent<TProps> {
   onMouseUx = (event: React.MouseEvent<HTMLElement>) => {
-    const { id, setViewModifier } = this.props;
-    setViewModifier(id, StyleStates.Hovered, event.type === 'mouseover');
+    const { vertexKey, setViewModifier } = this.props;
+    setViewModifier(vertexKey, StyleStates.Hovered, event.type === 'mouseover');
   };
 
   render() {

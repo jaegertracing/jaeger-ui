@@ -19,7 +19,7 @@ import DdgNode from './DdgNode';
 import { StyleStates } from '../../../model/ddg/types';
 
 describe('<DdgNode>', () => {
-  const id = 'some-id';
+  const vertexKey = 'some-key';
   const service = 'some-service';
   const operation = 'some-operation';
 
@@ -28,7 +28,7 @@ describe('<DdgNode>', () => {
 
   beforeEach(() => {
     props = {
-      id,
+      vertexKey,
       service,
       operation,
       isFocalNode: false,
@@ -54,8 +54,8 @@ describe('<DdgNode>', () => {
     expect(calls.length).toBe(1);
     wrapper.simulate('mouseout', { type: 'mouseout' });
     expect(calls.length).toBe(2);
-    expect(calls[0]).toEqual([id, StyleStates.Hovered, true]);
-    expect(calls[1]).toEqual([id, StyleStates.Hovered, false]);
+    expect(calls[0]).toEqual([vertexKey, StyleStates.Hovered, true]);
+    expect(calls[1]).toEqual([vertexKey, StyleStates.Hovered, false]);
   });
 
   it('renders correctly when isFocalNode = true and focalNodeUrl = null', () => {

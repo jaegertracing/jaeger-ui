@@ -14,7 +14,7 @@
 
 import { shallow } from 'enzyme';
 
-import getNodeLabel from './getNodeLabel';
+import getNodeLabel from './index';
 
 describe('getNodeLabel()', () => {
   it('returns a <DdgNode/>', () => {
