@@ -27,7 +27,7 @@ import {
 } from './deep-dependency-graph';
 import { fetchedState } from '../constants';
 import * as transformDdgData from '../model/ddg/transformDdgData';
-import { StyleStates } from '../model/ddg/types';
+import { EViewModifier } from '../model/ddg/types';
 
 describe('deepDependencyGraph reducers', () => {
   const service = 'serviceName';
@@ -176,22 +176,25 @@ describe('deepDependencyGraph reducers', () => {
     const stylePath = [...targetPath, 'styleStates'];
     const visibilityIndices = [4, 8, 15, 16, 23, 42];
     const emphasizedPayload = {
+      ...meta.query,
       visibilityIndices,
-      style: StyleStates.Emphasized,
+      style: EViewModifier.Emphasized,
     };
     const emphasizedStyleMap = new Map();
     visibilityIndices.forEach(idx => emphasizedStyleMap.set(idx, emphasizedPayload.style));
 
     const selectedPayload = {
+      ...meta.query,
       visibilityIndices,
-      style: StyleStates.Selected,
+      style: EViewModifier.Selected,
     };
     const selectedStyleMap = new Map();
     visibilityIndices.forEach(idx => selectedStyleMap.set(idx, selectedPayload.style));
 
     const multiPayload = {
+      ...meta.query,
       visibilityIndices,
-      style: StyleStates.Emphasized | StyleStates.Selected, // eslint-disable-line no-bitwise
+      style: EViewModifier.Emphasized | EViewModifier.Selected, // eslint-disable-line no-bitwise
     };
     const multiStyleMap = new Map();
     visibilityIndices.forEach(idx => multiStyleMap.set(idx, multiPayload.style));
@@ -221,26 +224,26 @@ describe('deepDependencyGraph reducers', () => {
     describe('addStyleState', () => {
       it('warns and returns existing state if not done', () => {
         const copyOfState = _cloneDeep(existingState);
-        const newState = addStyleState(copyOfState, { meta, payload: emphasizedPayload });
+        const newState = addStyleState(copyOfState, { payload: emphasizedPayload });
         expect(newState).toBe(copyOfState);
         expect(newState).toEqual(existingState);
         expect(warnSpy).toHaveBeenLastCalledWith('Cannot set style state for unloaded Deep Dependency Graph');
       });
 
       it('adds style to empty style state', () => {
-        const newState = addStyleState(emptyDoneState, { meta, payload: emphasizedPayload });
+        const newState = addStyleState(emptyDoneState, { payload: emphasizedPayload });
         const expected = _set(emptyDoneState, stylePath, emphasizedStyleMap);
         expect(newState).toEqual(expected);
       });
 
       it('adds multilpe styles at once', () => {
-        const newState = addStyleState(emptyDoneState, { meta, payload: multiPayload });
+        const newState = addStyleState(emptyDoneState, { payload: multiPayload });
         const expected = _set(emptyDoneState, stylePath, multiStyleMap);
         expect(newState).toEqual(expected);
       });
 
       it('adds provided style to existing style', () => {
-        const newState = addStyleState(emphasizedStyledState, { meta, payload: selectedPayload });
+        const newState = addStyleState(emphasizedStyledState, { payload: selectedPayload });
         const expected = _set(emphasizedStyledState, stylePath, multiStyleMap);
         expect(newState).toEqual(expected);
       });
@@ -255,9 +258,9 @@ describe('deepDependencyGraph reducers', () => {
           },
           Object
         );
+        const { operation: _op, ...emphasizedPayloadWithoutState } = emphasizedPayload;
         const newState = addStyleState(operationlessDoneState, {
-          meta: metaWithoutOperation,
-          payload: emphasizedPayload,
+          payload: emphasizedPayloadWithoutState,
         });
         const expected = _set(
           operationlessDoneState,
@@ -274,7 +277,7 @@ describe('deepDependencyGraph reducers', () => {
 
       it('warns and returns existing state if not done', () => {
         const copyOfState = _cloneDeep(existingState);
-        const newState = clearStyleState(copyOfState, { meta, payload: emphasizedPayload });
+        const newState = clearStyleState(copyOfState, { payload: emphasizedPayload });
         expect(newState).toBe(copyOfState);
         expect(newState).toEqual(existingState);
         expect(warnSpy).toHaveBeenLastCalledWith(
@@ -283,14 +286,13 @@ describe('deepDependencyGraph reducers', () => {
       });
 
       it('clears the provided style preserving other style state', () => {
-        const newState = clearStyleState(multiStyledState, { meta, payload: selectedPayload });
+        const newState = clearStyleState(multiStyledState, { payload: selectedPayload });
         const expected = _set(multiStyledState, stylePath, emphasizedStyleMap);
         expect(newState).toEqual(expected);
       });
 
       it('clears provided indices if style is omitted', () => {
         const newState = clearStyleState(multiStyledState, {
-          meta,
           payload: { visibilityIndices: partialIndices },
         });
         const expectedMap = new Map([[omittedIdx, multiPayload.style]]);
@@ -300,8 +302,7 @@ describe('deepDependencyGraph reducers', () => {
 
       it('clears provided style from all indices if visibilityIndices array is omitted', () => {
         const newState = clearStyleState(multiStyledState, {
-          meta,
-          payload: { style: StyleStates.Selected },
+          payload: { style: EViewModifier.Selected },
         });
         const expected = _set(multiStyledState, stylePath, emphasizedStyleMap);
         expect(newState).toEqual(expected);
@@ -310,15 +311,14 @@ describe('deepDependencyGraph reducers', () => {
       it('removes indices that become 0', () => {
         const mixedStyleMap = new Map(multiStyleMap);
         for (let i = 0; i < partialIndices.length - 1; i++) {
-          mixedStyleMap.set(partialIndices[i], StyleStates.Emphasized);
+          mixedStyleMap.set(partialIndices[i], EViewModifier.Emphasized);
         }
         const mixedStyledState = _set(_cloneDeep(emptyDoneState), stylePath, mixedStyleMap);
         const newState = clearStyleState(mixedStyledState, {
-          meta,
-          payload: { visibilityIndices: partialIndices, style: StyleStates.Emphasized },
+          payload: { visibilityIndices: partialIndices, style: EViewModifier.Emphasized },
         });
         const expectedMap = new Map([
-          [partialIndices[partialIndices.length - 1], StyleStates.Selected],
+          [partialIndices[partialIndices.length - 1], EViewModifier.Selected],
           [omittedIdx, multiPayload.style],
         ]);
         const expected = _set(mixedStyledState, stylePath, expectedMap);
@@ -328,10 +328,10 @@ describe('deepDependencyGraph reducers', () => {
       it('does not add previously absent idx if included in payload', () => {
         const partialStyleMap = new Map();
         for (let i = 0; i < partialIndices.length; i++) {
-          partialStyleMap.set(partialIndices[i], StyleStates.Emphasized);
+          partialStyleMap.set(partialIndices[i], EViewModifier.Emphasized);
         }
         const partiallyStyledState = _set(_cloneDeep(emptyDoneState), stylePath, partialStyleMap);
-        const newState = clearStyleState(partiallyStyledState, { meta, payload: emphasizedPayload });
+        const newState = clearStyleState(partiallyStyledState, { payload: emphasizedPayload });
         const expected = _set(partiallyStyledState, stylePath, new Map());
         expect(newState).toEqual(expected);
       });
@@ -346,9 +346,9 @@ describe('deepDependencyGraph reducers', () => {
           },
           Object
         );
+        const { operation: _op, ...selectedPayloadWithoutState } = selectedPayload;
         const newState = clearStyleState(operationlessStyledState, {
-          meta: metaWithoutOperation,
-          payload: selectedPayload,
+          payload: selectedPayloadWithoutState,
         });
         const expected = _set(
           operationlessStyledState,

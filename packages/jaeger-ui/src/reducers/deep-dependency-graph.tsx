@@ -22,13 +22,13 @@ import { ApiError } from '../types/api-error';
 import transformDdgData from '../model/ddg/transformDdgData';
 import {
   TDdgActionMeta,
-  TDdgAddStyleAction,
-  TDdgClearStyleAction,
+  TDdgAddStylePayload,
+  TDdgClearStylePayload,
   TDdgPayload,
   TDdgState,
   TDdgStateEntry,
 } from '../model/ddg/types';
-import { guardReducerWithMeta } from '../utils/guardReducer';
+import guardReducer, { guardReducerWithMeta } from '../utils/guardReducer';
 
 function newState(
   state: TDdgState,
@@ -53,13 +53,8 @@ function newState(
   };
 }
 
-export function addStyleState(
-  state: TDdgState,
-  { meta, payload }: { meta: TDdgActionMeta; payload: TDdgAddStyleAction }
-) {
-  const { query } = meta;
-  const { service, operation = '*', start, end } = query;
-  const { visibilityIndices, style } = payload;
+export function addStyleState(state: TDdgState, { payload }: { payload: TDdgAddStylePayload }) {
+  const { service, operation = '*', start, end, visibilityIndices, style } = payload;
   const stateEntry: TDdgStateEntry | undefined = _get(state, [service, operation, start, end]);
   if (!stateEntry || stateEntry.state !== fetchedState.DONE) {
     console.warn('Cannot set style state for unloaded Deep Dependency Graph'); // eslint-disable-line no-console
@@ -75,13 +70,8 @@ export function addStyleState(
   });
 }
 
-export function clearStyleState(
-  state: TDdgState,
-  { meta, payload }: { meta: TDdgActionMeta; payload: TDdgClearStyleAction }
-) {
-  const { query } = meta;
-  const { service, operation = '*', start, end } = query;
-  const { visibilityIndices, style } = payload;
+export function clearStyleState(state: TDdgState, { payload }: { payload: TDdgClearStylePayload }) {
+  const { service, operation = '*', start, end, visibilityIndices, style } = payload;
   const stateEntry: TDdgStateEntry | undefined = _get(state, [service, operation, start, end]);
   if (!stateEntry || stateEntry.state !== fetchedState.DONE) {
     console.warn('Cannot change style state for unloaded Deep Dependency Graph'); // eslint-disable-line no-console
@@ -143,10 +133,8 @@ export default handleActions(
       fetchDeepDependencyGraphErred
     ),
 
-    [actionTypes.ADD_STYLE_STATE]: guardReducerWithMeta<TDdgState, TDdgAddStyleAction, TDdgActionMeta>(
-      addStyleState
-    ),
-    [actionTypes.CLEAR_STYLE_STATE]: guardReducerWithMeta<TDdgState, TDdgClearStyleAction, TDdgActionMeta>(
+    [actionTypes.ADD_STYLE_STATE]: guardReducer<TDdgState, { payload: TDdgAddStylePayload }>(addStyleState),
+    [actionTypes.CLEAR_STYLE_STATE]: guardReducer<TDdgState, { payload: TDdgClearStylePayload }>(
       clearStyleState
     ),
   },

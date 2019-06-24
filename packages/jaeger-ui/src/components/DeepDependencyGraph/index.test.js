@@ -88,8 +88,7 @@ describe('DeepDependencyGraphPage', () => {
       it('renders graph when done', () => {
         const graphStandin = shallow(
           <DeepDependencyGraphPageImpl graphState={{ state: fetchedState.DONE }} />
-        )
-          .find('h1')
+        ).find('h1');
         expect(graphStandin.text()).toBe('Loaded');
       });
 
