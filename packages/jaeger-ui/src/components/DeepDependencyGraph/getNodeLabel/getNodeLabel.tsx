@@ -18,20 +18,17 @@ import DdgNode from './DdgNode';
 import { DdgVertex, StyleStates } from '../../../model/ddg/types';
 
 // temp fill in props
+/* istanbul ignore next */
 const noops = {
-  setAsFocalNode(service: string, operation: string | null) {
-    // eslint-disable-next-line no-console
-    console.log(`set as focal: ${service} -- ${operation}`);
-  },
   setViewModifier(id: string, viewModifier: StyleStates, enabled: boolean) {
     // eslint-disable-next-line no-console
     console.log(`set view modifier: ${enabled ? 'on' : 'OFF'} ${viewModifier} -- ${id}`);
   },
 };
 
-// temp -- transform DdgVertex for rendering purposes
 export default function getNodeLabel(vertex: DdgVertex) {
-  const pathElem = [...vertex.pathElems.values()][0];
+  // temp -- get DdgVertex for rendering purposes
+  const pathElem = [...vertex.pathElems][0];
   if (!pathElem) {
     throw new Error('Invalid vertex state');
   }
@@ -44,6 +41,7 @@ export default function getNodeLabel(vertex: DdgVertex) {
       operation={operationName}
       isFocalNode={isFocalNode}
       viewModifiers={0}
+      focalNodeUrl={isFocalNode ? null : 'some-url'}
       {...noops}
     />
   );

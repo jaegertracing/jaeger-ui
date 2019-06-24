@@ -16,6 +16,8 @@ import * as React from 'react';
 import cx from 'classnames';
 
 import focalNodeIcon from './focalNodeIcon';
+import setFocusButtonIcon from './setFocusButtonIcon';
+import NewWindowIcon from '../../common/NewWindowIcon';
 import { StyleStates } from '../../../model/ddg/types';
 
 import './DdgNode.css';
@@ -24,35 +26,41 @@ type TProps = {
   id: string;
   service: string;
   operation: string | null;
+  focalNodeUrl: string | null;
   isFocalNode: boolean;
   viewModifiers: number;
-  setAsFocalNode: (service: string, operation: string | null) => void;
   setViewModifier: (id: string, viewModifier: StyleStates, isEnabled: boolean) => void;
 };
 
 export default class Node extends React.PureComponent<TProps> {
-  setAsFocalNode = () => {
-    const { operation, service, setAsFocalNode } = this.props;
-    setAsFocalNode(service, operation);
-  };
-
   onMouseUx = (event: React.MouseEvent<HTMLElement>) => {
     const { id, setViewModifier } = this.props;
     setViewModifier(id, StyleStates.Hovered, event.type === 'mouseover');
   };
 
   render() {
-    const { isFocalNode, operation, service } = this.props;
+    const { focalNodeUrl, isFocalNode, operation, service } = this.props;
     return (
-      <div
-        className={cx('DdgNode', { 'is-focalNode': isFocalNode })}
-        onMouseOver={this.onMouseUx}
-        onMouseOut={this.onMouseUx}
-      >
-        {isFocalNode && <div className="DdgNode--focalMarker">{focalNodeIcon}</div>}
-        <div>
-          <h4 className="DdgNode--label">{service}</h4>
-          {operation && <div className="DdgNode--label">{operation}</div>}
+      <div className="DdgNode" onMouseOver={this.onMouseUx} onMouseOut={this.onMouseUx}>
+        <div className={cx('DdgNode--core', { 'is-focalNode': isFocalNode })}>
+          {isFocalNode && <div className="DdgNode--focalMarker">{focalNodeIcon}</div>}
+          <div>
+            <h4 className="DdgNode--label">{service}</h4>
+            {operation && <div className="DdgNode--label">{operation}</div>}
+          </div>
+        </div>
+
+        <div className="DdgNode--actionsWrapper">
+          {focalNodeUrl && (
+            <a href={focalNodeUrl} className="DdgNode--actionsItem">
+              {setFocusButtonIcon}
+              <span className="DdgNode--actionsItemText">Set focus</span>
+            </a>
+          )}
+          <a className="DdgNode--actionsItem">
+            <NewWindowIcon />
+            <span className="DdgNode--actionsItemText">View traces</span>
+          </a>
         </div>
       </div>
     );

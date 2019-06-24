@@ -14,18 +14,19 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-.DdgNode {
+.DdgNode--core {
   background: #fff;
   border: 1px solid #bbb;
   box-shadow: 0 0px 4px 1px rgba(0, 0, 0, 0.07);
   display: flex;
+  min-width: 125px;
 }
 
-.DdgNode.is-focalNode {
+.DdgNode--core.is-focalNode {
   border-color: #eb2f96;
 }
 
-.DdgNode.is-focalNode::before {
+.DdgNode--core.is-focalNode::before {
   bottom: 0;
   content: '';
   left: 0;
@@ -34,7 +35,7 @@ limitations under the License.
   right: 0;
   top: 0;
 }
-.DdgNode.is-focalNode::after {
+.DdgNode--core.is-focalNode::after {
   bottom: 0;
   content: '';
   left: 0;
@@ -60,4 +61,40 @@ limitations under the License.
 
 .DdgNode--label:not(:first-child) {
   padding-top: 0.2rem;
+}
+
+.DdgNode--actionsWrapper {
+  background: #fff;
+  border-radius: 3px;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  bottom: 100%;
+  box-shadow: 0 0px 4px 1px rgba(0, 0, 0, 0.1);
+  left: 1em;
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  transition: opacity 0.1s;
+  white-space: nowrap;
+}
+
+.DdgNode:hover > .DdgNode--actionsWrapper {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.DdgNode--actionsItem {
+  align-items: center;
+  display: flex;
+  padding: 0.5em;
+}
+
+.DdgNode--actionsItem:not(:hover) {
+  color: inherit;
+}
+
+.DdgNode--actionsItemText {
+  font-size: 0.9em;
+  line-height: normal;
+  margin-left: 0.5em;
 }
