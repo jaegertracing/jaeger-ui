@@ -64,17 +64,6 @@ describe('PathElem', () => {
     expect(pathElem.focalSideNeighbor).toBe(null);
   });
 
-  it('has correct farSideEdgesKey and focalSideEdgesKey when upstream', () => {
-    expect(pathElem.farSideEdgesKey).toBe('ingressEdges');
-    expect(pathElem.focalSideEdgesKey).toBe('egressEdges');
-  });
-
-  it('has correct farSideEdgesKey and focalSideEdgesKey when downstream', () => {
-    pathElem = new PathElem({ path: testPath, operation: testOperation, memberIdx: testPath.focalIdx + 1 });
-    expect(pathElem.farSideEdgesKey).toBe('egressEdges');
-    expect(pathElem.focalSideEdgesKey).toBe('ingressEdges');
-  });
-
   describe('legibility', () => {
     const path = {
       focalIdx: 2,

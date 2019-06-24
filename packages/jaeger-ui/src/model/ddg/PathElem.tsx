@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { EDdgEdgeKeys, TDdgOperation, TDdgPath } from './types';
+import { TDdgOperation, TDdgPath } from './types';
 
 export default class PathElem {
   memberIdx: number;
@@ -56,14 +56,6 @@ export default class PathElem {
   get focalSideNeighbor(): PathElem | null {
     if (!this.distance) return null;
     return this.memberOf.members[this.memberIdx - this.distance / Math.abs(this.distance)];
-  }
-
-  get focalSideEdgesKey(): EDdgEdgeKeys {
-    return this.distance < 0 ? EDdgEdgeKeys.egressEdges : EDdgEdgeKeys.ingressEdges;
-  }
-
-  get farSideEdgesKey(): EDdgEdgeKeys {
-    return this.distance > 0 ? EDdgEdgeKeys.egressEdges : EDdgEdgeKeys.ingressEdges;
   }
 
   private toJSONHelper = () => ({

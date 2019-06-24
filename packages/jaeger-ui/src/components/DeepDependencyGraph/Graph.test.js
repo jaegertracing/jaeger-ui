@@ -18,7 +18,7 @@ import { DirectedGraph, LayoutManager } from '@jaegertracing/plexus';
 
 import Graph from './Graph';
 
-import DdgEVManager from '../../model/ddg/DdgEVManager';
+import GraphModel from '../../model/ddg/Graph';
 
 describe('<Graph />', () => {
   const replaceMock = jest.fn();
@@ -26,9 +26,14 @@ describe('<Graph />', () => {
   const otherValue = 'testOtherValue';
   const props = {
     ddgModel: {
-      visIdxToPathElem: new Array(10)
-        .fill()
-        .map((_empty, i) => ({ visibilityIdx: i, distance: Math.ceil(i / 3) })),
+      distanceToPathElems: new Map([
+        [-2, [{ visibilityIdx: 8 }, { visibilityIdx: 9 }]],
+        [-1, [{ visibilityIdx: 4 }, { visibilityIdx: 5 }]],
+        [0, [{ visibilityIdx: 0 }, { visibilityIdx: 1 }]],
+        [1, [{ visibilityIdx: 2 }, { visibilityIdx: 3 }]],
+        [2, [{ visibilityIdx: 6 }, { visibilityIdx: 7 }]],
+      ]),
+      visIdxToPathElem: [],
     },
     history: {
       replace: replaceMock,
@@ -43,14 +48,44 @@ describe('<Graph />', () => {
   describe('constructor', () => {
     it('creates new managers', () => {
       const graph = new Graph(props);
-      expect(graph.ddgEVManager instanceof DdgEVManager).toBe(true);
+      expect(graph.graphModel instanceof GraphModel).toBe(true);
       expect(graph.layoutManager instanceof LayoutManager).toBe(true);
     });
 
     it('adds visibilityKey to url if not given visKey', () => {
       new Graph(propsWithoutVisKey); // eslint-disable-line no-new
       expect(replaceMock).toHaveBeenLastCalledWith(
-        expect.objectContaining({ search: `${props.location.search}&visibilityKey=3j` })
+        expect.objectContaining({ search: `${props.location.search}&visibilityKey=sf` })
+      );
+    });
+
+    it('handles smaller than two-hop graph', () => {
+      const slightlySmallerMap = new Map(props.ddgModel.distanceToPathElems);
+      slightlySmallerMap.delete(-2);
+      const slightlySmallerProps = {
+        ...propsWithoutVisKey,
+        ddgModel: {
+          ...propsWithoutVisKey.ddgModel,
+          distanceToPathElems: slightlySmallerMap,
+        },
+      };
+
+      new Graph(slightlySmallerProps); // eslint-disable-line no-new
+      expect(replaceMock).toHaveBeenLastCalledWith(
+        expect.objectContaining({ search: `${props.location.search}&visibilityKey=73` })
+      );
+
+      const noElemsProps = {
+        ...propsWithoutVisKey,
+        ddgModel: {
+          ...propsWithoutVisKey.ddgModel,
+          distanceToPathElems: new Map(),
+        },
+      };
+
+      new Graph(noElemsProps); // eslint-disable-line no-new
+      expect(replaceMock).toHaveBeenLastCalledWith(
+        expect.objectContaining({ search: `${props.location.search}&visibilityKey=` })
       );
     });
   });
@@ -67,7 +102,7 @@ describe('<Graph />', () => {
       const vertices = ['test vertices array'];
       const wrapper = shallow(<Graph {...propsWithoutVisKey} />);
       const getEVSpy = jest
-        .spyOn(wrapper.instance().ddgEVManager, 'getEdgesAndVertices')
+        .spyOn(wrapper.instance().graphModel, 'getVisible')
         .mockImplementation(() => ({ edges, vertices }));
 
       wrapper.setProps(props);
