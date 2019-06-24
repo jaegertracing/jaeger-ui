@@ -18,7 +18,7 @@ import cx from 'classnames';
 import focalNodeIcon from './focalNodeIcon';
 import setFocusButtonIcon from './setFocusButtonIcon';
 import NewWindowIcon from '../../common/NewWindowIcon';
-import { StyleStates } from '../../../model/ddg/types';
+import { EViewModifier } from '../../../model/ddg/types';
 
 import './DdgNode.css';
 
@@ -29,13 +29,13 @@ type TProps = {
   focalNodeUrl: string | null;
   isFocalNode: boolean;
   viewModifiers: number;
-  setViewModifier: (vertexKey: string, viewModifier: StyleStates, isEnabled: boolean) => void;
+  setViewModifier: (vertexKey: string, viewModifier: EViewModifier, isEnabled: boolean) => void;
 };
 
 export default class Node extends React.PureComponent<TProps> {
   onMouseUx = (event: React.MouseEvent<HTMLElement>) => {
     const { vertexKey, setViewModifier } = this.props;
-    setViewModifier(vertexKey, StyleStates.Hovered, event.type === 'mouseover');
+    setViewModifier(vertexKey, EViewModifier.Hovered, event.type === 'mouseover');
   };
 
   render() {

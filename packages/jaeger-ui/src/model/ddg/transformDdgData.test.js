@@ -120,19 +120,19 @@ describe('transform ddg data', () => {
       doubleFocalPath,
       almostDoubleFocalPath,
     } = testResources;
-    const { visIdxToPathElem: presortedPathsVisIdxToPathElemMap } = transformDdgData(
+    const { visIdxToPathElem: presortedPathsVisIdxToPathElem } = transformDdgData(
       [simplePath, doubleFocalPath, almostDoubleFocalPath, longSimplePath],
       focalPayloadElem
     );
-    const { visIdxToPathElem: unsortedPathsVisIdxToPathElemMap } = transformDdgData(
+    const { visIdxToPathElem: unsortedPathsVisIdxToPathElem } = transformDdgData(
       [longSimplePath, almostDoubleFocalPath, simplePath, doubleFocalPath],
       focalPayloadElem
     );
 
-    expect(Array.from(presortedPathsVisIdxToPathElemMap.keys())).toEqual(
-      Array.from(unsortedPathsVisIdxToPathElemMap.keys())
+    expect(_map(presortedPathsVisIdxToPathElem, 'visibilityIdx')).toEqual(
+      _map(unsortedPathsVisIdxToPathElem, 'visibilityIdx')
     );
-    presortedPathsVisIdxToPathElemMap.forEach((presortedPathsPathElem, presortedPathsVisIdx) => {
+    presortedPathsVisIdxToPathElem.forEach((presortedPathsPathElem, presortedPathsVisIdx) => {
       const {
         memberIdx: presortedPathsMemberIdx,
         memberOf: presortedPathsMemberOf,
@@ -147,7 +147,7 @@ describe('transform ddg data', () => {
         memberOf: unsortedPathsMemberOf,
         operation: unsortedPathsOperation,
         visibilityIdx: unsortedPathsVisIdx,
-      } = unsortedPathsVisIdxToPathElemMap[presortedPathsVisIdx];
+      } = unsortedPathsVisIdxToPathElem[presortedPathsVisIdx];
       const { focalIdx: unsortedPathsFocalIdx } = unsortedPathsMemberOf;
       const { name: unsortedPathsOperationName, service: unsortedService } = unsortedPathsOperation;
       const { name: unsortedPathsServiceName } = unsortedService;

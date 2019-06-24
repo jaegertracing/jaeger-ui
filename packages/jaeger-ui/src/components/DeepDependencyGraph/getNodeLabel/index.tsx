@@ -15,30 +15,25 @@
 import * as React from 'react';
 
 import DdgNode from './DdgNode';
-import { DdgVertex, StyleStates } from '../../../model/ddg/types';
+import { EViewModifier, TDdgVertex } from '../../../model/ddg/types';
 
 // temp fill in props
 /* istanbul ignore next */
 const noops = {
-  setViewModifier(vertexKey: string, viewModifier: StyleStates, enabled: boolean) {
+  setViewModifier(vertexKey: string, viewModifier: EViewModifier, enabled: boolean) {
     // eslint-disable-next-line no-console
     console.log(`set view modifier: ${enabled ? 'on' : 'OFF'} ${viewModifier} -- ${vertexKey}`);
   },
 };
 
-export default function getNodeLabel(vertex: DdgVertex) {
-  // temp -- get DdgVertex for rendering purposes
-  const pathElem = [...vertex.pathElems][0];
-  if (!pathElem) {
-    throw new Error('Invalid vertex state');
-  }
-  const { name: operationName, service } = pathElem.operation;
-  const isFocalNode = pathElem.memberIdx === pathElem.memberOf.focalIdx;
+export default function getNodeLabel(vertex: TDdgVertex) {
+  const { operation, service } = vertex;
+  const isFocalNode = service.length % 3 === 0;
   return (
     <DdgNode
       vertexKey={vertex.key}
-      service={service.name}
-      operation={operationName}
+      service={service}
+      operation={operation}
       isFocalNode={isFocalNode}
       viewModifiers={0}
       focalNodeUrl={isFocalNode ? null : 'some-url'}

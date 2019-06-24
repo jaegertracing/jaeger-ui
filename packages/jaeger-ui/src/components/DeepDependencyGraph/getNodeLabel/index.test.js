@@ -18,30 +18,19 @@ import getNodeLabel from './index';
 
 describe('getNodeLabel()', () => {
   it('returns a <DdgNode/>', () => {
-    const opName = 'the-operation';
-    const svcName = 'the-service';
-    const focalIdx = 3;
-    const pathElem = {
-      memberOf: { focalIdx },
-      memberIdx: 2,
-      operation: {
-        name: opName,
-        service: {
-          name: svcName,
-        },
-      },
-    };
-    const pathElems = new Set([pathElem]);
-    let ddgNode = getNodeLabel({ pathElems });
+    const operation = 'the-operation';
+    const service = 'the-service';
+    const ddgNode = getNodeLabel({ operation, service });
     expect(ddgNode).toBeDefined();
-    let wrapper = shallow(ddgNode);
+    const wrapper = shallow(ddgNode);
     expect(wrapper).toMatchSnapshot();
     // set as the focal node
-    pathElem.memberIdx = focalIdx;
-    ddgNode = getNodeLabel({ pathElems });
-    expect(ddgNode).toBeDefined();
-    wrapper = shallow(ddgNode);
-    expect(wrapper).toMatchSnapshot();
+    // TODO(joe): update test after vertex indicates focal node or not
+    // pathElem.memberIdx = focalIdx;
+    // ddgNode = getNodeLabel({ pathElems });
+    // expect(ddgNode).toBeDefined();
+    // wrapper = shallow(ddgNode);
+    // expect(wrapper).toMatchSnapshot();
   });
 
   it('throws an error if given a vertex without any path elements', () => {
