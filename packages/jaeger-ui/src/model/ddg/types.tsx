@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { TVertex } from '@jaegertracing/plexus/lib/types';
+
 import PathElem from './PathElem';
 
 export { default as PathElem } from './PathElem';
@@ -34,19 +36,20 @@ export type TDdgOperation = {
   service: TDdgService;
 };
 
+export type TDdgServiceMap = Map<string, TDdgService>;
+
 export type TDdgPath = {
   focalIdx: number;
   members: PathElem[];
 };
 
-export type TDdgServiceMap = Map<string, TDdgService>;
-
-export type TDdgPathElemsByDistance = Map<number, PathElem[]>;
-export type TDdgVisibilityIdxToPathElem = Map<number, PathElem>;
+export type TDdgDistanceToPathElems = Map<number, PathElem[]>;
 
 export type TDdgModel = {
-  pathElemsByDistance: TDdgPathElemsByDistance;
+  distanceToPathElems: TDdgDistanceToPathElems;
   paths: TDdgPath[];
   services: TDdgServiceMap;
-  visibilityIdxToPathElem: TDdgVisibilityIdxToPathElem;
+  visIdxToPathElem: PathElem[];
 };
+
+export type TDdgVertex = TVertex<{ service: string; operation: string }>;

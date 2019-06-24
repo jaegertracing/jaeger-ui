@@ -38,12 +38,12 @@ export type TLayoutVertex<T = any> = TSizeVertex<T> & {
   top: number;
 };
 
-export type TEdge = {
+export type TEdge<T = any> = {
   from: TVertexKey;
   to: TVertexKey;
   isBidirectional?: boolean;
   label?: React.ReactNode;
-  data?: any;
+  data?: T;
 };
 
 export type TLayoutEdge = {

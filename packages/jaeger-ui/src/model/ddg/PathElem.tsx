@@ -52,4 +52,43 @@ export default class PathElem {
     }
     return this._visibilityIdx;
   }
+
+  get focalSideNeighbor(): PathElem | null {
+    if (!this.distance) return null;
+    return this.memberOf.members[this.memberIdx - Math.sign(this.distance)];
+  }
+
+  private toJSONHelper = () => ({
+    memberIdx: this.memberIdx,
+    operation: this.operation.name,
+    service: this.operation.service.name,
+    visibilityIdx: this._visibilityIdx,
+  });
+
+  /*
+   * Because the memberOf on a PathElem contains an array of all of its members which in turn all contain
+   * memberOf back to the path, some assistance is necessary when creating error messages. toJSON is called by
+   * JSON.stringify and expected to return a JSON object. To that end, this method simplifies the
+   * representation of the PathElems in memberOf's path to remove the circular reference.
+   */
+  toJSON() {
+    return {
+      ...this.toJSONHelper(),
+      memberOf: {
+        focalIdx: this.memberOf.focalIdx,
+        members: this.memberOf.members.map(member => member.toJSONHelper()),
+      },
+    };
+  }
+
+  // `toJSON` is called by `JSON.stringify` while `toString` is used by template strings and string concat
+  toString() {
+    return JSON.stringify(this.toJSON(), null, 2);
+  }
+
+  // `[Symbol.toStringTag]` is used when attempting to use an object as a key on an object, where a full
+  // stringified JSON would reduce clarity
+  get [Symbol.toStringTag]() {
+    return `PathElem ${this._visibilityIdx}`;
+  }
 }

@@ -13,13 +13,15 @@
 // limitations under the License.
 
 import PathElem from './PathElem';
+import { simplePath } from './sample-paths.test.resources';
 
 describe('PathElem', () => {
+  const testMemberIdx = 3;
   const testOperation = {};
   const testPath = {
     focalIdx: 5,
+    members: ['member0', 'member1', 'member2', 'member3', 'member4', 'member5'],
   };
-  const testMemberIdx = 3;
   const testVisibilityIdx = 105;
   let pathElem;
 
@@ -28,9 +30,9 @@ describe('PathElem', () => {
   });
 
   it('initializes instance properties', () => {
+    expect(pathElem.memberIdx).toBe(testMemberIdx);
     expect(pathElem.memberOf).toBe(testPath);
     expect(pathElem.operation).toBe(testOperation);
-    expect(pathElem.memberIdx).toBe(testMemberIdx);
   });
 
   it('calculates distance', () => {
@@ -51,5 +53,54 @@ describe('PathElem', () => {
     expect(() => {
       pathElem.visibilityIdx = testVisibilityIdx;
     }).toThrowError();
+  });
+
+  it('has focalSideNeighbor if distance is not 0', () => {
+    expect(pathElem.focalSideNeighbor).toBe(testPath.members[testMemberIdx + 1]);
+  });
+
+  it('has a null focalSideNeighbor if distance is 0', () => {
+    pathElem = new PathElem({ path: testPath, operation: testOperation, memberIdx: testPath.focalIdx });
+    expect(pathElem.focalSideNeighbor).toBe(null);
+  });
+
+  describe('legibility', () => {
+    const path = {
+      focalIdx: 2,
+    };
+    const members = simplePath.map(
+      ({ operation, service }, i) =>
+        new PathElem({
+          memberIdx: i,
+          operation: {
+            name: operation,
+            service: {
+              name: service,
+            },
+          },
+          path,
+        })
+    );
+    members[2].visibilityIdx = 0;
+    members[3].visibilityIdx = 1;
+    members[1].visibilityIdx = 2;
+    members[4].visibilityIdx = 3;
+    members[0].visibilityIdx = 4;
+    path.members = members;
+    const targetPathElem = path.members[1];
+
+    it('creates consumable JSON', () => {
+      expect(targetPathElem.toJSON()).toMatchSnapshot();
+    });
+
+    it('creates consumable string', () => {
+      expect(targetPathElem.toString()).toBe(JSON.stringify(targetPathElem.toJSON(), null, 2));
+    });
+
+    it('creates informative string tag', () => {
+      expect(Object.prototype.toString.call(targetPathElem)).toEqual(
+        `[object PathElem ${targetPathElem.visibilityIdx}]`
+      );
+    });
   });
 });

@@ -18,33 +18,32 @@ import {
   TDdgPayload,
   TDdgPayloadEntry,
   TDdgPath,
-  TDdgPathElemsByDistance,
+  TDdgDistanceToPathElems,
   TDdgServiceMap,
-  TDdgVisibilityIdxToPathElem,
 } from './types';
 
-const stringifyPayloadEntry = ({ service, operation }: TDdgPayloadEntry) => `${service}\v${operation}`;
+const stringifyEntry = ({ service, operation }: TDdgPayloadEntry) => `${service}\v${operation}`;
 
 export default function transformDdgData(
   payload: TDdgPayload,
   { service: focalService, operation: focalOperation }: { service: string; operation?: string }
 ): TDdgModel {
   const serviceMap: TDdgServiceMap = new Map();
-  const pathElemsByDistance: TDdgPathElemsByDistance = new Map();
-  const pathsComparisonMap: Map<TDdgPayloadEntry[], string> = new Map();
+  const distanceToPathElems: TDdgDistanceToPathElems = new Map();
+  const pathCompareValues: Map<TDdgPayloadEntry[], string> = new Map();
 
   const paths = payload
     .slice()
     .sort((a, b) => {
-      let aCompareValue = pathsComparisonMap.get(a);
+      let aCompareValue = pathCompareValues.get(a);
       if (!aCompareValue) {
-        aCompareValue = a.map(stringifyPayloadEntry).join();
-        pathsComparisonMap.set(a, aCompareValue);
+        aCompareValue = a.map(stringifyEntry).join();
+        pathCompareValues.set(a, aCompareValue);
       }
-      let bCompareValue = pathsComparisonMap.get(b);
+      let bCompareValue = pathCompareValues.get(b);
       if (!bCompareValue) {
-        bCompareValue = b.map(stringifyPayloadEntry).join();
-        pathsComparisonMap.set(b, bCompareValue);
+        bCompareValue = b.map(stringifyEntry).join();
+        pathCompareValues.set(b, bCompareValue);
       }
       if (aCompareValue > bCompareValue) return 1;
       if (aCompareValue < bCompareValue) return -1;
@@ -97,11 +96,11 @@ export default function transformDdgData(
       // Track all pathElems by their distance for visibilityIdx assignment and hop management
       // This needs to be a separate loop as path.focalIdx must be set before distance can be calculated
       path.members.forEach(member => {
-        const pathElemsAtDistance = pathElemsByDistance.get(member.distance);
-        if (pathElemsAtDistance) {
-          pathElemsAtDistance.push(member);
+        const elems = distanceToPathElems.get(member.distance);
+        if (elems) {
+          elems.push(member);
         } else {
-          pathElemsByDistance.set(member.distance, [member]);
+          distanceToPathElems.set(member.distance, [member]);
         }
       });
 
@@ -110,26 +109,25 @@ export default function transformDdgData(
 
   // Assign visibility indices such there is a positive, dependent correlation between visibilityIdx and distance
   let downstream = 0;
-  let downstreamPathElems: PathElem[] | void;
+  let downstreamElems: PathElem[] | void;
   let upstream = 1;
-  let upstreamPathElems: PathElem[] | void;
-  let visibilityIdx = 0;
-  const visibilityIdxToPathElem: TDdgVisibilityIdxToPathElem = new Map();
-  function setPathElemVisibilityIdx(pathElem: PathElem) {
-    visibilityIdxToPathElem.set(visibilityIdx, pathElem);
-    pathElem.visibilityIdx = visibilityIdx++; // eslint-disable-line no-param-reassign
+  let upstreamElems: PathElem[] | void;
+  const visIdxToPathElem: PathElem[] = [];
+  function setIdx(pathElem: PathElem) {
+    pathElem.visibilityIdx = visIdxToPathElem.length; // eslint-disable-line no-param-reassign
+    visIdxToPathElem.push(pathElem);
   }
   do {
-    downstreamPathElems = pathElemsByDistance.get(downstream--);
-    upstreamPathElems = pathElemsByDistance.get(upstream++);
-    if (downstreamPathElems) downstreamPathElems.forEach(setPathElemVisibilityIdx);
-    if (upstreamPathElems) upstreamPathElems.forEach(setPathElemVisibilityIdx);
-  } while (downstreamPathElems || upstreamPathElems);
+    downstreamElems = distanceToPathElems.get(downstream--);
+    upstreamElems = distanceToPathElems.get(upstream++);
+    if (downstreamElems) downstreamElems.forEach(setIdx);
+    if (upstreamElems) upstreamElems.forEach(setIdx);
+  } while (downstreamElems || upstreamElems);
 
   return {
     paths,
-    pathElemsByDistance,
+    distanceToPathElems,
     services: serviceMap,
-    visibilityIdxToPathElem,
+    visIdxToPathElem,
   };
 }
