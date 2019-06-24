@@ -70,7 +70,10 @@ export type TDdgStateEntry =
       styleStates: Map<number, number>;
     };
 
-export type TDdgState = Record<string, Record<string, Record<string, Record<string, TDdgStateEntry>>>>;
+export const stateKey = (service: string, operation: string = '*', start: number, end: number): string =>
+  [service, operation, start, end].join('\t');
+
+export type TDdgState = Record<string, TDdgStateEntry>;
 
 export enum EViewModifier {
   None,

@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import _get from 'lodash/get';
 import { handleActions } from 'redux-actions';
 
 import { actionTypes } from '../actions/deep-dependency-graph';
@@ -21,6 +20,7 @@ import { fetchedState } from '../constants';
 import { ApiError } from '../types/api-error';
 import transformDdgData from '../model/ddg/transformDdgData';
 import {
+  stateKey,
   TDdgActionMeta,
   TDdgAddStylePayload,
   TDdgClearStylePayload,
@@ -30,32 +30,10 @@ import {
 } from '../model/ddg/types';
 import guardReducer, { guardReducerWithMeta } from '../utils/guardReducer';
 
-function newState(
-  state: TDdgState,
-  service: string,
-  operation: string,
-  start: number,
-  end: number,
-  value: TDdgStateEntry
-): TDdgState {
-  return {
-    ...state,
-    [service]: {
-      ..._get(state, service),
-      [operation]: {
-        ..._get(state, [service, operation]),
-        [start]: {
-          ..._get(state, [service, operation, start]),
-          [end]: value,
-        },
-      },
-    },
-  };
-}
-
 export function addStyleState(state: TDdgState, { payload }: { payload: TDdgAddStylePayload }) {
-  const { service, operation = '*', start, end, visibilityIndices, style } = payload;
-  const stateEntry: TDdgStateEntry | undefined = _get(state, [service, operation, start, end]);
+  const { service, operation, start, end, visibilityIndices, style } = payload;
+  const key = stateKey(service, operation, start, end);
+  const stateEntry: TDdgStateEntry | undefined = state[key];
   if (!stateEntry || stateEntry.state !== fetchedState.DONE) {
     console.warn('Cannot set style state for unloaded Deep Dependency Graph'); // eslint-disable-line no-console
     return state;
@@ -64,15 +42,19 @@ export function addStyleState(state: TDdgState, { payload }: { payload: TDdgAddS
   visibilityIndices.forEach(idx => {
     styleStates.set(idx, (styleStates.get(idx) || 0) | style); // eslint-disable-line no-bitwise
   });
-  return newState(state, service, operation, start, end, {
-    ...stateEntry,
-    styleStates,
-  });
+  return {
+    ...state,
+    [key]: {
+      ...stateEntry,
+      styleStates,
+    },
+  };
 }
 
 export function clearStyleState(state: TDdgState, { payload }: { payload: TDdgClearStylePayload }) {
-  const { service, operation = '*', start, end, visibilityIndices, style } = payload;
-  const stateEntry: TDdgStateEntry | undefined = _get(state, [service, operation, start, end]);
+  const { service, operation, start, end, visibilityIndices, style } = payload;
+  const key = stateKey(service, operation, start, end);
+  const stateEntry: TDdgStateEntry | undefined = state[key];
   if (!stateEntry || stateEntry.state !== fetchedState.DONE) {
     console.warn('Cannot change style state for unloaded Deep Dependency Graph'); // eslint-disable-line no-console
     return state;
@@ -86,16 +68,25 @@ export function clearStyleState(state: TDdgState, { payload }: { payload: TDdgCl
       if (styleStates.get(idx) === 0) styleStates.delete(idx);
     }
   });
-  return newState(state, service, operation, start, end, {
-    ...stateEntry,
-    styleStates,
-  });
+  return {
+    ...state,
+    [key]: {
+      ...stateEntry,
+      styleStates,
+    },
+  };
 }
 
 export function fetchDeepDependencyGraphStarted(state: TDdgState, { meta }: { meta: TDdgActionMeta }) {
   const { query } = meta;
-  const { service, operation = '*', start, end } = query;
-  return newState(state, service, operation, start, end, { state: fetchedState.LOADING });
+  const { service, operation, start, end } = query;
+  const key = stateKey(service, operation, start, end);
+  return {
+    ...state,
+    [key]: {
+      state: fetchedState.LOADING,
+    },
+  };
 }
 
 export function fetchDeepDependencyGraphDone(
@@ -104,11 +95,15 @@ export function fetchDeepDependencyGraphDone(
 ) {
   const { query } = meta;
   const { service, operation, start, end } = query;
-  return newState(state, service, operation || '*', start, end, {
-    model: transformDdgData(payload, { service, operation }),
-    state: fetchedState.DONE,
-    styleStates: new Map(),
-  });
+  const key = stateKey(service, operation, start, end);
+  return {
+    ...state,
+    [key]: {
+      model: transformDdgData(payload, { service, operation }),
+      state: fetchedState.DONE,
+      styleStates: new Map(),
+    },
+  };
 }
 
 export function fetchDeepDependencyGraphErred(
@@ -116,11 +111,15 @@ export function fetchDeepDependencyGraphErred(
   { meta, payload }: { meta: TDdgActionMeta; payload: ApiError }
 ) {
   const { query } = meta;
-  const { service, operation = '*', start, end } = query;
-  return newState(state, service, operation, start, end, {
-    error: payload,
-    state: fetchedState.ERROR,
-  });
+  const { service, operation, start, end } = query;
+  const key = stateKey(service, operation, start, end);
+  return {
+    ...state,
+    [key]: {
+      error: payload,
+      state: fetchedState.ERROR,
+    },
+  };
 }
 
 export default handleActions(

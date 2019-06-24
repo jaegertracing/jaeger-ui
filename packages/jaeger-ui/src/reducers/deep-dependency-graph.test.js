@@ -13,10 +13,7 @@
 // limitations under the License.
 
 import _cloneDeep from 'lodash/cloneDeep';
-import _get from 'lodash/get';
 import _set from 'lodash/set';
-// _setWith is necessary when numbers exist in the path, see lodash issue #4323 for info
-import _setWith from 'lodash/setWith';
 
 import {
   addStyleState,
@@ -27,17 +24,15 @@ import {
 } from './deep-dependency-graph';
 import { fetchedState } from '../constants';
 import * as transformDdgData from '../model/ddg/transformDdgData';
-import { EViewModifier } from '../model/ddg/types';
+import { stateKey, EViewModifier } from '../model/ddg/types';
 
 describe('deepDependencyGraph reducers', () => {
   const service = 'serviceName';
   const operation = 'operationName';
   const start = 400;
   const end = 800;
-  const otherService = 'otherServiceName';
-  const otherOperation = 'otherOperationName';
-  const otherStart = 555;
-  const otherEnd = 999;
+  const targetKey = stateKey(service, operation, start, end);
+  const operationlessKey = stateKey(service, undefined, start, end);
   const meta = {
     query: {
       service,
@@ -54,32 +49,9 @@ describe('deepDependencyGraph reducers', () => {
     },
   };
   const existingState = {
-    [service]: {
-      [operation]: {
-        [start]: {
-          [end]: 'some pre-existing state on target branch',
-          [otherEnd]: 'some pre-existing state at a different end time',
-        },
-        [otherStart]: {
-          [end]: 'some pre-existing state at a different start time',
-        },
-      },
-      [otherOperation]: {
-        [start]: {
-          [end]: 'some pre-existing state at a different operation',
-        },
-      },
-    },
-    [otherService]: {
-      [operation]: {
-        [start]: {
-          [end]: 'some pre-existing state at a different service',
-        },
-      },
-    },
+    [targetKey]: 'some pre-existing state on target branch',
+    [operationlessKey]: 'some pre-existing state on branch without operation',
   };
-  const targetPath = [service, operation, start, end];
-  const operationlessPath = [service, '*', start, end];
 
   describe('retrieving deep dependency graph data', () => {
     describe('fetchDeepDependencyGraphStarted', () => {
@@ -89,18 +61,20 @@ describe('deepDependencyGraph reducers', () => {
 
       it('indicates request is loading', () => {
         const newState = fetchDeepDependencyGraphStarted({}, { meta });
-        expect(_get(newState, targetPath)).toEqual(expectedState);
+        expect(newState[targetKey]).toEqual(expectedState);
       });
 
       it('clears relevant exisitng state and preserves the rest', () => {
         const newState = fetchDeepDependencyGraphStarted(existingState, { meta });
-        const expected = _set(_cloneDeep(existingState), targetPath, expectedState);
+        const expected = _cloneDeep(existingState);
+        expected[targetKey] = expectedState;
         expect(newState).toEqual(expected);
       });
 
       it('handles lack of operation', () => {
         const newState = fetchDeepDependencyGraphStarted(existingState, { meta: metaWithoutOperation });
-        const expected = _setWith(_cloneDeep(existingState), operationlessPath, expectedState, Object);
+        const expected = _cloneDeep(existingState);
+        expected[operationlessKey] = expectedState;
         expect(newState).toEqual(expected);
       });
     });
@@ -114,12 +88,13 @@ describe('deepDependencyGraph reducers', () => {
 
       it('indicates request has erred', () => {
         const newState = fetchDeepDependencyGraphErred({}, { meta, payload: testError });
-        expect(_get(newState, targetPath)).toEqual(expectedState);
+        expect(newState[targetKey]).toEqual(expectedState);
       });
 
       it('clears relevant exisitng state and preserves the rest', () => {
         const newState = fetchDeepDependencyGraphErred(existingState, { meta, payload: testError });
-        const expected = _set(_cloneDeep(existingState), targetPath, expectedState);
+        const expected = _cloneDeep(existingState);
+        expected[targetKey] = expectedState;
         expect(newState).toEqual(expected);
       });
 
@@ -128,7 +103,8 @@ describe('deepDependencyGraph reducers', () => {
           meta: metaWithoutOperation,
           payload: testError,
         });
-        const expected = _setWith(_cloneDeep(existingState), operationlessPath, expectedState, Object);
+        const expected = _cloneDeep(existingState);
+        expected[operationlessKey] = expectedState;
         expect(newState).toEqual(expected);
       });
     });
@@ -153,19 +129,21 @@ describe('deepDependencyGraph reducers', () => {
 
       it('indicates request has succeeded and transforms payload', () => {
         const newState = fetchDeepDependencyGraphDone({}, { meta, payload });
-        expect(_get(newState, targetPath)).toEqual(expectedState);
+        expect(newState[targetKey]).toEqual(expectedState);
         expect(transformSpy).toHaveBeenLastCalledWith(payload, { operation, service });
       });
 
       it('clears relevant exisitng state and preserves the rest', () => {
         const newState = fetchDeepDependencyGraphDone(existingState, { meta, payload });
-        const expected = _set(_cloneDeep(existingState), targetPath, expectedState);
+        const expected = _cloneDeep(existingState);
+        expected[targetKey] = expectedState;
         expect(newState).toEqual(expected);
       });
 
       it('handles lack of operation', () => {
         const newState = fetchDeepDependencyGraphDone(existingState, { meta: metaWithoutOperation, payload });
-        const expected = _setWith(_cloneDeep(existingState), operationlessPath, expectedState, Object);
+        const expected = _cloneDeep(existingState);
+        expected[operationlessKey] = expectedState;
         expect(newState).toEqual(expected);
         expect(transformSpy).toHaveBeenLastCalledWith(payload, { operation: undefined, service });
       });
@@ -173,7 +151,7 @@ describe('deepDependencyGraph reducers', () => {
   });
 
   describe('managing style', () => {
-    const stylePath = [...targetPath, 'styleStates'];
+    const stylePath = [targetKey, 'styleStates'];
     const visibilityIndices = [4, 8, 15, 16, 23, 42];
     const emphasizedPayload = {
       ...meta.query,
@@ -209,10 +187,11 @@ describe('deepDependencyGraph reducers', () => {
     });
 
     beforeEach(() => {
-      emptyDoneState = _set(_cloneDeep(existingState), targetPath, {
+      emptyDoneState = _cloneDeep(existingState);
+      emptyDoneState[targetKey] = {
         state: fetchedState.DONE,
         styleStates: new Map(),
-      });
+      };
       emphasizedStyledState = _set(_cloneDeep(emptyDoneState), stylePath, emphasizedStyleMap);
       multiStyledState = _set(_cloneDeep(emptyDoneState), stylePath, multiStyleMap);
     });
@@ -249,24 +228,17 @@ describe('deepDependencyGraph reducers', () => {
       });
 
       it('handles absent operation', () => {
-        const operationlessDoneState = _setWith(
-          _cloneDeep(existingState),
-          operationlessPath,
-          {
-            state: fetchedState.DONE,
-            styleStates: new Map(),
-          },
-          Object
-        );
+        const operationlessDoneState = _cloneDeep(existingState);
+        operationlessDoneState[operationlessKey] = {
+          state: fetchedState.DONE,
+          styleStates: new Map(),
+        };
         const { operation: _op, ...emphasizedPayloadWithoutState } = emphasizedPayload;
         const newState = addStyleState(operationlessDoneState, {
           payload: emphasizedPayloadWithoutState,
         });
-        const expected = _set(
-          operationlessDoneState,
-          [...operationlessPath, 'styleStates'],
-          emphasizedStyleMap
-        );
+        const expected = _cloneDeep(operationlessDoneState);
+        expected[operationlessKey].styleStates = emphasizedStyleMap;
         expect(newState).toEqual(expected);
       });
     });
@@ -293,7 +265,7 @@ describe('deepDependencyGraph reducers', () => {
 
       it('clears provided indices if style is omitted', () => {
         const newState = clearStyleState(multiStyledState, {
-          payload: { visibilityIndices: partialIndices },
+          payload: { ...meta.query, visibilityIndices: partialIndices },
         });
         const expectedMap = new Map([[omittedIdx, multiPayload.style]]);
         const expected = _set(multiStyledState, stylePath, expectedMap);
@@ -302,7 +274,7 @@ describe('deepDependencyGraph reducers', () => {
 
       it('clears provided style from all indices if visibilityIndices array is omitted', () => {
         const newState = clearStyleState(multiStyledState, {
-          payload: { style: EViewModifier.Selected },
+          payload: { ...meta.query, style: EViewModifier.Selected },
         });
         const expected = _set(multiStyledState, stylePath, emphasizedStyleMap);
         expect(newState).toEqual(expected);
@@ -337,24 +309,17 @@ describe('deepDependencyGraph reducers', () => {
       });
 
       it('handles absent operation', () => {
-        const operationlessStyledState = _setWith(
-          _cloneDeep(existingState),
-          operationlessPath,
-          {
-            state: fetchedState.DONE,
-            styleStates: multiStyleMap,
-          },
-          Object
-        );
+        const operationlessStyledState = _cloneDeep(existingState);
+        operationlessStyledState[operationlessKey] = {
+          state: fetchedState.DONE,
+          styleStates: multiStyleMap,
+        };
         const { operation: _op, ...selectedPayloadWithoutState } = selectedPayload;
         const newState = clearStyleState(operationlessStyledState, {
           payload: selectedPayloadWithoutState,
         });
-        const expected = _set(
-          operationlessStyledState,
-          [...operationlessPath, 'styleStates'],
-          emphasizedStyleMap
-        );
+        const expected = _cloneDeep(operationlessStyledState);
+        expected[operationlessKey].styleStates = emphasizedStyleMap;
         expect(newState).toEqual(expected);
       });
     });
