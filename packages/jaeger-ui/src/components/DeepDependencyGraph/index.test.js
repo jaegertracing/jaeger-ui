@@ -18,10 +18,10 @@ import cloneDeep from 'lodash/cloneDeep';
 import _set from 'lodash/set';
 
 import { DeepDependencyGraphPageImpl, mapDispatchToProps, mapStateToProps } from '.';
+import * as url from './url';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
 import { fetchedState } from '../../constants';
-import * as extractQuery from '../../model/ddg/extractQuery';
 import { stateKey } from '../../model/ddg/types';
 
 describe('DeepDependencyGraphPage', () => {
@@ -126,21 +126,21 @@ describe('DeepDependencyGraphPage', () => {
       service,
       operation,
     };
-    let querySpy;
+    let getUrlStateSpy;
 
     beforeAll(() => {
-      querySpy = jest.spyOn(extractQuery, 'default');
+      getUrlStateSpy = jest.spyOn(url, 'getUrlState');
     });
 
     beforeEach(() => {
-      querySpy.mockReset();
+      getUrlStateSpy.mockReset();
     });
 
     it('uses gets relevant params from location.search', () => {
-      querySpy.mockReturnValue(expected);
+      getUrlStateSpy.mockReturnValue(expected);
       const result = mapStateToProps({}, { location: { search } });
       expect(result).toEqual(expected);
-      expect(querySpy).toHaveBeenLastCalledWith(search);
+      expect(getUrlStateSpy).toHaveBeenLastCalledWith(search);
     });
 
     it('includes graphState iff location.search has service, start, end, and optionally operation', () => {
@@ -154,16 +154,16 @@ describe('DeepDependencyGraphPage', () => {
         graphStateWithoutOp
       );
 
-      querySpy.mockReturnValue(expected);
+      getUrlStateSpy.mockReturnValue(expected);
       const result = mapStateToProps(reduxState, { location: { search } });
       expect(result.graphState).toEqual(graphState);
 
       const { operation: _op, ...rest } = expected;
-      querySpy.mockReturnValue(rest);
+      getUrlStateSpy.mockReturnValue(rest);
       const resultWithoutOp = mapStateToProps(reduxState, { location: { search } });
       expect(resultWithoutOp.graphState).toEqual(graphStateWithoutOp);
 
-      querySpy.mockReturnValue({});
+      getUrlStateSpy.mockReturnValue({});
       const resultWithoutParams = mapStateToProps(reduxState, { location: { search } });
       expect(resultWithoutParams.graphState).toBeUndefined();
     });

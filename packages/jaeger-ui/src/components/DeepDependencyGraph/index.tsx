@@ -18,12 +18,12 @@ import _get from 'lodash/get';
 import { bindActionCreators, Dispatch } from 'redux';
 import { connect } from 'react-redux';
 
+import { getUrlState } from './url';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
 import Header from './Header';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import { fetchedState } from '../../constants';
-import extractQuery from '../../model/ddg/extractQuery';
 import { stateKey, TDdgActionMeta, TDdgStateEntry } from '../../model/ddg/types';
 import { ReduxState } from '../../types';
 
@@ -50,7 +50,7 @@ type TProps = TDispatchProps & TReduxProps & TOwnProps;
 
 // export for tests
 export class DeepDependencyGraphPageImpl extends Component<TProps> {
-  // houldComponentUpdate is necessary as we don't want the plexus graph to re-render due to a uxStatus change
+  // shouldComponentUpdate is necessary as we don't want the plexus graph to re-render due to a uxStatus change
   shouldComponentUpdate(nextProps: TProps) {
     const updateCauses = [
       'service',
@@ -105,7 +105,7 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
 
 // export for tests
 export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxProps {
-  const { service, operation, start, end } = extractQuery(ownProps.location.search);
+  const { service, operation, start, end } = getUrlState(ownProps.location.search);
   let graphState: TDdgStateEntry | undefined;
   if (service && start && end) {
     graphState = _get(state, ['deepDependencyGraph', stateKey(service, operation, start, end)]);
