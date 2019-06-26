@@ -18,29 +18,25 @@ import _get from 'lodash/get';
 import { bindActionCreators, Dispatch } from 'redux';
 import { connect } from 'react-redux';
 
+import { getUrlState } from './url';
 import Header from './Header';
 import Graph from './Graph';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import { fetchedState } from '../../constants';
-import extractQuery from '../../model/ddg/extractQuery';
-import { stateKey, TDdgActionMeta, TDdgStateEntry } from '../../model/ddg/types';
+import { stateKey, TDdgRequiredUrlState, TDdgSparseUrlState, TDdgStateEntry } from '../../model/ddg/types';
 import { ReduxState } from '../../types';
 
 // import './index.css';
 
 type TDispatchProps = {
-  fetchDeepDependencyGraph: (query: TDdgActionMeta['query']) => void;
+  fetchDeepDependencyGraph: (query: TDdgRequiredUrlState) => void;
 };
 
 type TReduxProps = {
-  end?: number;
   graphState?: TDdgStateEntry;
-  operation?: string;
-  service?: string;
-  start?: number;
-  visibilityKey?: string;
+  urlState: TDdgSparseUrlState;
 };
 
 type TOwnProps = {
@@ -52,7 +48,7 @@ type TProps = TDispatchProps & TReduxProps & TOwnProps;
 
 // export for tests
 export class DeepDependencyGraphPageImpl extends Component<TProps> {
-  // houldComponentUpdate is necessary as we don't want the plexus graph to re-render due to a uxStatus change
+  // shouldComponentUpdate is necessary as we don't want the plexus graph to re-render due to a uxStatus change
   shouldComponentUpdate(nextProps: TProps) {
     const updateCauses = ['service', 'operation', 'start', 'end', 'visibilityKey', 'graphState.state'];
 
@@ -69,7 +65,7 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
             ddgModel={graphState.model}
             history={this.props.history}
             location={this.props.location}
-            visKey={this.props.visibilityKey}
+            visKey={this.props.urlState.visEncoding}
           />
         );
       case fetchedState.LOADING:
@@ -87,7 +83,8 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
   };
 
   render() {
-    const { service, operation, start, end, fetchDeepDependencyGraph, history, location } = this.props;
+    const { fetchDeepDependencyGraph, history, location, urlState } = this.props;
+    const { service, operation, start, end } = urlState;
     return (
       <div>
         <Header
@@ -107,19 +104,16 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
 
 // export for tests
 export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxProps {
-  const { service, operation, start, end, visibilityKey } = extractQuery(ownProps.location.search);
+  const urlState = getUrlState(ownProps.location.search);
+  const { service, operation, start, end } = urlState;
   let graphState: TDdgStateEntry | undefined;
   if (service && start && end) {
     graphState = _get(state, ['deepDependencyGraph', stateKey(service, operation, start, end)]);
   }
 
   return {
-    service,
-    operation,
-    start,
-    end,
-    visibilityKey,
     graphState,
+    urlState,
   };
 }
 

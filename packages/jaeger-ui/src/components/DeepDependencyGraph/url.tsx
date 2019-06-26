@@ -12,8 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import _isEmpty from 'lodash/isEmpty';
+import queryString from 'query-string';
 import { matchPath } from 'react-router-dom';
 
+import { TDdgSparseUrlState } from '../../model/ddg/types';
 import prefixUrl from '../../utils/prefix-url';
 
 export const ROUTE_PATH = prefixUrl('/deep-dependencies');
@@ -24,6 +27,37 @@ export function matches(path: string) {
   return Boolean(matchPath(path, ROUTE_MATCHER));
 }
 
-export function getUrl() {
+export function getUrl(args?: object) {
+  if (args && !_isEmpty(args)) return `${ROUTE_PATH}?${queryString.stringify(args)}`;
   return ROUTE_PATH;
+}
+
+function firstParam(arg: string | string[]): string {
+  if (Array.isArray(arg)) {
+    const returnVal = arg[0];
+    console.warn(`Found multiple query parameters: "${arg}", using "${returnVal}"`); // eslint-disable-line no-console
+    return returnVal;
+  }
+  return arg;
+}
+
+export function getUrlState(search: string): TDdgSparseUrlState {
+  const { service, operation, start, end, visEncoding } = queryString.parse(search);
+  const rv: TDdgSparseUrlState = {};
+  if (service) {
+    rv.service = firstParam(service);
+  }
+  if (operation) {
+    rv.operation = firstParam(operation);
+  }
+  if (start) {
+    rv.start = Number.parseInt(firstParam(start), 10);
+  }
+  if (end) {
+    rv.end = Number.parseInt(firstParam(end), 10);
+  }
+  if (visEncoding) {
+    rv.visEncoding = firstParam(visEncoding);
+  }
+  return rv;
 }
