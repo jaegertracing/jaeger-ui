@@ -98,6 +98,7 @@ export default class Graph {
         this.pathElemToEdge.set(pathElem, existingEdge || newEdge);
       }
 
+      // Link vertex back to this pathElem
       pathElemsForVertex.add(pathElem);
     });
   }
@@ -119,11 +120,11 @@ export default class Graph {
       .join('\n');
   };
 
-  public getVisible = (visKey?: string): { edges: TEdge[]; vertices: TDdgVertex[] } => {
+  public getVisible = (visEncoding?: string): { edges: TEdge[]; vertices: TDdgVertex[] } => {
     const edges: Set<TEdge> = new Set();
     const vertices: Set<TDdgVertex> = new Set();
     const pathElems =
-      visKey == null
+      visEncoding == null
         ? ([] as PathElem[]).concat(
             this.distanceToPathElems.get(-2) || [],
             this.distanceToPathElems.get(-1) || [],
@@ -131,9 +132,10 @@ export default class Graph {
             this.distanceToPathElems.get(1) || [],
             this.distanceToPathElems.get(2) || []
           )
-        : decode(visKey)
+        : decode(visEncoding)
             .map(visIdx => this.visIdxToPathElem[visIdx])
             .filter(Boolean);
+
     pathElems.forEach(pathElem => {
       const edge = this.pathElemToEdge.get(pathElem);
       if (edge) edges.add(edge);
@@ -141,6 +143,7 @@ export default class Graph {
       if (vertex) vertices.add(vertex);
       else throw new Error(`PathElem wasn't present in initial model: ${pathElem}`);
     });
+
     return {
       edges: Array.from(edges),
       vertices: Array.from(vertices),

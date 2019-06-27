@@ -56,18 +56,11 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
   }
 
   body = () => {
-    const { graphState } = this.props;
+    const { graphState, urlState } = this.props;
     if (!graphState) return <h1>Enter query above</h1>;
     switch (graphState.state) {
       case fetchedState.DONE:
-        return (
-          <Graph
-            ddgModel={graphState.model}
-            history={this.props.history}
-            location={this.props.location}
-            visKey={this.props.urlState.visEncoding}
-          />
-        );
+        return <Graph ddgModel={graphState.model} visEncoding={urlState.visEncoding} />;
       case fetchedState.LOADING:
         return <LoadingIndicator centered />;
       case fetchedState.ERROR:

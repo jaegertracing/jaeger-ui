@@ -21,7 +21,7 @@ import { TDdgModel } from '../../model/ddg/types';
 
 type TProps = {
   ddgModel: TDdgModel;
-  visKey?: string;
+  visEncoding?: string;
 };
 
 export default class Graph extends Component<TProps> {
@@ -36,7 +36,7 @@ export default class Graph extends Component<TProps> {
   }
 
   render() {
-    const { edges, vertices } = this.graphModel.getVisible(this.props.visKey);
+    const { edges, vertices } = this.graphModel.getVisible(this.props.visEncoding);
 
     return (
       <DirectedGraph

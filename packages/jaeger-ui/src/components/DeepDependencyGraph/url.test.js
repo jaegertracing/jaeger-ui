@@ -105,8 +105,8 @@ describe('DeepDependencyGraph/url', () => {
 
     it('handles absent values', () => {
       ['service', 'operation', 'start', 'end', 'visibilityEncoding'].forEach(param => {
-        const { [param]: _unused, ...rest } = expectedParams;
-        const { [param]: _alsoUnused, ...rv } = acceptableParams;
+        const { [param]: unused, ...rest } = expectedParams;
+        const { [param]: alsoUnused, ...rv } = acceptableParams;
         parseSpy.mockReturnValue(rv);
         expect(getUrlState(search)).toEqual(rest);
         expect(parseSpy).toHaveBeenLastCalledWith(search);

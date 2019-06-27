@@ -17,16 +17,15 @@ import { shallow } from 'enzyme';
 import { DirectedGraph, LayoutManager } from '@jaegertracing/plexus';
 
 import Graph from './Graph';
-
+import { focalPayloadElem, simplePath } from '../../model/ddg/sample-paths.test.resources';
+import transformDdgData from '../../model/ddg/transformDdgData';
 import GraphModel from '../../model/ddg/Graph';
 
 describe('<Graph />', () => {
+  const ddgModel = transformDdgData([simplePath], focalPayloadElem);
   const props = {
-    ddgModel: {
-      distanceToPathElems: new Map(),
-      visIdxToPathElem: [],
-    },
-    visKey: 'test',
+    ddgModel,
+    visEncoding: '3',
   };
 
   describe('constructor', () => {
@@ -41,9 +40,12 @@ describe('<Graph />', () => {
     it('provides edges and vertices from ddgEVManager to plexus', () => {
       const wrapper = shallow(<Graph {...props} />);
       const plexusGraph = wrapper.find(DirectedGraph);
+      const { edges: expectedEdges, vertices: expectedVertices } = new GraphModel({ ddgModel }).getVisible(
+        '3'
+      );
 
-      expect(plexusGraph.prop('edges')).toEqual([]); // TODO .toBe(edges);
-      expect(plexusGraph.prop('vertices')).toEqual([]); // TODO .toBe(vertices);
+      expect(plexusGraph.prop('edges')).toEqual(expectedEdges);
+      expect(plexusGraph.prop('vertices')).toEqual(expectedVertices);
     });
   });
 });
