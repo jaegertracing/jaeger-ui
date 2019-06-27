@@ -15,18 +15,18 @@
 import _identity from 'lodash/identity';
 import { createActions } from 'redux-actions';
 
-import { TDdgAddStylePayload, TDdgClearStylePayload } from '../model/ddg/types';
+import { TDdgAddViewModifierPayload, TDdgClearViewModifierPayload } from '../model/ddg/types';
 import generateActionTypes from '../utils/generate-action-types';
 
 export const actionTypes = generateActionTypes('@jaeger-ui/DEEP-DEPENDENCY-GRAPH', [
-  'ADD_STYLE_STATE',
-  'CLEAR_STYLE_STATE',
+  'ADD_VIEW_MODIFIER',
+  'CLEAR_VIEW_MODIFIER',
 ]);
 
-const addStyleState: (kwarg: TDdgAddStylePayload) => TDdgAddStylePayload = _identity;
-const clearStyleState: (kwarg: TDdgClearStylePayload) => TDdgClearStylePayload = _identity;
+const addViewModifier: (kwarg: TDdgAddViewModifierPayload) => TDdgAddViewModifierPayload = _identity;
+const clearViewModifier: (kwarg: TDdgClearViewModifierPayload) => TDdgClearViewModifierPayload = _identity;
 
-export const actions = createActions<TDdgAddStylePayload | TDdgClearStylePayload>({
-  [actionTypes.ADD_STYLE_STATE]: addStyleState,
-  [actionTypes.CLEAR_STYLE_STATE]: clearStyleState,
+export const actions = createActions<TDdgAddViewModifierPayload | TDdgClearViewModifierPayload>({
+  [actionTypes.ADD_VIEW_MODIFIER]: addViewModifier,
+  [actionTypes.CLEAR_VIEW_MODIFIER]: clearViewModifier,
 });
