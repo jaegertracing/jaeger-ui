@@ -25,13 +25,13 @@ import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import { fetchedState } from '../../constants';
-import { stateKey, TDdgRequiredUrlState, TDdgSparseUrlState, TDdgStateEntry } from '../../model/ddg/types';
+import { stateKey, TDdgModelParams, TDdgSparseUrlState, TDdgStateEntry } from '../../model/ddg/types';
 import { ReduxState } from '../../types';
 
 // import './index.css';
 
 type TDispatchProps = {
-  fetchDeepDependencyGraph: (query: TDdgRequiredUrlState) => void;
+  fetchDeepDependencyGraph: (query: TDdgModelParams) => void;
 };
 
 type TReduxProps = {
@@ -101,7 +101,7 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
   const { service, operation, start, end } = urlState;
   let graphState: TDdgStateEntry | undefined;
   if (service && start && end) {
-    graphState = _get(state, ['deepDependencyGraph', stateKey(service, operation, start, end)]);
+    graphState = _get(state, ['deepDependencyGraph', stateKey({ service, operation, start, end })]);
   }
 
   return {

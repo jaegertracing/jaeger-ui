@@ -139,7 +139,7 @@ export const RAVEN_PAYLOAD = deepFreeze({
         {
           category: 'navigation',
           data: {
-            to: '/uknonwn/url',
+            to: '/unknown/url',
           },
         },
         {

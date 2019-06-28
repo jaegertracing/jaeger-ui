@@ -67,10 +67,10 @@ export type TDdgStateEntry =
   | {
       model: TDdgModel;
       state: typeof fetchedState.DONE;
-      styleStates: Map<number, number>;
+      viewModifiers: Map<number, number>;
     };
 
-export const stateKey = (service: string, operation: string = '*', start: number, end: number): string =>
+export const stateKey = ({ service, operation = '*', start, end }: TDdgModelParams): string =>
   [service, operation, start, end].join('\t');
 
 export type TDdgState = Record<string, TDdgStateEntry>;
@@ -90,7 +90,7 @@ export type TDdgSparseUrlState = {
   visEncoding?: string;
 };
 
-export type TDdgRequiredUrlState = {
+export type TDdgModelParams = {
   service: string;
   operation?: string;
   start: number;
@@ -98,9 +98,21 @@ export type TDdgRequiredUrlState = {
 };
 
 export type TDdgActionMeta = {
-  query: TDdgRequiredUrlState;
+  query: TDdgModelParams;
 };
 
-export type TDdgAddStylePayload = TDdgRequiredUrlState & { visibilityIndices: number[]; style: number };
+export type TDdgAddViewModifierPayload = TDdgModelParams & {
+  visibilityIndices: number[];
+  viewModifier: number;
+};
 
-export type TDdgClearStylePayload = TDdgRequiredUrlState & { visibilityIndices?: number[]; style?: number };
+export type TDdgClearViewModifiersFromIndicesPayload = TDdgAddViewModifierPayload & { viewModifier?: void };
+
+export type TDdgRemoveViewModifierFromIndicesPayload = TDdgAddViewModifierPayload;
+
+export type TDdgRemoveViewModifierPayload = TDdgAddViewModifierPayload & { visibilityIndices?: void };
+
+export type TDdgViewModifierRemovalPayload =
+  | TDdgClearViewModifiersFromIndicesPayload
+  | TDdgRemoveViewModifierFromIndicesPayload
+  | TDdgRemoveViewModifierPayload;
