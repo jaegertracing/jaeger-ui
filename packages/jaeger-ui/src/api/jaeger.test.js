@@ -84,7 +84,7 @@ describe('fetchTrace', () => {
     expect(fetchMock).toHaveBeenLastCalledWith(`${DEFAULT_API_ROOT}traces/trace-id`, defaultOptions);
   });
 
-  it('fetchTrace() should resolve the whole response', () => {
+  it('fetchTrace() should resolve the whole response', async () => {
     fetchMock.mockReturnValue(
       Promise.resolve({
         status: 200,
@@ -92,7 +92,8 @@ describe('fetchTrace', () => {
       })
     );
 
-    return JaegerAPI.fetchTrace('trace-id').then(resp => expect(resp.data).toBe(generatedTraces));
+    const resp = await JaegerAPI.fetchTrace('trace-id');
+    expect(resp.data).toBe(generatedTraces);
   });
 
   it('fetchTrace() throws an error on a >= 400 status code', done => {
