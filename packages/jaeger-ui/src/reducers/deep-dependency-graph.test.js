@@ -17,7 +17,7 @@ import _set from 'lodash/set';
 
 import {
   addViewModifier,
-  clearViewModifier,
+  viewModifierRemoval as clearViewModifier,
   fetchDeepDependencyGraphDone,
   fetchDeepDependencyGraphErred,
   fetchDeepDependencyGraphStarted,
@@ -247,7 +247,7 @@ describe('deepDependencyGraph reducers', () => {
       });
     });
 
-    describe('clearViewModifier', () => {
+    describe('viewModifierRemoval', () => {
       const partialIndices = visibilityIndices.slice(0, visibilityIndices.length - 1);
       const omittedIdx = visibilityIndices[visibilityIndices.length - 1];
 
@@ -310,13 +310,13 @@ describe('deepDependencyGraph reducers', () => {
         for (let i = 0; i < partialIndices.length; i++) {
           partialViewModifierMap.set(partialIndices[i], EViewModifier.Emphasized);
         }
-        const partiallyViewModifierState = _set(
+        const partialViewModifierState = _set(
           _cloneDeep(emptyDoneState),
           viewModifierPath,
           partialViewModifierMap
         );
-        const newState = clearViewModifier(partiallyViewModifierState, { payload: emphasizedPayload });
-        const expected = _set(partiallyViewModifierState, viewModifierPath, new Map());
+        const newState = clearViewModifier(partialViewModifierState, { payload: emphasizedPayload });
+        const expected = _set(partialViewModifierState, viewModifierPath, new Map());
         expect(newState).toEqual(expected);
       });
 

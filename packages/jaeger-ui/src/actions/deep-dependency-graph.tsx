@@ -15,18 +15,34 @@
 import _identity from 'lodash/identity';
 import { createActions } from 'redux-actions';
 
-import { TDdgAddViewModifierPayload, TDdgClearViewModifierPayload } from '../model/ddg/types';
+import {
+  TDdgAddViewModifierPayload,
+  TDdgClearViewModifiersFromIndicesPayload,
+  TDdgRemoveViewModifierFromIndicesPayload,
+  TDdgRemoveViewModifierPayload,
+  TDdgViewModifierRemovalPayload,
+} from '../model/ddg/types';
 import generateActionTypes from '../utils/generate-action-types';
 
 export const actionTypes = generateActionTypes('@jaeger-ui/DEEP-DEPENDENCY-GRAPH', [
   'ADD_VIEW_MODIFIER',
-  'CLEAR_VIEW_MODIFIER',
+  'CLEAR_VIEW_MODIFIERS_FROM_INDICES',
+  'REMOVE_VIEW_MODIFIER',
+  'REMOVE_VIEW_MODIFIER_FROM_INDICES',
 ]);
 
 const addViewModifier: (kwarg: TDdgAddViewModifierPayload) => TDdgAddViewModifierPayload = _identity;
-const clearViewModifier: (kwarg: TDdgClearViewModifierPayload) => TDdgClearViewModifierPayload = _identity;
+const clearViewModifiersFromIndices: (
+  kwarg: TDdgClearViewModifiersFromIndicesPayload
+) => TDdgClearViewModifiersFromIndicesPayload = _identity;
+const removeViewModifier: (kwarg: TDdgRemoveViewModifierPayload) => TDdgRemoveViewModifierPayload = _identity;
+const removeViewModifierFromIndices: (
+  kwarg: TDdgRemoveViewModifierFromIndicesPayload
+) => TDdgRemoveViewModifierFromIndicesPayload = _identity;
 
-export const actions = createActions<TDdgAddViewModifierPayload | TDdgClearViewModifierPayload>({
+export const actions = createActions<TDdgAddViewModifierPayload | TDdgViewModifierRemovalPayload>({
   [actionTypes.ADD_VIEW_MODIFIER]: addViewModifier,
-  [actionTypes.CLEAR_VIEW_MODIFIER]: clearViewModifier,
+  [actionTypes.CLEAR_VIEW_MODIFIERS_FROM_INDICES]: clearViewModifiersFromIndices,
+  [actionTypes.REMOVE_VIEW_MODIFIER]: removeViewModifier,
+  [actionTypes.REMOVE_VIEW_MODIFIER_FROM_INDICES]: removeViewModifierFromIndices,
 });

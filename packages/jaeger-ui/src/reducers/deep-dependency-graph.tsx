@@ -21,12 +21,16 @@ import { ApiError } from '../types/api-error';
 import transformDdgData from '../model/ddg/transformDdgData';
 import {
   stateKey,
+  EViewModifier,
   TDdgActionMeta,
   TDdgAddViewModifierPayload,
-  TDdgClearViewModifierPayload,
+  TDdgClearViewModifiersFromIndicesPayload,
   TDdgPayload,
+  TDdgRemoveViewModifierFromIndicesPayload,
+  TDdgRemoveViewModifierPayload,
   TDdgState,
   TDdgStateEntry,
+  TDdgViewModifierRemovalPayload,
 } from '../model/ddg/types';
 import guardReducer, { guardReducerWithMeta } from '../utils/guardReducer';
 
@@ -51,7 +55,10 @@ export function addViewModifier(state: TDdgState, { payload }: { payload: TDdgAd
   };
 }
 
-export function clearViewModifier(state: TDdgState, { payload }: { payload: TDdgClearViewModifierPayload }) {
+export function viewModifierRemoval(
+  state: TDdgState,
+  { payload }: { payload: TDdgViewModifierRemovalPayload }
+) {
   const { visibilityIndices, viewModifier } = payload;
   const key = stateKey(payload);
   const stateEntry: TDdgStateEntry | void = state[key];
@@ -59,15 +66,22 @@ export function clearViewModifier(state: TDdgState, { payload }: { payload: TDdg
     console.warn('Cannot change view modifiers for unloaded Deep Dependency Graph'); // eslint-disable-line no-console
     return state;
   }
+
   const viewModifiers = new Map(stateEntry.viewModifiers);
-  (visibilityIndices || Array.from(viewModifiers.keys())).forEach(idx => {
-    if (viewModifier == null) {
+  const indicesToUpdate = visibilityIndices || Array.from(viewModifiers.keys());
+
+  indicesToUpdate.forEach(idx => {
+    const newValue = viewModifier
+      ? (viewModifiers.get(idx) || 0) & ~viewModifier // eslint-disable-line no-bitwise
+      : EViewModifier.None;
+
+    if (newValue === EViewModifier.None) {
       viewModifiers.delete(idx);
     } else {
-      viewModifiers.set(idx, (viewModifiers.get(idx) || 0) & ~viewModifier); // eslint-disable-line no-bitwise
-      if (viewModifiers.get(idx) === 0) viewModifiers.delete(idx);
+      viewModifiers.set(idx, newValue);
     }
   });
+
   return {
     ...state,
     [key]: {
@@ -133,9 +147,17 @@ export default handleActions(
     [actionTypes.ADD_VIEW_MODIFIER]: guardReducer<TDdgState, { payload: TDdgAddViewModifierPayload }>(
       addViewModifier
     ),
-    [actionTypes.CLEAR_VIEW_MODIFIER]: guardReducer<TDdgState, { payload: TDdgClearViewModifierPayload }>(
-      clearViewModifier
+    [actionTypes.CLEAR_VIEW_MODIFIERS_FROM_INDICES]: guardReducer<
+      TDdgState,
+      { payload: TDdgClearViewModifiersFromIndicesPayload }
+    >(viewModifierRemoval),
+    [actionTypes.REMOVE_VIEW_MODIFIER]: guardReducer<TDdgState, { payload: TDdgRemoveViewModifierPayload }>(
+      viewModifierRemoval
     ),
+    [actionTypes.REMOVE_VIEW_MODIFIER_FROM_INDICES]: guardReducer<
+      TDdgState,
+      { payload: TDdgRemoveViewModifierFromIndicesPayload }
+    >(viewModifierRemoval),
   },
   {}
 );

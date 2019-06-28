@@ -98,7 +98,13 @@ export type TDdgAddViewModifierPayload = TDdgModelParams & {
   viewModifier: number;
 };
 
-export type TDdgClearViewModifierPayload = TDdgModelParams & {
-  visibilityIndices?: number[];
-  viewModifier?: number;
-};
+export type TDdgClearViewModifiersFromIndicesPayload = TDdgAddViewModifierPayload & { viewModifier?: void };
+
+export type TDdgRemoveViewModifierFromIndicesPayload = TDdgAddViewModifierPayload;
+
+export type TDdgRemoveViewModifierPayload = TDdgAddViewModifierPayload & { visibilityIndices?: void };
+
+export type TDdgViewModifierRemovalPayload =
+  | TDdgClearViewModifiersFromIndicesPayload
+  | TDdgRemoveViewModifierFromIndicesPayload
+  | TDdgRemoveViewModifierPayload;
