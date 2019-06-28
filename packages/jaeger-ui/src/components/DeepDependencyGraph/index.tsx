@@ -108,7 +108,7 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
   const { service, operation, start, end } = getUrlState(ownProps.location.search);
   let graphState: TDdgStateEntry | undefined;
   if (service && start && end) {
-    graphState = _get(state, ['deepDependencyGraph', stateKey(service, operation, start, end)]);
+    graphState = _get(state, ['deepDependencyGraph', stateKey({ service, operation, start, end })]);
   }
 
   return {

@@ -147,10 +147,10 @@ describe('DeepDependencyGraphPage', () => {
       const graphState = 'testGraphState';
       const graphStateWithoutOp = 'testGraphStateWithoutOp';
       const reduxState = {};
-      _set(reduxState, ['deepDependencyGraph', stateKey(service, operation, start, end)], graphState);
+      _set(reduxState, ['deepDependencyGraph', stateKey({ service, operation, start, end })], graphState);
       _set(
         reduxState,
-        ['deepDependencyGraph', stateKey(service, undefined, start, end)],
+        ['deepDependencyGraph', stateKey({ service, undefined, start, end })],
         graphStateWithoutOp
       );
 
