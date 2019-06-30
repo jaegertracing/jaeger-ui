@@ -87,18 +87,9 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
   };
 
   render() {
-    const { service, operation, start, end, fetchDeepDependencyGraph, history, location } = this.props;
     return (
       <div>
-        <Header
-          service={service}
-          operation={operation}
-          start={start}
-          end={end}
-          fetchDeepDependencyGraph={fetchDeepDependencyGraph}
-          history={history}
-          location={location}
-        />
+        <Header />
         {this.body()}
       </div>
     );

@@ -31,7 +31,7 @@ limitations under the License.
 }
 
 .u-tx-muted {
-  color: #aaa;
+  color: var(--tx-color-muted);
 }
 
 .u-tx-inherit {
@@ -60,7 +60,7 @@ limitations under the License.
 }
 
 .u-simple-scrollbars::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.1);
+  background: rgba(0, 0, 0, 0.03);
 }
 
 .u-simple-scrollbars::-webkit-scrollbar-track:vertical {
@@ -81,4 +81,10 @@ limitations under the License.
 
 .u-simple-scrollbars::-webkit-scrollbar-thumb:window-inactive {
   background: rgba(0, 0, 0, 0.15);
+}
+
+/* Remove the padding around ant-design's popover, unfortunate but very handy */
+.u-rm-popover-title-padding .ant-popover-title,
+.u-rm-popover-content-padding .ant-popover-inner-content {
+  padding: 0;
 }
