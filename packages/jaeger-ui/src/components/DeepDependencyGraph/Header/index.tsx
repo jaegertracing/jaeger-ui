@@ -26,6 +26,7 @@ type TTempState = {
   operation: string | null;
 };
 
+// istanbul ignore next
 const TMP_OPTIIONS = tempOptions.map(s => (s.match(/^(\S+\s+){1,12}|^\S+$/) || ['MISSING'])[0]);
 
 export default class Header extends React.PureComponent<TProps, TTempState> {
@@ -35,12 +36,14 @@ export default class Header extends React.PureComponent<TProps, TTempState> {
   };
 
   setService = (service: string) => {
+    // istanbul ignore next
     if (service !== this.state.service) {
       this.setState({ service, operation: null });
     }
   };
 
   setOperation = (operation: string) => {
+    // istanbul ignore next
     this.setState({ operation });
   };
 

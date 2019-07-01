@@ -16,7 +16,7 @@ import * as React from 'react';
 import cx from 'classnames';
 import { ListChildComponentProps } from 'react-window';
 
-import matchHighlighter from './matchHighlighter';
+import highlightMatches from './highlightMatches';
 
 import './ListItem.css';
 
@@ -40,6 +40,7 @@ export default class ListItem extends React.PureComponent<IListItemProps> {
 
   render() {
     const { data, index, style: styleOrig } = this.props;
+    // omit the width from the style so the panel can scroll horizontally
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { width: _, ...style } = styleOrig;
     const { focusedIndex, highlightQuery, options, selectedValue } = data;
@@ -56,7 +57,7 @@ export default class ListItem extends React.PureComponent<IListItemProps> {
         role="switch"
         aria-checked={index === focusedIndex ? 'true' : 'false'}
       >
-        {matchHighlighter(highlightQuery, options[index])}
+        {highlightMatches(highlightQuery, options[index])}
       </div>
     );
   }

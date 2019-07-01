@@ -48,9 +48,7 @@ export default class FilteredList extends React.PureComponent<TProps, TState> {
   };
 
   componentDidUpdate() {
-    if (this.inputRef.current) {
-      this.inputRef.current.focus();
-    }
+    this.focusInput();
   }
 
   focusInput = () => {
@@ -91,7 +89,7 @@ export default class FilteredList extends React.PureComponent<TProps, TState> {
           const offset = event.key === EKey.ArrowDown ? 1 : -1;
           const filteredOptions = this.getFilteredOptions();
           const i = stFocused + offset;
-          focusedIndex = i > 0 ? i % filteredOptions.length : filteredOptions.length + i;
+          focusedIndex = i > -1 ? i % filteredOptions.length : filteredOptions.length + i;
           this.setState({ focusedIndex });
         }
         const listInstance = this.vlistRef.current;

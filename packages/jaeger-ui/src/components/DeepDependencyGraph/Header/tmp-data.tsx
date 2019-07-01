@@ -14,6 +14,7 @@
 
 // These strings are lifted from
 // https://github.com/moby/moby/blob/e105a74c54193e0ebdeddd93afc8746c33aeca73/pkg/namesgenerator/names-generator.go
+// istanbul ignore next
 export default [
   'admiring',
   'adoring',

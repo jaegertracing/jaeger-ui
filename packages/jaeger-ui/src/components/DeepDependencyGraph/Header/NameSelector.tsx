@@ -92,8 +92,8 @@ export default class NameSelector extends React.PureComponent<TProps, TState> {
         visible={popoverVisible}
       >
         <h2 className={rootCls}>
-          {useLabel && <span className="NameSelecrtor--label">{label}</span>}
-          <BreakableText className="NameSelecrtor--value" text={text} />
+          {useLabel && <span className="NameSelector--label">{label}</span>}
+          <BreakableText className="NameSelector--value" text={text} />
           <IoChevronDown className="NameSelector--chevron" />
         </h2>
       </Popover>

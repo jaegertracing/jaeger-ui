@@ -1,0 +1,112 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`highlightMatches(query, text) matches contains: been-kat-br[eak]able 1`] = `
+<span>
+  been-kat-br
+  <mark
+    key="eak2"
+  >
+    eak
+  </mark>
+  able
+</span>
+`;
+
+exports[`highlightMatches(query, text) matches letters, in sequence: h[i]ghl[i]ght[i]ng-the-th[i]ngs 1`] = `
+<span>
+  h
+  <mark
+    key="i2"
+  >
+    i
+  </mark>
+  ghl
+  <mark
+    key="i4"
+  >
+    i
+  </mark>
+  ght
+  <mark
+    key="i6"
+  >
+    i
+  </mark>
+  ng-the-th
+  <mark
+    key="i8"
+  >
+    i
+  </mark>
+  ngs
+</span>
+`;
+
+exports[`highlightMatches(query, text) matches the acronym: [h]ello[T]here 1`] = `
+<span>
+  <mark
+    key="h2"
+  >
+    h
+  </mark>
+  ello
+  <mark
+    key="T4"
+  >
+    T
+  </mark>
+  here
+</span>
+`;
+
+exports[`highlightMatches(query, text) matches the acronym: [h]ello-[t]here 1`] = `
+<span>
+  <mark
+    key="h2"
+  >
+    h
+  </mark>
+  ello-
+  <mark
+    key="t4"
+  >
+    t
+  </mark>
+  here
+</span>
+`;
+
+exports[`highlightMatches(query, text) matches the start of a word: camelcase[Cas]e 1`] = `
+<span>
+  camelcase
+  <mark
+    key="Cas2"
+  >
+    Cas
+  </mark>
+  e
+</span>
+`;
+
+exports[`highlightMatches(query, text) matches the start of a word: kebabcase-[ca]se 1`] = `
+<span>
+  kebabcase-
+  <mark
+    key="ca2"
+  >
+    ca
+  </mark>
+  se
+</span>
+`;
+
+exports[`highlightMatches(query, text) matches the start of the text: [eg]g 1`] = `
+<span>
+  <mark
+    key="eg1"
+  >
+    eg
+  </mark>
+  g
+</span>
+`;

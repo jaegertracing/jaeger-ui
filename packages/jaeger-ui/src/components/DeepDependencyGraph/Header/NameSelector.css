@@ -49,12 +49,12 @@ limitations under the License.
   outline-color: #ddd;
 }
 
-.NameSelecrtor--label {
+.NameSelector--label {
   font-weight: 400;
   padding-right: 0.5em;
 }
 
-.NameSelecrtor--value {
+.NameSelector--value {
   color: var(--tx-color-title);
 }
 

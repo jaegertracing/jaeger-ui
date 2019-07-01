@@ -24,8 +24,7 @@ const ANY_LAZY = '(.*?)';
 const ANY_GREEDY = '(.*)';
 
 function wordBreak(lowerLetter: string) {
-  const s = lowerLetter[0] || '';
-  return `(\\b${s}|${s.toUpperCase()})`;
+  return `(\\b${lowerLetter}|${lowerLetter.toUpperCase()})`;
 }
 
 function letterClass(lowerLetter: string) {
@@ -64,6 +63,7 @@ class MatchHighlighter {
   private readonly matchers: [RegExp, EHighlightCadence][];
 
   constructor(readonly query: string) {
+    // istanbul ignore next
     if (!query) {
       this.matchers = [];
       return;
@@ -120,11 +120,11 @@ class MatchHighlighter {
 
 const getHighlighter = memoize(30)(MatchHighlighter.make);
 
-function matchHighlighterImpl(query: string, text: string) {
+function highlightMatchesImpl(query: string, text: string) {
   if (!query) {
     return text;
   }
   return getHighlighter(query).highlightMatches(text);
 }
 
-export default memoize(200)(matchHighlighterImpl);
+export default memoize(200)(highlightMatchesImpl);
