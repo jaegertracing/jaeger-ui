@@ -50,7 +50,14 @@ type TProps = TDispatchProps & TReduxProps & TOwnProps;
 export class DeepDependencyGraphPageImpl extends Component<TProps> {
   // shouldComponentUpdate is necessary as we don't want the plexus graph to re-render due to a uxStatus change
   shouldComponentUpdate(nextProps: TProps) {
-    const updateCauses = ['service', 'operation', 'start', 'end', 'visibilityKey', 'graphState.state'];
+    const updateCauses = [
+      'urlState.service',
+      'urlState.operation',
+      'urlState.start',
+      'urlState.end',
+      'urlState.visibilityKey',
+      'graphState.state',
+    ];
 
     return updateCauses.some(cause => _get(nextProps, cause) !== _get(this.props, cause));
   }

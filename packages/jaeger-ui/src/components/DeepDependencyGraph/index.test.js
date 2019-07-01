@@ -61,8 +61,16 @@ describe('DeepDependencyGraphPage', () => {
       });
 
       it('returns true if certain props change', () => {
-        ['service', 'operation', 'start', 'end', 'visibilityKey', 'graphState.state'].forEach(prop => {
+        [
+          'urlState.service',
+          'urlState.operation',
+          'urlState.start',
+          'urlState.end',
+          'urlState.visibilityKey',
+          'graphState.state',
+        ].forEach(prop => {
           const newProps = cloneDeep(props);
+          expect(ddgPageImpl.shouldComponentUpdate(newProps)).toBe(false);
           _set(newProps, prop, 'new value');
           expect(ddgPageImpl.shouldComponentUpdate(newProps)).toBe(true);
         });
