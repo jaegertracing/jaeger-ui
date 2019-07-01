@@ -32,7 +32,7 @@ function letterClass(lowerLetter: string) {
 }
 
 function toHighlights(cadence: EHighlightCadence, match: RegExpMatchArray) {
-  return match
+  const texts = match
     .map((tx: string, i: number) => {
       if (i === 0 || !tx) {
         // the first group is the full match, not a capturing group
@@ -44,6 +44,7 @@ function toHighlights(cadence: EHighlightCadence, match: RegExpMatchArray) {
       return <mark key={`${tx + i}`}>{tx}</mark>;
     })
     .filter(Boolean);
+  return <span>{texts}</span>;
 }
 
 /**
