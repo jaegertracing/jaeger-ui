@@ -82,6 +82,14 @@ export enum EViewModifier {
   Emphasized = 1 << 2, // eslint-disable-line no-bitwise
 }
 
+export type TDdgSparseUrlState = {
+  service?: string;
+  operation?: string;
+  start?: number;
+  end?: number;
+  visEncoding?: string;
+};
+
 export type TDdgModelParams = {
   service: string;
   operation?: string;

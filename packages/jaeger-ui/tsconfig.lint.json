@@ -29,6 +29,7 @@
     "src/actions/jaeger-api.js",
     "src/api/jaeger.js",
     "src/components/SearchTracePage/SearchResults/ResultItem.markers.js",
+    "src/model/ddg/sample-paths.test.resources.js",
     "src/model/order-by.js",
     "src/model/trace-viewer.js",
     "src/selectors/process.js",

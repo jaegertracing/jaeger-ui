@@ -16,6 +16,7 @@ import _isEmpty from 'lodash/isEmpty';
 import queryString from 'query-string';
 import { matchPath } from 'react-router-dom';
 
+import { TDdgSparseUrlState } from '../../model/ddg/types';
 import prefixUrl from '../../utils/prefix-url';
 
 export const ROUTE_PATH = prefixUrl('/deep-dependencies');
@@ -40,22 +41,23 @@ function firstParam(arg: string | string[]): string {
   return arg;
 }
 
-type TUrlState = { service?: string; operation?: string; start?: number; end?: number };
-
-export function getUrlState(search: string): TUrlState {
-  const { service, operation, start, end } = queryString.parse(search);
-  const returnVal: TUrlState = {};
+export function getUrlState(search: string): TDdgSparseUrlState {
+  const { service, operation, start, end, visEncoding } = queryString.parse(search);
+  const rv: TDdgSparseUrlState = {};
   if (service) {
-    returnVal.service = firstParam(service);
+    rv.service = firstParam(service);
   }
   if (operation) {
-    returnVal.operation = firstParam(operation);
+    rv.operation = firstParam(operation);
   }
   if (start) {
-    returnVal.start = Number.parseInt(firstParam(start), 10);
+    rv.start = Number.parseInt(firstParam(start), 10);
   }
   if (end) {
-    returnVal.end = Number.parseInt(firstParam(end), 10);
+    rv.end = Number.parseInt(firstParam(end), 10);
   }
-  return returnVal;
+  if (visEncoding) {
+    rv.visEncoding = firstParam(visEncoding);
+  }
+  return rv;
 }
