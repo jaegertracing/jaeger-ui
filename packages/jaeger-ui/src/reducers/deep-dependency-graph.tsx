@@ -42,10 +42,12 @@ export function addViewModifier(state: TDdgState, { payload }: { payload: TDdgAd
     console.warn('Cannot set view modifiers for unloaded Deep Dependency Graph'); // eslint-disable-line no-console
     return state;
   }
+
   const viewModifiers = new Map(stateEntry.viewModifiers);
   visibilityIndices.forEach(idx => {
     viewModifiers.set(idx, (viewModifiers.get(idx) || 0) | viewModifier); // eslint-disable-line no-bitwise
   });
+
   return {
     ...state,
     [key]: {

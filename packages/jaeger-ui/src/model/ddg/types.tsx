@@ -102,8 +102,9 @@ export type TDdgActionMeta = {
 };
 
 export type TDdgAddViewModifierPayload = TDdgModelParams & {
-  visibilityIndices: number[];
+  // Number instead of EViewModifier so that multiple views can be changed at once.
   viewModifier: number;
+  visibilityIndices: number[];
 };
 
 export type TDdgClearViewModifiersFromIndicesPayload = TDdgAddViewModifierPayload & { viewModifier?: void };
