@@ -16,13 +16,16 @@ import moment from 'moment';
 import _round from 'lodash/round';
 
 import { toFloatPrecision } from './number';
+import { getConfigValue } from './config/get-config';
+import { FALLBACK_STANDARD_DATETIME_FORMAT } from '../constants';
 
 const TODAY = 'Today';
 const YESTERDAY = 'Yesterday';
 
 export const STANDARD_DATE_FORMAT = 'YYYY-MM-DD';
 export const STANDARD_TIME_FORMAT = 'HH:mm';
-export const STANDARD_DATETIME_FORMAT = 'LLL';
+export const STANDARD_DATETIME_FORMAT =
+  getConfigValue('standardDatetimeFormat') || FALLBACK_STANDARD_DATETIME_FORMAT;
 export const ONE_MILLISECOND = 1000;
 export const ONE_SECOND = 1000 * ONE_MILLISECOND;
 export const DEFAULT_MS_PRECISION = Math.log10(ONE_MILLISECOND);

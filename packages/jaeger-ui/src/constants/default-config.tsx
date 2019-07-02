@@ -14,7 +14,7 @@
 
 import deepFreeze from 'deep-freeze';
 
-import { FALLBACK_DAG_MAX_NUM_SERVICES } from './index';
+import { FALLBACK_DAG_MAX_NUM_SERVICES, FALLBACK_STANDARD_DATETIME_FORMAT } from './index';
 
 export default deepFreeze(
   Object.defineProperty(
@@ -66,6 +66,7 @@ export default deepFreeze(
         gaID: null,
         trackErrors: true,
       },
+      standardDatetimeFormat: FALLBACK_STANDARD_DATETIME_FORMAT,
     },
     // fields that should be individually merged vs wholesale replaced
     '__mergeFields',
