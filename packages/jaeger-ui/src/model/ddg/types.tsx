@@ -15,6 +15,8 @@
 import { TVertex } from '@jaegertracing/plexus/lib/types';
 
 import PathElem from './PathElem';
+import { fetchedState } from '../../constants';
+import { ApiError } from '../../types/api-error';
 
 export { default as PathElem } from './PathElem';
 
@@ -53,3 +55,65 @@ export type TDdgModel = {
 };
 
 export type TDdgVertex = TVertex<{ service: string; operation: string }>;
+
+export type TDdgStateEntry =
+  | {
+      state: typeof fetchedState.LOADING;
+    }
+  | {
+      error: ApiError;
+      state: typeof fetchedState.ERROR;
+    }
+  | {
+      model: TDdgModel;
+      state: typeof fetchedState.DONE;
+      viewModifiers: Map<number, number>;
+    };
+
+export const stateKey = ({ service, operation = '*', start, end }: TDdgModelParams): string =>
+  [service, operation, start, end].join('\t');
+
+export type TDdgState = Record<string, TDdgStateEntry>;
+
+export enum EViewModifier {
+  None,
+  Hovered,
+  Selected,
+  Emphasized = 1 << 2, // eslint-disable-line no-bitwise
+}
+
+export type TDdgSparseUrlState = {
+  service?: string;
+  operation?: string;
+  start?: number;
+  end?: number;
+  visEncoding?: string;
+};
+
+export type TDdgModelParams = {
+  service: string;
+  operation?: string;
+  start: number;
+  end: number;
+};
+
+export type TDdgActionMeta = {
+  query: TDdgModelParams;
+};
+
+export type TDdgAddViewModifierPayload = TDdgModelParams & {
+  // Number instead of EViewModifier so that multiple views can be changed at once.
+  viewModifier: number;
+  visibilityIndices: number[];
+};
+
+export type TDdgClearViewModifiersFromIndicesPayload = TDdgAddViewModifierPayload & { viewModifier?: void };
+
+export type TDdgRemoveViewModifierFromIndicesPayload = TDdgAddViewModifierPayload;
+
+export type TDdgRemoveViewModifierPayload = TDdgAddViewModifierPayload & { visibilityIndices?: void };
+
+export type TDdgViewModifierRemovalPayload =
+  | TDdgClearViewModifiersFromIndicesPayload
+  | TDdgRemoveViewModifierFromIndicesPayload
+  | TDdgRemoveViewModifierPayload;
