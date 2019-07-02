@@ -39,7 +39,7 @@ yarn install
 yarn
 ```
 
-Make sure you have the Jaeger Query service running on http://localhost:16686. For example, you can run Jaeger all-in-one Docker image as descibed in the [documentation][aio-docs].
+Make sure you have the Jaeger Query service running on http://localhost:16686. For example, you can run Jaeger all-in-one Docker image as described in the [documentation][aio-docs].
 
 If you don't have it running locally, then tunnel to the correct host and port.
 
