@@ -216,18 +216,21 @@ describe('deepDependencyGraph reducers', () => {
       it('adds viewModifier to state without viewModifiers', () => {
         const newState = addViewModifier(emptyDoneState, { payload: emphasizedPayload });
         const expected = _set(emptyDoneState, viewModifierPath, emphasizedViewModifierMap);
+        expect(newState).not.toBe(emptyDoneState);
         expect(newState).toEqual(expected);
       });
 
       it('adds multilpe viewModifiers at once', () => {
         const newState = addViewModifier(emptyDoneState, { payload: multiPayload });
         const expected = _set(emptyDoneState, viewModifierPath, multiViewModifierMap);
+        expect(newState).not.toBe(emptyDoneState);
         expect(newState).toEqual(expected);
       });
 
       it('adds provided viewModifier to existing viewModifier', () => {
         const newState = addViewModifier(emphasizedViewModifierState, { payload: selectedPayload });
         const expected = _set(emphasizedViewModifierState, viewModifierPath, multiViewModifierMap);
+        expect(newState).not.toBe(emphasizedViewModifierState);
         expect(newState).toEqual(expected);
       });
 
@@ -237,12 +240,13 @@ describe('deepDependencyGraph reducers', () => {
           state: fetchedState.DONE,
           viewModifiers: new Map(),
         };
-        const { operation: _op, ...emphasizedPayloadWithoutState } = emphasizedPayload;
+        const { operation: _op, ...emphasizedPayloadWithoutOp } = emphasizedPayload;
         const newState = addViewModifier(operationlessDoneState, {
-          payload: emphasizedPayloadWithoutState,
+          payload: emphasizedPayloadWithoutOp,
         });
         const expected = _cloneDeep(operationlessDoneState);
         expected[keySansOp].viewModifiers = emphasizedViewModifierMap;
+        expect(newState).not.toBe(operationlessDoneState);
         expect(newState).toEqual(expected);
       });
     });
@@ -264,6 +268,7 @@ describe('deepDependencyGraph reducers', () => {
       it('clears the provided viewModifier preserving other viewModifiers', () => {
         const newState = clearViewModifier(multiViewModifierState, { payload: selectedPayload });
         const expected = _set(multiViewModifierState, viewModifierPath, emphasizedViewModifierMap);
+        expect(newState).not.toBe(multiViewModifierState);
         expect(newState).toEqual(expected);
       });
 
@@ -273,6 +278,7 @@ describe('deepDependencyGraph reducers', () => {
         });
         const expectedMap = new Map([[omittedIdx, multiPayload.viewModifier]]);
         const expected = _set(multiViewModifierState, viewModifierPath, expectedMap);
+        expect(newState).not.toBe(multiViewModifierState);
         expect(newState).toEqual(expected);
       });
 
@@ -281,6 +287,7 @@ describe('deepDependencyGraph reducers', () => {
           payload: { ...meta.query, viewModifier: EViewModifier.Selected },
         });
         const expected = _set(multiViewModifierState, viewModifierPath, emphasizedViewModifierMap);
+        expect(newState).not.toBe(multiViewModifierState);
         expect(newState).toEqual(expected);
       });
 
@@ -295,13 +302,18 @@ describe('deepDependencyGraph reducers', () => {
           mixedViewModifierMap
         );
         const newState = clearViewModifier(mixedViewModifierState, {
-          payload: { visibilityIndices: partialIndices, viewModifier: EViewModifier.Emphasized },
+          payload: {
+            ...meta.query,
+            visibilityIndices: partialIndices,
+            viewModifier: EViewModifier.Emphasized,
+          },
         });
         const expectedMap = new Map([
           [partialIndices[partialIndices.length - 1], EViewModifier.Selected],
           [omittedIdx, multiPayload.viewModifier],
         ]);
         const expected = _set(mixedViewModifierState, viewModifierPath, expectedMap);
+        expect(newState).not.toBe(mixedViewModifierState);
         expect(newState).toEqual(expected);
       });
 
@@ -317,6 +329,7 @@ describe('deepDependencyGraph reducers', () => {
         );
         const newState = clearViewModifier(partialViewModifierState, { payload: emphasizedPayload });
         const expected = _set(partialViewModifierState, viewModifierPath, new Map());
+        expect(newState).not.toBe(partialViewModifierState);
         expect(newState).toEqual(expected);
       });
 
@@ -332,6 +345,7 @@ describe('deepDependencyGraph reducers', () => {
         });
         const expected = _cloneDeep(operationlessViewModifierState);
         expected[keySansOp].viewModifiers = emphasizedViewModifierMap;
+        expect(newState).not.toBe(operationlessViewModifierState);
         expect(newState).toEqual(expected);
       });
     });
