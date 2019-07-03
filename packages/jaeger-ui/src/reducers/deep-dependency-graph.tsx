@@ -21,66 +21,81 @@ import { ApiError } from '../types/api-error';
 import transformDdgData from '../model/ddg/transformDdgData';
 import {
   stateKey,
+  EViewModifier,
   TDdgActionMeta,
-  TDdgAddStylePayload,
-  TDdgClearStylePayload,
+  TDdgAddViewModifierPayload,
+  TDdgClearViewModifiersFromIndicesPayload,
   TDdgPayload,
+  TDdgRemoveViewModifierFromIndicesPayload,
+  TDdgRemoveViewModifierPayload,
   TDdgState,
   TDdgStateEntry,
+  TDdgViewModifierRemovalPayload,
 } from '../model/ddg/types';
 import guardReducer, { guardReducerWithMeta } from '../utils/guardReducer';
 
-export function addStyleState(state: TDdgState, { payload }: { payload: TDdgAddStylePayload }) {
-  const { service, operation, start, end, visibilityIndices, style } = payload;
-  const key = stateKey(service, operation, start, end);
-  const stateEntry: TDdgStateEntry | undefined = state[key];
+export function addViewModifier(state: TDdgState, { payload }: { payload: TDdgAddViewModifierPayload }) {
+  const { visibilityIndices, viewModifier } = payload;
+  const key = stateKey(payload);
+  const stateEntry: TDdgStateEntry | void = state[key];
   if (!stateEntry || stateEntry.state !== fetchedState.DONE) {
-    console.warn('Cannot set style state for unloaded Deep Dependency Graph'); // eslint-disable-line no-console
+    console.warn('Cannot set view modifiers for unloaded Deep Dependency Graph'); // eslint-disable-line no-console
     return state;
   }
-  const styleStates = new Map(stateEntry.styleStates);
+
+  const viewModifiers = new Map(stateEntry.viewModifiers);
   visibilityIndices.forEach(idx => {
-    styleStates.set(idx, (styleStates.get(idx) || 0) | style); // eslint-disable-line no-bitwise
+    viewModifiers.set(idx, (viewModifiers.get(idx) || 0) | viewModifier); // eslint-disable-line no-bitwise
   });
+
   return {
     ...state,
     [key]: {
       ...stateEntry,
-      styleStates,
+      viewModifiers,
     },
   };
 }
 
-export function clearStyleState(state: TDdgState, { payload }: { payload: TDdgClearStylePayload }) {
-  const { service, operation, start, end, visibilityIndices, style } = payload;
-  const key = stateKey(service, operation, start, end);
-  const stateEntry: TDdgStateEntry | undefined = state[key];
+export function viewModifierRemoval(
+  state: TDdgState,
+  { payload }: { payload: TDdgViewModifierRemovalPayload }
+) {
+  const { visibilityIndices, viewModifier } = payload;
+  const key = stateKey(payload);
+  const stateEntry: TDdgStateEntry | void = state[key];
   if (!stateEntry || stateEntry.state !== fetchedState.DONE) {
-    console.warn('Cannot change style state for unloaded Deep Dependency Graph'); // eslint-disable-line no-console
+    console.warn('Cannot change view modifiers for unloaded Deep Dependency Graph'); // eslint-disable-line no-console
     return state;
   }
-  const styleStates = new Map(stateEntry.styleStates);
-  (visibilityIndices || Array.from(styleStates.keys())).forEach(idx => {
-    if (style == null) {
-      styleStates.delete(idx);
+
+  const viewModifiers = new Map(stateEntry.viewModifiers);
+  const indicesToUpdate = visibilityIndices || Array.from(viewModifiers.keys());
+
+  indicesToUpdate.forEach(idx => {
+    const newValue = viewModifier
+      ? (viewModifiers.get(idx) || 0) & ~viewModifier // eslint-disable-line no-bitwise
+      : EViewModifier.None;
+
+    if (newValue === EViewModifier.None) {
+      viewModifiers.delete(idx);
     } else {
-      styleStates.set(idx, (styleStates.get(idx) || 0) & ~style); // eslint-disable-line no-bitwise
-      if (styleStates.get(idx) === 0) styleStates.delete(idx);
+      viewModifiers.set(idx, newValue);
     }
   });
+
   return {
     ...state,
     [key]: {
       ...stateEntry,
-      styleStates,
+      viewModifiers,
     },
   };
 }
 
 export function fetchDeepDependencyGraphStarted(state: TDdgState, { meta }: { meta: TDdgActionMeta }) {
   const { query } = meta;
-  const { service, operation, start, end } = query;
-  const key = stateKey(service, operation, start, end);
+  const key = stateKey(query);
   return {
     ...state,
     [key]: {
@@ -94,14 +109,14 @@ export function fetchDeepDependencyGraphDone(
   { meta, payload }: { meta: TDdgActionMeta; payload: TDdgPayload }
 ) {
   const { query } = meta;
-  const { service, operation, start, end } = query;
-  const key = stateKey(service, operation, start, end);
+  const { service, operation } = query;
+  const key = stateKey(query);
   return {
     ...state,
     [key]: {
       model: transformDdgData(payload, { service, operation }),
       state: fetchedState.DONE,
-      styleStates: new Map(),
+      viewModifiers: new Map(),
     },
   };
 }
@@ -111,8 +126,7 @@ export function fetchDeepDependencyGraphErred(
   { meta, payload }: { meta: TDdgActionMeta; payload: ApiError }
 ) {
   const { query } = meta;
-  const { service, operation, start, end } = query;
-  const key = stateKey(service, operation, start, end);
+  const key = stateKey(query);
   return {
     ...state,
     [key]: {
@@ -132,10 +146,20 @@ export default handleActions(
       fetchDeepDependencyGraphErred
     ),
 
-    [actionTypes.ADD_STYLE_STATE]: guardReducer<TDdgState, { payload: TDdgAddStylePayload }>(addStyleState),
-    [actionTypes.CLEAR_STYLE_STATE]: guardReducer<TDdgState, { payload: TDdgClearStylePayload }>(
-      clearStyleState
+    [actionTypes.ADD_VIEW_MODIFIER]: guardReducer<TDdgState, { payload: TDdgAddViewModifierPayload }>(
+      addViewModifier
     ),
+    [actionTypes.CLEAR_VIEW_MODIFIERS_FROM_INDICES]: guardReducer<
+      TDdgState,
+      { payload: TDdgClearViewModifiersFromIndicesPayload }
+    >(viewModifierRemoval),
+    [actionTypes.REMOVE_VIEW_MODIFIER]: guardReducer<TDdgState, { payload: TDdgRemoveViewModifierPayload }>(
+      viewModifierRemoval
+    ),
+    [actionTypes.REMOVE_VIEW_MODIFIER_FROM_INDICES]: guardReducer<
+      TDdgState,
+      { payload: TDdgRemoveViewModifierFromIndicesPayload }
+    >(viewModifierRemoval),
   },
   {}
 );

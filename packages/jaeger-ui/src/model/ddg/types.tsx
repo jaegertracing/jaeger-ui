@@ -67,10 +67,10 @@ export type TDdgStateEntry =
   | {
       model: TDdgModel;
       state: typeof fetchedState.DONE;
-      styleStates: Map<number, number>;
+      viewModifiers: Map<number, number>;
     };
 
-export const stateKey = (service: string, operation: string = '*', start: number, end: number): string =>
+export const stateKey = ({ service, operation = '*', start, end }: TDdgModelParams): string =>
   [service, operation, start, end].join('\t');
 
 export type TDdgState = Record<string, TDdgStateEntry>;
@@ -82,7 +82,15 @@ export enum EViewModifier {
   Emphasized = 1 << 2, // eslint-disable-line no-bitwise
 }
 
-export type TDdgRequiredUrlState = {
+export type TDdgSparseUrlState = {
+  service?: string;
+  operation?: string;
+  start?: number;
+  end?: number;
+  visEncoding?: string;
+};
+
+export type TDdgModelParams = {
   service: string;
   operation?: string;
   start: number;
@@ -90,9 +98,22 @@ export type TDdgRequiredUrlState = {
 };
 
 export type TDdgActionMeta = {
-  query: TDdgRequiredUrlState;
+  query: TDdgModelParams;
 };
 
-export type TDdgAddStylePayload = TDdgRequiredUrlState & { visibilityIndices: number[]; style: number };
+export type TDdgAddViewModifierPayload = TDdgModelParams & {
+  // Number instead of EViewModifier so that multiple views can be changed at once.
+  viewModifier: number;
+  visibilityIndices: number[];
+};
 
-export type TDdgClearStylePayload = TDdgRequiredUrlState & { visibilityIndices?: number[]; style?: number };
+export type TDdgClearViewModifiersFromIndicesPayload = TDdgAddViewModifierPayload & { viewModifier?: void };
+
+export type TDdgRemoveViewModifierFromIndicesPayload = TDdgAddViewModifierPayload;
+
+export type TDdgRemoveViewModifierPayload = TDdgAddViewModifierPayload & { visibilityIndices?: void };
+
+export type TDdgViewModifierRemovalPayload =
+  | TDdgClearViewModifiersFromIndicesPayload
+  | TDdgRemoveViewModifierFromIndicesPayload
+  | TDdgRemoveViewModifierPayload;

@@ -55,6 +55,7 @@ function tempTestFetch() {
     resolve = res;
   });
   setTimeout(() => {
+    /* istanbul ignore next */
     resolve([paths.simplePath, paths.almostDoubleFocalPath]);
   }, 1000);
   return promise;
@@ -62,9 +63,9 @@ function tempTestFetch() {
 
 export const fetchDeepDependencyGraph = createAction(
   '@JAEGER_API/FETCH_DEEP_DEPENDENCY_GRAPH',
+  // Temporary mock used until backend is available, TODO revert & re-enable test
   // query => JaegerAPI.fetchDeepDependencyGraph(query),
-  // temp change to test error page
-  tempTestFetch, // () => JaegerAPI.fetchTrace('404'),
+  tempTestFetch,
   query => ({ query })
 );
 

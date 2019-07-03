@@ -16,8 +16,8 @@ import _cloneDeep from 'lodash/cloneDeep';
 import _set from 'lodash/set';
 
 import {
-  addStyleState,
-  clearStyleState,
+  addViewModifier,
+  viewModifierRemoval as clearViewModifier,
   fetchDeepDependencyGraphDone,
   fetchDeepDependencyGraphErred,
   fetchDeepDependencyGraphStarted,
@@ -31,26 +31,24 @@ describe('deepDependencyGraph reducers', () => {
   const operation = 'operationName';
   const start = 400;
   const end = 800;
-  const targetKey = stateKey(service, operation, start, end);
-  const operationlessKey = stateKey(service, undefined, start, end);
+  const metaSansOp = {
+    query: {
+      service,
+      start,
+      end,
+    },
+  };
   const meta = {
     query: {
-      service,
+      ...metaSansOp.query,
       operation,
-      start,
-      end,
     },
   };
-  const metaWithoutOperation = {
-    query: {
-      service,
-      start,
-      end,
-    },
-  };
+  const targetKey = stateKey(meta.query);
+  const keySansOp = stateKey(metaSansOp.query);
   const existingState = {
     [targetKey]: 'some pre-existing state on target branch',
-    [operationlessKey]: 'some pre-existing state on branch without operation',
+    [keySansOp]: 'some pre-existing state on branch without operation',
   };
 
   describe('retrieving deep dependency graph data', () => {
@@ -72,14 +70,14 @@ describe('deepDependencyGraph reducers', () => {
       });
 
       it('handles lack of operation', () => {
-        const newState = fetchDeepDependencyGraphStarted(existingState, { meta: metaWithoutOperation });
+        const newState = fetchDeepDependencyGraphStarted(existingState, { meta: metaSansOp });
         const expected = _cloneDeep(existingState);
-        expected[operationlessKey] = expectedState;
+        expected[keySansOp] = expectedState;
         expect(newState).toEqual(expected);
       });
     });
 
-    describe('fetchDeepDependencyGraphStarted', () => {
+    describe('fetchDeepDependencyGraphErred', () => {
       const testError = new Error('Test error');
       const expectedState = {
         error: testError,
@@ -100,11 +98,11 @@ describe('deepDependencyGraph reducers', () => {
 
       it('handles lack of operation', () => {
         const newState = fetchDeepDependencyGraphErred(existingState, {
-          meta: metaWithoutOperation,
+          meta: metaSansOp,
           payload: testError,
         });
         const expected = _cloneDeep(existingState);
-        expected[operationlessKey] = expectedState;
+        expected[keySansOp] = expectedState;
         expect(newState).toEqual(expected);
       });
     });
@@ -115,7 +113,7 @@ describe('deepDependencyGraph reducers', () => {
       const expectedState = {
         model: mockModel,
         state: fetchedState.DONE,
-        styleStates: new Map(),
+        viewModifiers: new Map(),
       };
       let transformSpy;
 
@@ -141,45 +139,45 @@ describe('deepDependencyGraph reducers', () => {
       });
 
       it('handles lack of operation', () => {
-        const newState = fetchDeepDependencyGraphDone(existingState, { meta: metaWithoutOperation, payload });
+        const newState = fetchDeepDependencyGraphDone(existingState, { meta: metaSansOp, payload });
         const expected = _cloneDeep(existingState);
-        expected[operationlessKey] = expectedState;
+        expected[keySansOp] = expectedState;
         expect(newState).toEqual(expected);
         expect(transformSpy).toHaveBeenLastCalledWith(payload, { operation: undefined, service });
       });
     });
   });
 
-  describe('managing style', () => {
-    const stylePath = [targetKey, 'styleStates'];
+  describe('managing view modifiers', () => {
+    const viewModifierPath = [targetKey, 'viewModifiers'];
     const visibilityIndices = [4, 8, 15, 16, 23, 42];
     const emphasizedPayload = {
       ...meta.query,
       visibilityIndices,
-      style: EViewModifier.Emphasized,
+      viewModifier: EViewModifier.Emphasized,
     };
-    const emphasizedStyleMap = new Map();
-    visibilityIndices.forEach(idx => emphasizedStyleMap.set(idx, emphasizedPayload.style));
+    const emphasizedViewModifierMap = new Map();
+    visibilityIndices.forEach(idx => emphasizedViewModifierMap.set(idx, emphasizedPayload.viewModifier));
 
     const selectedPayload = {
       ...meta.query,
       visibilityIndices,
-      style: EViewModifier.Selected,
+      viewModifier: EViewModifier.Selected,
     };
-    const selectedStyleMap = new Map();
-    visibilityIndices.forEach(idx => selectedStyleMap.set(idx, selectedPayload.style));
+    const selectedViewModifierMap = new Map();
+    visibilityIndices.forEach(idx => selectedViewModifierMap.set(idx, selectedPayload.viewModifier));
 
     const multiPayload = {
       ...meta.query,
       visibilityIndices,
-      style: EViewModifier.Emphasized | EViewModifier.Selected, // eslint-disable-line no-bitwise
+      viewModifier: EViewModifier.Emphasized | EViewModifier.Selected, // eslint-disable-line no-bitwise
     };
-    const multiStyleMap = new Map();
-    visibilityIndices.forEach(idx => multiStyleMap.set(idx, multiPayload.style));
+    const multiViewModifierMap = new Map();
+    visibilityIndices.forEach(idx => multiViewModifierMap.set(idx, multiPayload.viewModifier));
 
-    let emphasizedStyledState;
+    let emphasizedViewModifierState;
     let emptyDoneState;
-    let multiStyledState;
+    let multiViewModifierState;
     let warnSpy;
 
     beforeAll(() => {
@@ -190,152 +188,164 @@ describe('deepDependencyGraph reducers', () => {
       emptyDoneState = _cloneDeep(existingState);
       emptyDoneState[targetKey] = {
         state: fetchedState.DONE,
-        styleStates: new Map(),
+        viewModifiers: new Map(),
       };
-      emphasizedStyledState = _set(_cloneDeep(emptyDoneState), stylePath, emphasizedStyleMap);
-      multiStyledState = _set(_cloneDeep(emptyDoneState), stylePath, multiStyleMap);
+      emphasizedViewModifierState = _set(
+        _cloneDeep(emptyDoneState),
+        viewModifierPath,
+        emphasizedViewModifierMap
+      );
+      multiViewModifierState = _set(_cloneDeep(emptyDoneState), viewModifierPath, multiViewModifierMap);
     });
 
     afterAll(() => {
       warnSpy.mockRestore();
     });
 
-    describe('addStyleState', () => {
+    describe('addViewModifier', () => {
       it('warns and returns existing state if not done', () => {
         const copyOfState = _cloneDeep(existingState);
-        const newState = addStyleState(copyOfState, { payload: emphasizedPayload });
+        const newState = addViewModifier(copyOfState, { payload: emphasizedPayload });
         expect(newState).toBe(copyOfState);
         expect(newState).toEqual(existingState);
-        expect(warnSpy).toHaveBeenLastCalledWith('Cannot set style state for unloaded Deep Dependency Graph');
+        expect(warnSpy).toHaveBeenLastCalledWith(
+          'Cannot set view modifiers for unloaded Deep Dependency Graph'
+        );
       });
 
-      it('adds style to empty style state', () => {
-        const newState = addStyleState(emptyDoneState, { payload: emphasizedPayload });
-        const expected = _set(emptyDoneState, stylePath, emphasizedStyleMap);
+      it('adds viewModifier to state without viewModifiers', () => {
+        const newState = addViewModifier(emptyDoneState, { payload: emphasizedPayload });
+        const expected = _set(emptyDoneState, viewModifierPath, emphasizedViewModifierMap);
         expect(newState).not.toBe(emptyDoneState);
         expect(newState).toEqual(expected);
       });
 
-      it('adds multilpe styles at once', () => {
-        const newState = addStyleState(emptyDoneState, { payload: multiPayload });
-        const expected = _set(emptyDoneState, stylePath, multiStyleMap);
+      it('adds multilpe viewModifiers at once', () => {
+        const newState = addViewModifier(emptyDoneState, { payload: multiPayload });
+        const expected = _set(emptyDoneState, viewModifierPath, multiViewModifierMap);
         expect(newState).not.toBe(emptyDoneState);
         expect(newState).toEqual(expected);
       });
 
-      it('adds provided style to existing style', () => {
-        const newState = addStyleState(emphasizedStyledState, { payload: selectedPayload });
-        const expected = _set(emphasizedStyledState, stylePath, multiStyleMap);
-        expect(newState).not.toBe(emphasizedStyledState);
+      it('adds provided viewModifier to existing viewModifier', () => {
+        const newState = addViewModifier(emphasizedViewModifierState, { payload: selectedPayload });
+        const expected = _set(emphasizedViewModifierState, viewModifierPath, multiViewModifierMap);
+        expect(newState).not.toBe(emphasizedViewModifierState);
         expect(newState).toEqual(expected);
       });
 
       it('handles absent operation', () => {
         const operationlessDoneState = _cloneDeep(existingState);
-        operationlessDoneState[operationlessKey] = {
+        operationlessDoneState[keySansOp] = {
           state: fetchedState.DONE,
-          styleStates: new Map(),
+          viewModifiers: new Map(),
         };
-        const { operation: _op, ...emphasizedPayloadWithoutState } = emphasizedPayload;
-        const newState = addStyleState(operationlessDoneState, {
-          payload: emphasizedPayloadWithoutState,
+        const { operation: _op, ...emphasizedPayloadWithoutOp } = emphasizedPayload;
+        const newState = addViewModifier(operationlessDoneState, {
+          payload: emphasizedPayloadWithoutOp,
         });
         const expected = _cloneDeep(operationlessDoneState);
-        expected[operationlessKey].styleStates = emphasizedStyleMap;
+        expected[keySansOp].viewModifiers = emphasizedViewModifierMap;
         expect(newState).not.toBe(operationlessDoneState);
         expect(newState).toEqual(expected);
       });
     });
 
-    describe('clearStyleState', () => {
+    describe('viewModifierRemoval', () => {
       const partialIndices = visibilityIndices.slice(0, visibilityIndices.length - 1);
       const omittedIdx = visibilityIndices[visibilityIndices.length - 1];
 
       it('warns and returns existing state if not done', () => {
         const copyOfState = _cloneDeep(existingState);
-        const newState = clearStyleState(copyOfState, { payload: emphasizedPayload });
+        const newState = clearViewModifier(copyOfState, { payload: emphasizedPayload });
         expect(newState).toBe(copyOfState);
         expect(newState).toEqual(existingState);
         expect(warnSpy).toHaveBeenLastCalledWith(
-          'Cannot change style state for unloaded Deep Dependency Graph'
+          'Cannot change view modifiers for unloaded Deep Dependency Graph'
         );
       });
 
-      it('clears the provided style preserving other style state', () => {
-        const newState = clearStyleState(multiStyledState, { payload: selectedPayload });
-        const expected = _set(multiStyledState, stylePath, emphasizedStyleMap);
-        expect(newState).not.toBe(multiStyledState);
+      it('clears the provided viewModifier preserving other viewModifiers', () => {
+        const newState = clearViewModifier(multiViewModifierState, { payload: selectedPayload });
+        const expected = _set(multiViewModifierState, viewModifierPath, emphasizedViewModifierMap);
+        expect(newState).not.toBe(multiViewModifierState);
         expect(newState).toEqual(expected);
       });
 
-      it('clears provided indices if style is omitted', () => {
-        const newState = clearStyleState(multiStyledState, {
-          payload: {
-            ...meta.query,
-            visibilityIndices: partialIndices,
-          },
+      it('clears provided indices if viewModifier is omitted', () => {
+        const newState = clearViewModifier(multiViewModifierState, {
+          payload: { ...meta.query, visibilityIndices: partialIndices },
         });
-        const expectedMap = new Map([[omittedIdx, multiPayload.style]]);
-        const expected = _set(multiStyledState, stylePath, expectedMap);
-        expect(newState).not.toBe(multiStyledState);
+        const expectedMap = new Map([[omittedIdx, multiPayload.viewModifier]]);
+        const expected = _set(multiViewModifierState, viewModifierPath, expectedMap);
+        expect(newState).not.toBe(multiViewModifierState);
         expect(newState).toEqual(expected);
       });
 
-      it('clears provided style from all indices if visibilityIndices array is omitted', () => {
-        const newState = clearStyleState(multiStyledState, {
-          payload: {
-            ...meta.query,
-            style: EViewModifier.Selected,
-          },
+      it('clears provided viewModifier from all indices if visibilityIndices array is omitted', () => {
+        const newState = clearViewModifier(multiViewModifierState, {
+          payload: { ...meta.query, viewModifier: EViewModifier.Selected },
         });
-        const expected = _set(multiStyledState, stylePath, emphasizedStyleMap);
-        expect(newState).not.toBe(multiStyledState);
+        const expected = _set(multiViewModifierState, viewModifierPath, emphasizedViewModifierMap);
+        expect(newState).not.toBe(multiViewModifierState);
         expect(newState).toEqual(expected);
       });
 
       it('removes indices that become 0', () => {
-        const mixedStyleMap = new Map(multiStyleMap);
+        const mixedViewModifierMap = new Map(multiViewModifierMap);
         for (let i = 0; i < partialIndices.length - 1; i++) {
-          mixedStyleMap.set(partialIndices[i], EViewModifier.Emphasized);
+          mixedViewModifierMap.set(partialIndices[i], EViewModifier.Emphasized);
         }
-        const mixedStyledState = _set(_cloneDeep(emptyDoneState), stylePath, mixedStyleMap);
-        const newState = clearStyleState(mixedStyledState, {
-          payload: { ...meta.query, visibilityIndices: partialIndices, style: EViewModifier.Emphasized },
+        const mixedViewModifierState = _set(
+          _cloneDeep(emptyDoneState),
+          viewModifierPath,
+          mixedViewModifierMap
+        );
+        const newState = clearViewModifier(mixedViewModifierState, {
+          payload: {
+            ...meta.query,
+            visibilityIndices: partialIndices,
+            viewModifier: EViewModifier.Emphasized,
+          },
         });
         const expectedMap = new Map([
           [partialIndices[partialIndices.length - 1], EViewModifier.Selected],
-          [omittedIdx, multiPayload.style],
+          [omittedIdx, multiPayload.viewModifier],
         ]);
-        const expected = _set(mixedStyledState, stylePath, expectedMap);
-        expect(newState).not.toBe(mixedStyledState);
+        const expected = _set(mixedViewModifierState, viewModifierPath, expectedMap);
+        expect(newState).not.toBe(mixedViewModifierState);
         expect(newState).toEqual(expected);
       });
 
       it('does not add previously absent idx if included in payload', () => {
-        const partialStyleMap = new Map();
+        const partialViewModifierMap = new Map();
         for (let i = 0; i < partialIndices.length; i++) {
-          partialStyleMap.set(partialIndices[i], EViewModifier.Emphasized);
+          partialViewModifierMap.set(partialIndices[i], EViewModifier.Emphasized);
         }
-        const partiallyStyledState = _set(_cloneDeep(emptyDoneState), stylePath, partialStyleMap);
-        const newState = clearStyleState(partiallyStyledState, { payload: emphasizedPayload });
-        const expected = _set(partiallyStyledState, stylePath, new Map());
-        expect(newState).not.toBe(partiallyStyledState);
+        const partialViewModifierState = _set(
+          _cloneDeep(emptyDoneState),
+          viewModifierPath,
+          partialViewModifierMap
+        );
+        const newState = clearViewModifier(partialViewModifierState, { payload: emphasizedPayload });
+        const expected = _set(partialViewModifierState, viewModifierPath, new Map());
+        expect(newState).not.toBe(partialViewModifierState);
         expect(newState).toEqual(expected);
       });
 
       it('handles absent operation', () => {
-        const operationlessStyledState = _cloneDeep(existingState);
-        operationlessStyledState[operationlessKey] = {
+        const operationlessViewModifierState = _cloneDeep(existingState);
+        operationlessViewModifierState[keySansOp] = {
           state: fetchedState.DONE,
-          styleStates: multiStyleMap,
+          viewModifiers: multiViewModifierMap,
         };
         const { operation: _op, ...selectedPayloadWithoutState } = selectedPayload;
-        const newState = clearStyleState(operationlessStyledState, {
+        const newState = clearViewModifier(operationlessViewModifierState, {
           payload: selectedPayloadWithoutState,
         });
-        const expected = _cloneDeep(operationlessStyledState);
-        expected[operationlessKey].styleStates = emphasizedStyleMap;
-        expect(newState).not.toBe(operationlessStyledState);
+        const expected = _cloneDeep(operationlessViewModifierState);
+        expected[keySansOp].viewModifiers = emphasizedViewModifierMap;
+        expect(newState).not.toBe(operationlessViewModifierState);
         expect(newState).toEqual(expected);
       });
     });
