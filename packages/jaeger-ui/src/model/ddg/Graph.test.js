@@ -12,15 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as testResources from './sample-paths.test.resources';
+import { convergentPaths, focalPayloadElem, simplePath } from './sample-paths.test.resources';
 import transformDdgData from './transformDdgData';
 
 import Graph from './Graph';
 import { encode } from './visibility-codec';
 
 describe('Graph', () => {
-  const convergentModel = transformDdgData(testResources.convergentPaths, testResources.focalPayloadElem);
-  const simpleModel = transformDdgData([testResources.simplePath], testResources.focalPayloadElem);
+  const convergentModel = transformDdgData(convergentPaths, focalPayloadElem);
+  const simpleModel = transformDdgData([simplePath], focalPayloadElem);
 
   /**
    * This function takes in a Graph and validates the structure based on the expected vertices.
@@ -163,11 +163,11 @@ describe('Graph', () => {
       const convergentGraph = new Graph({
         ddgModel: convergentModel,
       });
-      const sharedEdgeElem0 = convergentGraph.visIdxToPathElem[5];
-      const sharedEdgeElem1 = convergentGraph.visIdxToPathElem[4];
+      const sharedEdgeElemA = convergentGraph.visIdxToPathElem[5];
+      const sharedEdgeElemB = convergentGraph.visIdxToPathElem[4];
 
-      expect(convergentGraph.pathElemToEdge.get(sharedEdgeElem0)).toBe(
-        convergentGraph.pathElemToEdge.get(sharedEdgeElem1)
+      expect(convergentGraph.pathElemToEdge.get(sharedEdgeElemA)).toBe(
+        convergentGraph.pathElemToEdge.get(sharedEdgeElemB)
       );
     });
 
@@ -192,43 +192,67 @@ describe('Graph', () => {
     const convergentGraph = new Graph({
       ddgModel: convergentModel,
     });
-    const { convergentPaths } = testResources;
 
-    it('returns just focalNode', () => {
-      const { edges, vertices } = convergentGraph.getVisible(encode([0]));
-      expect(edges).toHaveLength(0);
-      expect(vertices).toEqual([expect.objectContaining(convergentPaths[0][1])]);
+    describe('visEncoding provided', () => {
+      it('returns just focalNode', () => {
+        const { edges, vertices } = convergentGraph.getVisible(encode([0]));
+        expect(edges).toHaveLength(0);
+        expect(vertices).toEqual([expect.objectContaining(convergentPaths[0][1])]);
+      });
+
+      it('returns two specified vertices and their connecting edge', () => {
+        const { edges, vertices } = convergentGraph.getVisible(encode([0, 4]));
+        expect(edges).toHaveLength(1);
+        expect(vertices).toEqual([
+          expect.objectContaining(convergentPaths[0][1]),
+          expect.objectContaining(convergentPaths[0][0]),
+        ]);
+      });
+
+      it('does not return duplicate data when multiple visIndices share vertices and edges', () => {
+        const { edges, vertices } = convergentGraph.getVisible(encode([0, 1, 4, 5]));
+        expect(edges).toHaveLength(1);
+        expect(vertices).toEqual([
+          expect.objectContaining(convergentPaths[0][1]),
+          expect.objectContaining(convergentPaths[0][0]),
+        ]);
+      });
+
+      it('handles out of bounds visIdx', () => {
+        const { edges, vertices } = convergentGraph.getVisible(encode([100]));
+        expect(edges).toHaveLength(0);
+        expect(vertices).toHaveLength(0);
+      });
+
+      it('errors if pathElem is mutated into model after graph is created', () => {
+        const willMutate = convergentModel.visIdxToPathElem.slice();
+        const victimOfMutation = new Graph({ ddgModel: { visIdxToPathElem: willMutate } });
+        const newIdx = willMutate.push({ problematic: 'pathElem' }) - 1;
+        expect(() => victimOfMutation.getVisible(encode([newIdx]))).toThrowError();
+      });
     });
 
-    it('returns two specified vertices and their connecting edge', () => {
-      const { edges, vertices } = convergentGraph.getVisible(encode([0, 4]));
-      expect(edges).toHaveLength(1);
-      expect(vertices).toEqual([
-        expect.objectContaining(convergentPaths[0][1]),
-        expect.objectContaining(convergentPaths[0][0]),
-      ]);
-    });
+    describe('visEncoding not provided', () => {
+      it('returns edges and vertices within two hops', () => {
+        const twoHopGraph = new Graph({ ddgModel: simpleModel });
+        const expectedVertices = simpleModel.visIdxToPathElem.map(elem =>
+          twoHopGraph.pathElemToVertex.get(elem)
+        );
+        const expectedEdges = simpleModel.visIdxToPathElem
+          .filter(elem => elem.distance)
+          .map(elem => twoHopGraph.pathElemToEdge.get(elem));
+        const { edges, vertices } = twoHopGraph.getVisible();
+        expect(new Set(edges)).toEqual(new Set(expectedEdges));
+        expect(new Set(vertices)).toEqual(new Set(expectedVertices));
+      });
 
-    it('does not return duplicate data when multiple visIndices share vertices and edges', () => {
-      const { edges, vertices } = convergentGraph.getVisible(encode([0, 1, 4, 5]));
-      expect(edges).toHaveLength(1);
-      expect(vertices).toEqual([
-        expect.objectContaining(convergentPaths[0][1]),
-        expect.objectContaining(convergentPaths[0][0]),
-      ]);
-    });
-
-    it('handles out of bounds visIdx', () => {
-      const { edges, vertices } = convergentGraph.getVisible(encode([100]));
-      expect(edges).toHaveLength(0);
-      expect(vertices).toHaveLength(0);
-    });
-
-    it('errors if pathElem is mutated into model after graph is created', () => {
-      const willMutate = convergentModel.visIdxToPathElem.slice();
-      const victimOfMutation = new Graph({ ddgModel: { visIdxToPathElem: willMutate } });
-      const newIdx = willMutate.push({ problematic: 'pathElem' }) - 1;
-      expect(() => victimOfMutation.getVisible(encode([newIdx]))).toThrowError();
+      it('handles graphs smaller than two hops', () => {
+        const emptyGraph = new Graph({ ddgModel: { distanceToPathElems: new Map(), visIdxToPathElem: [] } });
+        expect(emptyGraph.getVisible()).toEqual({
+          edges: [],
+          vertices: [],
+        });
+      });
     });
   });
 });

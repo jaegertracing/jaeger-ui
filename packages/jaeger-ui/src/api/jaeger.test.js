@@ -24,68 +24,117 @@ jest.mock('isomorphic-fetch', () =>
 );
 
 import fetchMock from 'isomorphic-fetch';
+import queryString from 'query-string';
 
 import traceGenerator from '../demo/trace-generators';
-import JaegerAPI, { getMessageFromError } from './jaeger';
+import JaegerAPI, { getMessageFromError, DEFAULT_API_ROOT, DEFAULT_DEPENDENCY_LOOKBACK } from './jaeger';
 
-const generatedTraces = traceGenerator.traces({ numberOfTraces: 5 });
+const defaultOptions = {
+  credentials: 'same-origin',
+};
 
-it('fetchTrace() should fetch with the id', () => {
-  fetchMock.mockClear();
-  JaegerAPI.apiRoot = '/api/';
-  JaegerAPI.fetchTrace('trace-id');
-  expect(fetchMock.mock.calls[0][0]).toBe('/api/traces/trace-id');
-});
-
-it('fetchTrace() should resolve the whole response', () => {
-  fetchMock.mockReturnValue(
-    Promise.resolve({
-      status: 200,
-      json: () => Promise.resolve({ data: generatedTraces }),
-    })
-  );
-
-  return JaegerAPI.fetchTrace('trace-id').then(resp => expect(resp.data).toBe(generatedTraces));
-});
-
-it('fetchTrace() throws an error on a >= 400 status code', done => {
-  const status = 400;
-  const statusText = 'some-status';
-  const msg = 'some-message';
-  const errorData = { errors: [{ msg, code: status }] };
-
-  fetchMock.mockReturnValue(
-    Promise.resolve({
-      status,
-      statusText,
-      text: () => Promise.resolve(JSON.stringify(errorData)),
-    })
-  );
-  JaegerAPI.fetchTrace('trace-id').catch(err => {
-    expect(err.message).toMatch(msg);
-    expect(err.httpStatus).toBe(status);
-    expect(err.httpStatusText).toBe(statusText);
-    done();
+describe('archiveTrace', () => {
+  it('POSTs the specified id', () => {
+    JaegerAPI.archiveTrace('trace-id');
+    expect(fetchMock).toHaveBeenLastCalledWith(`${DEFAULT_API_ROOT}archive/trace-id`, {
+      ...defaultOptions,
+      method: 'POST',
+    });
   });
 });
 
-it('fetchTrace() throws an useful error derived from a text payload', done => {
-  const status = 400;
-  const statusText = 'some-status';
-  const errorData = 'this is some error message';
+describe('fetchDeepDependencyGraph', () => {
+  it('GETs the specified query', () => {
+    const query = { service: 'serviceName', start: 400, end: 800 };
+    JaegerAPI.fetchDeepDependencyGraph(query);
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      `${DEFAULT_API_ROOT}deep-dependency-graph?${queryString.stringify(query)}`,
+      defaultOptions
+    );
+  });
+});
 
-  fetchMock.mockReturnValue(
-    Promise.resolve({
-      status,
-      statusText,
-      text: () => Promise.resolve(errorData),
-    })
-  );
-  JaegerAPI.fetchTrace('trace-id').catch(err => {
-    expect(err.message).toMatch(errorData);
-    expect(err.httpStatus).toBe(status);
-    expect(err.httpStatusText).toBe(statusText);
-    done();
+describe('fetchDependencies', () => {
+  it('GETs the specified query', () => {
+    const endTs = 'end time stamp';
+    const lookback = 'test lookback';
+    JaegerAPI.fetchDependencies(endTs, lookback);
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      `${DEFAULT_API_ROOT}dependencies?${queryString.stringify({ endTs, lookback })}`,
+      defaultOptions
+    );
+  });
+
+  it('has default query values', () => {
+    JaegerAPI.fetchDependencies();
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      expect.stringMatching(
+        new RegExp(`${DEFAULT_API_ROOT}dependencies\\?endTs=\\d+&lookback=${DEFAULT_DEPENDENCY_LOOKBACK}`)
+      ),
+      defaultOptions
+    );
+  });
+});
+
+describe('fetchTrace', () => {
+  const generatedTraces = traceGenerator.traces({ numberOfTraces: 5 });
+
+  it('fetchTrace() should fetch with the id', () => {
+    JaegerAPI.fetchTrace('trace-id');
+    expect(fetchMock).toHaveBeenLastCalledWith(`${DEFAULT_API_ROOT}traces/trace-id`, defaultOptions);
+  });
+
+  it('fetchTrace() should resolve the whole response', async () => {
+    fetchMock.mockReturnValue(
+      Promise.resolve({
+        status: 200,
+        json: () => Promise.resolve({ data: generatedTraces }),
+      })
+    );
+
+    const resp = await JaegerAPI.fetchTrace('trace-id');
+    expect(resp.data).toBe(generatedTraces);
+  });
+
+  it('fetchTrace() throws an error on a >= 400 status code', done => {
+    const status = 400;
+    const statusText = 'some-status';
+    const msg = 'some-message';
+    const errorData = { errors: [{ msg, code: status }] };
+
+    fetchMock.mockReturnValue(
+      Promise.resolve({
+        status,
+        statusText,
+        text: () => Promise.resolve(JSON.stringify(errorData)),
+      })
+    );
+    JaegerAPI.fetchTrace('trace-id').catch(err => {
+      expect(err.message).toMatch(msg);
+      expect(err.httpStatus).toBe(status);
+      expect(err.httpStatusText).toBe(statusText);
+      done();
+    });
+  });
+
+  it('fetchTrace() throws an useful error derived from a text payload', done => {
+    const status = 400;
+    const statusText = 'some-status';
+    const errorData = 'this is some error message';
+
+    fetchMock.mockReturnValue(
+      Promise.resolve({
+        status,
+        statusText,
+        text: () => Promise.resolve(errorData),
+      })
+    );
+    JaegerAPI.fetchTrace('trace-id').catch(err => {
+      expect(err.message).toMatch(errorData);
+      expect(err.httpStatus).toBe(status);
+      expect(err.httpStatusText).toBe(statusText);
+      done();
+    });
   });
 });
 

@@ -16,9 +16,10 @@ import { TEdge } from '@jaegertracing/plexus/lib/types';
 
 import { decode } from './visibility-codec';
 
-import { PathElem, TDdgModel, TDdgVertex } from './types';
+import { PathElem, TDdgDistanceToPathElems, TDdgModel, TDdgVertex } from './types';
 
 export default class Graph {
+  private distanceToPathElems: TDdgDistanceToPathElems;
   private pathElemToEdge: Map<PathElem, TEdge>;
   private pathElemToVertex: Map<PathElem, TDdgVertex>;
   private vertexToPathElems: Map<TDdgVertex, Set<PathElem>>;
@@ -26,6 +27,7 @@ export default class Graph {
   private visIdxToPathElem: PathElem[];
 
   constructor({ ddgModel }: { ddgModel: TDdgModel }) {
+    this.distanceToPathElems = ddgModel.distanceToPathElems;
     this.pathElemToEdge = new Map();
     this.pathElemToVertex = new Map();
     this.vertexToPathElems = new Map();
@@ -49,10 +51,12 @@ export default class Graph {
       // Link pathElem to its vertex
       this.pathElemToVertex.set(pathElem, vertex);
 
-      // Type cast as its impossible for the vertex to exist without existing in vertexToPathElems map.
-      // Typically this can be avoided by throwing an error if absent, but there is no way to force the error
-      // for testing.
-      const pathElemsForVertex = this.vertexToPathElems.get(vertex) as Set<PathElem>;
+      const pathElemsForVertex = this.vertexToPathElems.get(vertex);
+
+      /* istanbul ignore next */
+      if (!pathElemsForVertex) {
+        throw new Error(`Vertex exists without pathElems, vertex: ${vertex}`);
+      }
 
       // If the newly-visible PathElem is not the focalNode, it needs to be connected to the rest of the graph
       const connectedElem = pathElem.focalSideNeighbor;
@@ -94,6 +98,7 @@ export default class Graph {
         this.pathElemToEdge.set(pathElem, existingEdge || newEdge);
       }
 
+      // Link vertex back to this pathElem
       pathElemsForVertex.add(pathElem);
     });
   }
@@ -115,19 +120,30 @@ export default class Graph {
       .join('\n');
   };
 
-  public getVisible = (visKey: string): { edges: TEdge[]; vertices: TDdgVertex[] } => {
+  public getVisible = (visEncoding?: string): { edges: TEdge[]; vertices: TDdgVertex[] } => {
     const edges: Set<TEdge> = new Set();
     const vertices: Set<TDdgVertex> = new Set();
-    decode(visKey).forEach(visIdx => {
-      const pathElem = this.visIdxToPathElem[visIdx];
-      if (pathElem) {
-        const edge = this.pathElemToEdge.get(pathElem);
-        if (edge) edges.add(edge);
-        const vertex = this.pathElemToVertex.get(pathElem);
-        if (vertex) vertices.add(vertex);
-        else throw new Error(`PathElem wasn't present in initial model: ${pathElem}`);
-      }
+    const pathElems =
+      visEncoding == null
+        ? ([] as PathElem[]).concat(
+            this.distanceToPathElems.get(-2) || [],
+            this.distanceToPathElems.get(-1) || [],
+            this.distanceToPathElems.get(0) || [],
+            this.distanceToPathElems.get(1) || [],
+            this.distanceToPathElems.get(2) || []
+          )
+        : decode(visEncoding)
+            .map(visIdx => this.visIdxToPathElem[visIdx])
+            .filter(Boolean);
+
+    pathElems.forEach(pathElem => {
+      const edge = this.pathElemToEdge.get(pathElem);
+      if (edge) edges.add(edge);
+      const vertex = this.pathElemToVertex.get(pathElem);
+      if (vertex) vertices.add(vertex);
+      else throw new Error(`PathElem wasn't present in initial model: ${pathElem}`);
     });
+
     return {
       edges: Array.from(edges),
       vertices: Array.from(vertices),

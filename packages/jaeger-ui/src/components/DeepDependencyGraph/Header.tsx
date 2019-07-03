@@ -37,6 +37,7 @@ type TProps = TState & {
  * This is a very crudely thrown-together component to act as a stand in until the header is properly
  * implemented. Currently this should suffice as a means to provide the arguments to fetch a ddg, but it is
  * far from an enjoyable experience to do so.
+ * TODO: Remove exception from code coverage in package.json
  */
 export default class Header extends PureComponent<TProps, TState> {
   constructor(props: TProps) {
