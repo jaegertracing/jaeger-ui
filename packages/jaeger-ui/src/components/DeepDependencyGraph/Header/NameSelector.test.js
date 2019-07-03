@@ -19,7 +19,7 @@ import { shallow } from 'enzyme';
 import BreakableText from '../../common/BreakableText';
 import NameSelector from './NameSelector';
 
-describe('<ListItem>', () => {
+describe('<NameSelector>', () => {
   const placeholder = 'This is the placeholder';
   let props;
   let wrapper;

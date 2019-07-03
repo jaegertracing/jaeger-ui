@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`<ListItem> renders with is-invalid when required and without a value 1`] = `
+exports[`<NameSelector> renders with is-invalid when required and without a value 1`] = `
 <Popover
   content={
     <FilteredList
@@ -42,7 +42,7 @@ exports[`<ListItem> renders with is-invalid when required and without a value 1`
 </Popover>
 `;
 
-exports[`<ListItem> renders without exploding 1`] = `
+exports[`<NameSelector> renders without exploding 1`] = `
 <Popover
   content={
     <FilteredList
@@ -84,7 +84,7 @@ exports[`<ListItem> renders without exploding 1`] = `
 </Popover>
 `;
 
-exports[`<ListItem> renders without is-invalid when not required and without a value 1`] = `
+exports[`<NameSelector> renders without is-invalid when not required and without a value 1`] = `
 <Popover
   content={
     <FilteredList

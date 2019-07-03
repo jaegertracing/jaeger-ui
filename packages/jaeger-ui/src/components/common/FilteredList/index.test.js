@@ -28,7 +28,7 @@ describe('<FilteredList>', () => {
 
   const getData = () => wrapper.find(VList).prop('itemData');
 
-  const keyDown = (key: EKey) => wrapper.find('input').simulate('keydown', { key });
+  const keyDown = key => wrapper.find('input').simulate('keydown', { key });
 
   beforeEach(() => {
     props = {
@@ -96,7 +96,7 @@ describe('<FilteredList>', () => {
       expect(wrapper.state('focusedIndex')).toBe(indices.visibleStartIndex);
     });
 
-    it('up arrow sets the focus index to the first visible item when focusIndex == null', () => {
+    it('up arrow sets the focus index to the last visible item when focusIndex == null', () => {
       keyDown(EKey.ArrowUp);
       expect(wrapper.state('focusedIndex')).toBe(indices.visibleStopIndex);
     });
@@ -108,7 +108,7 @@ describe('<FilteredList>', () => {
       expect(wrapper.state('focusedIndex')).toBe(indices.visibleStopIndex - 1);
     });
 
-    it('cause the view the scroll if necessary', () => {
+    it('cause the view to scroll if necessary', () => {
       const fn = jest.fn();
       keyDown(EKey.ArrowDown);
       expect(wrapper.state('focusedIndex')).toBe(indices.visibleStartIndex);

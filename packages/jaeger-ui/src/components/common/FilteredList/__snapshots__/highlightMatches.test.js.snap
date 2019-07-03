@@ -46,40 +46,40 @@ exports[`highlightMatches(query, text) matches letters, in sequence: h[i]ghl[i]g
 </span>
 `;
 
-exports[`highlightMatches(query, text) matches the acronym: [h]ello[T]here 1`] = `
+exports[`highlightMatches(query, text) matches the acronym: [e]xactly [e]xact sleek bespoke 1`] = `
 <span>
   <span>
     <mark
-      key="h2"
+      key="e2"
     >
-      h
+      e
     </mark>
-    ello
+    xactly 
     <mark
-      key="T4"
+      key="e4"
     >
-      T
+      e
     </mark>
-    here
+    xact sleek bespoke
   </span>
 </span>
 `;
 
-exports[`highlightMatches(query, text) matches the acronym: [h]ello-[t]here 1`] = `
+exports[`highlightMatches(query, text) matches the acronym: [e]xactly[E]xactSleekBespoke 1`] = `
 <span>
   <span>
     <mark
-      key="h2"
+      key="e2"
     >
-      h
+      e
     </mark>
-    ello-
+    xactly
     <mark
-      key="t4"
+      key="E4"
     >
-      t
+      E
     </mark>
-    here
+    xactSleekBespoke
   </span>
 </span>
 `;
@@ -112,7 +112,7 @@ exports[`highlightMatches(query, text) matches the start of a word: kebabcase-[c
 </span>
 `;
 
-exports[`highlightMatches(query, text) matches the start of the text: [eg]g 1`] = `
+exports[`highlightMatches(query, text) matches the start of the text: [eg]g ego 1`] = `
 <span>
   <span>
     <mark
@@ -120,7 +120,7 @@ exports[`highlightMatches(query, text) matches the start of the text: [eg]g 1`] 
     >
       eg
     </mark>
-    g
+    g ego
   </span>
 </span>
 `;

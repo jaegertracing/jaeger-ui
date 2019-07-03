@@ -48,6 +48,12 @@ describe('<ListItem>', () => {
     expect(wrapper).toMatchSnapshot();
   });
 
+  it('is selected when options[index] == selectedValue', () => {
+    const data = { ...props.data, selectedValue: props.data.options[props.index] };
+    wrapper.setProps({ data });
+    expect(wrapper).toMatchSnapshot();
+  });
+
   it('sets the value when clicked', () => {
     expect(setValue.mock.calls.length).toBe(0);
     wrapper.simulate('click');

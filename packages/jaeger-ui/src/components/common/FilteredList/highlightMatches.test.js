@@ -20,9 +20,9 @@ import highlightMatches from './highlightMatches';
 describe('highlightMatches(query, text)', () => {
   const tests = [
     {
-      message: 'matches the start of the text: [eg]g',
+      message: 'matches the start of the text: [eg]g ego',
       query: 'eg',
-      text: 'egg',
+      text: 'egg ego',
     },
     {
       message: 'matches the start of a word: kebabcase-[ca]se',
@@ -35,14 +35,14 @@ describe('highlightMatches(query, text)', () => {
       text: 'camelcaseCase',
     },
     {
-      message: 'matches the acronym: [h]ello-[t]here',
-      query: 'ht',
-      text: 'hello-there',
+      message: 'matches the acronym: [e]xactly [e]xact sleek bespoke',
+      query: 'ee',
+      text: 'exactly exact sleek bespoke',
     },
     {
-      message: 'matches the acronym: [h]ello[T]here',
-      query: 'ht',
-      text: 'helloThere',
+      message: 'matches the acronym: [e]xactly[E]xactSleekBespoke',
+      query: 'ee',
+      text: 'exactlyExactSleekBespoke',
     },
     {
       message: 'matches contains: been-kat-br[eak]able',

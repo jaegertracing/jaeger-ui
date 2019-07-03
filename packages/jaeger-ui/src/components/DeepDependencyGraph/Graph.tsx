@@ -36,7 +36,7 @@ export default class Graph extends Component<TProps> {
   }
 
   render() {
-    const { edges, vertices } = this.graphModel.getVisible(this.props.visEncoding || '');
+    const { edges, vertices } = this.graphModel.getVisible(this.props.visEncoding);
 
     return (
       <DirectedGraph
