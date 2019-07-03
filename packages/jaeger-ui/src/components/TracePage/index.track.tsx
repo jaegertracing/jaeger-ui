@@ -18,7 +18,7 @@ import { trackEvent } from '../../utils/tracking';
 
 // export for tests
 export const CATEGORY_RANGE = 'jaeger/ux/trace/range';
-export const CATEGORY_FILTER = 'jaeger/ux/trace/range';
+export const CATEGORY_FILTER = 'jaeger/ux/trace/filter';
 
 // export for tests
 export const ACTION_FILTER_SET = 'set';
