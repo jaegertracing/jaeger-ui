@@ -32,9 +32,4 @@ describe('getNodeLabel()', () => {
     // wrapper = shallow(ddgNode);
     // expect(wrapper).toMatchSnapshot();
   });
-
-  it('throws an error if given a vertex without any path elements', () => {
-    const pathElems = new Set();
-    expect(() => getNodeLabel({ pathElems })).toThrow();
-  });
 });

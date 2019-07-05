@@ -27,7 +27,7 @@ exports[`getNodeLabel() returns a <DdgNode/> 1`] = `
   >
     <a
       className="DdgNode--actionsItem"
-      href="some-url"
+      href="/deep-dependencies?operation=the-operation&service=the-service"
     >
       <svg
         className="DdgSetFocusButtonIcon"

@@ -54,7 +54,12 @@ export type TDdgModel = {
   visIdxToPathElem: PathElem[];
 };
 
-export type TDdgVertex = TVertex<{ key: string; operation: string; service: string }>;
+export type TDdgVertex = TVertex<{
+  isFocalNode: boolean;
+  key: string;
+  operation: string;
+  service: string;
+}>;
 
 export type TDdgStateEntry =
   | {

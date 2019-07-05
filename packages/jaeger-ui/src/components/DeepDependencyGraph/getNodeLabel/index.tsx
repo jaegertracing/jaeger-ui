@@ -15,6 +15,7 @@
 import * as React from 'react';
 
 import DdgNode from './DdgNode';
+import { getUrl } from '../url';
 import { EViewModifier, TDdgVertex } from '../../../model/ddg/types';
 
 // temp fill in props
@@ -27,16 +28,16 @@ const noops = {
 };
 
 export default function getNodeLabel(vertex: TDdgVertex) {
-  const { operation, service } = vertex;
+  const { key, operation, service } = vertex;
   const isFocalNode = service.length % 3 === 0;
   return (
     <DdgNode
-      vertexKey={vertex.key}
+      vertexKey={key}
       service={service}
       operation={operation}
       isFocalNode={isFocalNode}
       viewModifiers={0}
-      focalNodeUrl={isFocalNode ? null : 'some-url'}
+      focalNodeUrl={isFocalNode ? null : getUrl({ operation, service })}
       {...noops}
     />
   );
