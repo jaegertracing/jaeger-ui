@@ -18,8 +18,9 @@ import _get from 'lodash/get';
 import { bindActionCreators, Dispatch } from 'redux';
 import { connect } from 'react-redux';
 
-import { getUrlState } from './url';
+import { getUrl, getUrlState } from './url';
 import Header from './Header';
+import HopsSelector from './HopsSelector';
 import Graph from './Graph';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
@@ -55,7 +56,7 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
       'urlState.operation',
       'urlState.start',
       'urlState.end',
-      'urlState.visibilityKey',
+      'urlState.visEncoding',
       'graphState.state',
     ];
 
@@ -67,7 +68,12 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
     if (!graphState) return <h1>Enter query above</h1>;
     switch (graphState.state) {
       case fetchedState.DONE:
-        return <Graph ddgModel={graphState.model} visEncoding={urlState.visEncoding} />;
+        return (
+          <div>
+            <HopsSelector  ddgModel={graphState.model} updateVisEncoding={this.updateVisEncoding} visEncoding={urlState.visEncoding} />
+            <Graph ddgModel={graphState.model} visEncoding={urlState.visEncoding} />
+          </div>
+        );
       case fetchedState.LOADING:
         return <LoadingIndicator centered />;
       case fetchedState.ERROR:
@@ -81,6 +87,15 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
         );
     }
   };
+
+  updateUrlState = (newValues: TDdgSparseUrlState) => {
+    const { urlState, history } = this.props;
+    history.push(getUrl(Object.assign({}, urlState, newValues)));
+  };
+
+  updateVisEncoding = (visEncoding: string) => {
+    this.updateUrlState({ visEncoding });
+  }
 
   render() {
     const { fetchDeepDependencyGraph, history, location, urlState } = this.props;
