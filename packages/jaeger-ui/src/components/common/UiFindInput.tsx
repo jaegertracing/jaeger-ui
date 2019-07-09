@@ -55,6 +55,16 @@ export class UnconnectedUiFindInput extends React.PureComponent<TProps, StateTyp
     ownInputValue: undefined,
   };
 
+  updateUiFindQueryParam = _debounce((uiFind: string | undefined) => {
+    const { history, location, trackFindFunction } = this.props;
+    updateUiFind({
+      location,
+      history,
+      trackFindFunction,
+      uiFind,
+    });
+  }, 250);
+
   handleInputBlur = () => {
     this.updateUiFindQueryParam.flush();
     this.setState({ ownInputValue: undefined });
@@ -65,16 +75,6 @@ export class UnconnectedUiFindInput extends React.PureComponent<TProps, StateTyp
     this.updateUiFindQueryParam(value);
     this.setState({ ownInputValue: value });
   };
-
-  updateUiFindQueryParam = _debounce((uiFind: string | undefined) => {
-    const { history, location, trackFindFunction } = this.props;
-    updateUiFind({
-      location,
-      history,
-      trackFindFunction,
-      uiFind,
-    });
-  }, 250);
 
   render() {
     const inputValue = _isString(this.state.ownInputValue) ? this.state.ownInputValue : this.props.uiFind;
