@@ -28,7 +28,7 @@ import { fetchedState } from '../../constants';
 import { stateKey, TDdgModelParams, TDdgSparseUrlState, TDdgStateEntry } from '../../model/ddg/types';
 import { ReduxState } from '../../types';
 
-// import './index.css';
+import './index.css';
 
 type TDispatchProps = {
   fetchDeepDependencyGraph: (query: TDdgModelParams) => void;
@@ -83,7 +83,11 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
     if (!graphState) return <h1>Enter query above</h1>;
     switch (graphState.state) {
       case fetchedState.DONE:
-        return <Graph ddgModel={graphState.model} visEncoding={urlState.visEncoding} />;
+        return (
+          <div className="Ddg--graphWrapper">
+            <Graph ddgModel={graphState.model} visEncoding={urlState.visEncoding} />
+          </div>
+        );
       case fetchedState.LOADING:
         return <LoadingIndicator centered />;
       case fetchedState.ERROR:
