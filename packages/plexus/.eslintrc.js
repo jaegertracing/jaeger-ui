@@ -34,6 +34,7 @@ module.exports = {
 
     '@typescript-eslint/explicit-function-return-type': 0,
     '@typescript-eslint/explicit-member-accessibility': 0,
+    '@typescript-eslint/interface-name-prefix': ['error', 'always'],
     '@typescript-eslint/no-explicit-any': 0,
     '@typescript-eslint/no-useless-constructor': 1,
     '@typescript-eslint/prefer-interface': 0,
