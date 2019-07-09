@@ -15,6 +15,7 @@
 import React, { Component } from 'react';
 import { DirectedGraph, LayoutManager } from '@jaegertracing/plexus';
 
+import getNodeLabel from './getNodeLabel';
 import GraphModel from '../../model/ddg/Graph';
 
 import { TDdgModel } from '../../model/ddg/types';
@@ -43,10 +44,11 @@ export default class Graph extends Component<TProps> {
         minimap
         zoom
         arrowScaleDampener={0}
-        minimapClassName="DeepDependencyGraph--miniMap"
+        minimapClassName="u-miniMap"
         layoutManager={this.layoutManager}
         edges={edges}
         vertices={vertices}
+        getNodeLabel={getNodeLabel}
       />
     );
   }
