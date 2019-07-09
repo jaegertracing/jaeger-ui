@@ -82,6 +82,8 @@ export class TraceDiffImpl extends React.PureComponent<TStateProps & TDispatchPr
     graphTopOffset: TOP_NAV_HEIGHT,
   };
 
+  headerWrapperElm: HTMLDivElement | TNil = null;
+
   componentDidMount() {
     this.processProps();
   }
@@ -90,8 +92,6 @@ export class TraceDiffImpl extends React.PureComponent<TStateProps & TDispatchPr
     this.setGraphTopOffset();
     this.processProps();
   }
-
-  headerWrapperElm: HTMLDivElement | TNil = null;
 
   headerWrapperRef = (elm: HTMLDivElement | TNil) => {
     this.headerWrapperElm = elm;

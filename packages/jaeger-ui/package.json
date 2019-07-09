@@ -16,6 +16,8 @@
     ]
   },
   "devDependencies": {
+    "@types/match-sorter": "^2.3.0",
+    "@types/react-window": "^1.8.0",
     "babel-plugin-import": "1.11.0",
     "bluebird": "^3.5.0",
     "customize-cra": "0.2.9",
@@ -67,6 +69,7 @@
     "lodash": "^4.17.4",
     "logfmt": "^1.2.0",
     "lru-memoize": "^1.1.0",
+    "match-sorter": "^3.1.1",
     "memoize-one": "^5.0.0",
     "moment": "^2.18.1",
     "prop-types": "^15.5.10",
@@ -85,6 +88,7 @@
     "react-virtualized-select": "^3.1.0",
     "react-vis": "^1.7.2",
     "react-vis-force": "^0.3.1",
+    "react-window": "^1.8.3",
     "recompose": "^0.25.0",
     "redux": "^3.7.2",
     "redux-actions": "^2.2.1",
@@ -93,6 +97,7 @@
     "redux-promise-middleware": "^4.3.0",
     "reselect": "^3.0.1",
     "store": "^2.0.12",
+    "ts-key-enum": "^2.0.0",
     "tween-functions": "^1.2.0",
     "typescript": "^3.3.3333",
     "u-basscss": "2.0.0"
@@ -100,7 +105,7 @@
   "scripts": {
     "analyze": "source-map-explorer build/static/js/main.*",
     "build": "REACT_APP_VSN_STATE=$(../../scripts/get-tracking-version.js) react-app-rewired build",
-    "coverage": "yarn run test -- --coverage",
+    "coverage": "yarn run test --coverage",
     "start:ga-debug": "REACT_APP_GA_DEBUG=1 REACT_APP_VSN_STATE=$(../../scripts/get-tracking-version.js) react-app-rewired start",
     "start": "react-app-rewired start",
     "test-dev": "react-app-rewired test --env=jsdom",
