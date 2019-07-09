@@ -17,7 +17,7 @@ import { Popover } from 'antd';
 import { shallow } from 'enzyme';
 
 import BreakableText from '../../common/BreakableText';
-import NameSelector from './NameSelector';
+import NameSelector, { DEFAULT_PLACEHOLDER } from './NameSelector';
 
 describe('<NameSelector>', () => {
   const placeholder = 'This is the placeholder';
@@ -49,8 +49,24 @@ describe('<NameSelector>', () => {
     expect(wrapper).toMatchSnapshot();
   });
 
-  it('renders the placeholder when value == null', () => {
-    expect(wrapper.find(BreakableText).prop('text')).toBe(placeholder);
+  describe('placeholder prop', () => {
+    it('renders the placeholder when it is a string and value == null', () => {
+      wrapper.setProps({ placeholder, value: null });
+      expect(wrapper.find(BreakableText).prop('text')).toBe(placeholder);
+    });
+
+    it('renders the default placeholder when the prop is true and value == null', () => {
+      wrapper.setProps({ placeholder: true, value: null });
+      expect(wrapper.find(BreakableText).prop('text')).toBe(DEFAULT_PLACEHOLDER);
+    });
+
+    it('does not render a placeholder if there is a value', () => {
+      const value = 'some-value';
+      wrapper.setProps({ placeholder, value });
+      expect(wrapper.find(BreakableText).prop('text')).toBe(value);
+      wrapper.setProps({ placeholder: true, value });
+      expect(wrapper.find(BreakableText).prop('text')).toBe(value);
+    });
   });
 
   it('allows the filtered list to set values', () => {

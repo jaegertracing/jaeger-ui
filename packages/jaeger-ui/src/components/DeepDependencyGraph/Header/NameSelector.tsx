@@ -35,7 +35,7 @@ type TState = {
   popoverVisible: boolean;
 };
 
-const PLACEHOLDER = 'Select a value…';
+export const DEFAULT_PLACEHOLDER = 'Select a value…';
 
 export default class NameSelector extends React.PureComponent<TProps, TState> {
   listRef: React.RefObject<FilteredList> = React.createRef();
@@ -72,7 +72,7 @@ export default class NameSelector extends React.PureComponent<TProps, TState> {
     let text = value || '';
     if (!value && placeholder) {
       useLabel = false;
-      text = typeof placeholder === 'string' ? placeholder : PLACEHOLDER;
+      text = typeof placeholder === 'string' ? placeholder : DEFAULT_PLACEHOLDER;
     }
     return (
       <Popover

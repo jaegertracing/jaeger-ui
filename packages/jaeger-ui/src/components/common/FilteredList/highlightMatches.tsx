@@ -15,10 +15,37 @@
 import * as React from 'react';
 import memoize from 'lru-memoize';
 
-enum EHighlightCadence {
-  Even = 0,
-  Odd = 1,
+type TIsHighlightGroupFn = (index: number) => boolean;
+
+type THighlightMatchFn = (match: RegExpMatchArray) => React.ReactNode;
+
+function toHighlights(isHighlightGroup: TIsHighlightGroupFn, match: RegExpMatchArray) {
+  const texts = match
+    .map((tx: string, i: number) => {
+      if (i === 0 || !tx) {
+        // the first group is the full match, not a capturing group
+        return null;
+      }
+      if (isHighlightGroup(i)) {
+        return <mark key={`${tx + i}`}>{tx}</mark>;
+      }
+      return tx;
+    })
+    .filter(Boolean);
+  return <span>{texts}</span>;
 }
+
+// In the matches from the regular expressions created in `MatchHighlighter`,
+// text that should be highlighted is interleaved with text that shouldn't be
+// highlighted. E.g. alternating capturing groups should be highlighted,
+// regardless of how many capturing groups there are in the match. Therefore, we
+// need to establish if the first capturing group (i.e. match[1]) should be
+// highlighted or if it should start at match[2]. Then, we alternate, from there.
+// This results in either highlighting even groups (starting at match[2]) or odd
+// groups (starting at match[1]). However, we don't actually need to highlight
+// odd groups, but just the first group (match[1]), so we can simplify that test.
+const highlightEvenGroups = toHighlights.bind(null, (index: number) => index % 2 === 0);
+const highlightFirstGroup = toHighlights.bind(null, (index: number) => index === 1);
 
 const ANY_LAZY = '(.*?)';
 const ANY_GREEDY = '(.*)';
@@ -29,22 +56,6 @@ function wordBreak(lowerLetter: string) {
 
 function letterClass(lowerLetter: string) {
   return `[${lowerLetter}${lowerLetter.toUpperCase()}]`;
-}
-
-function toHighlights(cadence: EHighlightCadence, match: RegExpMatchArray) {
-  const texts = match
-    .map((tx: string, i: number) => {
-      if (i === 0 || !tx) {
-        // the first group is the full match, not a capturing group
-        return null;
-      }
-      if (i % 2 !== cadence) {
-        return tx;
-      }
-      return <mark key={`${tx + i}`}>{tx}</mark>;
-    })
-    .filter(Boolean);
-  return <span>{texts}</span>;
 }
 
 /**
@@ -61,7 +72,7 @@ class MatchHighlighter {
     return new MatchHighlighter(query);
   }
 
-  private readonly matchers: [RegExp, EHighlightCadence][];
+  private readonly matchers: [RegExp, THighlightMatchFn][];
 
   constructor(readonly query: string) {
     // istanbul ignore next
@@ -82,24 +93,24 @@ class MatchHighlighter {
     this.matchers = [
       // case-insensitive match at start of text, would match "ego" but not "lego"
       // /^(eg)(.*)/i
-      [new RegExp(`${startsWith}${ANY_GREEDY}`, 'i'), EHighlightCadence.Odd],
+      [new RegExp(`${startsWith}${ANY_GREEDY}`, 'i'), highlightFirstGroup],
 
       // case-insensitive match at start of word, with boundaries in camelCase counting as words
       // would match "theEgg" and "the-egg"
       // /(.*?)(\b[eE][gG]|Eg)(.*)/
-      [new RegExp(`${ANY_LAZY}${wordStartsWith}${ANY_GREEDY}`), EHighlightCadence.Even],
+      [new RegExp(`${ANY_LAZY}${wordStartsWith}${ANY_GREEDY}`), highlightEvenGroups],
 
       // match an acronym, e.g. "easy-going" and "easyGoing" would both match "eg"
       // /(.*?)(\be|E)(.*?)(\bg|G)(.*)/
-      [new RegExp(`${ANY_LAZY}${acronymLetters}${ANY_GREEDY}`), EHighlightCadence.Even],
+      [new RegExp(`${ANY_LAZY}${acronymLetters}${ANY_GREEDY}`), highlightEvenGroups],
 
       // case insensitive contains
       // /(.*?)(eg)(.*)/i
-      [new RegExp(`${ANY_LAZY}${constains}${ANY_GREEDY}`, 'i'), EHighlightCadence.Even],
+      [new RegExp(`${ANY_LAZY}${constains}${ANY_GREEDY}`, 'i'), highlightEvenGroups],
 
       // contains each letter, in sequence
       // /(.*?)(e)(.*?)(g)(.*)/i
-      [new RegExp(`${ANY_LAZY}${anyLetters}${ANY_GREEDY}`, 'i'), EHighlightCadence.Even],
+      [new RegExp(`${ANY_LAZY}${anyLetters}${ANY_GREEDY}`, 'i'), highlightEvenGroups],
     ];
   }
 
@@ -108,12 +119,11 @@ class MatchHighlighter {
       return text;
     }
     for (let i = 0; i < this.matchers.length; i++) {
-      const [matcher, cadence] = this.matchers[i];
+      const [matcher, highlightMatch] = this.matchers[i];
       const match = text.match(matcher);
-      if (!match) {
-        continue;
+      if (match) {
+        return highlightMatch(match);
       }
-      return toHighlights(cadence, match);
     }
     return text;
   }

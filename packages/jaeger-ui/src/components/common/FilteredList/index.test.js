@@ -79,8 +79,9 @@ describe('<FilteredList>', () => {
   describe('up / down arrow keys', () => {
     let indices;
 
+    beforeAll(jest.useFakeTimers);
+
     beforeEach(() => {
-      jest.useFakeTimers();
       indices = {
         visibleStartIndex: 1,
         visibleStopIndex: props.options.length - 1,
@@ -89,7 +90,7 @@ describe('<FilteredList>', () => {
       jest.runAllTimers();
     });
 
-    afterEach(jest.useRealTimers);
+    afterAll(jest.useRealTimers);
 
     it('down arrow sets the focus index to the first visible item when focusIndex == null', () => {
       keyDown(EKey.ArrowDown);

@@ -29,7 +29,7 @@ describe('<ListItem>', () => {
     expect(wrapper).toMatchSnapshot();
   });
 
-  it('omits the operation selector is a service is not selected', () => {
+  it('omits the operation selector if a service is not selected', () => {
     expect(wrapper.state('service')).toBe(null);
     const nameSelector = wrapper.find(NameSelector);
     expect(nameSelector.length).toBe(1);
