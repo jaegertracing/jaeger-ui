@@ -41,6 +41,7 @@ export default class Graph {
       if (!vertex) {
         vertex = {
           key,
+          isFocalNode: !pathElem.distance,
           service: pathElem.operation.service.name,
           operation: pathElem.operation.name,
         };

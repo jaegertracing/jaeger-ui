@@ -108,10 +108,8 @@
   },
   "jest": {
     "collectCoverageFrom": [
-      "src/**/*.js",
-      "!src/components/DeepDependencyGraph/Header.tsx",
       "!src/setup*.js",
-      "!src/utils/DraggableManager/demo/*.js",
+      "!src/utils/DraggableManager/demo/*.tsx",
       "!src/utils/test/**/*.js",
       "!src/demo/**/*.js"
     ]
