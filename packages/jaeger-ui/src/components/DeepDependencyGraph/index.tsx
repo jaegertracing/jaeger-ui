@@ -29,7 +29,7 @@ import { fetchedState } from '../../constants';
 import { stateKey, TDdgModelParams, TDdgSparseUrlState, TDdgStateEntry } from '../../model/ddg/types';
 import { ReduxState } from '../../types';
 
-// import './index.css';
+import './index.css';
 
 type TDispatchProps = {
   fetchDeepDependencyGraph: (query: TDdgModelParams) => void;
@@ -111,7 +111,7 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
           history={history}
           location={location}
         />
-        {this.body()}
+        <div className="Ddg--graphWrapper">{this.body()}</div>
       </div>
     );
   }
