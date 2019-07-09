@@ -28,8 +28,7 @@ const noops = {
 };
 
 export default function getNodeLabel(vertex: TDdgVertex) {
-  const { key, operation, service } = vertex;
-  const isFocalNode = service.length % 3 === 0;
+  const { isFocalNode, key, operation, service } = vertex;
   return (
     <DdgNode
       vertexKey={key}

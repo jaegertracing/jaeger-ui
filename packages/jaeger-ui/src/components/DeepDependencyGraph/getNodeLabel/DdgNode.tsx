@@ -32,7 +32,7 @@ type TProps = {
   setViewModifier: (vertexKey: string, viewModifier: EViewModifier, isEnabled: boolean) => void;
 };
 
-export default class Node extends React.PureComponent<TProps> {
+export default class DdgNode extends React.PureComponent<TProps> {
   onMouseUx = (event: React.MouseEvent<HTMLElement>) => {
     const { vertexKey, setViewModifier } = this.props;
     setViewModifier(vertexKey, EViewModifier.Hovered, event.type === 'mouseover');

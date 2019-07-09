@@ -14,22 +14,34 @@
 
 import { shallow } from 'enzyme';
 
+import DdgNode from './DdgNode';
 import getNodeLabel from './index';
 
 describe('getNodeLabel()', () => {
+  let ddgVertex;
+
+  beforeEach(() => {
+    ddgVertex = {
+      isFocalNode: false,
+      key: 'some-key',
+      operation: 'the-operation',
+      service: 'the-service',
+    };
+  });
+
   it('returns a <DdgNode/>', () => {
-    const operation = 'the-operation';
-    const service = 'the-service';
-    const ddgNode = getNodeLabel({ operation, service });
+    const ddgNode = getNodeLabel(ddgVertex);
     expect(ddgNode).toBeDefined();
     const wrapper = shallow(ddgNode);
     expect(wrapper).toMatchSnapshot();
-    // set as the focal node
-    // TODO(joe): update test after vertex indicates focal node or not
-    // pathElem.memberIdx = focalIdx;
-    // ddgNode = getNodeLabel({ pathElems });
-    // expect(ddgNode).toBeDefined();
-    // wrapper = shallow(ddgNode);
-    // expect(wrapper).toMatchSnapshot();
+    expect(ddgNode.type).toBe(DdgNode);
+  });
+
+  it('renders as a focal node when isFocalNode == true', () => {
+    ddgVertex.isFocalNode = true;
+    const ddgNode = getNodeLabel(ddgVertex);
+    expect(ddgNode).toBeDefined();
+    const wrapper = shallow(ddgNode);
+    expect(wrapper).toMatchSnapshot();
   });
 });
