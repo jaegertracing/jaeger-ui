@@ -33,7 +33,7 @@ describe('DeepDependencyGraphPage', () => {
         end: 'testEnd',
         service: 'testService',
         operation: 'testOperation',
-        visibilityKey: 'testVisKey',
+        visEncoding: 'testVisKey',
       },
       graphState: {
         uxState: new Map(),
@@ -66,7 +66,7 @@ describe('DeepDependencyGraphPage', () => {
           'urlState.operation',
           'urlState.start',
           'urlState.end',
-          'urlState.visibilityKey',
+          'urlState.visEncoding',
           'graphState.state',
         ].forEach(prop => {
           const newProps = cloneDeep(props);

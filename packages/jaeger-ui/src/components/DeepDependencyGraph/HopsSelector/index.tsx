@@ -16,7 +16,7 @@ import React, { PureComponent } from 'react';
 
 import { decode, encode } from '../../../model/ddg/visibility-codec';
 import { TDdgModel } from '../../../model/ddg/types';
-import Selector from './selector';
+import Selector from './Selector';
 
 import { EStream, EFullness, THop } from './types';
 
@@ -27,12 +27,6 @@ type TProps = {
 };
 
 export default class HopsSelector extends PureComponent<TProps> {
-  constructor(props: TProps) {
-    super(props);
-    console.log(props.ddgModel.visIdxToPathElem);
-    console.log(props.ddgModel.visIdxToPathElem.map(({ visibilityIdx, distance }) => ({ visibilityIdx, distance })));
-  }
-
   private handleClick = (clickedDistance: number, direction: EStream) => {
     const { ddgModel, updateVisEncoding, visEncoding } = this.props;
     const { distanceToPathElems, visIdxToPathElem } = ddgModel;
@@ -98,7 +92,7 @@ export default class HopsSelector extends PureComponent<TProps> {
 
     hops.sort(({ distance: a }, { distance: b }) => a - b);
     const splitIdx = hops.findIndex(({ distance }) => !distance);
-    const upstream = hops.slice(0, splitIdx + 1); // .reverse()
+    const upstream = hops.slice(0, splitIdx + 1).reverse();
     const downstream = hops.slice(splitIdx);
 
     return (

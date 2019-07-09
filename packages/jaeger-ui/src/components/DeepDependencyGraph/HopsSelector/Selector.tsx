@@ -14,11 +14,14 @@
 
 import React from 'react';
 import { Popover } from 'antd';
+import cx from 'classnames';
 
 import { decode, encode } from '../../../model/ddg/visibility-codec';
 import { TDdgModel } from '../../../model/ddg/types';
 
 import { EStream, EFullness, THop } from './types';
+
+import './Selector.css';
 
 type TProps = {
   furthestDistance: number;
@@ -30,36 +33,28 @@ type TProps = {
 
 export default function selector(props: TProps) {
   const { furthestDistance, furthestFullness, handleClick, hops, stream } = props; 
-  const streamLabel = stream === EStream.down ? 'Downstream hops' : 'Upstream hops';
-  const btn = ({ distance, fullness, suffix }: THop & { suffix?: string }) => (
+  const streamText = stream === EStream.down ? 'Down' : 'Up';
+  const streamLabel = `${streamText}stream hops`;
+  const btn = ({ distance, fullness, suffix = 'popover-content' }: THop & { suffix?: string }) => (
     <button
       key={`${distance} ${stream} ${suffix}`}
+      className={cx('Selector--btn', fullness, streamText.toLowerCase(), suffix)}
       onClick={() => handleClick(distance, stream)}
     >
-      {/* Math.abs(distance) */}
-      {distance}
+      {Math.abs(distance)}
     </button>
   );
 
   const furthestBtn = btn({ distance: furthestDistance, fullness: furthestFullness, suffix: 'furthest' })
   const delimiterBtn = btn({
-    // ...hops[hops.length - 1],
-    ...hops[stream === EStream.down ? hops.length - 1 : 0],
+    ...hops[hops.length - 1],
     suffix: 'delimiter',
   });
 
-  const content = (<div>
-    <div>
-      Visible {streamLabel.toLowerCase()}
-    </div>
-    <div>
-      {hops.map(btn)}
-    </div>
-  </div>);
-
   return (
-    <Popover placement={'bottom'} content={content}>
-      <span>{streamLabel} {furthestBtn} / {delimiterBtn}</span>
+    <Popover placement={'bottom'} title={`Visible ${streamLabel.toLowerCase()}`}
+content={hops.map(btn)}>
+      <span className={'Selector'}>{streamLabel} {furthestBtn} / {delimiterBtn}</span>
     </Popover>
   );
 }

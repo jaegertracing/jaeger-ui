@@ -13,9 +13,9 @@
 // limitations under the License.
 
 export enum EFullness {
-  full,
-  empty,
-  partial,
+  full = 'full',
+  empty = 'empty',
+  partial = 'partial',
 };
 
 export enum EStream {
