@@ -32,7 +32,7 @@ export const decode: (encoded: string) => number[] = memoize(10)((encoded: strin
   const rv: number[] = [];
   encoded.split(',').forEach((partial, i) => {
     const partialAsNumber = partial ? parseInt(partial, 36) : 0;
-    for (let j = 0; partialAsNumber >= 1 << j; j += 1) {
+    for (let j = 0; partialAsNumber >= 1 << j && j < VISIBILITY_BUCKET_SIZE; j += 1) {
       if ((1 << j) & partialAsNumber) {
         rv.push(i * VISIBILITY_BUCKET_SIZE + j);
       }

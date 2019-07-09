@@ -88,7 +88,8 @@ function parseGraph(str: string, startIndex: number): { end: number; graph: TLay
 function parseNode(str: string, startIndex: number) {
   // skip "node "
   const i = startIndex + 5;
-  const { value: key, end: keyEnd } = parseString(str, i);
+  const { value: raw, end: keyEnd } = parseString(str, i);
+  const key = raw.replace(/\\|\n/g, '');
   const { values, end } = parseNumbers(4, str, keyEnd + 1);
   const [left, top, width, height] = values;
   return {
@@ -106,8 +107,10 @@ function parseNode(str: string, startIndex: number) {
 function parseEdge(str: string, startIndex: number) {
   // skip "edge "
   const i = startIndex + 5;
-  const { value: from, end: fromEnd } = parseString(str, i);
-  const { value: to, end: toEnd } = parseString(str, fromEnd + 1);
+  const { value: fromRaw, end: fromEnd } = parseString(str, i);
+  const { value: toRaw, end: toEnd } = parseString(str, fromEnd + 1);
+  const from = fromRaw.replace(/\\|\n/g, '');
+  const to = toRaw.replace(/\\|\n/g, '');
   const { value: pointCount, end: endPtCount } = parseNumber(str, toEnd + 1);
   const { values: flatPoints, end: pointsEnd } = parseNumbers(pointCount * 2, str, endPtCount + 1);
   const { value: flags, end: flagsEnd } = parseString(str, pointsEnd + 1);

@@ -15,6 +15,9 @@
 import { encode, decode } from './visibility-codec';
 
 describe('visibility-codec', () => {
+  const sampleLargestEncoded = 'zik0zj,zik0zj';
+  const sampleLargestDecoded = [...new Array(62)].map((_undef, i) => i);
+
   describe('encode', () => {
     it('converts numbers into encoded string', () => {
       expect(encode([0, 1])).toBe('3');
@@ -26,6 +29,10 @@ describe('visibility-codec', () => {
 
     it('leaves empty csv entries', () => {
       expect(encode([0, 1, 31, 93])).toBe('3,1,,1');
+    });
+
+    it('creates largest possible value in csv', () => {
+      expect(encode(sampleLargestDecoded)).toBe(sampleLargestEncoded);
     });
   });
 
@@ -40,6 +47,10 @@ describe('visibility-codec', () => {
 
     it('handles empty csv entries', () => {
       expect(decode('3,1,,1')).toEqual([0, 1, 31, 93]);
+    });
+
+    it('handles largest possible value in csv', () => {
+      expect(decode(sampleLargestEncoded)).toEqual(sampleLargestDecoded);
     });
   });
 });
