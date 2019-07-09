@@ -78,6 +78,7 @@ module.exports = {
           'state',
           'propTypes',
           'static-methods',
+          'instance-variables',
           'constructor',
           'lifecycle',
           'everything-else',

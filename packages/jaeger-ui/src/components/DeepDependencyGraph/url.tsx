@@ -28,7 +28,9 @@ export function matches(path: string) {
 }
 
 export function getUrl(args?: { [key: string]: unknown }) {
-  if (args && !_isEmpty(args)) return `${ROUTE_PATH}?${queryString.stringify(args)}`;
+  if (args && !_isEmpty(args)) {
+    return `${ROUTE_PATH}?${queryString.stringify(args)}`;
+  }
   return ROUTE_PATH;
 }
 
