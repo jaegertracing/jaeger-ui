@@ -41,7 +41,7 @@ import { trackSlimHeaderToggle } from './TracePageHeader/TracePageHeader.track';
 import TracePageHeader from './TracePageHeader';
 import TraceTimelineViewer from './TraceTimelineViewer';
 import { actions as timelineActions } from './TraceTimelineViewer/duck';
-import { TUpdateViewRangeTimeFunction, ViewRange, ViewRangeTimeUpdate } from './types';
+import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate } from './types';
 import { getLocation, getUrl } from './url';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
@@ -87,7 +87,7 @@ type TState = {
   headerHeight: number | TNil;
   slimView: boolean;
   traceGraphView: boolean;
-  viewRange: ViewRange;
+  viewRange: IViewRange;
 };
 
 // export for tests
