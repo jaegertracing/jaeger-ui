@@ -77,6 +77,8 @@ export default class LayeredDirectedGraph<T = {}, U = {}> extends React.PureComp
   TLayeredDirectedGraphProps<T, U>,
   TLayeredDirectedGraphState<T, U>
 > {
+  renderUtils: TRendererUtils;
+
   static propsFactories = {
     classNameIsSmall,
     mergePropSetters,
@@ -102,6 +104,12 @@ export default class LayeredDirectedGraph<T = {}, U = {}> extends React.PureComp
     zoomTransform: zoomIdentity,
   };
 
+  baseId = `plexus--LayeredDirectedGraph--${idCounter++}`;
+
+  rootRef: React.RefObject<HTMLDivElement> = React.createRef();
+
+  zoomManager: ZoomManager | null = null;
+
   constructor(props: TLayeredDirectedGraphProps<T, U>) {
     super(props);
     const { edges, vertices, zoom: zoomEnabled } = props;
@@ -115,6 +123,10 @@ export default class LayeredDirectedGraph<T = {}, U = {}> extends React.PureComp
     } else {
       this.zoomManager = null;
     }
+    this.renderUtils = {
+      getLocalId: this.getLocalId,
+      getZoomTransform: this.getZoomTransform,
+    };
   }
 
   componentDidMount() {
@@ -124,20 +136,9 @@ export default class LayeredDirectedGraph<T = {}, U = {}> extends React.PureComp
     }
   }
 
-  baseId = `plexus--LayeredDirectedGraph--${idCounter++}`;
-
-  rootRef: React.RefObject<HTMLDivElement> = React.createRef();
-
-  zoomManager: ZoomManager | null = null;
-
   getLocalId = (name: string) => `${this.baseId}--${name}`;
 
   getZoomTransform = () => this.state.zoomTransform;
-
-  renderUtils: TRendererUtils = {
-    getLocalId: this.getLocalId,
-    getZoomTransform: this.getZoomTransform,
-  };
 
   private setSizeVertices = (sizeVertices: TSizeVertex<T>[]) => {
     this.setState({ sizeVertices });
