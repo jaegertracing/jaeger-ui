@@ -29,6 +29,7 @@
     "src/actions/jaeger-api.js",
     "src/api/jaeger.js",
     "src/components/SearchTracePage/SearchResults/ResultItem.markers.js",
+    // TODO: remove the next line when the fetchDeepDependencyGraph action is live
     "src/model/ddg/sample-paths.test.resources.js",
     "src/model/order-by.js",
     "src/model/trace-viewer.js",

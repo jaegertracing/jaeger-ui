@@ -1,4 +1,4 @@
-// Copyright (c) 2018 Uber Technologies, Inc.
+// Copyright (c) 2019 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,8 +13,6 @@
 // limitations under the License.
 
 import { zoomIdentity, ZoomTransform } from 'd3-zoom';
-
-// import { TD3Transform } from './types';
 
 const SCALE_MAX = 1;
 const SCALE_MIN = 0.03;
@@ -36,7 +34,12 @@ function getFittedScale(width: number, height: number, viewWidth: number, viewHe
   );
 }
 
-export function getScaleExtent(width: number, height: number, viewWidth: number, viewHeight: number) {
+export function getScaleExtent(
+  width: number,
+  height: number,
+  viewWidth: number,
+  viewHeight: number
+): [number, number] {
   const scaleMin = getFittedScale(width, height, viewWidth, viewHeight);
   return [scaleMin, SCALE_MAX];
 }

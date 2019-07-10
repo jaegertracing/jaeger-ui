@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2018 Uber Technologies, Inc.
+Copyright (c) 2019 Uber Technologies, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,8 +14,25 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-:root {
-  --tx-color-title: rgba(0, 0, 0, 0.85);
-  --tx-color-body: rgba(0, 0, 0, 0.65);
-  --tx-color-muted: #aaa;
+.DdgHeader {
+  align-items: stretch;
+  background: #fafafa;
+  box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  flex: 1 1;
+  position: relative;
+  z-index: 10;
+}
+
+.DdgHeader--paramsHeader {
+  flex-wrap: wrap;
+  font-size: unset;
+  align-items: center;
+  background: #fff;
+  display: flex;
+  flex: 1;
+  margin: 0;
+  padding: 0.75rem 1.25rem 0.75rem 1.25rem;
+  position: relative;
 }

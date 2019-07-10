@@ -13,8 +13,6 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { select } from 'd3-selection';
-import { zoom as d3Zoom, zoomIdentity, zoomTransform as getTransform, ZoomTransform } from 'd3-zoom';
 
 import defaultGetNodeLabel from './builtins/defaultGetNodeLabel';
 import EdgeArrowDef from './builtins/EdgeArrowDef';
@@ -25,17 +23,9 @@ import MiniMap from './MiniMap';
 import classNameIsSmall from './prop-factories/classNameIsSmall';
 import mergePropSetters, { mergeClassNameAndStyle } from './prop-factories/mergePropSetters';
 import scaledStrokeWidth from './prop-factories/scaledStrokeWidth';
-import {
-  constrainZoom,
-  DEFAULT_SCALE_EXTENT,
-  fitWithinContainer,
-  getScaleExtent,
-  getZoomAttr,
-  getZoomStyle,
-} from './transform-utils';
-
 import { TDirectedGraphProps, TDirectedGraphState } from './types';
 import { TCancelled, TLayoutDone, TPositionsDone, TSizeVertex } from '../types';
+import ZoomManager, { zoomIdentity, ZoomTransform } from '../ZoomManager';
 
 const PHASE_NO_DATA = 0;
 const PHASE_CALC_SIZES = 1;
@@ -70,11 +60,9 @@ export default class DirectedGraph<T> extends React.PureComponent<
 > {
   arrowId: string;
   arrowIriRef: string;
-  // ref API defs in flow seem to be a WIP
-  // https://github.com/facebook/flow/issues/6103
-  rootRef: { current: HTMLDivElement | null };
+  rootRef: React.RefObject<HTMLDivElement>;
   rootSelection: any;
-  zoom: any;
+  zoomManager: ZoomManager | null;
 
   static propsFactories = {
     classNameIsSmall,
@@ -86,12 +74,10 @@ export default class DirectedGraph<T> extends React.PureComponent<
     arrowScaleDampener: undefined,
     className: '',
     classNamePrefix: 'plexus',
-    // getEdgeLabel: defaultGetEdgeLabel,
     getNodeLabel: defaultGetNodeLabel,
     minimap: false,
     minimapClassName: '',
     zoom: false,
-    zoomTransform: zoomIdentity,
   };
 
   state: TDirectedGraphState = {
@@ -144,16 +130,18 @@ export default class DirectedGraph<T> extends React.PureComponent<
     this.arrowIriRef = EdgeArrowDef.getIriRef(idBase);
     this.rootRef = React.createRef();
     if (zoomEnabled) {
-      this.zoom = d3Zoom()
-        .scaleExtent(DEFAULT_SCALE_EXTENT)
-        .constrain(this._constrainZoom)
-        .on('zoom', this._onZoomed);
+      this.zoomManager = new ZoomManager(this._onZoomUpdated);
+    } else {
+      this.zoomManager = null;
     }
   }
 
   componentDidMount() {
     this._setSizeVertices();
-    this.rootSelection = select(this.rootRef.current);
+    const { current } = this.rootRef;
+    if (current && this.zoomManager) {
+      this.zoomManager.setElement(current);
+    }
   }
 
   componentDidUpdate() {
@@ -175,48 +163,14 @@ export default class DirectedGraph<T> extends React.PureComponent<
     if (result.isCancelled || !root) {
       return;
     }
-    const { zoomEnabled } = this.state;
     const { edges: layoutEdges, graph: layoutGraph, vertices: layoutVertices } = result;
-    const { clientHeight: height, clientWidth: width } = root;
-    let zoomTransform = zoomIdentity;
-    if (zoomEnabled) {
-      const scaleExtent = getScaleExtent(layoutGraph.width, layoutGraph.height, width, height);
-      zoomTransform = fitWithinContainer(layoutGraph.width, layoutGraph.height, width, height);
-      this.zoom.scaleExtent(scaleExtent);
-      this.rootSelection.call(this.zoom);
-      // set the initial transform
-      this.zoom.transform(this.rootSelection, zoomTransform);
+    this.setState({ layoutEdges, layoutGraph, layoutVertices, layoutPhase: PHASE_DONE });
+    if (this.zoomManager) {
+      this.zoomManager.setContentSize(layoutGraph);
     }
-    this.setState({ layoutEdges, layoutGraph, layoutVertices, zoomTransform, layoutPhase: PHASE_DONE });
   };
 
-  _onZoomed = () => {
-    const root = this.rootRef.current;
-    if (!root) {
-      return;
-    }
-    const zoomTransform = getTransform(root);
-    this.setState({ zoomTransform });
-  };
-
-  _constrainZoom = (transform: ZoomTransform, extent: [[number, number], [number, number]]) => {
-    const [, [vw, vh]] = extent;
-    const { height: h = null, width: w = null } = this.state.layoutGraph || {};
-    if (h == null || w == null) {
-      return transform;
-    }
-    return constrainZoom(transform, w, h, vw, vh);
-  };
-
-  _resetZoom = () => {
-    const root = this.rootRef.current;
-    const layoutGraph = this.state.layoutGraph;
-    if (!root || !layoutGraph) {
-      return;
-    }
-    const { clientHeight: height, clientWidth: width } = root;
-    const zoomTransform = fitWithinContainer(layoutGraph.width, layoutGraph.height, width, height);
-    this.zoom.transform(this.rootSelection, zoomTransform);
+  _onZoomUpdated = (zoomTransform: ZoomTransform) => {
     this.setState({ zoomTransform });
   };
 
@@ -279,14 +233,14 @@ export default class DirectedGraph<T> extends React.PureComponent<
     } = this.props;
     const { layoutPhase: phase, layoutGraph, zoomEnabled, zoomTransform } = this.state;
     const { height = 0, width = 0 } = layoutGraph || {};
-    const { current: rootElm } = this.rootRef;
+    // const { current: rootElm } = this.rootRef;
     const haveEdges = phase === PHASE_DONE;
 
     const nodesContainerProps = mergeClassNameAndStyle(
       (setOnNodesContainer && setOnNodesContainer(this.state)) || {},
       {
         style: {
-          ...(zoomEnabled ? getZoomStyle(zoomTransform) : null),
+          ...(zoomEnabled ? ZoomManager.getZoomStyle(zoomTransform) : null),
           position: 'absolute',
           top: 0,
           left: 0,
@@ -315,20 +269,17 @@ export default class DirectedGraph<T> extends React.PureComponent<
               scaleDampener={arrowScaleDampener}
               zoomScale={zoomEnabled && zoomTransform ? zoomTransform.k : null}
             />
-            <g transform={zoomEnabled ? getZoomAttr(zoomTransform) : undefined}>{this._renderEdges()}</g>
+            <g transform={zoomEnabled ? ZoomManager.getZoomAttr(zoomTransform) : undefined}>
+              {this._renderEdges()}
+            </g>
           </EdgesContainer>
         )}
         <div {...nodesContainerProps}>{this._renderVertices()}</div>
-        {zoomEnabled && minimapEnabled && layoutGraph && rootElm && (
+        {zoomEnabled && minimapEnabled && this.zoomManager && (
           <MiniMap
             className={minimapClassName}
             classNamePrefix={classNamePrefix}
-            contentHeight={height}
-            contentWidth={width}
-            viewAll={this._resetZoom}
-            viewportHeight={rootElm.clientHeight}
-            viewportWidth={rootElm.clientWidth}
-            {...zoomTransform}
+            {...this.zoomManager.getProps()}
           />
         )}
       </div>
