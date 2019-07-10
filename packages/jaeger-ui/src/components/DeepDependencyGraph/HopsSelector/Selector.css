@@ -18,10 +18,6 @@ limitations under the License.
   padding: 0px 3px;
 }
 
-.Selector {
-  text-transform: capitalize;
-}
-
 .Selector--btn {
   background: transparent;
   border: none;
@@ -38,7 +34,7 @@ limitations under the License.
   color: orange;
 }
 
-.Selector--btn.popover-content:not(:first-of-type)::before {
+.Selector--btn.popover-content ~ .Selector--btn.popover-content::before {
   content: '>';
   padding-right: 4px;
 }

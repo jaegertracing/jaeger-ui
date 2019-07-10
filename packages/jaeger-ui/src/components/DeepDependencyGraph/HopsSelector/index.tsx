@@ -33,8 +33,9 @@ export default class HopsSelector extends PureComponent<TProps> {
 
     let nextVisible: number[];
     if (visEncoding) {
-      nextVisible = decode(visEncoding)
-        .filter(idx => visIdxToPathElem[idx] && Math.sign(visIdxToPathElem[idx].distance) !== direction)
+      nextVisible = decode(visEncoding).filter(
+        idx => visIdxToPathElem[idx] && Math.sign(visIdxToPathElem[idx].distance) !== direction
+      );
     } else {
       nextVisible = [
         ...(distanceToPathElems.get(-1 * direction) || []),
@@ -50,7 +51,7 @@ export default class HopsSelector extends PureComponent<TProps> {
     }
 
     updateVisEncoding(encode(nextVisible));
-  }
+  };
 
   render() {
     const { ddgModel, visEncoding } = this.props;
@@ -64,28 +65,28 @@ export default class HopsSelector extends PureComponent<TProps> {
     const visibleIndices = visEncoding && new Set(decode(visEncoding));
 
     distanceToPathElems.forEach((elems, distance) => {
-      let newValue: THop;
+      let fullness: EFullness;
       if (visibleIndices) {
         const visible = elems.filter(({ visibilityIdx }) => visibleIndices.has(visibilityIdx));
         if (visible.length === elems.length) {
-          newValue = { distance, fullness: EFullness.full }
+          fullness = EFullness.full;
         } else if (!visible.length) {
-          newValue = { distance, fullness: EFullness.empty };
+          fullness = EFullness.empty;
         } else {
-          newValue = { distance, fullness: EFullness.partial };
+          fullness = EFullness.partial;
         }
       } else {
-        newValue = { distance, fullness: Math.abs(distance) <= 2 ? EFullness.full : EFullness.empty };
+        fullness = Math.abs(distance) <= 2 ? EFullness.full : EFullness.empty;
       }
 
-      hops.push(newValue);
-      if (newValue.fullness !== EFullness.empty) {
-        if (newValue.distance > maxVisDistance) {
-          maxVisDistance = newValue.distance;
-          maxVisDistanceFullness = newValue.fullness;
-        } else if (newValue.distance < minVisDistance) {
-          minVisDistance = newValue.distance;
-          minVisDistanceFullness = newValue.fullness;
+      hops.push({ distance, fullness });
+      if (fullness !== EFullness.empty) {
+        if (distance > maxVisDistance) {
+          maxVisDistance = distance;
+          maxVisDistanceFullness = fullness;
+        } else if (distance < minVisDistance) {
+          minVisDistance = distance;
+          minVisDistanceFullness = fullness;
         }
       }
     });

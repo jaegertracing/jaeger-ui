@@ -1,0 +1,200 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`HopsSelector render with visEncoding renders hops with correct fullness 1`] = `
+<div>
+  <Selector
+    furthestDistance={-4}
+    furthestFullness="full"
+    handleClick={[Function]}
+    hops={
+      Array [
+        Object {
+          "distance": 0,
+          "fullness": "full",
+        },
+        Object {
+          "distance": -1,
+          "fullness": "full",
+        },
+        Object {
+          "distance": -2,
+          "fullness": "partial",
+        },
+        Object {
+          "distance": -3,
+          "fullness": "full",
+        },
+        Object {
+          "distance": -4,
+          "fullness": "full",
+        },
+        Object {
+          "distance": -5,
+          "fullness": "empty",
+        },
+        Object {
+          "distance": -6,
+          "fullness": "empty",
+        },
+      ]
+    }
+    stream={-1}
+  />
+  <Selector
+    furthestDistance={4}
+    furthestFullness="full"
+    handleClick={[Function]}
+    hops={
+      Array [
+        Object {
+          "distance": 0,
+          "fullness": "full",
+        },
+        Object {
+          "distance": 1,
+          "fullness": "full",
+        },
+        Object {
+          "distance": 2,
+          "fullness": "partial",
+        },
+        Object {
+          "distance": 3,
+          "fullness": "full",
+        },
+        Object {
+          "distance": 4,
+          "fullness": "full",
+        },
+        Object {
+          "distance": 5,
+          "fullness": "empty",
+        },
+        Object {
+          "distance": 6,
+          "fullness": "empty",
+        },
+      ]
+    }
+    stream={1}
+  />
+</div>
+`;
+
+exports[`HopsSelector render without visEncoding handles DDGs smaller than two hops 1`] = `
+<div>
+  <Selector
+    furthestDistance={-1}
+    furthestFullness="full"
+    handleClick={[Function]}
+    hops={
+      Array [
+        Object {
+          "distance": 0,
+          "fullness": "full",
+        },
+        Object {
+          "distance": -1,
+          "fullness": "full",
+        },
+      ]
+    }
+    stream={-1}
+  />
+  <Selector
+    furthestDistance={0}
+    furthestFullness="empty"
+    handleClick={[Function]}
+    hops={
+      Array [
+        Object {
+          "distance": 0,
+          "fullness": "full",
+        },
+      ]
+    }
+    stream={1}
+  />
+</div>
+`;
+
+exports[`HopsSelector render without visEncoding renders hops within two hops as full and others as empty 1`] = `
+<div>
+  <Selector
+    furthestDistance={-2}
+    furthestFullness="full"
+    handleClick={[Function]}
+    hops={
+      Array [
+        Object {
+          "distance": 0,
+          "fullness": "full",
+        },
+        Object {
+          "distance": -1,
+          "fullness": "full",
+        },
+        Object {
+          "distance": -2,
+          "fullness": "full",
+        },
+        Object {
+          "distance": -3,
+          "fullness": "empty",
+        },
+        Object {
+          "distance": -4,
+          "fullness": "empty",
+        },
+        Object {
+          "distance": -5,
+          "fullness": "empty",
+        },
+        Object {
+          "distance": -6,
+          "fullness": "empty",
+        },
+      ]
+    }
+    stream={-1}
+  />
+  <Selector
+    furthestDistance={2}
+    furthestFullness="full"
+    handleClick={[Function]}
+    hops={
+      Array [
+        Object {
+          "distance": 0,
+          "fullness": "full",
+        },
+        Object {
+          "distance": 1,
+          "fullness": "full",
+        },
+        Object {
+          "distance": 2,
+          "fullness": "full",
+        },
+        Object {
+          "distance": 3,
+          "fullness": "empty",
+        },
+        Object {
+          "distance": 4,
+          "fullness": "empty",
+        },
+        Object {
+          "distance": 5,
+          "fullness": "empty",
+        },
+        Object {
+          "distance": 6,
+          "fullness": "empty",
+        },
+      ]
+    }
+    stream={1}
+  />
+</div>
+`;

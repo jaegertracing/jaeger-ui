@@ -28,6 +28,13 @@ import { stateKey } from '../../model/ddg/types';
 describe('DeepDependencyGraphPage', () => {
   describe('DeepDependencyGraphPageImpl', () => {
     const props = {
+      history: {
+        push: jest.fn(),
+      },
+      graphState: {
+        uxState: new Map(),
+        state: fetchedState.DONE,
+      },
       urlState: {
         start: 'testStart',
         end: 'testEnd',
@@ -35,15 +42,10 @@ describe('DeepDependencyGraphPage', () => {
         operation: 'testOperation',
         visEncoding: 'testVisKey',
       },
-      graphState: {
-        uxState: new Map(),
-        state: fetchedState.DONE,
-      },
     };
+    const ddgPageImpl = new DeepDependencyGraphPageImpl(props);
 
     describe('shouldComponentUpdate', () => {
-      const ddgPageImpl = new DeepDependencyGraphPageImpl(props);
-
       it('returns false if props are unchanged', () => {
         expect(ddgPageImpl.shouldComponentUpdate({ ...props })).toBe(false);
       });
@@ -73,6 +75,62 @@ describe('DeepDependencyGraphPage', () => {
           expect(ddgPageImpl.shouldComponentUpdate(newProps)).toBe(false);
           _set(newProps, prop, 'new value');
           expect(ddgPageImpl.shouldComponentUpdate(newProps)).toBe(true);
+        });
+      });
+    });
+
+    describe('updateUrlState', () => {
+      let getUrlSpy;
+
+      beforeAll(() => {
+        getUrlSpy = jest.spyOn(url, 'getUrl');
+      });
+
+      beforeEach(() => {
+        props.history.push.mockReset();
+      });
+
+      it('updates provided value', () => {
+        ['service', 'operation', 'start', 'end', 'visEnconding'].forEach((propName, i) => {
+          const value = `new ${propName}`;
+          const kwarg = { [propName]: value };
+          ddgPageImpl.updateUrlState(kwarg);
+          expect(getUrlSpy).toHaveBeenLastCalledWith(Object.assign({}, props.urlState, kwarg));
+          expect(props.history.push).toHaveBeenCalledTimes(i + 1);
+        });
+      });
+
+      it('updates multiple values', () => {
+        const kwarg = {
+          end: 'new end',
+          start: 'new start',
+        };
+        ddgPageImpl.updateUrlState(kwarg);
+        expect(getUrlSpy).toHaveBeenLastCalledWith(Object.assign({}, props.urlState, kwarg));
+        expect(props.history.push).toHaveBeenCalledTimes(1);
+      });
+
+      it('leaves unspecified, previously-undefined values as undefined', () => {
+        const { start: _s, end: _e, ...otherUrlState } = props.urlState;
+        const otherProps = {
+          ...props,
+          urlState: otherUrlState,
+        };
+        const kwarg = {
+          end: 'new end',
+        };
+        const ddgPageWithFewerProps = new DeepDependencyGraphPageImpl(otherProps);
+        ddgPageWithFewerProps.updateUrlState(kwarg);
+        expect(getUrlSpy).toHaveBeenLastCalledWith(Object.assign({}, otherUrlState, kwarg));
+        expect(props.history.push).toHaveBeenCalledTimes(1);
+      });
+
+      describe('updateVisEncoding', () => {
+        it('updates visEncoding', () => {
+          const visEncoding = 'new visEncoding';
+          ddgPageImpl.updateVisEncoding(visEncoding);
+          expect(getUrlSpy).toHaveBeenLastCalledWith(Object.assign({}, props.urlState, { visEncoding }));
+          expect(props.history.push).toHaveBeenCalledTimes(1);
         });
       });
     });

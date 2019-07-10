@@ -16,11 +16,11 @@ export enum EFullness {
   full = 'full',
   empty = 'empty',
   partial = 'partial',
-};
+}
 
 export enum EStream {
   up = -1,
   down = 1,
 }
 
-export type THop = { distance: number, fullness: EFullness };
+export type THop = { distance: number; fullness: EFullness };

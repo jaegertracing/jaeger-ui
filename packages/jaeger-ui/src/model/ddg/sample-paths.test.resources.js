@@ -48,6 +48,7 @@ const midPayloadElem = simplePayloadElemMaker('mid');
 const afterPayloadElem = simplePayloadElemMaker('after');
 const lastPayloadElem = simplePayloadElemMaker('last');
 
+export const shortPath = [beforePayloadElem, focalPayloadElem];
 export const simplePath = [
   firstPayloadElem,
   beforePayloadElem,

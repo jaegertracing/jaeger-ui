@@ -70,7 +70,11 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
       case fetchedState.DONE:
         return (
           <div>
-            <HopsSelector  ddgModel={graphState.model} updateVisEncoding={this.updateVisEncoding} visEncoding={urlState.visEncoding} />
+            <HopsSelector
+              ddgModel={graphState.model}
+              updateVisEncoding={this.updateVisEncoding}
+              visEncoding={urlState.visEncoding}
+            />
             <Graph ddgModel={graphState.model} visEncoding={urlState.visEncoding} />
           </div>
         );
@@ -95,7 +99,7 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
 
   updateVisEncoding = (visEncoding: string) => {
     this.updateUrlState({ visEncoding });
-  }
+  };
 
   render() {
     const { fetchDeepDependencyGraph, history, location, urlState } = this.props;

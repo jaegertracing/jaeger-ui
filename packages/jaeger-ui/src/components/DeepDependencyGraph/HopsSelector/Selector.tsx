@@ -12,12 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import React from 'react';
+import React, { PureComponent } from 'react';
 import { Popover } from 'antd';
 import cx from 'classnames';
-
-import { decode, encode } from '../../../model/ddg/visibility-codec';
-import { TDdgModel } from '../../../model/ddg/types';
 
 import { EStream, EFullness, THop } from './types';
 
@@ -31,30 +28,70 @@ type TProps = {
   stream: EStream;
 };
 
-export default function selector(props: TProps) {
-  const { furthestDistance, furthestFullness, handleClick, hops, stream } = props; 
-  const streamText = stream === EStream.down ? 'Down' : 'Up';
-  const streamLabel = `${streamText}stream hops`;
-  const btn = ({ distance, fullness, suffix = 'popover-content' }: THop & { suffix?: string }) => (
-    <button
-      key={`${distance} ${stream} ${suffix}`}
-      className={cx('Selector--btn', fullness, streamText.toLowerCase(), suffix)}
-      onClick={() => handleClick(distance, stream)}
-    >
-      {Math.abs(distance)}
-    </button>
-  );
+export default class Selector extends PureComponent<TProps> {
+  private btn = ({ distance, fullness, suffix = 'popover-content' }: THop & { suffix?: string }) => {
+    const { handleClick, stream } = this.props;
+    return (
+      <button
+        key={`${distance} ${stream} ${suffix}`}
+        className={cx('Selector--btn', fullness, suffix)}
+        type="button"
+        onClick={() => handleClick(distance, stream)}
+      >
+        {Math.abs(distance)}
+      </button>
+    );
+  };
 
-  const furthestBtn = btn({ distance: furthestDistance, fullness: furthestFullness, suffix: 'furthest' })
-  const delimiterBtn = btn({
-    ...hops[hops.length - 1],
-    suffix: 'delimiter',
-  });
+  render() {
+    const { furthestDistance, furthestFullness, handleClick, hops, stream } = this.props;
+    const streamLabel = `${stream === EStream.down ? 'Down' : 'Up'}stream hops`;
+    const lowercaseLabel = streamLabel.toLowerCase();
+    if (hops.length === 1) {
+      return <span className="Selector">No {lowercaseLabel}</span>;
+    }
 
-  return (
-    <Popover placement={'bottom'} title={`Visible ${streamLabel.toLowerCase()}`}
-content={hops.map(btn)}>
-      <span className={'Selector'}>{streamLabel} {furthestBtn} / {delimiterBtn}</span>
-    </Popover>
-  );
+    const decrementBtn = (
+      <button
+        key={`decrement ${stream}`}
+        disabled={furthestDistance === 0}
+        type="button"
+        onClick={() => handleClick(furthestDistance - stream, stream)}
+      >
+        -
+      </button>
+    );
+    const incrementBtn = (
+      <button
+        key={`increment ${stream}`}
+        disabled={furthestDistance === hops[hops.length - 1].distance}
+        type="button"
+        onClick={() => handleClick(furthestDistance + stream, stream)}
+      >
+        +
+      </button>
+    );
+    const delimiterBtn = this.btn({
+      ...hops[hops.length - 1],
+      suffix: 'delimiter',
+    });
+    const furthestBtn = this.btn({
+      distance: furthestDistance,
+      fullness: furthestFullness,
+      suffix: 'furthest',
+    });
+
+    return (
+      <Popover
+        arrowPointAtCenter
+        content={[decrementBtn, hops.map(this.btn), incrementBtn]}
+        placement="bottom"
+        title={`Visible ${lowercaseLabel}`}
+      >
+        <span className="Selector">
+          {streamLabel} {furthestBtn} / {delimiterBtn}
+        </span>
+      </Popover>
+    );
+  }
 }
