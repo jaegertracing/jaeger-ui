@@ -122,6 +122,7 @@ describe('DeepDependencyGraphPage', () => {
         const ddgPageWithFewerProps = new DeepDependencyGraphPageImpl(otherProps);
         ddgPageWithFewerProps.updateUrlState(kwarg);
         expect(getUrlSpy).toHaveBeenLastCalledWith(Object.assign({}, otherUrlState, kwarg));
+        expect(getUrlSpy).not.toHaveBeenLastCalledWith(expect.objectContaining({ start: expect.anything() }));
         expect(props.history.push).toHaveBeenCalledTimes(1);
       });
 

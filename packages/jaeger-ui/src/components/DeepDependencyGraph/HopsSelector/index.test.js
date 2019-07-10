@@ -37,6 +37,15 @@ describe('HopsSelector', () => {
       encodeSpy = jest.spyOn(codec, 'encode');
     });
 
+    /**
+     * Checks that encode was last called with all indices between two specified hops, inclusive, except those
+     * specified as omitted.
+     *
+     * @param {number} start - The lowest hop that is expected, should be less than or equal to 0.
+     * @param {number} end - The largest hop that is expected, should be greater than or equal to 0.
+     * @param {Set<number>} [omit] - Indices between start and end that should not be encoded, used for
+     *     testing partially full hops.
+     */
     function validateEncoding(start, end, omit) {
       const expectedIndices = [];
       for (let i = start; i <= end; i++) {
@@ -86,8 +95,11 @@ describe('HopsSelector', () => {
     });
 
     describe('with visEncoding', () => {
+      // All indices wthin four hops
       const fourHops = codec.encode([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]);
       const fourHopsSelector = new HopsSelector({ ddgModel, updateVisEncoding, visEncoding: fourHops });
+
+      // All indices within three hops, except two. One with a distance of -2, one with a distance of 2
       const partialHops = codec.encode([0, 1, 2, 3, 4, 5, 7, 9, 10, 11]);
       const partialHopsSelector = new HopsSelector({ ddgModel, updateVisEncoding, visEncoding: partialHops });
 

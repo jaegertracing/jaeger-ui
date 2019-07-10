@@ -32,6 +32,8 @@ export const decode: (encoded: string) => number[] = memoize(10)((encoded: strin
   const rv: number[] = [];
   encoded.split(',').forEach((partial, i) => {
     const partialAsNumber = partial ? parseInt(partial, 36) : 0;
+    // Because JavaScript bitwise operators wrap when exceeding 32 bits, the second check is necessary to
+    // prevent an infinite loop if (partialAsNuber & i << 31) is truthy.
     for (let j = 0; partialAsNumber >= 1 << j && j < VISIBILITY_BUCKET_SIZE; j += 1) {
       if ((1 << j) & partialAsNumber) {
         rv.push(i * VISIBILITY_BUCKET_SIZE + j);
