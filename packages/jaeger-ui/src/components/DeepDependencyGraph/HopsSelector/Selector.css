@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-.Selector {
+.HopsSelector--Selector {
   padding: 0px 3px;
 }
 
@@ -26,11 +26,11 @@ limitations under the License.
   padding: 1px 2px;
 }
 
-.Selector--btn.empty {
+.Selector--btn.Empty {
   color: grey;
 }
 
-.Selector--btn.partial {
+.Selector--btn.Partial {
   color: orange;
 }
 

@@ -16,27 +16,27 @@ import React, { PureComponent } from 'react';
 import { Popover } from 'antd';
 import cx from 'classnames';
 
-import { EStream, EFullness, THop } from './types';
+import { ECheckedStatus, EDirection, THop } from '../../../model/ddg/types';
 
 import './Selector.css';
 
 type TProps = {
+  direction: EDirection;
   furthestDistance: number;
-  furthestFullness: EFullness;
-  handleClick: (distance: number, direction: EStream) => void;
+  furthestFullness: ECheckedStatus;
+  handleClick: (distance: number, direction: EDirection) => void;
   hops: THop[];
-  stream: EStream;
 };
 
 export default class Selector extends PureComponent<TProps> {
-  private btn = ({ distance, fullness, suffix = 'popover-content' }: THop & { suffix?: string }) => {
-    const { handleClick, stream } = this.props;
+  private makeBtn = ({ distance, fullness, suffix = 'popover-content' }: THop & { suffix?: string }) => {
+    const { handleClick, direction } = this.props;
     return (
       <button
-        key={`${distance} ${stream} ${suffix}`}
+        key={`${distance} ${direction} ${suffix}`}
         className={cx('Selector--btn', fullness, suffix)}
         type="button"
-        onClick={() => handleClick(distance, stream)}
+        onClick={() => handleClick(distance, direction)}
       >
         {Math.abs(distance)}
       </button>
@@ -44,38 +44,38 @@ export default class Selector extends PureComponent<TProps> {
   };
 
   render() {
-    const { furthestDistance, furthestFullness, handleClick, hops, stream } = this.props;
-    const streamLabel = `${stream === EStream.down ? 'Down' : 'Up'}stream hops`;
+    const { direction, furthestDistance, furthestFullness, handleClick, hops } = this.props;
+    const streamLabel = `${direction === EDirection.Downstream ? 'Down' : 'Up'}stream hops`;
     const lowercaseLabel = streamLabel.toLowerCase();
     if (hops.length === 1) {
-      return <span className="Selector">No {lowercaseLabel}</span>;
+      return <span className="HopsSelector--Selector">No {lowercaseLabel}</span>;
     }
 
     const decrementBtn = (
       <button
-        key={`decrement ${stream}`}
+        key={`decrement ${direction}`}
         disabled={furthestDistance === 0}
         type="button"
-        onClick={() => handleClick(furthestDistance - stream, stream)}
+        onClick={() => handleClick(furthestDistance - direction, direction)}
       >
         -
       </button>
     );
     const incrementBtn = (
       <button
-        key={`increment ${stream}`}
+        key={`increment ${direction}`}
         disabled={furthestDistance === hops[hops.length - 1].distance}
         type="button"
-        onClick={() => handleClick(furthestDistance + stream, stream)}
+        onClick={() => handleClick(furthestDistance + direction, direction)}
       >
         +
       </button>
     );
-    const delimiterBtn = this.btn({
+    const delimiterBtn = this.makeBtn({
       ...hops[hops.length - 1],
       suffix: 'delimiter',
     });
-    const furthestBtn = this.btn({
+    const furthestBtn = this.makeBtn({
       distance: furthestDistance,
       fullness: furthestFullness,
       suffix: 'furthest',
@@ -84,11 +84,11 @@ export default class Selector extends PureComponent<TProps> {
     return (
       <Popover
         arrowPointAtCenter
-        content={[decrementBtn, hops.map(this.btn), incrementBtn]}
+        content={[decrementBtn, hops.map(this.makeBtn), incrementBtn]}
         placement="bottom"
         title={`Visible ${lowercaseLabel}`}
       >
-        <span className="Selector">
+        <span className="HopsSelector--Selector">
           {streamLabel} {furthestBtn} / {delimiterBtn}
         </span>
       </Popover>

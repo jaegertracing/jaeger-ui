@@ -30,101 +30,27 @@ describe('HopsSelector', () => {
   const shortModel = transformDdgData([shortPath], focalPayloadElem);
 
   describe('handleClick', () => {
-    const updateVisEncoding = () => {};
-    let encodeSpy;
+    const updateVisEncoding = jest.fn();
+    const visEncoding = '3';
+    const mockNewEncoding = '1';
+    let encodeDistanceSpy;
 
     beforeAll(() => {
-      encodeSpy = jest.spyOn(codec, 'encode');
+      encodeDistanceSpy = jest.spyOn(codec, 'encodeDistance').mockImplementation(() => mockNewEncoding);
     });
 
-    /**
-     * Checks that encode was last called with all indices between two specified hops, inclusive, except those
-     * specified as omitted.
-     *
-     * @param {number} start - The lowest hop that is expected, should be less than or equal to 0.
-     * @param {number} end - The largest hop that is expected, should be greater than or equal to 0.
-     * @param {Set<number>} [omit] - Indices between start and end that should not be encoded, used for
-     *     testing partially full hops.
-     */
-    function validateEncoding(start, end, omit) {
-      const expectedIndices = [];
-      for (let i = start; i <= end; i++) {
-        expectedIndices.push(
-          ...ddgModel.distanceToPathElems
-            .get(i)
-            .map(({ visibilityIdx }) => visibilityIdx)
-            .filter(idx => !omit || !omit.has(idx))
-        );
-      }
-      const { calls } = encodeSpy.mock;
-      expect(new Set(calls[calls.length - 1][0])).toEqual(new Set(expectedIndices));
-    }
-
-    describe('without visEncoding', () => {
-      const hopsSelector = new HopsSelector({ ddgModel, updateVisEncoding });
-
-      it('removes hops when selecting less than 2 hops', () => {
-        hopsSelector.handleClick(-1, -1);
-        validateEncoding(-1, 2);
+    it('calls props.updateVisEncoding with result of encodeDistance', () => {
+      const hopsSelector = new HopsSelector({ ddgModel, updateVisEncoding, visEncoding });
+      const distance = -3;
+      const direction = -1;
+      hopsSelector.handleClick(distance, direction);
+      expect(encodeDistanceSpy).toHaveBeenLastCalledWith({
+        ddgModel,
+        direction,
+        distance,
+        prevVisEncoding: visEncoding,
       });
-
-      it('adds hops when selecting more than 2 hops', () => {
-        hopsSelector.handleClick(4, 1);
-        validateEncoding(-2, 4);
-      });
-
-      it('handles selecting 0', () => {
-        hopsSelector.handleClick(0, 1);
-        validateEncoding(-2, 0);
-
-        hopsSelector.handleClick(0, -1);
-        validateEncoding(0, 2);
-      });
-
-      it('handles DDGs smaller than two hops', () => {
-        const shortSelector = new HopsSelector({ ddgModel: shortModel, updateVisEncoding });
-        shortSelector.handleClick(0, -1);
-        const { calls } = encodeSpy.mock;
-        expect(calls[calls.length - 1][0]).toEqual([0]);
-      });
-
-      it('handles out of bounds selection', () => {
-        hopsSelector.handleClick(8, 1);
-        validateEncoding(-2, 6);
-      });
-    });
-
-    describe('with visEncoding', () => {
-      // All indices wthin four hops
-      const fourHops = codec.encode([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]);
-      const fourHopsSelector = new HopsSelector({ ddgModel, updateVisEncoding, visEncoding: fourHops });
-
-      // All indices within three hops, except two. One with a distance of -2, one with a distance of 2
-      const partialHops = codec.encode([0, 1, 2, 3, 4, 5, 7, 9, 10, 11]);
-      const partialHopsSelector = new HopsSelector({ ddgModel, updateVisEncoding, visEncoding: partialHops });
-
-      it('adds hops when selecting more hops', () => {
-        fourHopsSelector.handleClick(6, 1);
-        validateEncoding(-4, 6);
-      });
-
-      it('removes hops when selecting fewer hops', () => {
-        fourHopsSelector.handleClick(-2, -1);
-        validateEncoding(-2, 4);
-      });
-
-      it('handles partially full hops', () => {
-        partialHopsSelector.handleClick(4, 1);
-        validateEncoding(-3, 4, new Set([8]));
-      });
-
-      it('handles selecting 0', () => {
-        partialHopsSelector.handleClick(0, 1);
-        validateEncoding(-3, 0, new Set([8]));
-
-        partialHopsSelector.handleClick(0, -1);
-        validateEncoding(0, 3, new Set([6]));
-      });
+      expect(updateVisEncoding).toHaveBeenLastCalledWith(mockNewEncoding);
     });
   });
 

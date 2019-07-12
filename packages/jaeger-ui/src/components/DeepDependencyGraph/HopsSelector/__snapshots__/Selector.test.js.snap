@@ -68,7 +68,7 @@ exports[`Selector renders buttons with expected text and classNames 1`] = `
   trigger="hover"
 >
   <span
-    className="Selector"
+    className="HopsSelector--Selector"
   >
     Downstream hops
      
@@ -95,7 +95,7 @@ exports[`Selector renders buttons with expected text and classNames 1`] = `
 
 exports[`Selector renders message when there are no options 1`] = `
 <span
-  className="Selector"
+  className="HopsSelector--Selector"
 >
   No 
   upstream hops
@@ -170,7 +170,7 @@ exports[`Selector renders upstream hops with negative distance correctly 1`] = `
   trigger="hover"
 >
   <span
-    className="Selector"
+    className="HopsSelector--Selector"
   >
     Upstream hops
      

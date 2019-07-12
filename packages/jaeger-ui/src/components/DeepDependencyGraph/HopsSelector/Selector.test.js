@@ -16,22 +16,22 @@ import * as React from 'react';
 import { shallow } from 'enzyme';
 import { Popover } from 'antd';
 
+import { EDirection } from '../../../model/ddg/types';
 import Selector from './Selector';
-import { EStream } from './types';
 
 describe('Selector', () => {
   const handleClick = jest.fn();
   const hops = ['full', 'partial', 'full', 'empty', 'empty'];
-  const makeHops = (fullnessArr, stream = EStream.down) =>
+  const makeHops = (fullnessArr, direction = EDirection.Downstream) =>
     fullnessArr.map((fullness, i) => ({
-      distance: i * stream,
+      distance: i * direction,
       fullness,
     }));
   const props = {
     furthestDistance: 2,
     furthestFullness: 'full',
     hops: makeHops(hops),
-    stream: EStream.down,
+    direction: EDirection.Downstream,
     handleClick,
   };
   let wrapper;
@@ -55,10 +55,10 @@ describe('Selector', () => {
 
   it('renders upstream hops with negative distance correctly', () => {
     const upstreamProps = {
-      furthestDistance: EStream.up * props.furthestDistance,
+      direction: EDirection.Upstream,
+      furthestDistance: EDirection.Upstream * props.furthestDistance,
       furthestFullness: 'full',
-      hops: makeHops(hops, EStream.up),
-      stream: EStream.up,
+      hops: makeHops(hops, EDirection.Upstream),
       handleClick,
     };
     const upstreamWrapper = shallow(<Selector {...upstreamProps} />);
@@ -70,10 +70,10 @@ describe('Selector', () => {
     expect(buttons.length).toBe(2);
 
     buttons.first().simulate('click');
-    expect(handleClick).toHaveBeenLastCalledWith(props.furthestDistance, props.stream);
+    expect(handleClick).toHaveBeenLastCalledWith(props.furthestDistance, props.direction);
 
     buttons.last().simulate('click');
-    expect(handleClick).toHaveBeenLastCalledWith(props.hops.length - 1, props.stream);
+    expect(handleClick).toHaveBeenLastCalledWith(props.hops.length - 1, props.direction);
   });
 
   it('calls handleClick with correct arguments from popover buttons', () => {
@@ -83,7 +83,7 @@ describe('Selector', () => {
 
     popoverButtons.forEach((btn, i) => {
       btn.simulate('click');
-      expect(handleClick).toHaveBeenLastCalledWith(expectedDistances[i], props.stream);
+      expect(handleClick).toHaveBeenLastCalledWith(expectedDistances[i], props.direction);
     });
   });
 

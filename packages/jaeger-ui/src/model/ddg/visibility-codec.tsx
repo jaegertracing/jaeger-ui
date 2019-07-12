@@ -16,6 +16,8 @@
 
 import memoize from 'lru-memoize';
 
+import { EDirection, TDdgModel } from './types';
+
 // This bucket size was chosen as JavaScript uses 32-bit numbers for bitwise operators, so the maximum number
 // of indices that can be tracked in a single number is 32. Increasing from 31 visibility values per base36
 // number to 32 visibility values would require an additional base36 character, which reduces the efficiency.
@@ -74,4 +76,43 @@ export const encode = (decoded: number[]): string => {
     partial[csvIdx] |= visibilityValue;
   });
   return partial.map(p => p.toString(36)).join();
+};
+
+export const encodeDistance = ({
+  ddgModel,
+  direction,
+  distance,
+  prevVisEncoding,
+}: {
+  ddgModel: TDdgModel;
+  direction: EDirection;
+  distance: number;
+  prevVisEncoding?: string;
+}): string => {
+  if (Math.sign(distance) === -1 * Math.sign(direction)) {
+    throw new Error(`Distance (${distance}) and direction (${direction}) cannot have opposite signs`);
+  }
+
+  const { distanceToPathElems, visIdxToPathElem } = ddgModel;
+
+  let nextVisible: number[];
+  if (prevVisEncoding) {
+    nextVisible = decode(prevVisEncoding).filter(
+      idx => visIdxToPathElem[idx] && Math.sign(visIdxToPathElem[idx].distance) !== direction
+    );
+  } else {
+    nextVisible = [
+      ...(distanceToPathElems.get(-1 * direction) || []),
+      ...(distanceToPathElems.get(-2 * direction) || []),
+    ].map(({ visibilityIdx }) => visibilityIdx);
+  }
+
+  for (let i = 0; i !== distance + direction; i += direction) {
+    const elems = distanceToPathElems.get(i);
+    if (elems) {
+      nextVisible.push(...elems.map(({ visibilityIdx }) => visibilityIdx));
+    }
+  }
+
+  return encode(nextVisible);
 };

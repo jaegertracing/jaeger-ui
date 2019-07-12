@@ -3,80 +3,80 @@
 exports[`HopsSelector render with visEncoding renders hops with correct fullness 1`] = `
 <div>
   <Selector
+    direction={-1}
     furthestDistance={-4}
-    furthestFullness="full"
+    furthestFullness="Full"
     handleClick={[Function]}
     hops={
       Array [
         Object {
           "distance": 0,
-          "fullness": "full",
+          "fullness": "Full",
         },
         Object {
           "distance": -1,
-          "fullness": "full",
+          "fullness": "Full",
         },
         Object {
           "distance": -2,
-          "fullness": "partial",
+          "fullness": "Partial",
         },
         Object {
           "distance": -3,
-          "fullness": "full",
+          "fullness": "Full",
         },
         Object {
           "distance": -4,
-          "fullness": "full",
+          "fullness": "Full",
         },
         Object {
           "distance": -5,
-          "fullness": "empty",
+          "fullness": "Empty",
         },
         Object {
           "distance": -6,
-          "fullness": "empty",
+          "fullness": "Empty",
         },
       ]
     }
-    stream={-1}
   />
   <Selector
+    direction={1}
     furthestDistance={4}
-    furthestFullness="full"
+    furthestFullness="Full"
     handleClick={[Function]}
     hops={
       Array [
         Object {
           "distance": 0,
-          "fullness": "full",
+          "fullness": "Full",
         },
         Object {
           "distance": 1,
-          "fullness": "full",
+          "fullness": "Full",
         },
         Object {
           "distance": 2,
-          "fullness": "partial",
+          "fullness": "Partial",
         },
         Object {
           "distance": 3,
-          "fullness": "full",
+          "fullness": "Full",
         },
         Object {
           "distance": 4,
-          "fullness": "full",
+          "fullness": "Full",
         },
         Object {
           "distance": 5,
-          "fullness": "empty",
+          "fullness": "Empty",
         },
         Object {
           "distance": 6,
-          "fullness": "empty",
+          "fullness": "Empty",
         },
       ]
     }
-    stream={1}
   />
 </div>
 `;
@@ -84,36 +84,36 @@ exports[`HopsSelector render with visEncoding renders hops with correct fullness
 exports[`HopsSelector render without visEncoding handles DDGs smaller than two hops 1`] = `
 <div>
   <Selector
+    direction={-1}
     furthestDistance={-1}
-    furthestFullness="full"
+    furthestFullness="Full"
     handleClick={[Function]}
     hops={
       Array [
         Object {
           "distance": 0,
-          "fullness": "full",
+          "fullness": "Full",
         },
         Object {
           "distance": -1,
-          "fullness": "full",
+          "fullness": "Full",
         },
       ]
     }
-    stream={-1}
   />
   <Selector
+    direction={1}
     furthestDistance={0}
-    furthestFullness="empty"
+    furthestFullness="Empty"
     handleClick={[Function]}
     hops={
       Array [
         Object {
           "distance": 0,
-          "fullness": "full",
+          "fullness": "Full",
         },
       ]
     }
-    stream={1}
   />
 </div>
 `;
@@ -121,80 +121,80 @@ exports[`HopsSelector render without visEncoding handles DDGs smaller than two h
 exports[`HopsSelector render without visEncoding renders hops within two hops as full and others as empty 1`] = `
 <div>
   <Selector
+    direction={-1}
     furthestDistance={-2}
-    furthestFullness="full"
+    furthestFullness="Full"
     handleClick={[Function]}
     hops={
       Array [
         Object {
           "distance": 0,
-          "fullness": "full",
+          "fullness": "Full",
         },
         Object {
           "distance": -1,
-          "fullness": "full",
+          "fullness": "Full",
         },
         Object {
           "distance": -2,
-          "fullness": "full",
+          "fullness": "Full",
         },
         Object {
           "distance": -3,
-          "fullness": "empty",
+          "fullness": "Empty",
         },
         Object {
           "distance": -4,
-          "fullness": "empty",
+          "fullness": "Empty",
         },
         Object {
           "distance": -5,
-          "fullness": "empty",
+          "fullness": "Empty",
         },
         Object {
           "distance": -6,
-          "fullness": "empty",
+          "fullness": "Empty",
         },
       ]
     }
-    stream={-1}
   />
   <Selector
+    direction={1}
     furthestDistance={2}
-    furthestFullness="full"
+    furthestFullness="Full"
     handleClick={[Function]}
     hops={
       Array [
         Object {
           "distance": 0,
-          "fullness": "full",
+          "fullness": "Full",
         },
         Object {
           "distance": 1,
-          "fullness": "full",
+          "fullness": "Full",
         },
         Object {
           "distance": 2,
-          "fullness": "full",
+          "fullness": "Full",
         },
         Object {
           "distance": 3,
-          "fullness": "empty",
+          "fullness": "Empty",
         },
         Object {
           "distance": 4,
-          "fullness": "empty",
+          "fullness": "Empty",
         },
         Object {
           "distance": 5,
-          "fullness": "empty",
+          "fullness": "Empty",
         },
         Object {
           "distance": 6,
-          "fullness": "empty",
+          "fullness": "Empty",
         },
       ]
     }
-    stream={1}
   />
 </div>
 `;

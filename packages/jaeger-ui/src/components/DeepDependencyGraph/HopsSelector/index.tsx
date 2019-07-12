@@ -14,11 +14,9 @@
 
 import React, { PureComponent } from 'react';
 
-import { decode, encode } from '../../../model/ddg/visibility-codec';
-import { TDdgModel } from '../../../model/ddg/types';
+import { decode, encodeDistance } from '../../../model/ddg/visibility-codec';
+import { ECheckedStatus, EDirection, TDdgModel, THop } from '../../../model/ddg/types';
 import Selector from './Selector';
-
-import { EStream, EFullness, THop } from './types';
 
 type TProps = {
   ddgModel: TDdgModel;
@@ -27,30 +25,17 @@ type TProps = {
 };
 
 export default class HopsSelector extends PureComponent<TProps> {
-  private handleClick = (clickedDistance: number, direction: EStream) => {
+  private handleClick = (distance: number, direction: EDirection) => {
     const { ddgModel, updateVisEncoding, visEncoding } = this.props;
-    const { distanceToPathElems, visIdxToPathElem } = ddgModel;
 
-    let nextVisible: number[];
-    if (visEncoding) {
-      nextVisible = decode(visEncoding).filter(
-        idx => visIdxToPathElem[idx] && Math.sign(visIdxToPathElem[idx].distance) !== direction
-      );
-    } else {
-      nextVisible = [
-        ...(distanceToPathElems.get(-1 * direction) || []),
-        ...(distanceToPathElems.get(-2 * direction) || []),
-      ].map(({ visibilityIdx }) => visibilityIdx);
-    }
-
-    for (let distance = 0; distance !== clickedDistance + direction; distance += direction) {
-      const elems = distanceToPathElems.get(distance);
-      if (elems) {
-        nextVisible.push(...elems.map(({ visibilityIdx }) => visibilityIdx));
-      }
-    }
-
-    updateVisEncoding(encode(nextVisible));
+    updateVisEncoding(
+      encodeDistance({
+        ddgModel,
+        direction,
+        distance,
+        prevVisEncoding: visEncoding,
+      })
+    );
   };
 
   render() {
@@ -59,28 +44,28 @@ export default class HopsSelector extends PureComponent<TProps> {
 
     const hops: THop[] = [];
     let minVisDistance = 0;
-    let minVisDistanceFullness = EFullness.empty;
+    let minVisDistanceFullness = ECheckedStatus.Empty;
     let maxVisDistance = 0;
-    let maxVisDistanceFullness = EFullness.empty;
+    let maxVisDistanceFullness = ECheckedStatus.Empty;
     const visibleIndices = visEncoding && new Set(decode(visEncoding));
 
     distanceToPathElems.forEach((elems, distance) => {
-      let fullness: EFullness;
+      let fullness: ECheckedStatus;
       if (visibleIndices) {
         const visible = elems.filter(({ visibilityIdx }) => visibleIndices.has(visibilityIdx));
         if (visible.length === elems.length) {
-          fullness = EFullness.full;
+          fullness = ECheckedStatus.Full;
         } else if (!visible.length) {
-          fullness = EFullness.empty;
+          fullness = ECheckedStatus.Empty;
         } else {
-          fullness = EFullness.partial;
+          fullness = ECheckedStatus.Partial;
         }
       } else {
-        fullness = Math.abs(distance) <= 2 ? EFullness.full : EFullness.empty;
+        fullness = Math.abs(distance) <= 2 ? ECheckedStatus.Full : ECheckedStatus.Empty;
       }
 
       hops.push({ distance, fullness });
-      if (fullness !== EFullness.empty) {
+      if (fullness !== ECheckedStatus.Empty) {
         if (distance > maxVisDistance) {
           maxVisDistance = distance;
           maxVisDistanceFullness = fullness;
@@ -99,18 +84,18 @@ export default class HopsSelector extends PureComponent<TProps> {
     return (
       <div>
         <Selector
+          direction={EDirection.Upstream}
           handleClick={this.handleClick}
           hops={upstream}
           furthestDistance={minVisDistance}
           furthestFullness={minVisDistanceFullness}
-          stream={EStream.up}
         />
         <Selector
+          direction={EDirection.Downstream}
           handleClick={this.handleClick}
           hops={downstream}
           furthestDistance={maxVisDistance}
           furthestFullness={maxVisDistanceFullness}
-          stream={EStream.down}
         />
       </div>
     );
