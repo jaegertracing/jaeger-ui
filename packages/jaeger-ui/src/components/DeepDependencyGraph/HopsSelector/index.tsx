@@ -42,7 +42,8 @@ export default class HopsSelector extends PureComponent<TProps> {
     const { ddgModel, visEncoding } = this.props;
     const { distanceToPathElems } = ddgModel;
 
-    const hops: THop[] = [];
+    const downstreamHops: THop[] = [];
+    const upstreamHops: THop[] = [];
     let minVisDistance = 0;
     let minVisDistanceFullness = ECheckedStatus.Empty;
     let maxVisDistance = 0;
@@ -64,7 +65,9 @@ export default class HopsSelector extends PureComponent<TProps> {
         fullness = Math.abs(distance) <= 2 ? ECheckedStatus.Full : ECheckedStatus.Empty;
       }
 
-      hops.push({ distance, fullness });
+      if (distance >= 0) downstreamHops.push({ distance, fullness });
+      if (distance <= 0) upstreamHops.push({ distance, fullness });
+
       if (fullness !== ECheckedStatus.Empty) {
         if (distance > maxVisDistance) {
           maxVisDistance = distance;
@@ -76,24 +79,22 @@ export default class HopsSelector extends PureComponent<TProps> {
       }
     });
 
-    hops.sort(({ distance: a }, { distance: b }) => a - b);
-    const splitIdx = hops.findIndex(({ distance }) => !distance);
-    const upstream = hops.slice(0, splitIdx + 1).reverse();
-    const downstream = hops.slice(splitIdx);
+    downstreamHops.sort(({ distance: a }, { distance: b }) => a - b);
+    upstreamHops.sort(({ distance: a }, { distance: b }) => b - a);
 
     return (
       <div>
         <Selector
           direction={EDirection.Upstream}
           handleClick={this.handleClick}
-          hops={upstream}
+          hops={upstreamHops}
           furthestDistance={minVisDistance}
           furthestFullness={minVisDistanceFullness}
         />
         <Selector
           direction={EDirection.Downstream}
           handleClick={this.handleClick}
-          hops={downstream}
+          hops={downstreamHops}
           furthestDistance={maxVisDistance}
           furthestFullness={maxVisDistanceFullness}
         />

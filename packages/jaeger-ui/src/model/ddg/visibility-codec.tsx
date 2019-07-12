@@ -78,6 +78,18 @@ export const encode = (decoded: number[]): string => {
   return partial.map(p => p.toString(36)).join();
 };
 
+/**
+ * Creates a string csv of base36 such that all indices between 0 and the distance, inclusive, are visible,
+ * and all other indices in that direction are hidden. Indices in the opposite direction are unchanged.
+ *
+ * @param {Object} kwarg - Object containing arguments to encodeDistance.
+ * @param {TDdgModel} kwarg.ddgModel - Model used to determine which indices exist at difference distances.
+ * @param {EDirection} kwarg.direction - Direction of affected indices.
+ * @param {number} kwarg.distance - Range of indices to include.
+ * @param {string} [kwarg.prevVisEncoding] - Previous visibility encoding. Encoded indices opposite of
+ *     affected direction will persist in new encoding. If absent, two hops is the default to preserve.
+ * @returns {string} - New base36 csv visibility encoding.
+ */
 export const encodeDistance = ({
   ddgModel,
   direction,
