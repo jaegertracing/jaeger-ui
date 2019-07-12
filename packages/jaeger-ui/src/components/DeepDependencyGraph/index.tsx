@@ -49,6 +49,23 @@ type TProps = TDispatchProps & TReduxProps & TOwnProps;
 
 // export for tests
 export class DeepDependencyGraphPageImpl extends Component<TProps> {
+  static fetchModelIfStale(props: TProps) {
+    const { fetchDeepDependencyGraph, graphState = null } = props;
+    // TEMP
+    if (!graphState) {
+      fetchDeepDependencyGraph({ service: 'focalService', operation: 'focalOperation', start: 0, end: 0 });
+    }
+  }
+
+  constructor(props: TProps) {
+    super(props);
+    DeepDependencyGraphPageImpl.fetchModelIfStale(props);
+  }
+
+  componentWillReceiveProps(nextProps: TProps) {
+    DeepDependencyGraphPageImpl.fetchModelIfStale(nextProps);
+  }
+
   // shouldComponentUpdate is necessary as we don't want the plexus graph to re-render due to a uxStatus change
   shouldComponentUpdate(nextProps: TProps) {
     const updateCauses = [
@@ -59,7 +76,6 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
       'urlState.visEncoding',
       'graphState.state',
     ];
-
     return updateCauses.some(cause => _get(nextProps, cause) !== _get(this.props, cause));
   }
 
@@ -69,7 +85,7 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
     switch (graphState.state) {
       case fetchedState.DONE:
         return (
-          <div>
+          <div className="Ddg--graphWrapper">
             <HopsSelector
               ddgModel={graphState.model}
               updateVisEncoding={this.updateVisEncoding}
@@ -102,20 +118,10 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
   };
 
   render() {
-    const { fetchDeepDependencyGraph, history, location, urlState } = this.props;
-    const { service, operation, start, end } = urlState;
     return (
       <div>
-        <Header
-          service={service}
-          operation={operation}
-          start={start}
-          end={end}
-          fetchDeepDependencyGraph={fetchDeepDependencyGraph}
-          history={history}
-          location={location}
-        />
-        <div className="Ddg--graphWrapper">{this.body()}</div>
+        <Header />
+        {this.body()}
       </div>
     );
   }
@@ -124,12 +130,16 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
 // export for tests
 export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxProps {
   const urlState = getUrlState(ownProps.location.search);
-  const { service, operation, start, end } = urlState;
-  let graphState: TDdgStateEntry | undefined;
-  if (service && start && end) {
-    graphState = _get(state, ['deepDependencyGraph', stateKey({ service, operation, start, end })]);
-  }
-
+  const graphState = _get(state, [
+    'deepDependencyGraph',
+    stateKey({ service: 'focalService', operation: 'focalOperation', start: 0, end: 0 }),
+  ]);
+  // skip using the URL until services and operations are wired up
+  // const { service, operation, start, end } = urlState;
+  // let graphState: TDdgStateEntry | undefined;
+  // if (service && start && end) {
+  //   graphState = _get(state, ['deepDependencyGraph', stateKey({ service, operation, start, end })]);
+  // }
   return {
     graphState,
     urlState,

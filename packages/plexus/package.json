@@ -60,7 +60,7 @@
     "build": "NODE_ENV=production npm-run-all -ln --serial _tasks/clean/* _tasks/bundle-worker --parallel _tasks/build/**",
     "coverage": "echo 'NO TESTS YET'",
     "prepublishOnly": "$npm_execpath build",
-    "start": "NODE_ENV='development' npm-run-all -ln --serial _tasks/clean/worker --parallel '_tasks/bundle-worker --watch' _tasks/dev-server",
+    "start": "NODE_ENV='development' npm-run-all -ln --serial _tasks/clean/worker _tasks/bundle-worker --parallel '_tasks/bundle-worker --watch' _tasks/dev-server",
     "test": "echo 'NO TESTS YET'"
   }
 }

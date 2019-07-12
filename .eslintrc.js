@@ -37,6 +37,7 @@ module.exports = {
       plugins: ['@typescript-eslint'],
       rules: {
         'no-unused-vars': 0,
+        '@typescript-eslint/interface-name-prefix': ['error', 'always'],
         '@typescript-eslint/no-unused-vars': 1,
       },
     },
@@ -78,6 +79,7 @@ module.exports = {
           'state',
           'propTypes',
           'static-methods',
+          'instance-variables',
           'constructor',
           'lifecycle',
           'everything-else',

@@ -42,6 +42,7 @@ describe('DeepDependencyGraphPage', () => {
         operation: 'testOperation',
         visEncoding: 'testVisKey',
       },
+      fetchDeepDependencyGraph: () => {},
     };
     const ddgPageImpl = new DeepDependencyGraphPageImpl(props);
 
@@ -219,7 +220,8 @@ describe('DeepDependencyGraphPage', () => {
       expect(getUrlStateSpy).toHaveBeenLastCalledWith(search);
     });
 
-    it('includes graphState iff location.search has service, start, end, and optionally operation', () => {
+    // skip using the URL until services and operations are wired up
+    it.skip('includes graphState iff location.search has service, start, end, and optionally operation', () => {
       const graphState = 'testGraphState';
       const graphStateWithoutOp = 'testGraphStateWithoutOp';
       const reduxState = {};

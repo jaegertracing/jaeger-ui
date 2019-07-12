@@ -14,34 +14,34 @@
 
 import { TNil } from '../../types';
 
-interface TimeCursorUpdate {
+interface ITimeCursorUpdate {
   cursor: number | TNil;
 }
 
-interface TimeReframeUpdate {
+interface ITimeReframeUpdate {
   reframe: {
     anchor: number;
     shift: number;
   };
 }
 
-interface TimeShiftEndUpdate {
+interface ITimeShiftEndUpdate {
   shiftEnd: number;
 }
 
-interface TimeShiftStartUpdate {
+interface ITimeShiftStartUpdate {
   shiftStart: number;
 }
 
 export type TUpdateViewRangeTimeFunction = (start: number, end: number, trackSrc?: string) => void;
 
 export type ViewRangeTimeUpdate =
-  | TimeCursorUpdate
-  | TimeReframeUpdate
-  | TimeShiftEndUpdate
-  | TimeShiftStartUpdate;
+  | ITimeCursorUpdate
+  | ITimeReframeUpdate
+  | ITimeShiftEndUpdate
+  | ITimeShiftStartUpdate;
 
-export interface ViewRangeTime {
+export interface IViewRangeTime {
   current: [number, number];
   cursor?: number | TNil;
   reframe?: {
@@ -52,6 +52,6 @@ export interface ViewRangeTime {
   shiftStart?: number;
 }
 
-export interface ViewRange {
-  time: ViewRangeTime;
+export interface IViewRange {
+  time: IViewRangeTime;
 }
