@@ -25,6 +25,7 @@ export const linksPropTypes = PropTypes.arrayOf(
   PropTypes.shape({
     source: PropTypes.string.isRequired,
     target: PropTypes.string.isRequired,
+    target_node_size: PropTypes.number,
     value: PropTypes.number.isRequired,
   })
 );
