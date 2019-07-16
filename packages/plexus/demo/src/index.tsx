@@ -16,10 +16,12 @@ import * as React from 'react';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { render } from 'react-dom';
 
-import largeDg, { getNodeLabel as getLargeNodeLabel } from './data-large';
+import largeDag, { getNodeLabel as getLargeNodeLabel } from './data-large';
 import { edges as dagEdges, vertices as dagVertices } from './data-dag';
 import { colored as colorData, getColorNodeLabel, setOnColorEdge, setOnColorNode } from './data-small';
 import { DirectedGraph, LayoutManager } from '../../src';
+import LayeredDigraph from '../../src/LayeredDigraph';
+import { classNameIsSmall as layeredClassNameIsSmall } from '../../src/LayeredDigraph/props-factories';
 import { TVertex } from '../../src/types';
 
 import './index.css';
@@ -36,6 +38,35 @@ const setOnNode = (vertex: TVertex) => ({
 function Demo() {
   return (
     <div>
+      <h1>LayeredDigraph</h1>
+      <div>
+        <div className="DemoGraph">
+          <LayeredDigraph
+            zoom
+            minimap
+            className="DemoGraph--dag"
+            layoutManager={new LayoutManager({ useDotEdges: true })}
+            minimapClassName="Demo--miniMap"
+            setOnGraph={layeredClassNameIsSmall}
+            measurableNodesKey="nodes"
+            layers={[
+              {
+                key: 'nodes-layers',
+                html: true,
+                layers: [
+                  {
+                    setOnNode,
+                    key: 'nodes',
+                    measurable: true,
+                    nodeRender: getLargeNodeLabel,
+                  },
+                ],
+              },
+            ]}
+            {...largeDag}
+          />
+        </div>
+      </div>
       <h1>Directed graph with cycles - dot edges</h1>
       <div>
         <div className="DemoGraph">
@@ -49,7 +80,7 @@ function Demo() {
             minimapClassName="Demo--miniMap"
             setOnNode={setOnNode}
             setOnRoot={classNameIsSmall}
-            {...largeDg}
+            {...largeDag}
           />
         </div>
       </div>
@@ -66,7 +97,7 @@ function Demo() {
             minimapClassName="Demo--miniMap"
             setOnNode={setOnNode}
             setOnRoot={classNameIsSmall}
-            {...largeDg}
+            {...largeDag}
           />
         </div>
       </div>
@@ -89,7 +120,7 @@ function Demo() {
             minimapClassName="Demo--miniMap"
             setOnNode={setOnNode}
             setOnRoot={classNameIsSmall}
-            {...largeDg}
+            {...largeDag}
           />
         </div>
       </div>

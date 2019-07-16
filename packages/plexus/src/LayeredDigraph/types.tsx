@@ -26,6 +26,22 @@ export enum ELayoutPhase {
   Done = 'Done',
 }
 
+export type TRendererUtils = {
+  getLocalId: (name: string) => string;
+  getZoomTransform: () => ZoomTransform;
+};
+
+export type TExposedGraphState<T = {}, U = {}> = {
+  edges: TEdge<U>[];
+  layoutEdges: TLayoutEdge<U>[] | null;
+  layoutGraph: TLayoutGraph | null;
+  layoutPhase: ELayoutPhase;
+  layoutVertices: TLayoutVertex<T>[] | null;
+  renderUtils: TRendererUtils;
+  vertices: TVertex<T>[];
+  zoomTransform: ZoomTransform;
+};
+
 export type TAnyProps = Record<string, unknown> & {
   className?: string;
   style?: React.CSSProperties;
@@ -38,33 +54,13 @@ export type TSetProps<TFactoryFn extends TPropFactoryFn> =
   | TFactoryFn
   | (TAnyProps | TFactoryFn)[];
 
-// TODO(joe): consider getting rid of this type
-// type TAesthetics = {
-//   className?: string;
-//   style?: React.CSSProperties;
-// };
-
-export type TRendererUtils = {
-  getLocalId: (name: string) => string;
-  getZoomTransform: () => ZoomTransform;
-};
-
-export type TExposedGraphState<T = {}, U = {}> = {
-  edges: TEdge<U>[];
-  zoomTransform: ZoomTransform;
-  layoutEdges: TLayoutEdge<U>[] | null;
-  layoutGraph: TLayoutGraph | null;
-  layoutPhase: ELayoutPhase;
-  layoutVertices: TLayoutVertex<T>[] | null;
-  renderUtils: TRendererUtils;
-  vertices: TVertex<T>[];
-};
-
 export type TFromGraphStateFn<T = {}, U = {}> = (input: TExposedGraphState<T, U>) => TAnyProps | null;
 
-export type TSetOnContainer<T = {}, U = {}> = {
-  setOnContainer?: TSetProps<TFromGraphStateFn<T, U>>;
+export type TPropsFactory<PropNames extends string, FactoryFn extends TPropFactoryFn> = {
+  [K in PropNames]?: TSetProps<FactoryFn>;
 };
+
+export type TSetOnContainer<T = {}, U = {}> = TPropsFactory<'setOnContainer', TFromGraphStateFn<T, U>>;
 
 type TKeyed = { key: string };
 
@@ -114,17 +110,17 @@ type TStandaloneEdgesLayer<T = {}, U = {}> = TEdgesLayer<T, U> &
     defs?: TMarkerDef<T, U>[];
   };
 
-type THtmlLayersGroup<T = {}, U = {}> = TKeyed &
+export type THtmlLayersGroup<T = {}, U = {}> = TKeyed &
   TSetOnContainer<T, U> & {
     html: true;
-    layers: (TNodesLayer<T, U> | TEdgesLayer<T, U>)[];
+    layers: TOneOfTwo<TNodesLayer<T, U>, TEdgesLayer<T, U>>[];
   };
 
 type TSvgLayersGroup<T = {}, U = {}> = TKeyed &
   TSetOnContainer<T, U> & {
     svg: true;
     defs?: TMarkerDef<T, U>[];
-    layers: (TNodesLayer<T, U> | TEdgesLayer<T, U>)[];
+    layers: TOneOfTwo<TNodesLayer<T, U>, TEdgesLayer<T, U>>[];
   };
 
 export type TLayer<T = {}, U = {}> = TOneOfFour<
@@ -134,8 +130,8 @@ export type TLayer<T = {}, U = {}> = TOneOfFour<
   TStandaloneEdgesLayer<T, U>
 >;
 
-export type TMeasurableNodeProps<T = {}> = Pick<TMeasurableNodeRenderer<T>, 'nodeRender' | 'setOnNode'> & {
-  classNamePrefix: string;
+export type TMeasurableNodeProps<T = {}> = Omit<TMeasurableNodeRenderer<T>, 'measurable'> & {
+  classNamePrefix?: string;
   hidden?: boolean;
   layoutVertex: TLayoutVertex<T> | null;
   renderUtils: TRendererUtils;
