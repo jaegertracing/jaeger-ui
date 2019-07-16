@@ -15,7 +15,7 @@
 import * as React from 'react';
 
 import { TEdge, TLayoutEdge, TLayoutGraph, TLayoutVertex, TVertex } from '../types';
-import TOneOf from '../types/TOneOf';
+import { TOneOfFour, TOneOfTwo } from '../types/TOneOf';
 import { ZoomTransform } from '../ZoomManager';
 
 export enum ELayoutPhase {
@@ -68,7 +68,7 @@ export type TSetOnContainer<T = {}, U = {}> = {
 
 type TKeyed = { key: string };
 
-type TElemType = TOneOf<{ html: true }, { svg: true }>;
+export type TElemType = TOneOfTwo<{ html: true }, { svg: true }>;
 
 export type TNodeRenderFn<T = {}> = (vertex: TVertex<T>, utils: TRendererUtils) => React.ReactNode;
 
@@ -78,7 +78,7 @@ export type TMeasurableNodeRenderFn<T = {}> = (
   layoutVertex: TLayoutVertex<T> | null
 ) => React.ReactNode;
 
-type TMeasurableNodeRenderer<T = {}> = {
+export type TMeasurableNodeRenderer<T = {}> = {
   measurable: true;
   nodeRender: TMeasurableNodeRenderFn<T>;
   setOnNode?: TSetProps<
@@ -92,10 +92,16 @@ type TNodeRenderer<T = {}> = {
 };
 
 type TNodesLayer<T = {}, U = {}> = TKeyed &
-  TOneOf<TNodeRenderer<T>, TMeasurableNodeRenderer<T>> &
+  TOneOfTwo<TNodeRenderer<T>, TMeasurableNodeRenderer<T>> &
   TSetOnContainer<T, U>;
 
 type TStandaloneNodesLayer<T = {}, U = {}> = TNodesLayer<T, U> & TElemType;
+
+type TMarkerDef<T = {}, U = {}> = TKeyed & {
+  type: React.Component;
+  localId: string;
+  setOnMarker?: TSetProps<TFromGraphStateFn<T, U>>;
+};
 
 type TEdgesLayer<T = {}, U = {}> = TKeyed &
   TSetOnContainer<T, U> & {
@@ -103,19 +109,16 @@ type TEdgesLayer<T = {}, U = {}> = TKeyed &
     setOnEdge?: TSetProps<(edges: TLayoutEdge<U>, utils: TRendererUtils) => TAnyProps | null>;
   };
 
-type TStandaloneEdgesLayer<T = {}, U = {}> = TEdgesLayer<T, U> & TElemType;
+type TStandaloneEdgesLayer<T = {}, U = {}> = TEdgesLayer<T, U> &
+  TElemType & {
+    defs?: TMarkerDef<T, U>[];
+  };
 
 type THtmlLayersGroup<T = {}, U = {}> = TKeyed &
   TSetOnContainer<T, U> & {
     html: true;
     layers: (TNodesLayer<T, U> | TEdgesLayer<T, U>)[];
   };
-
-type TMarkerDef<T = {}, U = {}> = TKeyed & {
-  type: React.Component;
-  localId: string;
-  setOnMarker?: TSetProps<TFromGraphStateFn<T, U>>;
-};
 
 type TSvgLayersGroup<T = {}, U = {}> = TKeyed &
   TSetOnContainer<T, U> & {
@@ -124,9 +127,17 @@ type TSvgLayersGroup<T = {}, U = {}> = TKeyed &
     layers: (TNodesLayer<T, U> | TEdgesLayer<T, U>)[];
   };
 
-export type TLayer<T = {}, U = {}> = TOneOf<
+export type TLayer<T = {}, U = {}> = TOneOfFour<
   THtmlLayersGroup<T, U>,
   TSvgLayersGroup<T, U>,
   TStandaloneNodesLayer<T, U>,
   TStandaloneEdgesLayer<T, U>
 >;
+
+export type TMeasurableNodeProps<T = {}> = Pick<TMeasurableNodeRenderer<T>, 'nodeRender' | 'setOnNode'> & {
+  classNamePrefix: string;
+  hidden?: boolean;
+  layoutVertex: TLayoutVertex<T> | null;
+  renderUtils: TRendererUtils;
+  vertex: TVertex<T>;
+};
