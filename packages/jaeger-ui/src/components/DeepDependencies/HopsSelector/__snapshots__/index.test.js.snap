@@ -104,7 +104,7 @@ exports[`HopsSelector render without visEncoding handles DDGs smaller than two h
   <Selector
     direction={1}
     furthestDistance={0}
-    furthestFullness="Empty"
+    furthestFullness="Full"
     handleClick={[Function]}
     hops={
       Array [

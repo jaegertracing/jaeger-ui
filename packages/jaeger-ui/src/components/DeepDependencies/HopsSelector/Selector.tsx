@@ -15,6 +15,9 @@
 import React, { PureComponent } from 'react';
 import { Popover } from 'antd';
 import cx from 'classnames';
+import SortAmountAsc from 'react-icons/lib/fa/sort-amount-asc.js';
+import IoChevronDown from 'react-icons/lib/io/chevron-down';
+import IoChevronRight from 'react-icons/lib/io/chevron-right';
 
 import { ECheckedStatus, EDirection, THop } from '../../../model/ddg/types';
 
@@ -28,33 +31,37 @@ type TProps = {
   hops: THop[];
 };
 
+const CLASSNAME = 'HopsSelector--Selector';
+
 export default class Selector extends PureComponent<TProps> {
-  private makeBtn = ({ distance, fullness, suffix = 'popover-content' }: THop & { suffix?: string }) => {
+  private makeBtn = ({ distance, fullness, suffix }: THop & { suffix?: string }) => {
     const { handleClick, direction } = this.props;
     return (
       <button
         key={`${distance} ${direction} ${suffix}`}
-        className={cx('Selector--btn', fullness, suffix)}
+        className={cx(`${CLASSNAME}--btn`, fullness, suffix || 'popover-content')}
         type="button"
         onClick={() => handleClick(distance, direction)}
       >
-        {Math.abs(distance)}
+        {!suffix && <IoChevronRight className={`${CLASSNAME}--ChevronRight`} />} {Math.abs(distance)}
       </button>
     );
   };
 
   render() {
     const { direction, furthestDistance, furthestFullness, handleClick, hops } = this.props;
-    const streamLabel = `${direction === EDirection.Downstream ? 'Down' : 'Up'}stream hops`;
+    const streamText = direction === EDirection.Downstream ? 'Down' : 'Up';
+    const streamLabel = `${streamText}stream hops`;
     const lowercaseLabel = streamLabel.toLowerCase();
     if (hops.length === 1) {
-      return <span className="HopsSelector--Selector">No {lowercaseLabel}</span>;
+      return <span className={CLASSNAME}>No {lowercaseLabel}</span>;
     }
 
     const decrementBtn = (
       <button
         key={`decrement ${direction}`}
         disabled={furthestDistance === 0}
+        className={cx(CLASSNAME, 'decrement')}
         type="button"
         onClick={() => handleClick(furthestDistance - direction, direction)}
       >
@@ -65,6 +72,7 @@ export default class Selector extends PureComponent<TProps> {
       <button
         key={`increment ${direction}`}
         disabled={furthestDistance === hops[hops.length - 1].distance}
+        className={cx(CLASSNAME, 'increment')}
         type="button"
         onClick={() => handleClick(furthestDistance + direction, direction)}
       >
@@ -84,12 +92,14 @@ export default class Selector extends PureComponent<TProps> {
     return (
       <Popover
         arrowPointAtCenter
-        content={[decrementBtn, hops.map(this.makeBtn), incrementBtn]}
+        content={[decrementBtn, ...hops.map(this.makeBtn), incrementBtn]}
         placement="bottom"
+        visible={direction === EDirection.Upstream}
         title={`Visible ${lowercaseLabel}`}
       >
-        <span className="HopsSelector--Selector">
-          {streamLabel} {furthestBtn} / {delimiterBtn}
+        <span className={CLASSNAME}>
+          <SortAmountAsc className={cx(`${CLASSNAME}--AscIcon`, streamText)} /> {streamLabel} {furthestBtn} /{' '}
+          {delimiterBtn} <IoChevronDown className={`${CLASSNAME}--ChevronDown`} />
         </span>
       </Popover>
     );

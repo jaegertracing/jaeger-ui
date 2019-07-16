@@ -69,10 +69,11 @@ export default class HopsSelector extends PureComponent<TProps> {
       if (distance <= 0) upstreamHops.push({ distance, fullness });
 
       if (fullness !== ECheckedStatus.Empty) {
-        if (distance > maxVisDistance) {
+        if (distance >= maxVisDistance) {
           maxVisDistance = distance;
           maxVisDistanceFullness = fullness;
-        } else if (distance < minVisDistance) {
+        }
+        if (distance <= minVisDistance) {
           minVisDistance = distance;
           minVisDistanceFullness = fullness;
         }

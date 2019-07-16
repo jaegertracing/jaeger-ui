@@ -15,26 +15,75 @@ limitations under the License.
 */
 
 .HopsSelector--Selector {
+  color: rgba(0, 0, 0, 0.65);
   padding: 0px 3px;
 }
 
-.Selector--btn {
+.HopsSelector--Selector.decrement,
+.HopsSelector--Selector.increment {
+  background-color: #f4f4f4;
+  border: none;
+  cursor: pointer;
+  height: 27px;
+  margin-top: ;
+  padding: 0em 0.3em 0.3em;
+  width: 27px;
+}
+
+.HopsSelector--Selector.decrement {
+  margin-right: 0.75em;
+}
+
+.HopsSelector--Selector.increment {
+  margin-left: 0.75em;
+}
+
+.HopsSelector--Selector.decrement:disabled,
+.HopsSelector--Selector.increment:disabled {
+  color: #bbb;
+}
+
+.HopsSelector--Selector--AscIcon.Up {
+  transform: scaleY(-1);
+}
+
+.HopsSelector--Selector--btn {
   background: transparent;
   border: none;
+  color: #096dd9;
   cursor: pointer;
   font-weight: bold;
   padding: 1px 2px;
 }
 
-.Selector--btn.Empty {
-  color: grey;
+.HopsSelector--Selector--btn.Empty {
+  color: #ccc;
 }
 
-.Selector--btn.Partial {
-  color: orange;
+.HopsSelector--Selector--btn.Partial {
+  color: #d46b08;
 }
 
-.Selector--btn.popover-content ~ .Selector--btn.popover-content::before {
-  content: '>';
-  padding-right: 4px;
+.HopsSelector--Selector--btn.delimiter {
+  color: inherit;
+}
+
+.HopsSelector--Selector--ChevronDown {
+  color: #999;
+  height: 0.7em;
+  padding-bottom: 0.15em;
+  width: 0.7em;
+}
+
+.HopsSelector--Selector--ChevronRight {
+  display: none;
+  height: 0.7em;
+  padding-bottom: 0.15em;
+  width: 0.7em;
+}
+
+.HopsSelector--Selector--btn.popover-content
+  ~ .HopsSelector--Selector--btn.popover-content
+  > .HopsSelector--Selector--ChevronRight {
+  display: unset;
 }
