@@ -14,9 +14,10 @@
 
 import React from 'react';
 import { shallow } from 'enzyme';
-import { InteractiveForceGraph, ForceGraphNode, ForceGraphLink } from 'react-vis-force';
+import { InteractiveForceGraph, ForceGraphNode } from 'react-vis-force';
 
 import DependencyForceGraph, { chargeStrength } from './DependencyForceGraph';
+import ForceGraphArrowLink from './ForceGraphArrowLink';
 
 describe('chargeStrength', () => {
   it('returns a number', () => {
@@ -109,8 +110,8 @@ describe('<DependencyForceGraph>', () => {
       expect(wrapper.find(ForceGraphNode).length).toBe(nodes.length);
     });
 
-    it('renders a <ForceGraphLink> for each link', () => {
-      expect(wrapper.find(ForceGraphLink).length).toBe(links.length);
+    it('renders a <ForceGraphArrowLink> for each link', () => {
+      expect(wrapper.find(ForceGraphArrowLink).length).toBe(links.length);
     });
   });
 });
