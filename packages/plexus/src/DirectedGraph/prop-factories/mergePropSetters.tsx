@@ -14,7 +14,7 @@
 
 import { TPropsFactoryFn } from '../types';
 
-function merge(a: Record<string, any>, b: Record<string, any>) {
+function reduce(a: Record<string, any>, b: Record<string, any>) {
   // eslint-disable-next-line prefer-const
   let { className, style, ...rest } = a;
   const { className: bClassName, style: bStyle, ...bRest } = b;
@@ -29,8 +29,8 @@ function merge(a: Record<string, any>, b: Record<string, any>) {
   return { className, style, ...rest, ...bRest };
 }
 
-export function mergeClassNameAndStyle(...objs: Record<string, any>[]) {
-  return objs.reduce(merge);
+export function assignMergeCss(...objs: Record<string, any>[]) {
+  return objs.reduce(reduce);
 }
 
 export default function mergePropSetters<U>(...fns: TPropsFactoryFn<U>[]): TPropsFactoryFn<U> {
@@ -44,6 +44,6 @@ export default function mergePropSetters<U>(...fns: TPropsFactoryFn<U>[]): TProp
         propsList.push(props);
       }
     }
-    return propsList.reduce(merge);
+    return propsList.reduce(reduce);
   };
 }
