@@ -1200,6 +1200,9 @@ exports[`<ListItem> renders the operation selector if a service is selected 1`] 
       value={null}
     />
   </div>
+  <div
+    className="DdgHeader--attrHeader"
+  />
 </header>
 `;
 
@@ -1807,5 +1810,8 @@ exports[`<ListItem> renders without exploding 1`] = `
       value={null}
     />
   </div>
+  <div
+    className="DdgHeader--attrHeader"
+  />
 </header>
 `;

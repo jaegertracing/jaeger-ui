@@ -86,7 +86,6 @@ exports[`Selector renders buttons with expected text and classNames 1`] = `
   title="Visible downstream hops"
   transitionName="zoom-big"
   trigger="hover"
-  visible={false}
 >
   <span
     className="HopsSelector--Selector"
@@ -220,7 +219,6 @@ exports[`Selector renders upstream hops with negative distance correctly 1`] = `
   title="Visible upstream hops"
   transitionName="zoom-big"
   trigger="hover"
-  visible={true}
 >
   <span
     className="HopsSelector--Selector"

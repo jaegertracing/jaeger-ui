@@ -19,7 +19,7 @@ import SortAmountAsc from 'react-icons/lib/fa/sort-amount-asc.js';
 import IoChevronDown from 'react-icons/lib/io/chevron-down';
 import IoChevronRight from 'react-icons/lib/io/chevron-right';
 
-import { ECheckedStatus, EDirection, THop } from '../../../model/ddg/types';
+import { ECheckedStatus, EDirection, THop } from '../../../../model/ddg/types';
 
 import './Selector.css';
 
@@ -94,7 +94,6 @@ export default class Selector extends PureComponent<TProps> {
         arrowPointAtCenter
         content={[decrementBtn, ...hops.map(this.makeBtn), incrementBtn]}
         placement="bottom"
-        visible={direction === EDirection.Upstream}
         title={`Visible ${lowercaseLabel}`}
       >
         <span className={CLASSNAME}>

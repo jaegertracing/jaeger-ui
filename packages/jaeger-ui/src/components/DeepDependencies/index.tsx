@@ -20,7 +20,6 @@ import { connect } from 'react-redux';
 
 import { getUrl, getUrlState } from './url';
 import Header from './Header';
-import HopsSelector from './HopsSelector';
 import Graph from './Graph';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
@@ -86,11 +85,6 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
       case fetchedState.DONE:
         return (
           <div className="Ddg--graphWrapper">
-            <HopsSelector
-              ddgModel={graphState.model}
-              updateVisEncoding={this.updateVisEncoding}
-              visEncoding={urlState.visEncoding}
-            />
             <Graph ddgModel={graphState.model} visEncoding={urlState.visEncoding} />
           </div>
         );
@@ -118,9 +112,10 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
   };
 
   render() {
+    const { graphState, urlState } = this.props;
     return (
       <div>
-        <Header />
+        <Header graphState={graphState} updateVisEncoding={this.updateVisEncoding} urlState={urlState} />
         {this.body()}
       </div>
     );

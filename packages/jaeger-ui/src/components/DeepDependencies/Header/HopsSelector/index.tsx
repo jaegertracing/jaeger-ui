@@ -14,8 +14,8 @@
 
 import React, { PureComponent } from 'react';
 
-import { decode, encodeDistance } from '../../../model/ddg/visibility-codec';
-import { ECheckedStatus, EDirection, TDdgModel, THop } from '../../../model/ddg/types';
+import { decode, encodeDistance } from '../../../../model/ddg/visibility-codec';
+import { ECheckedStatus, EDirection, TDdgModel, THop } from '../../../../model/ddg/types';
 import Selector from './Selector';
 
 type TProps = {

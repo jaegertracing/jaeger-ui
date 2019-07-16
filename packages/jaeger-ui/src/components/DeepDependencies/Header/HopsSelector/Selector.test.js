@@ -16,7 +16,7 @@ import * as React from 'react';
 import { shallow } from 'enzyme';
 import { Popover } from 'antd';
 
-import { EDirection } from '../../../model/ddg/types';
+import { EDirection } from '../../../../model/ddg/types';
 import Selector from './Selector';
 
 describe('Selector', () => {

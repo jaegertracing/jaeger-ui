@@ -14,12 +14,20 @@
 
 import * as React from 'react';
 
+import HopsSelector from './HopsSelector';
 import NameSelector from './NameSelector';
 import tempOptions from './tmp-data';
 
+import { fetchedState } from '../../../constants';
+import { TDdgSparseUrlState, TDdgStateEntry } from '../../../model/ddg/types';
+
 import './index.css';
 
-type TProps = {};
+type TProps = {
+  graphState?: TDdgStateEntry;
+  updateVisEncoding: (visEncoding: string) => void;
+  urlState: TDdgSparseUrlState;
+};
 
 type TTempState = {
   service: string | null;
@@ -48,7 +56,9 @@ export default class Header extends React.PureComponent<TProps, TTempState> {
   };
 
   render() {
+    const { graphState, updateVisEncoding, urlState } = this.props;
     const { service, operation } = this.state;
+
     return (
       <header className="DdgHeader">
         <div className="DdgHeader--paramsHeader">
@@ -68,6 +78,15 @@ export default class Header extends React.PureComponent<TProps, TTempState> {
               setValue={this.setOperation}
               required
               options={TMP_OPTIIONS}
+            />
+          )}
+        </div>
+        <div className="DdgHeader--attrHeader">
+          {graphState && graphState.state === fetchedState.DONE && (
+            <HopsSelector
+              ddgModel={graphState.model}
+              updateVisEncoding={updateVisEncoding}
+              visEncoding={urlState.visEncoding}
             />
           )}
         </div>

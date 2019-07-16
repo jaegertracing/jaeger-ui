@@ -20,9 +20,9 @@ import {
   longSimplePath,
   shortPath,
   simplePath,
-} from '../../../model/ddg/sample-paths.test.resources';
-import transformDdgData from '../../../model/ddg/transformDdgData';
-import * as codec from '../../../model/ddg/visibility-codec';
+} from '../../../../model/ddg/sample-paths.test.resources';
+import transformDdgData from '../../../../model/ddg/transformDdgData';
+import * as codec from '../../../../model/ddg/visibility-codec';
 import HopsSelector from '.';
 
 describe('HopsSelector', () => {
