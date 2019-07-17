@@ -12,94 +12,76 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import React, { PureComponent } from 'react';
+import React, { memo } from 'react';
 
-import { decode, encodeDistance } from '../../../../model/ddg/visibility-codec';
-import { ECheckedStatus, EDirection, TDdgModel, THop } from '../../../../model/ddg/types';
+import { decode } from '../../../../model/ddg/visibility-codec';
+import { ECheckedStatus, EDirection, TDdgDistanceToPathElems, THop } from '../../../../model/ddg/types';
 import Selector from './Selector';
 
 type TProps = {
-  ddgModel: TDdgModel;
-  updateVisEncoding: (visEncoding: string) => void;
+  distanceToPathElems: TDdgDistanceToPathElems;
+  handleClick: (distance: number, direction: EDirection) => void;
   visEncoding?: string;
 };
 
-export default class HopsSelector extends PureComponent<TProps> {
-  private handleClick = (distance: number, direction: EDirection) => {
-    const { ddgModel, updateVisEncoding, visEncoding } = this.props;
+export default memo(function HopsSelector({ distanceToPathElems, handleClick, visEncoding }: TProps) {
+  const downstreamHops: THop[] = [];
+  const upstreamHops: THop[] = [];
+  let minVisDistance = 0;
+  let minVisDistanceFullness = ECheckedStatus.Empty;
+  let maxVisDistance = 0;
+  let maxVisDistanceFullness = ECheckedStatus.Empty;
+  const visibleIndices = visEncoding && new Set(decode(visEncoding));
 
-    updateVisEncoding(
-      encodeDistance({
-        ddgModel,
-        direction,
-        distance,
-        prevVisEncoding: visEncoding,
-      })
-    );
-  };
-
-  render() {
-    const { ddgModel, visEncoding } = this.props;
-    const { distanceToPathElems } = ddgModel;
-
-    const downstreamHops: THop[] = [];
-    const upstreamHops: THop[] = [];
-    let minVisDistance = 0;
-    let minVisDistanceFullness = ECheckedStatus.Empty;
-    let maxVisDistance = 0;
-    let maxVisDistanceFullness = ECheckedStatus.Empty;
-    const visibleIndices = visEncoding && new Set(decode(visEncoding));
-
-    distanceToPathElems.forEach((elems, distance) => {
-      let fullness: ECheckedStatus;
-      if (visibleIndices) {
-        const visible = elems.filter(({ visibilityIdx }) => visibleIndices.has(visibilityIdx));
-        if (visible.length === elems.length) {
-          fullness = ECheckedStatus.Full;
-        } else if (!visible.length) {
-          fullness = ECheckedStatus.Empty;
-        } else {
-          fullness = ECheckedStatus.Partial;
-        }
+  distanceToPathElems.forEach((elems, distance) => {
+    let fullness: ECheckedStatus;
+    if (visibleIndices) {
+      const visible = elems.filter(({ visibilityIdx }) => visibleIndices.has(visibilityIdx));
+      if (visible.length === elems.length) {
+        fullness = ECheckedStatus.Full;
+      } else if (!visible.length) {
+        fullness = ECheckedStatus.Empty;
       } else {
-        fullness = Math.abs(distance) <= 2 ? ECheckedStatus.Full : ECheckedStatus.Empty;
+        fullness = ECheckedStatus.Partial;
       }
+    } else {
+      fullness = Math.abs(distance) <= 2 ? ECheckedStatus.Full : ECheckedStatus.Empty;
+    }
 
-      if (distance >= 0) downstreamHops.push({ distance, fullness });
-      if (distance <= 0) upstreamHops.push({ distance, fullness });
+    if (distance >= 0) downstreamHops.push({ distance, fullness });
+    if (distance <= 0) upstreamHops.push({ distance, fullness });
 
-      if (fullness !== ECheckedStatus.Empty) {
-        if (distance >= maxVisDistance) {
-          maxVisDistance = distance;
-          maxVisDistanceFullness = fullness;
-        }
-        if (distance <= minVisDistance) {
-          minVisDistance = distance;
-          minVisDistanceFullness = fullness;
-        }
+    if (fullness !== ECheckedStatus.Empty) {
+      if (distance >= maxVisDistance) {
+        maxVisDistance = distance;
+        maxVisDistanceFullness = fullness;
       }
-    });
+      if (distance <= minVisDistance) {
+        minVisDistance = distance;
+        minVisDistanceFullness = fullness;
+      }
+    }
+  });
 
-    downstreamHops.sort(({ distance: a }, { distance: b }) => a - b);
-    upstreamHops.sort(({ distance: a }, { distance: b }) => b - a);
+  downstreamHops.sort(({ distance: a }, { distance: b }) => a - b);
+  upstreamHops.sort(({ distance: a }, { distance: b }) => b - a);
 
-    return (
-      <div>
-        <Selector
-          direction={EDirection.Upstream}
-          handleClick={this.handleClick}
-          hops={upstreamHops}
-          furthestDistance={minVisDistance}
-          furthestFullness={minVisDistanceFullness}
-        />
-        <Selector
-          direction={EDirection.Downstream}
-          handleClick={this.handleClick}
-          hops={downstreamHops}
-          furthestDistance={maxVisDistance}
-          furthestFullness={maxVisDistanceFullness}
-        />
-      </div>
-    );
-  }
-}
+  return (
+    <div>
+      <Selector
+        direction={EDirection.Upstream}
+        handleClick={handleClick}
+        hops={upstreamHops}
+        furthestDistance={minVisDistance}
+        furthestFullness={minVisDistanceFullness}
+      />
+      <Selector
+        direction={EDirection.Downstream}
+        handleClick={handleClick}
+        hops={downstreamHops}
+        furthestDistance={maxVisDistance}
+        furthestFullness={maxVisDistanceFullness}
+      />
+    </div>
+  );
+});

@@ -18,15 +18,14 @@ import HopsSelector from './HopsSelector';
 import NameSelector from './NameSelector';
 import tempOptions from './tmp-data';
 
-import { fetchedState } from '../../../constants';
-import { TDdgSparseUrlState, TDdgStateEntry } from '../../../model/ddg/types';
+import { EDirection, TDdgDistanceToPathElems } from '../../../model/ddg/types';
 
 import './index.css';
 
 type TProps = {
-  graphState?: TDdgStateEntry;
-  updateVisEncoding: (visEncoding: string) => void;
-  urlState: TDdgSparseUrlState;
+  distanceToPathElems?: TDdgDistanceToPathElems;
+  setDistance: (distance: number, direction: EDirection) => void;
+  visEncoding?: string;
 };
 
 type TTempState = {
@@ -56,7 +55,7 @@ export default class Header extends React.PureComponent<TProps, TTempState> {
   };
 
   render() {
-    const { graphState, updateVisEncoding, urlState } = this.props;
+    const { distanceToPathElems, setDistance, visEncoding } = this.props;
     const { service, operation } = this.state;
 
     return (
@@ -82,11 +81,11 @@ export default class Header extends React.PureComponent<TProps, TTempState> {
           )}
         </div>
         <div className="DdgHeader--attrHeader">
-          {graphState && graphState.state === fetchedState.DONE && (
+          {distanceToPathElems && (
             <HopsSelector
-              ddgModel={graphState.model}
-              updateVisEncoding={updateVisEncoding}
-              visEncoding={urlState.visEncoding}
+              distanceToPathElems={distanceToPathElems}
+              handleClick={setDistance}
+              visEncoding={visEncoding}
             />
           )}
         </div>

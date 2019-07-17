@@ -26,53 +26,28 @@ import * as codec from '../../../../model/ddg/visibility-codec';
 import HopsSelector from '.';
 
 describe('HopsSelector', () => {
-  const ddgModel = transformDdgData([longSimplePath, simplePath], focalPayloadElem);
-  const shortModel = transformDdgData([shortPath], focalPayloadElem);
+  const { distanceToPathElems } = transformDdgData([longSimplePath, simplePath], focalPayloadElem);
+  const { distanceToPathElems: shortPathElems } = transformDdgData([shortPath], focalPayloadElem);
 
-  describe('handleClick', () => {
-    const updateVisEncoding = jest.fn();
-    const visEncoding = '3';
-    const mockNewEncoding = '1';
-    let encodeDistanceSpy;
-
-    beforeAll(() => {
-      encodeDistanceSpy = jest.spyOn(codec, 'encodeDistance').mockImplementation(() => mockNewEncoding);
+  describe('without visEncoding', () => {
+    it('renders hops within two hops as full and others as empty', () => {
+      const wrapper = shallow(<HopsSelector distanceToPathElems={distanceToPathElems} />);
+      expect(wrapper).toMatchSnapshot();
     });
 
-    it('calls props.updateVisEncoding with result of encodeDistance', () => {
-      const hopsSelector = new HopsSelector({ ddgModel, updateVisEncoding, visEncoding });
-      const distance = -3;
-      const direction = -1;
-      hopsSelector.handleClick(distance, direction);
-      expect(encodeDistanceSpy).toHaveBeenLastCalledWith({
-        ddgModel,
-        direction,
-        distance,
-        prevVisEncoding: visEncoding,
-      });
-      expect(updateVisEncoding).toHaveBeenLastCalledWith(mockNewEncoding);
+    it('handles DDGs smaller than two hops', () => {
+      const wrapper = shallow(<HopsSelector distanceToPathElems={shortPathElems} />);
+      expect(wrapper).toMatchSnapshot();
     });
   });
 
-  describe('render', () => {
-    describe('without visEncoding', () => {
-      it('renders hops within two hops as full and others as empty', () => {
-        const wrapper = shallow(<HopsSelector ddgModel={ddgModel} />);
-        expect(wrapper).toMatchSnapshot();
-      });
-
-      it('handles DDGs smaller than two hops', () => {
-        const wrapper = shallow(<HopsSelector ddgModel={shortModel} />);
-        expect(wrapper).toMatchSnapshot();
-      });
-    });
-
-    describe('with visEncoding', () => {
-      it('renders hops with correct fullness', () => {
-        const visEncoding = codec.encode([0, 1, 2, 3, 4, 5, 7, 9, 10, 11, 12, 13]);
-        const wrapper = shallow(<HopsSelector ddgModel={ddgModel} visEncoding={visEncoding} />);
-        expect(wrapper).toMatchSnapshot();
-      });
+  describe('with visEncoding', () => {
+    it('renders hops with correct fullness', () => {
+      const visEncoding = codec.encode([0, 1, 2, 3, 4, 5, 7, 9, 10, 11, 12, 13]);
+      const wrapper = shallow(
+        <HopsSelector distanceToPathElems={distanceToPathElems} visEncoding={visEncoding} />
+      );
+      expect(wrapper).toMatchSnapshot();
     });
   });
 });

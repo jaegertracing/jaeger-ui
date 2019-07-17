@@ -24,6 +24,7 @@ import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
 import { fetchedState } from '../../constants';
 import { stateKey } from '../../model/ddg/types';
+import * as codec from '../../model/ddg/visibility-codec';
 
 describe('DeepDependencyGraphPage', () => {
   describe('DeepDependencyGraphPageImpl', () => {
@@ -32,8 +33,11 @@ describe('DeepDependencyGraphPage', () => {
         push: jest.fn(),
       },
       graphState: {
-        uxState: new Map(),
+        model: {
+          distanceToPathElems: new Map(),
+        },
         state: fetchedState.DONE,
+        uxState: new Map(),
       },
       urlState: {
         start: 'testStart',
@@ -127,11 +131,28 @@ describe('DeepDependencyGraphPage', () => {
         expect(props.history.push).toHaveBeenCalledTimes(1);
       });
 
-      describe('updateVisEncoding', () => {
-        it('updates visEncoding', () => {
-          const visEncoding = 'new visEncoding';
-          ddgPageImpl.updateVisEncoding(visEncoding);
-          expect(getUrlSpy).toHaveBeenLastCalledWith(Object.assign({}, props.urlState, { visEncoding }));
+      describe('setDistance', () => {
+        const mockNewEncoding = '1';
+        let encodeDistanceSpy;
+
+        beforeAll(() => {
+          encodeDistanceSpy = jest.spyOn(codec, 'encodeDistance').mockImplementation(() => mockNewEncoding);
+        });
+
+        it('updates url with result of encodeDistance', () => {
+          const distance = -3;
+          const direction = -1;
+          const visEncoding = props.urlState.visEncoding;
+          ddgPageImpl.setDistance(distance, direction);
+          expect(encodeDistanceSpy).toHaveBeenLastCalledWith({
+            ddgModel: props.graphState.model,
+            direction,
+            distance,
+            prevVisEncoding: visEncoding,
+          });
+          expect(getUrlSpy).toHaveBeenLastCalledWith(
+            Object.assign({}, props.urlState, { visEncoding: mockNewEncoding })
+          );
           expect(props.history.push).toHaveBeenCalledTimes(1);
         });
       });
@@ -162,9 +183,8 @@ describe('DeepDependencyGraphPage', () => {
       });
 
       it('renders graph when done', () => {
-        const wrapper = shallow(
-          <DeepDependencyGraphPageImpl {...props} graphState={{ state: fetchedState.DONE }} />
-        );
+        const graphState = { model: { distanceToPathElems: [] }, state: fetchedState.DONE };
+        const wrapper = shallow(<DeepDependencyGraphPageImpl {...props} graphState={graphState} />);
         expect(wrapper.find(Graph)).toHaveLength(1);
       });
 
