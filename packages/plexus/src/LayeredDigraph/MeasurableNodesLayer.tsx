@@ -17,22 +17,25 @@ import * as React from 'react';
 import MeasurableHtmlNode from './MeasurableHtmlNode';
 import {
   TExposedGraphState,
-  TElemType,
+  TLayerType,
   TSetOnContainer,
   TMeasurableNodeRenderer,
   ELayoutPhase,
+  ELayerType,
 } from './types';
 import { assignMergeCss, getProps } from './utils';
 import { TSizeVertex, TVertex } from '../types';
 import { TOneOfTwo } from '../types/TOneOf';
+import ZoomManager from '../ZoomManager';
 
-type TProps<T = {}, U = {}> = TElemType &
-  Omit<TMeasurableNodeRenderer<T>, 'measurable'> &
+type TProps<T = {}, U = {}> = Omit<TMeasurableNodeRenderer<T>, 'measurable'> &
   TSetOnContainer<T, U> & {
     classNamePrefix?: string;
     graphState: TExposedGraphState<T, U>;
     senderKey: string;
+    layerType: TLayerType;
     setSizeVertices: (senderKey: string, sizeVertices: TSizeVertex<T>[]) => void;
+    standalone?: boolean;
   };
 
 type TState<T> = TOneOfTwo<
@@ -73,15 +76,15 @@ export default class MeasurableNodesLayer<T = {}, U = {}> extends React.PureComp
 
   constructor(props: TProps<T, U>) {
     super(props);
-    const { graphState, html } = props;
-    if (html) {
+    const { graphState, layerType } = props;
+    if (ELayerType.Html === layerType) {
       const { vertices } = graphState;
       this.state = {
         vertices,
         htmlNodeRefs: createRefs<MeasurableHtmlNode<T>>(vertices.length),
       };
     } else {
-      // props.svg === true
+      // layerType === ELayerType.Svg
       throw new Error('Not implemented');
     }
   }
@@ -146,9 +149,11 @@ export default class MeasurableNodesLayer<T = {}, U = {}> extends React.PureComp
   render() {
     const { htmlNodeRefs } = this.state;
     if (htmlNodeRefs) {
-      const { classNamePrefix, graphState, setOnContainer } = this.props;
+      const { classNamePrefix, graphState, setOnContainer, standalone } = this.props;
+      const { zoomTransform } = graphState;
       const containerProps = assignMergeCss(getProps(setOnContainer, graphState), {
         style: {
+          ...(standalone ? ZoomManager.getZoomStyle(zoomTransform) : null),
           position: 'absolute',
           top: 0,
           left: 0,

@@ -15,6 +15,8 @@
 import * as React from 'react';
 
 import HtmlLayersGroup from './HtmlLayersGroup';
+import MeasurableNodesLayer from './MeasurableNodesLayer';
+import { classNameIsSmall, scaledStrokeWidth } from './props-factories';
 import {
   ELayoutPhase,
   TExposedGraphState,
@@ -22,9 +24,9 @@ import {
   TLayer,
   TPropsFactory,
   TRendererUtils,
+  ELayerType,
 } from './types';
 import { assignMergeCss, getProps } from './utils';
-import { classNameIsSmall, scaledStrokeWidth } from './props-factories';
 // TODO(joe): don't use stuff in ../DirectedGraph
 import MiniMap from '../DirectedGraph/MiniMap';
 import LayoutManager from '../LayoutManager';
@@ -152,19 +154,47 @@ export default class LayeredDigraph<T = {}, U = {}> extends React.PureComponent<
       renderUtils: this.renderUtils,
     };
     return topLayers.map(layer => {
-      if (layer.layers && layer.html && !layer.nodeRender) {
-        const { key, layers, setOnContainer } = layer;
+      const { layerType, key, layers, setOnContainer } = layer;
+      if (layers) {
+        if (layerType === ELayerType.Html) {
+          return (
+            <HtmlLayersGroup<T, U>
+              key={key}
+              graphState={graphState}
+              layers={layers}
+              classNamePrefix={classNamePrefix}
+              setOnContainer={setOnContainer}
+              setSizeVertices={this.setSizeVertices}
+            />
+          );
+        }
+        // svg group layer
+        throw new Error('Not implemented');
+      }
+      const { edges } = layer;
+      if (edges) {
+        // edges standalone layer
+        throw new Error('Not implemented');
+      }
+      if (layer.measurable) {
+        // standalone measurable Nodes Layer
+        const { nodeRender, setOnNode } = layer;
         return (
-          <HtmlLayersGroup<T, U>
+          <MeasurableNodesLayer<T, U>
             key={key}
-            graphState={graphState}
-            layers={layers}
+            standalone
             classNamePrefix={classNamePrefix}
+            graphState={graphState}
+            layerType={layer.layerType}
+            nodeRender={nodeRender}
+            senderKey={key}
             setOnContainer={setOnContainer}
+            setOnNode={setOnNode}
             setSizeVertices={this.setSizeVertices}
           />
         );
       }
+      // regular nodes layer
       throw new Error('Not implemented');
     });
   }

@@ -26,6 +26,12 @@ export enum ELayoutPhase {
   Done = 'Done',
 }
 
+export type TLayerType = 'html' | 'svg';
+export enum ELayerType {
+  Html = 'html',
+  Svg = 'svg',
+}
+
 export type TRendererUtils = {
   getLocalId: (name: string) => string;
   getZoomTransform: () => ZoomTransform;
@@ -64,8 +70,6 @@ export type TSetOnContainer<T = {}, U = {}> = TPropsFactory<'setOnContainer', TF
 
 type TKeyed = { key: string };
 
-export type TElemType = TOneOfTwo<{ html: true }, { svg: true }>;
-
 export type TNodeRenderFn<T = {}> = (vertex: TVertex<T>, utils: TRendererUtils) => React.ReactNode;
 
 export type TMeasurableNodeRenderFn<T = {}> = (
@@ -91,7 +95,9 @@ type TNodesLayer<T = {}, U = {}> = TKeyed &
   TOneOfTwo<TNodeRenderer<T>, TMeasurableNodeRenderer<T>> &
   TSetOnContainer<T, U>;
 
-type TStandaloneNodesLayer<T = {}, U = {}> = TNodesLayer<T, U> & TElemType;
+type TStandaloneNodesLayer<T = {}, U = {}> = TNodesLayer<T, U> & {
+  layerType: TLayerType;
+};
 
 type TMarkerDef<T = {}, U = {}> = TKeyed & {
   type: React.Component;
@@ -105,20 +111,20 @@ type TEdgesLayer<T = {}, U = {}> = TKeyed &
     setOnEdge?: TSetProps<(edges: TLayoutEdge<U>, utils: TRendererUtils) => TAnyProps | null>;
   };
 
-type TStandaloneEdgesLayer<T = {}, U = {}> = TEdgesLayer<T, U> &
-  TElemType & {
-    defs?: TMarkerDef<T, U>[];
-  };
+type TStandaloneEdgesLayer<T = {}, U = {}> = TEdgesLayer<T, U> & {
+  layerType: TLayerType;
+  defs?: TMarkerDef<T, U>[];
+};
 
 export type THtmlLayersGroup<T = {}, U = {}> = TKeyed &
   TSetOnContainer<T, U> & {
-    html: true;
+    layerType: Extract<TLayerType, 'html'>;
     layers: TOneOfTwo<TNodesLayer<T, U>, TEdgesLayer<T, U>>[];
   };
 
 type TSvgLayersGroup<T = {}, U = {}> = TKeyed &
   TSetOnContainer<T, U> & {
-    svg: true;
+    layerType: Extract<TLayerType, 'svg'>;
     defs?: TMarkerDef<T, U>[];
     layers: TOneOfTwo<TNodesLayer<T, U>, TEdgesLayer<T, U>>[];
   };

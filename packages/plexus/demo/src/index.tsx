@@ -25,6 +25,7 @@ import { classNameIsSmall as layeredClassNameIsSmall } from '../../src/LayeredDi
 import { TVertex } from '../../src/types';
 
 import './index.css';
+import { ELayerType } from '../../src/LayeredDigraph/types';
 
 const { classNameIsSmall } = DirectedGraph.propsFactories;
 
@@ -52,7 +53,7 @@ function Demo() {
             layers={[
               {
                 key: 'nodes-layers',
-                html: true,
+                layerType: ELayerType.Html,
                 layers: [
                   {
                     setOnNode,
@@ -61,6 +62,30 @@ function Demo() {
                     nodeRender: getLargeNodeLabel,
                   },
                 ],
+              },
+            ]}
+            {...largeDag}
+          />
+        </div>
+      </div>
+      <h1>LayeredDigraph with standalone layers</h1>
+      <div>
+        <div className="DemoGraph">
+          <LayeredDigraph
+            zoom
+            minimap
+            className="DemoGraph--dag"
+            layoutManager={new LayoutManager({ useDotEdges: true })}
+            minimapClassName="Demo--miniMap"
+            setOnGraph={layeredClassNameIsSmall}
+            measurableNodesKey="nodes"
+            layers={[
+              {
+                setOnNode,
+                key: 'nodes',
+                layerType: 'html',
+                measurable: true,
+                nodeRender: getLargeNodeLabel,
               },
             ]}
             {...largeDag}

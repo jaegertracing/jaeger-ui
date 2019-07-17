@@ -15,12 +15,12 @@
 import * as React from 'react';
 
 import MeasurableNodesLayer from './MeasurableNodesLayer';
-import { TExposedGraphState, THtmlLayersGroup } from './types';
+import { TExposedGraphState, THtmlLayersGroup, ELayerType } from './types';
 import { assignMergeCss, getProps } from './utils';
 import { TSizeVertex } from '../types';
 import ZoomManager from '../ZoomManager';
 
-type TProps<T = {}, U = {}> = Omit<THtmlLayersGroup<T, U>, 'html' | 'key'> & {
+type TProps<T = {}, U = {}> = Omit<THtmlLayersGroup<T, U>, 'layerType' | 'key'> & {
   classNamePrefix?: string;
   graphState: TExposedGraphState<T, U>;
   setSizeVertices: (senderKey: string, sizeVertices: TSizeVertex<T>[]) => void;
@@ -35,13 +35,13 @@ export default class HtmlLayersGroup<T = {}, U = {}> extends React.PureComponent
         return (
           <MeasurableNodesLayer<T, U>
             key={key}
-            html
+            layerType={ELayerType.Html}
             nodeRender={nodeRender}
             setOnNode={setOnNode}
             graphState={graphState}
             senderKey={key}
             setSizeVertices={setSizeVertices}
-            classNamePrefix={classNamePrefix || undefined}
+            classNamePrefix={classNamePrefix}
             setOnContainer={setOnContainer}
           />
         );
