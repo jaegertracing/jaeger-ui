@@ -37,7 +37,7 @@ export type Accessors = {
   mapSpanIndexToRowIndex: (spanIndex: number) => number;
 };
 
-interface Scroller {
+interface IScroller {
   scrollTo: (rowIndex: number) => void;
   // TODO arg names throughout
   scrollBy: (rowIndex: number, opt?: boolean) => void;
@@ -55,7 +55,7 @@ interface Scroller {
  * @returns {{ isHidden: boolean, parentIds: Set<string> }}
  */
 function isSpanHidden(span: Span, childrenAreHidden: Set<string>, spansMap: Map<string, Span | TNil>) {
-  const parentIDs = new Set();
+  const parentIDs = new Set<string>();
   let { references }: { references: SpanReference[] | TNil } = span;
   let parentID: undefined | string;
   const checkRef = (ref: SpanReference) => {
@@ -87,10 +87,10 @@ function isSpanHidden(span: Span, childrenAreHidden: Set<string>, spansMap: Map<
  */
 export default class ScrollManager {
   _trace: Trace | TNil;
-  _scroller: Scroller;
+  _scroller: IScroller;
   _accessors: Accessors | TNil;
 
-  constructor(trace: Trace | TNil, scroller: Scroller) {
+  constructor(trace: Trace | TNil, scroller: IScroller) {
     this._trace = trace;
     this._scroller = scroller;
     this._accessors = undefined;

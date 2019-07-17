@@ -21,7 +21,7 @@ import TimelineHeaderRow from './TimelineHeaderRow';
 import VirtualizedTraceView from './VirtualizedTraceView';
 import { merge as mergeShortcuts } from '../keyboard-shortcuts';
 import { Accessors } from '../ScrollManager';
-import { TUpdateViewRangeTimeFunction, ViewRange, ViewRangeTimeUpdate } from '../types';
+import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate } from '../types';
 import { TNil, ReduxState } from '../../../types';
 import { Span, Trace } from '../../../types/trace';
 
@@ -43,7 +43,7 @@ type TProps = TDispatchProps & {
   trace: Trace;
   updateNextViewRangeTime: (update: ViewRangeTimeUpdate) => void;
   updateViewRangeTime: TUpdateViewRangeTimeFunction;
-  viewRange: ViewRange;
+  viewRange: IViewRange;
 };
 
 const NUM_TICKS = 5;

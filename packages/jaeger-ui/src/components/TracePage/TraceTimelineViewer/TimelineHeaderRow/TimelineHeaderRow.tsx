@@ -19,7 +19,7 @@ import TimelineColumnResizer from './TimelineColumnResizer';
 import TimelineViewingLayer from './TimelineViewingLayer';
 import Ticks from '../Ticks';
 import TimelineRow from '../TimelineRow';
-import { TUpdateViewRangeTimeFunction, ViewRangeTime, ViewRangeTimeUpdate } from '../../types';
+import { TUpdateViewRangeTimeFunction, IViewRangeTime, ViewRangeTimeUpdate } from '../../types';
 
 import './TimelineHeaderRow.css';
 
@@ -34,7 +34,7 @@ type TimelineHeaderRowProps = {
   onExpandOne: () => void;
   updateNextViewRangeTime: (update: ViewRangeTimeUpdate) => void;
   updateViewRangeTime: TUpdateViewRangeTimeFunction;
-  viewRangeTime: ViewRangeTime;
+  viewRangeTime: IViewRangeTime;
 };
 
 export default function TimelineHeaderRow(props: TimelineHeaderRowProps) {
