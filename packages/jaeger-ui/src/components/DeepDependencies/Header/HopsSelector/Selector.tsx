@@ -34,17 +34,23 @@ type TProps = {
 const CLASSNAME = 'HopsSelector--Selector';
 
 export default class Selector extends PureComponent<TProps> {
-  private makeBtn = ({ distance, fullness, suffix }: THop & { suffix?: string }) => {
+  private makeBtn = (
+    { distance, fullness, suffix = 'popover-content' }: THop & { suffix?: string },
+    showChevron?: number
+  ) => {
     const { handleClick, direction } = this.props;
     return (
-      <button
-        key={`${distance} ${direction} ${suffix}`}
-        className={cx(`${CLASSNAME}--btn`, fullness, suffix || 'popover-content')}
-        type="button"
-        onClick={() => handleClick(distance, direction)}
-      >
-        {!suffix && <IoChevronRight className={`${CLASSNAME}--ChevronRight`} />} {Math.abs(distance)}
-      </button>
+      <>
+        {Boolean(showChevron) && <IoChevronRight className={cx(`${CLASSNAME}--ChevronRight`, fullness)} />}
+        <button
+          key={`${distance} ${direction} ${suffix}`}
+          className={cx(`${CLASSNAME}--btn`, fullness, suffix)}
+          type="button"
+          onClick={() => handleClick(distance, direction)}
+        >
+          {Math.abs(distance)}
+        </button>
+      </>
     );
   };
 

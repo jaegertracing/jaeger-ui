@@ -13,61 +13,63 @@ exports[`Selector renders buttons with expected text and classNames 1`] = `
       >
         -
       </button>,
-      <button
-        className="HopsSelector--Selector--btn full popover-content"
-        onClick={[Function]}
-        type="button"
-      >
+      <React.Fragment>
+        <button
+          className="HopsSelector--Selector--btn full popover-content"
+          onClick={[Function]}
+          type="button"
+        >
+          0
+        </button>
+      </React.Fragment>,
+      <React.Fragment>
         <IoChevronRight
-          className="HopsSelector--Selector--ChevronRight"
+          className="HopsSelector--Selector--ChevronRight partial"
         />
-         
-        0
-      </button>,
-      <button
-        className="HopsSelector--Selector--btn partial popover-content"
-        onClick={[Function]}
-        type="button"
-      >
+        <button
+          className="HopsSelector--Selector--btn partial popover-content"
+          onClick={[Function]}
+          type="button"
+        >
+          1
+        </button>
+      </React.Fragment>,
+      <React.Fragment>
         <IoChevronRight
-          className="HopsSelector--Selector--ChevronRight"
+          className="HopsSelector--Selector--ChevronRight full"
         />
-         
-        1
-      </button>,
-      <button
-        className="HopsSelector--Selector--btn full popover-content"
-        onClick={[Function]}
-        type="button"
-      >
+        <button
+          className="HopsSelector--Selector--btn full popover-content"
+          onClick={[Function]}
+          type="button"
+        >
+          2
+        </button>
+      </React.Fragment>,
+      <React.Fragment>
         <IoChevronRight
-          className="HopsSelector--Selector--ChevronRight"
+          className="HopsSelector--Selector--ChevronRight empty"
         />
-         
-        2
-      </button>,
-      <button
-        className="HopsSelector--Selector--btn empty popover-content"
-        onClick={[Function]}
-        type="button"
-      >
+        <button
+          className="HopsSelector--Selector--btn empty popover-content"
+          onClick={[Function]}
+          type="button"
+        >
+          3
+        </button>
+      </React.Fragment>,
+      <React.Fragment>
         <IoChevronRight
-          className="HopsSelector--Selector--ChevronRight"
+          className="HopsSelector--Selector--ChevronRight empty"
         />
-         
-        3
-      </button>,
-      <button
-        className="HopsSelector--Selector--btn empty popover-content"
-        onClick={[Function]}
-        type="button"
-      >
-        <IoChevronRight
-          className="HopsSelector--Selector--ChevronRight"
-        />
-         
-        4
-      </button>,
+        <button
+          className="HopsSelector--Selector--btn empty popover-content"
+          onClick={[Function]}
+          type="button"
+        >
+          4
+        </button>
+      </React.Fragment>,
       <button
         className="HopsSelector--Selector increment"
         disabled={false}
@@ -102,7 +104,6 @@ exports[`Selector renders buttons with expected text and classNames 1`] = `
       onClick={[Function]}
       type="button"
     >
-       
       2
     </button>
      /
@@ -113,7 +114,6 @@ exports[`Selector renders buttons with expected text and classNames 1`] = `
       onClick={[Function]}
       type="button"
     >
-       
       4
     </button>
      
@@ -146,61 +146,63 @@ exports[`Selector renders upstream hops with negative distance correctly 1`] = `
       >
         -
       </button>,
-      <button
-        className="HopsSelector--Selector--btn full popover-content"
-        onClick={[Function]}
-        type="button"
-      >
+      <React.Fragment>
+        <button
+          className="HopsSelector--Selector--btn full popover-content"
+          onClick={[Function]}
+          type="button"
+        >
+          0
+        </button>
+      </React.Fragment>,
+      <React.Fragment>
         <IoChevronRight
-          className="HopsSelector--Selector--ChevronRight"
+          className="HopsSelector--Selector--ChevronRight partial"
         />
-         
-        0
-      </button>,
-      <button
-        className="HopsSelector--Selector--btn partial popover-content"
-        onClick={[Function]}
-        type="button"
-      >
+        <button
+          className="HopsSelector--Selector--btn partial popover-content"
+          onClick={[Function]}
+          type="button"
+        >
+          1
+        </button>
+      </React.Fragment>,
+      <React.Fragment>
         <IoChevronRight
-          className="HopsSelector--Selector--ChevronRight"
+          className="HopsSelector--Selector--ChevronRight full"
         />
-         
-        1
-      </button>,
-      <button
-        className="HopsSelector--Selector--btn full popover-content"
-        onClick={[Function]}
-        type="button"
-      >
+        <button
+          className="HopsSelector--Selector--btn full popover-content"
+          onClick={[Function]}
+          type="button"
+        >
+          2
+        </button>
+      </React.Fragment>,
+      <React.Fragment>
         <IoChevronRight
-          className="HopsSelector--Selector--ChevronRight"
+          className="HopsSelector--Selector--ChevronRight empty"
         />
-         
-        2
-      </button>,
-      <button
-        className="HopsSelector--Selector--btn empty popover-content"
-        onClick={[Function]}
-        type="button"
-      >
+        <button
+          className="HopsSelector--Selector--btn empty popover-content"
+          onClick={[Function]}
+          type="button"
+        >
+          3
+        </button>
+      </React.Fragment>,
+      <React.Fragment>
         <IoChevronRight
-          className="HopsSelector--Selector--ChevronRight"
+          className="HopsSelector--Selector--ChevronRight empty"
         />
-         
-        3
-      </button>,
-      <button
-        className="HopsSelector--Selector--btn empty popover-content"
-        onClick={[Function]}
-        type="button"
-      >
-        <IoChevronRight
-          className="HopsSelector--Selector--ChevronRight"
-        />
-         
-        4
-      </button>,
+        <button
+          className="HopsSelector--Selector--btn empty popover-content"
+          onClick={[Function]}
+          type="button"
+        >
+          4
+        </button>
+      </React.Fragment>,
       <button
         className="HopsSelector--Selector increment"
         disabled={false}
@@ -235,7 +237,6 @@ exports[`Selector renders upstream hops with negative distance correctly 1`] = `
       onClick={[Function]}
       type="button"
     >
-       
       2
     </button>
      /
@@ -246,7 +247,6 @@ exports[`Selector renders upstream hops with negative distance correctly 1`] = `
       onClick={[Function]}
       type="button"
     >
-       
       4
     </button>
      

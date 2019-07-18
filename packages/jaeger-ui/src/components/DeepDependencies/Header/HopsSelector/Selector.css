@@ -16,6 +16,7 @@ limitations under the License.
 
 .HopsSelector--Selector {
   color: rgba(0, 0, 0, 0.65);
+  margin: 0 0.5em;
   padding: 0px 3px;
 }
 
@@ -76,14 +77,13 @@ limitations under the License.
 }
 
 .HopsSelector--Selector--ChevronRight {
-  display: none;
+  color: #999;
   height: 0.7em;
+  margin-left: 0.1em;
   padding-bottom: 0.15em;
   width: 0.7em;
 }
 
-.HopsSelector--Selector--btn.popover-content
-  ~ .HopsSelector--Selector--btn.popover-content
-  > .HopsSelector--Selector--ChevronRight {
-  display: unset;
+.HopsSelector--Selector--ChevronRight.Empty {
+  color: #ccc;
 }
