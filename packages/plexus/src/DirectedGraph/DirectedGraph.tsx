@@ -21,7 +21,7 @@ import PureEdges from './builtins/PureEdges';
 import PureNodes from './builtins/PureNodes';
 import MiniMap from './MiniMap';
 import classNameIsSmall from './prop-factories/classNameIsSmall';
-import mergePropSetters, { mergeClassNameAndStyle } from './prop-factories/mergePropSetters';
+import mergePropSetters, { assignMergeCss } from './prop-factories/mergePropSetters';
 import scaledStrokeWidth from './prop-factories/scaledStrokeWidth';
 import { TDirectedGraphProps, TDirectedGraphState } from './types';
 import { TCancelled, TLayoutDone, TPositionsDone, TSizeVertex } from '../types';
@@ -236,7 +236,7 @@ export default class DirectedGraph<T> extends React.PureComponent<
     // const { current: rootElm } = this.rootRef;
     const haveEdges = phase === PHASE_DONE;
 
-    const nodesContainerProps = mergeClassNameAndStyle(
+    const nodesContainerProps = assignMergeCss(
       (setOnNodesContainer && setOnNodesContainer(this.state)) || {},
       {
         style: {
@@ -248,14 +248,14 @@ export default class DirectedGraph<T> extends React.PureComponent<
         className: `${classNamePrefix}-DirectedGraph--nodeContainer`,
       }
     );
-    const edgesContainerProps = mergeClassNameAndStyle(
+    const edgesContainerProps = assignMergeCss(
       (setOnEdgesContainer && setOnEdgesContainer(this.state)) || {},
       {
         style: { minHeight: '100%', minWidth: '100%' },
         className: `${classNamePrefix}-DirectedGraph--nodeContainer`,
       }
     );
-    const rootProps = mergeClassNameAndStyle((setOnRoot && setOnRoot(this.state)) || {}, {
+    const rootProps = assignMergeCss((setOnRoot && setOnRoot(this.state)) || {}, {
       style: zoomEnabled ? WRAPPER_STYLE_ZOOM : WRAPPER_STYLE,
       className: `${classNamePrefix}-DirectedGraph ${className}`,
     });
