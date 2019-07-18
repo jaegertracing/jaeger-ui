@@ -85,11 +85,16 @@ function parseGraph(str: string, startIndex: number): { end: number; graph: TLay
   };
 }
 
+// TODO: Temporary hack to circumvent how long vertex keys are handled
+function _removeBackslashAndNewLine(raw: string): string {
+  return raw.replace(/\\|\n/g, '');
+}
+
 function parseNode(str: string, startIndex: number) {
   // skip "node "
   const i = startIndex + 5;
   const { value: raw, end: keyEnd } = parseString(str, i);
-  const key = raw.replace(/\\|\n/g, '');
+  const key = _removeBackslashAndNewLine(raw);
   const { values, end } = parseNumbers(4, str, keyEnd + 1);
   const [left, top, width, height] = values;
   return {
@@ -109,8 +114,8 @@ function parseEdge(str: string, startIndex: number) {
   const i = startIndex + 5;
   const { value: fromRaw, end: fromEnd } = parseString(str, i);
   const { value: toRaw, end: toEnd } = parseString(str, fromEnd + 1);
-  const from = fromRaw.replace(/\\|\n/g, '');
-  const to = toRaw.replace(/\\|\n/g, '');
+  const from = _removeBackslashAndNewLine(fromRaw);
+  const to = _removeBackslashAndNewLine(toRaw);
   const { value: pointCount, end: endPtCount } = parseNumber(str, toEnd + 1);
   const { values: flatPoints, end: pointsEnd } = parseNumbers(pointCount * 2, str, endPtCount + 1);
   const { value: flags, end: flagsEnd } = parseString(str, pointsEnd + 1);
