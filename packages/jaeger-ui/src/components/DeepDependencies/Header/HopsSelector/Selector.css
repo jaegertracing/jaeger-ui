@@ -31,21 +31,17 @@ limitations under the License.
   width: 27px;
 }
 
-.HopsSelector--Selector.decrement {
+.HopsSelector--Selector--decrement {
   margin-right: 0.75em;
 }
 
-.HopsSelector--Selector.increment {
+.HopsSelector--Selector--increment {
   margin-left: 0.75em;
 }
 
-.HopsSelector--Selector.decrement:disabled,
-.HopsSelector--Selector.increment:disabled {
+.HopsSelector--Selector--decrement:disabled,
+.HopsSelector--Selector--increment:disabled {
   color: #bbb;
-}
-
-.HopsSelector--Selector--AscIcon.Up {
-  transform: scaleY(-1);
 }
 
 .HopsSelector--Selector--btn {
@@ -57,16 +53,34 @@ limitations under the License.
   padding: 1px 2px;
 }
 
-.HopsSelector--Selector--btn.Empty {
+.HopsSelector--Selector--btn.is-Empty {
   color: #ccc;
 }
 
-.HopsSelector--Selector--btn.Partial {
+.HopsSelector--Selector--btn.is-Partial {
   color: #d46b08;
 }
 
-.HopsSelector--Selector--btn.delimiter {
+.HopsSelector--Selector > .HopsSelector--Selector--furthest {
+  margin-left: 0.3em;
+}
+
+.HopsSelector--Selector > .HopsSelector--Selector--delimiter {
   color: inherit;
+  margin-right: 0.3em;
+}
+
+.HopsSelector--Selector--slash {
+  margin: 0 0.15em;
+  font-weight: bold;
+}
+
+.HopsSelector--Selector--AscIcon {
+  margin-right: 0.3em;
+}
+
+.HopsSelector--Selector--AscIcon.is-Up {
+  transform: scaleY(-1);
 }
 
 .HopsSelector--Selector--ChevronDown {
@@ -84,6 +98,6 @@ limitations under the License.
   width: 0.7em;
 }
 
-.HopsSelector--Selector--ChevronRight.Empty {
+.HopsSelector--Selector--ChevronRight.is-Empty {
   color: #ccc;
 }

@@ -14,7 +14,6 @@
 
 import React, { PureComponent } from 'react';
 import { Popover } from 'antd';
-import cx from 'classnames';
 import SortAmountAsc from 'react-icons/lib/fa/sort-amount-asc.js';
 import IoChevronDown from 'react-icons/lib/io/chevron-down';
 import IoChevronRight from 'react-icons/lib/io/chevron-right';
@@ -41,10 +40,10 @@ export default class Selector extends PureComponent<TProps> {
     const { handleClick, direction } = this.props;
     return (
       <>
-        {Boolean(showChevron) && <IoChevronRight className={cx(`${CLASSNAME}--ChevronRight`, fullness)} />}
+        {Boolean(showChevron) && <IoChevronRight className={`${CLASSNAME}--ChevronRight is-${fullness}`} />}
         <button
           key={`${distance} ${direction} ${suffix}`}
-          className={cx(`${CLASSNAME}--btn`, fullness, suffix)}
+          className={`${CLASSNAME}--btn is-${fullness} ${CLASSNAME}--${suffix}`}
           type="button"
           onClick={() => handleClick(distance, direction)}
         >
@@ -67,7 +66,7 @@ export default class Selector extends PureComponent<TProps> {
       <button
         key={`decrement ${direction}`}
         disabled={furthestDistance === 0}
-        className={cx(CLASSNAME, 'decrement')}
+        className={`${CLASSNAME}--decrement`}
         type="button"
         onClick={() => handleClick(furthestDistance - direction, direction)}
       >
@@ -78,7 +77,7 @@ export default class Selector extends PureComponent<TProps> {
       <button
         key={`increment ${direction}`}
         disabled={furthestDistance === hops[hops.length - 1].distance}
-        className={cx(CLASSNAME, 'increment')}
+        className={`${CLASSNAME}--increment`}
         type="button"
         onClick={() => handleClick(furthestDistance + direction, direction)}
       >
@@ -103,8 +102,12 @@ export default class Selector extends PureComponent<TProps> {
         title={`Visible ${lowercaseLabel}`}
       >
         <span className={CLASSNAME}>
-          <SortAmountAsc className={cx(`${CLASSNAME}--AscIcon`, streamText)} /> {streamLabel} {furthestBtn} /{' '}
-          {delimiterBtn} <IoChevronDown className={`${CLASSNAME}--ChevronDown`} />
+          <SortAmountAsc className={`${CLASSNAME}--AscIcon is-${streamText}`} />
+          {streamLabel}
+          {furthestBtn}
+          <span className={`${CLASSNAME}--slash`}>/</span>
+          {delimiterBtn}
+          <IoChevronDown className={`${CLASSNAME}--ChevronDown`} />
         </span>
       </Popover>
     );
