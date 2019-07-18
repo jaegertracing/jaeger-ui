@@ -25,7 +25,7 @@ limitations under the License.
   z-index: 10;
 }
 
-.DdgHeader--attrHeader {
+.DdgHeader--controlHeader {
   align-items: center;
   background-color: #fafafa;
   display: flex;

@@ -80,7 +80,7 @@ export default class Header extends React.PureComponent<TProps, TTempState> {
             />
           )}
         </div>
-        <div className="DdgHeader--attrHeader">
+        <div className="DdgHeader--controlHeader">
           {distanceToPathElems && (
             <HopsSelector
               distanceToPathElems={distanceToPathElems}
