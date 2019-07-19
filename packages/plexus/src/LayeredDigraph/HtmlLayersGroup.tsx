@@ -52,9 +52,7 @@ export default class HtmlLayersGroup<T = {}, U = {}> extends React.PureComponent
 
   render() {
     const { classNamePrefix, graphState, setOnContainer } = this.props;
-
     const { zoomTransform } = graphState;
-
     const containerProps = assignMergeCss(getProps(setOnContainer, graphState), {
       style: {
         ...ZoomManager.getZoomStyle(zoomTransform),

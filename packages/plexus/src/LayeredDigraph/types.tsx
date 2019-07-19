@@ -62,11 +62,9 @@ export type TSetProps<TFactoryFn extends TPropFactoryFn> =
 
 export type TFromGraphStateFn<T = {}, U = {}> = (input: TExposedGraphState<T, U>) => TAnyProps | null;
 
-export type TPropsFactory<PropNames extends string, FactoryFn extends TPropFactoryFn> = {
-  [K in PropNames]?: TSetProps<FactoryFn>;
+export type TSetOnContainer<T = {}, U = {}> = {
+  setOnContainer?: TSetProps<TFromGraphStateFn<T, U>>;
 };
-
-export type TSetOnContainer<T = {}, U = {}> = TPropsFactory<'setOnContainer', TFromGraphStateFn<T, U>>;
 
 type TKeyed = { key: string };
 
@@ -99,21 +97,28 @@ type TStandaloneNodesLayer<T = {}, U = {}> = TNodesLayer<T, U> & {
   layerType: TLayerType;
 };
 
-type TMarkerDef<T = {}, U = {}> = TKeyed & {
-  type: React.Component;
+export type TDefEntry<T = {}, U = {}> = {
+  renderEntry?: (
+    graphState: TExposedGraphState<T, U>,
+    entryProps: TAnyProps | null,
+    id: string
+  ) => React.ReactElement<any>;
   localId: string;
-  setOnMarker?: TSetProps<TFromGraphStateFn<T, U>>;
+  setOnEntry?: TSetProps<TFromGraphStateFn<T, U>>;
 };
 
-type TEdgesLayer<T = {}, U = {}> = TKeyed &
+export type TEdgesLayer<T = {}, U = {}> = TKeyed &
   TSetOnContainer<T, U> & {
     edges: true;
-    setOnEdge?: TSetProps<(edges: TLayoutEdge<U>, utils: TRendererUtils) => TAnyProps | null>;
+    markerEndId?: string;
+    markerMidId?: string;
+    markerStartId?: string;
+    setOnEdge?: TSetProps<(edge: TLayoutEdge<U>, utils: TRendererUtils) => TAnyProps | null>;
   };
 
-type TStandaloneEdgesLayer<T = {}, U = {}> = TEdgesLayer<T, U> & {
-  layerType: TLayerType;
-  defs?: TMarkerDef<T, U>[];
+export type TStandaloneEdgesLayer<T = {}, U = {}> = TEdgesLayer<T, U> & {
+  defs?: [TDefEntry<T, U>, ...TDefEntry<T, U>[]];
+  layerType: 'svg';
 };
 
 export type THtmlLayersGroup<T = {}, U = {}> = TKeyed &
@@ -125,7 +130,7 @@ export type THtmlLayersGroup<T = {}, U = {}> = TKeyed &
 type TSvgLayersGroup<T = {}, U = {}> = TKeyed &
   TSetOnContainer<T, U> & {
     layerType: Extract<TLayerType, 'svg'>;
-    defs?: TMarkerDef<T, U>[];
+    defs?: TDefEntry<T, U>[];
     layers: TOneOfTwo<TNodesLayer<T, U>, TEdgesLayer<T, U>>[];
   };
 

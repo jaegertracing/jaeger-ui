@@ -22,7 +22,6 @@ import {
   TExposedGraphState,
   TFromGraphStateFn,
   TLayer,
-  TPropsFactory,
   TRendererUtils,
   ELayerType,
 } from './types';
@@ -32,21 +31,23 @@ import MiniMap from '../DirectedGraph/MiniMap';
 import LayoutManager from '../LayoutManager';
 import ZoomManager, { zoomIdentity, ZoomTransform } from '../ZoomManager';
 import { TCancelled, TEdge, TLayoutDone, TSizeVertex, TVertex } from '../types';
+import EdgesLayer from './EdgesLayer';
 
 type TLayeredDigraphState<T = {}, U = {}> = Omit<TExposedGraphState<T, U>, 'renderUtils'> & {
   sizeVertices: TSizeVertex<T>[] | null;
 };
 
-type TLayeredDigraphProps<T = {}, U = {}> = TPropsFactory<'setOnGraph', TFromGraphStateFn<T, U>> & {
+type TLayeredDigraphProps<T = {}, U = {}> = {
   className?: string;
   classNamePrefix?: string;
   edges: TEdge<U>[];
   // require atleast one layer
-  layers: [TLayer, ...TLayer[]];
+  layers: [TLayer<T, U>, ...TLayer<T, U>[]];
   layoutManager: LayoutManager;
   measurableNodesKey: string;
   minimap?: boolean;
   minimapClassName?: string;
+  setOnGraph?: TFromGraphStateFn<T, U>;
   style?: React.CSSProperties;
   vertices: TVertex<T>[];
   zoom?: boolean;
@@ -111,8 +112,6 @@ export default class LayeredDigraph<T = {}, U = {}> extends React.PureComponent<
     }
     if (zoomEnabled) {
       this.zoomManager = new ZoomManager(this.onZoomUpdated);
-    } else {
-      this.zoomManager = null;
     }
     this.renderUtils = {
       getLocalId: this.getLocalId,
@@ -139,20 +138,23 @@ export default class LayeredDigraph<T = {}, U = {}> extends React.PureComponent<
     }
     this.setState({ sizeVertices });
     const { layout } = layoutManager.getLayout(edges, sizeVertices);
-    // const { positions, layout } = layoutManager.getLayout(edges, sizeVertices);
-    // positions.then(this._onPositionsDone);
     layout.then(this.onLayoutDone);
     this.setState({ sizeVertices, layoutPhase: ELayoutPhase.CalcPositions });
+    // We can add support for drawing nodes in the correct position before we have edges
+    // via the following (instead of the above)
+    // const { positions, layout } = layoutManager.getLayout(edges, sizeVertices);
+    // positions.then(this._onPositionsDone);
   };
 
   private renderLayers() {
     const { classNamePrefix, layers: topLayers } = this.props;
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { sizeVertices, ...partialGraphState } = this.state;
+    const { sizeVertices: _, ...partialGraphState } = this.state;
     const graphState = {
       ...partialGraphState,
       renderUtils: this.renderUtils,
     };
+    const { layoutPhase } = graphState;
     return topLayers.map(layer => {
       const { layerType, key, layers, setOnContainer } = layer;
       if (layers) {
@@ -171,10 +173,24 @@ export default class LayeredDigraph<T = {}, U = {}> extends React.PureComponent<
         // svg group layer
         throw new Error('Not implemented');
       }
-      const { edges } = layer;
-      if (edges) {
+      if (layer.edges) {
         // edges standalone layer
-        throw new Error('Not implemented');
+        const { defs, markerEndId, markerMidId, markerStartId, setOnEdge } = layer;
+        return layoutPhase === ELayoutPhase.Done ? (
+          <EdgesLayer
+            key={key}
+            standalone
+            classNamePrefix={classNamePrefix}
+            defs={defs}
+            layerType={layer.layerType}
+            graphState={graphState}
+            markerEndId={markerEndId}
+            markerMidId={markerMidId}
+            markerStartId={markerStartId}
+            setOnContainer={setOnContainer}
+            setOnEdge={setOnEdge}
+          />
+        ) : null;
       }
       if (layer.measurable) {
         // standalone measurable Nodes Layer

@@ -44,3 +44,38 @@ export function getProps<TFactoryFn extends TPropFactoryFn>(
   const propsList = specs.map(spec => (typeof spec === 'function' ? spec(...args) || {} : spec));
   return assignMergeCss(...propsList);
 }
+
+export const getValueScaler = (() => {
+  // define via an IIFE to sequester non-public stuff
+  type TScalerParams = {
+    expAdjuster: number;
+    factorMax: number;
+    factorMin: number;
+    valueMax: number;
+    valueMin: number;
+  };
+  const DEFAULT_PARAMS: TScalerParams = {
+    expAdjuster: 0.5,
+    factorMax: 1,
+    factorMin: 0,
+    valueMax: 1,
+    valueMin: 0.3,
+  };
+
+  // eslint-disable-next-line no-shadow
+  function getValueScaler(config: Partial<TScalerParams> = {}) {
+    const { expAdjuster, factorMax, factorMin, valueMax, valueMin } = { ...DEFAULT_PARAMS, ...config };
+    return function scaleValue(factor: number) {
+      if (factor >= factorMax) {
+        return valueMax;
+      }
+      if (factor <= factorMin) {
+        return valueMin;
+      }
+      return (
+        valueMin + ((factor - factorMin) / (factorMax - factorMin)) ** expAdjuster * (valueMax - valueMin)
+      );
+    };
+  }
+  return getValueScaler;
+})();

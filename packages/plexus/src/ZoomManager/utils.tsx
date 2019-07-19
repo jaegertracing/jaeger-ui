@@ -72,14 +72,15 @@ export function constrainZoom(
 }
 
 export function getZoomStyle(transform: ZoomTransform | void) {
-  if (!transform) {
+  if (transform == null) {
     return null;
   }
   const { x, y, k } = transform;
-  return {
+  const rv: React.CSSProperties = {
     transform: `translate(${x}px, ${y}px) scale(${k})`,
     transformOrigin: '0 0',
   };
+  return rv;
 }
 
 export function getZoomAttr(transform: ZoomTransform | void) {

@@ -21,7 +21,10 @@ import { edges as dagEdges, vertices as dagVertices } from './data-dag';
 import { colored as colorData, getColorNodeLabel, setOnColorEdge, setOnColorNode } from './data-small';
 import { DirectedGraph, LayoutManager } from '../../src';
 import LayeredDigraph from '../../src/LayeredDigraph';
-import { classNameIsSmall as layeredClassNameIsSmall } from '../../src/LayeredDigraph/props-factories';
+import {
+  classNameIsSmall as layeredClassNameIsSmall,
+  scaleProperty,
+} from '../../src/LayeredDigraph/props-factories';
 import { TVertex } from '../../src/types';
 
 import './index.css';
@@ -69,13 +72,14 @@ function Demo() {
         </div>
       </div>
       <h1>LayeredDigraph with standalone layers</h1>
+      <h3>TODO: Indicate the relevance of standalone layers vs groups</h3>
       <div>
         <div className="DemoGraph">
           <LayeredDigraph
             zoom
             minimap
             className="DemoGraph--dag"
-            layoutManager={new LayoutManager({ useDotEdges: true })}
+            layoutManager={new LayoutManager({ useDotEdges: false })}
             minimapClassName="Demo--miniMap"
             setOnGraph={layeredClassNameIsSmall}
             measurableNodesKey="nodes"
@@ -86,6 +90,16 @@ function Demo() {
                 layerType: 'html',
                 measurable: true,
                 nodeRender: getLargeNodeLabel,
+              },
+              {
+                key: 'edges-visible-path',
+                defs: [{ localId: 'arrowHead' }],
+                edges: true,
+                layerType: 'svg',
+                markerEndId: 'arrowHead',
+                setOnContainer: [{ className: 'DdgGraph--edges' }, scaleProperty.strokeOpacity],
+                // TODO: demo this
+                // setOnEdge: this.setOnEdge,
               },
             ]}
             {...largeDag}
