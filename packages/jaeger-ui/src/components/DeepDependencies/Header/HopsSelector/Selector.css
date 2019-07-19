@@ -20,13 +20,12 @@ limitations under the License.
   padding: 0px 3px;
 }
 
-.HopsSelector--Selector.decrement,
-.HopsSelector--Selector.increment {
+.HopsSelector--Selector--decrement,
+.HopsSelector--Selector--increment {
   background-color: #f4f4f4;
   border: none;
   cursor: pointer;
   height: 27px;
-  margin-top: ;
   padding: 0em 0.3em 0.3em;
   width: 27px;
 }
