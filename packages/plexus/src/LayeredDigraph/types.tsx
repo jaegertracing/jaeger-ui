@@ -17,6 +17,7 @@ import * as React from 'react';
 import { TEdge, TLayoutEdge, TLayoutGraph, TLayoutVertex, TVertex } from '../types';
 import { TOneOfFour, TOneOfTwo } from '../types/TOneOf';
 import { ZoomTransform } from '../ZoomManager';
+import TNonEmptyArray from '../types/TNonEmptyArray';
 
 export enum ELayoutPhase {
   NoData = 'NoData',
@@ -58,7 +59,7 @@ export type TPropFactoryFn = (...args: any[]) => TAnyProps | null;
 export type TSetProps<TFactoryFn extends TPropFactoryFn> =
   | TAnyProps
   | TFactoryFn
-  | (TAnyProps | TFactoryFn)[];
+  | TNonEmptyArray<TAnyProps | TFactoryFn>;
 
 export type TFromGraphStateFn<T = {}, U = {}> = (input: TExposedGraphState<T, U>) => TAnyProps | null;
 
@@ -117,21 +118,22 @@ export type TEdgesLayer<T = {}, U = {}> = TKeyed &
   };
 
 export type TStandaloneEdgesLayer<T = {}, U = {}> = TEdgesLayer<T, U> & {
-  defs?: [TDefEntry<T, U>, ...TDefEntry<T, U>[]];
-  layerType: 'svg';
+  defs?: TNonEmptyArray<TDefEntry<T, U>>;
+  layerType: Extract<TLayerType, 'svg'>;
 };
 
 export type THtmlLayersGroup<T = {}, U = {}> = TKeyed &
   TSetOnContainer<T, U> & {
     layerType: Extract<TLayerType, 'html'>;
-    layers: TOneOfTwo<TNodesLayer<T, U>, TEdgesLayer<T, U>>[];
+    // TODO(joe): only support node layers in HTML
+    layers: TNonEmptyArray<TOneOfTwo<TNodesLayer<T, U>, TEdgesLayer<T, U>>>;
   };
 
 type TSvgLayersGroup<T = {}, U = {}> = TKeyed &
   TSetOnContainer<T, U> & {
     layerType: Extract<TLayerType, 'svg'>;
-    defs?: TDefEntry<T, U>[];
-    layers: TOneOfTwo<TNodesLayer<T, U>, TEdgesLayer<T, U>>[];
+    defs?: TNonEmptyArray<TDefEntry<T, U>>;
+    layers: TNonEmptyArray<TOneOfTwo<TNodesLayer<T, U>, TEdgesLayer<T, U>>>;
   };
 
 export type TLayer<T = {}, U = {}> = TOneOfFour<

@@ -17,12 +17,13 @@ import * as React from 'react';
 import SvgDefEntry from './SvgDefEntry';
 import SvgEdge from './SvgEdge';
 import { TExposedGraphState, ELayerType, TStandaloneEdgesLayer, TDefEntry } from './types';
+import TNonEmptyArray from '../types/TNonEmptyArray';
 import { assignMergeCss, getProps } from './utils';
 import ZoomManager from '../ZoomManager';
 
 type TProps<T = {}, U = {}> = Omit<TStandaloneEdgesLayer<T, U>, 'edges' | 'key'> & {
   classNamePrefix?: string;
-  defs?: TDefEntry<T, U>[];
+  defs?: TNonEmptyArray<TDefEntry<T, U>>;
   graphState: TExposedGraphState<T, U>;
   markerEndId?: string;
   markerMidId?: string;

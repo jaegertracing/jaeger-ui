@@ -32,6 +32,7 @@ import LayoutManager from '../LayoutManager';
 import ZoomManager, { zoomIdentity, ZoomTransform } from '../ZoomManager';
 import { TCancelled, TEdge, TLayoutDone, TSizeVertex, TVertex } from '../types';
 import EdgesLayer from './EdgesLayer';
+import TNonEmptyArray from '../types/TNonEmptyArray';
 
 type TLayeredDigraphState<T = {}, U = {}> = Omit<TExposedGraphState<T, U>, 'renderUtils'> & {
   sizeVertices: TSizeVertex<T>[] | null;
@@ -41,8 +42,7 @@ type TLayeredDigraphProps<T = {}, U = {}> = {
   className?: string;
   classNamePrefix?: string;
   edges: TEdge<U>[];
-  // require atleast one layer
-  layers: [TLayer<T, U>, ...TLayer<T, U>[]];
+  layers: TNonEmptyArray<TLayer<T, U>>;
   layoutManager: LayoutManager;
   measurableNodesKey: string;
   minimap?: boolean;

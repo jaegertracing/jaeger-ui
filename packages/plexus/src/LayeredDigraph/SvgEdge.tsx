@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Uber Technologies, Inc.
+// Copyright (c) 2019 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import * as React from 'react';
+
 import { TRendererUtils, TSetProps, TAnyProps } from './types';
 import { TLayoutEdge } from '../types';
 import { getProps } from './utils';
