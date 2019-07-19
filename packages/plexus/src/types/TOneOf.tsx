@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export type TOneOf<A, B, C = {}, D = {}, E = {}> =
+type TOneOf<A, B, C = {}, D = {}, E = {}> =
   | { [P in Exclude<keyof (B & C & D & E), keyof A>]?: null } & A
   | { [P in Exclude<keyof (A & C & D & E), keyof B>]?: null } & B
   | { [P in Exclude<keyof (A & B & D & E), keyof C>]?: null } & C

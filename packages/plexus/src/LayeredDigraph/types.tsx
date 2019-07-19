@@ -26,6 +26,28 @@ export enum ELayoutPhase {
   Done = 'Done',
 }
 
+export type TLayerType = 'html' | 'svg';
+export enum ELayerType {
+  Html = 'html',
+  Svg = 'svg',
+}
+
+export type TRendererUtils = {
+  getLocalId: (name: string) => string;
+  getZoomTransform: () => ZoomTransform;
+};
+
+export type TExposedGraphState<T = {}, U = {}> = {
+  edges: TEdge<U>[];
+  layoutEdges: TLayoutEdge<U>[] | null;
+  layoutGraph: TLayoutGraph | null;
+  layoutPhase: ELayoutPhase;
+  layoutVertices: TLayoutVertex<T>[] | null;
+  renderUtils: TRendererUtils;
+  vertices: TVertex<T>[];
+  zoomTransform: ZoomTransform;
+};
+
 export type TAnyProps = Record<string, unknown> & {
   className?: string;
   style?: React.CSSProperties;
@@ -38,37 +60,15 @@ export type TSetProps<TFactoryFn extends TPropFactoryFn> =
   | TFactoryFn
   | (TAnyProps | TFactoryFn)[];
 
-// TODO(joe): consider getting rid of this type
-// type TAesthetics = {
-//   className?: string;
-//   style?: React.CSSProperties;
-// };
-
-export type TRendererUtils = {
-  getLocalId: (name: string) => string;
-  getZoomTransform: () => ZoomTransform;
-};
-
-export type TExposedGraphState<T = {}, U = {}> = {
-  edges: TEdge<U>[];
-  zoomTransform: ZoomTransform;
-  layoutEdges: TLayoutEdge<U>[] | null;
-  layoutGraph: TLayoutGraph | null;
-  layoutPhase: ELayoutPhase;
-  layoutVertices: TLayoutVertex<T>[] | null;
-  renderUtils: TRendererUtils;
-  vertices: TVertex<T>[];
-};
-
 export type TFromGraphStateFn<T = {}, U = {}> = (input: TExposedGraphState<T, U>) => TAnyProps | null;
 
-export type TSetOnContainer<T = {}, U = {}> = {
-  setOnContainer?: TSetProps<TFromGraphStateFn<T, U>>;
+export type TPropsFactory<PropNames extends string, FactoryFn extends TPropFactoryFn> = {
+  [K in PropNames]?: TSetProps<FactoryFn>;
 };
 
-type TKeyed = { key: string };
+export type TSetOnContainer<T = {}, U = {}> = TPropsFactory<'setOnContainer', TFromGraphStateFn<T, U>>;
 
-export type TElemType = TOneOfTwo<{ html: true }, { svg: true }>;
+type TKeyed = { key: string };
 
 export type TNodeRenderFn<T = {}> = (vertex: TVertex<T>, utils: TRendererUtils) => React.ReactNode;
 
@@ -95,7 +95,9 @@ type TNodesLayer<T = {}, U = {}> = TKeyed &
   TOneOfTwo<TNodeRenderer<T>, TMeasurableNodeRenderer<T>> &
   TSetOnContainer<T, U>;
 
-type TStandaloneNodesLayer<T = {}, U = {}> = TNodesLayer<T, U> & TElemType;
+type TStandaloneNodesLayer<T = {}, U = {}> = TNodesLayer<T, U> & {
+  layerType: TLayerType;
+};
 
 type TMarkerDef<T = {}, U = {}> = TKeyed & {
   type: React.Component;
@@ -109,22 +111,22 @@ type TEdgesLayer<T = {}, U = {}> = TKeyed &
     setOnEdge?: TSetProps<(edges: TLayoutEdge<U>, utils: TRendererUtils) => TAnyProps | null>;
   };
 
-type TStandaloneEdgesLayer<T = {}, U = {}> = TEdgesLayer<T, U> &
-  TElemType & {
-    defs?: TMarkerDef<T, U>[];
-  };
+type TStandaloneEdgesLayer<T = {}, U = {}> = TEdgesLayer<T, U> & {
+  layerType: TLayerType;
+  defs?: TMarkerDef<T, U>[];
+};
 
-type THtmlLayersGroup<T = {}, U = {}> = TKeyed &
+export type THtmlLayersGroup<T = {}, U = {}> = TKeyed &
   TSetOnContainer<T, U> & {
-    html: true;
-    layers: (TNodesLayer<T, U> | TEdgesLayer<T, U>)[];
+    layerType: Extract<TLayerType, 'html'>;
+    layers: TOneOfTwo<TNodesLayer<T, U>, TEdgesLayer<T, U>>[];
   };
 
 type TSvgLayersGroup<T = {}, U = {}> = TKeyed &
   TSetOnContainer<T, U> & {
-    svg: true;
+    layerType: Extract<TLayerType, 'svg'>;
     defs?: TMarkerDef<T, U>[];
-    layers: (TNodesLayer<T, U> | TEdgesLayer<T, U>)[];
+    layers: TOneOfTwo<TNodesLayer<T, U>, TEdgesLayer<T, U>>[];
   };
 
 export type TLayer<T = {}, U = {}> = TOneOfFour<
@@ -134,8 +136,8 @@ export type TLayer<T = {}, U = {}> = TOneOfFour<
   TStandaloneEdgesLayer<T, U>
 >;
 
-export type TMeasurableNodeProps<T = {}> = Pick<TMeasurableNodeRenderer<T>, 'nodeRender' | 'setOnNode'> & {
-  classNamePrefix: string;
+export type TMeasurableNodeProps<T = {}> = Omit<TMeasurableNodeRenderer<T>, 'measurable'> & {
+  classNamePrefix?: string;
   hidden?: boolean;
   layoutVertex: TLayoutVertex<T> | null;
   renderUtils: TRendererUtils;

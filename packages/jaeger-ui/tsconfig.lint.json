@@ -36,6 +36,7 @@
     "src/selectors/process.js",
     "src/selectors/span.js",
     "src/selectors/trace.js",
-    "src/utils/sort.js"
+    "src/utils/sort.js",
+    "src/utils/TreeNode.js"
   ]
 }
