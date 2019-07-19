@@ -23,7 +23,6 @@ type TProps<U = {}> = {
   classNamePrefix?: string;
   layoutEdge: TLayoutEdge<U>;
   markerEndId?: string;
-  markerMidId?: string;
   markerStartId?: string;
   renderUtils: TRendererUtils;
   setOnEdge?: TSetProps<(edge: TLayoutEdge<U>, utils: TRendererUtils) => TAnyProps | null>;
@@ -37,19 +36,10 @@ function makeIriRef(renderUtils: TRendererUtils, localId: string | undefined) {
 
 export default class SvgEdge<U = {}> extends React.PureComponent<TProps<U>> {
   render() {
-    const {
-      classNamePrefix,
-      layoutEdge,
-      markerEndId,
-      markerMidId,
-      markerStartId,
-      renderUtils,
-      setOnEdge,
-    } = this.props;
+    const { classNamePrefix, layoutEdge, markerEndId, markerStartId, renderUtils, setOnEdge } = this.props;
     const { pathPoints } = layoutEdge;
     const d = pathPoints.map((pt, i) => `${PATH_D_CMDS[i] || ''}${pt.join(',')}`).join(' ');
     const markerEnd = makeIriRef(renderUtils, markerEndId);
-    const markerMid = makeIriRef(renderUtils, markerMidId);
     const markerStart = makeIriRef(renderUtils, markerStartId);
     const customProps = assignMergeCss(getProps(setOnEdge, layoutEdge, renderUtils), {
       className: `${classNamePrefix} ${classNamePrefix}-LayeredDigraph--SvgEdge`,
@@ -58,10 +48,8 @@ export default class SvgEdge<U = {}> extends React.PureComponent<TProps<U>> {
       <path
         d={d}
         fill="none"
-        stroke="#000"
         vectorEffect="non-scaling-stroke"
         markerEnd={markerEnd}
-        markerMid={markerMid}
         markerStart={markerStart}
         {...customProps}
       />

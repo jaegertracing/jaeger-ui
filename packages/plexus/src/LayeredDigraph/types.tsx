@@ -112,7 +112,6 @@ export type TEdgesLayer<T = {}, U = {}> = TKeyed &
   TSetOnContainer<T, U> & {
     edges: true;
     markerEndId?: string;
-    markerMidId?: string;
     markerStartId?: string;
     setOnEdge?: TSetProps<(edge: TLayoutEdge<U>, utils: TRendererUtils) => TAnyProps | null>;
   };
@@ -129,7 +128,7 @@ export type THtmlLayersGroup<T = {}, U = {}> = TKeyed &
     layers: TNonEmptyArray<TOneOfTwo<TNodesLayer<T, U>, TEdgesLayer<T, U>>>;
   };
 
-type TSvgLayersGroup<T = {}, U = {}> = TKeyed &
+export type TSvgLayersGroup<T = {}, U = {}> = TKeyed &
   TSetOnContainer<T, U> & {
     layerType: Extract<TLayerType, 'svg'>;
     defs?: TNonEmptyArray<TDefEntry<T, U>>;

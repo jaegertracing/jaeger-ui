@@ -33,6 +33,7 @@ import LayoutManager from '../LayoutManager';
 import { TCancelled, TEdge, TLayoutDone, TSizeVertex, TVertex } from '../types';
 import TNonEmptyArray from '../types/TNonEmptyArray';
 import ZoomManager, { zoomIdentity, ZoomTransform } from '../ZoomManager';
+import SvgLayersGroup from './SvgLayersGroup';
 
 type TLayeredDigraphState<T = {}, U = {}> = Omit<TExposedGraphState<T, U>, 'renderUtils'> & {
   sizeVertices: TSizeVertex<T>[] | null;
@@ -171,21 +172,29 @@ export default class LayeredDigraph<T = {}, U = {}> extends React.PureComponent<
           );
         }
         // svg group layer
-        throw new Error('Not implemented');
+        const { defs } = layer;
+        return (
+          <SvgLayersGroup<T, U>
+            key={key}
+            classNamePrefix={classNamePrefix}
+            defs={defs}
+            graphState={graphState}
+            layers={layers}
+            setOnContainer={setOnContainer}
+          />
+        );
       }
       if (layer.edges) {
         // edges standalone layer
-        const { defs, markerEndId, markerMidId, markerStartId, setOnEdge } = layer;
+        const { defs, markerEndId, markerStartId, setOnEdge } = layer;
         return layoutPhase === ELayoutPhase.Done ? (
           <SvgEdgesLayer
             key={key}
             standalone
             classNamePrefix={classNamePrefix}
             defs={defs}
-            layerType={layer.layerType}
             graphState={graphState}
             markerEndId={markerEndId}
-            markerMidId={markerMidId}
             markerStartId={markerStartId}
             setOnContainer={setOnContainer}
             setOnEdge={setOnEdge}

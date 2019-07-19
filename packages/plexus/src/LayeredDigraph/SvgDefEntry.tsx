@@ -36,7 +36,7 @@ const getMarkerScale = getValueScaler({
   valueMin: 7,
 });
 
-function renderDefaultArrow(
+function renderDefaultMarker(
   graphState: TExposedGraphState<any, any>,
   entryProps: TAnyProps | null,
   id: string
@@ -53,14 +53,20 @@ function renderDefaultArrow(
       refY={scale * 3}
       {...entryProps}
     >
-      <path d={`M0,0 L0,${scale * 6} L${scale * 9},${scale * 3} z`} fill="#000" />
+      <path d={`M0,0 L0,${scale * 6} L${scale * 9},${scale * 3} z`} />
     </marker>
   );
 }
 
 export default class SvgDefEntry<T = {}, U = {}> extends React.PureComponent<TProps<T, U>> {
   render() {
-    const { classNamePrefix, localId, graphState, renderEntry = renderDefaultArrow, setOnEntry } = this.props;
+    const {
+      classNamePrefix,
+      localId,
+      graphState,
+      renderEntry = renderDefaultMarker,
+      setOnEntry,
+    } = this.props;
     const id = graphState.renderUtils.getLocalId(localId);
     const entryProps = assignMergeCss(getProps(setOnEntry, graphState), {
       className: `${classNamePrefix} ${classNamePrefix}-LayeredDigraph--DefEntry`,

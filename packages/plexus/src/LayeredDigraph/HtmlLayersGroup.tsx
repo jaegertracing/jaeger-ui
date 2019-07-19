@@ -35,14 +35,14 @@ export default class HtmlLayersGroup<T = {}, U = {}> extends React.PureComponent
         return (
           <MeasurableNodesLayer<T, U>
             key={key}
+            classNamePrefix={classNamePrefix}
+            graphState={graphState}
             layerType={ELayerType.Html}
             nodeRender={nodeRender}
-            setOnNode={setOnNode}
-            graphState={graphState}
             senderKey={key}
-            setSizeVertices={setSizeVertices}
-            classNamePrefix={classNamePrefix}
             setOnContainer={setOnContainer}
+            setOnNode={setOnNode}
+            setSizeVertices={setSizeVertices}
           />
         );
       }
