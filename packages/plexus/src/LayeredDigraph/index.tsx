@@ -17,6 +17,7 @@ import * as React from 'react';
 import HtmlLayersGroup from './HtmlLayersGroup';
 import MeasurableNodesLayer from './MeasurableNodesLayer';
 import { classNameIsSmall, scaledStrokeWidth } from './props-factories';
+import SvgEdgesLayer from './SvgEdgesLayer';
 import {
   ELayoutPhase,
   TExposedGraphState,
@@ -29,10 +30,9 @@ import { assignMergeCss, getProps } from './utils';
 // TODO(joe): don't use stuff in ../DirectedGraph
 import MiniMap from '../DirectedGraph/MiniMap';
 import LayoutManager from '../LayoutManager';
-import ZoomManager, { zoomIdentity, ZoomTransform } from '../ZoomManager';
 import { TCancelled, TEdge, TLayoutDone, TSizeVertex, TVertex } from '../types';
-import EdgesLayer from './EdgesLayer';
 import TNonEmptyArray from '../types/TNonEmptyArray';
+import ZoomManager, { zoomIdentity, ZoomTransform } from '../ZoomManager';
 
 type TLayeredDigraphState<T = {}, U = {}> = Omit<TExposedGraphState<T, U>, 'renderUtils'> & {
   sizeVertices: TSizeVertex<T>[] | null;
@@ -177,7 +177,7 @@ export default class LayeredDigraph<T = {}, U = {}> extends React.PureComponent<
         // edges standalone layer
         const { defs, markerEndId, markerMidId, markerStartId, setOnEdge } = layer;
         return layoutPhase === ELayoutPhase.Done ? (
-          <EdgesLayer
+          <SvgEdgesLayer
             key={key}
             standalone
             classNamePrefix={classNamePrefix}
