@@ -36,7 +36,7 @@ type ProcessedLinkPattern = {
 };
 
 function getParamNames(str: string) {
-  const names = new Set();
+  const names = new Set<string>();
   str.replace(parameterRegExp, (match, name) => {
     names.add(name);
     return match;

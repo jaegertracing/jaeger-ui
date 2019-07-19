@@ -42,6 +42,7 @@ html {
   box-shadow: 0 0 7px 1px rgba(0, 0, 0, 0.4);
   cursor: pointer;
   padding: 0.8em 1.25em;
+  white-space: nowrap;
 }
 
 .DemoGraph--node:hover {
