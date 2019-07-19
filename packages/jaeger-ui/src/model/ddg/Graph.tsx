@@ -117,8 +117,8 @@ export default class Graph {
 
     return members
       .slice(Math.min(focalIdx, memberIdx), Math.max(focalIdx, memberIdx) + 1)
-      .map(({ operation }) => `${operation.service.name}\t${operation.name}`)
-      .join('\n');
+      .map(({ operation }) => `${operation.service.name}----${operation.name}`)
+      .join('____');
   };
 
   public getVisible = (visEncoding?: string): { edges: TEdge[]; vertices: TDdgVertex[] } => {

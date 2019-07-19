@@ -16,6 +16,7 @@ import React from 'react';
 import { shallow } from 'enzyme';
 
 import Header from './index';
+import HopsSelector from './HopsSelector';
 import NameSelector from './NameSelector';
 
 describe('<ListItem>', () => {
@@ -43,6 +44,15 @@ describe('<ListItem>', () => {
     nameSelector = wrapper.find(NameSelector);
     expect(nameSelector.length).toBe(2);
     expect(nameSelector.at(1).prop('label')).toMatch(/operation/i);
+    expect(wrapper).toMatchSnapshot();
+  });
+
+  it('renders the hops selector if distanceToPathElems is provided', () => {
+    wrapper.setProps({
+      distanceToPathElems: new Map(),
+      visEncoding: '3',
+    });
+    expect(wrapper.find(HopsSelector).length).toBe(1);
     expect(wrapper).toMatchSnapshot();
   });
 });
