@@ -63,7 +63,7 @@ describe('Graph', () => {
 
   describe('getVertexKey', () => {
     const testFocalElem = simpleModel.paths[0].members[2];
-    const expectedKeyEntry = pathElem => `${pathElem.operation.service.name}\t${pathElem.operation.name}`;
+    const expectedKeyEntry = pathElem => `${pathElem.operation.service.name}----${pathElem.operation.name}`;
     const expectedFocalElemKey = expectedKeyEntry(testFocalElem);
     // Because getVertexKey is completely context-unaware until late-alpha, an empty ddg is sufficient to test
     // this method.
@@ -77,7 +77,7 @@ describe('Graph', () => {
       const targetElem = simpleModel.paths[0].members[0];
       const interimElem = simpleModel.paths[0].members[1];
       expect(emptyGraph.getVertexKey(targetElem)).toBe(
-        [expectedKeyEntry(targetElem), expectedKeyEntry(interimElem), expectedFocalElemKey].join('\n')
+        [expectedKeyEntry(targetElem), expectedKeyEntry(interimElem), expectedFocalElemKey].join('____')
       );
     });
 
@@ -85,7 +85,7 @@ describe('Graph', () => {
       const targetElem = simpleModel.paths[0].members[4];
       const interimElem = simpleModel.paths[0].members[3];
       expect(emptyGraph.getVertexKey(targetElem)).toBe(
-        [expectedFocalElemKey, expectedKeyEntry(interimElem), expectedKeyEntry(targetElem)].join('\n')
+        [expectedFocalElemKey, expectedKeyEntry(interimElem), expectedKeyEntry(targetElem)].join('____')
       );
     });
   });

@@ -16,6 +16,8 @@
 
 import memoize from 'lru-memoize';
 
+import { EDirection, TDdgModel } from './types';
+
 // This bucket size was chosen as JavaScript uses 32-bit numbers for bitwise operators, so the maximum number
 // of indices that can be tracked in a single number is 32. Increasing from 31 visibility values per base36
 // number to 32 visibility values would require an additional base36 character, which reduces the efficiency.
@@ -32,7 +34,9 @@ export const decode: (encoded: string) => number[] = memoize(10)((encoded: strin
   const rv: number[] = [];
   encoded.split(',').forEach((partial, i) => {
     const partialAsNumber = partial ? parseInt(partial, 36) : 0;
-    for (let j = 0; partialAsNumber >= 1 << j; j += 1) {
+    // Because JavaScript bitwise operators wrap when exceeding 32 bits, the second check is necessary to
+    // prevent an infinite loop if (partialAsNuber & i << 31) is truthy.
+    for (let j = 0; partialAsNumber >= 1 << j && j < VISIBILITY_BUCKET_SIZE; j += 1) {
       if ((1 << j) & partialAsNumber) {
         rv.push(i * VISIBILITY_BUCKET_SIZE + j);
       }
@@ -72,4 +76,55 @@ export const encode = (decoded: number[]): string => {
     partial[csvIdx] |= visibilityValue;
   });
   return partial.map(p => p.toString(36)).join();
+};
+
+/**
+ * Creates a string csv of base36 such that all indices between 0 and the distance, inclusive, are visible,
+ * and all other indices in that direction are hidden. Indices in the opposite direction are unchanged.
+ *
+ * @param {Object} kwarg - Object containing arguments to encodeDistance.
+ * @param {TDdgModel} kwarg.ddgModel - Model used to determine which indices exist at difference distances.
+ * @param {EDirection} kwarg.direction - Direction of affected indices.
+ * @param {number} kwarg.distance - Range of indices to include.
+ * @param {string} [kwarg.prevVisEncoding] - Previous visibility encoding. Encoded indices opposite of
+ *     affected direction will persist in new encoding. If absent, two hops is the default to preserve.
+ * @returns {string} - New base36 csv visibility encoding.
+ */
+export const encodeDistance = ({
+  ddgModel,
+  direction,
+  distance,
+  prevVisEncoding,
+}: {
+  ddgModel: TDdgModel;
+  direction: EDirection;
+  distance: number;
+  prevVisEncoding?: string;
+}): string => {
+  if (Math.sign(distance) === -1 * Math.sign(direction)) {
+    throw new Error(`Distance (${distance}) and direction (${direction}) cannot have opposite signs`);
+  }
+
+  const { distanceToPathElems, visIdxToPathElem } = ddgModel;
+
+  let nextVisible: number[];
+  if (prevVisEncoding) {
+    nextVisible = decode(prevVisEncoding).filter(
+      idx => visIdxToPathElem[idx] && Math.sign(visIdxToPathElem[idx].distance) !== direction
+    );
+  } else {
+    nextVisible = [
+      ...(distanceToPathElems.get(-1 * direction) || []),
+      ...(distanceToPathElems.get(-2 * direction) || []),
+    ].map(({ visibilityIdx }) => visibilityIdx);
+  }
+
+  for (let i = 0; i !== distance + direction; i += direction) {
+    const elems = distanceToPathElems.get(i);
+    if (elems) {
+      nextVisible.push(...elems.map(({ visibilityIdx }) => visibilityIdx));
+    }
+  }
+
+  return encode(nextVisible);
 };
