@@ -29,10 +29,6 @@ html {
 
 .DemoGraph--dag {
   background: #f0f0f0;
-  stroke-width: 1.7;
-}
-
-.DemoGraph--dag.is-small {
   stroke-width: 0.85;
 }
 

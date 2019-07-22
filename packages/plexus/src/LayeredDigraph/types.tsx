@@ -17,6 +17,7 @@ import * as React from 'react';
 import { TEdge, TLayoutEdge, TLayoutGraph, TLayoutVertex, TVertex } from '../types';
 import { TOneOfFour, TOneOfTwo } from '../types/TOneOf';
 import { ZoomTransform } from '../ZoomManager';
+import TNonEmptyArray from '../types/TNonEmptyArray';
 
 export enum ELayoutPhase {
   NoData = 'NoData',
@@ -58,15 +59,13 @@ export type TPropFactoryFn = (...args: any[]) => TAnyProps | null;
 export type TSetProps<TFactoryFn extends TPropFactoryFn> =
   | TAnyProps
   | TFactoryFn
-  | (TAnyProps | TFactoryFn)[];
+  | TNonEmptyArray<TAnyProps | TFactoryFn>;
 
 export type TFromGraphStateFn<T = {}, U = {}> = (input: TExposedGraphState<T, U>) => TAnyProps | null;
 
-export type TPropsFactory<PropNames extends string, FactoryFn extends TPropFactoryFn> = {
-  [K in PropNames]?: TSetProps<FactoryFn>;
+export type TSetOnContainer<T = {}, U = {}> = {
+  setOnContainer?: TSetProps<TFromGraphStateFn<T, U>>;
 };
-
-export type TSetOnContainer<T = {}, U = {}> = TPropsFactory<'setOnContainer', TFromGraphStateFn<T, U>>;
 
 type TKeyed = { key: string };
 
@@ -99,34 +98,41 @@ type TStandaloneNodesLayer<T = {}, U = {}> = TNodesLayer<T, U> & {
   layerType: TLayerType;
 };
 
-type TMarkerDef<T = {}, U = {}> = TKeyed & {
-  type: React.Component;
+export type TDefEntry<T = {}, U = {}> = {
+  renderEntry?: (
+    graphState: TExposedGraphState<T, U>,
+    entryProps: TAnyProps | null,
+    id: string
+  ) => React.ReactElement<any>;
   localId: string;
-  setOnMarker?: TSetProps<TFromGraphStateFn<T, U>>;
+  setOnEntry?: TSetProps<TFromGraphStateFn<T, U>>;
 };
 
-type TEdgesLayer<T = {}, U = {}> = TKeyed &
+export type TEdgesLayer<T = {}, U = {}> = TKeyed &
   TSetOnContainer<T, U> & {
     edges: true;
-    setOnEdge?: TSetProps<(edges: TLayoutEdge<U>, utils: TRendererUtils) => TAnyProps | null>;
+    markerEndId?: string;
+    markerStartId?: string;
+    setOnEdge?: TSetProps<(edge: TLayoutEdge<U>, utils: TRendererUtils) => TAnyProps | null>;
   };
 
-type TStandaloneEdgesLayer<T = {}, U = {}> = TEdgesLayer<T, U> & {
-  layerType: TLayerType;
-  defs?: TMarkerDef<T, U>[];
+export type TStandaloneEdgesLayer<T = {}, U = {}> = TEdgesLayer<T, U> & {
+  defs?: TNonEmptyArray<TDefEntry<T, U>>;
+  layerType: Extract<TLayerType, 'svg'>;
 };
 
 export type THtmlLayersGroup<T = {}, U = {}> = TKeyed &
   TSetOnContainer<T, U> & {
     layerType: Extract<TLayerType, 'html'>;
-    layers: TOneOfTwo<TNodesLayer<T, U>, TEdgesLayer<T, U>>[];
+    // TODO(joe): only support node layers in HTML
+    layers: TNonEmptyArray<TOneOfTwo<TNodesLayer<T, U>, TEdgesLayer<T, U>>>;
   };
 
-type TSvgLayersGroup<T = {}, U = {}> = TKeyed &
+export type TSvgLayersGroup<T = {}, U = {}> = TKeyed &
   TSetOnContainer<T, U> & {
     layerType: Extract<TLayerType, 'svg'>;
-    defs?: TMarkerDef<T, U>[];
-    layers: TOneOfTwo<TNodesLayer<T, U>, TEdgesLayer<T, U>>[];
+    defs?: TNonEmptyArray<TDefEntry<T, U>>;
+    layers: TNonEmptyArray<TOneOfTwo<TNodesLayer<T, U>, TEdgesLayer<T, U>>>;
   };
 
 export type TLayer<T = {}, U = {}> = TOneOfFour<

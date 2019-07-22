@@ -31,7 +31,7 @@ export function matches(path: string) {
   return Boolean(matchPath(path, ROUTE_MATCHER));
 }
 
-export function getUrl(query?: { [key: string]: unknown } | null | undefined) {
+export function getUrl(query?: Record<string, unknown> | null | undefined) {
   const search = query ? `?${queryString.stringify(query)}` : '';
   return prefixUrl(`/search${search}`);
 }
