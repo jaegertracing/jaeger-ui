@@ -14,12 +14,19 @@
 
 import * as React from 'react';
 
+import HopsSelector from './HopsSelector';
 import NameSelector from './NameSelector';
 import tempOptions from './tmp-data';
 
+import { EDirection, TDdgDistanceToPathElems } from '../../../model/ddg/types';
+
 import './index.css';
 
-type TProps = {};
+type TProps = {
+  distanceToPathElems?: TDdgDistanceToPathElems;
+  setDistance: (distance: number, direction: EDirection) => void;
+  visEncoding?: string;
+};
 
 type TTempState = {
   service: string | null;
@@ -48,7 +55,9 @@ export default class Header extends React.PureComponent<TProps, TTempState> {
   };
 
   render() {
+    const { distanceToPathElems, setDistance, visEncoding } = this.props;
     const { service, operation } = this.state;
+
     return (
       <header className="DdgHeader">
         <div className="DdgHeader--paramsHeader">
@@ -68,6 +77,15 @@ export default class Header extends React.PureComponent<TProps, TTempState> {
               setValue={this.setOperation}
               required
               options={TMP_OPTIIONS}
+            />
+          )}
+        </div>
+        <div className="DdgHeader--controlHeader">
+          {distanceToPathElems && (
+            <HopsSelector
+              distanceToPathElems={distanceToPathElems}
+              handleClick={setDistance}
+              visEncoding={visEncoding}
             />
           )}
         </div>

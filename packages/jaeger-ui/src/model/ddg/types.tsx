@@ -122,3 +122,16 @@ export type TDdgViewModifierRemovalPayload =
   | TDdgClearViewModifiersFromIndicesPayload
   | TDdgRemoveViewModifierFromIndicesPayload
   | TDdgRemoveViewModifierPayload;
+
+export enum ECheckedStatus {
+  Empty = 'Empty',
+  Full = 'Full',
+  Partial = 'Partial',
+}
+
+export enum EDirection {
+  Upstream = -1,
+  Downstream = 1,
+}
+
+export type THop = { distance: number; fullness: ECheckedStatus };

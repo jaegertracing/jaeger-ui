@@ -25,6 +25,13 @@ limitations under the License.
   z-index: 10;
 }
 
+.DdgHeader--controlHeader {
+  align-items: center;
+  background-color: #fafafa;
+  display: flex;
+  height: 40px; /* Arbitrary height until find is implemented */
+}
+
 .DdgHeader--paramsHeader {
   flex-wrap: wrap;
   font-size: unset;
