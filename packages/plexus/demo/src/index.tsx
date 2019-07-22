@@ -25,11 +25,19 @@ import {
   classNameIsSmall as layeredClassNameIsSmall,
   scaleProperty,
 } from '../../src/LayeredDigraph/props-factories';
-import { TVertex, TLayoutEdge } from '../../src/types';
+import { TVertex, TLayoutEdge, TLayoutVertex } from '../../src/types';
 
 import './index.css';
+import TNonEmptyArray from '../../src/types/TNonEmptyArray';
+import { TLayer } from '../../src/LayeredDigraph/types';
+
+type TState = {
+  hoveredEdge: TLayoutEdge<any> | null;
+};
 
 const { classNameIsSmall } = DirectedGraph.propsFactories;
+
+const VOWELS = new Set(['a', 'e', 'i', 'o', 'u', 'y']);
 
 const addAnAttr = () => ({ 'data-rando': Math.random() });
 const setOnNode = (vertex: TVertex) => ({
@@ -38,9 +46,89 @@ const setOnNode = (vertex: TVertex) => ({
   onClick: () => console.log(vertex.key),
 });
 
-type TState = {
-  hoveredEdge: TLayoutEdge<any> | null;
-};
+function renderComparisons(
+  a: { nodesKey: string; layers: TNonEmptyArray<TLayer> },
+  b: { nodesKey: string; layers: TNonEmptyArray<TLayer> },
+  hoveredEdge: TLayoutEdge<any> | null = null
+) {
+  return (
+    <>
+      <div className="demo-row">
+        <div>
+          <div className="DemoGraph is-small">
+            <LayeredDigraph
+              zoom
+              minimap
+              className="DemoGraph--dag"
+              layoutManager={new LayoutManager({ useDotEdges: true })}
+              minimapClassName="Demo--miniMap"
+              setOnGraph={layeredClassNameIsSmall}
+              measurableNodesKey={a.nodesKey}
+              layers={a.layers}
+              {...largeDag}
+            />
+          </div>
+        </div>
+        <div>
+          <div className="DemoGraph is-small">
+            <LayeredDigraph
+              zoom
+              minimap
+              className="DemoGraph--dag"
+              layoutManager={new LayoutManager({ useDotEdges: true })}
+              minimapClassName="Demo--miniMap"
+              setOnGraph={layeredClassNameIsSmall}
+              measurableNodesKey={b.nodesKey}
+              layers={b.layers}
+              {...largeDag}
+            />
+          </div>
+        </div>
+      </div>
+      <div className="demo-row">
+        <div>
+          <p>
+            hovered edge:{' '}
+            {hoveredEdge && (
+              <span>
+                <strong>{hoveredEdge.edge.from}</strong> → <strong>{hoveredEdge.edge.to}</strong>
+              </span>
+            )}
+          </p>
+          <div className="DemoGraph">
+            <LayeredDigraph
+              zoom
+              minimap
+              className="DemoGraph--dag"
+              layoutManager={new LayoutManager({ useDotEdges: true })}
+              minimapClassName="Demo--miniMap"
+              setOnGraph={layeredClassNameIsSmall}
+              measurableNodesKey={a.nodesKey}
+              layers={a.layers}
+              {...largeDag}
+            />
+          </div>
+        </div>
+        <div>
+          <p>&nbsp;</p>
+          <div className="DemoGraph">
+            <LayeredDigraph
+              zoom
+              minimap
+              className="DemoGraph--dag"
+              layoutManager={new LayoutManager({ useDotEdges: true })}
+              minimapClassName="Demo--miniMap"
+              setOnGraph={layeredClassNameIsSmall}
+              measurableNodesKey={b.nodesKey}
+              layers={b.layers}
+              {...largeDag}
+            />
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
 
 class Demo extends React.PureComponent<{}, TState> {
   state: TState = {
@@ -74,100 +162,135 @@ class Demo extends React.PureComponent<{}, TState> {
     return (
       <div>
         <h1>LayeredDigraph</h1>
-        <div>
-          <p>
-            hovered edge:{' '}
-            {hoveredEdge && (
-              <span>
-                <strong>{hoveredEdge.edge.from}</strong> → <strong>{hoveredEdge.edge.to}</strong>
-              </span>
-            )}
-          </p>
-          <div className="DemoGraph">
-            <LayeredDigraph
-              zoom
-              minimap
-              className="DemoGraph--dag"
-              layoutManager={new LayoutManager({ useDotEdges: true })}
-              minimapClassName="Demo--miniMap"
-              setOnGraph={layeredClassNameIsSmall}
-              measurableNodesKey="nodes"
-              layers={[
-                {
-                  key: 'nodes-layers',
-                  layerType: 'html',
-                  layers: [
-                    {
-                      setOnNode,
-                      key: 'nodes',
-                      measurable: true,
-                      nodeRender: getLargeNodeLabel,
-                    },
-                  ],
-                },
-                {
-                  key: 'edges-layers',
-                  layerType: 'svg',
-                  defs: [{ localId: 'arrow-head' }],
-                  layers: [
-                    {
-                      key: 'edges',
-                      markerEndId: 'arrow-head',
-                      edges: true,
-                      setOnContainer: scaleProperty.strokeOpacity,
-                    },
-                    {
-                      key: 'edges-pointer-area',
-                      edges: true,
-                      setOnContainer: { style: { cursor: 'default', opacity: 0, strokeWidth: 4 } },
-                      // eslint-disable-next-line no-console
-                      setOnEdge: (...args) => ({
-                        onMouseOver: () => this.onEdgeEnter(args[0]),
-                        onMouseOut: () => this.onEdgeExit(args[0]),
-                      }),
-                    },
-                  ],
-                },
-              ]}
-              {...largeDag}
-            />
-          </div>
-        </div>
-        <h1>LayeredDigraph with standalone layers</h1>
-        <h3>TODO: Indicate the relevance of standalone layers vs groups</h3>
-        <div>
-          <div className="DemoGraph">
-            <LayeredDigraph
-              zoom
-              minimap
-              className="DemoGraph--dag"
-              layoutManager={new LayoutManager({ useDotEdges: false })}
-              minimapClassName="Demo--miniMap"
-              setOnGraph={layeredClassNameIsSmall}
-              measurableNodesKey="nodes"
-              layers={[
-                {
-                  setOnNode,
-                  key: 'nodes',
-                  layerType: 'html',
-                  measurable: true,
-                  nodeRender: getLargeNodeLabel,
-                },
-                {
-                  key: 'edges-visible-path',
-                  defs: [{ localId: 'arrowHead' }],
-                  edges: true,
-                  layerType: 'svg',
-                  markerEndId: 'arrowHead',
-                  setOnContainer: [{ className: 'DdgGraph--edges' }, scaleProperty.strokeOpacity],
-                  // TODO: demo this
-                  // setOnEdge: this.setOnEdge,
-                },
-              ]}
-              {...largeDag}
-            />
-          </div>
-        </div>
+        {renderComparisons(
+          {
+            nodesKey: 'main-nodes',
+            layers: [
+              {
+                key: 'nodes-layers',
+                layerType: 'html',
+                layers: [
+                  {
+                    key: 'emph-nodes',
+                    nodeRender: (lv: TLayoutVertex<any>) =>
+                      VOWELS.has(lv.vertex.key[0]) ? <div className="DemoGraph--node--emphasized" /> : null,
+                  },
+                  {
+                    setOnNode,
+                    key: 'main-nodes',
+                    measurable: true,
+                    nodeRender: getLargeNodeLabel,
+                  },
+                ],
+              },
+              {
+                key: 'edges-layers',
+                layerType: 'svg',
+                defs: [{ localId: 'arrow-head' }],
+                layers: [
+                  {
+                    key: 'edges',
+                    markerEndId: 'arrow-head',
+                    edges: true,
+                    setOnContainer: scaleProperty.strokeOpacity,
+                  },
+                  {
+                    key: 'edges-pointer-area',
+                    edges: true,
+                    setOnContainer: { style: { cursor: 'default', opacity: 0, strokeWidth: 4 } },
+                    setOnEdge: (...args) => ({
+                      onMouseOver: () => this.onEdgeEnter(args[0]),
+                      onMouseOut: () => this.onEdgeExit(args[0]),
+                    }),
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            nodesKey: 'nodes',
+            layers: [
+              {
+                key: 'emph-nodes-border',
+                layerType: 'svg',
+                nodeRender: (lv: TLayoutVertex<any>) =>
+                  !VOWELS.has(lv.vertex.key[0]) ? null : (
+                    <g>
+                      <rect
+                        className="DemoGraph--node--vectorEmphasized-border"
+                        vectorEffect="non-scaling-stroke"
+                        width={lv.width}
+                        height={lv.height}
+                      />
+                    </g>
+                  ),
+              },
+              {
+                key: 'emph-nodes-html',
+                layerType: 'html',
+                nodeRender: (lv: TLayoutVertex<any>) =>
+                  VOWELS.has(lv.vertex.key[0]) ? <div className="DemoGraph--node--emphasized" /> : null,
+              },
+              {
+                key: 'node-effects-svg-layer',
+                layerType: 'svg',
+                layers: [
+                  {
+                    key: 'emph-nodes',
+                    nodeRender: (lv: TLayoutVertex<any>) =>
+                      !VOWELS.has(lv.vertex.key[0]) ? null : (
+                        <g>
+                          <rect
+                            className="DemoGraph--node--vectorEmphasized"
+                            vectorEffect="non-scaling-stroke"
+                            width={lv.width}
+                            height={lv.height}
+                          />
+                        </g>
+                      ),
+                  },
+                  {
+                    key: 'border-nodes',
+                    nodeRender: (lv: TLayoutVertex<any>) => (
+                      <rect
+                        className="DemoGraph--node--vectorBorder"
+                        vectorEffect="non-scaling-stroke"
+                        width={lv.width}
+                        height={lv.height}
+                      />
+                    ),
+                  },
+                ],
+              },
+              {
+                setOnNode: [setOnNode, { className: 'is-vector-bordered' }],
+                key: 'nodes',
+                layerType: 'html',
+                measurable: true,
+                nodeRender: getLargeNodeLabel,
+              },
+              {
+                key: 'edges-visible-path',
+                defs: [{ localId: 'arrowHead' }],
+                edges: true,
+                layerType: 'svg',
+                markerEndId: 'arrowHead',
+                setOnContainer: [{ className: 'DdgGraph--edges' }, scaleProperty.strokeOpacity],
+              },
+              {
+                key: 'edges-pointer-area',
+                edges: true,
+                layerType: 'svg',
+                setOnContainer: { style: { cursor: 'default', opacity: 0, strokeWidth: 4 } },
+                setOnEdge: (...args) => ({
+                  onMouseOver: () => this.onEdgeEnter(args[0]),
+                  onMouseOut: () => this.onEdgeExit(args[0]),
+                }),
+              },
+            ],
+          },
+          hoveredEdge
+        )}
         <h1>Directed graph with cycles - dot edges</h1>
         <div>
           <div className="DemoGraph">

@@ -69,7 +69,7 @@ export type TSetOnContainer<T = {}, U = {}> = {
 
 type TKeyed = { key: string };
 
-export type TNodeRenderFn<T = {}> = (vertex: TVertex<T>, utils: TRendererUtils) => React.ReactNode;
+export type TNodeRenderFn<T = {}> = (vertex: TLayoutVertex<T>, utils: TRendererUtils) => React.ReactNode;
 
 export type TMeasurableNodeRenderFn<T = {}> = (
   vertex: TVertex<T>,
@@ -85,7 +85,7 @@ export type TMeasurableNodeRenderer<T = {}> = {
   >;
 };
 
-type TNodeRenderer<T = {}> = {
+export type TNodeRenderer<T = {}> = {
   nodeRender: TNodeRenderFn<T>;
   setOnNode?: TSetProps<(layoutVertex: TLayoutVertex<T>, utils: TRendererUtils) => TAnyProps | null>;
 };
@@ -94,16 +94,20 @@ type TNodesLayer<T = {}, U = {}> = TKeyed &
   TOneOfTwo<TNodeRenderer<T>, TMeasurableNodeRenderer<T>> &
   TSetOnContainer<T, U>;
 
-type TStandaloneNodesLayer<T = {}, U = {}> = TNodesLayer<T, U> & {
-  layerType: TLayerType;
-};
+type TStandaloneNodesLayer<T = {}, U = {}> = TNodesLayer<T, U> &
+  (
+    | { layerType: Extract<TLayerType, 'html'> }
+    | {
+        layerType: Extract<TLayerType, 'svg'>;
+        defs?: TNonEmptyArray<TDefEntry<T, U>>;
+      });
 
 export type TDefEntry<T = {}, U = {}> = {
   renderEntry?: (
     graphState: TExposedGraphState<T, U>,
     entryProps: TAnyProps | null,
     id: string
-  ) => React.ReactElement<any>;
+  ) => React.ReactElement;
   localId: string;
   setOnEntry?: TSetProps<TFromGraphStateFn<T, U>>;
 };
@@ -143,8 +147,8 @@ export type TLayer<T = {}, U = {}> = TOneOfFour<
 >;
 
 export type TMeasurableNodeProps<T = {}> = Omit<TMeasurableNodeRenderer<T>, 'measurable'> & {
-  classNamePrefix?: string;
-  hidden?: boolean;
+  getClassName: (name: string) => string;
+  hidden: boolean;
   layoutVertex: TLayoutVertex<T> | null;
   renderUtils: TRendererUtils;
   vertex: TVertex<T>;

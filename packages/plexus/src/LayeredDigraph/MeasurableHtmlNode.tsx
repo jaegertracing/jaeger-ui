@@ -18,10 +18,6 @@ import { TMeasurableNodeProps } from './types';
 import { assignMergeCss, getProps } from './utils';
 
 export default class MeasurableHtmlNode<T = {}> extends React.PureComponent<TMeasurableNodeProps<T>> {
-  static defaultProps = {
-    hidden: false,
-  };
-
   wrapperRef: React.RefObject<HTMLDivElement> = React.createRef();
 
   measure() {
@@ -36,10 +32,10 @@ export default class MeasurableHtmlNode<T = {}> extends React.PureComponent<TMea
   }
 
   render() {
-    const { classNamePrefix, hidden, nodeRender, renderUtils, setOnNode, vertex, layoutVertex } = this.props;
+    const { getClassName, hidden, nodeRender, renderUtils, setOnNode, vertex, layoutVertex } = this.props;
     const { left = null, top = null } = layoutVertex || {};
     const props = assignMergeCss(getProps(setOnNode, vertex, renderUtils, layoutVertex), {
-      className: `${classNamePrefix}-Node`,
+      className: getClassName('MeasurableHtmlNode'),
       style: {
         position: 'absolute',
         transform: left == null || top == null ? undefined : `translate(${left}px,${top}px)`,
