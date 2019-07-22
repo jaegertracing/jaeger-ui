@@ -26,4 +26,14 @@ module.exports = function setupProxy(app) {
       xfwd: true,
     })
   );
+  app.use(
+    proxy('/analytics', {
+      target: 'http://localhost:16686',
+      logLevel: 'silent',
+      secure: false,
+      changeOrigin: true,
+      ws: true,
+      xfwd: true,
+    })
+  );
 };
