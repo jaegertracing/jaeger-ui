@@ -33,12 +33,16 @@ export default class MeasurableHtmlNode<T = {}> extends React.PureComponent<TMea
 
   render() {
     const { getClassName, hidden, nodeRender, renderUtils, setOnNode, vertex, layoutVertex } = this.props;
-    const { left = null, top = null } = layoutVertex || {};
+    const { height = null, left = null, top = null, width = null } = layoutVertex || {};
     const props = assignMergeCss(getProps(setOnNode, vertex, renderUtils, layoutVertex), {
       className: getClassName('MeasurableHtmlNode'),
       style: {
+        height,
+        width,
+        boxSizing: 'border-box',
         position: 'absolute',
-        transform: left == null || top == null ? undefined : `translate(${left}px,${top}px)`,
+        transform:
+          left == null || top == null ? undefined : `translate(${left.toFixed()}px,${top.toFixed()}px)`,
         visibility: hidden ? 'hidden' : undefined,
       },
     });

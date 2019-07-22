@@ -198,9 +198,9 @@ class Demo extends React.PureComponent<{}, TState> {
                     key: 'edges-pointer-area',
                     edges: true,
                     setOnContainer: { style: { cursor: 'default', opacity: 0, strokeWidth: 4 } },
-                    setOnEdge: (...args) => ({
-                      onMouseOver: () => this.onEdgeEnter(args[0]),
-                      onMouseOut: () => this.onEdgeExit(args[0]),
+                    setOnEdge: layoutEdge => ({
+                      onMouseOver: () => this.onEdgeEnter(layoutEdge),
+                      onMouseOut: () => this.onEdgeExit(layoutEdge),
                     }),
                   },
                 ],
@@ -282,9 +282,9 @@ class Demo extends React.PureComponent<{}, TState> {
                 edges: true,
                 layerType: 'svg',
                 setOnContainer: { style: { cursor: 'default', opacity: 0, strokeWidth: 4 } },
-                setOnEdge: (...args) => ({
-                  onMouseOver: () => this.onEdgeEnter(args[0]),
-                  onMouseOut: () => this.onEdgeExit(args[0]),
+                setOnEdge: layoutEdge => ({
+                  onMouseOver: () => this.onEdgeEnter(layoutEdge),
+                  onMouseOut: () => this.onEdgeExit(layoutEdge),
                 }),
               },
             ],

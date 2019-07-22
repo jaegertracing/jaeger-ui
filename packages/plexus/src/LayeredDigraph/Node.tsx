@@ -31,7 +31,7 @@ function getHtmlStyle(lv: TLayoutVertex<any>) {
     height,
     width,
     position: 'absolute',
-    transform: left == null || top == null ? undefined : `translate(${left}px,${top}px)`,
+    transform: left == null || top == null ? undefined : `translate(${left.toFixed()}px,${top.toFixed()}px)`,
   };
 }
 
@@ -42,7 +42,7 @@ export default class Node<T = {}> extends React.PureComponent<TProps<T>> {
     const props = assignMergeCss(getProps(setOnNode, layoutVertex, renderUtils), {
       className: getClassName('Node'),
       style: layerType === ELayerType.Html ? getHtmlStyle(layoutVertex) : null,
-      transform: layerType === ELayerType.Svg ? `translate(${left},${top})` : null,
+      transform: layerType === ELayerType.Svg ? `translate(${left.toFixed()},${top.toFixed()})` : null,
     });
     const Wrapper = layerType === ELayerType.Html ? 'div' : 'g';
     return <Wrapper {...props}>{nodeRender(layoutVertex, renderUtils)}</Wrapper>;

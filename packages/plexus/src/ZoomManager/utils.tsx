@@ -82,7 +82,7 @@ export function getZoomStyle(transform: ZoomTransform | void) {
   }
   const { x, y, k } = transform;
   const rv: React.CSSProperties = {
-    transform: `translate(${x}px, ${y}px) scale(${k})`,
+    transform: `translate(${x.toFixed()}px, ${y.toFixed()}px) scale(${k})`,
     transformOrigin: '0 0',
   };
   return rv;
@@ -93,5 +93,5 @@ export function getZoomAttr(transform: ZoomTransform | void) {
     return undefined;
   }
   const { x, y, k } = transform;
-  return `translate(${x},${y}) scale(${k})`;
+  return `translate(${x.toFixed()},${y.toFixed()}) scale(${k})`;
 }

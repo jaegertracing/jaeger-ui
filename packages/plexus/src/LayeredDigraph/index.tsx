@@ -161,7 +161,7 @@ export default class LayeredDigraph<T = {}, U = {}> extends React.PureComponent<
     return topLayers.map(layer => {
       const { layerType, key, setOnContainer } = layer;
       if (layer.layers) {
-        if (layerType === ELayerType.Html) {
+        if (layer.layerType === ELayerType.Html) {
           return (
             <HtmlLayersGroup<T, U>
               key={key}
@@ -173,18 +173,19 @@ export default class LayeredDigraph<T = {}, U = {}> extends React.PureComponent<
             />
           );
         }
-        // svg group layer
-        const { defs } = layer;
-        return (
-          <SvgLayersGroup<T, U>
-            key={key}
-            getClassName={getClassName}
-            defs={defs}
-            graphState={graphState}
-            layers={layer.layers}
-            setOnContainer={setOnContainer}
-          />
-        );
+        // svg group layer, the if is for TypeScript
+        if (layer.layerType === ELayerType.Svg) {
+          return (
+            <SvgLayersGroup<T, U>
+              key={key}
+              getClassName={getClassName}
+              defs={layer.defs}
+              graphState={graphState}
+              layers={layer.layers}
+              setOnContainer={setOnContainer}
+            />
+          );
+        }
       }
       if (layer.edges) {
         // edges standalone layer
@@ -221,19 +222,21 @@ export default class LayeredDigraph<T = {}, U = {}> extends React.PureComponent<
           />
         );
       }
-      const { nodeRender, setOnNode } = layer;
-      return (
-        <NodesLayer<T, U>
-          key={key}
-          standalone
-          getClassName={getClassName}
-          graphState={graphState}
-          layerType={layer.layerType}
-          nodeRender={nodeRender}
-          setOnContainer={setOnContainer}
-          setOnNode={setOnNode}
-        />
-      );
+      if (layer.nodeRender) {
+        return (
+          <NodesLayer<T, U>
+            key={key}
+            standalone
+            getClassName={getClassName}
+            graphState={graphState}
+            layerType={layer.layerType}
+            nodeRender={layer.nodeRender}
+            setOnContainer={setOnContainer}
+            setOnNode={layer.setOnNode}
+          />
+        );
+      }
+      throw new Error('Unrecognized layer');
     });
   }
 

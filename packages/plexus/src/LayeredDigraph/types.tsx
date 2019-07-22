@@ -128,8 +128,7 @@ export type TStandaloneEdgesLayer<T = {}, U = {}> = TEdgesLayer<T, U> & {
 export type THtmlLayersGroup<T = {}, U = {}> = TKeyed &
   TSetOnContainer<T, U> & {
     layerType: Extract<TLayerType, 'html'>;
-    // TODO(joe): only support node layers in HTML
-    layers: TNonEmptyArray<TOneOfTwo<TNodesLayer<T, U>, TEdgesLayer<T, U>>>;
+    layers: TNonEmptyArray<TNodesLayer<T, U>>;
   };
 
 export type TSvgLayersGroup<T = {}, U = {}> = TKeyed &
