@@ -168,7 +168,7 @@ function childrenToggle(state: TTraceTimeline, { spanID }: TSpanIdValue): TTrace
 }
 
 export function expandAll(state: TTraceTimeline): TTraceTimeline {
-  const childrenHiddenIDs = new Set();
+  const childrenHiddenIDs = new Set<string>();
   return { ...state, childrenHiddenIDs };
 }
 
@@ -181,7 +181,7 @@ export function collapseAll(state: TTraceTimeline, { spans }: TSpansValue) {
       res.add(s.spanID);
     }
     return res;
-  }, new Set());
+  }, new Set<string>());
   return { ...state, childrenHiddenIDs };
 }
 

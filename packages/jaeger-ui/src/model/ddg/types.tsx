@@ -25,7 +25,9 @@ export type TDdgPayloadEntry = {
   service: string;
 };
 
-export type TDdgPayload = TDdgPayloadEntry[][];
+export type TDdgPayload = {
+  path: TDdgPayloadEntry[];
+}[];
 
 export type TDdgService = {
   name: string;
@@ -122,3 +124,16 @@ export type TDdgViewModifierRemovalPayload =
   | TDdgClearViewModifiersFromIndicesPayload
   | TDdgRemoveViewModifierFromIndicesPayload
   | TDdgRemoveViewModifierPayload;
+
+export enum ECheckedStatus {
+  Empty = 'Empty',
+  Full = 'Full',
+  Partial = 'Partial',
+}
+
+export enum EDirection {
+  Upstream = -1,
+  Downstream = 1,
+}
+
+export type THop = { distance: number; fullness: ECheckedStatus };

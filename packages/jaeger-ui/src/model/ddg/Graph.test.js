@@ -12,15 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { convergentPaths, focalPayloadElem, simplePath } from './sample-paths.test.resources';
+import { convergentPaths, focalPayloadElem, simplePath, wrap } from './sample-paths.test.resources';
 import transformDdgData from './transformDdgData';
 
 import Graph from './Graph';
 import { encode } from './visibility-codec';
 
 describe('Graph', () => {
-  const convergentModel = transformDdgData(convergentPaths, focalPayloadElem);
-  const simpleModel = transformDdgData([simplePath], focalPayloadElem);
+  const convergentModel = transformDdgData(convergentPaths.map(wrap), focalPayloadElem);
+  const simpleModel = transformDdgData([simplePath].map(wrap), focalPayloadElem);
 
   /**
    * This function takes in a Graph and validates the structure based on the expected vertices.
@@ -63,7 +63,7 @@ describe('Graph', () => {
 
   describe('getVertexKey', () => {
     const testFocalElem = simpleModel.paths[0].members[2];
-    const expectedKeyEntry = pathElem => `${pathElem.operation.service.name}\t${pathElem.operation.name}`;
+    const expectedKeyEntry = pathElem => `${pathElem.operation.service.name}----${pathElem.operation.name}`;
     const expectedFocalElemKey = expectedKeyEntry(testFocalElem);
     // Because getVertexKey is completely context-unaware until late-alpha, an empty ddg is sufficient to test
     // this method.
@@ -77,7 +77,7 @@ describe('Graph', () => {
       const targetElem = simpleModel.paths[0].members[0];
       const interimElem = simpleModel.paths[0].members[1];
       expect(emptyGraph.getVertexKey(targetElem)).toBe(
-        [expectedKeyEntry(targetElem), expectedKeyEntry(interimElem), expectedFocalElemKey].join('\n')
+        [expectedKeyEntry(targetElem), expectedKeyEntry(interimElem), expectedFocalElemKey].join('____')
       );
     });
 
@@ -85,7 +85,7 @@ describe('Graph', () => {
       const targetElem = simpleModel.paths[0].members[4];
       const interimElem = simpleModel.paths[0].members[3];
       expect(emptyGraph.getVertexKey(targetElem)).toBe(
-        [expectedFocalElemKey, expectedKeyEntry(interimElem), expectedKeyEntry(targetElem)].join('\n')
+        [expectedFocalElemKey, expectedKeyEntry(interimElem), expectedKeyEntry(targetElem)].join('____')
       );
     });
   });

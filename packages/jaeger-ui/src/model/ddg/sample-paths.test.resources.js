@@ -48,6 +48,7 @@ const midPayloadElem = simplePayloadElemMaker('mid');
 const afterPayloadElem = simplePayloadElemMaker('after');
 const lastPayloadElem = simplePayloadElemMaker('last');
 
+export const shortPath = [beforePayloadElem, focalPayloadElem];
 export const simplePath = [
   firstPayloadElem,
   beforePayloadElem,
@@ -87,3 +88,5 @@ export const convergentPaths = [
   [firstPayloadElem, focalPayloadElem, midPayloadElem, afterPayloadElem, lastPayloadElem],
   [firstPayloadElem, focalPayloadElem, divergentPayloadElem, afterPayloadElem, lastPayloadElem],
 ];
+
+export const wrap = path => ({ path });

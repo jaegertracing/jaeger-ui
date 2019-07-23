@@ -12,28 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// eslint-disable-next-line import/no-extraneous-dependencies
-const proxy = require('http-proxy-middleware');
+type TNonEmptyArray<T> = [T, ...T[]];
 
-module.exports = function setupProxy(app) {
-  app.use(
-    proxy('/api', {
-      target: 'http://localhost:16686',
-      logLevel: 'silent',
-      secure: false,
-      changeOrigin: true,
-      ws: true,
-      xfwd: true,
-    })
-  );
-  app.use(
-    proxy('/analytics', {
-      target: 'http://localhost:16686',
-      logLevel: 'silent',
-      secure: false,
-      changeOrigin: true,
-      ws: true,
-      xfwd: true,
-    })
-  );
-};
+// eslint-disable-next-line no-undef
+export default TNonEmptyArray;

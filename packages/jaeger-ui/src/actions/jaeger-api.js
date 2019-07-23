@@ -15,8 +15,6 @@
 import { createAction } from 'redux-actions';
 import JaegerAPI from '../api/jaeger';
 
-import * as paths from '../model/ddg/sample-paths.test.resources';
-
 export const fetchTrace = createAction(
   '@JAEGER_API/FETCH_TRACE',
   id => JaegerAPI.fetchTrace(id),
@@ -49,23 +47,9 @@ export const fetchServiceOperations = createAction(
   serviceName => ({ serviceName })
 );
 
-function tempTestFetch() {
-  let resolve;
-  const promise = new Promise(res => {
-    resolve = res;
-  });
-  setTimeout(() => {
-    /* istanbul ignore next */
-    resolve([paths.simplePath, paths.almostDoubleFocalPath]);
-  }, 1000);
-  return promise;
-}
-
 export const fetchDeepDependencyGraph = createAction(
   '@JAEGER_API/FETCH_DEEP_DEPENDENCY_GRAPH',
-  // Temporary mock used until backend is available, TODO revert & re-enable test
-  // query => JaegerAPI.fetchDeepDependencyGraph(query),
-  tempTestFetch,
+  query => JaegerAPI.fetchDeepDependencyGraph(query),
   query => ({ query })
 );
 

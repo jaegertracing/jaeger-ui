@@ -33,7 +33,7 @@ export default function transformDdgData(
   const pathCompareValues: Map<TDdgPayloadEntry[], string> = new Map();
 
   const paths = payload
-    .slice()
+    .map(({ path }) => path)
     .sort((a, b) => {
       let aCompareValue = pathCompareValues.get(a);
       if (!aCompareValue) {
