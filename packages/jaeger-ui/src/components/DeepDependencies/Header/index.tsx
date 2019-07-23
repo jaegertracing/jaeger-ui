@@ -13,50 +13,65 @@
 // limitations under the License.
 
 import * as React from 'react';
+import { connect } from 'react-redux';
+import { bindActionCreators, Dispatch } from 'redux';
 
 import HopsSelector from './HopsSelector';
 import NameSelector from './NameSelector';
-import tempOptions from './tmp-data';
-
+import * as jaegerApiActions from '../../../actions/jaeger-api';
 import { EDirection, TDdgDistanceToPathElems } from '../../../model/ddg/types';
+import { ReduxState } from '../../../types/index';
 
 import './index.css';
 
-type TProps = {
-  distanceToPathElems?: TDdgDistanceToPathElems;
-  setDistance: (distance: number, direction: EDirection) => void;
-  visEncoding?: string;
+type TDispatchProps = {
+  fetchServices: () => void;
+  fetchServiceOperations: (service: string) => void;
 };
 
-type TTempState = {
-  service: string | null;
-  operation: string | null;
+type TReduxProps = {
+  operationsForService: Record<string, string[]>;
+  services?: string[] | null;
 };
 
-// istanbul ignore next
-const TMP_OPTIIONS = tempOptions.map(s => (s.match(/^(\S+\s+){1,12}|^\S+$/) || ['MISSING'])[0]);
-
-export default class Header extends React.PureComponent<TProps, TTempState> {
-  state = {
-    service: null,
-    operation: null,
+type TProps = TDispatchProps &
+  TReduxProps & {
+    distanceToPathElems?: TDdgDistanceToPathElems;
+    operation?: string;
+    service?: string;
+    setDistance: (distance: number, direction: EDirection) => void;
+    setOperation: (operation: string) => void;
+    setService: (service: string) => void;
+    visEncoding?: string;
   };
+
+export class HeaderImpl extends React.PureComponent<TProps> {
+  constructor(props: TProps) {
+    super(props);
+    if (!props.services) {
+      props.fetchServices();
+    }
+    if (props.service) {
+      props.fetchServiceOperations(props.service);
+    }
+  }
 
   setService = (service: string) => {
-    // istanbul ignore next
-    if (service !== this.state.service) {
-      this.setState({ service, operation: null });
-    }
-  };
-
-  setOperation = (operation: string) => {
-    // istanbul ignore next
-    this.setState({ operation });
+    this.props.fetchServiceOperations(service);
+    this.props.setService(service);
   };
 
   render() {
-    const { distanceToPathElems, setDistance, visEncoding } = this.props;
-    const { service, operation } = this.state;
+    const {
+      distanceToPathElems,
+      operation,
+      operationsForService,
+      service,
+      services,
+      setOperation,
+      setDistance,
+      visEncoding,
+    } = this.props;
 
     return (
       <header className="DdgHeader">
@@ -64,19 +79,19 @@ export default class Header extends React.PureComponent<TProps, TTempState> {
           <NameSelector
             label="Service:"
             placeholder="Select a service…"
-            value={service}
+            value={service || null}
             setValue={this.setService}
             required
-            options={TMP_OPTIIONS}
+            options={services || []}
           />
           {service && (
             <NameSelector
               label="Operation:"
               placeholder="Select an operation…"
-              value={operation}
-              setValue={this.setOperation}
+              value={operation || null}
+              setValue={setOperation}
               required
-              options={TMP_OPTIIONS}
+              options={operationsForService[service] || []}
             />
           )}
         </div>
@@ -93,3 +108,25 @@ export default class Header extends React.PureComponent<TProps, TTempState> {
     );
   }
 }
+
+export function mapStateToProps(state: ReduxState): TReduxProps {
+  const { services: stServices } = state;
+  const { services, operationsForService } = stServices;
+  return {
+    services,
+    operationsForService,
+  };
+}
+
+function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
+  const { fetchServiceOperations, fetchServices } = bindActionCreators(jaegerApiActions, dispatch);
+  return {
+    fetchServiceOperations,
+    fetchServices,
+  };
+}
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(HeaderImpl);

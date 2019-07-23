@@ -133,9 +133,17 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
     }
   };
 
+  setOperation = (operation: string) => {
+    this.updateUrlState({ operation });
+  };
+
+  setService = (service: string) => {
+    this.updateUrlState({ operation: undefined, service, visEncoding: undefined });
+  };
+
   render() {
     const { graphState, urlState } = this.props;
-    const { visEncoding } = urlState;
+    const { operation, service, visEncoding } = urlState;
     const distanceToPathElems =
       graphState && graphState.state === fetchedState.DONE ? graphState.model.distanceToPathElems : undefined;
 
@@ -143,7 +151,11 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
       <div>
         <Header
           distanceToPathElems={distanceToPathElems}
+          operation={operation}
+          service={service}
           setDistance={this.setDistance}
+          setOperation={this.setOperation}
+          setService={this.setService}
           visEncoding={visEncoding}
         />
         {this.body()}
