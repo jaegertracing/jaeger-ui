@@ -25,7 +25,10 @@ describe('transform ddg data', () => {
     const focalPayloadElemArgument = ignoreFocalOperation
       ? { service: focalPayloadElem.service }
       : focalPayloadElem;
-    const { paths, services, visIdxToPathElem } = transformDdgData(payload, focalPayloadElemArgument);
+    const { paths, services, visIdxToPathElem } = transformDdgData(
+      payload.map(testResources.wrap),
+      focalPayloadElemArgument
+    );
 
     // Validate all services and operations are captured
     expect(new Set(services.keys())).toEqual(new Set(_map(_flatten(payload), 'service')));
@@ -121,11 +124,11 @@ describe('transform ddg data', () => {
       almostDoubleFocalPath,
     } = testResources;
     const { visIdxToPathElem: presortedPathsVisIdxToPathElem } = transformDdgData(
-      [simplePath, doubleFocalPath, almostDoubleFocalPath, longSimplePath],
+      [simplePath, doubleFocalPath, almostDoubleFocalPath, longSimplePath].map(testResources.wrap),
       focalPayloadElem
     );
     const { visIdxToPathElem: unsortedPathsVisIdxToPathElem } = transformDdgData(
-      [longSimplePath, almostDoubleFocalPath, simplePath, doubleFocalPath],
+      [longSimplePath, almostDoubleFocalPath, simplePath, doubleFocalPath].map(testResources.wrap),
       focalPayloadElem
     );
 
@@ -163,7 +166,7 @@ describe('transform ddg data', () => {
   it('throws an error if a path lacks the focalPayloadElem', () => {
     const { simplePath, noFocalPath, doubleFocalPath, focalPayloadElem } = testResources;
     expect(() =>
-      transformDdgData([simplePath, noFocalPath, doubleFocalPath], focalPayloadElem)
+      transformDdgData([simplePath, noFocalPath, doubleFocalPath].map(testResources.wrap), focalPayloadElem)
     ).toThrowError();
   });
 });

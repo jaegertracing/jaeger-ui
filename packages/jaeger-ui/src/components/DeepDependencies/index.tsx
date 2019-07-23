@@ -56,10 +56,11 @@ type TProps = TDispatchProps & TReduxProps & TOwnProps;
 // export for tests
 export class DeepDependencyGraphPageImpl extends Component<TProps> {
   static fetchModelIfStale(props: TProps) {
-    const { fetchDeepDependencyGraph, graphState = null } = props;
-    // TEMP
-    if (!graphState) {
-      fetchDeepDependencyGraph({ service: 'focalService', operation: 'focalOperation', start: 0, end: 0 });
+    const { fetchDeepDependencyGraph, graphState = null, urlState } = props;
+    const { service, operation } = urlState;
+    // backend temporarily requires service and operation
+    if (!graphState && service && operation) {
+      fetchDeepDependencyGraph({ service, operation, start: 0, end: 0 });
     }
   }
 
@@ -154,16 +155,13 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
 // export for tests
 export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxProps {
   const urlState = getUrlState(ownProps.location.search);
-  const graphState = _get(state, [
-    'deepDependencyGraph',
-    stateKey({ service: 'focalService', operation: 'focalOperation', start: 0, end: 0 }),
-  ]);
-  // skip using the URL until services and operations are wired up
-  // const { service, operation, start, end } = urlState;
-  // let graphState: TDdgStateEntry | undefined;
-  // if (service && start && end) {
-  //   graphState = _get(state, ['deepDependencyGraph', stateKey({ service, operation, start, end })]);
-  // }
+  const { service, operation } = urlState;
+  let graphState: TDdgStateEntry | undefined;
+  // backend temporarily requires service and operation
+  // if (service) {
+  if (service && operation) {
+    graphState = _get(state, ['deepDependencyGraph', stateKey({ service, operation, start: 0, end: 0 })]);
+  }
   return {
     graphState,
     urlState,

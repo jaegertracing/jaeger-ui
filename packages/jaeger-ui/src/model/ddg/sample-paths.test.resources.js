@@ -88,3 +88,5 @@ export const convergentPaths = [
   [firstPayloadElem, focalPayloadElem, midPayloadElem, afterPayloadElem, lastPayloadElem],
   [firstPayloadElem, focalPayloadElem, divergentPayloadElem, afterPayloadElem, lastPayloadElem],
 ];
+
+export const wrap = path => ({ path });

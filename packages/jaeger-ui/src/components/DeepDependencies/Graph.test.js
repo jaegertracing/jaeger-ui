@@ -17,12 +17,12 @@ import { shallow } from 'enzyme';
 import { DirectedGraph, LayoutManager } from '@jaegertracing/plexus';
 
 import Graph from './Graph';
-import { focalPayloadElem, simplePath } from '../../model/ddg/sample-paths.test.resources';
+import { focalPayloadElem, simplePath, wrap } from '../../model/ddg/sample-paths.test.resources';
 import transformDdgData from '../../model/ddg/transformDdgData';
 import GraphModel from '../../model/ddg/Graph';
 
 describe('<Graph />', () => {
-  const ddgModel = transformDdgData([simplePath], focalPayloadElem);
+  const ddgModel = transformDdgData([simplePath].map(wrap), focalPayloadElem);
   const props = {
     ddgModel,
     visEncoding: '3',

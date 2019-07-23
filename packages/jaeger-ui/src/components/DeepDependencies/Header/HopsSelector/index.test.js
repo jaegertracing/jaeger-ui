@@ -20,14 +20,15 @@ import {
   longSimplePath,
   shortPath,
   simplePath,
+  wrap,
 } from '../../../../model/ddg/sample-paths.test.resources';
 import transformDdgData from '../../../../model/ddg/transformDdgData';
 import * as codec from '../../../../model/ddg/visibility-codec';
 import HopsSelector from '.';
 
 describe('HopsSelector', () => {
-  const { distanceToPathElems } = transformDdgData([longSimplePath, simplePath], focalPayloadElem);
-  const { distanceToPathElems: shortPathElems } = transformDdgData([shortPath], focalPayloadElem);
+  const { distanceToPathElems } = transformDdgData([longSimplePath, simplePath].map(wrap), focalPayloadElem);
+  const { distanceToPathElems: shortPathElems } = transformDdgData([shortPath].map(wrap), focalPayloadElem);
 
   describe('without visEncoding', () => {
     it('renders hops within two hops as full and others as empty', () => {

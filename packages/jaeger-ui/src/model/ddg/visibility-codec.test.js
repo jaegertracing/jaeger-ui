@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { encode, decode, encodeDistance } from './visibility-codec';
-import { focalPayloadElem, longSimplePath, shortPath, simplePath } from './sample-paths.test.resources';
+import { focalPayloadElem, longSimplePath, shortPath, simplePath, wrap } from './sample-paths.test.resources';
 import transformDdgData from './transformDdgData';
 
 describe('visibility-codec', () => {
@@ -57,8 +57,8 @@ describe('visibility-codec', () => {
   });
 
   describe('encodeDistance', () => {
-    const ddgModel = transformDdgData([longSimplePath, simplePath], focalPayloadElem);
-    const shortModel = transformDdgData([shortPath], focalPayloadElem);
+    const ddgModel = transformDdgData([longSimplePath, simplePath].map(wrap), focalPayloadElem);
+    const shortModel = transformDdgData([shortPath].map(wrap), focalPayloadElem);
 
     /**
      * Creates a visibility encoding containing all indices between two specified hops, inclusive, except
