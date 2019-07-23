@@ -18,7 +18,6 @@ import HtmlLayer from './HtmlLayer';
 import Node from './Node';
 import SvgLayer from './SvgLayer';
 import { TExposedGraphState, TNodeRenderer, TLayerType, TSetOnContainer, ELayerType } from './types';
-import { TLayoutVertex } from '../types';
 
 type TProps<T = {}, U = {}> = TNodeRenderer<T> &
   TSetOnContainer<T, U> & {
@@ -29,39 +28,32 @@ type TProps<T = {}, U = {}> = TNodeRenderer<T> &
   };
 
 export default class NodesLayer<T = {}, U = {}> extends React.PureComponent<TProps<T, U>> {
-  private renderNodes(layoutVertices: TLayoutVertex<T>[]) {
+  render() {
+    const { layoutVertices } = this.props.graphState;
+    if (!layoutVertices) {
+      return null;
+    }
     const {
       getClassName,
       graphState: { renderUtils },
       layerType,
-      nodeRender,
+      renderNode,
       setOnNode,
     } = this.props;
-    return layoutVertices.map(lv => (
-      <Node
-        key={lv.vertex.key}
-        getClassName={getClassName}
-        layerType={layerType}
-        layoutVertex={lv}
-        nodeRender={nodeRender}
-        renderUtils={renderUtils}
-        setOnNode={setOnNode}
-      />
-    ));
-  }
-
-  render() {
-    const {
-      graphState: { layoutVertices },
-      layerType,
-    } = this.props;
-    if (!layoutVertices) {
-      return null;
-    }
     const LayerComponent = layerType === ELayerType.Html ? HtmlLayer : SvgLayer;
     return (
       <LayerComponent {...this.props} classNamePart="NodesLayer">
-        {this.renderNodes(layoutVertices)}
+        {layoutVertices.map(lv => (
+          <Node
+            key={lv.vertex.key}
+            getClassName={getClassName}
+            layerType={layerType}
+            layoutVertex={lv}
+            renderNode={renderNode}
+            renderUtils={renderUtils}
+            setOnNode={setOnNode}
+          />
+        ))}
       </LayerComponent>
     );
   }

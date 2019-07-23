@@ -206,7 +206,7 @@ export default class LayeredDigraph<T = {}, U = {}> extends React.PureComponent<
       }
       if (layer.measurable) {
         // standalone measurable Nodes Layer
-        const { nodeRender, setOnNode } = layer;
+        const { measureNode, renderNode, setOnNode } = layer;
         return (
           <MeasurableNodesLayer<T, U>
             key={key}
@@ -214,7 +214,8 @@ export default class LayeredDigraph<T = {}, U = {}> extends React.PureComponent<
             getClassName={getClassName}
             graphState={graphState}
             layerType={layerType}
-            nodeRender={nodeRender}
+            measureNode={measureNode}
+            renderNode={renderNode}
             senderKey={key}
             setOnContainer={setOnContainer}
             setOnNode={setOnNode}
@@ -222,7 +223,7 @@ export default class LayeredDigraph<T = {}, U = {}> extends React.PureComponent<
           />
         );
       }
-      if (layer.nodeRender) {
+      if (layer.renderNode) {
         return (
           <NodesLayer<T, U>
             key={key}
@@ -230,7 +231,7 @@ export default class LayeredDigraph<T = {}, U = {}> extends React.PureComponent<
             getClassName={getClassName}
             graphState={graphState}
             layerType={layer.layerType}
-            nodeRender={layer.nodeRender}
+            renderNode={layer.renderNode}
             setOnContainer={setOnContainer}
             setOnNode={layer.setOnNode}
           />
