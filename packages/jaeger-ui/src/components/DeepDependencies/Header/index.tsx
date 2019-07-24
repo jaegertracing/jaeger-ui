@@ -48,17 +48,23 @@ type TProps = TDispatchProps &
 export class HeaderImpl extends React.PureComponent<TProps> {
   constructor(props: TProps) {
     super(props);
-    if (!props.services) {
-      props.fetchServices();
+
+    const { fetchServices, fetchServiceOperations, operationsForService, service, services } = props;
+
+    if (!services) {
+      fetchServices();
     }
-    if (props.service) {
-      props.fetchServiceOperations(props.service);
+    if (service && !Reflect.has(operationsForService, service)) {
+      fetchServiceOperations(service);
     }
   }
 
   setService = (service: string) => {
-    this.props.fetchServiceOperations(service);
-    this.props.setService(service);
+    const { fetchServiceOperations, setService, operationsForService } = this.props;
+    if (!Reflect.has(operationsForService, service)) {
+      fetchServiceOperations(service);
+    }
+    setService(service);
   };
 
   render() {
@@ -118,7 +124,7 @@ export function mapStateToProps(state: ReduxState): TReduxProps {
   };
 }
 
-function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
+export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
   const { fetchServiceOperations, fetchServices } = bindActionCreators(jaegerApiActions, dispatch);
   return {
     fetchServiceOperations,

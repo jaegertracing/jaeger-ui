@@ -155,6 +155,26 @@ describe('DeepDependencyGraphPage', () => {
           );
           expect(props.history.push).toHaveBeenCalledTimes(1);
         });
+
+        describe('setOperation', () => {
+          it('updates operation', () => {
+            const operation = 'newOperation';
+            ddgPageImpl.setOperation(operation);
+            expect(getUrlSpy).toHaveBeenLastCalledWith(Object.assign({}, props.urlState, { operation }));
+            expect(props.history.push).toHaveBeenCalledTimes(1);
+          });
+        });
+
+        describe('setService', () => {
+          it('updates service and clears operation and visEncoding', () => {
+            const service = 'newService';
+            ddgPageImpl.setService(service);
+            expect(getUrlSpy).toHaveBeenLastCalledWith(
+              Object.assign({}, props.urlState, { operation: undefined, service, visEncoding: undefined })
+            );
+            expect(props.history.push).toHaveBeenCalledTimes(1);
+          });
+        });
       });
     });
 
