@@ -25,7 +25,9 @@ export type TDdgPayloadEntry = {
   service: string;
 };
 
-export type TDdgPayload = TDdgPayloadEntry[][];
+export type TDdgPayload = {
+  path: TDdgPayloadEntry[];
+}[];
 
 export type TDdgService = {
   name: string;

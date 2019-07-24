@@ -27,7 +27,12 @@ import fetchMock from 'isomorphic-fetch';
 import queryString from 'query-string';
 
 import traceGenerator from '../demo/trace-generators';
-import JaegerAPI, { getMessageFromError, DEFAULT_API_ROOT, DEFAULT_DEPENDENCY_LOOKBACK } from './jaeger';
+import JaegerAPI, {
+  getMessageFromError,
+  DEFAULT_API_ROOT,
+  DEFAULT_DEPENDENCY_LOOKBACK,
+  ANALYTICS_ROOT,
+} from './jaeger';
 
 const defaultOptions = {
   credentials: 'same-origin',
@@ -48,7 +53,7 @@ describe('fetchDeepDependencyGraph', () => {
     const query = { service: 'serviceName', start: 400, end: 800 };
     JaegerAPI.fetchDeepDependencyGraph(query);
     expect(fetchMock).toHaveBeenLastCalledWith(
-      `${DEFAULT_API_ROOT}deep-dependency-graph?${queryString.stringify(query)}`,
+      `${ANALYTICS_ROOT}v1/dependencies?${queryString.stringify(query)}`,
       defaultOptions
     );
   });

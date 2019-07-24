@@ -12,15 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { convergentPaths, focalPayloadElem, simplePath } from './sample-paths.test.resources';
+import { convergentPaths, focalPayloadElem, simplePath, wrap } from './sample-paths.test.resources';
 import transformDdgData from './transformDdgData';
 
 import Graph from './Graph';
 import { encode } from './visibility-codec';
 
 describe('Graph', () => {
-  const convergentModel = transformDdgData(convergentPaths, focalPayloadElem);
-  const simpleModel = transformDdgData([simplePath], focalPayloadElem);
+  const convergentModel = transformDdgData(convergentPaths.map(wrap), focalPayloadElem);
+  const simpleModel = transformDdgData([simplePath].map(wrap), focalPayloadElem);
 
   /**
    * This function takes in a Graph and validates the structure based on the expected vertices.
