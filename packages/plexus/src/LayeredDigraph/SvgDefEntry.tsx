@@ -18,7 +18,7 @@ import { TFromGraphStateFn, TAnyProps, TSetProps, TExposedGraphState } from './t
 import { assignMergeCss, getProps, getValueScaler } from './utils';
 
 type TProps<T = {}, U = {}> = {
-  classNamePrefix?: string;
+  getClassName: (name: string) => string;
   graphState: TExposedGraphState<T, U>;
   localId: string;
   renderEntry?: (
@@ -60,16 +60,10 @@ function renderDefaultMarker(
 
 export default class SvgDefEntry<T = {}, U = {}> extends React.PureComponent<TProps<T, U>> {
   render() {
-    const {
-      classNamePrefix,
-      localId,
-      graphState,
-      renderEntry = renderDefaultMarker,
-      setOnEntry,
-    } = this.props;
+    const { getClassName, localId, graphState, renderEntry = renderDefaultMarker, setOnEntry } = this.props;
     const id = graphState.renderUtils.getLocalId(localId);
     const entryProps = assignMergeCss(getProps(setOnEntry, graphState), {
-      className: `${classNamePrefix} ${classNamePrefix}-LayeredDigraph--DefEntry`,
+      className: getClassName('DefEntry'),
     });
     return renderEntry(graphState, entryProps, id);
   }
