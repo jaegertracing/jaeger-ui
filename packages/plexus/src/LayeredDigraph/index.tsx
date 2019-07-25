@@ -16,8 +16,10 @@ import * as React from 'react';
 
 import HtmlLayersGroup from './HtmlLayersGroup';
 import MeasurableNodesLayer from './MeasurableNodesLayer';
+import NodesLayer from './NodesLayer';
 import { classNameIsSmall, scaledStrokeWidth } from './props-factories';
 import SvgEdgesLayer from './SvgEdgesLayer';
+import SvgLayersGroup from './SvgLayersGroup';
 import {
   ELayoutPhase,
   TExposedGraphState,
@@ -33,7 +35,6 @@ import LayoutManager from '../LayoutManager';
 import { TCancelled, TEdge, TLayoutDone, TSizeVertex, TVertex } from '../types';
 import TNonEmptyArray from '../types/TNonEmptyArray';
 import ZoomManager, { zoomIdentity, ZoomTransform } from '../ZoomManager';
-import SvgLayersGroup from './SvgLayersGroup';
 
 type TLayeredDigraphState<T = {}, U = {}> = Omit<TExposedGraphState<T, U>, 'renderUtils'> & {
   sizeVertices: TSizeVertex<T>[] | null;
@@ -149,6 +150,7 @@ export default class LayeredDigraph<T = {}, U = {}> extends React.PureComponent<
 
   private renderLayers() {
     const { classNamePrefix, layers: topLayers } = this.props;
+    const getClassName = (name: string) => `${classNamePrefix} ${classNamePrefix}-LayeredDigraph--${name}`;
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { sizeVertices: _, ...partialGraphState } = this.state;
     const graphState = {
@@ -157,32 +159,33 @@ export default class LayeredDigraph<T = {}, U = {}> extends React.PureComponent<
     };
     const { layoutPhase } = graphState;
     return topLayers.map(layer => {
-      const { layerType, key, layers, setOnContainer } = layer;
-      if (layers) {
-        if (layerType === ELayerType.Html) {
+      const { layerType, key, setOnContainer } = layer;
+      if (layer.layers) {
+        if (layer.layerType === ELayerType.Html) {
           return (
             <HtmlLayersGroup<T, U>
               key={key}
               graphState={graphState}
-              layers={layers}
-              classNamePrefix={classNamePrefix}
+              layers={layer.layers}
+              getClassName={getClassName}
               setOnContainer={setOnContainer}
               setSizeVertices={this.setSizeVertices}
             />
           );
         }
-        // svg group layer
-        const { defs } = layer;
-        return (
-          <SvgLayersGroup<T, U>
-            key={key}
-            classNamePrefix={classNamePrefix}
-            defs={defs}
-            graphState={graphState}
-            layers={layers}
-            setOnContainer={setOnContainer}
-          />
-        );
+        // svg group layer, the if is for TypeScript
+        if (layer.layerType === ELayerType.Svg) {
+          return (
+            <SvgLayersGroup<T, U>
+              key={key}
+              getClassName={getClassName}
+              defs={layer.defs}
+              graphState={graphState}
+              layers={layer.layers}
+              setOnContainer={setOnContainer}
+            />
+          );
+        }
       }
       if (layer.edges) {
         // edges standalone layer
@@ -191,7 +194,7 @@ export default class LayeredDigraph<T = {}, U = {}> extends React.PureComponent<
           <SvgEdgesLayer
             key={key}
             standalone
-            classNamePrefix={classNamePrefix}
+            getClassName={getClassName}
             defs={defs}
             graphState={graphState}
             markerEndId={markerEndId}
@@ -208,9 +211,9 @@ export default class LayeredDigraph<T = {}, U = {}> extends React.PureComponent<
           <MeasurableNodesLayer<T, U>
             key={key}
             standalone
-            classNamePrefix={classNamePrefix}
+            getClassName={getClassName}
             graphState={graphState}
-            layerType={layer.layerType}
+            layerType={layerType}
             nodeRender={nodeRender}
             senderKey={key}
             setOnContainer={setOnContainer}
@@ -219,8 +222,21 @@ export default class LayeredDigraph<T = {}, U = {}> extends React.PureComponent<
           />
         );
       }
-      // regular nodes layer
-      throw new Error('Not implemented');
+      if (layer.nodeRender) {
+        return (
+          <NodesLayer<T, U>
+            key={key}
+            standalone
+            getClassName={getClassName}
+            graphState={graphState}
+            layerType={layer.layerType}
+            nodeRender={layer.nodeRender}
+            setOnContainer={setOnContainer}
+            setOnNode={layer.setOnNode}
+          />
+        );
+      }
+      throw new Error('Unrecognized layer');
     });
   }
 

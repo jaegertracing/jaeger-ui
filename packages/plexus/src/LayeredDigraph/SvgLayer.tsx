@@ -20,40 +20,69 @@ import { assignMergeCss, getProps } from './utils';
 import TNonEmptyArray from '../types/TNonEmptyArray';
 import ZoomManager from '../ZoomManager';
 
-type TProps<T = {}, U = {}> = TSetOnContainer<T, U> & {
-  classNamePrefix?: string;
-  defs?: TNonEmptyArray<TDefEntry<T, U>>;
-  graphState: TExposedGraphState<T, U>;
-};
+type TProps<T = {}, U = {}> = Record<string, unknown> &
+  TSetOnContainer<T, U> & {
+    classNamePart: string;
+    getClassName: (name: string) => string;
+    defs?: TNonEmptyArray<TDefEntry<T, U>>;
+    extraWrapper?: Record<string, unknown>;
+    graphState: TExposedGraphState<T, U>;
+    standalone?: boolean;
+    topLayer?: boolean;
+  };
 
-export default class SvgDoc<T = {}, U = {}> extends React.PureComponent<TProps<T, U>> {
+const STYLE: React.CSSProperties = { minHeight: '100%', minWidth: '100%', position: 'absolute' };
+
+export default class SvgLayer<T = {}, U = {}> extends React.PureComponent<TProps<T, U>> {
   render() {
-    const { children, classNamePrefix, defs, graphState, setOnContainer } = this.props;
-    const { zoomTransform } = graphState;
-    const containerProps = assignMergeCss(getProps(setOnContainer, graphState), {
-      className: `${classNamePrefix} ${classNamePrefix}-LayeredDigraph--SvgDoc`,
-      style: { minHeight: '100%', minWidth: '100%' },
-    });
+    const {
+      children,
+      classNamePart,
+      getClassName,
+      defs,
+      extraWrapper,
+      graphState,
+      setOnContainer,
+      standalone,
+      topLayer,
+    } = this.props;
 
-    return (
-      <svg {...containerProps}>
+    const containerProps = assignMergeCss(getProps(setOnContainer, graphState), {
+      className: getClassName(classNamePart),
+    });
+    let content = (
+      <g {...containerProps}>
         {defs && (
           <defs>
             {defs.map(defEntry => (
               <SvgDefEntry<T, U>
                 key={defEntry.localId}
                 {...defEntry}
-                classNamePrefix={classNamePrefix}
+                getClassName={getClassName}
                 graphState={graphState}
               />
             ))}
           </defs>
         )}
+        {children}
+      </g>
+    );
+    if (extraWrapper) {
+      content = <g {...extraWrapper}>{content}</g>;
+    }
+
+    if (!standalone && !topLayer) {
+      return content;
+    }
+
+    const { zoomTransform } = graphState;
+    return (
+      <svg className={getClassName('SvgLayer')} style={STYLE}>
         <g
-          className={`${classNamePrefix} ${classNamePrefix}-LayeredDigraph--SvgDoc--transformer`}
+          className={getClassName('SvgLayer--transformer')}
           transform={ZoomManager.getZoomAttr(zoomTransform)}
         >
-          {children}
+          {content}
         </g>
       </svg>
     );

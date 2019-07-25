@@ -14,60 +14,47 @@
 
 import * as React from 'react';
 
-import SvgDoc from './SvgDoc';
 import SvgEdge from './SvgEdge';
+import SvgLayer from './SvgLayer';
 import { TExposedGraphState, TStandaloneEdgesLayer } from './types';
-import { assignMergeCss, getProps } from './utils';
 
 type TProps<T = {}, U = {}> = Omit<TStandaloneEdgesLayer<T, U>, 'edges' | 'layerType' | 'key'> & {
-  classNamePrefix?: string;
+  getClassName: (name: string) => string;
   graphState: TExposedGraphState<T, U>;
   standalone?: boolean;
 };
 
+// Add the default black stroke on an outter <g> so CSS classes or styles
+// on the inner <g> can override it
+// TODO: A more configurable appraoch to setting a default stroke color
+const INHERIT_STROKE = { stroke: '#000' };
+
 export default class SvgEdgesLayer<T = {}, U = {}> extends React.PureComponent<TProps<T, U>> {
   render() {
-    const {
-      classNamePrefix,
-      defs,
-      graphState,
-      markerEndId,
-      markerStartId,
-      setOnContainer,
-      setOnEdge,
-      standalone,
-    } = this.props;
-
+    const { getClassName, graphState, markerEndId, markerStartId, setOnEdge } = this.props;
     const { layoutEdges, renderUtils } = graphState;
+
     if (!layoutEdges) {
       return null;
     }
-    const gProps = assignMergeCss(getProps(setOnContainer, graphState), {
-      className: `${classNamePrefix} ${classNamePrefix}-LayeredDigraph--SvgEdgesLayer`,
-    });
-    const g = (
-      // Add the default black stroke on an outter <g> so CSS classes or styles
-      // on the inner <g> can override it
-      // TODO: A more configurable appraoch to setting a default stroke color
-      <g style={{ stroke: '#000' }}>
-        <g {...gProps}>
-          {layoutEdges.map(edge => (
-            // TODO(joe): wrap the edges in a pure component so can render the <defs> without
-            // rendering edges, i.e. avoid calling shouldComponentUpdate on each edge, call on
-            // them as a group
-            <SvgEdge<U>
-              key={`${edge.edge.from}\v${edge.edge.to}`}
-              classNamePrefix={classNamePrefix}
-              layoutEdge={edge}
-              markerEndId={markerEndId}
-              markerStartId={markerStartId}
-              renderUtils={renderUtils}
-              setOnEdge={setOnEdge}
-            />
-          ))}
-        </g>
-      </g>
+
+    return (
+      <SvgLayer {...this.props} classNamePart="SvgEdgesLayer" extraWrapper={INHERIT_STROKE}>
+        {layoutEdges.map(edge => (
+          // TODO(joe): wrap the edges in a pure component so can render the <defs> without
+          // rendering edges, i.e. avoid calling shouldComponentUpdate on each edge, call on
+          // them as a group
+          <SvgEdge<U>
+            key={`${edge.edge.from}\v${edge.edge.to}`}
+            getClassName={getClassName}
+            layoutEdge={edge}
+            markerEndId={markerEndId}
+            markerStartId={markerStartId}
+            renderUtils={renderUtils}
+            setOnEdge={setOnEdge}
+          />
+        ))}
+      </SvgLayer>
     );
-    return standalone ? <SvgDoc {...{ classNamePrefix, graphState, defs }}>{g}</SvgDoc> : g;
   }
 }

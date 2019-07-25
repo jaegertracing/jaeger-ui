@@ -14,6 +14,7 @@
 
 import * as React from 'react';
 
+import HtmlLayer from './HtmlLayer';
 import MeasurableHtmlNode from './MeasurableHtmlNode';
 import {
   TExposedGraphState,
@@ -23,14 +24,12 @@ import {
   ELayoutPhase,
   ELayerType,
 } from './types';
-import { assignMergeCss, getProps } from './utils';
 import { TSizeVertex, TVertex } from '../types';
 import { TOneOfTwo } from '../types/TOneOf';
-import ZoomManager from '../ZoomManager';
 
 type TProps<T = {}, U = {}> = Omit<TMeasurableNodeRenderer<T>, 'measurable'> &
   TSetOnContainer<T, U> & {
-    classNamePrefix?: string;
+    getClassName: (name: string) => string;
     graphState: TExposedGraphState<T, U>;
     senderKey: string;
     layerType: TLayerType;
@@ -126,7 +125,7 @@ export default class MeasurableNodesLayer<T = {}, U = {}> extends React.PureComp
   // TODO - parameterize to handle SVG too
   private renderVertices(htmlNodeRefs: React.RefObject<MeasurableHtmlNode<T>>[]) {
     const {
-      classNamePrefix,
+      getClassName,
       graphState: { layoutVertices, renderUtils, vertices },
       nodeRender,
       setOnNode,
@@ -134,7 +133,7 @@ export default class MeasurableNodesLayer<T = {}, U = {}> extends React.PureComp
     return vertices.map((vertex, i) => (
       <MeasurableHtmlNode<T>
         key={vertex.key}
-        classNamePrefix={classNamePrefix}
+        getClassName={getClassName}
         ref={htmlNodeRefs[i]}
         hidden={!layoutVertices}
         nodeRender={nodeRender}
@@ -149,18 +148,11 @@ export default class MeasurableNodesLayer<T = {}, U = {}> extends React.PureComp
   render() {
     const { htmlNodeRefs } = this.state;
     if (htmlNodeRefs) {
-      const { classNamePrefix, graphState, setOnContainer, standalone } = this.props;
-      const { zoomTransform } = graphState;
-      const containerProps = assignMergeCss(getProps(setOnContainer, graphState), {
-        style: {
-          ...(standalone ? ZoomManager.getZoomStyle(zoomTransform) : null),
-          position: 'absolute',
-          top: 0,
-          left: 0,
-        },
-        className: `${classNamePrefix} ${classNamePrefix}-LayeredDigraph--MeasurableNodesLayer`,
-      });
-      return <div {...containerProps}>{this.renderVertices(htmlNodeRefs)}</div>;
+      return (
+        <HtmlLayer classNamePart="MeasurableNodesLayer" {...this.props}>
+          {this.renderVertices(htmlNodeRefs)}
+        </HtmlLayer>
+      );
     }
     return null;
   }
