@@ -14,7 +14,6 @@
 
 import * as React from 'react';
 import { shallow } from 'enzyme';
-import cloneDeep from 'lodash/cloneDeep';
 import _set from 'lodash/set';
 
 import { DeepDependencyGraphPageImpl, mapDispatchToProps, mapStateToProps } from '.';
@@ -32,6 +31,8 @@ describe('DeepDependencyGraphPage', () => {
       history: {
         push: jest.fn(),
       },
+      fetchServices: jest.fn(),
+      fetchServiceOperations: jest.fn(),
       graphState: {
         model: {
           distanceToPathElems: new Map(),
@@ -39,6 +40,7 @@ describe('DeepDependencyGraphPage', () => {
         state: fetchedState.DONE,
         uxState: new Map(),
       },
+      operationsForService: {},
       urlState: {
         start: 'testStart',
         end: 'testEnd',
@@ -49,6 +51,31 @@ describe('DeepDependencyGraphPage', () => {
       fetchDeepDependencyGraph: () => {},
     };
     const ddgPageImpl = new DeepDependencyGraphPageImpl(props);
+
+    describe('constructor', () => {
+      beforeEach(() => {
+        props.fetchServices.mockReset();
+        props.fetchServiceOperations.mockReset();
+      });
+
+      it('fetches services if services are not provided', () => {
+        new DeepDependencyGraphPageImpl({ ...props, services: [] }); // eslint-disable-line no-new
+        expect(props.fetchServices).not.toHaveBeenCalled();
+        new DeepDependencyGraphPageImpl(props); // eslint-disable-line no-new
+        expect(props.fetchServices).toHaveBeenCalledTimes(1);
+      });
+
+      it('fetches services if service is provided without operations', () => {
+        const { service, ...urlState } = props.urlState;
+        new DeepDependencyGraphPageImpl({ ...props, urlState }); // eslint-disable-line no-new
+        expect(props.fetchServiceOperations).not.toHaveBeenCalled();
+        new DeepDependencyGraphPageImpl({ ...props, operationsForService: { [service]: [] } }); // eslint-disable-line no-new
+        expect(props.fetchServiceOperations).not.toHaveBeenCalled();
+        new DeepDependencyGraphPageImpl(props); // eslint-disable-line no-new
+        expect(props.fetchServiceOperations).toHaveBeenLastCalledWith(service);
+        expect(props.fetchServiceOperations).toHaveBeenCalledTimes(1);
+      });
+    });
 
     describe('shouldComponentUpdate', () => {
       it('returns false if props are unchanged', () => {
@@ -69,6 +96,8 @@ describe('DeepDependencyGraphPage', () => {
 
       it('returns true if certain props change', () => {
         [
+          'operationsForService',
+          'services',
           'urlState.service',
           'urlState.operation',
           'urlState.start',
@@ -76,7 +105,11 @@ describe('DeepDependencyGraphPage', () => {
           'urlState.visEncoding',
           'graphState.state',
         ].forEach(prop => {
-          const newProps = cloneDeep(props);
+          const newProps = {
+            ...props,
+            urlState: { ...props.urlState },
+            graphState: { ...props.graphState },
+          };
           expect(ddgPageImpl.shouldComponentUpdate(newProps)).toBe(false);
           _set(newProps, prop, 'new value');
           expect(ddgPageImpl.shouldComponentUpdate(newProps)).toBe(true);
@@ -155,6 +188,47 @@ describe('DeepDependencyGraphPage', () => {
           );
           expect(props.history.push).toHaveBeenCalledTimes(1);
         });
+
+        describe('setOperation', () => {
+          it('updates operation and clears visEncoding', () => {
+            const operation = 'newOperation';
+            ddgPageImpl.setOperation(operation);
+            expect(getUrlSpy).toHaveBeenLastCalledWith(
+              Object.assign({}, props.urlState, { operation, visEncoding: undefined })
+            );
+            expect(props.history.push).toHaveBeenCalledTimes(1);
+          });
+        });
+
+        describe('setService', () => {
+          const service = 'newService';
+
+          beforeEach(() => {
+            props.fetchServiceOperations.mockReset();
+          });
+
+          it('updates service and clears operation and visEncoding', () => {
+            ddgPageImpl.setService(service);
+            expect(getUrlSpy).toHaveBeenLastCalledWith(
+              Object.assign({}, props.urlState, { operation: undefined, service, visEncoding: undefined })
+            );
+            expect(props.history.push).toHaveBeenCalledTimes(1);
+          });
+
+          it('fetches operations for service when not yet provided', () => {
+            ddgPageImpl.setService(service);
+            expect(props.fetchServiceOperations).toHaveBeenLastCalledWith(service);
+            expect(props.fetchServiceOperations).toHaveBeenCalledTimes(1);
+
+            const pageWithOpForService = new DeepDependencyGraphPageImpl({
+              ...props,
+              operationsForService: { [service]: [props.urlState.operation] },
+            });
+            const { length: callCount } = props.fetchServiceOperations.mock.calls;
+            pageWithOpForService.setService(service);
+            expect(props.fetchServiceOperations).toHaveBeenCalledTimes(callCount);
+          });
+        });
       });
     });
 
@@ -205,6 +279,8 @@ describe('DeepDependencyGraphPage', () => {
     it('creates the actions correctly', () => {
       expect(mapDispatchToProps(() => {})).toEqual({
         fetchDeepDependencyGraph: expect.any(Function),
+        fetchServices: expect.any(Function),
+        fetchServiceOperations: expect.any(Function),
       });
     });
   });
@@ -223,6 +299,19 @@ describe('DeepDependencyGraphPage', () => {
         operation,
       },
     };
+    const services = [service];
+    const operationsForService = {
+      [service]: ['some operation'],
+    };
+    const state = {
+      otherState: 'otherState',
+      services: {
+        operationsForService,
+        otherState: 'otherState',
+        services,
+      },
+    };
+    const ownProps = { location: { search } };
     let getUrlStateSpy;
 
     beforeAll(() => {
@@ -231,39 +320,46 @@ describe('DeepDependencyGraphPage', () => {
 
     beforeEach(() => {
       getUrlStateSpy.mockReset();
+      getUrlStateSpy.mockReturnValue(expected.urlState);
     });
 
     it('uses gets relevant params from location.search', () => {
-      getUrlStateSpy.mockReturnValue(expected.urlState);
-      const result = mapStateToProps({}, { location: { search } });
-      expect(result).toEqual(expected);
+      const result = mapStateToProps(state, ownProps);
+      expect(result).toEqual(expect.objectContaining(expected));
       expect(getUrlStateSpy).toHaveBeenLastCalledWith(search);
     });
 
-    // skip using the URL until services and operations are wired up
-    it.skip('includes graphState iff location.search has service, start, end, and optionally operation', () => {
+    it('includes graphState iff location.search has service, start, end, and optionally operation', () => {
       const graphState = 'testGraphState';
       const graphStateWithoutOp = 'testGraphStateWithoutOp';
-      const reduxState = {};
-      _set(reduxState, ['deepDependencyGraph', stateKey({ service, operation, start, end })], graphState);
+      const reduxState = { ...state };
+      // TODO: Remove 0s once time buckets are implemented
       _set(
         reduxState,
-        ['deepDependencyGraph', stateKey({ service, undefined, start, end })],
-        graphStateWithoutOp
+        ['deepDependencyGraph', stateKey({ service, operation, start: 0, end: 0 })],
+        graphState
       );
+      _set(reduxState, ['deepDependencyGraph', stateKey({ service, start, end })], graphStateWithoutOp);
 
-      getUrlStateSpy.mockReturnValue(expected.urlState);
-      const result = mapStateToProps(reduxState, { location: { search } });
+      const result = mapStateToProps(reduxState, ownProps);
       expect(result.graphState).toEqual(graphState);
 
+      /* TODO: operation is still required, when requirement is lifted, re-enable
       const { operation: _op, ...rest } = expected.urlState;
       getUrlStateSpy.mockReturnValue(rest);
-      const resultWithoutOp = mapStateToProps(reduxState, { location: { search } });
+      const resultWithoutOp = mapStateToProps(reduxState, ownProps);
       expect(resultWithoutOp.graphState).toEqual(graphStateWithoutOp);
+      */
 
       getUrlStateSpy.mockReturnValue({});
-      const resultWithoutParams = mapStateToProps(reduxState, { location: { search } });
+      const resultWithoutParams = mapStateToProps(reduxState, ownProps);
       expect(resultWithoutParams.graphState).toBeUndefined();
+    });
+
+    it('includes services and operationsForService', () => {
+      expect(mapStateToProps(state, ownProps)).toEqual(
+        expect.objectContaining({ operationsForService, services })
+      );
     });
   });
 });
