@@ -19,31 +19,42 @@ import Header from './index';
 import HopsSelector from './HopsSelector';
 import NameSelector from './NameSelector';
 
-describe('<ListItem>', () => {
+describe('<Header>', () => {
+  const minProps = {
+    operationsForService: {},
+    setDistance: () => {},
+    setOperation: () => {},
+    setService: () => {},
+  };
+  const service = 'testService';
+  const services = [service];
+  const operation = 'testOperation';
+  const operations = [operation];
   let wrapper;
 
   beforeEach(() => {
-    wrapper = shallow(<Header />);
+    wrapper = shallow(<Header {...minProps} />);
   });
 
-  it('renders without exploding', () => {
+  it('renders with minimal props', () => {
     expect(wrapper).toMatchSnapshot();
   });
 
   it('omits the operation selector if a service is not selected', () => {
-    expect(wrapper.state('service')).toBe(null);
     const nameSelector = wrapper.find(NameSelector);
     expect(nameSelector.length).toBe(1);
     expect(nameSelector.prop('label')).toMatch(/service/i);
   });
 
   it('renders the operation selector if a service is selected', () => {
-    expect(wrapper.state('service')).toBe(null);
     let nameSelector = wrapper.find(NameSelector);
-    nameSelector.prop('setValue')('a');
+    wrapper.setProps({ service, services });
     nameSelector = wrapper.find(NameSelector);
     expect(nameSelector.length).toBe(2);
     expect(nameSelector.at(1).prop('label')).toMatch(/operation/i);
+    expect(wrapper).toMatchSnapshot();
+
+    wrapper.setProps({ operation, operations });
     expect(wrapper).toMatchSnapshot();
   });
 

@@ -16,47 +16,35 @@ import * as React from 'react';
 
 import HopsSelector from './HopsSelector';
 import NameSelector from './NameSelector';
-import tempOptions from './tmp-data';
-
 import { EDirection, TDdgDistanceToPathElems } from '../../../model/ddg/types';
 
 import './index.css';
 
 type TProps = {
   distanceToPathElems?: TDdgDistanceToPathElems;
+  operation?: string;
+  operationsForService: Record<string, string[]>;
+  service?: string;
+  services?: string[] | null;
   setDistance: (distance: number, direction: EDirection) => void;
+  setOperation: (operation: string) => void;
+  setService: (service: string) => void;
   visEncoding?: string;
 };
 
-type TTempState = {
-  service: string | null;
-  operation: string | null;
-};
-
-// istanbul ignore next
-const TMP_OPTIIONS = tempOptions.map(s => (s.match(/^(\S+\s+){1,12}|^\S+$/) || ['MISSING'])[0]);
-
-export default class Header extends React.PureComponent<TProps, TTempState> {
-  state = {
-    service: null,
-    operation: null,
-  };
-
-  setService = (service: string) => {
-    // istanbul ignore next
-    if (service !== this.state.service) {
-      this.setState({ service, operation: null });
-    }
-  };
-
-  setOperation = (operation: string) => {
-    // istanbul ignore next
-    this.setState({ operation });
-  };
-
+export default class Header extends React.PureComponent<TProps> {
   render() {
-    const { distanceToPathElems, setDistance, visEncoding } = this.props;
-    const { service, operation } = this.state;
+    const {
+      distanceToPathElems,
+      operation,
+      operationsForService,
+      service,
+      services,
+      setDistance,
+      setOperation,
+      setService,
+      visEncoding,
+    } = this.props;
 
     return (
       <header className="DdgHeader">
@@ -64,19 +52,19 @@ export default class Header extends React.PureComponent<TProps, TTempState> {
           <NameSelector
             label="Service:"
             placeholder="Select a service…"
-            value={service}
-            setValue={this.setService}
+            value={service || null}
+            setValue={setService}
             required
-            options={TMP_OPTIIONS}
+            options={services || []}
           />
           {service && (
             <NameSelector
               label="Operation:"
               placeholder="Select an operation…"
-              value={operation}
-              setValue={this.setOperation}
+              value={operation || null}
+              setValue={setOperation}
               required
-              options={TMP_OPTIIONS}
+              options={operationsForService[service] || []}
             />
           )}
         </div>

@@ -58,7 +58,7 @@ export default class Selector extends PureComponent<TProps> {
     const streamText = direction === EDirection.Downstream ? 'Down' : 'Up';
     const streamLabel = `${streamText}stream hops`;
     const lowercaseLabel = streamLabel.toLowerCase();
-    if (hops.length === 1) {
+    if (hops.length <= 1) {
       return <span className={CLASSNAME}>No {lowercaseLabel}</span>;
     }
 
