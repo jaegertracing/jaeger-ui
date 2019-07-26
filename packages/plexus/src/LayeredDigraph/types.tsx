@@ -69,24 +69,31 @@ export type TSetOnContainer<T = {}, U = {}> = {
 
 type TKeyed = { key: string };
 
-export type TNodeRenderFn<T = {}> = (vertex: TLayoutVertex<T>, utils: TRendererUtils) => React.ReactNode;
+export type TRenderNodeFn<T = {}> = (vertex: TLayoutVertex<T>, utils: TRendererUtils) => React.ReactNode;
 
-export type TMeasurableNodeRenderFn<T = {}> = (
+export type TRenderMeasurableNodeFn<T = {}> = (
   vertex: TVertex<T>,
   utils: TRendererUtils,
   layoutVertex: TLayoutVertex<T> | null
 ) => React.ReactNode;
 
+export type TMeasureNodeUtils = {
+  layerType: 'html' | 'svg';
+  getWrapperSize: () => { height: number; width: number };
+  getWrapper: () => TOneOfTwo<{ htmlWrapper: HTMLDivElement | null }, { svgWrapper: SVGGElement | null }>;
+};
+
 export type TMeasurableNodeRenderer<T = {}> = {
   measurable: true;
-  nodeRender: TMeasurableNodeRenderFn<T>;
+  measureNode?: (vertex: TVertex<T>, utils: TMeasureNodeUtils) => { height: number; width: number };
+  renderNode: TRenderMeasurableNodeFn<T>;
   setOnNode?: TSetProps<
     (vertex: TVertex<T>, utils: TRendererUtils, layoutVertex: TLayoutVertex<T> | null) => TAnyProps | null
   >;
 };
 
 export type TNodeRenderer<T = {}> = {
-  nodeRender: TNodeRenderFn<T>;
+  renderNode: TRenderNodeFn<T>;
   setOnNode?: TSetProps<(layoutVertex: TLayoutVertex<T>, utils: TRendererUtils) => TAnyProps | null>;
 };
 
@@ -144,11 +151,3 @@ export type TLayer<T = {}, U = {}> = TOneOfFour<
   TStandaloneNodesLayer<T, U>,
   TStandaloneEdgesLayer<T, U>
 >;
-
-export type TMeasurableNodeProps<T = {}> = Omit<TMeasurableNodeRenderer<T>, 'measurable'> & {
-  getClassName: (name: string) => string;
-  hidden: boolean;
-  layoutVertex: TLayoutVertex<T> | null;
-  renderUtils: TRendererUtils;
-  vertex: TVertex<T>;
-};

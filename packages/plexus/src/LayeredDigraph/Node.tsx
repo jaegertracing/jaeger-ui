@@ -37,7 +37,7 @@ function getHtmlStyle(lv: TLayoutVertex<any>) {
 
 export default class Node<T = {}> extends React.PureComponent<TProps<T>> {
   render() {
-    const { getClassName, layerType, nodeRender, renderUtils, setOnNode, layoutVertex } = this.props;
+    const { getClassName, layerType, renderNode, renderUtils, setOnNode, layoutVertex } = this.props;
     const { left, top } = layoutVertex;
     const props = assignMergeCss(getProps(setOnNode, layoutVertex, renderUtils), {
       className: getClassName('Node'),
@@ -45,6 +45,6 @@ export default class Node<T = {}> extends React.PureComponent<TProps<T>> {
       transform: layerType === ELayerType.Svg ? `translate(${left.toFixed()},${top.toFixed()})` : null,
     });
     const Wrapper = layerType === ELayerType.Html ? 'div' : 'g';
-    return <Wrapper {...props}>{nodeRender(layoutVertex, renderUtils)}</Wrapper>;
+    return <Wrapper {...props}>{renderNode(layoutVertex, renderUtils)}</Wrapper>;
   }
 }

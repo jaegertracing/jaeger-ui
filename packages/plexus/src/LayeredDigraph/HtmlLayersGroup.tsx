@@ -34,14 +34,14 @@ export default class HtmlLayersGroup<T = {}, U = {}> extends React.PureComponent
       const { key, setOnContainer } = layer;
 
       if (layer.measurable) {
-        const { nodeRender, setOnNode } = layer;
+        const { renderNode, setOnNode } = layer;
         return (
           <MeasurableNodesLayer<T, U>
             key={key}
             getClassName={getClassName}
             graphState={graphState}
             layerType={ELayerType.Html}
-            nodeRender={nodeRender}
+            renderNode={renderNode}
             senderKey={key}
             setOnContainer={setOnContainer}
             setOnNode={setOnNode}
@@ -49,15 +49,15 @@ export default class HtmlLayersGroup<T = {}, U = {}> extends React.PureComponent
           />
         );
       }
-      if (layer.nodeRender) {
-        const { nodeRender, setOnNode } = layer;
+      if (layer.renderNode) {
+        const { renderNode, setOnNode } = layer;
         return (
           <NodesLayer<T, U>
             key={key}
             getClassName={getClassName}
             graphState={graphState}
             layerType={ELayerType.Html}
-            nodeRender={nodeRender}
+            renderNode={renderNode}
             setOnContainer={setOnContainer}
             setOnNode={setOnNode}
           />

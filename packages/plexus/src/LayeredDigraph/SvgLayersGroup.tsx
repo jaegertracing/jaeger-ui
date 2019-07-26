@@ -52,7 +52,7 @@ export default class SvgLayersGroup<T = {}, U = {}> extends React.PureComponent<
           getClassName={getClassName}
           graphState={graphState}
           layerType={ELayerType.Svg}
-          nodeRender={layer.nodeRender}
+          renderNode={layer.renderNode}
           setOnContainer={setOnContainer}
           setOnNode={layer.setOnNode}
         />

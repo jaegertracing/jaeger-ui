@@ -29,7 +29,7 @@ import { TVertex, TLayoutEdge, TLayoutVertex } from '../../src/types';
 
 import './index.css';
 import TNonEmptyArray from '../../src/types/TNonEmptyArray';
-import { TLayer } from '../../src/LayeredDigraph/types';
+import { TLayer, TRendererUtils, TMeasureNodeUtils } from '../../src/LayeredDigraph/types';
 
 type TState = {
   hoveredEdge: TLayoutEdge<any> | null;
@@ -172,14 +172,14 @@ class Demo extends React.PureComponent<{}, TState> {
                 layers: [
                   {
                     key: 'emph-nodes',
-                    nodeRender: (lv: TLayoutVertex<any>) =>
+                    renderNode: (lv: TLayoutVertex<any>) =>
                       VOWELS.has(lv.vertex.key[0]) ? <div className="DemoGraph--node--emphasized" /> : null,
                   },
                   {
                     setOnNode,
                     key: 'main-nodes',
                     measurable: true,
-                    nodeRender: getLargeNodeLabel,
+                    renderNode: getLargeNodeLabel,
                   },
                 ],
               },
@@ -213,7 +213,7 @@ class Demo extends React.PureComponent<{}, TState> {
               {
                 key: 'emph-nodes-border',
                 layerType: 'svg',
-                nodeRender: (lv: TLayoutVertex<any>) =>
+                renderNode: (lv: TLayoutVertex<any>) =>
                   !VOWELS.has(lv.vertex.key[0]) ? null : (
                     <g>
                       <rect
@@ -228,7 +228,7 @@ class Demo extends React.PureComponent<{}, TState> {
               {
                 key: 'emph-nodes-html',
                 layerType: 'html',
-                nodeRender: (lv: TLayoutVertex<any>) =>
+                renderNode: (lv: TLayoutVertex<any>) =>
                   VOWELS.has(lv.vertex.key[0]) ? <div className="DemoGraph--node--emphasized" /> : null,
               },
               {
@@ -237,7 +237,7 @@ class Demo extends React.PureComponent<{}, TState> {
                 layers: [
                   {
                     key: 'emph-nodes',
-                    nodeRender: (lv: TLayoutVertex<any>) =>
+                    renderNode: (lv: TLayoutVertex<any>) =>
                       !VOWELS.has(lv.vertex.key[0]) ? null : (
                         <g>
                           <rect
@@ -251,7 +251,7 @@ class Demo extends React.PureComponent<{}, TState> {
                   },
                   {
                     key: 'border-nodes',
-                    nodeRender: (lv: TLayoutVertex<any>) => (
+                    renderNode: (lv: TLayoutVertex<any>) => (
                       <rect
                         className="DemoGraph--node--vectorBorder"
                         vectorEffect="non-scaling-stroke"
@@ -267,7 +267,7 @@ class Demo extends React.PureComponent<{}, TState> {
                 key: 'nodes',
                 layerType: 'html',
                 measurable: true,
-                nodeRender: getLargeNodeLabel,
+                renderNode: getLargeNodeLabel,
               },
               {
                 key: 'edges-visible-path',
@@ -291,6 +291,57 @@ class Demo extends React.PureComponent<{}, TState> {
           },
           hoveredEdge
         )}
+        <h1>LayeredDigraph with measurable SVG nodes</h1>
+        <div>
+          <div className="DemoGraph">
+            <LayeredDigraph
+              zoom
+              minimap
+              className="DemoGraph--dag"
+              layoutManager={new LayoutManager({ useDotEdges: true })}
+              minimapClassName="Demo--miniMap"
+              setOnGraph={layeredClassNameIsSmall}
+              measurableNodesKey="nodes"
+              layers={[
+                {
+                  key: 'edges',
+                  defs: [{ localId: 'arrowHead' }],
+                  edges: true,
+                  layerType: 'svg',
+                  markerEndId: 'arrowHead',
+                  setOnContainer: [{ className: 'DdgGraph--edges' }, scaleProperty.strokeOpacity],
+                },
+                {
+                  key: 'nodes',
+                  layerType: 'svg',
+                  measurable: true,
+                  measureNode: (_: any, utils: TMeasureNodeUtils) => {
+                    const { height, width } = utils.getWrapperSize();
+                    return { height: height + 40, width: width + 40 };
+                  },
+                  renderNode: (vertex: TVertex, utils: TRendererUtils, lv: TLayoutVertex | null) => (
+                    <>
+                      {lv && (
+                        <rect
+                          width={lv.width}
+                          height={lv.height}
+                          fill="#ddd"
+                          stroke="#444"
+                          strokeWidth="1"
+                          vectorEffect="non-scaling-stroke"
+                        />
+                      )}
+                      <text x="20" y="20" dy="1em">
+                        {vertex.key}
+                      </text>
+                    </>
+                  ),
+                },
+              ]}
+              {...largeDag}
+            />
+          </div>
+        </div>
         <h1>Directed graph with cycles - dot edges</h1>
         <div>
           <div className="DemoGraph">

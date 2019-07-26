@@ -28,7 +28,7 @@ html {
 }
 
 .DemoGraph {
-  border: 1px solid #666;
+  border: 1px solid #bbb;
   cursor: move;
   overflow: hidden;
   height: 700px;
@@ -42,7 +42,7 @@ html {
 }
 
 .DemoGraph--dag {
-  background: #f0f0f0;
+  background: #fafafa;
   stroke-width: 0.85;
 }
 
