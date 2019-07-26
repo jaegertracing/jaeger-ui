@@ -87,6 +87,7 @@ export enum EViewModifier {
   Hovered,
   Selected,
   Emphasized = 1 << 2, // eslint-disable-line no-bitwise
+  FindMatch = 1 << 3, // eslint-disable-line no-bitwise
 }
 
 export type TDdgSparseUrlState = {

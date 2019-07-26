@@ -18,6 +18,7 @@ import { bindActionCreators, Dispatch } from 'redux';
 
 import HopsSelector from './HopsSelector';
 import NameSelector from './NameSelector';
+import UiFindInput from '../../common/UiFindInput';
 import * as jaegerApiActions from '../../../actions/jaeger-api';
 import { EDirection, TDdgDistanceToPathElems } from '../../../model/ddg/types';
 import { ReduxState } from '../../../types/index';
@@ -30,6 +31,7 @@ type TDispatchProps = {
 };
 
 type TReduxProps = {
+  // TODO: Take array
   operationsForService: Record<string, string[]>;
   services?: string[] | null;
 };
@@ -37,6 +39,7 @@ type TReduxProps = {
 type TProps = TDispatchProps &
   TReduxProps & {
     distanceToPathElems?: TDdgDistanceToPathElems;
+    inputSuffix: string | undefined;
     operation?: string;
     service?: string;
     setDistance: (distance: number, direction: EDirection) => void;
@@ -70,6 +73,7 @@ export class HeaderImpl extends React.PureComponent<TProps> {
   render() {
     const {
       distanceToPathElems,
+      inputSuffix,
       operation,
       operationsForService,
       service,
@@ -109,6 +113,7 @@ export class HeaderImpl extends React.PureComponent<TProps> {
               visEncoding={visEncoding}
             />
           )}
+          <UiFindInput inputProps={{ suffix: inputSuffix }}/>
         </div>
       </header>
     );

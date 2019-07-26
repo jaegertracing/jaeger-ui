@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import memoize from 'lru-memoize';
+import matchSorter from 'match-sorter';
+
 import { TEdge } from '@jaegertracing/plexus/lib/types';
 
 import { decode } from './visibility-codec';
@@ -150,4 +153,22 @@ export default class Graph {
       vertices: Array.from(vertices),
     };
   };
+
+  public getVisibleUiFindMatches = (uiFind: string, visEncoding?: string): Set<TDdgVertex> => {
+    const vertexSet: Set<TDdgVertex> = new Set();
+
+    const uiFindArr = uiFind.toLowerCase().split(' ');
+    const { vertices } = this.getVisible(visEncoding);
+    vertices.forEach(vertex => {
+      const { service, operation } = vertex;
+      const possibleMatch = `${service} ${operation}`.toLowerCase();
+      if (uiFindArr.some(str => possibleMatch.includes(str))) {
+        vertexSet.add(vertex);
+      }
+    });
+
+    return vertexSet;
+  }
 }
+
+export const makeGraph = memoize(10)((ddgModel: TDdgModel) => new Graph({ ddgModel }));
