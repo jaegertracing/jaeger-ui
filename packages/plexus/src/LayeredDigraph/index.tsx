@@ -27,6 +27,7 @@ import {
   TLayer,
   TRendererUtils,
   ELayerType,
+  TSetProps,
 } from './types';
 import { assignMergeCss, getProps } from './utils';
 // TODO(joe): don't use stuff in ../DirectedGraph
@@ -49,7 +50,7 @@ type TLayeredDigraphProps<T = {}, U = {}> = {
   measurableNodesKey: string;
   minimap?: boolean;
   minimapClassName?: string;
-  setOnGraph?: TFromGraphStateFn<T, U>;
+  setOnGraph?: TSetProps<TFromGraphStateFn<T, U>>;
   style?: React.CSSProperties;
   vertices: TVertex<T>[];
   zoom?: boolean;
@@ -266,12 +267,12 @@ export default class LayeredDigraph<T = {}, U = {}> extends React.PureComponent<
       style,
     } = this.props;
     const rootProps = assignMergeCss(
-      { className, style },
-      getProps(setOnGraph, { ...this.state, renderUtils: this.renderUtils }),
       {
         style: this.zoomManager ? WRAPPER_STYLE_ZOOM : WRAPPER_STYLE,
         className: `${classNamePrefix} ${classNamePrefix}-LayeredDigraph`,
-      }
+      },
+      { className, style },
+      getProps(setOnGraph, { ...this.state, renderUtils: this.renderUtils })
     );
     return (
       <div {...rootProps} ref={this.rootRef}>

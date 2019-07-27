@@ -56,18 +56,21 @@ export default class MeasurableHtmlNode<T = {}> extends React.PureComponent<TPro
   private renderHtml() {
     const { getClassName, hidden, renderNode, renderUtils, setOnNode, vertex, layoutVertex } = this.props;
     const { height = null, left = null, top = null, width = null } = layoutVertex || {};
-    const props = assignMergeCss(getProps(setOnNode, vertex, renderUtils, layoutVertex), {
-      className: getClassName('MeasurableHtmlNode'),
-      style: {
-        height,
-        width,
-        boxSizing: 'border-box',
-        position: 'absolute',
-        transform:
-          left == null || top == null ? undefined : `translate(${left.toFixed()}px,${top.toFixed()}px)`,
-        visibility: hidden ? 'hidden' : undefined,
+    const props = assignMergeCss(
+      {
+        className: getClassName('MeasurableHtmlNode'),
+        style: {
+          height,
+          width,
+          boxSizing: 'border-box',
+          position: 'absolute',
+          transform:
+            left == null || top == null ? undefined : `translate(${left.toFixed()}px,${top.toFixed()}px)`,
+          visibility: hidden ? 'hidden' : undefined,
+        },
       },
-    });
+      getProps(setOnNode, vertex, renderUtils, layoutVertex)
+    );
     return (
       <div ref={this.htmlRef} {...props}>
         {renderNode(vertex, renderUtils, layoutVertex)}
@@ -78,11 +81,14 @@ export default class MeasurableHtmlNode<T = {}> extends React.PureComponent<TPro
   private renderSvg() {
     const { getClassName, hidden, renderNode, renderUtils, setOnNode, vertex, layoutVertex } = this.props;
     const { left = null, top = null } = layoutVertex || {};
-    const props = assignMergeCss(getProps(setOnNode, vertex, renderUtils, layoutVertex), {
-      className: getClassName('MeasurableSvgNode'),
-      transform: left == null || top == null ? undefined : `translate(${left.toFixed()}, ${top.toFixed()})`,
-      style: hidden ? SVG_HIDDEN_STYLE : null,
-    });
+    const props = assignMergeCss(
+      {
+        className: getClassName('MeasurableSvgNode'),
+        transform: left == null || top == null ? undefined : `translate(${left.toFixed()}, ${top.toFixed()})`,
+        style: hidden ? SVG_HIDDEN_STYLE : null,
+      },
+      getProps(setOnNode, vertex, renderUtils, layoutVertex)
+    );
     return (
       <g ref={this.svgRef} {...props}>
         {renderNode(vertex, renderUtils, layoutVertex)}
