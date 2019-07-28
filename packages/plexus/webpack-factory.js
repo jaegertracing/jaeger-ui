@@ -65,7 +65,13 @@ function makeBaseConfig() {
 }
 
 function makeDevConfig() {
+  const entry = {
+    index: join(__dirname, 'demo/src/index'),
+    simple: join(__dirname, 'demo/src/SimpleGraph'),
+    'ux-edges': join(__dirname, 'demo/src/UxEdges'),
+  };
   const config = {
+    entry,
     mode: 'development',
     devtool: 'cheap-module-eval-source-map',
     output: {
@@ -73,12 +79,16 @@ function makeDevConfig() {
       publicPath: '/',
       filename: 'assets/[name].js',
     },
-    entry: { index: join(__dirname, 'demo/src/index') },
     devServer: {
       port: 5000,
       hot: false,
       historyApiFallback: true,
       overlay: true,
+      index: 'index',
+      contentBase: join(__dirname, 'build'),
+      staticOptions: {
+        extensions: ['.htm', '.html'],
+      },
       stats: {
         all: false,
         errors: true,
@@ -86,19 +96,21 @@ function makeDevConfig() {
         warnings: true,
       },
     },
-    plugins: [
-      new HtmlWebpackPlugin({
-        template: join(__dirname, 'demo/template.ejs'),
-        appMountId: 'root',
-        lang: 'en',
-        meta: {
-          viewport: 'width=device-width, initial-scale=1',
-        },
-        filename: 'index.html',
-        chunks: ['index'],
-        title: 'React Preview',
-      }),
-    ],
+    plugins: Object.keys(entry).map(
+      name =>
+        new HtmlWebpackPlugin({
+          template: join(__dirname, 'demo/template.ejs'),
+          appMountId: 'root',
+          lang: 'en',
+          meta: {
+            viewport: 'width=device-width, initial-scale=1',
+          },
+          // intentionally omit the ".html" from the filename
+          filename: `${name}`,
+          chunks: [name],
+          title: 'React Preview',
+        })
+    ),
   };
 
   const rules = [
