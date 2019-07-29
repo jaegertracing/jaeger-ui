@@ -45,7 +45,7 @@ describe('getNodeLabel()', () => {
     expect(wrapper).toMatchSnapshot();
   });
 
-  it('renders as a focal node when in provided set', () => {
+  it('renders as a UiFindMatch when in provided set', () => {
     const otherVertex = {
       key: 'other-key',
     };

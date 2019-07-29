@@ -42,7 +42,6 @@ import { ReduxState } from '../../types';
 import './index.css';
 
 type TDispatchProps = {
-  // addViewModifier: (payload: TDdgAddViewModifierPayload) => void;
   fetchDeepDependencyGraph: (query: TDdgModelParams) => void;
   fetchServices: () => void;
   fetchServiceOperations: (service: string) => void;

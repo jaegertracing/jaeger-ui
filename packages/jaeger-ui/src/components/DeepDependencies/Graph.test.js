@@ -37,7 +37,7 @@ describe('<Graph />', () => {
   };
 
   describe('constructor', () => {
-    it('create layout manager', () => {
+    it('creates layout manager', () => {
       const graph = new Graph(props);
       expect(graph.layoutManager instanceof LayoutManager).toBe(true);
     });
