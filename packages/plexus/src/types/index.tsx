@@ -18,7 +18,7 @@ export type TLayoutGraph = {
   width: number;
 };
 
-export type TVertexKey = string | number;
+export type TVertexKey = string;
 
 export type TVertex<T = {}> = T & {
   key: TVertexKey;

@@ -37,7 +37,7 @@ const edges = [
   { from: 'users', to: 'db' },
 ];
 
-const lm = new LayoutManager<{ name: string }>({ useDotEdges: true, rankdir: 'TB', ranksep: 1.1 });
+const lm = new LayoutManager({ useDotEdges: true, rankdir: 'TB', ranksep: 1.1 });
 
 const simpleGraph = (
   <Digraph

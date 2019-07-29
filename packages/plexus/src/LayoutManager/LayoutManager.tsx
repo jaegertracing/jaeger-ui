@@ -24,10 +24,10 @@ type TPendingResult<T, U> = {
   resolveLayout?: (result: TCancelled | TLayoutDone<T, U>) => void;
 };
 
-export default class LayoutManager<T = Record<string, unknown>, U = Record<string, unknown>> {
+export default class LayoutManager {
   layoutId: number;
-  coordinator: Coordinator<T, U>;
-  pendingResult: TPendingResult<T, U> | null;
+  coordinator: Coordinator;
+  pendingResult: TPendingResult<any, any> | null;
   options: TLayoutOptions | void;
 
   constructor(options: TLayoutOptions | void) {
@@ -37,7 +37,7 @@ export default class LayoutManager<T = Record<string, unknown>, U = Record<strin
     this.pendingResult = null;
   }
 
-  getLayout(edges: TEdge<U>[], vertices: TSizeVertex<T>[]): TPendingLayoutResult<T, U> {
+  getLayout<T, U>(edges: TEdge<U>[], vertices: TSizeVertex<T>[]): TPendingLayoutResult<T, U> {
     this._cancelPending();
     this.layoutId++;
     const id = this.layoutId;
@@ -75,7 +75,8 @@ export default class LayoutManager<T = Record<string, unknown>, U = Record<strin
     }
   }
 
-  _handleUpdate = (data: TUpdate<T, U>) => {
+  // _handleUpdate = (data: TUpdate<T, U>) => {
+  _handleUpdate = (data: TUpdate<any, any>) => {
     const pendingResult = this.pendingResult;
     if (!pendingResult || data.layoutId !== pendingResult.id) {
       return;

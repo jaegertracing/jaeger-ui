@@ -31,15 +31,15 @@ import {
 } from './types';
 import { TEdge, TLayoutVertex, TSizeVertex } from '../types';
 
-type TCurrentLayout<T, U> = {
+type TCurrentLayout = {
   cleaned: {
     edges: TEdge<{}>[];
     vertices: TSizeVertex<{}>[];
   };
   id: number;
   input: {
-    edges: TEdge<U>[];
-    vertices: TSizeVertex<T>[];
+    edges: TEdge<any>[];
+    vertices: TSizeVertex<any>[];
   };
   options: TLayoutOptions | null;
   status: {
@@ -80,14 +80,14 @@ function findAndRemoveWorker(lists: LayoutWorker[][], worker: LayoutWorker) {
   return { ok: false };
 }
 
-export default class Coordinator<T = Record<string, unknown>, U = Record<string, unknown>> {
-  currentLayout: TCurrentLayout<T, U> | null;
+export default class Coordinator {
+  currentLayout: TCurrentLayout | null;
   nextWorkerId: number;
   idleWorkers: LayoutWorker[];
   busyWorkers: LayoutWorker[];
-  callback: (update: TUpdate<T, U>) => void;
+  callback: (update: TUpdate<any, any>) => void;
 
-  constructor(callback: (update: TUpdate<T, U>) => void) {
+  constructor(callback: (update: TUpdate<any, any>) => void) {
     this.callback = callback;
     this.currentLayout = null;
     this.nextWorkerId = 0;
@@ -95,7 +95,12 @@ export default class Coordinator<T = Record<string, unknown>, U = Record<string,
     this.busyWorkers = [];
   }
 
-  getLayout(id: number, inEdges: TEdge<U>[], inVertices: TSizeVertex<T>[], options: TLayoutOptions | void) {
+  getLayout<T, U>(
+    id: number,
+    inEdges: TEdge<U>[],
+    inVertices: TSizeVertex<T>[],
+    options: TLayoutOptions | void
+  ) {
     this.busyWorkers.forEach(killWorker);
     this.busyWorkers.length = 0;
     const { edges, vertices: _vertices } = cleanInput(inEdges, inVertices);
@@ -237,7 +242,7 @@ export default class Coordinator<T = Record<string, unknown>, U = Record<string,
 
     const adjVertexCoords = convCoord.vertexToPixels.bind(null, graph);
     const adjCleanVertices = vertices.map<TLayoutVertex>(adjVertexCoords);
-    const adjVertices = matchVertices<T>(input.vertices, adjCleanVertices);
+    const adjVertices = matchVertices(input.vertices, adjCleanVertices);
     const adjGraph = convCoord.graphToPixels(graph);
 
     if (phase === EWorkerPhase.Positions || phase === EWorkerPhase.DotOnly) {

@@ -37,7 +37,7 @@ const edges = [
   { from: 'users', to: 'db' },
 ];
 
-const lm = new LayoutManager<{ name: string }>({ useDotEdges: true, rankdir: 'TB', ranksep: 1.1 });
+const lm = new LayoutManager({ useDotEdges: true, rankdir: 'TB', ranksep: 1.1 });
 
 const UxEdges = () => (
   <Digraph
@@ -69,7 +69,9 @@ const UxEdges = () => (
             edges: true,
             setOnContainer: { style: { cursor: 'default', opacity: 0, strokeWidth: 4 } },
             setOnEdge: layoutEdge => ({
+              // eslint-disable-next-line no-console
               onMouseOver: () => console.log('mouse over', layoutEdge),
+              // eslint-disable-next-line no-console
               onMouseOut: () => console.log('mouse out', layoutEdge),
             }),
           },

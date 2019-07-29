@@ -17,7 +17,7 @@ import * as React from 'react';
 import HtmlLayersGroup from './HtmlLayersGroup';
 import MeasurableNodesLayer from './MeasurableNodesLayer';
 import NodesLayer from './NodesLayer';
-import { classNameIsSmall, scaledStrokeWidth } from './props-factories';
+import { classNameIsSmall, scaleProperty } from './props-factories';
 import SvgEdgesLayer from './SvgEdgesLayer';
 import SvgLayersGroup from './SvgLayersGroup';
 import {
@@ -31,22 +31,22 @@ import {
 } from './types';
 import { assignMergeCss, getProps } from './utils';
 // TODO(joe): don't use stuff in ../DirectedGraph
-import MiniMap from '../DirectedGraph/MiniMap';
 import LayoutManager from '../LayoutManager';
 import { TCancelled, TEdge, TLayoutDone, TSizeVertex, TVertex } from '../types';
 import TNonEmptyArray from '../types/TNonEmptyArray';
-import ZoomManager, { zoomIdentity, ZoomTransform } from '../ZoomManager';
+import MiniMap from '../zoom/MiniMap';
+import ZoomManager, { zoomIdentity, ZoomTransform } from '../zoom/ZoomManager';
 
 type TDigraphState<T = {}, U = {}> = Omit<TExposedGraphState<T, U>, 'renderUtils'> & {
   sizeVertices: TSizeVertex<T>[] | null;
 };
 
-type TDigraphProps<T = {}, U = {}> = {
+type TDigraphProps<T = unknown, U = unknown> = {
   className?: string;
   classNamePrefix?: string;
   edges: TEdge<U>[];
   layers: TNonEmptyArray<TLayer<T, U>>;
-  layoutManager: LayoutManager<T, U>;
+  layoutManager: LayoutManager;
   measurableNodesKey: string;
   minimap?: boolean;
   minimapClassName?: string;
@@ -56,29 +56,32 @@ type TDigraphProps<T = {}, U = {}> = {
   zoom?: boolean;
 };
 
-const WRAPPER_STYLE_ZOOM = {
+const WRAPPER_STYLE_ZOOM: React.CSSProperties = {
   height: '100%',
   overflow: 'hidden',
   position: 'relative',
   width: '100%',
 };
 
-const WRAPPER_STYLE = {
+const WRAPPER_STYLE: React.CSSProperties = {
   position: 'relative',
 };
 
 let idCounter = 0;
 
-export default class Digraph<
-  T = Record<string, unknown>,
-  U = Record<string, unknown>
-> extends React.PureComponent<TDigraphProps<T, U>, TDigraphState<T, U>> {
+export default class Digraph<T = unknown, U = unknown> extends React.PureComponent<
+  TDigraphProps<T, U>,
+  TDigraphState<T, U>
+> {
   renderUtils: TRendererUtils;
 
-  static propsFactories = {
+  static propsFactories: Record<string, TFromGraphStateFn<unknown, unknown>> = {
     classNameIsSmall,
-    scaledStrokeWidth,
+    scaleOpacity: scaleProperty.opacity,
+    strokeOpacity: scaleProperty.strokeOpacity,
   };
+
+  static scaleProperty = scaleProperty;
 
   static defaultProps = {
     className: '',
@@ -117,7 +120,7 @@ export default class Digraph<
       this.zoomManager = new ZoomManager(this.onZoomUpdated);
     }
     this.renderUtils = {
-      getLocalId: this.getLocalId,
+      getGlobalId: this.getGlobalId,
       getZoomTransform: this.getZoomTransform,
     };
   }
@@ -129,7 +132,7 @@ export default class Digraph<
     }
   }
 
-  getLocalId = (name: string) => `${this.baseId}--${name}`;
+  getGlobalId = (name: string) => `${this.baseId}--${name}`;
 
   getZoomTransform = () => this.state.zoomTransform;
 
@@ -266,17 +269,20 @@ export default class Digraph<
       setOnGraph,
       style,
     } = this.props;
+    const builtinStyle = this.zoomManager ? WRAPPER_STYLE_ZOOM : WRAPPER_STYLE;
     const rootProps = assignMergeCss(
       {
-        style: this.zoomManager ? WRAPPER_STYLE_ZOOM : WRAPPER_STYLE,
+        style: builtinStyle,
         className: `${classNamePrefix} ${classNamePrefix}-Digraph`,
       },
       { className, style },
       getProps(setOnGraph, { ...this.state, renderUtils: this.renderUtils })
     );
     return (
-      <div {...rootProps} ref={this.rootRef}>
-        {this.renderLayers()}
+      <div {...rootProps}>
+        <div style={builtinStyle} ref={this.rootRef}>
+          {this.renderLayers()}
+        </div>
         {minimapEnabled && this.zoomManager && (
           <MiniMap
             className={minimapClassName}

@@ -18,13 +18,13 @@ import EdgeArrowDef from './builtins/EdgeArrowDef';
 import EdgesContainer from './builtins/EdgesContainer';
 import PureEdges from './builtins/PureEdges';
 import PureNodes from './builtins/PureNodes';
-import MiniMap from './MiniMap';
 import classNameIsSmall from './prop-factories/classNameIsSmall';
 import mergePropSetters, { assignMergeCss } from './prop-factories/mergePropSetters';
 import scaledStrokeWidth from './prop-factories/scaledStrokeWidth';
 import { TDirectedGraphProps, TDirectedGraphState } from './types';
 import { TCancelled, TLayoutDone, TPositionsDone, TSizeVertex } from '../types';
-import ZoomManager, { zoomIdentity, ZoomTransform } from '../ZoomManager';
+import MiniMap from '../zoom/MiniMap';
+import ZoomManager, { zoomIdentity, ZoomTransform } from '../zoom/ZoomManager';
 
 const PHASE_NO_DATA = 0;
 const PHASE_CALC_SIZES = 1;

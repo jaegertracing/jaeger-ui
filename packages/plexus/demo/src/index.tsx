@@ -16,14 +16,10 @@ import * as React from 'react';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { render } from 'react-dom';
 
-import largeDag, { getNodeLabel as getLargeNodeLabel } from './data-large';
+import largeDag, { getNodeLabel as getLargeNodeLabel, TLargeNode } from './data-large';
 import { edges as dagEdges, vertices as dagVertices } from './data-dag';
 import { colored as colorData, getColorNodeLabel, setOnColorEdge, setOnColorNode } from './data-small';
 import { Digraph, DirectedGraph, LayoutManager } from '../../src';
-import {
-  classNameIsSmall as layeredClassNameIsSmall,
-  scaleProperty,
-} from '../../src/Digraph/props-factories';
 import { TLayer, TRendererUtils, TMeasureNodeUtils } from '../../src/Digraph/types';
 import { TVertex, TLayoutEdge, TLayoutVertex } from '../../src/types';
 import TNonEmptyArray from '../../src/types/TNonEmptyArray';
@@ -35,6 +31,7 @@ type TState = {
 };
 
 const { classNameIsSmall } = DirectedGraph.propsFactories;
+const { classNameIsSmall: layeredClassNameIsSmall, strokeOpacity } = Digraph.propsFactories;
 
 const VOWELS = new Set(['a', 'e', 'i', 'o', 'u', 'y']);
 
@@ -46,8 +43,8 @@ const setOnNode = (vertex: TVertex) => ({
 });
 
 function renderComparisons(
-  a: { nodesKey: string; layers: TNonEmptyArray<TLayer> },
-  b: { nodesKey: string; layers: TNonEmptyArray<TLayer> },
+  a: { nodesKey: string; layers: TNonEmptyArray<TLayer<any, any>> },
+  b: { nodesKey: string; layers: TNonEmptyArray<TLayer<any, any>> },
   hoveredEdge: TLayoutEdge<any> | null = null
 ) {
   return (
@@ -171,7 +168,7 @@ class Demo extends React.PureComponent<{}, TState> {
                 layers: [
                   {
                     key: 'emph-nodes',
-                    renderNode: (lv: TLayoutVertex<any>) =>
+                    renderNode: (lv: TLayoutVertex<{ key: string }>) =>
                       VOWELS.has(lv.vertex.key[0]) ? <div className="DemoGraph--node--emphasized" /> : null,
                   },
                   {
@@ -191,7 +188,7 @@ class Demo extends React.PureComponent<{}, TState> {
                     key: 'edges',
                     markerEndId: 'arrow-head',
                     edges: true,
-                    setOnContainer: scaleProperty.strokeOpacity,
+                    setOnContainer: strokeOpacity,
                   },
                   {
                     key: 'edges-pointer-area',
@@ -274,7 +271,7 @@ class Demo extends React.PureComponent<{}, TState> {
                 edges: true,
                 layerType: 'svg',
                 markerEndId: 'arrowHead',
-                setOnContainer: [{ className: 'DdgGraph--edges' }, scaleProperty.strokeOpacity],
+                setOnContainer: [{ className: 'DdgGraph--edges' }, strokeOpacity],
               },
               {
                 key: 'edges-pointer-area',
@@ -293,7 +290,7 @@ class Demo extends React.PureComponent<{}, TState> {
         <h1>Digraph with measurable SVG nodes</h1>
         <div>
           <div className="DemoGraph">
-            <Digraph
+            <Digraph<TLargeNode>
               zoom
               minimap
               className="DemoGraph--dag"
@@ -308,17 +305,21 @@ class Demo extends React.PureComponent<{}, TState> {
                   edges: true,
                   layerType: 'svg',
                   markerEndId: 'arrowHead',
-                  setOnContainer: [{ className: 'DdgGraph--edges' }, scaleProperty.strokeOpacity],
+                  setOnContainer: [{ className: 'DdgGraph--edges' }, strokeOpacity],
                 },
                 {
                   key: 'nodes',
                   layerType: 'svg',
                   measurable: true,
-                  measureNode: (_: any, utils: TMeasureNodeUtils) => {
+                  measureNode: (_: TVertex, utils: TMeasureNodeUtils) => {
                     const { height, width } = utils.getWrapperSize();
                     return { height: height + 40, width: width + 40 };
                   },
-                  renderNode: (vertex: TVertex, utils: TRendererUtils, lv: TLayoutVertex | null) => (
+                  renderNode: (
+                    vertex: TVertex<TLargeNode>,
+                    utils: TRendererUtils,
+                    lv: TLayoutVertex<TLargeNode> | null
+                  ) => (
                     <>
                       {lv && (
                         <rect
@@ -337,7 +338,8 @@ class Demo extends React.PureComponent<{}, TState> {
                   ),
                 },
               ]}
-              {...largeDag}
+              edges={largeDag.edges}
+              vertices={largeDag.vertices}
             />
           </div>
         </div>

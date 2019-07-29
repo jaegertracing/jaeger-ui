@@ -18,7 +18,7 @@ import SvgDefEntry from './SvgDefEntry';
 import { TSetOnContainer, TExposedGraphState, TDefEntry } from './types';
 import { assignMergeCss, getProps } from './utils';
 import TNonEmptyArray from '../types/TNonEmptyArray';
-import ZoomManager from '../ZoomManager';
+import ZoomManager from '../zoom/ZoomManager';
 
 type TProps<T = {}, U = {}> = Record<string, unknown> &
   TSetOnContainer<T, U> & {

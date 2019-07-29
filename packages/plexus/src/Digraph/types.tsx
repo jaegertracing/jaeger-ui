@@ -16,7 +16,7 @@ import * as React from 'react';
 
 import { TEdge, TLayoutEdge, TLayoutGraph, TLayoutVertex, TVertex } from '../types';
 import { TOneOfFour, TOneOfTwo } from '../types/TOneOf';
-import { ZoomTransform } from '../ZoomManager';
+import { ZoomTransform } from '../zoom/ZoomManager';
 import TNonEmptyArray from '../types/TNonEmptyArray';
 
 export enum ELayoutPhase {
@@ -34,7 +34,7 @@ export enum ELayerType {
 }
 
 export type TRendererUtils = {
-  getLocalId: (name: string) => string;
+  getGlobalId: (name: string) => string;
   getZoomTransform: () => ZoomTransform;
 };
 
@@ -65,7 +65,7 @@ export type TFromGraphStateFn<T = Record<string, unknown>, U = Record<string, un
   input: TExposedGraphState<T, U>
 ) => TAnyProps | null;
 
-export type TSetOnContainer<T = Record<string, unknown>, U = Record<string, unknown>> = {
+export type TSetOnContainer<T = any, U = any> = {
   setOnContainer?: TSetProps<TFromGraphStateFn<T, U>>;
 };
 
