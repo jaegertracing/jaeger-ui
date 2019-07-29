@@ -137,7 +137,7 @@ const edges = [
 
 ### `LayoutManager`
 
-The LayoutManager generates the layout for the graph, i.e. it determines the node positions and the paths of the edges. Options can be passed that will affect the layout. See `TODO(joe)` for details.
+The LayoutManager generates the layout for the graph, i.e. it determines the node positions and the paths of the edges. Options can be passed that will affect the layout. See [`LayoutManager` options](#layoutmanager-options) for details.
 
 ```tsx
 const lm = new LayoutManager({ useDotEdges: true, rankdir: 'TB', ranksep: 1.1 });
