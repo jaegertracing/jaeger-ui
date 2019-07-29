@@ -15,10 +15,7 @@
 import React, { Component } from 'react';
 import { History as RouterHistory, Location } from 'history';
 import _get from 'lodash/get';
-/*
-import memoize from 'lru-memoize';
-import matchSorter from 'match-sorter';
- */
+import { TEdge } from '@jaegertracing/plexus/lib/types';
 import { bindActionCreators, Dispatch } from 'redux';
 import { connect } from 'react-redux';
 
@@ -29,19 +26,14 @@ import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
 import { extractUiFindFromState, TExtractUiFindFromStateReturn } from '../common/UiFindInput';
 import * as jaegerApiActions from '../../actions/jaeger-api';
-// import { actions as deepDependencyActions } from '../../actions/deep-dependency-graph';
 import { fetchedState } from '../../constants';
 import {
   stateKey,
   EDirection,
-  /*
-  EViewModifier,
-  PathElem,
-  TDdgAddViewModifierPayload,
-   */
   TDdgModelParams,
   TDdgSparseUrlState,
   TDdgStateEntry,
+  TDdgVertex,
 } from '../../model/ddg/types';
 import TGraph, { makeGraph } from '../../model/ddg/Graph';
 import { encodeDistance } from '../../model/ddg/visibility-codec';
@@ -78,34 +70,6 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
     }
   }
 
-  /*
-  calcUiFindMatches = memoize(10)((uiFind?: string, visIdxToPathElem?: PathElem[]) => {
-    if (visIdxToPathElem) {
-      const { addViewModifier, urlState } = this.props;
-      const { service, operation } = urlState;
-      if (uiFind && service) {
-        const visibilityIndices: number[] = matchSorter(
-          visIdxToPathElem,
-          uiFind,
-          {
-            keys: ['operation.name', 'operation.service.name']
-          }
-        ).map(({ visibilityIdx }) => visibilityIdx);
-
-        console.log(this.props.uiFind);
-        this.props.addViewModifier({
-          service,
-          operation,
-          start: 0,
-          end: 0,
-          visibilityIndices,
-          viewModifier: EViewModifier.FindMatch,
-        });
-      }
-    }
-  });
-   */
-
   constructor(props: TProps) {
     super(props);
     DeepDependencyGraphPageImpl.fetchModelIfStale(props);
@@ -113,7 +77,6 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
 
   componentWillReceiveProps(nextProps: TProps) {
     DeepDependencyGraphPageImpl.fetchModelIfStale(nextProps);
-    // this.calcUiFindMatches(nextProps.uiFind, _get(nextProps, 'graphState.model.visIdxToPathElem'));
   }
 
   // shouldComponentUpdate is necessary as we don't want the plexus graph to re-render due to a uxStatus change
@@ -129,30 +92,6 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
     ];
     return updateCauses.some(cause => _get(nextProps, cause) !== _get(this.props, cause));
   }
-
-  body = () => {
-    const { graphState, urlState } = this.props;
-    if (!graphState) return <h1>Enter query above</h1>;
-    switch (graphState.state) {
-      case fetchedState.DONE:
-        return (
-          <div className="Ddg--graphWrapper">
-            <Graph ddgModel={graphState.model} visEncoding={urlState.visEncoding} />
-          </div>
-        );
-      case fetchedState.LOADING:
-        return <LoadingIndicator centered />;
-      case fetchedState.ERROR:
-        return <ErrorMessage error={graphState.error} />;
-      default:
-        return (
-          <div>
-            <h1>Unknown graphState:</h1>
-            <p>${JSON.stringify(graphState)}</p>
-          </div>
-        );
-    }
-  };
 
   setDistance = (distance: number, direction: EDirection) => {
     const { graphState } = this.props;
@@ -190,7 +129,37 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
     const { operation, service, visEncoding } = urlState;
     const distanceToPathElems =
       graphState && graphState.state === fetchedState.DONE ? graphState.model.distanceToPathElems : undefined;
-    const inputSuffix = graph && uiFind && `${graph.getVisibleUiFindMatches(uiFind, visEncoding).size} / ${graph.getVisible(visEncoding).vertices.length}`;
+    let edges: TEdge[] | undefined;
+    let vertices: TDdgVertex[] | undefined;
+    let uiFindMatches: Set<TDdgVertex> | undefined;
+    let inputSuffix: string | undefined;
+    if (graph) {
+      uiFindMatches = graph.getVisibleUiFindMatches(uiFind, visEncoding);
+      const { edges: e, vertices: v } = graph.getVisible(visEncoding);
+      edges = e;
+      vertices = v;
+      inputSuffix = uiFind && uiFind.length ? `${uiFindMatches.size} / ${vertices.length}` : undefined;
+    }
+
+    if (!graphState) return <h1>Enter query above</h1>;
+
+    let content = (
+      <div>
+        <h1>Unknown graphState:</h1>
+        <p>${JSON.stringify(graphState)}</p>
+      </div>
+    );
+    if (graphState.state === fetchedState.DONE && edges && vertices) {
+      content = (
+        <div className="Ddg--graphWrapper">
+          <Graph edges={edges} uiFindMatches={uiFindMatches} vertices={vertices} />
+        </div>
+      );
+    } else if (graphState.state === fetchedState.LOADING) {
+      content = <LoadingIndicator centered />;
+    } else if (graphState.state === fetchedState.ERROR) {
+      content = <ErrorMessage error={graphState.error} />;
+    }
 
     return (
       <div>
@@ -204,7 +173,7 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
           setService={this.setService}
           visEncoding={visEncoding}
         />
-        {this.body()}
+        {content}
       </div>
     );
   }
@@ -235,8 +204,7 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
 // export for tests
 export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
   const { fetchDeepDependencyGraph } = bindActionCreators(jaegerApiActions, dispatch);
-  // const { addViewModifier } = bindActionCreators(deepDependencyActions, dispatch);
-  return { /* addViewModifier, */ fetchDeepDependencyGraph };
+  return { fetchDeepDependencyGraph };
 }
 
 export default connect(
