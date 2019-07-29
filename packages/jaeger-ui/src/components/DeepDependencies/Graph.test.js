@@ -17,35 +17,36 @@ import { shallow } from 'enzyme';
 import { DirectedGraph, LayoutManager } from '@jaegertracing/plexus';
 
 import Graph from './Graph';
-import { focalPayloadElem, simplePath, wrap } from '../../model/ddg/sample-paths.test.resources';
-import transformDdgData from '../../model/ddg/transformDdgData';
-import GraphModel from '../../model/ddg/Graph';
 
 describe('<Graph />', () => {
-  const ddgModel = transformDdgData([simplePath].map(wrap), focalPayloadElem);
+  const vertices = [... new Array(10)].map((_, i) => ({ key: `key${i}` }));
+  const edges = [{
+      from: vertices[0].key,
+      to: vertices[1].key,
+  }, {
+      from: vertices[1].key,
+      to: vertices[2].key,
+  }];
+
   const props = {
-    ddgModel,
-    visEncoding: '3',
+    vertices,
+    edges,
   };
 
   describe('constructor', () => {
-    it('creates new managers', () => {
+    it('create layout manager', () => {
       const graph = new Graph(props);
-      expect(graph.graphModel instanceof GraphModel).toBe(true);
       expect(graph.layoutManager instanceof LayoutManager).toBe(true);
     });
   });
 
   describe('render', () => {
-    it('provides edges and vertices from ddgEVManager to plexus', () => {
+    it('renders provided edges and vertices', () => {
       const wrapper = shallow(<Graph {...props} />);
       const plexusGraph = wrapper.find(DirectedGraph);
-      const { edges: expectedEdges, vertices: expectedVertices } = new GraphModel({ ddgModel }).getVisible(
-        '3'
-      );
-
-      expect(plexusGraph.prop('edges')).toEqual(expectedEdges);
-      expect(plexusGraph.prop('vertices')).toEqual(expectedVertices);
+      expect(plexusGraph.prop('edges')).toEqual(edges);
+      expect(plexusGraph.prop('vertices')).toEqual(vertices);
+      expect(wrapper).toMatchSnapshot();
     });
   });
 });

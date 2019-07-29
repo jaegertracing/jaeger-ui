@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import * as React from 'react';
 import { shallow } from 'enzyme';
 
 import DdgNode from './DdgNode';
@@ -30,7 +31,7 @@ describe('getNodeLabel()', () => {
   });
 
   it('returns a <DdgNode/>', () => {
-    const ddgNode = getNodeLabel(ddgVertex);
+    const ddgNode = getNodeLabel()(ddgVertex);
     expect(ddgNode).toBeDefined();
     const wrapper = shallow(ddgNode);
     expect(wrapper).toMatchSnapshot();
@@ -39,9 +40,23 @@ describe('getNodeLabel()', () => {
 
   it('renders as a focal node when isFocalNode == true', () => {
     ddgVertex.isFocalNode = true;
-    const ddgNode = getNodeLabel(ddgVertex);
+    const ddgNode = getNodeLabel()(ddgVertex);
     expect(ddgNode).toBeDefined();
     const wrapper = shallow(ddgNode);
     expect(wrapper).toMatchSnapshot();
+  });
+
+  it('renders as a focal node when in provided set', () => {
+    const otherVertex = {
+      key: 'other-key',
+    };
+    const vertices = new Set([otherVertex]);
+
+    let ddgNode = getNodeLabel(vertices)(ddgVertex);
+    expect(ddgNode.props.isUiFindMatch).toBe(false);
+
+    vertices.add(ddgVertex);
+    ddgNode = getNodeLabel(vertices)(ddgVertex);
+    expect(ddgNode.props.isUiFindMatch).toBe(true);
   });
 });

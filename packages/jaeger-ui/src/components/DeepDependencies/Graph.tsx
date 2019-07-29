@@ -35,7 +35,7 @@ export default class Graph extends PureComponent<TProps> {
   }
 
   render() {
-    const { edges, uiFindMatches, vertices } = this.props; // this.graphModel.getVisible(this.props.visEncoding);
+    const { edges, uiFindMatches, vertices } = this.props;
 
     return (
       <DirectedGraph

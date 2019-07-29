@@ -24,6 +24,14 @@ exports[`<Header> render renders the hops selector if distanceToPathElems is pro
       handleClick={[MockFunction]}
       visEncoding="3"
     />
+    <withRouter(Connect(UnconnectedUiFindInput))
+      inputProps={
+        Object {
+          "className": "DdgHeader--uiFind",
+          "suffix": undefined,
+        }
+      }
+    />
   </div>
 </header>
 `;
@@ -58,7 +66,16 @@ exports[`<Header> render renders the operation selector if a service is selected
   </div>
   <div
     className="DdgHeader--controlHeader"
-  />
+  >
+    <withRouter(Connect(UnconnectedUiFindInput))
+      inputProps={
+        Object {
+          "className": "DdgHeader--uiFind",
+          "suffix": undefined,
+        }
+      }
+    />
+  </div>
 </header>
 `;
 
@@ -92,7 +109,16 @@ exports[`<Header> render renders the operation selector if a service is selected
   </div>
   <div
     className="DdgHeader--controlHeader"
-  />
+  >
+    <withRouter(Connect(UnconnectedUiFindInput))
+      inputProps={
+        Object {
+          "className": "DdgHeader--uiFind",
+          "suffix": undefined,
+        }
+      }
+    />
+  </div>
 </header>
 `;
 
@@ -114,6 +140,15 @@ exports[`<Header> render renders with minimal props 1`] = `
   </div>
   <div
     className="DdgHeader--controlHeader"
-  />
+  >
+    <withRouter(Connect(UnconnectedUiFindInput))
+      inputProps={
+        Object {
+          "className": "DdgHeader--uiFind",
+          "suffix": undefined,
+        }
+      }
+    />
+  </div>
 </header>
 `;

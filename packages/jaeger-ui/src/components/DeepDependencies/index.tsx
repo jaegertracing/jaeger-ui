@@ -76,6 +76,7 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
   }
 
   componentWillReceiveProps(nextProps: TProps) {
+    /* istanbul ignore next */
     DeepDependencyGraphPageImpl.fetchModelIfStale(nextProps);
   }
 

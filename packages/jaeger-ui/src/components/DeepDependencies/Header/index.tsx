@@ -113,7 +113,7 @@ export class HeaderImpl extends React.PureComponent<TProps> {
               visEncoding={visEncoding}
             />
           )}
-          <UiFindInput inputProps={{ suffix: inputSuffix }} />
+          <UiFindInput inputProps={{ className: 'DdgHeader--uiFind', suffix: inputSuffix }} />
         </div>
       </header>
     );

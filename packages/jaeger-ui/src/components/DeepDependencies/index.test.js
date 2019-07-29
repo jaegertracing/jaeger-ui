@@ -32,6 +32,13 @@ describe('DeepDependencyGraphPage', () => {
       history: {
         push: jest.fn(),
       },
+      graph: {
+        getVisible: () => ({
+          edges: [],
+          vertices: [],
+        }),
+        getVisibleUiFindMatches: () => new Set(),
+      },
       graphState: {
         model: {
           distanceToPathElems: new Map(),
