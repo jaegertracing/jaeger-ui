@@ -13,7 +13,6 @@
 // limitations under the License.
 
 import memoize from 'lru-memoize';
-import matchSorter from 'match-sorter';
 
 import { TEdge } from '@jaegertracing/plexus/lib/types';
 

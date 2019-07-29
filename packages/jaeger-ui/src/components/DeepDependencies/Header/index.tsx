@@ -13,63 +13,28 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { connect } from 'react-redux';
-import { bindActionCreators, Dispatch } from 'redux';
 
 import HopsSelector from './HopsSelector';
 import NameSelector from './NameSelector';
 import UiFindInput from '../../common/UiFindInput';
-import * as jaegerApiActions from '../../../actions/jaeger-api';
 import { EDirection, TDdgDistanceToPathElems } from '../../../model/ddg/types';
-import { ReduxState } from '../../../types/index';
 
 import './index.css';
 
-type TDispatchProps = {
-  fetchServices: () => void;
-  fetchServiceOperations: (service: string) => void;
-};
-
-type TReduxProps = {
+type TProps = {
+  distanceToPathElems?: TDdgDistanceToPathElems;
+  inputSuffix: string | undefined;
+  operation?: string;
   // TODO: Take array
   operationsForService: Record<string, string[]>;
+  service?: string;
   services?: string[] | null;
+  setDistance: (distance: number, direction: EDirection) => void;
+  setOperation: (operation: string) => void;
+  setService: (service: string) => void;
+  visEncoding?: string;
 };
-
-type TProps = TDispatchProps &
-  TReduxProps & {
-    distanceToPathElems?: TDdgDistanceToPathElems;
-    inputSuffix: string | undefined;
-    operation?: string;
-    service?: string;
-    setDistance: (distance: number, direction: EDirection) => void;
-    setOperation: (operation: string) => void;
-    setService: (service: string) => void;
-    visEncoding?: string;
-  };
-
-export class HeaderImpl extends React.PureComponent<TProps> {
-  constructor(props: TProps) {
-    super(props);
-
-    const { fetchServices, fetchServiceOperations, operationsForService, service, services } = props;
-
-    if (!services) {
-      fetchServices();
-    }
-    if (service && !Reflect.has(operationsForService, service)) {
-      fetchServiceOperations(service);
-    }
-  }
-
-  setService = (service: string) => {
-    const { fetchServiceOperations, setService, operationsForService } = this.props;
-    if (!Reflect.has(operationsForService, service)) {
-      fetchServiceOperations(service);
-    }
-    setService(service);
-  };
-
+export default class Header extends React.PureComponent<TProps> {
   render() {
     const {
       distanceToPathElems,
@@ -78,8 +43,9 @@ export class HeaderImpl extends React.PureComponent<TProps> {
       operationsForService,
       service,
       services,
-      setOperation,
       setDistance,
+      setOperation,
+      setService,
       visEncoding,
     } = this.props;
 
@@ -90,7 +56,7 @@ export class HeaderImpl extends React.PureComponent<TProps> {
             label="Service:"
             placeholder="Select a service…"
             value={service || null}
-            setValue={this.setService}
+            setValue={setService}
             required
             options={services || []}
           />
@@ -119,25 +85,3 @@ export class HeaderImpl extends React.PureComponent<TProps> {
     );
   }
 }
-
-export function mapStateToProps(state: ReduxState): TReduxProps {
-  const { services: stServices } = state;
-  const { services, operationsForService } = stServices;
-  return {
-    services,
-    operationsForService,
-  };
-}
-
-export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
-  const { fetchServiceOperations, fetchServices } = bindActionCreators(jaegerApiActions, dispatch);
-  return {
-    fetchServiceOperations,
-    fetchServices,
-  };
-}
-
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(HeaderImpl);

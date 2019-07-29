@@ -14,7 +14,9 @@
 
 import * as React from 'react';
 
-import MeasurableHtmlNode from './MeasurableHtmlNode';
+import HtmlLayer from './HtmlLayer';
+import MeasurableNode from './MeasurableNode';
+import SvgLayer from './SvgLayer';
 import {
   TExposedGraphState,
   TLayerType,
@@ -23,14 +25,11 @@ import {
   ELayoutPhase,
   ELayerType,
 } from './types';
-import { assignMergeCss, getProps } from './utils';
 import { TSizeVertex, TVertex } from '../types';
-import { TOneOfTwo } from '../types/TOneOf';
-import ZoomManager from '../ZoomManager';
 
 type TProps<T = {}, U = {}> = Omit<TMeasurableNodeRenderer<T>, 'measurable'> &
   TSetOnContainer<T, U> & {
-    classNamePrefix?: string;
+    getClassName: (name: string) => string;
     graphState: TExposedGraphState<T, U>;
     senderKey: string;
     layerType: TLayerType;
@@ -38,14 +37,8 @@ type TProps<T = {}, U = {}> = Omit<TMeasurableNodeRenderer<T>, 'measurable'> &
     standalone?: boolean;
   };
 
-type TState<T> = TOneOfTwo<
-  {
-    htmlNodeRefs: React.RefObject<MeasurableHtmlNode<T>>[];
-  },
-  {
-    svgNodeRefs: React.RefObject<any>[];
-  }
-> & {
+type TState<T> = {
+  nodeRefs: React.RefObject<MeasurableNode<T>>[];
   vertices: TVertex<T>[];
 };
 
@@ -57,7 +50,6 @@ function createRefs<T>(length: number) {
   return rv;
 }
 
-// TODO - parameterize to handle SVG too
 export default class MeasurableNodesLayer<T = {}, U = {}> extends React.PureComponent<
   TProps<T, U>,
   TState<T>
@@ -70,23 +62,18 @@ export default class MeasurableNodesLayer<T = {}, U = {}> extends React.PureComp
     }
     return {
       vertices,
-      htmlNodeRefs: createRefs<MeasurableHtmlNode<T>>(vertices.length),
+      nodeRefs: createRefs<MeasurableNode<T>>(vertices.length),
     };
   }
 
   constructor(props: TProps<T, U>) {
     super(props);
-    const { graphState, layerType } = props;
-    if (ELayerType.Html === layerType) {
-      const { vertices } = graphState;
-      this.state = {
-        vertices,
-        htmlNodeRefs: createRefs<MeasurableHtmlNode<T>>(vertices.length),
-      };
-    } else {
-      // layerType === ELayerType.Svg
-      throw new Error('Not implemented');
-    }
+    const { graphState } = props;
+    const { vertices } = graphState;
+    this.state = {
+      vertices,
+      nodeRefs: createRefs<MeasurableNode<T>>(vertices.length),
+    };
   }
 
   componentDidMount() {
@@ -102,65 +89,71 @@ export default class MeasurableNodesLayer<T = {}, U = {}> extends React.PureComp
     if (layoutPhase !== ELayoutPhase.CalcSizes) {
       return;
     }
-    const { htmlNodeRefs } = this.state;
-    if (!htmlNodeRefs) {
+    const { nodeRefs } = this.state;
+    if (!nodeRefs) {
       return;
     }
+    const { layerType, measureNode, senderKey, setSizeVertices } = this.props;
+    let current: MeasurableNode<T> | null = null;
+    const utils = measureNode && {
+      layerType,
+      getWrapper: () => {
+        if (current) {
+          return current.getRef();
+        }
+        throw new Error('Invalid scenario');
+      },
+      getWrapperSize: () => {
+        if (current) {
+          return current.measure();
+        }
+        throw new Error('Invalid scenario');
+      },
+    };
+
     const sizeVertices: TSizeVertex<T>[] = [];
-    htmlNodeRefs.forEach((ref, i) => {
-      const { current } = ref;
+    for (let i = 0; i < nodeRefs.length; i++) {
+      current = nodeRefs[i].current;
+      const vertex = vertices[i];
       if (current) {
         sizeVertices.push({
-          ...current.measure(),
-          vertex: vertices[i],
+          vertex,
+          ...(measureNode && utils ? measureNode(vertex, utils) : current.measure()),
         });
-      } else {
-        // eslint-disable-next-line no-console
-        console.error(`Invalid ref state: current is ${current}`);
       }
-    });
-    const { senderKey, setSizeVertices } = this.props;
+    }
     setSizeVertices(senderKey, sizeVertices);
   }
 
-  // TODO - parameterize to handle SVG too
-  private renderVertices(htmlNodeRefs: React.RefObject<MeasurableHtmlNode<T>>[]) {
-    const {
-      classNamePrefix,
-      graphState: { layoutVertices, renderUtils, vertices },
-      nodeRender,
-      setOnNode,
-    } = this.props;
-    return vertices.map((vertex, i) => (
-      <MeasurableHtmlNode<T>
-        key={vertex.key}
-        classNamePrefix={classNamePrefix}
-        ref={htmlNodeRefs[i]}
-        hidden={!layoutVertices}
-        nodeRender={nodeRender}
-        renderUtils={renderUtils}
-        vertex={vertex}
-        layoutVertex={layoutVertices && layoutVertices[i]}
-        setOnNode={setOnNode}
-      />
-    ));
-  }
-
   render() {
-    const { htmlNodeRefs } = this.state;
-    if (htmlNodeRefs) {
-      const { classNamePrefix, graphState, setOnContainer, standalone } = this.props;
-      const { zoomTransform } = graphState;
-      const containerProps = assignMergeCss(getProps(setOnContainer, graphState), {
-        style: {
-          ...(standalone ? ZoomManager.getZoomStyle(zoomTransform) : null),
-          position: 'absolute',
-          top: 0,
-          left: 0,
-        },
-        className: `${classNamePrefix} ${classNamePrefix}-LayeredDigraph--MeasurableNodesLayer`,
-      });
-      return <div {...containerProps}>{this.renderVertices(htmlNodeRefs)}</div>;
+    const { nodeRefs } = this.state;
+    if (nodeRefs) {
+      const {
+        getClassName,
+        graphState: { layoutVertices, renderUtils, vertices },
+        layerType,
+        renderNode,
+        setOnNode,
+      } = this.props;
+      const LayerComponent = layerType === ELayerType.Html ? HtmlLayer : SvgLayer;
+      return (
+        <LayerComponent classNamePart="MeasurableNodesLayer" {...this.props}>
+          {vertices.map((vertex, i) => (
+            <MeasurableNode<T>
+              key={vertex.key}
+              getClassName={getClassName}
+              ref={nodeRefs[i]}
+              hidden={!layoutVertices}
+              layerType={layerType}
+              renderNode={renderNode}
+              renderUtils={renderUtils}
+              vertex={vertex}
+              layoutVertex={layoutVertices && layoutVertices[i]}
+              setOnNode={setOnNode}
+            />
+          ))}
+        </LayerComponent>
+      );
     }
     return null;
   }

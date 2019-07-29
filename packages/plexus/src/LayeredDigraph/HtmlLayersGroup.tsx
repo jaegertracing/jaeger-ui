@@ -14,31 +14,34 @@
 
 import * as React from 'react';
 
+import HtmlLayer from './HtmlLayer';
 import MeasurableNodesLayer from './MeasurableNodesLayer';
+import NodesLayer from './NodesLayer';
 import { TExposedGraphState, THtmlLayersGroup, ELayerType } from './types';
-import { assignMergeCss, getProps } from './utils';
 import { TSizeVertex } from '../types';
-import ZoomManager from '../ZoomManager';
 
 type TProps<T = {}, U = {}> = Omit<THtmlLayersGroup<T, U>, 'layerType' | 'key'> & {
-  classNamePrefix?: string;
+  getClassName: (name: string) => string;
   graphState: TExposedGraphState<T, U>;
   setSizeVertices: (senderKey: string, sizeVertices: TSizeVertex<T>[]) => void;
 };
 
 export default class HtmlLayersGroup<T = {}, U = {}> extends React.PureComponent<TProps<T, U>> {
   private renderLayers() {
-    const { classNamePrefix, layers, graphState, setSizeVertices } = this.props;
+    const { getClassName, layers, graphState, setSizeVertices } = this.props;
+
     return layers.map(layer => {
-      if (layer.nodeRender && layer.measurable) {
-        const { key, setOnContainer, setOnNode, nodeRender } = layer;
+      const { key, setOnContainer } = layer;
+
+      if (layer.measurable) {
+        const { renderNode, setOnNode } = layer;
         return (
           <MeasurableNodesLayer<T, U>
             key={key}
-            classNamePrefix={classNamePrefix}
+            getClassName={getClassName}
             graphState={graphState}
             layerType={ELayerType.Html}
-            nodeRender={nodeRender}
+            renderNode={renderNode}
             senderKey={key}
             setOnContainer={setOnContainer}
             setOnNode={setOnNode}
@@ -46,22 +49,30 @@ export default class HtmlLayersGroup<T = {}, U = {}> extends React.PureComponent
           />
         );
       }
+      if (layer.renderNode) {
+        const { renderNode, setOnNode } = layer;
+        return (
+          <NodesLayer<T, U>
+            key={key}
+            getClassName={getClassName}
+            graphState={graphState}
+            layerType={ELayerType.Html}
+            renderNode={renderNode}
+            setOnContainer={setOnContainer}
+            setOnNode={setOnNode}
+          />
+        );
+      }
+      // html edges layer
       throw new Error('Not implemented');
     });
   }
 
   render() {
-    const { classNamePrefix, graphState, setOnContainer } = this.props;
-    const { zoomTransform } = graphState;
-    const containerProps = assignMergeCss(getProps(setOnContainer, graphState), {
-      style: {
-        ...ZoomManager.getZoomStyle(zoomTransform),
-        position: 'absolute',
-        top: 0,
-        left: 0,
-      },
-      className: `${classNamePrefix} ${classNamePrefix}-LayeredDigraph--HtmlLayersGroup`,
-    });
-    return <div {...containerProps}>{this.renderLayers()}</div>;
+    return (
+      <HtmlLayer topLayer classNamePart="HtmlLayersGroup" {...this.props}>
+        {this.renderLayers()}
+      </HtmlLayer>
+    );
   }
 }

@@ -18,27 +18,74 @@ html {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+.demo-row {
+  display: flex;
+  flex-wrap: nowrap;
+}
+
+.demo-row > :first-child {
+  margin-right: 3rem;
+}
+
 .DemoGraph {
-  border: 1px solid #666;
+  border: 1px solid #bbb;
   cursor: move;
   overflow: hidden;
-  height: 500px;
-  width: 800px;
+  height: 700px;
+  width: 700px;
   position: relative;
 }
 
+.DemoGraph.is-small {
+  height: 250px;
+  width: 350px;
+}
+
 .DemoGraph--dag {
-  background: #f0f0f0;
+  background: #fafafa;
   stroke-width: 0.85;
 }
 
 .DemoGraph--node {
   background: #bbb;
-  border: 1px solid #999;
-  box-shadow: 0 0 7px 1px rgba(0, 0, 0, 0.4);
+  border: 1px solid #777;
+  /* box-shadow: 0 0 7px 1px rgba(0, 0, 0, 0.4); */
   cursor: pointer;
   padding: 0.8em 1.25em;
   white-space: nowrap;
+}
+
+.DemoGraph--node.is-vector-bordered {
+  border: none;
+}
+
+.DemoGraph--node--emphasized {
+  position: absolute;
+  /* content: ""; */
+  left: -20px;
+  right: -20px;
+  top: -20px;
+  bottom: -20px;
+  background-image: repeating-linear-gradient(-60deg, #fffb8f, #fff566 3px, #fffb8f 5px);
+  border: 1px dashed rgba(173, 139, 0, 0.5);
+}
+
+.DemoGraph--node--vectorBorder {
+  fill: none;
+  stroke: #777;
+  stroke-width: 2;
+}
+
+.DemoGraph--node--vectorEmphasized {
+  fill: none;
+  stroke: #fff566;
+  stroke-width: 10;
+}
+
+.DemoGraph--node--vectorEmphasized-border {
+  fill: none;
+  stroke: rgba(173, 139, 0, 0.5);
+  stroke-width: 12;
 }
 
 .DemoGraph--node:hover {

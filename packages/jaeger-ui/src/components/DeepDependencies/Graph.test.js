@@ -19,14 +19,17 @@ import { DirectedGraph, LayoutManager } from '@jaegertracing/plexus';
 import Graph from './Graph';
 
 describe('<Graph />', () => {
-  const vertices = [... new Array(10)].map((_, i) => ({ key: `key${i}` }));
-  const edges = [{
+  const vertices = [...new Array(10)].map((_, i) => ({ key: `key${i}` }));
+  const edges = [
+    {
       from: vertices[0].key,
       to: vertices[1].key,
-  }, {
+    },
+    {
       from: vertices[1].key,
       to: vertices[2].key,
-  }];
+    },
+  ];
 
   const props = {
     vertices,

@@ -44,11 +44,15 @@ import './index.css';
 type TDispatchProps = {
   // addViewModifier: (payload: TDdgAddViewModifierPayload) => void;
   fetchDeepDependencyGraph: (query: TDdgModelParams) => void;
+  fetchServices: () => void;
+  fetchServiceOperations: (service: string) => void;
 };
 
 type TReduxProps = TExtractUiFindFromStateReturn & {
   graph: TGraph | undefined;
   graphState?: TDdgStateEntry;
+  operationsForService: Record<string, string[]>;
+  services?: string[] | null;
   urlState: TDdgSparseUrlState;
 };
 
@@ -73,6 +77,16 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
   constructor(props: TProps) {
     super(props);
     DeepDependencyGraphPageImpl.fetchModelIfStale(props);
+
+    const { fetchServices, fetchServiceOperations, operationsForService, services, urlState } = props;
+    const { service } = urlState;
+
+    if (!services) {
+      fetchServices();
+    }
+    if (service && !Reflect.has(operationsForService, service)) {
+      fetchServiceOperations(service);
+    }
   }
 
   componentWillReceiveProps(nextProps: TProps) {
@@ -84,6 +98,8 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
   shouldComponentUpdate(nextProps: TProps) {
     const updateCauses = [
       'uiFind',
+      'operationsForService',
+      'services',
       'urlState.service',
       'urlState.operation',
       'urlState.start',
@@ -113,20 +129,24 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
   };
 
   setOperation = (operation: string) => {
-    this.updateUrlState({ operation });
+    this.updateUrlState({ operation, visEncoding: undefined });
   };
 
   setService = (service: string) => {
+    const { fetchServiceOperations, operationsForService } = this.props;
+    if (!Reflect.has(operationsForService, service)) {
+      fetchServiceOperations(service);
+    }
     this.updateUrlState({ operation: undefined, service, visEncoding: undefined });
   };
 
   updateUrlState = (newValues: TDdgSparseUrlState) => {
-    const { urlState, history } = this.props;
-    history.push(getUrl(Object.assign({}, urlState, newValues)));
+    const { uiFind, urlState, history } = this.props;
+    history.push(getUrl(Object.assign({ uiFind }, urlState, newValues)));
   };
 
   render() {
-    const { graph, graphState, uiFind, urlState } = this.props;
+    const { graph, graphState, operationsForService, services, uiFind, urlState } = this.props;
     const { operation, service, visEncoding } = urlState;
     const distanceToPathElems =
       graphState && graphState.state === fetchedState.DONE ? graphState.model.distanceToPathElems : undefined;
@@ -168,7 +188,9 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
           distanceToPathElems={distanceToPathElems}
           inputSuffix={inputSuffix}
           operation={operation}
+          operationsForService={operationsForService}
           service={service}
+          services={services}
           setDistance={this.setDistance}
           setOperation={this.setOperation}
           setService={this.setService}
@@ -182,6 +204,8 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
 
 // export for tests
 export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxProps {
+  const { services: stServices } = state;
+  const { services, operationsForService } = stServices;
   const urlState = getUrlState(ownProps.location.search);
   const { service, operation } = urlState;
   let graphState: TDdgStateEntry | undefined;
@@ -197,6 +221,8 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
   return {
     graph,
     graphState,
+    services,
+    operationsForService,
     urlState,
     ...extractUiFindFromState(state),
   };
@@ -204,8 +230,12 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
 
 // export for tests
 export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
-  const { fetchDeepDependencyGraph } = bindActionCreators(jaegerApiActions, dispatch);
-  return { fetchDeepDependencyGraph };
+  const { fetchDeepDependencyGraph, fetchServiceOperations, fetchServices } = bindActionCreators(
+    jaegerApiActions,
+    dispatch
+  );
+
+  return { fetchDeepDependencyGraph, fetchServiceOperations, fetchServices };
 }
 
 export default connect(

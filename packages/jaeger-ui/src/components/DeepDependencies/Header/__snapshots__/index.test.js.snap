@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`<Header> render renders the hops selector if distanceToPathElems is provided 1`] = `
+exports[`<Header> renders the hops selector if distanceToPathElems is provided 1`] = `
 <header
   className="DdgHeader"
 >
@@ -21,7 +21,7 @@ exports[`<Header> render renders the hops selector if distanceToPathElems is pro
   >
     <Component
       distanceToPathElems={Map {}}
-      handleClick={[MockFunction]}
+      handleClick={[Function]}
       visEncoding="3"
     />
     <withRouter(Connect(UnconnectedUiFindInput))
@@ -36,7 +36,7 @@ exports[`<Header> render renders the hops selector if distanceToPathElems is pro
 </header>
 `;
 
-exports[`<Header> render renders the operation selector if a service is selected 1`] = `
+exports[`<Header> renders the operation selector if a service is selected 1`] = `
 <header
   className="DdgHeader"
 >
@@ -60,7 +60,7 @@ exports[`<Header> render renders the operation selector if a service is selected
       options={Array []}
       placeholder="Select an operation…"
       required={true}
-      setValue={[MockFunction]}
+      setValue={[Function]}
       value={null}
     />
   </div>
@@ -79,7 +79,7 @@ exports[`<Header> render renders the operation selector if a service is selected
 </header>
 `;
 
-exports[`<Header> render renders the operation selector if a service is selected 2`] = `
+exports[`<Header> renders the operation selector if a service is selected 2`] = `
 <header
   className="DdgHeader"
 >
@@ -103,7 +103,7 @@ exports[`<Header> render renders the operation selector if a service is selected
       options={Array []}
       placeholder="Select an operation…"
       required={true}
-      setValue={[MockFunction]}
+      setValue={[Function]}
       value="testOperation"
     />
   </div>
@@ -122,7 +122,7 @@ exports[`<Header> render renders the operation selector if a service is selected
 </header>
 `;
 
-exports[`<Header> render renders with minimal props 1`] = `
+exports[`<Header> renders with minimal props 1`] = `
 <header
   className="DdgHeader"
 >

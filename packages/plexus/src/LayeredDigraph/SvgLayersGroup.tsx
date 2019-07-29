@@ -14,42 +14,57 @@
 
 import * as React from 'react';
 
+import NodesLayer from './NodesLayer';
 import SvgEdgesLayer from './SvgEdgesLayer';
-import { TExposedGraphState, TSvgLayersGroup } from './types';
-import { assignMergeCss, getProps } from './utils';
-import SvgDoc from './SvgDoc';
+import SvgLayer from './SvgLayer';
+import { TExposedGraphState, TSvgLayersGroup, ELayerType } from './types';
 
 type TProps<T = {}, U = {}> = Omit<TSvgLayersGroup<T, U>, 'layerType' | 'key'> & {
-  classNamePrefix?: string;
+  getClassName: (name: string) => string;
   graphState: TExposedGraphState<T, U>;
 };
 
 export default class SvgLayersGroup<T = {}, U = {}> extends React.PureComponent<TProps<T, U>> {
   private renderLayers() {
-    const { classNamePrefix, layers, graphState } = this.props;
+    const { getClassName, layers, graphState } = this.props;
     return layers.map(layer => {
+      const { key, setOnContainer } = layer;
       if (layer.edges) {
-        // omit props we don't need to pass on
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { edges, measurable, setOnNode, nodeRender, ...edgeProps } = layer;
         return (
-          <SvgEdgesLayer<T, U> {...edgeProps} classNamePrefix={classNamePrefix} graphState={graphState} />
+          <SvgEdgesLayer<T, U>
+            key={key}
+            getClassName={getClassName}
+            graphState={graphState}
+            markerEndId={layer.markerEndId}
+            markerStartId={layer.markerStartId}
+            setOnContainer={setOnContainer}
+            setOnEdge={layer.setOnEdge}
+          />
         );
       }
-      // nodes layer or meassurable nodes layer
-      throw new Error('Not implemented');
+      if (layer.measurable) {
+        // meassurable nodes layer
+        throw new Error('Not implemented');
+      }
+      return (
+        <NodesLayer<T, U>
+          key={key}
+          getClassName={getClassName}
+          graphState={graphState}
+          layerType={ELayerType.Svg}
+          renderNode={layer.renderNode}
+          setOnContainer={setOnContainer}
+          setOnNode={layer.setOnNode}
+        />
+      );
     });
   }
 
   render() {
-    const { classNamePrefix, defs, graphState, setOnContainer } = this.props;
-    const gProps = assignMergeCss(getProps(setOnContainer, graphState), {
-      className: `${classNamePrefix} ${classNamePrefix}-LayeredDigraph--SvgLayersGroup`,
-    });
     return (
-      <SvgDoc classNamePrefix={classNamePrefix} graphState={graphState} defs={defs}>
-        <g {...gProps}>{this.renderLayers()}</g>
-      </SvgDoc>
+      <SvgLayer topLayer {...this.props} classNamePart="SvgLayersGroup">
+        {this.renderLayers()}
+      </SvgLayer>
     );
   }
 }
