@@ -14,7 +14,6 @@
 
 import * as React from 'react';
 
-import defaultGetNodeLabel from './builtins/defaultGetNodeLabel';
 import EdgeArrowDef from './builtins/EdgeArrowDef';
 import EdgesContainer from './builtins/EdgesContainer';
 import PureEdges from './builtins/PureEdges';
@@ -74,7 +73,7 @@ export default class DirectedGraph<T> extends React.PureComponent<
     arrowScaleDampener: undefined,
     className: '',
     classNamePrefix: 'plexus',
-    getNodeLabel: defaultGetNodeLabel,
+    // getNodeLabel: defaultGetNodeLabel,
     minimap: false,
     minimapClassName: '',
     zoom: false,
@@ -201,7 +200,7 @@ export default class DirectedGraph<T> extends React.PureComponent<
     return (
       <PureNodes
         classNamePrefix={classNamePrefix}
-        getNodeLabel={getNodeLabel || defaultGetNodeLabel}
+        getNodeLabel={getNodeLabel || String}
         layoutVertices={layoutVertices}
         setOnNode={setOnNode}
         vertexRefs={vertexRefs}

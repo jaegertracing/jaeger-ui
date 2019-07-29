@@ -19,13 +19,12 @@ import { render } from 'react-dom';
 import largeDag, { getNodeLabel as getLargeNodeLabel } from './data-large';
 import { edges as dagEdges, vertices as dagVertices } from './data-dag';
 import { colored as colorData, getColorNodeLabel, setOnColorEdge, setOnColorNode } from './data-small';
-import { DirectedGraph, LayoutManager } from '../../src';
-import LayeredDigraph from '../../src/LayeredDigraph';
+import { Digraph, DirectedGraph, LayoutManager } from '../../src';
 import {
   classNameIsSmall as layeredClassNameIsSmall,
   scaleProperty,
-} from '../../src/LayeredDigraph/props-factories';
-import { TLayer, TRendererUtils, TMeasureNodeUtils } from '../../src/LayeredDigraph/types';
+} from '../../src/Digraph/props-factories';
+import { TLayer, TRendererUtils, TMeasureNodeUtils } from '../../src/Digraph/types';
 import { TVertex, TLayoutEdge, TLayoutVertex } from '../../src/types';
 import TNonEmptyArray from '../../src/types/TNonEmptyArray';
 
@@ -56,7 +55,7 @@ function renderComparisons(
       <div className="demo-row">
         <div>
           <div className="DemoGraph is-small">
-            <LayeredDigraph
+            <Digraph
               zoom
               minimap
               className="DemoGraph--dag"
@@ -71,7 +70,7 @@ function renderComparisons(
         </div>
         <div>
           <div className="DemoGraph is-small">
-            <LayeredDigraph
+            <Digraph
               zoom
               minimap
               className="DemoGraph--dag"
@@ -96,7 +95,7 @@ function renderComparisons(
             )}
           </p>
           <div className="DemoGraph">
-            <LayeredDigraph
+            <Digraph
               zoom
               minimap
               className="DemoGraph--dag"
@@ -112,7 +111,7 @@ function renderComparisons(
         <div>
           <p>&nbsp;</p>
           <div className="DemoGraph">
-            <LayeredDigraph
+            <Digraph
               zoom
               minimap
               className="DemoGraph--dag"
@@ -161,7 +160,7 @@ class Demo extends React.PureComponent<{}, TState> {
     const { hoveredEdge } = this.state;
     return (
       <div>
-        <h1>LayeredDigraph</h1>
+        <h1>Digraph</h1>
         {renderComparisons(
           {
             nodesKey: 'main-nodes',
@@ -291,10 +290,10 @@ class Demo extends React.PureComponent<{}, TState> {
           },
           hoveredEdge
         )}
-        <h1>LayeredDigraph with measurable SVG nodes</h1>
+        <h1>Digraph with measurable SVG nodes</h1>
         <div>
           <div className="DemoGraph">
-            <LayeredDigraph
+            <Digraph
               zoom
               minimap
               className="DemoGraph--dag"

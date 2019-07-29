@@ -38,7 +38,7 @@ export type TRendererUtils = {
   getZoomTransform: () => ZoomTransform;
 };
 
-export type TExposedGraphState<T = {}, U = {}> = {
+export type TExposedGraphState<T = Record<string, unknown>, U = Record<string, unknown>> = {
   edges: TEdge<U>[];
   layoutEdges: TLayoutEdge<U>[] | null;
   layoutGraph: TLayoutGraph | null;
@@ -61,15 +61,17 @@ export type TSetProps<TFactoryFn extends TPropFactoryFn> =
   | TFactoryFn
   | TNonEmptyArray<TAnyProps | TFactoryFn>;
 
-export type TFromGraphStateFn<T = {}, U = {}> = (input: TExposedGraphState<T, U>) => TAnyProps | null;
+export type TFromGraphStateFn<T = Record<string, unknown>, U = Record<string, unknown>> = (
+  input: TExposedGraphState<T, U>
+) => TAnyProps | null;
 
-export type TSetOnContainer<T = {}, U = {}> = {
+export type TSetOnContainer<T = Record<string, unknown>, U = Record<string, unknown>> = {
   setOnContainer?: TSetProps<TFromGraphStateFn<T, U>>;
 };
 
 type TKeyed = { key: string };
 
-export type TDefEntry<T = {}, U = {}> = {
+export type TDefEntry<T = Record<string, unknown>, U = Record<string, unknown>> = {
   renderEntry?: (
     graphState: TExposedGraphState<T, U>,
     entryProps: TAnyProps | null,
@@ -79,9 +81,12 @@ export type TDefEntry<T = {}, U = {}> = {
   setOnEntry?: TSetProps<TFromGraphStateFn<T, U>>;
 };
 
-export type TRenderNodeFn<T = {}> = (vertex: TLayoutVertex<T>, utils: TRendererUtils) => React.ReactNode;
+export type TRenderNodeFn<T = Record<string, unknown>> = (
+  vertex: TLayoutVertex<T>,
+  utils: TRendererUtils
+) => React.ReactNode;
 
-export type TRenderMeasurableNodeFn<T = {}> = (
+export type TRenderMeasurableNodeFn<T = Record<string, unknown>> = (
   vertex: TVertex<T>,
   utils: TRendererUtils,
   layoutVertex: TLayoutVertex<T> | null
@@ -93,7 +98,7 @@ export type TMeasureNodeUtils = {
   getWrapper: () => TOneOfTwo<{ htmlWrapper: HTMLDivElement | null }, { svgWrapper: SVGGElement | null }>;
 };
 
-export type TMeasurableNodeRenderer<T = {}> = {
+export type TMeasurableNodeRenderer<T = Record<string, unknown>> = {
   measurable: true;
   measureNode?: (vertex: TVertex<T>, utils: TMeasureNodeUtils) => { height: number; width: number };
   renderNode: TRenderMeasurableNodeFn<T>;
@@ -102,16 +107,16 @@ export type TMeasurableNodeRenderer<T = {}> = {
   >;
 };
 
-export type TNodeRenderer<T = {}> = {
+export type TNodeRenderer<T = Record<string, unknown>> = {
   renderNode: TRenderNodeFn<T>;
   setOnNode?: TSetProps<(layoutVertex: TLayoutVertex<T>, utils: TRendererUtils) => TAnyProps | null>;
 };
 
-type TNodesLayer<T = {}, U = {}> = TKeyed &
+type TNodesLayer<T = Record<string, unknown>, U = Record<string, unknown>> = TKeyed &
   TOneOfTwo<TNodeRenderer<T>, TMeasurableNodeRenderer<T>> &
   TSetOnContainer<T, U>;
 
-type TStandaloneNodesLayer<T = {}, U = {}> = TNodesLayer<T, U> &
+type TStandaloneNodesLayer<T = Record<string, unknown>, U = Record<string, unknown>> = TNodesLayer<T, U> &
   (
     | { layerType: Extract<TLayerType, 'html'> }
     | {
@@ -119,7 +124,7 @@ type TStandaloneNodesLayer<T = {}, U = {}> = TNodesLayer<T, U> &
         defs?: TNonEmptyArray<TDefEntry<T, U>>;
       });
 
-export type TEdgesLayer<T = {}, U = {}> = TKeyed &
+export type TEdgesLayer<T = Record<string, unknown>, U = Record<string, unknown>> = TKeyed &
   TSetOnContainer<T, U> & {
     edges: true;
     markerEndId?: string;
@@ -127,25 +132,28 @@ export type TEdgesLayer<T = {}, U = {}> = TKeyed &
     setOnEdge?: TSetProps<(edge: TLayoutEdge<U>, utils: TRendererUtils) => TAnyProps | null>;
   };
 
-export type TStandaloneEdgesLayer<T = {}, U = {}> = TEdgesLayer<T, U> & {
+export type TStandaloneEdgesLayer<T = Record<string, unknown>, U = Record<string, unknown>> = TEdgesLayer<
+  T,
+  U
+> & {
   defs?: TNonEmptyArray<TDefEntry<T, U>>;
   layerType: Extract<TLayerType, 'svg'>;
 };
 
-export type THtmlLayersGroup<T = {}, U = {}> = TKeyed &
+export type THtmlLayersGroup<T = Record<string, unknown>, U = Record<string, unknown>> = TKeyed &
   TSetOnContainer<T, U> & {
     layerType: Extract<TLayerType, 'html'>;
     layers: TNonEmptyArray<TNodesLayer<T, U>>;
   };
 
-export type TSvgLayersGroup<T = {}, U = {}> = TKeyed &
+export type TSvgLayersGroup<T = Record<string, unknown>, U = Record<string, unknown>> = TKeyed &
   TSetOnContainer<T, U> & {
     layerType: Extract<TLayerType, 'svg'>;
     defs?: TNonEmptyArray<TDefEntry<T, U>>;
     layers: TNonEmptyArray<TOneOfTwo<TNodesLayer<T, U>, TEdgesLayer<T, U>>>;
   };
 
-export type TLayer<T = {}, U = {}> = TOneOfFour<
+export type TLayer<T = Record<string, unknown>, U = Record<string, unknown>> = TOneOfFour<
   THtmlLayersGroup<T, U>,
   TSvgLayersGroup<T, U>,
   TStandaloneNodesLayer<T, U>,

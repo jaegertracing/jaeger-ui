@@ -37,16 +37,16 @@ import { TCancelled, TEdge, TLayoutDone, TSizeVertex, TVertex } from '../types';
 import TNonEmptyArray from '../types/TNonEmptyArray';
 import ZoomManager, { zoomIdentity, ZoomTransform } from '../ZoomManager';
 
-type TLayeredDigraphState<T = {}, U = {}> = Omit<TExposedGraphState<T, U>, 'renderUtils'> & {
+type TDigraphState<T = {}, U = {}> = Omit<TExposedGraphState<T, U>, 'renderUtils'> & {
   sizeVertices: TSizeVertex<T>[] | null;
 };
 
-type TLayeredDigraphProps<T = {}, U = {}> = {
+type TDigraphProps<T = {}, U = {}> = {
   className?: string;
   classNamePrefix?: string;
   edges: TEdge<U>[];
   layers: TNonEmptyArray<TLayer<T, U>>;
-  layoutManager: LayoutManager;
+  layoutManager: LayoutManager<T, U>;
   measurableNodesKey: string;
   minimap?: boolean;
   minimapClassName?: string;
@@ -69,10 +69,10 @@ const WRAPPER_STYLE = {
 
 let idCounter = 0;
 
-export default class LayeredDigraph<T = {}, U = {}> extends React.PureComponent<
-  TLayeredDigraphProps<T, U>,
-  TLayeredDigraphState<T, U>
-> {
+export default class Digraph<
+  T = Record<string, unknown>,
+  U = Record<string, unknown>
+> extends React.PureComponent<TDigraphProps<T, U>, TDigraphState<T, U>> {
   renderUtils: TRendererUtils;
 
   static propsFactories = {
@@ -88,7 +88,7 @@ export default class LayeredDigraph<T = {}, U = {}> extends React.PureComponent<
     zoom: false,
   };
 
-  state: TLayeredDigraphState<T, U> = {
+  state: TDigraphState<T, U> = {
     edges: [],
     layoutEdges: null,
     layoutGraph: null,
@@ -99,13 +99,13 @@ export default class LayeredDigraph<T = {}, U = {}> extends React.PureComponent<
     zoomTransform: zoomIdentity,
   };
 
-  baseId = `plexus--LayeredDigraph--${idCounter++}`;
+  baseId = `plexus--Digraph--${idCounter++}`;
 
   rootRef: React.RefObject<HTMLDivElement> = React.createRef();
 
   zoomManager: ZoomManager | null = null;
 
-  constructor(props: TLayeredDigraphProps<T, U>) {
+  constructor(props: TDigraphProps<T, U>) {
     super(props);
     const { edges, vertices, zoom: zoomEnabled } = props;
     if (Array.isArray(edges) && edges.length && Array.isArray(vertices) && vertices.length) {
@@ -151,7 +151,7 @@ export default class LayeredDigraph<T = {}, U = {}> extends React.PureComponent<
 
   private renderLayers() {
     const { classNamePrefix, layers: topLayers } = this.props;
-    const getClassName = (name: string) => `${classNamePrefix} ${classNamePrefix}-LayeredDigraph--${name}`;
+    const getClassName = (name: string) => `${classNamePrefix} ${classNamePrefix}-Digraph--${name}`;
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { sizeVertices: _, ...partialGraphState } = this.state;
     const graphState = {
@@ -246,7 +246,7 @@ export default class LayeredDigraph<T = {}, U = {}> extends React.PureComponent<
     this.setState({ zoomTransform });
   };
 
-  private onLayoutDone = (result: TCancelled | TLayoutDone) => {
+  private onLayoutDone = (result: TCancelled | TLayoutDone<T, U>) => {
     if (result.isCancelled) {
       return;
     }
@@ -269,7 +269,7 @@ export default class LayeredDigraph<T = {}, U = {}> extends React.PureComponent<
     const rootProps = assignMergeCss(
       {
         style: this.zoomManager ? WRAPPER_STYLE_ZOOM : WRAPPER_STYLE,
-        className: `${classNamePrefix} ${classNamePrefix}-LayeredDigraph`,
+        className: `${classNamePrefix} ${classNamePrefix}-Digraph`,
       },
       { className, style },
       getProps(setOnGraph, { ...this.state, renderUtils: this.renderUtils })

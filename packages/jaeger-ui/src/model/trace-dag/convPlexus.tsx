@@ -32,7 +32,6 @@ export default function convPlexus<T>(nodesMap: Map<NodeID, DagNode<T>>) {
     }
     vertices.push({
       key: i,
-      label: `${dagNode.count} | ${dagNode.operation}`,
       data: dagNode,
     });
     const parentKey = dagNode.parentID && keyMap.get(dagNode.parentID);
