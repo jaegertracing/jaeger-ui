@@ -152,16 +152,12 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
     let edges: TEdge[] | undefined;
     let vertices: TDdgVertex[] | undefined;
     let uiFindMatches: Set<TDdgVertex> | undefined;
-    let inputSuffix: string | undefined;
     if (graph) {
       uiFindMatches = graph.getVisibleUiFindMatches(uiFind, visEncoding);
       const { edges: e, vertices: v } = graph.getVisible(visEncoding);
       edges = e;
       vertices = v;
-      inputSuffix = uiFind && uiFind.length ? `${uiFindMatches.size} / ${vertices.length}` : undefined;
     }
-
-    if (!graphState) return <h1>Enter query above</h1>;
 
     let content = (
       <div>
@@ -169,7 +165,9 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
         <p>${JSON.stringify(graphState)}</p>
       </div>
     );
-    if (graphState.state === fetchedState.DONE && edges && vertices) {
+    if (!graphState) {
+      content = <h1>Enter query above</h1>;
+    } else if (graphState.state === fetchedState.DONE && edges && vertices) {
       content = (
         <div className="Ddg--graphWrapper">
           <Graph edges={edges} uiFindMatches={uiFindMatches} vertices={vertices} />
@@ -185,7 +183,6 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
       <div>
         <Header
           distanceToPathElems={distanceToPathElems}
-          inputSuffix={inputSuffix}
           operation={operation}
           operationsForService={operationsForService}
           service={service}
@@ -193,6 +190,7 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
           setDistance={this.setDistance}
           setOperation={this.setOperation}
           setService={this.setService}
+          uiFindCount={uiFind ? uiFindMatches && uiFindMatches.size : undefined}
           visEncoding={visEncoding}
         />
         {content}

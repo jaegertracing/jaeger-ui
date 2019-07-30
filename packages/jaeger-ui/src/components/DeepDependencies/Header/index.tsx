@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import * as React from 'react';
+import { Icon } from 'antd';
 
 import HopsSelector from './HopsSelector';
 import NameSelector from './NameSelector';
@@ -23,7 +24,6 @@ import './index.css';
 
 type TProps = {
   distanceToPathElems?: TDdgDistanceToPathElems;
-  inputSuffix: string | undefined;
   operation?: string;
   // TODO: Take array
   operationsForService: Record<string, string[]>;
@@ -32,13 +32,13 @@ type TProps = {
   setDistance: (distance: number, direction: EDirection) => void;
   setOperation: (operation: string) => void;
   setService: (service: string) => void;
+  uiFindCount: number | undefined;
   visEncoding?: string;
 };
 export default class Header extends React.PureComponent<TProps> {
   render() {
     const {
       distanceToPathElems,
-      inputSuffix,
       operation,
       operationsForService,
       service,
@@ -46,6 +46,7 @@ export default class Header extends React.PureComponent<TProps> {
       setDistance,
       setOperation,
       setService,
+      uiFindCount,
       visEncoding,
     } = this.props;
 
@@ -79,7 +80,13 @@ export default class Header extends React.PureComponent<TProps> {
               visEncoding={visEncoding}
             />
           )}
-          <UiFindInput inputProps={{ className: 'DdgHeader--uiFind', suffix: inputSuffix }} />
+          <div className="DdgHeader--uiFind">
+            <UiFindInput allowClear inputProps={{ /* allowClear: true, */ className: 'DdgHeader--uiFindInput', prefix: <Icon role='button' type='search' />, suffix: (
+            <span className="DdgHeader--uiFindCount">
+              {uiFindCount != null && uiFindCount}
+            </span>
+            )}} />
+          </div>
         </div>
       </header>
     );

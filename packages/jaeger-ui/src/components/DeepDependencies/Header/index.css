@@ -28,8 +28,9 @@ limitations under the License.
 .DdgHeader--controlHeader {
   align-items: center;
   background-color: #fafafa;
+  /* border-color: #eee; */
+  border-top: 1px solid #eee;
   display: flex;
-  height: 40px; /* Arbitrary height until find is implemented */
   justify-content: space-between;
 }
 
@@ -46,6 +47,9 @@ limitations under the License.
 }
 
 .DdgHeader--uiFind {
+  align-items: center;
+  display: flex;
+  flex-grow: 1;
   min-width: 200px;
   max-width: 20%;
   margin-right: 8px;
@@ -54,4 +58,45 @@ limitations under the License.
 
 .DdgHeader--uiFind:focus-within {
   max-width: 60%;
+}
+
+.DdgHeader--uiFindInput {
+  border-left: 1px solid #eee;
+  border-right: 1px solid #eee;
+}
+
+.DdgHeader--uiFindInput > input {
+  border: none;
+  border-radius: 0px;
+}
+
+.DdgHeader--uiFindInput > .ant-input-suffix {
+  background-color: #ffffff;
+  padding-left: 2px;
+  right: 0px;
+}
+
+.DdgHeader--uiFindCount {
+  background: #ffffb8;
+  border: 1px dashed #fadb14 !important /* #ffec3d */;
+  border-radius: 4px;
+  color: #ad8b00;
+  margin-left: 0.25em;
+  margin-right: 0.5em;
+  transition: width 0.5s;
+  /* min-width: 27px; */
+  /* overflow: auto; */
+  padding: 0.27em 0.4em;
+  stroke: #666;
+  stroke-width: 1.2px;
+  text-align: center;
+}
+
+.DdgHeader--uiFindCount:empty {
+  /* display: none; */
+  border: none;
+  background-color: transparent;
+  padding: none;
+  /* content: '1'; */
+  /* min-width: 27px; */
 }
