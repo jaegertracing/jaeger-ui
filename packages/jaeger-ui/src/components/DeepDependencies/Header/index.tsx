@@ -25,8 +25,7 @@ import './index.css';
 type TProps = {
   distanceToPathElems?: TDdgDistanceToPathElems;
   operation?: string;
-  // TODO: Take array
-  operationsForService: Record<string, string[]>;
+  operations: string[] | undefined;
   service?: string;
   services?: string[] | null;
   setDistance: (distance: number, direction: EDirection) => void;
@@ -53,7 +52,7 @@ export default class Header extends React.PureComponent<TProps> {
     const {
       distanceToPathElems,
       operation,
-      operationsForService,
+      operations,
       service,
       services,
       setDistance,
@@ -81,7 +80,7 @@ export default class Header extends React.PureComponent<TProps> {
               value={operation || null}
               setValue={setOperation}
               required
-              options={operationsForService[service] || []}
+              options={operations || []}
             />
           )}
         </div>

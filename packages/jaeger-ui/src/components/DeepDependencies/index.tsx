@@ -184,7 +184,7 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
         <Header
           distanceToPathElems={distanceToPathElems}
           operation={operation}
-          operationsForService={operationsForService}
+          operations={operationsForService[service || '']}
           service={service}
           services={services}
           setDistance={this.setDistance}

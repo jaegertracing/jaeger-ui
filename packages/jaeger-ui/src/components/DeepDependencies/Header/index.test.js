@@ -21,7 +21,6 @@ import NameSelector from './NameSelector';
 
 describe('<Header>', () => {
   const minProps = {
-    operationsForService: {},
     setDistance: () => {},
     setOperation: () => {},
     setService: () => {},

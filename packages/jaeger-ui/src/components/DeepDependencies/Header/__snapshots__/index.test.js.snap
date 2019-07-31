@@ -136,7 +136,11 @@ exports[`<Header> renders the operation selector if a service is selected 2`] = 
     />
     <NameSelector
       label="Operation:"
-      options={Array []}
+      options={
+        Array [
+          "testOperation",
+        ]
+      }
       placeholder="Select an operation…"
       required={true}
       setValue={[Function]}
