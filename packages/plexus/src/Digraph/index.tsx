@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import * as React from 'react';
+import memoizeOne from 'memoize-one';
 
 import HtmlLayersGroup from './HtmlLayersGroup';
 import MeasurableNodesLayer from './MeasurableNodesLayer';
@@ -78,7 +79,7 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
   static propsFactories: Record<string, TFromGraphStateFn<unknown, unknown>> = {
     classNameIsSmall,
     scaleOpacity: scaleProperty.opacity,
-    strokeOpacity: scaleProperty.strokeOpacity,
+    scaleStrokeOpacity: scaleProperty.strokeOpacity,
   };
 
   static scaleProperty = scaleProperty;
@@ -103,6 +104,10 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
   };
 
   baseId = `plexus--Digraph--${idCounter++}`;
+
+  makeClassNameFactory = memoizeOne((classNamePrefix: string) => {
+    return (name: string) => `${classNamePrefix} ${classNamePrefix}-Digraph--${name}`;
+  });
 
   rootRef: React.RefObject<HTMLDivElement> = React.createRef();
 
@@ -154,7 +159,7 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
 
   private renderLayers() {
     const { classNamePrefix, layers: topLayers } = this.props;
-    const getClassName = (name: string) => `${classNamePrefix} ${classNamePrefix}-Digraph--${name}`;
+    const getClassName = this.makeClassNameFactory(classNamePrefix || '');
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { sizeVertices: _, ...partialGraphState } = this.state;
     const graphState = {

@@ -18,7 +18,7 @@ import { TMeasurableNodeRenderer, TLayerType, TRendererUtils, ELayerType } from 
 import { assignMergeCss, getProps } from './utils';
 import { TLayoutVertex, TVertex } from '../types';
 
-type TProps<T = {}> = Omit<TMeasurableNodeRenderer<T>, 'measurable'> & {
+type TProps<T = {}> = Omit<TMeasurableNodeRenderer<T>, 'measurable' | 'measureNode'> & {
   getClassName: (name: string) => string;
   hidden: boolean;
   layerType: TLayerType;
@@ -29,7 +29,7 @@ type TProps<T = {}> = Omit<TMeasurableNodeRenderer<T>, 'measurable'> & {
 
 const SVG_HIDDEN_STYLE = { visibility: 'hidden' };
 
-export default class MeasurableHtmlNode<T = {}> extends React.PureComponent<TProps<T>> {
+export default class MeasurableNode<T = {}> extends React.PureComponent<TProps<T>> {
   htmlRef: React.RefObject<HTMLDivElement> = React.createRef();
   svgRef: React.RefObject<SVGGElement> = React.createRef();
 

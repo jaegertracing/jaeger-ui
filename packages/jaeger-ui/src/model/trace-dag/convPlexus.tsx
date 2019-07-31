@@ -21,26 +21,19 @@ import TDagVertex from './types/TDagVertex';
 export default function convPlexus<T>(nodesMap: Map<NodeID, DagNode<T>>) {
   const vertices: TDagVertex<T>[] = [];
   const edges: TEdge[] = [];
-  const ids = [...nodesMap.keys()];
-  const keyMap: Map<string, number> = new Map(ids.map((id: NodeID, i: number): [string, number] => [id, i]));
-  for (let i = 0; i < ids.length; i++) {
-    const id = ids[i];
-    const dagNode = nodesMap.get(id);
-    if (!dagNode) {
-      // should not happen, keep flow happy
-      continue;
-    }
+  const nodes = [...nodesMap.values()];
+  for (let i = 0; i < nodes.length; i++) {
+    const dagNode = nodes[i];
     vertices.push({
-      key: i,
+      key: dagNode.id,
       data: dagNode,
     });
-    const parentKey = dagNode.parentID && keyMap.get(dagNode.parentID);
-    if (parentKey == null) {
+    if (!dagNode.parentID) {
       continue;
     }
     edges.push({
-      from: parentKey,
-      to: i,
+      from: dagNode.parentID,
+      to: dagNode.id,
     });
   }
   return { edges, vertices };
