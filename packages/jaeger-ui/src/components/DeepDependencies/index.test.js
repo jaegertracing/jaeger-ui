@@ -182,7 +182,7 @@ describe('DeepDependencyGraphPage', () => {
           encodeDistanceSpy = jest.spyOn(codec, 'encodeDistance').mockImplementation(() => mockNewEncoding);
         });
 
-        it('updates url with result of encodeDistance IFF graph is loaded', () => {
+        it('updates url with result of encodeDistance iff graph is loaded', () => {
           const distance = -3;
           const direction = -1;
           const visEncoding = props.urlState.visEncoding;
@@ -329,15 +329,15 @@ describe('DeepDependencyGraphPage', () => {
         expect(unknownIndication).toMatch(/Unknown graphState/);
       });
 
-      it('calculates uiFindInputSuffix', () => {
+      it('calculates uiFindCount', () => {
         const wrapper = shallow(<DeepDependencyGraphPageImpl {...props} graph={graph} />);
-        expect(wrapper.find(Header).prop('inputSuffix')).toBe(undefined);
+        expect(wrapper.find(Header).prop('uiFindCount')).toBe(undefined);
 
         wrapper.setProps({ uiFind: '' });
-        expect(wrapper.find(Header).prop('inputSuffix')).toBe(undefined);
+        expect(wrapper.find(Header).prop('uiFindCount')).toBe(undefined);
 
         wrapper.setProps({ uiFind: 'truthy uiFind' });
-        expect(wrapper.find(Header).prop('inputSuffix')).toBe(`${vertices.length - 1} / ${vertices.length}`);
+        expect(wrapper.find(Header).prop('uiFindCount')).toBe(vertices.length - 1);
       });
     });
   });

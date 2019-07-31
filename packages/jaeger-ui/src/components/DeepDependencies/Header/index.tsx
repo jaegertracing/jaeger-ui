@@ -47,7 +47,7 @@ export default class Header extends React.PureComponent<TProps> {
     if (this._uiFindInput && this._uiFindInput.current) {
       this._uiFindInput.current.focus();
     }
-  }
+  };
 
   render() {
     const {
@@ -87,11 +87,13 @@ export default class Header extends React.PureComponent<TProps> {
         </div>
         <div className="DdgHeader--controlHeader">
           <div className="DdgHeader--uiFind" role="button" onClick={this.focusUiFindInput}>
-            <Icon className="DdgHeader--uiFindSearchIcon" type='search' />
-            <UiFindInput allowClear forwardedRef={this._uiFindInput} inputProps={{ className: 'DdgHeader--uiFindInput' }} />
-            <span className="DdgHeader--uiFindCount">
-              {uiFindCount != null && uiFindCount}
-            </span>
+            <Icon className="DdgHeader--uiFindSearchIcon" type="search" />
+            <UiFindInput
+              allowClear
+              forwardedRef={this._uiFindInput}
+              inputProps={{ className: 'DdgHeader--uiFindInput' }}
+            />
+            <span className="DdgHeader--uiFindCount">{uiFindCount != null && uiFindCount}</span>
           </div>
           {distanceToPathElems && (
             <HopsSelector

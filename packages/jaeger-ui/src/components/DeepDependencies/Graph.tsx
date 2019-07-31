@@ -31,7 +31,7 @@ export default class Graph extends PureComponent<TProps> {
 
   constructor(props: TProps) {
     super(props);
-    this.layoutManager = new LayoutManager({ /* rankdir: 'TB', */ useDotEdges: true, splines: 'polyline' });
+    this.layoutManager = new LayoutManager({ useDotEdges: true, splines: 'polyline' });
   }
 
   render() {

@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { /* Button, */ Icon, Input } from 'antd';
+import { Icon, Input } from 'antd';
 import { History as RouterHistory, Location } from 'history';
 import _debounce from 'lodash/debounce';
 import _isString from 'lodash/isString';
@@ -46,7 +46,7 @@ type StateType = {
 
 export class UnconnectedUiFindInput extends React.PureComponent<TProps, StateType> {
   static defaultProps: Partial<TProps> = {
-    forwardedRef: React.createRef<Input>(),
+    forwardedRef: undefined,
     inputProps: {},
     trackFindFunction: undefined,
     uiFind: undefined,
@@ -69,7 +69,7 @@ export class UnconnectedUiFindInput extends React.PureComponent<TProps, StateTyp
   clearUiFind = () => {
     this.updateUiFindQueryParam();
     this.updateUiFindQueryParam.flush();
-  }
+  };
 
   handleInputBlur = () => {
     this.updateUiFindQueryParam.flush();
@@ -83,19 +83,14 @@ export class UnconnectedUiFindInput extends React.PureComponent<TProps, StateTyp
   };
 
   render() {
-    const {
-      allowClear,
-      forwardedRef,
-      inputProps,
-    } = this.props;
+    const { allowClear, forwardedRef, inputProps } = this.props;
 
     const inputValue = _isString(this.state.ownInputValue) ? this.state.ownInputValue : this.props.uiFind;
 
-    // antd cannot handle suffix changing from present to absent or vice versa 
+    // antd cannot handle suffix changing from present to absent or vice versa
     let suffix: React.ReactElement = inputProps.suffix || <></>;
     if (inputValue && inputValue.length && allowClear) {
-      suffix = <Icon role='button' type='close' onClick={this.clearUiFind} />;
-      // suffix = <Button icon='close' onClick={this.clearUiFind} />;
+      suffix = <Icon type="close" onClick={this.clearUiFind} />;
       if (inputProps.suffix) {
         suffix = (
           <>
@@ -108,6 +103,7 @@ export class UnconnectedUiFindInput extends React.PureComponent<TProps, StateTyp
 
     return (
       <Input
+        autosize={null}
         placeholder="Find..."
         {...inputProps}
         onBlur={this.handleInputBlur}

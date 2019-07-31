@@ -54,9 +54,9 @@ limitations under the License.
   color: #bbb;
   display: flex;
   flex-grow: 1;
-  min-width: 200px;
-  max-width: 20%;
   margin-right: 8px;
+  max-width: 20%;
+  min-width: 200px;
   transition: max-width 0.5s;
 }
 
