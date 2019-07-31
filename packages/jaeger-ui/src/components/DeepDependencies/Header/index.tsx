@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Icon } from 'antd';
+import { Icon, Input } from 'antd';
 
 import HopsSelector from './HopsSelector';
 import NameSelector from './NameSelector';
@@ -36,6 +36,19 @@ type TProps = {
   visEncoding?: string;
 };
 export default class Header extends React.PureComponent<TProps> {
+  private _uiFindInput: React.RefObject<Input>;
+
+  constructor(props: TProps) {
+    super(props);
+    this._uiFindInput = React.createRef();
+  }
+
+  focusUiFindInput = () => {
+    if (this._uiFindInput && this._uiFindInput.current) {
+      this._uiFindInput.current.focus();
+    }
+  }
+
   render() {
     const {
       distanceToPathElems,
@@ -73,6 +86,13 @@ export default class Header extends React.PureComponent<TProps> {
           )}
         </div>
         <div className="DdgHeader--controlHeader">
+          <div className="DdgHeader--uiFind" role="button" onClick={this.focusUiFindInput}>
+            <Icon className="DdgHeader--uiFindSearchIcon" type='search' />
+            <UiFindInput allowClear forwardedRef={this._uiFindInput} inputProps={{ className: 'DdgHeader--uiFindInput' }} />
+            <span className="DdgHeader--uiFindCount">
+              {uiFindCount != null && uiFindCount}
+            </span>
+          </div>
           {distanceToPathElems && (
             <HopsSelector
               distanceToPathElems={distanceToPathElems}
@@ -80,13 +100,6 @@ export default class Header extends React.PureComponent<TProps> {
               visEncoding={visEncoding}
             />
           )}
-          <div className="DdgHeader--uiFind">
-            <UiFindInput allowClear inputProps={{ /* allowClear: true, */ className: 'DdgHeader--uiFindInput', prefix: <Icon role='button' type='search' />, suffix: (
-            <span className="DdgHeader--uiFindCount">
-              {uiFindCount != null && uiFindCount}
-            </span>
-            )}} />
-          </div>
         </div>
       </header>
     );
