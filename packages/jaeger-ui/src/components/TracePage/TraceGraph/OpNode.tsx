@@ -22,6 +22,7 @@ import TDagVertex from '../../../model/trace-dag/types/TDagVertex';
 import colorGenerator from '../../../utils/color-generator';
 
 import './OpNode.css';
+import EmphasizedNode from '../../common/EmphasizedNode';
 
 type Props = {
   count: number;
@@ -136,24 +137,7 @@ export function getNodeFindEmphasisRenderer(uiFindVertexKeys: Set<string> | null
     if (!uiFindVertexKeys || !uiFindVertexKeys.has(lv.vertex.key)) {
       return null;
     }
-    return (
-      <>
-        <rect
-          className="OpNode--findEmpahsisContrast is-non-scaling"
-          vectorEffect="non-scaling-stroke"
-          width={lv.width}
-          height={lv.height}
-        />
-        <rect className="OpNode--findEmpahsisContrast is-scaling" width={lv.width} height={lv.height} />
-        <rect
-          className="OpNode--findEmpahsis is-non-scaling"
-          vectorEffect="non-scaling-stroke"
-          width={lv.width}
-          height={lv.height}
-        />
-        <rect className="OpNode--findEmpahsis is-scaling" width={lv.width} height={lv.height} />
-      </>
-    );
+    return <EmphasizedNode height={lv.height} width={lv.width} />;
   };
 }
 

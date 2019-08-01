@@ -15,11 +15,12 @@
 import React from 'react';
 import { shallow } from 'enzyme';
 
-import drawNodeGenerator, { DiffNode } from './drawNode';
+import renderNode, { DiffNode } from './renderNode';
 
 describe('drawNode', () => {
   const operation = 'operationName';
   const service = 'serviceName';
+
   describe('diffNode', () => {
     const defaultCount = 100;
     const props = {
@@ -65,7 +66,7 @@ describe('drawNode', () => {
     });
   });
 
-  describe('drawNode function', () => {
+  describe('renderNode()', () => {
     const dataKey = 'data-key';
     const dataValue = 'data-value';
     const key = 'vertex key';
@@ -81,16 +82,10 @@ describe('drawNode', () => {
     };
 
     it('extracts values from vertex.data', () => {
-      const drawNodeResult = drawNodeGenerator(new Set())(vertex);
-      expect(drawNodeResult.props[dataKey]).toBe(dataValue);
-      expect(drawNodeResult.props.isUiFindMatch).toBe(false);
-      expect(drawNodeResult.props.operation).toBe(operation);
-      expect(drawNodeResult.props.service).toBe(service);
-    });
-
-    it('passes isUiFindMatch as true if key is in set', () => {
-      const drawNodeResult = drawNodeGenerator(new Set([key]))(vertex);
-      expect(drawNodeResult.props.isUiFindMatch).toBe(true);
+      const node = renderNode(vertex);
+      expect(node.props[dataKey]).toBe(dataValue);
+      expect(node.props.operation).toBe(operation);
+      expect(node.props.service).toBe(service);
     });
   });
 });

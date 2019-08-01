@@ -24,4 +24,6 @@ export function makeCacheScope() {
   };
 }
 
-export default makeCacheScope();
+const defaultScope = Object.assign(makeCacheScope(), { makeScope: makeCacheScope });
+
+export default defaultScope;

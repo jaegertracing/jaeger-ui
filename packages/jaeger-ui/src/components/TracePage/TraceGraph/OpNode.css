@@ -75,28 +75,6 @@ limitations under the License.
   justify-content: space-between;
 }
 
-.OpNode--findEmpahsis {
-  stroke: #fff3d7;
-}
-
-.OpNode--findEmpahsis.is-non-scaling {
-  stroke-width: 10;
-}
-
-.OpNode--findEmpahsis.is-scaling {
-  stroke-width: 24;
-}
-
-.OpNode--findEmpahsisContrast {
-  stroke: rgba(0, 0, 0, 0.07);
-}
-.OpNode--findEmpahsisContrast.is-non-scaling {
-  stroke-width: 12;
-}
-.OpNode--findEmpahsisContrast.is-scaling {
-  stroke-width: 26;
-}
-
 /* Tweak the popover aesthetics - unfortunate but necessary */
 
 .OpNode--popover .ant-popover-inner-content {
