@@ -14,12 +14,11 @@
 
 import * as React from 'react';
 import { Popover } from 'antd';
-import cx from 'classnames';
+import { TLayoutVertex } from '@jaegertracing/plexus/lib/types';
 
 import { TSumSpan } from './types';
 import CopyIcon from '../../common/CopyIcon';
 import TDagVertex from '../../../model/trace-dag/types/TDagVertex';
-import { TNil } from '../../../types';
 import colorGenerator from '../../../utils/color-generator';
 
 import './OpNode.css';
@@ -34,7 +33,6 @@ type Props = {
   operation: string;
   service: string;
   mode: string;
-  isUiFindMatch: boolean;
 };
 
 export const MODE_SERVICE = 'service';
@@ -42,7 +40,7 @@ export const MODE_TIME = 'time';
 export const MODE_SELFTIME = 'selftime';
 
 export const HELP_TABLE = (
-  <table className="OpNode OpNode--mode-service">
+  <table className="OpNode OpNode--legendNode">
     <tbody>
       <tr>
         <td className="OpNode--metricCell">Count / Error</td>
@@ -66,18 +64,7 @@ export function round2(percent: number) {
 
 export default class OpNode extends React.PureComponent<Props> {
   render() {
-    const {
-      count,
-      errors,
-      time,
-      percent,
-      selfTime,
-      percentSelfTime,
-      operation,
-      service,
-      mode,
-      isUiFindMatch,
-    } = this.props;
+    const { count, errors, time, percent, selfTime, percentSelfTime, operation, service, mode } = this.props;
 
     // Spans over 20 % time are full red - we have probably to reconsider better approach
     let backgroundColor;
@@ -93,12 +80,8 @@ export default class OpNode extends React.PureComponent<Props> {
         .join();
     }
 
-    const className = cx('OpNode', `OpNode--mode-${mode}`, {
-      'is-ui-find-match': isUiFindMatch,
-    });
-
     const table = (
-      <table className={className} cellSpacing="0">
+      <table className={`OpNode OpNode--mode-${mode}`} cellSpacing="0">
         <tbody
           className="OpNode--body"
           style={{
@@ -131,26 +114,56 @@ export default class OpNode extends React.PureComponent<Props> {
         </tbody>
       </table>
     );
+    const popoverContent = <div className="OpNode--popoverContent">{table}</div>;
 
     return (
-      <Popover overlayClassName="OpNode--popover" mouseEnterDelay={0.25} content={table}>
+      <Popover overlayClassName="OpNode--popover" mouseEnterDelay={0.25} content={popoverContent}>
         {table}
       </Popover>
     );
   }
 }
 
-export function getNodeDrawer(mode: string, uiFindVertexKeys: Set<number | string> | TNil) {
+export function getNodeRenderer(mode: string) {
   return function drawNode(vertex: TDagVertex<TSumSpan>) {
     const { data, operation, service } = vertex.data;
+    return <OpNode {...data} mode={mode} operation={operation} service={service} />;
+  };
+}
+
+export function getNodeFindEmphasisRenderer(uiFindVertexKeys: Set<string> | null | undefined) {
+  return function renderFindEmphasis(lv: TLayoutVertex<TDagVertex<TSumSpan>>) {
+    if (!uiFindVertexKeys || !uiFindVertexKeys.has(lv.vertex.key)) {
+      return null;
+    }
     return (
-      <OpNode
-        {...data}
-        isUiFindMatch={uiFindVertexKeys ? uiFindVertexKeys.has(vertex.key) : false}
-        mode={mode}
-        operation={operation}
-        service={service}
-      />
+      <>
+        <rect
+          className="OpNode--findEmpahsisContrast is-non-scaling"
+          vectorEffect="non-scaling-stroke"
+          width={lv.width}
+          height={lv.height}
+        />
+        <rect className="OpNode--findEmpahsisContrast is-scaling" width={lv.width} height={lv.height} />
+        <rect
+          className="OpNode--findEmpahsis is-non-scaling"
+          vectorEffect="non-scaling-stroke"
+          width={lv.width}
+          height={lv.height}
+        />
+        <rect className="OpNode--findEmpahsis is-scaling" width={lv.width} height={lv.height} />
+      </>
     );
   };
+}
+
+export function renderNodeVectorBorder(lv: TLayoutVertex<TDagVertex<TSumSpan>>) {
+  return (
+    <rect
+      className="OpNode--vectorBorder"
+      vectorEffect="non-scaling-stroke"
+      width={lv.width}
+      height={lv.height}
+    />
+  );
 }

@@ -16,10 +16,20 @@ limitations under the License.
 
 .OpNode {
   width: 100%;
-  border: 1px solid #111;
+  background: #fff;
   cursor: pointer;
   white-space: nowrap;
   border-collapse: separate;
+}
+
+.OpNode--popoverContent {
+  border: 1px solid #bbb;
+}
+
+.OpNode--vectorBorder {
+  box-sizing: content-box;
+  stroke: rgba(0, 0, 0, 0.4);
+  stroke-width: 2;
 }
 
 .OpNode td,
@@ -36,8 +46,8 @@ limitations under the License.
   outline: #fff3d7 solid 3px;
 }
 
-.OpMode--mode-service {
-  background: #bbb;
+.OpNode--legendNode {
+  background: #096dd9;
 }
 
 .OpNode--mode-time {
@@ -63,6 +73,28 @@ limitations under the License.
 .OpNode--service {
   display: flex;
   justify-content: space-between;
+}
+
+.OpNode--findEmpahsis {
+  stroke: #fff3d7;
+}
+
+.OpNode--findEmpahsis.is-non-scaling {
+  stroke-width: 10;
+}
+
+.OpNode--findEmpahsis.is-scaling {
+  stroke-width: 24;
+}
+
+.OpNode--findEmpahsisContrast {
+  stroke: rgba(0, 0, 0, 0.07);
+}
+.OpNode--findEmpahsisContrast.is-non-scaling {
+  stroke-width: 12;
+}
+.OpNode--findEmpahsisContrast.is-scaling {
+  stroke-width: 26;
 }
 
 /* Tweak the popover aesthetics - unfortunate but necessary */
