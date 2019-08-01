@@ -21,12 +21,12 @@ import { decode } from './visibility-codec';
 import { PathElem, TDdgDistanceToPathElems, TDdgModel, TDdgVertex } from './types';
 
 export default class Graph {
-  private distanceToPathElems: TDdgDistanceToPathElems;
-  private pathElemToEdge: Map<PathElem, TEdge>;
-  private pathElemToVertex: Map<PathElem, TDdgVertex>;
-  private vertexToPathElems: Map<TDdgVertex, Set<PathElem>>;
-  private vertices: Map<string, TDdgVertex>;
-  private visIdxToPathElem: PathElem[];
+  private readonly distanceToPathElems: TDdgDistanceToPathElems;
+  private readonly pathElemToEdge: Map<PathElem, TEdge>;
+  private readonly pathElemToVertex: Map<PathElem, TDdgVertex>;
+  private readonly vertexToPathElems: Map<TDdgVertex, Set<PathElem>>;
+  private readonly vertices: Map<string, TDdgVertex>;
+  private readonly visIdxToPathElem: PathElem[];
 
   constructor({ ddgModel }: { ddgModel: TDdgModel }) {
     this.distanceToPathElems = ddgModel.distanceToPathElems;
@@ -176,6 +176,20 @@ export default class Graph {
       return vertexSet;
     }
   );
+
+  // eslint-disable-next-line consistent-return
+  public getVisiblePathElems = (vertexKey: string, visEncoding?: string): PathElem[] | undefined => {
+    const vertex = this.vertices.get(vertexKey);
+    if (vertex) {
+      const pathElems = this.vertexToPathElems.get(vertex);
+      if (pathElems && pathElems.size) {
+        const visIndices = visEncoding ? new Set(decode(visEncoding)) : undefined;
+        return Array.from(pathElems).filter(elem => {
+          return visIndices ? visIndices.has(elem.visibilityIdx) : Math.abs(elem.distance) < 3;
+        });
+      }
+    }
+  };
 }
 
 export const makeGraph = memoize(10)((ddgModel: TDdgModel) => new Graph({ ddgModel }));

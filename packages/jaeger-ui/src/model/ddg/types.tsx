@@ -27,6 +27,7 @@ export type TDdgPayloadEntry = {
 
 export type TDdgPayload = {
   path: TDdgPayloadEntry[];
+  trace_id: string; // eslint-disable-line camelcase
 }[];
 
 export type TDdgService = {
@@ -45,6 +46,7 @@ export type TDdgServiceMap = Map<string, TDdgService>;
 export type TDdgPath = {
   focalIdx: number;
   members: PathElem[];
+  traceID: string;
 };
 
 export type TDdgDistanceToPathElems = Map<number, PathElem[]>;

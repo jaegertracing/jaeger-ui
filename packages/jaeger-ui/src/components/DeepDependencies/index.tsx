@@ -167,10 +167,15 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
     );
     if (!graphState) {
       content = <h1>Enter query above</h1>;
-    } else if (graphState.state === fetchedState.DONE && edges && vertices) {
+    } else if (graphState.state === fetchedState.DONE && graph && edges && vertices) {
       content = (
         <div className="Ddg--graphWrapper">
-          <Graph edges={edges} uiFindMatches={uiFindMatches} vertices={vertices} />
+          <Graph
+            edges={edges}
+            getVisiblePathElems={(key: string) => graph.getVisiblePathElems(key, visEncoding)}
+            uiFindMatches={uiFindMatches}
+            vertices={vertices}
+          />
         </div>
       );
     } else if (graphState.state === fetchedState.LOADING) {

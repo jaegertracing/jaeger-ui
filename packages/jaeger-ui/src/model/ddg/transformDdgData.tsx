@@ -33,8 +33,8 @@ export default function transformDdgData(
   const pathCompareValues: Map<TDdgPayloadEntry[], string> = new Map();
 
   const paths = payload
-    .map(({ path }) => path)
-    .sort((a, b) => {
+    // .map(({ path }) => path)
+    .sort(({ path: a }, { path: b }) => {
       let aCompareValue = pathCompareValues.get(a);
       if (!aCompareValue) {
         aCompareValue = a.map(stringifyEntry).join();
@@ -49,9 +49,10 @@ export default function transformDdgData(
       if (aCompareValue < bCompareValue) return -1;
       return 0;
     })
-    .map(payloadPath => {
+    // eslint-disable-next-line camelcase
+    .map(({ path: payloadPath, trace_id }) => {
       // Path with stand-in values is necessary for assigning PathElem.memberOf
-      const path: TDdgPath = { focalIdx: -1, members: [] };
+      const path: TDdgPath = { focalIdx: -1, members: [], traceID: trace_id };
 
       path.members = payloadPath.map(({ operation: operationName, service: serviceName }, i) => {
         // Ensure pathElem.service exists, else create it
