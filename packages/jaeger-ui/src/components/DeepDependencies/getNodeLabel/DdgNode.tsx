@@ -35,6 +35,7 @@ type TProps = {
   setViewModifier: (vertexKey: string, viewModifier: EViewModifier, isEnabled: boolean) => void;
 };
 
+// While browsers suport URLs of unlimited length, many server clients do not handle more than this max
 const MAX_LENGTH = 2083;
 const MIN_LENGTH = getSearchUrl().length;
 const PARAM_NAME_LENGTH = '&traceID='.length;
@@ -48,6 +49,8 @@ export default class DdgNode extends React.PureComponent<TProps> {
       let currLength = MIN_LENGTH;
       for (let i = 0; i < elems.length; i++) {
         const id = elems[i].memberOf.traceID;
+        // Keep track of the length, then break if it is too long, to avoid opening a tab with a URL that the
+        // backend cannot process, even if there are more traceIDs
         currLength += PARAM_NAME_LENGTH + id.length;
         if (currLength > MAX_LENGTH) break;
         ids.add(id);
