@@ -35,15 +35,10 @@ type TProps = {
   visEncoding?: string;
 };
 export default class Header extends React.PureComponent<TProps> {
-  private _uiFindInput: React.RefObject<Input>;
-
-  constructor(props: TProps) {
-    super(props);
-    this._uiFindInput = React.createRef();
-  }
+  private _uiFindInput: React.RefObject<Input> = React.createRef();
 
   focusUiFindInput = () => {
-    if (this._uiFindInput && this._uiFindInput.current) {
+    if (this._uiFindInput.current) {
       this._uiFindInput.current.focus();
     }
   };
@@ -92,7 +87,7 @@ export default class Header extends React.PureComponent<TProps> {
               forwardedRef={this._uiFindInput}
               inputProps={{ className: 'DdgHeader--uiFindInput' }}
             />
-            <span className="DdgHeader--uiFindCount">{uiFindCount != null && uiFindCount}</span>
+            <span className="DdgHeader--uiFindCount">{uiFindCount}</span>
           </div>
           {distanceToPathElems && (
             <HopsSelector

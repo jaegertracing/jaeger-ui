@@ -161,14 +161,14 @@ export default class Graph {
       if (!uiFind) return vertexSet;
 
       const uiFindArr = uiFind
+        .trim()
         .toLowerCase()
-        .split(' ')
-        .filter(Boolean);
+        .split(' ');
       const { vertices } = this.getVisible(visEncoding);
       vertices.forEach(vertex => {
-        const { service, operation } = vertex;
-        const possibleMatch = `${service} ${operation}`.toLowerCase();
-        if (uiFindArr.some(str => possibleMatch.includes(str))) {
+        const svc = vertex.service.toLowerCase();
+        const op = vertex.operation.toLowerCase();
+        if (uiFindArr.some(str => svc.includes(str) || op.includes(str))) {
           vertexSet.add(vertex);
         }
       });

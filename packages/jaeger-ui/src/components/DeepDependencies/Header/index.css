@@ -61,7 +61,7 @@ limitations under the License.
 }
 
 .DdgHeader--uiFind:focus-within {
-  max-width: 60%;
+  max-width: 40%;
 }
 
 .DdgHeader--uiFindSearchIcon {

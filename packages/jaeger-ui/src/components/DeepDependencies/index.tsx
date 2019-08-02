@@ -15,7 +15,6 @@
 import React, { Component } from 'react';
 import { History as RouterHistory, Location } from 'history';
 import _get from 'lodash/get';
-import { TEdge } from '@jaegertracing/plexus/lib/types';
 import { bindActionCreators, Dispatch } from 'redux';
 import { connect } from 'react-redux';
 
@@ -33,7 +32,6 @@ import {
   TDdgModelParams,
   TDdgSparseUrlState,
   TDdgStateEntry,
-  TDdgVertex,
 } from '../../model/ddg/types';
 import TGraph, { makeGraph } from '../../model/ddg/Graph';
 import { encodeDistance } from '../../model/ddg/visibility-codec';
@@ -141,7 +139,7 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
 
   updateUrlState = (newValues: TDdgSparseUrlState) => {
     const { uiFind, urlState, history } = this.props;
-    history.push(getUrl(Object.assign({ uiFind }, urlState, newValues)));
+    history.push(getUrl({ uiFind, ...urlState, ...newValues }));
   };
 
   render() {
@@ -149,15 +147,7 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
     const { operation, service, visEncoding } = urlState;
     const distanceToPathElems =
       graphState && graphState.state === fetchedState.DONE ? graphState.model.distanceToPathElems : undefined;
-    let edges: TEdge[] | undefined;
-    let vertices: TDdgVertex[] | undefined;
-    let uiFindMatches: Set<TDdgVertex> | undefined;
-    if (graph) {
-      uiFindMatches = graph.getVisibleUiFindMatches(uiFind, visEncoding);
-      const { edges: e, vertices: v } = graph.getVisible(visEncoding);
-      edges = e;
-      vertices = v;
-    }
+    const uiFindMatches = graph && graph.getVisibleUiFindMatches(uiFind, visEncoding);
 
     let content = (
       <div>
@@ -167,7 +157,8 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
     );
     if (!graphState) {
       content = <h1>Enter query above</h1>;
-    } else if (graphState.state === fetchedState.DONE && edges && vertices) {
+    } else if (graphState.state === fetchedState.DONE && graph) {
+      const { edges, vertices } = graph.getVisible(visEncoding);
       content = (
         <div className="Ddg--graphWrapper">
           <Graph edges={edges} uiFindMatches={uiFindMatches} vertices={vertices} />
