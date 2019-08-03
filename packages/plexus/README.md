@@ -21,24 +21,23 @@ A React component for directed graphs.
   - [Layers group](#layers-group)
   - [`setOn*` props factories](#seton-props-factories)
 - [API](#api)
-  - [Common types](#common-types)
-    - [TExtension](#textension)
+  - [Input](#input)
     - [TVertexKey](#tvertexkey)
     - [TVertex](#tvertex)
     - [TEdge](#tedge)
+  - [Data augmented with layout information](#data-augmented-with-layout-information)
     - [TLayoutVertex](#tlayoutvertex)
     - [TLayoutEdge](#tlayoutedge)
     - [TLayoutGraph](#tlayoutgraph)
-    - [ELayoutPhase](#elayoutphase)
+  - [Externally exposed graph state](#externally-exposed-graph-state)
     - [TRendererUtils](#trendererutils)
     - [TExposedGraphState](#texposedgraphstate)
     - [TContainerPropsSetter](#tcontainerpropssetter)
-    - [TDefEntry](#tdefentry)
   - [`LayoutManager` options](#layoutmanager-options)
   - [`LayeredDigraph` props](#layereddigraph-props)
   - [Layer configuration objects](#layer-configuration-objects)
     - [Common to all layers](#common-to-all-layers)
-    - [Common to SVG layers](#common-to-svg-layers)
+    - [Common to SVG layers, only](#common-to-svg-layers-only)
     - [Measurable nodes layer](#measurable-nodes-layer)
     - [Nodes layer](#nodes-layer)
     - [Edges layer](#edges-layer)
@@ -59,7 +58,7 @@ We needed to render directed graphs in Jaeger UI for the trace comparison featur
 - The more readable the graphs, the better
 - Try not to step outside of React
 - Complex layouts within nodes should be supported
-- We should not need to specify the width and height of nodes (but, resizing ndoes doesn't need to be supported)
+- We should not need to specify the width and height of nodes (but, resizing nodes doesn't need to be supported)
 - We want lots of options for styling and adding interactivity
 
 We found the landscape to be very impressive, but none of the existing options seemed to fit our key takeaways:
@@ -81,7 +80,8 @@ To break this down a bit further:
 - React
   - Use HTML to render content within nodes
   - Use SVG to render edges
-  - Do whatever we want for adding interactivity
+  - Use either HTML or SVG to render supplemental layers of graph elements
+  - Use standard React patterns for adding interactivity
 
 The excellent [viz.js](https://github.com/mdaines/viz.js) is used, in a WebWorker, to generate GraphViz as plain-text output which is then parsed and provided to a React component which does the rendering.
 
@@ -143,7 +143,7 @@ The LayoutManager generates the layout for the graph, i.e. it determines the nod
 const lm = new LayoutManager({ useDotEdges: true, rankdir: 'TB', ranksep: 1.1 });
 ```
 
-### `<LayeredDigraph>`
+### `LayeredDigraph`
 
 `(TODO(joe): Update after renaming the component.) VV`
 
@@ -285,7 +285,7 @@ Layers can be grouped by their type: HTML or SVG. This is mainly only relevant i
 
 plexus provides hooks to define or generate props for the elements in the graph and their containers. For instance, the `setOnGraph` prop of the `LayeredDigraph` component (TODO(joe): rename) allows props to be defined or generated for the root `<div>` element of the graph.
 
-Generally, the value of these can be either an object of props to set on the target element, a function which will generate either `null` or an object of props to set on the target, or an array either of these.
+Generally, the value of these can be either an object of props to set on the target element, a function which will generate either `null` or an object of props to set on the target, or an array of either of these.
 
 ```tsx
 const graphClassName = { className: 'LeGraphOlogy' };
@@ -331,24 +331,23 @@ const allOfTheAbove = (
 
 ## API
 
-- [Common types](#common-types)
-  - [TExtension](#textension)
+- [Input](#input)
   - [TVertexKey](#tvertexkey)
   - [TVertex](#tvertex)
   - [TEdge](#tedge)
+- [Data augmented with layout information](#data-augmented-with-layout-information)
   - [TLayoutVertex](#tlayoutvertex)
   - [TLayoutEdge](#tlayoutedge)
   - [TLayoutGraph](#tlayoutgraph)
-  - [ELayoutPhase](#elayoutphase)
+- [Externally exposed graph state](#externally-exposed-graph-state)
   - [TRendererUtils](#trendererutils)
   - [TExposedGraphState](#texposedgraphstate)
   - [TContainerPropsSetter](#tcontainerpropssetter)
-  - [TDefEntry](#tdefentry)
 - [`LayoutManager` options](#layoutmanager-options)
 - [`LayeredDigraph` props](#layereddigraph-props)
 - [Layer configuration objects](#layer-configuration-objects)
   - [Common to all layers](#common-to-all-layers)
-  - [Common to SVG layers](#common-to-svg-layers)
+  - [Common to SVG layers, only](#common-to-svg-layers-only)
   - [Measurable nodes layer](#measurable-nodes-layer)
   - [Nodes layer](#nodes-layer)
   - [Edges layer](#edges-layer)
@@ -359,22 +358,14 @@ const allOfTheAbove = (
   - [scaleProperty.strokeOpacity](#scalepropertystrokeopacity)
   - [scaleProperty](#scaleproperty)
 
-### Common types
-
-#### `TExtension`
-
-The default type parameter for extending `TVertex` and `TEdge`.
-
-```tsx
-type TExtension = Record<string, unknown>;
-```
+### Input
 
 #### `TVertexKey`
 
 The type for the `key` field on vertices.
 
 ```tsx
-type TVertexKey = string | number;
+type TVertexKey = string;
 ```
 
 #### `TVertex`
@@ -382,10 +373,8 @@ type TVertexKey = string | number;
 The type for the data underlying vertices.
 
 ```tsx
-type TVertex<T = TExtension> = T & {
+type TVertex<T = {}> = T & {
   key: TVertexKey;
-  // TODO(joe): remove label
-  label?: React.ReactNode;
 };
 ```
 
@@ -394,21 +383,21 @@ type TVertex<T = TExtension> = T & {
 The data that underlies edges in a graph.
 
 ```tsx
-type TEdge<T = TExtension> = {
+type TEdge<T = {}> = T & {
   from: TVertexKey;
   to: TVertexKey;
   isBidirectional?: boolean;
-  label?: React.ReactNode;
-  data?: T;
 };
 ```
+
+### Data augmented with layout information
 
 #### `TLayoutVertex`
 
 The underlying vertex data with layout information for a given vertex.
 
 ```tsx
-type TLayoutVertex<T = TExtension> = {
+type TLayoutVertex<T = {}> = {
   vertex: TVertex<T>;
   height: number;
   left: number;
@@ -422,7 +411,7 @@ type TLayoutVertex<T = TExtension> = {
 The combination of the underlying edge data (for a single edge) and the path information for a given edge.
 
 ```tsx
-type TLayoutEdge<T = TExtension> = {
+type TLayoutEdge<T = {}> = {
   edge: TEdge<T>;
   pathPoints: [number, number][];
 };
@@ -440,30 +429,22 @@ type TLayoutGraph = {
 };
 ```
 
-#### `ELayoutPhase`
+### Externally exposed graph state
 
-The various phases of the graph layout process.
-
-```tsx
-enum ELayoutPhase {
-  NoData = 'NoData',
-  CalcSizes = 'CalcSizes',
-  CalcPositions = 'CalcPositions',
-  CalcEdges = 'CalcEdges',
-  Done = 'Done',
-}
-```
+Various aspects of the state of the plexus graph are made available to props factories and render functions.
 
 #### `TRendererUtils`
 
 These utils are made available to the props factories (`setOn...`) and the render fields of the layer configuration objects.
+
+The specific object which serves as the `TRendererUtils` that is made available does not change; referential equality is maintained throughout the life of a plexus graph. Therefore, these utils don't trigger updates to components (such as when the zoom transform changes).
 
 | Field | Type and description |
 | :-- | :-- |
 | getLocalId | `(name: string) => string` |
 |  | Takes in a string and prefixes it to scope the string to the current plexus graph. This effectively allows for IDs that are unique within the document given the `name` parameter is unique within a graph.<br>&nbsp; |
 | getZoomTransform | `() => ZoomTransform` |
-|  | Returns the current D3 zoom transform. See <https://github.com/d3/d3-zoom#zoom-transforms> for details.<br>&nbsp; |
+|  | Returns the current D3 zoom transform. See <https://github.com/d3/d3-zoom#zoom-transforms> for details.<br><br>**Note:** A reference to this function can be used to access the current zoom, at any time. For instance, if we have a node that shows a normal scale view of itself on hover, this function can be used to restrict the hover effect to only happen when the graph is actually at a reduced scale.<br>&nbsp; |
 
 #### `TExposedGraphState`
 
@@ -488,6 +469,18 @@ This type gives access to the graph's current state, such as the current phase o
 | zoomTransform | `ZoomTransform` |
 |  | The current zoom transform on the graph.<br>&nbsp; |
 
+`ELayoutPhase` is an enum of the phases of the graph layout process.
+
+```tsx
+enum ELayoutPhase {
+  NoData = 'NoData',
+  CalcSizes = 'CalcSizes',
+  CalcPositions = 'CalcPositions',
+  CalcEdges = 'CalcEdges',
+  Done = 'Done',
+}
+```
+
 #### `TContainerPropsSetter`
 
 The type of the props factories for containers that allows props to be defined or generated.
@@ -501,38 +494,6 @@ type TContainerPropsSetter =
   | (Record<string, unknown> | ((input: TExposedGraphState) => Record<string, unknown> | null))[];
 ```
 
-#### `TDefEntry`
-
-This type allows you to add an element to a [`<defs>`](https://developer.mozilla.org/en-US/docs/Web/SVG/Element/defs) within an SVG layer or group of SVG layers. The main use of `defs` is to define markers for the edges, e.g. to add an arrow shape to the head of an edge.
-
-| Field | Type and description |
-| :-- | :-- |
-| localId | `string` |
-|  | **Required**<br>The ID part that must be unique within a graph. `localId` be unique within a `LayeredDigraph` instance (TODO: rename). `localId` will then be prefixed with an ID that is unique to the instance `LayeredDigraph`, resulting in the final ID which is unique within the document. This final ID is then passed to `renderEntry` as the third argument.<br>&nbsp; |
-| renderEntry | `TRenderDefEntryFn` _See below for details on the function signature._ |
-|  | Provide a render function for the element that will be added to the `<defs>`.<br><br>**Note:** The fallback `renderEntry` function (i.e. the default value for this field) will return a `<marker>` suitable to be the `marker-end` reference on an edge's `<path>`. This `<marker>` will result in an arrow head.<br>&nbsp; |
-| setOnEntry | `TContainerPropsSetter` |
-|  | Specify props to be passed as the second argument to the `renderEntry` function. See [`TContainerPropsSetter`](#tcontainerpropssetter) for details on this field's type.<br>&nbsp; |
-
-The signature for the `renderEntry` function is below.
-
-```tsx
-type TRenderDefEntryFn = (
-  graphState: TExposedGraphState,
-  entryProps: Record<string, unknown> | null,
-  id: string
-) => React.ReactElement;
-```
-
-|  | Argument | Type and description |
-| :-: | :-- | :-- |
-| 0 | graphState | `TExposedGraphState` |
-|  |  | The current state of the graph. See [`TExposedGraphState`](#texposedgraphstate) for details.<br>&nbsp; |
-| 1 | entryProps | `Record<string, unknown> | null` |
-|  |  | The the result of evaluating `setOnEntry`.<br>&nbsp; |
-| 2 | id | `string` |
-|  |  | An ID, unique within the document, to be applied to the root-most element being returned from `renderEntry`.<br>&nbsp; |
-
 ### `LayoutManager` options
 
 The `LayoutManager` supports the following configuration options:
@@ -540,19 +501,19 @@ The `LayoutManager` supports the following configuration options:
 | Name | Type and description |
 | :-- | :-- |
 | totalMemory | `number` |
-|  | Useful if you're hitting memory allocation errors. See [`totalMemory` reference](<https://github.com/mdaines/viz.js/wiki/API-(1.x)#totalmemory-option>). The value should be a power of two.<br>&nbsp; |
+|  | This affects the total memeory available for the GraphViz Emscripten module instance. It's useful if you're hitting memory allocation errors. See [`totalMemory` reference](<https://github.com/mdaines/viz.js/wiki/API-(1.x)#totalmemory-option>). The value should be a power of two.<br>&nbsp; |
 | useDotEdges | `boolean = false` |
 |  | When `true` the dot edges are used; i.e. generating neato edge paths is skipped.<br>&nbsp; |
 | splines | `string = "true"` |
 |  | GraphViz [splines](https://www.graphviz.org/doc/info/attrs.html#d:splines) graph attribute.<br>&nbsp; |
 | sep | `number = 0.5` |
-|  | GraphViz [sep](https://www.graphviz.org/doc/info/attrs.html#d:sep) graph attribute.<br>&nbsp; |
+|  | GraphViz [sep](https://www.graphviz.org/doc/info/attrs.html#d:sep) graph attribute, which defines the space margin around nodes.s<br>&nbsp; |
 | rankdir | `'TB' \| 'LR' \| 'BT' \| 'RL' = 'LR'` |
-|  | GraphViz [rankdir](https://www.graphviz.org/doc/info/attrs.html#d:rankdir) graph attribute.<br>&nbsp; |
+|  | GraphViz [rankdir](https://www.graphviz.org/doc/info/attrs.html#d:rankdir) graph attribute, which defines the orientation of the layout.<br>&nbsp; |
 | ranksep | `number = 5` |
-|  | GraphViz [ranksep](https://www.graphviz.org/doc/info/attrs.html#d:ranksep) graph attribute.<br>&nbsp; |
+|  | GraphViz [ranksep](https://www.graphviz.org/doc/info/attrs.html#d:ranksep) graph attribute, which defines the minimum distance between levels of nodes.<br>&nbsp; |
 | nodesep | `number = 1.5` |
-|  | GraphViz [nodesep](https://www.graphviz.org/doc/info/attrs.html#d:nodesep) graph attribute.<br>&nbsp; |
+|  | GraphViz [nodesep](https://www.graphviz.org/doc/info/attrs.html#d:nodesep) graph attribute, which establishes the minimum distance between two adjacent nodes in the same level.<br>&nbsp; |
 
 ### `LayeredDigraph` props
 
@@ -600,14 +561,44 @@ Configuration fields common to all layers.
 | setOnContainer | `TContainerPropsSetter` |
 |  | An optional field that allows props to be defined or generated for the container element of the layer.<br>&nbsp; |
 
-#### Common to SVG layers
+#### Common to SVG layers, only
 
-Configuration fields available only on SVG layers.
+This configuration field is available only on SVG layers.
 
 | Name | Type and description |
 | :-- | :-- |
-| defs | `TDefEntry[]` |
-|  | `defs` allows you to add elements to a [`<defs>`](https://developer.mozilla.org/en-US/docs/Web/SVG/Element/defs) within an SVG layer or group of SVG layers. The main use of `defs` is to define markers for the edges. See `TDefEntry`, above, for details on configuring `defs`.<br>&nbsp; |
+| defs | `TDefEntry[]` _See below for details on the `TDefEntry` type._ |
+|  | `defs` allows you to add elements to a [`<defs>`](https://developer.mozilla.org/en-US/docs/Web/SVG/Element/defs) within an SVG layer or group of SVG layers. The main use of `defs` is to define markers for the edges. See `TDefEntry`, below, for details on configuring `defs`.<br>&nbsp; |
+
+The `TDefEntry` type is defined as follows:
+
+| Field | Type and description |
+| :-- | :-- |
+| localId | `string` |
+|  | **Required**<br>The ID part that must be unique within a graph. `localId` be unique within a `LayeredDigraph` instance (TODO: rename). `localId` will then be prefixed with an ID that is unique to the instance `LayeredDigraph`, resulting in the final ID which is unique within the document. This final ID is then passed to `renderEntry` as the third argument.<br>&nbsp; |
+| renderEntry | `TRenderDefEntryFn` _See below for details on the function signature._ |
+|  | Provide a render function for the element that will be added to the `<defs>`.<br><br>**Note:** The fallback `renderEntry` function (i.e. the default value for this field) will return a `<marker>` suitable to be the `marker-end` reference on an edge's `<path>`. This `<marker>` will result in an arrow head.<br>&nbsp; |
+| setOnEntry | `TContainerPropsSetter` |
+|  | Specify props to be passed as the second argument to the `renderEntry` function. See [`TContainerPropsSetter`](#tcontainerpropssetter) for details on this field's type.<br>&nbsp; |
+
+And, the signature for the `renderEntry` function is:
+
+```tsx
+type TRenderDefEntryFn = (
+  graphState: TExposedGraphState,
+  entryProps: Record<string, unknown> | null,
+  id: string
+) => React.ReactElement;
+```
+
+|  | Argument | Type and description |
+| :-: | :-- | :-- |
+| 0 | graphState | `TExposedGraphState` |
+|  |  | The current state of the graph. See [`TExposedGraphState`](#texposedgraphstate) for details.<br>&nbsp; |
+| 1 | entryProps | `Record<string, unknown> | null` |
+|  |  | The the result of evaluating `setOnEntry`.<br>&nbsp; |
+| 2 | id | `string` |
+|  |  | An ID, unique within the document, to be applied to the root-most element being returned from `renderEntry`.<br>&nbsp; |
 
 #### Measurable nodes layer
 
@@ -626,17 +617,17 @@ In addition to the common layer configuration fields, the following fields are a
 | measureNode | `TMeasureNodeFn` _See below for details on this type._ |
 |  | Overrides the default measuring of nodes.<br>&nbsp; |
 
-The types for `setOnNode` and `renderNode` are distinct from the corresponding fields on a non-measurable nodes layer in that the `layoutVertex` argument is **not always available**.
+sThe types for `setOnNode` and `renderNode` are distinct from the corresponding fields on a non-measurable nodes layer in that the first argument is the `TVertex`, and the `TLayoutVertex` argument is **only available after initial render**.
 
 The type for `setOnNode` is similar to that of `setOnContainer` in that the value can also be either an object of props, a factory function, or an array of either.
 
 ```tsx
 type TMeasurableNodePropsSetter =
   | Record<string, unknown>
-  | TMeasurableNodesPropsFn
-  | (TMeasurableNodesPropsFn | Record<string, unknown>)[];
+  | TMeasurableNodePropsFn
+  | (TMeasurableNodePropsFn | Record<string, unknown>)[];
 
-type TMeasurableNodesPropsFn = (
+type TMeasurableNodePropsFn = (
   vertex: TVertex,
   utils: TRendererUtils,
   layoutVertex: TLayoutVertex | null
@@ -870,6 +861,7 @@ TODO:
 - Recipe for node outlines, for emphasis, that don't diminish when the view is zoomed out
 - Recipe for coloring edges based on their direction
 - Recipe for animating edges to indicate directionality
+- Recipe for showing a 1x scale view of a node, on hover, only when the graph is less than N scale
 
 ### Arrow heads
 
