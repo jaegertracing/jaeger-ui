@@ -15,7 +15,7 @@
 import { convergentPaths, focalPayloadElem, simplePath, wrap } from './sample-paths.test.resources';
 import transformDdgData from './transformDdgData';
 
-import Graph from './Graph';
+import GraphModel from './GraphModel';
 import { encode } from './visibility-codec';
 
 describe('Graph', () => {
@@ -67,7 +67,7 @@ describe('Graph', () => {
     const expectedFocalElemKey = expectedKeyEntry(testFocalElem);
     // Because getVertexKey is completely context-unaware until late-alpha, an empty ddg is sufficient to test
     // this method.
-    const emptyGraph = new Graph({ ddgModel: { visIdxToPathElem: [] } });
+    const emptyGraph = new GraphModel({ visIdxToPathElem: [] });
 
     it('creates key for focal pathElem', () => {
       expect(emptyGraph.getVertexKey(testFocalElem)).toBe(expectedFocalElemKey);
@@ -92,9 +92,7 @@ describe('Graph', () => {
 
   describe('constructor', () => {
     it('creates five vertices and four edges for one-path ddg', () => {
-      const testGraph = new Graph({
-        ddgModel: simpleModel,
-      });
+      const testGraph = new GraphModel(simpleModel);
       validateGraph(testGraph, [
         {
           visIndices: [0],
@@ -121,9 +119,7 @@ describe('Graph', () => {
 
   describe('convergent paths', () => {
     it('adds separate vertices for equal PathElems that have different focalPaths, even those with equal focalSideNeighbors', () => {
-      const convergentGraph = new Graph({
-        ddgModel: convergentModel,
-      });
+      const convergentGraph = new GraphModel(convergentModel);
       validateGraph(convergentGraph, [
         {
           visIndices: [0, 1],
@@ -160,9 +156,7 @@ describe('Graph', () => {
     });
 
     it('reuses edge when possible', () => {
-      const convergentGraph = new Graph({
-        ddgModel: convergentModel,
-      });
+      const convergentGraph = new GraphModel(convergentModel);
       const sharedEdgeElemA = convergentGraph.visIdxToPathElem[5];
       const sharedEdgeElemB = convergentGraph.visIdxToPathElem[4];
 
@@ -178,20 +172,13 @@ describe('Graph', () => {
           visIdxToPathElem: simpleModel.visIdxToPathElem.slice(),
         };
         invalidModel.visIdxToPathElem.splice(1, 1);
-        expect(
-          () =>
-            new Graph({
-              ddgModel: invalidModel,
-            })
-        ).toThrowError();
+        expect(() => new GraphModel(invalidModel)).toThrowError();
       });
     });
   });
 
   describe('getVisible', () => {
-    const convergentGraph = new Graph({
-      ddgModel: convergentModel,
-    });
+    const convergentGraph = new GraphModel(convergentModel);
 
     describe('visEncoding provided', () => {
       it('returns just focalNode', () => {
@@ -226,7 +213,7 @@ describe('Graph', () => {
 
       it('errors if pathElem is mutated into model after graph is created', () => {
         const willMutate = convergentModel.visIdxToPathElem.slice();
-        const victimOfMutation = new Graph({ ddgModel: { visIdxToPathElem: willMutate } });
+        const victimOfMutation = new GraphModel({ visIdxToPathElem: willMutate });
         const newIdx = willMutate.push({ problematic: 'pathElem' }) - 1;
         expect(() => victimOfMutation.getVisible(encode([newIdx]))).toThrowError();
       });
@@ -234,7 +221,7 @@ describe('Graph', () => {
 
     describe('visEncoding not provided', () => {
       it('returns edges and vertices within two hops', () => {
-        const twoHopGraph = new Graph({ ddgModel: simpleModel });
+        const twoHopGraph = new GraphModel(simpleModel);
         const expectedVertices = simpleModel.visIdxToPathElem.map(elem =>
           twoHopGraph.pathElemToVertex.get(elem)
         );
@@ -247,7 +234,7 @@ describe('Graph', () => {
       });
 
       it('handles graphs smaller than two hops', () => {
-        const emptyGraph = new Graph({ ddgModel: { distanceToPathElems: new Map(), visIdxToPathElem: [] } });
+        const emptyGraph = new GraphModel({ distanceToPathElems: new Map(), visIdxToPathElem: [] });
         expect(emptyGraph.getVisible()).toEqual({
           edges: [],
           vertices: [],
@@ -257,9 +244,7 @@ describe('Graph', () => {
   });
 
   describe('getVisible', () => {
-    const convergentGraph = new Graph({
-      ddgModel: convergentModel,
-    });
+    const convergentGraph = new GraphModel(convergentModel);
 
     it('returns a subset of getVisible that match provided uiFind', () => {
       const visEncoding = encode([0, 1, 2, 3, 4, 5]);

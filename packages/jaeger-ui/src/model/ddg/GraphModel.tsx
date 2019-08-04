@@ -20,7 +20,7 @@ import { decode } from './visibility-codec';
 
 import { PathElem, TDdgDistanceToPathElems, TDdgModel, TDdgVertex } from './types';
 
-export default class Graph {
+export default class GraphModel {
   private distanceToPathElems: TDdgDistanceToPathElems;
   private pathElemToEdge: Map<PathElem, TEdge>;
   private pathElemToVertex: Map<PathElem, TDdgVertex>;
@@ -28,7 +28,7 @@ export default class Graph {
   private vertices: Map<string, TDdgVertex>;
   private visIdxToPathElem: PathElem[];
 
-  constructor({ ddgModel }: { ddgModel: TDdgModel }) {
+  constructor(ddgModel: TDdgModel) {
     this.distanceToPathElems = ddgModel.distanceToPathElems;
     this.pathElemToEdge = new Map();
     this.pathElemToVertex = new Map();
@@ -178,4 +178,4 @@ export default class Graph {
   );
 }
 
-export const makeGraph = memoize(10)((ddgModel: TDdgModel) => new Graph({ ddgModel }));
+export const makeGraph = memoize(10)((ddgModel: TDdgModel) => new GraphModel(ddgModel));

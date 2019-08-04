@@ -98,7 +98,6 @@ exports[`Selector renders buttons with expected text and classNames 1`] = `
     Downstream hops
     <button
       className="HopsSelector--Selector--btn is-full HopsSelector--Selector--furthest"
-      key="2 1 furthest"
       onClick={[Function]}
       type="button"
     >
@@ -111,7 +110,6 @@ exports[`Selector renders buttons with expected text and classNames 1`] = `
     </span>
     <button
       className="HopsSelector--Selector--btn is-empty HopsSelector--Selector--delimiter"
-      key="4 1 delimiter"
       onClick={[Function]}
       type="button"
     >
@@ -231,7 +229,6 @@ exports[`Selector renders upstream hops with negative distance correctly 1`] = `
     Upstream hops
     <button
       className="HopsSelector--Selector--btn is-full HopsSelector--Selector--furthest"
-      key="-2 -1 furthest"
       onClick={[Function]}
       type="button"
     >
@@ -244,7 +241,6 @@ exports[`Selector renders upstream hops with negative distance correctly 1`] = `
     </span>
     <button
       className="HopsSelector--Selector--btn is-empty HopsSelector--Selector--delimiter"
-      key="-4 -1 delimiter"
       onClick={[Function]}
       type="button"
     >

@@ -33,7 +33,7 @@ import {
   TDdgSparseUrlState,
   TDdgStateEntry,
 } from '../../model/ddg/types';
-import TGraph, { makeGraph } from '../../model/ddg/Graph';
+import GraphModel, { makeGraph } from '../../model/ddg/GraphModel';
 import { encodeDistance } from '../../model/ddg/visibility-codec';
 import { ReduxState } from '../../types';
 
@@ -46,7 +46,7 @@ type TDispatchProps = {
 };
 
 type TReduxProps = TExtractUiFindFromStateReturn & {
-  graph: TGraph | undefined;
+  graph: GraphModel | undefined;
   graphState?: TDdgStateEntry;
   operationsForService: Record<string, string[]>;
   services?: string[] | null;
@@ -149,12 +149,7 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
       graphState && graphState.state === fetchedState.DONE ? graphState.model.distanceToPathElems : undefined;
     const uiFindMatches = graph && graph.getVisibleUiFindMatches(uiFind, visEncoding);
 
-    let content = (
-      <div>
-        <h1>Unknown graphState:</h1>
-        <p>${JSON.stringify(graphState)}</p>
-      </div>
-    );
+    let content: React.ReactElement | null = null;
     if (!graphState) {
       content = <h1>Enter query above</h1>;
     } else if (graphState.state === fetchedState.DONE && graph) {
@@ -168,6 +163,14 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
       content = <LoadingIndicator centered />;
     } else if (graphState.state === fetchedState.ERROR) {
       content = <ErrorMessage error={graphState.error} />;
+    }
+    if (!content) {
+      content = (
+        <div>
+          <h1>Unknown graphState:</h1>
+          <p>${JSON.stringify(graphState)}</p>
+        </div>
+      );
     }
 
     return (
@@ -202,7 +205,7 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
   if (service && operation) {
     graphState = _get(state, ['deepDependencyGraph', stateKey({ service, operation, start: 0, end: 0 })]);
   }
-  let graph: TGraph | undefined;
+  let graph: GraphModel | undefined;
   if (graphState && graphState.state === fetchedState.DONE) {
     graph = makeGraph(graphState.model);
   }
