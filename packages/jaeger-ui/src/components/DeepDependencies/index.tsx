@@ -25,7 +25,7 @@ import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
 import { extractUiFindFromState, TExtractUiFindFromStateReturn } from '../common/UiFindInput';
 import * as jaegerApiActions from '../../actions/jaeger-api';
-import { fetchedState } from '../../constants';
+import { fetchedState, TOP_NAV_HEIGHT } from '../../constants';
 import {
   stateKey,
   EDirection,
@@ -70,6 +70,8 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
       fetchDeepDependencyGraph({ service, operation, start: 0, end: 0 });
     }
   }
+
+  headerWrapper: React.RefObject<HTMLDivElement> = React.createRef();
 
   constructor(props: TProps) {
     super(props);
@@ -154,13 +156,9 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
       content = <h1>Enter query above</h1>;
     } else if (graphState.state === fetchedState.DONE && graph) {
       const { edges, vertices } = graph.getVisible(visEncoding);
-      content = (
-        <div className="Ddg--graphWrapper">
-          <Graph edges={edges} uiFindMatches={uiFindMatches} vertices={vertices} />
-        </div>
-      );
+      content = <Graph edges={edges} uiFindMatches={uiFindMatches} vertices={vertices} />;
     } else if (graphState.state === fetchedState.LOADING) {
-      content = <LoadingIndicator centered />;
+      content = <LoadingIndicator centered className="u-mt-vast" />;
     } else if (graphState.state === fetchedState.ERROR) {
       content = <ErrorMessage error={graphState.error} />;
     }
@@ -175,19 +173,30 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
 
     return (
       <div>
-        <Header
-          distanceToPathElems={distanceToPathElems}
-          operation={operation}
-          operations={operationsForService[service || '']}
-          service={service}
-          services={services}
-          setDistance={this.setDistance}
-          setOperation={this.setOperation}
-          setService={this.setService}
-          uiFindCount={uiFind ? uiFindMatches && uiFindMatches.size : undefined}
-          visEncoding={visEncoding}
-        />
-        {content}
+        <div ref={this.headerWrapper}>
+          <Header
+            distanceToPathElems={distanceToPathElems}
+            operation={operation}
+            operations={operationsForService[service || '']}
+            service={service}
+            services={services}
+            setDistance={this.setDistance}
+            setOperation={this.setOperation}
+            setService={this.setService}
+            uiFindCount={uiFind ? uiFindMatches && uiFindMatches.size : undefined}
+            visEncoding={visEncoding}
+          />
+        </div>
+        <div
+          className="Ddg--graphWrapper"
+          style={{
+            top: this.headerWrapper.current
+              ? this.headerWrapper.current.offsetHeight + this.headerWrapper.current.offsetTop
+              : TOP_NAV_HEIGHT,
+          }}
+        >
+          {content}
+        </div>
       </div>
     );
   }
