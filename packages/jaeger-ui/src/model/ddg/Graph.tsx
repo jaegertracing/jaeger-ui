@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import memoize from 'lru-memoize';
+
 import { TEdge } from '@jaegertracing/plexus/lib/types';
 
 import { decode } from './visibility-codec';
@@ -121,33 +123,59 @@ export default class Graph {
       .join('____');
   };
 
-  public getVisible = (visEncoding?: string): { edges: TEdge[]; vertices: TDdgVertex[] } => {
-    const edges: Set<TEdge> = new Set();
-    const vertices: Set<TDdgVertex> = new Set();
-    const pathElems =
-      visEncoding == null
-        ? ([] as PathElem[]).concat(
-            this.distanceToPathElems.get(-2) || [],
-            this.distanceToPathElems.get(-1) || [],
-            this.distanceToPathElems.get(0) || [],
-            this.distanceToPathElems.get(1) || [],
-            this.distanceToPathElems.get(2) || []
-          )
-        : decode(visEncoding)
-            .map(visIdx => this.visIdxToPathElem[visIdx])
-            .filter(Boolean);
+  public getVisible: (visEncoding?: string) => { edges: TEdge[]; vertices: TDdgVertex[] } = memoize(10)(
+    (visEncoding?: string): { edges: TEdge[]; vertices: TDdgVertex[] } => {
+      const edges: Set<TEdge> = new Set();
+      const vertices: Set<TDdgVertex> = new Set();
+      const pathElems =
+        visEncoding == null
+          ? ([] as PathElem[]).concat(
+              this.distanceToPathElems.get(-2) || [],
+              this.distanceToPathElems.get(-1) || [],
+              this.distanceToPathElems.get(0) || [],
+              this.distanceToPathElems.get(1) || [],
+              this.distanceToPathElems.get(2) || []
+            )
+          : decode(visEncoding)
+              .map(visIdx => this.visIdxToPathElem[visIdx])
+              .filter(Boolean);
 
-    pathElems.forEach(pathElem => {
-      const edge = this.pathElemToEdge.get(pathElem);
-      if (edge) edges.add(edge);
-      const vertex = this.pathElemToVertex.get(pathElem);
-      if (vertex) vertices.add(vertex);
-      else throw new Error(`PathElem wasn't present in initial model: ${pathElem}`);
-    });
+      pathElems.forEach(pathElem => {
+        const edge = this.pathElemToEdge.get(pathElem);
+        if (edge) edges.add(edge);
+        const vertex = this.pathElemToVertex.get(pathElem);
+        if (vertex) vertices.add(vertex);
+        else throw new Error(`PathElem wasn't present in initial model: ${pathElem}`);
+      });
 
-    return {
-      edges: Array.from(edges),
-      vertices: Array.from(vertices),
-    };
-  };
+      return {
+        edges: Array.from(edges),
+        vertices: Array.from(vertices),
+      };
+    }
+  );
+
+  public getVisibleUiFindMatches: (uiFind?: string, visEncoding?: string) => Set<TDdgVertex> = memoize(10)(
+    (uiFind?: string, visEncoding?: string): Set<TDdgVertex> => {
+      const vertexSet: Set<TDdgVertex> = new Set();
+      if (!uiFind) return vertexSet;
+
+      const uiFindArr = uiFind
+        .trim()
+        .toLowerCase()
+        .split(' ');
+      const { vertices } = this.getVisible(visEncoding);
+      vertices.forEach(vertex => {
+        const svc = vertex.service.toLowerCase();
+        const op = vertex.operation.toLowerCase();
+        if (uiFindArr.some(str => svc.includes(str) || op.includes(str))) {
+          vertexSet.add(vertex);
+        }
+      });
+
+      return vertexSet;
+    }
+  );
 }
+
+export const makeGraph = memoize(10)((ddgModel: TDdgModel) => new Graph({ ddgModel }));

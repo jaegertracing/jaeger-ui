@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Input } from 'antd';
+import { Icon, Input } from 'antd';
 import { History as RouterHistory, Location } from 'history';
 import _debounce from 'lodash/debounce';
 import _isString from 'lodash/isString';
@@ -25,6 +25,7 @@ import updateUiFind from '../../utils/update-ui-find';
 import { TNil, ReduxState } from '../../types/index';
 
 type TOwnProps = RouteComponentProps<any> & {
+  allowClear?: boolean;
   forwardedRef?: React.Ref<Input>;
   inputProps: Record<string, any>;
   history: RouterHistory;
@@ -55,7 +56,7 @@ export class UnconnectedUiFindInput extends React.PureComponent<TProps, StateTyp
     ownInputValue: undefined,
   };
 
-  updateUiFindQueryParam = _debounce((uiFind: string | undefined) => {
+  updateUiFindQueryParam = _debounce((uiFind?: string) => {
     const { history, location, trackFindFunction } = this.props;
     updateUiFind({
       location,
@@ -64,6 +65,11 @@ export class UnconnectedUiFindInput extends React.PureComponent<TProps, StateTyp
       uiFind,
     });
   }, 250);
+
+  clearUiFind = () => {
+    this.updateUiFindQueryParam();
+    this.updateUiFindQueryParam.flush();
+  };
 
   handleInputBlur = () => {
     this.updateUiFindQueryParam.flush();
@@ -77,16 +83,33 @@ export class UnconnectedUiFindInput extends React.PureComponent<TProps, StateTyp
   };
 
   render() {
+    const { allowClear, forwardedRef, inputProps } = this.props;
+
     const inputValue = _isString(this.state.ownInputValue) ? this.state.ownInputValue : this.props.uiFind;
+
+    // antd cannot handle suffix changing from present to absent or vice versa
+    let suffix: React.ReactElement = inputProps.suffix || <></>;
+    if (inputValue && inputValue.length && allowClear) {
+      suffix = <Icon type="close" onClick={this.clearUiFind} />;
+      if (inputProps.suffix) {
+        suffix = (
+          <>
+            {suffix}
+            {inputProps.suffix}
+          </>
+        );
+      }
+    }
 
     return (
       <Input
         autosize={null}
         placeholder="Find..."
-        {...this.props.inputProps}
+        {...inputProps}
         onBlur={this.handleInputBlur}
         onChange={this.handleInputChange}
-        ref={this.props.forwardedRef}
+        ref={forwardedRef}
+        suffix={suffix}
         value={inputValue}
       />
     );

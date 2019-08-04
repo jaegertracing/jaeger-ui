@@ -13,9 +13,11 @@
 // limitations under the License.
 
 import * as React from 'react';
+import { Icon, Input } from 'antd';
 
 import HopsSelector from './HopsSelector';
 import NameSelector from './NameSelector';
+import UiFindInput from '../../common/UiFindInput';
 import { EDirection, TDdgDistanceToPathElems } from '../../../model/ddg/types';
 
 import './index.css';
@@ -23,26 +25,35 @@ import './index.css';
 type TProps = {
   distanceToPathElems?: TDdgDistanceToPathElems;
   operation?: string;
-  operationsForService: Record<string, string[]>;
+  operations: string[] | undefined;
   service?: string;
   services?: string[] | null;
   setDistance: (distance: number, direction: EDirection) => void;
   setOperation: (operation: string) => void;
   setService: (service: string) => void;
+  uiFindCount: number | undefined;
   visEncoding?: string;
 };
-
 export default class Header extends React.PureComponent<TProps> {
+  private _uiFindInput: React.RefObject<Input> = React.createRef();
+
+  focusUiFindInput = () => {
+    if (this._uiFindInput.current) {
+      this._uiFindInput.current.focus();
+    }
+  };
+
   render() {
     const {
       distanceToPathElems,
       operation,
-      operationsForService,
+      operations,
       service,
       services,
       setDistance,
       setOperation,
       setService,
+      uiFindCount,
       visEncoding,
     } = this.props;
 
@@ -64,11 +75,20 @@ export default class Header extends React.PureComponent<TProps> {
               value={operation || null}
               setValue={setOperation}
               required
-              options={operationsForService[service] || []}
+              options={operations || []}
             />
           )}
         </div>
         <div className="DdgHeader--controlHeader">
+          <div className="DdgHeader--uiFind" role="button" onClick={this.focusUiFindInput}>
+            <Icon className="DdgHeader--uiFindSearchIcon" type="search" />
+            <UiFindInput
+              allowClear
+              forwardedRef={this._uiFindInput}
+              inputProps={{ className: 'DdgHeader--uiFindInput' }}
+            />
+            <span className="DdgHeader--uiFindCount">{uiFindCount}</span>
+          </div>
           {distanceToPathElems && (
             <HopsSelector
               distanceToPathElems={distanceToPathElems}
