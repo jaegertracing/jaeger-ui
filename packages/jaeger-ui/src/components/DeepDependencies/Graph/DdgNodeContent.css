@@ -14,24 +14,23 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-.DdgNode--core {
+.DdgNodeContent--core {
   background: #fff;
-  border: 1px solid #bbb;
-  box-shadow: 0 0px 4px 1px rgba(0, 0, 0, 0.07);
+  box-shadow: 0 1px 2px 1px rgba(0, 0, 0, 0.15);
   display: flex;
   min-width: 125px;
+  white-space: nowrap;
 }
 
-.DdgNode--core.is-focalNode {
-  border-color: #eb2f96;
+.DdgNodeContent--core.is-positioned {
+  bottom: 1px;
+  left: 1px;
+  position: absolute;
+  right: 1px;
+  top: 1px;
 }
 
-.DdgNode--core.is-UiFindMatch {
-  /* TODO: Joe, scalable indication */
-  background-color: #fff3d7;
-}
-
-.DdgNode--core.is-focalNode::before {
+.DdgNodeContent--core.is-focalNode::before {
   bottom: 0;
   content: '';
   left: 0;
@@ -40,7 +39,8 @@ limitations under the License.
   right: 0;
   top: 0;
 }
-.DdgNode--core.is-focalNode::after {
+
+.DdgNodeContent--core.is-focalNode::after {
   bottom: 0;
   content: '';
   left: 0;
@@ -51,24 +51,23 @@ limitations under the License.
   top: 0;
 }
 
-.DdgNode--focalMarker {
+.DdgNodeContent--focalMarker {
   align-items: center;
   background: #eb2f96;
   display: flex;
   padding: 0.3rem 0.15rem;
 }
 
-.DdgNode--label {
+.DdgNodeContent--label {
   margin: 0;
   padding: 0.5rem 0.5rem 0.3rem 0.75rem;
-  white-space: nowrap;
 }
 
-.DdgNode--label:not(:first-child) {
+.DdgNodeContent--label:not(:first-child) {
   padding-top: 0.2rem;
 }
 
-.DdgNode--actionsWrapper {
+.DdgNodeContent--actionsWrapper {
   background: #fff;
   border-radius: 3px;
   border-bottom-left-radius: 0;
@@ -83,22 +82,22 @@ limitations under the License.
   white-space: nowrap;
 }
 
-.DdgNode:hover > .DdgNode--actionsWrapper {
+.DdgNodeContent:hover > .DdgNodeContent--actionsWrapper {
   opacity: 1;
   pointer-events: all;
 }
 
-.DdgNode--actionsItem {
+.DdgNodeContent--actionsItem {
   align-items: center;
   display: flex;
   padding: 0.5em;
 }
 
-.DdgNode--actionsItem:not(:hover) {
+.DdgNodeContent--actionsItem:not(:hover) {
   color: inherit;
 }
 
-.DdgNode--actionsItemText {
+.DdgNodeContent--actionsItemText {
   font-size: 0.9em;
   line-height: normal;
   margin-left: 0.5em;

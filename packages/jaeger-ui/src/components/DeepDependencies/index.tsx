@@ -156,7 +156,15 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
       content = <h1>Enter query above</h1>;
     } else if (graphState.state === fetchedState.DONE && graph) {
       const { edges, vertices } = graph.getVisible(visEncoding);
-      content = <Graph edges={edges} uiFindMatches={uiFindMatches} vertices={vertices} />;
+      // TODO: using `key` here is a hack, debug digraph to fix the underlying issue
+      content = (
+        <Graph
+          key={`${urlState.service},${urlState.operation},${urlState.visEncoding}`}
+          edges={edges}
+          uiFindMatches={uiFindMatches}
+          vertices={vertices}
+        />
+      );
     } else if (graphState.state === fetchedState.LOADING) {
       content = <LoadingIndicator centered className="u-mt-vast" />;
     } else if (graphState.state === fetchedState.ERROR) {

@@ -33,7 +33,7 @@ const getMarkerScale = getValueScaler({
   factorMax: 1,
   factorMin: 0.1,
   valueMax: 2,
-  valueMin: 7,
+  valueMin: 6,
 });
 
 function renderDefaultMarker(

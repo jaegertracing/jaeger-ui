@@ -1,36 +1,113 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`<DdgNode> omits the operation if it is null 1`] = `
+exports[`<DdgNodeContent> DdgNodeContent.renderNode() returns a <DdgNodeContentContent/> 1`] = `
 <div
-  className="DdgNode"
+  className="DdgNodeContent"
   onMouseOut={[Function]}
   onMouseOver={[Function]}
 >
   <div
-    className="DdgNode--core"
+    className="DdgNodeContent--core"
   >
     <div>
       <h4
-        className="DdgNode--label"
+        className="DdgNodeContent--label"
+      >
+        the-service
+      </h4>
+      <div
+        className="DdgNodeContent--label"
+      >
+        the-operation
+      </div>
+    </div>
+  </div>
+  <div
+    className="DdgNodeContent--actionsWrapper"
+  >
+    <a
+      className="DdgNodeContent--actionsItem"
+      href="/deep-dependencies?operation=the-operation&service=the-service"
+    >
+      <svg
+        className="DdgNode-SetFocusIcon"
+        height="100"
+        viewBox="0 0 100 100"
+        width="100"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <g>
+          <path
+            d="M50.0001 -1L61.0557 22.1383H38.9444L50.0001 -1Z"
+            fill="currentColor"
+          />
+          <path
+            d="M49.9999 99L38.9443 75.8617L61.0556 75.8617L49.9999 99Z"
+            fill="currentColor"
+          />
+          <path
+            d="M100 49L76.8617 60.0556L76.8617 37.9444L100 49Z"
+            fill="currentColor"
+          />
+          <path
+            d="M1.57361e-06 49L23.1383 37.9444L23.1383 60.0556L1.57361e-06 49Z"
+            fill="currentColor"
+          />
+        </g>
+      </svg>
+      <span
+        className="DdgNodeContent--actionsItemText"
+      >
+        Set focus
+      </span>
+    </a>
+    <a
+      className="DdgNodeContent--actionsItem"
+    >
+      <NewWindowIcon
+        isLarge={false}
+      />
+      <span
+        className="DdgNodeContent--actionsItemText"
+      >
+        View traces
+      </span>
+    </a>
+  </div>
+</div>
+`;
+
+exports[`<DdgNodeContent> omits the operation if it is null 1`] = `
+<div
+  className="DdgNodeContent"
+  onMouseOut={[Function]}
+  onMouseOver={[Function]}
+>
+  <div
+    className="DdgNodeContent--core"
+  >
+    <div>
+      <h4
+        className="DdgNodeContent--label"
       >
         some-service
       </h4>
       <div
-        className="DdgNode--label"
+        className="DdgNodeContent--label"
       >
         some-operation
       </div>
     </div>
   </div>
   <div
-    className="DdgNode--actionsWrapper"
+    className="DdgNodeContent--actionsWrapper"
   >
     <a
-      className="DdgNode--actionsItem"
+      className="DdgNodeContent--actionsItem"
       href="some-url"
     >
       <svg
-        className="DdgSetFocusButtonIcon"
+        className="DdgNode-SetFocusIcon"
         height="100"
         viewBox="0 0 100 100"
         width="100"
@@ -56,19 +133,19 @@ exports[`<DdgNode> omits the operation if it is null 1`] = `
         </g>
       </svg>
       <span
-        className="DdgNode--actionsItemText"
+        className="DdgNodeContent--actionsItemText"
       >
         Set focus
       </span>
     </a>
     <a
-      className="DdgNode--actionsItem"
+      className="DdgNodeContent--actionsItem"
     >
       <NewWindowIcon
         isLarge={false}
       />
       <span
-        className="DdgNode--actionsItemText"
+        className="DdgNodeContent--actionsItemText"
       >
         View traces
       </span>
@@ -77,32 +154,32 @@ exports[`<DdgNode> omits the operation if it is null 1`] = `
 </div>
 `;
 
-exports[`<DdgNode> omits the operation if it is null 2`] = `
+exports[`<DdgNodeContent> omits the operation if it is null 2`] = `
 <div
-  className="DdgNode"
+  className="DdgNodeContent"
   onMouseOut={[Function]}
   onMouseOver={[Function]}
 >
   <div
-    className="DdgNode--core"
+    className="DdgNodeContent--core"
   >
     <div>
       <h4
-        className="DdgNode--label"
+        className="DdgNodeContent--label"
       >
         some-service
       </h4>
     </div>
   </div>
   <div
-    className="DdgNode--actionsWrapper"
+    className="DdgNodeContent--actionsWrapper"
   >
     <a
-      className="DdgNode--actionsItem"
+      className="DdgNodeContent--actionsItem"
       href="some-url"
     >
       <svg
-        className="DdgSetFocusButtonIcon"
+        className="DdgNode-SetFocusIcon"
         height="100"
         viewBox="0 0 100 100"
         width="100"
@@ -128,19 +205,19 @@ exports[`<DdgNode> omits the operation if it is null 2`] = `
         </g>
       </svg>
       <span
-        className="DdgNode--actionsItemText"
+        className="DdgNodeContent--actionsItemText"
       >
         Set focus
       </span>
     </a>
     <a
-      className="DdgNode--actionsItem"
+      className="DdgNodeContent--actionsItem"
     >
       <NewWindowIcon
         isLarge={false}
       />
       <span
-        className="DdgNode--actionsItemText"
+        className="DdgNodeContent--actionsItemText"
       >
         View traces
       </span>
@@ -149,37 +226,37 @@ exports[`<DdgNode> omits the operation if it is null 2`] = `
 </div>
 `;
 
-exports[`<DdgNode> renders correctly when isFocalNode = true and focalNodeUrl = null 1`] = `
+exports[`<DdgNodeContent> renders correctly when isFocalNode = true and focalNodeUrl = null 1`] = `
 <div
-  className="DdgNode"
+  className="DdgNodeContent"
   onMouseOut={[Function]}
   onMouseOver={[Function]}
 >
   <div
-    className="DdgNode--core"
+    className="DdgNodeContent--core"
   >
     <div>
       <h4
-        className="DdgNode--label"
+        className="DdgNodeContent--label"
       >
         some-service
       </h4>
       <div
-        className="DdgNode--label"
+        className="DdgNodeContent--label"
       >
         some-operation
       </div>
     </div>
   </div>
   <div
-    className="DdgNode--actionsWrapper"
+    className="DdgNodeContent--actionsWrapper"
   >
     <a
-      className="DdgNode--actionsItem"
+      className="DdgNodeContent--actionsItem"
       href="some-url"
     >
       <svg
-        className="DdgSetFocusButtonIcon"
+        className="DdgNode-SetFocusIcon"
         height="100"
         viewBox="0 0 100 100"
         width="100"
@@ -205,19 +282,19 @@ exports[`<DdgNode> renders correctly when isFocalNode = true and focalNodeUrl = 
         </g>
       </svg>
       <span
-        className="DdgNode--actionsItemText"
+        className="DdgNodeContent--actionsItemText"
       >
         Set focus
       </span>
     </a>
     <a
-      className="DdgNode--actionsItem"
+      className="DdgNodeContent--actionsItem"
     >
       <NewWindowIcon
         isLarge={false}
       />
       <span
-        className="DdgNode--actionsItemText"
+        className="DdgNodeContent--actionsItemText"
       >
         View traces
       </span>
@@ -226,17 +303,17 @@ exports[`<DdgNode> renders correctly when isFocalNode = true and focalNodeUrl = 
 </div>
 `;
 
-exports[`<DdgNode> renders correctly when isFocalNode = true and focalNodeUrl = null 2`] = `
+exports[`<DdgNodeContent> renders correctly when isFocalNode = true and focalNodeUrl = null 2`] = `
 <div
-  className="DdgNode"
+  className="DdgNodeContent"
   onMouseOut={[Function]}
   onMouseOver={[Function]}
 >
   <div
-    className="DdgNode--core is-focalNode"
+    className="DdgNodeContent--core is-focalNode"
   >
     <div
-      className="DdgNode--focalMarker"
+      className="DdgNodeContent--focalMarker"
     >
       <svg
         fill="none"
@@ -267,28 +344,28 @@ exports[`<DdgNode> renders correctly when isFocalNode = true and focalNodeUrl = 
     </div>
     <div>
       <h4
-        className="DdgNode--label"
+        className="DdgNodeContent--label"
       >
         some-service
       </h4>
       <div
-        className="DdgNode--label"
+        className="DdgNodeContent--label"
       >
         some-operation
       </div>
     </div>
   </div>
   <div
-    className="DdgNode--actionsWrapper"
+    className="DdgNodeContent--actionsWrapper"
   >
     <a
-      className="DdgNode--actionsItem"
+      className="DdgNodeContent--actionsItem"
     >
       <NewWindowIcon
         isLarge={false}
       />
       <span
-        className="DdgNode--actionsItemText"
+        className="DdgNodeContent--actionsItemText"
       >
         View traces
       </span>

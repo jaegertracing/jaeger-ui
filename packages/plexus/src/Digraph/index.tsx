@@ -76,7 +76,7 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
 > {
   renderUtils: TRendererUtils;
 
-  static propsFactories: Record<string, TFromGraphStateFn<unknown, unknown>> = {
+  static propsFactories: Record<string, TFromGraphStateFn<any, any>> = {
     classNameIsSmall,
     scaleOpacity: scaleProperty.opacity,
     scaleStrokeOpacity: scaleProperty.strokeOpacity,

@@ -1,8 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`<Graph /> render renders provided edges and vertices 1`] = `
-<DirectedGraph
-  arrowScaleDampener={0}
+<Digraph
   className=""
   classNamePrefix="plexus"
   edges={
@@ -17,7 +16,56 @@ exports[`<Graph /> render renders provided edges and vertices 1`] = `
       },
     ]
   }
-  getNodeLabel={[Function]}
+  layers={
+    Array [
+      Object {
+        "key": "nodes/find-emphasis/vector-outline",
+        "layerType": "svg",
+        "renderNode": [Function],
+      },
+      Object {
+        "key": "nodes/find-emphasis/html",
+        "layerType": "html",
+        "renderNode": [Function],
+      },
+      Object {
+        "key": "nodes/find-emphasis/vector-color-band",
+        "layerType": "svg",
+        "renderNode": [Function],
+      },
+      Object {
+        "key": "nodes/vector-border",
+        "layerType": "svg",
+        "renderNode": [Function],
+      },
+      Object {
+        "defs": Array [
+          Object {
+            "localId": "arrow",
+          },
+        ],
+        "edges": true,
+        "key": "edges",
+        "layerType": "svg",
+        "markerEndId": "arrow",
+        "setOnContainer": Array [
+          [Function],
+          [Function],
+          Object {
+            "stroke": "#444",
+            "strokeWidth": 0.7,
+          },
+        ],
+      },
+      Object {
+        "key": "nodes/content",
+        "layerType": "html",
+        "measurable": true,
+        "measureNode": [Function],
+        "renderNode": [Function],
+      },
+    ]
+  }
   layoutManager={
     LayoutManager {
       "_handleUpdate": [Function],
@@ -33,12 +81,14 @@ exports[`<Graph /> render renders provided edges and vertices 1`] = `
       },
       "layoutId": 0,
       "options": Object {
+        "rankdir": "TB",
         "splines": "polyline",
         "useDotEdges": true,
       },
       "pendingResult": null,
     }
   }
+  measurableNodesKey="nodes/content"
   minimap={true}
   minimapClassName="u-miniMap"
   vertices={
