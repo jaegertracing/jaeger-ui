@@ -96,6 +96,14 @@ limitations under the License.
   padding: 0.25rem 0.5rem;
 }
 
+.TracePageHeader--overviewItem--valueDetail {
+  color: #aaa;
+}
+
+.TracePageHeader--overviewItem--value:hover > .TracePageHeader--overviewItem--valueDetail {
+  color: unset;
+}
+
 .TracePageHeader--archiveIcon {
   font-size: 1.78em;
   margin-right: 0.15em;
