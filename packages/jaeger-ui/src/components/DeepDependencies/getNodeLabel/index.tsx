@@ -27,21 +27,21 @@ const noops = {
   },
 };
 
-const getNodeLabel = (uiFindMatches: Set<TDdgVertex> | undefined) => (vertex: TDdgVertex) => {
-  const { isFocalNode, key, operation, service } = vertex;
-  const isUiFindMatch = Boolean(uiFindMatches && uiFindMatches.has(vertex));
-  return (
-    <DdgNode
-      vertexKey={key}
-      service={service}
-      operation={operation}
-      isFocalNode={isFocalNode}
-      isUiFindMatch={isUiFindMatch}
-      viewModifiers={0}
-      focalNodeUrl={isFocalNode ? null : getUrl({ operation, service })}
-      {...noops}
-    />
-  );
-};
-
-export default getNodeLabel;
+export default function getNodeLabel(uiFindMatches: Set<TDdgVertex> | undefined) {
+  return (vertex: TDdgVertex) => {
+    const { isFocalNode, key, operation, service } = vertex;
+    const isUiFindMatch = Boolean(uiFindMatches && uiFindMatches.has(vertex));
+    return (
+      <DdgNode
+        vertexKey={key}
+        service={service}
+        operation={operation}
+        isFocalNode={isFocalNode}
+        isUiFindMatch={isUiFindMatch}
+        viewModifiers={0}
+        focalNodeUrl={isFocalNode ? null : getUrl({ operation, service })}
+        {...noops}
+      />
+    );
+  };
+}

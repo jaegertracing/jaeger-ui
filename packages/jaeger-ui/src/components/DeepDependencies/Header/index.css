@@ -30,7 +30,6 @@ limitations under the License.
   background-color: #fafafa;
   border-top: 1px solid #eee;
   display: flex;
-  flex-direction: row-reverse;
   justify-content: space-between;
 }
 
@@ -55,13 +54,13 @@ limitations under the License.
   display: flex;
   flex-grow: 1;
   margin-right: 8px;
-  max-width: 20%;
+  max-width: 400px;
   min-width: 200px;
   transition: max-width 0.5s;
 }
 
 .DdgHeader--uiFind:focus-within {
-  max-width: 40%;
+  max-width: 550px;
 }
 
 .DdgHeader--uiFindSearchIcon {

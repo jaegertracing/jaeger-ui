@@ -19,6 +19,11 @@ exports[`<Header> renders the hops selector if distanceToPathElems is provided 1
   <div
     className="DdgHeader--controlHeader"
   >
+    <Component
+      distanceToPathElems={Map {}}
+      handleClick={[Function]}
+      visEncoding="3"
+    />
     <div
       className="DdgHeader--uiFind"
       onClick={[Function]}
@@ -45,11 +50,6 @@ exports[`<Header> renders the hops selector if distanceToPathElems is provided 1
         className="DdgHeader--uiFindCount"
       />
     </div>
-    <Component
-      distanceToPathElems={Map {}}
-      handleClick={[Function]}
-      visEncoding="3"
-    />
   </div>
 </header>
 `;
@@ -85,6 +85,9 @@ exports[`<Header> renders the operation selector if a service is selected 1`] = 
   <div
     className="DdgHeader--controlHeader"
   >
+    <Component
+      handleClick={[Function]}
+    />
     <div
       className="DdgHeader--uiFind"
       onClick={[Function]}
@@ -150,6 +153,9 @@ exports[`<Header> renders the operation selector if a service is selected 2`] = 
   <div
     className="DdgHeader--controlHeader"
   >
+    <Component
+      handleClick={[Function]}
+    />
     <div
       className="DdgHeader--uiFind"
       onClick={[Function]}
@@ -199,6 +205,9 @@ exports[`<Header> renders with minimal props 1`] = `
   <div
     className="DdgHeader--controlHeader"
   >
+    <Component
+      handleClick={[Function]}
+    />
     <div
       className="DdgHeader--uiFind"
       onClick={[Function]}
