@@ -25,11 +25,11 @@ import {
   classNameIsSmall as layeredClassNameIsSmall,
   scaleProperty,
 } from '../../src/LayeredDigraph/props-factories';
+import { TLayer, TRendererUtils, TMeasureNodeUtils } from '../../src/LayeredDigraph/types';
 import { TVertex, TLayoutEdge, TLayoutVertex } from '../../src/types';
+import TNonEmptyArray from '../../src/types/TNonEmptyArray';
 
 import './index.css';
-import TNonEmptyArray from '../../src/types/TNonEmptyArray';
-import { TLayer, TRendererUtils, TMeasureNodeUtils } from '../../src/LayeredDigraph/types';
 
 type TState = {
   hoveredEdge: TLayoutEdge<any> | null;

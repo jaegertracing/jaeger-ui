@@ -69,6 +69,16 @@ export type TSetOnContainer<T = {}, U = {}> = {
 
 type TKeyed = { key: string };
 
+export type TDefEntry<T = {}, U = {}> = {
+  renderEntry?: (
+    graphState: TExposedGraphState<T, U>,
+    entryProps: TAnyProps | null,
+    id: string
+  ) => React.ReactElement;
+  localId: string;
+  setOnEntry?: TSetProps<TFromGraphStateFn<T, U>>;
+};
+
 export type TRenderNodeFn<T = {}> = (vertex: TLayoutVertex<T>, utils: TRendererUtils) => React.ReactNode;
 
 export type TRenderMeasurableNodeFn<T = {}> = (
@@ -108,16 +118,6 @@ type TStandaloneNodesLayer<T = {}, U = {}> = TNodesLayer<T, U> &
         layerType: Extract<TLayerType, 'svg'>;
         defs?: TNonEmptyArray<TDefEntry<T, U>>;
       });
-
-export type TDefEntry<T = {}, U = {}> = {
-  renderEntry?: (
-    graphState: TExposedGraphState<T, U>,
-    entryProps: TAnyProps | null,
-    id: string
-  ) => React.ReactElement;
-  localId: string;
-  setOnEntry?: TSetProps<TFromGraphStateFn<T, U>>;
-};
 
 export type TEdgesLayer<T = {}, U = {}> = TKeyed &
   TSetOnContainer<T, U> & {
