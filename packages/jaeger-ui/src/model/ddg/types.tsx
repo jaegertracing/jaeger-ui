@@ -59,7 +59,7 @@ export type TDdgModel = {
 export type TDdgVertex = TVertex<{
   isFocalNode: boolean;
   key: string;
-  operation: string;
+  operation: string | null;
   service: string;
 }>;
 
@@ -90,10 +90,11 @@ export enum EViewModifier {
 }
 
 export type TDdgSparseUrlState = {
-  service?: string;
-  operation?: string;
-  start?: number;
   end?: number;
+  operation?: string;
+  service?: string;
+  showOp: boolean;
+  start?: number;
   visEncoding?: string;
 };
 

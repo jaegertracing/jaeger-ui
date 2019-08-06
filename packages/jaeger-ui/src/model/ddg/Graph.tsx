@@ -24,14 +24,16 @@ export default class Graph {
   private distanceToPathElems: TDdgDistanceToPathElems;
   private pathElemToEdge: Map<PathElem, TEdge>;
   private pathElemToVertex: Map<PathElem, TDdgVertex>;
+  private readonly showOp: boolean;
   private vertexToPathElems: Map<TDdgVertex, Set<PathElem>>;
   private vertices: Map<string, TDdgVertex>;
   private visIdxToPathElem: PathElem[];
 
-  constructor({ ddgModel }: { ddgModel: TDdgModel }) {
+  constructor({ ddgModel, showOp }: { ddgModel: TDdgModel; showOp: boolean }) {
     this.distanceToPathElems = ddgModel.distanceToPathElems;
     this.pathElemToEdge = new Map();
     this.pathElemToVertex = new Map();
+    this.showOp = showOp;
     this.vertexToPathElems = new Map();
     this.vertices = new Map();
     this.visIdxToPathElem = ddgModel.visIdxToPathElem;
@@ -45,7 +47,7 @@ export default class Graph {
           key,
           isFocalNode: !pathElem.distance,
           service: pathElem.operation.service.name,
-          operation: pathElem.operation.name,
+          operation: this.showOp ? pathElem.operation.name : null,
         };
         this.vertices.set(key, vertex);
         this.vertexToPathElems.set(vertex, new Set());
@@ -116,10 +118,13 @@ export default class Graph {
   private getVertexKey = (pathElem: PathElem): string => {
     const { memberIdx, memberOf } = pathElem;
     const { focalIdx, members } = memberOf;
+    const keySegmentFn = this.showOp
+      ? ({ operation }: PathElem) => `${operation.service.name}----${operation.name}`
+      : ({ operation }: PathElem) => operation.service.name;
 
     return members
       .slice(Math.min(focalIdx, memberIdx), Math.max(focalIdx, memberIdx) + 1)
-      .map(({ operation }) => `${operation.service.name}----${operation.name}`)
+      .map(keySegmentFn)
       .join('____');
   };
 
@@ -166,10 +171,11 @@ export default class Graph {
         .split(' ');
       const { vertices } = this.getVisible(visEncoding);
       for (let i = 0; i < vertices.length; i++) {
-        const svc = vertices[i].service.toLowerCase();
-        const op = vertices[i].operation.toLowerCase();
+        const { service, operation } = vertices[i];
+        const svc = service.toLowerCase();
+        const op = operation && operation.toLowerCase();
         for (let j = 0; j < uiFindArr.length; j++) {
-          if (svc.includes(uiFindArr[j]) || op.includes(uiFindArr[j])) {
+          if (svc.includes(uiFindArr[j]) || (op && op.includes(uiFindArr[j]))) {
             vertexSet.add(vertices[i]);
             break;
           }
@@ -181,4 +187,6 @@ export default class Graph {
   );
 }
 
-export const makeGraph = memoize(10)((ddgModel: TDdgModel) => new Graph({ ddgModel }));
+export const makeGraph = memoize(10)(
+  (ddgModel: TDdgModel, showOp: boolean) => new Graph({ ddgModel, showOp })
+);

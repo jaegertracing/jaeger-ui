@@ -47,7 +47,7 @@ export default class DdgNode extends React.PureComponent<TProps> {
           className={cx('DdgNode--core', { 'is-focalNode': isFocalNode, 'is-UiFindMatch': isUiFindMatch })}
         >
           {isFocalNode && <div className="DdgNode--focalMarker">{focalNodeIcon}</div>}
-          <div>
+          <div className="DdgNode--labelWrapper">
             <h4 className="DdgNode--label">{service}</h4>
             {operation && <div className="DdgNode--label">{operation}</div>}
           </div>

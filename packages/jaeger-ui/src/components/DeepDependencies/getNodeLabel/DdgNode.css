@@ -26,6 +26,12 @@ limitations under the License.
   border-color: #eb2f96;
 }
 
+.DdgNode--labelWrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
 .DdgNode--core.is-UiFindMatch {
   /* TODO: Joe, scalable indication */
   background-color: #fff3d7;
@@ -62,6 +68,10 @@ limitations under the License.
   margin: 0;
   padding: 0.5rem 0.5rem 0.3rem 0.75rem;
   white-space: nowrap;
+}
+
+.DdgNode--label:only-child {
+  padding-top: 0.3rem;
 }
 
 .DdgNode--label:not(:first-child) {

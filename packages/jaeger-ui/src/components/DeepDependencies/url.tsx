@@ -44,19 +44,21 @@ function firstParam(arg: string | string[]): string {
 }
 
 export function getUrlState(search: string): TDdgSparseUrlState {
-  const { service, operation, start, end, visEncoding } = queryString.parse(search);
-  const rv: TDdgSparseUrlState = {};
-  if (service) {
-    rv.service = firstParam(service);
+  const { end, operation, service, showOp = '1', start, visEncoding } = queryString.parse(search);
+  const rv: TDdgSparseUrlState = {
+    showOp: Boolean(+firstParam(showOp)),
+  };
+  if (end) {
+    rv.end = Number.parseInt(firstParam(end), 10);
   }
   if (operation) {
     rv.operation = firstParam(operation);
   }
+  if (service) {
+    rv.service = firstParam(service);
+  }
   if (start) {
     rv.start = Number.parseInt(firstParam(start), 10);
-  }
-  if (end) {
-    rv.end = Number.parseInt(firstParam(end), 10);
   }
   if (visEncoding) {
     rv.visEncoding = firstParam(visEncoding);

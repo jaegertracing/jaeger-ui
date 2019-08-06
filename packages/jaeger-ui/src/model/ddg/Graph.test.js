@@ -63,30 +63,60 @@ describe('Graph', () => {
 
   describe('getVertexKey', () => {
     const testFocalElem = simpleModel.paths[0].members[2];
-    const expectedKeyEntry = pathElem => `${pathElem.operation.service.name}----${pathElem.operation.name}`;
-    const expectedFocalElemKey = expectedKeyEntry(testFocalElem);
     // Because getVertexKey is completely context-unaware until late-alpha, an empty ddg is sufficient to test
     // this method.
-    const emptyGraph = new Graph({ ddgModel: { visIdxToPathElem: [] } });
+    const ddgModel = { visIdxToPathElem: [] };
 
-    it('creates key for focal pathElem', () => {
-      expect(emptyGraph.getVertexKey(testFocalElem)).toBe(expectedFocalElemKey);
+    describe('showOp is true', () => {
+      const emptyGraph = new Graph({ ddgModel, showOp: true });
+      const expectedKeyEntry = pathElem => `${pathElem.operation.service.name}----${pathElem.operation.name}`;
+      const expectedFocalElemKey = expectedKeyEntry(testFocalElem);
+
+      it('creates key for focal pathElem', () => {
+        expect(emptyGraph.getVertexKey(testFocalElem)).toBe(expectedFocalElemKey);
+      });
+
+      it('creates key for an upstream pathElem', () => {
+        const targetElem = simpleModel.paths[0].members[0];
+        const interimElem = simpleModel.paths[0].members[1];
+        expect(emptyGraph.getVertexKey(targetElem)).toBe(
+          [expectedKeyEntry(targetElem), expectedKeyEntry(interimElem), expectedFocalElemKey].join('____')
+        );
+      });
+
+      it('creates key for a downstream pathElem', () => {
+        const targetElem = simpleModel.paths[0].members[4];
+        const interimElem = simpleModel.paths[0].members[3];
+        expect(emptyGraph.getVertexKey(targetElem)).toBe(
+          [expectedFocalElemKey, expectedKeyEntry(interimElem), expectedKeyEntry(targetElem)].join('____')
+        );
+      });
     });
 
-    it('creates key for an upstream pathElem', () => {
-      const targetElem = simpleModel.paths[0].members[0];
-      const interimElem = simpleModel.paths[0].members[1];
-      expect(emptyGraph.getVertexKey(targetElem)).toBe(
-        [expectedKeyEntry(targetElem), expectedKeyEntry(interimElem), expectedFocalElemKey].join('____')
-      );
-    });
+    describe('showOp is false', () => {
+      const emptyGraph = new Graph({ ddgModel, showOp: false });
+      const expectedKeyEntry = pathElem => pathElem.operation.service.name;
+      const expectedFocalElemKey = expectedKeyEntry(testFocalElem);
 
-    it('creates key for a downstream pathElem', () => {
-      const targetElem = simpleModel.paths[0].members[4];
-      const interimElem = simpleModel.paths[0].members[3];
-      expect(emptyGraph.getVertexKey(targetElem)).toBe(
-        [expectedFocalElemKey, expectedKeyEntry(interimElem), expectedKeyEntry(targetElem)].join('____')
-      );
+      it('creates key for focal pathElem', () => {
+        expect(emptyGraph.getVertexKey(testFocalElem)).toBe(expectedFocalElemKey);
+      });
+
+      it('creates key for an upstream pathElem', () => {
+        const targetElem = simpleModel.paths[0].members[0];
+        const interimElem = simpleModel.paths[0].members[1];
+        expect(emptyGraph.getVertexKey(targetElem)).toBe(
+          [expectedKeyEntry(targetElem), expectedKeyEntry(interimElem), expectedFocalElemKey].join('____')
+        );
+      });
+
+      it('creates key for a downstream pathElem', () => {
+        const targetElem = simpleModel.paths[0].members[4];
+        const interimElem = simpleModel.paths[0].members[3];
+        expect(emptyGraph.getVertexKey(targetElem)).toBe(
+          [expectedFocalElemKey, expectedKeyEntry(interimElem), expectedKeyEntry(targetElem)].join('____')
+        );
+      });
     });
   });
 
@@ -94,6 +124,7 @@ describe('Graph', () => {
     it('creates five vertices and four edges for one-path ddg', () => {
       const testGraph = new Graph({
         ddgModel: simpleModel,
+        showOp: true,
       });
       validateGraph(testGraph, [
         {
@@ -123,6 +154,7 @@ describe('Graph', () => {
     it('adds separate vertices for equal PathElems that have different focalPaths, even those with equal focalSideNeighbors', () => {
       const convergentGraph = new Graph({
         ddgModel: convergentModel,
+        showOp: true,
       });
       validateGraph(convergentGraph, [
         {
@@ -162,6 +194,7 @@ describe('Graph', () => {
     it('reuses edge when possible', () => {
       const convergentGraph = new Graph({
         ddgModel: convergentModel,
+        showOp: true,
       });
       const sharedEdgeElemA = convergentGraph.visIdxToPathElem[5];
       const sharedEdgeElemB = convergentGraph.visIdxToPathElem[4];
@@ -191,6 +224,7 @@ describe('Graph', () => {
   describe('getVisible', () => {
     const convergentGraph = new Graph({
       ddgModel: convergentModel,
+      showOp: true,
     });
 
     describe('visEncoding provided', () => {
@@ -259,18 +293,31 @@ describe('Graph', () => {
   describe('getVisible', () => {
     const convergentGraph = new Graph({
       ddgModel: convergentModel,
+      showOp: true,
     });
+    const shorten = str => str && str.substring(0, str.length - 3);
+    const visEncoding = encode([0, 1, 2, 3, 4, 5]);
 
     it('returns a subset of getVisible that match provided uiFind', () => {
-      const visEncoding = encode([0, 1, 2, 3, 4, 5]);
       const { vertices: visibleVertices } = convergentGraph.getVisible(visEncoding);
       const { service, operation } = visibleVertices[0];
       const { service: otherService } = visibleVertices[2];
-      const partial = str => str.substring(0, service.length - 3);
-      const uiFind = `${partial(service)} ${partial(operation)} ${partial(otherService)}`;
+      const uiFind = `${shorten(service)} ${shorten(operation)} ${shorten(otherService)}`;
       expect(convergentGraph.getVisibleUiFindMatches(uiFind, visEncoding)).toEqual(
         new Set([visibleVertices[0], visibleVertices[2]])
       );
+    });
+
+    it('matches only on service.name if showOp is false', () => {
+      const hideOpGraph = new Graph({
+        ddgModel: convergentModel,
+        showOp: false,
+      });
+      const { vertices: visibleVertices } = hideOpGraph.getVisible(visEncoding);
+      const { service } = visibleVertices[0];
+      const { operation } = visibleVertices[2];
+      const uiFind = `${shorten(service)} ${shorten(operation)}`;
+      expect(hideOpGraph.getVisibleUiFindMatches(uiFind, visEncoding)).toEqual(new Set([visibleVertices[0]]));
     });
 
     it('returns an empty set when provided empty or undefined uiFind', () => {
