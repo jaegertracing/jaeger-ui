@@ -66,6 +66,7 @@ describe('DeepDependencyGraph/url', () => {
 
   describe('getUrlState', () => {
     const search = 'test search';
+    const density = 'test density';
     const end = '900';
     const operation = 'operationName';
     const service = 'serviceName';
@@ -73,6 +74,7 @@ describe('DeepDependencyGraph/url', () => {
     const start = '400';
     const visEncoding = 'vis encoding';
     const acceptableParams = {
+      density,
       end,
       operation,
       service,
@@ -81,6 +83,7 @@ describe('DeepDependencyGraph/url', () => {
       visEncoding,
     };
     const expectedParams = {
+      density,
       end: Number.parseInt(end, 10),
       operation,
       service,
@@ -126,6 +129,14 @@ describe('DeepDependencyGraph/url', () => {
       const { showOp: alsoUnused, ...rv } = acceptableParams;
       parseSpy.mockReturnValue(rv);
       expect(getUrlState(search)).toEqual({ ...rest, showOp: true });
+      expect(parseSpy).toHaveBeenLastCalledWith(search);
+    });
+
+    it("defaults `density` to 'PPE'", () => {
+      const { density: unused, ...rest } = expectedParams;
+      const { density: alsoUnused, ...rv } = acceptableParams;
+      parseSpy.mockReturnValue(rv);
+      expect(getUrlState(search)).toEqual({ ...rest, density: 'PPE' });
       expect(parseSpy).toHaveBeenLastCalledWith(search);
     });
 

@@ -19,7 +19,7 @@ describe('PathElem', () => {
   const testMemberIdx = 3;
   const testOperation = {};
   const testPath = {
-    focalIdx: 5,
+    focalIdx: 4,
     members: ['member0', 'member1', 'member2', 'member3', 'member4', 'member5'],
   };
   const testVisibilityIdx = 105;
@@ -36,7 +36,7 @@ describe('PathElem', () => {
   });
 
   it('calculates distance', () => {
-    expect(pathElem.distance).toBe(-2);
+    expect(pathElem.distance).toBe(-1);
   });
 
   it('sets visibilityIdx', () => {
@@ -62,6 +62,27 @@ describe('PathElem', () => {
   it('has a null focalSideNeighbor if distance is 0', () => {
     pathElem = new PathElem({ path: testPath, operation: testOperation, memberIdx: testPath.focalIdx });
     expect(pathElem.focalSideNeighbor).toBe(null);
+  });
+
+  it('is external if it is first or last PathElem in memberOf.path and not the focalElem', () => {
+    expect(pathElem.isExternal).toBe(false);
+
+    const firstElem = new PathElem({ path: testPath, operation: testOperation, memberIdx: 0 });
+    expect(firstElem.isExternal).toBe(true);
+
+    const lastElem = new PathElem({
+      path: testPath,
+      operation: testOperation,
+      memberIdx: testPath.members.length - 1,
+    });
+    expect(lastElem.isExternal).toBe(true);
+
+    const path = {
+      ...testPath,
+      focalIdx: testPath.members.length - 1,
+    };
+    const focalElem = new PathElem({ path, operation: testOperation, memberIdx: path.members.length - 1 });
+    expect(focalElem.isExternal).toBe(false);
   });
 
   describe('legibility', () => {

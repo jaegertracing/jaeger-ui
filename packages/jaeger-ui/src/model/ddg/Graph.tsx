@@ -18,9 +18,10 @@ import { TEdge } from '@jaegertracing/plexus/lib/types';
 
 import { decode } from './visibility-codec';
 
-import { PathElem, TDdgDistanceToPathElems, TDdgModel, TDdgVertex } from './types';
+import { PathElem, TDdgDensity, TDdgDistanceToPathElems, TDdgModel, TDdgVertex } from './types';
 
 export default class Graph {
+  private readonly density: TDdgDensity;
   private distanceToPathElems: TDdgDistanceToPathElems;
   private pathElemToEdge: Map<PathElem, TEdge>;
   private pathElemToVertex: Map<PathElem, TDdgVertex>;
@@ -29,7 +30,8 @@ export default class Graph {
   private vertices: Map<string, TDdgVertex>;
   private visIdxToPathElem: PathElem[];
 
-  constructor({ ddgModel, showOp }: { ddgModel: TDdgModel; showOp: boolean }) {
+  constructor({ ddgModel, density, showOp }: { ddgModel: TDdgModel; density: TDdgDensity; showOp: boolean }) {
+    this.density = density;
     this.distanceToPathElems = ddgModel.distanceToPathElems;
     this.pathElemToEdge = new Map();
     this.pathElemToVertex = new Map();
@@ -116,16 +118,43 @@ export default class Graph {
   // provide that to this fn. could also be property on pathElem that gets set by showElems
   // tl;dr may move in late-alpha
   private getVertexKey = (pathElem: PathElem): string => {
-    const { memberIdx, memberOf } = pathElem;
-    const { focalIdx, members } = memberOf;
-    const keySegmentFn = this.showOp
+    const elemToStr = this.showOp
       ? ({ operation }: PathElem) => `${operation.service.name}----${operation.name}`
       : ({ operation }: PathElem) => operation.service.name;
 
-    return members
-      .slice(Math.min(focalIdx, memberIdx), Math.max(focalIdx, memberIdx) + 1)
-      .map(keySegmentFn)
-      .join('____');
+    switch (this.density) {
+      case TDdgDensity.MostConcise: {
+        return elemToStr(pathElem);
+      }
+      case TDdgDensity.UpstreamVsDownstream: {
+        return `${elemToStr(pathElem)}=${Math.sign(pathElem.distance)}`;
+      }
+      case TDdgDensity.PreventPathEntanglement:
+      case TDdgDensity.ExternalVsInternal: {
+        const decorate =
+          this.density === TDdgDensity.ExternalVsInternal
+            ? (str: string) => `${str}${pathElem.isExternal ? '----external' : ''}`
+            : (str: string) => str;
+        const { memberIdx, memberOf } = pathElem;
+        const { focalIdx, members } = memberOf;
+
+        return decorate(
+          members
+            .slice(Math.min(focalIdx, memberIdx), Math.max(focalIdx, memberIdx) + 1)
+            .map(elemToStr)
+            .join('____')
+        );
+      }
+      default: {
+        throw new Error(
+          `Density: ${this.density} has not been implemented, try one of these: ${JSON.stringify(
+            TDdgDensity,
+            null,
+            2
+          )}`
+        );
+      }
+    }
   };
 
   public getVisible: (visEncoding?: string) => { edges: TEdge[]; vertices: TDdgVertex[] } = memoize(10)(
@@ -188,5 +217,5 @@ export default class Graph {
 }
 
 export const makeGraph = memoize(10)(
-  (ddgModel: TDdgModel, showOp: boolean) => new Graph({ ddgModel, showOp })
+  (ddgModel: TDdgModel, showOp: boolean, density: TDdgDensity) => new Graph({ ddgModel, density, showOp })
 );
