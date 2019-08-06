@@ -57,6 +57,11 @@ describe('DeepDependencyGraph/url', () => {
       const paramB = 'bParam';
       expect(getUrl({ paramA, paramB })).toBe(`/deep-dependencies?paramA=${paramA}&paramB=${paramB}`);
     });
+
+    it('converts truthiness of showOp into 0 or 1', () => {
+      expect(getUrl({ showOp: true })).toBe(`/deep-dependencies?showOp=1`);
+      expect(getUrl({ showOp: false })).toBe(`/deep-dependencies?showOp=0`);
+    });
   });
 
   describe('getUrlState', () => {

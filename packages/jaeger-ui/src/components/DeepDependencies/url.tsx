@@ -27,9 +27,15 @@ export function matches(path: string) {
   return Boolean(matchPath(path, ROUTE_MATCHER));
 }
 
-export function getUrl(args?: { [key: string]: unknown }) {
+export function getUrl(args?: { [key: string]: unknown; showOp?: boolean }) {
   if (args && !_isEmpty(args)) {
-    return `${ROUTE_PATH}?${queryString.stringify(args)}`;
+    const stringifyArgs = Reflect.has(args, 'showOp')
+      ? {
+          ...args,
+          showOp: args.showOp ? 1 : 0,
+        }
+      : args;
+    return `${ROUTE_PATH}?${queryString.stringify(stringifyArgs)}`;
   }
   return ROUTE_PATH;
 }
