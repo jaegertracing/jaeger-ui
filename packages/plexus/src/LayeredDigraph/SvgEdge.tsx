@@ -41,9 +41,12 @@ export default class SvgEdge<U = {}> extends React.PureComponent<TProps<U>> {
     const d = pathPoints.map((pt, i) => `${PATH_D_CMDS[i] || ''}${pt.join(',')}`).join(' ');
     const markerEnd = makeIriRef(renderUtils, markerEndId);
     const markerStart = makeIriRef(renderUtils, markerStartId);
-    const customProps = assignMergeCss(getProps(setOnEdge, layoutEdge, renderUtils), {
-      className: getClassName('SvgEdge'),
-    });
+    const customProps = assignMergeCss(
+      {
+        className: getClassName('SvgEdge'),
+      },
+      getProps(setOnEdge, layoutEdge, renderUtils)
+    );
     return (
       <path
         d={d}
