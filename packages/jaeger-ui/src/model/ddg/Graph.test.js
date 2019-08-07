@@ -255,4 +255,27 @@ describe('Graph', () => {
       });
     });
   });
+
+  describe('getVisible', () => {
+    const convergentGraph = new Graph({
+      ddgModel: convergentModel,
+    });
+
+    it('returns a subset of getVisible that match provided uiFind', () => {
+      const visEncoding = encode([0, 1, 2, 3, 4, 5]);
+      const { vertices: visibleVertices } = convergentGraph.getVisible(visEncoding);
+      const { service, operation } = visibleVertices[0];
+      const { service: otherService } = visibleVertices[2];
+      const partial = str => str.substring(0, service.length - 3);
+      const uiFind = `${partial(service)} ${partial(operation)} ${partial(otherService)}`;
+      expect(convergentGraph.getVisibleUiFindMatches(uiFind, visEncoding)).toEqual(
+        new Set([visibleVertices[0], visibleVertices[2]])
+      );
+    });
+
+    it('returns an empty set when provided empty or undefined uiFind', () => {
+      expect(convergentGraph.getVisibleUiFindMatches()).toEqual(new Set());
+      expect(convergentGraph.getVisibleUiFindMatches('')).toEqual(new Set());
+    });
+  });
 });

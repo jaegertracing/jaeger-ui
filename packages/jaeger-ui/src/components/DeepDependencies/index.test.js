@@ -19,9 +19,11 @@ import _set from 'lodash/set';
 import { DeepDependencyGraphPageImpl, mapDispatchToProps, mapStateToProps } from '.';
 import * as url from './url';
 import Graph from './Graph';
+import Header from './Header';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
 import { fetchedState } from '../../constants';
+import * as GraphModel from '../../model/ddg/Graph';
 import { stateKey } from '../../model/ddg/types';
 import * as codec from '../../model/ddg/visibility-codec';
 
@@ -30,6 +32,13 @@ describe('DeepDependencyGraphPage', () => {
     const props = {
       history: {
         push: jest.fn(),
+      },
+      graph: {
+        getVisible: () => ({
+          edges: [],
+          vertices: [],
+        }),
+        getVisibleUiFindMatches: () => new Set(),
       },
       fetchServices: jest.fn(),
       fetchServiceOperations: jest.fn(),
@@ -125,6 +134,7 @@ describe('DeepDependencyGraphPage', () => {
       });
 
       beforeEach(() => {
+        getUrlSpy.mockReset();
         props.history.push.mockReset();
       });
 
@@ -172,10 +182,27 @@ describe('DeepDependencyGraphPage', () => {
           encodeDistanceSpy = jest.spyOn(codec, 'encodeDistance').mockImplementation(() => mockNewEncoding);
         });
 
-        it('updates url with result of encodeDistance', () => {
+        it('updates url with result of encodeDistance iff graph is loaded', () => {
           const distance = -3;
           const direction = -1;
           const visEncoding = props.urlState.visEncoding;
+
+          const { graphState: e, ...graphStatelessProps } = props;
+          const graphStateless = new DeepDependencyGraphPageImpl(graphStatelessProps);
+          graphStateless.setDistance(distance, direction);
+          expect(encodeDistanceSpy).not.toHaveBeenCalled();
+          expect(getUrlSpy).not.toHaveBeenCalled();
+          expect(props.history.push).not.toHaveBeenCalled();
+
+          const graphStateLoading = new DeepDependencyGraphPageImpl({
+            ...graphStatelessProps,
+            graphState: { state: fetchedState.LOADING },
+          });
+          graphStateLoading.setDistance(distance, direction);
+          expect(encodeDistanceSpy).not.toHaveBeenCalled();
+          expect(getUrlSpy).not.toHaveBeenCalled();
+          expect(props.history.push).not.toHaveBeenCalled();
+
           ddgPageImpl.setDistance(distance, direction);
           expect(encodeDistanceSpy).toHaveBeenLastCalledWith({
             ddgModel: props.graphState.model,
@@ -188,51 +215,69 @@ describe('DeepDependencyGraphPage', () => {
           );
           expect(props.history.push).toHaveBeenCalledTimes(1);
         });
+      });
 
-        describe('setOperation', () => {
-          it('updates operation and clears visEncoding', () => {
-            const operation = 'newOperation';
-            ddgPageImpl.setOperation(operation);
-            expect(getUrlSpy).toHaveBeenLastCalledWith(
-              Object.assign({}, props.urlState, { operation, visEncoding: undefined })
-            );
-            expect(props.history.push).toHaveBeenCalledTimes(1);
-          });
+      describe('setOperation', () => {
+        it('updates operation and clears visEncoding', () => {
+          const operation = 'newOperation';
+          ddgPageImpl.setOperation(operation);
+          expect(getUrlSpy).toHaveBeenLastCalledWith(
+            Object.assign({}, props.urlState, { operation, visEncoding: undefined })
+          );
+          expect(props.history.push).toHaveBeenCalledTimes(1);
+        });
+      });
+
+      describe('setService', () => {
+        const service = 'newService';
+
+        beforeEach(() => {
+          props.fetchServiceOperations.mockReset();
         });
 
-        describe('setService', () => {
-          const service = 'newService';
+        it('updates service and clears operation and visEncoding', () => {
+          ddgPageImpl.setService(service);
+          expect(getUrlSpy).toHaveBeenLastCalledWith(
+            Object.assign({}, props.urlState, { operation: undefined, service, visEncoding: undefined })
+          );
+          expect(props.history.push).toHaveBeenCalledTimes(1);
+        });
 
-          beforeEach(() => {
-            props.fetchServiceOperations.mockReset();
+        it('fetches operations for service when not yet provided', () => {
+          ddgPageImpl.setService(service);
+          expect(props.fetchServiceOperations).toHaveBeenLastCalledWith(service);
+          expect(props.fetchServiceOperations).toHaveBeenCalledTimes(1);
+
+          const pageWithOpForService = new DeepDependencyGraphPageImpl({
+            ...props,
+            operationsForService: { [service]: [props.urlState.operation] },
           });
-
-          it('updates service and clears operation and visEncoding', () => {
-            ddgPageImpl.setService(service);
-            expect(getUrlSpy).toHaveBeenLastCalledWith(
-              Object.assign({}, props.urlState, { operation: undefined, service, visEncoding: undefined })
-            );
-            expect(props.history.push).toHaveBeenCalledTimes(1);
-          });
-
-          it('fetches operations for service when not yet provided', () => {
-            ddgPageImpl.setService(service);
-            expect(props.fetchServiceOperations).toHaveBeenLastCalledWith(service);
-            expect(props.fetchServiceOperations).toHaveBeenCalledTimes(1);
-
-            const pageWithOpForService = new DeepDependencyGraphPageImpl({
-              ...props,
-              operationsForService: { [service]: [props.urlState.operation] },
-            });
-            const { length: callCount } = props.fetchServiceOperations.mock.calls;
-            pageWithOpForService.setService(service);
-            expect(props.fetchServiceOperations).toHaveBeenCalledTimes(callCount);
-          });
+          const { length: callCount } = props.fetchServiceOperations.mock.calls;
+          pageWithOpForService.setService(service);
+          expect(props.fetchServiceOperations).toHaveBeenCalledTimes(callCount);
         });
       });
     });
 
     describe('render', () => {
+      const vertices = [{ key: 'key0' }, { key: 'key1' }, { key: 'key2' }];
+      const graph = {
+        getVisible: () => ({
+          edges: [
+            {
+              from: vertices[0].key,
+              to: vertices[1].key,
+            },
+            {
+              from: vertices[1].key,
+              to: vertices[2].key,
+            },
+          ],
+          vertices,
+        }),
+        getVisibleUiFindMatches: () => new Set(vertices.slice(1)),
+      };
+
       it('renders message to query a ddg when no graphState is provided', () => {
         const message = shallow(<DeepDependencyGraphPageImpl {...props} graphState={undefined} />)
           .find('h1')
@@ -257,8 +302,7 @@ describe('DeepDependencyGraphPage', () => {
       });
 
       it('renders graph when done', () => {
-        const graphState = { model: { distanceToPathElems: [] }, state: fetchedState.DONE };
-        const wrapper = shallow(<DeepDependencyGraphPageImpl {...props} graphState={graphState} />);
+        const wrapper = shallow(<DeepDependencyGraphPageImpl {...props} graph={graph} />);
         expect(wrapper.find(Graph)).toHaveLength(1);
       });
 
@@ -271,6 +315,29 @@ describe('DeepDependencyGraphPage', () => {
           .text();
         expect(unknownIndication).toMatch(new RegExp(state));
         expect(unknownIndication).toMatch(/Unknown graphState/);
+      });
+
+      it('renders indication of unknown state when done but no graph is provided', () => {
+        const { graph: _, ...propsWithoutGraph } = props;
+        const wrapper = shallow(<DeepDependencyGraphPageImpl {...propsWithoutGraph} />);
+        const unknownIndication = wrapper
+          .find('div')
+          .find('div')
+          .last()
+          .text();
+        expect(wrapper.find(Graph)).toHaveLength(0);
+        expect(unknownIndication).toMatch(/Unknown graphState/);
+      });
+
+      it('calculates uiFindCount', () => {
+        const wrapper = shallow(<DeepDependencyGraphPageImpl {...props} graph={graph} />);
+        expect(wrapper.find(Header).prop('uiFindCount')).toBe(undefined);
+
+        wrapper.setProps({ uiFind: '' });
+        expect(wrapper.find(Header).prop('uiFindCount')).toBe(undefined);
+
+        wrapper.setProps({ uiFind: 'truthy uiFind' });
+        expect(wrapper.find(Header).prop('uiFindCount')).toBe(vertices.length - 1);
       });
     });
   });
@@ -305,6 +372,11 @@ describe('DeepDependencyGraphPage', () => {
     };
     const state = {
       otherState: 'otherState',
+      router: {
+        location: {
+          search: 'search',
+        },
+      },
       services: {
         operationsForService,
         otherState: 'otherState',
@@ -312,15 +384,20 @@ describe('DeepDependencyGraphPage', () => {
       },
     };
     const ownProps = { location: { search } };
+    const mockGraphModel = { getVisible: () => ({}) };
     let getUrlStateSpy;
+    let makeGraphSpy;
 
     beforeAll(() => {
       getUrlStateSpy = jest.spyOn(url, 'getUrlState');
+      makeGraphSpy = jest.spyOn(GraphModel, 'makeGraph');
     });
 
     beforeEach(() => {
       getUrlStateSpy.mockReset();
       getUrlStateSpy.mockReturnValue(expected.urlState);
+      makeGraphSpy.mockReset();
+      makeGraphSpy.mockReturnValue(mockGraphModel);
     });
 
     it('uses gets relevant params from location.search', () => {
@@ -354,6 +431,30 @@ describe('DeepDependencyGraphPage', () => {
       getUrlStateSpy.mockReturnValue({});
       const resultWithoutParams = mapStateToProps(reduxState, ownProps);
       expect(resultWithoutParams.graphState).toBeUndefined();
+    });
+
+    it('includes graph iff graphState.state is fetchedState.DONE', () => {
+      const loadingState = { state: fetchedState.LOADING };
+      const reduxState = { ...state };
+      // TODO: Remove 0s once time buckets are implemented
+      _set(
+        reduxState,
+        ['deepDependencyGraph', stateKey({ service, operation, start: 0, end: 0 })],
+        loadingState
+      );
+      const result = mapStateToProps(reduxState, ownProps);
+      expect(result.graph).toBe(undefined);
+
+      const doneState = _set(
+        { ...state },
+        ['deepDependencyGraph', stateKey({ service, operation, start: 0, end: 0 })],
+        {
+          model: {},
+          state: fetchedState.DONE,
+        }
+      );
+      const doneResult = mapStateToProps(doneState, ownProps);
+      expect(doneResult.graph).toBe(mockGraphModel);
     });
 
     it('includes services and operationsForService', () => {
