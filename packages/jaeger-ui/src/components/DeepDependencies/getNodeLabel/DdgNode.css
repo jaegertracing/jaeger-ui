@@ -26,6 +26,11 @@ limitations under the License.
   border-color: #eb2f96;
 }
 
+.DdgNode--core.is-UiFindMatch {
+  /* TODO: Joe, scalable indication */
+  background-color: #fff3d7;
+}
+
 .DdgNode--core.is-focalNode::before {
   bottom: 0;
   content: '';

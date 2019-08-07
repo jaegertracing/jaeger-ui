@@ -68,7 +68,18 @@ export const HEADER_ITEMS = [
   {
     key: 'timestamp',
     label: 'Trace Start',
-    renderer: (trace: Trace) => formatDatetime(trace.startTime),
+    renderer: (trace: Trace) => {
+      const dateStr = formatDatetime(trace.startTime);
+      const match = dateStr.match(/^(.+)(:\d\d\.\d+)$/);
+      return match ? (
+        <span className="TracePageHeader--overviewItem--value">
+          {match[1]}
+          <span className="TracePageHeader--overviewItem--valueDetail">{match[2]}</span>
+        </span>
+      ) : (
+        dateStr
+      );
+    },
   },
   {
     key: 'duration',

@@ -1,0 +1,80 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`<Graph /> render renders provided edges and vertices 1`] = `
+<DirectedGraph
+  arrowScaleDampener={0}
+  className=""
+  classNamePrefix="plexus"
+  edges={
+    Array [
+      Object {
+        "from": "key0",
+        "to": "key1",
+      },
+      Object {
+        "from": "key1",
+        "to": "key2",
+      },
+    ]
+  }
+  getNodeLabel={[Function]}
+  layoutManager={
+    LayoutManager {
+      "_handleUpdate": [Function],
+      "coordinator": Coordinator {
+        "_handleVizWorkerError": [Function],
+        "_handleVizWorkerMessage": [Function],
+        "_handleVizWorkerMessageError": [Function],
+        "busyWorkers": Array [],
+        "callback": [Function],
+        "currentLayout": null,
+        "idleWorkers": Array [],
+        "nextWorkerId": 0,
+      },
+      "layoutId": 0,
+      "options": Object {
+        "splines": "polyline",
+        "useDotEdges": true,
+      },
+      "pendingResult": null,
+    }
+  }
+  minimap={true}
+  minimapClassName="u-miniMap"
+  vertices={
+    Array [
+      Object {
+        "key": "key0",
+      },
+      Object {
+        "key": "key1",
+      },
+      Object {
+        "key": "key2",
+      },
+      Object {
+        "key": "key3",
+      },
+      Object {
+        "key": "key4",
+      },
+      Object {
+        "key": "key5",
+      },
+      Object {
+        "key": "key6",
+      },
+      Object {
+        "key": "key7",
+      },
+      Object {
+        "key": "key8",
+      },
+      Object {
+        "key": "key9",
+      },
+    ]
+  }
+  zoom={true}
+/>
+`;
