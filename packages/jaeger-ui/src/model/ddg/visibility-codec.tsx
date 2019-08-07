@@ -18,6 +18,8 @@ import memoize from 'lru-memoize';
 
 import { EDirection, TDdgModel } from './types';
 
+const COUNT_INDICATOR = '~';
+const DELIMITER = '.';
 // This bucket size was chosen as JavaScript uses 32-bit numbers for bitwise operators, so the maximum number
 // of indices that can be tracked in a single number is 32. Increasing from 31 visibility values per base36
 // number to 32 visibility values would require an additional base36 character, which reduces the efficiency.
@@ -32,15 +34,21 @@ const VISIBILITY_BUCKET_SIZE = 31;
  */
 export const decode: (encoded: string) => number[] = memoize(10)((encoded: string): number[] => {
   const rv: number[] = [];
-  encoded.split(',').forEach((partial, i) => {
+  let i = 0;
+  encoded.split(DELIMITER).forEach(tupleStr => {
+    const [partial, c = '1'] = tupleStr.split(COUNT_INDICATOR);
+    const count = parseInt(c, 36);
     const partialAsNumber = partial ? parseInt(partial, 36) : 0;
     // Because JavaScript bitwise operators wrap when exceeding 32 bits, the second check is necessary to
     // prevent an infinite loop if (partialAsNuber & i << 31) is truthy.
     for (let j = 0; partialAsNumber >= 1 << j && j < VISIBILITY_BUCKET_SIZE; j += 1) {
       if ((1 << j) & partialAsNumber) {
-        rv.push(i * VISIBILITY_BUCKET_SIZE + j);
+        for (let k = 0; k < count; k += 1) {
+          rv.push((i + k) * VISIBILITY_BUCKET_SIZE + j);
+        }
       }
     }
+    i += count;
   });
   return rv;
 });
@@ -70,12 +78,31 @@ function convertAbsoluteIdxToRelativeValues(absIdx: number) {
  * @returns {string} - base36 csv visibility encoding.
  */
 export const encode = (decoded: number[]): string => {
-  const partial: number[] = [];
+  const partials: number[] = [];
   decoded.forEach(visIdx => {
     const { csvIdx, visibilityValue } = convertAbsoluteIdxToRelativeValues(visIdx);
-    partial[csvIdx] |= visibilityValue;
+    partials[csvIdx] |= visibilityValue;
   });
-  return partial.map(p => p.toString(36)).join();
+
+  const condensed: [number, number][] = [];
+  // for loop is necessary instead of forEach as partials can contain `empty`
+  for (let i = 0; i < partials.length; i++) {
+    const partial = partials[i];
+    const tuple = condensed[condensed.length - 1];
+    if (!tuple || tuple[0] !== partial) {
+      condensed.push([partial, 1]);
+    } else {
+      tuple[1] += 1;
+    }
+  }
+
+  return condensed
+    .map(([partial, count]) => {
+      const encoded = partial ? partial.toString(36) : '';
+      const suffix = count !== 1 ? `${COUNT_INDICATOR}${count.toString(36)}` : '';
+      return `${encoded}${suffix}`;
+    })
+    .join(DELIMITER);
 };
 
 /**
