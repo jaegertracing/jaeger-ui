@@ -62,9 +62,12 @@ export default class SvgDefEntry<T = {}, U = {}> extends React.PureComponent<TPr
   render() {
     const { getClassName, localId, graphState, renderEntry = renderDefaultMarker, setOnEntry } = this.props;
     const id = graphState.renderUtils.getLocalId(localId);
-    const entryProps = assignMergeCss(getProps(setOnEntry, graphState), {
-      className: getClassName('DefEntry'),
-    });
+    const entryProps = assignMergeCss(
+      {
+        className: getClassName('DefEntry'),
+      },
+      getProps(setOnEntry, graphState)
+    );
     return renderEntry(graphState, entryProps, id);
   }
 }
