@@ -28,8 +28,9 @@ limitations under the License.
 .DdgHeader--controlHeader {
   align-items: center;
   background-color: #fafafa;
+  border-top: 1px solid #eee;
   display: flex;
-  height: 40px; /* Arbitrary height until find is implemented */
+  justify-content: space-between;
 }
 
 .DdgHeader--paramsHeader {
@@ -42,4 +43,52 @@ limitations under the License.
   margin: 0;
   padding: 0.75rem 1.25rem 0.75rem 1.25rem;
   position: relative;
+}
+
+.DdgHeader--uiFind {
+  align-items: center;
+  background-color: #ffffff;
+  border-left: 1px solid #eee;
+  border-right: 1px solid #eee;
+  color: #bbb;
+  display: flex;
+  flex-grow: 1;
+  margin-right: 8px;
+  max-width: 400px;
+  min-width: 200px;
+  transition: max-width 0.5s;
+}
+
+.DdgHeader--uiFind:focus-within {
+  max-width: 550px;
+}
+
+.DdgHeader--uiFindSearchIcon {
+  margin: 0 0.25em;
+  padding: 0.24em;
+}
+
+.DdgHeader--uiFindInput > input:focus,
+.DdgHeader--uiFindInput > input {
+  border: none;
+  box-shadow: none;
+  border-radius: 0px;
+}
+
+.DdgHeader--uiFindCount {
+  background: #ffffb8;
+  border: 1px dashed #fadb14;
+  border-radius: 4px;
+  color: #ad8b00;
+  margin-left: 0.25em;
+  margin-right: 0.5em;
+  transition: width 0.5s;
+  padding: 0.27em 0.4em;
+  stroke: #666;
+  stroke-width: 1.2px;
+  text-align: center;
+}
+
+.DdgHeader--uiFindCount:empty {
+  display: none;
 }

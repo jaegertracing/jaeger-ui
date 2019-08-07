@@ -28,6 +28,7 @@ type TProps = {
   operation: string | null;
   focalNodeUrl: string | null;
   isFocalNode: boolean;
+  isUiFindMatch: boolean;
   viewModifiers: number;
   setViewModifier: (vertexKey: string, viewModifier: EViewModifier, isEnabled: boolean) => void;
 };
@@ -39,10 +40,12 @@ export default class DdgNode extends React.PureComponent<TProps> {
   };
 
   render() {
-    const { focalNodeUrl, isFocalNode, operation, service } = this.props;
+    const { focalNodeUrl, isFocalNode, isUiFindMatch, operation, service } = this.props;
     return (
       <div className="DdgNode" onMouseOver={this.onMouseUx} onMouseOut={this.onMouseUx}>
-        <div className={cx('DdgNode--core', { 'is-focalNode': isFocalNode })}>
+        <div
+          className={cx('DdgNode--core', { 'is-focalNode': isFocalNode, 'is-UiFindMatch': isUiFindMatch })}
+        >
           {isFocalNode && <div className="DdgNode--focalMarker">{focalNodeIcon}</div>}
           <div>
             <h4 className="DdgNode--label">{service}</h4>

@@ -24,6 +24,32 @@ exports[`<Header> renders the hops selector if distanceToPathElems is provided 1
       handleClick={[Function]}
       visEncoding="3"
     />
+    <div
+      className="DdgHeader--uiFind"
+      onClick={[Function]}
+      role="button"
+    >
+      <Icon
+        className="DdgHeader--uiFindSearchIcon"
+        type="search"
+      />
+      <withRouter(Connect(UnconnectedUiFindInput))
+        allowClear={true}
+        forwardedRef={
+          Object {
+            "current": null,
+          }
+        }
+        inputProps={
+          Object {
+            "className": "DdgHeader--uiFindInput",
+          }
+        }
+      />
+      <span
+        className="DdgHeader--uiFindCount"
+      />
+    </div>
   </div>
 </header>
 `;
@@ -58,7 +84,37 @@ exports[`<Header> renders the operation selector if a service is selected 1`] = 
   </div>
   <div
     className="DdgHeader--controlHeader"
-  />
+  >
+    <Component
+      handleClick={[Function]}
+    />
+    <div
+      className="DdgHeader--uiFind"
+      onClick={[Function]}
+      role="button"
+    >
+      <Icon
+        className="DdgHeader--uiFindSearchIcon"
+        type="search"
+      />
+      <withRouter(Connect(UnconnectedUiFindInput))
+        allowClear={true}
+        forwardedRef={
+          Object {
+            "current": null,
+          }
+        }
+        inputProps={
+          Object {
+            "className": "DdgHeader--uiFindInput",
+          }
+        }
+      />
+      <span
+        className="DdgHeader--uiFindCount"
+      />
+    </div>
+  </div>
 </header>
 `;
 
@@ -83,7 +139,11 @@ exports[`<Header> renders the operation selector if a service is selected 2`] = 
     />
     <NameSelector
       label="Operation:"
-      options={Array []}
+      options={
+        Array [
+          "testOperation",
+        ]
+      }
       placeholder="Select an operation…"
       required={true}
       setValue={[Function]}
@@ -92,7 +152,37 @@ exports[`<Header> renders the operation selector if a service is selected 2`] = 
   </div>
   <div
     className="DdgHeader--controlHeader"
-  />
+  >
+    <Component
+      handleClick={[Function]}
+    />
+    <div
+      className="DdgHeader--uiFind"
+      onClick={[Function]}
+      role="button"
+    >
+      <Icon
+        className="DdgHeader--uiFindSearchIcon"
+        type="search"
+      />
+      <withRouter(Connect(UnconnectedUiFindInput))
+        allowClear={true}
+        forwardedRef={
+          Object {
+            "current": null,
+          }
+        }
+        inputProps={
+          Object {
+            "className": "DdgHeader--uiFindInput",
+          }
+        }
+      />
+      <span
+        className="DdgHeader--uiFindCount"
+      />
+    </div>
+  </div>
 </header>
 `;
 
@@ -114,6 +204,36 @@ exports[`<Header> renders with minimal props 1`] = `
   </div>
   <div
     className="DdgHeader--controlHeader"
-  />
+  >
+    <Component
+      handleClick={[Function]}
+    />
+    <div
+      className="DdgHeader--uiFind"
+      onClick={[Function]}
+      role="button"
+    >
+      <Icon
+        className="DdgHeader--uiFindSearchIcon"
+        type="search"
+      />
+      <withRouter(Connect(UnconnectedUiFindInput))
+        allowClear={true}
+        forwardedRef={
+          Object {
+            "current": null,
+          }
+        }
+        inputProps={
+          Object {
+            "className": "DdgHeader--uiFindInput",
+          }
+        }
+      />
+      <span
+        className="DdgHeader--uiFindCount"
+      />
+    </div>
+  </div>
 </header>
 `;
