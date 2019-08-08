@@ -13,11 +13,12 @@
 // limitations under the License.
 
 import * as React from 'react';
+import memoizeOne from 'memoize-one';
 
 import HtmlLayersGroup from './HtmlLayersGroup';
 import MeasurableNodesLayer from './MeasurableNodesLayer';
 import NodesLayer from './NodesLayer';
-import { classNameIsSmall, scaledStrokeWidth } from './props-factories';
+import { classNameIsSmall, scaleProperty } from './props-factories';
 import SvgEdgesLayer from './SvgEdgesLayer';
 import SvgLayersGroup from './SvgLayersGroup';
 import {
@@ -31,17 +32,17 @@ import {
 } from './types';
 import { assignMergeCss, getProps } from './utils';
 // TODO(joe): don't use stuff in ../DirectedGraph
-import MiniMap from '../DirectedGraph/MiniMap';
 import LayoutManager from '../LayoutManager';
 import { TCancelled, TEdge, TLayoutDone, TSizeVertex, TVertex } from '../types';
 import TNonEmptyArray from '../types/TNonEmptyArray';
-import ZoomManager, { zoomIdentity, ZoomTransform } from '../ZoomManager';
+import MiniMap from '../zoom/MiniMap';
+import ZoomManager, { zoomIdentity, ZoomTransform } from '../zoom/ZoomManager';
 
-type TLayeredDigraphState<T = {}, U = {}> = Omit<TExposedGraphState<T, U>, 'renderUtils'> & {
+type TDigraphState<T = {}, U = {}> = Omit<TExposedGraphState<T, U>, 'renderUtils'> & {
   sizeVertices: TSizeVertex<T>[] | null;
 };
 
-type TLayeredDigraphProps<T = {}, U = {}> = {
+type TDigraphProps<T = unknown, U = unknown> = {
   className?: string;
   classNamePrefix?: string;
   edges: TEdge<U>[];
@@ -56,29 +57,32 @@ type TLayeredDigraphProps<T = {}, U = {}> = {
   zoom?: boolean;
 };
 
-const WRAPPER_STYLE_ZOOM = {
+const WRAPPER_STYLE_ZOOM: React.CSSProperties = {
   height: '100%',
   overflow: 'hidden',
   position: 'relative',
   width: '100%',
 };
 
-const WRAPPER_STYLE = {
+const WRAPPER_STYLE: React.CSSProperties = {
   position: 'relative',
 };
 
 let idCounter = 0;
 
-export default class LayeredDigraph<T = {}, U = {}> extends React.PureComponent<
-  TLayeredDigraphProps<T, U>,
-  TLayeredDigraphState<T, U>
+export default class Digraph<T = unknown, U = unknown> extends React.PureComponent<
+  TDigraphProps<T, U>,
+  TDigraphState<T, U>
 > {
   renderUtils: TRendererUtils;
 
-  static propsFactories = {
+  static propsFactories: Record<string, TFromGraphStateFn<unknown, unknown>> = {
     classNameIsSmall,
-    scaledStrokeWidth,
+    scaleOpacity: scaleProperty.opacity,
+    scaleStrokeOpacity: scaleProperty.strokeOpacity,
   };
+
+  static scaleProperty = scaleProperty;
 
   static defaultProps = {
     className: '',
@@ -88,7 +92,7 @@ export default class LayeredDigraph<T = {}, U = {}> extends React.PureComponent<
     zoom: false,
   };
 
-  state: TLayeredDigraphState<T, U> = {
+  state: TDigraphState<T, U> = {
     edges: [],
     layoutEdges: null,
     layoutGraph: null,
@@ -99,13 +103,17 @@ export default class LayeredDigraph<T = {}, U = {}> extends React.PureComponent<
     zoomTransform: zoomIdentity,
   };
 
-  baseId = `plexus--LayeredDigraph--${idCounter++}`;
+  baseId = `plexus--Digraph--${idCounter++}`;
+
+  makeClassNameFactory = memoizeOne((classNamePrefix: string) => {
+    return (name: string) => `${classNamePrefix} ${classNamePrefix}-Digraph--${name}`;
+  });
 
   rootRef: React.RefObject<HTMLDivElement> = React.createRef();
 
   zoomManager: ZoomManager | null = null;
 
-  constructor(props: TLayeredDigraphProps<T, U>) {
+  constructor(props: TDigraphProps<T, U>) {
     super(props);
     const { edges, vertices, zoom: zoomEnabled } = props;
     if (Array.isArray(edges) && edges.length && Array.isArray(vertices) && vertices.length) {
@@ -117,7 +125,7 @@ export default class LayeredDigraph<T = {}, U = {}> extends React.PureComponent<
       this.zoomManager = new ZoomManager(this.onZoomUpdated);
     }
     this.renderUtils = {
-      getLocalId: this.getLocalId,
+      getGlobalId: this.getGlobalId,
       getZoomTransform: this.getZoomTransform,
     };
   }
@@ -129,7 +137,7 @@ export default class LayeredDigraph<T = {}, U = {}> extends React.PureComponent<
     }
   }
 
-  getLocalId = (name: string) => `${this.baseId}--${name}`;
+  getGlobalId = (name: string) => `${this.baseId}--${name}`;
 
   getZoomTransform = () => this.state.zoomTransform;
 
@@ -151,7 +159,7 @@ export default class LayeredDigraph<T = {}, U = {}> extends React.PureComponent<
 
   private renderLayers() {
     const { classNamePrefix, layers: topLayers } = this.props;
-    const getClassName = (name: string) => `${classNamePrefix} ${classNamePrefix}-LayeredDigraph--${name}`;
+    const getClassName = this.makeClassNameFactory(classNamePrefix || '');
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { sizeVertices: _, ...partialGraphState } = this.state;
     const graphState = {
@@ -246,7 +254,7 @@ export default class LayeredDigraph<T = {}, U = {}> extends React.PureComponent<
     this.setState({ zoomTransform });
   };
 
-  private onLayoutDone = (result: TCancelled | TLayoutDone) => {
+  private onLayoutDone = (result: TCancelled | TLayoutDone<T, U>) => {
     if (result.isCancelled) {
       return;
     }
@@ -266,17 +274,20 @@ export default class LayeredDigraph<T = {}, U = {}> extends React.PureComponent<
       setOnGraph,
       style,
     } = this.props;
+    const builtinStyle = this.zoomManager ? WRAPPER_STYLE_ZOOM : WRAPPER_STYLE;
     const rootProps = assignMergeCss(
       {
-        style: this.zoomManager ? WRAPPER_STYLE_ZOOM : WRAPPER_STYLE,
-        className: `${classNamePrefix} ${classNamePrefix}-LayeredDigraph`,
+        style: builtinStyle,
+        className: `${classNamePrefix} ${classNamePrefix}-Digraph`,
       },
       { className, style },
       getProps(setOnGraph, { ...this.state, renderUtils: this.renderUtils })
     );
     return (
-      <div {...rootProps} ref={this.rootRef}>
-        {this.renderLayers()}
+      <div {...rootProps}>
+        <div style={builtinStyle} ref={this.rootRef}>
+          {this.renderLayers()}
+        </div>
         {minimapEnabled && this.zoomManager && (
           <MiniMap
             className={minimapClassName}

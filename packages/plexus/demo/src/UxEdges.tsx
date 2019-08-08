@@ -18,7 +18,7 @@ import { render } from 'react-dom';
 
 import { LayoutManager } from '../../src';
 // TODO(joe): Update import after killing `DirectedGraph`
-import LayeredDigraph from '../../src/LayeredDigraph';
+import Digraph from '../../src/Digraph';
 import { TVertex } from '../../src/types';
 
 const vertices = [
@@ -40,7 +40,7 @@ const edges = [
 const lm = new LayoutManager({ useDotEdges: true, rankdir: 'TB', ranksep: 1.1 });
 
 const UxEdges = () => (
-  <LayeredDigraph
+  <Digraph
     edges={edges}
     vertices={vertices}
     setOnGraph={{
@@ -69,7 +69,9 @@ const UxEdges = () => (
             edges: true,
             setOnContainer: { style: { cursor: 'default', opacity: 0, strokeWidth: 4 } },
             setOnEdge: layoutEdge => ({
+              // eslint-disable-next-line no-console
               onMouseOver: () => console.log('mouse over', layoutEdge),
+              // eslint-disable-next-line no-console
               onMouseOut: () => console.log('mouse out', layoutEdge),
             }),
           },
@@ -79,7 +81,7 @@ const UxEdges = () => (
         key: 'nodes',
         layerType: 'html',
         measurable: true,
-        renderNode: (vertex: TVertex) => vertex.name,
+        renderNode: (vertex: TVertex<{ name: string }>) => vertex.name,
         setOnNode: { style: { padding: '1rem', whiteSpace: 'nowrap', background: '#e8e8e8' } },
       },
     ]}

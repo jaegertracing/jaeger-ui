@@ -99,7 +99,7 @@
     "store": "^2.0.12",
     "ts-key-enum": "^2.0.0",
     "tween-functions": "^1.2.0",
-    "typescript": "^3.3.3333",
+    "typescript": "3.5.3",
     "u-basscss": "2.0.0"
   },
   "scripts": {
