@@ -22,6 +22,7 @@ limitations under the License.
 }
 
 .TraceGraph--graphWrapper {
+  background: #f0f0f0;
   bottom: 0;
   cursor: move;
   left: 0;
@@ -38,18 +39,21 @@ limitations under the License.
 }
 
 .TraceGraph--sidebar-container {
+  background: #f4f4f4;
   display: flex;
   z-index: 1;
 }
 
 .TraceGraph--menu {
+  border-left: 1px solid #e4e4e4;
+  border-right: 1px solid #e4e4e4;
   cursor: pointer;
   padding: 0.8rem;
 }
 
 .TraceGraph--menu > li {
   list-style-type: none;
-  text-align: right;
+  text-align: center;
   padding-bottom: 0.3rem;
 }
 
@@ -63,11 +67,7 @@ limitations under the License.
 }
 
 .TraceGraph--dag {
-  stroke-width: 1.2;
-}
-
-.TraceGraph--dag.is-small {
-  stroke-width: 0.7;
+  stroke-width: 0.8;
 }
 
 /* DAG minimap */

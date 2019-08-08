@@ -15,7 +15,7 @@
 import React from 'react';
 import { shallow } from 'enzyme';
 
-import OpNode, { getNodeDrawer, MODE_SERVICE, MODE_TIME, MODE_SELFTIME } from './OpNode';
+import OpNode, { getNodeRenderer, MODE_SERVICE, MODE_TIME, MODE_SELFTIME } from './OpNode';
 import CopyIcon from '../../common/CopyIcon';
 
 describe('<OpNode>', () => {
@@ -79,11 +79,6 @@ describe('<OpNode>', () => {
     expect(wrapper.find('.OpNode--mode-selftime').length).toBe(1);
   });
 
-  it('updates class when it matches search', () => {
-    wrapper.setProps({ isUiFindMatch: true });
-    expect(wrapper.find('.is-ui-find-match').length).toBe(1);
-  });
-
   it('renders a copy icon', () => {
     const copyIcon = wrapper.find(CopyIcon);
     expect(copyIcon.length).toBe(1);
@@ -91,7 +86,7 @@ describe('<OpNode>', () => {
     expect(copyIcon.prop('tooltipTitle')).toBe('Copy label');
   });
 
-  describe('getNodeDrawer()', () => {
+  describe('getNodeRenderer()', () => {
     const key = 'key test value';
     const vertex = {
       data: {
@@ -103,19 +98,10 @@ describe('<OpNode>', () => {
     };
 
     it('creates OpNode', () => {
-      const drawNode = getNodeDrawer(MODE_SERVICE, new Set());
+      const drawNode = getNodeRenderer(MODE_SERVICE);
       const opNode = drawNode(vertex);
       expect(opNode.type === 'OpNode');
-      expect(opNode.props.isUiFindMatch).toBe(false);
       expect(opNode.props.mode).toBe(MODE_SERVICE);
-    });
-
-    it('creates OpNode that matches uiFind', () => {
-      const drawNode = getNodeDrawer(MODE_TIME, new Set([key]));
-      const opNode = drawNode(vertex);
-      expect(opNode.type === 'OpNode');
-      expect(opNode.props.isUiFindMatch).toBe(true);
-      expect(opNode.props.mode).toBe(MODE_TIME);
     });
   });
 });
