@@ -20,20 +20,28 @@ import { TLayoutVertex, TVertex } from '@jaegertracing/plexus/lib/types';
 import { focalNodeIcon, setFocusIcon } from './node-icons';
 import { getUrl } from '../url';
 import NewWindowIcon from '../../common/NewWindowIcon';
-import { EViewModifier, TDdgVertex } from '../../../model/ddg/types';
+import { getUrl as getSearchUrl } from '../../SearchTracePage/url';
+import { EViewModifier, TDdgVertex, PathElem } from '../../../model/ddg/types';
 
 import './DdgNodeContent.css';
 
 type TProps = {
-  vertexKey: string;
-  service: string;
-  operation: string | null;
   focalNodeUrl: string | null;
+  getVisiblePathElems: (vertexKey: string) => PathElem[] | undefined;
   isFocalNode: boolean;
   isPositioned: boolean;
-  viewModifiers: number;
+  operation: string | null;
+  service: string;
   setViewModifier: (vertexKey: string, viewModifier: EViewModifier, isEnabled: boolean) => void;
+  vertexKey: string;
+  viewModifiers: number;
 };
+
+// While browsers suport URLs of unlimited length, many server clients do not handle more than this max
+const MAX_LENGTH = 2083;
+const MAX_LINKED_TRACES = 35;
+const MIN_LENGTH = getSearchUrl().length;
+const PARAM_NAME_LENGTH = '&traceID='.length;
 
 // temp fill in props
 /* istanbul ignore next */
@@ -53,21 +61,50 @@ export default class DdgNodeContent extends React.PureComponent<TProps> {
     };
   }
 
-  static renderNode(vertex: TDdgVertex, utils: TRendererUtils, lv: TLayoutVertex<any> | null) {
-    const { isFocalNode, key, operation, service } = vertex;
-    return (
-      <DdgNodeContent
-        vertexKey={key}
-        service={service}
-        operation={operation}
-        isFocalNode={isFocalNode}
-        isPositioned={Boolean(lv)}
-        viewModifiers={0}
-        focalNodeUrl={isFocalNode ? null : getUrl({ operation, service })}
-        {...noops}
-      />
-    );
+  static getNodeRenderer(getVisiblePathElems: (vertexKey: string) => PathElem[] | undefined) {
+    return function renderNode(vertex: TDdgVertex, utils: TRendererUtils, lv: TLayoutVertex<any> | null) {
+      const { isFocalNode, key, operation, service } = vertex;
+      return (
+        <DdgNodeContent
+          getVisiblePathElems={getVisiblePathElems}
+          vertexKey={key}
+          service={service}
+          operation={operation}
+          isFocalNode={isFocalNode}
+          isPositioned={Boolean(lv)}
+          viewModifiers={0}
+          focalNodeUrl={isFocalNode ? null : getUrl({ operation, service })}
+          {...noops}
+        />
+      );
+    };
   }
+
+  private viewTraces = () => {
+    const { vertexKey, getVisiblePathElems } = this.props;
+    const elems = getVisiblePathElems(vertexKey);
+    if (elems) {
+      const ids: Set<string> = new Set();
+      let currLength = MIN_LENGTH;
+      for (let i = 0; i < elems.length; i++) {
+        const id = elems[i].memberOf.traceID;
+        if (ids.has(id)) {
+          continue;
+        }
+        // Keep track of the length, then break if it is too long, to avoid opening a tab with a URL that the
+        // backend cannot process, even if there are more traceIDs
+        currLength += PARAM_NAME_LENGTH + id.length;
+        if (currLength > MAX_LENGTH) {
+          break;
+        }
+        ids.add(id);
+        if (ids.size >= MAX_LINKED_TRACES) {
+          break;
+        }
+      }
+      window.open(getSearchUrl({ traceID: Array.from(ids) }), '_blank');
+    }
+  };
 
   private onMouseUx = (event: React.MouseEvent<HTMLElement>) => {
     const { vertexKey, setViewModifier } = this.props;
@@ -98,7 +135,7 @@ export default class DdgNodeContent extends React.PureComponent<TProps> {
               <span className="DdgNodeContent--actionsItemText">Set focus</span>
             </a>
           )}
-          <a className="DdgNodeContent--actionsItem">
+          <a className="DdgNodeContent--actionsItem" onClick={this.viewTraces} role="button">
             <NewWindowIcon />
             <span className="DdgNodeContent--actionsItemText">View traces</span>
           </a>

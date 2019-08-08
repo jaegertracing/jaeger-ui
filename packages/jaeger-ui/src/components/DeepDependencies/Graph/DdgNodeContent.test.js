@@ -64,7 +64,7 @@ describe('<DdgNodeContent>', () => {
     expect(wrapper).toMatchSnapshot();
   });
 
-  describe('DdgNodeContent.renderNode()', () => {
+  describe('DdgNodeContent.getNodeRenderer()', () => {
     let ddgVertex;
 
     beforeEach(() => {
@@ -76,8 +76,8 @@ describe('<DdgNodeContent>', () => {
       };
     });
 
-    it('returns a <DdgNodeContentContent/>', () => {
-      const ddgNode = DdgNodeContent.renderNode(ddgVertex);
+    it('returns a <DdgNodeContent />', () => {
+      const ddgNode = DdgNodeContent.getNodeRenderer(() => undefined)(ddgVertex);
       expect(ddgNode).toBeDefined();
       expect(shallow(ddgNode)).toMatchSnapshot();
       expect(ddgNode.type).toBe(DdgNodeContent);

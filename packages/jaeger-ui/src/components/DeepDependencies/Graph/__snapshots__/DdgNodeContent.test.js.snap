@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`<DdgNodeContent> DdgNodeContent.renderNode() returns a <DdgNodeContentContent/> 1`] = `
+exports[`<DdgNodeContent> DdgNodeContent.getNodeRenderer() returns a <DdgNodeContent /> 1`] = `
 <div
   className="DdgNodeContent"
   onMouseOut={[Function]}
@@ -63,6 +63,8 @@ exports[`<DdgNodeContent> DdgNodeContent.renderNode() returns a <DdgNodeContentC
     </a>
     <a
       className="DdgNodeContent--actionsItem"
+      onClick={[Function]}
+      role="button"
     >
       <NewWindowIcon
         isLarge={false}
@@ -140,6 +142,8 @@ exports[`<DdgNodeContent> omits the operation if it is null 1`] = `
     </a>
     <a
       className="DdgNodeContent--actionsItem"
+      onClick={[Function]}
+      role="button"
     >
       <NewWindowIcon
         isLarge={false}
@@ -212,6 +216,8 @@ exports[`<DdgNodeContent> omits the operation if it is null 2`] = `
     </a>
     <a
       className="DdgNodeContent--actionsItem"
+      onClick={[Function]}
+      role="button"
     >
       <NewWindowIcon
         isLarge={false}
@@ -289,6 +295,8 @@ exports[`<DdgNodeContent> renders correctly when isFocalNode = true and focalNod
     </a>
     <a
       className="DdgNodeContent--actionsItem"
+      onClick={[Function]}
+      role="button"
     >
       <NewWindowIcon
         isLarge={false}
@@ -360,6 +368,8 @@ exports[`<DdgNodeContent> renders correctly when isFocalNode = true and focalNod
   >
     <a
       className="DdgNodeContent--actionsItem"
+      onClick={[Function]}
+      role="button"
     >
       <NewWindowIcon
         isLarge={false}

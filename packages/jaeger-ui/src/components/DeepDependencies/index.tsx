@@ -161,6 +161,7 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
         <Graph
           key={`${urlState.service},${urlState.operation},${urlState.visEncoding}`}
           edges={edges}
+          getVisiblePathElems={(key: string) => graph.getVisiblePathElems(key, visEncoding)}
           uiFindMatches={uiFindMatches}
           vertices={vertices}
         />

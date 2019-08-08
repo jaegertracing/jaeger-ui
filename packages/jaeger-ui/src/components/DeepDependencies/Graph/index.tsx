@@ -20,10 +20,11 @@ import { TSetProps, TFromGraphStateFn } from '@jaegertracing/plexus/lib/Digraph/
 
 import DdgNodeContent from './DdgNodeContent';
 import { getFindEmphasisRenderers } from './node-renderers';
-import { TDdgVertex } from '../../../model/ddg/types';
+import { PathElem, TDdgVertex } from '../../../model/ddg/types';
 
 type TProps = {
   edges: TEdge[];
+  getVisiblePathElems: (vertexKey: string) => PathElem[] | undefined;
   uiFindMatches: Set<TDdgVertex> | undefined;
   vertices: TDdgVertex[];
 };
@@ -52,7 +53,7 @@ export default class Graph extends PureComponent<TProps> {
   }
 
   render() {
-    const { edges, uiFindMatches, vertices } = this.props;
+    const { edges, getVisiblePathElems, uiFindMatches, vertices } = this.props;
     const findRenderers = this.getFindEmphasisRenderers(uiFindMatches || this.emptyFindSet);
 
     return (
@@ -98,7 +99,7 @@ export default class Graph extends PureComponent<TProps> {
             layerType: 'html',
             measurable: true,
             measureNode: DdgNodeContent.measureNode,
-            renderNode: DdgNodeContent.renderNode,
+            renderNode: DdgNodeContent.getNodeRenderer(getVisiblePathElems),
           },
         ]}
       />
