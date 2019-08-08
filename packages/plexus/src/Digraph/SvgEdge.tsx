@@ -15,8 +15,7 @@
 import * as React from 'react';
 
 import { TAnyProps, TRendererUtils, TSetProps } from './types';
-import { getProps } from './utils';
-import { assignMergeCss } from '../DirectedGraph/prop-factories/mergePropSetters';
+import { assignMergeCss, getProps } from './utils';
 import { TLayoutEdge } from '../types';
 
 type TProps<U = {}> = {
@@ -29,7 +28,7 @@ type TProps<U = {}> = {
 };
 
 function makeIriRef(renderUtils: TRendererUtils, localId: string | undefined) {
-  return localId ? `url(#${renderUtils.getLocalId(localId)})` : localId;
+  return localId ? `url(#${renderUtils.getGlobalId(localId)})` : localId;
 }
 
 const PATH_D_CMDS = ['M', 'C'];
@@ -41,9 +40,12 @@ export default class SvgEdge<U = {}> extends React.PureComponent<TProps<U>> {
     const d = pathPoints.map((pt, i) => `${PATH_D_CMDS[i] || ''}${pt.join(',')}`).join(' ');
     const markerEnd = makeIriRef(renderUtils, markerEndId);
     const markerStart = makeIriRef(renderUtils, markerStartId);
-    const customProps = assignMergeCss(getProps(setOnEdge, layoutEdge, renderUtils), {
-      className: getClassName('SvgEdge'),
-    });
+    const customProps = assignMergeCss(
+      {
+        className: getClassName('SvgEdge'),
+      },
+      getProps(setOnEdge, layoutEdge, renderUtils)
+    );
     return (
       <path
         d={d}

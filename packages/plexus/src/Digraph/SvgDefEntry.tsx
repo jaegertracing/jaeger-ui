@@ -61,10 +61,13 @@ function renderDefaultMarker(
 export default class SvgDefEntry<T = {}, U = {}> extends React.PureComponent<TProps<T, U>> {
   render() {
     const { getClassName, localId, graphState, renderEntry = renderDefaultMarker, setOnEntry } = this.props;
-    const id = graphState.renderUtils.getLocalId(localId);
-    const entryProps = assignMergeCss(getProps(setOnEntry, graphState), {
-      className: getClassName('DefEntry'),
-    });
+    const id = graphState.renderUtils.getGlobalId(localId);
+    const entryProps = assignMergeCss(
+      {
+        className: getClassName('DefEntry'),
+      },
+      getProps(setOnEntry, graphState)
+    );
     return renderEntry(graphState, entryProps, id);
   }
 }

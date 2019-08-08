@@ -39,11 +39,14 @@ export default class Node<T = {}> extends React.PureComponent<TProps<T>> {
   render() {
     const { getClassName, layerType, renderNode, renderUtils, setOnNode, layoutVertex } = this.props;
     const { left, top } = layoutVertex;
-    const props = assignMergeCss(getProps(setOnNode, layoutVertex, renderUtils), {
-      className: getClassName('Node'),
-      style: layerType === ELayerType.Html ? getHtmlStyle(layoutVertex) : null,
-      transform: layerType === ELayerType.Svg ? `translate(${left.toFixed()},${top.toFixed()})` : null,
-    });
+    const props = assignMergeCss(
+      {
+        className: getClassName('Node'),
+        style: layerType === ELayerType.Html ? getHtmlStyle(layoutVertex) : null,
+        transform: layerType === ELayerType.Svg ? `translate(${left.toFixed()},${top.toFixed()})` : null,
+      },
+      getProps(setOnNode, layoutVertex, renderUtils)
+    );
     const Wrapper = layerType === ELayerType.Html ? 'div' : 'g';
     return <Wrapper {...props}>{renderNode(layoutVertex, renderUtils)}</Wrapper>;
   }

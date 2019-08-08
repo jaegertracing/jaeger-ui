@@ -14,7 +14,7 @@
 
 import * as React from 'react';
 
-import SvgEdge from './SvgEdge';
+import SvgEdges from './SvgEdges';
 import SvgLayer from './SvgLayer';
 import { TExposedGraphState, TStandaloneEdgesLayer } from './types';
 
@@ -40,20 +40,14 @@ export default class SvgEdgesLayer<T = {}, U = {}> extends React.PureComponent<T
 
     return (
       <SvgLayer {...this.props} classNamePart="SvgEdgesLayer" extraWrapper={INHERIT_STROKE}>
-        {layoutEdges.map(edge => (
-          // TODO(joe): wrap the edges in a pure component so can render the <defs> without
-          // rendering edges, i.e. avoid calling shouldComponentUpdate on each edge, call on
-          // them as a group
-          <SvgEdge<U>
-            key={`${edge.edge.from}\v${edge.edge.to}`}
-            getClassName={getClassName}
-            layoutEdge={edge}
-            markerEndId={markerEndId}
-            markerStartId={markerStartId}
-            renderUtils={renderUtils}
-            setOnEdge={setOnEdge}
-          />
-        ))}
+        <SvgEdges
+          getClassName={getClassName}
+          layoutEdges={layoutEdges}
+          markerEndId={markerEndId}
+          markerStartId={markerStartId}
+          renderUtils={renderUtils}
+          setOnEdge={setOnEdge}
+        />
       </SvgLayer>
     );
   }

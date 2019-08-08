@@ -15,7 +15,7 @@
 import * as React from 'react';
 
 import HtmlLayer from './HtmlLayer';
-import Node from './Node';
+import Nodes from './Nodes';
 import SvgLayer from './SvgLayer';
 import { TExposedGraphState, TNodeRenderer, TLayerType, TSetOnContainer, ELayerType } from './types';
 
@@ -43,17 +43,14 @@ export default class NodesLayer<T = {}, U = {}> extends React.PureComponent<TPro
     const LayerComponent = layerType === ELayerType.Html ? HtmlLayer : SvgLayer;
     return (
       <LayerComponent {...this.props} classNamePart="NodesLayer">
-        {layoutVertices.map(lv => (
-          <Node
-            key={lv.vertex.key}
-            getClassName={getClassName}
-            layerType={layerType}
-            layoutVertex={lv}
-            renderNode={renderNode}
-            renderUtils={renderUtils}
-            setOnNode={setOnNode}
-          />
-        ))}
+        <Nodes<T>
+          getClassName={getClassName}
+          layerType={layerType}
+          layoutVertices={layoutVertices}
+          renderNode={renderNode}
+          renderUtils={renderUtils}
+          setOnNode={setOnNode}
+        />
       </LayerComponent>
     );
   }

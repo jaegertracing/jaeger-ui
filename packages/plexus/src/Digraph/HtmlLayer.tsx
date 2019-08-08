@@ -16,7 +16,7 @@ import * as React from 'react';
 
 import { TSetOnContainer, TExposedGraphState } from './types';
 import { assignMergeCss, getProps } from './utils';
-import ZoomManager from '../ZoomManager';
+import ZoomManager from '../zoom/ZoomManager';
 
 type TProps<T = {}, U = {}> = Record<string, unknown> &
   TSetOnContainer<T, U> & {
@@ -42,10 +42,14 @@ export default class HtmlLayer<T = {}, U = {}> extends React.PureComponent<TProp
     } = this.props;
     const { zoomTransform } = graphState;
     const zoomStyle = { style: topLayer || standalone ? ZoomManager.getZoomStyle(zoomTransform) : {} };
-    const containerProps = assignMergeCss(getProps(setOnContainer, graphState), zoomStyle, {
-      className: getClassName(classNamePart),
-      style: STYLE,
-    });
+    const containerProps = assignMergeCss(
+      {
+        className: getClassName(classNamePart),
+        style: STYLE,
+      },
+      zoomStyle,
+      getProps(setOnContainer, graphState)
+    );
     return <div {...containerProps}>{children}</div>;
   }
 }

@@ -12,17 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as React from 'react';
-
-import { TVertex } from '../../types';
-
-export default function defaultGetNodeLabel(vertex: TVertex) {
-  const { label } = vertex;
-  if (label != null) {
-    if (typeof label === 'string' || React.isValidElement(label)) {
-      return label;
+export function makeCacheScope() {
+  const cache = new Map<string, any>();
+  return function cacheAs(key: string, value: any) {
+    const stored = cache.get(key);
+    if (stored) {
+      return stored;
     }
-    return String(label);
-  }
-  return String(vertex.key);
+    cache.set(key, value);
+    return value;
+  };
 }
+
+export default makeCacheScope();

@@ -17,17 +17,17 @@ import { TCancelled, TEdge, TLayoutDone, TPendingLayoutResult, TPositionsDone, T
 
 import Coordinator from './Coordinator';
 
-type TPendingResult<T> = {
+type TPendingResult<T, U> = {
   id: number;
   isPositionsResolved: boolean;
   resolvePositions?: (result: TCancelled | TPositionsDone<T>) => void;
-  resolveLayout?: (result: TCancelled | TLayoutDone<T>) => void;
+  resolveLayout?: (result: TCancelled | TLayoutDone<T, U>) => void;
 };
 
-export default class LayoutManager<T = {}> {
+export default class LayoutManager {
   layoutId: number;
-  coordinator: Coordinator<T>;
-  pendingResult: TPendingResult<T> | null;
+  coordinator: Coordinator;
+  pendingResult: TPendingResult<any, any> | null;
   options: TLayoutOptions | void;
 
   constructor(options: TLayoutOptions | void) {
@@ -37,18 +37,18 @@ export default class LayoutManager<T = {}> {
     this.pendingResult = null;
   }
 
-  getLayout(edges: TEdge[], vertices: TSizeVertex[]): TPendingLayoutResult {
+  getLayout<T, U>(edges: TEdge<U>[], vertices: TSizeVertex<T>[]): TPendingLayoutResult<T, U> {
     this._cancelPending();
     this.layoutId++;
     const id = this.layoutId;
     this.coordinator.getLayout(id, edges, vertices, this.options);
     this.pendingResult = { id, isPositionsResolved: false };
-    const positions: Promise<TCancelled | TPositionsDone> = new Promise(resolve => {
+    const positions: Promise<TCancelled | TPositionsDone<T>> = new Promise(resolve => {
       if (this.pendingResult && id === this.pendingResult.id) {
         this.pendingResult.resolvePositions = resolve;
       }
     });
-    const layout: Promise<TCancelled | TLayoutDone> = new Promise(resolve => {
+    const layout: Promise<TCancelled | TLayoutDone<T, U>> = new Promise(resolve => {
       if (this.pendingResult && id === this.pendingResult.id) {
         this.pendingResult.resolveLayout = resolve;
       }
@@ -75,7 +75,7 @@ export default class LayoutManager<T = {}> {
     }
   }
 
-  _handleUpdate = (data: TUpdate<T>) => {
+  _handleUpdate = (data: TUpdate<any, any>) => {
     const pendingResult = this.pendingResult;
     if (!pendingResult || data.layoutId !== pendingResult.id) {
       return;

@@ -56,7 +56,7 @@ export class UnconnectedUiFindInput extends React.PureComponent<TProps, StateTyp
     ownInputValue: undefined,
   };
 
-  updateUiFindQueryParam = _debounce((uiFind?: string | undefined) => {
+  updateUiFindQueryParam = _debounce((uiFind?: string) => {
     const { history, location, trackFindFunction } = this.props;
     updateUiFind({
       location,
@@ -86,20 +86,12 @@ export class UnconnectedUiFindInput extends React.PureComponent<TProps, StateTyp
     const { allowClear, forwardedRef, inputProps } = this.props;
 
     const inputValue = _isString(this.state.ownInputValue) ? this.state.ownInputValue : this.props.uiFind;
-
-    // antd cannot handle suffix changing from present to absent or vice versa
-    let suffix: React.ReactElement = inputProps.suffix || <></>;
-    if (inputValue && inputValue.length && allowClear) {
-      suffix = <Icon type="close" onClick={this.clearUiFind} />;
-      if (inputProps.suffix) {
-        suffix = (
-          <>
-            {suffix}
-            {inputProps.suffix}
-          </>
-        );
-      }
-    }
+    const suffix = (
+      <>
+        {allowClear && inputValue && inputValue.length && <Icon type="close" onClick={this.clearUiFind} />}
+        {inputProps.suffix}
+      </>
+    );
 
     return (
       <Input

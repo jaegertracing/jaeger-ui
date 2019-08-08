@@ -18,7 +18,7 @@ import { TMeasurableNodeRenderer, TLayerType, TRendererUtils, ELayerType } from 
 import { assignMergeCss, getProps } from './utils';
 import { TLayoutVertex, TVertex } from '../types';
 
-type TProps<T = {}> = Omit<TMeasurableNodeRenderer<T>, 'measurable'> & {
+type TProps<T = {}> = Omit<TMeasurableNodeRenderer<T>, 'measurable' | 'measureNode'> & {
   getClassName: (name: string) => string;
   hidden: boolean;
   layerType: TLayerType;
@@ -29,7 +29,7 @@ type TProps<T = {}> = Omit<TMeasurableNodeRenderer<T>, 'measurable'> & {
 
 const SVG_HIDDEN_STYLE = { visibility: 'hidden' };
 
-export default class MeasurableHtmlNode<T = {}> extends React.PureComponent<TProps<T>> {
+export default class MeasurableNode<T = {}> extends React.PureComponent<TProps<T>> {
   htmlRef: React.RefObject<HTMLDivElement> = React.createRef();
   svgRef: React.RefObject<SVGGElement> = React.createRef();
 
@@ -56,18 +56,21 @@ export default class MeasurableHtmlNode<T = {}> extends React.PureComponent<TPro
   private renderHtml() {
     const { getClassName, hidden, renderNode, renderUtils, setOnNode, vertex, layoutVertex } = this.props;
     const { height = null, left = null, top = null, width = null } = layoutVertex || {};
-    const props = assignMergeCss(getProps(setOnNode, vertex, renderUtils, layoutVertex), {
-      className: getClassName('MeasurableHtmlNode'),
-      style: {
-        height,
-        width,
-        boxSizing: 'border-box',
-        position: 'absolute',
-        transform:
-          left == null || top == null ? undefined : `translate(${left.toFixed()}px,${top.toFixed()}px)`,
-        visibility: hidden ? 'hidden' : undefined,
+    const props = assignMergeCss(
+      {
+        className: getClassName('MeasurableHtmlNode'),
+        style: {
+          height,
+          width,
+          boxSizing: 'border-box',
+          position: 'absolute',
+          transform:
+            left == null || top == null ? undefined : `translate(${left.toFixed()}px,${top.toFixed()}px)`,
+          visibility: hidden ? 'hidden' : undefined,
+        },
       },
-    });
+      getProps(setOnNode, vertex, renderUtils, layoutVertex)
+    );
     return (
       <div ref={this.htmlRef} {...props}>
         {renderNode(vertex, renderUtils, layoutVertex)}
@@ -78,11 +81,14 @@ export default class MeasurableHtmlNode<T = {}> extends React.PureComponent<TPro
   private renderSvg() {
     const { getClassName, hidden, renderNode, renderUtils, setOnNode, vertex, layoutVertex } = this.props;
     const { left = null, top = null } = layoutVertex || {};
-    const props = assignMergeCss(getProps(setOnNode, vertex, renderUtils, layoutVertex), {
-      className: getClassName('MeasurableSvgNode'),
-      transform: left == null || top == null ? undefined : `translate(${left.toFixed()}, ${top.toFixed()})`,
-      style: hidden ? SVG_HIDDEN_STYLE : null,
-    });
+    const props = assignMergeCss(
+      {
+        className: getClassName('MeasurableSvgNode'),
+        transform: left == null || top == null ? undefined : `translate(${left.toFixed()}, ${top.toFixed()})`,
+        style: hidden ? SVG_HIDDEN_STYLE : null,
+      },
+      getProps(setOnNode, vertex, renderUtils, layoutVertex)
+    );
     return (
       <g ref={this.svgRef} {...props}>
         {renderNode(vertex, renderUtils, layoutVertex)}

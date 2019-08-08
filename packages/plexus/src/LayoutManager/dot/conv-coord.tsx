@@ -28,7 +28,7 @@ export function vertexToDot(v: TSizeVertex): TSizeVertex {
   };
 }
 
-export function edgeToPixels(graph: TLayoutGraph, e: TLayoutEdge): TLayoutEdge {
+export function edgeToPixels(graph: TLayoutGraph, e: TLayoutEdge<{}>): TLayoutEdge<{}> {
   const { height: h } = graph;
   const { edge, pathPoints } = e;
   return {

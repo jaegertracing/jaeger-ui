@@ -50,7 +50,7 @@ export type TLayoutWorkerMeta = {
 };
 
 export type TWorkerInputMessage = {
-  edges: TEdge[];
+  edges: TEdge<{}>[];
   meta: TLayoutWorkerMeta;
   options: TLayoutOptions | null;
   vertices: TSizeVertex<{}>[] | TLayoutVertex<{}>[];
@@ -58,7 +58,7 @@ export type TWorkerInputMessage = {
 
 export type TWorkerOutputMessage = {
   type: EWorkerPhase | EWorkerErrorType.LayoutError;
-  edges: TLayoutEdge[] | null;
+  edges: TLayoutEdge<{}>[] | null;
   graph: TLayoutGraph;
   layoutErrorMessage?: string;
   meta: TLayoutWorkerMeta;
@@ -71,19 +71,21 @@ export type TWorkerErrorMessage = {
   type: EWorkerErrorType.Error;
 };
 
-export type TNodesUpdate<T> = {
+export type TNodesUpdate<T = Record<string, unknown>> = {
   type: ECoordinatorPhase.Positions;
   layoutId: number;
   graph: TLayoutGraph;
   vertices: TLayoutVertex<T>[];
 };
 
-export type TLayoutUpdate<T> = {
+export type TLayoutUpdate<T = Record<string, unknown>, U = Record<string, unknown>> = {
   type: ECoordinatorPhase.Done;
   layoutId: number;
   graph: TLayoutGraph;
-  edges: TLayoutEdge[];
+  edges: TLayoutEdge<U>[];
   vertices: TLayoutVertex<T>[];
 };
 
-export type TUpdate<T> = TNodesUpdate<T> | TLayoutUpdate<T>;
+export type TUpdate<T = Record<string, unknown>, U = Record<string, unknown>> =
+  | TNodesUpdate<T>
+  | TLayoutUpdate<T, U>;

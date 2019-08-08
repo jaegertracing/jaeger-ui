@@ -12,8 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { default as Digraph } from './Digraph';
 import { default as DirectedGraph } from './DirectedGraph';
 import { default as LayoutManager } from './LayoutManager';
 
-export default { DirectedGraph, LayoutManager };
-export { DirectedGraph, LayoutManager };
+export default { Digraph, DirectedGraph, LayoutManager };
+export { Digraph, DirectedGraph, LayoutManager };

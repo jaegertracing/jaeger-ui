@@ -19,12 +19,14 @@ import { ECheckedStatus, EDirection, TDdgDistanceToPathElems, THop } from '../..
 import Selector from './Selector';
 
 type TProps = {
-  distanceToPathElems: TDdgDistanceToPathElems;
+  distanceToPathElems?: TDdgDistanceToPathElems;
   handleClick: (distance: number, direction: EDirection) => void;
   visEncoding?: string;
 };
 
 export default memo(function HopsSelector({ distanceToPathElems, handleClick, visEncoding }: TProps) {
+  if (!distanceToPathElems) return <div />;
+
   const downstreamHops: THop[] = [];
   const upstreamHops: THop[] = [];
   let minVisDistance = 0;

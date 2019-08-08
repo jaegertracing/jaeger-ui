@@ -18,7 +18,7 @@ import SvgDefEntry from './SvgDefEntry';
 import { TSetOnContainer, TExposedGraphState, TDefEntry } from './types';
 import { assignMergeCss, getProps } from './utils';
 import TNonEmptyArray from '../types/TNonEmptyArray';
-import ZoomManager from '../ZoomManager';
+import ZoomManager from '../zoom/ZoomManager';
 
 type TProps<T = {}, U = {}> = Record<string, unknown> &
   TSetOnContainer<T, U> & {
@@ -31,7 +31,13 @@ type TProps<T = {}, U = {}> = Record<string, unknown> &
     topLayer?: boolean;
   };
 
-const STYLE: React.CSSProperties = { minHeight: '100%', minWidth: '100%', position: 'absolute' };
+const STYLE: React.CSSProperties = {
+  left: 0,
+  minHeight: '100%',
+  minWidth: '100%',
+  position: 'absolute',
+  top: 0,
+};
 
 export default class SvgLayer<T = {}, U = {}> extends React.PureComponent<TProps<T, U>> {
   render() {
@@ -47,9 +53,12 @@ export default class SvgLayer<T = {}, U = {}> extends React.PureComponent<TProps
       topLayer,
     } = this.props;
 
-    const containerProps = assignMergeCss(getProps(setOnContainer, graphState), {
-      className: getClassName(classNamePart),
-    });
+    const containerProps = assignMergeCss(
+      {
+        className: getClassName(classNamePart),
+      },
+      getProps(setOnContainer, graphState)
+    );
     let content = (
       <g {...containerProps}>
         {defs && (

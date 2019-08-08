@@ -16,6 +16,7 @@ import * as React from 'react';
 
 import HtmlLayer from './HtmlLayer';
 import MeasurableNode from './MeasurableNode';
+import MeasurableNodes from './MeasurableNodes';
 import SvgLayer from './SvgLayer';
 import {
   TExposedGraphState,
@@ -138,20 +139,16 @@ export default class MeasurableNodesLayer<T = {}, U = {}> extends React.PureComp
       const LayerComponent = layerType === ELayerType.Html ? HtmlLayer : SvgLayer;
       return (
         <LayerComponent classNamePart="MeasurableNodesLayer" {...this.props}>
-          {vertices.map((vertex, i) => (
-            <MeasurableNode<T>
-              key={vertex.key}
-              getClassName={getClassName}
-              ref={nodeRefs[i]}
-              hidden={!layoutVertices}
-              layerType={layerType}
-              renderNode={renderNode}
-              renderUtils={renderUtils}
-              vertex={vertex}
-              layoutVertex={layoutVertices && layoutVertices[i]}
-              setOnNode={setOnNode}
-            />
-          ))}
+          <MeasurableNodes<T>
+            nodeRefs={nodeRefs}
+            getClassName={getClassName}
+            layerType={layerType}
+            renderNode={renderNode}
+            renderUtils={renderUtils}
+            vertices={vertices}
+            layoutVertices={layoutVertices}
+            setOnNode={setOnNode}
+          />
         </LayerComponent>
       );
     }
