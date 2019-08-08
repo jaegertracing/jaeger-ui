@@ -255,8 +255,6 @@ export default class Coordinator {
     }
     // phase is either edges or dot-only
     if (edges) {
-      // const adjEdgeCoords = convCoord.edgeToPixels<{}>.bind(null, graph);
-      // let adjEdges = edges.map((edge: TEdge<{}>) => convCoord.edgeToPixels(graph, edge) adjEdgeCoords);
       const pixelEdges = edges.map(edge => convCoord.edgeToPixels(graph, edge));
       const mergedEdges = matchEdges(input.edges, pixelEdges);
       this.callback({
