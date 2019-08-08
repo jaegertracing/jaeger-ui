@@ -22,11 +22,6 @@ limitations under the License.
   white-space: nowrap;
 }
 
-.DiffNode.is-ui-find-match {
-  outline: inherit;
-  outline-color: #fff3d7;
-}
-
 .DiffNode.is-changed {
   color: var(--tx-color-title);
 }
@@ -55,10 +50,6 @@ limitations under the License.
 
 .TraceDiffGraph--dag.is-small .DiffNode--body {
   opacity: 0;
-}
-
-.DiffNode--popover .DiffNode.is-ui-find-match {
-  outline: #fff3d7 solid 3px;
 }
 
 .DiffNode--metricCell {

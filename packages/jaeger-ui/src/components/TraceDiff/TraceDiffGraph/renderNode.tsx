@@ -15,17 +15,18 @@
 import * as React from 'react';
 import { Popover } from 'antd';
 import cx from 'classnames';
+import { TLayoutVertex } from '@jaegertracing/plexus/lib/types';
 
+import EmphasizedNode from '../../common/EmphasizedNode';
 import CopyIcon from '../../common/CopyIcon';
 import { DiffCounts } from '../../../model/trace-dag/types';
 import TDagVertex from '../../../model/trace-dag/types/TDagVertex';
 
-import './drawNode.css';
+import './renderNode.css';
 
 type Props = {
   a: number;
   b: number;
-  isUiFindMatch: boolean;
   operation: string;
   service: string;
 };
@@ -35,7 +36,7 @@ const max = Math.max;
 
 export class DiffNode extends React.PureComponent<Props> {
   render() {
-    const { a, b, isUiFindMatch, operation, service } = this.props;
+    const { a, b, operation, service } = this.props;
     const isSame = a === b;
     const className = cx({
       'is-same': isSame,
@@ -44,7 +45,6 @@ export class DiffNode extends React.PureComponent<Props> {
       'is-added': a === 0,
       'is-less': a > b && b > 0,
       'is-removed': b === 0,
-      'is-ui-find-match': isUiFindMatch,
     });
     const chgSign = a < b ? '+' : '-';
     const table = (
@@ -86,13 +86,16 @@ export class DiffNode extends React.PureComponent<Props> {
   }
 }
 
-function drawNode(vertex: TDagVertex<DiffCounts>, keys: Set<number | string>) {
+export default function renderNode(vertex: TDagVertex<DiffCounts>) {
   const { data, operation, service } = vertex.data;
-  return <DiffNode {...data} isUiFindMatch={keys.has(vertex.key)} operation={operation} service={service} />;
+  return <DiffNode {...data} operation={operation} service={service} />;
 }
 
-export default function drawNodeGenerator(keys: Set<number | string>) {
-  return function drawVertex(vertex: TDagVertex<DiffCounts>) {
-    return drawNode(vertex, keys);
+export function getNodeEmphasisRenderer(keys: Set<string>) {
+  return function drawEmphasizedNode(lv: TLayoutVertex<any>) {
+    if (!keys.has(lv.vertex.key)) {
+      return null;
+    }
+    return <EmphasizedNode height={lv.height} width={lv.width} />;
   };
 }
