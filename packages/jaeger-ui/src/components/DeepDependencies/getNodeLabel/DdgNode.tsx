@@ -37,6 +37,7 @@ type TProps = {
 
 // While browsers suport URLs of unlimited length, many server clients do not handle more than this max
 const MAX_LENGTH = 2083;
+const MAX_LINKED_TRACES = 35;
 const MIN_LENGTH = getSearchUrl().length;
 const PARAM_NAME_LENGTH = '&traceID='.length;
 
@@ -49,11 +50,19 @@ export default class DdgNode extends React.PureComponent<TProps> {
       let currLength = MIN_LENGTH;
       for (let i = 0; i < elems.length; i++) {
         const id = elems[i].memberOf.traceID;
+        if (ids.has(id)) {
+          continue;
+        }
         // Keep track of the length, then break if it is too long, to avoid opening a tab with a URL that the
         // backend cannot process, even if there are more traceIDs
         currLength += PARAM_NAME_LENGTH + id.length;
-        if (currLength > MAX_LENGTH) break;
+        if (currLength > MAX_LENGTH) {
+          break;
+        }
         ids.add(id);
+        if (ids.size >= MAX_LINKED_TRACES) {
+          break;
+        }
       }
       window.open(getSearchUrl({ traceID: Array.from(ids) }), '_blank');
     }
@@ -85,7 +94,7 @@ export default class DdgNode extends React.PureComponent<TProps> {
               <span className="DdgNode--actionsItemText">Set focus</span>
             </a>
           )}
-          <a className="DdgNode--actionsItem" onClick={this.viewTraces}>
+          <a className="DdgNode--actionsItem" onClick={this.viewTraces} role="button">
             <NewWindowIcon />
             <span className="DdgNode--actionsItemText">View traces</span>
           </a>

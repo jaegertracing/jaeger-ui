@@ -58,6 +58,7 @@ exports[`getNodeLabel() renders as a focal node when isFocalNode == true 1`] = `
     <a
       className="DdgNode--actionsItem"
       onClick={[Function]}
+      role="button"
     >
       <NewWindowIcon
         isLarge={false}
@@ -136,6 +137,7 @@ exports[`getNodeLabel() returns a <DdgNode/> 1`] = `
     <a
       className="DdgNode--actionsItem"
       onClick={[Function]}
+      role="button"
     >
       <NewWindowIcon
         isLarge={false}
