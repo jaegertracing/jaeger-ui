@@ -18,7 +18,7 @@ export function matchEdges<T = Record<string, unknown>>(
   input: TEdge<T>[],
   output: TLayoutEdge<{}>[]
 ): TLayoutEdge<T>[] {
-  const map: { [key: string]: TEdge<any> } = {};
+  const map: { [key: string]: TEdge<T> } = {};
   input.forEach(edge => {
     map[`${edge.from}\v${edge.to}`] = edge;
   });

@@ -88,7 +88,7 @@ export function MiniMap(props: TProps) {
       <div className={`${css.item} ${css.map}`} style={mapSize}>
         <div className={css.mapActive} style={{ ...activeXform, ...mapSize }} />
       </div>
-      <div className={`${css.item} ${css.button}`} onClick={props.viewAll} data-wtf="true" role="button">
+      <div className={`${css.item} ${css.button}`} onClick={props.viewAll} role="button">
         {resetZoomIcon}
       </div>
     </div>

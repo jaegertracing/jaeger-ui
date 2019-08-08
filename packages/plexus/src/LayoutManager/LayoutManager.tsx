@@ -75,7 +75,6 @@ export default class LayoutManager {
     }
   }
 
-  // _handleUpdate = (data: TUpdate<T, U>) => {
   _handleUpdate = (data: TUpdate<any, any>) => {
     const pendingResult = this.pendingResult;
     if (!pendingResult || data.layoutId !== pendingResult.id) {

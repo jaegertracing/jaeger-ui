@@ -80,6 +80,11 @@ export default class Header extends React.PureComponent<TProps> {
           )}
         </div>
         <div className="DdgHeader--controlHeader">
+          <HopsSelector
+            distanceToPathElems={distanceToPathElems}
+            handleClick={setDistance}
+            visEncoding={visEncoding}
+          />
           <div className="DdgHeader--uiFind" role="button" onClick={this.focusUiFindInput}>
             <Icon className="DdgHeader--uiFindSearchIcon" type="search" />
             <UiFindInput
@@ -89,13 +94,6 @@ export default class Header extends React.PureComponent<TProps> {
             />
             <span className="DdgHeader--uiFindCount">{uiFindCount}</span>
           </div>
-          {distanceToPathElems && (
-            <HopsSelector
-              distanceToPathElems={distanceToPathElems}
-              handleClick={setDistance}
-              visEncoding={visEncoding}
-            />
-          )}
         </div>
       </header>
     );

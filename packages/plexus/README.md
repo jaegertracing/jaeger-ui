@@ -505,7 +505,7 @@ The `LayoutManager` supports the following configuration options:
 | splines | `string = "true"` |
 |  | GraphViz [splines](https://www.graphviz.org/doc/info/attrs.html#d:splines) graph attribute.<br>&nbsp; |
 | sep | `number = 0.5` |
-|  | GraphViz [sep](https://www.graphviz.org/doc/info/attrs.html#d:sep) graph attribute, which defines the space margin around nodes.s<br>&nbsp; |
+|  | GraphViz [sep](https://www.graphviz.org/doc/info/attrs.html#d:sep) graph attribute, which defines the space margin around nodes.<br>&nbsp; |
 | rankdir | `'TB' \| 'LR' \| 'BT' \| 'RL' = 'LR'` |
 |  | GraphViz [rankdir](https://www.graphviz.org/doc/info/attrs.html#d:rankdir) graph attribute, which defines the orientation of the layout.<br>&nbsp; |
 | ranksep | `number = 5` |
@@ -613,7 +613,7 @@ In addition to the common layer configuration fields, the following fields are a
 | measureNode | `TMeasureNodeFn` _See below for details on this type._ |
 |  | Overrides the default measuring of nodes.<br>&nbsp; |
 
-sThe types for `setOnNode` and `renderNode` are distinct from the corresponding fields on a non-measurable nodes layer in that the first argument is the `TVertex`, and the `TLayoutVertex` argument is **only available after initial render**.
+The types for `setOnNode` and `renderNode` are distinct from the corresponding fields on a non-measurable nodes layer in that the first argument is the `TVertex`, and the `TLayoutVertex` argument is **only available after initial render**.
 
 The type for `setOnNode` is similar to that of `setOnContainer` in that the value can also be either an object of props, a factory function, or an array of either.
 

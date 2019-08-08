@@ -165,13 +165,16 @@ export default class GraphModel {
         .toLowerCase()
         .split(' ');
       const { vertices } = this.getVisible(visEncoding);
-      vertices.forEach(vertex => {
-        const svc = vertex.service.toLowerCase();
-        const op = vertex.operation.toLowerCase();
-        if (uiFindArr.some(str => svc.includes(str) || op.includes(str))) {
-          vertexSet.add(vertex);
+      for (let i = 0; i < vertices.length; i++) {
+        const svc = vertices[i].service.toLowerCase();
+        const op = vertices[i].operation.toLowerCase();
+        for (let j = 0; j < uiFindArr.length; j++) {
+          if (svc.includes(uiFindArr[j]) || op.includes(uiFindArr[j])) {
+            vertexSet.add(vertices[i]);
+            break;
+          }
         }
-      });
+      }
 
       return vertexSet;
     }
