@@ -63,6 +63,8 @@ exports[`<DdgNode> omits the operation if it is null 1`] = `
     </a>
     <a
       className="DdgNode--actionsItem"
+      onClick={[Function]}
+      role="button"
     >
       <NewWindowIcon
         isLarge={false}
@@ -135,6 +137,8 @@ exports[`<DdgNode> omits the operation if it is null 2`] = `
     </a>
     <a
       className="DdgNode--actionsItem"
+      onClick={[Function]}
+      role="button"
     >
       <NewWindowIcon
         isLarge={false}
@@ -212,6 +216,8 @@ exports[`<DdgNode> renders correctly when isFocalNode = true and focalNodeUrl = 
     </a>
     <a
       className="DdgNode--actionsItem"
+      onClick={[Function]}
+      role="button"
     >
       <NewWindowIcon
         isLarge={false}
@@ -283,6 +289,8 @@ exports[`<DdgNode> renders correctly when isFocalNode = true and focalNodeUrl = 
   >
     <a
       className="DdgNode--actionsItem"
+      onClick={[Function]}
+      role="button"
     >
       <NewWindowIcon
         isLarge={false}

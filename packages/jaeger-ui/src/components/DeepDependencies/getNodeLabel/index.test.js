@@ -30,7 +30,7 @@ describe('getNodeLabel()', () => {
   });
 
   it('returns a <DdgNode/>', () => {
-    const ddgNode = getNodeLabel()(ddgVertex);
+    const ddgNode = getNodeLabel({})(ddgVertex);
     expect(ddgNode).toBeDefined();
     const wrapper = shallow(ddgNode);
     expect(wrapper).toMatchSnapshot();
@@ -39,7 +39,7 @@ describe('getNodeLabel()', () => {
 
   it('renders as a focal node when isFocalNode == true', () => {
     ddgVertex.isFocalNode = true;
-    const ddgNode = getNodeLabel()(ddgVertex);
+    const ddgNode = getNodeLabel({})(ddgVertex);
     expect(ddgNode).toBeDefined();
     const wrapper = shallow(ddgNode);
     expect(wrapper).toMatchSnapshot();
@@ -49,13 +49,13 @@ describe('getNodeLabel()', () => {
     const otherVertex = {
       key: 'other-key',
     };
-    const vertices = new Set([otherVertex]);
+    const uiFindMatches = new Set([otherVertex]);
 
-    let ddgNode = getNodeLabel(vertices)(ddgVertex);
+    let ddgNode = getNodeLabel({ uiFindMatches })(ddgVertex);
     expect(ddgNode.props.isUiFindMatch).toBe(false);
 
-    vertices.add(ddgVertex);
-    ddgNode = getNodeLabel(vertices)(ddgVertex);
+    uiFindMatches.add(ddgVertex);
+    ddgNode = getNodeLabel({ uiFindMatches })(ddgVertex);
     expect(ddgNode.props.isUiFindMatch).toBe(true);
   });
 });

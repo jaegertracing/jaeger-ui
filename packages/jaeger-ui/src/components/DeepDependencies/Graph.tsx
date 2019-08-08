@@ -18,10 +18,11 @@ import { TEdge } from '@jaegertracing/plexus/lib/types';
 
 import getNodeLabel from './getNodeLabel';
 
-import { TDdgVertex } from '../../model/ddg/types';
+import { PathElem, TDdgVertex } from '../../model/ddg/types';
 
 type TProps = {
   edges: TEdge[];
+  getVisiblePathElems: (vertexKey: string) => PathElem[] | undefined;
   uiFindMatches: Set<TDdgVertex> | undefined;
   vertices: TDdgVertex[];
 };
@@ -35,7 +36,7 @@ export default class Graph extends PureComponent<TProps> {
   }
 
   render() {
-    const { edges, uiFindMatches, vertices } = this.props;
+    const { edges, getVisiblePathElems, uiFindMatches, vertices } = this.props;
 
     return (
       <DirectedGraph
@@ -46,7 +47,7 @@ export default class Graph extends PureComponent<TProps> {
         layoutManager={this.layoutManager}
         edges={edges}
         vertices={vertices}
-        getNodeLabel={getNodeLabel(uiFindMatches)}
+        getNodeLabel={getNodeLabel({ getVisiblePathElems, uiFindMatches })}
       />
     );
   }
