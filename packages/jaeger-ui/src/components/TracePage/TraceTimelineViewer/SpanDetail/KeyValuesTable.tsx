@@ -23,11 +23,17 @@ import { KeyValuePair, Link } from '../../../../types/trace';
 
 import './KeyValuesTable.css';
 
-function parseIfJson(value: any) {
-  try {
-    return JSON.parse(value);
-    // eslint-disable-next-line no-empty
-  } catch (_) {}
+const jsonObjectOrArrayStartRegex = '/^({|[)/';
+
+function parseIfComplexJson(value: any) {
+  // if the value is a string representing actual json object or array, then use json-markup
+  if (typeof value === 'string' && jsonObjectOrArrayStartRegex.match(value)) {
+    // otherwise just return as is
+    try {
+      return JSON.parse(value);
+      // eslint-disable-next-line no-empty
+    } catch (_) {}
+  }
   return value;
 }
 
@@ -66,7 +72,7 @@ export default function KeyValuesTable(props: KeyValuesTableProps) {
         <tbody className="KeyValueTable--body">
           {data.map((row, i) => {
             const markup = {
-              __html: jsonMarkup(parseIfJson(row.value)),
+              __html: jsonMarkup(parseIfComplexJson(row.value)),
             };
             // eslint-disable-next-line react/no-danger
             const jsonTable = <div className="ub-inline-block" dangerouslySetInnerHTML={markup} />;
