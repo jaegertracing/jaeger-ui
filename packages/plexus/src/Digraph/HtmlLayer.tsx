@@ -16,7 +16,7 @@ import * as React from 'react';
 
 import { TSetOnContainer, TExposedGraphState } from './types';
 import { assignMergeCss, getProps } from './utils';
-import ZoomManager from '../ZoomManager';
+import ZoomManager from '../zoom/ZoomManager';
 
 type TProps<T = {}, U = {}> = Record<string, unknown> &
   TSetOnContainer<T, U> & {

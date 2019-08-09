@@ -12,41 +12,36 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as React from 'react';
-
 export type TLayoutGraph = {
   height: number;
   scale: number;
   width: number;
 };
 
-export type TVertexKey = string | number;
+export type TVertexKey = string;
 
-export type TVertex<T = any> = T & {
+export type TVertex<T = {}> = T & {
   key: TVertexKey;
-  label?: React.ReactNode;
 };
 
-export type TSizeVertex<T = any> = {
+export type TSizeVertex<T = {}> = {
   vertex: TVertex<T>;
   width: number;
   height: number;
 };
 
-export type TLayoutVertex<T = any> = TSizeVertex<T> & {
+export type TLayoutVertex<T = {}> = TSizeVertex<T> & {
   left: number;
   top: number;
 };
 
-export type TEdge<T = any> = {
+export type TEdge<T = {}> = T & {
   from: TVertexKey;
   to: TVertexKey;
   isBidirectional?: boolean;
-  label?: React.ReactNode;
-  data?: T;
 };
 
-export type TLayoutEdge<T = any> = {
+export type TLayoutEdge<T = {}> = {
   edge: TEdge<T>;
   pathPoints: [number, number][];
 };
@@ -55,20 +50,20 @@ export type TCancelled = {
   isCancelled: true;
 };
 
-export type TPositionsDone<T = any> = {
+export type TPositionsDone<T = Record<string, unknown>> = {
   isCancelled: false;
   graph: TLayoutGraph;
   vertices: TLayoutVertex<T>[];
 };
 
-export type TLayoutDone<T = any> = {
+export type TLayoutDone<T = Record<string, unknown>, U = Record<string, unknown>> = {
   isCancelled: false;
-  edges: TLayoutEdge[];
+  edges: TLayoutEdge<U>[];
   graph: TLayoutGraph;
   vertices: TLayoutVertex<T>[];
 };
 
-export type TPendingLayoutResult<T = any> = {
+export type TPendingLayoutResult<T = Record<string, unknown>, U = Record<string, unknown>> = {
   positions: Promise<TPositionsDone<T> | TCancelled>;
-  layout: Promise<TLayoutDone<T> | TCancelled>;
+  layout: Promise<TLayoutDone<T, U> | TCancelled>;
 };

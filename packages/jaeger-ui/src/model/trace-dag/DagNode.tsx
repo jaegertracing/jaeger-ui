@@ -18,7 +18,7 @@ import { TNil } from '../../types';
 export default class DagNode<T = void> {
   static getID(service: string, operation: string, hasChildren: boolean, parentID?: string | TNil): NodeID {
     const name = `${service}\t${operation}${hasChildren ? '' : '\t__LEAF__'}`;
-    return parentID ? `${parentID}\n${name}` : name;
+    return parentID ? `${parentID}\v${name}` : name;
   }
 
   service: string;

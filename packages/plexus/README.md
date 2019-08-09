@@ -12,7 +12,7 @@ A React component for directed graphs.
   - [Import](#import)
   - [Data](#data)
   - [LayoutManager](#layoutmanager)
-  - [LayeredDigraph](#layereddigraph)
+  - [Digraph](#digraph)
   - [Result](#result)
 - [Concepts](#concepts)
   - [Edge and vertex data](#edge-and-vertex-data)
@@ -34,7 +34,7 @@ A React component for directed graphs.
     - [TExposedGraphState](#texposedgraphstate)
     - [TContainerPropsSetter](#tcontainerpropssetter)
   - [`LayoutManager` options](#layoutmanager-options)
-  - [`LayeredDigraph` props](#layereddigraph-props)
+  - [`Digraph` props](#digraph-props)
   - [Layer configuration objects](#layer-configuration-objects)
     - [Common to all layers](#common-to-all-layers)
     - [Common to SVG layers, only](#common-to-svg-layers-only)
@@ -106,7 +106,7 @@ import * as React from 'react';
 
 import { LayoutManager } from 'plexus';
 // TODO(joe): Update import after killing `DirectedGraph`
-import LayeredDigraph from 'plexus/LayeredDigraph';
+import Digraph from 'plexus/Digraph';
 ```
 
 ### Data
@@ -143,17 +143,15 @@ The LayoutManager generates the layout for the graph, i.e. it determines the nod
 const lm = new LayoutManager({ useDotEdges: true, rankdir: 'TB', ranksep: 1.1 });
 ```
 
-### `LayeredDigraph`
+### `Digraph`
 
-`(TODO(joe): Update after renaming the component.) VV`
+The bulk of the public API is the `Digraph` component.
 
-The bulk of the public API is the `LayeredDigraph` component.
-
-Below, we use the `LayeredDigraph` component to create a graph from the `vertices` and `edges` we defined, above. We set some styles, pass in the `LayoutManager` and configure the layers of the graph.
+Below, we use the `Digraph` component to create a graph from the `vertices` and `edges` we defined, above. We set some styles, pass in the `LayoutManager` and configure the layers of the graph.
 
 ```tsx
 const simpleGraph = (
-  <LayeredDigraph
+  <Digraph
     edges={edges}
     vertices={vertices}
     setOnGraph={{
@@ -257,7 +255,7 @@ There are three types of layers:
 - Nodes
 - Measurable nodes
 
-Layers are configured through plain JavaScript objects and the `layers` prop on the `LayeredDigraph` (TODO(joe): rename) component.
+Layers are configured through plain JavaScript objects and the `layers` prop on the `Digraph` component.
 
 A layer can generate either HTML elements or SVG elements but **not a combination** of the two.
 
@@ -265,13 +263,13 @@ A layer can generate either HTML elements or SVG elements but **not a combinatio
 
 Layers have a containing element to group the elements they render. For HTML layers this is a `div`; for SVG layers this is a `g`.
 
-The ordering of layers in the document matches the order in which they're defined in the `layers` prop on the `LayeredDigraph`.
+The ordering of layers in the document matches the order in which they're defined in the `layers` prop on the `Digraph`.
 
 ### Measurable nodes
 
 As noted in the description of the lifecycle, **every plexus graph must contain one measurable nodes layer**. This layer is rendered before the layout is generated so the size of the nodes can be accounted for in the layout.
 
-This layer can be either HTML or SVG, and the value of the layer's `key` must also be set to the `measurableNodesKey` prop on the `LayeredDigraph` (TODO(joe): rename) component.
+This layer can be either HTML or SVG, and the value of the layer's `key` must also be set to the `measurableNodesKey` prop on the `Digraph` component.
 
 By default, the size of a node is based on the dimensions of the wrapper for the node after it's been rendered to the document: a `div` for HTML nodes and a `g` for SVG nodes. This default behavior can be overridden via the `measureNode` field on the layer configuration object.
 
@@ -283,7 +281,7 @@ Layers can be grouped by their type: HTML or SVG. This is mainly only relevant i
 
 ### `setOn*` props factories
 
-plexus provides hooks to define or generate props for the elements in the graph and their containers. For instance, the `setOnGraph` prop of the `LayeredDigraph` component (TODO(joe): rename) allows props to be defined or generated for the root `<div>` element of the graph.
+plexus provides hooks to define or generate props for the elements in the graph and their containers. For instance, the `setOnGraph` prop of the `Digraph` component allows props to be defined or generated for the root `<div>` element of the graph.
 
 Generally, the value of these can be either an object of props to set on the target element, a function which will generate either `null` or an object of props to set on the target, or an array of either of these.
 
@@ -300,7 +298,7 @@ const generatePaddingStyle = () => {
 
 // Set only the CSS class
 const ok = (
-  <LayeredDigraph
+  <Digraph
     edges={edges}
     vertices={vertices}
     setOnGraph={graphClassName}
@@ -310,7 +308,7 @@ const ok = (
 
 // Set only the random padding
 const alsoOk = (
-  <LayeredDigraph
+  <Digraph
     edges={edges}
     vertices={vertices}
     setOnGraph={generatePaddingStyle}
@@ -320,7 +318,7 @@ const alsoOk = (
 
 // Set both the CSS class and the random padding
 const allOfTheAbove = (
-  <LayeredDigraph
+  <Digraph
     edges={edges}
     vertices={vertices}
     setOnGraph={[graphClassName, generatePaddingStyle]}
@@ -344,7 +342,7 @@ const allOfTheAbove = (
   - [TExposedGraphState](#texposedgraphstate)
   - [TContainerPropsSetter](#tcontainerpropssetter)
 - [`LayoutManager` options](#layoutmanager-options)
-- [`LayeredDigraph` props](#layereddigraph-props)
+- [`Digraph` props](#digraph-props)
 - [Layer configuration objects](#layer-configuration-objects)
   - [Common to all layers](#common-to-all-layers)
   - [Common to SVG layers, only](#common-to-svg-layers-only)
@@ -515,9 +513,7 @@ The `LayoutManager` supports the following configuration options:
 | nodesep | `number = 1.5` |
 |  | GraphViz [nodesep](https://www.graphviz.org/doc/info/attrs.html#d:nodesep) graph attribute, which establishes the minimum distance between two adjacent nodes in the same level.<br>&nbsp; |
 
-### `LayeredDigraph` props
-
-(TODO(joe): rename)
+### `Digraph` props
 
 | Name | Type and description |
 | :-- | :-- |
@@ -575,7 +571,7 @@ The `TDefEntry` type is defined as follows:
 | Field | Type and description |
 | :-- | :-- |
 | localId | `string` |
-|  | **Required**<br>The ID part that must be unique within a graph. `localId` be unique within a `LayeredDigraph` instance (TODO: rename). `localId` will then be prefixed with an ID that is unique to the instance `LayeredDigraph`, resulting in the final ID which is unique within the document. This final ID is then passed to `renderEntry` as the third argument.<br>&nbsp; |
+|  | **Required**<br>The ID part that must be unique within a graph. `localId` be unique within a `Digraph` instance. `localId` will then be prefixed with an ID that is unique to the instance `Digraph`, resulting in the final ID which is unique within the document. This final ID is then passed to `renderEntry` as the third argument.<br>&nbsp; |
 | renderEntry | `TRenderDefEntryFn` _See below for details on the function signature._ |
 |  | Provide a render function for the element that will be added to the `<defs>`.<br><br>**Note:** The fallback `renderEntry` function (i.e. the default value for this field) will return a `<marker>` suitable to be the `marker-end` reference on an edge's `<path>`. This `<marker>` will result in an arrow head.<br>&nbsp; |
 | setOnEntry | `TContainerPropsSetter` |
@@ -602,7 +598,7 @@ type TRenderDefEntryFn = (
 
 #### Measurable nodes layer
 
-`LayeredDigraph` (TODO: rename) **requires one measurable nodes layer.**
+`Digraph` **requires one measurable nodes layer.**
 
 In addition to the common layer configuration fields, the following fields are also available:
 
@@ -613,7 +609,7 @@ In addition to the common layer configuration fields, the following fields are a
 | setOnNode | `TMeasurableNodePropsSetter` _See below for details on this type._ |
 |  | Allows props to be defined or generated for the container of the node. This is a `<div>` for HTML layers and a `<g>` for SVG layers. **Note:** The resultant props are applied to the container element; they are not passed on to the `renderNode` factory.<br>&nbsp; |
 | renderNode | `TRenderMeasurableNodeFn` _See below for details on this type._ |
-|  | **Required**<br>A factory function that is used to generate nodes from the `vertices` prop on the `LayeredDigraph` component. The generated node will be used to determine the size of the nodes, which is taken into account when laying out the graph. `renderNode` is invoked for each `TVertex`. The `TLayoutVertex` will be `null` until the graph layout is available. This function will have access to the `TRenderUtils`, which means it can access the current zoom transform, but it is not redrawn when the zoom transform changes.<br>&nbsp; |
+|  | **Required**<br>A factory function that is used to generate nodes from the `vertices` prop on the `Digraph` component. The generated node will be used to determine the size of the nodes, which is taken into account when laying out the graph. `renderNode` is invoked for each `TVertex`. The `TLayoutVertex` will be `null` until the graph layout is available. This function will have access to the `TRenderUtils`, which means it can access the current zoom transform, but it is not redrawn when the zoom transform changes.<br>&nbsp; |
 | measureNode | `TMeasureNodeFn` _See below for details on this type._ |
 |  | Overrides the default measuring of nodes.<br>&nbsp; |
 
@@ -658,7 +654,7 @@ type TMeasureNodeUtils = {
 
 #### Nodes layer
 
-Any number of nodes layers can be configured for a `LayoutDigraph` (TODO: rename).
+Any number of nodes layers can be configured for a `Digraph`.
 
 In addition to the common layer configuration fields, the following fields are also available:
 
@@ -690,7 +686,7 @@ type TRenderNodeFn = (layoutVertex: TLayoutVertex, utils: TRendererUtils) => Rea
 
 #### Edges layer
 
-Any number of edges layers can be configured for a `LayoutDigraph` (TODO: rename). Edges layers are more restrictive (or less mature) than nodes layers, at present:
+Any number of edges layers can be configured for a `Digraph`. Edges layers are more restrictive (or less mature) than nodes layers, at present:
 
 - The `layerType` of edges layers must be `"svg"`
 - Edges layers do not afford a `renderEdge` equivalent to the `renderNode`.
@@ -728,7 +724,7 @@ type TEdgesPropsFn = (edge: TLayoutEdge, utils: TRendererUtils) => Record<string
 
 An HTML layers group can be used to group multiple HTML layers together. And, the SVG layers group does the same for SVG layers.
 
-Using a group is mainly only going to be useful if `zoom` is enabled on the `LayeredDigraph` or if you want to set props on a container that is common to the layers within the group.
+Using a group is mainly only going to be useful if `zoom` is enabled on the `Digraph` or if you want to set props on a container that is common to the layers within the group.
 
 Regarding zoom, using a group will cause the current zoom transform to be applied once to the entire group instead of individually to each of the layers within the group.
 
@@ -759,7 +755,7 @@ plexus ships with a few functions that are suitable for use with the `setOnConta
 
 #### `classNameIsSmall`
 
-This utility returns `{ className: 'is-small' }` if the graph is zoom out to a small scale. If added to a `setOnContainer` field or the `setOnGraph` prop of the `LayeredDigraph` it will add the CSS class to the container when the graph is zoomed out to a small scale.
+This utility returns `{ className: 'is-small' }` if the graph is zoom out to a small scale. If added to a `setOnContainer` field or the `setOnGraph` prop of the `Digraph` it will add the CSS class to the container when the graph is zoomed out to a small scale.
 
 This util can be used to hide text when it would be too small to read:
 
@@ -770,7 +766,7 @@ This util can be used to hide text when it would be too small to read:
 ```
 
 ```tsx
-<LayeredDigraph
+<Digraph
   edges={edges}
   vertices={vertices}
   setOnGraph={[{ className: 'demo-graph' }, classNameIsSmall]}
@@ -806,7 +802,7 @@ This utility will generate a style prop with the opacity reduced as the view zoo
 In the following example, the opacity of the edges will be reduced as the view is zoomed out.
 
 ```tsx
-<LayeredDigraph
+<Digraph
   edges={edges}
   vertices={vertices}
   layoutManager={lm}
@@ -851,7 +847,7 @@ function scaleProperty(
 
 With the default values, the property will approach `0.3` as the scale of the zoom transform approaches `0`. The `expAdjuster` is an exponent applied to the linear change. By default, the interpolation is based on the square root of the linear change.
 
-If you need something more expressive, take a look at `packages/plexus/src/LayeredDigraph/utils.tsx`, which `scaleProperty` wraps.
+If you need something more expressive, take a look at `packages/plexus/src/Digraph/utils.tsx`, which `scaleProperty` wraps.
 
 ## Recipes
 

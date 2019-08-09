@@ -14,8 +14,11 @@
 
 import { TEdge, TLayoutEdge, TLayoutVertex, TSizeVertex, TVertex } from '../types';
 
-export function matchEdges(input: TEdge[], output: TLayoutEdge[]): TLayoutEdge[] {
-  const map: { [key: string]: TEdge } = {};
+export function matchEdges<T = Record<string, unknown>>(
+  input: TEdge<T>[],
+  output: TLayoutEdge<{}>[]
+): TLayoutEdge<T>[] {
+  const map: { [key: string]: TEdge<T> } = {};
   input.forEach(edge => {
     map[`${edge.from}\v${edge.to}`] = edge;
   });

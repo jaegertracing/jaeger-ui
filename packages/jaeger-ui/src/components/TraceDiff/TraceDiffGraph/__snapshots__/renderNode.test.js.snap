@@ -614,20 +614,20 @@ exports[`drawNode diffNode renders as expected when props.isUiFindMatch is true 
 <Popover
   content={
     <table
-      className="DiffNode is-same is-ui-find-match"
+      className="DiffNode is-same"
     >
       <tbody
         className="DiffNode--body"
       >
         <tr>
           <td
-            className="DiffNode--metricCell is-same is-ui-find-match"
+            className="DiffNode--metricCell is-same"
             rowSpan={2}
           >
             100
           </td>
           <td
-            className="DiffNode--labelCell is-same is-ui-find-match"
+            className="DiffNode--labelCell is-same"
           >
             <strong>
               serviceName
@@ -643,7 +643,7 @@ exports[`drawNode diffNode renders as expected when props.isUiFindMatch is true 
         </tr>
         <tr>
           <td
-            className="DiffNode--labelCell is-same is-ui-find-match"
+            className="DiffNode--labelCell is-same"
           >
             operationName
           </td>
@@ -653,7 +653,7 @@ exports[`drawNode diffNode renders as expected when props.isUiFindMatch is true 
   }
   mouseEnterDelay={0.25}
   mouseLeaveDelay={0.1}
-  overlayClassName="DiffNode--popover is-same is-ui-find-match"
+  overlayClassName="DiffNode--popover is-same"
   overlayStyle={Object {}}
   placement="top"
   prefixCls="ant-popover"
@@ -661,20 +661,20 @@ exports[`drawNode diffNode renders as expected when props.isUiFindMatch is true 
   trigger="hover"
 >
   <table
-    className="DiffNode is-same is-ui-find-match"
+    className="DiffNode is-same"
   >
     <tbody
       className="DiffNode--body"
     >
       <tr>
         <td
-          className="DiffNode--metricCell is-same is-ui-find-match"
+          className="DiffNode--metricCell is-same"
           rowSpan={2}
         >
           100
         </td>
         <td
-          className="DiffNode--labelCell is-same is-ui-find-match"
+          className="DiffNode--labelCell is-same"
         >
           <strong>
             serviceName
@@ -690,7 +690,7 @@ exports[`drawNode diffNode renders as expected when props.isUiFindMatch is true 
       </tr>
       <tr>
         <td
-          className="DiffNode--labelCell is-same is-ui-find-match"
+          className="DiffNode--labelCell is-same"
         >
           operationName
         </td>

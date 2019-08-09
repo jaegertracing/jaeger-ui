@@ -18,7 +18,8 @@ import cx from 'classnames';
 import focalNodeIcon from './focalNodeIcon';
 import setFocusButtonIcon from './setFocusButtonIcon';
 import NewWindowIcon from '../../common/NewWindowIcon';
-import { EViewModifier } from '../../../model/ddg/types';
+import { getUrl as getSearchUrl } from '../../SearchTracePage/url';
+import { EViewModifier, PathElem } from '../../../model/ddg/types';
 
 import './DdgNode.css';
 
@@ -27,13 +28,46 @@ type TProps = {
   service: string;
   operation: string | null;
   focalNodeUrl: string | null;
+  getVisiblePathElems: (vertexKey: string) => PathElem[] | undefined;
   isFocalNode: boolean;
   isUiFindMatch: boolean;
   viewModifiers: number;
   setViewModifier: (vertexKey: string, viewModifier: EViewModifier, isEnabled: boolean) => void;
 };
 
+// While browsers suport URLs of unlimited length, many server clients do not handle more than this max
+const MAX_LENGTH = 2083;
+const MAX_LINKED_TRACES = 35;
+const MIN_LENGTH = getSearchUrl().length;
+const PARAM_NAME_LENGTH = '&traceID='.length;
+
 export default class DdgNode extends React.PureComponent<TProps> {
+  viewTraces = () => {
+    const { vertexKey, getVisiblePathElems } = this.props;
+    const elems = getVisiblePathElems(vertexKey);
+    if (elems) {
+      const ids: Set<string> = new Set();
+      let currLength = MIN_LENGTH;
+      for (let i = 0; i < elems.length; i++) {
+        const id = elems[i].memberOf.traceID;
+        if (ids.has(id)) {
+          continue;
+        }
+        // Keep track of the length, then break if it is too long, to avoid opening a tab with a URL that the
+        // backend cannot process, even if there are more traceIDs
+        currLength += PARAM_NAME_LENGTH + id.length;
+        if (currLength > MAX_LENGTH) {
+          break;
+        }
+        ids.add(id);
+        if (ids.size >= MAX_LINKED_TRACES) {
+          break;
+        }
+      }
+      window.open(getSearchUrl({ traceID: Array.from(ids) }), '_blank');
+    }
+  };
+
   onMouseUx = (event: React.MouseEvent<HTMLElement>) => {
     const { vertexKey, setViewModifier } = this.props;
     setViewModifier(vertexKey, EViewModifier.Hovered, event.type === 'mouseover');
@@ -47,7 +81,7 @@ export default class DdgNode extends React.PureComponent<TProps> {
           className={cx('DdgNode--core', { 'is-focalNode': isFocalNode, 'is-UiFindMatch': isUiFindMatch })}
         >
           {isFocalNode && <div className="DdgNode--focalMarker">{focalNodeIcon}</div>}
-          <div className="DdgNode--labelWrapper">
+          <div>
             <h4 className="DdgNode--label">{service}</h4>
             {operation && <div className="DdgNode--label">{operation}</div>}
           </div>
@@ -60,7 +94,7 @@ export default class DdgNode extends React.PureComponent<TProps> {
               <span className="DdgNode--actionsItemText">Set focus</span>
             </a>
           )}
-          <a className="DdgNode--actionsItem">
+          <a className="DdgNode--actionsItem" onClick={this.viewTraces} role="button">
             <NewWindowIcon />
             <span className="DdgNode--actionsItemText">View traces</span>
           </a>

@@ -22,13 +22,13 @@ import { PathElem, TDdgDensity, TDdgDistanceToPathElems, TDdgModel, TDdgVertex }
 
 export default class Graph {
   private readonly density: TDdgDensity;
-  private distanceToPathElems: TDdgDistanceToPathElems;
-  private pathElemToEdge: Map<PathElem, TEdge>;
-  private pathElemToVertex: Map<PathElem, TDdgVertex>;
+  private readonly distanceToPathElems: TDdgDistanceToPathElems;
+  private readonly pathElemToEdge: Map<PathElem, TEdge>;
+  private readonly pathElemToVertex: Map<PathElem, TDdgVertex>;
   private readonly showOp: boolean;
-  private vertexToPathElems: Map<TDdgVertex, Set<PathElem>>;
-  private vertices: Map<string, TDdgVertex>;
-  private visIdxToPathElem: PathElem[];
+  private readonly vertexToPathElems: Map<TDdgVertex, Set<PathElem>>;
+  private readonly vertices: Map<string, TDdgVertex>;
+  private readonly visIdxToPathElem: PathElem[];
 
   constructor({ ddgModel, density, showOp }: { ddgModel: TDdgModel; density: TDdgDensity; showOp: boolean }) {
     this.density = density;
@@ -45,11 +45,12 @@ export default class Graph {
       const key = this.getVertexKey(pathElem);
       let vertex: TDdgVertex | undefined = this.vertices.get(key);
       if (!vertex) {
+        const isFocalNode = !pathElem.distance;
         vertex = {
           key,
-          isFocalNode: !pathElem.distance,
+          isFocalNode,
           service: pathElem.operation.service.name,
-          operation: this.showOp ? pathElem.operation.name : null,
+          operation: this.showOp || isFocalNode ? pathElem.operation.name : null,
         };
         this.vertices.set(key, vertex);
         this.vertexToPathElems.set(vertex, new Set());
@@ -120,7 +121,9 @@ export default class Graph {
   private getVertexKey = (pathElem: PathElem): string => {
     const elemToStr = this.showOp
       ? ({ operation }: PathElem) => `${operation.service.name}----${operation.name}`
-      : ({ operation }: PathElem) => operation.service.name;
+      : // Always show the operation for the focal node, i.e. when distance === 0
+        ({ distance, operation }: PathElem) =>
+          distance === 0 ? `${operation.service.name}----${operation.name}` : operation.service.name;
 
     switch (this.density) {
       case TDdgDensity.MostConcise: {
@@ -214,6 +217,20 @@ export default class Graph {
       return vertexSet;
     }
   );
+
+  // eslint-disable-next-line consistent-return
+  public getVisiblePathElems = (vertexKey: string, visEncoding?: string): PathElem[] | undefined => {
+    const vertex = this.vertices.get(vertexKey);
+    if (vertex) {
+      const pathElems = this.vertexToPathElems.get(vertex);
+      if (pathElems && pathElems.size) {
+        const visIndices = visEncoding ? new Set(decode(visEncoding)) : undefined;
+        return Array.from(pathElems).filter(elem => {
+          return visIndices ? visIndices.has(elem.visibilityIdx) : Math.abs(elem.distance) < 3;
+        });
+      }
+    }
+  };
 }
 
 export const makeGraph = memoize(10)(

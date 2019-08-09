@@ -67,13 +67,14 @@ describe('Graph', () => {
     // Because getVertexKey only uses density, showOp, and the specific pathElem, an empty ddg model is
     // sufficient to test this method.
     const ddgModel = { visIdxToPathElem: [] };
+    const showOpKeyEntry = pathElem => `${pathElem.operation.service.name}----${pathElem.operation.name}`;
+    const noOpKeyEntry = pathElem => pathElem.operation.service.name;
 
     [true, false].forEach(showOp => {
       describe(`showOp is ${showOp}`, () => {
-        const expectedKeyEntry = showOp
-          ? pathElem => `${pathElem.operation.service.name}----${pathElem.operation.name}`
-          : pathElem => pathElem.operation.service.name;
-        const expectedFocalElemKey = expectedKeyEntry(testFocalElem);
+        const expectedKeyEntry = showOp ? showOpKeyEntry : noOpKeyEntry;
+        // Always show the operation for the focal node
+        const expectedFocalElemKey = showOpKeyEntry(testFocalElem);
 
         describe('MostConcise', () => {
           const emptyGraph = new Graph({ ddgModel, density: TDdgDensity.MostConcise, showOp });
