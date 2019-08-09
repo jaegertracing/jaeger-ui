@@ -23,13 +23,14 @@ import { KeyValuePair, Link } from '../../../../types/trace';
 
 import './KeyValuesTable.css';
 
-const jsonObjectOrArrayStartRegex = '/^({|[)/';
+const jsonObjectOrArrayStartRegex = /^(\[|\{)/;
 
 function parseIfComplexJson(value: any) {
   // if the value is a string representing actual json object or array, then use json-markup
-  if (typeof value === 'string' && jsonObjectOrArrayStartRegex.match(value)) {
+  if (typeof value === 'string' && value.match(jsonObjectOrArrayStartRegex)) {
     // otherwise just return as is
     try {
+      console.log('parsing JSON');
       return JSON.parse(value);
       // eslint-disable-next-line no-empty
     } catch (_) {}
