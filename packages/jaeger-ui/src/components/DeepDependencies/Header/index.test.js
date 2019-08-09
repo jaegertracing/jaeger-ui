@@ -21,7 +21,6 @@ import NameSelector from './NameSelector';
 
 describe('<Header>', () => {
   const minProps = {
-    operationsForService: {},
     setDistance: () => {},
     setOperation: () => {},
     setService: () => {},
@@ -65,5 +64,15 @@ describe('<Header>', () => {
     });
     expect(wrapper.find(HopsSelector).length).toBe(1);
     expect(wrapper).toMatchSnapshot();
+  });
+
+  it('focuses uiFindInput IFF rendered when clicking on wrapping div', () => {
+    const click = () => wrapper.find('.DdgHeader--uiFind').simulate('click');
+    const focus = jest.fn();
+    click();
+
+    wrapper.instance()._uiFindInput = { current: { focus } };
+    click();
+    expect(focus).toHaveBeenCalledTimes(1);
   });
 });

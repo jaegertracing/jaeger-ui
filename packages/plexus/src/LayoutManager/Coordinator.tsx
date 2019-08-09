@@ -29,17 +29,17 @@ import {
   TWorkerInputMessage,
   TWorkerOutputMessage,
 } from './types';
-import { TEdge, TLayoutEdge, TLayoutVertex, TSizeVertex } from '../types';
+import { TEdge, TLayoutVertex, TSizeVertex } from '../types';
 
 type TCurrentLayout = {
   cleaned: {
-    edges: TEdge[];
-    vertices: TSizeVertex[];
+    edges: TEdge<{}>[];
+    vertices: TSizeVertex<{}>[];
   };
   id: number;
   input: {
-    edges: TEdge[];
-    vertices: TSizeVertex[];
+    edges: TEdge<any>[];
+    vertices: TSizeVertex<any>[];
   };
   options: TLayoutOptions | null;
   status: {
@@ -49,8 +49,8 @@ type TCurrentLayout = {
 };
 
 function cleanInput(
-  srcEdges: TEdge[],
-  srcVertices: TSizeVertex[]
+  srcEdges: TEdge<any>[],
+  srcVertices: TSizeVertex<any>[]
 ): { edges: TEdge[]; vertices: TSizeVertex[] } {
   const edges = srcEdges.map(({ from, to, isBidirectional }) => ({ from, to, isBidirectional }));
   const vertices = srcVertices.map(({ vertex: { key }, ...rest }) => ({ vertex: { key }, ...rest }));
@@ -80,14 +80,14 @@ function findAndRemoveWorker(lists: LayoutWorker[][], worker: LayoutWorker) {
   return { ok: false };
 }
 
-export default class Coordinator<T> {
+export default class Coordinator {
   currentLayout: TCurrentLayout | null;
   nextWorkerId: number;
   idleWorkers: LayoutWorker[];
   busyWorkers: LayoutWorker[];
-  callback: (update: TUpdate<T>) => void;
+  callback: (update: TUpdate<any, any>) => void;
 
-  constructor(callback: (update: TUpdate<T>) => void) {
+  constructor(callback: (update: TUpdate<any, any>) => void) {
     this.callback = callback;
     this.currentLayout = null;
     this.nextWorkerId = 0;
@@ -95,7 +95,12 @@ export default class Coordinator<T> {
     this.busyWorkers = [];
   }
 
-  getLayout(id: number, inEdges: TEdge[], inVertices: TSizeVertex[], options: TLayoutOptions | void) {
+  getLayout<T, U>(
+    id: number,
+    inEdges: TEdge<U>[],
+    inVertices: TSizeVertex<T>[],
+    options: TLayoutOptions | void
+  ) {
     this.busyWorkers.forEach(killWorker);
     this.busyWorkers.length = 0;
     const { edges, vertices: _vertices } = cleanInput(inEdges, inVertices);
@@ -250,14 +255,13 @@ export default class Coordinator<T> {
     }
     // phase is either edges or dot-only
     if (edges) {
-      const adjEdgeCoords = convCoord.edgeToPixels.bind(null, graph);
-      let adjEdges = edges.map<TLayoutEdge>(adjEdgeCoords);
-      adjEdges = matchEdges(input.edges, adjEdges);
+      const pixelEdges = edges.map(edge => convCoord.edgeToPixels(graph, edge));
+      const mergedEdges = matchEdges(input.edges, pixelEdges);
       this.callback({
         type: ECoordinatorPhase.Done,
         layoutId: layout.id,
         graph: adjGraph,
-        edges: adjEdges,
+        edges: mergedEdges,
         vertices: adjVertices,
       });
     }

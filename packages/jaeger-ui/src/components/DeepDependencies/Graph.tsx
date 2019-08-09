@@ -12,32 +12,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import React, { Component } from 'react';
+import React, { PureComponent } from 'react';
 import { DirectedGraph, LayoutManager } from '@jaegertracing/plexus';
+import { TEdge } from '@jaegertracing/plexus/lib/types';
 
 import getNodeLabel from './getNodeLabel';
-import GraphModel from '../../model/ddg/Graph';
 
-import { TDdgModel } from '../../model/ddg/types';
+import { PathElem, TDdgVertex } from '../../model/ddg/types';
 
 type TProps = {
-  ddgModel: TDdgModel;
-  visEncoding?: string;
+  edges: TEdge[];
+  getVisiblePathElems: (vertexKey: string) => PathElem[] | undefined;
+  uiFindMatches: Set<TDdgVertex> | undefined;
+  vertices: TDdgVertex[];
 };
 
-export default class Graph extends Component<TProps> {
-  private graphModel: GraphModel;
+export default class Graph extends PureComponent<TProps> {
   private layoutManager: LayoutManager;
 
   constructor(props: TProps) {
     super(props);
-    const { ddgModel } = props;
-    this.graphModel = new GraphModel({ ddgModel });
     this.layoutManager = new LayoutManager({ useDotEdges: true, splines: 'polyline' });
   }
 
   render() {
-    const { edges, vertices } = this.graphModel.getVisible(this.props.visEncoding);
+    const { edges, getVisiblePathElems, uiFindMatches, vertices } = this.props;
 
     return (
       <DirectedGraph
@@ -48,7 +47,7 @@ export default class Graph extends Component<TProps> {
         layoutManager={this.layoutManager}
         edges={edges}
         vertices={vertices}
-        getNodeLabel={getNodeLabel}
+        getNodeLabel={getNodeLabel({ getVisiblePathElems, uiFindMatches })}
       />
     );
   }

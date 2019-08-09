@@ -38,6 +38,17 @@ export default class PathElem {
     return this.memberIdx - this.memberOf.focalIdx;
   }
 
+  get focalSideNeighbor(): PathElem | null {
+    if (!this.distance) return null;
+    return this.memberOf.members[this.memberIdx - Math.sign(this.distance)];
+  }
+
+  get isExternal(): boolean {
+    return (
+      Boolean(this.distance) && (this.memberIdx === 0 || this.memberIdx === this.memberOf.members.length - 1)
+    );
+  }
+
   set visibilityIdx(visibilityIdx: number) {
     if (this._visibilityIdx == null) {
       this._visibilityIdx = visibilityIdx;
@@ -51,11 +62,6 @@ export default class PathElem {
       throw new Error('Visibility Index was never set for this PathElem');
     }
     return this._visibilityIdx;
-  }
-
-  get focalSideNeighbor(): PathElem | null {
-    if (!this.distance) return null;
-    return this.memberOf.members[this.memberIdx - Math.sign(this.distance)];
   }
 
   private toJSONHelper = () => ({

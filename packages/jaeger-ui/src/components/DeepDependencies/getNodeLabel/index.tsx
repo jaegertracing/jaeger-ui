@@ -16,7 +16,7 @@ import * as React from 'react';
 
 import DdgNode from './DdgNode';
 import { getUrl } from '../url';
-import { EViewModifier, TDdgVertex } from '../../../model/ddg/types';
+import { EViewModifier, PathElem, TDdgVertex } from '../../../model/ddg/types';
 
 // temp fill in props
 /* istanbul ignore next */
@@ -27,17 +27,28 @@ const noops = {
   },
 };
 
-export default function getNodeLabel(vertex: TDdgVertex) {
+const getNodeLabel = ({
+  getVisiblePathElems,
+  uiFindMatches,
+}: {
+  getVisiblePathElems: (vertexKey: string) => PathElem[] | undefined;
+  uiFindMatches: Set<TDdgVertex> | undefined;
+}) => (vertex: TDdgVertex) => {
   const { isFocalNode, key, operation, service } = vertex;
+  const isUiFindMatch = Boolean(uiFindMatches && uiFindMatches.has(vertex));
   return (
     <DdgNode
       vertexKey={key}
       service={service}
       operation={operation}
       isFocalNode={isFocalNode}
+      isUiFindMatch={isUiFindMatch}
+      getVisiblePathElems={getVisiblePathElems}
       viewModifiers={0}
       focalNodeUrl={isFocalNode ? null : getUrl({ operation, service })}
       {...noops}
     />
   );
-}
+};
+
+export default getNodeLabel;

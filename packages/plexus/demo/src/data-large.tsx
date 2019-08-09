@@ -14,6 +14,10 @@
 
 import * as React from 'react';
 
+import { TVertex } from '../../src/types';
+
+export type TLargeNode = TVertex<{ service: string; operation: string }>;
+
 export default {
   edges: [
     {
@@ -328,179 +332,293 @@ export default {
   vertices: [
     {
       key: 'fervent::ferve/fervent',
+      service: 'fervent',
+      operation: 'ferve/fervent',
     },
     {
       key: 'carson::carso/carson',
+      service: 'carson',
+      operation: 'carso/carson',
     },
     {
       key: 'volhard::volha/volhard',
+      service: 'volhard',
+      operation: 'volha/volhard',
     },
     {
       key: 'yalow::yalow/yalow',
+      service: 'yalow',
+      operation: 'yalow/yalow',
     },
     {
       key: 'mystifying::mysti/mystifying',
+      service: 'mystifying',
+      operation: 'mysti/mystifying',
     },
     {
       key: 'meninsky::menin/meninsky',
+      service: 'meninsky',
+      operation: 'menin/meninsky',
     },
     {
       key: 'admiring::admir/admiring',
+      service: 'admiring',
+      operation: 'admir/admiring',
     },
     {
       key: 'hoover::hoove/hoover',
+      service: 'hoover',
+      operation: 'hoove/hoover',
     },
     {
       key: 'brahmagupta::brahm/brahmagupta',
+      service: 'brahmagupta',
+      operation: 'brahm/brahmagupta',
     },
     {
       key: 'banach::banac/banach',
+      service: 'banach',
+      operation: 'banac/banach',
     },
     {
       key: 'chatterjee::chatt/chatterjee',
+      service: 'chatterjee',
+      operation: 'chatt/chatterjee',
     },
     {
       key: 'unruffled::unruf/unruffled',
+      service: 'unruffled',
+      operation: 'unruf/unruffled',
     },
     {
       key: 'shockley::shock/shockley',
+      service: 'shockley',
+      operation: 'shock/shockley',
     },
     {
       key: 'pasteur::paste/pasteur',
+      service: 'pasteur',
+      operation: 'paste/pasteur',
     },
     {
       key: 'upbeat::upbea/upbeat',
+      service: 'upbeat',
+      operation: 'upbea/upbeat',
     },
     {
       key: 'darwin::darwi/darwin',
+      service: 'darwin',
+      operation: 'darwi/darwin',
     },
     {
       key: 'priceless::price/priceless',
+      service: 'priceless',
+      operation: 'price/priceless',
     },
     {
       key: 'sammet::samme/sammet',
+      service: 'sammet',
+      operation: 'samme/sammet',
     },
     {
       key: 'serene::seren/serene',
+      service: 'serene',
+      operation: 'seren/serene',
     },
     {
       key: 'vigorous::vigor/vigorous',
+      service: 'vigorous',
+      operation: 'vigor/vigorous',
     },
     {
       key: 'gracious::graci/gracious',
+      service: 'gracious',
+      operation: 'graci/gracious',
     },
     {
       key: 'hardcore::hardc/hardcore',
+      service: 'hardcore',
+      operation: 'hardc/hardcore',
     },
     {
       key: 'elastic::elast/elastic',
+      service: 'elastic',
+      operation: 'elast/elastic',
     },
     {
       key: 'dazzling::dazzl/dazzling',
+      service: 'dazzling',
+      operation: 'dazzl/dazzling',
     },
     {
       key: 'neumann::neuma/neumann',
+      service: 'neumann',
+      operation: 'neuma/neumann',
     },
     {
       key: 'keller::kelle/keller',
+      service: 'keller',
+      operation: 'kelle/keller',
     },
     {
       key: 'heuristic::heuri/heuristic',
+      service: 'heuristic',
+      operation: 'heuri/heuristic',
     },
     {
       key: 'murdock::murdo/murdock',
+      service: 'murdock',
+      operation: 'murdo/murdock',
     },
     {
       key: 'eloquent::eloqu/eloquent',
+      service: 'eloquent',
+      operation: 'eloqu/eloquent',
     },
     {
       key: 'peaceful::peace/peaceful',
+      service: 'peaceful',
+      operation: 'peace/peaceful',
     },
     {
       key: 'infallible::infal/infallible',
+      service: 'infallible',
+      operation: 'infal/infallible',
     },
     {
       key: 'easley::easle/easley',
+      service: 'easley',
+      operation: 'easle/easley',
     },
     {
       key: 'sharp::sharp/sharp',
+      service: 'sharp',
+      operation: 'sharp/sharp',
     },
     {
       key: 'lalande::lalan/lalande',
+      service: 'lalande',
+      operation: 'lalan/lalande',
     },
     {
       key: 'brave::brave/brave',
+      service: 'brave',
+      operation: 'brave/brave',
     },
     {
       key: 'wright::wrigh/wright',
+      service: 'wright',
+      operation: 'wrigh/wright',
     },
     {
       key: 'jones::jones/jones',
+      service: 'jones',
+      operation: 'jones/jones',
     },
     {
       key: 'bose::bose/bose',
+      service: 'bose',
+      operation: 'bose/bose',
     },
     {
       key: 'ecstatic::ecsta/ecstatic',
+      service: 'ecstatic',
+      operation: 'ecsta/ecstatic',
     },
     {
       key: 'tereshkova::teres/tereshkova',
+      service: 'tereshkova',
+      operation: 'teres/tereshkova',
     },
     {
       key: 'lichterman::licht/lichterman',
+      service: 'lichterman',
+      operation: 'licht/lichterman',
     },
     {
       key: 'visvesvaraya::visve/visvesvaraya',
+      service: 'visvesvaraya',
+      operation: 'visve/visvesvaraya',
     },
     {
       key: 'mclean::mclea/mclean',
+      service: 'mclean',
+      operation: 'mclea/mclean',
     },
     {
       key: 'stupefied::stupe/stupefied',
+      service: 'stupefied',
+      operation: 'stupe/stupefied',
     },
     {
       key: 'bhabha::bhabh/bhabha',
+      service: 'bhabha',
+      operation: 'bhabh/bhabha',
     },
     {
       key: 'youthful::youth/youthful',
+      service: 'youthful',
+      operation: 'youth/youthful',
     },
     {
       key: 'lumiere::lumie/lumiere',
+      service: 'lumiere',
+      operation: 'lumie/lumiere',
     },
     {
       key: 'golick::golic/golick',
+      service: 'golick',
+      operation: 'golic/golick',
     },
     {
       key: 'goldstine::golds/goldstine',
+      service: 'goldstine',
+      operation: 'golds/goldstine',
     },
     {
       key: 'zhukovsky::zhuko/zhukovsky',
+      service: 'zhukovsky',
+      operation: 'zhuko/zhukovsky',
     },
     {
       key: 'dubinsky::dubin/dubinsky',
+      service: 'dubinsky',
+      operation: 'dubin/dubinsky',
     },
     {
       key: 'joliot::jolio/joliot',
+      service: 'joliot',
+      operation: 'jolio/joliot',
     },
     {
       key: 'pensive::pensi/pensive',
+      service: 'pensive',
+      operation: 'pensi/pensive',
     },
     {
       key: 'jolly::jolly/jolly',
+      service: 'jolly',
+      operation: 'jolly/jolly',
     },
     {
       key: 'euclid::eucli/euclid',
+      service: 'euclid',
+      operation: 'eucli/euclid',
     },
     {
       key: 'boring::borin/boring',
+      service: 'boring',
+      operation: 'borin/boring',
     },
     {
       key: 'fermi::fermi/fermi',
+      service: 'fermi',
+      operation: 'fermi/fermi',
     },
   ],
 };
 
-export function getNodeLabel(vertex) {
+export function getNodeLabel(vertex: TVertex<{ key: string }>) {
   const [svc, op] = vertex.key.split('::', 2);
   return (
     <span className="DemoGraph--nodeLabel">

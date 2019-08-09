@@ -16,7 +16,7 @@ import _isEmpty from 'lodash/isEmpty';
 import queryString from 'query-string';
 import { matchPath } from 'react-router-dom';
 
-import { TDdgSparseUrlState } from '../../model/ddg/types';
+import { EDdgDensity, TDdgSparseUrlState } from '../../model/ddg/types';
 import prefixUrl from '../../utils/prefix-url';
 
 export const ROUTE_PATH = prefixUrl('/deep-dependencies');
@@ -27,9 +27,15 @@ export function matches(path: string) {
   return Boolean(matchPath(path, ROUTE_MATCHER));
 }
 
-export function getUrl(args?: { [key: string]: unknown }) {
+export function getUrl(args?: { [key: string]: unknown; showOp?: boolean }) {
   if (args && !_isEmpty(args)) {
-    return `${ROUTE_PATH}?${queryString.stringify(args)}`;
+    const stringifyArgs = Reflect.has(args, 'showOp')
+      ? {
+          ...args,
+          showOp: args.showOp ? 1 : 0,
+        }
+      : args;
+    return `${ROUTE_PATH}?${queryString.stringify(stringifyArgs)}`;
   }
   return ROUTE_PATH;
 }
@@ -44,19 +50,30 @@ function firstParam(arg: string | string[]): string {
 }
 
 export function getUrlState(search: string): TDdgSparseUrlState {
-  const { service, operation, start, end, visEncoding } = queryString.parse(search);
-  const rv: TDdgSparseUrlState = {};
-  if (service) {
-    rv.service = firstParam(service);
+  const {
+    density = EDdgDensity.PreventPathEntanglement,
+    end,
+    operation,
+    service,
+    showOp = '1',
+    start,
+    visEncoding,
+  } = queryString.parse(search);
+  const rv: TDdgSparseUrlState = {
+    density: firstParam(density) as EDdgDensity,
+    showOp: Boolean(+firstParam(showOp)),
+  };
+  if (end) {
+    rv.end = Number.parseInt(firstParam(end), 10);
   }
   if (operation) {
     rv.operation = firstParam(operation);
   }
+  if (service) {
+    rv.service = firstParam(service);
+  }
   if (start) {
     rv.start = Number.parseInt(firstParam(start), 10);
-  }
-  if (end) {
-    rv.end = Number.parseInt(firstParam(end), 10);
   }
   if (visEncoding) {
     rv.visEncoding = firstParam(visEncoding);

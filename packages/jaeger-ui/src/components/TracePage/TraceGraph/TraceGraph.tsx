@@ -15,12 +15,21 @@
 import * as React from 'react';
 import { Card, Icon, Button, Tooltip } from 'antd';
 import cx from 'classnames';
-import { DirectedGraph, LayoutManager } from '@jaegertracing/plexus';
+import { Digraph, LayoutManager } from '@jaegertracing/plexus';
+import cacheAs from '@jaegertracing/plexus/lib/cacheAs';
 
-import { TEv } from './types';
-import { getNodeDrawer, MODE_SERVICE, MODE_TIME, MODE_SELFTIME, HELP_TABLE } from './OpNode';
+import {
+  getNodeRenderer,
+  getNodeFindEmphasisRenderer,
+  renderNodeVectorBorder,
+  MODE_SERVICE,
+  MODE_TIME,
+  MODE_SELFTIME,
+  HELP_TABLE,
+} from './OpNode';
+import { TEv, TSumSpan } from './types';
+import TDagVertex from '../../../model/trace-dag/types/TDagVertex';
 import { TNil } from '../../../types';
-import { setOnEdgesContainer, setOnNodesContainer, setOnNode } from '../../../utils/plexus/set-on-graph';
 
 import './TraceGraph.css';
 
@@ -28,14 +37,14 @@ type Props = {
   headerHeight: number;
   ev?: TEv | TNil;
   uiFind: string | TNil;
-  uiFindVertexKeys: Set<number | string> | TNil;
+  uiFindVertexKeys: Set<string> | TNil;
 };
 type State = {
   showHelp: boolean;
   mode: string;
 };
 
-const { classNameIsSmall } = DirectedGraph.propsFactories;
+const { classNameIsSmall, scaleOpacity, scaleStrokeOpacity } = Digraph.propsFactories;
 
 export function setOnEdgePath(e: any) {
   return e.followsFrom ? { strokeDasharray: 4 } : {};
@@ -144,20 +153,43 @@ export default class TraceGraph extends React.PureComponent<Props, State> {
     const wrapperClassName = cx('TraceGraph--graphWrapper', { 'is-uiFind-mode': uiFind });
 
     return (
-      <div className={wrapperClassName} style={{ paddingTop: headerHeight + 49 }}>
-        <DirectedGraph
+      <div className={wrapperClassName} style={{ paddingTop: headerHeight + 47 }}>
+        <Digraph<TDagVertex<TSumSpan>>
           minimap
           zoom
-          arrowScaleDampener={0}
           className="TraceGraph--dag"
-          minimapClassName="TraceGraph--miniMap"
+          minimapClassName="u-miniMap"
           layoutManager={this.layoutManager}
-          getNodeLabel={getNodeDrawer(mode, uiFindVertexKeys)}
-          setOnRoot={classNameIsSmall}
-          setOnEdgePath={setOnEdgePath}
-          setOnEdgesContainer={setOnEdgesContainer}
-          setOnNodesContainer={setOnNodesContainer}
-          setOnNode={setOnNode}
+          measurableNodesKey="nodes"
+          layers={[
+            {
+              key: 'node-find-emphasis',
+              layerType: 'svg',
+              renderNode: getNodeFindEmphasisRenderer(uiFindVertexKeys),
+            },
+            {
+              key: 'edges',
+              edges: true,
+              layerType: 'svg',
+              defs: [{ localId: 'arrow' }],
+              markerEndId: 'arrow',
+              setOnContainer: [scaleOpacity, scaleStrokeOpacity],
+              setOnEdge: setOnEdgePath,
+            },
+            {
+              key: 'nodes-borders',
+              layerType: 'svg',
+              setOnContainer: scaleStrokeOpacity,
+              renderNode: renderNodeVectorBorder,
+            },
+            {
+              key: 'nodes',
+              layerType: 'html',
+              measurable: true,
+              renderNode: cacheAs(`trace-graph/nodes/render/${mode}`, getNodeRenderer(mode)),
+            },
+          ]}
+          setOnGraph={classNameIsSmall}
           edges={ev.edges}
           vertices={ev.vertices}
         />
@@ -215,19 +247,17 @@ export default class TraceGraph extends React.PureComponent<Props, State> {
             </li>
           </ul>
           {showHelp && (
-            <section className="TraceGraph--sidebar">
-              <Card
-                title="Help"
-                bordered={false}
-                extra={
-                  <a onClick={this.closeSidebar} role="button">
-                    <Icon type="close" />
-                  </a>
-                }
-              >
-                {HELP_CONTENT}
-              </Card>
-            </section>
+            <Card
+              title="Help"
+              bordered={false}
+              extra={
+                <a onClick={this.closeSidebar} role="button">
+                  <Icon type="close" />
+                </a>
+              }
+            >
+              {HELP_CONTENT}
+            </Card>
           )}
         </div>
       </div>

@@ -12,8 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { default as DirectedGraph } from './DirectedGraph';
-import { default as LayoutManager } from './LayoutManager';
+import cacheAs from './cacheAs';
+import Digraph from './Digraph';
+import DirectedGraph from './DirectedGraph';
+import LayoutManager from './LayoutManager';
 
-export default { DirectedGraph, LayoutManager };
-export { DirectedGraph, LayoutManager };
+export default { cacheAs, Digraph, DirectedGraph, LayoutManager };
+export { cacheAs, Digraph, DirectedGraph, LayoutManager };

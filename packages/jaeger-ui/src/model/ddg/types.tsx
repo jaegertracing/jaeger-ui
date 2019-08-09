@@ -27,6 +27,7 @@ export type TDdgPayloadEntry = {
 
 export type TDdgPayload = {
   path: TDdgPayloadEntry[];
+  trace_id: string; // eslint-disable-line camelcase
 }[];
 
 export type TDdgService = {
@@ -45,6 +46,7 @@ export type TDdgServiceMap = Map<string, TDdgService>;
 export type TDdgPath = {
   focalIdx: number;
   members: PathElem[];
+  traceID: string;
 };
 
 export type TDdgDistanceToPathElems = Map<number, PathElem[]>;
@@ -59,7 +61,7 @@ export type TDdgModel = {
 export type TDdgVertex = TVertex<{
   isFocalNode: boolean;
   key: string;
-  operation: string;
+  operation: string | null;
   service: string;
 }>;
 
@@ -89,11 +91,20 @@ export enum EViewModifier {
   Emphasized = 1 << 2, // eslint-disable-line no-bitwise
 }
 
+export enum EDdgDensity {
+  MostConcise = 'MC',
+  UpstreamVsDownstream = 'UvD',
+  PreventPathEntanglement = 'PPE',
+  ExternalVsInternal = 'EvI',
+}
+
 export type TDdgSparseUrlState = {
-  service?: string;
-  operation?: string;
-  start?: number;
+  density: EDdgDensity;
   end?: number;
+  operation?: string;
+  service?: string;
+  showOp: boolean;
+  start?: number;
   visEncoding?: string;
 };
 
