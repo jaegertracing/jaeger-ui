@@ -15,17 +15,18 @@
 import { convergentPaths, focalPayloadElem, simplePath, wrap } from './sample-paths.test.resources';
 import transformDdgData from './transformDdgData';
 
-import GraphModel from './GraphModel';
+import GraphModel, { makeGraph } from './GraphModel';
+import { EDdgDensity } from './types';
 import { encode } from './visibility-codec';
 
-describe('Graph', () => {
+describe('GraphModel', () => {
   const convergentModel = transformDdgData(convergentPaths.map(wrap), focalPayloadElem);
   const simpleModel = transformDdgData([simplePath].map(wrap), focalPayloadElem);
 
   /**
    * This function takes in a Graph and validates the structure based on the expected vertices.
    *
-   * @param {Graph} graph - The Graph to validate.
+   * @param {GraphModel} graph - The Graph to validate.
    * @param {Object[]} expectedVertices - The vertices that the Graph should have.
    * @param {number[]} expectedVertices[].visIndices - The visibility indices that should all share one
    *     DdgVertex.
@@ -63,36 +64,146 @@ describe('Graph', () => {
 
   describe('getVertexKey', () => {
     const testFocalElem = simpleModel.paths[0].members[2];
-    const expectedKeyEntry = pathElem => `${pathElem.operation.service.name}----${pathElem.operation.name}`;
-    const expectedFocalElemKey = expectedKeyEntry(testFocalElem);
-    // Because getVertexKey is completely context-unaware until late-alpha, an empty ddg is sufficient to test
-    // this method.
-    const emptyGraph = new GraphModel({ visIdxToPathElem: [] });
+    // Because getVertexKey only uses density, showOp, and the specific pathElem, an empty ddg model is
+    // sufficient to test this method.
+    const ddgModel = { visIdxToPathElem: [] };
+    const showOpKeyEntry = pathElem => `${pathElem.operation.service.name}----${pathElem.operation.name}`;
+    const noOpKeyEntry = pathElem => pathElem.operation.service.name;
 
-    it('creates key for focal pathElem', () => {
-      expect(emptyGraph.getVertexKey(testFocalElem)).toBe(expectedFocalElemKey);
+    [true, false].forEach(showOp => {
+      describe(`showOp is ${showOp}`, () => {
+        const expectedKeyEntry = showOp ? showOpKeyEntry : noOpKeyEntry;
+        // Always show the operation for the focal node
+        const expectedFocalElemKey = showOpKeyEntry(testFocalElem);
+
+        describe('MostConcise', () => {
+          const emptyGraph = new GraphModel({ ddgModel, density: EDdgDensity.MostConcise, showOp });
+
+          it('creates key for focal pathElem', () => {
+            expect(emptyGraph.getVertexKey(testFocalElem)).toBe(expectedFocalElemKey);
+          });
+
+          it('creates key for an upstream pathElem', () => {
+            const targetElem = simpleModel.paths[0].members[0];
+            expect(emptyGraph.getVertexKey(targetElem)).toBe(expectedKeyEntry(targetElem));
+          });
+
+          it('creates key for a downstream pathElem', () => {
+            const targetElem = simpleModel.paths[0].members[4];
+            expect(emptyGraph.getVertexKey(targetElem)).toBe(expectedKeyEntry(targetElem));
+          });
+        });
+
+        describe('UpstreamVsDownstream', () => {
+          const emptyGraph = new GraphModel({ ddgModel, density: EDdgDensity.UpstreamVsDownstream, showOp });
+
+          it('creates key for focal pathElem', () => {
+            expect(emptyGraph.getVertexKey(testFocalElem)).toBe(`${expectedFocalElemKey}=0`);
+          });
+
+          it('creates key for an upstream pathElem', () => {
+            const targetElem = simpleModel.paths[0].members[0];
+            expect(emptyGraph.getVertexKey(targetElem)).toBe(`${expectedKeyEntry(targetElem)}=-1`);
+          });
+
+          it('creates key for a downstream pathElem', () => {
+            const targetElem = simpleModel.paths[0].members[4];
+            expect(emptyGraph.getVertexKey(targetElem)).toBe(`${expectedKeyEntry(targetElem)}=1`);
+          });
+        });
+
+        describe('PreventPathEntanglement', () => {
+          const emptyGraph = new GraphModel({
+            ddgModel,
+            density: EDdgDensity.PreventPathEntanglement,
+            showOp,
+          });
+
+          it('creates key for focal pathElem', () => {
+            expect(emptyGraph.getVertexKey(testFocalElem)).toBe(expectedFocalElemKey);
+          });
+
+          it('creates key for an upstream pathElem', () => {
+            const targetElem = simpleModel.paths[0].members[0];
+            const interimElem = simpleModel.paths[0].members[1];
+            expect(emptyGraph.getVertexKey(targetElem)).toBe(
+              [expectedKeyEntry(targetElem), expectedKeyEntry(interimElem), expectedFocalElemKey].join('____')
+            );
+          });
+
+          it('creates key for a downstream pathElem', () => {
+            const targetElem = simpleModel.paths[0].members[4];
+            const interimElem = simpleModel.paths[0].members[3];
+            expect(emptyGraph.getVertexKey(targetElem)).toBe(
+              [expectedFocalElemKey, expectedKeyEntry(interimElem), expectedKeyEntry(targetElem)].join('____')
+            );
+          });
+        });
+
+        describe('ExternalVsInternal', () => {
+          const emptyGraph = new GraphModel({ ddgModel, density: EDdgDensity.ExternalVsInternal, showOp });
+
+          it('creates key for focal pathElem', () => {
+            expect(emptyGraph.getVertexKey(testFocalElem)).toBe(expectedFocalElemKey);
+          });
+
+          it('creates key for an upstream pathElem', () => {
+            const targetElem = simpleModel.paths[0].members[1];
+            expect(emptyGraph.getVertexKey(targetElem)).toBe(
+              [expectedKeyEntry(targetElem), expectedFocalElemKey].join('____')
+            );
+          });
+
+          it('creates key for an external upstream pathElem', () => {
+            const targetElem = simpleModel.paths[0].members[0];
+            const interimElem = simpleModel.paths[0].members[1];
+            expect(emptyGraph.getVertexKey(targetElem)).toBe(
+              `${[expectedKeyEntry(targetElem), expectedKeyEntry(interimElem), expectedFocalElemKey].join(
+                '____'
+              )}----external`
+            );
+          });
+
+          it('creates key for a downstream pathElem', () => {
+            const targetElem = simpleModel.paths[0].members[3];
+            expect(emptyGraph.getVertexKey(targetElem)).toBe(
+              [expectedFocalElemKey, expectedKeyEntry(targetElem)].join('____')
+            );
+          });
+
+          it('creates key for an external downstream pathElem', () => {
+            const targetElem = simpleModel.paths[0].members[4];
+            const interimElem = simpleModel.paths[0].members[3];
+            expect(emptyGraph.getVertexKey(targetElem)).toBe(
+              `${[expectedFocalElemKey, expectedKeyEntry(interimElem), expectedKeyEntry(targetElem)].join(
+                '____'
+              )}----external`
+            );
+          });
+        });
+      });
     });
 
-    it('creates key for an upstream pathElem', () => {
-      const targetElem = simpleModel.paths[0].members[0];
-      const interimElem = simpleModel.paths[0].members[1];
-      expect(emptyGraph.getVertexKey(targetElem)).toBe(
-        [expectedKeyEntry(targetElem), expectedKeyEntry(interimElem), expectedFocalElemKey].join('____')
-      );
-    });
+    it('throws error when not given supported density', () => {
+      const invalidDensityGraph = new GraphModel({
+        ddgModel,
+        density: `${EDdgDensity.MostConcise} ${EDdgDensity.MostConcise}`,
+        showOp: true,
+      });
+      expect(() => invalidDensityGraph.getVertexKey({ memberOf: {} })).toThrowError();
 
-    it('creates key for a downstream pathElem', () => {
-      const targetElem = simpleModel.paths[0].members[4];
-      const interimElem = simpleModel.paths[0].members[3];
-      expect(emptyGraph.getVertexKey(targetElem)).toBe(
-        [expectedFocalElemKey, expectedKeyEntry(interimElem), expectedKeyEntry(targetElem)].join('____')
-      );
+      const noDensityGraph = new GraphModel({ ddgModel, density: undefined, showOp: true });
+      expect(() => noDensityGraph.getVertexKey({ memberOf: {} })).toThrowError();
     });
   });
 
   describe('constructor', () => {
     it('creates five vertices and four edges for one-path ddg', () => {
-      const testGraph = new GraphModel(simpleModel);
+      const testGraph = new GraphModel({
+        ddgModel: simpleModel,
+        density: EDdgDensity.PreventPathEntanglement,
+        showOp: true,
+      });
       validateGraph(testGraph, [
         {
           visIndices: [0],
@@ -119,7 +230,11 @@ describe('Graph', () => {
 
   describe('convergent paths', () => {
     it('adds separate vertices for equal PathElems that have different focalPaths, even those with equal focalSideNeighbors', () => {
-      const convergentGraph = new GraphModel(convergentModel);
+      const convergentGraph = new GraphModel({
+        ddgModel: convergentModel,
+        density: EDdgDensity.PreventPathEntanglement,
+        showOp: true,
+      });
       validateGraph(convergentGraph, [
         {
           visIndices: [0, 1],
@@ -156,7 +271,11 @@ describe('Graph', () => {
     });
 
     it('reuses edge when possible', () => {
-      const convergentGraph = new GraphModel(convergentModel);
+      const convergentGraph = new GraphModel({
+        ddgModel: convergentModel,
+        density: EDdgDensity.PreventPathEntanglement,
+        showOp: true,
+      });
       const sharedEdgeElemA = convergentGraph.visIdxToPathElem[5];
       const sharedEdgeElemB = convergentGraph.visIdxToPathElem[4];
 
@@ -172,13 +291,24 @@ describe('Graph', () => {
           visIdxToPathElem: simpleModel.visIdxToPathElem.slice(),
         };
         invalidModel.visIdxToPathElem.splice(1, 1);
-        expect(() => new GraphModel(invalidModel)).toThrowError();
+        expect(
+          () =>
+            new GraphModel({
+              ddgModel: invalidModel,
+              density: EDdgDensity.PreventPathEntanglement,
+              showOp: true,
+            })
+        ).toThrowError();
       });
     });
   });
 
   describe('getVisible', () => {
-    const convergentGraph = new GraphModel(convergentModel);
+    const convergentGraph = new GraphModel({
+      ddgModel: convergentModel,
+      density: EDdgDensity.PreventPathEntanglement,
+      showOp: true,
+    });
 
     describe('visEncoding provided', () => {
       it('returns just focalNode', () => {
@@ -213,7 +343,12 @@ describe('Graph', () => {
 
       it('errors if pathElem is mutated into model after graph is created', () => {
         const willMutate = convergentModel.visIdxToPathElem.slice();
-        const victimOfMutation = new GraphModel({ visIdxToPathElem: willMutate });
+        const victimOfMutation = new GraphModel({
+          ddgModel: {
+            visIdxToPathElem: willMutate,
+          },
+          density: EDdgDensity.PreventPathEntanglement,
+        });
         const newIdx = willMutate.push({ problematic: 'pathElem' }) - 1;
         expect(() => victimOfMutation.getVisible(encode([newIdx]))).toThrowError();
       });
@@ -221,7 +356,10 @@ describe('Graph', () => {
 
     describe('visEncoding not provided', () => {
       it('returns edges and vertices within two hops', () => {
-        const twoHopGraph = new GraphModel(simpleModel);
+        const twoHopGraph = new GraphModel({
+          ddgModel: simpleModel,
+          density: EDdgDensity.PreventPathEntanglement,
+        });
         const expectedVertices = simpleModel.visIdxToPathElem.map(elem =>
           twoHopGraph.pathElemToVertex.get(elem)
         );
@@ -234,7 +372,9 @@ describe('Graph', () => {
       });
 
       it('handles graphs smaller than two hops', () => {
-        const emptyGraph = new GraphModel({ distanceToPathElems: new Map(), visIdxToPathElem: [] });
+        const emptyGraph = new GraphModel({
+          ddgModel: { distanceToPathElems: new Map(), visIdxToPathElem: [] },
+        });
         expect(emptyGraph.getVisible()).toEqual({
           edges: [],
           vertices: [],
@@ -243,24 +383,54 @@ describe('Graph', () => {
     });
   });
 
-  describe('getVisible', () => {
-    const convergentGraph = new GraphModel(convergentModel);
+  describe('getVisibleUiFindMatches', () => {
+    const convergentGraph = new GraphModel({
+      ddgModel: convergentModel,
+      density: EDdgDensity.PreventPathEntanglement,
+      showOp: true,
+    });
+    const shorten = str => str.substring(0, str.length - 3);
+    const visEncoding = encode([0, 1, 2, 3, 4, 5]);
 
     it('returns a subset of getVisible that match provided uiFind', () => {
-      const visEncoding = encode([0, 1, 2, 3, 4, 5]);
       const { vertices: visibleVertices } = convergentGraph.getVisible(visEncoding);
       const { service, operation } = visibleVertices[0];
       const { service: otherService } = visibleVertices[2];
-      const partial = str => str.substring(0, service.length - 3);
-      const uiFind = `${partial(service)} ${partial(operation)} ${partial(otherService)}`;
+      const uiFind = `${shorten(service)} ${shorten(operation)} ${shorten(otherService)}`;
       expect(convergentGraph.getVisibleUiFindMatches(uiFind, visEncoding)).toEqual(
         new Set([visibleVertices[0], visibleVertices[2]])
       );
     });
 
+    it('matches only on service.name if showOp is false', () => {
+      const hideOpGraph = new GraphModel({
+        ddgModel: convergentModel,
+        density: EDdgDensity.PreventPathEntanglement,
+        showOp: false,
+      });
+      const { vertices: visibleVertices } = hideOpGraph.getVisible(visEncoding);
+      const { service } = visibleVertices[0];
+      const {
+        operation: { name: operation },
+      } = Array.from(hideOpGraph.vertexToPathElems.get(visibleVertices[2]))[0];
+      const uiFind = `${shorten(service)} ${shorten(operation)}`;
+      expect(hideOpGraph.getVisibleUiFindMatches(uiFind, visEncoding)).toEqual(new Set([visibleVertices[0]]));
+    });
+
     it('returns an empty set when provided empty or undefined uiFind', () => {
       expect(convergentGraph.getVisibleUiFindMatches()).toEqual(new Set());
       expect(convergentGraph.getVisibleUiFindMatches('')).toEqual(new Set());
+    });
+  });
+
+  describe('makeGraph', () => {
+    it('returns Graph with correct properties', () => {
+      const graph = makeGraph(convergentModel, true, EDdgDensity.PreventPathEntanglement);
+      expect(graph instanceof GraphModel).toBe(true);
+      expect(graph.density).toBe(EDdgDensity.PreventPathEntanglement);
+      expect(graph.distanceToPathElems).toBe(convergentModel.distanceToPathElems);
+      expect(graph.showOp).toBe(true);
+      expect(graph.visIdxToPathElem).toBe(convergentModel.visIdxToPathElem);
     });
   });
 });

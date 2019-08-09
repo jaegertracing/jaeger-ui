@@ -17,8 +17,10 @@ import { focalPayloadElem, longSimplePath, shortPath, simplePath, wrap } from '.
 import transformDdgData from './transformDdgData';
 
 describe('visibility-codec', () => {
-  const sampleLargestEncoded = 'zik0zj,zik0zj';
-  const sampleLargestDecoded = [...new Array(62)].map((_undef, i) => i);
+  const sampleLargestDecoded = [...new Array(31)].map((_undef, i) => i);
+  const sampleLargestEncoded = 'zik0zj';
+  const sampleRepeatedDecoded = [0, 1, 31, 32, 124, 156, 187];
+  const sampleRepeatedEncoded = '3~2.~2.1.2~2';
 
   describe('encode', () => {
     it('converts numbers into encoded string', () => {
@@ -26,15 +28,19 @@ describe('visibility-codec', () => {
     });
 
     it('converts numbers greater than 30 into encoded string', () => {
-      expect(encode([0, 1, 31])).toBe('3,1');
+      expect(encode([0, 1, 31])).toBe('3.1');
     });
 
-    it('leaves empty csv entries', () => {
-      expect(encode([0, 1, 31, 93])).toBe('3,1,,1');
+    it('leaves empty psv entries', () => {
+      expect(encode([0, 1, 31, 93])).toBe('3.1..1');
     });
 
-    it('creates largest possible value in csv', () => {
+    it('creates largest possible value in psv', () => {
       expect(encode(sampleLargestDecoded)).toBe(sampleLargestEncoded);
+    });
+
+    it('creates psv with repeated values', () => {
+      expect(encode(sampleRepeatedDecoded)).toBe(sampleRepeatedEncoded);
     });
   });
 
@@ -44,15 +50,19 @@ describe('visibility-codec', () => {
     });
 
     it('converts encoded string with commas into numbers greater than 31', () => {
-      expect(decode('3,1')).toEqual([0, 1, 31]);
+      expect(decode('3.1')).toEqual([0, 1, 31]);
     });
 
-    it('handles empty csv entries', () => {
-      expect(decode('3,1,,1')).toEqual([0, 1, 31, 93]);
+    it('handles empty psv entries', () => {
+      expect(decode('3.1..1')).toEqual([0, 1, 31, 93]);
     });
 
-    it('handles largest possible value in csv', () => {
+    it('handles largest possible value in psv', () => {
       expect(decode(sampleLargestEncoded)).toEqual(sampleLargestDecoded);
+    });
+
+    it('parses psv with repeated values', () => {
+      expect(decode(sampleRepeatedEncoded).sort((a, b) => a - b)).toEqual(sampleRepeatedDecoded);
     });
   });
 

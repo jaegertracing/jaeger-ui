@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`HopsSelector with visEncoding renders hops with correct fullness 1`] = `
+exports[`HopsSelector with distanceToPathElems with visEncoding renders hops with correct fullness 1`] = `
 <div>
   <Selector
     direction={-1}
@@ -79,7 +79,7 @@ exports[`HopsSelector with visEncoding renders hops with correct fullness 1`] = 
 </div>
 `;
 
-exports[`HopsSelector without visEncoding handles DDGs smaller than two hops 1`] = `
+exports[`HopsSelector with distanceToPathElems without visEncoding handles DDGs smaller than two hops 1`] = `
 <div>
   <Selector
     direction={-1}
@@ -114,7 +114,7 @@ exports[`HopsSelector without visEncoding handles DDGs smaller than two hops 1`]
 </div>
 `;
 
-exports[`HopsSelector without visEncoding renders hops within two hops as full and others as empty 1`] = `
+exports[`HopsSelector with distanceToPathElems without visEncoding renders hops within two hops as full and others as empty 1`] = `
 <div>
   <Selector
     direction={-1}
@@ -192,3 +192,5 @@ exports[`HopsSelector without visEncoding renders hops within two hops as full a
   />
 </div>
 `;
+
+exports[`HopsSelector without distanceToPathElems renders empty div 1`] = `<div />`;
