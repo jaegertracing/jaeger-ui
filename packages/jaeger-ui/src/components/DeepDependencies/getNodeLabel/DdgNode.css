@@ -60,8 +60,12 @@ limitations under the License.
 
 .DdgNode--label {
   margin: 0;
-  padding: 0.5rem 0.5rem 0.3rem 0.75rem;
+  padding: 0.5rem 0.75rem 0.3rem 0.75rem;
   white-space: nowrap;
+}
+
+.DdgNode--label:only-child {
+  padding: 0.5rem;
 }
 
 .DdgNode--label:not(:first-child) {

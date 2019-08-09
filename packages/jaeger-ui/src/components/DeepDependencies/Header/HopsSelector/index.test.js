@@ -30,25 +30,34 @@ describe('HopsSelector', () => {
   const { distanceToPathElems } = transformDdgData([longSimplePath, simplePath].map(wrap), focalPayloadElem);
   const { distanceToPathElems: shortPathElems } = transformDdgData([shortPath].map(wrap), focalPayloadElem);
 
-  describe('without visEncoding', () => {
-    it('renders hops within two hops as full and others as empty', () => {
-      const wrapper = shallow(<HopsSelector distanceToPathElems={distanceToPathElems} />);
-      expect(wrapper).toMatchSnapshot();
-    });
-
-    it('handles DDGs smaller than two hops', () => {
-      const wrapper = shallow(<HopsSelector distanceToPathElems={shortPathElems} />);
+  describe('without distanceToPathElems', () => {
+    it('renders empty div', () => {
+      const wrapper = shallow(<HopsSelector />);
       expect(wrapper).toMatchSnapshot();
     });
   });
 
-  describe('with visEncoding', () => {
-    it('renders hops with correct fullness', () => {
-      const visEncoding = codec.encode([0, 1, 2, 3, 4, 5, 7, 9, 10, 11, 12, 13]);
-      const wrapper = shallow(
-        <HopsSelector distanceToPathElems={distanceToPathElems} visEncoding={visEncoding} />
-      );
-      expect(wrapper).toMatchSnapshot();
+  describe('with distanceToPathElems', () => {
+    describe('without visEncoding', () => {
+      it('renders hops within two hops as full and others as empty', () => {
+        const wrapper = shallow(<HopsSelector distanceToPathElems={distanceToPathElems} />);
+        expect(wrapper).toMatchSnapshot();
+      });
+
+      it('handles DDGs smaller than two hops', () => {
+        const wrapper = shallow(<HopsSelector distanceToPathElems={shortPathElems} />);
+        expect(wrapper).toMatchSnapshot();
+      });
+    });
+
+    describe('with visEncoding', () => {
+      it('renders hops with correct fullness', () => {
+        const visEncoding = codec.encode([0, 1, 2, 3, 4, 5, 7, 9, 10, 11, 12, 13]);
+        const wrapper = shallow(
+          <HopsSelector distanceToPathElems={distanceToPathElems} visEncoding={visEncoding} />
+        );
+        expect(wrapper).toMatchSnapshot();
+      });
     });
   });
 });

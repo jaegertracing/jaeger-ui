@@ -137,7 +137,7 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
     this.updateUrlState({ operation: undefined, service, visEncoding: undefined });
   };
 
-  updateUrlState = (newValues: TDdgSparseUrlState) => {
+  updateUrlState = (newValues: Partial<TDdgSparseUrlState>) => {
     const { uiFind, urlState, history } = this.props;
     history.push(getUrl({ uiFind, ...urlState, ...newValues }));
   };
@@ -200,7 +200,7 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
   const { services: stServices } = state;
   const { services, operationsForService } = stServices;
   const urlState = getUrlState(ownProps.location.search);
-  const { service, operation } = urlState;
+  const { operation, service, showOp } = urlState;
   let graphState: TDdgStateEntry | undefined;
   // backend temporarily requires service and operation
   // if (service) {
@@ -209,7 +209,7 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
   }
   let graph: TGraph | undefined;
   if (graphState && graphState.state === fetchedState.DONE) {
-    graph = makeGraph(graphState.model);
+    graph = makeGraph(graphState.model, showOp);
   }
   return {
     graph,
