@@ -79,3 +79,13 @@ export const getValueScaler = (() => {
   }
   return getValueScaler;
 })();
+
+export function isSamePropSetter(a: TSetProps<any>, b: TSetProps<any>) {
+  if (Array.isArray(a)) {
+    if (!Array.isArray(b) || a.length !== b.length) {
+      return false;
+    }
+    return !a.some((item: any, i: number) => item !== b[i]);
+  }
+  return a === b;
+}

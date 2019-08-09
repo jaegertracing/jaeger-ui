@@ -13,17 +13,16 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { DirectedGraph, LayoutManager } from '@jaegertracing/plexus';
+import { cacheAs, Digraph, LayoutManager } from '@jaegertracing/plexus';
 import cx from 'classnames';
 import { connect } from 'react-redux';
 
-import drawNodeGenerator from './drawNode';
+import renderNode, { getNodeEmphasisRenderer } from './renderNode';
 import { getUiFindVertexKeys, getEdgesAndVertices } from './traceDiffGraphUtils';
 import ErrorMessage from '../../common/ErrorMessage';
 import LoadingIndicator from '../../common/LoadingIndicator';
 import UiFindInput, { extractUiFindFromState, TExtractUiFindFromStateReturn } from '../../common/UiFindInput';
 import { fetchedState } from '../../../constants';
-import { setOnEdgesContainer, setOnNodesContainer, setOnNode } from '../../../utils/plexus/set-on-graph';
 import { FetchedTrace, TNil } from '../../../types';
 
 import './TraceDiffGraph.css';
@@ -33,19 +32,16 @@ type Props = {
   b: FetchedTrace | TNil;
 } & TExtractUiFindFromStateReturn;
 
-const { classNameIsSmall } = DirectedGraph.propsFactories;
+const { classNameIsSmall, scaleOpacity, scaleStrokeOpacity } = Digraph.propsFactories;
 
 export class UnconnectedTraceDiffGraph extends React.PureComponent<Props> {
-  layoutManager: LayoutManager;
+  layoutManager = new LayoutManager({ useDotEdges: true, splines: 'polyline' });
+
+  cacheAs = cacheAs.makeScope();
 
   static defaultProps = {
     uiFind: '',
   };
-
-  constructor(props: Props) {
-    super(props);
-    this.layoutManager = new LayoutManager({ useDotEdges: true, splines: 'polyline' });
-  }
 
   componentWillUnmount() {
     this.layoutManager.stopAndRelease();
@@ -99,18 +95,42 @@ export class UnconnectedTraceDiffGraph extends React.PureComponent<Props> {
 
     return (
       <div className="TraceDiffGraph--graphWrapper">
-        <DirectedGraph
+        <Digraph
+          // `key` is necessary to see updates to the graph when a or b changes
+          // TODO(joe): debug this issue in Digraph
+          key={`${a.id} vs ${b.id}`}
           minimap
           zoom
-          arrowScaleDampener={0}
           className={dagClassName}
-          minimapClassName="TraceDiffGraph--miniMap"
+          minimapClassName="u-miniMap"
           layoutManager={this.layoutManager}
-          getNodeLabel={drawNodeGenerator(keys)}
-          setOnRoot={classNameIsSmall}
-          setOnEdgesContainer={setOnEdgesContainer}
-          setOnNodesContainer={setOnNodesContainer}
-          setOnNode={setOnNode}
+          measurableNodesKey="nodes"
+          layers={[
+            {
+              key: 'emphasis-nodes',
+              layerType: 'svg',
+              renderNode: getNodeEmphasisRenderer(keys),
+            },
+            {
+              key: 'edges',
+              layerType: 'svg',
+              edges: true,
+              defs: [{ localId: 'arrow' }],
+              markerEndId: 'arrow',
+              setOnContainer: this.cacheAs('edges/container', [
+                scaleOpacity,
+                scaleStrokeOpacity,
+                { stroke: '#444' },
+              ]),
+            },
+            {
+              renderNode,
+              key: 'nodes',
+              measurable: true,
+              layerType: 'html',
+            },
+          ]}
+          setOnGraph={classNameIsSmall}
           edges={edges}
           vertices={vertices}
         />

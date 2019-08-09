@@ -16,16 +16,12 @@ import * as React from 'react';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { render } from 'react-dom';
 
-import largeDag, { getNodeLabel as getLargeNodeLabel } from './data-large';
+import largeDag, { getNodeLabel as getLargeNodeLabel, TLargeNode } from './data-large';
 import { edges as dagEdges, vertices as dagVertices } from './data-dag';
 import { colored as colorData, getColorNodeLabel, setOnColorEdge, setOnColorNode } from './data-small';
-import { DirectedGraph, LayoutManager } from '../../src';
-import LayeredDigraph from '../../src/LayeredDigraph';
-import {
-  classNameIsSmall as layeredClassNameIsSmall,
-  scaleProperty,
-} from '../../src/LayeredDigraph/props-factories';
-import { TLayer, TRendererUtils, TMeasureNodeUtils } from '../../src/LayeredDigraph/types';
+import { Digraph, DirectedGraph, LayoutManager } from '../../src';
+import cacheAs from '../../src/cacheAs';
+import { TLayer, TRendererUtils, TMeasureNodeUtils } from '../../src/Digraph/types';
 import { TVertex, TLayoutEdge, TLayoutVertex } from '../../src/types';
 import TNonEmptyArray from '../../src/types/TNonEmptyArray';
 
@@ -36,6 +32,7 @@ type TState = {
 };
 
 const { classNameIsSmall } = DirectedGraph.propsFactories;
+const { classNameIsSmall: layeredClassNameIsSmall, scaleStrokeOpacity } = Digraph.propsFactories;
 
 const VOWELS = new Set(['a', 'e', 'i', 'o', 'u', 'y']);
 
@@ -47,8 +44,8 @@ const setOnNode = (vertex: TVertex) => ({
 });
 
 function renderComparisons(
-  a: { nodesKey: string; layers: TNonEmptyArray<TLayer> },
-  b: { nodesKey: string; layers: TNonEmptyArray<TLayer> },
+  a: { nodesKey: string; layers: TNonEmptyArray<TLayer<any, any>> },
+  b: { nodesKey: string; layers: TNonEmptyArray<TLayer<any, any>> },
   hoveredEdge: TLayoutEdge<any> | null = null
 ) {
   return (
@@ -56,7 +53,7 @@ function renderComparisons(
       <div className="demo-row">
         <div>
           <div className="DemoGraph is-small">
-            <LayeredDigraph
+            <Digraph
               zoom
               minimap
               className="DemoGraph--dag"
@@ -71,7 +68,7 @@ function renderComparisons(
         </div>
         <div>
           <div className="DemoGraph is-small">
-            <LayeredDigraph
+            <Digraph
               zoom
               minimap
               className="DemoGraph--dag"
@@ -96,7 +93,7 @@ function renderComparisons(
             )}
           </p>
           <div className="DemoGraph">
-            <LayeredDigraph
+            <Digraph
               zoom
               minimap
               className="DemoGraph--dag"
@@ -112,7 +109,7 @@ function renderComparisons(
         <div>
           <p>&nbsp;</p>
           <div className="DemoGraph">
-            <LayeredDigraph
+            <Digraph
               zoom
               minimap
               className="DemoGraph--dag"
@@ -127,6 +124,53 @@ function renderComparisons(
         </div>
       </div>
     </>
+  );
+}
+
+function renderVowelEmphasisHtml(lv: TLayoutVertex<any>) {
+  return VOWELS.has(lv.vertex.key[0]) ? <div className="DemoGraph--node--emphasized" /> : null;
+}
+
+function renderVowelEmphasisBorderSvg(lv: TLayoutVertex<any>) {
+  if (!VOWELS.has(lv.vertex.key[0])) {
+    return null;
+  }
+  return (
+    <g>
+      <rect
+        className="DemoGraph--node--vectorEmphasized-border"
+        vectorEffect="non-scaling-stroke"
+        width={lv.width}
+        height={lv.height}
+      />
+    </g>
+  );
+}
+
+function renderVowelEmphasisSvg(lv: TLayoutVertex<any>) {
+  if (!VOWELS.has(lv.vertex.key[0])) {
+    return null;
+  }
+  return (
+    <g>
+      <rect
+        className="DemoGraph--node--vectorEmphasized"
+        vectorEffect="non-scaling-stroke"
+        width={lv.width}
+        height={lv.height}
+      />
+    </g>
+  );
+}
+
+function renderNodeVectorBorder(lv: TLayoutVertex<any>) {
+  return (
+    <rect
+      className="DemoGraph--node--vectorBorder"
+      vectorEffect="non-scaling-stroke"
+      width={lv.width}
+      height={lv.height}
+    />
   );
 }
 
@@ -145,6 +189,11 @@ class Demo extends React.PureComponent<{}, TState> {
     return null;
   };
 
+  private setUxOnEdge = (layoutEdge: TLayoutEdge<any>) => ({
+    onMouseOver: () => this.onEdgeEnter(layoutEdge),
+    onMouseOut: () => this.onEdgeExit(layoutEdge),
+  });
+
   private onEdgeEnter = (le: TLayoutEdge<any>) => {
     this.hovering = le;
     this.setState(this.updateHoveredState);
@@ -161,7 +210,7 @@ class Demo extends React.PureComponent<{}, TState> {
     const { hoveredEdge } = this.state;
     return (
       <div>
-        <h1>LayeredDigraph</h1>
+        <h1>Digraph</h1>
         {renderComparisons(
           {
             nodesKey: 'main-nodes',
@@ -172,8 +221,7 @@ class Demo extends React.PureComponent<{}, TState> {
                 layers: [
                   {
                     key: 'emph-nodes',
-                    renderNode: (lv: TLayoutVertex<any>) =>
-                      VOWELS.has(lv.vertex.key[0]) ? <div className="DemoGraph--node--emphasized" /> : null,
+                    renderNode: renderVowelEmphasisHtml,
                   },
                   {
                     setOnNode,
@@ -192,16 +240,15 @@ class Demo extends React.PureComponent<{}, TState> {
                     key: 'edges',
                     markerEndId: 'arrow-head',
                     edges: true,
-                    setOnContainer: scaleProperty.strokeOpacity,
+                    setOnContainer: scaleStrokeOpacity,
                   },
                   {
                     key: 'edges-pointer-area',
                     edges: true,
-                    setOnContainer: { style: { cursor: 'default', opacity: 0, strokeWidth: 4 } },
-                    setOnEdge: layoutEdge => ({
-                      onMouseOver: () => this.onEdgeEnter(layoutEdge),
-                      onMouseOut: () => this.onEdgeExit(layoutEdge),
+                    setOnContainer: cacheAs('html-effects/edges-pointer-area/set-on-container', {
+                      style: { cursor: 'default', opacity: 0, strokeWidth: 4 },
                     }),
+                    setOnEdge: this.setUxOnEdge,
                   },
                 ],
               },
@@ -213,23 +260,12 @@ class Demo extends React.PureComponent<{}, TState> {
               {
                 key: 'emph-nodes-border',
                 layerType: 'svg',
-                renderNode: (lv: TLayoutVertex<any>) =>
-                  !VOWELS.has(lv.vertex.key[0]) ? null : (
-                    <g>
-                      <rect
-                        className="DemoGraph--node--vectorEmphasized-border"
-                        vectorEffect="non-scaling-stroke"
-                        width={lv.width}
-                        height={lv.height}
-                      />
-                    </g>
-                  ),
+                renderNode: renderVowelEmphasisBorderSvg,
               },
               {
                 key: 'emph-nodes-html',
                 layerType: 'html',
-                renderNode: (lv: TLayoutVertex<any>) =>
-                  VOWELS.has(lv.vertex.key[0]) ? <div className="DemoGraph--node--emphasized" /> : null,
+                renderNode: renderVowelEmphasisHtml,
               },
               {
                 key: 'node-effects-svg-layer',
@@ -237,33 +273,19 @@ class Demo extends React.PureComponent<{}, TState> {
                 layers: [
                   {
                     key: 'emph-nodes',
-                    renderNode: (lv: TLayoutVertex<any>) =>
-                      !VOWELS.has(lv.vertex.key[0]) ? null : (
-                        <g>
-                          <rect
-                            className="DemoGraph--node--vectorEmphasized"
-                            vectorEffect="non-scaling-stroke"
-                            width={lv.width}
-                            height={lv.height}
-                          />
-                        </g>
-                      ),
+                    renderNode: renderVowelEmphasisSvg,
                   },
                   {
                     key: 'border-nodes',
-                    renderNode: (lv: TLayoutVertex<any>) => (
-                      <rect
-                        className="DemoGraph--node--vectorBorder"
-                        vectorEffect="non-scaling-stroke"
-                        width={lv.width}
-                        height={lv.height}
-                      />
-                    ),
+                    renderNode: renderNodeVectorBorder,
                   },
                 ],
               },
               {
-                setOnNode: [setOnNode, { className: 'is-vector-bordered' }],
+                setOnNode: cacheAs('svg-effects/nodes/set-on-node', [
+                  setOnNode,
+                  { className: 'is-vector-bordered' },
+                ]),
                 key: 'nodes',
                 layerType: 'html',
                 measurable: true,
@@ -275,26 +297,28 @@ class Demo extends React.PureComponent<{}, TState> {
                 edges: true,
                 layerType: 'svg',
                 markerEndId: 'arrowHead',
-                setOnContainer: [{ className: 'DdgGraph--edges' }, scaleProperty.strokeOpacity],
+                setOnContainer: cacheAs('svg-effects/edges-visible-path/set-on-node', [
+                  { className: 'DdgGraph--edges' },
+                  scaleStrokeOpacity,
+                ]),
               },
               {
                 key: 'edges-pointer-area',
                 edges: true,
                 layerType: 'svg',
-                setOnContainer: { style: { cursor: 'default', opacity: 0, strokeWidth: 4 } },
-                setOnEdge: layoutEdge => ({
-                  onMouseOver: () => this.onEdgeEnter(layoutEdge),
-                  onMouseOut: () => this.onEdgeExit(layoutEdge),
+                setOnContainer: cacheAs('svg-effects/edges-pointer-area/set-on-container', {
+                  style: { cursor: 'default', opacity: 0, strokeWidth: 4 },
                 }),
+                setOnEdge: this.setUxOnEdge,
               },
             ],
           },
           hoveredEdge
         )}
-        <h1>LayeredDigraph with measurable SVG nodes</h1>
+        <h1>Digraph with measurable SVG nodes</h1>
         <div>
           <div className="DemoGraph">
-            <LayeredDigraph
+            <Digraph<TLargeNode>
               zoom
               minimap
               className="DemoGraph--dag"
@@ -309,36 +333,47 @@ class Demo extends React.PureComponent<{}, TState> {
                   edges: true,
                   layerType: 'svg',
                   markerEndId: 'arrowHead',
-                  setOnContainer: [{ className: 'DdgGraph--edges' }, scaleProperty.strokeOpacity],
+                  setOnContainer: cacheAs('svg-nodes/edges/set-on-container', [
+                    { className: 'DdgGraph--edges' },
+                    scaleStrokeOpacity,
+                  ]),
                 },
                 {
                   key: 'nodes',
                   layerType: 'svg',
                   measurable: true,
-                  measureNode: (_: any, utils: TMeasureNodeUtils) => {
+                  measureNode: cacheAs('svg-nodes/nodes/measure', (_: TVertex, utils: TMeasureNodeUtils) => {
                     const { height, width } = utils.getWrapperSize();
                     return { height: height + 40, width: width + 40 };
-                  },
-                  renderNode: (vertex: TVertex, utils: TRendererUtils, lv: TLayoutVertex | null) => (
-                    <>
-                      {lv && (
-                        <rect
-                          width={lv.width}
-                          height={lv.height}
-                          fill="#ddd"
-                          stroke="#444"
-                          strokeWidth="1"
-                          vectorEffect="non-scaling-stroke"
-                        />
-                      )}
-                      <text x="20" y="20" dy="1em">
-                        {vertex.key}
-                      </text>
-                    </>
+                  }),
+                  renderNode: cacheAs(
+                    'svg-nodes/nodes/render',
+                    (
+                      vertex: TVertex<TLargeNode>,
+                      utils: TRendererUtils,
+                      lv: TLayoutVertex<TLargeNode> | null
+                    ) => (
+                      <>
+                        {lv && (
+                          <rect
+                            width={lv.width}
+                            height={lv.height}
+                            fill="#ddd"
+                            stroke="#444"
+                            strokeWidth="1"
+                            vectorEffect="non-scaling-stroke"
+                          />
+                        )}
+                        <text x="20" y="20" dy="1em">
+                          {vertex.key}
+                        </text>
+                      </>
+                    )
                   ),
                 },
               ]}
-              {...largeDag}
+              edges={largeDag.edges}
+              vertices={largeDag.vertices}
             />
           </div>
         </div>

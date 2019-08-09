@@ -14,18 +14,17 @@
 
 import * as React from 'react';
 
-import defaultGetNodeLabel from './builtins/defaultGetNodeLabel';
 import EdgeArrowDef from './builtins/EdgeArrowDef';
 import EdgesContainer from './builtins/EdgesContainer';
 import PureEdges from './builtins/PureEdges';
 import PureNodes from './builtins/PureNodes';
-import MiniMap from './MiniMap';
 import classNameIsSmall from './prop-factories/classNameIsSmall';
 import mergePropSetters, { assignMergeCss } from './prop-factories/mergePropSetters';
 import scaledStrokeWidth from './prop-factories/scaledStrokeWidth';
 import { TDirectedGraphProps, TDirectedGraphState } from './types';
 import { TCancelled, TLayoutDone, TPositionsDone, TSizeVertex } from '../types';
-import ZoomManager, { zoomIdentity, ZoomTransform } from '../ZoomManager';
+import MiniMap from '../zoom/MiniMap';
+import ZoomManager, { zoomIdentity, ZoomTransform } from '../zoom/ZoomManager';
 
 const PHASE_NO_DATA = 0;
 const PHASE_CALC_SIZES = 1;
@@ -74,7 +73,7 @@ export default class DirectedGraph<T> extends React.PureComponent<
     arrowScaleDampener: undefined,
     className: '',
     classNamePrefix: 'plexus',
-    getNodeLabel: defaultGetNodeLabel,
+    // getNodeLabel: defaultGetNodeLabel,
     minimap: false,
     minimapClassName: '',
     zoom: false,
@@ -201,7 +200,7 @@ export default class DirectedGraph<T> extends React.PureComponent<
     return (
       <PureNodes
         classNamePrefix={classNamePrefix}
-        getNodeLabel={getNodeLabel || defaultGetNodeLabel}
+        getNodeLabel={getNodeLabel || String}
         layoutVertices={layoutVertices}
         setOnNode={setOnNode}
         vertexRefs={vertexRefs}
