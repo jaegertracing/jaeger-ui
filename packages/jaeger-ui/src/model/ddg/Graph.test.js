@@ -16,7 +16,7 @@ import { convergentPaths, focalPayloadElem, simplePath, wrap } from './sample-pa
 import transformDdgData from './transformDdgData';
 
 import Graph, { makeGraph } from './Graph';
-import { TDdgDensity } from './types';
+import { EDdgDensity } from './types';
 import { encode } from './visibility-codec';
 
 describe('Graph', () => {
@@ -77,7 +77,7 @@ describe('Graph', () => {
         const expectedFocalElemKey = showOpKeyEntry(testFocalElem);
 
         describe('MostConcise', () => {
-          const emptyGraph = new Graph({ ddgModel, density: TDdgDensity.MostConcise, showOp });
+          const emptyGraph = new Graph({ ddgModel, density: EDdgDensity.MostConcise, showOp });
 
           it('creates key for focal pathElem', () => {
             expect(emptyGraph.getVertexKey(testFocalElem)).toBe(expectedFocalElemKey);
@@ -95,7 +95,7 @@ describe('Graph', () => {
         });
 
         describe('UpstreamVsDownstream', () => {
-          const emptyGraph = new Graph({ ddgModel, density: TDdgDensity.UpstreamVsDownstream, showOp });
+          const emptyGraph = new Graph({ ddgModel, density: EDdgDensity.UpstreamVsDownstream, showOp });
 
           it('creates key for focal pathElem', () => {
             expect(emptyGraph.getVertexKey(testFocalElem)).toBe(`${expectedFocalElemKey}=0`);
@@ -113,7 +113,7 @@ describe('Graph', () => {
         });
 
         describe('PreventPathEntanglement', () => {
-          const emptyGraph = new Graph({ ddgModel, density: TDdgDensity.PreventPathEntanglement, showOp });
+          const emptyGraph = new Graph({ ddgModel, density: EDdgDensity.PreventPathEntanglement, showOp });
 
           it('creates key for focal pathElem', () => {
             expect(emptyGraph.getVertexKey(testFocalElem)).toBe(expectedFocalElemKey);
@@ -137,7 +137,7 @@ describe('Graph', () => {
         });
 
         describe('ExternalVsInternal', () => {
-          const emptyGraph = new Graph({ ddgModel, density: TDdgDensity.ExternalVsInternal, showOp });
+          const emptyGraph = new Graph({ ddgModel, density: EDdgDensity.ExternalVsInternal, showOp });
 
           it('creates key for focal pathElem', () => {
             expect(emptyGraph.getVertexKey(testFocalElem)).toBe(expectedFocalElemKey);
@@ -183,7 +183,7 @@ describe('Graph', () => {
     it('throws error when not given supported density', () => {
       const invalidDensityGraph = new Graph({
         ddgModel,
-        density: `${TDdgDensity.MostConcise} ${TDdgDensity.MostConcise}`,
+        density: `${EDdgDensity.MostConcise} ${EDdgDensity.MostConcise}`,
         showOp: true,
       });
       expect(() => invalidDensityGraph.getVertexKey({ memberOf: {} })).toThrowError();
@@ -197,7 +197,7 @@ describe('Graph', () => {
     it('creates five vertices and four edges for one-path ddg', () => {
       const testGraph = new Graph({
         ddgModel: simpleModel,
-        density: TDdgDensity.PreventPathEntanglement,
+        density: EDdgDensity.PreventPathEntanglement,
         showOp: true,
       });
       validateGraph(testGraph, [
@@ -228,7 +228,7 @@ describe('Graph', () => {
     it('adds separate vertices for equal PathElems that have different focalPaths, even those with equal focalSideNeighbors', () => {
       const convergentGraph = new Graph({
         ddgModel: convergentModel,
-        density: TDdgDensity.PreventPathEntanglement,
+        density: EDdgDensity.PreventPathEntanglement,
         showOp: true,
       });
       validateGraph(convergentGraph, [
@@ -269,7 +269,7 @@ describe('Graph', () => {
     it('reuses edge when possible', () => {
       const convergentGraph = new Graph({
         ddgModel: convergentModel,
-        density: TDdgDensity.PreventPathEntanglement,
+        density: EDdgDensity.PreventPathEntanglement,
         showOp: true,
       });
       const sharedEdgeElemA = convergentGraph.visIdxToPathElem[5];
@@ -291,7 +291,7 @@ describe('Graph', () => {
           () =>
             new Graph({
               ddgModel: invalidModel,
-              density: TDdgDensity.PreventPathEntanglement,
+              density: EDdgDensity.PreventPathEntanglement,
               showOp: true,
             })
         ).toThrowError();
@@ -302,7 +302,7 @@ describe('Graph', () => {
   describe('getVisible', () => {
     const convergentGraph = new Graph({
       ddgModel: convergentModel,
-      density: TDdgDensity.PreventPathEntanglement,
+      density: EDdgDensity.PreventPathEntanglement,
       showOp: true,
     });
 
@@ -343,7 +343,7 @@ describe('Graph', () => {
           ddgModel: {
             visIdxToPathElem: willMutate,
           },
-          density: TDdgDensity.PreventPathEntanglement,
+          density: EDdgDensity.PreventPathEntanglement,
         });
         const newIdx = willMutate.push({ problematic: 'pathElem' }) - 1;
         expect(() => victimOfMutation.getVisible(encode([newIdx]))).toThrowError();
@@ -354,7 +354,7 @@ describe('Graph', () => {
       it('returns edges and vertices within two hops', () => {
         const twoHopGraph = new Graph({
           ddgModel: simpleModel,
-          density: TDdgDensity.PreventPathEntanglement,
+          density: EDdgDensity.PreventPathEntanglement,
         });
         const expectedVertices = simpleModel.visIdxToPathElem.map(elem =>
           twoHopGraph.pathElemToVertex.get(elem)
@@ -380,7 +380,7 @@ describe('Graph', () => {
   describe('getVisibleUiFindMatches', () => {
     const convergentGraph = new Graph({
       ddgModel: convergentModel,
-      density: TDdgDensity.PreventPathEntanglement,
+      density: EDdgDensity.PreventPathEntanglement,
       showOp: true,
     });
     const shorten = str => str.substring(0, str.length - 3);
@@ -399,7 +399,7 @@ describe('Graph', () => {
     it('matches only on service.name if showOp is false', () => {
       const hideOpGraph = new Graph({
         ddgModel: convergentModel,
-        density: TDdgDensity.PreventPathEntanglement,
+        density: EDdgDensity.PreventPathEntanglement,
         showOp: false,
       });
       const { vertices: visibleVertices } = hideOpGraph.getVisible(visEncoding);
@@ -419,9 +419,9 @@ describe('Graph', () => {
 
   describe('makeGraph', () => {
     it('returns Graph with correct properties', () => {
-      const graph = makeGraph(convergentModel, true, TDdgDensity.PreventPathEntanglement);
+      const graph = makeGraph(convergentModel, true, EDdgDensity.PreventPathEntanglement);
       expect(graph instanceof Graph).toBe(true);
-      expect(graph.density).toBe(TDdgDensity.PreventPathEntanglement);
+      expect(graph.density).toBe(EDdgDensity.PreventPathEntanglement);
       expect(graph.distanceToPathElems).toBe(convergentModel.distanceToPathElems);
       expect(graph.showOp).toBe(true);
       expect(graph.visIdxToPathElem).toBe(convergentModel.visIdxToPathElem);

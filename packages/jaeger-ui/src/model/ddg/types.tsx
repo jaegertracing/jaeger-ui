@@ -91,7 +91,7 @@ export enum EViewModifier {
   Emphasized = 1 << 2, // eslint-disable-line no-bitwise
 }
 
-export enum TDdgDensity {
+export enum EDdgDensity {
   MostConcise = 'MC',
   UpstreamVsDownstream = 'UvD',
   PreventPathEntanglement = 'PPE',
@@ -99,7 +99,7 @@ export enum TDdgDensity {
 }
 
 export type TDdgSparseUrlState = {
-  density: TDdgDensity;
+  density: EDdgDensity;
   end?: number;
   operation?: string;
   service?: string;

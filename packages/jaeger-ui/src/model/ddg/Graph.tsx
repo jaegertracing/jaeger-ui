@@ -18,10 +18,10 @@ import { TEdge } from '@jaegertracing/plexus/lib/types';
 
 import { decode } from './visibility-codec';
 
-import { PathElem, TDdgDensity, TDdgDistanceToPathElems, TDdgModel, TDdgVertex } from './types';
+import { PathElem, EDdgDensity, TDdgDistanceToPathElems, TDdgModel, TDdgVertex } from './types';
 
 export default class Graph {
-  private readonly density: TDdgDensity;
+  private readonly density: EDdgDensity;
   private readonly distanceToPathElems: TDdgDistanceToPathElems;
   private readonly pathElemToEdge: Map<PathElem, TEdge>;
   private readonly pathElemToVertex: Map<PathElem, TDdgVertex>;
@@ -30,7 +30,7 @@ export default class Graph {
   private readonly vertices: Map<string, TDdgVertex>;
   private readonly visIdxToPathElem: PathElem[];
 
-  constructor({ ddgModel, density, showOp }: { ddgModel: TDdgModel; density: TDdgDensity; showOp: boolean }) {
+  constructor({ ddgModel, density, showOp }: { ddgModel: TDdgModel; density: EDdgDensity; showOp: boolean }) {
     this.density = density;
     this.distanceToPathElems = ddgModel.distanceToPathElems;
     this.pathElemToEdge = new Map();
@@ -126,16 +126,16 @@ export default class Graph {
           distance === 0 ? `${operation.service.name}----${operation.name}` : operation.service.name;
 
     switch (this.density) {
-      case TDdgDensity.MostConcise: {
+      case EDdgDensity.MostConcise: {
         return elemToStr(pathElem);
       }
-      case TDdgDensity.UpstreamVsDownstream: {
+      case EDdgDensity.UpstreamVsDownstream: {
         return `${elemToStr(pathElem)}=${Math.sign(pathElem.distance)}`;
       }
-      case TDdgDensity.PreventPathEntanglement:
-      case TDdgDensity.ExternalVsInternal: {
+      case EDdgDensity.PreventPathEntanglement:
+      case EDdgDensity.ExternalVsInternal: {
         const decorate =
-          this.density === TDdgDensity.ExternalVsInternal
+          this.density === EDdgDensity.ExternalVsInternal
             ? (str: string) => `${str}${pathElem.isExternal ? '----external' : ''}`
             : (str: string) => str;
         const { memberIdx, memberOf } = pathElem;
@@ -151,7 +151,7 @@ export default class Graph {
       default: {
         throw new Error(
           `Density: ${this.density} has not been implemented, try one of these: ${JSON.stringify(
-            TDdgDensity,
+            EDdgDensity,
             null,
             2
           )}`
@@ -234,5 +234,5 @@ export default class Graph {
 }
 
 export const makeGraph = memoize(10)(
-  (ddgModel: TDdgModel, showOp: boolean, density: TDdgDensity) => new Graph({ ddgModel, density, showOp })
+  (ddgModel: TDdgModel, showOp: boolean, density: EDdgDensity) => new Graph({ ddgModel, density, showOp })
 );

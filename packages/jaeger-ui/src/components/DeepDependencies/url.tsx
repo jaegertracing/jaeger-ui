@@ -16,7 +16,7 @@ import _isEmpty from 'lodash/isEmpty';
 import queryString from 'query-string';
 import { matchPath } from 'react-router-dom';
 
-import { TDdgDensity, TDdgSparseUrlState } from '../../model/ddg/types';
+import { EDdgDensity, TDdgSparseUrlState } from '../../model/ddg/types';
 import prefixUrl from '../../utils/prefix-url';
 
 export const ROUTE_PATH = prefixUrl('/deep-dependencies');
@@ -51,7 +51,7 @@ function firstParam(arg: string | string[]): string {
 
 export function getUrlState(search: string): TDdgSparseUrlState {
   const {
-    density = TDdgDensity.PreventPathEntanglement,
+    density = EDdgDensity.PreventPathEntanglement,
     end,
     operation,
     service,
@@ -60,7 +60,7 @@ export function getUrlState(search: string): TDdgSparseUrlState {
     visEncoding,
   } = queryString.parse(search);
   const rv: TDdgSparseUrlState = {
-    density: firstParam(density) as TDdgDensity,
+    density: firstParam(density) as EDdgDensity,
     showOp: Boolean(+firstParam(showOp)),
   };
   if (end) {
