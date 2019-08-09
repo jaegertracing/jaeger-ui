@@ -66,11 +66,12 @@ describe('Graph', () => {
     // Because getVertexKey is completely context-unaware until late-alpha, an empty ddg is sufficient to test
     // this method.
     const ddgModel = { visIdxToPathElem: [] };
+    const showOpKeyEntry = pathElem => `${pathElem.operation.service.name}----${pathElem.operation.name}`;
+    const noOpKeyEntry = pathElem => pathElem.operation.service.name;
 
     describe('showOp is true', () => {
       const emptyGraph = new Graph({ ddgModel, showOp: true });
-      const expectedKeyEntry = pathElem => `${pathElem.operation.service.name}----${pathElem.operation.name}`;
-      const expectedFocalElemKey = expectedKeyEntry(testFocalElem);
+      const expectedFocalElemKey = showOpKeyEntry(testFocalElem);
 
       it('creates key for focal pathElem', () => {
         expect(emptyGraph.getVertexKey(testFocalElem)).toBe(expectedFocalElemKey);
@@ -80,7 +81,7 @@ describe('Graph', () => {
         const targetElem = simpleModel.paths[0].members[0];
         const interimElem = simpleModel.paths[0].members[1];
         expect(emptyGraph.getVertexKey(targetElem)).toBe(
-          [expectedKeyEntry(targetElem), expectedKeyEntry(interimElem), expectedFocalElemKey].join('____')
+          [showOpKeyEntry(targetElem), showOpKeyEntry(interimElem), expectedFocalElemKey].join('____')
         );
       });
 
@@ -88,15 +89,15 @@ describe('Graph', () => {
         const targetElem = simpleModel.paths[0].members[4];
         const interimElem = simpleModel.paths[0].members[3];
         expect(emptyGraph.getVertexKey(targetElem)).toBe(
-          [expectedFocalElemKey, expectedKeyEntry(interimElem), expectedKeyEntry(targetElem)].join('____')
+          [expectedFocalElemKey, showOpKeyEntry(interimElem), showOpKeyEntry(targetElem)].join('____')
         );
       });
     });
 
     describe('showOp is false', () => {
       const emptyGraph = new Graph({ ddgModel, showOp: false });
-      const expectedKeyEntry = pathElem => pathElem.operation.service.name;
-      const expectedFocalElemKey = expectedKeyEntry(testFocalElem);
+      // The focal elem always shows the operation
+      const expectedFocalElemKey = showOpKeyEntry(testFocalElem);
 
       it('creates key for focal pathElem', () => {
         expect(emptyGraph.getVertexKey(testFocalElem)).toBe(expectedFocalElemKey);
@@ -106,7 +107,7 @@ describe('Graph', () => {
         const targetElem = simpleModel.paths[0].members[0];
         const interimElem = simpleModel.paths[0].members[1];
         expect(emptyGraph.getVertexKey(targetElem)).toBe(
-          [expectedKeyEntry(targetElem), expectedKeyEntry(interimElem), expectedFocalElemKey].join('____')
+          [noOpKeyEntry(targetElem), noOpKeyEntry(interimElem), expectedFocalElemKey].join('____')
         );
       });
 
@@ -114,7 +115,7 @@ describe('Graph', () => {
         const targetElem = simpleModel.paths[0].members[4];
         const interimElem = simpleModel.paths[0].members[3];
         expect(emptyGraph.getVertexKey(targetElem)).toBe(
-          [expectedFocalElemKey, expectedKeyEntry(interimElem), expectedKeyEntry(targetElem)].join('____')
+          [expectedFocalElemKey, noOpKeyEntry(interimElem), noOpKeyEntry(targetElem)].join('____')
         );
       });
     });

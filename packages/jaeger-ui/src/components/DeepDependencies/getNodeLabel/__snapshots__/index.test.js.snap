@@ -39,9 +39,7 @@ exports[`getNodeLabel() renders as a focal node when isFocalNode == true 1`] = `
         />
       </svg>
     </div>
-    <div
-      className="DdgNode--labelWrapper"
-    >
+    <div>
       <h4
         className="DdgNode--label"
       >
@@ -84,9 +82,7 @@ exports[`getNodeLabel() returns a <DdgNode/> 1`] = `
   <div
     className="DdgNode--core"
   >
-    <div
-      className="DdgNode--labelWrapper"
-    >
+    <div>
       <h4
         className="DdgNode--label"
       >

@@ -43,11 +43,12 @@ export default class Graph {
       const key = this.getVertexKey(pathElem);
       let vertex: TDdgVertex | undefined = this.vertices.get(key);
       if (!vertex) {
+        const isFocalNode = !pathElem.distance;
         vertex = {
           key,
-          isFocalNode: !pathElem.distance,
+          isFocalNode,
           service: pathElem.operation.service.name,
-          operation: this.showOp ? pathElem.operation.name : null,
+          operation: this.showOp || isFocalNode ? pathElem.operation.name : null,
         };
         this.vertices.set(key, vertex);
         this.vertexToPathElems.set(vertex, new Set());
@@ -120,7 +121,9 @@ export default class Graph {
     const { focalIdx, members } = memberOf;
     const keySegmentFn = this.showOp
       ? ({ operation }: PathElem) => `${operation.service.name}----${operation.name}`
-      : ({ operation }: PathElem) => operation.service.name;
+      : // Always show the operation for the focal node, i.e. when distance === 0
+        ({ distance, operation }: PathElem) =>
+          distance === 0 ? `${operation.service.name}----${operation.name}` : operation.service.name;
 
     return members
       .slice(Math.min(focalIdx, memberIdx), Math.max(focalIdx, memberIdx) + 1)

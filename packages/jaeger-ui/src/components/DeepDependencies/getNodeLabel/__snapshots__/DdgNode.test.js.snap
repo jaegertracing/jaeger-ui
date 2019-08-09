@@ -9,9 +9,7 @@ exports[`<DdgNode> omits the operation if it is null 1`] = `
   <div
     className="DdgNode--core"
   >
-    <div
-      className="DdgNode--labelWrapper"
-    >
+    <div>
       <h4
         className="DdgNode--label"
       >
@@ -90,9 +88,7 @@ exports[`<DdgNode> omits the operation if it is null 2`] = `
   <div
     className="DdgNode--core"
   >
-    <div
-      className="DdgNode--labelWrapper"
-    >
+    <div>
       <h4
         className="DdgNode--label"
       >
@@ -166,9 +162,7 @@ exports[`<DdgNode> renders correctly when isFocalNode = true and focalNodeUrl = 
   <div
     className="DdgNode--core"
   >
-    <div
-      className="DdgNode--labelWrapper"
-    >
+    <div>
       <h4
         className="DdgNode--label"
       >
@@ -277,9 +271,7 @@ exports[`<DdgNode> renders correctly when isFocalNode = true and focalNodeUrl = 
         />
       </svg>
     </div>
-    <div
-      className="DdgNode--labelWrapper"
-    >
+    <div>
       <h4
         className="DdgNode--label"
       >
