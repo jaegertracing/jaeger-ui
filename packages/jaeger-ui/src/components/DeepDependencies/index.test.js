@@ -86,46 +86,6 @@ describe('DeepDependencyGraphPage', () => {
       });
     });
 
-    describe('shouldComponentUpdate', () => {
-      it('returns false if props are unchanged', () => {
-        expect(ddgPageImpl.shouldComponentUpdate({ ...props })).toBe(false);
-      });
-
-      it('returns false if irrelevant prop is changed', () => {
-        expect(ddgPageImpl.shouldComponentUpdate({ ...props, irrelevantProp: 'ignored' })).toBe(false);
-      });
-
-      it('returns false if graphState uxState prop is changed', () => {
-        const graphState = {
-          ...props.graphState,
-          uxState: new Map([[3, 4]]),
-        };
-        expect(ddgPageImpl.shouldComponentUpdate({ ...props, graphState })).toBe(false);
-      });
-
-      it('returns true if certain props change', () => {
-        [
-          'operationsForService',
-          'services',
-          'urlState.service',
-          'urlState.operation',
-          'urlState.start',
-          'urlState.end',
-          'urlState.visEncoding',
-          'graphState.state',
-        ].forEach(prop => {
-          const newProps = {
-            ...props,
-            urlState: { ...props.urlState },
-            graphState: { ...props.graphState },
-          };
-          expect(ddgPageImpl.shouldComponentUpdate(newProps)).toBe(false);
-          _set(newProps, prop, 'new value');
-          expect(ddgPageImpl.shouldComponentUpdate(newProps)).toBe(true);
-        });
-      });
-    });
-
     describe('updateUrlState', () => {
       let getUrlSpy;
 
@@ -275,6 +235,7 @@ describe('DeepDependencyGraphPage', () => {
           ],
           vertices,
         }),
+        getDerivedViewModifiers: () => ({ edges: new Map(), vertices: new Map() }),
         getVisibleUiFindMatches: () => new Set(vertices.slice(1)),
         getVisibleIndices: () => new Set(),
       };

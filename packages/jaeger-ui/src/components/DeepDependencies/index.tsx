@@ -12,16 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import React, { Component } from 'react';
+import * as React from 'react';
 import { History as RouterHistory, Location } from 'history';
 import _get from 'lodash/get';
-import memoize from 'memoize-one';
 import { bindActionCreators, Dispatch } from 'redux';
 import { connect } from 'react-redux';
 
-import { getUrl, getUrlState } from './url';
 import Header from './Header';
 import Graph from './Graph';
+import { getUrl, getUrlState } from './url';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
 import { extractUiFindFromState, TExtractUiFindFromStateReturn } from '../common/UiFindInput';
@@ -29,7 +28,7 @@ import ddgActions from '../../actions/ddg';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import { fetchedState, TOP_NAV_HEIGHT } from '../../constants';
 import getDdgModelKey from '../../model/ddg/getDdgModelKey';
-import GraphModel, { getDerivedViewModifiers, makeGraph } from '../../model/ddg/GraphModel';
+import GraphModel, { makeGraph } from '../../model/ddg/GraphModel';
 import {
   EDirection,
   TDdgModelParams,
@@ -69,7 +68,7 @@ type TOwnProps = {
 type TProps = TDispatchProps & TReduxProps & TOwnProps;
 
 // export for tests
-export class DeepDependencyGraphPageImpl extends Component<TProps> {
+export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
   static fetchModelIfStale(props: TProps) {
     const { fetchDeepDependencyGraph, graphState = null, urlState } = props;
     const { service, operation } = urlState;
@@ -78,8 +77,6 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
       fetchDeepDependencyGraph({ service, operation, start: 0, end: 0 });
     }
   }
-
-  getDerivedViewModifiers = memoize(getDerivedViewModifiers);
 
   headerWrapper: React.RefObject<HTMLDivElement> = React.createRef();
 
@@ -101,25 +98,6 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
   componentWillReceiveProps(nextProps: TProps) {
     /* istanbul ignore next */
     DeepDependencyGraphPageImpl.fetchModelIfStale(nextProps);
-  }
-
-  // shouldComponentUpdate is necessary as we don't want the plexus graph to re-render due to a uxStatus change
-  shouldComponentUpdate(nextProps: TProps) {
-    const updateCauses = [
-      'graphState.state',
-      'graphState.viewModifiers',
-      'operationsForService',
-      'services',
-      'uiFind',
-      'urlState.density',
-      'urlState.end',
-      'urlState.operation',
-      'urlState.service',
-      'urlState.showOp',
-      'urlState.start',
-      'urlState.visEncoding',
-    ];
-    return updateCauses.some(cause => _get(nextProps, cause) !== _get(this.props, cause));
   }
 
   getVisiblePathElems = (key: string) => {
@@ -205,8 +183,7 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
     } else if (graphState.state === fetchedState.DONE && graph) {
       const { edges, vertices } = graph.getVisible(visEncoding);
       const { viewModifiers } = graphState;
-      const { edges: edgesViewModifiers, vertices: verticesViewModifiers } = this.getDerivedViewModifiers(
-        graph,
+      const { edges: edgesViewModifiers, vertices: verticesViewModifiers } = graph.getDerivedViewModifiers(
         visEncoding,
         viewModifiers
       );
@@ -227,8 +204,7 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
       content = <LoadingIndicator centered className="u-mt-vast" />;
     } else if (graphState.state === fetchedState.ERROR) {
       content = <ErrorMessage error={graphState.error} className="ub-m4" />;
-    }
-    if (!content) {
+    } else {
       content = (
         <div>
           <h1>Unknown graphState:</h1>

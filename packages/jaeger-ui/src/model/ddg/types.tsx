@@ -27,10 +27,10 @@ export enum EViewModifier {
 }
 
 export enum EDdgDensity {
-  MostConcise = 'MC',
-  UpstreamVsDownstream = 'UvD',
-  PreventPathEntanglement = 'PPE',
-  ExternalVsInternal = 'EvI',
+  ExternalVsInternal = 'ext-vs-int',
+  MostConcise = 'mc',
+  PreventPathEntanglement = 'ppe',
+  UpstreamVsDownstream = 'up-vs-down',
 }
 
 export enum ECheckedStatus {
