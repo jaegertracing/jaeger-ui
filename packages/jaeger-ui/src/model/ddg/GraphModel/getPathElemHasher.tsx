@@ -47,13 +47,11 @@ function getExtVsIntHasher(elemToStr: TPathElemToStr) {
       .join('\n')}${pe.isExternal ? '; is-external' : ''}`;
 }
 
-// This function assumes the density is set to PPE with distinct operations
-// It is a class property so that it can be aware of density in late-alpha
-//
-// It might make sense to live on PathElem so that pathElems can be compared when checking how many
-// inbound/outbound edges are visible for a vertex, but maybe not as vertices could be densitiy-aware and
-// provide that to this fn. could also be property on pathElem that gets set by showElems
-// tl;dr may move in late-alpha
+// It might make sense for this function live on PathElem so that pathElems can
+// be compared when checking how many inbound/outbound edges are visible for a
+// vertex, but maybe not as vertices could be densitiy-aware and provide that to
+// this fn. could also be property on pathElem that gets set by showElems
+// tl;dr may move in late-alpha.
 export default function getPathElemHasher(this: GraphModel) {
   const elemToStr = this.showOp ? fmtElemShowOp : fmtElemSvcOnly;
 
