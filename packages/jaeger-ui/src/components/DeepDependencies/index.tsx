@@ -32,6 +32,7 @@ import {
   TDdgModelParams,
   TDdgSparseUrlState,
   TDdgStateEntry,
+  EDdgDensity,
 } from '../../model/ddg/types';
 import GraphModel, { makeGraph } from '../../model/ddg/GraphModel';
 import { encodeDistance } from '../../model/ddg/visibility-codec';
@@ -96,15 +97,17 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
   // shouldComponentUpdate is necessary as we don't want the plexus graph to re-render due to a uxStatus change
   shouldComponentUpdate(nextProps: TProps) {
     const updateCauses = [
-      'uiFind',
+      'graphState.state',
       'operationsForService',
       'services',
-      'urlState.service',
-      'urlState.operation',
-      'urlState.start',
+      'uiFind',
+      'urlState.density',
       'urlState.end',
+      'urlState.operation',
+      'urlState.service',
+      'urlState.showOp',
+      'urlState.start',
       'urlState.visEncoding',
-      'graphState.state',
     ];
     return updateCauses.some(cause => _get(nextProps, cause) !== _get(this.props, cause));
   }
@@ -139,6 +142,10 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
     this.updateUrlState({ operation: undefined, service, visEncoding: undefined });
   };
 
+  setDensity = (density: EDdgDensity) => this.updateUrlState({ density });
+
+  toggleShowOperations = (enable: boolean) => this.updateUrlState({ showOp: enable });
+
   updateUrlState = (newValues: Partial<TDdgSparseUrlState>) => {
     const { uiFind, urlState, history } = this.props;
     history.push(getUrl({ uiFind, ...urlState, ...newValues }));
@@ -146,7 +153,7 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
 
   render() {
     const { graph, graphState, operationsForService, services, uiFind, urlState } = this.props;
-    const { operation, service, visEncoding } = urlState;
+    const { density, operation, service, showOp, visEncoding } = urlState;
     const distanceToPathElems =
       graphState && graphState.state === fetchedState.DONE ? graphState.model.distanceToPathElems : undefined;
     const uiFindMatches = graph && graph.getVisibleUiFindMatches(uiFind, visEncoding);
@@ -159,7 +166,7 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
       // TODO: using `key` here is a hack, debug digraph to fix the underlying issue
       content = (
         <Graph
-          key={`${urlState.service},${urlState.operation},${urlState.visEncoding}`}
+          key={JSON.stringify(urlState)}
           edges={edges}
           getVisiblePathElems={(key: string) => graph.getVisiblePathElems(key, visEncoding)}
           uiFindMatches={uiFindMatches}
@@ -184,14 +191,18 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
       <div>
         <div ref={this.headerWrapper}>
           <Header
+            density={density}
             distanceToPathElems={distanceToPathElems}
             operation={operation}
             operations={operationsForService[service || '']}
             service={service}
             services={services}
+            setDensity={this.setDensity}
             setDistance={this.setDistance}
             setOperation={this.setOperation}
             setService={this.setService}
+            showOperations={showOp}
+            toggleShowOperations={this.toggleShowOperations}
             uiFindCount={uiFind ? uiFindMatches && uiFindMatches.size : undefined}
             visEncoding={visEncoding}
           />

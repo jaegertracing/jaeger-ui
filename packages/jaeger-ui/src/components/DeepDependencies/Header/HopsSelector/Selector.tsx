@@ -15,9 +15,9 @@
 import React, { PureComponent } from 'react';
 import { Popover } from 'antd';
 import SortAmountAsc from 'react-icons/lib/fa/sort-amount-asc.js';
-import IoChevronDown from 'react-icons/lib/io/chevron-down';
 import IoChevronRight from 'react-icons/lib/io/chevron-right';
 
+import ChevronDown from '../ChevronDown';
 import { ECheckedStatus, EDirection, THop } from '../../../../model/ddg/types';
 
 import './Selector.css';
@@ -104,9 +104,10 @@ export default class Selector extends PureComponent<TProps> {
           <SortAmountAsc className={`${CLASSNAME}--AscIcon is-${streamText}`} />
           {streamLabel}
           {furthestBtn}
-          <span className={`${CLASSNAME}--slash`}>/</span>
+          <span className={`${CLASSNAME}--delimiter`}>/</span>
           {delimiterBtn}
-          <IoChevronDown className={`${CLASSNAME}--ChevronDown`} />
+          {/* <IoChevronDown className={`${CLASSNAME}--ChevronDown`} /> */}
+          <ChevronDown className="ub-ml1" />
         </span>
       </Popover>
     );

@@ -14,10 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-.DdgNode--SetFocusIcon {
-  box-sizing: content-box;
-  color: inherit;
-  height: 1.05em;
-  padding: 0.1em;
-  width: 1.05em;
+.Ddg--LayoutSettings--SettingsIcon {
+  fill: currentColor;
+  height: 18px;
+  margin-bottom: -4px;
+  margin-right: 0.3em;
+  width: 18px;
 }

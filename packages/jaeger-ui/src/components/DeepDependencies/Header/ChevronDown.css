@@ -14,10 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-.DdgNode--SetFocusIcon {
-  box-sizing: content-box;
-  color: inherit;
-  height: 1.05em;
-  padding: 0.1em;
-  width: 1.05em;
+.Ddg--Header--ChevronDown {
+  color: #999;
+  height: 0.7em;
+  padding-bottom: 0.15em;
+  width: 0.7em;
 }
