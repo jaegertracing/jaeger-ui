@@ -19,14 +19,16 @@ import { TEdge } from '@jaegertracing/plexus/lib/types';
 import { TSetProps, TFromGraphStateFn } from '@jaegertracing/plexus/lib/Digraph/types';
 
 import DdgNodeContent from './DdgNodeContent';
-import { getFindEmphasisRenderers } from './node-renderers';
-import { PathElem, TDdgVertex } from '../../../model/ddg/types';
+import getNodeRenderers from './getNodeRenderers';
+import { PathElem, TDdgVertex, EViewModifier } from '../../../model/ddg/types';
 
 type TProps = {
   edges: TEdge[];
   getVisiblePathElems: (vertexKey: string) => PathElem[] | undefined;
+  setViewModifier: (vertexKey: string, viewModifier: EViewModifier, enable: boolean) => void;
   uiFindMatches: Set<TDdgVertex> | undefined;
   vertices: TDdgVertex[];
+  viewModifiers: Map<string, number>;
 };
 
 const { scaleOpacity, scaleStrokeOpacity } = Digraph.propsFactories;
@@ -38,7 +40,8 @@ const setOnEdgesContainer: TSetProps<TFromGraphStateFn<TDdgVertex, any>> = [
 ];
 
 export default class Graph extends PureComponent<TProps> {
-  private getFindEmphasisRenderers = memoize(getFindEmphasisRenderers);
+  private getNodeRenderers = memoize(getNodeRenderers);
+  private getNodeContentRenderer = memoize(DdgNodeContent.getNodeRenderer);
 
   private layoutManager: LayoutManager = new LayoutManager({
     useDotEdges: true,
@@ -53,8 +56,15 @@ export default class Graph extends PureComponent<TProps> {
   }
 
   render() {
-    const { edges, getVisiblePathElems, uiFindMatches, vertices } = this.props;
-    const findRenderers = this.getFindEmphasisRenderers(uiFindMatches || this.emptyFindSet);
+    const {
+      edges,
+      getVisiblePathElems,
+      setViewModifier,
+      uiFindMatches,
+      vertices,
+      viewModifiers,
+    } = this.props;
+    const findRenderers = this.getNodeRenderers(uiFindMatches || this.emptyFindSet, viewModifiers);
 
     return (
       <Digraph<TDdgVertex>
@@ -99,7 +109,7 @@ export default class Graph extends PureComponent<TProps> {
             layerType: 'html',
             measurable: true,
             measureNode: DdgNodeContent.measureNode,
-            renderNode: DdgNodeContent.getNodeRenderer(getVisiblePathElems),
+            renderNode: this.getNodeContentRenderer(getVisiblePathElems, setViewModifier),
           },
         ]}
       />

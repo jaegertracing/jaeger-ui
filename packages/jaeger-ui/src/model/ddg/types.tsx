@@ -18,6 +18,31 @@ import PathElem from './PathElem';
 
 export { default as PathElem } from './PathElem';
 
+export enum EViewModifier {
+  None,
+  Hovered,
+  Selected,
+  Emphasized = 1 << 2, // eslint-disable-line no-bitwise
+}
+
+export enum EDdgDensity {
+  MostConcise = 'MC',
+  UpstreamVsDownstream = 'UvD',
+  PreventPathEntanglement = 'PPE',
+  ExternalVsInternal = 'EvI',
+}
+
+export enum ECheckedStatus {
+  Empty = 'Empty',
+  Full = 'Full',
+  Partial = 'Partial',
+}
+
+export enum EDirection {
+  Upstream = -1,
+  Downstream = 1,
+}
+
 export type TDdgPayloadEntry = {
   operation: string;
   service: string;
@@ -63,20 +88,6 @@ export type TDdgVertex = TVertex<{
   service: string;
 }>;
 
-export enum EViewModifier {
-  None,
-  Hovered,
-  Selected,
-  Emphasized = 1 << 2, // eslint-disable-line no-bitwise
-}
-
-export enum EDdgDensity {
-  MostConcise = 'MC',
-  UpstreamVsDownstream = 'UvD',
-  PreventPathEntanglement = 'PPE',
-  ExternalVsInternal = 'EvI',
-}
-
 export type TDdgSparseUrlState = {
   density: EDdgDensity;
   end?: number;
@@ -114,16 +125,5 @@ export type TDdgViewModifierRemovalPayload =
   | TDdgClearViewModifiersFromIndicesPayload
   | TDdgRemoveViewModifierFromIndicesPayload
   | TDdgRemoveViewModifierPayload;
-
-export enum ECheckedStatus {
-  Empty = 'Empty',
-  Full = 'Full',
-  Partial = 'Partial',
-}
-
-export enum EDirection {
-  Upstream = -1,
-  Downstream = 1,
-}
 
 export type THop = { distance: number; fullness: ECheckedStatus };

@@ -34,7 +34,6 @@ type TProps = {
   service: string;
   setViewModifier: (vertexKey: string, viewModifier: EViewModifier, isEnabled: boolean) => void;
   vertexKey: string;
-  viewModifiers: number;
 };
 
 // While browsers suport URLs of unlimited length, many server clients do not handle more than this max
@@ -42,15 +41,6 @@ const MAX_LENGTH = 2083;
 const MAX_LINKED_TRACES = 35;
 const MIN_LENGTH = getSearchUrl().length;
 const PARAM_NAME_LENGTH = '&traceID='.length;
-
-// temp fill in props
-/* istanbul ignore next */
-const noops = {
-  setViewModifier(vertexKey: string, viewModifier: EViewModifier, enabled: boolean) {
-    // eslint-disable-next-line no-console
-    console.log(`set view modifier: ${enabled ? 'on' : 'OFF'} ${viewModifier} -- ${vertexKey}`);
-  },
-};
 
 export default class DdgNodeContent extends React.PureComponent<TProps> {
   static measureNode(_: TVertex<any>, utils: TMeasureNodeUtils) {
@@ -61,20 +51,22 @@ export default class DdgNodeContent extends React.PureComponent<TProps> {
     };
   }
 
-  static getNodeRenderer(getVisiblePathElems: (vertexKey: string) => PathElem[] | undefined) {
+  static getNodeRenderer(
+    getVisiblePathElems: (vertexKey: string) => PathElem[] | undefined,
+    setViewModifier: (vertexKey: string, viewModifier: EViewModifier, enable: boolean) => void
+  ) {
     return function renderNode(vertex: TDdgVertex, utils: TRendererUtils, lv: TLayoutVertex<any> | null) {
       const { isFocalNode, key, operation, service } = vertex;
       return (
         <DdgNodeContent
+          focalNodeUrl={isFocalNode ? null : getUrl({ operation, service })}
           getVisiblePathElems={getVisiblePathElems}
-          vertexKey={key}
-          service={service}
-          operation={operation}
           isFocalNode={isFocalNode}
           isPositioned={Boolean(lv)}
-          viewModifiers={0}
-          focalNodeUrl={isFocalNode ? null : getUrl({ operation, service })}
-          {...noops}
+          operation={operation}
+          setViewModifier={setViewModifier}
+          service={service}
+          vertexKey={key}
         />
       );
     };

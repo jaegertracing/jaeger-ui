@@ -33,7 +33,7 @@ import {
 import TDdgState, { TDdgStateEntry } from '../types/TDdgState';
 import guardReducer, { guardReducerWithMeta } from '../utils/guardReducer';
 
-export function addViewModifier(state: TDdgState, { payload }: { payload: TDdgAddViewModifierPayload }) {
+export function addViewModifier(state: TDdgState, payload: TDdgAddViewModifierPayload) {
   const { visibilityIndices, viewModifier } = payload;
   const key = getDdgModelKey(payload);
   const stateEntry: TDdgStateEntry | void = state[key];
@@ -56,10 +56,7 @@ export function addViewModifier(state: TDdgState, { payload }: { payload: TDdgAd
   };
 }
 
-export function viewModifierRemoval(
-  state: TDdgState,
-  { payload }: { payload: TDdgViewModifierRemovalPayload }
-) {
+export function viewModifierRemoval(state: TDdgState, payload: TDdgViewModifierRemovalPayload) {
   const { visibilityIndices, viewModifier } = payload;
   const key = getDdgModelKey(payload);
   const stateEntry: TDdgStateEntry | void = state[key];
@@ -145,19 +142,17 @@ export default handleActions(
       fetchDeepDependencyGraphErred
     ),
 
-    [actionTypes.ADD_VIEW_MODIFIER]: guardReducer<TDdgState, { payload: TDdgAddViewModifierPayload }>(
-      addViewModifier
-    ),
+    [actionTypes.ADD_VIEW_MODIFIER]: guardReducer<TDdgState, TDdgAddViewModifierPayload>(addViewModifier),
     [actionTypes.CLEAR_VIEW_MODIFIERS_FROM_INDICES]: guardReducer<
       TDdgState,
-      { payload: TDdgClearViewModifiersFromIndicesPayload }
+      TDdgClearViewModifiersFromIndicesPayload
     >(viewModifierRemoval),
-    [actionTypes.REMOVE_VIEW_MODIFIER]: guardReducer<TDdgState, { payload: TDdgRemoveViewModifierPayload }>(
+    [actionTypes.REMOVE_VIEW_MODIFIER]: guardReducer<TDdgState, TDdgRemoveViewModifierPayload>(
       viewModifierRemoval
     ),
     [actionTypes.REMOVE_VIEW_MODIFIER_FROM_INDICES]: guardReducer<
       TDdgState,
-      { payload: TDdgRemoveViewModifierFromIndicesPayload }
+      TDdgRemoveViewModifierFromIndicesPayload
     >(viewModifierRemoval),
   },
   {}

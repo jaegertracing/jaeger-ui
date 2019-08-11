@@ -276,6 +276,7 @@ describe('DeepDependencyGraphPage', () => {
           vertices,
         }),
         getVisibleUiFindMatches: () => new Set(vertices.slice(1)),
+        groupPathElemDataByVertexKey: () => new Map(),
       };
 
       it('renders message to query a ddg when no graphState is provided', () => {
@@ -345,9 +346,11 @@ describe('DeepDependencyGraphPage', () => {
   describe('mapDispatchToProps()', () => {
     it('creates the actions correctly', () => {
       expect(mapDispatchToProps(() => {})).toEqual({
+        addViewModifier: expect.any(Function),
         fetchDeepDependencyGraph: expect.any(Function),
         fetchServices: expect.any(Function),
         fetchServiceOperations: expect.any(Function),
+        removeViewModifierFromIndices: expect.any(Function),
       });
     });
   });
@@ -411,12 +414,8 @@ describe('DeepDependencyGraphPage', () => {
       const graphStateWithoutOp = 'testGraphStateWithoutOp';
       const reduxState = { ...state };
       // TODO: Remove 0s once time buckets are implemented
-      _set(
-        reduxState,
-        ['deepDependencyGraph', getDdgModelKey({ service, operation, start: 0, end: 0 })],
-        graphState
-      );
-      _set(reduxState, ['deepDependencyGraph', getDdgModelKey({ service, start, end })], graphStateWithoutOp);
+      _set(reduxState, ['ddg', getDdgModelKey({ service, operation, start: 0, end: 0 })], graphState);
+      _set(reduxState, ['ddg', getDdgModelKey({ service, start, end })], graphStateWithoutOp);
 
       const result = mapStateToProps(reduxState, ownProps);
       expect(result.graphState).toEqual(graphState);
@@ -437,17 +436,13 @@ describe('DeepDependencyGraphPage', () => {
       const loadingState = { state: fetchedState.LOADING };
       const reduxState = { ...state };
       // TODO: Remove 0s once time buckets are implemented
-      _set(
-        reduxState,
-        ['deepDependencyGraph', getDdgModelKey({ service, operation, start: 0, end: 0 })],
-        loadingState
-      );
+      _set(reduxState, ['ddg', getDdgModelKey({ service, operation, start: 0, end: 0 })], loadingState);
       const result = mapStateToProps(reduxState, ownProps);
       expect(result.graph).toBe(undefined);
 
       const doneState = _set(
         { ...state },
-        ['deepDependencyGraph', getDdgModelKey({ service, operation, start: 0, end: 0 })],
+        ['ddg', getDdgModelKey({ service, operation, start: 0, end: 0 })],
         {
           model: {},
           state: fetchedState.DONE,

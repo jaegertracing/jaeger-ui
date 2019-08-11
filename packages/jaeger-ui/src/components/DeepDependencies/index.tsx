@@ -15,6 +15,7 @@
 import React, { Component } from 'react';
 import { History as RouterHistory, Location } from 'history';
 import _get from 'lodash/get';
+import memoize from 'memoize-one';
 import { bindActionCreators, Dispatch } from 'redux';
 import { connect } from 'react-redux';
 
@@ -24,11 +25,18 @@ import Graph from './Graph';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
 import { extractUiFindFromState, TExtractUiFindFromStateReturn } from '../common/UiFindInput';
+import ddgActions from '../../actions/ddg';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import { fetchedState, TOP_NAV_HEIGHT } from '../../constants';
 import getDdgModelKey from '../../model/ddg/getDdgModelKey';
 import GraphModel, { makeGraph } from '../../model/ddg/GraphModel';
-import { EDirection, TDdgModelParams, TDdgSparseUrlState, EDdgDensity } from '../../model/ddg/types';
+import {
+  EDirection,
+  TDdgModelParams,
+  TDdgSparseUrlState,
+  EDdgDensity,
+  EViewModifier,
+} from '../../model/ddg/types';
 import { encodeDistance } from '../../model/ddg/visibility-codec';
 import { ReduxState } from '../../types';
 import { TDdgStateEntry } from '../../types/TDdgState';
@@ -36,9 +44,13 @@ import { TDdgStateEntry } from '../../types/TDdgState';
 import './index.css';
 
 type TDispatchProps = {
+  addViewModifier: (kwarg: TDdgModelParams & { viewModifier: number; visibilityIndices: number[] }) => void;
   fetchDeepDependencyGraph: (query: TDdgModelParams) => void;
   fetchServices: () => void;
   fetchServiceOperations: (service: string) => void;
+  removeViewModifierFromIndices: (
+    kwarg: TDdgModelParams & { viewModifier: number; visibilityIndices: number[] }
+  ) => void;
 };
 
 type TReduxProps = TExtractUiFindFromStateReturn & {
@@ -56,6 +68,20 @@ type TOwnProps = {
 
 type TProps = TDispatchProps & TReduxProps & TOwnProps;
 
+function getViewModifiersByVertex(graphModel: GraphModel, viewModifiers: Map<number, number>) {
+  const groupedByKey = graphModel.groupPathElemDataByVertexKey(viewModifiers);
+  const rv = new Map<string, number>();
+  groupedByKey.forEach((value, key) => {
+    let netValue = 0;
+    for (let i = 0; i < value.length; i++) {
+      // eslint-disable-next-line no-bitwise
+      netValue |= value[i];
+    }
+    rv.set(key, netValue);
+  });
+  return rv;
+}
+
 // export for tests
 export class DeepDependencyGraphPageImpl extends Component<TProps> {
   static fetchModelIfStale(props: TProps) {
@@ -66,6 +92,8 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
       fetchDeepDependencyGraph({ service, operation, start: 0, end: 0 });
     }
   }
+
+  getViewModifiersByVertex = memoize(getViewModifiersByVertex);
 
   headerWrapper: React.RefObject<HTMLDivElement> = React.createRef();
 
@@ -93,6 +121,7 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
   shouldComponentUpdate(nextProps: TProps) {
     const updateCauses = [
       'graphState.state',
+      'graphState.viewModifiers',
       'operationsForService',
       'services',
       'uiFind',
@@ -106,6 +135,14 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
     ];
     return updateCauses.some(cause => _get(nextProps, cause) !== _get(this.props, cause));
   }
+
+  getVisiblePathElems = (key: string) => {
+    const { graph, urlState } = this.props;
+    if (graph) {
+      return graph.getVisiblePathElems(key, urlState.visEncoding);
+    }
+    return undefined;
+  };
 
   setDistance = (distance: number, direction: EDirection) => {
     const { graphState } = this.props;
@@ -125,6 +162,8 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
     }
   };
 
+  setDensity = (density: EDdgDensity) => this.updateUrlState({ density });
+
   setOperation = (operation: string) => {
     this.updateUrlState({ operation, visEncoding: undefined });
   };
@@ -137,7 +176,25 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
     this.updateUrlState({ operation: undefined, service, visEncoding: undefined });
   };
 
-  setDensity = (density: EDdgDensity) => this.updateUrlState({ density });
+  setViewModifier = (vertexKey: string, viewModifier: EViewModifier, enable: boolean) => {
+    const { addViewModifier, graph, removeViewModifierFromIndices, urlState } = this.props;
+    const { service, operation } = urlState;
+    if (!graph || !service || !operation) {
+      return;
+    }
+    const visibilityIndices: number[] = [];
+    const pathElems = graph.getPathElemsFromVertexKey(vertexKey);
+    pathElems.forEach(pe => visibilityIndices.push(pe.visibilityIdx));
+    const fn = enable ? addViewModifier : removeViewModifierFromIndices;
+    fn({
+      operation,
+      service,
+      viewModifier,
+      visibilityIndices,
+      end: 0,
+      start: 0,
+    });
+  };
 
   toggleShowOperations = (enable: boolean) => this.updateUrlState({ showOp: enable });
 
@@ -158,20 +215,24 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
       content = <h1>Enter query above</h1>;
     } else if (graphState.state === fetchedState.DONE && graph) {
       const { edges, vertices } = graph.getVisible(visEncoding);
+      const { viewModifiers } = graphState;
+      const viewModifiersByKey = this.getViewModifiersByVertex(graph, viewModifiers);
       // TODO: using `key` here is a hack, debug digraph to fix the underlying issue
       content = (
         <Graph
           key={JSON.stringify(urlState)}
           edges={edges}
-          getVisiblePathElems={(key: string) => graph.getVisiblePathElems(key, visEncoding)}
+          getVisiblePathElems={this.getVisiblePathElems}
+          setViewModifier={this.setViewModifier}
           uiFindMatches={uiFindMatches}
           vertices={vertices}
+          viewModifiers={viewModifiersByKey}
         />
       );
     } else if (graphState.state === fetchedState.LOADING) {
       content = <LoadingIndicator centered className="u-mt-vast" />;
     } else if (graphState.state === fetchedState.ERROR) {
-      content = <ErrorMessage error={graphState.error} />;
+      content = <ErrorMessage error={graphState.error} className="ub-m4" />;
     }
     if (!content) {
       content = (
@@ -227,10 +288,7 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
   // backend temporarily requires service and operation
   // if (service) {
   if (service && operation) {
-    graphState = _get(state, [
-      'deepDependencyGraph',
-      getDdgModelKey({ service, operation, start: 0, end: 0 }),
-    ]);
+    graphState = _get(state, ['ddg', getDdgModelKey({ service, operation, start: 0, end: 0 })]);
   }
   let graph: GraphModel | undefined;
   if (graphState && graphState.state === fetchedState.DONE) {
@@ -252,8 +310,15 @@ export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchPro
     jaegerApiActions,
     dispatch
   );
+  const { addViewModifier, removeViewModifierFromIndices } = bindActionCreators(ddgActions, dispatch);
 
-  return { fetchDeepDependencyGraph, fetchServiceOperations, fetchServices };
+  return {
+    addViewModifier,
+    fetchDeepDependencyGraph,
+    fetchServiceOperations,
+    fetchServices,
+    removeViewModifierFromIndices,
+  };
 }
 
 export default connect(

@@ -16,7 +16,7 @@ import { reducer as formReducer } from 'redux-form';
 
 import config from './config';
 import dependencies from './dependencies';
-import deepDependencyGraph from './deep-dependency-graph';
+import ddg from './ddg';
 import embedded from './embedded';
 import services from './services';
 import trace from './trace';
@@ -24,7 +24,7 @@ import trace from './trace';
 export default {
   config,
   dependencies,
-  deepDependencyGraph,
+  ddg,
   embedded,
   services,
   trace,

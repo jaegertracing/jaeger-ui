@@ -160,6 +160,35 @@ export default class GraphModel {
     }
   };
 
+  public groupPathElemDataByVertexKey<T>(data: Map<number, T>): Map<string, T[]> {
+    const rv = new Map<string, T[]>();
+    data.forEach((value, key) => {
+      const pe = this.visIdxToPathElem[key];
+      if (!pe) {
+        throw new Error(`Invalid vis ids: ${key}`);
+      }
+      const vertex = this.pathElemToVertex.get(pe);
+      if (!vertex) {
+        throw new Error(`Path elem without vertex: ${pe}`);
+      }
+      const current = rv.get(vertex.key);
+      if (!current) {
+        rv.set(vertex.key, [value]);
+      } else {
+        current.push(value);
+      }
+    });
+    return rv;
+  }
+
+  public getPathElemsFromVertexKey(vertexKey: string): Set<PathElem> {
+    const vertex = this.vertices.get(vertexKey);
+    if (!vertex) {
+      return new Set();
+    }
+    return this.vertexToPathElems.get(vertex) || new Set();
+  }
+
   public getVisible: (visEncoding?: string) => { edges: TEdge[]; vertices: TDdgVertex[] } = memoize(10)(
     (visEncoding?: string): { edges: TEdge[]; vertices: TDdgVertex[] } => {
       const edges: Set<TEdge> = new Set();

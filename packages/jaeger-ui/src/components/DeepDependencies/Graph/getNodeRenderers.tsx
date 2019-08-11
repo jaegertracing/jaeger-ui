@@ -16,15 +16,17 @@ import * as React from 'react';
 import cx from 'classnames';
 import { TLayoutVertex } from '@jaegertracing/plexus/lib/types';
 
-import { TDdgVertex } from '../../../model/ddg/types';
+import { TDdgVertex, EViewModifier } from '../../../model/ddg/types';
 
-import './node-renderers.css';
+import './getNodeRenderers.css';
 
-// eslint-disable-next-line import/prefer-default-export
-export function getFindEmphasisRenderers(findMatches: Set<TDdgVertex>) {
+export default function getNodeRenderers(findMatches: Set<TDdgVertex>, viewModifiers: Map<string, number>) {
   function renderVectorBorder(lv: TLayoutVertex<TDdgVertex>) {
+    // eslint-disable-next-line no-bitwise
+    const isHovered = (viewModifiers.get(lv.vertex.key) || 0) & EViewModifier.Hovered;
     const className = cx('DdgNode--VectorBorder', {
-      'is-findMatch': findMatches.has(lv.vertex),
+      'is-findMatch': !isHovered && findMatches.has(lv.vertex),
+      'is-hovered': isHovered,
       'is-focalNode': lv.vertex.isFocalNode,
     });
     return (
