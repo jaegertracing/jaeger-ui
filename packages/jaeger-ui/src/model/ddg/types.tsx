@@ -15,8 +15,6 @@
 import { TVertex } from '@jaegertracing/plexus/lib/types';
 
 import PathElem from './PathElem';
-import { fetchedState } from '../../constants';
-import { ApiError } from '../../types/api-error';
 
 export { default as PathElem } from './PathElem';
 
@@ -64,25 +62,6 @@ export type TDdgVertex = TVertex<{
   operation: string | null;
   service: string;
 }>;
-
-export type TDdgStateEntry =
-  | {
-      state: typeof fetchedState.LOADING;
-    }
-  | {
-      error: ApiError;
-      state: typeof fetchedState.ERROR;
-    }
-  | {
-      model: TDdgModel;
-      state: typeof fetchedState.DONE;
-      viewModifiers: Map<number, number>;
-    };
-
-export const stateKey = ({ service, operation = '*', start, end }: TDdgModelParams): string =>
-  [service, operation, start, end].join('\t');
-
-export type TDdgState = Record<string, TDdgStateEntry>;
 
 export enum EViewModifier {
   None,

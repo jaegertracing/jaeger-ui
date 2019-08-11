@@ -20,6 +20,7 @@ import { TracesArchive } from './archive';
 import { Config } from './config';
 import { EmbeddedState } from './embedded';
 import { SearchQuery } from './search';
+import TDdgState from './TDdgState';
 import TNil from './TNil';
 import { Trace } from './trace';
 import TTraceDiffState from './TTraceDiffState';
@@ -39,6 +40,7 @@ export type FetchedTrace = {
 export type ReduxState = {
   archive: TracesArchive;
   config: Config;
+  deepDependencyGraph: TDdgState;
   dependencies: {
     dependencies: { parent: string; child: string; callCount: number }[];
     loading: boolean;

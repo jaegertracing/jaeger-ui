@@ -26,17 +26,12 @@ import LoadingIndicator from '../common/LoadingIndicator';
 import { extractUiFindFromState, TExtractUiFindFromStateReturn } from '../common/UiFindInput';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import { fetchedState, TOP_NAV_HEIGHT } from '../../constants';
-import {
-  stateKey,
-  EDirection,
-  TDdgModelParams,
-  TDdgSparseUrlState,
-  TDdgStateEntry,
-  EDdgDensity,
-} from '../../model/ddg/types';
+import getDdgModelKey from '../../model/ddg/getDdgModelKey';
 import GraphModel, { makeGraph } from '../../model/ddg/GraphModel';
+import { EDirection, TDdgModelParams, TDdgSparseUrlState, EDdgDensity } from '../../model/ddg/types';
 import { encodeDistance } from '../../model/ddg/visibility-codec';
 import { ReduxState } from '../../types';
+import { TDdgStateEntry } from '../../types/TDdgState';
 
 import './index.css';
 
@@ -232,7 +227,10 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
   // backend temporarily requires service and operation
   // if (service) {
   if (service && operation) {
-    graphState = _get(state, ['deepDependencyGraph', stateKey({ service, operation, start: 0, end: 0 })]);
+    graphState = _get(state, [
+      'deepDependencyGraph',
+      getDdgModelKey({ service, operation, start: 0, end: 0 }),
+    ]);
   }
   let graph: GraphModel | undefined;
   if (graphState && graphState.state === fetchedState.DONE) {
