@@ -24,9 +24,12 @@ export default function getNodeRenderers(findMatches: Set<TDdgVertex>, viewModif
   function renderVectorBorder(lv: TLayoutVertex<TDdgVertex>) {
     // eslint-disable-next-line no-bitwise
     const isHovered = (viewModifiers.get(lv.vertex.key) || 0) & EViewModifier.Hovered;
+    // eslint-disable-next-line no-bitwise
+    const isPathHovered = (viewModifiers.get(lv.vertex.key) || 0) & EViewModifier.PathHovered;
     const className = cx('DdgNode--VectorBorder', {
       'is-findMatch': !isHovered && findMatches.has(lv.vertex),
       'is-hovered': isHovered,
+      'is-pathHovered': !isHovered && isPathHovered,
       'is-focalNode': lv.vertex.isFocalNode,
     });
     return (

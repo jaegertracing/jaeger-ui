@@ -80,6 +80,8 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
     classNameIsSmall,
     scaleOpacity: scaleProperty.opacity,
     scaleStrokeOpacity: scaleProperty.strokeOpacity,
+    scaleStrokeOpacityStrong: scaleProperty.strokeOpacityStrong,
+    scaleStrokeOpacityStrongest: scaleProperty.strokeOpacityStrongest,
   };
 
   static scaleProperty = scaleProperty;

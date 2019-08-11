@@ -34,6 +34,7 @@ describe('<Graph />', () => {
   const props = {
     vertices,
     edges,
+    edgesViewModifiers: new Map(),
   };
 
   describe('constructor', () => {

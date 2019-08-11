@@ -47,7 +47,7 @@ describe('DeepDependencyGraphPage', () => {
           distanceToPathElems: new Map(),
         },
         state: fetchedState.DONE,
-        uxState: new Map(),
+        viewModifiers: new Map(),
       },
       operationsForService: {},
       urlState: {
@@ -276,7 +276,7 @@ describe('DeepDependencyGraphPage', () => {
           vertices,
         }),
         getVisibleUiFindMatches: () => new Set(vertices.slice(1)),
-        groupPathElemDataByVertexKey: () => new Map(),
+        getVisibleIndices: () => new Set(),
       };
 
       it('renders message to query a ddg when no graphState is provided', () => {

@@ -29,7 +29,7 @@ import ddgActions from '../../actions/ddg';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import { fetchedState, TOP_NAV_HEIGHT } from '../../constants';
 import getDdgModelKey from '../../model/ddg/getDdgModelKey';
-import GraphModel, { makeGraph } from '../../model/ddg/GraphModel';
+import GraphModel, { getDerivedViewModifiers, makeGraph } from '../../model/ddg/GraphModel';
 import {
   EDirection,
   TDdgModelParams,
@@ -68,20 +68,6 @@ type TOwnProps = {
 
 type TProps = TDispatchProps & TReduxProps & TOwnProps;
 
-function getViewModifiersByVertex(graphModel: GraphModel, viewModifiers: Map<number, number>) {
-  const groupedByKey = graphModel.groupPathElemDataByVertexKey(viewModifiers);
-  const rv = new Map<string, number>();
-  groupedByKey.forEach((value, key) => {
-    let netValue = 0;
-    for (let i = 0; i < value.length; i++) {
-      // eslint-disable-next-line no-bitwise
-      netValue |= value[i];
-    }
-    rv.set(key, netValue);
-  });
-  return rv;
-}
-
 // export for tests
 export class DeepDependencyGraphPageImpl extends Component<TProps> {
   static fetchModelIfStale(props: TProps) {
@@ -93,7 +79,7 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
     }
   }
 
-  getViewModifiersByVertex = memoize(getViewModifiersByVertex);
+  getDerivedViewModifiers = memoize(getDerivedViewModifiers);
 
   headerWrapper: React.RefObject<HTMLDivElement> = React.createRef();
 
@@ -139,7 +125,7 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
   getVisiblePathElems = (key: string) => {
     const { graph, urlState } = this.props;
     if (graph) {
-      return graph.getVisiblePathElems(key, urlState.visEncoding);
+      return graph.getVertexVisiblePathElems(key, urlState.visEncoding);
     }
     return undefined;
   };
@@ -178,12 +164,15 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
 
   setViewModifier = (vertexKey: string, viewModifier: EViewModifier, enable: boolean) => {
     const { addViewModifier, graph, removeViewModifierFromIndices, urlState } = this.props;
-    const { service, operation } = urlState;
+    const { service, operation, visEncoding } = urlState;
     if (!graph || !service || !operation) {
       return;
     }
     const visibilityIndices: number[] = [];
-    const pathElems = graph.getPathElemsFromVertexKey(vertexKey);
+    const pathElems = graph.getVertexVisiblePathElems(vertexKey, visEncoding);
+    if (!pathElems) {
+      throw new Error(`Invalid vertext key to set view modifier for: ${vertexKey}`);
+    }
     pathElems.forEach(pe => visibilityIndices.push(pe.visibilityIdx));
     const fn = enable ? addViewModifier : removeViewModifierFromIndices;
     fn({
@@ -216,17 +205,22 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
     } else if (graphState.state === fetchedState.DONE && graph) {
       const { edges, vertices } = graph.getVisible(visEncoding);
       const { viewModifiers } = graphState;
-      const viewModifiersByKey = this.getViewModifiersByVertex(graph, viewModifiers);
+      const { edges: edgesViewModifiers, vertices: verticesViewModifiers } = this.getDerivedViewModifiers(
+        graph,
+        visEncoding,
+        viewModifiers
+      );
       // TODO: using `key` here is a hack, debug digraph to fix the underlying issue
       content = (
         <Graph
           key={JSON.stringify(urlState)}
           edges={edges}
+          edgesViewModifiers={edgesViewModifiers}
           getVisiblePathElems={this.getVisiblePathElems}
           setViewModifier={this.setViewModifier}
           uiFindMatches={uiFindMatches}
           vertices={vertices}
-          viewModifiers={viewModifiersByKey}
+          verticesViewModifiers={verticesViewModifiers}
         />
       );
     } else if (graphState.state === fetchedState.LOADING) {

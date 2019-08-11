@@ -32,6 +32,10 @@ limitations under the License.
   stroke: #08979c;
 }
 
+.DdgNode--VectorBorder.is-pathHovered {
+  stroke: #08979c;
+}
+
 .DdgNode--HtmlFindEmphasis {
   background-image: repeating-linear-gradient(-60deg, #fffb8f, #fff566 3px, #fffb8f 5px);
   border: 1px dashed rgba(173, 139, 0, 0.5);

@@ -15,33 +15,43 @@
 import React, { PureComponent } from 'react';
 import memoize from 'memoize-one';
 import { Digraph, LayoutManager } from '@jaegertracing/plexus';
+import { TSetProps, TFromGraphStateFn, TDefEntry } from '@jaegertracing/plexus/lib/Digraph/types';
 import { TEdge } from '@jaegertracing/plexus/lib/types';
-import { TSetProps, TFromGraphStateFn } from '@jaegertracing/plexus/lib/Digraph/types';
+import TNonEmptyArray from '@jaegertracing/plexus/lib/types/TNonEmptyArray';
 
 import DdgNodeContent from './DdgNodeContent';
 import getNodeRenderers from './getNodeRenderers';
+import getSetOnEdge from './getSetOnEdge';
 import { PathElem, TDdgVertex, EViewModifier } from '../../../model/ddg/types';
+
+import './index.css';
 
 type TProps = {
   edges: TEdge[];
+  edgesViewModifiers: Map<string, number>;
   getVisiblePathElems: (vertexKey: string) => PathElem[] | undefined;
   setViewModifier: (vertexKey: string, viewModifier: EViewModifier, enable: boolean) => void;
   uiFindMatches: Set<TDdgVertex> | undefined;
   vertices: TDdgVertex[];
-  viewModifiers: Map<string, number>;
+  verticesViewModifiers: Map<string, number>;
 };
 
-const { scaleOpacity, scaleStrokeOpacity } = Digraph.propsFactories;
+const { scaleStrokeOpacityStrongest } = Digraph.propsFactories;
 
 const setOnEdgesContainer: TSetProps<TFromGraphStateFn<TDdgVertex, any>> = [
-  scaleOpacity,
-  scaleStrokeOpacity,
+  scaleStrokeOpacityStrongest,
   { stroke: '#444', strokeWidth: 0.7 },
+];
+
+const edgesDefs: TNonEmptyArray<TDefEntry<TDdgVertex, unknown>> = [
+  { localId: 'arrow' },
+  { localId: 'arrow-hovered', setOnEntry: { className: 'DdgArrow is-pathHovered' } },
 ];
 
 export default class Graph extends PureComponent<TProps> {
   private getNodeRenderers = memoize(getNodeRenderers);
   private getNodeContentRenderer = memoize(DdgNodeContent.getNodeRenderer);
+  private getSetOnEdge = memoize(getSetOnEdge);
 
   private layoutManager: LayoutManager = new LayoutManager({
     useDotEdges: true,
@@ -58,13 +68,14 @@ export default class Graph extends PureComponent<TProps> {
   render() {
     const {
       edges,
+      edgesViewModifiers,
       getVisiblePathElems,
       setViewModifier,
       uiFindMatches,
       vertices,
-      viewModifiers,
+      verticesViewModifiers,
     } = this.props;
-    const findRenderers = this.getNodeRenderers(uiFindMatches || this.emptyFindSet, viewModifiers);
+    const findRenderers = this.getNodeRenderers(uiFindMatches || this.emptyFindSet, verticesViewModifiers);
 
     return (
       <Digraph<TDdgVertex>
@@ -100,9 +111,10 @@ export default class Graph extends PureComponent<TProps> {
             key: 'edges',
             layerType: 'svg',
             edges: true,
-            defs: [{ localId: 'arrow' }],
+            defs: edgesDefs,
             markerEndId: 'arrow',
             setOnContainer: setOnEdgesContainer,
+            setOnEdge: this.getSetOnEdge(edgesViewModifiers),
           },
           {
             key: 'nodes/content',

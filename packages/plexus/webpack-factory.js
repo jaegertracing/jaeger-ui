@@ -184,7 +184,6 @@ function makeDevConfig() {
 
 function makeCommonProdConfig() {
   return {
-    devtool: 'source-map',
     optimization: {
       minimize: true,
       splitChunks: false,
@@ -196,7 +195,6 @@ function makeCommonProdConfig() {
 function makeWorkerConfig() {
   const layoutDir = join(__dirname, 'src/LayoutManager');
   const config = {
-    ...makeCommonProdConfig(),
     output: {
       path: layoutDir,
       publicPath: '/',

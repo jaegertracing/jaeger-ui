@@ -62,5 +62,7 @@ export const scaleProperty = (() => {
 
   scaleProperty.opacity = scaleProperty('opacity');
   scaleProperty.strokeOpacity = scaleProperty('strokeOpacity');
+  scaleProperty.strokeOpacityStrong = scaleProperty('strokeOpacity', MIN, MAX, 0.75);
+  scaleProperty.strokeOpacityStrongest = scaleProperty('strokeOpacity', MIN, MAX, 1);
   return scaleProperty;
 })();
