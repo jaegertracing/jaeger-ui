@@ -178,14 +178,6 @@ export default class GraphModel {
     );
   }
 
-  public getPathElemsFromVertexKey(vertexKey: string): Set<PathElem> {
-    const vertex = this.vertices.get(vertexKey);
-    if (!vertex) {
-      return new Set();
-    }
-    return this.vertexToPathElems.get(vertex) || new Set();
-  }
-
   public getVisibleIndices(visEncoding?: string) {
     if (visEncoding == null) {
       const pathElems = this.getDefaultVisiblePathElems();
