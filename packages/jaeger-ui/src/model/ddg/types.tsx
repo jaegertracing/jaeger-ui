@@ -29,6 +29,7 @@ export enum EViewModifier {
 export enum EDdgDensity {
   ExternalVsInternal = 'ext-vs-int',
   MostConcise = 'mc',
+  OnePerLevel = 'per-level',
   PreventPathEntanglement = 'ppe',
   UpstreamVsDownstream = 'up-vs-down',
 }

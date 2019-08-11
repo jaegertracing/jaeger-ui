@@ -50,6 +50,12 @@ const densityOptions = [
       'This setting differentiates upstream nodes from downstream nodes. And, within the each section, a given resource is represented by only one node.',
   },
   {
+    option: EDdgDensity.OnePerLevel,
+    title: 'One resource per level',
+    description:
+      'Represents each resource at most one time for any given level, or number of hops, from the focal node.',
+  },
+  {
     option: EDdgDensity.PreventPathEntanglement,
     title: 'Show paths to the focal node',
     description:

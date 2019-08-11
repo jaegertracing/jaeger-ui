@@ -43,6 +43,8 @@ const testTable = [
   [true, EDdgDensity.MostConcise, 7],
   [false, EDdgDensity.UpstreamVsDownstream, 7],
   [true, EDdgDensity.UpstreamVsDownstream, 9],
+  [false, EDdgDensity.OnePerLevel, 7],
+  [true, EDdgDensity.OnePerLevel, 9],
   [false, EDdgDensity.PreventPathEntanglement, 9],
   [true, EDdgDensity.PreventPathEntanglement, 11],
   [false, EDdgDensity.ExternalVsInternal, 13],

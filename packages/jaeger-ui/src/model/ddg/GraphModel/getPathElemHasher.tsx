@@ -62,6 +62,9 @@ export default function getPathElemHasher(this: GraphModel) {
     case EDdgDensity.UpstreamVsDownstream: {
       return (pe: PathElem) => `${elemToStr(pe)}; direction=${Math.sign(pe.distance)}`;
     }
+    case EDdgDensity.OnePerLevel: {
+      return (pe: PathElem) => `${elemToStr(pe)}; distance=${pe.distance}`;
+    }
     case EDdgDensity.PreventPathEntanglement: {
       return getPpeHasher(elemToStr);
     }
