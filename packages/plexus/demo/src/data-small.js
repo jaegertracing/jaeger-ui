@@ -44,25 +44,25 @@ export const varied = {
 
 export const colored = {
   vertices: [
-    { key: 'string key 0', data: 'red' },
+    { key: 'key 0', data: 'red' },
     {
-      key: 1,
+      key: '1',
       label: 'Key is the number 1',
       data: 'blue',
     },
     { key: '2', label: <h3>OMG an H3</h3>, data: 'green' },
-    { key: 33, data: 'teal' },
+    { key: '33', data: 'teal' },
   ],
   edges: [
-    { from: 'string key 0', to: 1, label: 'The Great Edge Label', data: '#c00' },
+    { from: 'key 0', to: '1', label: 'The Great Edge Label', data: '#c00' },
     {
-      from: 'string key 0',
+      from: 'key 0',
       to: '2',
       label: <strong>Drop it like its hot</strong>,
       data: '#0c0',
     },
     { from: '1', to: '2', data: '#00c' },
-    { from: '2', to: 33, isBidirectional: true, data: '#c0c' },
+    { from: '2', to: '33', isBidirectional: true, data: '#c0c' },
   ],
 };
 

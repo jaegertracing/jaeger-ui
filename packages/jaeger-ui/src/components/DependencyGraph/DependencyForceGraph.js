@@ -13,9 +13,10 @@
 // limitations under the License.
 
 import React, { Component } from 'react';
-import { InteractiveForceGraph, ForceGraphNode, ForceGraphLink } from 'react-vis-force';
+import { InteractiveForceGraph, ForceGraphNode } from 'react-vis-force';
 import { window } from 'global';
 import { debounce } from 'lodash';
+import ForceGraphArrowLink from './ForceGraphArrowLink';
 
 import { nodesPropTypes, linksPropTypes } from '../../propTypes/dependencies';
 
@@ -59,6 +60,7 @@ export default class DependencyForceGraph extends Component {
   render() {
     const { nodes, links } = this.props;
     const { width, height } = this.state;
+    const nodesMap = new Map(nodes.map(node => [node.id, node]));
 
     return (
       <div
@@ -102,7 +104,12 @@ export default class DependencyForceGraph extends Component {
             />
           ))}
           {links.map(({ opacity, ...link }) => (
-            <ForceGraphLink key={`${link.source}=>${link.target}`} opacity={opacity} link={link} />
+            <ForceGraphArrowLink
+              key={`${link.source}=>${link.target}`}
+              opacity={opacity}
+              link={link}
+              targetRadius={nodesMap.get(link.target).radius}
+            />
           ))}
         </InteractiveForceGraph>
       </div>

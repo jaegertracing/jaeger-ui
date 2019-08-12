@@ -4,7 +4,10 @@
   "version": "0.2.0",
   "description": "Directed Graph React component",
   "main": "lib/index.js",
-  "files": ["lib", "dist"],
+  "files": [
+    "lib",
+    "dist"
+  ],
   "devDependencies": {
     "@babel/cli": "7.2.3",
     "@babel/core": "7.3.4",
@@ -44,6 +47,7 @@
   "dependencies": {
     "d3-selection": "^1.3.0",
     "d3-zoom": "^1.7.1",
+    "memoize-one": "5.0.0",
     "viz.js": "1.8.1"
   },
   "scripts": {
@@ -54,12 +58,10 @@
     "_tasks/clean/worker": "rimraf src/LayoutManager/layout.worker*js*",
     "_tasks/bundle-worker": "webpack --mode $NODE_ENV --config webpack.layout-worker.config.js",
     "_tasks/dev-server": "webpack-dev-server --mode $NODE_ENV --config webpack.dev.config.js",
-    "build":
-      "NODE_ENV=production npm-run-all -ln --serial _tasks/clean/* _tasks/bundle-worker --parallel _tasks/build/**",
+    "build": "NODE_ENV=production npm-run-all -ln --serial _tasks/clean/* _tasks/bundle-worker --parallel _tasks/build/**",
     "coverage": "echo 'NO TESTS YET'",
     "prepublishOnly": "$npm_execpath build",
-    "start":
-      "NODE_ENV='development' npm-run-all -ln --serial _tasks/clean/worker --parallel '_tasks/bundle-worker --watch' _tasks/dev-server",
+    "start": "NODE_ENV='development' npm-run-all -ln --serial _tasks/clean/worker _tasks/bundle-worker --parallel '_tasks/bundle-worker --watch' _tasks/dev-server",
     "test": "echo 'NO TESTS YET'"
   }
 }

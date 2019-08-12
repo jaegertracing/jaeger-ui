@@ -75,15 +75,13 @@ export default class TraceDiffHeader extends React.PureComponent<Props, State> {
       id: aId = undefined,
       state: aState = undefined,
       error: aError = undefined,
-    } =
-      a || {};
+    } = a || {};
     const {
       data: bData = undefined,
       id: bId = undefined,
       state: bState = undefined,
       error: bError = undefined,
-    } =
-      b || {};
+    } = b || {};
     const selection: Record<string, { label: 'A' | 'B' }> = {};
     if (aId) selection[aId] = { label: 'A' };
     if (bId) selection[bId] = { label: 'B' };

@@ -25,3 +25,7 @@ const createSerializer = require('enzyme-to-json').createSerializer;
 
 Enzyme.configure({ adapter: new EnzymeAdapter() });
 expect.addSnapshotSerializer(createSerializer({ mode: 'deep' }));
+
+// Calls to get-config.tsx warn if this global is not a function
+// This file is executed before each test file, so this value may be overridden safely
+window.getJaegerUiConfig = () => ({});

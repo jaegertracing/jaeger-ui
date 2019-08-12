@@ -48,7 +48,7 @@ function convSpans(spans: Span[]) {
       service,
       span,
       tags,
-      children: new Set(),
+      children: new Set<string>(),
       skipToChild: false,
     };
     const parent = parentID && map.get(parentID);

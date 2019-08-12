@@ -26,7 +26,7 @@ import AltViewOptions from './AltViewOptions';
 import KeyboardShortcutsHelp from './KeyboardShortcutsHelp';
 import SpanGraph from './SpanGraph';
 import TracePageSearchBar from './TracePageSearchBar';
-import { TUpdateViewRangeTimeFunction, ViewRange, ViewRangeTimeUpdate } from '../types';
+import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate } from '../types';
 import LabeledList from '../../common/LabeledList';
 import NewWindowIcon from '../../common/NewWindowIcon';
 import TraceName from '../../common/TraceName';
@@ -40,6 +40,7 @@ import './TracePageHeader.css';
 type TracePageHeaderEmbedProps = {
   canCollapse: boolean;
   clearSearch: () => void;
+  focusUiFindMatches: () => void;
   hideMap: boolean;
   hideSummary: boolean;
   linkToStandalone: string;
@@ -60,14 +61,25 @@ type TracePageHeaderEmbedProps = {
   traceGraphView: boolean;
   updateNextViewRangeTime: (update: ViewRangeTimeUpdate) => void;
   updateViewRangeTime: TUpdateViewRangeTimeFunction;
-  viewRange: ViewRange;
+  viewRange: IViewRange;
 };
 
 export const HEADER_ITEMS = [
   {
     key: 'timestamp',
     label: 'Trace Start',
-    renderer: (trace: Trace) => formatDatetime(trace.startTime),
+    renderer: (trace: Trace) => {
+      const dateStr = formatDatetime(trace.startTime);
+      const match = dateStr.match(/^(.+)(:\d\d\.\d+)$/);
+      return match ? (
+        <span className="TracePageHeader--overviewItem--value">
+          {match[1]}
+          <span className="TracePageHeader--overviewItem--valueDetail">{match[2]}</span>
+        </span>
+      ) : (
+        dateStr
+      );
+    },
   },
   {
     key: 'duration',
@@ -95,6 +107,7 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
   const {
     canCollapse,
     clearSearch,
+    focusUiFindMatches,
     forwardedRef,
     hideMap,
     hideSummary,
@@ -161,9 +174,9 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
         ) : (
           title
         )}
-        {showShortcutsHelp && <KeyboardShortcutsHelp className="ub-mr2" />}
         <TracePageSearchBar
           clearSearch={clearSearch}
+          focusUiFindMatches={focusUiFindMatches}
           nextResult={nextResult}
           prevResult={prevResult}
           ref={forwardedRef}
@@ -171,7 +184,7 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
           textFilter={textFilter}
           navigable={!traceGraphView}
         />
-
+        {showShortcutsHelp && <KeyboardShortcutsHelp className="ub-m2" />}
         {showViewOptions && (
           <AltViewOptions
             onTraceGraphViewClicked={onTraceGraphViewClicked}
@@ -197,15 +210,14 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
         )}
       </div>
       {summaryItems && <LabeledList className="TracePageHeader--overviewItems" items={summaryItems} />}
-      {!hideMap &&
-        !slimView && (
-          <SpanGraph
-            trace={trace}
-            viewRange={viewRange}
-            updateNextViewRangeTime={updateNextViewRangeTime}
-            updateViewRangeTime={updateViewRangeTime}
-          />
-        )}
+      {!hideMap && !slimView && (
+        <SpanGraph
+          trace={trace}
+          viewRange={viewRange}
+          updateNextViewRangeTime={updateNextViewRangeTime}
+          updateViewRangeTime={updateViewRangeTime}
+        />
+      )}
     </header>
   );
 }

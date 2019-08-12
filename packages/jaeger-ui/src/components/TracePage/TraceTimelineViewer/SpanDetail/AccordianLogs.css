@@ -17,6 +17,7 @@ limitations under the License.
 .AccordianLogs {
   border: 1px solid #d8d8d8;
   position: relative;
+  margin-bottom: 0.25rem;
 }
 
 .AccordianLogs--header {

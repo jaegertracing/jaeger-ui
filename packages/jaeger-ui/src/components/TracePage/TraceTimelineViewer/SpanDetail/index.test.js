@@ -23,6 +23,7 @@ import AccordianLogs from './AccordianLogs';
 import DetailState from './DetailState';
 import SpanDetail from './index';
 import { formatDuration } from '../utils';
+import CopyIcon from '../../../common/CopyIcon';
 import LabeledList from '../../../common/LabeledList';
 import traceGenerator from '../../../../demo/trace-generators';
 import transformTraceData from '../../../../model/transform-trace-data';
@@ -38,7 +39,6 @@ describe('<SpanDetail>', () => {
     .toggleTags();
   const traceStartTime = 5;
   const props = {
-    addToUiFind: jest.fn(),
     detailState,
     span,
     traceStartTime,
@@ -46,6 +46,7 @@ describe('<SpanDetail>', () => {
     logsToggle: jest.fn(),
     processToggle: jest.fn(),
     tagsToggle: jest.fn(),
+    warningsToggle: jest.fn(),
   };
   span.logs = [
     {
@@ -58,13 +59,14 @@ describe('<SpanDetail>', () => {
     },
   ];
 
+  span.warnings = ['Warning 1', 'Warning 2'];
+
   beforeEach(() => {
     formatDuration.mockReset();
     props.tagsToggle.mockReset();
     props.processToggle.mockReset();
     props.logsToggle.mockReset();
     props.logItemToggle.mockReset();
-    props.addToUiFind.mockReset();
     wrapper = shallow(<SpanDetail {...props} />);
   });
 
@@ -121,9 +123,19 @@ describe('<SpanDetail>', () => {
     expect(props.logItemToggle).toHaveBeenLastCalledWith(span.spanID, somethingUniq);
   });
 
-  it('calls addToUiFind when the spanID is clicked', () => {
-    const spanIDButton = wrapper.find('button');
-    spanIDButton.simulate('click');
-    expect(props.addToUiFind).toHaveBeenCalledWith(props.span.spanID);
+  it('renders the warnings', () => {
+    const warningElm = wrapper.find({ data: span.warnings });
+    expect(warningElm.length).toBe(1);
+    warningElm.simulate('toggle');
+    expect(props.warningsToggle).toHaveBeenLastCalledWith(span.spanID);
+  });
+
+  it('renders CopyIcon with deep link URL', () => {
+    expect(
+      wrapper
+        .find(CopyIcon)
+        .prop('copyText')
+        .includes(`?uiFind=${props.span.spanID}`)
+    ).toBe(true);
   });
 });

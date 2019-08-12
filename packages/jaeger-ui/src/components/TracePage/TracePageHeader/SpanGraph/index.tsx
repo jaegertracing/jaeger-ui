@@ -17,7 +17,7 @@ import * as React from 'react';
 import CanvasSpanGraph from './CanvasSpanGraph';
 import TickLabels from './TickLabels';
 import ViewingLayer from './ViewingLayer';
-import { TUpdateViewRangeTimeFunction, ViewRange, ViewRangeTimeUpdate } from '../../types';
+import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate } from '../../types';
 import { Span, Trace } from '../../../../types/trace';
 
 const DEFAULT_HEIGHT = 60;
@@ -26,7 +26,7 @@ const TIMELINE_TICK_INTERVAL = 4;
 type SpanGraphProps = {
   height?: number;
   trace: Trace;
-  viewRange: ViewRange;
+  viewRange: IViewRange;
   updateViewRangeTime: TUpdateViewRangeTimeFunction;
   updateNextViewRangeTime: (nextUpdate: ViewRangeTimeUpdate) => void;
 };

@@ -25,7 +25,9 @@ import {
   convertQueryParamsToFormDates,
   convTagsLogfmt,
   getUnixTimeStampInMSFromForm,
+  lookbackToTimestamp,
   mapStateToProps,
+  optionsWithinMaxLookback,
   submitForm,
   traceIDsToQuery,
   SearchFormImpl as SearchForm,
@@ -53,8 +55,12 @@ function makeDateParams(dateOffset = 0) {
 const DATE_FORMAT = 'YYYY-MM-DD';
 const TIME_FORMAT = 'HH:mm';
 const defaultProps = {
-  services: [{ name: 'svcA', operations: ['A', 'B'] }, { name: 'svcB', operations: ['A', 'B'] }],
   dataCenters: ['dc1'],
+  searchMaxLookback: {
+    label: '2 Days',
+    value: '2d',
+  },
+  services: [{ name: 'svcA', operations: ['A', 'B'] }, { name: 'svcB', operations: ['A', 'B'] }],
 };
 
 describe('conversion utils', () => {
@@ -122,6 +128,104 @@ describe('conversion utils', () => {
     it('splits on ","', () => {
       const strs = ['a', 'b', 'c'];
       expect(traceIDsToQuery(strs.join(','))).toEqual(strs);
+    });
+  });
+});
+
+describe('lookback utils', () => {
+  describe('lookbackToTimestamp', () => {
+    const hourInMicroseconds = 60 * 60 * 1000 * 1000;
+    const now = new Date();
+    const nowInMicroseconds = now * 1000;
+
+    it('creates timestamp for hours ago', () => {
+      [1, 2, 4, 7].forEach(lookbackNum => {
+        expect(nowInMicroseconds - lookbackToTimestamp(`${lookbackNum}h`, now)).toBe(
+          lookbackNum * hourInMicroseconds
+        );
+      });
+    });
+
+    it('creates timestamp for days ago', () => {
+      [1, 2, 4, 7].forEach(lookbackNum => {
+        expect(nowInMicroseconds - lookbackToTimestamp(`${lookbackNum}d`, now)).toBe(
+          lookbackNum * 24 * hourInMicroseconds
+        );
+      });
+    });
+
+    it('creates timestamp for weeks ago', () => {
+      [1, 2, 4, 7].forEach(lookbackNum => {
+        expect(nowInMicroseconds - lookbackToTimestamp(`${lookbackNum}w`, now)).toBe(
+          lookbackNum * 7 * 24 * hourInMicroseconds
+        );
+      });
+    });
+  });
+
+  describe('optionsWithinMaxLookback', () => {
+    const threeHoursOfExpectedOptions = [
+      {
+        label: 'Hour',
+        value: '1h',
+      },
+      {
+        label: '2 Hours',
+        value: '2h',
+      },
+      {
+        label: '3 Hours',
+        value: '3h',
+      },
+    ];
+
+    it('memoizes correctly', () => {
+      const firstCallOptions = optionsWithinMaxLookback(threeHoursOfExpectedOptions[0]);
+      const secondCallOptions = optionsWithinMaxLookback(threeHoursOfExpectedOptions[0]);
+      const thirdCallOptions = optionsWithinMaxLookback(threeHoursOfExpectedOptions[1]);
+      expect(secondCallOptions).toBe(firstCallOptions);
+      expect(thirdCallOptions).not.toBe(firstCallOptions);
+    });
+
+    it('returns options within config.search.maxLookback', () => {
+      const configValue = threeHoursOfExpectedOptions[2];
+      const options = optionsWithinMaxLookback(configValue);
+
+      expect(options.length).toBe(threeHoursOfExpectedOptions.length);
+      options.forEach(({ props }, i) => {
+        expect(props.value).toBe(threeHoursOfExpectedOptions[i].value);
+        expect(props.children[1]).toBe(threeHoursOfExpectedOptions[i].label);
+      });
+    });
+
+    it("includes config.search.maxLookback if it's not part of standard options", () => {
+      const configValue = {
+        label: '4 Hours - configValue',
+        value: '4h',
+      };
+      const expectedOptions = [...threeHoursOfExpectedOptions, configValue];
+      const options = optionsWithinMaxLookback(configValue);
+
+      expect(options.length).toBe(expectedOptions.length);
+      options.forEach(({ props }, i) => {
+        expect(props.value).toBe(expectedOptions[i].value);
+        expect(props.children[1]).toBe(expectedOptions[i].label);
+      });
+    });
+
+    it('uses config.search.maxLookback in place of standard option it is not equal to but is equivalent to', () => {
+      const configValue = {
+        label: '180 minutes is equivalent to 3 hours',
+        value: '180m',
+      };
+      const expectedOptions = [threeHoursOfExpectedOptions[0], threeHoursOfExpectedOptions[1], configValue];
+      const options = optionsWithinMaxLookback(configValue);
+
+      expect(options.length).toBe(expectedOptions.length);
+      options.forEach(({ props }, i) => {
+        expect(props.value).toBe(expectedOptions[i].value);
+        expect(props.children[1]).toBe(expectedOptions[i].label);
+      });
     });
   });
 });

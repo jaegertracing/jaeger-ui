@@ -26,7 +26,7 @@ import filterSpans from '../../../utils/filter-spans';
 
 function getUiFindVertexKeysFn(uiFind: string, vertices: TDagVertex<any>[]): Set<TVertexKey> {
   if (!uiFind) return new Set<TVertexKey>();
-  const newVertexKeys: Set<number | string> = new Set();
+  const newVertexKeys: Set<TVertexKey> = new Set();
   vertices.forEach(({ key, data: { members } }) => {
     if (_get(filterSpans(uiFind, _map(members, 'span')), 'size')) {
       newVertexKeys.add(key);

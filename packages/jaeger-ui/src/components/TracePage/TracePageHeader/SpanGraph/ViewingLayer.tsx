@@ -18,7 +18,7 @@ import * as React from 'react';
 
 import GraphTicks from './GraphTicks';
 import Scrubber from './Scrubber';
-import { TUpdateViewRangeTimeFunction, ViewRange, ViewRangeTimeUpdate } from '../../types';
+import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate } from '../../types';
 import { TNil } from '../../../../types';
 import DraggableManager, {
   DraggableBounds,
@@ -33,7 +33,7 @@ type ViewingLayerProps = {
   numTicks: number;
   updateViewRangeTime: TUpdateViewRangeTimeFunction;
   updateNextViewRangeTime: (update: ViewRangeTimeUpdate) => void;
-  viewRange: ViewRange;
+  viewRange: IViewRange;
 };
 
 type ViewingLayerState = {

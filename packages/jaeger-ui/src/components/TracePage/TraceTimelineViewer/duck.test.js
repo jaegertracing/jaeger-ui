@@ -51,101 +51,162 @@ describe('TraceTimelineViewer/duck', () => {
     expect(width).toBe(n);
   });
 
-  describe('setTrace', () => {
-    describe('without uiFind', () => {
-      it('retains all state when setting to the same traceID', () => {
-        const action = actions.setTrace(trace);
-        store.dispatch(action);
-        const state = store.getState();
-        store.dispatch(action);
-        expect(store.getState()).toBe(state);
-      });
+  describe('focusUiFindMatches', () => {
+    const uiFind = 'uiFind';
+    const action = actions.focusUiFindMatches(trace, uiFind);
+    const uiFindMatchesArray = [trace.spans[5].spanID, trace.spans[10].spanID, trace.spans[15].spanID];
+    const uiFindMatches = new Set(uiFindMatchesArray);
+    const uiFindAncestorIdsMockSchema = {
+      [uiFindMatchesArray[0]]: [trace.spans[0].spanID, trace.spans[3].spanID, trace.spans[4].spanID],
+      [uiFindMatchesArray[1]]: [
+        trace.spans[0].spanID,
+        trace.spans[3].spanID,
+        trace.spans[4].spanID,
+        trace.spans[5].spanID,
+        trace.spans[8].spanID,
+        trace.spans[9].spanID,
+      ],
+      [uiFindMatchesArray[2]]: [
+        trace.spans[0].spanID,
+        trace.spans[3].spanID,
+        trace.spans[13].spanID,
+        trace.spans[14].spanID,
+      ],
+    };
+    const uiFindAncestorIdsSet = new Set(
+      _reduce(uiFindAncestorIdsMockSchema, (allAncestors, spanAncestors) =>
+        allAncestors.concat(spanAncestors)
+      )
+    );
+    let focusUiFindMatchesStore;
+    let state;
 
-      it('retains only the spanNameColumnWidth when changing traceIDs', () => {
-        let action;
-        const width = 0.5;
-        const id = 'some-id';
+    beforeAll(() => {
+      filterSpansSpy.mockReturnValue(uiFindMatches);
+      spanAncestorIdsSpy.mockImplementation(({ spanID }) => uiFindAncestorIdsMockSchema[spanID]);
+      focusUiFindMatchesStore = createStore(reducer, newInitialState());
+      focusUiFindMatchesStore.dispatch(action);
+      state = focusUiFindMatchesStore.getState();
+    });
 
-        action = actions.childrenToggle(id);
-        store.dispatch(action);
-        action = actions.detailToggle(id);
-        store.dispatch(action);
-        action = actions.setSpanNameColumnWidth(width);
-        store.dispatch(action);
+    it('adds a detailState for each span matching the uiFind filter', () => {
+      // Sanity check
+      expect(trace.spans).toHaveLength(30);
+      expect(uiFindMatches.size).toBe(3);
 
-        let state = store.getState();
-        expect(state.traceID).toBe(null);
-        expect(state.childrenHiddenIDs).not.toEqual(new Set());
-        expect(state.detailStates).not.toEqual(new Map());
-        expect(state.spanNameColumnWidth).toBe(width);
-
-        action = actions.setTrace(trace);
-        store.dispatch(action);
-        state = store.getState();
-        expect(state.traceID).toBe(trace.traceID);
-        expect(state.childrenHiddenIDs).toEqual(new Set());
-        expect(state.detailStates).toEqual(new Map());
-        expect(state.spanNameColumnWidth).toBe(width);
+      expect(filterSpansSpy).toHaveBeenCalledWith(uiFind, trace.spans);
+      trace.spans.forEach(({ spanID }) => {
+        expect(state.detailStates.has(spanID)).toBe(uiFindMatches.has(spanID));
       });
     });
 
-    describe('with uiFind', () => {
-      const uiFind = 'uiFind';
-      const uiFindMatchesArray = [trace.spans[5].spanID, trace.spans[10].spanID, trace.spans[15].spanID];
-      const uiFindMatches = new Set(uiFindMatchesArray);
-      const uiFindAncestorIdsMockSchema = {
-        [uiFindMatchesArray[0]]: [trace.spans[0].spanID, trace.spans[3].spanID, trace.spans[4].spanID],
-        [uiFindMatchesArray[1]]: [
-          trace.spans[0].spanID,
-          trace.spans[3].spanID,
-          trace.spans[4].spanID,
-          trace.spans[5].spanID,
-          trace.spans[8].spanID,
-          trace.spans[9].spanID,
-        ],
-        [uiFindMatchesArray[2]]: [
-          trace.spans[0].spanID,
-          trace.spans[3].spanID,
-          trace.spans[13].spanID,
-          trace.spans[14].spanID,
-        ],
-      };
-      const uiFindAncestorIdsSet = new Set(
-        _reduce(uiFindAncestorIdsMockSchema, (allAncestors, spanAncestors) =>
-          allAncestors.concat(spanAncestors)
-        )
+    it('hides the children of all spanIDs that are not ancestors of a span matching the uiFind filter', () => {
+      // Sanity check
+      expect(trace.spans).toHaveLength(30);
+      expect(uiFindAncestorIdsSet.size).toBe(8);
+
+      trace.spans.forEach(({ spanID }) => {
+        expect(state.childrenHiddenIDs.has(spanID)).toBe(!uiFindAncestorIdsSet.has(spanID));
+      });
+    });
+
+    it('indicates the need to scroll iff there are uiFindMatches', () => {
+      expect(state.shouldScrollToFirstUiFindMatch).toBe(true);
+
+      filterSpansSpy.mockReturnValue(new Set());
+      const singleSpecStore = createStore(reducer, newInitialState());
+      singleSpecStore.dispatch(action);
+      const singleSpecState = singleSpecStore.getState();
+      expect(singleSpecState.shouldScrollToFirstUiFindMatch).toBe(false);
+    });
+
+    it('returns existing state if uiFind is falsy', () => {
+      const emptyStringAction = actions.focusUiFindMatches(trace, '');
+      focusUiFindMatchesStore.dispatch(emptyStringAction);
+      expect(focusUiFindMatchesStore.getState()).toBe(state);
+
+      const nullAction = actions.focusUiFindMatches(trace, null);
+      focusUiFindMatchesStore.dispatch(nullAction);
+      expect(focusUiFindMatchesStore.getState()).toBe(state);
+
+      const undefinedAction = actions.focusUiFindMatches(trace, undefined);
+      focusUiFindMatchesStore.dispatch(undefinedAction);
+      expect(focusUiFindMatchesStore.getState()).toBe(state);
+    });
+  });
+
+  describe('setTrace', () => {
+    beforeEach(() => {
+      filterSpansSpy.mockClear();
+    });
+
+    const setTraceAction = actions.setTrace(trace);
+
+    it('retains all state when setting to the same traceID', () => {
+      store.dispatch(setTraceAction);
+      const state = store.getState();
+      store.dispatch(setTraceAction);
+      expect(store.getState()).toBe(state);
+    });
+
+    it('retains only the spanNameColumnWidth when changing traceIDs', () => {
+      let action;
+      const width = 0.5;
+      const id = 'some-id';
+
+      action = actions.childrenToggle(id);
+      store.dispatch(action);
+      action = actions.detailToggle(id);
+      store.dispatch(action);
+      action = actions.setSpanNameColumnWidth(width);
+      store.dispatch(action);
+
+      let state = store.getState();
+      expect(state.traceID).toBe(null);
+      expect(state.childrenHiddenIDs).not.toEqual(new Set());
+      expect(state.detailStates).not.toEqual(new Map());
+      expect(state.spanNameColumnWidth).toBe(width);
+
+      store.dispatch(setTraceAction);
+      state = store.getState();
+      expect(state.traceID).toBe(trace.traceID);
+      expect(state.childrenHiddenIDs).toEqual(new Set());
+      expect(state.detailStates).toEqual(new Map());
+      expect(state.spanNameColumnWidth).toBe(width);
+    });
+
+    it('calls calculateHiddenIdsAndDetailStates iff a truthy uiFind is provided', () => {
+      store.dispatch(setTraceAction);
+      expect(filterSpansSpy).not.toHaveBeenCalled();
+
+      store.dispatch(actions.setTrace(Object.assign({}, trace, { traceID: `${trace.traceID}_1` }), null));
+      expect(filterSpansSpy).not.toHaveBeenCalled();
+
+      store.dispatch(actions.setTrace(Object.assign({}, trace, { traceID: `${trace.traceID}_2` }), ''));
+      expect(filterSpansSpy).not.toHaveBeenCalled();
+
+      store.dispatch(
+        actions.setTrace(Object.assign({}, trace, { traceID: `${trace.traceID}_3` }), 'truthy uiFind string')
       );
-      let state;
+      expect(filterSpansSpy).toHaveBeenCalledTimes(1);
+    });
+  });
 
-      beforeAll(() => {
-        filterSpansSpy.mockReturnValue(uiFindMatches);
-        spanAncestorIdsSpy.mockImplementation(({ spanID }) => uiFindAncestorIdsMockSchema[spanID]);
-        const action = actions.setTrace(trace, uiFind);
-        store = createStore(reducer, newInitialState());
-        store.dispatch(action);
-        state = store.getState();
-      });
+  describe('clearShouldScrollToFirstUiFindMatch', () => {
+    const clearShouldScrollToFirstUiFindMatchAction = actions.clearShouldScrollToFirstUiFindMatch();
 
-      it('adds a detailState for each span matching the uiFind filter', () => {
-        // Sanity check
-        expect(trace.spans).toHaveLength(30);
-        expect(uiFindMatches.size).toBe(3);
+    it('returns existing state if current state does not indicate need to scroll', () => {
+      const state = store.getState();
+      store.dispatch(clearShouldScrollToFirstUiFindMatchAction);
+      expect(store.getState()).toBe(state);
+    });
 
-        expect(filterSpansSpy).toHaveBeenCalledWith(uiFind, trace.spans);
-        trace.spans.forEach(({ spanID }) => {
-          expect(state.detailStates.has(spanID)).toBe(uiFindMatches.has(spanID));
-        });
-      });
-
-      it('hides the children of all spanIDs that are not ancestors of a span matching the uiFind filter', () => {
-        // Sanity check
-        expect(trace.spans).toHaveLength(30);
-        expect(uiFindAncestorIdsSet.size).toBe(8);
-
-        trace.spans.forEach(({ spanID }) => {
-          expect(state.childrenHiddenIDs.has(spanID)).toBe(!uiFindAncestorIdsSet.has(spanID));
-        });
-      });
+    it('sets state.shouldScrollToFirstUiFindMatch to false if it is currently true', () => {
+      const state = store.getState();
+      state.shouldScrollToFirstUiFindMatch = true;
+      expect(store.getState().shouldScrollToFirstUiFindMatch).toBe(true);
+      store.dispatch(clearShouldScrollToFirstUiFindMatchAction);
+      expect(store.getState().shouldScrollToFirstUiFindMatch).toBe(false);
     });
   });
 
@@ -319,6 +380,13 @@ describe('TraceTimelineViewer/duck', () => {
         unchecked: new DetailState(),
         checked: baseDetail.toggleLogs(),
       },
+      {
+        msg: 'toggles warnings',
+        action: actions.detailWarningsToggle(id),
+        get: state => state.detailStates.get(id),
+        unchecked: new DetailState(),
+        checked: baseDetail.toggleWarnings(),
+      },
     ];
 
     beforeEach(() => {
@@ -348,13 +416,18 @@ describe('TraceTimelineViewer/duck', () => {
   it('toggles a log item', () => {
     const logItem = 'hello-log-item';
     const id = trace.spans[0].spanID;
+    const secondID = trace.spans[1].spanID;
     const baseDetail = new DetailState();
     const toggledDetail = baseDetail.toggleLogItem(logItem);
 
     store.dispatch(actions.detailToggle(id));
+    store.dispatch(actions.detailToggle(secondID));
+    const secondDetail = store.getState().detailStates.get(secondID);
     expect(store.getState().detailStates.get(id)).toEqual(baseDetail);
+
     store.dispatch(actions.detailLogItemToggle(id, logItem));
     expect(store.getState().detailStates.get(id)).toEqual(toggledDetail);
+    expect(store.getState().detailStates.get(secondID)).toBe(secondDetail);
   });
 
   describe('hoverIndentGuideIds', () => {

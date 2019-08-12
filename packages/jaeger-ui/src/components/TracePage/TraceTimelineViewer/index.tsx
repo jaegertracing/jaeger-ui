@@ -21,7 +21,7 @@ import TimelineHeaderRow from './TimelineHeaderRow';
 import VirtualizedTraceView from './VirtualizedTraceView';
 import { merge as mergeShortcuts } from '../keyboard-shortcuts';
 import { Accessors } from '../ScrollManager';
-import { TUpdateViewRangeTimeFunction, ViewRange, ViewRangeTimeUpdate } from '../types';
+import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate } from '../types';
 import { TNil, ReduxState } from '../../../types';
 import { Span, Trace } from '../../../types/trace';
 
@@ -38,11 +38,12 @@ type TDispatchProps = {
 type TProps = TDispatchProps & {
   registerAccessors: (accessors: Accessors) => void;
   findMatchesIDs: Set<string> | TNil;
+  scrollToFirstVisibleSpan: () => void;
   spanNameColumnWidth: number;
   trace: Trace;
   updateNextViewRangeTime: (update: ViewRangeTimeUpdate) => void;
   updateViewRangeTime: TUpdateViewRangeTimeFunction;
-  viewRange: ViewRange;
+  viewRange: IViewRange;
 };
 
 const NUM_TICKS = 5;
@@ -123,4 +124,7 @@ function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
   return { setSpanNameColumnWidth, expandAll, expandOne, collapseAll, collapseOne };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(TraceTimelineViewerImpl);
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(TraceTimelineViewerImpl);

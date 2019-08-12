@@ -14,12 +14,18 @@
 
 import * as React from 'react';
 
-import { Icon, Tooltip } from 'antd';
-import CopyToClipboard from 'react-copy-to-clipboard';
+import { Button, Tooltip } from 'antd';
+import { TooltipPlacement } from 'antd/lib/tooltip/index';
+import cx from 'classnames';
+import copy from 'copy-to-clipboard';
+
+import './CopyIcon.css';
 
 type PropsType = {
   className?: string;
   copyText: string;
+  icon?: string;
+  placement?: TooltipPlacement;
   tooltipTitle: string;
 };
 
@@ -30,6 +36,8 @@ type StateType = {
 export default class CopyIcon extends React.PureComponent<PropsType, StateType> {
   static defaultProps: Partial<PropsType> = {
     className: undefined,
+    icon: 'copy',
+    placement: 'left',
   };
 
   state = {
@@ -40,6 +48,7 @@ export default class CopyIcon extends React.PureComponent<PropsType, StateType> 
     this.setState({
       hasCopied: true,
     });
+    copy(this.props.copyText);
   };
 
   handleTooltipVisibilityChange = (visible: boolean) => {
@@ -56,12 +65,15 @@ export default class CopyIcon extends React.PureComponent<PropsType, StateType> 
         arrowPointAtCenter
         mouseLeaveDelay={0.5}
         onVisibleChange={this.handleTooltipVisibilityChange}
-        placement="left"
+        placement={this.props.placement}
         title={this.state.hasCopied ? 'Copied' : this.props.tooltipTitle}
       >
-        <CopyToClipboard text={this.props.copyText}>
-          <Icon className={this.props.className} onClick={this.handleClick} type="copy" />
-        </CopyToClipboard>
+        <Button
+          className={cx(this.props.className, 'CopyIcon')}
+          htmlType="button"
+          icon={this.props.icon}
+          onClick={this.handleClick}
+        />
       </Tooltip>
     );
   }

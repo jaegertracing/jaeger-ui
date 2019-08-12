@@ -21,6 +21,7 @@ import queryString from 'query-string';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import store from 'store';
+import memoizeOne from 'memoize-one';
 
 import SearchForm from './SearchForm';
 import SearchResults, { sortFormSelector } from './SearchResults';
@@ -33,7 +34,6 @@ import { getLocation as getTraceLocation } from '../TracePage/url';
 import { actions as traceDiffActions } from '../TraceDiff/duck';
 import { fetchedState } from '../../constants';
 import { sortTraces } from '../../model/search';
-import getLastXformCacher from '../../utils/get-last-xform-cacher';
 import { stripEmbeddedState } from '../../utils/embedded-url';
 import FileLoader from './FileLoader';
 
@@ -71,7 +71,7 @@ export class SearchTracePageImpl extends Component {
 
   goToTrace = traceID => {
     const { queryOfResults } = this.props;
-    const searchUrl = getUrl(stripEmbeddedState(queryOfResults));
+    const searchUrl = queryOfResults ? getUrl(stripEmbeddedState(queryOfResults)) : getUrl();
     this.props.history.push(getTraceLocation(traceID, { fromSearch: searchUrl }));
   };
 
@@ -115,7 +115,9 @@ export class SearchTracePageImpl extends Component {
             {showErrors && (
               <div className="js-test-error-message">
                 <h2>There was an error querying for traces:</h2>
-                {errors.map(err => <ErrorMessage key={err.message} error={err} />)}
+                {errors.map(err => (
+                  <ErrorMessage key={err.message} error={err} />
+                ))}
               </div>
             )}
             {!showErrors && (
@@ -191,7 +193,7 @@ SearchTracePageImpl.propTypes = {
   loadJsonTraces: PropTypes.func,
 };
 
-const stateTraceXformer = getLastXformCacher(stateTrace => {
+const stateTraceXformer = memoizeOne(stateTrace => {
   const { traces: traceMap, search } = stateTrace;
   const { query, results, state, error: traceError } = search;
 
@@ -201,19 +203,19 @@ const stateTraceXformer = getLastXformCacher(stateTrace => {
   return { traces, maxDuration, traceError, loadingTraces, query };
 });
 
-const stateTraceDiffXformer = getLastXformCacher((stateTrace, stateTraceDiff) => {
+const stateTraceDiffXformer = memoizeOne((stateTrace, stateTraceDiff) => {
   const { traces } = stateTrace;
   const { cohort } = stateTraceDiff;
   return cohort.map(id => traces[id] || { id });
 });
 
-const sortedTracesXformer = getLastXformCacher((traces, sortBy) => {
+const sortedTracesXformer = memoizeOne((traces, sortBy) => {
   const traceResults = traces.slice();
   sortTraces(traceResults, sortBy);
   return traceResults;
 });
 
-const stateServicesXformer = getLastXformCacher(stateServices => {
+const stateServicesXformer = memoizeOne(stateServices => {
   const {
     loading: loadingServices,
     services: serviceList,
@@ -282,4 +284,7 @@ function mapDispatchToProps(dispatch) {
   };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(SearchTracePageImpl);
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(SearchTracePageImpl);

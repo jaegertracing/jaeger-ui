@@ -16,4 +16,6 @@ limitations under the License.
 
 :root {
   --tx-color-title: rgba(0, 0, 0, 0.85);
+  --tx-color-body: rgba(0, 0, 0, 0.65);
+  --tx-color-muted: #aaa;
 }

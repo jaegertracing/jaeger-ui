@@ -72,27 +72,31 @@ function getJSON(url, options = {}) {
 }
 
 export const DEFAULT_API_ROOT = prefixUrl('/api/');
+export const ANALYTICS_ROOT = prefixUrl('/analytics/');
 export const DEFAULT_DEPENDENCY_LOOKBACK = moment.duration(1, 'weeks').asMilliseconds();
 
 const JaegerAPI = {
   apiRoot: DEFAULT_API_ROOT,
-  fetchTrace(id) {
-    return getJSON(`${this.apiRoot}traces/${id}`);
-  },
   archiveTrace(id) {
     return getJSON(`${this.apiRoot}archive/${id}`, { method: 'POST' });
   },
-  searchTraces(query) {
-    return getJSON(`${this.apiRoot}traces`, { query });
+  fetchDeepDependencyGraph(query) {
+    return getJSON(`${ANALYTICS_ROOT}v1/dependencies`, { query });
   },
-  fetchServices() {
-    return getJSON(`${this.apiRoot}services`);
+  fetchDependencies(endTs = new Date().getTime(), lookback = DEFAULT_DEPENDENCY_LOOKBACK) {
+    return getJSON(`${this.apiRoot}dependencies`, { query: { endTs, lookback } });
   },
   fetchServiceOperations(serviceName) {
     return getJSON(`${this.apiRoot}services/${encodeURIComponent(serviceName)}/operations`);
   },
-  fetchDependencies(endTs = new Date().getTime(), lookback = DEFAULT_DEPENDENCY_LOOKBACK) {
-    return getJSON(`${this.apiRoot}dependencies`, { query: { endTs, lookback } });
+  fetchServices() {
+    return getJSON(`${this.apiRoot}services`);
+  },
+  fetchTrace(id) {
+    return getJSON(`${this.apiRoot}traces/${id}`);
+  },
+  searchTraces(query) {
+    return getJSON(`${this.apiRoot}traces`, { query });
   },
 };
 

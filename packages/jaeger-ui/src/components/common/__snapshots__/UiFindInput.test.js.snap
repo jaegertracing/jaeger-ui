@@ -8,6 +8,7 @@ exports[`UiFind rendering renders as expected 1`] = `
   onChange={[Function]}
   placeholder="Find..."
   prefixCls="ant-input"
+  suffix={<React.Fragment />}
   type="text"
   value={null}
 />

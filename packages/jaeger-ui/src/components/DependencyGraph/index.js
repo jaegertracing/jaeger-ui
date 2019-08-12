@@ -131,4 +131,7 @@ export function mapDispatchToProps(dispatch) {
   return { fetchDependencies };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(DependencyGraphPageImpl);
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(DependencyGraphPageImpl);

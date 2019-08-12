@@ -52,7 +52,7 @@ exports[`TraceDiff render renders as expected 1`] = `
     key="graph"
     style={
       Object {
-        "top": 47,
+        "top": 46,
       }
     }
   >

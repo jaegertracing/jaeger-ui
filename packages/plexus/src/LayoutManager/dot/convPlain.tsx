@@ -70,7 +70,10 @@ function parseNumbers(
 function parseGraph(str: string, startIndex: number): { end: number; graph: TLayoutGraph } {
   // skip "graph "
   const i = startIndex + 6;
-  const { values: [scale, width], end: widthEnd } = parseNumbers(2, str, i);
+  const {
+    values: [scale, width],
+    end: widthEnd,
+  } = parseNumbers(2, str, i);
   const { value: height, end } = parseNumber(str, widthEnd + 1, '\n');
   return {
     end,
@@ -132,9 +135,6 @@ export default function convPlain(str: string, parseEdges: boolean = false) {
   const edges: TLayoutEdge[] = [];
   const vertices: TLayoutVertex[] = [];
   let i = 0;
-  if (str[0] !== 'g') {
-    throwMalformedPlain(str, i);
-  }
   const { end: graphEnd, graph } = parseGraph(str, i);
   i = graphEnd + 1;
   // stop when the "stop" line is hit

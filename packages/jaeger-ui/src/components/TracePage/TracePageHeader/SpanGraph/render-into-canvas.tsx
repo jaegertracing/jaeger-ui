@@ -21,6 +21,7 @@ export const MIN_ITEM_HEIGHT = 2;
 export const MAX_TOTAL_HEIGHT = 200;
 export const MIN_ITEM_WIDTH = 10;
 export const MIN_TOTAL_HEIGHT = 60;
+export const MAX_ITEM_HEIGHT = 6;
 
 export default function renderIntoCanvas(
   canvas: HTMLCanvasElement,
@@ -36,7 +37,7 @@ export default function renderIntoCanvas(
   canvas.width = cWidth;
   // eslint-disable-next-line no-param-reassign
   canvas.height = cHeight;
-  const itemHeight = Math.max(MIN_ITEM_HEIGHT, cHeight / items.length);
+  const itemHeight = Math.min(MAX_ITEM_HEIGHT, Math.max(MIN_ITEM_HEIGHT, cHeight / items.length));
   const itemYChange = cHeight / items.length;
 
   const ctx = canvas.getContext('2d', { alpha: false }) as CanvasRenderingContext2D;
@@ -44,8 +45,8 @@ export default function renderIntoCanvas(
   ctx.fillRect(0, 0, cWidth, cHeight);
   for (let i = 0; i < items.length; i++) {
     const { valueWidth, valueOffset, serviceName } = items[i];
-    const x = valueOffset / totalValueWidth * cWidth;
-    let width = valueWidth / totalValueWidth * cWidth;
+    const x = (valueOffset / totalValueWidth) * cWidth;
+    let width = (valueWidth / totalValueWidth) * cWidth;
     if (width < MIN_ITEM_WIDTH) {
       width = MIN_ITEM_WIDTH;
     }

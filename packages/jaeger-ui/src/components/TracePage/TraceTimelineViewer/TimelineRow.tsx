@@ -16,19 +16,19 @@ import * as React from 'react';
 
 import './TimelineRow.css';
 
-type TimelineRowProps = {
+type TTimelineRowProps = {
   children: React.ReactNode;
   className?: string;
 };
 
-interface TimelineRowCellProps extends React.HTMLAttributes<HTMLDivElement> {
+interface ITimelineRowCellProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   className?: string;
   width: number;
   style?: Object;
 }
 
-export default function TimelineRow(props: TimelineRowProps) {
+export default function TimelineRow(props: TTimelineRowProps) {
   const { children, className = '', ...rest } = props;
   return (
     <div className={`flex-row ${className}`} {...rest}>
@@ -41,7 +41,7 @@ TimelineRow.defaultProps = {
   className: '',
 };
 
-function TimelineRowCell(props: TimelineRowCellProps) {
+function TimelineRowCell(props: ITimelineRowCellProps) {
   const { children, className = '', width, style, ...rest } = props;
   const widthPercent = `${width * 100}%`;
   const mergedStyle = { ...style, flexBasis: widthPercent, maxWidth: widthPercent };

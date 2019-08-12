@@ -28,7 +28,7 @@ export default function FileLoader(props: FileLoaderProps) {
         <Icon type="file-add" />
       </p>
       <p className="ant-upload-text">Click or drag files to this area.</p>
-      <p className="ant-upload-hint">Support JSON files containig one or more traces.</p>
+      <p className="ant-upload-hint">JSON files containing one or more traces are supported.</p>
     </Dragger>
   );
 }

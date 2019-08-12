@@ -15,12 +15,16 @@ limitations under the License.
 */
 
 .TracePageSearchBar {
-  max-width: 20rem;
+  width: 40%;
 }
 
 .TracePageSearchBar--bar {
-  display: flex;
   max-width: 20rem;
+  transition: max-width 0.5s;
+}
+
+.TracePageSearchBar--bar:focus-within {
+  max-width: 100%;
 }
 
 .TracePageSearchBar--count {
@@ -28,9 +32,14 @@ limitations under the License.
 }
 
 .TracePageSearchBar--btn {
+  border-left: none;
   transition: 0.2s;
 }
 
 .TracePageSearchBar--btn.is-disabled {
   opacity: 0.5;
+}
+
+.TracePageSearchBar--locateBtn {
+  padding: 1px 8px 4px;
 }
