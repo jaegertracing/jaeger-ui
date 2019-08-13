@@ -42,22 +42,37 @@ export default class NameSelector extends React.PureComponent<TProps, TState> {
   state: TState = { popoverVisible: false };
 
   componentDidUpdate() {
-    if (this.listRef.current) {
+    if (this.listRef.current && this.state.popoverVisible) {
       this.listRef.current.focusInput();
     }
   }
 
+  private changeVisible(popoverVisible: boolean) {
+    if (popoverVisible) {
+      window.document.body.addEventListener('click', this.onBodyClicked);
+    } else {
+      window.document.body.removeEventListener('click', this.onBodyClicked);
+    }
+    this.setState({ popoverVisible });
+  }
+
   setValue = (value: string) => {
     this.props.setValue(value);
-    this.setState({ popoverVisible: false });
+    this.changeVisible(false);
+  };
+
+  private onBodyClicked = () => {
+    if (this.listRef.current && !this.listRef.current.isMouseWithin()) {
+      this.changeVisible(false);
+    }
   };
 
   onFilterCancelled = () => {
-    this.setState({ popoverVisible: false });
+    this.changeVisible(false);
   };
 
   onPopoverVisbileChanged = (popoverVisible: boolean) => {
-    this.setState({ popoverVisible });
+    this.changeVisible(popoverVisible);
   };
 
   render() {
