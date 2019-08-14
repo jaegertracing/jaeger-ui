@@ -15,10 +15,10 @@ limitations under the License.
 */
 
 .Ddg--graphWrapper {
-  background: #f0f0f0;
+  background: #fff;
   bottom: 0;
   left: 0;
-  position: fixed;
+  position: absolute;
   right: 0;
   top: 0;
 }
