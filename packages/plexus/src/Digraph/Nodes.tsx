@@ -15,15 +15,17 @@
 import * as React from 'react';
 
 import Node from './Node';
-import { TNodeRenderer, TLayerType, TRendererUtils } from './types';
+import { TLayerType, TRendererUtils, TRenderNodeFn, TSetProps, TAnyProps } from './types';
 import { TLayoutVertex } from '../types';
 import { isSamePropSetter } from './utils';
 
-type TProps<T = {}> = TNodeRenderer<T> & {
+type TProps<T = {}> = {
   getClassName: (name: string) => string;
   layerType: TLayerType;
   layoutVertices: TLayoutVertex<T>[];
+  renderNode: TRenderNodeFn<T>;
   renderUtils: TRendererUtils;
+  setOnNode?: TSetProps<(layoutVertex: TLayoutVertex<T>, utils: TRendererUtils) => TAnyProps | null>;
 };
 
 export default class Nodes<T = {}> extends React.Component<TProps<T>> {

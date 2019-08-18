@@ -21,7 +21,7 @@ import { TDdgVertex, EViewModifier } from '../../../model/ddg/types';
 import './getNodeRenderers.css';
 
 export default function getNodeRenderers(findMatches: Set<TDdgVertex>, viewModifiers: Map<string, number>) {
-  function renderVectorBorder(lv: TLayoutVertex<TDdgVertex>) {
+  function vectorBorder(lv: TLayoutVertex<TDdgVertex>) {
     // eslint-disable-next-line no-bitwise
     const isHovered = (viewModifiers.get(lv.vertex.key) || 0) & EViewModifier.Hovered;
     // eslint-disable-next-line no-bitwise
@@ -44,7 +44,16 @@ export default function getNodeRenderers(findMatches: Set<TDdgVertex>, viewModif
     );
   }
 
-  function renderVectorFindEmphasisOutline(lv: TLayoutVertex<any>) {
+  if (!findMatches.size) {
+    return {
+      vectorBorder,
+      htmlFindEmphasis: null,
+      vectorFindColorBand: null,
+      vectorFindOutline: null,
+    };
+  }
+
+  function vectorFindOutline(lv: TLayoutVertex<any>) {
     if (!findMatches.has(lv.vertex)) {
       return null;
     }
@@ -60,14 +69,14 @@ export default function getNodeRenderers(findMatches: Set<TDdgVertex>, viewModif
     );
   }
 
-  function renderHtmlFindEmphasis(lv: TLayoutVertex<any>) {
+  function htmlFindEmphasis(lv: TLayoutVertex<any>) {
     if (!findMatches.has(lv.vertex)) {
       return null;
     }
     return <div className="DdgNode--HtmlFindEmphasis" />;
   }
 
-  function renderVectorFindEmphasisColorBand(lv: TLayoutVertex<any>) {
+  function vectorFindColorBand(lv: TLayoutVertex<any>) {
     if (!findMatches.has(lv.vertex)) {
       return null;
     }
@@ -84,9 +93,9 @@ export default function getNodeRenderers(findMatches: Set<TDdgVertex>, viewModif
   }
 
   return {
-    htmlFindEmphasis: renderHtmlFindEmphasis,
-    vectorBorder: renderVectorBorder,
-    vectorFindColorBand: renderVectorFindEmphasisColorBand,
-    vectorFindOutline: renderVectorFindEmphasisOutline,
+    htmlFindEmphasis,
+    vectorBorder,
+    vectorFindColorBand,
+    vectorFindOutline,
   };
 }

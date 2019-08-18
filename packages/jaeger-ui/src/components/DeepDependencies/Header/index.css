@@ -28,7 +28,7 @@ limitations under the License.
 
 .DdgHeader--controlHeader {
   align-items: center;
-  background-color: #f8f8f8;
+  background-color: #f6f6f6;
   border-top: 1px solid #eee;
   display: flex;
   justify-content: space-between;
@@ -39,7 +39,7 @@ limitations under the License.
   flex-wrap: wrap;
   font-size: unset;
   align-items: center;
-  background: #fff;
+  background: #fafafa;
   display: flex;
   flex: 1;
   margin: 0;

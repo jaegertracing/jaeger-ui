@@ -17,29 +17,35 @@ import * as React from 'react';
 import HtmlLayer from './HtmlLayer';
 import Nodes from './Nodes';
 import SvgLayer from './SvgLayer';
-import { TExposedGraphState, TNodeRenderer, TLayerType, TSetOnContainer, ELayerType } from './types';
+import {
+  TExposedGraphState,
+  TLayerType,
+  TSetOnContainer,
+  ELayerType,
+  TRenderNodeFn,
+  TSetProps,
+  TRendererUtils,
+  TAnyProps,
+} from './types';
+import { TLayoutVertex } from '../types';
 
-type TProps<T = {}, U = {}> = TNodeRenderer<T> &
-  TSetOnContainer<T, U> & {
-    getClassName: (name: string) => string;
-    graphState: TExposedGraphState<T, U>;
-    layerType: TLayerType;
-    standalone?: boolean;
-  };
+type TProps<T = {}, U = {}> = TSetOnContainer<T, U> & {
+  getClassName: (name: string) => string;
+  graphState: TExposedGraphState<T, U>;
+  layerType: TLayerType;
+  renderNode: TRenderNodeFn<T> | null;
+  setOnNode?: TSetProps<(layoutVertex: TLayoutVertex<T>, utils: TRendererUtils) => TAnyProps | null>;
+  standalone?: boolean;
+};
 
 export default class NodesLayer<T = {}, U = {}> extends React.PureComponent<TProps<T, U>> {
   render() {
-    const { layoutVertices } = this.props.graphState;
-    if (!layoutVertices) {
+    const { renderNode } = this.props;
+    const { layoutVertices, renderUtils } = this.props.graphState;
+    if (!layoutVertices || !renderNode) {
       return null;
     }
-    const {
-      getClassName,
-      graphState: { renderUtils },
-      layerType,
-      renderNode,
-      setOnNode,
-    } = this.props;
+    const { getClassName, layerType, setOnNode } = this.props;
     const LayerComponent = layerType === ELayerType.Html ? HtmlLayer : SvgLayer;
     return (
       <LayerComponent {...this.props} classNamePart="NodesLayer">

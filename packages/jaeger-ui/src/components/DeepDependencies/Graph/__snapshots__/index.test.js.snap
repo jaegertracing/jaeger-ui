@@ -21,17 +21,17 @@ exports[`<Graph /> render renders provided edges and vertices 1`] = `
       Object {
         "key": "nodes/find-emphasis/vector-outline",
         "layerType": "svg",
-        "renderNode": [Function],
+        "renderNode": null,
       },
       Object {
         "key": "nodes/find-emphasis/html",
         "layerType": "html",
-        "renderNode": [Function],
+        "renderNode": null,
       },
       Object {
         "key": "nodes/find-emphasis/vector-color-band",
         "layerType": "svg",
-        "renderNode": [Function],
+        "renderNode": null,
       },
       Object {
         "key": "nodes/vector-border",
@@ -46,7 +46,7 @@ exports[`<Graph /> render renders provided edges and vertices 1`] = `
           Object {
             "localId": "arrow-hovered",
             "setOnEntry": Object {
-              "className": "DdgArrow is-pathHovered",
+              "className": "Ddg--Arrow is-pathHovered",
             },
           },
         ],
@@ -57,11 +57,12 @@ exports[`<Graph /> render renders provided edges and vertices 1`] = `
         "setOnContainer": Array [
           [Function],
           Object {
-            "stroke": "#444",
-            "strokeWidth": 0.7,
+            "className": "Ddg--Edges",
           },
         ],
-        "setOnEdge": undefined,
+        "setOnEdge": Object {
+          "className": "Ddg--Edge",
+        },
       },
       Object {
         "key": "nodes/content",

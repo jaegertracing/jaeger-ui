@@ -23,5 +23,9 @@ limitations under the License.
 }
 
 .Page--content {
-  padding-top: 46px;
+  left: 0;
+  min-height: calc(100% - 46px);
+  position: absolute;
+  right: 0;
+  top: 46px;
 }

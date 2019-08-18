@@ -14,15 +14,17 @@
 
 import * as React from 'react';
 
-import { TNodeRenderer, TRendererUtils, TLayerType, ELayerType } from './types';
+import { TRendererUtils, TLayerType, ELayerType, TRenderNodeFn, TSetProps, TAnyProps } from './types';
 import { assignMergeCss, getProps } from './utils';
 import { TLayoutVertex } from '../types';
 
-export type TProps<T = {}> = TNodeRenderer<T> & {
+export type TProps<T = {}> = {
   getClassName: (name: string) => string;
-  layoutVertex: TLayoutVertex<T>;
-  renderUtils: TRendererUtils;
   layerType: TLayerType;
+  layoutVertex: TLayoutVertex<T>;
+  renderNode: TRenderNodeFn<T>;
+  renderUtils: TRendererUtils;
+  setOnNode?: TSetProps<(layoutVertex: TLayoutVertex<T>, utils: TRendererUtils) => TAnyProps | null>;
 };
 
 function getHtmlStyle(lv: TLayoutVertex<any>) {
@@ -38,6 +40,10 @@ function getHtmlStyle(lv: TLayoutVertex<any>) {
 export default class Node<T = {}> extends React.PureComponent<TProps<T>> {
   render() {
     const { getClassName, layerType, renderNode, renderUtils, setOnNode, layoutVertex } = this.props;
+    const nodeContent = renderNode(layoutVertex, renderUtils);
+    if (!nodeContent) {
+      return null;
+    }
     const { left, top } = layoutVertex;
     const props = assignMergeCss(
       {

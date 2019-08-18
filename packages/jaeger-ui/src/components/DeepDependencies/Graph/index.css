@@ -14,16 +14,22 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-.DdgArrow.is-pathHovered {
+.Ddg--Edges {
+  stroke: #444;
+  stroke-width: 0.7;
+}
+
+.Ddg--Edges.is-withViewModifiers {
+  stroke-opacity: 0.15;
+}
+
+.Ddg--Arrow.is-pathHovered {
   fill: #08979c;
   stroke: none;
 }
 
-.DdgEdge.is-pathHovered {
+.Ddg--Edge.is-pathHovered {
   stroke: #08979c;
   stroke-opacity: 1;
-}
-
-.DdgEdge.is-notMatched {
-  stroke-opacity: 0.1;
+  stroke-width: 0.85;
 }
