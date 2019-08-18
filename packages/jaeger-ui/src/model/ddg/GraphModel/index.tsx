@@ -107,55 +107,6 @@ export default class GraphModel {
     Object.freeze(this.visIdxToPathElem);
   }
 
-  // // This function assumes the density is set to PPE with distinct operations
-  // // It is a class property so that it can be aware of density in late-alpha
-  // //
-  // // It might make sense to live on PathElem so that pathElems can be compared when checking how many
-  // // inbound/outbound edges are visible for a vertex, but maybe not as vertices could be densitiy-aware and
-  // // provide that to this fn. could also be property on pathElem that gets set by showElems
-  // // tl;dr may move in late-alpha
-  // private getVertexKey = (pathElem: PathElem): string => {
-  //   const elemToStr = this.showOp
-  //     ? ({ operation }: PathElem) => `${operation.service.name}----${operation.name}`
-  //     : // Always show the operation for the focal node, i.e. when distance === 0
-  //       ({ distance, operation }: PathElem) =>
-  //         distance === 0 ? `${operation.service.name}----${operation.name}` : operation.service.name;
-
-  //   switch (this.density) {
-  //     case EDdgDensity.MostConcise: {
-  //       return elemToStr(pathElem);
-  //     }
-  //     case EDdgDensity.UpstreamVsDownstream: {
-  //       return `${elemToStr(pathElem)}=${Math.sign(pathElem.distance)}`;
-  //     }
-  //     case EDdgDensity.PreventPathEntanglement:
-  //     case EDdgDensity.ExternalVsInternal: {
-  //       const decorate =
-  //         this.density === EDdgDensity.ExternalVsInternal
-  //           ? (str: string) => `${str}${pathElem.isExternal ? '----external' : ''}`
-  //           : (str: string) => str;
-  //       const { memberIdx, memberOf } = pathElem;
-  //       const { focalIdx, members } = memberOf;
-
-  //       return decorate(
-  //         members
-  //           .slice(Math.min(focalIdx, memberIdx), Math.max(focalIdx, memberIdx) + 1)
-  //           .map(elemToStr)
-  //           .join('____')
-  //       );
-  //     }
-  //     default: {
-  //       throw new Error(
-  //         `Density: ${this.density} has not been implemented, try one of these: ${JSON.stringify(
-  //           EDdgDensity,
-  //           null,
-  //           2
-  //         )}`
-  //       );
-  //     }
-  //   }
-  // };
-
   private getDefaultVisiblePathElems() {
     return ([] as PathElem[]).concat(
       this.distanceToPathElems.get(-2) || [],
