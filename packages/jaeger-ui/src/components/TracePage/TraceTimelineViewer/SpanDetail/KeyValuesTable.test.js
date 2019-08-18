@@ -45,7 +45,12 @@ describe('LinkValue', () => {
 describe('<KeyValuesTable>', () => {
   let wrapper;
 
-  const data = [{ key: 'span.kind', value: 'client' }, { key: 'omg', value: 'mos-def' }];
+  const data = [
+    { key: 'span.kind', value: 'client' },
+    { key: 'omg', value: 'mos-def' },
+    { key: 'numericString', value: '12345678901234567890' },
+    { key: 'jsonkey', value: JSON.stringify({ hello: 'world' }) },
+  ];
 
   beforeEach(() => {
     wrapper = shallow(<KeyValuesTable data={data} />);
@@ -125,6 +130,16 @@ describe('<KeyValuesTable>', () => {
     copyIcons.forEach((copyIcon, i) => {
       expect(copyIcon.prop('copyText')).toBe(JSON.stringify(data[i], null, 2));
       expect(copyIcon.prop('tooltipTitle')).toBe('Copy JSON');
+    });
+  });
+
+  it('renders a span value containing numeric string correctly', () => {
+    const el = wrapper.find('.ub-inline-block');
+    expect(el.length).toBe(data.length);
+    el.forEach((valueDiv, i) => {
+      if (data[i].key !== 'jsonkey') {
+        expect(valueDiv.html()).toMatch(`"${data[i].value}"`);
+      }
     });
   });
 });
