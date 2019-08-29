@@ -15,7 +15,7 @@
 import React from 'react';
 import { shallow } from 'enzyme';
 
-import SearchResults from '.';
+import { UnconnectedSearchResults as SearchResults } from '.';
 import * as markers from './index.markers';
 import ResultItem from './ResultItem';
 import ScatterPlot from './ScatterPlot';

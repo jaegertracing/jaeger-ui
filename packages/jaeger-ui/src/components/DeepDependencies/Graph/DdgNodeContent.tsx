@@ -36,7 +36,7 @@ type TProps = {
   vertexKey: string;
 };
 
-// While browsers suport URLs of unlimited length, many server clients do not handle more than this max
+// While browsers support URLs of unlimited length, many server clients do not handle more than this max
 const MAX_LENGTH = 2083;
 const MAX_LINKED_TRACES = 35;
 const MIN_LENGTH = getSearchUrl().length;
@@ -55,13 +55,17 @@ export default class DdgNodeContent extends React.PureComponent<TProps> {
     getVisiblePathElems: (vertexKey: string) => PathElem[] | undefined,
     setViewModifier: (vertexKey: string, viewModifier: EViewModifier, enable: boolean) => void,
     density: EDdgDensity,
-    showOp: boolean
+    showOp: boolean,
+    baseUrl: string,
+    extraUrlArgs: { [key: string]: unknown } | undefined
   ) {
     return function renderNode(vertex: TDdgVertex, utils: TRendererUtils, lv: TLayoutVertex<any> | null) {
       const { isFocalNode, key, operation, service } = vertex;
       return (
         <DdgNodeContent
-          focalNodeUrl={isFocalNode ? null : getUrl({ density, operation, service, showOp })}
+          focalNodeUrl={
+            isFocalNode ? null : getUrl({ density, operation, service, showOp, ...extraUrlArgs }, baseUrl)
+          }
           getVisiblePathElems={getVisiblePathElems}
           isFocalNode={isFocalNode}
           isPositioned={Boolean(lv)}

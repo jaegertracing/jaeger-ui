@@ -36,6 +36,8 @@ type TProps = {
   uiFindMatches: Set<TDdgVertex> | undefined;
   vertices: TDdgVertex[];
   verticesViewModifiers: Map<string, number>;
+  baseUrl: string;
+  extraUrlArgs?: { [key: string]: unknown };
 };
 
 // The dichotomy between w/ & w/o VMs assumes that any edge VM neccesitates unmodified edges are de-emphasized
@@ -82,6 +84,8 @@ export default class Graph extends PureComponent<TProps> {
       uiFindMatches,
       vertices,
       verticesViewModifiers,
+      baseUrl,
+      extraUrlArgs,
     } = this.props;
     const nodeRenderers = this.getNodeRenderers(uiFindMatches || this.emptyFindSet, verticesViewModifiers);
 
@@ -134,7 +138,14 @@ export default class Graph extends PureComponent<TProps> {
             layerType: 'html',
             measurable: true,
             measureNode: DdgNodeContent.measureNode,
-            renderNode: this.getNodeContentRenderer(getVisiblePathElems, setViewModifier, density, showOp),
+            renderNode: this.getNodeContentRenderer(
+              getVisiblePathElems,
+              setViewModifier,
+              density,
+              showOp,
+              baseUrl,
+              extraUrlArgs
+            ),
           },
         ]}
       />

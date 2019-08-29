@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { MemoryRouter } from 'react-router-dom';
+
 jest.mock('redux-form', () => {
   function reduxForm() {
     return component => component;
@@ -23,7 +25,6 @@ jest.mock('redux-form', () => {
   return { Field, formValueSelector, reduxForm };
 });
 
-jest.mock('react-router-dom');
 jest.mock('store');
 
 /* eslint-disable import/first */
@@ -76,7 +77,11 @@ describe('<SearchTracePage>', () => {
     props.fetchServiceOperations.mockClear();
     const oldFn = store.get;
     store.get = jest.fn(() => ({ service: 'svc-b' }));
-    wrapper = mount(<SearchTracePage {...props} />);
+    wrapper = mount(
+      <MemoryRouter>
+        <SearchTracePage {...props} />
+      </MemoryRouter>
+    );
     expect(props.fetchServices.mock.calls.length).toBe(1);
     expect(props.fetchServiceOperations.mock.calls.length).toBe(1);
     store.get = oldFn;
@@ -87,8 +92,16 @@ describe('<SearchTracePage>', () => {
     const query = 'some-query';
     const historyPush = jest.fn();
     const historyMock = { push: historyPush };
-    wrapper = mount(<SearchTracePage {...props} history={historyMock} query={query} />);
-    wrapper.instance().goToTrace(traceID);
+    wrapper = mount(
+      <MemoryRouter>
+        <SearchTracePage {...props} history={historyMock} query={query} />
+      </MemoryRouter>
+    );
+    wrapper
+      .find(SearchTracePage)
+      .first()
+      .instance()
+      .goToTrace(traceID);
     expect(historyPush.mock.calls.length).toBe(1);
     expect(historyPush.mock.calls[0][0]).toEqual({
       pathname: `/trace/${traceID}`,
@@ -155,9 +168,14 @@ describe('mapStateToProps()', () => {
       services: stateServices,
     };
 
-    const { maxTraceDuration, traceResults, diffCohort, numberOfTraceResults, ...rest } = mapStateToProps(
-      state
-    );
+    const {
+      maxTraceDuration,
+      traceResults,
+      diffCohort,
+      numberOfTraceResults,
+      location,
+      ...rest
+    } = mapStateToProps(state);
     expect(traceResults).toHaveLength(stateTrace.search.results.length);
     expect(traceResults[0].traceID).toBe(trace.traceID);
     expect(maxTraceDuration).toBe(trace.duration);

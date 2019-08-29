@@ -35,3 +35,7 @@ limitations under the License.
 .SearchResults--resultLink:hover {
   color: inherit;
 }
+
+.SearchResults--ddg-container {
+  min-height: 600px;
+}

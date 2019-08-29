@@ -16,14 +16,17 @@
 
 import * as React from 'react';
 import { Select } from 'antd';
-import { Link } from 'react-router-dom';
-import { Field, reduxForm, formValueSelector } from 'redux-form';
+import { Link, withRouter } from 'react-router-dom';
+import { Field, formValueSelector, reduxForm } from 'redux-form';
+import { History as RouterHistory, Location } from 'history';
+import queryString from 'query-string';
 
 import DiffSelection from './DiffSelection';
 import * as markers from './index.markers';
 import ResultItem from './ResultItem';
 import ScatterPlot from './ScatterPlot';
 import { getUrl } from '../url';
+
 import LoadingIndicator from '../../common/LoadingIndicator';
 import NewWindowIcon from '../../common/NewWindowIcon';
 import { getLocation } from '../../TracePage/url';
@@ -36,6 +39,8 @@ import type { FetchedTrace } from '../../../types';
 import type { SearchQuery } from '../../../types/search';
 
 import './index.css';
+import AltViewOptions from './AltViewOptions';
+import SearchResultsDGG from '../../DeepDependencies/traces';
 
 type SearchResultsProps = {
   cohortAddTrace: string => void,
@@ -50,6 +55,8 @@ type SearchResultsProps = {
   showStandaloneLink: boolean,
   skipMessage?: boolean,
   traces: TraceSummary[],
+  history: RouterHistory,
+  location: Location,
 };
 
 const Option = Select.Option;
@@ -81,7 +88,7 @@ const SelectSort = reduxForm({
 
 export const sortFormSelector = formValueSelector('traceResultsSort');
 
-export default class SearchResults extends React.PureComponent<SearchResultsProps> {
+export class UnconnectedSearchResults extends React.PureComponent<SearchResultsProps> {
   props: SearchResultsProps;
 
   static defaultProps = { skipMessage: false, queryOfResults: undefined };
@@ -93,6 +100,19 @@ export default class SearchResults extends React.PureComponent<SearchResultsProp
     } else {
       cohortAddTrace(traceID);
     }
+  };
+
+  updateUrlState = () => {
+    const { location, history } = this.props;
+    const urlState = queryString.parse(location.search);
+    history.push(getUrl({ ...urlState, view: 'ddg' }));
+  };
+
+  onTraceGraphViewClicked = () => {
+    const { location, history } = this.props;
+    const urlState = queryString.parse(location.search);
+    const view = urlState.view && urlState.view === 'ddg' ? 'traces' : 'ddg';
+    history.push(getUrl({ ...urlState, view }));
   };
 
   render() {
@@ -107,7 +127,16 @@ export default class SearchResults extends React.PureComponent<SearchResultsProp
       showStandaloneLink,
       skipMessage,
       traces,
+      history,
+      location,
     } = this.props;
+
+    let traceResultsView = true;
+    if (location && location.search) {
+      const urlState = queryString.parse(location.search);
+      traceResultsView = urlState.view === 'traces' || urlState.view === undefined;
+    }
+
     const diffSelection = !disableComparisons && (
       <DiffSelection toggleComparison={this.toggleComparison} traces={diffCohort} />
     );
@@ -137,7 +166,7 @@ export default class SearchResults extends React.PureComponent<SearchResultsProp
       <div>
         <div>
           <div className="SearchResults--header">
-            {!hideGraph && (
+            {!hideGraph && traceResultsView && (
               <div className="ub-p3">
                 <ScatterPlot
                   data={traces.map(t => ({
@@ -157,7 +186,11 @@ export default class SearchResults extends React.PureComponent<SearchResultsProp
               <h2 className="ub-m0 u-flex-1">
                 {traces.length} Trace{traces.length > 1 && 's'}
               </h2>
-              <SelectSort />
+              {traceResultsView && <SelectSort />}
+              <AltViewOptions
+                traceResultsView={traceResultsView}
+                onTraceGraphViewClicked={this.onTraceGraphViewClicked}
+              />
               {showStandaloneLink && (
                 <Link
                   className="u-tx-inherit ub-nowrap ub-ml3"
@@ -172,23 +205,32 @@ export default class SearchResults extends React.PureComponent<SearchResultsProp
           </div>
         </div>
         <div>
-          {diffSelection}
-          <ul className="ub-list-reset">
-            {traces.map(trace => (
-              <li className="ub-my3" key={trace.traceID}>
-                <ResultItem
-                  durationPercent={getPercentageOfDuration(trace.duration, maxTraceDuration)}
-                  isInDiffCohort={cohortIds.has(trace.traceID)}
-                  linkTo={getLocation(trace.traceID, { fromSearch: searchUrl })}
-                  toggleComparison={this.toggleComparison}
-                  trace={trace}
-                  disableComparision={disableComparisons}
-                />
-              </li>
-            ))}
-          </ul>
+          {!traceResultsView && (
+            <div className="SearchResults--ddg-container">
+              <SearchResultsDGG location={location} history={history} />
+            </div>
+          )}
+          {traceResultsView && diffSelection}
+          {traceResultsView && (
+            <ul className="ub-list-reset">
+              {traces.map(trace => (
+                <li className="ub-my3" key={trace.traceID}>
+                  <ResultItem
+                    durationPercent={getPercentageOfDuration(trace.duration, maxTraceDuration)}
+                    isInDiffCohort={cohortIds.has(trace.traceID)}
+                    linkTo={getLocation(trace.traceID, { fromSearch: searchUrl })}
+                    toggleComparison={this.toggleComparison}
+                    trace={trace}
+                    disableComparision={disableComparisons}
+                  />
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
     );
   }
 }
+
+export default withRouter(UnconnectedSearchResults);

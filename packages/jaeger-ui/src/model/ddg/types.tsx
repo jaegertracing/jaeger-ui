@@ -50,10 +50,12 @@ export type TDdgPayloadEntry = {
   service: string;
 };
 
-export type TDdgPayload = {
+export type TDdgPayloadPath = {
   path: TDdgPayloadEntry[];
   trace_id: string; // eslint-disable-line camelcase
-}[];
+};
+
+export type TDdgPayload = TDdgPayloadPath[];
 
 export type TDdgService = {
   name: string;

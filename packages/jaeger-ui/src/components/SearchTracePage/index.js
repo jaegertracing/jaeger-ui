@@ -94,6 +94,7 @@ export class SearchTracePageImpl extends Component {
     const hasTraceResults = traceResults && traceResults.length > 0;
     const showErrors = errors && !loadingTraces;
     const showLogo = isHomepage && !hasTraceResults && !loadingTraces && !errors;
+
     return (
       <div>
         <Row>
@@ -248,9 +249,11 @@ export function mapStateToProps(state) {
   if (serviceError) {
     errors.push(serviceError);
   }
+  const location = router.location;
   const sortBy = sortFormSelector(state, 'sortBy');
   const traceResults = sortedTracesXformer(traces, sortBy);
   return {
+    location,
     queryOfResults,
     diffCohort,
     embedded,

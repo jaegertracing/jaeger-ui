@@ -22,6 +22,7 @@ type TProps = {
   distanceToPathElems?: TDdgDistanceToPathElems;
   handleClick: (distance: number, direction: EDirection) => void;
   visEncoding?: string;
+  extraUrlArgs?: { [key: string]: unknown };
 };
 
 export default memo(function HopsSelector({ distanceToPathElems, handleClick, visEncoding }: TProps) {
