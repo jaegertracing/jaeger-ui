@@ -121,4 +121,3 @@ Finally, we generally adhere to the [Airbnb Style Guide](https://github.com/airb
 # Cutting a Jaeger UI release
 
 Please see [RELEASE.md](./RELEASE.md).
-
