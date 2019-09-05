@@ -1,5 +1,29 @@
 # Releases
 
+## v1.4.0 (August 31, 2019)
+
+### Enhancements
+
+- **Dependency graph:** Use directed edges ([@Etienne-Carriere](https://github.com/Etienne-Carriere) in [#373](https://github.com/jaegertracing/jaeger-ui/pull/373))
+
+- **Trace detail:** Show seconds in trace start time on the trace page ([@tiffon](https://github.com/tiffon) in [#430](https://github.com/jaegertracing/jaeger-ui/pull/430), with thanks to [@leogomes](https://github.com/leogomes) for [#403](https://github.com/jaegertracing/jaeger-ui/pull/403))
+
+### Fixes
+
+- **Trace detail:** Fix handling of numeric strings in span tag values ([@yntelectual](https://github.com/yntelectual) in [#436](https://github.com/jaegertracing/jaeger-ui/pull/436))
+
+- **Google Analytics:** Fix GA filter category ([@everett980](https://github.com/everett980) in [#404](https://github.com/jaegertracing/jaeger-ui/pull/404))
+
+### Documentation
+
+- **Plexus:** Add a real README for plexus ([@tiffon](https://github.com/tiffon) in [#425](https://github.com/jaegertracing/jaeger-ui/pull/425))
+
+### Chores & Maintenance
+
+- **Codebase:** Add an ESLint rule requiring the names of interfaces to be prefixed with "I" ([@tiffon](https://github.com/tiffon) in [#411](https://github.com/jaegertracing/jaeger-ui/pull/411))
+
+- **General:** Fix typo on README file ([@leogomes](https://github.com/leogomes) in [#402](https://github.com/jaegertracing/jaeger-ui/pull/402))
+
 ## v1.3.0 (June 21, 2019)
 
 ### Enhancements
