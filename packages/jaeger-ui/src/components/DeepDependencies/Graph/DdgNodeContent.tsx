@@ -21,7 +21,7 @@ import { focalNodeIcon, setFocusIcon } from './node-icons';
 import { getUrl } from '../url';
 import NewWindowIcon from '../../common/NewWindowIcon';
 import { getUrl as getSearchUrl } from '../../SearchTracePage/url';
-import { EViewModifier, TDdgVertex, PathElem } from '../../../model/ddg/types';
+import { EDdgDensity, EViewModifier, TDdgVertex, PathElem } from '../../../model/ddg/types';
 
 import './DdgNodeContent.css';
 
@@ -53,13 +53,15 @@ export default class DdgNodeContent extends React.PureComponent<TProps> {
 
   static getNodeRenderer(
     getVisiblePathElems: (vertexKey: string) => PathElem[] | undefined,
-    setViewModifier: (vertexKey: string, viewModifier: EViewModifier, enable: boolean) => void
+    setViewModifier: (vertexKey: string, viewModifier: EViewModifier, enable: boolean) => void,
+    density: EDdgDensity,
+    showOp: boolean
   ) {
     return function renderNode(vertex: TDdgVertex, utils: TRendererUtils, lv: TLayoutVertex<any> | null) {
       const { isFocalNode, key, operation, service } = vertex;
       return (
         <DdgNodeContent
-          focalNodeUrl={isFocalNode ? null : getUrl({ operation, service })}
+          focalNodeUrl={isFocalNode ? null : getUrl({ density, operation, service, showOp })}
           getVisiblePathElems={getVisiblePathElems}
           isFocalNode={isFocalNode}
           isPositioned={Boolean(lv)}

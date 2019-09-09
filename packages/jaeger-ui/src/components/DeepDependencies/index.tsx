@@ -191,10 +191,12 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
       content = (
         <Graph
           key={JSON.stringify(urlState)}
+          density={density}
           edges={edges}
           edgesViewModifiers={edgesViewModifiers}
           getVisiblePathElems={this.getVisiblePathElems}
           setViewModifier={this.setViewModifier}
+          showOp={showOp}
           uiFindMatches={uiFindMatches}
           vertices={vertices}
           verticesViewModifiers={verticesViewModifiers}
