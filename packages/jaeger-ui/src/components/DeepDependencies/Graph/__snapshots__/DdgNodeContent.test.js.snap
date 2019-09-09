@@ -27,7 +27,7 @@ exports[`<DdgNodeContent> DdgNodeContent.getNodeRenderer() returns a <DdgNodeCon
   >
     <a
       className="DdgNodeContent--actionsItem"
-      href="/deep-dependencies?operation=the-operation&service=the-service"
+      href="/deep-dependencies?operation=the-operation&service=the-service&showOp=0"
     >
       <svg
         className="DdgNode--SetFocusIcon"
