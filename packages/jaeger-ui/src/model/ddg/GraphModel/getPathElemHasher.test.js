@@ -23,10 +23,10 @@ function makePayloadEntry(pairStr) {
 
 const payload = `
   a:0   b:0   focal:focal   c:0   d:0
-        b:0   focal:focal   c:0
+  a:0   c:0   focal:focal   d:0   c:0
+        c:1   focal:focal   b:0   d:0
         c:0   focal:focal   b:0
-  a:0   c:0   focal:focal   b:0   d:0
-  a:1   b:0   focal:focal   c:0   d:1
+  a:0   c:0   focal:focal   b:0
 `
   .trim()
   .split('\n')
@@ -40,15 +40,15 @@ const payload = `
 const testTable = [
   // showOp, density, number of expected vertices
   [false, EDdgDensity.MostConcise, 5],
-  [true, EDdgDensity.MostConcise, 7],
+  [true, EDdgDensity.MostConcise, 6],
   [false, EDdgDensity.UpstreamVsDownstream, 7],
-  [true, EDdgDensity.UpstreamVsDownstream, 9],
-  [false, EDdgDensity.OnePerLevel, 7],
-  [true, EDdgDensity.OnePerLevel, 9],
-  [false, EDdgDensity.PreventPathEntanglement, 9],
-  [true, EDdgDensity.PreventPathEntanglement, 11],
+  [true, EDdgDensity.UpstreamVsDownstream, 8],
+  [false, EDdgDensity.OnePerLevel, 9],
+  [true, EDdgDensity.OnePerLevel, 10],
+  [false, EDdgDensity.PreventPathEntanglement, 11],
+  [true, EDdgDensity.PreventPathEntanglement, 12],
   [false, EDdgDensity.ExternalVsInternal, 13],
-  [true, EDdgDensity.ExternalVsInternal, 15],
+  [true, EDdgDensity.ExternalVsInternal, 14],
 ];
 
 describe('getPathElemHasher()', () => {
