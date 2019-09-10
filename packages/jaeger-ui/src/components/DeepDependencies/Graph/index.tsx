@@ -36,6 +36,7 @@ type TProps = {
   verticesViewModifiers: Map<string, number>;
 };
 
+// The dichotomy between w/ & w/o VMs assumes that any edge VM neccesitates unmodified edges are de-emphasized
 const setOnEdgesContainer: Record<string, TSetProps<TFromGraphStateFn<any, any>>> = {
   withViewModifiers: [{ className: 'Ddg--Edges is-withViewModifiers' }],
   withoutViewModifiers: [Digraph.propsFactories.scaleStrokeOpacityStrongest, { className: 'Ddg--Edges' }],

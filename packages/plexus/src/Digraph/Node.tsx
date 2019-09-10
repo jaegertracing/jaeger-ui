@@ -54,6 +54,6 @@ export default class Node<T = {}> extends React.PureComponent<TProps<T>> {
       getProps(setOnNode, layoutVertex, renderUtils)
     );
     const Wrapper = layerType === ELayerType.Html ? 'div' : 'g';
-    return <Wrapper {...props}>{renderNode(layoutVertex, renderUtils)}</Wrapper>;
+    return <Wrapper {...props}>{nodeContent}</Wrapper>;
   }
 }

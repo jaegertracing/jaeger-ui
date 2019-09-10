@@ -17,26 +17,15 @@ import * as React from 'react';
 import HtmlLayer from './HtmlLayer';
 import Nodes from './Nodes';
 import SvgLayer from './SvgLayer';
-import {
-  TExposedGraphState,
-  TLayerType,
-  TSetOnContainer,
-  ELayerType,
-  TRenderNodeFn,
-  TSetProps,
-  TRendererUtils,
-  TAnyProps,
-} from './types';
-import { TLayoutVertex } from '../types';
+import { TExposedGraphState, TLayerType, TSetOnContainer, ELayerType, TNodeRenderer } from './types';
 
-type TProps<T = {}, U = {}> = TSetOnContainer<T, U> & {
-  getClassName: (name: string) => string;
-  graphState: TExposedGraphState<T, U>;
-  layerType: TLayerType;
-  renderNode: TRenderNodeFn<T> | null;
-  setOnNode?: TSetProps<(layoutVertex: TLayoutVertex<T>, utils: TRendererUtils) => TAnyProps | null>;
-  standalone?: boolean;
-};
+type TProps<T = {}, U = {}> = TNodeRenderer<T> &
+  TSetOnContainer<T, U> & {
+    getClassName: (name: string) => string;
+    graphState: TExposedGraphState<T, U>;
+    layerType: TLayerType;
+    standalone?: boolean;
+  };
 
 export default class NodesLayer<T = {}, U = {}> extends React.PureComponent<TProps<T, U>> {
   render() {
