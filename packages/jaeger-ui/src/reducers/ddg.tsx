@@ -18,7 +18,7 @@ import { actionTypes } from '../actions/ddg';
 import { fetchDeepDependencyGraph } from '../actions/jaeger-api';
 import { fetchedState } from '../constants';
 import { ApiError } from '../types/api-error';
-import getDdgModelKey from '../model/ddg/getDdgModelKey';
+import getStateEntryKey from '../model/ddg/getStateEntryKey';
 import transformDdgData from '../model/ddg/transformDdgData';
 import {
   EViewModifier,
@@ -35,7 +35,7 @@ import guardReducer, { guardReducerWithMeta } from '../utils/guardReducer';
 
 export function addViewModifier(state: TDdgState, payload: TDdgAddViewModifierPayload) {
   const { visibilityIndices, viewModifier } = payload;
-  const key = getDdgModelKey(payload);
+  const key = getStateEntryKey(payload);
   const stateEntry: TDdgStateEntry | void = state[key];
   if (!stateEntry || stateEntry.state !== fetchedState.DONE) {
     console.warn('Cannot set view modifiers for unloaded Deep Dependency Graph'); // eslint-disable-line no-console
@@ -58,7 +58,7 @@ export function addViewModifier(state: TDdgState, payload: TDdgAddViewModifierPa
 
 export function viewModifierRemoval(state: TDdgState, payload: TDdgViewModifierRemovalPayload) {
   const { visibilityIndices, viewModifier } = payload;
-  const key = getDdgModelKey(payload);
+  const key = getStateEntryKey(payload);
   const stateEntry: TDdgStateEntry | void = state[key];
   if (!stateEntry || stateEntry.state !== fetchedState.DONE) {
     console.warn('Cannot change view modifiers for unloaded Deep Dependency Graph'); // eslint-disable-line no-console
@@ -91,7 +91,7 @@ export function viewModifierRemoval(state: TDdgState, payload: TDdgViewModifierR
 
 export function fetchDeepDependencyGraphStarted(state: TDdgState, { meta }: { meta: TDdgActionMeta }) {
   const { query } = meta;
-  const key = getDdgModelKey(query);
+  const key = getStateEntryKey(query);
   return {
     ...state,
     [key]: {
@@ -106,7 +106,7 @@ export function fetchDeepDependencyGraphDone(
 ) {
   const { query } = meta;
   const { service, operation } = query;
-  const key = getDdgModelKey(query);
+  const key = getStateEntryKey(query);
   return {
     ...state,
     [key]: {
@@ -122,7 +122,7 @@ export function fetchDeepDependencyGraphErred(
   { meta, payload }: { meta: TDdgActionMeta; payload: ApiError }
 ) {
   const { query } = meta;
-  const key = getDdgModelKey(query);
+  const key = getStateEntryKey(query);
   return {
     ...state,
     [key]: {

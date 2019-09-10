@@ -28,7 +28,7 @@ import { extractUiFindFromState, TExtractUiFindFromStateReturn } from '../common
 import ddgActions from '../../actions/ddg';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import { fetchedState, TOP_NAV_HEIGHT } from '../../constants';
-import getDdgModelKey from '../../model/ddg/getDdgModelKey';
+import getStateEntryKey from '../../model/ddg/getStateEntryKey';
 import GraphModel, { getDerivedViewModifiers, makeGraph } from '../../model/ddg/GraphModel';
 import {
   EDirection,
@@ -168,12 +168,11 @@ export class DeepDependencyGraphPageImpl extends Component<TProps> {
     if (!graph || !service || !operation) {
       return;
     }
-    const visibilityIndices: number[] = [];
     const pathElems = graph.getVertexVisiblePathElems(vertexKey, visEncoding);
     if (!pathElems) {
-      throw new Error(`Invalid vertext key to set view modifier for: ${vertexKey}`);
+      throw new Error(`Invalid vertex key to set view modifier for: ${vertexKey}`);
     }
-    pathElems.forEach(pe => visibilityIndices.push(pe.visibilityIdx));
+    const visibilityIndices = pathElems.map(pe => pe.visibilityIdx);
     const fn = enable ? addViewModifier : removeViewModifierFromIndices;
     fn({
       operation,
@@ -282,7 +281,7 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
   // backend temporarily requires service and operation
   // if (service) {
   if (service && operation) {
-    graphState = _get(state, ['ddg', getDdgModelKey({ service, operation, start: 0, end: 0 })]);
+    graphState = _get(state.ddg, getStateEntryKey({ service, operation, start: 0, end: 0 }));
   }
   let graph: GraphModel | undefined;
   if (graphState && graphState.state === fetchedState.DONE) {

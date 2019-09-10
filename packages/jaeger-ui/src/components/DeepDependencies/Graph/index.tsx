@@ -43,6 +43,11 @@ const setOnEdgesContainer: TSetProps<TFromGraphStateFn<TDdgVertex, any>> = [
   { stroke: '#444', strokeWidth: 0.7 },
 ];
 
+// The dichotomy between w/ & w/o VMs assumes that any vertex VM makes unmodified vertices de-emphasized
+const setOnVectorBorderContainerWithViewModifiers: TSetProps<TFromGraphStateFn<TDdgVertex, any>> = {
+  className: 'DdgVectorBorders is-withViewModifiers',
+};
+
 const edgesDefs: TNonEmptyArray<TDefEntry<TDdgVertex, unknown>> = [
   { localId: 'arrow' },
   { localId: 'arrow-hovered', setOnEntry: { className: 'DdgArrow is-pathHovered' } },
@@ -75,7 +80,7 @@ export default class Graph extends PureComponent<TProps> {
       vertices,
       verticesViewModifiers,
     } = this.props;
-    const findRenderers = this.getNodeRenderers(uiFindMatches || this.emptyFindSet, verticesViewModifiers);
+    const nodeRenderers = this.getNodeRenderers(uiFindMatches || this.emptyFindSet, verticesViewModifiers);
 
     return (
       <Digraph<TDdgVertex>
@@ -90,22 +95,25 @@ export default class Graph extends PureComponent<TProps> {
           {
             key: 'nodes/find-emphasis/vector-outline',
             layerType: 'svg',
-            renderNode: findRenderers.vectorFindOutline,
+            renderNode: nodeRenderers.vectorFindOutline,
           },
           {
             key: 'nodes/find-emphasis/html',
             layerType: 'html',
-            renderNode: findRenderers.htmlFindEmphasis,
+            renderNode: nodeRenderers.htmlFindEmphasis,
           },
           {
             key: 'nodes/find-emphasis/vector-color-band',
             layerType: 'svg',
-            renderNode: findRenderers.vectorFindColorBand,
+            renderNode: nodeRenderers.vectorFindColorBand,
           },
           {
             key: 'nodes/vector-border',
             layerType: 'svg',
-            renderNode: findRenderers.vectorBorder,
+            renderNode: nodeRenderers.vectorBorder,
+            setOnContainer: verticesViewModifiers.size
+              ? setOnVectorBorderContainerWithViewModifiers
+              : scaleStrokeOpacityStrongest,
           },
           {
             key: 'edges',

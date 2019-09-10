@@ -13,23 +13,25 @@
 // limitations under the License.
 
 import memoize from 'lru-memoize';
+
 import { TEdge } from '@jaegertracing/plexus/lib/types';
 
-import { PathElem, EDdgDensity, TDdgDistanceToPathElems, TDdgModel, TDdgVertex } from '../types';
 import { decode } from '../visibility-codec';
+
+import { PathElem, EDdgDensity, TDdgDistanceToPathElems, TDdgModel, TDdgVertex } from '../types';
 
 export { default as getDerivedViewModifiers } from './getDerivedViewModifiers';
 export { default as getEdgeId } from './getEdgeId';
 
 export default class GraphModel {
-  readonly density: EDdgDensity;
-  readonly distanceToPathElems: TDdgDistanceToPathElems;
-  readonly pathElemToEdge: Map<PathElem, TEdge>;
-  readonly pathElemToVertex: Map<PathElem, TDdgVertex>;
-  readonly showOp: boolean;
-  readonly vertexToPathElems: Map<TDdgVertex, Set<PathElem>>;
-  readonly vertices: Map<string, TDdgVertex>;
-  readonly visIdxToPathElem: PathElem[];
+  private readonly density: EDdgDensity;
+  private readonly distanceToPathElems: TDdgDistanceToPathElems;
+  private readonly pathElemToEdge: Map<PathElem, TEdge>;
+  public readonly pathElemToVertex: Map<PathElem, TDdgVertex>;
+  private readonly showOp: boolean;
+  private readonly vertexToPathElems: Map<TDdgVertex, Set<PathElem>>;
+  private readonly vertices: Map<string, TDdgVertex>;
+  public readonly visIdxToPathElem: PathElem[];
 
   constructor({ ddgModel, density, showOp }: { ddgModel: TDdgModel; density: EDdgDensity; showOp: boolean }) {
     this.density = density;
@@ -241,7 +243,6 @@ export default class GraphModel {
     }
   );
 
-  // eslint-disable-next-line consistent-return
   public getVertexVisiblePathElems = (
     vertexKey: string,
     visEncoding: string | undefined
