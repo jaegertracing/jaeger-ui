@@ -29,14 +29,14 @@ function getKeyFromVisIdx(graph: GraphModel, visIdx: number) {
 }
 
 export default function getDerivedViewModifiers(
-  graph: GraphModel,
+  this: GraphModel,
   visEncoding: string | undefined,
   viewModifiers: Map<number, number>
 ) {
   const vertices = new Map<string, number>();
   const edges = new Map<string, number>();
 
-  const visibleIndices = graph.getVisibleIndices(visEncoding);
+  const visibleIndices = this.getVisibleIndices(visEncoding);
 
   const pushVertexVm = (vm: number, key: string) => {
     // eslint-disable-next-line no-bitwise
@@ -53,11 +53,11 @@ export default function getDerivedViewModifiers(
     if (!visibleIndices.has(visIdx)) {
       return;
     }
-    pushVertexVm(vm, getKeyFromVisIdx(graph, visIdx));
+    pushVertexVm(vm, getKeyFromVisIdx(this, visIdx));
     if (vm !== EViewModifier.Hovered) {
       return;
     }
-    const hoveredPe = graph.visIdxToPathElem[visIdx];
+    const hoveredPe = this.visIdxToPathElem[visIdx];
     if (!hoveredPe) {
       throw new Error(`Invalid vis index: ${visIdx}`);
     }
@@ -69,7 +69,7 @@ export default function getDerivedViewModifiers(
         lastKey = null;
         continue;
       }
-      const key = getKeyFromVisIdx(graph, members[i].visibilityIdx);
+      const key = getKeyFromVisIdx(this, members[i].visibilityIdx);
       pushVertexVm(EViewModifier.PathHovered, key);
       if (lastKey) {
         pushEdgeVm(EViewModifier.PathHovered, lastKey, key);

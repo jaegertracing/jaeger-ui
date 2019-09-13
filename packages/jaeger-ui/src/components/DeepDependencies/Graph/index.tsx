@@ -22,15 +22,17 @@ import TNonEmptyArray from '@jaegertracing/plexus/lib/types/TNonEmptyArray';
 import DdgNodeContent from './DdgNodeContent';
 import getNodeRenderers from './getNodeRenderers';
 import getSetOnEdge from './getSetOnEdge';
-import { PathElem, TDdgVertex, EViewModifier } from '../../../model/ddg/types';
+import { PathElem, TDdgVertex, EDdgDensity, EViewModifier } from '../../../model/ddg/types';
 
 import './index.css';
 
 type TProps = {
+  density: EDdgDensity;
   edges: TEdge[];
   edgesViewModifiers: Map<string, number>;
   getVisiblePathElems: (vertexKey: string) => PathElem[] | undefined;
   setViewModifier: (vertexKey: string, viewModifier: EViewModifier, enable: boolean) => void;
+  showOp: boolean;
   uiFindMatches: Set<TDdgVertex> | undefined;
   vertices: TDdgVertex[];
   verticesViewModifiers: Map<string, number>;
@@ -72,10 +74,12 @@ export default class Graph extends PureComponent<TProps> {
 
   render() {
     const {
+      density,
       edges,
       edgesViewModifiers,
       getVisiblePathElems,
       setViewModifier,
+      showOp,
       uiFindMatches,
       vertices,
       verticesViewModifiers,
@@ -129,7 +133,7 @@ export default class Graph extends PureComponent<TProps> {
             layerType: 'html',
             measurable: true,
             measureNode: DdgNodeContent.measureNode,
-            renderNode: this.getNodeContentRenderer(getVisiblePathElems, setViewModifier),
+            renderNode: this.getNodeContentRenderer(getVisiblePathElems, setViewModifier, density, showOp),
           },
         ]}
       />

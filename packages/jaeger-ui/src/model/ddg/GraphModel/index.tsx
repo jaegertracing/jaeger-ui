@@ -16,22 +16,26 @@ import memoize from 'lru-memoize';
 
 import { TEdge } from '@jaegertracing/plexus/lib/types';
 
+import getDerivedViewModifiers from './getDerivedViewModifiers';
+import getEdgeId from './getEdgeId';
+import getPathElemHasher from './getPathElemHasher';
 import { decode } from '../visibility-codec';
 
 import { PathElem, EDdgDensity, TDdgDistanceToPathElems, TDdgModel, TDdgVertex } from '../types';
 
-export { default as getDerivedViewModifiers } from './getDerivedViewModifiers';
 export { default as getEdgeId } from './getEdgeId';
 
 export default class GraphModel {
-  private readonly density: EDdgDensity;
-  private readonly distanceToPathElems: TDdgDistanceToPathElems;
-  private readonly pathElemToEdge: Map<PathElem, TEdge>;
-  public readonly pathElemToVertex: Map<PathElem, TDdgVertex>;
-  private readonly showOp: boolean;
-  private readonly vertexToPathElems: Map<TDdgVertex, Set<PathElem>>;
-  private readonly vertices: Map<string, TDdgVertex>;
-  public readonly visIdxToPathElem: PathElem[];
+  readonly getDerivedViewModifiers = memoize(3)(getDerivedViewModifiers.bind(this));
+  private readonly getPathElemHasher = getPathElemHasher;
+  readonly density: EDdgDensity;
+  readonly distanceToPathElems: TDdgDistanceToPathElems;
+  readonly pathElemToEdge: Map<PathElem, TEdge>;
+  readonly pathElemToVertex: Map<PathElem, TDdgVertex>;
+  readonly showOp: boolean;
+  readonly vertexToPathElems: Map<TDdgVertex, Set<PathElem>>;
+  readonly vertices: Map<string, TDdgVertex>;
+  readonly visIdxToPathElem: PathElem[];
 
   constructor({ ddgModel, density, showOp }: { ddgModel: TDdgModel; density: EDdgDensity; showOp: boolean }) {
     this.density = density;
@@ -43,9 +47,12 @@ export default class GraphModel {
     this.vertices = new Map();
     this.visIdxToPathElem = ddgModel.visIdxToPathElem.slice();
 
+    const hasher = this.getPathElemHasher();
+    const edgesById = new Map<string, TEdge>();
+
     ddgModel.visIdxToPathElem.forEach(pathElem => {
       // If there is a compatible vertex for this pathElem, use it, else, make a new vertex
-      const key = this.getVertexKey(pathElem);
+      const key = hasher(pathElem);
       let vertex: TDdgVertex | undefined = this.vertices.get(key);
       if (!vertex) {
         const isFocalNode = !pathElem.distance;
@@ -56,18 +63,18 @@ export default class GraphModel {
           operation: this.showOp || isFocalNode ? pathElem.operation.name : null,
         };
         this.vertices.set(key, vertex);
-        this.vertexToPathElems.set(vertex, new Set());
+        this.vertexToPathElems.set(vertex, new Set([pathElem]));
+      } else {
+        const pathElemsForVertex = this.vertexToPathElems.get(vertex);
+        /* istanbul ignore next */
+        if (!pathElemsForVertex) {
+          throw new Error(`Vertex exists without pathElems, vertex: ${vertex}`);
+        }
+        // Link vertex back to this pathElem
+        pathElemsForVertex.add(pathElem);
       }
-
       // Link pathElem to its vertex
       this.pathElemToVertex.set(pathElem, vertex);
-
-      const pathElemsForVertex = this.vertexToPathElems.get(vertex);
-
-      /* istanbul ignore next */
-      if (!pathElemsForVertex) {
-        throw new Error(`Vertex exists without pathElems, vertex: ${vertex}`);
-      }
 
       // If the newly-visible PathElem is not the focalNode, it needs to be connected to the rest of the graph
       const connectedElem = pathElem.focalSideNeighbor;
@@ -80,37 +87,18 @@ export default class GraphModel {
         }
 
         // Create edge connecting current vertex to connectedVertex
-        const newEdge =
-          pathElem.distance > 0
-            ? {
-                from: connectedVertex.key,
-                to: vertex.key,
-              }
-            : {
-                from: vertex.key,
-                to: connectedVertex.key,
-              };
-
-        // Check if equivalent edge already exists
-        let existingEdge: TEdge | undefined;
-        const elemArr = Array.from(pathElemsForVertex);
-        for (let i = 0; i < elemArr.length; i += 1) {
-          const edge = this.pathElemToEdge.get(elemArr[i]);
-          // With PPE as the only supported heuristic, the following two lines cannot be fully tested
-          if (edge) {
-            if (edge.to === newEdge.to && edge.from === newEdge.from) {
-              existingEdge = edge;
-              break;
-            }
-          }
+        const from = pathElem.distance > 0 ? connectedVertex.key : vertex.key;
+        const to = pathElem.distance > 0 ? vertex.key : connectedVertex.key;
+        const edgeId = getEdgeId(from, to);
+        const existingEdge = edgesById.get(edgeId);
+        if (!existingEdge) {
+          const edge = { from, to };
+          edgesById.set(edgeId, edge);
+          this.pathElemToEdge.set(pathElem, edge);
+        } else {
+          this.pathElemToEdge.set(pathElem, existingEdge);
         }
-
-        // Prefer existing edge, else use new edge
-        this.pathElemToEdge.set(pathElem, existingEdge || newEdge);
       }
-
-      // Link vertex back to this pathElem
-      pathElemsForVertex.add(pathElem);
     });
 
     Object.freeze(this.distanceToPathElems);
@@ -121,54 +109,54 @@ export default class GraphModel {
     Object.freeze(this.visIdxToPathElem);
   }
 
-  // This function assumes the density is set to PPE with distinct operations
-  // It is a class property so that it can be aware of density in late-alpha
-  //
-  // It might make sense to live on PathElem so that pathElems can be compared when checking how many
-  // inbound/outbound edges are visible for a vertex, but maybe not as vertices could be densitiy-aware and
-  // provide that to this fn. could also be property on pathElem that gets set by showElems
-  // tl;dr may move in late-alpha
-  private getVertexKey = (pathElem: PathElem): string => {
-    const elemToStr = this.showOp
-      ? ({ operation }: PathElem) => `${operation.service.name}----${operation.name}`
-      : // Always show the operation for the focal node, i.e. when distance === 0
-        ({ distance, operation }: PathElem) =>
-          distance === 0 ? `${operation.service.name}----${operation.name}` : operation.service.name;
+  // // This function assumes the density is set to PPE with distinct operations
+  // // It is a class property so that it can be aware of density in late-alpha
+  // //
+  // // It might make sense to live on PathElem so that pathElems can be compared when checking how many
+  // // inbound/outbound edges are visible for a vertex, but maybe not as vertices could be densitiy-aware and
+  // // provide that to this fn. could also be property on pathElem that gets set by showElems
+  // // tl;dr may move in late-alpha
+  // private getVertexKey = (pathElem: PathElem): string => {
+  //   const elemToStr = this.showOp
+  //     ? ({ operation }: PathElem) => `${operation.service.name}----${operation.name}`
+  //     : // Always show the operation for the focal node, i.e. when distance === 0
+  //       ({ distance, operation }: PathElem) =>
+  //         distance === 0 ? `${operation.service.name}----${operation.name}` : operation.service.name;
 
-    switch (this.density) {
-      case EDdgDensity.MostConcise: {
-        return elemToStr(pathElem);
-      }
-      case EDdgDensity.UpstreamVsDownstream: {
-        return `${elemToStr(pathElem)}=${Math.sign(pathElem.distance)}`;
-      }
-      case EDdgDensity.PreventPathEntanglement:
-      case EDdgDensity.ExternalVsInternal: {
-        const decorate =
-          this.density === EDdgDensity.ExternalVsInternal
-            ? (str: string) => `${str}${pathElem.isExternal ? '----external' : ''}`
-            : (str: string) => str;
-        const { memberIdx, memberOf } = pathElem;
-        const { focalIdx, members } = memberOf;
+  //   switch (this.density) {
+  //     case EDdgDensity.MostConcise: {
+  //       return elemToStr(pathElem);
+  //     }
+  //     case EDdgDensity.UpstreamVsDownstream: {
+  //       return `${elemToStr(pathElem)}=${Math.sign(pathElem.distance)}`;
+  //     }
+  //     case EDdgDensity.PreventPathEntanglement:
+  //     case EDdgDensity.ExternalVsInternal: {
+  //       const decorate =
+  //         this.density === EDdgDensity.ExternalVsInternal
+  //           ? (str: string) => `${str}${pathElem.isExternal ? '----external' : ''}`
+  //           : (str: string) => str;
+  //       const { memberIdx, memberOf } = pathElem;
+  //       const { focalIdx, members } = memberOf;
 
-        return decorate(
-          members
-            .slice(Math.min(focalIdx, memberIdx), Math.max(focalIdx, memberIdx) + 1)
-            .map(elemToStr)
-            .join('____')
-        );
-      }
-      default: {
-        throw new Error(
-          `Density: ${this.density} has not been implemented, try one of these: ${JSON.stringify(
-            EDdgDensity,
-            null,
-            2
-          )}`
-        );
-      }
-    }
-  };
+  //       return decorate(
+  //         members
+  //           .slice(Math.min(focalIdx, memberIdx), Math.max(focalIdx, memberIdx) + 1)
+  //           .map(elemToStr)
+  //           .join('____')
+  //       );
+  //     }
+  //     default: {
+  //       throw new Error(
+  //         `Density: ${this.density} has not been implemented, try one of these: ${JSON.stringify(
+  //           EDdgDensity,
+  //           null,
+  //           2
+  //         )}`
+  //       );
+  //     }
+  //   }
+  // };
 
   private getDefaultVisiblePathElems() {
     return ([] as PathElem[]).concat(

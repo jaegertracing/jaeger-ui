@@ -132,11 +132,11 @@ describe('DeepDependencyGraph/url', () => {
       expect(parseSpy).toHaveBeenLastCalledWith(search);
     });
 
-    it("defaults `density` to 'PPE'", () => {
+    it("defaults `density` to 'ppe'", () => {
       const { density: unused, ...rest } = expectedParams;
       const { density: alsoUnused, ...rv } = acceptableParams;
       parseSpy.mockReturnValue(rv);
-      expect(getUrlState(search)).toEqual({ ...rest, density: 'PPE' });
+      expect(getUrlState(search)).toEqual({ ...rest, density: 'ppe' });
       expect(parseSpy).toHaveBeenLastCalledWith(search);
     });
 
