@@ -23,7 +23,7 @@ import Header from './Header';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
 import { fetchedState } from '../../constants';
-import getDdgModelKey from '../../model/ddg/getDdgModelKey';
+import getStateEntryKey from '../../model/ddg/getStateEntryKey';
 import * as GraphModel from '../../model/ddg/GraphModel';
 import * as codec from '../../model/ddg/visibility-codec';
 
@@ -375,8 +375,8 @@ describe('DeepDependencyGraphPage', () => {
       const graphStateWithoutOp = 'testGraphStateWithoutOp';
       const reduxState = { ...state };
       // TODO: Remove 0s once time buckets are implemented
-      _set(reduxState, ['ddg', getDdgModelKey({ service, operation, start: 0, end: 0 })], graphState);
-      _set(reduxState, ['ddg', getDdgModelKey({ service, start, end })], graphStateWithoutOp);
+      _set(reduxState, ['ddg', getStateEntryKey({ service, operation, start: 0, end: 0 })], graphState);
+      _set(reduxState, ['ddg', getStateEntryKey({ service, start, end })], graphStateWithoutOp);
 
       const result = mapStateToProps(reduxState, ownProps);
       expect(result.graphState).toEqual(graphState);
@@ -397,13 +397,13 @@ describe('DeepDependencyGraphPage', () => {
       const loadingState = { state: fetchedState.LOADING };
       const reduxState = { ...state };
       // TODO: Remove 0s once time buckets are implemented
-      _set(reduxState, ['ddg', getDdgModelKey({ service, operation, start: 0, end: 0 })], loadingState);
+      _set(reduxState, ['ddg', getStateEntryKey({ service, operation, start: 0, end: 0 })], loadingState);
       const result = mapStateToProps(reduxState, ownProps);
       expect(result.graph).toBe(undefined);
 
       const doneState = _set(
         { ...state },
-        ['ddg', getDdgModelKey({ service, operation, start: 0, end: 0 })],
+        ['ddg', getStateEntryKey({ service, operation, start: 0, end: 0 })],
         {
           model: {},
           state: fetchedState.DONE,

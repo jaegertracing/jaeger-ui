@@ -14,6 +14,6 @@
 
 import { TDdgModelParams } from './types';
 
-export default function getDdgModelKey({ service, operation = '*', start, end }: TDdgModelParams) {
+export default function getStateEntryKey({ service, operation = '*', start, end }: TDdgModelParams) {
   return `${service}\n${operation}\n${start}\n${end}`;
 }

@@ -27,9 +27,9 @@ export default function getNodeRenderers(findMatches: Set<TDdgVertex>, viewModif
     // eslint-disable-next-line no-bitwise
     const isPathHovered = (viewModifiers.get(lv.vertex.key) || 0) & EViewModifier.PathHovered;
     const className = cx('DdgNode--VectorBorder', {
-      'is-findMatch': !isHovered && findMatches.has(lv.vertex),
+      'is-findMatch': findMatches.has(lv.vertex),
       'is-hovered': isHovered,
-      'is-pathHovered': !isHovered && isPathHovered,
+      'is-pathHovered': isPathHovered,
       'is-focalNode': lv.vertex.isFocalNode,
     });
     return (
