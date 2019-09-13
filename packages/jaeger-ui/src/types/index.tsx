@@ -40,7 +40,7 @@ export type FetchedTrace = {
 export type ReduxState = {
   archive: TracesArchive;
   config: Config;
-  deepDependencyGraph: TDdgState;
+  ddg: TDdgState;
   dependencies: {
     dependencies: { parent: string; child: string; callCount: number }[];
     loading: boolean;

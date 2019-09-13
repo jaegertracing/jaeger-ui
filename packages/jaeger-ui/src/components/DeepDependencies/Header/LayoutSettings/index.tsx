@@ -59,7 +59,7 @@ const densityOptions = [
     option: EDdgDensity.PreventPathEntanglement,
     title: 'Show paths to the focal node',
     description:
-      'Each unique path to the focal node, both upstream and downstream, is represented. A resource (e.g. a service or service:operation) can be represented more than once if it is present in more than one paths to the focal node.',
+      'Each unique path to the focal node, both upstream and downstream, is represented. A resource (e.g. a service or service:operation) can be represented more than once if it is present in more than one path to the focal node.',
   },
   {
     option: EDdgDensity.ExternalVsInternal,
@@ -108,7 +108,7 @@ export default class LayoutSettings extends React.PureComponent<TProps> {
             <tr key={config.option}>
               {i === 0 && (
                 <td className={cssCls('optionGroupTitle')} rowSpan={densityOptions.length}>
-                  Graph desnsity
+                  Graph density
                 </td>
               )}
               <td>

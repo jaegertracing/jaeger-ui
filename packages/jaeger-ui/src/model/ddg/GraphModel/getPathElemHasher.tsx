@@ -41,18 +41,11 @@ function getPpeHasher(elemToStr: TPathElemToStr) {
 }
 
 function getExtVsIntHasher(elemToStr: TPathElemToStr) {
-  return (pe: PathElem) =>
-    `${getElemsToFocal(pe)
-      .map(elemToStr)
-      .join('\n')}${pe.isExternal ? '; is-external' : ''}`;
+  return (pe: PathElem) => `${getPpeHasher(elemToStr)(pe)}${pe.isExternal ? '; is-external' : ''}`;
 }
 
-// It might make sense for this function live on PathElem so that pathElems can
-// be compared when checking how many inbound/outbound edges are visible for a
-// vertex, but maybe not as vertices could be densitiy-aware and provide that to
-// this fn. could also be property on pathElem that gets set by showElems
-// tl;dr may move in late-alpha.
-export default function getPathElemHasher(this: GraphModel) {
+// This function is bound to a GraphModel and returns a different hasher based on the model's layout settings
+export default function getPathElemHasher(this: GraphModel): TPathElemToStr {
   const elemToStr = this.showOp ? fmtElemShowOp : fmtElemSvcOnly;
 
   switch (this.density) {
