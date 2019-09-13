@@ -23,7 +23,7 @@ import Header from './Header';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
 import { fetchedState } from '../../constants';
-import * as GraphModel from '../../model/ddg/Graph';
+import * as GraphModel from '../../model/ddg/GraphModel';
 import { stateKey } from '../../model/ddg/types';
 import * as codec from '../../model/ddg/visibility-codec';
 

@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-.DdgSetFocusButtonIcon {
+.DdgNode-SetFocusIcon {
   box-sizing: content-box;
   color: inherit;
   height: 1.05em;

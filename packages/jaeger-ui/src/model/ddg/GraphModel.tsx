@@ -20,7 +20,7 @@ import { decode } from './visibility-codec';
 
 import { PathElem, EDdgDensity, TDdgDistanceToPathElems, TDdgModel, TDdgVertex } from './types';
 
-export default class Graph {
+export default class GraphModel {
   private readonly density: EDdgDensity;
   private readonly distanceToPathElems: TDdgDistanceToPathElems;
   private readonly pathElemToEdge: Map<PathElem, TEdge>;
@@ -234,5 +234,6 @@ export default class Graph {
 }
 
 export const makeGraph = memoize(10)(
-  (ddgModel: TDdgModel, showOp: boolean, density: EDdgDensity) => new Graph({ ddgModel, density, showOp })
+  (ddgModel: TDdgModel, showOp: boolean, density: EDdgDensity) =>
+    new GraphModel({ ddgModel, density, showOp })
 );

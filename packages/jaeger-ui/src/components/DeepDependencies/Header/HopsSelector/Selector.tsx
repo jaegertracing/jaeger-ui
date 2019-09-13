@@ -39,17 +39,16 @@ export default class Selector extends PureComponent<TProps> {
   ) => {
     const { handleClick, direction } = this.props;
     return (
-      <>
+      <React.Fragment key={`${distance} ${direction} ${suffix}`}>
         {Boolean(showChevron) && <IoChevronRight className={`${CLASSNAME}--ChevronRight is-${fullness}`} />}
         <button
-          key={`${distance} ${direction} ${suffix}`}
           className={`${CLASSNAME}--btn is-${fullness} ${CLASSNAME}--${suffix}`}
           type="button"
           onClick={() => handleClick(distance, direction)}
         >
           {Math.abs(distance)}
         </button>
-      </>
+      </React.Fragment>
     );
   };
 

@@ -15,10 +15,10 @@
 import React from 'react';
 import { shallow } from 'enzyme';
 
-import DdgNode from './DdgNode';
+import DdgNodeContent from './DdgNodeContent';
 import { EViewModifier } from '../../../model/ddg/types';
 
-describe('<DdgNode>', () => {
+describe('<DdgNodeContent>', () => {
   const vertexKey = 'some-key';
   const service = 'some-service';
   const operation = 'some-operation';
@@ -35,7 +35,7 @@ describe('<DdgNode>', () => {
       focalNodeUrl: 'some-url',
       setViewModifier: jest.fn(),
     };
-    wrapper = shallow(<DdgNode {...props} />);
+    wrapper = shallow(<DdgNodeContent {...props} />);
   });
 
   it('does not explode', () => {
@@ -62,5 +62,25 @@ describe('<DdgNode>', () => {
     expect(wrapper).toMatchSnapshot();
     wrapper.setProps({ focalNodeUrl: null, isFocalNode: true });
     expect(wrapper).toMatchSnapshot();
+  });
+
+  describe('DdgNodeContent.getNodeRenderer()', () => {
+    let ddgVertex;
+
+    beforeEach(() => {
+      ddgVertex = {
+        isFocalNode: false,
+        key: 'some-key',
+        operation: 'the-operation',
+        service: 'the-service',
+      };
+    });
+
+    it('returns a <DdgNodeContent />', () => {
+      const ddgNode = DdgNodeContent.getNodeRenderer(() => undefined)(ddgVertex);
+      expect(ddgNode).toBeDefined();
+      expect(shallow(ddgNode)).toMatchSnapshot();
+      expect(ddgNode.type).toBe(DdgNodeContent);
+    });
   });
 });

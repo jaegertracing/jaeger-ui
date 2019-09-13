@@ -14,9 +14,9 @@
 
 import * as React from 'react';
 import { shallow } from 'enzyme';
-import { DirectedGraph, LayoutManager } from '@jaegertracing/plexus';
+import { Digraph, LayoutManager } from '@jaegertracing/plexus';
 
-import Graph from './Graph';
+import Graph from './index';
 
 describe('<Graph />', () => {
   const vertices = [...new Array(10)].map((_, i) => ({ key: `key${i}` }));
@@ -46,7 +46,7 @@ describe('<Graph />', () => {
   describe('render', () => {
     it('renders provided edges and vertices', () => {
       const wrapper = shallow(<Graph {...props} />);
-      const plexusGraph = wrapper.find(DirectedGraph);
+      const plexusGraph = wrapper.find(Digraph);
       expect(plexusGraph.prop('edges')).toEqual(edges);
       expect(plexusGraph.prop('vertices')).toEqual(vertices);
       expect(wrapper).toMatchSnapshot();
