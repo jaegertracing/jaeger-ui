@@ -49,29 +49,30 @@ limitations under the License.
   color: #096dd9;
   cursor: pointer;
   font-weight: bold;
+  margin: 0 0.2em;
   padding: 1px 2px;
 }
 
 .HopsSelector--Selector--btn.is-Empty {
-  color: #ccc;
+  color: #aaa;
+  font-weight: 400;
 }
 
 .HopsSelector--Selector--btn.is-Partial {
   color: #d46b08;
 }
 
-.HopsSelector--Selector > .HopsSelector--Selector--furthest {
+/* .HopsSelector--Selector > .HopsSelector--Selector--furthest {
   margin-left: 0.3em;
-}
+} */
 
 .HopsSelector--Selector > .HopsSelector--Selector--delimiter {
-  color: inherit;
-  margin-right: 0.3em;
+  color: #999;
+  font-weight: 400;
 }
 
 .HopsSelector--Selector--slash {
-  margin: 0 0.15em;
-  font-weight: bold;
+  color: #999;
 }
 
 .HopsSelector--Selector--AscIcon {
@@ -92,7 +93,6 @@ limitations under the License.
 .HopsSelector--Selector--ChevronRight {
   color: #999;
   height: 0.7em;
-  margin-left: 0.1em;
   padding-bottom: 0.15em;
   width: 0.7em;
 }

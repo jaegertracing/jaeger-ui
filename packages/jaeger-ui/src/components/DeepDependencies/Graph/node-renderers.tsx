@@ -23,7 +23,7 @@ import './node-renderers.css';
 // eslint-disable-next-line import/prefer-default-export
 export function getFindEmphasisRenderers(findMatches: Set<TDdgVertex>) {
   function renderVectorBorder(lv: TLayoutVertex<TDdgVertex>) {
-    const className = cx('DdgNode-VectorBorder', {
+    const className = cx('DdgNode--VectorBorder', {
       'is-findMatch': findMatches.has(lv.vertex),
       'is-focalNode': lv.vertex.isFocalNode,
     });
@@ -45,7 +45,7 @@ export function getFindEmphasisRenderers(findMatches: Set<TDdgVertex>) {
     }
     return (
       <rect
-        className="DdgNode-VectorFindEmphasis--outline"
+        className="DdgNode--VectorFindEmphasis--outline"
         vectorEffect="non-scaling-stroke"
         width={lv.width - 2}
         height={lv.height - 2}
@@ -59,7 +59,7 @@ export function getFindEmphasisRenderers(findMatches: Set<TDdgVertex>) {
     if (!findMatches.has(lv.vertex)) {
       return null;
     }
-    return <div className="DdgNode-HtmlFindEmphasis" />;
+    return <div className="DdgNode--HtmlFindEmphasis" />;
   }
 
   function renderVectorFindEmphasisColorBand(lv: TLayoutVertex<any>) {
@@ -68,7 +68,7 @@ export function getFindEmphasisRenderers(findMatches: Set<TDdgVertex>) {
     }
     return (
       <rect
-        className="DdgNode-VectorFindEmphasis--colorBand"
+        className="DdgNode--VectorFindEmphasis--colorBand"
         vectorEffect="non-scaling-stroke"
         width={lv.width - 2}
         height={lv.height - 2}

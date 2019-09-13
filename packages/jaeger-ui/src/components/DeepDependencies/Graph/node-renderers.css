@@ -14,21 +14,21 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-.DdgNode-VectorBorder {
+.DdgNode--VectorBorder {
   fill: #fff;
   stroke: #bbb;
   stroke-width: 2;
 }
 
-.DdgNode-VectorBorder.is-findMatch {
+.DdgNode--VectorBorder.is-findMatch {
   stroke: #fadb14;
 }
 
-.DdgNode-VectorBorder.is-focalNode {
+.DdgNode--VectorBorder.is-focalNode {
   stroke: #eb2f96;
 }
 
-.DdgNode-HtmlFindEmphasis {
+.DdgNode--HtmlFindEmphasis {
   background-image: repeating-linear-gradient(-60deg, #fffb8f, #fff566 3px, #fffb8f 5px);
   border: 1px dashed rgba(173, 139, 0, 0.5);
   bottom: -20px;
@@ -41,12 +41,12 @@ limitations under the License.
   margin: 1px 0 0 1px;
 }
 
-.DdgNode-VectorFindEmphasis--colorBand {
+.DdgNode--VectorFindEmphasis--colorBand {
   stroke: #fef876;
   stroke-width: 10;
 }
 
-.DdgNode-VectorFindEmphasis--outline {
+.DdgNode--VectorFindEmphasis--outline {
   stroke: rgba(173, 139, 0, 0.5);
   stroke-width: 12;
 }

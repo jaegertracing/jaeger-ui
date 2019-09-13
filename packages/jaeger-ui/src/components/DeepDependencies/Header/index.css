@@ -27,10 +27,11 @@ limitations under the License.
 
 .DdgHeader--controlHeader {
   align-items: center;
-  background-color: #fafafa;
+  background-color: #f8f8f8;
   border-top: 1px solid #eee;
   display: flex;
   justify-content: space-between;
+  padding-left: 1.25rem;
 }
 
 .DdgHeader--paramsHeader {
@@ -45,15 +46,20 @@ limitations under the License.
   position: relative;
 }
 
+.DdgHeader--findWrapper {
+  display: flex;
+  flex: 1 1 auto;
+  justify-content: flex-end;
+}
+
 .DdgHeader--uiFind {
   align-items: center;
-  background-color: #ffffff;
+  background-color: #fff;
   border-left: 1px solid #eee;
   border-right: 1px solid #eee;
   color: #bbb;
   display: flex;
   flex-grow: 1;
-  margin-right: 8px;
   max-width: 400px;
   min-width: 200px;
   transition: max-width 0.5s;

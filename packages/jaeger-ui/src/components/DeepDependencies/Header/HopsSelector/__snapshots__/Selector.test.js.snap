@@ -104,7 +104,7 @@ exports[`Selector renders buttons with expected text and classNames 1`] = `
       2
     </button>
     <span
-      className="HopsSelector--Selector--slash"
+      className="HopsSelector--Selector--delimiter"
     >
       /
     </span>
@@ -115,8 +115,8 @@ exports[`Selector renders buttons with expected text and classNames 1`] = `
     >
       4
     </button>
-    <IoChevronDown
-      className="HopsSelector--Selector--ChevronDown"
+    <Component
+      className="ub-ml1"
     />
   </span>
 </Popover>
@@ -235,7 +235,7 @@ exports[`Selector renders upstream hops with negative distance correctly 1`] = `
       2
     </button>
     <span
-      className="HopsSelector--Selector--slash"
+      className="HopsSelector--Selector--delimiter"
     >
       /
     </span>
@@ -246,8 +246,8 @@ exports[`Selector renders upstream hops with negative distance correctly 1`] = `
     >
       4
     </button>
-    <IoChevronDown
-      className="HopsSelector--Selector--ChevronDown"
+    <Component
+      className="ub-ml1"
     />
   </span>
 </Popover>

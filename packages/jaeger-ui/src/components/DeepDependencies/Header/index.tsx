@@ -17,20 +17,25 @@ import { Icon, Input } from 'antd';
 
 import HopsSelector from './HopsSelector';
 import NameSelector from './NameSelector';
+import LayoutSettings from './LayoutSettings';
 import UiFindInput from '../../common/UiFindInput';
-import { EDirection, TDdgDistanceToPathElems } from '../../../model/ddg/types';
+import { EDirection, TDdgDistanceToPathElems, EDdgDensity } from '../../../model/ddg/types';
 
 import './index.css';
 
 type TProps = {
+  density: EDdgDensity;
   distanceToPathElems?: TDdgDistanceToPathElems;
   operation?: string;
   operations: string[] | undefined;
   service?: string;
   services?: string[] | null;
+  setDensity: (density: EDdgDensity) => void;
   setDistance: (distance: number, direction: EDirection) => void;
   setOperation: (operation: string) => void;
   setService: (service: string) => void;
+  showOperations: boolean;
+  toggleShowOperations: (enable: boolean) => void;
   uiFindCount: number | undefined;
   visEncoding?: string;
 };
@@ -45,14 +50,18 @@ export default class Header extends React.PureComponent<TProps> {
 
   render() {
     const {
+      density,
       distanceToPathElems,
       operation,
       operations,
       service,
       services,
+      setDensity,
       setDistance,
       setOperation,
       setService,
+      showOperations,
+      toggleShowOperations,
       uiFindCount,
       visEncoding,
     } = this.props;
@@ -80,19 +89,27 @@ export default class Header extends React.PureComponent<TProps> {
           )}
         </div>
         <div className="DdgHeader--controlHeader">
+          <LayoutSettings
+            density={density}
+            setDensity={setDensity}
+            showOperations={showOperations}
+            toggleShowOperations={toggleShowOperations}
+          />
           <HopsSelector
             distanceToPathElems={distanceToPathElems}
             handleClick={setDistance}
             visEncoding={visEncoding}
           />
-          <div className="DdgHeader--uiFind" role="button" onClick={this.focusUiFindInput}>
-            <Icon className="DdgHeader--uiFindSearchIcon" type="search" />
-            <UiFindInput
-              allowClear
-              forwardedRef={this._uiFindInput}
-              inputProps={{ className: 'DdgHeader--uiFindInput' }}
-            />
-            <span className="DdgHeader--uiFindCount">{uiFindCount}</span>
+          <div className="DdgHeader--findWrapper">
+            <div className="DdgHeader--uiFind" role="button" onClick={this.focusUiFindInput}>
+              <Icon className="DdgHeader--uiFindSearchIcon" type="search" />
+              <UiFindInput
+                allowClear
+                forwardedRef={this._uiFindInput}
+                inputProps={{ className: 'DdgHeader--uiFindInput' }}
+              />
+              <span className="DdgHeader--uiFindCount">{uiFindCount}</span>
+            </div>
           </div>
         </div>
       </header>

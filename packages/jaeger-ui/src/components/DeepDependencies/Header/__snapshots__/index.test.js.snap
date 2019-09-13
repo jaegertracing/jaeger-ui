@@ -19,36 +19,41 @@ exports[`<Header> renders the hops selector if distanceToPathElems is provided 1
   <div
     className="DdgHeader--controlHeader"
   >
+    <LayoutSettings />
     <Component
       distanceToPathElems={Map {}}
       handleClick={[Function]}
       visEncoding="3"
     />
     <div
-      className="DdgHeader--uiFind"
-      onClick={[Function]}
-      role="button"
+      className="DdgHeader--findWrapper"
     >
-      <Icon
-        className="DdgHeader--uiFindSearchIcon"
-        type="search"
-      />
-      <withRouter(Connect(UnconnectedUiFindInput))
-        allowClear={true}
-        forwardedRef={
-          Object {
-            "current": null,
+      <div
+        className="DdgHeader--uiFind"
+        onClick={[Function]}
+        role="button"
+      >
+        <Icon
+          className="DdgHeader--uiFindSearchIcon"
+          type="search"
+        />
+        <withRouter(Connect(UnconnectedUiFindInput))
+          allowClear={true}
+          forwardedRef={
+            Object {
+              "current": null,
+            }
           }
-        }
-        inputProps={
-          Object {
-            "className": "DdgHeader--uiFindInput",
+          inputProps={
+            Object {
+              "className": "DdgHeader--uiFindInput",
+            }
           }
-        }
-      />
-      <span
-        className="DdgHeader--uiFindCount"
-      />
+        />
+        <span
+          className="DdgHeader--uiFindCount"
+        />
+      </div>
     </div>
   </div>
 </header>
@@ -85,34 +90,39 @@ exports[`<Header> renders the operation selector if a service is selected 1`] = 
   <div
     className="DdgHeader--controlHeader"
   >
+    <LayoutSettings />
     <Component
       handleClick={[Function]}
     />
     <div
-      className="DdgHeader--uiFind"
-      onClick={[Function]}
-      role="button"
+      className="DdgHeader--findWrapper"
     >
-      <Icon
-        className="DdgHeader--uiFindSearchIcon"
-        type="search"
-      />
-      <withRouter(Connect(UnconnectedUiFindInput))
-        allowClear={true}
-        forwardedRef={
-          Object {
-            "current": null,
+      <div
+        className="DdgHeader--uiFind"
+        onClick={[Function]}
+        role="button"
+      >
+        <Icon
+          className="DdgHeader--uiFindSearchIcon"
+          type="search"
+        />
+        <withRouter(Connect(UnconnectedUiFindInput))
+          allowClear={true}
+          forwardedRef={
+            Object {
+              "current": null,
+            }
           }
-        }
-        inputProps={
-          Object {
-            "className": "DdgHeader--uiFindInput",
+          inputProps={
+            Object {
+              "className": "DdgHeader--uiFindInput",
+            }
           }
-        }
-      />
-      <span
-        className="DdgHeader--uiFindCount"
-      />
+        />
+        <span
+          className="DdgHeader--uiFindCount"
+        />
+      </div>
     </div>
   </div>
 </header>
@@ -153,34 +163,39 @@ exports[`<Header> renders the operation selector if a service is selected 2`] = 
   <div
     className="DdgHeader--controlHeader"
   >
+    <LayoutSettings />
     <Component
       handleClick={[Function]}
     />
     <div
-      className="DdgHeader--uiFind"
-      onClick={[Function]}
-      role="button"
+      className="DdgHeader--findWrapper"
     >
-      <Icon
-        className="DdgHeader--uiFindSearchIcon"
-        type="search"
-      />
-      <withRouter(Connect(UnconnectedUiFindInput))
-        allowClear={true}
-        forwardedRef={
-          Object {
-            "current": null,
+      <div
+        className="DdgHeader--uiFind"
+        onClick={[Function]}
+        role="button"
+      >
+        <Icon
+          className="DdgHeader--uiFindSearchIcon"
+          type="search"
+        />
+        <withRouter(Connect(UnconnectedUiFindInput))
+          allowClear={true}
+          forwardedRef={
+            Object {
+              "current": null,
+            }
           }
-        }
-        inputProps={
-          Object {
-            "className": "DdgHeader--uiFindInput",
+          inputProps={
+            Object {
+              "className": "DdgHeader--uiFindInput",
+            }
           }
-        }
-      />
-      <span
-        className="DdgHeader--uiFindCount"
-      />
+        />
+        <span
+          className="DdgHeader--uiFindCount"
+        />
+      </div>
     </div>
   </div>
 </header>
@@ -205,34 +220,39 @@ exports[`<Header> renders with minimal props 1`] = `
   <div
     className="DdgHeader--controlHeader"
   >
+    <LayoutSettings />
     <Component
       handleClick={[Function]}
     />
     <div
-      className="DdgHeader--uiFind"
-      onClick={[Function]}
-      role="button"
+      className="DdgHeader--findWrapper"
     >
-      <Icon
-        className="DdgHeader--uiFindSearchIcon"
-        type="search"
-      />
-      <withRouter(Connect(UnconnectedUiFindInput))
-        allowClear={true}
-        forwardedRef={
-          Object {
-            "current": null,
+      <div
+        className="DdgHeader--uiFind"
+        onClick={[Function]}
+        role="button"
+      >
+        <Icon
+          className="DdgHeader--uiFindSearchIcon"
+          type="search"
+        />
+        <withRouter(Connect(UnconnectedUiFindInput))
+          allowClear={true}
+          forwardedRef={
+            Object {
+              "current": null,
+            }
           }
-        }
-        inputProps={
-          Object {
-            "className": "DdgHeader--uiFindInput",
+          inputProps={
+            Object {
+              "className": "DdgHeader--uiFindInput",
+            }
           }
-        }
-      />
-      <span
-        className="DdgHeader--uiFindCount"
-      />
+        />
+        <span
+          className="DdgHeader--uiFindCount"
+        />
+      </div>
     </div>
   </div>
 </header>

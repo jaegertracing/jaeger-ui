@@ -30,7 +30,7 @@ exports[`<DdgNodeContent> DdgNodeContent.getNodeRenderer() returns a <DdgNodeCon
       href="/deep-dependencies?operation=the-operation&service=the-service"
     >
       <svg
-        className="DdgNode-SetFocusIcon"
+        className="DdgNode--SetFocusIcon"
         height="100"
         viewBox="0 0 100 100"
         width="100"
@@ -109,7 +109,7 @@ exports[`<DdgNodeContent> omits the operation if it is null 1`] = `
       href="some-url"
     >
       <svg
-        className="DdgNode-SetFocusIcon"
+        className="DdgNode--SetFocusIcon"
         height="100"
         viewBox="0 0 100 100"
         width="100"
@@ -183,7 +183,7 @@ exports[`<DdgNodeContent> omits the operation if it is null 2`] = `
       href="some-url"
     >
       <svg
-        className="DdgNode-SetFocusIcon"
+        className="DdgNode--SetFocusIcon"
         height="100"
         viewBox="0 0 100 100"
         width="100"
@@ -262,7 +262,7 @@ exports[`<DdgNodeContent> renders correctly when isFocalNode = true and focalNod
       href="some-url"
     >
       <svg
-        className="DdgNode-SetFocusIcon"
+        className="DdgNode--SetFocusIcon"
         height="100"
         viewBox="0 0 100 100"
         width="100"
