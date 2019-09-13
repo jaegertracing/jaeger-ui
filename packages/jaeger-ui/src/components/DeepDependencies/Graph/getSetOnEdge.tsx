@@ -18,17 +18,20 @@ import { TLayoutEdge } from '@jaegertracing/plexus/lib/types';
 import { getEdgeId } from '../../../model/ddg/GraphModel';
 import { EViewModifier } from '../../../model/ddg/types';
 
+const baseCase = { className: 'Ddg--Edge' };
+const matchMiss = { className: 'Ddg--Edge', markerEnd: null };
+
 export default function getSetOnEdge(edgesViewModifiers: Map<string, number>) {
   if (!edgesViewModifiers.size) {
-    return undefined;
+    return baseCase;
   }
   return function setOnEdge(lv: TLayoutEdge<unknown>, utils: TRendererUtils) {
     const edgeId = getEdgeId(lv.edge.from, lv.edge.to);
     // eslint-disable-next-line no-bitwise
     if ((edgesViewModifiers.get(edgeId) || 0) & EViewModifier.PathHovered) {
       const markerEnd = `url(#${utils.getGlobalId('arrow-hovered')})`;
-      return { markerEnd, className: 'DdgEdge is-pathHovered' };
+      return { markerEnd, className: 'Ddg--Edge is-pathHovered' };
     }
-    return { className: 'DdgEdge is-notMatched', markerEnd: null };
+    return matchMiss;
   };
 }

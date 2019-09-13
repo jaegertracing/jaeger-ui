@@ -38,12 +38,11 @@ type TProps = {
   verticesViewModifiers: Map<string, number>;
 };
 
-const { scaleStrokeOpacityStrongest } = Digraph.propsFactories;
-
-const setOnEdgesContainer: TSetProps<TFromGraphStateFn<TDdgVertex, any>> = [
-  scaleStrokeOpacityStrongest,
-  { stroke: '#444', strokeWidth: 0.7 },
-];
+// The dichotomy between w/ & w/o VMs assumes that any edge VM neccesitates unmodified edges are de-emphasized
+const setOnEdgesContainer: Record<string, TSetProps<TFromGraphStateFn<any, any>>> = {
+  withViewModifiers: [{ className: 'Ddg--Edges is-withViewModifiers' }],
+  withoutViewModifiers: [Digraph.propsFactories.scaleStrokeOpacityStrongest, { className: 'Ddg--Edges' }],
+};
 
 // The dichotomy between w/ & w/o VMs assumes that any vertex VM makes unmodified vertices de-emphasized
 const setOnVectorBorderContainerWithViewModifiers: TSetProps<TFromGraphStateFn<TDdgVertex, any>> = {
@@ -52,7 +51,7 @@ const setOnVectorBorderContainerWithViewModifiers: TSetProps<TFromGraphStateFn<T
 
 const edgesDefs: TNonEmptyArray<TDefEntry<TDdgVertex, unknown>> = [
   { localId: 'arrow' },
-  { localId: 'arrow-hovered', setOnEntry: { className: 'DdgArrow is-pathHovered' } },
+  { localId: 'arrow-hovered', setOnEntry: { className: 'Ddg--Arrow is-pathHovered' } },
 ];
 
 export default class Graph extends PureComponent<TProps> {
@@ -117,7 +116,7 @@ export default class Graph extends PureComponent<TProps> {
             renderNode: nodeRenderers.vectorBorder,
             setOnContainer: verticesViewModifiers.size
               ? setOnVectorBorderContainerWithViewModifiers
-              : scaleStrokeOpacityStrongest,
+              : Digraph.propsFactories.scaleStrokeOpacityStrongest,
           },
           {
             key: 'edges',
@@ -125,7 +124,9 @@ export default class Graph extends PureComponent<TProps> {
             edges: true,
             defs: edgesDefs,
             markerEndId: 'arrow',
-            setOnContainer: setOnEdgesContainer,
+            setOnContainer: edgesViewModifiers.size
+              ? setOnEdgesContainer.withViewModifiers
+              : setOnEdgesContainer.withoutViewModifiers,
             setOnEdge: this.getSetOnEdge(edgesViewModifiers),
           },
           {

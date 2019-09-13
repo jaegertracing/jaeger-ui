@@ -99,7 +99,7 @@ describe('<NameSelector>', () => {
         focusInput: fn,
       },
     };
-    wrapper.setProps({ required: false });
+    wrapper.setState({ popoverVisible: true });
     expect(fn.mock.calls.length).toBe(1);
   });
 });

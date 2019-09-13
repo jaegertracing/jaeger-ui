@@ -108,7 +108,7 @@ export type TMeasurableNodeRenderer<T = Record<string, unknown>> = {
 };
 
 export type TNodeRenderer<T = Record<string, unknown>> = {
-  renderNode: TRenderNodeFn<T>;
+  renderNode: TRenderNodeFn<T> | null;
   setOnNode?: TSetProps<(layoutVertex: TLayoutVertex<T>, utils: TRendererUtils) => TAnyProps | null>;
 };
 

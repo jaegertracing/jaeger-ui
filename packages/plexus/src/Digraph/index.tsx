@@ -234,7 +234,8 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
           />
         );
       }
-      if (layer.renderNode) {
+      const { renderNode } = layer;
+      if (renderNode !== undefined) {
         return (
           <NodesLayer<T, U>
             key={key}
@@ -242,7 +243,7 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
             getClassName={getClassName}
             graphState={graphState}
             layerType={layer.layerType}
-            renderNode={layer.renderNode}
+            renderNode={renderNode}
             setOnContainer={setOnContainer}
             setOnNode={layer.setOnNode}
           />

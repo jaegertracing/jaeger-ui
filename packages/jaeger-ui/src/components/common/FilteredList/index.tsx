@@ -40,6 +40,7 @@ type TState = {
 export default class FilteredList extends React.PureComponent<TProps, TState> {
   inputRef: React.RefObject<HTMLInputElement> = React.createRef();
   vlistRef: React.RefObject<VList> = React.createRef();
+  wrapperRef: React.RefObject<HTMLDivElement> = React.createRef();
   state: TState = {
     filterText: '',
     focusedIndex: null,
@@ -57,6 +58,11 @@ export default class FilteredList extends React.PureComponent<TProps, TState> {
       current.focus();
     }
   };
+
+  isMouseWithin() {
+    const { current } = this.wrapperRef;
+    return current != null && current.matches(':hover');
+  }
 
   private getFilteredOptions = () => {
     const { options } = this.props;
@@ -138,7 +144,7 @@ export default class FilteredList extends React.PureComponent<TProps, TState> {
       setValue: this.setValue,
     };
     return (
-      <div>
+      <div ref={this.wrapperRef}>
         <label className="FilteredList--filterWrapper">
           <IoIosSearch className="FilteredList--filterIcon" />
           <input

@@ -26,7 +26,7 @@ import LoadingIndicator from '../common/LoadingIndicator';
 import { extractUiFindFromState, TExtractUiFindFromStateReturn } from '../common/UiFindInput';
 import ddgActions from '../../actions/ddg';
 import * as jaegerApiActions from '../../actions/jaeger-api';
-import { fetchedState, TOP_NAV_HEIGHT } from '../../constants';
+import { fetchedState } from '../../constants';
 import getStateEntryKey from '../../model/ddg/getStateEntryKey';
 import GraphModel, { makeGraph } from '../../model/ddg/GraphModel';
 import {
@@ -215,7 +215,7 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
     }
 
     return (
-      <div>
+      <div className="Ddg">
         <div ref={this.headerWrapper}>
           <Header
             density={density}
@@ -234,16 +234,7 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
             visEncoding={visEncoding}
           />
         </div>
-        <div
-          className="Ddg--graphWrapper"
-          style={{
-            top: this.headerWrapper.current
-              ? this.headerWrapper.current.offsetHeight + this.headerWrapper.current.offsetTop
-              : TOP_NAV_HEIGHT,
-          }}
-        >
-          {content}
-        </div>
+        <div className="Ddg--graphWrapper">{content}</div>
       </div>
     );
   }

@@ -14,18 +14,22 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+.Ddg--Edges {
+  stroke: #444;
+  stroke-width: 0.7;
+}
+
+.Ddg--Edges.is-withViewModifiers {
+  stroke-opacity: 0.15;
+}
+
 .DdgArrow.is-pathHovered {
-  /* fill: #08979c; */
   stroke: none;
 }
 
-.DdgEdge.is-pathHovered {
-  /* stroke: #08979c; */
+.Ddg--Edge.is-pathHovered {
   stroke-opacity: 1;
-}
-
-.DdgEdge.is-notMatched {
-  stroke-opacity: 0.1;
+  stroke-width: 0.85;
 }
 
 .DdgVectorBorders.is-withViewModifiers {
