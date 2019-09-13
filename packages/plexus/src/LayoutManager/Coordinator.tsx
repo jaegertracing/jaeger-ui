@@ -15,7 +15,7 @@
 /* eslint-disable no-console */
 
 import * as convCoord from './dot/conv-coord';
-import { matchEdges, matchVertices } from './match-inputs';
+import convInputs from './convInputs';
 // eslint-disable-next-line import/order, import/no-unresolved
 import LayoutWorker from './layout.worker.bundled';
 
@@ -29,7 +29,7 @@ import {
   TWorkerInputMessage,
   TWorkerOutputMessage,
 } from './types';
-import { TEdge, TLayoutVertex, TSizeVertex } from '../types';
+import { TEdge, TLayoutVertex, TSizeVertex, TLayoutEdge } from '../types';
 
 type TCurrentLayout = {
   cleaned: {
@@ -39,6 +39,8 @@ type TCurrentLayout = {
   id: number;
   input: {
     edges: TEdge<any>[];
+    unmapEdges: (output: TLayoutEdge<{}>[]) => TLayoutEdge<any>[];
+    unmapVertices: (output: TLayoutVertex<{}>[]) => TLayoutVertex<any>[];
     vertices: TSizeVertex<any>[];
   };
   options: TLayoutOptions | null;
@@ -47,15 +49,6 @@ type TCurrentLayout = {
     phase: ECoordinatorPhase;
   };
 };
-
-function cleanInput(
-  srcEdges: TEdge<any>[],
-  srcVertices: TSizeVertex<any>[]
-): { edges: TEdge[]; vertices: TSizeVertex[] } {
-  const edges = srcEdges.map(({ from, to, isBidirectional }) => ({ from, to, isBidirectional }));
-  const vertices = srcVertices.map(({ vertex: { key }, ...rest }) => ({ vertex: { key }, ...rest }));
-  return { edges, vertices };
-}
 
 function killWorker(worker: LayoutWorker) {
   const w = worker;
@@ -103,13 +96,13 @@ export default class Coordinator {
   ) {
     this.busyWorkers.forEach(killWorker);
     this.busyWorkers.length = 0;
-    const { edges, vertices: _vertices } = cleanInput(inEdges, inVertices);
+    const { edges, unmapEdges, unmapVertices, vertices: _vertices } = convInputs(inEdges, inVertices);
     const vertices = _vertices.map(convCoord.vertexToDot);
     this.currentLayout = {
       id,
       cleaned: { edges, vertices },
       options: options || null,
-      input: { edges: inEdges, vertices: inVertices },
+      input: { edges: inEdges, unmapEdges, unmapVertices, vertices: inVertices },
       status: { phase: ECoordinatorPhase.NotStarted },
     };
     const isDotOnly = Boolean(options && options.useDotEdges);
@@ -242,7 +235,7 @@ export default class Coordinator {
 
     const adjVertexCoords = convCoord.vertexToPixels.bind(null, graph);
     const adjCleanVertices = vertices.map<TLayoutVertex>(adjVertexCoords);
-    const adjVertices = matchVertices(input.vertices, adjCleanVertices);
+    const adjVertices = input.unmapVertices(adjCleanVertices);
     const adjGraph = convCoord.graphToPixels(graph);
 
     if (phase === EWorkerPhase.Positions || phase === EWorkerPhase.DotOnly) {
@@ -256,7 +249,7 @@ export default class Coordinator {
     // phase is either edges or dot-only
     if (edges) {
       const pixelEdges = edges.map(edge => convCoord.edgeToPixels(graph, edge));
-      const mergedEdges = matchEdges(input.edges, pixelEdges);
+      const mergedEdges = input.unmapEdges(pixelEdges);
       this.callback({
         type: ECoordinatorPhase.Done,
         layoutId: layout.id,

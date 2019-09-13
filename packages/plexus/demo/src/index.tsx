@@ -377,6 +377,76 @@ class Demo extends React.PureComponent<{}, TState> {
             />
           </div>
         </div>
+        <h1>Digraph with neato edges and rankdir = TB</h1>
+        <div>
+          <div className="DemoGraph">
+            <Digraph<TLargeNode>
+              zoom
+              minimap
+              className="DemoGraph--dag"
+              layoutManager={
+                new LayoutManager({ useDotEdges: false, nodesep: 7, ranksep: 10, rankdir: 'TB' })
+              }
+              minimapClassName="Demo--miniMap"
+              setOnGraph={layeredClassNameIsSmall}
+              measurableNodesKey="nodes"
+              layers={[
+                {
+                  key: 'edges',
+                  defs: [{ localId: 'arrowHead' }],
+                  edges: true,
+                  layerType: 'svg',
+                  markerEndId: 'arrowHead',
+                  setOnContainer: cacheAs('svg-nodes/edges/set-on-container', [
+                    { className: 'DdgGraph--edges' },
+                    scaleStrokeOpacity,
+                  ]),
+                },
+                {
+                  key: 'nodes',
+                  layerType: 'svg',
+                  measurable: true,
+                  measureNode: cacheAs('svg-nodes/nodes/measure', (_: TVertex, utils: TMeasureNodeUtils) => {
+                    const { height, width } = utils.getWrapperSize();
+                    return { height: height + 40, width: width + 40 };
+                  }),
+                  renderNode: cacheAs(
+                    'svg-nodes-tb/nodes/render',
+                    (
+                      vertex: TVertex<TLargeNode>,
+                      utils: TRendererUtils,
+                      lv: TLayoutVertex<TLargeNode> | null
+                    ) => (
+                      <>
+                        {lv && (
+                          <rect
+                            width={lv.width}
+                            height={lv.height}
+                            fill="#ddd"
+                            stroke="#444"
+                            strokeWidth="1"
+                            vectorEffect="non-scaling-stroke"
+                          />
+                        )}
+                        <text x="20" y="20" dy="1em">
+                          {vertex.service}
+                        </text>
+                      </>
+                    )
+                  ),
+                },
+              ]}
+              edges={largeDag.edges.map(edge => ({
+                from: edge.from.repeat(8),
+                to: edge.to.repeat(8),
+              }))}
+              vertices={largeDag.vertices.map(vtx => ({
+                ...vtx,
+                key: vtx.key.repeat(8),
+              }))}
+            />
+          </div>
+        </div>
         <h1>Directed graph with cycles - dot edges</h1>
         <div>
           <div className="DemoGraph">

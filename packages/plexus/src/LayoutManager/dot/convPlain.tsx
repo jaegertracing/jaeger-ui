@@ -85,16 +85,10 @@ function parseGraph(str: string, startIndex: number): { end: number; graph: TLay
   };
 }
 
-// TODO: Temporary hack to circumvent how long vertex keys are handled
-function _removeBackslashAndNewLine(raw: string): string {
-  return raw.replace(/\\|\n/g, '');
-}
-
 function parseNode(str: string, startIndex: number) {
   // skip "node "
   const i = startIndex + 5;
-  const { value: raw, end: keyEnd } = parseString(str, i);
-  const key = _removeBackslashAndNewLine(raw);
+  const { value: key, end: keyEnd } = parseString(str, i);
   const { values, end } = parseNumbers(4, str, keyEnd + 1);
   const [left, top, width, height] = values;
   return {
@@ -112,10 +106,8 @@ function parseNode(str: string, startIndex: number) {
 function parseEdge(str: string, startIndex: number) {
   // skip "edge "
   const i = startIndex + 5;
-  const { value: fromRaw, end: fromEnd } = parseString(str, i);
-  const { value: toRaw, end: toEnd } = parseString(str, fromEnd + 1);
-  const from = _removeBackslashAndNewLine(fromRaw);
-  const to = _removeBackslashAndNewLine(toRaw);
+  const { value: from, end: fromEnd } = parseString(str, i);
+  const { value: to, end: toEnd } = parseString(str, fromEnd + 1);
   const { value: pointCount, end: endPtCount } = parseNumber(str, toEnd + 1);
   const { values: flatPoints, end: pointsEnd } = parseNumbers(pointCount * 2, str, endPtCount + 1);
   const { value: flags, end: flagsEnd } = parseString(str, pointsEnd + 1);
@@ -143,9 +135,6 @@ export default function convPlain(str: string, parseEdges: boolean = false) {
   const edges: TLayoutEdge[] = [];
   const vertices: TLayoutVertex[] = [];
   let i = 0;
-  if (str[0] !== 'g') {
-    throwMalformedPlain(str, i);
-  }
   const { end: graphEnd, graph } = parseGraph(str, i);
   i = graphEnd + 1;
   // stop when the "stop" line is hit
