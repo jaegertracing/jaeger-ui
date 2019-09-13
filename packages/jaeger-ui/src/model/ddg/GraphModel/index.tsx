@@ -13,13 +13,15 @@
 // limitations under the License.
 
 import memoize from 'lru-memoize';
+
 import { TEdge } from '@jaegertracing/plexus/lib/types';
 
 import getDerivedViewModifiers from './getDerivedViewModifiers';
 import getEdgeId from './getEdgeId';
 import getPathElemHasher from './getPathElemHasher';
-import { PathElem, EDdgDensity, TDdgDistanceToPathElems, TDdgModel, TDdgVertex } from '../types';
 import { decode } from '../visibility-codec';
+
+import { PathElem, EDdgDensity, TDdgDistanceToPathElems, TDdgModel, TDdgVertex } from '../types';
 
 export { default as getEdgeId } from './getEdgeId';
 
@@ -180,7 +182,6 @@ export default class GraphModel {
     }
   );
 
-  // eslint-disable-next-line consistent-return
   public getVertexVisiblePathElems = (
     vertexKey: string,
     visEncoding: string | undefined

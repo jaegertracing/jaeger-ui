@@ -37,6 +37,7 @@ exports[`<Graph /> render renders provided edges and vertices 1`] = `
         "key": "nodes/vector-border",
         "layerType": "svg",
         "renderNode": [Function],
+        "setOnContainer": [Function],
       },
       Object {
         "defs": Array [

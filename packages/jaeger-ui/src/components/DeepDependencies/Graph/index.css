@@ -23,13 +23,15 @@ limitations under the License.
   stroke-opacity: 0.15;
 }
 
-.Ddg--Arrow.is-pathHovered {
-  fill: #08979c;
+.DdgArrow.is-pathHovered {
   stroke: none;
 }
 
 .Ddg--Edge.is-pathHovered {
-  stroke: #08979c;
   stroke-opacity: 1;
   stroke-width: 0.85;
+}
+
+.DdgVectorBorders.is-withViewModifiers {
+  stroke-opacity: 0.1;
 }

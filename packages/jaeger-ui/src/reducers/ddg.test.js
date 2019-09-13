@@ -24,7 +24,7 @@ import {
 } from './ddg';
 import { fetchedState } from '../constants';
 import * as transformDdgData from '../model/ddg/transformDdgData';
-import getDdgModelKey from '../model/ddg/getDdgModelKey';
+import getStateEntryKey from '../model/ddg/getStateEntryKey';
 import { EViewModifier } from '../model/ddg/types';
 
 describe('deepDependencyGraph reducers', () => {
@@ -45,8 +45,8 @@ describe('deepDependencyGraph reducers', () => {
       operation,
     },
   };
-  const targetKey = getDdgModelKey(meta.query);
-  const keySansOp = getDdgModelKey(metaSansOp.query);
+  const targetKey = getStateEntryKey(meta.query);
+  const keySansOp = getStateEntryKey(metaSansOp.query);
   const existingState = {
     [targetKey]: 'some pre-existing state on target branch',
     [keySansOp]: 'some pre-existing state on branch without operation',
