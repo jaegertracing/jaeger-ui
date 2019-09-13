@@ -15,30 +15,48 @@
 import React, { PureComponent } from 'react';
 import memoize from 'memoize-one';
 import { Digraph, LayoutManager } from '@jaegertracing/plexus';
+import { TSetProps, TFromGraphStateFn, TDefEntry } from '@jaegertracing/plexus/lib/Digraph/types';
 import { TEdge } from '@jaegertracing/plexus/lib/types';
-import { TSetProps, TFromGraphStateFn } from '@jaegertracing/plexus/lib/Digraph/types';
+import TNonEmptyArray from '@jaegertracing/plexus/lib/types/TNonEmptyArray';
 
 import DdgNodeContent from './DdgNodeContent';
-import { getFindEmphasisRenderers } from './node-renderers';
-import { PathElem, TDdgVertex } from '../../../model/ddg/types';
+import getNodeRenderers from './getNodeRenderers';
+import getSetOnEdge from './getSetOnEdge';
+import { PathElem, TDdgVertex, EViewModifier } from '../../../model/ddg/types';
+
+import './index.css';
 
 type TProps = {
   edges: TEdge[];
+  edgesViewModifiers: Map<string, number>;
   getVisiblePathElems: (vertexKey: string) => PathElem[] | undefined;
+  setViewModifier: (vertexKey: string, viewModifier: EViewModifier, enable: boolean) => void;
   uiFindMatches: Set<TDdgVertex> | undefined;
   vertices: TDdgVertex[];
+  verticesViewModifiers: Map<string, number>;
 };
 
-const { scaleOpacity, scaleStrokeOpacity } = Digraph.propsFactories;
+const { scaleStrokeOpacityStrongest } = Digraph.propsFactories;
 
 const setOnEdgesContainer: TSetProps<TFromGraphStateFn<TDdgVertex, any>> = [
-  scaleOpacity,
-  scaleStrokeOpacity,
+  scaleStrokeOpacityStrongest,
   { stroke: '#444', strokeWidth: 0.7 },
 ];
 
+// The dichotomy between w/ & w/o VMs assumes that any vertex VM makes unmodified vertices de-emphasized
+const setOnVectorBorderContainerWithViewModifiers: TSetProps<TFromGraphStateFn<TDdgVertex, any>> = {
+  className: 'DdgVectorBorders is-withViewModifiers',
+};
+
+const edgesDefs: TNonEmptyArray<TDefEntry<TDdgVertex, unknown>> = [
+  { localId: 'arrow' },
+  { localId: 'arrow-hovered', setOnEntry: { className: 'DdgArrow is-pathHovered' } },
+];
+
 export default class Graph extends PureComponent<TProps> {
-  private getFindEmphasisRenderers = memoize(getFindEmphasisRenderers);
+  private getNodeRenderers = memoize(getNodeRenderers);
+  private getNodeContentRenderer = memoize(DdgNodeContent.getNodeRenderer);
+  private getSetOnEdge = memoize(getSetOnEdge);
 
   private layoutManager: LayoutManager = new LayoutManager({
     useDotEdges: true,
@@ -53,8 +71,16 @@ export default class Graph extends PureComponent<TProps> {
   }
 
   render() {
-    const { edges, getVisiblePathElems, uiFindMatches, vertices } = this.props;
-    const findRenderers = this.getFindEmphasisRenderers(uiFindMatches || this.emptyFindSet);
+    const {
+      edges,
+      edgesViewModifiers,
+      getVisiblePathElems,
+      setViewModifier,
+      uiFindMatches,
+      vertices,
+      verticesViewModifiers,
+    } = this.props;
+    const nodeRenderers = this.getNodeRenderers(uiFindMatches || this.emptyFindSet, verticesViewModifiers);
 
     return (
       <Digraph<TDdgVertex>
@@ -69,37 +95,41 @@ export default class Graph extends PureComponent<TProps> {
           {
             key: 'nodes/find-emphasis/vector-outline',
             layerType: 'svg',
-            renderNode: findRenderers.vectorFindOutline,
+            renderNode: nodeRenderers.vectorFindOutline,
           },
           {
             key: 'nodes/find-emphasis/html',
             layerType: 'html',
-            renderNode: findRenderers.htmlFindEmphasis,
+            renderNode: nodeRenderers.htmlFindEmphasis,
           },
           {
             key: 'nodes/find-emphasis/vector-color-band',
             layerType: 'svg',
-            renderNode: findRenderers.vectorFindColorBand,
+            renderNode: nodeRenderers.vectorFindColorBand,
           },
           {
             key: 'nodes/vector-border',
             layerType: 'svg',
-            renderNode: findRenderers.vectorBorder,
+            renderNode: nodeRenderers.vectorBorder,
+            setOnContainer: verticesViewModifiers.size
+              ? setOnVectorBorderContainerWithViewModifiers
+              : scaleStrokeOpacityStrongest,
           },
           {
             key: 'edges',
             layerType: 'svg',
             edges: true,
-            defs: [{ localId: 'arrow' }],
+            defs: edgesDefs,
             markerEndId: 'arrow',
             setOnContainer: setOnEdgesContainer,
+            setOnEdge: this.getSetOnEdge(edgesViewModifiers),
           },
           {
             key: 'nodes/content',
             layerType: 'html',
             measurable: true,
             measureNode: DdgNodeContent.measureNode,
-            renderNode: DdgNodeContent.getNodeRenderer(getVisiblePathElems),
+            renderNode: this.getNodeContentRenderer(getVisiblePathElems, setViewModifier),
           },
         ]}
       />

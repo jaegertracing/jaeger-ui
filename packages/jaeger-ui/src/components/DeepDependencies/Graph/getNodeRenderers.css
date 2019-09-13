@@ -21,11 +21,17 @@ limitations under the License.
 }
 
 .DdgNode--VectorBorder.is-findMatch {
+  /* This color may be overridden or removed when other coloring rationales are added */
   stroke: #fadb14;
 }
 
 .DdgNode--VectorBorder.is-focalNode {
   stroke: #eb2f96;
+}
+
+.DdgNode--VectorBorder.is-pathHovered,
+.DdgNode--VectorBorder.is-hovered {
+  stroke-opacity: 1;
 }
 
 .DdgNode--HtmlFindEmphasis {

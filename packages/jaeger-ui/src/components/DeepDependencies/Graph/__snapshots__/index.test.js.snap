@@ -37,11 +37,18 @@ exports[`<Graph /> render renders provided edges and vertices 1`] = `
         "key": "nodes/vector-border",
         "layerType": "svg",
         "renderNode": [Function],
+        "setOnContainer": [Function],
       },
       Object {
         "defs": Array [
           Object {
             "localId": "arrow",
+          },
+          Object {
+            "localId": "arrow-hovered",
+            "setOnEntry": Object {
+              "className": "DdgArrow is-pathHovered",
+            },
           },
         ],
         "edges": true,
@@ -50,12 +57,12 @@ exports[`<Graph /> render renders provided edges and vertices 1`] = `
         "markerEndId": "arrow",
         "setOnContainer": Array [
           [Function],
-          [Function],
           Object {
             "stroke": "#444",
             "strokeWidth": 0.7,
           },
         ],
+        "setOnEdge": undefined,
       },
       Object {
         "key": "nodes/content",

@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { convergentPaths, focalPayloadElem, simplePath, wrap } from './sample-paths.test.resources';
-import transformDdgData from './transformDdgData';
+import { convergentPaths, focalPayloadElem, simplePath, wrap } from '../sample-paths.test.resources';
+import transformDdgData from '../transformDdgData';
 
-import GraphModel, { makeGraph } from './GraphModel';
-import { EDdgDensity } from './types';
-import { encode } from './visibility-codec';
+import GraphModel, { makeGraph } from './index';
+import { EDdgDensity } from '../types';
+import { encode } from '../visibility-codec';
 
 describe('GraphModel', () => {
   const convergentModel = transformDdgData(convergentPaths.map(wrap), focalPayloadElem);
@@ -341,7 +341,7 @@ describe('GraphModel', () => {
         expect(vertices).toHaveLength(0);
       });
 
-      it('errors if pathElem is mutated into model after graph is created', () => {
+      it('is resiliant against mutation of the ddg model', () => {
         const willMutate = convergentModel.visIdxToPathElem.slice();
         const victimOfMutation = new GraphModel({
           ddgModel: {
@@ -349,8 +349,11 @@ describe('GraphModel', () => {
           },
           density: EDdgDensity.PreventPathEntanglement,
         });
-        const newIdx = willMutate.push({ problematic: 'pathElem' }) - 1;
-        expect(() => victimOfMutation.getVisible(encode([newIdx]))).toThrowError();
+        const idx = willMutate.length - 1;
+        const prior = victimOfMutation.getVisible(encode([idx]));
+        willMutate.push({ problematic: 'pathElem' });
+        const now = victimOfMutation.getVisible(encode([idx, idx + 1]));
+        expect(prior).toEqual(now);
       });
     });
 
@@ -428,9 +431,9 @@ describe('GraphModel', () => {
       const graph = makeGraph(convergentModel, true, EDdgDensity.PreventPathEntanglement);
       expect(graph instanceof GraphModel).toBe(true);
       expect(graph.density).toBe(EDdgDensity.PreventPathEntanglement);
-      expect(graph.distanceToPathElems).toBe(convergentModel.distanceToPathElems);
+      expect(graph.distanceToPathElems).toEqual(convergentModel.distanceToPathElems);
       expect(graph.showOp).toBe(true);
-      expect(graph.visIdxToPathElem).toBe(convergentModel.visIdxToPathElem);
+      expect(graph.visIdxToPathElem).toEqual(convergentModel.visIdxToPathElem);
     });
   });
 });

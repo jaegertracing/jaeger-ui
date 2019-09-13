@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Uber Technologies, Inc.
+// Copyright (c) 2019 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,21 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { reducer as formReducer } from 'redux-form';
-
-import config from './config';
-import dependencies from './dependencies';
-import ddg from './ddg';
-import embedded from './embedded';
-import services from './services';
-import trace from './trace';
-
-export default {
-  config,
-  dependencies,
-  ddg,
-  embedded,
-  services,
-  trace,
-  form: formReducer,
-};
+export default function getEdgeId(from: string, to: string) {
+  return `${from}\v${to}`;
+}

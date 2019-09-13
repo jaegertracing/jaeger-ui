@@ -15,10 +15,34 @@
 import { TVertex } from '@jaegertracing/plexus/lib/types';
 
 import PathElem from './PathElem';
-import { fetchedState } from '../../constants';
-import { ApiError } from '../../types/api-error';
 
 export { default as PathElem } from './PathElem';
+
+export enum EViewModifier {
+  None,
+  Hovered,
+  Selected,
+  Emphasized = 1 << 2, // eslint-disable-line no-bitwise
+  PathHovered = 1 << 3, // eslint-disable-line no-bitwise
+}
+
+export enum EDdgDensity {
+  MostConcise = 'MC',
+  UpstreamVsDownstream = 'UvD',
+  PreventPathEntanglement = 'PPE',
+  ExternalVsInternal = 'EvI',
+}
+
+export enum ECheckedStatus {
+  Empty = 'Empty',
+  Full = 'Full',
+  Partial = 'Partial',
+}
+
+export enum EDirection {
+  Upstream = -1,
+  Downstream = 1,
+}
 
 export type TDdgPayloadEntry = {
   operation: string;
@@ -65,39 +89,6 @@ export type TDdgVertex = TVertex<{
   service: string;
 }>;
 
-export type TDdgStateEntry =
-  | {
-      state: typeof fetchedState.LOADING;
-    }
-  | {
-      error: ApiError;
-      state: typeof fetchedState.ERROR;
-    }
-  | {
-      model: TDdgModel;
-      state: typeof fetchedState.DONE;
-      viewModifiers: Map<number, number>;
-    };
-
-export const stateKey = ({ service, operation = '*', start, end }: TDdgModelParams): string =>
-  [service, operation, start, end].join('\t');
-
-export type TDdgState = Record<string, TDdgStateEntry>;
-
-export enum EViewModifier {
-  None,
-  Hovered,
-  Selected,
-  Emphasized = 1 << 2, // eslint-disable-line no-bitwise
-}
-
-export enum EDdgDensity {
-  MostConcise = 'MC',
-  UpstreamVsDownstream = 'UvD',
-  PreventPathEntanglement = 'PPE',
-  ExternalVsInternal = 'EvI',
-}
-
 export type TDdgSparseUrlState = {
   density: EDdgDensity;
   end?: number;
@@ -135,16 +126,5 @@ export type TDdgViewModifierRemovalPayload =
   | TDdgClearViewModifiersFromIndicesPayload
   | TDdgRemoveViewModifierFromIndicesPayload
   | TDdgRemoveViewModifierPayload;
-
-export enum ECheckedStatus {
-  Empty = 'Empty',
-  Full = 'Full',
-  Partial = 'Partial',
-}
-
-export enum EDirection {
-  Upstream = -1,
-  Downstream = 1,
-}
 
 export type THop = { distance: number; fullness: ECheckedStatus };

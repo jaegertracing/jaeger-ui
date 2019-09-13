@@ -16,29 +16,32 @@ import memoize from 'lru-memoize';
 
 import { TEdge } from '@jaegertracing/plexus/lib/types';
 
-import { decode } from './visibility-codec';
+import { decode } from '../visibility-codec';
 
-import { PathElem, EDdgDensity, TDdgDistanceToPathElems, TDdgModel, TDdgVertex } from './types';
+import { PathElem, EDdgDensity, TDdgDistanceToPathElems, TDdgModel, TDdgVertex } from '../types';
+
+export { default as getDerivedViewModifiers } from './getDerivedViewModifiers';
+export { default as getEdgeId } from './getEdgeId';
 
 export default class GraphModel {
   private readonly density: EDdgDensity;
   private readonly distanceToPathElems: TDdgDistanceToPathElems;
   private readonly pathElemToEdge: Map<PathElem, TEdge>;
-  private readonly pathElemToVertex: Map<PathElem, TDdgVertex>;
+  public readonly pathElemToVertex: Map<PathElem, TDdgVertex>;
   private readonly showOp: boolean;
   private readonly vertexToPathElems: Map<TDdgVertex, Set<PathElem>>;
   private readonly vertices: Map<string, TDdgVertex>;
-  private readonly visIdxToPathElem: PathElem[];
+  public readonly visIdxToPathElem: PathElem[];
 
   constructor({ ddgModel, density, showOp }: { ddgModel: TDdgModel; density: EDdgDensity; showOp: boolean }) {
     this.density = density;
-    this.distanceToPathElems = ddgModel.distanceToPathElems;
+    this.distanceToPathElems = new Map(ddgModel.distanceToPathElems);
     this.pathElemToEdge = new Map();
     this.pathElemToVertex = new Map();
     this.showOp = showOp;
     this.vertexToPathElems = new Map();
     this.vertices = new Map();
-    this.visIdxToPathElem = ddgModel.visIdxToPathElem;
+    this.visIdxToPathElem = ddgModel.visIdxToPathElem.slice();
 
     ddgModel.visIdxToPathElem.forEach(pathElem => {
       // If there is a compatible vertex for this pathElem, use it, else, make a new vertex
@@ -109,6 +112,13 @@ export default class GraphModel {
       // Link vertex back to this pathElem
       pathElemsForVertex.add(pathElem);
     });
+
+    Object.freeze(this.distanceToPathElems);
+    Object.freeze(this.pathElemToEdge);
+    Object.freeze(this.pathElemToVertex);
+    Object.freeze(this.vertexToPathElems);
+    Object.freeze(this.vertices);
+    Object.freeze(this.visIdxToPathElem);
   }
 
   // This function assumes the density is set to PPE with distinct operations
@@ -160,23 +170,38 @@ export default class GraphModel {
     }
   };
 
+  private getDefaultVisiblePathElems() {
+    return ([] as PathElem[]).concat(
+      this.distanceToPathElems.get(-2) || [],
+      this.distanceToPathElems.get(-1) || [],
+      this.distanceToPathElems.get(0) || [],
+      this.distanceToPathElems.get(1) || [],
+      this.distanceToPathElems.get(2) || []
+    );
+  }
+
+  public getVisibleIndices(visEncoding?: string) {
+    if (visEncoding == null) {
+      const pathElems = this.getDefaultVisiblePathElems();
+      return new Set(pathElems.map(pe => pe.visibilityIdx));
+    }
+    return new Set(decode(visEncoding));
+  }
+
+  public getVisiblePathElems(visEncoding?: string) {
+    if (visEncoding == null) {
+      return this.getDefaultVisiblePathElems();
+    }
+    return decode(visEncoding)
+      .map(visIdx => this.visIdxToPathElem[visIdx])
+      .filter(Boolean);
+  }
+
   public getVisible: (visEncoding?: string) => { edges: TEdge[]; vertices: TDdgVertex[] } = memoize(10)(
     (visEncoding?: string): { edges: TEdge[]; vertices: TDdgVertex[] } => {
       const edges: Set<TEdge> = new Set();
       const vertices: Set<TDdgVertex> = new Set();
-      const pathElems =
-        visEncoding == null
-          ? ([] as PathElem[]).concat(
-              this.distanceToPathElems.get(-2) || [],
-              this.distanceToPathElems.get(-1) || [],
-              this.distanceToPathElems.get(0) || [],
-              this.distanceToPathElems.get(1) || [],
-              this.distanceToPathElems.get(2) || []
-            )
-          : decode(visEncoding)
-              .map(visIdx => this.visIdxToPathElem[visIdx])
-              .filter(Boolean);
-
+      const pathElems = this.getVisiblePathElems(visEncoding);
       pathElems.forEach(pathElem => {
         const edge = this.pathElemToEdge.get(pathElem);
         if (edge) edges.add(edge);
@@ -218,8 +243,10 @@ export default class GraphModel {
     }
   );
 
-  // eslint-disable-next-line consistent-return
-  public getVisiblePathElems = (vertexKey: string, visEncoding?: string): PathElem[] | undefined => {
+  public getVertexVisiblePathElems = (
+    vertexKey: string,
+    visEncoding: string | undefined
+  ): PathElem[] | undefined => {
     const vertex = this.vertices.get(vertexKey);
     if (vertex) {
       const pathElems = this.vertexToPathElems.get(vertex);
@@ -230,6 +257,7 @@ export default class GraphModel {
         });
       }
     }
+    return undefined;
   };
 }
 

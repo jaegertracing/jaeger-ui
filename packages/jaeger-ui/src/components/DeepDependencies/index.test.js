@@ -23,8 +23,8 @@ import Header from './Header';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
 import { fetchedState } from '../../constants';
+import getStateEntryKey from '../../model/ddg/getStateEntryKey';
 import * as GraphModel from '../../model/ddg/GraphModel';
-import { stateKey } from '../../model/ddg/types';
 import * as codec from '../../model/ddg/visibility-codec';
 
 describe('DeepDependencyGraphPage', () => {
@@ -47,7 +47,7 @@ describe('DeepDependencyGraphPage', () => {
           distanceToPathElems: new Map(),
         },
         state: fetchedState.DONE,
-        uxState: new Map(),
+        viewModifiers: new Map(),
       },
       operationsForService: {},
       urlState: {
@@ -276,6 +276,7 @@ describe('DeepDependencyGraphPage', () => {
           vertices,
         }),
         getVisibleUiFindMatches: () => new Set(vertices.slice(1)),
+        getVisibleIndices: () => new Set(),
       };
 
       it('renders message to query a ddg when no graphState is provided', () => {
@@ -345,9 +346,11 @@ describe('DeepDependencyGraphPage', () => {
   describe('mapDispatchToProps()', () => {
     it('creates the actions correctly', () => {
       expect(mapDispatchToProps(() => {})).toEqual({
+        addViewModifier: expect.any(Function),
         fetchDeepDependencyGraph: expect.any(Function),
         fetchServices: expect.any(Function),
         fetchServiceOperations: expect.any(Function),
+        removeViewModifierFromIndices: expect.any(Function),
       });
     });
   });
@@ -411,12 +414,8 @@ describe('DeepDependencyGraphPage', () => {
       const graphStateWithoutOp = 'testGraphStateWithoutOp';
       const reduxState = { ...state };
       // TODO: Remove 0s once time buckets are implemented
-      _set(
-        reduxState,
-        ['deepDependencyGraph', stateKey({ service, operation, start: 0, end: 0 })],
-        graphState
-      );
-      _set(reduxState, ['deepDependencyGraph', stateKey({ service, start, end })], graphStateWithoutOp);
+      _set(reduxState, ['ddg', getStateEntryKey({ service, operation, start: 0, end: 0 })], graphState);
+      _set(reduxState, ['ddg', getStateEntryKey({ service, start, end })], graphStateWithoutOp);
 
       const result = mapStateToProps(reduxState, ownProps);
       expect(result.graphState).toEqual(graphState);
@@ -437,17 +436,13 @@ describe('DeepDependencyGraphPage', () => {
       const loadingState = { state: fetchedState.LOADING };
       const reduxState = { ...state };
       // TODO: Remove 0s once time buckets are implemented
-      _set(
-        reduxState,
-        ['deepDependencyGraph', stateKey({ service, operation, start: 0, end: 0 })],
-        loadingState
-      );
+      _set(reduxState, ['ddg', getStateEntryKey({ service, operation, start: 0, end: 0 })], loadingState);
       const result = mapStateToProps(reduxState, ownProps);
       expect(result.graph).toBe(undefined);
 
       const doneState = _set(
         { ...state },
-        ['deepDependencyGraph', stateKey({ service, operation, start: 0, end: 0 })],
+        ['ddg', getStateEntryKey({ service, operation, start: 0, end: 0 })],
         {
           model: {},
           state: fetchedState.DONE,

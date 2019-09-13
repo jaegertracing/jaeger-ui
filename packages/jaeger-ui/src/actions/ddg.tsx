@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import _identity from 'lodash/identity';
-import { createActions } from 'redux-actions';
+import { createActions, ActionFunctionAny, Action } from 'redux-actions';
 
 import {
   TDdgAddViewModifierPayload,
@@ -40,9 +40,14 @@ const removeViewModifierFromIndices: (
   kwarg: TDdgRemoveViewModifierFromIndicesPayload
 ) => TDdgRemoveViewModifierFromIndicesPayload = _identity;
 
-export const actions = createActions<TDdgAddViewModifierPayload | TDdgViewModifierRemovalPayload>({
+const fullActions = createActions<TDdgAddViewModifierPayload | TDdgViewModifierRemovalPayload>({
   [actionTypes.ADD_VIEW_MODIFIER]: addViewModifier,
   [actionTypes.CLEAR_VIEW_MODIFIERS_FROM_INDICES]: clearViewModifiersFromIndices,
   [actionTypes.REMOVE_VIEW_MODIFIER]: removeViewModifier,
   [actionTypes.REMOVE_VIEW_MODIFIER_FROM_INDICES]: removeViewModifierFromIndices,
 });
+
+export default (fullActions as any).jaegerUi.deepDependencyGraph as Record<
+  string,
+  ActionFunctionAny<Action<TDdgViewModifierRemovalPayload>>
+>;
