@@ -13,13 +13,14 @@
 // limitations under the License.
 
 import GraphModel, { makeGraph } from './index';
-import { convergentPaths, focalPayloadElem, simplePath, wrap } from '../sample-paths.test.resources';
+import { convergentPaths, doubleFocalPath, focalPayloadElem, simplePath, wrap } from '../sample-paths.test.resources';
 import transformDdgData from '../transformDdgData';
 import { EDdgDensity } from '../types';
 import { encode } from '../visibility-codec';
 
 describe('GraphModel', () => {
   const convergentModel = transformDdgData(convergentPaths.map(wrap), focalPayloadElem);
+  const doubleFocalModel = transformDdgData([doubleFocalPath, simplePath].map(wrap), focalPayloadElem);
   const simpleModel = transformDdgData([simplePath].map(wrap), focalPayloadElem);
 
   /**
@@ -288,6 +289,44 @@ describe('GraphModel', () => {
     it('returns an empty set when provided empty or undefined uiFind', () => {
       expect(convergentGraph.getVisibleUiFindMatches()).toEqual(new Set());
       expect(convergentGraph.getVisibleUiFindMatches('')).toEqual(new Set());
+    });
+  });
+
+  describe('getVertexVisiblePathElems', () => {
+    const overlapGraph = new GraphModel({
+      ddgModel: doubleFocalModel,
+      density: EDdgDensity.UpstreamVsDownstream,
+      showOp: true,
+    });
+    const lastElemKey = overlapGraph.getPathElemHasher()(overlapGraph.visIdxToPathElem[6]);
+
+    it('returns `undefined` if key does not match any vertex', () => {
+      expect(overlapGraph.getVertexVisiblePathElems('absent key')).toBe(undefined);
+    });
+
+    it('returns `undefined` if key has no pathElems', () => {
+      const convergentGraph = new GraphModel({
+        ddgModel: convergentModel,
+        density: EDdgDensity.PreventPathEntanglement,
+        showOp: true,
+      });
+      const focalElemKey = convergentGraph.getPathElemHasher()(convergentGraph.visIdxToPathElem[0]);
+      const focalVertex = convergentGraph.vertices.get(focalElemKey);
+      convergentGraph.vertexToPathElems.get(focalVertex).clear();
+      expect(convergentGraph.getVertexVisiblePathElems(focalElemKey)).toBe(undefined);
+
+      convergentGraph.vertexToPathElems.delete(focalVertex);
+      expect(convergentGraph.getVertexVisiblePathElems(focalElemKey)).toBe(undefined);
+    });
+
+    it('returns elems within two hops when visEncoding is omitted', () => {
+      expect(overlapGraph.getVertexVisiblePathElems(lastElemKey)).toHaveLength(1);
+    });
+
+    it('returns visible elems according to provided key', () => {
+      const fullKey = encode(Array.from(overlapGraph.visIdxToPathElem.keys()));
+      expect(overlapGraph.getVertexVisiblePathElems(lastElemKey, encode([0]))).toHaveLength(0);
+      expect(overlapGraph.getVertexVisiblePathElems(lastElemKey, fullKey)).toHaveLength(2);
     });
   });
 

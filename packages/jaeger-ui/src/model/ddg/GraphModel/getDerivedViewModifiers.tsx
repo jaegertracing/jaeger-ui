@@ -14,6 +14,7 @@
 
 import GraphModel from './index';
 import getEdgeId from './getEdgeId';
+import { decode } from '../visibility-codec';
 import { EViewModifier } from '../types';
 
 function getKeyFromVisIdx(graph: GraphModel, visIdx: number) {
@@ -36,7 +37,9 @@ export default function getDerivedViewModifiers(
   const vertices = new Map<string, number>();
   const edges = new Map<string, number>();
 
-  const visibleIndices = this.getVisibleIndices(visEncoding);
+  const visibleIndices = new Set(visEncoding == null
+    ? this.getDefaultVisiblePathElems().map(pe => pe.visibilityIdx)
+    : new Set(decode(visEncoding)));
 
   const pushVertexVm = (vm: number, key: string) => {
     // eslint-disable-next-line no-bitwise
