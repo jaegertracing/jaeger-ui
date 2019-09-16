@@ -17,10 +17,11 @@ import { History as RouterHistory, Location } from 'history';
 import _get from 'lodash/get';
 import { bindActionCreators, Dispatch } from 'redux';
 import { connect } from 'react-redux';
+import { match as Match } from 'react-router-dom';
 
 import Header from './Header';
 import Graph from './Graph';
-import { getUrl, getUrlState } from './url';
+import { getUrl, getUrlParams } from './url';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
 import { extractUiFindFromState, TExtractUiFindFromStateReturn } from '../common/UiFindInput';
@@ -63,6 +64,7 @@ type TReduxProps = TExtractUiFindFromStateReturn & {
 type TOwnProps = {
   history: RouterHistory;
   location: Location;
+  match: Match<{ operation?: string; service?: string }>;
 };
 
 type TProps = TDispatchProps & TReduxProps & TOwnProps;
@@ -244,8 +246,11 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
 export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxProps {
   const { services: stServices } = state;
   const { services, operationsForService } = stServices;
-  const urlState = getUrlState(ownProps.location.search);
-  const { density, operation, service, showOp } = urlState;
+  const urlState = getUrlParams(ownProps.location.search);
+  const { service: encodedService, operation: encodedOperation } = ownProps.match.params;
+  const service = encodedService && decodeURIComponent(encodedService);
+  const operation = encodedOperation && decodeURIComponent(encodedOperation);
+  const { density, showOp } = urlState;
   let graphState: TDdgStateEntry | undefined;
   // backend temporarily requires service and operation
   // if (service) {
@@ -261,7 +266,11 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
     graphState,
     services,
     operationsForService,
-    urlState,
+    urlState: {
+      ...urlState,
+      operation,
+      service,
+    },
     ...extractUiFindFromState(state),
   };
 }

@@ -19,7 +19,8 @@ import { matchPath } from 'react-router-dom';
 import { EDdgDensity, TDdgSparseUrlState } from '../../model/ddg/types';
 import prefixUrl from '../../utils/prefix-url';
 
-export const ROUTE_PATH = prefixUrl('/deep-dependencies');
+const ROUTE_PREFIX = prefixUrl('/deep-dependencies');
+export const ROUTE_PATH = `${ROUTE_PREFIX}/:service?/:operation?`;
 
 const ROUTE_MATCHER = { path: ROUTE_PATH, strict: true, exact: true };
 
@@ -27,17 +28,25 @@ export function matches(path: string) {
   return Boolean(matchPath(path, ROUTE_MATCHER));
 }
 
-export function getUrl(args?: { [key: string]: unknown; showOp?: boolean }) {
+export function getUrl(args?: {
+  [key: string]: unknown;
+  operation?: string | null;
+  service?: string;
+  showOp?: boolean;
+}) {
   if (args && !_isEmpty(args)) {
-    const stringifyArgs = Reflect.has(args, 'showOp')
+    const { service, operation, ...rest } = args;
+    const serviceStr = service ? `/${encodeURIComponent(service)}` : '';
+    const operationStr = operation ? `/${encodeURIComponent(operation)}` : '';
+    const stringifyArgs = Reflect.has(rest, 'showOp')
       ? {
-          ...args,
+          ...rest,
           showOp: args.showOp ? 1 : 0,
         }
-      : args;
-    return `${ROUTE_PATH}?${queryString.stringify(stringifyArgs)}`;
+      : rest;
+    return `${ROUTE_PREFIX}${serviceStr}${operationStr}?${queryString.stringify(stringifyArgs)}`;
   }
-  return ROUTE_PATH;
+  return ROUTE_PREFIX;
 }
 
 function firstParam(arg: string | string[]): string {
@@ -49,12 +58,10 @@ function firstParam(arg: string | string[]): string {
   return arg;
 }
 
-export function getUrlState(search: string): TDdgSparseUrlState {
+export function getUrlParams(search: string): TDdgSparseUrlState {
   const {
     density = EDdgDensity.PreventPathEntanglement,
     end,
-    operation,
-    service,
     showOp = '1',
     start,
     visEncoding,
@@ -65,12 +72,6 @@ export function getUrlState(search: string): TDdgSparseUrlState {
   };
   if (end) {
     rv.end = Number.parseInt(firstParam(end), 10);
-  }
-  if (operation) {
-    rv.operation = firstParam(operation);
-  }
-  if (service) {
-    rv.service = firstParam(service);
   }
   if (start) {
     rv.start = Number.parseInt(firstParam(start), 10);

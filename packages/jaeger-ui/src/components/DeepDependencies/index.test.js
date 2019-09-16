@@ -49,12 +49,16 @@ describe('DeepDependencyGraphPage', () => {
         state: fetchedState.DONE,
         viewModifiers: new Map(),
       },
+      match: {
+        params: {
+          service: 'testService',
+          operation: 'testOperation',
+        },
+      },
       operationsForService: {},
       urlState: {
         start: 'testStart',
         end: 'testEnd',
-        service: 'testService',
-        operation: 'testOperation',
         visEncoding: 'testVisKey',
       },
       fetchDeepDependencyGraph: () => {},
@@ -74,13 +78,29 @@ describe('DeepDependencyGraphPage', () => {
         expect(props.fetchServices).toHaveBeenCalledTimes(1);
       });
 
-      it('fetches services if service is provided without operations', () => {
-        const { service, ...urlState } = props.urlState;
-        new DeepDependencyGraphPageImpl({ ...props, urlState }); // eslint-disable-line no-new
+      it('fetches operations if service is provided without operations', () => {
+        const { service, operation } = props.match.params;
+        const propsWithOp = {
+          ...props,
+          urlState: {
+            ...props.urlState,
+            operation,
+          },
+        };
+        new DeepDependencyGraphPageImpl(propsWithOp); // eslint-disable-line no-new
         expect(props.fetchServiceOperations).not.toHaveBeenCalled();
-        new DeepDependencyGraphPageImpl({ ...props, operationsForService: { [service]: [] } }); // eslint-disable-line no-new
+
+        const propsWithServiceOp = {
+          ...props,
+          urlState: {
+            ...props.urlState,
+            operation,
+            service,
+          },
+        };
+        new DeepDependencyGraphPageImpl({ ...propsWithServiceOp, operationsForService: { [service]: [] } }); // eslint-disable-line no-new
         expect(props.fetchServiceOperations).not.toHaveBeenCalled();
-        new DeepDependencyGraphPageImpl(props); // eslint-disable-line no-new
+        new DeepDependencyGraphPageImpl(propsWithServiceOp); // eslint-disable-line no-new
         expect(props.fetchServiceOperations).toHaveBeenLastCalledWith(service);
         expect(props.fetchServiceOperations).toHaveBeenCalledTimes(1);
       });
@@ -347,19 +367,27 @@ describe('DeepDependencyGraphPage', () => {
         services,
       },
     };
-    const ownProps = { location: { search } };
+    const ownProps = {
+      location: { search },
+      match: {
+        params: {
+          service,
+          operation,
+        },
+      },
+    };
     const mockGraphModel = { getVisible: () => ({}) };
-    let getUrlStateSpy;
+    let getUrlParamsSpy;
     let makeGraphSpy;
 
     beforeAll(() => {
-      getUrlStateSpy = jest.spyOn(url, 'getUrlState');
+      getUrlParamsSpy = jest.spyOn(url, 'getUrlParams');
       makeGraphSpy = jest.spyOn(GraphModel, 'makeGraph');
     });
 
     beforeEach(() => {
-      getUrlStateSpy.mockReset();
-      getUrlStateSpy.mockReturnValue(expected.urlState);
+      getUrlParamsSpy.mockReset();
+      getUrlParamsSpy.mockReturnValue({ end, start });
       makeGraphSpy.mockReset();
       makeGraphSpy.mockReturnValue(mockGraphModel);
     });
@@ -367,7 +395,7 @@ describe('DeepDependencyGraphPage', () => {
     it('uses gets relevant params from location.search', () => {
       const result = mapStateToProps(state, ownProps);
       expect(result).toEqual(expect.objectContaining(expected));
-      expect(getUrlStateSpy).toHaveBeenLastCalledWith(search);
+      expect(getUrlParamsSpy).toHaveBeenLastCalledWith(search);
     });
 
     it('includes graphState iff location.search has service, start, end, and optionally operation', () => {
@@ -382,14 +410,25 @@ describe('DeepDependencyGraphPage', () => {
       expect(result.graphState).toEqual(graphState);
 
       /* TODO: operation is still required, when requirement is lifted, re-enable
-      const { operation: _op, ...rest } = expected.urlState;
-      getUrlStateSpy.mockReturnValue(rest);
-      const resultWithoutOp = mapStateToProps(reduxState, ownProps);
+      const ownPropsWithoutOp = {
+        ...ownProps,
+        match: {
+          params: {
+            service,
+          },
+        }
+      };
+      const resultWithoutOp = mapStateToProps(reduxState, ownPropsWithoutOp);
       expect(resultWithoutOp.graphState).toEqual(graphStateWithoutOp);
       */
 
-      getUrlStateSpy.mockReturnValue({});
-      const resultWithoutParams = mapStateToProps(reduxState, ownProps);
+      const ownPropsWithoutServiceOp = {
+        ...ownProps,
+        match: {
+          params: {},
+        },
+      };
+      const resultWithoutParams = mapStateToProps(reduxState, ownPropsWithoutServiceOp);
       expect(resultWithoutParams.graphState).toBeUndefined();
     });
 
