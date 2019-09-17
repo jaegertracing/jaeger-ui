@@ -15,7 +15,7 @@
 import queryString from 'query-string';
 import * as reactRouterDom from 'react-router-dom';
 
-import { ROUTE_PATH, matches, getUrl, getUrlParams } from './url';
+import { ROUTE_PATH, matches, getUrl, getUrlState } from './url';
 
 describe('DeepDependencyGraph/url', () => {
   describe('matches', () => {
@@ -58,6 +58,11 @@ describe('DeepDependencyGraph/url', () => {
       expect(getUrl({ paramA, paramB })).toBe(`/deep-dependencies?paramA=${paramA}&paramB=${paramB}`);
     });
 
+    it('converts truthiness of showOp into 0 or 1', () => {
+      expect(getUrl({ showOp: true })).toBe(`/deep-dependencies?showOp=1`);
+      expect(getUrl({ showOp: false })).toBe(`/deep-dependencies?showOp=0`);
+    });
+
     it('includes safe form of provided service', () => {
       const service = 'service/name';
       expect(getUrl({ service })).toBe(`/deep-dependencies/${encodeURIComponent(service)}?`);
@@ -70,23 +75,22 @@ describe('DeepDependencyGraph/url', () => {
         `/deep-dependencies/${encodeURIComponent(service)}/${encodeURIComponent(operation)}?`
       );
     });
-
-    it('converts truthiness of showOp into 0 or 1', () => {
-      expect(getUrl({ showOp: true })).toBe(`/deep-dependencies?showOp=1`);
-      expect(getUrl({ showOp: false })).toBe(`/deep-dependencies?showOp=0`);
-    });
   });
 
-  describe('getUrlParams', () => {
+  describe('getUrlState', () => {
     const search = 'test search';
     const density = 'test density';
     const end = '900';
+    const operation = 'operationName';
+    const service = 'serviceName';
     const showOp = '0';
     const start = '400';
     const visEncoding = 'vis encoding';
     const acceptableParams = {
       density,
       end,
+      operation,
+      service,
       showOp,
       start,
       visEncoding,
@@ -94,6 +98,8 @@ describe('DeepDependencyGraph/url', () => {
     const expectedParams = {
       density,
       end: Number.parseInt(end, 10),
+      operation,
+      service,
       showOp: Boolean(+showOp),
       start: Number.parseInt(start, 10),
       visEncoding,
@@ -117,16 +123,16 @@ describe('DeepDependencyGraph/url', () => {
 
     it('gets all values from queryString', () => {
       parseSpy.mockReturnValue(acceptableParams);
-      expect(getUrlParams(search)).toEqual(expectedParams);
+      expect(getUrlState(search)).toEqual(expectedParams);
       expect(parseSpy).toHaveBeenCalledWith(search);
     });
 
     it('handles absent values', () => {
-      ['end', 'start', 'visEncoding'].forEach(param => {
+      ['end', 'operation', 'service', 'start', 'visEncoding'].forEach(param => {
         const { [param]: unused, ...rest } = expectedParams;
         const { [param]: alsoUnused, ...rv } = acceptableParams;
         parseSpy.mockReturnValue(rv);
-        expect(getUrlParams(search)).toEqual(rest);
+        expect(getUrlState(search)).toEqual(rest);
         expect(parseSpy).toHaveBeenLastCalledWith(search);
       });
     });
@@ -135,7 +141,7 @@ describe('DeepDependencyGraph/url', () => {
       const { showOp: unused, ...rest } = expectedParams;
       const { showOp: alsoUnused, ...rv } = acceptableParams;
       parseSpy.mockReturnValue(rv);
-      expect(getUrlParams(search)).toEqual({ ...rest, showOp: true });
+      expect(getUrlState(search)).toEqual({ ...rest, showOp: true });
       expect(parseSpy).toHaveBeenLastCalledWith(search);
     });
 
@@ -143,7 +149,7 @@ describe('DeepDependencyGraph/url', () => {
       const { density: unused, ...rest } = expectedParams;
       const { density: alsoUnused, ...rv } = acceptableParams;
       parseSpy.mockReturnValue(rv);
-      expect(getUrlParams(search)).toEqual({ ...rest, density: 'ppe' });
+      expect(getUrlState(search)).toEqual({ ...rest, density: 'ppe' });
       expect(parseSpy).toHaveBeenLastCalledWith(search);
     });
 
@@ -155,28 +161,28 @@ describe('DeepDependencyGraph/url', () => {
         ...extraneous,
         ...acceptableParams,
       });
-      expect(getUrlParams(search)).toEqual(expect.not.objectContaining(extraneous));
+      expect(getUrlState(search)).toEqual(expect.not.objectContaining(extraneous));
       expect(parseSpy).toHaveBeenCalledWith(search);
     });
 
     it('omits falsy values', () => {
-      ['end', 'start', 'visEncoding'].forEach(param => {
+      ['end', 'operation', 'service', 'start', 'visEncoding'].forEach(param => {
         [null, undefined, ''].forEach(falsyPossibility => {
           parseSpy.mockReturnValue({ ...expectedParams, [param]: falsyPossibility });
-          expect(Reflect.has(getUrlParams(search), param)).toBe(false);
+          expect(Reflect.has(getUrlState(search), param)).toBe(false);
           expect(parseSpy).toHaveBeenLastCalledWith(search);
         });
       });
     });
 
     it('handles and warns on duplicate values', () => {
-      ['end', 'showOp', 'start', 'visEncoding'].forEach(param => {
+      ['end', 'operation', 'service', 'showOp', 'start', 'visEncoding'].forEach(param => {
         const secondParam = `second ${acceptableParams[param]}`;
         parseSpy.mockReturnValue({
           ...acceptableParams,
           [param]: [acceptableParams[param], secondParam],
         });
-        expect(getUrlParams(search)[param]).toBe(expectedParams[param]);
+        expect(getUrlState(search)[param]).toBe(expectedParams[param]);
         expect(warnSpy).toHaveBeenLastCalledWith(expect.stringContaining(secondParam));
         expect(parseSpy).toHaveBeenLastCalledWith(search);
       });

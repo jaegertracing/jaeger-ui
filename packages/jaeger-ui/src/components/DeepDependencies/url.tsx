@@ -58,10 +58,12 @@ function firstParam(arg: string | string[]): string {
   return arg;
 }
 
-export function getUrlParams(search: string): TDdgSparseUrlState {
+export function getUrlState(search: string): TDdgSparseUrlState {
   const {
     density = EDdgDensity.PreventPathEntanglement,
     end,
+    operation,
+    service,
     showOp = '1',
     start,
     visEncoding,
@@ -72,6 +74,12 @@ export function getUrlParams(search: string): TDdgSparseUrlState {
   };
   if (end) {
     rv.end = Number.parseInt(firstParam(end), 10);
+  }
+  if (operation) {
+    rv.operation = firstParam(operation);
+  }
+  if (service) {
+    rv.service = firstParam(service);
   }
   if (start) {
     rv.start = Number.parseInt(firstParam(start), 10);

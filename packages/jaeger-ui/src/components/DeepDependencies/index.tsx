@@ -21,7 +21,7 @@ import { match as Match } from 'react-router-dom';
 
 import Header from './Header';
 import Graph from './Graph';
-import { getUrl, getUrlParams } from './url';
+import { getUrl, getUrlState } from './url';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
 import { extractUiFindFromState, TExtractUiFindFromStateReturn } from '../common/UiFindInput';
@@ -246,7 +246,7 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
 export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxProps {
   const { services: stServices } = state;
   const { services, operationsForService } = stServices;
-  const urlState = getUrlParams(ownProps.location.search);
+  const urlState = getUrlState(ownProps.location.search);
   const { service: encodedService, operation: encodedOperation } = ownProps.match.params;
   const service = encodedService && decodeURIComponent(encodedService);
   const operation = encodedOperation && decodeURIComponent(encodedOperation);

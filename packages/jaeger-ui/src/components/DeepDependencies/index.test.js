@@ -377,17 +377,17 @@ describe('DeepDependencyGraphPage', () => {
       },
     };
     const mockGraphModel = { getVisible: () => ({}) };
-    let getUrlParamsSpy;
+    let getUrlStateSpy;
     let makeGraphSpy;
 
     beforeAll(() => {
-      getUrlParamsSpy = jest.spyOn(url, 'getUrlParams');
+      getUrlStateSpy = jest.spyOn(url, 'getUrlState');
       makeGraphSpy = jest.spyOn(GraphModel, 'makeGraph');
     });
 
     beforeEach(() => {
-      getUrlParamsSpy.mockReset();
-      getUrlParamsSpy.mockReturnValue({ end, start });
+      getUrlStateSpy.mockReset();
+      getUrlStateSpy.mockReturnValue({ end, start });
       makeGraphSpy.mockReset();
       makeGraphSpy.mockReturnValue(mockGraphModel);
     });
@@ -395,7 +395,7 @@ describe('DeepDependencyGraphPage', () => {
     it('uses gets relevant params from location.search', () => {
       const result = mapStateToProps(state, ownProps);
       expect(result).toEqual(expect.objectContaining(expected));
-      expect(getUrlParamsSpy).toHaveBeenLastCalledWith(search);
+      expect(getUrlStateSpy).toHaveBeenLastCalledWith(search);
     });
 
     it('includes graphState iff location.search has service, start, end, and optionally operation', () => {
