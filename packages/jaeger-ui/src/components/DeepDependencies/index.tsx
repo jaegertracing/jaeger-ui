@@ -175,6 +175,7 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
     const distanceToPathElems =
       graphState && graphState.state === fetchedState.DONE ? graphState.model.distanceToPathElems : undefined;
     const uiFindMatches = graph && graph.getVisibleUiFindMatches(uiFind, visEncoding);
+    const hiddenUiFindMatches = graph && graph.getHiddenUiFindMatches(uiFind, visEncoding);
 
     let content: React.ReactElement | null = null;
     if (!graphState) {
@@ -220,6 +221,7 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
           <Header
             density={density}
             distanceToPathElems={distanceToPathElems}
+            hiddenUiFindMatches={hiddenUiFindMatches}
             operation={operation}
             operations={operationsForService[service || '']}
             service={service}

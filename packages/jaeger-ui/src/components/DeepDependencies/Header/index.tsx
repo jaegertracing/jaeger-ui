@@ -19,13 +19,14 @@ import HopsSelector from './HopsSelector';
 import NameSelector from './NameSelector';
 import LayoutSettings from './LayoutSettings';
 import UiFindInput from '../../common/UiFindInput';
-import { EDirection, TDdgDistanceToPathElems, EDdgDensity } from '../../../model/ddg/types';
+import { EDirection, TDdgDistanceToPathElems, TDdgVertex, EDdgDensity } from '../../../model/ddg/types';
 
 import './index.css';
 
 type TProps = {
   density: EDdgDensity;
   distanceToPathElems?: TDdgDistanceToPathElems;
+  hiddenUiFindMatches?: Set<TDdgVertex>;
   operation?: string;
   operations: string[] | undefined;
   service?: string;
@@ -52,6 +53,7 @@ export default class Header extends React.PureComponent<TProps> {
     const {
       density,
       distanceToPathElems,
+      hiddenUiFindMatches,
       operation,
       operations,
       service,
@@ -65,6 +67,9 @@ export default class Header extends React.PureComponent<TProps> {
       uiFindCount,
       visEncoding,
     } = this.props;
+    const uiFindResult = uiFindCount != null && hiddenUiFindMatches ? 
+      `${uiFindCount || 0} / ${uiFindCount || 0 + hiddenUiFindMatches.size}`
+      : uiFindCount;
 
     return (
       <header className="DdgHeader">
@@ -108,7 +113,7 @@ export default class Header extends React.PureComponent<TProps> {
                 forwardedRef={this._uiFindInput}
                 inputProps={{ className: 'DdgHeader--uiFindInput' }}
               />
-              <span className="DdgHeader--uiFindCount">{uiFindCount}</span>
+                  <span className="DdgHeader--uiFindCount">{uiFindResult}</span>
             </div>
           </div>
         </div>
