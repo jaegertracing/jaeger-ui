@@ -179,18 +179,18 @@ export default class GraphModel {
     return vertexSet;
   }
 
-  public getVisibleUiFindMatches: (uiFind?: string, visEncoding?: string) => Set<TDdgVertex> = memoize(10)(
-    (uiFind?: string, visEncoding?: string): Set<TDdgVertex> => {
-      const { vertices } = this.getVisible(visEncoding);
-      return GraphModel.getUiFindMatches(vertices, uiFind);
-    }
-  );
-
   public getHiddenUiFindMatches: (uiFind?: string, visEncoding?: string) => Set<TDdgVertex> = memoize(10)(
     (uiFind?: string, visEncoding?: string): Set<TDdgVertex> => {
       const visible = new Set(this.getVisible(visEncoding).vertices);
       const hidden: TDdgVertex[] = Array.from(this.vertices.values()).filter(vertex => !visible.has(vertex));
       return GraphModel.getUiFindMatches(hidden, uiFind);
+    }
+  );
+
+  public getVisibleUiFindMatches: (uiFind?: string, visEncoding?: string) => Set<TDdgVertex> = memoize(10)(
+    (uiFind?: string, visEncoding?: string): Set<TDdgVertex> => {
+      const { vertices } = this.getVisible(visEncoding);
+      return GraphModel.getUiFindMatches(vertices, uiFind);
     }
   );
 

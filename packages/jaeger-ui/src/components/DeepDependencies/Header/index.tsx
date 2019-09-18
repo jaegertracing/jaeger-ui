@@ -49,11 +49,19 @@ export default class Header extends React.PureComponent<TProps> {
     }
   };
 
+  getUiFindInfo = () => {
+    const { hiddenUiFindMatches, uiFindCount } = this.props;
+
+    if (uiFindCount === undefined) return '';
+    if (!hiddenUiFindMatches || !hiddenUiFindMatches.size) return uiFindCount;
+
+    return `${uiFindCount} / ${uiFindCount + hiddenUiFindMatches.size}`;
+  };
+
   render() {
     const {
       density,
       distanceToPathElems,
-      hiddenUiFindMatches,
       operation,
       operations,
       service,
@@ -64,12 +72,8 @@ export default class Header extends React.PureComponent<TProps> {
       setService,
       showOperations,
       toggleShowOperations,
-      uiFindCount,
       visEncoding,
     } = this.props;
-    const uiFindResult = uiFindCount != null && hiddenUiFindMatches ? 
-      `${uiFindCount || 0} / ${uiFindCount || 0 + hiddenUiFindMatches.size}`
-      : uiFindCount;
 
     return (
       <header className="DdgHeader">
@@ -113,7 +117,7 @@ export default class Header extends React.PureComponent<TProps> {
                 forwardedRef={this._uiFindInput}
                 inputProps={{ className: 'DdgHeader--uiFindInput' }}
               />
-                  <span className="DdgHeader--uiFindCount">{uiFindResult}</span>
+              <span className="DdgHeader--uiFindInfo">{this.getUiFindInfo()}</span>
             </div>
           </div>
         </div>

@@ -82,20 +82,21 @@ limitations under the License.
   border-radius: 0px;
 }
 
-.DdgHeader--uiFindCount {
+.DdgHeader--uiFindInfo {
   background: #ffffb8;
   border: 1px dashed #fadb14;
   border-radius: 4px;
   color: #ad8b00;
   margin-left: 0.25em;
   margin-right: 0.5em;
-  transition: width 0.5s;
   padding: 0.27em 0.4em;
   stroke: #666;
   stroke-width: 1.2px;
   text-align: center;
+  transition: width 0.5s;
+  white-space: nowrap;
 }
 
-.DdgHeader--uiFindCount:empty {
+.DdgHeader--uiFindInfo:empty {
   display: none;
 }
