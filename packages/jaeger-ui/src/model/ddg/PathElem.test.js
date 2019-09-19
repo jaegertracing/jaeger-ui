@@ -16,6 +16,31 @@ import PathElem from './PathElem';
 import { simplePath } from './sample-paths.test.resources';
 
 describe('PathElem', () => {
+  const getPath = () => {
+    const path = {
+      focalIdx: 2,
+    };
+    const members = simplePath.map(
+      ({ operation, service }, i) =>
+        new PathElem({
+          memberIdx: i,
+          operation: {
+            name: operation,
+            service: {
+              name: service,
+            },
+          },
+          path,
+        })
+    );
+    members[2].visibilityIdx = 0;
+    members[3].visibilityIdx = 1;
+    members[1].visibilityIdx = 2;
+    members[4].visibilityIdx = 3;
+    members[0].visibilityIdx = 4;
+    path.members = members;
+    return path;
+  };
   const testMemberIdx = 3;
   const testOperation = {};
   const testPath = {
@@ -85,29 +110,28 @@ describe('PathElem', () => {
     expect(focalElem.isExternal).toBe(false);
   });
 
+  describe('focalPath', () => {
+    const path = getPath();
+
+    it('returns array of itself if it is focal elem', () => {
+      const targetPathElem = path.members[path.focalIdx];
+      expect(targetPathElem.focalPath).toEqual([targetPathElem]);
+    });
+
+    it('returns path to focal elem in correct order for upstream elem', () => {
+      const targetPathElem = path.members[0];
+      expect(targetPathElem.focalPath).toEqual(path.members.slice(0, path.focalIdx + 1));
+    });
+
+    it('returns path to focal elem in correct order for downstream elem', () => {
+      const idx = path.members.length - 1;
+      const targetPathElem = path.members[idx];
+      expect(targetPathElem.focalPath).toEqual(path.members.slice(path.focalIdx, idx + 1));
+    });
+  });
+
   describe('legibility', () => {
-    const path = {
-      focalIdx: 2,
-    };
-    const members = simplePath.map(
-      ({ operation, service }, i) =>
-        new PathElem({
-          memberIdx: i,
-          operation: {
-            name: operation,
-            service: {
-              name: service,
-            },
-          },
-          path,
-        })
-    );
-    members[2].visibilityIdx = 0;
-    members[3].visibilityIdx = 1;
-    members[1].visibilityIdx = 2;
-    members[4].visibilityIdx = 3;
-    members[0].visibilityIdx = 4;
-    path.members = members;
+    const path = getPath();
     const targetPathElem = path.members[1];
 
     it('creates consumable JSON', () => {

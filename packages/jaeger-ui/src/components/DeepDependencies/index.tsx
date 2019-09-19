@@ -33,6 +33,7 @@ import {
   EDirection,
   TDdgModelParams,
   TDdgSparseUrlState,
+  TDdgVertex,
   EDdgDensity,
   EViewModifier,
 } from '../../model/ddg/types';
@@ -162,6 +163,13 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
     });
   };
 
+  showVertices = (vertices: TDdgVertex[]) => {
+    const { graph, urlState } = this.props;
+    const { visEncoding } = urlState;
+    if (!graph) return;
+    this.updateUrlState({ visEncoding: graph.getVisWithVertices(vertices, visEncoding) });
+  };
+
   toggleShowOperations = (enable: boolean) => this.updateUrlState({ showOp: enable });
 
   updateUrlState = (newValues: Partial<TDdgSparseUrlState>) => {
@@ -231,6 +239,7 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
             setOperation={this.setOperation}
             setService={this.setService}
             showOperations={showOp}
+            showVertices={this.showVertices}
             toggleShowOperations={this.toggleShowOperations}
             uiFindCount={uiFind ? uiFindMatches && uiFindMatches.size : undefined}
             visEncoding={visEncoding}

@@ -25,19 +25,8 @@ function fmtElemSvcOnly(pe: PathElem) {
   return pe.distance === 0 ? fmtElemShowOp(pe) : pe.operation.service.name;
 }
 
-function getElemsToFocal(pe: PathElem) {
-  const {
-    memberIdx,
-    memberOf: { focalIdx, members },
-  } = pe;
-  return members.slice(Math.min(focalIdx, memberIdx), Math.max(focalIdx, memberIdx) + 1);
-}
-
 function getPpeHasher(elemToStr: TPathElemToStr) {
-  return (pe: PathElem) =>
-    getElemsToFocal(pe)
-      .map(elemToStr)
-      .join('\n');
+  return (pe: PathElem) => pe.focalPath.map(elemToStr).join('\n');
 }
 
 function getExtVsIntHasher(elemToStr: TPathElemToStr) {

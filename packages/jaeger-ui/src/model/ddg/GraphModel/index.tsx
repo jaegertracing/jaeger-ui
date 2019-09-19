@@ -19,7 +19,7 @@ import { TEdge } from '@jaegertracing/plexus/lib/types';
 import getDerivedViewModifiers from './getDerivedViewModifiers';
 import getEdgeId from './getEdgeId';
 import getPathElemHasher from './getPathElemHasher';
-import { decode } from '../visibility-codec';
+import { decode, encode } from '../visibility-codec';
 
 import { PathElem, EDdgDensity, TDdgDistanceToPathElems, TDdgModel, TDdgVertex } from '../types';
 
@@ -193,6 +193,21 @@ export default class GraphModel {
       return GraphModel.getUiFindMatches(vertices, uiFind);
     }
   );
+
+  public getVisWithVertices = (vertices: TDdgVertex[], visEncoding?: string) => {
+    const indices: Set<number> = this.getVisibleIndices(visEncoding);
+
+    vertices.forEach(vertex => {
+      const elems = this.vertexToPathElems.get(vertex);
+      if (!elems) throw new Error(`${vertex} does not exist in graph`);
+
+      elems.forEach(elem => {
+        elem.focalPath.forEach(({ visibilityIdx }) => indices.add(visibilityIdx));
+      });
+    });
+
+    return encode(Array.from(indices));
+  };
 
   public getVertexVisiblePathElems = (
     vertexKey: string,

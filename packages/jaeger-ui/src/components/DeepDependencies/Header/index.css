@@ -97,6 +97,6 @@ limitations under the License.
   white-space: nowrap;
 }
 
-.DdgHeader--uiFindInfo:empty {
-  display: none;
+.DdgHeader--uiFindInfo--tooltip {
+  white-space: nowrap;
 }

@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Icon, Input } from 'antd';
+import { Icon, Input, Tooltip } from 'antd';
 
 import HopsSelector from './HopsSelector';
 import NameSelector from './NameSelector';
@@ -36,6 +36,7 @@ type TProps = {
   setOperation: (operation: string) => void;
   setService: (service: string) => void;
   showOperations: boolean;
+  showVertices: (vertices: TDdgVertex[]) => void;
   toggleShowOperations: (enable: boolean) => void;
   uiFindCount: number | undefined;
   visEncoding?: string;
@@ -52,10 +53,38 @@ export default class Header extends React.PureComponent<TProps> {
   getUiFindInfo = () => {
     const { hiddenUiFindMatches, uiFindCount } = this.props;
 
-    if (uiFindCount === undefined) return '';
-    if (!hiddenUiFindMatches || !hiddenUiFindMatches.size) return uiFindCount;
+    if (uiFindCount === undefined) return null;
 
-    return `${uiFindCount} / ${uiFindCount + hiddenUiFindMatches.size}`;
+    let btnText = `${uiFindCount}`;
+    let noMore = true;
+    let tipText = 'All matches are visible';
+    if (hiddenUiFindMatches && hiddenUiFindMatches.size) {
+      noMore = false;
+      btnText = `${uiFindCount} / ${uiFindCount + hiddenUiFindMatches.size}`;
+      tipText = 'Click to view hidden matches';
+    }
+
+    return (
+      <Tooltip overlayClassName="DdgHeader--uiFindInfo--tooltip" placement="topRight" title={tipText}>
+        <span>
+          {' '}
+          {/* arbitrary span is necessary as Tooltip alters child's styling */}
+          <button
+            className="DdgHeader--uiFindInfo"
+            disabled={noMore}
+            onClick={this.handleInfoClick}
+            type="button"
+          >
+            {btnText}
+          </button>
+        </span>
+      </Tooltip>
+    );
+  };
+
+  handleInfoClick = () => {
+    const { hiddenUiFindMatches, showVertices } = this.props;
+    if (hiddenUiFindMatches) showVertices(Array.from(hiddenUiFindMatches));
   };
 
   render() {
@@ -117,7 +146,7 @@ export default class Header extends React.PureComponent<TProps> {
                 forwardedRef={this._uiFindInput}
                 inputProps={{ className: 'DdgHeader--uiFindInput' }}
               />
-              <span className="DdgHeader--uiFindInfo">{this.getUiFindInfo()}</span>
+              {this.getUiFindInfo()}
             </div>
           </div>
         </div>

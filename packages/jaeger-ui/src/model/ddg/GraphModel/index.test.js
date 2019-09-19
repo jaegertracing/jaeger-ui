@@ -251,6 +251,19 @@ describe('GraphModel', () => {
     });
   });
 
+  describe('getVisWithVertices', () => {
+    const convergentGraph = new GraphModel({
+      ddgModel: convergentModel,
+      density: EDdgDensity.PreventPathEntanglement,
+      showOp: true,
+    });
+
+    it('handles absent visEncoding', () => {
+      const alreadyVisible = convergentGraph.getDefaultVisiblePathElems();
+      console.log(convergentGraph.distanceToPathElems(4));
+    });
+  });
+
   describe('getVisibleUiFindMatches', () => {
     const convergentGraph = new GraphModel({
       ddgModel: convergentModel,
