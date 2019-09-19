@@ -109,7 +109,8 @@ export default class GraphModel {
     Object.freeze(this.visIdxToPathElem);
   }
 
-  private getDefaultVisiblePathElems() {
+  // Only public for bound fn getDerivedViewModifiers
+  public getDefaultVisiblePathElems() {
     return ([] as PathElem[]).concat(
       this.distanceToPathElems.get(-2) || [],
       this.distanceToPathElems.get(-1) || [],
@@ -119,18 +120,8 @@ export default class GraphModel {
     );
   }
 
-  public getVisibleIndices(visEncoding?: string) {
-    if (visEncoding == null) {
-      const pathElems = this.getDefaultVisiblePathElems();
-      return new Set(pathElems.map(pe => pe.visibilityIdx));
-    }
-    return new Set(decode(visEncoding));
-  }
-
-  public getVisiblePathElems(visEncoding?: string) {
-    if (visEncoding == null) {
-      return this.getDefaultVisiblePathElems();
-    }
+  private getVisiblePathElems(visEncoding?: string) {
+    if (visEncoding == null) return this.getDefaultVisiblePathElems();
     return decode(visEncoding)
       .map(visIdx => this.visIdxToPathElem[visIdx])
       .filter(Boolean);
