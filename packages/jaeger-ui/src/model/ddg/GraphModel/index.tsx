@@ -137,7 +137,6 @@ export default class GraphModel {
         if (edge) edges.add(edge);
         const vertex = this.pathElemToVertex.get(pathElem);
         if (vertex) vertices.add(vertex);
-        else throw new Error(`PathElem wasn't present in initial model: ${pathElem}`);
       });
 
       return {
@@ -186,7 +185,7 @@ export default class GraphModel {
   );
 
   public getVisWithVertices = (vertices: TDdgVertex[], visEncoding?: string) => {
-    const indices: Set<number> = this.getVisibleIndices(visEncoding);
+    const indices: Set<number> = new Set(this.getVisiblePathElems(visEncoding).map(pe => pe.visibilityIdx));
 
     vertices.forEach(vertex => {
       const elems = this.vertexToPathElems.get(vertex);

@@ -37,9 +37,11 @@ export default function getDerivedViewModifiers(
   const vertices = new Map<string, number>();
   const edges = new Map<string, number>();
 
-  const visibleIndices = new Set(visEncoding == null
-    ? this.getDefaultVisiblePathElems().map(pe => pe.visibilityIdx)
-    : new Set(decode(visEncoding)));
+  const visibleIndices = new Set(
+    visEncoding == null
+      ? this.getDefaultVisiblePathElems().map(pe => pe.visibilityIdx)
+      : new Set(decode(visEncoding))
+  );
 
   const pushVertexVm = (vm: number, key: string) => {
     // eslint-disable-next-line no-bitwise

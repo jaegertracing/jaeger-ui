@@ -13,7 +13,13 @@
 // limitations under the License.
 
 import GraphModel, { makeGraph } from './index';
-import { convergentPaths, doubleFocalPath, focalPayloadElem, simplePath, wrap } from '../sample-paths.test.resources';
+import {
+  convergentPaths,
+  doubleFocalPath,
+  focalPayloadElem,
+  simplePath,
+  wrap,
+} from '../sample-paths.test.resources';
 import transformDdgData from '../transformDdgData';
 import { EDdgDensity } from '../types';
 import { encode } from '../visibility-codec';
@@ -252,56 +258,96 @@ describe('GraphModel', () => {
     });
   });
 
-  describe('getVisWithVertices', () => {
+  describe('uiFindMatches', () => {
     const convergentGraph = new GraphModel({
       ddgModel: convergentModel,
       density: EDdgDensity.PreventPathEntanglement,
       showOp: true,
     });
-
-    it('handles absent visEncoding', () => {
-      const alreadyVisible = convergentGraph.getDefaultVisiblePathElems();
-      console.log(convergentGraph.distanceToPathElems(4));
-    });
-  });
-
-  describe('getVisibleUiFindMatches', () => {
-    const convergentGraph = new GraphModel({
+    const hideOpGraph = new GraphModel({
       ddgModel: convergentModel,
       density: EDdgDensity.PreventPathEntanglement,
-      showOp: true,
+      showOp: false,
     });
     const shorten = str => str.substring(0, str.length - 3);
     const visEncoding = encode([0, 1, 2, 3, 4, 5]);
+    const { vertices: visibleVertices } = convergentGraph.getVisible(visEncoding);
+    const { service: focalService, operation: focalOperation } = visibleVertices[0];
+    const { service: otherService } = visibleVertices[2];
+    const { vertices: oplessVertices } = hideOpGraph.getVisible(visEncoding);
+    const {
+      operation: { name: otherOp },
+    } = Array.from(hideOpGraph.vertexToPathElems.get(oplessVertices[2]))[0];
 
-    it('returns a subset of getVisible that match provided uiFind', () => {
-      const { vertices: visibleVertices } = convergentGraph.getVisible(visEncoding);
-      const { service, operation } = visibleVertices[0];
-      const { service: otherService } = visibleVertices[2];
-      const uiFind = `${shorten(service)} ${shorten(operation)} ${shorten(otherService)}`;
-      expect(convergentGraph.getVisibleUiFindMatches(uiFind, visEncoding)).toEqual(
-        new Set([visibleVertices[0], visibleVertices[2]])
+    describe('getHiddenUiFindMatches', () => {
+      it('returns a subset of hidden vertices that match provided uiFind', () => {
+        const uiFind = `${shorten(focalService)} ${shorten(focalOperation)} ${shorten(otherService)}`;
+        expect(convergentGraph.getHiddenUiFindMatches(uiFind, encode([0, 1]))).toEqual(
+          new Set([visibleVertices[2]])
+        );
+      });
+
+      it('matches only on service.name if showOp is false', () => {
+        const uiFind = `${shorten(oplessVertices[1].service)} ${shorten(otherOp)}`;
+        expect(hideOpGraph.getHiddenUiFindMatches(uiFind, encode([0]))).toEqual(new Set([oplessVertices[1]]));
+      });
+
+      it('returns an empty set when provided empty or undefined uiFind', () => {
+        expect(convergentGraph.getHiddenUiFindMatches()).toEqual(new Set());
+        expect(convergentGraph.getHiddenUiFindMatches('')).toEqual(new Set());
+      });
+
+      it('returns an empty set when all matches are visible', () => {
+        const uiFind = `${shorten(focalService)} ${shorten(otherService)}`;
+        expect(convergentGraph.getHiddenUiFindMatches(uiFind, visEncoding)).toEqual(new Set());
+      });
+    });
+
+    describe('getVisibleUiFindMatches', () => {
+      it('returns a subset of getVisible that match provided uiFind', () => {
+        const uiFind = `${shorten(focalService)} ${shorten(focalOperation)} ${shorten(otherService)}`;
+        expect(convergentGraph.getVisibleUiFindMatches(uiFind, visEncoding)).toEqual(
+          new Set([visibleVertices[0], visibleVertices[2]])
+        );
+      });
+
+      it('matches only on service.name if showOp is false', () => {
+        const uiFind = `${shorten(focalService)} ${shorten(otherOp)}`;
+        expect(hideOpGraph.getVisibleUiFindMatches(uiFind, visEncoding)).toEqual(
+          new Set([visibleVertices[0]])
+        );
+      });
+
+      it('returns an empty set when provided empty or undefined uiFind', () => {
+        expect(convergentGraph.getVisibleUiFindMatches()).toEqual(new Set());
+        expect(convergentGraph.getVisibleUiFindMatches('')).toEqual(new Set());
+      });
+    });
+  });
+
+  describe('getVisWithVertices', () => {
+    const overlapGraph = new GraphModel({
+      ddgModel: convergentModel,
+      density: EDdgDensity.PreventPathEntanglement,
+      showOp: true,
+    });
+    const vertices = [
+      overlapGraph.pathElemToVertex.get(overlapGraph.distanceToPathElems.get(3)[0]),
+      overlapGraph.pathElemToVertex.get(overlapGraph.distanceToPathElems.get(-1)[0]),
+    ];
+
+    it('handles absent visEncoding', () => {
+      expect(overlapGraph.getVisWithVertices(vertices)).toBe(encode([0, 1, 2, 3, 4, 5, 6, 7, 8]));
+    });
+
+    it('uses provided visEncoding', () => {
+      expect(overlapGraph.getVisWithVertices(vertices, encode([0, 1, 3]))).toBe(
+        encode([0, 1, 2, 3, 4, 5, 6, 8])
       );
     });
 
-    it('matches only on service.name if showOp is false', () => {
-      const hideOpGraph = new GraphModel({
-        ddgModel: convergentModel,
-        density: EDdgDensity.PreventPathEntanglement,
-        showOp: false,
-      });
-      const { vertices: visibleVertices } = hideOpGraph.getVisible(visEncoding);
-      const { service } = visibleVertices[0];
-      const {
-        operation: { name: operation },
-      } = Array.from(hideOpGraph.vertexToPathElems.get(visibleVertices[2]))[0];
-      const uiFind = `${shorten(service)} ${shorten(operation)}`;
-      expect(hideOpGraph.getVisibleUiFindMatches(uiFind, visEncoding)).toEqual(new Set([visibleVertices[0]]));
-    });
-
-    it('returns an empty set when provided empty or undefined uiFind', () => {
-      expect(convergentGraph.getVisibleUiFindMatches()).toEqual(new Set());
-      expect(convergentGraph.getVisibleUiFindMatches('')).toEqual(new Set());
+    it('throws error if given absent vertex', () => {
+      expect(() => overlapGraph.getVisWithVertices([{}])).toThrowError();
     });
   });
 

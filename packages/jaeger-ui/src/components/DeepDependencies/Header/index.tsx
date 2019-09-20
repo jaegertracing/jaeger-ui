@@ -66,9 +66,8 @@ export default class Header extends React.PureComponent<TProps> {
 
     return (
       <Tooltip overlayClassName="DdgHeader--uiFindInfo--tooltip" placement="topRight" title={tipText}>
+        {/* arbitrary span is necessary as Tooltip alters child's styling */}
         <span>
-          {' '}
-          {/* arbitrary span is necessary as Tooltip alters child's styling */}
           <button
             className="DdgHeader--uiFindInfo"
             disabled={noMore}
