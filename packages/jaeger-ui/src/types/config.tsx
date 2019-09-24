@@ -25,11 +25,17 @@ export type ConfigMenuGroup = {
   items: ConfigMenuItem[];
 };
 
+export type TScript = {
+  text: string;
+  type: 'inline';
+};
+
 export type Config = {
   archiveEnabled?: boolean;
   dependencies?: { dagMaxServicesLen?: number; menuEnabled?: boolean };
   menu: (ConfigMenuGroup | ConfigMenuItem)[];
   search?: { maxLookback: { label: string; value: string } };
+  scripts?: TScript[];
   tracking?: {
     gaID: string | TNil;
     trackErrors: boolean | TNil;
