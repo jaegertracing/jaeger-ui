@@ -50,9 +50,6 @@ exports[`<Header> renders the hops selector if distanceToPathElems is provided 1
             }
           }
         />
-        <span
-          className="DdgHeader--uiFindInfo"
-        />
       </div>
     </div>
   </div>
@@ -118,9 +115,6 @@ exports[`<Header> renders the operation selector if a service is selected 1`] = 
               "className": "DdgHeader--uiFindInput",
             }
           }
-        />
-        <span
-          className="DdgHeader--uiFindInfo"
         />
       </div>
     </div>
@@ -192,9 +186,6 @@ exports[`<Header> renders the operation selector if a service is selected 2`] = 
             }
           }
         />
-        <span
-          className="DdgHeader--uiFindInfo"
-        />
       </div>
     </div>
   </div>
@@ -248,9 +239,6 @@ exports[`<Header> renders with minimal props 1`] = `
               "className": "DdgHeader--uiFindInput",
             }
           }
-        />
-        <span
-          className="DdgHeader--uiFindInfo"
         />
       </div>
     </div>

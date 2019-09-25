@@ -19,7 +19,7 @@ import { TEdge } from '@jaegertracing/plexus/lib/types';
 import getDerivedViewModifiers from './getDerivedViewModifiers';
 import getEdgeId from './getEdgeId';
 import getPathElemHasher from './getPathElemHasher';
-import { decode } from '../visibility-codec';
+import { decode, encode } from '../visibility-codec';
 
 import { PathElem, EDdgDensity, TDdgDistanceToPathElems, TDdgModel, TDdgVertex } from '../types';
 
@@ -109,7 +109,8 @@ export default class GraphModel {
     Object.freeze(this.visIdxToPathElem);
   }
 
-  private getDefaultVisiblePathElems() {
+  // Only public for bound fn getDerivedViewModifiers
+  public getDefaultVisiblePathElems() {
     return ([] as PathElem[]).concat(
       this.distanceToPathElems.get(-2) || [],
       this.distanceToPathElems.get(-1) || [],
@@ -119,18 +120,8 @@ export default class GraphModel {
     );
   }
 
-  public getVisibleIndices(visEncoding?: string) {
-    if (visEncoding == null) {
-      const pathElems = this.getDefaultVisiblePathElems();
-      return new Set(pathElems.map(pe => pe.visibilityIdx));
-    }
-    return new Set(decode(visEncoding));
-  }
-
-  public getVisiblePathElems(visEncoding?: string) {
-    if (visEncoding == null) {
-      return this.getDefaultVisiblePathElems();
-    }
+  private getVisiblePathElems(visEncoding?: string) {
+    if (visEncoding == null) return this.getDefaultVisiblePathElems();
     return decode(visEncoding)
       .map(visIdx => this.visIdxToPathElem[visIdx])
       .filter(Boolean);
@@ -146,7 +137,6 @@ export default class GraphModel {
         if (edge) edges.add(edge);
         const vertex = this.pathElemToVertex.get(pathElem);
         if (vertex) vertices.add(vertex);
-        else throw new Error(`PathElem wasn't present in initial model: ${pathElem}`);
       });
 
       return {
@@ -193,6 +183,21 @@ export default class GraphModel {
       return GraphModel.getUiFindMatches(vertices, uiFind);
     }
   );
+
+  public getVisWithVertices = (vertices: TDdgVertex[], visEncoding?: string) => {
+    const indices: Set<number> = new Set(this.getVisiblePathElems(visEncoding).map(pe => pe.visibilityIdx));
+
+    vertices.forEach(vertex => {
+      const elems = this.vertexToPathElems.get(vertex);
+      if (!elems) throw new Error(`${vertex} does not exist in graph`);
+
+      elems.forEach(elem => {
+        elem.focalPath.forEach(({ visibilityIdx }) => indices.add(visibilityIdx));
+      });
+    });
+
+    return encode(Array.from(indices));
+  };
 
   public getVertexVisiblePathElems = (
     vertexKey: string,
