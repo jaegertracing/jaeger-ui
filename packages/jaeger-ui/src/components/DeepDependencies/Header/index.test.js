@@ -66,6 +66,22 @@ describe('<Header>', () => {
     expect(wrapper).toMatchSnapshot();
   });
 
+  it('renders the expected uiFind matches information', () => {
+    const getMatchesInfo = () => wrapper.find('.DdgHeader--uiFindInfo').text();
+    expect(getMatchesInfo()).toBe('');
+
+    const uiFindCount = 20;
+    wrapper.setProps({ uiFindCount });
+    expect(getMatchesInfo()).toBe(`${uiFindCount}`);
+
+    wrapper.setProps({ hiddenUiFindMatches: new Set() });
+    expect(getMatchesInfo()).toBe(`${uiFindCount}`);
+
+    const hiddenUiFindMatches = new Set(['hidden', 'match', 'vertices']);
+    wrapper.setProps({ hiddenUiFindMatches });
+    expect(getMatchesInfo()).toBe(`${uiFindCount} / ${uiFindCount + hiddenUiFindMatches.size}`);
+  });
+
   it('focuses uiFindInput IFF rendered when clicking on wrapping div', () => {
     const click = () => wrapper.find('.DdgHeader--uiFind').simulate('click');
     const focus = jest.fn();

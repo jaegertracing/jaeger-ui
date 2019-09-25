@@ -156,29 +156,41 @@ export default class GraphModel {
     }
   );
 
-  public getVisibleUiFindMatches: (uiFind?: string, visEncoding?: string) => Set<TDdgVertex> = memoize(10)(
-    (uiFind?: string, visEncoding?: string): Set<TDdgVertex> => {
-      const vertexSet: Set<TDdgVertex> = new Set();
-      if (!uiFind) return vertexSet;
+  private static getUiFindMatches(vertices: TDdgVertex[], uiFind?: string) {
+    const vertexSet: Set<TDdgVertex> = new Set();
+    if (!uiFind) return vertexSet;
 
-      const uiFindArr = uiFind
-        .trim()
-        .toLowerCase()
-        .split(' ');
-      const { vertices } = this.getVisible(visEncoding);
-      for (let i = 0; i < vertices.length; i++) {
-        const { service, operation } = vertices[i];
-        const svc = service.toLowerCase();
-        const op = operation && operation.toLowerCase();
-        for (let j = 0; j < uiFindArr.length; j++) {
-          if (svc.includes(uiFindArr[j]) || (op && op.includes(uiFindArr[j]))) {
-            vertexSet.add(vertices[i]);
-            break;
-          }
+    const uiFindArr = uiFind
+      .trim()
+      .toLowerCase()
+      .split(' ');
+    for (let i = 0; i < vertices.length; i++) {
+      const { service, operation } = vertices[i];
+      const svc = service.toLowerCase();
+      const op = operation && operation.toLowerCase();
+      for (let j = 0; j < uiFindArr.length; j++) {
+        if (svc.includes(uiFindArr[j]) || (op && op.includes(uiFindArr[j]))) {
+          vertexSet.add(vertices[i]);
+          break;
         }
       }
+    }
 
-      return vertexSet;
+    return vertexSet;
+  }
+
+  public getHiddenUiFindMatches: (uiFind?: string, visEncoding?: string) => Set<TDdgVertex> = memoize(10)(
+    (uiFind?: string, visEncoding?: string): Set<TDdgVertex> => {
+      const visible = new Set(this.getVisible(visEncoding).vertices);
+      const hidden: TDdgVertex[] = Array.from(this.vertices.values()).filter(vertex => !visible.has(vertex));
+      return GraphModel.getUiFindMatches(hidden, uiFind);
+    }
+  );
+
+  public getVisibleUiFindMatches: (uiFind?: string, visEncoding?: string) => Set<TDdgVertex> = memoize(10)(
+    (uiFind?: string, visEncoding?: string): Set<TDdgVertex> => {
+      const { vertices } = this.getVisible(visEncoding);
+      return GraphModel.getUiFindMatches(vertices, uiFind);
     }
   );
 

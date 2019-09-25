@@ -38,6 +38,7 @@ describe('DeepDependencyGraphPage', () => {
           edges: [],
           vertices: [],
         }),
+        getHiddenUiFindMatches: () => new Set(),
         getVisibleUiFindMatches: () => new Set(),
       },
       fetchServices: jest.fn(),
@@ -236,7 +237,8 @@ describe('DeepDependencyGraphPage', () => {
           vertices,
         }),
         getDerivedViewModifiers: () => ({ edges: new Map(), vertices: new Map() }),
-        getVisibleUiFindMatches: () => new Set(vertices.slice(1)),
+        getHiddenUiFindMatches: () => new Set(vertices.slice(1)),
+        getVisibleUiFindMatches: () => new Set(vertices.slice(0, 1)),
         getVisibleIndices: () => new Set(),
       };
 
@@ -291,15 +293,16 @@ describe('DeepDependencyGraphPage', () => {
         expect(unknownIndication).toMatch(/Unknown graphState/);
       });
 
-      it('calculates uiFindCount', () => {
-        const wrapper = shallow(<DeepDependencyGraphPageImpl {...props} graph={graph} />);
+      it('calculates uiFindCount and hiddenUiFindMatches', () => {
+        const wrapper = shallow(
+          <DeepDependencyGraphPageImpl {...props} graph={undefined} uiFind="truthy uiFind" />
+        );
         expect(wrapper.find(Header).prop('uiFindCount')).toBe(undefined);
+        expect(wrapper.find(Header).prop('hiddenUiFindMatches')).toBe(undefined);
 
-        wrapper.setProps({ uiFind: '' });
-        expect(wrapper.find(Header).prop('uiFindCount')).toBe(undefined);
-
-        wrapper.setProps({ uiFind: 'truthy uiFind' });
-        expect(wrapper.find(Header).prop('uiFindCount')).toBe(vertices.length - 1);
+        wrapper.setProps({ graph });
+        expect(wrapper.find(Header).prop('uiFindCount')).toBe(1);
+        expect(wrapper.find(Header).prop('hiddenUiFindMatches').size).toBe(vertices.length - 1);
       });
     });
   });
