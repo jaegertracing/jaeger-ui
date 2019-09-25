@@ -32,6 +32,7 @@ import TracePage from '../TracePage';
 import { ROUTE_PATH as tracePath } from '../TracePage/url';
 import JaegerAPI, { DEFAULT_API_ROOT } from '../../api/jaeger';
 import configureStore from '../../utils/configure-store';
+import processScripts from '../../utils/config/process-scripts';
 import prefixUrl from '../../utils/prefix-url';
 
 import '../common/vars.css';
@@ -45,6 +46,7 @@ export default class JaegerUIApp extends Component {
     super(props);
     this.store = configureStore(history);
     JaegerAPI.apiRoot = DEFAULT_API_ROOT;
+    processScripts();
   }
 
   render() {
