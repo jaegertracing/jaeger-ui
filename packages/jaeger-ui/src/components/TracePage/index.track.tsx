@@ -12,29 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import _throttle from 'lodash/throttle';
-
 import { trackEvent } from '../../utils/tracking';
+import getTrackFilter from '../../utils/tracking/getTrackFilter';
 
 // export for tests
 export const CATEGORY_RANGE = 'jaeger/ux/trace/range';
 export const CATEGORY_FILTER = 'jaeger/ux/trace/filter';
 
 // export for tests
-export const ACTION_FILTER_SET = 'set';
-export const ACTION_FILTER_CLEAR = 'clear';
 export const ACTION_RANGE_REFRAME = 'reframe';
 export const ACTION_RANGE_SHIFT = 'shift';
 
-const trackFilterSet = _throttle(trackEvent.bind(null, CATEGORY_FILTER, ACTION_FILTER_SET), 750, {
-  leading: false,
-});
-
-const trackFilterClear = _throttle(trackEvent.bind(null, CATEGORY_FILTER, ACTION_FILTER_CLEAR), 750, {
-  leading: false,
-});
-
-export const trackFilter = (value: any) => (value ? trackFilterSet() : trackFilterClear());
+export const trackFilter = getTrackFilter(CATEGORY_FILTER);
 
 function getRangeAction(current: [number, number], next: [number, number]) {
   const [curStart, curEnd] = current;

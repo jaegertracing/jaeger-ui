@@ -49,6 +49,7 @@ exports[`<Header> renders the hops selector if distanceToPathElems is provided 1
               "className": "DdgHeader--uiFindInput",
             }
           }
+          trackFindFunction={[Function]}
         />
       </div>
     </div>
@@ -115,6 +116,7 @@ exports[`<Header> renders the operation selector if a service is selected 1`] = 
               "className": "DdgHeader--uiFindInput",
             }
           }
+          trackFindFunction={[Function]}
         />
       </div>
     </div>
@@ -185,6 +187,7 @@ exports[`<Header> renders the operation selector if a service is selected 2`] = 
               "className": "DdgHeader--uiFindInput",
             }
           }
+          trackFindFunction={[Function]}
         />
       </div>
     </div>
@@ -239,6 +242,7 @@ exports[`<Header> renders with minimal props 1`] = `
               "className": "DdgHeader--uiFindInput",
             }
           }
+          trackFindFunction={[Function]}
         />
       </div>
     </div>
