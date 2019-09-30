@@ -93,6 +93,7 @@ export type TDdgVertex = TVertex<{
 export type TDdgSparseUrlState = {
   density: EDdgDensity;
   end?: number;
+  hash?: string;
   operation?: string;
   service?: string;
   showOp: boolean;

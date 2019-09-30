@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import memoize from 'lru-memoize';
+import objectHash from 'object-hash';
 
 import { TEdge } from '@jaegertracing/plexus/lib/types';
 
@@ -30,6 +31,7 @@ export default class GraphModel {
   private readonly getPathElemHasher = getPathElemHasher;
   readonly density: EDdgDensity;
   readonly distanceToPathElems: TDdgDistanceToPathElems;
+  readonly hash: string;
   readonly pathElemToEdge: Map<PathElem, TEdge>;
   readonly pathElemToVertex: Map<PathElem, TDdgVertex>;
   readonly showOp: boolean;
@@ -100,6 +102,14 @@ export default class GraphModel {
         }
       }
     });
+
+    const objHasherArg: Record<string, number[]> = {};
+    this.vertexToPathElems.forEach((pathElems, vertex) => {
+      objHasherArg[vertex.key] = Array.from(pathElems)
+        .map(el => el.visibilityIdx)
+        .sort((a: number, b: number) => a - b);
+    });
+    this.hash = objectHash(objHasherArg).slice(0, 16);
 
     Object.freeze(this.distanceToPathElems);
     Object.freeze(this.pathElemToEdge);

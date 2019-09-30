@@ -69,12 +69,13 @@ describe('GraphModel', () => {
   }
 
   describe('constructor', () => {
+    const testGraph = new GraphModel({
+      ddgModel: simpleModel,
+      density: EDdgDensity.PreventPathEntanglement,
+      showOp: true,
+    });
+
     it('creates five vertices and four edges for one-path ddg', () => {
-      const testGraph = new GraphModel({
-        ddgModel: simpleModel,
-        density: EDdgDensity.PreventPathEntanglement,
-        showOp: true,
-      });
       validateGraph(testGraph, [
         {
           visIndices: [0],
@@ -96,6 +97,44 @@ describe('GraphModel', () => {
           focalSideNeighbors: [2],
         },
       ]);
+    });
+
+    describe('hash', () => {
+      it('creates equal hashes if model data is equivalent', () => {
+        const simpleModelEquivalent = transformDdgData(
+          [simplePath].map((path, i) => ({ path, trace_id: `trace${i}` })),
+          focalPayloadElem
+        );
+        const testGraphEquivalent = new GraphModel({
+          ddgModel: simpleModelEquivalent,
+          density: EDdgDensity.PreventPathEntanglement,
+          showOp: true,
+        });
+
+        expect(simpleModelEquivalent).not.toEqual(simpleModel);
+        expect(testGraphEquivalent).not.toBe(testGraph);
+        expect(testGraphEquivalent.hash).toBe(testGraph.hash);
+      });
+
+      it('creates different hashes if model data is different', () => {
+        const diffModelGraph = new GraphModel({
+          ddgModel: doubleFocalModel,
+          density: EDdgDensity.PreventPathEntanglement,
+          showOp: true,
+        });
+
+        expect(diffModelGraph.hash).not.toBe(testGraph.hash);
+      });
+
+      it('creates different hashes if density configurations are different', () => {
+        const diffDensityGraph = new GraphModel({
+          ddgModel: simpleModel,
+          density: EDdgDensity.UpstreamVsDownstream,
+          showOp: false,
+        });
+
+        expect(diffDensityGraph.hash).not.toBe(testGraph.hash);
+      });
     });
   });
 

@@ -20,7 +20,7 @@ import { connect } from 'react-redux';
 
 import Header from './Header';
 import Graph from './Graph';
-import { getUrl, getUrlState } from './url';
+import { getUrl, getUrlState, sanitizeUrlState } from './url';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
 import { extractUiFindFromState, TExtractUiFindFromStateReturn } from '../common/UiFindInput';
@@ -78,8 +78,6 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
       fetchDeepDependencyGraph({ service, operation, start: 0, end: 0 });
     }
   }
-
-  headerWrapper: React.RefObject<HTMLDivElement> = React.createRef();
 
   constructor(props: TProps) {
     super(props);
@@ -173,8 +171,11 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
   toggleShowOperations = (enable: boolean) => this.updateUrlState({ showOp: enable });
 
   updateUrlState = (newValues: Partial<TDdgSparseUrlState>) => {
-    const { uiFind, urlState, history } = this.props;
-    history.push(getUrl({ uiFind, ...urlState, ...newValues }));
+    const { graph, history, uiFind, urlState } = this.props;
+    const getUrlArg = { uiFind, ...urlState, ...newValues };
+    const hash = graph && graph.hash;
+    if (hash) getUrlArg.hash = hash;
+    history.push(getUrl(getUrlArg));
   };
 
   render() {
@@ -225,7 +226,7 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
 
     return (
       <div className="Ddg">
-        <div ref={this.headerWrapper}>
+        <div>
           <Header
             density={density}
             distanceToPathElems={distanceToPathElems}
@@ -272,7 +273,7 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
     graphState,
     services,
     operationsForService,
-    urlState,
+    urlState: sanitizeUrlState(urlState, graph && graph.hash),
     ...extractUiFindFromState(state),
   };
 }

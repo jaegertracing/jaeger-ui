@@ -135,6 +135,23 @@ describe('DeepDependencyGraphPage', () => {
         expect(props.history.push).toHaveBeenCalledTimes(1);
       });
 
+      it('includes props.graph.hash iff it is truthy', () => {
+        ddgPageImpl.updateUrlState({});
+        expect(getUrlSpy).not.toHaveBeenLastCalledWith(expect.objectContaining({ hash: expect.anything() }));
+
+        const hash = 'testHash';
+        const propsWithHash = {
+          ...props,
+          graph: {
+            ...props.graph,
+            hash,
+          },
+        };
+        const ddgPageWithHash = new DeepDependencyGraphPageImpl(propsWithHash);
+        ddgPageWithHash.updateUrlState({});
+        expect(getUrlSpy).toHaveBeenLastCalledWith(expect.objectContaining({ hash }));
+      });
+
       describe('setDistance', () => {
         const mockNewEncoding = '1';
         let encodeDistanceSpy;
@@ -351,12 +368,22 @@ describe('DeepDependencyGraphPage', () => {
       },
     };
     const ownProps = { location: { search } };
-    const mockGraphModel = { getVisible: () => ({}) };
+    const mockGraph = { hash: 'testHash', getVisible: () => ({}) };
+    const doneState = _set(
+      { ...state },
+      ['ddg', getStateEntryKey({ service, operation, start: 0, end: 0 })],
+      {
+        model: {},
+        state: fetchedState.DONE,
+      }
+    );
     let getUrlStateSpy;
+    let sanitizeUrlStateSpy;
     let makeGraphSpy;
 
     beforeAll(() => {
       getUrlStateSpy = jest.spyOn(url, 'getUrlState');
+      sanitizeUrlStateSpy = jest.spyOn(url, 'sanitizeUrlState');
       makeGraphSpy = jest.spyOn(GraphModel, 'makeGraph');
     });
 
@@ -364,7 +391,7 @@ describe('DeepDependencyGraphPage', () => {
       getUrlStateSpy.mockReset();
       getUrlStateSpy.mockReturnValue(expected.urlState);
       makeGraphSpy.mockReset();
-      makeGraphSpy.mockReturnValue(mockGraphModel);
+      makeGraphSpy.mockReturnValue(mockGraph);
     });
 
     it('uses gets relevant params from location.search', () => {
@@ -404,22 +431,19 @@ describe('DeepDependencyGraphPage', () => {
       const result = mapStateToProps(reduxState, ownProps);
       expect(result.graph).toBe(undefined);
 
-      const doneState = _set(
-        { ...state },
-        ['ddg', getStateEntryKey({ service, operation, start: 0, end: 0 })],
-        {
-          model: {},
-          state: fetchedState.DONE,
-        }
-      );
       const doneResult = mapStateToProps(doneState, ownProps);
-      expect(doneResult.graph).toBe(mockGraphModel);
+      expect(doneResult.graph).toBe(mockGraph);
     });
 
     it('includes services and operationsForService', () => {
       expect(mapStateToProps(state, ownProps)).toEqual(
         expect.objectContaining({ operationsForService, services })
       );
+    });
+
+    it('sanitizes urlState', () => {
+      mapStateToProps(doneState, ownProps);
+      expect(sanitizeUrlStateSpy).toHaveBeenLastCalledWith(expected.urlState, mockGraph.hash);
     });
   });
 });
