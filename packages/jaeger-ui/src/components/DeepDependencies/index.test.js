@@ -137,7 +137,7 @@ describe('DeepDependencyGraphPage', () => {
 
       it('includes props.graph.hash iff it is truthy', () => {
         ddgPageImpl.updateUrlState({});
-        expect(getUrlSpy).not.toHaveBeenLastCalledWith(expect.objectContaining({ hash: expect.anything() }));
+        expect(getUrlSpy).toHaveBeenLastCalledWith(expect.not.objectContaining({ hash: expect.anything() }));
 
         const hash = 'testHash';
         const propsWithHash = {
