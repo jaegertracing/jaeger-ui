@@ -89,7 +89,9 @@ exports[`<Graph /> render renders provided edges and vertices 1`] = `
       },
       "layoutId": 0,
       "options": Object {
+        "nodesep": 0.5,
         "rankdir": "TB",
+        "ranksep": 1.5,
         "splines": "polyline",
         "useDotEdges": true,
       },

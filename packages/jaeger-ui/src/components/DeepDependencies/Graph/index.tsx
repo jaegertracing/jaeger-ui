@@ -60,9 +60,11 @@ export default class Graph extends PureComponent<TProps> {
   private getSetOnEdge = memoize(getSetOnEdge);
 
   private layoutManager: LayoutManager = new LayoutManager({
-    useDotEdges: true,
-    splines: 'polyline',
+    nodesep: 0.5,
+    ranksep: 1.5,
     rankdir: 'TB',
+    splines: 'polyline',
+    useDotEdges: true,
   });
 
   private emptyFindSet: Set<TDdgVertex> = new Set();
