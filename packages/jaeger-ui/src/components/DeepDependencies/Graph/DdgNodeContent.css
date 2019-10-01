@@ -16,11 +16,11 @@ limitations under the License.
 
 .DdgNodeContent--core {
   background: #eee;
+  border-radius: 100%;
   box-shadow: 0 1px 2px 1px rgba(0, 0, 0, 0.15);
   cursor: default;
   display: flex;
   min-width: 125px;
-  white-space: nowrap;
 }
 
 .DdgNodeContent--core.is-positioned {
@@ -62,7 +62,13 @@ limitations under the License.
 .DdgNodeContent--label {
   margin: 0;
   padding: 0.5rem 0.75rem 0.3rem 0.75rem;
-  white-space: nowrap;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.DdgNode--test-classname {
+  margin: auto;
 }
 
 .DdgNodeContent--label:only-child {

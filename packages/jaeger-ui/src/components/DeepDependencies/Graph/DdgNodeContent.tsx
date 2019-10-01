@@ -19,6 +19,7 @@ import { TLayoutVertex, TVertex } from '@jaegertracing/plexus/lib/types';
 
 import { focalNodeIcon, setFocusIcon } from './node-icons';
 import { getUrl } from '../url';
+import BreakableText from '../../common/BreakableText';
 import NewWindowIcon from '../../common/NewWindowIcon';
 import { getUrl as getSearchUrl } from '../../SearchTracePage/url';
 import { EDdgDensity, EViewModifier, TDdgVertex, PathElem } from '../../../model/ddg/types';
@@ -42,13 +43,17 @@ const MAX_LINKED_TRACES = 35;
 const MIN_LENGTH = getSearchUrl().length;
 const PARAM_NAME_LENGTH = '&traceID='.length;
 
+// A border radius of 1px has a maximum horizontal/vertical thickness of Math.sqrt(2). Double for both sides.
+const CURVED_BORDER_THICKNESS = 2 * Math.sqrt(2);
+
 export default class DdgNodeContent extends React.PureComponent<TProps> {
   static measureNode(_: TVertex<any>, utils: TMeasureNodeUtils) {
     const { height, width } = utils.getWrapperSize();
+    const diagonal = Math.sqrt(height ** 2 + width ** 2) + CURVED_BORDER_THICKNESS;
     return {
-      height: height + 2,
-      width: width + 2,
-    };
+      height: diagonal,
+      width: diagonal,
+    }
   }
 
   static getNodeRenderer(
@@ -116,9 +121,9 @@ export default class DdgNodeContent extends React.PureComponent<TProps> {
           })}
         >
           {isFocalNode && <div className="DdgNodeContent--focalMarker">{focalNodeIcon}</div>}
-          <div>
-            <h4 className="DdgNodeContent--label">{service}</h4>
-            {operation && <div className="DdgNodeContent--label">{operation}</div>}
+          <div className="DdgNode--test-classname">
+            <h4 className="DdgNodeContent--label"><BreakableText text={service}/></h4>
+            {operation && <div className="DdgNodeContent--label"><BreakableText text={operation}/></div>}
           </div>
         </div>
 

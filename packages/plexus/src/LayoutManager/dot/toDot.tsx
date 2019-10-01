@@ -26,12 +26,13 @@ const DEFAULT_GRAPH_ATTRS = {
 };
 
 function makeGraphWrapper(options?: TLayoutOptions | null) {
+  // TODO grab shape from here
   const { nodesep, rankdir, ranksep, sep, splines } = { ...DEFAULT_GRAPH_ATTRS, ...options };
   return `digraph G {
   graph[nodesep=${nodesep.toFixed(3)}, rankdir=${rankdir}, ranksep=${ranksep.toFixed(3)}, sep=${sep.toFixed(
     3
   )}, splines=${splines}];
-  node [shape=box, fixedsize=true, label="", color="_", fillcolor="_"];
+  node [shape=circle, fixedsize=true, label="", color="_", fillcolor="_"];
   edge [arrowhead=none, arrowtail=none];`;
 }
 
