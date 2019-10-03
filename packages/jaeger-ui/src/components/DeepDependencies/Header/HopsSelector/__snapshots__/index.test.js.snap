@@ -5,6 +5,7 @@ exports[`HopsSelector with distanceToPathElems with visEncoding renders hops wit
   <Selector
     direction={-1}
     furthestDistance={-4}
+    furthestFullDistance={-4}
     furthestFullness="Full"
     hops={
       Array [
@@ -42,6 +43,7 @@ exports[`HopsSelector with distanceToPathElems with visEncoding renders hops wit
   <Selector
     direction={1}
     furthestDistance={4}
+    furthestFullDistance={4}
     furthestFullness="Full"
     hops={
       Array [
@@ -84,6 +86,7 @@ exports[`HopsSelector with distanceToPathElems without visEncoding handles DDGs 
   <Selector
     direction={-1}
     furthestDistance={-1}
+    furthestFullDistance={-1}
     furthestFullness="Full"
     hops={
       Array [
@@ -101,6 +104,7 @@ exports[`HopsSelector with distanceToPathElems without visEncoding handles DDGs 
   <Selector
     direction={1}
     furthestDistance={0}
+    furthestFullDistance={0}
     furthestFullness="Full"
     hops={
       Array [
@@ -119,6 +123,7 @@ exports[`HopsSelector with distanceToPathElems without visEncoding renders hops 
   <Selector
     direction={-1}
     furthestDistance={-2}
+    furthestFullDistance={-2}
     furthestFullness="Full"
     hops={
       Array [
@@ -156,6 +161,7 @@ exports[`HopsSelector with distanceToPathElems without visEncoding renders hops 
   <Selector
     direction={1}
     furthestDistance={2}
+    furthestFullDistance={2}
     furthestFullness="Full"
     hops={
       Array [

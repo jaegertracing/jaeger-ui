@@ -14,51 +14,10 @@
 
 /* eslint-disable import/first */
 
-jest.mock('lodash/throttle', () => jest.fn(fn => fn));
 jest.mock('../../utils/tracking');
 
-import _throttle from 'lodash/throttle';
-
-import {
-  ACTION_FILTER_CLEAR,
-  ACTION_FILTER_SET,
-  ACTION_RANGE_REFRAME,
-  ACTION_RANGE_SHIFT,
-  CATEGORY_FILTER,
-  CATEGORY_RANGE,
-  trackFilter,
-  trackRange,
-} from './index.track';
+import { ACTION_RANGE_REFRAME, ACTION_RANGE_SHIFT, CATEGORY_RANGE, trackRange } from './index.track';
 import { trackEvent } from '../../utils/tracking';
-
-describe('trackFilter', () => {
-  beforeEach(() => {
-    trackEvent.mockClear();
-  });
-
-  it('uses lodash throttle with 750ms and leading: false', () => {
-    const calls = _throttle.mock.calls;
-    expect(calls.length).toBe(2);
-    expect(calls).toEqual([
-      [expect.any(Function), 750, { leading: false }],
-      [expect.any(Function), 750, { leading: false }],
-    ]);
-  });
-
-  it('tracks filter set when setting values', () => {
-    expect(trackEvent.mock.calls.length).toBe(0);
-    trackFilter('abc');
-    expect(trackEvent.mock.calls.length).toBe(1);
-    expect(trackEvent.mock.calls[0]).toEqual([CATEGORY_FILTER, ACTION_FILTER_SET]);
-  });
-
-  it('tracks filter clear when clearing the value', () => {
-    expect(trackEvent.mock.calls.length).toBe(0);
-    trackFilter();
-    expect(trackEvent.mock.calls.length).toBe(1);
-    expect(trackEvent.mock.calls[0]).toEqual([CATEGORY_FILTER, ACTION_FILTER_CLEAR]);
-  });
-});
 
 describe('trackRange', () => {
   beforeEach(() => {
