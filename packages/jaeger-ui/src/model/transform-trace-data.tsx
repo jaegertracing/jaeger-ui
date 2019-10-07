@@ -17,6 +17,7 @@ import _isEqual from 'lodash/isEqual';
 import { getTraceSpanIdsAsTree } from '../selectors/trace';
 import { KeyValuePair, Span, SpanData, Trace, TraceData } from '../types/trace';
 import TreeNode from '../utils/TreeNode';
+import { getTraceName } from './trace-viewer';
 
 function deduplicateTags(spanTags: Array<KeyValuePair>) {
   const warningsHash: Map<string, string> = new Map<string, string>();
@@ -87,7 +88,6 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
   const tree = getTraceSpanIdsAsTree(data);
   const spans: Span[] = [];
   const svcCounts: Record<string, number> = {};
-  let traceName = '';
 
   tree.walk((spanID: string, node: TreeNode, depth: number = 0) => {
     if (spanID === '__root__') {
@@ -99,9 +99,6 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     }
     const { serviceName } = span.process;
     svcCounts[serviceName] = (svcCounts[serviceName] || 0) + 1;
-    if (!span.references || !span.references.length) {
-      traceName = `${serviceName}: ${span.operationName}`;
-    }
     span.relativeStartTime = span.startTime - traceStartTime;
     span.depth = depth - 1;
     span.hasChildren = node.children.length > 0;
@@ -125,7 +122,7 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     services,
     spans,
     traceID,
-    traceName,
+    traceName: getTraceName(spans),
     // can't use spread operator for intersection types
     // repl: https://goo.gl/4Z23MJ
     // issue: https://github.com/facebook/flow/issues/1511
