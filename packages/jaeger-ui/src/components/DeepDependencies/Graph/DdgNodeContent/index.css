@@ -20,7 +20,6 @@ limitations under the License.
   box-shadow: 0 1px 2px 1px rgba(0, 0, 0, 0.15);
   cursor: default;
   display: flex;
-  min-width: 125px;
 }
 
 .DdgNodeContent--core.is-positioned {
@@ -31,6 +30,25 @@ limitations under the License.
   top: 1px;
 }
 
+
+.DdgNodeContent--core.is-focalNode {
+  /* background: linear-gradient(90deg, #eb2f96 0%, #eb2f96 14%, #eee 14%); */
+}
+
+.DdgNodeContent--core.is-focalNode::before {
+  /* background-image: repeating-linear-gradient(-60deg, #fffb8f, #fff566 3px, #fffb8f 5px); */
+  border: 1px dashed #eb2f96;
+  border-radius: 100%;
+  bottom: -20px;
+  content: '';
+  left: -20px;
+  position: absolute;
+  right: -20px;
+  top: -20px;
+  z-index: -3;
+  margin: 1px 0 0 1px;
+}
+/*
 .DdgNodeContent--core.is-focalNode::before {
   bottom: 0;
   content: '';
@@ -58,25 +76,31 @@ limitations under the License.
   display: flex;
   padding: 0.3rem 0.15rem;
 }
+*/
 
 .DdgNodeContent--label {
   margin: 0;
-  padding: 0.5rem 0.75rem 0.3rem 0.75rem;
+  /* padding: 0.5rem 0.75rem 0.3rem 0.75rem; test fit */
+  margin-right: auto;
+  margin-left: auto;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
 }
 
 .DdgNode--test-classname {
-  margin: auto;
+  /* margin: auto; */
+  margin-right: auto;
+  margin-left: auto;
 }
 
 .DdgNodeContent--label:only-child {
-  padding: 0.5rem;
+  /* padding: 0.5rem; test fit */
 }
 
 .DdgNodeContent--label:not(:first-child) {
-  padding-top: 0.2rem;
+  /* padding-top: 0.2rem; test fit */
+  padding-top: 5px;
 }
 
 .DdgNodeContent--actionsWrapper {

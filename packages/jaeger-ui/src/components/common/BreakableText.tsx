@@ -30,21 +30,30 @@ export default function BreakableText(
   props: Props
 ): any /* React.ReactNode /* React.ReactElement | React.ReactElement[] \*\/ */ {
   const { className, text, wordRegexp = WORD_RX } = props;
-  if (!text) {
+  if (!text) { // might be able to remove thanks to `|| [text]` below
     return typeof text === 'string' ? text : null;
   }
   const spans = [];
   wordRegexp.exec('');
-  let match = wordRegexp.exec(text);
+  // if the given text has no words, set the first match to the entire text
+  let match: RegExpExecArray | string[] | null = wordRegexp.exec(text) || [text];
   while (match) {
     spans.push(
-      <span key={`word-${spans.length}`} className={className}>
+      <span key={`${text}-${spans.length}`} className={className}>
         {match[0]}
       </span>
     );
     match = wordRegexp.exec(text);
   }
   return spans;
+  /*
+  return (text.match(WORD_RX) || [text]).map((match: string, i: number) => (
+    // eslint-disable-next-line react/no-array-index-key
+    <span key={`word-${i}`} className={className}> 
+      {match}
+    </span>
+  ));
+   */
 }
 
 BreakableText.defaultProps = {

@@ -32,6 +32,7 @@ export default function getNodeRenderers(findMatches: Set<TDdgVertex>, viewModif
       'is-pathHovered': isPathHovered,
       'is-focalNode': lv.vertex.isFocalNode,
     });
+    /*
     return (
       <rect
         className={className}
@@ -40,6 +41,16 @@ export default function getNodeRenderers(findMatches: Set<TDdgVertex>, viewModif
         height={lv.height - 2}
         x="1"
         y="1"
+      />
+    );
+     */
+    return (
+      <circle
+        className={className}
+        vectorEffect="non-scaling-stroke"
+        r={lv.width /2 - 1}
+        cx={lv.width / 2}
+        cy={lv.width / 2}
       />
     );
   }
@@ -54,17 +65,17 @@ export default function getNodeRenderers(findMatches: Set<TDdgVertex>, viewModif
   }
 
   function vectorFindOutline(lv: TLayoutVertex<any>) {
+    return null;
     if (!findMatches.has(lv.vertex)) {
       return null;
     }
     return (
-      <rect
+      <circle
         className="DdgNode--VectorFindEmphasis--outline"
         vectorEffect="non-scaling-stroke"
-        width={lv.width - 2}
-        height={lv.height - 2}
-        x="1"
-        y="1"
+        r={lv.width / 2 - 1}
+        cx={lv.width / 2}
+        cy={lv.width / 2}
       />
     );
   }
@@ -77,10 +88,12 @@ export default function getNodeRenderers(findMatches: Set<TDdgVertex>, viewModif
   }
 
   function vectorFindColorBand(lv: TLayoutVertex<any>) {
+    return null;
     if (!findMatches.has(lv.vertex)) {
       return null;
     }
     return (
+      /*
       <rect
         className="DdgNode--VectorFindEmphasis--colorBand"
         vectorEffect="non-scaling-stroke"
@@ -88,6 +101,14 @@ export default function getNodeRenderers(findMatches: Set<TDdgVertex>, viewModif
         height={lv.height - 2}
         x="1"
         y="1"
+      />
+       */
+      <circle
+        className="DdgNode--VectorFindEmphasis--colorBand"
+        vectorEffect="non-scaling-stroke"
+        r={lv.width / 2 - 1}
+        cx={lv.width / 2}
+        cy={lv.width / 2}
       />
     );
   }

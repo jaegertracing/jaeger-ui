@@ -60,7 +60,7 @@ export default class Graph extends PureComponent<TProps> {
   private getSetOnEdge = memoize(getSetOnEdge);
 
   private layoutManager: LayoutManager = new LayoutManager({
-    nodesep: 0.5,
+    nodesep: 0.55,
     ranksep: 1.5,
     rankdir: 'TB',
     splines: 'polyline',
