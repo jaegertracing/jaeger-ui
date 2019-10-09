@@ -30,7 +30,6 @@ limitations under the License.
   top: 1px;
 }
 
-
 .DdgNodeContent--core.is-focalNode {
   /* background: linear-gradient(90deg, #eb2f96 0%, #eb2f96 14%, #eee 14%); */
 }
@@ -89,18 +88,8 @@ limitations under the License.
 }
 
 .DdgNode--test-classname {
-  /* margin: auto; */
   margin-right: auto;
   margin-left: auto;
-}
-
-.DdgNodeContent--label:only-child {
-  /* padding: 0.5rem; test fit */
-}
-
-.DdgNodeContent--label:not(:first-child) {
-  /* padding-top: 0.2rem; test fit */
-  padding-top: 5px;
 }
 
 .DdgNodeContent--actionsWrapper {

@@ -30,7 +30,7 @@ export default function BreakableText(
   props: Props
 ): any /* React.ReactNode /* React.ReactElement | React.ReactElement[] \*\/ */ {
   const { className, text, wordRegexp = WORD_RX } = props;
-  if (!text) { // might be able to remove thanks to `|| [text]` below
+  if (!text) {
     return typeof text === 'string' ? text : null;
   }
   const spans = [];
@@ -46,14 +46,6 @@ export default function BreakableText(
     match = wordRegexp.exec(text);
   }
   return spans;
-  /*
-  return (text.match(WORD_RX) || [text]).map((match: string, i: number) => (
-    // eslint-disable-next-line react/no-array-index-key
-    <span key={`word-${i}`} className={className}> 
-      {match}
-    </span>
-  ));
-   */
 }
 
 BreakableText.defaultProps = {

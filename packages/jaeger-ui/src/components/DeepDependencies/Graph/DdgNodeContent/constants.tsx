@@ -17,10 +17,9 @@ import { getUrl as getSearchUrl } from '../../../SearchTracePage/url';
 // A border radius of 1px has a maximum horizontal/vertical thickness of Math.sqrt(2). Double for both sides.
 // export const CURVED_BORDER_THICKNESS = 2 * Math.sqrt(2);
 export const FONT_SIZE = 14;
-export const LINE_HEIGHT = 1.5;
-// const FONT = `${FONT_SIZE}px Helvetica Nueue`;
 export const FONT = `${FONT_SIZE}px Helvetica Nueue`;
-// const HEAVY_FONT = `500 ${FONT}`;
+export const LINE_HEIGHT = 1.5;
+export const RADIUS_MARGIN = 3;
 
 export const WORD_RX = /\W*\w+\W*/g;
 

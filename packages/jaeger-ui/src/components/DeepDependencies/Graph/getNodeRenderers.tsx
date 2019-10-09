@@ -48,7 +48,7 @@ export default function getNodeRenderers(findMatches: Set<TDdgVertex>, viewModif
       <circle
         className={className}
         vectorEffect="non-scaling-stroke"
-        r={lv.width /2 - 1}
+        r={lv.width / 2 - 1}
         cx={lv.width / 2}
         cy={lv.width / 2}
       />
@@ -64,8 +64,10 @@ export default function getNodeRenderers(findMatches: Set<TDdgVertex>, viewModif
     };
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   function vectorFindOutline(lv: TLayoutVertex<any>) {
     return null;
+    /*
     if (!findMatches.has(lv.vertex)) {
       return null;
     }
@@ -78,6 +80,7 @@ export default function getNodeRenderers(findMatches: Set<TDdgVertex>, viewModif
         cy={lv.width / 2}
       />
     );
+     */
   }
 
   function htmlFindEmphasis(lv: TLayoutVertex<any>) {
@@ -87,8 +90,10 @@ export default function getNodeRenderers(findMatches: Set<TDdgVertex>, viewModif
     return <div className="DdgNode--HtmlFindEmphasis" />;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   function vectorFindColorBand(lv: TLayoutVertex<any>) {
     return null;
+    /*
     if (!findMatches.has(lv.vertex)) {
       return null;
     }
@@ -102,7 +107,7 @@ export default function getNodeRenderers(findMatches: Set<TDdgVertex>, viewModif
         x="1"
         y="1"
       />
-       */
+       *\/
       <circle
         className="DdgNode--VectorFindEmphasis--colorBand"
         vectorEffect="non-scaling-stroke"
@@ -111,6 +116,7 @@ export default function getNodeRenderers(findMatches: Set<TDdgVertex>, viewModif
         cy={lv.width / 2}
       />
     );
+    */
   }
 
   return {
