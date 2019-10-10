@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 .DdgNode--VectorBorder {
-  /* fill: #fff; */
+  fill: #fff;
   stroke: #bbb;
   stroke-width: 2;
 }
@@ -51,9 +51,4 @@ limitations under the License.
 .DdgNode--VectorFindEmphasis--colorBand {
   stroke: #fef876;
   stroke-width: 10;
-}
-
-.DdgNode--VectorFindEmphasis--outline {
-  stroke: rgba(173, 139, 0, 0.5);
-  stroke-width: 12;
 }

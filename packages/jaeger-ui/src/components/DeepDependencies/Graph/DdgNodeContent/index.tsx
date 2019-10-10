@@ -21,9 +21,9 @@ import {
   MAX_LENGTH,
   MAX_LINKED_TRACES,
   MIN_LENGTH,
+  OP_PADDING_TOP,
   PARAM_NAME_LENGTH,
   RADIUS_MARGIN,
-  OP_PADDING_TOP,
   WORD_RX,
 } from './constants';
 import { setFocusIcon } from './node-icons';
@@ -49,6 +49,7 @@ type TProps = {
 export default class DdgNodeContent extends React.PureComponent<TProps> {
   static measureNode(vertex: TVertex<TDdgVertex>) {
     const { radius } = calcPositioning(vertex.service, vertex.operation);
+    // Add one for svg color bands
     const diameter = 2 * (radius + 1 + RADIUS_MARGIN);
 
     return {
@@ -122,7 +123,7 @@ export default class DdgNodeContent extends React.PureComponent<TProps> {
             'is-positioned': isPositioned,
           })}
         >
-          <div className="DdgNode--test-classname">
+          <div className="DdgNode--labelWrapper">
             <h4
               className="DdgNodeContent--label"
               style={{ marginTop: `${svcMarginTop + RADIUS_MARGIN}px`, width: `${svcWidth}px` }}

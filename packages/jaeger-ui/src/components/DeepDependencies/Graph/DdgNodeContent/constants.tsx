@@ -14,19 +14,16 @@
 
 import { getUrl as getSearchUrl } from '../../../SearchTracePage/url';
 
-// A border radius of 1px has a maximum horizontal/vertical thickness of Math.sqrt(2). Double for both sides.
-// export const CURVED_BORDER_THICKNESS = 2 * Math.sqrt(2);
+// Constants for calculating circular node positioning
 export const FONT_SIZE = 14;
 export const FONT = `${FONT_SIZE}px Helvetica Nueue`;
 export const LINE_HEIGHT = 1.5;
 export const RADIUS_MARGIN = 3;
-
 export const WORD_RX = /\W*\w+\W*/g;
+export const OP_PADDING_TOP = 5;
 
 // While browsers suport URLs of unlimited length, many server clients do not handle more than this max
 export const MAX_LENGTH = 2083;
 export const MAX_LINKED_TRACES = 35;
 export const MIN_LENGTH = getSearchUrl().length;
 export const PARAM_NAME_LENGTH = '&traceID='.length;
-
-export const OP_PADDING_TOP = 5; // might be margin?

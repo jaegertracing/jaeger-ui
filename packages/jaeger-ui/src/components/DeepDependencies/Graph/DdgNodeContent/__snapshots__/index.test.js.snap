@@ -10,7 +10,7 @@ exports[`<DdgNodeContent> DdgNodeContent.getNodeRenderer() returns a <DdgNodeCon
     className="DdgNodeContent--core"
   >
     <div
-      className="DdgNode--test-classname"
+      className="DdgNode--labelWrapper"
     >
       <h4
         className="DdgNodeContent--label"
@@ -111,7 +111,7 @@ exports[`<DdgNodeContent> omits the operation if it is null 1`] = `
     className="DdgNodeContent--core"
   >
     <div
-      className="DdgNode--test-classname"
+      className="DdgNode--labelWrapper"
     >
       <h4
         className="DdgNodeContent--label"
@@ -212,7 +212,7 @@ exports[`<DdgNodeContent> omits the operation if it is null 2`] = `
     className="DdgNodeContent--core"
   >
     <div
-      className="DdgNode--test-classname"
+      className="DdgNode--labelWrapper"
     >
       <h4
         className="DdgNodeContent--label"
@@ -298,7 +298,7 @@ exports[`<DdgNodeContent> renders correctly when isFocalNode = true and focalNod
     className="DdgNodeContent--core"
   >
     <div
-      className="DdgNode--test-classname"
+      className="DdgNode--labelWrapper"
     >
       <h4
         className="DdgNodeContent--label"
@@ -399,7 +399,7 @@ exports[`<DdgNodeContent> renders correctly when isFocalNode = true and focalNod
     className="DdgNodeContent--core is-focalNode"
   >
     <div
-      className="DdgNode--test-classname"
+      className="DdgNode--labelWrapper"
     >
       <h4
         className="DdgNodeContent--label"

@@ -63,6 +63,7 @@ export default class Graph extends PureComponent<TProps> {
     nodesep: 0.55,
     ranksep: 1.5,
     rankdir: 'TB',
+    shape: 'circle',
     splines: 'polyline',
     useDotEdges: true,
   });
@@ -97,11 +98,6 @@ export default class Graph extends PureComponent<TProps> {
         vertices={vertices}
         measurableNodesKey="nodes/content"
         layers={[
-          {
-            key: 'nodes/find-emphasis/vector-outline',
-            layerType: 'svg',
-            renderNode: nodeRenderers.vectorFindOutline,
-          },
           {
             key: 'nodes/find-emphasis/html',
             layerType: 'html',

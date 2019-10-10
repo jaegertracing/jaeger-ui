@@ -30,12 +30,8 @@ limitations under the License.
   top: 1px;
 }
 
-.DdgNodeContent--core.is-focalNode {
-  /* background: linear-gradient(90deg, #eb2f96 0%, #eb2f96 14%, #eee 14%); */
-}
-
 .DdgNodeContent--core.is-focalNode::before {
-  /* background-image: repeating-linear-gradient(-60deg, #fffb8f, #fff566 3px, #fffb8f 5px); */
+  background-image: repeating-linear-gradient(30deg, transparent, #eb2f96 3px, transparent 5px);
   border: 1px dashed #eb2f96;
   border-radius: 100%;
   bottom: -20px;
@@ -47,39 +43,9 @@ limitations under the License.
   z-index: -3;
   margin: 1px 0 0 1px;
 }
-/*
-.DdgNodeContent--core.is-focalNode::before {
-  bottom: 0;
-  content: '';
-  left: 0;
-  outline: 20px solid rgba(255, 255, 255, 0.2);
-  position: absolute;
-  right: 0;
-  top: 0;
-}
-
-.DdgNodeContent--core.is-focalNode::after {
-  bottom: 0;
-  content: '';
-  left: 0;
-  outline-offset: 20px;
-  outline: 1px dashed #ec8cb475;
-  position: absolute;
-  right: 0;
-  top: 0;
-}
-
-.DdgNodeContent--focalMarker {
-  align-items: center;
-  background: #eb2f96;
-  display: flex;
-  padding: 0.3rem 0.15rem;
-}
-*/
 
 .DdgNodeContent--label {
   margin: 0;
-  /* padding: 0.5rem 0.75rem 0.3rem 0.75rem; test fit */
   margin-right: auto;
   margin-left: auto;
   display: flex;
@@ -87,7 +53,7 @@ limitations under the License.
   justify-content: center;
 }
 
-.DdgNode--test-classname {
+.DdgNode--labelWrapper {
   margin-right: auto;
   margin-left: auto;
 }

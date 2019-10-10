@@ -57,17 +57,17 @@ describe('calcPositioning', () => {
     opSpan.getClientRects = measureOp;
   });
 
-  afterAll(() => {
-    while (document.body.firstChild) {
-      document.body.firstChild.remove();
-    }
-  });
-
   beforeEach(() => {
     svcMeasurements = undefined;
     opMeasurements = undefined;
     measureSvc.mockClear();
     measureOp.mockClear();
+  });
+
+  afterAll(() => {
+    while (document.body.firstChild) {
+      document.body.firstChild.remove();
+    }
   });
 
   describe('service only', () => {
@@ -192,13 +192,15 @@ describe('calcPositioning', () => {
       const operation = 'testOperation';
       const diffService = 'diffService';
       const diffOperation = 'diffOperation';
+      const firstResult = calcPositioning(service, operation);
 
-      expect(calcPositioning(service, operation)).toBe(calcPositioning(service, operation));
+      expect(calcPositioning(service, operation)).toBe(firstResult);
       expect(calcPositioning(service, operation)).not.toBe(calcPositioning(service, diffOperation));
       expect(calcPositioning(service, operation)).not.toBe(calcPositioning(diffService, operation));
       expect(calcPositioning(service, operation)).not.toBe(calcPositioning(diffService, diffOperation));
       expect(calcPositioning(service, operation)).not.toBe(calcPositioning(service));
-      expect(calcPositioning(service, operation)).toBe(calcPositioning(service, operation));
+      expect(calcPositioning(service, operation)).toBe(firstResult);
+      expect(calcPositioning(service)).not.toBe(firstResult);
       expect(calcPositioning(service)).toBe(calcPositioning(service));
     });
 

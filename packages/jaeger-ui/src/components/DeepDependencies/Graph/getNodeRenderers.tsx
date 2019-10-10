@@ -32,18 +32,6 @@ export default function getNodeRenderers(findMatches: Set<TDdgVertex>, viewModif
       'is-pathHovered': isPathHovered,
       'is-focalNode': lv.vertex.isFocalNode,
     });
-    /*
-    return (
-      <rect
-        className={className}
-        vectorEffect="non-scaling-stroke"
-        width={lv.width - 2}
-        height={lv.height - 2}
-        x="1"
-        y="1"
-      />
-    );
-     */
     return (
       <circle
         className={className}
@@ -60,27 +48,7 @@ export default function getNodeRenderers(findMatches: Set<TDdgVertex>, viewModif
       vectorBorder,
       htmlFindEmphasis: null,
       vectorFindColorBand: null,
-      vectorFindOutline: null,
     };
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  function vectorFindOutline(lv: TLayoutVertex<any>) {
-    return null;
-    /*
-    if (!findMatches.has(lv.vertex)) {
-      return null;
-    }
-    return (
-      <circle
-        className="DdgNode--VectorFindEmphasis--outline"
-        vectorEffect="non-scaling-stroke"
-        r={lv.width / 2 - 1}
-        cx={lv.width / 2}
-        cy={lv.width / 2}
-      />
-    );
-     */
   }
 
   function htmlFindEmphasis(lv: TLayoutVertex<any>) {
@@ -90,24 +58,11 @@ export default function getNodeRenderers(findMatches: Set<TDdgVertex>, viewModif
     return <div className="DdgNode--HtmlFindEmphasis" />;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   function vectorFindColorBand(lv: TLayoutVertex<any>) {
-    return null;
-    /*
     if (!findMatches.has(lv.vertex)) {
       return null;
     }
     return (
-      /*
-      <rect
-        className="DdgNode--VectorFindEmphasis--colorBand"
-        vectorEffect="non-scaling-stroke"
-        width={lv.width - 2}
-        height={lv.height - 2}
-        x="1"
-        y="1"
-      />
-       *\/
       <circle
         className="DdgNode--VectorFindEmphasis--colorBand"
         vectorEffect="non-scaling-stroke"
@@ -116,13 +71,11 @@ export default function getNodeRenderers(findMatches: Set<TDdgVertex>, viewModif
         cy={lv.width / 2}
       />
     );
-    */
   }
 
   return {
     htmlFindEmphasis,
     vectorBorder,
     vectorFindColorBand,
-    vectorFindOutline,
   };
 }
