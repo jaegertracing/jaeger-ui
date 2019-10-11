@@ -8,15 +8,22 @@ exports[`<DdgNodeContent> DdgNodeContent.getNodeRenderer() returns a <DdgNodeCon
 >
   <div
     className="DdgNodeContent--core"
+    style={
+      Object {
+        "height": "100px",
+        "transform": "translate(25px, 25px) scale(1.5)",
+        "width": "100px",
+      }
+    }
   >
     <div
-      className="DdgNode--labelWrapper"
+      className="DdgNodeContent--labelWrapper"
     >
       <h4
         className="DdgNodeContent--label"
         style={
           Object {
-            "marginTop": "13px",
+            "marginTop": "10px",
             "width": "20px",
           }
         }
@@ -109,15 +116,22 @@ exports[`<DdgNodeContent> omits the operation if it is null 1`] = `
 >
   <div
     className="DdgNodeContent--core"
+    style={
+      Object {
+        "height": "100px",
+        "transform": "translate(25px, 25px) scale(1.5)",
+        "width": "100px",
+      }
+    }
   >
     <div
-      className="DdgNode--labelWrapper"
+      className="DdgNodeContent--labelWrapper"
     >
       <h4
         className="DdgNodeContent--label"
         style={
           Object {
-            "marginTop": "13px",
+            "marginTop": "10px",
             "width": "20px",
           }
         }
@@ -210,15 +224,22 @@ exports[`<DdgNodeContent> omits the operation if it is null 2`] = `
 >
   <div
     className="DdgNodeContent--core"
+    style={
+      Object {
+        "height": "100px",
+        "transform": "translate(25px, 25px) scale(1.5)",
+        "width": "100px",
+      }
+    }
   >
     <div
-      className="DdgNode--labelWrapper"
+      className="DdgNodeContent--labelWrapper"
     >
       <h4
         className="DdgNodeContent--label"
         style={
           Object {
-            "marginTop": "13px",
+            "marginTop": "10px",
             "width": "20px",
           }
         }
@@ -296,15 +317,22 @@ exports[`<DdgNodeContent> renders correctly when isFocalNode = true and focalNod
 >
   <div
     className="DdgNodeContent--core"
+    style={
+      Object {
+        "height": "100px",
+        "transform": "translate(25px, 25px) scale(1.5)",
+        "width": "100px",
+      }
+    }
   >
     <div
-      className="DdgNode--labelWrapper"
+      className="DdgNodeContent--labelWrapper"
     >
       <h4
         className="DdgNodeContent--label"
         style={
           Object {
-            "marginTop": "13px",
+            "marginTop": "10px",
             "width": "20px",
           }
         }
@@ -397,15 +425,22 @@ exports[`<DdgNodeContent> renders correctly when isFocalNode = true and focalNod
 >
   <div
     className="DdgNodeContent--core is-focalNode"
+    style={
+      Object {
+        "height": "100px",
+        "transform": "translate(25px, 25px) scale(1.5)",
+        "width": "100px",
+      }
+    }
   >
     <div
-      className="DdgNode--labelWrapper"
+      className="DdgNodeContent--labelWrapper"
     >
       <h4
         className="DdgNodeContent--label"
         style={
           Object {
-            "marginTop": "13px",
+            "marginTop": "10px",
             "width": "20px",
           }
         }

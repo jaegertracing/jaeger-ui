@@ -43,19 +43,23 @@ export default function getNodeRenderers(findMatches: Set<TDdgVertex>, viewModif
     );
   }
 
+  function htmlEmphasis(lv: TLayoutVertex<any>) {
+    const matchClasses = cx({
+      'is-findMatch': findMatches.has(lv.vertex),
+      'is-focalNode': lv.vertex.isFocalNode,
+    });
+    if (!matchClasses) {
+      return null;
+    }
+    return <div className={`DdgNode--HtmlEmphasis ${matchClasses}`} />;
+  }
+
   if (!findMatches.size) {
     return {
       vectorBorder,
-      htmlFindEmphasis: null,
+      htmlEmphasis,
       vectorFindColorBand: null,
     };
-  }
-
-  function htmlFindEmphasis(lv: TLayoutVertex<any>) {
-    if (!findMatches.has(lv.vertex)) {
-      return null;
-    }
-    return <div className="DdgNode--HtmlFindEmphasis" />;
   }
 
   function vectorFindColorBand(lv: TLayoutVertex<any>) {
@@ -74,7 +78,7 @@ export default function getNodeRenderers(findMatches: Set<TDdgVertex>, viewModif
   }
 
   return {
-    htmlFindEmphasis,
+    htmlEmphasis,
     vectorBorder,
     vectorFindColorBand,
   };

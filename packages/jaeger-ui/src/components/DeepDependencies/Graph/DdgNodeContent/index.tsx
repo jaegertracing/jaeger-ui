@@ -23,7 +23,7 @@ import {
   MIN_LENGTH,
   OP_PADDING_TOP,
   PARAM_NAME_LENGTH,
-  RADIUS_MARGIN,
+  RADIUS,
   WORD_RX,
 } from './constants';
 import { setFocusIcon } from './node-icons';
@@ -47,10 +47,8 @@ type TProps = {
 };
 
 export default class DdgNodeContent extends React.PureComponent<TProps> {
-  static measureNode(vertex: TVertex<TDdgVertex>) {
-    const { radius } = calcPositioning(vertex.service, vertex.operation);
-    // Add one for svg color bands
-    const diameter = 2 * (radius + 1 + RADIUS_MARGIN);
+  static measureNode() {
+    const diameter = 2 * (RADIUS + 1);
 
     return {
       height: diameter,
@@ -114,7 +112,9 @@ export default class DdgNodeContent extends React.PureComponent<TProps> {
 
   render() {
     const { focalNodeUrl, isFocalNode, isPositioned, operation, service } = this.props;
-    const { svcWidth, opWidth, svcMarginTop } = calcPositioning(service, operation);
+    const { radius, svcWidth, opWidth, svcMarginTop } = calcPositioning(service, operation);
+    const scaleFactor = RADIUS / radius;
+    const transform = `translate(${RADIUS - radius}px, ${RADIUS - radius}px) scale(${scaleFactor})`;
     return (
       <div className="DdgNodeContent" onMouseOver={this.onMouseUx} onMouseOut={this.onMouseUx}>
         <div
@@ -122,11 +122,12 @@ export default class DdgNodeContent extends React.PureComponent<TProps> {
             'is-focalNode': isFocalNode,
             'is-positioned': isPositioned,
           })}
+          style={{ width: `${radius * 2}px`, height: `${radius * 2}px`, transform }}
         >
-          <div className="DdgNode--labelWrapper">
+          <div className="DdgNodeContent--labelWrapper">
             <h4
               className="DdgNodeContent--label"
-              style={{ marginTop: `${svcMarginTop + RADIUS_MARGIN}px`, width: `${svcWidth}px` }}
+              style={{ marginTop: `${svcMarginTop}px`, width: `${svcWidth}px` }}
             >
               <BreakableText text={service} wordRegexp={WORD_RX} />
             </h4>

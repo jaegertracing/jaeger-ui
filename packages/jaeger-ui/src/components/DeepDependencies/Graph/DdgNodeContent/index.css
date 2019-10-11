@@ -30,18 +30,9 @@ limitations under the License.
   top: 1px;
 }
 
-.DdgNodeContent--core.is-focalNode::before {
-  background-image: repeating-linear-gradient(30deg, transparent, #eb2f96 3px, transparent 5px);
-  border: 1px dashed #eb2f96;
-  border-radius: 100%;
-  bottom: -20px;
-  content: '';
-  left: -20px;
-  position: absolute;
-  right: -20px;
-  top: -20px;
-  z-index: -3;
-  margin: 1px 0 0 1px;
+.DdgNodeContent--labelWrapper {
+  margin-right: auto;
+  margin-left: auto;
 }
 
 .DdgNodeContent--label {
@@ -51,11 +42,6 @@ limitations under the License.
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-}
-
-.DdgNode--labelWrapper {
-  margin-right: auto;
-  margin-left: auto;
 }
 
 .DdgNodeContent--actionsWrapper {

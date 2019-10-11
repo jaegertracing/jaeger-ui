@@ -18,9 +18,9 @@ import { getUrl as getSearchUrl } from '../../../SearchTracePage/url';
 export const FONT_SIZE = 14;
 export const FONT = `${FONT_SIZE}px Helvetica Nueue`;
 export const LINE_HEIGHT = 1.5;
-export const RADIUS_MARGIN = 3;
-export const WORD_RX = /\W*\w+\W*/g;
 export const OP_PADDING_TOP = 5;
+export const RADIUS = 75;
+export const WORD_RX = /\W*\w+\W*/g;
 
 // While browsers suport URLs of unlimited length, many server clients do not handle more than this max
 export const MAX_LENGTH = 2083;

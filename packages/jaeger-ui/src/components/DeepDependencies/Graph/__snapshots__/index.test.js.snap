@@ -21,7 +21,7 @@ exports[`<Graph /> render renders provided edges and vertices 1`] = `
       Object {
         "key": "nodes/find-emphasis/html",
         "layerType": "html",
-        "renderNode": null,
+        "renderNode": [Function],
       },
       Object {
         "key": "nodes/find-emphasis/vector-color-band",

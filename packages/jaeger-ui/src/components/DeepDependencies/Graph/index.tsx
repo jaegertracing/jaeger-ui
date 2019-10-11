@@ -101,7 +101,7 @@ export default class Graph extends PureComponent<TProps> {
           {
             key: 'nodes/find-emphasis/html',
             layerType: 'html',
-            renderNode: nodeRenderers.htmlFindEmphasis,
+            renderNode: nodeRenderers.htmlEmphasis,
           },
           {
             key: 'nodes/find-emphasis/vector-color-band',
