@@ -169,4 +169,18 @@ describe('transform ddg data', () => {
       transformDdgData([simplePath, noFocalPath, doubleFocalPath].map(testResources.wrap), focalPayloadElem)
     ).toThrowError();
   });
+
+  it('creates equal hashes iff paths are equivalent', () => {
+    const { focalPayloadElem, doubleFocalPath, longSimplePath, simplePath, wrap } = testResources;
+    const simpleModel = transformDdgData([simplePath, longSimplePath].map(wrap), focalPayloadElem);
+    const reverseModel = transformDdgData([longSimplePath, simplePath].map(wrap), focalPayloadElem);
+
+    expect(reverseModel).not.toEqual(simpleModel);
+    expect(reverseModel).not.toBe(simpleModel);
+    expect(reverseModel.hash).toBe(simpleModel.hash);
+
+    const diffModel = transformDdgData([doubleFocalPath].map(wrap), focalPayloadElem);
+
+    expect(diffModel.hash).not.toBe(simpleModel.hash);
+  });
 });

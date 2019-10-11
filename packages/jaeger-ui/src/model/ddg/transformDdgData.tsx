@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import objectHash from 'object-hash';
+
 import {
   PathElem,
   TDdgModel,
@@ -31,6 +33,7 @@ export default function transformDdgData(
   const serviceMap: TDdgServiceMap = new Map();
   const distanceToPathElems: TDdgDistanceToPathElems = new Map();
   const pathCompareValues: Map<TDdgPayloadEntry[], string> = new Map();
+  const hashArg: string[] = [];
 
   const paths = payload
     .sort(({ path: a }, { path: b }) => {
@@ -50,6 +53,9 @@ export default function transformDdgData(
     })
     // eslint-disable-next-line camelcase
     .map(({ path: payloadPath, trace_id }) => {
+      // Default value necessary as sort is not called if there is only one path
+      hashArg.push(pathCompareValues.get(payloadPath) || payloadPath.map(stringifyEntry).join());
+
       // Path with stand-in values is necessary for assigning PathElem.memberOf
       const path: TDdgPath = { focalIdx: -1, members: [], traceID: trace_id };
 
@@ -124,8 +130,11 @@ export default function transformDdgData(
     if (upstreamElems) upstreamElems.forEach(setIdx);
   } while (downstreamElems || upstreamElems);
 
+  const hash = objectHash(hashArg).slice(0, 16);
+
   return {
     paths,
+    hash,
     distanceToPathElems,
     services: serviceMap,
     visIdxToPathElem,

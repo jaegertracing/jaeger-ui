@@ -69,12 +69,13 @@ describe('GraphModel', () => {
   }
 
   describe('constructor', () => {
+    const testGraph = new GraphModel({
+      ddgModel: simpleModel,
+      density: EDdgDensity.PreventPathEntanglement,
+      showOp: true,
+    });
+
     it('creates five vertices and four edges for one-path ddg', () => {
-      const testGraph = new GraphModel({
-        ddgModel: simpleModel,
-        density: EDdgDensity.PreventPathEntanglement,
-        showOp: true,
-      });
       validateGraph(testGraph, [
         {
           visIndices: [0],
