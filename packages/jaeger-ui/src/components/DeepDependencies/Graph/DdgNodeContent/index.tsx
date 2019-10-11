@@ -14,7 +14,7 @@
 
 import * as React from 'react';
 import cx from 'classnames';
-import { TLayoutVertex, TVertex } from '@jaegertracing/plexus/lib/types';
+import { TLayoutVertex } from '@jaegertracing/plexus/lib/types';
 
 import calcPositioning from './calc-positioning';
 import {
