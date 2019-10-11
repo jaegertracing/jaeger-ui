@@ -12,11 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+jest.mock('./calc-positioning', () => () => ({
+  radius: 50,
+  svcWidth: 20,
+  opWidth: 30,
+  svcMarginTop: 10,
+}));
+
+/* eslint-disable import/first */
 import React from 'react';
 import { shallow } from 'enzyme';
 
-import DdgNodeContent from './DdgNodeContent';
-import { EViewModifier } from '../../../model/ddg/types';
+import DdgNodeContent from '.';
+import { EViewModifier } from '../../../../model/ddg/types';
 
 describe('<DdgNodeContent>', () => {
   const vertexKey = 'some-key';
