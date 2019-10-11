@@ -33,47 +33,33 @@ export default function getNodeRenderers(findMatches: Set<TDdgVertex>, viewModif
       'is-focalNode': lv.vertex.isFocalNode,
     });
     return (
-      <rect
+      <circle
         className={className}
         vectorEffect="non-scaling-stroke"
-        width={lv.width - 2}
-        height={lv.height - 2}
-        x="1"
-        y="1"
+        r={lv.width / 2 - 1}
+        cx={lv.width / 2}
+        cy={lv.width / 2}
       />
     );
+  }
+
+  function htmlEmphasis(lv: TLayoutVertex<any>) {
+    const matchClasses = cx({
+      'is-findMatch': findMatches.has(lv.vertex),
+      'is-focalNode': lv.vertex.isFocalNode,
+    });
+    if (!matchClasses) {
+      return null;
+    }
+    return <div className={`DdgNode--HtmlEmphasis ${matchClasses}`} />;
   }
 
   if (!findMatches.size) {
     return {
       vectorBorder,
-      htmlFindEmphasis: null,
+      htmlEmphasis,
       vectorFindColorBand: null,
-      vectorFindOutline: null,
     };
-  }
-
-  function vectorFindOutline(lv: TLayoutVertex<any>) {
-    if (!findMatches.has(lv.vertex)) {
-      return null;
-    }
-    return (
-      <rect
-        className="DdgNode--VectorFindEmphasis--outline"
-        vectorEffect="non-scaling-stroke"
-        width={lv.width - 2}
-        height={lv.height - 2}
-        x="1"
-        y="1"
-      />
-    );
-  }
-
-  function htmlFindEmphasis(lv: TLayoutVertex<any>) {
-    if (!findMatches.has(lv.vertex)) {
-      return null;
-    }
-    return <div className="DdgNode--HtmlFindEmphasis" />;
   }
 
   function vectorFindColorBand(lv: TLayoutVertex<any>) {
@@ -81,21 +67,19 @@ export default function getNodeRenderers(findMatches: Set<TDdgVertex>, viewModif
       return null;
     }
     return (
-      <rect
+      <circle
         className="DdgNode--VectorFindEmphasis--colorBand"
         vectorEffect="non-scaling-stroke"
-        width={lv.width - 2}
-        height={lv.height - 2}
-        x="1"
-        y="1"
+        r={lv.width / 2 - 1}
+        cx={lv.width / 2}
+        cy={lv.width / 2}
       />
     );
   }
 
   return {
-    htmlFindEmphasis,
+    htmlEmphasis,
     vectorBorder,
     vectorFindColorBand,
-    vectorFindOutline,
   };
 }

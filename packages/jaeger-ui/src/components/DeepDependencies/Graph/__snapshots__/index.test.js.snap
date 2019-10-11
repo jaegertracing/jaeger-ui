@@ -19,14 +19,9 @@ exports[`<Graph /> render renders provided edges and vertices 1`] = `
   layers={
     Array [
       Object {
-        "key": "nodes/find-emphasis/vector-outline",
-        "layerType": "svg",
-        "renderNode": null,
-      },
-      Object {
         "key": "nodes/find-emphasis/html",
         "layerType": "html",
-        "renderNode": null,
+        "renderNode": [Function],
       },
       Object {
         "key": "nodes/find-emphasis/vector-color-band",
@@ -89,7 +84,10 @@ exports[`<Graph /> render renders provided edges and vertices 1`] = `
       },
       "layoutId": 0,
       "options": Object {
+        "nodesep": 0.55,
         "rankdir": "TB",
+        "ranksep": 1.5,
+        "shape": "circle",
         "splines": "polyline",
         "useDotEdges": true,
       },

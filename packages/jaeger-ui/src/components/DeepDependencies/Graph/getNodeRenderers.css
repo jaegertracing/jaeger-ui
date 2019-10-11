@@ -34,9 +34,8 @@ limitations under the License.
   stroke-opacity: 1;
 }
 
-.DdgNode--HtmlFindEmphasis {
-  background-image: repeating-linear-gradient(-60deg, #fffb8f, #fff566 3px, #fffb8f 5px);
-  border: 1px dashed rgba(173, 139, 0, 0.5);
+.DdgNode--HtmlEmphasis {
+  border-radius: 100%;
   bottom: -20px;
   content: '';
   left: -20px;
@@ -47,12 +46,17 @@ limitations under the License.
   margin: 1px 0 0 1px;
 }
 
+.DdgNode--HtmlEmphasis.is-findMatch {
+  background-image: repeating-linear-gradient(-60deg, #fffb8f, #fff566 3px, #fffb8f 5px);
+  border: 1px dashed rgba(173, 139, 0, 0.5);
+}
+
+.DdgNode--HtmlEmphasis.is-focalNode {
+  background-image: repeating-linear-gradient(30deg, transparent, #eb2f96 3px, transparent 5px);
+  border: 1px dashed #eb2f96;
+}
+
 .DdgNode--VectorFindEmphasis--colorBand {
   stroke: #fef876;
   stroke-width: 10;
-}
-
-.DdgNode--VectorFindEmphasis--outline {
-  stroke: rgba(173, 139, 0, 0.5);
-  stroke-width: 12;
 }

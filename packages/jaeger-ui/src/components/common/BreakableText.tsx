@@ -35,10 +35,11 @@ export default function BreakableText(
   }
   const spans = [];
   wordRegexp.exec('');
-  let match = wordRegexp.exec(text);
+  // if the given text has no words, set the first match to the entire text
+  let match: RegExpExecArray | string[] | null = wordRegexp.exec(text) || [text];
   while (match) {
     spans.push(
-      <span key={`word-${spans.length}`} className={className}>
+      <span key={`${text}-${spans.length}`} className={className}>
         {match[0]}
       </span>
     );
