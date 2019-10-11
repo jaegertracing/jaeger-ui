@@ -78,6 +78,7 @@ export type TDdgDistanceToPathElems = Map<number, PathElem[]>;
 
 export type TDdgModel = {
   distanceToPathElems: TDdgDistanceToPathElems;
+  hash: string;
   paths: TDdgPath[];
   services: TDdgServiceMap;
   visIdxToPathElem: PathElem[];

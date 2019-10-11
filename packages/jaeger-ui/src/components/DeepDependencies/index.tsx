@@ -171,9 +171,9 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
   toggleShowOperations = (enable: boolean) => this.updateUrlState({ showOp: enable });
 
   updateUrlState = (newValues: Partial<TDdgSparseUrlState>) => {
-    const { graph, history, uiFind, urlState } = this.props;
+    const { graphState, history, uiFind, urlState } = this.props;
     const getUrlArg = { uiFind, ...urlState, ...newValues };
-    const hash = graph && graph.hash;
+    const hash = _get(graphState, 'model.hash');
     if (hash) getUrlArg.hash = hash;
     history.push(getUrl(getUrlArg));
   };
@@ -273,7 +273,7 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
     graphState,
     services,
     operationsForService,
-    urlState: sanitizeUrlState(urlState, graph && graph.hash),
+    urlState: sanitizeUrlState(urlState, _get(graphState, 'model.hash')),
     ...extractUiFindFromState(state),
   };
 }

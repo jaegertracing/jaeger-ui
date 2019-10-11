@@ -135,16 +135,19 @@ describe('DeepDependencyGraphPage', () => {
         expect(props.history.push).toHaveBeenCalledTimes(1);
       });
 
-      it('includes props.graph.hash iff it is truthy', () => {
+      it('includes props.graphState.model.hash iff it is truthy', () => {
         ddgPageImpl.updateUrlState({});
         expect(getUrlSpy).toHaveBeenLastCalledWith(expect.not.objectContaining({ hash: expect.anything() }));
 
         const hash = 'testHash';
         const propsWithHash = {
           ...props,
-          graph: {
-            ...props.graph,
-            hash,
+          graphState: {
+            ...props.graphState,
+            model: {
+              ...props.graphState.model,
+              hash,
+            },
           },
         };
         const ddgPageWithHash = new DeepDependencyGraphPageImpl(propsWithHash);
@@ -368,12 +371,13 @@ describe('DeepDependencyGraphPage', () => {
       },
     };
     const ownProps = { location: { search } };
-    const mockGraph = { hash: 'testHash', getVisible: () => ({}) };
+    const mockGraph = { getVisible: () => ({}) };
+    const hash = 'testHash';
     const doneState = _set(
       { ...state },
       ['ddg', getStateEntryKey({ service, operation, start: 0, end: 0 })],
       {
-        model: {},
+        model: { hash },
         state: fetchedState.DONE,
       }
     );
@@ -443,7 +447,7 @@ describe('DeepDependencyGraphPage', () => {
 
     it('sanitizes urlState', () => {
       mapStateToProps(doneState, ownProps);
-      expect(sanitizeUrlStateSpy).toHaveBeenLastCalledWith(expected.urlState, mockGraph.hash);
+      expect(sanitizeUrlStateSpy).toHaveBeenLastCalledWith(expected.urlState, hash);
     });
   });
 });
