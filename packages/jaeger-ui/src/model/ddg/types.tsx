@@ -51,9 +51,15 @@ export type TDdgPayloadEntry = {
 };
 
 export type TDdgPayload = {
-  path: TDdgPayloadEntry[];
-  trace_id: string; // eslint-disable-line camelcase
-}[];
+  dependencies: {
+    path: TDdgPayloadEntry[];
+    // TODO: Everett Tech Debt: Fix KeyValuePair types
+    attributes: {
+      key: 'exemplar_trace_id'; // eslint-disable-line camelcase
+      value: string;
+    }[];
+  }[];
+};
 
 export type TDdgService = {
   name: string;
@@ -71,7 +77,7 @@ export type TDdgServiceMap = Map<string, TDdgService>;
 export type TDdgPath = {
   focalIdx: number;
   members: PathElem[];
-  traceID: string;
+  traceIDs: string[];
 };
 
 export type TDdgDistanceToPathElems = Map<number, PathElem[]>;

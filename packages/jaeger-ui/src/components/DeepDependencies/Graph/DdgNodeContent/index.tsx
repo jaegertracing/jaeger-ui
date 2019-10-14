@@ -83,25 +83,30 @@ export default class DdgNodeContent extends React.PureComponent<TProps> {
     const { vertexKey, getVisiblePathElems } = this.props;
     const elems = getVisiblePathElems(vertexKey);
     if (elems) {
-      const ids: Set<string> = new Set();
+      const urlIds: Set<string> = new Set();
       let currLength = MIN_LENGTH;
-      for (let i = 0; i < elems.length; i++) {
-        const id = elems[i].memberOf.traceID;
-        if (ids.has(id)) {
-          continue;
-        }
-        // Keep track of the length, then break if it is too long, to avoid opening a tab with a URL that the
-        // backend cannot process, even if there are more traceIDs
-        currLength += PARAM_NAME_LENGTH + id.length;
-        if (currLength > MAX_LENGTH) {
-          break;
-        }
-        ids.add(id);
-        if (ids.size >= MAX_LINKED_TRACES) {
-          break;
+      // Because there is a limit on traceIDs, attempt to get some from each elem rather than all from one.
+      const allIDs = elems.map(({ memberOf: m }) => m.traceIDs.slice());
+      while (allIDs.length) {
+        const ids = allIDs.shift();
+        if (ids && ids.length) {
+          const id = ids.pop();
+          if (id && !urlIds.has(id)) {
+            // Keep track of the length, then break if it is too long, to avoid opening a tab with a URL that
+            // the backend cannot process, even if there are more traceIDs
+            currLength += PARAM_NAME_LENGTH + id.length;
+            if (currLength > MAX_LENGTH) {
+              break;
+            }
+            urlIds.add(id);
+            if (urlIds.size >= MAX_LINKED_TRACES) {
+              break;
+            }
+          }
+          allIDs.push(ids);
         }
       }
-      window.open(getSearchUrl({ traceID: Array.from(ids) }), '_blank');
+      window.open(getSearchUrl({ traceID: Array.from(urlIds) }), '_blank');
     }
   };
 
