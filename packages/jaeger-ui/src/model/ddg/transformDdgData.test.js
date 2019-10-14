@@ -166,8 +166,8 @@ describe('transform ddg data', () => {
   it('throws an error if a path lacks the focalPayloadElem', () => {
     const { simplePath, noFocalPath, doubleFocalPath, focalPayloadElem } = testResources;
     expect(() =>
-      testResources.wrap(transformDdgData([simplePath, noFocalPath, doubleFocalPath]), focalPayloadElem)
-    ).toThrowError();
+      transformDdgData(testResources.wrap([simplePath, noFocalPath, doubleFocalPath]), focalPayloadElem)
+    ).toThrowError(/focalNode/);
   });
 
   it('creates equal hashes iff paths are equivalent', () => {
