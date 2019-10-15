@@ -26,7 +26,7 @@ describe('transform ddg data', () => {
       ? { service: focalPayloadElem.service }
       : focalPayloadElem;
     const { paths, services, visIdxToPathElem } = transformDdgData(
-      payload.map(testResources.wrap),
+      testResources.wrap(payload),
       focalPayloadElemArgument
     );
 
@@ -124,11 +124,11 @@ describe('transform ddg data', () => {
       almostDoubleFocalPath,
     } = testResources;
     const { visIdxToPathElem: presortedPathsVisIdxToPathElem } = transformDdgData(
-      [simplePath, doubleFocalPath, almostDoubleFocalPath, longSimplePath].map(testResources.wrap),
+      testResources.wrap([simplePath, doubleFocalPath, almostDoubleFocalPath, longSimplePath]),
       focalPayloadElem
     );
     const { visIdxToPathElem: unsortedPathsVisIdxToPathElem } = transformDdgData(
-      [longSimplePath, almostDoubleFocalPath, simplePath, doubleFocalPath].map(testResources.wrap),
+      testResources.wrap([longSimplePath, almostDoubleFocalPath, simplePath, doubleFocalPath]),
       focalPayloadElem
     );
 
@@ -166,21 +166,43 @@ describe('transform ddg data', () => {
   it('throws an error if a path lacks the focalPayloadElem', () => {
     const { simplePath, noFocalPath, doubleFocalPath, focalPayloadElem } = testResources;
     expect(() =>
-      transformDdgData([simplePath, noFocalPath, doubleFocalPath].map(testResources.wrap), focalPayloadElem)
-    ).toThrowError();
+      transformDdgData(testResources.wrap([simplePath, noFocalPath, doubleFocalPath]), focalPayloadElem)
+    ).toThrowError(/focalNode/);
   });
 
   it('creates equal hashes iff paths are equivalent', () => {
     const { focalPayloadElem, doubleFocalPath, longSimplePath, simplePath, wrap } = testResources;
-    const simpleModel = transformDdgData([simplePath, longSimplePath].map(wrap), focalPayloadElem);
-    const reverseModel = transformDdgData([longSimplePath, simplePath].map(wrap), focalPayloadElem);
+    const simpleModel = transformDdgData(wrap([simplePath, longSimplePath]), focalPayloadElem);
+    const reverseModel = transformDdgData(wrap([longSimplePath, simplePath]), focalPayloadElem);
 
     expect(reverseModel).not.toEqual(simpleModel);
     expect(reverseModel).not.toBe(simpleModel);
     expect(reverseModel.hash).toBe(simpleModel.hash);
 
-    const diffModel = transformDdgData([doubleFocalPath].map(wrap), focalPayloadElem);
+    const diffModel = transformDdgData(wrap([doubleFocalPath]), focalPayloadElem);
 
     expect(diffModel.hash).not.toBe(simpleModel.hash);
+  });
+
+  it('adds traceIDs to paths from attributes', () => {
+    const { focalPayloadElem, doubleFocalPath, simplePath, wrap } = testResources;
+    const payload = wrap([simplePath, doubleFocalPath]);
+    payload.dependencies.forEach((dependency, i) => {
+      // eslint-disable-next-line no-param-reassign
+      dependency.attributes = [
+        {
+          key: 'exemplar_trace_id',
+          value: `trace ${i} a`,
+        },
+        {
+          key: 'exemplar_trace_id',
+          value: `trace ${i} b`,
+        },
+      ];
+    });
+    const model = transformDdgData(payload, focalPayloadElem);
+    model.paths.forEach((path, i) => {
+      expect(path.traceIDs).toEqual([`trace ${i} a`, `trace ${i} b`]);
+    });
   });
 });

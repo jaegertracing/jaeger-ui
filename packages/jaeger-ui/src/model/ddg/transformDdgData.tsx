@@ -26,8 +26,18 @@ import {
 
 const stringifyEntry = ({ service, operation }: TDdgPayloadEntry) => `${service}\v${operation}`;
 
+// TODO: Everett Tech Debt: Fix KeyValuePair types
+function group(arg: { key: string; value: any }[]): Record<string, any[]> {
+  const result: Record<string, any[]> = {};
+  arg.forEach(({ key, value }) => {
+    if (!result[key]) result[key] = [];
+    result[key].push(value);
+  });
+  return result;
+}
+
 export default function transformDdgData(
-  payload: TDdgPayload,
+  { dependencies }: TDdgPayload,
   { service: focalService, operation: focalOperation }: { service: string; operation?: string }
 ): TDdgModel {
   const serviceMap: TDdgServiceMap = new Map();
@@ -35,7 +45,7 @@ export default function transformDdgData(
   const pathCompareValues: Map<TDdgPayloadEntry[], string> = new Map();
   const hashArg: string[] = [];
 
-  const paths = payload
+  const paths = dependencies
     .sort(({ path: a }, { path: b }) => {
       let aCompareValue = pathCompareValues.get(a);
       if (!aCompareValue) {
@@ -51,13 +61,15 @@ export default function transformDdgData(
       if (aCompareValue < bCompareValue) return -1;
       return 0;
     })
-    // eslint-disable-next-line camelcase
-    .map(({ path: payloadPath, trace_id }) => {
+    .map(({ path: payloadPath, attributes }) => {
       // Default value necessary as sort is not called if there is only one path
       hashArg.push(pathCompareValues.get(payloadPath) || payloadPath.map(stringifyEntry).join());
 
+      // eslint-disable-next-line camelcase
+      const { exemplar_trace_id: traceIDs } = group(attributes);
+
       // Path with stand-in values is necessary for assigning PathElem.memberOf
-      const path: TDdgPath = { focalIdx: -1, members: [], traceID: trace_id };
+      const path: TDdgPath = { focalIdx: -1, members: [], traceIDs };
 
       path.members = payloadPath.map(({ operation: operationName, service: serviceName }, i) => {
         // Ensure pathElem.service exists, else create it
