@@ -94,60 +94,57 @@ export class SearchTracePageImpl extends Component {
     const hasTraceResults = traceResults && traceResults.length > 0;
     const showErrors = errors && !loadingTraces;
     const showLogo = isHomepage && !hasTraceResults && !loadingTraces && !errors;
-
     return (
-      <div>
-        <Row>
-          {!embedded && (
-            <Col span={6} className="SearchTracePage--column">
-              <div className="SearchTracePage--find">
-                <Tabs size="large">
-                  <TabPane tab="Search" key="searchForm">
-                    {!loadingServices && services ? <SearchForm services={services} /> : <LoadingIndicator />}
-                  </TabPane>
-                  <TabPane tab="JSON File" key="fileLoader">
-                    <FileLoader loadJsonTraces={loadJsonTraces} />
-                  </TabPane>
-                </Tabs>
-              </div>
-            </Col>
-          )}
-          <Col span={!embedded ? 18 : 24} className="SearchTracePage--column">
-            {showErrors && (
-              <div className="js-test-error-message">
-                <h2>There was an error querying for traces:</h2>
-                {errors.map(err => (
-                  <ErrorMessage key={err.message} error={err} />
-                ))}
-              </div>
-            )}
-            {!showErrors && (
-              <SearchResults
-                cohortAddTrace={cohortAddTrace}
-                cohortRemoveTrace={cohortRemoveTrace}
-                diffCohort={diffCohort}
-                disableComparisons={embedded}
-                goToTrace={this.goToTrace}
-                hideGraph={embedded && embedded.searchHideGraph}
-                loading={loadingTraces}
-                maxTraceDuration={maxTraceDuration}
-                queryOfResults={queryOfResults}
-                showStandaloneLink={Boolean(embedded)}
-                skipMessage={isHomepage}
-                traces={traceResults}
-              />
-            )}
-            {showLogo && (
-              <img
-                className="SearchTracePage--logo js-test-logo"
-                alt="presentation"
-                src={JaegerLogo}
-                width="400"
-              />
-            )}
+      <Row className="SearchTracePage--row">
+        {!embedded && (
+          <Col span={6} className="SearchTracePage--column">
+            <div className="SearchTracePage--find">
+              <Tabs size="large">
+                <TabPane tab="Search" key="searchForm">
+                  {!loadingServices && services ? <SearchForm services={services} /> : <LoadingIndicator />}
+                </TabPane>
+                <TabPane tab="JSON File" key="fileLoader">
+                  <FileLoader loadJsonTraces={loadJsonTraces} />
+                </TabPane>
+              </Tabs>
+            </div>
           </Col>
-        </Row>
-      </div>
+        )}
+        <Col span={!embedded ? 18 : 24} className="SearchTracePage--column">
+          {showErrors && (
+            <div className="js-test-error-message">
+              <h2>There was an error querying for traces:</h2>
+              {errors.map(err => (
+                <ErrorMessage key={err.message} error={err} />
+              ))}
+            </div>
+          )}
+          {!showErrors && (
+            <SearchResults
+              cohortAddTrace={cohortAddTrace}
+              cohortRemoveTrace={cohortRemoveTrace}
+              diffCohort={diffCohort}
+              disableComparisons={embedded}
+              goToTrace={this.goToTrace}
+              hideGraph={embedded && embedded.searchHideGraph}
+              loading={loadingTraces}
+              maxTraceDuration={maxTraceDuration}
+              queryOfResults={queryOfResults}
+              showStandaloneLink={Boolean(embedded)}
+              skipMessage={isHomepage}
+              traces={traceResults}
+            />
+          )}
+          {showLogo && (
+            <img
+              className="SearchTracePage--logo js-test-logo"
+              alt="presentation"
+              src={JaegerLogo}
+              width="400"
+            />
+          )}
+        </Col>
+      </Row>
     );
   }
 }
@@ -249,11 +246,9 @@ export function mapStateToProps(state) {
   if (serviceError) {
     errors.push(serviceError);
   }
-  const location = router.location;
   const sortBy = sortFormSelector(state, 'sortBy');
   const traceResults = sortedTracesXformer(traces, sortBy);
   return {
-    location,
     queryOfResults,
     diffCohort,
     embedded,

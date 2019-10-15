@@ -40,7 +40,7 @@ import type { SearchQuery } from '../../../types/search';
 
 import './index.css';
 import AltViewOptions from './AltViewOptions';
-import SearchResultsDGG from '../../DeepDependencies/traces';
+import SearchResultsDDG from '../../DeepDependencies/traces';
 
 type SearchResultsProps = {
   cohortAddTrace: string => void,
@@ -102,12 +102,6 @@ export class UnconnectedSearchResults extends React.PureComponent<SearchResultsP
     }
   };
 
-  updateUrlState = () => {
-    const { location, history } = this.props;
-    const urlState = queryString.parse(location.search);
-    history.push(getUrl({ ...urlState, view: 'ddg' }));
-  };
-
   onTraceGraphViewClicked = () => {
     const { location, history } = this.props;
     const urlState = queryString.parse(location.search);
@@ -163,71 +157,67 @@ export class UnconnectedSearchResults extends React.PureComponent<SearchResultsP
     const cohortIds = new Set(diffCohort.map(datum => datum.id));
     const searchUrl = queryOfResults ? getUrl(stripEmbeddedState(queryOfResults)) : getUrl();
     return (
-      <div>
-        <div>
-          <div className="SearchResults--header">
-            {!hideGraph && traceResultsView && (
-              <div className="ub-p3">
-                <ScatterPlot
-                  data={traces.map(t => ({
-                    x: t.startTime,
-                    y: t.duration,
-                    traceID: t.traceID,
-                    size: t.spans.length,
-                    name: t.traceName,
-                  }))}
-                  onValueClick={t => {
-                    goToTrace(t.traceID);
-                  }}
-                />
-              </div>
-            )}
-            <div className="SearchResults--headerOverview">
-              <h2 className="ub-m0 u-flex-1">
-                {traces.length} Trace{traces.length > 1 && 's'}
-              </h2>
-              {traceResultsView && <SelectSort />}
-              <AltViewOptions
-                traceResultsView={traceResultsView}
-                onTraceGraphViewClicked={this.onTraceGraphViewClicked}
+      <div className="SearchResults">
+        <div className="SearchResults--header">
+          {!hideGraph && traceResultsView && (
+            <div className="ub-p3 SearchResults--headerScatterPlot">
+              <ScatterPlot
+                data={traces.map(t => ({
+                  x: t.startTime,
+                  y: t.duration,
+                  traceID: t.traceID,
+                  size: t.spans.length,
+                  name: t.traceName,
+                }))}
+                onValueClick={t => {
+                  goToTrace(t.traceID);
+                }}
               />
-              {showStandaloneLink && (
-                <Link
-                  className="u-tx-inherit ub-nowrap ub-ml3"
-                  to={searchUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <NewWindowIcon isLarge />
-                </Link>
-              )}
             </div>
+          )}
+          <div className="SearchResults--headerOverview">
+            <h2 className="ub-m0 u-flex-1">
+              {traces.length} Trace{traces.length > 1 && 's'}
+            </h2>
+            {traceResultsView && <SelectSort />}
+            <AltViewOptions
+              traceResultsView={traceResultsView}
+              onTraceGraphViewClicked={this.onTraceGraphViewClicked}
+            />
+            {showStandaloneLink && (
+              <Link
+                className="u-tx-inherit ub-nowrap ub-ml3"
+                to={searchUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <NewWindowIcon isLarge />
+              </Link>
+            )}
           </div>
         </div>
-        <div>
-          {!traceResultsView && (
-            <div className="SearchResults--ddg-container">
-              <SearchResultsDGG location={location} history={history} />
-            </div>
-          )}
-          {traceResultsView && diffSelection}
-          {traceResultsView && (
-            <ul className="ub-list-reset">
-              {traces.map(trace => (
-                <li className="ub-my3" key={trace.traceID}>
-                  <ResultItem
-                    durationPercent={getPercentageOfDuration(trace.duration, maxTraceDuration)}
-                    isInDiffCohort={cohortIds.has(trace.traceID)}
-                    linkTo={getLocation(trace.traceID, { fromSearch: searchUrl })}
-                    toggleComparison={this.toggleComparison}
-                    trace={trace}
-                    disableComparision={disableComparisons}
-                  />
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+        {!traceResultsView && (
+          <div className="SearchResults--ddg-container">
+            <SearchResultsDDG location={location} history={history} />
+          </div>
+        )}
+        {traceResultsView && diffSelection}
+        {traceResultsView && (
+          <ul className="ub-list-reset">
+            {traces.map(trace => (
+              <li className="ub-my3" key={trace.traceID}>
+                <ResultItem
+                  durationPercent={getPercentageOfDuration(trace.duration, maxTraceDuration)}
+                  isInDiffCohort={cohortIds.has(trace.traceID)}
+                  linkTo={getLocation(trace.traceID, { fromSearch: searchUrl })}
+                  toggleComparison={this.toggleComparison}
+                  trace={trace}
+                  disableComparision={disableComparisons}
+                />
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     );
   }

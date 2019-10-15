@@ -29,19 +29,19 @@ limitations under the License.
 .DdgHeader--controlHeader {
   align-items: center;
   background-color: #f6f6f6;
-  border-top: 1px solid #eee;
   display: flex;
   justify-content: space-between;
   padding-left: 1.25rem;
 }
 
 .DdgHeader--paramsHeader {
-  flex-wrap: wrap;
-  font-size: unset;
   align-items: center;
   background: #fafafa;
+  border-bottom: 1px solid #eee;
   display: flex;
   flex: 1;
+  flex-wrap: wrap;
+  font-size: unset;
   margin: 0;
   padding: 0.75rem 1.25rem 0.75rem 1.25rem;
   position: relative;

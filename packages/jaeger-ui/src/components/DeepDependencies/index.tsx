@@ -62,11 +62,11 @@ export type TReduxProps = TExtractUiFindFromStateReturn & {
 };
 
 export type TOwnProps = {
-  history: RouterHistory;
-  location: Location;
-  showServicesOpsHeader: boolean;
   baseUrl: string;
   extraUrlArgs?: { [key: string]: unknown };
+  history: RouterHistory;
+  location: Location;
+  showSvcOpsHeader: boolean;
 };
 
 export type TProps = TDispatchProps & TReduxProps & TOwnProps;
@@ -74,7 +74,7 @@ export type TProps = TDispatchProps & TReduxProps & TOwnProps;
 // export for tests
 export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
   static defaultProps = {
-    showServicesOpsHeader: true,
+    showSvcOpsHeader: true,
     baseUrl: ROUTE_PATH,
   };
 
@@ -187,15 +187,15 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
 
   render() {
     const {
+      baseUrl,
+      extraUrlArgs,
       graph,
       graphState,
       operationsForService,
       services,
       uiFind,
       urlState,
-      showServicesOpsHeader,
-      baseUrl,
-      extraUrlArgs,
+      showSvcOpsHeader,
     } = this.props;
     const { density, operation, service, showOp, visEncoding } = urlState;
     const distanceToPathElems =
@@ -247,7 +247,7 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
       <div className="Ddg">
         <div ref={this.headerWrapper}>
           <Header
-            showParameters={showServicesOpsHeader}
+            showParameters={showSvcOpsHeader}
             density={density}
             distanceToPathElems={distanceToPathElems}
             hiddenUiFindMatches={hiddenUiFindMatches}
@@ -298,7 +298,7 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
   };
 }
 
-// export for tests
+// export for traces ddg
 export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
   const { fetchDeepDependencyGraph, fetchServiceOperations, fetchServices } = bindActionCreators(
     jaegerApiActions,

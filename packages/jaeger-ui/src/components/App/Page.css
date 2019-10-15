@@ -23,6 +23,8 @@ limitations under the License.
 }
 
 .Page--content {
+  display: flex;
+  flex-direction: column;
   left: 0;
   min-height: calc(100% - 46px);
   position: absolute;

@@ -24,7 +24,7 @@ export default function AltViewOptions(props: Props) {
   const { onTraceGraphViewClicked, traceResultsView } = props;
   return (
     <Button className="ub-ml2" htmlType="button" onClick={onTraceGraphViewClicked}>
-      {traceResultsView ? 'Deep dependency graph' : 'Trace Results'}
+      {traceResultsView ? 'Deep Dependency Graph' : 'Trace Results'}
     </Button>
   );
 }

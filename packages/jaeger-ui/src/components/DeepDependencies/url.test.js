@@ -52,6 +52,11 @@ describe('DeepDependencyGraph/url', () => {
       expect(getUrl({})).toBe('/deep-dependencies');
     });
 
+    it('uses given baseUrl', () => {
+      const baseUrl = 'test base url';
+      expect(getUrl({}, baseUrl)).toBe(baseUrl);
+    });
+
     it('includes provided args', () => {
       const paramA = 'aParam';
       const paramB = 'bParam';

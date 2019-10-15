@@ -42,7 +42,6 @@ type TProps = {
   uiFindCount: number | undefined;
   visEncoding?: string;
   showParameters?: boolean;
-  extraUrlArgs?: { [key: string]: unknown };
 };
 export default class Header extends React.PureComponent<TProps> {
   private _uiFindInput: React.RefObject<Input> = React.createRef();
@@ -110,7 +109,6 @@ export default class Header extends React.PureComponent<TProps> {
       toggleShowOperations,
       visEncoding,
       showParameters,
-      extraUrlArgs,
     } = this.props;
 
     return (
@@ -148,7 +146,6 @@ export default class Header extends React.PureComponent<TProps> {
             distanceToPathElems={distanceToPathElems}
             handleClick={setDistance}
             visEncoding={visEncoding}
-            extraUrlArgs={extraUrlArgs}
           />
           <div className="DdgHeader--findWrapper">
             <div className="DdgHeader--uiFind" role="button" onClick={this.focusUiFindInput}>

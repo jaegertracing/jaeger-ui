@@ -23,7 +23,7 @@ type Node = {
 };
 
 const hasFocal = (path: TDdgPayloadEntry[], focalService: string, focalOperation: string | undefined) => {
-  for (let i = 0; i < path.length; ++i) {
+  for (let i = 0; i < path.length; i++) {
     if (
       focalService === path[i].service &&
       (focalOperation === undefined || focalOperation === path[i].operation)
@@ -46,25 +46,28 @@ export default function(
   focalOperation: string | undefined
 ) {
   const paths: TDdgPayload = [];
-  Object.values(traces).forEach(trace => {
-    const map: Map<string, Span> = new Map();
-    if (trace.data) {
-      const traceId = trace.data.traceID;
-      trace.data.spans
+  Object.values(traces).forEach(({ data }) => {
+    if (data) {
+      const spanMap: Map<string, Span> = new Map();
+      const { traceID } = data;
+      data.spans
         .filter(span => {
-          map.set(span.spanID, span);
+          spanMap.set(span.spanID, span);
           return !span.hasChildren;
         })
         .forEach(leaf => {
-          const path = spanAncestorIds(leaf)
-            // @ts-ignore
-            .map(id => convertSpan(map.get(id), trace.data));
-          // @ts-ignore
-          path.push(convertSpan(map.get(leaf.spanID), trace.data));
+          const path = spanAncestorIds(leaf).map(id => {
+            const span = spanMap.get(id);
+            if (!span) throw new Error(`Ancestor spanID ${id} not found in trace ${traceID}`);
+
+            return convertSpan(span, data);
+          });
+          path.push(convertSpan(leaf, data));
+
           if (hasFocal(path, focalService, focalOperation)) {
             paths.push({
               path,
-              trace_id: traceId,
+              trace_id: traceID,
             });
           }
         });
