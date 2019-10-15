@@ -53,17 +53,17 @@ describe('transform traces to ddg paths', () => {
   const childSpan = makeSpan('child', rootSpan);
   const grandchildSpan = makeSpan('grandchild', childSpan);
 
-  it('transforms single short trace results payload', () => {
+  it('transforms single short trace result payload', () => {
     const traces = {
       [shortTraceID]: makeTrace([rootSpan, { ...childSpan, hasChildren: false }], shortTraceID),
     };
 
-    const result = transformTracesToPaths(traces, 'child service');
+    const { dependencies: result } = transformTracesToPaths(traces, 'child service');
     expect(result.length).toBe(1);
     expect(result[0].path.length).toBe(2);
   });
 
-  it('transforms multiple traces results payload', () => {
+  it('transforms multiple traces result payload', () => {
     const traces = {
       [shortTraceID]: makeTrace([rootSpan, { ...childSpan, hasChildren: false }], shortTraceID),
       [linearTraceID]: makeTrace(
@@ -72,7 +72,7 @@ describe('transform traces to ddg paths', () => {
       ),
     };
 
-    const result = transformTracesToPaths(traces, 'child service');
+    const { dependencies: result } = transformTracesToPaths(traces, 'child service');
     expect(result.length).toBe(2);
     expect(result[0].path.length).toBe(2);
     expect(result[1].path.length).toBe(3);
@@ -90,7 +90,7 @@ describe('transform traces to ddg paths', () => {
       ),
     };
 
-    const result = transformTracesToPaths(traces, 'child service');
+    const { dependencies: result } = transformTracesToPaths(traces, 'child service');
     expect(result.length).toBe(1);
     expect(result[0].path.length).toBe(3);
   });
@@ -109,12 +109,12 @@ describe('transform traces to ddg paths', () => {
       ),
     };
 
-    const result = transformTracesToPaths(traces, 'child service');
+    const { dependencies: result } = transformTracesToPaths(traces, 'child service');
     expect(result.length).toBe(2);
     expect(result[0].path.length).toBe(2);
     expect(result[1].path.length).toBe(3);
 
-    const resultWithOp = transformTracesToPaths(traces, 'child service', 'child operation');
+    const { dependencies: resultWithOp } = transformTracesToPaths(traces, 'child service', 'child operation');
     expect(resultWithOp.length).toBe(1);
     expect(resultWithOp[0].path.length).toBe(3);
   });
@@ -127,7 +127,7 @@ describe('transform traces to ddg paths', () => {
       ),
     };
 
-    const result = transformTracesToPaths(traces, 'child service');
+    const { dependencies: result } = transformTracesToPaths(traces, 'child service');
     expect(result.length).toBe(2);
     expect(result[0].path.length).toBe(2);
     expect(result[1].path.length).toBe(3);
@@ -147,7 +147,7 @@ describe('transform traces to ddg paths', () => {
       noData: {},
     };
 
-    const result = transformTracesToPaths(traces, 'child service');
+    const { dependencies: result } = transformTracesToPaths(traces, 'child service');
     expect(result.length).toBe(1);
   });
 });

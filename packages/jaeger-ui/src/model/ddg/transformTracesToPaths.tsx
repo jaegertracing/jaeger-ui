@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { TDdgPayloadEntry, TDdgPayload } from './types';
+import { TDdgPayloadEntry, TDdgPayloadPath, TDdgPayload } from './types';
 import { Span, Trace } from '../../types/trace';
 import { FetchedTrace } from '../../types';
 import spanAncestorIds from '../../utils/span-ancestor-ids';
@@ -44,8 +44,8 @@ export default function(
   traces: Record<string, FetchedTrace>,
   focalService: string,
   focalOperation: string | undefined
-) {
-  const paths: TDdgPayload = [];
+): TDdgPayload {
+  const dependencies: TDdgPayloadPath[] = [];
   Object.values(traces).forEach(({ data }) => {
     if (data) {
       const spanMap: Map<string, Span> = new Map();
@@ -65,13 +65,18 @@ export default function(
           path.push(convertSpan(leaf, data));
 
           if (hasFocal(path, focalService, focalOperation)) {
-            paths.push({
+            dependencies.push({
               path,
-              trace_id: traceID,
+              attributes: [
+                {
+                  key: 'exemplar_trace_id',
+                  value: traceID,
+                },
+              ],
             });
           }
         });
     }
   });
-  return paths;
+  return { dependencies };
 }

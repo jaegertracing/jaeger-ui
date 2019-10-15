@@ -25,9 +25,9 @@ import { EDdgDensity } from '../types';
 import { encode } from '../visibility-codec';
 
 describe('GraphModel', () => {
-  const convergentModel = transformDdgData(convergentPaths.map(wrap), focalPayloadElem);
-  const doubleFocalModel = transformDdgData([doubleFocalPath, simplePath].map(wrap), focalPayloadElem);
-  const simpleModel = transformDdgData([simplePath].map(wrap), focalPayloadElem);
+  const convergentModel = transformDdgData(wrap(convergentPaths), focalPayloadElem);
+  const doubleFocalModel = transformDdgData(wrap([doubleFocalPath, simplePath]), focalPayloadElem);
+  const simpleModel = transformDdgData(wrap([simplePath]), focalPayloadElem);
 
   /**
    * This function takes in a Graph and validates the structure based on the expected vertices.
@@ -69,12 +69,13 @@ describe('GraphModel', () => {
   }
 
   describe('constructor', () => {
+    const testGraph = new GraphModel({
+      ddgModel: simpleModel,
+      density: EDdgDensity.PreventPathEntanglement,
+      showOp: true,
+    });
+
     it('creates five vertices and four edges for one-path ddg', () => {
-      const testGraph = new GraphModel({
-        ddgModel: simpleModel,
-        density: EDdgDensity.PreventPathEntanglement,
-        showOp: true,
-      });
       validateGraph(testGraph, [
         {
           visIndices: [0],

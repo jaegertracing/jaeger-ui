@@ -89,4 +89,6 @@ export const convergentPaths = [
   [firstPayloadElem, focalPayloadElem, divergentPayloadElem, afterPayloadElem, lastPayloadElem],
 ];
 
-export const wrap = path => ({ path });
+export const wrap = paths => ({
+  dependencies: paths.map(path => ({ path, attributes: [] })),
+});

@@ -14,6 +14,7 @@
 
 import GraphModel from './index';
 import transformDdgData from '../transformDdgData';
+import { wrap } from '../sample-paths.test.resources';
 import { EDdgDensity } from '../types';
 
 function makePayloadEntry(pairStr) {
@@ -30,12 +31,12 @@ const payload = `
 `
   .trim()
   .split('\n')
-  .map(line => ({
-    path: line
+  .map(line =>
+    line
       .trim()
       .split(/\s+/g)
-      .map(makePayloadEntry),
-  }));
+      .map(makePayloadEntry)
+  );
 
 const testTable = [
   // showOp, density, number of expected vertices
@@ -52,7 +53,7 @@ const testTable = [
 ];
 
 describe('getPathElemHasher()', () => {
-  const ddgModel = transformDdgData(payload, makePayloadEntry('focal:focal'));
+  const ddgModel = transformDdgData(wrap(payload), makePayloadEntry('focal:focal'));
 
   describe('creates vertices based on density and showOp', () => {
     it.each(testTable)('showOp: %p \t density: %p', (showOp, density, verticesCount) => {

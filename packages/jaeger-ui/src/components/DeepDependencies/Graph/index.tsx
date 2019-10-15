@@ -62,9 +62,12 @@ export default class Graph extends PureComponent<TProps> {
   private getSetOnEdge = memoize(getSetOnEdge);
 
   private layoutManager: LayoutManager = new LayoutManager({
-    useDotEdges: true,
-    splines: 'polyline',
+    nodesep: 0.55,
+    ranksep: 1.5,
     rankdir: 'TB',
+    shape: 'circle',
+    splines: 'polyline',
+    useDotEdges: true,
   });
 
   private emptyFindSet: Set<TDdgVertex> = new Set();
@@ -100,14 +103,9 @@ export default class Graph extends PureComponent<TProps> {
         measurableNodesKey="nodes/content"
         layers={[
           {
-            key: 'nodes/find-emphasis/vector-outline',
-            layerType: 'svg',
-            renderNode: nodeRenderers.vectorFindOutline,
-          },
-          {
             key: 'nodes/find-emphasis/html',
             layerType: 'html',
-            renderNode: nodeRenderers.htmlFindEmphasis,
+            renderNode: nodeRenderers.htmlEmphasis,
           },
           {
             key: 'nodes/find-emphasis/vector-color-band',

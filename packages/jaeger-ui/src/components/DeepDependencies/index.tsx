@@ -20,7 +20,7 @@ import { connect } from 'react-redux';
 
 import Header from './Header';
 import Graph from './Graph';
-import { getUrl, getUrlState, ROUTE_PATH } from './url';
+import { getUrl, getUrlState, sanitizeUrlState, ROUTE_PATH } from './url';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
 import { extractUiFindFromState, TExtractUiFindFromStateReturn } from '../common/UiFindInput';
@@ -86,8 +86,6 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
       fetchDeepDependencyGraph({ service, operation, start: 0, end: 0 });
     }
   }
-
-  headerWrapper: React.RefObject<HTMLDivElement> = React.createRef();
 
   constructor(props: TProps) {
     super(props);
@@ -181,8 +179,11 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
   toggleShowOperations = (enable: boolean) => this.updateUrlState({ showOp: enable });
 
   updateUrlState = (newValues: Partial<TDdgSparseUrlState>) => {
-    const { uiFind, urlState, history, baseUrl, extraUrlArgs } = this.props;
-    history.push(getUrl({ uiFind, ...urlState, ...newValues, ...extraUrlArgs }, baseUrl));
+    const { baseUrl, extraUrlArgs, graphState, history, uiFind, urlState } = this.props;
+    const getUrlArg = { uiFind, ...urlState, ...newValues, ...extraUrlArgs };
+    const hash = _get(graphState, 'model.hash');
+    if (hash) getUrlArg.hash = hash;
+    history.push(getUrl(getUrlArg, baseUrl));
   };
 
   render() {
@@ -245,7 +246,7 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
 
     return (
       <div className="Ddg">
-        <div ref={this.headerWrapper}>
+        <div>
           <Header
             showParameters={showSvcOpsHeader}
             density={density}
@@ -293,7 +294,7 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
     graphState,
     services,
     operationsForService,
-    urlState,
+    urlState: sanitizeUrlState(urlState, _get(graphState, 'model.hash')),
     ...extractUiFindFromState(state),
   };
 }

@@ -67,8 +67,8 @@ describe('visibility-codec', () => {
   });
 
   describe('encodeDistance', () => {
-    const ddgModel = transformDdgData([longSimplePath, simplePath].map(wrap), focalPayloadElem);
-    const shortModel = transformDdgData([shortPath].map(wrap), focalPayloadElem);
+    const ddgModel = transformDdgData(wrap([longSimplePath, simplePath]), focalPayloadElem);
+    const shortModel = transformDdgData(wrap([shortPath]), focalPayloadElem);
 
     /**
      * Creates a visibility encoding containing all indices between two specified hops, inclusive, except

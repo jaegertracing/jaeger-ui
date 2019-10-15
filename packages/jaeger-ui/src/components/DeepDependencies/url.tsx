@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import _isEmpty from 'lodash/isEmpty';
+import memoizeOne from 'memoize-one';
 import queryString from 'query-string';
 import { matchPath } from 'react-router-dom';
 
@@ -53,10 +54,11 @@ function firstParam(arg: string | string[]): string {
   return arg;
 }
 
-export function getUrlState(search: string): TDdgSparseUrlState {
+export const getUrlState = memoizeOne(function getUrlState(search: string): TDdgSparseUrlState {
   const {
     density = EDdgDensity.PreventPathEntanglement,
     end,
+    hash,
     operation,
     service,
     showOp = '1',
@@ -69,6 +71,9 @@ export function getUrlState(search: string): TDdgSparseUrlState {
   };
   if (end) {
     rv.end = Number.parseInt(firstParam(end), 10);
+  }
+  if (hash) {
+    rv.hash = firstParam(hash);
   }
   if (operation) {
     rv.operation = firstParam(operation);
@@ -83,4 +88,15 @@ export function getUrlState(search: string): TDdgSparseUrlState {
     rv.visEncoding = firstParam(visEncoding);
   }
   return rv;
-}
+});
+
+export const sanitizeUrlState = memoizeOne(function sanitizeUrlStateImpl(
+  state: TDdgSparseUrlState,
+  hash?: string
+): TDdgSparseUrlState {
+  if (hash && state.hash === hash) {
+    return state;
+  }
+  const { visEncoding, ...sanitized } = state; // eslint-disable-line @typescript-eslint/no-unused-vars
+  return sanitized;
+});

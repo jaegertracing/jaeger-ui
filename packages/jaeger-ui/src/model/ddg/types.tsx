@@ -52,10 +52,16 @@ export type TDdgPayloadEntry = {
 
 export type TDdgPayloadPath = {
   path: TDdgPayloadEntry[];
-  trace_id: string; // eslint-disable-line camelcase
+  // TODO: Everett Tech Debt: Fix KeyValuePair types
+  attributes: {
+    key: 'exemplar_trace_id'; // eslint-disable-line camelcase
+    value: string;
+  }[];
 };
 
-export type TDdgPayload = TDdgPayloadPath[];
+export type TDdgPayload = {
+  dependencies: TDdgPayloadPath[];
+};
 
 export type TDdgService = {
   name: string;
@@ -73,13 +79,14 @@ export type TDdgServiceMap = Map<string, TDdgService>;
 export type TDdgPath = {
   focalIdx: number;
   members: PathElem[];
-  traceID: string;
+  traceIDs: string[];
 };
 
 export type TDdgDistanceToPathElems = Map<number, PathElem[]>;
 
 export type TDdgModel = {
   distanceToPathElems: TDdgDistanceToPathElems;
+  hash: string;
   paths: TDdgPath[];
   services: TDdgServiceMap;
   visIdxToPathElem: PathElem[];
@@ -95,6 +102,7 @@ export type TDdgVertex = TVertex<{
 export type TDdgSparseUrlState = {
   density: EDdgDensity;
   end?: number;
+  hash?: string;
   operation?: string;
   service?: string;
   showOp: boolean;

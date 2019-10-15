@@ -14,16 +14,26 @@
 
 import * as React from 'react';
 import cx from 'classnames';
-import { TMeasureNodeUtils, TRendererUtils } from '@jaegertracing/plexus/lib/Digraph/types';
-import { TLayoutVertex, TVertex } from '@jaegertracing/plexus/lib/types';
+import { TLayoutVertex } from '@jaegertracing/plexus/lib/types';
 
-import { focalNodeIcon, setFocusIcon } from './node-icons';
-import { getUrl } from '../url';
-import NewWindowIcon from '../../common/NewWindowIcon';
-import { getUrl as getSearchUrl } from '../../SearchTracePage/url';
-import { EDdgDensity, EViewModifier, TDdgVertex, PathElem } from '../../../model/ddg/types';
+import calcPositioning from './calc-positioning';
+import {
+  MAX_LENGTH,
+  MAX_LINKED_TRACES,
+  MIN_LENGTH,
+  OP_PADDING_TOP,
+  PARAM_NAME_LENGTH,
+  RADIUS,
+  WORD_RX,
+} from './constants';
+import { setFocusIcon } from './node-icons';
+import { getUrl } from '../../url';
+import BreakableText from '../../../common/BreakableText';
+import NewWindowIcon from '../../../common/NewWindowIcon';
+import { getUrl as getSearchUrl } from '../../../SearchTracePage/url';
+import { EDdgDensity, EViewModifier, TDdgVertex, PathElem } from '../../../../model/ddg/types';
 
-import './DdgNodeContent.css';
+import './index.css';
 
 type TProps = {
   focalNodeUrl: string | null;
@@ -36,18 +46,13 @@ type TProps = {
   vertexKey: string;
 };
 
-// While browsers support URLs of unlimited length, many server clients do not handle more than this max
-const MAX_LENGTH = 2083;
-const MAX_LINKED_TRACES = 35;
-const MIN_LENGTH = getSearchUrl().length;
-const PARAM_NAME_LENGTH = '&traceID='.length;
-
 export default class DdgNodeContent extends React.PureComponent<TProps> {
-  static measureNode(_: TVertex<any>, utils: TMeasureNodeUtils) {
-    const { height, width } = utils.getWrapperSize();
+  static measureNode() {
+    const diameter = 2 * (RADIUS + 1);
+
     return {
-      height: height + 2,
-      width: width + 2,
+      height: diameter,
+      width: diameter,
     };
   }
 
@@ -59,7 +64,7 @@ export default class DdgNodeContent extends React.PureComponent<TProps> {
     baseUrl: string,
     extraUrlArgs: { [key: string]: unknown } | undefined
   ) {
-    return function renderNode(vertex: TDdgVertex, utils: TRendererUtils, lv: TLayoutVertex<any> | null) {
+    return function renderNode(vertex: TDdgVertex, _: unknown, lv: TLayoutVertex<any> | null) {
       const { isFocalNode, key, operation, service } = vertex;
       return (
         <DdgNodeContent
@@ -82,25 +87,30 @@ export default class DdgNodeContent extends React.PureComponent<TProps> {
     const { vertexKey, getVisiblePathElems } = this.props;
     const elems = getVisiblePathElems(vertexKey);
     if (elems) {
-      const ids: Set<string> = new Set();
+      const urlIds: Set<string> = new Set();
       let currLength = MIN_LENGTH;
-      for (let i = 0; i < elems.length; i++) {
-        const id = elems[i].memberOf.traceID;
-        if (ids.has(id)) {
-          continue;
-        }
-        // Keep track of the length, then break if it is too long, to avoid opening a tab with a URL that the
-        // backend cannot process, even if there are more traceIDs
-        currLength += PARAM_NAME_LENGTH + id.length;
-        if (currLength > MAX_LENGTH) {
-          break;
-        }
-        ids.add(id);
-        if (ids.size >= MAX_LINKED_TRACES) {
-          break;
+      // Because there is a limit on traceIDs, attempt to get some from each elem rather than all from one.
+      const allIDs = elems.map(({ memberOf: m }) => m.traceIDs.slice());
+      while (allIDs.length) {
+        const ids = allIDs.shift();
+        if (ids && ids.length) {
+          const id = ids.pop();
+          if (id && !urlIds.has(id)) {
+            // Keep track of the length, then break if it is too long, to avoid opening a tab with a URL that
+            // the backend cannot process, even if there are more traceIDs
+            currLength += PARAM_NAME_LENGTH + id.length;
+            if (currLength > MAX_LENGTH) {
+              break;
+            }
+            urlIds.add(id);
+            if (urlIds.size >= MAX_LINKED_TRACES) {
+              break;
+            }
+          }
+          allIDs.push(ids);
         }
       }
-      window.open(getSearchUrl({ traceID: Array.from(ids) }), '_blank');
+      window.open(getSearchUrl({ traceID: Array.from(urlIds) }), '_blank');
     }
   };
 
@@ -111,6 +121,9 @@ export default class DdgNodeContent extends React.PureComponent<TProps> {
 
   render() {
     const { focalNodeUrl, isFocalNode, isPositioned, operation, service } = this.props;
+    const { radius, svcWidth, opWidth, svcMarginTop } = calcPositioning(service, operation);
+    const scaleFactor = RADIUS / radius;
+    const transform = `translate(${RADIUS - radius}px, ${RADIUS - radius}px) scale(${scaleFactor})`;
     return (
       <div className="DdgNodeContent" onMouseOver={this.onMouseUx} onMouseOut={this.onMouseUx}>
         <div
@@ -118,11 +131,23 @@ export default class DdgNodeContent extends React.PureComponent<TProps> {
             'is-focalNode': isFocalNode,
             'is-positioned': isPositioned,
           })}
+          style={{ width: `${radius * 2}px`, height: `${radius * 2}px`, transform }}
         >
-          {isFocalNode && <div className="DdgNodeContent--focalMarker">{focalNodeIcon}</div>}
-          <div>
-            <h4 className="DdgNodeContent--label">{service}</h4>
-            {operation && <div className="DdgNodeContent--label">{operation}</div>}
+          <div className="DdgNodeContent--labelWrapper">
+            <h4
+              className="DdgNodeContent--label"
+              style={{ marginTop: `${svcMarginTop}px`, width: `${svcWidth}px` }}
+            >
+              <BreakableText text={service} wordRegexp={WORD_RX} />
+            </h4>
+            {operation && (
+              <div
+                className="DdgNodeContent--label"
+                style={{ paddingTop: `${OP_PADDING_TOP}px`, width: `${opWidth}px` }}
+              >
+                <BreakableText text={operation} wordRegexp={WORD_RX} />
+              </div>
+            )}
           </div>
         </div>
 
