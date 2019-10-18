@@ -21,14 +21,15 @@ import { Field, formValueSelector, reduxForm } from 'redux-form';
 import { History as RouterHistory, Location } from 'history';
 import queryString from 'query-string';
 
+import AltViewOptions from './AltViewOptions';
 import DiffSelection from './DiffSelection';
 import * as markers from './index.markers';
 import ResultItem from './ResultItem';
 import ScatterPlot from './ScatterPlot';
 import { getUrl } from '../url';
-
 import LoadingIndicator from '../../common/LoadingIndicator';
 import NewWindowIcon from '../../common/NewWindowIcon';
+import SearchResultsDDG from '../../DeepDependencies/traces';
 import { getLocation } from '../../TracePage/url';
 import * as orderBy from '../../../model/order-by';
 import { getPercentageOfDuration } from '../../../utils/date';
@@ -39,8 +40,6 @@ import type { FetchedTrace } from '../../../types';
 import type { SearchQuery } from '../../../types/search';
 
 import './index.css';
-import AltViewOptions from './AltViewOptions';
-import SearchResultsDDG from '../../DeepDependencies/traces';
 
 type SearchResultsProps = {
   cohortAddTrace: string => void,
@@ -125,11 +124,7 @@ export class UnconnectedSearchResults extends React.PureComponent<SearchResultsP
       location,
     } = this.props;
 
-    let traceResultsView = true;
-    if (location && location.search) {
-      const urlState = queryString.parse(location.search);
-      traceResultsView = urlState.view === 'traces' || urlState.view === undefined;
-    }
+    const traceResultsView = queryString.parse(location.search).view !== 'ddg';
 
     const diffSelection = !disableComparisons && (
       <DiffSelection toggleComparison={this.toggleComparison} traces={diffCohort} />

@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import memoizeOne from 'memoize-one';
 import objectHash from 'object-hash';
 
 import {
@@ -36,7 +37,7 @@ function group(arg: { key: string; value: any }[]): Record<string, any[]> {
   return result;
 }
 
-export default function transformDdgData(
+function transformDdgData(
   { dependencies }: TDdgPayload,
   { service: focalService, operation: focalOperation }: { service: string; operation?: string }
 ): TDdgModel {
@@ -152,3 +153,5 @@ export default function transformDdgData(
     visIdxToPathElem,
   };
 }
+
+export default memoizeOne(transformDdgData);

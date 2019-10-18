@@ -11,11 +11,15 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 import queryString from 'query-string';
+import _get from 'lodash/get';
+import memoizeOne from 'memoize-one';
 import * as React from 'react';
 import { connect } from 'react-redux';
+
 import { ReduxState } from '../../types';
-import { getUrlState } from './url';
+import { getUrlState, sanitizeUrlState } from './url';
 import { TDdgStateEntry } from '../../types/TDdgState';
 import GraphModel, { makeGraph } from '../../model/ddg/GraphModel';
 import { fetchedState } from '../../constants';
@@ -23,20 +27,21 @@ import { extractUiFindFromState } from '../common/UiFindInput';
 import transformDdgData from '../../model/ddg/transformDdgData';
 import transformTracesToPaths from '../../model/ddg/transformTracesToPaths';
 import { ROUTE_PATH } from '../SearchTracePage/url';
-import { DeepDependencyGraphPageImpl, mapDispatchToProps, TOwnProps, TProps, TReduxProps } from '.';
+import { DeepDependencyGraphPageImpl, TOwnProps, TProps, TReduxProps } from '.';
+
+// Required for proper memoization of subsequent function calls
+const svcOp = memoizeOne((service, operation) => ({ service, operation }));
 
 // export for tests
 export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxProps {
-  const { services: stServices, trace } = state;
-  const { services, operationsForService } = stServices;
   const urlState = getUrlState(ownProps.location.search);
   const { density, operation, service, showOp } = urlState;
   let graphState: TDdgStateEntry | undefined;
   let graph: GraphModel | undefined;
   if (service) {
-    const payload = transformTracesToPaths(trace.traces, service, operation);
+    const payload = transformTracesToPaths(state.trace.traces, service, operation);
     graphState = {
-      model: transformDdgData(payload, { service, operation }),
+      model: transformDdgData(payload, svcOp(service, operation)),
       state: fetchedState.DONE,
       viewModifiers: new Map(),
     };
@@ -46,9 +51,7 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
   return {
     graph,
     graphState,
-    operationsForService,
-    services,
-    urlState,
+    urlState: sanitizeUrlState(urlState, _get(graphState, 'model.hash')),
     ...extractUiFindFromState(state),
   };
 }
@@ -71,7 +74,4 @@ export class TracesDdgImpl extends React.PureComponent<TProps & { showSvcOpsHead
   }
 }
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(TracesDdgImpl);
+export default connect(mapStateToProps)(TracesDdgImpl);

@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import memoizeOne from 'memoize-one';
+
 import { TDdgPayloadEntry, TDdgPayloadPath, TDdgPayload } from './types';
 import { Span, Trace } from '../../types/trace';
 import { FetchedTrace } from '../../types';
@@ -40,7 +42,7 @@ function convertSpan(span: Span, trace: Trace): TDdgPayloadEntry {
   return { service: serviceName, operation: operationName };
 }
 
-export default function(
+function transformTracesToPaths(
   traces: Record<string, FetchedTrace>,
   focalService: string,
   focalOperation: string | undefined
@@ -80,3 +82,5 @@ export default function(
   });
   return { dependencies };
 }
+
+export default memoizeOne(transformTracesToPaths);
