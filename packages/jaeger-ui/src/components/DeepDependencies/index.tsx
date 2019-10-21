@@ -255,7 +255,6 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
       <div className="Ddg">
         <div>
           <Header
-            showParameters={showSvcOpsHeader}
             density={density}
             distanceToPathElems={distanceToPathElems}
             hiddenUiFindMatches={hiddenUiFindMatches}
@@ -268,6 +267,7 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
             setOperation={this.setOperation}
             setService={this.setService}
             showOperations={showOp}
+            showParameters={showSvcOpsHeader}
             showVertices={this.showVertices}
             toggleShowOperations={this.toggleShowOperations}
             uiFindCount={uiFind ? uiFindMatches && uiFindMatches.size : undefined}

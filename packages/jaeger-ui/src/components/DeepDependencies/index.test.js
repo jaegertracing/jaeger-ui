@@ -394,14 +394,13 @@ describe('DeepDependencyGraphPage', () => {
     beforeAll(() => {
       getUrlStateSpy = jest.spyOn(url, 'getUrlState');
       sanitizeUrlStateSpy = jest.spyOn(url, 'sanitizeUrlState');
-      makeGraphSpy = jest.spyOn(GraphModel, 'makeGraph');
+      makeGraphSpy = jest.spyOn(GraphModel, 'makeGraph').mockReturnValue(mockGraph);
     });
 
     beforeEach(() => {
-      getUrlStateSpy.mockReset();
+      getUrlStateSpy.mockClear();
       getUrlStateSpy.mockReturnValue(expected.urlState);
-      makeGraphSpy.mockReset();
-      makeGraphSpy.mockReturnValue(mockGraph); // todo beforeall!
+      makeGraphSpy.mockClear();
     });
 
     it('uses gets relevant params from location.search', () => {

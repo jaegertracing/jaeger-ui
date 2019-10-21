@@ -16,9 +16,9 @@
 
 import * as React from 'react';
 import { Select } from 'antd';
+import { History as RouterHistory, Location } from 'history';
 import { Link, withRouter } from 'react-router-dom';
 import { Field, formValueSelector, reduxForm } from 'redux-form';
-import { History as RouterHistory, Location } from 'history';
 import queryString from 'query-string';
 
 import AltViewOptions from './AltViewOptions';
@@ -48,14 +48,14 @@ type SearchResultsProps = {
   disableComparisons: boolean,
   goToTrace: string => void,
   hideGraph: boolean,
+  history: RouterHistory,
   loading: boolean,
+  location: Location,
   maxTraceDuration: number,
   queryOfResults?: SearchQuery,
   showStandaloneLink: boolean,
   skipMessage?: boolean,
   traces: TraceSummary[],
-  history: RouterHistory,
-  location: Location,
 };
 
 const Option = Select.Option;
@@ -114,14 +114,14 @@ export class UnconnectedSearchResults extends React.PureComponent<SearchResultsP
       disableComparisons,
       goToTrace,
       hideGraph,
+      history,
       loading,
+      location,
       maxTraceDuration,
       queryOfResults,
       showStandaloneLink,
       skipMessage,
       traces,
-      history,
-      location,
     } = this.props;
 
     const traceResultsView = queryString.parse(location.search).view !== 'ddg';

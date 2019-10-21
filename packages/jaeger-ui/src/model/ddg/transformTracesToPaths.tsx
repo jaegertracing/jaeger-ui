@@ -14,27 +14,11 @@
 
 import memoizeOne from 'memoize-one';
 
-import { TDdgPayloadEntry, TDdgPayloadPath, TDdgPayload } from './types';
-import { Span, Trace } from '../../types/trace';
-import { FetchedTrace } from '../../types';
 import spanAncestorIds from '../../utils/span-ancestor-ids';
 
-type Node = {
-  value?: Span;
-  children: Node[];
-};
-
-const hasFocal = (path: TDdgPayloadEntry[], focalService: string, focalOperation: string | undefined) => {
-  for (let i = 0; i < path.length; i++) {
-    if (
-      focalService === path[i].service &&
-      (focalOperation === undefined || focalOperation === path[i].operation)
-    ) {
-      return true;
-    }
-  }
-  return false;
-};
+import { TDdgPayloadEntry, TDdgPayloadPath, TDdgPayload } from './types';
+import { FetchedTrace } from '../../types';
+import { Span, Trace } from '../../types/trace';
 
 function convertSpan(span: Span, trace: Trace): TDdgPayloadEntry {
   const serviceName = trace.processes[span.processID].serviceName;
@@ -66,7 +50,12 @@ function transformTracesToPaths(
           });
           path.push(convertSpan(leaf, data));
 
-          if (hasFocal(path, focalService, focalOperation)) {
+          if (
+            path.some(
+              ({ service, operation }) =>
+                service === focalService && (!focalOperation || operation === focalOperation)
+            )
+          ) {
             dependencies.push({
               path,
               attributes: [

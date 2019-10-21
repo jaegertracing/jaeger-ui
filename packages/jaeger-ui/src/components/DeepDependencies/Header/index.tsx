@@ -37,11 +37,11 @@ type TProps = {
   setOperation: (operation: string) => void;
   setService: (service: string) => void;
   showOperations: boolean;
+  showParameters?: boolean;
   showVertices: (vertices: TDdgVertex[]) => void;
   toggleShowOperations: (enable: boolean) => void;
   uiFindCount: number | undefined;
   visEncoding?: string;
-  showParameters?: boolean;
 };
 export default class Header extends React.PureComponent<TProps> {
   private _uiFindInput: React.RefObject<Input> = React.createRef();

@@ -12,22 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import queryString from 'query-string';
+import * as React from 'react';
 import _get from 'lodash/get';
 import memoizeOne from 'memoize-one';
-import * as React from 'react';
+import queryString from 'query-string';
 import { connect } from 'react-redux';
 
-import { ReduxState } from '../../types';
+import { DeepDependencyGraphPageImpl, TOwnProps, TProps, TReduxProps } from '.';
 import { getUrlState, sanitizeUrlState } from './url';
-import { TDdgStateEntry } from '../../types/TDdgState';
+import { ROUTE_PATH } from '../SearchTracePage/url';
 import GraphModel, { makeGraph } from '../../model/ddg/GraphModel';
 import { fetchedState } from '../../constants';
 import { extractUiFindFromState } from '../common/UiFindInput';
 import transformDdgData from '../../model/ddg/transformDdgData';
 import transformTracesToPaths from '../../model/ddg/transformTracesToPaths';
-import { ROUTE_PATH } from '../SearchTracePage/url';
-import { DeepDependencyGraphPageImpl, TOwnProps, TProps, TReduxProps } from '.';
+
+import { TDdgStateEntry } from '../../types/TDdgState';
+import { ReduxState } from '../../types';
 
 // Required for proper memoization of subsequent function calls
 const svcOp = memoizeOne((service, operation) => ({ service, operation }));

@@ -27,17 +27,17 @@ import { PathElem, TDdgVertex, EDdgDensity, EViewModifier } from '../../../model
 import './index.css';
 
 type TProps = {
+  baseUrl: string;
   density: EDdgDensity;
   edges: TEdge[];
   edgesViewModifiers: Map<string, number>;
+  extraUrlArgs?: { [key: string]: unknown };
   getVisiblePathElems: (vertexKey: string) => PathElem[] | undefined;
   setViewModifier: (vertexKey: string, viewModifier: EViewModifier, enable: boolean) => void;
   showOp: boolean;
   uiFindMatches: Set<TDdgVertex> | undefined;
   vertices: TDdgVertex[];
   verticesViewModifiers: Map<string, number>;
-  baseUrl: string;
-  extraUrlArgs?: { [key: string]: unknown };
 };
 
 // The dichotomy between w/ & w/o VMs assumes that any edge VM neccesitates unmodified edges are de-emphasized

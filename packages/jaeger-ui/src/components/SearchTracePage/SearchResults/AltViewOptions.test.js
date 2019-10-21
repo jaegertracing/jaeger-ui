@@ -13,18 +13,28 @@
 // limitations under the License.
 
 import * as React from 'react';
+import { shallow } from 'enzyme';
 import { Button } from 'antd';
 
-type Props = {
-  onTraceGraphViewClicked: () => void;
-  traceResultsView: boolean;
-};
+import AltViewOptions from './AltViewOptions';
 
-export default function AltViewOptions(props: Props) {
-  const { onTraceGraphViewClicked, traceResultsView } = props;
-  return (
-    <Button className="ub-ml2" htmlType="button" onClick={onTraceGraphViewClicked}>
-      {traceResultsView ? 'Deep Dependency Graph' : 'Trace Results'}
-    </Button>
-  );
-}
+describe('AltViewOptions', () => {
+  const props = {
+    traceResultsView: true,
+    onTraceGraphViewClicked: jest.fn(),
+  };
+  let wrapper;
+
+  beforeEach(() => {
+    props.onTraceGraphViewClicked.mockClear();
+    wrapper = shallow(<AltViewOptions {...props} />);
+  });
+
+  it('renders correct label', () => {
+    const getLabel = () => wrapper.find(Button).prop('children');
+    expect(getLabel()).toBe('Deep Dependency Graph');
+
+    wrapper.setProps({ traceResultsView: false });
+    expect(getLabel()).toBe('Trace Results');
+  });
+});
