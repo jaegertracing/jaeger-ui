@@ -60,13 +60,17 @@ export default class DdgNodeContent extends React.PureComponent<TProps> {
     getVisiblePathElems: (vertexKey: string) => PathElem[] | undefined,
     setViewModifier: (vertexKey: string, viewModifier: EViewModifier, enable: boolean) => void,
     density: EDdgDensity,
-    showOp: boolean
+    showOp: boolean,
+    baseUrl: string,
+    extraUrlArgs: { [key: string]: unknown } | undefined
   ) {
     return function renderNode(vertex: TDdgVertex, _: unknown, lv: TLayoutVertex<any> | null) {
       const { isFocalNode, key, operation, service } = vertex;
       return (
         <DdgNodeContent
-          focalNodeUrl={isFocalNode ? null : getUrl({ density, operation, service, showOp })}
+          focalNodeUrl={
+            isFocalNode ? null : getUrl({ density, operation, service, showOp, ...extraUrlArgs }, baseUrl)
+          }
           getVisiblePathElems={getVisiblePathElems}
           isFocalNode={isFocalNode}
           isPositioned={Boolean(lv)}

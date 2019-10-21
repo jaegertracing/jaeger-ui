@@ -27,9 +27,11 @@ import { PathElem, TDdgVertex, EDdgDensity, EViewModifier } from '../../../model
 import './index.css';
 
 type TProps = {
+  baseUrl: string;
   density: EDdgDensity;
   edges: TEdge[];
   edgesViewModifiers: Map<string, number>;
+  extraUrlArgs?: { [key: string]: unknown };
   getVisiblePathElems: (vertexKey: string) => PathElem[] | undefined;
   setViewModifier: (vertexKey: string, viewModifier: EViewModifier, enable: boolean) => void;
   showOp: boolean;
@@ -85,6 +87,8 @@ export default class Graph extends PureComponent<TProps> {
       uiFindMatches,
       vertices,
       verticesViewModifiers,
+      baseUrl,
+      extraUrlArgs,
     } = this.props;
     const nodeRenderers = this.getNodeRenderers(uiFindMatches || this.emptyFindSet, verticesViewModifiers);
 
@@ -132,7 +136,14 @@ export default class Graph extends PureComponent<TProps> {
             layerType: 'html',
             measurable: true,
             measureNode: DdgNodeContent.measureNode,
-            renderNode: this.getNodeContentRenderer(getVisiblePathElems, setViewModifier, density, showOp),
+            renderNode: this.getNodeContentRenderer(
+              getVisiblePathElems,
+              setViewModifier,
+              density,
+              showOp,
+              baseUrl,
+              extraUrlArgs
+            ),
           },
         ]}
       />

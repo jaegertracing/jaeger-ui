@@ -37,6 +37,7 @@ type TProps = {
   setOperation: (operation: string) => void;
   setService: (service: string) => void;
   showOperations: boolean;
+  showParameters?: boolean;
   showVertices: (vertices: TDdgVertex[]) => void;
   toggleShowOperations: (enable: boolean) => void;
   uiFindCount: number | undefined;
@@ -44,6 +45,10 @@ type TProps = {
 };
 export default class Header extends React.PureComponent<TProps> {
   private _uiFindInput: React.RefObject<Input> = React.createRef();
+
+  static defaultProps = {
+    showParameters: true,
+  };
 
   focusUiFindInput = () => {
     if (this._uiFindInput.current) {
@@ -103,30 +108,33 @@ export default class Header extends React.PureComponent<TProps> {
       showOperations,
       toggleShowOperations,
       visEncoding,
+      showParameters,
     } = this.props;
 
     return (
       <header className="DdgHeader">
-        <div className="DdgHeader--paramsHeader">
-          <NameSelector
-            label="Service:"
-            placeholder="Select a service…"
-            value={service || null}
-            setValue={setService}
-            required
-            options={services || []}
-          />
-          {service && (
+        {showParameters && (
+          <div className="DdgHeader--paramsHeader">
             <NameSelector
-              label="Operation:"
-              placeholder="Select an operation…"
-              value={operation || null}
-              setValue={setOperation}
+              label="Service:"
+              placeholder="Select a service…"
+              value={service || null}
+              setValue={setService}
               required
-              options={operations || []}
+              options={services || []}
             />
-          )}
-        </div>
+            {service && (
+              <NameSelector
+                label="Operation:"
+                placeholder="Select an operation…"
+                value={operation || null}
+                setValue={setOperation}
+                required
+                options={operations || []}
+              />
+            )}
+          </div>
+        )}
         <div className="DdgHeader--controlHeader">
           <LayoutSettings
             density={density}

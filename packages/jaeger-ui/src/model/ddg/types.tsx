@@ -50,15 +50,17 @@ export type TDdgPayloadEntry = {
   service: string;
 };
 
-export type TDdgPayload = {
-  dependencies: {
-    path: TDdgPayloadEntry[];
-    // TODO: Everett Tech Debt: Fix KeyValuePair types
-    attributes: {
-      key: 'exemplar_trace_id'; // eslint-disable-line camelcase
-      value: string;
-    }[];
+export type TDdgPayloadPath = {
+  path: TDdgPayloadEntry[];
+  // TODO: Everett Tech Debt: Fix KeyValuePair types
+  attributes: {
+    key: 'exemplar_trace_id'; // eslint-disable-line camelcase
+    value: string;
   }[];
+};
+
+export type TDdgPayload = {
+  dependencies: TDdgPayloadPath[];
 };
 
 export type TDdgService = {

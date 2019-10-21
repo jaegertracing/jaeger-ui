@@ -20,7 +20,7 @@ import { connect } from 'react-redux';
 
 import Header from './Header';
 import Graph from './Graph';
-import { getUrl, getUrlState, sanitizeUrlState } from './url';
+import { getUrl, getUrlState, sanitizeUrlState, ROUTE_PATH } from './url';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
 import { extractUiFindFromState, TExtractUiFindFromStateReturn } from '../common/UiFindInput';
@@ -43,38 +43,46 @@ import { TDdgStateEntry } from '../../types/TDdgState';
 
 import './index.css';
 
-type TDispatchProps = {
-  addViewModifier: (kwarg: TDdgModelParams & { viewModifier: number; visibilityIndices: number[] }) => void;
-  fetchDeepDependencyGraph: (query: TDdgModelParams) => void;
-  fetchServices: () => void;
-  fetchServiceOperations: (service: string) => void;
-  removeViewModifierFromIndices: (
+export type TDispatchProps = {
+  addViewModifier?: (kwarg: TDdgModelParams & { viewModifier: number; visibilityIndices: number[] }) => void;
+  fetchDeepDependencyGraph?: (query: TDdgModelParams) => void;
+  fetchServices?: () => void;
+  fetchServiceOperations?: (service: string) => void;
+  removeViewModifierFromIndices?: (
     kwarg: TDdgModelParams & { viewModifier: number; visibilityIndices: number[] }
   ) => void;
 };
 
-type TReduxProps = TExtractUiFindFromStateReturn & {
+export type TReduxProps = TExtractUiFindFromStateReturn & {
   graph: GraphModel | undefined;
   graphState?: TDdgStateEntry;
-  operationsForService: Record<string, string[]>;
+  operationsForService?: Record<string, string[]>;
   services?: string[] | null;
   urlState: TDdgSparseUrlState;
 };
 
-type TOwnProps = {
+export type TOwnProps = {
+  baseUrl: string;
+  extraUrlArgs?: { [key: string]: unknown };
   history: RouterHistory;
   location: Location;
+  showSvcOpsHeader: boolean;
 };
 
-type TProps = TDispatchProps & TReduxProps & TOwnProps;
+export type TProps = TDispatchProps & TReduxProps & TOwnProps;
 
 // export for tests
 export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
+  static defaultProps = {
+    showSvcOpsHeader: true,
+    baseUrl: ROUTE_PATH,
+  };
+
   static fetchModelIfStale(props: TProps) {
     const { fetchDeepDependencyGraph, graphState = null, urlState } = props;
     const { service, operation } = urlState;
     // backend temporarily requires service and operation
-    if (!graphState && service && operation) {
+    if (!graphState && service && operation && fetchDeepDependencyGraph) {
       fetchDeepDependencyGraph({ service, operation, start: 0, end: 0 });
     }
   }
@@ -86,10 +94,15 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
     const { fetchServices, fetchServiceOperations, operationsForService, services, urlState } = props;
     const { service } = urlState;
 
-    if (!services) {
+    if (!services && fetchServices) {
       fetchServices();
     }
-    if (service && !Reflect.has(operationsForService, service)) {
+    if (
+      service &&
+      operationsForService &&
+      !Reflect.has(operationsForService, service) &&
+      fetchServiceOperations
+    ) {
       fetchServiceOperations(service);
     }
   }
@@ -133,7 +146,7 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
 
   setService = (service: string) => {
     const { fetchServiceOperations, operationsForService } = this.props;
-    if (!Reflect.has(operationsForService, service)) {
+    if (operationsForService && !Reflect.has(operationsForService, service) && fetchServiceOperations) {
       fetchServiceOperations(service);
     }
     this.updateUrlState({ operation: undefined, service, visEncoding: undefined });
@@ -151,14 +164,16 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
     }
     const visibilityIndices = pathElems.map(pe => pe.visibilityIdx);
     const fn = enable ? addViewModifier : removeViewModifierFromIndices;
-    fn({
-      operation,
-      service,
-      viewModifier,
-      visibilityIndices,
-      end: 0,
-      start: 0,
-    });
+    if (fn) {
+      fn({
+        operation,
+        service,
+        viewModifier,
+        visibilityIndices,
+        end: 0,
+        start: 0,
+      });
+    }
   };
 
   showVertices = (vertices: TDdgVertex[]) => {
@@ -171,15 +186,25 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
   toggleShowOperations = (enable: boolean) => this.updateUrlState({ showOp: enable });
 
   updateUrlState = (newValues: Partial<TDdgSparseUrlState>) => {
-    const { graphState, history, uiFind, urlState } = this.props;
-    const getUrlArg = { uiFind, ...urlState, ...newValues };
+    const { baseUrl, extraUrlArgs, graphState, history, uiFind, urlState } = this.props;
+    const getUrlArg = { uiFind, ...urlState, ...newValues, ...extraUrlArgs };
     const hash = _get(graphState, 'model.hash');
     if (hash) getUrlArg.hash = hash;
-    history.push(getUrl(getUrlArg));
+    history.push(getUrl(getUrlArg, baseUrl));
   };
 
   render() {
-    const { graph, graphState, operationsForService, services, uiFind, urlState } = this.props;
+    const {
+      baseUrl,
+      extraUrlArgs,
+      graph,
+      graphState,
+      operationsForService,
+      services,
+      uiFind,
+      urlState,
+      showSvcOpsHeader,
+    } = this.props;
     const { density, operation, service, showOp, visEncoding } = urlState;
     const distanceToPathElems =
       graphState && graphState.state === fetchedState.DONE ? graphState.model.distanceToPathElems : undefined;
@@ -200,9 +225,11 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
       content = (
         <Graph
           key={JSON.stringify(urlState)}
+          baseUrl={baseUrl}
           density={density}
           edges={edges}
           edgesViewModifiers={edgesViewModifiers}
+          extraUrlArgs={extraUrlArgs}
           getVisiblePathElems={this.getVisiblePathElems}
           setViewModifier={this.setViewModifier}
           showOp={showOp}
@@ -232,7 +259,7 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
             distanceToPathElems={distanceToPathElems}
             hiddenUiFindMatches={hiddenUiFindMatches}
             operation={operation}
-            operations={operationsForService[service || '']}
+            operations={operationsForService && operationsForService[service || '']}
             service={service}
             services={services}
             setDensity={this.setDensity}
@@ -240,6 +267,7 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
             setOperation={this.setOperation}
             setService={this.setService}
             showOperations={showOp}
+            showParameters={showSvcOpsHeader}
             showVertices={this.showVertices}
             toggleShowOperations={this.toggleShowOperations}
             uiFindCount={uiFind ? uiFindMatches && uiFindMatches.size : undefined}

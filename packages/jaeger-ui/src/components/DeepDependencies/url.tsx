@@ -28,7 +28,7 @@ export function matches(path: string) {
   return Boolean(matchPath(path, ROUTE_MATCHER));
 }
 
-export function getUrl(args?: { [key: string]: unknown; showOp?: boolean }) {
+export function getUrl(args?: { [key: string]: unknown; showOp?: boolean }, baseUrl: string = ROUTE_PATH) {
   if (args && !_isEmpty(args)) {
     const stringifyArgs = Reflect.has(args, 'showOp')
       ? {
@@ -36,9 +36,9 @@ export function getUrl(args?: { [key: string]: unknown; showOp?: boolean }) {
           showOp: args.showOp ? 1 : 0,
         }
       : args;
-    return `${ROUTE_PATH}?${queryString.stringify(stringifyArgs)}`;
+    return `${baseUrl}?${queryString.stringify(stringifyArgs)}`;
   }
-  return ROUTE_PATH;
+  return baseUrl;
 }
 
 function firstParam(arg: string | string[]): string {

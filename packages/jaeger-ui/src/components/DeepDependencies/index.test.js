@@ -104,7 +104,7 @@ describe('DeepDependencyGraphPage', () => {
           const value = `new ${propName}`;
           const kwarg = { [propName]: value };
           ddgPageImpl.updateUrlState(kwarg);
-          expect(getUrlSpy).toHaveBeenLastCalledWith(Object.assign({}, props.urlState, kwarg));
+          expect(getUrlSpy).toHaveBeenLastCalledWith(Object.assign({}, props.urlState, kwarg), undefined);
           expect(props.history.push).toHaveBeenCalledTimes(i + 1);
         });
       });
@@ -115,7 +115,7 @@ describe('DeepDependencyGraphPage', () => {
           start: 'new start',
         };
         ddgPageImpl.updateUrlState(kwarg);
-        expect(getUrlSpy).toHaveBeenLastCalledWith(Object.assign({}, props.urlState, kwarg));
+        expect(getUrlSpy).toHaveBeenLastCalledWith(Object.assign({}, props.urlState, kwarg), undefined);
         expect(props.history.push).toHaveBeenCalledTimes(1);
       });
 
@@ -130,14 +130,17 @@ describe('DeepDependencyGraphPage', () => {
         };
         const ddgPageWithFewerProps = new DeepDependencyGraphPageImpl(otherProps);
         ddgPageWithFewerProps.updateUrlState(kwarg);
-        expect(getUrlSpy).toHaveBeenLastCalledWith(Object.assign({}, otherUrlState, kwarg));
+        expect(getUrlSpy).toHaveBeenLastCalledWith(Object.assign({}, otherUrlState, kwarg), undefined);
         expect(getUrlSpy).not.toHaveBeenLastCalledWith(expect.objectContaining({ start: expect.anything() }));
         expect(props.history.push).toHaveBeenCalledTimes(1);
       });
 
       it('includes props.graphState.model.hash iff it is truthy', () => {
         ddgPageImpl.updateUrlState({});
-        expect(getUrlSpy).toHaveBeenLastCalledWith(expect.not.objectContaining({ hash: expect.anything() }));
+        expect(getUrlSpy).toHaveBeenLastCalledWith(
+          expect.not.objectContaining({ hash: expect.anything() }),
+          undefined
+        );
 
         const hash = 'testHash';
         const propsWithHash = {
@@ -152,7 +155,7 @@ describe('DeepDependencyGraphPage', () => {
         };
         const ddgPageWithHash = new DeepDependencyGraphPageImpl(propsWithHash);
         ddgPageWithHash.updateUrlState({});
-        expect(getUrlSpy).toHaveBeenLastCalledWith(expect.objectContaining({ hash }));
+        expect(getUrlSpy).toHaveBeenLastCalledWith(expect.objectContaining({ hash }), undefined);
       });
 
       describe('setDistance', () => {
@@ -192,7 +195,8 @@ describe('DeepDependencyGraphPage', () => {
             prevVisEncoding: visEncoding,
           });
           expect(getUrlSpy).toHaveBeenLastCalledWith(
-            Object.assign({}, props.urlState, { visEncoding: mockNewEncoding })
+            Object.assign({}, props.urlState, { visEncoding: mockNewEncoding }),
+            undefined
           );
           expect(props.history.push).toHaveBeenCalledTimes(1);
         });
@@ -203,7 +207,8 @@ describe('DeepDependencyGraphPage', () => {
           const operation = 'newOperation';
           ddgPageImpl.setOperation(operation);
           expect(getUrlSpy).toHaveBeenLastCalledWith(
-            Object.assign({}, props.urlState, { operation, visEncoding: undefined })
+            Object.assign({}, props.urlState, { operation, visEncoding: undefined }),
+            undefined
           );
           expect(props.history.push).toHaveBeenCalledTimes(1);
         });
@@ -219,7 +224,8 @@ describe('DeepDependencyGraphPage', () => {
         it('updates service and clears operation and visEncoding', () => {
           ddgPageImpl.setService(service);
           expect(getUrlSpy).toHaveBeenLastCalledWith(
-            Object.assign({}, props.urlState, { operation: undefined, service, visEncoding: undefined })
+            Object.assign({}, props.urlState, { operation: undefined, service, visEncoding: undefined }),
+            undefined
           );
           expect(props.history.push).toHaveBeenCalledTimes(1);
         });
@@ -382,20 +388,19 @@ describe('DeepDependencyGraphPage', () => {
       }
     );
     let getUrlStateSpy;
-    let sanitizeUrlStateSpy;
     let makeGraphSpy;
+    let sanitizeUrlStateSpy;
 
     beforeAll(() => {
       getUrlStateSpy = jest.spyOn(url, 'getUrlState');
       sanitizeUrlStateSpy = jest.spyOn(url, 'sanitizeUrlState');
-      makeGraphSpy = jest.spyOn(GraphModel, 'makeGraph');
+      makeGraphSpy = jest.spyOn(GraphModel, 'makeGraph').mockReturnValue(mockGraph);
     });
 
     beforeEach(() => {
-      getUrlStateSpy.mockReset();
+      getUrlStateSpy.mockClear();
       getUrlStateSpy.mockReturnValue(expected.urlState);
-      makeGraphSpy.mockReset();
-      makeGraphSpy.mockReturnValue(mockGraph);
+      makeGraphSpy.mockClear();
     });
 
     it('uses gets relevant params from location.search', () => {

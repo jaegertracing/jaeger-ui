@@ -16,9 +16,12 @@
 
 import * as React from 'react';
 import { Select } from 'antd';
-import { Link } from 'react-router-dom';
-import { Field, reduxForm, formValueSelector } from 'redux-form';
+import { History as RouterHistory, Location } from 'history';
+import { Link, withRouter } from 'react-router-dom';
+import { Field, formValueSelector, reduxForm } from 'redux-form';
+import queryString from 'query-string';
 
+import AltViewOptions from './AltViewOptions';
 import DiffSelection from './DiffSelection';
 import * as markers from './index.markers';
 import ResultItem from './ResultItem';
@@ -26,6 +29,7 @@ import ScatterPlot from './ScatterPlot';
 import { getUrl } from '../url';
 import LoadingIndicator from '../../common/LoadingIndicator';
 import NewWindowIcon from '../../common/NewWindowIcon';
+import SearchResultsDDG from '../../DeepDependencies/traces';
 import { getLocation } from '../../TracePage/url';
 import * as orderBy from '../../../model/order-by';
 import { getPercentageOfDuration } from '../../../utils/date';
@@ -44,7 +48,9 @@ type SearchResultsProps = {
   disableComparisons: boolean,
   goToTrace: string => void,
   hideGraph: boolean,
+  history: RouterHistory,
   loading: boolean,
+  location: Location,
   maxTraceDuration: number,
   queryOfResults?: SearchQuery,
   showStandaloneLink: boolean,
@@ -81,7 +87,7 @@ const SelectSort = reduxForm({
 
 export const sortFormSelector = formValueSelector('traceResultsSort');
 
-export default class SearchResults extends React.PureComponent<SearchResultsProps> {
+export class UnconnectedSearchResults extends React.PureComponent<SearchResultsProps> {
   props: SearchResultsProps;
 
   static defaultProps = { skipMessage: false, queryOfResults: undefined };
@@ -95,19 +101,31 @@ export default class SearchResults extends React.PureComponent<SearchResultsProp
     }
   };
 
+  onTraceGraphViewClicked = () => {
+    const { location, history } = this.props;
+    const urlState = queryString.parse(location.search);
+    const view = urlState.view && urlState.view === 'ddg' ? 'traces' : 'ddg';
+    history.push(getUrl({ ...urlState, view }));
+  };
+
   render() {
     const {
       diffCohort,
       disableComparisons,
       goToTrace,
       hideGraph,
+      history,
       loading,
+      location,
       maxTraceDuration,
       queryOfResults,
       showStandaloneLink,
       skipMessage,
       traces,
     } = this.props;
+
+    const traceResultsView = queryString.parse(location.search).view !== 'ddg';
+
     const diffSelection = !disableComparisons && (
       <DiffSelection toggleComparison={this.toggleComparison} traces={diffCohort} />
     );
@@ -134,45 +152,52 @@ export default class SearchResults extends React.PureComponent<SearchResultsProp
     const cohortIds = new Set(diffCohort.map(datum => datum.id));
     const searchUrl = queryOfResults ? getUrl(stripEmbeddedState(queryOfResults)) : getUrl();
     return (
-      <div>
-        <div>
-          <div className="SearchResults--header">
-            {!hideGraph && (
-              <div className="ub-p3">
-                <ScatterPlot
-                  data={traces.map(t => ({
-                    x: t.startTime,
-                    y: t.duration,
-                    traceID: t.traceID,
-                    size: t.spans.length,
-                    name: t.traceName,
-                  }))}
-                  onValueClick={t => {
-                    goToTrace(t.traceID);
-                  }}
-                />
-              </div>
-            )}
-            <div className="SearchResults--headerOverview">
-              <h2 className="ub-m0 u-flex-1">
-                {traces.length} Trace{traces.length > 1 && 's'}
-              </h2>
-              <SelectSort />
-              {showStandaloneLink && (
-                <Link
-                  className="u-tx-inherit ub-nowrap ub-ml3"
-                  to={searchUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <NewWindowIcon isLarge />
-                </Link>
-              )}
+      <div className="SearchResults">
+        <div className="SearchResults--header">
+          {!hideGraph && traceResultsView && (
+            <div className="ub-p3 SearchResults--headerScatterPlot">
+              <ScatterPlot
+                data={traces.map(t => ({
+                  x: t.startTime,
+                  y: t.duration,
+                  traceID: t.traceID,
+                  size: t.spans.length,
+                  name: t.traceName,
+                }))}
+                onValueClick={t => {
+                  goToTrace(t.traceID);
+                }}
+              />
             </div>
+          )}
+          <div className="SearchResults--headerOverview">
+            <h2 className="ub-m0 u-flex-1">
+              {traces.length} Trace{traces.length > 1 && 's'}
+            </h2>
+            {traceResultsView && <SelectSort />}
+            <AltViewOptions
+              traceResultsView={traceResultsView}
+              onTraceGraphViewClicked={this.onTraceGraphViewClicked}
+            />
+            {showStandaloneLink && (
+              <Link
+                className="u-tx-inherit ub-nowrap ub-ml3"
+                to={searchUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <NewWindowIcon isLarge />
+              </Link>
+            )}
           </div>
         </div>
-        <div>
-          {diffSelection}
+        {!traceResultsView && (
+          <div className="SearchResults--ddg-container">
+            <SearchResultsDDG location={location} history={history} />
+          </div>
+        )}
+        {traceResultsView && diffSelection}
+        {traceResultsView && (
           <ul className="ub-list-reset">
             {traces.map(trace => (
               <li className="ub-my3" key={trace.traceID}>
@@ -187,8 +212,10 @@ export default class SearchResults extends React.PureComponent<SearchResultsProp
               </li>
             ))}
           </ul>
-        </div>
+        )}
       </div>
     );
   }
 }
+
+export default withRouter(UnconnectedSearchResults);
