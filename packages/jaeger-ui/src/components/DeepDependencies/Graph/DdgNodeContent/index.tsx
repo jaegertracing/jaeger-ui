@@ -90,7 +90,7 @@ export default class DdgNodeContent extends React.PureComponent<TProps> {
       const urlIds: Set<string> = new Set();
       let currLength = MIN_LENGTH;
       // Because there is a limit on traceIDs, attempt to get some from each elem rather than all from one.
-      const allIDs = elems.map(({ memberOf: m }) => m.traceIDs.slice());
+      const allIDs = elems.map(({ memberOf }) => memberOf.traceIDs.slice());
       while (allIDs.length) {
         const ids = allIDs.shift();
         if (ids && ids.length) {

@@ -45,7 +45,7 @@ describe('<NameSelector>', () => {
   });
 
   it('renders without is-invalid when not required and without a value', () => {
-    wrapper.setProps({ required: false });
+    wrapper.setProps({ required: undefined });
     expect(wrapper).toMatchSnapshot();
   });
 
@@ -67,6 +67,11 @@ describe('<NameSelector>', () => {
       wrapper.setProps({ placeholder: true, value });
       expect(wrapper.find(BreakableText).prop('text')).toBe(value);
     });
+
+    it('does not render default placeholder if placeholder is disabled', () => {
+      wrapper.setProps({ placeholder: undefined });
+      expect(wrapper.find(BreakableText).prop('text')).toBe('');
+    });
   });
 
   it('allows the filtered list to set values', () => {
@@ -83,6 +88,28 @@ describe('<NameSelector>', () => {
     const list = popover.prop('content');
     list.props.cancel();
     expect(wrapper.state('popoverVisible')).toBe(false);
+  });
+
+  it('hides the popover when clicking outside of the open popover', () => {
+    let mouseWithin = false;
+    wrapper.setState({ popoverVisible: true });
+    wrapper.instance().listRef = {
+      current: {
+        focusInput: () => {},
+        isMouseWithin: () => mouseWithin,
+      },
+    };
+    wrapper.instance().onBodyClicked();
+    expect(wrapper.state('popoverVisible')).toBe(false);
+
+    wrapper.setState({ popoverVisible: true });
+    mouseWithin = true;
+    wrapper.instance().onBodyClicked();
+    expect(wrapper.state('popoverVisible')).toBe(true);
+
+    wrapper.instance().listRef = {};
+    wrapper.instance().onBodyClicked();
+    expect(wrapper.state('popoverVisible')).toBe(true);
   });
 
   it('controls the visibility of the popover', () => {

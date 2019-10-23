@@ -108,7 +108,6 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
   }
 
   componentWillReceiveProps(nextProps: TProps) {
-    /* istanbul ignore next */
     DeepDependencyGraphPageImpl.fetchModelIfStale(nextProps);
   }
 
@@ -154,8 +153,9 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
 
   setViewModifier = (vertexKey: string, viewModifier: EViewModifier, enable: boolean) => {
     const { addViewModifier, graph, removeViewModifierFromIndices, urlState } = this.props;
+    const fn = enable ? addViewModifier : removeViewModifierFromIndices;
     const { service, operation, visEncoding } = urlState;
-    if (!graph || !service || !operation) {
+    if (!fn || !graph || !operation || !service) {
       return;
     }
     const pathElems = graph.getVertexVisiblePathElems(vertexKey, visEncoding);
@@ -163,17 +163,14 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
       throw new Error(`Invalid vertex key to set view modifier for: ${vertexKey}`);
     }
     const visibilityIndices = pathElems.map(pe => pe.visibilityIdx);
-    const fn = enable ? addViewModifier : removeViewModifierFromIndices;
-    if (fn) {
-      fn({
-        operation,
-        service,
-        viewModifier,
-        visibilityIndices,
-        end: 0,
-        start: 0,
-      });
-    }
+    fn({
+      operation,
+      service,
+      viewModifier,
+      visibilityIndices,
+      end: 0,
+      start: 0,
+    });
   };
 
   showVertices = (vertices: TDdgVertex[]) => {
