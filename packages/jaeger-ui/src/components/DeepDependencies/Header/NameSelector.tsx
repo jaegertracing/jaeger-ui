@@ -71,7 +71,7 @@ export default class NameSelector extends React.PureComponent<TProps, TState> {
     this.changeVisible(false);
   };
 
-  onPopoverVisbileChanged = (popoverVisible: boolean) => {
+  onPopoverVisibleChanged = (popoverVisible: boolean) => {
     this.changeVisible(popoverVisible);
   };
 
@@ -92,7 +92,7 @@ export default class NameSelector extends React.PureComponent<TProps, TState> {
     return (
       <Popover
         overlayClassName="NameSelector--overlay u-rm-popover-content-padding"
-        onVisibleChange={this.onPopoverVisbileChanged}
+        onVisibleChange={this.onPopoverVisibleChanged}
         placement="bottomLeft"
         content={
           <FilteredList

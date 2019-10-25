@@ -36,7 +36,8 @@ const cssCls = (() => {
   return (namePart?: string) => (namePart ? `${CLASSNAME_PREFIX}--${namePart}` : CLASSNAME_PREFIX);
 })();
 
-const densityOptions = [
+// exported for tests
+export const densityOptions = [
   {
     option: EDdgDensity.MostConcise,
     title: 'One node per resource',

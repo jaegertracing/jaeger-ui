@@ -16,10 +16,12 @@ import { TRendererUtils } from '@jaegertracing/plexus/lib/Digraph/types';
 import { TLayoutEdge } from '@jaegertracing/plexus/lib/types';
 
 import { getEdgeId } from '../../../model/ddg/GraphModel';
+
 import { EViewModifier } from '../../../model/ddg/types';
 
-const baseCase = { className: 'Ddg--Edge' };
-const matchMiss = { className: 'Ddg--Edge', markerEnd: null };
+// exported for tests
+export const baseCase = { className: 'Ddg--Edge' };
+export const matchMiss = { className: 'Ddg--Edge', markerEnd: null };
 
 export default function getSetOnEdge(edgesViewModifiers: Map<string, number>) {
   if (!edgesViewModifiers.size) {

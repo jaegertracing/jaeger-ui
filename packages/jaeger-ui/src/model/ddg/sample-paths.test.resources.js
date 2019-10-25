@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-const simplePayloadElemMaker = label => ({
+export const simplePayloadElemMaker = label => ({
   operation: `${label}Operation`,
   service: `${label}Service`,
 });
@@ -42,11 +42,11 @@ const pathLengthener = path => {
   return [...prequels, ...path, ...sequels];
 };
 
-const firstPayloadElem = simplePayloadElemMaker('first');
-const beforePayloadElem = simplePayloadElemMaker('before');
-const midPayloadElem = simplePayloadElemMaker('mid');
-const afterPayloadElem = simplePayloadElemMaker('after');
-const lastPayloadElem = simplePayloadElemMaker('last');
+export const firstPayloadElem = simplePayloadElemMaker('first');
+export const beforePayloadElem = simplePayloadElemMaker('before');
+export const midPayloadElem = simplePayloadElemMaker('mid');
+export const afterPayloadElem = simplePayloadElemMaker('after');
+export const lastPayloadElem = simplePayloadElemMaker('last');
 
 export const shortPath = [beforePayloadElem, focalPayloadElem];
 export const simplePath = [
