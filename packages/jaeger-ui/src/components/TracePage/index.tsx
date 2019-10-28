@@ -25,7 +25,7 @@ import { bindActionCreators } from 'redux';
 
 import ArchiveNotifier from './ArchiveNotifier';
 import { actions as archiveActions } from './ArchiveNotifier/duck';
-import { trackRange } from './index.track';
+import { trackFilter, trackFocusMatches, trackNextMatch, trackPrevMatch, trackRange } from './index.track';
 import {
   CombokeysHandler,
   merge as mergeShortcuts,
@@ -240,12 +240,11 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
 
   clearSearch = () => {
     const { history, location } = this.props;
-    // flow does not allow omitting optional kwargs when using an object literal.
-    const arg = {
+    updateUiFind({
       history,
       location,
-    };
-    updateUiFind(arg);
+      trackFindFunction: trackFilter,
+    });
     if (this._searchBar.current) this._searchBar.current.blur();
   };
 
@@ -308,8 +307,19 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
   focusUiFindMatches = () => {
     const { trace, focusUiFindMatches, uiFind } = this.props;
     if (trace && trace.data) {
+      trackFocusMatches();
       focusUiFindMatches(trace.data, uiFind);
     }
+  };
+
+  nextResult = () => {
+    trackNextMatch();
+    this._scrollManager.scrollToNextVisibleSpan();
+  };
+
+  prevResult = () => {
+    trackPrevMatch();
+    this._scrollManager.scrollToPrevVisibleSpan();
   };
 
   render() {
@@ -348,11 +358,11 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
       hideMap: Boolean(traceGraphView || (embedded && embedded.timeline.hideMinimap)),
       hideSummary: Boolean(embedded && embedded.timeline.hideSummary),
       linkToStandalone: getUrl(id),
-      nextResult: this._scrollManager.scrollToNextVisibleSpan,
+      nextResult: this.nextResult,
       onArchiveClicked: this.archiveTrace,
       onSlimViewClicked: this.toggleSlimView,
       onTraceGraphViewClicked: this.toggleTraceGraphView,
-      prevResult: this._scrollManager.scrollToPrevVisibleSpan,
+      prevResult: this.prevResult,
       ref: this._searchBar,
       resultCount: findCount,
       showArchiveButton: !isEmbedded && archiveEnabled,

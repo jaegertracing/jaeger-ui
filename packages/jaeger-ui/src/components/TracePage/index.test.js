@@ -117,6 +117,7 @@ describe('<TracePage>', () => {
       expect(updateUiFindSpy).toHaveBeenCalledWith({
         history: defaultProps.history,
         location: defaultProps.location,
+        trackFindFunction: track.trackFilter,
       });
     });
 
@@ -135,23 +136,76 @@ describe('<TracePage>', () => {
     });
   });
 
-  describe('focusUiFindMatches', () => {
-    beforeEach(() => {
-      defaultProps.focusUiFindMatches.mockReset();
+  describe('viewing uiFind matches', () => {
+    describe('focusUiFindMatches', () => {
+      let trackFocusSpy;
+
+      beforeAll(() => {
+        trackFocusSpy = jest.spyOn(track, 'trackFocusMatches');
+      });
+
+      beforeEach(() => {
+        defaultProps.focusUiFindMatches.mockReset();
+        trackFocusSpy.mockReset();
+      });
+
+      it('calls props.focusUiFindMatches with props.trace.data and uiFind when props.trace.data is present', () => {
+        const uiFind = 'test ui find';
+        wrapper.setProps({ uiFind });
+        wrapper.find(TracePageHeader).prop('focusUiFindMatches')();
+        expect(defaultProps.focusUiFindMatches).toHaveBeenCalledWith(defaultProps.trace.data, uiFind);
+        expect(trackFocusSpy).toHaveBeenCalledTimes(1);
+      });
+
+      it('handles when props.trace.data is absent', () => {
+        const propFn = wrapper.find(TracePageHeader).prop('focusUiFindMatches');
+        wrapper.setProps({ trace: {} });
+        propFn();
+        expect(defaultProps.focusUiFindMatches).not.toHaveBeenCalled();
+        expect(trackFocusSpy).not.toHaveBeenCalled();
+      });
     });
 
-    it('calls props.focusUiFindMatches with props.trace.data and uiFind when props.trace.data is present', () => {
-      const uiFind = 'test ui find';
-      wrapper.setProps({ uiFind });
-      wrapper.find(TracePageHeader).prop('focusUiFindMatches')();
-      expect(defaultProps.focusUiFindMatches).toHaveBeenCalledWith(defaultProps.trace.data, uiFind);
+    describe('nextResult', () => {
+      let trackNextSpy;
+
+      beforeAll(() => {
+        trackNextSpy = jest.spyOn(track, 'trackNextMatch');
+      });
+
+      beforeEach(() => {
+        trackNextSpy.mockReset();
+      });
+
+      it('calls scrollToNextVisibleSpan and tracks it', () => {
+        const scrollNextSpy = jest
+          .spyOn(wrapper.instance()._scrollManager, 'scrollToNextVisibleSpan')
+          .mockImplementation();
+        wrapper.find(TracePageHeader).prop('nextResult')();
+        expect(trackNextSpy).toHaveBeenCalledTimes(1);
+        expect(scrollNextSpy).toHaveBeenCalledTimes(1);
+      });
     });
 
-    it('handles when props.trace.data is absent', () => {
-      const propFn = wrapper.find(TracePageHeader).prop('focusUiFindMatches');
-      wrapper.setProps({ trace: {} });
-      propFn();
-      expect(defaultProps.focusUiFindMatches).not.toHaveBeenCalled();
+    describe('prevResult', () => {
+      let trackPrevSpy;
+
+      beforeAll(() => {
+        trackPrevSpy = jest.spyOn(track, 'trackPrevMatch');
+      });
+
+      beforeEach(() => {
+        trackPrevSpy.mockReset();
+      });
+
+      it('calls scrollToPrevVisibleSpan and tracks it', () => {
+        const scrollPrevSpy = jest
+          .spyOn(wrapper.instance()._scrollManager, 'scrollToPrevVisibleSpan')
+          .mockImplementation();
+        wrapper.find(TracePageHeader).prop('prevResult')();
+        expect(trackPrevSpy).toHaveBeenCalledTimes(1);
+        expect(scrollPrevSpy).toHaveBeenCalledTimes(1);
+      });
     });
   });
 
