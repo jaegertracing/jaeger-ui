@@ -52,7 +52,6 @@ const getRowClass = (_: any, index: number) => (index % 2 > 0 ? ODD_ROW_CLASS : 
 let kbdTable: React.ReactNode | null = null;
 
 function getHelpModal() {
-  track();
   if (kbdTable) {
     return kbdTable;
   }
@@ -90,7 +89,10 @@ export default class KeyboardShortcutsHelp extends React.PureComponent<Props, St
     visible: false,
   };
 
-  onCtaClicked = () => this.setState({ visible: true });
+  onCtaClicked = () => {
+    track();
+    this.setState({ visible: true });
+  };
 
   onCloserClicked = () => this.setState({ visible: false });
 

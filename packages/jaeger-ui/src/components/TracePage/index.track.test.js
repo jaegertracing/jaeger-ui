@@ -16,7 +16,19 @@
 
 jest.mock('../../utils/tracking');
 
-import { ACTION_RANGE_REFRAME, ACTION_RANGE_SHIFT, CATEGORY_RANGE, trackRange } from './index.track';
+import {
+  ACTION_FOCUS,
+  ACTION_NEXT,
+  ACTION_PREV,
+  ACTION_RANGE_REFRAME,
+  ACTION_RANGE_SHIFT,
+  CATEGORY_MATCH_INTERACTIONS,
+  CATEGORY_RANGE,
+  trackFocusMatches,
+  trackNextMatch,
+  trackPrevMatch,
+  trackRange,
+} from './index.track';
 import { trackEvent } from '../../utils/tracking';
 
 describe('trackRange', () => {
@@ -92,5 +104,18 @@ describe('trackRange', () => {
       expect(trackEvent.mock.calls.length).toBe(1);
       expect(trackEvent.mock.calls[0]).toEqual([CATEGORY_RANGE, rangeType, source]);
     });
+  });
+});
+
+describe('track match interactions', () => {
+  const cases = [
+    ['focusing matches', ACTION_FOCUS, trackFocusMatches],
+    ['viewing next match', ACTION_NEXT, trackNextMatch],
+    ['viewing previous match', ACTION_PREV, trackPrevMatch],
+  ];
+
+  it.each(cases)('tracks %s', (_msg, action, trackFn) => {
+    trackFn();
+    expect(trackEvent).toHaveBeenLastCalledWith(CATEGORY_MATCH_INTERACTIONS, action);
   });
 });
