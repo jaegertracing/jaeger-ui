@@ -34,8 +34,10 @@ import { getTraceName } from '../../../model/trace-viewer';
 import { TNil } from '../../../types';
 import { Trace } from '../../../types/trace';
 import { formatDatetime, formatDuration } from '../../../utils/date';
+import { getTraceLinks } from '../../../model/link-patterns';
 
 import './TracePageHeader.css';
+import ExternalLinks from '../../common/ExternalLinks';
 
 type TracePageHeaderEmbedProps = {
   canCollapse: boolean;
@@ -136,6 +138,8 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
     return null;
   }
 
+  const links = getTraceLinks(trace);
+
   const summaryItems =
     !hideSummary &&
     !slimView &&
@@ -159,6 +163,7 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
             <IoAndroidArrowBack />
           </Link>
         )}
+        {links && links.length > 0 && <ExternalLinks links={links} className="TracePageHeader--back" />}
         {canCollapse ? (
           <a
             className="TracePageHeader--titleLink"

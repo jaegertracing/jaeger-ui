@@ -16,7 +16,7 @@ import _uniq from 'lodash/uniq';
 import { getConfigValue } from '../utils/config/get-config';
 import { getParent } from './span';
 import { TNil } from '../types';
-import { Span, Link, KeyValuePair } from '../types/trace';
+import { Span, Link, KeyValuePair, Trace } from '../types/trace';
 
 const parameterRegExp = /#\{([^{}]*)\}/g;
 
@@ -139,6 +139,35 @@ function callTemplate(template: ProcessedTemplate, data: any) {
   return template.template(data);
 }
 
+export function computeTraceLinks(linkPatterns: ProcessedLinkPattern[], trace: Trace) {
+  const result: { url: string; text: string }[] = [];
+  const validKeys = Object.keys(trace)
+    // @ts-ignore
+    .filter(key => typeof trace[key] === 'string' || typeof trace[key] === 'number');
+
+  linkPatterns
+    .filter(pattern => pattern.type('trace'))
+    .forEach(pattern => {
+      const parameterValues: Record<string, any> = {};
+      const allParameters = pattern.parameters.every(parameter => {
+        if (validKeys.some(name => name === parameter)) {
+          // @ts-ignore
+          parameterValues[parameter] = trace[parameter];
+          return true;
+        }
+        return false;
+      });
+      if (allParameters) {
+        result.push({
+          url: callTemplate(pattern.url, parameterValues),
+          text: callTemplate(pattern.text, parameterValues),
+        });
+      }
+    });
+
+  return result;
+}
+
 export function computeLinks(
   linkPatterns: ProcessedLinkPattern[],
   span: Span,
@@ -188,6 +217,20 @@ export function computeLinks(
   return result;
 }
 
+export function createGetTraceLinks(linkPatterns: ProcessedLinkPattern[], cache: WeakMap<Trace, Link[]>) {
+  return (trace: Trace | undefined) => {
+    if (!trace || linkPatterns.length === 0) {
+      return [];
+    }
+    let result = cache.get(trace);
+    if (!result) {
+      result = computeTraceLinks(linkPatterns, trace);
+      cache.set(trace, result);
+    }
+    return result;
+  };
+}
+
 export function createGetLinks(linkPatterns: ProcessedLinkPattern[], cache: WeakMap<KeyValuePair, Link[]>) {
   return (span: Span, items: KeyValuePair[], itemIndex: number) => {
     if (linkPatterns.length === 0) {
@@ -204,6 +247,11 @@ export function createGetLinks(linkPatterns: ProcessedLinkPattern[], cache: Weak
 }
 
 export default createGetLinks(
+  (getConfigValue('linkPatterns') || []).map(processLinkPattern).filter(Boolean),
+  new WeakMap()
+);
+
+export const getTraceLinks = createGetTraceLinks(
   (getConfigValue('linkPatterns') || []).map(processLinkPattern).filter(Boolean),
   new WeakMap()
 );
