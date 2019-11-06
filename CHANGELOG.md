@@ -4,15 +4,15 @@
 
 ### Enhancements
 
-- **Deep Dependency Graph:** Implement Service Oriented Dependency Graph (DDG) ([@tiffon](https://github.com/tiffon) in [#442](https://github.com/jaegertracing/jaeger-ui/pull/442), [#441](https://github.com/jaegertracing/jaeger-ui/pull/441), [#440](https://github.com/jaegertracing/jaeger-ui/pull/440), [#439](https://github.com/jaegertracing/jaeger-ui/pull/439), [#438](https://github.com/jaegertracing/jaeger-ui/pull/438), [#437](https://github.com/jaegertracing/jaeger-ui/pull/437), [#431](https://github.com/jaegertracing/jaeger-ui/pull/431), [#406](https://github.com/jaegertracing/jaeger-ui/pull/406), and [#405](https://github.com/jaegertracing/jaeger-ui/pull/405); and [@everett980](https://github.com/everett980) in [#468](https://github.com/jaegertracing/jaeger-ui/pull/468), [#466](https://github.com/jaegertracing/jaeger-ui/pull/466), [#458](https://github.com/jaegertracing/jaeger-ui/pull/458), [#463](https://github.com/jaegertracing/jaeger-ui/pull/463), [#457](https://github.com/jaegertracing/jaeger-ui/pull/457), [#453](https://github.com/jaegertracing/jaeger-ui/pull/453), [#452](https://github.com/jaegertracing/jaeger-ui/pull/452), [#434](https://github.com/jaegertracing/jaeger-ui/pull/434), [#433](https://github.com/jaegertracing/jaeger-ui/pull/433), [#432](https://github.com/jaegertracing/jaeger-ui/pull/432), [#429](https://github.com/jaegertracing/jaeger-ui/pull/429), [#427](https://github.com/jaegertracing/jaeger-ui/pull/427), [#424](https://github.com/jaegertracing/jaeger-ui/pull/424), [#421](https://github.com/jaegertracing/jaeger-ui/pull/421), [#412](https://github.com/jaegertracing/jaeger-ui/pull/412), [#398](https://github.com/jaegertracing/jaeger-ui/pull/398), [#386](https://github.com/jaegertracing/jaeger-ui/pull/386), and [#378](https://github.com/jaegertracing/jaeger-ui/pull/378))
+- **Deep Dependency Graph:** Implement Service-Oriented Deep Dependency Graph (DDG) ([@tiffon](https://github.com/tiffon) and [@everett980](https://github.com/everett980) in [#481](https://github.com/jaegertracing/jaeger-ui/issues/481))
 
 - **Deep Dependency Graph:** Derive DDG from search results ([@rubenvp8510](https://github.com/rubenvp8510) in [#445](https://github.com/jaegertracing/jaeger-ui/pull/445))
 
-- **Configuration:** Add script tags from config to body ([@everett980](https://github.com/everett980) in [#455](https://github.com/jaegertracing/jaeger-ui/pull/455))
+- **Configuration:** Allow ui-config.json to specify script tags which are added to UI body ([@everett980](https://github.com/everett980) in [#455](https://github.com/jaegertracing/jaeger-ui/pull/455))
 
 - **Plexus:** Sequester zoom concerns to ZoomManager ([@tiffon](https://github.com/tiffon) in [#409](https://github.com/jaegertracing/jaeger-ui/pull/409))
 
-- **Plexus:** Support multiple layers ([@tiffon](https://github.com/tiffon) in [#426](https://github.com/jaegertracing/jaeger-ui/pull/426), [#428](https://github.com/jaegertracing/jaeger-ui/pull/428), [#422](https://github.com/jaegertracing/jaeger-ui/pull/422), [#420](https://github.com/jaegertracing/jaeger-ui/pull/420), [#419](https://github.com/jaegertracing/jaeger-ui/pull/419), [#416](https://github.com/jaegertracing/jaeger-ui/pull/416), and [#414](https://github.com/jaegertracing/jaeger-ui/pull/414))
+- **Plexus:** Support multiple layers of nodes and edges ([@tiffon](https://github.com/tiffon) in [#482](https://github.com/jaegertracing/jaeger-ui/issues/482))
 
 - **Google Analytics:** Track filter interactions on trace detail page ([@everett980](https://github.com/everett980) in [#470](https://github.com/jaegertracing/jaeger-ui/pull/470))
 
