@@ -31,18 +31,22 @@ import { getUrl } from '../../url';
 import BreakableText from '../../../common/BreakableText';
 import NewWindowIcon from '../../../common/NewWindowIcon';
 import { getUrl as getSearchUrl } from '../../../SearchTracePage/url';
-import { EDdgDensity, EViewModifier, TDdgVertex, PathElem } from '../../../../model/ddg/types';
+import { ECheckedStatus, EDdgDensity, EDirection, EViewModifier, TDdgVertex, PathElem } from '../../../../model/ddg/types';
 
 import './index.css';
 
 type TProps = {
   focalNodeUrl: string | null;
+  focusPathsThroughVertex: (vertexKey: string) => void;
+  getGenerationVisibility: (vertexKey: string, direction: EDirection) => ECheckedStatus | null;
   getVisiblePathElems: (vertexKey: string) => PathElem[] | undefined;
+  hideVertex: (vertexKey: string) => void;
   isFocalNode: boolean;
   isPositioned: boolean;
   operation: string | null;
   service: string;
   setViewModifier: (vertexKey: string, viewModifier: EViewModifier, isEnabled: boolean) => void;
+  updateGenerationVisibility: (vertexKey: string, direction: EDirection) => void;
   vertexKey: string;
 };
 
@@ -56,14 +60,29 @@ export default class DdgNodeContent extends React.PureComponent<TProps> {
     };
   }
 
-  static getNodeRenderer(
-    getVisiblePathElems: (vertexKey: string) => PathElem[] | undefined,
-    setViewModifier: (vertexKey: string, viewModifier: EViewModifier, enable: boolean) => void,
-    density: EDdgDensity,
-    showOp: boolean,
-    baseUrl: string,
-    extraUrlArgs: { [key: string]: unknown } | undefined
-  ) {
+  static getNodeRenderer({
+    baseUrl,
+    density,
+    extraUrlArgs,
+    focusPathsThroughVertex,
+    getGenerationVisibility,
+    getVisiblePathElems,
+    hideVertex,
+    setViewModifier,
+    showOp,
+    updateGenerationVisibility,
+  }: {
+    baseUrl: string;
+    density: EDdgDensity;
+    extraUrlArgs?: { [key: string]: unknown };
+    focusPathsThroughVertex: (vertexKey: string) => void;
+    getGenerationVisibility: (vertexKey: string, direction: EDirection) => ECheckedStatus | null;
+    getVisiblePathElems: (vertexKey: string) => PathElem[] | undefined;
+    hideVertex: (vertexKey: string) => void;
+    setViewModifier: (vertexKey: string, viewModifier: EViewModifier, enable: boolean) => void;
+    showOp: boolean;
+    updateGenerationVisibility: (vertexKey: string, direction: EDirection) => void;
+  }) {
     return function renderNode(vertex: TDdgVertex, _: unknown, lv: TLayoutVertex<any> | null) {
       const { isFocalNode, key, operation, service } = vertex;
       return (
@@ -71,17 +90,28 @@ export default class DdgNodeContent extends React.PureComponent<TProps> {
           focalNodeUrl={
             isFocalNode ? null : getUrl({ density, operation, service, showOp, ...extraUrlArgs }, baseUrl)
           }
+          focusPathsThroughVertex={focusPathsThroughVertex}
+          getGenerationVisibility={getGenerationVisibility}
           getVisiblePathElems={getVisiblePathElems}
+          hideVertex={hideVertex}
           isFocalNode={isFocalNode}
           isPositioned={Boolean(lv)}
           operation={operation}
           setViewModifier={setViewModifier}
           service={service}
+          updateGenerationVisibility={updateGenerationVisibility}
           vertexKey={key}
         />
       );
     };
   }
+
+  /*
+  componentWillUnmount() {
+    const { vertexKey, setViewModifier } = this.props;
+    setViewModifier(vertexKey, EViewModifier.Hovered, false);
+  }
+   */
 
   private viewTraces = () => {
     const { vertexKey, getVisiblePathElems } = this.props;
@@ -120,7 +150,18 @@ export default class DdgNodeContent extends React.PureComponent<TProps> {
   };
 
   render() {
-    const { focalNodeUrl, isFocalNode, isPositioned, operation, service } = this.props;
+    const {
+      focalNodeUrl,
+      focusPathsThroughVertex,
+      getGenerationVisibility,
+      hideVertex,
+      isFocalNode,
+      isPositioned,
+      operation,
+      service,
+      updateGenerationVisibility,
+      vertexKey,
+    } = this.props;
     const { radius, svcWidth, opWidth, svcMarginTop } = calcPositioning(service, operation);
     const scaleFactor = RADIUS / radius;
     const transform = `translate(${RADIUS - radius}px, ${RADIUS - radius}px) scale(${scaleFactor})`;
@@ -161,6 +202,21 @@ export default class DdgNodeContent extends React.PureComponent<TProps> {
           <a className="DdgNodeContent--actionsItem" onClick={this.viewTraces} role="button">
             <NewWindowIcon />
             <span className="DdgNodeContent--actionsItemText">View traces</span>
+          </a>
+          <a className="DdgNodeContent--actionsItem" onClick={() => focusPathsThroughVertex(vertexKey)} role="button">
+            Focus paths through this node
+          </a>
+          <a className="DdgNodeContent--actionsItem" onClick={() => hideVertex(vertexKey)} role="button">
+            Hide node
+          </a>
+          {/* TODO Move to other panels; use antd checkbox not checkedstatus text */}
+          <a className="DdgNodeContent--actionsItem" onClick={() => updateGenerationVisibility(vertexKey, EDirection.Upstream)} role="button">
+            {/* TODO Don't calculate when not visible, performance is _terrible_ as is */}
+            {getGenerationVisibility(vertexKey, EDirection.Upstream)} Parents
+          </a>
+          <a className="DdgNodeContent--actionsItem" onClick={() => updateGenerationVisibility(vertexKey, EDirection.Downstream)} role="button">
+            {/* TODO Don't calculate when not visible, performance is _terrible_ as is */}
+            {getGenerationVisibility(vertexKey, EDirection.Downstream)} Children
           </a>
         </div>
       </div>
