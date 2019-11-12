@@ -20,6 +20,8 @@ import {
   processLinkPattern,
   computeLinks,
   createGetLinks,
+  computeTraceLinks,
+  createGetTraceLinks,
 } from './link-patterns';
 
 describe('processTemplate()', () => {
@@ -305,6 +307,40 @@ describe('getParameterInAncestor()', () => {
   });
 });
 
+describe('computeTraceLinks()', () => {
+  const linkPatterns = [
+    {
+      type: 'trace',
+      url: 'http://example.com/?myKey=#{traceID}',
+      text: 'first link (#{traceID})',
+    },
+    {
+      type: 'trace',
+      url: 'http://example.com/?myKey=#{myOtherKey}&myKey=#{myKey}',
+      text: 'second link (#{myOtherKey})',
+    },
+  ].map(processLinkPattern);
+
+  const trace = {
+    processes: [],
+    traceID: 'trc1',
+    spans: [],
+    startTime: 1000,
+    endTime: 2000,
+    duration: 1000,
+    services: [],
+  };
+
+  it('correctly computes links', () => {
+    expect(computeTraceLinks(linkPatterns, trace)).toEqual([
+      {
+        url: 'http://example.com/?myKey=trc1',
+        text: 'first link (trc1)',
+      },
+    ]);
+  });
+});
+
 describe('computeLinks()', () => {
   const linkPatterns = [
     {
@@ -392,5 +428,61 @@ describe('getLinks()', () => {
       },
     ]);
     expect(cache.get(span.tags[0])).toBe(result);
+  });
+});
+
+describe('getTraceLinks()', () => {
+  const linkPatterns = [
+    {
+      type: 'trace',
+      url: 'http://example.com/#{traceID}',
+      text: 'special key link (#{traceID})',
+    },
+  ].map(processLinkPattern);
+  const template = jest.spyOn(linkPatterns[0].url, 'template');
+
+  const trace = {
+    processes: [],
+    traceID: 'trc1',
+    spans: [],
+    startTime: 1000,
+    endTime: 2000,
+    duration: 1000,
+    services: [],
+  };
+
+  let cache;
+
+  beforeEach(() => {
+    cache = new WeakMap();
+    template.mockClear();
+  });
+
+  it('does not access the cache if there is no link pattern', () => {
+    cache.get = jest.fn();
+    const getTraceLinks = createGetTraceLinks([], cache);
+    expect(getTraceLinks(trace)).toEqual([]);
+    expect(cache.get).not.toHaveBeenCalled();
+  });
+
+  it('returns the result from the cache', () => {
+    const result = [];
+    cache.set(trace, result);
+    const getTraceLinks = createGetTraceLinks(linkPatterns, cache);
+    expect(getTraceLinks(trace)).toBe(result);
+    expect(template).not.toHaveBeenCalled();
+  });
+
+  it('adds the result to the cache', () => {
+    const getTraceLinks = createGetTraceLinks(linkPatterns, cache);
+    const result = getTraceLinks(trace);
+    expect(template).toHaveBeenCalledTimes(1);
+    expect(result).toEqual([
+      {
+        url: 'http://example.com/trc1',
+        text: 'special key link (trc1)',
+      },
+    ]);
+    expect(cache.get(trace)).toBe(result);
   });
 });
