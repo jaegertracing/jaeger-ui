@@ -29,7 +29,7 @@ import { SpanReference, Trace } from '../../../types/trace';
 import updateUiFind from '../../../utils/update-ui-find';
 
 type TDispatchProps = {
-  focusUiFindMatches: (trace: Trace, uiFind: string | TNil) => void;
+  focusUiFindMatches: (trace: Trace, uiFind: string | TNil, preserveHiddenStatus?: boolean) => void;
 };
 
 type TReduxProps = {
@@ -48,7 +48,7 @@ type TOwnProps = {
 type TReferencesButtonProps = TDispatchProps & TReduxProps & TOwnProps;
 
 class ReferencesButtonImpl extends React.PureComponent<TReferencesButtonProps> {
-  focusUiFindMatches = (uiFind: string) => {
+  focusSpan = (uiFind: string) => {
     const { trace, focusUiFindMatches, location, history } = this.props;
     if (trace && trace.data) {
       updateUiFind({
@@ -56,7 +56,7 @@ class ReferencesButtonImpl extends React.PureComponent<TReferencesButtonProps> {
         history,
         uiFind,
       });
-      focusUiFindMatches(trace.data, uiFind);
+      focusUiFindMatches(trace.data, uiFind, true);
     }
   };
 
@@ -64,7 +64,7 @@ class ReferencesButtonImpl extends React.PureComponent<TReferencesButtonProps> {
     <Menu>
       {references.map(({ span, spanID }) => (
         <Menu.Item key={`${spanID}`}>
-          <a role="button" onClick={() => this.focusUiFindMatches(spanID)}>
+          <a role="button" onClick={() => this.focusSpan(spanID)}>
             {span ? `${span.operationName} - ${spanID}` : spanID}
           </a>
         </Menu.Item>

@@ -27,7 +27,7 @@ import spanAncestorIds from '../../../utils/span-ancestor-ids';
 export type TSpanIdLogValue = { logItem: Log; spanID: string };
 export type TSpanIdValue = { spanID: string };
 type TSpansValue = { spans: Span[] };
-type TTraceUiFindValue = { trace: Trace; uiFind: string | TNil };
+type TTraceUiFindValue = { trace: Trace; uiFind: string | TNil; preserveHiddenStatus?: boolean };
 export type TWidthValue = { width: number };
 export type TActionTypes =
   | TSpanIdLogValue
@@ -91,7 +91,11 @@ const fullActions = createActions<TActionTypes>({
   [actionTypes.DETAIL_WARNINGS_TOGGLE]: (spanID: string) => ({ spanID }),
   [actionTypes.DETAIL_TAGS_TOGGLE]: (spanID: string) => ({ spanID }),
   [actionTypes.DETAIL_TOGGLE]: (spanID: string) => ({ spanID }),
-  [actionTypes.FOCUS_UI_FIND_MATCHES]: (trace: Trace, uiFind: string | TNil) => ({ trace, uiFind }),
+  [actionTypes.FOCUS_UI_FIND_MATCHES]: (
+    trace: Trace,
+    uiFind: string | TNil,
+    preserveHiddenStatus?: boolean
+  ) => ({ trace, uiFind, preserveHiddenStatus }),
   [actionTypes.REMOVE_HOVER_INDENT_GUIDE_ID]: (spanID: string) => ({ spanID }),
   [actionTypes.SET_SPAN_NAME_COLUMN_WIDTH]: (width: number) => ({ width }),
   [actionTypes.SET_TRACE]: (trace: Trace, uiFind: string | TNil) => ({ trace, uiFind }),
@@ -99,7 +103,7 @@ const fullActions = createActions<TActionTypes>({
 
 export const actions = (fullActions as any).jaegerUi.traceTimelineViewer as TTimelineViewerActions;
 
-function calculateFocusedFindRowStates(uiFind: string, spans: Span[]) {
+function calculateFocusedFindRowStates(uiFind: string, spans: Span[], preserveHiddenStatus: boolean = false) {
   const spansMap = new Map();
   const childrenHiddenIDs: Set<string> = new Set();
   const detailStates: Map<string, DetailState> = new Map();
@@ -107,7 +111,9 @@ function calculateFocusedFindRowStates(uiFind: string, spans: Span[]) {
 
   spans.forEach(span => {
     spansMap.set(span.spanID, span);
-    childrenHiddenIDs.add(span.spanID);
+    if (!preserveHiddenStatus) {
+      childrenHiddenIDs.add(span.spanID);
+    }
   });
   const matchedSpanIds = filterSpans(uiFind, spans);
   if (matchedSpanIds && matchedSpanIds.size) {
@@ -125,11 +131,14 @@ function calculateFocusedFindRowStates(uiFind: string, spans: Span[]) {
   };
 }
 
-function focusUiFindMatches(state: TTraceTimeline, { uiFind, trace }: TTraceUiFindValue) {
+function focusUiFindMatches(
+  state: TTraceTimeline,
+  { uiFind, trace, preserveHiddenStatus }: TTraceUiFindValue
+) {
   if (!uiFind) return state;
   return {
     ...state,
-    ...calculateFocusedFindRowStates(uiFind, trace.spans),
+    ...calculateFocusedFindRowStates(uiFind, trace.spans, preserveHiddenStatus),
   };
 }
 
