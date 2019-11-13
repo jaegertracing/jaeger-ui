@@ -21,14 +21,27 @@ import {
   CATEGORY_TOGGLE_SHOW_OP,
   CATEGORY_UPSTREAM_HOPS_CHANGE,
   CATEGORY_UPSTREAM_HOPS_SELECTION,
+  CATEGORY_VERTEX_INTERACTIONS,
   ACTION_DECREASE,
+  ACTION_FOCUS_PATHS,
   ACTION_HIDE,
+  ACTION_HIDE_CHILDREN,
+  ACTION_HIDE_PARENTS,
   ACTION_INCREASE,
+  ACTION_SET_FOCUS,
   ACTION_SHOW,
+  ACTION_SHOW_CHILDREN,
+  ACTION_SHOW_PARENTS,
+  ACTION_VIEW_TRACES,
   trackDensityChange,
+  trackFocusPaths,
+  trackHide,
   trackHopChange,
+  trackShow,
+  trackSetFocus,
   trackShowMatches,
   trackToggleShowOp,
+  trackViewTraces,
 } from './index.track';
 import { EDdgDensity, EDirection } from '../../model/ddg/types';
 import * as trackingUtils from '../../utils/tracking';
@@ -96,6 +109,29 @@ describe('DeepDependencies tracking', () => {
     });
   });
 
+  describe('trackFocusPaths', () => {
+    it('calls trackViewTraces with the vertex category and focus paths action', () => {
+      trackFocusPaths();
+      expect(trackEvent).toHaveBeenCalledWith(CATEGORY_VERTEX_INTERACTIONS, ACTION_FOCUS_PATHS);
+    });
+  });
+
+  describe('trackHide', () => {
+    const testTable = [
+      [ACTION_HIDE, undefined],
+      [ACTION_HIDE_PARENTS, EDirection.Upstream],
+      [ACTION_HIDE_CHILDREN, EDirection.Downstream],
+    ];
+
+    it.each(testTable)(
+      'calls trackEvent with the vertex category and %p action when direction is %p',
+      (action, direction) => {
+        trackHide(direction);
+        expect(trackEvent).toHaveBeenCalledWith(CATEGORY_VERTEX_INTERACTIONS, action);
+      }
+    );
+  });
+
   describe('trackHopChange', () => {
     const largerPosDistance = 6;
     const largerNegDistance = -1 * largerPosDistance;
@@ -158,6 +194,28 @@ describe('DeepDependencies tracking', () => {
     );
   });
 
+  describe('trackSetFocus', () => {
+    it('calls trackEvent with the vertex category and set focus action', () => {
+      trackSetFocus();
+      expect(trackEvent).toHaveBeenCalledWith(CATEGORY_VERTEX_INTERACTIONS, ACTION_SET_FOCUS);
+    });
+  });
+
+  describe('trackShow', () => {
+    const testTable = [
+      [ACTION_SHOW_PARENTS, EDirection.Upstream],
+      [ACTION_SHOW_CHILDREN, EDirection.Downstream],
+    ];
+
+    it.each(testTable)(
+      'calls trackEvent with the vertex category and %p action when direction is %p',
+      (action, direction) => {
+        trackShow(direction);
+        expect(trackEvent).toHaveBeenCalledWith(CATEGORY_VERTEX_INTERACTIONS, action);
+      }
+    );
+  });
+
   describe('trackShowMatches', () => {
     it('calls trackEvent with the match category and show action', () => {
       trackShowMatches();
@@ -175,5 +233,12 @@ describe('DeepDependencies tracking', () => {
         expect(trackEvent).toHaveBeenCalledWith(CATEGORY_TOGGLE_SHOW_OP, action);
       }
     );
+  });
+
+  describe('trackViewTraces', () => {
+    it('calls trackViewTraces with the vertex category and view traces action', () => {
+      trackViewTraces();
+      expect(trackEvent).toHaveBeenCalledWith(CATEGORY_VERTEX_INTERACTIONS, ACTION_VIEW_TRACES);
+    });
   });
 });

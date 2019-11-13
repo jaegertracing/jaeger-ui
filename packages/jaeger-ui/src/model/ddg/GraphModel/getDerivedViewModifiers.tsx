@@ -14,7 +14,6 @@
 
 import GraphModel from './index';
 import getEdgeId from './getEdgeId';
-import { decode } from '../visibility-codec';
 import { EViewModifier } from '../types';
 
 function getKeyFromVisIdx(graph: GraphModel, visIdx: number) {

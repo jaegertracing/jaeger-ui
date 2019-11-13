@@ -52,16 +52,7 @@ limitations under the License.
   bottom: 100%;
   box-shadow: 0 0px 4px 1px rgba(0, 0, 0, 0.1);
   left: 1em;
-  opacity: 0;
-  pointer-events: none;
   position: absolute;
-  transition: opacity 0.1s;
-  white-space: nowrap;
-}
-
-.DdgNodeContent:hover > .DdgNodeContent--actionsWrapper {
-  opacity: 1;
-  pointer-events: all;
 }
 
 .DdgNodeContent--actionsItem {
@@ -72,6 +63,22 @@ limitations under the License.
 
 .DdgNodeContent--actionsItem:not(:hover) {
   color: inherit;
+}
+
+.DdgNodeContent--actionsItemIconWrapper {
+  height: 16px;
+  width: 16px;
+}
+
+.DdgNodeContent--actionsItemIconWrapper > * {
+  height: 16px;
+  position: absolute;
+  width: 16px;
+}
+
+.DdgNodeContent--actionsItemIconWrapper > * > .ant-checkbox {
+  vertical-align: unset;
+  top: unset;
 }
 
 .DdgNodeContent--actionsItemText {

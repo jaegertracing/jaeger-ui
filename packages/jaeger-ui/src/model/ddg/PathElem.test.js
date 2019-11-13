@@ -80,6 +80,20 @@ describe('PathElem', () => {
     }).toThrowError();
   });
 
+  it('has externalSideNeighbor if distance is not 0 and it is not external', () => {
+    expect(pathElem.externalSideNeighbor).toBe(testPath.members[testMemberIdx - 1]);
+  });
+
+  it('has a null externalSideNeighbor if distance is 0', () => {
+    pathElem = new PathElem({ path: testPath, operation: testOperation, memberIdx: testPath.focalIdx });
+    expect(pathElem.externalSideNeighbor).toBe(null);
+  });
+
+  it('has an undefined externalSideNeighbor if is external', () => {
+    pathElem = new PathElem({ path: testPath, operation: testOperation, memberIdx: 0 });
+    expect(pathElem.externalSideNeighbor).toBe(undefined);
+  });
+
   it('has focalSideNeighbor if distance is not 0', () => {
     expect(pathElem.focalSideNeighbor).toBe(testPath.members[testMemberIdx + 1]);
   });
@@ -108,6 +122,27 @@ describe('PathElem', () => {
     };
     const focalElem = new PathElem({ path, operation: testOperation, memberIdx: path.members.length - 1 });
     expect(focalElem.isExternal).toBe(false);
+  });
+
+  describe('externalPath', () => {
+    const path = getPath();
+
+    it('returns array of itself if it is focal elem', () => {
+      const targetPathElem = path.members[path.focalIdx];
+      expect(targetPathElem.externalPath).toEqual([targetPathElem]);
+    });
+
+    it('returns path to focal elem in correct order for upstream elem', () => {
+      const idx = path.focalIdx - 1;
+      const targetPathElem = path.members[idx];
+      expect(targetPathElem.externalPath).toEqual(path.members.slice(0, idx + 1));
+    });
+
+    it('returns path to focal elem in correct order for downstream elem', () => {
+      const idx = path.focalIdx + 1;
+      const targetPathElem = path.members[idx];
+      expect(targetPathElem.externalPath).toEqual(path.members.slice(idx));
+    });
   });
 
   describe('focalPath', () => {

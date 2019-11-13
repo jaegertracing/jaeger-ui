@@ -85,10 +85,16 @@ describe('getDerivedViewModifiers', () => {
 
   describe('error cases', () => {
     it('errors if out of bounds visIdx has a VM', () => {
+      const graphWithOutOfBoundsIdx = getGraph();
       const outOfBounds = graph.visIdxToPathElem.length;
-      const outOfBoundsEncoding = encode([...visibleIndices, outOfBounds]);
+      const outOfBoundsIndices = [...visibleIndices, outOfBounds];
+      const outOfBoundsEncoding = encode(outOfBoundsIndices);
+      graphWithOutOfBoundsIdx.getVisibleIndices = () => new Set(outOfBoundsIndices);
       expect(() =>
-        graph.getDerivedViewModifiers(outOfBoundsEncoding, new Map([[outOfBounds, EViewModifier.Hovered]]))
+        graphWithOutOfBoundsIdx.getDerivedViewModifiers(
+          outOfBoundsEncoding,
+          new Map([[outOfBounds, EViewModifier.Hovered]])
+        )
       ).toThrowError(`Invalid vis ids: ${outOfBounds}`);
     });
 

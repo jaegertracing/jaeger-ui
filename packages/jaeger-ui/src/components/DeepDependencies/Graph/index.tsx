@@ -163,7 +163,7 @@ export default class Graph extends PureComponent<TProps> {
               getGenerationVisibility,
               getVisiblePathElems,
               hideVertex,
-          setViewModifier,
+              setViewModifier,
               showOp,
               updateGenerationVisibility,
             }),

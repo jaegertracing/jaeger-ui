@@ -18,6 +18,7 @@ import _get from 'lodash/get';
 import { bindActionCreators, Dispatch } from 'redux';
 import { connect } from 'react-redux';
 
+import { trackFocusPaths, trackHide, trackShow } from './index.track';
 import Header from './Header';
 import Graph from './Graph';
 import { getUrl, getUrlState, sanitizeUrlState, ROUTE_PATH } from './url';
@@ -34,7 +35,6 @@ import {
   EDdgDensity,
   EDirection,
   EViewModifier,
-  PathElem,
   TDdgModelParams,
   TDdgSparseUrlState,
   TDdgVertex,
@@ -116,38 +116,21 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
   focusPathsThroughVertex = (vertexKey: string) => {
     const elems = this.getVisiblePathElems(vertexKey);
     if (!elems) return;
-    const indices = ([] as number[]).concat(...elems.map(({ memberOf }) => memberOf.members.map(({ visibilityIdx }) => visibilityIdx)));
-    this.updateUrlState({ visEncoding: encode(indices) });
-  }
 
-  private getGeneration = (vertexKey: string, direction: EDirection): PathElem[] => {
-    const rv: PathElem[] = [];
-    const elems = this.getVisiblePathElems(vertexKey);
-    if (!elems) return rv;
-     elems.forEach(({ focalSideNeighbor, memberIdx, memberOf }) => {
-      const generationMember = memberOf.members[memberIdx + direction];
-      if (generationMember && generationMember !== focalSideNeighbor) rv.push(generationMember);
-    });
-    return rv;
-  }
+    trackFocusPaths();
+    const indices = ([] as number[]).concat(
+      ...elems.map(({ memberOf }) => memberOf.members.map(({ visibilityIdx }) => visibilityIdx))
+    );
+    this.updateUrlState({ visEncoding: encode(indices) });
+  };
 
   getGenerationVisibility = (vertexKey: string, direction: EDirection): ECheckedStatus | null => {
     const { graph, urlState } = this.props;
-    const generation = this.getGeneration(vertexKey, direction);
-    if (!generation.length || !graph) return null;
-
-    const visibleIndices = graph.getVisibleIndices(urlState.visEncoding);
-    let partial = false;
-    let full = true;
-    generation.forEach(elem => {
-      const isVis = visibleIndices.has(elem.visibilityIdx);
-      partial = partial || isVis;
-      full = full && isVis;
-    });
-    if (full) return ECheckedStatus.Full;
-    if (partial) return ECheckedStatus.Partial;
-    return ECheckedStatus.Empty;
-  }
+    if (graph) {
+      return graph.getGenerationVisibility(vertexKey, direction, urlState.visEncoding);
+    }
+    return null;
+  };
 
   getVisiblePathElems = (key: string) => {
     const { graph, urlState } = this.props;
@@ -157,25 +140,17 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
     return undefined;
   };
 
-  private hideElems = (elems: PathElem[]) => {
+  hideVertex = (vertexKey: string) => {
     const { graph, urlState } = this.props;
-    const { visEncoding } = urlState;
+    const { visEncoding: currVisEncoding } = urlState;
     if (!graph) return;
 
-    const visible = graph.getVisibleIndices(visEncoding);
-    elems.forEach(({ externalPath }) => {
-      externalPath.forEach(({ visibilityIdx }) => {
-        visible.delete(visibilityIdx);
-      });
-    });
+    const visEncoding = graph.getVisWithoutVertex(vertexKey, currVisEncoding);
+    if (!visEncoding) return;
 
-    this.updateUrlState({ visEncoding: encode(Array.from(visible)) });
-  }
-
-  hideVertex = (vertexKey: string) => {
-    const elems = this.getVisiblePathElems(vertexKey);
-    if (elems) this.hideElems(elems);
-  }
+    trackHide();
+    this.updateUrlState({ visEncoding });
+  };
 
   setDensity = (density: EDdgDensity) => this.updateUrlState({ density });
 
@@ -218,7 +193,9 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
     }
     const pathElems = graph.getVertexVisiblePathElems(vertexKey, visEncoding);
     if (!pathElems) {
-      throw new Error(`Invalid vertex key to set view modifier for: ${vertexKey}`);
+      // eslint-disable-next-line no-console
+      console.warn(`Invalid vertex key to set view modifier for: ${vertexKey}`);
+      return;
     }
     const visibilityIndices = pathElems.map(pe => pe.visibilityIdx);
     fn({
@@ -242,19 +219,17 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
 
   updateGenerationVisibility = (vertexKey: string, direction: EDirection) => {
     const { graph, urlState } = this.props;
-    const { visEncoding } = urlState;
-    const generationElems = this.getGeneration(vertexKey, direction);
-    const currCheckedStatus = this.getGenerationVisibility(vertexKey, direction);
-    if (!graph || !generationElems || !currCheckedStatus) return;
+    const { visEncoding: currVisEncoding } = urlState;
+    if (!graph) return;
 
-    if (currCheckedStatus === ECheckedStatus.Full) {
-      this.hideElems(generationElems);
-    } else {
-      const visible = graph.getVisibleIndices(visEncoding);
-      generationElems.forEach(({ visibilityIdx }) => visible.add(visibilityIdx));
-      this.updateUrlState({ visEncoding: encode(Array.from(visible)) });
-    }
-  }
+    const result = graph.getVisWithUpdatedGeneration(vertexKey, direction, currVisEncoding);
+    if (!result) return;
+
+    const { visEncoding, update } = result;
+    if (update === ECheckedStatus.Empty) trackHide(direction);
+    else trackShow(direction);
+    this.updateUrlState({ visEncoding });
+  };
 
   updateUrlState = (newValues: Partial<TDdgSparseUrlState>) => {
     const { baseUrl, extraUrlArgs, graphState, history, uiFind, urlState } = this.props;
