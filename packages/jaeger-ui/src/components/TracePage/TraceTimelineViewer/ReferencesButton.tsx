@@ -14,7 +14,6 @@
 
 import React from 'react';
 import { Dropdown, Menu, Tooltip } from 'antd';
-import IoNetwork from 'react-icons/lib/io/network';
 import { bindActionCreators } from 'redux';
 import { connect, Dispatch } from 'react-redux';
 import { withRouter } from 'react-router-dom';
@@ -43,6 +42,8 @@ type TOwnProps = {
   history: RouterHistory;
   location: Location;
   match: any;
+  children?: React.ReactNode;
+  tooltipText: string;
 };
 
 type TReferencesButtonProps = TDispatchProps & TReduxProps & TOwnProps;
@@ -73,14 +74,12 @@ class ReferencesButtonImpl extends React.PureComponent<TReferencesButtonProps> {
   );
 
   render() {
-    const { references } = this.props;
+    const { references, children, tooltipText } = this.props;
 
     return (
-      <Tooltip arrowPointAtCenter mouseLeaveDelay={0.5} placement="left" title="Contains multiple references">
+      <Tooltip arrowPointAtCenter mouseLeaveDelay={0.5} placement="left" title={tooltipText}>
         <Dropdown overlay={this.referencesList(references)} placement="bottomRight" trigger={['click']}>
-          <a className="multi-parent-button">
-            <IoNetwork />
-          </a>
+          <a className="multi-parent-button">{children}</a>
         </Dropdown>
       </Tooltip>
     );

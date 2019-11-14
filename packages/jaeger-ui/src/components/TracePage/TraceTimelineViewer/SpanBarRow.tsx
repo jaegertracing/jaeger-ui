@@ -15,6 +15,8 @@
 import * as React from 'react';
 import IoAlert from 'react-icons/lib/io/alert';
 import IoArrowRightA from 'react-icons/lib/io/arrow-right-a';
+import IoNetwork from 'react-icons/lib/io/network';
+
 import ReferencesButton from './ReferencesButton';
 import TimelineRow from './TimelineRow';
 import { formatDuration, ViewedBoundsFunctionType } from './utils';
@@ -151,7 +153,13 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
               <small className="endpoint-name">{rpc ? rpc.operationName : operationName}</small>
             </a>
             {span.references.length > 1 && (
-              <ReferencesButton references={span.references} traceID={span.traceID} />
+              <ReferencesButton
+                references={span.references}
+                traceID={span.traceID}
+                tooltipText="Contains multiple references"
+              >
+                <IoNetwork />
+              </ReferencesButton>
             )}
           </div>
         </TimelineRow.Cell>
