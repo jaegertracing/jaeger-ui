@@ -76,6 +76,7 @@ describe('DeepDependencyGraphPage', () => {
     };
     const ddgPageImpl = new DeepDependencyGraphPageImpl(props);
     const ddgWithoutGraph = new DeepDependencyGraphPageImpl(propsWithoutGraph);
+    const setIdx = visibilityIdx => ({ visibilityIdx });
 
     describe('constructor', () => {
       beforeEach(() => {
@@ -195,17 +196,17 @@ describe('DeepDependencyGraphPage', () => {
           expect(trackFocusPathsSpy).not.toHaveBeenCalled();
         });
 
-        it('udates url state and tracks focus paths', () => {
+        it('updates url state and tracks focus paths', () => {
           const indices = [4, 8, 15, 16, 23, 42];
           const elems = [
             {
               memberOf: {
-                members: indices.slice(0, indices.length / 2).map(visibilityIdx => ({ visibilityIdx })),
+                members: indices.slice(0, indices.length / 2).map(setIdx),
               },
             },
             {
               memberOf: {
-                members: indices.slice(indices.length / 2).map(visibilityIdx => ({ visibilityIdx })),
+                members: indices.slice(indices.length / 2).map(setIdx),
               },
             },
           ];
@@ -235,10 +236,14 @@ describe('DeepDependencyGraphPage', () => {
           expect(trackHideSpy).not.toHaveBeenCalled();
         });
 
-        it('udates url state and tracks hide', () => {
+        it('updates url state and tracks hide', () => {
           props.graph.getVisWithoutVertex.mockReturnValueOnce(visEncoding);
           ddgPageImpl.hideVertex(vertexKey);
 
+          expect(props.graph.getVisWithoutVertex).toHaveBeenLastCalledWith(
+            vertexKey,
+            props.urlState.visEncoding
+          );
           expect(getUrlSpy).toHaveBeenLastCalledWith(
             Object.assign({}, props.urlState, { visEncoding }),
             undefined
@@ -417,13 +422,18 @@ describe('DeepDependencyGraphPage', () => {
           expect(trackShowSpy).not.toHaveBeenCalled();
         });
 
-        it('udates url state and tracks hide if result.status is ECheckedStatus.Empty', () => {
+        it('updates url state and tracks hide if result.status is ECheckedStatus.Empty', () => {
           props.graph.getVisWithUpdatedGeneration.mockReturnValueOnce({
             visEncoding,
             update: ECheckedStatus.Empty,
           });
           ddgPageImpl.updateGenerationVisibility(vertexKey, direction);
 
+          expect(props.graph.getVisWithUpdatedGeneration).toHaveBeenLastCalledWith(
+            vertexKey,
+            direction,
+            props.urlState.visEncoding
+          );
           expect(getUrlSpy).toHaveBeenLastCalledWith(
             Object.assign({}, props.urlState, { visEncoding }),
             undefined
@@ -433,13 +443,18 @@ describe('DeepDependencyGraphPage', () => {
           expect(trackShowSpy).not.toHaveBeenCalled();
         });
 
-        it('udates url state and tracks show if result.status is ECheckedStatus.Full', () => {
+        it('updates url state and tracks show if result.status is ECheckedStatus.Full', () => {
           props.graph.getVisWithUpdatedGeneration.mockReturnValueOnce({
             visEncoding,
             update: ECheckedStatus.Full,
           });
           ddgPageImpl.updateGenerationVisibility(vertexKey, direction);
 
+          expect(props.graph.getVisWithUpdatedGeneration).toHaveBeenLastCalledWith(
+            vertexKey,
+            direction,
+            props.urlState.visEncoding
+          );
           expect(getUrlSpy).toHaveBeenLastCalledWith(
             Object.assign({}, props.urlState, { visEncoding }),
             undefined
@@ -457,10 +472,8 @@ describe('DeepDependencyGraphPage', () => {
       let warnSpy;
 
       beforeAll(() => {
-        props.graph.getVertexVisiblePathElems.mockReturnValue(
-          visibilityIndices.map(visibilityIdx => ({ visibilityIdx }))
-        );
-        warnSpy = jest.spyOn(console, 'warn').mockImplementation();
+        props.graph.getVertexVisiblePathElems.mockReturnValue(visibilityIndices.map(setIdx));
+        warnSpy = jest.spyOn(console, 'warn').mockImplementationOnce();
       });
 
       beforeEach(() => {

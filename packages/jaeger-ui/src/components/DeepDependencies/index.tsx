@@ -142,10 +142,9 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
 
   hideVertex = (vertexKey: string) => {
     const { graph, urlState } = this.props;
-    const { visEncoding: currVisEncoding } = urlState;
     if (!graph) return;
 
-    const visEncoding = graph.getVisWithoutVertex(vertexKey, currVisEncoding);
+    const visEncoding = graph.getVisWithoutVertex(vertexKey, urlState.visEncoding);
     if (!visEncoding) return;
 
     trackHide();
@@ -219,10 +218,9 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
 
   updateGenerationVisibility = (vertexKey: string, direction: EDirection) => {
     const { graph, urlState } = this.props;
-    const { visEncoding: currVisEncoding } = urlState;
     if (!graph) return;
 
-    const result = graph.getVisWithUpdatedGeneration(vertexKey, direction, currVisEncoding);
+    const result = graph.getVisWithUpdatedGeneration(vertexKey, direction, urlState.visEncoding);
     if (!result) return;
 
     const { visEncoding, update } = result;

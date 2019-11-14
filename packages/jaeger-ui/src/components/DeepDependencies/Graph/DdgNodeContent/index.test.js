@@ -142,10 +142,10 @@ describe('<DdgNodeContent>', () => {
 
     it('cancels delayed set state if mouse re-enters before timeout runs', () => {
       wrapper.simulate('mouseleave', { type: 'mouseleave' });
-      expect(wrapper.instance().timeout).toEqual(expect.any(Number));
+      expect(wrapper.instance().hoverClearDelay).toEqual(expect.any(Number));
 
       wrapper.simulate('mouseenter', { type: 'mouseenter' });
-      expect(wrapper.instance().timeout).toBeUndefined();
+      expect(wrapper.instance().hoverClearDelay).toBeUndefined();
 
       jest.runAllTimers();
       expect(wrapper.state('hovered')).toBe(true);

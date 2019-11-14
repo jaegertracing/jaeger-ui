@@ -14,6 +14,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+/*
+ * Because .plexus-Digraph--MeasurableHtmlNode is `position: absolute`, adding a z-index to DdgNodeContent
+ * would have no effect on layering.
+ */
+.plexus-Digraph--MeasurableHtmlNode:hover {
+  z-index: 1;
+}
+
 .DdgNodeContent--core {
   background: #eee;
   border-radius: 100%;
@@ -66,6 +74,7 @@ limitations under the License.
 }
 
 .DdgNodeContent--actionsItemIconWrapper {
+  flex: none;
   height: 16px;
   width: 16px;
 }

@@ -62,7 +62,7 @@ type TProps = {
 };
 
 export default class DdgNodeContent extends React.PureComponent<TProps> {
-  timeout?: number;
+  hoverClearDelay?: number;
 
   state = {
     hovered: false,
@@ -186,16 +186,16 @@ export default class DdgNodeContent extends React.PureComponent<TProps> {
     const hovered = event.type === 'mouseenter';
     setViewModifier(vertexKey, EViewModifier.Hovered, hovered);
     if (hovered) {
-      if (this.timeout) {
-        clearTimeout(this.timeout);
-        this.timeout = undefined;
+      if (this.hoverClearDelay) {
+        clearTimeout(this.hoverClearDelay);
+        this.hoverClearDelay = undefined;
       } else {
         this.setState({ hovered });
       }
     } else {
-      this.timeout = setTimeout(() => {
+      this.hoverClearDelay = setTimeout(() => {
         this.setState({ hovered });
-        this.timeout = undefined;
+        this.hoverClearDelay = undefined;
       }, 150);
     }
   };

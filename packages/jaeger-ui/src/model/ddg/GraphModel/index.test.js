@@ -28,8 +28,8 @@ import { encode } from '../visibility-codec';
 describe('GraphModel', () => {
   const convergentModel = transformDdgData(wrap(convergentPaths), focalPayloadElem);
   const doubleFocalModel = transformDdgData(wrap([doubleFocalPath, simplePath]), focalPayloadElem);
-  const generationModel = transformDdgData(wrap(generationPaths), focalPayloadElem);
   const simpleModel = transformDdgData(wrap([simplePath]), focalPayloadElem);
+  const getIdx = ({ visibilityIdx }) => visibilityIdx;
 
   describe('constructor', () => {
     /**
@@ -175,47 +175,46 @@ describe('GraphModel', () => {
   });
 
   describe('generations', () => {
+    const generationModel = transformDdgData(wrap(generationPaths), focalPayloadElem);
     const generationGraph = makeGraph(generationModel, false, EDdgDensity.MostConcise);
     const oneHopIndices = [
       ...generationGraph.distanceToPathElems.get(-1),
       ...generationGraph.distanceToPathElems.get(0),
       ...generationGraph.distanceToPathElems.get(1),
-    ].map(({ visibilityIdx }) => visibilityIdx);
+    ].map(getIdx);
+    const allVisible = encode(generationGraph.visIdxToPathElem.map((_elem, idx) => idx));
     const external = ({ isExternal }) => isExternal;
-    const hasher = generationGraph.getPathElemHasher();
     const internal = ({ isExternal }) => !isExternal;
 
     const downstreamTargets = generationGraph.distanceToPathElems.get(2);
+    const targetKey = generationGraph.getPathElemHasher()(downstreamTargets[0]);
     const upstreamTargets = generationGraph.distanceToPathElems.get(-2);
-    const targets = [...downstreamTargets, ...upstreamTargets];
-    const twoHopIndices = [...oneHopIndices, ...targets.map(({ visibilityIdx }) => visibilityIdx)];
-    const targetKey = hasher(targets[0]);
     const { visibilityIdx: targetLeafIdx } = downstreamTargets.find(external);
+    const { visibilityIdx: targetRootIdx } = upstreamTargets.find(external);
+    const leafAndRootVisIndices = [...oneHopIndices, targetLeafIdx, targetRootIdx];
+    const leafAndRootVisEncoding = encode(leafAndRootVisIndices);
     const [hiddenDownstreamTargetNotLeaf, visibleDownstreamTargetNotLeaf] = downstreamTargets.filter(
       internal
     );
-
-    const { visibilityIdx: targetRootIdx } = upstreamTargets.find(external);
     const [hiddenUpstreamTargetNotRoot, visibleUpstreamTargetNotRoot] = upstreamTargets.filter(internal);
-    const leafAndRootVisEncoding = encode([...oneHopIndices, targetLeafIdx, targetRootIdx]);
-    const partialInternalTargetVisIndices = [
-      ...oneHopIndices,
-      targetLeafIdx,
-      targetRootIdx,
+    const partialTargetVisIndices = [
+      ...leafAndRootVisIndices,
       visibleDownstreamTargetNotLeaf.visibilityIdx,
       visibleUpstreamTargetNotRoot.visibilityIdx,
     ];
-    const partialInternalTargetVisEncoding = encode(partialInternalTargetVisIndices);
-    const allVisible = encode(generationGraph.visIdxToPathElem.map((_elem, idx) => idx));
-
-    const subsetOfTargetExternalNeighborVisibilityIndices = [
+    const partialTargetVisEncoding = encode(partialTargetVisIndices);
+    const subsetOfTargetExternalNeighborsVisibilityIndices = [
       visibleDownstreamTargetNotLeaf.externalSideNeighbor.visibilityIdx,
       visibleUpstreamTargetNotRoot.externalSideNeighbor.visibilityIdx,
     ];
-
+    const twoHopIndices = [
+      ...oneHopIndices,
+      ...downstreamTargets.map(getIdx),
+      ...upstreamTargets.map(getIdx),
+    ];
     const allButSomeExternalVisible = encode([
       ...twoHopIndices,
-      ...subsetOfTargetExternalNeighborVisibilityIndices,
+      ...subsetOfTargetExternalNeighborsVisibilityIndices,
     ]);
 
     describe('getGeneration', () => {
@@ -230,6 +229,7 @@ describe('GraphModel', () => {
         expect(
           generationGraph.getGeneration(targetKey, EDirection.Downstream, encode(oneHopIndices))
         ).toEqual([]);
+
         expect(generationGraph.getGeneration(targetKey, EDirection.Upstream, encode(oneHopIndices))).toEqual(
           []
         );
@@ -249,7 +249,7 @@ describe('GraphModel', () => {
         const downstreamResult = generationGraph.getGeneration(
           targetKey,
           EDirection.Downstream,
-          partialInternalTargetVisEncoding
+          partialTargetVisEncoding
         );
         expect(downstreamResult).toEqual([visibleDownstreamTargetNotLeaf.externalSideNeighbor]);
         expect(downstreamResult).toEqual(
@@ -262,7 +262,7 @@ describe('GraphModel', () => {
         const upstreamResult = generationGraph.getGeneration(
           targetKey,
           EDirection.Upstream,
-          partialInternalTargetVisEncoding
+          partialTargetVisEncoding
         );
         expect(upstreamResult).toEqual([visibleUpstreamTargetNotRoot.externalSideNeighbor]);
         expect(upstreamResult).toEqual(
@@ -279,6 +279,7 @@ describe('GraphModel', () => {
         expect(
           generationGraph.getGenerationVisibility(targetKey, EDirection.Downstream, leafAndRootVisEncoding)
         ).toEqual(null);
+
         expect(
           generationGraph.getGenerationVisibility(targetKey, EDirection.Upstream, leafAndRootVisEncoding)
         ).toEqual(null);
@@ -289,29 +290,21 @@ describe('GraphModel', () => {
           ECheckedStatus.Empty
         );
         expect(
-          generationGraph.getGenerationVisibility(
-            targetKey,
-            EDirection.Downstream,
-            partialInternalTargetVisEncoding
-          )
+          generationGraph.getGenerationVisibility(targetKey, EDirection.Downstream, partialTargetVisEncoding)
         ).toEqual(ECheckedStatus.Empty);
 
         expect(generationGraph.getGenerationVisibility(targetKey, EDirection.Upstream)).toEqual(
           ECheckedStatus.Empty
         );
         expect(
-          generationGraph.getGenerationVisibility(
-            targetKey,
-            EDirection.Upstream,
-            partialInternalTargetVisEncoding
-          )
+          generationGraph.getGenerationVisibility(targetKey, EDirection.Upstream, partialTargetVisEncoding)
         ).toEqual(ECheckedStatus.Empty);
       });
 
       it('returns ECheckedStatus.Full if all neighbors are visible', () => {
-        const partialTargetExternalEncoding = encode([
-          ...partialInternalTargetVisIndices,
-          ...subsetOfTargetExternalNeighborVisibilityIndices,
+        const partialTargetWithRespectiveExternalVisEncoding = encode([
+          ...partialTargetVisIndices,
+          ...subsetOfTargetExternalNeighborsVisibilityIndices,
         ]);
 
         expect(generationGraph.getGenerationVisibility(targetKey, EDirection.Downstream, allVisible)).toEqual(
@@ -321,7 +314,7 @@ describe('GraphModel', () => {
           generationGraph.getGenerationVisibility(
             targetKey,
             EDirection.Downstream,
-            partialTargetExternalEncoding
+            partialTargetWithRespectiveExternalVisEncoding
           )
         ).toEqual(ECheckedStatus.Full);
         expect(generationGraph.getGenerationVisibility(targetKey, EDirection.Upstream, allVisible)).toEqual(
@@ -331,7 +324,7 @@ describe('GraphModel', () => {
           generationGraph.getGenerationVisibility(
             targetKey,
             EDirection.Upstream,
-            partialTargetExternalEncoding
+            partialTargetWithRespectiveExternalVisEncoding
           )
         ).toEqual(ECheckedStatus.Full);
       });
@@ -340,6 +333,7 @@ describe('GraphModel', () => {
         expect(
           generationGraph.getGenerationVisibility(targetKey, EDirection.Downstream, allButSomeExternalVisible)
         ).toEqual(ECheckedStatus.Partial);
+
         expect(
           generationGraph.getGenerationVisibility(targetKey, EDirection.Upstream, allButSomeExternalVisible)
         ).toEqual(ECheckedStatus.Partial);
@@ -349,32 +343,33 @@ describe('GraphModel', () => {
     describe('getVisWithUpdatedGeneration', () => {
       const downstreamFullIndices = [
         ...twoHopIndices,
-        ...generationGraph.distanceToPathElems.get(3).map(({ visibilityIdx }) => visibilityIdx),
+        ...generationGraph.distanceToPathElems.get(3).map(getIdx),
       ];
       const downstreamFullEncoding = encode(downstreamFullIndices);
       const upstreamFullIndices = [
         ...twoHopIndices,
-        ...generationGraph.distanceToPathElems.get(-3).map(({ visibilityIdx }) => visibilityIdx),
+        ...generationGraph.distanceToPathElems.get(-3).map(getIdx),
       ];
       const upstreamFullEncoding = encode(upstreamFullIndices);
 
-      it('returns undefined if there is no generation to update', () => {
+      it('returns null if there is no generation to update', () => {
         expect(
           generationGraph.getVisWithUpdatedGeneration(targetKey, EDirection.Downstream, encode(oneHopIndices))
-        ).toEqual(undefined);
+        ).toEqual(null);
         expect(
           generationGraph.getVisWithUpdatedGeneration(targetKey, EDirection.Upstream, encode(oneHopIndices))
-        ).toEqual(undefined);
+        ).toEqual(null);
+
         expect(
           generationGraph.getVisWithUpdatedGeneration(
             targetKey,
             EDirection.Downstream,
             leafAndRootVisEncoding
           )
-        ).toEqual(undefined);
+        ).toEqual(null);
         expect(
           generationGraph.getVisWithUpdatedGeneration(targetKey, EDirection.Upstream, leafAndRootVisEncoding)
-        ).toEqual(undefined);
+        ).toEqual(null);
       });
 
       it('emptys target generation if it is full', () => {
@@ -384,6 +379,7 @@ describe('GraphModel', () => {
           visEncoding: upstreamFullEncoding,
           update: ECheckedStatus.Empty,
         });
+
         expect(
           generationGraph.getVisWithUpdatedGeneration(targetKey, EDirection.Upstream, allVisible)
         ).toEqual({
@@ -397,6 +393,7 @@ describe('GraphModel', () => {
           visEncoding: downstreamFullEncoding,
           update: ECheckedStatus.Full,
         });
+
         expect(generationGraph.getVisWithUpdatedGeneration(targetKey, EDirection.Upstream)).toEqual({
           visEncoding: upstreamFullEncoding,
           update: ECheckedStatus.Full,
@@ -411,9 +408,13 @@ describe('GraphModel', () => {
             allButSomeExternalVisible
           )
         ).toEqual({
-          visEncoding: encode([...downstreamFullIndices, ...subsetOfTargetExternalNeighborVisibilityIndices]),
+          visEncoding: encode([
+            ...downstreamFullIndices,
+            ...subsetOfTargetExternalNeighborsVisibilityIndices,
+          ]),
           update: ECheckedStatus.Full,
         });
+
         expect(
           generationGraph.getVisWithUpdatedGeneration(
             targetKey,
@@ -421,7 +422,7 @@ describe('GraphModel', () => {
             allButSomeExternalVisible
           )
         ).toEqual({
-          visEncoding: encode([...upstreamFullIndices, ...subsetOfTargetExternalNeighborVisibilityIndices]),
+          visEncoding: encode([...upstreamFullIndices, ...subsetOfTargetExternalNeighborsVisibilityIndices]),
           update: ECheckedStatus.Full,
         });
       });

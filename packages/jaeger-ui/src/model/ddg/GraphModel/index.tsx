@@ -131,6 +131,7 @@ export default class GraphModel {
     const rv: PathElem[] = [];
     const elems = this.getVertexVisiblePathElems(vertexKey, visEncoding);
     if (!elems) return rv;
+
     elems.forEach(({ focalSideNeighbor, memberIdx, memberOf }) => {
       const generationMember = memberOf.members[memberIdx + direction];
       if (generationMember && generationMember !== focalSideNeighbor) rv.push(generationMember);
@@ -154,6 +155,7 @@ export default class GraphModel {
       partial = partial || isVis;
       full = full && isVis;
     });
+
     if (full) return ECheckedStatus.Full;
     if (partial) return ECheckedStatus.Partial;
     return ECheckedStatus.Empty;
@@ -259,10 +261,10 @@ export default class GraphModel {
     vertexKey: string,
     direction: EDirection,
     visEncoding?: string
-  ): { visEncoding: string; update: ECheckedStatus } | undefined {
+  ): { visEncoding: string; update: ECheckedStatus } | null {
     const generationElems = this.getGeneration(vertexKey, direction, visEncoding);
     const currCheckedStatus = this.getGenerationVisibility(vertexKey, direction, visEncoding);
-    if (!generationElems.length || !currCheckedStatus) return undefined;
+    if (!generationElems.length || !currCheckedStatus) return null;
 
     if (currCheckedStatus === ECheckedStatus.Full) {
       return {
@@ -278,15 +280,15 @@ export default class GraphModel {
   }
 
   public getVisWithVertices(vertices: TDdgVertex[], visEncoding?: string) {
-    const elemSet: Set<PathElem> = new Set();
+    const elemSet: PathElem[] = [];
     vertices.forEach(vertex => {
       const elems = this.vertexToPathElems.get(vertex);
       if (!elems) throw new Error(`${vertex} does not exist in graph`);
 
-      elems.forEach(elem => elemSet.add(elem));
+      elemSet.push(...elems);
     });
 
-    return this.getVisWithElems(Array.from(elemSet), visEncoding);
+    return this.getVisWithElems(elemSet, visEncoding);
   }
 
   public getVertexVisiblePathElems(
