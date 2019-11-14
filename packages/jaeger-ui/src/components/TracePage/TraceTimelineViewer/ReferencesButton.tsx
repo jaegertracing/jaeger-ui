@@ -75,12 +75,21 @@ class ReferencesButtonImpl extends React.PureComponent<TReferencesButtonProps> {
 
   render() {
     const { references, children, tooltipText } = this.props;
-
+    if (references.length > 1) {
+      return (
+        <Tooltip arrowPointAtCenter mouseLeaveDelay={0.5} placement="left" title={tooltipText}>
+          <Dropdown overlay={this.referencesList(references)} placement="bottomRight" trigger={['click']}>
+            <a className="multi-parent-button">{children}</a>
+          </Dropdown>
+        </Tooltip>
+      );
+    }
+    const ref = references[0];
     return (
       <Tooltip arrowPointAtCenter mouseLeaveDelay={0.5} placement="left" title={tooltipText}>
-        <Dropdown overlay={this.referencesList(references)} placement="bottomRight" trigger={['click']}>
-          <a className="multi-parent-button">{children}</a>
-        </Dropdown>
+        <a role="button" className="multi-parent-button" onClick={() => this.focusSpan(ref.spanID)}>
+          {children}
+        </a>
       </Tooltip>
     );
   }

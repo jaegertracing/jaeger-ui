@@ -16,7 +16,7 @@ import * as React from 'react';
 import IoAlert from 'react-icons/lib/io/alert';
 import IoArrowRightA from 'react-icons/lib/io/arrow-right-a';
 import IoNetwork from 'react-icons/lib/io/network';
-
+import IoIosArrowUp from 'react-icons/lib/io/ios-arrow-up';
 import ReferencesButton from './ReferencesButton';
 import TimelineRow from './TimelineRow';
 import { formatDuration, ViewedBoundsFunctionType } from './utils';
@@ -159,6 +159,15 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
                 tooltipText="Contains multiple references"
               >
                 <IoNetwork />
+              </ReferencesButton>
+            )}
+            {span.referrals && span.referrals.length > 0 && (
+              <ReferencesButton
+                references={span.referrals}
+                traceID={span.traceID}
+                tooltipText="This span is refereed by another span with multiple references."
+              >
+                <IoIosArrowUp />
               </ReferencesButton>
             )}
           </div>
