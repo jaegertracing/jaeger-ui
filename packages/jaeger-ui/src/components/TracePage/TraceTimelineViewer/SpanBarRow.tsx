@@ -152,7 +152,7 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
               </span>
               <small className="endpoint-name">{rpc ? rpc.operationName : operationName}</small>
             </a>
-            {span.references.length > 1 && (
+            {span.references && span.references.length > 1 && (
               <ReferencesButton
                 references={span.references}
                 traceID={span.traceID}
