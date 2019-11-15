@@ -20,14 +20,15 @@ import NameSelector from './NameSelector';
 import LayoutSettings from './LayoutSettings';
 import { trackFilter, trackShowMatches } from '../index.track';
 import UiFindInput from '../../common/UiFindInput';
-import { EDirection, TDdgDistanceToPathElems, TDdgVertex, EDdgDensity } from '../../../model/ddg/types';
+import { EDirection, TDdgDistanceToPathElems, EDdgDensity } from '../../../model/ddg/types';
 
 import './index.css';
 
 type TProps = {
+  clearOperation: () => void;
   density: EDdgDensity;
   distanceToPathElems?: TDdgDistanceToPathElems;
-  hiddenUiFindMatches?: Set<TDdgVertex>;
+  hiddenUiFindMatches?: Set<string>;
   operation?: string;
   operations: string[] | undefined;
   service?: string;
@@ -38,7 +39,7 @@ type TProps = {
   setService: (service: string) => void;
   showOperations: boolean;
   showParameters?: boolean;
-  showVertices: (vertices: TDdgVertex[]) => void;
+  showVertices: (vertexKeys: string[]) => void;
   toggleShowOperations: (enable: boolean) => void;
   uiFindCount: number | undefined;
   visEncoding?: string;
@@ -95,6 +96,7 @@ export default class Header extends React.PureComponent<TProps> {
 
   render() {
     const {
+      clearOperation,
       density,
       distanceToPathElems,
       operation,
@@ -106,9 +108,9 @@ export default class Header extends React.PureComponent<TProps> {
       setOperation,
       setService,
       showOperations,
+      showParameters,
       toggleShowOperations,
       visEncoding,
-      showParameters,
     } = this.props;
 
     return (
@@ -116,7 +118,7 @@ export default class Header extends React.PureComponent<TProps> {
         {showParameters && (
           <div className="DdgHeader--paramsHeader">
             <NameSelector
-              label="Service:"
+              label="Service"
               placeholder="Select a service…"
               value={service || null}
               setValue={setService}
@@ -125,11 +127,11 @@ export default class Header extends React.PureComponent<TProps> {
             />
             {service && (
               <NameSelector
-                label="Operation:"
-                placeholder="Select an operation…"
+                clearValue={clearOperation}
+                label="Operation"
+                placeholder="Filter by operation…"
                 value={operation || null}
                 setValue={setOperation}
-                required
                 options={operations || []}
               />
             )}

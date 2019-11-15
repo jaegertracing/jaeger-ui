@@ -20,6 +20,9 @@ limitations under the License.
  */
 .plexus-Digraph--MeasurableHtmlNode:hover {
   z-index: 1;
+  /* TODO ease-out 150ms */
+  /* if ease-out also works for display none the hovered.state can be used only as a guard for calculating the
+   * parent/children vis */
 }
 
 .DdgNodeContent--core {

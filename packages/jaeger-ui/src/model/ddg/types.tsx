@@ -92,10 +92,28 @@ export type TDdgModel = {
   visIdxToPathElem: PathElem[];
 };
 
+/*
+type TDdgVertexCommon = {
+  key: string;
+  operation: string | null;
+}
+
+type TDdgVertexFocal = {
+  isFocalNode: true;
+  service: string | string[];
+}
+
+type TDdgVertexNonFocal = {
+  isFocalNode: false;
+  service: string;
+}
+
+export type TDdgVertex = TVertex<TDdgVertexCommon & (TDdgVertexFocal | TDdgVertexNonFocal)>;
+*/
 export type TDdgVertex = TVertex<{
   isFocalNode: boolean;
   key: string;
-  operation: string | null;
+  operation: string | string[] | null;
   service: string;
 }>;
 
@@ -105,7 +123,7 @@ export type TDdgSparseUrlState = {
   hash?: string;
   operation?: string;
   service?: string;
-  showOp: boolean;
+  showOp?: boolean;
   start?: number;
   visEncoding?: string;
 };

@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Checkbox } from 'antd';
+import { Checkbox, Popover } from 'antd';
 import cx from 'classnames';
 import { TLayoutVertex } from '@jaegertracing/plexus/lib/types';
 import IoAndroidLocate from 'react-icons/lib/io/android-locate';
@@ -33,6 +33,7 @@ import { setFocusIcon } from './node-icons';
 import { trackSetFocus, trackViewTraces } from '../../index.track';
 import { getUrl } from '../../url';
 import BreakableText from '../../../common/BreakableText';
+import FilteredList from '../../../common/FilteredList';
 import NewWindowIcon from '../../../common/NewWindowIcon';
 import { getUrl as getSearchUrl } from '../../../SearchTracePage/url';
 import {
@@ -54,8 +55,9 @@ type TProps = {
   hideVertex: (vertexKey: string) => void;
   isFocalNode: boolean;
   isPositioned: boolean;
-  operation: string | null;
+  operation: string | string[] | null;
   service: string;
+  setOperation: (operation: string) => void;
   setViewModifier: (vertexKey: string, viewModifier: EViewModifier, isEnabled: boolean) => void;
   updateGenerationVisibility: (vertexKey: string, direction: EDirection) => void;
   vertexKey: string;
@@ -85,8 +87,8 @@ export default class DdgNodeContent extends React.PureComponent<TProps> {
     getGenerationVisibility,
     getVisiblePathElems,
     hideVertex,
+    setOperation,
     setViewModifier,
-    showOp,
     updateGenerationVisibility,
   }: {
     baseUrl: string;
@@ -96,8 +98,8 @@ export default class DdgNodeContent extends React.PureComponent<TProps> {
     getGenerationVisibility: (vertexKey: string, direction: EDirection) => ECheckedStatus | null;
     getVisiblePathElems: (vertexKey: string) => PathElem[] | undefined;
     hideVertex: (vertexKey: string) => void;
+    setOperation: (operation: string) => void;
     setViewModifier: (vertexKey: string, viewModifier: EViewModifier, enable: boolean) => void;
-    showOp: boolean;
     updateGenerationVisibility: (vertexKey: string, direction: EDirection) => void;
   }) {
     return function renderNode(vertex: TDdgVertex, _: unknown, lv: TLayoutVertex<any> | null) {
@@ -105,7 +107,7 @@ export default class DdgNodeContent extends React.PureComponent<TProps> {
       return (
         <DdgNodeContent
           focalNodeUrl={
-            isFocalNode ? null : getUrl({ density, operation, service, showOp, ...extraUrlArgs }, baseUrl)
+            isFocalNode ? null : getUrl({ density, operation, service, ...extraUrlArgs }, baseUrl)
           }
           focusPathsThroughVertex={focusPathsThroughVertex}
           getGenerationVisibility={getGenerationVisibility}
@@ -114,6 +116,7 @@ export default class DdgNodeContent extends React.PureComponent<TProps> {
           isFocalNode={isFocalNode}
           isPositioned={Boolean(lv)}
           operation={operation}
+          setOperation={setOperation}
           setViewModifier={setViewModifier}
           service={service}
           updateGenerationVisibility={updateGenerationVisibility}
@@ -209,6 +212,7 @@ export default class DdgNodeContent extends React.PureComponent<TProps> {
       isPositioned,
       operation,
       service,
+      setOperation,
       vertexKey,
     } = this.props;
 
@@ -240,7 +244,24 @@ export default class DdgNodeContent extends React.PureComponent<TProps> {
                 className="DdgNodeContent--label"
                 style={{ paddingTop: `${OP_PADDING_TOP}px`, width: `${opWidth}px` }}
               >
-                <BreakableText text={operation} wordRegexp={WORD_RX} />
+              {
+                Array.isArray(operation)
+                  ? <Popover
+                      content={
+                        <FilteredList
+                          cancel={() => {}}
+                          options={operation}
+                          value={null}
+                          setValue={setOperation}
+                        />
+                      }
+                      placement="bottom"
+                      title="Select Operation to Filter Graph"
+                    >
+                      <span>{`${operation.length} Operations`}</span>
+                    </Popover>
+                  : <BreakableText text={operation} wordRegexp={WORD_RX} />
+              }
               </div>
             )}
           </div>

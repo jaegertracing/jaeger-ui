@@ -90,7 +90,7 @@ export class UnconnectedTraceDiffGraph extends React.PureComponent<Props> {
     const dagClassName = cx('TraceDiffGraph--dag', { 'is-uiFind-mode': uiFind });
     const inputProps: Record<string, any> = {
       className: 'TraceDiffGraph--uiFind',
-      suffix: uiFind.length && String(keys.size),
+      suffix: uiFind.length ? String(keys.size) : undefined,
     };
 
     return (
