@@ -111,13 +111,13 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     const tagsInfo = deduplicateTags(span.tags);
     span.tags = tagsInfo.tags;
     span.warnings = span.warnings.concat(tagsInfo.warnings);
-    const multiRef = span.references.length > 1;
     span.references.forEach((ref, index) => {
       const refSpan = spanMap.get(ref.spanID) as Span;
       if (refSpan) {
         // eslint-disable-next-line no-param-reassign
         ref.span = refSpan;
-        if (multiRef && index > 0) {
+        if (index > 0) {
+          // Don't take into account the parent, just other references.
           refSpan.referrals = refSpan.referrals || [];
           refSpan.referrals.push({
             spanID,

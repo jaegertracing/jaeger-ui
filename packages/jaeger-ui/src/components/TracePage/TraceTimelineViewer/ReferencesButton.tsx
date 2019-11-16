@@ -48,7 +48,8 @@ type TOwnProps = {
 
 type TReferencesButtonProps = TDispatchProps & TReduxProps & TOwnProps;
 
-class ReferencesButtonImpl extends React.PureComponent<TReferencesButtonProps> {
+// export for tests
+export class UnconnectedReferencesButton extends React.PureComponent<TReferencesButtonProps> {
   focusSpan = (uiFind: string) => {
     const { trace, focusUiFindMatches, location, history } = this.props;
     if (trace && trace.data) {
@@ -65,7 +66,7 @@ class ReferencesButtonImpl extends React.PureComponent<TReferencesButtonProps> {
     <Menu>
       {references.map(({ span, spanID }) => (
         <Menu.Item key={`${spanID}`}>
-          <a role="button" onClick={() => this.focusSpan(spanID)}>
+          <a role="button" onClick={() => this.focusSpan(spanID)} className="reference-option">
             {span ? `${span.operationName} - ${spanID}` : spanID}
           </a>
         </Menu.Item>
@@ -95,6 +96,7 @@ class ReferencesButtonImpl extends React.PureComponent<TReferencesButtonProps> {
   }
 }
 
+// export for tests
 export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
   const { focusUiFindMatches } = bindActionCreators(timelineActions, dispatch);
   return { focusUiFindMatches };
@@ -114,5 +116,5 @@ export default withRouter(
   connect(
     mapStateToProps,
     mapDispatchToProps
-  )(ReferencesButtonImpl)
+  )(UnconnectedReferencesButton)
 );
