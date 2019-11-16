@@ -113,6 +113,27 @@ describe('fetch multiple traces', () => {
       };
       expect(state.traces).toEqual(outcome);
     });
+
+    it('process multiple references', () => {
+      const multiRefTrace = traceGenerator.trace({ numberOfSpans: 6, maxDepth: 3, spansPerLevel: 4 });
+      const parentID = multiRefTrace.spans[0].spanID;
+      const traceID = multiRefTrace.spans[0].traceID;
+      const noSiblingSpan = multiRefTrace.spans.filter(
+        span => span.references.length > 0 && span.references[0].spanID !== parentID
+      );
+      const firstLevel = multiRefTrace.spans.filter(
+        span => span.references.length > 0 && span.references[0].spanID === parentID
+      );
+      noSiblingSpan[0].references.push({
+        refType: 'CHILD_OF',
+        traceID,
+        spanID: firstLevel[0].spanID,
+      });
+      const tTrace = transformTraceData(multiRefTrace);
+      const multiRef = tTrace.spans.filter(span => span.referrals && span.referrals.length > 0);
+      expect(multiRef.length).toEqual(1);
+      expect(multiRef[0].spanID).toEqual(firstLevel[0].spanID);
+    });
   });
 
   it('handles a failed request', () => {
