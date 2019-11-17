@@ -146,7 +146,7 @@ export function computeTraceLinks(linkPatterns: ProcessedLinkPattern[], trace: T
     .filter(key => typeof trace[key] === 'string' || typeof trace[key] === 'number');
 
   linkPatterns
-    .filter(pattern => pattern.type('trace'))
+    .filter(pattern => pattern.type('traces'))
     .forEach(pattern => {
       const parameterValues: Record<string, any> = {};
       const allParameters = pattern.parameters.every(parameter => {

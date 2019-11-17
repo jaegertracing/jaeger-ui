@@ -30,6 +30,13 @@ export type TScript = {
   type: 'inline';
 };
 
+export type LinkPatternsConfig = {
+  type: 'process' | 'tags' | 'logs' | 'traces';
+  key?: string;
+  url: string;
+  text: string;
+};
+
 export type Config = {
   archiveEnabled?: boolean;
   dependencies?: { dagMaxServicesLen?: number; menuEnabled?: boolean };
@@ -41,4 +48,5 @@ export type Config = {
     gaID: string | TNil;
     trackErrors: boolean | TNil;
   };
+  linkPatterns?: LinkPatternsConfig;
 };

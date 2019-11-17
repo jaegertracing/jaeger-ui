@@ -310,12 +310,12 @@ describe('getParameterInAncestor()', () => {
 describe('computeTraceLinks()', () => {
   const linkPatterns = [
     {
-      type: 'trace',
+      type: 'traces',
       url: 'http://example.com/?myKey=#{traceID}',
       text: 'first link (#{traceID})',
     },
     {
-      type: 'trace',
+      type: 'traces',
       url: 'http://example.com/?myKey=#{myOtherKey}&myKey=#{myKey}',
       text: 'second link (#{myOtherKey})',
     },
@@ -434,7 +434,7 @@ describe('getLinks()', () => {
 describe('getTraceLinks()', () => {
   const linkPatterns = [
     {
-      type: 'trace',
+      type: 'traces',
       url: 'http://example.com/#{traceID}',
       text: 'special key link (#{traceID})',
     },
