@@ -19,13 +19,16 @@ import { connect, Dispatch } from 'react-redux';
 import { withRouter } from 'react-router-dom';
 import { History as RouterHistory, Location } from 'history';
 
-import './ReferencesButton.css';
+import NewWindowIcon from '../../common/NewWindowIcon';
+import updateUiFind from '../../../utils/update-ui-find';
 
+import { getUrl } from '../url';
 import { FetchedTrace, ReduxState, TNil } from '../../../types';
 import { actions as timelineActions } from './duck';
 import { extractUiFindFromState } from '../../common/UiFindInput';
 import { SpanReference, Trace } from '../../../types/trace';
-import updateUiFind from '../../../utils/update-ui-find';
+
+import './ReferencesButton.css';
 
 type TDispatchProps = {
   focusUiFindMatches: (trace: Trace, uiFind: string | TNil, preserveHiddenStatus?: boolean) => void;
@@ -48,6 +51,8 @@ type TOwnProps = {
 
 type TReferencesButtonProps = TDispatchProps & TReduxProps & TOwnProps;
 
+const linkToExternalSpan = (traceID: string, spanID: string) => `${getUrl(traceID)}/uiFind?=${spanID}`;
+
 // export for tests
 export class UnconnectedReferencesButton extends React.PureComponent<TReferencesButtonProps> {
   focusSpan = (uiFind: string) => {
@@ -62,15 +67,38 @@ export class UnconnectedReferencesButton extends React.PureComponent<TReferences
     }
   };
 
+  spanLink = (reference: SpanReference, traceID: string, children?: React.ReactNode, className?: string) => {
+    if (traceID === reference.traceID) {
+      return (
+        <a role="button" onClick={() => this.focusSpan(reference.spanID)} className={className}>
+          {children}
+        </a>
+      );
+    }
+    return (
+      <a
+        href={linkToExternalSpan(reference.traceID, reference.spanID)}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={className}
+      >
+        {children}
+      </a>
+    );
+  };
+
   referencesList = (references: SpanReference[]) => (
     <Menu>
-      {references.map(({ span, spanID }) => (
-        <Menu.Item key={`${spanID}`}>
-          <a role="button" onClick={() => this.focusSpan(spanID)} className="reference-option">
-            {span ? `${span.operationName} - ${spanID}` : spanID}
-          </a>
-        </Menu.Item>
-      ))}
+      {references.map(ref => {
+        const { span, traceID, spanID } = ref;
+        const child = (
+          <React.Fragment>
+            {span ? `${span.operationName} - ${ref.spanID}` : ref.spanID}
+            {traceID !== this.props.traceID && <NewWindowIcon />}
+          </React.Fragment>
+        );
+        return <Menu.Item key={`${spanID}`}>{this.spanLink(ref, this.props.traceID, child)}</Menu.Item>;
+      })}
     </Menu>
   );
 
@@ -88,9 +116,7 @@ export class UnconnectedReferencesButton extends React.PureComponent<TReferences
     const ref = references[0];
     return (
       <Tooltip arrowPointAtCenter mouseLeaveDelay={0.5} placement="left" title={tooltipText}>
-        <a role="button" className="multi-parent-button" onClick={() => this.focusSpan(ref.spanID)}>
-          {children}
-        </a>
+        {this.spanLink(ref, this.props.traceID, children, 'multi-parent-button')}
       </Tooltip>
     );
   }

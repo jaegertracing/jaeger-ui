@@ -21,6 +21,7 @@ import { UnconnectedReferencesButton, mapDispatchToProps, mapStateToProps } from
 import updateUiFindSpy from '../../../utils/update-ui-find';
 import transformTraceData from '../../../model/transform-trace-data';
 import traceGenerator from '../../../demo/trace-generators';
+import NewWindowIcon from '../../common/NewWindowIcon';
 
 jest.mock('../../../utils/update-ui-find');
 
@@ -28,6 +29,7 @@ describe('ReferencesButton', () => {
   const trace = transformTraceData(traceGenerator.trace({ numberOfSpans: 10 }));
   const focusMock = jest.fn();
   const oneReference = trace.spans[1].references;
+
   const moreReferences = oneReference.slice();
   moreReferences.push({
     refType: 'CHILD_OF',
@@ -42,7 +44,7 @@ describe('ReferencesButton', () => {
     location: {
       search: null,
     },
-    traceID: 'trace1',
+    traceID: trace.traceID,
     trace: {
       data: trace,
     },
@@ -55,6 +57,16 @@ describe('ReferencesButton', () => {
       expect(wrapper).toMatchSnapshot();
     });
 
+    it('rendering as with external reference', () => {
+      const oneExternal = [{ ...oneReference[0] }];
+      oneExternal[0].traceID = 'extTrace';
+      oneExternal[0].spanID = 'extSpanID';
+
+      const props = { ...baseProps, references: oneExternal };
+      const wrapper = shallow(<UnconnectedReferencesButton {...props} />);
+      expect(wrapper).toMatchSnapshot();
+    });
+
     it('render with dropdown', () => {
       const props = { ...baseProps, references: moreReferences };
       const wrapper = shallow(<UnconnectedReferencesButton {...props} />);
@@ -63,6 +75,23 @@ describe('ReferencesButton', () => {
       const menuInstance = shallow(dropdown.first().props().overlay);
       const submenuItems = menuInstance.find(Menu.Item);
       expect(submenuItems.length).toBe(2);
+    });
+
+    it('render with dropdown and mix of external and internal', () => {
+      const mixRef = oneReference.slice();
+      const oneExternal = { ...oneReference[0] };
+      oneExternal.traceID = 'extTrace';
+      oneExternal.spanID = 'extSpanID';
+      mixRef.push(oneExternal);
+      const props = { ...baseProps, references: mixRef };
+      const wrapper = shallow(<UnconnectedReferencesButton {...props} />);
+      const dropdown = wrapper.find(Dropdown);
+      expect(dropdown.length).toBe(1);
+      const menuInstance = shallow(dropdown.first().props().overlay);
+      const submenuItems = menuInstance.find(Menu.Item);
+      expect(submenuItems.length).toBe(2);
+      expect(submenuItems.at(1).find('a[href="/trace/extTrace/uiFind?=extSpanID"]').length).toBe(1);
+      expect(submenuItems.at(1).find(NewWindowIcon).length).toBe(1);
     });
   });
 
