@@ -18,3 +18,12 @@ limitations under the License.
   padding: 0 5px;
   color: #000;
 }
+
+.external-trace-ref {
+  float: right;
+  margin-left: 5px;
+}
+
+.ref-tooltip {
+  max-width: none;
+}

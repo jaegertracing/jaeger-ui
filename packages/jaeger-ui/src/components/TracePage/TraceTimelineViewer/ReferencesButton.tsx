@@ -93,8 +93,14 @@ export class UnconnectedReferencesButton extends React.PureComponent<TReferences
         const { span, traceID, spanID } = ref;
         const child = (
           <React.Fragment>
-            {span ? `${span.operationName} - ${ref.spanID}` : ref.spanID}
-            {traceID !== this.props.traceID && <NewWindowIcon />}
+            {span
+              ? `${span.process.serviceName}:${span.operationName} - ${ref.spanID}`
+              : `(another trace) - ${ref.spanID}`}
+            {traceID !== this.props.traceID && (
+              <div className="external-trace-ref">
+                <NewWindowIcon />
+              </div>
+            )}
           </React.Fragment>
         );
         return <Menu.Item key={`${spanID}`}>{this.spanLink(ref, this.props.traceID, child)}</Menu.Item>;
@@ -106,7 +112,13 @@ export class UnconnectedReferencesButton extends React.PureComponent<TReferences
     const { references, children, tooltipText } = this.props;
     if (references.length > 1) {
       return (
-        <Tooltip arrowPointAtCenter mouseLeaveDelay={0.5} placement="left" title={tooltipText}>
+        <Tooltip
+          arrowPointAtCenter
+          mouseLeaveDelay={0.5}
+          placement="bottom"
+          title={tooltipText}
+          overlayClassName="ref-tooltip"
+        >
           <Dropdown overlay={this.referencesList(references)} placement="bottomRight" trigger={['click']}>
             <a className="multi-parent-button">{children}</a>
           </Dropdown>
@@ -115,7 +127,13 @@ export class UnconnectedReferencesButton extends React.PureComponent<TReferences
     }
     const ref = references[0];
     return (
-      <Tooltip arrowPointAtCenter mouseLeaveDelay={0.5} placement="left" title={tooltipText}>
+      <Tooltip
+        arrowPointAtCenter
+        mouseLeaveDelay={0.5}
+        placement="bottom"
+        title={tooltipText}
+        overlayClassName="ref-tooltip"
+      >
         {this.spanLink(ref, this.props.traceID, children, 'multi-parent-button')}
       </Tooltip>
     );

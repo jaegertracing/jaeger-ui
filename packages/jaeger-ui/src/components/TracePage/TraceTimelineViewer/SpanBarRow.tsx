@@ -165,7 +165,7 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
               <ReferencesButton
                 references={span.referrals}
                 traceID={span.traceID}
-                tooltipText="This span is refereed by another span with multiple references."
+                tooltipText="This span is refereed by another span"
               >
                 <IoIosArrowUp />
               </ReferencesButton>
