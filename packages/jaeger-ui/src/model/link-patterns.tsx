@@ -17,6 +17,7 @@ import { getConfigValue } from '../utils/config/get-config';
 import { getParent } from './span';
 import { TNil } from '../types';
 import { Span, Link, KeyValuePair } from '../types/trace';
+import pluckTruthy from '../utils/ts/pluckTruthy';
 
 const parameterRegExp = /#\{([^{}]*)\}/g;
 
@@ -139,12 +140,36 @@ function callTemplate(template: ProcessedTemplate, data: any) {
   return template.template(data);
 }
 
+function renderPattern(
+  pattern: ProcessedLinkPattern,
+  items: KeyValuePair[],
+  findInAncestorsFn: (_: string) => KeyValuePair | undefined,
+  onMissingFn: (_: string) => void
+) {
+  const parameterValues: Record<string, any> = {};
+  const allParameters = pattern.parameters.every(parameter => {
+    const entry = getParameterInArray(parameter, items) || findInAncestorsFn(parameter);
+    if (entry) {
+      parameterValues[parameter] = entry.value;
+      return true;
+    }
+    onMissingFn(parameter);
+    return false;
+  });
+  return (
+    allParameters && {
+      url: callTemplate(pattern.url, parameterValues),
+      text: callTemplate(pattern.text, parameterValues),
+    }
+  );
+}
+
 export function computeLinks(
   linkPatterns: ProcessedLinkPattern[],
   span: Span,
   items: KeyValuePair[],
   itemIndex: number
-) {
+): { url: string; text: string }[] {
   const item = items[itemIndex];
   let type = 'logs';
   const processTags = span.process.tags === items;
@@ -155,37 +180,43 @@ export function computeLinks(
   if (spanTags) {
     type = 'tags';
   }
-  const result: { url: string; text: string }[] = [];
-  linkPatterns.forEach(pattern => {
-    if (pattern.type(type) && pattern.key(item.key) && pattern.value(item.value)) {
-      const parameterValues: Record<string, any> = {};
-      const allParameters = pattern.parameters.every(parameter => {
-        let entry = getParameterInArray(parameter, items);
-        if (!entry && !processTags) {
-          // do not look in ancestors for process tags because the same object may appear in different places in the hierarchy
-          // and the cache in getLinks uses that object as a key
-          entry = getParameterInAncestor(parameter, span);
-        }
-        if (entry) {
-          parameterValues[parameter] = entry.value;
-          return true;
-        }
-        // eslint-disable-next-line no-console
-        console.warn(
-          `Skipping link pattern, missing parameter ${parameter} for key ${item.key} in ${type}.`,
-          pattern.object
-        );
-        return false;
-      });
-      if (allParameters) {
-        result.push({
-          url: callTemplate(pattern.url, parameterValues),
-          text: callTemplate(pattern.text, parameterValues),
-        });
-      }
-    }
+  return pluckTruthy(
+    linkPatterns.map(
+      pattern =>
+        pattern.type(type) &&
+        pattern.key(item.key) &&
+        pattern.value(item.value) &&
+        renderPattern(
+          pattern,
+          items,
+          parameter => {
+            // do not look in ancestors for process tags because the same object may appear in different
+            // places in the hierarchy and the cache in getLinks uses that object as a key
+            return !processTags ? getParameterInAncestor(parameter, span) : undefined;
+          },
+          parameter => {
+            // eslint-disable-next-line no-console
+            console.warn(
+              `Skipping link pattern, missing parameter ${parameter} for key ${item.key} in ${type}.`,
+              pattern.object
+            );
+          }
+        )
+    )
+  );
+}
+
+export function computeSingleTagPattern(pattern: String, span: Span) {
+  const linkPattern = processLinkPattern({
+    type: 'tags',
+    url: '',
+    text: pattern,
   });
-  return result;
+  if (!linkPattern) {
+    return false;
+  }
+  const link = renderPattern(linkPattern, span.tags, () => undefined, () => {});
+  return link && link.text;
 }
 
 export function createGetLinks(linkPatterns: ProcessedLinkPattern[], cache: WeakMap<KeyValuePair, Link[]>) {

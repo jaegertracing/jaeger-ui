@@ -40,4 +40,5 @@ export type Config = {
     gaID: string | TNil;
     trackErrors: boolean | TNil;
   };
+  opLabel?: string | TNil;
 };

@@ -24,6 +24,8 @@ import Ticks from './Ticks';
 
 import { TNil } from '../../../types';
 import { Span } from '../../../types/trace';
+import { getConfigValue } from '../../../utils/config/get-config';
+import { computeSingleTagPattern } from '../../../model/link-patterns';
 
 import './SpanBarRow.css';
 
@@ -99,6 +101,8 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
     const viewBounds = getViewedBounds(span.startTime, span.startTime + span.duration);
     const viewStart = viewBounds.start;
     const viewEnd = viewBounds.end;
+    const opLabelPattern = getConfigValue('opLabel');
+    const opLabel = opLabelPattern && computeSingleTagPattern(opLabelPattern, span);
 
     const labelDetail = `${serviceName}::${operationName}`;
     let longLabel;
@@ -148,7 +152,10 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
                   </span>
                 )}
               </span>
-              <small className="endpoint-name">{rpc ? rpc.operationName : operationName}</small>
+              <small className="endpoint-name">
+                {rpc ? rpc.operationName : operationName}
+                {opLabel ? ` ${opLabel}` : ''}
+              </small>
             </a>
           </div>
         </TimelineRow.Cell>

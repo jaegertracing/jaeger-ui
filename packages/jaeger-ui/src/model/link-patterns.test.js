@@ -19,6 +19,7 @@ import {
   getParameterInAncestor,
   processLinkPattern,
   computeLinks,
+  computeSingleTagPattern,
   createGetLinks,
 } from './link-patterns';
 
@@ -344,6 +345,22 @@ describe('computeLinks()', () => {
         text: 'second link (valueOfMy+Other+Key)',
       },
     ]);
+  });
+});
+
+describe('computeSingleTagPattern()', () => {
+  const span = { process: {}, tags: [{ key: 'myKey', value: 'v1' }, { key: 'myKey2', value: 'v2' }] };
+  it('correctly computes single tag pattern', () => {
+    expect(computeSingleTagPattern('#{myKey} - #{myKey}(#{myKey2})', span)).toBe('v1 - v1(v2)');
+  });
+  it('any non-existent tag yields undefined', () => {
+    expect(computeSingleTagPattern('#{myKey} - #{myKey}(#{myKey3})', span)).toBe(false);
+  });
+  it('invalid pattern yields undefined', () => {
+    expect(computeSingleTagPattern('#{myK(#{myKey3})', span)).toBe(false);
+  });
+  it('invalid pattern', () => {
+    expect(computeSingleTagPattern(null, span)).toBe(false);
   });
 });
 

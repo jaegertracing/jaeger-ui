@@ -12,13 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import _omit from 'lodash/omit';
+
 import React from 'react';
 import { mount } from 'enzyme';
 
 import SpanBarRow from './SpanBarRow';
 import SpanTreeOffset from './SpanTreeOffset';
+import { getConfigValue } from '../../../utils/config/get-config';
 
 jest.mock('./SpanTreeOffset');
+jest.mock('../../../utils/config/get-config');
 
 describe('<SpanBarRow>', () => {
   const spanID = 'some-id';
@@ -31,7 +35,6 @@ describe('<SpanBarRow>', () => {
     isFilteredOut: false,
     onDetailToggled: jest.fn(),
     onChildrenToggled: jest.fn(),
-    operationName: 'op-name',
     numTicks: 5,
     rpc: {
       viewStart: 0.25,
@@ -44,12 +47,14 @@ describe('<SpanBarRow>', () => {
     getViewedBounds: () => ({ start: 0, end: 1 }),
     span: {
       duration: 'test-duration',
+      operationName: 'op-name',
       hasChildren: true,
       process: {
         serviceName: 'service-name',
       },
       spanID,
       logs: [],
+      tags: [{ key: 'opLabelTag', value: '#id' }],
     },
   };
 
@@ -58,11 +63,13 @@ describe('<SpanBarRow>', () => {
   beforeEach(() => {
     props.onDetailToggled.mockReset();
     props.onChildrenToggled.mockReset();
+    getConfigValue.mockReset();
     wrapper = mount(<SpanBarRow {...props} />);
   });
 
   it('renders without exploding', () => {
     expect(wrapper).toBeDefined();
+    expect(wrapper.find('.endpoint-name').text()).toBe('rpc-op-name');
   });
 
   it('escalates detail toggling', () => {
@@ -77,5 +84,23 @@ describe('<SpanBarRow>', () => {
     expect(onChildrenToggled.mock.calls.length).toBe(0);
     wrapper.find(SpanTreeOffset).prop('onClick')();
     expect(onChildrenToggled.mock.calls).toEqual([[spanID]]);
+  });
+
+  it('has expected lebel when pattern is set and tags exist', () => {
+    getConfigValue.mockReturnValue('(#{opLabelTag})');
+    wrapper = mount(<SpanBarRow {...props} />);
+    expect(wrapper.find('.endpoint-name').text()).toBe('rpc-op-name (#id)');
+  });
+
+  it('hides unless every tag exists', () => {
+    getConfigValue.mockReturnValue('#{opLabelTag} #{http.status_code}');
+    wrapper = mount(<SpanBarRow {...props} />);
+    expect(wrapper.find('.endpoint-name').text()).toBe('rpc-op-name');
+  });
+
+  it('has expected lebel when no rpc', () => {
+    const norpc = _omit(props, 'rpc');
+    wrapper = mount(<SpanBarRow {...norpc} />);
+    expect(wrapper.find('.endpoint-name').text()).toBe('op-name');
   });
 });
