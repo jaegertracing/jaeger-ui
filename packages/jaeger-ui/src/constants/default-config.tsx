@@ -87,6 +87,7 @@ export default deepFreeze(
         trackErrors: true,
         customWebAnalytics: null,
       },
+      opLabel: null,
     },
     // fields that should be individually merged vs wholesale replaced
     '__mergeFields',
