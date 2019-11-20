@@ -27,6 +27,7 @@ import { TNil } from '../../../../types';
 import { KeyValuePair, Link, Log, Span } from '../../../../types/trace';
 
 import './index.css';
+import AccordianReferences from './AccordianReferences';
 
 type SpanDetailProps = {
   detailState: DetailState;
@@ -38,6 +39,7 @@ type SpanDetailProps = {
   tagsToggle: (spanID: string) => void;
   traceStartTime: number;
   warningsToggle: (spanID: string) => void;
+  referencesToggle: (spanID: string) => void;
 };
 
 export default function SpanDetail(props: SpanDetailProps) {
@@ -51,9 +53,20 @@ export default function SpanDetail(props: SpanDetailProps) {
     tagsToggle,
     traceStartTime,
     warningsToggle,
+    referencesToggle,
   } = props;
-  const { isTagsOpen, isProcessOpen, logs: logsState, isWarningsOpen } = detailState;
-  const { operationName, process, duration, relativeStartTime, spanID, logs, tags, warnings } = span;
+  const { isTagsOpen, isProcessOpen, logs: logsState, isWarningsOpen, isReferencesOpen } = detailState;
+  const {
+    operationName,
+    process,
+    duration,
+    relativeStartTime,
+    spanID,
+    logs,
+    tags,
+    warnings,
+    references,
+  } = span;
   const overviewItems = [
     {
       key: 'svc',
@@ -123,6 +136,17 @@ export default function SpanDetail(props: SpanDetailProps) {
             data={warnings}
             isOpen={isWarningsOpen}
             onToggle={() => warningsToggle(spanID)}
+          />
+        )}
+        {references && references.length > 1 && (
+          <AccordianReferences
+            className="AccordianReferences"
+            headerClassName="AccordianReferences--header"
+            label={<span className="AccordianReferences--label">References</span>}
+            data={references}
+            isOpen={isReferencesOpen}
+            onToggle={() => referencesToggle(spanID)}
+            traceID={span.traceID}
           />
         )}
         <small className="SpanDetail--debugInfo">

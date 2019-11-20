@@ -62,6 +62,7 @@ type TDispatchProps = {
   detailLogItemToggle: (spanID: string, log: Log) => void;
   detailLogsToggle: (spanID: string) => void;
   detailWarningsToggle: (spanID: string) => void;
+  detailReferencesToggle: (spanID: string) => void;
   detailProcessToggle: (spanID: string) => void;
   detailTagsToggle: (spanID: string) => void;
   detailToggle: (spanID: string) => void;
@@ -372,6 +373,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
       detailLogItemToggle,
       detailLogsToggle,
       detailProcessToggle,
+      detailReferencesToggle,
       detailWarningsToggle,
       detailStates,
       detailTagsToggle,
@@ -395,6 +397,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
           logItemToggle={detailLogItemToggle}
           logsToggle={detailLogsToggle}
           processToggle={detailProcessToggle}
+          referencesToggle={detailReferencesToggle}
           warningsToggle={detailWarningsToggle}
           span={span}
           tagsToggle={detailTagsToggle}
