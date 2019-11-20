@@ -19,6 +19,7 @@ import IoIosArrowRight from 'react-icons/lib/io/ios-arrow-right';
 import { TNil } from '../../../../types';
 import './AccordianReferences.css';
 import { SpanReference } from '../../../../types/trace';
+import ReferenceLink from '../ReferenceLink';
 
 type AccordianReferencesProps = {
   className?: string | TNil;
@@ -36,16 +37,18 @@ type AccordianReferencesProps = {
 type ReferenceItemProps = {
   data: SpanReference[];
   focusSpan: (uiFind: string) => void;
+  traceID: string;
 };
 
 export function References(props: ReferenceItemProps) {
-  const { data, focusSpan } = props;
+  const { data, focusSpan, traceID } = props;
   return (
     <div className="ReferencesList u-simple-scrollbars">
       <ul className="ReferencesList--List">
         {data.map(reference => {
           return (
             <li className="ReferencesList--Item" key={`${reference.spanID}`}>
+              <ReferenceLink reference={reference} traceID={traceID} focusSpan={focusSpan} />
               <a role="button" onClick={() => focusSpan(reference.spanID)}>
                 {reference.spanID}{' '}
               </a>
@@ -76,6 +79,7 @@ export default class AccordianReferences extends React.PureComponent<AccordianRe
       label,
       onToggle,
       focusSpan,
+      traceID,
     } = this.props;
     const isEmpty = !Array.isArray(data) || !data.length;
     const iconCls = cx('u-align-icon', { 'AccordianKReferences--emptyIcon': isEmpty });
@@ -102,7 +106,7 @@ export default class AccordianReferences extends React.PureComponent<AccordianRe
           {arrow}
           <strong>{label}</strong> ({data.length})
         </div>
-        {isOpen && <References data={data} focusSpan={focusSpan} />}
+        {isOpen && <References data={data} focusSpan={focusSpan} traceID={traceID} />}
       </div>
     );
   }

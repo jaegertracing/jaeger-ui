@@ -15,11 +15,10 @@
 import React from 'react';
 import { Dropdown, Menu, Tooltip } from 'antd';
 import NewWindowIcon from '../../common/NewWindowIcon';
-
-import { getUrl } from '../url';
 import { SpanReference } from '../../../types/trace';
 
 import './ReferencesButton.css';
+import ReferenceLink from './ReferenceLink';
 
 type TReferencesButtonProps = {
   references: SpanReference[];
@@ -29,51 +28,30 @@ type TReferencesButtonProps = {
   focusSpan: (spanID: string) => void;
 };
 
-const linkToExternalSpan = (traceID: string, spanID: string) => `${getUrl(traceID)}/uiFind?=${spanID}`;
-
 // export for tests
 export default class ReferencesButton extends React.PureComponent<TReferencesButtonProps> {
   _focusSpan(spanID: string) {
     this.props.focusSpan(spanID);
   }
 
-  spanLink = (reference: SpanReference, traceID: string, children?: React.ReactNode, className?: string) => {
-    if (traceID === reference.traceID) {
-      return (
-        <a role="button" onClick={() => this._focusSpan(reference.spanID)} className={className}>
-          {children}
-        </a>
-      );
-    }
-    return (
-      <a
-        href={linkToExternalSpan(reference.traceID, reference.spanID)}
-        target="_blank"
-        rel="noopener noreferrer"
-        className={className}
-      >
-        {children}
-      </a>
-    );
-  };
-
   referencesList = (references: SpanReference[]) => (
     <Menu>
       {references.map(ref => {
         const { span, traceID, spanID } = ref;
-        const child = (
-          <React.Fragment>
-            {span
-              ? `${span.process.serviceName}:${span.operationName} - ${ref.spanID}`
-              : `(another trace) - ${ref.spanID}`}
-            {traceID !== this.props.traceID && (
-              <div className="external-trace-ref">
-                <NewWindowIcon />
-              </div>
-            )}
-          </React.Fragment>
+        return (
+          <Menu.Item key={`${spanID}`}>
+            <ReferenceLink reference={ref} traceID={this.props.traceID} focusSpan={this._focusSpan}>
+              {span
+                ? `${span.process.serviceName}:${span.operationName} - ${ref.spanID}`
+                : `(another trace) - ${ref.spanID}`}
+              {traceID !== this.props.traceID && (
+                <div className="external-trace-ref">
+                  <NewWindowIcon />
+                </div>
+              )}
+            </ReferenceLink>
+          </Menu.Item>
         );
-        return <Menu.Item key={`${spanID}`}>{this.spanLink(ref, this.props.traceID, child)}</Menu.Item>;
       })}
     </Menu>
   );
@@ -104,7 +82,14 @@ export default class ReferencesButton extends React.PureComponent<TReferencesBut
         title={tooltipText}
         overlayClassName="ref-tooltip"
       >
-        {this.spanLink(ref, this.props.traceID, children, 'multi-parent-button')}
+        <ReferenceLink
+          reference={ref}
+          traceID={this.props.traceID}
+          focusSpan={this._focusSpan}
+          className="multi-parent-button"
+        >
+          {children}
+        </ReferenceLink>
       </Tooltip>
     );
   }
