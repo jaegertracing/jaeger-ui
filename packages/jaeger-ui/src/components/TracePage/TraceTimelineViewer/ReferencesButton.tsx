@@ -14,63 +14,33 @@
 
 import React from 'react';
 import { Dropdown, Menu, Tooltip } from 'antd';
-import { bindActionCreators } from 'redux';
-import { connect, Dispatch } from 'react-redux';
-import { withRouter } from 'react-router-dom';
-import { History as RouterHistory, Location } from 'history';
-
 import NewWindowIcon from '../../common/NewWindowIcon';
-import updateUiFind from '../../../utils/update-ui-find';
 
 import { getUrl } from '../url';
-import { FetchedTrace, ReduxState, TNil } from '../../../types';
-import { actions as timelineActions } from './duck';
-import { extractUiFindFromState } from '../../common/UiFindInput';
-import { SpanReference, Trace } from '../../../types/trace';
+import { SpanReference } from '../../../types/trace';
 
 import './ReferencesButton.css';
 
-type TDispatchProps = {
-  focusUiFindMatches: (trace: Trace, uiFind: string | TNil, preserveHiddenStatus?: boolean) => void;
-};
-
-type TReduxProps = {
-  uiFind: string | TNil;
-  trace: FetchedTrace | TNil;
-};
-
-type TOwnProps = {
+type TReferencesButtonProps = {
   references: SpanReference[];
   traceID: string;
-  history: RouterHistory;
-  location: Location;
-  match: any;
   children?: React.ReactNode;
   tooltipText: string;
+  focusSpan: (spanID: string) => void;
 };
-
-type TReferencesButtonProps = TDispatchProps & TReduxProps & TOwnProps;
 
 const linkToExternalSpan = (traceID: string, spanID: string) => `${getUrl(traceID)}/uiFind?=${spanID}`;
 
 // export for tests
-export class UnconnectedReferencesButton extends React.PureComponent<TReferencesButtonProps> {
-  focusSpan = (uiFind: string) => {
-    const { trace, focusUiFindMatches, location, history } = this.props;
-    if (trace && trace.data) {
-      updateUiFind({
-        location,
-        history,
-        uiFind,
-      });
-      focusUiFindMatches(trace.data, uiFind, true);
-    }
-  };
+export default class ReferencesButton extends React.PureComponent<TReferencesButtonProps> {
+  _focusSpan(spanID: string) {
+    this.props.focusSpan(spanID);
+  }
 
   spanLink = (reference: SpanReference, traceID: string, children?: React.ReactNode, className?: string) => {
     if (traceID === reference.traceID) {
       return (
-        <a role="button" onClick={() => this.focusSpan(reference.spanID)} className={className}>
+        <a role="button" onClick={() => this._focusSpan(reference.spanID)} className={className}>
           {children}
         </a>
       );
@@ -139,26 +109,3 @@ export class UnconnectedReferencesButton extends React.PureComponent<TReferences
     );
   }
 }
-
-// export for tests
-export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
-  const { focusUiFindMatches } = bindActionCreators(timelineActions, dispatch);
-  return { focusUiFindMatches };
-}
-
-// export for tests
-export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxProps {
-  const { traces } = state.trace;
-  const trace = ownProps.traceID ? traces[ownProps.traceID] : null;
-  return {
-    trace,
-    ...extractUiFindFromState(state),
-  };
-}
-
-export default withRouter(
-  connect(
-    mapStateToProps,
-    mapDispatchToProps
-  )(UnconnectedReferencesButton)
-);

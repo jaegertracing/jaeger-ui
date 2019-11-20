@@ -16,18 +16,11 @@ import * as React from 'react';
 import cx from 'classnames';
 import IoIosArrowDown from 'react-icons/lib/io/ios-arrow-down';
 import IoIosArrowRight from 'react-icons/lib/io/ios-arrow-right';
-import { FetchedTrace, ReduxState, TNil } from '../../../../types';
-
+import { TNil } from '../../../../types';
 import './AccordianReferences.css';
-import { SpanReference, Trace } from '../../../../types/trace';
-import updateUiFind from '../../../../utils/update-ui-find';
-import { connect, Dispatch } from 'react-redux';
-import { bindActionCreators } from 'redux';
-import { actions as timelineActions } from '../duck';
-import { extractUiFindFromState } from '../../../common/UiFindInput';
-import { RouteComponentProps, withRouter } from 'react-router-dom';
+import { SpanReference } from '../../../../types/trace';
 
-type TOwnProps = {
+type AccordianReferencesProps = {
   className?: string | TNil;
   data: SpanReference[];
   headerClassName?: string | TNil;
@@ -37,25 +30,15 @@ type TOwnProps = {
   label: React.ReactNode;
   onToggle?: null | (() => void);
   traceID: string;
+  focusSpan: (uiFind: string) => void;
 };
-
-type TDispatchProps = {
-  focusUiFindMatches: (trace: Trace, uiFind: string | TNil, preserveHiddenStatus?: boolean) => void;
-};
-
-type TReduxProps = {
-  uiFind: string | TNil;
-  trace: FetchedTrace | TNil;
-};
-
-type AccordianReferencesProps = TOwnProps & TDispatchProps & TReduxProps & RouteComponentProps;
 
 type ReferenceItemProps = {
   data: SpanReference[];
-  focusSpan: (spanID: string) => void;
+  focusSpan: (uiFind: string) => void;
 };
 
-function References(props: ReferenceItemProps) {
+export function References(props: ReferenceItemProps) {
   const { data, focusSpan } = props;
   return (
     <div className="ReferencesList u-simple-scrollbars">
@@ -74,24 +57,12 @@ function References(props: ReferenceItemProps) {
   );
 }
 
-export class UnconnectedAccordianReferences extends React.PureComponent<AccordianReferencesProps> {
+export default class AccordianReferences extends React.PureComponent<AccordianReferencesProps> {
   static defaultProps = {
     className: null,
     highContrast: false,
     interactive: true,
     onToggle: null,
-  };
-
-  focusSpan = (uiFind: string) => {
-    const { trace, focusUiFindMatches, location, history } = this.props;
-    if (trace && trace.data) {
-      updateUiFind({
-        location,
-        history,
-        uiFind,
-      });
-      focusUiFindMatches(trace.data, uiFind, true);
-    }
   };
 
   render() {
@@ -104,6 +75,7 @@ export class UnconnectedAccordianReferences extends React.PureComponent<Accordia
       isOpen,
       label,
       onToggle,
+      focusSpan,
     } = this.props;
     const isEmpty = !Array.isArray(data) || !data.length;
     const iconCls = cx('u-align-icon', { 'AccordianKReferences--emptyIcon': isEmpty });
@@ -130,31 +102,8 @@ export class UnconnectedAccordianReferences extends React.PureComponent<Accordia
           {arrow}
           <strong>{label}</strong> ({data.length})
         </div>
-        {isOpen && <References data={data} focusSpan={this.focusSpan} />}
+        {isOpen && <References data={data} focusSpan={focusSpan} />}
       </div>
     );
   }
 }
-
-// export for tests
-export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
-  const { focusUiFindMatches } = bindActionCreators(timelineActions, dispatch);
-  return { focusUiFindMatches };
-}
-
-// export for tests
-export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxProps {
-  const { traces } = state.trace;
-  const trace = ownProps.traceID ? traces[ownProps.traceID] : null;
-  return {
-    trace,
-    ...extractUiFindFromState(state),
-  };
-}
-
-export default withRouter(
-  connect(
-    mapStateToProps,
-    mapDispatchToProps
-  )(UnconnectedAccordianReferences)
-);

@@ -6,7 +6,8 @@ exports[`ReferencesButton rendering rendering as expected 1`] = `
   autoAdjustOverflow={true}
   mouseEnterDelay={0.1}
   mouseLeaveDelay={0.5}
-  placement="left"
+  overlayClassName="ref-tooltip"
+  placement="bottom"
   prefixCls="ant-tooltip"
   transitionName="zoom-big-fast"
 >
@@ -24,7 +25,8 @@ exports[`ReferencesButton rendering rendering as with external reference 1`] = `
   autoAdjustOverflow={true}
   mouseEnterDelay={0.1}
   mouseLeaveDelay={0.5}
-  placement="left"
+  overlayClassName="ref-tooltip"
+  placement="bottom"
   prefixCls="ant-tooltip"
   transitionName="zoom-big-fast"
 >

@@ -52,6 +52,7 @@ type SpanBarRowProps = {
   getViewedBounds: ViewedBoundsFunctionType;
   traceStartTime: number;
   span: Span;
+  focusSpan: (spanID: string) => void;
 };
 
 /**
@@ -90,6 +91,7 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
       getViewedBounds,
       traceStartTime,
       span,
+      focusSpan,
     } = this.props;
     const {
       duration,
@@ -157,6 +159,7 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
                 references={span.references}
                 traceID={span.traceID}
                 tooltipText="Contains multiple references"
+                focusSpan={focusSpan}
               >
                 <IoNetwork />
               </ReferencesButton>
@@ -166,6 +169,7 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
                 references={span.referrals}
                 traceID={span.traceID}
                 tooltipText="This span is refereed by another span"
+                focusSpan={focusSpan}
               >
                 <IoIosArrowUp />
               </ReferencesButton>

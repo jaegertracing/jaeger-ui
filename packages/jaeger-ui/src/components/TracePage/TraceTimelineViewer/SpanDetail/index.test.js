@@ -36,6 +36,7 @@ describe('<SpanDetail>', () => {
   const detailState = new DetailState()
     .toggleLogs()
     .toggleProcess()
+    .toggleReferences()
     .toggleTags();
   const traceStartTime = 5;
   const props = {
@@ -47,6 +48,7 @@ describe('<SpanDetail>', () => {
     processToggle: jest.fn(),
     tagsToggle: jest.fn(),
     warningsToggle: jest.fn(),
+    referencesToggle: jest.fn(),
   };
   span.logs = [
     {
@@ -60,6 +62,48 @@ describe('<SpanDetail>', () => {
   ];
 
   span.warnings = ['Warning 1', 'Warning 2'];
+
+  span.references = [
+    {
+      refType: 'CHILD_OF',
+      span: {
+        spanID: 'span2',
+        traceID: 'trace1',
+        operationName: 'op1',
+        process: {
+          serviceName: 'service1',
+        },
+      },
+      spanID: 'span1',
+      traceID: 'trace1',
+    },
+    {
+      refType: 'CHILD_OF',
+      span: {
+        spanID: 'span3',
+        traceID: 'trace1',
+        operationName: 'op2',
+        process: {
+          serviceName: 'service2',
+        },
+      },
+      spanID: 'span4',
+      traceID: 'trace1',
+    },
+    {
+      refType: 'CHILD_OF',
+      span: {
+        spanID: 'span6',
+        traceID: 'trace2',
+        operationName: 'op2',
+        process: {
+          serviceName: 'service2',
+        },
+      },
+      spanID: 'span5',
+      traceID: 'trace2',
+    },
+  ];
 
   beforeEach(() => {
     formatDuration.mockReset();
@@ -128,6 +172,13 @@ describe('<SpanDetail>', () => {
     expect(warningElm.length).toBe(1);
     warningElm.simulate('toggle');
     expect(props.warningsToggle).toHaveBeenLastCalledWith(span.spanID);
+  });
+
+  it('renders the references', () => {
+    const warningElm = wrapper.find({ data: span.references });
+    expect(warningElm.length).toBe(1);
+    warningElm.simulate('toggle');
+    expect(props.referencesToggle).toHaveBeenLastCalledWith(span.spanID);
   });
 
   it('renders CopyIcon with deep link URL', () => {

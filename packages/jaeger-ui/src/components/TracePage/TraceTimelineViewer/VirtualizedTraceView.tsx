@@ -41,6 +41,7 @@ import { Log, Span, Trace, KeyValuePair } from '../../../types/trace';
 import TTraceTimeline from '../../../types/TTraceTimeline';
 
 import './VirtualizedTraceView.css';
+import updateUiFind from '../../../utils/update-ui-find';
 
 type RowState = {
   isDetail: boolean;
@@ -68,6 +69,7 @@ type TDispatchProps = {
   detailToggle: (spanID: string) => void;
   setSpanNameColumnWidth: (width: number) => void;
   setTrace: (trace: Trace | TNil, uiFind: string | TNil) => void;
+  focusUiFindMatches: (trace: Trace, uiFind: string | TNil, preserveHiddenStatus?: boolean) => void;
 };
 
 type VirtualizedTraceViewProps = TVirtualizedTraceViewOwnProps &
@@ -221,6 +223,18 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     }
   }
 
+  focusSpan = (uiFind: string) => {
+    const { trace, focusUiFindMatches, location, history } = this.props;
+    if (trace) {
+      updateUiFind({
+        location,
+        history,
+        uiFind,
+      });
+      focusUiFindMatches(trace, uiFind, true);
+    }
+  };
+
   getAccessors() {
     const lv = this.listView;
     if (!lv) {
@@ -361,6 +375,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
           getViewedBounds={this.getViewedBounds}
           traceStartTime={trace.startTime}
           span={span}
+          focusSpan={this.focusSpan}
         />
       </div>
     );
@@ -402,6 +417,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
           span={span}
           tagsToggle={detailTagsToggle}
           traceStartTime={trace.startTime}
+          focusSpan={this.focusSpan}
         />
       </div>
     );

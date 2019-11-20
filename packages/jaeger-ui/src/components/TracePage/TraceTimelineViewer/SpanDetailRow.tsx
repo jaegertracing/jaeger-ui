@@ -37,6 +37,7 @@ type SpanDetailRowProps = {
   span: Span;
   tagsToggle: (spanID: string) => void;
   traceStartTime: number;
+  focusSpan: (uiFind: string) => void;
 };
 
 export default class SpanDetailRow extends React.PureComponent<SpanDetailRowProps> {
@@ -62,6 +63,7 @@ export default class SpanDetailRow extends React.PureComponent<SpanDetailRowProp
       span,
       tagsToggle,
       traceStartTime,
+      focusSpan,
     } = this.props;
     return (
       <TimelineRow className="detail-row">
@@ -90,6 +92,7 @@ export default class SpanDetailRow extends React.PureComponent<SpanDetailRowProp
               span={span}
               tagsToggle={tagsToggle}
               traceStartTime={traceStartTime}
+              focusSpan={focusSpan}
             />
           </div>
         </TimelineRow.Cell>

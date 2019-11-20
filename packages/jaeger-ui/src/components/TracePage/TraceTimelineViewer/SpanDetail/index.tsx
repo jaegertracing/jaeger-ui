@@ -40,6 +40,7 @@ type SpanDetailProps = {
   traceStartTime: number;
   warningsToggle: (spanID: string) => void;
   referencesToggle: (spanID: string) => void;
+  focusSpan: (uiFind: string) => void;
 };
 
 export default function SpanDetail(props: SpanDetailProps) {
@@ -54,6 +55,7 @@ export default function SpanDetail(props: SpanDetailProps) {
     traceStartTime,
     warningsToggle,
     referencesToggle,
+    focusSpan,
   } = props;
   const { isTagsOpen, isProcessOpen, logs: logsState, isWarningsOpen, isReferencesOpen } = detailState;
   const {
@@ -147,6 +149,7 @@ export default function SpanDetail(props: SpanDetailProps) {
             isOpen={isReferencesOpen}
             onToggle={() => referencesToggle(spanID)}
             traceID={span.traceID}
+            focusSpan={focusSpan}
           />
         )}
         <small className="SpanDetail--debugInfo">

@@ -15,15 +15,11 @@
 import React from 'react';
 import { shallow, mount } from 'enzyme';
 import { Menu, Dropdown } from 'antd';
-import queryString from 'query-string';
 
-import { UnconnectedReferencesButton, mapDispatchToProps, mapStateToProps } from './ReferencesButton';
-import updateUiFindSpy from '../../../utils/update-ui-find';
+import ReferencesButton from './ReferencesButton';
 import transformTraceData from '../../../model/transform-trace-data';
 import traceGenerator from '../../../demo/trace-generators';
 import NewWindowIcon from '../../common/NewWindowIcon';
-
-jest.mock('../../../utils/update-ui-find');
 
 describe('ReferencesButton', () => {
   const trace = transformTraceData(traceGenerator.trace({ numberOfSpans: 10 }));
@@ -48,12 +44,12 @@ describe('ReferencesButton', () => {
     trace: {
       data: trace,
     },
-    focusUiFindMatches: focusMock,
+    focusSpan: focusMock,
   };
   describe('rendering', () => {
     it('rendering as expected', () => {
       const props = { ...baseProps, references: oneReference };
-      const wrapper = shallow(<UnconnectedReferencesButton {...props} />);
+      const wrapper = shallow(<ReferencesButton {...props} />);
       expect(wrapper).toMatchSnapshot();
     });
 
@@ -63,13 +59,13 @@ describe('ReferencesButton', () => {
       oneExternal[0].spanID = 'extSpanID';
 
       const props = { ...baseProps, references: oneExternal };
-      const wrapper = shallow(<UnconnectedReferencesButton {...props} />);
+      const wrapper = shallow(<ReferencesButton {...props} />);
       expect(wrapper).toMatchSnapshot();
     });
 
     it('render with dropdown', () => {
       const props = { ...baseProps, references: moreReferences };
-      const wrapper = shallow(<UnconnectedReferencesButton {...props} />);
+      const wrapper = shallow(<ReferencesButton {...props} />);
       const dropdown = wrapper.find(Dropdown);
       expect(dropdown.length).toBe(1);
       const menuInstance = shallow(dropdown.first().props().overlay);
@@ -84,7 +80,7 @@ describe('ReferencesButton', () => {
       oneExternal.spanID = 'extSpanID';
       mixRef.push(oneExternal);
       const props = { ...baseProps, references: mixRef };
-      const wrapper = shallow(<UnconnectedReferencesButton {...props} />);
+      const wrapper = shallow(<ReferencesButton {...props} />);
       const dropdown = wrapper.find(Dropdown);
       expect(dropdown.length).toBe(1);
       const menuInstance = shallow(dropdown.first().props().overlay);
@@ -102,19 +98,14 @@ describe('ReferencesButton', () => {
 
     it('calls updateUiFind and focusUiFindMatches with correct kwargs', () => {
       const props = { ...baseProps, references: oneReference };
-      const wrapper = shallow(<UnconnectedReferencesButton {...props} />);
+      const wrapper = shallow(<ReferencesButton {...props} />);
       wrapper.find('a').simulate('click');
-      expect(updateUiFindSpy).toHaveBeenLastCalledWith({
-        history: props.history,
-        location: props.location,
-        uiFind: trace.spans[1].references[0].spanID,
-      });
-      expect(focusMock).toHaveBeenLastCalledWith(trace, trace.spans[1].references[0].spanID, true);
+      expect(focusMock).toHaveBeenLastCalledWith(trace.spans[1].references[0].spanID);
     });
 
     it('calls updateUiFind and focusUiFindMatches with correct kwargs on dropdown', () => {
       const props = { ...baseProps, references: moreReferences };
-      const wrapper = mount(<UnconnectedReferencesButton {...props} />);
+      const wrapper = mount(<ReferencesButton {...props} />);
       const dropdown = wrapper.find(Dropdown);
       dropdown.find('.multi-parent-button').simulate('click');
       const menuInstance = shallow(dropdown.first().props().overlay);
@@ -123,47 +114,7 @@ describe('ReferencesButton', () => {
         .at(0)
         .find('a')
         .simulate('click');
-      expect(focusMock).toHaveBeenLastCalledWith(trace, trace.spans[1].references[0].spanID, true);
-    });
-  });
-
-  describe('mapDispatchToProps()', () => {
-    it('creates the actions correctly', () => {
-      expect(mapDispatchToProps(() => {})).toEqual({
-        focusUiFindMatches: expect.any(Function),
-      });
-    });
-  });
-
-  describe('mapStateToProps()', () => {
-    const queryStringParseSpy = jest.spyOn(queryString, 'parse');
-    const uiFind = 'span1';
-
-    beforeEach(() => {
-      queryStringParseSpy.mockReturnValue({ uiFind });
-    });
-
-    it('maps state to props correctly', () => {
-      const state = {
-        router: {
-          location: {
-            search: uiFind,
-          },
-        },
-        trace: {
-          traces: {
-            [trace.traceID]: trace,
-          },
-        },
-      };
-      const mappedProps = mapStateToProps(state, {
-        traceID: trace.traceID,
-      });
-
-      expect(mappedProps).toEqual({
-        trace,
-        uiFind: 'span1',
-      });
+      expect(focusMock).toHaveBeenLastCalledWith(trace.spans[1].references[0].spanID);
     });
   });
 });
