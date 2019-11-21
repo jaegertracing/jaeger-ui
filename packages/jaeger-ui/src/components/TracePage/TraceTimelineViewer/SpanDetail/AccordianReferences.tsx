@@ -40,6 +40,7 @@ type ReferenceItemProps = {
   traceID: string;
 };
 
+// export for test
 export function References(props: ReferenceItemProps) {
   const { data, focusSpan, traceID } = props;
   return (
@@ -48,10 +49,25 @@ export function References(props: ReferenceItemProps) {
         {data.map(reference => {
           return (
             <li className="ReferencesList--Item" key={`${reference.spanID}`}>
-              <ReferenceLink reference={reference} traceID={traceID} focusSpan={focusSpan} />
-              <a role="button" onClick={() => focusSpan(reference.spanID)}>
-                {reference.spanID}{' '}
-              </a>
+              <ReferenceLink reference={reference} traceID={traceID} focusSpan={focusSpan}>
+                {reference.span && reference.traceID === traceID && (
+                  <React.Fragment>
+                    <span className="span-svc-name"> {reference.span.process.serviceName} </span>
+                    <small className="endpoint-name">{reference.span.operationName} </small>
+                    <small className="SpanReference--debugInfo">
+                      <span className="SpanReference--debugLabel" data-label="SpanID:" /> {reference.spanID}
+                    </small>
+                  </React.Fragment>
+                )}
+                {reference.traceID !== traceID && (
+                  <React.Fragment>
+                    <span className="span-svc-name">&lt; span in another trace &gt;</span>
+                    <small className="SpanReference--debugInfo">
+                      <span className="SpanReference--debugLabel" data-label="SpanID:" /> {reference.spanID}
+                    </small>
+                  </React.Fragment>
+                )}
+              </ReferenceLink>
             </li>
           );
         })}

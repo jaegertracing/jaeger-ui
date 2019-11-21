@@ -13,19 +13,10 @@
 // limitations under the License.
 
 import React from 'react';
-import { mount } from 'enzyme';
+import { shallow } from 'enzyme';
 import AccordianReferences, { References } from './AccordianReferences';
+import ReferenceLink from '../ReferenceLink';
 
-/*
-export type SpanReference = {
-  refType: 'CHILD_OF' | 'FOLLOWS_FROM';
-  // eslint-disable-next-line no-use-before-define
-  span: Span | null | undefined;
-  spanID: string;
-  traceID: string;
-};
-
- */
 const references = [
   {
     refType: 'CHILD_OF',
@@ -83,7 +74,7 @@ describe('<AccordianReferences>', () => {
   };
 
   beforeEach(() => {
-    wrapper = mount(<AccordianReferences {...props} />);
+    wrapper = shallow(<AccordianReferences {...props} />);
     mockFocusSpan.mockReset();
   });
 
@@ -103,17 +94,31 @@ describe('<AccordianReferences>', () => {
     const content = wrapper.find(References);
     expect(content.length).toBe(1);
     expect(content.prop('data')).toBe(references);
-    const links = content.find('a');
-    expect(links.length).toBe(references.length);
+  });
+});
+
+describe('<References>', () => {
+  let wrapper;
+  const mockFocusSpan = jest.fn();
+
+  const props = {
+    data: references,
+    traceID: 'trace1',
+    focusSpan: jest.fn(),
+  };
+
+  beforeEach(() => {
+    wrapper = shallow(<References {...props} />);
+    mockFocusSpan.mockReset();
   });
 
-  it('call spanFocus when click on item', () => {
-    wrapper.setProps({ isOpen: true });
-    const content = wrapper.find(References);
-    content
-      .find('a')
-      .at(0)
-      .simulate('click');
-    expect(mockFocusSpan).toHaveBeenLastCalledWith(references[0].spanID);
+  it('render references list', () => {
+    expect(wrapper.find(ReferenceLink).length).toBe(references.length);
+    const spanOtherTrace = wrapper
+      .find('ReferenceLink')
+      .at(2)
+      .find('span.span-svc-name')
+      .text();
+    expect(spanOtherTrace).toBe('< span in another trace >');
   });
 });

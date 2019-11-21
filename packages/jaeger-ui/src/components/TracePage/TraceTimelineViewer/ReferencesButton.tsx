@@ -30,17 +30,13 @@ type TReferencesButtonProps = {
 
 // export for tests
 export default class ReferencesButton extends React.PureComponent<TReferencesButtonProps> {
-  _focusSpan(spanID: string) {
-    this.props.focusSpan(spanID);
-  }
-
   referencesList = (references: SpanReference[]) => (
     <Menu>
       {references.map(ref => {
         const { span, traceID, spanID } = ref;
         return (
           <Menu.Item key={`${spanID}`}>
-            <ReferenceLink reference={ref} traceID={this.props.traceID} focusSpan={this._focusSpan}>
+            <ReferenceLink reference={ref} traceID={this.props.traceID} focusSpan={this.props.focusSpan}>
               {span
                 ? `${span.process.serviceName}:${span.operationName} - ${ref.spanID}`
                 : `(another trace) - ${ref.spanID}`}
@@ -57,7 +53,7 @@ export default class ReferencesButton extends React.PureComponent<TReferencesBut
   );
 
   render() {
-    const { references, children, tooltipText } = this.props;
+    const { references, children, tooltipText, focusSpan } = this.props;
     if (references.length > 1) {
       return (
         <Tooltip
@@ -85,7 +81,7 @@ export default class ReferencesButton extends React.PureComponent<TReferencesBut
         <ReferenceLink
           reference={ref}
           traceID={this.props.traceID}
-          focusSpan={this._focusSpan}
+          focusSpan={focusSpan}
           className="multi-parent-button"
         >
           {children}

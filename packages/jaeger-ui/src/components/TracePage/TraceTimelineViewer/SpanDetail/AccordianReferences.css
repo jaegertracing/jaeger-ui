@@ -33,6 +33,22 @@ limitations under the License.
   padding: 0.25rem 0.5rem;
 }
 
+.ReferencesList--Item > a {
+  width: 100%;
+  display: inline-block;
+}
+
 .ReferencesList--Item:nth-child(2n) {
   background: #f5f5f5;
+}
+
+.SpanReference--debugInfo {
+  letter-spacing: 0.25px;
+  margin: 0.5em 0 -0.75em;
+  float: right;
+}
+
+.SpanReference--debugLabel::before {
+  color: #bbb;
+  content: attr(data-label);
 }
