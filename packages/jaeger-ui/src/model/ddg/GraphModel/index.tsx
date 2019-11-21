@@ -63,10 +63,8 @@ export default class GraphModel {
       // If there is a compatible vertex for this pathElem, use it, else, make a new vertex
       const key = hasher(pathElem);
       const isFocalNode = !pathElem.distance;
-      const operation = this.showOp ? pathElem.operation.name : null
-      if (isFocalNode) {
-        if (operation) focalOperations.add(operation);
-      }
+      const operation = this.showOp ? pathElem.operation.name : null;
+      if (isFocalNode && operation) focalOperations.add(operation);
 
       let vertex: TDdgVertex | undefined = this.vertices.get(key);
       if (!vertex) {
@@ -104,21 +102,19 @@ export default class GraphModel {
         const from = pathElem.distance > 0 ? connectedVertex.key : vertex.key;
         const to = pathElem.distance > 0 ? vertex.key : connectedVertex.key;
         const edgeId = getEdgeId(from, to);
-        const existingEdge = edgesById.get(edgeId);
-        if (!existingEdge) {
-          const edge = { from, to };
+        let edge = edgesById.get(edgeId);
+        if (!edge) {
+          edge = { from, to };
           edgesById.set(edgeId, edge);
-          this.pathElemToEdge.set(pathElem, edge);
-        } else {
-          this.pathElemToEdge.set(pathElem, existingEdge);
         }
+        this.pathElemToEdge.set(pathElem, edge);
       }
-    }); 
+    });
 
     if (focalOperations.size > 1) {
       const focalVertex = this.vertices.get(FOCAL_KEY);
+      // istanbul ignore next : focalVertex cannot be missing if focalOperations.size is not 0
       if (focalVertex) focalVertex.operation = Array.from(focalOperations);
-      else if (this.visIdxToPathElem.length) throw new Error('No focal vertex found');
     }
 
     Object.freeze(this.distanceToPathElems);
@@ -198,18 +194,22 @@ export default class GraphModel {
 
       if (this.visIdxToPathElem.length) {
         const focalVertex = this.vertices.get(FOCAL_KEY);
+        // istanbul ignore next : If there are pathElems without a focal vertex the constructor would throw
         if (!focalVertex) throw new Error('No focal vertex found');
         const visibleFocalElems = this.getVertexVisiblePathElems(FOCAL_KEY, visEncoding);
-        if (visibleFocalElems) {
-          const visibleFocalOps = Array.from(new Set(visibleFocalElems.map(({ operation }) => operation.name)));
-          const potentiallyPartialFocalVertex = {
-            ...focalVertex,
-            operation: this.showOp
-            ? visibleFocalOps.length === 1 ? visibleFocalOps[0] : visibleFocalOps
-            : null,
-          };
-          vertices.add(potentiallyPartialFocalVertex);
-        };
+        if (visibleFocalElems && visibleFocalElems.length) {
+          if (!this.showOp) vertices.add(focalVertex);
+          else {
+            const visibleFocalOps = Array.from(
+              new Set(visibleFocalElems.map(({ operation }) => operation.name))
+            );
+            const potentiallyPartialFocalVertex = {
+              ...focalVertex,
+              operation: visibleFocalOps.length === 1 ? visibleFocalOps[0] : visibleFocalOps,
+            };
+            vertices.add(potentiallyPartialFocalVertex);
+          }
+        }
       }
 
       return {
@@ -221,16 +221,17 @@ export default class GraphModel {
 
   private static getUiFindMatches(vertices: TDdgVertex[], uiFind?: string): Set<string> {
     const keySet: Set<string> = new Set();
-    if (!uiFind) return keySet;
+    if (!uiFind || /^\s+$/.test(uiFind)) return keySet;
 
     const uiFindArr = uiFind
       .trim()
       .toLowerCase()
-      .split(' ');
+      .split(/\s+/);
     for (let i = 0; i < vertices.length; i++) {
       const { service, operation } = vertices[i];
       const svc = service.toLowerCase();
-      const ops = operation && (Array.isArray(operation) ? operation : [operation]).map(op => op.toLowerCase());
+      const ops =
+        operation && (Array.isArray(operation) ? operation : [operation]).map(op => op.toLowerCase());
       for (let j = 0; j < uiFindArr.length; j++) {
         if (svc.includes(uiFindArr[j]) || (ops && ops.some(op => op.includes(uiFindArr[j])))) {
           keySet.add(vertices[i].key);
@@ -245,12 +246,16 @@ export default class GraphModel {
   public getHiddenUiFindMatches: (uiFind?: string, visEncoding?: string) => Set<string> = memoize(10)(
     (uiFind?: string, visEncoding?: string): Set<string> => {
       const visible = new Set(this.getVisible(visEncoding).vertices);
-      const hidden: TDdgVertex[] = Array.from(this.vertices.values()).filter(vertex => !visible.has(vertex) && !vertex.isFocalNode);
+      const hidden: TDdgVertex[] = Array.from(this.vertices.values()).filter(
+        vertex => !visible.has(vertex) && !vertex.isFocalNode
+      );
 
       if (this.visIdxToPathElem.length) {
         const focalVertex = this.vertices.get(FOCAL_KEY);
+        // istanbul ignore next : If there are pathElems without a focal vertex the constructor would throw
         if (!focalVertex) throw new Error('No focal vertex found');
         const focalElems = this.vertexToPathElems.get(focalVertex);
+        // istanbul ignore next : If there are pathElems without a focal vertex the constructor would throw
         if (!focalElems) throw new Error('No focal elems found');
         const visibleFocalElems = new Set(this.getVertexVisiblePathElems(FOCAL_KEY, visEncoding));
         const hiddenFocalOperations = Array.from(focalElems)
@@ -329,9 +334,10 @@ export default class GraphModel {
     const elemSet: PathElem[] = [];
     vertexKeys.forEach(vertexKey => {
       const vertex = this.vertices.get(vertexKey);
-      if (!vertex) throw new Error(`${vertex} does not exist in graph`);
+      if (!vertex) throw new Error(`${vertexKey} does not exist in graph`);
       const elems = this.vertexToPathElems.get(vertex);
-      if (!elems) throw new Error(`${vertex} does not exist in graph`);
+      // istanbul ignore next : If a vertex exists it must have elems
+      if (!elems) throw new Error(`${vertexKey} does not exist in graph`);
 
       elemSet.push(...elems);
     });

@@ -37,7 +37,6 @@ import {
   EViewModifier,
   TDdgModelParams,
   TDdgSparseUrlState,
-  TDdgVertex,
 } from '../../model/ddg/types';
 import { encode, encodeDistance } from '../../model/ddg/visibility-codec';
 import { ReduxState } from '../../types';
@@ -115,7 +114,7 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
 
   clearOperation = () => {
     this.updateUrlState({ operation: undefined });
-  }
+  };
 
   focusPathsThroughVertex = (vertexKey: string) => {
     const elems = this.getVisiblePathElems(vertexKey);
@@ -187,20 +186,11 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
     this.updateUrlState({ operation: undefined, service, visEncoding: undefined });
   };
 
-  setViewModifier = (vertexKey: string, viewModifier: EViewModifier, enable: boolean) => {
+  setViewModifier = (visibilityIndices: number[], viewModifier: EViewModifier, enable: boolean) => {
     const { addViewModifier, graph, removeViewModifierFromIndices, urlState } = this.props;
     const fn = enable ? addViewModifier : removeViewModifierFromIndices;
-    const { service, operation, visEncoding } = urlState;
-    if (!fn || !graph || !operation || !service) {
-      return;
-    }
-    const pathElems = graph.getVertexVisiblePathElems(vertexKey, visEncoding);
-    if (!pathElems) {
-      // eslint-disable-next-line no-console
-      console.warn(`Invalid vertex key to set view modifier for: ${vertexKey}`);
-      return;
-    }
-    const visibilityIndices = pathElems.map(pe => pe.visibilityIdx);
+    const { service, operation } = urlState;
+    if (!fn || !graph || !service) return;
     fn({
       operation,
       service,
@@ -340,7 +330,7 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
   const { services, operationsForService } = stServices;
   const urlState = getUrlState(ownProps.location.search);
   const { density, operation, service, showOp: urlStateShowOp } = urlState;
-  const showOp = urlStateShowOp !== undefined ? urlStateShowOp: operation !== undefined ;
+  const showOp = urlStateShowOp !== undefined ? urlStateShowOp : operation !== undefined;
   let graphState: TDdgStateEntry | undefined;
   if (service) {
     graphState = _get(state.ddg, getStateEntryKey({ service, operation, start: 0, end: 0 }));

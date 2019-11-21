@@ -37,7 +37,7 @@ const svcOp = memoizeOne((service, operation) => ({ service, operation }));
 export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxProps {
   const urlState = getUrlState(ownProps.location.search);
   const { density, operation, service, showOp: urlStateShowOp } = urlState;
-  const showOp = urlStateShowOp !== undefined ? urlStateShowOp: operation !== undefined ;
+  const showOp = urlStateShowOp !== undefined ? urlStateShowOp : operation !== undefined;
   let graphState: TDdgStateEntry | undefined;
   let graph: GraphModel | undefined;
   if (service) {

@@ -1,0 +1,82 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TraceDiffGraph renders a DiGraph when it has data 1`] = `
+<div
+  className="TraceDiffGraph--graphWrapper"
+>
+  <Digraph
+    className="TraceDiffGraph--dag"
+    classNamePrefix="plexus"
+    edges={Array []}
+    key="trace-id-a vs trace-id-b"
+    layers={
+      Array [
+        Object {
+          "key": "emphasis-nodes",
+          "layerType": "svg",
+          "renderNode": [Function],
+        },
+        Object {
+          "defs": Array [
+            Object {
+              "localId": "arrow",
+            },
+          ],
+          "edges": true,
+          "key": "edges",
+          "layerType": "svg",
+          "markerEndId": "arrow",
+          "setOnContainer": Array [
+            [Function],
+            [Function],
+            Object {
+              "stroke": "#444",
+            },
+          ],
+        },
+        Object {
+          "key": "nodes",
+          "layerType": "html",
+          "measurable": true,
+          "renderNode": [Function],
+        },
+      ]
+    }
+    layoutManager={
+      LayoutManager {
+        "_handleUpdate": [Function],
+        "coordinator": Coordinator {
+          "_handleVizWorkerError": [Function],
+          "_handleVizWorkerMessage": [Function],
+          "_handleVizWorkerMessageError": [Function],
+          "busyWorkers": Array [],
+          "callback": [Function],
+          "currentLayout": null,
+          "idleWorkers": Array [],
+          "nextWorkerId": 0,
+        },
+        "layoutId": 0,
+        "options": Object {
+          "splines": "polyline",
+          "useDotEdges": true,
+        },
+        "pendingResult": null,
+      }
+    }
+    measurableNodesKey="nodes"
+    minimap={true}
+    minimapClassName="u-miniMap"
+    setOnGraph={[Function]}
+    vertices={Array []}
+    zoom={true}
+  />
+  <withRouter(Connect(UnconnectedUiFindInput))
+    inputProps={
+      Object {
+        "className": "TraceDiffGraph--uiFind",
+        "suffix": undefined,
+      }
+    }
+  />
+</div>
+`;

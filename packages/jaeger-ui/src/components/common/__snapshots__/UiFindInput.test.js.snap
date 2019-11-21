@@ -10,6 +10,5 @@ exports[`UiFind rendering renders as expected 1`] = `
   prefixCls="ant-input"
   suffix={<React.Fragment />}
   type="text"
-  value={null}
 />
 `;

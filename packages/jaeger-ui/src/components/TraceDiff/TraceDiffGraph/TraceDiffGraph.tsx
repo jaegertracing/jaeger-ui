@@ -39,21 +39,12 @@ export class UnconnectedTraceDiffGraph extends React.PureComponent<Props> {
 
   cacheAs = cacheAs.makeScope();
 
-  static defaultProps = {
-    uiFind: '',
-  };
-
   componentWillUnmount() {
     this.layoutManager.stopAndRelease();
   }
 
   render() {
-    const {
-      a,
-      b,
-      // Flow requires `= ''` because it does not interpret defaultProps
-      uiFind = '',
-    } = this.props;
+    const { a, b, uiFind = '' } = this.props;
     if (!a || !b) {
       return <h1 className="u-mt-vast u-tx-muted ub-tx-center">At least two Traces are needed</h1>;
     }

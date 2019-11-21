@@ -133,13 +133,6 @@ describe('DeepDependencyGraph/url', () => {
       });
     });
 
-    it('defaults `showOp` to true', () => {
-      const { showOp: unused, ...rest } = expectedParams;
-      const { showOp: alsoUnused, ...rv } = acceptableParams;
-      parseSpy.mockReturnValue(rv);
-      expect(getUrlState(getSearch())).toEqual({ ...rest, showOp: true });
-    });
-
     it("defaults `density` to 'ppe'", () => {
       const { density: unused, ...rest } = expectedParams;
       const { density: alsoUnused, ...rv } = acceptableParams;

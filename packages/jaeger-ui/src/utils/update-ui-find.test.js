@@ -89,17 +89,6 @@ describe('updateUiFind', () => {
     expect(replaceMock).toHaveBeenCalledWith(expectedReplaceMockArgument);
   });
 
-  it('no-ops when given existing value', () => {
-    updateUiFind({
-      history,
-      location,
-      uiFind: existingUiFind,
-    });
-    expect(queryStringParseSpy).toHaveBeenCalledWith(location.search);
-    expect(queryStringStringifySpy).not.toHaveBeenCalled();
-    expect(replaceMock).not.toHaveBeenCalled();
-  });
-
   describe('trackFindFunction provided', () => {
     const trackFindFunction = jest.fn();
 
@@ -124,26 +113,6 @@ describe('updateUiFind', () => {
         uiFind: newUiFind,
       });
       expect(trackFindFunction).toHaveBeenCalledWith(newUiFind);
-    });
-
-    it('does not track unchanged value', () => {
-      updateUiFind({
-        history,
-        location,
-        trackFindFunction,
-        uiFind: existingUiFind,
-      });
-      expect(trackFindFunction).not.toHaveBeenCalled();
-
-      queryStringParseSpy.mockReturnValueOnce({
-        uiFind: undefined,
-      });
-      updateUiFind({
-        history,
-        location,
-        trackFindFunction,
-      });
-      expect(trackFindFunction).not.toHaveBeenCalled();
     });
   });
 });

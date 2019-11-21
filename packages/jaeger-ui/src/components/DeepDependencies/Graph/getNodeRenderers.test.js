@@ -41,7 +41,7 @@ describe('getNodeRenderers', () => {
               pathHovered
             )} .is-pathHovered,\tand ${wvwo(focalNode)} .is-focalNode`, () => {
               const testLv = focalNode ? focalLv : lv;
-              const findMatches = new Set(findMatch ? [testLv.vertex] : undefined);
+              const findMatches = new Set(findMatch ? [testLv.vertex.key] : undefined);
               const vm =
                 // eslint-disable-next-line no-bitwise
                 (hovered ? EViewModifier.Hovered : 0) | (pathHovered ? EViewModifier.PathHovered : 0);
@@ -60,7 +60,7 @@ describe('getNodeRenderers', () => {
     });
 
     it('returns div with .is-findMatch if vertex is a findMatch', () => {
-      const wrapper = shallow(getNodeRenderers(new Set([lv.vertex]), new Map()).htmlEmphasis(lv));
+      const wrapper = shallow(getNodeRenderers(new Set([lv.vertex.key]), new Map()).htmlEmphasis(lv));
       expect(wrapper.hasClass('is-findMatch')).toBe(true);
       expect(wrapper.type()).toBe('div');
     });
@@ -72,7 +72,9 @@ describe('getNodeRenderers', () => {
     });
 
     it('returns div with .is-findMatch and .is-focalNode if vertex is a focalNode and a findMatch', () => {
-      const wrapper = shallow(getNodeRenderers(new Set([focalLv.vertex]), new Map()).htmlEmphasis(focalLv));
+      const wrapper = shallow(
+        getNodeRenderers(new Set([focalLv.vertex.key]), new Map()).htmlEmphasis(focalLv)
+      );
       expect(wrapper.hasClass('is-findMatch')).toBe(true);
       expect(wrapper.hasClass('is-focalNode')).toBe(true);
       expect(wrapper.type()).toBe('div');
@@ -92,7 +94,7 @@ describe('getNodeRenderers', () => {
 
     it('returns circle with correct size and className', () => {
       expect(
-        shallow(getNodeRenderers(new Set([lv.vertex]), new Map()).vectorFindColorBand(lv))
+        shallow(getNodeRenderers(new Set([lv.vertex.key]), new Map()).vectorFindColorBand(lv))
       ).toMatchSnapshot();
     });
   });

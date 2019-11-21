@@ -16,13 +16,18 @@ limitations under the License.
 
 /*
  * Because .plexus-Digraph--MeasurableHtmlNode is `position: absolute`, adding a z-index to DdgNodeContent
- * would have no effect on layering.
+ * would have no effect on layering between different nodes.
  */
+.plexus-Digraph--MeasurableHtmlNode {
+  /* transition-delay must equal .DdgNodeContent--actionsWrapper transition delay plus duration */
+  transition-delay: 250ms;
+  transition-property: z-index;
+  z-index: 0;
+}
+
 .plexus-Digraph--MeasurableHtmlNode:hover {
+  transition-delay: 0s;
   z-index: 1;
-  /* TODO ease-out 150ms */
-  /* if ease-out also works for display none the hovered.state can be used only as a guard for calculating the
-   * parent/children vis */
 }
 
 .DdgNodeContent--core {
@@ -63,7 +68,19 @@ limitations under the License.
   bottom: 100%;
   box-shadow: 0 0px 4px 1px rgba(0, 0, 0, 0.1);
   left: 1em;
+  opacity: 0;
+  pointer-events: none;
   position: absolute;
+  /* transition delay plus duration must equal .plexus-Digraph--MeasurableHtmlNode transition-delay  */
+  transition-delay: 150ms;
+  transition-duration: 0.1s;
+  transition-property: opacity;
+}
+
+.DdgNodeContent:hover .DdgNodeContent--actionsWrapper {
+  opacity: 1;
+  pointer-events: all;
+  transition-delay: 0s;
 }
 
 .DdgNodeContent--actionsItem {

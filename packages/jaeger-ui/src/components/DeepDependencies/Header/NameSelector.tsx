@@ -22,16 +22,15 @@ import FilteredList from '../../common/FilteredList';
 
 import './NameSelector.css';
 
-
 type TOptional = {
   clearValue: () => void;
   required?: false;
-}
+};
 
 type TRequired = {
   clearValue?: never;
   required: true;
-}
+};
 
 type TProps = {
   label: string;
@@ -71,7 +70,7 @@ export default class NameSelector extends React.PureComponent<TProps, TState> {
 
     evt.stopPropagation();
     this.props.clearValue();
-  }
+  };
 
   setValue = (value: string) => {
     this.props.setValue(value);
@@ -127,7 +126,9 @@ export default class NameSelector extends React.PureComponent<TProps, TState> {
           {useLabel && <span className="NameSelector--label">{label}:</span>}
           <BreakableText className="NameSelector--value" text={text} />
           <IoChevronDown className="NameSelector--chevron" />
-          {!required && value && <Icon className="NameSelector--clearIcon" type="close" onClick={this.clearValue} />}
+          {!required && value && (
+            <Icon className="NameSelector--clearIcon" type="close" onClick={this.clearValue} />
+          )}
         </h2>
       </Popover>
     );

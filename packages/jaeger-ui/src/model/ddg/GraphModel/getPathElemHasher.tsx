@@ -48,22 +48,26 @@ export default function getPathElemHasher(this: GraphModel): TPathElemToStr {
           if (pe === focalElem || !this.showOp) return FOCAL_KEY;
 
           const focalVertex = this.vertices.get(FOCAL_KEY);
+          // istanbul ignore next : Unreachable error to appease TS, transformDdgData would have thrown
           if (!focalVertex) throw new Error('No focal vertex found');
           const focalElems = this.vertexToPathElems.get(focalVertex);
+          // istanbul ignore next : Unreachable error to appease TS, transformDdgData would have thrown
           if (!focalElems) throw new Error('No focal elems found');
+
           // Because pathElems are processed in increasing order of absolute distance, the following set will
           // never be incomplete.
           const focalOps = new Set(Array.from(focalElems).map(({ operation }) => operation.name));
           if (focalOps.has(pe.operation.name)) return FOCAL_KEY;
         }
         return elemToStr(pe);
-      }
+      };
     }
     case EDdgDensity.UpstreamVsDownstream: {
-      return (pe: PathElem) => `${elemToStr(pe)}; direction=${Math.sign(pe.distance)}`;
+      return (pe: PathElem) =>
+        pe.distance ? `${elemToStr(pe)}; direction=${Math.sign(pe.distance)}` : FOCAL_KEY;
     }
     case EDdgDensity.OnePerLevel: {
-      return (pe: PathElem) => `${elemToStr(pe)}; distance=${pe.distance}`;
+      return (pe: PathElem) => (pe.distance ? `${elemToStr(pe)}; distance=${pe.distance}` : FOCAL_KEY);
     }
     case EDdgDensity.PreventPathEntanglement: {
       return getPpeHasher(elemToStr);

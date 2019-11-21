@@ -52,9 +52,6 @@ type TRect = { height: number; width: number };
 
 let svcSpan: HTMLSpanElement | undefined;
 
-// TODO remove
-let log: (...args: any) => void = () => {};
-
 /*
  * Mesaurements for the words comprising a service are measured by a span that is mounted out of a view.
  * Using a canvas would remove the requirement that the measuring container is part of the DOM, however canvas
@@ -153,12 +150,12 @@ function calcWidth(lengths: number[], lines: number, longestThusFar: number = 0)
  */
 const calcRects = _memoize(
   function calcRects(str: string | string[], span: HTMLSpanElement): TRect[] {
-    log(str, Array.isArray(str));
-    const lengths = (Array.isArray(str) ? [`${str.length} Operations}`] : (str.match(WORD_RX) || [str])).map(s => {
-      span.innerHTML = s; // eslint-disable-line no-param-reassign
-      return span.getClientRects()[0].width;
-    });
-    log(lengths);
+    const lengths = (Array.isArray(str) ? [`${str.length} Operations}`] : str.match(WORD_RX) || [str]).map(
+      s => {
+        span.innerHTML = s; // eslint-disable-line no-param-reassign
+        return span.getClientRects()[0].width;
+      }
+    );
 
     const rects: TRect[] = [];
     for (let lines = 1; lines <= lengths.length; lines++) {
@@ -167,7 +164,6 @@ const calcRects = _memoize(
       if (!rects.length || width < rects[rects.length - 1].width) rects.push({ height, width });
       if (height > width) break;
     }
-    log(rects);
     return rects;
   },
   (str: string, span: HTMLSpanElement) => `${str}\t${span.style.fontWeight}`
@@ -246,10 +242,12 @@ function smallestRadius(svcRects: TRect[], opRects?: TRect[]): TSmallestRadiusRV
   return rv;
 }
 
-const calcPositioning: (service: string, operation?: string | string[] | null) => TSmallestRadiusRV = _memoize(
+const calcPositioning: (
+  service: string,
+  operation?: string | string[] | null
+) => TSmallestRadiusRV = _memoize(
   function calcPositioningImpl(service: string, operation?: string | string[] | null) {
     const svcRects = calcRects(service, _initSvcSpan());
-    log = Array.isArray(operation) ? console.log : () => {};
     const opRects = operation ? calcRects(operation, _initOpSpan()) : undefined;
 
     return smallestRadius(svcRects, opRects);

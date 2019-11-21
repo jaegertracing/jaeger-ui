@@ -22,6 +22,7 @@ jest.mock('./calc-positioning', () => () => ({
 /* eslint-disable import/first */
 import React from 'react';
 import { shallow } from 'enzyme';
+import { Checkbox } from 'antd';
 
 import DdgNodeContent from '.';
 import { MAX_LENGTH, MAX_LINKED_TRACES, MIN_LENGTH, PARAM_NAME_LENGTH, RADIUS } from './constants';
@@ -50,14 +51,10 @@ describe('<DdgNodeContent>', () => {
   let wrapper;
 
   beforeEach(() => {
-    props.getGenerationVisibility.mockImplementation(direction =>
-      direction === EDirection.Upstream ? ECheckedStatus.Full : ECheckedStatus.Partial
-    );
     props.getVisiblePathElems.mockReset();
     props.setViewModifier.mockReset();
     props.updateGenerationVisibility.mockReset();
     wrapper = shallow(<DdgNodeContent {...props} />);
-    wrapper.setState({ hovered: true });
   });
 
   it('does not explode', () => {
@@ -70,15 +67,15 @@ describe('<DdgNodeContent>', () => {
     expect(wrapper).toMatchSnapshot();
   });
 
-  it('renders correctly when isFocalNode = true and focalNodeUrl = null', () => {
+  it('renders the number of operations if there are multiple', () => {
     expect(wrapper).toMatchSnapshot();
-    wrapper.setProps({ focalNodeUrl: null, isFocalNode: true });
+    wrapper.setProps({ operation: ['op0', 'op1', 'op2', 'op3'] });
     expect(wrapper).toMatchSnapshot();
   });
 
-  it('renders correctly when not hovered', () => {
+  it('renders correctly when isFocalNode = true and focalNodeUrl = null', () => {
     expect(wrapper).toMatchSnapshot();
-    wrapper.setState({ hovered: false });
+    wrapper.setProps({ focalNodeUrl: null, isFocalNode: true });
     expect(wrapper).toMatchSnapshot();
   });
 
@@ -93,62 +90,73 @@ describe('<DdgNodeContent>', () => {
   });
 
   describe('hover behavior', () => {
-    beforeAll(() => {
-      jest.useFakeTimers();
+    const testIndices = [4, 8, 15, 16, 23, 42];
+    const testElems = testIndices.map(visibilityIdx => ({ visibilityIdx }));
+
+    beforeEach(() => {
+      props.getVisiblePathElems.mockReturnValue(testElems);
     });
 
     it('calls setViewModifier on mouse enter', () => {
       wrapper.simulate('mouseenter', { type: 'mouseenter' });
 
       expect(props.setViewModifier).toHaveBeenCalledTimes(1);
-      expect(props.setViewModifier).toHaveBeenCalledWith(vertexKey, EViewModifier.Hovered, true);
+      expect(props.setViewModifier).toHaveBeenCalledWith(testIndices, EViewModifier.Hovered, true);
     });
 
-    it('calls setViewModifier on mouse leave', () => {
+    it('calls setViewModifier with all modified indices on mouse leave', () => {
+      wrapper.simulate('mouseenter', { type: 'mouseenter' });
       wrapper.simulate('mouseleave', { type: 'mouseleave' });
 
-      expect(props.setViewModifier).toHaveBeenCalledTimes(1);
-      expect(props.setViewModifier).toHaveBeenCalledWith(vertexKey, EViewModifier.Hovered, false);
+      expect(props.setViewModifier).toHaveBeenCalledTimes(2);
+      expect(props.setViewModifier).toHaveBeenCalledWith(testIndices, EViewModifier.Hovered, false);
+
+      wrapper.simulate('mouseenter', { type: 'mouseenter' });
+      const moreIndices = [108];
+      const moreElems = moreIndices.map(visibilityIdx => ({ visibilityIdx }));
+      props.getVisiblePathElems.mockReturnValue(moreElems);
+      wrapper.simulate('mouseenter', { type: 'mouseenter' });
+      wrapper.simulate('mouseleave', { type: 'mouseleave' });
+
+      expect(props.setViewModifier).toHaveBeenCalledTimes(5);
+      expect(props.setViewModifier).toHaveBeenCalledWith(
+        testIndices.concat(moreIndices),
+        EViewModifier.Hovered,
+        false
+      );
     });
 
-    it('calls setViewModifier on unmount iff state.hovered is true', () => {
+    it('calls setViewModifier on unmount iff any indices were hovered and not unhovered', () => {
+      wrapper.unmount();
+      expect(props.setViewModifier).toHaveBeenCalledTimes(0);
+
+      wrapper = shallow(<DdgNodeContent {...props} />);
+      wrapper.simulate('mouseenter', { type: 'mouseenter' });
+      wrapper.simulate('mouseleave', { type: 'mouseleave' });
+      expect(props.setViewModifier).toHaveBeenCalledTimes(2);
+      wrapper.unmount();
+      expect(props.setViewModifier).toHaveBeenCalledTimes(2);
+
+      wrapper = shallow(<DdgNodeContent {...props} />);
+      wrapper.simulate('mouseenter', { type: 'mouseenter' });
       wrapper.unmount();
 
-      expect(props.setViewModifier).toHaveBeenCalledTimes(1);
-      expect(props.setViewModifier).toHaveBeenCalledWith(vertexKey, EViewModifier.Hovered, false);
-
-      // state.hovered is initially false
-      const unhoveredWrapper = shallow(<DdgNodeContent {...props} />);
-      unhoveredWrapper.unmount();
-
-      expect(props.setViewModifier).toHaveBeenCalledTimes(1);
-      expect(props.setViewModifier).toHaveBeenCalledWith(vertexKey, EViewModifier.Hovered, false);
+      expect(props.setViewModifier).toHaveBeenCalledTimes(4);
+      expect(props.setViewModifier).toHaveBeenCalledWith(testIndices, EViewModifier.Hovered, false);
     });
 
-    it('sets state.hovered to true on mouse enter', () => {
-      wrapper.setState({ hovered: false });
+    it('calculates state.childrenVisibility and state.parentVisibility on mouse enter', () => {
+      const childrenVisibility = ECheckedStatus.Partial;
+      const parentVisibility = ECheckedStatus.Full;
+      props.getGenerationVisibility.mockImplementation((_key, direction) =>
+        direction === EDirection.Upstream ? parentVisibility : childrenVisibility
+      );
       wrapper.simulate('mouseenter', { type: 'mouseenter' });
 
-      expect(wrapper.state('hovered')).toBe(true);
-    });
-
-    it('sets state.hovered to false on mouse leave, after delay', () => {
-      wrapper.simulate('mouseleave', { type: 'mouseleave' });
-      expect(wrapper.state('hovered')).toBe(true);
-
-      jest.runAllTimers();
-      expect(wrapper.state('hovered')).toBe(false);
-    });
-
-    it('cancels delayed set state if mouse re-enters before timeout runs', () => {
-      wrapper.simulate('mouseleave', { type: 'mouseleave' });
-      expect(wrapper.instance().hoverClearDelay).toEqual(expect.any(Number));
-
-      wrapper.simulate('mouseenter', { type: 'mouseenter' });
-      expect(wrapper.instance().hoverClearDelay).toBeUndefined();
-
-      jest.runAllTimers();
-      expect(wrapper.state('hovered')).toBe(true);
+      expect(wrapper.state()).toEqual({
+        childrenVisibility,
+        parentVisibility,
+      });
     });
   });
 
@@ -186,10 +194,42 @@ describe('<DdgNodeContent>', () => {
     });
 
     describe('updateChildren', () => {
+      it('renders children visibility status indicator iff state.childrenVisibility is provided', () => {
+        const initialItemCount = wrapper.find('.DdgNodeContent--actionsItem').length;
+
+        wrapper.setState({ childrenVisibility: ECheckedStatus.Empty });
+        expect(wrapper.find('.DdgNodeContent--actionsItem').length).toBe(initialItemCount + 1);
+        expect(wrapper.find(Checkbox).props()).toEqual(
+          expect.objectContaining({
+            checked: false,
+            indeterminate: false,
+          })
+        );
+
+        wrapper.setState({ childrenVisibility: ECheckedStatus.Partial });
+        expect(wrapper.find('.DdgNodeContent--actionsItem').length).toBe(initialItemCount + 1);
+        expect(wrapper.find(Checkbox).props()).toEqual(
+          expect.objectContaining({
+            checked: false,
+            indeterminate: true,
+          })
+        );
+
+        wrapper.setState({ childrenVisibility: ECheckedStatus.Full });
+        expect(wrapper.find('.DdgNodeContent--actionsItem').length).toBe(initialItemCount + 1);
+        expect(wrapper.find(Checkbox).props()).toEqual(
+          expect.objectContaining({
+            checked: true,
+            indeterminate: false,
+          })
+        );
+      });
+
       it('calls this.props.updateGenerationVisibility with this.props.vertexKey', () => {
+        wrapper.setState({ childrenVisibility: ECheckedStatus.Empty });
         wrapper
           .find('.DdgNodeContent--actionsItem')
-          .at(5)
+          .last()
           .simulate('click');
 
         expect(props.updateGenerationVisibility).toHaveBeenCalledWith(props.vertexKey, EDirection.Downstream);
@@ -198,10 +238,42 @@ describe('<DdgNodeContent>', () => {
     });
 
     describe('updateParents', () => {
+      it('renders parent visibility status indicator iff state.parentVisibility is provided', () => {
+        const initialItemCount = wrapper.find('.DdgNodeContent--actionsItem').length;
+
+        wrapper.setState({ parentVisibility: ECheckedStatus.Empty });
+        expect(wrapper.find('.DdgNodeContent--actionsItem').length).toBe(initialItemCount + 1);
+        expect(wrapper.find(Checkbox).props()).toEqual(
+          expect.objectContaining({
+            checked: false,
+            indeterminate: false,
+          })
+        );
+
+        wrapper.setState({ parentVisibility: ECheckedStatus.Partial });
+        expect(wrapper.find('.DdgNodeContent--actionsItem').length).toBe(initialItemCount + 1);
+        expect(wrapper.find(Checkbox).props()).toEqual(
+          expect.objectContaining({
+            checked: false,
+            indeterminate: true,
+          })
+        );
+
+        wrapper.setState({ parentVisibility: ECheckedStatus.Full });
+        expect(wrapper.find('.DdgNodeContent--actionsItem').length).toBe(initialItemCount + 1);
+        expect(wrapper.find(Checkbox).props()).toEqual(
+          expect.objectContaining({
+            checked: true,
+            indeterminate: false,
+          })
+        );
+      });
+
       it('calls this.props.updateGenerationVisibility with this.props.vertexKey', () => {
+        wrapper.setState({ parentVisibility: ECheckedStatus.Empty });
         wrapper
           .find('.DdgNodeContent--actionsItem')
-          .at(4)
+          .last()
           .simulate('click');
 
         expect(props.updateGenerationVisibility).toHaveBeenCalledWith(props.vertexKey, EDirection.Upstream);

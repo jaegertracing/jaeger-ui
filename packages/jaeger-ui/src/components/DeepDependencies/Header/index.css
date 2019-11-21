@@ -96,6 +96,17 @@ limitations under the License.
   white-space: nowrap;
 }
 
+.DdgHeader--uiFindInfo--hidden {
+  border-left: dashed var(--tx-color-muted) 1px;
+  margin-left: 0.3em;
+  padding-left: 0.3em;
+}
+
+.DdgHeader--uiFindInfo--icon {
+  margin-bottom: 1.5px;
+  margin-left: 0.2em;
+}
+
 .DdgHeader--uiFindInfo--tooltip {
   white-space: nowrap;
 }

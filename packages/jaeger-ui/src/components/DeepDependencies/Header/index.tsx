@@ -14,6 +14,8 @@
 
 import * as React from 'react';
 import { Icon, Input, Tooltip } from 'antd';
+import MdVisibility from 'react-icons/lib/md/visibility';
+import MdVisibilityOff from 'react-icons/lib/md/visibility-off';
 
 import HopsSelector from './HopsSelector';
 import NameSelector from './NameSelector';
@@ -62,13 +64,19 @@ export default class Header extends React.PureComponent<TProps> {
 
     if (uiFindCount === undefined) return null;
 
-    let btnText = `${uiFindCount}`;
-    let noMore = true;
-    let tipText = 'All matches are visible';
+    let hasHidden = false;
+    let hiddenInfo: React.ReactNode = null;
+    let tipText = uiFindCount ? 'All matches are visible' : 'No matches';
     if (hiddenUiFindMatches && hiddenUiFindMatches.size) {
-      noMore = false;
-      btnText = `${uiFindCount} / ${uiFindCount + hiddenUiFindMatches.size}`;
-      tipText = 'Click to view hidden matches';
+      const { size } = hiddenUiFindMatches;
+      hasHidden = true;
+      tipText = `Click to view ${size} hidden match${size !== 1 ? 'es' : ''}`;
+      hiddenInfo = (
+        <span className="DdgHeader--uiFindInfo--hidden">
+          {size}
+          <MdVisibilityOff className="DdgHeader--uiFindInfo--icon" />
+        </span>
+      );
     }
 
     return (
@@ -77,11 +85,13 @@ export default class Header extends React.PureComponent<TProps> {
         <span>
           <button
             className="DdgHeader--uiFindInfo"
-            disabled={noMore}
+            disabled={!hasHidden}
             onClick={this.handleInfoClick}
             type="button"
           >
-            {btnText}
+            {uiFindCount}
+            {(uiFindCount !== 0 || hasHidden) && <MdVisibility className="DdgHeader--uiFindInfo--icon" />}
+            {hiddenInfo}
           </button>
         </span>
       </Tooltip>

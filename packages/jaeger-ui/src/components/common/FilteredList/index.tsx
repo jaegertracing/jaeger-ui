@@ -82,7 +82,7 @@ export default class FilteredList extends React.PureComponent<TProps, TState> {
         const { cancel } = this.props;
         this.setState({ filterText: '', focusedIndex: null });
         cancel();
-        return;
+        break;
       }
       case EKey.ArrowUp:
       case EKey.ArrowDown: {
@@ -102,19 +102,12 @@ export default class FilteredList extends React.PureComponent<TProps, TState> {
         if (listInstance && (focusedIndex < visibleStartIndex + 1 || focusedIndex > visibleStopIndex - 1)) {
           listInstance.scrollToItem(focusedIndex);
         }
-        return;
+        break;
       }
       case EKey.Enter: {
         const filteredOptions = this.getFilteredOptions();
-        const value = stFocused !== null
-          ? filteredOptions[stFocused]
-          : filteredOptions.length === 1
-            ? filteredOptions[0]
-            : null;
-        if (value === null) {
-          return;
-        }
-        this.setValue(value);
+        if (stFocused !== null) this.setValue(filteredOptions[stFocused]);
+        else if (filteredOptions.length === 1) this.setValue(filteredOptions[0]);
         break;
       }
       default: // no-op

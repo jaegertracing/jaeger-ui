@@ -44,7 +44,7 @@ type TProps = {
   getVisiblePathElems: (vertexKey: string) => PathElem[] | undefined;
   hideVertex: (vertexKey: string) => void;
   setOperation: (operation: string) => void;
-  setViewModifier: (vertexKey: string, viewModifier: EViewModifier, enable: boolean) => void;
+  setViewModifier: (visIndices: number[], viewModifier: EViewModifier, enable: boolean) => void;
   uiFindMatches: Set<string> | undefined;
   updateGenerationVisibility: (vertexKey: string, direction: EDirection) => void;
   vertices: TDdgVertex[];
