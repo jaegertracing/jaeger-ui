@@ -57,7 +57,7 @@ exports[`<Header> renders the hops selector if distanceToPathElems is provided 1
 </header>
 `;
 
-exports[`<Header> renders the operation selector if a service is selected 1`] = `
+exports[`<Header> renders the operation selector iff a service is selected 1`] = `
 <header
   className="DdgHeader"
 >
@@ -124,7 +124,7 @@ exports[`<Header> renders the operation selector if a service is selected 1`] = 
 </header>
 `;
 
-exports[`<Header> renders the operation selector if a service is selected 2`] = `
+exports[`<Header> renders the operation selector iff a service is selected 2`] = `
 <header
   className="DdgHeader"
 >

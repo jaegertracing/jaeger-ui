@@ -179,10 +179,17 @@ describe('DeepDependencyGraphPage', () => {
       });
 
       describe('clearOperation', () => {
+        let trackClearOperationSpy;
+
+        beforeAll(() => {
+          trackClearOperationSpy = jest.spyOn(track, 'trackClearOperation');
+        });
+
         it('removes op from urlState', () => {
           ddgPageImpl.clearOperation();
           const { operation: _o, ...urlStateWithoutOp } = props.urlState;
           expect(getUrlSpy).toHaveBeenLastCalledWith(urlStateWithoutOp, undefined);
+          expect(trackClearOperationSpy).toHaveBeenCalledTimes(1);
         });
       });
 
@@ -329,9 +336,15 @@ describe('DeepDependencyGraphPage', () => {
 
       describe('setService', () => {
         const service = 'newService';
+        let trackSetServiceSpy;
+
+        beforeAll(() => {
+          trackSetServiceSpy = jest.spyOn(track, 'trackSetService');
+        });
 
         beforeEach(() => {
           props.fetchServiceOperations.mockReset();
+          trackSetServiceSpy.mockClear();
         });
 
         it('updates service and clears operation and visEncoding', () => {
@@ -341,12 +354,14 @@ describe('DeepDependencyGraphPage', () => {
             undefined
           );
           expect(props.history.push).toHaveBeenCalledTimes(1);
+          expect(trackSetServiceSpy).toHaveBeenCalledTimes(1);
         });
 
         it('fetches operations for service when not yet provided', () => {
           ddgPageImpl.setService(service);
           expect(props.fetchServiceOperations).toHaveBeenLastCalledWith(service);
           expect(props.fetchServiceOperations).toHaveBeenCalledTimes(1);
+          expect(trackSetServiceSpy).toHaveBeenCalledTimes(1);
 
           const pageWithOpForService = new DeepDependencyGraphPageImpl({
             ...props,
@@ -355,6 +370,7 @@ describe('DeepDependencyGraphPage', () => {
           const { length: callCount } = props.fetchServiceOperations.mock.calls;
           pageWithOpForService.setService(service);
           expect(props.fetchServiceOperations).toHaveBeenCalledTimes(callCount);
+          expect(trackSetServiceSpy).toHaveBeenCalledTimes(2);
         });
       });
 

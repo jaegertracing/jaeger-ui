@@ -57,7 +57,19 @@ exports[`<DdgNodeContent> DdgNodeContent.getNodeRenderer() returns a <DdgNodeCon
     <a
       className="DdgNodeContent--actionsItem"
       href="/deep-dependencies?operation=the-operation&service=the-service"
-      onClick={[Function]}
+      onClick={
+        [MockFunction] {
+          "calls": Array [
+            Array [],
+          ],
+          "results": Array [
+            Object {
+              "isThrow": false,
+              "value": undefined,
+            },
+          ],
+        }
+      }
     >
       <span
         className="DdgNodeContent--actionsItemIconWrapper"
@@ -937,6 +949,7 @@ exports[`<DdgNodeContent> renders the number of operations if there are multiple
                   "op3",
                 ]
               }
+              setValue={[Function]}
               value={null}
             />
           }

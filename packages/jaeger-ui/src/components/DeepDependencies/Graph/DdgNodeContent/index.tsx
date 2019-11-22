@@ -30,7 +30,7 @@ import {
   WORD_RX,
 } from './constants';
 import { setFocusIcon } from './node-icons';
-import { trackSetFocus, trackViewTraces } from '../../index.track';
+import { trackSetFocus, trackViewTraces, trackVertexSetOperation } from '../../index.track';
 import { getUrl } from '../../url';
 import BreakableText from '../../../common/BreakableText';
 import FilteredList from '../../../common/FilteredList';
@@ -146,6 +146,11 @@ export default class DdgNodeContent extends React.PureComponent<TProps, TState> 
     hideVertex(vertexKey);
   };
 
+  private setOperation = (operation: string) => {
+    trackVertexSetOperation();
+    this.props.setOperation(operation);
+  };
+
   private updateChildren = () => {
     const { updateGenerationVisibility, vertexKey } = this.props;
     updateGenerationVisibility(vertexKey, EDirection.Downstream);
@@ -209,7 +214,7 @@ export default class DdgNodeContent extends React.PureComponent<TProps, TState> 
 
   render() {
     const { childrenVisibility, parentVisibility } = this.state;
-    const { focalNodeUrl, isFocalNode, isPositioned, operation, service, setOperation } = this.props;
+    const { focalNodeUrl, isFocalNode, isPositioned, operation, service } = this.props;
 
     const { radius, svcWidth, opWidth, svcMarginTop } = calcPositioning(service, operation);
     const scaleFactor = RADIUS / radius;
@@ -243,7 +248,7 @@ export default class DdgNodeContent extends React.PureComponent<TProps, TState> 
                         cancel={() => {}}
                         options={operation}
                         value={null}
-                        setValue={setOperation}
+                        setValue={this.setOperation}
                       />
                     }
                     placement="bottom"

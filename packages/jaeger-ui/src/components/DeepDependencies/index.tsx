@@ -18,7 +18,7 @@ import _get from 'lodash/get';
 import { bindActionCreators, Dispatch } from 'redux';
 import { connect } from 'react-redux';
 
-import { trackFocusPaths, trackHide, trackShow } from './index.track';
+import { trackClearOperation, trackFocusPaths, trackHide, trackSetService, trackShow } from './index.track';
 import Header from './Header';
 import Graph from './Graph';
 import { getUrl, getUrlState, sanitizeUrlState, ROUTE_PATH } from './url';
@@ -113,6 +113,7 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
   }
 
   clearOperation = () => {
+    trackClearOperation();
     this.updateUrlState({ operation: undefined });
   };
 
@@ -184,6 +185,7 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
       fetchServiceOperations(service);
     }
     this.updateUrlState({ operation: undefined, service, visEncoding: undefined });
+    trackSetService();
   };
 
   setViewModifier = (visibilityIndices: number[], viewModifier: EViewModifier, enable: boolean) => {

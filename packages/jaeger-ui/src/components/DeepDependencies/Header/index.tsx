@@ -20,7 +20,7 @@ import MdVisibilityOff from 'react-icons/lib/md/visibility-off';
 import HopsSelector from './HopsSelector';
 import NameSelector from './NameSelector';
 import LayoutSettings from './LayoutSettings';
-import { trackFilter, trackShowMatches } from '../index.track';
+import { trackFilter, trackHeaderSetOperation, trackShowMatches } from '../index.track';
 import UiFindInput from '../../common/UiFindInput';
 import { EDirection, TDdgDistanceToPathElems, EDdgDensity } from '../../../model/ddg/types';
 
@@ -98,6 +98,11 @@ export default class Header extends React.PureComponent<TProps> {
     );
   };
 
+  setOperation = (operation: string) => {
+    trackHeaderSetOperation();
+    this.props.setOperation(operation);
+  };
+
   handleInfoClick = () => {
     trackShowMatches();
     const { hiddenUiFindMatches, showVertices } = this.props;
@@ -141,7 +146,7 @@ export default class Header extends React.PureComponent<TProps> {
                 label="Operation"
                 placeholder="Filter by operation…"
                 value={operation || null}
-                setValue={setOperation}
+                setValue={this.setOperation}
                 options={operations || []}
               />
             )}
