@@ -22,16 +22,18 @@ type ReferenceLinkProps = {
   children?: React.ReactNode;
   className?: string;
   focusSpan: (spanID: string) => void;
+  onClick?: () => void;
 };
 
 export default class ReferenceLink extends React.PureComponent<ReferenceLinkProps> {
   linkToExternalSpan = (traceID: string, spanID: string) => `${getUrl(traceID)}/uiFind?=${spanID}`;
 
   render() {
-    const { traceID, reference, children, className, focusSpan } = this.props;
+    const { traceID, reference, children, className, focusSpan, ...otherProps } = this.props;
+    delete otherProps.onClick;
     if (traceID === reference.traceID) {
       return (
-        <a role="button" onClick={() => focusSpan(reference.spanID)} className={className}>
+        <a role="button" onClick={() => focusSpan(reference.spanID)} className={className} {...otherProps}>
           {children}
         </a>
       );
@@ -42,6 +44,7 @@ export default class ReferenceLink extends React.PureComponent<ReferenceLinkProp
         target="_blank"
         rel="noopener noreferrer"
         className={className}
+        {...otherProps}
       >
         {children}
       </a>
