@@ -15,10 +15,15 @@
 // limitations under the License.
 
 // This code will generate changelog entries
+
+const { readFile } = require('fs');
 // eslint-disable-next-line import/no-extraneous-dependencies
 const fetch = require('isomorphic-fetch');
 // eslint-disable-next-line import/no-extraneous-dependencies
 const jsdom = require('jsdom');
+const { promisify } = require('util');
+
+const readFilePromise = promisify(readFile);
 
 const DOMAIN = 'https://github.com/';
 
@@ -28,7 +33,7 @@ function getData(elm) {
   const title = elm.querySelector('[data-hovercard-type="pull_request"]').textContent;
   const url = elm.querySelector('[data-hovercard-type="pull_request"]').href;
   const pid = /#\d+/g.exec(elm.querySelector('.opened-by').textContent)[0];
-  const user = elm.querySelector('[data-hovercard-type="user"]').textContent;
+  const user = elm.querySelector('a.muted-link').textContent;
   const dateMerged = new Date(elm.querySelector('[datetime]').getAttribute('datetime'));
   return { title, url, pid, user, dateMerged };
 }
@@ -84,9 +89,16 @@ function getChangelog(pages) {
 }
 
 if (require.main === module) {
-  getChangelog(process.argv[2] || 1)
-    // eslint-disable-next-line no-console
-    .then(items => console.log(items.map(fmtPr).join('\n\n')))
+  Promise.all([getChangelog(process.argv[2] || 1), readFilePromise('./CHANGELOG.md', 'utf8')])
+    .then(([items, changelog]) =>
+      // eslint-disable-next-line no-console
+      console.log(
+        items
+          .filter(({ pid, url }) => changelog.indexOf(`[${pid}](${url})`) === -1)
+          .map(fmtPr)
+          .join('\n\n')
+      )
+    )
     // eslint-disable-next-line no-console
     .catch(error => console.error(error));
 } else {

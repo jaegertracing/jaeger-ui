@@ -1,5 +1,27 @@
 # Releases
 
+## v1.5.0 (November 4, 2019)
+
+### Enhancements
+
+- **Deep Dependency Graph:** Implement Service-Oriented Deep Dependency Graph (DDG) ([@tiffon](https://github.com/tiffon) and [@everett980](https://github.com/everett980) in [#481](https://github.com/jaegertracing/jaeger-ui/issues/481))
+
+- **Deep Dependency Graph:** Derive DDG from search results ([@rubenvp8510](https://github.com/rubenvp8510) in [#445](https://github.com/jaegertracing/jaeger-ui/pull/445))
+
+- **Configuration:** Allow ui-config.json to specify script tags which are added to UI body ([@everett980](https://github.com/everett980) in [#455](https://github.com/jaegertracing/jaeger-ui/pull/455))
+
+- **Plexus:** Sequester zoom concerns to ZoomManager ([@tiffon](https://github.com/tiffon) in [#409](https://github.com/jaegertracing/jaeger-ui/pull/409))
+
+- **Plexus:** Support multiple layers of nodes and edges ([@tiffon](https://github.com/tiffon) in [#482](https://github.com/jaegertracing/jaeger-ui/issues/482))
+
+- **Google Analytics:** Track filter interactions on trace detail page ([@everett980](https://github.com/everett980) in [#470](https://github.com/jaegertracing/jaeger-ui/pull/470))
+
+### Fixes
+
+- **Google Analytics:** Fix tracking of clear filter & view keyboard shortcut modal ([@everett980](https://github.com/everett980) in [#470](https://github.com/jaegertracing/jaeger-ui/pull/470))
+
+- **Codebase:** Fix codecov reporting ([@tiffon](https://github.com/tiffon) in [#418](https://github.com/jaegertracing/jaeger-ui/pull/418), [#417](https://github.com/jaegertracing/jaeger-ui/pull/417), and[#415](https://github.com/jaegertracing/jaeger-ui/pull/415))
+
 ## v1.4.0 (August 31, 2019)
 
 ### Enhancements

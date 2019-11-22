@@ -75,7 +75,7 @@ yarn build
 
 ## UI Configuration
 
-See the [deployment guide](https://www.jaegertracing.io/docs/latest/deployment/#ui-configuration) for details on configuring Google Analytics tracking and menu customizations.
+See the [configuration guide](https://www.jaegertracing.io/docs/latest/frontend-ui/) for details on configuring Google Analytics tracking, menu customizations, and other aspects of UI behavior.
 
 ## License
 
