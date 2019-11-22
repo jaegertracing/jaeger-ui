@@ -13,8 +13,11 @@
 // limitations under the License.
 
 import * as React from 'react';
+import { Checkbox } from 'antd';
 import cx from 'classnames';
 import { TLayoutVertex } from '@jaegertracing/plexus/lib/types';
+import IoAndroidLocate from 'react-icons/lib/io/android-locate';
+import MdVisibilityOff from 'react-icons/lib/md/visibility-off';
 
 import calcPositioning from './calc-positioning';
 import {
@@ -27,26 +30,44 @@ import {
   WORD_RX,
 } from './constants';
 import { setFocusIcon } from './node-icons';
+import { trackSetFocus, trackViewTraces } from '../../index.track';
 import { getUrl } from '../../url';
 import BreakableText from '../../../common/BreakableText';
 import NewWindowIcon from '../../../common/NewWindowIcon';
 import { getUrl as getSearchUrl } from '../../../SearchTracePage/url';
-import { EDdgDensity, EViewModifier, TDdgVertex, PathElem } from '../../../../model/ddg/types';
+import {
+  ECheckedStatus,
+  EDdgDensity,
+  EDirection,
+  EViewModifier,
+  TDdgVertex,
+  PathElem,
+} from '../../../../model/ddg/types';
 
 import './index.css';
 
 type TProps = {
   focalNodeUrl: string | null;
+  focusPathsThroughVertex: (vertexKey: string) => void;
+  getGenerationVisibility: (vertexKey: string, direction: EDirection) => ECheckedStatus | null;
   getVisiblePathElems: (vertexKey: string) => PathElem[] | undefined;
+  hideVertex: (vertexKey: string) => void;
   isFocalNode: boolean;
   isPositioned: boolean;
   operation: string | null;
   service: string;
   setViewModifier: (vertexKey: string, viewModifier: EViewModifier, isEnabled: boolean) => void;
+  updateGenerationVisibility: (vertexKey: string, direction: EDirection) => void;
   vertexKey: string;
 };
 
 export default class DdgNodeContent extends React.PureComponent<TProps> {
+  hoverClearDelay?: number;
+
+  state = {
+    hovered: false,
+  };
+
   static measureNode() {
     const diameter = 2 * (RADIUS + 1);
 
@@ -56,14 +77,29 @@ export default class DdgNodeContent extends React.PureComponent<TProps> {
     };
   }
 
-  static getNodeRenderer(
-    getVisiblePathElems: (vertexKey: string) => PathElem[] | undefined,
-    setViewModifier: (vertexKey: string, viewModifier: EViewModifier, enable: boolean) => void,
-    density: EDdgDensity,
-    showOp: boolean,
-    baseUrl: string,
-    extraUrlArgs: { [key: string]: unknown } | undefined
-  ) {
+  static getNodeRenderer({
+    baseUrl,
+    density,
+    extraUrlArgs,
+    focusPathsThroughVertex,
+    getGenerationVisibility,
+    getVisiblePathElems,
+    hideVertex,
+    setViewModifier,
+    showOp,
+    updateGenerationVisibility,
+  }: {
+    baseUrl: string;
+    density: EDdgDensity;
+    extraUrlArgs?: { [key: string]: unknown };
+    focusPathsThroughVertex: (vertexKey: string) => void;
+    getGenerationVisibility: (vertexKey: string, direction: EDirection) => ECheckedStatus | null;
+    getVisiblePathElems: (vertexKey: string) => PathElem[] | undefined;
+    hideVertex: (vertexKey: string) => void;
+    setViewModifier: (vertexKey: string, viewModifier: EViewModifier, enable: boolean) => void;
+    showOp: boolean;
+    updateGenerationVisibility: (vertexKey: string, direction: EDirection) => void;
+  }) {
     return function renderNode(vertex: TDdgVertex, _: unknown, lv: TLayoutVertex<any> | null) {
       const { isFocalNode, key, operation, service } = vertex;
       return (
@@ -71,19 +107,50 @@ export default class DdgNodeContent extends React.PureComponent<TProps> {
           focalNodeUrl={
             isFocalNode ? null : getUrl({ density, operation, service, showOp, ...extraUrlArgs }, baseUrl)
           }
+          focusPathsThroughVertex={focusPathsThroughVertex}
+          getGenerationVisibility={getGenerationVisibility}
           getVisiblePathElems={getVisiblePathElems}
+          hideVertex={hideVertex}
           isFocalNode={isFocalNode}
           isPositioned={Boolean(lv)}
           operation={operation}
           setViewModifier={setViewModifier}
           service={service}
+          updateGenerationVisibility={updateGenerationVisibility}
           vertexKey={key}
         />
       );
     };
   }
 
+  componentWillUnmount() {
+    if (this.state.hovered) {
+      this.props.setViewModifier(this.props.vertexKey, EViewModifier.Hovered, false);
+    }
+  }
+
+  private focusPaths = () => {
+    const { focusPathsThroughVertex, vertexKey } = this.props;
+    focusPathsThroughVertex(vertexKey);
+  };
+
+  private hideVertex = () => {
+    const { hideVertex, vertexKey } = this.props;
+    hideVertex(vertexKey);
+  };
+
+  private updateChildren = () => {
+    const { updateGenerationVisibility, vertexKey } = this.props;
+    updateGenerationVisibility(vertexKey, EDirection.Downstream);
+  };
+
+  private updateParents = () => {
+    const { updateGenerationVisibility, vertexKey } = this.props;
+    updateGenerationVisibility(vertexKey, EDirection.Upstream);
+  };
+
   private viewTraces = () => {
+    trackViewTraces();
     const { vertexKey, getVisiblePathElems } = this.props;
     const elems = getVisiblePathElems(vertexKey);
     if (elems) {
@@ -116,16 +183,44 @@ export default class DdgNodeContent extends React.PureComponent<TProps> {
 
   private onMouseUx = (event: React.MouseEvent<HTMLElement>) => {
     const { vertexKey, setViewModifier } = this.props;
-    setViewModifier(vertexKey, EViewModifier.Hovered, event.type === 'mouseover');
+    const hovered = event.type === 'mouseenter';
+    setViewModifier(vertexKey, EViewModifier.Hovered, hovered);
+    if (hovered) {
+      if (this.hoverClearDelay) {
+        clearTimeout(this.hoverClearDelay);
+        this.hoverClearDelay = undefined;
+      } else {
+        this.setState({ hovered });
+      }
+    } else {
+      this.hoverClearDelay = setTimeout(() => {
+        this.setState({ hovered });
+        this.hoverClearDelay = undefined;
+      }, 150);
+    }
   };
 
   render() {
-    const { focalNodeUrl, isFocalNode, isPositioned, operation, service } = this.props;
+    const { hovered } = this.state;
+    const {
+      focalNodeUrl,
+      getGenerationVisibility,
+      isFocalNode,
+      isPositioned,
+      operation,
+      service,
+      vertexKey,
+    } = this.props;
+
     const { radius, svcWidth, opWidth, svcMarginTop } = calcPositioning(service, operation);
     const scaleFactor = RADIUS / radius;
     const transform = `translate(${RADIUS - radius}px, ${RADIUS - radius}px) scale(${scaleFactor})`;
+
+    const childrenVisibility = hovered && getGenerationVisibility(vertexKey, EDirection.Downstream);
+    const parentVisibility = hovered && getGenerationVisibility(vertexKey, EDirection.Upstream);
+
     return (
-      <div className="DdgNodeContent" onMouseOver={this.onMouseUx} onMouseOut={this.onMouseUx}>
+      <div className="DdgNodeContent" onMouseEnter={this.onMouseUx} onMouseLeave={this.onMouseUx}>
         <div
           className={cx('DdgNodeContent--core', {
             'is-focalNode': isFocalNode,
@@ -151,18 +246,60 @@ export default class DdgNodeContent extends React.PureComponent<TProps> {
           </div>
         </div>
 
-        <div className="DdgNodeContent--actionsWrapper">
-          {focalNodeUrl && (
-            <a href={focalNodeUrl} className="DdgNodeContent--actionsItem">
-              {setFocusIcon}
-              <span className="DdgNodeContent--actionsItemText">Set focus</span>
+        {hovered && (
+          <div className="DdgNodeContent--actionsWrapper">
+            {focalNodeUrl && (
+              <a href={focalNodeUrl} className="DdgNodeContent--actionsItem" onClick={trackSetFocus}>
+                <span className="DdgNodeContent--actionsItemIconWrapper">{setFocusIcon}</span>
+                <span className="DdgNodeContent--actionsItemText">Set focus</span>
+              </a>
+            )}
+            <a className="DdgNodeContent--actionsItem" onClick={this.viewTraces} role="button">
+              <span className="DdgNodeContent--actionsItemIconWrapper">
+                <NewWindowIcon />
+              </span>
+              <span className="DdgNodeContent--actionsItemText">View traces</span>
             </a>
-          )}
-          <a className="DdgNodeContent--actionsItem" onClick={this.viewTraces} role="button">
-            <NewWindowIcon />
-            <span className="DdgNodeContent--actionsItemText">View traces</span>
-          </a>
-        </div>
+            {!isFocalNode && (
+              <a className="DdgNodeContent--actionsItem" onClick={this.focusPaths} role="button">
+                <span className="DdgNodeContent--actionsItemIconWrapper">
+                  <IoAndroidLocate />
+                </span>
+                <span className="DdgNodeContent--actionsItemText">Focus paths through this node</span>
+              </a>
+            )}
+            {!isFocalNode && (
+              <a className="DdgNodeContent--actionsItem" onClick={this.hideVertex} role="button">
+                <span className="DdgNodeContent--actionsItemIconWrapper">
+                  <MdVisibilityOff />
+                </span>
+                <span className="DdgNodeContent--actionsItemText">Hide node</span>
+              </a>
+            )}
+            {parentVisibility && (
+              <a className="DdgNodeContent--actionsItem" onClick={this.updateParents} role="button">
+                <span className="DdgNodeContent--actionsItemIconWrapper">
+                  <Checkbox
+                    checked={parentVisibility === ECheckedStatus.Full}
+                    indeterminate={parentVisibility === ECheckedStatus.Partial}
+                  />
+                </span>
+                <span className="DdgNodeContent--actionsItemText">View Parents</span>
+              </a>
+            )}
+            {childrenVisibility && (
+              <a className="DdgNodeContent--actionsItem" onClick={this.updateChildren} role="button">
+                <span className="DdgNodeContent--actionsItemIconWrapper">
+                  <Checkbox
+                    checked={childrenVisibility === ECheckedStatus.Full}
+                    indeterminate={childrenVisibility === ECheckedStatus.Partial}
+                  />
+                </span>
+                <span className="DdgNodeContent--actionsItemText">View Children</span>
+              </a>
+            )}
+          </div>
+        )}
       </div>
     );
   }

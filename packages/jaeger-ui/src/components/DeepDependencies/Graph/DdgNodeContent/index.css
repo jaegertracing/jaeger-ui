@@ -14,6 +14,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+/*
+ * Because .plexus-Digraph--MeasurableHtmlNode is `position: absolute`, adding a z-index to DdgNodeContent
+ * would have no effect on layering.
+ */
+.plexus-Digraph--MeasurableHtmlNode:hover {
+  z-index: 1;
+}
+
 .DdgNodeContent--core {
   background: #eee;
   border-radius: 100%;
@@ -52,16 +60,7 @@ limitations under the License.
   bottom: 100%;
   box-shadow: 0 0px 4px 1px rgba(0, 0, 0, 0.1);
   left: 1em;
-  opacity: 0;
-  pointer-events: none;
   position: absolute;
-  transition: opacity 0.1s;
-  white-space: nowrap;
-}
-
-.DdgNodeContent:hover > .DdgNodeContent--actionsWrapper {
-  opacity: 1;
-  pointer-events: all;
 }
 
 .DdgNodeContent--actionsItem {
@@ -72,6 +71,23 @@ limitations under the License.
 
 .DdgNodeContent--actionsItem:not(:hover) {
   color: inherit;
+}
+
+.DdgNodeContent--actionsItemIconWrapper {
+  flex: none;
+  height: 16px;
+  width: 16px;
+}
+
+.DdgNodeContent--actionsItemIconWrapper > * {
+  height: 16px;
+  position: absolute;
+  width: 16px;
+}
+
+.DdgNodeContent--actionsItemIconWrapper > * > .ant-checkbox {
+  vertical-align: unset;
+  top: unset;
 }
 
 .DdgNodeContent--actionsItemText {

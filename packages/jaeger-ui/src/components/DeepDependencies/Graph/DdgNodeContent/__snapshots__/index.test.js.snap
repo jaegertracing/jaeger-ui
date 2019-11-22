@@ -3,8 +3,8 @@
 exports[`<DdgNodeContent> DdgNodeContent.getNodeRenderer() returns a <DdgNodeContent /> 1`] = `
 <div
   className="DdgNodeContent"
-  onMouseOut={[Function]}
-  onMouseOver={[Function]}
+  onMouseEnter={[Function]}
+  onMouseLeave={[Function]}
 >
   <div
     className="DdgNodeContent--core"
@@ -51,68 +51,14 @@ exports[`<DdgNodeContent> DdgNodeContent.getNodeRenderer() returns a <DdgNodeCon
       </div>
     </div>
   </div>
-  <div
-    className="DdgNodeContent--actionsWrapper"
-  >
-    <a
-      className="DdgNodeContent--actionsItem"
-      href="testBaseUrl?density=ppe&maxDuration=100ms&operation=the-operation&service=the-service&showOp=1"
-    >
-      <svg
-        className="DdgNode--SetFocusIcon"
-        height="100"
-        viewBox="0 0 100 100"
-        width="100"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <g>
-          <path
-            d="M50.0001 -1L61.0557 22.1383H38.9444L50.0001 -1Z"
-            fill="currentColor"
-          />
-          <path
-            d="M49.9999 99L38.9443 75.8617L61.0556 75.8617L49.9999 99Z"
-            fill="currentColor"
-          />
-          <path
-            d="M100 49L76.8617 60.0556L76.8617 37.9444L100 49Z"
-            fill="currentColor"
-          />
-          <path
-            d="M1.57361e-06 49L23.1383 37.9444L23.1383 60.0556L1.57361e-06 49Z"
-            fill="currentColor"
-          />
-        </g>
-      </svg>
-      <span
-        className="DdgNodeContent--actionsItemText"
-      >
-        Set focus
-      </span>
-    </a>
-    <a
-      className="DdgNodeContent--actionsItem"
-      onClick={[Function]}
-      role="button"
-    >
-      <NewWindowIcon
-        isLarge={false}
-      />
-      <span
-        className="DdgNodeContent--actionsItemText"
-      >
-        View traces
-      </span>
-    </a>
-  </div>
 </div>
 `;
 
 exports[`<DdgNodeContent> DdgNodeContent.getNodeRenderer() returns a focal <DdgNodeContent /> 1`] = `
 <div
   className="DdgNodeContent"
-  onMouseOut={[Function]}
-  onMouseOver={[Function]}
+  onMouseEnter={[Function]}
+  onMouseLeave={[Function]}
 >
   <div
     className="DdgNodeContent--core is-focalNode"
@@ -159,32 +105,14 @@ exports[`<DdgNodeContent> DdgNodeContent.getNodeRenderer() returns a focal <DdgN
       </div>
     </div>
   </div>
-  <div
-    className="DdgNodeContent--actionsWrapper"
-  >
-    <a
-      className="DdgNodeContent--actionsItem"
-      onClick={[Function]}
-      role="button"
-    >
-      <NewWindowIcon
-        isLarge={false}
-      />
-      <span
-        className="DdgNodeContent--actionsItemText"
-      >
-        View traces
-      </span>
-    </a>
-  </div>
 </div>
 `;
 
 exports[`<DdgNodeContent> omits the operation if it is null 1`] = `
 <div
   className="DdgNodeContent"
-  onMouseOut={[Function]}
-  onMouseOver={[Function]}
+  onMouseEnter={[Function]}
+  onMouseLeave={[Function]}
 >
   <div
     className="DdgNodeContent--core"
@@ -237,33 +165,38 @@ exports[`<DdgNodeContent> omits the operation if it is null 1`] = `
     <a
       className="DdgNodeContent--actionsItem"
       href="some-url"
+      onClick={[Function]}
     >
-      <svg
-        className="DdgNode--SetFocusIcon"
-        height="100"
-        viewBox="0 0 100 100"
-        width="100"
-        xmlns="http://www.w3.org/2000/svg"
+      <span
+        className="DdgNodeContent--actionsItemIconWrapper"
       >
-        <g>
-          <path
-            d="M50.0001 -1L61.0557 22.1383H38.9444L50.0001 -1Z"
-            fill="currentColor"
-          />
-          <path
-            d="M49.9999 99L38.9443 75.8617L61.0556 75.8617L49.9999 99Z"
-            fill="currentColor"
-          />
-          <path
-            d="M100 49L76.8617 60.0556L76.8617 37.9444L100 49Z"
-            fill="currentColor"
-          />
-          <path
-            d="M1.57361e-06 49L23.1383 37.9444L23.1383 60.0556L1.57361e-06 49Z"
-            fill="currentColor"
-          />
-        </g>
-      </svg>
+        <svg
+          className="DdgNode--SetFocusIcon"
+          height="100"
+          viewBox="0 0 100 100"
+          width="100"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <g>
+            <path
+              d="M50.0001 -1L61.0557 22.1383H38.9444L50.0001 -1Z"
+              fill="currentColor"
+            />
+            <path
+              d="M49.9999 99L38.9443 75.8617L61.0556 75.8617L49.9999 99Z"
+              fill="currentColor"
+            />
+            <path
+              d="M100 49L76.8617 60.0556L76.8617 37.9444L100 49Z"
+              fill="currentColor"
+            />
+            <path
+              d="M1.57361e-06 49L23.1383 37.9444L23.1383 60.0556L1.57361e-06 49Z"
+              fill="currentColor"
+            />
+          </g>
+        </svg>
+      </span>
       <span
         className="DdgNodeContent--actionsItemText"
       >
@@ -275,13 +208,89 @@ exports[`<DdgNodeContent> omits the operation if it is null 1`] = `
       onClick={[Function]}
       role="button"
     >
-      <NewWindowIcon
-        isLarge={false}
-      />
+      <span
+        className="DdgNodeContent--actionsItemIconWrapper"
+      >
+        <NewWindowIcon
+          isLarge={false}
+        />
+      </span>
       <span
         className="DdgNodeContent--actionsItemText"
       >
         View traces
+      </span>
+    </a>
+    <a
+      className="DdgNodeContent--actionsItem"
+      onClick={[Function]}
+      role="button"
+    >
+      <span
+        className="DdgNodeContent--actionsItemIconWrapper"
+      >
+        <IoAndroidLocate />
+      </span>
+      <span
+        className="DdgNodeContent--actionsItemText"
+      >
+        Focus paths through this node
+      </span>
+    </a>
+    <a
+      className="DdgNodeContent--actionsItem"
+      onClick={[Function]}
+      role="button"
+    >
+      <span
+        className="DdgNodeContent--actionsItemIconWrapper"
+      >
+        <MdVisibilityOff />
+      </span>
+      <span
+        className="DdgNodeContent--actionsItemText"
+      >
+        Hide node
+      </span>
+    </a>
+    <a
+      className="DdgNodeContent--actionsItem"
+      onClick={[Function]}
+      role="button"
+    >
+      <span
+        className="DdgNodeContent--actionsItemIconWrapper"
+      >
+        <Checkbox
+          checked={false}
+          indeterminate={true}
+          prefixCls="ant-checkbox"
+        />
+      </span>
+      <span
+        className="DdgNodeContent--actionsItemText"
+      >
+        View Parents
+      </span>
+    </a>
+    <a
+      className="DdgNodeContent--actionsItem"
+      onClick={[Function]}
+      role="button"
+    >
+      <span
+        className="DdgNodeContent--actionsItemIconWrapper"
+      >
+        <Checkbox
+          checked={false}
+          indeterminate={true}
+          prefixCls="ant-checkbox"
+        />
+      </span>
+      <span
+        className="DdgNodeContent--actionsItemText"
+      >
+        View Children
       </span>
     </a>
   </div>
@@ -291,8 +300,8 @@ exports[`<DdgNodeContent> omits the operation if it is null 1`] = `
 exports[`<DdgNodeContent> omits the operation if it is null 2`] = `
 <div
   className="DdgNodeContent"
-  onMouseOut={[Function]}
-  onMouseOver={[Function]}
+  onMouseEnter={[Function]}
+  onMouseLeave={[Function]}
 >
   <div
     className="DdgNodeContent--core"
@@ -330,33 +339,38 @@ exports[`<DdgNodeContent> omits the operation if it is null 2`] = `
     <a
       className="DdgNodeContent--actionsItem"
       href="some-url"
+      onClick={[Function]}
     >
-      <svg
-        className="DdgNode--SetFocusIcon"
-        height="100"
-        viewBox="0 0 100 100"
-        width="100"
-        xmlns="http://www.w3.org/2000/svg"
+      <span
+        className="DdgNodeContent--actionsItemIconWrapper"
       >
-        <g>
-          <path
-            d="M50.0001 -1L61.0557 22.1383H38.9444L50.0001 -1Z"
-            fill="currentColor"
-          />
-          <path
-            d="M49.9999 99L38.9443 75.8617L61.0556 75.8617L49.9999 99Z"
-            fill="currentColor"
-          />
-          <path
-            d="M100 49L76.8617 60.0556L76.8617 37.9444L100 49Z"
-            fill="currentColor"
-          />
-          <path
-            d="M1.57361e-06 49L23.1383 37.9444L23.1383 60.0556L1.57361e-06 49Z"
-            fill="currentColor"
-          />
-        </g>
-      </svg>
+        <svg
+          className="DdgNode--SetFocusIcon"
+          height="100"
+          viewBox="0 0 100 100"
+          width="100"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <g>
+            <path
+              d="M50.0001 -1L61.0557 22.1383H38.9444L50.0001 -1Z"
+              fill="currentColor"
+            />
+            <path
+              d="M49.9999 99L38.9443 75.8617L61.0556 75.8617L49.9999 99Z"
+              fill="currentColor"
+            />
+            <path
+              d="M100 49L76.8617 60.0556L76.8617 37.9444L100 49Z"
+              fill="currentColor"
+            />
+            <path
+              d="M1.57361e-06 49L23.1383 37.9444L23.1383 60.0556L1.57361e-06 49Z"
+              fill="currentColor"
+            />
+          </g>
+        </svg>
+      </span>
       <span
         className="DdgNodeContent--actionsItemText"
       >
@@ -368,13 +382,89 @@ exports[`<DdgNodeContent> omits the operation if it is null 2`] = `
       onClick={[Function]}
       role="button"
     >
-      <NewWindowIcon
-        isLarge={false}
-      />
+      <span
+        className="DdgNodeContent--actionsItemIconWrapper"
+      >
+        <NewWindowIcon
+          isLarge={false}
+        />
+      </span>
       <span
         className="DdgNodeContent--actionsItemText"
       >
         View traces
+      </span>
+    </a>
+    <a
+      className="DdgNodeContent--actionsItem"
+      onClick={[Function]}
+      role="button"
+    >
+      <span
+        className="DdgNodeContent--actionsItemIconWrapper"
+      >
+        <IoAndroidLocate />
+      </span>
+      <span
+        className="DdgNodeContent--actionsItemText"
+      >
+        Focus paths through this node
+      </span>
+    </a>
+    <a
+      className="DdgNodeContent--actionsItem"
+      onClick={[Function]}
+      role="button"
+    >
+      <span
+        className="DdgNodeContent--actionsItemIconWrapper"
+      >
+        <MdVisibilityOff />
+      </span>
+      <span
+        className="DdgNodeContent--actionsItemText"
+      >
+        Hide node
+      </span>
+    </a>
+    <a
+      className="DdgNodeContent--actionsItem"
+      onClick={[Function]}
+      role="button"
+    >
+      <span
+        className="DdgNodeContent--actionsItemIconWrapper"
+      >
+        <Checkbox
+          checked={false}
+          indeterminate={true}
+          prefixCls="ant-checkbox"
+        />
+      </span>
+      <span
+        className="DdgNodeContent--actionsItemText"
+      >
+        View Parents
+      </span>
+    </a>
+    <a
+      className="DdgNodeContent--actionsItem"
+      onClick={[Function]}
+      role="button"
+    >
+      <span
+        className="DdgNodeContent--actionsItemIconWrapper"
+      >
+        <Checkbox
+          checked={false}
+          indeterminate={true}
+          prefixCls="ant-checkbox"
+        />
+      </span>
+      <span
+        className="DdgNodeContent--actionsItemText"
+      >
+        View Children
       </span>
     </a>
   </div>
@@ -384,8 +474,8 @@ exports[`<DdgNodeContent> omits the operation if it is null 2`] = `
 exports[`<DdgNodeContent> renders correctly when isFocalNode = true and focalNodeUrl = null 1`] = `
 <div
   className="DdgNodeContent"
-  onMouseOut={[Function]}
-  onMouseOver={[Function]}
+  onMouseEnter={[Function]}
+  onMouseLeave={[Function]}
 >
   <div
     className="DdgNodeContent--core"
@@ -438,33 +528,38 @@ exports[`<DdgNodeContent> renders correctly when isFocalNode = true and focalNod
     <a
       className="DdgNodeContent--actionsItem"
       href="some-url"
+      onClick={[Function]}
     >
-      <svg
-        className="DdgNode--SetFocusIcon"
-        height="100"
-        viewBox="0 0 100 100"
-        width="100"
-        xmlns="http://www.w3.org/2000/svg"
+      <span
+        className="DdgNodeContent--actionsItemIconWrapper"
       >
-        <g>
-          <path
-            d="M50.0001 -1L61.0557 22.1383H38.9444L50.0001 -1Z"
-            fill="currentColor"
-          />
-          <path
-            d="M49.9999 99L38.9443 75.8617L61.0556 75.8617L49.9999 99Z"
-            fill="currentColor"
-          />
-          <path
-            d="M100 49L76.8617 60.0556L76.8617 37.9444L100 49Z"
-            fill="currentColor"
-          />
-          <path
-            d="M1.57361e-06 49L23.1383 37.9444L23.1383 60.0556L1.57361e-06 49Z"
-            fill="currentColor"
-          />
-        </g>
-      </svg>
+        <svg
+          className="DdgNode--SetFocusIcon"
+          height="100"
+          viewBox="0 0 100 100"
+          width="100"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <g>
+            <path
+              d="M50.0001 -1L61.0557 22.1383H38.9444L50.0001 -1Z"
+              fill="currentColor"
+            />
+            <path
+              d="M49.9999 99L38.9443 75.8617L61.0556 75.8617L49.9999 99Z"
+              fill="currentColor"
+            />
+            <path
+              d="M100 49L76.8617 60.0556L76.8617 37.9444L100 49Z"
+              fill="currentColor"
+            />
+            <path
+              d="M1.57361e-06 49L23.1383 37.9444L23.1383 60.0556L1.57361e-06 49Z"
+              fill="currentColor"
+            />
+          </g>
+        </svg>
+      </span>
       <span
         className="DdgNodeContent--actionsItemText"
       >
@@ -476,13 +571,89 @@ exports[`<DdgNodeContent> renders correctly when isFocalNode = true and focalNod
       onClick={[Function]}
       role="button"
     >
-      <NewWindowIcon
-        isLarge={false}
-      />
+      <span
+        className="DdgNodeContent--actionsItemIconWrapper"
+      >
+        <NewWindowIcon
+          isLarge={false}
+        />
+      </span>
       <span
         className="DdgNodeContent--actionsItemText"
       >
         View traces
+      </span>
+    </a>
+    <a
+      className="DdgNodeContent--actionsItem"
+      onClick={[Function]}
+      role="button"
+    >
+      <span
+        className="DdgNodeContent--actionsItemIconWrapper"
+      >
+        <IoAndroidLocate />
+      </span>
+      <span
+        className="DdgNodeContent--actionsItemText"
+      >
+        Focus paths through this node
+      </span>
+    </a>
+    <a
+      className="DdgNodeContent--actionsItem"
+      onClick={[Function]}
+      role="button"
+    >
+      <span
+        className="DdgNodeContent--actionsItemIconWrapper"
+      >
+        <MdVisibilityOff />
+      </span>
+      <span
+        className="DdgNodeContent--actionsItemText"
+      >
+        Hide node
+      </span>
+    </a>
+    <a
+      className="DdgNodeContent--actionsItem"
+      onClick={[Function]}
+      role="button"
+    >
+      <span
+        className="DdgNodeContent--actionsItemIconWrapper"
+      >
+        <Checkbox
+          checked={false}
+          indeterminate={true}
+          prefixCls="ant-checkbox"
+        />
+      </span>
+      <span
+        className="DdgNodeContent--actionsItemText"
+      >
+        View Parents
+      </span>
+    </a>
+    <a
+      className="DdgNodeContent--actionsItem"
+      onClick={[Function]}
+      role="button"
+    >
+      <span
+        className="DdgNodeContent--actionsItemIconWrapper"
+      >
+        <Checkbox
+          checked={false}
+          indeterminate={true}
+          prefixCls="ant-checkbox"
+        />
+      </span>
+      <span
+        className="DdgNodeContent--actionsItemText"
+      >
+        View Children
       </span>
     </a>
   </div>
@@ -492,8 +663,8 @@ exports[`<DdgNodeContent> renders correctly when isFocalNode = true and focalNod
 exports[`<DdgNodeContent> renders correctly when isFocalNode = true and focalNodeUrl = null 2`] = `
 <div
   className="DdgNodeContent"
-  onMouseOut={[Function]}
-  onMouseOver={[Function]}
+  onMouseEnter={[Function]}
+  onMouseLeave={[Function]}
 >
   <div
     className="DdgNodeContent--core is-focalNode"
@@ -548,15 +719,302 @@ exports[`<DdgNodeContent> renders correctly when isFocalNode = true and focalNod
       onClick={[Function]}
       role="button"
     >
-      <NewWindowIcon
-        isLarge={false}
-      />
+      <span
+        className="DdgNodeContent--actionsItemIconWrapper"
+      >
+        <NewWindowIcon
+          isLarge={false}
+        />
+      </span>
       <span
         className="DdgNodeContent--actionsItemText"
       >
         View traces
       </span>
     </a>
+    <a
+      className="DdgNodeContent--actionsItem"
+      onClick={[Function]}
+      role="button"
+    >
+      <span
+        className="DdgNodeContent--actionsItemIconWrapper"
+      >
+        <Checkbox
+          checked={false}
+          indeterminate={true}
+          prefixCls="ant-checkbox"
+        />
+      </span>
+      <span
+        className="DdgNodeContent--actionsItemText"
+      >
+        View Parents
+      </span>
+    </a>
+    <a
+      className="DdgNodeContent--actionsItem"
+      onClick={[Function]}
+      role="button"
+    >
+      <span
+        className="DdgNodeContent--actionsItemIconWrapper"
+      >
+        <Checkbox
+          checked={false}
+          indeterminate={true}
+          prefixCls="ant-checkbox"
+        />
+      </span>
+      <span
+        className="DdgNodeContent--actionsItemText"
+      >
+        View Children
+      </span>
+    </a>
+  </div>
+</div>
+`;
+
+exports[`<DdgNodeContent> renders correctly when not hovered 1`] = `
+<div
+  className="DdgNodeContent"
+  onMouseEnter={[Function]}
+  onMouseLeave={[Function]}
+>
+  <div
+    className="DdgNodeContent--core"
+    style={
+      Object {
+        "height": "100px",
+        "transform": "translate(25px, 25px) scale(1.5)",
+        "width": "100px",
+      }
+    }
+  >
+    <div
+      className="DdgNodeContent--labelWrapper"
+    >
+      <h4
+        className="DdgNodeContent--label"
+        style={
+          Object {
+            "marginTop": "10px",
+            "width": "20px",
+          }
+        }
+      >
+        <BreakableText
+          className="BreakableText"
+          text="some-service"
+          wordRegexp={/\\\\W\\*\\\\w\\+\\\\W\\*/g}
+        />
+      </h4>
+      <div
+        className="DdgNodeContent--label"
+        style={
+          Object {
+            "paddingTop": "5px",
+            "width": "30px",
+          }
+        }
+      >
+        <BreakableText
+          className="BreakableText"
+          text="some-operation"
+          wordRegexp={/\\\\W\\*\\\\w\\+\\\\W\\*/g}
+        />
+      </div>
+    </div>
+  </div>
+  <div
+    className="DdgNodeContent--actionsWrapper"
+  >
+    <a
+      className="DdgNodeContent--actionsItem"
+      href="some-url"
+      onClick={[Function]}
+    >
+      <span
+        className="DdgNodeContent--actionsItemIconWrapper"
+      >
+        <svg
+          className="DdgNode--SetFocusIcon"
+          height="100"
+          viewBox="0 0 100 100"
+          width="100"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <g>
+            <path
+              d="M50.0001 -1L61.0557 22.1383H38.9444L50.0001 -1Z"
+              fill="currentColor"
+            />
+            <path
+              d="M49.9999 99L38.9443 75.8617L61.0556 75.8617L49.9999 99Z"
+              fill="currentColor"
+            />
+            <path
+              d="M100 49L76.8617 60.0556L76.8617 37.9444L100 49Z"
+              fill="currentColor"
+            />
+            <path
+              d="M1.57361e-06 49L23.1383 37.9444L23.1383 60.0556L1.57361e-06 49Z"
+              fill="currentColor"
+            />
+          </g>
+        </svg>
+      </span>
+      <span
+        className="DdgNodeContent--actionsItemText"
+      >
+        Set focus
+      </span>
+    </a>
+    <a
+      className="DdgNodeContent--actionsItem"
+      onClick={[Function]}
+      role="button"
+    >
+      <span
+        className="DdgNodeContent--actionsItemIconWrapper"
+      >
+        <NewWindowIcon
+          isLarge={false}
+        />
+      </span>
+      <span
+        className="DdgNodeContent--actionsItemText"
+      >
+        View traces
+      </span>
+    </a>
+    <a
+      className="DdgNodeContent--actionsItem"
+      onClick={[Function]}
+      role="button"
+    >
+      <span
+        className="DdgNodeContent--actionsItemIconWrapper"
+      >
+        <IoAndroidLocate />
+      </span>
+      <span
+        className="DdgNodeContent--actionsItemText"
+      >
+        Focus paths through this node
+      </span>
+    </a>
+    <a
+      className="DdgNodeContent--actionsItem"
+      onClick={[Function]}
+      role="button"
+    >
+      <span
+        className="DdgNodeContent--actionsItemIconWrapper"
+      >
+        <MdVisibilityOff />
+      </span>
+      <span
+        className="DdgNodeContent--actionsItemText"
+      >
+        Hide node
+      </span>
+    </a>
+    <a
+      className="DdgNodeContent--actionsItem"
+      onClick={[Function]}
+      role="button"
+    >
+      <span
+        className="DdgNodeContent--actionsItemIconWrapper"
+      >
+        <Checkbox
+          checked={false}
+          indeterminate={true}
+          prefixCls="ant-checkbox"
+        />
+      </span>
+      <span
+        className="DdgNodeContent--actionsItemText"
+      >
+        View Parents
+      </span>
+    </a>
+    <a
+      className="DdgNodeContent--actionsItem"
+      onClick={[Function]}
+      role="button"
+    >
+      <span
+        className="DdgNodeContent--actionsItemIconWrapper"
+      >
+        <Checkbox
+          checked={false}
+          indeterminate={true}
+          prefixCls="ant-checkbox"
+        />
+      </span>
+      <span
+        className="DdgNodeContent--actionsItemText"
+      >
+        View Children
+      </span>
+    </a>
+  </div>
+</div>
+`;
+
+exports[`<DdgNodeContent> renders correctly when not hovered 2`] = `
+<div
+  className="DdgNodeContent"
+  onMouseEnter={[Function]}
+  onMouseLeave={[Function]}
+>
+  <div
+    className="DdgNodeContent--core"
+    style={
+      Object {
+        "height": "100px",
+        "transform": "translate(25px, 25px) scale(1.5)",
+        "width": "100px",
+      }
+    }
+  >
+    <div
+      className="DdgNodeContent--labelWrapper"
+    >
+      <h4
+        className="DdgNodeContent--label"
+        style={
+          Object {
+            "marginTop": "10px",
+            "width": "20px",
+          }
+        }
+      >
+        <BreakableText
+          className="BreakableText"
+          text="some-service"
+          wordRegexp={/\\\\W\\*\\\\w\\+\\\\W\\*/g}
+        />
+      </h4>
+      <div
+        className="DdgNodeContent--label"
+        style={
+          Object {
+            "paddingTop": "5px",
+            "width": "30px",
+          }
+        }
+      >
+        <BreakableText
+          className="BreakableText"
+          text="some-operation"
+          wordRegexp={/\\\\W\\*\\\\w\\+\\\\W\\*/g}
+        />
+      </div>
+    </div>
   </div>
 </div>
 `;

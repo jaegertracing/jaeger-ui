@@ -21,7 +21,15 @@ import getEdgeId from './getEdgeId';
 import getPathElemHasher from './getPathElemHasher';
 import { decode, encode } from '../visibility-codec';
 
-import { PathElem, EDdgDensity, TDdgDistanceToPathElems, TDdgModel, TDdgVertex } from '../types';
+import {
+  PathElem,
+  ECheckedStatus,
+  EDdgDensity,
+  EDirection,
+  TDdgDistanceToPathElems,
+  TDdgModel,
+  TDdgVertex,
+} from '../types';
 
 export { default as getEdgeId } from './getEdgeId';
 
@@ -109,8 +117,7 @@ export default class GraphModel {
     Object.freeze(this.visIdxToPathElem);
   }
 
-  // Only public for bound fn getDerivedViewModifiers
-  public getDefaultVisiblePathElems() {
+  private getDefaultVisiblePathElems() {
     return ([] as PathElem[]).concat(
       this.distanceToPathElems.get(-2) || [],
       this.distanceToPathElems.get(-1) || [],
@@ -120,11 +127,49 @@ export default class GraphModel {
     );
   }
 
+  private getGeneration = (vertexKey: string, direction: EDirection, visEncoding?: string): PathElem[] => {
+    const rv: PathElem[] = [];
+    const elems = this.getVertexVisiblePathElems(vertexKey, visEncoding);
+    if (!elems) return rv;
+
+    elems.forEach(({ focalSideNeighbor, memberIdx, memberOf }) => {
+      const generationMember = memberOf.members[memberIdx + direction];
+      if (generationMember && generationMember !== focalSideNeighbor) rv.push(generationMember);
+    });
+    return rv;
+  };
+
+  public getGenerationVisibility = (
+    vertexKey: string,
+    direction: EDirection,
+    visEncoding?: string
+  ): ECheckedStatus | null => {
+    const generation = this.getGeneration(vertexKey, direction, visEncoding);
+    if (!generation.length) return null;
+
+    const visibleIndices = this.getVisibleIndices(visEncoding);
+    let partial = false;
+    let full = true;
+    generation.forEach(elem => {
+      const isVis = visibleIndices.has(elem.visibilityIdx);
+      partial = partial || isVis;
+      full = full && isVis;
+    });
+
+    if (full) return ECheckedStatus.Full;
+    if (partial) return ECheckedStatus.Partial;
+    return ECheckedStatus.Empty;
+  };
+
   private getVisiblePathElems(visEncoding?: string) {
     if (visEncoding == null) return this.getDefaultVisiblePathElems();
     return decode(visEncoding)
       .map(visIdx => this.visIdxToPathElem[visIdx])
       .filter(Boolean);
+  }
+
+  public getVisibleIndices(visEncoding?: string): Set<number> {
+    return new Set(this.getVisiblePathElems(visEncoding).map(({ visibilityIdx }) => visibilityIdx));
   }
 
   public getVisible: (visEncoding?: string) => { edges: TEdge[]; vertices: TDdgVertex[] } = memoize(10)(
@@ -184,37 +229,84 @@ export default class GraphModel {
     }
   );
 
-  public getVisWithVertices = (vertices: TDdgVertex[], visEncoding?: string) => {
-    const indices: Set<number> = new Set(this.getVisiblePathElems(visEncoding).map(pe => pe.visibilityIdx));
+  private getVisWithoutElems(elems: PathElem[], visEncoding?: string) {
+    const visible = this.getVisibleIndices(visEncoding);
+    elems.forEach(({ externalPath }) => {
+      externalPath.forEach(({ visibilityIdx }) => {
+        visible.delete(visibilityIdx);
+      });
+    });
 
+    return encode(Array.from(visible));
+  }
+
+  public getVisWithoutVertex(vertexKey: string, visEncoding?: string): string | undefined {
+    const elems = this.getVertexVisiblePathElems(vertexKey, visEncoding);
+    if (elems && elems.length) return this.getVisWithoutElems(elems, visEncoding);
+    return undefined;
+  }
+
+  private getVisWithElems(elems: PathElem[], visEncoding?: string) {
+    const visible = this.getVisibleIndices(visEncoding);
+    elems.forEach(({ focalPath }) =>
+      focalPath.forEach(({ visibilityIdx }) => {
+        visible.add(visibilityIdx);
+      })
+    );
+
+    return encode(Array.from(visible));
+  }
+
+  public getVisWithUpdatedGeneration(
+    vertexKey: string,
+    direction: EDirection,
+    visEncoding?: string
+  ): { visEncoding: string; update: ECheckedStatus } | null {
+    const generationElems = this.getGeneration(vertexKey, direction, visEncoding);
+    const currCheckedStatus = this.getGenerationVisibility(vertexKey, direction, visEncoding);
+    if (!generationElems.length || !currCheckedStatus) return null;
+
+    if (currCheckedStatus === ECheckedStatus.Full) {
+      return {
+        visEncoding: this.getVisWithoutElems(generationElems, visEncoding),
+        update: ECheckedStatus.Empty,
+      };
+    }
+
+    return {
+      visEncoding: this.getVisWithElems(generationElems, visEncoding),
+      update: ECheckedStatus.Full,
+    };
+  }
+
+  public getVisWithVertices(vertices: TDdgVertex[], visEncoding?: string) {
+    const elemSet: PathElem[] = [];
     vertices.forEach(vertex => {
       const elems = this.vertexToPathElems.get(vertex);
       if (!elems) throw new Error(`${vertex} does not exist in graph`);
 
-      elems.forEach(elem => {
-        elem.focalPath.forEach(({ visibilityIdx }) => indices.add(visibilityIdx));
-      });
+      elemSet.push(...elems);
     });
 
-    return encode(Array.from(indices));
-  };
+    return this.getVisWithElems(elemSet, visEncoding);
+  }
 
-  public getVertexVisiblePathElems = (
+  public getVertexVisiblePathElems(
     vertexKey: string,
     visEncoding: string | undefined
-  ): PathElem[] | undefined => {
+  ): PathElem[] | undefined {
     const vertex = this.vertices.get(vertexKey);
     if (vertex) {
       const pathElems = this.vertexToPathElems.get(vertex);
       if (pathElems && pathElems.size) {
-        const visIndices = visEncoding ? new Set(decode(visEncoding)) : undefined;
+        const visIndices = this.getVisibleIndices(visEncoding);
         return Array.from(pathElems).filter(elem => {
-          return visIndices ? visIndices.has(elem.visibilityIdx) : Math.abs(elem.distance) < 3;
+          return visIndices.has(elem.visibilityIdx);
         });
       }
     }
     return undefined;
-  };
+  }
 }
 
 export const makeGraph = memoize(10)(

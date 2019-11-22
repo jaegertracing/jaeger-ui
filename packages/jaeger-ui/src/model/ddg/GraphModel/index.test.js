@@ -16,66 +16,67 @@ import GraphModel, { makeGraph } from './index';
 import {
   convergentPaths,
   doubleFocalPath,
+  generationPaths,
   focalPayloadElem,
   simplePath,
   wrap,
 } from '../sample-paths.test.resources';
 import transformDdgData from '../transformDdgData';
-import { EDdgDensity } from '../types';
+import { ECheckedStatus, EDirection, EDdgDensity } from '../types';
 import { encode } from '../visibility-codec';
 
 describe('GraphModel', () => {
   const convergentModel = transformDdgData(wrap(convergentPaths), focalPayloadElem);
   const doubleFocalModel = transformDdgData(wrap([doubleFocalPath, simplePath]), focalPayloadElem);
   const simpleModel = transformDdgData(wrap([simplePath]), focalPayloadElem);
-
-  /**
-   * This function takes in a Graph and validates the structure based on the expected vertices.
-   *
-   * @param {GraphModel} graph - The Graph to validate.
-   * @param {Object[]} expectedVertices - The vertices that the Graph should have.
-   * @param {number[]} expectedVertices[].visIndices - The visibility indices that should all share one
-   *     DdgVertex.
-   * @param {number[]} expectedVertices[].focalSIdeNeighbors - A single visibilityIdx is sufficient to define a
-   *     neighboring vertex. For each focalSide visibilityIdx, the expectedVertex should have an
-   *     edge connecting the expectedVertex back to the focalSideNeighbor.
-   */
-  function validateGraph(graph, expectedVertices) {
-    let expectedEdgeCount = 0;
-    expectedVertices.forEach(({ visIndices, focalSideNeighbors = [] }) => {
-      // Validate that all visIndices share the same vertex
-      const pathElems = visIndices.map(visIdx => graph.visIdxToPathElem[visIdx]);
-      const vertices = pathElems.map(elem => graph.pathElemToVertex.get(elem));
-      const vertex = vertices[0];
-      expect(new Set(vertices)).toEqual(new Set([vertex]));
-      // Validate that the common vertex is associated with all of its pathElems
-      expect(graph.vertexToPathElems.get(vertex)).toEqual(new Set(pathElems));
-
-      // Validate that there is an edge connecting the vertex with each expected focalSideNeighbor
-      expectedEdgeCount += focalSideNeighbors.length;
-      const focalSideEdges = Array.from(
-        new Set(pathElems.map(elem => graph.pathElemToEdge.get(elem)))
-      ).filter(Boolean);
-      const focalSideKeys = focalSideEdges.map(({ to, from }) => (to === vertex.key ? from : to));
-      const expectedKeys = focalSideNeighbors.map(
-        idx => graph.pathElemToVertex.get(graph.visIdxToPathElem[idx]).key
-      );
-      expect(focalSideKeys).toEqual(expectedKeys);
-    });
-
-    // Validate that there aren't any rogue vertices nor edges
-    expect(graph.vertices.size).toBe(expectedVertices.length);
-    expect(new Set(graph.pathElemToEdge.values()).size).toBe(expectedEdgeCount);
-  }
+  const getIdx = ({ visibilityIdx }) => visibilityIdx;
 
   describe('constructor', () => {
-    const testGraph = new GraphModel({
-      ddgModel: simpleModel,
-      density: EDdgDensity.PreventPathEntanglement,
-      showOp: true,
-    });
+    /**
+     * This function takes in a Graph and validates the structure based on the expected vertices.
+     *
+     * @param {GraphModel} graph - The Graph to validate.
+     * @param {Object[]} expectedVertices - The vertices that the Graph should have.
+     * @param {number[]} expectedVertices[].visIndices - The visibility indices that should all share one
+     *     DdgVertex.
+     * @param {number[]} expectedVertices[].focalSIdeNeighbors - A single visibilityIdx is sufficient to define a
+     *     neighboring vertex. For each focalSide visibilityIdx, the expectedVertex should have an
+     *     edge connecting the expectedVertex back to the focalSideNeighbor.
+     */
+    function validateGraph(graph, expectedVertices) {
+      let expectedEdgeCount = 0;
+      expectedVertices.forEach(({ visIndices, focalSideNeighbors = [] }) => {
+        // Validate that all visIndices share the same vertex
+        const pathElems = visIndices.map(visIdx => graph.visIdxToPathElem[visIdx]);
+        const vertices = pathElems.map(elem => graph.pathElemToVertex.get(elem));
+        const vertex = vertices[0];
+        expect(new Set(vertices)).toEqual(new Set([vertex]));
+        // Validate that the common vertex is associated with all of its pathElems
+        expect(graph.vertexToPathElems.get(vertex)).toEqual(new Set(pathElems));
+
+        // Validate that there is an edge connecting the vertex with each expected focalSideNeighbor
+        expectedEdgeCount += focalSideNeighbors.length;
+        const focalSideEdges = Array.from(
+          new Set(pathElems.map(elem => graph.pathElemToEdge.get(elem)))
+        ).filter(Boolean);
+        const focalSideKeys = focalSideEdges.map(({ to, from }) => (to === vertex.key ? from : to));
+        const expectedKeys = focalSideNeighbors.map(
+          idx => graph.pathElemToVertex.get(graph.visIdxToPathElem[idx]).key
+        );
+        expect(focalSideKeys).toEqual(expectedKeys);
+      });
+
+      // Validate that there aren't any rogue vertices nor edges
+      expect(graph.vertices.size).toBe(expectedVertices.length);
+      expect(new Set(graph.pathElemToEdge.values()).size).toBe(expectedEdgeCount);
+    }
 
     it('creates five vertices and four edges for one-path ddg', () => {
+      const testGraph = new GraphModel({
+        ddgModel: simpleModel,
+        density: EDdgDensity.PreventPathEntanglement,
+        showOp: true,
+      });
       validateGraph(testGraph, [
         {
           visIndices: [0],
@@ -98,9 +99,7 @@ describe('GraphModel', () => {
         },
       ]);
     });
-  });
 
-  describe('convergent paths', () => {
     it('adds separate vertices for equal PathElems that have different focalPaths, even those with equal focalSideNeighbors', () => {
       const convergentGraph = new GraphModel({
         ddgModel: convergentModel,
@@ -171,6 +170,261 @@ describe('GraphModel', () => {
               showOp: true,
             })
         ).toThrowError();
+      });
+    });
+  });
+
+  describe('generations', () => {
+    const generationModel = transformDdgData(wrap(generationPaths), focalPayloadElem);
+    const generationGraph = makeGraph(generationModel, false, EDdgDensity.MostConcise);
+    const oneHopIndices = [
+      ...generationGraph.distanceToPathElems.get(-1),
+      ...generationGraph.distanceToPathElems.get(0),
+      ...generationGraph.distanceToPathElems.get(1),
+    ].map(getIdx);
+    const allVisible = encode(generationGraph.visIdxToPathElem.map((_elem, idx) => idx));
+    const external = ({ isExternal }) => isExternal;
+    const internal = ({ isExternal }) => !isExternal;
+
+    const downstreamTargets = generationGraph.distanceToPathElems.get(2);
+    const targetKey = generationGraph.getPathElemHasher()(downstreamTargets[0]);
+    const upstreamTargets = generationGraph.distanceToPathElems.get(-2);
+    const { visibilityIdx: targetLeafIdx } = downstreamTargets.find(external);
+    const { visibilityIdx: targetRootIdx } = upstreamTargets.find(external);
+    const leafAndRootVisIndices = [...oneHopIndices, targetLeafIdx, targetRootIdx];
+    const leafAndRootVisEncoding = encode(leafAndRootVisIndices);
+    const [hiddenDownstreamTargetNotLeaf, visibleDownstreamTargetNotLeaf] = downstreamTargets.filter(
+      internal
+    );
+    const [hiddenUpstreamTargetNotRoot, visibleUpstreamTargetNotRoot] = upstreamTargets.filter(internal);
+    const partialTargetVisIndices = [
+      ...leafAndRootVisIndices,
+      visibleDownstreamTargetNotLeaf.visibilityIdx,
+      visibleUpstreamTargetNotRoot.visibilityIdx,
+    ];
+    const partialTargetVisEncoding = encode(partialTargetVisIndices);
+    const subsetOfTargetExternalNeighborsVisibilityIndices = [
+      visibleDownstreamTargetNotLeaf.externalSideNeighbor.visibilityIdx,
+      visibleUpstreamTargetNotRoot.externalSideNeighbor.visibilityIdx,
+    ];
+    const twoHopIndices = [
+      ...oneHopIndices,
+      ...downstreamTargets.map(getIdx),
+      ...upstreamTargets.map(getIdx),
+    ];
+    const allButSomeExternalVisible = encode([
+      ...twoHopIndices,
+      ...subsetOfTargetExternalNeighborsVisibilityIndices,
+    ]);
+
+    describe('getGeneration', () => {
+      it('returns empty array if key does not exist', () => {
+        const absentKey = 'absent key';
+
+        expect(generationGraph.getGeneration(absentKey, EDirection.Downstream)).toEqual([]);
+        expect(generationGraph.getGeneration(absentKey, EDirection.Upstream)).toEqual([]);
+      });
+
+      it('returns empty array if key has no visible elems', () => {
+        expect(
+          generationGraph.getGeneration(targetKey, EDirection.Downstream, encode(oneHopIndices))
+        ).toEqual([]);
+
+        expect(generationGraph.getGeneration(targetKey, EDirection.Upstream, encode(oneHopIndices))).toEqual(
+          []
+        );
+      });
+
+      it('returns empty array if key is leaf/root elem', () => {
+        expect(
+          generationGraph.getGeneration(targetKey, EDirection.Downstream, leafAndRootVisEncoding)
+        ).toEqual([]);
+
+        expect(generationGraph.getGeneration(targetKey, EDirection.Upstream, leafAndRootVisEncoding)).toEqual(
+          []
+        );
+      });
+
+      it('omits focalSide elems', () => {
+        const downstreamResult = generationGraph.getGeneration(
+          targetKey,
+          EDirection.Downstream,
+          partialTargetVisEncoding
+        );
+        expect(downstreamResult).toEqual([visibleDownstreamTargetNotLeaf.externalSideNeighbor]);
+        expect(downstreamResult).toEqual(
+          expect.not.arrayContaining([hiddenDownstreamTargetNotLeaf.externalSideNeighbor])
+        );
+        expect(downstreamResult).toEqual(
+          expect.not.arrayContaining([visibleUpstreamTargetNotRoot.focalSideNeighbor])
+        );
+
+        const upstreamResult = generationGraph.getGeneration(
+          targetKey,
+          EDirection.Upstream,
+          partialTargetVisEncoding
+        );
+        expect(upstreamResult).toEqual([visibleUpstreamTargetNotRoot.externalSideNeighbor]);
+        expect(upstreamResult).toEqual(
+          expect.not.arrayContaining([hiddenUpstreamTargetNotRoot.externalSideNeighbor])
+        );
+        expect(downstreamResult).toEqual(
+          expect.not.arrayContaining([visibleDownstreamTargetNotLeaf.focalSideNeighbor])
+        );
+      });
+    });
+
+    describe('getGenerationVisibility', () => {
+      it('returns null if getGeneration returns []', () => {
+        expect(
+          generationGraph.getGenerationVisibility(targetKey, EDirection.Downstream, leafAndRootVisEncoding)
+        ).toEqual(null);
+
+        expect(
+          generationGraph.getGenerationVisibility(targetKey, EDirection.Upstream, leafAndRootVisEncoding)
+        ).toEqual(null);
+      });
+
+      it('returns ECheckedStatus.Empty if all neighbors are hidden', () => {
+        expect(generationGraph.getGenerationVisibility(targetKey, EDirection.Downstream)).toEqual(
+          ECheckedStatus.Empty
+        );
+        expect(
+          generationGraph.getGenerationVisibility(targetKey, EDirection.Downstream, partialTargetVisEncoding)
+        ).toEqual(ECheckedStatus.Empty);
+
+        expect(generationGraph.getGenerationVisibility(targetKey, EDirection.Upstream)).toEqual(
+          ECheckedStatus.Empty
+        );
+        expect(
+          generationGraph.getGenerationVisibility(targetKey, EDirection.Upstream, partialTargetVisEncoding)
+        ).toEqual(ECheckedStatus.Empty);
+      });
+
+      it('returns ECheckedStatus.Full if all neighbors are visible', () => {
+        const partialTargetWithRespectiveExternalVisEncoding = encode([
+          ...partialTargetVisIndices,
+          ...subsetOfTargetExternalNeighborsVisibilityIndices,
+        ]);
+
+        expect(generationGraph.getGenerationVisibility(targetKey, EDirection.Downstream, allVisible)).toEqual(
+          ECheckedStatus.Full
+        );
+        expect(
+          generationGraph.getGenerationVisibility(
+            targetKey,
+            EDirection.Downstream,
+            partialTargetWithRespectiveExternalVisEncoding
+          )
+        ).toEqual(ECheckedStatus.Full);
+        expect(generationGraph.getGenerationVisibility(targetKey, EDirection.Upstream, allVisible)).toEqual(
+          ECheckedStatus.Full
+        );
+        expect(
+          generationGraph.getGenerationVisibility(
+            targetKey,
+            EDirection.Upstream,
+            partialTargetWithRespectiveExternalVisEncoding
+          )
+        ).toEqual(ECheckedStatus.Full);
+      });
+
+      it('returns ECheckedStatus.Partial if only some neighbors are visible', () => {
+        expect(
+          generationGraph.getGenerationVisibility(targetKey, EDirection.Downstream, allButSomeExternalVisible)
+        ).toEqual(ECheckedStatus.Partial);
+
+        expect(
+          generationGraph.getGenerationVisibility(targetKey, EDirection.Upstream, allButSomeExternalVisible)
+        ).toEqual(ECheckedStatus.Partial);
+      });
+    });
+
+    describe('getVisWithUpdatedGeneration', () => {
+      const downstreamFullIndices = [
+        ...twoHopIndices,
+        ...generationGraph.distanceToPathElems.get(3).map(getIdx),
+      ];
+      const downstreamFullEncoding = encode(downstreamFullIndices);
+      const upstreamFullIndices = [
+        ...twoHopIndices,
+        ...generationGraph.distanceToPathElems.get(-3).map(getIdx),
+      ];
+      const upstreamFullEncoding = encode(upstreamFullIndices);
+
+      it('returns null if there is no generation to update', () => {
+        expect(
+          generationGraph.getVisWithUpdatedGeneration(targetKey, EDirection.Downstream, encode(oneHopIndices))
+        ).toEqual(null);
+        expect(
+          generationGraph.getVisWithUpdatedGeneration(targetKey, EDirection.Upstream, encode(oneHopIndices))
+        ).toEqual(null);
+
+        expect(
+          generationGraph.getVisWithUpdatedGeneration(
+            targetKey,
+            EDirection.Downstream,
+            leafAndRootVisEncoding
+          )
+        ).toEqual(null);
+        expect(
+          generationGraph.getVisWithUpdatedGeneration(targetKey, EDirection.Upstream, leafAndRootVisEncoding)
+        ).toEqual(null);
+      });
+
+      it('emptys target generation if it is full', () => {
+        expect(
+          generationGraph.getVisWithUpdatedGeneration(targetKey, EDirection.Downstream, allVisible)
+        ).toEqual({
+          visEncoding: upstreamFullEncoding,
+          update: ECheckedStatus.Empty,
+        });
+
+        expect(
+          generationGraph.getVisWithUpdatedGeneration(targetKey, EDirection.Upstream, allVisible)
+        ).toEqual({
+          visEncoding: downstreamFullEncoding,
+          update: ECheckedStatus.Empty,
+        });
+      });
+
+      it('fills target generation if it is empty', () => {
+        expect(generationGraph.getVisWithUpdatedGeneration(targetKey, EDirection.Downstream)).toEqual({
+          visEncoding: downstreamFullEncoding,
+          update: ECheckedStatus.Full,
+        });
+
+        expect(generationGraph.getVisWithUpdatedGeneration(targetKey, EDirection.Upstream)).toEqual({
+          visEncoding: upstreamFullEncoding,
+          update: ECheckedStatus.Full,
+        });
+      });
+
+      it('fills target generation if it is partially full', () => {
+        expect(
+          generationGraph.getVisWithUpdatedGeneration(
+            targetKey,
+            EDirection.Downstream,
+            allButSomeExternalVisible
+          )
+        ).toEqual({
+          visEncoding: encode([
+            ...downstreamFullIndices,
+            ...subsetOfTargetExternalNeighborsVisibilityIndices,
+          ]),
+          update: ECheckedStatus.Full,
+        });
+
+        expect(
+          generationGraph.getVisWithUpdatedGeneration(
+            targetKey,
+            EDirection.Upstream,
+            allButSomeExternalVisible
+          )
+        ).toEqual({
+          visEncoding: encode([...upstreamFullIndices, ...subsetOfTargetExternalNeighborsVisibilityIndices]),
+          update: ECheckedStatus.Full,
+        });
       });
     });
   });
@@ -326,32 +580,6 @@ describe('GraphModel', () => {
     });
   });
 
-  describe('getVisWithVertices', () => {
-    const overlapGraph = new GraphModel({
-      ddgModel: convergentModel,
-      density: EDdgDensity.PreventPathEntanglement,
-      showOp: true,
-    });
-    const vertices = [
-      overlapGraph.pathElemToVertex.get(overlapGraph.distanceToPathElems.get(3)[0]),
-      overlapGraph.pathElemToVertex.get(overlapGraph.distanceToPathElems.get(-1)[0]),
-    ];
-
-    it('handles absent visEncoding', () => {
-      expect(overlapGraph.getVisWithVertices(vertices)).toBe(encode([0, 1, 2, 3, 4, 5, 6, 7, 8]));
-    });
-
-    it('uses provided visEncoding', () => {
-      expect(overlapGraph.getVisWithVertices(vertices, encode([0, 1, 3]))).toBe(
-        encode([0, 1, 2, 3, 4, 5, 6, 8])
-      );
-    });
-
-    it('throws error if given absent vertex', () => {
-      expect(() => overlapGraph.getVisWithVertices([{}])).toThrowError();
-    });
-  });
-
   describe('getVertexVisiblePathElems', () => {
     const overlapGraph = new GraphModel({
       ddgModel: doubleFocalModel,
@@ -387,6 +615,59 @@ describe('GraphModel', () => {
       const fullKey = encode(Array.from(overlapGraph.visIdxToPathElem.keys()));
       expect(overlapGraph.getVertexVisiblePathElems(lastElemKey, encode([0]))).toHaveLength(0);
       expect(overlapGraph.getVertexVisiblePathElems(lastElemKey, fullKey)).toHaveLength(2);
+    });
+  });
+
+  describe('getVisWithoutVertex', () => {
+    const overlapGraph = new GraphModel({
+      ddgModel: convergentModel,
+      density: EDdgDensity.OnePerLevel,
+      showOp: true,
+    });
+    const vertexKey = overlapGraph.getPathElemHasher()(overlapGraph.distanceToPathElems.get(2)[0]);
+
+    it('handles absent visEncoding', () => {
+      expect(overlapGraph.getVisWithoutVertex(vertexKey)).toBe(encode([0, 1, 2, 3, 4, 5]));
+    });
+
+    it('uses provided visEncoding', () => {
+      expect(overlapGraph.getVisWithoutVertex(vertexKey, encode([0, 1, 2, 3, 5, 6, 7, 8, 9]))).toBe(
+        encode([0, 1, 2, 3, 5])
+      );
+    });
+
+    it('returns undefined if vertex is already hidden', () => {
+      expect(overlapGraph.getVisWithoutVertex(vertexKey, encode([0, 1, 2, 3, 5]))).toBe(undefined);
+    });
+
+    it('returns undefined if vertex has no elems', () => {
+      expect(overlapGraph.getVisWithoutVertex('absent vertex key')).toBe(undefined);
+    });
+  });
+
+  describe('getVisWithVertices', () => {
+    const overlapGraph = new GraphModel({
+      ddgModel: convergentModel,
+      density: EDdgDensity.PreventPathEntanglement,
+      showOp: true,
+    });
+    const vertices = [
+      overlapGraph.pathElemToVertex.get(overlapGraph.distanceToPathElems.get(3)[0]),
+      overlapGraph.pathElemToVertex.get(overlapGraph.distanceToPathElems.get(-1)[0]),
+    ];
+
+    it('handles absent visEncoding', () => {
+      expect(overlapGraph.getVisWithVertices(vertices)).toBe(encode([0, 1, 2, 3, 4, 5, 6, 7, 8]));
+    });
+
+    it('uses provided visEncoding', () => {
+      expect(overlapGraph.getVisWithVertices(vertices, encode([0, 1, 3]))).toBe(
+        encode([0, 1, 2, 3, 4, 5, 6, 8])
+      );
+    });
+
+    it('throws error if given absent vertex', () => {
+      expect(() => overlapGraph.getVisWithVertices([{}])).toThrowError();
     });
   });
 

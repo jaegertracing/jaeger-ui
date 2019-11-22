@@ -38,6 +38,22 @@ export default class PathElem {
     return this.memberIdx - this.memberOf.focalIdx;
   }
 
+  get externalPath(): PathElem[] {
+    const result: PathElem[] = [];
+    let current: PathElem | null | undefined = this;
+    while (current) {
+      result.push(current);
+      current = current.externalSideNeighbor;
+    }
+    if (this.distance < 0) result.reverse();
+    return result;
+  }
+
+  get externalSideNeighbor(): PathElem | null | undefined {
+    if (!this.distance) return null;
+    return this.memberOf.members[this.memberIdx + Math.sign(this.distance)];
+  }
+
   get focalPath(): PathElem[] {
     const result: PathElem[] = [];
     let current: PathElem | null = this;
