@@ -156,16 +156,10 @@ export default class GraphModel {
     if (!generation.length) return null;
 
     const visibleIndices = this.getVisibleIndices(visEncoding);
-    let partial = false;
-    let full = true;
-    generation.forEach(elem => {
-      const isVis = visibleIndices.has(elem.visibilityIdx);
-      partial = partial || isVis;
-      full = full && isVis;
-    });
+    const visibleGeneration = generation.filter(({ visibilityIdx }) => visibleIndices.has(visibilityIdx));
 
-    if (full) return ECheckedStatus.Full;
-    if (partial) return ECheckedStatus.Partial;
+    if (visibleGeneration.length === generation.length) return ECheckedStatus.Full;
+    if (visibleGeneration.length) return ECheckedStatus.Partial;
     return ECheckedStatus.Empty;
   };
 
@@ -189,7 +183,7 @@ export default class GraphModel {
         const edge = this.pathElemToEdge.get(pathElem);
         if (edge) edges.add(edge);
         const vertex = this.pathElemToVertex.get(pathElem);
-        if (vertex && vertex.key !== FOCAL_KEY) vertices.add(vertex);
+        if (vertex && !vertex.isFocalNode) vertices.add(vertex);
       });
 
       if (this.visIdxToPathElem.length) {

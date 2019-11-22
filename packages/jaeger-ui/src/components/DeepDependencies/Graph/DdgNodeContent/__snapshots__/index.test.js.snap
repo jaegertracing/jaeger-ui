@@ -3,8 +3,8 @@
 exports[`<DdgNodeContent> DdgNodeContent.getNodeRenderer() returns a <DdgNodeContent /> 1`] = `
 <div
   className="DdgNodeContent"
-  onMouseEnter={[Function]}
-  onMouseLeave={[Function]}
+  onMouseOut={[Function]}
+  onMouseOver={[Function]}
 >
   <div
     className="DdgNodeContent--core"
@@ -152,8 +152,8 @@ exports[`<DdgNodeContent> DdgNodeContent.getNodeRenderer() returns a <DdgNodeCon
 exports[`<DdgNodeContent> DdgNodeContent.getNodeRenderer() returns a focal <DdgNodeContent /> 1`] = `
 <div
   className="DdgNodeContent"
-  onMouseEnter={[Function]}
-  onMouseLeave={[Function]}
+  onMouseOut={[Function]}
+  onMouseOver={[Function]}
 >
   <div
     className="DdgNodeContent--core is-focalNode"
@@ -228,8 +228,8 @@ exports[`<DdgNodeContent> DdgNodeContent.getNodeRenderer() returns a focal <DdgN
 exports[`<DdgNodeContent> omits the operation if it is null 1`] = `
 <div
   className="DdgNodeContent"
-  onMouseEnter={[Function]}
-  onMouseLeave={[Function]}
+  onMouseOut={[Function]}
+  onMouseOver={[Function]}
 >
   <div
     className="DdgNodeContent--core"
@@ -377,8 +377,8 @@ exports[`<DdgNodeContent> omits the operation if it is null 1`] = `
 exports[`<DdgNodeContent> omits the operation if it is null 2`] = `
 <div
   className="DdgNodeContent"
-  onMouseEnter={[Function]}
-  onMouseLeave={[Function]}
+  onMouseOut={[Function]}
+  onMouseOver={[Function]}
 >
   <div
     className="DdgNodeContent--core"
@@ -511,8 +511,8 @@ exports[`<DdgNodeContent> omits the operation if it is null 2`] = `
 exports[`<DdgNodeContent> renders correctly when isFocalNode = true and focalNodeUrl = null 1`] = `
 <div
   className="DdgNodeContent"
-  onMouseEnter={[Function]}
-  onMouseLeave={[Function]}
+  onMouseOut={[Function]}
+  onMouseOver={[Function]}
 >
   <div
     className="DdgNodeContent--core"
@@ -660,8 +660,8 @@ exports[`<DdgNodeContent> renders correctly when isFocalNode = true and focalNod
 exports[`<DdgNodeContent> renders correctly when isFocalNode = true and focalNodeUrl = null 2`] = `
 <div
   className="DdgNodeContent"
-  onMouseEnter={[Function]}
-  onMouseLeave={[Function]}
+  onMouseOut={[Function]}
+  onMouseOver={[Function]}
 >
   <div
     className="DdgNodeContent--core is-focalNode"
@@ -736,8 +736,8 @@ exports[`<DdgNodeContent> renders correctly when isFocalNode = true and focalNod
 exports[`<DdgNodeContent> renders the number of operations if there are multiple 1`] = `
 <div
   className="DdgNodeContent"
-  onMouseEnter={[Function]}
-  onMouseLeave={[Function]}
+  onMouseOut={[Function]}
+  onMouseOver={[Function]}
 >
   <div
     className="DdgNodeContent--core"
@@ -885,8 +885,8 @@ exports[`<DdgNodeContent> renders the number of operations if there are multiple
 exports[`<DdgNodeContent> renders the number of operations if there are multiple 2`] = `
 <div
   className="DdgNodeContent"
-  onMouseEnter={[Function]}
-  onMouseLeave={[Function]}
+  onMouseOut={[Function]}
+  onMouseOver={[Function]}
 >
   <div
     className="DdgNodeContent--core"

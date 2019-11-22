@@ -92,24 +92,6 @@ export type TDdgModel = {
   visIdxToPathElem: PathElem[];
 };
 
-/*
-type TDdgVertexCommon = {
-  key: string;
-  operation: string | null;
-}
-
-type TDdgVertexFocal = {
-  isFocalNode: true;
-  service: string | string[];
-}
-
-type TDdgVertexNonFocal = {
-  isFocalNode: false;
-  service: string;
-}
-
-export type TDdgVertex = TVertex<TDdgVertexCommon & (TDdgVertexFocal | TDdgVertexNonFocal)>;
-*/
 export type TDdgVertex = TVertex<{
   isFocalNode: boolean;
   key: string;

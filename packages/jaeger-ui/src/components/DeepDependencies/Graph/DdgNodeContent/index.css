@@ -77,7 +77,7 @@ limitations under the License.
   transition-property: opacity;
 }
 
-.DdgNodeContent:hover .DdgNodeContent--actionsWrapper {
+.DdgNodeContent:hover > .DdgNodeContent--actionsWrapper {
   opacity: 1;
   pointer-events: all;
   transition-delay: 0s;

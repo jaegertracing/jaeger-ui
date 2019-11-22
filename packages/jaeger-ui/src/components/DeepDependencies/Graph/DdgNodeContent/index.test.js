@@ -97,26 +97,26 @@ describe('<DdgNodeContent>', () => {
       props.getVisiblePathElems.mockReturnValue(testElems);
     });
 
-    it('calls setViewModifier on mouse enter', () => {
-      wrapper.simulate('mouseenter', { type: 'mouseenter' });
+    it('calls setViewModifier on mouse over', () => {
+      wrapper.simulate('mouseover', { type: 'mouseover' });
 
       expect(props.setViewModifier).toHaveBeenCalledTimes(1);
       expect(props.setViewModifier).toHaveBeenCalledWith(testIndices, EViewModifier.Hovered, true);
     });
 
-    it('calls setViewModifier with all modified indices on mouse leave', () => {
-      wrapper.simulate('mouseenter', { type: 'mouseenter' });
-      wrapper.simulate('mouseleave', { type: 'mouseleave' });
+    it('calls setViewModifier with all modified indices on mouse out', () => {
+      wrapper.simulate('mouseover', { type: 'mouseover' });
+      wrapper.simulate('mouseout', { type: 'mouseout' });
 
       expect(props.setViewModifier).toHaveBeenCalledTimes(2);
       expect(props.setViewModifier).toHaveBeenCalledWith(testIndices, EViewModifier.Hovered, false);
 
-      wrapper.simulate('mouseenter', { type: 'mouseenter' });
+      wrapper.simulate('mouseover', { type: 'mouseover' });
       const moreIndices = [108];
       const moreElems = moreIndices.map(visibilityIdx => ({ visibilityIdx }));
       props.getVisiblePathElems.mockReturnValue(moreElems);
-      wrapper.simulate('mouseenter', { type: 'mouseenter' });
-      wrapper.simulate('mouseleave', { type: 'mouseleave' });
+      wrapper.simulate('mouseover', { type: 'mouseover' });
+      wrapper.simulate('mouseout', { type: 'mouseout' });
 
       expect(props.setViewModifier).toHaveBeenCalledTimes(5);
       expect(props.setViewModifier).toHaveBeenCalledWith(
@@ -131,27 +131,27 @@ describe('<DdgNodeContent>', () => {
       expect(props.setViewModifier).toHaveBeenCalledTimes(0);
 
       wrapper = shallow(<DdgNodeContent {...props} />);
-      wrapper.simulate('mouseenter', { type: 'mouseenter' });
-      wrapper.simulate('mouseleave', { type: 'mouseleave' });
+      wrapper.simulate('mouseover', { type: 'mouseover' });
+      wrapper.simulate('mouseout', { type: 'mouseout' });
       expect(props.setViewModifier).toHaveBeenCalledTimes(2);
       wrapper.unmount();
       expect(props.setViewModifier).toHaveBeenCalledTimes(2);
 
       wrapper = shallow(<DdgNodeContent {...props} />);
-      wrapper.simulate('mouseenter', { type: 'mouseenter' });
+      wrapper.simulate('mouseover', { type: 'mouseover' });
+      expect(props.setViewModifier).toHaveBeenCalledTimes(3);
       wrapper.unmount();
-
       expect(props.setViewModifier).toHaveBeenCalledTimes(4);
       expect(props.setViewModifier).toHaveBeenCalledWith(testIndices, EViewModifier.Hovered, false);
     });
 
-    it('calculates state.childrenVisibility and state.parentVisibility on mouse enter', () => {
+    it('calculates state.childrenVisibility and state.parentVisibility on mouse over', () => {
       const childrenVisibility = ECheckedStatus.Partial;
       const parentVisibility = ECheckedStatus.Full;
       props.getGenerationVisibility.mockImplementation((_key, direction) =>
         direction === EDirection.Upstream ? parentVisibility : childrenVisibility
       );
-      wrapper.simulate('mouseenter', { type: 'mouseenter' });
+      wrapper.simulate('mouseover', { type: 'mouseover' });
 
       expect(wrapper.state()).toEqual({
         childrenVisibility,

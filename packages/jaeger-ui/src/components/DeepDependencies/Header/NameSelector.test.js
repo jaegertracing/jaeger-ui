@@ -147,8 +147,8 @@ describe('<NameSelector>', () => {
       wrapper.find(Icon).simulate('click', { stopPropagation });
 
       expect(clearValue).toHaveBeenCalled();
-      expect(stopPropagation).toHaveBeenCalled();
       expect(wrapper.state('popoverVisible')).toBe(false);
+      expect(stopPropagation).toHaveBeenCalled();
     });
 
     it('throws Error when attempting to clear when required', () => {

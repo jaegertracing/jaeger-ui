@@ -77,6 +77,7 @@ exports[`<Header> renders the operation selector if a service is selected 1`] = 
       value="testService"
     />
     <NameSelector
+      clearValue={[Function]}
       label="Operation"
       options={Array []}
       placeholder="Filter by operation…"
@@ -143,6 +144,7 @@ exports[`<Header> renders the operation selector if a service is selected 2`] = 
       value="testService"
     />
     <NameSelector
+      clearValue={[Function]}
       label="Operation"
       options={
         Array [

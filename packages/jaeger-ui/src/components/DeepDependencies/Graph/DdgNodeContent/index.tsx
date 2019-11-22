@@ -190,7 +190,7 @@ export default class DdgNodeContent extends React.PureComponent<TProps, TState> 
 
   private onMouseUx = (event: React.MouseEvent<HTMLElement>) => {
     const { getGenerationVisibility, getVisiblePathElems, setViewModifier, vertexKey } = this.props;
-    const hovered = event.type === 'mouseenter';
+    const hovered = event.type === 'mouseover';
     const visIndices = hovered
       ? (getVisiblePathElems(vertexKey) || []).map(({ visibilityIdx }) => {
           this.hoveredIndices.add(visibilityIdx);
@@ -216,7 +216,7 @@ export default class DdgNodeContent extends React.PureComponent<TProps, TState> 
     const transform = `translate(${RADIUS - radius}px, ${RADIUS - radius}px) scale(${scaleFactor})`;
 
     return (
-      <div className="DdgNodeContent" onMouseEnter={this.onMouseUx} onMouseLeave={this.onMouseUx}>
+      <div className="DdgNodeContent" onMouseOver={this.onMouseUx} onMouseOut={this.onMouseUx}>
         <div
           className={cx('DdgNodeContent--core', {
             'is-focalNode': isFocalNode,

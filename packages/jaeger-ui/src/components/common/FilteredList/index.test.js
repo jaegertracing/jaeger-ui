@@ -140,8 +140,8 @@ describe('<FilteredList>', () => {
 
   it('enter selects the filteredOption if there is only one option', () => {
     const value = words[1];
-    expect(props.setValue.mock.calls.length).toBe(0);
     wrapper.find('input').simulate('change', { target: { value } });
+    expect(props.setValue.mock.calls.length).toBe(0);
     keyDown(EKey.Enter);
     expect(props.setValue.mock.calls).toEqual([[value]]);
   });

@@ -255,7 +255,7 @@ describe('GraphModel', () => {
       ...downstreamTargets.map(getIdx),
       ...upstreamTargets.map(getIdx),
     ];
-    const allButSomeExternalVisible = encode([
+    const allButSomeExternalVisEncoding = encode([
       ...twoHopIndices,
       ...subsetOfTargetExternalNeighborsVisibilityIndices,
     ]);
@@ -360,6 +360,7 @@ describe('GraphModel', () => {
             partialTargetWithRespectiveExternalVisEncoding
           )
         ).toEqual(ECheckedStatus.Full);
+
         expect(generationGraph.getGenerationVisibility(targetKey, EDirection.Upstream, allVisible)).toEqual(
           ECheckedStatus.Full
         );
@@ -374,11 +375,19 @@ describe('GraphModel', () => {
 
       it('returns ECheckedStatus.Partial if only some neighbors are visible', () => {
         expect(
-          generationGraph.getGenerationVisibility(targetKey, EDirection.Downstream, allButSomeExternalVisible)
+          generationGraph.getGenerationVisibility(
+            targetKey,
+            EDirection.Downstream,
+            allButSomeExternalVisEncoding
+          )
         ).toEqual(ECheckedStatus.Partial);
 
         expect(
-          generationGraph.getGenerationVisibility(targetKey, EDirection.Upstream, allButSomeExternalVisible)
+          generationGraph.getGenerationVisibility(
+            targetKey,
+            EDirection.Upstream,
+            allButSomeExternalVisEncoding
+          )
         ).toEqual(ECheckedStatus.Partial);
       });
     });
@@ -448,7 +457,7 @@ describe('GraphModel', () => {
           generationGraph.getVisWithUpdatedGeneration(
             targetKey,
             EDirection.Downstream,
-            allButSomeExternalVisible
+            allButSomeExternalVisEncoding
           )
         ).toEqual({
           visEncoding: encode([
@@ -462,7 +471,7 @@ describe('GraphModel', () => {
           generationGraph.getVisWithUpdatedGeneration(
             targetKey,
             EDirection.Upstream,
-            allButSomeExternalVisible
+            allButSomeExternalVisEncoding
           )
         ).toEqual({
           visEncoding: encode([...upstreamFullIndices, ...subsetOfTargetExternalNeighborsVisibilityIndices]),
@@ -531,7 +540,7 @@ describe('GraphModel', () => {
       });
 
       it('returns focal vertex with multiple operations', () => {
-        const { vertices } = withoutFocalOpGraph.getVisible();
+        const { vertices } = withoutFocalOpGraph.getVisible(encode([0, 1]));
         const focalOps = vertices[vertices.length - 1].operation;
 
         expect(focalOps).toEqual(expect.any(Array));

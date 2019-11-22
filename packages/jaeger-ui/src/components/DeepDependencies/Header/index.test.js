@@ -24,6 +24,7 @@ import NameSelector from './NameSelector';
 
 describe('<Header>', () => {
   const minProps = {
+    clearOperation: () => {},
     setDistance: () => {},
     setOperation: () => {},
     setService: () => {},
@@ -116,6 +117,7 @@ describe('<Header>', () => {
 
     it('renders both visible and hidden counts if both are provided', () => {
       wrapper.setProps({ hiddenUiFindMatches, uiFindCount });
+
       expect(getMatchesInfo().text()).toEqual(expectedFindCount);
       expect(getMatchesInfo().text()).toEqual(expectedHiddenCount);
       expect(getTooltip().prop('title')).toBe(expectedHiddenTitle);
@@ -124,17 +126,21 @@ describe('<Header>', () => {
       expect(wrapper.find(MdVisibilityOff)).toHaveLength(1);
     });
 
-    it('renders 0 with correct tooltip if there are no matches', () => {
+    it('renders 0 with correct tooltip if there are no visible nor hidden matches', () => {
       const expectedTitle = 'No matches';
-
       wrapper.setProps({ uiFindCount: 0 });
+
       expect(getMatchesInfo().text()).toBe('0');
       expect(getTooltip().prop('title')).toBe(expectedTitle);
       expect(getBtn().prop('disabled')).toBe(true);
       expect(wrapper.find(MdVisibility)).toHaveLength(0);
       expect(wrapper.find(MdVisibilityOff)).toHaveLength(0);
+    });
 
+    it('renders 0 with correct tooltip if there are no matches but there are hidden matches', () => {
+      wrapper.setProps({ uiFindCount: 0 });
       wrapper.setProps({ hiddenUiFindMatches });
+
       expect(getMatchesInfo().text()).toEqual(expect.stringContaining('0'));
       expect(getMatchesInfo().text()).toEqual(expectedHiddenCount);
       expect(getTooltip().prop('title')).toBe(expectedHiddenTitle);
@@ -144,9 +150,9 @@ describe('<Header>', () => {
     });
 
     it('renders correct plurality in tooltip', () => {
-      const expectedTitle = `Click to view 1 hidden match`;
-
+      const expectedTitle = 'Click to view 1 hidden match';
       wrapper.setProps({ hiddenUiFindMatches: new Set([Array.from(hiddenUiFindMatches)[0]]), uiFindCount });
+
       expect(getTooltip().prop('title')).toBe(expectedTitle);
     });
 
