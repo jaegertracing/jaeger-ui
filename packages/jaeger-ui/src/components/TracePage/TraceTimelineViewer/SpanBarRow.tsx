@@ -16,7 +16,7 @@ import * as React from 'react';
 import IoAlert from 'react-icons/lib/io/alert';
 import IoArrowRightA from 'react-icons/lib/io/arrow-right-a';
 import IoNetwork from 'react-icons/lib/io/network';
-import IoIosArrowUp from 'react-icons/lib/io/ios-arrow-up';
+import MdFileUpload from 'react-icons/lib/md/file-upload';
 import ReferencesButton from './ReferencesButton';
 import TimelineRow from './TimelineRow';
 import { formatDuration, ViewedBoundsFunctionType } from './utils';
@@ -171,7 +171,7 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
                 tooltipText="This span is refereed by another span"
                 focusSpan={focusSpan}
               >
-                <IoIosArrowUp />
+                <MdFileUpload />
               </ReferencesButton>
             )}
           </div>
