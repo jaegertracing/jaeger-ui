@@ -55,7 +55,12 @@ export function References(props: ReferenceItemProps) {
                     <span className="span-svc-name"> {reference.span.process.serviceName} </span>
                     <small className="endpoint-name">{reference.span.operationName} </small>
                     <small className="SpanReference--debugInfo">
-                      <span className="SpanReference--debugLabel" data-label="SpanID:" /> {reference.spanID}
+                      <span className="SpanReference--debugLabel" data-label="Reference Type:">
+                        {reference.refType}
+                      </span>
+                      <span className="SpanReference--debugLabel" data-label="SpanID:">
+                        {reference.spanID}
+                      </span>
                     </small>
                   </React.Fragment>
                 )}
@@ -63,7 +68,12 @@ export function References(props: ReferenceItemProps) {
                   <React.Fragment>
                     <span className="span-svc-name">&lt; span in another trace &gt;</span>
                     <small className="SpanReference--debugInfo">
-                      <span className="SpanReference--debugLabel" data-label="SpanID:" /> {reference.spanID}
+                      <span className="SpanReference--debugLabel" data-label="Reference Type:">
+                        {reference.refType}
+                      </span>
+                      <span className="SpanReference--debugLabel" data-label="SpanID:">
+                        {reference.spanID}
+                      </span>
                     </small>
                   </React.Fragment>
                 )}
