@@ -149,11 +149,13 @@ function calcWidth(lengths: number[], lines: number, longestThusFar: number = 0)
  * @returns {TRect[]} - Possible bounding rectangles.
  */
 const calcRects = _memoize(
-  function calcRects(str: string, span: HTMLSpanElement): TRect[] {
-    const lengths = (str.match(WORD_RX) || [str]).map(s => {
-      span.innerHTML = s; // eslint-disable-line no-param-reassign
-      return span.getClientRects()[0].width;
-    });
+  function calcRects(str: string | string[], span: HTMLSpanElement): TRect[] {
+    const lengths = (Array.isArray(str) ? [`${str.length} Operations}`] : str.match(WORD_RX) || [str]).map(
+      s => {
+        span.innerHTML = s; // eslint-disable-line no-param-reassign
+        return span.getClientRects()[0].width;
+      }
+    );
 
     const rects: TRect[] = [];
     for (let lines = 1; lines <= lengths.length; lines++) {
@@ -240,8 +242,11 @@ function smallestRadius(svcRects: TRect[], opRects?: TRect[]): TSmallestRadiusRV
   return rv;
 }
 
-const calcPositioning: (service: string, operation?: string | null) => TSmallestRadiusRV = _memoize(
-  function calcPositioningImpl(service: string, operation?: string | null) {
+const calcPositioning: (
+  service: string,
+  operation?: string | string[] | null
+) => TSmallestRadiusRV = _memoize(
+  function calcPositioningImpl(service: string, operation?: string | string[] | null) {
     const svcRects = calcRects(service, _initSvcSpan());
     const opRects = operation ? calcRects(operation, _initOpSpan()) : undefined;
 

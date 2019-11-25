@@ -56,6 +56,10 @@ limitations under the License.
   border: 1px dashed #eb2f96;
 }
 
+.DdgNode--HtmlEmphasis.is-focalNode.is-findMatch {
+  background-image: repeating-linear-gradient(30deg, #fffb8f, #eb2f96 3px, #fffb8f 5px);
+}
+
 .DdgNode--VectorFindEmphasis--colorBand {
   stroke: #fef876;
   stroke-width: 10;

@@ -157,6 +157,23 @@ describe('calcPositioning', () => {
         );
         expect(svcMarginTop).toBe(radius - lineHeight - OP_PADDING_TOP / 2);
       });
+
+      it('treats multiple operations as a single word', () => {
+        const maxSvcLines = 2;
+        const operationCount = 10;
+        svcMeasurements = genWidths(new Array(maxSvcLines).fill(0.5));
+        opMeasurements = genWidths(new Array(operationCount).fill(3));
+        const { opWidth, radius, svcWidth, svcMarginTop } = calcPositioning(
+          genStr(maxSvcLines),
+          new Array(operationCount).fill(genStr(1))
+        );
+        expect(measureSvc).toHaveBeenCalledTimes(maxSvcLines);
+        expect(measureOp).toHaveBeenCalledTimes(1);
+        expect(svcWidth).toBe(1 * lineHeight);
+        expect(opWidth).toBe(3 * lineHeight);
+        expect(radius).toMatchInlineSnapshot(`34.51869478592516`);
+        expect(svcMarginTop).toBeCloseTo(radius - radius * Math.sin(Math.acos(svcWidth / 2 / radius)), 8);
+      });
     });
 
     describe('neglible service rectangle', () => {

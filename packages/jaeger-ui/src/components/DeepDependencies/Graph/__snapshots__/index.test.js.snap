@@ -19,14 +19,14 @@ exports[`<Graph /> render renders provided edges and vertices 1`] = `
   layers={
     Array [
       Object {
-        "key": "nodes/find-emphasis/html",
-        "layerType": "html",
-        "renderNode": [Function],
-      },
-      Object {
         "key": "nodes/find-emphasis/vector-color-band",
         "layerType": "svg",
         "renderNode": null,
+      },
+      Object {
+        "key": "nodes/find-emphasis/html",
+        "layerType": "html",
+        "renderNode": [Function],
       },
       Object {
         "key": "nodes/vector-border",

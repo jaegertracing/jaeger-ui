@@ -106,6 +106,21 @@ describe('TracesDdg', () => {
       expect(mapStateToProps(state, ownProps)).toEqual(expect.objectContaining({ urlState }));
     });
 
+    it('calculates showOp off of urlState', () => {
+      [true, false, undefined].forEach(showOp => {
+        ['focalOperation', undefined].forEach(focalOp => {
+          const mockUrlState = {
+            ...urlState,
+            operation: focalOp,
+            showOp,
+          };
+          getUrlStateSpy.mockReturnValue(mockUrlState);
+          const result = mapStateToProps(state, ownProps);
+          expect(result.showOp).toBe(showOp === undefined ? focalOp !== undefined : showOp);
+        });
+      });
+    });
+
     it('calculates graphState and graph iff service is provided', () => {
       expect(mapStateToProps(state, ownProps)).toEqual(
         expect.objectContaining({

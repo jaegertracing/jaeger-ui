@@ -43,9 +43,9 @@ type TProps = {
   getGenerationVisibility: (vertexKey: string, direction: EDirection) => ECheckedStatus | null;
   getVisiblePathElems: (vertexKey: string) => PathElem[] | undefined;
   hideVertex: (vertexKey: string) => void;
-  setViewModifier: (vertexKey: string, viewModifier: EViewModifier, enable: boolean) => void;
-  showOp: boolean;
-  uiFindMatches: Set<TDdgVertex> | undefined;
+  setOperation: (operation: string) => void;
+  setViewModifier: (visIndices: number[], viewModifier: EViewModifier, enable: boolean) => void;
+  uiFindMatches: Set<string> | undefined;
   updateGenerationVisibility: (vertexKey: string, direction: EDirection) => void;
   vertices: TDdgVertex[];
   verticesViewModifiers: Map<string, number>;
@@ -85,7 +85,7 @@ export default class Graph extends PureComponent<TProps> {
     useDotEdges: true,
   });
 
-  private emptyFindSet: Set<TDdgVertex> = new Set();
+  private emptyFindSet: Set<string> = new Set();
 
   componentWillUnmount() {
     this.layoutManager.stopAndRelease();
@@ -102,8 +102,8 @@ export default class Graph extends PureComponent<TProps> {
       getGenerationVisibility,
       getVisiblePathElems,
       hideVertex,
+      setOperation,
       setViewModifier,
-      showOp,
       uiFindMatches,
       updateGenerationVisibility,
       vertices,
@@ -122,14 +122,14 @@ export default class Graph extends PureComponent<TProps> {
         measurableNodesKey="nodes/content"
         layers={[
           {
-            key: 'nodes/find-emphasis/html',
-            layerType: 'html',
-            renderNode: nodeRenderers.htmlEmphasis,
-          },
-          {
             key: 'nodes/find-emphasis/vector-color-band',
             layerType: 'svg',
             renderNode: nodeRenderers.vectorFindColorBand,
+          },
+          {
+            key: 'nodes/find-emphasis/html',
+            layerType: 'html',
+            renderNode: nodeRenderers.htmlEmphasis,
           },
           {
             key: 'nodes/vector-border',
@@ -163,8 +163,8 @@ export default class Graph extends PureComponent<TProps> {
               getGenerationVisibility,
               getVisiblePathElems,
               hideVertex,
+              setOperation,
               setViewModifier,
-              showOp,
               updateGenerationVisibility,
             }),
           },

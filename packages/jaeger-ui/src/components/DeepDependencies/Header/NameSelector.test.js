@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import React from 'react';
-import { Popover } from 'antd';
+import { Icon, Popover } from 'antd';
 import { shallow } from 'enzyme';
 
 import BreakableText from '../../common/BreakableText';
@@ -128,5 +128,31 @@ describe('<NameSelector>', () => {
     };
     wrapper.setState({ popoverVisible: true });
     expect(fn.mock.calls.length).toBe(1);
+  });
+
+  describe('clear', () => {
+    const clearValue = jest.fn();
+
+    beforeEach(() => {
+      clearValue.mockClear();
+      wrapper.setProps({ clearValue, required: undefined, value: 'foo' });
+    });
+
+    it('renders with clear icon when not required and with a value', () => {
+      expect(wrapper).toMatchSnapshot();
+    });
+
+    it('clicking clear icon clears value when not required without opening popover', () => {
+      const stopPropagation = jest.fn();
+      wrapper.find(Icon).simulate('click', { stopPropagation });
+
+      expect(clearValue).toHaveBeenCalled();
+      expect(wrapper.state('popoverVisible')).toBe(false);
+      expect(stopPropagation).toHaveBeenCalled();
+    });
+
+    it('throws Error when attempting to clear when required', () => {
+      expect(new NameSelector(props).clearValue).toThrowError('Cannot clear value of required NameSelector');
+    });
   });
 });

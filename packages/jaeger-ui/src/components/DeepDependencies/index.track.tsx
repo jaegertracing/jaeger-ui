@@ -23,12 +23,14 @@ export const CATEGORY_DOWNSTREAM_HOPS_CHANGE = 'jaeger/ux/ddg/downstream-hops-ch
 export const CATEGORY_DOWNSTREAM_HOPS_SELECTION = 'jaeger/ux/ddg/downstream-hops-selection';
 export const CATEGORY_FILTER = 'jaeger/ux/ddg/filter';
 export const CATEGORY_MATCH_INTERACTIONS = 'jaeger/ux/ddg/match-interactions';
+export const CATEGORY_SEARCH = 'jaeger/ux/ddg/search';
 export const CATEGORY_TOGGLE_SHOW_OP = 'jaeger/ux/ddg/toggle-show-op';
 export const CATEGORY_UPSTREAM_HOPS_CHANGE = 'jaeger/ux/ddg/upstream-hops-change';
 export const CATEGORY_UPSTREAM_HOPS_SELECTION = 'jaeger/ux/ddg/upstream-hops-selection';
 export const CATEGORY_VERTEX_INTERACTIONS = 'jaeger/ux/ddg/vertex-interactions';
 
 // export for tests
+export const ACTION_CLEAR_OPERATION = 'clear-operation';
 export const ACTION_DECREASE = 'decrease';
 export const ACTION_FOCUS_PATHS = 'focus-paths';
 export const ACTION_HIDE = 'hide';
@@ -36,10 +38,16 @@ export const ACTION_HIDE_CHILDREN = 'hide-children';
 export const ACTION_HIDE_PARENTS = 'hide-parents';
 export const ACTION_INCREASE = 'increase';
 export const ACTION_SET_FOCUS = 'set-focus';
+export const ACTION_SET_OPERATION = 'set-operation';
+export const ACTION_SET_SERVICE = 'set-service';
 export const ACTION_SHOW = 'show';
 export const ACTION_SHOW_CHILDREN = 'show-children';
 export const ACTION_SHOW_PARENTS = 'show-parents';
 export const ACTION_VIEW_TRACES = 'view-traces';
+
+export function trackClearOperation() {
+  trackEvent(CATEGORY_SEARCH, ACTION_CLEAR_OPERATION);
+}
 
 export function trackDensityChange(
   prevDensity: EDdgDensity,
@@ -73,6 +81,10 @@ export const trackFilter = getTrackFilter(CATEGORY_FILTER);
 
 export function trackFocusPaths() {
   trackEvent(CATEGORY_VERTEX_INTERACTIONS, ACTION_FOCUS_PATHS);
+}
+
+export function trackHeaderSetOperation() {
+  trackEvent(CATEGORY_SEARCH, ACTION_SET_OPERATION);
 }
 
 export function trackHide(direction?: EDirection) {
@@ -116,6 +128,10 @@ export function trackSetFocus() {
   trackEvent(CATEGORY_VERTEX_INTERACTIONS, ACTION_SET_FOCUS);
 }
 
+export function trackSetService() {
+  trackEvent(CATEGORY_SEARCH, ACTION_SET_SERVICE);
+}
+
 export function trackShowMatches() {
   trackEvent(CATEGORY_MATCH_INTERACTIONS, ACTION_SHOW);
 }
@@ -123,6 +139,10 @@ export function trackShowMatches() {
 export function trackToggleShowOp(value: boolean) {
   const action = value ? ACTION_SHOW : ACTION_HIDE;
   trackEvent(CATEGORY_TOGGLE_SHOW_OP, action);
+}
+
+export function trackVertexSetOperation() {
+  trackEvent(CATEGORY_VERTEX_INTERACTIONS, ACTION_SET_OPERATION);
 }
 
 export function trackViewTraces() {

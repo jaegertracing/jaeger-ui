@@ -14,11 +14,11 @@
 
 import * as React from 'react';
 import { shallow } from 'enzyme';
-// import _mapValues from 'lodash/mapValues';
 
 import { UnconnectedTraceDiffGraph as TraceDiffGraph } from './TraceDiffGraph';
 import ErrorMessage from '../../common/ErrorMessage';
 import LoadingIndicator from '../../common/LoadingIndicator';
+import UiFindInput from '../../common/UiFindInput';
 import { fetchedState } from '../../../constants';
 
 describe('TraceDiffGraph', () => {
@@ -145,6 +145,26 @@ describe('TraceDiffGraph', () => {
 
     wrapper.setProps({ a: props.a });
     expect(wrapper.children().length).toBe(0);
+  });
+
+  it('renders a DiGraph when it has data', () => {
+    expect(wrapper).toMatchSnapshot();
+  });
+
+  it('renders current uiFind count when given uiFind', () => {
+    expect(wrapper.find(UiFindInput).prop('inputProps')).toEqual(
+      expect.objectContaining({
+        suffix: undefined,
+      })
+    );
+
+    wrapper.setProps({ uiFind: 'test uiFind' });
+
+    expect(wrapper.find(UiFindInput).prop('inputProps')).toEqual(
+      expect.objectContaining({
+        suffix: '0',
+      })
+    );
   });
 
   it('cleans up layoutManager before unmounting', () => {

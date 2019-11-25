@@ -18,7 +18,7 @@ import _get from 'lodash/get';
 import { bindActionCreators, Dispatch } from 'redux';
 import { connect } from 'react-redux';
 
-import { trackFocusPaths, trackHide, trackShow } from './index.track';
+import { trackClearOperation, trackFocusPaths, trackHide, trackSetService, trackShow } from './index.track';
 import Header from './Header';
 import Graph from './Graph';
 import { getUrl, getUrlState, sanitizeUrlState, ROUTE_PATH } from './url';
@@ -37,7 +37,6 @@ import {
   EViewModifier,
   TDdgModelParams,
   TDdgSparseUrlState,
-  TDdgVertex,
 } from '../../model/ddg/types';
 import { encode, encodeDistance } from '../../model/ddg/visibility-codec';
 import { ReduxState } from '../../types';
@@ -60,6 +59,7 @@ export type TReduxProps = TExtractUiFindFromStateReturn & {
   graphState?: TDdgStateEntry;
   operationsForService?: Record<string, string[]>;
   services?: string[] | null;
+  showOp: boolean;
   urlState: TDdgSparseUrlState;
 };
 
@@ -83,8 +83,7 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
   static fetchModelIfStale(props: TProps) {
     const { fetchDeepDependencyGraph, graphState = null, urlState } = props;
     const { service, operation } = urlState;
-    // backend temporarily requires service and operation
-    if (!graphState && service && operation && fetchDeepDependencyGraph) {
+    if (!graphState && service && fetchDeepDependencyGraph) {
       fetchDeepDependencyGraph({ service, operation, start: 0, end: 0 });
     }
   }
@@ -112,6 +111,11 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
   componentWillReceiveProps(nextProps: TProps) {
     DeepDependencyGraphPageImpl.fetchModelIfStale(nextProps);
   }
+
+  clearOperation = () => {
+    trackClearOperation();
+    this.updateUrlState({ operation: undefined });
+  };
 
   focusPathsThroughVertex = (vertexKey: string) => {
     const elems = this.getVisiblePathElems(vertexKey);
@@ -181,22 +185,14 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
       fetchServiceOperations(service);
     }
     this.updateUrlState({ operation: undefined, service, visEncoding: undefined });
+    trackSetService();
   };
 
-  setViewModifier = (vertexKey: string, viewModifier: EViewModifier, enable: boolean) => {
+  setViewModifier = (visibilityIndices: number[], viewModifier: EViewModifier, enable: boolean) => {
     const { addViewModifier, graph, removeViewModifierFromIndices, urlState } = this.props;
     const fn = enable ? addViewModifier : removeViewModifierFromIndices;
-    const { service, operation, visEncoding } = urlState;
-    if (!fn || !graph || !operation || !service) {
-      return;
-    }
-    const pathElems = graph.getVertexVisiblePathElems(vertexKey, visEncoding);
-    if (!pathElems) {
-      // eslint-disable-next-line no-console
-      console.warn(`Invalid vertex key to set view modifier for: ${vertexKey}`);
-      return;
-    }
-    const visibilityIndices = pathElems.map(pe => pe.visibilityIdx);
+    const { service, operation } = urlState;
+    if (!fn || !graph || !service) return;
     fn({
       operation,
       service,
@@ -207,11 +203,11 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
     });
   };
 
-  showVertices = (vertices: TDdgVertex[]) => {
+  showVertices = (vertexKeys: string[]) => {
     const { graph, urlState } = this.props;
     const { visEncoding } = urlState;
     if (!graph) return;
-    this.updateUrlState({ visEncoding: graph.getVisWithVertices(vertices, visEncoding) });
+    this.updateUrlState({ visEncoding: graph.getVisWithVertices(vertexKeys, visEncoding) });
   };
 
   toggleShowOperations = (enable: boolean) => this.updateUrlState({ showOp: enable });
@@ -245,11 +241,12 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
       graphState,
       operationsForService,
       services,
+      showOp,
       uiFind,
       urlState,
       showSvcOpsHeader,
     } = this.props;
-    const { density, operation, service, showOp, visEncoding } = urlState;
+    const { density, operation, service, visEncoding } = urlState;
     const distanceToPathElems =
       graphState && graphState.state === fetchedState.DONE ? graphState.model.distanceToPathElems : undefined;
     const uiFindMatches = graph && graph.getVisibleUiFindMatches(uiFind, visEncoding);
@@ -278,8 +275,8 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
           getGenerationVisibility={this.getGenerationVisibility}
           getVisiblePathElems={this.getVisiblePathElems}
           hideVertex={this.hideVertex}
+          setOperation={this.setOperation}
           setViewModifier={this.setViewModifier}
-          showOp={showOp}
           uiFindMatches={uiFindMatches}
           updateGenerationVisibility={this.updateGenerationVisibility}
           vertices={vertices}
@@ -303,6 +300,7 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
       <div className="Ddg">
         <div>
           <Header
+            clearOperation={this.clearOperation}
             density={density}
             distanceToPathElems={distanceToPathElems}
             hiddenUiFindMatches={hiddenUiFindMatches}
@@ -333,11 +331,10 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
   const { services: stServices } = state;
   const { services, operationsForService } = stServices;
   const urlState = getUrlState(ownProps.location.search);
-  const { density, operation, service, showOp } = urlState;
+  const { density, operation, service, showOp: urlStateShowOp } = urlState;
+  const showOp = urlStateShowOp !== undefined ? urlStateShowOp : operation !== undefined;
   let graphState: TDdgStateEntry | undefined;
-  // backend temporarily requires service and operation
-  // if (service) {
-  if (service && operation) {
+  if (service) {
     graphState = _get(state.ddg, getStateEntryKey({ service, operation, start: 0, end: 0 }));
   }
   let graph: GraphModel | undefined;
@@ -347,8 +344,9 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
   return {
     graph,
     graphState,
-    services,
     operationsForService,
+    services,
+    showOp,
     urlState: sanitizeUrlState(urlState, _get(graphState, 'model.hash')),
     ...extractUiFindFromState(state),
   };

@@ -57,13 +57,12 @@ export const getUrlState = memoizeOne(function getUrlState(search: string): TDdg
     hash,
     operation,
     service,
-    showOp = '1',
+    showOp,
     start,
     visEncoding,
   } = queryString.parse(search);
   const rv: TDdgSparseUrlState = {
     density: firstParam(density) as EDdgDensity,
-    showOp: Boolean(+firstParam(showOp)),
   };
   if (end) {
     rv.end = Number.parseInt(firstParam(end), 10);
@@ -76,6 +75,9 @@ export const getUrlState = memoizeOne(function getUrlState(search: string): TDdg
   }
   if (service) {
     rv.service = firstParam(service);
+  }
+  if (showOp) {
+    rv.showOp = Boolean(+firstParam(showOp));
   }
   if (start) {
     rv.start = Number.parseInt(firstParam(start), 10);

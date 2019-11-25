@@ -20,7 +20,7 @@ export const simplePayloadElemMaker = label => ({
 export const focalPayloadElem = simplePayloadElemMaker('focal');
 
 const sameFocalServicePayloadElem = {
-  operation: `not-${focalPayloadElem.operation}`,
+  operation: 'someOtherOperation',
   service: focalPayloadElem.service,
 };
 
@@ -85,8 +85,8 @@ export const almostDoubleFocalPath = [
 
 const divergentPayloadElem = simplePayloadElemMaker('divergentPayloadElem');
 export const convergentPaths = [
-  [firstPayloadElem, focalPayloadElem, midPayloadElem, afterPayloadElem, lastPayloadElem],
   [firstPayloadElem, focalPayloadElem, divergentPayloadElem, afterPayloadElem, lastPayloadElem],
+  [firstPayloadElem, focalPayloadElem, midPayloadElem, afterPayloadElem, lastPayloadElem],
 ];
 
 const generationPayloadElems = {

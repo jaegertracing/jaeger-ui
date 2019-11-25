@@ -64,6 +64,14 @@ limitations under the License.
   position: relative;
 }
 
+.NameSelector--chevron:not(:last-child) {
+  margin-right: 0.8em;
+}
+
+.NameSelector--clearIcon:not(:hover) {
+  color: var(--tx-color-muted);
+}
+
 .NameSelector--overlay .ant-popover-arrow {
   border: 1px solid #999;
   z-index: -1;

@@ -178,6 +178,21 @@ describe('DeepDependencyGraphPage', () => {
         expect(getUrlSpy).toHaveBeenLastCalledWith(expect.objectContaining({ hash }), undefined);
       });
 
+      describe('clearOperation', () => {
+        let trackClearOperationSpy;
+
+        beforeAll(() => {
+          trackClearOperationSpy = jest.spyOn(track, 'trackClearOperation');
+        });
+
+        it('removes op from urlState', () => {
+          ddgPageImpl.clearOperation();
+          const { operation: _o, ...urlStateWithoutOp } = props.urlState;
+          expect(getUrlSpy).toHaveBeenLastCalledWith(urlStateWithoutOp, undefined);
+          expect(trackClearOperationSpy).toHaveBeenCalledTimes(1);
+        });
+      });
+
       describe('focusPathsThroughVertex', () => {
         let trackFocusPathsSpy;
 
@@ -321,9 +336,15 @@ describe('DeepDependencyGraphPage', () => {
 
       describe('setService', () => {
         const service = 'newService';
+        let trackSetServiceSpy;
+
+        beforeAll(() => {
+          trackSetServiceSpy = jest.spyOn(track, 'trackSetService');
+        });
 
         beforeEach(() => {
           props.fetchServiceOperations.mockReset();
+          trackSetServiceSpy.mockClear();
         });
 
         it('updates service and clears operation and visEncoding', () => {
@@ -333,12 +354,14 @@ describe('DeepDependencyGraphPage', () => {
             undefined
           );
           expect(props.history.push).toHaveBeenCalledTimes(1);
+          expect(trackSetServiceSpy).toHaveBeenCalledTimes(1);
         });
 
         it('fetches operations for service when not yet provided', () => {
           ddgPageImpl.setService(service);
           expect(props.fetchServiceOperations).toHaveBeenLastCalledWith(service);
           expect(props.fetchServiceOperations).toHaveBeenCalledTimes(1);
+          expect(trackSetServiceSpy).toHaveBeenCalledTimes(1);
 
           const pageWithOpForService = new DeepDependencyGraphPageImpl({
             ...props,
@@ -347,6 +370,7 @@ describe('DeepDependencyGraphPage', () => {
           const { length: callCount } = props.fetchServiceOperations.mock.calls;
           pageWithOpForService.setService(service);
           expect(props.fetchServiceOperations).toHaveBeenCalledTimes(callCount);
+          expect(trackSetServiceSpy).toHaveBeenCalledTimes(2);
         });
       });
 
@@ -469,12 +493,6 @@ describe('DeepDependencyGraphPage', () => {
     describe('view modifiers', () => {
       const visibilityIndices = ['visId0', 'visId1', 'visId2'];
       const targetVM = EViewModifier.Emphasized;
-      let warnSpy;
-
-      beforeAll(() => {
-        props.graph.getVertexVisiblePathElems.mockReturnValue(visibilityIndices.map(setIdx));
-        warnSpy = jest.spyOn(console, 'warn').mockImplementationOnce();
-      });
 
       beforeEach(() => {
         props.addViewModifier.mockReset();
@@ -482,12 +500,8 @@ describe('DeepDependencyGraphPage', () => {
         props.removeViewModifierFromIndices.mockReset();
       });
 
-      afterAll(() => {
-        warnSpy.mockRestore();
-      });
-
       it('adds given viewModifier to specified pathElems', () => {
-        ddgPageImpl.setViewModifier(vertexKey, targetVM, true);
+        ddgPageImpl.setViewModifier(visibilityIndices, targetVM, true);
         expect(props.addViewModifier).toHaveBeenLastCalledWith({
           operation: props.urlState.operation,
           service: props.urlState.service,
@@ -496,14 +510,10 @@ describe('DeepDependencyGraphPage', () => {
           end: 0,
           start: 0,
         });
-        expect(props.graph.getVertexVisiblePathElems).toHaveBeenCalledWith(
-          vertexKey,
-          props.urlState.visEncoding
-        );
       });
 
       it('removes given viewModifier from specified pathElems', () => {
-        ddgPageImpl.setViewModifier(vertexKey, targetVM, false);
+        ddgPageImpl.setViewModifier(visibilityIndices, targetVM, false);
         expect(props.removeViewModifierFromIndices).toHaveBeenCalledWith({
           operation: props.urlState.operation,
           service: props.urlState.service,
@@ -512,44 +522,20 @@ describe('DeepDependencyGraphPage', () => {
           end: 0,
           start: 0,
         });
-        expect(props.graph.getVertexVisiblePathElems).toHaveBeenCalledWith(
-          vertexKey,
-          props.urlState.visEncoding
-        );
       });
 
-      it('warns error if given absent vertexKey', () => {
-        props.graph.getVertexVisiblePathElems.mockReturnValueOnce(undefined);
-        const absentVertexKey = 'absentVertexKey';
-        ddgPageImpl.setViewModifier(absentVertexKey, EViewModifier.emphasized, true);
-        expect(warnSpy).toHaveBeenCalledTimes(1);
-        expect(warnSpy).toHaveBeenCalledWith(
-          `Invalid vertex key to set view modifier for: ${absentVertexKey}`
-        );
-      });
-
-      it('no-ops if not given dispatch fn or graph or operation or service', () => {
+      it('no-ops if not given dispatch fn or graph or service', () => {
         const { addViewModifier: _add, ...propsWithoutAdd } = props;
         const ddgWithoutAdd = new DeepDependencyGraphPageImpl(propsWithoutAdd);
         ddgWithoutAdd.setViewModifier(vertexKey, EViewModifier.emphasized, true);
-        expect(props.graph.getVertexVisiblePathElems).not.toHaveBeenCalled();
 
         const { removeViewModifierFromIndices: _remove, ...propsWithoutRemove } = props;
         const ddgWithoutRemove = new DeepDependencyGraphPageImpl(propsWithoutRemove);
         ddgWithoutRemove.setViewModifier(vertexKey, EViewModifier.emphasized, false);
-        expect(props.graph.getVertexVisiblePathElems).not.toHaveBeenCalled();
+        expect(props.removeViewModifierFromIndices).not.toHaveBeenCalled();
 
         ddgWithoutGraph.setViewModifier(vertexKey, EViewModifier.emphasized, true);
-        expect(props.graph.getVertexVisiblePathElems).not.toHaveBeenCalled();
-
-        const {
-          urlState: { operation: _operation, ...urlStateWithoutOperation },
-          ...propsWithoutOperation
-        } = props;
-        propsWithoutOperation.urlState = urlStateWithoutOperation;
-        const ddgWithoutOperation = new DeepDependencyGraphPageImpl(propsWithoutGraph);
-        ddgWithoutOperation.setViewModifier(vertexKey, EViewModifier.emphasized, true);
-        expect(props.graph.getVertexVisiblePathElems).not.toHaveBeenCalled();
+        expect(props.removeViewModifierFromIndices).not.toHaveBeenCalled();
 
         const {
           urlState: { service: _service, ...urlStateWithoutService },
@@ -558,7 +544,7 @@ describe('DeepDependencyGraphPage', () => {
         propsWithoutService.urlState = urlStateWithoutService;
         const ddgWithoutService = new DeepDependencyGraphPageImpl(propsWithoutGraph);
         ddgWithoutService.setViewModifier(vertexKey, EViewModifier.emphasized, true);
-        expect(props.graph.getVertexVisiblePathElems).not.toHaveBeenCalled();
+        expect(props.removeViewModifierFromIndices).not.toHaveBeenCalled();
       });
     });
 
@@ -787,23 +773,36 @@ describe('DeepDependencyGraphPage', () => {
       expect(getUrlStateSpy).toHaveBeenLastCalledWith(search);
     });
 
+    it('calculates showOp off of urlState', () => {
+      [true, false, undefined].forEach(showOp => {
+        ['focalOperation', undefined].forEach(focalOp => {
+          const urlState = {
+            ...expected.urlState,
+            operation: focalOp,
+            showOp,
+          };
+          getUrlStateSpy.mockReturnValue(urlState);
+          const result = mapStateToProps(state, ownProps);
+          expect(result.showOp).toBe(showOp === undefined ? focalOp !== undefined : showOp);
+        });
+      });
+    });
+
     it('includes graphState iff location.search has service, start, end, and optionally operation', () => {
       const graphState = 'testGraphState';
       const graphStateWithoutOp = 'testGraphStateWithoutOp';
       const reduxState = { ...state };
       // TODO: Remove 0s once time buckets are implemented
       _set(reduxState, ['ddg', getStateEntryKey({ service, operation, start: 0, end: 0 })], graphState);
-      _set(reduxState, ['ddg', getStateEntryKey({ service, start, end })], graphStateWithoutOp);
+      _set(reduxState, ['ddg', getStateEntryKey({ service, start: 0, end: 0 })], graphStateWithoutOp);
 
       const result = mapStateToProps(reduxState, ownProps);
       expect(result.graphState).toEqual(graphState);
 
-      /* TODO: operation is still required, when requirement is lifted, re-enable
       const { operation: _op, ...rest } = expected.urlState;
       getUrlStateSpy.mockReturnValue(rest);
       const resultWithoutOp = mapStateToProps(reduxState, ownProps);
       expect(resultWithoutOp.graphState).toEqual(graphStateWithoutOp);
-      */
 
       getUrlStateSpy.mockReturnValue({});
       const resultWithoutParams = mapStateToProps(reduxState, ownProps);

@@ -13,7 +13,9 @@
 // limitations under the License.
 
 import GraphModel, { makeGraph } from './index';
+import { FOCAL_KEY } from './getPathElemHasher';
 import {
+  almostDoubleFocalPath,
   convergentPaths,
   doubleFocalPath,
   generationPaths,
@@ -28,6 +30,9 @@ import { encode } from '../visibility-codec';
 describe('GraphModel', () => {
   const convergentModel = transformDdgData(wrap(convergentPaths), focalPayloadElem);
   const doubleFocalModel = transformDdgData(wrap([doubleFocalPath, simplePath]), focalPayloadElem);
+  const withoutFocalOpModel = transformDdgData(wrap([almostDoubleFocalPath, simplePath]), {
+    service: focalPayloadElem.service,
+  });
   const simpleModel = transformDdgData(wrap([simplePath]), focalPayloadElem);
   const getIdx = ({ visibilityIdx }) => visibilityIdx;
 
@@ -155,6 +160,44 @@ describe('GraphModel', () => {
       );
     });
 
+    it('creates focal vertex with multiple operations if focal operation is omitted', () => {
+      const withoutFocalOpGraph = new GraphModel({
+        ddgModel: withoutFocalOpModel,
+        density: EDdgDensity.UpstreamVsDownstream,
+        showOp: true,
+      });
+      validateGraph(withoutFocalOpGraph, [
+        {
+          visIndices: [0, 1],
+        },
+        {
+          visIndices: [3],
+          focalSideNeighbors: [0],
+        },
+        {
+          visIndices: [4, 5],
+          focalSideNeighbors: [0],
+        },
+        {
+          visIndices: [7],
+          focalSideNeighbors: [3],
+        },
+        {
+          visIndices: [8, 9],
+          focalSideNeighbors: [4],
+        },
+        {
+          visIndices: [2, 10],
+          focalSideNeighbors: [0, 7],
+        },
+        {
+          visIndices: [6, 11],
+          focalSideNeighbors: [2],
+        },
+      ]);
+      expect(withoutFocalOpGraph.vertices.get(FOCAL_KEY).operation).toHaveLength(2);
+    });
+
     describe('error cases', () => {
       it('errors if given model contains a pathElem that cannot be connected to the focal node', () => {
         const invalidModel = {
@@ -212,7 +255,7 @@ describe('GraphModel', () => {
       ...downstreamTargets.map(getIdx),
       ...upstreamTargets.map(getIdx),
     ];
-    const allButSomeExternalVisible = encode([
+    const allButSomeExternalVisEncoding = encode([
       ...twoHopIndices,
       ...subsetOfTargetExternalNeighborsVisibilityIndices,
     ]);
@@ -317,6 +360,7 @@ describe('GraphModel', () => {
             partialTargetWithRespectiveExternalVisEncoding
           )
         ).toEqual(ECheckedStatus.Full);
+
         expect(generationGraph.getGenerationVisibility(targetKey, EDirection.Upstream, allVisible)).toEqual(
           ECheckedStatus.Full
         );
@@ -331,11 +375,19 @@ describe('GraphModel', () => {
 
       it('returns ECheckedStatus.Partial if only some neighbors are visible', () => {
         expect(
-          generationGraph.getGenerationVisibility(targetKey, EDirection.Downstream, allButSomeExternalVisible)
+          generationGraph.getGenerationVisibility(
+            targetKey,
+            EDirection.Downstream,
+            allButSomeExternalVisEncoding
+          )
         ).toEqual(ECheckedStatus.Partial);
 
         expect(
-          generationGraph.getGenerationVisibility(targetKey, EDirection.Upstream, allButSomeExternalVisible)
+          generationGraph.getGenerationVisibility(
+            targetKey,
+            EDirection.Upstream,
+            allButSomeExternalVisEncoding
+          )
         ).toEqual(ECheckedStatus.Partial);
       });
     });
@@ -405,7 +457,7 @@ describe('GraphModel', () => {
           generationGraph.getVisWithUpdatedGeneration(
             targetKey,
             EDirection.Downstream,
-            allButSomeExternalVisible
+            allButSomeExternalVisEncoding
           )
         ).toEqual({
           visEncoding: encode([
@@ -419,7 +471,7 @@ describe('GraphModel', () => {
           generationGraph.getVisWithUpdatedGeneration(
             targetKey,
             EDirection.Upstream,
-            allButSomeExternalVisible
+            allButSomeExternalVisEncoding
           )
         ).toEqual({
           visEncoding: encode([...upstreamFullIndices, ...subsetOfTargetExternalNeighborsVisibilityIndices]),
@@ -435,6 +487,11 @@ describe('GraphModel', () => {
       density: EDdgDensity.PreventPathEntanglement,
       showOp: true,
     });
+    const withoutFocalOpGraph = new GraphModel({
+      ddgModel: withoutFocalOpModel,
+      density: EDdgDensity.UpstreamVsDownstream,
+      showOp: true,
+    });
 
     describe('visEncoding provided', () => {
       it('returns just focalNode', () => {
@@ -447,8 +504,8 @@ describe('GraphModel', () => {
         const { edges, vertices } = convergentGraph.getVisible(encode([0, 4]));
         expect(edges).toHaveLength(1);
         expect(vertices).toEqual([
-          expect.objectContaining(convergentPaths[0][1]),
           expect.objectContaining(convergentPaths[0][0]),
+          expect.objectContaining(convergentPaths[0][1]),
         ]);
       });
 
@@ -456,8 +513,8 @@ describe('GraphModel', () => {
         const { edges, vertices } = convergentGraph.getVisible(encode([0, 1, 4, 5]));
         expect(edges).toHaveLength(1);
         expect(vertices).toEqual([
-          expect.objectContaining(convergentPaths[0][1]),
           expect.objectContaining(convergentPaths[0][0]),
+          expect.objectContaining(convergentPaths[0][1]),
         ]);
       });
 
@@ -480,6 +537,21 @@ describe('GraphModel', () => {
         willMutate.push({ problematic: 'pathElem' });
         const now = victimOfMutation.getVisible(encode([idx, idx + 1]));
         expect(prior).toEqual(now);
+      });
+
+      it('returns focal vertex with multiple operations', () => {
+        const { vertices } = withoutFocalOpGraph.getVisible(encode([0, 1]));
+        const focalOps = vertices[vertices.length - 1].operation;
+
+        expect(focalOps).toEqual(expect.any(Array));
+        expect(focalOps).toHaveLength(2);
+      });
+
+      it('only returns visible operations for focal vertex', () => {
+        const { vertices } = withoutFocalOpGraph.getVisible(encode([0]));
+        const focalOp = vertices[vertices.length - 1].operation;
+
+        expect(focalOp).toEqual(expect.any(String));
       });
     });
 
@@ -510,6 +582,14 @@ describe('GraphModel', () => {
           vertices: [],
         });
       });
+
+      it('returns focal vertex with multiple operations', () => {
+        const { vertices } = withoutFocalOpGraph.getVisible();
+        const focalOps = vertices[vertices.length - 1].operation;
+
+        expect(focalOps).toEqual(expect.any(Array));
+        expect(focalOps).toHaveLength(2);
+      });
     });
   });
 
@@ -524,37 +604,84 @@ describe('GraphModel', () => {
       density: EDdgDensity.PreventPathEntanglement,
       showOp: false,
     });
+    const withoutFocalOpGraph = new GraphModel({
+      ddgModel: withoutFocalOpModel,
+      density: EDdgDensity.UpstreamVsDownstream,
+      showOp: true,
+    });
+    const [
+      {
+        operation: { name: withoutFocalOpZerothOp },
+      },
+      {
+        operation: { name: withoutFocalOpFistOp },
+      },
+    ] = withoutFocalOpGraph.visIdxToPathElem;
     const shorten = str => str.substring(0, str.length - 3);
     const visEncoding = encode([0, 1, 2, 3, 4, 5]);
     const { vertices: visibleVertices } = convergentGraph.getVisible(visEncoding);
-    const { service: focalService, operation: focalOperation } = visibleVertices[0];
+    const { key: focalKey, service: focalService, operation: focalOperation } = visibleVertices[
+      visibleVertices.length - 1
+    ];
     const { service: otherService } = visibleVertices[2];
-    const { vertices: oplessVertices } = hideOpGraph.getVisible(visEncoding);
+    const { vertices: hiddenOpVertices } = hideOpGraph.getVisible(visEncoding);
     const {
       operation: { name: otherOp },
-    } = Array.from(hideOpGraph.vertexToPathElems.get(oplessVertices[2]))[0];
+    } = Array.from(hideOpGraph.vertexToPathElems.get(hiddenOpVertices[2]))[0];
 
     describe('getHiddenUiFindMatches', () => {
       it('returns a subset of hidden vertices that match provided uiFind', () => {
         const uiFind = `${shorten(focalService)} ${shorten(focalOperation)} ${shorten(otherService)}`;
         expect(convergentGraph.getHiddenUiFindMatches(uiFind, encode([0, 1]))).toEqual(
-          new Set([visibleVertices[2]])
+          new Set([visibleVertices[2].key])
         );
       });
 
       it('matches only on service.name if showOp is false', () => {
-        const uiFind = `${shorten(oplessVertices[1].service)} ${shorten(otherOp)}`;
-        expect(hideOpGraph.getHiddenUiFindMatches(uiFind, encode([0]))).toEqual(new Set([oplessVertices[1]]));
+        const uiFind = `${shorten(hiddenOpVertices[1].service)} ${shorten(otherOp)}`;
+        expect(hideOpGraph.getHiddenUiFindMatches(uiFind, encode([0]))).toEqual(
+          new Set([hiddenOpVertices[1].key])
+        );
       });
 
       it('returns an empty set when provided empty or undefined uiFind', () => {
         expect(convergentGraph.getHiddenUiFindMatches()).toEqual(new Set());
         expect(convergentGraph.getHiddenUiFindMatches('')).toEqual(new Set());
+        expect(convergentGraph.getVisibleUiFindMatches(' ')).toEqual(new Set());
       });
 
       it('returns an empty set when all matches are visible', () => {
         const uiFind = `${shorten(focalService)} ${shorten(otherService)}`;
         expect(convergentGraph.getHiddenUiFindMatches(uiFind, visEncoding)).toEqual(new Set());
+      });
+
+      it('only matches hidden operations of focal vertex', () => {
+        expect(withoutFocalOpGraph.getHiddenUiFindMatches(shorten(withoutFocalOpZerothOp))).toEqual(
+          new Set()
+        );
+        expect(withoutFocalOpGraph.getHiddenUiFindMatches(shorten(withoutFocalOpFistOp))).toEqual(new Set());
+
+        expect(
+          withoutFocalOpGraph.getHiddenUiFindMatches(shorten(withoutFocalOpZerothOp), encode([0, 7]))
+        ).toEqual(new Set());
+        expect(
+          withoutFocalOpGraph.getHiddenUiFindMatches(shorten(withoutFocalOpFistOp), encode([0, 7]))
+        ).toEqual(new Set([focalKey]));
+
+        expect(
+          withoutFocalOpGraph.getHiddenUiFindMatches(shorten(withoutFocalOpZerothOp), encode([1, 7]))
+        ).toEqual(new Set([focalKey]));
+        expect(
+          withoutFocalOpGraph.getHiddenUiFindMatches(shorten(withoutFocalOpFistOp), encode([1]))
+        ).toEqual(new Set());
+      });
+
+      it('handles empty graph', () => {
+        const emptyGraph = new GraphModel({
+          ddgModel: { distanceToPathElems: new Map(), visIdxToPathElem: [] },
+          density: EDdgDensity.PreventPathEntanglement,
+        });
+        expect(emptyGraph.getHiddenUiFindMatches('*')).toEqual(new Set());
       });
     });
 
@@ -562,20 +689,42 @@ describe('GraphModel', () => {
       it('returns a subset of getVisible that match provided uiFind', () => {
         const uiFind = `${shorten(focalService)} ${shorten(focalOperation)} ${shorten(otherService)}`;
         expect(convergentGraph.getVisibleUiFindMatches(uiFind, visEncoding)).toEqual(
-          new Set([visibleVertices[0], visibleVertices[2]])
+          new Set([focalKey, visibleVertices[2].key])
         );
       });
 
       it('matches only on service.name if showOp is false', () => {
         const uiFind = `${shorten(focalService)} ${shorten(otherOp)}`;
-        expect(hideOpGraph.getVisibleUiFindMatches(uiFind, visEncoding)).toEqual(
-          new Set([visibleVertices[0]])
-        );
+        expect(hideOpGraph.getVisibleUiFindMatches(uiFind, visEncoding)).toEqual(new Set([focalKey]));
       });
 
       it('returns an empty set when provided empty or undefined uiFind', () => {
         expect(convergentGraph.getVisibleUiFindMatches()).toEqual(new Set());
         expect(convergentGraph.getVisibleUiFindMatches('')).toEqual(new Set());
+        expect(convergentGraph.getVisibleUiFindMatches(' ')).toEqual(new Set());
+      });
+
+      it('only matches visible operations of focal vertex', () => {
+        expect(
+          withoutFocalOpGraph.getVisibleUiFindMatches(shorten(withoutFocalOpZerothOp), encode([0, 1]))
+        ).toEqual(new Set([focalKey]));
+        expect(
+          withoutFocalOpGraph.getVisibleUiFindMatches(shorten(withoutFocalOpFistOp), encode([0, 1]))
+        ).toEqual(new Set([focalKey]));
+
+        expect(
+          withoutFocalOpGraph.getVisibleUiFindMatches(shorten(withoutFocalOpZerothOp), encode([0]))
+        ).toEqual(new Set([focalKey]));
+        expect(
+          withoutFocalOpGraph.getVisibleUiFindMatches(shorten(withoutFocalOpFistOp), encode([0]))
+        ).toEqual(new Set());
+
+        expect(
+          withoutFocalOpGraph.getVisibleUiFindMatches(shorten(withoutFocalOpZerothOp), encode([1]))
+        ).toEqual(new Set());
+        expect(
+          withoutFocalOpGraph.getVisibleUiFindMatches(shorten(withoutFocalOpFistOp), encode([1]))
+        ).toEqual(new Set([focalKey]));
       });
     });
   });
@@ -651,23 +800,23 @@ describe('GraphModel', () => {
       density: EDdgDensity.PreventPathEntanglement,
       showOp: true,
     });
-    const vertices = [
-      overlapGraph.pathElemToVertex.get(overlapGraph.distanceToPathElems.get(3)[0]),
-      overlapGraph.pathElemToVertex.get(overlapGraph.distanceToPathElems.get(-1)[0]),
+    const vertexKeys = [
+      overlapGraph.pathElemToVertex.get(overlapGraph.distanceToPathElems.get(3)[0]).key,
+      overlapGraph.pathElemToVertex.get(overlapGraph.distanceToPathElems.get(-1)[0]).key,
     ];
 
     it('handles absent visEncoding', () => {
-      expect(overlapGraph.getVisWithVertices(vertices)).toBe(encode([0, 1, 2, 3, 4, 5, 6, 7, 8]));
+      expect(overlapGraph.getVisWithVertices(vertexKeys)).toBe(encode([0, 1, 2, 3, 4, 5, 6, 7, 8]));
     });
 
     it('uses provided visEncoding', () => {
-      expect(overlapGraph.getVisWithVertices(vertices, encode([0, 1, 3]))).toBe(
+      expect(overlapGraph.getVisWithVertices(vertexKeys, encode([0, 1, 3]))).toBe(
         encode([0, 1, 2, 3, 4, 5, 6, 8])
       );
     });
 
     it('throws error if given absent vertex', () => {
-      expect(() => overlapGraph.getVisWithVertices([{}])).toThrowError();
+      expect(() => overlapGraph.getVisWithVertices(['absent key'])).toThrowError(/does not exist in graph/);
     });
   });
 

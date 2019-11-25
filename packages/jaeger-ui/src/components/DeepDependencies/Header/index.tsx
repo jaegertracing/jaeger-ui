@@ -14,20 +14,23 @@
 
 import * as React from 'react';
 import { Icon, Input, Tooltip } from 'antd';
+import MdVisibility from 'react-icons/lib/md/visibility';
+import MdVisibilityOff from 'react-icons/lib/md/visibility-off';
 
 import HopsSelector from './HopsSelector';
 import NameSelector from './NameSelector';
 import LayoutSettings from './LayoutSettings';
-import { trackFilter, trackShowMatches } from '../index.track';
+import { trackFilter, trackHeaderSetOperation, trackShowMatches } from '../index.track';
 import UiFindInput from '../../common/UiFindInput';
-import { EDirection, TDdgDistanceToPathElems, TDdgVertex, EDdgDensity } from '../../../model/ddg/types';
+import { EDirection, TDdgDistanceToPathElems, EDdgDensity } from '../../../model/ddg/types';
 
 import './index.css';
 
 type TProps = {
+  clearOperation: () => void;
   density: EDdgDensity;
   distanceToPathElems?: TDdgDistanceToPathElems;
-  hiddenUiFindMatches?: Set<TDdgVertex>;
+  hiddenUiFindMatches?: Set<string>;
   operation?: string;
   operations: string[] | undefined;
   service?: string;
@@ -38,7 +41,7 @@ type TProps = {
   setService: (service: string) => void;
   showOperations: boolean;
   showParameters?: boolean;
-  showVertices: (vertices: TDdgVertex[]) => void;
+  showVertices: (vertexKeys: string[]) => void;
   toggleShowOperations: (enable: boolean) => void;
   uiFindCount: number | undefined;
   visEncoding?: string;
@@ -61,13 +64,19 @@ export default class Header extends React.PureComponent<TProps> {
 
     if (uiFindCount === undefined) return null;
 
-    let btnText = `${uiFindCount}`;
-    let noMore = true;
-    let tipText = 'All matches are visible';
+    let hasHidden = false;
+    let hiddenInfo: React.ReactNode = null;
+    let tipText = uiFindCount ? 'All matches are visible' : 'No matches';
     if (hiddenUiFindMatches && hiddenUiFindMatches.size) {
-      noMore = false;
-      btnText = `${uiFindCount} / ${uiFindCount + hiddenUiFindMatches.size}`;
-      tipText = 'Click to view hidden matches';
+      const { size } = hiddenUiFindMatches;
+      hasHidden = true;
+      tipText = `Click to view ${size} hidden match${size !== 1 ? 'es' : ''}`;
+      hiddenInfo = (
+        <span className="DdgHeader--uiFindInfo--hidden">
+          {size}
+          <MdVisibilityOff className="DdgHeader--uiFindInfo--icon" />
+        </span>
+      );
     }
 
     return (
@@ -76,15 +85,22 @@ export default class Header extends React.PureComponent<TProps> {
         <span>
           <button
             className="DdgHeader--uiFindInfo"
-            disabled={noMore}
+            disabled={!hasHidden}
             onClick={this.handleInfoClick}
             type="button"
           >
-            {btnText}
+            {uiFindCount}
+            {(uiFindCount !== 0 || hasHidden) && <MdVisibility className="DdgHeader--uiFindInfo--icon" />}
+            {hiddenInfo}
           </button>
         </span>
       </Tooltip>
     );
+  };
+
+  setOperation = (operation: string) => {
+    trackHeaderSetOperation();
+    this.props.setOperation(operation);
   };
 
   handleInfoClick = () => {
@@ -95,6 +111,7 @@ export default class Header extends React.PureComponent<TProps> {
 
   render() {
     const {
+      clearOperation,
       density,
       distanceToPathElems,
       operation,
@@ -106,9 +123,9 @@ export default class Header extends React.PureComponent<TProps> {
       setOperation,
       setService,
       showOperations,
+      showParameters,
       toggleShowOperations,
       visEncoding,
-      showParameters,
     } = this.props;
 
     return (
@@ -116,7 +133,7 @@ export default class Header extends React.PureComponent<TProps> {
         {showParameters && (
           <div className="DdgHeader--paramsHeader">
             <NameSelector
-              label="Service:"
+              label="Service"
               placeholder="Select a service…"
               value={service || null}
               setValue={setService}
@@ -125,11 +142,11 @@ export default class Header extends React.PureComponent<TProps> {
             />
             {service && (
               <NameSelector
-                label="Operation:"
-                placeholder="Select an operation…"
+                clearValue={clearOperation}
+                label="Operation"
+                placeholder="Filter by operation…"
                 value={operation || null}
-                setValue={setOperation}
-                required
+                setValue={this.setOperation}
                 options={operations || []}
               />
             )}

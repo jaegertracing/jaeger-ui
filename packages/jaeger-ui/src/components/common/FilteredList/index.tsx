@@ -77,15 +77,15 @@ export default class FilteredList extends React.PureComponent<TProps, TState> {
 
   private onKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     const { focusedIndex: stFocused } = this.state;
-    switch (true) {
-      case event.key === EKey.Escape: {
+    switch (event.key) {
+      case EKey.Escape: {
         const { cancel } = this.props;
         this.setState({ filterText: '', focusedIndex: null });
         cancel();
-        return;
+        break;
       }
-      case event.key === EKey.ArrowUp:
-      case event.key === EKey.ArrowDown: {
+      case EKey.ArrowUp:
+      case EKey.ArrowDown: {
         const { visibleStartIndex, visibleStopIndex } = this.state;
         let focusedIndex: number | void;
         if (stFocused == null) {
@@ -102,15 +102,12 @@ export default class FilteredList extends React.PureComponent<TProps, TState> {
         if (listInstance && (focusedIndex < visibleStartIndex + 1 || focusedIndex > visibleStopIndex - 1)) {
           listInstance.scrollToItem(focusedIndex);
         }
-        return;
+        break;
       }
-      case event.key === EKey.Enter: {
-        if (stFocused == null) {
-          return;
-        }
+      case EKey.Enter: {
         const filteredOptions = this.getFilteredOptions();
-        const value = filteredOptions[stFocused];
-        this.setValue(value);
+        if (stFocused !== null) this.setValue(filteredOptions[stFocused]);
+        else if (filteredOptions.length === 1) this.setValue(filteredOptions[0]);
         break;
       }
       default: // no-op

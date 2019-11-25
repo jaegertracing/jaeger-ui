@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Popover } from 'antd';
+import { Icon, Popover } from 'antd';
 import cx from 'classnames';
 import IoChevronDown from 'react-icons/lib/io/chevron-down';
 
@@ -22,14 +22,23 @@ import FilteredList from '../../common/FilteredList';
 
 import './NameSelector.css';
 
+type TOptional = {
+  clearValue: () => void;
+  required?: false;
+};
+
+type TRequired = {
+  clearValue?: never;
+  required: true;
+};
+
 type TProps = {
   label: string;
   placeholder?: boolean | string;
   options: string[];
   value: string | null;
-  required?: boolean;
   setValue: (value: string) => void;
-};
+} & (TOptional | TRequired);
 
 type TState = {
   popoverVisible: boolean;
@@ -56,6 +65,13 @@ export default class NameSelector extends React.PureComponent<TProps, TState> {
     this.setState({ popoverVisible });
   }
 
+  private clearValue = (evt: React.MouseEvent<React.ReactSVGElement>) => {
+    if (this.props.required) throw new Error('Cannot clear value of required NameSelector');
+
+    evt.stopPropagation();
+    this.props.clearValue();
+  };
+
   setValue = (value: string) => {
     this.props.setValue(value);
     this.changeVisible(false);
@@ -76,7 +92,7 @@ export default class NameSelector extends React.PureComponent<TProps, TState> {
   };
 
   render() {
-    const { label, placeholder = false, options, required = false, value } = this.props;
+    const { label, options, placeholder = false, required = false, value } = this.props;
     const { popoverVisible } = this.state;
 
     const rootCls = cx('NameSelector', {
@@ -107,9 +123,12 @@ export default class NameSelector extends React.PureComponent<TProps, TState> {
         visible={popoverVisible}
       >
         <h2 className={rootCls}>
-          {useLabel && <span className="NameSelector--label">{label}</span>}
+          {useLabel && <span className="NameSelector--label">{label}:</span>}
           <BreakableText className="NameSelector--value" text={text} />
           <IoChevronDown className="NameSelector--chevron" />
+          {!required && value && (
+            <Icon className="NameSelector--clearIcon" type="close" onClick={this.clearValue} />
+          )}
         </h2>
       </Popover>
     );

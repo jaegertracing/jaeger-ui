@@ -8,7 +8,7 @@ exports[`<Header> renders the hops selector if distanceToPathElems is provided 1
     className="DdgHeader--paramsHeader"
   >
     <NameSelector
-      label="Service:"
+      label="Service"
       options={Array []}
       placeholder="Select a service…"
       required={true}
@@ -57,7 +57,7 @@ exports[`<Header> renders the hops selector if distanceToPathElems is provided 1
 </header>
 `;
 
-exports[`<Header> renders the operation selector if a service is selected 1`] = `
+exports[`<Header> renders the operation selector iff a service is selected 1`] = `
 <header
   className="DdgHeader"
 >
@@ -65,7 +65,7 @@ exports[`<Header> renders the operation selector if a service is selected 1`] = 
     className="DdgHeader--paramsHeader"
   >
     <NameSelector
-      label="Service:"
+      label="Service"
       options={
         Array [
           "testService",
@@ -77,10 +77,10 @@ exports[`<Header> renders the operation selector if a service is selected 1`] = 
       value="testService"
     />
     <NameSelector
-      label="Operation:"
+      clearValue={[Function]}
+      label="Operation"
       options={Array []}
-      placeholder="Select an operation…"
-      required={true}
+      placeholder="Filter by operation…"
       setValue={[Function]}
       value={null}
     />
@@ -124,7 +124,7 @@ exports[`<Header> renders the operation selector if a service is selected 1`] = 
 </header>
 `;
 
-exports[`<Header> renders the operation selector if a service is selected 2`] = `
+exports[`<Header> renders the operation selector iff a service is selected 2`] = `
 <header
   className="DdgHeader"
 >
@@ -132,7 +132,7 @@ exports[`<Header> renders the operation selector if a service is selected 2`] = 
     className="DdgHeader--paramsHeader"
   >
     <NameSelector
-      label="Service:"
+      label="Service"
       options={
         Array [
           "testService",
@@ -144,14 +144,14 @@ exports[`<Header> renders the operation selector if a service is selected 2`] = 
       value="testService"
     />
     <NameSelector
-      label="Operation:"
+      clearValue={[Function]}
+      label="Operation"
       options={
         Array [
           "testOperation",
         ]
       }
-      placeholder="Select an operation…"
-      required={true}
+      placeholder="Filter by operation…"
       setValue={[Function]}
       value="testOperation"
     />
@@ -203,7 +203,7 @@ exports[`<Header> renders with minimal props 1`] = `
     className="DdgHeader--paramsHeader"
   >
     <NameSelector
-      label="Service:"
+      label="Service"
       options={Array []}
       placeholder="Select a service…"
       required={true}

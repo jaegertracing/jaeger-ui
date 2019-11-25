@@ -20,14 +20,14 @@ import { TDdgVertex, EViewModifier } from '../../../model/ddg/types';
 
 import './getNodeRenderers.css';
 
-export default function getNodeRenderers(findMatches: Set<TDdgVertex>, viewModifiers: Map<string, number>) {
+export default function getNodeRenderers(findMatches: Set<string>, viewModifiers: Map<string, number>) {
   function vectorBorder(lv: TLayoutVertex<TDdgVertex>) {
     // eslint-disable-next-line no-bitwise
     const isHovered = (viewModifiers.get(lv.vertex.key) || 0) & EViewModifier.Hovered;
     // eslint-disable-next-line no-bitwise
     const isPathHovered = (viewModifiers.get(lv.vertex.key) || 0) & EViewModifier.PathHovered;
     const className = cx('DdgNode--VectorBorder', {
-      'is-findMatch': findMatches.has(lv.vertex),
+      'is-findMatch': findMatches.has(lv.vertex.key),
       'is-hovered': isHovered,
       'is-pathHovered': isPathHovered,
       'is-focalNode': lv.vertex.isFocalNode,
@@ -45,7 +45,7 @@ export default function getNodeRenderers(findMatches: Set<TDdgVertex>, viewModif
 
   function htmlEmphasis(lv: TLayoutVertex<any>) {
     const matchClasses = cx({
-      'is-findMatch': findMatches.has(lv.vertex),
+      'is-findMatch': findMatches.has(lv.vertex.key),
       'is-focalNode': lv.vertex.isFocalNode,
     });
     if (!matchClasses) {
@@ -63,7 +63,7 @@ export default function getNodeRenderers(findMatches: Set<TDdgVertex>, viewModif
   }
 
   function vectorFindColorBand(lv: TLayoutVertex<any>) {
-    if (!findMatches.has(lv.vertex)) {
+    if (!findMatches.has(lv.vertex.key)) {
       return null;
     }
     return (

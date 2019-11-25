@@ -95,7 +95,7 @@ export type TDdgModel = {
 export type TDdgVertex = TVertex<{
   isFocalNode: boolean;
   key: string;
-  operation: string | null;
+  operation: string | string[] | null;
   service: string;
 }>;
 
@@ -105,7 +105,7 @@ export type TDdgSparseUrlState = {
   hash?: string;
   operation?: string;
   service?: string;
-  showOp: boolean;
+  showOp?: boolean;
   start?: number;
   visEncoding?: string;
 };

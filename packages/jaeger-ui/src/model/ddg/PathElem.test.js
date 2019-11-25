@@ -132,13 +132,13 @@ describe('PathElem', () => {
       expect(targetPathElem.externalPath).toEqual([targetPathElem]);
     });
 
-    it('returns path to focal elem in correct order for upstream elem', () => {
+    it('returns path away from focal elem in correct order for upstream elem', () => {
       const idx = path.focalIdx - 1;
       const targetPathElem = path.members[idx];
       expect(targetPathElem.externalPath).toEqual(path.members.slice(0, idx + 1));
     });
 
-    it('returns path to focal elem in correct order for downstream elem', () => {
+    it('returns path away from focal elem in correct order for downstream elem', () => {
       const idx = path.focalIdx + 1;
       const targetPathElem = path.members[idx];
       expect(targetPathElem.externalPath).toEqual(path.members.slice(idx));
