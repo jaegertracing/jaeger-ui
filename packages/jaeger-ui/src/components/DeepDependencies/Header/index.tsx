@@ -120,7 +120,6 @@ export default class Header extends React.PureComponent<TProps> {
       services,
       setDensity,
       setDistance,
-      setOperation,
       setService,
       showOperations,
       showParameters,

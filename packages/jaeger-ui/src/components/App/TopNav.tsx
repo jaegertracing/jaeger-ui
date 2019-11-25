@@ -19,7 +19,8 @@ import { connect } from 'react-redux';
 import { RouteComponentProps, Link, withRouter } from 'react-router-dom';
 
 import TraceIDSearchInput from './TraceIDSearchInput';
-import * as dependencies from '../DependencyGraph/url';
+import * as dependencyGraph from '../DependencyGraph/url';
+import * as deepDependencies from '../DeepDependencies/url';
 import * as searchUrl from '../SearchTracePage/url';
 import * as diffUrl from '../TraceDiff/url';
 import { ReduxState } from '../../types';
@@ -44,9 +45,17 @@ const NAV_LINKS = [
 
 if (getConfigValue('dependencies.menuEnabled')) {
   NAV_LINKS.push({
-    to: dependencies.getUrl(),
-    matches: dependencies.matches,
-    text: 'Dependencies',
+    to: dependencyGraph.getUrl(),
+    matches: dependencyGraph.matches,
+    text: 'System Architecture',
+  });
+}
+
+if (getConfigValue('deepDependencies.menuEnabled')) {
+  NAV_LINKS.push({
+    to: deepDependencies.getUrl(),
+    matches: deepDependencies.matches,
+    text: 'Service Dependencies',
   });
 }
 

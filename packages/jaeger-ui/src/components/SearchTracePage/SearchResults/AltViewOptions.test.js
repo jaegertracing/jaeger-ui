@@ -31,7 +31,11 @@ describe('AltViewOptions', () => {
   });
 
   it('renders correct label', () => {
-    const getLabel = () => wrapper.find(Button).prop('children');
+    const getLabel = () =>
+      wrapper
+        .find(Button)
+        .first()
+        .prop('children');
     expect(getLabel()).toBe('Deep Dependency Graph');
 
     wrapper.setProps({ traceResultsView: false });
