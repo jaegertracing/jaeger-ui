@@ -109,6 +109,9 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     span.tags = span.tags || [];
     span.references = span.references || [];
     const tagsInfo = deduplicateTags(span.tags);
+    tagsInfo.tags.sort((a, b) => {
+      return a.key.localeCompare(b.key);
+    });
     span.tags = tagsInfo.tags;
     span.warnings = span.warnings.concat(tagsInfo.warnings);
     span.references.forEach(ref => {
