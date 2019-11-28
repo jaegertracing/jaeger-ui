@@ -19,7 +19,7 @@ import { getConfigValue } from '../utils/config/get-config';
 import { KeyValuePair, Span, SpanData, Trace, TraceData } from '../types/trace';
 import TreeNode from '../utils/TreeNode';
 
-function deduplicateTags(spanTags: Array<KeyValuePair>) {
+export function deduplicateTags(spanTags: Array<KeyValuePair>) {
   const warningsHash: Map<string, string> = new Map<string, string>();
   const tags: Array<KeyValuePair> = spanTags.reduce<Array<KeyValuePair>>((uniqueTags, tag) => {
     if (!uniqueTags.some(t => t.key === tag.key && t.value === tag.value)) {

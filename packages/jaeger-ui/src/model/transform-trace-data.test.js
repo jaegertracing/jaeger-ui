@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { orderTags } from './transform-trace-data';
+import { orderTags, deduplicateTags } from './transform-trace-data';
 
 describe('orderTags()', () => {
   it('correctly orders tags', () => {
@@ -29,5 +29,23 @@ describe('orderTags()', () => {
       { key: 'a.ip', value: '8.8.8.8' },
       { key: 'b.ip', value: '8.8.4.4' },
     ]);
+  });
+});
+
+describe('deduplicateTags()', () => {
+  it('deduplicates tags', () => {
+    const tagsInfo = deduplicateTags([
+      { key: 'b.ip', value: '8.8.4.4' },
+      { key: 'b.ip', value: '8.8.8.8' },
+      { key: 'b.ip', value: '8.8.4.4' },
+      { key: 'a.ip', value: '8.8.8.8' },
+    ]);
+
+    expect(tagsInfo.tags).toEqual([
+      { key: 'b.ip', value: '8.8.4.4' },
+      { key: 'b.ip', value: '8.8.8.8' },
+      { key: 'a.ip', value: '8.8.8.8' },
+    ]);
+    expect(tagsInfo.warnings).toEqual(['Duplicate tag "b.ip:8.8.4.4"']);
   });
 });
