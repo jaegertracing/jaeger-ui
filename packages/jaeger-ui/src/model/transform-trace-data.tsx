@@ -15,6 +15,7 @@
 import _isEqual from 'lodash/isEqual';
 
 import { getTraceSpanIdsAsTree } from '../selectors/trace';
+import { getConfigValue } from '../utils/config/get-config';
 import { KeyValuePair, Span, SpanData, Trace, TraceData } from '../types/trace';
 import TreeNode from '../utils/TreeNode';
 
@@ -30,6 +31,24 @@ function deduplicateTags(spanTags: Array<KeyValuePair>) {
   }, []);
   const warnings = Array.from(warningsHash.values());
   return { tags, warnings };
+}
+
+export function orderTags(spanTags: Array<KeyValuePair>, topPrefixes: Array<string>) {
+  const orderedTags: Array<KeyValuePair> = [...spanTags];
+  orderedTags.sort((a, b) => {
+    for (let i = 0; i < topPrefixes.length; i++) {
+      const p = topPrefixes[i];
+      if (a.key.startsWith(p) && !b.key.startsWith(p)) {
+        return -1;
+      }
+
+      if (!a.key.startsWith(p) && b.key.startsWith(p)) {
+        return 1;
+      }
+    }
+    return a.key.localeCompare(b.key);
+  });
+  return orderedTags;
 }
 
 /**
@@ -109,10 +128,7 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     span.tags = span.tags || [];
     span.references = span.references || [];
     const tagsInfo = deduplicateTags(span.tags);
-    tagsInfo.tags.sort((a, b) => {
-      return a.key.localeCompare(b.key);
-    });
-    span.tags = tagsInfo.tags;
+    span.tags = orderTags(tagsInfo.tags, getConfigValue('topTagPrefixes') || []);
     span.warnings = span.warnings.concat(tagsInfo.warnings);
     span.references.forEach(ref => {
       const refSpan = spanMap.get(ref.spanID) as Span;
