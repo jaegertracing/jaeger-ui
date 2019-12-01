@@ -15,11 +15,48 @@
 import { createAction } from 'redux-actions';
 import JaegerAPI from '../api/jaeger';
 
-export const fetchTrace = createAction(
-  '@JAEGER_API/FETCH_TRACE',
-  id => JaegerAPI.fetchTrace(id),
-  id => ({ id })
-);
+export function mergeAll(id) {
+  return traces => {
+    if (traces.data.length < 2) {
+      return traces;
+    }
+    const ot = { traceID: id, spans: [], processes: {}, warnings: [] };
+
+    const processMap = {};
+
+    traces.data.forEach(trace => {
+      const tracePidMap = {};
+      Object.entries(trace.processes).forEach(([pid, process]) => {
+        const pJson = JSON.stringify(process);
+        let targetPid = processMap[pJson];
+        if (!targetPid) {
+          targetPid = `p${Object.keys(processMap).length + 1}`;
+          processMap[pJson] = targetPid;
+          ot.processes[targetPid] = process;
+        }
+        tracePidMap[pid] = targetPid;
+      });
+      trace.spans.forEach(span => {
+        const ns = span;
+        ns.processID = tracePidMap[ns.processID];
+        ot.spans.push(ns);
+      });
+      if (trace.warnings) {
+        trace.warnings.forEach(j => ot.warnings.push(j));
+      }
+    });
+
+    return { data: [ot] };
+  };
+}
+
+function reduceFetch(id) {
+  const ids = id.split('|');
+  const promise = ids.length < 2 ? JaegerAPI.fetchTrace(id) : JaegerAPI.searchTraces({ traceID: ids });
+  return promise && promise.then(mergeAll(id));
+}
+
+export const fetchTrace = createAction('@JAEGER_API/FETCH_TRACE', id => reduceFetch(id), id => ({ id }));
 
 export const fetchMultipleTraces = createAction(
   '@JAEGER_API/FETCH_MULTIPLE_TRACES',

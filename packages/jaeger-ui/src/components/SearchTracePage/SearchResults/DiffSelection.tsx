@@ -18,7 +18,7 @@ import { Link } from 'react-router-dom';
 
 import ResultItemTitle from './ResultItemTitle';
 import { getUrl } from '../../TraceDiff/url';
-import { getUrl as getTracePageUrl } from '../../TracePage/url';
+import { getUrl as getTracePageUrl, getCombineUrl } from '../../TracePage/url';
 import { fetchedState } from '../../../constants';
 
 import { FetchedTrace } from '../../../types';
@@ -41,6 +41,12 @@ export default class DiffSelection extends React.PureComponent<Props> {
     const compareBtn = (
       <Button className="ub-right" disabled={cohort.length < 2} htmlType="button" type="primary">
         Compare Traces
+      </Button>
+    );
+    const combineHref = cohort.length > 1 ? getCombineUrl(cohort) : null;
+    const combineBtn = (
+      <Button className="ub-right" disabled={cohort.length < 2} htmlType="button" type="primary">
+        Show Combined
       </Button>
     );
     return (
@@ -70,6 +76,7 @@ export default class DiffSelection extends React.PureComponent<Props> {
           {traces.length > 0 ? (
             <React.Fragment>
               {compareHref ? <Link to={compareHref}>{compareBtn}</Link> : compareBtn}
+              {combineHref ? <Link to={combineHref}>{combineBtn}</Link> : combineBtn}
               <h2 className="ub-m0">{cohort.length} Selected for comparison</h2>
             </React.Fragment>
           ) : (

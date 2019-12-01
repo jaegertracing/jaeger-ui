@@ -32,3 +32,7 @@ limitations under the License.
   border: 1px solid #ccc;
   border-bottom: none;
 }
+
+.DiffSelection--message button {
+  margin-left: 7px;
+}

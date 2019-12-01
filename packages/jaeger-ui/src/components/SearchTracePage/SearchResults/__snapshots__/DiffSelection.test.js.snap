@@ -37,6 +37,18 @@ exports[`DiffSelection renders a trace as expected 1`] = `
     >
       Compare Traces
     </Button>
+    <Button
+      block={false}
+      className="ub-right"
+      disabled={true}
+      ghost={false}
+      htmlType="button"
+      loading={false}
+      prefixCls="ant-btn"
+      type="primary"
+    >
+      Show Combined
+    </Button>
     <h2
       className="ub-m0"
     >
@@ -111,6 +123,23 @@ exports[`DiffSelection renders multiple traces as expected 1`] = `
         type="primary"
       >
         Compare Traces
+      </Button>
+    </Link>
+    <Link
+      replace={false}
+      to="/trace/trace-id-0|trace-id-1"
+    >
+      <Button
+        block={false}
+        className="ub-right"
+        disabled={false}
+        ghost={false}
+        htmlType="button"
+        loading={false}
+        prefixCls="ant-btn"
+        type="primary"
+      >
+        Show Combined
       </Button>
     </Link>
     <h2

@@ -22,6 +22,10 @@ export function getUrl(id: string) {
   return prefixUrl(`/trace/${id}`);
 }
 
+export function getCombineUrl(id: string[]) {
+  return prefixUrl(`/trace/${id.join('|')}`);
+}
+
 export function getLocation(id: string, state: Record<string, any> | TNil) {
   return {
     state,

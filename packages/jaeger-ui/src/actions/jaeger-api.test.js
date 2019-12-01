@@ -142,3 +142,88 @@ describe('actions/jaeger-api', () => {
     expect(called.verify()).toBeTruthy();
   });
 });
+
+describe('mergeAll()', () => {
+  const trace1 = {
+    traceID: 'trace1',
+    spans: [
+      {
+        traceID: 'trace1',
+        spanID: 'span-1',
+        processID: 'p1',
+      },
+    ],
+    processes: {
+      p1: {
+        serviceName: 'frontend',
+      },
+    },
+    warnings: ['warning 1'],
+  };
+  const trace2 = {
+    traceID: 'trace2',
+    spans: [
+      {
+        traceID: 'trace2',
+        spanID: 'span-a',
+        processID: 'p1',
+      },
+      {
+        traceID: 'trace2',
+        spanID: 'span-b',
+        processID: 'p2',
+      },
+    ],
+    processes: {
+      p1: {
+        serviceName: 'database',
+      },
+      p2: {
+        serviceName: 'frontend',
+      },
+    },
+    warnings: ['warning 2'],
+  };
+  it('mergeAll() of less than two traces returns identity', () => {
+    const merge = jaegerApiActions.mergeAll('id');
+    const traces = { data: [trace1] };
+    expect(merge(traces)).toEqual(traces);
+  });
+  it('mergeAll() of many traces returns merged trace', () => {
+    const merge = jaegerApiActions.mergeAll('id');
+    const traces = { data: [trace1, trace2] };
+    expect(merge(traces)).toEqual({
+      data: [
+        {
+          processes: {
+            p1: {
+              serviceName: 'frontend',
+            },
+            p2: {
+              serviceName: 'database',
+            },
+          },
+          spans: [
+            {
+              processID: 'p1',
+              spanID: 'span-1',
+              traceID: 'trace1',
+            },
+            {
+              processID: 'p2',
+              spanID: 'span-a',
+              traceID: 'trace2',
+            },
+            {
+              processID: 'p1',
+              spanID: 'span-b',
+              traceID: 'trace2',
+            },
+          ],
+          traceID: 'id',
+          warnings: ['warning 1', 'warning 2'],
+        },
+      ],
+    });
+  });
+});
