@@ -724,7 +724,7 @@ describe('DeepDependencyGraphPage', () => {
       },
     };
     const services = [service];
-    const operationsForService = {
+    const serverOpsForService = {
       [service]: ['some operation'],
     };
     const state = {
@@ -735,7 +735,7 @@ describe('DeepDependencyGraphPage', () => {
         },
       },
       services: {
-        operationsForService,
+        serverOpsForService,
         otherState: 'otherState',
         services,
       },
@@ -821,9 +821,9 @@ describe('DeepDependencyGraphPage', () => {
       expect(doneResult.graph).toBe(mockGraph);
     });
 
-    it('includes services and operationsForService', () => {
+    it('includes services and serverOpsForService', () => {
       expect(mapStateToProps(state, ownProps)).toEqual(
-        expect.objectContaining({ operationsForService, services })
+        expect.objectContaining({ operationsForService: serverOpsForService, services })
       );
     });
 

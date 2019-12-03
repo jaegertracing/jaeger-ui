@@ -43,7 +43,7 @@ export const densityOptions = [
     title: 'One node per resource',
     note: 'Most conscise',
     description:
-      "This setting represents each resource one time in the graph, regardless of whether or not it's upstream or downstream of the focal node. This results in the most desnse graph layout, possible.",
+      "This setting represents each resource one time in the graph, regardless of whether or not it's upstream or downstream of the focal node. This results in the most dense graph layout, possible.",
   },
   {
     option: EDdgDensity.UpstreamVsDownstream,

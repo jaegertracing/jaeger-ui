@@ -26,16 +26,21 @@ type TSpanIdHooks = {
 };
 
 const ACTION_RESIZE = 'resize';
+const ACTION_COLLAPSE_ALL = 'collapse-all';
+const ACTION_COLLAPSE_ONE = 'collapse-one';
+const ACTION_EXPAND_ALL = 'expand-all';
+const ACTION_EXPAND_ONE = 'expand-one';
 
 const CATEGORY_BASE = 'jaeger/ux/trace/timeline';
 // export for tests
-export const CATEGORY_TAGS = `${CATEGORY_BASE}/tags`;
-export const CATEGORY_PROCESS = `${CATEGORY_BASE}/process`;
+export const CATEGORY_COLUMN = `${CATEGORY_BASE}/column`;
+export const CATEGORY_EXPAND_COLLAPSE = `${CATEGORY_BASE}/expand-collapse`;
 export const CATEGORY_LOGS = `${CATEGORY_BASE}/logs`;
 export const CATEGORY_LOGS_ITEM = `${CATEGORY_BASE}/logs/item`;
-export const CATEGORY_COLUMN = `${CATEGORY_BASE}/column`;
 export const CATEGORY_PARENT = `${CATEGORY_BASE}/parent`;
+export const CATEGORY_PROCESS = `${CATEGORY_BASE}/process`;
 export const CATEGORY_ROW = `${CATEGORY_BASE}/row`;
+export const CATEGORY_TAGS = `${CATEGORY_BASE}/tags`;
 
 function getDetail(store: Store<ReduxState>, { payload }: Action<TSpanIdValue | TSpanIdLogValue>) {
   return payload ? store.getState().traceTimeline.detailStates.get(payload.spanID) : undefined;
@@ -84,23 +89,28 @@ function trackLogsItem(store: Store<ReduxState>, action: Action<TSpanIdLogValue>
   trackEvent(CATEGORY_LOGS_ITEM, getToggleValue(isOpen));
 }
 
-const logs = (detail: DetailState) => trackEvent(CATEGORY_LOGS, getToggleValue(detail.logs.isOpen));
-const process = (detail: DetailState) => trackEvent(CATEGORY_PROCESS, getToggleValue(detail.isProcessOpen));
-const tags = (detail: DetailState) => trackEvent(CATEGORY_TAGS, getToggleValue(detail.isTagsOpen));
-const detailRow = (isOpen: boolean) => trackEvent(CATEGORY_ROW, getToggleValue(isOpen));
-const columnWidth = (_: any, { payload }: Action<TWidthValue>) =>
+const trackColumnWidth = (_: any, { payload }: Action<TWidthValue>) =>
   payload && trackEvent(CATEGORY_COLUMN, ACTION_RESIZE, Math.round(payload.width * 1000));
+const trackDetailRow = (isOpen: boolean) => trackEvent(CATEGORY_ROW, getToggleValue(isOpen));
+const trackLogs = (detail: DetailState) => trackEvent(CATEGORY_LOGS, getToggleValue(detail.logs.isOpen));
+const trackProcess = (detail: DetailState) =>
+  trackEvent(CATEGORY_PROCESS, getToggleValue(detail.isProcessOpen));
+const trackTags = (detail: DetailState) => trackEvent(CATEGORY_TAGS, getToggleValue(detail.isTagsOpen));
 
 const hooks: TSpanIdHooks = {
   [types.CHILDREN_TOGGLE]: trackParent,
-  [types.DETAIL_TOGGLE]: (store, action) => detailRow(Boolean(getDetail(store, action))),
-  [types.DETAIL_TAGS_TOGGLE]: (store, action) => trackDetailState(store, action, tags),
-  [types.DETAIL_PROCESS_TOGGLE]: (store, action) => trackDetailState(store, action, process),
-  [types.DETAIL_LOGS_TOGGLE]: (store, action) => trackDetailState(store, action, logs),
+  [types.DETAIL_TOGGLE]: (store, action) => trackDetailRow(Boolean(getDetail(store, action))),
+  [types.DETAIL_TAGS_TOGGLE]: (store, action) => trackDetailState(store, action, trackTags),
+  [types.DETAIL_PROCESS_TOGGLE]: (store, action) => trackDetailState(store, action, trackProcess),
+  [types.DETAIL_LOGS_TOGGLE]: (store, action) => trackDetailState(store, action, trackLogs),
 };
 
 export const middlewareHooks = {
   ...hooks,
+  [types.COLLAPSE_ALL]: () => trackEvent(CATEGORY_EXPAND_COLLAPSE, ACTION_COLLAPSE_ALL),
+  [types.COLLAPSE_ONE]: () => trackEvent(CATEGORY_EXPAND_COLLAPSE, ACTION_COLLAPSE_ONE),
   [types.DETAIL_LOG_ITEM_TOGGLE]: trackLogsItem,
-  [types.SET_SPAN_NAME_COLUMN_WIDTH]: columnWidth,
+  [types.EXPAND_ALL]: () => trackEvent(CATEGORY_EXPAND_COLLAPSE, ACTION_EXPAND_ALL),
+  [types.EXPAND_ONE]: () => trackEvent(CATEGORY_EXPAND_COLLAPSE, ACTION_EXPAND_ONE),
+  [types.SET_SPAN_NAME_COLUMN_WIDTH]: trackColumnWidth,
 };

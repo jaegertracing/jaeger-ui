@@ -41,6 +41,8 @@ type Props = {
 
 const DEFAULT_DURATION_PERCENT = 0;
 
+const stopCheckboxPropagation = (evt: React.MouseEvent) => evt.stopPropagation();
+
 export default class ResultItemTitle extends React.PureComponent<Props> {
   static defaultProps: Partial<Props> = {
     disableComparision: false,
@@ -80,16 +82,18 @@ export default class ResultItemTitle extends React.PureComponent<Props> {
       }
     }
     const isErred = state === fetchedState.ERROR;
+    // Separate propagation management and toggle manegement due to ant-design#16400
+    const checkboxProps = {
+      className: 'ResultItemTitle--item ub-flex-none',
+      checked: !isErred && isInDiffCohort,
+      disabled: isErred,
+      onChange: this.toggleComparison,
+      onClick: stopCheckboxPropagation,
+    };
+
     return (
       <div className="ResultItemTitle">
-        {!disableComparision && (
-          <Checkbox
-            className="ResultItemTitle--item ub-flex-none"
-            checked={!isErred && isInDiffCohort}
-            disabled={isErred}
-            onChange={this.toggleComparison}
-          />
-        )}
+        {!disableComparision && <Checkbox {...checkboxProps} />}
         {/* TODO: Shouldn't need cast */}
         <WrapperComponent {...(wrapperProps as { [key: string]: any; to: string })}>
           <span

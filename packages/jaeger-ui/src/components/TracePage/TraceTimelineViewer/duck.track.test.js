@@ -107,11 +107,15 @@ describe('middlewareHooks', () => {
     expect(Object.keys(track.middlewareHooks).sort()).toEqual(
       [
         types.CHILDREN_TOGGLE,
+        types.COLLAPSE_ALL,
+        types.COLLAPSE_ONE,
         types.DETAIL_TOGGLE,
         types.DETAIL_TAGS_TOGGLE,
         types.DETAIL_PROCESS_TOGGLE,
         types.DETAIL_LOGS_TOGGLE,
         types.DETAIL_LOG_ITEM_TOGGLE,
+        types.EXPAND_ALL,
+        types.EXPAND_ONE,
         types.SET_SPAN_NAME_COLUMN_WIDTH,
       ].sort()
     );

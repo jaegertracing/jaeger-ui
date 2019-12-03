@@ -19,10 +19,11 @@ const initialState = serviceReducer(undefined, {});
 
 function verifyInitialState() {
   expect(initialState).toEqual({
-    services: null,
-    loading: false,
     error: null,
+    loading: false,
     operationsForService: {},
+    serverOpsForService: {},
+    services: null,
   });
 }
 
@@ -35,19 +36,21 @@ it('#92 - ensures services is at least an empty array', () => {
     type: `${fetchServices}_FULFILLED`,
     payload: { data: services },
   });
-  expect(state).toEqual({
+  const expected = {
+    ...initialState,
     services: [],
-    operationsForService: {},
-    loading: false,
-    error: null,
-  });
+  };
+  expect(state).toEqual(expected);
 });
 
 it('should handle a fetch services with loading state', () => {
   const state = serviceReducer(initialState, {
     type: `${fetchServices}_PENDING`,
   });
-  const expected = { ...initialState, loading: true };
+  const expected = {
+    ...initialState,
+    loading: true,
+  };
   expect(state).toEqual(expected);
 });
 
@@ -57,12 +60,11 @@ it('should handle successful services fetch', () => {
     type: `${fetchServices}_FULFILLED`,
     payload: { data: services.slice() },
   });
-  expect(state).toEqual({
+  const expected = {
+    ...initialState,
     services,
-    operationsForService: {},
-    loading: false,
-    error: null,
-  });
+  };
+  expect(state).toEqual(expected);
 });
 
 it('should handle a failed services fetch', () => {
@@ -71,12 +73,12 @@ it('should handle a failed services fetch', () => {
     type: `${fetchServices}_REJECTED`,
     payload: error,
   });
-  expect(state).toEqual({
+  const expected = {
+    ...initialState,
     error,
     services: [],
-    operationsForService: {},
-    loading: false,
-  });
+  };
+  expect(state).toEqual(expected);
 });
 
 it('should handle a successful fetching operations for a service ', () => {

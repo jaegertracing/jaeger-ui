@@ -329,7 +329,7 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
 // export for tests
 export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxProps {
   const { services: stServices } = state;
-  const { services, operationsForService } = stServices;
+  const { services, serverOpsForService: operationsForService } = stServices;
   const urlState = getUrlState(ownProps.location.search);
   const { density, operation, service, showOp: urlStateShowOp } = urlState;
   const showOp = urlStateShowOp !== undefined ? urlStateShowOp : operation !== undefined;
@@ -354,10 +354,11 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
 
 // export for tests
 export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
-  const { fetchDeepDependencyGraph, fetchServiceOperations, fetchServices } = bindActionCreators(
-    jaegerApiActions,
-    dispatch
-  );
+  const {
+    fetchDeepDependencyGraph,
+    fetchServiceServerOps: fetchServiceOperations,
+    fetchServices,
+  } = bindActionCreators(jaegerApiActions, dispatch);
   const { addViewModifier, removeViewModifierFromIndices } = bindActionCreators(ddgActions, dispatch);
 
   return {
