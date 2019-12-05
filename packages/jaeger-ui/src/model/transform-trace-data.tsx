@@ -19,9 +19,10 @@ import { getConfigValue } from '../utils/config/get-config';
 import { KeyValuePair, Span, SpanData, Trace, TraceData } from '../types/trace';
 import TreeNode from '../utils/TreeNode';
 
-export function deduplicateTags(spanTags: Array<KeyValuePair>) {
+// exported for tests
+export function deduplicateTags(spanTags: KeyValuePair[]) {
   const warningsHash: Map<string, string> = new Map<string, string>();
-  const tags: Array<KeyValuePair> = spanTags.reduce<Array<KeyValuePair>>((uniqueTags, tag) => {
+  const tags: KeyValuePair[] = spanTags.reduce<KeyValuePair[]>((uniqueTags, tag) => {
     if (!uniqueTags.some(t => t.key === tag.key && t.value === tag.value)) {
       uniqueTags.push(tag);
     } else {
@@ -33,21 +34,34 @@ export function deduplicateTags(spanTags: Array<KeyValuePair>) {
   return { tags, warnings };
 }
 
-export function orderTags(spanTags: Array<KeyValuePair>, topPrefixes: Array<string>) {
-  const orderedTags: Array<KeyValuePair> = [...spanTags];
+// exported for tests
+export function orderTags(spanTags: KeyValuePair[], topPrefixes?: string[]) {
+  const orderedTags: KeyValuePair[] = spanTags.slice();
+  const tp = (topPrefixes || []).map((p: string) => p.toLowerCase());
+
   orderedTags.sort((a, b) => {
-    for (let i = 0; i < topPrefixes.length; i++) {
-      const p = topPrefixes[i];
-      if (a.key.startsWith(p) && !b.key.startsWith(p)) {
+    const aKey = a.key.toLowerCase();
+    const bKey = b.key.toLowerCase();
+
+    for (let i = 0; i < tp.length; i++) {
+      const p = tp[i];
+      if (aKey.startsWith(p) && !bKey.startsWith(p)) {
         return -1;
       }
-
-      if (!a.key.startsWith(p) && b.key.startsWith(p)) {
+      if (!aKey.startsWith(p) && bKey.startsWith(p)) {
         return 1;
       }
     }
-    return a.key.localeCompare(b.key);
+
+    if (aKey > bKey) {
+      return 1;
+    }
+    if (aKey < bKey) {
+      return -1;
+    }
+    return 0;
   });
+
   return orderedTags;
 }
 
@@ -128,7 +142,7 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     span.tags = span.tags || [];
     span.references = span.references || [];
     const tagsInfo = deduplicateTags(span.tags);
-    span.tags = orderTags(tagsInfo.tags, getConfigValue('topTagPrefixes') || []);
+    span.tags = orderTags(tagsInfo.tags, getConfigValue('topTagPrefixes'));
     span.warnings = span.warnings.concat(tagsInfo.warnings);
     span.references.forEach(ref => {
       const refSpan = spanMap.get(ref.spanID) as Span;

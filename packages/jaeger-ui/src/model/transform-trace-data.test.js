@@ -19,14 +19,18 @@ describe('orderTags()', () => {
     const orderedTags = orderTags(
       [
         { key: 'b.ip', value: '8.8.4.4' },
-        { key: 'http.status_code', value: '200' },
+        { key: 'http.Status_code', value: '200' },
+        { key: 'z.ip', value: '8.8.8.16' },
         { key: 'a.ip', value: '8.8.8.8' },
+        { key: 'http.message', value: 'ok' },
       ],
-      ['http.']
+      ['z.', 'a.', 'HTTP.']
     );
     expect(orderedTags).toEqual([
-      { key: 'http.status_code', value: '200' },
+      { key: 'z.ip', value: '8.8.8.16' },
       { key: 'a.ip', value: '8.8.8.8' },
+      { key: 'http.message', value: 'ok' },
+      { key: 'http.Status_code', value: '200' },
       { key: 'b.ip', value: '8.8.4.4' },
     ]);
   });
