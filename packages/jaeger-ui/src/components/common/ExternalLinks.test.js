@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow, mount } from 'enzyme';
+import { shallow } from 'enzyme';
 import ExternalLinks from './ExternalLinks';
 
 describe('<ExternalLinks>', () => {
@@ -37,11 +37,5 @@ describe('<ExternalLinks>', () => {
       expect(dropdown.length).toBe(0);
       expect(wrapper.find('LinkValue').length).toBe(1);
     });
-  });
-
-  it('is fine when mounted', () => {
-    const links = [{ url: 'http://nowhere/', text: 'some text' }];
-    const wrapper = mount(<ExternalLinks links={links} />);
-    expect(wrapper).toBeDefined();
   });
 });
