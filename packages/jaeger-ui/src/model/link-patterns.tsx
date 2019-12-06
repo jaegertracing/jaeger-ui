@@ -13,11 +13,11 @@
 // limitations under the License.
 
 import _uniq from 'lodash/uniq';
+import memoize from 'lru-memoize';
 import { getConfigValue } from '../utils/config/get-config';
 import { getParent } from './span';
 import { TNil } from '../types';
 import { Span, Link, KeyValuePair, Trace } from '../types/trace';
-import memoize from 'lru-memoize';
 
 const parameterRegExp = /#\{([^{}]*)\}/g;
 
@@ -37,9 +37,6 @@ type ProcessedLinkPattern = {
 };
 
 type TLinksRV = { url: string; text: string }[];
-const processedLinks: ProcessedLinkPattern[] = (getConfigValue('linkPatterns') || [])
-  .map(processLinkPattern)
-  .filter(Boolean);
 
 function getParamNames(str: string) {
   const names = new Set<string>();
@@ -176,14 +173,6 @@ export function computeTraceLink(linkPatterns: ProcessedLinkPattern[], trace: Tr
   return result;
 }
 
-export const getTraceLinks: (trace: Trace | undefined) => TLinksRV = memoize(10)(
-  (trace: Trace | undefined) => {
-    const result: TLinksRV = [];
-    if (!trace) return result;
-    return computeTraceLink(processedLinks, trace);
-  }
-);
-
 export function computeLinks(
   linkPatterns: ProcessedLinkPattern[],
   span: Span,
@@ -247,5 +236,17 @@ export function createGetLinks(linkPatterns: ProcessedLinkPattern[], cache: Weak
     return result;
   };
 }
+
+const processedLinks: ProcessedLinkPattern[] = (getConfigValue('linkPatterns') || [])
+  .map(processLinkPattern)
+  .filter(Boolean);
+
+export const getTraceLinks: (trace: Trace | undefined) => TLinksRV = memoize(10)(
+  (trace: Trace | undefined) => {
+    const result: TLinksRV = [];
+    if (!trace) return result;
+    return computeTraceLink(processedLinks, trace);
+  }
+);
 
 export default createGetLinks(processedLinks, new WeakMap());

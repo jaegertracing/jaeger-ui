@@ -14,6 +14,8 @@
 
 import React from 'react';
 import { shallow } from 'enzyme';
+import { Menu, Dropdown } from 'antd';
+
 import ExternalLinks from './ExternalLinks';
 
 describe('<ExternalLinks>', () => {
@@ -26,14 +28,22 @@ describe('<ExternalLinks>', () => {
       ];
 
       const wrapper = shallow(<ExternalLinks links={links} />);
-      const dropdown = wrapper.find('Dropdown');
+      const dropdown = wrapper.find(Dropdown);
       expect(dropdown.length).toBe(1);
+      const linkValues = shallow(dropdown.first().props().overlay);
+      const submenuItems = linkValues.find(Menu.Item);
+      expect(submenuItems.length).toBe(links.length);
+      submenuItems.forEach((subMenu, i) => {
+        const linkValue = subMenu.find('LinkValue');
+        expect(linkValue.props().href).toBe(links[i].url);
+        expect(linkValue.props().children).toBe(links[i].text);
+      });
     });
 
     it('renders one link', () => {
       const links = [{ url: 'http://nowhere/', text: 'some text' }];
       const wrapper = shallow(<ExternalLinks links={links} />);
-      const dropdown = wrapper.find('Dropdown');
+      const dropdown = wrapper.find(Dropdown);
       expect(dropdown.length).toBe(0);
       const linkValues = wrapper.find('LinkValue');
       expect(linkValues.length).toBe(1);
