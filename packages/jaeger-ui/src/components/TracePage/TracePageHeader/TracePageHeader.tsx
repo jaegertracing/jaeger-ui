@@ -163,7 +163,7 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
             <IoAndroidArrowBack />
           </Link>
         )}
-        {links && links.length > 0 && <ExternalLinks links={links} className="TracePageHeader--back" />}
+        {links && links.length > 0 && <ExternalLinks links={links} />}
         {canCollapse ? (
           <a
             className="TracePageHeader--titleLink"

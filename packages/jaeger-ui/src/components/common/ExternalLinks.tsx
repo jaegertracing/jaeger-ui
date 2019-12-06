@@ -19,13 +19,12 @@ import { Link } from '../../types/trace';
 type ExternalLinksProps = {
   links: Link[];
   children?: React.ReactNode;
-  className?: string;
 };
 
 const LinkValue = (props: {
   href: string;
   title?: string;
-  children: React.ReactNode;
+  children?: React.ReactNode;
   className?: string;
 }) => (
   <a
@@ -53,18 +52,14 @@ export const linkValueList = (links: Link[]) => (
 );
 
 export default function ExternalLinks(props: ExternalLinksProps) {
-  const { links, className } = props;
+  const { links } = props;
   if (links.length === 1) {
-    return (
-      <LinkValue href={links[0].url} title={links[0].text} className={className}>
-        {props.children}
-      </LinkValue>
-    );
+    return <LinkValue href={links[0].url} title={links[0].text} className="TracePageHeader--back" />;
   }
   return (
     <Dropdown overlay={linkValueList(links)} placement="bottomRight" trigger={['click']}>
-      <a className={className}>
-        {props.children} <Icon className="KeyValueTable--linkIcon is-large" type="profile" />
+      <a className="TracePageHeader--back">
+        <Icon className="KeyValueTable--linkIcon is-large" type="profile" />
       </a>
     </Dropdown>
   );
