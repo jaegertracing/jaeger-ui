@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Uber Technologies, Inc.
+// Copyright (c) 2019 The Jaeger Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,7 +35,10 @@ describe('<ExternalLinks>', () => {
       const wrapper = shallow(<ExternalLinks links={links} />);
       const dropdown = wrapper.find('Dropdown');
       expect(dropdown.length).toBe(0);
-      expect(wrapper.find('LinkValue').length).toBe(1);
+      const linkValues = wrapper.find('LinkValue');
+      expect(linkValues.length).toBe(1);
+      expect(linkValues.prop('href')).toBe(links[0].url);
+      expect(linkValues.prop('title')).toBe(links[0].text);
     });
   });
 });

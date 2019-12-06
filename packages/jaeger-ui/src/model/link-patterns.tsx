@@ -17,6 +17,7 @@ import { getConfigValue } from '../utils/config/get-config';
 import { getParent } from './span';
 import { TNil } from '../types';
 import { Span, Link, KeyValuePair, Trace } from '../types/trace';
+import memoize from 'lru-memoize';
 
 const parameterRegExp = /#\{([^{}]*)\}/g;
 
@@ -34,6 +35,11 @@ type ProcessedLinkPattern = {
   text: ProcessedTemplate;
   parameters: string[];
 };
+
+type TLinksRV = { url: string; text: string }[];
+const processedLinks: ProcessedLinkPattern[] = (getConfigValue('linkPatterns') || [])
+  .map(processLinkPattern)
+  .filter(Boolean);
 
 function getParamNames(str: string) {
   const names = new Set<string>();
@@ -139,20 +145,22 @@ function callTemplate(template: ProcessedTemplate, data: any) {
   return template.template(data);
 }
 
-export function computeTraceLinks(linkPatterns: ProcessedLinkPattern[], trace: Trace) {
-  const result: { url: string; text: string }[] = [];
-  const validKeys = Object.keys(trace)
-    // @ts-ignore
-    .filter(key => typeof trace[key] === 'string' || typeof trace[key] === 'number');
+export function computeTraceLink(linkPatterns: ProcessedLinkPattern[], trace: Trace) {
+  const result: TLinksRV = [];
+  const validKeys = (Object.keys(trace) as (keyof Trace)[]).filter(
+    key => typeof trace[key] === 'string' || trace[key] === 'number'
+  );
 
   linkPatterns
     .filter(pattern => pattern.type('traces'))
     .forEach(pattern => {
       const parameterValues: Record<string, any> = {};
       const allParameters = pattern.parameters.every(parameter => {
-        if (validKeys.some(name => name === parameter)) {
-          // @ts-ignore
-          parameterValues[parameter] = trace[parameter];
+        const key = parameter as keyof Trace;
+        if (validKeys.includes(key)) {
+          // At this point is safe to access to trace object using parameter variable because
+          // we validated parameter against validKeys, this implies that parameter a keyof Trace.
+          parameterValues[parameter] = trace[key];
           return true;
         }
         return false;
@@ -167,6 +175,14 @@ export function computeTraceLinks(linkPatterns: ProcessedLinkPattern[], trace: T
 
   return result;
 }
+
+export const getTraceLinks: (trace: Trace | undefined) => TLinksRV = memoize(10)(
+  (trace: Trace | undefined) => {
+    const result: TLinksRV = [];
+    if (!trace) return result;
+    return computeTraceLink(processedLinks, trace);
+  }
+);
 
 export function computeLinks(
   linkPatterns: ProcessedLinkPattern[],
@@ -217,20 +233,6 @@ export function computeLinks(
   return result;
 }
 
-export function createGetTraceLinks(linkPatterns: ProcessedLinkPattern[], cache: WeakMap<Trace, Link[]>) {
-  return (trace: Trace | undefined) => {
-    if (!trace || linkPatterns.length === 0) {
-      return [];
-    }
-    let result = cache.get(trace);
-    if (!result) {
-      result = computeTraceLinks(linkPatterns, trace);
-      cache.set(trace, result);
-    }
-    return result;
-  };
-}
-
 export function createGetLinks(linkPatterns: ProcessedLinkPattern[], cache: WeakMap<KeyValuePair, Link[]>) {
   return (span: Span, items: KeyValuePair[], itemIndex: number) => {
     if (linkPatterns.length === 0) {
@@ -246,12 +248,4 @@ export function createGetLinks(linkPatterns: ProcessedLinkPattern[], cache: Weak
   };
 }
 
-export default createGetLinks(
-  (getConfigValue('linkPatterns') || []).map(processLinkPattern).filter(Boolean),
-  new WeakMap()
-);
-
-export const getTraceLinks = createGetTraceLinks(
-  (getConfigValue('linkPatterns') || []).map(processLinkPattern).filter(Boolean),
-  new WeakMap()
-);
+export default createGetLinks(processedLinks, new WeakMap());
