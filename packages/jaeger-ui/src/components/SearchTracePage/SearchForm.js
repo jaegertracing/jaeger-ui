@@ -264,16 +264,19 @@ export class SearchFormImpl extends React.PureComponent {
       services,
       submitting: disabled,
     } = this.props;
-    const selectedServicePayload = services.find(s => s.name === selectedService);
+    const servicesLoaded = services != null;
+    const servicesList = (servicesLoaded && services.map(v => ({ label: v.name, value: v.name }))) || [];
+    const selectedServicePayload = (servicesLoaded && services.find(s => s.name === selectedService)) || [];
     const opsForSvc = (selectedServicePayload && selectedServicePayload.operations) || [];
     const noSelectedService = selectedService === '-' || !selectedService;
     const tz = selectedLookback === 'custom' ? new Date().toTimeString().replace(/^.*?GMT/, 'UTC') : null;
+    const servicesCount = (servicesLoaded && services.length) || 'Loading...';
     return (
       <Form layout="vertical" onSubmit={handleSubmit}>
         <FormItem
           label={
             <span>
-              Service <span className="SearchForm--labelCount">({services.length})</span>
+              Service <span className="SearchForm--labelCount">({servicesCount})</span>
             </span>
           }
         >
@@ -284,7 +287,7 @@ export class SearchFormImpl extends React.PureComponent {
             props={{
               disabled,
               clearable: false,
-              options: services.map(v => ({ label: v.name, value: v.name })),
+              options: servicesList,
               required: true,
             }}
           />
@@ -513,7 +516,7 @@ export function mapStateToProps(state) {
     // last search is only valid if the service is in the list of services
     const { operation: lastOp, service: lastSvc } = lastSearch;
     if (lastSvc && lastSvc !== '-') {
-      if (state.services.services.includes(lastSvc)) {
+      if (state.services && state.services.services && state.services.services.includes(lastSvc)) {
         lastSearchService = lastSvc;
         if (lastOp && lastOp !== '-') {
           const ops = state.services.operationsForService[lastSvc];

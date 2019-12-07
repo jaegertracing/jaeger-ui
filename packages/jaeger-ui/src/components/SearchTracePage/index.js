@@ -29,7 +29,6 @@ import { isSameQuery, getUrl } from './url';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import * as fileReaderActions from '../../actions/file-reader-api';
 import ErrorMessage from '../common/ErrorMessage';
-import LoadingIndicator from '../common/LoadingIndicator';
 import { getLocation as getTraceLocation } from '../TracePage/url';
 import { actions as traceDiffActions } from '../TraceDiff/duck';
 import { fetchedState } from '../../constants';
@@ -44,6 +43,8 @@ const TabPane = Tabs.TabPane;
 
 // export for tests
 export class SearchTracePageImpl extends Component {
+  pollServicesTimer = null;
+
   componentDidMount() {
     const {
       diffCohort,
@@ -63,10 +64,22 @@ export class SearchTracePageImpl extends Component {
       fetchMultipleTraces(needForDiffs);
     }
     fetchServices();
+    // this.pollForServices();
     const { service } = store.get('lastSearch') || {};
     if (service && service !== '-') {
       fetchServiceOperations(service);
     }
+  }
+
+  componentWillUnmount() {
+    clearTimeout(this.pollServicesTimer);
+  }
+
+  pollForServices() {
+    const { fetchServices } = this.props;
+    this.pollServicesTimer = setInterval(() => {
+      fetchServices();
+    }, 5000);
   }
 
   goToTrace = traceID => {
@@ -83,7 +96,6 @@ export class SearchTracePageImpl extends Component {
       embedded,
       errors,
       isHomepage,
-      loadingServices,
       loadingTraces,
       maxTraceDuration,
       services,
@@ -101,7 +113,7 @@ export class SearchTracePageImpl extends Component {
             <div className="SearchTracePage--find">
               <Tabs size="large">
                 <TabPane tab="Search" key="searchForm">
-                  {!loadingServices && services ? <SearchForm services={services} /> : <LoadingIndicator />}
+                  <SearchForm services={services} />
                 </TabPane>
                 <TabPane tab="JSON File" key="fileLoader">
                   <FileLoader loadJsonTraces={loadJsonTraces} />
@@ -160,7 +172,6 @@ SearchTracePageImpl.propTypes = {
     searchHideGraph: PropTypes.bool,
   }),
   maxTraceDuration: PropTypes.number,
-  loadingServices: PropTypes.bool,
   loadingTraces: PropTypes.bool,
   urlQueryParams: PropTypes.shape({
     service: PropTypes.string,
