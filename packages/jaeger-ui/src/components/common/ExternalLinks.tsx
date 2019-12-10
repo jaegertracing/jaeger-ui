@@ -15,10 +15,10 @@
 import { Dropdown, Icon, Menu } from 'antd';
 import * as React from 'react';
 import { Link } from '../../types/trace';
+import NewWindowIcon from './NewWindowIcon';
 
 type ExternalLinksProps = {
   links: Link[];
-  children?: React.ReactNode;
 };
 
 const LinkValue = (props: {
@@ -34,7 +34,7 @@ const LinkValue = (props: {
     rel="noopener noreferrer"
     className={props.className}
   >
-    {props.children} <Icon className="KeyValueTable--linkIcon" type="export" />
+    {props.children} <NewWindowIcon />
   </a>
 );
 
@@ -59,7 +59,7 @@ export default function ExternalLinks(props: ExternalLinksProps) {
   return (
     <Dropdown overlay={linkValueList(links)} placement="bottomRight" trigger={['click']}>
       <a className="TracePageHeader--back">
-        <Icon className="KeyValueTable--linkIcon is-large" type="profile" />
+        <NewWindowIcon isLarge={true} />
       </a>
     </Dropdown>
   );
