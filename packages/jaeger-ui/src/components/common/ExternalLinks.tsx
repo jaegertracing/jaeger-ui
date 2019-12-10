@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { Dropdown, Icon, Menu } from 'antd';
+import { Dropdown, Menu } from 'antd';
 import * as React from 'react';
 import { Link } from '../../types/trace';
 import NewWindowIcon from './NewWindowIcon';
@@ -59,7 +59,7 @@ export default function ExternalLinks(props: ExternalLinksProps) {
   return (
     <Dropdown overlay={linkValueList(links)} placement="bottomRight" trigger={['click']}>
       <a className="TracePageHeader--back">
-        <NewWindowIcon isLarge={true} />
+        <NewWindowIcon isLarge />
       </a>
     </Dropdown>
   );
