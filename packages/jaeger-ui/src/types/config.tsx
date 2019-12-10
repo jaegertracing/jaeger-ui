@@ -36,6 +36,7 @@ export type Config = {
   menu: (ConfigMenuGroup | ConfigMenuItem)[];
   search?: { maxLookback: { label: string; value: string } };
   scripts?: TScript[];
+  topTagPrefixes?: string[];
   tracking?: {
     gaID: string | TNil;
     trackErrors: boolean | TNil;
