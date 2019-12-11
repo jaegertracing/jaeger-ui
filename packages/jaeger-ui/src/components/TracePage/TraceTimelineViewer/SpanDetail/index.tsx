@@ -142,9 +142,6 @@ export default function SpanDetail(props: SpanDetailProps) {
         )}
         {references && references.length > 1 && (
           <AccordianReferences
-            className="AccordianReferences"
-            headerClassName="AccordianReferences--header"
-            label={<span className="AccordianReferences--label">References</span>}
             data={references}
             isOpen={isReferencesOpen}
             onToggle={() => referencesToggle(spanID)}

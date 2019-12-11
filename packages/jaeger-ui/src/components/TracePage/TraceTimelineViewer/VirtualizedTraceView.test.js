@@ -402,13 +402,13 @@ describe('<VirtualizedTraceViewImpl>', () => {
   });
 
   describe('focusSpan', () => {
-    it('calls updateUiFind and focusUiFindMatches when focusSpan', () => {
-      focusUiFindMatchesMock.mockReset();
-      instance.focusSpan('span1');
+    it('calls updateUiFind and focusUiFindMatches', () => {
+      const spanName = 'span1';
+      instance.focusSpan(spanName);
       expect(updateUiFindSpy).toHaveBeenLastCalledWith({
         history: props.history,
         location: props.location,
-        uiFind: 'span1',
+        uiFind: spanName,
       });
     });
   });

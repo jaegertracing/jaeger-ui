@@ -23,12 +23,11 @@ import ReferenceLink from './ReferenceLink';
 type TReferencesButtonProps = {
   references: SpanReference[];
   traceID: string;
-  children?: React.ReactNode;
+  children: React.ReactNode;
   tooltipText: string;
   focusSpan: (spanID: string) => void;
 };
 
-// export for tests
 export default class ReferencesButton extends React.PureComponent<TReferencesButtonProps> {
   referencesList = (references: SpanReference[]) => (
     <Menu>
@@ -36,15 +35,16 @@ export default class ReferencesButton extends React.PureComponent<TReferencesBut
         const { span, traceID, spanID } = ref;
         return (
           <Menu.Item key={`${spanID}`}>
-            <ReferenceLink reference={ref} traceID={this.props.traceID} focusSpan={this.props.focusSpan}>
+            <ReferenceLink
+              reference={ref}
+              traceID={this.props.traceID}
+              focusSpan={this.props.focusSpan}
+              className="ReferencesButton--TraceRefLink"
+            >
               {span
                 ? `${span.process.serviceName}:${span.operationName} - ${ref.spanID}`
                 : `(another trace) - ${ref.spanID}`}
-              {traceID !== this.props.traceID && (
-                <div className="external-trace-ref">
-                  <NewWindowIcon />
-                </div>
-              )}
+              {traceID !== this.props.traceID && <NewWindowIcon />}
             </ReferenceLink>
           </Menu.Item>
         );
@@ -61,10 +61,10 @@ export default class ReferencesButton extends React.PureComponent<TReferencesBut
           mouseLeaveDelay={0.5}
           placement="bottom"
           title={tooltipText}
-          overlayClassName="ref-tooltip"
+          overlayClassName="ReferencesButton-tooltip"
         >
           <Dropdown overlay={this.referencesList(references)} placement="bottomRight" trigger={['click']}>
-            <a className="multi-parent-button">{children}</a>
+            <a className="ReferencesButton-MultiParent">{children}</a>
           </Dropdown>
         </Tooltip>
       );

@@ -29,11 +29,14 @@ limitations under the License.
   overflow: auto;
 }
 
-.ReferencesList--Item {
+.ReferencesList--itemContent {
   padding: 0.25rem 0.5rem;
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
 }
 
-.ReferencesList--Item > a {
+.ReferencesList--itemContent > a {
   width: 100%;
   display: inline-block;
 }
@@ -44,8 +47,7 @@ limitations under the License.
 
 .SpanReference--debugInfo {
   letter-spacing: 0.25px;
-  margin: 0.5em 0 -0.75em;
-  float: right;
+  margin: 0.5em 0 0;
 }
 
 .SpanReference--debugLabel::before {

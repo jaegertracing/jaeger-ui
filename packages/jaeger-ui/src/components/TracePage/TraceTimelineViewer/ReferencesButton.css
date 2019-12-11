@@ -14,16 +14,23 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-.multi-parent-button {
+.ReferencesButton-MultiParent {
   padding: 0 5px;
   color: #000;
 }
-
-.external-trace-ref {
-  float: right;
+.ReferencesButton-MultiParent ~ .ReferencesButton-MultiParent {
   margin-left: 5px;
 }
 
-.ref-tooltip {
+a.ReferencesButton--TraceRefLink {
+  display: flex;
+  justify-content: space-between;
+}
+
+a.ReferencesButton--TraceRefLink > .NewWindowIcon {
+  margin: 0.2em 0 0;
+}
+
+.ReferencesButton-tooltip {
   max-width: none;
 }

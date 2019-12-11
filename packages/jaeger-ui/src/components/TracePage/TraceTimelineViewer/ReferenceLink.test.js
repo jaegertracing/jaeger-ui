@@ -34,7 +34,7 @@ describe(ReferenceLink, () => {
   };
 
   describe('rendering', () => {
-    it('render for external trace', () => {
+    it('render for this trace', () => {
       const component = shallow(
         <ReferenceLink reference={sameTraceRef} traceID={traceID} focusSpan={focusMock} />
       );
@@ -43,7 +43,7 @@ describe(ReferenceLink, () => {
       expect(link.props().role).toBe('button');
     });
 
-    it('render for this trace', () => {
+    it('render for external trace', () => {
       const component = shallow(
         <ReferenceLink reference={externalRef} traceID={traceID} focusSpan={focusMock} />
       );

@@ -164,11 +164,13 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
                 <IoNetwork />
               </ReferencesButton>
             )}
-            {span.referrals && span.referrals.length > 0 && (
+            {span.subsidiarilyReferencedBy && span.subsidiarilyReferencedBy.length > 0 && (
               <ReferencesButton
-                references={span.referrals}
+                references={span.subsidiarilyReferencedBy}
                 traceID={span.traceID}
-                tooltipText="This span is refereed by another span"
+                tooltipText={`This span is referenced by ${
+                  span.subsidiarilyReferencedBy.length === 1 ? 'another span' : 'multiple other spans'
+                }`}
                 focusSpan={focusSpan}
               >
                 <MdFileUpload />

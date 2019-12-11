@@ -175,9 +175,9 @@ describe('<SpanDetail>', () => {
   });
 
   it('renders the references', () => {
-    const warningElm = wrapper.find({ data: span.references });
-    expect(warningElm.length).toBe(1);
-    warningElm.simulate('toggle');
+    const refElem = wrapper.find({ data: span.references });
+    expect(refElem.length).toBe(1);
+    refElem.simulate('toggle');
     expect(props.referencesToggle).toHaveBeenLastCalledWith(span.spanID);
   });
 

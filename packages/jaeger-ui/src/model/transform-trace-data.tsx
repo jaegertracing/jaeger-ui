@@ -118,8 +118,8 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
         ref.span = refSpan;
         if (index > 0) {
           // Don't take into account the parent, just other references.
-          refSpan.referrals = refSpan.referrals || [];
-          refSpan.referrals.push({
+          refSpan.subsidiarilyReferencedBy = refSpan.subsidiarilyReferencedBy || [];
+          refSpan.subsidiarilyReferencedBy.push({
             spanID,
             traceID,
             span,

@@ -17,37 +17,38 @@ import { shallow } from 'enzyme';
 import AccordianReferences, { References } from './AccordianReferences';
 import ReferenceLink from '../ReferenceLink';
 
+const traceID = 'trace1';
 const references = [
   {
     refType: 'CHILD_OF',
     span: {
-      spanID: 'span2',
-      traceID: 'trace1',
+      spanID: 'span1',
+      traceID,
       operationName: 'op1',
       process: {
         serviceName: 'service1',
       },
     },
     spanID: 'span1',
-    traceID: 'trace1',
+    traceID,
   },
   {
     refType: 'CHILD_OF',
     span: {
       spanID: 'span3',
-      traceID: 'trace1',
+      traceID,
       operationName: 'op2',
       process: {
         serviceName: 'service2',
       },
     },
-    spanID: 'span4',
-    traceID: 'trace1',
+    spanID: 'span3',
+    traceID,
   },
   {
     refType: 'CHILD_OF',
     span: {
-      spanID: 'span6',
+      spanID: 'span5',
       traceID: 'trace2',
       operationName: 'op2',
       process: {
@@ -68,25 +69,17 @@ describe('<AccordianReferences>', () => {
     data: references,
     highContrast: false,
     isOpen: false,
-    label: 'le-label',
     onToggle: jest.fn(),
     focusSpan: mockFocusSpan,
   };
 
   beforeEach(() => {
     wrapper = shallow(<AccordianReferences {...props} />);
-    mockFocusSpan.mockReset();
   });
 
   it('renders without exploding', () => {
     expect(wrapper).toBeDefined();
     expect(wrapper.exists()).toBe(true);
-  });
-
-  it('renders the label', () => {
-    const header = wrapper.find(`.AccordianReferences--header > strong`);
-    expect(header.length).toBe(1);
-    expect(header.text()).toBe(props.label);
   });
 
   it('renders the content when it is expanded', () => {
@@ -113,12 +106,18 @@ describe('<References>', () => {
   });
 
   it('render references list', () => {
-    expect(wrapper.find(ReferenceLink).length).toBe(references.length);
-    const spanOtherTrace = wrapper
-      .find('ReferenceLink')
-      .at(2)
-      .find('span.span-svc-name')
-      .text();
-    expect(spanOtherTrace).toBe('< span in another trace >');
+    const refLinks = wrapper.find(ReferenceLink);
+    expect(refLinks.length).toBe(references.length);
+    refLinks.forEach((refLink, i) => {
+      const span = references[i].span;
+      const serviceName = refLink.find('span.span-svc-name').text();
+      if (span && span.traceID === traceID) {
+        const endpointName = refLink.find('small.endpoint-name').text();
+        expect(serviceName).toBe(span.process.serviceName);
+        expect(endpointName).toBe(span.operationName);
+      } else {
+        expect(serviceName).toBe('< span in another trace >');
+      }
+    });
   });
 });

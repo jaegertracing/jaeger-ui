@@ -115,24 +115,35 @@ describe('fetch multiple traces', () => {
     });
 
     it('process multiple references', () => {
-      const multiRefTrace = traceGenerator.trace({ numberOfSpans: 6, maxDepth: 3, spansPerLevel: 4 });
-      const parentID = multiRefTrace.spans[0].spanID;
-      const traceID = multiRefTrace.spans[0].traceID;
-      const noSiblingSpan = multiRefTrace.spans.filter(
-        span => span.references.length > 0 && span.references[0].spanID !== parentID
+      const multiRefTrace = traceGenerator.trace({ numberOfSpans: 7, maxDepth: 3, spansPerLevel: 4 });
+      const { traceID, spanID: rootSpanId } = multiRefTrace.spans[0];
+      const [willGainRef, willNotChange] = multiRefTrace.spans.filter(
+        span => span.references.length > 0 && span.references[0].spanID !== rootSpanId
       );
-      const firstLevel = multiRefTrace.spans.filter(
-        span => span.references.length > 0 && span.references[0].spanID === parentID
-      );
-      noSiblingSpan[0].references.push({
+      const { spanID: existingRefID } = willGainRef.references[0];
+      const { spanID: willBeReferencedID } = willNotChange.references[0];
+
+      willGainRef.references.push({
         refType: 'CHILD_OF',
         traceID,
-        spanID: firstLevel[0].spanID,
+        spanID: willBeReferencedID,
       });
       const tTrace = transformTraceData(multiRefTrace);
-      const multiRef = tTrace.spans.filter(span => span.referrals && span.referrals.length > 0);
-      expect(multiRef.length).toEqual(1);
-      expect(multiRef[0].spanID).toEqual(firstLevel[0].spanID);
+      const multiReference = tTrace.spans.filter(span => span.references && span.references.length > 1);
+
+      expect(multiReference.length).toEqual(1);
+      expect(new Set(multiReference[0].references)).toEqual(
+        new Set([
+          expect.objectContaining({ spanID: willBeReferencedID }),
+          expect.objectContaining({ spanID: existingRefID }),
+        ])
+      );
+      const hasReferral = tTrace.spans.filter(
+        span => span.subsidiarilyReferencedBy && span.subsidiarilyReferencedBy.length > 0
+      );
+      expect(new Set(hasReferral[0].subsidiarilyReferencedBy)).toEqual(
+        new Set([expect.objectContaining({ spanID: willGainRef.spanID })])
+      );
     });
   });
 

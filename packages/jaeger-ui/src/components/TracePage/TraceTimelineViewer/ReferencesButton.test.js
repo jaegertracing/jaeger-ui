@@ -46,28 +46,32 @@ describe(ReferencesButton, () => {
     },
     focusSpan: focusMock,
   };
-  describe('rendering', () => {
-    it('render with dropdown', () => {
-      const props = { ...baseProps, references: oneReference };
-      const wrapper = shallow(<ReferencesButton {...props} />);
-      const dropdown = wrapper.find(Dropdown);
-      const refLink = wrapper.find(ReferenceLink);
-      const tooltip = wrapper.find(Tooltip);
 
-      expect(dropdown.length).toBe(0);
-      expect(refLink.length).toBe(1);
-      expect(refLink.first().props().className).toBe('multi-parent-button');
-      expect(tooltip.length).toBe(1);
-    });
+  it('renders single reference', () => {
+    const props = { ...baseProps, references: oneReference };
+    const wrapper = shallow(<ReferencesButton {...props} />);
+    const dropdown = wrapper.find(Dropdown);
+    const refLink = wrapper.find(ReferenceLink);
+    const tooltip = wrapper.find(Tooltip);
 
-    it('render with dropdown', () => {
-      const props = { ...baseProps, references: moreReferences };
-      const wrapper = shallow(<ReferencesButton {...props} />);
-      const dropdown = wrapper.find(Dropdown);
-      expect(dropdown.length).toBe(1);
-      const menuInstance = shallow(dropdown.first().props().overlay);
-      const submenuItems = menuInstance.find(Menu.Item);
-      expect(submenuItems.length).toBe(2);
+    expect(dropdown.length).toBe(0);
+    expect(refLink.length).toBe(1);
+    expect(refLink.prop('reference')).toBe(oneReference[0]);
+    expect(refLink.first().props().className).toBe('multi-parent-button');
+    expect(tooltip.length).toBe(1);
+    expect(tooltip.prop('title')).toBe(props.tooltipText);
+  });
+
+  it('renders multiple references', () => {
+    const props = { ...baseProps, references: moreReferences };
+    const wrapper = shallow(<ReferencesButton {...props} />);
+    const dropdown = wrapper.find(Dropdown);
+    expect(dropdown.length).toBe(1);
+    const menuInstance = shallow(dropdown.first().props().overlay);
+    const submenuItems = menuInstance.find(Menu.Item);
+    expect(submenuItems.length).toBe(2);
+    submenuItems.forEach((submenuItem, i) => {
+      expect(submenuItem.find(ReferenceLink).prop('reference')).toBe(moreReferences[i]);
     });
   });
 });

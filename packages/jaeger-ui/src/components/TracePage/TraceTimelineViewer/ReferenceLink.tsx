@@ -19,7 +19,7 @@ import { getUrl } from '../url';
 type ReferenceLinkProps = {
   reference: SpanReference;
   traceID: string;
-  children?: React.ReactNode;
+  children: React.ReactNode;
   className?: string;
   focusSpan: (spanID: string) => void;
   onClick?: () => void;
