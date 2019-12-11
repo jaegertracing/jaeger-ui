@@ -19,7 +19,7 @@ import { Menu, Dropdown, Tooltip } from 'antd';
 import ReferencesButton from './ReferencesButton';
 import transformTraceData from '../../../model/transform-trace-data';
 import traceGenerator from '../../../demo/trace-generators';
-import ReferenceLink from './ReferenceLink';
+import ReferenceLink from '../url/ReferenceLink';
 
 describe(ReferencesButton, () => {
   const trace = transformTraceData(traceGenerator.trace({ numberOfSpans: 10 }));
@@ -33,13 +33,6 @@ describe(ReferencesButton, () => {
     spanID: trace.spans[2].spanID,
   });
   const baseProps = {
-    uiFind: null,
-    history: {
-      replace: () => {},
-    },
-    location: {
-      search: null,
-    },
     traceID: trace.traceID,
     trace: {
       data: trace,

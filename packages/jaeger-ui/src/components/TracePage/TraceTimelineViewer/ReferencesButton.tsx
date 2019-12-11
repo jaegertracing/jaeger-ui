@@ -18,7 +18,7 @@ import NewWindowIcon from '../../common/NewWindowIcon';
 import { SpanReference } from '../../../types/trace';
 
 import './ReferencesButton.css';
-import ReferenceLink from './ReferenceLink';
+import ReferenceLink from '../url/ReferenceLink';
 
 type TReferencesButtonProps = {
   references: SpanReference[];

@@ -14,7 +14,7 @@
 
 import React from 'react';
 import { SpanReference } from '../../../types/trace';
-import { getUrl } from '../url';
+import { getUrl } from '.';
 
 type ReferenceLinkProps = {
   reference: SpanReference;
@@ -25,29 +25,27 @@ type ReferenceLinkProps = {
   onClick?: () => void;
 };
 
-export default class ReferenceLink extends React.PureComponent<ReferenceLinkProps> {
-  linkToExternalSpan = (traceID: string, spanID: string) => `${getUrl(traceID)}/uiFind?=${spanID}`;
+const linkToExternalSpan = (traceID: string, spanID: string) => `${getUrl(traceID)}/uiFind?=${spanID}`;
 
-  render() {
-    const { traceID, reference, children, className, focusSpan, ...otherProps } = this.props;
-    delete otherProps.onClick;
-    if (traceID === reference.traceID) {
-      return (
-        <a role="button" onClick={() => focusSpan(reference.spanID)} className={className} {...otherProps}>
-          {children}
-        </a>
-      );
-    }
+export default function ReferenceLink(props: ReferenceLinkProps) {
+  const { traceID, reference, children, className, focusSpan, ...otherProps } = props;
+  delete otherProps.onClick;
+  if (traceID === reference.traceID) {
     return (
-      <a
-        href={this.linkToExternalSpan(reference.traceID, reference.spanID)}
-        target="_blank"
-        rel="noopener noreferrer"
-        className={className}
-        {...otherProps}
-      >
+      <a role="button" onClick={() => focusSpan(reference.spanID)} className={className} {...otherProps}>
         {children}
       </a>
     );
   }
+  return (
+    <a
+      href={linkToExternalSpan(reference.traceID, reference.spanID)}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={className}
+      {...otherProps}
+    >
+      {children}
+    </a>
+  );
 }

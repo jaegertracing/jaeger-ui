@@ -69,7 +69,7 @@ type TDispatchProps = {
   detailToggle: (spanID: string) => void;
   setSpanNameColumnWidth: (width: number) => void;
   setTrace: (trace: Trace | TNil, uiFind: string | TNil) => void;
-  focusUiFindMatches: (trace: Trace, uiFind: string | TNil, preserveHiddenStatus?: boolean) => void;
+  focusUiFindMatches: (trace: Trace, uiFind: string | TNil, allowHide?: boolean) => void;
 };
 
 type VirtualizedTraceViewProps = TVirtualizedTraceViewOwnProps &
@@ -231,7 +231,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
         history,
         uiFind,
       });
-      focusUiFindMatches(trace, uiFind, true);
+      focusUiFindMatches(trace, uiFind, false);
     }
   };
 

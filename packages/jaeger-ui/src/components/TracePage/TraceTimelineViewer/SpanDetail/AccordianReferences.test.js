@@ -15,7 +15,7 @@
 import React from 'react';
 import { shallow } from 'enzyme';
 import AccordianReferences, { References } from './AccordianReferences';
-import ReferenceLink from '../ReferenceLink';
+import ReferenceLink from '../../url/ReferenceLink';
 
 const traceID = 'trace1';
 const references = [
@@ -47,14 +47,6 @@ const references = [
   },
   {
     refType: 'CHILD_OF',
-    span: {
-      spanID: 'span5',
-      traceID: 'trace2',
-      operationName: 'op2',
-      process: {
-        serviceName: 'service2',
-      },
-    },
     spanID: 'span5',
     traceID: 'trace2',
   },
@@ -62,7 +54,6 @@ const references = [
 
 describe('<AccordianReferences>', () => {
   let wrapper;
-  const mockFocusSpan = jest.fn();
 
   const props = {
     compact: false,
@@ -70,7 +61,7 @@ describe('<AccordianReferences>', () => {
     highContrast: false,
     isOpen: false,
     onToggle: jest.fn(),
-    focusSpan: mockFocusSpan,
+    focusSpan: jest.fn(),
   };
 
   beforeEach(() => {
@@ -92,7 +83,6 @@ describe('<AccordianReferences>', () => {
 
 describe('<References>', () => {
   let wrapper;
-  const mockFocusSpan = jest.fn();
 
   const props = {
     data: references,
@@ -102,7 +92,6 @@ describe('<References>', () => {
 
   beforeEach(() => {
     wrapper = shallow(<References {...props} />);
-    mockFocusSpan.mockReset();
   });
 
   it('render references list', () => {

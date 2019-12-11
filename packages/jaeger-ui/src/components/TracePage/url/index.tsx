@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import prefixUrl from '../../utils/prefix-url';
+import prefixUrl from '../../../utils/prefix-url';
 
-import { TNil } from '../../types';
+import { TNil } from '../../../types';
 
 export const ROUTE_PATH = prefixUrl('/trace/:id');
 

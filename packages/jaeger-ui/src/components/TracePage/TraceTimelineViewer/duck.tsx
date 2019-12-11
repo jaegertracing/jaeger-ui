@@ -93,11 +93,11 @@ const fullActions = createActions<TActionTypes>({
   [actionTypes.DETAIL_REFERENCES_TOGGLE]: (spanID: string) => ({ spanID }),
   [actionTypes.DETAIL_TAGS_TOGGLE]: (spanID: string) => ({ spanID }),
   [actionTypes.DETAIL_TOGGLE]: (spanID: string) => ({ spanID }),
-  [actionTypes.FOCUS_UI_FIND_MATCHES]: (
-    trace: Trace,
-    uiFind: string | TNil,
-    preserveHiddenStatus?: boolean
-  ) => ({ trace, uiFind, preserveHiddenStatus }),
+  [actionTypes.FOCUS_UI_FIND_MATCHES]: (trace: Trace, uiFind: string | TNil, allowHide?: boolean) => ({
+    trace,
+    uiFind,
+    allowHide,
+  }),
   [actionTypes.REMOVE_HOVER_INDENT_GUIDE_ID]: (spanID: string) => ({ spanID }),
   [actionTypes.SET_SPAN_NAME_COLUMN_WIDTH]: (width: number) => ({ width }),
   [actionTypes.SET_TRACE]: (trace: Trace, uiFind: string | TNil) => ({ trace, uiFind }),

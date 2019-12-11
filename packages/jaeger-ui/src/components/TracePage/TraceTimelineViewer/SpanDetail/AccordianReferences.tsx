@@ -18,7 +18,7 @@ import IoIosArrowDown from 'react-icons/lib/io/ios-arrow-down';
 import IoIosArrowRight from 'react-icons/lib/io/ios-arrow-right';
 import './AccordianReferences.css';
 import { SpanReference } from '../../../../types/trace';
-import ReferenceLink from '../ReferenceLink';
+import ReferenceLink from '../../url/ReferenceLink';
 
 type AccordianReferencesProps = {
   data: SpanReference[];
