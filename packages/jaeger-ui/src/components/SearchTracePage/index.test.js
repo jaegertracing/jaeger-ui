@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { MemoryRouter } from 'react-router-dom';
-
 jest.mock('redux-form', () => {
   function reduxForm() {
     return component => component;
@@ -29,12 +27,11 @@ jest.mock('store');
 
 /* eslint-disable import/first */
 import React from 'react';
-import { shallow, mount } from 'enzyme';
+import { shallow } from 'enzyme';
 import store from 'store';
 
 import { SearchTracePageImpl as SearchTracePage, mapStateToProps } from './index';
 import SearchForm from './SearchForm';
-import LoadingIndicator from '../common/LoadingIndicator';
 import { fetchedState } from '../../constants';
 import traceGenerator from '../../demo/trace-generators';
 import { MOST_RECENT } from '../../model/order-by';
@@ -77,11 +74,7 @@ describe('<SearchTracePage>', () => {
     props.fetchServiceOperations.mockClear();
     const oldFn = store.get;
     store.get = jest.fn(() => ({ service: 'svc-b' }));
-    wrapper = mount(
-      <MemoryRouter>
-        <SearchTracePage {...props} />
-      </MemoryRouter>
-    );
+    wrapper = shallow(<SearchTracePage {...props} />);
     expect(props.fetchServices.mock.calls.length).toBe(1);
     expect(props.fetchServiceOperations.mock.calls.length).toBe(1);
     store.get = oldFn;
@@ -92,26 +85,13 @@ describe('<SearchTracePage>', () => {
     const query = 'some-query';
     const historyPush = jest.fn();
     const historyMock = { push: historyPush };
-    wrapper = mount(
-      <MemoryRouter>
-        <SearchTracePage {...props} history={historyMock} query={query} />
-      </MemoryRouter>
-    );
-    wrapper
-      .find(SearchTracePage)
-      .first()
-      .instance()
-      .goToTrace(traceID);
+    wrapper = shallow(<SearchTracePage {...props} history={historyMock} query={query} />);
+    wrapper.instance().goToTrace(traceID);
     expect(historyPush.mock.calls.length).toBe(1);
     expect(historyPush.mock.calls[0][0]).toEqual({
       pathname: `/trace/${traceID}`,
       state: { fromSearch: '/search?' },
     });
-  });
-
-  it('shows a loading indicator if loading services', () => {
-    wrapper.setProps({ loadingServices: true });
-    expect(wrapper.find(LoadingIndicator).length).toBe(1);
   });
 
   it('shows a search form when services are loaded', () => {
@@ -131,12 +111,12 @@ describe('<SearchTracePage>', () => {
   });
 
   it('hide SearchForm if is embed', () => {
-    wrapper.setProps({ embed: true });
+    wrapper.setProps({ embedded: true });
     expect(wrapper.find(SearchForm).length).toBe(0);
   });
 
   it('hide logo if is embed', () => {
-    wrapper.setProps({ embed: true });
+    wrapper.setProps({ embedded: true });
     expect(wrapper.find('.js-test-logo').length).toBe(0);
   });
 });
