@@ -27,11 +27,22 @@ describe(ReferencesButton, () => {
   const oneReference = trace.spans[1].references;
 
   const moreReferences = oneReference.slice();
-  moreReferences.push({
-    refType: 'CHILD_OF',
-    traceID: trace.traceID,
-    spanID: trace.spans[2].spanID,
-  });
+  const externalSpanID = 'extSpan';
+
+  moreReferences.push(
+    {
+      refType: 'CHILD_OF',
+      traceID: trace.traceID,
+      spanID: trace.spans[2].spanID,
+      span: trace.spans[2],
+    },
+    {
+      refType: 'CHILD_OF',
+      traceID: 'otherTrace',
+      spanID: externalSpanID,
+    }
+  );
+
   const baseProps = {
     traceID: trace.traceID,
     trace: {
@@ -62,9 +73,16 @@ describe(ReferencesButton, () => {
     expect(dropdown.length).toBe(1);
     const menuInstance = shallow(dropdown.first().props().overlay);
     const submenuItems = menuInstance.find(Menu.Item);
-    expect(submenuItems.length).toBe(2);
+    expect(submenuItems.length).toBe(3);
     submenuItems.forEach((submenuItem, i) => {
       expect(submenuItem.find(ReferenceLink).prop('reference')).toBe(moreReferences[i]);
     });
+    expect(
+      submenuItems
+        .at(2)
+        .find(ReferenceLink)
+        .childAt(0)
+        .text()
+    ).toBe(`(another trace) - ${moreReferences[2].spanID}`);
   });
 });
