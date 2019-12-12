@@ -57,6 +57,8 @@ export default deepFreeze(
         },
       ],
       search: {
+        servicePolling: true,
+        servicePollingInterval: 5000,
         maxLookback: {
           label: '2 Days',
           value: '2d',

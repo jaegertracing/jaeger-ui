@@ -22,6 +22,7 @@ import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import store from 'store';
 import memoizeOne from 'memoize-one';
+import _get from 'lodash/get';
 
 import SearchForm from './SearchForm';
 import SearchResults, { sortFormSelector } from './SearchResults';
@@ -55,6 +56,8 @@ export class SearchTracePageImpl extends Component {
       queryOfResults,
       searchTraces,
       urlQueryParams,
+      servicePollingInterval,
+      servicePollingEnabled,
     } = this.props;
     if (!isHomepage && urlQueryParams && !isSameQuery(urlQueryParams, queryOfResults)) {
       searchTraces(urlQueryParams);
@@ -64,7 +67,11 @@ export class SearchTracePageImpl extends Component {
       fetchMultipleTraces(needForDiffs);
     }
     fetchServices();
-    // this.pollForServices();
+    if (servicePollingEnabled === true) {
+      this.pollServicesTimer = setInterval(() => {
+        fetchServices();
+      }, servicePollingInterval);
+    }
     const { service } = store.get('lastSearch') || {};
     if (service && service !== '-') {
       fetchServiceOperations(service);
@@ -72,14 +79,9 @@ export class SearchTracePageImpl extends Component {
   }
 
   componentWillUnmount() {
-    clearTimeout(this.pollServicesTimer);
-  }
-
-  pollForServices() {
-    const { fetchServices } = this.props;
-    this.pollServicesTimer = setInterval(() => {
-      fetchServices();
-    }, 5000);
+    if (this.pollServicesTimer) {
+      clearTimeout(this.pollServicesTimer);
+    }
   }
 
   goToTrace = traceID => {
@@ -200,6 +202,8 @@ SearchTracePageImpl.propTypes = {
     })
   ),
   loadJsonTraces: PropTypes.func,
+  servicePollingEnabled: PropTypes.bool,
+  servicePollingInterval: PropTypes.number,
 };
 
 const stateTraceXformer = memoizeOne(stateTrace => {
@@ -272,6 +276,8 @@ export function mapStateToProps(state) {
     maxTraceDuration: maxDuration,
     sortTracesBy: sortBy,
     urlQueryParams: Object.keys(query).length > 0 ? query : null,
+    servicePollingEnabled: _get(state, 'config.search.servicePolling'),
+    servicePollingInterval: _get(state, 'config.search.servicePollingInterval'),
   };
 }
 
