@@ -47,7 +47,7 @@ export function References(props: ReferenceItemProps) {
             <li className="ReferencesList--Item" key={`${reference.spanID}`}>
               <ReferenceLink reference={reference} traceID={traceID} focusSpan={focusSpan}>
                 <span className="ReferencesList--itemContent">
-                  {reference.span && reference.traceID === traceID ? (
+                  {reference.span ? (
                     <span>
                       <span className="span-svc-name">{reference.span.process.serviceName}</span>
                       <small className="endpoint-name">{reference.span.operationName}</small>

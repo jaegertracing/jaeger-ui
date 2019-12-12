@@ -14,6 +14,7 @@
 
 import React from 'react';
 import { Dropdown, Menu, Tooltip } from 'antd';
+import { TooltipPlacement } from 'antd/lib/tooltip';
 import NewWindowIcon from '../../common/NewWindowIcon';
 import { SpanReference } from '../../../types/trace';
 
@@ -32,7 +33,7 @@ export default class ReferencesButton extends React.PureComponent<TReferencesBut
   referencesList = (references: SpanReference[]) => (
     <Menu>
       {references.map(ref => {
-        const { span, traceID, spanID } = ref;
+        const { span, spanID } = ref;
         return (
           <Menu.Item key={`${spanID}`}>
             <ReferenceLink
@@ -44,7 +45,7 @@ export default class ReferencesButton extends React.PureComponent<TReferencesBut
               {span
                 ? `${span.process.serviceName}:${span.operationName} - ${ref.spanID}`
                 : `(another trace) - ${ref.spanID}`}
-              {traceID !== this.props.traceID && <NewWindowIcon />}
+              {!span && <NewWindowIcon />}
             </ReferenceLink>
           </Menu.Item>
         );
@@ -54,15 +55,18 @@ export default class ReferencesButton extends React.PureComponent<TReferencesBut
 
   render() {
     const { references, children, tooltipText, focusSpan } = this.props;
+
+    const tooltipProps = {
+      arrowPointAtCenter: true,
+      mouseLeaveDelay: 0.5,
+      placement: 'bottom' as TooltipPlacement,
+      title: tooltipText,
+      overlayClassName: 'ReferencesButton--tooltip',
+    };
+
     if (references.length > 1) {
       return (
-        <Tooltip
-          arrowPointAtCenter
-          mouseLeaveDelay={0.5}
-          placement="bottom"
-          title={tooltipText}
-          overlayClassName="ReferencesButton-tooltip"
-        >
+        <Tooltip {...tooltipProps}>
           <Dropdown overlay={this.referencesList(references)} placement="bottomRight" trigger={['click']}>
             <a className="ReferencesButton-MultiParent">{children}</a>
           </Dropdown>
@@ -71,18 +75,12 @@ export default class ReferencesButton extends React.PureComponent<TReferencesBut
     }
     const ref = references[0];
     return (
-      <Tooltip
-        arrowPointAtCenter
-        mouseLeaveDelay={0.5}
-        placement="bottom"
-        title={tooltipText}
-        overlayClassName="ref-tooltip"
-      >
+      <Tooltip {...tooltipProps}>
         <ReferenceLink
           reference={ref}
           traceID={this.props.traceID}
           focusSpan={focusSpan}
-          className="multi-parent-button"
+          className="ReferencesButton-MultiParent"
         >
           {children}
         </ReferenceLink>

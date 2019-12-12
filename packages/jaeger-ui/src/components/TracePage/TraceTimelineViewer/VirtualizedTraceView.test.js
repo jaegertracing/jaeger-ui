@@ -410,6 +410,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
         location: props.location,
         uiFind: spanName,
       });
+      expect(focusUiFindMatchesMock).toHaveBeenLastCalledWith(trace, spanName, false);
     });
   });
 });

@@ -23,7 +23,6 @@ import ReferenceLink from '../url/ReferenceLink';
 
 describe(ReferencesButton, () => {
   const trace = transformTraceData(traceGenerator.trace({ numberOfSpans: 10 }));
-  const focusMock = jest.fn();
   const oneReference = trace.spans[1].references;
 
   const moreReferences = oneReference.slice();
@@ -48,7 +47,7 @@ describe(ReferencesButton, () => {
     trace: {
       data: trace,
     },
-    focusSpan: focusMock,
+    focusSpan: () => {},
   };
 
   it('renders single reference', () => {
@@ -61,7 +60,7 @@ describe(ReferencesButton, () => {
     expect(dropdown.length).toBe(0);
     expect(refLink.length).toBe(1);
     expect(refLink.prop('reference')).toBe(oneReference[0]);
-    expect(refLink.first().props().className).toBe('multi-parent-button');
+    expect(refLink.first().props().className).toBe('ReferencesButton-MultiParent');
     expect(tooltip.length).toBe(1);
     expect(tooltip.prop('title')).toBe(props.tooltipText);
   });
