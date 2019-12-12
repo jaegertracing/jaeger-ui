@@ -61,6 +61,9 @@ describe('<SearchTracePage>', () => {
       fetchServiceOperations: jest.fn(),
       fetchServices: jest.fn(),
       searchTraces: jest.fn(),
+      // polling
+      servicePollingEnabled: false,
+      servicePollingInterval: 5000,
     };
     wrapper = shallow(<SearchTracePage {...props} />);
   });
@@ -118,6 +121,30 @@ describe('<SearchTracePage>', () => {
   it('hide logo if is embed', () => {
     wrapper.setProps({ embedded: true });
     expect(wrapper.find('.js-test-logo').length).toBe(0);
+  });
+
+  it('enable fetch services at intervals', () => {
+    const mockFetchServices = jest.fn();
+    const interval = 4000;
+    const numberOfIntervals = 2;
+    // number of intervals elapsed + the first fetch
+    const expectedFetchCalls = numberOfIntervals + 1;
+    jest.useFakeTimers();
+    wrapper = shallow(
+      <SearchTracePage
+        {...props}
+        servicePollingEnabled
+        fetchServices={mockFetchServices}
+        servicePollingInterval={interval}
+      />
+    );
+    jest.advanceTimersByTime(numberOfIntervals * interval);
+    expect(mockFetchServices).toHaveBeenCalledTimes(expectedFetchCalls);
+    // Don't call it anymore
+    wrapper.unmount();
+    jest.advanceTimersByTime(numberOfIntervals * interval);
+    // Expect call numbers the same, because now the component is umounted.
+    expect(mockFetchServices).toHaveBeenCalledTimes(expectedFetchCalls);
   });
 });
 
