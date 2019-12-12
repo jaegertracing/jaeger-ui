@@ -157,7 +157,6 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
             {span.references && span.references.length > 1 && (
               <ReferencesButton
                 references={span.references}
-                traceID={span.traceID}
                 tooltipText="Contains multiple references"
                 focusSpan={focusSpan}
               >
@@ -167,7 +166,6 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
             {span.subsidiarilyReferencedBy && span.subsidiarilyReferencedBy.length > 0 && (
               <ReferencesButton
                 references={span.subsidiarilyReferencedBy}
-                traceID={span.traceID}
                 tooltipText={`This span is referenced by ${
                   span.subsidiarilyReferencedBy.length === 1 ? 'another span' : 'multiple other spans'
                 }`}

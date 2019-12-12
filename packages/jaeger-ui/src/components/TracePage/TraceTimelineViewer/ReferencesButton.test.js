@@ -43,10 +43,6 @@ describe(ReferencesButton, () => {
   );
 
   const baseProps = {
-    traceID: trace.traceID,
-    trace: {
-      data: trace,
-    },
     focusSpan: () => {},
   };
 

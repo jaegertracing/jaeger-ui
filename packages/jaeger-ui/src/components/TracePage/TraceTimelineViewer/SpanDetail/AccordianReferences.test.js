@@ -86,7 +86,6 @@ describe('<References>', () => {
 
   const props = {
     data: references,
-    traceID: 'trace1',
     focusSpan: jest.fn(),
   };
 

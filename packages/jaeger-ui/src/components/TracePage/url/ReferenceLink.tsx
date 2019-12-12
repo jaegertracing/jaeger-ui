@@ -18,7 +18,6 @@ import { getUrl } from '.';
 
 type ReferenceLinkProps = {
   reference: SpanReference;
-  traceID: string;
   children: React.ReactNode;
   className?: string;
   focusSpan: (spanID: string) => void;
@@ -28,9 +27,9 @@ type ReferenceLinkProps = {
 const linkToExternalSpan = (traceID: string, spanID: string) => `${getUrl(traceID)}/uiFind?=${spanID}`;
 
 export default function ReferenceLink(props: ReferenceLinkProps) {
-  const { traceID, reference, children, className, focusSpan, ...otherProps } = props;
+  const { reference, children, className, focusSpan, ...otherProps } = props;
   delete otherProps.onClick;
-  if (traceID === reference.traceID) {
+  if (reference.span) {
     return (
       <a role="button" onClick={() => focusSpan(reference.spanID)} className={className} {...otherProps}>
         {children}

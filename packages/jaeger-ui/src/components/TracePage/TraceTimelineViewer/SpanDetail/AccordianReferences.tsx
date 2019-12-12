@@ -26,26 +26,25 @@ type AccordianReferencesProps = {
   interactive?: boolean;
   isOpen: boolean;
   onToggle?: null | (() => void);
-  traceID: string;
   focusSpan: (uiFind: string) => void;
 };
 
 type ReferenceItemProps = {
   data: SpanReference[];
   focusSpan: (uiFind: string) => void;
-  traceID: string;
 };
 
 // export for test
 export function References(props: ReferenceItemProps) {
-  const { data, focusSpan, traceID } = props;
+  const { data, focusSpan } = props;
+
   return (
     <div className="ReferencesList u-simple-scrollbars">
       <ul className="ReferencesList--List">
         {data.map(reference => {
           return (
             <li className="ReferencesList--Item" key={`${reference.spanID}`}>
-              <ReferenceLink reference={reference} traceID={traceID} focusSpan={focusSpan}>
+              <ReferenceLink reference={reference} focusSpan={focusSpan}>
                 <span className="ReferencesList--itemContent">
                   {reference.span ? (
                     <span>
@@ -81,7 +80,7 @@ export default class AccordianReferences extends React.PureComponent<AccordianRe
   };
 
   render() {
-    const { data, highContrast, interactive, isOpen, onToggle, focusSpan, traceID } = this.props;
+    const { data, highContrast, interactive, isOpen, onToggle, focusSpan } = this.props;
     const isEmpty = !Array.isArray(data) || !data.length;
     const iconCls = cx('u-align-icon', { 'AccordianKReferences--emptyIcon': isEmpty });
     let arrow: React.ReactNode | null = null;
@@ -110,7 +109,7 @@ export default class AccordianReferences extends React.PureComponent<AccordianRe
           </strong>{' '}
           ({data.length})
         </div>
-        {isOpen && <References data={data} focusSpan={focusSpan} traceID={traceID} />}
+        {isOpen && <References data={data} focusSpan={focusSpan} />}
       </div>
     );
   }

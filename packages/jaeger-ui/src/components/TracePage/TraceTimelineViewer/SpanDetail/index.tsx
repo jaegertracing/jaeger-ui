@@ -145,7 +145,6 @@ export default function SpanDetail(props: SpanDetailProps) {
             data={references}
             isOpen={isReferencesOpen}
             onToggle={() => referencesToggle(spanID)}
-            traceID={span.traceID}
             focusSpan={focusSpan}
           />
         )}

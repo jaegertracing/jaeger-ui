@@ -23,7 +23,6 @@ import ReferenceLink from '../url/ReferenceLink';
 
 type TReferencesButtonProps = {
   references: SpanReference[];
-  traceID: string;
   children: React.ReactNode;
   tooltipText: string;
   focusSpan: (spanID: string) => void;
@@ -38,7 +37,6 @@ export default class ReferencesButton extends React.PureComponent<TReferencesBut
           <Menu.Item key={`${spanID}`}>
             <ReferenceLink
               reference={ref}
-              traceID={this.props.traceID}
               focusSpan={this.props.focusSpan}
               className="ReferencesButton--TraceRefLink"
             >
@@ -76,12 +74,7 @@ export default class ReferencesButton extends React.PureComponent<TReferencesBut
     const ref = references[0];
     return (
       <Tooltip {...tooltipProps}>
-        <ReferenceLink
-          reference={ref}
-          traceID={this.props.traceID}
-          focusSpan={focusSpan}
-          className="ReferencesButton-MultiParent"
-        >
+        <ReferenceLink reference={ref} focusSpan={focusSpan} className="ReferencesButton-MultiParent">
           {children}
         </ReferenceLink>
       </Tooltip>

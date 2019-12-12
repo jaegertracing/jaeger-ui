@@ -19,12 +19,14 @@ import ReferenceLink from './ReferenceLink';
 
 describe(ReferenceLink, () => {
   const focusMock = jest.fn();
-  const traceID = 'trace1';
 
   const sameTraceRef = {
     refType: 'CHILD_OF',
     traceID: 'trace1',
     spanID: 'span1',
+    span: {
+      // not null or undefined is an indicator of an internal reference
+    },
   };
 
   const externalRef = {
@@ -35,18 +37,14 @@ describe(ReferenceLink, () => {
 
   describe('rendering', () => {
     it('render for this trace', () => {
-      const component = shallow(
-        <ReferenceLink reference={sameTraceRef} traceID={traceID} focusSpan={focusMock} />
-      );
+      const component = shallow(<ReferenceLink reference={sameTraceRef} focusSpan={focusMock} />);
       const link = component.find('a');
       expect(link.length).toBe(1);
       expect(link.props().role).toBe('button');
     });
 
     it('render for external trace', () => {
-      const component = shallow(
-        <ReferenceLink reference={externalRef} traceID={traceID} focusSpan={focusMock} />
-      );
+      const component = shallow(<ReferenceLink reference={externalRef} focusSpan={focusMock} />);
       const link = component.find('a[href="/trace/trace2/uiFind?=span2"]');
       expect(link.length).toBe(1);
     });
@@ -54,9 +52,7 @@ describe(ReferenceLink, () => {
   describe('focus span', () => {
     it('call focusSpan', () => {
       focusMock.mockReset();
-      const component = shallow(
-        <ReferenceLink reference={sameTraceRef} traceID={traceID} focusSpan={focusMock} />
-      );
+      const component = shallow(<ReferenceLink reference={sameTraceRef} focusSpan={focusMock} />);
       const link = component.find('a');
       link.simulate('click');
       expect(focusMock).toHaveBeenLastCalledWith('span1');
