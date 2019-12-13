@@ -49,18 +49,18 @@ function getParentSpanId(span, levels) {
 }
 
 /* this simulates the hierarchy created by CHILD_OF tags */
-function attachReferences(spans) {
-  const depth = chance.integer({ min: 1, max: 10 });
+function attachReferences(spans, depth, spansPerLevel) {
   let levels = [[getSpanId(spans[0])]];
 
-  const duplicateLevelFilter = currentLevels => spanID =>
-    !currentLevels.find(level => level.indexOf(spanID) >= 0);
+  const duplicateLevelFilter = currentLevels => span =>
+    !currentLevels.find(level => level.indexOf(span.spanID) >= 0);
 
   while (levels.length < depth) {
+    const remainingSpans = spans.filter(duplicateLevelFilter(levels));
+    if (remainingSpans.length <= 0) break;
     const newLevel = chance
-      .pickset(spans, chance.integer({ min: 4, max: 8 }))
-      .map(getSpanId)
-      .filter(duplicateLevelFilter(levels));
+      .pickset(remainingSpans, spansPerLevel || chance.integer({ min: 4, max: 8 }))
+      .map(getSpanId);
     levels.push(newLevel);
   }
 
@@ -95,6 +95,8 @@ export default chance.mixin({
       Math.ceil(chance.normal({ mean: 45, dev: 15 })) + 1,
     ]),
     numberOfProcesses = chance.integer({ min: 1, max: 10 }),
+    maxDepth = chance.integer({ min: 1, max: 10 }),
+    spansPerLevel = null,
   }) {
     const traceID = chance.guid();
     const duration = chance.integer({ min: 10000, max: 5000000 });
@@ -109,7 +111,7 @@ export default chance.mixin({
       traceStartTime: timestamp,
       traceEndTime: timestamp + duration,
     });
-    spans = attachReferences(spans);
+    spans = attachReferences(spans, maxDepth, spansPerLevel);
     if (spans.length > 1) {
       spans = setupParentSpan(spans, { startTime: timestamp, duration });
     }

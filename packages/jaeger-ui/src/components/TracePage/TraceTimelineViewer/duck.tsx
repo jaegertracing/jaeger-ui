@@ -27,7 +27,7 @@ import spanAncestorIds from '../../../utils/span-ancestor-ids';
 export type TSpanIdLogValue = { logItem: Log; spanID: string };
 export type TSpanIdValue = { spanID: string };
 type TSpansValue = { spans: Span[] };
-type TTraceUiFindValue = { trace: Trace; uiFind: string | TNil };
+type TTraceUiFindValue = { trace: Trace; uiFind: string | TNil; allowHide?: boolean };
 export type TWidthValue = { width: number };
 export type TActionTypes =
   | TSpanIdLogValue
@@ -69,6 +69,7 @@ export const actionTypes = generateActionTypes('@jaeger-ui/trace-timeline-viewer
   'DETAIL_LOGS_TOGGLE',
   'DETAIL_LOG_ITEM_TOGGLE',
   'DETAIL_WARNINGS_TOGGLE',
+  'DETAIL_REFERENCES_TOGGLE',
   'EXPAND_ALL',
   'EXPAND_ONE',
   'FOCUS_UI_FIND_MATCHES',
@@ -89,9 +90,14 @@ const fullActions = createActions<TActionTypes>({
   [actionTypes.EXPAND_ONE]: (spans: Span[]) => ({ spans }),
   [actionTypes.DETAIL_PROCESS_TOGGLE]: (spanID: string) => ({ spanID }),
   [actionTypes.DETAIL_WARNINGS_TOGGLE]: (spanID: string) => ({ spanID }),
+  [actionTypes.DETAIL_REFERENCES_TOGGLE]: (spanID: string) => ({ spanID }),
   [actionTypes.DETAIL_TAGS_TOGGLE]: (spanID: string) => ({ spanID }),
   [actionTypes.DETAIL_TOGGLE]: (spanID: string) => ({ spanID }),
-  [actionTypes.FOCUS_UI_FIND_MATCHES]: (trace: Trace, uiFind: string | TNil) => ({ trace, uiFind }),
+  [actionTypes.FOCUS_UI_FIND_MATCHES]: (trace: Trace, uiFind: string | TNil, allowHide?: boolean) => ({
+    trace,
+    uiFind,
+    allowHide,
+  }),
   [actionTypes.REMOVE_HOVER_INDENT_GUIDE_ID]: (spanID: string) => ({ spanID }),
   [actionTypes.SET_SPAN_NAME_COLUMN_WIDTH]: (width: number) => ({ width }),
   [actionTypes.SET_TRACE]: (trace: Trace, uiFind: string | TNil) => ({ trace, uiFind }),
@@ -99,7 +105,7 @@ const fullActions = createActions<TActionTypes>({
 
 export const actions = (fullActions as any).jaegerUi.traceTimelineViewer as TTimelineViewerActions;
 
-function calculateFocusedFindRowStates(uiFind: string, spans: Span[]) {
+function calculateFocusedFindRowStates(uiFind: string, spans: Span[], allowHide: boolean = true) {
   const spansMap = new Map();
   const childrenHiddenIDs: Set<string> = new Set();
   const detailStates: Map<string, DetailState> = new Map();
@@ -107,7 +113,9 @@ function calculateFocusedFindRowStates(uiFind: string, spans: Span[]) {
 
   spans.forEach(span => {
     spansMap.set(span.spanID, span);
-    childrenHiddenIDs.add(span.spanID);
+    if (allowHide) {
+      childrenHiddenIDs.add(span.spanID);
+    }
   });
   const matchedSpanIds = filterSpans(uiFind, spans);
   if (matchedSpanIds && matchedSpanIds.size) {
@@ -125,11 +133,11 @@ function calculateFocusedFindRowStates(uiFind: string, spans: Span[]) {
   };
 }
 
-function focusUiFindMatches(state: TTraceTimeline, { uiFind, trace }: TTraceUiFindValue) {
+function focusUiFindMatches(state: TTraceTimeline, { uiFind, trace, allowHide }: TTraceUiFindValue) {
   if (!uiFind) return state;
   return {
     ...state,
-    ...calculateFocusedFindRowStates(uiFind, trace.spans),
+    ...calculateFocusedFindRowStates(uiFind, trace.spans, allowHide),
   };
 }
 
@@ -239,7 +247,7 @@ function detailToggle(state: TTraceTimeline, { spanID }: TSpanIdValue) {
 }
 
 function detailSubsectionToggle(
-  subSection: 'tags' | 'process' | 'logs' | 'warnings',
+  subSection: 'tags' | 'process' | 'logs' | 'warnings' | 'references',
   state: TTraceTimeline,
   { spanID }: TSpanIdValue
 ) {
@@ -254,6 +262,8 @@ function detailSubsectionToggle(
     detailState = old.toggleProcess();
   } else if (subSection === 'warnings') {
     detailState = old.toggleWarnings();
+  } else if (subSection === 'references') {
+    detailState = old.toggleReferences();
   } else {
     detailState = old.toggleLogs();
   }
@@ -266,6 +276,7 @@ const detailTagsToggle = detailSubsectionToggle.bind(null, 'tags');
 const detailProcessToggle = detailSubsectionToggle.bind(null, 'process');
 const detailLogsToggle = detailSubsectionToggle.bind(null, 'logs');
 const detailWarningsToggle = detailSubsectionToggle.bind(null, 'warnings');
+const detailReferencesToggle = detailSubsectionToggle.bind(null, 'references');
 
 function detailLogItemToggle(state: TTraceTimeline, { spanID, logItem }: TSpanIdLogValue) {
   const old = state.detailStates.get(spanID);
@@ -305,6 +316,7 @@ export default handleActions(
     [actionTypes.DETAIL_LOG_ITEM_TOGGLE]: guardReducer(detailLogItemToggle),
     [actionTypes.DETAIL_PROCESS_TOGGLE]: guardReducer(detailProcessToggle),
     [actionTypes.DETAIL_WARNINGS_TOGGLE]: guardReducer(detailWarningsToggle),
+    [actionTypes.DETAIL_REFERENCES_TOGGLE]: guardReducer(detailReferencesToggle),
     [actionTypes.DETAIL_TAGS_TOGGLE]: guardReducer(detailTagsToggle),
     [actionTypes.DETAIL_TOGGLE]: guardReducer(detailToggle),
     [actionTypes.EXPAND_ALL]: guardReducer(expandAll),

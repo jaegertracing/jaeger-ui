@@ -113,6 +113,38 @@ describe('fetch multiple traces', () => {
       };
       expect(state.traces).toEqual(outcome);
     });
+
+    it('process multiple references', () => {
+      const multiRefTrace = traceGenerator.trace({ numberOfSpans: 7, maxDepth: 3, spansPerLevel: 4 });
+      const { traceID, spanID: rootSpanId } = multiRefTrace.spans[0];
+      const [willGainRef, willNotChange] = multiRefTrace.spans.filter(
+        span => span.references.length > 0 && span.references[0].spanID !== rootSpanId
+      );
+      const { spanID: existingRefID } = willGainRef.references[0];
+      const { spanID: willBeReferencedID } = willNotChange.references[0];
+
+      willGainRef.references.push({
+        refType: 'CHILD_OF',
+        traceID,
+        spanID: willBeReferencedID,
+      });
+      const tTrace = transformTraceData(multiRefTrace);
+      const multiReference = tTrace.spans.filter(span => span.references && span.references.length > 1);
+
+      expect(multiReference.length).toEqual(1);
+      expect(new Set(multiReference[0].references)).toEqual(
+        new Set([
+          expect.objectContaining({ spanID: willBeReferencedID }),
+          expect.objectContaining({ spanID: existingRefID }),
+        ])
+      );
+      const hasReferral = tTrace.spans.filter(
+        span => span.subsidiarilyReferencedBy && span.subsidiarilyReferencedBy.length > 0
+      );
+      expect(new Set(hasReferral[0].subsidiarilyReferencedBy)).toEqual(
+        new Set([expect.objectContaining({ spanID: willGainRef.spanID })])
+      );
+    });
   });
 
   it('handles a failed request', () => {

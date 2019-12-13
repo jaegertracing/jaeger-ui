@@ -15,7 +15,9 @@
 import * as React from 'react';
 import IoAlert from 'react-icons/lib/io/alert';
 import IoArrowRightA from 'react-icons/lib/io/arrow-right-a';
-
+import IoNetwork from 'react-icons/lib/io/network';
+import MdFileUpload from 'react-icons/lib/md/file-upload';
+import ReferencesButton from './ReferencesButton';
 import TimelineRow from './TimelineRow';
 import { formatDuration, ViewedBoundsFunctionType } from './utils';
 import SpanTreeOffset from './SpanTreeOffset';
@@ -50,6 +52,7 @@ type SpanBarRowProps = {
   getViewedBounds: ViewedBoundsFunctionType;
   traceStartTime: number;
   span: Span;
+  focusSpan: (spanID: string) => void;
 };
 
 /**
@@ -88,6 +91,7 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
       getViewedBounds,
       traceStartTime,
       span,
+      focusSpan,
     } = this.props;
     const {
       duration,
@@ -150,6 +154,26 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
               </span>
               <small className="endpoint-name">{rpc ? rpc.operationName : operationName}</small>
             </a>
+            {span.references && span.references.length > 1 && (
+              <ReferencesButton
+                references={span.references}
+                tooltipText="Contains multiple references"
+                focusSpan={focusSpan}
+              >
+                <IoNetwork />
+              </ReferencesButton>
+            )}
+            {span.subsidiarilyReferencedBy && span.subsidiarilyReferencedBy.length > 0 && (
+              <ReferencesButton
+                references={span.subsidiarilyReferencedBy}
+                tooltipText={`This span is referenced by ${
+                  span.subsidiarilyReferencedBy.length === 1 ? 'another span' : 'multiple other spans'
+                }`}
+                focusSpan={focusSpan}
+              >
+                <MdFileUpload />
+              </ReferencesButton>
+            )}
           </div>
         </TimelineRow.Cell>
         <TimelineRow.Cell
