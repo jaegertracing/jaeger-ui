@@ -41,6 +41,7 @@ import { Log, Span, Trace, KeyValuePair } from '../../../types/trace';
 import TTraceTimeline from '../../../types/TTraceTimeline';
 
 import './VirtualizedTraceView.css';
+import updateUiFind from '../../../utils/update-ui-find';
 
 type RowState = {
   isDetail: boolean;
@@ -62,11 +63,13 @@ type TDispatchProps = {
   detailLogItemToggle: (spanID: string, log: Log) => void;
   detailLogsToggle: (spanID: string) => void;
   detailWarningsToggle: (spanID: string) => void;
+  detailReferencesToggle: (spanID: string) => void;
   detailProcessToggle: (spanID: string) => void;
   detailTagsToggle: (spanID: string) => void;
   detailToggle: (spanID: string) => void;
   setSpanNameColumnWidth: (width: number) => void;
   setTrace: (trace: Trace | TNil, uiFind: string | TNil) => void;
+  focusUiFindMatches: (trace: Trace, uiFind: string | TNil, allowHide?: boolean) => void;
 };
 
 type VirtualizedTraceViewProps = TVirtualizedTraceViewOwnProps &
@@ -220,6 +223,18 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     }
   }
 
+  focusSpan = (uiFind: string) => {
+    const { trace, focusUiFindMatches, location, history } = this.props;
+    if (trace) {
+      updateUiFind({
+        location,
+        history,
+        uiFind,
+      });
+      focusUiFindMatches(trace, uiFind, false);
+    }
+  };
+
   getAccessors() {
     const lv = this.listView;
     if (!lv) {
@@ -360,6 +375,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
           getViewedBounds={this.getViewedBounds}
           traceStartTime={trace.startTime}
           span={span}
+          focusSpan={this.focusSpan}
         />
       </div>
     );
@@ -372,6 +388,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
       detailLogItemToggle,
       detailLogsToggle,
       detailProcessToggle,
+      detailReferencesToggle,
       detailWarningsToggle,
       detailStates,
       detailTagsToggle,
@@ -395,10 +412,12 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
           logItemToggle={detailLogItemToggle}
           logsToggle={detailLogsToggle}
           processToggle={detailProcessToggle}
+          referencesToggle={detailReferencesToggle}
           warningsToggle={detailWarningsToggle}
           span={span}
           tagsToggle={detailTagsToggle}
           traceStartTime={trace.startTime}
+          focusSpan={this.focusSpan}
         />
       </div>
     );

@@ -22,12 +22,19 @@ export default class DetailState {
   isProcessOpen: boolean;
   logs: { isOpen: boolean; openedItems: Set<Log> };
   isWarningsOpen: boolean;
+  isReferencesOpen: boolean;
 
   constructor(oldState?: DetailState) {
-    const { isTagsOpen, isProcessOpen, isWarningsOpen, logs }: DetailState | Record<string, undefined> =
-      oldState || {};
+    const {
+      isTagsOpen,
+      isProcessOpen,
+      isReferencesOpen,
+      isWarningsOpen,
+      logs,
+    }: DetailState | Record<string, undefined> = oldState || {};
     this.isTagsOpen = Boolean(isTagsOpen);
     this.isProcessOpen = Boolean(isProcessOpen);
+    this.isReferencesOpen = Boolean(isReferencesOpen);
     this.isWarningsOpen = Boolean(isWarningsOpen);
     this.logs = {
       isOpen: Boolean(logs && logs.isOpen),
@@ -44,6 +51,12 @@ export default class DetailState {
   toggleProcess() {
     const next = new DetailState(this);
     next.isProcessOpen = !this.isProcessOpen;
+    return next;
+  }
+
+  toggleReferences() {
+    const next = new DetailState(this);
+    next.isReferencesOpen = !this.isReferencesOpen;
     return next;
   }
 
