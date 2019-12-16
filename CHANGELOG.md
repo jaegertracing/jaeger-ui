@@ -1,5 +1,24 @@
 # Releases
 
+## v1.6.0 (December 16, 2019)
+
+### Enhancements
+
+- **Trace detail:** Jaeger UI visualizing span with multiple parents ([@rubenvp8510](https://github.com/rubenvp8510) in [#477](https://github.com/jaegertracing/jaeger-ui/pull/477))
+
+- **Trace detail:** Support trace-scoped external links similar to tag links ( [@rubenvp8510](https://github.com/rubenvp8510) in [#480](https://github.com/jaegertracing/jaeger-ui/pull/480))
+
+- **Trace detail:** Sort span tags in alphabetical order ([@nabam](https://github.com/nabam) in [#489](https://github.com/jaegertracing/jaeger-ui/pull/489))
+
+- **Deep Dependency Graph:** Ddg optional operation ([@everett980](https://github.com/everett980), [#488](https://github.com/jaegertracing/jaeger-ui/pull/488))
+
+- **Deep Dependency Graph:** Ddg node vis interactions ([@everett980](https://github.com/everett980) in [#483](https://github.com/jaegertracing/jaeger-ui/pull/483))
+
+### Fixes
+
+- **General: ** Fixes Jeager UI broken when accessing via IPv6 address ([@MaheshGPai](https://github.com/MaheshGPai) in [#494](https://github.com/jaegertracing/jaeger-ui/pull/494))
+
+
 ## v1.5.0 (November 4, 2019)
 
 ### Enhancements
