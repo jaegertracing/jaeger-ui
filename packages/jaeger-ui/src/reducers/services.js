@@ -16,8 +16,8 @@ import { handleActions } from 'redux-actions';
 
 import {
   fetchServices,
-  fetchServiceServerOps as fetchServerOps,
   fetchServiceOperations as fetchOps,
+  fetchServiceServerOps as fetchServerOps,
 } from '../actions/jaeger-api';
 import { localeStringComparator } from '../utils/sort';
 
