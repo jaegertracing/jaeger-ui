@@ -16,7 +16,7 @@
 
 ### Fixes
 
-- **General:** Fixes Jeager UI broken when accessing via IPv6 address ([@MaheshGPai](https://github.com/MaheshGPai) in [#494](https://github.com/jaegertracing/jaeger-ui/pull/494))
+- **General:** Fixes Jaeger UI broken when accessing via IPv6 address ([@MaheshGPai](https://github.com/MaheshGPai) in [#494](https://github.com/jaegertracing/jaeger-ui/pull/494))
 
 ## v1.5.0 (November 4, 2019)
 
