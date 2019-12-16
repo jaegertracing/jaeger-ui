@@ -32,6 +32,7 @@ export type TScript = {
 
 export type Config = {
   archiveEnabled?: boolean;
+  deepDependencies?: { menuEnabled?: boolean };
   dependencies?: { dagMaxServicesLen?: number; menuEnabled?: boolean };
   menu: (ConfigMenuGroup | ConfigMenuItem)[];
   search?: { maxLookback: { label: string; value: string } };
