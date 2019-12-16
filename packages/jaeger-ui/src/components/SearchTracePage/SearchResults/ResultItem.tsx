@@ -58,7 +58,7 @@ export default class ResultItem extends React.PureComponent<Props> {
     const numSpans = spans.length;
     const numErredSpans = spans.filter(sp => sp.tags.some(isErrorTag)).length;
     return (
-      <div className="ResultItem" onClick={trackTraceConversions}>
+      <div className="ResultItem" onClick={trackTraceConversions} role="button">
         <ResultItemTitle
           duration={duration}
           durationPercent={durationPercent}

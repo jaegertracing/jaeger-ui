@@ -48,7 +48,7 @@ export type TDispatchProps = {
   addViewModifier?: (kwarg: TDdgModelParams & { viewModifier: number; visibilityIndices: number[] }) => void;
   fetchDeepDependencyGraph?: (query: TDdgModelParams) => void;
   fetchServices?: () => void;
-  fetchServiceOperations?: (service: string) => void;
+  fetchServiceServerOps?: (service: string) => void;
   removeViewModifierFromIndices?: (
     kwarg: TDdgModelParams & { viewModifier: number; visibilityIndices: number[] }
   ) => void;
@@ -57,7 +57,7 @@ export type TDispatchProps = {
 export type TReduxProps = TExtractUiFindFromStateReturn & {
   graph: GraphModel | undefined;
   graphState?: TDdgStateEntry;
-  operationsForService?: Record<string, string[]>;
+  serverOpsForService?: Record<string, string[]>;
   services?: string[] | null;
   showOp: boolean;
   urlState: TDdgSparseUrlState;
@@ -92,7 +92,7 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
     super(props);
     DeepDependencyGraphPageImpl.fetchModelIfStale(props);
 
-    const { fetchServices, fetchServiceOperations, operationsForService, services, urlState } = props;
+    const { fetchServices, fetchServiceServerOps, serverOpsForService, services, urlState } = props;
     const { service } = urlState;
 
     if (!services && fetchServices) {
@@ -100,11 +100,11 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
     }
     if (
       service &&
-      operationsForService &&
-      !Reflect.has(operationsForService, service) &&
-      fetchServiceOperations
+      serverOpsForService &&
+      !Reflect.has(serverOpsForService, service) &&
+      fetchServiceServerOps
     ) {
-      fetchServiceOperations(service);
+      fetchServiceServerOps(service);
     }
   }
 
@@ -180,9 +180,9 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
   };
 
   setService = (service: string) => {
-    const { fetchServiceOperations, operationsForService } = this.props;
-    if (operationsForService && !Reflect.has(operationsForService, service) && fetchServiceOperations) {
-      fetchServiceOperations(service);
+    const { fetchServiceServerOps, serverOpsForService } = this.props;
+    if (serverOpsForService && !Reflect.has(serverOpsForService, service) && fetchServiceServerOps) {
+      fetchServiceServerOps(service);
     }
     this.updateUrlState({ operation: undefined, service, visEncoding: undefined });
     trackSetService();
@@ -239,7 +239,7 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
       extraUrlArgs,
       graph,
       graphState,
-      operationsForService,
+      serverOpsForService,
       services,
       showOp,
       uiFind,
@@ -305,7 +305,7 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
             distanceToPathElems={distanceToPathElems}
             hiddenUiFindMatches={hiddenUiFindMatches}
             operation={operation}
-            operations={operationsForService && operationsForService[service || '']}
+            operations={serverOpsForService && serverOpsForService[service || '']}
             service={service}
             services={services}
             setDensity={this.setDensity}
@@ -329,7 +329,7 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
 // export for tests
 export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxProps {
   const { services: stServices } = state;
-  const { services, serverOpsForService: operationsForService } = stServices;
+  const { services, serverOpsForService } = stServices;
   const urlState = getUrlState(ownProps.location.search);
   const { density, operation, service, showOp: urlStateShowOp } = urlState;
   const showOp = urlStateShowOp !== undefined ? urlStateShowOp : operation !== undefined;
@@ -344,7 +344,7 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
   return {
     graph,
     graphState,
-    operationsForService,
+    serverOpsForService,
     services,
     showOp,
     urlState: sanitizeUrlState(urlState, _get(graphState, 'model.hash')),
@@ -354,17 +354,16 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
 
 // export for tests
 export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
-  const {
-    fetchDeepDependencyGraph,
-    fetchServiceServerOps: fetchServiceOperations,
-    fetchServices,
-  } = bindActionCreators(jaegerApiActions, dispatch);
+  const { fetchDeepDependencyGraph, fetchServiceServerOps, fetchServices } = bindActionCreators(
+    jaegerApiActions,
+    dispatch
+  );
   const { addViewModifier, removeViewModifierFromIndices } = bindActionCreators(ddgActions, dispatch);
 
   return {
     addViewModifier,
     fetchDeepDependencyGraph,
-    fetchServiceOperations,
+    fetchServiceServerOps,
     fetchServices,
     removeViewModifierFromIndices,
   };

@@ -104,7 +104,6 @@ export default class LayoutSettings extends React.PureComponent<TProps> {
                   <h4>Show operations</h4>
                   <p>
                     Controls whether or not the operations are considered when creating nodes for the graph.
-                    Note: The operation of the focal node is always shown.
                   </p>
                 </div>
               </Checkbox>

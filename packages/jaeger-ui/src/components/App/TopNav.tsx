@@ -126,7 +126,8 @@ export function TopNavImpl(props: Props) {
 
 TopNavImpl.CustomNavDropdown = CustomNavDropdown;
 
-function mapStateToProps(state: ReduxState) {
+// export for tests
+export function mapStateToProps(state: ReduxState) {
   return state;
 }
 

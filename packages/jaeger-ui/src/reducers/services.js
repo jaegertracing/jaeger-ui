@@ -45,15 +45,14 @@ function fetchServicesErred(state, { payload: error }) {
 }
 
 function fetchServerOpsStarted(state, { meta: { serviceName } }) {
-  const serverOpForService = {
+  const serverOpsForService = {
     ...state.operationsForService,
     [serviceName]: [],
   };
-  return { ...state, serverOpForService };
+  return { ...state, serverOpsForService };
 }
 
-function fetchServerOpsDone(state, { meta: { serviceName }, payload }) {
-  const { data: serverOpStructs } = payload;
+function fetchServerOpsDone(state, { meta: { serviceName }, payload: { data: serverOpStructs } }) {
   if (!Array.isArray(serverOpStructs)) return state;
 
   const serverOpsForService = {

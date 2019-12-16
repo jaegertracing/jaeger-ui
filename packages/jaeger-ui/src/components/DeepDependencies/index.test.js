@@ -37,7 +37,7 @@ describe('DeepDependencyGraphPage', () => {
       addViewModifier: jest.fn(),
       fetchDeepDependencyGraph: () => {},
       fetchServices: jest.fn(),
-      fetchServiceOperations: jest.fn(),
+      fetchServiceServerOps: jest.fn(),
       graphState: {
         model: {
           distanceToPathElems: new Map(),
@@ -48,7 +48,7 @@ describe('DeepDependencyGraphPage', () => {
       history: {
         push: jest.fn(),
       },
-      operationsForService: {},
+      serverOpsForService: {},
       removeViewModifierFromIndices: jest.fn(),
       urlState: {
         start: 'testStart',
@@ -81,7 +81,7 @@ describe('DeepDependencyGraphPage', () => {
     describe('constructor', () => {
       beforeEach(() => {
         props.fetchServices.mockReset();
-        props.fetchServiceOperations.mockReset();
+        props.fetchServiceServerOps.mockReset();
       });
 
       it('fetches services if services are not provided', () => {
@@ -94,12 +94,12 @@ describe('DeepDependencyGraphPage', () => {
       it('fetches operations if service is provided without operations', () => {
         const { service, ...urlState } = props.urlState;
         new DeepDependencyGraphPageImpl({ ...props, urlState }); // eslint-disable-line no-new
-        expect(props.fetchServiceOperations).not.toHaveBeenCalled();
-        new DeepDependencyGraphPageImpl({ ...props, operationsForService: { [service]: [] } }); // eslint-disable-line no-new
-        expect(props.fetchServiceOperations).not.toHaveBeenCalled();
+        expect(props.fetchServiceServerOps).not.toHaveBeenCalled();
+        new DeepDependencyGraphPageImpl({ ...props, serverOpsForService: { [service]: [] } }); // eslint-disable-line no-new
+        expect(props.fetchServiceServerOps).not.toHaveBeenCalled();
         new DeepDependencyGraphPageImpl(props); // eslint-disable-line no-new
-        expect(props.fetchServiceOperations).toHaveBeenLastCalledWith(service);
-        expect(props.fetchServiceOperations).toHaveBeenCalledTimes(1);
+        expect(props.fetchServiceServerOps).toHaveBeenLastCalledWith(service);
+        expect(props.fetchServiceServerOps).toHaveBeenCalledTimes(1);
       });
     });
 
@@ -343,7 +343,7 @@ describe('DeepDependencyGraphPage', () => {
         });
 
         beforeEach(() => {
-          props.fetchServiceOperations.mockReset();
+          props.fetchServiceServerOps.mockReset();
           trackSetServiceSpy.mockClear();
         });
 
@@ -359,17 +359,17 @@ describe('DeepDependencyGraphPage', () => {
 
         it('fetches operations for service when not yet provided', () => {
           ddgPageImpl.setService(service);
-          expect(props.fetchServiceOperations).toHaveBeenLastCalledWith(service);
-          expect(props.fetchServiceOperations).toHaveBeenCalledTimes(1);
+          expect(props.fetchServiceServerOps).toHaveBeenLastCalledWith(service);
+          expect(props.fetchServiceServerOps).toHaveBeenCalledTimes(1);
           expect(trackSetServiceSpy).toHaveBeenCalledTimes(1);
 
           const pageWithOpForService = new DeepDependencyGraphPageImpl({
             ...props,
-            operationsForService: { [service]: [props.urlState.operation] },
+            serverOpsForService: { [service]: [props.urlState.operation] },
           });
-          const { length: callCount } = props.fetchServiceOperations.mock.calls;
+          const { length: callCount } = props.fetchServiceServerOps.mock.calls;
           pageWithOpForService.setService(service);
-          expect(props.fetchServiceOperations).toHaveBeenCalledTimes(callCount);
+          expect(props.fetchServiceServerOps).toHaveBeenCalledTimes(callCount);
           expect(trackSetServiceSpy).toHaveBeenCalledTimes(2);
         });
       });
@@ -680,15 +680,15 @@ describe('DeepDependencyGraphPage', () => {
 
       it('passes correct operations to Header', () => {
         const wrapper = shallow(
-          <DeepDependencyGraphPageImpl {...props} graph={graph} operationsForService={undefined} />
+          <DeepDependencyGraphPageImpl {...props} graph={graph} serverOpsForService={undefined} />
         );
         expect(wrapper.find(Header).prop('operations')).toBe(undefined);
 
-        const operationsForService = {
+        const serverOpsForService = {
           [props.urlState.service]: ['testOperation0', 'testOperation1'],
         };
-        wrapper.setProps({ operationsForService });
-        expect(wrapper.find(Header).prop('operations')).toBe(operationsForService[props.urlState.service]);
+        wrapper.setProps({ serverOpsForService });
+        expect(wrapper.find(Header).prop('operations')).toBe(serverOpsForService[props.urlState.service]);
 
         const { service: _, ...urlStateWithoutService } = props.urlState;
         wrapper.setProps({ urlState: urlStateWithoutService });
@@ -703,7 +703,7 @@ describe('DeepDependencyGraphPage', () => {
         addViewModifier: expect.any(Function),
         fetchDeepDependencyGraph: expect.any(Function),
         fetchServices: expect.any(Function),
-        fetchServiceOperations: expect.any(Function),
+        fetchServiceServerOps: expect.any(Function),
         removeViewModifierFromIndices: expect.any(Function),
       });
     });
@@ -823,7 +823,7 @@ describe('DeepDependencyGraphPage', () => {
 
     it('includes services and serverOpsForService', () => {
       expect(mapStateToProps(state, ownProps)).toEqual(
-        expect.objectContaining({ operationsForService: serverOpsForService, services })
+        expect.objectContaining({ serverOpsForService, services })
       );
     });
 

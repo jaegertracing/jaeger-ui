@@ -119,8 +119,16 @@ describe('actions/jaeger-api', () => {
     expect(called.verify()).toBeTruthy();
   });
 
-  // Temporary mock used until backend is available, TODO revert & re-enable test
-  xit('@JAEGER_API/FETCH_DEEP_DEPENDENCY_GRAPH should fetch the graph by params', () => {
+  it('@JAEGER_API/FETCH_SERVICE_SERVER_OP should call the JaegerAPI', () => {
+    const called = mock
+      .expects('fetchServiceServerOps')
+      .once()
+      .withExactArgs('service');
+    jaegerApiActions.fetchServiceServerOps('service');
+    expect(called.verify()).toBeTruthy();
+  });
+
+  it('@JAEGER_API/FETCH_DEEP_DEPENDENCY_GRAPH should fetch the graph by params', () => {
     mock.expects('fetchDeepDependencyGraph').withExactArgs(query);
     jaegerApiActions.fetchDeepDependencyGraph(query);
     expect(() => mock.verify()).not.toThrow();
