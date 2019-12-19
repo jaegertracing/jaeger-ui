@@ -15,6 +15,7 @@
 import sitePrefix from '../site-prefix';
 
 const origin = process.env.NODE_ENV === 'test' ? global.location.origin : window.location.origin;
+
 /**
  * Generate the URL prefix from `sitePrefix` and use it for all subsequent calls
  * to `prefixUrl()`. `sitePrefix` should be an absolute URL, e.g. with an origin.
@@ -24,8 +25,15 @@ const origin = process.env.NODE_ENV === 'test' ? global.location.origin : window
  * - `"http://localhost:3000/abc/"` to `"/abc"`
  * - `"http://localhost:3000/abc/def/"` to `"/abc/def"`
  */
-const rx = new RegExp(`^${origin}|/$`, 'ig');
-const pathPrefix = sitePrefix.replace(rx, '');
+// exported for tests
+export function getPathPrefix(orig?: string, sitePref?: string) {
+  const o = orig == null ? '' : orig.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
+  const s = sitePref == null ? '' : sitePref;
+  const rx = new RegExp(`^${o}|/$`, 'ig');
+  return s.replace(rx, '');
+}
+
+const pathPrefix = getPathPrefix(origin, sitePrefix);
 
 /**
  * Add the path prefix to the  URL. See [site-prefix.js](../site-prefix.js) and

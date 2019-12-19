@@ -13,10 +13,11 @@
 // limitations under the License.
 
 import React from 'react';
-import { mount } from 'enzyme';
+import { mount, shallow } from 'enzyme';
 
 import SpanBarRow from './SpanBarRow';
 import SpanTreeOffset from './SpanTreeOffset';
+import ReferencesButton from './ReferencesButton';
 
 jest.mock('./SpanTreeOffset');
 
@@ -77,5 +78,88 @@ describe('<SpanBarRow>', () => {
     expect(onChildrenToggled.mock.calls.length).toBe(0);
     wrapper.find(SpanTreeOffset).prop('onClick')();
     expect(onChildrenToggled.mock.calls).toEqual([[spanID]]);
+  });
+
+  it('render references button', () => {
+    const span = Object.assign(
+      {
+        references: [
+          {
+            refType: 'CHILD_OF',
+            traceID: 'trace1',
+            spanID: 'span0',
+            span: {
+              spanID: 'span0',
+            },
+          },
+          {
+            refType: 'CHILD_OF',
+            traceID: 'otherTrace',
+            spanID: 'span1',
+            span: {
+              spanID: 'span1',
+            },
+          },
+        ],
+      },
+      props.span
+    );
+
+    const spanRow = shallow(<SpanBarRow {...props} span={span} />);
+    const refButton = spanRow.find(ReferencesButton);
+    expect(refButton.length).toEqual(1);
+    expect(refButton.at(0).props().tooltipText).toEqual('Contains multiple references');
+  });
+
+  it('render referenced to by single span', () => {
+    const span = Object.assign(
+      {
+        subsidiarilyReferencedBy: [
+          {
+            refType: 'CHILD_OF',
+            traceID: 'trace1',
+            spanID: 'span0',
+            span: {
+              spanID: 'span0',
+            },
+          },
+        ],
+      },
+      props.span
+    );
+    const spanRow = shallow(<SpanBarRow {...props} span={span} />);
+    const refButton = spanRow.find(ReferencesButton);
+    expect(refButton.length).toEqual(1);
+    expect(refButton.at(0).props().tooltipText).toEqual('This span is referenced by another span');
+  });
+
+  it('render referenced to by multiple span', () => {
+    const span = Object.assign(
+      {
+        subsidiarilyReferencedBy: [
+          {
+            refType: 'CHILD_OF',
+            traceID: 'trace1',
+            spanID: 'span0',
+            span: {
+              spanID: 'span0',
+            },
+          },
+          {
+            refType: 'CHILD_OF',
+            traceID: 'trace1',
+            spanID: 'span1',
+            span: {
+              spanID: 'span1',
+            },
+          },
+        ],
+      },
+      props.span
+    );
+    const spanRow = shallow(<SpanBarRow {...props} span={span} />);
+    const refButton = spanRow.find(ReferencesButton);
+    expect(refButton.length).toEqual(1);
+    expect(refButton.at(0).props().tooltipText).toEqual('This span is referenced by multiple other spans');
   });
 });
