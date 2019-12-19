@@ -29,12 +29,12 @@ function getFirstAncestor(span: Span): Span | TNil {
 }
 
 export default function spanAncestorIds(span: Span | TNil): string[] {
-  if (!span) return [];
-  const ancestorIDs: Set<string> = new Set();
+  const ancestorIDs: string[] = [];
+  if (!span) return ancestorIDs;
   let ref = getFirstAncestor(span);
   while (ref) {
-    ancestorIDs.add(ref.spanID);
+    ancestorIDs.push(ref.spanID);
     ref = getFirstAncestor(ref);
   }
-  return Array.from(ancestorIDs);
+  return ancestorIDs;
 }

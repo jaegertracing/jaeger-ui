@@ -42,13 +42,17 @@ function transformTracesToPaths(
           return !span.hasChildren;
         })
         .forEach(leaf => {
-          const path = spanAncestorIds(leaf).map(id => {
+          const spans = spanAncestorIds(leaf).map(id => {
             const span = spanMap.get(id);
             if (!span) throw new Error(`Ancestor spanID ${id} not found in trace ${traceID}`);
-
-            return convertSpan(span, data);
+            return span;
           });
-          path.push(convertSpan(leaf, data));
+          spans.reverse();
+          spans.push(leaf);
+
+          const path: TDdgPayloadEntry[] = spans
+            .filter(span => span.tags.find(({ key, value }) => key === 'span.kind' && value === 'server'))
+            .map(span => convertSpan(span, data));
 
           if (
             path.some(
@@ -56,6 +60,7 @@ function transformTracesToPaths(
                 service === focalService && (!focalOperation || operation === focalOperation)
             )
           ) {
+            // TODO: Paths should be deduped with all traceIDs #503
             dependencies.push({
               path,
               attributes: [

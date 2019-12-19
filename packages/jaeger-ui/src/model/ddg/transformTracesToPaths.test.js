@@ -15,7 +15,7 @@
 import transformTracesToPaths from './transformTracesToPaths';
 
 describe('transform traces to ddg paths', () => {
-  const makeSpan = (spanName, childOf) => ({
+  const makeSpan = (spanName, childOf, kind) => ({
     hasChildren: true,
     operationName: `${spanName} operation`,
     processID: `${spanName} processID`,
@@ -28,6 +28,15 @@ describe('transform traces to ddg paths', () => {
           },
         ]
       : [],
+    tags:
+      kind === false
+        ? []
+        : [
+            {
+              key: 'span.kind',
+              value: kind === undefined ? 'server' : kind,
+            },
+          ],
     spanID: `${spanName} spanID`,
   });
   const makeTrace = (spans, traceID) => ({
@@ -149,5 +158,28 @@ describe('transform traces to ddg paths', () => {
 
     const { dependencies: result } = transformTracesToPaths(traces, 'child service');
     expect(result.length).toBe(1);
+  });
+
+  it("omits span if tags does not have span.kind === 'server'", () => {
+    const badSpanName = 'test bad span name';
+    const clientSpan = makeSpan(badSpanName, childSpan, 'client');
+    clientSpan.hasChildren = false;
+    const clientTraceID = 'test client trace ID';
+    const clientTrace = makeTrace([rootSpan, childSpan, clientSpan], clientTraceID);
+    const kindlessSpan = makeSpan(badSpanName, childSpan, false);
+    kindlessSpan.hasChildren = false;
+    const kindlessTraceID = 'test kindless trace ID';
+    const kindlessTrace = makeTrace([rootSpan, childSpan, kindlessSpan], kindlessTraceID);
+
+    const traces = {
+      [clientTraceID]: clientTrace,
+      [kindlessTraceID]: kindlessTrace,
+    };
+    const { dependencies: result } = transformTracesToPaths(traces, 'child service');
+    expect(result.length).toBe(2);
+    expect(result[0].path.length).toBe(clientTrace.data.spans.length - 1);
+    expect(result[0].path.some(({ operation }) => operation.startsWith(badSpanName))).toBe(false);
+    expect(result[1].path.length).toBe(kindlessTrace.data.spans.length - 1);
+    expect(result[1].path.some(({ operation }) => operation.startsWith(badSpanName))).toBe(false);
   });
 });
