@@ -27,28 +27,3 @@ a {
 a:hover {
   color: #00474e;
 }
-
-/* TODO: Delete to end of file */
-a[href='/deep-dependencies'] {
-  overflow: hidden;
-  padding-right: 40px;
-  position: relative;
-}
-
-.ant-menu-horizontal > li:last-child {
-  padding-right: 0px;
-}
-
-a[href='/deep-dependencies']:after {
-  content: 'New!';
-  background-color: red;
-  height: 60px;
-  overflow: hidden;
-  padding-left: 30px;
-  padding-top: 25px;
-  position: absolute;
-  right: -50px;
-  top: -25px;
-  transform: rotateZ(45deg);
-  width: 100px;
-}

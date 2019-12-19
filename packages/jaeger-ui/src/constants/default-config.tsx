@@ -20,10 +20,6 @@ export default deepFreeze(
   Object.defineProperty(
     {
       archiveEnabled: false,
-      // TODO: remove default
-      deepDependencies: {
-        menuEnabled: true,
-      },
       dependencies: {
         dagMaxNumServices: FALLBACK_DAG_MAX_NUM_SERVICES,
         menuEnabled: true,
