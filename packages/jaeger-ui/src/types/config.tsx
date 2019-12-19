@@ -30,14 +30,24 @@ export type TScript = {
   type: 'inline';
 };
 
+export type LinkPatternsConfig = {
+  type: 'process' | 'tags' | 'logs' | 'traces';
+  key?: string;
+  url: string;
+  text: string;
+};
+
 export type Config = {
   archiveEnabled?: boolean;
+  deepDependencies?: { menuEnabled?: boolean };
   dependencies?: { dagMaxServicesLen?: number; menuEnabled?: boolean };
   menu: (ConfigMenuGroup | ConfigMenuItem)[];
   search?: { maxLookback: { label: string; value: string } };
   scripts?: TScript[];
+  topTagPrefixes?: string[];
   tracking?: {
     gaID: string | TNil;
     trackErrors: boolean | TNil;
   };
+  linkPatterns?: LinkPatternsConfig;
 };

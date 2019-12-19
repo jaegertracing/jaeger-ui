@@ -16,7 +16,7 @@ import React from 'react';
 import { shallow } from 'enzyme';
 import { Link } from 'react-router-dom';
 
-import { TopNavImpl as TopNav } from './TopNav';
+import { mapStateToProps, TopNavImpl as TopNav } from './TopNav';
 
 describe('<TopNav>', () => {
   const labelGitHub = 'GitHub';
@@ -78,8 +78,8 @@ describe('<TopNav>', () => {
       expect(items.length).toBe(1);
     });
 
-    it('renders the "Dependencies" button', () => {
-      const items = wrapper.find(Link).findWhere(link => /Dependencies/.test(link.text()));
+    it('renders the "System Architecture" button', () => {
+      const items = wrapper.find(Link).findWhere(link => /System Architecture/.test(link.text()));
       expect(items.length).toBe(1);
     });
   });
@@ -124,5 +124,12 @@ describe('<TopNav>', () => {
         });
       });
     });
+  });
+});
+
+describe('mapStateToProps', () => {
+  it('returns entire state', () => {
+    const testState = {};
+    expect(mapStateToProps(testState)).toBe(testState);
   });
 });

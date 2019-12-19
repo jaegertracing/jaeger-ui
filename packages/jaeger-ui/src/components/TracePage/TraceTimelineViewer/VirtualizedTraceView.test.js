@@ -21,12 +21,15 @@ import SpanDetailRow from './SpanDetailRow';
 import { DEFAULT_HEIGHTS, VirtualizedTraceViewImpl } from './VirtualizedTraceView';
 import traceGenerator from '../../../demo/trace-generators';
 import transformTraceData from '../../../model/transform-trace-data';
+import updateUiFindSpy from '../../../utils/update-ui-find';
 
 jest.mock('./SpanTreeOffset');
+jest.mock('../../../utils/update-ui-find');
 
 describe('<VirtualizedTraceViewImpl>', () => {
   let wrapper;
   let instance;
+  const focusUiFindMatchesMock = jest.fn();
 
   const trace = transformTraceData(traceGenerator.trace({ numberOfSpans: 10 }));
   const props = {
@@ -44,11 +47,18 @@ describe('<VirtualizedTraceViewImpl>', () => {
     registerAccessors: jest.fn(),
     scrollToFirstVisibleSpan: jest.fn(),
     setSpanNameColumnWidth: jest.fn(),
+    focusUiFindMatches: focusUiFindMatchesMock,
     setTrace: jest.fn(),
     shouldScrollToFirstUiFindMatch: false,
     spanNameColumnWidth: 0.5,
     trace,
     uiFind: 'uiFind',
+    history: {
+      replace: () => {},
+    },
+    location: {
+      search: null,
+    },
   };
 
   function expandRow(rowIndex) {
@@ -388,6 +398,19 @@ describe('<VirtualizedTraceViewImpl>', () => {
       it('returns false if all props are unchanged', () => {
         expect(wrapper.instance().shouldComponentUpdate(props)).toBe(false);
       });
+    });
+  });
+
+  describe('focusSpan', () => {
+    it('calls updateUiFind and focusUiFindMatches', () => {
+      const spanName = 'span1';
+      instance.focusSpan(spanName);
+      expect(updateUiFindSpy).toHaveBeenLastCalledWith({
+        history: props.history,
+        location: props.location,
+        uiFind: spanName,
+      });
+      expect(focusUiFindMatchesMock).toHaveBeenLastCalledWith(trace, spanName, false);
     });
   });
 });

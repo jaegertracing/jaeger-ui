@@ -19,6 +19,7 @@ import { Link } from 'react-router-dom';
 import { sortBy } from 'lodash';
 import moment from 'moment';
 
+import { trackConversions, EAltViewActions } from './index.track';
 import * as markers from './ResultItem.markers';
 import ResultItemTitle from './ResultItemTitle';
 import colorGenerator from '../../../utils/color-generator';
@@ -38,6 +39,7 @@ type Props = {
 };
 
 const isErrorTag = ({ key, value }: KeyValuePair) => key === 'error' && (value === true || value === 'true');
+const trackTraceConversions = () => trackConversions(EAltViewActions.Traces);
 
 export default class ResultItem extends React.PureComponent<Props> {
   render() {
@@ -56,7 +58,7 @@ export default class ResultItem extends React.PureComponent<Props> {
     const numSpans = spans.length;
     const numErredSpans = spans.filter(sp => sp.tags.some(isErrorTag)).length;
     return (
-      <div className="ResultItem">
+      <div className="ResultItem" onClick={trackTraceConversions} role="button">
         <ResultItemTitle
           duration={duration}
           durationPercent={durationPercent}

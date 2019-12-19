@@ -52,6 +52,7 @@ export type ReduxState = {
   };
   services: {
     services: (string[]) | TNil;
+    serverOpsForService: Record<string, string[]>;
     operationsForService: Record<string, string[]>;
     loading: boolean;
     error: ApiError | TNil;
