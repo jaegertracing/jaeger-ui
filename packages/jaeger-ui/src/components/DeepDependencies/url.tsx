@@ -30,12 +30,13 @@ export function matches(path: string) {
 
 export function getUrl(args?: { [key: string]: unknown; showOp?: boolean }, baseUrl: string = ROUTE_PATH) {
   if (args && !_isEmpty(args)) {
-    const stringifyArgs = Reflect.has(args, 'showOp')
-      ? {
-          ...args,
-          showOp: args.showOp ? 1 : 0,
-        }
-      : args;
+    const stringifyArgs =
+      Reflect.has(args, 'showOp') && args.showOp !== undefined
+        ? {
+            ...args,
+            showOp: args.showOp ? 1 : 0,
+          }
+        : args;
     return `${baseUrl}?${queryString.stringify(stringifyArgs)}`;
   }
   return baseUrl;

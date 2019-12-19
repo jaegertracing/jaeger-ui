@@ -81,6 +81,18 @@ describe('fetchDependencies', () => {
   });
 });
 
+describe('fetchServiceServerOps', () => {
+  it('GETs the specified query', () => {
+    const service = 'serviceName';
+    const query = { service, spanKind: 'server' };
+    JaegerAPI.fetchServiceServerOps(service);
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      `${DEFAULT_API_ROOT}operations?${queryString.stringify(query)}`,
+      defaultOptions
+    );
+  });
+});
+
 describe('fetchTrace', () => {
   const generatedTraces = traceGenerator.traces({ numberOfTraces: 5 });
 

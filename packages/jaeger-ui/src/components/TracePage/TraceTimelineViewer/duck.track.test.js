@@ -60,10 +60,34 @@ describe('middlewareHooks', () => {
       extraTrackArgs: [columnWidth.tracked],
     },
     {
+      action: track.ACTION_COLLAPSE_ALL,
+      category: track.CATEGORY_EXPAND_COLLAPSE,
+      msg: 'tracks a GA event for collapsing all',
+      type: types.COLLAPSE_ALL,
+    },
+    {
+      action: track.ACTION_COLLAPSE_ONE,
+      category: track.CATEGORY_EXPAND_COLLAPSE,
+      msg: 'tracks a GA event for collapsing a level',
+      type: types.COLLAPSE_ONE,
+    },
+    {
       msg: 'tracks a GA event for collapsing a parent',
       type: types.CHILDREN_TOGGLE,
       category: track.CATEGORY_PARENT,
       extraTrackArgs: [123],
+    },
+    {
+      action: track.ACTION_EXPAND_ALL,
+      category: track.CATEGORY_EXPAND_COLLAPSE,
+      msg: 'tracks a GA event for expanding all',
+      type: types.COLLAPSE_ALL,
+    },
+    {
+      action: track.ACTION_EXPAND_ONE,
+      category: track.CATEGORY_EXPAND_COLLAPSE,
+      msg: 'tracks a GA event for expanding a level',
+      type: types.COLLAPSE_ONE,
     },
     {
       msg: 'tracks a GA event for toggling a detail row',
@@ -93,25 +117,30 @@ describe('middlewareHooks', () => {
     },
   ];
 
-  cases.forEach(_case => {
-    const { msg, type, category, extraTrackArgs = [], payloadCustom = null } = _case;
-    it(msg, () => {
-      const action = { type, payload: payloadCustom || payload };
-      track.middlewareHooks[type](store, action);
-      expect(trackEvent.mock.calls.length).toBe(1);
-      expect(trackEvent.mock.calls[0]).toEqual([category, expect.any(String), ...extraTrackArgs]);
-    });
-  });
+  cases.forEach(
+    ({ action = expect.any(String), msg, type, category, extraTrackArgs = [], payloadCustom = null }) => {
+      it(msg, () => {
+        const reduxAction = { type, payload: payloadCustom || payload };
+        track.middlewareHooks[type](store, reduxAction);
+        expect(trackEvent.mock.calls.length).toBe(1);
+        expect(trackEvent.mock.calls[0]).toEqual([category, action, ...extraTrackArgs]);
+      });
+    }
+  );
 
   it('has the correct keys and they refer to functions', () => {
     expect(Object.keys(track.middlewareHooks).sort()).toEqual(
       [
         types.CHILDREN_TOGGLE,
+        types.COLLAPSE_ALL,
+        types.COLLAPSE_ONE,
         types.DETAIL_TOGGLE,
         types.DETAIL_TAGS_TOGGLE,
         types.DETAIL_PROCESS_TOGGLE,
         types.DETAIL_LOGS_TOGGLE,
         types.DETAIL_LOG_ITEM_TOGGLE,
+        types.EXPAND_ALL,
+        types.EXPAND_ONE,
         types.SET_SPAN_NAME_COLUMN_WIDTH,
       ].sort()
     );

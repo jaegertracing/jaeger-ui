@@ -14,15 +14,20 @@
 
 import { handleActions } from 'redux-actions';
 
-import { fetchServices, fetchServiceOperations as fetchOps } from '../actions/jaeger-api';
+import {
+  fetchServices,
+  fetchServiceOperations as fetchOps,
+  fetchServiceServerOps as fetchServerOps,
+} from '../actions/jaeger-api';
 import { localeStringComparator } from '../utils/sort';
 
 const initialState = {
+  error: null,
+  loading: false,
+  operationsForService: {},
+  serverOpsForService: {},
   // `services` initial value of `null` indicates they haven't yet been loaded
   services: null,
-  operationsForService: {},
-  loading: false,
-  error: null,
 };
 
 function fetchStarted(state) {
@@ -37,6 +42,24 @@ function fetchServicesDone(state, { payload }) {
 
 function fetchServicesErred(state, { payload: error }) {
   return { ...state, error, loading: false, services: [] };
+}
+
+function fetchServerOpsStarted(state, { meta: { serviceName } }) {
+  const serverOpsForService = {
+    ...state.operationsForService,
+    [serviceName]: [],
+  };
+  return { ...state, serverOpsForService };
+}
+
+function fetchServerOpsDone(state, { meta: { serviceName }, payload: { data: serverOpStructs } }) {
+  if (!Array.isArray(serverOpStructs)) return state;
+
+  const serverOpsForService = {
+    ...state.operationsForService,
+    [serviceName]: serverOpStructs.map(({ name }) => name).sort(localeStringComparator),
+  };
+  return { ...state, serverOpsForService };
 }
 
 function fetchOpsStarted(state, { meta: { serviceName } }) {
@@ -66,6 +89,9 @@ export default handleActions(
     [`${fetchServices}_PENDING`]: fetchStarted,
     [`${fetchServices}_FULFILLED`]: fetchServicesDone,
     [`${fetchServices}_REJECTED`]: fetchServicesErred,
+
+    [`${fetchServerOps}_PENDING`]: fetchServerOpsStarted,
+    [`${fetchServerOps}_FULFILLED`]: fetchServerOpsDone,
 
     [`${fetchOps}_PENDING`]: fetchOpsStarted,
     [`${fetchOps}_FULFILLED`]: fetchOpsDone,

@@ -43,7 +43,7 @@ export const densityOptions = [
     title: 'One node per resource',
     note: 'Most conscise',
     description:
-      "This setting represents each resource one time in the graph, regardless of whether or not it's upstream or downstream of the focal node. This results in the most desnse graph layout, possible.",
+      "This setting represents each resource one time in the graph, regardless of whether or not it's upstream or downstream of the focal node. This results in the most dense graph layout, possible.",
   },
   {
     option: EDdgDensity.UpstreamVsDownstream,
@@ -104,7 +104,6 @@ export default class LayoutSettings extends React.PureComponent<TProps> {
                   <h4>Show operations</h4>
                   <p>
                     Controls whether or not the operations are considered when creating nodes for the graph.
-                    Note: The operation of the focal node is always shown.
                   </p>
                 </div>
               </Checkbox>

@@ -89,6 +89,14 @@ const JaegerAPI = {
   fetchServiceOperations(serviceName) {
     return getJSON(`${this.apiRoot}services/${encodeURIComponent(serviceName)}/operations`);
   },
+  fetchServiceServerOps(service) {
+    return getJSON(`${this.apiRoot}operations`, {
+      query: {
+        service,
+        spanKind: 'server',
+      },
+    });
+  },
   fetchServices() {
     return getJSON(`${this.apiRoot}services`);
   },

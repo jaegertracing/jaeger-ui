@@ -10,6 +10,7 @@ exports[`ResultItemTitle renders as expected 1`] = `
     disabled={false}
     indeterminate={false}
     onChange={[Function]}
+    onClick={[Function]}
     prefixCls="ant-checkbox"
   />
   <Link
