@@ -66,6 +66,7 @@ export type Span = SpanData & {
   tags: NonNullable<SpanData['tags']>;
   references: NonNullable<SpanData['references']>;
   warnings: NonNullable<SpanData['warnings']>;
+  subsidiarilyReferencedBy: Array<SpanReference>;
 };
 
 export type TraceData = {

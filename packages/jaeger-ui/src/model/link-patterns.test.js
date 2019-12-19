@@ -20,6 +20,7 @@ import {
   processLinkPattern,
   computeLinks,
   createGetLinks,
+  computeTraceLink,
 } from './link-patterns';
 
 describe('processTemplate()', () => {
@@ -302,6 +303,40 @@ describe('getParameterInAncestor()', () => {
       },
     ];
     expect(getParameterInAncestor('a', spansWithUndefinedTags[0])).toBeUndefined();
+  });
+});
+
+describe('computeTraceLink()', () => {
+  const linkPatterns = [
+    {
+      type: 'traces',
+      url: 'http://example.com/?myKey=#{traceID}',
+      text: 'first link (#{traceID})',
+    },
+    {
+      type: 'traces',
+      url: 'http://example.com/?myKey=#{traceID}&myKey=#{myKey}',
+      text: 'second link (#{myKey})',
+    },
+  ].map(processLinkPattern);
+
+  const trace = {
+    processes: [],
+    traceID: 'trc1',
+    spans: [],
+    startTime: 1000,
+    endTime: 2000,
+    duration: 1000,
+    services: [],
+  };
+
+  it('correctly computes links', () => {
+    expect(computeTraceLink(linkPatterns, trace)).toEqual([
+      {
+        url: 'http://example.com/?myKey=trc1',
+        text: 'first link (trc1)',
+      },
+    ]);
   });
 });
 
