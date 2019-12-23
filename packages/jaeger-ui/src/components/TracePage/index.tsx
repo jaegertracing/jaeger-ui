@@ -55,6 +55,7 @@ import { TraceArchive } from '../../types/archive';
 import { EmbeddedState } from '../../types/embedded';
 import filterSpans from '../../utils/filter-spans';
 import updateUiFind from '../../utils/update-ui-find';
+import TraceTagOverview from './TraceTagOverview/index';
 
 import './index.css';
 
@@ -86,7 +87,7 @@ type TProps = TDispatchProps & TOwnProps & TReduxProps;
 type TState = {
   headerHeight: number | TNil;
   slimView: boolean;
-  traceGraphView: boolean;
+  selectedTraceView: number;
   viewRange: IViewRange;
 };
 
@@ -134,7 +135,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
     this.state = {
       headerHeight: null,
       slimView: Boolean(embedded && embedded.timeline.collapseTitle),
-      traceGraphView: false,
+      selectedTraceView: 0,
       viewRange: {
         time: {
           current: [0, 1],
@@ -274,12 +275,19 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
     this.setState({ slimView: !slimView });
   };
 
-  toggleTraceGraphView = () => {
-    const { traceGraphView } = this.state;
+  toogleTraceView = (index: number) => {
+    let { selectedTraceView } = this.state;
+
     if (this.props.trace && this.props.trace.data) {
       this.traceDagEV = calculateTraceDagEV(this.props.trace.data);
     }
-    this.setState({ traceGraphView: !traceGraphView });
+    selectedTraceView = index;
+
+    if (selectedTraceView > 2) {
+      selectedTraceView = 0;
+    }
+
+    this.setState({ selectedTraceView });
   };
 
   archiveTrace = () => {
@@ -324,7 +332,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
 
   render() {
     const { archiveEnabled, archiveTraceState, embedded, id, searchUrl, uiFind, trace } = this.props;
-    const { slimView, traceGraphView, headerHeight, viewRange } = this.state;
+    const { slimView, selectedTraceView, headerHeight, viewRange } = this.state;
     if (!trace || trace.state === fetchedState.LOADING) {
       return <LoadingIndicator className="u-mt-vast" centered />;
     }
@@ -334,10 +342,10 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
     }
 
     let findCount = 0;
-    let graphFindMatches;
-    let spanFindMatches;
+    let graphFindMatches: Set<string> | null | undefined;
+    let spanFindMatches: Set<string> | null | undefined;
     if (uiFind) {
-      if (traceGraphView) {
+      if (selectedTraceView !== 0) {
         graphFindMatches = getUiFindVertexKeys(uiFind, _get(this.traceDagEV, 'vertices', []));
         findCount = graphFindMatches ? graphFindMatches.size : 0;
       } else {
@@ -351,17 +359,17 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
       focusUiFindMatches: this.focusUiFindMatches,
       slimView,
       textFilter: uiFind,
-      traceGraphView,
+      selectedTraceView,
       viewRange,
       canCollapse: !embedded || !embedded.timeline.hideSummary || !embedded.timeline.hideMinimap,
       clearSearch: this.clearSearch,
-      hideMap: Boolean(traceGraphView || (embedded && embedded.timeline.hideMinimap)),
+      hideMap: Boolean(selectedTraceView !== 0 || (embedded && embedded.timeline.hideMinimap)),
       hideSummary: Boolean(embedded && embedded.timeline.hideSummary),
       linkToStandalone: getUrl(id),
       nextResult: this.nextResult,
       onArchiveClicked: this.archiveTrace,
       onSlimViewClicked: this.toggleSlimView,
-      onTraceGraphViewClicked: this.toggleTraceGraphView,
+      onTraceGraphViewClicked: this.toogleTraceView,
       prevResult: this.prevResult,
       ref: this._searchBar,
       resultCount: findCount,
@@ -384,28 +392,41 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
           <TracePageHeader {...headerProps} />
         </div>
         {headerHeight &&
-          (traceGraphView ? (
-            <section style={{ paddingTop: headerHeight }}>
-              <TraceGraph
-                headerHeight={headerHeight}
-                ev={this.traceDagEV}
-                uiFind={uiFind}
-                uiFindVertexKeys={graphFindMatches}
-              />
-            </section>
-          ) : (
-            <section style={{ paddingTop: headerHeight }}>
-              <TraceTimelineViewer
-                registerAccessors={this._scrollManager.setAccessors}
-                scrollToFirstVisibleSpan={this._scrollManager.scrollToFirstVisibleSpan}
-                findMatchesIDs={spanFindMatches}
-                trace={data}
-                updateNextViewRangeTime={this.updateNextViewRangeTime}
-                updateViewRangeTime={this.updateViewRangeTime}
-                viewRange={viewRange}
-              />
-            </section>
-          ))}
+          (() => {
+            switch (selectedTraceView) {
+              case 0:
+                return (
+                  <section style={{ paddingTop: headerHeight }}>
+                    <TraceTimelineViewer
+                      registerAccessors={this._scrollManager.setAccessors}
+                      scrollToFirstVisibleSpan={this._scrollManager.scrollToFirstVisibleSpan}
+                      findMatchesIDs={spanFindMatches}
+                      trace={data}
+                      updateNextViewRangeTime={this.updateNextViewRangeTime}
+                      updateViewRangeTime={this.updateViewRangeTime}
+                      viewRange={viewRange}
+                    />
+                  </section>
+                );
+              case 1:
+                return (
+                  <section style={{ paddingTop: headerHeight }}>
+                    <TraceGraph
+                      headerHeight={headerHeight}
+                      ev={this.traceDagEV}
+                      uiFind={uiFind}
+                      uiFindVertexKeys={graphFindMatches}
+                    />
+                  </section>
+                );
+              default:
+                return (
+                  <section style={{ paddingTop: headerHeight }}>
+                    <TraceTagOverview trace={data} uiFindVertexKeys={graphFindMatches} uiFind={uiFind} />
+                  </section>
+                );
+            }
+          })()}
       </div>
     );
   }

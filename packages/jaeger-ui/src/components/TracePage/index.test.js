@@ -347,7 +347,7 @@ describe('<TracePage>', () => {
     describe('calculates hideMap correctly', () => {
       it('is true if on traceGraphView', () => {
         wrapper.instance().traceDagEV = { vertices: [], nodes: [] };
-        wrapper.setState({ traceGraphView: true });
+        wrapper.setState({ selectedTraceView: 1 });
         expect(wrapper.find(TracePageHeader).prop('hideMap')).toBe(true);
       });
 
@@ -432,7 +432,7 @@ describe('<TracePage>', () => {
 
         const size = 30;
         getUiFindVertexKeysSpy.mockReturnValueOnce({ size });
-        wrapper.setState({ traceGraphView: true });
+        wrapper.setState({ selectedTraceView: 1 });
         wrapper.setProps({ uiFind: 'new ui find to bust memo' });
         expect(wrapper.find(TracePageHeader).prop('resultCount')).toBe(size);
       });
@@ -629,11 +629,11 @@ describe('<TracePage>', () => {
 
     it('propagates traceGraphView changes', () => {
       const { onTraceGraphViewClicked } = header.props();
-      expect(header.prop('traceGraphView')).toBe(false);
+      expect(header.prop('selectedTraceView')).toBe(0);
       onTraceGraphViewClicked();
       wrapper.update();
       refreshWrappers();
-      expect(header.prop('traceGraphView')).toBe(true);
+      expect(header.prop('selectedTraceView')).toBe(undefined);
       expect(calculateTraceDagEVSpy).toHaveBeenCalledWith(defaultProps.trace.data);
 
       wrapper.setProps({ trace: {} });
