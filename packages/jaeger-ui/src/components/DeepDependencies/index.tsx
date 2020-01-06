@@ -25,6 +25,7 @@ import { getUrl, getUrlState, sanitizeUrlState, ROUTE_PATH } from './url';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
 import { extractUiFindFromState, TExtractUiFindFromStateReturn } from '../common/UiFindInput';
+import { getUrl as getSearchUrl } from '../SearchTracePage/url';
 import ddgActions from '../../actions/ddg';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import { fetchedState } from '../../constants';
@@ -39,6 +40,7 @@ import {
   TDdgSparseUrlState,
 } from '../../model/ddg/types';
 import { encode, encodeDistance } from '../../model/ddg/visibility-codec';
+import { getConfigValue } from '../../utils/config/get-config';
 import { ReduxState } from '../../types';
 import { TDdgStateEntry } from '../../types/TDdgState';
 
@@ -262,37 +264,75 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
         visEncoding,
         viewModifiers
       );
-      // TODO: using `key` here is a hack, debug digraph to fix the underlying issue
-      content = (
-        <Graph
-          key={JSON.stringify(urlState)}
-          baseUrl={baseUrl}
-          density={density}
-          edges={edges}
-          edgesViewModifiers={edgesViewModifiers}
-          extraUrlArgs={extraUrlArgs}
-          focusPathsThroughVertex={this.focusPathsThroughVertex}
-          getGenerationVisibility={this.getGenerationVisibility}
-          getVisiblePathElems={this.getVisiblePathElems}
-          hideVertex={this.hideVertex}
-          setOperation={this.setOperation}
-          setViewModifier={this.setViewModifier}
-          uiFindMatches={uiFindMatches}
-          updateGenerationVisibility={this.updateGenerationVisibility}
-          vertices={vertices}
-          verticesViewModifiers={verticesViewModifiers}
-        />
-      );
+      if (vertices.length > 1) {
+        // TODO: using `key` here is a hack, debug digraph to fix the underlying issue
+        content = (
+          <Graph
+            key={JSON.stringify(urlState)}
+            baseUrl={baseUrl}
+            density={density}
+            edges={edges}
+            edgesViewModifiers={edgesViewModifiers}
+            extraUrlArgs={extraUrlArgs}
+            focusPathsThroughVertex={this.focusPathsThroughVertex}
+            getGenerationVisibility={this.getGenerationVisibility}
+            getVisiblePathElems={this.getVisiblePathElems}
+            hideVertex={this.hideVertex}
+            setOperation={this.setOperation}
+            setViewModifier={this.setViewModifier}
+            uiFindMatches={uiFindMatches}
+            updateGenerationVisibility={this.updateGenerationVisibility}
+            vertices={vertices}
+            verticesViewModifiers={verticesViewModifiers}
+          />
+        );
+      } else if (
+        graphState.model.distanceToPathElems.has(-1) ||
+        graphState.model.distanceToPathElems.has(1)
+      ) {
+        content = (
+          <>
+            <h1 className="Ddg--center">There is nothing visible to show</h1>
+            <p className="Ddg--center">Select at least one hop to view</p>
+          </>
+        );
+      } else {
+        const lookback = getConfigValue('search.maxLookback.value');
+        const checkLink = getSearchUrl({
+          lookback,
+          minDuration: '0ms',
+          operation,
+          service,
+          tags: '{"span.kind":"server"}',
+        });
+        content = (
+          <>
+            <h1 className="Ddg--center">There are no dependencies</h1>
+            <p className="Ddg--center">
+              No traces were found that contain {service}
+              {operation && `:${operation}`} and any other service where span.kind is &lsquo;server&rsquo;.
+            </p>
+            <p className="Ddg--center">
+              <a href={checkLink}>Confirm by searching</a>
+            </p>
+          </>
+        );
+      }
     } else if (graphState.state === fetchedState.LOADING) {
       content = <LoadingIndicator centered className="u-mt-vast" />;
     } else if (graphState.state === fetchedState.ERROR) {
-      content = <ErrorMessage error={graphState.error} className="ub-m4" />;
+      content = (
+        <>
+          <ErrorMessage error={graphState.error} className="ub-m4" />
+          <p className="Ddg--center">If you are using an adblocker, whitelist Jaeger and retry.</p>
+        </>
+      );
     } else {
       content = (
-        <div>
-          <h1>Unknown graphState:</h1>
-          <p>${JSON.stringify(graphState)}</p>
-        </div>
+        <>
+          <h1 className="Ddg--center">Unknown graphState:</h1>
+          <p className="Ddg--center">{JSON.stringify(graphState, null, 2)}</p>
+        </>
       );
     }
 
