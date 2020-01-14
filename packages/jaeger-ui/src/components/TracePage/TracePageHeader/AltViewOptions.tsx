@@ -27,10 +27,15 @@ type Props = {
 
 export default function AltViewOptions(props: Props) {
   const { onTraceGraphViewClicked, traceGraphView, traceID } = props;
+  const handleToggleView = () => {
+    if (traceGraphView) trackGanttView();
+    else trackGraphView();
+    onTraceGraphViewClicked();
+  };
   const menu = (
     <Menu>
       <Menu.Item>
-        <a onClick={traceGraphView ? trackGanttView : trackGraphView} role="button">
+        <a onClick={handleToggleView} role="button">
           {traceGraphView ? 'Trace Timeline' : 'Trace Graph'}
         </a>
       </Menu.Item>
@@ -58,7 +63,7 @@ export default function AltViewOptions(props: Props) {
   );
   return (
     <Dropdown overlay={menu}>
-      <Button className="ub-mr2" htmlType="button" onClick={onTraceGraphViewClicked}>
+      <Button className="ub-mr2" htmlType="button" onClick={handleToggleView}>
         Alternate Views <Icon type="down" />
       </Button>
     </Dropdown>
