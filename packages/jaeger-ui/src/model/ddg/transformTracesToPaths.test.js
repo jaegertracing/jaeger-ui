@@ -15,6 +15,13 @@
 import transformTracesToPaths from './transformTracesToPaths';
 
 describe('transform traces to ddg paths', () => {
+  const makePath = (pathSpans, trace) => ({
+    path: pathSpans.map(({ processID, operationName: operation }) => ({
+      service: trace.data.processes[processID].serviceName,
+      operation,
+    })),
+    attributes: [{ key: 'exemplar_trace_id', value: trace.data.traceID }],
+  });
   const makeSpan = (spanName, childOf, kind) => ({
     hasChildren: true,
     operationName: `${spanName} operation`,
@@ -54,132 +61,111 @@ describe('transform traces to ddg paths', () => {
       traceID,
     },
   });
+  const makeTraces = (...traces) =>
+    traces.reduce((res, trace) => ({ ...res, [trace.data.traceID]: trace }), {});
 
-  const linearTraceID = 'linearTraceID';
+  const branchingTraceID = 'branchingTraceID';
   const missTraceID = 'missTraceID';
-  const shortTraceID = 'shortTraceID';
   const rootSpan = makeSpan('root');
-  const childSpan = makeSpan('child', rootSpan);
-  const grandchildSpan = makeSpan('grandchild', childSpan);
+  const focalSpan = makeSpan('focal', rootSpan);
+  const followsFocalSpan = makeSpan('followsFocal', focalSpan);
+  followsFocalSpan.hasChildren = false;
+  const notPathSpan = makeSpan('notPath', rootSpan);
+  notPathSpan.hasChildren = false;
+
+  const shortTrace = makeTrace([rootSpan, { ...focalSpan, hasChildren: false }], 'shortTraceID');
+  const shortPath = makePath([rootSpan, focalSpan], shortTrace);
+  const longerTrace = makeTrace([rootSpan, focalSpan, followsFocalSpan], 'longerTraceID');
+  const longerPath = makePath([rootSpan, focalSpan, followsFocalSpan], longerTrace);
+  const missTrace = makeTrace([rootSpan, notPathSpan], missTraceID);
+
+  const focalSvc = shortTrace.data.processes[focalSpan.processID].serviceName;
 
   it('transforms single short trace result payload', () => {
-    const traces = {
-      [shortTraceID]: makeTrace([rootSpan, { ...childSpan, hasChildren: false }], shortTraceID),
-    };
-
-    const { dependencies: result } = transformTracesToPaths(traces, 'child service');
-    expect(result.length).toBe(1);
-    expect(result[0].path.length).toBe(2);
+    const { dependencies: result } = transformTracesToPaths(makeTraces(shortTrace), focalSvc);
+    expect(result).toEqual([shortPath]);
   });
 
   it('transforms multiple traces result payload', () => {
-    const traces = {
-      [shortTraceID]: makeTrace([rootSpan, { ...childSpan, hasChildren: false }], shortTraceID),
-      [linearTraceID]: makeTrace(
-        [rootSpan, childSpan, { ...grandchildSpan, hasChildren: false }],
-        linearTraceID
-      ),
-    };
-
-    const { dependencies: result } = transformTracesToPaths(traces, 'child service');
-    expect(result.length).toBe(2);
-    expect(result[0].path.length).toBe(2);
-    expect(result[1].path.length).toBe(3);
+    const { dependencies: result } = transformTracesToPaths(makeTraces(shortTrace, longerTrace), focalSvc);
+    expect(new Set(result)).toEqual(new Set([shortPath, longerPath]));
   });
 
   it('ignores paths without focalService', () => {
-    const branchingTraceID = 'branchingTraceID';
-    const uncleSpan = makeSpan('uncle', rootSpan);
-    uncleSpan.hasChildren = false;
-    const traces = {
-      [missTraceID]: makeTrace([rootSpan, childSpan, uncleSpan], missTraceID),
-      [branchingTraceID]: makeTrace(
-        [rootSpan, childSpan, uncleSpan, { ...grandchildSpan, hasChildren: false }],
-        branchingTraceID
-      ),
-    };
+    const branchingTrace = makeTrace([rootSpan, focalSpan, notPathSpan, followsFocalSpan], branchingTraceID);
 
-    const { dependencies: result } = transformTracesToPaths(traces, 'child service');
-    expect(result.length).toBe(1);
-    expect(result[0].path.length).toBe(3);
+    const { dependencies: result } = transformTracesToPaths(makeTraces(missTrace, branchingTrace), focalSvc);
+    expect(result).toEqual([makePath([rootSpan, focalSpan, followsFocalSpan], branchingTrace)]);
   });
 
   it('matches service and operation names', () => {
-    const childSpanWithDiffOp = {
-      ...childSpan,
+    const focalSpanWithDiffOp = {
+      ...focalSpan,
       hasChildren: false,
       operationName: 'diff operation',
     };
-    const traces = {
-      [missTraceID]: makeTrace([rootSpan, childSpanWithDiffOp], missTraceID),
-      [linearTraceID]: makeTrace(
-        [rootSpan, childSpan, { ...grandchildSpan, hasChildren: false }],
-        linearTraceID
-      ),
-    };
+    const diffOpTrace = makeTrace([rootSpan, focalSpanWithDiffOp], 'diffOpTraceID');
+    const traces = makeTraces(diffOpTrace, longerTrace);
 
-    const { dependencies: result } = transformTracesToPaths(traces, 'child service');
-    expect(result.length).toBe(2);
-    expect(result[0].path.length).toBe(2);
-    expect(result[1].path.length).toBe(3);
+    const { dependencies: result } = transformTracesToPaths(traces, focalSvc);
+    expect(new Set(result)).toEqual(
+      new Set([makePath([rootSpan, focalSpanWithDiffOp], diffOpTrace), longerPath])
+    );
 
-    const { dependencies: resultWithOp } = transformTracesToPaths(traces, 'child service', 'child operation');
-    expect(resultWithOp.length).toBe(1);
-    expect(resultWithOp[0].path.length).toBe(3);
+    const { dependencies: resultWithFocalOp } = transformTracesToPaths(
+      traces,
+      focalSvc,
+      focalSpan.operationName
+    );
+    expect(resultWithFocalOp).toEqual([longerPath]);
   });
 
   it('transforms multiple paths from single trace', () => {
-    const traces = {
-      [linearTraceID]: makeTrace(
-        [rootSpan, { ...childSpan, hasChildren: false }, { ...grandchildSpan, hasChildren: false }],
-        linearTraceID
-      ),
-    };
+    const alsoFollowsFocalSpan = makeSpan('alsoFollows', focalSpan);
+    alsoFollowsFocalSpan.hasChildren = false;
+    const branchingTrace = makeTrace(
+      [rootSpan, focalSpan, followsFocalSpan, alsoFollowsFocalSpan],
+      branchingTraceID
+    );
 
-    const { dependencies: result } = transformTracesToPaths(traces, 'child service');
-    expect(result.length).toBe(2);
-    expect(result[0].path.length).toBe(2);
-    expect(result[1].path.length).toBe(3);
+    const { dependencies: result } = transformTracesToPaths(makeTraces(branchingTrace), focalSvc);
+    expect(new Set(result)).toEqual(
+      new Set([
+        makePath([rootSpan, focalSpan, alsoFollowsFocalSpan], branchingTrace),
+        makePath([rootSpan, focalSpan, followsFocalSpan], branchingTrace),
+      ])
+    );
   });
 
   it('errors if span has ancestor id not in trace data', () => {
-    const traces = {
-      [linearTraceID]: makeTrace([rootSpan, { ...grandchildSpan, hasChildren: false }], linearTraceID),
-    };
-
-    expect(() => transformTracesToPaths(traces, 'child service')).toThrowError(/Ancestor spanID.*not found/);
+    const traces = makeTraces(makeTrace([rootSpan, followsFocalSpan], missTraceID));
+    expect(() => transformTracesToPaths(traces, focalSvc)).toThrowError(/Ancestor spanID.*not found/);
   });
 
   it('skips trace without data', () => {
     const traces = {
-      [shortTraceID]: makeTrace([rootSpan, { ...childSpan, hasChildren: false }], shortTraceID),
+      ...makeTraces(shortTrace),
       noData: {},
     };
 
-    const { dependencies: result } = transformTracesToPaths(traces, 'child service');
+    const { dependencies: result } = transformTracesToPaths(traces, focalSvc);
     expect(result.length).toBe(1);
   });
 
   it("omits span if tags does not have span.kind === 'server'", () => {
     const badSpanName = 'test bad span name';
-    const clientSpan = makeSpan(badSpanName, childSpan, 'client');
-    clientSpan.hasChildren = false;
-    const clientTraceID = 'test client trace ID';
-    const clientTrace = makeTrace([rootSpan, childSpan, clientSpan], clientTraceID);
-    const kindlessSpan = makeSpan(badSpanName, childSpan, false);
-    kindlessSpan.hasChildren = false;
-    const kindlessTraceID = 'test kindless trace ID';
-    const kindlessTrace = makeTrace([rootSpan, childSpan, kindlessSpan], kindlessTraceID);
 
-    const traces = {
-      [clientTraceID]: clientTrace,
-      [kindlessTraceID]: kindlessTrace,
-    };
-    const { dependencies: result } = transformTracesToPaths(traces, 'child service');
-    expect(result.length).toBe(2);
-    expect(result[0].path.length).toBe(clientTrace.data.spans.length - 1);
-    expect(result[0].path.some(({ operation }) => operation.startsWith(badSpanName))).toBe(false);
-    expect(result[1].path.length).toBe(kindlessTrace.data.spans.length - 1);
-    expect(result[1].path.some(({ operation }) => operation.startsWith(badSpanName))).toBe(false);
+    const clientSpan = makeSpan(badSpanName, focalSpan, 'client');
+    clientSpan.hasChildren = false;
+    const clientTrace = makeTrace([rootSpan, focalSpan, clientSpan], 'clientTraceID');
+
+    const kindlessSpan = makeSpan(badSpanName, focalSpan, false);
+    kindlessSpan.hasChildren = false;
+    const kindlessTrace = makeTrace([rootSpan, focalSpan, kindlessSpan], 'kindlessTraceID');
+
+    const { dependencies: result } = transformTracesToPaths(makeTraces(clientTrace, kindlessTrace), focalSvc);
+    expect(new Set(result)).toEqual(
+      new Set([makePath([rootSpan, focalSpan], clientTrace), makePath([rootSpan, focalSpan], kindlessTrace)])
+    );
   });
 });

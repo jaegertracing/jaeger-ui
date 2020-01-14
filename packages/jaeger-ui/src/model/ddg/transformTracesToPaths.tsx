@@ -18,18 +18,12 @@ import spanAncestorIds from '../../utils/span-ancestor-ids';
 
 import { TDdgPayloadEntry, TDdgPayloadPath, TDdgPayload } from './types';
 import { FetchedTrace } from '../../types';
-import { Span, Trace } from '../../types/trace';
-
-function convertSpan(span: Span, trace: Trace): TDdgPayloadEntry {
-  const serviceName = trace.processes[span.processID].serviceName;
-  const operationName = span.operationName;
-  return { service: serviceName, operation: operationName };
-}
+import { Span } from '../../types/trace';
 
 function transformTracesToPaths(
   traces: Record<string, FetchedTrace>,
   focalService: string,
-  focalOperation: string | undefined
+  focalOperation?: string
 ): TDdgPayload {
   const dependencies: TDdgPayloadPath[] = [];
   Object.values(traces).forEach(({ data }) => {
@@ -52,7 +46,10 @@ function transformTracesToPaths(
 
           const path: TDdgPayloadEntry[] = spans
             .filter(span => span.tags.find(({ key, value }) => key === 'span.kind' && value === 'server'))
-            .map(span => convertSpan(span, data));
+            .map(({ processID, operationName: operation }) => ({
+              service: data.processes[processID].serviceName,
+              operation,
+            }));
 
           if (
             path.some(
