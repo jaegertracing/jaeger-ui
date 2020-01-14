@@ -61,6 +61,7 @@ export default deepFreeze(
           label: '2 Days',
           value: '2d',
         },
+        maxLimit: 1500,
       },
       tracking: {
         gaID: null,
