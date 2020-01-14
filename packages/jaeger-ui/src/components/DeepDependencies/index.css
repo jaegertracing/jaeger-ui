@@ -23,6 +23,12 @@ limitations under the License.
   right: 0;
 }
 
+.Ddg--center {
+  margin: auto;
+  text-align: center;
+  max-width: 60%;
+}
+
 .Ddg--graphWrapper {
   flex: 1;
   overflow: hidden;

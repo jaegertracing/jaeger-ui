@@ -23,10 +23,12 @@ import Graph from './Graph';
 import Header from './Header';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
+import * as getSearchUrl from '../SearchTracePage/url';
 import { fetchedState } from '../../constants';
 import getStateEntryKey from '../../model/ddg/getStateEntryKey';
 import * as GraphModel from '../../model/ddg/GraphModel';
 import * as codec from '../../model/ddg/visibility-codec';
+import * as getConfig from '../../utils/config/get-config';
 
 import { ECheckedStatus, EDirection, EDdgDensity, EViewModifier } from '../../model/ddg/types';
 
@@ -74,6 +76,7 @@ describe('DeepDependencyGraphPage', () => {
         getVisWithUpdatedGeneration: jest.fn(),
       },
     };
+    const { operation: _o, ...urlStateWithoutOp } = props.urlState;
     const ddgPageImpl = new DeepDependencyGraphPageImpl(props);
     const ddgWithoutGraph = new DeepDependencyGraphPageImpl(propsWithoutGraph);
     const setIdx = visibilityIdx => ({ visibilityIdx });
@@ -187,7 +190,6 @@ describe('DeepDependencyGraphPage', () => {
 
         it('removes op from urlState', () => {
           ddgPageImpl.clearOperation();
-          const { operation: _o, ...urlStateWithoutOp } = props.urlState;
           expect(getUrlSpy).toHaveBeenLastCalledWith(urlStateWithoutOp, undefined);
           expect(trackClearOperationSpy).toHaveBeenCalledTimes(1);
         });
@@ -596,25 +598,27 @@ describe('DeepDependencyGraphPage', () => {
 
     describe('render', () => {
       const vertices = [{ key: 'key0' }, { key: 'key1' }, { key: 'key2' }];
+      const visibleFindCount = vertices.length - 1;
       const graph = {
-        getVisible: () => ({
-          edges: [
-            {
-              from: vertices[0].key,
-              to: vertices[1].key,
-            },
-            {
-              from: vertices[1].key,
-              to: vertices[2].key,
-            },
-          ],
-          vertices,
-        }),
+        getVisible: jest.fn(),
         getDerivedViewModifiers: () => ({ edges: new Map(), vertices: new Map() }),
-        getHiddenUiFindMatches: () => new Set(vertices.slice(1)),
-        getVisibleUiFindMatches: () => new Set(vertices.slice(0, 1)),
+        getHiddenUiFindMatches: () => new Set(vertices.slice(visibleFindCount)),
+        getVisibleUiFindMatches: () => new Set(vertices.slice(0, visibleFindCount)),
         getVisibleIndices: () => new Set(),
       };
+      graph.getVisible.mockReturnValue({
+        edges: [
+          {
+            from: vertices[0].key,
+            to: vertices[1].key,
+          },
+          {
+            from: vertices[1].key,
+            to: vertices[2].key,
+          },
+        ],
+        vertices,
+      });
 
       it('renders message to query a ddg when no graphState is provided', () => {
         const message = shallow(<DeepDependencyGraphPageImpl {...props} graphState={undefined} />)
@@ -639,9 +643,111 @@ describe('DeepDependencyGraphPage', () => {
         expect(errorComponent.prop('error')).toBe(error);
       });
 
-      it('renders graph when done', () => {
-        const wrapper = shallow(<DeepDependencyGraphPageImpl {...props} graph={graph} />);
-        expect(wrapper.find(Graph)).toHaveLength(1);
+      describe('graphState.state === fetchedState.DONE', () => {
+        function makeGraphState(specifiedDistance, vertexCount = 1) {
+          graph.getVisible.mockReturnValueOnce({
+            edges: [],
+            vertices: vertices.slice(vertices.length - vertexCount),
+          });
+          return {
+            graphState: {
+              ...props.graphState,
+              model: {
+                ...props.graphState.model,
+                distanceToPathElems: specifiedDistance
+                  ? new Map([[specifiedDistance, 'test elem']])
+                  : new Map(),
+              },
+            },
+          };
+        }
+        let getConfigValueSpy;
+        let getSearchUrlSpy;
+        let wrapper;
+
+        beforeAll(() => {
+          getConfigValueSpy = jest.spyOn(getConfig, 'getConfigValue');
+          getSearchUrlSpy = jest.spyOn(getSearchUrl, 'getUrl');
+        });
+
+        beforeEach(() => {
+          getConfigValueSpy.mockClear();
+          getSearchUrlSpy.mockClear();
+          wrapper = shallow(<DeepDependencyGraphPageImpl {...props} graph={graph} />);
+        });
+
+        it('renders graph if there are multiple vertices visible', () => {
+          const graphComponent = wrapper.find(Graph);
+
+          expect(graphComponent).toHaveLength(1);
+          expect(graphComponent.prop('vertices')).toBe(vertices);
+        });
+
+        it('renders disclaimer to show more hops if one or fewer vertices are visible and more hops were in paylaod', () => {
+          const expectedHeader = 'There is nothing visible to show';
+          const expectedInstruction = 'Select at least one hop to view';
+          expect(wrapper.find(Graph)).toHaveLength(1);
+
+          wrapper.setProps(makeGraphState(1));
+          expect(wrapper.find(Graph)).toHaveLength(0);
+          expect(wrapper.find('h1.Ddg--center').text()).toBe(expectedHeader);
+          expect(wrapper.find('p.Ddg--center').text()).toBe(expectedInstruction);
+
+          wrapper.setProps(makeGraphState(-1, 0));
+          expect(wrapper.find(Graph)).toHaveLength(0);
+          expect(wrapper.find('h1.Ddg--center').text()).toBe(expectedHeader);
+          expect(wrapper.find('p.Ddg--center').text()).toBe(expectedInstruction);
+        });
+
+        it('renders disclaimer that service has no known dependencies with correct link to verify', () => {
+          const expectedHeader = 'There are no dependencies';
+          const { operation, service } = props.urlState;
+          const expectedInstruction = (withOp = true) =>
+            `No traces were found that contain ${service}${
+              withOp ? `:${operation}` : ''
+            } and any other service where span.kind is ‘server’.`;
+          const lookback = 'test look back';
+          getConfigValueSpy.mockReturnValue(lookback);
+          const mockUrl = 'test search url';
+          getSearchUrlSpy.mockReturnValue(mockUrl);
+
+          expect(wrapper.find(Graph)).toHaveLength(1);
+
+          wrapper.setProps(makeGraphState());
+          expect(wrapper.find(Graph)).toHaveLength(0);
+          expect(wrapper.find('h1.Ddg--center').text()).toBe(expectedHeader);
+          expect(
+            wrapper
+              .find('p.Ddg--center')
+              .first()
+              .text()
+          ).toBe(expectedInstruction());
+          expect(wrapper.find('a').prop('href')).toBe(mockUrl);
+          expect(getSearchUrlSpy).toHaveBeenLastCalledWith({
+            lookback,
+            minDuration: '0ms',
+            operation,
+            service,
+            tags: '{"span.kind":"server"}',
+          });
+
+          wrapper.setProps({ urlState: urlStateWithoutOp, ...makeGraphState() });
+          expect(wrapper.find(Graph)).toHaveLength(0);
+          expect(wrapper.find('h1.Ddg--center').text()).toBe(expectedHeader);
+          expect(
+            wrapper
+              .find('p.Ddg--center')
+              .first()
+              .text()
+          ).toBe(expectedInstruction(false));
+          expect(wrapper.find('a').prop('href')).toBe(mockUrl);
+          expect(getSearchUrlSpy).toHaveBeenLastCalledWith({
+            lookback,
+            minDuration: '0ms',
+            service,
+            tags: '{"span.kind":"server"}',
+          });
+        });
       });
 
       it('renders indication of unknown graphState', () => {
@@ -674,8 +780,10 @@ describe('DeepDependencyGraphPage', () => {
         expect(wrapper.find(Header).prop('hiddenUiFindMatches')).toBe(undefined);
 
         wrapper.setProps({ graph });
-        expect(wrapper.find(Header).prop('uiFindCount')).toBe(1);
-        expect(wrapper.find(Header).prop('hiddenUiFindMatches').size).toBe(vertices.length - 1);
+        expect(wrapper.find(Header).prop('uiFindCount')).toBe(visibleFindCount);
+        expect(wrapper.find(Header).prop('hiddenUiFindMatches').size).toBe(
+          vertices.length - visibleFindCount
+        );
       });
 
       it('passes correct operations to Header', () => {
