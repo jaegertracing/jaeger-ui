@@ -16,7 +16,7 @@ import * as React from 'react';
 import { Button, Dropdown, Icon, Menu } from 'antd';
 import { Link } from 'react-router-dom';
 
-import { trackAltViewOpen } from './TracePageHeader.track';
+import { trackGanttView, trackGraphView, trackJsonView, trackRawJsonView } from './TracePageHeader.track';
 import prefixUrl from '../../../utils/prefix-url';
 
 type Props = {
@@ -27,10 +27,15 @@ type Props = {
 
 export default function AltViewOptions(props: Props) {
   const { onTraceGraphViewClicked, traceGraphView, traceID } = props;
+  const handleToggleView = () => {
+    if (traceGraphView) trackGanttView();
+    else trackGraphView();
+    onTraceGraphViewClicked();
+  };
   const menu = (
     <Menu>
       <Menu.Item>
-        <a onClick={onTraceGraphViewClicked} role="button">
+        <a onClick={handleToggleView} role="button">
           {traceGraphView ? 'Trace Timeline' : 'Trace Graph'}
         </a>
       </Menu.Item>
@@ -39,7 +44,7 @@ export default function AltViewOptions(props: Props) {
           to={prefixUrl(`/api/traces/${traceID}?prettyPrint=true`)}
           rel="noopener noreferrer"
           target="_blank"
-          onClick={trackAltViewOpen}
+          onClick={trackJsonView}
         >
           Trace JSON
         </Link>
@@ -49,7 +54,7 @@ export default function AltViewOptions(props: Props) {
           to={prefixUrl(`/api/traces/${traceID}?raw=true&prettyPrint=true`)}
           rel="noopener noreferrer"
           target="_blank"
-          onClick={trackAltViewOpen}
+          onClick={trackRawJsonView}
         >
           Trace JSON (unadjusted)
         </Link>
@@ -58,8 +63,8 @@ export default function AltViewOptions(props: Props) {
   );
   return (
     <Dropdown overlay={menu}>
-      <Button className="ub-mr2" htmlType="button" onClick={onTraceGraphViewClicked}>
-        {traceGraphView ? 'Trace Graph' : 'Trace Timeline'} <Icon type="down" />
+      <Button className="ub-mr2" htmlType="button" onClick={handleToggleView}>
+        Alternate Views <Icon type="down" />
       </Button>
     </Dropdown>
   );

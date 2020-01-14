@@ -102,7 +102,7 @@ export class UnconnectedSearchResults extends React.PureComponent<SearchResultsP
     }
   };
 
-  onTraceGraphViewClicked = () => {
+  onDdgViewClicked = () => {
     const { location, history } = this.props;
     const urlState = queryString.parse(location.search);
     const view = urlState.view && urlState.view === 'ddg' ? 'traces' : 'ddg';
@@ -177,10 +177,7 @@ export class UnconnectedSearchResults extends React.PureComponent<SearchResultsP
               {traces.length} Trace{traces.length > 1 && 's'}
             </h2>
             {traceResultsView && <SelectSort />}
-            <AltViewOptions
-              traceResultsView={traceResultsView}
-              onTraceGraphViewClicked={this.onTraceGraphViewClicked}
-            />
+            <AltViewOptions traceResultsView={traceResultsView} onDdgViewClicked={this.onDdgViewClicked} />
             {showStandaloneLink && (
               <Link
                 className="u-tx-inherit ub-nowrap ub-ml3"
