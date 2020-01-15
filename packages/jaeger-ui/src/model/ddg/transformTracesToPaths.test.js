@@ -15,23 +15,23 @@
 import transformTracesToPaths from './transformTracesToPaths';
 
 describe('transform traces to ddg paths', () => {
-  const makePath = (pathSpans, trace) => ({
+  const makeExpectedPath = (pathSpans, trace) => ({
     path: pathSpans.map(({ processID, operationName: operation }) => ({
       service: trace.data.processes[processID].serviceName,
       operation,
     })),
     attributes: [{ key: 'exemplar_trace_id', value: trace.data.traceID }],
   });
-  const makeSpan = (spanName, childOf, kind) => ({
+  const makeSpan = (spanName, parent, kind) => ({
     hasChildren: true,
     operationName: `${spanName} operation`,
     processID: `${spanName} processID`,
-    references: childOf
+    references: parent
       ? [
           {
             refType: 'CHILD_OF',
-            span: childOf,
-            spanID: childOf.spanID,
+            span: parent,
+            spanID: parent.spanID,
           },
         ]
       : [],
@@ -74,9 +74,9 @@ describe('transform traces to ddg paths', () => {
   notPathSpan.hasChildren = false;
 
   const shortTrace = makeTrace([rootSpan, { ...focalSpan, hasChildren: false }], 'shortTraceID');
-  const shortPath = makePath([rootSpan, focalSpan], shortTrace);
+  const shortPath = makeExpectedPath([rootSpan, focalSpan], shortTrace);
   const longerTrace = makeTrace([rootSpan, focalSpan, followsFocalSpan], 'longerTraceID');
-  const longerPath = makePath([rootSpan, focalSpan, followsFocalSpan], longerTrace);
+  const longerPath = makeExpectedPath([rootSpan, focalSpan, followsFocalSpan], longerTrace);
   const missTrace = makeTrace([rootSpan, notPathSpan], missTraceID);
 
   const focalSvc = shortTrace.data.processes[focalSpan.processID].serviceName;
@@ -95,7 +95,7 @@ describe('transform traces to ddg paths', () => {
     const branchingTrace = makeTrace([rootSpan, focalSpan, notPathSpan, followsFocalSpan], branchingTraceID);
 
     const { dependencies: result } = transformTracesToPaths(makeTraces(missTrace, branchingTrace), focalSvc);
-    expect(result).toEqual([makePath([rootSpan, focalSpan, followsFocalSpan], branchingTrace)]);
+    expect(result).toEqual([makeExpectedPath([rootSpan, focalSpan, followsFocalSpan], branchingTrace)]);
   });
 
   it('matches service and operation names', () => {
@@ -109,7 +109,7 @@ describe('transform traces to ddg paths', () => {
 
     const { dependencies: result } = transformTracesToPaths(traces, focalSvc);
     expect(new Set(result)).toEqual(
-      new Set([makePath([rootSpan, focalSpanWithDiffOp], diffOpTrace), longerPath])
+      new Set([makeExpectedPath([rootSpan, focalSpanWithDiffOp], diffOpTrace), longerPath])
     );
 
     const { dependencies: resultWithFocalOp } = transformTracesToPaths(
@@ -131,8 +131,8 @@ describe('transform traces to ddg paths', () => {
     const { dependencies: result } = transformTracesToPaths(makeTraces(branchingTrace), focalSvc);
     expect(new Set(result)).toEqual(
       new Set([
-        makePath([rootSpan, focalSpan, alsoFollowsFocalSpan], branchingTrace),
-        makePath([rootSpan, focalSpan, followsFocalSpan], branchingTrace),
+        makeExpectedPath([rootSpan, focalSpan, alsoFollowsFocalSpan], branchingTrace),
+        makeExpectedPath([rootSpan, focalSpan, followsFocalSpan], branchingTrace),
       ])
     );
   });
@@ -165,7 +165,10 @@ describe('transform traces to ddg paths', () => {
 
     const { dependencies: result } = transformTracesToPaths(makeTraces(clientTrace, kindlessTrace), focalSvc);
     expect(new Set(result)).toEqual(
-      new Set([makePath([rootSpan, focalSpan], clientTrace), makePath([rootSpan, focalSpan], kindlessTrace)])
+      new Set([
+        makeExpectedPath([rootSpan, focalSpan], clientTrace),
+        makeExpectedPath([rootSpan, focalSpan], kindlessTrace),
+      ])
     );
   });
 });
