@@ -92,7 +92,7 @@ describe('<SearchResults>', () => {
         const push = jest.fn();
         wrapper.setProps({ history: { push }, location: { search: otherSearch } });
 
-        const toggle = wrapper.find(AltViewOptions).prop('onTraceGraphViewClicked');
+        const toggle = wrapper.find(AltViewOptions).prop('onDdgViewClicked');
         toggle();
         expect(push).toHaveBeenLastCalledWith(getUrl({ [otherParam]: otherValue, [searchParam]: viewDdg }));
         expect(trackAltViewSpy).toHaveBeenLastCalledWith(viewDdg);

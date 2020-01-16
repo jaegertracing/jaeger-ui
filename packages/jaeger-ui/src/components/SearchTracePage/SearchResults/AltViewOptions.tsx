@@ -20,7 +20,7 @@ import { getUrl, getUrlState } from '../../DeepDependencies/url';
 import { getConfigValue } from '../../../utils/config/get-config';
 
 type Props = {
-  onTraceGraphViewClicked: () => void;
+  onDdgViewClicked: () => void;
   traceResultsView: boolean;
 };
 
@@ -31,9 +31,9 @@ function viewAllDep({ ctrlKey, metaKey }: React.MouseEvent<HTMLButtonElement>) {
 }
 
 export default function AltViewOptions(props: Props) {
-  const { onTraceGraphViewClicked, traceResultsView } = props;
+  const { onDdgViewClicked, traceResultsView } = props;
   const toggleBtn = (
-    <Button className="ub-ml2" htmlType="button" onClick={onTraceGraphViewClicked}>
+    <Button className="ub-ml2" htmlType="button" onClick={onDdgViewClicked}>
       {traceResultsView ? 'Deep Dependency Graph' : 'Trace Results'}
     </Button>
   );
