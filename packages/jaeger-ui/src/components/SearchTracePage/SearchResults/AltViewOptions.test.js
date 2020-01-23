@@ -31,7 +31,7 @@ describe('AltViewOptions', () => {
   const getLabel = (btnIndex = 0) => getBtn(btnIndex).prop('children');
   const props = {
     traceResultsView: true,
-    onTraceGraphViewClicked: jest.fn(),
+    onDdgViewClicked: jest.fn(),
   };
 
   beforeAll(() => {
