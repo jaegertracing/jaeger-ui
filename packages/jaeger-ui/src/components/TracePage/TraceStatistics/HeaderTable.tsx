@@ -14,7 +14,7 @@
 
 import React from 'react';
 import { Icon } from 'antd';
-import './TableOverviewHeadTag.css';
+import './HeaderTable.css';
 
 type Props = {
   element: any;
@@ -29,17 +29,17 @@ type Props = {
  * Used to render the table header.
  * @param props
  */
-export default function TableOverviewHeaderTag(props: Props) {
+export default function HeaderTable(props: Props) {
   const thStyle = { width: Math.round(window.innerWidth * 0.2) };
   const iconStyle = { opacity: props.sortIndex === props.index ? 1.0 : 0.2 };
   const iconType = props.sortAsc && props.sortIndex === props.index ? 'up' : 'down';
   return (
-    <th className="TableOverviewHeadTag--th" style={thStyle}>
+    <th className="HeaderTable--th" style={thStyle}>
       {props.element.title}
-      <div className="TableOverviewHeaderTag--buttonPosition">
+      <div className="HeaderTable--buttonPosition">
         <button
           type="submit"
-          className="TableOverviewHeaderTag--sortButton"
+          className="HeaderTable--sortButton"
           onClick={() => props.sortClick(props.index)}
         >
           <Icon style={iconStyle} type={iconType} />

@@ -17,6 +17,7 @@ import React, { Component } from 'react';
 import './DetailTableData.css';
 
 type Props = {
+  type: string;
   name: string;
   searchColor: string;
   values: any[];
@@ -50,7 +51,8 @@ export default class DetailTableData extends Component<Props, State> {
 
   render() {
     const styleOption1 = {
-      background: 'rgb(248,248,248)',
+      background: this.props.colorToPercent,
+      borderColor: this.props.colorToPercent,
       color: 'rgb(153,153,153)',
       fontStyle: 'italic',
     };
@@ -64,28 +66,32 @@ export default class DetailTableData extends Component<Props, State> {
       background: this.props.searchColor,
       borderColor: this.props.searchColor,
     };
-    const others = 'Others';
+    const others = 'undefined';
     let styleCondition;
-    if (this.props.name === others) {
+    if (this.props.type === others) {
       styleCondition = styleOption1;
     } else if (this.props.searchColor === 'rgb(248,248,248)') {
       styleCondition = styleOption2;
     } else {
       styleCondition = styleOption3;
     }
+    const labelStyle1 = { borderColor: this.props.color };
+    const labelStyle2 = { borderColor: this.props.color, marginLeft: '12px' };
+    let labelCondition;
+    if (this.props.secondTagDropdownTitle === 'Service Name') {
+      labelCondition = labelStyle2;
+    } else {
+      labelCondition = labelStyle1;
+    }
     const onClickOption =
-      this.props.secondTagDropdownTitle === 'sql' && this.props.name !== others
+      this.props.secondTagDropdownTitle === 'sql' && this.props.type !== others
         ? () => this.props.togglePopup(this.props.name)
         : undefined;
     return (
       <tr className="DetailTableData--tr" style={styleCondition}>
         <td className="DetailTableData--child--td">
           <a role="button" onClick={onClickOption} style={{ color: 'inherit' }}>
-            <label
-              title={this.props.name}
-              className="DetailTableData--serviceBorder"
-              style={{ borderColor: this.props.color }}
-            >
+            <label title={this.props.name} className="DetailTableData--serviceBorder" style={labelCondition}>
               {this.props.name}
             </label>
           </a>

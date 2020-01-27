@@ -55,7 +55,7 @@ import { TraceArchive } from '../../types/archive';
 import { EmbeddedState } from '../../types/embedded';
 import filterSpans from '../../utils/filter-spans';
 import updateUiFind from '../../utils/update-ui-find';
-import TraceTagOverview from './TraceTagOverview/index';
+import TraceStatistics from './TraceStatistics/index';
 
 import './index.css';
 
@@ -422,7 +422,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
               default:
                 return (
                   <section style={{ paddingTop: headerHeight }}>
-                    <TraceTagOverview trace={data} uiFindVertexKeys={graphFindMatches} uiFind={uiFind} />
+                    <TraceStatistics trace={data} uiFindVertexKeys={graphFindMatches} uiFind={uiFind} />
                   </section>
                 );
             }

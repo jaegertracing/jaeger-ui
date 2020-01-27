@@ -16,7 +16,13 @@ import * as React from 'react';
 import { Button, Dropdown, Icon, Menu } from 'antd';
 import { Link } from 'react-router-dom';
 
-import { trackAltViewOpen } from './TracePageHeader.track';
+import {
+  trackGanttView,
+  trackGraphView,
+  trackStatisticsView,
+  trackJsonView,
+  trackRawJsonView,
+} from './TracePageHeader.track';
 import prefixUrl from '../../../utils/prefix-url';
 
 type Props = {
@@ -26,16 +32,41 @@ type Props = {
 };
 
 export default function AltViewOptions(props: Props) {
-  const { onTraceGraphViewClicked, traceID, selectedTraceView } = props;
+  const { onTraceGraphViewClicked, selectedTraceView, traceID } = props;
+  const menuItems = ['Trace Timeline', 'Trace Graph', 'Trace Statistics'];
 
-  const menuItems = ['Trace Timeline', 'Trace Graph', 'Trace Overview'];
+  const handleToggleView = (index: number, item: string) => {
+    if (item === menuItems[0]) {
+      trackGanttView();
+    } else if (item === menuItems[1]) {
+      trackGraphView();
+    } else if (item === menuItems[2]) {
+      trackStatisticsView();
+    }
+    onTraceGraphViewClicked(index);
+  };
+
+  const toggle = () => {
+    let nextIndex = selectedTraceView + 1;
+    if (nextIndex > 2) {
+      nextIndex = 0;
+    }
+    if (nextIndex === 0) {
+      trackGanttView();
+    } else if (nextIndex === 1) {
+      trackGraphView();
+    } else if (nextIndex === 2) {
+      trackStatisticsView();
+    }
+    onTraceGraphViewClicked(nextIndex);
+  };
 
   const menu = (
     <Menu>
       {menuItems.map((item, index) =>
         index === selectedTraceView ? null : (
           <Menu.Item key={item}>
-            <a onClick={() => onTraceGraphViewClicked(index)} role="button">
+            <a onClick={() => handleToggleView(index, item)} role="button">
               {item}
             </a>
           </Menu.Item>
@@ -46,7 +77,7 @@ export default function AltViewOptions(props: Props) {
           to={prefixUrl(`/api/traces/${traceID}?prettyPrint=true`)}
           rel="noopener noreferrer"
           target="_blank"
-          onClick={trackAltViewOpen}
+          onClick={trackJsonView}
         >
           Trace JSON
         </Link>
@@ -56,21 +87,18 @@ export default function AltViewOptions(props: Props) {
           to={prefixUrl(`/api/traces/${traceID}?raw=true&prettyPrint=true`)}
           rel="noopener noreferrer"
           target="_blank"
-          onClick={trackAltViewOpen}
+          onClick={trackRawJsonView}
         >
           Trace JSON (unadjusted)
         </Link>
       </Menu.Item>
     </Menu>
   );
+
   return (
     <Dropdown overlay={menu}>
-      <Button
-        className="ub-mr2"
-        htmlType="button"
-        onClick={() => onTraceGraphViewClicked(selectedTraceView + 1)}
-      >
-        {menuItems[selectedTraceView]} <Icon type="down" />
+      <Button onClick={toggle} className="ub-mr2" htmlType="button">
+        Alternate Views <Icon type="down" />
       </Button>
     </Dropdown>
   );

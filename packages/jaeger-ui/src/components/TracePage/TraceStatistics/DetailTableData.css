@@ -36,13 +36,6 @@ limitations under the License.
   white-space: nowrap;
 }
 
-td {
-  max-width: 25em;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .DetailTableData--serviceBorder {
   border-left: 4px solid transparent;
   padding-left: 0.6em;
@@ -54,7 +47,7 @@ td {
   border-top: 1px solid rgb(230, 230, 230);
   border-bottom: 1px solid rgb(230, 230, 230);
   width: 9.09%;
-  padding-left: 1em;
+  padding-left: 2em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

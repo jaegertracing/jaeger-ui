@@ -20,7 +20,7 @@ import MdVisibilityOff from 'react-icons/lib/md/visibility-off';
 
 import Header from './index';
 import HopsSelector from './HopsSelector';
-import NameSelector from './NameSelector';
+import NameSelector from '../../common/NameSelector';
 import * as track from '../index.track';
 
 describe('<Header>', () => {

@@ -19,16 +19,20 @@ import colorGenerator from '../../../utils/color-generator';
 
 const serviceName = 'Service Name';
 const operationName = 'Operation Name';
-const others = 'Others';
 
 /**
  * Return the lowest startTime.
  */
 function getLowestStartTime(allOverlay: Span[]) {
+  let result;
   const temp = _.minBy(allOverlay, function calc(a) {
     return a.relativeStartTime;
   });
-  const result = { duration: temp!.duration, lowestStartTime: temp!.relativeStartTime };
+  if (temp !== undefined) {
+    result = { duration: temp.duration, lowestStartTime: temp.relativeStartTime };
+  } else {
+    result = { duration: -1, lowestStartTime: -1 };
+  }
   return result;
 }
 
@@ -90,7 +94,7 @@ function onlyOverlay(allOverlay: Span[], allChildren: Span[], tempSelf: number, 
 /**
  * Used to calculated the content.
  */
-function calculateContent(span: Span, allSpans: Span[], resultValue: any) {
+function calculateContent(trace: Trace, span: Span, allSpans: Span[], resultValue: any) {
   const resultValueChange = resultValue;
   resultValueChange.count += 1;
   resultValueChange.total += span.duration;
@@ -228,7 +232,9 @@ function calculateContent(span: Span, allSpans: Span[], resultValue: any) {
     resultValueChange.selfMax = tempSelf;
   }
   resultValueChange.self += tempSelf;
-  resultValueChange.percent = resultValueChange.self / (resultValueChange.total / 100);
+
+  const onePercent = 100 / trace.duration;
+  resultValueChange.percent = resultValueChange.self * onePercent;
 
   return resultValueChange;
 }
@@ -247,7 +253,7 @@ function buildOneColumn(oneColumn: ITableSpan) {
   oneColumnChange.selfMin = Math.round((oneColumnChange.selfMin / 1000) * 100) / 100;
   oneColumnChange.selfMax = Math.round((oneColumnChange.selfMax / 1000) * 100) / 100;
   oneColumnChange.percent = Math.round((oneColumnChange.percent / 1) * 100) / 100;
-  oneColumnChange.colorToPercent = 'rgb(248,248,248)';
+  // oneColumnChange.colorToPercent;
   return oneColumnChange;
 }
 
@@ -306,18 +312,18 @@ function valueFirstDropdown(selectedTagKey: string, trace: Trace) {
     for (let j = 0; j < allSpans.length; j++) {
       if (selectedTagKey === serviceName) {
         if (allSpans[j].process.serviceName === allDiffColumnValues[i]) {
-          resultValue = calculateContent(allSpans[j], allSpans, resultValue);
+          resultValue = calculateContent(trace, allSpans[j], allSpans, resultValue);
           color = colorGenerator.getColorByKey(allSpans[j].process.serviceName);
         }
       } else if (selectedTagKey === operationName) {
         if (allSpans[j].operationName === allDiffColumnValues[i]) {
-          resultValue = calculateContent(allSpans[j], allSpans, resultValue);
+          resultValue = calculateContent(trace, allSpans[j], allSpans, resultValue);
         }
       } else {
         // used when a tag is selected
         for (let l = 0; l < allSpans[j].tags.length; l++) {
           if (allSpans[j].tags[l].value === allDiffColumnValues[i]) {
-            resultValue = calculateContent(allSpans[j], allSpans, resultValue);
+            resultValue = calculateContent(trace, allSpans[j], allSpans, resultValue);
           }
         }
       }
@@ -325,6 +331,7 @@ function valueFirstDropdown(selectedTagKey: string, trace: Trace) {
     resultValue.selfAvg = resultValue.self / resultValue.count;
     resultValue.avg = resultValue.total / resultValue.count;
     let tableSpan = {
+      type: 'defined',
       name: allDiffColumnValues[i],
       count: resultValue.count,
       total: resultValue.total,
@@ -340,7 +347,7 @@ function valueFirstDropdown(selectedTagKey: string, trace: Trace) {
       color,
       searchColor: '',
       parentElement: 'none',
-      colorToPercent: '',
+      colorToPercent: 'tranparent',
     };
     tableSpan = buildOneColumn(tableSpan);
     allTableValues.push(tableSpan);
@@ -374,14 +381,15 @@ function valueFirstDropdown(selectedTagKey: string, trace: Trace) {
       percent: 0,
     };
     for (let i = 0; i < spanWithNoSelectedTag.length; i++) {
-      resultValue = calculateContent(spanWithNoSelectedTag[i], allSpans, resultValue);
+      resultValue = calculateContent(trace, spanWithNoSelectedTag[i], allSpans, resultValue);
     }
     if (resultValue.count !== 0) {
       // Others is build
       resultValue.selfAvg = resultValue.self / resultValue.count;
       resultValue.avg = resultValue.total / resultValue.count;
       let tableSpanOTHERS = {
-        name: others,
+        type: 'undefined',
+        name: `Without Tag: ${selectedTagKey}`,
         count: resultValue.count,
         total: resultValue.total,
         avg: resultValue.avg,
@@ -396,7 +404,7 @@ function valueFirstDropdown(selectedTagKey: string, trace: Trace) {
         color: '',
         searchColor: 'transparent',
         parentElement: '',
-        colorToPercent: '',
+        colorToPercent: 'rgb(248,248,248)',
       };
       tableSpanOTHERS = buildOneColumn(tableSpanOTHERS);
       allTableValues.push(tableSpanOTHERS);
@@ -436,21 +444,22 @@ function buildDetail(
       if (isDetail) {
         for (let a = 0; a < tempArray[l].tags.length; a++) {
           if (diffNamesA[j] === tempArray[l].tags[a].value) {
-            resultValue = calculateContent(tempArray[l], allSpans, resultValue);
+            resultValue = calculateContent(trace, tempArray[l], allSpans, resultValue);
           }
         }
       } else if (selectedTagKeySecond === serviceName) {
         if (diffNamesA[j] === tempArray[l].process.serviceName) {
-          resultValue = calculateContent(tempArray[l], allSpans, resultValue);
+          resultValue = calculateContent(trace, tempArray[l], allSpans, resultValue);
           color = colorGenerator.getColorByKey(tempArray[l].process.serviceName);
         }
       } else if (diffNamesA[j] === tempArray[l].operationName) {
-        resultValue = calculateContent(tempArray[l], allSpans, resultValue);
+        resultValue = calculateContent(trace, tempArray[l], allSpans, resultValue);
       }
     }
     resultValue.selfAvg = resultValue.self / resultValue.count;
     resultValue.avg = resultValue.total / resultValue.count;
     let buildOneColumnValue = {
+      type: 'defined',
       name: diffNamesA[j],
       count: resultValue.count,
       total: resultValue.total,
@@ -466,7 +475,7 @@ function buildDetail(
       color,
       searchColor: '',
       parentElement: parentName,
-      colorToPercent: '',
+      colorToPercent: 'rgb(248,248,248)',
     };
     buildOneColumnValue = buildOneColumn(buildOneColumnValue);
     newColumnValues.push(buildOneColumnValue);
@@ -508,7 +517,7 @@ function generateDetailRest(allColumnValues: ITableSpan[], selectedTagKeySecond:
             }
           }
           if (rest) {
-            resultValue = calculateContent(allSpans[j], allSpans, resultValue);
+            resultValue = calculateContent(trace, allSpans[j], allSpans, resultValue);
           }
         }
       }
@@ -516,7 +525,8 @@ function generateDetailRest(allColumnValues: ITableSpan[], selectedTagKeySecond:
       resultValue.selfAvg = resultValue.self / resultValue.count;
       if (resultValue.count !== 0) {
         let buildOneColumnValue = {
-          name: others,
+          type: 'undefined',
+          name: `Without Tag: ${selectedTagKeySecond}`,
           count: resultValue.count,
           total: resultValue.total,
           avg: resultValue.avg,
@@ -531,7 +541,7 @@ function generateDetailRest(allColumnValues: ITableSpan[], selectedTagKeySecond:
           color: '',
           searchColor: '',
           parentElement: allColumnValues[i].name,
-          colorToPercent: '',
+          colorToPercent: 'rgb(248,248,248)',
         };
         buildOneColumnValue = buildOneColumn(buildOneColumnValue);
         newTable.push(buildOneColumnValue);
@@ -655,5 +665,8 @@ export function getColumnValuesSecondDropdown(
   selectedTagKeySecond: string,
   trace: Trace
 ) {
-  return valueSecondDropdown(actualTableValues, selectedTagKey, selectedTagKeySecond, trace);
+  if (selectedTagKeySecond !== 'Reset') {
+    return valueSecondDropdown(actualTableValues, selectedTagKey, selectedTagKeySecond, trace);
+  }
+  return getColumnValues(selectedTagKey, trace);
 }

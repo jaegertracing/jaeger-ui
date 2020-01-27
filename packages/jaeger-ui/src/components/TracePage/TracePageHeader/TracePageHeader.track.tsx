@@ -12,14 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { getToggleValue, OPEN } from '../../../utils/tracking/common';
+import { getToggleValue } from '../../../utils/tracking/common';
 import { trackEvent } from '../../../utils/tracking';
 
-const CATEGORY_ALT_VIEW = 'jaeger/ux/trace/alt-view';
-const CATEGORY_SLIM_HEADER = 'jaeger/ux/trace/slim-header';
+// export for tests
+export const CATEGORY_ALT_VIEW = 'jaeger/ux/trace/alt-view';
+export const CATEGORY_SLIM_HEADER = 'jaeger/ux/trace/slim-header';
+
+// export for tests
+export const ACTION_GANTT = 'gantt';
+export const ACTION_GRAPH = 'graph';
+export const ACTION_JSON = 'json';
+export const ACTION_RAW_JSON = 'rawJson';
+export const ACTION_STATISTICS = 'traceStatistics';
 
 // use a closure instead of bind to prevent forwarding any arguments to trackEvent()
-export const trackAltViewOpen = () => trackEvent(CATEGORY_ALT_VIEW, OPEN);
+export const trackGanttView = () => trackEvent(CATEGORY_ALT_VIEW, ACTION_GANTT);
+export const trackGraphView = () => trackEvent(CATEGORY_ALT_VIEW, ACTION_GRAPH);
+export const trackJsonView = () => trackEvent(CATEGORY_ALT_VIEW, ACTION_JSON);
+export const trackRawJsonView = () => trackEvent(CATEGORY_ALT_VIEW, ACTION_RAW_JSON);
+export const trackStatisticsView = () => trackEvent(CATEGORY_ALT_VIEW, ACTION_STATISTICS);
 
 export const trackSlimHeaderToggle = (isOpen: boolean) =>
   trackEvent(CATEGORY_SLIM_HEADER, getToggleValue(isOpen));

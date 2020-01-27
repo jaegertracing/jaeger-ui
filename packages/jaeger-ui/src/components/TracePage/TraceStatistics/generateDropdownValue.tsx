@@ -18,22 +18,21 @@ import { ITableSpan } from './types';
 
 const serviceName = 'Service Name';
 const operationName = 'Operation Name';
-const others = 'Others';
 
 /**
  * Used to get the values if no tag is picked from the first dropdown.
  */
-function getValueTagIsPicked(tableValue: ITableSpan[], trace: Trace, tagDropdownTitle: string) {
+function getValueTagIsPicked(tableValue: ITableSpan[], trace: Trace, nameSelectorTitle: string) {
   const allSpans = trace.spans;
   let availableTags = [];
 
   // add all Spans with this tag key
 
   for (let i = 0; i < tableValue.length; i++) {
-    if (tableValue[i].name !== others) {
+    if (tableValue[i].type !== 'undefined') {
       for (let j = 0; j < allSpans.length; j++) {
         for (let l = 0; l < allSpans[j].tags.length; l++) {
-          if (tagDropdownTitle === allSpans[j].tags[l].key) {
+          if (nameSelectorTitle === allSpans[j].tags[l].key) {
             availableTags.push(allSpans[j]);
           }
         }
@@ -51,7 +50,7 @@ function getValueTagIsPicked(tableValue: ITableSpan[], trace: Trace, tagDropdown
     .uniq()
     .value();
   tagKeys = _.filter(tagKeys, function calc(o) {
-    return o !== tagDropdownTitle;
+    return o !== nameSelectorTitle;
   });
   availableTags = [];
   availableTags.push(serviceName);
@@ -64,10 +63,10 @@ function getValueTagIsPicked(tableValue: ITableSpan[], trace: Trace, tagDropdown
 /**
  * Used to get the values if no tag is picked from the first dropdown.
  */
-function getValueNoTagIsPicked(tableValue: ITableSpan[], trace: Trace, tagDropdownTitle: string) {
+function getValueNoTagIsPicked(trace: Trace, nameSelectorTitle: string) {
   let availableTags = [];
   const allSpans = trace.spans;
-  if (tagDropdownTitle === serviceName) {
+  if (nameSelectorTitle === serviceName) {
     availableTags.push(operationName);
   } else {
     availableTags.push(serviceName);
@@ -96,13 +95,12 @@ export function generateDropdownValue(trace: Trace) {
   return values;
 }
 
-export function generateSecondDropdownValue(
-  tableValue: ITableSpan[],
-  trace: Trace,
-  dropdownTestTitle1: string
-) {
-  if (dropdownTestTitle1 !== serviceName && dropdownTestTitle1 !== operationName) {
-    return getValueTagIsPicked(tableValue, trace, dropdownTestTitle1);
+export function generateSecondDropdownValue(tableValue: ITableSpan[], trace: Trace, dropdownTitle1: string) {
+  let values;
+  if (dropdownTitle1 !== serviceName && dropdownTitle1 !== operationName) {
+    values = getValueTagIsPicked(tableValue, trace, dropdownTitle1);
+  } else {
+    values = getValueNoTagIsPicked(trace, dropdownTitle1);
   }
-  return getValueNoTagIsPicked(tableValue, trace, dropdownTestTitle1);
+  return values;
 }

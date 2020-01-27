@@ -15,19 +15,19 @@
 import * as _ from 'lodash';
 import React, { Component } from 'react';
 import './MainTableData.css';
-import { ITableSpan } from './types';
 
 type Props = {
-  oneSpan: ITableSpan;
+  type: string;
   name: string;
   searchColor: string;
   values: any[];
   columnsArray: any;
   togglePopup: any;
-  dropdownTestTitle1: string;
-  dropdowntestTitle2: string;
+  dropdownTitle1: string;
+  dropdownTitle2: string;
   color: string;
   clickColumn: (name: string) => void;
+  colorToPercent: string;
 };
 
 type State = {
@@ -52,45 +52,71 @@ export default class MainTableData extends Component<Props, State> {
   }
 
   render() {
-    const trOption1 = {
-      background: this.props.searchColor,
-      borderColor: this.props.searchColor,
-      cursor: 'pointer',
+    const styleOption1 = {
+      background: this.props.colorToPercent,
+      borderColor: this.props.colorToPercent,
+      cursor: 'default',
     };
 
-    const trOption2 = {
+    const styleOption2 = {
       background: this.props.searchColor,
       borderColor: this.props.searchColor,
+      cursor: 'default',
     };
 
     const labelOption1 = {
-      borderColor: this.props.color,
       color: 'rgb(153,153,153)',
       fontStyle: 'italic',
     };
 
     const labelOption2 = {
+      borderLeft: '4px solid transparent',
+      paddingLeft: '0.6em',
       borderColor: this.props.color,
     };
 
-    const others = 'Others';
-    const noItemSelected = 'No Item selected';
+    const others = 'undefined';
 
-    const trStyle = this.props.dropdowntestTitle2 !== noItemSelected ? trOption1 : trOption2;
+    let styleCondition;
+    if (this.props.type === others) {
+      if (this.props.dropdownTitle2 !== 'No Item selected' && this.props.type !== 'undefined') {
+        styleOption1.cursor = 'pointer';
+      }
+      styleCondition = styleOption1;
+    } else if (this.props.searchColor === 'transparent') {
+      if (this.props.dropdownTitle2 !== 'No Item selected') {
+        styleOption1.cursor = 'pointer';
+      }
+      styleCondition = styleOption1;
+    } else {
+      if (this.props.dropdownTitle2 !== 'No Item selected') {
+        styleOption1.cursor = 'pointer';
+      }
+      styleCondition = styleOption2;
+    }
+
+    let labelCondition;
+    if (this.props.color !== '') {
+      labelCondition = labelOption2;
+    } else if (this.props.type === 'undefined') {
+      labelCondition = labelOption1;
+    } else {
+      labelCondition = undefined;
+    }
+
     const onClickOption =
-      this.props.dropdownTestTitle1 === 'sql' && this.props.name !== others
+      this.props.dropdownTitle1 === 'sql' && this.props.type !== others
         ? () => this.props.togglePopup(this.props.name)
         : undefined;
-    const labelStyle = this.props.name === others ? labelOption1 : labelOption2;
     return (
       <tr
         className="MainTableData--tr"
         onClick={() => this.props.clickColumn(this.props.name)}
-        style={trStyle}
+        style={styleCondition}
       >
         <td className="MainTableData--td">
           <a role="button" onClick={onClickOption} style={{ color: 'inherit' }}>
-            <label title={this.props.name} className="MainTableData--labelBorder" style={labelStyle}>
+            <label title={this.props.name} className="MainTableData--label" style={labelCondition}>
               {this.props.name}
             </label>
           </a>

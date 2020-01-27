@@ -188,7 +188,7 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
           ref={forwardedRef}
           resultCount={resultCount}
           textFilter={textFilter}
-          navigable={!(selectedTraceView !== 0)}
+          navigable={selectedTraceView === 0}
         />
         {showShortcutsHelp && <KeyboardShortcutsHelp className="ub-m2" />}
         {showViewOptions && (

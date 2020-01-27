@@ -13,10 +13,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-.DropDown {
-  padding-top: 0.6em;
-  padding-bottom: 0.6em;
-  padding-left: 0.6em;
-  position: relative;
-  display: inline-block;
+.title--TraceStatistics {
+  width: 100%;
+  padding-top: 0.3%;
+  padding-bottom: 0.3%;
+  padding-left: 0.4%;
+  background: rgb(236, 236, 236);
+  margin-bottom: 0%;
+}
+
+.DetailTraceTableTbody--TraceStatistics {
+  position: absolute;
+  border-bottom: 1px solid rgb(204, 204, 204);
 }

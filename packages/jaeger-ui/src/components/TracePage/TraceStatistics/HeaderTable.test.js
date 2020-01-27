@@ -12,21 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export interface ITableSpan {
-  name: string;
-  count: number;
-  total: number;
-  avg: number;
-  min: number;
-  max: number;
-  self: number;
-  selfAvg: number;
-  selfMin: number;
-  selfMax: number;
-  percent: number;
-  isDetail: boolean;
-  parentElement: string;
-  color: string; // If it is a service name, the color will be set.
-  searchColor: string;
-  colorToPercent: string; // Color created by percent
-}
+import React from 'react';
+import { shallow } from 'enzyme';
+import HeaderTable from './HeaderTable';
+
+describe('<HeaderTable>', () => {
+  let wrapper;
+  let props;
+
+  beforeEach(() => {
+    props = {
+      element: { title: 'Name' },
+      sortIndex: 1,
+      index: 1,
+      sortClick: () => {},
+      sortAsc: false,
+    };
+    wrapper = shallow(<HeaderTable {...props} />);
+  });
+
+  it('does not explode', () => {
+    expect(wrapper).toBeDefined();
+    expect(wrapper.find('.HeaderTable--th').length).toBe(1);
+    expect(wrapper.find('.HeaderTable--sortButton').length).toBe(1);
+  });
+});
