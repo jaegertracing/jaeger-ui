@@ -35,3 +35,14 @@ limitations under the License.
 .DdgVectorBorders.is-withViewModifiers {
   stroke-opacity: 0.1;
 }
+
+.Ddg--loadingIndicator {
+  position: absolute;
+  height: 0;
+  width: 0;
+  margin: auto;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}

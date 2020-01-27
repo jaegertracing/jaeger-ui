@@ -76,15 +76,18 @@ export type TNodesUpdate<T = Record<string, unknown>> = {
   type: ECoordinatorPhase.Positions;
   layoutId: number;
   graph: TLayoutGraph;
-  vertices: TLayoutVertex<T>[];
+  // vertices: TLayoutVertex<T>[];
+  vertices: Map<string, TLayoutVertex<T>>;
 };
 
 export type TLayoutUpdate<T = Record<string, unknown>, U = Record<string, unknown>> = {
   type: ECoordinatorPhase.Done;
   layoutId: number;
   graph: TLayoutGraph;
-  edges: TLayoutEdge<U>[];
-  vertices: TLayoutVertex<T>[];
+  // edges: TLayoutEdge<{}>[] | null;
+  edges: Map<TEdge<U>, TLayoutEdge<U>> | null;
+  // vertices: TLayoutVertex<T>[];
+  vertices: Map<string, TLayoutVertex>;
 };
 
 export type TUpdate<T = Record<string, unknown>, U = Record<string, unknown>> =

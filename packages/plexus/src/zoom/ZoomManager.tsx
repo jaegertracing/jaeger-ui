@@ -93,7 +93,7 @@ export default class ZoomManager {
       this.contentSize = size;
     }
     this.setExtent();
-    this.resetZoom();
+    // this.resetZoom();
   }
 
   public resetZoom = () => {

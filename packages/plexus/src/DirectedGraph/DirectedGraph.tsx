@@ -153,7 +153,7 @@ export default class DirectedGraph<T> extends React.PureComponent<
   _onPositionsDone = (result: TCancelled | TPositionsDone) => {
     if (!result.isCancelled) {
       const { graph: layoutGraph, vertices: layoutVertices } = result;
-      this.setState({ layoutGraph, layoutVertices, layoutPhase: PHASE_CALC_EDGES });
+      this.setState({ layoutGraph, layoutVertices: Array.from(layoutVertices.values()), layoutPhase: PHASE_CALC_EDGES });
     }
   };
 
@@ -163,7 +163,7 @@ export default class DirectedGraph<T> extends React.PureComponent<
       return;
     }
     const { edges: layoutEdges, graph: layoutGraph, vertices: layoutVertices } = result;
-    this.setState({ layoutEdges, layoutGraph, layoutVertices, layoutPhase: PHASE_DONE });
+    this.setState({ layoutEdges: layoutEdges && Array.from(layoutEdges.values()), layoutGraph, layoutVertices: Array.from(layoutVertices.values()), layoutPhase: PHASE_DONE });
     if (this.zoomManager) {
       this.zoomManager.setContentSize(layoutGraph);
     }

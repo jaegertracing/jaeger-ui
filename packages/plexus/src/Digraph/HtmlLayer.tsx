@@ -30,6 +30,21 @@ type TProps<T = {}, U = {}> = Record<string, unknown> &
 const STYLE: React.CSSProperties = { left: 0, position: 'absolute', top: 0 };
 
 export default class HtmlLayer<T = {}, U = {}> extends React.PureComponent<TProps<T, U>> {
+
+  /*
+  shouldComponentUpdate(nextProps: TProps<T, U>) {
+    let rv = false;
+    Object.keys(nextProps).forEach((key) => {
+      const k = key as keyof TProps<T, U>;
+      if (nextProps[k] !== this.props[k]) {
+        rv = true;
+        console.log(`${k} changed in html layer props`);
+      }
+    });
+    return rv;
+  }
+   */
+
   render() {
     const {
       children,
@@ -40,6 +55,7 @@ export default class HtmlLayer<T = {}, U = {}> extends React.PureComponent<TProp
       standalone,
       topLayer,
     } = this.props;
+    // console.log('html layer render');
     const { zoomTransform } = graphState;
     const zoomStyle = { style: topLayer || standalone ? ZoomManager.getZoomStyle(zoomTransform) : {} };
     const containerProps = assignMergeCss(

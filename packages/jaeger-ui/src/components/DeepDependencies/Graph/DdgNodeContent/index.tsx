@@ -154,11 +154,21 @@ export default class DdgNodeContent extends React.PureComponent<TProps, TState> 
   private updateChildren = () => {
     const { updateGenerationVisibility, vertexKey } = this.props;
     updateGenerationVisibility(vertexKey, EDirection.Downstream);
+    if (this.state.childrenVisibility === ECheckedStatus.Full) {
+      this.setState({ childrenVisibility: ECheckedStatus.Empty });
+    } else {
+      this.setState({ childrenVisibility: ECheckedStatus.Full });
+    }
   };
 
   private updateParents = () => {
     const { updateGenerationVisibility, vertexKey } = this.props;
     updateGenerationVisibility(vertexKey, EDirection.Upstream);
+    if (this.state.parentVisibility === ECheckedStatus.Full) {
+      this.setState({ parentVisibility: ECheckedStatus.Empty });
+    } else {
+      this.setState({ parentVisibility: ECheckedStatus.Full });
+    }
   };
 
   private viewTraces = () => {
@@ -215,6 +225,7 @@ export default class DdgNodeContent extends React.PureComponent<TProps, TState> 
   render() {
     const { childrenVisibility, parentVisibility } = this.state;
     const { focalNodeUrl, isFocalNode, isPositioned, operation, service } = this.props;
+    console.log('ddg node render');
 
     const { radius, svcWidth, opWidth, svcMarginTop } = calcPositioning(service, operation);
     const scaleFactor = RADIUS / radius;

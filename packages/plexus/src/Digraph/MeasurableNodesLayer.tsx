@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import * as React from 'react';
+import memoizeOne from 'memoize-one';
 
 import HtmlLayer from './HtmlLayer';
 import MeasurableNode from './MeasurableNode';
@@ -26,7 +27,7 @@ import {
   ELayoutPhase,
   ELayerType,
 } from './types';
-import { TSizeVertex, TVertex } from '../types';
+import { TEdge, TSizeVertex, TVertex } from '../types';
 
 type TProps<T = {}, U = {}> = Omit<TMeasurableNodeRenderer<T>, 'measurable'> &
   TSetOnContainer<T, U> & {
@@ -67,6 +68,29 @@ export default class MeasurableNodesLayer<T = {}, U = {}> extends React.PureComp
     };
   }
 
+  shouldComponentUpdate(nextProps: TProps<T, U>, nextState: TState<T>) {
+    let rv = false;
+    Object.keys(nextProps).forEach((key) => {
+      const k = key as keyof TProps<T, U>;
+      if (nextProps[k] !== this.props[k]) {
+        rv = true;
+        console.log(`${k} changed in measurable layer props`);
+      }
+    });
+    if (!rv) {
+    Object.keys(nextState).forEach((key) => {
+      const k = key as keyof TState<T>;
+      if (nextState[k] !== this.state[k]) {
+        rv = true;
+        console.log(`${k} changed in measurable layer state`);
+      }
+    });
+    }
+    return rv;
+  }
+
+
+
   constructor(props: TProps<T, U>) {
     super(props);
     const { graphState } = props;
@@ -78,18 +102,16 @@ export default class MeasurableNodesLayer<T = {}, U = {}> extends React.PureComp
   }
 
   componentDidMount() {
-    this.measureNodes();
+    this.measureNodes(this.props.graphState.vertices, this.props.graphState.edges);
   }
 
   componentDidUpdate() {
-    this.measureNodes();
+    this.measureNodes(this.props.graphState.vertices, this.props.graphState.edges);
   }
 
-  private measureNodes() {
-    const { layoutPhase, vertices } = this.props.graphState;
-    if (layoutPhase !== ELayoutPhase.CalcSizes) {
-      return;
-    }
+  private vertexToMeasured: WeakMap<TVertex<T>, TSizeVertex<T>> = new WeakMap();
+
+  private measureNodes: (vertices: TVertex<T>[], edges: TEdge<U>[]) => void = memoizeOne((vertices: TVertex<T>[], edges: TEdge<U>[]) => {
     const { nodeRefs } = this.state;
     if (!nodeRefs) {
       return;
@@ -117,17 +139,29 @@ export default class MeasurableNodesLayer<T = {}, U = {}> extends React.PureComp
       current = nodeRefs[i].current;
       const vertex = vertices[i];
       if (current) {
+        /*
         sizeVertices.push({
           vertex,
           ...(measureNode && utils ? measureNode(vertex, utils) : current.measure()),
         });
+         */
+        let measured = this.vertexToMeasured.get(vertex);
+        if (!measured) {
+          measured = {
+            vertex,
+            ...(measureNode && utils ? measureNode(vertex, utils) : current.measure()),
+          };
+          this.vertexToMeasured.set(vertex, measured);
+        }
+        sizeVertices.push(measured);
       }
     }
     setSizeVertices(senderKey, sizeVertices);
-  }
+  });
 
   render() {
     const { nodeRefs } = this.state;
+    console.log('measurable layer render');
     if (nodeRefs) {
       const {
         getClassName,

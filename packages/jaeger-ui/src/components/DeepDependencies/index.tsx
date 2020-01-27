@@ -265,10 +265,8 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
         viewModifiers
       );
       if (vertices.length > 1) {
-        // TODO: using `key` here is a hack, debug digraph to fix the underlying issue
         content = (
           <Graph
-            key={JSON.stringify(urlState)}
             baseUrl={baseUrl}
             density={density}
             edges={edges}

@@ -21,7 +21,7 @@ import { isSamePropSetter } from './utils';
 
 type TProps<T = {}> = {
   getClassName: (name: string) => string;
-  layoutEdges: TLayoutEdge<T>[];
+  layoutEdges: Map<unknown, TLayoutEdge<T>>;
   markerEndId?: string;
   markerStartId?: string;
   renderUtils: TRendererUtils;
@@ -43,7 +43,7 @@ export default class SvgEdges<T = {}> extends React.Component<TProps<T>> {
 
   render() {
     const { getClassName, layoutEdges, markerEndId, markerStartId, renderUtils, setOnEdge } = this.props;
-    return layoutEdges.map(edge => (
+    return Array.from(layoutEdges.values()).map(edge => (
       <SvgEdge
         key={`${edge.edge.from}\v${edge.edge.to}`}
         getClassName={getClassName}

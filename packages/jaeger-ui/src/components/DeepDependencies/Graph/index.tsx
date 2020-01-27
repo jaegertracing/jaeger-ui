@@ -30,6 +30,7 @@ import {
   PathElem,
   TDdgVertex,
 } from '../../../model/ddg/types';
+import LoadingIndicator from '../../common/LoadingIndicator';
 
 import './index.css';
 
@@ -71,6 +72,29 @@ const edgesDefs: TNonEmptyArray<TDefEntry<TDdgVertex, unknown>> = [
   { localId: 'arrow-hovered', setOnEntry: { className: 'Ddg--Arrow is-pathHovered' } },
 ];
 
+const temp = memoize((
+              baseUrl,
+              density,
+              extraUrlArgs,
+              focusPathsThroughVertex,
+              getGenerationVisibility,
+              getVisiblePathElems,
+              hideVertex,
+              setOperation,
+              setViewModifier,
+              updateGenerationVisibility,
+) => ({
+  baseUrl,
+  density,
+  extraUrlArgs,
+  focusPathsThroughVertex,
+  getGenerationVisibility,
+  getVisiblePathElems,
+  hideVertex,
+  setOperation,
+  setViewModifier,
+  updateGenerationVisibility,
+}));
 export default class Graph extends PureComponent<TProps> {
   private getNodeRenderers = memoize(getNodeRenderers);
   private getNodeContentRenderer = memoize(DdgNodeContent.getNodeRenderer);
@@ -117,10 +141,12 @@ export default class Graph extends PureComponent<TProps> {
         zoom
         minimapClassName="u-miniMap"
         layoutManager={this.layoutManager}
+        loadingIndicator={<LoadingIndicator className="Ddg--loadingIndicator" />}
         edges={edges}
         vertices={vertices}
         measurableNodesKey="nodes/content"
         layers={[
+          /* TODO should these be grouped? */
           {
             key: 'nodes/find-emphasis/vector-color-band',
             layerType: 'svg',
@@ -155,7 +181,7 @@ export default class Graph extends PureComponent<TProps> {
             layerType: 'html',
             measurable: true,
             measureNode: DdgNodeContent.measureNode,
-            renderNode: this.getNodeContentRenderer({
+            renderNode: this.getNodeContentRenderer(temp(
               baseUrl,
               density,
               extraUrlArgs,
@@ -166,7 +192,7 @@ export default class Graph extends PureComponent<TProps> {
               setOperation,
               setViewModifier,
               updateGenerationVisibility,
-            }),
+            )),
           },
         ]}
       />

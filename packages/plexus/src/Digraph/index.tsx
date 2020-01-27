@@ -38,8 +38,8 @@ import TNonEmptyArray from '../types/TNonEmptyArray';
 import MiniMap from '../zoom/MiniMap';
 import ZoomManager, { zoomIdentity, ZoomTransform } from '../zoom/ZoomManager';
 
-type TDigraphState<T = {}, U = {}> = Omit<TExposedGraphState<T, U>, 'renderUtils'> & {
-  sizeVertices: TSizeVertex<T>[] | null;
+type TDigraphState<T = {}, U = {}> = Omit<Omit<Omit<TExposedGraphState<T, U>, 'renderUtils'>, 'edges'>, 'vertices'> & {
+  // sizeVertices: TSizeVertex<T>[] | null;
 };
 
 type TDigraphProps<T = unknown, U = unknown> = {
@@ -48,6 +48,7 @@ type TDigraphProps<T = unknown, U = unknown> = {
   edges: TEdge<U>[];
   layers: TNonEmptyArray<TLayer<T, U>>;
   layoutManager: LayoutManager;
+  loadingIndicator?: React.ReactNode;
   measurableNodesKey: string;
   minimap?: boolean;
   minimapClassName?: string;
@@ -95,17 +96,16 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
   };
 
   state: TDigraphState<T, U> = {
-    edges: [],
     layoutEdges: null,
     layoutGraph: null,
     layoutPhase: ELayoutPhase.NoData,
     layoutVertices: null,
-    sizeVertices: null,
-    vertices: [],
+    // sizeVertices: null,
     zoomTransform: zoomIdentity,
   };
 
   baseId = `plexus--Digraph--${idCounter++}`;
+  hasFinished = false;
 
   makeClassNameFactory = memoizeOne((classNamePrefix: string) => {
     return (name: string) => `${classNamePrefix} ${classNamePrefix}-Digraph--${name}`;
@@ -120,8 +120,6 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
     const { edges, vertices, zoom: zoomEnabled } = props;
     if (Array.isArray(edges) && edges.length && Array.isArray(vertices) && vertices.length) {
       this.state.layoutPhase = ELayoutPhase.CalcSizes;
-      this.state.edges = edges;
-      this.state.vertices = vertices;
     }
     if (zoomEnabled) {
       this.zoomManager = new ZoomManager(this.onZoomUpdated);
@@ -149,25 +147,70 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
       const values = `expected ${JSON.stringify(expectedKey)}, recieved ${JSON.stringify(senderKey)}`;
       throw new Error(`Key mismatch for measuring nodes; ${values}`);
     }
-    this.setState({ sizeVertices });
+    // TODO necessary?? seems like no
+    // this.setState({ sizeVertices });
     const { layout } = layoutManager.getLayout(edges, sizeVertices);
-    layout.then(this.onLayoutDone);
-    this.setState({ sizeVertices, layoutPhase: ELayoutPhase.CalcPositions });
+    /*
+    layout.then((...args) => {
+      (window as any).cont = () => this.onLayoutDone(...args);
+      console.log('can cont()');
+    });
+     */
+    layout.then((...args) => setTimeout(() => this.onLayoutDone(...args), 350));
+    /*
+    layout.then((...args) => setTimeout(() => {
+      debugger;
+      this.onLayoutDone(...args);
+    }, 350));
+     */
+    // TODO: probably want next line
+    this.setState({ layoutPhase: ELayoutPhase.CalcPositions });
+    // this.setState({ sizeVertices, layoutPhase: ELayoutPhase.CalcPositions });
     // We can add support for drawing nodes in the correct position before we have edges
     // via the following (instead of the above)
     // const { positions, layout } = layoutManager.getLayout(edges, sizeVertices);
     // positions.then(this._onPositionsDone);
   };
 
-  private renderLayers() {
-    const { classNamePrefix, layers: topLayers } = this.props;
-    const getClassName = this.makeClassNameFactory(classNamePrefix || '');
+  private getGraphState = memoizeOne((state, edges: TEdge<U>[], vertices: TVertex<T>[]) => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { sizeVertices: _, ...partialGraphState } = this.state;
-    const graphState = {
+    const { /* sizeVertices: _, */ layoutEdges: evs, layoutVertices: lvs, ...partialGraphState } = this.state; // TODO delet previous line?
+    const rv: TExposedGraphState<T, U> = {
       ...partialGraphState,
+      edges,
+      layoutEdges: null,
+      layoutVertices: null,
       renderUtils: this.renderUtils,
+      vertices,
     };
+
+    if (lvs) {
+      const layoutVertices = new Map();
+      vertices.forEach(({ key }) => {
+        const lv = lvs.get(key);
+        if (lv) layoutVertices.set(key, lv);
+      });
+
+      rv.layoutVertices = layoutVertices;
+    }
+
+    if (evs) {
+      const layoutEdges = new Map();
+      edges.forEach(edge => {
+        const ev = evs.get(edge);
+        if (ev) layoutEdges.set(edge, ev);
+      });
+
+      rv.layoutEdges = layoutEdges;
+    }
+
+    return rv;
+  });
+
+  private renderLayers() {
+    const { edges, classNamePrefix, layers: topLayers, vertices } = this.props;
+    const getClassName = this.makeClassNameFactory(classNamePrefix || '');
+    const graphState = this.getGraphState(this.state, edges, vertices);
     const { layoutPhase } = graphState;
     return topLayers.map(layer => {
       const { layerType, key, setOnContainer } = layer;
@@ -265,18 +308,45 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
     this.setState({ layoutEdges, layoutGraph, layoutVertices, layoutPhase: ELayoutPhase.Done });
     if (this.zoomManager) {
       this.zoomManager.setContentSize(layoutGraph);
+      if (!this.hasFinished) this.zoomManager.resetZoom();
     }
+    this.hasFinished = true;
   };
+
+  shouldComponentUpdate(nextProps: TDigraphProps<T, U>, nextState: TDigraphState<T, U>) {
+    let rv = false;
+    Object.keys(nextProps).forEach((key) => {
+      const k = key as keyof TDigraphProps<T, U>;
+      if (nextProps[k] !== this.props[k]) {
+        rv = true;
+        console.log(`${k} changed in digraph props`);
+      }
+    });
+    if (!rv) {
+    Object.keys(nextState).forEach((key) => {
+      const k = key as keyof TDigraphState<T, U>;
+      if (nextState[k] !== this.state[k]) {
+        rv = true;
+        console.log(`${k} changed in digraph state`);
+      }
+    });
+    }
+    return rv;
+  }
 
   render() {
     const {
       className,
       classNamePrefix,
+      edges,
+      loadingIndicator,
       minimap: minimapEnabled,
       minimapClassName,
       setOnGraph,
       style,
+      vertices,
     } = this.props;
+    console.log('digraph render');
     const builtinStyle = this.zoomManager ? WRAPPER_STYLE_ZOOM : WRAPPER_STYLE;
     const rootProps = assignMergeCss(
       {
@@ -284,7 +354,12 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
         className: `${classNamePrefix} ${classNamePrefix}-Digraph`,
       },
       { className, style },
-      getProps(setOnGraph, { ...this.state, renderUtils: this.renderUtils })
+      getProps(setOnGraph, {
+        ...this.state,
+        edges,
+        renderUtils: this.renderUtils,
+        vertices,
+      })
     );
     return (
       <div {...rootProps}>
@@ -298,6 +373,7 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
             {...this.zoomManager.getProps()}
           />
         )}
+        {this.state.layoutPhase !== ELayoutPhase.Done && loadingIndicator}
       </div>
     );
   }

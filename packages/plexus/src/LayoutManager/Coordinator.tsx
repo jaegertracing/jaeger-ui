@@ -237,25 +237,29 @@ export default class Coordinator {
     const adjCleanVertices = vertices.map<TLayoutVertex>(adjVertexCoords);
     const adjVertices = input.unmapVertices(adjCleanVertices);
     const adjGraph = convCoord.graphToPixels(graph);
+    const vertexMap = new Map(adjVertices.map(v => [v.vertex.key, v]));
 
     if (phase === EWorkerPhase.Positions || phase === EWorkerPhase.DotOnly) {
       this.callback({
         type: ECoordinatorPhase.Positions,
         layoutId: layout.id,
         graph: adjGraph,
-        vertices: adjVertices,
+        vertices: vertexMap, // adjVertices,
       });
     }
     // phase is either edges or dot-only
     if (edges) {
       const pixelEdges = edges.map(edge => convCoord.edgeToPixels(graph, edge));
       const mergedEdges = input.unmapEdges(pixelEdges);
+      const edgeMap = new Map(mergedEdges.map(e => [e.edge, e]));
       this.callback({
         type: ECoordinatorPhase.Done,
         layoutId: layout.id,
         graph: adjGraph,
-        edges: mergedEdges,
-        vertices: adjVertices,
+        // edges: mergedEdges,
+        edges: edgeMap,
+        // vertices: adjVertices,
+        vertices: vertexMap, // adjVertices,
       });
     }
     if (phase === EWorkerPhase.Positions) {

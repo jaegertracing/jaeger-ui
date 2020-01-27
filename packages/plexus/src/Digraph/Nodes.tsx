@@ -22,7 +22,8 @@ import { isSamePropSetter } from './utils';
 type TProps<T = {}> = TNodeRenderer<T> & {
   getClassName: (name: string) => string;
   layerType: TLayerType;
-  layoutVertices: TLayoutVertex<T>[];
+  // layoutVertices: TLayoutVertex<T>[];
+  layoutVertices: Map<string, TLayoutVertex<T>>;
   renderNode: NonNullable<TNodeRenderer<T>['renderNode']>;
   renderUtils: TRendererUtils;
 };
@@ -42,7 +43,7 @@ export default class Nodes<T = {}> extends React.Component<TProps<T>> {
 
   render() {
     const { getClassName, layoutVertices, renderUtils, layerType, renderNode, setOnNode } = this.props;
-    return layoutVertices.map(lv => (
+    return Array.from(layoutVertices.values()).map(lv => (
       <Node
         key={lv.vertex.key}
         getClassName={getClassName}

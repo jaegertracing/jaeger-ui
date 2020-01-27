@@ -33,6 +33,18 @@ export default class MeasurableNode<T = {}> extends React.PureComponent<TProps<T
   htmlRef: React.RefObject<HTMLDivElement> = React.createRef();
   svgRef: React.RefObject<SVGGElement> = React.createRef();
 
+  shouldComponentUpdate(nextProps: TProps<T>) {
+    let rv = false;
+    Object.keys(nextProps).forEach((key) => {
+      const k = key as keyof TProps<T>;
+      if (nextProps[k] !== this.props[k]) {
+        rv = true;
+        console.log(`${k} changed in measurable node singular props`);
+      }
+    });
+    return rv;
+  }
+
   private measureHtml() {
     const { current } = this.htmlRef;
     if (!current) {
@@ -66,6 +78,7 @@ export default class MeasurableNode<T = {}> extends React.PureComponent<TProps<T
           position: 'absolute',
           transform:
             left == null || top == null ? undefined : `translate(${left.toFixed()}px,${top.toFixed()}px)`,
+          transition: 'transform 2s',
           visibility: hidden ? 'hidden' : undefined,
         },
       },
@@ -85,7 +98,9 @@ export default class MeasurableNode<T = {}> extends React.PureComponent<TProps<T
       {
         className: getClassName('MeasurableSvgNode'),
         transform: left == null || top == null ? undefined : `translate(${left.toFixed()}, ${top.toFixed()})`,
-        style: hidden ? SVG_HIDDEN_STYLE : null,
+        style: hidden ? SVG_HIDDEN_STYLE : {
+          transition: 'transform 2s',
+        },
       },
       getProps(setOnNode, vertex, renderUtils, layoutVertex)
     );
@@ -109,6 +124,7 @@ export default class MeasurableNode<T = {}> extends React.PureComponent<TProps<T
 
   render() {
     const { layerType } = this.props;
+    console.log('measurable node single render');
     if (layerType === ELayerType.Html) {
       return this.renderHtml();
     }
