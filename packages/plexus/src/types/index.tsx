@@ -54,7 +54,7 @@ export type TPositionsDone<T = Record<string, unknown>> = {
   isCancelled: false;
   graph: TLayoutGraph;
   // vertices: TLayoutVertex<T>[];
-  vertices: Map<string, TLayoutVertex>;
+  vertices: Map<string, TLayoutVertex<T>>;
 };
 
 export type TLayoutDone<T = Record<string, unknown>, U = Record<string, unknown>> = {

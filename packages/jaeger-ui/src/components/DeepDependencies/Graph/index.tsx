@@ -136,6 +136,7 @@ export default class Graph extends PureComponent<TProps> {
     const nodeRenderers = this.getNodeRenderers(uiFindMatches || this.emptyFindSet, verticesViewModifiers);
 
     return (
+      // TODO key = layout stuff (density, show op... that's it?) + focal svc + focal op
       <Digraph<TDdgVertex>
         minimap
         zoom

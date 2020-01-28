@@ -116,7 +116,8 @@ export default class MeasurableNodesLayer<T = {}, U = {}> extends React.PureComp
     if (!nodeRefs) {
       return;
     }
-    const { layerType, measureNode, senderKey, setSizeVertices } = this.props;
+    const { layerType, graphState: { layoutEdges, layoutVertices }, measureNode, senderKey, setSizeVertices } = this.props;
+    if (layoutVertices && vertices.every(({ key }) => layoutVertices.has(key)) && layoutEdges && edges.every(edge => layoutEdges.has(edge))) return;
     let current: MeasurableNode<T> | null = null;
     const utils = measureNode && {
       layerType,

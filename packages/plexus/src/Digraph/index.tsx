@@ -33,7 +33,7 @@ import {
 import { assignMergeCss, getProps } from './utils';
 // TODO(joe): don't use stuff in ../DirectedGraph
 import LayoutManager from '../LayoutManager';
-import { TCancelled, TEdge, TLayoutDone, TSizeVertex, TVertex } from '../types';
+import { TCancelled, TEdge, TLayoutDone, TPositionsDone, TSizeVertex, TVertex } from '../types';
 import TNonEmptyArray from '../types/TNonEmptyArray';
 import MiniMap from '../zoom/MiniMap';
 import ZoomManager, { zoomIdentity, ZoomTransform } from '../zoom/ZoomManager';
@@ -105,7 +105,6 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
   };
 
   baseId = `plexus--Digraph--${idCounter++}`;
-  hasFinished = false;
 
   makeClassNameFactory = memoizeOne((classNamePrefix: string) => {
     return (name: string) => `${classNamePrefix} ${classNamePrefix}-Digraph--${name}`;
@@ -148,15 +147,15 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
       throw new Error(`Key mismatch for measuring nodes; ${values}`);
     }
     // TODO necessary?? seems like no
-    // this.setState({ sizeVertices });
-    const { layout } = layoutManager.getLayout(edges, sizeVertices);
+    /* this.setState({ sizeVertices }); */
+    // const { layout } = layoutManager.getLayout(edges, sizeVertices);
     /*
     layout.then((...args) => {
       (window as any).cont = () => this.onLayoutDone(...args);
       console.log('can cont()');
     });
      */
-    layout.then((...args) => setTimeout(() => this.onLayoutDone(...args), 350));
+    // layout.then((...args) => setTimeout(() => this.onLayoutDone(...args), 350));
     /*
     layout.then((...args) => setTimeout(() => {
       debugger;
@@ -164,12 +163,27 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
     }, 350));
      */
     // TODO: probably want next line
-    this.setState({ layoutPhase: ELayoutPhase.CalcPositions });
+    // this.setState({ layoutPhase: ELayoutPhase.CalcPositions });
     // this.setState({ sizeVertices, layoutPhase: ELayoutPhase.CalcPositions });
     // We can add support for drawing nodes in the correct position before we have edges
     // via the following (instead of the above)
     // const { positions, layout } = layoutManager.getLayout(edges, sizeVertices);
     // positions.then(this._onPositionsDone);
+
+
+    // This works for single update (obvi remove timeout)
+    /*
+    const { layout } = layoutManager.getLayout(edges, sizeVertices);
+    layout.then((...args) => setTimeout(() => this.onLayoutDone(...args), 350));
+    this.setState({ layoutPhase: ELayoutPhase.CalcPositions });
+     */
+    // Can I just change this to layoutVertex || sizeVertices????
+    const { positions, layout } = layoutManager.getLayout(edges, sizeVertices);
+    // TODO no timeout
+    positions.then((...args) => setTimeout(() => this.onPositionsDone(...args), 350));
+    // TODO  only timeout if edges take less than two seconds, else immediate
+    layout.then((...args) => setTimeout(() => this.onLayoutDone(...args), this.state.layoutVertices ? 2350 : 350));
+    this.setState({ layoutPhase: ELayoutPhase.CalcPositions });
   };
 
   private getGraphState = memoizeOne((state, edges: TEdge<U>[], vertices: TVertex<T>[]) => {
@@ -300,17 +314,29 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
     this.setState({ zoomTransform });
   };
 
+  private onPositionsDone = (result: TCancelled | TPositionsDone<T>) => {
+    if (result.isCancelled) {
+      return;
+    }
+    const { graph: layoutGraph, vertices: layoutVertices } = result;
+    if (this.zoomManager) {
+      this.zoomManager.setContentSize(layoutGraph);
+      if (!this.state.layoutVertices) this.zoomManager.resetZoom();
+    }
+    this.setState({ layoutGraph, layoutVertices });
+  };
+
+
   private onLayoutDone = (result: TCancelled | TLayoutDone<T, U>) => {
     if (result.isCancelled) {
       return;
     }
     const { edges: layoutEdges, graph: layoutGraph, vertices: layoutVertices } = result;
-    this.setState({ layoutEdges, layoutGraph, layoutVertices, layoutPhase: ELayoutPhase.Done });
     if (this.zoomManager) {
       this.zoomManager.setContentSize(layoutGraph);
-      if (!this.hasFinished) this.zoomManager.resetZoom();
+      if (!this.state.layoutEdges) this.zoomManager.resetZoom();
     }
-    this.hasFinished = true;
+    this.setState({ layoutEdges, layoutGraph, layoutVertices, layoutPhase: ELayoutPhase.Done });
   };
 
   shouldComponentUpdate(nextProps: TDigraphProps<T, U>, nextState: TDigraphState<T, U>) {
