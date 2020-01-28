@@ -33,7 +33,7 @@ import {
 import { assignMergeCss, getProps } from './utils';
 // TODO(joe): don't use stuff in ../DirectedGraph
 import LayoutManager from '../LayoutManager';
-import { TCancelled, TEdge, TLayoutDone, TPositionsDone, TSizeVertex, TVertex } from '../types';
+import { TCancelled, TEdge, TLayoutDone, TLayoutVertex, TPositionsDone, TSizeVertex, TVertex } from '../types';
 import TNonEmptyArray from '../types/TNonEmptyArray';
 import MiniMap from '../zoom/MiniMap';
 import ZoomManager, { zoomIdentity, ZoomTransform } from '../zoom/ZoomManager';
@@ -177,8 +177,9 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
     layout.then((...args) => setTimeout(() => this.onLayoutDone(...args), 350));
     this.setState({ layoutPhase: ELayoutPhase.CalcPositions });
      */
-    // Can I just change this to layoutVertex || sizeVertices????
-    const { positions, layout } = layoutManager.getLayout(edges, sizeVertices);
+    const inVertices: (TSizeVertex<T> | TLayoutVertex<T>)[] = sizeVertices.map(v => (this.state.layoutVertices && this.state.layoutVertices.get(v.vertex.key)) || v);
+    console.log(this.state.layoutVertices, sizeVertices, inVertices);
+    const { positions, layout } = layoutManager.getLayout(edges, inVertices);
     // TODO no timeout
     positions.then((...args) => setTimeout(() => this.onPositionsDone(...args), 350));
     // TODO  only timeout if edges take less than two seconds, else immediate
@@ -339,6 +340,7 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
     this.setState({ layoutEdges, layoutGraph, layoutVertices, layoutPhase: ELayoutPhase.Done });
   };
 
+  /*
   shouldComponentUpdate(nextProps: TDigraphProps<T, U>, nextState: TDigraphState<T, U>) {
     let rv = false;
     Object.keys(nextProps).forEach((key) => {
@@ -359,6 +361,7 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
     }
     return rv;
   }
+   */
 
   render() {
     const {
@@ -372,8 +375,9 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
       style,
       vertices,
     } = this.props;
-    console.log('digraph render');
+    // console.log('digraph render');
     const builtinStyle = this.zoomManager ? WRAPPER_STYLE_ZOOM : WRAPPER_STYLE;
+    // TODO: if not done, pointer events none?
     const rootProps = assignMergeCss(
       {
         style: builtinStyle,

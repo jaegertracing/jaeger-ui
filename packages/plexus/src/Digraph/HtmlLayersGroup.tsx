@@ -69,7 +69,7 @@ export default class HtmlLayersGroup<T = {}, U = {}> extends React.PureComponent
   }
 
   render() {
-    console.log('layer group render');
+    // console.log('layer group render');
     return (
       <HtmlLayer topLayer classNamePart="HtmlLayersGroup" {...this.props}>
         {this.renderLayers()}

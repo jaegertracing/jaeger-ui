@@ -101,7 +101,8 @@ export default class Graph extends PureComponent<TProps> {
   private getSetOnEdge = memoize(getSetOnEdge);
 
   private layoutManager: LayoutManager = new LayoutManager({
-    nodesep: 0.55,
+    // nodesep: 0.55,
+    nodesep: 1, // TODO fine tune
     ranksep: 1.5,
     rankdir: 'TB',
     shape: 'circle',

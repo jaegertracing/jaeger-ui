@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { ECoordinatorPhase, TLayoutOptions, TUpdate } from './types';
-import { TCancelled, TEdge, TLayoutDone, TPendingLayoutResult, TPositionsDone, TSizeVertex } from '../types';
+import { TCancelled, TEdge, TLayoutDone, TLayoutVertex, TPendingLayoutResult, TPositionsDone, TSizeVertex } from '../types';
 
 import Coordinator from './Coordinator';
 
@@ -37,7 +37,7 @@ export default class LayoutManager {
     this.pendingResult = null;
   }
 
-  getLayout<T, U>(edges: TEdge<U>[], vertices: TSizeVertex<T>[]): TPendingLayoutResult<T, U> {
+  getLayout<T, U>(edges: TEdge<U>[], vertices: (TSizeVertex<T> | TLayoutVertex<T>)[]): TPendingLayoutResult<T, U> {
     this._cancelPending();
     this.layoutId++;
     const id = this.layoutId;
@@ -84,7 +84,7 @@ export default class LayoutManager {
       const { isPositionsResolved, resolvePositions } = pendingResult;
       if (isPositionsResolved) {
         // eslint-disable-next-line no-console
-        console.warn('Duplicate positiosn update', data);
+        console.warn('Duplicate positions update', data);
         return;
       }
       const { graph, vertices } = data;

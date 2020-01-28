@@ -51,6 +51,7 @@ export default class MeasurableNode<T = {}> extends React.PureComponent<TProps<T
     return { wasHidden: false };
   }
 
+  /*
   shouldComponentUpdate(nextProps: TProps<T>) {
     let rv = false;
     Object.keys(nextProps).forEach((key) => {
@@ -62,6 +63,7 @@ export default class MeasurableNode<T = {}> extends React.PureComponent<TProps<T
     });
     return rv;
   }
+   */
 
   private measureHtml() {
     const { current } = this.htmlRef;
@@ -143,7 +145,7 @@ export default class MeasurableNode<T = {}> extends React.PureComponent<TProps<T
 
   render() {
     const { layerType } = this.props;
-    console.log('measurable node single render');
+    // console.log('measurable node single render');
     if (layerType === ELayerType.Html) {
       return this.renderHtml();
     }

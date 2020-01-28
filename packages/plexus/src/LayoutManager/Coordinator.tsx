@@ -91,7 +91,8 @@ export default class Coordinator {
   getLayout<T, U>(
     id: number,
     inEdges: TEdge<U>[],
-    inVertices: TSizeVertex<T>[],
+    // inVertices: TSizeVertex<T>[],
+    inVertices:(TSizeVertex | TLayoutVertex)[],
     options: TLayoutOptions | void
   ) {
     this.busyWorkers.forEach(killWorker);

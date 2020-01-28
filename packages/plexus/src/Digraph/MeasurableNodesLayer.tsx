@@ -68,6 +68,7 @@ export default class MeasurableNodesLayer<T = {}, U = {}> extends React.PureComp
     };
   }
 
+  /*
   shouldComponentUpdate(nextProps: TProps<T, U>, nextState: TState<T>) {
     let rv = false;
     Object.keys(nextProps).forEach((key) => {
@@ -88,6 +89,7 @@ export default class MeasurableNodesLayer<T = {}, U = {}> extends React.PureComp
     }
     return rv;
   }
+   */
 
 
 
@@ -162,7 +164,7 @@ export default class MeasurableNodesLayer<T = {}, U = {}> extends React.PureComp
 
   render() {
     const { nodeRefs } = this.state;
-    console.log('measurable layer render');
+    // console.log('measurable layer render');
     if (nodeRefs) {
       const {
         getClassName,
