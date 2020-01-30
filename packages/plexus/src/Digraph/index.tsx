@@ -33,7 +33,7 @@ import {
 import { assignMergeCss, getProps } from './utils';
 // TODO(joe): don't use stuff in ../DirectedGraph
 import LayoutManager from '../LayoutManager';
-import { TCancelled, TEdge, TLayoutDone, TLayoutVertex, TPositionsDone, TSizeVertex, TVertex } from '../types';
+import { TCancelled, TEdge, TLayoutDone, TLayoutEdge, TLayoutVertex, TPositionsDone, TSizeVertex, TVertex } from '../types';
 import TNonEmptyArray from '../types/TNonEmptyArray';
 import MiniMap from '../zoom/MiniMap';
 import ZoomManager, { zoomIdentity, ZoomTransform } from '../zoom/ZoomManager';
@@ -177,9 +177,25 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
     layout.then((...args) => setTimeout(() => this.onLayoutDone(...args), 350));
     this.setState({ layoutPhase: ELayoutPhase.CalcPositions });
      */
-    const inVertices: (TSizeVertex<T> | TLayoutVertex<T>)[] = sizeVertices.map(v => (this.state.layoutVertices && this.state.layoutVertices.get(v.vertex.key)) || v);
-    console.log(this.state.layoutVertices, sizeVertices, inVertices);
-    const { positions, layout } = layoutManager.getLayout(edges, inVertices);
+      /*
+    const inVertices: (TSizeVertex<T> | TLayoutVertex<T>)[] = this.state.layoutGraph
+      ? sizeVertices.map(v => {
+        const lv = this.state.layoutVertices && this.state.layoutVertices.get(v.vertex.key);
+        if (lv && this.state.layoutGraph) return {
+          ...lv,
+          top: this.state.layoutGraph.height + lv.top,
+        };
+        return v;
+      })
+      : sizeVertices;
+       */
+    const inVertices: (TSizeVertex<T> | TLayoutVertex<T>)[] = sizeVertices.map(v => this.state.layoutVertices && this.state.layoutVertices.get(v.vertex.key) || v);
+    // console.log(this.state.layoutVertices, sizeVertices, inVertices);
+    const inEdges: (TEdge<U> | TLayoutEdge<U>)[] = edges.map(edge => (this.state.layoutEdges && this.state.layoutEdges.get(edge)) || edge);
+    const { positions, layout } = layoutManager.getLayout(inEdges, inVertices, this.state.layoutGraph);
+    // const { positions, layout } = layoutManager.getLayout(edges, inVertices);
+    // const { positions, layout } = layoutManager.getLayout(edges, sizeVertices);
+
     // TODO no timeout
     positions.then((...args) => setTimeout(() => this.onPositionsDone(...args), 350));
     // TODO  only timeout if edges take less than two seconds, else immediate
@@ -319,12 +335,34 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
     if (result.isCancelled) {
       return;
     }
-    const { graph: layoutGraph, vertices: layoutVertices } = result;
+    // const { graph: layoutGraph, vertices: layoutVertices } = result;
+    // TODO: TEMP
+    /*
+    const newGraph = this.state.layoutGraph ? { 
+      height: this.state.layoutGraph.height + layoutGraph.height,
+      scale: this.state.layoutGraph.scale,
+      width: this.state.layoutGraph.width + layoutGraph.width,
+    } : layoutGraph;
+     */
+
+    const { graph: layoutGraph, vertices } = result;
     if (this.zoomManager) {
       this.zoomManager.setContentSize(layoutGraph);
+      if (!this.state.layoutEdges) this.zoomManager.resetZoom();
+    }
+    const layoutVertices = this.state.layoutVertices && vertices
+      ? new Map([...this.state.layoutVertices.entries(), ...vertices.entries()])
+      : vertices;
+
+    if (this.zoomManager) {
+      this.zoomManager.setContentSize(layoutGraph);
+      // this.zoomManager.setContentSize(newGraph);
       if (!this.state.layoutVertices) this.zoomManager.resetZoom();
     }
+    console.log(layoutGraph, layoutVertices);
+    // console.log(newGraph, layoutVertices);
     this.setState({ layoutGraph, layoutVertices });
+    // this.setState({ layoutGraph: newGraph, layoutVertices });
   };
 
 
@@ -332,11 +370,18 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
     if (result.isCancelled) {
       return;
     }
-    const { edges: layoutEdges, graph: layoutGraph, vertices: layoutVertices } = result;
+    // TODO: no vertices here?
+    const { edges, graph: layoutGraph, vertices } = result;
     if (this.zoomManager) {
       this.zoomManager.setContentSize(layoutGraph);
       if (!this.state.layoutEdges) this.zoomManager.resetZoom();
     }
+    const layoutVertices = this.state.layoutVertices && vertices
+      ? new Map([...this.state.layoutVertices.entries(), ...vertices.entries()])
+      : vertices;
+    const layoutEdges = this.state.layoutEdges && edges
+      ? new Map([...this.state.layoutEdges.entries(), ...edges.entries()])
+      : edges;
     this.setState({ layoutEdges, layoutGraph, layoutVertices, layoutPhase: ELayoutPhase.Done });
   };
 

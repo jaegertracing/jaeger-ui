@@ -29,11 +29,11 @@ import {
   TWorkerInputMessage,
   TWorkerOutputMessage,
 } from './types';
-import { TEdge, TLayoutVertex, TSizeVertex, TLayoutEdge } from '../types';
+import { TEdge, TLayoutEdge, TLayoutGraph, TLayoutVertex, TSizeVertex } from '../types';
 
 type TCurrentLayout = {
   cleaned: {
-    edges: TEdge<{}>[];
+    edges: (TLayoutEdge | TEdge<{}>)[];
     vertices: TSizeVertex<{}>[];
   };
   id: number;
@@ -90,15 +90,16 @@ export default class Coordinator {
 
   getLayout<T, U>(
     id: number,
-    inEdges: TEdge<U>[],
+    inEdges: (TEdge<U> | TLayoutEdge<U>)[],
     // inVertices: TSizeVertex<T>[],
-    inVertices:(TSizeVertex | TLayoutVertex)[],
-    options: TLayoutOptions | void
+    inVertices: (TSizeVertex<T> | TLayoutVertex<T>)[],
+    options: TLayoutOptions | void,
+    previousGraph: TLayoutGraph | null
   ) {
     this.busyWorkers.forEach(killWorker);
     this.busyWorkers.length = 0;
     const { edges, unmapEdges, unmapVertices, vertices: _vertices } = convInputs(inEdges, inVertices);
-    const vertices = _vertices.map(convCoord.vertexToDot);
+    const vertices = _vertices.map(v => convCoord.vertexToDot(v, previousGraph));
     this.currentLayout = {
       id,
       cleaned: { edges, vertices },
@@ -108,7 +109,7 @@ export default class Coordinator {
     };
     const isDotOnly = Boolean(options && options.useDotEdges);
     const phase = isDotOnly ? EWorkerPhase.DotOnly : EWorkerPhase.Positions;
-    this._postWork(phase, edges, vertices);
+    this._postWork(phase, edges, vertices, previousGraph && convCoord.graphToDot(previousGraph));
   }
 
   stopAndRelease() {
@@ -138,7 +139,7 @@ export default class Coordinator {
     }
   }
 
-  _postWork(phase: EWorkerPhase, edges: TEdge[], vertices: TSizeVertex[] | TLayoutVertex[]) {
+  _postWork(phase: EWorkerPhase, edges: (TEdge | TLayoutEdge)[], vertices: (TSizeVertex | TLayoutVertex)[], previousGraph: TLayoutGraph | null = null) {
     if (!this.currentLayout) {
       throw new Error('_startWork called without a current layout');
     }
@@ -150,6 +151,7 @@ export default class Coordinator {
     const message: TWorkerInputMessage = {
       options,
       edges,
+      previousGraph,
       vertices,
       meta: {
         phase,
@@ -240,6 +242,8 @@ export default class Coordinator {
     const adjGraph = convCoord.graphToPixels(graph);
     const vertexMap = new Map(adjVertices.map(v => [v.vertex.key, v]));
 
+    // TODO: DotOnly only does not return edges?
+    // SEPARATE RETURN!!
     if (phase === EWorkerPhase.Positions || phase === EWorkerPhase.DotOnly) {
       this.callback({
         type: ECoordinatorPhase.Positions,
@@ -264,6 +268,9 @@ export default class Coordinator {
       });
     }
     if (phase === EWorkerPhase.Positions) {
+      /*
+    } else {
+       */
       this._postWork(EWorkerPhase.Edges, cleaned.edges, vertices);
     }
   }

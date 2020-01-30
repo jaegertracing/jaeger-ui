@@ -51,10 +51,11 @@ export type TLayoutWorkerMeta = {
 };
 
 export type TWorkerInputMessage = {
-  edges: TEdge<{}>[];
+  edges: (TEdge<{}> | TLayoutEdge<{}>)[];
   meta: TLayoutWorkerMeta;
   options: TLayoutOptions | null;
-  vertices: TSizeVertex<{}>[] | TLayoutVertex<{}>[];
+  previousGraph: TLayoutGraph | null;
+  vertices: (TSizeVertex<{}> | TLayoutVertex<{}>)[];
 };
 
 export type TWorkerOutputMessage = {

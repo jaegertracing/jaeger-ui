@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { ECoordinatorPhase, TLayoutOptions, TUpdate } from './types';
-import { TCancelled, TEdge, TLayoutDone, TLayoutVertex, TPendingLayoutResult, TPositionsDone, TSizeVertex } from '../types';
+import { TCancelled, TEdge, TLayoutDone, TLayoutEdge, TLayoutGraph, TLayoutVertex, TPendingLayoutResult, TPositionsDone, TSizeVertex } from '../types';
 
 import Coordinator from './Coordinator';
 
@@ -37,11 +37,11 @@ export default class LayoutManager {
     this.pendingResult = null;
   }
 
-  getLayout<T, U>(edges: TEdge<U>[], vertices: (TSizeVertex<T> | TLayoutVertex<T>)[]): TPendingLayoutResult<T, U> {
+  getLayout<T, U>(edges: (TEdge<U> | TLayoutEdge<U>)[], vertices: (TSizeVertex<T> | TLayoutVertex<T>)[], previousGraph: TLayoutGraph | null = null): TPendingLayoutResult<T, U> {
     this._cancelPending();
     this.layoutId++;
     const id = this.layoutId;
-    this.coordinator.getLayout(id, edges, vertices, this.options);
+    this.coordinator.getLayout(id, edges, vertices, this.options, previousGraph);
     this.pendingResult = { id, isPositionsResolved: false };
     const positions: Promise<TCancelled | TPositionsDone<T>> = new Promise(resolve => {
       if (this.pendingResult && id === this.pendingResult.id) {

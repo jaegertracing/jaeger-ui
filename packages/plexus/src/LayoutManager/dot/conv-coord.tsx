@@ -18,7 +18,7 @@ const round = Math.round;
 
 const DPI = 72;
 
-export function vertexToDot(v: TSizeVertex): TSizeVertex {
+export function vertexToDot(v: TSizeVertex | TLayoutVertex, previousGraph: TLayoutGraph | null): TSizeVertex | TLayoutVertex {
   /*
   // expect only width and height for going to dot
   const { vertex, height, width } = v;
@@ -28,9 +28,34 @@ export function vertexToDot(v: TSizeVertex): TSizeVertex {
     width: width / DPI,
   };
    */
+  // can no longer only expect width and height :|
   const { height, width } = v;
-  return {
+  const rv = {
     ...v,
+    height: height / DPI,
+    width: width / DPI,
+  };
+
+  if ('left' in v) {
+    if (!previousGraph) throw new Error('Cannot calculate top for LayoutVertex without previousGraph');
+    const left = v.left / DPI + rv.width / 2;
+    // const top = (previousGraph.height + v.top + height / 2) / DPI;
+    const top = (previousGraph.height - v.top - height / 2) / DPI;
+    console.log(v.top, top);
+    return {
+      ...rv,
+      left,
+      top,
+    };
+  }
+
+  return rv;
+}
+
+export function graphToDot(graph: TLayoutGraph) {
+  const { height, scale, width } = graph;
+  return {
+    scale,
     height: height / DPI,
     width: width / DPI,
   };
@@ -58,6 +83,7 @@ export function graphToPixels(graph: TLayoutGraph) {
 export function vertexToPixels(graph: TLayoutGraph, v: TLayoutVertex): TLayoutVertex {
   const { height: h } = graph;
   const { vertex, height, left, top, width } = v;
+  if (top) console.log(round((h - top - height * 0.5) * DPI), top);
   return {
     vertex,
     height: round(height * DPI),

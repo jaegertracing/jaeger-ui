@@ -43,7 +43,7 @@ function unmapEdges<T = Record<string, unknown>>(
   });
 }
 
-export default function convInputs(srcEdges: TEdge<any>[], inVertices: TSizeVertex<any>[]) {
+export default function convInputs(srcEdges: (TEdge<unknown> | TLayoutEdge<unknown>)[], inVertices: (TSizeVertex<unknown> | TLayoutVertex<unknown>)[]) {
   const keyToId = new Map<string, string>();
   const idToVertex = new Map<string, TSizeVertex<any>>();
   const idsToEdge = new Map<string, TEdge<any>>();
@@ -61,6 +61,27 @@ export default function convInputs(srcEdges: TEdge<any>[], inVertices: TSizeVert
     return { vertex: { key: id }, ...rest };
   });
   const edges = srcEdges.map(e => {
+    if ('edge' in e) {
+      const { from, to, isBidirectional } = e.edge;
+      const fromId = keyToId.get(from);
+      const toId = keyToId.get(to);
+      if (fromId == null) {
+        throw new Error(`Unrecognized key on edge, from: ${from}`);
+      }
+      if (toId == null) {
+        throw new Error(`Unrecognized key on edge, to: ${to}`);
+      }
+      const edge = {
+        isBidirectional,
+        from: fromId,
+        to: toId,
+      };
+      idsToEdge.set(makeEdgeId(edge), e);
+      return {
+        ...e,
+        edge,
+      };
+    }
     const { from, to, isBidirectional } = e;
     const fromId = keyToId.get(from);
     const toId = keyToId.get(to);
