@@ -316,7 +316,7 @@ export default function getLayout(
     const edgesOut: TLayoutEdge[] = [];
     // const verticesOut: TLayoutVertex[] = [];
     // TODO: only need to reframe once!
-    graphQueue.forEach(({ anchorKey, edges, vertices }) => {
+    graphQueue.forEach(({ anchorDirection, anchorKey, edges, vertices }) => {
       const anchorVertex = positionVertices.get(anchorKey);
       if (!anchorVertex) throw new Error(`Lost anchor: ${anchorKey}`);
       const { top: anchorTop, left: anchorLeft } = anchorVertex;
@@ -332,42 +332,184 @@ export default function getLayout(
       console.log('vizzed');
 
       console.log('going to conv');
-      const { edges: subEdges, graph, vertices: subVertices } = convPlain(plainOut, true);
+      const { edges: subEdges, graph: subGraph, vertices: subVertices } = convPlain(plainOut, true);
       console.log('conved');
       // IF THE GRAPH GROWS TALLER, EVERY EXISTING SIZE VERTEX HAS TO SHIFT UP BY THE DELTA
       // console.log(graph, previousGraph, graphOut, subVertices[0].height);
       const subAnchor = subVertices.find(({ vertex: { key } }) => key === anchorKey);
       if (!subAnchor) throw new Error(`Anchor not in graft: ${anchorKey}`);
       const { top: subAnchorTop, left: subAnchorLeft } = subAnchor;
+      const leftAdjust = anchorLeft - subAnchorLeft;
+      const topAdjust = anchorTop - subAnchorTop;
 
       // TODO: clear room for subVertices
 
       // verticesOut = verticesOut.concat(vertices);
       // verticesOut.push(...vertices);
+      // TODO: should be below?
+      /*
       subVertices.forEach(({ left, top, ...rest }) => {
         // assumes anchorDirection is 'from' and layoutOptions.direction is top -> bottom
         if (rest.vertex.key !== anchorKey) {
           // TODO: Can calculate needed room here
           positionVertices.set(rest.vertex.key, {
-            left: left + anchorLeft - subAnchorLeft,
-            top: top + anchorTop - subAnchorTop,
+            left: left + leftAdjust,
+            top: top + topAdjust,
             ...rest,
           });
         }
       });
+       */
       // major TODO
       if (subEdges) edgesOut.push(...subEdges);
 
-      // graphOut = graph;
-      // assumes one vertex is added below graph
       /*
-      graphOut = {
-        scale: 1,
-        width: previousGraph.width,
-        height: previousGraph.height + graph.height - anchorVertex.height,
-      };
-       */
-      // return reframe(graphOut /*, graph */);
+      let slideMin: number;
+      let slideDimension: 'top' | 'left';
+      let slideCheckAttribute: 'height' | 'width';
+      let slideSectionDirection: -1 | 1;
+      let collisionMin: number;
+      let collisionMax: number;
+      let collisionDimension: 'top' | 'left';
+      let collisionDivisor: number;
+      let collisionLowerLimit: number;
+      let collisionUpperLimit: number;
+      let collisionCheckAttribute: 'height' | 'width';
+      if (layoutOptions && layoutOptions.rankdir === 'TB') {
+        slideDimension = 'top';
+        collisionDimension = 'left';
+        slideCheckAttribute = 'height';
+        collisionCheckAttribute = 'width';
+        slideSectionDirection = anchorDirection === 'from' ? -1 : 1;
+        slideMin = anchorVertex[slideDimension] - (slideSectionDirection * anchorVertex[slideCheckAttribute] / 2);
+        collisionDivisor = anchorVertex[collisionDimension];
+        collisionMin = slideMin;
+        collisionMax = 
+          */
+      let slideThreshold: number;
+      let slideDimension: 'top' | 'left';
+      let otherDimension: 'top' | 'left';
+      let slideDivisor: number;
+      let slideCheckAttribute: 'height' | 'width';
+      let otherAttribute: 'height' | 'width';
+      let slideSectionDirection: -1 | 1;
+
+      // let collisionMin: number;
+      let collisionLimit: number;
+      let collisionLowerBound: number;
+      let collisionUpperBound: number;
+
+      const lowerSlideCandidates: TLayoutVertex[] = [];
+      const upperSlideCandidates: TLayoutVertex[] = [];
+      let lowerSlideDistance: number | undefined = undefined;
+      let upperSlideDistance: number | undefined = undefined;
+
+      // let collisionCheckAttribute: 'height' | 'width';
+
+      // rankdir 'BT' should work with negated anchcorDIrection
+      if (layoutOptions && layoutOptions.rankdir === 'TB') {
+        slideDimension = 'top';
+        otherDimension = 'left';
+        slideCheckAttribute = 'height';
+        // collisionCheckAttribute = 'width';
+        otherAttribute = 'width';
+        slideSectionDirection = anchorDirection === 'from' ? -1 : 1;
+
+        // TODO: everything after here shouldn't be divided by ifs
+        slideThreshold = anchorVertex[slideDimension] + (slideSectionDirection * anchorVertex[slideCheckAttribute] / 2);
+        slideDivisor = anchorVertex[otherDimension];
+        // collisionLimit = anchorVertex[slideDimension] + slideSectionDirection * (Math.max(subAnchor[slideDimension], subGraph[slideCheckAttribute], subGraph[slideCheckAttribute] - subAnchor[slideDimension]));
+        // collisionLimit = slideThreshold + (slideSectionDirection * (subGraph[slideCheckAttribute] - subAnchor[slideCheckAttribute] /* TODO: perhaps subtract part of ranksep */));
+        collisionLimit = slideThreshold + (slideSectionDirection * (subGraph[slideCheckAttribute] - subAnchor[slideCheckAttribute] + 0.1 * ((layoutOptions && layoutOptions.ranksep) || 5)));
+        collisionLowerBound = anchorVertex[otherDimension] - subAnchor[otherDimension];
+        collisionUpperBound = collisionLowerBound + subGraph[otherAttribute];
+
+        positionVertices.forEach(existingVertex => {
+          const slideThresholdCompareVal = existingVertex[slideDimension] + (slideSectionDirection * existingVertex[slideCheckAttribute] / 2);
+          if (Math.sign(slideThresholdCompareVal - slideThreshold) === slideSectionDirection) {
+            const collisionLimitCompareVal = existingVertex[slideDimension] - (slideSectionDirection * existingVertex[slideCheckAttribute] / 2);
+            const isCloseEnoughOnSlideDimensionToCollide = Math.sign(collisionLimitCompareVal - collisionLimit) !== slideSectionDirection;
+            const slideDivisorCompareVal = existingVertex[otherDimension];
+            if (slideDivisorCompareVal <= slideDivisor) {
+              lowerSlideCandidates.push(existingVertex);
+              if (isCloseEnoughOnSlideDimensionToCollide) {
+                // shouldn't be using direction for divisors, divisors are absolute
+                /*
+                const lowerSlideDistanceCompareVal = existingVertex[otherDimension] - (slideSectionDirection * existingVertex[otherAttribute] / 2) - collisionLowerBound;
+                if (lowerSlideDistanceCompareVal < 0 && (lowerSlideDistance === undefined || lowerSlideDistanceCompareVal < lowerSlideDistance)) lowerSlideDistance = lowerSlideDistanceCompareVal;
+                 */
+                const lowerSlideDistanceCompareVal = existingVertex[otherDimension] + existingVertex[otherAttribute] / 2 - collisionLowerBound;
+                if (lowerSlideDistanceCompareVal > 0 && (lowerSlideDistance === undefined || lowerSlideDistanceCompareVal < lowerSlideDistance)) lowerSlideDistance = -1 * lowerSlideDistanceCompareVal;
+              }
+            } else {
+              upperSlideCandidates.push(existingVertex);
+              if (isCloseEnoughOnSlideDimensionToCollide) {
+                /*
+                const upperSlideDistanceCompareVal = existingVertex[otherDimension] - (slideSectionDirection * existingVertex[otherAttribute] / 2) - collisionUpperBound;
+                if (upperSlideDistanceCompareVal < 0 && (upperSlideDistance === undefined || upperSlideDistanceCompareVal > upperSlideDistance)) upperSlideDistance = -1 * upperSlideDistanceCompareVal;
+                 */
+                const upperSlideDistanceCompareVal = existingVertex[otherDimension] - existingVertex[otherAttribute] / 2 - collisionUpperBound;
+                if (upperSlideDistanceCompareVal < 0 && (upperSlideDistance === undefined || upperSlideDistanceCompareVal > upperSlideDistance)) upperSlideDistance = -1 * upperSlideDistanceCompareVal;
+              }
+            }
+          }
+        });
+
+        if (lowerSlideDistance) {
+          lowerSlideCandidates.forEach(vertex => {
+            positionVertices.set(vertex.vertex.key, {
+              ...vertex,
+              [otherDimension]: vertex[otherDimension] + (lowerSlideDistance as number),
+            });
+          });
+        }
+
+        if (upperSlideDistance) {
+          upperSlideCandidates.forEach(vertex => {
+            positionVertices.set(vertex.vertex.key, {
+              ...vertex,
+              [otherDimension]: vertex[otherDimension] + (upperSlideDistance as number),
+            });
+          });
+        }
+
+        console.log(JSON.stringify({
+          anchorVertex,
+          subAnchor,
+          subGraph,
+          slideThreshold,
+          collisionLimit,
+          collisionLowerBound,
+          collisionUpperBound,
+          slideDivisor,
+          hitbox: 'calc above',
+          lowerSlideCandidates,
+          lowerSlideDistance,
+          upperSlideCandidates,
+          upperSlideDistance,
+          slide: 'should move shtuff above',
+          slideDimension,
+          otherDimension,
+          slideCheckAttribute,
+          otherAttribute,
+          slideSectionDirection,
+        }, null, 2));
+      } else {
+        throw new Error('Uhh should be TB');
+      }
+
+      // TODO: was moved down
+      subVertices.forEach(({ left, top, ...rest }) => {
+        // assumes anchorDirection is 'from' and layoutOptions.direction is top -> bottom
+        if (rest.vertex.key !== anchorKey) {
+          // TODO: Can calculate needed room here
+          positionVertices.set(rest.vertex.key, {
+            left: left + leftAdjust,
+            top: top + topAdjust,
+            ...rest,
+          });
+        }
+      });
     });
 
     const graphOut = reframe(previousGraph);
