@@ -242,6 +242,7 @@ export default class Coordinator {
     const adjGraph = convCoord.graphToPixels(graph);
     const vertexMap = new Map(adjVertices.map(v => [v.vertex.key, v]));
 
+    // IF SLIDING INCLUDE EXISTING NODES AND EDGES IN FIRST CALL BACK AND NEW NODES AND EDGES IN SECOND
     // TODO: DotOnly only does not return edges?
     // SEPARATE RETURN!!
     if (phase === EWorkerPhase.Positions || phase === EWorkerPhase.DotOnly) {

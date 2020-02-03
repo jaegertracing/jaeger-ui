@@ -17,7 +17,8 @@ import { TEdge, TLayoutVertex, TSizeVertex, TVertexKey } from '../../types';
 
 const GRAPH_FOOTER = `}`;
 
-const DEFAULT_GRAPH_ATTRS = {
+// TODO move
+export const DEFAULT_GRAPH_ATTRS = {
   nodesep: 1.5,
   rankdir: 'LR',
   ranksep: 5,

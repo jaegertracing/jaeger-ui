@@ -351,6 +351,7 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
       if (!this.state.layoutEdges) this.zoomManager.resetZoom();
     }
     const layoutVertices = this.state.layoutVertices && vertices
+    // TODO: no merge
       ? new Map([...this.state.layoutVertices.entries(), ...vertices.entries()])
       : vertices;
 
@@ -377,9 +378,11 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
       if (!this.state.layoutEdges) this.zoomManager.resetZoom();
     }
     const layoutVertices = this.state.layoutVertices && vertices
+    // TODO: no merge
       ? new Map([...this.state.layoutVertices.entries(), ...vertices.entries()])
       : vertices;
     const layoutEdges = this.state.layoutEdges && edges
+    // TODO: only merge when subset
       ? new Map([...this.state.layoutEdges.entries(), ...edges.entries()])
       : edges;
     this.setState({ layoutEdges, layoutGraph, layoutVertices, layoutPhase: ELayoutPhase.Done });

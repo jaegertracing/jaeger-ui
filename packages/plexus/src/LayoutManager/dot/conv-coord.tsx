@@ -41,7 +41,7 @@ export function vertexToDot(v: TSizeVertex | TLayoutVertex, previousGraph: TLayo
     const left = v.left / DPI + rv.width / 2;
     // const top = (previousGraph.height + v.top + height / 2) / DPI;
     const top = (previousGraph.height - v.top - height / 2) / DPI;
-    console.log(v.top, top);
+    // console.log(v.top, top);
     return {
       ...rv,
       left,
@@ -83,7 +83,7 @@ export function graphToPixels(graph: TLayoutGraph) {
 export function vertexToPixels(graph: TLayoutGraph, v: TLayoutVertex): TLayoutVertex {
   const { height: h } = graph;
   const { vertex, height, left, top, width } = v;
-  if (top) console.log(round((h - top - height * 0.5) * DPI), top);
+  // if (top) console.log(round((h - top - height * 0.5) * DPI), top);
   return {
     vertex,
     height: round(height * DPI),

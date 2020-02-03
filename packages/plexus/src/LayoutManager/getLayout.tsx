@@ -15,7 +15,7 @@
 import viz from 'viz.js/viz.js';
 
 import convPlain from './dot/convPlain';
-import toDot from './dot/toDot';
+import toDot, { DEFAULT_GRAPH_ATTRS } from './dot/toDot';
 
 import { EWorkerPhase, TLayoutOptions } from './types';
 import { TEdge, TLayoutEdge, TLayoutGraph, TLayoutVertex, TSizeVertex } from '../types';
@@ -254,6 +254,7 @@ export default function getLayout(
     });
   }
 
+  // TODO: return new graph, zoom pan, and should delay
   function reframe(/* graphOut */ graph: TLayoutGraph /*, subGraph: TLayoutGraph */): TLayoutGraph {
     // if any vertex too left, shift all
     // too left is if "trueLeft" is negative
@@ -313,27 +314,36 @@ export default function getLayout(
   console.log(graphQueue);
   if (graphQueue.length) {
     if (!previousGraph) throw new Error('Cannot have new vertices without previous graph');
-    const edgesOut: TLayoutEdge[] = [];
+    const ranksep = layoutOptions && layoutOptions.ranksep || DEFAULT_GRAPH_ATTRS.ranksep;
+    const nodesep = layoutOptions && layoutOptions.nodesep || DEFAULT_GRAPH_ATTRS.nodesep;
+    // const edgesOut: TLayoutEdge[] = [];
+    type TEdgeLoc = {
+      fromLeft: number,
+      fromTop: number,
+      toLeft: number,
+      toTop: number,
+    };
+    const moveEdges: Map<TLayoutEdge, TEdgeLoc> = new Map();
     // const verticesOut: TLayoutVertex[] = [];
     // TODO: only need to reframe once!
     graphQueue.forEach(({ anchorDirection, anchorKey, edges, vertices }) => {
       const anchorVertex = positionVertices.get(anchorKey);
       if (!anchorVertex) throw new Error(`Lost anchor: ${anchorKey}`);
       const { top: anchorTop, left: anchorLeft } = anchorVertex;
-      console.log('going to dot');
+      // console.log('going to dot');
       const dot = toDot(edges, vertices, layoutOptions);
-      console.log('dotted');
+      // console.log('dotted');
 
       const { totalMemory = undefined } = layoutOptions || {};
       const options = { totalMemory, engine: phase === EWorkerPhase.Edges ? 'neato' : 'dot', format: 'plain' };
-      console.log('going to viz');
+      // console.log('going to viz');
 
       const plainOut = viz(dot, options);
-      console.log('vizzed');
+      // console.log('vizzed');
 
-      console.log('going to conv');
+      // console.log('going to conv');
       const { edges: subEdges, graph: subGraph, vertices: subVertices } = convPlain(plainOut, true);
-      console.log('conved');
+      // console.log('conved');
       // IF THE GRAPH GROWS TALLER, EVERY EXISTING SIZE VERTEX HAS TO SHIFT UP BY THE DELTA
       // console.log(graph, previousGraph, graphOut, subVertices[0].height);
       const subAnchor = subVertices.find(({ vertex: { key } }) => key === anchorKey);
@@ -342,50 +352,23 @@ export default function getLayout(
       const leftAdjust = anchorLeft - subAnchorLeft;
       const topAdjust = anchorTop - subAnchorTop;
 
-      // TODO: clear room for subVertices
-
-      // verticesOut = verticesOut.concat(vertices);
-      // verticesOut.push(...vertices);
-      // TODO: should be below?
-      /*
-      subVertices.forEach(({ left, top, ...rest }) => {
-        // assumes anchorDirection is 'from' and layoutOptions.direction is top -> bottom
-        if (rest.vertex.key !== anchorKey) {
-          // TODO: Can calculate needed room here
-          positionVertices.set(rest.vertex.key, {
-            left: left + leftAdjust,
-            top: top + topAdjust,
-            ...rest,
+      const newVertices: Map<string, TLayoutVertex> = new Map();
+      subVertices.forEach(v => newVertices.set(v.vertex.key, v));
+      if (subEdges) {
+        subEdges.forEach(e => {
+          const from = newVertices.get(e.edge.from);
+          if (!from) throw new Error('From missing');
+          const to = newVertices.get(e.edge.to);
+          if (!to) throw new Error('to missing');
+          moveEdges.set(e, {
+            fromLeft: from.left,
+            fromTop: from.top,
+            toLeft: to.left,
+            toTop: to.top,
           });
-        }
-      });
-       */
-      // major TODO
-      if (subEdges) edgesOut.push(...subEdges);
+        });
+      }
 
-      /*
-      let slideMin: number;
-      let slideDimension: 'top' | 'left';
-      let slideCheckAttribute: 'height' | 'width';
-      let slideSectionDirection: -1 | 1;
-      let collisionMin: number;
-      let collisionMax: number;
-      let collisionDimension: 'top' | 'left';
-      let collisionDivisor: number;
-      let collisionLowerLimit: number;
-      let collisionUpperLimit: number;
-      let collisionCheckAttribute: 'height' | 'width';
-      if (layoutOptions && layoutOptions.rankdir === 'TB') {
-        slideDimension = 'top';
-        collisionDimension = 'left';
-        slideCheckAttribute = 'height';
-        collisionCheckAttribute = 'width';
-        slideSectionDirection = anchorDirection === 'from' ? -1 : 1;
-        slideMin = anchorVertex[slideDimension] - (slideSectionDirection * anchorVertex[slideCheckAttribute] / 2);
-        collisionDivisor = anchorVertex[collisionDimension];
-        collisionMin = slideMin;
-        collisionMax = 
-          */
       let slideThreshold: number;
       let slideDimension: 'top' | 'left';
       let otherDimension: 'top' | 'left';
@@ -415,14 +398,14 @@ export default function getLayout(
         otherAttribute = 'width';
         slideSectionDirection = anchorDirection === 'from' ? -1 : 1;
 
+        const SEP_PERCENTAGE = 0.8; /* TODO: tweak percentage */
+
         // TODO: everything after here shouldn't be divided by ifs
-        slideThreshold = anchorVertex[slideDimension] + (slideSectionDirection * anchorVertex[slideCheckAttribute] / 2);
+        slideThreshold = anchorVertex[slideDimension] + (slideSectionDirection * (anchorVertex[slideCheckAttribute] / 2 + SEP_PERCENTAGE * ranksep));
         slideDivisor = anchorVertex[otherDimension];
-        // collisionLimit = anchorVertex[slideDimension] + slideSectionDirection * (Math.max(subAnchor[slideDimension], subGraph[slideCheckAttribute], subGraph[slideCheckAttribute] - subAnchor[slideDimension]));
-        // collisionLimit = slideThreshold + (slideSectionDirection * (subGraph[slideCheckAttribute] - subAnchor[slideCheckAttribute] /* TODO: perhaps subtract part of ranksep */));
-        collisionLimit = slideThreshold + (slideSectionDirection * (subGraph[slideCheckAttribute] - subAnchor[slideCheckAttribute] + 0.1 * ((layoutOptions && layoutOptions.ranksep) || 5)));
-        collisionLowerBound = anchorVertex[otherDimension] - subAnchor[otherDimension];
-        collisionUpperBound = collisionLowerBound + subGraph[otherAttribute];
+        collisionLimit = slideThreshold + (slideSectionDirection * (subGraph[slideCheckAttribute] - subAnchor[slideCheckAttribute] + SEP_PERCENTAGE * ranksep));
+        collisionLowerBound = anchorVertex[otherDimension] - subAnchor[otherDimension] - SEP_PERCENTAGE * nodesep;
+        collisionUpperBound = collisionLowerBound + subGraph[otherAttribute] + 2 * SEP_PERCENTAGE * nodesep;
 
         positionVertices.forEach(existingVertex => {
           const slideThresholdCompareVal = existingVertex[slideDimension] + (slideSectionDirection * existingVertex[slideCheckAttribute] / 2);
@@ -433,21 +416,12 @@ export default function getLayout(
             if (slideDivisorCompareVal <= slideDivisor) {
               lowerSlideCandidates.push(existingVertex);
               if (isCloseEnoughOnSlideDimensionToCollide) {
-                // shouldn't be using direction for divisors, divisors are absolute
-                /*
-                const lowerSlideDistanceCompareVal = existingVertex[otherDimension] - (slideSectionDirection * existingVertex[otherAttribute] / 2) - collisionLowerBound;
-                if (lowerSlideDistanceCompareVal < 0 && (lowerSlideDistance === undefined || lowerSlideDistanceCompareVal < lowerSlideDistance)) lowerSlideDistance = lowerSlideDistanceCompareVal;
-                 */
                 const lowerSlideDistanceCompareVal = existingVertex[otherDimension] + existingVertex[otherAttribute] / 2 - collisionLowerBound;
                 if (lowerSlideDistanceCompareVal > 0 && (lowerSlideDistance === undefined || lowerSlideDistanceCompareVal < lowerSlideDistance)) lowerSlideDistance = -1 * lowerSlideDistanceCompareVal;
               }
             } else {
               upperSlideCandidates.push(existingVertex);
               if (isCloseEnoughOnSlideDimensionToCollide) {
-                /*
-                const upperSlideDistanceCompareVal = existingVertex[otherDimension] - (slideSectionDirection * existingVertex[otherAttribute] / 2) - collisionUpperBound;
-                if (upperSlideDistanceCompareVal < 0 && (upperSlideDistance === undefined || upperSlideDistanceCompareVal > upperSlideDistance)) upperSlideDistance = -1 * upperSlideDistanceCompareVal;
-                 */
                 const upperSlideDistanceCompareVal = existingVertex[otherDimension] - existingVertex[otherAttribute] / 2 - collisionUpperBound;
                 if (upperSlideDistanceCompareVal < 0 && (upperSlideDistance === undefined || upperSlideDistanceCompareVal > upperSlideDistance)) upperSlideDistance = -1 * upperSlideDistanceCompareVal;
               }
@@ -498,7 +472,6 @@ export default function getLayout(
         throw new Error('Uhh should be TB');
       }
 
-      // TODO: was moved down
       subVertices.forEach(({ left, top, ...rest }) => {
         // assumes anchorDirection is 'from' and layoutOptions.direction is top -> bottom
         if (rest.vertex.key !== anchorKey) {
@@ -516,28 +489,67 @@ export default function getLayout(
 
     // verticesOut.push(...positionVertices.values());
     const verticesOut = Array.from(positionVertices.values());
-    edgesOut.push(...positionEdges.values());
+    // edgesOut.push(...positionEdges.values());
+    const edgesOut: TLayoutEdge[] = [];
+    moveEdges.forEach((originalLoc, edge) => {
+      const from = positionVertices.get(edge.edge.from);
+      if (!from) throw new Error('From missing');
+      const to = positionVertices.get(edge.edge.to);
+      if (!to) throw new Error('to missing');
+
+      const fromTopDelta = from.top - originalLoc.fromTop;
+      const fromLeftDelta = from.left - originalLoc.fromLeft;
+      const toTopDelta = to.top - originalLoc.toTop;
+      const toLeftDelta = to.left - originalLoc.toLeft;
+      console.log(JSON.stringify({
+        fromTopDelta,
+        fromtop: from.top,
+        originalLocfromTop: originalLoc.fromTop,
+        fromLeftDelta,
+        fromleft: from.left,
+        originalLocfromLeft: originalLoc.fromLeft,
+        toTopDelta,
+        totop: to.top,
+        originalLoctoTop: originalLoc.toTop,
+        toLeftDelta,
+        toleft: to.left,
+        originalLoctoLeft: originalLoc.toLeft,
+        edge,
+      }, null, 2));
+
+      if (isCloseEnough(fromTopDelta, toTopDelta) && isCloseEnough(fromLeftDelta, toLeftDelta )) {
+        const movedEdge = {
+          ...edge,
+          pathPoints: edge.pathPoints.map(([left, top]) => ([left + fromLeftDelta, top + fromTopDelta] as [number, number])), // TODO: no cast
+        };
+        console.log(JSON.stringify({
+          edge,
+          movedEdge,
+        }, null, 2));
+        edgesOut.push(movedEdge);
+      }
+    });
 
     if (graphOut) console.log('should be subset af');
     console.log(graphOut, edgesOut, verticesOut);
     if (graphOut) return { graph: graphOut, edges: edgesOut, vertices: verticesOut };
   }
 
-  console.log('going to dot');
+  // console.log('going to dot');
   const dot = toDot(newEdges, inVertices, layoutOptions);
   // const dot = toDot(newEdges, Array.from(newVertices.values()), layoutOptions);
-  console.log('dotted');
+  // console.log('dotted');
 
   const { totalMemory = undefined } = layoutOptions || {};
   const options = { totalMemory, engine: phase === EWorkerPhase.Edges ? 'neato' : 'dot', format: 'plain' };
-  console.log('going to viz');
+  // console.log('going to viz');
 
   const plainOut = viz(dot, options);
-  console.log('vizzed');
+  // console.log('vizzed');
 
-  console.log('going to conv');
+  // console.log('going to conv');
   const { edges, graph, vertices } = convPlain(plainOut, phase !== EWorkerPhase.Positions);
-  console.log('conved');
+  // console.log('conved');
 
   const result = getVerticesValidity(inVertices, vertices);
 
