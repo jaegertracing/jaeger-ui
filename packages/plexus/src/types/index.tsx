@@ -44,6 +44,10 @@ export type TEdge<T = {}> = T & {
 export type TLayoutEdge<T = {}> = {
   edge: TEdge<T>;
   pathPoints: [number, number][];
+  translate?: {
+    x: number;
+    y: number;
+  };
 };
 
 export type TCancelled = {

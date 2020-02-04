@@ -12,11 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { TLayoutEdge, TLayoutGraph, TLayoutVertex, TSizeVertex } from '../../types';
+import { TEdge, TLayoutEdge, TLayoutGraph, TLayoutVertex, TSizeVertex } from '../../types';
 
 const round = Math.round;
 
 const DPI = 72;
+
+export function edgeToDot(e: TEdge | TLayoutEdge): TEdge | TLayoutEdge {
+  if ('translate' in e && e.translate) {
+    return {
+      ...e,
+      translate: {
+        x: e.translate.x / DPI,
+        y: e.translate.y / DPI,
+      },
+    };
+  }
+
+  return e;
+}
 
 export function vertexToDot(v: TSizeVertex | TLayoutVertex, previousGraph: TLayoutGraph | null): TSizeVertex | TLayoutVertex {
   /*
@@ -39,7 +53,6 @@ export function vertexToDot(v: TSizeVertex | TLayoutVertex, previousGraph: TLayo
   if ('left' in v) {
     if (!previousGraph) throw new Error('Cannot calculate top for LayoutVertex without previousGraph');
     const left = v.left / DPI + rv.width / 2;
-    // const top = (previousGraph.height + v.top + height / 2) / DPI;
     const top = (previousGraph.height - v.top - height / 2) / DPI;
     // console.log(v.top, top);
     return {
@@ -63,7 +76,19 @@ export function graphToDot(graph: TLayoutGraph) {
 
 export function edgeToPixels(graph: TLayoutGraph, e: TLayoutEdge<{}>): TLayoutEdge<{}> {
   const { height: h } = graph;
-  const { edge, pathPoints } = e;
+  const { edge, pathPoints, translate } = e;
+  if (translate) {
+    return {
+      ...e,
+      translate: {
+        x: translate.x * DPI,
+        // y: h - translate.y * DPI,
+        // y: -1 * translate.y * DPI,
+        y: translate.y * DPI,
+      },
+    };
+  }
+
   return {
     edge,
     pathPoints:

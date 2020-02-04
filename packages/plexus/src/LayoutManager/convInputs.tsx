@@ -36,9 +36,12 @@ function unmapEdges<T = Record<string, unknown>>(
   return output.map(le => {
     const id = makeEdgeId(le.edge);
     const edge = idsToEdge.get(id);
+    // let edge = idsToEdge.get(id);
+    // if (edge.edge) edge = edge.edge;
     if (!edge) {
       throw new Error(`Unable to find edge for ${id}`);
     }
+    // if ('edge' in edge) return { ...le, edge: edge.edge };
     return { ...le, edge };
   });
 }
@@ -61,6 +64,7 @@ export default function convInputs(srcEdges: (TEdge<unknown> | TLayoutEdge<unkno
     return { vertex: { key: id }, ...rest };
   });
   const edges = srcEdges.map(e => {
+    // TODO DRY
     if ('edge' in e) {
       const { from, to, isBidirectional } = e.edge;
       const fromId = keyToId.get(from);
@@ -76,7 +80,7 @@ export default function convInputs(srcEdges: (TEdge<unknown> | TLayoutEdge<unkno
         from: fromId,
         to: toId,
       };
-      idsToEdge.set(makeEdgeId(edge), e);
+      idsToEdge.set(makeEdgeId(edge), e.edge);
       return {
         ...e,
         edge,

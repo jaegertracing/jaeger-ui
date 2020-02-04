@@ -43,10 +43,19 @@ type TValidityWarn = {
 
 type TVerticesValidity = TValidityError | TValidityOk | TValidityWarn;
 
-const SHIFT_THRESHOLD = 0.015;
+const SHIFT_THRESHOLD = 1e-5;
+
+// Fails if b is negative or 0 or if a is negative
+// changing from nearly 0 to also nearly 0 results in huge percent differences (e.g.: 3e-15 to 6e-15)
+/*
+function isCloseEnough(a: number, b: number) {
+  if (a === 0 && b === 0) return true;
+  return Math.abs(a - b) / Math.max(Math.abs(a), Math.abs(b)) < SHIFT_THRESHOLD;
+}
+ */
 
 function isCloseEnough(a: number, b: number) {
-  return Math.abs(a - b) / b < SHIFT_THRESHOLD;
+  return Math.abs(a - b) < SHIFT_THRESHOLD;
 }
 
 function getVerticesValidity(
@@ -159,11 +168,29 @@ export default function getLayout(
     else newVertices.set(vertex.vertex.key, vertex);
   });
 
-  const positionEdges: Map<TEdge, TLayoutEdge> = new Map();
+  type TEdgeLoc = {
+    fromLeft: number,
+    fromTop: number,
+    toLeft: number,
+    toTop: number,
+  };
+  const positionEdges: Map<TLayoutEdge, TEdgeLoc> = new Map();
   const newEdges: TEdge[] = [];
   inEdges.forEach(edge => {
     console.log(edge, 'edge' in edge);
-    if ('edge' in edge) positionEdges.set(edge.edge, edge);
+    if ('edge' in edge) {
+      const from = positionVertices.get(edge.edge.from);
+      if (!from) throw new Error('From missing');
+      const to = positionVertices.get(edge.edge.to);
+      if (!to) throw new Error('to missing');
+      if (!previousGraph) throw new Error('Cannot have positioned edges without previous graph');
+      positionEdges.set(edge, {
+        fromLeft: from.left,
+        fromTop: previousGraph.height - from.top,
+        toLeft: to.left,
+        toTop: previousGraph.height - to.top,
+      });
+    }
     else newEdges.push(edge);
   });
 
@@ -292,6 +319,7 @@ export default function getLayout(
     */
 
     if (maxLeft !== 0 || maxBottom !== 0) {
+      console.log({ maxLeft, maxBottom });
       hasShifted = true;
       positionVertices.forEach(({ left, top, ...rest }, key) => {
         positionVertices.set(key, {
@@ -447,6 +475,7 @@ export default function getLayout(
           });
         }
 
+          /*
         console.log(JSON.stringify({
           anchorVertex,
           subAnchor,
@@ -468,6 +497,7 @@ export default function getLayout(
           otherAttribute,
           slideSectionDirection,
         }, null, 2));
+           */
       } else {
         throw new Error('Uhh should be TB');
       }
@@ -501,6 +531,7 @@ export default function getLayout(
       const fromLeftDelta = from.left - originalLoc.fromLeft;
       const toTopDelta = to.top - originalLoc.toTop;
       const toLeftDelta = to.left - originalLoc.toLeft;
+      /*
       console.log(JSON.stringify({
         fromTopDelta,
         fromtop: from.top,
@@ -516,18 +547,67 @@ export default function getLayout(
         originalLoctoLeft: originalLoc.toLeft,
         edge,
       }, null, 2));
+       */
 
       if (isCloseEnough(fromTopDelta, toTopDelta) && isCloseEnough(fromLeftDelta, toLeftDelta )) {
         const movedEdge = {
           ...edge,
           pathPoints: edge.pathPoints.map(([left, top]) => ([left + fromLeftDelta, top + fromTopDelta] as [number, number])), // TODO: no cast
         };
+        /*
         console.log(JSON.stringify({
           edge,
           movedEdge,
         }, null, 2));
+         */
         edgesOut.push(movedEdge);
       }
+    });
+
+    positionEdges.forEach((originalLoc, edge) => {
+      const from = positionVertices.get(edge.edge.from);
+      if (!from) throw new Error('From missing');
+      const to = positionVertices.get(edge.edge.to);
+      if (!to) throw new Error('to missing');
+
+      const fromTopDelta = (graphOut.height - from.top) - originalLoc.fromTop;
+      const fromLeftDelta = from.left - originalLoc.fromLeft;
+      const toTopDelta = (graphOut.height - to.top) - originalLoc.toTop;
+      const toLeftDelta = to.left - originalLoc.toLeft;
+
+      console.log(JSON.stringify({
+        fromTopDelta,
+        fromtop: graphOut.height - from.top,
+        originalLocfromTop: originalLoc.fromTop,
+        fromLeftDelta,
+        fromleft: from.left,
+        originalLocfromLeft: originalLoc.fromLeft,
+        toTopDelta,
+        totop: graphOut.height - to.top,
+        originalLoctoTop: originalLoc.toTop,
+        toLeftDelta,
+        toleft: to.left,
+        originalLoctoLeft: originalLoc.toLeft,
+      }, null, 2));
+
+      if (isCloseEnough(fromTopDelta, toTopDelta) && isCloseEnough(fromLeftDelta, toLeftDelta )) {
+        const { x: prevX = 0, y: prevY = 0 } = edge.translate || {};
+        const movedEdge = {
+          ...edge,
+          translate: {
+            x: fromLeftDelta + prevX,
+            y: fromTopDelta + prevY,
+          },
+        };
+        /*
+        console.log(JSON.stringify({
+          edge,
+          movedEdge,
+        }, null, 2));
+         */
+        edgesOut.push(movedEdge);
+        console.log('close enough');
+      } else console.log('not close enough');
     });
 
     if (graphOut) console.log('should be subset af');

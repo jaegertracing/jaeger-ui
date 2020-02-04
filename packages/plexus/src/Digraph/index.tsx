@@ -205,7 +205,7 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
 
   private getGraphState = memoizeOne((state, edges: TEdge<U>[], vertices: TVertex<T>[]) => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { /* sizeVertices: _, */ layoutEdges: evs, layoutVertices: lvs, ...partialGraphState } = this.state; // TODO delet previous line?
+    const { /* sizeVertices: _, */ layoutEdges: les, layoutVertices: lvs, ...partialGraphState } = this.state; // TODO delet previous line?
     const rv: TExposedGraphState<T, U> = {
       ...partialGraphState,
       edges,
@@ -225,11 +225,11 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
       rv.layoutVertices = layoutVertices;
     }
 
-    if (evs) {
+    if (les) {
       const layoutEdges = new Map();
       edges.forEach(edge => {
-        const ev = evs.get(edge);
-        if (ev) layoutEdges.set(edge, ev);
+        const le = les.get(edge);
+        if (le) layoutEdges.set(edge, le);
       });
 
       rv.layoutEdges = layoutEdges;
@@ -242,6 +242,7 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
     const { edges, classNamePrefix, layers: topLayers, vertices } = this.props;
     const getClassName = this.makeClassNameFactory(classNamePrefix || '');
     const graphState = this.getGraphState(this.state, edges, vertices);
+    // console.log(graphState.layoutEdges);
     const { layoutPhase } = graphState;
     return topLayers.map(layer => {
       const { layerType, key, setOnContainer } = layer;
@@ -381,11 +382,15 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
     // TODO: no merge
       ? new Map([...this.state.layoutVertices.entries(), ...vertices.entries()])
       : vertices;
+    console.log('layout done edges');
+    console.log(edges, edges && Array.from(edges.entries()).filter(([edge, le]) => le.translate));
+    /*
     const layoutEdges = this.state.layoutEdges && edges
     // TODO: only merge when subset
       ? new Map([...this.state.layoutEdges.entries(), ...edges.entries()])
       : edges;
-    this.setState({ layoutEdges, layoutGraph, layoutVertices, layoutPhase: ELayoutPhase.Done });
+     */
+    this.setState({ layoutEdges: edges, layoutGraph, layoutVertices, layoutPhase: ELayoutPhase.Done });
   };
 
   /*
@@ -410,6 +415,12 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
     return rv;
   }
    */
+
+  componentDidUpdate(_prevProps: TDigraphProps<T, U>, prevState: TDigraphState<T, U>) {
+    if (prevState.layoutEdges !== this.state.layoutEdges) {
+      console.log('layoutEdges changed from: ', prevState.layoutEdges, ' to: ', this.state.layoutEdges)
+    }
+  }
 
   render() {
     const {

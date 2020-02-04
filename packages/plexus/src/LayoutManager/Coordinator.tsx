@@ -98,7 +98,8 @@ export default class Coordinator {
   ) {
     this.busyWorkers.forEach(killWorker);
     this.busyWorkers.length = 0;
-    const { edges, unmapEdges, unmapVertices, vertices: _vertices } = convInputs(inEdges, inVertices);
+    const { edges: _edges, unmapEdges, unmapVertices, vertices: _vertices } = convInputs(inEdges, inVertices);
+    const edges = _edges.map(convCoord.edgeToDot);
     const vertices = _vertices.map(v => convCoord.vertexToDot(v, previousGraph));
     this.currentLayout = {
       id,
