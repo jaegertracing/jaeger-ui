@@ -45,6 +45,13 @@ const gaID = _get(config, 'tracking.gaID');
 export const isGaEnabled = isTest || isDebugMode || (isProd && Boolean(gaID));
 const isErrorsEnabled = isDebugMode || (isGaEnabled && Boolean(_get(config, 'tracking.trackErrors')));
 
+const cookieToDimension = _get(config, 'tracking.cookieToDimension');
+if (cookieToDimension) {
+  const match = ` ${document.cookie}`.match(new RegExp(`[; ]${cookieToDimension.cookie}=([^\\s;]*)`));
+  if (match) ReactGA.set({ [cookieToDimension.dimension]: match[1] });
+  else console.warn(`${cookieToDimension} not present in cookies`);
+}
+
 /* istanbul ignore next */
 function logTrackingCalls() {
   const calls = ReactGA.testModeAPI.calls;
