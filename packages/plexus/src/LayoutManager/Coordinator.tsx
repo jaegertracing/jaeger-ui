@@ -251,7 +251,7 @@ export default class Coordinator {
         type: ECoordinatorPhase.Positions,
         layoutId: layout.id,
         graph: adjGraph,
-        vertices: vertexMap, // adjVertices,
+        vertices: vertexMap,
       });
     }
     // phase is either edges or dot-only
@@ -263,10 +263,8 @@ export default class Coordinator {
         type: ECoordinatorPhase.Done,
         layoutId: layout.id,
         graph: adjGraph,
-        // edges: mergedEdges,
         edges: edgeMap,
-        // vertices: adjVertices,
-        vertices: vertexMap, // adjVertices,
+        vertices: vertexMap,
       });
     }
     if (phase === EWorkerPhase.Positions) {

@@ -146,56 +146,9 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
       const values = `expected ${JSON.stringify(expectedKey)}, recieved ${JSON.stringify(senderKey)}`;
       throw new Error(`Key mismatch for measuring nodes; ${values}`);
     }
-    // TODO necessary?? seems like no
-    /* this.setState({ sizeVertices }); */
-    // const { layout } = layoutManager.getLayout(edges, sizeVertices);
-    /*
-    layout.then((...args) => {
-      (window as any).cont = () => this.onLayoutDone(...args);
-      console.log('can cont()');
-    });
-     */
-    // layout.then((...args) => setTimeout(() => this.onLayoutDone(...args), 350));
-    /*
-    layout.then((...args) => setTimeout(() => {
-      debugger;
-      this.onLayoutDone(...args);
-    }, 350));
-     */
-    // TODO: probably want next line
-    // this.setState({ layoutPhase: ELayoutPhase.CalcPositions });
-    // this.setState({ sizeVertices, layoutPhase: ELayoutPhase.CalcPositions });
-    // We can add support for drawing nodes in the correct position before we have edges
-    // via the following (instead of the above)
-    // const { positions, layout } = layoutManager.getLayout(edges, sizeVertices);
-    // positions.then(this._onPositionsDone);
-
-
-    // This works for single update (obvi remove timeout)
-    /*
-    const { layout } = layoutManager.getLayout(edges, sizeVertices);
-    layout.then((...args) => setTimeout(() => this.onLayoutDone(...args), 350));
-    this.setState({ layoutPhase: ELayoutPhase.CalcPositions });
-     */
-      /*
-    const inVertices: (TSizeVertex<T> | TLayoutVertex<T>)[] = this.state.layoutGraph
-      ? sizeVertices.map(v => {
-        const lv = this.state.layoutVertices && this.state.layoutVertices.get(v.vertex.key);
-        if (lv && this.state.layoutGraph) return {
-          ...lv,
-          top: this.state.layoutGraph.height + lv.top,
-        };
-        return v;
-      })
-      : sizeVertices;
-       */
     const inVertices: (TSizeVertex<T> | TLayoutVertex<T>)[] = sizeVertices.map(v => this.state.layoutVertices && this.state.layoutVertices.get(v.vertex.key) || v);
-    // console.log(this.state.layoutVertices, sizeVertices, inVertices);
     const inEdges: (TEdge<U> | TLayoutEdge<U>)[] = edges.map(edge => (this.state.layoutEdges && this.state.layoutEdges.get(edge)) || edge);
     const { positions, layout } = layoutManager.getLayout(inEdges, inVertices, this.state.layoutGraph);
-    // const { positions, layout } = layoutManager.getLayout(edges, inVertices);
-    // const { positions, layout } = layoutManager.getLayout(edges, sizeVertices);
-
     // TODO no timeout
     positions.then((...args) => setTimeout(() => this.onPositionsDone(...args), 350));
     // TODO  only timeout if edges take less than two seconds, else immediate
@@ -204,8 +157,7 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
   };
 
   private getGraphState = memoizeOne((state, edges: TEdge<U>[], vertices: TVertex<T>[]) => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { /* sizeVertices: _, */ layoutEdges: les, layoutVertices: lvs, ...partialGraphState } = this.state; // TODO delet previous line?
+    const { layoutEdges: les, layoutVertices: lvs, ...partialGraphState } = this.state;
     const rv: TExposedGraphState<T, U> = {
       ...partialGraphState,
       edges,
@@ -242,7 +194,6 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
     const { edges, classNamePrefix, layers: topLayers, vertices } = this.props;
     const getClassName = this.makeClassNameFactory(classNamePrefix || '');
     const graphState = this.getGraphState(this.state, edges, vertices);
-    // console.log(graphState.layoutEdges);
     const { layoutPhase } = graphState;
     return topLayers.map(layer => {
       const { layerType, key, setOnContainer } = layer;
@@ -336,16 +287,6 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
     if (result.isCancelled) {
       return;
     }
-    // const { graph: layoutGraph, vertices: layoutVertices } = result;
-    // TODO: TEMP
-    /*
-    const newGraph = this.state.layoutGraph ? { 
-      height: this.state.layoutGraph.height + layoutGraph.height,
-      scale: this.state.layoutGraph.scale,
-      width: this.state.layoutGraph.width + layoutGraph.width,
-    } : layoutGraph;
-     */
-
     const { graph: layoutGraph, vertices } = result;
     if (this.zoomManager) {
       this.zoomManager.setContentSize(layoutGraph);
@@ -358,13 +299,10 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
 
     if (this.zoomManager) {
       this.zoomManager.setContentSize(layoutGraph);
-      // this.zoomManager.setContentSize(newGraph);
       if (!this.state.layoutVertices) this.zoomManager.resetZoom();
     }
     console.log(layoutGraph, layoutVertices);
-    // console.log(newGraph, layoutVertices);
     this.setState({ layoutGraph, layoutVertices });
-    // this.setState({ layoutGraph: newGraph, layoutVertices });
   };
 
 

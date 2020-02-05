@@ -22,7 +22,6 @@ import { TLayoutVertex, TVertex } from '../types';
 type TProps<T = {}> = Omit<TMeasurableNodeRenderer<T>, 'measurable' | 'measureNode'> & {
   getClassName: (name: string) => string;
   layerType: TLayerType;
-  // layoutVertices: TLayoutVertex<T>[] | null;
   layoutVertices: Map<string, TLayoutVertex<T>> | null;
   nodeRefs: React.RefObject<MeasurableNode<T>>[];
   renderUtils: TRendererUtils;

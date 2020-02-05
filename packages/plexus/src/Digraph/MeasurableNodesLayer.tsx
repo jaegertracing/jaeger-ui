@@ -142,12 +142,6 @@ export default class MeasurableNodesLayer<T = {}, U = {}> extends React.PureComp
       current = nodeRefs[i].current;
       const vertex = vertices[i];
       if (current) {
-        /*
-        sizeVertices.push({
-          vertex,
-          ...(measureNode && utils ? measureNode(vertex, utils) : current.measure()),
-        });
-         */
         let measured = this.vertexToMeasured.get(vertex);
         if (!measured) {
           measured = {

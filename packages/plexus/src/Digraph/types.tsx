@@ -40,11 +40,9 @@ export type TRendererUtils = {
 
 export type TExposedGraphState<T = Record<string, unknown>, U = Record<string, unknown>> = {
   edges: TEdge<U>[];
-  // layoutEdges: TLayoutEdge<U>[] | null;
   layoutEdges: Map<TEdge<U>, TLayoutEdge<U>> | null;
   layoutGraph: TLayoutGraph | null;
   layoutPhase: ELayoutPhase;
-  // layoutVertices: TLayoutVertex<T>[] | null;
   layoutVertices: Map<string, TLayoutVertex<T>> | null;
   renderUtils: TRendererUtils;
   vertices: TVertex<T>[];

@@ -22,7 +22,6 @@ import { isSamePropSetter } from './utils';
 type TProps<T = {}> = TNodeRenderer<T> & {
   getClassName: (name: string) => string;
   layerType: TLayerType;
-  // layoutVertices: TLayoutVertex<T>[];
   layoutVertices: Map<string, TLayoutVertex<T>>;
   renderNode: NonNullable<TNodeRenderer<T>['renderNode']>;
   renderUtils: TRendererUtils;

@@ -45,15 +45,6 @@ type TVerticesValidity = TValidityError | TValidityOk | TValidityWarn;
 
 const SHIFT_THRESHOLD = 1e-5;
 
-// Fails if b is negative or 0 or if a is negative
-// changing from nearly 0 to also nearly 0 results in huge percent differences (e.g.: 3e-15 to 6e-15)
-/*
-function isCloseEnough(a: number, b: number) {
-  if (a === 0 && b === 0) return true;
-  return Math.abs(a - b) / Math.max(Math.abs(a), Math.abs(b)) < SHIFT_THRESHOLD;
-}
- */
-
 function isCloseEnough(a: number, b: number) {
   return Math.abs(a - b) < SHIFT_THRESHOLD;
 }
@@ -208,24 +199,18 @@ export default function getLayout(
 
   const graphQueue: TGraphQueue = [];
   while(newVertices.size) {
-    // console.log(newVertices.size);
     const [k, v] = newVertices.entries().next().value;
     newVertices.delete(k);
     const edges: Set<TEdge> = new Set();
     const vertices: TSizeVertex[] = [v];
     let anchorKey: undefined | string = undefined;
     let anchorDirection: undefined | 'from' | 'to';
-    // const vertexQueue: TSizeVertex[] = [v];
     for(let i = 0; i < vertices.length; i++) {
       const vertex = vertices[i];
       const key = vertex.vertex.key;
-      // console.log('length', vertices.length);
-      // newVertices.delete(key);
-      // vertices.push(vertex);
 
       if (key !== anchorKey || anchorDirection === 'to') {
         const inEdges = edgesByTo.get(key);
-        // edgesByTo.delete(key);
         if (inEdges) {
           Array.from(inEdges.values()).forEach(edge => {
             const connectedVertex = newVertices.get(edge.from);
@@ -249,7 +234,6 @@ export default function getLayout(
 
       if (key !== anchorKey || anchorDirection === 'from') {
         const outEdges = edgesByFrom.get(key);
-        // edgesByFrom.delete(key);
         if (outEdges) {
           Array.from(outEdges.values()).forEach(edge => {
             const connectedVertex = newVertices.get(edge.to);
@@ -282,18 +266,7 @@ export default function getLayout(
   }
 
   // TODO: return new graph, zoom pan, and should delay
-  function reframe(/* graphOut */ graph: TLayoutGraph /*, subGraph: TLayoutGraph */): TLayoutGraph {
-    // if any vertex too left, shift all
-    // too left is if "trueLeft" is negative
-    // if any vertex too top, shift all
-    // too top is if "trueTop" is negative
-    // then calculate max top and possibly increase graph.height
-    // then calculate max left and possibly increase graph.width
-    //
-    // calc maxLeft, maxRight, maxTop, maxBottom.
-    // shift all uniformly as necessary
-    // width is shiftedmaxRight - shiftedmaxLeft
-    // height is shiftedmaxTop - shiftedmaxBottom
+  function reframe(graph: TLayoutGraph): TLayoutGraph {
     let maxLeft: number | undefined = undefined;
     let maxRight: number | undefined = undefined;
     let maxTop: number | undefined = undefined;
@@ -310,13 +283,6 @@ export default function getLayout(
     });
 
     if (maxBottom === undefined || maxLeft === undefined || maxRight === undefined || maxTop === undefined) throw new Error('No position vertices');
-
-    /*
-    if (maxBottom === undefined) throw new Error('No position vertices');
-    if (maxLeft === undefined) throw new Error('No position vertices');
-    if (maxRight === undefined) throw new Error('No position vertices');
-    if (maxTop === undefined) throw new Error('No position vertices');
-    */
 
     if (maxLeft !== 0 || maxBottom !== 0) {
       console.log({ maxLeft, maxBottom });
@@ -344,7 +310,6 @@ export default function getLayout(
     if (!previousGraph) throw new Error('Cannot have new vertices without previous graph');
     const ranksep = layoutOptions && layoutOptions.ranksep || DEFAULT_GRAPH_ATTRS.ranksep;
     const nodesep = layoutOptions && layoutOptions.nodesep || DEFAULT_GRAPH_ATTRS.nodesep;
-    // const edgesOut: TLayoutEdge[] = [];
     type TEdgeLoc = {
       fromLeft: number,
       fromTop: number,
@@ -352,8 +317,6 @@ export default function getLayout(
       toTop: number,
     };
     const moveEdges: Map<TLayoutEdge, TEdgeLoc> = new Map();
-    // const verticesOut: TLayoutVertex[] = [];
-    // TODO: only need to reframe once!
     graphQueue.forEach(({ anchorDirection, anchorKey, edges, vertices }) => {
       const anchorVertex = positionVertices.get(anchorKey);
       if (!anchorVertex) throw new Error(`Lost anchor: ${anchorKey}`);
@@ -371,9 +334,6 @@ export default function getLayout(
 
       // console.log('going to conv');
       const { edges: subEdges, graph: subGraph, vertices: subVertices } = convPlain(plainOut, true);
-      // console.log('conved');
-      // IF THE GRAPH GROWS TALLER, EVERY EXISTING SIZE VERTEX HAS TO SHIFT UP BY THE DELTA
-      // console.log(graph, previousGraph, graphOut, subVertices[0].height);
       const subAnchor = subVertices.find(({ vertex: { key } }) => key === anchorKey);
       if (!subAnchor) throw new Error(`Anchor not in graft: ${anchorKey}`);
       const { top: subAnchorTop, left: subAnchorLeft } = subAnchor;
@@ -405,7 +365,6 @@ export default function getLayout(
       let otherAttribute: 'height' | 'width';
       let slideSectionDirection: -1 | 1;
 
-      // let collisionMin: number;
       let collisionLimit: number;
       let collisionLowerBound: number;
       let collisionUpperBound: number;
@@ -415,14 +374,11 @@ export default function getLayout(
       let lowerSlideDistance: number | undefined = undefined;
       let upperSlideDistance: number | undefined = undefined;
 
-      // let collisionCheckAttribute: 'height' | 'width';
-
       // rankdir 'BT' should work with negated anchcorDIrection
       if (layoutOptions && layoutOptions.rankdir === 'TB') {
         slideDimension = 'top';
         otherDimension = 'left';
         slideCheckAttribute = 'height';
-        // collisionCheckAttribute = 'width';
         otherAttribute = 'width';
         slideSectionDirection = anchorDirection === 'from' ? -1 : 1;
 
@@ -475,37 +431,14 @@ export default function getLayout(
           });
         }
 
-          /*
-        console.log(JSON.stringify({
-          anchorVertex,
-          subAnchor,
-          subGraph,
-          slideThreshold,
-          collisionLimit,
-          collisionLowerBound,
-          collisionUpperBound,
-          slideDivisor,
-          hitbox: 'calc above',
-          lowerSlideCandidates,
-          lowerSlideDistance,
-          upperSlideCandidates,
-          upperSlideDistance,
-          slide: 'should move shtuff above',
-          slideDimension,
-          otherDimension,
-          slideCheckAttribute,
-          otherAttribute,
-          slideSectionDirection,
-        }, null, 2));
-           */
       } else {
         throw new Error('Uhh should be TB');
       }
 
       subVertices.forEach(({ left, top, ...rest }) => {
         // assumes anchorDirection is 'from' and layoutOptions.direction is top -> bottom
+        // I DON'T THINK SO ANY MORE
         if (rest.vertex.key !== anchorKey) {
-          // TODO: Can calculate needed room here
           positionVertices.set(rest.vertex.key, {
             left: left + leftAdjust,
             top: top + topAdjust,
@@ -517,9 +450,7 @@ export default function getLayout(
 
     const graphOut = reframe(previousGraph);
 
-    // verticesOut.push(...positionVertices.values());
     const verticesOut = Array.from(positionVertices.values());
-    // edgesOut.push(...positionEdges.values());
     const edgesOut: TLayoutEdge[] = [];
     moveEdges.forEach((originalLoc, edge) => {
       const from = positionVertices.get(edge.edge.from);
@@ -531,35 +462,12 @@ export default function getLayout(
       const fromLeftDelta = from.left - originalLoc.fromLeft;
       const toTopDelta = to.top - originalLoc.toTop;
       const toLeftDelta = to.left - originalLoc.toLeft;
-      /*
-      console.log(JSON.stringify({
-        fromTopDelta,
-        fromtop: from.top,
-        originalLocfromTop: originalLoc.fromTop,
-        fromLeftDelta,
-        fromleft: from.left,
-        originalLocfromLeft: originalLoc.fromLeft,
-        toTopDelta,
-        totop: to.top,
-        originalLoctoTop: originalLoc.toTop,
-        toLeftDelta,
-        toleft: to.left,
-        originalLoctoLeft: originalLoc.toLeft,
-        edge,
-      }, null, 2));
-       */
 
       if (isCloseEnough(fromTopDelta, toTopDelta) && isCloseEnough(fromLeftDelta, toLeftDelta )) {
         const movedEdge = {
           ...edge,
           pathPoints: edge.pathPoints.map(([left, top]) => ([left + fromLeftDelta, top + fromTopDelta] as [number, number])), // TODO: no cast
         };
-        /*
-        console.log(JSON.stringify({
-          edge,
-          movedEdge,
-        }, null, 2));
-         */
         edgesOut.push(movedEdge);
       }
     });
@@ -599,12 +507,6 @@ export default function getLayout(
             y: fromTopDelta + prevY,
           },
         };
-        /*
-        console.log(JSON.stringify({
-          edge,
-          movedEdge,
-        }, null, 2));
-         */
         edgesOut.push(movedEdge);
         console.log('close enough');
       } else console.log('not close enough');

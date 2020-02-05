@@ -36,12 +36,9 @@ function unmapEdges<T = Record<string, unknown>>(
   return output.map(le => {
     const id = makeEdgeId(le.edge);
     const edge = idsToEdge.get(id);
-    // let edge = idsToEdge.get(id);
-    // if (edge.edge) edge = edge.edge;
     if (!edge) {
       throw new Error(`Unable to find edge for ${id}`);
     }
-    // if ('edge' in edge) return { ...le, edge: edge.edge };
     return { ...le, edge };
   });
 }
