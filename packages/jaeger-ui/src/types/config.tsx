@@ -49,7 +49,7 @@ export type Config = {
     cookieToDimension?: {
       cookie: string;
       dimension: string;
-    };
+    }[];
     gaID: string | TNil;
     trackErrors: boolean | TNil;
   };

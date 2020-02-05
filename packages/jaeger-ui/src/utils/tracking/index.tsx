@@ -45,11 +45,13 @@ const gaID = _get(config, 'tracking.gaID');
 export const isGaEnabled = isTest || isDebugMode || (isProd && Boolean(gaID));
 const isErrorsEnabled = isDebugMode || (isGaEnabled && Boolean(_get(config, 'tracking.trackErrors')));
 
-const cookieToDimension = _get(config, 'tracking.cookieToDimension');
-if (cookieToDimension) {
-  const match = ` ${document.cookie}`.match(new RegExp(`[; ]${cookieToDimension.cookie}=([^\\s;]*)`));
-  if (match) ReactGA.set({ [cookieToDimension.dimension]: match[1] });
-  else console.warn(`${cookieToDimension} not present in cookies`);
+const cookiesToDimensions = _get(config, 'tracking.cookiesToDimensions');
+if (cookiesToDimensions) {
+  cookiesToDimensions.forEach(({ cookie, dimension }: { cookie: string; dimension: string }) => {
+    const match = ` ${document.cookie}`.match(new RegExp(`[; ]${cookie}=([^\\s;]*)`));
+    if (match) ReactGA.set({ [dimension]: match[1] });
+    else console.warn(`${cookie} not present in cookies, could not set dimension: ${dimension}`);
+  });
 }
 
 /* istanbul ignore next */

@@ -29,7 +29,7 @@ import ReactGA from 'react-ga';
 import * as tracking from './index';
 
 let longStr = '---';
-function getStr(len: number) {
+function getStr(len) {
   while (longStr.length < len) {
     longStr += longStr.slice(0, len - longStr.length);
   }
