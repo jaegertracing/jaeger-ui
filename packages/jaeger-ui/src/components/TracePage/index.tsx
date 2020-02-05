@@ -20,7 +20,7 @@ import _get from 'lodash/get';
 import _mapValues from 'lodash/mapValues';
 import _memoize from 'lodash/memoize';
 import { connect, Dispatch } from 'react-redux';
-import { match as Match } from 'react-router-dom';
+import { match as Match, RouteComponentProps } from 'react-router-dom';
 import { bindActionCreators } from 'redux';
 
 import ArchiveNotifier from './ArchiveNotifier';
@@ -45,24 +45,43 @@ import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate } from '.
 import { getLocation, getUrl } from './url';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
-import { extractUiFindFromState } from '../common/UiFindInput';
+import { extractUiFindFromState, TExtractUiFindFromStateReturn } from '../common/UiFindInput';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import { getUiFindVertexKeys } from '../TraceDiff/TraceDiffGraph/traceDiffGraphUtils';
 import { fetchedState } from '../../constants';
 import { FetchedTrace, ReduxState, TNil } from '../../types';
-import { Trace } from '../../types/trace';
+import { Log, Span, Trace } from '../../types/trace';
 import { TraceArchive } from '../../types/archive';
 import { EmbeddedState } from '../../types/embedded';
 import filterSpans from '../../utils/filter-spans';
 import updateUiFind from '../../utils/update-ui-find';
 
 import './index.css';
+import TTraceTimeline from '../../types/TTraceTimeline';
 
-type TDispatchProps = {
+type TDispatchPropsTimelineViewer = {
+  focusUiFindMatches: (trace: Trace, uiFind: string | TNil, allowHide?: boolean) => void;
+  setSpanNameColumnWidth: (width: number) => void;
+  collapseAll: (spans: Span[]) => void;
+  collapseOne: (spans: Span[]) => void;
+  expandAll: () => void;
+  expandOne: (spans: Span[]) => void;
+  childrenToggle: (spanID: string) => void;
+  clearShouldScrollToFirstUiFindMatch: () => void;
+  detailLogItemToggle: (spanID: string, log: Log) => void;
+  detailLogsToggle: (spanID: string) => void;
+  detailWarningsToggle: (spanID: string) => void;
+  detailReferencesToggle: (spanID: string) => void;
+  detailProcessToggle: (spanID: string) => void;
+  detailTagsToggle: (spanID: string) => void;
+  detailToggle: (spanID: string) => void;
+  setTrace: (trace: Trace | TNil, uiFind: string | TNil) => void;
+};
+
+type TDispatchProps = TDispatchPropsTimelineViewer & {
   acknowledgeArchive: (id: string) => void;
   archiveTrace: (id: string) => void;
   fetchTrace: (id: string) => void;
-  focusUiFindMatches: (trace: Trace, uiFind: string | TNil) => void;
 };
 
 type TOwnProps = {
@@ -71,17 +90,17 @@ type TOwnProps = {
   match: Match<{ id: string }>;
 };
 
-type TReduxProps = {
+type TReduxProps = TExtractUiFindFromStateReturn & {
   archiveEnabled: boolean;
   archiveTraceState: TraceArchive | TNil;
   embedded: null | EmbeddedState;
   id: string;
   searchUrl: null | string;
   trace: FetchedTrace | TNil;
-  uiFind: string | TNil;
+  traceTimeline: TTraceTimeline;
 };
 
-type TProps = TDispatchProps & TOwnProps & TReduxProps;
+type TProps = TDispatchProps & TOwnProps & TReduxProps & RouteComponentProps;
 
 type TState = {
   headerHeight: number | TNil;
@@ -322,8 +341,30 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
     this._scrollManager.scrollToPrevVisibleSpan();
   };
 
+  focusSpan = (uiFind: string) => {
+    const { trace, focusUiFindMatches, location, history } = this.props;
+    if (trace && trace.data) {
+      updateUiFind({
+        location,
+        history,
+        uiFind,
+      });
+      focusUiFindMatches(trace.data, uiFind, false);
+    }
+  };
+
   render() {
-    const { archiveEnabled, archiveTraceState, embedded, id, searchUrl, uiFind, trace } = this.props;
+    const {
+      archiveEnabled,
+      archiveTraceState,
+      embedded,
+      id,
+      searchUrl,
+      uiFind,
+      trace,
+      traceTimeline,
+      ...rest
+    } = this.props;
     const { slimView, traceGraphView, headerHeight, viewRange } = this.state;
     if (!trace || trace.state === fetchedState.LOADING) {
       return <LoadingIndicator className="u-mt-vast" centered />;
@@ -403,6 +444,10 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
                 updateNextViewRangeTime={this.updateNextViewRangeTime}
                 updateViewRangeTime={this.updateViewRangeTime}
                 viewRange={viewRange}
+                focusSpan={this.focusSpan}
+                uiFind={uiFind}
+                traceTimeline={traceTimeline}
+                {...rest}
               />
             </section>
           ))}
@@ -430,6 +475,7 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
     id,
     searchUrl,
     trace,
+    traceTimeline: state.traceTimeline,
   };
 }
 
@@ -437,8 +483,12 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
 export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
   const { fetchTrace } = bindActionCreators(jaegerApiActions, dispatch);
   const { archiveTrace, acknowledge: acknowledgeArchive } = bindActionCreators(archiveActions, dispatch);
-  const { focusUiFindMatches } = bindActionCreators(timelineActions, dispatch);
-  return { acknowledgeArchive, archiveTrace, fetchTrace, focusUiFindMatches };
+  return {
+    acknowledgeArchive,
+    archiveTrace,
+    fetchTrace,
+    ...((bindActionCreators(timelineActions, dispatch) as unknown) as TDispatchPropsTimelineViewer),
+  };
 }
 
 export default connect(

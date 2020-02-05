@@ -80,13 +80,14 @@ describe('makeShortcutCallbacks()', () => {
 });
 
 describe('<TracePage>', () => {
-  TraceTimelineViewer.prototype.shouldComponentUpdate.mockReturnValue(false);
+  TraceTimelineViewer.mockReturnValue('');
 
   const trace = transformTraceData(traceGenerator.trace({}));
+  const focusUiFindMatchesMock = jest.fn();
   const defaultProps = {
     acknowledgeArchive: () => {},
     fetchTrace() {},
-    focusUiFindMatches: jest.fn(),
+    focusUiFindMatches: focusUiFindMatchesMock,
     id: trace.traceID,
     history: {
       replace: () => {},
@@ -699,15 +700,43 @@ describe('<TracePage>', () => {
       expect(track.trackRange.mock.calls).toEqual([[src, range, [0, 1]]]);
     });
   });
+
+  describe('focusSpan', () => {
+    it('calls updateUiFind and focusUiFindMatches', () => {
+      const spanName = 'span1';
+      wrapper.instance().focusSpan(spanName);
+      expect(updateUiFindSpy).toHaveBeenLastCalledWith({
+        history: defaultProps.history,
+        location: defaultProps.location,
+        uiFind: spanName,
+      });
+      expect(focusUiFindMatchesMock).toHaveBeenLastCalledWith(trace, spanName, false);
+    });
+  });
 });
 
 describe('mapDispatchToProps()', () => {
   it('creates the actions correctly', () => {
-    expect(mapDispatchToProps(() => {})).toEqual({
+    expect(mapDispatchToProps(() => {})).toMatchObject({
       acknowledgeArchive: expect.any(Function),
       archiveTrace: expect.any(Function),
       fetchTrace: expect.any(Function),
       focusUiFindMatches: expect.any(Function),
+      setSpanNameColumnWidth: expect.any(Function),
+      collapseAll: expect.any(Function),
+      collapseOne: expect.any(Function),
+      expandAll: expect.any(Function),
+      expandOne: expect.any(Function),
+      childrenToggle: expect.any(Function),
+      clearShouldScrollToFirstUiFindMatch: expect.any(Function),
+      detailLogItemToggle: expect.any(Function),
+      detailLogsToggle: expect.any(Function),
+      detailWarningsToggle: expect.any(Function),
+      detailReferencesToggle: expect.any(Function),
+      detailProcessToggle: expect.any(Function),
+      detailTagsToggle: expect.any(Function),
+      detailToggle: expect.any(Function),
+      setTrace: expect.any(Function),
     });
   });
 });
