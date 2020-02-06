@@ -473,6 +473,17 @@ describe('<TracePage>', () => {
     });
   });
 
+  describe('TraceTimelineView props', () => {
+    it('gets correct createLinkToExternalSpan prop', () => {
+      wrapper.instance().setHeaderHeight({ clientHeight: 100 });
+      wrapper.update();
+      const timeline = wrapper.find(TraceTimelineViewer);
+      expect(timeline.props().createLinkToExternalSpan('trace1', 'span1')).toBe(
+        '/trace/trace1/uiFind?=span1'
+      );
+    });
+  });
+
   describe('_adjustViewRange()', () => {
     let instance;
     let time;

@@ -26,6 +26,7 @@ import { TNil, ReduxState } from '../../../types';
 import { Span, Trace } from '../../../types/trace';
 
 import './index.css';
+import ExternalLinkContext from '../url/externalLinkContext';
 
 type TDispatchProps = {
   setSpanNameColumnWidth: (width: number) => void;
@@ -44,6 +45,7 @@ type TProps = TDispatchProps & {
   updateNextViewRangeTime: (update: ViewRangeTimeUpdate) => void;
   updateViewRangeTime: TUpdateViewRangeTimeFunction;
   viewRange: IViewRange;
+  createLinkToExternalSpan: (traceID: string, spanID: string) => string;
 };
 
 const NUM_TICKS = 5;
@@ -86,27 +88,30 @@ export class TraceTimelineViewerImpl extends React.PureComponent<TProps> {
       updateNextViewRangeTime,
       updateViewRangeTime,
       viewRange,
+      createLinkToExternalSpan,
       ...rest
     } = this.props;
     const { spanNameColumnWidth, trace } = rest;
 
     return (
-      <div className="TraceTimelineViewer">
-        <TimelineHeaderRow
-          duration={trace.duration}
-          nameColumnWidth={spanNameColumnWidth}
-          numTicks={NUM_TICKS}
-          onCollapseAll={this.collapseAll}
-          onCollapseOne={this.collapseOne}
-          onColummWidthChange={setSpanNameColumnWidth}
-          onExpandAll={this.expandAll}
-          onExpandOne={this.expandOne}
-          viewRangeTime={viewRange.time}
-          updateNextViewRangeTime={updateNextViewRangeTime}
-          updateViewRangeTime={updateViewRangeTime}
-        />
-        <VirtualizedTraceView {...rest} currentViewRangeTime={viewRange.time.current} />
-      </div>
+      <ExternalLinkContext.Provider value={createLinkToExternalSpan}>
+        <div className="TraceTimelineViewer">
+          <TimelineHeaderRow
+            duration={trace.duration}
+            nameColumnWidth={spanNameColumnWidth}
+            numTicks={NUM_TICKS}
+            onCollapseAll={this.collapseAll}
+            onCollapseOne={this.collapseOne}
+            onColummWidthChange={setSpanNameColumnWidth}
+            onExpandAll={this.expandAll}
+            onExpandOne={this.expandOne}
+            viewRangeTime={viewRange.time}
+            updateNextViewRangeTime={updateNextViewRangeTime}
+            updateViewRangeTime={updateViewRangeTime}
+          />
+          <VirtualizedTraceView {...rest} currentViewRangeTime={viewRange.time.current} />
+        </div>
+      </ExternalLinkContext.Provider>
     );
   }
 }
