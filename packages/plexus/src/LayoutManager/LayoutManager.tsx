@@ -37,11 +37,32 @@ export default class LayoutManager {
     this.pendingResult = null;
   }
 
-  getLayout<T, U>(edges: (TEdge<U> | TLayoutEdge<U>)[], vertices: (TSizeVertex<T> | TLayoutVertex<T>)[], previousGraph: TLayoutGraph | null = null): TPendingLayoutResult<T, U> {
+  // getLayout<T, U>(edges: (TEdge<U> | TLayoutEdge<U>)[], vertices: (TSizeVertex<T> | TLayoutVertex<T>)[], previousGraph: TLayoutGraph | null = null): TPendingLayoutResult<T, U> {
+  getLayout<T, U>({
+    moveVertices,
+    newVertices,
+    moveEdges,
+    newEdges,
+    prevGraph,
+  }: {
+    moveVertices: TLayoutVertex<T>[],
+    newVertices: TSizeVertex<T>[],
+    moveEdges: TLayoutEdge<U>[],
+    newEdges: TEdge<U>[],
+    prevGraph: TLayoutGraph | null,
+  }) {
     this._cancelPending();
     this.layoutId++;
     const id = this.layoutId;
-    this.coordinator.getLayout(id, edges, vertices, this.options, previousGraph);
+    this.coordinator.getLayout({
+      id, 
+      moveVertices,
+      newVertices,
+      moveEdges,
+      newEdges,
+      options: this.options,
+      prevGraph,
+    });
     this.pendingResult = { id, isPositionsResolved: false };
     const positions: Promise<TCancelled | TPositionsDone<T>> = new Promise(resolve => {
       if (this.pendingResult && id === this.pendingResult.id) {

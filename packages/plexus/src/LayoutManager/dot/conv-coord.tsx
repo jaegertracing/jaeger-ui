@@ -18,7 +18,7 @@ const round = Math.round;
 
 const DPI = 72;
 
-export function edgeToDot(e: TEdge | TLayoutEdge): TEdge | TLayoutEdge {
+export function edgeToDot(e: TLayoutEdge): TLayoutEdge {
   if ('translate' in e && e.translate) {
     return {
       ...e,
@@ -32,26 +32,28 @@ export function edgeToDot(e: TEdge | TLayoutEdge): TEdge | TLayoutEdge {
   return e;
 }
 
-export function vertexToDot(v: TSizeVertex | TLayoutVertex, previousGraph: TLayoutGraph | null): TSizeVertex | TLayoutVertex {
+export function sizeVertexToDot(v: TSizeVertex): TSizeVertex {
   const { height, width } = v;
-  const rv = {
+  return {
     ...v,
     height: height / DPI,
     width: width / DPI,
   };
+}
 
-  if ('left' in v) {
-    if (!previousGraph) throw new Error('Cannot calculate top for LayoutVertex without previousGraph');
-    const left = v.left / DPI + rv.width / 2;
-    const top = (previousGraph.height - v.top - height / 2) / DPI;
-    return {
-      ...rv,
-      left,
-      top,
-    };
-  }
+export function layoutVertexToDot(v: TLayoutVertex, previousGraph: TLayoutGraph | null): TLayoutVertex {
+  if (!previousGraph) throw new Error('Cannot calculate top for LayoutVertex without previousGraph');
+  const { height, width } = sizeVertexToDot(v);
 
-  return rv;
+  const left = v.left / DPI + width / 2;
+  const top = (previousGraph.height - v.top - v.height / 2) / DPI;
+  return {
+    ...v,
+    height,
+    width,
+    left,
+    top,
+  };
 }
 
 export function graphToDot(graph: TLayoutGraph) {
@@ -63,7 +65,7 @@ export function graphToDot(graph: TLayoutGraph) {
   };
 }
 
-export function edgeToPixels(graph: TLayoutGraph, e: TLayoutEdge<{}>): TLayoutEdge<{}> {
+export function edgeToPixels(graph: TLayoutGraph, e: TLayoutEdge): TLayoutEdge {
   const { height: h } = graph;
   const { edge, pathPoints, translate } = e;
   if (translate) {

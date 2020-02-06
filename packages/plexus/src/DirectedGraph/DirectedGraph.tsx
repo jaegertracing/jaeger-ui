@@ -22,7 +22,7 @@ import classNameIsSmall from './prop-factories/classNameIsSmall';
 import mergePropSetters, { assignMergeCss } from './prop-factories/mergePropSetters';
 import scaledStrokeWidth from './prop-factories/scaledStrokeWidth';
 import { TDirectedGraphProps, TDirectedGraphState } from './types';
-import { TCancelled, TLayoutDone, TPositionsDone, TSizeVertex } from '../types';
+import { TCancelled, TLayoutDone, TPositionsDone, TSizeVertex, TLayoutVertex, TLayoutEdge } from '../types';
 import MiniMap from '../zoom/MiniMap';
 import ZoomManager, { zoomIdentity, ZoomTransform } from '../zoom/ZoomManager';
 
@@ -188,9 +188,9 @@ export default class DirectedGraph<T> extends React.PureComponent<
         });
       }
     });
-    const { positions, layout } = layoutManager.getLayout(edges, sizeVertices);
+    const { positions, layout } = layoutManager.getLayout({ moveEdges: ([] as TLayoutEdge[]), newEdges: edges, moveVertices: ([] as TLayoutVertex[]), newVertices: sizeVertices, prevGraph: null });
     positions.then(this._onPositionsDone);
-    layout.then(this._onLayoutDone);
+    layout.then(this._onLayoutDone as any);
     this.setState({ sizeVertices, layoutPhase: PHASE_CALC_POSITIONS });
   }
 

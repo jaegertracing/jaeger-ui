@@ -17,7 +17,7 @@ import { TEdge, TLayoutEdge, TLayoutVertex, TSizeVertex } from '../types';
 const makeEdgeId = (edge: TEdge<any>) => `${edge.from}\v${edge.to}`;
 
 function unmapVertices<T>(
-  idToVertex: Map<string, TSizeVertex<any>>,
+  idToVertex: Map<string, TSizeVertex<T>>,
   output: TLayoutVertex<{}>[]
 ): TLayoutVertex<T>[] {
   return output.map(lv => {
@@ -29,10 +29,10 @@ function unmapVertices<T>(
   });
 }
 
-function unmapEdges<T = Record<string, unknown>>(
-  idsToEdge: Map<string, TEdge<any>>,
-  output: TLayoutEdge<{}>[]
-): TLayoutEdge<T>[] {
+function unmapEdges(
+  idsToEdge: Map<string, TEdge>,
+  output: TLayoutEdge[]
+): TLayoutEdge[] {
   return output.map(le => {
     const id = makeEdgeId(le.edge);
     const edge = idsToEdge.get(id);
@@ -43,25 +43,37 @@ function unmapEdges<T = Record<string, unknown>>(
   });
 }
 
-export default function convInputs(srcEdges: (TEdge<unknown> | TLayoutEdge<unknown>)[], inVertices: (TSizeVertex<unknown> | TLayoutVertex<unknown>)[]) {
+function mapVertices<T extends TSizeVertex, U extends TSizeVertex>(vertices: T[], prevIds?: Map<string, string>): {
+    keyToId: Map<string, string>,
+    idToVertex: Map<string, T | U>,
+    mappedVertices: T[],
+} {
   const keyToId = new Map<string, string>();
-  const idToVertex = new Map<string, TSizeVertex<any>>();
-  const idsToEdge = new Map<string, TEdge<any>>();
-  const vertices = inVertices.map(v => {
+  const idToVertex = new Map<string, T | U>();
+  const mappedVertices = vertices.map(v => {
     const {
       vertex: { key },
       ...rest
     } = v;
-    if (keyToId.has(key)) {
+    if (keyToId.has(key) || (prevIds && prevIds.has(key))) {
       throw new Error(`Non-unique vertex key: ${key}`);
     }
-    const id = String(keyToId.size);
+    const id = String(keyToId.size + (prevIds ? prevIds.size : 0));
     keyToId.set(key, id);
     idToVertex.set(id, v);
-    return { vertex: { key: id }, ...rest };
+    // TODO remove cast
+    return { vertex: { key: id }, ...rest } as T;
   });
-  const edges = srcEdges.map(e => {
+  return {
+    keyToId,
+    idToVertex,
+    mappedVertices,
+  };
+}
+
+function convToFrom(e: TEdge, keyToId: Map<string, string>): TEdge {
     // TODO DRY
+    /*
     if ('edge' in e) {
       const { from, to, isBidirectional } = e.edge;
       const fromId = keyToId.get(from);
@@ -83,6 +95,7 @@ export default function convInputs(srcEdges: (TEdge<unknown> | TLayoutEdge<unkno
         edge,
       };
     }
+     */
     const { from, to, isBidirectional } = e;
     const fromId = keyToId.get(from);
     const toId = keyToId.get(to);
@@ -97,12 +110,46 @@ export default function convInputs(srcEdges: (TEdge<unknown> | TLayoutEdge<unkno
       from: fromId,
       to: toId,
     };
-    idsToEdge.set(makeEdgeId(edge), e);
     return edge;
+}
+
+// export default function convInputs(srcEdges: (TEdge<unknown> | TLayoutEdge<unknown>)[], inVertices: (TSizeVertex<unknown> | TLayoutVertex<unknown>)[]) {
+export default function convInputs({
+    inMoveVertices,
+    inNewVertices,
+    inMoveEdges,
+    inNewEdges,
+  }: {
+    inMoveVertices: TLayoutVertex[],
+    inNewVertices: TSizeVertex[],
+    inMoveEdges: TLayoutEdge[],
+    inNewEdges: TEdge[],
+  }) {
+  const { keyToId, idToVertex, mappedVertices: moveVertices } = mapVertices<TLayoutVertex, TSizeVertex>(inMoveVertices);
+  const { keyToId: moreKeyToId, idToVertex: moreIdToVertex, mappedVertices: newVertices } = mapVertices<TSizeVertex, TLayoutVertex>(inNewVertices, keyToId);
+  moreKeyToId.forEach((v, k) => keyToId.set(k, v));
+  moreIdToVertex.forEach((v, k) => idToVertex.set(k, v));
+
+  const idsToEdge = new Map<string, TEdge>();
+  const moveEdges = inMoveEdges.map(e => {
+    const { edge } = e;
+    const convEdge = convToFrom(edge, keyToId);
+    idsToEdge.set(makeEdgeId(convEdge), edge);
+    return {
+      ...e,
+      edge: convEdge,
+    };
+  });
+  const newEdges = inNewEdges.map(e => {
+    const convEdge = convToFrom(e, keyToId);
+    idsToEdge.set(makeEdgeId(convEdge), e);
+    return convEdge;
   });
   return {
-    edges,
-    vertices,
+    moveVertices,
+    newVertices,
+    moveEdges,
+    newEdges,
     unmapEdges: unmapEdges.bind(null, idsToEdge),
     unmapVertices: unmapVertices.bind(null, idToVertex),
   };

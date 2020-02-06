@@ -17,7 +17,7 @@ import viz from 'viz.js/viz.js';
 import convPlain from './dot/convPlain';
 import toDot, { DEFAULT_GRAPH_ATTRS } from './dot/toDot';
 
-import { EWorkerPhase, TLayoutOptions } from './types';
+import { TWorkerOutputMessage, TWorkerInputMessage, EWorkerPhase, TLayoutOptions } from './types';
 import { TEdge, TLayoutEdge, TLayoutGraph, TLayoutVertex, TSizeVertex } from '../types';
 
 enum EValidity {
@@ -43,7 +43,8 @@ type TValidityWarn = {
 
 type TVerticesValidity = TValidityError | TValidityOk | TValidityWarn;
 
-const SHIFT_THRESHOLD = 1e-5;
+// const SHIFT_THRESHOLD = 1e-5;
+const SHIFT_THRESHOLD = 1e-3;
 
 function isCloseEnough(a: number, b: number) {
   return Math.abs(a - b) < SHIFT_THRESHOLD;
@@ -110,14 +111,24 @@ type TGraphCohort = {
 
 type TGraphQueue = TGraphCohort[];
 
+/*
 export default function getLayout(
   phase: EWorkerPhase,
   inEdges: (TEdge | TLayoutEdge)[],
   inVertices: (TSizeVertex | TLayoutVertex)[],
   layoutOptions: TLayoutOptions | null,
-  previousGraph: TLayoutGraph | null
+  prevGraph: TLayoutGraph | null
 ) {
-  console.log(phase);
+  */
+export default function getLayout({
+  phase,
+  moveVertices: inMoveVertices,
+  newVertices: inNewVertices,
+  moveEdges: inMoveEdges,
+  newEdges: inNewEdges,
+  options: layoutOptions,
+  prevGraph,
+}: Omit<TWorkerInputMessage, 'meta'> & { phase: EWorkerPhase }) {
   /*
   if (phase !== EWorkerPhase.Positions) {
     const dot = toDot(inEdges, inVertices, layoutOptions);
@@ -151,13 +162,16 @@ export default function getLayout(
    */
 
   let hasShifted = false;
-  const positionVertices: Map<string, TLayoutVertex> = new Map();
-  const newVertices: Map<string, TSizeVertex> = new Map();
+  const positionVertices: Map<string, TLayoutVertex> = new Map(inMoveVertices.map(v => [v.vertex.key, v]));
+  const moveVertexKeys: Set<string> = new Set(positionVertices.keys());
+  const inNewVerticesMap: Map<string, TSizeVertex> = new Map(inNewVertices.map(v => [v.vertex.key, v]));
+  /*
   inVertices.forEach(vertex => {
     console.log(vertex, 'top' in vertex);
     if ('top' in vertex) positionVertices.set(vertex.vertex.key, vertex);
     else newVertices.set(vertex.vertex.key, vertex);
   });
+   */
 
   type TEdgeLoc = {
     fromLeft: number,
@@ -165,8 +179,21 @@ export default function getLayout(
     toLeft: number,
     toTop: number,
   };
-  const positionEdges: Map<TLayoutEdge, TEdgeLoc> = new Map();
-  const newEdges: TEdge[] = [];
+  const positionEdges: Map<TLayoutEdge, TEdgeLoc> = new Map(inMoveEdges.map(e => {
+    const from = positionVertices.get(e.edge.from);
+    if (!from) throw new Error('From missing');
+    const to = positionVertices.get(e.edge.to);
+    if (!to) throw new Error('to missing');
+    if (!prevGraph) throw new Error('Cannot have positioned edges without previous graph');
+    return [e, {
+      fromLeft: from.left,
+      fromTop: prevGraph.height - from.top,
+      toLeft: to.left,
+      toTop: prevGraph.height - to.top,
+    }];
+  }));
+  // const newEdges: TEdge[] = [];
+  /*
   inEdges.forEach(edge => {
     console.log(edge, 'edge' in edge);
     if ('edge' in edge) {
@@ -174,20 +201,21 @@ export default function getLayout(
       if (!from) throw new Error('From missing');
       const to = positionVertices.get(edge.edge.to);
       if (!to) throw new Error('to missing');
-      if (!previousGraph) throw new Error('Cannot have positioned edges without previous graph');
+      if (!prevGraph) throw new Error('Cannot have positioned edges without previous graph');
       positionEdges.set(edge, {
         fromLeft: from.left,
-        fromTop: previousGraph.height - from.top,
+        fromTop: prevGraph.height - from.top,
         toLeft: to.left,
-        toTop: previousGraph.height - to.top,
+        toTop: prevGraph.height - to.top,
       });
     }
     else newEdges.push(edge);
   });
+   */
 
   const edgesByTo: Map<string, Map<string, TEdge>> = new Map();
   const edgesByFrom: Map<string, Map<string, TEdge>> = new Map();
-  newEdges.forEach(edge => {
+  inNewEdges.forEach(edge => {
     const to = edgesByTo.get(edge.to);
     if (to) to.set(edge.from, edge);
     else edgesByTo.set(edge.to, new Map([[edge.from, edge]]));
@@ -198,9 +226,9 @@ export default function getLayout(
   });
 
   const graphQueue: TGraphQueue = [];
-  while(newVertices.size) {
-    const [k, v] = newVertices.entries().next().value;
-    newVertices.delete(k);
+  while(inNewVerticesMap.size) {
+    const [k, v] = inNewVerticesMap.entries().next().value;
+    inNewVerticesMap.delete(k);
     const edges: Set<TEdge> = new Set();
     const vertices: TSizeVertex[] = [v];
     let anchorKey: undefined | string = undefined;
@@ -213,10 +241,10 @@ export default function getLayout(
         const inEdges = edgesByTo.get(key);
         if (inEdges) {
           Array.from(inEdges.values()).forEach(edge => {
-            const connectedVertex = newVertices.get(edge.from);
+            const connectedVertex = inNewVerticesMap.get(edge.from);
             if (connectedVertex) {
               vertices.push(connectedVertex);
-              newVertices.delete(edge.from);
+              inNewVerticesMap.delete(edge.from);
               edges.add(edge);
             } else if (!anchorKey) {
               const anchorVertex = positionVertices.get(edge.from);
@@ -236,11 +264,11 @@ export default function getLayout(
         const outEdges = edgesByFrom.get(key);
         if (outEdges) {
           Array.from(outEdges.values()).forEach(edge => {
-            const connectedVertex = newVertices.get(edge.to);
+            const connectedVertex = inNewVerticesMap.get(edge.to);
             if (connectedVertex) {
               vertices.push(connectedVertex);
               edges.add(edge);
-              newVertices.delete(edge.to);
+              inNewVerticesMap.delete(edge.to);
             } else if (!anchorKey) {
               const anchorVertex = positionVertices.get(edge.to);
               if (anchorVertex) {
@@ -307,7 +335,7 @@ export default function getLayout(
 
   console.log(graphQueue);
   if (graphQueue.length) {
-    if (!previousGraph) throw new Error('Cannot have new vertices without previous graph');
+    if (!prevGraph) throw new Error('Cannot have new vertices without previous graph');
     const ranksep = layoutOptions && layoutOptions.ranksep || DEFAULT_GRAPH_ATTRS.ranksep;
     const nodesep = layoutOptions && layoutOptions.nodesep || DEFAULT_GRAPH_ATTRS.nodesep;
     type TEdgeLoc = {
@@ -316,7 +344,7 @@ export default function getLayout(
       toLeft: number,
       toTop: number,
     };
-    const moveEdges: Map<TLayoutEdge, TEdgeLoc> = new Map();
+    const graftEdges: Map<TLayoutEdge, TEdgeLoc> = new Map();
     graphQueue.forEach(({ anchorDirection, anchorKey, edges, vertices }) => {
       const anchorVertex = positionVertices.get(anchorKey);
       if (!anchorVertex) throw new Error(`Lost anchor: ${anchorKey}`);
@@ -333,22 +361,22 @@ export default function getLayout(
       // console.log('vizzed');
 
       // console.log('going to conv');
-      const { edges: subEdges, graph: subGraph, vertices: subVertices } = convPlain(plainOut, true);
-      const subAnchor = subVertices.find(({ vertex: { key } }) => key === anchorKey);
-      if (!subAnchor) throw new Error(`Anchor not in graft: ${anchorKey}`);
-      const { top: subAnchorTop, left: subAnchorLeft } = subAnchor;
-      const leftAdjust = anchorLeft - subAnchorLeft;
-      const topAdjust = anchorTop - subAnchorTop;
+      const { edges: _graftEdges, graph: graftGraph, vertices: graftVertices } = convPlain(plainOut, true);
+      const graftAnchor = graftVertices.find(({ vertex: { key } }) => key === anchorKey);
+      if (!graftAnchor) throw new Error(`Anchor not in graft: ${anchorKey}`);
+      const { top: graftAnchorTop, left: graftAnchorLeft } = graftAnchor;
+      const leftAdjust = anchorLeft - graftAnchorLeft;
+      const topAdjust = anchorTop - graftAnchorTop;
 
-      const newVertices: Map<string, TLayoutVertex> = new Map();
-      subVertices.forEach(v => newVertices.set(v.vertex.key, v));
-      if (subEdges) {
-        subEdges.forEach(e => {
-          const from = newVertices.get(e.edge.from);
+      const newSubVertices: Map<string, TLayoutVertex> = new Map();
+      graftVertices.forEach(v => newSubVertices.set(v.vertex.key, v));
+      if (_graftEdges) { // TODO: If not necessary when true given to convPlain
+        _graftEdges.forEach(e => {
+          const from = newSubVertices.get(e.edge.from);
           if (!from) throw new Error('From missing');
-          const to = newVertices.get(e.edge.to);
+          const to = newSubVertices.get(e.edge.to);
           if (!to) throw new Error('to missing');
-          moveEdges.set(e, {
+          graftEdges.set(e, {
             fromLeft: from.left,
             fromTop: from.top,
             toLeft: to.left,
@@ -387,9 +415,9 @@ export default function getLayout(
         // TODO: everything after here shouldn't be divided by ifs
         slideThreshold = anchorVertex[slideDimension] + (slideSectionDirection * (anchorVertex[slideCheckAttribute] / 2 + SEP_PERCENTAGE * ranksep));
         slideDivisor = anchorVertex[otherDimension];
-        collisionLimit = slideThreshold + (slideSectionDirection * (subGraph[slideCheckAttribute] - subAnchor[slideCheckAttribute] + SEP_PERCENTAGE * ranksep));
-        collisionLowerBound = anchorVertex[otherDimension] - subAnchor[otherDimension] - SEP_PERCENTAGE * nodesep;
-        collisionUpperBound = collisionLowerBound + subGraph[otherAttribute] + 2 * SEP_PERCENTAGE * nodesep;
+        collisionLimit = slideThreshold + (slideSectionDirection * (graftGraph[slideCheckAttribute] - graftAnchor[slideCheckAttribute] + SEP_PERCENTAGE * ranksep));
+        collisionLowerBound = anchorVertex[otherDimension] - graftAnchor[otherDimension] - SEP_PERCENTAGE * nodesep;
+        collisionUpperBound = collisionLowerBound + graftGraph[otherAttribute] + 2 * SEP_PERCENTAGE * nodesep;
 
         positionVertices.forEach(existingVertex => {
           const slideThresholdCompareVal = existingVertex[slideDimension] + (slideSectionDirection * existingVertex[slideCheckAttribute] / 2);
@@ -435,7 +463,7 @@ export default function getLayout(
         throw new Error('Uhh should be TB');
       }
 
-      subVertices.forEach(({ left, top, ...rest }) => {
+      graftVertices.forEach(({ left, top, ...rest }) => {
         // assumes anchorDirection is 'from' and layoutOptions.direction is top -> bottom
         // I DON'T THINK SO ANY MORE
         if (rest.vertex.key !== anchorKey) {
@@ -448,11 +476,10 @@ export default function getLayout(
       });
     });
 
-    const graphOut = reframe(previousGraph);
+    const graphOut = reframe(prevGraph);
 
-    const verticesOut = Array.from(positionVertices.values());
-    const edgesOut: TLayoutEdge[] = [];
-    moveEdges.forEach((originalLoc, edge) => {
+    const newEdges: TLayoutEdge[] = [];
+    graftEdges.forEach((originalLoc, edge) => {
       const from = positionVertices.get(edge.edge.from);
       if (!from) throw new Error('From missing');
       const to = positionVertices.get(edge.edge.to);
@@ -468,10 +495,11 @@ export default function getLayout(
           ...edge,
           pathPoints: edge.pathPoints.map(([left, top]) => ([left + fromLeftDelta, top + fromTopDelta] as [number, number])), // TODO: no cast
         };
-        edgesOut.push(movedEdge);
+        newEdges.push(movedEdge);
       }
     });
 
+    const moveEdges: TLayoutEdge[] = [];
     positionEdges.forEach((originalLoc, edge) => {
       const from = positionVertices.get(edge.edge.from);
       if (!from) throw new Error('From missing');
@@ -483,20 +511,24 @@ export default function getLayout(
       const toTopDelta = (graphOut.height - to.top) - originalLoc.toTop;
       const toLeftDelta = to.left - originalLoc.toLeft;
 
+      /*
       console.log(JSON.stringify({
+        from: edge.edge.from,
         fromTopDelta,
-        fromtop: graphOut.height - from.top,
-        originalLocfromTop: originalLoc.fromTop,
+        // fromtop: graphOut.height - from.top,
+        // originalLocfromTop: originalLoc.fromTop,
         fromLeftDelta,
-        fromleft: from.left,
-        originalLocfromLeft: originalLoc.fromLeft,
+        // fromleft: from.left,
+        // originalLocfromLeft: originalLoc.fromLeft,
+        to: edge.edge.to,
         toTopDelta,
         totop: graphOut.height - to.top,
         originalLoctoTop: originalLoc.toTop,
         toLeftDelta,
-        toleft: to.left,
-        originalLoctoLeft: originalLoc.toLeft,
+        // toleft: to.left,
+        // originalLoctoLeft: originalLoc.toLeft,
       }, null, 2));
+       */
 
       if (isCloseEnough(fromTopDelta, toTopDelta) && isCloseEnough(fromLeftDelta, toLeftDelta )) {
         const { x: prevX = 0, y: prevY = 0 } = edge.translate || {};
@@ -507,18 +539,24 @@ export default function getLayout(
             y: fromTopDelta + prevY,
           },
         };
-        edgesOut.push(movedEdge);
+        moveEdges.push(movedEdge);
         console.log('close enough');
       } else console.log('not close enough');
     });
 
-    if (graphOut) console.log('should be subset af');
-    console.log(graphOut, edgesOut, verticesOut);
-    if (graphOut) return { graph: graphOut, edges: edgesOut, vertices: verticesOut };
+    if (graphOut) console.log('should be graftset af');
+    const moveVertices: TLayoutVertex[] = []; // Array.from(positionVertices.values());
+    const newVertices: TLayoutVertex[] = []; // Array.from(inNewVerticesMap.values());
+    positionVertices.forEach((v, key) => {
+      if (moveVertexKeys.has(key)) moveVertices.push(v);
+      else newVertices.push(v);
+    });
+    console.log(graphOut, moveEdges, moveVertices, newEdges, newVertices);
+    if (graphOut) return { graph: graphOut, moveEdges, moveVertices, newEdges, newVertices };
   }
 
   // console.log('going to dot');
-  const dot = toDot(newEdges, inVertices, layoutOptions);
+  const dot = toDot(inNewEdges, inNewVertices, layoutOptions);
   // const dot = toDot(newEdges, Array.from(newVertices.values()), layoutOptions);
   // console.log('dotted');
 
@@ -530,18 +568,18 @@ export default function getLayout(
   // console.log('vizzed');
 
   // console.log('going to conv');
-  const { edges, graph, vertices } = convPlain(plainOut, phase !== EWorkerPhase.Positions);
+  const { edges: newEdges, graph, vertices: newVertices } = convPlain(plainOut, phase !== EWorkerPhase.Positions);
   // console.log('conved');
 
-  const result = getVerticesValidity(inVertices, vertices);
+  const result = getVerticesValidity(inNewVertices, newVertices);
 
   if (result.validity === EValidity.Error) {
     console.log('error');
     const message = result.message;
     return {
       graph,
-      edges,
-      vertices,
+      newEdges,
+      newVertices,
       layoutError: true,
       layoutErrorMessage: message,
     };
@@ -550,11 +588,10 @@ export default function getLayout(
     console.log('only warn');
     return {
       graph,
-      edges,
-      vertices,
+      newEdges,
+      newVertices,
       layoutErrorMessage: result.message,
     };
   }
-  return { edges, graph, vertices };
-
+  return { newEdges, graph, newVertices };
 }

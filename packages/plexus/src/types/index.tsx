@@ -20,28 +20,28 @@ export type TLayoutGraph = {
 
 export type TVertexKey = string;
 
-export type TVertex<T = {}> = T & {
+export type TVertex<T = unknown> = T & {
   key: TVertexKey;
 };
 
-export type TSizeVertex<T = {}> = {
+export type TSizeVertex<T = unknown> = {
   vertex: TVertex<T>;
   width: number;
   height: number;
 };
 
-export type TLayoutVertex<T = {}> = TSizeVertex<T> & {
+export type TLayoutVertex<T = unknown> = TSizeVertex<T> & {
   left: number;
   top: number;
 };
 
-export type TEdge<T = {}> = T & {
+export type TEdge<T = unknown> = T & {
   from: TVertexKey;
   to: TVertexKey;
   isBidirectional?: boolean;
 };
 
-export type TLayoutEdge<T = {}> = {
+export type TLayoutEdge<T = unknown> = {
   edge: TEdge<T>;
   pathPoints: [number, number][];
   translate?: {
@@ -54,11 +54,12 @@ export type TCancelled = {
   isCancelled: true;
 };
 
-export type TPositionsDone<T = Record<string, unknown>> = {
+export type TPositionsDone<T = Record<string, unknown>, U = Record<string, unknown>> = {
   isCancelled: false;
   graph: TLayoutGraph;
   // vertices: TLayoutVertex<T>[];
   vertices: Map<string, TLayoutVertex<T>>;
+  edges?: Map<TEdge<U>, TLayoutEdge<U>> | null;
 };
 
 export type TLayoutDone<T = Record<string, unknown>, U = Record<string, unknown>> = {

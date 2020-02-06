@@ -25,6 +25,7 @@ export enum ECoordinatorPhase {
   Edges = 'Edges',
   NotStarted = 'NotStarted',
   Positions = 'Positions',
+  Reposition = 'Reposition',
 }
 
 export enum EWorkerPhase {
@@ -51,20 +52,29 @@ export type TLayoutWorkerMeta = {
 };
 
 export type TWorkerInputMessage = {
-  edges: (TEdge<{}> | TLayoutEdge<{}>)[];
+  // edges: (TEdge<{}> | TLayoutEdge<{}>)[];
   meta: TLayoutWorkerMeta;
   options: TLayoutOptions | null;
-  previousGraph: TLayoutGraph | null;
-  vertices: (TSizeVertex<{}> | TLayoutVertex<{}>)[];
+  // previousGraph: TLayoutGraph | null;
+  // vertices: (TSizeVertex<{}> | TLayoutVertex<{}>)[];
+  moveVertices: TLayoutVertex[];
+  newVertices: TSizeVertex[];
+  moveEdges: TLayoutEdge[];
+  newEdges: TEdge[];
+  prevGraph: TLayoutGraph | null;
 };
 
 export type TWorkerOutputMessage = {
   type: EWorkerPhase | EWorkerErrorType.LayoutError;
-  edges: TLayoutEdge<{}>[] | null;
+  moveVertices?: TLayoutVertex[] | null;
+  newVertices: TLayoutVertex[] | null;
+  moveEdges?: TLayoutEdge[] | null;
+  newEdges: TLayoutEdge[] | null;
+  // edges: TLayoutEdge[] | null;
   graph: TLayoutGraph;
   layoutErrorMessage?: string;
   meta: TLayoutWorkerMeta;
-  vertices: TLayoutVertex<{}>[];
+  // vertices: TLayoutVertex[];
 };
 
 export type TWorkerErrorMessage = {
@@ -73,12 +83,13 @@ export type TWorkerErrorMessage = {
   type: EWorkerErrorType.Error;
 };
 
-export type TNodesUpdate<T = Record<string, unknown>> = {
+export type TNodesUpdate<T = Record<string, unknown>, U = Record<string, unknown>> = {
   type: ECoordinatorPhase.Positions;
   layoutId: number;
   graph: TLayoutGraph;
   // vertices: TLayoutVertex<T>[];
   vertices: Map<string, TLayoutVertex<T>>;
+  edges?: Map<TEdge<U>, TLayoutEdge<U>> | null;
 };
 
 export type TLayoutUpdate<T = Record<string, unknown>, U = Record<string, unknown>> = {

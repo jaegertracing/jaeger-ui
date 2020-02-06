@@ -146,11 +146,27 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
       const values = `expected ${JSON.stringify(expectedKey)}, recieved ${JSON.stringify(senderKey)}`;
       throw new Error(`Key mismatch for measuring nodes; ${values}`);
     }
-    const inVertices: (TSizeVertex<T> | TLayoutVertex<T>)[] = sizeVertices.map(v => this.state.layoutVertices && this.state.layoutVertices.get(v.vertex.key) || v);
-    const inEdges: (TEdge<U> | TLayoutEdge<U>)[] = edges.map(edge => (this.state.layoutEdges && this.state.layoutEdges.get(edge)) || edge);
-    const { positions, layout } = layoutManager.getLayout(inEdges, inVertices, this.state.layoutGraph);
+    const moveVertices: TLayoutVertex<T>[] = [];
+    const newVertices: TSizeVertex<T>[] = sizeVertices.filter(v => {
+      const lv = this.state.layoutVertices && this.state.layoutVertices.get(v.vertex.key);
+      if (lv) moveVertices.push(lv);
+      return !lv;
+    });
+    const moveEdges: TLayoutEdge<U>[] = [];
+    const newEdges: TEdge<U>[] = edges.filter(e => {
+      const le = this.state.layoutEdges && this.state.layoutEdges.get(e);
+      if (le) moveEdges.push(le);
+      return !le;
+    });
+    const { positions, layout } = layoutManager.getLayout({
+      moveVertices,
+      newVertices,
+      moveEdges,
+      newEdges,
+      prevGraph: this.state.layoutGraph,
+    });
     // TODO no timeout
-    positions.then((...args) => setTimeout(() => this.onPositionsDone(...args), 350));
+    positions.then(res => setTimeout(() => this.onPositionsDone(res as any), 350)); // TODO no cast
     // TODO  only timeout if edges take less than two seconds, else immediate
     layout.then((...args) => setTimeout(() => this.onLayoutDone(...args), this.state.layoutVertices ? 2350 : 350));
     this.setState({ layoutPhase: ELayoutPhase.CalcPositions });
@@ -283,11 +299,11 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
     this.setState({ zoomTransform });
   };
 
-  private onPositionsDone = (result: TCancelled | TPositionsDone<T>) => {
+  private onPositionsDone = (result: TCancelled | TPositionsDone<T, U>) => {
     if (result.isCancelled) {
       return;
     }
-    const { graph: layoutGraph, vertices } = result;
+    const { graph: layoutGraph, edges, vertices } = result;
     if (this.zoomManager) {
       this.zoomManager.setContentSize(layoutGraph);
       if (!this.state.layoutEdges) this.zoomManager.resetZoom();
@@ -302,7 +318,10 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
       if (!this.state.layoutVertices) this.zoomManager.resetZoom();
     }
     console.log(layoutGraph, layoutVertices);
-    this.setState({ layoutGraph, layoutVertices });
+    // this.setState({ layoutGraph, layoutVertices });
+    const setStateArg: Partial<TDigraphState<T, U>> = { layoutGraph, layoutVertices };
+    if (edges) setStateArg.layoutEdges = edges;
+    this.setState(setStateArg as any); // TODO no cast
   };
 
 
