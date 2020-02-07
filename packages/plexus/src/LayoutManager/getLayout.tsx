@@ -122,441 +122,368 @@ export default function getLayout(
   */
 export default function getLayout({
   phase,
-  moveVertices: inMoveVertices,
+  positionedVertices: inPositionedVertices,
   newVertices: inNewVertices,
-  moveEdges: inMoveEdges,
+  positionedEdges: inPositionedEdges,
   newEdges: inNewEdges,
   options: layoutOptions,
   prevGraph,
-}: Omit<TWorkerInputMessage, 'meta'> & { phase: EWorkerPhase }) {
-  /*
-  if (phase !== EWorkerPhase.Positions) {
-    const dot = toDot(inEdges, inVertices, layoutOptions);
-    const { totalMemory = undefined } = layoutOptions || {};
-    const options = { totalMemory, engine: phase === EWorkerPhase.Edges ? 'neato' : 'dot', format: 'plain' };
-    const plainOut = viz(dot, options);
-    const { edges, graph, vertices } = convPlain(plainOut, phase !== EWorkerPhase.Positions);
-    const result = getVerticesValidity(inVertices, vertices);
-    if (result.validity === EValidity.Error) {
-      console.log('error');
-      const message = result.message;
-      return {
-        graph,
-        edges,
-        vertices,
-        layoutError: true,
-        layoutErrorMessage: message,
-      };
-    }
-    if (result.validity === EValidity.Warn) {
-      console.log('only warn');
-      return {
-        graph,
-        edges,
-        vertices,
-        layoutErrorMessage: result.message,
-      };
-    }
-    return { edges, graph, vertices };
-  }
-   */
+}: Omit<TWorkerInputMessage, 'meta'> & { phase: EWorkerPhase }): Omit<Omit<TWorkerOutputMessage, 'type'>, 'meta'> & {
+  layoutError?: true,
+} {
+  // /* if (TODO) */ {
+    let hasShifted = false;
+    const positionVertices: Map<string, TLayoutVertex> = new Map(inPositionedVertices);
+    const movedVertexKeys: Set<string> = new Set(positionVertices.keys());
+    const newVertices: Map<string, TSizeVertex> = new Map(inNewVertices);
 
-  let hasShifted = false;
-  const positionVertices: Map<string, TLayoutVertex> = new Map(inMoveVertices.map(v => [v.vertex.key, v]));
-  const moveVertexKeys: Set<string> = new Set(positionVertices.keys());
-  const inNewVerticesMap: Map<string, TSizeVertex> = new Map(inNewVertices.map(v => [v.vertex.key, v]));
-  /*
-  inVertices.forEach(vertex => {
-    console.log(vertex, 'top' in vertex);
-    if ('top' in vertex) positionVertices.set(vertex.vertex.key, vertex);
-    else newVertices.set(vertex.vertex.key, vertex);
-  });
-   */
-
-  type TEdgeLoc = {
-    fromLeft: number,
-    fromTop: number,
-    toLeft: number,
-    toTop: number,
-  };
-  const positionEdges: Map<TLayoutEdge, TEdgeLoc> = new Map(inMoveEdges.map(e => {
-    const from = positionVertices.get(e.edge.from);
-    if (!from) throw new Error('From missing');
-    const to = positionVertices.get(e.edge.to);
-    if (!to) throw new Error('to missing');
-    if (!prevGraph) throw new Error('Cannot have positioned edges without previous graph');
-    return [e, {
-      fromLeft: from.left,
-      fromTop: prevGraph.height - from.top,
-      toLeft: to.left,
-      toTop: prevGraph.height - to.top,
-    }];
-  }));
-  // const newEdges: TEdge[] = [];
-  /*
-  inEdges.forEach(edge => {
-    console.log(edge, 'edge' in edge);
-    if ('edge' in edge) {
-      const from = positionVertices.get(edge.edge.from);
-      if (!from) throw new Error('From missing');
-      const to = positionVertices.get(edge.edge.to);
-      if (!to) throw new Error('to missing');
-      if (!prevGraph) throw new Error('Cannot have positioned edges without previous graph');
-      positionEdges.set(edge, {
-        fromLeft: from.left,
-        fromTop: prevGraph.height - from.top,
-        toLeft: to.left,
-        toTop: prevGraph.height - to.top,
-      });
-    }
-    else newEdges.push(edge);
-  });
-   */
-
-  const edgesByTo: Map<string, Map<string, TEdge>> = new Map();
-  const edgesByFrom: Map<string, Map<string, TEdge>> = new Map();
-  inNewEdges.forEach(edge => {
-    const to = edgesByTo.get(edge.to);
-    if (to) to.set(edge.from, edge);
-    else edgesByTo.set(edge.to, new Map([[edge.from, edge]]));
-
-    const from = edgesByFrom.get(edge.from);
-    if (from) from.set(edge.to, edge);
-    else edgesByFrom.set(edge.from, new Map([[edge.to, edge]]));
-  });
-
-  const graphQueue: TGraphQueue = [];
-  while(inNewVerticesMap.size) {
-    const [k, v] = inNewVerticesMap.entries().next().value;
-    inNewVerticesMap.delete(k);
-    const edges: Set<TEdge> = new Set();
-    const vertices: TSizeVertex[] = [v];
-    let anchorKey: undefined | string = undefined;
-    let anchorDirection: undefined | 'from' | 'to';
-    for(let i = 0; i < vertices.length; i++) {
-      const vertex = vertices[i];
-      const key = vertex.vertex.key;
-
-      if (key !== anchorKey || anchorDirection === 'to') {
-        const inEdges = edgesByTo.get(key);
-        if (inEdges) {
-          Array.from(inEdges.values()).forEach(edge => {
-            const connectedVertex = inNewVerticesMap.get(edge.from);
-            if (connectedVertex) {
-              vertices.push(connectedVertex);
-              inNewVerticesMap.delete(edge.from);
-              edges.add(edge);
-            } else if (!anchorKey) {
-              const anchorVertex = positionVertices.get(edge.from);
-              if (anchorVertex) {
-                const { top: _t, left: _l, ...sizeAnchor } = anchorVertex;
-                vertices.push(sizeAnchor);
-                anchorKey = anchorVertex.vertex.key;
-                anchorDirection = 'from';
-                edges.add(edge);
-              }
-            }
-          });
-        }
-      }
-
-      if (key !== anchorKey || anchorDirection === 'from') {
-        const outEdges = edgesByFrom.get(key);
-        if (outEdges) {
-          Array.from(outEdges.values()).forEach(edge => {
-            const connectedVertex = inNewVerticesMap.get(edge.to);
-            if (connectedVertex) {
-              vertices.push(connectedVertex);
-              edges.add(edge);
-              inNewVerticesMap.delete(edge.to);
-            } else if (!anchorKey) {
-              const anchorVertex = positionVertices.get(edge.to);
-              if (anchorVertex) {
-                const { top: _t, left: _l, ...sizeAnchor } = anchorVertex;
-                vertices.push(sizeAnchor);
-                anchorKey = anchorVertex.vertex.key;
-                anchorDirection = 'to';
-                edges.add(edge);
-              }
-            }
-          });
-        }
-      }
-    }
-
-    if (!anchorKey || !anchorDirection) console.log('unanchored');
-    else graphQueue.push({
-      anchorKey,
-      anchorDirection,
-      edges: Array.from(edges),
-      vertices,
-    });
-  }
-
-  // TODO: return new graph, zoom pan, and should delay
-  function reframe(graph: TLayoutGraph): TLayoutGraph {
-    let maxLeft: number | undefined = undefined;
-    let maxRight: number | undefined = undefined;
-    let maxTop: number | undefined = undefined;
-    let maxBottom: number | undefined = undefined;
-    positionVertices.forEach(({ left, top, height, width }) => {
-      const bottomBorder = top - height / 2;
-      if (maxBottom === undefined || bottomBorder < maxBottom) maxBottom = bottomBorder;
-      const leftBorder = left - width / 2;
-      if (maxLeft === undefined || leftBorder < maxLeft) maxLeft = leftBorder;
-      const rightBorder = left + width / 2;
-      if (maxRight === undefined || rightBorder > maxRight) maxRight = rightBorder;
-      const topBorder = top + height / 2;
-      if (maxTop === undefined || topBorder > maxTop) maxTop = topBorder;
-    });
-
-    if (maxBottom === undefined || maxLeft === undefined || maxRight === undefined || maxTop === undefined) throw new Error('No position vertices');
-
-    if (maxLeft !== 0 || maxBottom !== 0) {
-      console.log({ maxLeft, maxBottom });
-      hasShifted = true;
-      positionVertices.forEach(({ left, top, ...rest }, key) => {
-        positionVertices.set(key, {
-          ...rest,
-          // TODO: no cast
-          left: left - (maxLeft as number),
-          // TODO: no cast
-          top: top - (maxBottom as number),
-        });
-      });
-    }
-    
-    return {
-      scale: 1,
-      width: maxRight - maxLeft,
-      height: maxTop - maxBottom,
-    };
-  }
-
-  console.log(graphQueue);
-  if (graphQueue.length) {
-    if (!prevGraph) throw new Error('Cannot have new vertices without previous graph');
-    const ranksep = layoutOptions && layoutOptions.ranksep || DEFAULT_GRAPH_ATTRS.ranksep;
-    const nodesep = layoutOptions && layoutOptions.nodesep || DEFAULT_GRAPH_ATTRS.nodesep;
     type TEdgeLoc = {
       fromLeft: number,
       fromTop: number,
       toLeft: number,
       toTop: number,
     };
-    const graftEdges: Map<TLayoutEdge, TEdgeLoc> = new Map();
-    graphQueue.forEach(({ anchorDirection, anchorKey, edges, vertices }) => {
-      const anchorVertex = positionVertices.get(anchorKey);
-      if (!anchorVertex) throw new Error(`Lost anchor: ${anchorKey}`);
-      const { top: anchorTop, left: anchorLeft } = anchorVertex;
-      // console.log('going to dot');
-      const dot = toDot(edges, vertices, layoutOptions);
-      // console.log('dotted');
-
-      const { totalMemory = undefined } = layoutOptions || {};
-      const options = { totalMemory, engine: phase === EWorkerPhase.Edges ? 'neato' : 'dot', format: 'plain' };
-      // console.log('going to viz');
-
-      const plainOut = viz(dot, options);
-      // console.log('vizzed');
-
-      // console.log('going to conv');
-      const { edges: _graftEdges, graph: graftGraph, vertices: graftVertices } = convPlain(plainOut, true);
-      const graftAnchor = graftVertices.find(({ vertex: { key } }) => key === anchorKey);
-      if (!graftAnchor) throw new Error(`Anchor not in graft: ${anchorKey}`);
-      const { top: graftAnchorTop, left: graftAnchorLeft } = graftAnchor;
-      const leftAdjust = anchorLeft - graftAnchorLeft;
-      const topAdjust = anchorTop - graftAnchorTop;
-
-      const newSubVertices: Map<string, TLayoutVertex> = new Map();
-      graftVertices.forEach(v => newSubVertices.set(v.vertex.key, v));
-      if (_graftEdges) { // TODO: If not necessary when true given to convPlain
-        _graftEdges.forEach(e => {
-          const from = newSubVertices.get(e.edge.from);
-          if (!from) throw new Error('From missing');
-          const to = newSubVertices.get(e.edge.to);
-          if (!to) throw new Error('to missing');
-          graftEdges.set(e, {
-            fromLeft: from.left,
-            fromTop: from.top,
-            toLeft: to.left,
-            toTop: to.top,
-          });
-        });
-      }
-
-      let slideThreshold: number;
-      let slideDimension: 'top' | 'left';
-      let otherDimension: 'top' | 'left';
-      let slideDivisor: number;
-      let slideCheckAttribute: 'height' | 'width';
-      let otherAttribute: 'height' | 'width';
-      let slideSectionDirection: -1 | 1;
-
-      let collisionLimit: number;
-      let collisionLowerBound: number;
-      let collisionUpperBound: number;
-
-      const lowerSlideCandidates: TLayoutVertex[] = [];
-      const upperSlideCandidates: TLayoutVertex[] = [];
-      let lowerSlideDistance: number | undefined = undefined;
-      let upperSlideDistance: number | undefined = undefined;
-
-      // rankdir 'BT' should work with negated anchcorDIrection
-      if (layoutOptions && layoutOptions.rankdir === 'TB') {
-        slideDimension = 'top';
-        otherDimension = 'left';
-        slideCheckAttribute = 'height';
-        otherAttribute = 'width';
-        slideSectionDirection = anchorDirection === 'from' ? -1 : 1;
-
-        const SEP_PERCENTAGE = 0.8; /* TODO: tweak percentage */
-
-        // TODO: everything after here shouldn't be divided by ifs
-        slideThreshold = anchorVertex[slideDimension] + (slideSectionDirection * (anchorVertex[slideCheckAttribute] / 2 + SEP_PERCENTAGE * ranksep));
-        slideDivisor = anchorVertex[otherDimension];
-        collisionLimit = slideThreshold + (slideSectionDirection * (graftGraph[slideCheckAttribute] - graftAnchor[slideCheckAttribute] + SEP_PERCENTAGE * ranksep));
-        collisionLowerBound = anchorVertex[otherDimension] - graftAnchor[otherDimension] - SEP_PERCENTAGE * nodesep;
-        collisionUpperBound = collisionLowerBound + graftGraph[otherAttribute] + 2 * SEP_PERCENTAGE * nodesep;
-
-        positionVertices.forEach(existingVertex => {
-          const slideThresholdCompareVal = existingVertex[slideDimension] + (slideSectionDirection * existingVertex[slideCheckAttribute] / 2);
-          if (Math.sign(slideThresholdCompareVal - slideThreshold) === slideSectionDirection) {
-            const collisionLimitCompareVal = existingVertex[slideDimension] - (slideSectionDirection * existingVertex[slideCheckAttribute] / 2);
-            const isCloseEnoughOnSlideDimensionToCollide = Math.sign(collisionLimitCompareVal - collisionLimit) !== slideSectionDirection;
-            const slideDivisorCompareVal = existingVertex[otherDimension];
-            if (slideDivisorCompareVal <= slideDivisor) {
-              lowerSlideCandidates.push(existingVertex);
-              if (isCloseEnoughOnSlideDimensionToCollide) {
-                const lowerSlideDistanceCompareVal = existingVertex[otherDimension] + existingVertex[otherAttribute] / 2 - collisionLowerBound;
-                if (lowerSlideDistanceCompareVal > 0 && (lowerSlideDistance === undefined || lowerSlideDistanceCompareVal < lowerSlideDistance)) lowerSlideDistance = -1 * lowerSlideDistanceCompareVal;
-              }
-            } else {
-              upperSlideCandidates.push(existingVertex);
-              if (isCloseEnoughOnSlideDimensionToCollide) {
-                const upperSlideDistanceCompareVal = existingVertex[otherDimension] - existingVertex[otherAttribute] / 2 - collisionUpperBound;
-                if (upperSlideDistanceCompareVal < 0 && (upperSlideDistance === undefined || upperSlideDistanceCompareVal > upperSlideDistance)) upperSlideDistance = -1 * upperSlideDistanceCompareVal;
-              }
-            }
-          }
-        });
-
-        if (lowerSlideDistance) {
-          lowerSlideCandidates.forEach(vertex => {
-            positionVertices.set(vertex.vertex.key, {
-              ...vertex,
-              [otherDimension]: vertex[otherDimension] + (lowerSlideDistance as number),
-            });
-          });
-        }
-
-        if (upperSlideDistance) {
-          upperSlideCandidates.forEach(vertex => {
-            positionVertices.set(vertex.vertex.key, {
-              ...vertex,
-              [otherDimension]: vertex[otherDimension] + (upperSlideDistance as number),
-            });
-          });
-        }
-
-      } else {
-        throw new Error('Uhh should be TB');
-      }
-
-      graftVertices.forEach(({ left, top, ...rest }) => {
-        // assumes anchorDirection is 'from' and layoutOptions.direction is top -> bottom
-        // I DON'T THINK SO ANY MORE
-        if (rest.vertex.key !== anchorKey) {
-          positionVertices.set(rest.vertex.key, {
-            left: left + leftAdjust,
-            top: top + topAdjust,
-            ...rest,
-          });
-        }
+    const positionedEdges: Map<TLayoutEdge, TEdgeLoc> = new Map();
+    inPositionedEdges.forEach((le, e) => {
+      const from = positionVertices.get(e.from);
+      if (!from) throw new Error('From missing');
+      const to = positionVertices.get(e.to);
+      if (!to) throw new Error('to missing');
+      if (!prevGraph) throw new Error('Cannot have positioned edges without previous graph');
+      positionedEdges.set(le, {
+        fromLeft: from.left,
+        fromTop: prevGraph.height - from.top,
+        toLeft: to.left,
+        toTop: prevGraph.height - to.top,
       });
     });
 
-    const graphOut = reframe(prevGraph);
+    const edgesByTo: Map<string, Map<string, TEdge>> = new Map();
+    const edgesByFrom: Map<string, Map<string, TEdge>> = new Map();
+    inNewEdges.forEach(edge => {
+      const to = edgesByTo.get(edge.to);
+      if (to) to.set(edge.from, edge);
+      else edgesByTo.set(edge.to, new Map([[edge.from, edge]]));
 
-    const newEdges: TLayoutEdge[] = [];
-    graftEdges.forEach((originalLoc, edge) => {
-      const from = positionVertices.get(edge.edge.from);
-      if (!from) throw new Error('From missing');
-      const to = positionVertices.get(edge.edge.to);
-      if (!to) throw new Error('to missing');
+      const from = edgesByFrom.get(edge.from);
+      if (from) from.set(edge.to, edge);
+      else edgesByFrom.set(edge.from, new Map([[edge.to, edge]]));
+    });
 
-      const fromTopDelta = from.top - originalLoc.fromTop;
-      const fromLeftDelta = from.left - originalLoc.fromLeft;
-      const toTopDelta = to.top - originalLoc.toTop;
-      const toLeftDelta = to.left - originalLoc.toLeft;
+    const graphQueue: TGraphQueue = [];
+    while(newVertices.size) {
+      const [k, v] = newVertices.entries().next().value;
+      newVertices.delete(k);
+      const edges: Set<TEdge> = new Set();
+      const vertices: TSizeVertex[] = [v];
+      let anchorKey: undefined | string = undefined;
+      let anchorDirection: undefined | 'from' | 'to';
+      for(let i = 0; i < vertices.length; i++) {
+        const vertex = vertices[i];
+        const key = vertex.vertex.key;
 
-      if (isCloseEnough(fromTopDelta, toTopDelta) && isCloseEnough(fromLeftDelta, toLeftDelta )) {
-        const movedEdge = {
-          ...edge,
-          pathPoints: edge.pathPoints.map(([left, top]) => ([left + fromLeftDelta, top + fromTopDelta] as [number, number])), // TODO: no cast
-        };
-        newEdges.push(movedEdge);
+        if (key !== anchorKey || anchorDirection === 'to') {
+          const inEdges = edgesByTo.get(key);
+          if (inEdges) {
+            Array.from(inEdges.values()).forEach(edge => {
+              const connectedVertex = newVertices.get(edge.from);
+              if (connectedVertex) {
+                vertices.push(connectedVertex);
+                newVertices.delete(edge.from);
+                edges.add(edge);
+              } else if (!anchorKey) {
+                const anchorVertex = positionVertices.get(edge.from);
+                if (anchorVertex) {
+                  const { top: _t, left: _l, ...sizeAnchor } = anchorVertex;
+                  vertices.push(sizeAnchor);
+                  anchorKey = anchorVertex.vertex.key;
+                  anchorDirection = 'from';
+                  edges.add(edge);
+                }
+              }
+            });
+          }
+        }
+
+        if (key !== anchorKey || anchorDirection === 'from') {
+          const outEdges = edgesByFrom.get(key);
+          if (outEdges) {
+            Array.from(outEdges.values()).forEach(edge => {
+              const connectedVertex = newVertices.get(edge.to);
+              if (connectedVertex) {
+                vertices.push(connectedVertex);
+                edges.add(edge);
+                newVertices.delete(edge.to);
+              } else if (!anchorKey) {
+                const anchorVertex = positionVertices.get(edge.to);
+                if (anchorVertex) {
+                  const { top: _t, left: _l, ...sizeAnchor } = anchorVertex;
+                  vertices.push(sizeAnchor);
+                  anchorKey = anchorVertex.vertex.key;
+                  anchorDirection = 'to';
+                  edges.add(edge);
+                }
+              }
+            });
+          }
+        }
       }
-    });
 
-    const moveEdges: TLayoutEdge[] = [];
-    positionEdges.forEach((originalLoc, edge) => {
-      const from = positionVertices.get(edge.edge.from);
-      if (!from) throw new Error('From missing');
-      const to = positionVertices.get(edge.edge.to);
-      if (!to) throw new Error('to missing');
+      if (!anchorKey || !anchorDirection) console.log('unanchored');
+      else graphQueue.push({
+        anchorKey,
+        anchorDirection,
+        edges: Array.from(edges),
+        vertices,
+      });
+    }
 
-      const fromTopDelta = (graphOut.height - from.top) - originalLoc.fromTop;
-      const fromLeftDelta = from.left - originalLoc.fromLeft;
-      const toTopDelta = (graphOut.height - to.top) - originalLoc.toTop;
-      const toLeftDelta = to.left - originalLoc.toLeft;
+    // TODO: return new graph, zoom pan, and should delay
+    function reframe(graph: TLayoutGraph): TLayoutGraph {
+      let maxLeft: number | undefined = undefined;
+      let maxRight: number | undefined = undefined;
+      let maxTop: number | undefined = undefined;
+      let maxBottom: number | undefined = undefined;
+      positionVertices.forEach(({ left, top, height, width }) => {
+        const bottomBorder = top - height / 2;
+        if (maxBottom === undefined || bottomBorder < maxBottom) maxBottom = bottomBorder;
+        const leftBorder = left - width / 2;
+        if (maxLeft === undefined || leftBorder < maxLeft) maxLeft = leftBorder;
+        const rightBorder = left + width / 2;
+        if (maxRight === undefined || rightBorder > maxRight) maxRight = rightBorder;
+        const topBorder = top + height / 2;
+        if (maxTop === undefined || topBorder > maxTop) maxTop = topBorder;
+      });
 
-      /*
-      console.log(JSON.stringify({
-        from: edge.edge.from,
-        fromTopDelta,
-        // fromtop: graphOut.height - from.top,
-        // originalLocfromTop: originalLoc.fromTop,
-        fromLeftDelta,
-        // fromleft: from.left,
-        // originalLocfromLeft: originalLoc.fromLeft,
-        to: edge.edge.to,
-        toTopDelta,
-        totop: graphOut.height - to.top,
-        originalLoctoTop: originalLoc.toTop,
-        toLeftDelta,
-        // toleft: to.left,
-        // originalLoctoLeft: originalLoc.toLeft,
-      }, null, 2));
-       */
+      if (maxBottom === undefined || maxLeft === undefined || maxRight === undefined || maxTop === undefined) throw new Error('No position vertices');
 
-      if (isCloseEnough(fromTopDelta, toTopDelta) && isCloseEnough(fromLeftDelta, toLeftDelta )) {
-        const { x: prevX = 0, y: prevY = 0 } = edge.translate || {};
-        const movedEdge = {
-          ...edge,
-          translate: {
-            x: fromLeftDelta + prevX,
-            y: fromTopDelta + prevY,
-          },
-        };
-        moveEdges.push(movedEdge);
-        console.log('close enough');
-      } else console.log('not close enough');
-    });
+      if (maxLeft !== 0 || maxBottom !== 0) {
+        console.log({ maxLeft, maxBottom });
+        hasShifted = true;
+        positionVertices.forEach(({ left, top, ...rest }, key) => {
+          positionVertices.set(key, {
+            ...rest,
+            // TODO: no cast
+            left: left - (maxLeft as number),
+            // TODO: no cast
+            top: top - (maxBottom as number),
+          });
+        });
+      }
 
-    if (graphOut) console.log('should be graftset af');
-    const moveVertices: TLayoutVertex[] = []; // Array.from(positionVertices.values());
-    const newVertices: TLayoutVertex[] = []; // Array.from(inNewVerticesMap.values());
-    positionVertices.forEach((v, key) => {
-      if (moveVertexKeys.has(key)) moveVertices.push(v);
-      else newVertices.push(v);
-    });
-    console.log(graphOut, moveEdges, moveVertices, newEdges, newVertices);
-    if (graphOut) return { graph: graphOut, moveEdges, moveVertices, newEdges, newVertices };
+      return {
+        scale: 1,
+        width: maxRight - maxLeft,
+        height: maxTop - maxBottom,
+      };
+    }
+
+    console.log(graphQueue);
+    if (graphQueue.length) {
+      if (!prevGraph) throw new Error('Cannot have new vertices without previous graph');
+      const ranksep = layoutOptions && layoutOptions.ranksep || DEFAULT_GRAPH_ATTRS.ranksep;
+      const nodesep = layoutOptions && layoutOptions.nodesep || DEFAULT_GRAPH_ATTRS.nodesep;
+      type TEdgeLoc = {
+        fromLeft: number,
+        fromTop: number,
+        toLeft: number,
+        toTop: number,
+      };
+      const graftEdges: Map<TLayoutEdge, TEdgeLoc> = new Map();
+      graphQueue.forEach(({ anchorDirection, anchorKey, edges, vertices }) => {
+        const anchorVertex = positionVertices.get(anchorKey);
+        if (!anchorVertex) throw new Error(`Lost anchor: ${anchorKey}`);
+        const { top: anchorTop, left: anchorLeft } = anchorVertex;
+        // console.log('going to dot');
+        const dot = toDot(edges, vertices, layoutOptions);
+        // console.log('dotted');
+
+        const { totalMemory = undefined } = layoutOptions || {};
+        const options = { totalMemory, engine: phase === EWorkerPhase.Edges ? 'neato' : 'dot', format: 'plain' };
+        // console.log('going to viz');
+
+        const plainOut = viz(dot, options);
+        // console.log('vizzed');
+
+        // console.log('going to conv');
+        const { edges: _graftEdges, graph: graftGraph, vertices: graftVertices } = convPlain(plainOut, true);
+        const graftAnchor = graftVertices.find(({ vertex: { key } }) => key === anchorKey);
+        if (!graftAnchor) throw new Error(`Anchor not in graft: ${anchorKey}`);
+        const { top: graftAnchorTop, left: graftAnchorLeft } = graftAnchor;
+        const leftAdjust = anchorLeft - graftAnchorLeft;
+        const topAdjust = anchorTop - graftAnchorTop;
+
+        const newSubVertices: Map<string, TLayoutVertex> = new Map();
+        graftVertices.forEach(v => newSubVertices.set(v.vertex.key, v));
+        if (_graftEdges) { // TODO: If not necessary when true given to convPlain
+          _graftEdges.forEach(e => {
+            const from = newSubVertices.get(e.edge.from);
+            if (!from) throw new Error('From missing');
+            const to = newSubVertices.get(e.edge.to);
+            if (!to) throw new Error('to missing');
+            graftEdges.set(e, {
+              fromLeft: from.left,
+              fromTop: from.top,
+              toLeft: to.left,
+              toTop: to.top,
+            });
+          });
+        }
+
+        let slideThreshold: number;
+        let slideDimension: 'top' | 'left';
+        let otherDimension: 'top' | 'left';
+        let slideDivisor: number;
+        let slideCheckAttribute: 'height' | 'width';
+        let otherAttribute: 'height' | 'width';
+        let slideSectionDirection: -1 | 1;
+
+        let collisionLimit: number;
+        let collisionLowerBound: number;
+        let collisionUpperBound: number;
+
+        const lowerSlideCandidates: TLayoutVertex[] = [];
+        const upperSlideCandidates: TLayoutVertex[] = [];
+        let lowerSlideDistance: number | undefined = undefined;
+        let upperSlideDistance: number | undefined = undefined;
+
+        // rankdir 'BT' should work with negated anchcorDIrection
+        if (layoutOptions && layoutOptions.rankdir === 'TB') {
+          slideDimension = 'top';
+          otherDimension = 'left';
+          slideCheckAttribute = 'height';
+          otherAttribute = 'width';
+          slideSectionDirection = anchorDirection === 'from' ? -1 : 1;
+
+          const SEP_PERCENTAGE = 0.8; /* TODO: tweak percentage */
+
+          // TODO: everything after here shouldn't be divided by ifs
+          slideThreshold = anchorVertex[slideDimension] + (slideSectionDirection * (anchorVertex[slideCheckAttribute] / 2 + SEP_PERCENTAGE * ranksep));
+          slideDivisor = anchorVertex[otherDimension];
+          collisionLimit = slideThreshold + (slideSectionDirection * (graftGraph[slideCheckAttribute] - graftAnchor[slideCheckAttribute] + SEP_PERCENTAGE * ranksep));
+          collisionLowerBound = anchorVertex[otherDimension] - graftAnchor[otherDimension] - SEP_PERCENTAGE * nodesep;
+          collisionUpperBound = collisionLowerBound + graftGraph[otherAttribute] + 2 * SEP_PERCENTAGE * nodesep;
+
+          positionVertices.forEach(existingVertex => {
+            const slideThresholdCompareVal = existingVertex[slideDimension] + (slideSectionDirection * existingVertex[slideCheckAttribute] / 2);
+            if (Math.sign(slideThresholdCompareVal - slideThreshold) === slideSectionDirection) {
+              const collisionLimitCompareVal = existingVertex[slideDimension] - (slideSectionDirection * existingVertex[slideCheckAttribute] / 2);
+              const isCloseEnoughOnSlideDimensionToCollide = Math.sign(collisionLimitCompareVal - collisionLimit) !== slideSectionDirection;
+              const slideDivisorCompareVal = existingVertex[otherDimension];
+              if (slideDivisorCompareVal <= slideDivisor) {
+                lowerSlideCandidates.push(existingVertex);
+                if (isCloseEnoughOnSlideDimensionToCollide) {
+                  const lowerSlideDistanceCompareVal = existingVertex[otherDimension] + existingVertex[otherAttribute] / 2 - collisionLowerBound;
+                  if (lowerSlideDistanceCompareVal > 0 && (lowerSlideDistance === undefined || lowerSlideDistanceCompareVal < lowerSlideDistance)) lowerSlideDistance = -1 * lowerSlideDistanceCompareVal;
+                }
+              } else {
+                upperSlideCandidates.push(existingVertex);
+                if (isCloseEnoughOnSlideDimensionToCollide) {
+                  const upperSlideDistanceCompareVal = existingVertex[otherDimension] - existingVertex[otherAttribute] / 2 - collisionUpperBound;
+                  if (upperSlideDistanceCompareVal < 0 && (upperSlideDistance === undefined || upperSlideDistanceCompareVal > upperSlideDistance)) upperSlideDistance = -1 * upperSlideDistanceCompareVal;
+                }
+              }
+            }
+          });
+
+          if (lowerSlideDistance) {
+            lowerSlideCandidates.forEach(vertex => {
+              positionVertices.set(vertex.vertex.key, {
+                ...vertex,
+                [otherDimension]: vertex[otherDimension] + (lowerSlideDistance as number),
+              });
+            });
+          }
+
+          if (upperSlideDistance) {
+            upperSlideCandidates.forEach(vertex => {
+              positionVertices.set(vertex.vertex.key, {
+                ...vertex,
+                [otherDimension]: vertex[otherDimension] + (upperSlideDistance as number),
+              });
+            });
+          }
+
+        } else {
+          throw new Error('Uhh should be TB');
+        }
+
+        graftVertices.forEach(({ left, top, ...rest }) => {
+          // assumes anchorDirection is 'from' and layoutOptions.direction is top -> bottom
+          // I DON'T THINK SO ANY MORE
+          if (rest.vertex.key !== anchorKey) {
+            positionVertices.set(rest.vertex.key, {
+              left: left + leftAdjust,
+              top: top + topAdjust,
+              ...rest,
+            });
+          }
+        });
+      });
+
+      const graphOut = reframe(prevGraph);
+
+      const newEdges = new Map<TEdge, TLayoutEdge>();
+      graftEdges.forEach((originalLoc, edge) => {
+        const from = positionVertices.get(edge.edge.from);
+        if (!from) throw new Error('From missing');
+        const to = positionVertices.get(edge.edge.to);
+        if (!to) throw new Error('to missing');
+
+        const fromTopDelta = from.top - originalLoc.fromTop;
+        const fromLeftDelta = from.left - originalLoc.fromLeft;
+        const toTopDelta = to.top - originalLoc.toTop;
+        const toLeftDelta = to.left - originalLoc.toLeft;
+
+        if (isCloseEnough(fromTopDelta, toTopDelta) && isCloseEnough(fromLeftDelta, toLeftDelta )) {
+          const movedEdge = {
+            ...edge,
+            pathPoints: edge.pathPoints.map(([left, top]) => ([left + fromLeftDelta, top + fromTopDelta] as [number, number])), // TODO: no cast
+          };
+          newEdges.set(movedEdge.edge, movedEdge);
+        }
+      });
+
+      const movedEdges = new Map<TEdge, TLayoutEdge>();
+      positionedEdges.forEach((originalLoc, edge) => {
+        const from = positionVertices.get(edge.edge.from);
+        if (!from) throw new Error('From missing');
+        const to = positionVertices.get(edge.edge.to);
+        if (!to) throw new Error('to missing');
+
+        const fromTopDelta = (graphOut.height - from.top) - originalLoc.fromTop;
+        const fromLeftDelta = from.left - originalLoc.fromLeft;
+        const toTopDelta = (graphOut.height - to.top) - originalLoc.toTop;
+        const toLeftDelta = to.left - originalLoc.toLeft;
+
+        if (isCloseEnough(fromTopDelta, toTopDelta) && isCloseEnough(fromLeftDelta, toLeftDelta )) {
+          const { x: prevX = 0, y: prevY = 0 } = edge.translate || {};
+          const movedEdge = {
+            ...edge,
+            translate: {
+              x: fromLeftDelta + prevX,
+              y: fromTopDelta + prevY,
+            },
+          };
+          movedEdges.set(edge.edge, movedEdge);
+          console.log('close enough');
+        } else console.log('not close enough');
+      });
+
+      if (graphOut) console.log('should be graftset af');
+      const movedVertices = new Map<string, TLayoutVertex>();
+      const newVertices = new Map<string, TLayoutVertex>();
+      positionVertices.forEach((v, key) => {
+        if (movedVertexKeys.has(key)) movedVertices.set(key, v);
+        else newVertices.set(key, v);
+      });
+      console.log(graphOut, movedEdges, movedVertices, newEdges, newVertices);
+      if (graphOut) return { graph: graphOut, movedEdges, movedVertices, newEdges, newVertices };
   }
 
   // console.log('going to dot');
-  const dot = toDot(inNewEdges, inNewVertices, layoutOptions);
+  const newVerArr = Array.from(inNewVertices.values());
+  const dot = toDot(inNewEdges, newVerArr, layoutOptions);
   // const dot = toDot(newEdges, Array.from(newVertices.values()), layoutOptions);
   // console.log('dotted');
 
@@ -568,10 +495,12 @@ export default function getLayout({
   // console.log('vizzed');
 
   // console.log('going to conv');
-  const { edges: newEdges, graph, vertices: newVertices } = convPlain(plainOut, phase !== EWorkerPhase.Positions);
+  const { edges, graph, vertices } = convPlain(plainOut, phase !== EWorkerPhase.Positions);
   // console.log('conved');
 
-  const result = getVerticesValidity(inNewVertices, newVertices);
+  const result = getVerticesValidity(newVerArr, vertices);
+  const newEdges = new Map<TEdge, TLayoutEdge>(edges ? edges.map(e => [e.edge, e]) : []);
+  const newVertices_ = new Map<string, TLayoutVertex>(vertices.map(v => [v.vertex.key, v]));
 
   if (result.validity === EValidity.Error) {
     console.log('error');
@@ -579,7 +508,7 @@ export default function getLayout({
     return {
       graph,
       newEdges,
-      newVertices,
+      newVertices: newVertices_,
       layoutError: true,
       layoutErrorMessage: message,
     };
@@ -589,9 +518,9 @@ export default function getLayout({
     return {
       graph,
       newEdges,
-      newVertices,
+      newVertices: newVertices_,
       layoutErrorMessage: result.message,
     };
   }
-  return { newEdges, graph, newVertices };
+  return { newEdges, graph, newVertices: newVertices_ };
 }

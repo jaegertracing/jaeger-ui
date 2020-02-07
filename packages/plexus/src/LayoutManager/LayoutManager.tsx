@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ECoordinatorPhase, TLayoutOptions, TUpdate } from './types';
+import { ECoordinatorPhase, TGetLayout, TLayoutOptions, TUpdate } from './types';
 import { TCancelled, TEdge, TLayoutDone, TLayoutEdge, TLayoutGraph, TLayoutVertex, TPendingLayoutResult, TPositionsDone, TSizeVertex } from '../types';
 
 import Coordinator from './Coordinator';
@@ -38,30 +38,14 @@ export default class LayoutManager {
   }
 
   // getLayout<T, U>(edges: (TEdge<U> | TLayoutEdge<U>)[], vertices: (TSizeVertex<T> | TLayoutVertex<T>)[], previousGraph: TLayoutGraph | null = null): TPendingLayoutResult<T, U> {
-  getLayout<T, U>({
-    moveVertices,
-    newVertices,
-    moveEdges,
-    newEdges,
-    prevGraph,
-  }: {
-    moveVertices: TLayoutVertex<T>[],
-    newVertices: TSizeVertex<T>[],
-    moveEdges: TLayoutEdge<U>[],
-    newEdges: TEdge<U>[],
-    prevGraph: TLayoutGraph | null,
-  }) {
+  getLayout<T, U>(input: TGetLayout) {
     this._cancelPending();
     this.layoutId++;
     const id = this.layoutId;
     this.coordinator.getLayout({
       id, 
-      moveVertices,
-      newVertices,
-      moveEdges,
-      newEdges,
       options: this.options,
-      prevGraph,
+      ...input,
     });
     this.pendingResult = { id, isPositionsResolved: false };
     const positions: Promise<TCancelled | TPositionsDone<T>> = new Promise(resolve => {

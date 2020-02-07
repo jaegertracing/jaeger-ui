@@ -34,6 +34,14 @@ export enum EWorkerPhase {
   Positions = ECoordinatorPhase.Positions,
 }
 
+export type TGetLayout = {
+  positionedVertices: Map<string, TLayoutVertex>;
+  newVertices: Map<string, TSizeVertex>;
+  positionedEdges: Map<TEdge, TLayoutEdge>;
+  newEdges: TEdge[];
+  prevGraph: TLayoutGraph | null;
+}
+
 export type TLayoutOptions = {
   rankdir?: 'TB' | 'LR' | 'BT' | 'RL';
   ranksep?: number;
@@ -51,25 +59,17 @@ export type TLayoutWorkerMeta = {
   phase: EWorkerPhase;
 };
 
-export type TWorkerInputMessage = {
-  // edges: (TEdge<{}> | TLayoutEdge<{}>)[];
+export type TWorkerInputMessage = TGetLayout & {
   meta: TLayoutWorkerMeta;
   options: TLayoutOptions | null;
-  // previousGraph: TLayoutGraph | null;
-  // vertices: (TSizeVertex<{}> | TLayoutVertex<{}>)[];
-  moveVertices: TLayoutVertex[];
-  newVertices: TSizeVertex[];
-  moveEdges: TLayoutEdge[];
-  newEdges: TEdge[];
-  prevGraph: TLayoutGraph | null;
 };
 
 export type TWorkerOutputMessage = {
   type: EWorkerPhase | EWorkerErrorType.LayoutError;
-  moveVertices?: TLayoutVertex[] | null;
-  newVertices: TLayoutVertex[] | null;
-  moveEdges?: TLayoutEdge[] | null;
-  newEdges: TLayoutEdge[] | null;
+  movedVertices?: TGetLayout['positionedVertices'] | null;
+  newVertices?: TGetLayout['positionedVertices'] | null;
+  movedEdges?: TGetLayout['positionedEdges'] | null;
+  newEdges: TGetLayout['positionedEdges'] | null;
   // edges: TLayoutEdge[] | null;
   graph: TLayoutGraph;
   layoutErrorMessage?: string;
@@ -88,8 +88,8 @@ export type TNodesUpdate<T = Record<string, unknown>, U = Record<string, unknown
   layoutId: number;
   graph: TLayoutGraph;
   // vertices: TLayoutVertex<T>[];
-  vertices: Map<string, TLayoutVertex<T>>;
-  edges?: Map<TEdge<U>, TLayoutEdge<U>> | null;
+  vertices: Map<string, TLayoutVertex>;
+  edges?: Map<TEdge, TLayoutEdge> | null;
 };
 
 export type TLayoutUpdate<T = Record<string, unknown>, U = Record<string, unknown>> = {

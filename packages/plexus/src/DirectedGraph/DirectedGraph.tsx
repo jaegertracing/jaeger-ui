@@ -188,7 +188,8 @@ export default class DirectedGraph<T> extends React.PureComponent<
         });
       }
     });
-    const { positions, layout } = layoutManager.getLayout({ moveEdges: ([] as TLayoutEdge[]), newEdges: edges, moveVertices: ([] as TLayoutVertex[]), newVertices: sizeVertices, prevGraph: null });
+    const newVertices = new Map<string, TSizeVertex>(sizeVertices.map(v => [v.vertex.key, v]));
+    const { positions, layout } = layoutManager.getLayout({ positionedEdges: new Map(), newEdges: edges, positionedVertices: new Map(), newVertices, prevGraph: null });
     positions.then(this._onPositionsDone);
     layout.then(this._onLayoutDone as any);
     this.setState({ sizeVertices, layoutPhase: PHASE_CALC_POSITIONS });

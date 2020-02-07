@@ -146,29 +146,31 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
       const values = `expected ${JSON.stringify(expectedKey)}, recieved ${JSON.stringify(senderKey)}`;
       throw new Error(`Key mismatch for measuring nodes; ${values}`);
     }
-    const moveVertices: TLayoutVertex<T>[] = [];
-    const newVertices: TSizeVertex<T>[] = sizeVertices.filter(v => {
-      const lv = this.state.layoutVertices && this.state.layoutVertices.get(v.vertex.key);
-      if (lv) moveVertices.push(lv);
-      return !lv;
+    const positionedVertices = new Map<string, TLayoutVertex<T>>();
+    const newVertices = new Map<string, TSizeVertex<T>>();
+    sizeVertices.forEach(v => {
+      const key = v.vertex.key;
+      const lv = this.state.layoutVertices && this.state.layoutVertices.get(key);
+      if (lv) positionedVertices.set(key, lv);
+      else newVertices.set(key, v);
     });
-    const moveEdges: TLayoutEdge<U>[] = [];
+    const positionedEdges = new Map<TEdge<U>, TLayoutEdge<U>>();
     const newEdges: TEdge<U>[] = edges.filter(e => {
       const le = this.state.layoutEdges && this.state.layoutEdges.get(e);
-      if (le) moveEdges.push(le);
+      if (le) positionedEdges.set(e, le);
       return !le;
     });
     const { positions, layout } = layoutManager.getLayout({
-      moveVertices,
       newVertices,
-      moveEdges,
       newEdges,
+      positionedEdges,
+      positionedVertices,
       prevGraph: this.state.layoutGraph,
     });
     // TODO no timeout
     positions.then(res => setTimeout(() => this.onPositionsDone(res as any), 350)); // TODO no cast
     // TODO  only timeout if edges take less than two seconds, else immediate
-    layout.then((...args) => setTimeout(() => this.onLayoutDone(...args), this.state.layoutVertices ? 2350 : 350));
+    layout.then(res => setTimeout(() => this.onLayoutDone(res as any), this.state.layoutVertices ? 2350 : 350)); // TODO no cast
     this.setState({ layoutPhase: ELayoutPhase.CalcPositions });
   };
 
@@ -347,7 +349,7 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
       ? new Map([...this.state.layoutEdges.entries(), ...edges.entries()])
       : edges;
      */
-    this.setState({ layoutEdges: edges, layoutGraph, layoutVertices, layoutPhase: ELayoutPhase.Done });
+    this.setState({ layoutEdges: new Map(edges ? [...edges.entries()] : []), layoutGraph, layoutVertices, layoutPhase: ELayoutPhase.Done });
   };
 
   /*
