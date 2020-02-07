@@ -131,6 +131,55 @@ export default function getLayout({
 }: Omit<TWorkerInputMessage, 'meta'> & { phase: EWorkerPhase }): Omit<Omit<TWorkerOutputMessage, 'type'>, 'meta'> & {
   layoutError?: true,
 } {
+  if (phase === EWorkerPhase.Edges) {
+    console.log(inNewEdges, inPositionedEdges, inPositionedVertices);
+    // console.log('going to dot');
+    const verArr = Array.from(inPositionedVertices.values());
+    // TODO: consider give all edges then detangle
+    const dot = toDot(inNewEdges, verArr, layoutOptions);
+    // const dot = toDot(newEdges, Array.from(newVertices.values()), layoutOptions);
+    // console.log('dotted');
+
+    const { totalMemory = undefined } = layoutOptions || {};
+    const options = { totalMemory, engine: phase === EWorkerPhase.Edges ? 'neato' : 'dot', format: 'plain' };
+    // console.log('going to viz');
+
+    const plainOut = viz(dot, options);
+    // console.log('vizzed');
+
+    // console.log('going to conv');
+    const { edges, graph, vertices } = convPlain(plainOut, phase !== EWorkerPhase.Positions);
+    // console.log('conved');
+
+    const result = getVerticesValidity(verArr, vertices);
+    const newEdges = new Map<TEdge, TLayoutEdge>(edges ? edges.map(e => [e.edge, e]) : []);
+
+    if (result.validity === EValidity.Error) {
+      console.log('error');
+      const message = result.message;
+      return {
+        graph,
+        newEdges,
+        movedEdges: inPositionedEdges,
+        movedVertices: inPositionedVertices,
+        layoutError: true,
+        layoutErrorMessage: message,
+      };
+    }
+    if (result.validity === EValidity.Warn) {
+      console.log('only warn');
+      return {
+        graph,
+        newEdges,
+        movedEdges: inPositionedEdges,
+        movedVertices: inPositionedVertices,
+        layoutErrorMessage: result.message,
+      };
+    }
+    return { newEdges, graph, movedEdges: inPositionedEdges, movedVertices: inPositionedVertices };
+  }
+
+
   // /* if (TODO) */ {
     let hasShifted = false;
     const positionVertices: Map<string, TLayoutVertex> = new Map(inPositionedVertices);

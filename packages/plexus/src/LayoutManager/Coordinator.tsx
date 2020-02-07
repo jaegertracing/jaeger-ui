@@ -33,6 +33,7 @@ import {
 import { TEdge, TLayoutEdge, TLayoutGraph, TLayoutVertex, TSizeVertex } from '../types';
 
 // TODO: Move?
+// TODO: calc type based on result
 const size = (input: Map<unknown, unknown> | unknown[] | null | undefined): number => input
   ? Array.isArray(input)
     ? input.length
@@ -295,6 +296,7 @@ export default class Coordinator {
     }
 
     // const adjVertexCoords = convCoord.vertexToPixels.bind(null, graph);
+    // TODO: mapMap util
     const movedVertices = dotMovedVertices && input.unmapVertices(
       new Map<string, TLayoutVertex>(
         Array.from(dotMovedVertices.entries())
@@ -368,11 +370,31 @@ export default class Coordinator {
           });
         } else {
           console.log(`need to make ${inEdgeCount - movedEdgeCount - newEdgeCount} edges`);
+          const reprocessEdges = new Map<TEdge, TLayoutEdge>([
+            ...(dotNewEdges ? dotNewEdges.entries() : []),
+            ...(dotMovedEdges ? dotMovedEdges.entries() : []),
+          ]);
+          // const notNew = new Set<TEdge>([...reprocessEdges.values()].map(({ edge }) => edge));
+          const madeEdges = new Map<string, Set<string>>();
+          reprocessEdges.forEach((le, edge) => {
+            const tos = madeEdges.get(edge.from);
+            if (tos) tos.add(edge.to);
+            else madeEdges.set(edge.from, new Set([edge.to]));
+          });
+          console.log(reprocessEdges, madeEdges, cleanedEdges);
           this._postWork({
-            positionedVertices,
+            positionedVertices: new Map<string, TLayoutVertex>([
+              ...(dotNewVertices ? dotNewVertices.entries() : []),
+              ...(dotMovedVertices ? dotMovedVertices.entries() : []),
+            ]),
             newVertices: new Map(),
-            positionedEdges,
-            newEdges: cleanedEdges.filter(e => !positionedEdges.has(e)),
+            positionedEdges: reprocessEdges,
+            // newEdges: cleanedEdges.filter(e => !notNew.has(e)),
+            newEdges: cleanedEdges.filter(e => {
+              const tos = madeEdges.get(e.from);
+              if (!tos) return true;
+              return !tos.has(e.to);
+            }),
             phase: EWorkerPhase.Edges,
             prevGraph: graph,
           });
