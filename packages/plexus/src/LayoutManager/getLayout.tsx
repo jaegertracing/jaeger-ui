@@ -132,6 +132,8 @@ export default function getLayout({
   layoutError?: true,
 } {
   if (phase === EWorkerPhase.Edges) {
+    if (!prevGraph) throw new Error('Cannot add edges without previous graph');
+
     console.log(inNewEdges, inPositionedEdges, inPositionedVertices);
     // console.log('going to dot');
     const verArr = Array.from(inPositionedVertices.values());
@@ -148,19 +150,29 @@ export default function getLayout({
     // console.log('vizzed');
 
     // console.log('going to conv');
-    const { edges, graph, vertices } = convPlain(plainOut, phase !== EWorkerPhase.Positions);
+    const { edges, graph: _graph, vertices } = convPlain(plainOut, phase !== EWorkerPhase.Positions);
     // console.log('conved');
 
     const result = getVerticesValidity(verArr, vertices);
     const newEdges = new Map<TEdge, TLayoutEdge>(edges ? edges.map(e => [e.edge, e]) : []);
+    const movedEdges = new Map<TEdge, TLayoutEdge>(Array.from(inPositionedEdges.entries()).map(([e, le]) => {
+      if ('translate' in le) return [e, le];
+      return [e, {
+        ...le,
+        translate: {
+          x: 0,
+          y: 0,
+        },
+      }];
+    }));
 
     if (result.validity === EValidity.Error) {
       console.log('error');
       const message = result.message;
       return {
-        graph,
+        graph: prevGraph,
         newEdges,
-        movedEdges: inPositionedEdges,
+        movedEdges,
         movedVertices: inPositionedVertices,
         layoutError: true,
         layoutErrorMessage: message,
@@ -169,14 +181,14 @@ export default function getLayout({
     if (result.validity === EValidity.Warn) {
       console.log('only warn');
       return {
-        graph,
+        graph: prevGraph,
         newEdges,
-        movedEdges: inPositionedEdges,
+        movedEdges,
         movedVertices: inPositionedVertices,
         layoutErrorMessage: result.message,
       };
     }
-    return { newEdges, graph, movedEdges: inPositionedEdges, movedVertices: inPositionedVertices };
+    return { newEdges, graph: prevGraph, movedEdges, movedVertices: inPositionedVertices };
   }
 
 
@@ -493,6 +505,7 @@ export default function getLayout({
         }
       });
 
+      // TODO: do in reframe?
       const movedEdges = new Map<TEdge, TLayoutEdge>();
       positionedEdges.forEach((originalLoc, edge) => {
         const from = positionVertices.get(edge.edge.from);
