@@ -66,10 +66,10 @@ export type TWorkerInputMessage = TGetLayout & {
 
 export type TWorkerOutputMessage = {
   type: EWorkerPhase | EWorkerErrorType.LayoutError;
-  movedVertices?: TGetLayout['positionedVertices'] | null;
-  newVertices?: TGetLayout['positionedVertices'] | null;
-  movedEdges?: TGetLayout['positionedEdges'] | null;
-  newEdges: TGetLayout['positionedEdges'] | null;
+  movedVertices?: TGetLayout['positionedVertices'];
+  newVertices?: TGetLayout['positionedVertices'];
+  movedEdges?: TGetLayout['positionedEdges'];
+  newEdges: TGetLayout['positionedEdges'];
   // edges: TLayoutEdge[] | null;
   graph: TLayoutGraph;
   layoutErrorMessage?: string;
@@ -83,13 +83,13 @@ export type TWorkerErrorMessage = {
   type: EWorkerErrorType.Error;
 };
 
-export type TNodesUpdate<T = Record<string, unknown>, U = Record<string, unknown>> = {
+export type TNodesUpdate<T, U> = {
   type: ECoordinatorPhase.Positions;
   layoutId: number;
   graph: TLayoutGraph;
   // vertices: TLayoutVertex<T>[];
   vertices: Map<string, TLayoutVertex>;
-  edges?: Map<TEdge, TLayoutEdge> | null;
+  edges?: Map<TEdge<U>, TLayoutEdge<U>> | null;
 };
 
 export type TLayoutUpdate<T = Record<string, unknown>, U = Record<string, unknown>> = {
@@ -102,6 +102,6 @@ export type TLayoutUpdate<T = Record<string, unknown>, U = Record<string, unknow
   vertices: Map<string, TLayoutVertex>;
 };
 
-export type TUpdate<T = Record<string, unknown>, U = Record<string, unknown>> =
-  | TNodesUpdate<T>
+export type TUpdate<T, U> =
+  | TNodesUpdate<T, U>
   | TLayoutUpdate<T, U>;

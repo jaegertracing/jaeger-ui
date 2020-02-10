@@ -92,13 +92,14 @@ export default class LayoutManager {
         console.warn('Duplicate positions update', data);
         return;
       }
-      const { graph, vertices } = data;
+      const { graph, edges, vertices } = data;
       if (!vertices || !resolvePositions) {
         // make flow happy
         throw new Error('Invalid state');
       }
       pendingResult.isPositionsResolved = true;
       resolvePositions({
+        edges,
         graph,
         vertices,
         isCancelled: false,

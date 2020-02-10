@@ -111,15 +111,6 @@ type TGraphCohort = {
 
 type TGraphQueue = TGraphCohort[];
 
-/*
-export default function getLayout(
-  phase: EWorkerPhase,
-  inEdges: (TEdge | TLayoutEdge)[],
-  inVertices: (TSizeVertex | TLayoutVertex)[],
-  layoutOptions: TLayoutOptions | null,
-  prevGraph: TLayoutGraph | null
-) {
-  */
 export default function getLayout({
   phase,
   positionedVertices: inPositionedVertices,
@@ -155,6 +146,7 @@ export default function getLayout({
 
     const result = getVerticesValidity(verArr, vertices);
     const newEdges = new Map<TEdge, TLayoutEdge>(edges ? edges.map(e => [e.edge, e]) : []);
+    // reframe should tackle this
     const movedEdges = new Map<TEdge, TLayoutEdge>(Array.from(inPositionedEdges.entries()).map(([e, le]) => {
       if ('translate' in le) return [e, le];
       return [e, {
@@ -172,7 +164,7 @@ export default function getLayout({
       return {
         graph: prevGraph,
         newEdges,
-        movedEdges,
+        movedEdges, // : inPositionedEdges,
         movedVertices: inPositionedVertices,
         layoutError: true,
         layoutErrorMessage: message,
@@ -183,12 +175,12 @@ export default function getLayout({
       return {
         graph: prevGraph,
         newEdges,
-        movedEdges,
+        movedEdges, // : inPositionedEdges,
         movedVertices: inPositionedVertices,
         layoutErrorMessage: result.message,
       };
     }
-    return { newEdges, graph: prevGraph, movedEdges, movedVertices: inPositionedVertices };
+    return { newEdges, graph: prevGraph, movedEdges, /* : inPositionedEdges, */ movedVertices: inPositionedVertices };
   }
 
 

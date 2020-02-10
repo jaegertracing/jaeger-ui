@@ -267,7 +267,7 @@ export default class Coordinator {
       console.log('no layout');
       return;
     }
-    const { movedEdges: dotMovedEdges, newEdges: dotNewEdges, graph, meta, movedVertices: dotMovedVertices, newVertices: dotNewVertices } = workerMessage;
+    const { movedEdges: dotMovedEdges = new Map(), newEdges: dotNewEdges = new Map(), graph, meta, movedVertices: dotMovedVertices = new Map(), newVertices: dotNewVertices = new Map() } = workerMessage;
     const { workerId } = meta;
     const { cleanedEdges /* cleaned */, input, status } = layout;
     const { phase: stPhase, workerId: stWorkerId } = status;
@@ -298,27 +298,25 @@ export default class Coordinator {
 
     // const adjVertexCoords = convCoord.vertexToPixels.bind(null, graph);
     // TODO: mapMap util
-    const movedVertices = dotMovedVertices && input.unmapVertices(
+    const movedVertices = input.unmapVertices(
       new Map<string, TLayoutVertex>(
         Array.from(dotMovedVertices.entries())
           .map(([k, v]) => [k, convCoord.vertexToPixels(graph, v)])
       )
     );
-    const newVertices = dotNewVertices && input.unmapVertices(
+    const newVertices = input.unmapVertices(
       new Map<string, TLayoutVertex>(
         Array.from(dotNewVertices.entries())
           .map(([k, v]) => [k, convCoord.vertexToPixels(graph, v)])
       )
     );
-    // const movedEdges = dotMovedEdges && (phase !== EWorkerPhase.Edges ? input.unmapEdges(
-    const movedEdges = dotMovedEdges && input.unmapEdges(
+    const movedEdges = input.unmapEdges(
       new Map<TEdge, TLayoutEdge>(
         Array.from(dotMovedEdges.entries())
-          .map(([e, le]) => [e, convCoord.edgeToPixels(graph, le)])
-        )
+        .map(([e, le]) => [e, convCoord.edgeToPixels(graph, le)])
+      )
     );
-    // ) : dotMovedEdges);
-    const newEdges = dotNewEdges && input.unmapEdges(
+    const newEdges = input.unmapEdges(
       new Map<TEdge, TLayoutEdge>(
         Array.from(dotNewEdges.entries())
           .map(([e, le]) => [e, convCoord.edgeToPixels(graph, le)])
@@ -329,7 +327,23 @@ export default class Coordinator {
 
     if (phase === EWorkerPhase.Positions) {
       // TODO:
-      throw new Error('EWorkerPhase.Positions is not currently under consideration');
+      this.callback({
+        type: ECoordinatorPhase.Positions,
+        layoutId: layout.id,
+        graph: adjGraph,
+        vertices: newVertices,
+      });
+      this._postWork({
+        positionedVertices: new Map<string, TLayoutVertex>([
+          ...dotNewVertices,
+          ...dotMovedVertices,
+        ]),
+        newVertices: new Map(),
+        positionedEdges: new Map(),
+        newEdges: cleanedEdges,
+        phase: EWorkerPhase.Edges,
+        prevGraph: graph,
+      });
     } else if (phase === EWorkerPhase.DotOnly) {
       if (movedVertexCount === inVertexCount && movedEdgeCount === inEdgeCount) {
         console.log('all moved');
@@ -337,8 +351,8 @@ export default class Coordinator {
           type: ECoordinatorPhase.Done,
           layoutId: layout.id,
           graph: adjGraph,
-          edges: (movedEdges as NonNullable<typeof movedEdges>),
-          vertices: (movedVertices as NonNullable<typeof movedVertices>),
+          edges: movedEdges,
+          vertices: movedVertices,
         });
       } else if (newVertexCount === inVertexCount && newEdgeCount === inEdgeCount) {
         console.log('all new');
@@ -346,8 +360,8 @@ export default class Coordinator {
           type: ECoordinatorPhase.Done,
           layoutId: layout.id,
           graph: adjGraph,
-          edges: (newEdges as NonNullable<typeof newEdges>),
-          vertices: (newVertices as NonNullable<typeof newVertices>),
+          edges: newEdges,
+          vertices: newVertices,
         });
       } else {
         console.log('mixed');
@@ -355,13 +369,13 @@ export default class Coordinator {
           type: ECoordinatorPhase.Positions,
           layoutId: layout.id,
           graph: adjGraph,
-          edges: (movedEdges as NonNullable<typeof movedEdges>),
-          vertices: (movedVertices as NonNullable<typeof movedVertices>),
+          edges: movedEdges,
+          vertices: movedVertices,
         });
-        const positionedVertices = new Map(movedVertices as NonNullable<typeof movedVertices>);
-        (newVertices as NonNullable<typeof newVertices>).forEach((v, k) => positionedVertices.set(k, v));
-        const positionedEdges = new Map(movedEdges as NonNullable<typeof movedEdges>);
-        (newEdges as NonNullable<typeof newEdges>).forEach((le, e) => positionedEdges.set(e, le));
+        const positionedVertices = new Map(movedVertices);
+        newVertices.forEach((v, k) => positionedVertices.set(k, v));
+        const positionedEdges = new Map(movedEdges);
+        newEdges.forEach((le, e) => positionedEdges.set(e, le));
         if (movedEdgeCount + newEdgeCount === inEdgeCount) {
           console.log('mixed but done');
           this.callback({
@@ -373,13 +387,12 @@ export default class Coordinator {
           });
         } else {
           console.log(`need to make ${inEdgeCount - movedEdgeCount - newEdgeCount} edges`);
-          const interimMap = new Map<TEdge, TLayoutEdge>(dotNewEdges ? Array.from(dotNewEdges.entries()).map(([e, le]) => [e, convCoord.edgeToPixels(graph, le)]) : [])
+          const interimMap = new Map<TEdge, TLayoutEdge>(Array.from(dotNewEdges.entries()).map(([e, le]) => [e, convCoord.edgeToPixels(graph, le)]))
           const reprocessEdges = new Map<TEdge, TLayoutEdge>([
-            // conv cord of new
-            ...interimMap.entries(),
-            ...(dotMovedEdges ? dotMovedEdges.entries() : []),
+            ...interimMap,
+            // ...(dotNewEdges ? dotNewEdges.entries() : []),
+            ...dotMovedEdges,
           ]);
-          // const notNew = new Set<TEdge>([...reprocessEdges.values()].map(({ edge }) => edge));
           const madeEdges = new Map<string, Set<string>>();
           reprocessEdges.forEach((le, edge) => {
             const tos = madeEdges.get(edge.from);
@@ -389,12 +402,11 @@ export default class Coordinator {
           console.log(reprocessEdges, positionedEdges, madeEdges, cleanedEdges);
           this._postWork({
             positionedVertices: new Map<string, TLayoutVertex>([
-              ...(dotNewVertices ? dotNewVertices.entries() : []),
-              ...(dotMovedVertices ? dotMovedVertices.entries() : []),
+              ...dotNewVertices,
+              ...dotMovedVertices,
             ]),
             newVertices: new Map(),
             positionedEdges: reprocessEdges,
-            // newEdges: cleanedEdges.filter(e => !notNew.has(e)),
             newEdges: cleanedEdges.filter(e => {
               const tos = madeEdges.get(e.from);
               if (!tos) return true;
@@ -407,14 +419,14 @@ export default class Coordinator {
       }
     } else if (phase === EWorkerPhase.Edges) {
       console.log('made all the edges');
-      const edgeMap = new Map(movedEdges as NonNullable<typeof movedEdges>);
-      (newEdges as NonNullable<typeof newEdges>).forEach((le, e) => edgeMap.set(e, le));
+      const edgeMap = new Map(movedEdges);
+      newEdges.forEach((le, e) => edgeMap.set(e, le));
       this.callback({
         type: ECoordinatorPhase.Done,
         layoutId: layout.id,
         graph: adjGraph,
         edges: edgeMap,
-        vertices: (movedVertices as NonNullable<typeof movedVertices>),
+        vertices: movedVertices,
       });
     }
   }

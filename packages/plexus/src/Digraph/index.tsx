@@ -170,7 +170,11 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
     // TODO no timeout
     positions.then(res => setTimeout(() => this.onPositionsDone(res as any), 350)); // TODO no cast
     // TODO  only timeout if edges take less than two seconds, else immediate
-    layout.then(res => setTimeout(() => this.onLayoutDone(res as any), this.state.layoutVertices ? 2350 : 350)); // TODO no cast
+    // layout.then(res => setTimeout(() => this.onLayoutDone(res as any), this.state.layoutVertices ? 2350 : 350)); // TODO no cast
+    layout.then(res => {
+      (window as any).cont = () => this.onLayoutDone(res as any);
+      console.log('can window.cont now');
+    }); //, this.state.layoutVertices ? 2350 : 350)); // TODO no cast
     this.setState({ layoutPhase: ELayoutPhase.CalcPositions });
   };
 
@@ -245,8 +249,8 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
       if (layer.edges) {
         // edges standalone layer
         const { defs, markerEndId, markerStartId, setOnEdge } = layer;
-        return layoutPhase === ELayoutPhase.Done ? (
-          <SvgEdgesLayer
+        // return layoutPhase === ELayoutPhase.Done ? (
+          return (<SvgEdgesLayer
             key={key}
             standalone
             getClassName={getClassName}
@@ -257,7 +261,7 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
             setOnContainer={setOnContainer}
             setOnEdge={setOnEdge}
           />
-        ) : null;
+          ); // : null;
       }
       if (layer.measurable) {
         // standalone measurable Nodes Layer
@@ -322,7 +326,10 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
     console.log(layoutGraph, layoutVertices);
     // this.setState({ layoutGraph, layoutVertices });
     const setStateArg: Partial<TDigraphState<T, U>> = { layoutGraph, layoutVertices };
-    if (edges) setStateArg.layoutEdges = edges;
+    if (edges) {
+      console.log('edges', edges);
+      setStateArg.layoutEdges = edges;
+    }
     this.setState(setStateArg as any); // TODO no cast
   };
 
