@@ -389,7 +389,7 @@ export default function getLayout({
         let slideDivisor: number;
         let slideCheckAttribute: 'height' | 'width';
         let otherAttribute: 'height' | 'width';
-        let slideSectionDirection: -1 | 1;
+        let slideSectionDirection: -1 | 1 = anchorDirection === 'from' ? 1 : -1;
 
         let collisionLimit: number;
         let collisionLowerBound: number;
@@ -400,65 +400,81 @@ export default function getLayout({
         let lowerSlideDistance: number | undefined = undefined;
         let upperSlideDistance: number | undefined = undefined;
 
-        // rankdir 'BT' should work with negated anchcorDIrection
-        if (layoutOptions && layoutOptions.rankdir === 'TB') {
+        const dir = (layoutOptions && layoutOptions.rankdir) || DEFAULT_GRAPH_ATTRS.rankdir;
+        console.log(dir);
+        if (dir === 'BT' || dir === 'TB' ) {
+          console.log('TB or BT');
           slideDimension = 'top';
           otherDimension = 'left';
           slideCheckAttribute = 'height';
           otherAttribute = 'width';
-          slideSectionDirection = anchorDirection === 'from' ? -1 : 1;
+          if (dir === 'TB') slideSectionDirection *= -1;
 
-          const SEP_PERCENTAGE = 0.8; /* TODO: tweak percentage */
-
-          // TODO: everything after here shouldn't be divided by ifs
-          slideThreshold = anchorVertex[slideDimension] + (slideSectionDirection * (anchorVertex[slideCheckAttribute] / 2 + SEP_PERCENTAGE * ranksep));
-          slideDivisor = anchorVertex[otherDimension];
-          collisionLimit = slideThreshold + (slideSectionDirection * (graftGraph[slideCheckAttribute] - graftAnchor[slideCheckAttribute] + SEP_PERCENTAGE * ranksep));
-          collisionLowerBound = anchorVertex[otherDimension] - graftAnchor[otherDimension] - SEP_PERCENTAGE * nodesep;
-          collisionUpperBound = collisionLowerBound + graftGraph[otherAttribute] + 2 * SEP_PERCENTAGE * nodesep;
-
-          positionVertices.forEach(existingVertex => {
-            const slideThresholdCompareVal = existingVertex[slideDimension] + (slideSectionDirection * existingVertex[slideCheckAttribute] / 2);
-            if (Math.sign(slideThresholdCompareVal - slideThreshold) === slideSectionDirection) {
-              const collisionLimitCompareVal = existingVertex[slideDimension] - (slideSectionDirection * existingVertex[slideCheckAttribute] / 2);
-              const isCloseEnoughOnSlideDimensionToCollide = Math.sign(collisionLimitCompareVal - collisionLimit) !== slideSectionDirection;
-              const slideDivisorCompareVal = existingVertex[otherDimension];
-              if (slideDivisorCompareVal <= slideDivisor) {
-                lowerSlideCandidates.push(existingVertex);
-                if (isCloseEnoughOnSlideDimensionToCollide) {
-                  const lowerSlideDistanceCompareVal = existingVertex[otherDimension] + existingVertex[otherAttribute] / 2 - collisionLowerBound;
-                  if (lowerSlideDistanceCompareVal > 0 && (lowerSlideDistance === undefined || lowerSlideDistanceCompareVal < lowerSlideDistance)) lowerSlideDistance = -1 * lowerSlideDistanceCompareVal;
-                }
-              } else {
-                upperSlideCandidates.push(existingVertex);
-                if (isCloseEnoughOnSlideDimensionToCollide) {
-                  const upperSlideDistanceCompareVal = existingVertex[otherDimension] - existingVertex[otherAttribute] / 2 - collisionUpperBound;
-                  if (upperSlideDistanceCompareVal < 0 && (upperSlideDistance === undefined || upperSlideDistanceCompareVal > upperSlideDistance)) upperSlideDistance = -1 * upperSlideDistanceCompareVal;
-                }
-              }
-            }
-          });
-
-          if (lowerSlideDistance) {
-            lowerSlideCandidates.forEach(vertex => {
-              positionVertices.set(vertex.vertex.key, {
-                ...vertex,
-                [otherDimension]: vertex[otherDimension] + (lowerSlideDistance as number),
-              });
-            });
-          }
-
-          if (upperSlideDistance) {
-            upperSlideCandidates.forEach(vertex => {
-              positionVertices.set(vertex.vertex.key, {
-                ...vertex,
-                [otherDimension]: vertex[otherDimension] + (upperSlideDistance as number),
-              });
-            });
-          }
+        } else if (dir === 'LR' || dir === 'RL') {
+          console.log('LR');
+          slideDimension = 'left';
+          otherDimension = 'top';
+          slideCheckAttribute = 'width';
+          otherAttribute = 'height';
+          if (dir === 'RL') slideSectionDirection *= -1;
 
         } else {
-          throw new Error('Uhh should be TB');
+          throw new Error('Unknown dir');
+        }
+
+        const SEP_PERCENTAGE = 0.8; /* TODO: tweak percentage */
+
+        // TODO: everything after here shouldn't be divided by ifs
+        slideThreshold = anchorVertex[slideDimension] + (slideSectionDirection * (anchorVertex[slideCheckAttribute] / 2 + SEP_PERCENTAGE * ranksep));
+        slideDivisor = anchorVertex[otherDimension];
+        collisionLimit = slideThreshold + (slideSectionDirection * (graftGraph[slideCheckAttribute] - graftAnchor[slideCheckAttribute] + SEP_PERCENTAGE * ranksep));
+        collisionLowerBound = slideDivisor - (graftGraph[otherAttribute] - graftAnchor[otherDimension]) - SEP_PERCENTAGE * nodesep;
+        collisionUpperBound = collisionLowerBound + graftGraph[otherAttribute] + 2 * SEP_PERCENTAGE * nodesep;
+
+        console.log('going to see if need to slide');
+
+        positionVertices.forEach(existingVertex => {
+          const slideThresholdCompareVal = existingVertex[slideDimension] + (slideSectionDirection * existingVertex[slideCheckAttribute] / 2);
+          if (Math.sign(slideThresholdCompareVal - slideThreshold) === slideSectionDirection) {
+            const collisionLimitCompareVal = existingVertex[slideDimension] - (slideSectionDirection * existingVertex[slideCheckAttribute] / 2);
+            const isCloseEnoughOnSlideDimensionToCollide = Math.sign(collisionLimitCompareVal - collisionLimit) !== slideSectionDirection;
+            const slideDivisorCompareVal = existingVertex[otherDimension];
+            if (slideDivisorCompareVal <= slideDivisor) {
+              lowerSlideCandidates.push(existingVertex);
+              if (isCloseEnoughOnSlideDimensionToCollide) {
+                const lowerSlideDistanceCompareVal = collisionLowerBound - (slideDivisorCompareVal + existingVertex[otherAttribute] / 2);
+                if (lowerSlideDistanceCompareVal < 0 && (lowerSlideDistance === undefined || lowerSlideDistanceCompareVal < lowerSlideDistance)) lowerSlideDistance = lowerSlideDistanceCompareVal;
+              }
+            } else {
+              upperSlideCandidates.push(existingVertex);
+              if (isCloseEnoughOnSlideDimensionToCollide) {
+                const upperSlideDistanceCompareVal = collisionUpperBound - (slideDivisorCompareVal - existingVertex[otherAttribute] / 2);
+                if (upperSlideDistanceCompareVal > 0 && (upperSlideDistance === undefined || upperSlideDistanceCompareVal > upperSlideDistance)) upperSlideDistance = upperSlideDistanceCompareVal;
+              }
+            }
+          }
+        });
+
+        console.log('slide necessity calculated');
+
+        if (lowerSlideDistance) {
+          console.log('need to lower slide', lowerSlideCandidates.length);
+          lowerSlideCandidates.forEach(vertex => {
+            positionVertices.set(vertex.vertex.key, {
+              ...vertex,
+              [otherDimension]: vertex[otherDimension] + (lowerSlideDistance as number),
+            });
+          });
+        }
+
+        if (upperSlideDistance) {
+          console.log('need to upper slide', upperSlideCandidates.length);
+          upperSlideCandidates.forEach(vertex => {
+            positionVertices.set(vertex.vertex.key, {
+              ...vertex,
+              [otherDimension]: vertex[otherDimension] + (upperSlideDistance as number),
+            });
+          });
         }
 
         graftVertices.forEach(({ left, top, ...rest }) => {
@@ -474,6 +490,7 @@ export default function getLayout({
         });
       });
 
+      console.log('did slides');
       const graphOut = reframe(prevGraph);
 
       const newEdges = new Map<TEdge, TLayoutEdge>();
@@ -496,6 +513,8 @@ export default function getLayout({
           newEdges.set(movedEdge.edge, movedEdge);
         }
       });
+
+      console.log('slid new edges');
 
       // TODO: do in reframe?
       const movedEdges = new Map<TEdge, TLayoutEdge>();
@@ -523,6 +542,8 @@ export default function getLayout({
           console.log('close enough');
         } else console.log('not close enough');
       });
+
+      console.log('slid old');
 
       if (graphOut) console.log('should be graftset af');
       const movedVertices = new Map<string, TLayoutVertex>();
