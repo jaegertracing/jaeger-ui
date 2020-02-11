@@ -39,12 +39,15 @@ import MiniMap from '../zoom/MiniMap';
 import ZoomManager, { zoomIdentity, ZoomTransform } from '../zoom/ZoomManager';
 
 type TDigraphState<T = {}, U = {}> = Omit<Omit<Omit<TExposedGraphState<T, U>, 'renderUtils'>, 'edges'>, 'vertices'> & {
+  canCondense: boolean;
+  hasIterated: boolean;
   // sizeVertices: TSizeVertex<T>[] | null;
 };
 
 type TDigraphProps<T = unknown, U = unknown> = {
   className?: string;
   classNamePrefix?: string;
+  condenseBtnClassName?: string;
   edges: TEdge<U>[];
   layers: TNonEmptyArray<TLayer<T, U>>;
   layoutManager: LayoutManager;
@@ -96,6 +99,8 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
   };
 
   state: TDigraphState<T, U> = {
+    canCondense: false,
+    hasIterated: false,
     layoutEdges: null,
     layoutGraph: null,
     layoutPhase: ELayoutPhase.NoData,
@@ -140,6 +145,43 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
 
   getZoomTransform = () => this.state.zoomTransform;
 
+  private condense = () => {
+    const { edges, vertices, layoutManager } = this.props;
+    const newVertices = new Map<string, TSizeVertex<T>>();
+    vertices.forEach(v => {
+      const key = v.key;
+      const lv = this.state.layoutVertices && this.state.layoutVertices.get(key);
+      if (lv) {
+        const { left, top, ...sv } = lv;
+        newVertices.set(key, sv);
+      }
+    });
+
+    if (newVertices.size !== vertices.length) {
+      this.setState({
+        layoutEdges: null,
+        layoutVertices: null,
+      });
+      return;
+    }
+
+    const { positions, layout } = layoutManager.getLayout({
+      newVertices,
+      newEdges: edges,
+      positionedEdges: new Map(),
+      positionedVertices: new Map(),
+      prevGraph: this.state.layoutGraph,
+    });
+    layout.then(res => {
+      if (res.isCancelled) return;
+      const { edges: _e, ...rest } = res;
+      this.setState({ layoutEdges: null });
+      this.onPositionsDone(rest as any);
+      setTimeout(() => this.onLayoutDone(res as any), 2000);
+    }); //, this.state.layoutVertices ? 2350 : 350)); // TODO no cast
+    this.setState({ canCondense: false, layoutPhase: ELayoutPhase.CalcPositions });
+  }
+
   private setSizeVertices = (senderKey: string, sizeVertices: TSizeVertex<T>[]) => {
     const { edges, layoutManager, measurableNodesKey: expectedKey } = this.props;
     if (senderKey !== expectedKey) {
@@ -167,15 +209,19 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
       positionedVertices,
       prevGraph: this.state.layoutGraph,
     });
-    // TODO no timeout
-    positions.then(res => setTimeout(() => this.onPositionsDone(res as any), 350)); // TODO no cast
-    // TODO  only timeout if edges take less than two seconds, else immediate
-    // layout.then(res => setTimeout(() => this.onLayoutDone(res as any), this.state.layoutVertices ? 2350 : 350)); // TODO no cast
+    let positionTime: number | undefined;
+    positions.then(res => {
+      positionTime = Date.now();
+      this.onPositionsDone(res as any);
+    });
     layout.then(res => {
-      (window as any).cont = () => this.onLayoutDone(res as any);
-      console.log('can window.cont now');
-    }); //, this.state.layoutVertices ? 2350 : 350)); // TODO no cast
-    this.setState({ layoutPhase: ELayoutPhase.CalcPositions });
+      const currentTime = Date.now();
+      console.log(currentTime, positionTime);
+      if (positionTime === undefined || currentTime - positionTime > 2000) this.onLayoutDone(res as any);
+      else setTimeout(() => this.onLayoutDone(res as any), 2000 - (currentTime - positionTime));
+    });
+    // set canCondense in get derived state from props
+    this.setState({ canCondense: Boolean(positionedVertices.size), hasIterated: this.state.hasIterated || Boolean(positionedVertices.size), layoutPhase: ELayoutPhase.CalcPositions });
   };
 
   private getGraphState = memoizeOne((state, edges: TEdge<U>[], vertices: TVertex<T>[]) => {
@@ -389,9 +435,11 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
   }
 
   render() {
+    const { canCondense, hasIterated, layoutPhase } = this.state;
     const {
       className,
       classNamePrefix,
+      condenseBtnClassName,
       edges,
       loadingIndicator,
       minimap: minimapEnabled,
@@ -425,6 +473,9 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
           <MiniMap
             className={minimapClassName}
             classNamePrefix={classNamePrefix}
+            allowCondense={canCondense}
+            condense={this.condense}
+            showCondense={hasIterated}
             {...this.zoomManager.getProps()}
           />
         )}

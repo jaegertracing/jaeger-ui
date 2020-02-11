@@ -100,7 +100,7 @@ limitations under the License.
   z-index: 1;
 }
 
-.u-miniMap > .plexus-MiniMap--item {
+.plexus-MiniMap--item {
   background: #999;
   box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.3);
   margin-right: 1rem;
@@ -108,7 +108,7 @@ limitations under the License.
 }
 
 /* Add the border as a pseudo element so the inner content doesn't mask it */
-.u-miniMap > .plexus-MiniMap--item::after {
+.plexus-MiniMap--item::after {
   content: '';
   position: absolute;
   top: 0;
@@ -118,19 +118,19 @@ limitations under the License.
   outline: 1px solid #777;
 }
 
-.u-miniMap > .plexus-MiniMap--map {
+.plexus-MiniMap--map {
   /* dynamic widht, height */
   box-sizing: content-box;
   cursor: not-allowed;
 }
 
-.u-miniMap .plexus-MiniMap--mapActive {
+.plexus-MiniMap--mapActive {
   /* dynamic: width, height, transform */
   background: #ccc;
   position: absolute;
 }
 
-.u-miniMap > .plexus-MiniMap--button {
+.plexus-MiniMap--button {
   background: #ccc;
   color: #888;
   cursor: pointer;
@@ -139,6 +139,18 @@ limitations under the License.
   padding: 0.1rem;
 }
 
-.u-miniMap > .plexus-MiniMap--button:hover {
+.plexus-MiniMap--disabledWrapper.is-disabled {
+  cursor: not-allowed;
+}
+
+.plexus-MiniMap--button.is-disabled {
+  pointer-events: none;
+}
+
+.plexus-MiniMap--buttonWrapper > *:not(:first-child) {
+  margin-top: 0.6em;
+}
+
+.plexus-MiniMap--button:hover {
   background: #ddd;
 }

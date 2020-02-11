@@ -279,6 +279,9 @@ export default class DirectedGraph<T> extends React.PureComponent<
           <MiniMap
             className={minimapClassName}
             classNamePrefix={classNamePrefix}
+            allowCondense={false}
+            condense={() => {}}
+            showCondense={false}
             {...this.zoomManager.getProps()}
           />
         )}

@@ -14,14 +14,18 @@
 
 import * as React from 'react';
 
+import condenseIcon from './condenseIcon';
 import resetZoomIcon from './resetZoomIcon';
 
 /* eslint-disable react/no-unused-prop-types */
 type TProps = {
+  allowCondense: boolean;
   classNamePrefix?: string | void;
   className?: string | void;
+  condense: () => void;
   contentHeight: number;
   contentWidth: number;
+  showCondense: boolean;
   viewAll: () => void;
   viewportHeight: number;
   viewportWidth: number;
@@ -76,6 +80,8 @@ function getClassNames(props: TProps) {
     map: `${base}--map`,
     mapActive: `${base}--mapActive`,
     button: `${base}--button`,
+    buttonWrapper: `${base}--buttonWrapper`,
+    disabledWrapper: `${base}--disabledWrapper`,
   };
 }
 
@@ -83,13 +89,23 @@ export function MiniMap(props: TProps) {
   const css = getClassNames(props);
   const mapSize = getMapSize(props);
   const activeXform = getViewTransform(props, mapSize);
+  const disabledClass =  props.allowCondense ? '' : 'is-disabled';
   return (
     <div className={css.root}>
       <div className={`${css.item} ${css.map}`} style={mapSize}>
         <div className={css.mapActive} style={{ ...activeXform, ...mapSize }} />
       </div>
-      <div className={`${css.item} ${css.button}`} onClick={props.viewAll} role="button">
-        {resetZoomIcon}
+      <div className={css.buttonWrapper}>
+        {props.showCondense && (
+          <div className={`${css.disabledWrapper} ${disabledClass}`}>
+            <div className={`${css.item} ${css.button} ${disabledClass}`} onClick={props.condense} role="button">
+              {condenseIcon}
+            </div>
+          </div>
+        )}
+        <div className={`${css.item} ${css.button}`} onClick={props.viewAll} role="button">
+          {resetZoomIcon}
+        </div>
       </div>
     </div>
   );
