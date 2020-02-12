@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Input } from 'antd';
+import { Input, Popover } from 'antd';
 import { Location, History as RouterHistory } from 'history';
 import _clamp from 'lodash/clamp';
 import _get from 'lodash/get';
@@ -55,6 +55,7 @@ import { TraceArchive } from '../../types/archive';
 import { EmbeddedState } from '../../types/embedded';
 import filterSpans from '../../utils/filter-spans';
 import updateUiFind from '../../utils/update-ui-find';
+import UIElementsContext from './uiElementsContext';
 
 import './index.css';
 
@@ -395,15 +396,17 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
             </section>
           ) : (
             <section style={{ paddingTop: headerHeight }}>
-              <TraceTimelineViewer
-                registerAccessors={this._scrollManager.setAccessors}
-                scrollToFirstVisibleSpan={this._scrollManager.scrollToFirstVisibleSpan}
-                findMatchesIDs={spanFindMatches}
-                trace={data}
-                updateNextViewRangeTime={this.updateNextViewRangeTime}
-                updateViewRangeTime={this.updateViewRangeTime}
-                viewRange={viewRange}
-              />
+              <UIElementsContext.Provider value={{ Popover }}>
+                <TraceTimelineViewer
+                  registerAccessors={this._scrollManager.setAccessors}
+                  scrollToFirstVisibleSpan={this._scrollManager.scrollToFirstVisibleSpan}
+                  findMatchesIDs={spanFindMatches}
+                  trace={data}
+                  updateNextViewRangeTime={this.updateNextViewRangeTime}
+                  updateViewRangeTime={this.updateViewRangeTime}
+                  viewRange={viewRange}
+                />
+              </UIElementsContext.Provider>
             </section>
           ))}
       </div>

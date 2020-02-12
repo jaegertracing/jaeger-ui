@@ -13,7 +13,6 @@
 // limitations under the License.
 
 import React from 'react';
-import { Popover } from 'antd';
 import _groupBy from 'lodash/groupBy';
 import { onlyUpdateForKeys, compose, withState, withProps } from 'recompose';
 
@@ -22,6 +21,7 @@ import AccordianLogs from './SpanDetail/AccordianLogs';
 import { ViewedBoundsFunctionType } from './utils';
 import { TNil } from '../../../types';
 import { Span } from '../../../types/trace';
+import { UIPopover } from '../uiElementsContext';
 
 import './SpanBar.css';
 
@@ -102,7 +102,7 @@ function SpanBar(props: TInnerProps) {
       </div>
       <div>
         {Object.keys(logGroups).map(positionKey => (
-          <Popover
+          <UIPopover
             key={positionKey}
             arrowPointAtCenter
             overlayClassName="SpanBar--logHint"
@@ -117,7 +117,7 @@ function SpanBar(props: TInnerProps) {
             }
           >
             <div className="SpanBar--logMarker" style={{ left: positionKey }} />
-          </Popover>
+          </UIPopover>
         ))}
       </div>
       {rpc && (
