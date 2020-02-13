@@ -127,10 +127,13 @@ export default class ZoomManager {
   }
 
   public pan(panX: number, panY: number) {
+    // const elem = this.elem;
+    const selection = this.selection;
     const { k } = this.currentTransform;
-    console.log(this.currentTransform);
+    const beforeT = this.currentTransform;
     this.currentTransform = this.currentTransform.translate(panX / k, panY / k);
-    console.log(this.currentTransform);
+    if (selection) this.zoom.transform(selection, this.currentTransform);
+    console.log(beforeT, this.currentTransform, beforeT === this.currentTransform);
     this.updateCallback(this.currentTransform);
   }
 
@@ -149,7 +152,9 @@ export default class ZoomManager {
     if (!this.elem) {
       return;
     }
+    // const beforeT = this.currentTransform;
     this.currentTransform = getTransform(this.elem);
+    // console.log(beforeT, this.currentTransform, beforeT === this.currentTransform);
     this.updateCallback(this.currentTransform);
   };
 

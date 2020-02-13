@@ -99,7 +99,7 @@ export function nomogramToPixels(nomogram: TNomogram): TNomogram {
   return {
     panX: panX * DPI,
     // TODO negate or height - or anything?
-    panY: panY * DPI,
+    panY: panY * DPI, // * -1,
     shouldTransition,
   };
 }

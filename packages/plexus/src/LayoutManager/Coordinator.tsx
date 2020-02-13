@@ -279,7 +279,8 @@ export default class Coordinator {
     if (
         (movedVertexCount + newVertexCount !== inVertexCount)
         || !graph
-        || (phase === EWorkerPhase.Edges && (movedEdgeCount + newEdgeCount !== inEdgeCount))
+        // TODO: IF not enough edges, rebuild up to three times?
+        // || (phase === EWorkerPhase.Edges && (movedEdgeCount + newEdgeCount !== inEdgeCount))
     ) {
       console.error('Have work results, but received invalid result data');
       console.log('Have work results, but received invalid result data');
@@ -376,7 +377,6 @@ export default class Coordinator {
             layoutId: layout.id,
             graph: adjGraph,
             edges: positionedEdges,
-            nomogram,
             vertices: positionedVertices,
           });
         } else {

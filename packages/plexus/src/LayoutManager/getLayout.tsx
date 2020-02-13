@@ -144,7 +144,7 @@ export default function getLayout({
   });
 
   // TODO: return zoom pan
-  function reframeVertices(): { graph: TLayoutGraph; nomogram: TNomogram } {
+  function reframeVertices(): { graph: TLayoutGraph /* ; nomogram: TNomogram */ } {
     let mostLeft: number | undefined = undefined;
     let mostRight: number | undefined = undefined;
     let mostTop: number | undefined = undefined;
@@ -192,6 +192,7 @@ export default function getLayout({
       width: mostRight - mostLeft,
       height: mostTop - mostBottom,
       },
+      /*
       nomogram: {
         // probably not:
         // probably true if panX / Y not 0 or not super close to 0
@@ -200,6 +201,7 @@ export default function getLayout({
         panX: mostLeft,
         panY: mostBottom,
       },
+       */
     };
   }
 
@@ -287,8 +289,9 @@ export default function getLayout({
 
 
   if (inNewVertices.size && inPositionedVertices.size) {
-    let shouldTransition = false;
-    const movedVertexKeys: Set<string> = new Set(positionedVertices.keys());
+    // let shouldTransition = false;
+    // const movedVertexKeys: Set<string> = new Set(positionedVertices.keys());
+    const notSlidKeys: Set<string> = new Set(positionedVertices.keys());
     const newVertices: Map<string, TSizeVertex> = new Map(inNewVertices);
 
     const edgesByTo: Map<string, Map<string, TEdge>> = new Map();
@@ -493,9 +496,10 @@ export default function getLayout({
         console.log('slide necessity calculated');
 
         if (lowerSlideDistance) {
-          shouldTransition = true;
+          // shouldTransition = true;
           console.log('need to lower slide', lowerSlideCandidates.length);
           lowerSlideCandidates.forEach(vertex => {
+            notSlidKeys.delete(vertex.vertex.key);
             positionedVertices.set(vertex.vertex.key, {
               ...vertex,
               [otherDimension]: vertex[otherDimension] + (lowerSlideDistance as number),
@@ -504,9 +508,10 @@ export default function getLayout({
         }
 
         if (upperSlideDistance) {
-          shouldTransition = true;
+          // shouldTransition = true;
           console.log('need to upper slide', upperSlideCandidates.length);
           upperSlideCandidates.forEach(vertex => {
+            notSlidKeys.delete(vertex.vertex.key);
             positionedVertices.set(vertex.vertex.key, {
               ...vertex,
               [otherDimension]: vertex[otherDimension] + (upperSlideDistance as number),
@@ -525,8 +530,23 @@ export default function getLayout({
         });
       });
 
-      const { graph: graphOut, nomogram } = reframeVertices();;
-      if (shouldTransition) nomogram.shouldTransition = true;
+      const { graph: graphOut /*, nomogram */ } = reframeVertices();;
+      // if (shouldTransition) nomogram.shouldTransition = true;
+      let nomogram: TNomogram | undefined;
+      const geostationaryKey = notSlidKeys.values().next().value;
+      if (geostationaryKey) {
+        const inPosition = inPositionedVertices.get(geostationaryKey);
+        if (!inPosition) throw new Error(`key: ${geostationaryKey} mutated out of input`);
+        const outPosition = positionedVertices.get(geostationaryKey);
+        if (!outPosition) throw new Error(`key: ${geostationaryKey} absent from output`);
+        const { left: inLeft, top: inTop } = inPosition;
+        const { left: outLeft, top: outTop } = outPosition;
+        nomogram = {
+          panX: inLeft - outLeft,
+          panY: (prevGraph.height - inTop) - (graphOut.height - outTop),
+          shouldTransition: notSlidKeys.size !== inPositionedVertices.size,
+        };
+      }
       const movedEdges = reframeEdges(graphOut);
       const newEdges = new Map<TEdge, TLayoutEdge>();
       allGraftEdges.forEach((originalLoc, edge) => {
@@ -551,7 +571,7 @@ export default function getLayout({
       const movedVertices = new Map<string, TLayoutVertex>();
       const newVertices = new Map<string, TLayoutVertex>();
       positionedVertices.forEach((v, key) => {
-        if (movedVertexKeys.has(key)) movedVertices.set(key, v);
+        if (/* movedVertexKeys */ inPositionedVertices.has(key)) movedVertices.set(key, v);
         else newVertices.set(key, v);
       });
 

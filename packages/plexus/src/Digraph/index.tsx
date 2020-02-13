@@ -159,7 +159,9 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
 
     if (newVertices.size !== vertices.length) {
       this.setState({
+        canCondense: false,
         layoutEdges: null,
+        layoutPhase: ELayoutPhase.NoData,
         layoutVertices: null,
       });
       return;
@@ -221,7 +223,7 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
       else setTimeout(() => this.onLayoutDone(res as any), 2000 - (currentTime - positionTime));
     });
     // set canCondense in get derived state from props
-    this.setState({ canCondense: Boolean(positionedVertices.size), hasIterated: this.state.hasIterated || Boolean(positionedVertices.size), layoutPhase: ELayoutPhase.CalcPositions });
+    this.setState({ /* canCondense: Boolean(positionedVertices.size), hasIterated: this.state.hasIterated || Boolean(positionedVertices.size), */ layoutPhase: ELayoutPhase.CalcPositions });
   };
 
   private getGraphState = memoizeOne((state, edges: TEdge<U>[], vertices: TVertex<T>[]) => {
@@ -364,9 +366,9 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
     }
      */
     if (this.zoomManager) {
-      this.zoomManager.setContentSize(layoutGraph);
       console.log(nomogram);
       if (nomogram) this.zoomManager.pan(nomogram.panX, nomogram.panY);
+      this.zoomManager.setContentSize(layoutGraph);
       if (!this.state.layoutVertices) this.zoomManager.resetZoom();
     }
     const setStateArg: Partial<TDigraphState<T, U>> = { layoutGraph, layoutVertices: vertices };
@@ -377,16 +379,15 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
     this.setState(setStateArg as any); // TODO no cast
   };
 
-
   private onLayoutDone = (result: TCancelled | TLayoutDone<T, U>) => {
     if (result.isCancelled) {
       return;
     }
     const { edges, graph: layoutGraph, nomogram, vertices } = result;
     if (this.zoomManager) {
-      this.zoomManager.setContentSize(layoutGraph);
       console.log(nomogram);
       if (nomogram) this.zoomManager.pan(nomogram.panX, nomogram.panY);
+      this.zoomManager.setContentSize(layoutGraph);
       if (!this.state.layoutEdges) this.zoomManager.resetZoom();
     }
     this.setState({ layoutEdges: edges /* new Map(edges ? [...edges.entries()] : []) */, layoutGraph, layoutVertices: vertices, layoutPhase: ELayoutPhase.Done });
@@ -415,11 +416,34 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
   }
    */
 
-  componentDidUpdate(_prevProps: TDigraphProps<T, U>, prevState: TDigraphState<T, U>) {
+  componentDidUpdate(prevProps: TDigraphProps<T, U>, prevState: TDigraphState<T, U>) {
     if (prevState.layoutEdges !== this.state.layoutEdges) {
       console.log('layoutEdges changed from: ', prevState.layoutEdges, ' to: ', this.state.layoutEdges)
     }
+
+    const { canCondense, hasIterated } = this.state;
+    const { edges, vertices } = this.props;
+    if ((!canCondense || !hasIterated) && ((edges && edges !== prevProps.edges) || (vertices && vertices !== prevProps.vertices))) {
+      this.setState({
+        canCondense: true,
+        hasIterated: true,
+      });
+    }
   }
+
+  /*
+  componentDidUpdate(prevProps: TDigraphProps<T, U>) {
+    const { canCondense, hasIterated } = this.state;
+    const { edges, vertices } = this.props;
+    console.log(edges, vertices, canCondense, hasIterated, nextProps.edges, nextProps.vertices, nextProps);
+    if ((!canCondense || !hasIterated) && ((edges && edges !== nextProps.edges) || (vertices && vertices !== nextProps.vertices))) {
+      return {
+        canCondense: true,
+        hasIterated: true,
+      }
+    }
+  }
+   */
 
   render() {
     const { canCondense, hasIterated, layoutPhase } = this.state;
