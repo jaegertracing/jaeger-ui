@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { TEdge, TLayoutEdge, TLayoutGraph, TLayoutVertex, TSizeVertex } from '../types';
+import { TEdge, TLayoutEdge, TLayoutGraph, TLayoutVertex, TNomogram, TSizeVertex } from '../types';
 
 export enum EWorkerErrorType {
   Error = 'Error',
@@ -70,11 +70,10 @@ export type TWorkerOutputMessage = {
   newVertices?: TGetLayout['positionedVertices'];
   movedEdges?: TGetLayout['positionedEdges'];
   newEdges: TGetLayout['positionedEdges'];
-  // edges: TLayoutEdge[] | null;
   graph: TLayoutGraph;
   layoutErrorMessage?: string;
   meta: TLayoutWorkerMeta;
-  // vertices: TLayoutVertex[];
+  nomogram?: TNomogram;
 };
 
 export type TWorkerErrorMessage = {
@@ -87,7 +86,7 @@ export type TNodesUpdate<T, U> = {
   type: ECoordinatorPhase.Positions;
   layoutId: number;
   graph: TLayoutGraph;
-  // vertices: TLayoutVertex<T>[];
+  nomogram?: TNomogram;
   vertices: Map<string, TLayoutVertex>;
   edges?: Map<TEdge<U>, TLayoutEdge<U>> | null;
 };
@@ -96,9 +95,8 @@ export type TLayoutUpdate<T = Record<string, unknown>, U = Record<string, unknow
   type: ECoordinatorPhase.Done;
   layoutId: number;
   graph: TLayoutGraph;
-  // edges: TLayoutEdge<{}>[] | null;
   edges: Map<TEdge<U>, TLayoutEdge<U>> | null;
-  // vertices: TLayoutVertex<T>[];
+  nomogram?: TNomogram;
   vertices: Map<string, TLayoutVertex>;
 };
 

@@ -258,7 +258,7 @@ export default class Coordinator {
       console.log('no layout');
       return;
     }
-    const { movedEdges: dotMovedEdges = new Map(), newEdges: dotNewEdges = new Map(), graph, meta, movedVertices: dotMovedVertices = new Map(), newVertices: dotNewVertices = new Map() } = workerMessage;
+    const { movedEdges: dotMovedEdges = new Map(), newEdges: dotNewEdges = new Map(), graph, meta, movedVertices: dotMovedVertices = new Map(), newVertices: dotNewVertices = new Map(), nomogram: _nomogram } = workerMessage;
     const { workerId } = meta;
     const { cleanedEdges, input, status } = layout;
     const { phase: stPhase, workerId: stWorkerId } = status;
@@ -312,6 +312,7 @@ export default class Coordinator {
     const newEdges = input.unmapEdges(pixelNewEdges);
 
     const adjGraph = convCoord.graphToPixels(graph);
+    const nomogram = _nomogram && convCoord.nomogramToPixels(_nomogram);
 
     if (phase === EWorkerPhase.Positions) {
       // TODO:
@@ -319,6 +320,7 @@ export default class Coordinator {
         type: ECoordinatorPhase.Positions,
         layoutId: layout.id,
         graph: adjGraph,
+        nomogram,
         vertices: movedVertexCount ? movedVertices : newVertices,
       });
       this._postWork({
@@ -340,6 +342,7 @@ export default class Coordinator {
           layoutId: layout.id,
           graph: adjGraph,
           edges: movedEdges,
+          nomogram,
           vertices: movedVertices,
         });
       } else if (newVertexCount === inVertexCount && newEdgeCount === inEdgeCount) {
@@ -349,6 +352,7 @@ export default class Coordinator {
           layoutId: layout.id,
           graph: adjGraph,
           edges: newEdges,
+          nomogram,
           vertices: newVertices,
         });
       } else {
@@ -358,6 +362,7 @@ export default class Coordinator {
           layoutId: layout.id,
           graph: adjGraph,
           edges: movedEdges,
+          nomogram,
           vertices: movedVertices,
         });
         const positionedVertices = new Map(movedVertices);
@@ -371,19 +376,15 @@ export default class Coordinator {
             layoutId: layout.id,
             graph: adjGraph,
             edges: positionedEdges,
+            nomogram,
             vertices: positionedVertices,
           });
         } else {
           console.log(`need to make ${inEdgeCount - movedEdgeCount - newEdgeCount} edges`);
-          /*
           const reprocessEdges = new Map<TEdge, TLayoutEdge>([
             ...pixelNewEdges,
             ...dotMovedEdges,
           ]);
-           */
-          const reprocessEdges = new Map<TEdge, TLayoutEdge>(dotMovedEdges);
-          // edgeToDot is not the inverse of edgeToPixel as pathPoints are not altered by edgeToDot
-          pixelNewEdges.forEach((le, e) => reprocessEdges.set(e, convCoord.edgeToDot(le)));
           const madeEdges = new Map<string, Set<string>>();
           reprocessEdges.forEach((le, edge) => {
             const tos = madeEdges.get(edge.from);
@@ -417,6 +418,7 @@ export default class Coordinator {
         layoutId: layout.id,
         graph: adjGraph,
         edges: edgeMap,
+        nomogram,
         vertices: movedVertices,
       });
     }

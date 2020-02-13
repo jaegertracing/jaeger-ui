@@ -50,6 +50,12 @@ export type TLayoutEdge<T = unknown> = {
   };
 };
 
+export type TNomogram = {
+  panX: number;
+  panY: number;
+  shouldTransition: boolean;
+}
+
 export type TCancelled = {
   isCancelled: true;
 };
@@ -57,17 +63,16 @@ export type TCancelled = {
 export type TPositionsDone<T = Record<string, unknown>, U = Record<string, unknown>> = {
   isCancelled: false;
   graph: TLayoutGraph;
-  // vertices: TLayoutVertex<T>[];
+  nomogram?: TNomogram;
   vertices: Map<string, TLayoutVertex<T>>;
   edges?: Map<TEdge<U>, TLayoutEdge<U>> | null;
 };
 
 export type TLayoutDone<T = Record<string, unknown>, U = Record<string, unknown>> = {
   isCancelled: false;
-  // edges: TLayoutEdge<U>[];
   edges: Map<TEdge<U>, TLayoutEdge<U>> | null;
   graph: TLayoutGraph;
-  // vertices: TLayoutVertex<T>[];
+  nomogram?: TNomogram;
   vertices: Map<string, TLayoutVertex<T>>;
 };
 

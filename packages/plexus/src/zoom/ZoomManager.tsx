@@ -126,6 +126,14 @@ export default class ZoomManager {
     };
   }
 
+  public pan(panX: number, panY: number) {
+    const { k } = this.currentTransform;
+    console.log(this.currentTransform);
+    this.currentTransform = this.currentTransform.translate(panX / k, panY / k);
+    console.log(this.currentTransform);
+    this.updateCallback(this.currentTransform);
+  }
+
   private setExtent() {
     const elem = this.elem;
     const size = this.contentSize;

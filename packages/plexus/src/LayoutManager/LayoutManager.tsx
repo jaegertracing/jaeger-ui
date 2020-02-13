@@ -92,7 +92,7 @@ export default class LayoutManager {
         console.warn('Duplicate positions update', data);
         return;
       }
-      const { graph, edges, vertices } = data;
+      const { graph, edges, nomogram, vertices } = data;
       if (!vertices || !resolvePositions) {
         // make flow happy
         throw new Error('Invalid state');
@@ -101,12 +101,13 @@ export default class LayoutManager {
       resolvePositions({
         edges,
         graph,
+        nomogram,
         vertices,
         isCancelled: false,
       });
     } else if (data.type === ECoordinatorPhase.Done) {
       const { resolveLayout } = pendingResult;
-      const { edges, graph, vertices } = data;
+      const { edges, graph, nomogram, vertices } = data;
       if (!edges || !vertices || !resolveLayout) {
         // make flow happy
         throw new Error('Invalid state');
@@ -115,6 +116,7 @@ export default class LayoutManager {
       resolveLayout({
         edges,
         graph,
+        nomogram,
         vertices,
         isCancelled: false,
       });

@@ -18,7 +18,7 @@ import convPlain from './dot/convPlain';
 import toDot, { DEFAULT_GRAPH_ATTRS } from './dot/toDot';
 
 import { TWorkerOutputMessage, TWorkerInputMessage, EWorkerPhase, TLayoutOptions } from './types';
-import { TEdge, TLayoutEdge, TLayoutGraph, TLayoutVertex, TSizeVertex } from '../types';
+import { TEdge, TLayoutEdge, TLayoutGraph, TLayoutVertex, TNomogram, TSizeVertex } from '../types';
 
 enum EValidity {
   Ok = 'Ok',
@@ -102,14 +102,12 @@ function getVerticesValidity(
    */
 }
 
-type TGraphCohort = {
+type TGraft = {
   anchorKey: string;
   anchorDirection: 'to' | 'from';
   edges: TEdge[],
   vertices: TSizeVertex[],
 };
-
-type TGraphQueue = TGraphCohort[];
 
 type TEdgeLoc = {
   fromLeft: number,
@@ -146,7 +144,7 @@ export default function getLayout({
   });
 
   // TODO: return zoom pan
-  function reframeVertices(): TLayoutGraph {
+  function reframeVertices(): { graph: TLayoutGraph; nomogram: TNomogram } {
     let mostLeft: number | undefined = undefined;
     let mostRight: number | undefined = undefined;
     let mostTop: number | undefined = undefined;
@@ -164,6 +162,10 @@ export default function getLayout({
 
     if (mostBottom === undefined || mostLeft === undefined || mostRight === undefined || mostTop === undefined) throw new Error('No position vertices');
 
+    // probably not:
+    // probably true if panX / Y not 0 or not super close to 0
+    // const shouldTransition = !isCloseEnough(mostLeft, 0) || !isCloseEnough(mostBottom, 0);
+    // if (shouldTransition) {
     if (mostLeft !== 0 || mostBottom !== 0) {
       console.log({ mostLeft, mostBottom });
       positionedVertices.forEach(({ left, top, ...rest }, key) => {
@@ -177,10 +179,27 @@ export default function getLayout({
       });
     }
 
+    console.log({
+      mostLeft,
+      mostRight,
+      mostTop,
+      mostBottom,
+    });
+
     return {
+      graph: {
       scale: 1,
       width: mostRight - mostLeft,
       height: mostTop - mostBottom,
+      },
+      nomogram: {
+        // probably not:
+        // probably true if panX / Y not 0 or not super close to 0
+        shouldTransition: false,
+        // TODO check these
+        panX: mostLeft,
+        panY: mostBottom,
+      },
     };
   }
 
@@ -224,8 +243,16 @@ export default function getLayout({
     const options = { totalMemory, engine: phase === EWorkerPhase.Edges ? 'neato' : 'dot', format: 'plain' };
     const plainOut = viz(dot, options);
     const { edges, graph, vertices } = convPlain(plainOut, phase !== EWorkerPhase.Positions);
+    const [key, { left, top }] = positionedVertices.entries().next().value;
     positionedVertices.clear();
     vertices.forEach(v => positionedVertices.set(v.vertex.key, v));
+    const newLoc = positionedVertices.get(key);
+    if (!newLoc) throw new Error(`${key} was lost when making edges`);
+    const nomogram = {
+      panX: left - newLoc.left,
+      panY: top - newLoc.top,
+      shouldTransition: false,
+    };
     const movedEdges = reframeEdges(graph);
     const result = getVerticesValidity(verArr, vertices);
 
@@ -239,6 +266,7 @@ export default function getLayout({
         newEdges,
         movedEdges,
         movedVertices: positionedVertices,
+        nomogram,
         layoutError: true,
         layoutErrorMessage: message,
       };
@@ -250,23 +278,18 @@ export default function getLayout({
         newEdges,
         movedEdges,
         movedVertices: positionedVertices,
+        nomogram,
         layoutErrorMessage: result.message,
       };
     }
-    return { newEdges, graph, movedEdges, movedVertices: positionedVertices };
+    return { newEdges, graph, movedEdges, movedVertices: positionedVertices, nomogram };
   }
 
 
   if (inNewVertices.size && inPositionedVertices.size) {
+    let shouldTransition = false;
     const movedVertexKeys: Set<string> = new Set(positionedVertices.keys());
     const newVertices: Map<string, TSizeVertex> = new Map(inNewVertices);
-
-    type TEdgeLoc = {
-      fromLeft: number,
-      fromTop: number,
-      toLeft: number,
-      toTop: number,
-    };
 
     const edgesByTo: Map<string, Map<string, TEdge>> = new Map();
     const edgesByFrom: Map<string, Map<string, TEdge>> = new Map();
@@ -282,7 +305,7 @@ export default function getLayout({
 
     console.log('made edges');
 
-    const graphQueue: TGraphQueue = [];
+    const graftQueue: TGraft[] = [];
     while(newVertices.size) {
       const [k, v] = newVertices.entries().next().value;
       newVertices.delete(k);
@@ -342,7 +365,7 @@ export default function getLayout({
       }
 
       if (!anchorKey || !anchorDirection) throw new Error('New vertices not connected to graph');
-      else graphQueue.push({
+      else graftQueue.push({
         anchorKey,
         anchorDirection,
         edges: Array.from(edges),
@@ -351,14 +374,14 @@ export default function getLayout({
     }
 
     console.log('made grafts');
-    console.log(graphQueue);
+    console.log(graftQueue);
 
-    if (graphQueue.length) {
+    if (graftQueue.length) {
       if (!prevGraph) throw new Error('Cannot have new vertices without previous graph');
       const ranksep = layoutOptions && layoutOptions.ranksep || DEFAULT_GRAPH_ATTRS.ranksep;
       const nodesep = layoutOptions && layoutOptions.nodesep || DEFAULT_GRAPH_ATTRS.nodesep;
       const allGraftEdges: Map<TLayoutEdge, TEdgeLoc> = new Map();
-      graphQueue.forEach(({ anchorDirection, anchorKey, edges, vertices }) => {
+      graftQueue.forEach(({ anchorDirection, anchorKey, edges, vertices }) => {
         const anchorVertex = positionedVertices.get(anchorKey);
         if (!anchorVertex) throw new Error(`Lost anchor: ${anchorKey}`);
         const { top: anchorTop, left: anchorLeft } = anchorVertex;
@@ -470,6 +493,7 @@ export default function getLayout({
         console.log('slide necessity calculated');
 
         if (lowerSlideDistance) {
+          shouldTransition = true;
           console.log('need to lower slide', lowerSlideCandidates.length);
           lowerSlideCandidates.forEach(vertex => {
             positionedVertices.set(vertex.vertex.key, {
@@ -480,6 +504,7 @@ export default function getLayout({
         }
 
         if (upperSlideDistance) {
+          shouldTransition = true;
           console.log('need to upper slide', upperSlideCandidates.length);
           upperSlideCandidates.forEach(vertex => {
             positionedVertices.set(vertex.vertex.key, {
@@ -500,7 +525,8 @@ export default function getLayout({
         });
       });
 
-      const graphOut = reframeVertices();;
+      const { graph: graphOut, nomogram } = reframeVertices();;
+      if (shouldTransition) nomogram.shouldTransition = true;
       const movedEdges = reframeEdges(graphOut);
       const newEdges = new Map<TEdge, TLayoutEdge>();
       allGraftEdges.forEach((originalLoc, edge) => {
@@ -529,7 +555,7 @@ export default function getLayout({
         else newVertices.set(key, v);
       });
 
-      return { graph: graphOut, movedEdges, movedVertices, newEdges, newVertices };
+      return { graph: graphOut, movedEdges, movedVertices, newEdges, newVertices, nomogram };
     }
   }
 

@@ -351,27 +351,25 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
     this.setState({ zoomTransform });
   };
 
+  // TODO this is almost onLayoutDone!
   private onPositionsDone = (result: TCancelled | TPositionsDone<T, U>) => {
     if (result.isCancelled) {
       return;
     }
-    const { graph: layoutGraph, edges, vertices } = result;
+    const { graph: layoutGraph, edges, nomogram, vertices } = result;
+    /*
     if (this.zoomManager) {
       this.zoomManager.setContentSize(layoutGraph);
       if (!this.state.layoutEdges) this.zoomManager.resetZoom();
     }
-    const layoutVertices = this.state.layoutVertices && vertices
-    // TODO: no merge
-      ? new Map([...this.state.layoutVertices.entries(), ...vertices.entries()])
-      : vertices;
-
+     */
     if (this.zoomManager) {
       this.zoomManager.setContentSize(layoutGraph);
+      console.log(nomogram);
+      if (nomogram) this.zoomManager.pan(nomogram.panX, nomogram.panY);
       if (!this.state.layoutVertices) this.zoomManager.resetZoom();
     }
-    console.log(layoutGraph, layoutVertices);
-    // this.setState({ layoutGraph, layoutVertices });
-    const setStateArg: Partial<TDigraphState<T, U>> = { layoutGraph, layoutVertices };
+    const setStateArg: Partial<TDigraphState<T, U>> = { layoutGraph, layoutVertices: vertices };
     if (edges) {
       console.log('edges', edges);
       setStateArg.layoutEdges = edges;
@@ -384,25 +382,14 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
     if (result.isCancelled) {
       return;
     }
-    // TODO: no vertices here?
-    const { edges, graph: layoutGraph, vertices } = result;
+    const { edges, graph: layoutGraph, nomogram, vertices } = result;
     if (this.zoomManager) {
       this.zoomManager.setContentSize(layoutGraph);
+      console.log(nomogram);
+      if (nomogram) this.zoomManager.pan(nomogram.panX, nomogram.panY);
       if (!this.state.layoutEdges) this.zoomManager.resetZoom();
     }
-    const layoutVertices = this.state.layoutVertices && vertices
-    // TODO: no merge
-      ? new Map([...this.state.layoutVertices.entries(), ...vertices.entries()])
-      : vertices;
-    console.log('layout done edges');
-    console.log(edges, edges && Array.from(edges.entries()).filter(([edge, le]) => le.translate));
-    /*
-    const layoutEdges = this.state.layoutEdges && edges
-    // TODO: only merge when subset
-      ? new Map([...this.state.layoutEdges.entries(), ...edges.entries()])
-      : edges;
-     */
-    this.setState({ layoutEdges: new Map(edges ? [...edges.entries()] : []), layoutGraph, layoutVertices, layoutPhase: ELayoutPhase.Done });
+    this.setState({ layoutEdges: edges /* new Map(edges ? [...edges.entries()] : []) */, layoutGraph, layoutVertices: vertices, layoutPhase: ELayoutPhase.Done });
   };
 
   /*
