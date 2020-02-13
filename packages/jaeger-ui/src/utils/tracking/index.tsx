@@ -153,6 +153,15 @@ if (isGaEnabled) {
     appName: 'Jaeger UI',
     appVersion: versionLong,
   });
+  const cookiesToDimensions = _get(config, 'tracking.cookiesToDimensions');
+  if (cookiesToDimensions) {
+    cookiesToDimensions.forEach(({ cookie, dimension }: { cookie: string; dimension: string }) => {
+      const match = ` ${document.cookie}`.match(new RegExp(`[; ]${cookie}=([^\\s;]*)`));
+      if (match) ReactGA.set({ [dimension]: match[1] });
+      // eslint-disable-next-line no-console
+      else console.warn(`${cookie} not present in cookies, could not set dimension: ${dimension}`);
+    });
+  }
   if (isErrorsEnabled) {
     const ravenConfig: RavenOptions = {
       autoBreadcrumbs: {
