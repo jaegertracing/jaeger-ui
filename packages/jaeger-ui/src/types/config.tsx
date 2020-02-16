@@ -46,6 +46,10 @@ export type Config = {
   scripts?: TScript[];
   topTagPrefixes?: string[];
   tracking?: {
+    cookieToDimension?: {
+      cookie: string;
+      dimension: string;
+    }[];
     gaID: string | TNil;
     trackErrors: boolean | TNil;
   };
