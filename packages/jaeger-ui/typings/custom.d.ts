@@ -13,11 +13,12 @@
 // limitations under the License.
 
 // For jest
-declare const global: {
+declare type TestGlobal = {
   location: Location;
 }
+declare const global: TestGlobal;
 
-declare interface Window {
+declare interface Window { // eslint-disable-line @typescript-eslint/interface-name-prefix
   // For setting the site-prefix
   __webpack_public_path__: string; // eslint-disable-line camelcase
   // For getting ui config

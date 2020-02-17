@@ -19,6 +19,7 @@ import TraceTimelineViewer, { TraceTimelineViewerImpl } from './index';
 import traceGenerator from '../../../demo/trace-generators';
 import transformTraceData from '../../../model/transform-trace-data';
 import TimelineHeaderRow from './TimelineHeaderRow';
+import { defaultTheme } from '../Theme';
 
 describe('<TraceTimelineViewer>', () => {
   const trace = transformTraceData(traceGenerator.trace({}));
@@ -35,6 +36,7 @@ describe('<TraceTimelineViewer>', () => {
     collapseAll: jest.fn(),
     expandOne: jest.fn(),
     collapseOne: jest.fn(),
+    theme: defaultTheme,
   };
   const options = {
     context: {

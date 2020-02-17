@@ -14,10 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-.TraceTimelineViewer {
-  border-bottom: 1px solid #bbb;
-}
-
 .json-markup {
   line-height: 17px;
   font-size: 13px;

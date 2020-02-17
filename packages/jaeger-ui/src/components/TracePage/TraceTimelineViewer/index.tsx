@@ -15,6 +15,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
+import { css } from 'emotion';
 
 import { actions } from './duck';
 import TimelineHeaderRow from './TimelineHeaderRow';
@@ -26,6 +27,15 @@ import { TNil, ReduxState } from '../../../types';
 import { Span, Trace } from '../../../types/trace';
 
 import './index.css';
+import { createStyle, Theme, withTheme } from '../Theme';
+
+const getStyles = createStyle(theme => {
+  return {
+    TraceTimelineViewer: css`
+      border-bottom: ${theme.borderStyle};
+    `,
+  };
+});
 
 type TDispatchProps = {
   setSpanNameColumnWidth: (width: number) => void;
@@ -44,6 +54,7 @@ type TProps = TDispatchProps & {
   updateNextViewRangeTime: (update: ViewRangeTimeUpdate) => void;
   updateViewRangeTime: TUpdateViewRangeTimeFunction;
   viewRange: IViewRange;
+  theme: Theme;
 };
 
 const NUM_TICKS = 5;
@@ -86,12 +97,14 @@ export class TraceTimelineViewerImpl extends React.PureComponent<TProps> {
       updateNextViewRangeTime,
       updateViewRangeTime,
       viewRange,
+      theme,
       ...rest
     } = this.props;
     const { spanNameColumnWidth, trace } = rest;
+    const styles = getStyles(theme);
 
     return (
-      <div className="TraceTimelineViewer">
+      <div className={styles.TraceTimelineViewer}>
         <TimelineHeaderRow
           duration={trace.duration}
           nameColumnWidth={spanNameColumnWidth}
@@ -127,4 +140,4 @@ function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
 export default connect(
   mapStateToProps,
   mapDispatchToProps
-)(TraceTimelineViewerImpl);
+)(withTheme(TraceTimelineViewerImpl));

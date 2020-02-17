@@ -36,9 +36,11 @@ module.exports = {
       },
       plugins: ['@typescript-eslint'],
       rules: {
+        'no-useless-constructor': 'off',
         'no-unused-vars': 0,
         '@typescript-eslint/interface-name-prefix': ['error', 'always'],
         '@typescript-eslint/no-unused-vars': 1,
+        '@typescript-eslint/no-useless-constructor': 'error',
       },
     },
   ],

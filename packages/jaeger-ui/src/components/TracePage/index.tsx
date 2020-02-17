@@ -55,6 +55,7 @@ import { TraceArchive } from '../../types/archive';
 import { EmbeddedState } from '../../types/embedded';
 import filterSpans from '../../utils/filter-spans';
 import updateUiFind from '../../utils/update-ui-find';
+import { ThemeOptions, ThemeProvider } from './Theme';
 
 import './index.css';
 
@@ -376,37 +377,45 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
     };
 
     return (
-      <div>
-        {archiveEnabled && (
-          <ArchiveNotifier acknowledge={this.acknowledgeArchive} archivedState={archiveTraceState} />
-        )}
-        <div className="Tracepage--headerSection" ref={this.setHeaderHeight}>
-          <TracePageHeader {...headerProps} />
+      <ThemeProvider
+        value={
+          {
+            borderStyle: '5px dashed #bbb',
+          } as ThemeOptions
+        }
+      >
+        <div>
+          {archiveEnabled && (
+            <ArchiveNotifier acknowledge={this.acknowledgeArchive} archivedState={archiveTraceState} />
+          )}
+          <div className="Tracepage--headerSection" ref={this.setHeaderHeight}>
+            <TracePageHeader {...headerProps} />
+          </div>
+          {headerHeight &&
+            (traceGraphView ? (
+              <section style={{ paddingTop: headerHeight }}>
+                <TraceGraph
+                  headerHeight={headerHeight}
+                  ev={this.traceDagEV}
+                  uiFind={uiFind}
+                  uiFindVertexKeys={graphFindMatches}
+                />
+              </section>
+            ) : (
+              <section style={{ paddingTop: headerHeight }}>
+                <TraceTimelineViewer
+                  registerAccessors={this._scrollManager.setAccessors}
+                  scrollToFirstVisibleSpan={this._scrollManager.scrollToFirstVisibleSpan}
+                  findMatchesIDs={spanFindMatches}
+                  trace={data}
+                  updateNextViewRangeTime={this.updateNextViewRangeTime}
+                  updateViewRangeTime={this.updateViewRangeTime}
+                  viewRange={viewRange}
+                />
+              </section>
+            ))}
         </div>
-        {headerHeight &&
-          (traceGraphView ? (
-            <section style={{ paddingTop: headerHeight }}>
-              <TraceGraph
-                headerHeight={headerHeight}
-                ev={this.traceDagEV}
-                uiFind={uiFind}
-                uiFindVertexKeys={graphFindMatches}
-              />
-            </section>
-          ) : (
-            <section style={{ paddingTop: headerHeight }}>
-              <TraceTimelineViewer
-                registerAccessors={this._scrollManager.setAccessors}
-                scrollToFirstVisibleSpan={this._scrollManager.scrollToFirstVisibleSpan}
-                findMatchesIDs={spanFindMatches}
-                trace={data}
-                updateNextViewRangeTime={this.updateNextViewRangeTime}
-                updateViewRangeTime={this.updateViewRangeTime}
-                viewRange={viewRange}
-              />
-            </section>
-          ))}
-      </div>
+      </ThemeProvider>
     );
   }
 }
