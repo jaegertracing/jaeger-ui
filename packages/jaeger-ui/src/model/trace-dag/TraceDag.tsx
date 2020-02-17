@@ -1,4 +1,4 @@
-// Copyright (c) 2018 Uber Technologies, Inc.
+// Copyright (c) 2018-2020 The Jaeger Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,100 +12,111 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import DagNode from './DagNode';
 import DenseTrace from './DenseTrace';
-import { DiffCounts, NodeID } from './types';
-import { TNil } from '../../types';
+import { ancestralPathParentOrLeaf, TIdFactory } from './id-factories';
+import { TDenseSpan, TDiffCounts, NodeID, TDenseSpanMembers } from './types';
+import TDagNode from './types/TDagNode';
 import { Trace } from '../../types/trace';
 
-export default class TraceDag<T = void> {
-  static newFromTrace(trace: Trace) {
-    const dt: TraceDag<any> = new TraceDag();
-    dt._initFromTrace(trace, undefined);
-    return dt;
-  }
+export default class TraceDag<TData extends { [k: string]: unknown } = {}> {
+  static newFromTrace(trace: Trace, idFactory: TIdFactory = ancestralPathParentOrLeaf) {
+    const dag: TraceDag<TDenseSpanMembers> = new TraceDag();
+    const { denseSpansMap, rootIDs } = new DenseTrace(trace);
 
-  static diff(a: TraceDag<any>, b: TraceDag<any>) {
-    const dt: TraceDag<DiffCounts> = new TraceDag();
-    let key: 'a' | 'b' = 'a';
-
-    function pushDagNode(src: DagNode<any>) {
-      const node = dt._getDagNode(src.service, src.operation, src.children.size > 0, src.parentID, {
-        a: 0,
-        b: 0,
-      });
-      const { data } = node;
-      data[key] = src.count;
-      node.members.push(...src.members);
-      node.count = data.b - data.a;
-      if (!node.parentID) {
-        dt.rootIDs.add(node.id);
+    function addDenseSpan(denseSpan: TDenseSpan | undefined, parentNodeID: NodeID | null) {
+      if (!denseSpan) {
+        // eslint-disable-next-line no-console
+        console.warn(`Missing dense span`);
+        return;
       }
+      const { children, operation, service, skipToChild } = denseSpan;
+      let id: NodeID | null;
+
+      if (!skipToChild) {
+        id = idFactory(denseSpan, parentNodeID);
+        const node =
+          dag.getNode(id) ||
+          dag.addNode(id, parentNodeID, {
+            operation,
+            service,
+            members: [],
+          });
+        node.members.push(denseSpan);
+      } else {
+        id = parentNodeID;
+      }
+      children.forEach(childId => addDenseSpan(denseSpansMap.get(childId), id));
     }
-    key = 'a';
-    [...a.nodesMap.values()].forEach(pushDagNode);
-    key = 'b';
-    [...b.nodesMap.values()].forEach(pushDagNode);
-    return dt;
+
+    rootIDs.forEach(rootId => addDenseSpan(denseSpansMap.get(rootId), null));
+    return dag;
   }
 
-  denseTrace: DenseTrace | null;
-  nodesMap: Map<NodeID, DagNode<T>>;
+  static diff(a: TraceDag<TDenseSpanMembers>, b: TraceDag<TDenseSpanMembers>) {
+    const dag: TraceDag<TDiffCounts> = new TraceDag();
+
+    function makeDiffNode(id: NodeID) {
+      const nodeA = a.nodesMap.get(id);
+      const nodeB = b.nodesMap.get(id);
+      const parentNodeID = (nodeA && nodeA.parentID) || (nodeB && nodeB.parentID) || null;
+      const members = [...(nodeA ? nodeA.members : []), ...(nodeB ? nodeB.members : [])];
+      dag.addNode(id, parentNodeID, {
+        members,
+        a: nodeA ? nodeA.members : null,
+        b: nodeB ? nodeB.members : null,
+        operation: (nodeA && nodeA.operation) || (nodeB && nodeB.operation) || '__UNSET__',
+        service: (nodeA && nodeA.service) || (nodeB && nodeB.service) || '__UNSET__',
+      });
+    }
+
+    const ids = new Set([...a.nodesMap.keys(), ...b.nodesMap.keys()]);
+    ids.forEach(makeDiffNode);
+    return dag;
+  }
+
+  nodesMap: Map<NodeID, TDagNode<TData>>;
   rootIDs: Set<NodeID>;
 
   constructor() {
-    this.denseTrace = null;
     this.nodesMap = new Map();
     this.rootIDs = new Set();
   }
 
-  _initFromTrace(trace: Trace, data: T) {
-    this.denseTrace = new DenseTrace(trace);
-    [...this.denseTrace.rootIDs].forEach(id => this._addDenseSpan(id, null, data));
+  hasNode(id: NodeID) {
+    return this.nodesMap.has(id);
   }
 
-  _getDagNode(
-    service: string,
-    operation: string,
-    hasChildren: boolean,
-    parentID: NodeID | TNil,
-    data: T
-  ): DagNode<T> {
-    const nodeID = DagNode.getID(service, operation, hasChildren, parentID);
-    const existing = this.nodesMap.get(nodeID);
-    if (existing) {
-      return existing;
-    }
-    const node = new DagNode(service, operation, hasChildren, parentID, data);
-    this.nodesMap.set(nodeID, node);
-    if (!parentID) {
-      this.rootIDs.add(nodeID);
-    } else {
-      const parentDag = this.nodesMap.get(parentID);
-      if (parentDag) {
-        parentDag.children.add(nodeID);
-      }
+  getNode(id: NodeID) {
+    return this.nodesMap.get(id);
+  }
+
+  mustGetNode(id: NodeID) {
+    const node = this.getNode(id);
+    if (!node) {
+      throw new Error(`Node not found: ${JSON.stringify(id)}`);
     }
     return node;
   }
 
-  _addDenseSpan(spanID: string, parentNodeID: NodeID | TNil, data: T) {
-    const denseSpan = this.denseTrace && this.denseTrace.denseSpansMap.get(spanID);
-    if (!denseSpan) {
-      // eslint-disable-next-line no-console
-      console.warn(`Missing dense span: ${spanID}`);
-      return;
+  addNode(id: NodeID, parentID: NodeID | null, data: TData) {
+    if (this.hasNode(id)) {
+      throw new Error(`Node already added: ${JSON.stringify(id)}`);
     }
-    const { children, operation, service, skipToChild } = denseSpan;
-    let nodeID: string | TNil = null;
-    if (!skipToChild) {
-      const node = this._getDagNode(service, operation, children.size > 0, parentNodeID, data);
-      node.count++;
-      node.addMember(denseSpan);
-      nodeID = node.id;
+    const node: TDagNode<TData> = {
+      ...data,
+      id,
+      parentID,
+      children: new Set(),
+    };
+    this.nodesMap.set(id, node);
+    if (!parentID) {
+      this.rootIDs.add(id);
     } else {
-      nodeID = parentNodeID;
+      const parentNode = this.nodesMap.get(parentID);
+      if (parentNode) {
+        parentNode.children.add(id);
+      }
     }
-    [...children].forEach(id => this._addDenseSpan(id, nodeID, data));
+    return node;
   }
 }

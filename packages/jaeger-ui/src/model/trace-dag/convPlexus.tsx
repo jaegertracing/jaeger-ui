@@ -1,4 +1,4 @@
-// Copyright (c) 2018 Uber Technologies, Inc.
+// Copyright (c) 2018-2020 The Jaeger Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,12 +14,12 @@
 
 import { TEdge } from '@jaegertracing/plexus/lib/types';
 
-import DagNode from './DagNode';
 import { NodeID } from './types';
-import TDagVertex from './types/TDagVertex';
+import TDagNode from './types/TDagNode';
+import TDagPlexusVertex from './types/TDagPlexusVertex';
 
-export default function convPlexus<T>(nodesMap: Map<NodeID, DagNode<T>>) {
-  const vertices: TDagVertex<T>[] = [];
+export default function convPlexus<T extends { [k: string]: unknown }>(nodesMap: Map<NodeID, TDagNode<T>>) {
+  const vertices: TDagPlexusVertex<T>[] = [];
   const edges: TEdge[] = [];
   const nodes = [...nodesMap.values()];
   for (let i = 0; i < nodes.length; i++) {

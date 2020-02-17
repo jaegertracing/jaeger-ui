@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Uber Technologies, Inc.
+// Copyright (c) 2020 The Jaeger Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,11 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { TVertex } from '@jaegertracing/plexus/lib/types';
+import { TDenseSpan, NodeID } from './types';
 
-import DagNode from '../DagNode';
+export type TIdFactory = (denseSpan: TDenseSpan, parentID: NodeID | null) => NodeID;
 
-type TDagVertex<T> = TVertex<{ data: DagNode<T> }>;
-
-// eslint-disable-next-line no-undef
-export default TDagVertex;
+export function ancestralPathParentOrLeaf(denseSpan: TDenseSpan, parentID: NodeID | null): NodeID {
+  const { children, operation, service } = denseSpan;
+  const name = `${service}\t${operation}${children.size ? '' : '\t__LEAF__'}`;
+  return parentID ? `${parentID}\v${name}` : name;
+}
