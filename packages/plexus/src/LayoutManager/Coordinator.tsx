@@ -120,6 +120,7 @@ export default class Coordinator {
       inPositionedEdges,
       inNewEdges,
     });
+    // TODO mapMap util
     const positionedEdges = new Map<TEdge, TLayoutEdge>();
     _positionedEdges.forEach((le, e) => positionedEdges.set(e, convCoord.edgeToDot(le)));
     const positionedVertices = new Map<string, TLayoutVertex>();
@@ -265,7 +266,6 @@ export default class Coordinator {
     const layout = this.currentLayout;
     if (!layout) {
       // make flow happy - this is already checked and should not happen
-      console.log('no layout');
       return;
     }
     const {
@@ -297,8 +297,6 @@ export default class Coordinator {
     if (
         (movedVertexCount + newVertexCount !== inVertexCount)
         || !graph
-        // TODO: IF not enough edges, rebuild up to three times?
-        // || (phase === EWorkerPhase.Edges && (movedEdgeCount + newEdgeCount !== inEdgeCount))
     ) {
       console.error('Have work results, but received invalid result data');
       console.log('Have work results, but received invalid result data');

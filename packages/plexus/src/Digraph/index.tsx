@@ -391,7 +391,7 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
 
   private onPlexusUpdate = ({ result, newPhase, zoomResetCheckKey, forceZoomReset }: {
     result: TCancelled | TPositionsDone<T, U> | TLayoutDone<T, U>;
-    newPhase?: ELayoutPhase,
+    newPhase?: ELayoutPhase;
     forceZoomReset?: true;
     zoomResetCheckKey?: keyof TDigraphState;
   }) => {
@@ -414,36 +414,10 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
     this.setState(setStateArg as TDigraphState<T, U>); // TODO no cast
   }
 
-  /*
-  shouldComponentUpdate(nextProps: TDigraphProps<T, U>, nextState: TDigraphState<T, U>) {
-    let rv = false;
-    Object.keys(nextProps).forEach((key) => {
-      const k = key as keyof TDigraphProps<T, U>;
-      if (nextProps[k] !== this.props[k]) {
-        rv = true;
-        console.log(`${k} changed in digraph props`);
-      }
-    });
-    if (!rv) {
-    Object.keys(nextState).forEach((key) => {
-      const k = key as keyof TDigraphState<T, U>;
-      if (nextState[k] !== this.state[k]) {
-        rv = true;
-        console.log(`${k} changed in digraph state`);
-      }
-    });
-    }
-    return rv;
-  }
-   */
-
   componentDidUpdate(prevProps: TDigraphProps<T, U>, prevState: TDigraphState<T, U>) {
-    if (prevState.layoutEdges !== this.state.layoutEdges) {
-      console.log('layoutEdges changed from: ', prevState.layoutEdges, ' to: ', this.state.layoutEdges)
-    }
-
     const { canCondense, hasIterated } = this.state;
     const { edges, vertices } = this.props;
+    // TODO: comment and maybe check both truthy not just new
     if ((!canCondense || !hasIterated) && ((edges && edges !== prevProps.edges) || (vertices && vertices !== prevProps.vertices))) {
       this.setState({
         canCondense: true,
