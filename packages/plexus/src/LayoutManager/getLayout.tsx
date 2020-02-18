@@ -145,7 +145,7 @@ export default function getLayout({
   });
 
   // TODO: return zoom pan
-  function reframeVertices(): { graph: TLayoutGraph /* ; nomogram: TNomogram */ } {
+  function reframeVertices(): TLayoutGraph {
     let mostLeft: number | undefined = undefined;
     let mostRight: number | undefined = undefined;
     let mostTop: number | undefined = undefined;
@@ -163,10 +163,6 @@ export default function getLayout({
 
     if (mostBottom === undefined || mostLeft === undefined || mostRight === undefined || mostTop === undefined) throw new Error('No position vertices');
 
-    // probably not:
-    // probably true if panX / Y not 0 or not super close to 0
-    // const shouldTransition = !isCloseEnough(mostLeft, 0) || !isCloseEnough(mostBottom, 0);
-    // if (shouldTransition) {
     if (mostLeft !== 0 || mostBottom !== 0) {
       console.log({ mostLeft, mostBottom });
       positionedVertices.forEach(({ left, top, ...rest }, key) => {
@@ -188,21 +184,9 @@ export default function getLayout({
     });
 
     return {
-      graph: {
       scale: 1,
       width: mostRight - mostLeft,
       height: mostTop - mostBottom,
-      },
-      /*
-      nomogram: {
-        // probably not:
-        // probably true if panX / Y not 0 or not super close to 0
-        shouldTransition: false,
-        // TODO check these
-        panX: mostLeft,
-        panY: mostBottom,
-      },
-       */
     };
   }
 
@@ -235,9 +219,11 @@ export default function getLayout({
         if (phase === EWorkerPhase.Edges) {
           console.log(JSON.stringify({
             fromTopDelta,
-            fromLeftDelta,
             toTopDelta,
+            topCloseEnough: isCloseEnough(fromTopDelta, toTopDelta),
+            fromLeftDelta,
             toLeftDelta,
+            leftCloseEnough: isCloseEnough(fromLeftDelta, toLeftDelta ),
           }, null, 2));
         }
       }
@@ -542,8 +528,7 @@ export default function getLayout({
         });
       });
 
-      const { graph: graphOut /*, nomogram */ } = reframeVertices();;
-      // if (shouldTransition) nomogram.shouldTransition = true;
+      const graphOut = reframeVertices();
       let nomogram: TNomogram | undefined;
       const geostationaryKey = notSlidKeys.values().next().value;
       if (geostationaryKey) {
