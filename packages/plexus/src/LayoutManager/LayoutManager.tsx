@@ -20,7 +20,7 @@ import Coordinator from './Coordinator';
 type TPendingResult<T, U> = {
   id: number;
   isPositionsResolved: boolean;
-  resolvePositions?: (result: TCancelled | TPositionsDone<T>) => void;
+  resolvePositions?: (result: TCancelled | TPositionsDone<T, U>) => void;
   resolveLayout?: (result: TCancelled | TLayoutDone<T, U>) => void;
 };
 
@@ -37,7 +37,6 @@ export default class LayoutManager {
     this.pendingResult = null;
   }
 
-  // getLayout<T, U>(edges: (TEdge<U> | TLayoutEdge<U>)[], vertices: (TSizeVertex<T> | TLayoutVertex<T>)[], previousGraph: TLayoutGraph | null = null): TPendingLayoutResult<T, U> {
   getLayout<T, U>(input: TGetLayout) {
     this._cancelPending();
     this.layoutId++;
@@ -48,7 +47,7 @@ export default class LayoutManager {
       ...input,
     });
     this.pendingResult = { id, isPositionsResolved: false };
-    const positions: Promise<TCancelled | TPositionsDone<T>> = new Promise(resolve => {
+    const positions: Promise<TCancelled | TPositionsDone<T, U>> = new Promise(resolve => {
       if (this.pendingResult && id === this.pendingResult.id) {
         this.pendingResult.resolvePositions = resolve;
       }

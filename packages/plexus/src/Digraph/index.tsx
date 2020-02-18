@@ -33,7 +33,7 @@ import {
 import { assignMergeCss, getProps } from './utils';
 // TODO(joe): don't use stuff in ../DirectedGraph
 import LayoutManager from '../LayoutManager';
-import { TCancelled, TEdge, TLayoutDone, TLayoutEdge, TLayoutVertex, TPositionsDone, TSizeVertex, TVertex } from '../types';
+import { TCancelled, TEdge, TLayoutDone, TLayoutEdge, TLayoutVertex, TNomogram, TPositionsDone, TSizeVertex, TVertex } from '../types';
 import TNonEmptyArray from '../types/TNonEmptyArray';
 import MiniMap from '../zoom/MiniMap';
 import ZoomManager, { zoomIdentity, ZoomTransform } from '../zoom/ZoomManager';
@@ -50,27 +50,21 @@ const STYLES = `
   } */''}
 
   .plexus-Digraph.is-panning .plexus-Digraph--MeasurableHtmlNode {
-    background: red;
     transition: transform 2s;
   }
   .plexus-Digraph.is-panning .plexus-Digraph--Node {
-    background: red;
     transition: transform 2s;
   }
   .plexus-Digraph.is-panning .plexus-Digraph--SvgEdge {
-    background: red;
     transition: transform 2s;
   }
   .plexus-Digraph.is-panning .plexus-Digraph--MeasurableNodesLayer {
-    background: red;
     transition: transform 2s;
   }
   .plexus-Digraph.is-panning .plexus-Digraph--NodesLayer {
-    background: red;
     transition: transform 2s;
   }
   .plexus-Digraph.is-panning .plexus-Digraph--SvgLayer--transformer {
-    background: red;
     transition: transform 2s;
   }
 `;
@@ -206,20 +200,20 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
       return;
     }
 
-    const { positions, layout } = layoutManager.getLayout({
+    layoutManager.getLayout<T, U>({
       newVertices,
       newEdges: edges,
       positionedEdges: new Map(),
       positionedVertices: new Map(),
       prevGraph: this.state.layoutGraph,
-    });
-    layout.then(res => {
-      if (res.isCancelled) return;
-      const { edges: _e, ...rest } = res;
+    }).layout.then(result => {
+      if (result.isCancelled) return;
+      const { edges: _e, ...rest } = result;
       this.setState({ layoutEdges: null });
-      this.onPositionsDone(rest as any);
-      setTimeout(() => this.onLayoutDone(res as any), 2000);
-    }); //, this.state.layoutVertices ? 2350 : 350)); // TODO no cast
+      this.onPlexusUpdate({ result: rest, forceZoomReset: true });
+      setTimeout(() => this.onPlexusUpdate({ result, forceZoomReset: true, newPhase: ELayoutPhase.Done }), 2000);
+    });
+
     this.setState({ canCondense: false, layoutPhase: ELayoutPhase.CalcPositions });
   }
 
@@ -243,26 +237,29 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
       if (le) positionedEdges.set(e, le);
       return !le;
     });
-    const { positions, layout } = layoutManager.getLayout({
+
+    const { positions, layout } = layoutManager.getLayout<T, U>({
       newVertices,
       newEdges,
       positionedEdges,
       positionedVertices,
       prevGraph: this.state.layoutGraph,
     });
+
     let positionTime: number | undefined;
-    positions.then(res => {
+    let positionNomogram: TNomogram | undefined;
+    positions.then((result: TCancelled | TPositionsDone<T, U>) => {
       positionTime = Date.now();
-      this.onPositionsDone(res as any);
+      if ('nomogram' in result) positionNomogram = result.nomogram;
+      this.onPlexusUpdate({ result, zoomResetCheckKey: 'layoutVertices' });
     });
-    layout.then(res => {
+    layout.then(result => {
       const currentTime = Date.now();
-      console.log(currentTime, positionTime);
-      if (positionTime === undefined || currentTime - positionTime > 2000) this.onLayoutDone(res as any);
-      else setTimeout(() => this.onLayoutDone(res as any), 2000 - (currentTime - positionTime));
+      const doneFn = () => this.onPlexusUpdate({ result, newPhase: ELayoutPhase.Done, zoomResetCheckKey: 'layoutEdges' });
+      if (positionTime === undefined || currentTime - positionTime > 2000) doneFn();
+      else setTimeout(doneFn, 2000 - (currentTime - positionTime));
     });
-    // set canCondense in get derived state from props
-    this.setState({ /* canCondense: Boolean(positionedVertices.size), hasIterated: this.state.hasIterated || Boolean(positionedVertices.size), */ layoutPhase: ELayoutPhase.CalcPositions });
+    this.setState({ layoutPhase: ELayoutPhase.CalcPositions });
   };
 
   private getGraphState = memoizeOne((state, edges: TEdge<U>[], vertices: TVertex<T>[]) => {
@@ -392,39 +389,30 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
     this.setState({ zoomTransform });
   };
 
-  // TODO this is almost onLayoutDone! (diff reset check, no phase)
-  private onPositionsDone = (result: TCancelled | TPositionsDone<T, U>) => {
+  private onPlexusUpdate = ({ result, newPhase, zoomResetCheckKey, forceZoomReset }: {
+    result: TCancelled | TPositionsDone<T, U> | TLayoutDone<T, U>;
+    newPhase?: ELayoutPhase,
+    forceZoomReset?: true;
+    zoomResetCheckKey?: keyof TDigraphState;
+  }) => {
     if (result.isCancelled) {
       return;
     }
     const { graph: layoutGraph, edges, nomogram, vertices } = result;
     if (this.zoomManager) {
-      console.log(nomogram);
       this.zoomManager.setContentSize(layoutGraph);
       if (nomogram) this.zoomManager.pan(nomogram.panX, nomogram.panY);
-      if (!this.state.layoutVertices) this.zoomManager.resetZoom();
+      if (forceZoomReset || (zoomResetCheckKey && !this.state[zoomResetCheckKey])) this.zoomManager.resetZoom();
     }
     const setStateArg: Partial<TDigraphState<T, U>> = { layoutGraph, layoutVertices: vertices };
     if (edges) {
-      console.log('edges', edges);
       setStateArg.layoutEdges = edges;
     }
-    this.setState(setStateArg as any); // TODO no cast
-  };
-
-  private onLayoutDone = (result: TCancelled | TLayoutDone<T, U>) => {
-    if (result.isCancelled) {
-      return;
+    if (newPhase) {
+      setStateArg.layoutPhase = newPhase;
     }
-    const { edges, graph: layoutGraph, nomogram, vertices } = result;
-    if (this.zoomManager) {
-      console.log(nomogram);
-      this.zoomManager.setContentSize(layoutGraph);
-      if (nomogram) this.zoomManager.pan(nomogram.panX, nomogram.panY);
-      if (!this.state.layoutEdges) this.zoomManager.resetZoom();
-    }
-    this.setState({ layoutEdges: edges, layoutGraph, layoutVertices: vertices, layoutPhase: ELayoutPhase.Done });
-  };
+    this.setState(setStateArg as TDigraphState<T, U>); // TODO no cast
+  }
 
   /*
   shouldComponentUpdate(nextProps: TDigraphProps<T, U>, nextState: TDigraphState<T, U>) {
