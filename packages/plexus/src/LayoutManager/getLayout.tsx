@@ -123,6 +123,7 @@ export default function getLayout({
   positionedEdges: inPositionedEdges,
   newEdges: inNewEdges,
   options: layoutOptions,
+  prevNomogram,
   prevGraph,
 }: Omit<TWorkerInputMessage, 'meta'> & { phase: EWorkerPhase }): Omit<Omit<TWorkerOutputMessage, 'type'>, 'meta'> & {
   layoutError?: true,
@@ -229,7 +230,17 @@ export default function getLayout({
         };
         movedEdges.set(edge.edge, movedEdge);
         console.log('close enough');
-      } else console.log('not close enough');
+      } else {
+        console.log('not close enough');
+        if (phase === EWorkerPhase.Edges) {
+          console.log(JSON.stringify({
+            fromTopDelta,
+            fromLeftDelta,
+            toTopDelta,
+            toLeftDelta,
+          }, null, 2));
+        }
+      }
     });
 
     return movedEdges;
@@ -250,9 +261,10 @@ export default function getLayout({
     vertices.forEach(v => positionedVertices.set(v.vertex.key, v));
     const newLoc = positionedVertices.get(key);
     if (!newLoc) throw new Error(`${key} was lost when making edges`);
+    const { panX: prevPanX = 0, panY: prevPanY = 0 } = prevNomogram || {};
     const nomogram = {
-      panX: left - newLoc.left,
-      panY: top - newLoc.top,
+      panX: prevPanX + left - newLoc.left,
+      panY: prevPanY + (prevGraph.height - top) - (graph.height - newLoc.top), // gotta do graph top delta again
       shouldTransition: false,
     };
     const movedEdges = reframeEdges(graph);

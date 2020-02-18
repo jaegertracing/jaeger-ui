@@ -93,7 +93,6 @@ export default class ZoomManager {
       this.contentSize = size;
     }
     this.setExtent();
-    // this.resetZoom();
   }
 
   public resetZoom = () => {
@@ -127,12 +126,14 @@ export default class ZoomManager {
   }
 
   public pan(panX: number, panY: number) {
-    // const elem = this.elem;
+    console.log(this.elem, this.selection);
     const selection = this.selection;
-    const { k } = this.currentTransform;
+    // const { k } = this.currentTransform;
+    let k = 1;
     const beforeT = this.currentTransform;
     this.currentTransform = this.currentTransform.translate(panX / k, panY / k);
     if (selection) this.zoom.transform(selection, this.currentTransform);
+    else console.log('no selection mang');
     console.log(beforeT, this.currentTransform, beforeT === this.currentTransform);
     this.updateCallback(this.currentTransform);
   }
@@ -146,15 +147,15 @@ export default class ZoomManager {
     const { clientHeight: viewHeight, clientWidth: viewWidth } = elem;
     const scaleExtent = getScaleExtent(size.width, size.height, viewWidth, viewHeight);
     this.zoom.scaleExtent(scaleExtent);
+    // hmm?
+    this.currentTransform = getTransform(elem);
   }
 
   private onZoomed = () => {
     if (!this.elem) {
       return;
     }
-    // const beforeT = this.currentTransform;
     this.currentTransform = getTransform(this.elem);
-    // console.log(beforeT, this.currentTransform, beforeT === this.currentTransform);
     this.updateCallback(this.currentTransform);
   };
 

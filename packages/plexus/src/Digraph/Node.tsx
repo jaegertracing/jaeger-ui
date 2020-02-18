@@ -34,7 +34,7 @@ function getHtmlStyle(lv: TLayoutVertex<any>) {
     width,
     position: 'absolute',
     transform: left == null || top == null ? undefined : `translate(${left.toFixed()}px,${top.toFixed()}px)`,
-    transition: 'transform 2s',
+    /* transition: 'transform 2s', */
   };
 }
 
@@ -52,7 +52,7 @@ export default class Node<T = {}> extends React.PureComponent<TProps<T>> {
         // style: layerType === ELayerType.Html ? getHtmlStyle(layoutVertex) : null,
         style: layerType === ELayerType.Html
           ? getHtmlStyle(layoutVertex)
-          : { transition: 'transform 2s' },
+          : { /*  transition: 'transform 2s' */ },
         transform: layerType === ELayerType.Svg
           ? `translate(${left.toFixed()},${top.toFixed()})`
           : null,

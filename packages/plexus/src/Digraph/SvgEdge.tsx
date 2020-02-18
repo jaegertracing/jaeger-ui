@@ -65,7 +65,7 @@ export default class SvgEdge<U = {}> extends React.PureComponent<TProps<U>> {
       getProps(setOnEdge, layoutEdge, renderUtils),
       {
         transform: `translate(${x},${y})`,
-        style: { transition: 'transform 2s' },
+        // style: { transition: 'transform 2s' },
       }
     );
     return (

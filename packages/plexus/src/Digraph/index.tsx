@@ -38,9 +38,47 @@ import TNonEmptyArray from '../types/TNonEmptyArray';
 import MiniMap from '../zoom/MiniMap';
 import ZoomManager, { zoomIdentity, ZoomTransform } from '../zoom/ZoomManager';
 
+// import './index.css';
+// TODO: This is objectively bad, choose a css loader or css-in-js
+const STYLES = `
+  .plexus-Digraph.is-panning {
+    pointer-events: none;
+  }
+  
+  ${/* .plexus-Digraph.is-panning:after {
+    TODO size & cursor-style
+  } */''}
+
+  .plexus-Digraph.is-panning .plexus-Digraph--MeasurableHtmlNode {
+    background: red;
+    transition: transform 2s;
+  }
+  .plexus-Digraph.is-panning .plexus-Digraph--Node {
+    background: red;
+    transition: transform 2s;
+  }
+  .plexus-Digraph.is-panning .plexus-Digraph--SvgEdge {
+    background: red;
+    transition: transform 2s;
+  }
+  .plexus-Digraph.is-panning .plexus-Digraph--MeasurableNodesLayer {
+    background: red;
+    transition: transform 2s;
+  }
+  .plexus-Digraph.is-panning .plexus-Digraph--NodesLayer {
+    background: red;
+    transition: transform 2s;
+  }
+  .plexus-Digraph.is-panning .plexus-Digraph--SvgLayer--transformer {
+    background: red;
+    transition: transform 2s;
+  }
+`;
+
 type TDigraphState<T = {}, U = {}> = Omit<Omit<Omit<TExposedGraphState<T, U>, 'renderUtils'>, 'edges'>, 'vertices'> & {
   canCondense: boolean;
   hasIterated: boolean;
+  // isPanning: boolean;
   // sizeVertices: TSizeVertex<T>[] | null;
 };
 
@@ -101,6 +139,7 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
   state: TDigraphState<T, U> = {
     canCondense: false,
     hasIterated: false,
+    // isPanning: false,
     layoutEdges: null,
     layoutGraph: null,
     layoutPhase: ELayoutPhase.NoData,
@@ -353,22 +392,16 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
     this.setState({ zoomTransform });
   };
 
-  // TODO this is almost onLayoutDone!
+  // TODO this is almost onLayoutDone! (diff reset check, no phase)
   private onPositionsDone = (result: TCancelled | TPositionsDone<T, U>) => {
     if (result.isCancelled) {
       return;
     }
     const { graph: layoutGraph, edges, nomogram, vertices } = result;
-    /*
-    if (this.zoomManager) {
-      this.zoomManager.setContentSize(layoutGraph);
-      if (!this.state.layoutEdges) this.zoomManager.resetZoom();
-    }
-     */
     if (this.zoomManager) {
       console.log(nomogram);
-      if (nomogram) this.zoomManager.pan(nomogram.panX, nomogram.panY);
       this.zoomManager.setContentSize(layoutGraph);
+      if (nomogram) this.zoomManager.pan(nomogram.panX, nomogram.panY);
       if (!this.state.layoutVertices) this.zoomManager.resetZoom();
     }
     const setStateArg: Partial<TDigraphState<T, U>> = { layoutGraph, layoutVertices: vertices };
@@ -386,11 +419,11 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
     const { edges, graph: layoutGraph, nomogram, vertices } = result;
     if (this.zoomManager) {
       console.log(nomogram);
-      if (nomogram) this.zoomManager.pan(nomogram.panX, nomogram.panY);
       this.zoomManager.setContentSize(layoutGraph);
+      if (nomogram) this.zoomManager.pan(nomogram.panX, nomogram.panY);
       if (!this.state.layoutEdges) this.zoomManager.resetZoom();
     }
-    this.setState({ layoutEdges: edges /* new Map(edges ? [...edges.entries()] : []) */, layoutGraph, layoutVertices: vertices, layoutPhase: ELayoutPhase.Done });
+    this.setState({ layoutEdges: edges, layoutGraph, layoutVertices: vertices, layoutPhase: ELayoutPhase.Done });
   };
 
   /*
@@ -431,20 +464,6 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
     }
   }
 
-  /*
-  componentDidUpdate(prevProps: TDigraphProps<T, U>) {
-    const { canCondense, hasIterated } = this.state;
-    const { edges, vertices } = this.props;
-    console.log(edges, vertices, canCondense, hasIterated, nextProps.edges, nextProps.vertices, nextProps);
-    if ((!canCondense || !hasIterated) && ((edges && edges !== nextProps.edges) || (vertices && vertices !== nextProps.vertices))) {
-      return {
-        canCondense: true,
-        hasIterated: true,
-      }
-    }
-  }
-   */
-
   render() {
     const { canCondense, hasIterated, layoutPhase } = this.state;
     const {
@@ -465,7 +484,7 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
     const rootProps = assignMergeCss(
       {
         style: builtinStyle,
-        className: `${classNamePrefix} ${classNamePrefix}-Digraph`,
+        className: `${classNamePrefix} ${classNamePrefix}-Digraph plexus-Digraph ${layoutPhase === ELayoutPhase.CalcPositions ? 'is-panning' : ''}`,
       },
       { className, style },
       getProps(setOnGraph, {
@@ -477,6 +496,9 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
     );
     return (
       <div {...rootProps}>
+        <style>
+          {STYLES}
+        </style>
         <div style={builtinStyle} ref={this.rootRef}>
           {this.renderLayers()}
         </div>
@@ -490,7 +512,7 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
             {...this.zoomManager.getProps()}
           />
         )}
-        {this.state.layoutPhase !== ELayoutPhase.Done && loadingIndicator}
+        {layoutPhase !== ELayoutPhase.Done && loadingIndicator}
       </div>
     );
   }

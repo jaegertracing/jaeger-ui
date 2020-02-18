@@ -46,10 +46,12 @@ export default class MeasurableNode<T = {}> extends React.PureComponent<TProps<T
    */
   wasHidden = false;
 
+  /*
   getDerivedStateFromProps(props: TProps<T>) {
     if (this.props.hidden && !props.hidden) return { wasHidden: true }
     return { wasHidden: false };
   }
+   */
 
   /*
   shouldComponentUpdate(nextProps: TProps<T>) {
@@ -98,7 +100,7 @@ export default class MeasurableNode<T = {}> extends React.PureComponent<TProps<T
           position: 'absolute',
           transform:
             left == null || top == null ? undefined : `translate(${left.toFixed()}px,${top.toFixed()}px)`,
-          transition: !this.wasHidden ? 'transform 2s' : undefined,
+          // transition: !this.wasHidden ? 'transform 2s' : undefined,
           visibility: hidden ? 'hidden' : undefined,
         },
       },
@@ -120,7 +122,7 @@ export default class MeasurableNode<T = {}> extends React.PureComponent<TProps<T
         className: getClassName('MeasurableSvgNode'),
         transform: left == null || top == null ? undefined : `translate(${left.toFixed()}, ${top.toFixed()})`,
         style: hidden ? SVG_HIDDEN_STYLE : {
-          transition: 'transform 2s',
+          /* transition: 'transform 2s', */
         },
       },
       getProps(setOnNode, vertex, renderUtils, layoutVertex)

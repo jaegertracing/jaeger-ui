@@ -258,7 +258,7 @@ export default class Coordinator {
       console.log('no layout');
       return;
     }
-    const { movedEdges: dotMovedEdges = new Map(), newEdges: dotNewEdges = new Map(), graph, meta, movedVertices: dotMovedVertices = new Map(), newVertices: dotNewVertices = new Map(), nomogram: _nomogram } = workerMessage;
+    const { movedEdges: dotMovedEdges = new Map(), newEdges: dotNewEdges = new Map(), graph, meta, movedVertices: dotMovedVertices = new Map(), newVertices: dotNewVertices = new Map(), nomogram: dotNomogram } = workerMessage;
     const { workerId } = meta;
     const { cleanedEdges, input, status } = layout;
     const { phase: stPhase, workerId: stWorkerId } = status;
@@ -313,17 +313,19 @@ export default class Coordinator {
     const newEdges = input.unmapEdges(pixelNewEdges);
 
     const adjGraph = convCoord.graphToPixels(graph);
-    const nomogram = _nomogram && convCoord.nomogramToPixels(_nomogram);
+    const nomogram = dotNomogram && convCoord.nomogramToPixels(dotNomogram);
 
     if (phase === EWorkerPhase.Positions) {
       // TODO:
-      this.callback({
-        type: ECoordinatorPhase.Positions,
-        layoutId: layout.id,
-        graph: adjGraph,
-        nomogram,
-        vertices: movedVertexCount ? movedVertices : newVertices,
-      });
+      if (nomogram && nomogram.shouldTransition) {
+        this.callback({
+          type: ECoordinatorPhase.Positions,
+          layoutId: layout.id,
+          graph: adjGraph,
+          nomogram,
+          vertices: movedVertexCount ? movedVertices : newVertices,
+        });
+      }
       this._postWork({
         positionedVertices: new Map<string, TLayoutVertex>([
           ...dotNewVertices,
@@ -333,6 +335,7 @@ export default class Coordinator {
         positionedEdges: new Map(),
         newEdges: cleanedEdges,
         phase: EWorkerPhase.Edges,
+        prevNomogram: nomogram && !nomogram.shouldTransition ? dotNomogram : undefined,
         prevGraph: graph,
       });
     } else if (phase === EWorkerPhase.DotOnly) {
@@ -358,14 +361,16 @@ export default class Coordinator {
         });
       } else {
         console.log('mixed');
-        this.callback({
-          type: ECoordinatorPhase.Positions,
-          layoutId: layout.id,
-          graph: adjGraph,
-          edges: movedEdges,
-          nomogram,
-          vertices: movedVertices,
-        });
+        if (nomogram && nomogram.shouldTransition) {
+          this.callback({
+            type: ECoordinatorPhase.Positions,
+            layoutId: layout.id,
+            graph: adjGraph,
+            edges: movedEdges,
+            nomogram,
+            vertices: movedVertices,
+          });
+        }
         const positionedVertices = new Map(movedVertices);
         newVertices.forEach((v, k) => positionedVertices.set(k, v));
         const positionedEdges = new Map(movedEdges);
@@ -377,10 +382,21 @@ export default class Coordinator {
             layoutId: layout.id,
             graph: adjGraph,
             edges: positionedEdges,
+            nomogram: nomogram && !nomogram.shouldTransition ? nomogram : undefined,
             vertices: positionedVertices,
           });
         } else {
           console.log(`need to make ${inEdgeCount - movedEdgeCount - newEdgeCount} edges`);
+          if (nomogram && nomogram.shouldTransition) {
+            this.callback({
+              type: ECoordinatorPhase.Positions,
+              layoutId: layout.id,
+              graph: adjGraph,
+              edges: movedEdges,
+              nomogram,
+              vertices: movedVertices,
+            });
+          }
           const reprocessEdges = new Map<TEdge, TLayoutEdge>([
             ...pixelNewEdges,
             ...dotMovedEdges,
@@ -405,12 +421,15 @@ export default class Coordinator {
               return !tos.has(e.to);
             }),
             phase: EWorkerPhase.Edges,
+            prevNomogram: nomogram && !nomogram.shouldTransition ? dotNomogram : undefined,
             prevGraph: graph,
           });
         }
       }
     } else if (phase === EWorkerPhase.Edges) {
-      console.log('made all the edges');
+      const stillRemaining = inEdgeCount - movedEdgeCount - newEdgeCount;
+      if (stillRemaining) console.log(`Failed to make ${stillRemaining} edges`);
+      else console.log('made all the edges');
       const edgeMap = new Map(movedEdges);
       newEdges.forEach((le, e) => edgeMap.set(e, le));
       this.callback({

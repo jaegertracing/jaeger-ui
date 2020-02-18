@@ -40,6 +40,7 @@ export type TGetLayout = {
   positionedEdges: Map<TEdge, TLayoutEdge>;
   newEdges: TEdge[];
   prevGraph: TLayoutGraph | null;
+  prevNomogram?: TNomogram;
 }
 
 export type TLayoutOptions = {
@@ -62,6 +63,7 @@ export type TLayoutWorkerMeta = {
 export type TWorkerInputMessage = TGetLayout & {
   meta: TLayoutWorkerMeta;
   options: TLayoutOptions | null;
+  prevNomogram?: TNomogram;
 };
 
 export type TWorkerOutputMessage = {
