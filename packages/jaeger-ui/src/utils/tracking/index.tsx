@@ -170,7 +170,7 @@ if (isGaEnabled) {
         dom: true,
         location: true,
       },
-      environment: process.env.NODE_ENV || 'unkonwn',
+      environment: process.env.NODE_ENV || 'unknown',
       transport: trackRavenError,
     };
     if (versionShort && versionShort !== 'unknown') {
