@@ -17,30 +17,24 @@ import cx from 'classnames';
 import _get from 'lodash/get';
 import IoChevronRight from 'react-icons/lib/io/chevron-right';
 import IoIosArrowDown from 'react-icons/lib/io/ios-arrow-down';
-import { connect } from 'react-redux';
-import { bindActionCreators, Dispatch } from 'redux';
 
-import { actions } from './duck';
-import { ReduxState } from '../../../types';
 import { Span } from '../../../types/trace';
 import spanAncestorIds from '../../../utils/span-ancestor-ids';
 
 import './SpanTreeOffset.css';
 
-type TDispatchProps = {
+type TProps = {
+  childrenVisible?: boolean;
+  onClick?: () => void;
+  span: Span;
+  showChildrenIcon?: boolean;
+
+  hoverIndentGuideIds: Set<string>;
   addHoverIndentGuideId: (spanID: string) => void;
   removeHoverIndentGuideId: (spanID: string) => void;
 };
 
-type TProps = TDispatchProps & {
-  childrenVisible?: boolean;
-  hoverIndentGuideIds: Set<string>;
-  onClick?: () => void;
-  span: Span;
-  showChildrenIcon?: boolean;
-};
-
-export class UnconnectedSpanTreeOffset extends React.PureComponent<TProps> {
+export default class SpanTreeOffset extends React.PureComponent<TProps> {
   ancestorIds: string[];
 
   static defaultProps = {
@@ -126,18 +120,3 @@ export class UnconnectedSpanTreeOffset extends React.PureComponent<TProps> {
     );
   }
 }
-
-export function mapStateToProps(state: ReduxState): { hoverIndentGuideIds: Set<string> } {
-  const { hoverIndentGuideIds } = state.traceTimeline;
-  return { hoverIndentGuideIds };
-}
-
-export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
-  const { addHoverIndentGuideId, removeHoverIndentGuideId } = bindActionCreators(actions, dispatch);
-  return { addHoverIndentGuideId, removeHoverIndentGuideId };
-}
-
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(UnconnectedSpanTreeOffset);

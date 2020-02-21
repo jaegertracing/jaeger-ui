@@ -53,6 +53,9 @@ type SpanBarRowProps = {
   traceStartTime: number;
   span: Span;
   focusSpan: (spanID: string) => void;
+  hoverIndentGuideIds: Set<string>;
+  addHoverIndentGuideId: (spanID: string) => void;
+  removeHoverIndentGuideId: (spanID: string) => void;
 };
 
 /**
@@ -92,6 +95,9 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
       traceStartTime,
       span,
       focusSpan,
+      hoverIndentGuideIds,
+      addHoverIndentGuideId,
+      removeHoverIndentGuideId,
     } = this.props;
     const {
       duration,
@@ -130,6 +136,9 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
               childrenVisible={isChildrenExpanded}
               span={span}
               onClick={isParent ? this._childrenToggle : undefined}
+              hoverIndentGuideIds={hoverIndentGuideIds}
+              addHoverIndentGuideId={addHoverIndentGuideId}
+              removeHoverIndentGuideId={removeHoverIndentGuideId}
             />
             <a
               className={`span-name ${isDetailExpanded ? 'is-detail-expanded' : ''}`}

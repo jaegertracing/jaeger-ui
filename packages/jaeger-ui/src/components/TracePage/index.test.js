@@ -768,6 +768,9 @@ describe('mapStateToProps()', () => {
         archiveEnabled: false,
       },
       archive: {},
+      traceTimeline: {
+        hoverIndentGuideIds: new Set(['1', '2']),
+      },
     };
   });
   it('maps state to props correctly', () => {
@@ -779,6 +782,9 @@ describe('mapStateToProps()', () => {
       archiveTraceState: undefined,
       searchUrl: null,
       trace: { data: {}, state: fetchedState.DONE },
+      traceTimeline: {
+        hoverIndentGuideIds: new Set(['1', '2']),
+      },
     });
   });
 
@@ -810,6 +816,9 @@ describe('mapStateToProps()', () => {
       archiveTraceState: undefined,
       searchUrl: fakeUrl,
       trace: { data: {}, state: fetchedState.DONE },
+      traceTimeline: {
+        hoverIndentGuideIds: new Set(['1', '2']),
+      },
     });
   });
 });

@@ -26,7 +26,17 @@ import { TExtractUiFindFromStateReturn } from '../../common/UiFindInput';
 
 import './index.css';
 
-type TDispatchProps = {
+type TProps = TExtractUiFindFromStateReturn & {
+  registerAccessors: (accessors: Accessors) => void;
+  findMatchesIDs: Set<string> | TNil;
+  scrollToFirstVisibleSpan: () => void;
+  traceTimeline: TTraceTimeline;
+  trace: Trace;
+  updateNextViewRangeTime: (update: ViewRangeTimeUpdate) => void;
+  updateViewRangeTime: TUpdateViewRangeTimeFunction;
+  viewRange: IViewRange;
+  focusSpan: (uiFind: string) => void;
+
   setSpanNameColumnWidth: (width: number) => void;
   collapseAll: (spans: Span[]) => void;
   collapseOne: (spans: Span[]) => void;
@@ -43,20 +53,9 @@ type TDispatchProps = {
   detailTagsToggle: (spanID: string) => void;
   detailToggle: (spanID: string) => void;
   setTrace: (trace: Trace | TNil, uiFind: string | TNil) => void;
+  addHoverIndentGuideId: (spanID: string) => void;
+  removeHoverIndentGuideId: (spanID: string) => void;
 };
-
-type TProps = TDispatchProps &
-  TExtractUiFindFromStateReturn & {
-    registerAccessors: (accessors: Accessors) => void;
-    findMatchesIDs: Set<string> | TNil;
-    scrollToFirstVisibleSpan: () => void;
-    traceTimeline: TTraceTimeline;
-    trace: Trace;
-    updateNextViewRangeTime: (update: ViewRangeTimeUpdate) => void;
-    updateViewRangeTime: TUpdateViewRangeTimeFunction;
-    viewRange: IViewRange;
-    focusSpan: (uiFind: string) => void;
-  };
 
 const NUM_TICKS = 5;
 

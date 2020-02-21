@@ -76,6 +76,8 @@ type TDispatchPropsTimelineViewer = {
   detailTagsToggle: (spanID: string) => void;
   detailToggle: (spanID: string) => void;
   setTrace: (trace: Trace | TNil, uiFind: string | TNil) => void;
+  addHoverIndentGuideId: (spanID: string) => void;
+  removeHoverIndentGuideId: (spanID: string) => void;
 };
 
 type TDispatchProps = TDispatchPropsTimelineViewer & {

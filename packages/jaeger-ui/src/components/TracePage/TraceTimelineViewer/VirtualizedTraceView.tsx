@@ -62,6 +62,9 @@ type TVirtualizedTraceViewOwnProps = {
   detailToggle: (spanID: string) => void;
   setSpanNameColumnWidth: (width: number) => void;
   setTrace: (trace: Trace | TNil, uiFind: string | TNil) => void;
+  hoverIndentGuideIds: Set<string>;
+  addHoverIndentGuideId: (spanID: string) => void;
+  removeHoverIndentGuideId: (spanID: string) => void;
 };
 
 type VirtualizedTraceViewProps = TVirtualizedTraceViewOwnProps &
@@ -311,6 +314,9 @@ export default class VirtualizedTraceView extends React.Component<VirtualizedTra
       spanNameColumnWidth,
       trace,
       focusSpan,
+      hoverIndentGuideIds,
+      addHoverIndentGuideId,
+      removeHoverIndentGuideId,
     } = this.props;
     // to avert flow error
     if (!trace) {
@@ -355,6 +361,9 @@ export default class VirtualizedTraceView extends React.Component<VirtualizedTra
           traceStartTime={trace.startTime}
           span={span}
           focusSpan={focusSpan}
+          hoverIndentGuideIds={hoverIndentGuideIds}
+          addHoverIndentGuideId={addHoverIndentGuideId}
+          removeHoverIndentGuideId={removeHoverIndentGuideId}
         />
       </div>
     );
@@ -375,6 +384,9 @@ export default class VirtualizedTraceView extends React.Component<VirtualizedTra
       spanNameColumnWidth,
       trace,
       focusSpan,
+      hoverIndentGuideIds,
+      addHoverIndentGuideId,
+      removeHoverIndentGuideId,
     } = this.props;
     const detailState = detailStates.get(spanID);
     if (!trace || !detailState) {
@@ -398,6 +410,9 @@ export default class VirtualizedTraceView extends React.Component<VirtualizedTra
           tagsToggle={detailTagsToggle}
           traceStartTime={trace.startTime}
           focusSpan={focusSpan}
+          hoverIndentGuideIds={hoverIndentGuideIds}
+          addHoverIndentGuideId={addHoverIndentGuideId}
+          removeHoverIndentGuideId={removeHoverIndentGuideId}
         />
       </div>
     );

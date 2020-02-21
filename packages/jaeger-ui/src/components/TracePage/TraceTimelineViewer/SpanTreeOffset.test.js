@@ -17,7 +17,7 @@ import React from 'react';
 import IoChevronRight from 'react-icons/lib/io/chevron-right';
 import IoIosArrowDown from 'react-icons/lib/io/ios-arrow-down';
 
-import { mapDispatchToProps, mapStateToProps, UnconnectedSpanTreeOffset } from './SpanTreeOffset';
+import SpanTreeOffset from './SpanTreeOffset';
 import spanAncestorIdsSpy from '../../../utils/span-ancestor-ids';
 
 jest.mock('../../../utils/span-ancestor-ids');
@@ -42,13 +42,13 @@ describe('SpanTreeOffset', () => {
         spanID: ownSpanID,
       },
     };
-    wrapper = shallow(<UnconnectedSpanTreeOffset {...props} />);
+    wrapper = shallow(<SpanTreeOffset {...props} />);
   });
 
   describe('.SpanTreeOffset--indentGuide', () => {
     it('renders only one .SpanTreeOffset--indentGuide for entire trace if span has no ancestors', () => {
       spanAncestorIdsSpy.mockReturnValue([]);
-      wrapper = shallow(<UnconnectedSpanTreeOffset {...props} />);
+      wrapper = shallow(<SpanTreeOffset {...props} />);
       const indentGuides = wrapper.find('.SpanTreeOffset--indentGuide');
       expect(indentGuides.length).toBe(1);
       expect(indentGuides.prop('data-ancestor-id')).toBe(specialRootID);
@@ -64,7 +64,7 @@ describe('SpanTreeOffset', () => {
 
     it('adds .is-active to correct indentGuide', () => {
       props.hoverIndentGuideIds = new Set([parentSpanID]);
-      wrapper = shallow(<UnconnectedSpanTreeOffset {...props} />);
+      wrapper = shallow(<SpanTreeOffset {...props} />);
       const activeIndentGuide = wrapper.find('.is-active');
       expect(activeIndentGuide.length).toBe(1);
       expect(activeIndentGuide.prop('data-ancestor-id')).toBe(parentSpanID);
@@ -139,31 +139,6 @@ describe('SpanTreeOffset', () => {
       wrapper.find('.SpanTreeOffset--iconWrapper').simulate('mouseleave', {});
       expect(props.removeHoverIndentGuideId).toHaveBeenCalledTimes(1);
       expect(props.removeHoverIndentGuideId).toHaveBeenCalledWith(ownSpanID);
-    });
-  });
-
-  describe('mapDispatchToProps()', () => {
-    it('creates the actions correctly', () => {
-      expect(mapDispatchToProps(() => {})).toEqual({
-        addHoverIndentGuideId: expect.any(Function),
-        removeHoverIndentGuideId: expect.any(Function),
-      });
-    });
-  });
-
-  describe('mapStateToProps()', () => {
-    it('maps state to props correctly', () => {
-      const hoverIndentGuideIds = new Set([parentSpanID]);
-      const state = {
-        traceTimeline: {
-          hoverIndentGuideIds,
-        },
-      };
-      const mappedProps = mapStateToProps(state);
-      expect(mappedProps).toEqual({
-        hoverIndentGuideIds,
-      });
-      expect(mappedProps.hoverIndentGuideIds).toBe(hoverIndentGuideIds);
     });
   });
 });

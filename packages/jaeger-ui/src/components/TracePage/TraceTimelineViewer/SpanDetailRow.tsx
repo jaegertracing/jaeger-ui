@@ -38,6 +38,9 @@ type SpanDetailRowProps = {
   tagsToggle: (spanID: string) => void;
   traceStartTime: number;
   focusSpan: (uiFind: string) => void;
+  hoverIndentGuideIds: Set<string>;
+  addHoverIndentGuideId: (spanID: string) => void;
+  removeHoverIndentGuideId: (spanID: string) => void;
 };
 
 export default class SpanDetailRow extends React.PureComponent<SpanDetailRowProps> {
@@ -64,11 +67,20 @@ export default class SpanDetailRow extends React.PureComponent<SpanDetailRowProp
       tagsToggle,
       traceStartTime,
       focusSpan,
+      hoverIndentGuideIds,
+      addHoverIndentGuideId,
+      removeHoverIndentGuideId,
     } = this.props;
     return (
       <TimelineRow className="detail-row">
         <TimelineRow.Cell width={columnDivision}>
-          <SpanTreeOffset span={span} showChildrenIcon={false} />
+          <SpanTreeOffset
+            span={span}
+            showChildrenIcon={false}
+            hoverIndentGuideIds={hoverIndentGuideIds}
+            addHoverIndentGuideId={addHoverIndentGuideId}
+            removeHoverIndentGuideId={removeHoverIndentGuideId}
+          />
           <span>
             <span
               className="detail-row-expanded-accent"
