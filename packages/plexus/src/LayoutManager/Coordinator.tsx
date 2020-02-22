@@ -353,7 +353,6 @@ export default class Coordinator {
     console.log(pixelPathDotTranslateEdges, madeEdges, cleanedEdges);
 
     if (phase === EWorkerPhase.Positions) {
-      // TODO:
       if (nomogram && nomogram.shouldTransition) {
         this.callback({
           type: ECoordinatorPhase.Positions,

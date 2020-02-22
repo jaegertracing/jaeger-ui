@@ -25,7 +25,6 @@ export enum ECoordinatorPhase {
   Edges = 'Edges',
   NotStarted = 'NotStarted',
   Positions = 'Positions',
-  Reposition = 'Reposition',
 }
 
 export enum EWorkerPhase {

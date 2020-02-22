@@ -126,7 +126,6 @@ export default class ZoomManager {
   }
 
   public pan(panX: number, panY: number) {
-    console.log(this.elem, this.selection);
     const selection = this.selection;
     this.currentTransform = this.currentTransform.translate(panX, panY);
     if (selection) this.zoom.transform(selection, this.currentTransform);
