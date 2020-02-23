@@ -317,44 +317,37 @@ export default function getLayout({
       const edges: Set<TEdge> = new Set();
       const vertices: TSizeVertex[] = [v];
       let anchorKey: undefined | string;
-      let anchorDirection: undefined | 'from' | 'to';
+      let anchorDirection: undefined | TDir;
 
-      /*
-      function processEdges(dir: TDir) {
+      const processEdges = (dir: TDir, key: string) => {
+        if (key === anchorKey && anchorDirection === dir) return;
+        const dirEdges = edgesBy[dir].get(key);
+        if (dirEdges) {
+          Array.from(dirEdges.values()).forEach(edge => {
+            const connectedVertex = newVertices.get(edge[dirCompliment[dir]]);
+            if (connectedVertex) {
+              vertices.push(connectedVertex);
+              edges.add(edge);
+              newVertices.delete(edge[dirCompliment[dir]]);
+            } else if (!anchorKey) {
+              const anchorVertex = positionedVertices.get(edge[dirCompliment[dir]]);
+              if (anchorVertex) {
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                const { top: _t, left: _l, ...sizeAnchor } = anchorVertex;
+                vertices.push(sizeAnchor);
+                anchorKey = anchorVertex.vertex.key;
+                anchorDirection = dirCompliment[dir];
+                edges.add(edge);
+              }
+            }
+          });
+        }
       }
-       */
 
       for(let i = 0; i < vertices.length; i++) {
         const vertex = vertices[i];
         const key = vertex.vertex.key;
-
-        for (let j = 0; j < dirs.length; j++) {
-          const dir: TDir = dirs[j];
-          if (key === anchorKey && anchorDirection === dir) continue;
-          const dirEdges = edgesBy[dir].get(key);
-          if (dirEdges) {
-            // TODO do right:
-            // eslint-disable-next-line no-loop-func
-            Array.from(dirEdges.values()).forEach(edge => {
-              const connectedVertex = newVertices.get(edge[dirCompliment[dir]]);
-              if (connectedVertex) {
-                vertices.push(connectedVertex);
-                edges.add(edge);
-                newVertices.delete(edge[dirCompliment[dir]]);
-              } else if (!anchorKey) {
-                const anchorVertex = positionedVertices.get(edge[dirCompliment[dir]]);
-                if (anchorVertex) {
-                  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                  const { top: _t, left: _l, ...sizeAnchor } = anchorVertex;
-                  vertices.push(sizeAnchor);
-                  anchorKey = anchorVertex.vertex.key;
-                  anchorDirection = dir;
-                  edges.add(edge);
-                }
-              }
-            });
-          }
-        }
+        dirs.forEach(dir => processEdges(dir, key));
       }
 
       if (!anchorKey || !anchorDirection) throw new Error('New vertices not connected to graph');
