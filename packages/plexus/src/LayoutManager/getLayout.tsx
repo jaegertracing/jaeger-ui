@@ -14,10 +14,11 @@
 
 import viz from 'viz.js/viz.js';
 
+import DEFAULT_GRAPH_ATTRS from './dot/constants';
 import convPlain from './dot/convPlain';
-import toDot, { DEFAULT_GRAPH_ATTRS } from './dot/toDot';
+import toDot from './dot/toDot';
 
-import { TWorkerOutputMessage, TWorkerInputMessage, EWorkerPhase, TLayoutOptions } from './types';
+import { TWorkerOutputMessage, TWorkerInputMessage, EWorkerPhase } from './types';
 import { TEdge, TLayoutEdge, TLayoutGraph, TLayoutVertex, TNomogram, TSizeVertex } from '../types';
 
 enum EValidity {
@@ -43,7 +44,6 @@ type TValidityWarn = {
 
 type TVerticesValidity = TValidityError | TValidityOk | TValidityWarn;
 
-// const SHIFT_THRESHOLD = 1e-5;
 const SHIFT_THRESHOLD = 1e-3;
 
 function isCloseEnough(a: number, b: number) {
@@ -54,9 +54,6 @@ function getVerticesValidity(
   input: TSizeVertex[] | TLayoutVertex[],
   output: TLayoutVertex[]
 ): TVerticesValidity {
-  // TODO don't check left/top between input and output when re-positioning
-  return { validity: EValidity.Ok, message: null };
-  /*
   const inputHash: { [key: string]: TSizeVertex | TLayoutVertex } = {};
   input.forEach(v => {
     inputHash[String(v.vertex.key)] = v;
@@ -99,7 +96,6 @@ function getVerticesValidity(
     return { validity: EValidity.Error, message: `Missing ${word}: ${missingKeys.join(', ')}` };
   }
   return warn || { validity: EValidity.Ok, message: null };
-   */
 }
 
 type TGraft = {
@@ -144,7 +140,6 @@ export default function getLayout({
     });
   });
 
-  // TODO: return zoom pan
   function reframeVertices(): TLayoutGraph {
     let mostLeft: number | undefined;
     let mostRight: number | undefined;
@@ -164,7 +159,6 @@ export default function getLayout({
     if (mostBottom === undefined || mostLeft === undefined || mostRight === undefined || mostTop === undefined) throw new Error('No position vertices');
 
     if (mostLeft !== 0 || mostBottom !== 0) {
-      // console.log({ mostLeft, mostBottom });
       positionedVertices.forEach(({ left, top, ...rest }, key) => {
         positionedVertices.set(key, {
           ...rest,
@@ -175,15 +169,6 @@ export default function getLayout({
         });
       });
     }
-
-      /*
-    console.log({
-      mostLeft,
-      mostRight,
-      mostTop,
-      mostBottom,
-    });
-       */
 
     return {
       scale: 1,
@@ -215,21 +200,6 @@ export default function getLayout({
           },
         };
         movedEdges.set(edge.edge, movedEdge);
-        // console.log('close enough');
-      } else {
-        // console.log('not close enough');
-        if (phase === EWorkerPhase.Edges) {
-          /*
-          console.log(JSON.stringify({
-            fromTopDelta,
-            toTopDelta,
-            topCloseEnough: isCloseEnough(fromTopDelta, toTopDelta),
-            fromLeftDelta,
-            toLeftDelta,
-            leftCloseEnough: isCloseEnough(fromLeftDelta, toLeftDelta ),
-          }, null, 2));
-           */
-        }
       }
     });
 
@@ -254,7 +224,7 @@ export default function getLayout({
     const { panX: prevPanX = 0, panY: prevPanY = 0 } = prevNomogram || {};
     const nomogram = {
       panX: prevPanX + left - newLoc.left,
-      panY: prevPanY + (prevGraph.height - top) - (graph.height - newLoc.top), // gotta do graph top delta again
+      panY: prevPanY + (prevGraph.height - top) - (graph.height - newLoc.top),
       shouldTransition: false,
     };
     const movedEdges = reframeEdges(graph);
@@ -263,7 +233,6 @@ export default function getLayout({
     const newEdges = new Map<TEdge, TLayoutEdge>(edges ? edges.map(e => [e.edge, e]) : []);
 
     if (result.validity === EValidity.Error) {
-      // console.log('error');
       const message = result.message;
       return {
         graph,
@@ -276,7 +245,6 @@ export default function getLayout({
       };
     }
     if (result.validity === EValidity.Warn) {
-      // console.log('only warn');
       return {
         graph,
         newEdges,
@@ -294,8 +262,6 @@ export default function getLayout({
     const notSlidKeys: Set<string> = new Set(positionedVertices.keys());
     const newVertices: Map<string, TSizeVertex> = new Map(inNewVertices);
 
-    // const edgesByFrom: Map<string, Map<string, TEdge>> = new Map();
-    // const edgesByTo: Map<string, Map<string, TEdge>> = new Map();
     type TDir = 'to' | 'from';
     const dirs: TDir[] = ['to', 'from'];
     const dirCompliment: { [P in TDir]: TDir } = { 'to': 'from', 'from': 'to' };
@@ -307,8 +273,6 @@ export default function getLayout({
         else edgesBy[dir].set(edge[dir], new Map([[edge[dirCompliment[dir]], edge]]));
       });
     });
-
-    // console.log('made edges');
 
     const graftQueue: TGraft[] = [];
     while(newVertices.size) {
@@ -359,8 +323,6 @@ export default function getLayout({
       });
     }
 
-    // console.log('made grafts');
-    // console.log(graftQueue);
 
     if (graftQueue.length) {
       if (!prevGraph) throw new Error('Cannot have new vertices without previous graph');
@@ -378,18 +340,14 @@ export default function getLayout({
         const plainOut = viz(dot, options);
         const { edges: graftEdges, graph: graftGraph, vertices: graftVerticesArr } = convPlain(plainOut, true);
 
-        // console.log('made grapht');
-
         const graftVertices: Map<string, TLayoutVertex> = new Map();
         graftVerticesArr.forEach(v => graftVertices.set(v.vertex.key, v));
         const graftAnchor = graftVertices.get(anchorKey);
-        // console.log(graftAnchor, graftVertices, anchorKey, anchorVertex);
         if (!graftAnchor) throw new Error(`Anchor not in graft: ${anchorKey}`);
-        // console.log('got graftAnchor');
         const { top: graftAnchorTop, left: graftAnchorLeft } = graftAnchor;
         const leftAdjust = anchorLeft - graftAnchorLeft;
         const topAdjust = anchorTop - graftAnchorTop;
-        if (graftEdges) { // TODO: If not necessary when true given to convPlain
+        if (graftEdges) {
           graftEdges.forEach(e => {
             const from = graftVertices.get(e.edge.from);
             if (!from) throw new Error('From missing');
@@ -404,8 +362,6 @@ export default function getLayout({
           });
         }
 
-        // console.log('made graft edges');
-
         let slideDimension: 'top' | 'left';
         let otherDimension: 'top' | 'left';
         let slideCheckAttribute: 'height' | 'width';
@@ -419,7 +375,6 @@ export default function getLayout({
 
         const dir = (layoutOptions && layoutOptions.rankdir) || DEFAULT_GRAPH_ATTRS.rankdir;
         if (dir === 'BT' || dir === 'TB' ) {
-          // console.log('TB or BT');
           slideDimension = 'top';
           otherDimension = 'left';
           slideCheckAttribute = 'height';
@@ -427,7 +382,6 @@ export default function getLayout({
           if (dir === 'TB') slideSectionDirection *= -1;
 
         } else if (dir === 'LR' || dir === 'RL') {
-          // console.log('LR');
           slideDimension = 'left';
           otherDimension = 'top';
           slideCheckAttribute = 'width';
@@ -439,14 +393,11 @@ export default function getLayout({
 
         const SEP_PERCENTAGE = 0.8; /* TODO: tweak percentage */
 
-        // TODO: everything after here shouldn't be divided by ifs
         const slideThreshold = anchorVertex[slideDimension] + (slideSectionDirection * (anchorVertex[slideCheckAttribute] / 2 + SEP_PERCENTAGE * ranksep));
         const slideDivisor = anchorVertex[otherDimension];
         const collisionLimit = slideThreshold + (slideSectionDirection * (graftGraph[slideCheckAttribute] - graftAnchor[slideCheckAttribute] + SEP_PERCENTAGE * ranksep));
         const collisionLowerBound = slideDivisor - (graftGraph[otherAttribute] - graftAnchor[otherDimension]) - SEP_PERCENTAGE * nodesep;
         const collisionUpperBound = collisionLowerBound + graftGraph[otherAttribute] + 2 * SEP_PERCENTAGE * nodesep;
-
-        // console.log('going to see if need to slide');
 
         positionedVertices.forEach(existingVertex => {
           const slideThresholdCompareVal = existingVertex[slideDimension] + (slideSectionDirection * existingVertex[slideCheckAttribute] / 2);
@@ -470,11 +421,7 @@ export default function getLayout({
           }
         });
 
-        // console.log('slide necessity calculated');
-
         if (lowerSlideDistance) {
-          // shouldTransition = true;
-          // console.log('need to lower slide', lowerSlideCandidates.length);
           lowerSlideCandidates.forEach(vertex => {
             notSlidKeys.delete(vertex.vertex.key);
             positionedVertices.set(vertex.vertex.key, {
@@ -485,8 +432,6 @@ export default function getLayout({
         }
 
         if (upperSlideDistance) {
-          // shouldTransition = true;
-          // console.log('need to upper slide', upperSlideCandidates.length);
           upperSlideCandidates.forEach(vertex => {
             notSlidKeys.delete(vertex.vertex.key);
             positionedVertices.set(vertex.vertex.key, {

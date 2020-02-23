@@ -56,7 +56,6 @@ export default class SvgEdge<U = {}> extends React.PureComponent<TProps<U>> {
     const d = makePathD(pathPoints);
     const markerEnd = makeIriRef(renderUtils, markerEndId);
     const markerStart = makeIriRef(renderUtils, markerStartId);
-    // if (translate) console.log('got a translated edge', layoutEdge.edge.from, layoutEdge.edge.to);
     const { x = 0, y = 0 } = translate || {};
     const customProps = assignMergeCss(
       {
@@ -65,7 +64,6 @@ export default class SvgEdge<U = {}> extends React.PureComponent<TProps<U>> {
       getProps(setOnEdge, layoutEdge, renderUtils),
       {
         transform: `translate(${x},${y})`,
-        // style: { transition: 'transform 2s' },
       }
     );
     return (

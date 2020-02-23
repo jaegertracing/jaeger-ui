@@ -63,7 +63,6 @@ function mapVertices<T extends TSizeVertex, U extends TSizeVertex>(vertices: Map
     const id = String(keyToId.size + (prevIds ? prevIds.size : 0));
     keyToId.set(key, id);
     idToVertex.set(id, v);
-    // TODO remove cast
     mappedVertices.set(id, { ...v, vertex: { key: id } });
   });
   return {
@@ -101,7 +100,7 @@ export default function convInputs({
   inNewVertices: TGetLayout['newVertices'];
   inPositionedEdges: TGetLayout['positionedEdges'];
   inNewEdges: TGetLayout['newEdges'];
-}) /* : Omit<TGetLayout, 'prevGraph'> */ {
+}) {
   const { keyToId, idToVertex, mappedVertices: positionedVertices } = mapVertices<TLayoutVertex, TSizeVertex>(inPositionedVertices);
   const { keyToId: moreKeyToId, idToVertex: moreIdToVertex, mappedVertices: newVertices } = mapVertices<TSizeVertex, TLayoutVertex>(inNewVertices, keyToId);
   moreKeyToId.forEach((v, k) => keyToId.set(k, v));

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { TEdge, TLayoutEdge, TLayoutGraph, TLayoutVertex, TNomogram, TSizeVertex } from '../../types';
+import { TLayoutEdge, TLayoutGraph, TLayoutVertex, TNomogram, TSizeVertex } from '../../types';
 
 const round = Math.round;
 
@@ -98,8 +98,7 @@ export function nomogramToPixels(nomogram: TNomogram): TNomogram {
   const { panX, panY, shouldTransition } = nomogram;
   return {
     panX: panX * DPI,
-    // TODO negate or height - or anything?
-    panY: panY * DPI, // * -1,
+    panY: panY * DPI,
     shouldTransition,
   };
 }

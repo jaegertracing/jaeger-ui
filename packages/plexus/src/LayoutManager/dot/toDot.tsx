@@ -12,20 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import DEFAULT_GRAPH_ATTRS from './constants';
 import { TLayoutOptions } from '../types';
 import { TEdge, TLayoutVertex, TSizeVertex, TVertexKey } from '../../types';
 
 const GRAPH_FOOTER = `}`;
-
-// TODO move
-export const DEFAULT_GRAPH_ATTRS = {
-  nodesep: 1.5,
-  rankdir: 'LR',
-  ranksep: 5,
-  sep: 0.5,
-  shape: 'box',
-  splines: 'true',
-};
 
 function makeGraphWrapper(options?: TLayoutOptions | null) {
   const { nodesep, rankdir, ranksep, sep, shape, splines } = { ...DEFAULT_GRAPH_ATTRS, ...options };

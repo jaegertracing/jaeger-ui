@@ -68,49 +68,6 @@ export default class MeasurableNodesLayer<T = {}, U = {}> extends React.PureComp
     };
   }
 
-  /*
-  shouldComponentUpdate(nextProps: TProps<T, U>, nextState: TState<T>) {
-    let rv = false;
-    Object.keys(nextProps).forEach((key) => {
-      const k = key as keyof TProps<T, U>;
-      if (nextProps[k] !== this.props[k]) {
-        rv = true;
-        console.log(`${k} changed in measurable layer props`);
-      }
-    });
-    if (!rv) {
-    Object.keys(nextState).forEach((key) => {
-      const k = key as keyof TState<T>;
-      if (nextState[k] !== this.state[k]) {
-        rv = true;
-        console.log(`${k} changed in measurable layer state`);
-      }
-    });
-    }
-    return rv;
-  }
-   */
-
-
-
-  constructor(props: TProps<T, U>) {
-    super(props);
-    const { graphState } = props;
-    const { vertices } = graphState;
-    this.state = {
-      vertices,
-      nodeRefs: createRefs<MeasurableNode<T>>(vertices.length),
-    };
-  }
-
-  componentDidMount() {
-    this.measureNodes(this.props.graphState.vertices, this.props.graphState.edges);
-  }
-
-  componentDidUpdate() {
-    this.measureNodes(this.props.graphState.vertices, this.props.graphState.edges);
-  }
-
   private vertexToMeasured: WeakMap<TVertex<T>, TSizeVertex<T>> = new WeakMap();
 
   private measureNodes: (vertices: TVertex<T>[], edges: TEdge<U>[]) => void = memoizeOne((vertices: TVertex<T>[], edges: TEdge<U>[]) => {
@@ -156,9 +113,27 @@ export default class MeasurableNodesLayer<T = {}, U = {}> extends React.PureComp
     setSizeVertices(senderKey, sizeVertices);
   });
 
+
+  constructor(props: TProps<T, U>) {
+    super(props);
+    const { graphState } = props;
+    const { vertices } = graphState;
+    this.state = {
+      vertices,
+      nodeRefs: createRefs<MeasurableNode<T>>(vertices.length),
+    };
+  }
+
+  componentDidMount() {
+    this.measureNodes(this.props.graphState.vertices, this.props.graphState.edges);
+  }
+
+  componentDidUpdate() {
+    this.measureNodes(this.props.graphState.vertices, this.props.graphState.edges);
+  }
+
   render() {
     const { nodeRefs } = this.state;
-    // console.log('measurable layer render');
     if (nodeRefs) {
       const {
         getClassName,

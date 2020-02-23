@@ -54,7 +54,6 @@ export default class MeasurableNodes<T = {}> extends React.Component<TProps<T>> 
       renderNode,
       setOnNode,
     } = this.props;
-    // console.log('measurable nodes render');
     return vertices.map((vertex, i) => (
       <MeasurableNode<T>
         key={vertex.key}

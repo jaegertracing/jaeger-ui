@@ -225,7 +225,6 @@ export default class DdgNodeContent extends React.PureComponent<TProps, TState> 
   render() {
     const { childrenVisibility, parentVisibility } = this.state;
     const { focalNodeUrl, isFocalNode, isPositioned, operation, service } = this.props;
-    // console.log('ddg node render');
 
     const { radius, svcWidth, opWidth, svcMarginTop } = calcPositioning(service, operation);
     const scaleFactor = RADIUS / radius;
