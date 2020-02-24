@@ -25,6 +25,7 @@ import TTraceTimeline from '../../../types/TTraceTimeline';
 import { TExtractUiFindFromStateReturn } from '../../common/UiFindInput';
 
 import './index.css';
+import ExternalLinkContext from '../url/externalLinkContext';
 
 type TDispatchProps = {
   setSpanNameColumnWidth: (width: number) => void;
@@ -56,6 +57,7 @@ type TProps = TDispatchProps &
     updateViewRangeTime: TUpdateViewRangeTimeFunction;
     viewRange: IViewRange;
     focusSpan: (uiFind: string) => void;
+    createLinkToExternalSpan: (traceID: string, spanID: string) => string;
   };
 
 const NUM_TICKS = 5;
@@ -98,33 +100,36 @@ export default class TraceTimelineViewer extends React.PureComponent<TProps> {
       updateNextViewRangeTime,
       updateViewRangeTime,
       viewRange,
+      createLinkToExternalSpan,
       traceTimeline,
       ...rest
     } = this.props;
     const { trace } = rest;
 
     return (
-      <div className="TraceTimelineViewer">
-        <TimelineHeaderRow
-          duration={trace.duration}
-          nameColumnWidth={traceTimeline.spanNameColumnWidth}
-          numTicks={NUM_TICKS}
-          onCollapseAll={this.collapseAll}
-          onCollapseOne={this.collapseOne}
-          onColummWidthChange={setSpanNameColumnWidth}
-          onExpandAll={this.expandAll}
-          onExpandOne={this.expandOne}
-          viewRangeTime={viewRange.time}
-          updateNextViewRangeTime={updateNextViewRangeTime}
-          updateViewRangeTime={updateViewRangeTime}
-        />
-        <VirtualizedTraceView
-          {...rest}
-          {...traceTimeline}
-          setSpanNameColumnWidth={setSpanNameColumnWidth}
-          currentViewRangeTime={viewRange.time.current}
-        />
-      </div>
+      <ExternalLinkContext.Provider value={createLinkToExternalSpan}>
+        <div className="TraceTimelineViewer">
+          <TimelineHeaderRow
+            duration={trace.duration}
+            nameColumnWidth={traceTimeline.spanNameColumnWidth}
+            numTicks={NUM_TICKS}
+            onCollapseAll={this.collapseAll}
+            onCollapseOne={this.collapseOne}
+            onColummWidthChange={setSpanNameColumnWidth}
+            onExpandAll={this.expandAll}
+            onExpandOne={this.expandOne}
+            viewRangeTime={viewRange.time}
+            updateNextViewRangeTime={updateNextViewRangeTime}
+            updateViewRangeTime={updateViewRangeTime}
+          />
+          <VirtualizedTraceView
+            {...rest}
+            {...traceTimeline}
+            setSpanNameColumnWidth={setSpanNameColumnWidth}
+            currentViewRangeTime={viewRange.time.current}
+          />
+        </div>
+      </ExternalLinkContext.Provider>
     );
   }
 }

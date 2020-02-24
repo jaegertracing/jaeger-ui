@@ -137,6 +137,8 @@ export function makeShortcutCallbacks(adjRange: (start: number, end: number) => 
   return _mapValues(shortcutConfig, getHandler);
 }
 
+const createLinkToExternalSpan = (traceID: string, spanID: string) => `${getUrl(traceID)}/uiFind?=${spanID}`;
+
 // export for tests
 export class TracePageImpl extends React.PureComponent<TProps, TState> {
   state: TState;
@@ -447,6 +449,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
                 focusSpan={this.focusSpan}
                 uiFind={uiFind}
                 traceTimeline={traceTimeline}
+                createLinkToExternalSpan={createLinkToExternalSpan}
                 {...rest}
               />
             </section>
