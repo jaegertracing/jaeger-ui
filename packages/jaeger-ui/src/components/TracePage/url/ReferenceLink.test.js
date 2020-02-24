@@ -13,9 +13,10 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { shallow, mount } from 'enzyme';
 
 import ReferenceLink from './ReferenceLink';
+import ExternalLinkContext from './externalLinkContext';
 
 describe(ReferenceLink, () => {
   const focusMock = jest.fn();
@@ -44,9 +45,19 @@ describe(ReferenceLink, () => {
     });
 
     it('render for external trace', () => {
-      const component = shallow(<ReferenceLink reference={externalRef} focusSpan={focusMock} />);
-      const link = component.find('a[href="/trace/trace2/uiFind?=span2"]');
+      const component = mount(
+        <ExternalLinkContext.Provider value={(trace, span) => `${trace}/${span}`}>
+          <ReferenceLink reference={externalRef} focusSpan={focusMock} />
+        </ExternalLinkContext.Provider>
+      );
+      const link = component.find('a[href="trace2/span2"]');
       expect(link.length).toBe(1);
+    });
+
+    it('throws if ExternalLinkContext is not set', () => {
+      expect(() => mount(<ReferenceLink reference={externalRef} focusSpan={focusMock} />)).toThrow(
+        'ExternalLinkContext'
+      );
     });
   });
   describe('focus span', () => {

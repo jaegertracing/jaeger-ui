@@ -14,7 +14,7 @@
 
 import React from 'react';
 import { SpanReference } from '../../../types/trace';
-import { getUrl } from '.';
+import ExternalLinkContext from './externalLinkContext';
 
 type ReferenceLinkProps = {
   reference: SpanReference;
@@ -23,8 +23,6 @@ type ReferenceLinkProps = {
   focusSpan: (spanID: string) => void;
   onClick?: () => void;
 };
-
-const linkToExternalSpan = (traceID: string, spanID: string) => `${getUrl(traceID)}/uiFind?=${spanID}`;
 
 export default function ReferenceLink(props: ReferenceLinkProps) {
   const { reference, children, className, focusSpan, ...otherProps } = props;
@@ -36,15 +34,27 @@ export default function ReferenceLink(props: ReferenceLinkProps) {
       </a>
     );
   }
+
   return (
-    <a
-      href={linkToExternalSpan(reference.traceID, reference.spanID)}
-      target="_blank"
-      rel="noopener noreferrer"
-      className={className}
-      {...otherProps}
-    >
-      {children}
-    </a>
+    <ExternalLinkContext.Consumer>
+      {createLinkToExternalSpan => {
+        if (!createLinkToExternalSpan) {
+          throw new Error(
+            "ExternalLinkContext does not have a value, you probably forgot to setup it's provider"
+          );
+        }
+        return (
+          <a
+            href={createLinkToExternalSpan(reference.traceID, reference.spanID)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={className}
+            {...otherProps}
+          >
+            {children}
+          </a>
+        );
+      }}
+    </ExternalLinkContext.Consumer>
   );
 }

@@ -13,19 +13,19 @@
 // limitations under the License.
 
 import React from 'react';
-import { connect } from 'react-redux';
-import { bindActionCreators, Dispatch } from 'redux';
 
-import { actions } from './duck';
 import TimelineHeaderRow from './TimelineHeaderRow';
 import VirtualizedTraceView from './VirtualizedTraceView';
 import { merge as mergeShortcuts } from '../keyboard-shortcuts';
 import { Accessors } from '../ScrollManager';
 import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate } from '../types';
-import { TNil, ReduxState } from '../../../types';
-import { Span, Trace } from '../../../types/trace';
+import { TNil } from '../../../types';
+import { Span, Trace, Log } from '../../../types/trace';
+import TTraceTimeline from '../../../types/TTraceTimeline';
+import { TExtractUiFindFromStateReturn } from '../../common/UiFindInput';
 
 import './index.css';
+import ExternalLinkContext from '../url/externalLinkContext';
 
 type TDispatchProps = {
   setSpanNameColumnWidth: (width: number) => void;
@@ -33,18 +33,32 @@ type TDispatchProps = {
   collapseOne: (spans: Span[]) => void;
   expandAll: () => void;
   expandOne: (spans: Span[]) => void;
+
+  childrenToggle: (spanID: string) => void;
+  clearShouldScrollToFirstUiFindMatch: () => void;
+  detailLogItemToggle: (spanID: string, log: Log) => void;
+  detailLogsToggle: (spanID: string) => void;
+  detailWarningsToggle: (spanID: string) => void;
+  detailReferencesToggle: (spanID: string) => void;
+  detailProcessToggle: (spanID: string) => void;
+  detailTagsToggle: (spanID: string) => void;
+  detailToggle: (spanID: string) => void;
+  setTrace: (trace: Trace | TNil, uiFind: string | TNil) => void;
 };
 
-type TProps = TDispatchProps & {
-  registerAccessors: (accessors: Accessors) => void;
-  findMatchesIDs: Set<string> | TNil;
-  scrollToFirstVisibleSpan: () => void;
-  spanNameColumnWidth: number;
-  trace: Trace;
-  updateNextViewRangeTime: (update: ViewRangeTimeUpdate) => void;
-  updateViewRangeTime: TUpdateViewRangeTimeFunction;
-  viewRange: IViewRange;
-};
+type TProps = TDispatchProps &
+  TExtractUiFindFromStateReturn & {
+    registerAccessors: (accessors: Accessors) => void;
+    findMatchesIDs: Set<string> | TNil;
+    scrollToFirstVisibleSpan: () => void;
+    traceTimeline: TTraceTimeline;
+    trace: Trace;
+    updateNextViewRangeTime: (update: ViewRangeTimeUpdate) => void;
+    updateViewRangeTime: TUpdateViewRangeTimeFunction;
+    viewRange: IViewRange;
+    focusSpan: (uiFind: string) => void;
+    createLinkToExternalSpan: (traceID: string, spanID: string) => string;
+  };
 
 const NUM_TICKS = 5;
 
@@ -54,7 +68,7 @@ const NUM_TICKS = 5;
  * re-render the ListView every time the cursor is moved on the trace minimap
  * or `TimelineHeaderRow`.
  */
-export class TraceTimelineViewerImpl extends React.PureComponent<TProps> {
+export default class TraceTimelineViewer extends React.PureComponent<TProps> {
   componentDidMount() {
     mergeShortcuts({
       collapseAll: this.collapseAll,
@@ -86,45 +100,36 @@ export class TraceTimelineViewerImpl extends React.PureComponent<TProps> {
       updateNextViewRangeTime,
       updateViewRangeTime,
       viewRange,
+      createLinkToExternalSpan,
+      traceTimeline,
       ...rest
     } = this.props;
-    const { spanNameColumnWidth, trace } = rest;
+    const { trace } = rest;
 
     return (
-      <div className="TraceTimelineViewer">
-        <TimelineHeaderRow
-          duration={trace.duration}
-          nameColumnWidth={spanNameColumnWidth}
-          numTicks={NUM_TICKS}
-          onCollapseAll={this.collapseAll}
-          onCollapseOne={this.collapseOne}
-          onColummWidthChange={setSpanNameColumnWidth}
-          onExpandAll={this.expandAll}
-          onExpandOne={this.expandOne}
-          viewRangeTime={viewRange.time}
-          updateNextViewRangeTime={updateNextViewRangeTime}
-          updateViewRangeTime={updateViewRangeTime}
-        />
-        <VirtualizedTraceView {...rest} currentViewRangeTime={viewRange.time.current} />
-      </div>
+      <ExternalLinkContext.Provider value={createLinkToExternalSpan}>
+        <div className="TraceTimelineViewer">
+          <TimelineHeaderRow
+            duration={trace.duration}
+            nameColumnWidth={traceTimeline.spanNameColumnWidth}
+            numTicks={NUM_TICKS}
+            onCollapseAll={this.collapseAll}
+            onCollapseOne={this.collapseOne}
+            onColummWidthChange={setSpanNameColumnWidth}
+            onExpandAll={this.expandAll}
+            onExpandOne={this.expandOne}
+            viewRangeTime={viewRange.time}
+            updateNextViewRangeTime={updateNextViewRangeTime}
+            updateViewRangeTime={updateViewRangeTime}
+          />
+          <VirtualizedTraceView
+            {...rest}
+            {...traceTimeline}
+            setSpanNameColumnWidth={setSpanNameColumnWidth}
+            currentViewRangeTime={viewRange.time.current}
+          />
+        </div>
+      </ExternalLinkContext.Provider>
     );
   }
 }
-
-function mapStateToProps(state: ReduxState) {
-  const spanNameColumnWidth = state.traceTimeline.spanNameColumnWidth;
-  return { spanNameColumnWidth };
-}
-
-function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
-  const { setSpanNameColumnWidth, expandAll, expandOne, collapseAll, collapseOne } = bindActionCreators(
-    actions,
-    dispatch
-  );
-  return { setSpanNameColumnWidth, expandAll, expandOne, collapseAll, collapseOne };
-}
-
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(TraceTimelineViewerImpl);

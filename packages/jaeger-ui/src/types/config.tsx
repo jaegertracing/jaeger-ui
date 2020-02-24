@@ -42,10 +42,14 @@ export type Config = {
   deepDependencies?: { menuEnabled?: boolean };
   dependencies?: { dagMaxServicesLen?: number; menuEnabled?: boolean };
   menu: (ConfigMenuGroup | ConfigMenuItem)[];
-  search?: { maxLookback: { label: string; value: string } };
+  search?: { maxLookback: { label: string; value: string }; maxLimit: number };
   scripts?: TScript[];
   topTagPrefixes?: string[];
   tracking?: {
+    cookieToDimension?: {
+      cookie: string;
+      dimension: string;
+    }[];
     gaID: string | TNil;
     trackErrors: boolean | TNil;
   };
