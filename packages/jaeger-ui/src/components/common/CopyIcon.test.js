@@ -14,8 +14,8 @@
 
 import React from 'react';
 import { shallow } from 'enzyme';
-import { Button, Tooltip } from 'antd';
 import * as copy from 'copy-to-clipboard';
+import { UIButton, UITooltip } from '../TracePage/uiElementsContext';
 
 import CopyIcon from './CopyIcon';
 
@@ -47,24 +47,24 @@ describe('<CopyIcon />', () => {
     expect(wrapper.state().hasCopied).toBe(false);
     expect(copySpy).not.toHaveBeenCalled();
 
-    wrapper.find(Button).simulate('click');
+    wrapper.find(UIButton).simulate('click');
     expect(wrapper.state().hasCopied).toBe(true);
     expect(copySpy).toHaveBeenCalledWith(props.copyText);
   });
 
   it('updates state when tooltip hides and state.hasCopied is true', () => {
     wrapper.setState({ hasCopied: true });
-    wrapper.find(Tooltip).prop('onVisibleChange')(false);
+    wrapper.find(UITooltip).prop('onVisibleChange')(false);
     expect(wrapper.state().hasCopied).toBe(false);
 
     const state = wrapper.state();
-    wrapper.find(Tooltip).prop('onVisibleChange')(false);
+    wrapper.find(UITooltip).prop('onVisibleChange')(false);
     expect(wrapper.state()).toBe(state);
   });
 
   it('persists state when tooltip opens', () => {
     wrapper.setState({ hasCopied: true });
-    wrapper.find(Tooltip).prop('onVisibleChange')(true);
+    wrapper.find(UITooltip).prop('onVisibleChange')(true);
     expect(wrapper.state().hasCopied).toBe(true);
   });
 });

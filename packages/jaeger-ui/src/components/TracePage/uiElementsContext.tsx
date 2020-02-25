@@ -14,7 +14,7 @@
 
 import React from 'react';
 
-type TooltipPlacement =
+export type TooltipPlacement =
   | 'top'
   | 'left'
   | 'right'
@@ -27,18 +27,134 @@ type TooltipPlacement =
   | 'leftBottom'
   | 'rightTop'
   | 'rightBottom';
-type PopoverInterface = React.ComponentClass<
-  {
-    content?: React.ReactNode;
-    arrowPointAtCenter?: boolean;
-    overlayClassName?: string;
-    placement?: TooltipPlacement;
-    children?: React.ReactNode;
-  },
-  {}
->;
+export type PopoverProps = {
+  content?: React.ReactNode;
+  arrowPointAtCenter?: boolean;
+  overlayClassName?: string;
+  placement?: TooltipPlacement;
+  children?: React.ReactNode;
+};
+
+export const UIPopover: React.ComponentType<PopoverProps> = function UIPopover(props: PopoverProps) {
+  return (
+    <GetElementsContext>
+      {(elements: Elements) => {
+        return <elements.Popover {...props} />;
+      }}
+    </GetElementsContext>
+  );
+};
+
+type RenderFunction = () => React.ReactNode;
+export type TooltipProps = {
+  title?: React.ReactNode | RenderFunction;
+  getPopupContainer?: (triggerNode: Element) => HTMLElement;
+  overlayClassName?: string;
+  children?: React.ReactNode;
+  placement?: TooltipPlacement;
+  mouseLeaveDelay?: number;
+  arrowPointAtCenter?: boolean;
+  onVisibleChange?: (visible: boolean) => void;
+};
+
+export const UITooltip: React.ComponentType<TooltipProps> = function UITooltip(props: TooltipProps) {
+  return (
+    <GetElementsContext>
+      {(elements: Elements) => {
+        return <elements.Tooltip {...props} />;
+      }}
+    </GetElementsContext>
+  );
+};
+
+export type IconProps = {
+  type: string;
+  className?: string;
+  onClick?: React.MouseEventHandler<any>;
+};
+
+export const UIIcon: React.ComponentType<IconProps> = function UIIcon(props: IconProps) {
+  return (
+    <GetElementsContext>
+      {(elements: Elements) => {
+        return <elements.Icon {...props} />;
+      }}
+    </GetElementsContext>
+  );
+};
+
+export type DropdownProps = {
+  overlay: React.ReactNode;
+  placement?: 'topLeft' | 'topCenter' | 'topRight' | 'bottomLeft' | 'bottomCenter' | 'bottomRight';
+  trigger?: ('click' | 'hover' | 'contextMenu')[];
+  children?: React.ReactNode;
+};
+
+export const UIDropdown = function UIDropdown(props: DropdownProps) {
+  return (
+    <GetElementsContext>
+      {(elements: Elements) => {
+        return <elements.Dropdown {...props} />;
+      }}
+    </GetElementsContext>
+  );
+};
+
+export type MenuProps = {
+  children?: React.ReactNode;
+};
+
+export const UIMenu = function UIMenu(props: MenuProps) {
+  return (
+    <GetElementsContext>
+      {(elements: Elements) => {
+        return <elements.Menu {...props} />;
+      }}
+    </GetElementsContext>
+  );
+};
+
+export type MenuItemProps = {
+  children?: React.ReactNode;
+};
+
+export const UIMenuItem = function UIMenuItem(props: MenuItemProps) {
+  return (
+    <GetElementsContext>
+      {(elements: Elements) => {
+        return <elements.MenuItem {...props} />;
+      }}
+    </GetElementsContext>
+  );
+};
+
+export type ButtonHTMLType = 'submit' | 'button' | 'reset';
+export type ButtonProps = {
+  children?: React.ReactNode;
+  className?: string;
+  htmlType?: ButtonHTMLType;
+  icon?: string;
+  onClick?: React.MouseEventHandler<HTMLButtonElement>;
+};
+
+export const UIButton = function UIButton(props: ButtonProps) {
+  return (
+    <GetElementsContext>
+      {(elements: Elements) => {
+        return <elements.Button {...props} />;
+      }}
+    </GetElementsContext>
+  );
+};
+
 type Elements = {
-  Popover: PopoverInterface;
+  Popover: React.ComponentType<PopoverProps>;
+  Tooltip: React.ComponentType<TooltipProps>;
+  Icon: React.ComponentType<IconProps>;
+  Dropdown: React.ComponentType<DropdownProps>;
+  Menu: React.ComponentType<MenuProps>;
+  MenuItem: React.ComponentType<MenuItemProps>;
+  Button: React.ComponentType<ButtonProps>;
 };
 
 /**
@@ -68,15 +184,5 @@ export function GetElementsContext(props: GetElementsContextProps) {
         return props.children(value);
       }}
     </UIElementsContext.Consumer>
-  );
-}
-
-export function UIPopover(props: React.ComponentProps<PopoverInterface>) {
-  return (
-    <GetElementsContext>
-      {(elements: Elements) => {
-        return <elements.Popover {...props} />;
-      }}
-    </GetElementsContext>
   );
 }

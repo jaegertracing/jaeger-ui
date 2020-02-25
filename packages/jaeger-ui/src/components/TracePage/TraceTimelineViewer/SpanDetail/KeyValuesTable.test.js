@@ -14,11 +14,11 @@
 
 import React from 'react';
 import { shallow } from 'enzyme';
-import { Dropdown, Icon } from 'antd';
 
 import CopyIcon from '../../../common/CopyIcon';
 
 import KeyValuesTable, { LinkValue } from './KeyValuesTable';
+import { UIDropdown, UIIcon } from '../../uiElementsContext';
 
 describe('LinkValue', () => {
   const title = 'titleValue';
@@ -37,8 +37,8 @@ describe('LinkValue', () => {
   });
 
   it('renders correct Icon', () => {
-    expect(wrapper.find(Icon).hasClass('KeyValueTable--linkIcon')).toBe(true);
-    expect(wrapper.find(Icon).prop('type')).toBe('export');
+    expect(wrapper.find(UIIcon).hasClass('KeyValueTable--linkIcon')).toBe(true);
+    expect(wrapper.find(UIIcon).prop('type')).toBe('export');
   });
 });
 
@@ -105,8 +105,12 @@ describe('<KeyValuesTable>', () => {
             ]
           : [],
     });
-    const dropdown = wrapper.find(Dropdown);
-    const menu = shallow(dropdown.prop('overlay'));
+    const dropdown = wrapper.find(UIDropdown);
+    const overlay = shallow(dropdown.prop('overlay'));
+    // We have some wrappers here that dynamically inject specific component so we need to traverse a bit
+    // here
+    // eslint-disable-next-line react/prop-types
+    const menu = shallow(overlay.prop('children')({ Menu: ({ children }) => <div>{children}</div> }));
     const anchors = menu.find(LinkValue);
     expect(anchors).toHaveLength(2);
     const firstAnchor = anchors.first();

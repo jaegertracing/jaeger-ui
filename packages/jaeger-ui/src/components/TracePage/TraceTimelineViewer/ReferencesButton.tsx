@@ -13,10 +13,9 @@
 // limitations under the License.
 
 import React from 'react';
-import { Dropdown, Menu, Tooltip } from 'antd';
-import { TooltipPlacement } from 'antd/lib/tooltip';
 import NewWindowIcon from '../../common/NewWindowIcon';
 import { SpanReference } from '../../../types/trace';
+import { UITooltip, UIDropdown, UIMenuItem, UIMenu, TooltipPlacement } from '../uiElementsContext';
 
 import './ReferencesButton.css';
 import ReferenceLink from '../url/ReferenceLink';
@@ -30,11 +29,11 @@ type TReferencesButtonProps = {
 
 export default class ReferencesButton extends React.PureComponent<TReferencesButtonProps> {
   referencesList = (references: SpanReference[]) => (
-    <Menu>
+    <UIMenu>
       {references.map(ref => {
         const { span, spanID } = ref;
         return (
-          <Menu.Item key={`${spanID}`}>
+          <UIMenuItem key={`${spanID}`}>
             <ReferenceLink
               reference={ref}
               focusSpan={this.props.focusSpan}
@@ -45,10 +44,10 @@ export default class ReferencesButton extends React.PureComponent<TReferencesBut
                 : `(another trace) - ${ref.spanID}`}
               {!span && <NewWindowIcon />}
             </ReferenceLink>
-          </Menu.Item>
+          </UIMenuItem>
         );
       })}
-    </Menu>
+    </UIMenu>
   );
 
   render() {
@@ -64,20 +63,20 @@ export default class ReferencesButton extends React.PureComponent<TReferencesBut
 
     if (references.length > 1) {
       return (
-        <Tooltip {...tooltipProps}>
-          <Dropdown overlay={this.referencesList(references)} placement="bottomRight" trigger={['click']}>
+        <UITooltip {...tooltipProps}>
+          <UIDropdown overlay={this.referencesList(references)} placement="bottomRight" trigger={['click']}>
             <a className="ReferencesButton-MultiParent">{children}</a>
-          </Dropdown>
-        </Tooltip>
+          </UIDropdown>
+        </UITooltip>
       );
     }
     const ref = references[0];
     return (
-      <Tooltip {...tooltipProps}>
+      <UITooltip {...tooltipProps}>
         <ReferenceLink reference={ref} focusSpan={focusSpan} className="ReferencesButton-MultiParent">
           {children}
         </ReferenceLink>
-      </Tooltip>
+      </UITooltip>
     );
   }
 }

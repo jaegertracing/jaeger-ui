@@ -14,12 +14,12 @@
 
 import * as React from 'react';
 import jsonMarkup from 'json-markup';
-import { Dropdown, Icon, Menu } from 'antd';
 
 import CopyIcon from '../../../common/CopyIcon';
 
 import { TNil } from '../../../../types';
 import { KeyValuePair, Link } from '../../../../types/trace';
+import { UIDropdown, UIIcon, UIMenu, UIMenuItem } from '../../uiElementsContext';
 
 import './KeyValuesTable.css';
 
@@ -39,7 +39,7 @@ function parseIfComplexJson(value: any) {
 
 export const LinkValue = (props: { href: string; title?: string; children: React.ReactNode }) => (
   <a href={props.href} title={props.title} target="_blank" rel="noopener noreferrer">
-    {props.children} <Icon className="KeyValueTable--linkIcon" type="export" />
+    {props.children} <UIIcon className="KeyValueTable--linkIcon" type="export" />
   </a>
 );
 
@@ -48,15 +48,15 @@ LinkValue.defaultProps = {
 };
 
 const linkValueList = (links: Link[]) => (
-  <Menu>
+  <UIMenu>
     {links.map(({ text, url }, index) => (
       // `index` is necessary in the key because url can repeat
       // eslint-disable-next-line react/no-array-index-key
-      <Menu.Item key={`${url}-${index}`}>
+      <UIMenuItem key={`${url}-${index}`}>
         <LinkValue href={url}>{text}</LinkValue>
-      </Menu.Item>
+      </UIMenuItem>
     ))}
-  </Menu>
+  </UIMenu>
 );
 
 type KeyValuesTableProps = {
@@ -89,11 +89,11 @@ export default function KeyValuesTable(props: KeyValuesTableProps) {
             } else if (links && links.length > 1) {
               valueMarkup = (
                 <div>
-                  <Dropdown overlay={linkValueList(links)} placement="bottomRight" trigger={['click']}>
+                  <UIDropdown overlay={linkValueList(links)} placement="bottomRight" trigger={['click']}>
                     <a>
-                      {jsonTable} <Icon className="KeyValueTable--linkIcon" type="profile" />
+                      {jsonTable} <UIIcon className="KeyValueTable--linkIcon" type="profile" />
                     </a>
-                  </Dropdown>
+                  </UIDropdown>
                 </div>
               );
             } else {

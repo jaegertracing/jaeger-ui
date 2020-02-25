@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import React from 'react';
-import { Tooltip, Icon } from 'antd';
+import { UITooltip, UIIcon } from '../../uiElementsContext';
 
 import './TimelineCollapser.css';
 
@@ -43,18 +43,18 @@ export default class TimelineCollapser extends React.PureComponent<CollapserProp
     const { onExpandAll, onExpandOne, onCollapseAll, onCollapseOne } = this.props;
     return (
       <div className="TimelineCollapser" ref={this.containerRef}>
-        <Tooltip title={getTitle('Expand +1')} getPopupContainer={this.getContainer}>
-          <Icon type="right" onClick={onExpandOne} className="TimelineCollapser--btn-expand" />
-        </Tooltip>
-        <Tooltip title={getTitle('Collapse +1')} getPopupContainer={this.getContainer}>
-          <Icon type="right" onClick={onCollapseOne} className="TimelineCollapser--btn" />
-        </Tooltip>
-        <Tooltip title={getTitle('Expand All')} getPopupContainer={this.getContainer}>
-          <Icon type="double-right" onClick={onExpandAll} className="TimelineCollapser--btn-expand" />
-        </Tooltip>
-        <Tooltip title={getTitle('Collapse All')} getPopupContainer={this.getContainer}>
-          <Icon type="double-right" onClick={onCollapseAll} className="TimelineCollapser--btn" />
-        </Tooltip>
+        <UITooltip title={getTitle('Expand +1')} getPopupContainer={this.getContainer}>
+          <UIIcon type="right" onClick={onExpandOne} className="TimelineCollapser--btn-expand" />
+        </UITooltip>
+        <UITooltip title={getTitle('Collapse +1')} getPopupContainer={this.getContainer}>
+          <UIIcon type="right" onClick={onCollapseOne} className="TimelineCollapser--btn" />
+        </UITooltip>
+        <UITooltip title={getTitle('Expand All')} getPopupContainer={this.getContainer}>
+          <UIIcon type="double-right" onClick={onExpandAll} className="TimelineCollapser--btn-expand" />
+        </UITooltip>
+        <UITooltip title={getTitle('Collapse All')} getPopupContainer={this.getContainer}>
+          <UIIcon type="double-right" onClick={onCollapseAll} className="TimelineCollapser--btn" />
+        </UITooltip>
       </div>
     );
   }
