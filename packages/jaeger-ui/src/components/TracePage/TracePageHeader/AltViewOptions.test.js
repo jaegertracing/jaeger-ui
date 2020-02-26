@@ -14,10 +14,11 @@
 
 import * as React from 'react';
 import { shallow } from 'enzyme';
-import { Button, Dropdown } from 'antd';
+import { Dropdown } from 'antd';
 import { Link } from 'react-router-dom';
 import AltViewOptions from './AltViewOptions';
 import * as track from './TracePageHeader.track';
+import { ETraceViewType } from '../types';
 
 describe('AltViewOptions', () => {
   let trackGanttView;
@@ -43,9 +44,9 @@ describe('AltViewOptions', () => {
   };
 
   const props = {
-    selectedTraceView: 0,
+    viewType: ETraceViewType.TraceTimelineViewer,
     traceID: 'test trace ID',
-    onTraceGraphViewClicked: jest.fn(),
+    onTraceViewChange: jest.fn(),
   };
 
   beforeAll(() => {
@@ -81,50 +82,30 @@ describe('AltViewOptions', () => {
 
   it('track dropdown menu', () => {
     expect(trackGraphView).not.toHaveBeenCalled();
-    expect(props.onTraceGraphViewClicked).not.toHaveBeenCalled();
+    expect(props.onTraceViewChange).not.toHaveBeenCalled();
     getLink('Trace Graph').simulate('click');
     expect(trackGraphView).toHaveBeenCalledTimes(1);
-    expect(props.onTraceGraphViewClicked).toHaveBeenCalledTimes(1);
+    expect(props.onTraceViewChange).toHaveBeenCalledTimes(1);
     expect(trackStatisticsView).not.toHaveBeenCalled();
     getLink('Trace Statistics').simulate('click');
     expect(trackStatisticsView).toHaveBeenCalledTimes(1);
-    expect(props.onTraceGraphViewClicked).toHaveBeenCalledTimes(2);
+    expect(props.onTraceViewChange).toHaveBeenCalledTimes(2);
 
-    wrapper.setProps({ selectedTraceView: 1 });
+    wrapper.setProps({ viewType: ETraceViewType.TraceGraph });
     expect(trackGanttView).not.toHaveBeenCalled();
     getLink('Trace Timeline').simulate('click');
     expect(trackGanttView).toHaveBeenCalledTimes(1);
-    expect(props.onTraceGraphViewClicked).toHaveBeenCalledTimes(3);
+    expect(props.onTraceViewChange).toHaveBeenCalledTimes(3);
     getLink('Trace Statistics').simulate('click');
     expect(trackStatisticsView).toHaveBeenCalledTimes(2);
-    expect(props.onTraceGraphViewClicked).toHaveBeenCalledTimes(4);
+    expect(props.onTraceViewChange).toHaveBeenCalledTimes(4);
 
-    wrapper.setProps({ selectedTraceView: 2 });
+    wrapper.setProps({ viewType: 2 });
     getLink('Trace Timeline').simulate('click');
     expect(trackGanttView).toHaveBeenCalledTimes(2);
-    expect(props.onTraceGraphViewClicked).toHaveBeenCalledTimes(5);
+    expect(props.onTraceViewChange).toHaveBeenCalledTimes(5);
     getLink('Trace Graph').simulate('click');
     expect(trackGraphView).toHaveBeenCalledTimes(2);
-    expect(props.onTraceGraphViewClicked).toHaveBeenCalledTimes(6);
-  });
-
-  it('toggles and track toggle', () => {
-    wrapper.setProps({ selectedTraceView: 0 });
-    expect(trackGraphView).not.toHaveBeenCalled();
-    wrapper.find(Button).simulate('click');
-    expect(trackGraphView).toHaveBeenCalledTimes(1);
-    expect(props.onTraceGraphViewClicked).toHaveBeenCalledTimes(1);
-
-    wrapper.setProps({ selectedTraceView: 1 });
-    expect(trackStatisticsView).not.toHaveBeenCalled();
-    wrapper.find(Button).simulate('click');
-    expect(trackStatisticsView).toHaveBeenCalledTimes(1);
-    expect(props.onTraceGraphViewClicked).toHaveBeenCalledTimes(2);
-
-    wrapper.setProps({ selectedTraceView: 2 });
-    expect(trackGanttView).not.toHaveBeenCalled();
-    wrapper.find(Button).simulate('click');
-    expect(trackGanttView).toHaveBeenCalledTimes(1);
-    expect(props.onTraceGraphViewClicked).toHaveBeenCalledTimes(3);
+    expect(props.onTraceViewChange).toHaveBeenCalledTimes(6);
   });
 });

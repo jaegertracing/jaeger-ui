@@ -19,7 +19,7 @@ import MainTableData from './MainTableData';
 import DetailTableData from './DetailTableData';
 import HeaderTable from './HeaderTable';
 import TraceStatisticsHeader from './TraceStatisticsHeader';
-import PopupSQL from './PopupSQL';
+import PopupSql from './PopupSql';
 import transformTraceData from '../../../model/transform-trace-data';
 import { getColumnValues, getColumnValuesSecondDropdown } from './tableValues';
 
@@ -54,7 +54,7 @@ describe('<TraceTagOverview>', () => {
     expect(wrapper.state('valueNameSelector2')).toBe('No Item selected');
     expect(wrapper.find(MainTableData).length).toBe(2);
     expect(wrapper.find(DetailTableData).length).toBe(0);
-    expect(wrapper.find(PopupSQL).length).toBe(0);
+    expect(wrapper.find(PopupSql).length).toBe(0);
   });
 
   it('check search', () => {

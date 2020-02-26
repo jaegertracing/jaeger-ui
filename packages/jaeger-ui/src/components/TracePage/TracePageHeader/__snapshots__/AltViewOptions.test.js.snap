@@ -60,10 +60,9 @@ exports[`AltViewOptions renders correctly 1`] = `
     ghost={false}
     htmlType="button"
     loading={false}
-    onClick={[Function]}
     prefixCls="ant-btn"
   >
-    Alternate Views 
+    Trace Timeline
     <Icon
       type="down"
     />

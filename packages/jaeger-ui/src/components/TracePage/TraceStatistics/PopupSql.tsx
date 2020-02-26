@@ -14,7 +14,7 @@
 
 import React from 'react';
 import { Button } from 'antd';
-import './PopupSQL.css';
+import './PopupSql.css';
 
 type Props = {
   closePopup: (popupContent: string) => void;
@@ -24,7 +24,7 @@ type Props = {
 /**
  * Render the popup that is needed for sql.
  */
-export default function PopupSQL(props: Props) {
+export default function PopupSql(props: Props) {
   const value = `"${props.popupContent}"`;
   return (
     <div className="PopupSQL">

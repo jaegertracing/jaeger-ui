@@ -23,7 +23,7 @@ import TraceStatisticsHeader from './TraceStatisticsHeader';
 import { ITableSpan } from './types';
 import sortTable from './sortTable';
 import { TNil } from '../../../types';
-import PopupSQL from './PopupSQL';
+import PopupSQL from './PopupSql';
 
 type Props = {
   trace: Trace;

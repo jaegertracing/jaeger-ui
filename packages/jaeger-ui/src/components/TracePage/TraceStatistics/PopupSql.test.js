@@ -14,7 +14,7 @@
 
 import React from 'react';
 import { shallow } from 'enzyme';
-import PopupSQL from './PopupSQL';
+import PopupSql from './PopupSql';
 
 describe('<PopupSQL', () => {
   let wrapper;
@@ -26,7 +26,7 @@ describe('<PopupSQL', () => {
       popupContent:
         'select specialtie0_.vet_id as vet_id1_1_0_, specialtie0_.specialty_id as specialt2_1_0_, specialty1_.id as id1_0_1_, specialty1_.name as name2_0_1_ from vet_specialties specialtie0_ inner join specialties specialty1_ on specialtie0_.specialty_id=specialty1_.id where specialtie0_.vet_id=?',
     };
-    wrapper = shallow(<PopupSQL {...props} />);
+    wrapper = shallow(<PopupSql {...props} />);
   });
 
   it('does not explode', () => {

@@ -41,7 +41,7 @@ import { trackSlimHeaderToggle } from './TracePageHeader/TracePageHeader.track';
 import TracePageHeader from './TracePageHeader';
 import TraceTimelineViewer from './TraceTimelineViewer';
 import { actions as timelineActions } from './TraceTimelineViewer/duck';
-import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate } from './types';
+import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate, ETraceViewType } from './types';
 import { getLocation, getUrl } from './url';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
@@ -87,7 +87,7 @@ type TProps = TDispatchProps & TOwnProps & TReduxProps;
 type TState = {
   headerHeight: number | TNil;
   slimView: boolean;
-  selectedTraceView: number;
+  viewType: ETraceViewType;
   viewRange: IViewRange;
 };
 
@@ -135,7 +135,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
     this.state = {
       headerHeight: null,
       slimView: Boolean(embedded && embedded.timeline.collapseTitle),
-      selectedTraceView: 0,
+      viewType: ETraceViewType.TraceTimelineViewer,
       viewRange: {
         time: {
           current: [0, 1],
@@ -275,19 +275,14 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
     this.setState({ slimView: !slimView });
   };
 
-  toogleTraceView = (index: number) => {
-    let { selectedTraceView } = this.state;
+  toogleTraceView = (actualViewType: ETraceViewType) => {
+    let { viewType } = this.state;
 
     if (this.props.trace && this.props.trace.data) {
       this.traceDagEV = calculateTraceDagEV(this.props.trace.data);
     }
-    selectedTraceView = index;
-
-    if (selectedTraceView > 2) {
-      selectedTraceView = 0;
-    }
-
-    this.setState({ selectedTraceView });
+    viewType = actualViewType;
+    this.setState({ viewType });
   };
 
   archiveTrace = () => {
@@ -332,7 +327,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
 
   render() {
     const { archiveEnabled, archiveTraceState, embedded, id, searchUrl, uiFind, trace } = this.props;
-    const { slimView, selectedTraceView, headerHeight, viewRange } = this.state;
+    const { slimView, viewType, headerHeight, viewRange } = this.state;
     if (!trace || trace.state === fetchedState.LOADING) {
       return <LoadingIndicator className="u-mt-vast" centered />;
     }
@@ -345,7 +340,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
     let graphFindMatches: Set<string> | null | undefined;
     let spanFindMatches: Set<string> | null | undefined;
     if (uiFind) {
-      if (selectedTraceView !== 0) {
+      if (viewType !== ETraceViewType.TraceTimelineViewer) {
         graphFindMatches = getUiFindVertexKeys(uiFind, _get(this.traceDagEV, 'vertices', []));
         findCount = graphFindMatches ? graphFindMatches.size : 0;
       } else {
@@ -359,17 +354,19 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
       focusUiFindMatches: this.focusUiFindMatches,
       slimView,
       textFilter: uiFind,
-      selectedTraceView,
+      viewType,
       viewRange,
       canCollapse: !embedded || !embedded.timeline.hideSummary || !embedded.timeline.hideMinimap,
       clearSearch: this.clearSearch,
-      hideMap: Boolean(selectedTraceView !== 0 || (embedded && embedded.timeline.hideMinimap)),
+      hideMap: Boolean(
+        viewType !== ETraceViewType.TraceTimelineViewer || (embedded && embedded.timeline.hideMinimap)
+      ),
       hideSummary: Boolean(embedded && embedded.timeline.hideSummary),
       linkToStandalone: getUrl(id),
       nextResult: this.nextResult,
       onArchiveClicked: this.archiveTrace,
       onSlimViewClicked: this.toggleSlimView,
-      onTraceGraphViewClicked: this.toogleTraceView,
+      onTraceViewChange: this.toogleTraceView,
       prevResult: this.prevResult,
       ref: this._searchBar,
       resultCount: findCount,
@@ -393,8 +390,8 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
         </div>
         {headerHeight &&
           (() => {
-            switch (selectedTraceView) {
-              case 0:
+            switch (viewType) {
+              case ETraceViewType.TraceTimelineViewer:
                 return (
                   <section style={{ paddingTop: headerHeight }}>
                     <TraceTimelineViewer
@@ -408,7 +405,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
                     />
                   </section>
                 );
-              case 1:
+              case ETraceViewType.TraceGraph:
                 return (
                   <section style={{ paddingTop: headerHeight }}>
                     <TraceGraph

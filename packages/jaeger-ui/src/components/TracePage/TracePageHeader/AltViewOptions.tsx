@@ -24,50 +24,50 @@ import {
   trackRawJsonView,
 } from './TracePageHeader.track';
 import prefixUrl from '../../../utils/prefix-url';
+import { ETraceViewType } from '../types';
 
 type Props = {
-  onTraceGraphViewClicked: (index: number) => void;
+  onTraceViewChange: (actualViewType: ETraceViewType) => void;
   traceID: string;
-  selectedTraceView: number;
+  viewType: ETraceViewType;
 };
 
+const menuItems = [
+  {
+    viewType: ETraceViewType.TraceTimelineViewer,
+    label: 'Trace Timeline',
+  },
+  {
+    viewType: ETraceViewType.TraceGraph,
+    label: 'Trace Graph',
+  },
+  {
+    viewType: ETraceViewType.TraceStatistics,
+    label: 'Trace Statistics',
+  },
+];
+
 export default function AltViewOptions(props: Props) {
-  const { onTraceGraphViewClicked, selectedTraceView, traceID } = props;
-  const menuItems = ['Trace Timeline', 'Trace Graph', 'Trace Statistics'];
+  const { onTraceViewChange, viewType, traceID } = props;
 
-  const handleToggleView = (index: number, item: string) => {
-    if (item === menuItems[0]) {
+  const handleToggleView = (item: ETraceViewType) => {
+    if (item === ETraceViewType.TraceTimelineViewer) {
       trackGanttView();
-    } else if (item === menuItems[1]) {
+    } else if (item === ETraceViewType.TraceGraph) {
       trackGraphView();
-    } else if (item === menuItems[2]) {
+    } else if (item === ETraceViewType.TraceStatistics) {
       trackStatisticsView();
     }
-    onTraceGraphViewClicked(index);
-  };
-
-  const toggle = () => {
-    let nextIndex = selectedTraceView + 1;
-    if (nextIndex > 2) {
-      nextIndex = 0;
-    }
-    if (nextIndex === 0) {
-      trackGanttView();
-    } else if (nextIndex === 1) {
-      trackGraphView();
-    } else if (nextIndex === 2) {
-      trackStatisticsView();
-    }
-    onTraceGraphViewClicked(nextIndex);
+    onTraceViewChange(item);
   };
 
   const menu = (
     <Menu>
-      {menuItems.map((item, index) =>
-        index === selectedTraceView ? null : (
-          <Menu.Item key={item}>
-            <a onClick={() => handleToggleView(index, item)} role="button">
-              {item}
+      {menuItems.map(item =>
+        item.viewType === viewType ? null : (
+          <Menu.Item key={item.label}>
+            <a onClick={() => handleToggleView(item.viewType)} role="button">
+              {item.label}
             </a>
           </Menu.Item>
         )
@@ -97,8 +97,11 @@ export default function AltViewOptions(props: Props) {
 
   return (
     <Dropdown overlay={menu}>
-      <Button onClick={toggle} className="ub-mr2" htmlType="button">
-        Alternate Views <Icon type="down" />
+      <Button className="ub-mr2" htmlType="button">
+        {menuItems.find(test => test.viewType === viewType) !== undefined
+          ? menuItems.find(test => test.viewType === viewType)!.label
+          : ''}
+        <Icon type="down" />
       </Button>
     </Dropdown>
   );
