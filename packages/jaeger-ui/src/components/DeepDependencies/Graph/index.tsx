@@ -72,37 +72,39 @@ const edgesDefs: TNonEmptyArray<TDefEntry<TDdgVertex, unknown>> = [
   { localId: 'arrow-hovered', setOnEntry: { className: 'Ddg--Arrow is-pathHovered' } },
 ];
 
-const temp = memoize((
-              baseUrl,
-              density,
-              extraUrlArgs,
-              focusPathsThroughVertex,
-              getGenerationVisibility,
-              getVisiblePathElems,
-              hideVertex,
-              setOperation,
-              setViewModifier,
-              updateGenerationVisibility,
-) => ({
-  baseUrl,
-  density,
-  extraUrlArgs,
-  focusPathsThroughVertex,
-  getGenerationVisibility,
-  getVisiblePathElems,
-  hideVertex,
-  setOperation,
-  setViewModifier,
-  updateGenerationVisibility,
-}));
+const temp = memoize(
+  (
+    baseUrl,
+    density,
+    extraUrlArgs,
+    focusPathsThroughVertex,
+    getGenerationVisibility,
+    getVisiblePathElems,
+    hideVertex,
+    setOperation,
+    setViewModifier,
+    updateGenerationVisibility
+  ) => ({
+    baseUrl,
+    density,
+    extraUrlArgs,
+    focusPathsThroughVertex,
+    getGenerationVisibility,
+    getVisiblePathElems,
+    hideVertex,
+    setOperation,
+    setViewModifier,
+    updateGenerationVisibility,
+  })
+);
 export default class Graph extends PureComponent<TProps> {
   private getNodeRenderers = memoize(getNodeRenderers);
   private getNodeContentRenderer = memoize(DdgNodeContent.getNodeRenderer);
   private getSetOnEdge = memoize(getSetOnEdge);
 
   private layoutManager: LayoutManager = new LayoutManager({
-    // nodesep: 0.55,
-    nodesep: 1, // TODO fine tune
+    nodesep: 0.55,
+    // nodesep: 1, // TODO fine tune
     ranksep: 1.5,
     rankdir: 'TB',
     shape: 'circle',
@@ -183,18 +185,20 @@ export default class Graph extends PureComponent<TProps> {
             layerType: 'html',
             measurable: true,
             measureNode: DdgNodeContent.measureNode,
-            renderNode: this.getNodeContentRenderer(temp(
-              baseUrl,
-              density,
-              extraUrlArgs,
-              focusPathsThroughVertex,
-              getGenerationVisibility,
-              getVisiblePathElems,
-              hideVertex,
-              setOperation,
-              setViewModifier,
-              updateGenerationVisibility,
-            )),
+            renderNode: this.getNodeContentRenderer(
+              temp(
+                baseUrl,
+                density,
+                extraUrlArgs,
+                focusPathsThroughVertex,
+                getGenerationVisibility,
+                getVisiblePathElems,
+                hideVertex,
+                setOperation,
+                setViewModifier,
+                updateGenerationVisibility
+              )
+            ),
           },
         ]}
       />

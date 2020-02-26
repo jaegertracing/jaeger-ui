@@ -64,7 +64,7 @@ export default class MeasurableNodes<T = {}> extends React.Component<TProps<T>> 
         renderNode={renderNode}
         renderUtils={renderUtils}
         vertex={vertex}
-        layoutVertex={layoutVertices && layoutVertices.get(vertex.key) || null}
+        layoutVertex={(layoutVertices && layoutVertices.get(vertex.key)) || null}
         setOnNode={setOnNode}
       />
     ));

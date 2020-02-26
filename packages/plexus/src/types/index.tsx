@@ -54,7 +54,7 @@ export type TNomogram = {
   panX: number;
   panY: number;
   shouldTransition: boolean;
-}
+};
 
 export type TCancelled = {
   isCancelled: true;

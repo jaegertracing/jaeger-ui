@@ -22,7 +22,7 @@ import classNameIsSmall from './prop-factories/classNameIsSmall';
 import mergePropSetters, { assignMergeCss } from './prop-factories/mergePropSetters';
 import scaledStrokeWidth from './prop-factories/scaledStrokeWidth';
 import { TDirectedGraphProps, TDirectedGraphState } from './types';
-import { TCancelled, TLayoutDone, TPositionsDone, TSizeVertex, TLayoutVertex, TLayoutEdge } from '../types';
+import { TCancelled, TLayoutDone, TPositionsDone, TSizeVertex } from '../types';
 import MiniMap from '../zoom/MiniMap';
 import ZoomManager, { zoomIdentity, ZoomTransform } from '../zoom/ZoomManager';
 
@@ -153,7 +153,11 @@ export default class DirectedGraph<T> extends React.PureComponent<
   _onPositionsDone = (result: TCancelled | TPositionsDone) => {
     if (!result.isCancelled) {
       const { graph: layoutGraph, vertices: layoutVertices } = result;
-      this.setState({ layoutGraph, layoutVertices: Array.from(layoutVertices.values()), layoutPhase: PHASE_CALC_EDGES });
+      this.setState({
+        layoutGraph,
+        layoutVertices: Array.from(layoutVertices.values()),
+        layoutPhase: PHASE_CALC_EDGES,
+      });
     }
   };
 
@@ -163,7 +167,12 @@ export default class DirectedGraph<T> extends React.PureComponent<
       return;
     }
     const { edges: layoutEdges, graph: layoutGraph, vertices: layoutVertices } = result;
-    this.setState({ layoutEdges: layoutEdges && Array.from(layoutEdges.values()), layoutGraph, layoutVertices: Array.from(layoutVertices.values()), layoutPhase: PHASE_DONE });
+    this.setState({
+      layoutEdges: layoutEdges && Array.from(layoutEdges.values()),
+      layoutGraph,
+      layoutVertices: Array.from(layoutVertices.values()),
+      layoutPhase: PHASE_DONE,
+    });
     if (this.zoomManager) {
       this.zoomManager.setContentSize(layoutGraph);
     }
@@ -189,7 +198,13 @@ export default class DirectedGraph<T> extends React.PureComponent<
       }
     });
     const newVertices = new Map<string, TSizeVertex>(sizeVertices.map(v => [v.vertex.key, v]));
-    const { positions, layout } = layoutManager.getLayout<Record<string, unknown>, Record<string, unknown>>({ positionedEdges: new Map(), newEdges: edges, positionedVertices: new Map(), newVertices, prevGraph: null });
+    const { positions, layout } = layoutManager.getLayout<Record<string, unknown>, Record<string, unknown>>({
+      positionedEdges: new Map(),
+      newEdges: edges,
+      positionedVertices: new Map(),
+      newVertices,
+      prevGraph: null,
+    });
     positions.then(this._onPositionsDone);
     layout.then(this._onLayoutDone);
     this.setState({ sizeVertices, layoutPhase: PHASE_CALC_POSITIONS });

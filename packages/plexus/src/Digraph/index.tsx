@@ -33,7 +33,16 @@ import {
 import { assignMergeCss, getProps } from './utils';
 // TODO(joe): don't use stuff in ../DirectedGraph
 import LayoutManager from '../LayoutManager';
-import { TCancelled, TEdge, TLayoutDone, TLayoutEdge, TLayoutVertex, TPositionsDone, TSizeVertex, TVertex } from '../types';
+import {
+  TCancelled,
+  TEdge,
+  TLayoutDone,
+  TLayoutEdge,
+  TLayoutVertex,
+  TPositionsDone,
+  TSizeVertex,
+  TVertex,
+} from '../types';
 import TNonEmptyArray from '../types/TNonEmptyArray';
 import MiniMap from '../zoom/MiniMap';
 import ZoomManager, { zoomIdentity, ZoomTransform } from '../zoom/ZoomManager';
@@ -46,7 +55,7 @@ const STYLES = `
   
   ${/* .plexus-Digraph.is-panning:after {
     TODO size & cursor-style
-  } */''}
+  } */ ''}
 
   .plexus-Digraph.is-panning .plexus-Digraph--MeasurableHtmlNode {
     transition: transform 2s;
@@ -68,7 +77,10 @@ const STYLES = `
   }
 `;
 
-type TDigraphState<T = {}, U = {}> = Omit<Omit<Omit<TExposedGraphState<T, U>, 'renderUtils'>, 'edges'>, 'vertices'> & {
+type TDigraphState<T = {}, U = {}> = Omit<
+  Omit<Omit<TExposedGraphState<T, U>, 'renderUtils'>, 'edges'>,
+  'vertices'
+> & {
   canCondense: boolean;
   hasIterated: boolean;
 };
@@ -146,6 +158,40 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
 
   zoomManager: ZoomManager | null = null;
 
+  private getGraphState = memoizeOne((state, edges: TEdge<U>[], vertices: TVertex<T>[]) => {
+    const { layoutEdges: les, layoutVertices: lvs, ...partialGraphState } = this.state;
+    const rv: TExposedGraphState<T, U> = {
+      ...partialGraphState,
+      edges,
+      layoutEdges: null,
+      layoutVertices: null,
+      renderUtils: this.renderUtils,
+      vertices,
+    };
+
+    if (lvs) {
+      const layoutVertices = new Map();
+      vertices.forEach(({ key }) => {
+        const lv = lvs.get(key);
+        if (lv) layoutVertices.set(key, lv);
+      });
+
+      rv.layoutVertices = layoutVertices;
+    }
+
+    if (les) {
+      const layoutEdges = new Map();
+      edges.forEach(edge => {
+        const le = les.get(edge);
+        if (le) layoutEdges.set(edge, le);
+      });
+
+      rv.layoutEdges = layoutEdges;
+    }
+
+    return rv;
+  });
+
   constructor(props: TDigraphProps<T, U>) {
     super(props);
     const { edges, vertices, zoom: zoomEnabled } = props;
@@ -172,7 +218,10 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
     const { canCondense, hasIterated } = this.state;
     const { edges, vertices } = this.props;
     // TODO: comment and maybe check both truthy not just new
-    if ((!canCondense || !hasIterated) && ((edges && edges !== prevProps.edges) || (vertices && vertices !== prevProps.vertices))) {
+    if (
+      (!canCondense || !hasIterated) &&
+      ((edges && edges !== prevProps.edges) || (vertices && vertices !== prevProps.vertices))
+    ) {
       // eslint-disable-next-line react/no-did-update-set-state
       this.setState({
         canCondense: true,
@@ -208,23 +257,28 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
       return;
     }
 
-    layoutManager.getLayout<T, U>({
-      newVertices,
-      newEdges: edges,
-      positionedEdges: new Map(),
-      positionedVertices: new Map(),
-      prevGraph: this.state.layoutGraph,
-    }).layout.then(result => {
-      if (result.isCancelled) return;
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { edges: _e, ...rest } = result;
-      this.setState({ layoutEdges: null });
-      this.onPlexusUpdate({ result: rest, forceZoomReset: true });
-      setTimeout(() => this.onPlexusUpdate({ result, forceZoomReset: true, newPhase: ELayoutPhase.Done }), 2000);
-    });
+    layoutManager
+      .getLayout<T, U>({
+        newVertices,
+        newEdges: edges,
+        positionedEdges: new Map(),
+        positionedVertices: new Map(),
+        prevGraph: this.state.layoutGraph,
+      })
+      .layout.then(result => {
+        if (result.isCancelled) return;
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { edges: _e, ...rest } = result;
+        this.setState({ layoutEdges: null });
+        this.onPlexusUpdate({ result: rest, forceZoomReset: true });
+        setTimeout(
+          () => this.onPlexusUpdate({ result, forceZoomReset: true, newPhase: ELayoutPhase.Done }),
+          2000
+        );
+      });
 
     this.setState({ canCondense: false, layoutPhase: ELayoutPhase.CalcPositions });
-  }
+  };
 
   private setSizeVertices = (senderKey: string, sizeVertices: TSizeVertex<T>[]) => {
     const { edges, layoutManager, measurableNodesKey: expectedKey } = this.props;
@@ -264,46 +318,13 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
     });
     layout.then(result => {
       const currentTime = Date.now();
-      const doneFn = () => this.onPlexusUpdate({ result, newPhase: ELayoutPhase.Done, zoomResetCheckKey: 'layoutEdges' });
+      const doneFn = () =>
+        this.onPlexusUpdate({ result, newPhase: ELayoutPhase.Done, zoomResetCheckKey: 'layoutEdges' });
       if (positionTime === undefined || currentTime - positionTime > 2000) doneFn();
       else setTimeout(doneFn, 2000 - (currentTime - positionTime));
     });
     this.setState({ layoutPhase: ELayoutPhase.CalcPositions });
   };
-
-  private getGraphState = memoizeOne((state, edges: TEdge<U>[], vertices: TVertex<T>[]) => {
-    const { layoutEdges: les, layoutVertices: lvs, ...partialGraphState } = this.state;
-    const rv: TExposedGraphState<T, U> = {
-      ...partialGraphState,
-      edges,
-      layoutEdges: null,
-      layoutVertices: null,
-      renderUtils: this.renderUtils,
-      vertices,
-    };
-
-    if (lvs) {
-      const layoutVertices = new Map();
-      vertices.forEach(({ key }) => {
-        const lv = lvs.get(key);
-        if (lv) layoutVertices.set(key, lv);
-      });
-
-      rv.layoutVertices = layoutVertices;
-    }
-
-    if (les) {
-      const layoutEdges = new Map();
-      edges.forEach(edge => {
-        const le = les.get(edge);
-        if (le) layoutEdges.set(edge, le);
-      });
-
-      rv.layoutEdges = layoutEdges;
-    }
-
-    return rv;
-  });
 
   private renderLayers() {
     const { edges, classNamePrefix, layers: topLayers, vertices } = this.props;
@@ -341,7 +362,8 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
       if (layer.edges) {
         // edges standalone layer
         const { defs, markerEndId, markerStartId, setOnEdge } = layer;
-          return (<SvgEdgesLayer
+        return (
+          <SvgEdgesLayer
             key={key}
             standalone
             getClassName={getClassName}
@@ -396,7 +418,12 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
     this.setState({ zoomTransform });
   };
 
-  private onPlexusUpdate = ({ result, newPhase, zoomResetCheckKey, forceZoomReset }: {
+  private onPlexusUpdate = ({
+    result,
+    newPhase,
+    zoomResetCheckKey,
+    forceZoomReset,
+  }: {
     result: TCancelled | TPositionsDone<T, U> | TLayoutDone<T, U>;
     newPhase?: ELayoutPhase;
     forceZoomReset?: true;
@@ -409,7 +436,8 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
     if (this.zoomManager) {
       this.zoomManager.setContentSize(layoutGraph);
       if (nomogram) this.zoomManager.pan(nomogram.panX, nomogram.panY);
-      if (forceZoomReset || (zoomResetCheckKey && !this.state[zoomResetCheckKey])) this.zoomManager.resetZoom();
+      if (forceZoomReset || (zoomResetCheckKey && !this.state[zoomResetCheckKey]))
+        this.zoomManager.resetZoom();
     }
     const setStateArg: Partial<TDigraphState<T, U>> = { layoutGraph, layoutVertices: vertices };
     if (edges) {
@@ -419,7 +447,7 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
       setStateArg.layoutPhase = newPhase;
     }
     this.setState(setStateArg as TDigraphState<T, U>); // TODO no cast
-  }
+  };
 
   render() {
     const { canCondense, hasIterated, layoutPhase } = this.state;
@@ -438,7 +466,9 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
     const rootProps = assignMergeCss(
       {
         style: builtinStyle,
-        className: `${classNamePrefix} ${classNamePrefix}-Digraph plexus-Digraph ${layoutPhase === ELayoutPhase.CalcPositions ? 'is-panning' : ''}`,
+        className: `${classNamePrefix} ${classNamePrefix}-Digraph plexus-Digraph ${
+          layoutPhase === ELayoutPhase.CalcPositions ? 'is-panning' : ''
+        }`,
       },
       { className, style },
       getProps(setOnGraph, {
@@ -450,9 +480,7 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
     );
     return (
       <div {...rootProps}>
-        <style>
-          {STYLES}
-        </style>
+        <style>{STYLES}</style>
         <div style={builtinStyle} ref={this.rootRef}>
           {this.renderLayers()}
         </div>

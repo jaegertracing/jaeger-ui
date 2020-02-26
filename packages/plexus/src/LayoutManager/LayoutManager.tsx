@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { ECoordinatorPhase, TGetLayout, TLayoutOptions, TUpdate } from './types';
-import { TCancelled, TEdge, TLayoutDone, TLayoutEdge, TLayoutGraph, TLayoutVertex, TPendingLayoutResult, TPositionsDone, TSizeVertex } from '../types';
+import { TCancelled, TLayoutDone, TPositionsDone } from '../types';
 
 import Coordinator from './Coordinator';
 
@@ -42,7 +42,7 @@ export default class LayoutManager {
     this.layoutId++;
     const id = this.layoutId;
     this.coordinator.getLayout({
-      id, 
+      id,
       options: this.options,
       ...input,
     });

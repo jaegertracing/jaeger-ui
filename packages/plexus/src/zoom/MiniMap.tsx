@@ -89,7 +89,7 @@ export function MiniMap(props: TProps) {
   const css = getClassNames(props);
   const mapSize = getMapSize(props);
   const activeXform = getViewTransform(props, mapSize);
-  const disabledClass =  props.allowCondense ? '' : 'is-disabled';
+  const disabledClass = props.allowCondense ? '' : 'is-disabled';
   return (
     <div className={css.root}>
       <div className={`${css.item} ${css.map}`} style={mapSize}>
@@ -98,7 +98,11 @@ export function MiniMap(props: TProps) {
       <div className={css.buttonWrapper}>
         {props.showCondense && (
           <div className={`${css.disabledWrapper} ${disabledClass}`}>
-            <div className={`${css.item} ${css.button} ${disabledClass}`} onClick={props.condense} role="button">
+            <div
+              className={`${css.item} ${css.button} ${disabledClass}`}
+              onClick={props.condense}
+              role="button"
+            >
               {condenseIcon}
             </div>
           </div>

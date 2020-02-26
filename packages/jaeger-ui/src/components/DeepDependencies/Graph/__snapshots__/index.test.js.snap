@@ -94,6 +94,13 @@ exports[`<Graph /> render renders provided edges and vertices 1`] = `
       "pendingResult": null,
     }
   }
+  loadingIndicator={
+    <LoadingIndicator
+      centered={false}
+      className="Ddg--loadingIndicator"
+      small={false}
+    />
+  }
   measurableNodesKey="nodes/content"
   minimap={true}
   minimapClassName="u-miniMap"

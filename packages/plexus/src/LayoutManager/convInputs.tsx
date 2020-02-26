@@ -19,7 +19,7 @@ const makeEdgeId = (edge: TEdge<any>) => `${edge.from}\v${edge.to}`;
 
 function unmapVertices<T = unknown>(
   idToVertex: Map<string, TSizeVertex<T>>,
-  output: Map<string, TLayoutVertex<T>>,
+  output: Map<string, TLayoutVertex<T>>
 ): Map<string, TLayoutVertex<T>> {
   const rv = new Map<string, TLayoutVertex<T>>();
   output.forEach((lv, id) => {
@@ -32,10 +32,7 @@ function unmapVertices<T = unknown>(
   return rv;
 }
 
-function unmapEdges(
-  idsToEdge: Map<string, TEdge>,
-  output: Map<TEdge, TLayoutEdge>
-): Map<TEdge, TLayoutEdge> {
+function unmapEdges(idsToEdge: Map<string, TEdge>, output: Map<TEdge, TLayoutEdge>): Map<TEdge, TLayoutEdge> {
   const rv = new Map<TEdge, TLayoutEdge>();
   output.forEach((le, e) => {
     const id = makeEdgeId(e);
@@ -48,10 +45,13 @@ function unmapEdges(
   return rv;
 }
 
-function mapVertices<T extends TSizeVertex, U extends TSizeVertex>(vertices: Map<string, T>, prevIds?: Map<string, string>): {
-    keyToId: Map<string, string>,
-    idToVertex: Map<string, T | U>,
-    mappedVertices: Map<string, T>,
+function mapVertices<T extends TSizeVertex, U extends TSizeVertex>(
+  vertices: Map<string, T>,
+  prevIds?: Map<string, string>
+): {
+  keyToId: Map<string, string>;
+  idToVertex: Map<string, T | U>;
+  mappedVertices: Map<string, T>;
 } {
   const keyToId = new Map<string, string>();
   const idToVertex = new Map<string, T | U>();
@@ -73,21 +73,21 @@ function mapVertices<T extends TSizeVertex, U extends TSizeVertex>(vertices: Map
 }
 
 function convToFrom(e: TEdge, keyToId: Map<string, string>): TEdge {
-    const { from, to, isBidirectional } = e;
-    const fromId = keyToId.get(from);
-    const toId = keyToId.get(to);
-    if (fromId == null) {
-      throw new Error(`Unrecognized key on edge, from: ${from}`);
-    }
-    if (toId == null) {
-      throw new Error(`Unrecognized key on edge, to: ${to}`);
-    }
-    const edge = {
-      isBidirectional,
-      from: fromId,
-      to: toId,
-    };
-    return edge;
+  const { from, to, isBidirectional } = e;
+  const fromId = keyToId.get(from);
+  const toId = keyToId.get(to);
+  if (fromId == null) {
+    throw new Error(`Unrecognized key on edge, from: ${from}`);
+  }
+  if (toId == null) {
+    throw new Error(`Unrecognized key on edge, to: ${to}`);
+  }
+  const edge = {
+    isBidirectional,
+    from: fromId,
+    to: toId,
+  };
+  return edge;
 }
 
 export default function convInputs({
@@ -101,14 +101,19 @@ export default function convInputs({
   inPositionedEdges: TGetLayout['positionedEdges'];
   inNewEdges: TGetLayout['newEdges'];
 }) {
-  const { keyToId, idToVertex, mappedVertices: positionedVertices } = mapVertices<TLayoutVertex, TSizeVertex>(inPositionedVertices);
-  const { keyToId: moreKeyToId, idToVertex: moreIdToVertex, mappedVertices: newVertices } = mapVertices<TSizeVertex, TLayoutVertex>(inNewVertices, keyToId);
+  const { keyToId, idToVertex, mappedVertices: positionedVertices } = mapVertices<TLayoutVertex, TSizeVertex>(
+    inPositionedVertices
+  );
+  const { keyToId: moreKeyToId, idToVertex: moreIdToVertex, mappedVertices: newVertices } = mapVertices<
+    TSizeVertex,
+    TLayoutVertex
+  >(inNewVertices, keyToId);
   moreKeyToId.forEach((v, k) => keyToId.set(k, v));
   moreIdToVertex.forEach((v, k) => idToVertex.set(k, v));
 
   const idsToEdge = new Map<string, TEdge>();
   const positionedEdges = new Map<TEdge, TLayoutEdge>();
-  inPositionedEdges.forEach((le, e)  => {
+  inPositionedEdges.forEach((le, e) => {
     const convEdge = convToFrom(e, keyToId);
     idsToEdge.set(makeEdgeId(convEdge), e);
     positionedEdges.set(convEdge, {

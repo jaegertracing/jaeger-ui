@@ -30,13 +30,12 @@ import {
   TWorkerInputMessage,
   TWorkerOutputMessage,
 } from './types';
-import { TEdge, TLayoutEdge, TLayoutGraph, TLayoutVertex, TSizeVertex } from '../types';
+import { TEdge, TLayoutEdge, TLayoutVertex, TSizeVertex } from '../types';
 
-const size = (input: Map<unknown, unknown> | unknown[] | null | undefined): number => input
-  ? Array.isArray(input)
-    ? input.length
-    : input.size
-  : 0;
+const size = (input: Map<unknown, unknown> | unknown[] | null | undefined): number => {
+  if (input) return Array.isArray(input) ? input.length : input.size;
+  return 0;
+};
 
 type TCurrentLayout = {
   cleanedEdges: TEdge[];
@@ -102,17 +101,17 @@ export default class Coordinator {
     newEdges: inNewEdges,
     prevGraph,
   }: TGetLayout & {
-    id: number,
-    options: TLayoutOptions | void,
+    id: number;
+    options: TLayoutOptions | void;
   }) {
     this.busyWorkers.forEach(killWorker);
     this.busyWorkers.length = 0;
-    const { 
+    const {
       positionedVertices: _positionedVertices,
       newVertices: _newVertices,
       positionedEdges: _positionedEdges,
       newEdges,
-      unmapEdges, 
+      unmapEdges,
       unmapVertices,
     } = convInputs({
       inPositionedVertices,
@@ -124,9 +123,11 @@ export default class Coordinator {
     const positionedEdges = new Map<TEdge, TLayoutEdge>();
     _positionedEdges.forEach((le, e) => positionedEdges.set(e, convCoord.edgeToDot(le)));
     const positionedVertices = new Map<string, TLayoutVertex>();
-    _positionedVertices.forEach((v, id) => positionedVertices.set(id, convCoord.layoutVertexToDot(v, prevGraph)));
+    _positionedVertices.forEach((v, key) =>
+      positionedVertices.set(key, convCoord.layoutVertexToDot(v, prevGraph))
+    );
     const newVertices = new Map<string, TSizeVertex>();
-    _newVertices.forEach((v, id) => newVertices.set(id, convCoord.sizeVertexToDot(v)));
+    _newVertices.forEach((v, key) => newVertices.set(key, convCoord.sizeVertexToDot(v)));
     this.currentLayout = {
       id,
       cleanedEdges: newEdges.concat(Array.from(positionedEdges.keys())),
@@ -143,7 +144,9 @@ export default class Coordinator {
       },
     };
     const isDotOnly = Boolean(options && options.useDotEdges);
-    const phase = !newVertices.size ? EWorkerPhase.Edges : (isDotOnly ? EWorkerPhase.DotOnly : EWorkerPhase.Positions);
+    let phase: EWorkerPhase;
+    if (!newVertices.size) phase = EWorkerPhase.Edges;
+    else phase = isDotOnly ? EWorkerPhase.DotOnly : EWorkerPhase.Positions;
     this._postWork({
       positionedVertices,
       newVertices,
@@ -181,9 +184,11 @@ export default class Coordinator {
     }
   }
 
-  _postWork(input: {
-    phase: EWorkerPhase,
-  } & TGetLayout) {
+  _postWork(
+    input: {
+      phase: EWorkerPhase;
+    } & TGetLayout
+  ) {
     const { phase, ...rest } = input;
     if (!this.currentLayout) {
       throw new Error('_startWork called without a current layout');
@@ -292,12 +297,17 @@ export default class Coordinator {
     const movedEdgeCount = size(dotMovedEdges);
     const newEdgeCount = size(dotNewEdges);
 
-    console.log(phase, movedVertexCount, newVertexCount, inVertexCount, movedEdgeCount, newEdgeCount, inEdgeCount);
+    console.log(
+      phase,
+      movedVertexCount,
+      newVertexCount,
+      inVertexCount,
+      movedEdgeCount,
+      newEdgeCount,
+      inEdgeCount
+    );
 
-    if (
-        (movedVertexCount + newVertexCount !== inVertexCount)
-        || !graph
-    ) {
+    if (movedVertexCount + newVertexCount !== inVertexCount || !graph) {
       console.error('Have work results, but received invalid result data');
       console.log('Have work results, but received invalid result data');
       return;
@@ -306,39 +316,29 @@ export default class Coordinator {
     // TODO: mapMap util
     const movedVertices = input.unmapVertices(
       new Map<string, TLayoutVertex>(
-        Array.from(dotMovedVertices.entries())
-          .map(([k, v]) => [k, convCoord.vertexToPixels(graph, v)])
+        Array.from(dotMovedVertices.entries()).map(([k, v]) => [k, convCoord.vertexToPixels(graph, v)])
       )
     );
     const newVertices = input.unmapVertices(
       new Map<string, TLayoutVertex>(
-        Array.from(dotNewVertices.entries())
-          .map(([k, v]) => [k, convCoord.vertexToPixels(graph, v)])
+        Array.from(dotNewVertices.entries()).map(([k, v]) => [k, convCoord.vertexToPixels(graph, v)])
       )
     );
     const movedEdges = input.unmapEdges(
       new Map<TEdge, TLayoutEdge>(
-        Array.from(dotMovedEdges.entries())
-        .map(([e, le]) => [e, convCoord.edgeToPixels(graph, le)])
+        Array.from(dotMovedEdges.entries()).map(([e, le]) => [e, convCoord.edgeToPixels(graph, le)])
       )
     );
     const pixelNewEdges = new Map<TEdge, TLayoutEdge>(
-      Array.from(dotNewEdges.entries())
-        .map(([e, le]) => [e, convCoord.edgeToPixels(graph, le)])
+      Array.from(dotNewEdges.entries()).map(([e, le]) => [e, convCoord.edgeToPixels(graph, le)])
     );
     const newEdges = input.unmapEdges(pixelNewEdges);
 
     const adjGraph = convCoord.graphToPixels(graph);
     const nomogram = dotNomogram && convCoord.nomogramToPixels(dotNomogram);
 
-    const allDotVertices = new Map<string, TLayoutVertex>([
-      ...dotNewVertices,
-      ...dotMovedVertices,
-    ]);
-    const pixelPathDotTranslateEdges = new Map<TEdge, TLayoutEdge>([
-      ...pixelNewEdges,
-      ...dotMovedEdges,
-    ]);
+    const allDotVertices = new Map<string, TLayoutVertex>([...dotNewVertices, ...dotMovedVertices]);
+    const pixelPathDotTranslateEdges = new Map<TEdge, TLayoutEdge>([...pixelNewEdges, ...dotMovedEdges]);
     const madeEdges = new Map<string, Set<string>>();
     pixelPathDotTranslateEdges.forEach((le, edge) => {
       const tos = madeEdges.get(edge.from);
@@ -411,15 +411,9 @@ export default class Coordinator {
             type: ECoordinatorPhase.Done,
             layoutId: layout.id,
             graph: adjGraph,
-            edges: new Map([
-              ...movedEdges,
-              ...newEdges,
-            ]),
+            edges: new Map([...movedEdges, ...newEdges]),
             nomogram: nomogram && !nomogram.shouldTransition ? nomogram : undefined,
-            vertices: new Map([
-              ...movedVertices,
-              ...newVertices,
-            ]),
+            vertices: new Map([...movedVertices, ...newVertices]),
           });
         } else {
           console.log(`need to make ${inEdgeCount - movedEdgeCount - newEdgeCount} edges`);
@@ -452,7 +446,9 @@ export default class Coordinator {
       if (pendingEdges.length) {
         console.log(`Failed to make ${stillRemaining} edges`, pendingEdges.length, edgeAttempts);
         if (edgeAttempts < 3) {
-          console.log(`Made ${edgeAttempts} attempt so far, attempting to rebuild ${pendingEdges.length} edges`);
+          console.log(
+            `Made ${edgeAttempts} attempt so far, attempting to rebuild ${pendingEdges.length} edges`
+          );
           this._postWork({
             positionedVertices: allDotVertices,
             newVertices: new Map(),
@@ -463,7 +459,10 @@ export default class Coordinator {
             prevGraph: graph,
           });
         } else if (edgeAttempts === 3) {
-          console.log(`Made ${edgeAttempts} attempt so far, attempting to rebuild all edges`, pendingEdges.length);
+          console.log(
+            `Made ${edgeAttempts} attempt so far, attempting to rebuild all edges`,
+            pendingEdges.length
+          );
           this._postWork({
             positionedVertices: allDotVertices,
             newVertices: new Map(),

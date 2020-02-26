@@ -50,12 +50,13 @@ export default class Node<T = {}> extends React.PureComponent<TProps<T>> {
       {
         className: getClassName('Node'),
         // style: layerType === ELayerType.Html ? getHtmlStyle(layoutVertex) : null,
-        style: layerType === ELayerType.Html
-          ? getHtmlStyle(layoutVertex)
-          : { /*  transition: 'transform 2s' */ },
-        transform: layerType === ELayerType.Svg
-          ? `translate(${left.toFixed()},${top.toFixed()})`
-          : null,
+        style:
+          layerType === ELayerType.Html
+            ? getHtmlStyle(layoutVertex)
+            : {
+                /*  transition: 'transform 2s' */
+              },
+        transform: layerType === ELayerType.Svg ? `translate(${left.toFixed()},${top.toFixed()})` : null,
       },
       getProps(setOnNode, layoutVertex, renderUtils)
     );

@@ -40,7 +40,7 @@ export type TGetLayout = {
   newEdges: TEdge[];
   prevGraph: TLayoutGraph | null;
   prevNomogram?: TNomogram;
-}
+};
 
 export type TLayoutOptions = {
   rankdir?: 'TB' | 'LR' | 'BT' | 'RL';
@@ -101,6 +101,4 @@ export type TLayoutUpdate<T = Record<string, unknown>, U = Record<string, unknow
   vertices: Map<string, TLayoutVertex>;
 };
 
-export type TUpdate<T, U> =
-  | TNodesUpdate<T, U>
-  | TLayoutUpdate<T, U>;
+export type TUpdate<T, U> = TNodesUpdate<T, U> | TLayoutUpdate<T, U>;

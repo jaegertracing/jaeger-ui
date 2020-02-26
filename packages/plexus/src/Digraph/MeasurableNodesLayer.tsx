@@ -24,7 +24,6 @@ import {
   TLayerType,
   TSetOnContainer,
   TMeasurableNodeRenderer,
-  ELayoutPhase,
   ELayerType,
 } from './types';
 import { TEdge, TSizeVertex, TVertex } from '../types';
@@ -70,49 +69,62 @@ export default class MeasurableNodesLayer<T = {}, U = {}> extends React.PureComp
 
   private vertexToMeasured: WeakMap<TVertex<T>, TSizeVertex<T>> = new WeakMap();
 
-  private measureNodes: (vertices: TVertex<T>[], edges: TEdge<U>[]) => void = memoizeOne((vertices: TVertex<T>[], edges: TEdge<U>[]) => {
-    const { nodeRefs } = this.state;
-    if (!nodeRefs) {
-      return;
-    }
-    const { layerType, graphState: { layoutEdges, layoutVertices }, measureNode, senderKey, setSizeVertices } = this.props;
-    if (layoutVertices && vertices.every(({ key }) => layoutVertices.has(key)) && layoutEdges && edges.every(edge => layoutEdges.has(edge))) return;
-    let current: MeasurableNode<T> | null = null;
-    const utils = measureNode && {
-      layerType,
-      getWrapper: () => {
-        if (current) {
-          return current.getRef();
-        }
-        throw new Error('Invalid scenario');
-      },
-      getWrapperSize: () => {
-        if (current) {
-          return current.measure();
-        }
-        throw new Error('Invalid scenario');
-      },
-    };
-
-    const sizeVertices: TSizeVertex<T>[] = [];
-    for (let i = 0; i < nodeRefs.length; i++) {
-      current = nodeRefs[i].current;
-      const vertex = vertices[i];
-      if (current) {
-        let measured = this.vertexToMeasured.get(vertex);
-        if (!measured) {
-          measured = {
-            vertex,
-            ...(measureNode && utils ? measureNode(vertex, utils) : current.measure()),
-          };
-          this.vertexToMeasured.set(vertex, measured);
-        }
-        sizeVertices.push(measured);
+  private measureNodes: (vertices: TVertex<T>[], edges: TEdge<U>[]) => void = memoizeOne(
+    (vertices: TVertex<T>[], edges: TEdge<U>[]) => {
+      const { nodeRefs } = this.state;
+      if (!nodeRefs) {
+        return;
       }
-    }
-    setSizeVertices(senderKey, sizeVertices);
-  });
+      const {
+        layerType,
+        graphState: { layoutEdges, layoutVertices },
+        measureNode,
+        senderKey,
+        setSizeVertices,
+      } = this.props;
+      if (
+        layoutVertices &&
+        vertices.every(({ key }) => layoutVertices.has(key)) &&
+        layoutEdges &&
+        edges.every(edge => layoutEdges.has(edge))
+      )
+        return;
+      let current: MeasurableNode<T> | null = null;
+      const utils = measureNode && {
+        layerType,
+        getWrapper: () => {
+          if (current) {
+            return current.getRef();
+          }
+          throw new Error('Invalid scenario');
+        },
+        getWrapperSize: () => {
+          if (current) {
+            return current.measure();
+          }
+          throw new Error('Invalid scenario');
+        },
+      };
 
+      const sizeVertices: TSizeVertex<T>[] = [];
+      for (let i = 0; i < nodeRefs.length; i++) {
+        current = nodeRefs[i].current;
+        const vertex = vertices[i];
+        if (current) {
+          let measured = this.vertexToMeasured.get(vertex);
+          if (!measured) {
+            measured = {
+              vertex,
+              ...(measureNode && utils ? measureNode(vertex, utils) : current.measure()),
+            };
+            this.vertexToMeasured.set(vertex, measured);
+          }
+          sizeVertices.push(measured);
+        }
+      }
+      setSizeVertices(senderKey, sizeVertices);
+    }
+  );
 
   constructor(props: TProps<T, U>) {
     super(props);
