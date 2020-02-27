@@ -392,6 +392,19 @@ describe('<SearchForm>', () => {
     btn = wrapper.find(`[data-test="${markers.SUBMIT_BTN}"]`);
     expect(btn.prop('disabled')).toBeTruthy();
   });
+
+  it('uses config.search.maxLimit', () => {
+    const maxLimit = 6789;
+    const config = {
+      search: {
+        maxLimit,
+      },
+    };
+    window.getJaegerUiConfig = jest.fn(() => config);
+    wrapper = shallow(<SearchForm {...defaultProps} selectedService="svcA" />);
+    const field = wrapper.find(`Field[name="resultsLimit"]`);
+    expect(field.prop('props').max).toEqual(maxLimit);
+  });
 });
 
 describe('validation', () => {
