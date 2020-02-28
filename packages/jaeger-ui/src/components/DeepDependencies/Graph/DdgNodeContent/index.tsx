@@ -61,7 +61,13 @@ type TProps = {
   setViewModifier: (visIndices: number[], viewModifier: EViewModifier, isEnabled: boolean) => void;
   updateGenerationVisibility: (vertexKey: string, direction: EDirection) => void;
   vertexKey: string;
+
+  lv: any; // (TLayoutVertex<any> & { colorMeTimbers?: number[]; upDown?: ('up' | 'down')[] }) | null;
 };
+
+const CSS_COLORS = [
+  'black', 'silver', 'gray', 'white', 'maroon', 'red', 'purple', 'fuchsia', 'green', 'lime', 'olive', 'yellow', 'navy', 'blue', 'teal', 'aqua', 'orange', 'aliceblue', 'antiquewhite', 'aquamarine', 'azure', 'beige', 'bisque', 'blanchedalmond', 'blueviolet', 'brown', 'burlywood', 'cadetblue', 'chartreuse', 'chocolate', 'coral', 'cornflowerblue', 'cornsilk', 'crimson', 'darkblue', 'darkcyan', 'darkgoldenrod', 'darkgray', 'darkgreen', 'darkkhaki', 'darkmagenta', 'darkolivegreen', 'darkorange', 'darkorchid', 'darkred', 'darksalmon', 'darkseagreen', 'darkslateblue', 'darkslategray', 'darkturquoise', 'darkviolet', 'deeppink', 'deepskyblue', 'dimgray', 'dodgerblue', 'firebrick', 'floralwhite', 'forestgreen', 'gainsboro', 'ghostwhite', 'gold', 'goldenrod', 'greenyellow', 'honeydew', 'hotpink', 'indianred', 'indigo', 'ivory', 'khaki', 'lavender', 'lavenderblush', 'lawngreen', 'lemonchiffon', 'lightblue', 'lightcoral', 'lightcyan', 'lightgoldenrodyellow', 'lightgray', 'lightgreen', 'lightpink', 'lightsalmon', 'lightseagreen', 'lightskyblue', 'lightslategray', 'lightsteelblue', 'lightyellow', 'limegreen', 'linen', 'mediumaquamarine', 'mediumblue', 'mediumorchid', 'mediumpurple', 'mediumseagreen', 'mediumslateblue', 'mediumspringgreen', 'mediumturquoise', 'mediumvioletred', 'midnightblue', 'mintcream', 'mistyrose', 'moccasin', 'navajowhite', 'oldlace', 'olivedrab', 'orangered', 'orchid', 'palegoldenrod', 'palegreen', 'paleturquoise', 'palevioletred', 'papayawhip', 'peachpuff', 'peru', 'pink', 'plum', 'powderblue', 'rosybrown', 'royalblue', 'saddlebrown', 'salmon', 'sandybrown', 'seagreen', 'seashell', 'sienna', 'skyblue', 'slateblue', 'slategray', 'snow', 'springgreen', 'steelblue', 'tan', 'thistle', 'tomato', 'turquoise', 'violet', 'wheat', 'whitesmoke', 'yellowgreen'
+];
 
 type TState = {
   childrenVisibility?: ECheckedStatus | null;
@@ -122,6 +128,7 @@ export default class DdgNodeContent extends React.PureComponent<TProps, TState> 
           service={service}
           updateGenerationVisibility={updateGenerationVisibility}
           vertexKey={key}
+          lv={lv}
         />
       );
     };
@@ -230,6 +237,13 @@ export default class DdgNodeContent extends React.PureComponent<TProps, TState> 
     const scaleFactor = RADIUS / radius;
     const transform = `translate(${RADIUS - radius}px, ${RADIUS - radius}px) scale(${scaleFactor})`;
 
+    console.log(this.props.lv);
+    let background: string | undefined;
+    const { colorMeTimbers, upDown } = this.props.lv || {} as any;
+    if (colorMeTimbers && upDown) {
+      background = CSS_COLORS[(2 * colorMeTimbers[colorMeTimbers.length - 1]) + (upDown[upDown.length - 1] === 'up' ? 1 : 0)];
+    };
+
     return (
       <div className="DdgNodeContent" onMouseOver={this.onMouseUx} onMouseOut={this.onMouseUx}>
         <div
@@ -237,7 +251,7 @@ export default class DdgNodeContent extends React.PureComponent<TProps, TState> 
             'is-focalNode': isFocalNode,
             'is-positioned': isPositioned,
           })}
-          style={{ width: `${radius * 2}px`, height: `${radius * 2}px`, transform }}
+          style={{ background, width: `${radius * 2}px`, height: `${radius * 2}px`, transform }}
         >
           <div className="DdgNodeContent--labelWrapper">
             <h4

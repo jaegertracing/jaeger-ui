@@ -104,7 +104,6 @@ export default class Graph extends PureComponent<TProps> {
 
   private layoutManager: LayoutManager = new LayoutManager({
     nodesep: 0.55,
-    // nodesep: 1, // TODO fine tune
     ranksep: 1.5,
     rankdir: 'TB',
     shape: 'circle',
@@ -139,7 +138,6 @@ export default class Graph extends PureComponent<TProps> {
     const nodeRenderers = this.getNodeRenderers(uiFindMatches || this.emptyFindSet, verticesViewModifiers);
 
     return (
-      // TODO key = layout stuff (density, show op... that's it?) + focal svc + focal op
       <Digraph<TDdgVertex>
         minimap
         zoom
@@ -185,8 +183,8 @@ export default class Graph extends PureComponent<TProps> {
             layerType: 'html',
             measurable: true,
             measureNode: DdgNodeContent.measureNode,
-            renderNode: this.getNodeContentRenderer(
-              temp(
+            renderNode: DdgNodeContent.getNodeRenderer({ /* this.getNodeContentRenderer(
+              temp( */
                 baseUrl,
                 density,
                 extraUrlArgs,
@@ -197,7 +195,7 @@ export default class Graph extends PureComponent<TProps> {
                 setOperation,
                 setViewModifier,
                 updateGenerationVisibility
-              )
+              }
             ),
           },
         ]}

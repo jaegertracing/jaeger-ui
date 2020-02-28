@@ -29,7 +29,6 @@ type TProps<T = {}, U = {}> = TNodeRenderer<T> &
 
 export default class NodesLayer<T = {}, U = {}> extends React.PureComponent<TProps<T, U>> {
   render() {
-    // console.log('node layer render');
     const { renderNode } = this.props;
     const { layoutVertices, renderUtils } = this.props.graphState;
     if (!layoutVertices || !renderNode) {

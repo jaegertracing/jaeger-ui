@@ -105,9 +105,9 @@ export function nomogramToPixels(nomogram: TNomogram): TNomogram {
 
 export function vertexToPixels(graph: TLayoutGraph, v: TLayoutVertex): TLayoutVertex {
   const { height: h } = graph;
-  const { vertex, height, left, top, width } = v;
+  const { height, left, top, width } = v;
   return {
-    vertex,
+    ...v,
     height: round(height * DPI),
     left: left != null ? round((left - width * 0.5) * DPI) : left,
     top: top != null ? round((h - top - height * 0.5) * DPI) : top,

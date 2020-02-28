@@ -33,6 +33,8 @@ export type TSizeVertex<T = unknown> = {
 export type TLayoutVertex<T = unknown> = TSizeVertex<T> & {
   left: number;
   top: number;
+  colorMeTimbers?: number[];
+  upDown?: ('up' | 'down')[];
 };
 
 export type TEdge<T = unknown> = T & {

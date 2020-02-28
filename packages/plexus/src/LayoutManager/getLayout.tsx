@@ -222,12 +222,16 @@ export default function getLayout({
     // TODO: consider give all edges then detangle
     const dot = toDot(inNewEdges, verArr, layoutOptions);
     const { totalMemory = undefined } = layoutOptions || {};
-    const options = { totalMemory, engine: phase === EWorkerPhase.Edges ? 'neato' : 'dot', format: 'plain' };
+    const options = { totalMemory, engine: 'neato', format: 'plain' };
     const plainOut = viz(dot, options);
     const { edges, graph, vertices } = convPlain(plainOut, phase !== EWorkerPhase.Positions);
     const [key, { left, top }] = positionedVertices.entries().next().value;
-    positionedVertices.clear();
-    vertices.forEach(v => positionedVertices.set(v.vertex.key, v));
+    // positionedVertices.clear();
+    vertices.forEach(v => positionedVertices.set(v.vertex.key, {
+      ...(positionedVertices.get(v.vertex.key) || v),
+      left: v.left,
+      top: v.top,
+    }));
     const newLoc = positionedVertices.get(key);
     if (!newLoc) throw new Error(`${key} was lost when making edges`);
     const { panX: prevPanX = 0, panY: prevPanY = 0 } = prevNomogram || {};
@@ -333,11 +337,12 @@ export default function getLayout({
     }
 
     if (graftQueue.length) {
+      console.log(graftQueue);
       if (!prevGraph) throw new Error('Cannot have new vertices without previous graph');
       const ranksep = (layoutOptions && layoutOptions.ranksep) || DEFAULT_GRAPH_ATTRS.ranksep;
       const nodesep = (layoutOptions && layoutOptions.nodesep) || DEFAULT_GRAPH_ATTRS.nodesep;
       const allGraftEdges: Map<TLayoutEdge, TEdgeLoc> = new Map();
-      graftQueue.forEach(({ anchorDirection, anchorKey, edges, vertices }) => {
+      graftQueue.forEach(({ anchorDirection, anchorKey, edges, vertices }, graphQueueI) => {
         const anchorVertex = positionedVertices.get(anchorKey);
         if (!anchorVertex) throw new Error(`Lost anchor: ${anchorKey}`);
         const { top: anchorTop, left: anchorLeft } = anchorVertex;
@@ -346,7 +351,7 @@ export default function getLayout({
         const { totalMemory = undefined } = layoutOptions || {};
         const options = {
           totalMemory,
-          engine: phase === EWorkerPhase.Edges ? 'neato' : 'dot',
+          engine: 'dot',
           format: 'plain',
         };
         const plainOut = viz(dot, options);
@@ -359,9 +364,6 @@ export default function getLayout({
         graftVerticesArr.forEach(v => graftVertices.set(v.vertex.key, v));
         const graftAnchor = graftVertices.get(anchorKey);
         if (!graftAnchor) throw new Error(`Anchor not in graft: ${anchorKey}`);
-        const { top: graftAnchorTop, left: graftAnchorLeft } = graftAnchor;
-        const leftAdjust = anchorLeft - graftAnchorLeft;
-        const topAdjust = anchorTop - graftAnchorTop;
         if (graftEdges) {
           graftEdges.forEach(e => {
             const from = graftVertices.get(e.edge.from);
@@ -383,11 +385,6 @@ export default function getLayout({
         let otherAttribute: 'height' | 'width';
         let slideSectionDirection: -1 | 1 = anchorDirection === 'from' ? 1 : -1;
 
-        const lowerSlideCandidates: TLayoutVertex[] = [];
-        const upperSlideCandidates: TLayoutVertex[] = [];
-        let lowerSlideDistance: number | undefined;
-        let upperSlideDistance: number | undefined;
-
         const dir = (layoutOptions && layoutOptions.rankdir) || DEFAULT_GRAPH_ATTRS.rankdir;
         if (dir === 'BT' || dir === 'TB') {
           slideDimension = 'top';
@@ -402,19 +399,28 @@ export default function getLayout({
           otherAttribute = 'height';
           if (dir === 'RL') slideSectionDirection *= -1;
         } else {
-          throw new Error('Unknown dir');
+          throw new Error(`Unknown dir: ${dir}`);
         }
 
         const SEP_PERCENTAGE = 0.8; /* TODO: tweak percentage */
 
+        const slideDivisor = anchorVertex[otherDimension];
+        /*
         const slideThreshold =
           anchorVertex[slideDimension] +
           slideSectionDirection * (anchorVertex[slideCheckAttribute] / 2 + SEP_PERCENTAGE * ranksep);
-        const slideDivisor = anchorVertex[otherDimension];
         const collisionLimit =
           slideThreshold +
           slideSectionDirection *
             (graftGraph[slideCheckAttribute] - graftAnchor[slideCheckAttribute] + SEP_PERCENTAGE * ranksep);
+         */
+          // * TODO: Github ticket for MC collisions
+        const slideThreshold = anchorVertex[slideDimension] + slideSectionDirection * (graftAnchor[otherDimension] + SEP_PERCENTAGE * ranksep);
+        const collisionLimit = slideThreshold + slideSectionDirection * (graftGraph[otherAttribute] + 2 * SEP_PERCENTAGE * ranksep);
+        // const slideThreshold = anchorVertex[slideDimension] + slideSectionDirection * graftAnchor[otherDimension];
+        // const collisionLimit = slideThreshold - slideSectionDirection * graftGraph[otherAttribute];
+        // */
+
         const collisionLowerBound =
           slideDivisor -
           (graftGraph[otherAttribute] - graftAnchor[otherDimension]) -
@@ -422,10 +428,16 @@ export default function getLayout({
         const collisionUpperBound =
           collisionLowerBound + graftGraph[otherAttribute] + 2 * SEP_PERCENTAGE * nodesep;
 
+        const lowerSlideCandidates: TLayoutVertex[] = [];
+        const upperSlideCandidates: TLayoutVertex[] = [];
+        let lowerSlideDistance: number | undefined;
+        let upperSlideDistance: number | undefined;
+
         positionedVertices.forEach(existingVertex => {
           const slideThresholdCompareVal =
             existingVertex[slideDimension] +
             (slideSectionDirection * existingVertex[slideCheckAttribute]) / 2;
+
           if (Math.sign(slideThresholdCompareVal - slideThreshold) === slideSectionDirection) {
             const collisionLimitCompareVal =
               existingVertex[slideDimension] -
@@ -433,9 +445,10 @@ export default function getLayout({
             const isCloseEnoughOnSlideDimensionToCollide =
               Math.sign(collisionLimitCompareVal - collisionLimit) !== slideSectionDirection;
             const slideDivisorCompareVal = existingVertex[otherDimension];
+
             if (slideDivisorCompareVal <= slideDivisor) {
               lowerSlideCandidates.push(existingVertex);
-              if (isCloseEnoughOnSlideDimensionToCollide) {
+              // if (isCloseEnoughOnSlideDimensionToCollide) {
                 const lowerSlideDistanceCompareVal =
                   collisionLowerBound - (slideDivisorCompareVal + existingVertex[otherAttribute] / 2);
                 if (
@@ -443,10 +456,11 @@ export default function getLayout({
                   (lowerSlideDistance === undefined || lowerSlideDistanceCompareVal < lowerSlideDistance)
                 )
                   lowerSlideDistance = lowerSlideDistanceCompareVal;
-              }
+              // }
+
             } else {
               upperSlideCandidates.push(existingVertex);
-              if (isCloseEnoughOnSlideDimensionToCollide) {
+              // if (isCloseEnoughOnSlideDimensionToCollide) {
                 const upperSlideDistanceCompareVal =
                   collisionUpperBound - (slideDivisorCompareVal - existingVertex[otherAttribute] / 2);
                 if (
@@ -454,31 +468,42 @@ export default function getLayout({
                   (upperSlideDistance === undefined || upperSlideDistanceCompareVal > upperSlideDistance)
                 )
                   upperSlideDistance = upperSlideDistanceCompareVal;
-              }
+              // }
             }
           }
         });
 
         if (lowerSlideDistance) {
+          console.log('has lower slide distance: ', lowerSlideDistance, lowerSlideCandidates);
           lowerSlideCandidates.forEach(vertex => {
             notSlidKeys.delete(vertex.vertex.key);
+            console.log('has key: ', positionedVertices.has(vertex.vertex.key), vertex.vertex.key);
             positionedVertices.set(vertex.vertex.key, {
               ...vertex,
               [otherDimension]: vertex[otherDimension] + (lowerSlideDistance as number),
+              colorMeTimbers: [...(vertex.colorMeTimbers || []), graphQueueI],
+              upDown: [...(vertex.upDown || []), 'down'],
             });
           });
-        }
+        } else console.log('does not have lower slide distance: ', lowerSlideDistance);
 
         if (upperSlideDistance) {
+          console.log('has upper slide distance: ', upperSlideDistance, upperSlideCandidates);
           upperSlideCandidates.forEach(vertex => {
             notSlidKeys.delete(vertex.vertex.key);
+            console.log('has key: ', positionedVertices.has(vertex.vertex.key), vertex.vertex.key);
             positionedVertices.set(vertex.vertex.key, {
               ...vertex,
               [otherDimension]: vertex[otherDimension] + (upperSlideDistance as number),
+              colorMeTimbers: [...(vertex.colorMeTimbers || []), graphQueueI],
+              upDown: [...(vertex.upDown || []), 'up']
             });
           });
-        }
+        } else console.log('does not have upper slide distance: ', upperSlideDistance);
 
+        const { top: graftAnchorTop, left: graftAnchorLeft } = graftAnchor;
+        const leftAdjust = anchorLeft - graftAnchorLeft;
+        const topAdjust = anchorTop - graftAnchorTop;
         graftVertices.forEach(({ left, top, ...rest }) => {
           if (rest.vertex.key !== anchorKey) {
             positionedVertices.set(rest.vertex.key, {
@@ -506,6 +531,7 @@ export default function getLayout({
           shouldTransition: notSlidKeys.size !== inPositionedVertices.size,
         };
       }
+
       const movedEdges = reframeEdges(graphOut);
       const newEdges = new Map<TEdge, TLayoutEdge>();
       allGraftEdges.forEach((originalLoc, edge) => {
@@ -536,6 +562,8 @@ export default function getLayout({
         else positionedNewVertices.set(key, v);
       });
 
+      console.log(movedVertices, positionedNewVertices);
+
       return {
         graph: graphOut,
         movedEdges,
@@ -550,7 +578,7 @@ export default function getLayout({
   const newVerArr = Array.from(inNewVertices.values());
   const dot = toDot(inNewEdges, newVerArr, layoutOptions);
   const { totalMemory = undefined } = layoutOptions || {};
-  const options = { totalMemory, engine: phase === EWorkerPhase.Edges ? 'neato' : 'dot', format: 'plain' };
+  const options = { totalMemory, engine: 'dot', format: 'plain' };
   const plainOut = viz(dot, options);
   const { edges, graph, vertices } = convPlain(plainOut, phase !== EWorkerPhase.Positions);
 

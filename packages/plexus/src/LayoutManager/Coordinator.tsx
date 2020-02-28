@@ -267,7 +267,6 @@ export default class Coordinator {
   };
 
   _processResult(phase: EWorkerPhase, workerMessage: TWorkerOutputMessage) {
-    console.log('processing results');
     const layout = this.currentLayout;
     if (!layout) {
       // make flow happy - this is already checked and should not happen
@@ -296,16 +295,6 @@ export default class Coordinator {
     const newVertexCount = size(dotNewVertices);
     const movedEdgeCount = size(dotMovedEdges);
     const newEdgeCount = size(dotNewEdges);
-
-    console.log(
-      phase,
-      movedVertexCount,
-      newVertexCount,
-      inVertexCount,
-      movedEdgeCount,
-      newEdgeCount,
-      inEdgeCount
-    );
 
     if (movedVertexCount + newVertexCount !== inVertexCount || !graph) {
       console.error('Have work results, but received invalid result data');
@@ -350,7 +339,6 @@ export default class Coordinator {
       if (!tos) return true;
       return !tos.has(e.to);
     });
-    console.log(pixelPathDotTranslateEdges, madeEdges, cleanedEdges);
 
     if (phase === EWorkerPhase.Positions) {
       if (nomogram && nomogram.shouldTransition) {
@@ -373,8 +361,8 @@ export default class Coordinator {
         prevGraph: graph,
       });
     } else if (phase === EWorkerPhase.DotOnly) {
+      // all move verticesd
       if (movedVertexCount === inVertexCount && movedEdgeCount === inEdgeCount) {
-        console.log('all moved');
         this.callback({
           type: ECoordinatorPhase.Done,
           layoutId: layout.id,
@@ -383,8 +371,8 @@ export default class Coordinator {
           nomogram,
           vertices: movedVertices,
         });
+        // all new vertices:
       } else if (newVertexCount === inVertexCount && newEdgeCount === inEdgeCount) {
-        console.log('all new');
         this.callback({
           type: ECoordinatorPhase.Done,
           layoutId: layout.id,
@@ -393,8 +381,8 @@ export default class Coordinator {
           nomogram,
           vertices: newVertices,
         });
+        // mixed new and old vertices:
       } else {
-        console.log('mixed');
         if (nomogram && nomogram.shouldTransition) {
           this.callback({
             type: ECoordinatorPhase.Positions,
@@ -405,8 +393,8 @@ export default class Coordinator {
             vertices: movedVertices,
           });
         }
+        // all edges accounted for:
         if (movedEdgeCount + newEdgeCount === inEdgeCount) {
-          console.log('mixed but done');
           this.callback({
             type: ECoordinatorPhase.Done,
             layoutId: layout.id,
@@ -415,8 +403,8 @@ export default class Coordinator {
             nomogram: nomogram && !nomogram.shouldTransition ? nomogram : undefined,
             vertices: new Map([...movedVertices, ...newVertices]),
           });
+          // need to make edges:
         } else {
-          console.log(`need to make ${inEdgeCount - movedEdgeCount - newEdgeCount} edges`);
           if (nomogram && nomogram.shouldTransition) {
             this.callback({
               type: ECoordinatorPhase.Positions,
@@ -439,16 +427,10 @@ export default class Coordinator {
         }
       }
     } else if (phase === EWorkerPhase.Edges) {
-      const stillRemaining = inEdgeCount - movedEdgeCount - newEdgeCount;
-      console.log({ edgeAttempts });
-      if (stillRemaining) console.log(`Failed to make ${stillRemaining} edges`, pendingEdges.length);
-      else console.log('made all the edges');
+      // When adding edges to a graph, existing edges may be dropped, if so recreate those:
       if (pendingEdges.length) {
-        console.log(`Failed to make ${stillRemaining} edges`, pendingEdges.length, edgeAttempts);
+        // Attempt to only build missing edges:
         if (edgeAttempts < 3) {
-          console.log(
-            `Made ${edgeAttempts} attempt so far, attempting to rebuild ${pendingEdges.length} edges`
-          );
           this._postWork({
             positionedVertices: allDotVertices,
             newVertices: new Map(),
@@ -458,11 +440,8 @@ export default class Coordinator {
             prevNomogram: dotNomogram,
             prevGraph: graph,
           });
+          // If missing edges cannot be merged with existing edges, rebuild all edges:
         } else if (edgeAttempts === 3) {
-          console.log(
-            `Made ${edgeAttempts} attempt so far, attempting to rebuild all edges`,
-            pendingEdges.length
-          );
           this._postWork({
             positionedVertices: allDotVertices,
             newVertices: new Map(),
@@ -476,6 +455,7 @@ export default class Coordinator {
           console.error(`Unable to make edges in ${edgeAttempts} attempts`);
           console.log(`Unable to make edges in ${edgeAttempts} attempts`);
         }
+        // Else all edges are accounted for, call callback:
       } else {
         const edgeMap = new Map(movedEdges);
         newEdges.forEach((le, e) => edgeMap.set(e, le));
