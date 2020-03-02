@@ -45,7 +45,7 @@ describe(ReferenceLink, () => {
 
     it('render for external trace', () => {
       const component = shallow(<ReferenceLink reference={externalRef} focusSpan={focusMock} />);
-      const link = component.find('a[href="/trace/trace2/uiFind?=span2"]');
+      const link = component.find('a[href="/trace/trace2?uiFind=span2"]');
       expect(link.length).toBe(1);
     });
   });
