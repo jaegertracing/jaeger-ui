@@ -42,9 +42,10 @@ export function getUrl(query?: TUrlState) {
   if (!query) return searchUrl;
 
   const { traceID, spanLinks, ...rest } = query;
-  const ids = traceID
-    ? (Array.isArray(traceID) ? traceID : [traceID]).filter((id: string) => !spanLinks || !spanLinks[id])
-    : [];
+  let ids = traceID;
+  if (spanLinks && traceID) {
+    ids = (Array.isArray(traceID) ? traceID : [traceID]).filter((id: string) => !spanLinks[id]);
+  }
   const stringifyArg = {
     ...rest,
     span:
@@ -52,7 +53,7 @@ export function getUrl(query?: TUrlState) {
       Object.keys(spanLinks).reduce((res: string[], trace: string) => {
         return [...res, `${spanLinks[trace].replace(/ /g, ',')}@${trace}`];
       }, []),
-    traceID: ids.length ? ids : undefined,
+    traceID: ids && ids.length ? ids : undefined,
   };
   return `${searchUrl}?${queryString.stringify(stringifyArg)}`;
 }

@@ -37,10 +37,18 @@ describe('SearchTracePage/url', () => {
       expect(getUrl({ paramA, paramB })).toBe(`/search?paramA=${paramA}&paramB=${paramB}`);
     });
 
+    it('preserves traceID without spanLinks', () => {
+      expect(
+        getUrl({
+          traceID: trace0,
+        })
+      ).toBe(`/search?traceID=${trace0}`);
+    });
+
     it('converts spanLink and traceID to traceID and span', () => {
       expect(
         getUrl({
-          traceID: [trace0],
+          traceID: trace0,
           spanLinks: {
             [trace0]: span0,
           },
@@ -56,6 +64,14 @@ describe('SearchTracePage/url', () => {
           },
         })
       ).toBe(`/search?span=${span0}%40${trace0}`);
+    });
+
+    it('handles empty spanLinks', () => {
+      expect(
+        getUrl({
+          spanLinks: {},
+        })
+      ).toBe(`/search?`);
     });
 
     it('converts spanLink and other traceID to traceID and span', () => {
@@ -126,8 +142,46 @@ describe('SearchTracePage/url', () => {
   });
 
   describe('isSameQuery', () => {
+    const queryKeys = [
+      'end',
+      'limit',
+      'lookback',
+      'maxDuration',
+      'minDuration',
+      'operation',
+      'service',
+      'start',
+      'tags',
+    ];
+    const otherKey = 'other-key';
+    const baseQuery = queryKeys.reduce(
+      (res, curr, i) => ({
+        ...res,
+        [curr]: i % 2 ? curr : i,
+      }),
+      { [otherKey]: otherKey }
+    );
+
     it('returns `false` if only one argument is falsy', () => {
-      expect(isSameQuery({})).toBe(false);
+      expect(isSameQuery(baseQuery)).toBe(false);
+    });
+
+    it('returns `false` if a considered key is changed or omitted', () => {
+      queryKeys.forEach(key => {
+        // eslint-disable-next-line camelcase
+        const { [key]: _omitted, ...rest } = baseQuery;
+        expect(isSameQuery(baseQuery, rest)).toBe(false);
+        expect(isSameQuery(baseQuery, { ...rest, [key]: 'changed' })).toBe(false);
+      });
+    });
+
+    it('returns `true` if no considered keys are changed or omitted', () => {
+      expect(isSameQuery(baseQuery, { ...baseQuery })).toBe(true);
+
+      // eslint-disable-next-line camelcase
+      const { [otherKey]: _omitted, ...copy } = baseQuery;
+      expect(isSameQuery(baseQuery, copy)).toBe(true);
+      expect(isSameQuery(baseQuery, { ...copy, [otherKey]: 'changed' })).toBe(true);
     });
   });
 });
