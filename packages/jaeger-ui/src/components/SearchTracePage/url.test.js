@@ -94,7 +94,7 @@ describe('SearchTracePage/url', () => {
             [trace1]: span2,
           },
         })
-      ).toBe(`/search?span=${span0}%2C${span1}%40${trace0}&span=${span2}%40${trace1}&traceID=${trace2}`);
+      ).toBe(`/search?span=${span0}%20${span1}%40${trace0}&span=${span2}%40${trace1}&traceID=${trace2}`);
     });
   });
 
@@ -116,7 +116,7 @@ describe('SearchTracePage/url', () => {
 
     it('converts multiple spans to traceID and spanLinks', () => {
       expect(
-        getUrlState(`span=${span0}%2C${span1}%40${trace0}&span=${span2}%40${trace1}&traceID=${trace2}`)
+        getUrlState(`span=${span0}%20${span1}%40${trace0}&span=${span2}%40${trace1}&traceID=${trace2}`)
       ).toEqual({
         traceID: expect.arrayContaining([trace0, trace1, trace2]),
         spanLinks: {

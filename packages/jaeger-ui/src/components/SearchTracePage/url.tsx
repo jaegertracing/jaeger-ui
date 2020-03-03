@@ -51,7 +51,7 @@ export function getUrl(query?: TUrlState) {
     span:
       spanLinks &&
       Object.keys(spanLinks).reduce((res: string[], trace: string) => {
-        return [...res, `${spanLinks[trace].replace(/ /g, ',')}@${trace}`];
+        return [...res, `${spanLinks[trace]}@${trace}`];
       }, []),
     traceID: ids && ids.length ? ids : undefined,
   };
@@ -68,10 +68,9 @@ export const getUrlState: (search: string) => TUrlState = memoizeOne(function ge
   if (span && span.length) {
     (Array.isArray(span) ? span : [span]).forEach(s => {
       const [spansStr, trace] = s.split('@');
-      const uiFind = spansStr.replace(/,/g, ' ');
       traceIDs.add(trace);
-      if (spanLinks[trace]) spanLinks[trace] = spanLinks[trace].concat(' ', uiFind);
-      else spanLinks[trace] = uiFind;
+      if (spanLinks[trace]) spanLinks[trace] = spanLinks[trace].concat(' ', spansStr);
+      else spanLinks[trace] = spansStr;
     });
     rv.spanLinks = spanLinks;
   }
