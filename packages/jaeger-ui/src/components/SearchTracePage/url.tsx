@@ -69,8 +69,10 @@ export const getUrlState: (search: string) => TUrlState = memoizeOne(function ge
     (Array.isArray(span) ? span : [span]).forEach(s => {
       const [spansStr, trace] = s.split('@');
       traceIDs.add(trace);
-      if (spanLinks[trace]) spanLinks[trace] = spanLinks[trace].concat(' ', spansStr);
-      else spanLinks[trace] = spansStr;
+      if (spansStr) {
+        if (spanLinks[trace]) spanLinks[trace] = spanLinks[trace].concat(' ', spansStr);
+        else spanLinks[trace] = spansStr;
+      }
     });
     rv.spanLinks = spanLinks;
   }

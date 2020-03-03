@@ -126,6 +126,17 @@ describe('SearchTracePage/url', () => {
       });
     });
 
+    it('converts span param without spanIDs to just traceID', () => {
+      expect(getUrlState(`span=${span0}%20${span1}%40${trace0}&span=%40${trace1}&traceID=${trace2}`)).toEqual(
+        {
+          traceID: expect.arrayContaining([trace0, trace1, trace2]),
+          spanLinks: {
+            [trace0]: `${span0} ${span1}`,
+          },
+        }
+      );
+    });
+
     it('handles duplicate traceIDs', () => {
       expect(
         getUrlState(
