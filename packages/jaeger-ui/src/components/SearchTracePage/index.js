@@ -17,7 +17,6 @@
 import React, { Component } from 'react';
 import { Col, Row, Tabs } from 'antd';
 import PropTypes from 'prop-types';
-import queryString from 'query-string';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import store from 'store';
@@ -25,7 +24,7 @@ import memoizeOne from 'memoize-one';
 
 import SearchForm from './SearchForm';
 import SearchResults, { sortFormSelector } from './SearchResults';
-import { isSameQuery, getUrl } from './url';
+import { isSameQuery, getUrl, getUrlState } from './url';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import * as fileReaderActions from '../../actions/file-reader-api';
 import ErrorMessage from '../common/ErrorMessage';
@@ -90,6 +89,7 @@ export class SearchTracePageImpl extends Component {
       traceResults,
       queryOfResults,
       loadJsonTraces,
+      urlQueryParams,
     } = this.props;
     const hasTraceResults = traceResults && traceResults.length > 0;
     const showErrors = errors && !loadingTraces;
@@ -132,6 +132,7 @@ export class SearchTracePageImpl extends Component {
               queryOfResults={queryOfResults}
               showStandaloneLink={Boolean(embedded)}
               skipMessage={isHomepage}
+              spanLinks={urlQueryParams && urlQueryParams.spanLinks}
               traces={traceResults}
             />
           )}
@@ -232,7 +233,7 @@ const stateServicesXformer = memoizeOne(stateServices => {
 // export to test
 export function mapStateToProps(state) {
   const { embedded, router, services: stServices, traceDiff } = state;
-  const query = queryString.parse(router.location.search);
+  const query = getUrlState(router.location.search);
   const isHomepage = !Object.keys(query).length;
   const { query: queryOfResults, traces, maxDuration, traceError, loadingTraces } = stateTraceXformer(
     state.trace
