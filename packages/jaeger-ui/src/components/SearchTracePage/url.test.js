@@ -45,7 +45,7 @@ describe('SearchTracePage/url', () => {
       ).toBe(`/search?traceID=${trace0}`);
     });
 
-    it('converts spanLink and traceID to traceID and span', () => {
+    it('converts spanLink and its traceID to just span', () => {
       expect(
         getUrl({
           traceID: trace0,
