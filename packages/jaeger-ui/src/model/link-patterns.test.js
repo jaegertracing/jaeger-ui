@@ -310,31 +310,42 @@ describe('computeTraceLink()', () => {
   const linkPatterns = [
     {
       type: 'traces',
-      url: 'http://example.com/?myKey=#{traceID}',
+      url: 'http://example.com/?traceID=#{traceID}',
       text: 'first link (#{traceID})',
     },
     {
       type: 'traces',
-      url: 'http://example.com/?myKey=#{traceID}&myKey=#{myKey}',
-      text: 'second link (#{myKey})',
+      url: 'http://example.com/?traceID#{traceID}&myKey=#{myKey}',
+      text: 'second link will not render because myKey is not in the trace',
+    },
+    {
+      type: 'traces',
+      url:
+        'http://example.com/?traceID=#{traceID}&traceName=#{traceName}&startTime=#{startTime}&endTime=#{endTime}&duration=#{duration}',
+      text: 'third link (#{traceID}, #{traceName}, #{startTime}, #{endTime}, #{duration})',
     },
   ].map(processLinkPattern);
 
   const trace = {
     processes: [],
+    traceName: 'theTrace',
     traceID: 'trc1',
     spans: [],
     startTime: 1000,
-    endTime: 2000,
-    duration: 1000,
+    endTime: 3000,
+    duration: 2000,
     services: [],
   };
 
-  it('correctly computes links', () => {
+  it('correctly computes trace scoped links', () => {
     expect(computeTraceLink(linkPatterns, trace)).toEqual([
       {
-        url: 'http://example.com/?myKey=trc1',
+        url: 'http://example.com/?traceID=trc1',
         text: 'first link (trc1)',
+      },
+      {
+        url: 'http://example.com/?traceID=trc1&traceName=theTrace&startTime=1000&endTime=3000&duration=2000',
+        text: 'third link (trc1, theTrace, 1000, 3000, 2000)',
       },
     ]);
   });
