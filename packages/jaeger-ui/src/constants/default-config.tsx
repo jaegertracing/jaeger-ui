@@ -30,12 +30,12 @@ export default deepFreeze(
           label: 'About Jaeger',
           items: [
             {
-              label: 'GitHub',
-              url: 'https://github.com/uber/jaeger',
+              label: 'Website/Docs',
+              url: 'https://www.jaegertracing.io/',
             },
             {
-              label: 'Docs',
-              url: 'http://jaeger.readthedocs.io/en/latest/',
+              label: 'Blog',
+              url: 'https://medium.com/jaegertracing/',
             },
             {
               label: 'Twitter',
@@ -46,12 +46,12 @@ export default deepFreeze(
               url: 'https://groups.google.com/forum/#!forum/jaeger-tracing',
             },
             {
-              label: 'Gitter.im',
+              label: 'Online Chat',
               url: 'https://gitter.im/jaegertracing/Lobby',
             },
             {
-              label: 'Blog',
-              url: 'https://medium.com/jaegertracing/',
+              label: 'GitHub',
+              url: 'https://github.com/jaegertracing/',
             },
           ],
         },
