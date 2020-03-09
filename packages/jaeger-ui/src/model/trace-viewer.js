@@ -14,6 +14,18 @@
 
 // eslint-disable-next-line import/prefer-default-export
 export function getTraceName(spans) {
-  const span = spans.filter(sp => !sp.references || !sp.references.length)[0];
-  return span ? `${span.process.serviceName}: ${span.operationName}` : '';
+  const allSpanIDs = spans.map(sp => sp.spanID);
+  const rootSpan = spans
+    .filter(sp => {
+      if (!sp.references || !sp.references.length) {
+        return true;
+      }
+      const parentIDs = sp.references.filter(r => r.refType === 'CHILD_OF').map(r => r.spanID);
+
+      // no parent from trace
+      return !parentIDs.some(pID => allSpanIDs.includes(pID));
+    })
+    .sort((sp1, sp2) => sp1.startTime - sp2.startTime)[0];
+
+  return rootSpan ? `${rootSpan.process.serviceName}: ${rootSpan.operationName}` : '';
 }
