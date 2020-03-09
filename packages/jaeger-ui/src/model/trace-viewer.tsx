@@ -12,8 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { Span } from '../types/trace';
+
 // eslint-disable-next-line import/prefer-default-export
-export function getTraceName(spans) {
+export function getTraceName(spans: Span[]) {
   const allSpanIDs = spans.map(sp => sp.spanID);
   const rootSpan = spans
     .filter(sp => {
