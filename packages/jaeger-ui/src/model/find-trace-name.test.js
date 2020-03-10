@@ -18,7 +18,7 @@ describe('getTraceName', () => {
   const firstSpanId = 'firstSpanId';
   const secondSpanId = 'secondSpanId';
   const thirdSpanId = 'thirdSpanId';
-  const remoteSpanId = 'remoteSpanId';
+  const missingSpanId = 'missingSpanId';
 
   const serviceName = 'serviceName';
   const operationName = 'operationName';
@@ -79,7 +79,7 @@ describe('getTraceName', () => {
       },
       references: [
         {
-          spanID: remoteSpanId,
+          spanID: missingSpanId,
           refType: 'CHILD_OF',
         },
       ],
@@ -115,7 +115,7 @@ describe('getTraceName', () => {
       },
       references: [
         {
-          spanID: remoteSpanId,
+          spanID: missingSpanId,
           refType: 'CHILD_OF',
         },
       ],
