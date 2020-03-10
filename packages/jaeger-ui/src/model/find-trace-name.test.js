@@ -57,7 +57,7 @@ describe('getTraceName', () => {
       ],
     },
   ];
-  const spansWithMultipleRoots = [
+  const spansWithMultipleRootsDifferentByStartTime = [
     {
       spanID: firstSpanId,
       startTime: t + 200,
@@ -69,16 +69,52 @@ describe('getTraceName', () => {
       ],
     },
     {
-      spanID: secondSpanId, // root span
+      spanID: secondSpanId, // may be a root span
       startTime: t + 100,
+      references: [
+        {
+          spanID: missingSpanId,
+          refType: 'CHILD_OF',
+        },
+      ],
     },
     {
-      spanID: thirdSpanId, // root span
+      spanID: thirdSpanId, // root span (as the earliest)
       startTime: t,
       operationName,
       process: {
         serviceName,
       },
+      references: [
+        {
+          spanID: missingSpanId,
+          refType: 'CHILD_OF',
+        },
+      ],
+    },
+  ];
+  const spansWithMultipleRootsWithOneWithoutRefs = [
+    {
+      spanID: firstSpanId,
+      startTime: t + 200,
+      references: [
+        {
+          spanID: thirdSpanId,
+          refType: 'CHILD_OF',
+        },
+      ],
+    },
+    {
+      spanID: secondSpanId, // root span (as a span without any refs)
+      startTime: t + 100,
+      operationName,
+      process: {
+        serviceName,
+      },
+    },
+    {
+      spanID: thirdSpanId, // may be a root span
+      startTime: t,
       references: [
         {
           spanID: missingSpanId,
@@ -161,7 +197,11 @@ describe('getTraceName', () => {
   });
 
   it('returns an id of root span with the earliest startTime', () => {
-    expect(getTraceName(spansWithMultipleRoots)).toEqual(fullTraceName);
+    expect(getTraceName(spansWithMultipleRootsDifferentByStartTime)).toEqual(fullTraceName);
+  });
+
+  it('returns an id of root span without any refs', () => {
+    expect(getTraceName(spansWithMultipleRootsWithOneWithoutRefs)).toEqual(fullTraceName);
   });
 
   it('returns an id of root span with remote ref', () => {
