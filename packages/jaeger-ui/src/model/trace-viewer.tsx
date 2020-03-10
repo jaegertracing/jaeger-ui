@@ -14,9 +14,11 @@
 
 import { Span } from '../types/trace';
 
+type spansDict = { [index: string]: Span };
+
 // eslint-disable-next-line import/prefer-default-export
 export function getTraceName(spans: Span[]) {
-  const allSpanIDs = spans.map(sp => sp.spanID);
+  const allTraceSpans: spansDict = spans.reduce((dict, span) => ({ ...dict, [span.spanID]: span }), {});
   const rootSpan = spans
     .filter(sp => {
       if (!sp.references || !sp.references.length) {
@@ -25,7 +27,7 @@ export function getTraceName(spans: Span[]) {
       const parentIDs = sp.references.filter(r => r.refType === 'CHILD_OF').map(r => r.spanID);
 
       // no parent from trace
-      return !parentIDs.some(pID => allSpanIDs.includes(pID));
+      return !parentIDs.some(pID => Boolean(allTraceSpans[pID]));
     })
     .sort((sp1, sp2) => sp1.startTime - sp2.startTime)[0];
 
