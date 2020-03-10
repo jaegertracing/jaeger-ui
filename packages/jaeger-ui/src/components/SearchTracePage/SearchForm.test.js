@@ -148,9 +148,13 @@ describe('lookback utils', () => {
 
     it('creates timestamp for days ago', () => {
       [1, 2, 4, 7].forEach(lookbackNum => {
-        expect(nowInMicroseconds - lookbackToTimestamp(`${lookbackNum}d`, now)).toBe(
-          lookbackNum * 24 * hourInMicroseconds
-        );
+        const actual = nowInMicroseconds - lookbackToTimestamp(`${lookbackNum}d`, now);
+        const expected = lookbackNum * 24 * hourInMicroseconds;
+        try {
+          expect(actual).toBe(expected);
+        } catch (_e) {
+          expect(Math.abs(actual - expected)).toBe(hourInMicroseconds);
+        }
       });
     });
 

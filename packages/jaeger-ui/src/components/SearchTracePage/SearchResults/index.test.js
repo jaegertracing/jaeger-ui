@@ -74,6 +74,36 @@ describe('<SearchResults>', () => {
       expect(wrapper.find(ResultItem).length).toBe(traces.length);
     });
 
+    it('deep links traces', () => {
+      const uiFind = 'ui-find';
+      const spanLinks = {
+        [traces[0].traceID]: uiFind,
+      };
+      wrapper.setProps({ spanLinks });
+      const results = wrapper.find(ResultItem);
+      expect(results.at(0).prop('linkTo').search).toBe(`uiFind=${uiFind}`);
+      expect(results.at(1).prop('linkTo').search).toBeUndefined();
+    });
+
+    it('deep links traces with leading 0', () => {
+      const uiFind0 = 'ui-find-0';
+      const uiFind1 = 'ui-find-1';
+      const traceID0 = '00traceID0';
+      const traceID1 = 'traceID1';
+      const spanLinks = {
+        [traceID0]: uiFind0,
+        [traceID1]: uiFind1,
+      };
+      const zeroIDTraces = [
+        { traceID: traceID0, spans: [], processes: {} },
+        { traceID: `000${traceID1}`, spans: [], processes: {} },
+      ];
+      wrapper.setProps({ spanLinks, traces: zeroIDTraces });
+      const results = wrapper.find(ResultItem);
+      expect(results.at(0).prop('linkTo').search).toBe(`uiFind=${uiFind0}`);
+      expect(results.at(1).prop('linkTo').search).toBe(`uiFind=${uiFind1}`);
+    });
+
     describe('ddg', () => {
       const searchParam = 'view';
       const viewDdg = 'ddg';

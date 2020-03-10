@@ -208,7 +208,7 @@ export class UnconnectedSearchResults extends React.PureComponent<SearchResultsP
                   linkTo={getLocation(
                     trace.traceID,
                     { fromSearch: searchUrl },
-                    spanLinks && spanLinks[trace.traceID]
+                    spanLinks && (spanLinks[trace.traceID] || spanLinks[trace.traceID.replace(/^0*/, '')])
                   )}
                   toggleComparison={this.toggleComparison}
                   trace={trace}
