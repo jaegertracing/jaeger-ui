@@ -34,7 +34,7 @@ import * as jaegerApiActions from '../../actions/jaeger-api';
 import { formatDate, formatTime } from '../../utils/date';
 import reduxFormFieldAdapter from '../../utils/redux-form-field-adapter';
 import { DEFAULT_OPERATION, DEFAULT_LIMIT, DEFAULT_LOOKBACK } from '../../constants/search-form';
-import getConfigValue from '../../utils/config/get-config';
+import { getConfigValue } from '../../utils/config/get-config';
 import './SearchForm.css';
 
 const FormItem = Form.Item;

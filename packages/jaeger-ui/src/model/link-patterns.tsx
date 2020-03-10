@@ -145,7 +145,7 @@ function callTemplate(template: ProcessedTemplate, data: any) {
 export function computeTraceLink(linkPatterns: ProcessedLinkPattern[], trace: Trace) {
   const result: TLinksRV = [];
   const validKeys = (Object.keys(trace) as (keyof Trace)[]).filter(
-    key => typeof trace[key] === 'string' || trace[key] === 'number'
+    key => typeof trace[key] === 'string' || typeof trace[key] === 'number'
   );
 
   linkPatterns
