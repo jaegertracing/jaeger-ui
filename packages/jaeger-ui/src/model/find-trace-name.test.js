@@ -23,10 +23,12 @@ describe('getTraceName', () => {
   const serviceName = 'serviceName';
   const operationName = 'operationName';
 
+  const t = 1583758670000;
+
   const spansWithNoRoots = [
     {
       spanID: firstSpanId,
-      startTime: 1583758690000,
+      startTime: t + 200,
       references: [
         {
           spanID: secondSpanId,
@@ -36,7 +38,7 @@ describe('getTraceName', () => {
     },
     {
       spanID: secondSpanId,
-      startTime: 1583758680000,
+      startTime: t + 100,
       references: [
         {
           spanID: thirdSpanId,
@@ -46,7 +48,7 @@ describe('getTraceName', () => {
     },
     {
       spanID: thirdSpanId,
-      startTime: 1583758670000,
+      startTime: t,
       references: [
         {
           spanID: firstSpanId,
@@ -58,7 +60,7 @@ describe('getTraceName', () => {
   const spansWithMultipleRoots = [
     {
       spanID: firstSpanId,
-      startTime: 1583758690000,
+      startTime: t + 200,
       references: [
         {
           spanID: thirdSpanId,
@@ -68,11 +70,11 @@ describe('getTraceName', () => {
     },
     {
       spanID: secondSpanId, // root span
-      startTime: 1583758680000,
+      startTime: t + 100,
     },
     {
       spanID: thirdSpanId, // root span
-      startTime: 1583758670000,
+      startTime: t,
       operationName,
       process: {
         serviceName,
@@ -88,7 +90,7 @@ describe('getTraceName', () => {
   const spansWithOneRootWithRemoteRef = [
     {
       spanID: firstSpanId,
-      startTime: 1583758690000,
+      startTime: t + 200,
       references: [
         {
           spanID: secondSpanId,
@@ -98,7 +100,7 @@ describe('getTraceName', () => {
     },
     {
       spanID: secondSpanId,
-      startTime: 1583758680000,
+      startTime: t + 100,
       references: [
         {
           spanID: thirdSpanId,
@@ -108,7 +110,7 @@ describe('getTraceName', () => {
     },
     {
       spanID: thirdSpanId, // root span
-      startTime: 1583758670000,
+      startTime: t,
       operationName,
       process: {
         serviceName,
@@ -124,7 +126,7 @@ describe('getTraceName', () => {
   const spansWithOneRootWithNoRefs = [
     {
       spanID: firstSpanId,
-      startTime: 1583758690000,
+      startTime: t + 200,
       references: [
         {
           spanID: thirdSpanId,
@@ -134,7 +136,7 @@ describe('getTraceName', () => {
     },
     {
       spanID: secondSpanId, // root span
-      startTime: 1583758680000,
+      startTime: t + 100,
       operationName,
       process: {
         serviceName,
@@ -142,7 +144,7 @@ describe('getTraceName', () => {
     },
     {
       spanID: thirdSpanId,
-      startTime: 1583758670000,
+      startTime: t,
       references: [
         {
           spanID: secondSpanId,
