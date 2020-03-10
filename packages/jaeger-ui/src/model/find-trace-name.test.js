@@ -29,6 +29,7 @@ describe('getTraceName', () => {
     {
       spanID: firstSpanId,
       startTime: t + 200,
+      process: {},
       references: [
         {
           spanID: secondSpanId,
@@ -39,6 +40,7 @@ describe('getTraceName', () => {
     {
       spanID: secondSpanId,
       startTime: t + 100,
+      process: {},
       references: [
         {
           spanID: thirdSpanId,
@@ -49,6 +51,7 @@ describe('getTraceName', () => {
     {
       spanID: thirdSpanId,
       startTime: t,
+      process: {},
       references: [
         {
           spanID: firstSpanId,
@@ -61,6 +64,7 @@ describe('getTraceName', () => {
     {
       spanID: firstSpanId,
       startTime: t + 200,
+      process: {},
       references: [
         {
           spanID: thirdSpanId,
@@ -71,6 +75,7 @@ describe('getTraceName', () => {
     {
       spanID: secondSpanId, // may be a root span
       startTime: t + 100,
+      process: {},
       references: [
         {
           spanID: missingSpanId,
@@ -97,6 +102,7 @@ describe('getTraceName', () => {
     {
       spanID: firstSpanId,
       startTime: t + 200,
+      process: {},
       references: [
         {
           spanID: thirdSpanId,
@@ -115,6 +121,7 @@ describe('getTraceName', () => {
     {
       spanID: thirdSpanId, // may be a root span
       startTime: t,
+      process: {},
       references: [
         {
           spanID: missingSpanId,
@@ -127,6 +134,7 @@ describe('getTraceName', () => {
     {
       spanID: firstSpanId,
       startTime: t + 200,
+      process: {},
       references: [
         {
           spanID: secondSpanId,
@@ -137,6 +145,7 @@ describe('getTraceName', () => {
     {
       spanID: secondSpanId,
       startTime: t + 100,
+      process: {},
       references: [
         {
           spanID: thirdSpanId,
@@ -163,6 +172,7 @@ describe('getTraceName', () => {
     {
       spanID: firstSpanId,
       startTime: t + 200,
+      process: {},
       references: [
         {
           spanID: thirdSpanId,
@@ -181,6 +191,7 @@ describe('getTraceName', () => {
     {
       spanID: thirdSpanId,
       startTime: t,
+      process: {},
       references: [
         {
           spanID: secondSpanId,
