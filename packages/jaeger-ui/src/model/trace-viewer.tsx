@@ -29,7 +29,12 @@ export function getTraceName(spans: Span[]) {
       // no parent from trace
       return !parentIDs.some(pID => Boolean(allTraceSpans[pID]));
     })
-    .sort((sp1, sp2) => sp1.startTime - sp2.startTime)[0];
+    .sort((sp1, sp2) => {
+      const sp1ParentsNum = sp1.references ? sp1.references.filter(r => r.refType === 'CHILD_OF').length : 0;
+      const sp2ParentsNum = sp2.references ? sp2.references.filter(r => r.refType === 'CHILD_OF').length : 0;
+
+      return sp1ParentsNum - sp2ParentsNum || sp1.startTime - sp2.startTime;
+    })[0];
 
   return rootSpan ? `${rootSpan.process.serviceName}: ${rootSpan.operationName}` : '';
 }
