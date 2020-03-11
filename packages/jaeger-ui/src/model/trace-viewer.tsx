@@ -14,24 +14,19 @@
 
 import { Span } from '../types/trace';
 
-type spansDict = { [index: string]: Span };
-
 // eslint-disable-next-line import/prefer-default-export
 export function getTraceName(spans: Span[]) {
-  const allTraceSpans: spansDict = spans.reduce((dict, span) => ({ ...dict, [span.spanID]: span }), {});
   const rootSpan = spans
     .filter(sp => {
       if (!sp.references || !sp.references.length) {
         return true;
       }
-      const parentIDs = sp.references.filter(r => r.refType === 'CHILD_OF').map(r => r.spanID);
-
-      // no parent from trace
-      return !parentIDs.some(pID => Boolean(allTraceSpans[pID]));
+      // returns true if no parent from this trace found
+      return !sp.references.some(r => r.traceID === sp.traceID);
     })
     .sort((sp1, sp2) => {
-      const sp1ParentsNum = sp1.references ? sp1.references.filter(r => r.refType === 'CHILD_OF').length : 0;
-      const sp2ParentsNum = sp2.references ? sp2.references.filter(r => r.refType === 'CHILD_OF').length : 0;
+      const sp1ParentsNum = sp1.references ? sp1.references.length : 0;
+      const sp2ParentsNum = sp2.references ? sp2.references.length : 0;
 
       return sp1ParentsNum - sp2ParentsNum || sp1.startTime - sp2.startTime;
     })[0];
