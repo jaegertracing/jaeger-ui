@@ -25,6 +25,8 @@ describe('getTraceName', () => {
 
   const t = 1583758670000;
 
+  // Note: this trace has a loop S1 <- S2 <- S3 <- S1, which is the only way
+  // to make the algorithm return an empty string as trace name.
   const spansWithNoRoots = [
     {
       spanID: firstSpanId,
