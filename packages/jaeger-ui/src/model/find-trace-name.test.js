@@ -154,7 +154,7 @@ describe('getTraceName', () => {
       ],
     },
     {
-      spanID: thirdSpanId, // root span
+      spanID: thirdSpanId, // effective root span, since its parent is missing
       startTime: t,
       operationName,
       process: {
