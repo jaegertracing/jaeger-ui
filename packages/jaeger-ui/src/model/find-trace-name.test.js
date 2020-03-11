@@ -20,6 +20,9 @@ describe('getTraceName', () => {
   const thirdSpanId = 'thirdSpanId';
   const missingSpanId = 'missingSpanId';
 
+  const currentTraceId = 'currentTraceId';
+  const anotherTraceId = 'anotherTraceId';
+
   const serviceName = 'serviceName';
   const operationName = 'operationName';
 
@@ -30,34 +33,37 @@ describe('getTraceName', () => {
   const spansWithNoRoots = [
     {
       spanID: firstSpanId,
+      traceID: currentTraceId,
       startTime: t + 200,
       process: {},
       references: [
         {
           spanID: secondSpanId,
-          refType: 'CHILD_OF',
+          traceID: currentTraceId,
         },
       ],
     },
     {
       spanID: secondSpanId,
+      traceID: currentTraceId,
       startTime: t + 100,
       process: {},
       references: [
         {
           spanID: thirdSpanId,
-          refType: 'CHILD_OF',
+          traceID: currentTraceId,
         },
       ],
     },
     {
       spanID: thirdSpanId,
+      traceID: currentTraceId,
       startTime: t,
       process: {},
       references: [
         {
           spanID: firstSpanId,
-          refType: 'CHILD_OF',
+          traceID: currentTraceId,
         },
       ],
     },
@@ -65,28 +71,31 @@ describe('getTraceName', () => {
   const spansWithMultipleRootsDifferentByStartTime = [
     {
       spanID: firstSpanId,
+      traceID: currentTraceId,
       startTime: t + 200,
       process: {},
       references: [
         {
           spanID: thirdSpanId,
-          refType: 'CHILD_OF',
+          traceID: currentTraceId,
         },
       ],
     },
     {
       spanID: secondSpanId, // may be a root span
+      traceID: currentTraceId,
       startTime: t + 100,
       process: {},
       references: [
         {
           spanID: missingSpanId,
-          refType: 'CHILD_OF',
+          traceID: anotherTraceId,
         },
       ],
     },
     {
       spanID: thirdSpanId, // root span (as the earliest)
+      traceID: currentTraceId,
       startTime: t,
       operationName,
       process: {
@@ -95,7 +104,7 @@ describe('getTraceName', () => {
       references: [
         {
           spanID: missingSpanId,
-          refType: 'CHILD_OF',
+          traceID: anotherTraceId,
         },
       ],
     },
@@ -103,17 +112,19 @@ describe('getTraceName', () => {
   const spansWithMultipleRootsWithOneWithoutRefs = [
     {
       spanID: firstSpanId,
+      traceID: currentTraceId,
       startTime: t + 200,
       process: {},
       references: [
         {
           spanID: thirdSpanId,
-          refType: 'CHILD_OF',
+          traceID: currentTraceId,
         },
       ],
     },
     {
       spanID: secondSpanId, // root span (as a span without any refs)
+      traceID: currentTraceId,
       startTime: t + 100,
       operationName,
       process: {
@@ -122,12 +133,13 @@ describe('getTraceName', () => {
     },
     {
       spanID: thirdSpanId, // may be a root span
+      traceID: currentTraceId,
       startTime: t,
       process: {},
       references: [
         {
           spanID: missingSpanId,
-          refType: 'CHILD_OF',
+          traceID: anotherTraceId,
         },
       ],
     },
@@ -135,28 +147,31 @@ describe('getTraceName', () => {
   const spansWithOneRootWithRemoteRef = [
     {
       spanID: firstSpanId,
+      traceID: currentTraceId,
       startTime: t + 200,
       process: {},
       references: [
         {
           spanID: secondSpanId,
-          refType: 'CHILD_OF',
+          traceID: currentTraceId,
         },
       ],
     },
     {
       spanID: secondSpanId,
+      traceID: currentTraceId,
       startTime: t + 100,
       process: {},
       references: [
         {
           spanID: thirdSpanId,
-          refType: 'CHILD_OF',
+          traceID: currentTraceId,
         },
       ],
     },
     {
       spanID: thirdSpanId, // effective root span, since its parent is missing
+      traceID: currentTraceId,
       startTime: t,
       operationName,
       process: {
@@ -165,7 +180,7 @@ describe('getTraceName', () => {
       references: [
         {
           spanID: missingSpanId,
-          refType: 'CHILD_OF',
+          traceID: anotherTraceId,
         },
       ],
     },
@@ -173,17 +188,19 @@ describe('getTraceName', () => {
   const spansWithOneRootWithNoRefs = [
     {
       spanID: firstSpanId,
+      traceID: currentTraceId,
       startTime: t + 200,
       process: {},
       references: [
         {
           spanID: thirdSpanId,
-          refType: 'CHILD_OF',
+          traceID: currentTraceId,
         },
       ],
     },
     {
       spanID: secondSpanId, // root span
+      traceID: currentTraceId,
       startTime: t + 100,
       operationName,
       process: {
@@ -192,12 +209,13 @@ describe('getTraceName', () => {
     },
     {
       spanID: thirdSpanId,
+      traceID: currentTraceId,
       startTime: t,
       process: {},
       references: [
         {
           spanID: secondSpanId,
-          refType: 'CHILD_OF',
+          traceID: currentTraceId,
         },
       ],
     },
