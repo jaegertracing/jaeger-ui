@@ -21,7 +21,6 @@ describe('getTraceName', () => {
   const missingSpanId = 'missingSpanId';
 
   const currentTraceId = 'currentTraceId';
-  const anotherTraceId = 'anotherTraceId';
 
   const serviceName = 'serviceName';
   const operationName = 'operationName';
@@ -89,7 +88,7 @@ describe('getTraceName', () => {
       references: [
         {
           spanID: missingSpanId,
-          traceID: anotherTraceId,
+          traceID: currentTraceId,
         },
       ],
     },
@@ -104,7 +103,7 @@ describe('getTraceName', () => {
       references: [
         {
           spanID: missingSpanId,
-          traceID: anotherTraceId,
+          traceID: currentTraceId,
         },
       ],
     },
@@ -139,7 +138,7 @@ describe('getTraceName', () => {
       references: [
         {
           spanID: missingSpanId,
-          traceID: anotherTraceId,
+          traceID: currentTraceId,
         },
       ],
     },
@@ -180,7 +179,7 @@ describe('getTraceName', () => {
       references: [
         {
           spanID: missingSpanId,
-          traceID: anotherTraceId,
+          traceID: currentTraceId,
         },
       ],
     },
