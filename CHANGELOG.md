@@ -12,7 +12,7 @@
 - **General:** bump url-parse version to 1.4.7 ([#542](https://github.com/jaegertracing/jaeger-ui/pull/542), [@rubenvp8510](https://github.com/rubenvp8510))
 - **Search** Fix span links for leading 0s trace ID ([#539](https://github.com/jaegertracing/jaeger-ui/pull/539), [@everett980](https://github.com/everett980))
 - **General:** Reorder, rename, and fix "About Jaeger" links ([#540](https://github.com/jaegertracing/jaeger-ui/pull/540), [@yurishkuro](https://github.com/yurishkuro))
-- **Search:** Fix search.maxLimit configuration  ([#533](https://github.com/jaegertracing/jaeger-ui/pull/533), [@rubenvp8510](https://github.com/rubenvp8510))
+- **Search:** Fix search.maxLimit configuration ([#533](https://github.com/jaegertracing/jaeger-ui/pull/533), [@rubenvp8510](https://github.com/rubenvp8510))
 - **Trace detail:** Fix trace scoped links not supporting numeric fields ([#538](https://github.com/jaegertracing/jaeger-ui/pull/538), [@william-tran](https://github.com/william-tran))
 
 ## v1.7.0 (February 21, 2020)
