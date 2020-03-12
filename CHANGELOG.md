@@ -1,6 +1,6 @@
 # Releases
 
-## v1.7.1 (March 12, 2020)
+## v1.8.0 (March 12, 2020)
 
 ### Enhancements
 
