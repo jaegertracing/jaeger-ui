@@ -20,21 +20,22 @@ export type TPathAgnosticDecorationSchema = {
   opUrl?: string;
   valuePath: string;
   opValuePath?: string;
+  /*
   gradient: {
     startPercentage: number;
     inclusiveStart: boolean;
     endPercentage: number;
     inclusiveEnd: boolean;
   }[];
+   */
+};
+
+export type TPadEntry = {
+  value: number | string; // string or other type is for data unavailable
+  // renderData: unknown;
 };
 
 export type TNewData = Record<string, {
-  withoutOp: Record<string, {
-    value: number | string; // string or other type is for data unavailable
-    // renderData: unknown;
-  }>;
-  withOp: Record<string, Record<string, {
-    value: number | string; // string or other type is for data unavailable
-    // renderData: unknown;
-  }>>;
+  withoutOp: Record<string, TPadEntry>;
+  withOp?: Record<string, Record<string, TPadEntry>>;
 }>;

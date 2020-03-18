@@ -12,21 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { TPadEntry } from '../model/path-agnostic-decorations/types';
+
 type TPathAgnosticDecorations = Record<string, {
-  withoutOp: {
-    max: number;
-    entries: Record<string, {
-      value: number | string; // string or other type is for data unavailable
-      // renderData: unknown;
-    }>;
-  };
-  withOp: {
-    max: number;
-    entries: Record<string, Record<string, {
-      value: number | string; // string or other type is for data unavailable
-      // renderData: unknown;
-    }>>;
-  };
+  withOpMax?: number;
+  withoutOpMax: number;
+  withoutOp: Record<string, TPadEntry>;
+  withOp?: Record<string, Record<string, TPadEntry>>;
 }>;
 
 // eslint-disable-next-line no-undef
