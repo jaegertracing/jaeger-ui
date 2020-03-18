@@ -111,6 +111,10 @@ describe('pathAgnosticDecoration reducers', () => {
     it('adds service decoration error to state with existing decoration without overriding existing withoutOpMax', () => {
       expect(getDecorationDone(state01u1, payload00us)).toEqual(mergeAndObjectContaining(state00us, state01u1));
     });
+
+    it('adds service decoration to state with only operation decorations', () => {
+      expect(getDecorationDone(state0011, payload00u0)).toEqual(mergeAndObjectContaining(state00u0, state0011));
+    });
   });
 
   describe('withOp', () => {
