@@ -36,6 +36,6 @@ export type TPadEntry = {
 };
 
 export type TNewData = Record<string, {
-  withoutOp: Record<string, TPadEntry>;
+  withoutOp?: Record<string, TPadEntry>;
   withOp?: Record<string, Record<string, TPadEntry>>;
 }>;

@@ -20,17 +20,19 @@ import { TNewData } from '../model/path-agnostic-decorations/types';
 import TPathAgnosticDecorationsState from '../types/TPathAgnosticDecorationsState';
 import guardReducer from '../utils/guardReducer';
 
-function getDecorationDone(state: TPathAgnosticDecorationsState, payload?: TNewData) {
+export function getDecorationDone(state: TPathAgnosticDecorationsState, payload?: TNewData) {
   if (!payload) return state;
   return Object.keys(payload).reduce((newState, decorationID) => {
     const { withOp, withoutOp } = payload[decorationID];
-    const newWithOpValues: number[] = [];
-    Object.keys(withoutOp).forEach(service => {
-      const { value } = withoutOp[service];
-      if (typeof value === 'number') newWithoutOpValues.push(value);
-    });
-
     const newWithoutOpValues: number[] = [];
+    if (withoutOp) {
+      Object.keys(withoutOp).forEach(service => {
+        const { value } = withoutOp[service];
+        if (typeof value === 'number') newWithoutOpValues.push(value);
+      });
+    }
+
+    const newWithOpValues: number[] = [];
     if (withOp) {
       Object.keys(withOp).forEach(service => {
         Object.keys(withOp[service]).forEach(operation => {
@@ -52,11 +54,11 @@ function getDecorationDone(state: TPathAgnosticDecorationsState, payload?: TNewD
           withOp: withOp
             ? Object.keys(withOp).reduce((newWithOp, service) => ({
               ...newWithOp,
-              [service]: Object.assign({}, newWithOp[service], withoutOp[service]),
+              [service]: Object.assign({}, newWithOp[service], withOp[service]),
             }), newState[decorationID].withOp || {})
             : newState[decorationID].withOp,
           withOpMax,
-          withoutOp: withOp
+          withoutOp: withoutOp
             ? Object.assign({}, newState[decorationID].withoutOp, withoutOp)
             : newState[decorationID].withoutOp,
           withoutOpMax,
