@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Uber Technologies, Inc.
+// Copyright (c) 2020 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ import _memoize from 'lodash/memoize';
 import _set from 'lodash/set';
 import { createActions, ActionFunctionAny, Action } from 'redux-actions';
 
+import JaegerAPI from '../api/jaeger';
 import { TNewData, TPathAgnosticDecorationSchema } from '../model/path-agnostic-decorations/types';
 import { getConfigValue } from '../utils/config/get-config';
 import generateActionTypes from '../utils/generate-action-types';
@@ -25,6 +26,16 @@ import generateActionTypes from '../utils/generate-action-types';
 export const actionTypes = generateActionTypes('@jaeger-ui/PATH_AGNOSTIC_DECORATIONS', [
   'GET_DECORATION',
 ]);
+
+// this should probable be in a util file somewhere, with the ability to bind an enconding to it
+const parameterRegExp = /#\{([^{}]*)\}/g;
+
+export function stringSupplant(str: string, map: Record<string, string | number | undefined>) {
+  return str.replace(parameterRegExp, (_, name) => {
+    const value = map[name];
+    return value == null ? '' : `${value}`;
+  });
+}
 
 // TODO new home
 export const getDecorationSchema = _memoize((id: string): TPathAgnosticDecorationSchema | undefined => {
@@ -39,7 +50,11 @@ let pendingData: undefined | TNewData;
 let pendingPromise: undefined | Promise<TNewData>;
 let resolve: undefined | ((arg: TNewData) => void);
 
-function getDecoration(id: string, service: string, operation?: string) {
+export function getDecoration(id: string, service: string, operation?: string) {
+  const schema = getDecorationSchema(id);
+  console.log(schema);
+  if (!schema) return;
+
   const returnPromise = !resolve || !pendingPromise;
   if (returnPromise) {
     pendingPromise = new Promise<TNewData>(res => {
@@ -47,40 +62,39 @@ function getDecoration(id: string, service: string, operation?: string) {
     });
   }
 
-  const schema = getDecorationSchema(id);
-  if (!schema) return;
-
   pendingCount = pendingCount ? pendingCount + 1 : 1;
   const { url, opUrl, valuePath, opValuePath } = schema;
   let promise: Promise<Record<string, any>>;
   let getPath: string;
   let setPath: string;
   if (opValuePath && opUrl && operation) {
-    // const promise = fetch(stringSupplant(opUrl, { service, operation }));
-    const arbitraryNum = operation.length + service.length;
-    // getPath = stringSupplant(opValuePath, ({ service, operation }));
-    getPath = opValuePath;
+    promise = JaegerAPI.fetchDecoration(stringSupplant(opUrl, { service, operation }));
+    // const arbitraryNum = operation.length + service.length;
+    getPath = stringSupplant(opValuePath, ({ service, operation }));
+    // getPath = opValuePath;
     setPath = `withoutOp.${service}.${operation}`;
-    promise = new Promise(res => setTimeout(() => res({ opVal: arbitraryNum }), arbitraryNum * 100));
+    // promise = new Promise(res => setTimeout(() => res({ opVal: arbitraryNum }), arbitraryNum * 100));
     // .then(res => _get(res, getPath, `${getPath} not found in response`));
   } else {
-    // const promise = fetch(stringSupplant(url, { service }));
-    const arbitraryNum = service.length;
-    // getPath = stringSupplant(valuePath, ({ service }));
+    console.log(schema, url);
+    promise = JaegerAPI.fetchDecoration(stringSupplant(url, { service }));
+    // const arbitraryNum = service.length;
+    getPath = stringSupplant(valuePath, ({ service }));
     getPath = valuePath;
     setPath = `withOp.${service}`;
-    promise = new Promise(res => setTimeout(() => res({ val: arbitraryNum }), arbitraryNum * 100));
+    // promise = new Promise(res => setTimeout(() => res({ val: arbitraryNum }), arbitraryNum * 100));
     // .then(res => _get(res, getPath, `${getPath} not found in response`));
   }
 
   promise.then(res => {
     return _get(res, getPath, `${getPath} not found in response`);
   }).catch(err => {
-    return `Unable to fetch data, statusCode: ${err.statusCode}`;
+    return `Unable to fetch decoration: ${err.message || err}`;
   }).then(value => {
     if (!pendingData) pendingData = {};
     _set(pendingData, setPath, value);
     doneCount = doneCount ? doneCount + 1 : 1;
+
     if (doneCount === pendingCount) {
       if (resolve) resolve(pendingData);
       else throw new Error('`resolve` unexpectedly undefined');

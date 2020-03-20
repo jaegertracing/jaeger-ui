@@ -16,54 +16,60 @@ import _merge from 'lodash/merge';
 
 import { getDecorationDone } from './path-agnostic-decorations';
 
+const decorationID = {
+  0: 'decoration id 0',
+  1: 'decoration id 1',
+};
+const op = {
+  0: 'op 0',
+  1: 'op 1',
+};
+const svc = {
+  0: 'svc 0',
+  1: 'svc 1',
+};
+
+// eslint-disable-next-line import/prefer-default-export
+export function genStateAndPayload(_id, _service, _operation, value) {
+  const id = decorationID[_id];
+  const operation = op[_operation];
+  const service = svc[_service];
+
+  const isWithOp = typeof operation === 'number';
+  const valueObj = {
+    value,
+  };
+
+  const payloadKey = isWithOp ? 'withOp' : 'withoutOp';
+  const payload = {
+    [id]: {
+      [payloadKey]: {
+        [service]: isWithOp
+        ? {
+          [operation]: valueObj,
+        }
+        : valueObj,
+      },
+    },
+  };
+
+  const stateKey = isWithOp ? 'withOpMax' : 'withoutOpMax';
+  const state = {
+    [id]: {
+      ...payload[id],
+      [stateKey]: typeof value === 'number' ? value : -Infinity,
+    },
+  };
+  return { id, operation, service, payload, state };
+}
+
 describe('pathAgnosticDecoration reducers', () => {
-  const decorationID = {
-    0: 'decoration id 0',
-    1: 'decoration id 1',
-  };
-  const op = {
-    0: 'op 0',
-    1: 'op 1',
-  };
-  const svc = {
-    0: 'svc 0',
-    1: 'svc 1',
-  };
-
-  function genStateAndPayload(id, service, operation, value) {
-    const isWithOp = typeof operation === 'number';
-    const valueObj = {
-      value,
-    };
-
-    const payloadKey = isWithOp ? 'withOp' : 'withoutOp';
-    const payload = {
-      [decorationID[id]]: {
-        [payloadKey]: {
-          [svc[service]]: isWithOp
-          ? {
-            [op[operation]]: valueObj,
-          }
-          : valueObj,
-        },
-      },
-    };
-
-    const stateKey = isWithOp ? 'withOpMax' : 'withoutOpMax';
-    const state = {
-      [decorationID[id]]: {
-        ...payload[decorationID[id]],
-        [stateKey]: typeof value === 'number' ? value : -Infinity,
-      },
-    };
-    return { payload, state };
-  }
-
   // variable names are type(payload|state)+decoration(0|1)+service(0|1)+operation(0|1|u)+value(0|1|s)
   // u for undefined, or opless
   // s for string, or errored request
   const { payload: payload00u0, state: state00u0 } = genStateAndPayload(0, 0, undefined, 0);
   const { payload: payload00us, state: state00us } = genStateAndPayload(0, 0, undefined, 'Error: 404');
+  const { state: state00u1 } = genStateAndPayload(0, 0, undefined, 1);
   const { payload: payload01u1, state: state01u1 } = genStateAndPayload(0, 1, undefined, 1);
   const { payload: payload10u1, state: state10u1 } = genStateAndPayload(1, 0, undefined, 1);
 
@@ -111,10 +117,6 @@ describe('pathAgnosticDecoration reducers', () => {
     it('adds service decoration error to state with existing decoration without overriding existing withoutOpMax', () => {
       expect(getDecorationDone(state01u1, payload00us)).toEqual(mergeAndObjectContaining(state00us, state01u1));
     });
-
-    it('adds service decoration to state with only operation decorations', () => {
-      expect(getDecorationDone(state0011, payload00u0)).toEqual(mergeAndObjectContaining(state00u0, state0011));
-    });
   });
 
   describe('withOp', () => {
@@ -149,9 +151,23 @@ describe('pathAgnosticDecoration reducers', () => {
     it('adds operation decoration error to state with existing decoration without overriding existing withoutOpMax', () => {
       expect(getDecorationDone(state0011, payload000s)).toEqual(mergeAndObjectContaining(state000s, state0011));
     });
+  });
+
+  describe('mixed', () => {
+    it('adds service decoration to state with only operation decorations', () => {
+      expect(getDecorationDone(state0011, payload00u0)).toEqual(mergeAndObjectContaining(state00u0, state0011));
+    });
 
     it('adds operation decoration to state with only service decorations', () => {
-      expect(getDecorationDone(state01u1, payload0000)).toEqual(mergeAndObjectContaining(state0000, state01u1));
+      expect(getDecorationDone(state00u1, payload0000)).toEqual(mergeAndObjectContaining(state0000, state00u1));
+    });
+
+    it('adds multiple operation and service decortions to state with multiple operation and service decorations', () => {
+      const initialState = _merge({}, state00us, state00u0, state1001);
+      const payload = _merge({}, payload01u1, payload10u1, payload10u1, payload000s, payload0101);
+      const expectedState = mergeAndObjectContaining({}, state000s, initialState, state01u1, state10u1, state0101);
+   
+      expect(getDecorationDone(initialState, payload)).toEqual(expectedState);
     });
   });
 });
