@@ -34,7 +34,7 @@ import * as jaegerApiActions from '../../actions/jaeger-api';
 import { formatDate, formatTime } from '../../utils/date';
 import reduxFormFieldAdapter from '../../utils/redux-form-field-adapter';
 import { DEFAULT_OPERATION, DEFAULT_LIMIT, DEFAULT_LOOKBACK } from '../../constants/search-form';
-
+import { getConfigValue } from '../../utils/config/get-config';
 import './SearchForm.css';
 
 const FormItem = Form.Item;
@@ -443,7 +443,7 @@ export class SearchFormImpl extends React.PureComponent {
             type="number"
             component={AdaptedInput}
             placeholder="Limit Results"
-            props={{ disabled, min: 1, max: 1500 }}
+            props={{ disabled, min: 1, max: getConfigValue('search.maxLimit') }}
           />
         </FormItem>
 

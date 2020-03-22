@@ -148,9 +148,13 @@ describe('lookback utils', () => {
 
     it('creates timestamp for days ago', () => {
       [1, 2, 4, 7].forEach(lookbackNum => {
-        expect(nowInMicroseconds - lookbackToTimestamp(`${lookbackNum}d`, now)).toBe(
-          lookbackNum * 24 * hourInMicroseconds
-        );
+        const actual = nowInMicroseconds - lookbackToTimestamp(`${lookbackNum}d`, now);
+        const expected = lookbackNum * 24 * hourInMicroseconds;
+        try {
+          expect(actual).toBe(expected);
+        } catch (_e) {
+          expect(Math.abs(actual - expected)).toBe(hourInMicroseconds);
+        }
       });
     });
 
@@ -391,6 +395,19 @@ describe('<SearchForm>', () => {
     wrapper.setProps({ invalid: true });
     btn = wrapper.find(`[data-test="${markers.SUBMIT_BTN}"]`);
     expect(btn.prop('disabled')).toBeTruthy();
+  });
+
+  it('uses config.search.maxLimit', () => {
+    const maxLimit = 6789;
+    const config = {
+      search: {
+        maxLimit,
+      },
+    };
+    window.getJaegerUiConfig = jest.fn(() => config);
+    wrapper = shallow(<SearchForm {...defaultProps} selectedService="svcA" />);
+    const field = wrapper.find(`Field[name="resultsLimit"]`);
+    expect(field.prop('props').max).toEqual(maxLimit);
   });
 });
 

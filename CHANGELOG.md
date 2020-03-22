@@ -1,5 +1,40 @@
 # Releases
 
+## v1.8.0 (March 12, 2020)
+
+### Enhancements
+
+- **Search:** Search results link spans ([#536](https://github.com/jaegertracing/jaeger-ui/pull/536), [@everett980](https://github.com/everett980))
+
+### Fixes
+
+- **General:** Correct trace name resolution ([#541](https://github.com/jaegertracing/jaeger-ui/pull/541), [@swapster](https://github.com/swapster))
+- **General:** bump url-parse version to 1.4.7 ([#542](https://github.com/jaegertracing/jaeger-ui/pull/542), [@rubenvp8510](https://github.com/rubenvp8510))
+- **Search** Fix span links for leading 0s trace ID ([#539](https://github.com/jaegertracing/jaeger-ui/pull/539), [@everett980](https://github.com/everett980))
+- **General:** Reorder, rename, and fix "About Jaeger" links ([#540](https://github.com/jaegertracing/jaeger-ui/pull/540), [@yurishkuro](https://github.com/yurishkuro))
+- **Search:** Fix search.maxLimit configuration ([#533](https://github.com/jaegertracing/jaeger-ui/pull/533), [@rubenvp8510](https://github.com/rubenvp8510))
+- **Trace detail:** Fix trace scoped links not supporting numeric fields ([#538](https://github.com/jaegertracing/jaeger-ui/pull/538), [@william-tran](https://github.com/william-tran))
+
+## v1.7.0 (February 21, 2020)
+
+### Enhancements
+
+- **Search:** Configure search.maxLimit ([@GabrielDyck](https://github.com/GabrielDyck) in [#511](https://github.com/jaegertracing/jaeger-ui/pull/511))
+
+- **Google Analytics:** Add ga dimension for config cookie ([@everett980](https://github.com/everett980) in [#515](https://github.com/jaegertracing/jaeger-ui/pull/515))
+
+- **Deep Dependency Graph:** Fix search results DDG path ordering ([@everett980](https://github.com/everett980) in [#504](https://github.com/jaegertracing/jaeger-ui/pull/504))
+
+- **Google Analytics:** Track trace alt views ([@everett980](https://github.com/everett980) in [#512](https://github.com/jaegertracing/jaeger-ui/pull/512))
+
+- **Deep Dependency Graph:** Add adblocker and 0/single node disclaimers ([@everett980](https://github.com/everett980) in [#502](https://github.com/jaegertracing/jaeger-ui/pull/502))
+
+- **Deep Dependency Graph:** Add ddg menu item, fetch server ops, expand GA cov ([@everett980](https://github.com/everett980) in [#501](https://github.com/jaegertracing/jaeger-ui/pull/501))
+
+### Fixes
+
+- **Plexus:** Fix #523 - Arrows are huge on Chrome Canary (Time sensitive) ([@tiffon](https://github.com/tiffon) in [#524](https://github.com/jaegertracing/jaeger-ui/pull/524))
+
 ## v1.6.0 (December 16, 2019)
 
 ### Enhancements
