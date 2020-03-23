@@ -35,7 +35,7 @@ export function genStateAndPayload(_id, _service, _operation, value) {
   const operation = op[_operation];
   const service = svc[_service];
 
-  const isWithOp = typeof operation === 'number';
+  const isWithOp = Boolean(operation);
   const valueObj = {
     value,
   };
@@ -45,10 +45,10 @@ export function genStateAndPayload(_id, _service, _operation, value) {
     [id]: {
       [payloadKey]: {
         [service]: isWithOp
-        ? {
-          [operation]: valueObj,
-        }
-        : valueObj,
+          ? {
+              [operation]: valueObj,
+            }
+          : valueObj,
       },
     },
   };
@@ -103,19 +103,27 @@ describe('pathAgnosticDecoration reducers', () => {
     });
 
     it('adds service decoration to state with different decoration', () => {
-      expect(getDecorationDone(state00u0, payload10u1)).toEqual(mergeAndObjectContaining(state00u0, state10u1));
+      expect(getDecorationDone(state00u0, payload10u1)).toEqual(
+        mergeAndObjectContaining(state00u0, state10u1)
+      );
     });
 
     it('adds service decoration to state with existing decoration and updates withoutOpMax', () => {
-      expect(getDecorationDone(state00u0, payload01u1)).toEqual(mergeAndObjectContaining(state00u0, state01u1));
+      expect(getDecorationDone(state00u0, payload01u1)).toEqual(
+        mergeAndObjectContaining(state00u0, state01u1)
+      );
     });
 
     it('adds service decoration to state with existing decoration without overriding higher withoutOpMax', () => {
-      expect(getDecorationDone(state01u1, payload00u0)).toEqual(mergeAndObjectContaining(state00u0, state01u1));
+      expect(getDecorationDone(state01u1, payload00u0)).toEqual(
+        mergeAndObjectContaining(state00u0, state01u1)
+      );
     });
 
     it('adds service decoration error to state with existing decoration without overriding existing withoutOpMax', () => {
-      expect(getDecorationDone(state01u1, payload00us)).toEqual(mergeAndObjectContaining(state00us, state01u1));
+      expect(getDecorationDone(state01u1, payload00us)).toEqual(
+        mergeAndObjectContaining(state00us, state01u1)
+      );
     });
   });
 
@@ -129,44 +137,67 @@ describe('pathAgnosticDecoration reducers', () => {
     });
 
     it('adds operation decoration to state with different decoration', () => {
-      expect(getDecorationDone(state0000, payload1001)).toEqual(mergeAndObjectContaining(state0000, state1001));
+      expect(getDecorationDone(state0000, payload1001)).toEqual(
+        mergeAndObjectContaining(state0000, state1001)
+      );
     });
 
     it('adds operation decoration to state with same decoration but different service and updates withOpMax', () => {
-      expect(getDecorationDone(state0000, payload0101)).toEqual(mergeAndObjectContaining(state0000, state0101));
+      expect(getDecorationDone(state0000, payload0101)).toEqual(
+        mergeAndObjectContaining(state0000, state0101)
+      );
     });
 
     it('adds operation decoration to state with same decoration but different service without overriding higher withoutOpMax', () => {
-      expect(getDecorationDone(state0101, payload0000)).toEqual(mergeAndObjectContaining(state0000, state0101));
+      expect(getDecorationDone(state0101, payload0000)).toEqual(
+        mergeAndObjectContaining(state0000, state0101)
+      );
     });
 
     it('adds operation decoration to state with existing decoration and same service and updates withoutOpMax', () => {
-      expect(getDecorationDone(state0000, payload0011)).toEqual(mergeAndObjectContaining(state0000, state0011));
+      expect(getDecorationDone(state0000, payload0011)).toEqual(
+        mergeAndObjectContaining(state0000, state0011)
+      );
     });
 
     it('adds operation decoration to state with existing decoration and same service without overriding higher withoutOpMax', () => {
-      expect(getDecorationDone(state0011, payload0000)).toEqual(mergeAndObjectContaining(state0000, state0011));
+      expect(getDecorationDone(state0011, payload0000)).toEqual(
+        mergeAndObjectContaining(state0000, state0011)
+      );
     });
 
     it('adds operation decoration error to state with existing decoration without overriding existing withoutOpMax', () => {
-      expect(getDecorationDone(state0011, payload000s)).toEqual(mergeAndObjectContaining(state000s, state0011));
+      expect(getDecorationDone(state0011, payload000s)).toEqual(
+        mergeAndObjectContaining(state000s, state0011)
+      );
     });
   });
 
   describe('mixed', () => {
     it('adds service decoration to state with only operation decorations', () => {
-      expect(getDecorationDone(state0011, payload00u0)).toEqual(mergeAndObjectContaining(state00u0, state0011));
+      expect(getDecorationDone(state0011, payload00u0)).toEqual(
+        mergeAndObjectContaining(state00u0, state0011)
+      );
     });
 
     it('adds operation decoration to state with only service decorations', () => {
-      expect(getDecorationDone(state00u1, payload0000)).toEqual(mergeAndObjectContaining(state0000, state00u1));
+      expect(getDecorationDone(state00u1, payload0000)).toEqual(
+        mergeAndObjectContaining(state0000, state00u1)
+      );
     });
 
     it('adds multiple operation and service decortions to state with multiple operation and service decorations', () => {
       const initialState = _merge({}, state00us, state00u0, state1001);
       const payload = _merge({}, payload01u1, payload10u1, payload10u1, payload000s, payload0101);
-      const expectedState = mergeAndObjectContaining({}, state000s, initialState, state01u1, state10u1, state0101);
-   
+      const expectedState = mergeAndObjectContaining(
+        {},
+        state000s,
+        initialState,
+        state01u1,
+        state10u1,
+        state0101
+      );
+
       expect(getDecorationDone(initialState, payload)).toEqual(expectedState);
     });
   });

@@ -35,7 +35,10 @@ export type TPadEntry = {
   // renderData: unknown;
 };
 
-export type TNewData = Record<string, {
-  withoutOp?: Record<string, TPadEntry>;
-  withOp?: Record<string, Record<string, TPadEntry>>;
-}>;
+export type TNewData = Record<
+  string,
+  {
+    withoutOp?: Record<string, TPadEntry>;
+    withOp?: Record<string, Record<string, TPadEntry>>;
+  }
+>;

@@ -41,7 +41,7 @@ export type LinkPatternsConfig = {
 export type Config = {
   archiveEnabled?: boolean;
   deepDependencies?: {
-    menuEnabled?:boolean;
+    menuEnabled?: boolean;
   };
   dependencies?: { dagMaxServicesLen?: number; menuEnabled?: boolean };
   menu: (ConfigMenuGroup | ConfigMenuItem)[];

@@ -52,10 +52,13 @@ export function getDecorationDone(state: TPathAgnosticDecorationsState, payload?
         ...newState,
         [decorationID]: {
           withOp: withOp
-            ? Object.keys(withOp).reduce((newWithOp, service) => ({
-              ...newWithOp,
-              [service]: Object.assign({}, newWithOp[service], withOp[service]),
-            }), newState[decorationID].withOp || {})
+            ? Object.keys(withOp).reduce(
+                (newWithOp, service) => ({
+                  ...newWithOp,
+                  [service]: Object.assign({}, newWithOp[service], withOp[service]),
+                }),
+                newState[decorationID].withOp || {}
+              )
             : newState[decorationID].withOp,
           withOpMax,
           withoutOp: withoutOp
@@ -64,26 +67,26 @@ export function getDecorationDone(state: TPathAgnosticDecorationsState, payload?
           withoutOpMax,
         },
       };
-
-    } else {
-      const withOpMax = Math.max(...newWithOpValues);
-      const withoutOpMax = Math.max(...newWithoutOpValues);
-      return {
-        ...newState,
-        [decorationID]: {
-          withOp,
-          withOpMax,
-          withoutOp,
-          withoutOpMax,
-        },
-      };
     }
+    const withOpMax = Math.max(...newWithOpValues);
+    const withoutOpMax = Math.max(...newWithoutOpValues);
+    return {
+      ...newState,
+      [decorationID]: {
+        withOp,
+        withOpMax,
+        withoutOp,
+        withoutOpMax,
+      },
+    };
   }, state);
 }
 
 export default handleActions(
   {
-    [actionTypes.GET_DECORATION]: guardReducer<TPathAgnosticDecorationsState, TNewData | undefined>(getDecorationDone),
+    [actionTypes.GET_DECORATION]: guardReducer<TPathAgnosticDecorationsState, TNewData | undefined>(
+      getDecorationDone
+    ),
   },
   {}
 );
