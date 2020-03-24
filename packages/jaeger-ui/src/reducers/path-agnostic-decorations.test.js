@@ -16,54 +16,53 @@ import _merge from 'lodash/merge';
 
 import { getDecorationDone } from './path-agnostic-decorations';
 
-const decorationID = {
-  0: 'decoration id 0',
-  1: 'decoration id 1',
-};
-const op = {
-  0: 'op 0',
-  1: 'op 1',
-};
-const svc = {
-  0: 'svc 0',
-  1: 'svc 1',
-};
-
-// eslint-disable-next-line import/prefer-default-export
-export function genStateAndPayload(_id, _service, _operation, value) {
-  const id = decorationID[_id];
-  const operation = op[_operation];
-  const service = svc[_service];
-
-  const isWithOp = Boolean(operation);
-  const valueObj = {
-    value,
-  };
-
-  const payloadKey = isWithOp ? 'withOp' : 'withoutOp';
-  const payload = {
-    [id]: {
-      [payloadKey]: {
-        [service]: isWithOp
-          ? {
-              [operation]: valueObj,
-            }
-          : valueObj,
-      },
-    },
-  };
-
-  const stateKey = isWithOp ? 'withOpMax' : 'withoutOpMax';
-  const state = {
-    [id]: {
-      ...payload[id],
-      [stateKey]: typeof value === 'number' ? value : -Infinity,
-    },
-  };
-  return { id, operation, service, payload, state };
-}
-
 describe('pathAgnosticDecoration reducers', () => {
+  const decorationID = {
+    0: 'decoration id 0',
+    1: 'decoration id 1',
+  };
+  const op = {
+    0: 'op 0',
+    1: 'op 1',
+  };
+  const svc = {
+    0: 'svc 0',
+    1: 'svc 1',
+  };
+
+  function genStateAndPayload(_id, _service, _operation, value) {
+    const id = decorationID[_id];
+    const operation = op[_operation];
+    const service = svc[_service];
+
+    const isWithOp = Boolean(operation);
+    const valueObj = {
+      value,
+    };
+
+    const payloadKey = isWithOp ? 'withOp' : 'withoutOp';
+    const payload = {
+      [id]: {
+        [payloadKey]: {
+          [service]: isWithOp
+            ? {
+                [operation]: valueObj,
+              }
+            : valueObj,
+        },
+      },
+    };
+
+    const stateKey = isWithOp ? 'withOpMax' : 'withoutOpMax';
+    const state = {
+      [id]: {
+        ...payload[id],
+        [stateKey]: typeof value === 'number' ? value : -Infinity,
+      },
+    };
+    return { id, operation, service, payload, state };
+  }
+
   // variable names are type(payload|state)+decoration(0|1)+service(0|1)+operation(0|1|u)+value(0|1|s)
   // u for undefined, or opless
   // s for string, or errored request

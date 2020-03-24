@@ -30,16 +30,6 @@ export type TDdgStateEntry =
       viewModifiers: Map<number, number>;
     };
 
-/*
-type TDdgState = {
-  entries: Record<string, TDdgStateEntry>;
-  pathAgnosticDecorations: Record<string, {
-    max: number;
-    opMax: number;
-    entries: Record<string, number>;
-  }>;
-};
- */
 type TDdgState = Record<string, TDdgStateEntry>;
 
 // eslint-disable-next-line no-undef
