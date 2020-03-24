@@ -21,23 +21,11 @@ import JaegerAPI from '../api/jaeger';
 import { TNewData, TPathAgnosticDecorationSchema } from '../model/path-agnostic-decorations/types';
 import { getConfigValue } from '../utils/config/get-config';
 import generateActionTypes from '../utils/generate-action-types';
+import stringSupplant from '../utils/stringSupplant';
 
 export const actionTypes = generateActionTypes('@jaeger-ui/PATH_AGNOSTIC_DECORATIONS', ['GET_DECORATION']);
 
-// this should probable be in a util file somewhere, with the ability to bind an enconding to it
-const parameterRegExp = /#\{([^{}]*)\}/g;
-
-export function stringSupplant(str: string, map: Record<string, string | number | undefined>) {
-  return str.replace(parameterRegExp, (_, name) => {
-    // istanbul ignore next : Will test in new file
-    const value = map[name];
-    // istanbul ignore next : Will test in new file
-    return value == null ? '' : `${value}`;
-  });
-}
-
-// TODO new home
-export const getDecorationSchema = _memoize((id: string): TPathAgnosticDecorationSchema | undefined => {
+const getDecorationSchema = _memoize((id: string): TPathAgnosticDecorationSchema | undefined => {
   const schemas = getConfigValue('pathAgnosticDecorations') as TPathAgnosticDecorationSchema[] | undefined;
   if (!schemas) return undefined;
   return schemas.find(s => s.id === id);

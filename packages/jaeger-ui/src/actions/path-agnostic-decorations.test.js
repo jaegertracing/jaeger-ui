@@ -14,10 +14,10 @@
 
 import _set from 'lodash/set';
 
-import JaegerAPI from '../api/jaeger';
-
+import { processed, getDecoration as getDecorationImpl } from './path-agnostic-decorations';
 import * as getConfig from '../utils/config/get-config';
-import { processed, getDecoration as getDecorationImpl, stringSupplant } from './path-agnostic-decorations';
+import stringSupplant from '../utils/stringSupplant';
+import JaegerAPI from '../api/jaeger';
 
 describe('getDecoration', () => {
   let getConfigValueSpy;

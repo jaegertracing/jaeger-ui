@@ -15,7 +15,6 @@
 import { handleActions } from 'redux-actions';
 
 import { actionTypes } from '../actions/path-agnostic-decorations';
-
 import { TNewData } from '../model/path-agnostic-decorations/types';
 import TPathAgnosticDecorationsState from '../types/TPathAgnosticDecorationsState';
 import guardReducer from '../utils/guardReducer';
