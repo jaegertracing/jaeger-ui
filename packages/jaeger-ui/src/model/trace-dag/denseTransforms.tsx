@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { DenseSpan } from './types';
+import { TDenseSpan } from './types';
 import * as tagKeys from '../../constants/tag-keys';
 
 // -	if span
@@ -21,7 +21,7 @@ import * as tagKeys from '../../constants/tag-keys';
 //     -	has parent.operation startsWith self-tag peer.service
 //     -	has parent.operation endsWith self.operation
 //     -	set self.service = self-tag peer.service
-function fixLeafService(denseSpan: DenseSpan, map: Map<string, DenseSpan>) {
+function fixLeafService(denseSpan: TDenseSpan, map: Map<string, TDenseSpan>) {
   const { children, operation, parentID, tags } = denseSpan;
   const parent = parentID != null && map.get(parentID);
   const kind = tags[tagKeys.SPAN_KIND];
@@ -42,7 +42,7 @@ function fixLeafService(denseSpan: DenseSpan, map: Map<string, DenseSpan>) {
 //     -	parent has one child (self)
 //     -	(parent.operation OR parent-tag peer.service) startsWith self.service
 //     -	set parent.skipToChild = true
-function skipClient(denseSpan: DenseSpan, map: Map<string, DenseSpan>) {
+function skipClient(denseSpan: TDenseSpan, map: Map<string, TDenseSpan>) {
   const { parentID, service, tags } = denseSpan;
   const parent = parentID != null && map.get(parentID);
   if (!parent) {
@@ -61,7 +61,7 @@ function skipClient(denseSpan: DenseSpan, map: Map<string, DenseSpan>) {
 //     -	has operation === tag http.method
 //     -	(parent.operation OR parent-tag peer.service) startsWith self.service
 //     - fix self.operation
-function fixHttpOperation(denseSpan: DenseSpan, map: Map<string, DenseSpan>) {
+function fixHttpOperation(denseSpan: TDenseSpan, map: Map<string, TDenseSpan>) {
   const { parentID, operation, service, tags } = denseSpan;
   const parent = parentID != null && map.get(parentID);
   if (!parent) {
@@ -86,7 +86,7 @@ function fixHttpOperation(denseSpan: DenseSpan, map: Map<string, DenseSpan>) {
 //     - has only one child
 //     - parent.process === self.process
 //     - set self.skipToChild = true
-function skipAnnotationSpans(denseSpan: DenseSpan, map: Map<string, DenseSpan>) {
+function skipAnnotationSpans(denseSpan: TDenseSpan, map: Map<string, TDenseSpan>) {
   const { children, parentID, span } = denseSpan;
   if (children.size !== 1 || span.tags.length !== 0) {
     return;
@@ -107,7 +107,7 @@ function skipAnnotationSpans(denseSpan: DenseSpan, map: Map<string, DenseSpan>) 
 //     - the child is a server span
 //     - parent.span.processID === self.span.processID
 //     - set parent.skipToChild = true
-function skipClientSpans(denseSpan: DenseSpan, map: Map<string, DenseSpan>) {
+function skipClientSpans(denseSpan: TDenseSpan, map: Map<string, TDenseSpan>) {
   const { children, parentID, span, tags } = denseSpan;
   if (children.size !== 1 || tags[tagKeys.SPAN_KIND] !== 'client') {
     return;
@@ -123,7 +123,7 @@ function skipClientSpans(denseSpan: DenseSpan, map: Map<string, DenseSpan>) {
     child.tags[tagKeys.SPAN_KIND] === 'client' && parent.span.processID === span.processID;
 }
 
-export default function denseTransforms(denseSpan: DenseSpan, map: Map<string, DenseSpan>) {
+export default function denseTransforms(denseSpan: TDenseSpan, map: Map<string, TDenseSpan>) {
   fixLeafService(denseSpan, map);
   skipClient(denseSpan, map);
   fixHttpOperation(denseSpan, map);

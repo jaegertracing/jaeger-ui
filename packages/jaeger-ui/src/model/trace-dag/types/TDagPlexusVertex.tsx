@@ -12,21 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { TEdge } from '@jaegertracing/plexus/lib/types';
+import { TVertex } from '@jaegertracing/plexus/lib/types';
 
-import { TDenseSpanMembers } from '../../../model/trace-dag/types';
-import TDagPlexusVertex from '../../../model/trace-dag/types/TDagPlexusVertex';
+import TDagNode from './TDagNode';
 
-export type TSumSpan = {
-  count: number;
-  errors: number;
-  percent: number;
-  percentSelfTime: number;
-  selfTime: number;
-  time: number;
-};
+type TDagPlexusVertex<T extends { [k: string]: unknown } = {}> = TVertex<{ data: TDagNode<T> }>;
 
-export type TEv = {
-  edges: TEdge<{ followsFrom: boolean }>[];
-  vertices: TDagPlexusVertex<TSumSpan & TDenseSpanMembers>[];
-};
+// eslint-disable-next-line no-undef
+export default TDagPlexusVertex;

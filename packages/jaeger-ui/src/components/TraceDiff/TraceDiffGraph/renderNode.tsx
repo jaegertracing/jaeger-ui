@@ -1,4 +1,4 @@
-// Copyright (c) 2018 Uber Technologies, Inc.
+// Copyright (c) 2018-2020 The Jaeger Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,8 +19,8 @@ import { TLayoutVertex } from '@jaegertracing/plexus/lib/types';
 
 import EmphasizedNode from '../../common/EmphasizedNode';
 import CopyIcon from '../../common/CopyIcon';
-import { DiffCounts } from '../../../model/trace-dag/types';
-import TDagVertex from '../../../model/trace-dag/types/TDagVertex';
+import { TDiffCounts } from '../../../model/trace-dag/types';
+import TDagPlexusVertex from '../../../model/trace-dag/types/TDagPlexusVertex';
 
 import './renderNode.css';
 
@@ -86,9 +86,11 @@ export class DiffNode extends React.PureComponent<Props> {
   }
 }
 
-export default function renderNode(vertex: TDagVertex<DiffCounts>) {
-  const { data, operation, service } = vertex.data;
-  return <DiffNode {...data} operation={operation} service={service} />;
+export default function renderNode(vertex: TDagPlexusVertex<TDiffCounts>) {
+  const { a, b, operation, service } = vertex.data;
+  const lenA = a ? a.length : 0;
+  const lenB = b ? b.length : 0;
+  return <DiffNode a={lenA} b={lenB} operation={operation} service={service} />;
 }
 
 export function getNodeEmphasisRenderer(keys: Set<string>) {
