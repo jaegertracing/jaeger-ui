@@ -19,6 +19,7 @@ export const FONT_SIZE = 14;
 export const FONT = `${FONT_SIZE}px Helvetica Nueue`;
 export const LINE_HEIGHT = 1.5;
 export const OP_PADDING_TOP = 5;
+export const PROGRESS_BAR_STROKE_WIDTH = 15;
 export const RADIUS = 75;
 export const WORD_RX = /\W*\w+\W*/g;
 

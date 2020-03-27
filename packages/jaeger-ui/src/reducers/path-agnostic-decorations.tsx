@@ -83,7 +83,7 @@ export function getDecorationDone(state: TPathAgnosticDecorationsState, payload?
 
 export default handleActions(
   {
-    [actionTypes.GET_DECORATION]: guardReducer<TPathAgnosticDecorationsState, TNewData | undefined>(
+    [`${actionTypes.GET_DECORATION}_FULFILLED`]: guardReducer<TPathAgnosticDecorationsState, TNewData | undefined>(
       getDecorationDone
     ),
   },

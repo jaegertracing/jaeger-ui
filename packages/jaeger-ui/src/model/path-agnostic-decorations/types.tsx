@@ -13,9 +13,9 @@
 // limitations under the License.
 
 export type TPathAgnosticDecorationSchema = {
+  acronym: string;
   id: string;
-  label: string;
-  icon?: string;
+  name: string;
   url: string;
   opUrl?: string;
   valuePath: string;

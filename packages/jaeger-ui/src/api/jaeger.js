@@ -81,7 +81,15 @@ const JaegerAPI = {
     return getJSON(`${this.apiRoot}archive/${id}`, { method: 'POST' });
   },
   fetchDecoration(url) {
-    return getJSON(url);
+    // return getJSON(url);
+    if (url.startsWith('neapolitan')) {
+      return new Promise((res, rej) => setTimeout(() => {
+        if (url.length % 4) res({ val: url.length ** 2 });
+        else if (url.length % 2) res('No val here');
+        else rej(new Error(`One of the unlucky third: ${url.length}`));
+      }, 150));
+    }
+    return new Promise(res => setTimeout(() =>  res({ val: url.length ** 2 }), 150));
   },
   fetchDeepDependencyGraph(query) {
     return getJSON(`${ANALYTICS_ROOT}v1/dependencies`, { query });

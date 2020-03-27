@@ -56,6 +56,28 @@ export default deepFreeze(
           ],
         },
       ],
+      pathAgnosticDecorations: [{
+        acronym: 'N',
+        id: 'n',
+        name: 'Neapolitan mix of success/error/no path',
+        url: 'neapolitan #{service}',
+        valuePath: 'val',
+      }, {
+        acronym: 'AR',
+        id: 'ar',
+        name: 'All should resolve',
+        url: 'all should res #{service}',
+        valuePath: 'val',
+      }, {
+        acronym: 'RDT',
+        id: 'rdt',
+        name: 'all should resolve details too #{service}',
+        url: 'details too #{service}',
+        detailPath: 'deets',
+        valuePath: 'val',
+      }/*, {
+        TODO: op example too
+      }*/],
       search: {
         maxLookback: {
           label: '2 Days',

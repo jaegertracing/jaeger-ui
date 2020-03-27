@@ -74,12 +74,12 @@ export function getDecoration(
   if (opValuePath && opUrl && operation) {
     promise = JaegerAPI.fetchDecoration(stringSupplant(opUrl, { service, operation }));
     getPath = stringSupplant(opValuePath, { service, operation });
-    setPath = `${id}.withOp.${service}.${operation}`;
+    setPath = `${id}.withOp.${service}.${operation}.value`;
   } else {
     promise = JaegerAPI.fetchDecoration(stringSupplant(url, { service }));
     getPath = stringSupplant(valuePath, { service });
     getPath = valuePath;
-    setPath = `${id}.withoutOp.${service}`;
+    setPath = `${id}.withoutOp.${service}.value`;
   }
 
   promise
