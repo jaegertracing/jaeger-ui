@@ -20,6 +20,10 @@ import 'react-circular-progressbar/dist/styles.css';
 
 import extractDecorationFromState, { TDecorationFromState } from '../../../model/path-agnostic-decorations';
 import { TPathAgnosticDecorationSchema } from '../../../model/path-agnostic-decorations/types';
+import stringSupplant from '../../../utils/stringSupplant';
+
+import './DetailsPanel.css';
+
 
 type TProps = TDecorationFromState & {
   decorationSchema: TPathAgnosticDecorationSchema;
@@ -29,29 +33,19 @@ type TProps = TDecorationFromState & {
 
 export class UnconnectedDetailsPanel extends React.PureComponent<TProps> {
   render() {
-    const { decorationColor, decorationMax, decorationValue, operation, service } = this.props;
+    const { decorationProgressbar, decorationColor, decorationMax, decorationSchema, decorationValue, operation: _op, service } = this.props;
+    const operation = _op && !Array.isArray(_op) ? _op : undefined;
     return (
-      <div>
-        <div>
+      <div className="Ddg--DetailsPanel">
+        <div className="Ddg--DetailsPanel--SvcOpHeader">
           <span>{service}</span>{operation && (
           <span>::{operation}</span>
           )}
         </div>
-        {typeof decorationValue === 'number' && typeof decorationMax === 'number'  && <CircularProgressbar
-          background
-          styles={{
-            path: {
-              stroke: decorationColor,
-              strokeLinecap: 'butt',
-            },
-            text: {
-              fill: decorationColor,
-            },
-          }}
-          maxValue={decorationMax}
-          text={`${decorationValue}`}
-          value={decorationValue}
-        />}
+        <div className="Ddg--DetailsPanel--DecorationHeader">
+          <span>{stringSupplant(decorationSchema.name, { service, operation })}</span>
+        </div>
+        {decorationProgressbar || (<span>{decorationValue}</span>)}
       </div>
     )
   }

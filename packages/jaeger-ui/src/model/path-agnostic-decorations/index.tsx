@@ -12,19 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import * as React from 'react';
 import _get from 'lodash/get';
 import queryString from 'query-string';
+import { CircularProgressbar } from 'react-circular-progressbar';
 
+import {
+  PROGRESS_BAR_STROKE_WIDTH,
+  RADIUS,
+} from '../../components/DeepDependencies/Graph/DdgNodeContent/constants';
 import { ReduxState } from '../../types/index';
 import {
   TDdgVertex,
 } from '../ddg/types';
 
 export type TDecorationFromState = {
+  decorationBackgroundColor?: string;
   decorationColor?: string;
   decorationID?: string;
-  decorationValue?: string | number;
+  decorationProgressbar?: React.ReactNode;
   decorationMax?: number;
+  decorationValue?: string | number;
 };
 
 export default function extractDecorationFromState(state: ReduxState, { service, operation }: { service: string, operation?: string | string[] | null }): TDecorationFromState {
@@ -50,8 +58,34 @@ export default function extractDecorationFromState(state: ReduxState, { service,
   const saturation = Math.ceil(scale * 100);
   const light = 50 + Math.ceil((1 - scale) * 50);
   const decorationColor = `hsl(0, ${saturation}%, ${light}%)`;
+  const backgroundScale = Math.pow((decorationMax - decorationValue) / decorationMax, 1 / 4);
+  const backgroundSaturation = Math.ceil(backgroundScale * 100);
+  const backgroundLight = 50 + Math.ceil((1 - backgroundScale) * 50);
+  const decorationBackgroundColor = `hsl(120, ${backgroundSaturation}%, ${backgroundLight}%)`;
   //  const decorationColor = `hsl(0, 100%, ${light}%)`;
+  const decorationProgressbar = typeof decorationValue === 'number'
+ ? (
+    <CircularProgressbar
+      key={`${service}\t${operation}`}
+      styles={{
+        path: {
+          stroke: decorationColor,
+            strokeLinecap: 'butt',
+        },
+        text: {
+          fill: decorationColor,
+        },
+        trail: {
+          stroke: decorationBackgroundColor,
+          strokeLinecap: 'butt',
+        },
+      }}
+      maxValue={decorationMax}
+      strokeWidth={PROGRESS_BAR_STROKE_WIDTH / RADIUS * 50}
+      text={`${decorationValue}`}
+      value={decorationValue}
+    />
+  ) : undefined;
 
-
-  return { decorationColor, decorationID, decorationValue, decorationMax };
+  return { decorationProgressbar, decorationBackgroundColor, decorationColor, decorationID, decorationValue, decorationMax };
 }

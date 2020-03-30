@@ -77,11 +77,7 @@ type TProps = RouteComponentProps<any> & TDispatchProps & TDecorationFromState &
   updateGenerationVisibility: (vertexKey: string, direction: EDirection) => void;
   vertex: TDdgVertex;
   vertexKey: string;
-} /* & {
-  history: RouterHistory;
-  location: Location;
-  match: any;
-}*/;
+};
 
 type TState = {
   childrenVisibility?: ECheckedStatus | null;
@@ -258,7 +254,7 @@ export class UnconnectedDdgNodeContent extends React.PureComponent<TProps, TStat
 
   render() {
     const { childrenVisibility, parentVisibility } = this.state;
-    const { decorationColor, decorationMax, decorationValue, focalNodeUrl, isFocalNode, isPositioned, operation, service } = this.props;
+    const { decorationProgressbar, decorationBackgroundColor, decorationColor, decorationMax, decorationValue, focalNodeUrl, isFocalNode, isPositioned, operation, service } = this.props;
 
     const { radius, svcWidth, opWidth, svcMarginTop } = calcPositioning(service, operation);
     const trueRadius = typeof decorationValue === 'number' ? RADIUS - PROGRESS_BAR_STROKE_WIDTH : RADIUS;
@@ -272,17 +268,7 @@ export class UnconnectedDdgNodeContent extends React.PureComponent<TProps, TStat
 
     return (
       <div className="DdgNodeContent" onMouseOver={this.onMouseUx} onMouseOut={this.onMouseUx}>
-        {typeof decorationValue === 'number' && <CircularProgressbar
-          styles={{
-            path: {
-              stroke: decorationColor,
-              strokeLinecap: 'butt',
-            },
-          }}
-          maxValue={decorationMax}
-          strokeWidth={PROGRESS_BAR_STROKE_WIDTH / RADIUS * 50}
-          value={decorationValue}
-        />}
+        {decorationProgressbar}
         <div
           className={cx('DdgNodeContent--core', {
             'is-focalNode': isFocalNode,

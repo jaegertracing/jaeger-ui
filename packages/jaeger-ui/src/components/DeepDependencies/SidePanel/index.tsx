@@ -23,6 +23,8 @@ import { TPathAgnosticDecorationSchema } from '../../../model/path-agnostic-deco
 import { getConfigValue } from '../../../utils/config/get-config';
 import DetailsPanel from './DetailsPanel';
 
+import './index.css';
+
 
 type TProps = {
   clearSelected: () => void;
@@ -77,10 +79,10 @@ export default class SidePanel extends React.PureComponent<TProps, TState> {
               className="Ddg--SidePanel--decorationBtn"
               onClick={() => selectDecoration()}
             >
-              X
+              Clear 
             </button>
         </div>
-        <div className={`Ddg--SidePanel--Details ${selectedVertex ? '.is-expanded' : ''}`}>
+        <div className={`Ddg--SidePanel--Details ${selectedVertex && selectedSchema ? '.is-expanded' : ''}`}>
           {selectedVertex && selectedSchema && <DetailsPanel
             decorationSchema={selectedSchema}
             operation={selectedVertex.operation}

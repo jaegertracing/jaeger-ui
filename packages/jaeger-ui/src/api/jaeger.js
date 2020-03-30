@@ -82,11 +82,10 @@ const JaegerAPI = {
   },
   fetchDecoration(url) {
     // return getJSON(url);
-    if (url.startsWith('neapolitan')) {
+    if (url.length % 2 && url.startsWith('neapolitan')) {
       return new Promise((res, rej) => setTimeout(() => {
-        if (url.length % 4) res({ val: url.length ** 2 });
-        else if (url.length % 2) res('No val here');
-        else rej(new Error(`One of the unlucky third: ${url.length}`));
+        if (url.length % 4 === 1) res('No val here');
+        else rej(new Error(`One of the unlucky quarter: ${url.length}`));
       }, 150));
     }
     return new Promise(res => setTimeout(() =>  res({ val: url.length ** 2 }), 150));
