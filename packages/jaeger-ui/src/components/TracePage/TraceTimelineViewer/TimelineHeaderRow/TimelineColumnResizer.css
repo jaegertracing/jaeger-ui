@@ -21,6 +21,10 @@ limitations under the License.
   top: 0;
 }
 
+.TimelineColumnResizer.is-flipped {
+  transform: scaleX(-1);
+}
+
 .TimelineColumnResizer--wrapper {
   bottom: 0;
   position: absolute;

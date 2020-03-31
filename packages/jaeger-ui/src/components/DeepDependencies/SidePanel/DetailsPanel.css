@@ -40,3 +40,7 @@ limitations under the License.
   border-bottom: solid 1px #bbb;
   /* box-shadow: 0 1px 0.5px rgba(0, 0, 0, 0.3); */
 }
+
+.Ddg-DetailsPanel--errorMsg {
+  color: #E58C33;
+}

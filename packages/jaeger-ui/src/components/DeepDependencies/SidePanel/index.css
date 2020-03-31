@@ -21,18 +21,64 @@ limitations under the License.
   display: flex;
 }
 
-.Ddg--SidePanel--Btns {
+.Ddg--SidePanel--Btns, .Ddg--SidePanel--DecorationBtns {
   display: flex;
   flex-direction: column;
+}
+
+.Ddg--SidePanel--Btns {
+  justify-content: space-between;
+}
+
+.Ddg--SidePanel--Btns button {
+  pointer: click;
+}
+
+
+.Ddg--SidePanel--closeBtn, .Ddg--SidePanel--infoBtn {
+  background: transparent;
+  border: none;
+  margin: 5px 0px;
+}
+
+.Ddg--SidePanel--closeBtn > svg,
+.Ddg--SidePanel--infoBtn > svg {
+  height: 80%;
+  width: 80%;
+}
+
+.Ddg--SidePanel--closeBtn:focus > svg,
+.Ddg--SidePanel--infoBtn:focus > svg {
+  filter: drop-shadow(0 0 2px blue);
+}
+
+.Ddg--SidePanel--closeBtn:focus,
+.Ddg--SidePanel--infoBtn:focus{
+  outline: none;
+}
+
+.Ddg--SidePanel--closeBtn.is-hidden {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.Ddg--SidePanel--DecorationBtns {
+  flex-grow: 1;
   justify-content: center;
 }
 
 .Ddg--SidePanel--decorationBtn {
   border-radius: 100%;
+  margin: 3px;
   padding-bottom: 25%;
   padding-top: 25%;
 }
 
 .Ddg--SidePanel--decorationBtn.is-selected {
   background-color: yellow;
+}
+
+.Ddg--SidePanel--decorationBtn:focus {
+  box-shadow: 0 0 5px 2px blue;
+  outline: none;
 }

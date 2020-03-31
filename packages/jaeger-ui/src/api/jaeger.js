@@ -88,6 +88,32 @@ const JaegerAPI = {
         else rej(new Error(`One of the unlucky quarter: ${url.length}`));
       }, 150));
     }
+    if (url === 'get deets') {
+      return new Promise(res => setTimeout(() => res({
+        deets: {
+          here: [
+            {
+              count: 0,
+              value: 'first',
+              foo: 'bar',
+              bar: 'baz',
+            },
+            {
+              count: 1,
+              value: 'second',
+              foo: 'bar too',
+            },
+          ],
+        },
+        defs: {
+          here: [
+            'count',
+            'value',
+            'foo',
+          ]
+        },
+      }), 750));
+    }
     return new Promise(res => setTimeout(() =>  res({ val: url.length ** 2 }), 150));
   },
   fetchDeepDependencyGraph(query) {

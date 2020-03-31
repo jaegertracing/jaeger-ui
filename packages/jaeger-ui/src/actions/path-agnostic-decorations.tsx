@@ -67,24 +67,26 @@ export function getDecoration(
   }
 
   pendingCount = pendingCount ? pendingCount + 1 : 1;
-  const { url, opUrl, valuePath, opValuePath } = schema;
+  const { summaryUrl, opSummaryUrl, summaryPath, opSummaryPath } = schema;
   let promise: Promise<Record<string, any>>;
   let getPath: string;
   let setPath: string;
-  if (opValuePath && opUrl && operation) {
-    promise = JaegerAPI.fetchDecoration(stringSupplant(opUrl, { service, operation }));
-    getPath = stringSupplant(opValuePath, { service, operation });
+  if (opSummaryPath && opSummaryUrl && operation) {
+    // TODO: lru memoize it up if chrome doesn't cache
+    promise = JaegerAPI.fetchDecoration(stringSupplant(opSummaryUrl, { service, operation }));
+    getPath = stringSupplant(opSummaryPath, { service, operation });
     setPath = `${id}.withOp.${service}.${operation}.value`;
   } else {
-    promise = JaegerAPI.fetchDecoration(stringSupplant(url, { service }));
-    getPath = stringSupplant(valuePath, { service });
-    getPath = valuePath;
+    // TODO: lru memoize it up if chrome doesn't cache
+    promise = JaegerAPI.fetchDecoration(stringSupplant(summaryUrl, { service }));
+    getPath = stringSupplant(summaryPath, { service });
+    getPath = summaryPath;
     setPath = `${id}.withoutOp.${service}.value`;
   }
 
   promise
     .then(res => {
-      return _get(res, getPath, `${getPath} not found in response`);
+      return _get(res, getPath, `\`${getPath}\` not found in response`);
     })
     .catch(err => {
       return `Unable to fetch decoration: ${err.message || err}`;

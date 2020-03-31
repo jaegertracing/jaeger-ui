@@ -14,7 +14,11 @@
 
 import * as React from 'react';
 import { CircularProgressbar } from 'react-circular-progressbar';
+import MdExitToApp from 'react-icons/lib/md/exit-to-app';
+import MdInfoOutline from 'react-icons/lib/md/info-outline';
+
 import 'react-circular-progressbar/dist/styles.css';
+
 
 import {
   TDdgVertex,
@@ -50,6 +54,10 @@ export default class SidePanel extends React.PureComponent<TProps, TState> {
     this.decorations = getConfigValue('pathAgnosticDecorations');
   }
 
+  clearSelected = () => {
+    this.props.clearSelected();
+  }
+
   render() {
     if (!this.decorations) return null;
 
@@ -65,6 +73,10 @@ export default class SidePanel extends React.PureComponent<TProps, TState> {
     return (
       <div className="Ddg--SidePanel">
         <div className="Ddg--SidePanel--Btns">
+          <button className={`Ddg--SidePanel--closeBtn ${selectedVertex && selectedSchema ? '' : 'is-hidden'}`} onClick={this.clearSelected}>
+            <MdExitToApp />
+          </button>
+          <div className="Ddg--SidePanel--DecorationBtns">
           {this.decorations.map(({ acronym, id, name }) => (
             <button
               key={id}
@@ -81,6 +93,10 @@ export default class SidePanel extends React.PureComponent<TProps, TState> {
             >
               Clear 
             </button>
+          </div>
+          <button className="Ddg--SidePanel--infoBtn">
+            <MdInfoOutline />
+          </button>
         </div>
         <div className={`Ddg--SidePanel--Details ${selectedVertex && selectedSchema ? '.is-expanded' : ''}`}>
           {selectedVertex && selectedSchema && <DetailsPanel

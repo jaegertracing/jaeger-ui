@@ -16,14 +16,11 @@ import * as React from 'react';
 import { Checkbox, Popover } from 'antd';
 import cx from 'classnames';
 import { TLayoutVertex } from '@jaegertracing/plexus/lib/types';
-import { CircularProgressbar } from 'react-circular-progressbar';
 import IoAndroidLocate from 'react-icons/lib/io/android-locate';
 import MdVisibilityOff from 'react-icons/lib/md/visibility-off';
 import { connect } from 'react-redux';
 import { RouteComponentProps, withRouter } from 'react-router-dom';
 import { bindActionCreators, Dispatch } from 'redux';
-
-import 'react-circular-progressbar/dist/styles.css';
 
 import calcPositioning from './calc-positioning';
 import {
@@ -254,17 +251,12 @@ export class UnconnectedDdgNodeContent extends React.PureComponent<TProps, TStat
 
   render() {
     const { childrenVisibility, parentVisibility } = this.state;
-    const { decorationProgressbar, decorationBackgroundColor, decorationColor, decorationMax, decorationValue, focalNodeUrl, isFocalNode, isPositioned, operation, service } = this.props;
+    const { decorationProgressbar, decorationValue, focalNodeUrl, isFocalNode, isPositioned, operation, service } = this.props;
 
     const { radius, svcWidth, opWidth, svcMarginTop } = calcPositioning(service, operation);
     const trueRadius = typeof decorationValue === 'number' ? RADIUS - PROGRESS_BAR_STROKE_WIDTH : RADIUS;
     const scaleFactor = trueRadius / radius;
     const transform = `translate(${RADIUS - radius}px, ${RADIUS - radius}px) scale(${scaleFactor})`;
-
-    let backgroundColor: string | undefined;
-    if (typeof decorationValue === 'string') {
-      backgroundColor = 'lightblue';
-    }
 
     return (
       <div className="DdgNodeContent" onMouseOver={this.onMouseUx} onMouseOut={this.onMouseUx}>
@@ -272,10 +264,11 @@ export class UnconnectedDdgNodeContent extends React.PureComponent<TProps, TStat
         <div
           className={cx('DdgNodeContent--core', {
             'is-focalNode': isFocalNode,
+            'is-missingDecoration': typeof decorationValue === 'string',
             'is-positioned': isPositioned,
           })}
           onClick={this.handleClick}
-          style={{ width: `${radius * 2}px`, height: `${radius * 2}px`, transform, backgroundColor }}
+          style={{ width: `${radius * 2}px`, height: `${radius * 2}px`, transform }}
         >
           <div className="DdgNodeContent--labelWrapper">
             <h4
