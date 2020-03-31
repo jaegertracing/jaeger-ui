@@ -42,7 +42,7 @@ type TState = {
 };
 
 export class UnconnectedDetailsPanel extends React.PureComponent<TProps, TState> {
-  state = {} as TState; 
+  state: TState = {}; 
 
   componentDidMount() {
     this.fetchDetails();

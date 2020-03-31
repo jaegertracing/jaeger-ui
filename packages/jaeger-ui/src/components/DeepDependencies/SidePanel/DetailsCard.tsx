@@ -32,6 +32,10 @@ type TProps = {
   header: string;
 };
 
+function isList(arr: string[] | TPadRow[]): arr is string[] {
+  return typeof arr[0] === 'string';
+}
+
 export default class DetailsCard extends React.PureComponent<TProps> {
   /*
   static defaultProps = {
@@ -44,13 +48,12 @@ export default class DetailsCard extends React.PureComponent<TProps> {
 
   renderTable(details: TPadRow[]) {
     const { columnDefs: _columnDefs } = this.props;
-    const columnDefs = _columnDefs ? _columnDefs.slice() : [];
-
-    const knownColumns = new Set((columnDefs || []).map(keyOrObj => {
+    const columnDefs: TPadColumnDefs = _columnDefs ? _columnDefs.slice() : [];
+    const knownColumns = new Set(columnDefs.map(keyOrObj => {
       if (typeof keyOrObj === 'string') return keyOrObj;
       return keyOrObj.key;
     }));
-    details.forEach((row: any) => { // TODO def not any
+    details.forEach(row => {
       Object.keys(row).forEach((col: string) => {
         if (!knownColumns.has(col)) {
           knownColumns.add(col);
@@ -58,8 +61,6 @@ export default class DetailsCard extends React.PureComponent<TProps> {
         };
       });
     });
-    console.log(knownColumns);
-    console.log(columnDefs);
 
     return (
       <Table
@@ -69,26 +70,23 @@ export default class DetailsCard extends React.PureComponent<TProps> {
         rowKey="id"
         pagination={false}
       >
-        {columnDefs.map((fdef: any) => {
-          const def = fdef as unknown as any as (string | TPadColumnDef);
+        {columnDefs.map(def => {
           if (typeof def === 'string') {
-            const defString = def as string; // absolutely should not be necessary
             return (
               <Column
-                key={defString}
-                title={defString}
-                dataIndex={defString}
+                key={def}
+                title={def}
+                dataIndex={def}
                 {...{} /*render={() => <span className="u-tx-muted">{defString}</span>}*/}
               />
             );
           }
-          const defObj = def as TPadColumnDef;
           return (
             <Column
-                key={defObj.key}
-                title={defObj.label || defObj.key}
-                dataIndex={defObj.key}
-                {...{} /*render={() => <span className="u-tx-muted">{defString}</span>}*/}
+              key={def.key}
+              title={def.label || def.key}
+              dataIndex={def.key}
+              {...{} /*render={() => <span className="u-tx-muted">{defString}</span>}*/}
             />
           );
         })}
@@ -100,17 +98,14 @@ export default class DetailsCard extends React.PureComponent<TProps> {
     const { columnDefs: _columnDefs, details } = this.props;
     const columnDefs = _columnDefs ? _columnDefs.slice() : [];
 
-    let isTable = false;
-
     if (Array.isArray(details)) {
       if (details.length === 0) return null;
 
-      if (typeof details[0] === 'string') return this.renderList(details as string[]);
-
-      return this.renderTable(details as TPadRow[]);
+      if (isList(details)) return this.renderList(details);
+      return this.renderTable(details);
     }
 
-    return <span>details</span>;
+    return <span>{details}</span>;
   }
 
   render() {

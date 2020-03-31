@@ -41,7 +41,8 @@ export type TPadColumnDef = {
   label?: string;
   styling?: React.CSSProperties;
 };
-export type TPadColumnDefs = (string | (TStyledValue & { key: string }))[];
+
+export type TPadColumnDefs = (string | TPadColumnDef)[];
 
 // export type TPadDetails = string | TStyledValue | string[] | TStyledValue[] | Record<string, TStyledValue>[];
 export type TPadRow = Record<string, TStyledValue | string>;
