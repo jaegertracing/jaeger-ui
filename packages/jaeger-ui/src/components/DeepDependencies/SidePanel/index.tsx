@@ -109,30 +109,3 @@ export default class SidePanel extends React.PureComponent<TProps, TState> {
     );
   }
 }
-
-/*
-export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxProps {
-  const { services: stServices } = state;
-  const { services, serverOpsForService } = stServices;
-  const urlState = getUrlState(ownProps.location.search);
-  const { density, operation, service, showOp: urlStateShowOp } = urlState;
-  const showOp = urlStateShowOp !== undefined ? urlStateShowOp : operation !== undefined;
-  let graphState: TDdgStateEntry | undefined;
-  if (service) {
-    graphState = _get(state.ddg, getStateEntryKey({ service, operation, start: 0, end: 0 }));
-  }
-  let graph: GraphModel | undefined;
-  if (graphState && graphState.state === fetchedState.DONE) {
-    graph = makeGraph(graphState.model, showOp, density);
-  }
-  return {
-    graph,
-    graphState,
-    serverOpsForService,
-    services,
-    showOp,
-    urlState: sanitizeUrlState(urlState, _get(graphState, 'model.hash')),
-    ...extractUiFindFromState(state),
-  };
-}
-*/

@@ -38,6 +38,10 @@ limitations under the License.
   display: flex;
 }
 
+.DdgNodeContent--core.is-decorated {
+  cursor: pointer;
+}
+
 .DdgNodeContent--core.is-missingDecoration {
   background-color: #E58C33;
 }

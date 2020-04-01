@@ -174,8 +174,8 @@ export class UnconnectedDdgNodeContent extends React.PureComponent<TProps, TStat
   };
 
   private handleClick = () => {
-    const { selectVertex, vertex } = this.props;
-    selectVertex(vertex);
+    const { decorationValue, selectVertex, vertex } = this.props;
+    if (decorationValue) selectVertex(vertex);
   }
 
   private hideVertex = () => {
@@ -263,6 +263,7 @@ export class UnconnectedDdgNodeContent extends React.PureComponent<TProps, TStat
         {decorationProgressbar}
         <div
           className={cx('DdgNodeContent--core', {
+            'is-decorated': decorationValue,
             'is-focalNode': isFocalNode,
             'is-missingDecoration': typeof decorationValue === 'string',
             'is-positioned': isPositioned,

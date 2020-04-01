@@ -68,7 +68,8 @@ export default class TimelineColumnResizer extends React.PureComponent<
       throw new Error('invalid state');
     }
     const { left: clientXLeft, width } = this._rootElm.getBoundingClientRect();
-    const { min, max } = this.props;
+    let { rightSide, min, max } = this.props;
+    if (rightSide) [min, max] = [1 - max, 1 - min];
     return {
       clientXLeft,
       width,

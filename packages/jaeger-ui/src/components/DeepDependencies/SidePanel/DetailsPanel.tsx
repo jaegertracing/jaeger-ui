@@ -131,7 +131,14 @@ export class UnconnectedDetailsPanel extends React.PureComponent<TProps, TState>
           <div className="Ddg--DetailsPanel--DecorationHeader">
             <span>{stringSupplant(decorationSchema.name, { service, operation })}</span>
           </div>
-          {decorationProgressbar || (<span className="Ddg-DetailsPanel--errorMsg">{decorationValue}</span>)}
+          {decorationProgressbar
+            ? (
+              <div className="Ddg--DetailsPanel--PercentCircleWrapper">
+                {decorationProgressbar}
+              </div>
+            )
+            : <span className="Ddg-DetailsPanel--errorMsg">{decorationValue}</span>
+          }
           {this.state.details && (
             <DetailsCard
               header="Details"
@@ -141,12 +148,12 @@ export class UnconnectedDetailsPanel extends React.PureComponent<TProps, TState>
           )}
         </div>
         <ColumnResizer
-          max={.80}
-          min={.20}
-          position={width}
-          rightSide
+          max={0.80}
+      min={0.10}
+      position={width}
+      rightSide
           onChange={this.onResize}
-        />
+      />
       </div>
     )
   }

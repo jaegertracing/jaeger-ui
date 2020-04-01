@@ -16,10 +16,10 @@ import * as React from 'react';
 import { Table } from 'antd';
 // import _get from 'lodash/get';
 
-import { TPadColumnDef, TPadColumnDefs, TPadDetails, TPadRow } from '../../../model/path-agnostic-decorations/types';
+import { TPadColumnDef, TPadColumnDefs, TPadDetails, TPadRow } from '../../../../model/path-agnostic-decorations/types';
 // import stringSupplant from '../../../utils/stringSupplant';
 
-// import './DetailsTable.css';
+import './index.css';
 //
 //
 const { Column } = Table;
@@ -109,12 +109,14 @@ export default class DetailsCard extends React.PureComponent<TProps> {
   }
 
   render() {
+    const { description, header } = this.props;
+
     return (
       <div>
         <div>
-          <span>{this.props.header}</span>
+          <span className="DetailsCard--Header">{header}</span>
         </div>
-        <p>{this.props.description}</p>
+        <p>{description}</p>
         {this.renderDetails()}
       </div>
     );
