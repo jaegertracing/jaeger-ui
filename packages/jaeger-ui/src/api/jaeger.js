@@ -93,7 +93,12 @@ const JaegerAPI = {
         deets: {
           here: [
             {
-              count: 0,
+              count: {
+                value: 0,
+                styling: {
+                  backgroundColor: 'red',
+                },
+              },
               value: 'first',
               foo: 'bar',
               bar: 'baz',

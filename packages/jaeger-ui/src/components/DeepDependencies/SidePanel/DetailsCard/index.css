@@ -27,7 +27,8 @@ limitations under the License.
 }
 
 .DetailsCard--DetailsWrapper {
-  /* overflow: scroll; */
+  overflow: scroll;
+  /*
   display: flex;
   flex-direction: column;
 }
@@ -40,4 +41,10 @@ limitations under the License.
 
 .DetailsCard--DetailsWrapper div:not(:only-of-type):last-of-type {
   overflow: scroll;
+}
+*/
+}
+
+.DetailsCard--DetailsWrapper th {
+  min-width: 65px;
 }

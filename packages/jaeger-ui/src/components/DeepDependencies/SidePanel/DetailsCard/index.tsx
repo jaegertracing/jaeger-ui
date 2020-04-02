@@ -69,22 +69,51 @@ export default class DetailsCard extends React.PureComponent<TProps> {
       });
     });
 
+    const onCellObj = {
+      onCell: (...args: any[]) => {
+        console.log('on cell');
+        console.log(...args);
+        return ({
+          style: {
+            backgroundColor: 'red',
+            color: 'white',
+          },
+        })
+      },
+      render: (...args: any[]) => {
+        console.log('render');
+        console.log(...args);
+        return args[0];
+      },
+    };
+
     return (
       <Table
         key="table"
-        scroll={{
-          /* y: true, */
-        }}
         size="middle"
         dataSource={details}
         rowKey="id"
         pagination={false}
+      {...{} /* components={{
+          body: {
+            cell: (...args: any[]) => {
+              console.log(args);
+              return (
+                <td>
+                  hello
+                  {args[0].children[2] && (args[0].children[2].value !== undefined && args[0].children[2].value) || args[0].children[2]}
+                </td>
+              );
+            }
+          }
+                }} */ }
       >
         {columnDefs.map(def => {
           if (typeof def === 'string') {
             return (
               <Column
                 key={def}
+                {...onCellObj}
                 sorter={(a: TPadRow, b: TPadRow) => {
                   return (a[def] < b[def] ? 1 : b[def] < a[def] ? -1 : 0);
                 }}
