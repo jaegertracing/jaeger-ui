@@ -17,6 +17,7 @@ limitations under the License.
 .DetailsCard {
   display: flex;
   flex-direction: column;
+  padding: .5em;
 }
 
 .DetailsCard--Header {
@@ -28,21 +29,7 @@ limitations under the License.
 
 .DetailsCard--DetailsWrapper {
   overflow: scroll;
-  /*
-  display: flex;
-  flex-direction: column;
-}
-
-.DetailsCard--DetailsWrapper div:only-of-type {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-.DetailsCard--DetailsWrapper div:not(:only-of-type):last-of-type {
-  overflow: scroll;
-}
-*/
+  margin-top: .5em;
 }
 
 .DetailsCard--DetailsWrapper th {

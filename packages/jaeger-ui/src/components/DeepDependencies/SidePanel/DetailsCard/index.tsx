@@ -14,19 +14,18 @@
 
 import * as React from 'react';
 import { List, Table } from 'antd';
-// import _get from 'lodash/get';
+import _isEmpty from 'lodash/isEmpty';
 
-import { TPadColumnDef, TPadColumnDefs, TPadDetails, TPadRow } from '../../../../model/path-agnostic-decorations/types';
-// import stringSupplant from '../../../utils/stringSupplant';
+import { TPadColumnDef, TPadColumnDefs, TPadDetails, TPadRow, TStyledValue } from '../../../../model/path-agnostic-decorations/types';
 
 import './index.css';
-//
-//
+
 const { Column } = Table;
 const { Item } = List;
 
 
 type TProps = {
+  className?: string;
   columnDefs?: TPadColumnDefs;
   description?: string;
   details: TPadDetails;
@@ -38,19 +37,58 @@ function isList(arr: string[] | TPadRow[]): arr is string[] {
 }
 
 export default class DetailsCard extends React.PureComponent<TProps> {
-  /*
-  static defaultProps = {
-    columnDef: [],
-  };
-   */
   renderList(details: string[]) {
-    console.log(details);
     return (
       <List
         dataSource={details}
         renderItem={(s: string) => <Item><span>{s}</span></Item>}
       />
     );
+  }
+
+  renderColumn(def: TPadColumnDef | string) {
+    let dataIndex: string;
+    let key: string;
+    let style: React.CSSProperties | undefined;
+    let title: string;
+    if (typeof def === 'string') {
+      key = title = dataIndex = def;
+    } else {
+      key = title = dataIndex = def.key;
+      if (def.label) title = def.label;
+      if (def.styling) style = def.styling;
+    }
+
+    const props = {
+      dataIndex,
+      key,
+      title,
+      onCell: (row: TPadRow) => {
+        const cellData = row[dataIndex];
+        if (!cellData || typeof cellData !== 'object') return null;
+        const { styling } = cellData;
+        if (_isEmpty(styling)) return null;
+        return ({
+          style: styling,
+        })
+      },
+      onHeaderCell: () => ({
+        style,
+      }),
+      render: (cellData: undefined | string | TStyledValue) => {
+        if (!cellData || typeof cellData !== 'object') return cellData;
+        return cellData.value;
+      },
+      sorter: (a: TPadRow, b: TPadRow) => {
+        const aData = a[dataIndex];
+        const aValue = typeof aData === 'object' && aData.value !== undefined ? aData.value : aData;
+        const bData = b[dataIndex];
+        const bValue = typeof bData === 'object' && bData.value !== undefined ? bData.value : bData;
+        return (aValue < bValue ? 1 : bValue < aValue ? -1 : 0);
+      },
+    };
+
+    return <Column {...props} />;
   }
 
   renderTable(details: TPadRow[]) {
@@ -69,24 +107,6 @@ export default class DetailsCard extends React.PureComponent<TProps> {
       });
     });
 
-    const onCellObj = {
-      onCell: (...args: any[]) => {
-        console.log('on cell');
-        console.log(...args);
-        return ({
-          style: {
-            backgroundColor: 'red',
-            color: 'white',
-          },
-        })
-      },
-      render: (...args: any[]) => {
-        console.log('render');
-        console.log(...args);
-        return args[0];
-      },
-    };
-
     return (
       <Table
         key="table"
@@ -94,47 +114,8 @@ export default class DetailsCard extends React.PureComponent<TProps> {
         dataSource={details}
         rowKey="id"
         pagination={false}
-      {...{} /* components={{
-          body: {
-            cell: (...args: any[]) => {
-              console.log(args);
-              return (
-                <td>
-                  hello
-                  {args[0].children[2] && (args[0].children[2].value !== undefined && args[0].children[2].value) || args[0].children[2]}
-                </td>
-              );
-            }
-          }
-                }} */ }
       >
-        {columnDefs.map(def => {
-          if (typeof def === 'string') {
-            return (
-              <Column
-                key={def}
-                {...onCellObj}
-                sorter={(a: TPadRow, b: TPadRow) => {
-                  return (a[def] < b[def] ? 1 : b[def] < a[def] ? -1 : 0);
-                }}
-                title={def}
-                dataIndex={def}
-                {...{} /*render={() => <span className="u-tx-muted">{defString}</span>}*/}
-              />
-            );
-          }
-          return (
-            <Column
-              key={def.key}
-              sorter={(a: TPadRow, b: TPadRow) => {
-                return a[def.key] < b[def.key] ? 1 : b[def.key] < a[def.key] ? -1 : 0;
-              }}
-              title={def.label || def.key}
-              dataIndex={def.key}
-              {...{} /*render={() => <span className="u-tx-muted">{defString}</span>}*/}
-            />
-          );
-        })}
+        {columnDefs.map(this.renderColumn)}
         </Table>
       );
   }
@@ -154,10 +135,10 @@ export default class DetailsCard extends React.PureComponent<TProps> {
   }
 
   render() {
-    const { description, header } = this.props;
+    const { className, description, header } = this.props;
 
     return (
-      <div className="DetailsCard">
+      <div className={`DetailsCard ${className}`}>
         <div>
           <span className="DetailsCard--Header">{header}</span>
           {description && <p>{description}</p>}

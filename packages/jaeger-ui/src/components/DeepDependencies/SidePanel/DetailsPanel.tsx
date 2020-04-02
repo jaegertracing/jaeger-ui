@@ -16,7 +16,8 @@ import * as React from 'react';
 import _get from 'lodash/get';
 import { connect } from 'react-redux';
 
-import BreakableText from '../../../components/common/BreakableText';
+import BreakableText from '../..//common/BreakableText';
+import LoadingIndicator from '../../common/LoadingIndicator';
 import ColumnResizer from '../../../components/TracePage/TraceTimelineViewer/TimelineHeaderRow/TimelineColumnResizer';
 import JaegerAPI from '../../../api/jaeger';
 import extractDecorationFromState, { TDecorationFromState } from '../../../model/path-agnostic-decorations';
@@ -53,7 +54,6 @@ export class UnconnectedDetailsPanel extends React.PureComponent<TProps, TState>
       || prevProps.service !== this.props.service
       || prevProps.decorationSchema !== this.props.decorationSchema
     ) {
-      console.log('clearing state');
       this.setState({
         details: undefined,
         detailsErred: undefined,
@@ -98,17 +98,23 @@ export class UnconnectedDetailsPanel extends React.PureComponent<TProps, TState>
 
     JaegerAPI.fetchDecoration(fetchUrl)
       .then(res => {
-        const details = _get(res, (getDetailPath as string), `\`${getDetailPath}\` not found in response`);
+        let detailsErred = false;
+        let details = _get(res, (getDetailPath as string));
+        if (details === undefined) {
+          details = `\`${getDetailPath}\` not found in response`;
+          detailsErred = true;
+        }
         const columnDefs: TPadColumnDefs = getDefPath
           ? _get(res, getDefPath, [])
           : [];
 
-        this.setState({ details, columnDefs })
+        this.setState({ columnDefs, details, detailsErred, detailsLoading: false })
       })
       .catch(err => {
         this.setState({
           details: `Unable to fetch decoration: ${err.message || err}`,
           detailsErred: true,
+          detailsLoading: false,
         });
       })
   }
@@ -135,15 +141,21 @@ export class UnconnectedDetailsPanel extends React.PureComponent<TProps, TState>
           {decorationProgressbar}
         </div>
         )
-        : <span className="Ddg-DetailsPanel--errorMsg">{decorationValue}</span>
+        : <span className="Ddg--DetailsPanel--errorMsg">{decorationValue}</span>
         }
+        {this.state.detailsLoading && (
+          <div className="Ddg--DetailsPanel--LoadingWrapper">
+            <LoadingIndicator className="Ddg--DetailsPanel--LoadingIndicator" />
+          </div>
+        )}
         {this.state.details && (
-        <DetailsCard
-          header="Details"
-          details={this.state.details}
-          columnDefs={this.state.columnDefs}
+          <DetailsCard
+            className={`Ddg--DetailsPanel--DetailsCard ${this.state.detailsErred ? 'is-error' : ''}`}
+            columnDefs={this.state.columnDefs}
+            details={this.state.details}
+            header="Details"
           />
-            )}
+        )}
         <ColumnResizer
           max={0.80}
           min={0.10}

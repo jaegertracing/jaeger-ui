@@ -93,6 +93,30 @@ export default deepFreeze(
         detailUrl: 'get list',
         detailPath: 'deets.here',
         summaryPath: 'val',
+      }, {
+        acronym: 'RIL',
+        id: 'ril',
+        name: 'all should resolve, but infinite load details',
+        summaryUrl: 'details too #{service}',
+        detailUrl: 'infinite load',
+        detailPath: 'deets.here',
+        summaryPath: 'val',
+      }, {
+        acronym: 'RDE',
+        id: 'rde',
+        name: 'all should resolve, but details err',
+        summaryUrl: 'details too #{service}',
+        detailUrl: 'deets err',
+        detailPath: 'deets.here',
+        summaryPath: 'val',
+      }, {
+        acronym: 'RD4',
+        id: 'rd4',
+        name: 'all should resolve, but details not found',
+        summaryUrl: 'details too #{service}',
+        detailUrl: 'deets 404',
+        detailPath: 'deets.here',
+        summaryPath: 'val',
       }/*, {
         TODO: op example too
       }*/],

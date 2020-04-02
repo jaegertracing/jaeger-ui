@@ -97,6 +97,7 @@ const JaegerAPI = {
                 value: 0,
                 styling: {
                   backgroundColor: 'red',
+                  color: 'white',
                 },
               },
               value: 'first',
@@ -209,11 +210,18 @@ const JaegerAPI = {
         defs: {
           here: [
             'count',
-            'value',
+            {
+              key: 'value',
+              label: 'The value column',
+              styling: {
+                backgroundColor: 'blue',
+                color: 'lightgrey',
+              },
+            },
             'foo',
           ]
         },
-      }), 750));
+      }), 2750));
     }
     if (url === 'get string') {
       return new Promise(res => setTimeout(() => res({
@@ -229,6 +237,9 @@ const JaegerAPI = {
         },
       }), 750));
     }
+    if (url === 'infinite load') return new Promise(res => setTimeout(() => res('you are patient, eh?'), 1500000));
+    if (url === 'deets err') return new Promise((res, rej) => setTimeout(() => rej(new Error('you knew this would happen')), 600));
+    if (url === 'deets 404') return new Promise(res => res({}));
     return new Promise(res => setTimeout(() =>  res({ val: url.length ** 2 }), 150));
   },
   fetchDeepDependencyGraph(query) {

@@ -43,8 +43,33 @@ limitations under the License.
   box-shadow: 0px 3px 3px -3px rgba(0, 0, 0, 0.1);
 }
 
-.Ddg-DetailsPanel--errorMsg {
+.Ddg--DetailsPanel--errorMsg {
   color: #E58C33;
+}
+
+.Ddg--DetailsPanel--DetailsCard {
+  background-color: #ffffff;
+  border: solid 2px rgba(0, 0, 0, 0.3);
+  margin: 0.5em;
+}
+
+.Ddg--DetailsPanel--DetailsCard.is-error {
+  color: #E58C33;
+}
+
+.Ddg--DetailsPanel--LoadingIndicator {
+  display: block;
+  margin: auto;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  line-height: 0;
+}
+
+.Ddg--DetailsPanel--LoadingWrapper {
+  flex-grow: 1;
+  position: relative;
 }
 
 .Ddg--DetailsPanel--PercentCircleWrapper {
