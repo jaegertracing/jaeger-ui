@@ -117,7 +117,10 @@ export default class TimelineColumnResizer extends React.PureComponent<
       draggerStyle = gripStyle;
     }
     return (
-      <div className={`TimelineColumnResizer ${isDraggingCls} ${rightSide ? 'is-flipped' : ''}`} ref={this._setRootElm}>
+      <div
+        className={`TimelineColumnResizer ${isDraggingCls} ${rightSide ? 'is-flipped' : ''}`}
+        ref={this._setRootElm}
+      >
         <div className="TimelineColumnResizer--gripIcon" style={gripStyle} />
         <div
           aria-hidden

@@ -16,13 +16,18 @@ import * as React from 'react';
 import { List, Table } from 'antd';
 import _isEmpty from 'lodash/isEmpty';
 
-import { TPadColumnDef, TPadColumnDefs, TPadDetails, TPadRow, TStyledValue } from '../../../../model/path-agnostic-decorations/types';
+import {
+  TPadColumnDef,
+  TPadColumnDefs,
+  TPadDetails,
+  TPadRow,
+  TStyledValue,
+} from '../../../../model/path-agnostic-decorations/types';
 
 import './index.css';
 
 const { Column } = Table;
 const { Item } = List;
-
 
 type TProps = {
   className?: string;
@@ -41,7 +46,11 @@ export default class DetailsCard extends React.PureComponent<TProps> {
     return (
       <List
         dataSource={details}
-        renderItem={(s: string) => <Item><span>{s}</span></Item>}
+        renderItem={(s: string) => (
+          <Item>
+            <span>{s}</span>
+          </Item>
+        )}
       />
     );
   }
@@ -68,9 +77,9 @@ export default class DetailsCard extends React.PureComponent<TProps> {
         if (!cellData || typeof cellData !== 'object') return null;
         const { styling } = cellData;
         if (_isEmpty(styling)) return null;
-        return ({
+        return {
           style: styling,
-        })
+        };
       },
       onHeaderCell: () => ({
         style,
@@ -84,7 +93,7 @@ export default class DetailsCard extends React.PureComponent<TProps> {
         const aValue = typeof aData === 'object' && aData.value !== undefined ? aData.value : aData;
         const bData = b[dataIndex];
         const bValue = typeof bData === 'object' && bData.value !== undefined ? bData.value : bData;
-        return (aValue < bValue ? 1 : bValue < aValue ? -1 : 0);
+        return aValue < bValue ? 1 : bValue < aValue ? -1 : 0;
       },
     };
 
@@ -94,30 +103,26 @@ export default class DetailsCard extends React.PureComponent<TProps> {
   renderTable(details: TPadRow[]) {
     const { columnDefs: _columnDefs } = this.props;
     const columnDefs: TPadColumnDefs = _columnDefs ? _columnDefs.slice() : [];
-    const knownColumns = new Set(columnDefs.map(keyOrObj => {
-      if (typeof keyOrObj === 'string') return keyOrObj;
-      return keyOrObj.key;
-    }));
+    const knownColumns = new Set(
+      columnDefs.map(keyOrObj => {
+        if (typeof keyOrObj === 'string') return keyOrObj;
+        return keyOrObj.key;
+      })
+    );
     details.forEach(row => {
       Object.keys(row).forEach((col: string) => {
         if (!knownColumns.has(col)) {
           knownColumns.add(col);
           columnDefs.push(col);
-        };
+        }
       });
     });
 
     return (
-      <Table
-        key="table"
-        size="middle"
-        dataSource={details}
-        rowKey="id"
-        pagination={false}
-      >
+      <Table key="table" size="middle" dataSource={details} rowKey="id" pagination={false}>
         {columnDefs.map(this.renderColumn)}
-        </Table>
-      );
+      </Table>
+    );
   }
 
   renderDetails() {
@@ -143,9 +148,7 @@ export default class DetailsCard extends React.PureComponent<TProps> {
           <span className="DetailsCard--Header">{header}</span>
           {description && <p>{description}</p>}
         </div>
-        <div className="DetailsCard--DetailsWrapper">
-          {this.renderDetails()}
-        </div>
+        <div className="DetailsCard--DetailsWrapper">{this.renderDetails()}</div>
       </div>
     );
   }

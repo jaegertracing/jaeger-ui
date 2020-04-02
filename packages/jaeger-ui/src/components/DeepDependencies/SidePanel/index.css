@@ -21,7 +21,8 @@ limitations under the License.
   display: flex;
 }
 
-.Ddg--SidePanel--Btns, .Ddg--SidePanel--DecorationBtns {
+.Ddg--SidePanel--Btns,
+.Ddg--SidePanel--DecorationBtns {
   display: flex;
   flex-direction: column;
 }
@@ -34,8 +35,8 @@ limitations under the License.
   cursor: pointer;
 }
 
-
-.Ddg--SidePanel--closeBtn, .Ddg--SidePanel--infoBtn {
+.Ddg--SidePanel--closeBtn,
+.Ddg--SidePanel--infoBtn {
   background: transparent;
   border: none;
   margin: 5px 0px;
@@ -53,7 +54,7 @@ limitations under the License.
 }
 
 .Ddg--SidePanel--closeBtn:focus,
-.Ddg--SidePanel--infoBtn:focus{
+.Ddg--SidePanel--infoBtn:focus {
   outline: none;
 }
 

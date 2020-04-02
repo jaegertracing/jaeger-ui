@@ -22,9 +22,9 @@ import {
   RADIUS,
 } from '../../components/DeepDependencies/Graph/DdgNodeContent/constants';
 import { ReduxState } from '../../types/index';
-import {
-  TDdgVertex,
-} from '../ddg/types';
+import { TDdgVertex } from '../ddg/types';
+
+import 'react-circular-progressbar/dist/styles.css';
 
 export type TDecorationFromState = {
   decorationBackgroundColor?: string;
@@ -35,20 +35,26 @@ export type TDecorationFromState = {
   decorationValue?: string | number;
 };
 
-export default function extractDecorationFromState(state: ReduxState, { service, operation }: { service: string, operation?: string | string[] | null }): TDecorationFromState {
+export default function extractDecorationFromState(
+  state: ReduxState,
+  { service, operation }: { service: string; operation?: string | string[] | null }
+): TDecorationFromState {
   const { decoration } = queryString.parse(state.router.location.search);
   const decorationID = Array.isArray(decoration) ? decoration[0] : decoration;
 
   if (!decorationID) return {};
 
-  let decorationValue = _get(state, `pathAgnosticDecorations.${decorationID}.withOp.${service}.${operation}.value`);
+  let decorationValue = _get(
+    state,
+    `pathAgnosticDecorations.${decorationID}.withOp.${service}.${operation}.value`
+  );
   let decorationMax = _get(state, `pathAgnosticDecorations.${decorationID}.withOpMax`);
   if (!decorationValue) {
     decorationValue = _get(state, `pathAgnosticDecorations.${decorationID}.withoutOp.${service}.value`);
     decorationMax = _get(state, `pathAgnosticDecorations.${decorationID}.withoutOpMax`);
   }
 
-    /*
+  /*
   const red = Math.ceil(decorationValue / decorationMax * 255);
   const decorationColor = `rgb(${red}, 0, 0)`
      */
@@ -63,29 +69,38 @@ export default function extractDecorationFromState(state: ReduxState, { service,
   const backgroundLight = 50 + Math.ceil((1 - backgroundScale) * 50);
   const decorationBackgroundColor = `hsl(120, ${backgroundSaturation}%, ${backgroundLight}%)`;
   //  const decorationColor = `hsl(0, 100%, ${light}%)`;
-  const decorationProgressbar = typeof decorationValue === 'number'
- ? (
-    <CircularProgressbar
-      key={`${service}\t${operation}`}
-      styles={{
-        path: {
-          stroke: decorationColor,
+  const decorationProgressbar =
+    typeof decorationValue === 'number' ? (
+      <CircularProgressbar
+        key={`${service}\t${operation}`}
+        styles={{
+          path: {
+            stroke: decorationColor,
             strokeLinecap: 'butt',
-        },
-        text: {
-          fill: decorationColor,
-        },
-        trail: {
-          stroke: decorationBackgroundColor,
-          strokeLinecap: 'butt',
-        },
-      }}
-      maxValue={decorationMax}
-      strokeWidth={PROGRESS_BAR_STROKE_WIDTH / RADIUS * 50}
-      text={`${decorationValue}`}
-      value={decorationValue}
-    />
-  ) : undefined;
+          },
+          text: {
+            fill: decorationColor,
+          },
+          trail: {
+            stroke: decorationBackgroundColor,
+            strokeLinecap: 'butt',
+          },
+        }}
+        maxValue={decorationMax}
+        strokeWidth={(PROGRESS_BAR_STROKE_WIDTH / RADIUS) * 50}
+        text={`${decorationValue}`}
+        value={decorationValue}
+      />
+    ) : (
+      undefined
+    );
 
-  return { decorationProgressbar, decorationBackgroundColor, decorationColor, decorationID, decorationValue, decorationMax };
+  return {
+    decorationProgressbar,
+    decorationBackgroundColor,
+    decorationColor,
+    decorationID,
+    decorationValue,
+    decorationMax,
+  };
 }

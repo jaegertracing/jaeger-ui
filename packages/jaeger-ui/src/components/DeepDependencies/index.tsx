@@ -215,7 +215,7 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps, TSt
 
   selectVertex = (selectedVertex?: TDdgVertex) => {
     this.setState({ selectedVertex });
-  }
+  };
 
   showVertices = (vertexKeys: string[]) => {
     const { graph, urlState } = this.props;

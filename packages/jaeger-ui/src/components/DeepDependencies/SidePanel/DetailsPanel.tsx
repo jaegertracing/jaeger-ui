@@ -21,12 +21,15 @@ import LoadingIndicator from '../../common/LoadingIndicator';
 import ColumnResizer from '../../../components/TracePage/TraceTimelineViewer/TimelineHeaderRow/TimelineColumnResizer';
 import JaegerAPI from '../../../api/jaeger';
 import extractDecorationFromState, { TDecorationFromState } from '../../../model/path-agnostic-decorations';
-import { TPathAgnosticDecorationSchema, TPadColumnDefs, TPadDetails } from '../../../model/path-agnostic-decorations/types';
+import {
+  TPathAgnosticDecorationSchema,
+  TPadColumnDefs,
+  TPadDetails,
+} from '../../../model/path-agnostic-decorations/types';
 import stringSupplant from '../../../utils/stringSupplant';
 import DetailsCard from './DetailsCard';
 
 import './DetailsPanel.css';
-
 
 type TProps = TDecorationFromState & {
   decorationSchema: TPathAgnosticDecorationSchema;
@@ -43,16 +46,17 @@ type TState = {
 };
 
 export class UnconnectedDetailsPanel extends React.PureComponent<TProps, TState> {
-  state: TState = {}; 
+  state: TState = {};
 
   componentDidMount() {
     this.fetchDetails();
   }
 
   componentDidUpdate(prevProps: TProps) {
-    if (prevProps.operation !== this.props.operation
-      || prevProps.service !== this.props.service
-      || prevProps.decorationSchema !== this.props.decorationSchema
+    if (
+      prevProps.operation !== this.props.operation ||
+      prevProps.service !== this.props.service ||
+      prevProps.decorationSchema !== this.props.decorationSchema
     ) {
       this.setState({
         details: undefined,
@@ -75,7 +79,7 @@ export class UnconnectedDetailsPanel extends React.PureComponent<TProps, TState>
       },
       operation: _op,
       service,
-    }= this.props;
+    } = this.props;
 
     const operation = _op && !Array.isArray(_op) ? _op : undefined;
 
@@ -99,16 +103,14 @@ export class UnconnectedDetailsPanel extends React.PureComponent<TProps, TState>
     JaegerAPI.fetchDecoration(fetchUrl)
       .then(res => {
         let detailsErred = false;
-        let details = _get(res, (getDetailPath as string));
+        let details = _get(res, getDetailPath as string);
         if (details === undefined) {
           details = `\`${getDetailPath}\` not found in response`;
           detailsErred = true;
         }
-        const columnDefs: TPadColumnDefs = getDefPath
-          ? _get(res, getDefPath, [])
-          : [];
+        const columnDefs: TPadColumnDefs = getDefPath ? _get(res, getDefPath, []) : [];
 
-        this.setState({ columnDefs, details, detailsErred, detailsLoading: false })
+        this.setState({ columnDefs, details, detailsErred, detailsLoading: false });
       })
       .catch(err => {
         this.setState({
@@ -116,33 +118,39 @@ export class UnconnectedDetailsPanel extends React.PureComponent<TProps, TState>
           detailsErred: true,
           detailsLoading: false,
         });
-      })
+      });
   }
 
   onResize = (width: number) => {
     this.setState({ width });
-  }
+  };
 
   render() {
-    const { decorationProgressbar, decorationColor, decorationMax, decorationSchema, decorationValue, operation: _op, service } = this.props;
+    const {
+      decorationProgressbar,
+      decorationColor,
+      decorationMax,
+      decorationSchema,
+      decorationValue,
+      operation: _op,
+      service,
+    } = this.props;
     const { width = 0.3 } = this.state;
     const operation = _op && !Array.isArray(_op) ? _op : undefined;
     return (
       <div className="Ddg--DetailsPanel" style={{ width: `${width * 100}vw` }}>
         <div className="Ddg--DetailsPanel--SvcOpHeader">
-          <BreakableText text={service} />{operation && <BreakableText text={`::${operation}`} />}
+          <BreakableText text={service} />
+          {operation && <BreakableText text={`::${operation}`} />}
         </div>
         <div className="Ddg--DetailsPanel--DecorationHeader">
           <span>{stringSupplant(decorationSchema.name, { service, operation })}</span>
         </div>
-        {decorationProgressbar
-        ? (
-        <div className="Ddg--DetailsPanel--PercentCircleWrapper">
-          {decorationProgressbar}
-        </div>
-        )
-        : <span className="Ddg--DetailsPanel--errorMsg">{decorationValue}</span>
-        }
+        {decorationProgressbar ? (
+          <div className="Ddg--DetailsPanel--PercentCircleWrapper">{decorationProgressbar}</div>
+        ) : (
+          <span className="Ddg--DetailsPanel--errorMsg">{decorationValue}</span>
+        )}
         {this.state.detailsLoading && (
           <div className="Ddg--DetailsPanel--LoadingWrapper">
             <LoadingIndicator className="Ddg--DetailsPanel--LoadingIndicator" />
@@ -156,15 +164,9 @@ export class UnconnectedDetailsPanel extends React.PureComponent<TProps, TState>
             header="Details"
           />
         )}
-        <ColumnResizer
-          max={0.80}
-          min={0.10}
-          position={width}
-          rightSide
-          onChange={this.onResize}
-      />
+        <ColumnResizer max={0.8} min={0.1} position={width} rightSide onChange={this.onResize} />
       </div>
-    )
+    );
   }
 }
 

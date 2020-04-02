@@ -13,22 +13,16 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { CircularProgressbar } from 'react-circular-progressbar';
+import { Modal, Table } from 'antd';
 import MdExitToApp from 'react-icons/lib/md/exit-to-app';
 import MdInfoOutline from 'react-icons/lib/md/info-outline';
 
-import 'react-circular-progressbar/dist/styles.css';
-
-
-import {
-  TDdgVertex,
-} from '../../../model/ddg/types';
+import { TDdgVertex } from '../../../model/ddg/types';
 import { TPathAgnosticDecorationSchema } from '../../../model/path-agnostic-decorations/types';
 import { getConfigValue } from '../../../utils/config/get-config';
 import DetailsPanel from './DetailsPanel';
 
 import './index.css';
-
 
 type TProps = {
   clearSelected: () => void;
@@ -37,15 +31,7 @@ type TProps = {
   selectedVertex?: TDdgVertex;
 };
 
-type TState = {
-  collapsed: boolean;
-};
-
-export default class SidePanel extends React.PureComponent<TProps, TState> {
-  state = {
-    collapsed: false,
-  };
-
+export default class SidePanel extends React.PureComponent<TProps> {
   decorations: TPathAgnosticDecorationSchema[] | undefined;
 
   constructor(props: TProps) {
@@ -56,54 +42,79 @@ export default class SidePanel extends React.PureComponent<TProps, TState> {
 
   clearSelected = () => {
     this.props.clearSelected();
-  }
+  };
+
+  openInfoModal = () => {
+    Modal.info({
+      content: (
+        <Table
+          columns={[
+            {
+              dataIndex: 'acronym',
+              key: 'acronym',
+              title: 'Acronym',
+            },
+            {
+              dataIndex: 'name',
+              key: 'name',
+              title: 'Name',
+            },
+          ]}
+          dataSource={this.decorations}
+        />
+      ),
+      maskClosable: true,
+      title: 'Decoration Options',
+      width: '60vw',
+    });
+  };
 
   render() {
     if (!this.decorations) return null;
 
-    const {
-      clearSelected,
-      selectDecoration,
-      selectedDecoration,
-      selectedVertex,
-    } = this.props;
+    const { clearSelected, selectDecoration, selectedDecoration, selectedVertex } = this.props;
 
     const selectedSchema = this.decorations.find(({ id }) => id === selectedDecoration);
 
     return (
       <div className="Ddg--SidePanel">
         <div className="Ddg--SidePanel--Btns">
-          <button className={`Ddg--SidePanel--closeBtn ${selectedVertex && selectedSchema ? '' : 'is-hidden'}`} onClick={this.clearSelected}>
+          <button
+            className={`Ddg--SidePanel--closeBtn ${selectedVertex && selectedSchema ? '' : 'is-hidden'}`}
+            onClick={this.clearSelected}
+          >
             <MdExitToApp />
           </button>
           <div className="Ddg--SidePanel--DecorationBtns">
-          {this.decorations.map(({ acronym, id, name }) => (
-            <button
-              key={id}
-              className={`Ddg--SidePanel--decorationBtn ${id === selectedDecoration ? 'is-selected' : ''}`}
-              onClick={() => selectDecoration(id)}
-            >
-              {acronym}
-            </button>
-          ))}
+            {this.decorations.map(({ acronym, id, name }) => (
+              <button
+                key={id}
+                className={`Ddg--SidePanel--decorationBtn ${id === selectedDecoration ? 'is-selected' : ''}`}
+                onClick={() => selectDecoration(id)}
+              >
+                {acronym}
+              </button>
+            ))}
             <button
               key="clearBtn"
               className="Ddg--SidePanel--decorationBtn"
               onClick={() => selectDecoration()}
             >
-              Clear 
+              Clear
             </button>
           </div>
-          <button className="Ddg--SidePanel--infoBtn">
+          <button className="Ddg--SidePanel--infoBtn" onClick={this.openInfoModal}>
             <MdInfoOutline />
           </button>
         </div>
         <div className={`Ddg--SidePanel--Details ${selectedVertex && selectedSchema ? '.is-expanded' : ''}`}>
-          {selectedVertex && selectedSchema && <DetailsPanel
-            decorationSchema={selectedSchema}
-            operation={selectedVertex.operation}
-            service={selectedVertex.service}
-          />}
+          {selectedVertex && selectedSchema && (
+            <DetailsPanel
+              decorationSchema={selectedSchema}
+              operation={selectedVertex.operation}
+              service={selectedVertex.service}
+            />
+          )}
         </div>
       </div>
     );

@@ -49,7 +49,9 @@ import {
   TDdgVertex,
   PathElem,
 } from '../../../../model/ddg/types';
-import extractDecorationFromState, { TDecorationFromState } from '../../../../model/path-agnostic-decorations';
+import extractDecorationFromState, {
+  TDecorationFromState,
+} from '../../../../model/path-agnostic-decorations';
 import { ReduxState } from '../../../../types/index';
 
 import './index.css';
@@ -58,28 +60,30 @@ type TDispatchProps = {
   getDecoration: (id: string, svc: string, op?: string) => void;
 };
 
-type TProps = RouteComponentProps<any> & TDispatchProps & TDecorationFromState & {
-  focalNodeUrl: string | null;
-  focusPathsThroughVertex: (vertexKey: string) => void;
-  getGenerationVisibility: (vertexKey: string, direction: EDirection) => ECheckedStatus | null;
-  getVisiblePathElems: (vertexKey: string) => PathElem[] | undefined;
-  hideVertex: (vertexKey: string) => void;
-  isFocalNode: boolean;
-  isPositioned: boolean;
-  operation: string | string[] | null;
-  selectVertex: (selectedVertex: TDdgVertex) => void;
-  service: string;
-  setOperation: (operation: string) => void;
-  setViewModifier: (visIndices: number[], viewModifier: EViewModifier, isEnabled: boolean) => void;
-  updateGenerationVisibility: (vertexKey: string, direction: EDirection) => void;
-  vertex: TDdgVertex;
-  vertexKey: string;
-};
+type TProps = RouteComponentProps<any> &
+  TDispatchProps &
+  TDecorationFromState & {
+    focalNodeUrl: string | null;
+    focusPathsThroughVertex: (vertexKey: string) => void;
+    getGenerationVisibility: (vertexKey: string, direction: EDirection) => ECheckedStatus | null;
+    getVisiblePathElems: (vertexKey: string) => PathElem[] | undefined;
+    hideVertex: (vertexKey: string) => void;
+    isFocalNode: boolean;
+    isPositioned: boolean;
+    operation: string | string[] | null;
+    selectVertex: (selectedVertex: TDdgVertex) => void;
+    service: string;
+    setOperation: (operation: string) => void;
+    setViewModifier: (visIndices: number[], viewModifier: EViewModifier, isEnabled: boolean) => void;
+    updateGenerationVisibility: (vertexKey: string, direction: EDirection) => void;
+    vertex: TDdgVertex;
+    vertexKey: string;
+  };
 
 type TState = {
   childrenVisibility?: ECheckedStatus | null;
   parentVisibility?: ECheckedStatus | null;
-}
+};
 
 export function getNodeRenderer({
   baseUrl,
@@ -110,9 +114,7 @@ export function getNodeRenderer({
     const { isFocalNode, key, operation, service } = vertex;
     return (
       <DdgNodeContent
-        focalNodeUrl={
-          isFocalNode ? null : getUrl({ density, operation, service, ...extraUrlArgs }, baseUrl)
-        }
+        focalNodeUrl={isFocalNode ? null : getUrl({ density, operation, service, ...extraUrlArgs }, baseUrl)}
         focusPathsThroughVertex={focusPathsThroughVertex}
         getGenerationVisibility={getGenerationVisibility}
         getVisiblePathElems={getVisiblePathElems}
@@ -130,7 +132,7 @@ export function getNodeRenderer({
       />
     );
   };
-};
+}
 
 export function measureNode() {
   const diameter = 2 * (RADIUS + 1);
@@ -165,7 +167,9 @@ export class UnconnectedDdgNodeContent extends React.PureComponent<TProps, TStat
   private getDecoration() {
     const { decorationID, getDecoration, operation, service } = this.props;
 
-    if (decorationID) getDecoration(decorationID, service, typeof operation === 'string' ? operation : undefined);
+    if (decorationID) {
+      getDecoration(decorationID, service, typeof operation === 'string' ? operation : undefined);
+    }
   }
 
   private focusPaths = () => {
@@ -176,7 +180,7 @@ export class UnconnectedDdgNodeContent extends React.PureComponent<TProps, TStat
   private handleClick = () => {
     const { decorationValue, selectVertex, vertex } = this.props;
     if (decorationValue) selectVertex(vertex);
-  }
+  };
 
   private hideVertex = () => {
     const { hideVertex, vertexKey } = this.props;
@@ -251,7 +255,15 @@ export class UnconnectedDdgNodeContent extends React.PureComponent<TProps, TStat
 
   render() {
     const { childrenVisibility, parentVisibility } = this.state;
-    const { decorationProgressbar, decorationValue, focalNodeUrl, isFocalNode, isPositioned, operation, service } = this.props;
+    const {
+      decorationProgressbar,
+      decorationValue,
+      focalNodeUrl,
+      isFocalNode,
+      isPositioned,
+      operation,
+      service,
+    } = this.props;
 
     const { radius, svcWidth, opWidth, svcMarginTop } = calcPositioning(service, operation);
     const trueRadius = typeof decorationValue === 'number' ? RADIUS - PROGRESS_BAR_STROKE_WIDTH : RADIUS;
@@ -363,16 +375,18 @@ export class UnconnectedDdgNodeContent extends React.PureComponent<TProps, TStat
 }
 
 export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
-  const { getDecoration } = bindActionCreators(
-    padActions,
-    dispatch
-  );
+  const { getDecoration } = bindActionCreators(padActions, dispatch);
 
   return {
     getDecoration,
   };
 }
 
-const DdgNodeContent = withRouter(connect(extractDecorationFromState, mapDispatchToProps)(UnconnectedDdgNodeContent));
+const DdgNodeContent = withRouter(
+  connect(
+    extractDecorationFromState,
+    mapDispatchToProps
+  )(UnconnectedDdgNodeContent)
+);
 
 export default DdgNodeContent;

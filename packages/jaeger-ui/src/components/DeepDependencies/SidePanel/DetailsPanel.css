@@ -14,7 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-
 .Ddg--DetailsPanel {
   background-color: #fafafa;
   border-left: solid 1px #ddd;
@@ -29,13 +28,13 @@ limitations under the License.
   box-shadow: 0px 3px 3px rgba(0, 0, 0, 0.1);
   font-size: 1.5em;
   text-align: right;
-  padding: .1em .3em;
+  padding: 0.1em 0.3em;
 }
 
 .Ddg--DetailsPanel--DecorationHeader {
   font-size: 1.1em;
   text-align: center;
-  padding: .3em;
+  padding: 0.3em;
 }
 
 .Ddg--DetailsPanel--DecorationHeader > span {
@@ -44,7 +43,7 @@ limitations under the License.
 }
 
 .Ddg--DetailsPanel--errorMsg {
-  color: #E58C33;
+  color: #e58c33;
 }
 
 .Ddg--DetailsPanel--DetailsCard {
@@ -54,7 +53,7 @@ limitations under the License.
 }
 
 .Ddg--DetailsPanel--DetailsCard.is-error {
-  color: #E58C33;
+  color: #e58c33;
 }
 
 .Ddg--DetailsPanel--LoadingIndicator {
