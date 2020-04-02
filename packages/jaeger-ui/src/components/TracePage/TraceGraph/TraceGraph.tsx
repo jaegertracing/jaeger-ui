@@ -28,7 +28,8 @@ import {
   HELP_TABLE,
 } from './OpNode';
 import { TEv, TSumSpan } from './types';
-import TDagVertex from '../../../model/trace-dag/types/TDagVertex';
+import { TDenseSpanMembers } from '../../../model/trace-dag/types';
+import TDagPlexusVertex from '../../../model/trace-dag/types/TDagPlexusVertex';
 import { TNil } from '../../../types';
 
 import './TraceGraph.css';
@@ -154,7 +155,7 @@ export default class TraceGraph extends React.PureComponent<Props, State> {
 
     return (
       <div className={wrapperClassName} style={{ paddingTop: headerHeight + 47 }}>
-        <Digraph<TDagVertex<TSumSpan>>
+        <Digraph<TDagPlexusVertex<TSumSpan & TDenseSpanMembers>>
           minimap
           zoom
           className="TraceGraph--dag"

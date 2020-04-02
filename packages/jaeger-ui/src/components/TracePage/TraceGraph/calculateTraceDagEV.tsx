@@ -17,7 +17,8 @@ import DRange from 'drange';
 import { TEdge } from '@jaegertracing/plexus/lib/types';
 import convPlexus from '../../../model/trace-dag/convPlexus';
 import TraceDag from '../../../model/trace-dag/TraceDag';
-import DagNode from '../../../model/trace-dag/DagNode';
+import TDagNode from '../../../model/trace-dag/types/TDagNode';
+import { TDenseSpanMembers } from '../../../model/trace-dag/types';
 import { Trace, Span, KeyValuePair } from '../../../types/trace';
 import { TSumSpan, TEv } from './types';
 
@@ -33,12 +34,15 @@ export function isError(tags: Array<KeyValuePair>) {
   return false;
 }
 
-function extendFollowsFrom(edges: TEdge[], nodes: DagNode<TSumSpan>[]) {
+function mapFollowsFrom(
+  edges: TEdge[],
+  nodes: TDagNode<TSumSpan & TDenseSpanMembers>[]
+): TEdge<{ followsFrom: boolean }>[] {
   return edges.map(e => {
     let hasChildOf = true;
     if (typeof e.to === 'number') {
-      const n = nodes[e.to];
-      hasChildOf = n.members.some(
+      const node = nodes[e.to];
+      hasChildOf = node.members.some(
         m => m.span.references && m.span.references.some(r => r.refType === 'CHILD_OF')
       );
     }
@@ -72,21 +76,14 @@ function getChildOfDrange(parentID: string, trace: Trace) {
   return childrenDrange;
 }
 
-export function calculateTraceDag(trace: Trace): TraceDag<TSumSpan> {
-  const traceDag: TraceDag<TSumSpan> = new TraceDag();
-  traceDag._initFromTrace(trace, {
-    count: 0,
-    errors: 0,
-    time: 0,
-    percent: 0,
-    selfTime: 0,
-    percentSelfTime: 0,
-  });
+export function calculateTraceDag(trace: Trace): TraceDag<TSumSpan & TDenseSpanMembers> {
+  const baseDag = TraceDag.newFromTrace(trace);
+  const dag = new TraceDag<TSumSpan & TDenseSpanMembers>();
 
-  traceDag.nodesMap.forEach(n => {
-    const ntime = n.members.reduce((p, m) => p + m.span.duration, 0);
-    const numErrors = n.members.reduce((p, m) => (p + isError(m.span.tags) ? 1 : 0), 0);
-    const childDurationsDRange = n.members.reduce((p, m) => {
+  baseDag.nodesMap.forEach(node => {
+    const ntime = node.members.reduce((p, m) => p + m.span.duration, 0);
+    const numErrors = node.members.reduce((p, m) => (p + isError(m.span.tags) ? 1 : 0), 0);
+    const childDurationsDRange = node.members.reduce((p, m) => {
       // Using DRange to handle overlapping spans (fork-join)
       const cdr = new DRange(m.span.startTime, m.span.startTime + m.span.duration).intersect(
         getChildOfDrange(m.span.spanID, trace)
@@ -94,24 +91,23 @@ export function calculateTraceDag(trace: Trace): TraceDag<TSumSpan> {
       return p + cdr.length;
     }, 0);
     const stime = ntime - childDurationsDRange;
-    const nd = {
-      count: n.members.length,
+    dag.addNode(node.id, node.parentID, {
+      ...node,
+      count: node.members.length,
       errors: numErrors,
       time: ntime,
       percent: (100 / trace.duration) * ntime,
       selfTime: stime,
       percentSelfTime: (100 / ntime) * stime,
-    };
-    // eslint-disable-next-line no-param-reassign
-    n.data = nd;
+    });
   });
-  return traceDag;
+  return dag;
 }
 
 export default function calculateTraceDagEV(trace: Trace): TEv {
   const traceDag = calculateTraceDag(trace);
   const nodes = [...traceDag.nodesMap.values()];
   const ev = convPlexus(traceDag.nodesMap);
-  ev.edges = extendFollowsFrom(ev.edges, nodes);
-  return ev;
+  const edges = mapFollowsFrom(ev.edges, nodes);
+  return { ...ev, edges };
 }

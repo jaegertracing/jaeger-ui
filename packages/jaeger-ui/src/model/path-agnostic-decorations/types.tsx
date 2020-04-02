@@ -44,14 +44,12 @@ export type TPadColumnDef = {
 
 export type TPadColumnDefs = (string | TPadColumnDef)[];
 
-// export type TPadDetails = string | TStyledValue | string[] | TStyledValue[] | Record<string, TStyledValue>[];
 export type TPadRow = Record<string, TStyledValue | string | number>;
 
 export type TPadDetails = string | string[] | TPadRow[];
 
 export type TPadEntry = {
   value: number | string; // string or other type is for data unavailable
-  // renderData: unknown;
 };
 
 export type TNewData = Record<

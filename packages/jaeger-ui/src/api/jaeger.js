@@ -265,6 +265,7 @@ const JaegerAPI = {
       return new Promise((res, rej) => setTimeout(() => rej(new Error('you knew this would happen')), 600));
     if (url === 'deets 404') return new Promise(res => res({}));
     return new Promise(res => setTimeout(() => res({ val: url.length ** 2 }), 150));
+    // return getJSON(url);
   },
   fetchDeepDependencyGraph(query) {
     return getJSON(`${ANALYTICS_ROOT}v1/dependencies`, { query });
