@@ -69,13 +69,29 @@ export default deepFreeze(
         summaryUrl: 'all should res #{service}',
         summaryPath: 'val',
       }, {
-        acronym: 'RDT',
-        id: 'rdt',
-        name: 'all should resolve details too #{service}',
+        acronym: 'RGT',
+        id: 'rgt',
+        name: 'all should resolve details graph too #{service}',
         summaryUrl: 'details too #{service}',
-        detailUrl: 'get deets',
+        detailUrl: 'get graph',
         detailPath: 'deets.here',
         detailColumnDefPath: 'defs.here',
+        summaryPath: 'val',
+      }, {
+        acronym: 'RST',
+        id: 'rst',
+        name: 'all should resolve details string too #{service}',
+        summaryUrl: 'details too #{service}',
+        detailUrl: 'get string',
+        detailPath: 'deets.here',
+        summaryPath: 'val',
+      }, {
+        acronym: 'RLT',
+        id: 'rlt',
+        name: 'all should resolve details list too #{service}',
+        summaryUrl: 'details too #{service}',
+        detailUrl: 'get list',
+        detailPath: 'deets.here',
         summaryPath: 'val',
       }/*, {
         TODO: op example too

@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Table } from 'antd';
+import { List, Table } from 'antd';
 // import _get from 'lodash/get';
 
 import { TPadColumnDef, TPadColumnDefs, TPadDetails, TPadRow } from '../../../../model/path-agnostic-decorations/types';
@@ -23,6 +23,7 @@ import './index.css';
 //
 //
 const { Column } = Table;
+const { Item } = List;
 
 
 type TProps = {
@@ -43,7 +44,13 @@ export default class DetailsCard extends React.PureComponent<TProps> {
   };
    */
   renderList(details: string[]) {
-    return <span>Not yet implement</span>;
+    console.log(details);
+    return (
+      <List
+        dataSource={details}
+        renderItem={(s: string) => <Item><span>{s}</span></Item>}
+      />
+    );
   }
 
   renderTable(details: TPadRow[]) {
@@ -65,6 +72,9 @@ export default class DetailsCard extends React.PureComponent<TProps> {
     return (
       <Table
         key="table"
+        scroll={{
+          /* y: true, */
+        }}
         size="middle"
         dataSource={details}
         rowKey="id"
@@ -75,6 +85,9 @@ export default class DetailsCard extends React.PureComponent<TProps> {
             return (
               <Column
                 key={def}
+                sorter={(a: TPadRow, b: TPadRow) => {
+                  return (a[def] < b[def] ? 1 : b[def] < a[def] ? -1 : 0);
+                }}
                 title={def}
                 dataIndex={def}
                 {...{} /*render={() => <span className="u-tx-muted">{defString}</span>}*/}
@@ -84,6 +97,9 @@ export default class DetailsCard extends React.PureComponent<TProps> {
           return (
             <Column
               key={def.key}
+              sorter={(a: TPadRow, b: TPadRow) => {
+                return a[def.key] < b[def.key] ? 1 : b[def.key] < a[def.key] ? -1 : 0;
+              }}
               title={def.label || def.key}
               dataIndex={def.key}
               {...{} /*render={() => <span className="u-tx-muted">{defString}</span>}*/}
@@ -112,12 +128,14 @@ export default class DetailsCard extends React.PureComponent<TProps> {
     const { description, header } = this.props;
 
     return (
-      <div>
+      <div className="DetailsCard">
         <div>
           <span className="DetailsCard--Header">{header}</span>
+          {description && <p>{description}</p>}
         </div>
-        <p>{description}</p>
-        {this.renderDetails()}
+        <div className="DetailsCard--DetailsWrapper">
+          {this.renderDetails()}
+        </div>
       </div>
     );
   }

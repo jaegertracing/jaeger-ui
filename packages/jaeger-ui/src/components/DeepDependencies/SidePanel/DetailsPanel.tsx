@@ -102,9 +102,8 @@ export class UnconnectedDetailsPanel extends React.PureComponent<TProps, TState>
         const columnDefs: TPadColumnDefs = getDefPath
           ? _get(res, getDefPath, [])
           : [];
+
         this.setState({ details, columnDefs })
-
-
       })
       .catch(err => {
         this.setState({
@@ -124,34 +123,32 @@ export class UnconnectedDetailsPanel extends React.PureComponent<TProps, TState>
     const operation = _op && !Array.isArray(_op) ? _op : undefined;
     return (
       <div className="Ddg--DetailsPanel" style={{ width: `${width * 100}vw` }}>
-        <div>
-          <div className="Ddg--DetailsPanel--SvcOpHeader">
-            <BreakableText text={service} />{operation && <BreakableText text={`::${operation}`} />}
-          </div>
-          <div className="Ddg--DetailsPanel--DecorationHeader">
-            <span>{stringSupplant(decorationSchema.name, { service, operation })}</span>
-          </div>
-          {decorationProgressbar
-            ? (
-              <div className="Ddg--DetailsPanel--PercentCircleWrapper">
-                {decorationProgressbar}
-              </div>
-            )
-            : <span className="Ddg-DetailsPanel--errorMsg">{decorationValue}</span>
-          }
-          {this.state.details && (
-            <DetailsCard
-              header="Details"
-              details={this.state.details}
-              columnDefs={this.state.columnDefs}
-            />
-          )}
+        <div className="Ddg--DetailsPanel--SvcOpHeader">
+          <BreakableText text={service} />{operation && <BreakableText text={`::${operation}`} />}
         </div>
+        <div className="Ddg--DetailsPanel--DecorationHeader">
+          <span>{stringSupplant(decorationSchema.name, { service, operation })}</span>
+        </div>
+        {decorationProgressbar
+        ? (
+        <div className="Ddg--DetailsPanel--PercentCircleWrapper">
+          {decorationProgressbar}
+        </div>
+        )
+        : <span className="Ddg-DetailsPanel--errorMsg">{decorationValue}</span>
+        }
+        {this.state.details && (
+        <DetailsCard
+          header="Details"
+          details={this.state.details}
+          columnDefs={this.state.columnDefs}
+          />
+            )}
         <ColumnResizer
           max={0.80}
-      min={0.10}
-      position={width}
-      rightSide
+          min={0.10}
+          position={width}
+          rightSide
           onChange={this.onResize}
       />
       </div>

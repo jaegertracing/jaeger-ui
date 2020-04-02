@@ -88,7 +88,7 @@ const JaegerAPI = {
         else rej(new Error(`One of the unlucky quarter: ${url.length}`));
       }, 150));
     }
-    if (url === 'get deets') {
+    if (url === 'get graph') {
       return new Promise(res => setTimeout(() => res({
         deets: {
           here: [
@@ -103,6 +103,102 @@ const JaegerAPI = {
               value: 'second',
               foo: 'bar too',
             },
+            {
+              count: 2,
+              value: 'third',
+              foo: 'bar three',
+            },
+            {
+              count: 3,
+              value: 'second',
+              foo: 'bar too',
+            },
+            {
+              count: 4,
+              value: 'third',
+              foo: 'bar three',
+            },
+            {
+              count: 5,
+              value: 'second',
+              foo: 'bar too',
+            },
+            {
+              count: 6,
+              value: 'third',
+              foo: 'bar three',
+            },
+            {
+              count: 7,
+              value: 'second',
+              foo: 'bar too',
+            },
+            {
+              count: 8,
+              value: 'third',
+              foo: 'bar three',
+            },
+            {
+              count: 9,
+              value: 'second',
+              foo: 'bar too',
+            },
+            {
+              count: 10,
+              value: 'third',
+              foo: 'bar three',
+            },
+            {
+              count: 11,
+              value: 'second',
+              foo: 'bar too',
+            },
+            {
+              count: 12,
+              value: 'third',
+              foo: 'bar three',
+            },
+            {
+              count: 13,
+              value: 'second',
+              foo: 'bar too',
+            },
+            {
+              count: 14,
+              value: 'third',
+              foo: 'bar three',
+            },
+            {
+              count: 15,
+              value: 'second',
+              foo: 'bar too',
+            },
+            {
+              count: 16,
+              value: 'third',
+              foo: 'bar three',
+            },
+            {
+              count: 17,
+              value: 'second',
+              foo: 'bar too',
+            },
+            {
+              count: 18,
+              value: 'third',
+              foo: 'bar three',
+            },
+            {
+              count: 19,
+              value: 'second',
+              foo: 'bar too',
+            },
+            {
+              count: 20,
+              value: 'third',
+              foo: 'bar three',
+            },
+
           ],
         },
         defs: {
@@ -111,6 +207,20 @@ const JaegerAPI = {
             'value',
             'foo',
           ]
+        },
+      }), 750));
+    }
+    if (url === 'get string') {
+      return new Promise(res => setTimeout(() => res({
+        deets: {
+          here: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
+        },
+      }), 750));
+    }
+    if (url === 'get list') {
+      return new Promise(res => setTimeout(() => res({
+        deets: {
+          here: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.'.split(' '),
         },
       }), 750));
     }

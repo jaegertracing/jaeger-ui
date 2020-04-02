@@ -19,6 +19,8 @@ limitations under the License.
   background-color: #fafafa;
   border-left: solid 1px #ddd;
   box-shadow: -3px 0 3px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
   height: 100%;
 }
 
@@ -46,7 +48,7 @@ limitations under the License.
 }
 
 .Ddg--DetailsPanel--PercentCircleWrapper {
-  margin: auto;
+  margin: 0 auto;
   max-width: 20vh;
   padding: 0 3%;
 }
