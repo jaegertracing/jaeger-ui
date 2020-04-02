@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { TPathAgnosticDecorationSchema } from '../model/path-agnostic-decorations/types';
 import { TNil } from '.';
 
 export type ConfigMenuItem = {
@@ -39,9 +40,12 @@ export type LinkPatternsConfig = {
 
 export type Config = {
   archiveEnabled?: boolean;
-  deepDependencies?: { menuEnabled?: boolean };
+  deepDependencies?: {
+    menuEnabled?: boolean;
+  };
   dependencies?: { dagMaxServicesLen?: number; menuEnabled?: boolean };
   menu: (ConfigMenuGroup | ConfigMenuItem)[];
+  pathAgnosticDecorations?: TPathAgnosticDecorationSchema[];
   search?: { maxLookback: { label: string; value: string }; maxLimit: number };
   scripts?: TScript[];
   topTagPrefixes?: string[];
