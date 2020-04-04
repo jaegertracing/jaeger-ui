@@ -22,10 +22,10 @@ describe('transform traces to ddg paths', () => {
     })),
     attributes: [{ key: 'exemplar_trace_id', value: trace.data.traceID }],
   });
-  const makeSpan = (spanName, parent, kind) => ({
+  const makeSpan = (spanName, parent, kind, operationName, processID) => ({
     hasChildren: true,
-    operationName: `${spanName} operation`,
-    processID: `${spanName} processID`,
+    operationName: operationName || `${spanName} operation`,
+    processID: processID || `${spanName} processID`,
     references: parent
       ? [
           {
@@ -52,7 +52,7 @@ describe('transform traces to ddg paths', () => {
         (result, span) => ({
           ...result,
           [span.processID]: {
-            serviceName: `${span.spanID.split(' ')[0]} service`,
+            serviceName: span.processID,
           },
         }),
         {}
@@ -152,23 +152,50 @@ describe('transform traces to ddg paths', () => {
     expect(result.length).toBe(1);
   });
 
-  it("omits span if tags does not have span.kind === 'server'", () => {
-    const badSpanName = 'test bad span name';
+  it("omits span if tags does not have span.kind === 'server' and is followed by the same service", () => {
+    const spanServiceAServer = makeSpan('SpanA1', focalSpan, 'server', 'opA', 'serviceA');
+    const otherSpanServiceAServer = makeSpan('SpanA2', spanServiceAServer, 'server', 'opB', 'serviceA');
+    otherSpanServiceAServer.hasChildren = false;
+    const spanServiceAClient = makeSpan('SpanA3', spanServiceAServer, 'client', 'opA', 'serviceA');
+    spanServiceAClient.hasChildren = false;
+    const spanServiceAKindless = makeSpan('SpanA4', spanServiceAServer, false, 'opA', 'serviceA');
+    spanServiceAKindless.hasChildren = false;
 
-    const clientSpan = makeSpan(badSpanName, focalSpan, 'client');
-    clientSpan.hasChildren = false;
-    const clientTrace = makeTrace([rootSpan, focalSpan, clientSpan], 'clientTraceID');
+    const spanServiceBClient = makeSpan('SpanB1', focalSpan, 'client', 'opA', 'serviceB');
+    const spanServiceBServer = makeSpan('SpanB2', spanServiceBClient, 'server', 'opB', 'serviceB');
+    spanServiceBServer.hasChildren = false;
 
-    const kindlessSpan = makeSpan(badSpanName, focalSpan, false);
-    kindlessSpan.hasChildren = false;
-    const kindlessTrace = makeTrace([rootSpan, focalSpan, kindlessSpan], 'kindlessTraceID');
+    const serverClientTrace = makeTrace(
+      [rootSpan, focalSpan, spanServiceAServer, spanServiceAClient],
+      'serverClientTraceID'
+    );
+    const clientServerTrace = makeTrace(
+      [rootSpan, focalSpan, spanServiceBClient, spanServiceBServer],
+      'clientServerTraceID'
+    );
+    const kindlessTrace = makeTrace(
+      [rootSpan, focalSpan, spanServiceAServer, spanServiceAKindless],
+      'kindlessTraceID'
+    );
+    const twoServersTrace = makeTrace(
+      [rootSpan, focalSpan, spanServiceAServer, otherSpanServiceAServer],
+      'twoServersTraceID'
+    );
+    const { dependencies: result } = transformTracesToPaths(
+      makeTraces(serverClientTrace, kindlessTrace, twoServersTrace, clientServerTrace),
+      focalSvc
+    );
 
-    const { dependencies: result } = transformTracesToPaths(makeTraces(clientTrace, kindlessTrace), focalSvc);
-
-    const path = makeExpectedPath([rootSpan, focalSpan], clientTrace);
+    const path = makeExpectedPath([rootSpan, focalSpan, spanServiceAServer], serverClientTrace);
     path.attributes.push({ key: 'exemplar_trace_id', value: kindlessTrace.data.traceID });
 
-    expect(new Set(result)).toEqual(new Set([path]));
+    expect(new Set(result)).toEqual(
+      new Set([
+        path,
+        makeExpectedPath([rootSpan, focalSpan, spanServiceAServer, otherSpanServiceAServer], twoServersTrace),
+        makeExpectedPath([rootSpan, focalSpan, spanServiceBServer], clientServerTrace),
+      ])
+    );
   });
 
   it('dedupled paths', () => {

@@ -20,6 +20,9 @@ import { TDdgPayloadEntry, TDdgPayloadPath, TDdgPayload } from './types';
 import { FetchedTrace } from '../../types';
 import { Span } from '../../types/trace';
 
+const isKindServer = (span: Span) =>
+  span.tags.find(({ key, value }) => key === 'span.kind' && value === 'server');
+
 function transformTracesToPaths(
   traces: Record<string, FetchedTrace>,
   focalService: string,
@@ -35,22 +38,33 @@ function transformTracesToPaths(
           spanMap.set(span.spanID, span);
           return !span.hasChildren;
         })
+
         .forEach(leaf => {
-          const spans = spanAncestorIds(leaf).map(id => {
+          const ancestors = spanAncestorIds(leaf).reverse();
+          ancestors.push(leaf.spanID);
+          const spans = ancestors.reduce((reducedSpans: Span[], id: string): Span[] => {
             const span = spanMap.get(id);
             if (!span) throw new Error(`Ancestor spanID ${id} not found in trace ${traceID}`);
-            return span;
-          });
-          spans.reverse();
-          spans.push(leaf);
-
-          const path: TDdgPayloadEntry[] = spans
-            .filter(span => span.tags.find(({ key, value }) => key === 'span.kind' && value === 'server'))
-            .map(({ processID, operationName: operation }) => ({
-              service: data.processes[processID].serviceName,
-              operation,
-            }));
-
+            if (reducedSpans.length > 0) {
+              const headSpan = reducedSpans[reducedSpans.length - 1];
+              // Transition inside the same service ServiceA -> ServiceA
+              if (headSpan.processID === span.processID) {
+                if (isKindServer(span) && !isKindServer(headSpan)) {
+                  reducedSpans.pop();
+                  reducedSpans.push(span);
+                } else if (isKindServer(span) && isKindServer(headSpan)) {
+                  reducedSpans.push(span);
+                }
+                return reducedSpans;
+              }
+            }
+            reducedSpans.push(span);
+            return reducedSpans;
+          }, []);
+          const path: TDdgPayloadEntry[] = spans.map(({ processID, operationName: operation }) => ({
+            service: data.processes[processID].serviceName,
+            operation,
+          }));
           if (
             path.some(
               ({ service, operation }) =>
@@ -80,6 +94,7 @@ function transformTracesToPaths(
     }
   });
   const dependencies = Array.from(dependenciesMap.values());
+
   return { dependencies };
 }
 
