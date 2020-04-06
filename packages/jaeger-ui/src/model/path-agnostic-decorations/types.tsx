@@ -31,7 +31,7 @@ export type TPathAgnosticDecorationSchema = {
 };
 
 export type TStyledValue = {
-  // linkTo?: string;
+  linkTo?: string;
   styling?: React.CSSProperties;
   value: string;
 };
@@ -48,9 +48,7 @@ export type TPadRow = Record<string, TStyledValue | string | number>;
 
 export type TPadDetails = string | string[] | TPadRow[];
 
-export type TPadEntry = {
-  value: number | string; // string or other type is for data unavailable
-};
+export type TPadEntry = number | string; // string or other type is for data unavailable
 
 export type TNewData = Record<
   string,

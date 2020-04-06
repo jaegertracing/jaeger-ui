@@ -61,6 +61,7 @@ export default class SidePanel extends React.PureComponent<TProps> {
             },
           ]}
           dataSource={this.decorations}
+          rowKey={(schema: TPathAgnosticDecorationSchema) => schema.id}
         />
       ),
       maskClosable: true,

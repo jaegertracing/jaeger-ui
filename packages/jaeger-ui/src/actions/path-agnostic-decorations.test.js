@@ -25,10 +25,10 @@ describe('getDecoration', () => {
   let resolves;
   let rejects;
 
-  const opUrl = 'opUrl?service=#service&operation=#operation';
-  const url = 'opUrl?service=#service';
-  const valuePath = 'withoutOpPath.#service';
-  const opValuePath = 'opPath.#service.#operation';
+  const opSummaryUrl = 'opSummaryUrl?service=#service&operation=#operation';
+  const summaryUrl = 'summaryUrl?service=#service';
+  const summaryPath = 'withoutOpPath.#service';
+  const opSummaryPath = 'opPath.#service.#operation';
   const withOpID = 'decoration id with op url and op path';
   const partialID = 'decoration id with op url without op path';
   const withoutOpID = 'decoration id with only url';
@@ -48,21 +48,22 @@ describe('getDecoration', () => {
     getConfigValueSpy = jest.spyOn(getConfig, 'getConfigValue').mockReturnValue([
       {
         id: withOpID,
-        url,
-        opUrl,
-        valuePath,
-        opValuePath,
+        summaryUrl,
+        opSummaryUrl,
+        summaryPath,
+        opSummaryPath,
       },
       {
         id: partialID,
-        url,
-        opUrl,
-        valuePath,
+        summaryUrl,
+        opSummaryUrl,
+        summaryPath,
       },
       {
         id: withoutOpID,
-        url,
-        valuePath,
+        summaryUrl,
+        opSummaryUrl,
+        summaryPath,
       },
     ]);
     fetchDecorationSpy = jest.spyOn(JaegerAPI, 'fetchDecoration').mockImplementation(
@@ -102,42 +103,42 @@ describe('getDecoration', () => {
 
   it('resolves to include single response for op decoration given op', async () => {
     const promise = getDecoration(withOpID, service, operation);
-    resolves[0](_set({}, stringSupplant(opValuePath, { service, operation }), testVal));
+    resolves[0](_set({}, stringSupplant(opSummaryPath, { service, operation }), testVal));
     const res = await promise;
     expect(res).toEqual(_set({}, `${withOpID}.withOp.${service}.${operation}`, testVal));
-    expect(fetchDecorationSpy).toHaveBeenLastCalledWith(stringSupplant(opUrl, { service, operation }));
+    expect(fetchDecorationSpy).toHaveBeenLastCalledWith(stringSupplant(opSummaryUrl, { service, operation }));
   });
 
   it('resolves to include single response for op decoration not given op', async () => {
     const promise = getDecoration(withOpID, service);
-    resolves[0](_set({}, stringSupplant(valuePath, { service }), testVal));
+    resolves[0](_set({}, stringSupplant(summaryPath, { service }), testVal));
     const res = await promise;
     expect(res).toEqual(_set({}, `${withOpID}.withoutOp.${service}`, testVal));
-    expect(fetchDecorationSpy).toHaveBeenLastCalledWith(stringSupplant(url, { service }));
+    expect(fetchDecorationSpy).toHaveBeenLastCalledWith(stringSupplant(summaryUrl, { service }));
   });
 
   it('resolves to include single response for malformed op decoration given op', async () => {
     const promise = getDecoration(partialID, service, operation);
-    resolves[0](_set({}, stringSupplant(valuePath, { service }), testVal));
+    resolves[0](_set({}, stringSupplant(summaryPath, { service }), testVal));
     const res = await promise;
     expect(res).toEqual(_set({}, `${partialID}.withoutOp.${service}`, testVal));
-    expect(fetchDecorationSpy).toHaveBeenLastCalledWith(stringSupplant(url, { service }));
+    expect(fetchDecorationSpy).toHaveBeenLastCalledWith(stringSupplant(summaryUrl, { service }));
   });
 
   it('resolves to include single response for svc decoration given op', async () => {
     const promise = getDecoration(withoutOpID, service, operation);
-    resolves[0](_set({}, stringSupplant(valuePath, { service }), testVal));
+    resolves[0](_set({}, stringSupplant(summaryPath, { service }), testVal));
     const res = await promise;
     expect(res).toEqual(_set({}, `${withoutOpID}.withoutOp.${service}`, testVal));
-    expect(fetchDecorationSpy).toHaveBeenLastCalledWith(stringSupplant(url, { service }));
+    expect(fetchDecorationSpy).toHaveBeenLastCalledWith(stringSupplant(summaryUrl, { service }));
   });
 
   it('resolves to include single response for svc decoration not given op', async () => {
     const promise = getDecoration(withoutOpID, service);
-    resolves[0](_set({}, stringSupplant(valuePath, { service }), testVal));
+    resolves[0](_set({}, stringSupplant(summaryPath, { service }), testVal));
     const res = await promise;
     expect(res).toEqual(_set({}, `${withoutOpID}.withoutOp.${service}`, testVal));
-    expect(fetchDecorationSpy).toHaveBeenLastCalledWith(stringSupplant(url, { service }));
+    expect(fetchDecorationSpy).toHaveBeenLastCalledWith(stringSupplant(summaryUrl, { service }));
   });
 
   it('handles error responses', async () => {
@@ -148,7 +149,7 @@ describe('getDecoration', () => {
     expect(res0).toEqual(
       _set({}, `${withoutOpID}.withoutOp.${service}`, `Unable to fetch decoration: ${message}`)
     );
-    expect(fetchDecorationSpy).toHaveBeenLastCalledWith(stringSupplant(url, { service }));
+    expect(fetchDecorationSpy).toHaveBeenLastCalledWith(stringSupplant(summaryUrl, { service }));
 
     const err = 'foo error without message';
     const promise1 = getDecoration(withOpID, service, operation);
@@ -157,10 +158,10 @@ describe('getDecoration', () => {
     expect(res1).toEqual(
       _set({}, `${withOpID}.withOp.${service}.${operation}`, `Unable to fetch decoration: ${err}`)
     );
-    expect(fetchDecorationSpy).toHaveBeenLastCalledWith(stringSupplant(opUrl, { service, operation }));
+    expect(fetchDecorationSpy).toHaveBeenLastCalledWith(stringSupplant(opSummaryUrl, { service, operation }));
   });
 
-  it('defaults value if valuePath not found in response', async () => {
+  it('defaults value if summaryPath not found in response', async () => {
     const promise = getDecoration(withoutOpID, service);
     resolves[0]();
     const res = await promise;
@@ -168,10 +169,10 @@ describe('getDecoration', () => {
       _set(
         {},
         `${withoutOpID}.withoutOp.${service}`,
-        `${stringSupplant(valuePath, { service })} not found in response`
+        `\`${stringSupplant(summaryPath, { service })}\` not found in response`
       )
     );
-    expect(fetchDecorationSpy).toHaveBeenLastCalledWith(stringSupplant(url, { service }));
+    expect(fetchDecorationSpy).toHaveBeenLastCalledWith(stringSupplant(summaryUrl, { service }));
   });
 
   it('returns undefined if invoked before previous invocation is resolved', () => {
@@ -182,13 +183,13 @@ describe('getDecoration', () => {
   it('resolves to include responses for all concurrent requests', async () => {
     const otherOp = 'other op';
     const promise = getDecoration(withOpID, service, operation);
-    resolves[0](_set({}, stringSupplant(opValuePath, { service, operation }), testVal));
+    resolves[0](_set({}, stringSupplant(opSummaryPath, { service, operation }), testVal));
     getDecoration(partialID, service, operation);
-    resolves[1](_set({}, stringSupplant(valuePath, { service }), testVal));
+    resolves[1](_set({}, stringSupplant(summaryPath, { service }), testVal));
     getDecoration(withOpID, service);
-    resolves[2](_set({}, stringSupplant(valuePath, { service }), testVal));
+    resolves[2](_set({}, stringSupplant(summaryPath, { service }), testVal));
     getDecoration(withoutOpID, service);
-    resolves[3](_set({}, stringSupplant(valuePath, { service }), testVal));
+    resolves[3](_set({}, stringSupplant(summaryPath, { service }), testVal));
     const message = 'foo error message';
     getDecoration(withOpID, service, otherOp);
     rejects[4]({ message });
@@ -222,15 +223,15 @@ describe('getDecoration', () => {
   it('scopes promises to not include previous promise results', async () => {
     const otherOp = 'other op';
     const promise0 = getDecoration(withOpID, service, operation);
-    resolves[0](_set({}, stringSupplant(opValuePath, { service, operation }), testVal));
+    resolves[0](_set({}, stringSupplant(opSummaryPath, { service, operation }), testVal));
     getDecoration(partialID, service, operation);
-    resolves[1](_set({}, stringSupplant(valuePath, { service }), testVal));
+    resolves[1](_set({}, stringSupplant(summaryPath, { service }), testVal));
     const res0 = await promise0;
 
     const promise1 = getDecoration(withOpID, service);
-    resolves[2](_set({}, stringSupplant(valuePath, { service }), testVal));
+    resolves[2](_set({}, stringSupplant(summaryPath, { service }), testVal));
     getDecoration(withoutOpID, service);
-    resolves[3](_set({}, stringSupplant(valuePath, { service }), testVal));
+    resolves[3](_set({}, stringSupplant(summaryPath, { service }), testVal));
     const message = 'foo error message';
     getDecoration(withOpID, service, otherOp);
     rejects[4]({ message });
@@ -272,7 +273,7 @@ describe('getDecoration', () => {
 
   it('no-ops for already processed id, service, and operation', async () => {
     const promise0 = getDecoration(withOpID, service, operation);
-    resolves[0](_set({}, stringSupplant(opValuePath, { service, operation }), testVal));
+    resolves[0](_set({}, stringSupplant(opSummaryPath, { service, operation }), testVal));
     const res0 = await promise0;
     expect(res0).toEqual(_set({}, `${withOpID}.withOp.${service}.${operation}`, testVal));
 
@@ -280,7 +281,7 @@ describe('getDecoration', () => {
     expect(promise1).toBeUndefined();
 
     const promise2 = getDecoration(withoutOpID, service);
-    resolves[1](_set({}, stringSupplant(valuePath, { service }), testVal));
+    resolves[1](_set({}, stringSupplant(summaryPath, { service }), testVal));
     const res1 = await promise2;
     expect(res1).toEqual(_set({}, `${withoutOpID}.withoutOp.${service}`, testVal));
     expect(fetchDecorationSpy).toHaveBeenCalledTimes(2);

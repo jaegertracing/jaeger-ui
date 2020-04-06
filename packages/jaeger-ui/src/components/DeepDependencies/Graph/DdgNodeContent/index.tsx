@@ -60,7 +60,7 @@ type TDispatchProps = {
   getDecoration: (id: string, svc: string, op?: string) => void;
 };
 
-type TProps = RouteComponentProps<any> &
+type TProps = /* RouteComponentProps<any> & */
   TDispatchProps &
   TDecorationFromState & {
     focalNodeUrl: string | null;
@@ -107,7 +107,7 @@ export function getNodeRenderer({
   hideVertex: (vertexKey: string) => void;
   selectVertex: (selectedVertex: TDdgVertex) => void;
   setOperation: (operation: string) => void;
-  setViewModifier: (visIndices: number[], viewModifier: EViewModifier, enable: boolean) => void;
+  setViewModifier: (visIndices: number[], viewModifier: EViewModifier, isEnabled: boolean) => void;
   updateGenerationVisibility: (vertexKey: string, direction: EDirection) => void;
 }) {
   return function renderNode(vertex: TDdgVertex, _: unknown, lv: TLayoutVertex<any> | null) {
@@ -382,11 +382,18 @@ export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchPro
   };
 }
 
+  /*
 const DdgNodeContent = withRouter(
   connect(
     extractDecorationFromState,
     mapDispatchToProps
   )(UnconnectedDdgNodeContent)
 );
+   */
+const DdgNodeContent = 
+  connect(
+    extractDecorationFromState,
+    mapDispatchToProps
+  )(UnconnectedDdgNodeContent);
 
 export default DdgNodeContent;

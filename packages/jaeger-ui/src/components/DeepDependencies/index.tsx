@@ -96,6 +96,8 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps, TSt
     }
   }
 
+  state: TState = {};
+
   constructor(props: TProps) {
     super(props);
     DeepDependencyGraphPageImpl.fetchModelIfStale(props);
@@ -248,7 +250,7 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps, TSt
   };
 
   render() {
-    const { selectedVertex = undefined } = this.state || {};
+    const { selectedVertex } = this.state;
     const {
       baseUrl,
       extraUrlArgs,

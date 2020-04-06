@@ -75,13 +75,13 @@ export function getDecoration(
     // TODO: lru memoize it up if chrome doesn't cache
     promise = JaegerAPI.fetchDecoration(stringSupplant(opSummaryUrl, { service, operation }));
     getPath = stringSupplant(opSummaryPath, { service, operation });
-    setPath = `${id}.withOp.${service}.${operation}.value`;
+    setPath = `${id}.withOp.${service}.${operation}`;
   } else {
     // TODO: lru memoize it up if chrome doesn't cache
     promise = JaegerAPI.fetchDecoration(stringSupplant(summaryUrl, { service }));
     getPath = stringSupplant(summaryPath, { service });
     getPath = summaryPath;
-    setPath = `${id}.withoutOp.${service}.value`;
+    setPath = `${id}.withoutOp.${service}`;
   }
 
   promise

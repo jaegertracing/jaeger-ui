@@ -86,7 +86,7 @@ export class UnconnectedDetailsPanel extends React.PureComponent<TProps, TState>
     let fetchUrl: string | undefined;
     let getDetailPath: string | undefined;
     let getDefPath: string | undefined;
-    if (opDetailUrl && opDetailPath) {
+    if (opDetailUrl && opDetailPath && operation) {
       fetchUrl = stringSupplant(opDetailUrl, { service, operation });
       getDetailPath = stringSupplant(opDetailPath, { service, operation });
       getDefPath = opDetailColumnDefPath && stringSupplant(opDetailColumnDefPath, { service, operation });
@@ -164,7 +164,7 @@ export class UnconnectedDetailsPanel extends React.PureComponent<TProps, TState>
             header="Details"
           />
         )}
-        <ColumnResizer max={0.8} min={0.1} position={width} rightSide onChange={this.onResize} />
+        <ColumnResizer max={0.8} min={0.1} onChange={this.onResize} position={width} rightSide  />
       </div>
     );
   }

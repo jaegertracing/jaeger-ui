@@ -86,7 +86,8 @@ export default class DetailsCard extends React.PureComponent<TProps> {
       }),
       render: (cellData: undefined | string | TStyledValue) => {
         if (!cellData || typeof cellData !== 'object') return cellData;
-        return cellData.value;
+        if (!cellData.linkTo) return cellData.value;
+        return <a href={cellData.linkTo}>cellData.value</a>;
       },
       sorter: (a: TPadRow, b: TPadRow) => {
         const aData = a[dataIndex];
@@ -119,7 +120,13 @@ export default class DetailsCard extends React.PureComponent<TProps> {
     });
 
     return (
-      <Table key="table" size="middle" dataSource={details} rowKey="id" pagination={false}>
+      <Table
+        key="table"
+        size="middle"
+        dataSource={details}
+        pagination={false}
+        rowKey={(row: TPadRow) => JSON.stringify(row)}
+      >
         {columnDefs.map(this.renderColumn)}
       </Table>
     );

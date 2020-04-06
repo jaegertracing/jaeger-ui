@@ -46,20 +46,14 @@ export default function extractDecorationFromState(
 
   let decorationValue = _get(
     state,
-    `pathAgnosticDecorations.${decorationID}.withOp.${service}.${operation}.value`
+    `pathAgnosticDecorations.${decorationID}.withOp.${service}.${operation}`
   );
   let decorationMax = _get(state, `pathAgnosticDecorations.${decorationID}.withOpMax`);
   if (!decorationValue) {
-    decorationValue = _get(state, `pathAgnosticDecorations.${decorationID}.withoutOp.${service}.value`);
+    decorationValue = _get(state, `pathAgnosticDecorations.${decorationID}.withoutOp.${service}`);
     decorationMax = _get(state, `pathAgnosticDecorations.${decorationID}.withoutOpMax`);
   }
 
-  /*
-  const red = Math.ceil(decorationValue / decorationMax * 255);
-  const decorationColor = `rgb(${red}, 0, 0)`
-     */
-  // const saturation = Math.ceil(Math.pow(decorationValue / decorationMax, 1 / 2) * 100);
-  // const decorationColor = `hsl(0, ${saturation}%, 50%)`;
   const scale = Math.pow(decorationValue / decorationMax, 1 / 4);
   const saturation = Math.ceil(scale * 100);
   const light = 50 + Math.ceil((1 - scale) * 50);
@@ -68,7 +62,7 @@ export default function extractDecorationFromState(
   const backgroundSaturation = Math.ceil(backgroundScale * 100);
   const backgroundLight = 50 + Math.ceil((1 - backgroundScale) * 50);
   const decorationBackgroundColor = `hsl(120, ${backgroundSaturation}%, ${backgroundLight}%)`;
-  //  const decorationColor = `hsl(0, 100%, ${light}%)`;
+
   const decorationProgressbar =
     typeof decorationValue === 'number' ? (
       <CircularProgressbar

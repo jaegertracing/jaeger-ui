@@ -26,7 +26,7 @@ export function getDecorationDone(state: TPathAgnosticDecorationsState, payload?
     const newWithoutOpValues: number[] = [];
     if (withoutOp) {
       Object.keys(withoutOp).forEach(service => {
-        const { value } = withoutOp[service];
+        const value = withoutOp[service];
         if (typeof value === 'number') newWithoutOpValues.push(value);
       });
     }
@@ -35,7 +35,7 @@ export function getDecorationDone(state: TPathAgnosticDecorationsState, payload?
     if (withOp) {
       Object.keys(withOp).forEach(service => {
         Object.keys(withOp[service]).forEach(operation => {
-          const { value } = withOp[service][operation];
+          const value = withOp[service][operation];
           if (typeof value === 'number') newWithOpValues.push(value);
         });
       });

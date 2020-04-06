@@ -24,7 +24,7 @@ import React from 'react';
 import { shallow } from 'enzyme';
 import { Checkbox, Popover } from 'antd';
 
-import DdgNodeContent from '.';
+import { getNodeRenderer, measureNode, UnconnectedDdgNodeContent as DdgNodeContent } from '.';
 import { MAX_LENGTH, MAX_LINKED_TRACES, MIN_LENGTH, PARAM_NAME_LENGTH, RADIUS } from './constants';
 import * as track from '../../index.track';
 import FilteredList from '../../../common/FilteredList';
@@ -87,7 +87,7 @@ describe('<DdgNodeContent>', () => {
   describe('measureNode', () => {
     it('returns twice the RADIUS with a buffer for svg border', () => {
       const diameterWithBuffer = 2 * RADIUS + 2;
-      expect(DdgNodeContent.measureNode()).toEqual({
+      expect(measureNode()).toEqual({
         height: diameterWithBuffer,
         width: diameterWithBuffer,
       });
@@ -487,7 +487,7 @@ describe('<DdgNodeContent>', () => {
     });
   });
 
-  describe('DdgNodeContent.getNodeRenderer()', () => {
+  describe('getNodeRenderer()', () => {
     const ddgVertex = {
       isFocalNode: false,
       key: 'some-key',
@@ -496,8 +496,8 @@ describe('<DdgNodeContent>', () => {
     };
     const noOp = () => {};
 
-    it('returns a <DdgNodeContent />', () => {
-      const ddgNode = DdgNodeContent.getNodeRenderer(
+    fit('returns a <DdgNodeContent />', () => {
+      const ddgNode = getNodeRenderer(
         noOp,
         noOp,
         EDdgDensity.PreventPathEntanglement,
@@ -506,18 +506,16 @@ describe('<DdgNodeContent>', () => {
         { maxDuration: '100ms' }
       )(ddgVertex);
       expect(ddgNode).toBeDefined();
-      expect(shallow(ddgNode)).toMatchSnapshot();
-      expect(ddgNode.type).toBe(DdgNodeContent);
+      expect(ddgNode.props).toMatchSnapshot();
     });
 
     it('returns a focal <DdgNodeContent />', () => {
-      const focalNode = DdgNodeContent.getNodeRenderer(noOp, noOp)({
+      const focalNode = getNodeRenderer(noOp, noOp)({
         ...ddgVertex,
         isFocalNode: true,
       });
       expect(focalNode).toBeDefined();
-      expect(shallow(focalNode)).toMatchSnapshot();
-      expect(focalNode.type).toBe(DdgNodeContent);
+      expect(ddgNode.props).toMatchSnapshot();
     });
   });
 });
