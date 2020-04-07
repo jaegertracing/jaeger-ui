@@ -21,6 +21,7 @@ import { TDdgVertex } from '../../../model/ddg/types';
 import { TPathAgnosticDecorationSchema } from '../../../model/path-agnostic-decorations/types';
 import { getConfigValue } from '../../../utils/config/get-config';
 import DetailsPanel from './DetailsPanel';
+import * as track from './index.track';
 
 import './index.css';
 
@@ -37,12 +38,26 @@ export default class SidePanel extends React.PureComponent<TProps> {
   constructor(props: TProps) {
     super(props);
 
+    const { selectedDecoration, selectedVertex } = props;
+    if (selectedDecoration) track.trackDecorationSelected(selectedDecoration);
+    if (selectedVertex) track.trackDecorationViewDetails(selectedVertex);
+
     this.decorations = getConfigValue('pathAgnosticDecorations');
   }
 
+  componentDidUpdate(prevProps: TProps) {
+    if (prevProps.selectedVertex !== this.props.selectedVertex) track.trackDecorationViewDetails(this.props.selectedVertex);
+  }
+
   clearSelected = () => {
+    track.trackDecorationViewDetails();
     this.props.clearSelected();
   };
+
+  selectDecoration = (decoration?: string) => {
+    track.trackDecorationSelected(decoration);
+    this.props.selectDecoration(decoration);
+  }
 
   openInfoModal = () => {
     Modal.info({
@@ -73,7 +88,7 @@ export default class SidePanel extends React.PureComponent<TProps> {
   render() {
     if (!this.decorations) return null;
 
-    const { clearSelected, selectDecoration, selectedDecoration, selectedVertex } = this.props;
+    const { selectedDecoration, selectedVertex } = this.props;
 
     const selectedSchema = this.decorations.find(({ id }) => id === selectedDecoration);
 
@@ -91,7 +106,7 @@ export default class SidePanel extends React.PureComponent<TProps> {
               <button
                 key={id}
                 className={`Ddg--SidePanel--decorationBtn ${id === selectedDecoration ? 'is-selected' : ''}`}
-                onClick={() => selectDecoration(id)}
+                onClick={() => this.selectDecoration(id)}
               >
                 {acronym}
               </button>
@@ -99,7 +114,7 @@ export default class SidePanel extends React.PureComponent<TProps> {
             <button
               key="clearBtn"
               className="Ddg--SidePanel--decorationBtn"
-              onClick={() => selectDecoration()}
+              onClick={() => this.selectDecoration()}
             >
               Clear
             </button>

@@ -36,4 +36,15 @@ module.exports = function setupProxy(app) {
       xfwd: true,
     })
   );
+  // TODO: remove
+  app.use(
+    proxy('/serviceedges', {
+      target: 'http://localhost:16686',
+      logLevel: 'silent',
+      secure: false,
+      changeOrigin: true,
+      ws: true,
+      xfwd: true,
+    })
+  )
 };

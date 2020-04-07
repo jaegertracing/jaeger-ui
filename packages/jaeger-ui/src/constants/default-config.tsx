@@ -57,6 +57,15 @@ export default deepFreeze(
         },
       ],
       pathAgnosticDecorations: [{
+        acronym: 'ME',
+        id: 'me',
+        name: 'Missing Edges',
+        summaryUrl: '/analytics/v1/serviceedges/missing/summary?source=connmon',
+        summaryPath: '#{service}.count',
+        detailUrl: 'serviceedges/missing?source=connmon&service=#{service}',
+        detailPath: 'missingEdges',
+        detailColumnDefPath: 'columnDefs',
+      }, {
         acronym: 'N',
         id: 'n',
         name: 'Neapolitan mix of success/error/no path',

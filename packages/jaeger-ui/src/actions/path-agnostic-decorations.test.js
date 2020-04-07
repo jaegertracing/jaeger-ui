@@ -14,10 +14,12 @@
 
 import _set from 'lodash/set';
 
-import { processed, getDecoration as getDecorationImpl } from './path-agnostic-decorations';
+import { _processed, getDecoration as getDecorationImpl } from './path-agnostic-decorations';
 import * as getConfig from '../utils/config/get-config';
 import stringSupplant from '../utils/stringSupplant';
 import JaegerAPI from '../api/jaeger';
+
+jest.mock('lru-memoize', () => () => x => x);
 
 describe('getDecoration', () => {
   let getConfigValueSpy;
@@ -62,7 +64,6 @@ describe('getDecoration', () => {
       {
         id: withoutOpID,
         summaryUrl,
-        opSummaryUrl,
         summaryPath,
       },
     ]);
@@ -77,7 +78,7 @@ describe('getDecoration', () => {
 
   beforeEach(() => {
     fetchDecorationSpy.mockClear();
-    processed.clear();
+    _processed.clear();
     resolves = [];
     rejects = [];
   });

@@ -29,6 +29,7 @@ import {
   ACTION_HIDE_PARENTS,
   ACTION_INCREASE,
   ACTION_SET_FOCUS,
+  ACTION_SET_OPERATION,
   ACTION_SHOW,
   ACTION_SHOW_CHILDREN,
   ACTION_SHOW_PARENTS,
@@ -41,6 +42,7 @@ import {
   trackSetFocus,
   trackShowMatches,
   trackToggleShowOp,
+  trackVertexSetOperation,
   trackViewTraces,
 } from './index.track';
 import { EDdgDensity, EDirection } from '../../model/ddg/types';
@@ -233,6 +235,13 @@ describe('DeepDependencies tracking', () => {
         expect(trackEvent).toHaveBeenCalledWith(CATEGORY_TOGGLE_SHOW_OP, action);
       }
     );
+  });
+
+  describe('trackVertexSetOperation', () => {
+    it('calls trackEvent with the match category and show action', () => {
+      trackVertexSetOperation();
+      expect(trackEvent).toHaveBeenCalledWith(CATEGORY_VERTEX_INTERACTIONS, ACTION_SET_OPERATION);
+    });
   });
 
   describe('trackViewTraces', () => {

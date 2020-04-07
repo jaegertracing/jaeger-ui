@@ -81,7 +81,12 @@ const JaegerAPI = {
     return getJSON(`${this.apiRoot}archive/${id}`, { method: 'POST' });
   },
   fetchDecoration(url) {
-    // return getJSON(url);
+    console.log('calling url: ', url);
+    return getJSON(url);
+    // eslint-disable-next-line no-unreachable
+    if (url.startsWith('/analytics') || url.startsWith('/api/serviceedges')) {
+      return getJSON(url);
+    }
     if (url.length % 2 && url.startsWith('neapolitan')) {
       return new Promise((res, rej) =>
         setTimeout(() => {
@@ -90,6 +95,7 @@ const JaegerAPI = {
         }, 150)
       );
     }
+    // eslint-disable-next-line no-unreachable
     if (url === 'get graph') {
       return new Promise(res =>
         setTimeout(
@@ -230,6 +236,7 @@ const JaegerAPI = {
         )
       );
     }
+    // eslint-disable-next-line no-unreachable
     if (url === 'get string') {
       return new Promise(res =>
         setTimeout(
@@ -244,6 +251,7 @@ const JaegerAPI = {
         )
       );
     }
+    // eslint-disable-next-line no-unreachable
     if (url === 'get list') {
       return new Promise(res =>
         setTimeout(
@@ -259,11 +267,15 @@ const JaegerAPI = {
         )
       );
     }
+    // eslint-disable-next-line no-unreachable
     if (url === 'infinite load')
       return new Promise(res => setTimeout(() => res('you are patient, eh?'), 1500000));
+    // eslint-disable-next-line no-unreachable
     if (url === 'deets err')
       return new Promise((res, rej) => setTimeout(() => rej(new Error('you knew this would happen')), 600));
+    // eslint-disable-next-line no-unreachable
     if (url === 'deets 404') return new Promise(res => res({}));
+    // eslint-disable-next-line no-unreachable
     return new Promise(res => setTimeout(() => res({ val: url.length ** 2 }), 150));
     // return getJSON(url);
   },

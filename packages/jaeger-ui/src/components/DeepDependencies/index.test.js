@@ -270,6 +270,26 @@ describe('DeepDependencyGraphPage', () => {
         });
       });
 
+      describe('setDecoration', () => {
+        it('updates url with provided density', () => {
+          const decoration = 'decoration-id';
+          ddgPageImpl.setDecoration(decoration);
+          expect(getUrlSpy).toHaveBeenLastCalledWith(
+            Object.assign({}, props.urlState, { decoration }),
+            undefined
+          );
+        });
+
+        it('clears density from url', () => {
+          const decoration = undefined;
+          ddgPageImpl.setDecoration(decoration);
+          expect(getUrlSpy).toHaveBeenLastCalledWith(
+            Object.assign({}, props.urlState, { decoration }),
+            undefined
+          );
+        });
+      });
+
       describe('setDensity', () => {
         it('updates url with provided density', () => {
           const density = EDdgDensity.PreventPathEntanglement;
@@ -492,6 +512,28 @@ describe('DeepDependencyGraphPage', () => {
       });
     });
 
+    describe('select vertex', () => {
+      let wrapper;
+      const selectedVertex = { key: 'test vertex' };
+
+      beforeEach(() => {
+        wrapper = shallow(<DeepDependencyGraphPageImpl { ...props } graphState={undefined} />);
+      });
+
+      it('selects a vertex', () => {
+        expect(wrapper.state('selectedVertex')).toBeUndefined();
+        wrapper.instance().selectVertex(selectedVertex);
+        expect(wrapper.state('selectedVertex')).toEqual(selectedVertex);
+      });
+
+      it('clears a vertex', () => {
+        wrapper.setState({ selectedVertex });
+        expect(wrapper.state('selectedVertex')).toEqual(selectedVertex);
+        wrapper.instance().selectVertex();
+        expect(wrapper.state('selectedVertex')).toBeUndefined();
+      });
+    });
+
     describe('view modifiers', () => {
       const visibilityIndices = ['visId0', 'visId1', 'visId2'];
       const targetVM = EViewModifier.Emphasized;
@@ -641,6 +683,16 @@ describe('DeepDependencyGraphPage', () => {
         ).find(ErrorMessage);
         expect(errorComponent).toHaveLength(1);
         expect(errorComponent.prop('error')).toBe(error);
+      });
+
+      xit('selects a vertex', () => {
+        const wrapper = shallow(
+          <DeepDependencyGraphPageImpl {...props} />
+        );
+        const vertex = { key: 'test vertex' };
+        expect(wrapper.instance.state('selectedVertex')).toBeUndefined();
+        wrapper.instance().selectVertex(vertex);
+        expect(wrapper.instance.state('selectedVertex')).toEqual(vertex);
       });
 
       describe('graphState.state === fetchedState.DONE', () => {

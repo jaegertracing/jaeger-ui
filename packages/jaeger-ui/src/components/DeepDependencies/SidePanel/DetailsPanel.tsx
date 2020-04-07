@@ -101,7 +101,8 @@ export class UnconnectedDetailsPanel extends React.PureComponent<TProps, TState>
     this.setState({ detailsLoading: true });
 
     JaegerAPI.fetchDecoration(fetchUrl)
-      .then(res => {
+      // TODO: type
+      .then((res: any) => {
         let detailsErred = false;
         let details = _get(res, getDetailPath as string);
         if (details === undefined) {
@@ -112,7 +113,8 @@ export class UnconnectedDetailsPanel extends React.PureComponent<TProps, TState>
 
         this.setState({ columnDefs, details, detailsErred, detailsLoading: false });
       })
-      .catch(err => {
+      // TODO: type
+      .catch((err: any) => {
         this.setState({
           details: `Unable to fetch decoration: ${err.message || err}`,
           detailsErred: true,

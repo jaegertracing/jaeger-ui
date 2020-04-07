@@ -19,7 +19,6 @@ import { TLayoutVertex } from '@jaegertracing/plexus/lib/types';
 import IoAndroidLocate from 'react-icons/lib/io/android-locate';
 import MdVisibilityOff from 'react-icons/lib/md/visibility-off';
 import { connect } from 'react-redux';
-import { RouteComponentProps, withRouter } from 'react-router-dom';
 import { bindActionCreators, Dispatch } from 'redux';
 
 import calcPositioning from './calc-positioning';
@@ -266,7 +265,7 @@ export class UnconnectedDdgNodeContent extends React.PureComponent<TProps, TStat
     } = this.props;
 
     const { radius, svcWidth, opWidth, svcMarginTop } = calcPositioning(service, operation);
-    const trueRadius = typeof decorationValue === 'number' ? RADIUS - PROGRESS_BAR_STROKE_WIDTH : RADIUS;
+    const trueRadius = decorationProgressbar ? RADIUS - PROGRESS_BAR_STROKE_WIDTH : RADIUS;
     const scaleFactor = trueRadius / radius;
     const transform = `translate(${RADIUS - radius}px, ${RADIUS - radius}px) scale(${scaleFactor})`;
 
@@ -382,14 +381,6 @@ export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchPro
   };
 }
 
-  /*
-const DdgNodeContent = withRouter(
-  connect(
-    extractDecorationFromState,
-    mapDispatchToProps
-  )(UnconnectedDdgNodeContent)
-);
-   */
 const DdgNodeContent = 
   connect(
     extractDecorationFromState,
