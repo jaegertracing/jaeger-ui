@@ -76,23 +76,7 @@ describe('transformTraceData()', () => {
       ],
       startTime,
       duration,
-      tags: [
-        {
-          key: 'http.url',
-          type: 'string',
-          value: 'https://example.com/getSome',
-        },
-        {
-          key: 'http.method',
-          type: 'string',
-          value: 'get',
-        },
-        {
-          key: 'http.status_code',
-          type: 'float64',
-          value: 200,
-        },
-      ],
+      tags: [],
       processID: 'p1',
     },
     {
@@ -108,28 +92,7 @@ describe('transformTraceData()', () => {
       ],
       startTime: startTime + 100,
       duration,
-      tags: [
-        {
-          key: 'http.url',
-          type: 'string',
-          value: 'https://example.com/getSomeAnother',
-        },
-        {
-          key: 'http.method',
-          type: 'string',
-          value: 'get',
-        },
-        {
-          key: 'error',
-          type: 'bool',
-          value: true,
-        },
-        {
-          key: 'http.status_code',
-          type: 'float64',
-          value: 404,
-        },
-      ],
+      tags: [],
       processID: 'p1',
     },
   ];
@@ -147,23 +110,7 @@ describe('transformTraceData()', () => {
     ],
     startTime: startTime + 50,
     duration,
-    tags: [
-      {
-        key: 'http.url',
-        type: 'string',
-        value: 'https://example.com/getRoot',
-      },
-      {
-        key: 'http.method',
-        type: 'string',
-        value: 'get',
-      },
-      {
-        key: 'http.status_code',
-        type: 'float64',
-        value: 200,
-      },
-    ],
+    tags: [],
     processID: 'p1',
   };
 
@@ -173,41 +120,14 @@ describe('transformTraceData()', () => {
     operationName: rootOperationName,
     startTime: startTime + 50,
     duration,
-    tags: [
-      {
-        key: 'http.url',
-        type: 'string',
-        value: 'https://example.com/getRoot',
-      },
-      {
-        key: 'http.method',
-        type: 'string',
-        value: 'get',
-      },
-      {
-        key: 'http.status_code',
-        type: 'float64',
-        value: 200,
-      },
-    ],
+    tags: [],
     processID: 'p1',
   };
 
   const processes = {
     p1: {
       serviceName,
-      tags: [
-        {
-          key: 'ip',
-          type: 'string',
-          value: '0.0.0.0',
-        },
-        {
-          key: 'hostname',
-          type: 'string',
-          value: 'localhost',
-        },
-      ],
+      tags: [],
     },
   };
 
