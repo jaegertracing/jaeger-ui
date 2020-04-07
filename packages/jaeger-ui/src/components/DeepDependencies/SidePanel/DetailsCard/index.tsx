@@ -87,14 +87,18 @@ export default class DetailsCard extends React.PureComponent<TProps> {
       render: (cellData: undefined | string | TStyledValue) => {
         if (!cellData || typeof cellData !== 'object') return cellData;
         if (!cellData.linkTo) return cellData.value;
-        return <a href={cellData.linkTo}>cellData.value</a>;
+        return <a
+          href={cellData.linkTo}
+          target="_blank"
+          rel="noopener noreferrer"
+        >{cellData.value}</a>;
       },
       sorter: (a: TPadRow, b: TPadRow) => {
         const aData = a[dataIndex];
         const aValue = typeof aData === 'object' && aData.value !== undefined ? aData.value : aData;
         const bData = b[dataIndex];
         const bValue = typeof bData === 'object' && bData.value !== undefined ? bData.value : bData;
-        return aValue < bValue ? 1 : bValue < aValue ? -1 : 0;
+        return aValue < bValue ? -1 : bValue < aValue ? 1 : 0;
       },
     };
 
