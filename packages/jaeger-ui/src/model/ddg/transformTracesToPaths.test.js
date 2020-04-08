@@ -170,4 +170,15 @@ describe('transform traces to ddg paths', () => {
 
     expect(new Set(result)).toEqual(new Set([path]));
   });
+
+  it('dedupled paths', () => {
+    const otherSpan = makeSpan('other-span', focalSpan);
+    otherSpan.hasChildren = false;
+    const trace1 = makeTrace([rootSpan, focalSpan, otherSpan], 'trace1');
+    const trace2 = makeTrace([rootSpan, focalSpan, otherSpan], 'trace2');
+    const { dependencies: result } = transformTracesToPaths(makeTraces(trace1, trace2), focalSvc);
+    const path = makeExpectedPath([rootSpan, focalSpan, otherSpan], trace1);
+    path.attributes.push({ key: 'exemplar_trace_id', value: trace2.data.traceID });
+    expect(new Set(result)).toEqual(new Set([path]));
+  });
 });
