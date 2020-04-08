@@ -67,14 +67,13 @@ describe('drawNode', () => {
   });
 
   describe('renderNode()', () => {
-    const dataKey = 'data-key';
-    const dataValue = 'data-value';
+    const lenA = 3;
+    const lenB = 7;
     const key = 'vertex key';
     const vertex = {
       data: {
-        data: {
-          [dataKey]: dataValue,
-        },
+        a: new Array(lenA),
+        b: new Array(lenB),
         operation,
         service,
       },
@@ -83,7 +82,8 @@ describe('drawNode', () => {
 
     it('extracts values from vertex.data', () => {
       const node = renderNode(vertex);
-      expect(node.props[dataKey]).toBe(dataValue);
+      expect(node.props.a).toBe(lenA);
+      expect(node.props.b).toBe(lenB);
       expect(node.props.operation).toBe(operation);
       expect(node.props.service).toBe(service);
     });

@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 The Jaeger Authors.
+// Copyright (c) 2020 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,21 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { TEdge } from '@jaegertracing/plexus/lib/types';
+import { TPadEntry } from '../model/path-agnostic-decorations/types';
 
-import { TDenseSpanMembers } from '../../../model/trace-dag/types';
-import TDagPlexusVertex from '../../../model/trace-dag/types/TDagPlexusVertex';
+type TPathAgnosticDecorations = Record<
+  string,
+  {
+    withOpMax?: number;
+    withoutOpMax?: number;
+    withoutOp?: Record<string, TPadEntry>;
+    withOp?: Record<string, Record<string, TPadEntry>>;
+  }
+>;
 
-export type TSumSpan = {
-  count: number;
-  errors: number;
-  percent: number;
-  percentSelfTime: number;
-  selfTime: number;
-  time: number;
-};
-
-export type TEv = {
-  edges: TEdge<{ followsFrom: boolean }>[];
-  vertices: TDagPlexusVertex<TSumSpan & TDenseSpanMembers>[];
-};
+// eslint-disable-next-line no-undef
+export default TPathAgnosticDecorations;

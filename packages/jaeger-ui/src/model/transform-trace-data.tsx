@@ -16,6 +16,7 @@ import _isEqual from 'lodash/isEqual';
 
 import { getTraceSpanIdsAsTree } from '../selectors/trace';
 import { getConfigValue } from '../utils/config/get-config';
+import { getTraceName } from './trace-viewer';
 import { KeyValuePair, Span, SpanData, Trace, TraceData } from '../types/trace';
 import TreeNode from '../utils/TreeNode';
 
@@ -120,7 +121,6 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
   const tree = getTraceSpanIdsAsTree(data);
   const spans: Span[] = [];
   const svcCounts: Record<string, number> = {};
-  let traceName = '';
 
   tree.walk((spanID: string, node: TreeNode, depth: number = 0) => {
     if (spanID === '__root__') {
@@ -132,9 +132,6 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     }
     const { serviceName } = span.process;
     svcCounts[serviceName] = (svcCounts[serviceName] || 0) + 1;
-    if (!span.references || !span.references.length) {
-      traceName = `${serviceName}: ${span.operationName}`;
-    }
     span.relativeStartTime = span.startTime - traceStartTime;
     span.depth = depth - 1;
     span.hasChildren = node.children.length > 0;
@@ -163,6 +160,7 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     });
     spans.push(span);
   });
+  const traceName = getTraceName(spans);
   const services = Object.keys(svcCounts).map(name => ({ name, numberOfSpans: svcCounts[name] }));
   return {
     services,

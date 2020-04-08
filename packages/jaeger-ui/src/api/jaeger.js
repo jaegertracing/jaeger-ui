@@ -80,6 +80,9 @@ const JaegerAPI = {
   archiveTrace(id) {
     return getJSON(`${this.apiRoot}archive/${id}`, { method: 'POST' });
   },
+  fetchDecoration(url) {
+    return getJSON(url);
+  },
   fetchDeepDependencyGraph(query) {
     return getJSON(`${ANALYTICS_ROOT}v1/dependencies`, { query });
   },

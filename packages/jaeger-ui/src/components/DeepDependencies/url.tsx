@@ -54,6 +54,7 @@ function firstParam(arg: string | string[]): string {
 export const getUrlState = memoizeOne(function getUrlState(search: string): TDdgSparseUrlState {
   const {
     density = EDdgDensity.PreventPathEntanglement,
+    decoration,
     end,
     hash,
     operation,
@@ -65,6 +66,9 @@ export const getUrlState = memoizeOne(function getUrlState(search: string): TDdg
   const rv: TDdgSparseUrlState = {
     density: firstParam(density) as EDdgDensity,
   };
+  if (decoration) {
+    rv.decoration = firstParam(decoration);
+  }
   if (end) {
     rv.end = Number.parseInt(firstParam(end), 10);
   }

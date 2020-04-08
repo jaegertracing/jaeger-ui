@@ -157,6 +157,8 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
     this.updateUrlState({ visEncoding });
   };
 
+  setDecoration = (decoration: string | undefined) => this.updateUrlState({ decoration });
+
   setDensity = (density: EDdgDensity) => this.updateUrlState({ density });
 
   setDistance = (distance: number, direction: EDirection) => {
