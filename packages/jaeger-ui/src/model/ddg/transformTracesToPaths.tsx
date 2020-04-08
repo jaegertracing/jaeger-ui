@@ -25,7 +25,7 @@ function transformTracesToPaths(
   focalService: string,
   focalOperation?: string
 ): TDdgPayload {
-  const dependencies: TDdgPayloadPath[] = [];
+  const dependenciesMap = new Map<String, TDdgPayloadPath>();
   Object.values(traces).forEach(({ data }) => {
     if (data) {
       const spanMap: Map<string, Span> = new Map();
@@ -57,20 +57,29 @@ function transformTracesToPaths(
                 service === focalService && (!focalOperation || operation === focalOperation)
             )
           ) {
-            // TODO: Paths should be deduped with all traceIDs #503
-            dependencies.push({
-              path,
-              attributes: [
-                {
-                  key: 'exemplar_trace_id',
-                  value: traceID,
-                },
-              ],
-            });
+            const pathKey = path.map(value => `${value.operation}:${value.service}`).join('/');
+            const dependency = dependenciesMap.get(pathKey);
+            if (!dependency) {
+              dependenciesMap.set(pathKey, {
+                path,
+                attributes: [
+                  {
+                    key: 'exemplar_trace_id',
+                    value: traceID,
+                  },
+                ],
+              });
+            } else {
+              dependency.attributes.push({
+                key: 'exemplar_trace_id',
+                value: traceID,
+              });
+            }
           }
         });
     }
   });
+  const dependencies = Array.from(dependenciesMap.values());
   return { dependencies };
 }
 
