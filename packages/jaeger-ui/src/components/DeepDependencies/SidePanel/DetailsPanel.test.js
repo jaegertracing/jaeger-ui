@@ -74,13 +74,14 @@ describe('<SidePanel>', () => {
       const details = 'test details';
       const columnDefs = ['test', 'column', 'defs'];
 
+      // TODO: one `it` if all pass, separate `it`s if any fail
       ['detailUrl#{service}', undefined].forEach(detailUrl => {
         ['detail.path.#{service}', undefined].forEach(detailPath => {
           ['detail.column.def.path.#{service}', undefined].forEach(detailColumnDefPath => {
             ['opDetailUrl#{service}#{operation}', undefined].forEach(opDetailUrl => {
               ['op.detail.path.#{service}.#{operation}', undefined].forEach(opDetailPath => {
-                ['op', ['op0', 'op1'], undefined].forEach(operation => {
-                  ['op.detail.column.def.path.#{service}', undefined].forEach(opDetailColumnDefPath => {
+                ['op.detail.column.def.path.#{service}', undefined].forEach(opDetailColumnDefPath => {
+                  ['op', ['op0', 'op1'], undefined].forEach(operation => {
                     [{ message: 'Err obj with message' }, 'error message' , false].forEach(error => {
                       [true, false].forEach(hasDetails => {
                         [true, false].forEach(hasColumnDefPath => {
@@ -103,45 +104,58 @@ describe('<SidePanel>', () => {
                               const setStateSpy = jest.spyOn(detailsPanel, 'setState');
                               detailsPanel.fetchDetails();
 
-                              if (typeof opDetailUrl === 'string' && typeof opDetailPath === 'string' && typeof operation === 'string') {
-                                expect(fetchDecorationSpy).toHaveBeenLastCalledWith(stringSupplant(opDetailUrl, { service, operation }));
-                                expect(setStateSpy).toHaveBeenLastCalledWith({ detailsLoading: true });
-                                const expectedSetStateArg = {
-                                  detailsLoading: false,
-                                };
-                                if (!error) {
-                                  const result = {};
-                                  const supplantedDetailsPath = stringSupplant(opDetailPath, { service, operation });
+                              let supplantedUrl;
+                              let supplantedColumnDefPath;
+                              let supplantedDetailsPath;
 
-                                  if (hasDetails && opDetailPath) {
-                                    _set(result, supplantedDetailsPath, details);
-                                    expectedSetStateArg.details = details;
-                                    expectedSetStateArg.detailsErred = false;
-                                  } else {
-                                    expectedSetStateArg.details = `\`${supplantedDetailsPath}\` not found in response`;
-                                    expectedSetStateArg.detailsErred = true;
-                                  }
-                                  if (hasColumnDefPath && opDetailColumnDefPath) {
-                                    _set(result, stringSupplant(opDetailColumnDefPath, { service, operation }), columnDefs);
-                                    expectedSetStateArg.columnDefs = columnDefs;
-                                  } else {
-                                    expectedSetStateArg.columnDefs = [];
-                                  }
-                                  res(result);
-                                  await promise;
-                                  expect(setStateSpy).toHaveBeenLastCalledWith(expectedSetStateArg);
-                                } else {
-                                  expectedSetStateArg.detailsErred = true;
-                                  const errorMessage = error.message || error;
-                                  expectedSetStateArg.details = `Unable to fetch decoration: ${errorMessage}`;
-                                  rej(error);
-                                  await promise.catch(() => {});
-                                  expect(setStateSpy).toHaveBeenLastCalledWith(expectedSetStateArg);
-                                }
+                              if (typeof opDetailUrl === 'string' && typeof opDetailPath === 'string' && typeof operation === 'string') {
+                                supplantedUrl = stringSupplant(opDetailUrl, { service, operation });
+                                supplantedDetailsPath = stringSupplant(opDetailPath, { service, operation });
+                                if (opDetailColumnDefPath) supplantedColumnDefPath = stringSupplant(opDetailColumnDefPath, { service, operation });
                               } else if (typeof detailUrl === 'string' && typeof detailPath === 'string') {
-                                expect(fetchDecorationSpy).toHaveBeenLastCalledWith(stringSupplant(detailUrl, { service }));
+                                supplantedUrl = stringSupplant(detailUrl, { service });
+                                supplantedDetailsPath = stringSupplant(detailPath, { service });
+                                if (detailColumnDefPath) supplantedColumnDefPath = stringSupplant(detailColumnDefPath, { service });
                               } else {
                                 expect(fetchDecorationSpy).not.toHaveBeenCalled();
+                                return;
+                              }
+
+                              expect(fetchDecorationSpy).toHaveBeenLastCalledWith(supplantedUrl);
+                              expect(setStateSpy).toHaveBeenLastCalledWith({ detailsLoading: true });
+
+                              const expectedSetStateArg = {
+                                detailsLoading: false,
+                                detailsErred: Boolean(error || !hasDetails),
+                              };
+
+                              if (!error) {
+                                const result = {};
+
+                                if (hasDetails) {
+                                  _set(result, supplantedDetailsPath, details);
+                                  expectedSetStateArg.details = details;
+                                } else {
+                                  expectedSetStateArg.details = `\`${supplantedDetailsPath}\` not found in response`;
+                                }
+
+                                if (hasColumnDefPath && supplantedColumnDefPath) {
+                                  _set(result, supplantedColumnDefPath, columnDefs);
+                                  expectedSetStateArg.columnDefs = columnDefs;
+                                } else {
+                                  expectedSetStateArg.columnDefs = [];
+                                }
+
+                                res(result);
+                                await promise;
+                                expect(setStateSpy).toHaveBeenLastCalledWith(expectedSetStateArg);
+
+                              } else {
+                                const errorMessage = error.message || error;
+                                expectedSetStateArg.details = `Unable to fetch decoration: ${errorMessage}`;
+                                rej(error);
+                                await promise.catch(() => {});
+                                expect(setStateSpy).toHaveBeenLastCalledWith(expectedSetStateArg);
                               }
                             }
                           );
