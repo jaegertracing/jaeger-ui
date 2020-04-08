@@ -164,11 +164,10 @@ describe('transform traces to ddg paths', () => {
     const kindlessTrace = makeTrace([rootSpan, focalSpan, kindlessSpan], 'kindlessTraceID');
 
     const { dependencies: result } = transformTracesToPaths(makeTraces(clientTrace, kindlessTrace), focalSvc);
-    expect(new Set(result)).toEqual(
-      new Set([
-        makeExpectedPath([rootSpan, focalSpan], clientTrace),
-        makeExpectedPath([rootSpan, focalSpan], kindlessTrace),
-      ])
-    );
+
+    const path = makeExpectedPath([rootSpan, focalSpan], clientTrace);
+    path.attributes.push({ key: 'exemplar_trace_id', value: kindlessTrace.data.traceID });
+
+    expect(new Set(result)).toEqual(new Set([path]));
   });
 });
