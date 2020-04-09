@@ -27,11 +27,8 @@ import { TDdgVertex } from '../ddg/types';
 import 'react-circular-progressbar/dist/styles.css';
 
 export type TDecorationFromState = {
-  decorationBackgroundColor?: string;
-  decorationColor?: string;
   decorationID?: string;
   decorationProgressbar?: React.ReactNode;
-  decorationMax?: number;
   decorationValue?: string | number;
 };
 
@@ -91,10 +88,7 @@ export default function extractDecorationFromState(
 
   return {
     decorationProgressbar,
-    decorationBackgroundColor,
-    decorationColor,
     decorationID,
     decorationValue,
-    decorationMax,
   };
 }

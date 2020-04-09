@@ -16,10 +16,10 @@ import * as React from 'react';
 import _get from 'lodash/get';
 import { connect } from 'react-redux';
 
-import BreakableText from '../..//common/BreakableText';
+import BreakableText from '../../common/BreakableText';
 import LoadingIndicator from '../../common/LoadingIndicator';
-import ColumnResizer from '../../../components/TracePage/TraceTimelineViewer/TimelineHeaderRow/TimelineColumnResizer';
 import JaegerAPI from '../../../api/jaeger';
+import ColumnResizer from '../../TracePage/TraceTimelineViewer/TimelineHeaderRow/TimelineColumnResizer';
 import extractDecorationFromState, { TDecorationFromState } from '../../../model/path-agnostic-decorations';
 import {
   TPathAgnosticDecorationSchema,
@@ -60,8 +60,8 @@ export class UnconnectedDetailsPanel extends React.PureComponent<TProps, TState>
     ) {
       this.setState({
         details: undefined,
-        detailsErred: undefined,
-        detailsLoading: undefined,
+        detailsErred: false,
+        detailsLoading: false,
       });
       this.fetchDetails();
     }
@@ -128,8 +128,6 @@ export class UnconnectedDetailsPanel extends React.PureComponent<TProps, TState>
   render() {
     const {
       decorationProgressbar,
-      decorationColor,
-      decorationMax,
       decorationSchema,
       decorationValue,
       operation: _op,
