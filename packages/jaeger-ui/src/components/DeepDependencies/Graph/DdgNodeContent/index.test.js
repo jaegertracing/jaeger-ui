@@ -24,7 +24,12 @@ import React from 'react';
 import { shallow } from 'enzyme';
 import { Checkbox, Popover } from 'antd';
 
-import { getNodeRenderer, measureNode, mapDispatchToProps, UnconnectedDdgNodeContent as DdgNodeContent } from '.';
+import {
+  getNodeRenderer,
+  measureNode,
+  mapDispatchToProps,
+  UnconnectedDdgNodeContent as DdgNodeContent,
+} from '.';
 import { MAX_LENGTH, MAX_LINKED_TRACES, MIN_LENGTH, PARAM_NAME_LENGTH, RADIUS } from './constants';
 import * as track from '../../index.track';
 import FilteredList from '../../../common/FilteredList';
@@ -33,7 +38,7 @@ import * as getSearchUrl from '../../../SearchTracePage/url';
 import { ECheckedStatus, EDdgDensity, EDirection, EViewModifier } from '../../../../model/ddg/types';
 
 describe('<DdgNodeContent>', () => {
-  const decorationID = 'test decorationID'
+  const decorationID = 'test decorationID';
   const decorationValue = 42;
   const operation = 'some-operation';
   const operationArray = ['op0', 'op1', 'op2', 'op3'];
@@ -568,14 +573,9 @@ describe('<DdgNodeContent>', () => {
     const noOp = () => {};
 
     it('returns a <DdgNodeContent />', () => {
-      const ddgNode = getNodeRenderer(
-        noOp,
-        noOp,
-        EDdgDensity.PreventPathEntanglement,
-        true,
-        'testBaseUrl',
-        { maxDuration: '100ms' }
-      )(ddgVertex);
+      const ddgNode = getNodeRenderer(noOp, noOp, EDdgDensity.PreventPathEntanglement, true, 'testBaseUrl', {
+        maxDuration: '100ms',
+      })(ddgVertex);
       expect(ddgNode).toBeDefined();
       expect(ddgNode.props).toMatchSnapshot();
     });

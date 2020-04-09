@@ -63,6 +63,7 @@ exports[`<SidePanel> render ignores selectedVertex without selected decoration 1
     <button
       className="Ddg--SidePanel--closeBtn is-hidden"
       onClick={[Function]}
+      type="button"
     >
       <MdExitToApp />
     </button>
@@ -73,6 +74,7 @@ exports[`<SidePanel> render ignores selectedVertex without selected decoration 1
         className="Ddg--SidePanel--decorationBtn "
         key="first"
         onClick={[Function]}
+        type="button"
       >
         1st
       </button>
@@ -80,6 +82,7 @@ exports[`<SidePanel> render ignores selectedVertex without selected decoration 1
         className="Ddg--SidePanel--decorationBtn "
         key="test ID"
         onClick={[Function]}
+        type="button"
       >
         TA
       </button>
@@ -87,6 +90,7 @@ exports[`<SidePanel> render ignores selectedVertex without selected decoration 1
         className="Ddg--SidePanel--decorationBtn "
         key="last"
         onClick={[Function]}
+        type="button"
       >
         LO
       </button>
@@ -94,6 +98,7 @@ exports[`<SidePanel> render ignores selectedVertex without selected decoration 1
         className="Ddg--SidePanel--decorationBtn"
         key="clearBtn"
         onClick={[Function]}
+        type="button"
       >
         Clear
       </button>
@@ -101,6 +106,7 @@ exports[`<SidePanel> render ignores selectedVertex without selected decoration 1
     <button
       className="Ddg--SidePanel--infoBtn"
       onClick={[Function]}
+      type="button"
     >
       <MdInfoOutline />
     </button>
@@ -121,6 +127,7 @@ exports[`<SidePanel> render renders config decorations with clear button 1`] = `
     <button
       className="Ddg--SidePanel--closeBtn is-hidden"
       onClick={[Function]}
+      type="button"
     >
       <MdExitToApp />
     </button>
@@ -131,6 +138,7 @@ exports[`<SidePanel> render renders config decorations with clear button 1`] = `
         className="Ddg--SidePanel--decorationBtn "
         key="first"
         onClick={[Function]}
+        type="button"
       >
         1st
       </button>
@@ -138,6 +146,7 @@ exports[`<SidePanel> render renders config decorations with clear button 1`] = `
         className="Ddg--SidePanel--decorationBtn "
         key="test ID"
         onClick={[Function]}
+        type="button"
       >
         TA
       </button>
@@ -145,6 +154,7 @@ exports[`<SidePanel> render renders config decorations with clear button 1`] = `
         className="Ddg--SidePanel--decorationBtn "
         key="last"
         onClick={[Function]}
+        type="button"
       >
         LO
       </button>
@@ -152,6 +162,7 @@ exports[`<SidePanel> render renders config decorations with clear button 1`] = `
         className="Ddg--SidePanel--decorationBtn"
         key="clearBtn"
         onClick={[Function]}
+        type="button"
       >
         Clear
       </button>
@@ -159,6 +170,7 @@ exports[`<SidePanel> render renders config decorations with clear button 1`] = `
     <button
       className="Ddg--SidePanel--infoBtn"
       onClick={[Function]}
+      type="button"
     >
       <MdInfoOutline />
     </button>
@@ -179,6 +191,7 @@ exports[`<SidePanel> render renders selected decoration 1`] = `
     <button
       className="Ddg--SidePanel--closeBtn is-hidden"
       onClick={[Function]}
+      type="button"
     >
       <MdExitToApp />
     </button>
@@ -189,6 +202,7 @@ exports[`<SidePanel> render renders selected decoration 1`] = `
         className="Ddg--SidePanel--decorationBtn "
         key="first"
         onClick={[Function]}
+        type="button"
       >
         1st
       </button>
@@ -196,6 +210,7 @@ exports[`<SidePanel> render renders selected decoration 1`] = `
         className="Ddg--SidePanel--decorationBtn is-selected"
         key="test ID"
         onClick={[Function]}
+        type="button"
       >
         TA
       </button>
@@ -203,6 +218,7 @@ exports[`<SidePanel> render renders selected decoration 1`] = `
         className="Ddg--SidePanel--decorationBtn "
         key="last"
         onClick={[Function]}
+        type="button"
       >
         LO
       </button>
@@ -210,6 +226,7 @@ exports[`<SidePanel> render renders selected decoration 1`] = `
         className="Ddg--SidePanel--decorationBtn"
         key="clearBtn"
         onClick={[Function]}
+        type="button"
       >
         Clear
       </button>
@@ -217,6 +234,7 @@ exports[`<SidePanel> render renders selected decoration 1`] = `
     <button
       className="Ddg--SidePanel--infoBtn"
       onClick={[Function]}
+      type="button"
     >
       <MdInfoOutline />
     </button>
@@ -237,6 +255,7 @@ exports[`<SidePanel> render renders sidePanel and closeBtn when vertex and decor
     <button
       className="Ddg--SidePanel--closeBtn "
       onClick={[Function]}
+      type="button"
     >
       <MdExitToApp />
     </button>
@@ -247,6 +266,7 @@ exports[`<SidePanel> render renders sidePanel and closeBtn when vertex and decor
         className="Ddg--SidePanel--decorationBtn "
         key="first"
         onClick={[Function]}
+        type="button"
       >
         1st
       </button>
@@ -254,6 +274,7 @@ exports[`<SidePanel> render renders sidePanel and closeBtn when vertex and decor
         className="Ddg--SidePanel--decorationBtn is-selected"
         key="test ID"
         onClick={[Function]}
+        type="button"
       >
         TA
       </button>
@@ -261,6 +282,7 @@ exports[`<SidePanel> render renders sidePanel and closeBtn when vertex and decor
         className="Ddg--SidePanel--decorationBtn "
         key="last"
         onClick={[Function]}
+        type="button"
       >
         LO
       </button>
@@ -268,6 +290,7 @@ exports[`<SidePanel> render renders sidePanel and closeBtn when vertex and decor
         className="Ddg--SidePanel--decorationBtn"
         key="clearBtn"
         onClick={[Function]}
+        type="button"
       >
         Clear
       </button>
@@ -275,6 +298,7 @@ exports[`<SidePanel> render renders sidePanel and closeBtn when vertex and decor
     <button
       className="Ddg--SidePanel--infoBtn"
       onClick={[Function]}
+      type="button"
     >
       <MdInfoOutline />
     </button>

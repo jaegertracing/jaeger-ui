@@ -281,7 +281,6 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps, TSt
         viewModifiers
       );
       if (vertices.length > 1) {
-        const { density, showOp, service, operation, visEncoding } = urlState;
         wrapperClassName = 'is-horizontal';
         // TODO: using `key` here is a hack, debug digraph to fix the underlying issue
         content = (

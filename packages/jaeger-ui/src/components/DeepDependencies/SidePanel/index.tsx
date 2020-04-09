@@ -46,7 +46,9 @@ export default class SidePanel extends React.PureComponent<TProps> {
   }
 
   componentDidUpdate(prevProps: TProps) {
-    if (prevProps.selectedVertex !== this.props.selectedVertex) track.trackDecorationViewDetails(this.props.selectedVertex);
+    if (prevProps.selectedVertex !== this.props.selectedVertex) {
+      track.trackDecorationViewDetails(this.props.selectedVertex);
+    }
   }
 
   clearSelected = () => {
@@ -57,7 +59,7 @@ export default class SidePanel extends React.PureComponent<TProps> {
   selectDecoration = (decoration?: string) => {
     track.trackDecorationSelected(decoration);
     this.props.selectDecoration(decoration);
-  }
+  };
 
   openInfoModal = () => {
     Modal.info({
@@ -97,15 +99,17 @@ export default class SidePanel extends React.PureComponent<TProps> {
         <div className="Ddg--SidePanel--Btns">
           <button
             className={`Ddg--SidePanel--closeBtn ${selectedVertex && selectedSchema ? '' : 'is-hidden'}`}
+            type="button"
             onClick={this.clearSelected}
           >
             <MdExitToApp />
           </button>
           <div className="Ddg--SidePanel--DecorationBtns">
-            {this.decorations.map(({ acronym, id, name }) => (
+            {this.decorations.map(({ acronym, id }) => (
               <button
                 key={id}
                 className={`Ddg--SidePanel--decorationBtn ${id === selectedDecoration ? 'is-selected' : ''}`}
+                type="button"
                 onClick={() => this.selectDecoration(id)}
               >
                 {acronym}
@@ -114,12 +118,13 @@ export default class SidePanel extends React.PureComponent<TProps> {
             <button
               key="clearBtn"
               className="Ddg--SidePanel--decorationBtn"
+              type="button"
               onClick={() => this.selectDecoration()}
             >
               Clear
             </button>
           </div>
-          <button className="Ddg--SidePanel--infoBtn" onClick={this.openInfoModal}>
+          <button className="Ddg--SidePanel--infoBtn" onClick={this.openInfoModal} type="button">
             <MdInfoOutline />
           </button>
         </div>

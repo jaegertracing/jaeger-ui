@@ -13,7 +13,6 @@
 // limitations under the License.
 
 import { trackEvent } from '../../../utils/tracking';
-import getTrackFilter from '../../../utils/tracking/getTrackFilter';
 
 // export for tests
 export const CATEGORY_DECORATION_SELECTION = 'jaeger/ux/ddg/decoration-selection';

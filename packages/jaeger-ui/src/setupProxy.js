@@ -46,5 +46,5 @@ module.exports = function setupProxy(app) {
       ws: true,
       xfwd: true,
     })
-  )
+  );
 };

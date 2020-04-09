@@ -22,7 +22,6 @@ import {
   RADIUS,
 } from '../../components/DeepDependencies/Graph/DdgNodeContent/constants';
 import { ReduxState } from '../../types/index';
-import { TDdgVertex } from '../ddg/types';
 
 import 'react-circular-progressbar/dist/styles.css';
 
@@ -41,21 +40,18 @@ export default function extractDecorationFromState(
 
   if (!decorationID) return {};
 
-  let decorationValue = _get(
-    state,
-    `pathAgnosticDecorations.${decorationID}.withOp.${service}.${operation}`
-  );
+  let decorationValue = _get(state, `pathAgnosticDecorations.${decorationID}.withOp.${service}.${operation}`);
   let decorationMax = _get(state, `pathAgnosticDecorations.${decorationID}.withOpMax`);
   if (!decorationValue) {
     decorationValue = _get(state, `pathAgnosticDecorations.${decorationID}.withoutOp.${service}`);
     decorationMax = _get(state, `pathAgnosticDecorations.${decorationID}.withoutOpMax`);
   }
 
-  const scale = Math.pow(decorationValue / decorationMax, 1 / 4);
+  const scale = (decorationValue / decorationMax) ** (1 / 4);
   const saturation = Math.ceil(scale * 100);
   const light = 50 + Math.ceil((1 - scale) * 50);
   const decorationColor = `hsl(0, ${saturation}%, ${light}%)`;
-  const backgroundScale = Math.pow((decorationMax - decorationValue) / decorationMax, 1 / 4);
+  const backgroundScale = ((decorationMax - decorationValue) / decorationMax) ** (1 / 4);
   const backgroundSaturation = Math.ceil(backgroundScale * 100);
   const backgroundLight = 50 + Math.ceil((1 - backgroundScale) * 50);
   const decorationBackgroundColor = `hsl(120, ${backgroundSaturation}%, ${backgroundLight}%)`;

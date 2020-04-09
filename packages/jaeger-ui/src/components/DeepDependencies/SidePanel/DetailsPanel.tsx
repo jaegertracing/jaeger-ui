@@ -58,6 +58,7 @@ export class UnconnectedDetailsPanel extends React.PureComponent<TProps, TState>
       prevProps.service !== this.props.service ||
       prevProps.decorationSchema !== this.props.decorationSchema
     ) {
+      // eslint-disable-next-line react/no-did-update-set-state
       this.setState({
         details: undefined,
         detailsErred: false,
@@ -126,13 +127,7 @@ export class UnconnectedDetailsPanel extends React.PureComponent<TProps, TState>
   };
 
   render() {
-    const {
-      decorationProgressbar,
-      decorationSchema,
-      decorationValue,
-      operation: _op,
-      service,
-    } = this.props;
+    const { decorationProgressbar, decorationSchema, decorationValue, operation: _op, service } = this.props;
     const { width = 0.3 } = this.state;
     const operation = _op && !Array.isArray(_op) ? _op : undefined;
     return (
@@ -162,7 +157,7 @@ export class UnconnectedDetailsPanel extends React.PureComponent<TProps, TState>
             header="Details"
           />
         )}
-        <ColumnResizer max={0.8} min={0.1} onChange={this.onResize} position={width} rightSide  />
+        <ColumnResizer max={0.8} min={0.1} onChange={this.onResize} position={width} rightSide />
       </div>
     );
   }

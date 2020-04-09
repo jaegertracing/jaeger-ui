@@ -156,7 +156,7 @@ export default class Graph extends PureComponent<TProps> {
             key: 'nodes/content',
             layerType: 'html',
             measurable: true,
-            measureNode: measureNode,
+            measureNode,
             renderNode: this.getNodeContentRenderer({
               baseUrl,
               density,

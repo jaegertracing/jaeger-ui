@@ -59,8 +59,7 @@ type TDispatchProps = {
   getDecoration: (id: string, svc: string, op?: string) => void;
 };
 
-type TProps = /* RouteComponentProps<any> & */
-  TDispatchProps &
+type TProps = TDispatchProps &
   TDecorationFromState & {
     focalNodeUrl: string | null;
     focusPathsThroughVertex: (vertexKey: string) => void;
@@ -280,6 +279,7 @@ export class UnconnectedDdgNodeContent extends React.PureComponent<TProps, TStat
             'is-positioned': isPositioned,
           })}
           onClick={this.handleClick}
+          role="button"
           style={{ width: `${radius * 2}px`, height: `${radius * 2}px`, transform }}
         >
           <div className="DdgNodeContent--labelWrapper">
@@ -381,10 +381,9 @@ export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchPro
   };
 }
 
-const DdgNodeContent = 
-  connect(
-    extractDecorationFromState,
-    mapDispatchToProps
-  )(UnconnectedDdgNodeContent);
+const DdgNodeContent = connect(
+  extractDecorationFromState,
+  mapDispatchToProps
+)(UnconnectedDdgNodeContent);
 
 export default DdgNodeContent;

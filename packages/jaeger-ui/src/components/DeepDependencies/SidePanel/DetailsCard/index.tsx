@@ -42,7 +42,7 @@ function isList(arr: string[] | TPadRow[]): arr is string[] {
 }
 
 export default class DetailsCard extends React.PureComponent<TProps> {
-  renderList(details: string[]) {
+  static renderList(details: string[]) {
     return (
       <List
         dataSource={details}
@@ -55,14 +55,16 @@ export default class DetailsCard extends React.PureComponent<TProps> {
     );
   }
 
-  renderColumn(def: TPadColumnDef | string) {
+  static renderColumn(def: TPadColumnDef | string) {
     let dataIndex: string;
     let key: string;
     let style: React.CSSProperties | undefined;
     let title: string;
     if (typeof def === 'string') {
+      // eslint-disable-next-line no-multi-assign
       key = title = dataIndex = def;
     } else {
+      // eslint-disable-next-line no-multi-assign
       key = title = dataIndex = def.key;
       if (def.label) title = def.label;
       if (def.styling) style = def.styling;
@@ -87,18 +89,19 @@ export default class DetailsCard extends React.PureComponent<TProps> {
       render: (cellData: undefined | string | TStyledValue) => {
         if (!cellData || typeof cellData !== 'object') return cellData;
         if (!cellData.linkTo) return cellData.value;
-        return <a
-          href={cellData.linkTo}
-          target="_blank"
-          rel="noopener noreferrer"
-        >{cellData.value}</a>;
+        return (
+          <a href={cellData.linkTo} target="_blank" rel="noopener noreferrer">
+            {cellData.value}
+          </a>
+        );
       },
       sorter: (a: TPadRow, b: TPadRow) => {
         const aData = a[dataIndex];
         const aValue = typeof aData === 'object' && aData.value !== undefined ? aData.value : aData;
         const bData = b[dataIndex];
         const bValue = typeof bData === 'object' && bData.value !== undefined ? bData.value : bData;
-        return aValue < bValue ? -1 : bValue < aValue ? 1 : 0;
+        if (aValue < bValue) return -1;
+        return bValue < aValue ? 1 : 0;
       },
     };
 
@@ -131,19 +134,18 @@ export default class DetailsCard extends React.PureComponent<TProps> {
         pagination={false}
         rowKey={(row: TPadRow) => JSON.stringify(row)}
       >
-        {columnDefs.map(this.renderColumn)}
+        {columnDefs.map(DetailsCard.renderColumn)}
       </Table>
     );
   }
 
   renderDetails() {
-    const { columnDefs: _columnDefs, details } = this.props;
-    const columnDefs = _columnDefs ? _columnDefs.slice() : [];
+    const { details } = this.props;
 
     if (Array.isArray(details)) {
       if (details.length === 0) return null;
 
-      if (isList(details)) return this.renderList(details);
+      if (isList(details)) return DetailsCard.renderList(details);
       return this.renderTable(details);
     }
 

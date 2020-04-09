@@ -517,7 +517,7 @@ describe('DeepDependencyGraphPage', () => {
       const selectedVertex = { key: 'test vertex' };
 
       beforeEach(() => {
-        wrapper = shallow(<DeepDependencyGraphPageImpl { ...props } graphState={undefined} />);
+        wrapper = shallow(<DeepDependencyGraphPageImpl {...props} graphState={undefined} />);
       });
 
       it('selects a vertex', () => {
@@ -683,16 +683,6 @@ describe('DeepDependencyGraphPage', () => {
         ).find(ErrorMessage);
         expect(errorComponent).toHaveLength(1);
         expect(errorComponent.prop('error')).toBe(error);
-      });
-
-      xit('selects a vertex', () => {
-        const wrapper = shallow(
-          <DeepDependencyGraphPageImpl {...props} />
-        );
-        const vertex = { key: 'test vertex' };
-        expect(wrapper.instance.state('selectedVertex')).toBeUndefined();
-        wrapper.instance().selectVertex(vertex);
-        expect(wrapper.instance.state('selectedVertex')).toEqual(vertex);
       });
 
       describe('graphState.state === fetchedState.DONE', () => {

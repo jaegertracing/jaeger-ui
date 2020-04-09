@@ -164,14 +164,16 @@ describe('DeepDependencyGraph/url', () => {
     });
 
     it('handles and warns on duplicate values', () => {
-      ['decoration', 'end', 'hash', 'operation', 'service', 'showOp', 'start', 'visEncoding'].forEach(param => {
-        const secondParam = `second ${acceptableParams[param]}`;
-        parseSpy.mockReturnValue({
-          ...acceptableParams,
-          [param]: [acceptableParams[param], secondParam],
-        });
-        expect(getUrlState(getSearch())[param]).toBe(expectedParams[param]);
-      });
+      ['decoration', 'end', 'hash', 'operation', 'service', 'showOp', 'start', 'visEncoding'].forEach(
+        param => {
+          const secondParam = `second ${acceptableParams[param]}`;
+          parseSpy.mockReturnValue({
+            ...acceptableParams,
+            [param]: [acceptableParams[param], secondParam],
+          });
+          expect(getUrlState(getSearch())[param]).toBe(expectedParams[param]);
+        }
+      );
     });
 
     it('memoizes correctly', () => {
