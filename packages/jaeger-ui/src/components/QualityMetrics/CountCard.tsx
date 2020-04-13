@@ -14,42 +14,33 @@
 
 import * as React from 'react';
 
-import CircularProgressbar from '../common/CircularProgressbar';
-import NewWindowIcon from '../common/NewWindowIcon';
+import ExamplesLink from './ExamplesLink';
 
-import { TQualityMetrics } from './types';
+import { TExample } from './types';
 
 export type TProps = {
-  link: string;
-  score: TQualityMetrics["scores"][0];
+  count?: number;
+  title?: string;
+  examples?: TExample[];
 }
 
 export default class ScoreCard extends React.PureComponent<TProps> {
   render() {
     const {
-      link,
-      score: {
-        label,
-        max: maxValue,
-        value,
-      }
+      count,
+      title,
+      examples,
     } = this.props;
+
+    if (count === undefined || title === undefined) return null;
+
     return (
-      <div className="ScoreCard">
-        <div className="ScoreCard--TitleHeader">
-          {label}
+      <div className="CountCard">
+        <div className="CountCard--TitleHeader">
+          {title}
         </div>
-        <div className="ScoreCard--CircularProgressbarWrapper">
-          <CircularProgressbar
-            decorationHue={120}
-            maxValue={maxValue}
-            text={`${(value / maxValue * 100).toFixed(1)}%`}
-            value={value}
-          />
-        </div>
-        {value < maxValue && (
-          <a href={link}>How to improve <NewWindowIcon /></a>
-        )}
+        {count /* maybe antd number thing, those decent */}
+        <ExamplesLink examples={examples} includeText />
       </div>
     );
   }

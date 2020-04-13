@@ -15,15 +15,13 @@
 import * as React from 'react';
 import _get from 'lodash/get';
 import queryString from 'query-string';
-import { CircularProgressbar } from 'react-circular-progressbar';
+import CircularProgressbar from '../../components/common/CircularProgressbar';
 
 import {
   PROGRESS_BAR_STROKE_WIDTH,
   RADIUS,
 } from '../../components/DeepDependencies/Graph/DdgNodeContent/constants';
 import { ReduxState } from '../../types/index';
-
-import 'react-circular-progressbar/dist/styles.css';
 
 export type TDecorationFromState = {
   decorationID?: string;
@@ -47,32 +45,12 @@ export default function extractDecorationFromState(
     decorationMax = _get(state, `pathAgnosticDecorations.${decorationID}.withoutOpMax`);
   }
 
-  const scale = (decorationValue / decorationMax) ** (1 / 4);
-  const saturation = Math.ceil(scale * 100);
-  const light = 50 + Math.ceil((1 - scale) * 50);
-  const decorationColor = `hsl(0, ${saturation}%, ${light}%)`;
-  const backgroundScale = ((decorationMax - decorationValue) / decorationMax) ** (1 / 4);
-  const backgroundSaturation = Math.ceil(backgroundScale * 100);
-  const backgroundLight = 50 + Math.ceil((1 - backgroundScale) * 50);
-  const decorationBackgroundColor = `hsl(120, ${backgroundSaturation}%, ${backgroundLight}%)`;
-
   const decorationProgressbar =
     typeof decorationValue === 'number' ? (
       <CircularProgressbar
         key={`${service}\t${operation}`}
-        styles={{
-          path: {
-            stroke: decorationColor,
-            strokeLinecap: 'butt',
-          },
-          text: {
-            fill: decorationColor,
-          },
-          trail: {
-            stroke: decorationBackgroundColor,
-            strokeLinecap: 'butt',
-          },
-        }}
+        backgroundHue={120}
+        decorationHue={0}
         maxValue={decorationMax}
         strokeWidth={(PROGRESS_BAR_STROKE_WIDTH / RADIUS) * 50}
         text={`${decorationValue}`}

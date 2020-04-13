@@ -58,6 +58,7 @@ export default class DetailsCard extends React.PureComponent<TProps> {
   static renderColumn(def: TPadColumnDef | string) {
     let dataIndex: string;
     let key: string;
+    let sortable: boolean = true;
     let style: React.CSSProperties | undefined;
     let title: string;
     if (typeof def === 'string') {
@@ -68,6 +69,7 @@ export default class DetailsCard extends React.PureComponent<TProps> {
       key = title = dataIndex = def.key;
       if (def.label) title = def.label;
       if (def.styling) style = def.styling;
+      if (def.preventSort) sortable = false;
     }
 
     const props = {
@@ -95,14 +97,14 @@ export default class DetailsCard extends React.PureComponent<TProps> {
           </a>
         );
       },
-      sorter: (a: TPadRow, b: TPadRow) => {
+      sorter: sortable && ((a: TPadRow, b: TPadRow) => {
         const aData = a[dataIndex];
-        const aValue = typeof aData === 'object' && aData.value !== undefined ? aData.value : aData;
+        const aValue = typeof aData === 'object' && typeof aData.value === 'string' ? aData.value : aData;
         const bData = b[dataIndex];
-        const bValue = typeof bData === 'object' && bData.value !== undefined ? bData.value : bData;
+        const bValue = typeof bData === 'object' && typeof bData.value === 'string' ? bData.value : bData;
         if (aValue < bValue) return -1;
         return bValue < aValue ? 1 : 0;
-      },
+      }),
     };
 
     return <Column {...props} />;
@@ -132,7 +134,16 @@ export default class DetailsCard extends React.PureComponent<TProps> {
         size="middle"
         dataSource={details}
         pagination={false}
-        rowKey={(row: TPadRow) => JSON.stringify(row)}
+        rowKey={(row: TPadRow) => JSON.stringify(row, function replacer(key: string, value: TPadRow | string | number | TStyledValue) {
+          function isRow(v: typeof value): v is TPadRow { return v === row };
+          if (isRow(value)) return value;
+          if (typeof value === 'object') {
+            if (typeof value.value === 'string') return value.value;
+            const { key = "Unknown" } = value.value;
+            return key;
+          }
+          return value;
+        })}
       >
         {columnDefs.map(DetailsCard.renderColumn)}
       </Table>
@@ -155,6 +166,7 @@ export default class DetailsCard extends React.PureComponent<TProps> {
   render() {
     const { className, description, header } = this.props;
 
+    // TODO: Collapsible
     return (
       <div className={`DetailsCard ${className}`}>
         <div>

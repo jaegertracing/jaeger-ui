@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import memoizeOne from 'memoize-one';
+import queryString from 'query-string';
 import { matchPath } from 'react-router-dom';
 
 import prefixUrl from '../../utils/prefix-url';
@@ -24,6 +26,15 @@ export function matches(path: string) {
   return Boolean(matchPath(path, ROUTE_MATCHER));
 }
 
-export function getUrl() {
-  return ROUTE_PATH;
+export function getUrl(queryParams?: Record<string, string | string[]>) {
+  if (!queryParams) return ROUTE_PATH;
+
+  return `${ROUTE_PATH}?${queryString.stringify(queryParams)}`;
 }
+
+export const getUrlState = memoizeOne(function getUrlState(search: string): { service?: string } {
+  const { service: serviceFromUrl } = queryString.parse(search);
+  const service = Array.isArray(serviceFromUrl) ? serviceFromUrl[0] : serviceFromUrl;
+  if (service) return { service };
+  return {};
+});

@@ -16,14 +16,21 @@ import * as React from 'react';
 import { History as RouterHistory, Location } from 'history';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
-import queryString from 'query-string';
 
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import JaegerAPI from '../../api/jaeger';
 import BreakableText from '../common/BreakableText';
+import DetailsCard from '../DeepDependencies/SidePanel/DetailsCard';
+import ExamplesLink from './ExamplesLink';
+import Header from './Header';
+import MetricCard from './MetricCard';
+import ScoreCard from './ScoreCard';
+import { getUrl, getUrlState } from './url';
 
 import { ReduxState } from '../../types';
 import { TQualityMetrics } from './types';
+
+import './index.css';
 
 type TOwnProps = {
   history: RouterHistory;
@@ -49,6 +56,15 @@ type TState = {
 
 export class UnconnectedQualityMetrics extends React.PureComponent<TProps, TState> {
   state: TState = {};
+
+  constructor(props: TProps) {
+    super(props);
+
+    const { fetchServices, services } = props;
+    if (!services) {
+      fetchServices();
+    }
+  }
 
   componentDidMount() {
     this.fetchQualityMetrics();
@@ -87,38 +103,58 @@ export class UnconnectedQualityMetrics extends React.PureComponent<TProps, TStat
       });
   }
 
+  setService = (service: string) => {
+    const { history } = this.props;
+    history.push(getUrl({ service }));
+  }
+
   render() {
-    const { service } = this.props;
+    const { service, services } = this.props;
     const { qualityMetrics, error, loading } = this.state;
     return (
       <div className="QualityMetrics">
+        <Header service={service} services={services} setService={this.setService} />
         <div className="QualityMetrics--TitleHeader">
           Quality Metrics
         </div>
-        {/*
-        <div className="Ddg--DetailsPanel--DecorationHeader">
-          <span>{stringSupplant(decorationSchema.name, { service, operation })}</span>
-        </div>
-        {decorationProgressbar ? (
-          <div className="Ddg--DetailsPanel--PercentCircleWrapper">{decorationProgressbar}</div>
-        ) : (
-          <span className="Ddg--DetailsPanel--errorMsg">{decorationValue}</span>
+        {qualityMetrics && (
+          <>
+            <div className="QualityMetrics--ScoreCards">
+              {qualityMetrics.scores.map(score => (
+                <ScoreCard key={score.key} score={score} link={qualityMetrics.traceQualityDocumentationLink} />
+              ))}
+              <ScoreCard key="test" score={{ label: 'Test Full', key: 'test', max: 1, value: 1 }} link={qualityMetrics.traceQualityDocumentationLink} />
+            </div>
+            <div className="QualityMetrics--MetricCards">
+              {qualityMetrics.metrics.map(metric => (
+                <MetricCard key={metric.name} metric={metric} />
+              ))}
+            </div>
+            <DetailsCard
+              columnDefs={[{
+                key: 'version',
+                label: 'Version',
+              }, {
+                key: 'minVersion',
+                label: 'Minimum Version',
+              }, {
+                key: 'count',
+                label: 'Count',
+              }, {
+                key: 'examples',
+                label: 'Examples',
+                preventSort: true,
+              }]}
+              details={qualityMetrics.clients.map(clientRow => ({
+                ...clientRow,
+                examples: {
+                  value: <ExamplesLink examples={clientRow.examples} key={`${clientRow.version}--examples`} />,
+                },
+              }))}
+              header="Client Versions"
+            />
+          </>
         )}
-        {this.state.detailsLoading && (
-          <div className="Ddg--DetailsPanel--LoadingWrapper">
-            <LoadingIndicator className="Ddg--DetailsPanel--LoadingIndicator" />
-          </div>
-        )}
-        {this.state.details && (
-          <DetailsCard
-            className={`Ddg--DetailsPanel--DetailsCard ${this.state.detailsErred ? 'is-error' : ''}`}
-            columnDefs={this.state.columnDefs}
-            details={this.state.details}
-            header="Details"
-          />
-        )}
-        <ColumnResizer max={0.8} min={0.1} onChange={this.onResize} position={width} rightSide />
-        */}
       </div>
     );
   }
@@ -127,10 +163,8 @@ export class UnconnectedQualityMetrics extends React.PureComponent<TProps, TStat
 export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxProps {
   const { services: stServices } = state;
   const { services } = stServices;
-  const { service: serviceFromUrl } = queryString.parse(ownProps.location.search);
-  const service = Array.isArray(serviceFromUrl) ? serviceFromUrl[0] : serviceFromUrl;
   return {
-    service,
+    ...getUrlState(ownProps.location.search),
     services,
   };
 }

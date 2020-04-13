@@ -14,14 +14,18 @@
 
 import * as React from 'react';
 
-
 import { TPadColumnDef, TPadRow } from '../../model/path-agnostic-decorations/types';
+
+export type TExample = {
+  spanIDs?: string[];
+  traceID: string;
+};
 
 export type TQualityMetrics = {
   traceQualityDocumentationLink: string;
   bannerText?: string | {
     value: string;
-    styling: React.CSSProperties; // typedef
+    styling: React.CSSProperties;
   };
   scores: {
     key: string;
@@ -36,23 +40,14 @@ export type TQualityMetrics = {
     metricDocumentationLink: string;
     metricWeight: number;
     passCount: number;
-    passExamples?: {
-      spanIDs?: string[];
-      traceID: string;
-    }[];
+    passExamples?: TExample[];
     failureCount: number;
-    failureExamples?: {
-      spanIDs?: string[];
-      traceID: string;
-    }[];
+    failureExamples?: TExample[];
     exemptionCount?: number;
-    exemptionExamples?: {
-      spanIDs?: string[];
-      traceID: string;
-    }[];
+    exemptionExamples?: TExample[];
     details?: {
       description?: string;
-      tableHeader?: string;
+      header?: string;
       columns: TPadColumnDef[];
       rows: TPadRow[];
     }[];
@@ -61,9 +56,6 @@ export type TQualityMetrics = {
     version: string;
     minVersion: string;
     count: number;
-    examples: {
-      spanIDs?: string[];
-      traceID: string;
-    }[];
-  };
+    examples: TExample[];
+  }[];
 }

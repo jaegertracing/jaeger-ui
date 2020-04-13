@@ -33,12 +33,13 @@ export type TPathAgnosticDecorationSchema = {
 export type TStyledValue = {
   linkTo?: string;
   styling?: React.CSSProperties;
-  value: string;
+  value: string | React.ReactElement;
 };
 
 export type TPadColumnDef = {
   key: string;
   label?: string;
+  preventSort?: boolean;
   styling?: React.CSSProperties;
 };
 

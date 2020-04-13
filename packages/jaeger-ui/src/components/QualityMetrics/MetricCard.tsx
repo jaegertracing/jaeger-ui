@@ -13,137 +13,67 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { History as RouterHistory, Location } from 'history';
-import { connect } from 'react-redux';
-import { bindActionCreators, Dispatch } from 'redux';
-import queryString from 'query-string';
 
-import * as jaegerApiActions from '../../actions/jaeger-api';
-import JaegerAPI from '../../api/jaeger';
-import BreakableText from '../common/BreakableText';
+import CircularProgressbar from '../common/CircularProgressbar';
+import NewWindowIcon from '../common/NewWindowIcon';
+import DetailsCard from '../DeepDependencies/SidePanel/DetailsCard';
+import CountCard from './CountCard';
 
-import { ReduxState } from '../../types';
 import { TQualityMetrics } from './types';
 
-type TOwnProps = {
-  history: RouterHistory;
-  location: Location;
+export type TProps = {
+  // link: string;
+  metric: TQualityMetrics["metrics"][0];
 }
 
-type TDispatchProps = {
-  fetchServices: () => void;
-};
-
-type TReduxProps = {
-  service?: string;
-  services?: string[] | null;
-}
-
-export type TProps = TDispatchProps & TReduxProps & TOwnProps;
-
-type TState = {
-  qualityMetrics?: TQualityMetrics;
-  error?: Error;
-  loading?: boolean;
-};
-
-export class UnconnectedQualityMetrics extends React.PureComponent<TProps, TState> {
-  state: TState = {};
-
-  componentDidMount() {
-    this.fetchQualityMetrics();
-  }
-
-  componentDidUpdate(prevProps: TProps) {
-    if (prevProps.service !== this.props.service) {
-      // eslint-disable-next-line react/no-did-update-set-state
-      this.setState({
-        qualityMetrics: undefined,
-        error: undefined,
-        loading: false,
-      });
-      this.fetchQualityMetrics();
-    }
-  }
-
-  fetchQualityMetrics() {
-    const {
-      service,
-    } = this.props;
-    if (!service) return;
-
-    this.setState({ loading: true });
-
-    JaegerAPI.fetchQualityMetrics(service)
-      .then((qualityMetrics: TQualityMetrics) => {
-
-        this.setState({ qualityMetrics, loading: false });
-      })
-      .catch((error: Error) => {
-        this.setState({
-          error,
-          loading: false,
-        });
-      });
-  }
-
+export default class MetricCard extends React.PureComponent<TProps> {
   render() {
-    const { service } = this.props;
-    const { qualityMetrics, error, loading } = this.state;
+    const {
+      // link,
+      metric: {
+        name,
+        category,
+        description,
+        metricDocumentationLink,
+        // metricWeight,
+        passCount,
+        passExamples,
+        failureCount,
+        failureExamples,
+        exemptionCount,
+        exemptionExamples,
+        details,
+      }
+    } = this.props;
     return (
-      <div className="QualityMetrics">
-        <div className="QualityMetrics--TitleHeader">
-          Quality Metrics
-        </div>
-        {/*
-        <div className="Ddg--DetailsPanel--DecorationHeader">
-          <span>{stringSupplant(decorationSchema.name, { service, operation })}</span>
-        </div>
-        {decorationProgressbar ? (
-          <div className="Ddg--DetailsPanel--PercentCircleWrapper">{decorationProgressbar}</div>
-        ) : (
-          <span className="Ddg--DetailsPanel--errorMsg">{decorationValue}</span>
-        )}
-        {this.state.detailsLoading && (
-          <div className="Ddg--DetailsPanel--LoadingWrapper">
-            <LoadingIndicator className="Ddg--DetailsPanel--LoadingIndicator" />
-          </div>
-        )}
-        {this.state.details && (
-          <DetailsCard
-            className={`Ddg--DetailsPanel--DetailsCard ${this.state.detailsErred ? 'is-error' : ''}`}
-            columnDefs={this.state.columnDefs}
-            details={this.state.details}
-            header="Details"
+      <div className="MetricCard">
+        <div className="MetricCard--CircularProgressbarWrapper">
+          <CircularProgressbar
+            decorationHue={120}
+            maxValue={passCount + failureCount}
+            text={`${(passCount / (passCount + failureCount) * 100).toFixed(1)}%`}
+            value={passCount}
           />
-        )}
-        <ColumnResizer max={0.8} min={0.1} onChange={this.onResize} position={width} rightSide />
-        */}
+        </div>
+        <div className="MetricCard--Body">
+          <div className="MetricCard--TitleHeader">
+            {name} <a href={metricDocumentationLink} target="_blank" ref="noreferrer noopener"><NewWindowIcon /></a>
+          </div>
+          <p>{description}</p>
+          <div className="MetricCard--CountsWrapper">
+            <CountCard count={passCount} examples={passExamples} title="Passing"/>
+            <CountCard count={failureCount} examples={failureExamples} title="Failing"/>
+            <CountCard count={exemptionCount} examples={exemptionExamples} title="Exemptions"/>
+          </div>
+          {details && details.map(detail=> Boolean(detail.rows && detail.rows.length) && (
+            <DetailsCard
+              columnDefs={detail.columns}
+              details={detail.rows}
+              header={detail.header || "Details"}
+            />
+          ))}
+        </div>
       </div>
     );
   }
 }
-
-export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxProps {
-  const { services: stServices } = state;
-  const { services } = stServices;
-  const { service: serviceFromUrl } = queryString.parse(ownProps.location.search);
-  const service = Array.isArray(serviceFromUrl) ? serviceFromUrl[0] : serviceFromUrl;
-  return {
-    service,
-    services,
-  };
-}
-
-export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
-  const { fetchServices } = bindActionCreators(
-    jaegerApiActions,
-    dispatch
-  );
-
-  return {
-    fetchServices,
-  };
-}
-
-export default connect(mapStateToProps, mapDispatchToProps)(UnconnectedQualityMetrics);
