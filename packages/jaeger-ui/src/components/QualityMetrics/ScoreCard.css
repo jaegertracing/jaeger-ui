@@ -14,18 +14,20 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-.QualityMetrics {
-  display: flex;
-  flex-direction: column;
-  height: calc(100vh - var(--nav-height));
+.ScoreCard {
+  margin: 10px;
+  max-width: 25%;
+  min-width: 180px;
+  text-align: center;
 }
 
-.QualityMetrics--ScoreCards {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-around;
+.ScoreCard--CircularProgressbarWrapper {
+  padding: 3px;
 }
 
-.QualityMetrics--Body {
-  overflow: scroll;
+.ScoreCard--TitleHeader {
+  border-bottom: solid 1px #ddd;
+  box-shadow: 0px 5px 5px -5px rgba(0, 0, 0, 0.3);
+  font-size: 1.8em;
+  /* margin: 0 auto; */
 }

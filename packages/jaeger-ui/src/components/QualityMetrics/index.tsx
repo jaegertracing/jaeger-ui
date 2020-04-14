@@ -42,6 +42,7 @@ type TDispatchProps = {
 };
 
 type TReduxProps = {
+  lookback: number;
   service?: string;
   services?: string[] | null;
 }
@@ -71,7 +72,7 @@ export class UnconnectedQualityMetrics extends React.PureComponent<TProps, TStat
   }
 
   componentDidUpdate(prevProps: TProps) {
-    if (prevProps.service !== this.props.service) {
+    if (prevProps.service !== this.props.service || prevProps.lookback !== this.props.lookback) {
       // eslint-disable-next-line react/no-did-update-set-state
       this.setState({
         qualityMetrics: undefined,
@@ -84,13 +85,14 @@ export class UnconnectedQualityMetrics extends React.PureComponent<TProps, TStat
 
   fetchQualityMetrics() {
     const {
+      lookback,
       service,
     } = this.props;
     if (!service) return;
 
     this.setState({ loading: true });
 
-    JaegerAPI.fetchQualityMetrics(service)
+    JaegerAPI.fetchQualityMetrics(service, lookback ? `${lookback}h` : undefined)
       .then((qualityMetrics: TQualityMetrics) => {
 
         this.setState({ qualityMetrics, loading: false });
@@ -103,27 +105,37 @@ export class UnconnectedQualityMetrics extends React.PureComponent<TProps, TStat
       });
   }
 
+  setLookback = (lookback: number | string | undefined) => {
+    if (!lookback || typeof lookback === 'string') return;
+    if (lookback < 1 || lookback !== Math.floor(lookback)) return;
+
+    const { history, service = "" } = this.props;
+    history.push(getUrl({ lookback, service }));
+  }
+
   setService = (service: string) => {
-    const { history } = this.props;
-    history.push(getUrl({ service }));
+    const { history, lookback } = this.props;
+    history.push(getUrl({ lookback, service }));
   }
 
   render() {
-    const { service, services } = this.props;
+    const { lookback, service, services } = this.props;
     const { qualityMetrics, error, loading } = this.state;
     return (
       <div className="QualityMetrics">
-        <Header service={service} services={services} setService={this.setService} />
-        <div className="QualityMetrics--TitleHeader">
-          Quality Metrics
-        </div>
+        <Header
+          lookback={lookback}
+          service={service}
+          services={services}
+          setService={this.setService}
+          setLookback={this.setLookback}
+        />
         {qualityMetrics && (
-          <>
+          <div className="QualityMetrics--Body">
             <div className="QualityMetrics--ScoreCards">
               {qualityMetrics.scores.map(score => (
                 <ScoreCard key={score.key} score={score} link={qualityMetrics.traceQualityDocumentationLink} />
               ))}
-              <ScoreCard key="test" score={{ label: 'Test Full', key: 'test', max: 1, value: 1 }} link={qualityMetrics.traceQualityDocumentationLink} />
             </div>
             <div className="QualityMetrics--MetricCards">
               {qualityMetrics.metrics.map(metric => (
@@ -131,6 +143,7 @@ export class UnconnectedQualityMetrics extends React.PureComponent<TProps, TStat
               ))}
             </div>
             <DetailsCard
+              className="QualityMetrics--ClientVersions"
               columnDefs={[{
                 key: 'version',
                 label: 'Version',
@@ -153,7 +166,7 @@ export class UnconnectedQualityMetrics extends React.PureComponent<TProps, TStat
               }))}
               header="Client Versions"
             />
-          </>
+          </div>
         )}
       </div>
     );

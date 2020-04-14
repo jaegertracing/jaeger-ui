@@ -21,9 +21,16 @@ import CountCard from './CountCard';
 
 import { TQualityMetrics } from './types';
 
+import './MetricCard.css';
+
 export type TProps = {
   // link: string;
   metric: TQualityMetrics["metrics"][0];
+}
+
+const dividToFixedFloorPercentage = (pass: number, fail: number) => {
+  const str = `${pass/(pass+fail)*100}.0`
+  return `${str.substring(0, str.indexOf('.') + 2)}%`;
 }
 
 export default class MetricCard extends React.PureComponent<TProps> {
@@ -49,25 +56,29 @@ export default class MetricCard extends React.PureComponent<TProps> {
       <div className="MetricCard">
         <div className="MetricCard--CircularProgressbarWrapper">
           <CircularProgressbar
-            decorationHue={120}
+            backgroundHue={passCount === 0 ? 0 : undefined}
+            decorationHue={passCount === 0 ? 0 : 120}
             maxValue={passCount + failureCount}
-            text={`${(passCount / (passCount + failureCount) * 100).toFixed(1)}%`}
+            text={dividToFixedFloorPercentage(passCount, failureCount)}
             value={passCount}
           />
         </div>
         <div className="MetricCard--Body">
-          <div className="MetricCard--TitleHeader">
+          <span className="MetricCard--TitleHeader">
             {name} <a href={metricDocumentationLink} target="_blank" ref="noreferrer noopener"><NewWindowIcon /></a>
-          </div>
-          <p>{description}</p>
+          </span>
+          <p className="MetricCard--Description">{description}</p>
           <div className="MetricCard--CountsWrapper">
             <CountCard count={passCount} examples={passExamples} title="Passing"/>
             <CountCard count={failureCount} examples={failureExamples} title="Failing"/>
             <CountCard count={exemptionCount} examples={exemptionExamples} title="Exemptions"/>
           </div>
-          {details && details.map(detail=> Boolean(detail.rows && detail.rows.length) && (
+          {details && details.map(detail => Boolean(detail.rows && detail.rows.length) && (
             <DetailsCard
+              className="MetricCard--Details"
+              collapsible
               columnDefs={detail.columns}
+              description={detail.description}
               details={detail.rows}
               header={detail.header || "Details"}
             />

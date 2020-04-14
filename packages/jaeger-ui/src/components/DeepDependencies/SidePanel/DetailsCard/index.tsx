@@ -14,7 +14,9 @@
 
 import * as React from 'react';
 import { List, Table } from 'antd';
+import cx from 'classnames';
 import _isEmpty from 'lodash/isEmpty';
+import MdKeyboardArrowDown from 'react-icons/lib/md/keyboard-arrow-down';
 
 import {
   TPadColumnDef,
@@ -31,17 +33,30 @@ const { Item } = List;
 
 type TProps = {
   className?: string;
+  collapsible?: boolean;
   columnDefs?: TPadColumnDefs;
   description?: string;
   details: TPadDetails;
   header: string;
 };
 
+type TState = {
+  collapsed: boolean;
+}
+
 function isList(arr: string[] | TPadRow[]): arr is string[] {
   return typeof arr[0] === 'string';
 }
 
 export default class DetailsCard extends React.PureComponent<TProps> {
+  state: TState; 
+
+  constructor(props: TProps) {
+    super(props);
+
+    this.state = { collapsed: Boolean(props.collapsible) };
+  }
+
   static renderList(details: string[]) {
     return (
       <List
@@ -163,17 +178,31 @@ export default class DetailsCard extends React.PureComponent<TProps> {
     return <span>{details}</span>;
   }
 
+  toggleCollapse = () => {
+    this.setState({ collapsed: !this.state.collapsed });
+  }
+
   render() {
-    const { className, description, header } = this.props;
+    const { collapsed } = this.state;
+    const { className, collapsible, description, header } = this.props;
 
     // TODO: Collapsible
     return (
-      <div className={`DetailsCard ${className}`}>
-        <div>
-          <span className="DetailsCard--Header">{header}</span>
-          {description && <p>{description}</p>}
+      <div className={cx('DetailsCard', className)}>
+        <div className="DetailsCard--ButtonHeaderWrapper">
+          {collapsible && <button
+            onClick={this.toggleCollapse}
+            role="button"
+            className={cx('DetailsCard--Collapser', { 'is-collapsed': collapsed })}
+            >
+            <MdKeyboardArrowDown/>
+          </button>}
+          <div className="DetailsCard--HeaderWrapper">
+            <span className="DetailsCard--Header">{header}</span>
+            {description && <p className="DetailsCard--Description">{description}</p>}
+          </div>
         </div>
-        <div className="DetailsCard--DetailsWrapper">{this.renderDetails()}</div>
+        <div className={cx('DetailsCard--DetailsWrapper', { 'is-collapsed': collapsed })}>{this.renderDetails()}</div>
       </div>
     );
   }

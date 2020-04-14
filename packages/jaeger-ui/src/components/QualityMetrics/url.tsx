@@ -26,15 +26,26 @@ export function matches(path: string) {
   return Boolean(matchPath(path, ROUTE_MATCHER));
 }
 
-export function getUrl(queryParams?: Record<string, string | string[]>) {
+export function getUrl(queryParams?: Record<string, string | number>) {
   if (!queryParams) return ROUTE_PATH;
 
   return `${ROUTE_PATH}?${queryString.stringify(queryParams)}`;
 }
 
-export const getUrlState = memoizeOne(function getUrlState(search: string): { service?: string } {
-  const { service: serviceFromUrl } = queryString.parse(search);
+type  TReturnValue = {
+  lookback: number;
+  service?: string
+}
+
+export const getUrlState = memoizeOne(function getUrlState(search: string): TReturnValue {
+  const { lookback: lookbackFromUrl, service: serviceFromUrl } = queryString.parse(search);
   const service = Array.isArray(serviceFromUrl) ? serviceFromUrl[0] : serviceFromUrl;
-  if (service) return { service };
-  return {};
+  const lookbackStr = Array.isArray(lookbackFromUrl) ? lookbackFromUrl[0] : lookbackFromUrl;
+  const lookback = lookbackStr && Number.parseInt(lookbackStr);
+  const rv: TReturnValue = {
+    lookback: 1,
+  };
+  if (service) rv.service = service;
+  if (lookback) rv.lookback = lookback;
+  return rv;
 });

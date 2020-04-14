@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Icon, Input, Tooltip } from 'antd';
+import { InputNumber } from 'antd';
 import MdVisibility from 'react-icons/lib/md/visibility';
 import MdVisibilityOff from 'react-icons/lib/md/visibility-off';
 
@@ -24,33 +24,39 @@ import NameSelector from '../DeepDependencies/Header/NameSelector';
 // import UiFindInput from '../../common/UiFindInput';
 // import { EDirection, TDdgDistanceToPathElems, EDdgDensity } from '../../../model/ddg/types';
 
-// import './index.css';
+import './Header.css';
 
 type TProps = {
+  lookback: number;
   service?: string;
   services?: string[] | null;
+  setLookback: (lookback: number | string | undefined) => void;
   setService: (service: string) => void;
 };
+
 export default class Header extends React.PureComponent<TProps> {
   render() {
     const {
+      lookback,
       service,
       services,
       setService,
+      setLookback,
     } = this.props;
 
     return (
-      <header className="DdgHeader">
-        <div className="DdgHeader--paramsHeader">
-          <NameSelector
-            label="Service"
-            placeholder="Select a service…"
-            value={service || null}
-            setValue={setService}
-            required
-            options={services || []}
-          />
-        </div>
+      <header className="QualityMetrics--Header">
+        <NameSelector
+          label="Service"
+          placeholder="Select a service…"
+          value={service || null}
+          setValue={setService}
+          required
+          options={services || []}
+        />
+        <label className="QualityMetrics--Header--LookbackLabel" htmlFor="inputNumber">Lookback:</label>
+        <InputNumber id="inputNumber" onChange={setLookback} min={1} value={lookback} />
+        <span className="QualityMetrics--Header--LookbackSuffix">(in hours)</span>
       </header>
     );
   }

@@ -39,12 +39,12 @@ export default class CircularProgressbar extends React.PureComponent<TProps> {
       value,
     } = this.props;
     const scale = (value / maxValue) ** (1 / 4);
-    const saturation = Math.ceil(scale * 100);
-    const light = 50 + Math.ceil((1 - scale) * 50);
+    const saturation = 20 + Math.ceil(scale * 80);
+    const light = 50 + Math.ceil((1 - scale) * 30);
     const decorationColor = `hsl(${decorationHue}, ${saturation}%, ${light}%)`;
     const backgroundScale = ((maxValue - value) / maxValue) ** (1 / 4);
-    const backgroundSaturation = Math.ceil(backgroundScale * 100);
-    const backgroundLight = 50 + Math.ceil((1 - backgroundScale) * 50);
+    const backgroundSaturation = 20 + Math.ceil(backgroundScale * 80);
+    const backgroundLight = 50 + Math.ceil((1 - backgroundScale) * 30);
     const decorationBackgroundColor = `hsl(${backgroundHue}, ${backgroundSaturation}%, ${backgroundLight}%)`;
 
     return (
@@ -58,7 +58,7 @@ export default class CircularProgressbar extends React.PureComponent<TProps> {
             fill: decorationColor,
           },
           trail: {
-            stroke: backgroundHue ? decorationBackgroundColor : 'transparent',
+            stroke: backgroundHue !== undefined ? decorationBackgroundColor : 'transparent',
             strokeLinecap: 'butt',
           },
         }}

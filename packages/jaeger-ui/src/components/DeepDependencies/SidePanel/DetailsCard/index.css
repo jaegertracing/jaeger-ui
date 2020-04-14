@@ -20,6 +20,30 @@ limitations under the License.
   padding: 0.5em;
 }
 
+.DetailsCard--ButtonHeaderWrapper {
+  display: flex;
+}
+
+.DetailsCard--Collapser {
+  border: none;
+  background: transparent;
+  flex: 0;
+  font-size: 1.5rem;
+  transition: transform 0.25s ease-out;
+}
+
+.DetailsCard--Collapser:focus {
+  outline: none;
+}
+
+.DetailsCard--Collapser.is-collapsed {
+  transform: rotate(-90deg);
+}
+
+.DetailsCard--HeaderWrapper {
+  flex-grow: 1;
+}
+
 .DetailsCard--Header {
   border-bottom: solid 1px #ddd;
   box-shadow: 0px 5px 5px -5px rgba(0, 0, 0, 0.3);
@@ -27,9 +51,20 @@ limitations under the License.
   padding: 0.1em 0.3em;
 }
 
+.DetailsCard--Description {
+  margin-bottom: 0;
+  max-width: 90%;
+}
+
 .DetailsCard--DetailsWrapper {
   overflow: scroll;
   margin-top: 0.5em;
+  transition: max-height 0.25s ease-out;
+  max-height: 60vh;
+}
+
+.DetailsCard--DetailsWrapper.is-collapsed {
+  max-height: 0px;
 }
 
 .DetailsCard--DetailsWrapper th {

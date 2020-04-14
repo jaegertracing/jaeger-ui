@@ -24,6 +24,8 @@ export type TProps = {
   examples?: TExample[];
 }
 
+import './CountCard.css';
+
 export default class ScoreCard extends React.PureComponent<TProps> {
   render() {
     const {
@@ -36,10 +38,12 @@ export default class ScoreCard extends React.PureComponent<TProps> {
 
     return (
       <div className="CountCard">
-        <div className="CountCard--TitleHeader">
+        <span className="CountCard--TitleHeader">
           {title}
-        </div>
-        {count /* maybe antd number thing, those decent */}
+        </span>
+        <span className="CountCard--Count">
+          {count}
+        </span>
         <ExamplesLink examples={examples} includeText />
       </div>
     );
