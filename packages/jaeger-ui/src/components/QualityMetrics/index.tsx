@@ -20,7 +20,9 @@ import { bindActionCreators, Dispatch } from 'redux';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import JaegerAPI from '../../api/jaeger';
 import BreakableText from '../common/BreakableText';
+import LoadingIndicator from '../common/LoadingIndicator';
 import DetailsCard from '../DeepDependencies/SidePanel/DetailsCard';
+import BannerText from './BannerText';
 import ExamplesLink from './ExamplesLink';
 import Header from './Header';
 import MetricCard from './MetricCard';
@@ -94,7 +96,6 @@ export class UnconnectedQualityMetrics extends React.PureComponent<TProps, TStat
 
     JaegerAPI.fetchQualityMetrics(service, lookback ? `${lookback}h` : undefined)
       .then((qualityMetrics: TQualityMetrics) => {
-
         this.setState({ qualityMetrics, loading: false });
       })
       .catch((error: Error) => {
@@ -131,6 +132,8 @@ export class UnconnectedQualityMetrics extends React.PureComponent<TProps, TStat
           setLookback={this.setLookback}
         />
         {qualityMetrics && (
+          <>
+          <BannerText bannerText={qualityMetrics.bannerText} />
           <div className="QualityMetrics--Body">
             <div className="QualityMetrics--ScoreCards">
               {qualityMetrics.scores.map(score => (
@@ -166,6 +169,15 @@ export class UnconnectedQualityMetrics extends React.PureComponent<TProps, TStat
               }))}
               header="Client Versions"
             />
+          </div>
+        </>
+        )}
+        {loading && (
+          <LoadingIndicator centered />
+        )}
+        {error && (
+          <div className="QualityMetrics--Error">
+            {error.message}
           </div>
         )}
       </div>

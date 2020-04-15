@@ -27,6 +27,7 @@ limitations under the License.
 .DetailsCard--Collapser {
   border: none;
   background: transparent;
+  cursor: pointer;
   flex: 0;
   font-size: 1.5rem;
   transition: transform 0.25s ease-out;

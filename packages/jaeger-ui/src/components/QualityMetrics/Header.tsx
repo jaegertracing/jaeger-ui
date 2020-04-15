@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Uber Technologies, Inc.
+// Copyright (c) 2020 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,15 +14,9 @@
 
 import * as React from 'react';
 import { InputNumber } from 'antd';
-import MdVisibility from 'react-icons/lib/md/visibility';
-import MdVisibilityOff from 'react-icons/lib/md/visibility-off';
+import _debounce from 'lodash/debounce';
 
-// import HopsSelector from './HopsSelector';
 import NameSelector from '../DeepDependencies/Header/NameSelector';
-// import LayoutSettings from './LayoutSettings';
-// import { trackFilter, trackHeaderSetOperation, trackShowMatches } from '../index.track';
-// import UiFindInput from '../../common/UiFindInput';
-// import { EDirection, TDdgDistanceToPathElems, EDdgDensity } from '../../../model/ddg/types';
 
 import './Header.css';
 
@@ -34,15 +28,35 @@ type TProps = {
   setService: (service: string) => void;
 };
 
-export default class Header extends React.PureComponent<TProps> {
+type TState = {
+  ownInputValue: number | undefined;
+};
+
+export default class Header extends React.PureComponent<TProps, TState> {
+  state: TState = {
+    ownInputValue: undefined,
+  };
+
+  setLookback = _debounce((lookback: number | string | undefined) => {
+    this.setState({ ownInputValue: undefined });
+    this.props.setLookback(lookback);
+  }, 350);
+
+  handleInputChange = (value: string | number | undefined) => {
+    if (typeof value === 'string') return;
+    this.setState({ ownInputValue: value });
+    this.setLookback(value);
+  };
+
   render() {
     const {
       lookback,
       service,
       services,
       setService,
-      setLookback,
     } = this.props;
+    const { ownInputValue } = this.state;
+    const lookbackValue = ownInputValue !== undefined ? ownInputValue : lookback;
 
     return (
       <header className="QualityMetrics--Header">
@@ -55,7 +69,7 @@ export default class Header extends React.PureComponent<TProps> {
           options={services || []}
         />
         <label className="QualityMetrics--Header--LookbackLabel" htmlFor="inputNumber">Lookback:</label>
-        <InputNumber id="inputNumber" onChange={setLookback} min={1} value={lookback} />
+        <InputNumber id="inputNumber" onChange={this.handleInputChange} min={1} value={lookbackValue} />
         <span className="QualityMetrics--Header--LookbackSuffix">(in hours)</span>
       </header>
     );

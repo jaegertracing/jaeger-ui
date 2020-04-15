@@ -17,6 +17,7 @@ import queryString from 'query-string';
 import { matchPath } from 'react-router-dom';
 
 import prefixUrl from '../../utils/prefix-url';
+import { MAX_LENGTH } from '../DeepDependencies/Graph/DdgNodeContent/constants';
 
 import { SearchQuery } from '../../types/search';
 
@@ -55,7 +56,14 @@ export function getUrl(query?: TUrlState) {
       }, []),
     traceID: ids && ids.length ? ids : undefined,
   };
-  return `${searchUrl}?${queryString.stringify(stringifyArg)}`;
+
+  const fullUrl = `${searchUrl}?${queryString.stringify(stringifyArg)}`;
+  if (fullUrl.length <= MAX_LENGTH) return fullUrl;
+
+  const truncated = fullUrl.slice(0, MAX_LENGTH + 1);
+  if (truncated[MAX_LENGTH] === '&') return truncated.slice(0, -1);
+
+  return truncated.slice(0, truncated.lastIndexOf('&'));
 }
 
 export const getUrlState: (search: string) => TUrlState = memoizeOne(function getUrlState(

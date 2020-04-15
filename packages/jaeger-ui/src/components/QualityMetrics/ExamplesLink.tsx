@@ -37,7 +37,7 @@ function getGetUrlArg(examples: TExample[]): { spanLinks: Record<string, string>
   const spanLinks: Record<string, string> = {};
   const traceID: string[] = [];
   examples.forEach((example: TExample) => {
-    if (hasSpans(example)) spanLinks[example.traceID] = example.spanIDs.join('.');
+    if (hasSpans(example)) spanLinks[example.traceID] = example.spanIDs.join(' ');
     else traceID.push(example.traceID);
   })
   return {

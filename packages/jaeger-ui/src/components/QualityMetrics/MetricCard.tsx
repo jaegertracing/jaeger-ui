@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import * as React from 'react';
+import { Tooltip } from 'antd';
 
 import CircularProgressbar from '../common/CircularProgressbar';
 import NewWindowIcon from '../common/NewWindowIcon';
@@ -65,7 +66,12 @@ export default class MetricCard extends React.PureComponent<TProps> {
         </div>
         <div className="MetricCard--Body">
           <span className="MetricCard--TitleHeader">
-            {name} <a href={metricDocumentationLink} target="_blank" ref="noreferrer noopener"><NewWindowIcon /></a>
+            {name} <Tooltip
+              arrowPointAtCenter
+              title="Metric Documentation"
+              >
+              <a href={metricDocumentationLink} target="_blank" ref="noreferrer noopener"><NewWindowIcon /></a>
+            </Tooltip>
           </span>
           <p className="MetricCard--Description">{description}</p>
           <div className="MetricCard--CountsWrapper">

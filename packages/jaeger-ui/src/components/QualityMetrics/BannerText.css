@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2020 The Jaeger Authors.
+Copyright (c) 2020 Uber Technologies, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,19 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-.ScoreCard {
-  margin: 10px;
-  max-width: 25%;
-  min-width: 180px;
+.BannerText {
+  font-size: 1.5em;
+  font-weight: heavy;
+  padding: 0.5rem 1rem 0.5rem 1rem;
   text-align: center;
-}
-
-.ScoreCard--CircularProgressbarWrapper {
-  padding: 3px;
-}
-
-.ScoreCard--TitleHeader {
-  border-bottom: solid 1px #ddd;
-  box-shadow: 0px 5px 5px -5px rgba(0, 0, 0, 0.3);
-  font-size: 1.8em;
 }
