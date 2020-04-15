@@ -22,6 +22,14 @@ describe('transform traces to ddg paths', () => {
     })),
     attributes: [{ key: 'exemplar_trace_id', value: trace.data.traceID }],
   });
+
+  const addExemplarTraceIDs = (path, traces) => {
+    traces.forEach(trace => {
+      path.attributes.push({ key: 'exemplar_trace_id', value: trace.data.traceID });
+    });
+    return path;
+  };
+
   const makeSpan = (spanName, parent, kind, operationName, processID) => ({
     hasChildren: true,
     operationName: operationName || `${spanName} operation`,
@@ -186,12 +194,11 @@ describe('transform traces to ddg paths', () => {
       focalSvc
     );
 
-    const path = makeExpectedPath([rootSpan, focalSpan, spanServiceAServer], serverClientTrace);
-    path.attributes.push({ key: 'exemplar_trace_id', value: kindlessTrace.data.traceID });
-
     expect(new Set(result)).toEqual(
       new Set([
-        path,
+        addExemplarTraceIDs(makeExpectedPath([rootSpan, focalSpan, spanServiceAServer], serverClientTrace), [
+          kindlessTrace,
+        ]),
         makeExpectedPath([rootSpan, focalSpan, spanServiceAServer, otherSpanServiceAServer], twoServersTrace),
         makeExpectedPath([rootSpan, focalSpan, spanServiceBServer], clientServerTrace),
       ])
@@ -204,8 +211,9 @@ describe('transform traces to ddg paths', () => {
     const trace1 = makeTrace([rootSpan, focalSpan, otherSpan], 'trace1');
     const trace2 = makeTrace([rootSpan, focalSpan, otherSpan], 'trace2');
     const { dependencies: result } = transformTracesToPaths(makeTraces(trace1, trace2), focalSvc);
-    const path = makeExpectedPath([rootSpan, focalSpan, otherSpan], trace1);
-    path.attributes.push({ key: 'exemplar_trace_id', value: trace2.data.traceID });
-    expect(new Set(result)).toEqual(new Set([path]));
+
+    expect(new Set(result)).toEqual(
+      new Set([addExemplarTraceIDs(makeExpectedPath([rootSpan, focalSpan, otherSpan], trace1), [trace2])])
+    );
   });
 });
