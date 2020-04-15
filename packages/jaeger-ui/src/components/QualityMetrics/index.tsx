@@ -19,7 +19,6 @@ import { bindActionCreators, Dispatch } from 'redux';
 
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import JaegerAPI from '../../api/jaeger';
-import BreakableText from '../common/BreakableText';
 import LoadingIndicator from '../common/LoadingIndicator';
 import DetailsCard from '../DeepDependencies/SidePanel/DetailsCard';
 import BannerText from './BannerText';
@@ -37,7 +36,7 @@ import './index.css';
 type TOwnProps = {
   history: RouterHistory;
   location: Location;
-}
+};
 
 type TDispatchProps = {
   fetchServices: () => void;
@@ -47,7 +46,7 @@ type TReduxProps = {
   lookback: number;
   service?: string;
   services?: string[] | null;
-}
+};
 
 export type TProps = TDispatchProps & TReduxProps & TOwnProps;
 
@@ -86,10 +85,7 @@ export class UnconnectedQualityMetrics extends React.PureComponent<TProps, TStat
   }
 
   fetchQualityMetrics() {
-    const {
-      lookback,
-      service,
-    } = this.props;
+    const { lookback, service } = this.props;
     if (!service) return;
 
     this.setState({ loading: true });
@@ -110,14 +106,14 @@ export class UnconnectedQualityMetrics extends React.PureComponent<TProps, TStat
     if (!lookback || typeof lookback === 'string') return;
     if (lookback < 1 || lookback !== Math.floor(lookback)) return;
 
-    const { history, service = "" } = this.props;
+    const { history, service = '' } = this.props;
     history.push(getUrl({ lookback, service }));
-  }
+  };
 
   setService = (service: string) => {
     const { history, lookback } = this.props;
     history.push(getUrl({ lookback, service }));
-  }
+  };
 
   render() {
     const { lookback, service, services } = this.props;
@@ -133,53 +129,58 @@ export class UnconnectedQualityMetrics extends React.PureComponent<TProps, TStat
         />
         {qualityMetrics && (
           <>
-          <BannerText bannerText={qualityMetrics.bannerText} />
-          <div className="QualityMetrics--Body">
-            <div className="QualityMetrics--ScoreCards">
-              {qualityMetrics.scores.map(score => (
-                <ScoreCard key={score.key} score={score} link={qualityMetrics.traceQualityDocumentationLink} />
-              ))}
+            <BannerText bannerText={qualityMetrics.bannerText} />
+            <div className="QualityMetrics--Body">
+              <div className="QualityMetrics--ScoreCards">
+                {qualityMetrics.scores.map(score => (
+                  <ScoreCard
+                    key={score.key}
+                    score={score}
+                    link={qualityMetrics.traceQualityDocumentationLink}
+                  />
+                ))}
+              </div>
+              <div className="QualityMetrics--MetricCards">
+                {qualityMetrics.metrics.map(metric => (
+                  <MetricCard key={metric.name} metric={metric} />
+                ))}
+              </div>
+              <DetailsCard
+                className="QualityMetrics--ClientVersions"
+                columnDefs={[
+                  {
+                    key: 'version',
+                    label: 'Version',
+                  },
+                  {
+                    key: 'minVersion',
+                    label: 'Minimum Version',
+                  },
+                  {
+                    key: 'count',
+                    label: 'Count',
+                  },
+                  {
+                    key: 'examples',
+                    label: 'Examples',
+                    preventSort: true,
+                  },
+                ]}
+                details={qualityMetrics.clients.map(clientRow => ({
+                  ...clientRow,
+                  examples: {
+                    value: (
+                      <ExamplesLink examples={clientRow.examples} key={`${clientRow.version}--examples`} />
+                    ),
+                  },
+                }))}
+                header="Client Versions"
+              />
             </div>
-            <div className="QualityMetrics--MetricCards">
-              {qualityMetrics.metrics.map(metric => (
-                <MetricCard key={metric.name} metric={metric} />
-              ))}
-            </div>
-            <DetailsCard
-              className="QualityMetrics--ClientVersions"
-              columnDefs={[{
-                key: 'version',
-                label: 'Version',
-              }, {
-                key: 'minVersion',
-                label: 'Minimum Version',
-              }, {
-                key: 'count',
-                label: 'Count',
-              }, {
-                key: 'examples',
-                label: 'Examples',
-                preventSort: true,
-              }]}
-              details={qualityMetrics.clients.map(clientRow => ({
-                ...clientRow,
-                examples: {
-                  value: <ExamplesLink examples={clientRow.examples} key={`${clientRow.version}--examples`} />,
-                },
-              }))}
-              header="Client Versions"
-            />
-          </div>
-        </>
+          </>
         )}
-        {loading && (
-          <LoadingIndicator centered />
-        )}
-        {error && (
-          <div className="QualityMetrics--Error">
-            {error.message}
-          </div>
-        )}
+        {loading && <LoadingIndicator centered />}
+        {error && <div className="QualityMetrics--Error">{error.message}</div>}
       </div>
     );
   }
@@ -195,14 +196,14 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
 }
 
 export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
-  const { fetchServices } = bindActionCreators(
-    jaegerApiActions,
-    dispatch
-  );
+  const { fetchServices } = bindActionCreators(jaegerApiActions, dispatch);
 
   return {
     fetchServices,
   };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(UnconnectedQualityMetrics);
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(UnconnectedQualityMetrics);

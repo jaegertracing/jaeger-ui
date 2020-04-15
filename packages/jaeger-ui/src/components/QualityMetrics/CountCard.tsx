@@ -18,32 +18,24 @@ import ExamplesLink from './ExamplesLink';
 
 import { TExample } from './types';
 
+import './CountCard.css';
+
 export type TProps = {
   count?: number;
   title?: string;
   examples?: TExample[];
-}
-
-import './CountCard.css';
+};
 
 export default class ScoreCard extends React.PureComponent<TProps> {
   render() {
-    const {
-      count,
-      title,
-      examples,
-    } = this.props;
+    const { count, title, examples } = this.props;
 
     if (count === undefined || title === undefined) return null;
 
     return (
       <div className="CountCard">
-        <span className="CountCard--TitleHeader">
-          {title}
-        </span>
-        <span className="CountCard--Count">
-          {count}
-        </span>
+        <span className="CountCard--TitleHeader">{title}</span>
+        <span className="CountCard--Count">{count}</span>
         <ExamplesLink examples={examples} includeText />
       </div>
     );

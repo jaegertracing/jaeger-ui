@@ -32,16 +32,16 @@ export function getUrl(queryParams?: Record<string, string | number>) {
   return `${ROUTE_PATH}?${queryString.stringify(queryParams)}`;
 }
 
-type  TReturnValue = {
+type TReturnValue = {
   lookback: number;
-  service?: string
-}
+  service?: string;
+};
 
 export const getUrlState = memoizeOne(function getUrlState(search: string): TReturnValue {
   const { lookback: lookbackFromUrl, service: serviceFromUrl } = queryString.parse(search);
   const service = Array.isArray(serviceFromUrl) ? serviceFromUrl[0] : serviceFromUrl;
   const lookbackStr = Array.isArray(lookbackFromUrl) ? lookbackFromUrl[0] : lookbackFromUrl;
-  const lookback = lookbackStr && Number.parseInt(lookbackStr);
+  const lookback = lookbackStr && Number.parseInt(lookbackStr, 10);
   const rv: TReturnValue = {
     lookback: 1,
   };

@@ -14,22 +14,17 @@
 
 import * as React from 'react';
 
-import CircularProgressbar from '../common/CircularProgressbar';
-import NewWindowIcon from '../common/NewWindowIcon';
-
 import { TQualityMetrics } from './types';
 
 import './BannerText.css';
 
 export type TProps = {
-  bannerText: TQualityMetrics["bannerText"];
-}
+  bannerText: TQualityMetrics['bannerText'];
+};
 
 export default class BannerText extends React.PureComponent<TProps> {
   render() {
-    const {
-      bannerText
-    } = this.props;
+    const { bannerText } = this.props;
     if (!bannerText) return null;
 
     const { styling = undefined } = typeof bannerText === 'object' ? bannerText : {};

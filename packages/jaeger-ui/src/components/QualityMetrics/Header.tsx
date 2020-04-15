@@ -49,12 +49,7 @@ export default class Header extends React.PureComponent<TProps, TState> {
   };
 
   render() {
-    const {
-      lookback,
-      service,
-      services,
-      setService,
-    } = this.props;
+    const { lookback, service, services, setService } = this.props;
     const { ownInputValue } = this.state;
     const lookbackValue = ownInputValue !== undefined ? ownInputValue : lookback;
 
@@ -68,7 +63,9 @@ export default class Header extends React.PureComponent<TProps, TState> {
           required
           options={services || []}
         />
-        <label className="QualityMetrics--Header--LookbackLabel" htmlFor="inputNumber">Lookback:</label>
+        <label className="QualityMetrics--Header--LookbackLabel" htmlFor="inputNumber">
+          Lookback:
+        </label>
         <InputNumber id="inputNumber" onChange={this.handleInputChange} min={1} value={lookbackValue} />
         <span className="QualityMetrics--Header--LookbackSuffix">(in hours)</span>
       </header>

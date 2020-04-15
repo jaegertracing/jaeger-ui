@@ -22,7 +22,7 @@ import { TExample } from './types';
 export type TProps = {
   examples?: TExample[];
   includeText?: boolean;
-}
+};
 
 type TExampleWithSpans = {
   traceID: string;
@@ -33,13 +33,13 @@ function hasSpans(example: TExample | TExampleWithSpans): example is TExampleWit
   return Boolean(example.spanIDs && example.spanIDs.length);
 }
 
-function getGetUrlArg(examples: TExample[]): { spanLinks: Record<string, string>, traceID: string[] } {
+function getGetUrlArg(examples: TExample[]): { spanLinks: Record<string, string>; traceID: string[] } {
   const spanLinks: Record<string, string> = {};
   const traceID: string[] = [];
   examples.forEach((example: TExample) => {
     if (hasSpans(example)) spanLinks[example.traceID] = example.spanIDs.join(' ');
     else traceID.push(example.traceID);
-  })
+  });
   return {
     spanLinks,
     traceID,
@@ -48,16 +48,14 @@ function getGetUrlArg(examples: TExample[]): { spanLinks: Record<string, string>
 
 export default class ExamplesLink extends React.PureComponent<TProps> {
   render() {
-    const {
-      examples,
-      includeText,
-    } = this.props;
+    const { examples, includeText } = this.props;
 
     if (!examples || !examples.length) return null;
 
     return (
-      <a href={getUrl(getGetUrlArg(examples))} target="_blank" ref="noreferrer noopener">
-        {includeText && 'Examples '}<NewWindowIcon />
+      <a href={getUrl(getGetUrlArg(examples))} target="_blank" rel="noopener noreferrer">
+        {includeText && 'Examples '}
+        <NewWindowIcon />
       </a>
     );
   }

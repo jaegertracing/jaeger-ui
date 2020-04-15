@@ -42,20 +42,14 @@ type TProps = {
 
 type TState = {
   collapsed: boolean;
-}
+};
 
 function isList(arr: string[] | TPadRow[]): arr is string[] {
   return typeof arr[0] === 'string';
 }
 
 export default class DetailsCard extends React.PureComponent<TProps> {
-  state: TState; 
-
-  constructor(props: TProps) {
-    super(props);
-
-    this.state = { collapsed: Boolean(props.collapsible) };
-  }
+  state: TState;
 
   static renderList(details: string[]) {
     return (
@@ -112,17 +106,25 @@ export default class DetailsCard extends React.PureComponent<TProps> {
           </a>
         );
       },
-      sorter: sortable && ((a: TPadRow, b: TPadRow) => {
-        const aData = a[dataIndex];
-        const aValue = typeof aData === 'object' && typeof aData.value === 'string' ? aData.value : aData;
-        const bData = b[dataIndex];
-        const bValue = typeof bData === 'object' && typeof bData.value === 'string' ? bData.value : bData;
-        if (aValue < bValue) return -1;
-        return bValue < aValue ? 1 : 0;
-      }),
+      sorter:
+        sortable &&
+        ((a: TPadRow, b: TPadRow) => {
+          const aData = a[dataIndex];
+          const aValue = typeof aData === 'object' && typeof aData.value === 'string' ? aData.value : aData;
+          const bData = b[dataIndex];
+          const bValue = typeof bData === 'object' && typeof bData.value === 'string' ? bData.value : bData;
+          if (aValue < bValue) return -1;
+          return bValue < aValue ? 1 : 0;
+        }),
     };
 
     return <Column {...props} />;
+  }
+
+  constructor(props: TProps) {
+    super(props);
+
+    this.state = { collapsed: Boolean(props.collapsible) };
   }
 
   renderTable(details: TPadRow[]) {
@@ -149,16 +151,22 @@ export default class DetailsCard extends React.PureComponent<TProps> {
         size="middle"
         dataSource={details}
         pagination={false}
-        rowKey={(row: TPadRow) => JSON.stringify(row, function replacer(key: string, value: TPadRow | string | number | TStyledValue) {
-          function isRow(v: typeof value): v is TPadRow { return v === row };
-          if (isRow(value)) return value;
-          if (typeof value === 'object') {
-            if (typeof value.value === 'string') return value.value;
-            const { key = "Unknown" } = value.value;
-            return key;
-          }
-          return value;
-        })}
+        rowKey={(row: TPadRow) =>
+          JSON.stringify(row, function replacer(
+            key: string,
+            value: TPadRow | string | number | TStyledValue
+          ) {
+            function isRow(v: typeof value): v is TPadRow {
+              return v === row;
+            }
+            if (isRow(value)) return value;
+            if (typeof value === 'object') {
+              if (typeof value.value === 'string') return value.value;
+              return value.value.key || 'Unknown';
+            }
+            return value;
+          })
+        }
       >
         {columnDefs.map(DetailsCard.renderColumn)}
       </Table>
@@ -179,8 +187,10 @@ export default class DetailsCard extends React.PureComponent<TProps> {
   }
 
   toggleCollapse = () => {
-    this.setState({ collapsed: !this.state.collapsed });
-  }
+    this.setState((prevState: TState) => ({
+      collapsed: !prevState.collapsed,
+    }));
+  };
 
   render() {
     const { collapsed } = this.state;
@@ -190,19 +200,23 @@ export default class DetailsCard extends React.PureComponent<TProps> {
     return (
       <div className={cx('DetailsCard', className)}>
         <div className="DetailsCard--ButtonHeaderWrapper">
-          {collapsible && <button
-            onClick={this.toggleCollapse}
-            role="button"
-            className={cx('DetailsCard--Collapser', { 'is-collapsed': collapsed })}
+          {collapsible && (
+            <button
+              onClick={this.toggleCollapse}
+              type="button"
+              className={cx('DetailsCard--Collapser', { 'is-collapsed': collapsed })}
             >
-            <MdKeyboardArrowDown/>
-          </button>}
+              <MdKeyboardArrowDown />
+            </button>
+          )}
           <div className="DetailsCard--HeaderWrapper">
             <span className="DetailsCard--Header">{header}</span>
             {description && <p className="DetailsCard--Description">{description}</p>}
           </div>
         </div>
-        <div className={cx('DetailsCard--DetailsWrapper', { 'is-collapsed': collapsed })}>{this.renderDetails()}</div>
+        <div className={cx('DetailsCard--DetailsWrapper', { 'is-collapsed': collapsed })}>
+          {this.renderDetails()}
+        </div>
       </div>
     );
   }

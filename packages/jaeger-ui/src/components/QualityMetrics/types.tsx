@@ -23,10 +23,12 @@ export type TExample = {
 
 export type TQualityMetrics = {
   traceQualityDocumentationLink: string;
-  bannerText?: string | {
-    value: string;
-    styling: React.CSSProperties;
-  };
+  bannerText?:
+    | string
+    | {
+        value: string;
+        styling: React.CSSProperties;
+      };
   scores: {
     key: string;
     label: string;
@@ -58,4 +60,4 @@ export type TQualityMetrics = {
     count: number;
     examples: TExample[];
   }[];
-}
+};

@@ -25,7 +25,7 @@ type TProps = {
   strokeWidth?: number;
   text?: string;
   value: number;
-}
+};
 
 export default class CircularProgressbar extends React.PureComponent<TProps> {
   render() {

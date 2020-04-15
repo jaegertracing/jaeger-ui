@@ -23,37 +23,32 @@ import './ScoreCard.css';
 
 export type TProps = {
   link: string;
-  score: TQualityMetrics["scores"][0];
-}
+  score: TQualityMetrics['scores'][0];
+};
 
 export default class ScoreCard extends React.PureComponent<TProps> {
   render() {
     const {
       link,
-      score: {
-        label,
-        max: maxValue,
-        value,
-      }
+      score: { label, max: maxValue, value },
     } = this.props;
-    const linkText = value < maxValue
-      ? 'How to improve '
-      : 'Great! What does this mean ';
+    const linkText = value < maxValue ? 'How to improve ' : 'Great! What does this mean ';
     return (
       <div className="ScoreCard">
-        <span className="ScoreCard--TitleHeader">
-          {label}
-        </span>
+        <span className="ScoreCard--TitleHeader">{label}</span>
         <div className="ScoreCard--CircularProgressbarWrapper">
           <CircularProgressbar
             backgroundHue={value === 0 ? 0 : undefined}
             decorationHue={120}
             maxValue={maxValue}
-            text={`${(value / maxValue * 100).toFixed(1)}%`}
+            text={`${((value / maxValue) * 100).toFixed(1)}%`}
             value={value}
           />
         </div>
-        <a href={link} target="_blank" ref="noreferrer noopener">{linkText}<NewWindowIcon /></a>
+        <a href={link} target="_blank" rel="noreferrer noopener">
+          {linkText}
+          <NewWindowIcon />
+        </a>
       </div>
     );
   }
