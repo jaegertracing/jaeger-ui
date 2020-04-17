@@ -205,6 +205,20 @@ describe('transform traces to ddg paths', () => {
     );
   });
 
+  it('support client span root', () => {
+    const spanServiceAClient = makeSpan('SpanA2', undefined, 'client', 'opA', 'serviceA');
+    const spanServiceAServer = makeSpan('SpanA1', spanServiceAClient, 'server', 'opA', 'serviceA');
+    const clientServerTrace = makeTrace([spanServiceAClient, spanServiceAServer], 'clientServerTraceID');
+    spanServiceAServer.hasChildren = false;
+    const { dependencies: result } = transformTracesToPaths(
+      makeTraces(clientServerTrace),
+      clientServerTrace.data.processes[spanServiceAClient.processID].serviceName
+    );
+    expect(new Set(result)).toEqual(
+      new Set([makeExpectedPath([spanServiceAClient, spanServiceAServer], clientServerTrace)])
+    );
+  });
+
   it('dedupled paths', () => {
     const otherSpan = makeSpan('other-span', focalSpan);
     otherSpan.hasChildren = false;
