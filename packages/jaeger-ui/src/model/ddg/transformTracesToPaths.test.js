@@ -200,7 +200,7 @@ describe('transform traces to ddg paths', () => {
           kindlessTrace,
         ]),
         makeExpectedPath([rootSpan, focalSpan, spanServiceAServer, otherSpanServiceAServer], twoServersTrace),
-        makeExpectedPath([rootSpan, focalSpan, spanServiceBServer], clientServerTrace),
+        makeExpectedPath([rootSpan, focalSpan, spanServiceBClient, spanServiceBServer], clientServerTrace),
       ])
     );
   });

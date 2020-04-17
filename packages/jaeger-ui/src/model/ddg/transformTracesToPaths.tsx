@@ -45,20 +45,14 @@ function transformTracesToPaths(
           const spans = ancestors.reduce((reducedSpans: Span[], id: string): Span[] => {
             const span = spanMap.get(id);
             if (!span) throw new Error(`Ancestor spanID ${id} not found in trace ${traceID}`);
-            if (reducedSpans.length > 0) {
-              const headSpan = reducedSpans[reducedSpans.length - 1];
-              // Transition inside the same service ServiceA -> ServiceA
-              if (headSpan.processID === span.processID) {
-                if (isKindServer(span) && !isKindServer(headSpan)) {
-                  reducedSpans.pop();
-                  reducedSpans.push(span);
-                } else if (isKindServer(span) && isKindServer(headSpan)) {
-                  reducedSpans.push(span);
-                }
-                return reducedSpans;
-              }
+            if (reducedSpans.length === 0) {
+              reducedSpans.push(span);
+            } else if (
+              reducedSpans[reducedSpans.length - 1].processID !== span.processID ||
+              isKindServer(span)
+            ) {
+              reducedSpans.push(span);
             }
-            reducedSpans.push(span);
             return reducedSpans;
           }, []);
           const path: TDdgPayloadEntry[] = spans.map(({ processID, operationName: operation }) => ({
