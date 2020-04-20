@@ -145,11 +145,6 @@ describe('transform traces to ddg paths', () => {
     );
   });
 
-  it('errors if span has ancestor id not in trace data', () => {
-    const traces = makeTraces(makeTrace([rootSpan, followsFocalSpan], missTraceID));
-    expect(() => transformTracesToPaths(traces, focalSvc)).toThrowError(/Ancestor spanID.*not found/);
-  });
-
   it('skips trace without data', () => {
     const traces = {
       ...makeTraces(shortTrace),
