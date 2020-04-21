@@ -1,4 +1,4 @@
-// Copyright (c) 2018 The Jaeger Authors.
+// Copyright (c) 2020 The Jaeger Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -39,10 +39,9 @@ type State = {
   popupContent: string;
   wholeTable: ITableSpan[];
   valueNameSelector1: string;
-  valueNameSelector2: string;
+  valueNameSelector2: string | null;
 };
 
-const noItemSelected = 'No Item selected';
 const columnsArray: any[] = [
   {
     title: 'Name',
@@ -81,8 +80,8 @@ const columnsArray: any[] = [
     isDecimal: true,
   },
   {
-    title: 'Total ST',
-    attribute: 'self',
+    title: 'ST Total',
+    attribute: 'selfTotal',
     suffix: 'ms',
     isDecimal: true,
   },
@@ -127,7 +126,7 @@ export default class TraceStatistics extends Component<Props, State> {
       popupContent: '',
       wholeTable: [],
       valueNameSelector1: 'Service Name',
-      valueNameSelector2: 'No Item selected',
+      valueNameSelector2: null,
     };
 
     this.handler = this.handler.bind(this);
@@ -166,7 +165,7 @@ export default class TraceStatistics extends Component<Props, State> {
     tableValue: ITableSpan[],
     wholeTable: ITableSpan[],
     valueNameSelector1: string,
-    valueNameSelector2: string
+    valueNameSelector2: string | null
   ) {
     this.setState(prevState => {
       return {
@@ -291,7 +290,7 @@ export default class TraceStatistics extends Component<Props, State> {
    * Hides the child at the first click.
    */
   clickColumn(selectedSpan: string) {
-    if (this.state.valueNameSelector2 !== noItemSelected) {
+    if (this.state.valueNameSelector2 !== null) {
       let add = true;
       const actualTable = this.state.tableValue;
       let newTable = [];
@@ -401,7 +400,7 @@ export default class TraceStatistics extends Component<Props, State> {
         avg,
         min,
         max,
-        self,
+        selfTotal,
         selfAvg,
         selfMin,
         selfMax,
@@ -410,7 +409,7 @@ export default class TraceStatistics extends Component<Props, State> {
         searchColor,
         colorToPercent,
       } = oneSpan;
-      const values: any[] = [count, total, avg, min, max, self, selfAvg, selfMin, selfMax, percent];
+      const values: any[] = [count, total, avg, min, max, selfTotal, selfAvg, selfMin, selfMax, percent];
       const uid = _.uniqueId('id');
       if (!oneSpan.isDetail) {
         return (
@@ -422,8 +421,8 @@ export default class TraceStatistics extends Component<Props, State> {
             values={values}
             columnsArray={columnsArray}
             togglePopup={this.togglePopup}
-            dropdownTitle1={this.state.valueNameSelector1}
-            dropdownTitle2={this.state.valueNameSelector2}
+            valueNameSelector1={this.state.valueNameSelector1}
+            valueNameSelector2={this.state.valueNameSelector2}
             color={color}
             clickColumn={this.clickColumn}
             colorToPercent={colorToPercent}
@@ -440,7 +439,7 @@ export default class TraceStatistics extends Component<Props, State> {
           columnsArray={columnsArray}
           color={color}
           togglePopup={this.togglePopup}
-          secondTagDropdownTitle={this.state.valueNameSelector2}
+          valueNameSelector2={this.state.valueNameSelector2}
           colorToPercent={colorToPercent}
         />
       );
@@ -480,7 +479,7 @@ export default class TraceStatistics extends Component<Props, State> {
         {this.state.showPopup ? (
           <PopupSQL closePopup={this.togglePopup} popupContent={this.state.popupContent} />
         ) : null}
-        <table>
+        <table className="test1893">
           <tbody className="DetailTraceTableTbody--TraceStatistics">
             {this.renderTableHead()}
             {this.renderTableData()}

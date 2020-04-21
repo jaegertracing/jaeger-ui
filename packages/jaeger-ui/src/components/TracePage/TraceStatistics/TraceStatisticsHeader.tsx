@@ -1,4 +1,4 @@
-// Copyright (c) 2018 The Jaeger Authors.
+// Copyright (c) 2020 The Jaeger Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,13 +30,13 @@ type Props = {
     tableValue: ITableSpan[],
     wholeTable: ITableSpan[],
     valueNameSelector1: string,
-    valueNameSelector2: string
+    valueNameSelector2: string | null
   ) => void;
 };
 
 type State = {
   valueNameSelector1: string;
-  valueNameSelector2: string;
+  valueNameSelector2: string | null;
   valueNameSelector3: string;
 
   checkboxStatus: boolean;
@@ -48,11 +48,11 @@ const optionsNameSelector3 = new Map([
   ['Avg', 'avg'],
   ['Min', 'min'],
   ['Max', 'max'],
-  ['Total ST', 'self'],
+  ['ST Total', 'selfTotal'],
   ['ST Avg', 'selfAvg'],
   ['ST Min', 'selfMin'],
   ['ST Max', 'selfMax'],
-  ['ST Duration', 'percent'],
+  ['ST in Duration', 'percent'],
 ]);
 
 export default class TraceStatisticsHeader extends Component<Props, State> {
@@ -62,12 +62,12 @@ export default class TraceStatisticsHeader extends Component<Props, State> {
       getColumnValues('Service Name', this.props.trace),
       getColumnValues('Service Name', this.props.trace),
       'Service Name',
-      'No Item selected'
+      null
     );
 
     this.state = {
       valueNameSelector1: 'Service Name',
-      valueNameSelector2: 'No Item selected',
+      valueNameSelector2: null,
       valueNameSelector3: 'Count',
       checkboxStatus: false,
     };
@@ -95,7 +95,7 @@ export default class TraceStatisticsHeader extends Component<Props, State> {
   setValueNameSelector1(value: string) {
     this.setState({
       valueNameSelector1: value,
-      valueNameSelector2: 'No Item selected',
+      valueNameSelector2: null,
     });
     const newTableValue = generateColor(
       getColumnValues(value, this.props.trace),
@@ -107,7 +107,7 @@ export default class TraceStatisticsHeader extends Component<Props, State> {
       this.getValue(),
       this.state.checkboxStatus
     );
-    this.props.handler(newTableValue, newWohleTable, value, 'No Item selected');
+    this.props.handler(newTableValue, newWohleTable, value, null);
   }
 
   /**
@@ -185,7 +185,7 @@ export default class TraceStatisticsHeader extends Component<Props, State> {
    */
   clearValue() {
     this.setState({
-      valueNameSelector2: 'No Item selected',
+      valueNameSelector2: null,
     });
 
     const newTableValue = generateColor(
@@ -198,7 +198,7 @@ export default class TraceStatisticsHeader extends Component<Props, State> {
       this.getValue(),
       this.state.checkboxStatus
     );
-    this.props.handler(newTableValue, newWholeTable, this.state.valueNameSelector1, 'No Item selected');
+    this.props.handler(newTableValue, newWholeTable, this.state.valueNameSelector1, null);
   }
 
   render() {
@@ -221,7 +221,7 @@ export default class TraceStatisticsHeader extends Component<Props, State> {
         />
         <NameSelector
           label="Sub-Group"
-          placeholder={false}
+          placeholder="No item selected"
           options={optionsNameSelector2}
           value={this.state.valueNameSelector2}
           setValue={this.setValueNameSelector2}

@@ -1,4 +1,4 @@
-// Copyright (c) 2018 The Jaeger Authors.
+// Copyright (c) 2020 The Jaeger Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ export interface ITableSpan {
   avg: number;
   min: number;
   max: number;
-  self: number;
+  selfTotal: number;
   selfAvg: number;
   selfMin: number;
   selfMax: number;
@@ -30,4 +30,16 @@ export interface ITableSpan {
   color: string; // If it is a service name, the color will be set.
   searchColor: string;
   colorToPercent: string; // Color created by percent
+}
+
+export interface ITableValues {
+  uid: string;
+  value: number;
+}
+
+export interface IColumnValue {
+  title: string;
+  attribute: string;
+  suffix: string;
+  isDecimal: boolean;
 }

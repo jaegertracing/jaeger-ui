@@ -1,4 +1,4 @@
-// Copyright (c) 2018 The Jaeger Authors.
+// Copyright (c) 2020 The Jaeger Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,26 +25,16 @@ type Props = {
   sortAsc: boolean;
 };
 
-/**
- * Used to render the table header.
- * @param props
- */
 export default function HeaderTable(props: Props) {
-  const thStyle = { width: Math.round(window.innerWidth * 0.2) };
+  // const thStyle = { width: Math.round(window.innerWidth * 0.2) };
   const iconStyle = { opacity: props.sortIndex === props.index ? 1.0 : 0.2 };
   const iconType = props.sortAsc && props.sortIndex === props.index ? 'up' : 'down';
   return (
-    <th className="HeaderTable--th" style={thStyle}>
+    <th className="HeaderTable--th">
       {props.element.title}
-      <div className="HeaderTable--buttonPosition">
-        <button
-          type="submit"
-          className="HeaderTable--sortButton"
-          onClick={() => props.sortClick(props.index)}
-        >
-          <Icon style={iconStyle} type={iconType} />
-        </button>
-      </div>
+      <button type="submit" className="HeaderTable--sortButton" onClick={() => props.sortClick(props.index)}>
+        <Icon style={iconStyle} type={iconType} />
+      </button>
     </th>
   );
 }

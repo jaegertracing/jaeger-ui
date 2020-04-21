@@ -1,4 +1,4 @@
-// Copyright (c) 2018 The Jaeger Authors.
+// Copyright (c) 2020 The Jaeger Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -38,7 +38,7 @@ describe('tableValues', () => {
     expect(resultArray[0].avg).toBe(3.7);
     expect(resultArray[0].min).toBe(2.5);
     expect(resultArray[0].max).toBe(4.9);
-    expect(resultArray[0].self).toBe(3.16);
+    expect(resultArray[0].selfTotal).toBe(3.16);
     expect(resultArray[0].selfAvg).toBe(1.58);
     expect(resultArray[0].selfMin).toBe(0.76);
     expect(resultArray[0].selfMax).toBe(2.4);
@@ -49,7 +49,7 @@ describe('tableValues', () => {
     expect(resultArray[1].avg).toBe(0.6);
     expect(resultArray[1].min).toBe(0.02);
     expect(resultArray[1].max).toBe(1.74);
-    expect(resultArray[1].self).toBe(1.74);
+    expect(resultArray[1].selfTotal).toBe(1.74);
     expect(resultArray[1].selfAvg).toBe(0.58);
     expect(resultArray[1].selfMin).toBe(0.02);
     expect(resultArray[1].selfMax).toBe(1.67);
@@ -64,7 +64,7 @@ describe('tableValues', () => {
     expect(resultArray[0].avg).toBe(4.9);
     expect(resultArray[0].min).toBe(4.9);
     expect(resultArray[0].max).toBe(4.9);
-    expect(resultArray[0].self).toBe(2.4);
+    expect(resultArray[0].selfTotal).toBe(2.4);
     expect(resultArray[0].selfAvg).toBe(2.4);
     expect(resultArray[0].selfMin).toBe(2.4);
     expect(resultArray[0].selfMax).toBe(2.4);
@@ -75,7 +75,7 @@ describe('tableValues', () => {
     expect(resultArray[1].avg).toBe(2.12);
     expect(resultArray[1].min).toBe(1.74);
     expect(resultArray[1].max).toBe(2.5);
-    expect(resultArray[1].self).toBe(2.43);
+    expect(resultArray[1].selfTotal).toBe(2.43);
     expect(resultArray[1].selfAvg).toBe(1.21);
     expect(resultArray[1].selfMin).toBe(0.76);
     expect(resultArray[1].selfMax).toBe(1.67);
@@ -86,7 +86,7 @@ describe('tableValues', () => {
     expect(resultArray[2].avg).toBe(0.04);
     expect(resultArray[2].min).toBe(0.02);
     expect(resultArray[2].max).toBe(0.05);
-    expect(resultArray[2].self).toBe(0.07);
+    expect(resultArray[2].selfTotal).toBe(0.07);
     expect(resultArray[2].selfAvg).toBe(0.04);
     expect(resultArray[2].selfMin).toBe(0.02);
     expect(resultArray[2].selfMax).toBe(0.05);
@@ -101,7 +101,7 @@ describe('tableValues', () => {
     expect(resultArray[0].avg).toBe(0.04);
     expect(resultArray[0].min).toBe(0.02);
     expect(resultArray[0].max).toBe(0.05);
-    expect(resultArray[0].self).toBe(0.07);
+    expect(resultArray[0].selfTotal).toBe(0.07);
     expect(resultArray[0].selfAvg).toBe(0.04);
     expect(resultArray[0].selfMin).toBe(0.02);
     expect(resultArray[0].selfMax).toBe(0.05);
@@ -112,7 +112,7 @@ describe('tableValues', () => {
     expect(resultArray[1].avg).toBe(3.05);
     expect(resultArray[1].min).toBe(1.74);
     expect(resultArray[1].max).toBe(4.9);
-    expect(resultArray[1].self).toBe(4.83);
+    expect(resultArray[1].selfTotal).toBe(4.83);
     expect(resultArray[1].selfAvg).toBe(1.61);
     expect(resultArray[1].selfMin).toBe(0.76);
     expect(resultArray[1].selfMax).toBe(2.4);
@@ -134,7 +134,7 @@ describe('tableValues', () => {
     expect(resultArray[0].avg).toBe(3.7);
     expect(resultArray[0].min).toBe(2.5);
     expect(resultArray[0].max).toBe(4.9);
-    expect(resultArray[0].self).toBe(3.16);
+    expect(resultArray[0].selfTotal).toBe(3.16);
     expect(resultArray[0].selfAvg).toBe(1.58);
     expect(resultArray[0].selfMin).toBe(0.76);
     expect(resultArray[0].selfMax).toBe(2.4);
@@ -145,7 +145,7 @@ describe('tableValues', () => {
     expect(resultArray[1].avg).toBe(4.9);
     expect(resultArray[1].min).toBe(4.9);
     expect(resultArray[1].max).toBe(4.9);
-    expect(resultArray[1].self).toBe(2.4);
+    expect(resultArray[1].selfTotal).toBe(2.4);
     expect(resultArray[1].selfAvg).toBe(2.4);
     expect(resultArray[1].selfMin).toBe(2.4);
     expect(resultArray[1].selfMax).toBe(2.4);
@@ -156,7 +156,7 @@ describe('tableValues', () => {
     expect(resultArray[2].avg).toBe(2.5);
     expect(resultArray[2].min).toBe(2.5);
     expect(resultArray[2].max).toBe(2.5);
-    expect(resultArray[2].self).toBe(0.76);
+    expect(resultArray[2].selfTotal).toBe(0.76);
     expect(resultArray[2].selfAvg).toBe(0.76);
     expect(resultArray[2].selfMin).toBe(0.76);
     expect(resultArray[2].selfMax).toBe(0.76);
@@ -167,7 +167,7 @@ describe('tableValues', () => {
     expect(resultArray[3].avg).toBe(0.6);
     expect(resultArray[3].min).toBe(0.02);
     expect(resultArray[3].max).toBe(1.74);
-    expect(resultArray[3].self).toBe(1.74);
+    expect(resultArray[3].selfTotal).toBe(1.74);
     expect(resultArray[3].selfAvg).toBe(0.58);
     expect(resultArray[3].selfMin).toBe(0.02);
     expect(resultArray[3].selfMax).toBe(1.67);
@@ -178,7 +178,7 @@ describe('tableValues', () => {
     expect(resultArray[4].avg).toBe(1.74);
     expect(resultArray[4].min).toBe(1.74);
     expect(resultArray[4].max).toBe(1.74);
-    expect(resultArray[4].self).toBe(1.67);
+    expect(resultArray[4].selfTotal).toBe(1.67);
     expect(resultArray[4].selfAvg).toBe(1.67);
     expect(resultArray[4].selfMin).toBe(1.67);
     expect(resultArray[4].selfMax).toBe(1.67);
@@ -189,7 +189,7 @@ describe('tableValues', () => {
     expect(resultArray[5].avg).toBe(0.04);
     expect(resultArray[5].min).toBe(0.02);
     expect(resultArray[5].max).toBe(0.05);
-    expect(resultArray[5].self).toBe(0.07);
+    expect(resultArray[5].selfTotal).toBe(0.07);
     expect(resultArray[5].selfAvg).toBe(0.04);
     expect(resultArray[5].selfMin).toBe(0.02);
     expect(resultArray[5].selfMax).toBe(0.05);
@@ -211,7 +211,7 @@ describe('tableValues', () => {
     expect(resultArray[0].avg).toBe(4.9);
     expect(resultArray[0].min).toBe(4.9);
     expect(resultArray[0].max).toBe(4.9);
-    expect(resultArray[0].self).toBe(2.4);
+    expect(resultArray[0].selfTotal).toBe(2.4);
     expect(resultArray[0].selfAvg).toBe(2.4);
     expect(resultArray[0].selfMin).toBe(2.4);
     expect(resultArray[0].selfMax).toBe(2.4);
@@ -222,7 +222,7 @@ describe('tableValues', () => {
     expect(resultArray[1].avg).toBe(4.9);
     expect(resultArray[1].min).toBe(4.9);
     expect(resultArray[1].max).toBe(4.9);
-    expect(resultArray[1].self).toBe(2.4);
+    expect(resultArray[1].selfTotal).toBe(2.4);
     expect(resultArray[1].selfAvg).toBe(2.4);
     expect(resultArray[1].selfMin).toBe(2.4);
     expect(resultArray[1].selfMax).toBe(2.4);
@@ -233,7 +233,7 @@ describe('tableValues', () => {
     expect(resultArray[2].avg).toBe(2.12);
     expect(resultArray[2].min).toBe(1.74);
     expect(resultArray[2].max).toBe(2.5);
-    expect(resultArray[2].self).toBe(2.43);
+    expect(resultArray[2].selfTotal).toBe(2.43);
     expect(resultArray[2].selfAvg).toBe(1.21);
     expect(resultArray[2].selfMin).toBe(0.76);
     expect(resultArray[2].selfMax).toBe(1.67);
@@ -244,7 +244,7 @@ describe('tableValues', () => {
     expect(resultArray[3].avg).toBe(2.5);
     expect(resultArray[3].min).toBe(2.5);
     expect(resultArray[3].max).toBe(2.5);
-    expect(resultArray[3].self).toBe(0.76);
+    expect(resultArray[3].selfTotal).toBe(0.76);
     expect(resultArray[3].selfAvg).toBe(0.76);
     expect(resultArray[3].selfMin).toBe(0.76);
     expect(resultArray[3].selfMax).toBe(0.76);
@@ -255,7 +255,7 @@ describe('tableValues', () => {
     expect(resultArray[4].avg).toBe(1.74);
     expect(resultArray[4].min).toBe(1.74);
     expect(resultArray[4].max).toBe(1.74);
-    expect(resultArray[4].self).toBe(1.67);
+    expect(resultArray[4].selfTotal).toBe(1.67);
     expect(resultArray[4].selfAvg).toBe(1.67);
     expect(resultArray[4].selfMin).toBe(1.67);
     expect(resultArray[4].selfMax).toBe(1.67);
@@ -266,7 +266,7 @@ describe('tableValues', () => {
     expect(resultArray[5].avg).toBe(0.04);
     expect(resultArray[5].min).toBe(0.02);
     expect(resultArray[5].max).toBe(0.05);
-    expect(resultArray[5].self).toBe(0.07);
+    expect(resultArray[5].selfTotal).toBe(0.07);
     expect(resultArray[5].selfAvg).toBe(0.04);
     expect(resultArray[5].selfMin).toBe(0.02);
     expect(resultArray[5].selfMax).toBe(0.05);
@@ -277,7 +277,7 @@ describe('tableValues', () => {
     expect(resultArray[6].avg).toBe(0.04);
     expect(resultArray[6].min).toBe(0.02);
     expect(resultArray[6].max).toBe(0.05);
-    expect(resultArray[6].self).toBe(0.07);
+    expect(resultArray[6].selfTotal).toBe(0.07);
     expect(resultArray[6].selfAvg).toBe(0.04);
     expect(resultArray[6].selfMin).toBe(0.02);
     expect(resultArray[6].selfMax).toBe(0.05);
@@ -294,7 +294,7 @@ describe('tableValues', () => {
     expect(resultArray[0].avg).toBe(0.04);
     expect(resultArray[0].min).toBe(0.02);
     expect(resultArray[0].max).toBe(0.05);
-    expect(resultArray[0].self).toBe(0.07);
+    expect(resultArray[0].selfTotal).toBe(0.07);
     expect(resultArray[0].selfAvg).toBe(0.04);
     expect(resultArray[0].selfMin).toBe(0.02);
     expect(resultArray[0].selfMax).toBe(0.05);
@@ -305,7 +305,7 @@ describe('tableValues', () => {
     expect(resultArray[1].avg).toBe(0.04);
     expect(resultArray[1].min).toBe(0.02);
     expect(resultArray[1].max).toBe(0.05);
-    expect(resultArray[1].self).toBe(0.07);
+    expect(resultArray[1].selfTotal).toBe(0.07);
     expect(resultArray[1].selfAvg).toBe(0.04);
     expect(resultArray[1].selfMin).toBe(0.02);
     expect(resultArray[1].selfMax).toBe(0.05);
@@ -316,7 +316,7 @@ describe('tableValues', () => {
     expect(resultArray[2].avg).toBe(3.05);
     expect(resultArray[2].min).toBe(1.74);
     expect(resultArray[2].max).toBe(4.9);
-    expect(resultArray[2].self).toBe(4.83);
+    expect(resultArray[2].selfTotal).toBe(4.83);
     expect(resultArray[2].selfAvg).toBe(1.61);
     expect(resultArray[2].selfMin).toBe(0.76);
     expect(resultArray[2].selfMax).toBe(2.4);
@@ -333,7 +333,7 @@ describe('tableValues', () => {
     expect(resultArray[0].avg).toBe(3.7);
     expect(resultArray[0].min).toBe(2.5);
     expect(resultArray[0].max).toBe(4.9);
-    expect(resultArray[0].self).toBe(3.16);
+    expect(resultArray[0].selfTotal).toBe(3.16);
     expect(resultArray[0].selfAvg).toBe(1.58);
     expect(resultArray[0].selfMin).toBe(0.76);
     expect(resultArray[0].selfMax).toBe(2.4);
@@ -344,7 +344,7 @@ describe('tableValues', () => {
     expect(resultArray[1].avg).toBe(3.7);
     expect(resultArray[1].min).toBe(2.5);
     expect(resultArray[1].max).toBe(4.9);
-    expect(resultArray[1].self).toBe(3.16);
+    expect(resultArray[1].selfTotal).toBe(3.16);
     expect(resultArray[1].selfAvg).toBe(1.58);
     expect(resultArray[1].selfMin).toBe(0.76);
     expect(resultArray[1].selfMax).toBe(2.4);
@@ -355,7 +355,7 @@ describe('tableValues', () => {
     expect(resultArray[2].avg).toBe(0.6);
     expect(resultArray[2].min).toBe(0.02);
     expect(resultArray[2].max).toBe(1.74);
-    expect(resultArray[2].self).toBe(1.74);
+    expect(resultArray[2].selfTotal).toBe(1.74);
     expect(resultArray[2].selfAvg).toBe(0.58);
     expect(resultArray[2].selfMin).toBe(0.02);
     expect(resultArray[2].selfMax).toBe(1.67);
@@ -366,7 +366,7 @@ describe('tableValues', () => {
     expect(resultArray[3].avg).toBe(1.74);
     expect(resultArray[3].min).toBe(1.74);
     expect(resultArray[3].max).toBe(1.74);
-    expect(resultArray[3].self).toBe(1.67);
+    expect(resultArray[3].selfTotal).toBe(1.67);
     expect(resultArray[3].selfAvg).toBe(1.67);
     expect(resultArray[3].selfMin).toBe(1.67);
     expect(resultArray[3].selfMax).toBe(1.67);
@@ -377,7 +377,7 @@ describe('tableValues', () => {
     expect(resultArray[4].avg).toBe(0.04);
     expect(resultArray[4].min).toBe(0.02);
     expect(resultArray[4].max).toBe(0.05);
-    expect(resultArray[4].self).toBe(0.07);
+    expect(resultArray[4].selfTotal).toBe(0.07);
     expect(resultArray[4].selfAvg).toBe(0.04);
     expect(resultArray[4].selfMin).toBe(0.02);
     expect(resultArray[4].selfMax).toBe(0.05);
@@ -394,7 +394,7 @@ describe('tableValues', () => {
     expect(resultArray[0].avg).toBe(0.04);
     expect(resultArray[0].min).toBe(0.02);
     expect(resultArray[0].max).toBe(0.05);
-    expect(resultArray[0].self).toBe(0.07);
+    expect(resultArray[0].selfTotal).toBe(0.07);
     expect(resultArray[0].selfAvg).toBe(0.04);
     expect(resultArray[0].selfMin).toBe(0.02);
     expect(resultArray[0].selfMax).toBe(0.05);
@@ -405,7 +405,7 @@ describe('tableValues', () => {
     expect(resultArray[1].avg).toBe(0.02);
     expect(resultArray[1].min).toBe(0.02);
     expect(resultArray[1].max).toBe(0.02);
-    expect(resultArray[1].self).toBe(0.02);
+    expect(resultArray[1].selfTotal).toBe(0.02);
     expect(resultArray[1].selfAvg).toBe(0.02);
     expect(resultArray[1].selfMin).toBe(0.02);
     expect(resultArray[1].selfMax).toBe(0.02);
@@ -416,7 +416,7 @@ describe('tableValues', () => {
     expect(resultArray[2].avg).toBe(0.05);
     expect(resultArray[2].min).toBe(0.05);
     expect(resultArray[2].max).toBe(0.05);
-    expect(resultArray[2].self).toBe(0.05);
+    expect(resultArray[2].selfTotal).toBe(0.05);
     expect(resultArray[2].selfAvg).toBe(0.05);
     expect(resultArray[2].selfMin).toBe(0.05);
     expect(resultArray[2].selfMax).toBe(0.05);
@@ -427,7 +427,7 @@ describe('tableValues', () => {
     expect(resultArray[3].avg).toBe(3.05);
     expect(resultArray[3].min).toBe(1.74);
     expect(resultArray[3].max).toBe(4.9);
-    expect(resultArray[3].self).toBe(4.83);
+    expect(resultArray[3].selfTotal).toBe(4.83);
     expect(resultArray[3].selfAvg).toBe(1.61);
     expect(resultArray[3].selfMin).toBe(0.76);
     expect(resultArray[3].selfMax).toBe(2.4);
@@ -446,7 +446,7 @@ describe('check self time', () => {
       transformedTraceSpanAmongEachOthe
     );
 
-    expect(resultArray[4].self).toBe(1.67);
+    expect(resultArray[4].selfTotal).toBe(1.67);
   });
 
   it('spans among each other', () => {
@@ -457,7 +457,7 @@ describe('check self time', () => {
       'Operation Name',
       transformedTraceSpanAmongEachOtheGrouped
     );
-    expect(resultArray[4].self).toBe(1.63);
+    expect(resultArray[4].selfTotal).toBe(1.63);
   });
 
   it(' spans among each other and two other children', () => {
@@ -468,7 +468,7 @@ describe('check self time', () => {
       'Operation Name',
       transformedTraceSpanAmongEachOtheGroupedAndSpans
     );
-    expect(resultArray[4].self).toBe(1.56);
+    expect(resultArray[4].selfTotal).toBe(1.56);
   });
 
   it(' span is longer as parent', () => {
@@ -480,6 +480,6 @@ describe('check self time', () => {
       transformedTraceSpanLongerAsParent
     );
 
-    expect(resultArray[2].self).toBe(1.22);
+    expect(resultArray[2].selfTotal).toBe(1.22);
   });
 });

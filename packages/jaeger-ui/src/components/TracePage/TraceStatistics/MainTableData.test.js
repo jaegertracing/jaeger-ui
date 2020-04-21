@@ -1,4 +1,4 @@
-// Copyright (c) 2018 The Jaeger Authors.
+// Copyright (c) 2020 The Jaeger Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,14 +31,14 @@ describe('<MainTableData>', () => {
         { title: 'Avg', attribute: 'avg', suffix: 'ms', isDecimal: true },
         { title: 'Min', attribute: 'min', suffix: 'ms', isDecimal: true },
         { title: 'Max', attribute: 'max', suffix: 'ms', isDecimal: true },
-        { title: 'Total ST', attribute: 'self', suffix: 'ms', isDecimal: true },
+        { title: 'ST Total', attribute: 'selfTotal', suffix: 'ms', isDecimal: true },
         { title: 'ST Avg', attribute: 'selfAvg', suffix: 'ms', isDecimal: true },
         { title: 'ST Min', attribute: 'selfMin', suffix: 'ms', isDecimal: true },
         { title: 'ST Max', attribute: 'selfMax', suffix: 'ms', isDecimal: true },
         { title: 'ST in Duration', attribute: 'percent', suffix: '%', isDecimal: true },
       ],
-      dropdownTestTitle1: 'Service Name',
-      dropdowntestTitle2: 'No Item selected',
+      valueNameSelector1: 'Service Name',
+      valueNameSelector2: null,
       name: 'api-gateway',
       searchColor: 'transparent',
       togglePopup: '',

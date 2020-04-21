@@ -1,4 +1,4 @@
-// Copyright (c) 2018 The Jaeger Authors.
+// Copyright (c) 2020 The Jaeger Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,16 +15,17 @@
 import * as _ from 'lodash';
 import React, { Component } from 'react';
 import './MainTableData.css';
+import { ITableValues, IColumnValue } from './types';
 
 type Props = {
   type: string;
   name: string;
   searchColor: string;
-  values: any[];
-  columnsArray: any;
+  values: ITableValues[];
+  columnsArray: IColumnValue[];
   togglePopup: any;
-  dropdownTitle1: string;
-  dropdownTitle2: string;
+  valueNameSelector1: string;
+  valueNameSelector2: string | null;
   color: string;
   clickColumn: (name: string) => void;
   colorToPercent: string;
@@ -79,17 +80,17 @@ export default class MainTableData extends Component<Props, State> {
 
     let styleCondition;
     if (this.props.type === others) {
-      if (this.props.dropdownTitle2 !== 'No Item selected' && this.props.type !== 'undefined') {
+      if (this.props.valueNameSelector2 !== null && this.props.type !== 'undefined') {
         styleOption1.cursor = 'pointer';
       }
       styleCondition = styleOption1;
     } else if (this.props.searchColor === 'transparent') {
-      if (this.props.dropdownTitle2 !== 'No Item selected') {
+      if (this.props.valueNameSelector2 !== null) {
         styleOption1.cursor = 'pointer';
       }
       styleCondition = styleOption1;
     } else {
-      if (this.props.dropdownTitle2 !== 'No Item selected') {
+      if (this.props.valueNameSelector2 !== null) {
         styleOption1.cursor = 'pointer';
       }
       styleCondition = styleOption2;
@@ -105,7 +106,7 @@ export default class MainTableData extends Component<Props, State> {
     }
 
     const onClickOption =
-      this.props.dropdownTitle1 === 'sql' && this.props.type !== others
+      this.props.valueNameSelector1 === 'sql' && this.props.type !== others
         ? () => this.props.togglePopup(this.props.name)
         : undefined;
     return (

@@ -1,4 +1,4 @@
-// Copyright (c) 2018 The Jaeger Authors.
+// Copyright (c) 2020 The Jaeger Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -231,10 +231,10 @@ function calculateContent(trace: Trace, span: Span, allSpans: Span[], resultValu
   if (resultValueChange.selfMax < tempSelf) {
     resultValueChange.selfMax = tempSelf;
   }
-  resultValueChange.self += tempSelf;
+  resultValueChange.selfTotal += tempSelf;
 
   const onePercent = 100 / trace.duration;
-  resultValueChange.percent = resultValueChange.self * onePercent;
+  resultValueChange.percent = resultValueChange.selfTotal * onePercent;
 
   return resultValueChange;
 }
@@ -248,7 +248,7 @@ function buildOneColumn(oneColumn: ITableSpan) {
   oneColumnChange.avg = Math.round((oneColumnChange.avg / 1000) * 100) / 100;
   oneColumnChange.min = Math.round((oneColumnChange.min / 1000) * 100) / 100;
   oneColumnChange.max = Math.round((oneColumnChange.max / 1000) * 100) / 100;
-  oneColumnChange.self = Math.round((oneColumnChange.self / 1000) * 100) / 100;
+  oneColumnChange.selfTotal = Math.round((oneColumnChange.selfTotal / 1000) * 100) / 100;
   oneColumnChange.selfAvg = Math.round((oneColumnChange.selfAvg / 1000) * 100) / 100;
   oneColumnChange.selfMin = Math.round((oneColumnChange.selfMin / 1000) * 100) / 100;
   oneColumnChange.selfMax = Math.round((oneColumnChange.selfMax / 1000) * 100) / 100;
@@ -298,7 +298,7 @@ function valueFirstDropdown(selectedTagKey: string, trace: Trace) {
   const spanWithNoSelectedTag = []; // is only needed when there are Others
   for (let i = 0; i < allDiffColumnValues.length; i++) {
     let resultValue = {
-      self: 0,
+      selfTotal: 0,
       selfMin: trace.duration,
       selfMax: 0,
       selfAvg: 0,
@@ -328,7 +328,7 @@ function valueFirstDropdown(selectedTagKey: string, trace: Trace) {
         }
       }
     }
-    resultValue.selfAvg = resultValue.self / resultValue.count;
+    resultValue.selfAvg = resultValue.selfTotal / resultValue.count;
     resultValue.avg = resultValue.total / resultValue.count;
     let tableSpan = {
       type: 'defined',
@@ -339,7 +339,7 @@ function valueFirstDropdown(selectedTagKey: string, trace: Trace) {
       min: resultValue.min,
       max: resultValue.max,
       isDetail: false,
-      self: resultValue.self,
+      selfTotal: resultValue.selfTotal,
       selfAvg: resultValue.selfAvg,
       selfMin: resultValue.selfMin,
       selfMax: resultValue.selfMax,
@@ -369,7 +369,7 @@ function valueFirstDropdown(selectedTagKey: string, trace: Trace) {
     }
     // Others is calculated
     let resultValue = {
-      self: 0,
+      selfTotal: 0,
       selfAvg: 0,
       selfMin: trace.duration,
       selfMax: 0,
@@ -385,7 +385,7 @@ function valueFirstDropdown(selectedTagKey: string, trace: Trace) {
     }
     if (resultValue.count !== 0) {
       // Others is build
-      resultValue.selfAvg = resultValue.self / resultValue.count;
+      resultValue.selfAvg = resultValue.selfTotal / resultValue.count;
       resultValue.avg = resultValue.total / resultValue.count;
       let tableSpanOTHERS = {
         type: 'undefined',
@@ -396,7 +396,7 @@ function valueFirstDropdown(selectedTagKey: string, trace: Trace) {
         min: resultValue.min,
         max: resultValue.max,
         isDetail: false,
-        self: resultValue.self,
+        selfTotal: resultValue.selfTotal,
         selfAvg: resultValue.selfAvg,
         selfMin: resultValue.selfMin,
         selfMax: resultValue.selfMax,
@@ -429,7 +429,7 @@ function buildDetail(
   for (let j = 0; j < diffNamesA.length; j++) {
     let color = '';
     let resultValue = {
-      self: 0,
+      selfTotal: 0,
       selfAvg: 0,
       selfMin: trace.duration,
       selfMax: 0,
@@ -456,7 +456,7 @@ function buildDetail(
         resultValue = calculateContent(trace, tempArray[l], allSpans, resultValue);
       }
     }
-    resultValue.selfAvg = resultValue.self / resultValue.count;
+    resultValue.selfAvg = resultValue.selfTotal / resultValue.count;
     resultValue.avg = resultValue.total / resultValue.count;
     let buildOneColumnValue = {
       type: 'defined',
@@ -467,7 +467,7 @@ function buildDetail(
       min: resultValue.min,
       max: resultValue.max,
       isDetail: true,
-      self: resultValue.self,
+      selfTotal: resultValue.selfTotal,
       selfAvg: resultValue.selfAvg,
       selfMin: resultValue.selfMin,
       selfMax: resultValue.selfMax,
@@ -493,7 +493,7 @@ function generateDetailRest(allColumnValues: ITableSpan[], selectedTagKeySecond:
     newTable.push(allColumnValues[i]);
     if (!allColumnValues[i].isDetail) {
       let resultValue = {
-        self: 0,
+        selfTotal: 0,
         selfAvg: 0,
         selfMin: trace.duration,
         selfMax: 0,
@@ -522,7 +522,7 @@ function generateDetailRest(allColumnValues: ITableSpan[], selectedTagKeySecond:
         }
       }
       resultValue.avg = resultValue.total / resultValue.count;
-      resultValue.selfAvg = resultValue.self / resultValue.count;
+      resultValue.selfAvg = resultValue.selfTotal / resultValue.count;
       if (resultValue.count !== 0) {
         let buildOneColumnValue = {
           type: 'undefined',
@@ -533,7 +533,7 @@ function generateDetailRest(allColumnValues: ITableSpan[], selectedTagKeySecond:
           min: resultValue.min,
           max: resultValue.max,
           isDetail: true,
-          self: resultValue.self,
+          selfTotal: resultValue.selfTotal,
           selfAvg: resultValue.selfAvg,
           selfMin: resultValue.selfMin,
           selfMax: resultValue.selfMax,

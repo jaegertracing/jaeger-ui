@@ -628,17 +628,17 @@ describe('<TracePage>', () => {
       expect(header.prop('textFilter')).toBe(s);
     });
 
-    it('propagates traceGraphView changes', () => {
+    it('propagates traceView changes', () => {
       const { onTraceViewChange } = header.props();
       expect(header.prop('viewType')).toBe(ETraceViewType.TraceTimelineViewer);
-      onTraceViewChange();
+      onTraceViewChange(ETraceViewType.TraceGraph);
       wrapper.update();
       refreshWrappers();
-      expect(header.prop('viewType')).toBe(undefined);
+      expect(header.prop('viewType')).toBe(ETraceViewType.TraceGraph);
       expect(calculateTraceDagEVSpy).toHaveBeenCalledWith(defaultProps.trace.data);
 
       wrapper.setProps({ trace: {} });
-      onTraceViewChange();
+      onTraceViewChange(ETraceViewType.TraceTimelineViewer);
       expect(calculateTraceDagEVSpy).toHaveBeenCalledTimes(1);
     });
 

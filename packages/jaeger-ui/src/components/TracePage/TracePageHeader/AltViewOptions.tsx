@@ -13,8 +13,9 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Button, Dropdown, Icon, Menu } from 'antd';
+import { Dropdown, Icon, Menu } from 'antd';
 import { Link } from 'react-router-dom';
+import './AltViewOptions.css';
 
 import {
   trackGanttView,
@@ -32,7 +33,7 @@ type Props = {
   viewType: ETraceViewType;
 };
 
-const menuItems = [
+const MENU_ITEMS = [
   {
     viewType: ETraceViewType.TraceTimelineViewer,
     label: 'Trace Timeline',
@@ -50,7 +51,7 @@ const menuItems = [
 export default function AltViewOptions(props: Props) {
   const { onTraceViewChange, viewType, traceID } = props;
 
-  const handleToggleView = (item: ETraceViewType) => {
+  const handleSelectView = (item: ETraceViewType) => {
     if (item === ETraceViewType.TraceTimelineViewer) {
       trackGanttView();
     } else if (item === ETraceViewType.TraceGraph) {
@@ -63,15 +64,13 @@ export default function AltViewOptions(props: Props) {
 
   const menu = (
     <Menu>
-      {menuItems.map(item =>
-        item.viewType === viewType ? null : (
-          <Menu.Item key={item.label}>
-            <a onClick={() => handleToggleView(item.viewType)} role="button">
-              {item.label}
-            </a>
-          </Menu.Item>
-        )
-      )}
+      {MENU_ITEMS.filter(item => item.viewType !== viewType).map(item => (
+        <Menu.Item key={item.viewType}>
+          <a onClick={() => handleSelectView(item.viewType)} role="button">
+            {item.label}
+          </a>
+        </Menu.Item>
+      ))}
       <Menu.Item>
         <Link
           to={prefixUrl(`/api/traces/${traceID}?prettyPrint=true`)}
@@ -95,14 +94,14 @@ export default function AltViewOptions(props: Props) {
     </Menu>
   );
 
+  const currentItem = MENU_ITEMS.find(item => item.viewType === viewType);
+  const dropdownText = currentItem ? currentItem.label : 'Alternate Views';
   return (
     <Dropdown overlay={menu}>
-      <Button className="ub-mr2" htmlType="button">
-        {menuItems.find(test => test.viewType === viewType) !== undefined
-          ? menuItems.find(test => test.viewType === viewType)!.label
-          : ''}
+      <span className="span--AltViewOptions">
+        {`${dropdownText} `}
         <Icon type="down" />
-      </Button>
+      </span>
     </Dropdown>
   );
 }

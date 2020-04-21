@@ -81,31 +81,38 @@ describe('AltViewOptions', () => {
   });
 
   it('track dropdown menu', () => {
-    expect(trackGraphView).not.toHaveBeenCalled();
-    expect(props.onTraceViewChange).not.toHaveBeenCalled();
-    getLink('Trace Graph').simulate('click');
-    expect(trackGraphView).toHaveBeenCalledTimes(1);
-    expect(props.onTraceViewChange).toHaveBeenCalledTimes(1);
-    expect(trackStatisticsView).not.toHaveBeenCalled();
-    getLink('Trace Statistics').simulate('click');
-    expect(trackStatisticsView).toHaveBeenCalledTimes(1);
-    expect(props.onTraceViewChange).toHaveBeenCalledTimes(2);
+    const viewInteractions = [
+      {
+        link: 'Trace Graph',
+        trackFn: trackGraphView,
+        onTraceViewChangeArg: ETraceViewType.TraceGraph,
+      },
+      {
+        link: 'Trace Statistics',
+        trackFn: trackStatisticsView,
+        onTraceViewChangeArg: ETraceViewType.TraceStatisticsView,
+        propViewType: ETraceViewType.TraceGraph,
+      },
+      {
+        link: 'Trace Timeline',
+        trackFn: trackGanttView,
+        onTraceViewChangeArg: ETraceViewType.TraceTimelineViewer,
+        propViewType: ETraceViewType.TraceStatisticsView,
+      },
+    ];
 
-    wrapper.setProps({ viewType: ETraceViewType.TraceGraph });
-    expect(trackGanttView).not.toHaveBeenCalled();
-    getLink('Trace Timeline').simulate('click');
-    expect(trackGanttView).toHaveBeenCalledTimes(1);
-    expect(props.onTraceViewChange).toHaveBeenCalledTimes(3);
-    getLink('Trace Statistics').simulate('click');
-    expect(trackStatisticsView).toHaveBeenCalledTimes(2);
-    expect(props.onTraceViewChange).toHaveBeenCalledTimes(4);
+    viewInteractions.forEach(({ link, trackFn, propViewType }, i) => {
+      if (propViewType) {
+        wrapper.setProps({ viewType: propViewType });
+      }
+      expect(props.onTraceViewChange).toHaveBeenCalledTimes(i);
+      expect(trackFn).not.toHaveBeenCalled();
 
-    wrapper.setProps({ viewType: 2 });
-    getLink('Trace Timeline').simulate('click');
-    expect(trackGanttView).toHaveBeenCalledTimes(2);
-    expect(props.onTraceViewChange).toHaveBeenCalledTimes(5);
-    getLink('Trace Graph').simulate('click');
-    expect(trackGraphView).toHaveBeenCalledTimes(2);
-    expect(props.onTraceViewChange).toHaveBeenCalledTimes(6);
+      getLink(link).simulate('click');
+      expect(props.onTraceViewChange).toHaveBeenCalledTimes(i + 1);
+      viewInteractions.forEach(({ trackFn: fn }, j) => {
+        expect(fn).toHaveBeenCalledTimes(j <= i ? 1 : 0);
+      });
+    });
   });
 });

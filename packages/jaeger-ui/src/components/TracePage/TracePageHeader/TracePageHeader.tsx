@@ -49,7 +49,7 @@ type TracePageHeaderEmbedProps = {
   nextResult: () => void;
   onArchiveClicked: () => void;
   onSlimViewClicked: () => void;
-  onTraceViewChange: (actualViewType: ETraceViewType) => void;
+  onTraceViewChange: (viewType: ETraceViewType) => void;
   prevResult: () => void;
   resultCount: number;
   showArchiveButton: boolean;

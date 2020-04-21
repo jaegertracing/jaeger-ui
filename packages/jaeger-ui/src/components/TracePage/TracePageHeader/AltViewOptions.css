@@ -13,27 +13,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-.DetailTableData--tr {
-  border-top: 1px solid #ececec;
-}
-
-.DetailTableData--tr:hover {
-  background: #fafafa;
-  color: black;
-}
-
-.DetailTableData--serviceBorder {
-  border-left: 4px solid transparent;
-  padding-left: 0.6em;
-}
-
-.DetailTableData--td {
-  border-left: 1px solid rgb(204, 204, 204);
-  border-right: 1px solid rgb(204, 204, 204);
-  border-top: 1px solid rgb(230, 230, 230);
-  border-bottom: 1px solid rgb(230, 230, 230);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 25em;
+.span--AltViewOptions {
+  padding-right: 2rem;
 }

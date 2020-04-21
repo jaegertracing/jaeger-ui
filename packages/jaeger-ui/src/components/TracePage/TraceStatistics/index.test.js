@@ -1,4 +1,4 @@
-// Copyright (c) 2018 The Jaeger Authors.
+// Copyright (c) 2020 The Jaeger Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -51,7 +51,7 @@ describe('<TraceTagOverview>', () => {
     expect(wrapper.find(HeaderTable).length).toBe(11);
     expect(wrapper.find(TraceStatisticsHeader).length).toBe(1);
     expect(wrapper.state('valueNameSelector1')).toBe('Service Name');
-    expect(wrapper.state('valueNameSelector2')).toBe('No Item selected');
+    expect(wrapper.state('valueNameSelector2')).toBe(null);
     expect(wrapper.find(MainTableData).length).toBe(2);
     expect(wrapper.find(DetailTableData).length).toBe(0);
     expect(wrapper.find(PopupSql).length).toBe(0);

@@ -1,4 +1,4 @@
-// Copyright (c) 2018 The Jaeger Authors.
+// Copyright (c) 2020 The Jaeger Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,16 +15,17 @@
 import * as _ from 'lodash';
 import React, { Component } from 'react';
 import './DetailTableData.css';
+import { ITableValues, IColumnValue } from './types';
 
 type Props = {
   type: string;
   name: string;
   searchColor: string;
-  values: any[];
-  columnsArray: any[];
+  values: ITableValues[];
+  columnsArray: IColumnValue[];
   color: string;
   togglePopup: (name: string) => void;
-  secondTagDropdownTitle: string;
+  valueNameSelector2: string | null;
   colorToPercent: string;
 };
 
@@ -40,7 +41,6 @@ export default class DetailTableData extends Component<Props, State> {
     const element = this.props.values.map(item => {
       return { uid: _.uniqueId('id'), value: item };
     });
-
     this.setState(prevState => {
       return {
         ...prevState,
@@ -78,18 +78,18 @@ export default class DetailTableData extends Component<Props, State> {
     const labelStyle1 = { borderColor: this.props.color };
     const labelStyle2 = { borderColor: this.props.color, marginLeft: '12px' };
     let labelCondition;
-    if (this.props.secondTagDropdownTitle === 'Service Name') {
+    if (this.props.valueNameSelector2 === 'Service Name') {
       labelCondition = labelStyle2;
     } else {
       labelCondition = labelStyle1;
     }
     const onClickOption =
-      this.props.secondTagDropdownTitle === 'sql' && this.props.type !== others
+      this.props.valueNameSelector2 === 'sql' && this.props.type !== others
         ? () => this.props.togglePopup(this.props.name)
         : undefined;
     return (
       <tr className="DetailTableData--tr" style={styleCondition}>
-        <td className="DetailTableData--child--td">
+        <td className="DetailTableData--td">
           <a role="button" onClick={onClickOption} style={{ color: 'inherit' }}>
             <label title={this.props.name} className="DetailTableData--serviceBorder" style={labelCondition}>
               {this.props.name}
