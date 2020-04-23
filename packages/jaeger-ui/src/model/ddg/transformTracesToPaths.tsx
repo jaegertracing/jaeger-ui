@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import memoizeOne from 'memoize-one';
-import { getTraceSpanIdsAsTree } from '../../selectors/trace';
+import { getTraceSpanIdsAsTree, TREE_ROOT_ID } from '../../selectors/trace';
 
 import { TDdgPayloadEntry, TDdgPayloadPath, TDdgPayload } from './types';
 import { FetchedTrace } from '../../types';
@@ -36,7 +36,7 @@ function transformTracesToPaths(
       const tree = getTraceSpanIdsAsTree(data);
       tree.paths((pathIds: string[]) => {
         const paths = pathIds.reduce((reducedSpans: Span[], id: string): Span[] => {
-          if (id === '__root__') {
+          if (id === TREE_ROOT_ID) {
             return reducedSpans;
           }
           const span = spanMap.get(id);
