@@ -60,7 +60,7 @@ describe('transform traces to ddg paths', () => {
         (result, span) => ({
           ...result,
           [span.processID]: {
-            serviceName: span.processID,
+            serviceName: `${span.processID}-name`,
           },
         }),
         {}
