@@ -22,6 +22,7 @@ export type TPathAgnosticDecorationSchema = {
   opSummaryUrl?: string;
   summaryPath: string;
   opSummaryPath?: string;
+  detailLink?: string;
   detailUrl?: string;
   detailPath?: string;
   detailColumnDefPath?: string;

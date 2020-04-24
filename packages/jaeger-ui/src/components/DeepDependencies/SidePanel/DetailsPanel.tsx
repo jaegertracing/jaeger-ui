@@ -13,11 +13,13 @@
 // limitations under the License.
 
 import * as React from 'react';
+import { Tooltip } from 'antd';
 import _get from 'lodash/get';
 import { connect } from 'react-redux';
 
 import BreakableText from '../../common/BreakableText';
 import LoadingIndicator from '../../common/LoadingIndicator';
+import NewWindowIcon from '../../common/NewWindowIcon';
 import JaegerAPI from '../../../api/jaeger';
 import ColumnResizer from '../../TracePage/TraceTimelineViewer/TimelineHeaderRow/TimelineColumnResizer';
 import extractDecorationFromState, { TDecorationFromState } from '../../../model/path-agnostic-decorations';
@@ -128,6 +130,7 @@ export class UnconnectedDetailsPanel extends React.PureComponent<TProps, TState>
 
   render() {
     const { decorationProgressbar, decorationSchema, decorationValue, operation: _op, service } = this.props;
+    const { detailLink } = decorationSchema;
     const { width = 0.3 } = this.state;
     const operation = _op && !Array.isArray(_op) ? _op : undefined;
     return (
@@ -138,6 +141,18 @@ export class UnconnectedDetailsPanel extends React.PureComponent<TProps, TState>
         </div>
         <div className="Ddg--DetailsPanel--DecorationHeader">
           <span>{stringSupplant(decorationSchema.name, { service, operation })}</span>
+          {detailLink && (
+            <Tooltip arrowPointAtCenter title="More Info">
+              <a
+                className="Ddg--DetailsPanel--DetailLink"
+                href={stringSupplant(detailLink, { service, operation })}
+                target="_blank"
+                rel="noreferrer noopener"
+              >
+                <NewWindowIcon />
+              </a>
+            </Tooltip>
+          )}
         </div>
         {decorationProgressbar ? (
           <div className="Ddg--DetailsPanel--PercentCircleWrapper">{decorationProgressbar}</div>
