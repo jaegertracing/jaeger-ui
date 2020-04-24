@@ -27,8 +27,8 @@ export default class BannerText extends React.PureComponent<TProps> {
     const { bannerText } = this.props;
     if (!bannerText) return null;
 
-    const { styling = undefined } = typeof bannerText === 'object' ? bannerText : {};
-    const text = typeof bannerText === 'object' ? bannerText.value : bannerText;
+    const { styling = undefined, value: text } =
+      typeof bannerText === 'object' ? bannerText : { value: bannerText };
 
     return (
       <div className="BannerText" style={styling}>

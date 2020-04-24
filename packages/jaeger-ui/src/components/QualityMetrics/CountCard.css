@@ -17,7 +17,6 @@ limitations under the License.
 .CountCard {
   display: flex;
   flex-direction: column;
-  /* padding: 0 5px; */
   margin: 5px 5%;
   padding: 5px;
   text-align: center;

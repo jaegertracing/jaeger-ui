@@ -21,6 +21,7 @@ import { RouteComponentProps, Link, withRouter } from 'react-router-dom';
 import TraceIDSearchInput from './TraceIDSearchInput';
 import * as dependencyGraph from '../DependencyGraph/url';
 import * as deepDependencies from '../DeepDependencies/url';
+import * as qualityMetrics from '../QualityMetrics/url';
 import * as searchUrl from '../SearchTracePage/url';
 import * as diffUrl from '../TraceDiff/url';
 import { ReduxState } from '../../types';
@@ -56,6 +57,14 @@ if (getConfigValue('deepDependencies.menuEnabled')) {
     to: deepDependencies.getUrl(),
     matches: deepDependencies.matches,
     text: 'Service Dependencies',
+  });
+}
+
+if (getConfigValue('qualityMetrics.menuEnabled')) {
+  NAV_LINKS.push({
+    to: qualityMetrics.getUrl(),
+    matches: qualityMetrics.matches,
+    text: 'Quality Metrics',
   });
 }
 

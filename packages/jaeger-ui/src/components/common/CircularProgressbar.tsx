@@ -18,7 +18,6 @@ import { CircularProgressbar as CircularProgressbarImpl } from 'react-circular-p
 import 'react-circular-progressbar/dist/styles.css';
 
 type TProps = {
-  // key: string;
   backgroundHue?: number;
   decorationHue?: number;
   maxValue: number;
@@ -29,15 +28,7 @@ type TProps = {
 
 export default class CircularProgressbar extends React.PureComponent<TProps> {
   render() {
-    const {
-      // key,
-      backgroundHue,
-      decorationHue = 0,
-      maxValue,
-      strokeWidth,
-      text,
-      value,
-    } = this.props;
+    const { backgroundHue, decorationHue = 0, maxValue, strokeWidth, text, value } = this.props;
     const scale = (value / maxValue) ** (1 / 4);
     const saturation = 20 + Math.ceil(scale * 80);
     const light = 50 + Math.ceil((1 - scale) * 30);

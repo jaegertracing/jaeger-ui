@@ -15,8 +15,8 @@
 import * as React from 'react';
 import _get from 'lodash/get';
 import queryString from 'query-string';
-import CircularProgressbar from '../../components/common/CircularProgressbar';
 
+import CircularProgressbar from '../../components/common/CircularProgressbar';
 import {
   PROGRESS_BAR_STROKE_WIDTH,
   RADIUS,

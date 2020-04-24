@@ -196,7 +196,6 @@ export default class DetailsCard extends React.PureComponent<TProps> {
     const { collapsed } = this.state;
     const { className, collapsible, description, header } = this.props;
 
-    // TODO: Collapsible
     return (
       <div className={cx('DetailsCard', className)}>
         <div className="DetailsCard--ButtonHeaderWrapper">

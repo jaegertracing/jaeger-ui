@@ -215,6 +215,15 @@ describe('<SidePanel>', () => {
       wrapper.setState({ detailsLoading: false, details: 'details error', detailsErred: true });
       expect(wrapper).toMatchSnapshot();
     });
+
+    it('renders detailLink', () => {
+      const schemaWithLink = {
+        ...props.decorationSchema,
+        detailLink: 'test details link',
+      };
+      const wrapper = shallow(<DetailsPanel {...props} decorationSchema={schemaWithLink} />);
+      expect(wrapper).toMatchSnapshot();
+    });
   });
 
   describe('componentDidMount', () => {
