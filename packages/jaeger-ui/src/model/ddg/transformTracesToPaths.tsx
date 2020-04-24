@@ -13,12 +13,14 @@
 // limitations under the License.
 
 import memoizeOne from 'memoize-one';
-
-import spanAncestorIds from '../../utils/span-ancestor-ids';
+import { getTraceSpanIdsAsTree, TREE_ROOT_ID } from '../../selectors/trace';
 
 import { TDdgPayloadEntry, TDdgPayloadPath, TDdgPayload } from './types';
 import { FetchedTrace } from '../../types';
 import { Span } from '../../types/trace';
+
+const isKindServer = (span: Span) =>
+  span.tags.find(({ key, value }) => key === 'span.kind' && value === 'server');
 
 function transformTracesToPaths(
   traces: Record<string, FetchedTrace>,
@@ -30,53 +32,55 @@ function transformTracesToPaths(
     if (data) {
       const spanMap: Map<string, Span> = new Map();
       const { traceID } = data;
-      data.spans
-        .filter(span => {
-          spanMap.set(span.spanID, span);
-          return !span.hasChildren;
-        })
-        .forEach(leaf => {
-          const spans = spanAncestorIds(leaf).map(id => {
-            const span = spanMap.get(id);
-            if (!span) throw new Error(`Ancestor spanID ${id} not found in trace ${traceID}`);
-            return span;
-          });
-          spans.reverse();
-          spans.push(leaf);
-
-          const path: TDdgPayloadEntry[] = spans
-            .filter(span => span.tags.find(({ key, value }) => key === 'span.kind' && value === 'server'))
-            .map(({ processID, operationName: operation }) => ({
-              service: data.processes[processID].serviceName,
-              operation,
-            }));
-
-          if (
-            path.some(
-              ({ service, operation }) =>
-                service === focalService && (!focalOperation || operation === focalOperation)
-            )
-          ) {
-            const pathKey = path.map(value => `${value.operation}:${value.service}`).join('/');
-            const dependency = dependenciesMap.get(pathKey);
-            if (!dependency) {
-              dependenciesMap.set(pathKey, {
-                path,
-                attributes: [
-                  {
-                    key: 'exemplar_trace_id',
-                    value: traceID,
-                  },
-                ],
-              });
-            } else {
-              dependency.attributes.push({
-                key: 'exemplar_trace_id',
-                value: traceID,
-              });
-            }
+      data.spans.forEach(span => spanMap.set(span.spanID, span));
+      const tree = getTraceSpanIdsAsTree(data);
+      tree.paths((pathIds: string[]) => {
+        const paths = pathIds.reduce((reducedSpans: Span[], id: string): Span[] => {
+          if (id === TREE_ROOT_ID) {
+            return reducedSpans;
           }
-        });
+          const span = spanMap.get(id);
+          if (!span) throw new Error(`Ancestor spanID ${id} not found in trace ${traceID}`);
+          if (reducedSpans.length === 0) {
+            reducedSpans.push(span);
+          } else if (
+            reducedSpans[reducedSpans.length - 1].processID !== span.processID ||
+            isKindServer(span)
+          ) {
+            reducedSpans.push(span);
+          }
+          return reducedSpans;
+        }, []);
+        const path: TDdgPayloadEntry[] = paths.map(({ processID, operationName: operation }) => ({
+          service: data.processes[processID].serviceName,
+          operation,
+        }));
+        if (
+          path.some(
+            ({ service, operation }) =>
+              service === focalService && (!focalOperation || operation === focalOperation)
+          )
+        ) {
+          const pathKey = path.map(value => `${value.operation}:${value.service}`).join('/');
+          const dependency = dependenciesMap.get(pathKey);
+          if (!dependency) {
+            dependenciesMap.set(pathKey, {
+              path,
+              attributes: [
+                {
+                  key: 'exemplar_trace_id',
+                  value: traceID,
+                },
+              ],
+            });
+          } else {
+            dependency.attributes.push({
+              key: 'exemplar_trace_id',
+              value: traceID,
+            });
+          }
+        }
+      });
     }
   });
   const dependencies = Array.from(dependenciesMap.values());
