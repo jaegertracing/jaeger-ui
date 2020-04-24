@@ -97,4 +97,24 @@ export default class TreeNode {
       }
     }
   }
+
+  paths(fn) {
+    const stack = [];
+    stack.push({ node: this, childIndex: 0 });
+    const paths = [];
+    while (stack.length) {
+      const { node, childIndex } = stack[stack.length - 1];
+      if (node.children.length >= childIndex + 1) {
+        stack[stack.length - 1].childIndex++;
+        stack.push({ node: node.children[childIndex], childIndex: 0 });
+      } else {
+        if (node.children.length === 0) {
+          const path = stack.map(item => item.node.value);
+          fn(path);
+        }
+        stack.pop();
+      }
+    }
+    return paths;
+  }
 }
