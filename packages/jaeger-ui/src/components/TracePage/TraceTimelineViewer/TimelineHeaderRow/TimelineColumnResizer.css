@@ -21,6 +21,10 @@ limitations under the License.
   top: 0;
 }
 
+.TimelineColumnResizer.is-flipped {
+  transform: scaleX(-1);
+}
+
 .TimelineColumnResizer--wrapper {
   bottom: 0;
   position: absolute;
@@ -30,7 +34,7 @@ limitations under the License.
 .TimelineColumnResizer--dragger {
   border-left: 2px solid transparent;
   cursor: col-resize;
-  height: 5000px;
+  height: calc(100vh - var(--nav-height));
   margin-left: -1px;
   position: absolute;
   top: 0;

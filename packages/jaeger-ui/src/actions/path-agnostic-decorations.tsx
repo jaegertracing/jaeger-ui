@@ -15,6 +15,7 @@
 import _get from 'lodash/get';
 import _memoize from 'lodash/memoize';
 import _set from 'lodash/set';
+import memoize from 'lru-memoize';
 import { createActions, ActionFunctionAny, Action } from 'redux-actions';
 
 import JaegerAPI from '../api/jaeger';
@@ -23,9 +24,12 @@ import { getConfigValue } from '../utils/config/get-config';
 import generateActionTypes from '../utils/generate-action-types';
 import stringSupplant from '../utils/stringSupplant';
 
+// wrapping JaegerAPI.fetchDecoration is necessary for tests to properly mock inside memoization
+const fetchDecoration = memoize(10)((url: string) => JaegerAPI.fetchDecoration(url));
+
 export const actionTypes = generateActionTypes('@jaeger-ui/PATH_AGNOSTIC_DECORATIONS', ['GET_DECORATION']);
 
-const getDecorationSchema = _memoize((id: string): TPathAgnosticDecorationSchema | undefined => {
+export const getDecorationSchema = _memoize((id: string): TPathAgnosticDecorationSchema | undefined => {
   const schemas = getConfigValue('pathAgnosticDecorations') as TPathAgnosticDecorationSchema[] | undefined;
   if (!schemas) return undefined;
   return schemas.find(s => s.id === id);
@@ -39,16 +43,17 @@ let resolve: undefined | ((arg: TNewData) => void);
 
 // Bespoke memoization-adjacent solution necessary as this should return `undefined`, not an old promise, on
 // duplicate calls
-export const processed = new Map<string, Map<string, Set<string | undefined>>>();
+// exported for tests
+export const _processed = new Map<string, Map<string, Set<string | undefined>>>();
 
 export function getDecoration(
   id: string,
   service: string,
   operation?: string
 ): Promise<TNewData> | undefined {
-  const processedID = processed.get(id);
+  const processedID = _processed.get(id);
   if (!processedID) {
-    processed.set(id, new Map<string, Set<string | undefined>>([[service, new Set([operation])]]));
+    _processed.set(id, new Map<string, Set<string | undefined>>([[service, new Set([operation])]]));
   } else {
     const processedService = processedID.get(service);
     if (!processedService) processedID.set(service, new Set([operation]));
@@ -67,24 +72,23 @@ export function getDecoration(
   }
 
   pendingCount = pendingCount ? pendingCount + 1 : 1;
-  const { url, opUrl, valuePath, opValuePath } = schema;
+  const { summaryUrl, opSummaryUrl, summaryPath, opSummaryPath } = schema;
   let promise: Promise<Record<string, any>>;
   let getPath: string;
   let setPath: string;
-  if (opValuePath && opUrl && operation) {
-    promise = JaegerAPI.fetchDecoration(stringSupplant(opUrl, { service, operation }));
-    getPath = stringSupplant(opValuePath, { service, operation });
+  if (opSummaryPath && opSummaryUrl && operation) {
+    promise = fetchDecoration(stringSupplant(opSummaryUrl, { service, operation }));
+    getPath = stringSupplant(opSummaryPath, { service, operation });
     setPath = `${id}.withOp.${service}.${operation}`;
   } else {
-    promise = JaegerAPI.fetchDecoration(stringSupplant(url, { service }));
-    getPath = stringSupplant(valuePath, { service });
-    getPath = valuePath;
+    promise = fetchDecoration(stringSupplant(summaryUrl, { service }));
+    getPath = stringSupplant(summaryPath, { service });
     setPath = `${id}.withoutOp.${service}`;
   }
 
   promise
     .then(res => {
-      return _get(res, getPath, `${getPath} not found in response`);
+      return _get(res, getPath, `\`${getPath}\` not found in response`);
     })
     .catch(err => {
       return `Unable to fetch decoration: ${err.message || err}`;

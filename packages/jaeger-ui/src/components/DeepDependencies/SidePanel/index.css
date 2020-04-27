@@ -1,0 +1,91 @@
+/*
+Copyright (c) 2020 The Jaeger Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+.Ddg--SidePanel {
+  background-color: #f6f6f6;
+  border-left: solid 1px #ddd;
+  box-shadow: -3px 0 3px rgba(0, 0, 0, 0.1);
+  display: flex;
+}
+
+.Ddg--SidePanel--Btns,
+.Ddg--SidePanel--DecorationBtns {
+  display: flex;
+  flex-direction: column;
+}
+
+.Ddg--SidePanel--Btns {
+  justify-content: space-between;
+}
+
+.Ddg--SidePanel--Btns button {
+  cursor: pointer;
+}
+
+.Ddg--SidePanel--closeBtn,
+.Ddg--SidePanel--infoBtn {
+  background: transparent;
+  border: none;
+  margin: 5px 0px;
+}
+
+.Ddg--SidePanel--closeBtn > svg,
+.Ddg--SidePanel--infoBtn > svg {
+  height: 80%;
+  width: 80%;
+}
+
+.Ddg--SidePanel--closeBtn:focus > svg,
+.Ddg--SidePanel--infoBtn:focus > svg {
+  filter: drop-shadow(0 0 2px #006c99);
+}
+
+.Ddg--SidePanel--closeBtn:focus,
+.Ddg--SidePanel--infoBtn:focus {
+  outline: none;
+}
+
+.Ddg--SidePanel--closeBtn.is-hidden {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.Ddg--SidePanel--DecorationBtns {
+  flex-grow: 1;
+  justify-content: center;
+}
+
+.Ddg--SidePanel--decorationBtn {
+  border-radius: 100%;
+  margin: 3px;
+  padding-bottom: 25%;
+  padding-top: 25%;
+}
+
+.Ddg--SidePanel--decorationBtn.is-selected {
+  box-shadow: 0px 0px 4px 2px #006c99;
+}
+
+.Ddg--SidePanel--decorationBtn:focus {
+  box-shadow: inset 0 0 5px 2px #00b4ff;
+  outline: none;
+}
+
+.Ddg--SidePanel--decorationBtn.is-selected:focus {
+  border: none;
+  margin: 4px;
+  box-shadow: inset 0 0 5px 2px #00b4ff, 0px 0px 5px 3px #006c99;
+}

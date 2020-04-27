@@ -19,7 +19,7 @@ import { TSetProps, TFromGraphStateFn, TDefEntry } from '@jaegertracing/plexus/l
 import { TEdge } from '@jaegertracing/plexus/lib/types';
 import TNonEmptyArray from '@jaegertracing/plexus/lib/types/TNonEmptyArray';
 
-import DdgNodeContent from './DdgNodeContent';
+import { getNodeRenderer, measureNode } from './DdgNodeContent';
 import getNodeRenderers from './getNodeRenderers';
 import getSetOnEdge from './getSetOnEdge';
 import {
@@ -43,6 +43,7 @@ type TProps = {
   getGenerationVisibility: (vertexKey: string, direction: EDirection) => ECheckedStatus | null;
   getVisiblePathElems: (vertexKey: string) => PathElem[] | undefined;
   hideVertex: (vertexKey: string) => void;
+  selectVertex: (selectedVertex: TDdgVertex) => void;
   setOperation: (operation: string) => void;
   setViewModifier: (visIndices: number[], viewModifier: EViewModifier, enable: boolean) => void;
   uiFindMatches: Set<string> | undefined;
@@ -73,7 +74,7 @@ const edgesDefs: TNonEmptyArray<TDefEntry<TDdgVertex, unknown>> = [
 
 export default class Graph extends PureComponent<TProps> {
   private getNodeRenderers = memoize(getNodeRenderers);
-  private getNodeContentRenderer = memoize(DdgNodeContent.getNodeRenderer);
+  private getNodeContentRenderer = memoize(getNodeRenderer);
   private getSetOnEdge = memoize(getSetOnEdge);
 
   private layoutManager: LayoutManager = new LayoutManager({
@@ -102,6 +103,7 @@ export default class Graph extends PureComponent<TProps> {
       getGenerationVisibility,
       getVisiblePathElems,
       hideVertex,
+      selectVertex,
       setOperation,
       setViewModifier,
       uiFindMatches,
@@ -154,7 +156,7 @@ export default class Graph extends PureComponent<TProps> {
             key: 'nodes/content',
             layerType: 'html',
             measurable: true,
-            measureNode: DdgNodeContent.measureNode,
+            measureNode,
             renderNode: this.getNodeContentRenderer({
               baseUrl,
               density,
@@ -163,6 +165,7 @@ export default class Graph extends PureComponent<TProps> {
               getGenerationVisibility,
               getVisiblePathElems,
               hideVertex,
+              selectVertex,
               setOperation,
               setViewModifier,
               updateGenerationVisibility,

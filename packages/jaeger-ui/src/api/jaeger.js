@@ -80,6 +80,9 @@ const JaegerAPI = {
   archiveTrace(id) {
     return getJSON(`${this.apiRoot}archive/${id}`, { method: 'POST' });
   },
+  fetchQualityMetrics(service, lookback) {
+    return getJSON(`/qualitymetrics-v2`, { query: { service, lookback } });
+  },
   fetchDecoration(url) {
     return getJSON(url);
   },

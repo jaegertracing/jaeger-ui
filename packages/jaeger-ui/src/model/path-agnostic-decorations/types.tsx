@@ -12,28 +12,45 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import React from 'react';
+
 export type TPathAgnosticDecorationSchema = {
+  acronym: string;
   id: string;
-  label: string;
-  icon?: string;
-  url: string;
-  opUrl?: string;
-  valuePath: string;
-  opValuePath?: string;
-  /*
-  gradient: {
-    startPercentage: number;
-    inclusiveStart: boolean;
-    endPercentage: number;
-    inclusiveEnd: boolean;
-  }[];
-   */
+  name: string;
+  summaryUrl: string;
+  opSummaryUrl?: string;
+  summaryPath: string;
+  opSummaryPath?: string;
+  detailLink?: string;
+  detailUrl?: string;
+  detailPath?: string;
+  detailColumnDefPath?: string;
+  opDetailUrl?: string;
+  opDetailPath?: string;
+  opDetailColumnDefPath?: string;
 };
 
-export type TPadEntry = {
-  value: number | string; // string or other type is for data unavailable
-  // renderData: unknown;
+export type TStyledValue = {
+  linkTo?: string;
+  styling?: React.CSSProperties;
+  value: string | React.ReactElement;
 };
+
+export type TPadColumnDef = {
+  key: string;
+  label?: string;
+  preventSort?: boolean;
+  styling?: React.CSSProperties;
+};
+
+export type TPadColumnDefs = (string | TPadColumnDef)[];
+
+export type TPadRow = Record<string, TStyledValue | string | number>;
+
+export type TPadDetails = string | string[] | TPadRow[];
+
+export type TPadEntry = number | string;
 
 export type TNewData = Record<
   string,

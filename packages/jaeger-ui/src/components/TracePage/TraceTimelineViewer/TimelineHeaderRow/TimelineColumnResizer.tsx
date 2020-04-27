@@ -21,10 +21,11 @@ import DraggableManager, { DraggableBounds, DraggingUpdate } from '../../../../u
 import './TimelineColumnResizer.css';
 
 type TimelineColumnResizerProps = {
-  min: number;
   max: number;
+  min: number;
   onChange: (newSize: number) => void;
   position: number;
+  rightSide?: boolean;
 };
 
 type TimelineColumnResizerState = {
@@ -67,7 +68,9 @@ export default class TimelineColumnResizer extends React.PureComponent<
       throw new Error('invalid state');
     }
     const { left: clientXLeft, width } = this._rootElm.getBoundingClientRect();
-    const { min, max } = this.props;
+    const { rightSide } = this.props;
+    let { min, max } = this.props;
+    if (rightSide) [min, max] = [1 - max, 1 - min];
     return {
       clientXLeft,
       width,
@@ -77,20 +80,22 @@ export default class TimelineColumnResizer extends React.PureComponent<
   };
 
   _handleDragUpdate = ({ value }: DraggingUpdate) => {
-    this.setState({ dragPosition: value });
+    const dragPosition = this.props.rightSide ? 1 - value : value;
+    this.setState({ dragPosition });
   };
 
   _handleDragEnd = ({ manager, value }: DraggingUpdate) => {
     manager.resetBounds();
     this.setState({ dragPosition: null });
-    this.props.onChange(value);
+    const dragPosition = this.props.rightSide ? 1 - value : value;
+    this.props.onChange(dragPosition);
   };
 
   render() {
     let left;
     let draggerStyle;
     let isDraggingCls = '';
-    const { position } = this.props;
+    const { position, rightSide } = this.props;
     const { dragPosition } = this.state;
     left = `${position * 100}%`;
     const gripStyle = { left };
@@ -113,7 +118,10 @@ export default class TimelineColumnResizer extends React.PureComponent<
       draggerStyle = gripStyle;
     }
     return (
-      <div className={`TimelineColumnResizer ${isDraggingCls}`} ref={this._setRootElm}>
+      <div
+        className={`TimelineColumnResizer ${isDraggingCls} ${rightSide ? 'is-flipped' : ''}`}
+        ref={this._setRootElm}
+      >
         <div className="TimelineColumnResizer--gripIcon" style={gripStyle} />
         <div
           aria-hidden

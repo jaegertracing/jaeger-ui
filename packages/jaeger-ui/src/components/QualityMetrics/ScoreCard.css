@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2017 Uber Technologies, Inc.
+Copyright (c) 2020 The Jaeger Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,20 +14,19 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-.Page--topNav {
-  height: auto;
-  padding: 0;
-  position: fixed;
-  width: 100%;
-  z-index: 3;
+.ScoreCard {
+  margin: 10px;
+  max-width: 25%;
+  min-width: 180px;
+  text-align: center;
 }
 
-.Page--content {
-  display: flex;
-  flex-direction: column;
-  left: 0;
-  min-height: calc(100% - var(--nav-height));
-  position: absolute;
-  right: 0;
-  top: var(--nav-height);
+.ScoreCard--CircularProgressbarWrapper {
+  padding: 3px;
+}
+
+.ScoreCard--TitleHeader {
+  border-bottom: solid 1px #ddd;
+  box-shadow: 0px 5px 5px -5px rgba(0, 0, 0, 0.3);
+  font-size: 1.8em;
 }

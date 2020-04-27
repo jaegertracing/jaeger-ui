@@ -46,6 +46,9 @@ export type Config = {
   dependencies?: { dagMaxServicesLen?: number; menuEnabled?: boolean };
   menu: (ConfigMenuGroup | ConfigMenuItem)[];
   pathAgnosticDecorations?: TPathAgnosticDecorationSchema[];
+  qualityMetrics?: {
+    menuEnabled?: boolean;
+  };
   search?: { maxLookback: { label: string; value: string }; maxLimit: number };
   scripts?: TScript[];
   topTagPrefixes?: string[];

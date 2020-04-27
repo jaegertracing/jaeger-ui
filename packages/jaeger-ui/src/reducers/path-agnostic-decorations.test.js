@@ -36,9 +36,6 @@ describe('pathAgnosticDecoration reducers', () => {
     const service = svc[_service];
 
     const isWithOp = Boolean(operation);
-    const valueObj = {
-      value,
-    };
 
     const payloadKey = isWithOp ? 'withOp' : 'withoutOp';
     const payload = {
@@ -46,9 +43,9 @@ describe('pathAgnosticDecoration reducers', () => {
         [payloadKey]: {
           [service]: isWithOp
             ? {
-                [operation]: valueObj,
+                [operation]: value,
               }
-            : valueObj,
+            : value,
         },
       },
     };
