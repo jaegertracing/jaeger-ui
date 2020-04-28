@@ -15,6 +15,9 @@
 /* eslint-disable import/first */
 jest.mock('../../../utils/tracking');
 
+import _set from 'lodash/set';
+import _cloneDeep from 'lodash/cloneDeep';
+
 import DetailState from './SpanDetail/DetailState';
 import * as track from './duck.track';
 import { actionTypes as types } from './duck';
@@ -43,13 +46,17 @@ describe('middlewareHooks', () => {
       detailStates: new Map([[spanID, new DetailState()]]),
     },
   };
+  let stateClone;
   const store = {
     getState() {
-      return state;
+      return stateClone;
     },
   };
 
-  beforeEach(trackEvent.mockClear);
+  beforeEach(() => {
+    trackEvent.mockClear();
+    stateClone = _cloneDeep(state);
+  });
 
   const cases = [
     {
@@ -78,16 +85,51 @@ describe('middlewareHooks', () => {
       extraTrackArgs: [123],
     },
     {
+      msg: 'handles no payload in trackParent',
+      type: types.CHILDREN_TOGGLE,
+      payloadCustom: null,
+      category: track.CATEGORY_PARENT,
+      noOp: true,
+    },
+    {
+      msg: 'handles no traceID in trackParent',
+      type: types.CHILDREN_TOGGLE,
+      stateOverrides: new Map([['traceTimeline.traceID', null]]),
+      category: track.CATEGORY_PARENT,
+      noOp: true,
+    },
+    {
+      msg: 'handles no trace data in trackParent',
+      type: types.CHILDREN_TOGGLE,
+      stateOverrides: new Map([['traceTimeline.traceID', `not-${traceID}`]]),
+      category: track.CATEGORY_PARENT,
+      noOp: true,
+    },
+    {
+      msg: 'handles missing spanID in trackParent',
+      type: types.CHILDREN_TOGGLE,
+      payloadCustom: { spanID: 'missing spanID' },
+      category: track.CATEGORY_PARENT,
+      noOp: true,
+    },
+    {
+      msg: 'handles leading 0s in traceID in trackParent',
+      type: types.CHILDREN_TOGGLE,
+      stateOverrides: new Map([['traceTimeline.traceID', `00${traceID}`]]),
+      category: track.CATEGORY_PARENT,
+      extraTrackArgs: [123],
+    },
+    {
       action: track.ACTION_EXPAND_ALL,
       category: track.CATEGORY_EXPAND_COLLAPSE,
       msg: 'tracks a GA event for expanding all',
-      type: types.COLLAPSE_ALL,
+      type: types.EXPAND_ALL,
     },
     {
       action: track.ACTION_EXPAND_ONE,
       category: track.CATEGORY_EXPAND_COLLAPSE,
       msg: 'tracks a GA event for expanding a level',
-      type: types.COLLAPSE_ONE,
+      type: types.EXPAND_ONE,
     },
     {
       msg: 'tracks a GA event for toggling a detail row',
@@ -110,20 +152,66 @@ describe('middlewareHooks', () => {
       category: track.CATEGORY_LOGS,
     },
     {
+      msg: 'handles no detailState in trackDetailState',
+      type: types.DETAIL_TAGS_TOGGLE,
+      payloadCustom: { spanID: 'no details here' },
+      category: track.CATEGORY_ROW,
+      noOp: true,
+    },
+    {
       msg: 'tracks a GA event for toggling the span logs view',
       type: types.DETAIL_LOG_ITEM_TOGGLE,
       payloadCustom: { ...payload, logItem: {} },
       category: track.CATEGORY_LOGS_ITEM,
     },
+    {
+      msg: 'handles no payload in trackLogsitem',
+      type: types.DETAIL_LOG_ITEM_TOGGLE,
+      payloadCustom: null,
+      category: track.CATEGORY_LOGS_ITEM,
+      noOp: true,
+    },
+    {
+      msg: 'handles no logItem in payload in trackLogsitem',
+      type: types.DETAIL_LOG_ITEM_TOGGLE,
+      payloadCustom: {},
+      category: track.CATEGORY_LOGS_ITEM,
+      noOp: true,
+    },
+    {
+      msg: 'handles no logItem in payload in trackLogsitem',
+      type: types.DETAIL_LOG_ITEM_TOGGLE,
+      payloadCustom: { spanID: 'no details here', logItem: {} },
+      category: track.CATEGORY_LOGS_ITEM,
+      noOp: true,
+    },
   ];
 
   cases.forEach(
-    ({ action = expect.any(String), msg, type, category, extraTrackArgs = [], payloadCustom = null }) => {
+    ({
+      action = expect.any(String),
+      msg,
+      noOp = false,
+      stateOverrides = new Map(),
+      type,
+      category,
+      extraTrackArgs = [],
+      payloadCustom,
+    }) => {
       it(msg, () => {
-        const reduxAction = { type, payload: payloadCustom || payload };
+        const reduxAction = {
+          type,
+          payload: payloadCustom !== undefined ? payloadCustom : payload,
+        };
+        stateOverrides.forEach((value, path) => {
+          _set(stateClone, path, value);
+        });
         track.middlewareHooks[type](store, reduxAction);
-        expect(trackEvent.mock.calls.length).toBe(1);
-        expect(trackEvent.mock.calls[0]).toEqual([category, action, ...extraTrackArgs]);
+        if (noOp) expect(trackEvent).not.toHaveBeenCalled();
+        else {
+          expect(trackEvent.mock.calls.length).toBe(1);
+          expect(trackEvent.mock.calls[0]).toEqual([category, action, ...extraTrackArgs]);
+        }
       });
     }
   );
