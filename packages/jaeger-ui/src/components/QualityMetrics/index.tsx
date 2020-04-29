@@ -145,37 +145,45 @@ export class UnconnectedQualityMetrics extends React.PureComponent<TProps, TStat
                   <MetricCard key={metric.name} metric={metric} />
                 ))}
               </div>
-              <DetailsCard
-                className="QualityMetrics--ClientVersions"
-                columnDefs={[
-                  {
-                    key: 'version',
-                    label: 'Version',
-                  },
-                  {
-                    key: 'minVersion',
-                    label: 'Minimum Version',
-                  },
-                  {
-                    key: 'count',
-                    label: 'Count',
-                  },
-                  {
-                    key: 'examples',
-                    label: 'Examples',
-                    preventSort: true,
-                  },
-                ]}
-                details={qualityMetrics.clients.map(clientRow => ({
-                  ...clientRow,
-                  examples: {
-                    value: (
-                      <ExamplesLink examples={clientRow.examples} key={`${clientRow.version}--examples`} />
-                    ),
-                  },
-                }))}
-                header="Client Versions"
-              />
+              {qualityMetrics.clients && (
+                <DetailsCard
+                  className="QualityMetrics--ClientVersions"
+                  columnDefs={[
+                    {
+                      key: 'version',
+                      label: 'Version',
+                    },
+                    {
+                      key: 'minVersion',
+                      label: 'Minimum Version',
+                    },
+                    {
+                      key: 'count',
+                      label: 'Count',
+                    },
+                    {
+                      key: 'examples',
+                      label: 'Examples',
+                      preventSort: true,
+                    },
+                  ]}
+                  details={
+                    qualityMetrics.clients &&
+                    qualityMetrics.clients.map(clientRow => ({
+                      ...clientRow,
+                      examples: {
+                        value: (
+                          <ExamplesLink
+                            examples={clientRow.examples}
+                            key={`${clientRow.version}--examples`}
+                          />
+                        ),
+                      },
+                    }))
+                  }
+                  header="Client Versions"
+                />
+              )}
             </div>
           </>
         )}

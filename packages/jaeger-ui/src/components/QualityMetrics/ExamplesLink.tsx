@@ -17,7 +17,7 @@ import * as React from 'react';
 import NewWindowIcon from '../common/NewWindowIcon';
 import { getUrl } from '../SearchTracePage/url';
 
-import { TExample } from './types';
+import { TExample } from '../../model/path-agnostic-decorations/types';
 
 export type TProps = {
   examples?: TExample[];
