@@ -158,12 +158,14 @@ describe('lookback utils', () => {
       });
     });
 
-    // DST/not-DST means this test will fail for 14 out of 52 weeks of the year!
-    xit('creates timestamp for weeks ago', () => {
+    it('creates timestamp for weeks ago', () => {
       [1, 2, 4, 7].forEach(lookbackNum => {
-        expect(nowInMicroseconds - lookbackToTimestamp(`${lookbackNum}w`, now)).toBe(
-          lookbackNum * 7 * 24 * hourInMicroseconds
-        );
+        const actual = nowInMicroseconds - lookbackToTimestamp(`${lookbackNum}w`, now);
+        try {
+          expect(actual).toBe(lookbackNum * 7 * 24 * hourInMicroseconds);
+        } catch (_e) {
+          expect(Math.abs(actual - lookbackNum * 7 * 24 * hourInMicroseconds)).toBe(hourInMicroseconds);
+        }
       });
     });
   });
