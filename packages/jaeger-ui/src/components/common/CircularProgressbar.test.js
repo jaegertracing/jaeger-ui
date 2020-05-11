@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Uber Technologies, Inc.
+// Copyright (c) 2020 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,11 +15,27 @@
 import React from 'react';
 import { shallow } from 'enzyme';
 
-import JaegerUIApp from './index';
+import CircularProgressbar from './CircularProgressbar';
 
-describe('JaegerUIApp', () => {
-  it('does not explode', () => {
-    const wrapper = shallow(<JaegerUIApp />);
-    expect(wrapper).toMatchSnapshot();
+describe('CircularProgressbar', () => {
+  const minProps = {
+    maxValue: 108,
+    value: 42,
+  };
+
+  const fullProps = {
+    ...minProps,
+    backgroundHue: 0,
+    decorationHue: 120,
+    strokeWidth: 8,
+    text: 'test text',
+  };
+
+  it('renders as expected with all props', () => {
+    expect(shallow(<CircularProgressbar {...fullProps} />)).toMatchSnapshot();
+  });
+
+  it('handles minimal props', () => {
+    expect(shallow(<CircularProgressbar {...minProps} />)).toMatchSnapshot();
   });
 });

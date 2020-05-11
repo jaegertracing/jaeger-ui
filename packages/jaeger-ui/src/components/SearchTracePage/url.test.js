@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { getUrl, getUrlState, isSameQuery } from './url';
+import * as reactRouterDom from 'react-router-dom';
+
+import { MAX_LENGTH } from '../DeepDependencies/Graph/DdgNodeContent/constants';
+import { ROUTE_PATH, getUrl, getUrlState, isSameQuery, matches } from './url';
 
 describe('SearchTracePage/url', () => {
   const span0 = 'span-0';
@@ -21,6 +24,31 @@ describe('SearchTracePage/url', () => {
   const trace0 = 'trace-0';
   const trace1 = 'trace-1';
   const trace2 = 'trace-2';
+
+  describe('matches', () => {
+    const path = 'path argument';
+    let matchPathSpy;
+
+    beforeAll(() => {
+      matchPathSpy = jest.spyOn(reactRouterDom, 'matchPath');
+    });
+
+    it('calls matchPath with expected arguments', () => {
+      matches(path);
+      expect(matchPathSpy).toHaveBeenLastCalledWith(path, {
+        path: ROUTE_PATH,
+        strict: true,
+        exact: true,
+      });
+    });
+
+    it("returns truthiness of matchPath's return value", () => {
+      matchPathSpy.mockReturnValueOnce(null);
+      expect(matches(path)).toBe(false);
+      matchPathSpy.mockReturnValueOnce({});
+      expect(matches(path)).toBe(true);
+    });
+  });
 
   describe('getUrl', () => {
     it('handles no args given', () => {
@@ -95,6 +123,39 @@ describe('SearchTracePage/url', () => {
           },
         })
       ).toBe(`/search?span=${span0}%20${span1}%40${trace0}&span=${span2}%40${trace1}&traceID=${trace2}`);
+    });
+
+    describe('too long urls', () => {
+      const oneID = getUrl({
+        traceID: trace0,
+      });
+      const lengthBeforeArgs = oneID.indexOf('?');
+      const lengthOfOneArg = oneID.length - lengthBeforeArgs;
+      const maxLengthOfArgs = MAX_LENGTH - lengthBeforeArgs;
+
+      it('limits url length', () => {
+        const numberOfArgs = Math.ceil(maxLengthOfArgs / lengthOfOneArg);
+
+        expect(
+          getUrl({
+            traceID: new Array(numberOfArgs).fill(trace0),
+          }).length
+        ).toBeLessThan(MAX_LENGTH);
+      });
+
+      it('does not over shorten', () => {
+        const numberOfArgs = Math.floor(maxLengthOfArgs / lengthOfOneArg);
+        const remainder = maxLengthOfArgs % lengthOfOneArg;
+        const ids = new Array(numberOfArgs).fill(trace0);
+        ids[ids.length - 1] = `${ids[ids.length - 1]}${'x'.repeat(remainder)}`;
+        ids.push(trace0);
+
+        expect(
+          getUrl({
+            traceID: ids,
+          }).length
+        ).toBe(MAX_LENGTH);
+      });
     });
   });
 
