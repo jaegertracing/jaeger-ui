@@ -30,7 +30,7 @@ exports[`<SidePanel> render renders 1`] = `
   >
     test decorationValue
   </span>
-  <TimelineColumnResizer
+  <VerticalResizer
     max={0.8}
     min={0.1}
     onChange={[Function]}
@@ -100,7 +100,7 @@ exports[`<SidePanel> render renders detailLink 1`] = `
       small={false}
     />
   </div>
-  <TimelineColumnResizer
+  <VerticalResizer
     max={0.8}
     min={0.1}
     onChange={[Function]}
@@ -145,7 +145,7 @@ exports[`<SidePanel> render renders details 1`] = `
     details="details string"
     header="Details"
   />
-  <TimelineColumnResizer
+  <VerticalResizer
     max={0.8}
     min={0.1}
     onChange={[Function]}
@@ -190,7 +190,7 @@ exports[`<SidePanel> render renders details error 1`] = `
     details="details error"
     header="Details"
   />
-  <TimelineColumnResizer
+  <VerticalResizer
     max={0.8}
     min={0.1}
     onChange={[Function]}
@@ -230,7 +230,7 @@ exports[`<SidePanel> render renders omitted array of operations 1`] = `
   >
     test decorationValue
   </span>
-  <TimelineColumnResizer
+  <VerticalResizer
     max={0.8}
     min={0.1}
     onChange={[Function]}
@@ -279,7 +279,7 @@ exports[`<SidePanel> render renders while loading 1`] = `
       small={false}
     />
   </div>
-  <TimelineColumnResizer
+  <VerticalResizer
     max={0.8}
     min={0.1}
     onChange={[Function]}
@@ -324,7 +324,7 @@ exports[`<SidePanel> render renders with operation 1`] = `
   >
     test decorationValue
   </span>
-  <TimelineColumnResizer
+  <VerticalResizer
     max={0.8}
     min={0.1}
     onChange={[Function]}
@@ -366,7 +366,7 @@ exports[`<SidePanel> render renders with progressbar 1`] = `
       stand-in progressbar
     </div>
   </div>
-  <TimelineColumnResizer
+  <VerticalResizer
     max={0.8}
     min={0.1}
     onChange={[Function]}

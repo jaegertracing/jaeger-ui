@@ -14,8 +14,8 @@
 
 import * as React from 'react';
 
+import VerticalResizer from '../../../common/VerticalResizer';
 import TimelineCollapser from './TimelineCollapser';
-import TimelineColumnResizer from './TimelineColumnResizer';
 import TimelineViewingLayer from './TimelineViewingLayer';
 import Ticks from '../Ticks';
 import TimelineRow from '../TimelineRow';
@@ -72,12 +72,7 @@ export default function TimelineHeaderRow(props: TimelineHeaderRowProps) {
         />
         <Ticks numTicks={numTicks} startTime={viewStart * duration} endTime={viewEnd * duration} showLabels />
       </TimelineRow.Cell>
-      <TimelineColumnResizer
-        position={nameColumnWidth}
-        onChange={onColummWidthChange}
-        min={0.15}
-        max={0.85}
-      />
+      <VerticalResizer position={nameColumnWidth} onChange={onColummWidthChange} min={0.15} max={0.85} />
     </TimelineRow>
   );
 }

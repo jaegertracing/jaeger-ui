@@ -20,8 +20,8 @@ import { connect } from 'react-redux';
 import BreakableText from '../../common/BreakableText';
 import LoadingIndicator from '../../common/LoadingIndicator';
 import NewWindowIcon from '../../common/NewWindowIcon';
+import VerticalResizer from '../../common/VerticalResizer';
 import JaegerAPI from '../../../api/jaeger';
-import ColumnResizer from '../../TracePage/TraceTimelineViewer/TimelineHeaderRow/TimelineColumnResizer';
 import extractDecorationFromState, { TDecorationFromState } from '../../../model/path-agnostic-decorations';
 import {
   TPathAgnosticDecorationSchema,
@@ -172,7 +172,7 @@ export class UnconnectedDetailsPanel extends React.PureComponent<TProps, TState>
             header="Details"
           />
         )}
-        <ColumnResizer max={0.8} min={0.1} onChange={this.onResize} position={width} rightSide />
+        <VerticalResizer max={0.8} min={0.1} onChange={this.onResize} position={width} rightSide />
       </div>
     );
   }

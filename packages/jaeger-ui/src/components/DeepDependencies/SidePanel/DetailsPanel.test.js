@@ -18,7 +18,7 @@ import _set from 'lodash/set';
 
 import stringSupplant from '../../../utils/stringSupplant';
 import JaegerAPI from '../../../api/jaeger';
-import ColumnResizer from '../../TracePage/TraceTimelineViewer/TimelineHeaderRow/TimelineColumnResizer';
+import VerticalResizer from '../../common/VerticalResizer';
 import { UnconnectedDetailsPanel as DetailsPanel } from './DetailsPanel';
 
 describe('<SidePanel>', () => {
@@ -296,7 +296,7 @@ describe('<SidePanel>', () => {
       const wrapper = shallow(<DetailsPanel {...props} />);
       expect(wrapper.state('width')).not.toBe(width);
 
-      wrapper.find(ColumnResizer).prop('onChange')(width);
+      wrapper.find(VerticalResizer).prop('onChange')(width);
       expect(wrapper.state('width')).toBe(width);
     });
   });
