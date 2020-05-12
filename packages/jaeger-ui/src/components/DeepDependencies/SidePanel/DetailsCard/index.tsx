@@ -18,7 +18,10 @@ import cx from 'classnames';
 import _isEmpty from 'lodash/isEmpty';
 import MdKeyboardArrowDown from 'react-icons/lib/md/keyboard-arrow-down';
 
+import ExamplesLink from '../../../QualityMetrics/ExamplesLink';
+
 import {
+  TExample,
   TPadColumnDef,
   TPadColumnDefs,
   TPadDetails,
@@ -87,7 +90,7 @@ export default class DetailsCard extends React.PureComponent<TProps> {
       title,
       onCell: (row: TPadRow) => {
         const cellData = row[dataIndex];
-        if (!cellData || typeof cellData !== 'object') return null;
+        if (!cellData || typeof cellData !== 'object' || Array.isArray(cellData)) return null;
         const { styling } = cellData;
         if (_isEmpty(styling)) return null;
         return {
@@ -99,6 +102,7 @@ export default class DetailsCard extends React.PureComponent<TProps> {
       }),
       render: (cellData: undefined | string | TStyledValue) => {
         if (!cellData || typeof cellData !== 'object') return cellData;
+        if (Array.isArray(cellData)) return <ExamplesLink examples={cellData} />;
         if (!cellData.linkTo) return cellData.value;
         return (
           <a href={cellData.linkTo} target="_blank" rel="noopener noreferrer">
@@ -110,9 +114,17 @@ export default class DetailsCard extends React.PureComponent<TProps> {
         sortable &&
         ((a: TPadRow, b: TPadRow) => {
           const aData = a[dataIndex];
-          const aValue = typeof aData === 'object' && typeof aData.value === 'string' ? aData.value : aData;
+          let aValue;
+          if (Array.isArray(aData)) aValue = aData.length;
+          else if (typeof aData === 'object' && typeof aData.value === 'string') aValue = aData.value;
+          else aValue = aData;
+
           const bData = b[dataIndex];
-          const bValue = typeof bData === 'object' && typeof bData.value === 'string' ? bData.value : bData;
+          let bValue;
+          if (Array.isArray(bData)) bValue = bData.length;
+          else if (typeof bData === 'object' && typeof bData.value === 'string') bValue = bData.value;
+          else bValue = bData;
+
           if (aValue < bValue) return -1;
           return bValue < aValue ? 1 : 0;
         }),
@@ -154,12 +166,13 @@ export default class DetailsCard extends React.PureComponent<TProps> {
         rowKey={(row: TPadRow) =>
           JSON.stringify(row, function replacer(
             key: string,
-            value: TPadRow | string | number | TStyledValue
+            value: TPadRow | string | number | TStyledValue | TExample[]
           ) {
             function isRow(v: typeof value): v is TPadRow {
               return v === row;
             }
             if (isRow(value)) return value;
+            if (Array.isArray(value)) return JSON.stringify(value);
             if (typeof value === 'object') {
               if (typeof value.value === 'string') return value.value;
               return value.value.key || 'Unknown';

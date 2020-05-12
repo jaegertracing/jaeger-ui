@@ -12,29 +12,42 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import _memoize from 'lodash/memoize';
+
 import { Span } from '../types/trace';
 
-type spansDict = { [index: string]: Span };
+export function _getTraceNameImpl(spans: Span[]) {
+  // Use a span with no references to another span in given array
+  // prefering the span with the fewest references
+  // using start time as a tie breaker
+  let candidateSpan: Span | undefined;
+  const allIDs: Set<string> = new Set(spans.map(({ spanID }) => spanID));
 
-// eslint-disable-next-line import/prefer-default-export
-export function getTraceName(spans: Span[]) {
-  const allTraceSpans: spansDict = spans.reduce((dict, span) => ({ ...dict, [span.spanID]: span }), {});
-  const rootSpan = spans
-    .filter(sp => {
-      if (!sp.references || !sp.references.length) {
-        return true;
-      }
-      const parentIDs = sp.references.filter(r => r.traceID === sp.traceID).map(r => r.spanID);
+  for (let i = 0; i < spans.length; i++) {
+    const hasInternalRef =
+      spans[i].references &&
+      spans[i].references.some(({ traceID, spanID }) => traceID === spans[i].traceID && allIDs.has(spanID));
+    if (hasInternalRef) continue;
 
-      // returns true if no parent from this trace found
-      return !parentIDs.some(pID => Boolean(allTraceSpans[pID]));
-    })
-    .sort((sp1, sp2) => {
-      const sp1ParentsNum = sp1.references ? sp1.references.length : 0;
-      const sp2ParentsNum = sp2.references ? sp2.references.length : 0;
+    if (!candidateSpan) {
+      candidateSpan = spans[i];
+      continue;
+    }
 
-      return sp1ParentsNum - sp2ParentsNum || sp1.startTime - sp2.startTime;
-    })[0];
+    const thisRefLength = (spans[i].references && spans[i].references.length) || 0;
+    const candidateRefLength = (candidateSpan.references && candidateSpan.references.length) || 0;
 
-  return rootSpan ? `${rootSpan.process.serviceName}: ${rootSpan.operationName}` : '';
+    if (
+      thisRefLength < candidateRefLength ||
+      (thisRefLength === candidateRefLength && spans[i].startTime < candidateSpan.startTime)
+    ) {
+      candidateSpan = spans[i];
+    }
+  }
+  return candidateSpan ? `${candidateSpan.process.serviceName}: ${candidateSpan.operationName}` : '';
 }
+
+export const getTraceName = _memoize(_getTraceNameImpl, (spans: Span[]) => {
+  if (!spans.length) return 0;
+  return spans[0].traceID;
+});
