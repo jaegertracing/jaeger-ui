@@ -160,7 +160,7 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     });
     spans.push(span);
   });
-  const traceName = getTraceName(spans);
+  const traceName = getTraceName(spans, traceID);
   const services = Object.keys(svcCounts).map(name => ({ name, numberOfSpans: svcCounts[name] }));
   return {
     services,

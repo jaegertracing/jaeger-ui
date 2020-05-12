@@ -12,12 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import _memoize from 'lodash/memoize';
+
 import { Span } from '../types/trace';
 
 type spansDict = { [index: string]: Span };
 
-// eslint-disable-next-line import/prefer-default-export
-export function getTraceName(spans: Span[]) {
+function getTraceNameImpl(spans: Span[], traceID: string) {
   const allTraceSpans: spansDict = spans.reduce((dict, span) => ({ ...dict, [span.spanID]: span }), {});
   const rootSpan = spans
     .filter(sp => {
@@ -38,3 +39,6 @@ export function getTraceName(spans: Span[]) {
 
   return rootSpan ? `${rootSpan.process.serviceName}: ${rootSpan.operationName}` : '';
 }
+
+// eslint-disable-next-line import/prefer-default-export
+export const getTraceName = _memoize(getTraceNameImpl, (_spans, traceID) => traceID);
