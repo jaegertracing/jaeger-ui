@@ -14,12 +14,7 @@
 
 import * as React from 'react';
 
-import { TPadColumnDef, TPadRow } from '../../model/path-agnostic-decorations/types';
-
-export type TExample = {
-  spanIDs?: string[];
-  traceID: string;
-};
+import { TExample, TPadColumnDef, TPadRow } from '../../model/path-agnostic-decorations/types';
 
 export type TQualityMetrics = {
   traceQualityDocumentationLink: string;
@@ -54,7 +49,7 @@ export type TQualityMetrics = {
       rows: TPadRow[];
     }[];
   }[];
-  clients: {
+  clients?: {
     version: string;
     minVersion: string;
     count: number;
