@@ -18,7 +18,7 @@ import { Span } from '../types/trace';
 
 type spansDict = { [index: string]: Span };
 
-function getTraceNameImpl(spans: Span[], traceID: string) {
+export function _getTraceNameImpl(spans: Span[]) {
   const allTraceSpans: spansDict = spans.reduce((dict, span) => ({ ...dict, [span.spanID]: span }), {});
   const rootSpan = spans
     .filter(sp => {
@@ -40,5 +40,7 @@ function getTraceNameImpl(spans: Span[], traceID: string) {
   return rootSpan ? `${rootSpan.process.serviceName}: ${rootSpan.operationName}` : '';
 }
 
-// eslint-disable-next-line import/prefer-default-export
-export const getTraceName = _memoize(getTraceNameImpl, (_spans, traceID) => traceID);
+export const getTraceName = _memoize(_getTraceNameImpl, (spans: Span[]) => {
+  if (!spans.length) return 0;
+  return spans[0].traceID;
+});
