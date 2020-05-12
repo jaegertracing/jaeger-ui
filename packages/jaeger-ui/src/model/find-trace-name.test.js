@@ -219,26 +219,29 @@ describe('getTraceName', () => {
       ],
     },
   ];
+  const getTraceNameWrapper = jest.fn(spans =>
+    getTraceName(spans, `${spans.length}${getTraceNameWrapper.mock.calls.length}`)
+  );
 
   const fullTraceName = `${serviceName}: ${operationName}`;
 
   it('returns an empty string if given spans with no root among them', () => {
-    expect(getTraceName(spansWithNoRoots)).toEqual('');
+    expect(getTraceNameWrapper(spansWithNoRoots)).toEqual('');
   });
 
   it('returns an id of root span with the earliest startTime', () => {
-    expect(getTraceName(spansWithMultipleRootsDifferentByStartTime)).toEqual(fullTraceName);
+    expect(getTraceNameWrapper(spansWithMultipleRootsDifferentByStartTime)).toEqual(fullTraceName);
   });
 
   it('returns an id of root span without any refs', () => {
-    expect(getTraceName(spansWithMultipleRootsWithOneWithoutRefs)).toEqual(fullTraceName);
+    expect(getTraceNameWrapper(spansWithMultipleRootsWithOneWithoutRefs)).toEqual(fullTraceName);
   });
 
   it('returns an id of root span with remote ref', () => {
-    expect(getTraceName(spansWithOneRootWithRemoteRef)).toEqual(fullTraceName);
+    expect(getTraceNameWrapper(spansWithOneRootWithRemoteRef)).toEqual(fullTraceName);
   });
 
   it('returns an id of root span with no refs', () => {
-    expect(getTraceName(spansWithOneRootWithNoRefs)).toEqual(fullTraceName);
+    expect(getTraceNameWrapper(spansWithOneRootWithNoRefs)).toEqual(fullTraceName);
   });
 });
