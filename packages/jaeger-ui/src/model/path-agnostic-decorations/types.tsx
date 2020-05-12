@@ -14,6 +14,11 @@
 
 import React from 'react';
 
+export type TExample = {
+  spanIDs?: string[];
+  traceID: string;
+};
+
 export type TPathAgnosticDecorationSchema = {
   acronym: string;
   id: string;
@@ -46,7 +51,7 @@ export type TPadColumnDef = {
 
 export type TPadColumnDefs = (string | TPadColumnDef)[];
 
-export type TPadRow = Record<string, TStyledValue | string | number>;
+export type TPadRow = Record<string, TStyledValue | string | number | TExample[]>;
 
 export type TPadDetails = string | string[] | TPadRow[];
 
