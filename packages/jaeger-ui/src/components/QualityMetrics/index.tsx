@@ -90,7 +90,7 @@ export class UnconnectedQualityMetrics extends React.PureComponent<TProps, TStat
 
     this.setState({ loading: true });
 
-    JaegerAPI.fetchQualityMetrics(service, lookback ? `${lookback}h` : undefined)
+    JaegerAPI.fetchQualityMetrics(service, `${lookback}h`)
       .then((qualityMetrics: TQualityMetrics) => {
         this.setState({ qualityMetrics, loading: false });
       })
@@ -195,8 +195,9 @@ export class UnconnectedQualityMetrics extends React.PureComponent<TProps, TStat
 }
 
 export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxProps {
-  const { services: stServices } = state;
-  const { services } = stServices;
+  const {
+    services: { services },
+  } = state;
   return {
     ...getUrlState(ownProps.location.search),
     services,

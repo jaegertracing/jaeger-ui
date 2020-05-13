@@ -182,6 +182,7 @@ exports[`MetricCard renders as expected with details 1`] = `
         ]
       }
       header="Details"
+      key="Details[2] Description[\\"col4\\",\\"col5\\"]"
     />
     <DetailsCard
       className="MetricCard--Details"
@@ -202,6 +203,7 @@ exports[`MetricCard renders as expected with details 1`] = `
         ]
       }
       header="Details[3] Header"
+      key="Details[3] Description[\\"col6\\",\\"col7\\"]"
     />
   </div>
 </div>

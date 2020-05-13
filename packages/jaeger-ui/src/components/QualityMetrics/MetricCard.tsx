@@ -80,6 +80,7 @@ export default class MetricCard extends React.PureComponent<TProps> {
               detail =>
                 Boolean(detail.rows && detail.rows.length) && (
                   <DetailsCard
+                    key={`${detail.description}${JSON.stringify(detail.columns)}`}
                     className="MetricCard--Details"
                     collapsible
                     columnDefs={detail.columns}
