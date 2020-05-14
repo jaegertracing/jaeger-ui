@@ -4,24 +4,24 @@
 
 ### Enhancements
 
-* **Deep Dependency Graph:** Trace quality view & Ddg Decorations ([#564](https://github.com/jaegertracing/jaeger-ui/pull/564), [@everett980](https://github.com/everett980))
+- **Deep Dependency Graph:** Trace quality view & Ddg Decorations ([#564](https://github.com/jaegertracing/jaeger-ui/pull/564), [@everett980](https://github.com/everett980))
 
 ### Fixes
 
-* **Trace detail:** Improve get trace name performance ([#574](https://github.com/jaegertracing/jaeger-ui/pull/574), [@everett980](https://github.com/everett980))
-* **Deep Dependency Graph:** Support client versions table in details card ([#568](https://github.com/jaegertracing/jaeger-ui/pull/568), [@everett980](https://github.com/everett980))
-* **General:** Clean up getTraceName memoization ([#573](https://github.com/jaegertracing/jaeger-ui/pull/573), [@everett980](https://github.com/everett980))
-* **Trace detail:** Memoize getTraceName to improve render time by 3x ([#572](https://github.com/jaegertracing/jaeger-ui/pull/572), [@everett980](https://github.com/everett980))
-* **General:** Fix uiFind matches for spans with leading 0s ([#567](https://github.com/jaegertracing/jaeger-ui/pull/567), [@everett980](https://github.com/everett980))
-* **Trace detail:** Fix leading 0s breaking row interactions ([#566](https://github.com/jaegertracing/jaeger-ui/pull/566), [@everett980](https://github.com/everett980))
-* **Deep Dependency Graph:** Remove kind.server filter and validate the case of service calling itself ([#557](https://github.com/jaegertracing/jaeger-ui/pull/557), [@rubenvp8510](https://github.com/rubenvp8510))
-* **General:** Bump https-proxy-agent from 2.2.1 to 2.2.4 ([#561](https://github.com/jaegertracing/jaeger-ui/pull/561), [@dependabot[bot]](https://github.com/apps/dependabot))
-* **General:** Bump lodash to 4.17.15 ([#559](https://github.com/jaegertracing/jaeger-ui/pull/559), [@rubenvp8510](https://github.com/rubenvp8510))
-* **Deep Dependency Graph:** Dedupled search results DDG paths ([#558](https://github.com/jaegertracing/jaeger-ui/pull/558), [@rubenvp8510](https://github.com/rubenvp8510))
-* **General:** Bump acorn from 5.7.3 to 5.7.4 ([#545](https://github.com/jaegertracing/jaeger-ui/pull/545), [@dependabot[bot]](https://github.com/apps/dependabot))
-* **General:** Usage of a helper for trace name when preparing trace data ([#544](https://github.com/jaegertracing/jaeger-ui/pull/544), [@swapster](https://github.com/swapster))
-* **Deep Dependency Graph:** Add path agnostic decorations action & reducer ([#549](https://github.com/jaegertracing/jaeger-ui/pull/549), [@everett980](https://github.com/everett980))
-* **Trace comparison:** Refactor model/trace-dag to prep for latency diffs ([#521](https://github.com/jaegertracing/jaeger-ui/pull/521), [@tiffon](https://github.com/tiffon))
+- **Trace detail:** Improve get trace name performance ([#574](https://github.com/jaegertracing/jaeger-ui/pull/574), [@everett980](https://github.com/everett980))
+- **Deep Dependency Graph:** Support client versions table in details card ([#568](https://github.com/jaegertracing/jaeger-ui/pull/568), [@everett980](https://github.com/everett980))
+- **General:** Clean up getTraceName memoization ([#573](https://github.com/jaegertracing/jaeger-ui/pull/573), [@everett980](https://github.com/everett980))
+- **Trace detail:** Memoize getTraceName to improve render time by 3x ([#572](https://github.com/jaegertracing/jaeger-ui/pull/572), [@everett980](https://github.com/everett980))
+- **General:** Fix uiFind matches for spans with leading 0s ([#567](https://github.com/jaegertracing/jaeger-ui/pull/567), [@everett980](https://github.com/everett980))
+- **Trace detail:** Fix leading 0s breaking row interactions ([#566](https://github.com/jaegertracing/jaeger-ui/pull/566), [@everett980](https://github.com/everett980))
+- **Deep Dependency Graph:** Remove kind.server filter and validate the case of service calling itself ([#557](https://github.com/jaegertracing/jaeger-ui/pull/557), [@rubenvp8510](https://github.com/rubenvp8510))
+- **General:** Bump https-proxy-agent from 2.2.1 to 2.2.4 ([#561](https://github.com/jaegertracing/jaeger-ui/pull/561), [@dependabot[bot]](https://github.com/apps/dependabot))
+- **General:** Bump lodash to 4.17.15 ([#559](https://github.com/jaegertracing/jaeger-ui/pull/559), [@rubenvp8510](https://github.com/rubenvp8510))
+- **Deep Dependency Graph:** Dedupled search results DDG paths ([#558](https://github.com/jaegertracing/jaeger-ui/pull/558), [@rubenvp8510](https://github.com/rubenvp8510))
+- **General:** Bump acorn from 5.7.3 to 5.7.4 ([#545](https://github.com/jaegertracing/jaeger-ui/pull/545), [@dependabot[bot]](https://github.com/apps/dependabot))
+- **General:** Usage of a helper for trace name when preparing trace data ([#544](https://github.com/jaegertracing/jaeger-ui/pull/544), [@swapster](https://github.com/swapster))
+- **Deep Dependency Graph:** Add path agnostic decorations action & reducer ([#549](https://github.com/jaegertracing/jaeger-ui/pull/549), [@everett980](https://github.com/everett980))
+- **Trace comparison:** Refactor model/trace-dag to prep for latency diffs ([#521](https://github.com/jaegertracing/jaeger-ui/pull/521), [@tiffon](https://github.com/tiffon))
 
 ## v1.8.0 (March 12, 2020)
 
