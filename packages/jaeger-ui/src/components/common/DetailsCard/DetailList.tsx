@@ -12,31 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import React from 'react';
+import * as React from 'react';
+import { List } from 'antd';
 
-export type TPathAgnosticDecorationSchema = {
-  acronym: string;
-  id: string;
-  name: string;
-  summaryUrl: string;
-  opSummaryUrl?: string;
-  summaryPath: string;
-  opSummaryPath?: string;
-  detailLink?: string;
-  detailUrl?: string;
-  detailPath?: string;
-  detailColumnDefPath?: string;
-  opDetailUrl?: string;
-  opDetailPath?: string;
-  opDetailColumnDefPath?: string;
-};
+const { Item } = List;
 
-export type TPadEntry = number | string;
-
-export type TNewData = Record<
-  string,
-  {
-    withoutOp?: Record<string, TPadEntry>;
-    withOp?: Record<string, Record<string, TPadEntry>>;
-  }
->;
+export default function DetailList({ details }: { details: string[] }) {
+  return (
+    <List
+      dataSource={details}
+      renderItem={(s: string) => (
+        <Item>
+          <span>{s}</span>
+        </Item>
+      )}
+    />
+  );
+}

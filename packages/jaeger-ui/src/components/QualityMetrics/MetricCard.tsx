@@ -17,7 +17,7 @@ import { Tooltip } from 'antd';
 
 import CircularProgressbar from '../common/CircularProgressbar';
 import NewWindowIcon from '../common/NewWindowIcon';
-import DetailsCard from '../DeepDependencies/SidePanel/DetailsCard';
+import DetailsCard from '../common/DetailsCard';
 import CountCard from './CountCard';
 
 import { TQualityMetrics } from './types';

@@ -14,12 +14,15 @@
 
 import * as React from 'react';
 
-import NewWindowIcon from '../common/NewWindowIcon';
 import { getUrl } from '../SearchTracePage/url';
+import NewWindowIcon from './NewWindowIcon';
 
-import { TExample } from '../../model/path-agnostic-decorations/types';
+export type TExample = {
+  spanIDs?: string[];
+  traceID: string;
+};
 
-export type TProps = {
+type TProps = {
   examples?: TExample[];
   includeText?: boolean;
 };

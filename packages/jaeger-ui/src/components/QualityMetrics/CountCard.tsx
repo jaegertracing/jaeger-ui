@@ -14,9 +14,7 @@
 
 import * as React from 'react';
 
-import ExamplesLink from './ExamplesLink';
-
-import { TExample } from '../../model/path-agnostic-decorations/types';
+import ExamplesLink, { TExample } from '../common/ExamplesLink';
 
 import './CountCard.css';
 

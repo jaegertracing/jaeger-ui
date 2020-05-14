@@ -96,7 +96,6 @@ describe('QualityMetrics', () => {
         wrapper.setState(initialState);
       });
 
-      // TODO state
       it('clears state and fetches quality metrics if service changed', () => {
         expect(fetchQualityMetricsSpy).toHaveBeenCalledTimes(1);
         wrapper.setProps({ service: `not-${props.service}` });
