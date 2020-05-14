@@ -25,6 +25,11 @@ describe('DetailsCard', () => {
     expect(shallow(<DetailsCard details={details} header={header} />)).toMatchSnapshot();
   });
 
+  it('handles empty details array', () => {
+    const details = [];
+    expect(shallow(<DetailsCard details={details} header={header} />)).toMatchSnapshot();
+  });
+
   it('renders list details', () => {
     const details = ['foo', 'bar', 'baz'];
     expect(shallow(<DetailsCard details={details} header={header} />)).toMatchSnapshot();
@@ -65,10 +70,5 @@ describe('DetailsCard', () => {
 
     wrapper.find('button').simulate('click');
     expect(wrapper.state('collapsed')).toBe(true);
-  });
-
-  it('handles empty details array', () => {
-    const details = [];
-    expect(shallow(<DetailsCard details={details} header={header} />)).toMatchSnapshot();
   });
 });

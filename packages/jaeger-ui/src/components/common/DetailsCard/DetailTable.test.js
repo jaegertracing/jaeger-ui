@@ -153,7 +153,6 @@ describe('DetailTable', () => {
         expect(
           makeColumn({
             key: stringColumn,
-
             preventSort: true,
           })
         ).toEqual({

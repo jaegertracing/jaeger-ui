@@ -34,8 +34,11 @@ describe('ExamplesLink', () => {
     spanIDs: new Array(i + 1).fill('spanID').map((str, j) => `${str}${i}${j}`),
   }));
 
-  it('renders null when props.examples is absent or empty', () => {
+  it('renders null when props.examples is absent', () => {
     expect(shallow(<ExamplesLink />).type()).toBe(null);
+  });
+
+  it('renders null when props.examples is empty', () => {
     expect(shallow(<ExamplesLink examples={[]} />).type()).toBe(null);
   });
 

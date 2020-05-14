@@ -103,7 +103,7 @@ describe('QualityMetrics', () => {
         expect(wrapper.state()).toEqual(expectedState);
       });
 
-      it('clears state and fetches quality metrics if changed', () => {
+      it('clears state and fetches quality metrics if lookback changed', () => {
         expect(fetchQualityMetricsSpy).toHaveBeenCalledTimes(1);
         wrapper.setProps({ lookback: `not-${props.lookback}` });
         expect(fetchQualityMetricsSpy).toHaveBeenCalledTimes(2);
@@ -199,16 +199,22 @@ describe('QualityMetrics', () => {
         expect(props.history.push).toHaveBeenLastCalledWith(latestUrl);
       });
 
-      it('ignores falsy, string, less than one, and fractional lookbacks', () => {
+      it('ignores falsy lookback', () => {
         setLookback(null);
         expect(props.history.push).not.toHaveBeenCalled();
+      });
 
+      it('ignores string lookback', () => {
         setLookback(props.service);
         expect(props.history.push).not.toHaveBeenCalled();
+      });
 
+      it('ignores less than one lookback', () => {
         setLookback(-1);
         expect(props.history.push).not.toHaveBeenCalled();
+      });
 
+      it('ignores fractional lookback', () => {
         setLookback(2.5);
         expect(props.history.push).not.toHaveBeenCalled();
       });
