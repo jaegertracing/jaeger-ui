@@ -18,10 +18,16 @@ limitations under the License.
   background: #fafafa;
 }
 
+.FilteredList--filterCheckbox {
+  margin-left: 0.5em;
+  margin-right: 0.5em;
+}
+
 .FilteredList--filterWrapper {
   align-items: center;
-  display: flex;
+  background: white;
   box-shadow: 0 0 3px 1px rgba(0, 0, 0, 0.3);
+  display: flex;
   position: relative;
   z-index: 10;
 }
@@ -29,6 +35,8 @@ limitations under the License.
 .FilteredList--filterIcon {
   font-size: 1.3em;
   margin: 0 0.25em 0 0.65em;
+  /* TODO IFF has checkbox */
+  margin-left: 2em;
   position: absolute;
 }
 
@@ -37,6 +45,8 @@ limitations under the License.
   flex: 1;
   height: auto;
   padding: 0.5em 0.3em 0.5em 3em;
+  /* TODO CHECK IF has checkbox, if not necessary just update above */
+  padding-left: 2.5em;
 }
 
 .FilteredList--filterInput:focus {

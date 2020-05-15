@@ -298,7 +298,6 @@ export class UnconnectedDdgNodeContent extends React.PureComponent<TProps, TStat
                   <Popover
                     content={
                       <FilteredList
-                        cancel={() => {}}
                         options={operation}
                         value={null}
                         setValue={this.setOperation}

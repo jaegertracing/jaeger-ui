@@ -13,12 +13,97 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Table } from 'antd';
+import { Button, Table } from 'antd';
 import _isEmpty from 'lodash/isEmpty';
 
 import ExamplesLink, { TExample } from '../ExamplesLink';
+import FilteredList from '../FilteredList';
 
 import { TColumnDef, TColumnDefs, TRow, TStyledValue } from './types';
+
+// TODO Move
+export interface ColumnFilterItem {
+  text: React.ReactNode;
+  value: string | number | boolean;
+  children?: ColumnFilterItem[];
+}
+
+// TODO Move
+type TFilterDropdownProps = {
+  setSelectedKeys: (selectedKeys: React.Key[]) => void;
+  selectedKeys: React.Key[];
+  confirm: () => void;
+  clearFilters?: () => void;
+  filters?: ColumnFilterItem[];
+}
+
+// TODO NOOOOOOOO do not rely on this
+let confirmed = true;
+
+// exported for tests
+export const _makeFilterDropdown = (dataIndex: string, rows: TRow[]) => (props: TFilterDropdownProps) => {
+  const { clearFilters = () => {}, confirm, selectedKeys, setSelectedKeys } = props;
+
+  // if (selectedKeys.length === 0) setSelectedKeys(['agent', 'hor']);
+  if (!confirmed) {
+    confirm();
+    confirmed = true;
+  }
+  console.log(props.filters);
+  const options = new Set<string>();
+  rows.forEach(row => {
+    const value = row[dataIndex];
+    if (typeof value === 'string' && value) options.add(value);
+    else if (typeof value === 'object' && !Array.isArray(value) && typeof value.value === 'string') options.add(value.value);
+  });
+
+  const value = new Set<string>();
+  selectedKeys.forEach(selected => {
+    if (typeof selected === 'string') value.add(selected);
+  });
+
+  // TODO: Close on scroll? or fix scroll bug
+  return (
+    <div>
+      <FilteredList
+        addValues={(values: string[]) => {
+          setSelectedKeys([...selectedKeys, ...values]);
+          // confirmed = false;
+        }}
+        multi
+        options={Array.from(options)}
+        removeValues={(values: string[]) => {
+          const remove = new Set<React.Key>(values);
+          console.log(values, 'remove');
+          setSelectedKeys(selectedKeys.filter(key => !remove.has(key)));
+          // confirmed = false;
+        }}
+        setValue={(value: string) => {
+          setSelectedKeys([value]);
+          // confirmed = false;
+        }}
+        value={value}
+      />
+      <div>
+        <Button onClick={clearFilters}>
+          Clear
+        </Button>
+        <div>
+          {/* TODO: see if this can make cancel work */ }
+          <label htmlFor={dataIndex}>
+            <Button>
+              Cancel 
+            </Button>
+          </label>
+          <Button onClick={confirm}>
+            Apply
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 
 // exported for tests
 export const _onCell = (dataIndex: string) => (row: TRow) => {
@@ -29,6 +114,16 @@ export const _onCell = (dataIndex: string) => (row: TRow) => {
   return {
     style: styling,
   };
+};
+
+// exported for tests
+export const _onFilter = (dataIndex: string) => (value: string, row: TRow) => {
+  const data = row[dataIndex];
+  // console.log(value, data);
+  if (typeof data === 'object' && !Array.isArray(data) && typeof data.value === 'string') {
+    return data.value === value;
+  }
+  return data === value;
 };
 
 // exported for tests
@@ -62,7 +157,7 @@ export const _sort = (dataIndex: string) => (a: TRow, b: TRow) => {
 };
 
 // exported for tests
-export const _makeColumns = ({ defs }: { defs: TColumnDefs }) =>
+export const _makeColumns = ({ defs, rows }: { defs: TColumnDefs, rows: TRow[] }) =>
   defs.map((def: TColumnDef | string) => {
     let dataIndex: string;
     let key: string;
@@ -84,10 +179,14 @@ export const _makeColumns = ({ defs }: { defs: TColumnDefs }) =>
       dataIndex,
       key,
       title,
+      filterDropdown: _makeFilterDropdown(dataIndex, rows),
       onCell: _onCell(dataIndex),
       onHeaderCell: () => ({
+        // TODO: see if this can make cancel work
+        id: dataIndex,
         style,
       }),
+      onFilter: _onFilter(dataIndex),
       render: _renderCell,
       sorter: sortable && _sort(dataIndex),
     };
@@ -138,7 +237,8 @@ export default function DetailTable({
     <Table
       key="table"
       size="middle"
-      columns={_makeColumns({ defs: columnDefs })}
+      {...{} /*scroll={{ y: 240 }}*/}
+      columns={_makeColumns({ defs: columnDefs, rows: details })}
       dataSource={details}
       pagination={false}
       rowKey={_rowKey}

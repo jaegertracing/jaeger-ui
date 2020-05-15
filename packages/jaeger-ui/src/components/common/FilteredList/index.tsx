@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import * as React from 'react';
+import { Checkbox } from 'antd';
 import _debounce from 'lodash/debounce';
 import matchSorter from 'match-sorter';
 import IoIosSearch from 'react-icons/lib/io/ios-search';
@@ -24,10 +25,13 @@ import ListItem from './ListItem';
 import './index.css';
 
 type TProps = {
-  cancel: () => void;
+  addValues?: (values: string[]) => void;
+  cancel?: () => void;
+  multi?: boolean;
   options: string[];
-  value: string | null;
+  removeValues?: (values: string[]) => void;
   setValue: (value: string) => void;
+  value: Set<string> | string | null;
 };
 
 type TState = {
@@ -64,6 +68,40 @@ export default class FilteredList extends React.PureComponent<TProps, TState> {
     return current != null && current.matches(':hover');
   }
 
+  private getFilteredCheckbox(filtered: string[]) {
+    const { addValues, removeValues, value } = this.props;
+    if (!addValues || !removeValues) return null;
+    
+    let checkedCount = 0;
+    let indeterminate = false;
+    for (let i = 0; i < filtered.length; i++) {
+      const match = typeof value === 'string' || !value
+        ? filtered[i] === value
+        : value.has(filtered[i]);
+      if (match) checkedCount++;
+      if (checkedCount && checkedCount <= i) {
+        indeterminate = true;
+        break;
+      }
+    }
+
+    console.log(checkedCount, indeterminate, filtered.length);
+
+    // TODO: Tooltip
+    return (
+      <Checkbox
+        className="FilteredList--filterCheckbox"
+        checked={Boolean(checkedCount) && checkedCount === filtered.length}
+        disabled={!filtered.length}
+        onChange={({ target: { checked } }) => {
+          console.log(checked, filtered);
+          checked ? addValues(filtered) : removeValues(filtered)
+        }}
+        indeterminate={indeterminate}
+      />
+    );
+  }
+
   private getFilteredOptions = () => {
     const { options } = this.props;
     const { filterText } = this.state;
@@ -81,7 +119,7 @@ export default class FilteredList extends React.PureComponent<TProps, TState> {
       case EKey.Escape: {
         const { cancel } = this.props;
         this.setState({ filterText: '', focusedIndex: null });
-        cancel();
+        if (cancel) cancel();
         break;
       }
       case EKey.ArrowUp:
@@ -130,19 +168,24 @@ export default class FilteredList extends React.PureComponent<TProps, TState> {
   };
 
   render() {
-    const { value } = this.props;
+    const { addValues, multi, removeValues, value } = this.props;
     const { filterText, focusedIndex } = this.state;
     const filteredOptions = this.getFilteredOptions();
+    const filteredCheckbox = multi && this.getFilteredCheckbox(filteredOptions);
     const data = {
+      addValues,
       focusedIndex,
       highlightQuery: filterText,
+      multi,
       options: filteredOptions,
+      removeValues,
       selectedValue: value,
       setValue: this.setValue,
     };
     return (
       <div ref={this.wrapperRef}>
         <label className="FilteredList--filterWrapper">
+          {filteredCheckbox}
           <IoIosSearch className="FilteredList--filterIcon" />
           <input
             className="FilteredList--filterInput"
