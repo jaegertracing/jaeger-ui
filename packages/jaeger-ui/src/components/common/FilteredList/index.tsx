@@ -85,8 +85,6 @@ export default class FilteredList extends React.PureComponent<TProps, TState> {
       }
     }
 
-    console.log(checkedCount, indeterminate, filtered.length);
-
     // TODO: Tooltip
     return (
       <Checkbox
@@ -94,7 +92,6 @@ export default class FilteredList extends React.PureComponent<TProps, TState> {
         checked={Boolean(checkedCount) && checkedCount === filtered.length}
         disabled={!filtered.length}
         onChange={({ target: { checked } }) => {
-          console.log(checked, filtered);
           checked ? addValues(filtered) : removeValues(filtered)
         }}
         indeterminate={indeterminate}
@@ -184,19 +181,21 @@ export default class FilteredList extends React.PureComponent<TProps, TState> {
     };
     return (
       <div ref={this.wrapperRef}>
-        <label className="FilteredList--filterWrapper">
+        <div className="FilteredList--filterWrapper">
           {filteredCheckbox}
-          <IoIosSearch className="FilteredList--filterIcon" />
-          <input
-            className="FilteredList--filterInput"
-            placeholder="Filter..."
-            onChange={this.onFilterChanged}
-            onKeyDown={this.onKeyDown}
-            ref={this.inputRef}
-            type="text"
-            value={filterText}
-          />
-        </label>
+          <label className="FilteredList--inputWrapper">
+            <IoIosSearch className="FilteredList--filterIcon" />
+            <input
+              className="FilteredList--filterInput"
+              placeholder="Filter..."
+              onChange={this.onFilterChanged}
+              onKeyDown={this.onKeyDown}
+              ref={this.inputRef}
+              type="text"
+              value={filterText}
+            />
+          </label>
+        </div>
         <VList
           key={filterText}
           className="FilteredList--list u-simple-scrollbars"

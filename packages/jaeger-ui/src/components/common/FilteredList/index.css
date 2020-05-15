@@ -19,8 +19,11 @@ limitations under the License.
 }
 
 .FilteredList--filterCheckbox {
+  /*
   margin-left: 0.5em;
   margin-right: 0.5em;
+  */
+  margin: 0 0.5em;
 }
 
 .FilteredList--filterWrapper {
@@ -32,21 +35,31 @@ limitations under the License.
   z-index: 10;
 }
 
+.FilteredList--inputWrapper {
+  align-items: center;
+  background: white;
+  box-shadow: 0 0 3px 1px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-grow: 1;
+  position: relative;
+  z-index: 10;
+}
+
 .FilteredList--filterIcon {
   font-size: 1.3em;
   margin: 0 0.25em 0 0.65em;
-  /* TODO IFF has checkbox */
-  margin-left: 2em;
   position: absolute;
+}
+
+.FilteredList--filterIcon.isMulti {
+  margin-left: 2em;
 }
 
 .FilteredList--filterInput {
   border: none;
   flex: 1;
   height: auto;
-  padding: 0.5em 0.3em 0.5em 3em;
-  /* TODO CHECK IF has checkbox, if not necessary just update above */
-  padding-left: 2.5em;
+  padding: 0.5em 0.3em 0.5em 2.5em;
 }
 
 .FilteredList--filterInput:focus {

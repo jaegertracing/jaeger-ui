@@ -13,7 +13,11 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Button, Table } from 'antd';
+import { Button, Icon, Table } from 'antd';
+import FaCheck from 'react-icons/lib/fa/check.js';
+import FaFilter from 'react-icons/lib/fa/filter.js';
+import FaTrash from 'react-icons/lib/fa/trash.js';
+import TiCancel from 'react-icons/lib/ti/cancel.js';
 import _isEmpty from 'lodash/isEmpty';
 
 import ExamplesLink, { TExample } from '../ExamplesLink';
@@ -21,12 +25,7 @@ import FilteredList from '../FilteredList';
 
 import { TColumnDef, TColumnDefs, TRow, TStyledValue } from './types';
 
-// TODO Move
-export interface ColumnFilterItem {
-  text: React.ReactNode;
-  value: string | number | boolean;
-  children?: ColumnFilterItem[];
-}
+import './DetailTableDropdown.css'
 
 // TODO Move
 type TFilterDropdownProps = {
@@ -34,22 +33,105 @@ type TFilterDropdownProps = {
   selectedKeys: React.Key[];
   confirm: () => void;
   clearFilters?: () => void;
-  filters?: ColumnFilterItem[];
 }
 
-// TODO NOOOOOOOO do not rely on this
-let confirmed = true;
+type TProps = TFilterDropdownProps & {
+  dataIndex: string;
+  rows: TRow[];
+};
+
+class Dropdown extends React.PureComponent<TProps> {
+  cancelled = false;
+  selected: Array<React.Key> = [];
+
+  constructor(props: TProps) {
+    super(props);
+    this.selected = props.selectedKeys;
+  }
+
+  componentDidUpdate() {
+    if (this.cancelled) {
+      this.cancelled = false;
+      this.props.confirm();
+    };
+  }
+
+  cancel = () => {
+    this.cancelled = true;
+    this.props.setSelectedKeys(this.selected);
+  }
+
+  confirm = () => {
+    this.selected = this.props.selectedKeys;
+    this.props.confirm();
+  }
+
+  render() {
+    const { clearFilters = () => {}, dataIndex, rows, selectedKeys, setSelectedKeys } = this.props;
+
+    const options = new Set<string>();
+    rows.forEach(row => {
+      const value = row[dataIndex];
+      if (typeof value === 'string' && value) options.add(value);
+      else if (typeof value === 'object' && !Array.isArray(value) && typeof value.value === 'string') options.add(value.value);
+    });
+
+    const value = new Set<string>();
+    selectedKeys.forEach(selected => {
+      if (typeof selected === 'string') value.add(selected);
+    });
+
+    // TODO: Close on scroll? or fix scroll bug
+    return (
+      <div>
+        <FilteredList
+          addValues={(values: string[]) => {
+            setSelectedKeys([...selectedKeys, ...values]);
+          }}
+          multi
+          options={Array.from(options)}
+          removeValues={(values: string[]) => {
+            const remove = new Set<React.Key>(values);
+            setSelectedKeys(selectedKeys.filter(key => !remove.has(key)));
+          }}
+          setValue={(value: string) => {
+            setSelectedKeys([value]);
+          }}
+          value={value}
+        />
+        <div className="DetailDropdown--Footer">
+          <Button className="DetailDropdown--Btn Clear" onClick={clearFilters}>
+            <FaTrash size={18} />
+            Clear Filter
+          </Button>
+          <div className="DetailDropdown--Footer--CancelConfirm">
+            <Button className="DetailDropdown--Btn Cancel" onClick={this.cancel}>
+              <TiCancel size={20} />
+              Cancel 
+            </Button>
+            <Button className="DetailDropdown--Btn Apply" onClick={this.confirm}>
+              <FaCheck size={18} />
+              Apply
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+}
 
 // exported for tests
 export const _makeFilterDropdown = (dataIndex: string, rows: TRow[]) => (props: TFilterDropdownProps) => {
+  return <Dropdown
+    {...props}
+    key={dataIndex}
+    dataIndex={dataIndex}
+    rows={rows}
+  />;
+  /*
   const { clearFilters = () => {}, confirm, selectedKeys, setSelectedKeys } = props;
-
-  // if (selectedKeys.length === 0) setSelectedKeys(['agent', 'hor']);
-  if (!confirmed) {
-    confirm();
-    confirmed = true;
-  }
   console.log(props.filters);
+
   const options = new Set<string>();
   rows.forEach(row => {
     const value = row[dataIndex];
@@ -68,7 +150,6 @@ export const _makeFilterDropdown = (dataIndex: string, rows: TRow[]) => (props: 
       <FilteredList
         addValues={(values: string[]) => {
           setSelectedKeys([...selectedKeys, ...values]);
-          // confirmed = false;
         }}
         multi
         options={Array.from(options)}
@@ -76,25 +157,24 @@ export const _makeFilterDropdown = (dataIndex: string, rows: TRow[]) => (props: 
           const remove = new Set<React.Key>(values);
           console.log(values, 'remove');
           setSelectedKeys(selectedKeys.filter(key => !remove.has(key)));
-          // confirmed = false;
         }}
         setValue={(value: string) => {
           setSelectedKeys([value]);
-          // confirmed = false;
         }}
         value={value}
       />
       <div>
         <Button onClick={clearFilters}>
-          Clear
+          <FaTrash />
+          Clear Filter
         </Button>
         <div>
-          {/* TODO: see if this can make cancel work */ }
-          <label htmlFor={dataIndex}>
-            <Button>
-              Cancel 
-            </Button>
-          </label>
+          <Button onClick={() => {
+            setSelectedKeys([]);
+            document.dispatchEvent(CLOSE_EVENT);
+          }}>
+            Cancel 
+          </Button>
           <Button onClick={confirm}>
             Apply
           </Button>
@@ -102,6 +182,7 @@ export const _makeFilterDropdown = (dataIndex: string, rows: TRow[]) => (props: 
       </div>
     </div>
   );
+ */
 };
 
 
@@ -180,10 +261,12 @@ export const _makeColumns = ({ defs, rows }: { defs: TColumnDefs, rows: TRow[] }
       key,
       title,
       filterDropdown: _makeFilterDropdown(dataIndex, rows),
+      filterIcon: (filtered: boolean) => {
+        if (filtered) return <FaFilter />;
+        return <Icon type="filter" />;
+      },
       onCell: _onCell(dataIndex),
       onHeaderCell: () => ({
-        // TODO: see if this can make cancel work
-        id: dataIndex,
         style,
       }),
       onFilter: _onFilter(dataIndex),

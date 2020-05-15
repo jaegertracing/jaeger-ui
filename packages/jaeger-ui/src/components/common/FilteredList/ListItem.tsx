@@ -74,7 +74,7 @@ export default class ListItem extends React.PureComponent<IListItemProps> {
         role="switch"
         aria-checked={index === focusedIndex ? 'true' : 'false'}
       >
-        {multi && <Checkbox checked={isSelected} />}
+        {multi && <Checkbox className="FilteredList--ListItem--Checkbox" checked={isSelected} />}
         {highlightMatches(highlightQuery, options[index])}
       </div>
     );
