@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Button, Icon, Table } from 'antd';
+import { Icon, Table } from 'antd';
 import FaCheck from 'react-icons/lib/fa/check.js';
 import FaFilter from 'react-icons/lib/fa/filter.js';
 import FaTrash from 'react-icons/lib/fa/trash.js';
@@ -22,169 +22,16 @@ import _isEmpty from 'lodash/isEmpty';
 
 import ExamplesLink, { TExample } from '../ExamplesLink';
 import FilteredList from '../FilteredList';
+import DetailTableDropdown from './DetailTableDropdown';
 
-import { TColumnDef, TColumnDefs, TRow, TStyledValue } from './types';
-
-import './DetailTableDropdown.css'
-
-// TODO Move
-type TFilterDropdownProps = {
-  setSelectedKeys: (selectedKeys: React.Key[]) => void;
-  selectedKeys: React.Key[];
-  confirm: () => void;
-  clearFilters?: () => void;
-}
-
-type TProps = TFilterDropdownProps & {
-  dataIndex: string;
-  rows: TRow[];
-};
-
-class Dropdown extends React.PureComponent<TProps> {
-  cancelled = false;
-  selected: Array<React.Key> = [];
-
-  constructor(props: TProps) {
-    super(props);
-    this.selected = props.selectedKeys;
-  }
-
-  componentDidUpdate() {
-    if (this.cancelled) {
-      this.cancelled = false;
-      this.props.confirm();
-    };
-  }
-
-  cancel = () => {
-    this.cancelled = true;
-    this.props.setSelectedKeys(this.selected);
-  }
-
-  confirm = () => {
-    this.selected = this.props.selectedKeys;
-    this.props.confirm();
-  }
-
-  render() {
-    const { clearFilters = () => {}, dataIndex, rows, selectedKeys, setSelectedKeys } = this.props;
-
-    const options = new Set<string>();
-    rows.forEach(row => {
-      const value = row[dataIndex];
-      if (typeof value === 'string' && value) options.add(value);
-      else if (typeof value === 'object' && !Array.isArray(value) && typeof value.value === 'string') options.add(value.value);
-    });
-
-    const value = new Set<string>();
-    selectedKeys.forEach(selected => {
-      if (typeof selected === 'string') value.add(selected);
-    });
-
-    // TODO: Close on scroll? or fix scroll bug
-    return (
-      <div>
-        <FilteredList
-          addValues={(values: string[]) => {
-            setSelectedKeys([...selectedKeys, ...values]);
-          }}
-          multi
-          options={Array.from(options)}
-          removeValues={(values: string[]) => {
-            const remove = new Set<React.Key>(values);
-            setSelectedKeys(selectedKeys.filter(key => !remove.has(key)));
-          }}
-          setValue={(value: string) => {
-            setSelectedKeys([value]);
-          }}
-          value={value}
-        />
-        <div className="DetailDropdown--Footer">
-          <Button className="DetailDropdown--Btn Clear" onClick={clearFilters}>
-            <FaTrash size={18} />
-            Clear Filter
-          </Button>
-          <div className="DetailDropdown--Footer--CancelConfirm">
-            <Button className="DetailDropdown--Btn Cancel" onClick={this.cancel}>
-              <TiCancel size={20} />
-              Cancel 
-            </Button>
-            <Button className="DetailDropdown--Btn Apply" onClick={this.confirm}>
-              <FaCheck size={18} />
-              Apply
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-}
+import { TColumnDef, TColumnDefs, TFilterDropdownProps, TRow, TStyledValue } from './types';
 
 // exported for tests
-export const _makeFilterDropdown = (dataIndex: string, rows: TRow[]) => (props: TFilterDropdownProps) => {
-  return <Dropdown
-    {...props}
-    key={dataIndex}
-    dataIndex={dataIndex}
-    rows={rows}
-  />;
-  /*
-  const { clearFilters = () => {}, confirm, selectedKeys, setSelectedKeys } = props;
-  console.log(props.filters);
-
-  const options = new Set<string>();
-  rows.forEach(row => {
-    const value = row[dataIndex];
-    if (typeof value === 'string' && value) options.add(value);
-    else if (typeof value === 'object' && !Array.isArray(value) && typeof value.value === 'string') options.add(value.value);
-  });
-
-  const value = new Set<string>();
-  selectedKeys.forEach(selected => {
-    if (typeof selected === 'string') value.add(selected);
-  });
-
-  // TODO: Close on scroll? or fix scroll bug
-  return (
-    <div>
-      <FilteredList
-        addValues={(values: string[]) => {
-          setSelectedKeys([...selectedKeys, ...values]);
-        }}
-        multi
-        options={Array.from(options)}
-        removeValues={(values: string[]) => {
-          const remove = new Set<React.Key>(values);
-          console.log(values, 'remove');
-          setSelectedKeys(selectedKeys.filter(key => !remove.has(key)));
-        }}
-        setValue={(value: string) => {
-          setSelectedKeys([value]);
-        }}
-        value={value}
-      />
-      <div>
-        <Button onClick={clearFilters}>
-          <FaTrash />
-          Clear Filter
-        </Button>
-        <div>
-          <Button onClick={() => {
-            setSelectedKeys([]);
-            document.dispatchEvent(CLOSE_EVENT);
-          }}>
-            Cancel 
-          </Button>
-          <Button onClick={confirm}>
-            Apply
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
- */
+export const _makeFilterDropdown = (dataIndex: string, options: Set<string>) => (
+  props: TFilterDropdownProps
+) => {
+  return <DetailTableDropdown {...props} key={dataIndex} options={options} />;
 };
-
 
 // exported for tests
 export const _onCell = (dataIndex: string) => (row: TRow) => {
@@ -200,7 +47,6 @@ export const _onCell = (dataIndex: string) => (row: TRow) => {
 // exported for tests
 export const _onFilter = (dataIndex: string) => (value: string, row: TRow) => {
   const data = row[dataIndex];
-  // console.log(value, data);
   if (typeof data === 'object' && !Array.isArray(data) && typeof data.value === 'string') {
     return data.value === value;
   }
@@ -238,7 +84,7 @@ export const _sort = (dataIndex: string) => (a: TRow, b: TRow) => {
 };
 
 // exported for tests
-export const _makeColumns = ({ defs, rows }: { defs: TColumnDefs, rows: TRow[] }) =>
+export const _makeColumns = ({ defs, rows }: { defs: TColumnDefs; rows: TRow[] }) =>
   defs.map((def: TColumnDef | string) => {
     let dataIndex: string;
     let key: string;
@@ -256,11 +102,20 @@ export const _makeColumns = ({ defs, rows }: { defs: TColumnDefs, rows: TRow[] }
       if (def.preventSort) sortable = false;
     }
 
+    const options = new Set<string>();
+    rows.forEach(row => {
+      const value = row[dataIndex];
+      if (typeof value === 'string' && value) options.add(value);
+      else if (typeof value === 'object' && !Array.isArray(value) && typeof value.value === 'string') {
+        options.add(value.value);
+      }
+    });
+
     return {
       dataIndex,
       key,
       title,
-      filterDropdown: _makeFilterDropdown(dataIndex, rows),
+      filterDropdown: Boolean(options.size) && _makeFilterDropdown(dataIndex, options),
       filterIcon: (filtered: boolean) => {
         if (filtered) return <FaFilter />;
         return <Icon type="filter" />;
@@ -320,7 +175,6 @@ export default function DetailTable({
     <Table
       key="table"
       size="middle"
-      {...{} /*scroll={{ y: 240 }}*/}
       columns={_makeColumns({ defs: columnDefs, rows: details })}
       dataSource={details}
       pagination={false}

@@ -14,9 +14,20 @@
 
 import React from 'react';
 import { shallow } from 'enzyme';
+import { Icon } from 'antd';
+import FaFilter from 'react-icons/lib/fa/filter.js';
 
 import ExamplesLink from '../ExamplesLink';
-import DetailTable, { _onCell, _makeColumns, _renderCell, _rowKey, _sort } from './DetailTable';
+import DetailTableDropdown from './DetailTableDropdown';
+import DetailTable, {
+  _makeColumns,
+  _makeFilterDropdown,
+  _onCell,
+  _onFilter,
+  _renderCell,
+  _rowKey,
+  _sort,
+} from './DetailTable';
 
 describe('DetailTable', () => {
   describe('render', () => {
@@ -92,14 +103,15 @@ describe('DetailTable', () => {
     const stringColumn = 'stringCol';
 
     describe('static props', () => {
-      const makeColumn = def => _makeColumns({ defs: [def] })[0];
+      const makeColumn = def => _makeColumns({ defs: [def], rows: [] })[0];
 
       it('renders string column', () => {
         expect(makeColumn(stringColumn)).toEqual({
           dataIndex: stringColumn,
           key: stringColumn,
           title: stringColumn,
-          filterDropdown: expect.any(Function),
+          filterDropdown: false,
+          filterIcon: expect.any(Function),
           onFilter: expect.any(Function),
           onCell: expect.any(Function),
           onHeaderCell: expect.any(Function),
@@ -113,7 +125,8 @@ describe('DetailTable', () => {
           dataIndex: stringColumn,
           key: stringColumn,
           title: stringColumn,
-          filterDropdown: expect.any(Function),
+          filterDropdown: false,
+          filterIcon: expect.any(Function),
           onFilter: expect.any(Function),
           onCell: expect.any(Function),
           onHeaderCell: expect.any(Function),
@@ -133,7 +146,8 @@ describe('DetailTable', () => {
           dataIndex: stringColumn,
           key: stringColumn,
           title: label,
-          filterDropdown: expect.any(Function),
+          filterDropdown: false,
+          filterIcon: expect.any(Function),
           onFilter: expect.any(Function),
           onCell: expect.any(Function),
           onHeaderCell: expect.any(Function),
@@ -155,6 +169,36 @@ describe('DetailTable', () => {
         ).toBe(styling);
       });
 
+      it('renders filter icon without filter set', () => {
+        const icon = makeColumn(stringColumn).filterIcon();
+        expect(icon.type).toBe(Icon);
+        expect(icon.props.type).toBe('filter');
+      });
+
+      it('renders filter icon with filter set', () => {
+        const icon = makeColumn(stringColumn).filterIcon(true);
+        expect(icon.type).toBe(FaFilter);
+      });
+
+      it('renders filterable column if there are filterable values', () => {
+        const filterableValues = ['foo', 'bar', { value: 'obj foo' }, { value: 'obj baz' }];
+        const expected = new Set(filterableValues.map(v => v.value || v));
+        const values = [
+          ...filterableValues,
+          <ExamplesLink examples={[]} />,
+          <ExamplesLink key="fookey" examples={[]} />,
+          undefined,
+        ];
+        const rows = values.map(value => ({
+          [stringColumn]: value,
+        }));
+        const column = _makeColumns({ defs: [stringColumn], rows })[0];
+        const dropdown = column.filterDropdown();
+
+        expect(dropdown.props.options).toEqual(expected);
+        expect(dropdown.type).toBe(DetailTableDropdown);
+      });
+
       it('renders object column without sort', () => {
         expect(
           makeColumn({
@@ -165,7 +209,8 @@ describe('DetailTable', () => {
           dataIndex: stringColumn,
           key: stringColumn,
           title: stringColumn,
-          filterDropdown: expect.any(Function),
+          filterDropdown: false,
+          filterIcon: expect.any(Function),
           onFilter: expect.any(Function),
           onCell: expect.any(Function),
           onHeaderCell: expect.any(Function),
@@ -182,6 +227,25 @@ describe('DetailTable', () => {
             [stringColumn]: v,
           }))
         );
+
+      describe('_makeFilterDropdown', () => {
+        it('returns DetailsTableDropdown with correct props', () => {
+          const options = ['foo', 'bar'];
+          const mockAntdDropdownProps = {
+            foo: 'bar',
+            bar: 'baz',
+            baz: 'foo',
+          };
+          const filterDropdown = _makeFilterDropdown(stringColumn, options)(mockAntdDropdownProps);
+
+          expect(filterDropdown.type).toBe(DetailTableDropdown);
+          expect(filterDropdown.props).toEqual({
+            ...mockAntdDropdownProps,
+            options,
+          });
+          expect(filterDropdown.key).toBe(stringColumn);
+        });
+      });
 
       describe('_onCell', () => {
         const onCell = makeTestFn(_onCell);
@@ -209,6 +273,36 @@ describe('DetailTable', () => {
             color: 'white',
           };
           expect(onCell({ styling }).style).toBe(styling);
+        });
+      });
+
+      describe('_onFilter', () => {
+        const onFilter = (filterValue, testValue) =>
+          _onFilter(stringColumn)(filterValue, { [stringColumn]: testValue });
+        const value = 'test-value';
+
+        it('returns true if string value is filter', () => {
+          expect(onFilter(value, value)).toBe(true);
+        });
+
+        it('returns true if object value is filter', () => {
+          expect(onFilter(value, { value })).toBe(true);
+        });
+
+        it('returns false if string value is not filter', () => {
+          expect(onFilter(value, `not-${value}`)).toBe(false);
+        });
+
+        it('returns false if object value is not filter', () => {
+          expect(onFilter(value, { value: `not-${value}` })).toBe(false);
+        });
+
+        it('returns false for array value', () => {
+          expect(onFilter(value, [value])).toBe(false);
+        });
+
+        it('returns false for undefined value', () => {
+          expect(onFilter(value)).toBe(false);
         });
       });
 

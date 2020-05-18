@@ -32,3 +32,10 @@ export type TColumnDefs = (string | TColumnDef)[];
 export type TRow = Record<string, TStyledValue | string | number | TExample[]>;
 
 export type TDetails = string | string[] | TRow[];
+
+export type TFilterDropdownProps = {
+  clearFilters?: () => void;
+  confirm: () => void;
+  selectedKeys: React.Key[];
+  setSelectedKeys: (selectedKeys: React.Key[]) => void;
+};

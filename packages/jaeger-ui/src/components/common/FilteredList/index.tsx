@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Checkbox } from 'antd';
+import { Checkbox, Tooltip } from 'antd';
 import _debounce from 'lodash/debounce';
 import matchSorter from 'match-sorter';
 import IoIosSearch from 'react-icons/lib/io/ios-search';
@@ -23,6 +23,9 @@ import { Key as EKey } from 'ts-key-enum';
 import ListItem from './ListItem';
 
 import './index.css';
+
+const ITEM_HEIGHT = 35;
+const MAX_HEIGHT = 375;
 
 type TProps = {
   addValues?: (values: string[]) => void;
@@ -64,38 +67,45 @@ export default class FilteredList extends React.PureComponent<TProps, TState> {
   };
 
   isMouseWithin() {
+    /* istanbul ignore next */
     const { current } = this.wrapperRef;
+    /* istanbul ignore next */
     return current != null && current.matches(':hover');
   }
 
   private getFilteredCheckbox(filtered: string[]) {
-    const { addValues, removeValues, value } = this.props;
+    const { addValues, removeValues, options, value } = this.props;
     if (!addValues || !removeValues) return null;
-    
+
     let checkedCount = 0;
     let indeterminate = false;
     for (let i = 0; i < filtered.length; i++) {
-      const match = typeof value === 'string' || !value
-        ? filtered[i] === value
-        : value.has(filtered[i]);
+      const match = typeof value === 'string' || !value ? filtered[i] === value : value.has(filtered[i]);
       if (match) checkedCount++;
       if (checkedCount && checkedCount <= i) {
         indeterminate = true;
         break;
       }
     }
+    const checked = Boolean(checkedCount) && checkedCount === filtered.length;
+    const title = `Click to ${checked ? 'unselect' : 'select'} all ${
+      filtered.length < options.length ? 'filtered ' : ''
+    }options`;
 
     // TODO: Tooltip
     return (
-      <Checkbox
-        className="FilteredList--filterCheckbox"
-        checked={Boolean(checkedCount) && checkedCount === filtered.length}
-        disabled={!filtered.length}
-        onChange={({ target: { checked } }) => {
-          checked ? addValues(filtered) : removeValues(filtered)
-        }}
-        indeterminate={indeterminate}
-      />
+      <Tooltip title={title}>
+        <Checkbox
+          className="FilteredList--filterCheckbox"
+          checked={checked}
+          disabled={!filtered.length}
+          onChange={({ target: { checked: newCheckedState } }) => {
+            if (newCheckedState) addValues(filtered);
+            else removeValues(filtered);
+          }}
+          indeterminate={indeterminate}
+        />
+      </Tooltip>
     );
   }
 
@@ -165,7 +175,7 @@ export default class FilteredList extends React.PureComponent<TProps, TState> {
   };
 
   render() {
-    const { addValues, multi, removeValues, value } = this.props;
+    const { addValues, multi, options, removeValues, value } = this.props;
     const { filterText, focusedIndex } = this.state;
     const filteredOptions = this.getFilteredOptions();
     const filteredCheckbox = multi && this.getFilteredCheckbox(filteredOptions);
@@ -199,10 +209,10 @@ export default class FilteredList extends React.PureComponent<TProps, TState> {
         <VList
           key={filterText}
           className="FilteredList--list u-simple-scrollbars"
-          height={375}
+          height={Math.min(options.length * ITEM_HEIGHT, MAX_HEIGHT)}
           itemCount={filteredOptions.length}
           itemData={data}
-          itemSize={35}
+          itemSize={ITEM_HEIGHT}
           width={650}
           overscanCount={25}
           onItemsRendered={this.onListItemsRendered}

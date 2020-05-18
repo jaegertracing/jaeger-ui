@@ -19,6 +19,7 @@ exports[`DetailTable render does not duplicate columns 1`] = `
       Object {
         "dataIndex": "col1",
         "filterDropdown": [Function],
+        "filterIcon": [Function],
         "key": "col1",
         "onCell": [Function],
         "onFilter": [Function],
@@ -30,6 +31,7 @@ exports[`DetailTable render does not duplicate columns 1`] = `
       Object {
         "dataIndex": "col0",
         "filterDropdown": [Function],
+        "filterIcon": [Function],
         "key": "col0",
         "onCell": [Function],
         "onFilter": [Function],
@@ -74,6 +76,7 @@ exports[`DetailTable render infers all columns 1`] = `
       Object {
         "dataIndex": "col0",
         "filterDropdown": [Function],
+        "filterIcon": [Function],
         "key": "col0",
         "onCell": [Function],
         "onFilter": [Function],
@@ -85,6 +88,7 @@ exports[`DetailTable render infers all columns 1`] = `
       Object {
         "dataIndex": "col1",
         "filterDropdown": [Function],
+        "filterIcon": [Function],
         "key": "col1",
         "onCell": [Function],
         "onFilter": [Function],
@@ -125,6 +129,7 @@ exports[`DetailTable render infers missing columns 1`] = `
       Object {
         "dataIndex": "col0",
         "filterDropdown": [Function],
+        "filterIcon": [Function],
         "key": "col0",
         "onCell": [Function],
         "onFilter": [Function],
@@ -136,6 +141,7 @@ exports[`DetailTable render infers missing columns 1`] = `
       Object {
         "dataIndex": "col1",
         "filterDropdown": [Function],
+        "filterIcon": [Function],
         "key": "col1",
         "onCell": [Function],
         "onFilter": [Function],
@@ -176,6 +182,7 @@ exports[`DetailTable render renders given rows and columns 1`] = `
       Object {
         "dataIndex": "col1",
         "filterDropdown": [Function],
+        "filterIcon": [Function],
         "key": "col1",
         "onCell": [Function],
         "onFilter": [Function],
@@ -187,6 +194,7 @@ exports[`DetailTable render renders given rows and columns 1`] = `
       Object {
         "dataIndex": "col0",
         "filterDropdown": [Function],
+        "filterIcon": [Function],
         "key": "col0",
         "onCell": [Function],
         "onFilter": [Function],

@@ -35,6 +35,16 @@ interface IListItemProps extends ListChildComponentProps {
 }
 
 export default class ListItem extends React.PureComponent<IListItemProps> {
+  isSelected = () => {
+    const { data, index } = this.props;
+    const { options, selectedValue } = data;
+    const isSelected =
+      typeof selectedValue === 'string' || !selectedValue
+        ? options[index] === selectedValue
+        : selectedValue.has(options[index]);
+    return isSelected;
+  };
+
   onClicked = () => {
     const { data, index } = this.props;
     const { addValues, multi, options, removeValues, setValue } = data;
@@ -45,21 +55,12 @@ export default class ListItem extends React.PureComponent<IListItemProps> {
     } else setValue(value);
   };
 
-  isSelected = () => {
-    const { data, index } = this.props;
-    const { multi, options, selectedValue } = data;
-    const isSelected = typeof selectedValue === 'string' || !selectedValue
-      ? options[index] === selectedValue
-      : selectedValue.has(options[index]);
-    return isSelected;
-  }
-
   render() {
     const { data, index, style: styleOrig } = this.props;
     // omit the width from the style so the panel can scroll horizontally
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { width: _, ...style } = styleOrig;
-    const { focusedIndex, highlightQuery, multi, options, selectedValue } = data;
+    const { focusedIndex, highlightQuery, multi, options } = data;
     const isSelected = this.isSelected();
     const cls = cx('FilteredList--ListItem', {
       'is-focused': index === focusedIndex,
