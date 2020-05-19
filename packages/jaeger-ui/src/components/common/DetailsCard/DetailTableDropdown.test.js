@@ -99,50 +99,6 @@ describe('DetailTable', () => {
     });
   });
 
-  xdescribe('buttons', () => {
-    const selectedKeys = [options[0]];
-
-    it('calls props.clearFilters on Clear Filter', () => {
-      expect(props.clearFilters).not.toHaveBeenCalled();
-
-      wrapper
-        .find(Button)
-        .first()
-        .simulate('click');
-      expect(props.clearFilters).toHaveBeenCalledTimes(1);
-    });
-
-    it('resets to initial keys on cancel and calls confirm once props reflect cancellation', () => {
-      wrapper.setProps({ selectedKeys });
-      expect(props.confirm).not.toHaveBeenCalled();
-      expect(props.setSelectedKeys).not.toHaveBeenCalled();
-
-      wrapper
-        .find(Button)
-        .at(1)
-        .simulate('click');
-      expect(props.setSelectedKeys).toHaveBeenCalledTimes(1);
-      expect(props.setSelectedKeys).toHaveBeenCalledWith(props.selectedKeys);
-      expect(props.confirm).not.toHaveBeenCalled();
-
-      wrapper.setProps({ selectedKeys: props.selectedKeys });
-      expect(props.setSelectedKeys).toHaveBeenCalledTimes(1);
-      expect(props.confirm).toHaveBeenCalledTimes(1);
-    });
-
-    it('updates this.selected and calls props.confirm on Apply', () => {
-      wrapper.setProps({ selectedKeys });
-      expect(wrapper.instance().selected).not.toBe(selectedKeys);
-
-      wrapper
-        .find(Button)
-        .last()
-        .simulate('click');
-      expect(wrapper.instance().selected).toBe(selectedKeys);
-      expect(props.confirm).toHaveBeenCalledTimes(1);
-    });
-  });
-
   describe('FilteredList interactions', () => {
     const getFn = propName => wrapper.find(FilteredList).prop(propName);
 

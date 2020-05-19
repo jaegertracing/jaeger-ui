@@ -103,7 +103,7 @@ describe('DetailTable', () => {
     const stringColumn = 'stringCol';
 
     describe('static props', () => {
-      const makeColumn = def => _makeColumns({ defs: [def], rows: [] })[0];
+      const makeColumn = (def, rows = []) => _makeColumns({ defs: [def], rows })[0];
 
       it('renders string column', () => {
         expect(makeColumn(stringColumn)).toEqual({
@@ -192,7 +192,7 @@ describe('DetailTable', () => {
         const rows = values.map(value => ({
           [stringColumn]: value,
         }));
-        const column = _makeColumns({ defs: [stringColumn], rows })[0];
+        const column = makeColumn(stringColumn, rows);
         const dropdown = column.filterDropdown();
 
         expect(dropdown.props.options).toEqual(expected);

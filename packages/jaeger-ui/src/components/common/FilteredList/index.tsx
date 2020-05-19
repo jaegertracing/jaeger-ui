@@ -93,7 +93,6 @@ export default class FilteredList extends React.PureComponent<TProps, TState> {
       filtered.length < options.length ? 'filtered ' : ''
     }options`;
 
-    // TODO: Tooltip
     return (
       <Tooltip title={title}>
         <Checkbox

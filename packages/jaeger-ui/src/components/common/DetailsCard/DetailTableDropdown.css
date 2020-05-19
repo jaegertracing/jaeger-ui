@@ -15,10 +15,10 @@ limitations under the License.
 */
 
 .DetailTableDropdown--Footer {
-  display: flex;
   background: white;
-  justify-content: space-between;
   border: 1px solid #ccc;
+  display: flex;
+  justify-content: space-between;
   padding: 0.3em;
 }
 
