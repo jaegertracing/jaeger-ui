@@ -37,31 +37,17 @@ describe('DetailTable', () => {
     wrapper = shallow(<DetailTableDropdown {...props} />);
   });
 
-  it('initializes this.selected', () => {
-    expect(wrapper.instance().selected).toBe(props.selectedKeys);
-  });
+  describe('render', () => {
+    it('renders as expected', () => {
+      expect(wrapper).toMatchSnapshot();
+    });
 
-  it('renders as expected', () => {
-    expect(wrapper).toMatchSnapshot();
-  });
-
-  it('filters duplicates and numbers out of selectedKeys', () => {
-    const dupedKeysWithNumbers = props.selectedKeys.concat(props.selectedKeys).concat([4, 8, 15, 16, 23, 42]);
-    wrapper.setProps({ selectedKeys: dupedKeysWithNumbers });
-    expect(wrapper.find(FilteredList).prop('value')).toEqual(new Set(props.selectedKeys));
-  });
-
-  describe('buttons', () => {
-    const selectedKeys = [options[0]];
-
-    it('calls props.clearFilters on Clear Filter', () => {
-      expect(props.clearFilters).not.toHaveBeenCalled();
-
-      wrapper
-        .find(Button)
-        .first()
-        .simulate('click');
-      expect(props.clearFilters).toHaveBeenCalledTimes(1);
+    it('filters duplicates and numbers out of selectedKeys', () => {
+      const dupedKeysWithNumbers = props.selectedKeys
+        .concat(props.selectedKeys)
+        .concat([4, 8, 15, 16, 23, 42]);
+      wrapper.setProps({ selectedKeys: dupedKeysWithNumbers });
+      expect(wrapper.find(FilteredList).prop('value')).toEqual(new Set(props.selectedKeys));
     });
 
     it('handles missing clearFilters prop', () => {
@@ -72,6 +58,58 @@ describe('DetailTable', () => {
           .first()
           .simulate('click')
       ).not.toThrow();
+    });
+  });
+
+  describe('cancel', () => {
+    const selectedKeys = [options[0]];
+
+    it('resets to this.selectedKeys on cancel and calls confirm once props reflect cancellation', () => {
+      wrapper.instance().selected = selectedKeys;
+      expect(props.confirm).not.toHaveBeenCalled();
+      expect(props.setSelectedKeys).not.toHaveBeenCalled();
+
+      wrapper
+        .find(Button)
+        .at(1)
+        .simulate('click');
+      expect(props.setSelectedKeys).toHaveBeenCalledTimes(1);
+      expect(props.setSelectedKeys).toHaveBeenCalledWith(selectedKeys);
+      expect(props.confirm).not.toHaveBeenCalled();
+
+      wrapper.setProps({ selectedKeys });
+      expect(props.setSelectedKeys).toHaveBeenCalledTimes(1);
+      expect(props.confirm).toHaveBeenCalledTimes(1);
+    });
+
+    it('updates this.selectedKeys on open/close', () => {
+      expect(wrapper.instance().selected).not.toEqual(selectedKeys);
+
+      wrapper.setProps({ selectedKeys: selectedKeys.slice() });
+      expect(wrapper.instance().selected).not.toEqual(selectedKeys);
+
+      wrapper.setProps({ selectedKeys: selectedKeys.slice() });
+      expect(wrapper.instance().selected).toEqual(selectedKeys);
+    });
+
+    it('maintains this.selectedKeys on changed selection', () => {
+      wrapper.instance().selected = selectedKeys;
+      wrapper.setProps({ selectedKeys: props.options.slice(0, props.selectedKeys.length) });
+      expect(wrapper.instance().selected).toBe(selectedKeys);
+    });
+  });
+
+  xdescribe('buttons', () => {
+    const selectedKeys = [options[0]];
+
+    it('calls props.clearFilters on Clear Filter', () => {
+      expect(props.clearFilters).not.toHaveBeenCalled();
+
+      wrapper
+        .find(Button)
+        .first()
+        .simulate('click');
+      expect(props.clearFilters).toHaveBeenCalledTimes(1);
     });
 
     it('resets to initial keys on cancel and calls confirm once props reflect cancellation', () => {

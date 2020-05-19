@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`DetailTable renders as expected 1`] = `
+exports[`DetailTable render renders as expected 1`] = `
 <div>
   <FilteredList
     addValues={[Function]}
@@ -22,13 +22,14 @@ exports[`DetailTable renders as expected 1`] = `
     }
   />
   <div
-    className="DetailDropdown--Footer"
+    className="DetailTableDropdown--Footer"
   >
     <Tooltip
       arrowPointAtCenter={false}
       autoAdjustOverflow={true}
       mouseEnterDelay={0.1}
       mouseLeaveDelay={0.1}
+      overlayClassName="DetailTableDropdown--Tooltip"
       placement="top"
       prefixCls="ant-tooltip"
       title="Remove filter from this column"
@@ -36,7 +37,7 @@ exports[`DetailTable renders as expected 1`] = `
     >
       <Button
         block={false}
-        className="DetailDropdown--Btn Clear"
+        className="DetailTableDropdown--Btn Clear"
         ghost={false}
         loading={false}
         onClick={[MockFunction]}
@@ -49,13 +50,14 @@ exports[`DetailTable renders as expected 1`] = `
       </Button>
     </Tooltip>
     <div
-      className="DetailDropdown--Footer--CancelConfirm"
+      className="DetailTableDropdown--Footer--CancelConfirm"
     >
       <Tooltip
         arrowPointAtCenter={false}
         autoAdjustOverflow={true}
         mouseEnterDelay={0.1}
         mouseLeaveDelay={0.1}
+        overlayClassName="DetailTableDropdown--Tooltip"
         placement="top"
         prefixCls="ant-tooltip"
         title="Cancel changes to this column's filter"
@@ -63,7 +65,7 @@ exports[`DetailTable renders as expected 1`] = `
       >
         <Button
           block={false}
-          className="DetailDropdown--Btn Cancel"
+          className="DetailTableDropdown--Btn Cancel"
           ghost={false}
           loading={false}
           onClick={[Function]}
@@ -80,17 +82,31 @@ exports[`DetailTable renders as expected 1`] = `
         autoAdjustOverflow={true}
         mouseEnterDelay={0.1}
         mouseLeaveDelay={0.1}
+        overlayClassName="DetailTableDropdown--Tooltip"
         placement="top"
         prefixCls="ant-tooltip"
-        title="Apply changes to this column's filter\\\\nSame effect as clicking outside the dropdown"
+        title={
+          <div
+            className="DetailTableDropdown--Tooltip--Body"
+          >
+            <span>
+              Apply changes to this column
+              '
+              s filter
+            </span>
+            <span>
+              Same effect as clicking outside the dropdown
+            </span>
+          </div>
+        }
         transitionName="zoom-big-fast"
       >
         <Button
           block={false}
-          className="DetailDropdown--Btn Apply"
+          className="DetailTableDropdown--Btn Apply"
           ghost={false}
           loading={false}
-          onClick={[Function]}
+          onClick={[MockFunction]}
           prefixCls="ant-btn"
         >
           <FaCheck

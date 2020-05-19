@@ -77,10 +77,11 @@ export default class FilteredList extends React.PureComponent<TProps, TState> {
     const { addValues, removeValues, options, value } = this.props;
     if (!addValues || !removeValues) return null;
 
+    const valueSet = typeof value === 'string' || !value ? new Set([value]) : value;
     let checkedCount = 0;
     let indeterminate = false;
     for (let i = 0; i < filtered.length; i++) {
-      const match = typeof value === 'string' || !value ? filtered[i] === value : value.has(filtered[i]);
+      const match = valueSet.has(filtered[i]);
       if (match) checkedCount++;
       if (checkedCount && checkedCount <= i) {
         indeterminate = true;
@@ -100,7 +101,7 @@ export default class FilteredList extends React.PureComponent<TProps, TState> {
           checked={checked}
           disabled={!filtered.length}
           onChange={({ target: { checked: newCheckedState } }) => {
-            if (newCheckedState) addValues(filtered);
+            if (newCheckedState) addValues(filtered.filter(f => !valueSet.has(f)));
             else removeValues(filtered);
           }}
           indeterminate={indeterminate}

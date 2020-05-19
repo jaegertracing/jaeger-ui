@@ -14,14 +14,10 @@
 
 import * as React from 'react';
 import { Icon, Table } from 'antd';
-import FaCheck from 'react-icons/lib/fa/check.js';
 import FaFilter from 'react-icons/lib/fa/filter.js';
-import FaTrash from 'react-icons/lib/fa/trash.js';
-import TiCancel from 'react-icons/lib/ti/cancel.js';
 import _isEmpty from 'lodash/isEmpty';
 
 import ExamplesLink, { TExample } from '../ExamplesLink';
-import FilteredList from '../FilteredList';
 import DetailTableDropdown from './DetailTableDropdown';
 
 import { TColumnDef, TColumnDefs, TFilterDropdownProps, TRow, TStyledValue } from './types';

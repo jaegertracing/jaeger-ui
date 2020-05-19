@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-.DetailDropdown--Footer {
+.DetailTableDropdown--Footer {
   display: flex;
   background: white;
   justify-content: space-between;
@@ -22,11 +22,11 @@ limitations under the License.
   padding: 0.3em;
 }
 
-.DetailDropdown--Footer--CancelConfirm {
+.DetailTableDropdown--Footer--CancelConfirm {
   display: flex;
 }
 
-.DetailDropdown--Btn {
+.DetailTableDropdown--Btn {
   align-items: center;
   border-radius: 0;
   color: #ddd;
@@ -34,22 +34,32 @@ limitations under the License.
   padding: 0.3em 0.7em 0.3em 0.6em;
 }
 
-.DetailDropdown--Btn ~ .DetailDropdown--Btn {
+.DetailTableDropdown--Btn ~ .DetailTableDropdown--Btn {
   margin-left: 0.3em;
 }
 
-.DetailDropdown--Btn > *:not(:first-child) {
+.DetailTableDropdown--Btn > *:not(:first-child) {
   margin-left: 0.3em;
 }
 
-.DetailDropdown--Btn.Apply {
+.DetailTableDropdown--Btn.Apply {
   background: #4c21ce;
 }
 
-.DetailDropdown--Btn.Cancel {
+.DetailTableDropdown--Btn.Cancel {
   background: #007272;
 }
 
-.DetailDropdown--Btn.Clear {
+.DetailTableDropdown--Btn.Clear {
   background: #ff2626;
+}
+
+.DetailTableDropdown--Tooltip {
+  max-width: unset;
+  white-space: nowrap;
+}
+
+.DetailTableDropdown--Tooltip--Body {
+  display: flex;
+  flex-direction: column;
 }

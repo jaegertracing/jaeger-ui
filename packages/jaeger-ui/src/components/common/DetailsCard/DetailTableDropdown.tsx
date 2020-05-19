@@ -17,9 +17,7 @@ import { Button, Tooltip } from 'antd';
 import FaCheck from 'react-icons/lib/fa/check.js';
 import FaTrash from 'react-icons/lib/fa/trash.js';
 import TiCancel from 'react-icons/lib/ti/cancel.js';
-import _isEmpty from 'lodash/isEmpty';
 
-import ExamplesLink, { TExample } from '../ExamplesLink';
 import FilteredList from '../FilteredList';
 
 import { TFilterDropdownProps } from './types';
@@ -32,34 +30,35 @@ type TProps = TFilterDropdownProps & {
 
 export default class DetailTableDropdown extends React.PureComponent<TProps> {
   cancelled = false;
-  selected: Array<React.Key> = [];
+  selected: React.Key[] = [];
 
-  constructor(props: TProps) {
-    super(props);
-    // TODO CONFIRM THIS STAYS UP TO DATE WHEN CLICKING OUTSIDE DROPDOWN
-    this.selected = props.selectedKeys;
-  }
+  componentDidUpdate(prevProps: TProps) {
+    const { confirm, selectedKeys } = this.props;
 
-  componentDidUpdate() {
+    // If the entries in selectedKeys is unchanged, the dropdown has opened or closed.
+    // Record the selectedKeys at this time for future cancellations.
+    if (selectedKeys.length === prevProps.selectedKeys.length) {
+      const prevKeys = new Set(prevProps.selectedKeys);
+      if (selectedKeys.every(key => prevKeys.has(key))) {
+        this.selected = selectedKeys;
+      }
+    }
+
+    // Unfortunately antd requires setSelectedKeys and confirm to be called in different cycles.
     if (this.cancelled) {
       this.cancelled = false;
-      this.props.confirm();
+      confirm();
     }
   }
 
   cancel = () => {
+    // Unfortunately antd requires setSelectedKeys and confirm to be called in different cycles.
     this.cancelled = true;
     this.props.setSelectedKeys(this.selected);
   };
 
-  confirm = () => {
-    // TODO CONFIRM THIS IS NECESSARY OR IF CONSTRUCTOR COVERS IT
-    this.selected = this.props.selectedKeys;
-    this.props.confirm();
-  };
-
   render() {
-    const { clearFilters = () => {}, options, selectedKeys, setSelectedKeys } = this.props;
+    const { clearFilters = () => {}, confirm, options, selectedKeys, setSelectedKeys } = this.props;
 
     const value = new Set<string>();
     selectedKeys.forEach(selected => {
@@ -83,22 +82,33 @@ export default class DetailTableDropdown extends React.PureComponent<TProps> {
           }}
           value={value}
         />
-        <div className="DetailDropdown--Footer">
-          <Tooltip title="Remove filter from this column">
-            <Button className="DetailDropdown--Btn Clear" onClick={clearFilters}>
+        <div className="DetailTableDropdown--Footer">
+          <Tooltip overlayClassName="DetailTableDropdown--Tooltip" title="Remove filter from this column">
+            <Button className="DetailTableDropdown--Btn Clear" onClick={clearFilters}>
               <FaTrash size={18} />
               Clear Filter
             </Button>
           </Tooltip>
-          <div className="DetailDropdown--Footer--CancelConfirm">
-            <Tooltip title="Cancel changes to this column's filter">
-              <Button className="DetailDropdown--Btn Cancel" onClick={this.cancel}>
+          <div className="DetailTableDropdown--Footer--CancelConfirm">
+            <Tooltip
+              overlayClassName="DetailTableDropdown--Tooltip"
+              title="Cancel changes to this column's filter"
+            >
+              <Button className="DetailTableDropdown--Btn Cancel" onClick={this.cancel}>
                 <TiCancel size={20} />
                 Cancel
               </Button>
             </Tooltip>
-            <Tooltip title="Apply changes to this column's filter\nSame effect as clicking outside the dropdown">
-              <Button className="DetailDropdown--Btn Apply" onClick={this.confirm}>
+            <Tooltip
+              overlayClassName="DetailTableDropdown--Tooltip"
+              title={
+                <div className="DetailTableDropdown--Tooltip--Body">
+                  <span>Apply changes to this column{"'"}s filter</span>
+                  <span>Same effect as clicking outside the dropdown</span>
+                </div>
+              }
+            >
+              <Button className="DetailTableDropdown--Btn Apply" onClick={confirm}>
                 <FaCheck size={18} />
                 Apply
               </Button>

@@ -211,7 +211,15 @@ describe('<FilteredList>', () => {
       expect(isIndeterminate()).toBe(false);
     });
 
-    it('selects all filtered value when clicked and unchecked', () => {
+    it('unselects all filtered values when clicked and checked', () => {
+      wrapper.setState({ filterText: words[0][0] });
+      click(false);
+      expect(removeValues).toHaveBeenCalledTimes(1);
+      expect(removeValues).toHaveBeenCalledWith(words);
+      expect(addValues).not.toHaveBeenCalled();
+    });
+
+    it('selects all filtered values when clicked and unchecked', () => {
       wrapper.setState({ filterText: words[0][0] });
       click(true);
       expect(addValues).toHaveBeenCalledTimes(1);
@@ -219,12 +227,13 @@ describe('<FilteredList>', () => {
       expect(removeValues).not.toHaveBeenCalled();
     });
 
-    it('unselects all filtered value when clicked and checked', () => {
+    it('selects all unselected filtered values when clicked and unchecked', () => {
       wrapper.setState({ filterText: words[0][0] });
-      click(false);
-      expect(removeValues).toHaveBeenCalledTimes(1);
-      expect(removeValues).toHaveBeenCalledWith(words);
-      expect(addValues).not.toHaveBeenCalled();
+      wrapper.setProps({ value: words[0] });
+      click(true);
+      expect(addValues).toHaveBeenCalledTimes(1);
+      expect(addValues).toHaveBeenCalledWith(words.slice(1));
+      expect(removeValues).not.toHaveBeenCalled();
     });
   });
 
