@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import * as React from 'react';
+import { Checkbox, Tooltip } from 'antd';
 import _debounce from 'lodash/debounce';
 import matchSorter from 'match-sorter';
 import IoIosSearch from 'react-icons/lib/io/ios-search';
@@ -23,11 +24,17 @@ import ListItem from './ListItem';
 
 import './index.css';
 
+const ITEM_HEIGHT = 35;
+const MAX_HEIGHT = 375;
+
 type TProps = {
-  cancel: () => void;
+  addValues?: (values: string[]) => void;
+  cancel?: () => void;
+  multi?: boolean;
   options: string[];
-  value: string | null;
+  removeValues?: (values: string[]) => void;
   setValue: (value: string) => void;
+  value: Set<string> | string | null;
 };
 
 type TState = {
@@ -60,8 +67,46 @@ export default class FilteredList extends React.PureComponent<TProps, TState> {
   };
 
   isMouseWithin() {
+    /* istanbul ignore next */
     const { current } = this.wrapperRef;
+    /* istanbul ignore next */
     return current != null && current.matches(':hover');
+  }
+
+  private getFilteredCheckbox(filtered: string[]) {
+    const { addValues, removeValues, options, value } = this.props;
+    if (!addValues || !removeValues) return null;
+
+    const valueSet = typeof value === 'string' || !value ? new Set([value]) : value;
+    let checkedCount = 0;
+    let indeterminate = false;
+    for (let i = 0; i < filtered.length; i++) {
+      const match = valueSet.has(filtered[i]);
+      if (match) checkedCount++;
+      if (checkedCount && checkedCount <= i) {
+        indeterminate = true;
+        break;
+      }
+    }
+    const checked = Boolean(checkedCount) && checkedCount === filtered.length;
+    const title = `Click to ${checked ? 'unselect' : 'select'} all ${
+      filtered.length < options.length ? 'filtered ' : ''
+    }options`;
+
+    return (
+      <Tooltip title={title}>
+        <Checkbox
+          className="FilteredList--filterCheckbox"
+          checked={checked}
+          disabled={!filtered.length}
+          onChange={({ target: { checked: newCheckedState } }) => {
+            if (newCheckedState) addValues(filtered.filter(f => !valueSet.has(f)));
+            else removeValues(filtered);
+          }}
+          indeterminate={indeterminate}
+        />
+      </Tooltip>
+    );
   }
 
   private getFilteredOptions = () => {
@@ -81,7 +126,7 @@ export default class FilteredList extends React.PureComponent<TProps, TState> {
       case EKey.Escape: {
         const { cancel } = this.props;
         this.setState({ filterText: '', focusedIndex: null });
-        cancel();
+        if (cancel) cancel();
         break;
       }
       case EKey.ArrowUp:
@@ -130,37 +175,44 @@ export default class FilteredList extends React.PureComponent<TProps, TState> {
   };
 
   render() {
-    const { value } = this.props;
+    const { addValues, multi, options, removeValues, value } = this.props;
     const { filterText, focusedIndex } = this.state;
     const filteredOptions = this.getFilteredOptions();
+    const filteredCheckbox = multi && this.getFilteredCheckbox(filteredOptions);
     const data = {
+      addValues,
       focusedIndex,
       highlightQuery: filterText,
+      multi,
       options: filteredOptions,
+      removeValues,
       selectedValue: value,
       setValue: this.setValue,
     };
     return (
       <div ref={this.wrapperRef}>
-        <label className="FilteredList--filterWrapper">
-          <IoIosSearch className="FilteredList--filterIcon" />
-          <input
-            className="FilteredList--filterInput"
-            placeholder="Filter..."
-            onChange={this.onFilterChanged}
-            onKeyDown={this.onKeyDown}
-            ref={this.inputRef}
-            type="text"
-            value={filterText}
-          />
-        </label>
+        <div className="FilteredList--filterWrapper">
+          {filteredCheckbox}
+          <label className="FilteredList--inputWrapper">
+            <IoIosSearch className="FilteredList--filterIcon" />
+            <input
+              className="FilteredList--filterInput"
+              placeholder="Filter..."
+              onChange={this.onFilterChanged}
+              onKeyDown={this.onKeyDown}
+              ref={this.inputRef}
+              type="text"
+              value={filterText}
+            />
+          </label>
+        </div>
         <VList
           key={filterText}
           className="FilteredList--list u-simple-scrollbars"
-          height={375}
+          height={Math.min(options.length * ITEM_HEIGHT, MAX_HEIGHT)}
           itemCount={filteredOptions.length}
           itemData={data}
-          itemSize={35}
+          itemSize={ITEM_HEIGHT}
           width={650}
           overscanCount={25}
           onItemsRendered={this.onListItemsRendered}

@@ -19,22 +19,21 @@ import ListItem from './ListItem';
 
 describe('<ListItem>', () => {
   let wrapper;
-  let props;
-  let setValue;
+  const props = {
+    style: {},
+    index: 0,
+    data: {
+      setValue: jest.fn(),
+      focusedIndex: null,
+      highlightQuery: '',
+      options: ['a', 'b'],
+      selectedValue: null,
+    },
+  };
+  const selectedValue = props.data.options[props.index];
 
   beforeEach(() => {
-    setValue = jest.fn();
-    props = {
-      style: {},
-      index: 0,
-      data: {
-        setValue,
-        focusedIndex: null,
-        highlightQuery: '',
-        options: ['a', 'b'],
-        selectedValue: null,
-      },
-    };
+    props.data.setValue.mockReset();
     wrapper = shallow(<ListItem {...props} />);
   });
 
@@ -49,14 +48,70 @@ describe('<ListItem>', () => {
   });
 
   it('is selected when options[index] == selectedValue', () => {
-    const data = { ...props.data, selectedValue: props.data.options[props.index] };
+    const data = { ...props.data, selectedValue };
     wrapper.setProps({ data });
     expect(wrapper).toMatchSnapshot();
   });
 
   it('sets the value when clicked', () => {
-    expect(setValue.mock.calls.length).toBe(0);
+    expect(props.data.setValue.mock.calls.length).toBe(0);
     wrapper.simulate('click');
-    expect(setValue.mock.calls).toEqual([[props.data.options[props.index]]]);
+    expect(props.data.setValue.mock.calls).toEqual([[selectedValue]]);
+  });
+
+  describe('multi mode', () => {
+    const addValues = jest.fn();
+    const removeValues = jest.fn();
+    const data = { ...props.data, multi: true };
+
+    beforeEach(() => {
+      wrapper.setProps({ data });
+      addValues.mockReset();
+      removeValues.mockReset();
+    });
+
+    it('renders without exploding', () => {
+      expect(wrapper).toMatchSnapshot();
+    });
+
+    it('renders as selected when selected', () => {
+      wrapper.setProps({ data: { ...data, selectedValue } });
+      expect(wrapper).toMatchSnapshot();
+    });
+
+    it('renders as selected when selected with others', () => {
+      wrapper.setProps({ data: { ...data, selectedValue: new Set(props.data.options) } });
+      expect(wrapper).toMatchSnapshot();
+    });
+
+    it('no-ops on click when multi add/remove functions are not both available', () => {
+      expect(() => wrapper.simulate('click')).not.toThrow();
+
+      wrapper.setProps({ data: { ...data, addValues } });
+      expect(() => wrapper.simulate('click')).not.toThrow();
+      expect(addValues).not.toHaveBeenCalled();
+      expect(removeValues).not.toHaveBeenCalled();
+
+      wrapper.setProps({ data: { ...data, removeValues } });
+      expect(() => wrapper.simulate('click')).not.toThrow();
+      expect(addValues).not.toHaveBeenCalled();
+      expect(removeValues).not.toHaveBeenCalled();
+    });
+
+    it('selects value when multi add/remove functions are both available', () => {
+      wrapper.setProps({ data: { ...data, addValues, removeValues } });
+      wrapper.simulate('click');
+      expect(addValues).toHaveBeenCalledTimes(1);
+      expect(addValues).toHaveBeenCalledWith([props.data.options[props.index]]);
+      expect(removeValues).not.toHaveBeenCalled();
+    });
+
+    it('removes value when multi add/remove functions are both available and value is selected', () => {
+      wrapper.setProps({ data: { ...data, addValues, removeValues, selectedValue } });
+      wrapper.simulate('click');
+      expect(removeValues).toHaveBeenCalledTimes(1);
+      expect(removeValues).toHaveBeenCalledWith([props.data.options[props.index]]);
+      expect(addValues).not.toHaveBeenCalled();
+    });
   });
 });

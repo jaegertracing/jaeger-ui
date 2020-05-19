@@ -1372,7 +1372,6 @@ exports[`<DdgNodeContent> renders the number of operations if there are multiple
         <Popover
           content={
             <FilteredList
-              cancel={[Function]}
               options={
                 Array [
                   "op0",

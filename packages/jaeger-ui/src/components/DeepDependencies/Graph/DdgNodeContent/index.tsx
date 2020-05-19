@@ -296,14 +296,7 @@ export class UnconnectedDdgNodeContent extends React.PureComponent<TProps, TStat
               >
                 {Array.isArray(operation) ? (
                   <Popover
-                    content={
-                      <FilteredList
-                        cancel={() => {}}
-                        options={operation}
-                        value={null}
-                        setValue={this.setOperation}
-                      />
-                    }
+                    content={<FilteredList options={operation} value={null} setValue={this.setOperation} />}
                     placement="bottom"
                     title="Select Operation to Filter Graph"
                   >

@@ -13,12 +13,21 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Table } from 'antd';
+import { Icon, Table } from 'antd';
+import FaFilter from 'react-icons/lib/fa/filter.js';
 import _isEmpty from 'lodash/isEmpty';
 
 import ExamplesLink, { TExample } from '../ExamplesLink';
+import DetailTableDropdown from './DetailTableDropdown';
 
-import { TColumnDef, TColumnDefs, TRow, TStyledValue } from './types';
+import { TColumnDef, TColumnDefs, TFilterDropdownProps, TRow, TStyledValue } from './types';
+
+// exported for tests
+export const _makeFilterDropdown = (dataIndex: string, options: Set<string>) => (
+  props: TFilterDropdownProps
+) => {
+  return <DetailTableDropdown {...props} key={dataIndex} options={options} />;
+};
 
 // exported for tests
 export const _onCell = (dataIndex: string) => (row: TRow) => {
@@ -29,6 +38,15 @@ export const _onCell = (dataIndex: string) => (row: TRow) => {
   return {
     style: styling,
   };
+};
+
+// exported for tests
+export const _onFilter = (dataIndex: string) => (value: string, row: TRow) => {
+  const data = row[dataIndex];
+  if (typeof data === 'object' && !Array.isArray(data) && typeof data.value === 'string') {
+    return data.value === value;
+  }
+  return data === value;
 };
 
 // exported for tests
@@ -62,7 +80,7 @@ export const _sort = (dataIndex: string) => (a: TRow, b: TRow) => {
 };
 
 // exported for tests
-export const _makeColumns = ({ defs }: { defs: TColumnDefs }) =>
+export const _makeColumns = ({ defs, rows }: { defs: TColumnDefs; rows: TRow[] }) =>
   defs.map((def: TColumnDef | string) => {
     let dataIndex: string;
     let key: string;
@@ -80,14 +98,29 @@ export const _makeColumns = ({ defs }: { defs: TColumnDefs }) =>
       if (def.preventSort) sortable = false;
     }
 
+    const options = new Set<string>();
+    rows.forEach(row => {
+      const value = row[dataIndex];
+      if (typeof value === 'string' && value) options.add(value);
+      else if (typeof value === 'object' && !Array.isArray(value) && typeof value.value === 'string') {
+        options.add(value.value);
+      }
+    });
+
     return {
       dataIndex,
       key,
       title,
+      filterDropdown: Boolean(options.size) && _makeFilterDropdown(dataIndex, options),
+      filterIcon: (filtered: boolean) => {
+        if (filtered) return <FaFilter />;
+        return <Icon type="filter" />;
+      },
       onCell: _onCell(dataIndex),
       onHeaderCell: () => ({
         style,
       }),
+      onFilter: _onFilter(dataIndex),
       render: _renderCell,
       sorter: sortable && _sort(dataIndex),
     };
@@ -138,7 +171,7 @@ export default function DetailTable({
     <Table
       key="table"
       size="middle"
-      columns={_makeColumns({ defs: columnDefs })}
+      columns={_makeColumns({ defs: columnDefs, rows: details })}
       dataSource={details}
       pagination={false}
       rowKey={_rowKey}
