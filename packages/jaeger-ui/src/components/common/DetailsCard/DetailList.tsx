@@ -13,29 +13,19 @@
 // limitations under the License.
 
 import * as React from 'react';
+import { List } from 'antd';
 
-import ExamplesLink, { TExample } from '../common/ExamplesLink';
+const { Item } = List;
 
-import './CountCard.css';
-
-export type TProps = {
-  count?: number;
-  title?: string;
-  examples?: TExample[];
-};
-
-export default class ScoreCard extends React.PureComponent<TProps> {
-  render() {
-    const { count, title, examples } = this.props;
-
-    if (count === undefined || title === undefined) return null;
-
-    return (
-      <div className="CountCard">
-        <span className="CountCard--TitleHeader">{title}</span>
-        <span className="CountCard--Count">{count}</span>
-        <ExamplesLink examples={examples} includeText />
-      </div>
-    );
-  }
+export default function DetailList({ details }: { details: string[] }) {
+  return (
+    <List
+      dataSource={details}
+      renderItem={(s: string) => (
+        <Item>
+          <span>{s}</span>
+        </Item>
+      )}
+    />
+  );
 }

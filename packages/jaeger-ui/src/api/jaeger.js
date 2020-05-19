@@ -80,9 +80,6 @@ const JaegerAPI = {
   archiveTrace(id) {
     return getJSON(`${this.apiRoot}archive/${id}`, { method: 'POST' });
   },
-  fetchQualityMetrics(service, lookback) {
-    return getJSON(`/qualitymetrics-v2`, { query: { service, lookback } });
-  },
   fetchDecoration(url) {
     return getJSON(url);
   },
@@ -91,6 +88,9 @@ const JaegerAPI = {
   },
   fetchDependencies(endTs = new Date().getTime(), lookback = DEFAULT_DEPENDENCY_LOOKBACK) {
     return getJSON(`${this.apiRoot}dependencies`, { query: { endTs, lookback } });
+  },
+  fetchQualityMetrics(service, lookback) {
+    return getJSON(`/qualitymetrics-v2`, { query: { service, lookback } });
   },
   fetchServiceOperations(serviceName) {
     return getJSON(`${this.apiRoot}services/${encodeURIComponent(serviceName)}/operations`);

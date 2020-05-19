@@ -1,0 +1,242 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`DetailsCard handles empty details array 1`] = `
+<div
+  className="DetailsCard"
+>
+  <div
+    className="DetailsCard--ButtonHeaderWrapper"
+  >
+    <div
+      className="DetailsCard--HeaderWrapper"
+    >
+      <span
+        className="DetailsCard--Header"
+      >
+        Details Card Header
+      </span>
+    </div>
+  </div>
+  <div
+    className="DetailsCard--DetailsWrapper"
+  />
+</div>
+`;
+
+exports[`DetailsCard renders as collapsible 1`] = `
+<div
+  className="DetailsCard"
+>
+  <div
+    className="DetailsCard--ButtonHeaderWrapper"
+  >
+    <button
+      className="DetailsCard--Collapser is-collapsed"
+      onClick={[Function]}
+      type="button"
+    >
+      <MdKeyboardArrowDown />
+    </button>
+    <div
+      className="DetailsCard--HeaderWrapper"
+    >
+      <span
+        className="DetailsCard--Header"
+      >
+        Details Card Header
+      </span>
+    </div>
+  </div>
+  <div
+    className="DetailsCard--DetailsWrapper is-collapsed"
+  >
+    <span />
+  </div>
+</div>
+`;
+
+exports[`DetailsCard renders list details 1`] = `
+<div
+  className="DetailsCard"
+>
+  <div
+    className="DetailsCard--ButtonHeaderWrapper"
+  >
+    <div
+      className="DetailsCard--HeaderWrapper"
+    >
+      <span
+        className="DetailsCard--Header"
+      >
+        Details Card Header
+      </span>
+    </div>
+  </div>
+  <div
+    className="DetailsCard--DetailsWrapper"
+  >
+    <DetailList
+      details={
+        Array [
+          "foo",
+          "bar",
+          "baz",
+        ]
+      }
+    />
+  </div>
+</div>
+`;
+
+exports[`DetailsCard renders string details 1`] = `
+<div
+  className="DetailsCard"
+>
+  <div
+    className="DetailsCard--ButtonHeaderWrapper"
+  >
+    <div
+      className="DetailsCard--HeaderWrapper"
+    >
+      <span
+        className="DetailsCard--Header"
+      >
+        Details Card Header
+      </span>
+    </div>
+  </div>
+  <div
+    className="DetailsCard--DetailsWrapper"
+  >
+    <span>
+      test details
+    </span>
+  </div>
+</div>
+`;
+
+exports[`DetailsCard renders table details 1`] = `
+<div
+  className="DetailsCard"
+>
+  <div
+    className="DetailsCard--ButtonHeaderWrapper"
+  >
+    <div
+      className="DetailsCard--HeaderWrapper"
+    >
+      <span
+        className="DetailsCard--Header"
+      >
+        Details Card Header
+      </span>
+    </div>
+  </div>
+  <div
+    className="DetailsCard--DetailsWrapper"
+  >
+    <DetailTable
+      details={
+        Array [
+          Object {
+            "value": "foo",
+          },
+        ]
+      }
+    />
+  </div>
+</div>
+`;
+
+exports[`DetailsCard renders table details with column defs 1`] = `
+<div
+  className="DetailsCard"
+>
+  <div
+    className="DetailsCard--ButtonHeaderWrapper"
+  >
+    <div
+      className="DetailsCard--HeaderWrapper"
+    >
+      <span
+        className="DetailsCard--Header"
+      >
+        Details Card Header
+      </span>
+    </div>
+  </div>
+  <div
+    className="DetailsCard--DetailsWrapper"
+  >
+    <DetailTable
+      columnDefs={
+        Array [
+          "col",
+        ]
+      }
+      details={
+        Array [
+          Object {
+            "col": "foo",
+          },
+        ]
+      }
+    />
+  </div>
+</div>
+`;
+
+exports[`DetailsCard renders with className 1`] = `
+<div
+  className="DetailsCard test className"
+>
+  <div
+    className="DetailsCard--ButtonHeaderWrapper"
+  >
+    <div
+      className="DetailsCard--HeaderWrapper"
+    >
+      <span
+        className="DetailsCard--Header"
+      >
+        Details Card Header
+      </span>
+    </div>
+  </div>
+  <div
+    className="DetailsCard--DetailsWrapper"
+  >
+    <span />
+  </div>
+</div>
+`;
+
+exports[`DetailsCard renders with description 1`] = `
+<div
+  className="DetailsCard"
+>
+  <div
+    className="DetailsCard--ButtonHeaderWrapper"
+  >
+    <div
+      className="DetailsCard--HeaderWrapper"
+    >
+      <span
+        className="DetailsCard--Header"
+      >
+        Details Card Header
+      </span>
+      <p
+        className="DetailsCard--Description"
+      >
+        test description
+      </p>
+    </div>
+  </div>
+  <div
+    className="DetailsCard--DetailsWrapper"
+  >
+    <span />
+  </div>
+</div>
+`;

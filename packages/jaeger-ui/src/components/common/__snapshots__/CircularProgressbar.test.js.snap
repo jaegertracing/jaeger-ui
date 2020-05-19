@@ -1,0 +1,79 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`CircularProgressbar handles minimal props 1`] = `
+<CircularProgressbar
+  background={false}
+  backgroundPadding={0}
+  circleRatio={1}
+  className=""
+  classes={
+    Object {
+      "background": "CircularProgressbar-background",
+      "path": "CircularProgressbar-path",
+      "root": "CircularProgressbar",
+      "text": "CircularProgressbar-text",
+      "trail": "CircularProgressbar-trail",
+    }
+  }
+  counterClockwise={false}
+  maxValue={108}
+  minValue={0}
+  strokeWidth={8}
+  styles={
+    Object {
+      "path": Object {
+        "stroke": "hsl(0, 84%, 57%)",
+        "strokeLinecap": "butt",
+      },
+      "text": Object {
+        "fill": "hsl(0, 84%, 57%)",
+      },
+      "trail": Object {
+        "stroke": "transparent",
+        "strokeLinecap": "butt",
+      },
+    }
+  }
+  text=""
+  value={42}
+/>
+`;
+
+exports[`CircularProgressbar renders as expected with all props 1`] = `
+<CircularProgressbar
+  background={false}
+  backgroundPadding={0}
+  circleRatio={1}
+  className=""
+  classes={
+    Object {
+      "background": "CircularProgressbar-background",
+      "path": "CircularProgressbar-path",
+      "root": "CircularProgressbar",
+      "text": "CircularProgressbar-text",
+      "trail": "CircularProgressbar-trail",
+    }
+  }
+  counterClockwise={false}
+  maxValue={108}
+  minValue={0}
+  strokeWidth={8}
+  styles={
+    Object {
+      "path": Object {
+        "stroke": "hsl(120, 84%, 57%)",
+        "strokeLinecap": "butt",
+      },
+      "text": Object {
+        "fill": "hsl(120, 84%, 57%)",
+      },
+      "trail": Object {
+        "stroke": "hsl(0, 91%, 54%)",
+        "strokeLinecap": "butt",
+      },
+    }
+  }
+  text="test text"
+  value={42}
+/>
+`;

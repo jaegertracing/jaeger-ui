@@ -48,6 +48,14 @@ describe('archiveTrace', () => {
   });
 });
 
+describe('fetchDecoration', () => {
+  it('GETs the specified url', () => {
+    const url = 'foo.bar.baz';
+    JaegerAPI.fetchDecoration(url);
+    expect(fetchMock).toHaveBeenLastCalledWith(url, defaultOptions);
+  });
+});
+
 describe('fetchDeepDependencyGraph', () => {
   it('GETs the specified query', () => {
     const query = { service: 'serviceName', start: 400, end: 800 };
@@ -76,6 +84,18 @@ describe('fetchDependencies', () => {
       expect.stringMatching(
         new RegExp(`${DEFAULT_API_ROOT}dependencies\\?endTs=\\d+&lookback=${DEFAULT_DEPENDENCY_LOOKBACK}`)
       ),
+      defaultOptions
+    );
+  });
+});
+
+describe('fetchQualityMetrics', () => {
+  it('GETs the specified service and lookback', () => {
+    const lookback = '3h';
+    const service = 'test-service';
+    JaegerAPI.fetchQualityMetrics(service, lookback);
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      `/qualitymetrics-v2?${queryString.stringify({ service, lookback })}`,
       defaultOptions
     );
   });

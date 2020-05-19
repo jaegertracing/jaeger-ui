@@ -12,29 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export type TPathAgnosticDecorationSchema = {
-  acronym: string;
-  id: string;
-  name: string;
-  summaryUrl: string;
-  opSummaryUrl?: string;
-  summaryPath: string;
-  opSummaryPath?: string;
-  detailLink?: string;
-  detailUrl?: string;
-  detailPath?: string;
-  detailColumnDefPath?: string;
-  opDetailUrl?: string;
-  opDetailPath?: string;
-  opDetailColumnDefPath?: string;
+import { TExample } from '../ExamplesLink';
+
+export type TStyledValue = {
+  linkTo?: string;
+  styling?: React.CSSProperties;
+  value: string | React.ReactElement;
 };
 
-export type TPadEntry = number | string;
+export type TColumnDef = {
+  key: string;
+  label?: string;
+  preventSort?: boolean;
+  styling?: React.CSSProperties;
+};
 
-export type TNewData = Record<
-  string,
-  {
-    withoutOp?: Record<string, TPadEntry>;
-    withOp?: Record<string, Record<string, TPadEntry>>;
-  }
->;
+export type TColumnDefs = (string | TColumnDef)[];
+
+export type TRow = Record<string, TStyledValue | string | number | TExample[]>;
+
+export type TDetails = string | string[] | TRow[];

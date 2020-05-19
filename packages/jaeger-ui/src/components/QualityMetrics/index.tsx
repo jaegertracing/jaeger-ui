@@ -20,9 +20,9 @@ import { bindActionCreators, Dispatch } from 'redux';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import JaegerAPI from '../../api/jaeger';
 import LoadingIndicator from '../common/LoadingIndicator';
-import DetailsCard from '../DeepDependencies/SidePanel/DetailsCard';
+import DetailsCard from '../common/DetailsCard';
+import ExamplesLink from '../common/ExamplesLink';
 import BannerText from './BannerText';
-import ExamplesLink from './ExamplesLink';
 import Header from './Header';
 import MetricCard from './MetricCard';
 import ScoreCard from './ScoreCard';
@@ -90,7 +90,7 @@ export class UnconnectedQualityMetrics extends React.PureComponent<TProps, TStat
 
     this.setState({ loading: true });
 
-    JaegerAPI.fetchQualityMetrics(service, lookback ? `${lookback}h` : undefined)
+    JaegerAPI.fetchQualityMetrics(service, `${lookback}h`)
       .then((qualityMetrics: TQualityMetrics) => {
         this.setState({ qualityMetrics, loading: false });
       })
@@ -195,8 +195,9 @@ export class UnconnectedQualityMetrics extends React.PureComponent<TProps, TStat
 }
 
 export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxProps {
-  const { services: stServices } = state;
-  const { services } = stServices;
+  const {
+    services: { services },
+  } = state;
   return {
     ...getUrlState(ownProps.location.search),
     services,

@@ -18,18 +18,16 @@ import _get from 'lodash/get';
 import { connect } from 'react-redux';
 
 import BreakableText from '../../common/BreakableText';
+import DetailsCard from '../../common/DetailsCard';
 import LoadingIndicator from '../../common/LoadingIndicator';
 import NewWindowIcon from '../../common/NewWindowIcon';
+import VerticalResizer from '../../common/VerticalResizer';
 import JaegerAPI from '../../../api/jaeger';
-import ColumnResizer from '../../TracePage/TraceTimelineViewer/TimelineHeaderRow/TimelineColumnResizer';
 import extractDecorationFromState, { TDecorationFromState } from '../../../model/path-agnostic-decorations';
-import {
-  TPathAgnosticDecorationSchema,
-  TPadColumnDefs,
-  TPadDetails,
-} from '../../../model/path-agnostic-decorations/types';
 import stringSupplant from '../../../utils/stringSupplant';
-import DetailsCard from './DetailsCard';
+
+import { TPathAgnosticDecorationSchema } from '../../../model/path-agnostic-decorations/types';
+import { TColumnDefs, TDetails } from '../../common/DetailsCard/types';
 
 import './DetailsPanel.css';
 
@@ -40,8 +38,8 @@ type TProps = TDecorationFromState & {
 };
 
 type TState = {
-  columnDefs?: TPadColumnDefs;
-  details?: TPadDetails;
+  columnDefs?: TColumnDefs;
+  details?: TDetails;
   detailsErred?: boolean;
   detailsLoading?: boolean;
   width?: number;
@@ -111,7 +109,7 @@ export class UnconnectedDetailsPanel extends React.PureComponent<TProps, TState>
           details = `\`${getDetailPath}\` not found in response`;
           detailsErred = true;
         }
-        const columnDefs: TPadColumnDefs = getDefPath ? _get(res, getDefPath, []) : [];
+        const columnDefs: TColumnDefs = getDefPath ? _get(res, getDefPath, []) : [];
 
         this.setState({ columnDefs, details, detailsErred, detailsLoading: false });
       })
@@ -172,7 +170,7 @@ export class UnconnectedDetailsPanel extends React.PureComponent<TProps, TState>
             header="Details"
           />
         )}
-        <ColumnResizer max={0.8} min={0.1} onChange={this.onResize} position={width} rightSide />
+        <VerticalResizer max={0.8} min={0.1} onChange={this.onResize} position={width} rightSide />
       </div>
     );
   }

@@ -43,7 +43,7 @@ export const getUrlState = memoizeOne(function getUrlState(search: string): TRet
   const lookbackStr = Array.isArray(lookbackFromUrl) ? lookbackFromUrl[0] : lookbackFromUrl;
   const lookback = lookbackStr && Number.parseInt(lookbackStr, 10);
   const rv: TReturnValue = {
-    lookback: 1,
+    lookback: 48,
   };
   if (service) rv.service = service;
   if (lookback) rv.lookback = lookback;

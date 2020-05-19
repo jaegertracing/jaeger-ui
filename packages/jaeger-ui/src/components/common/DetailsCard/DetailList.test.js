@@ -12,29 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export type TPathAgnosticDecorationSchema = {
-  acronym: string;
-  id: string;
-  name: string;
-  summaryUrl: string;
-  opSummaryUrl?: string;
-  summaryPath: string;
-  opSummaryPath?: string;
-  detailLink?: string;
-  detailUrl?: string;
-  detailPath?: string;
-  detailColumnDefPath?: string;
-  opDetailUrl?: string;
-  opDetailPath?: string;
-  opDetailColumnDefPath?: string;
-};
+import React from 'react';
+import { shallow } from 'enzyme';
+import { List } from 'antd';
 
-export type TPadEntry = number | string;
+import DetailList from './DetailList';
 
-export type TNewData = Record<
-  string,
-  {
-    withoutOp?: Record<string, TPadEntry>;
-    withOp?: Record<string, Record<string, TPadEntry>>;
-  }
->;
+describe('DetailList', () => {
+  const details = ['foo', 'bar', 'baz'];
+
+  it('renders list as expected', () => {
+    expect(shallow(<DetailList details={details} />)).toMatchSnapshot();
+  });
+
+  it('renders item as expected', () => {
+    const renderItem = shallow(<DetailList details={details} />)
+      .find(List)
+      .prop('renderItem');
+    expect(shallow(<div>{renderItem(details[0])}</div>)).toMatchSnapshot();
+  });
+});

@@ -15,12 +15,12 @@
 import * as React from 'react';
 import cx from 'classnames';
 
-import { TNil } from '../../../../types';
-import DraggableManager, { DraggableBounds, DraggingUpdate } from '../../../../utils/DraggableManager';
+import { TNil } from '../../types';
+import DraggableManager, { DraggableBounds, DraggingUpdate } from '../../utils/DraggableManager';
 
-import './TimelineColumnResizer.css';
+import './VerticalResizer.css';
 
-type TimelineColumnResizerProps = {
+type VerticalResizerProps = {
   max: number;
   min: number;
   onChange: (newSize: number) => void;
@@ -28,20 +28,17 @@ type TimelineColumnResizerProps = {
   rightSide?: boolean;
 };
 
-type TimelineColumnResizerState = {
+type VerticalResizerState = {
   dragPosition: number | TNil;
 };
 
-export default class TimelineColumnResizer extends React.PureComponent<
-  TimelineColumnResizerProps,
-  TimelineColumnResizerState
-> {
-  state: TimelineColumnResizerState;
+export default class VerticalResizer extends React.PureComponent<VerticalResizerProps, VerticalResizerState> {
+  state: VerticalResizerState;
 
   _dragManager: DraggableManager;
   _rootElm: Element | TNil;
 
-  constructor(props: TimelineColumnResizerProps) {
+  constructor(props: VerticalResizerProps) {
     super(props);
     this._dragManager = new DraggableManager({
       getBounds: this._getDraggingBounds,
@@ -119,13 +116,13 @@ export default class TimelineColumnResizer extends React.PureComponent<
     }
     return (
       <div
-        className={`TimelineColumnResizer ${isDraggingCls} ${rightSide ? 'is-flipped' : ''}`}
+        className={`VerticalResizer ${isDraggingCls} ${rightSide ? 'is-flipped' : ''}`}
         ref={this._setRootElm}
       >
-        <div className="TimelineColumnResizer--gripIcon" style={gripStyle} />
+        <div className="VerticalResizer--gripIcon" style={gripStyle} />
         <div
           aria-hidden
-          className="TimelineColumnResizer--dragger"
+          className="VerticalResizer--dragger"
           onMouseDown={this._dragManager.handleMouseDown}
           style={draggerStyle}
         />

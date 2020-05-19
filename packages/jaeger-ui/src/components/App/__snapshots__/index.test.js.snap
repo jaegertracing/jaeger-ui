@@ -1,0 +1,88 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`JaegerUIApp does not explode 1`] = `
+<Provider
+  store={
+    Object {
+      "dispatch": [Function],
+      "getState": [Function],
+      "replaceReducer": [Function],
+      "subscribe": [Function],
+      Symbol(observable): [Function],
+    }
+  }
+>
+  <ConnectedRouter
+    history={
+      Object {
+        "action": "POP",
+        "block": [Function],
+        "createHref": [Function],
+        "go": [Function],
+        "goBack": [Function],
+        "goForward": [Function],
+        "length": 1,
+        "listen": [Function],
+        "location": Object {
+          "hash": "",
+          "pathname": "/",
+          "search": "",
+          "state": undefined,
+        },
+        "push": [Function],
+        "replace": [Function],
+      }
+    }
+  >
+    <withRouter(Connect(PageImpl))>
+      <Switch>
+        <Route
+          component={[Function]}
+          path="/search"
+        />
+        <Route
+          component={[Function]}
+          path="/trace/:a?\\\\.\\\\.\\\\.:b?"
+        />
+        <Route
+          component={[Function]}
+          path="/trace/:id"
+        />
+        <Route
+          component={[Function]}
+          path="/dependencies"
+        />
+        <Route
+          component={[Function]}
+          path="/deep-dependencies"
+        />
+        <Route
+          component={[Function]}
+          path="/quality-metrics"
+        />
+        <Redirect
+          exact={true}
+          path="/"
+          push={false}
+          to="/search"
+        />
+        <Redirect
+          exact={true}
+          path=""
+          push={false}
+          to="/search"
+        />
+        <Redirect
+          exact={true}
+          path="/"
+          push={false}
+          to="/search"
+        />
+        <Route
+          component={[Function]}
+        />
+      </Switch>
+    </withRouter(Connect(PageImpl))>
+  </ConnectedRouter>
+</Provider>
+`;
