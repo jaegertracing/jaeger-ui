@@ -72,6 +72,7 @@ describe('QualityMetrics', () => {
       it('fetches quality metrics', () => {
         shallow(<UnconnectedQualityMetrics {...props} />);
         expect(fetchQualityMetricsSpy).toHaveBeenCalledTimes(1);
+        expect(fetchQualityMetricsSpy).toHaveBeenCalledWith(props.service, props.lookback);
       });
     });
 
@@ -98,20 +99,27 @@ describe('QualityMetrics', () => {
 
       it('clears state and fetches quality metrics if service changed', () => {
         expect(fetchQualityMetricsSpy).toHaveBeenCalledTimes(1);
-        wrapper.setProps({ service: `not-${props.service}` });
+
+        const service = `not-${props.service}`;
+        wrapper.setProps({ service });
         expect(fetchQualityMetricsSpy).toHaveBeenCalledTimes(2);
+        expect(fetchQualityMetricsSpy).toHaveBeenLastCalledWith(service, props.lookback);
         expect(wrapper.state()).toEqual(expectedState);
       });
 
       it('clears state and fetches quality metrics if lookback changed', () => {
         expect(fetchQualityMetricsSpy).toHaveBeenCalledTimes(1);
-        wrapper.setProps({ lookback: `not-${props.lookback}` });
+
+        const lookback = `not-${props.lookback}`;
+        wrapper.setProps({ lookback });
         expect(fetchQualityMetricsSpy).toHaveBeenCalledTimes(2);
+        expect(fetchQualityMetricsSpy).toHaveBeenLastCalledWith(props.service, lookback);
         expect(wrapper.state()).toEqual(expectedState);
       });
 
       it('no-ops if neither service or lookback changed', () => {
         expect(fetchQualityMetricsSpy).toHaveBeenCalledTimes(1);
+
         wrapper.setProps({ services: [] });
         expect(fetchQualityMetricsSpy).toHaveBeenCalledTimes(1);
       });

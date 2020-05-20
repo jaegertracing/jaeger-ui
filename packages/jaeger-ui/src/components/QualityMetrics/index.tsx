@@ -90,7 +90,7 @@ export class UnconnectedQualityMetrics extends React.PureComponent<TProps, TStat
 
     this.setState({ loading: true });
 
-    JaegerAPI.fetchQualityMetrics(service, `${lookback}h`)
+    JaegerAPI.fetchQualityMetrics(service, lookback)
       .then((qualityMetrics: TQualityMetrics) => {
         this.setState({ qualityMetrics, loading: false });
       })

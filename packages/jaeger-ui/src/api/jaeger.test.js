@@ -91,11 +91,11 @@ describe('fetchDependencies', () => {
 
 describe('fetchQualityMetrics', () => {
   it('GETs the specified service and lookback', () => {
-    const lookback = '3h';
+    const hours = '108';
     const service = 'test-service';
-    JaegerAPI.fetchQualityMetrics(service, lookback);
+    JaegerAPI.fetchQualityMetrics(service, hours);
     expect(fetchMock).toHaveBeenLastCalledWith(
-      `/qualitymetrics-v2?${queryString.stringify({ service, lookback })}`,
+      `/qualitymetrics-v2?${queryString.stringify({ service, hours })}`,
       defaultOptions
     );
   });
