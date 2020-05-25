@@ -25,16 +25,47 @@ import './KeyValuesTable.css';
 
 const jsonObjectOrArrayStartRegex = /^(\[|\{)/;
 
-function parseIfComplexJson(value: any) {
-  // if the value is a string representing actual json object or array, then use json-markup
-  if (typeof value === 'string' && jsonObjectOrArrayStartRegex.test(value)) {
-    // otherwise just return as is
-    try {
-      return JSON.parse(value);
-      // eslint-disable-next-line no-empty
-    } catch (_) {}
+function tryParseJson(value: string) {
+  try {
+    return JSON.parse(value)
+  } catch (_) {
+    return value;
   }
-  return value;
+}
+
+const stringMarkup = (value: string) => (
+  <div className="json-markup">
+    <span className="json-markup-string">{value}</span>
+  </div>
+)
+
+function _jsonMarkup(value: any) {
+  const markup = { __html: jsonMarkup(value) };
+
+  return (
+    // eslint-disable-next-line react/no-danger
+    <div dangerouslySetInnerHTML={markup} />
+  );
+}
+
+function formatValue(value: any) {
+  let content;
+
+  // if the value is a string representing actual json object or array, then use json-markup
+  if (typeof value === 'string') {
+    // otherwise just return as is
+    content = jsonObjectOrArrayStartRegex.test(value)
+      ? _jsonMarkup(tryParseJson(value))
+      : stringMarkup(value);
+  } else {
+    content = _jsonMarkup(value)
+  }
+
+  return (
+    <div className="ub-inline-block">
+      {content}
+    </div>
+  )
 }
 
 export const LinkValue = (props: { href: string; title?: string; children: React.ReactNode }) => (
@@ -71,11 +102,7 @@ export default function KeyValuesTable(props: KeyValuesTableProps) {
       <table className="u-width-100">
         <tbody className="KeyValueTable--body">
           {data.map((row, i) => {
-            const markup = {
-              __html: jsonMarkup(parseIfComplexJson(row.value)),
-            };
-            // eslint-disable-next-line react/no-danger
-            const jsonTable = <div className="ub-inline-block" dangerouslySetInnerHTML={markup} />;
+            const jsonTable = formatValue(row.value);
             const links = linksGetter ? linksGetter(data, i) : null;
             let valueMarkup;
             if (links && links.length === 1) {

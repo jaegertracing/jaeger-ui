@@ -138,7 +138,7 @@ describe('<KeyValuesTable>', () => {
     expect(el.length).toBe(data.length);
     el.forEach((valueDiv, i) => {
       if (data[i].key !== 'jsonkey') {
-        expect(valueDiv.html()).toMatch(`"${data[i].value}"`);
+        expect(valueDiv.text()).toBe(data[i].value);
       }
     });
   });
