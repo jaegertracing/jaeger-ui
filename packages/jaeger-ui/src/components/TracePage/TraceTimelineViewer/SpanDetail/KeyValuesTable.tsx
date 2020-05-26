@@ -27,7 +27,7 @@ const jsonObjectOrArrayStartRegex = /^(\[|\{)/;
 
 function tryParseJson(value: string) {
   try {
-    return JSON.parse(value)
+    return JSON.parse(value);
   } catch (_) {
     return value;
   }
@@ -37,7 +37,7 @@ const stringMarkup = (value: string) => (
   <div className="json-markup">
     <span className="json-markup-string">{value}</span>
   </div>
-)
+);
 
 function _jsonMarkup(value: any) {
   const markup = { __html: jsonMarkup(value) };
@@ -58,14 +58,10 @@ function formatValue(value: any) {
       ? _jsonMarkup(tryParseJson(value))
       : stringMarkup(value);
   } else {
-    content = _jsonMarkup(value)
+    content = _jsonMarkup(value);
   }
 
-  return (
-    <div className="ub-inline-block">
-      {content}
-    </div>
-  )
+  return <div className="ub-inline-block">{content}</div>;
 }
 
 export const LinkValue = (props: { href: string; title?: string; children: React.ReactNode }) => (
