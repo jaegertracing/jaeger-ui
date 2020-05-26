@@ -45,7 +45,7 @@ limitations under the License.
 }
 
 .KeyValueTable--row:not(:hover) > .KeyValueTable--copyColumn > .KeyValueTable--copyIcon {
-  display: none;
+  visibility: hidden;
 }
 
 .KeyValueTable--row > td {
