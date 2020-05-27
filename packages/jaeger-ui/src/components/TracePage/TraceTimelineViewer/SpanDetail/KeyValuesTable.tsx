@@ -56,7 +56,7 @@ function formatValue(value: any) {
   let content;
 
   if (typeof value === 'string') {
-    let parsed = tryParseJson(value);
+    const parsed = tryParseJson(value);
     content = (typeof parsed === 'string')
       ? stringMarkup(parsed)
       : _jsonMarkup(parsed);
