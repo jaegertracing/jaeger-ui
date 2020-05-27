@@ -47,8 +47,8 @@ describe('<KeyValuesTable>', () => {
 
   const data = [
     { key: 'span.kind', value: 'client' },
-    { key: 'omg', value: 'mos-def' },
-    { key: 'numericString', value: '12345678901234567890' },
+    { key: 'omg', value: '{not-a-json' },
+    { key: 'numeric', value: 123456789 },
     { key: 'jsonkey', value: JSON.stringify({ hello: 'world' }) },
   ];
 
@@ -138,7 +138,7 @@ describe('<KeyValuesTable>', () => {
     expect(el.length).toBe(data.length);
     el.forEach((valueDiv, i) => {
       if (data[i].key !== 'jsonkey') {
-        expect(valueDiv.text()).toBe(data[i].value);
+        expect(valueDiv.html()).toMatch(data[i].value.toString());
       }
     });
   });

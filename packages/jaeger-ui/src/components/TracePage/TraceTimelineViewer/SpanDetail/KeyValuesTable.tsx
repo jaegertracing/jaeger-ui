@@ -26,8 +26,12 @@ import './KeyValuesTable.css';
 const jsonObjectOrArrayStartRegex = /^(\[|\{)/;
 
 function tryParseJson(value: string) {
+  // if the value is a string representing actual json object or array, then use json-markup
+  // otherwise just return as is
   try {
-    return JSON.parse(value);
+    return jsonObjectOrArrayStartRegex.test(value)
+      ? JSON.parse(value)
+      : value
   } catch (_) {
     return value;
   }
@@ -51,12 +55,11 @@ function _jsonMarkup(value: any) {
 function formatValue(value: any) {
   let content;
 
-  // if the value is a string representing actual json object or array, then use json-markup
   if (typeof value === 'string') {
-    // otherwise just return as is
-    content = jsonObjectOrArrayStartRegex.test(value)
-      ? _jsonMarkup(tryParseJson(value))
-      : stringMarkup(value);
+    let parsed = tryParseJson(value);
+    content = (typeof parsed === 'string')
+      ? stringMarkup(parsed)
+      : _jsonMarkup(parsed);
   } else {
     content = _jsonMarkup(value);
   }
