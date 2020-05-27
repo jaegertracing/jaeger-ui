@@ -29,9 +29,7 @@ function tryParseJson(value: string) {
   // if the value is a string representing actual json object or array, then use json-markup
   // otherwise just return as is
   try {
-    return jsonObjectOrArrayStartRegex.test(value)
-      ? JSON.parse(value)
-      : value
+    return jsonObjectOrArrayStartRegex.test(value) ? JSON.parse(value) : value;
   } catch (_) {
     return value;
   }
@@ -57,9 +55,7 @@ function formatValue(value: any) {
 
   if (typeof value === 'string') {
     const parsed = tryParseJson(value);
-    content = (typeof parsed === 'string')
-      ? stringMarkup(parsed)
-      : _jsonMarkup(parsed);
+    content = typeof parsed === 'string' ? stringMarkup(parsed) : _jsonMarkup(parsed);
   } else {
     content = _jsonMarkup(value);
   }
