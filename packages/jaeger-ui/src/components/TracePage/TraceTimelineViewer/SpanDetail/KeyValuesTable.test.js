@@ -46,9 +46,10 @@ describe('<KeyValuesTable>', () => {
   let wrapper;
 
   const data = [
-    { key: 'span.kind', value: 'client' },
-    { key: 'omg', value: '{not-a-json' },
-    { key: 'numeric', value: 123456789 },
+    { key: 'span.kind', value: 'client', expected: 'client' },
+    { key: 'omg', value: 'mos-def', expected: 'mos-def' },
+    { key: 'numericString', value: '12345678901234567890', expected: '12345678901234567890' },
+    { key: 'numeric', value: 123456789, expected: '123456789' },
     { key: 'jsonkey', value: JSON.stringify({ hello: 'world' }) },
   ];
 
@@ -138,7 +139,7 @@ describe('<KeyValuesTable>', () => {
     expect(el.length).toBe(data.length);
     el.forEach((valueDiv, i) => {
       if (data[i].key !== 'jsonkey') {
-        expect(valueDiv.html()).toMatch(data[i].value.toString());
+        expect(valueDiv.html()).toMatch(data[i].expected);
       }
     });
   });
