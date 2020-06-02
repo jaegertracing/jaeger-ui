@@ -23,6 +23,7 @@ limitations under the License.
   font-size: 13px;
   font-family: monospace;
   white-space: pre-wrap;
+  word-break: break-all;
 }
 .json-markup-key {
   font-weight: bold;
