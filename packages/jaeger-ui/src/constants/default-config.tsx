@@ -27,7 +27,7 @@ export default deepFreeze(
       linkPatterns: [],
       qualityMetrics: {
         menuEnabled: false,
-        menuLabel: ''
+        menuLabel: '',
       },
       menu: [
         {
