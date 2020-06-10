@@ -48,6 +48,7 @@ export type Config = {
   pathAgnosticDecorations?: TPathAgnosticDecorationSchema[];
   qualityMetrics?: {
     menuEnabled?: boolean;
+    menuLabel?: string;
   };
   search?: { maxLookback: { label: string; value: string }; maxLimit: number };
   scripts?: TScript[];

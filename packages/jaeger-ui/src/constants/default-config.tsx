@@ -25,6 +25,10 @@ export default deepFreeze(
         menuEnabled: true,
       },
       linkPatterns: [],
+      qualityMetrics: {
+        menuEnabled: false,
+        menuLabel: ''
+      },
       menu: [
         {
           label: 'About Jaeger',
