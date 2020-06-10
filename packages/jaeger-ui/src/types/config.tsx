@@ -38,6 +38,7 @@ export type LinkPatternsConfig = {
   text: string;
 };
 
+// Default values are provided in packages/jaeger-ui/src/constants/default-config.tsx
 export type Config = {
   archiveEnabled?: boolean;
   deepDependencies?: {
