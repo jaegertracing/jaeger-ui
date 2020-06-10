@@ -64,7 +64,7 @@ if (getConfigValue('qualityMetrics.menuEnabled')) {
   NAV_LINKS.push({
     to: qualityMetrics.getUrl(),
     matches: qualityMetrics.matches,
-    text: 'Quality Metrics',
+    text: getConfigValue('qualityMetrics.menuLabel'),
   });
 }
 

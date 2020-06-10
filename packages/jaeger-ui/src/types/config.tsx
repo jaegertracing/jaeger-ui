@@ -38,6 +38,7 @@ export type LinkPatternsConfig = {
   text: string;
 };
 
+// Default values are provided in packages/jaeger-ui/src/constants/default-config.tsx
 export type Config = {
   archiveEnabled?: boolean;
   deepDependencies?: {
@@ -48,6 +49,7 @@ export type Config = {
   pathAgnosticDecorations?: TPathAgnosticDecorationSchema[];
   qualityMetrics?: {
     menuEnabled?: boolean;
+    menuLabel?: string;
   };
   search?: { maxLookback: { label: string; value: string }; maxLimit: number };
   scripts?: TScript[];
