@@ -67,7 +67,7 @@
     "is-promise": "^2.1.0",
     "isomorphic-fetch": "^2.2.1",
     "json-markup": "^1.1.0",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.19",
     "logfmt": "^1.2.0",
     "lru-memoize": "^1.1.0",
     "match-sorter": "^3.1.1",
