@@ -72,7 +72,7 @@ export const HEADER_ITEMS = [
     label: 'Trace Start',
     renderer: (trace: Trace) => {
       const dateStr = formatDatetime(trace.startTime);
-      const match = dateStr.match(/^(.+)(:\d\d\.\d+)$/);
+      const match = dateStr.match(/^(.+)(\.\d+)$/);
       return match ? (
         <span className="TracePageHeader--overviewItem--value">
           {match[1]}
