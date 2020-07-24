@@ -24,7 +24,12 @@ import React from 'react';
 import { shallow } from 'enzyme';
 import { Checkbox, Popover } from 'antd';
 
-import DdgNodeContent from '.';
+import {
+  getNodeRenderer,
+  measureNode,
+  mapDispatchToProps,
+  UnconnectedDdgNodeContent as DdgNodeContent,
+} from '.';
 import { MAX_LENGTH, MAX_LINKED_TRACES, MIN_LENGTH, PARAM_NAME_LENGTH, RADIUS } from './constants';
 import * as track from '../../index.track';
 import FilteredList from '../../../common/FilteredList';
@@ -33,30 +38,39 @@ import * as getSearchUrl from '../../../SearchTracePage/url';
 import { ECheckedStatus, EDdgDensity, EDirection, EViewModifier } from '../../../../model/ddg/types';
 
 describe('<DdgNodeContent>', () => {
-  const vertexKey = 'some-key';
-  const service = 'some-service';
+  const decorationID = 'test decorationID';
+  const decorationValue = 42;
   const operation = 'some-operation';
   const operationArray = ['op0', 'op1', 'op2', 'op3'];
+  const service = 'some-service';
+  const vertexKey = 'some-key';
   const props = {
     focalNodeUrl: 'some-url',
     focusPathsThroughVertex: jest.fn(),
+    getDecoration: jest.fn(),
     getGenerationVisibility: jest.fn(),
     getVisiblePathElems: jest.fn(),
     hideVertex: jest.fn(),
     isFocalNode: false,
     operation,
+    selectVertex: jest.fn(),
     setOperation: jest.fn(),
     setViewModifier: jest.fn(),
     service,
     updateGenerationVisibility: jest.fn(),
+    vertex: {
+      key: vertexKey,
+    },
     vertexKey,
   };
 
   let wrapper;
 
   beforeEach(() => {
+    props.getDecoration.mockClear();
     props.getGenerationVisibility.mockReturnValue(null).mockClear();
     props.getVisiblePathElems.mockReset();
+    props.selectVertex.mockReset();
     props.setViewModifier.mockReset();
     props.updateGenerationVisibility.mockReset();
     wrapper = shallow(<DdgNodeContent {...props} />);
@@ -84,10 +98,65 @@ describe('<DdgNodeContent>', () => {
     expect(wrapper).toMatchSnapshot();
   });
 
+  it('renders correctly when given decorationProgressbar', () => {
+    expect(wrapper).toMatchSnapshot();
+
+    const decorationProgressbar = <span>Test progressbar</span>;
+    wrapper.setProps({ decorationProgressbar, decorationValue });
+    expect(wrapper).toMatchSnapshot();
+  });
+
+  it('renders correctly when decorationValue is a string', () => {
+    expect(wrapper).toMatchSnapshot();
+
+    wrapper.setProps({ decorationValue: 'Error: Status Code 418' });
+    expect(wrapper).toMatchSnapshot();
+  });
+
+  describe('getDecoration', () => {
+    it('gets decoration on mount or change of props.decorationID iff props.decorationID is truthy', () => {
+      expect(props.getDecoration).not.toHaveBeenCalled();
+
+      wrapper.setProps({ decorationID });
+      expect(props.getDecoration).toHaveBeenCalledTimes(1);
+      expect(props.getDecoration).toHaveBeenLastCalledWith(decorationID, service, operation);
+
+      wrapper.setProps({ decorationID });
+      expect(props.getDecoration).toHaveBeenCalledTimes(1);
+
+      const newDecorationID = `new ${decorationID}`;
+      wrapper.setProps({ decorationID: newDecorationID });
+      expect(props.getDecoration).toHaveBeenCalledTimes(2);
+      expect(props.getDecoration).toHaveBeenLastCalledWith(newDecorationID, service, operation);
+
+      wrapper.setProps({ decorationID, operation: operationArray });
+      expect(props.getDecoration).toHaveBeenCalledTimes(3);
+      expect(props.getDecoration).toHaveBeenLastCalledWith(decorationID, service, undefined);
+
+      shallow(<DdgNodeContent {...props} decorationID={decorationID} />);
+      expect(props.getDecoration).toHaveBeenCalledTimes(4);
+      expect(props.getDecoration).toHaveBeenLastCalledWith(decorationID, service, operation);
+    });
+  });
+
+  describe('handleClick', () => {
+    it('calls props.selectVertex iff props.decorationValue is truthy', () => {
+      expect(props.selectVertex).not.toHaveBeenCalled();
+
+      wrapper.find('.DdgNodeContent--core').simulate('click');
+      expect(props.selectVertex).not.toHaveBeenCalled();
+
+      wrapper.setProps({ decorationValue });
+      wrapper.find('.DdgNodeContent--core').simulate('click');
+      expect(props.selectVertex).toHaveBeenCalledTimes(1);
+      expect(props.selectVertex).toHaveBeenLastCalledWith(props.vertex);
+    });
+  });
+
   describe('measureNode', () => {
     it('returns twice the RADIUS with a buffer for svg border', () => {
       const diameterWithBuffer = 2 * RADIUS + 2;
-      expect(DdgNodeContent.measureNode()).toEqual({
+      expect(measureNode()).toEqual({
         height: diameterWithBuffer,
         width: diameterWithBuffer,
       });
@@ -173,6 +242,13 @@ describe('<DdgNodeContent>', () => {
         parentVisibility: null,
       });
       expect(props.setViewModifier).toHaveBeenCalledWith([], EViewModifier.Hovered, true);
+    });
+
+    it('clears hoveredIndices on mouse out', () => {
+      wrapper.simulate('mouseover', { type: 'mouseover' });
+      expect(wrapper.instance().hoveredIndices).not.toEqual(new Set());
+      wrapper.simulate('mouseout', { type: 'mouseout' });
+      expect(wrapper.instance().hoveredIndices).toEqual(new Set());
     });
   });
 
@@ -487,7 +563,7 @@ describe('<DdgNodeContent>', () => {
     });
   });
 
-  describe('DdgNodeContent.getNodeRenderer()', () => {
+  describe('getNodeRenderer()', () => {
     const ddgVertex = {
       isFocalNode: false,
       key: 'some-key',
@@ -497,27 +573,28 @@ describe('<DdgNodeContent>', () => {
     const noOp = () => {};
 
     it('returns a <DdgNodeContent />', () => {
-      const ddgNode = DdgNodeContent.getNodeRenderer(
-        noOp,
-        noOp,
-        EDdgDensity.PreventPathEntanglement,
-        true,
-        'testBaseUrl',
-        { maxDuration: '100ms' }
-      )(ddgVertex);
+      const ddgNode = getNodeRenderer(noOp, noOp, EDdgDensity.PreventPathEntanglement, true, 'testBaseUrl', {
+        maxDuration: '100ms',
+      })(ddgVertex);
       expect(ddgNode).toBeDefined();
-      expect(shallow(ddgNode)).toMatchSnapshot();
-      expect(ddgNode.type).toBe(DdgNodeContent);
+      expect(ddgNode.props).toMatchSnapshot();
     });
 
     it('returns a focal <DdgNodeContent />', () => {
-      const focalNode = DdgNodeContent.getNodeRenderer(noOp, noOp)({
+      const focalNode = getNodeRenderer(noOp, noOp)({
         ...ddgVertex,
         isFocalNode: true,
       });
       expect(focalNode).toBeDefined();
-      expect(shallow(focalNode)).toMatchSnapshot();
-      expect(focalNode.type).toBe(DdgNodeContent);
+      expect(focalNode.props).toMatchSnapshot();
+    });
+  });
+
+  describe('mapDispatchToProps()', () => {
+    it('creates the actions correctly', () => {
+      expect(mapDispatchToProps(() => {})).toEqual({
+        getDecoration: expect.any(Function),
+      });
     });
   });
 });

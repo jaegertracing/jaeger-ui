@@ -270,6 +270,26 @@ describe('DeepDependencyGraphPage', () => {
         });
       });
 
+      describe('setDecoration', () => {
+        it('updates url with provided density', () => {
+          const decoration = 'decoration-id';
+          ddgPageImpl.setDecoration(decoration);
+          expect(getUrlSpy).toHaveBeenLastCalledWith(
+            Object.assign({}, props.urlState, { decoration }),
+            undefined
+          );
+        });
+
+        it('clears density from url', () => {
+          const decoration = undefined;
+          ddgPageImpl.setDecoration(decoration);
+          expect(getUrlSpy).toHaveBeenLastCalledWith(
+            Object.assign({}, props.urlState, { decoration }),
+            undefined
+          );
+        });
+      });
+
       describe('setDensity', () => {
         it('updates url with provided density', () => {
           const density = EDdgDensity.PreventPathEntanglement;
@@ -489,6 +509,28 @@ describe('DeepDependencyGraphPage', () => {
           expect(trackShowSpy).toHaveBeenCalledTimes(1);
           expect(trackShowSpy).toHaveBeenCalledWith(direction);
         });
+      });
+    });
+
+    describe('select vertex', () => {
+      let wrapper;
+      const selectedVertex = { key: 'test vertex' };
+
+      beforeEach(() => {
+        wrapper = shallow(<DeepDependencyGraphPageImpl {...props} graphState={undefined} />);
+      });
+
+      it('selects a vertex', () => {
+        expect(wrapper.state('selectedVertex')).toBeUndefined();
+        wrapper.instance().selectVertex(selectedVertex);
+        expect(wrapper.state('selectedVertex')).toEqual(selectedVertex);
+      });
+
+      it('clears a vertex', () => {
+        wrapper.setState({ selectedVertex });
+        expect(wrapper.state('selectedVertex')).toEqual(selectedVertex);
+        wrapper.instance().selectVertex();
+        expect(wrapper.state('selectedVertex')).toBeUndefined();
       });
     });
 

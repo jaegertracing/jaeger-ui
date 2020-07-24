@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Uber Technologies, Inc.
+// Copyright (c) 2019-2020 The Jaeger Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,12 +19,15 @@ import memoizeOne from 'memoize-one';
 
 import convPlexus from '../../../model/trace-dag/convPlexus';
 import TraceDag from '../../../model/trace-dag/TraceDag';
-import { DiffCounts } from '../../../model/trace-dag/types';
-import TDagVertex from '../../../model/trace-dag/types/TDagVertex';
+import { TDenseSpanMembers, TDiffCounts } from '../../../model/trace-dag/types';
+import TDagPlexusVertex from '../../../model/trace-dag/types/TDagPlexusVertex';
 import { Trace } from '../../../types/trace';
 import filterSpans from '../../../utils/filter-spans';
 
-function getUiFindVertexKeysFn(uiFind: string, vertices: TDagVertex<any>[]): Set<TVertexKey> {
+function getUiFindVertexKeysFn(
+  uiFind: string,
+  vertices: TDagPlexusVertex<TDenseSpanMembers>[]
+): Set<TVertexKey> {
   if (!uiFind) return new Set<TVertexKey>();
   const newVertexKeys: Set<TVertexKey> = new Set();
   vertices.forEach(({ key, data: { members } }) => {
@@ -41,7 +44,7 @@ function getEdgesAndVerticesFn(aData: Trace, bData: Trace) {
   const aTraceDag = TraceDag.newFromTrace(aData);
   const bTraceDag = TraceDag.newFromTrace(bData);
   const diffDag = TraceDag.diff(aTraceDag, bTraceDag);
-  return convPlexus<DiffCounts>(diffDag.nodesMap);
+  return convPlexus<TDiffCounts>(diffDag.nodesMap);
 }
 
 export const getEdgesAndVertices = memoizeOne(getEdgesAndVerticesFn);

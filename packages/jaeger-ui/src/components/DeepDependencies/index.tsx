@@ -19,8 +19,9 @@ import { bindActionCreators, Dispatch } from 'redux';
 import { connect } from 'react-redux';
 
 import { trackClearOperation, trackFocusPaths, trackHide, trackSetService, trackShow } from './index.track';
-import Header from './Header';
 import Graph from './Graph';
+import Header from './Header';
+import SidePanel from './SidePanel';
 import { getUrl, getUrlState, sanitizeUrlState, ROUTE_PATH } from './url';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
@@ -38,6 +39,7 @@ import {
   EViewModifier,
   TDdgModelParams,
   TDdgSparseUrlState,
+  TDdgVertex,
 } from '../../model/ddg/types';
 import { encode, encodeDistance } from '../../model/ddg/visibility-codec';
 import { getConfigValue } from '../../utils/config/get-config';
@@ -75,8 +77,12 @@ export type TOwnProps = {
 
 export type TProps = TDispatchProps & TReduxProps & TOwnProps;
 
+type TState = {
+  selectedVertex?: TDdgVertex;
+};
+
 // export for tests
-export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
+export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps, TState> {
   static defaultProps = {
     showSvcOpsHeader: true,
     baseUrl: ROUTE_PATH,
@@ -89,6 +95,8 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
       fetchDeepDependencyGraph({ service, operation, start: 0, end: 0 });
     }
   }
+
+  state: TState = {};
 
   constructor(props: TProps) {
     super(props);
@@ -157,6 +165,8 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
     this.updateUrlState({ visEncoding });
   };
 
+  setDecoration = (decoration: string | undefined) => this.updateUrlState({ decoration });
+
   setDensity = (density: EDdgDensity) => this.updateUrlState({ density });
 
   setDistance = (distance: number, direction: EDirection) => {
@@ -205,6 +215,10 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
     });
   };
 
+  selectVertex = (selectedVertex?: TDdgVertex) => {
+    this.setState({ selectedVertex });
+  };
+
   showVertices = (vertexKeys: string[]) => {
     const { graph, urlState } = this.props;
     const { visEncoding } = urlState;
@@ -236,6 +250,7 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
   };
 
   render() {
+    const { selectedVertex } = this.state;
     const {
       baseUrl,
       extraUrlArgs,
@@ -255,6 +270,7 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
     const hiddenUiFindMatches = graph && graph.getHiddenUiFindMatches(uiFind, visEncoding);
 
     let content: React.ReactElement | null = null;
+    let wrapperClassName: string = '';
     if (!graphState) {
       content = <h1>Enter query above</h1>;
     } else if (graphState.state === fetchedState.DONE && graph) {
@@ -265,26 +281,36 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
         viewModifiers
       );
       if (vertices.length > 1) {
+        wrapperClassName = 'is-horizontal';
         // TODO: using `key` here is a hack, debug digraph to fix the underlying issue
         content = (
-          <Graph
-            key={JSON.stringify(urlState)}
-            baseUrl={baseUrl}
-            density={density}
-            edges={edges}
-            edgesViewModifiers={edgesViewModifiers}
-            extraUrlArgs={extraUrlArgs}
-            focusPathsThroughVertex={this.focusPathsThroughVertex}
-            getGenerationVisibility={this.getGenerationVisibility}
-            getVisiblePathElems={this.getVisiblePathElems}
-            hideVertex={this.hideVertex}
-            setOperation={this.setOperation}
-            setViewModifier={this.setViewModifier}
-            uiFindMatches={uiFindMatches}
-            updateGenerationVisibility={this.updateGenerationVisibility}
-            vertices={vertices}
-            verticesViewModifiers={verticesViewModifiers}
-          />
+          <>
+            <Graph
+              key={JSON.stringify({ density, showOp, service, operation, visEncoding })}
+              baseUrl={baseUrl}
+              density={density}
+              edges={edges}
+              edgesViewModifiers={edgesViewModifiers}
+              extraUrlArgs={extraUrlArgs}
+              focusPathsThroughVertex={this.focusPathsThroughVertex}
+              getGenerationVisibility={this.getGenerationVisibility}
+              getVisiblePathElems={this.getVisiblePathElems}
+              hideVertex={this.hideVertex}
+              selectVertex={this.selectVertex}
+              setOperation={this.setOperation}
+              setViewModifier={this.setViewModifier}
+              uiFindMatches={uiFindMatches}
+              updateGenerationVisibility={this.updateGenerationVisibility}
+              vertices={vertices}
+              verticesViewModifiers={verticesViewModifiers}
+            />
+            <SidePanel
+              clearSelected={this.selectVertex}
+              selectDecoration={this.setDecoration}
+              selectedDecoration={urlState.decoration}
+              selectedVertex={selectedVertex}
+            />
+          </>
         );
       } else if (
         graphState.model.distanceToPathElems.has(-1) ||
@@ -360,7 +386,7 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps> {
             visEncoding={visEncoding}
           />
         </div>
-        <div className="Ddg--graphWrapper">{content}</div>
+        <div className={`Ddg--graphWrapper ${wrapperClassName}`}>{content}</div>
       </div>
     );
   }

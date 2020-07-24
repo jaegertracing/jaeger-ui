@@ -1,0 +1,231 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`DetailTable _makeColumns function props _renderCell renders a regular link 1`] = `
+<a
+  href="test.link"
+  rel="noopener noreferrer"
+  target="_blank"
+>
+  test-value
+</a>
+`;
+
+exports[`DetailTable render does not duplicate columns 1`] = `
+<Table
+  bordered={false}
+  className=""
+  columns={
+    Array [
+      Object {
+        "dataIndex": "col1",
+        "filterDropdown": [Function],
+        "filterIcon": [Function],
+        "key": "col1",
+        "onCell": [Function],
+        "onFilter": [Function],
+        "onHeaderCell": [Function],
+        "render": [Function],
+        "sorter": [Function],
+        "title": "col1",
+      },
+      Object {
+        "dataIndex": "col0",
+        "filterDropdown": [Function],
+        "filterIcon": [Function],
+        "key": "col0",
+        "onCell": [Function],
+        "onFilter": [Function],
+        "onHeaderCell": [Function],
+        "render": [Function],
+        "sorter": [Function],
+        "title": "col0",
+      },
+    ]
+  }
+  dataSource={
+    Array [
+      Object {
+        "col0": "val0",
+        "col1": "val1",
+      },
+      Object {
+        "col0": "val2",
+        "col1": "val3",
+      },
+    ]
+  }
+  indentSize={20}
+  key="table"
+  loading={false}
+  locale={Object {}}
+  pagination={false}
+  prefixCls="ant-table"
+  rowKey={[Function]}
+  showHeader={true}
+  size="middle"
+  useFixedHeader={false}
+/>
+`;
+
+exports[`DetailTable render infers all columns 1`] = `
+<Table
+  bordered={false}
+  className=""
+  columns={
+    Array [
+      Object {
+        "dataIndex": "col0",
+        "filterDropdown": [Function],
+        "filterIcon": [Function],
+        "key": "col0",
+        "onCell": [Function],
+        "onFilter": [Function],
+        "onHeaderCell": [Function],
+        "render": [Function],
+        "sorter": [Function],
+        "title": "col0",
+      },
+      Object {
+        "dataIndex": "col1",
+        "filterDropdown": [Function],
+        "filterIcon": [Function],
+        "key": "col1",
+        "onCell": [Function],
+        "onFilter": [Function],
+        "onHeaderCell": [Function],
+        "render": [Function],
+        "sorter": [Function],
+        "title": "col1",
+      },
+    ]
+  }
+  dataSource={
+    Array [
+      Object {
+        "col0": "val0",
+        "col1": "val1",
+      },
+    ]
+  }
+  indentSize={20}
+  key="table"
+  loading={false}
+  locale={Object {}}
+  pagination={false}
+  prefixCls="ant-table"
+  rowKey={[Function]}
+  showHeader={true}
+  size="middle"
+  useFixedHeader={false}
+/>
+`;
+
+exports[`DetailTable render infers missing columns 1`] = `
+<Table
+  bordered={false}
+  className=""
+  columns={
+    Array [
+      Object {
+        "dataIndex": "col0",
+        "filterDropdown": [Function],
+        "filterIcon": [Function],
+        "key": "col0",
+        "onCell": [Function],
+        "onFilter": [Function],
+        "onHeaderCell": [Function],
+        "render": [Function],
+        "sorter": [Function],
+        "title": "col0",
+      },
+      Object {
+        "dataIndex": "col1",
+        "filterDropdown": [Function],
+        "filterIcon": [Function],
+        "key": "col1",
+        "onCell": [Function],
+        "onFilter": [Function],
+        "onHeaderCell": [Function],
+        "render": [Function],
+        "sorter": [Function],
+        "title": "col1",
+      },
+    ]
+  }
+  dataSource={
+    Array [
+      Object {
+        "col0": "val0",
+        "col1": "val1",
+      },
+    ]
+  }
+  indentSize={20}
+  key="table"
+  loading={false}
+  locale={Object {}}
+  pagination={false}
+  prefixCls="ant-table"
+  rowKey={[Function]}
+  showHeader={true}
+  size="middle"
+  useFixedHeader={false}
+/>
+`;
+
+exports[`DetailTable render renders given rows and columns 1`] = `
+<Table
+  bordered={false}
+  className=""
+  columns={
+    Array [
+      Object {
+        "dataIndex": "col1",
+        "filterDropdown": [Function],
+        "filterIcon": [Function],
+        "key": "col1",
+        "onCell": [Function],
+        "onFilter": [Function],
+        "onHeaderCell": [Function],
+        "render": [Function],
+        "sorter": [Function],
+        "title": "col1",
+      },
+      Object {
+        "dataIndex": "col0",
+        "filterDropdown": [Function],
+        "filterIcon": [Function],
+        "key": "col0",
+        "onCell": [Function],
+        "onFilter": [Function],
+        "onHeaderCell": [Function],
+        "render": [Function],
+        "sorter": [Function],
+        "title": "col0",
+      },
+    ]
+  }
+  dataSource={
+    Array [
+      Object {
+        "col0": "val0",
+        "col1": "val1",
+      },
+      Object {
+        "col0": "val2",
+        "col1": "val3",
+      },
+    ]
+  }
+  indentSize={20}
+  key="table"
+  loading={false}
+  locale={Object {}}
+  pagination={false}
+  prefixCls="ant-table"
+  rowKey={[Function]}
+  showHeader={true}
+  size="middle"
+  useFixedHeader={false}
+/>
+`;

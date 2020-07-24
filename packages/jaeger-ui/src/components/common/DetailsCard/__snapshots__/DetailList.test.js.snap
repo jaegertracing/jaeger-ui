@@ -1,0 +1,29 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`DetailList renders item as expected 1`] = `
+<div>
+  <Item>
+    <span>
+      foo
+    </span>
+  </Item>
+</div>
+`;
+
+exports[`DetailList renders list as expected 1`] = `
+<List
+  bordered={false}
+  dataSource={
+    Array [
+      "foo",
+      "bar",
+      "baz",
+    ]
+  }
+  loading={false}
+  pagination={false}
+  prefixCls="ant-list"
+  renderItem={[Function]}
+  split={true}
+/>
+`;

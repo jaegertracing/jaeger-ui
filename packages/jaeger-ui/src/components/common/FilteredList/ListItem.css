@@ -60,3 +60,7 @@ limitations under the License.
   font-weight: 500;
   padding: 0;
 }
+
+.FilteredList--ListItem--Checkbox {
+  margin-right: 0.5em;
+}

@@ -14,12 +14,12 @@
 
 import _uniq from 'lodash/uniq';
 import memoize from 'lru-memoize';
+
 import { getConfigValue } from '../utils/config/get-config';
+import { encodedStringSupplant, getParamNames } from '../utils/stringSupplant';
 import { getParent } from './span';
 import { TNil } from '../types';
 import { Span, Link, KeyValuePair, Trace } from '../types/trace';
-
-const parameterRegExp = /#\{([^{}]*)\}/g;
 
 type ProcessedTemplate = {
   parameters: string[];
@@ -38,22 +38,6 @@ type ProcessedLinkPattern = {
 
 type TLinksRV = { url: string; text: string }[];
 
-function getParamNames(str: string) {
-  const names = new Set<string>();
-  str.replace(parameterRegExp, (match, name) => {
-    names.add(name);
-    return match;
-  });
-  return Array.from(names);
-}
-
-function stringSupplant(str: string, encodeFn: (unencoded: any) => string, map: Record<string, any>) {
-  return str.replace(parameterRegExp, (_, name) => {
-    const value = map[name];
-    return value == null ? '' : encodeFn(value);
-  });
-}
-
 export function processTemplate(template: any, encodeFn: (unencoded: any) => string): ProcessedTemplate {
   if (typeof template !== 'string') {
     /*
@@ -68,7 +52,7 @@ export function processTemplate(template: any, encodeFn: (unencoded: any) => str
   }
   return {
     parameters: getParamNames(template),
-    template: stringSupplant.bind(null, template, encodeFn),
+    template: encodedStringSupplant.bind(null, template, encodeFn),
   };
 }
 
@@ -145,7 +129,7 @@ function callTemplate(template: ProcessedTemplate, data: any) {
 export function computeTraceLink(linkPatterns: ProcessedLinkPattern[], trace: Trace) {
   const result: TLinksRV = [];
   const validKeys = (Object.keys(trace) as (keyof Trace)[]).filter(
-    key => typeof trace[key] === 'string' || trace[key] === 'number'
+    key => typeof trace[key] === 'string' || typeof trace[key] === 'number'
   );
 
   linkPatterns

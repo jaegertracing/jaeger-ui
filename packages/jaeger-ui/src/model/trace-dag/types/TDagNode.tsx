@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Uber Technologies, Inc.
+// Copyright (c) 2020 The Jaeger Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,11 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { TVertex } from '@jaegertracing/plexus/lib/types';
+import { NodeID } from './index';
 
-import DagNode from '../DagNode';
-
-type TDagVertex<T> = TVertex<{ data: DagNode<T> }>;
+type TDagNode<TData extends { [k: string]: unknown } = {}> = TData & {
+  parentID: NodeID | null;
+  id: NodeID;
+  children: Set<NodeID>;
+};
 
 // eslint-disable-next-line no-undef
-export default TDagVertex;
+export default TDagNode;

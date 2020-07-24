@@ -36,4 +36,24 @@ module.exports = function setupProxy(app) {
       xfwd: true,
     })
   );
+  app.use(
+    proxy('/serviceedges', {
+      target: 'http://localhost:16686',
+      logLevel: 'silent',
+      secure: false,
+      changeOrigin: true,
+      ws: true,
+      xfwd: true,
+    })
+  );
+  app.use(
+    proxy('/qualitymetrics-v2', {
+      target: 'http://localhost:16686',
+      logLevel: 'silent',
+      secure: false,
+      changeOrigin: true,
+      ws: true,
+      xfwd: true,
+    })
+  );
 };

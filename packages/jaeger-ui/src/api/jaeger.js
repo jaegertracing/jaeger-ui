@@ -80,11 +80,17 @@ const JaegerAPI = {
   archiveTrace(id) {
     return getJSON(`${this.apiRoot}archive/${id}`, { method: 'POST' });
   },
+  fetchDecoration(url) {
+    return getJSON(url);
+  },
   fetchDeepDependencyGraph(query) {
     return getJSON(`${ANALYTICS_ROOT}v1/dependencies`, { query });
   },
   fetchDependencies(endTs = new Date().getTime(), lookback = DEFAULT_DEPENDENCY_LOOKBACK) {
     return getJSON(`${this.apiRoot}dependencies`, { query: { endTs, lookback } });
+  },
+  fetchQualityMetrics(service, hours) {
+    return getJSON(`/qualitymetrics-v2`, { query: { hours, service } });
   },
   fetchServiceOperations(serviceName) {
     return getJSON(`${this.apiRoot}services/${encodeURIComponent(serviceName)}/operations`);

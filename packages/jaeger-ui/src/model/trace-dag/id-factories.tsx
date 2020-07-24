@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Uber Technologies, Inc.
+// Copyright (c) 2020 The Jaeger Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,8 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// eslint-disable-next-line import/prefer-default-export
-export function getTraceName(spans) {
-  const span = spans.filter(sp => !sp.references || !sp.references.length)[0];
-  return span ? `${span.process.serviceName}: ${span.operationName}` : '';
+import { TDenseSpan, NodeID } from './types';
+
+export type TIdFactory = (denseSpan: TDenseSpan, parentID: NodeID | null) => NodeID;
+
+export function ancestralPathParentOrLeaf(denseSpan: TDenseSpan, parentID: NodeID | null): NodeID {
+  const { children, operation, service } = denseSpan;
+  const name = `${service}\t${operation}${children.size ? '' : '\t__LEAF__'}`;
+  return parentID ? `${parentID}\v${name}` : name;
 }

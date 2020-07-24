@@ -30,6 +30,12 @@ limitations under the License.
 }
 
 .Ddg--graphWrapper {
+  display: flex;
   flex: 1;
+  flex-direction: column;
   overflow: hidden;
+}
+
+.Ddg--graphWrapper.is-horizontal {
+  flex-direction: row;
 }

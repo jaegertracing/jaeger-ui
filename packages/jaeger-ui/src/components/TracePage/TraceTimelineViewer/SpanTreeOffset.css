@@ -28,7 +28,7 @@ limitations under the License.
   /* The size of the indentGuide is based off of the iconWrapper */
   padding-right: calc(0.5rem + 12px);
   height: 100%;
-  border-left: 1px solid transparent;
+  border-left: 3px solid transparent;
   display: inline-flex;
 }
 
@@ -39,14 +39,10 @@ limitations under the License.
 }
 
 .SpanTreeOffset--indentGuide.is-active {
-  /* The size of the indentGuide is based off of the iconWrapper */
-  padding-right: calc(0.5rem + 11px);
-  border-left: 0px;
+  border-left-color: darkgrey;
 }
 
 .SpanTreeOffset--indentGuide.is-active:before {
-  content: '';
-  padding-left: 3px;
   background-color: darkgrey;
 }
 

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import * as React from 'react';
+import { Checkbox } from 'antd';
 import cx from 'classnames';
 import { ListChildComponentProps } from 'react-window';
 
@@ -22,20 +23,36 @@ import './ListItem.css';
 
 interface IListItemProps extends ListChildComponentProps {
   data: {
+    addValues?: (values: string[]) => void;
     focusedIndex: number | null;
     highlightQuery: string;
+    multi?: boolean;
     options: string[];
-    selectedValue: string | null;
+    removeValues?: (values: string[]) => void;
+    selectedValue: Set<string> | string | null;
     setValue: (value: string) => void;
   };
 }
 
 export default class ListItem extends React.PureComponent<IListItemProps> {
+  isSelected = () => {
+    const { data, index } = this.props;
+    const { options, selectedValue } = data;
+    const isSelected =
+      typeof selectedValue === 'string' || !selectedValue
+        ? options[index] === selectedValue
+        : selectedValue.has(options[index]);
+    return isSelected;
+  };
+
   onClicked = () => {
     const { data, index } = this.props;
-    const { options, setValue } = data;
+    const { addValues, multi, options, removeValues, setValue } = data;
     const value = options[index];
-    setValue(value);
+    if (multi && addValues && removeValues) {
+      if (this.isSelected()) removeValues([value]);
+      else addValues([value]);
+    } else setValue(value);
   };
 
   render() {
@@ -43,10 +60,11 @@ export default class ListItem extends React.PureComponent<IListItemProps> {
     // omit the width from the style so the panel can scroll horizontally
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { width: _, ...style } = styleOrig;
-    const { focusedIndex, highlightQuery, options, selectedValue } = data;
+    const { focusedIndex, highlightQuery, multi, options } = data;
+    const isSelected = this.isSelected();
     const cls = cx('FilteredList--ListItem', {
       'is-focused': index === focusedIndex,
-      'is-selected': options[index] === selectedValue,
+      'is-selected': isSelected,
       'is-striped': index % 2,
     });
     return (
@@ -57,6 +75,7 @@ export default class ListItem extends React.PureComponent<IListItemProps> {
         role="switch"
         aria-checked={index === focusedIndex ? 'true' : 'false'}
       >
+        {multi && <Checkbox className="FilteredList--ListItem--Checkbox" checked={isSelected} />}
         {highlightMatches(highlightQuery, options[index])}
       </div>
     );

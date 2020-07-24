@@ -1,0 +1,37 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ExamplesLink renders as expected when given both span and trace links 1`] = `
+<a
+  href="/search?span=spanID00%40foo0&span=spanID10%20spanID11%40bar1&span=spanID20%20spanID21%20spanID22%40baz2&traceID=foo&traceID=bar&traceID=baz"
+  rel="noopener noreferrer"
+  target="_blank"
+>
+  <NewWindowIcon
+    isLarge={false}
+  />
+</a>
+`;
+
+exports[`ExamplesLink renders as expected when given span links 1`] = `
+<a
+  href="/search?span=spanID00%40foo0&span=spanID10%20spanID11%40bar1&span=spanID20%20spanID21%20spanID22%40baz2"
+  rel="noopener noreferrer"
+  target="_blank"
+>
+  <NewWindowIcon
+    isLarge={false}
+  />
+</a>
+`;
+
+exports[`ExamplesLink renders as expected when given trace links 1`] = `
+<a
+  href="/search?traceID=foo&traceID=bar&traceID=baz"
+  rel="noopener noreferrer"
+  target="_blank"
+>
+  <NewWindowIcon
+    isLarge={false}
+  />
+</a>
+`;

@@ -1,4 +1,4 @@
-// Copyright (c) 2018 Uber Technologies, Inc.
+// Copyright (c) 2018-2020 The Jaeger Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,12 +17,7 @@ import { TNil } from '../../../types';
 
 export type NodeID = string;
 
-export type DiffCounts = {
-  a: number;
-  b: number;
-};
-
-export type DenseSpan = {
+export type TDenseSpan = {
   span: Span;
   id: string;
   service: string;
@@ -31,4 +26,15 @@ export type DenseSpan = {
   parentID: string | TNil;
   skipToChild: boolean;
   children: Set<string>;
+};
+
+export type TDenseSpanMembers = {
+  members: TDenseSpan[];
+  operation: string;
+  service: string;
+};
+
+export type TDiffCounts = TDenseSpanMembers & {
+  a: TDenseSpan[] | null;
+  b: TDenseSpan[] | null;
 };

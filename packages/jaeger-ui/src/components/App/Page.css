@@ -26,8 +26,8 @@ limitations under the License.
   display: flex;
   flex-direction: column;
   left: 0;
-  min-height: calc(100% - 46px);
+  min-height: calc(100% - var(--nav-height));
   position: absolute;
   right: 0;
-  top: 46px;
+  top: var(--nav-height);
 }

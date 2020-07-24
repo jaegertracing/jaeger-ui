@@ -15,32 +15,30 @@
 import * as React from 'react';
 import cx from 'classnames';
 
-import { TNil } from '../../../../types';
-import DraggableManager, { DraggableBounds, DraggingUpdate } from '../../../../utils/DraggableManager';
+import { TNil } from '../../types';
+import DraggableManager, { DraggableBounds, DraggingUpdate } from '../../utils/DraggableManager';
 
-import './TimelineColumnResizer.css';
+import './VerticalResizer.css';
 
-type TimelineColumnResizerProps = {
-  min: number;
+type VerticalResizerProps = {
   max: number;
+  min: number;
   onChange: (newSize: number) => void;
   position: number;
+  rightSide?: boolean;
 };
 
-type TimelineColumnResizerState = {
+type VerticalResizerState = {
   dragPosition: number | TNil;
 };
 
-export default class TimelineColumnResizer extends React.PureComponent<
-  TimelineColumnResizerProps,
-  TimelineColumnResizerState
-> {
-  state: TimelineColumnResizerState;
+export default class VerticalResizer extends React.PureComponent<VerticalResizerProps, VerticalResizerState> {
+  state: VerticalResizerState;
 
   _dragManager: DraggableManager;
   _rootElm: Element | TNil;
 
-  constructor(props: TimelineColumnResizerProps) {
+  constructor(props: VerticalResizerProps) {
     super(props);
     this._dragManager = new DraggableManager({
       getBounds: this._getDraggingBounds,
@@ -67,7 +65,9 @@ export default class TimelineColumnResizer extends React.PureComponent<
       throw new Error('invalid state');
     }
     const { left: clientXLeft, width } = this._rootElm.getBoundingClientRect();
-    const { min, max } = this.props;
+    const { rightSide } = this.props;
+    let { min, max } = this.props;
+    if (rightSide) [min, max] = [1 - max, 1 - min];
     return {
       clientXLeft,
       width,
@@ -77,20 +77,22 @@ export default class TimelineColumnResizer extends React.PureComponent<
   };
 
   _handleDragUpdate = ({ value }: DraggingUpdate) => {
-    this.setState({ dragPosition: value });
+    const dragPosition = this.props.rightSide ? 1 - value : value;
+    this.setState({ dragPosition });
   };
 
   _handleDragEnd = ({ manager, value }: DraggingUpdate) => {
     manager.resetBounds();
     this.setState({ dragPosition: null });
-    this.props.onChange(value);
+    const dragPosition = this.props.rightSide ? 1 - value : value;
+    this.props.onChange(dragPosition);
   };
 
   render() {
     let left;
     let draggerStyle;
     let isDraggingCls = '';
-    const { position } = this.props;
+    const { position, rightSide } = this.props;
     const { dragPosition } = this.state;
     left = `${position * 100}%`;
     const gripStyle = { left };
@@ -113,11 +115,14 @@ export default class TimelineColumnResizer extends React.PureComponent<
       draggerStyle = gripStyle;
     }
     return (
-      <div className={`TimelineColumnResizer ${isDraggingCls}`} ref={this._setRootElm}>
-        <div className="TimelineColumnResizer--gripIcon" style={gripStyle} />
+      <div
+        className={`VerticalResizer ${isDraggingCls} ${rightSide ? 'is-flipped' : ''}`}
+        ref={this._setRootElm}
+      >
+        <div className="VerticalResizer--gripIcon" style={gripStyle} />
         <div
           aria-hidden
-          className="TimelineColumnResizer--dragger"
+          className="VerticalResizer--dragger"
           onMouseDown={this._dragManager.handleMouseDown}
           style={draggerStyle}
         />

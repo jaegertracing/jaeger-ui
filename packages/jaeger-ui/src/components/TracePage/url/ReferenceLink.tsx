@@ -24,8 +24,6 @@ type ReferenceLinkProps = {
   onClick?: () => void;
 };
 
-const linkToExternalSpan = (traceID: string, spanID: string) => `${getUrl(traceID)}/uiFind?=${spanID}`;
-
 export default function ReferenceLink(props: ReferenceLinkProps) {
   const { reference, children, className, focusSpan, ...otherProps } = props;
   delete otherProps.onClick;
@@ -38,7 +36,7 @@ export default function ReferenceLink(props: ReferenceLinkProps) {
   }
   return (
     <a
-      href={linkToExternalSpan(reference.traceID, reference.spanID)}
+      href={getUrl(reference.traceID, reference.spanID)}
       target="_blank"
       rel="noopener noreferrer"
       className={className}

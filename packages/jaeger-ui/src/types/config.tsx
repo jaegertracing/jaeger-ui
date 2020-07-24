@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { TPathAgnosticDecorationSchema } from '../model/path-agnostic-decorations/types';
 import { TNil } from '.';
 
 export type ConfigMenuItem = {
@@ -37,15 +38,27 @@ export type LinkPatternsConfig = {
   text: string;
 };
 
+// Default values are provided in packages/jaeger-ui/src/constants/default-config.tsx
 export type Config = {
   archiveEnabled?: boolean;
-  deepDependencies?: { menuEnabled?: boolean };
+  deepDependencies?: {
+    menuEnabled?: boolean;
+  };
   dependencies?: { dagMaxServicesLen?: number; menuEnabled?: boolean };
   menu: (ConfigMenuGroup | ConfigMenuItem)[];
-  search?: { maxLookback: { label: string; value: string } };
+  pathAgnosticDecorations?: TPathAgnosticDecorationSchema[];
+  qualityMetrics?: {
+    menuEnabled?: boolean;
+    menuLabel?: string;
+  };
+  search?: { maxLookback: { label: string; value: string }; maxLimit: number };
   scripts?: TScript[];
   topTagPrefixes?: string[];
   tracking?: {
+    cookieToDimension?: {
+      cookie: string;
+      dimension: string;
+    }[];
     gaID: string | TNil;
     trackErrors: boolean | TNil;
   };

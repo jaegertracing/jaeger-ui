@@ -59,7 +59,7 @@ export default function filterSpans(textFilter: string, spans: Span[] | TNil) {
     isTextInKeyValues(span.tags) ||
     span.logs.some(log => isTextInKeyValues(log.fields)) ||
     isTextInKeyValues(span.process.tags) ||
-    includeFilters.some(filter => filter === span.spanID);
+    includeFilters.some(filter => filter.replace(/^0*/, '') === span.spanID.replace(/^0*/, ''));
 
   // declare as const because need to disambiguate the type
   const rv: Set<string> = new Set(spans.filter(isSpanAMatch).map((span: Span) => span.spanID));

@@ -2,30 +2,36 @@
 
 exports[`<FilteredList> renders without exploding 1`] = `
 <div>
-  <label
+  <div
     className="FilteredList--filterWrapper"
   >
-    <IoIosSearch
-      className="FilteredList--filterIcon"
-    />
-    <input
-      className="FilteredList--filterInput"
-      onChange={[Function]}
-      onKeyDown={[Function]}
-      placeholder="Filter..."
-      type="text"
-      value=""
-    />
-  </label>
+    <label
+      className="FilteredList--inputWrapper"
+    >
+      <IoIosSearch
+        className="FilteredList--filterIcon"
+      />
+      <input
+        className="FilteredList--filterInput"
+        onChange={[Function]}
+        onKeyDown={[Function]}
+        placeholder="Filter..."
+        type="text"
+        value=""
+      />
+    </label>
+  </div>
   <List
     className="FilteredList--list u-simple-scrollbars"
     direction="ltr"
-    height={375}
+    height={210}
     itemCount={6}
     itemData={
       Object {
+        "addValues": undefined,
         "focusedIndex": null,
         "highlightQuery": "",
+        "multi": undefined,
         "options": Array [
           "and",
           "apples",
@@ -34,6 +40,7 @@ exports[`<FilteredList> renders without exploding 1`] = `
           "1",
           "2",
         ],
+        "removeValues": undefined,
         "selectedValue": null,
         "setValue": [Function],
       }

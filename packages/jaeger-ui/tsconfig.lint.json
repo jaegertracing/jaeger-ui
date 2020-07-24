@@ -30,7 +30,6 @@
     "src/api/jaeger.js",
     "src/components/SearchTracePage/SearchResults/ResultItem.markers.js",
     "src/model/order-by.js",
-    "src/model/trace-viewer.js",
     "src/selectors/process.js",
     "src/selectors/span.js",
     "src/selectors/trace.js",
