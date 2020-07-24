@@ -39,11 +39,11 @@ limitations under the License.
 }
 
 .SpanTreeOffset--indentGuide.is-active {
-  border-left: 3px solid darkgrey;
+  border-left-color: darkgrey;
 }
 
 .SpanTreeOffset--indentGuide.is-active:before {
-  background-color: transparent;
+  background-color: darkgrey;
 }
 
 .SpanTreeOffset--iconWrapper {
