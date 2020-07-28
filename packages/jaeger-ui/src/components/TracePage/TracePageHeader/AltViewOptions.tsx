@@ -28,7 +28,7 @@ import prefixUrl from '../../../utils/prefix-url';
 import { ETraceViewType } from '../types';
 
 type Props = {
-  onTraceViewChange: (actualViewType: ETraceViewType) => void;
+  onTraceViewChange: (viewType: ETraceViewType) => void;
   traceID: string;
   viewType: ETraceViewType;
 };
@@ -98,10 +98,10 @@ export default function AltViewOptions(props: Props) {
   const dropdownText = currentItem ? currentItem.label : 'Alternate Views';
   return (
     <Dropdown overlay={menu}>
-      <span className="span--AltViewOptions">
+      <div className="AltViewOptions">
         {`${dropdownText} `}
         <Icon type="down" />
-      </span>
+      </div>
     </Dropdown>
   );
 }
