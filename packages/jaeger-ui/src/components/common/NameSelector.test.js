@@ -16,7 +16,7 @@ import React from 'react';
 import { Icon, Popover } from 'antd';
 import { shallow } from 'enzyme';
 
-import BreakableText from '../../common/BreakableText';
+import BreakableText from './BreakableText';
 import NameSelector, { DEFAULT_PLACEHOLDER } from './NameSelector';
 
 describe('<NameSelector>', () => {

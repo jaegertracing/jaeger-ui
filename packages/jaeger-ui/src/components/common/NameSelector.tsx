@@ -17,8 +17,8 @@ import { Icon, Popover } from 'antd';
 import cx from 'classnames';
 import IoChevronDown from 'react-icons/lib/io/chevron-down';
 
-import BreakableText from '../../common/BreakableText';
-import FilteredList from '../../common/FilteredList';
+import BreakableText from './BreakableText';
+import FilteredList from './FilteredList';
 
 import './NameSelector.css';
 

@@ -18,7 +18,7 @@ import MdVisibility from 'react-icons/lib/md/visibility';
 import MdVisibilityOff from 'react-icons/lib/md/visibility-off';
 
 import HopsSelector from './HopsSelector';
-import NameSelector from './NameSelector';
+import NameSelector from '../../common/NameSelector';
 import LayoutSettings from './LayoutSettings';
 import { trackFilter, trackHeaderSetOperation, trackShowMatches } from '../index.track';
 import UiFindInput from '../../common/UiFindInput';

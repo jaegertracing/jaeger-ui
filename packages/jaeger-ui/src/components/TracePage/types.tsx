@@ -55,3 +55,9 @@ export interface IViewRangeTime {
 export interface IViewRange {
   time: IViewRangeTime;
 }
+
+export enum ETraceViewType {
+  TraceTimelineViewer = 'TraceTimelineViewer',
+  TraceGraph = 'TraceGraph',
+  TraceStatistics = 'TraceStatistics',
+}
