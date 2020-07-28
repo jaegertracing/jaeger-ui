@@ -13,32 +13,64 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Button, Dropdown, Icon, Menu } from 'antd';
+import { Dropdown, Icon, Menu } from 'antd';
 import { Link } from 'react-router-dom';
+import './AltViewOptions.css';
 
-import { trackGanttView, trackGraphView, trackJsonView, trackRawJsonView } from './TracePageHeader.track';
+import {
+  trackGanttView,
+  trackGraphView,
+  trackStatisticsView,
+  trackJsonView,
+  trackRawJsonView,
+} from './TracePageHeader.track';
 import prefixUrl from '../../../utils/prefix-url';
+import { ETraceViewType } from '../types';
 
 type Props = {
-  onTraceGraphViewClicked: () => void;
-  traceGraphView: boolean;
+  onTraceViewChange: (viewType: ETraceViewType) => void;
   traceID: string;
+  viewType: ETraceViewType;
 };
 
+const MENU_ITEMS = [
+  {
+    viewType: ETraceViewType.TraceTimelineViewer,
+    label: 'Trace Timeline',
+  },
+  {
+    viewType: ETraceViewType.TraceGraph,
+    label: 'Trace Graph',
+  },
+  {
+    viewType: ETraceViewType.TraceStatistics,
+    label: 'Trace Statistics',
+  },
+];
+
 export default function AltViewOptions(props: Props) {
-  const { onTraceGraphViewClicked, traceGraphView, traceID } = props;
-  const handleToggleView = () => {
-    if (traceGraphView) trackGanttView();
-    else trackGraphView();
-    onTraceGraphViewClicked();
+  const { onTraceViewChange, viewType, traceID } = props;
+
+  const handleSelectView = (item: ETraceViewType) => {
+    if (item === ETraceViewType.TraceTimelineViewer) {
+      trackGanttView();
+    } else if (item === ETraceViewType.TraceGraph) {
+      trackGraphView();
+    } else if (item === ETraceViewType.TraceStatistics) {
+      trackStatisticsView();
+    }
+    onTraceViewChange(item);
   };
+
   const menu = (
     <Menu>
-      <Menu.Item>
-        <a onClick={handleToggleView} role="button">
-          {traceGraphView ? 'Trace Timeline' : 'Trace Graph'}
-        </a>
-      </Menu.Item>
+      {MENU_ITEMS.filter(item => item.viewType !== viewType).map(item => (
+        <Menu.Item key={item.viewType}>
+          <a onClick={() => handleSelectView(item.viewType)} role="button">
+            {item.label}
+          </a>
+        </Menu.Item>
+      ))}
       <Menu.Item>
         <Link
           to={prefixUrl(`/api/traces/${traceID}?prettyPrint=true`)}
@@ -61,11 +93,15 @@ export default function AltViewOptions(props: Props) {
       </Menu.Item>
     </Menu>
   );
+
+  const currentItem = MENU_ITEMS.find(item => item.viewType === viewType);
+  const dropdownText = currentItem ? currentItem.label : 'Alternate Views';
   return (
     <Dropdown overlay={menu}>
-      <Button className="ub-mr2" htmlType="button" onClick={handleToggleView}>
-        Alternate Views <Icon type="down" />
-      </Button>
+      <div className="AltViewOptions">
+        {`${dropdownText} `}
+        <Icon type="down" />
+      </div>
     </Dropdown>
   );
 }

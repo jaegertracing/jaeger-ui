@@ -26,7 +26,7 @@ import AltViewOptions from './AltViewOptions';
 import KeyboardShortcutsHelp from './KeyboardShortcutsHelp';
 import SpanGraph from './SpanGraph';
 import TracePageSearchBar from './TracePageSearchBar';
-import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate } from '../types';
+import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate, ETraceViewType } from '../types';
 import LabeledList from '../../common/LabeledList';
 import NewWindowIcon from '../../common/NewWindowIcon';
 import TraceName from '../../common/TraceName';
@@ -49,7 +49,7 @@ type TracePageHeaderEmbedProps = {
   nextResult: () => void;
   onArchiveClicked: () => void;
   onSlimViewClicked: () => void;
-  onTraceGraphViewClicked: () => void;
+  onTraceViewChange: (viewType: ETraceViewType) => void;
   prevResult: () => void;
   resultCount: number;
   showArchiveButton: boolean;
@@ -60,7 +60,7 @@ type TracePageHeaderEmbedProps = {
   textFilter: string | TNil;
   toSearch: string | null;
   trace: Trace;
-  traceGraphView: boolean;
+  viewType: ETraceViewType;
   updateNextViewRangeTime: (update: ViewRangeTimeUpdate) => void;
   updateViewRangeTime: TUpdateViewRangeTimeFunction;
   viewRange: IViewRange;
@@ -117,7 +117,7 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
     nextResult,
     onArchiveClicked,
     onSlimViewClicked,
-    onTraceGraphViewClicked,
+    onTraceViewChange,
     prevResult,
     resultCount,
     showArchiveButton,
@@ -128,7 +128,7 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
     textFilter,
     toSearch,
     trace,
-    traceGraphView,
+    viewType,
     updateNextViewRangeTime,
     updateViewRangeTime,
     viewRange,
@@ -187,15 +187,11 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
           ref={forwardedRef}
           resultCount={resultCount}
           textFilter={textFilter}
-          navigable={!traceGraphView}
+          navigable={viewType === ETraceViewType.TraceTimelineViewer}
         />
         {showShortcutsHelp && <KeyboardShortcutsHelp className="ub-m2" />}
         {showViewOptions && (
-          <AltViewOptions
-            onTraceGraphViewClicked={onTraceGraphViewClicked}
-            traceGraphView={traceGraphView}
-            traceID={trace.traceID}
-          />
+          <AltViewOptions onTraceViewChange={onTraceViewChange} traceID={trace.traceID} viewType={viewType} />
         )}
         {showArchiveButton && (
           <Button className="ub-mr2 ub-flex ub-items-center" htmlType="button" onClick={onArchiveClicked}>

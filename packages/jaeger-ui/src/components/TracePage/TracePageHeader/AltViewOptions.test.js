@@ -14,17 +14,18 @@
 
 import * as React from 'react';
 import { shallow } from 'enzyme';
-import { Button, Dropdown } from 'antd';
+import { Dropdown } from 'antd';
 import { Link } from 'react-router-dom';
-
 import AltViewOptions from './AltViewOptions';
 import * as track from './TracePageHeader.track';
+import { ETraceViewType } from '../types';
 
 describe('AltViewOptions', () => {
   let trackGanttView;
   let trackGraphView;
   let trackJsonView;
   let trackRawJsonView;
+  let trackStatisticsView;
 
   let wrapper;
   const getLink = text => {
@@ -34,14 +35,18 @@ describe('AltViewOptions', () => {
       const link = links.at(i);
       if (link.children().text() === text) return link;
     }
-    const link = menu.find('a');
-    if (link.children().text() === text) return link;
+    const links2 = menu.find('a');
+    for (let i = 0; i < links.length; i++) {
+      const link = links2.at(i);
+      if (link.children().text() === text) return link;
+    }
     throw new Error(`Could not find "${text}"`);
   };
+
   const props = {
-    traceGraphView: true,
+    viewType: ETraceViewType.TraceTimelineViewer,
     traceID: 'test trace ID',
-    onTraceGraphViewClicked: jest.fn(),
+    onTraceViewChange: jest.fn(),
   };
 
   beforeAll(() => {
@@ -49,6 +54,7 @@ describe('AltViewOptions', () => {
     trackGraphView = jest.spyOn(track, 'trackGraphView');
     trackJsonView = jest.spyOn(track, 'trackJsonView');
     trackRawJsonView = jest.spyOn(track, 'trackRawJsonView');
+    trackStatisticsView = jest.spyOn(track, 'trackStatisticsView');
   });
 
   beforeEach(() => {
@@ -74,33 +80,39 @@ describe('AltViewOptions', () => {
     expect(trackGraphView).not.toHaveBeenCalled();
   });
 
-  it('toggles and tracks toggle', () => {
-    expect(trackGanttView).not.toHaveBeenCalled();
-    expect(props.onTraceGraphViewClicked).not.toHaveBeenCalled();
-    getLink('Trace Timeline').simulate('click');
-    expect(trackGanttView).toHaveBeenCalledTimes(1);
-    expect(props.onTraceGraphViewClicked).toHaveBeenCalledTimes(1);
+  it('track dropdown menu', () => {
+    const viewInteractions = [
+      {
+        link: 'Trace Graph',
+        trackFn: trackGraphView,
+        onTraceViewChangeArg: ETraceViewType.TraceGraph,
+      },
+      {
+        link: 'Trace Statistics',
+        trackFn: trackStatisticsView,
+        onTraceViewChangeArg: ETraceViewType.TraceStatisticsView,
+        propViewType: ETraceViewType.TraceGraph,
+      },
+      {
+        link: 'Trace Timeline',
+        trackFn: trackGanttView,
+        onTraceViewChangeArg: ETraceViewType.TraceTimelineViewer,
+        propViewType: ETraceViewType.TraceStatisticsView,
+      },
+    ];
 
-    wrapper.setProps({ traceGraphView: false });
-    expect(trackGraphView).not.toHaveBeenCalled();
-    getLink('Trace Graph').simulate('click');
-    expect(trackGraphView).toHaveBeenCalledTimes(1);
-    expect(props.onTraceGraphViewClicked).toHaveBeenCalledTimes(2);
+    viewInteractions.forEach(({ link, trackFn, propViewType }, i) => {
+      if (propViewType) {
+        wrapper.setProps({ viewType: propViewType });
+      }
+      expect(props.onTraceViewChange).toHaveBeenCalledTimes(i);
+      expect(trackFn).not.toHaveBeenCalled();
 
-    wrapper.setProps({ traceGraphView: true });
-    expect(trackGanttView).toHaveBeenCalledTimes(1);
-    wrapper.find(Button).simulate('click');
-    expect(trackGanttView).toHaveBeenCalledTimes(2);
-    expect(props.onTraceGraphViewClicked).toHaveBeenCalledTimes(3);
-
-    wrapper.setProps({ traceGraphView: false });
-    expect(trackGraphView).toHaveBeenCalledTimes(1);
-    wrapper.find(Button).simulate('click');
-    expect(trackGraphView).toHaveBeenCalledTimes(2);
-    expect(props.onTraceGraphViewClicked).toHaveBeenCalledTimes(4);
-
-    expect(trackGanttView).toHaveBeenCalledTimes(2);
-    expect(trackJsonView).not.toHaveBeenCalled();
-    expect(trackRawJsonView).not.toHaveBeenCalled();
+      getLink(link).simulate('click');
+      expect(props.onTraceViewChange).toHaveBeenCalledTimes(i + 1);
+      viewInteractions.forEach(({ trackFn: fn }, j) => {
+        expect(fn).toHaveBeenCalledTimes(j <= i ? 1 : 0);
+      });
+    });
   });
 });

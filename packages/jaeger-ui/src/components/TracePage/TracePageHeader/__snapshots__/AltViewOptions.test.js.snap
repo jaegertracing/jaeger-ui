@@ -16,7 +16,15 @@ exports[`AltViewOptions renders correctly 1`] = `
           onClick={[Function]}
           role="button"
         >
-          Trace Timeline
+          Trace Graph
+        </a>
+      </MenuItem>
+      <MenuItem>
+        <a
+          onClick={[Function]}
+          role="button"
+        >
+          Trace Statistics
         </a>
       </MenuItem>
       <MenuItem>
@@ -46,19 +54,13 @@ exports[`AltViewOptions renders correctly 1`] = `
   placement="bottomLeft"
   prefixCls="ant-dropdown"
 >
-  <Button
-    block={false}
-    className="ub-mr2"
-    ghost={false}
-    htmlType="button"
-    loading={false}
-    onClick={[Function]}
-    prefixCls="ant-btn"
+  <div
+    className="AltViewOptions"
   >
-    Alternate Views 
+    Trace Timeline 
     <Icon
       type="down"
     />
-  </Button>
+  </div>
 </Dropdown>
 `;
