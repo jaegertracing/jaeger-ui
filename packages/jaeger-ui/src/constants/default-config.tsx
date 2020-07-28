@@ -16,6 +16,8 @@ import deepFreeze from 'deep-freeze';
 
 import { FALLBACK_DAG_MAX_NUM_SERVICES } from './index';
 
+const { version } = require('../../package.json');
+
 export default deepFreeze(
   Object.defineProperty(
     {
@@ -33,6 +35,9 @@ export default deepFreeze(
         {
           label: 'About Jaeger',
           items: [
+            {
+              label: `Jaeger UI v${version}`,
+            },
             {
               label: 'Website/Docs',
               url: 'https://www.jaegertracing.io/',

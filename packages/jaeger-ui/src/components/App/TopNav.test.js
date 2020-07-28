@@ -25,6 +25,9 @@ describe('<TopNav>', () => {
   const labelAbout = 'About Jaeger';
   const dropdownItems = [
     {
+      label: 'Version 1',
+    },
+    {
       label: 'Docs',
       url: 'http://jaeger.readthedocs.io/en/latest/',
     },
@@ -111,16 +114,27 @@ describe('<TopNav>', () => {
     });
 
     describe('<CustomNavDropdown>', () => {
+      let subMenu;
+
       beforeEach(() => {
         wrapper = shallow(<TopNav.CustomNavDropdown {...configMenuGroup} />);
+        subMenu = shallow(wrapper.find('Dropdown').props().overlay);
       });
 
-      it('renders sub-menu items', () => {
-        const subMenu = shallow(wrapper.find('Dropdown').props().overlay);
-        dropdownItems.forEach(itemConfig => {
+      it('renders sub-menu text', () => {
+        dropdownItems.slice(0, 0).forEach(itemConfig => {
+          const item = subMenu.find(`[text="${itemConfig.label}"]`);
+          expect(item.length).toBe(1);
+          expect(item.prop('disabled')).toBe(true);
+        });
+      });
+
+      it('renders sub-menu links', () => {
+        dropdownItems.slice(1, 2).forEach(itemConfig => {
           const item = subMenu.find(`[href="${itemConfig.url}"]`);
           expect(item.length).toBe(1);
           expect(item.prop('target')).toBe(itemConfig.anchorTarget || '_blank');
+          expect(item.text()).toBe(itemConfig.label);
         });
       });
     });
