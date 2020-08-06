@@ -179,7 +179,8 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     return false;
   }
 
-  componentWillUpdate(nextProps: VirtualizedTraceViewProps) {
+  // eslint-disable-next-line camelcase
+  UNSAFE_componentWillUpdate(nextProps: VirtualizedTraceViewProps) {
     const { childrenHiddenIDs, detailStates, registerAccessors, trace, currentViewRangeTime } = this.props;
     const {
       currentViewRangeTime: nextViewRangeTime,

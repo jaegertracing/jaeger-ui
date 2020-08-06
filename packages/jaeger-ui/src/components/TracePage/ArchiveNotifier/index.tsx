@@ -111,7 +111,8 @@ export default class ArchiveNotifier extends React.PureComponent<Props, State> {
     this.state = { notifiedState };
   }
 
-  componentWillReceiveProps(nextProps: Props) {
+  // eslint-disable-next-line camelcase
+  UNSAFE_componentWillReceiveProps(nextProps: Props) {
     const notifiedState = processProps(this.state.notifiedState, nextProps);
     if (this.state.notifiedState !== notifiedState) {
       this.setState({ notifiedState });
