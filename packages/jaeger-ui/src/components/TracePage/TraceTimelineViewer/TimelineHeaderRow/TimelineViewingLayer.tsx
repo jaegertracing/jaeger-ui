@@ -137,7 +137,8 @@ export default class TimelineViewingLayer extends React.PureComponent<TimelineVi
     this._root = undefined;
   }
 
-  componentWillReceiveProps(nextProps: TimelineViewingLayerProps) {
+  // eslint-disable-next-line camelcase
+  UNSAFE_componentWillReceiveProps(nextProps: TimelineViewingLayerProps) {
     const { boundsInvalidator } = this.props;
     if (boundsInvalidator !== nextProps.boundsInvalidator) {
       this._draggerReframe.resetBounds();
