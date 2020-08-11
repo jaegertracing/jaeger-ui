@@ -182,14 +182,11 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
     mergeShortcuts(shortcutCallbacks);
   }
 
-  // eslint-disable-next-line camelcase
-  UNSAFE_componentWillReceiveProps(nextProps: TProps) {
-    const { trace } = nextProps;
-    this._scrollManager.setTrace(trace && trace.data);
-  }
-
   componentDidUpdate({ id: prevID }: TProps) {
     const { id, trace } = this.props;
+
+    this._scrollManager.setTrace(trace && trace.data);
+
     this.setHeaderHeight(this._headerElm);
     if (!trace) {
       this.ensureTraceFetched();
