@@ -37,7 +37,8 @@ export default class DependencyForceGraph extends Component {
     };
   }
 
-  componentWillMount() {
+  // eslint-disable-next-line camelcase
+  UNSAFE_componentWillMount() {
     this.onResize();
     this.debouncedResize = debounce((...args) => this.onResize(...args), 50);
     window.addEventListener('resize', this.debouncedResize);

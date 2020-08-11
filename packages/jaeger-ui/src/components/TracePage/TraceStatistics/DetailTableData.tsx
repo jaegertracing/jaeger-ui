@@ -37,7 +37,8 @@ type State = {
  * Used to render the detail column.
  */
 export default class DetailTableData extends Component<Props, State> {
-  componentWillMount() {
+  // eslint-disable-next-line camelcase
+  UNSAFE_componentWillMount() {
     const element = this.props.values.map(item => {
       return { uid: _.uniqueId('id'), value: item };
     });

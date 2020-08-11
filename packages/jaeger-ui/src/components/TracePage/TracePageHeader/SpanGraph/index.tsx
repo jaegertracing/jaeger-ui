@@ -66,7 +66,8 @@ export default class SpanGraph extends React.PureComponent<SpanGraphProps, SpanG
     };
   }
 
-  componentWillReceiveProps(nextProps: SpanGraphProps) {
+  // eslint-disable-next-line camelcase
+  UNSAFE_componentWillReceiveProps(nextProps: SpanGraphProps) {
     const { trace } = nextProps;
     if (this.props.trace !== trace) {
       this.setState({

@@ -42,7 +42,8 @@ export class PageImpl extends React.Component<TProps> {
     trackPageView(pathname, search);
   }
 
-  componentWillReceiveProps(nextProps: TProps) {
+  // eslint-disable-next-line camelcase
+  UNSAFE_componentWillReceiveProps(nextProps: TProps) {
     const { pathname, search } = this.props;
     const { pathname: nextPathname, search: nextSearch } = nextProps;
     if (pathname !== nextPathname || search !== nextSearch) {

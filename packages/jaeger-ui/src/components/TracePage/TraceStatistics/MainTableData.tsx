@@ -39,7 +39,8 @@ type State = {
  * Used to render the main column.
  */
 export default class MainTableData extends Component<Props, State> {
-  componentWillMount() {
+  // eslint-disable-next-line camelcase
+  UNSAFE_componentWillMount() {
     const element = this.props.values.map(item => {
       return { uid: _.uniqueId('id'), value: item };
     });
