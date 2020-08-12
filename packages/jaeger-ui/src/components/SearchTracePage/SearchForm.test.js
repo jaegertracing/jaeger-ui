@@ -56,6 +56,7 @@ const DATE_FORMAT = 'YYYY-MM-DD';
 const TIME_FORMAT = 'HH:mm';
 const defaultProps = {
   dataCenters: ['dc1'],
+  handleSubmit: () => {},
   searchMaxLookback: {
     label: '2 Days',
     value: '2d',
