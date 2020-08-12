@@ -1,0 +1,18 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`<TraceIDSearchInput /> renders as expected 1`] = `
+<form
+  className="ant-form ant-form-horizontal TraceIDSearchInput--form"
+  onSubmit={[Function]}
+>
+  <input
+    autosize={null}
+    className="ant-input"
+    disabled={false}
+    name="idInput"
+    onKeyDown={[Function]}
+    placeholder="Lookup by Trace ID..."
+    type="text"
+  />
+</form>
+`;
