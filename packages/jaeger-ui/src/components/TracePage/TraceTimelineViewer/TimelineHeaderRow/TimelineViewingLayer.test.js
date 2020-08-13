@@ -50,7 +50,7 @@ describe('<TimelineViewingLayer>', () => {
 
   it('sets _root to the root DOM node', () => {
     expect(instance._root).toBeDefined();
-    expect(wrapper.find('.TimelineViewingLayer').getDOMNode()).toBe(instance._root);
+    expect(wrapper.find('.TimelineViewingLayer').getDOMNode()).toBe(instance._root.current);
   });
 
   describe('uses DraggableManager', () => {
@@ -75,8 +75,15 @@ describe('<TimelineViewingLayer>', () => {
     it('returns the dragging bounds from _getDraggingBounds()', () => {
       const left = 10;
       const width = 100;
-      instance._root.getBoundingClientRect = () => ({ left, width });
+      instance._root.current.getBoundingClientRect = () => ({ left, width });
       expect(instance._getDraggingBounds()).toEqual({ width, clientXLeft: left });
+    });
+
+    it('throws error on call to _getDraggingBounds() on unmounted component', () => {
+      wrapper.unmount();
+      expect(instance._getDraggingBounds).toThrow(
+        'Component must be mounted in order to determine DraggableBounds'
+      );
     });
 
     it('updates viewRange.time.cursor via _draggerReframe._onMouseMove', () => {

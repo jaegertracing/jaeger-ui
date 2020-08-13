@@ -122,7 +122,7 @@ function getMarkers(
  */
 export default class TimelineViewingLayer extends React.PureComponent<TimelineViewingLayerProps> {
   _draggerReframe: DraggableManager;
-  _root: Element | TNil;
+  _root: React.RefObject<HTMLDivElement>;
 
   constructor(props: TimelineViewingLayerProps) {
     super(props);
@@ -134,7 +134,7 @@ export default class TimelineViewingLayer extends React.PureComponent<TimelineVi
       onMouseLeave: this._handleReframeMouseLeave,
       onMouseMove: this._handleReframeMouseMove,
     });
-    this._root = undefined;
+    this._root = React.createRef();
   }
 
   // eslint-disable-next-line camelcase
@@ -149,15 +149,12 @@ export default class TimelineViewingLayer extends React.PureComponent<TimelineVi
     this._draggerReframe.dispose();
   }
 
-  _setRoot = (elm: Element | TNil) => {
-    this._root = elm;
-  };
-
   _getDraggingBounds = (): DraggableBounds => {
-    if (!this._root) {
-      throw new Error('invalid state');
+    const current = this._root.current;
+    if (!current) {
+      throw new Error('Component must be mounted in order to determine DraggableBounds');
     }
-    const { left: clientXLeft, width } = this._root.getBoundingClientRect();
+    const { left: clientXLeft, width } = current.getBoundingClientRect();
     return { clientXLeft, width };
   };
 
@@ -205,7 +202,7 @@ export default class TimelineViewingLayer extends React.PureComponent<TimelineVi
       <div
         aria-hidden
         className="TimelineViewingLayer"
-        ref={this._setRoot}
+        ref={this._root}
         onMouseDown={this._draggerReframe.handleMouseDown}
         onMouseLeave={this._draggerReframe.handleMouseLeave}
         onMouseMove={this._draggerReframe.handleMouseMove}
