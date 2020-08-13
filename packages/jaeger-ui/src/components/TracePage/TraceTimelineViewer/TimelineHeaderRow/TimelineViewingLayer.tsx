@@ -171,20 +171,22 @@ export default class TimelineViewingLayer extends React.PureComponent<TimelineVi
     this.props.updateNextViewRangeTime({ cursor: undefined });
   };
 
-  _handleReframeDragUpdate = ({ value }: DraggingUpdate) => {
+  _getAnchorAndShift = (value: number) => {
     const { current, reframe } = this.props.viewRangeTime;
     const [viewStart, viewEnd] = current;
     const shift = mapFromViewSubRange(viewStart, viewEnd, value);
     const anchor = reframe ? reframe.anchor : shift;
+    return { anchor, shift };
+  };
+
+  _handleReframeDragUpdate = ({ value }: DraggingUpdate) => {
+    const { anchor, shift } = this._getAnchorAndShift(value);
     const update = { reframe: { anchor, shift } };
     this.props.updateNextViewRangeTime(update);
   };
 
   _handleReframeDragEnd = ({ manager, value }: DraggingUpdate) => {
-    const { current, reframe } = this.props.viewRangeTime;
-    const [viewStart, viewEnd] = current;
-    const shift = mapFromViewSubRange(viewStart, viewEnd, value);
-    const anchor = reframe ? reframe.anchor : shift;
+    const { anchor, shift } = this._getAnchorAndShift(value);
     const [start, end] = shift < anchor ? [shift, anchor] : [anchor, shift];
     manager.resetBounds();
     this.props.updateViewRangeTime(start, end, 'timeline-header');
