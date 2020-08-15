@@ -24,7 +24,7 @@ import transformTraceData from '../../../model/transform-trace-data';
 const trace = transformTraceData(traceGenerator.trace({}));
 
 it('<ResultItem /> should render base case correctly', () => {
-  const wrapper = shallow(<ResultItem trace={trace} durationPercent={50} />);
+  const wrapper = shallow(<ResultItem trace={trace} durationPercent={50} linkTo="" />);
   const numberOfSpanText = wrapper
     .find(`[data-test="${markers.NUM_SPANS}"]`)
     .first()
@@ -36,7 +36,7 @@ it('<ResultItem /> should render base case correctly', () => {
 });
 
 it('<ResultItem /> should not render any ServiceTags when there are no services', () => {
-  const wrapper = shallow(<ResultItem trace={{ ...trace, services: [] }} durationPercent={50} />);
+  const wrapper = shallow(<ResultItem trace={{ ...trace, services: [] }} durationPercent={50} linkTo="" />);
   const serviceTags = wrapper.find(`[data-test="${markers.SERVICE_TAGS}"]`).find(Tag);
   expect(serviceTags).toHaveLength(0);
 });

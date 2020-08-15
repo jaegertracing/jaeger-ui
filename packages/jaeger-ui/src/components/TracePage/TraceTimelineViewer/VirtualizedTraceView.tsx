@@ -179,9 +179,12 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     return false;
   }
 
-  componentWillUpdate(nextProps: VirtualizedTraceViewProps) {
-    const { childrenHiddenIDs, detailStates, registerAccessors, trace, currentViewRangeTime } = this.props;
+  componentDidUpdate(prevProps: Readonly<VirtualizedTraceViewProps>) {
+    const { childrenHiddenIDs, detailStates, registerAccessors, trace, currentViewRangeTime } = prevProps;
     const {
+      shouldScrollToFirstUiFindMatch,
+      clearShouldScrollToFirstUiFindMatch,
+      scrollToFirstVisibleSpan,
       currentViewRangeTime: nextViewRangeTime,
       childrenHiddenIDs: nextHiddenIDs,
       detailStates: nextDetailStates,
@@ -189,13 +192,16 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
       setTrace,
       trace: nextTrace,
       uiFind,
-    } = nextProps;
+    } = this.props;
+
     if (trace !== nextTrace) {
       setTrace(nextTrace, uiFind);
     }
+
     if (trace !== nextTrace || childrenHiddenIDs !== nextHiddenIDs || detailStates !== nextDetailStates) {
       this.rowStates = nextTrace ? generateRowStates(nextTrace.spans, nextHiddenIDs, nextDetailStates) : [];
     }
+
     if (currentViewRangeTime !== nextViewRangeTime) {
       this.clippingCssClasses = getCssClasses(nextViewRangeTime);
       const [zoomStart, zoomEnd] = nextViewRangeTime;
@@ -206,17 +212,11 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
         viewEnd: zoomEnd,
       });
     }
+
     if (this.listView && registerAccessors !== nextRegisterAccessors) {
       nextRegisterAccessors(this.getAccessors());
     }
-  }
 
-  componentDidUpdate() {
-    const {
-      shouldScrollToFirstUiFindMatch,
-      clearShouldScrollToFirstUiFindMatch,
-      scrollToFirstVisibleSpan,
-    } = this.props;
     if (shouldScrollToFirstUiFindMatch) {
       scrollToFirstVisibleSpan();
       clearShouldScrollToFirstUiFindMatch();

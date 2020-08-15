@@ -111,11 +111,9 @@ export default class ArchiveNotifier extends React.PureComponent<Props, State> {
     this.state = { notifiedState };
   }
 
-  componentWillReceiveProps(nextProps: Props) {
-    const notifiedState = processProps(this.state.notifiedState, nextProps);
-    if (this.state.notifiedState !== notifiedState) {
-      this.setState({ notifiedState });
-    }
+  static getDerivedStateFromProps(props: Props, state: State) {
+    const notifiedState = processProps(state.notifiedState, props);
+    return { notifiedState };
   }
 
   componentWillUnmount() {

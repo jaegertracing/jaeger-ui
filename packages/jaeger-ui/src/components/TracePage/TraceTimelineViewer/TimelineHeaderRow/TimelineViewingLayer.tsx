@@ -137,9 +137,9 @@ export default class TimelineViewingLayer extends React.PureComponent<TimelineVi
     this._root = undefined;
   }
 
-  componentWillReceiveProps(nextProps: TimelineViewingLayerProps) {
+  componentDidUpdate(prevProps: Readonly<TimelineViewingLayerProps>) {
     const { boundsInvalidator } = this.props;
-    if (boundsInvalidator !== nextProps.boundsInvalidator) {
+    if (prevProps.boundsInvalidator !== boundsInvalidator) {
       this._draggerReframe.resetBounds();
     }
   }

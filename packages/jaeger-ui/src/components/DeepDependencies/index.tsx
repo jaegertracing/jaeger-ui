@@ -118,8 +118,8 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps, TSt
     }
   }
 
-  componentWillReceiveProps(nextProps: TProps) {
-    DeepDependencyGraphPageImpl.fetchModelIfStale(nextProps);
+  componentDidUpdate() {
+    DeepDependencyGraphPageImpl.fetchModelIfStale(this.props);
   }
 
   clearOperation = () => {
