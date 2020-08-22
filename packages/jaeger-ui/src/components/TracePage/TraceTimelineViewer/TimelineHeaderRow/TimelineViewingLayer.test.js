@@ -50,7 +50,7 @@ describe('<TimelineViewingLayer>', () => {
 
   it('sets _root to the root DOM node', () => {
     expect(instance._root).toBeDefined();
-    expect(wrapper.find('.TimelineViewingLayer').getDOMNode()).toBe(instance._root);
+    expect(wrapper.find('.TimelineViewingLayer').getDOMNode()).toBe(instance._root.current);
   });
 
   describe('uses DraggableManager', () => {
@@ -75,8 +75,15 @@ describe('<TimelineViewingLayer>', () => {
     it('returns the dragging bounds from _getDraggingBounds()', () => {
       const left = 10;
       const width = 100;
-      instance._root.getBoundingClientRect = () => ({ left, width });
+      instance._root.current.getBoundingClientRect = () => ({ left, width });
       expect(instance._getDraggingBounds()).toEqual({ width, clientXLeft: left });
+    });
+
+    it('throws error on call to _getDraggingBounds() on unmounted component', () => {
+      wrapper.unmount();
+      expect(instance._getDraggingBounds).toThrow(
+        'Component must be mounted in order to determine DraggableBounds'
+      );
     });
 
     it('updates viewRange.time.cursor via _draggerReframe._onMouseMove', () => {
@@ -101,7 +108,7 @@ describe('<TimelineViewingLayer>', () => {
 
     it('handles drag move via _draggerReframe._onDragMove', () => {
       const anchor = 0.25;
-      const viewRangeTime = { ...props.viewRangeTime, reframe: { anchor, shift: Math.random() } };
+      const viewRangeTime = { ...props.viewRangeTime, reframe: { anchor, shift: 0.5 } };
       const value = 0.5;
       const shift = mapFromSubRange(viewStart, viewEnd, value);
       // make sure `anchor` is already present on the props
@@ -118,11 +125,28 @@ describe('<TimelineViewingLayer>', () => {
       const value = 0.5;
       const shift = mapFromSubRange(viewStart, viewEnd, value);
       const anchor = 0.25;
-      const viewRangeTime = { ...props.viewRangeTime, reframe: { anchor, shift: Math.random() } };
+      const viewRangeTime = { ...props.viewRangeTime, reframe: { anchor, shift } };
       wrapper.setProps({ viewRangeTime });
       instance._draggerReframe._onDragEnd({ manager, value });
       expect(manager.resetBounds.mock.calls).toEqual([[]]);
       expect(props.updateViewRangeTime.mock.calls).toEqual([[anchor, shift, 'timeline-header']]);
+    });
+
+    it('_draggerReframe._onDragEnd sorts anchor and shift', () => {
+      const manager = { resetBounds: jest.fn() };
+      const value = 0.5;
+      const shift = mapFromSubRange(viewStart, viewEnd, value);
+      const anchor = 0.75;
+      const viewRangeTime = { ...props.viewRangeTime, reframe: { anchor, shift } };
+      wrapper.setProps({ viewRangeTime });
+      instance._draggerReframe._onDragEnd({ manager, value });
+      expect(props.updateViewRangeTime.mock.calls).toEqual([[shift, anchor, 'timeline-header']]);
+    });
+
+    it('resets draggable bounds on boundsInvalidator update', () => {
+      const spy = jest.spyOn(instance._draggerReframe, 'resetBounds');
+      wrapper.setProps({ boundsInvalidator: 'SOMETHING-NEW' });
+      expect(spy).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -153,6 +177,24 @@ describe('<TimelineViewingLayer>', () => {
       const viewRangeTime = { ...props.viewRangeTime, reframe: { anchor: viewStart, shift: viewEnd } };
       wrapper.setProps({ viewRangeTime });
       expect(wrapper.find('.isDraggingRight.isReframeDrag').length).toBe(1);
+    });
+
+    it('renders the reframe dragging normalized left', () => {
+      const viewRangeTime = { ...props.viewRangeTime, reframe: { anchor: -0.25, shift: viewEnd } };
+      wrapper.setProps({ viewRangeTime });
+      expect(wrapper.find('.isDraggingRight.isReframeDrag').length).toBe(1);
+    });
+
+    it('renders the reframe dragging normalized right', () => {
+      const viewRangeTime = { ...props.viewRangeTime, reframe: { anchor: viewStart, shift: 1.25 } };
+      wrapper.setProps({ viewRangeTime });
+      expect(wrapper.find('.isDraggingRight.isReframeDrag').length).toBe(1);
+    });
+
+    it('does not render the reframe on out of bounds', () => {
+      const viewRangeTime = { ...props.viewRangeTime, reframe: { anchor: 1.5, shift: 1.75 } };
+      wrapper.setProps({ viewRangeTime });
+      expect(wrapper.find('.isReframeDrag').length).toBe(0);
     });
 
     it('renders the shiftStart dragging', () => {
