@@ -118,9 +118,8 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps, TSt
     }
   }
 
-  // eslint-disable-next-line camelcase
-  UNSAFE_componentWillReceiveProps(nextProps: TProps) {
-    DeepDependencyGraphPageImpl.fetchModelIfStale(nextProps);
+  componentDidUpdate() {
+    DeepDependencyGraphPageImpl.fetchModelIfStale(this.props);
   }
 
   clearOperation = () => {

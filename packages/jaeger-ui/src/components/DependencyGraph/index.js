@@ -66,8 +66,7 @@ export class DependencyGraphPageImpl extends Component {
     };
   }
 
-  // eslint-disable-next-line camelcase
-  UNSAFE_componentWillMount() {
+  componentDidMount() {
     this.props.fetchDependencies();
   }
 
