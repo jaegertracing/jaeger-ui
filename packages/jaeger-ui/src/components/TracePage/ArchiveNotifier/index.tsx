@@ -40,10 +40,10 @@ function getNextNotifiedState(props: Props) {
   if (!archivedState) {
     return null;
   }
-  if (archivedState.isLoading) {
+  if ('isLoading' in archivedState && archivedState.isLoading) {
     return ENotifiedState.Progress;
   }
-  return archivedState.isAcknowledged ? null : ENotifiedState.Outcome;
+  return 'isAcknowledged' in archivedState && archivedState.isAcknowledged ? null : ENotifiedState.Outcome;
 }
 
 function updateNotification(oldState: ENotifiedState | null, nextState: ENotifiedState | null, props: Props) {
@@ -65,7 +65,7 @@ function updateNotification(oldState: ENotifiedState | null, nextState: ENotifie
   }
   const { acknowledge, archivedState } = props;
   if (nextState === ENotifiedState.Outcome) {
-    if (archivedState && archivedState.error) {
+    if (archivedState && 'error' in archivedState) {
       const { error } = archivedState;
       notification.warn({
         key: ENotifiedState.Outcome,
@@ -76,7 +76,7 @@ function updateNotification(oldState: ENotifiedState | null, nextState: ENotifie
         icon: <Icon type="clock-circle-o" className="ArchiveNotifier--errorIcon" />,
         onClose: acknowledge,
       });
-    } else if (archivedState && archivedState.isArchived) {
+    } else if (archivedState && 'isArchived' in archivedState && archivedState.isArchived) {
       notification.success({
         key: ENotifiedState.Outcome,
         description: null,

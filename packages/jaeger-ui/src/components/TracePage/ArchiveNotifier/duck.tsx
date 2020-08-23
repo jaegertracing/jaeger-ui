@@ -16,7 +16,13 @@ import { createActions, handleActions, ActionFunctionAny } from 'redux-actions';
 
 import { archiveTrace } from '../../../actions/jaeger-api';
 import { ApiError } from '../../../types/api-error';
-import { TracesArchive } from '../../../types/archive';
+import {
+  AcknowledgedTraceArchive,
+  ErrorTraceArchive,
+  LoadingTraceArchive,
+  TraceArchive,
+  TracesArchive,
+} from '../../../types/archive';
 import generateActionTypes from '../../../utils/generate-action-types';
 
 type ArchiveAction = {
@@ -39,35 +45,45 @@ export const actions: { [actionType: string]: ActionFunctionAny<any> } = {
   archiveTrace,
 };
 
-function acknowledge(state: TracesArchive, { payload }: ArchiveAction) {
+function isLoading(traceArchive: TraceArchive): traceArchive is LoadingTraceArchive {
+  return traceArchive && 'isLoading' in traceArchive && traceArchive.isLoading;
+}
+
+function acknowledge(state: TracesArchive, { payload }: ArchiveAction): TracesArchive {
   const traceID = typeof payload === 'string' ? payload : null;
   if (!traceID) {
     // make flow happy
     throw new Error('Invalid state, missing traceID for archive acknowledge');
   }
   const traceArchive = state[traceID];
-  if (traceArchive && traceArchive.isLoading) {
+  if (isLoading(traceArchive)) {
     // acknowledgement during loading is invalid (should not happen)
     return state;
   }
-  const next = { ...traceArchive, isAcknowledged: true };
+
+  const next: AcknowledgedTraceArchive = { ...traceArchive, isAcknowledged: true };
   return { ...state, [traceID]: next };
 }
 
-function archiveStarted(state: TracesArchive, { meta }: ArchiveAction) {
+function archiveStarted(state: TracesArchive, { meta }: ArchiveAction): TracesArchive {
   return { ...state, [meta.id]: { isLoading: true } };
 }
 
-function archiveDone(state: TracesArchive, { meta }: ArchiveAction) {
+function archiveDone(state: TracesArchive, { meta }: ArchiveAction): TracesArchive {
   return { ...state, [meta.id]: { isArchived: true, isAcknowledged: false } };
 }
 
-function archiveErred(state: TracesArchive, { meta, payload }: ArchiveAction) {
+function archiveErred(state: TracesArchive, { meta, payload }: ArchiveAction): TracesArchive {
   if (!payload) {
     // make flow happy
     throw new Error('Invalid state, missing API error details');
   }
-  const traceArchive = { error: payload, isArchived: false, isError: true, isAcknowledged: false };
+  const traceArchive: ErrorTraceArchive = {
+    error: payload,
+    isArchived: false,
+    isError: true,
+    isAcknowledged: false,
+  };
   return { ...state, [meta.id]: traceArchive };
 }
 
