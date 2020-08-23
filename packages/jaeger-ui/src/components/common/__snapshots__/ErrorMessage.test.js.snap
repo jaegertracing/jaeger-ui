@@ -1,0 +1,143 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`<ErrorMessage> <Details /> renders custom wrapper class 1`] = `
+<div
+  className="ErrorMessage TEST-WRAPPER-CLASS"
+>
+  <div
+    className="ErrorMessage--details  u-simple-scrollbars"
+  >
+    <table
+      className="ErrorMessage--detailsTable"
+    >
+      <tbody>
+        <ErrorAttr
+          name="Status text"
+          value="value-httpStatusText"
+        />
+        <ErrorAttr
+          name="URL"
+          value="value-httpUrl"
+        />
+        <ErrorAttr
+          name="Query"
+          value="value-httpQuery"
+        />
+        <ErrorAttr
+          name="Response body"
+          value="value-httpBody"
+        />
+      </tbody>
+    </table>
+  </div>
+</div>
+`;
+
+exports[`<ErrorMessage> <Details /> renders empty on string error 1`] = `""`;
+
+exports[`<ErrorMessage> <Details /> renders wrapper on wrap 1`] = `
+<div
+  className="ErrorMessage "
+>
+  <div
+    className="ErrorMessage--details  u-simple-scrollbars"
+  >
+    <table
+      className="ErrorMessage--detailsTable"
+    >
+      <tbody>
+        <ErrorAttr
+          name="Status text"
+          value="value-httpStatusText"
+        />
+        <ErrorAttr
+          name="URL"
+          value="value-httpUrl"
+        />
+        <ErrorAttr
+          name="Query"
+          value="value-httpQuery"
+        />
+        <ErrorAttr
+          name="Response body"
+          value="value-httpBody"
+        />
+      </tbody>
+    </table>
+  </div>
+</div>
+`;
+
+exports[`<ErrorMessage> rendering more complex errors renders on missing httpStatus from the error 1`] = `
+<div
+  className="ErrorMessage--details  u-simple-scrollbars"
+>
+  <table
+    className="ErrorMessage--detailsTable"
+  >
+    <tbody>
+      <ErrorAttr
+        name="Status text"
+        value="value-httpStatusText"
+      />
+      <ErrorAttr
+        name="URL"
+        value="value-httpUrl"
+      />
+      <ErrorAttr
+        name="Query"
+        value="value-httpQuery"
+      />
+      <ErrorAttr
+        name="Response body"
+        value="value-httpBody"
+      />
+    </tbody>
+  </table>
+</div>
+`;
+
+exports[`<ErrorMessage> rendering more complex errors renders truncated body excerpt on large body 1`] = `
+<div
+  className="ErrorMessage--details  u-simple-scrollbars"
+>
+  <table
+    className="ErrorMessage--detailsTable"
+  >
+    <tbody>
+      <ErrorAttr
+        name="Status"
+        value="value-httpStatus"
+      />
+      <ErrorAttr
+        name="Status text"
+        value="value-httpStatusText"
+      />
+      <ErrorAttr
+        name="URL"
+        value="value-httpUrl"
+      />
+      <ErrorAttr
+        name="Query"
+        value="value-httpQuery"
+      />
+      <ErrorAttr
+        name="Response body"
+        value="value-httpBody-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed vel
+          arcu mattis, pellentesque metus eget, fermentum dolor. Pellentesque habitant morbi
+          tristique senectus et netus et malesuada fames ac turpis egestas. Integer placerat turpis
+          diam, in eleifend est congue maximus. Sed dictum ipsum a dolor pellentesque, vestibulum
+          congue mi pharetra. Pellentesque id augue sit amet libero consectetur rutrum ac rutrum
+          nisl. Proin suscipit, libero et gravida tristique, magna dolor pulvinar ex, sit amet
+          accumsan tellus metus vel elit. Ut condimentum ultrices felis vel feugiat. Praesent tellus
+          nisl, feugiat ut est sed, lobortis lacinia elit. Aenean consequat nunc arcu, in tincidunt
+          libero blandit non.
+          
+          Vestibulum aliquet lobortis tincidunt. Donec in nunc a sapien rutrum ultricies eu ac
+          felis. Vestibulum feugiat in mauris id fringilla. Nulla enim nisl, rutrum vel tellus vel,
+          tincidunt a..."
+      />
+    </tbody>
+  </table>
+</div>
+`;
