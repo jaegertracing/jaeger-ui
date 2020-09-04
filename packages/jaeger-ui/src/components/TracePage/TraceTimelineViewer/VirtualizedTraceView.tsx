@@ -17,6 +17,7 @@ import cx from 'classnames';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
 import { withRouter, RouteComponentProps } from 'react-router-dom';
+import _isEqual from 'lodash/isEqual';
 
 // import { History as RouterHistory, Location } from 'history';
 
@@ -148,8 +149,8 @@ function getCssClasses(currentViewRange: [number, number]) {
 }
 
 const memoizedGenerateRowStates = memoizeOne(generateRowStatesFromTrace);
-const memoizedViewBoundsFunc = memoizeOne(createViewedBoundsFunc);
-const memoizedGetCssClasses = memoizeOne(getCssClasses);
+const memoizedViewBoundsFunc = memoizeOne(createViewedBoundsFunc, _isEqual);
+const memoizedGetCssClasses = memoizeOne(getCssClasses, _isEqual);
 
 // export from tests
 export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceViewProps> {
