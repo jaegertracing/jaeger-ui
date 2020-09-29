@@ -1,5 +1,17 @@
 # Releases
 
+## v1.11.0 (September 28, 2020)
+
+### Enhancements
+
+- **Trace stats:** Improve styling of trace statistics selectors ([@rubenvp8510](https://github.com/rubenvp8510)) in [#639](https://github.com/jaegertracing/jaeger-ui/pull/639)
+
+### Fixes
+
+- **General:** Add coverage around existing TraceName component ([@tklever](https://github.com/tklever) in [#626](https://github.com/jaegertracing/jaeger-ui/pull/626))
+
+- **Trace detail:** Fixes TraceTimelineViewer span details render regression ([@rubenvp8510](https://github.com/rubenvp8510)) in [#629](https://github.com/jaegertracing/jaeger-ui/pull/629)
+
 ## v1.10.0 (August 25, 2020)
 
 ### Enhancements
