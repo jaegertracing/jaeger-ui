@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import moment from 'moment';
+import _dropWhile from 'lodash/dropWhile';
 import _round from 'lodash/round';
 
 import { toFloatPrecision } from './number';
@@ -25,7 +26,19 @@ export const STANDARD_TIME_FORMAT = 'HH:mm';
 export const STANDARD_DATETIME_FORMAT = 'MMMM D YYYY, HH:mm:ss.SSS';
 export const ONE_MILLISECOND = 1000;
 export const ONE_SECOND = 1000 * ONE_MILLISECOND;
+export const ONE_MINUTE = 60 * ONE_SECOND;
+export const ONE_HOUR = 60 * ONE_MINUTE;
+export const ONE_DAY = 24 * ONE_HOUR;
 export const DEFAULT_MS_PRECISION = Math.log10(ONE_MILLISECOND);
+
+const UNIT_STEPS: { unit: string; microseconds: number; maximum: number }[] = [
+  { unit: 'd', microseconds: ONE_DAY, maximum: Infinity },
+  { unit: 'h', microseconds: ONE_HOUR, maximum: 24 },
+  { unit: 'm', microseconds: ONE_MINUTE, maximum: 60 },
+  { unit: 's', microseconds: ONE_SECOND, maximum: 60 },
+  { unit: 'ms', microseconds: ONE_MILLISECOND, maximum: 1000 },
+  { unit: 'μs', microseconds: 1, maximum: 1000 },
+];
 
 /**
  * @param {number} timestamp
@@ -90,16 +103,32 @@ export function formatSecondTime(duration: number) {
  * 1000μs => 1ms
  */
 export function formatDuration(duration: number, inputUnit: string = 'microseconds'): string {
-  let d = duration;
-  if (inputUnit === 'microseconds') {
-    d = duration / 1000;
+  if (duration < 1) {
+    return `${_round(duration, 2)}μs`;
   }
-  let units = 'ms';
-  if (d >= 1000) {
-    units = 's';
-    d /= 1000;
-  }
-  return _round(d, 2) + units;
+
+  // Find the amount of each unit
+  const unitValues = UNIT_STEPS.map<[number, string]>(({ unit, microseconds, maximum }) => [
+    (duration / microseconds) % maximum,
+    unit,
+  ]);
+
+  // Remove values less than 1
+  return (
+    _dropWhile(unitValues, ([value]) => value < 1)
+      // Display a maximum of three units
+      .slice(0, 3)
+      // Round the final value and floor the rest
+      .map<[number, string]>(([value, unit], index, all) => [
+        index === all.length - 1 ? Math.round(value) : Math.floor(value),
+        unit,
+      ])
+      // Skip intermediate values less than one
+      .filter(([value]) => value >= 1)
+      // Floor all other numbers
+      .map(([value, unit]) => `${value}${unit}`)
+      .join(' ')
+  );
 }
 
 export function formatRelativeDate(value: any, fullMonthName: boolean = false) {
