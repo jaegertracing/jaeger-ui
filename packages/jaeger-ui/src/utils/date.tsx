@@ -96,13 +96,17 @@ export function formatSecondTime(duration: number) {
 }
 
 /**
- * Humanizes the duration based on the inputUnit
+ * Humanizes the duration for display.
  *
  * Example:
  * 5000ms => 5s
  * 1000μs => 1ms
+ * 183840s => 2d 3h 4m
+ *
+ * @param {number} duration (in microseconds)
+ * @return {string} formatted duration
  */
-export function formatDuration(duration: number, inputUnit: string = 'microseconds'): string {
+export function formatDuration(duration: number): string {
   if (duration < 1) {
     return `${_round(duration, 2)}μs`;
   }
