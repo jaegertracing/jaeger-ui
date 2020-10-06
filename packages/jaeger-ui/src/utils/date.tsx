@@ -20,6 +20,7 @@ import { toFloatPrecision } from './number';
 
 const TODAY = 'Today';
 const YESTERDAY = 'Yesterday';
+const DATE_FORMAT_DISPLAYED_UNITS = 2;
 
 export const STANDARD_DATE_FORMAT = 'YYYY-MM-DD';
 export const STANDARD_TIME_FORMAT = 'HH:mm';
@@ -121,7 +122,7 @@ export function formatDuration(duration: number): string {
   return (
     _dropWhile(unitValues, ([value]) => value < 1)
       // Display a maximum of three units
-      .slice(0, 3)
+      .slice(0, DATE_FORMAT_DISPLAYED_UNITS)
       // Round the final value and floor the rest
       .map<[number, string]>(([value, unit], index, all) => [
         index === all.length - 1 ? Math.round(value) : Math.floor(value),

@@ -21,7 +21,7 @@ describe('formatDuration', () => {
 
   it('formats values in different durations', () => {
     const input = 13 * ONE_SECOND + 256 * ONE_MILLISECOND + 777;
-    expect(formatDuration(input)).toBe('13s 256ms 777μs');
+    expect(formatDuration(input)).toBe('13s 257ms');
   });
 
   it('rounds the number of microseconds', () => {
@@ -29,14 +29,14 @@ describe('formatDuration', () => {
     expect(formatDuration(input)).toBe('256ms 1μs');
   });
 
-  it('displays a maximum of 3 units and rounds the last one', () => {
-    const input = 10 * ONE_MINUTE + 13 * ONE_SECOND + 256 * ONE_MILLISECOND + 777;
-    expect(formatDuration(input)).toBe('10m 13s 257ms');
+  it('displays a maximum of 2 units and rounds the last one', () => {
+    const input = 10 * ONE_MINUTE + 13 * ONE_SECOND + 777 * ONE_MILLISECOND;
+    expect(formatDuration(input)).toBe('10m 14s');
   });
 
   it('skips units that are empty', () => {
     const input = 2 * ONE_DAY + 5 * ONE_MINUTE;
-    expect(formatDuration(input)).toBe('2d 5m');
+    expect(formatDuration(input)).toBe('2d');
   });
 
   it('displays times less than a μs', () => {
