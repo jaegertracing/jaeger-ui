@@ -12,31 +12,41 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { formatDuration, ONE_MILLISECOND, ONE_SECOND, ONE_MINUTE, ONE_DAY } from './date.tsx';
+import { formatDuration, ONE_MILLISECOND, ONE_SECOND, ONE_MINUTE, ONE_HOUR, ONE_DAY } from './date.tsx';
 
 describe('formatDuration', () => {
   it('keeps microseconds the same', () => {
     expect(formatDuration(1)).toBe('1μs');
   });
 
-  it('formats values in different durations', () => {
-    const input = 13 * ONE_SECOND + 256 * ONE_MILLISECOND + 777;
-    expect(formatDuration(input)).toBe('13s 257ms');
-  });
-
-  it('rounds the number of microseconds', () => {
-    const input = 256 * ONE_MILLISECOND + 0.7;
-    expect(formatDuration(input)).toBe('256ms 1μs');
-  });
-
   it('displays a maximum of 2 units and rounds the last one', () => {
-    const input = 10 * ONE_MINUTE + 13 * ONE_SECOND + 777 * ONE_MILLISECOND;
-    expect(formatDuration(input)).toBe('10m 14s');
+    const input = 10 * ONE_DAY + 13 * ONE_HOUR + 30 * ONE_MINUTE;
+    expect(formatDuration(input)).toBe('10d 14h');
   });
 
   it('skips units that are empty', () => {
     const input = 2 * ONE_DAY + 5 * ONE_MINUTE;
     expect(formatDuration(input)).toBe('2d');
+  });
+
+  it('displays milliseconds in decimals', () => {
+    const input = 2 * ONE_MILLISECOND + 357;
+    expect(formatDuration(input)).toBe('2.36ms');
+  });
+
+  it('displays seconds in decimals', () => {
+    const input = 2 * ONE_SECOND + 357 * ONE_MILLISECOND;
+    expect(formatDuration(input)).toBe('2.36s');
+  });
+
+  it('displays minutes in split units', () => {
+    const input = 2 * ONE_MINUTE + 30 * ONE_SECOND + 555 * ONE_MILLISECOND;
+    expect(formatDuration(input)).toBe('2m 31s');
+  });
+
+  it('displays hours in split units', () => {
+    const input = 2 * ONE_HOUR + 30 * ONE_MINUTE + 30 * ONE_SECOND;
+    expect(formatDuration(input)).toBe('2h 31m');
   });
 
   it('displays times less than a μs', () => {

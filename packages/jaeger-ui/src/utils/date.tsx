@@ -20,7 +20,6 @@ import { toFloatPrecision } from './number';
 
 const TODAY = 'Today';
 const YESTERDAY = 'Yesterday';
-const DATE_FORMAT_DISPLAYED_UNITS = 2;
 
 export const STANDARD_DATE_FORMAT = 'YYYY-MM-DD';
 export const STANDARD_TIME_FORMAT = 'HH:mm';
@@ -32,13 +31,13 @@ export const ONE_HOUR = 60 * ONE_MINUTE;
 export const ONE_DAY = 24 * ONE_HOUR;
 export const DEFAULT_MS_PRECISION = Math.log10(ONE_MILLISECOND);
 
-const UNIT_STEPS: { unit: string; microseconds: number; maximum: number }[] = [
-  { unit: 'd', microseconds: ONE_DAY, maximum: Infinity },
-  { unit: 'h', microseconds: ONE_HOUR, maximum: 24 },
-  { unit: 'm', microseconds: ONE_MINUTE, maximum: 60 },
-  { unit: 's', microseconds: ONE_SECOND, maximum: 60 },
-  { unit: 'ms', microseconds: ONE_MILLISECOND, maximum: 1000 },
-  { unit: 'μs', microseconds: 1, maximum: 1000 },
+const UNIT_STEPS: { unit: string; microseconds: number; ofPrevious: number }[] = [
+  { unit: 'd', microseconds: ONE_DAY, ofPrevious: 24 },
+  { unit: 'h', microseconds: ONE_HOUR, ofPrevious: 60 },
+  { unit: 'm', microseconds: ONE_MINUTE, ofPrevious: 60 },
+  { unit: 's', microseconds: ONE_SECOND, ofPrevious: 1000 },
+  { unit: 'ms', microseconds: ONE_MILLISECOND, ofPrevious: 1000 },
+  { unit: 'μs', microseconds: 1, ofPrevious: 1000 },
 ];
 
 /**
@@ -102,38 +101,28 @@ export function formatSecondTime(duration: number) {
  * Example:
  * 5000ms => 5s
  * 1000μs => 1ms
- * 183840s => 2d 3h 4m
+ * 183840s => 2d 3h
  *
  * @param {number} duration (in microseconds)
  * @return {string} formatted duration
  */
 export function formatDuration(duration: number): string {
-  if (duration < 1) {
-    return `${_round(duration, 2)}μs`;
+  // Drop all units that are too large except the last one
+  const [primaryUnit, secondaryUnit] = _dropWhile(
+    UNIT_STEPS,
+    ({ microseconds }, index) => index < UNIT_STEPS.length - 1 && microseconds > duration
+  );
+
+  if (primaryUnit.ofPrevious === 1000) {
+    // If the unit is decimal based, display as a decimal
+    return `${_round(duration / primaryUnit.microseconds, 2)}${primaryUnit.unit}`;
   }
 
-  // Find the amount of each unit
-  const unitValues = UNIT_STEPS.map<[number, string]>(({ unit, microseconds, maximum }) => [
-    (duration / microseconds) % maximum,
-    unit,
-  ]);
-
-  // Remove values less than 1
-  return (
-    _dropWhile(unitValues, ([value]) => value < 1)
-      // Display a maximum of three units
-      .slice(0, DATE_FORMAT_DISPLAYED_UNITS)
-      // Round the final value and floor the rest
-      .map<[number, string]>(([value, unit], index, all) => [
-        index === all.length - 1 ? Math.round(value) : Math.floor(value),
-        unit,
-      ])
-      // Skip intermediate values less than one
-      .filter(([value]) => value >= 1)
-      // Floor all other numbers
-      .map(([value, unit]) => `${value}${unit}`)
-      .join(' ')
-  );
+  const primaryValue = Math.floor(duration / primaryUnit.microseconds);
+  const primaryUnitString = `${primaryValue}${primaryUnit.unit}`;
+  const secondaryValue = Math.round((duration / secondaryUnit.microseconds) % primaryUnit.ofPrevious);
+  const secondaryUnitString = `${secondaryValue}${secondaryUnit.unit}`;
+  return secondaryValue === 0 ? primaryUnitString : `${primaryUnitString} ${secondaryUnitString}`;
 }
 
 export function formatRelativeDate(value: any, fullMonthName: boolean = false) {
