@@ -29,7 +29,7 @@ exports[`ResultItemTitle renders as expected 1`] = `
     <span
       className="ub-right ub-relative"
     >
-      0.15ms
+      150μs
     </span>
     <h3
       className="ResultItemTitle--title"
