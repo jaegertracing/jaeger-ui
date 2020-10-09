@@ -1,5 +1,67 @@
 # Releases
 
+## v1.11.0 (September 28, 2020)
+
+### Enhancements
+
+- **Trace stats:** Improve styling of trace statistics selectors ([@rubenvp8510](https://github.com/rubenvp8510)) in [#639](https://github.com/jaegertracing/jaeger-ui/pull/639)
+
+### Fixes
+
+- **General:** Add coverage around existing TraceName component ([@tklever](https://github.com/tklever) in [#626](https://github.com/jaegertracing/jaeger-ui/pull/626))
+
+- **Trace detail:** Fixes TraceTimelineViewer span details render regression ([@rubenvp8510](https://github.com/rubenvp8510)) in [#629](https://github.com/jaegertracing/jaeger-ui/pull/629)
+
+## v1.10.0 (August 25, 2020)
+
+### Enhancements
+
+- **Trace stats:** Added view for showing detailed trace statistics ([@fylip97](https://github.com/fylip97) in [#506](https://github.com/jaegertracing/jaeger-ui/pull/506))
+
+### Fixes
+
+- **General:** Additional Test Coverage around TimelineViewingLayer ([@tklever](https://github.com/tklever) in [#617](https://github.com/jaegertracing/jaeger-ui/pull/617))
+
+- **General:** Archive notifier tests ([@tklever](https://github.com/tklever) in [#619](https://github.com/jaegertracing/jaeger-ui/pull/619))
+
+- **General:** Refactor SpanGraph.UNSAFE_componentWillReceiveProps ([@tklever](https://github.com/tklever) in [#613](https://github.com/jaegertracing/jaeger-ui/pull/613))
+
+- **General:** Remove UNSAFE_componentWillMount lifecycle methods ([@tklever](https://github.com/tklever) in [#611](https://github.com/jaegertracing/jaeger-ui/pull/611))
+
+- **General:** Migrate ArchiveNotifier from UNSAFE_componentWillReceiveProps ([@tklever](https://github.com/tklever) in [#614](https://github.com/jaegertracing/jaeger-ui/pull/614))
+
+- **General:** refactor UNSAFE_componentWillReceiveProps to use componentDidUpdate ([@tklever](https://github.com/tklever) in [#612](https://github.com/jaegertracing/jaeger-ui/pull/612))
+
+- **General:** clear console errors (proptype violations) from CLI output ([@tklever](https://github.com/tklever) in [#615](https://github.com/jaegertracing/jaeger-ui/pull/615))
+
+- **General:** add unit coverage for component TraceIDSearchInput ([@tklever](https://github.com/tklever) in [#616](https://github.com/jaegertracing/jaeger-ui/pull/616))
+
+- **General:** update legacy react lifecycle methods to indicate unsafe status ([@tklever](https://github.com/tklever) in [#610](https://github.com/jaegertracing/jaeger-ui/pull/610))
+
+- **General:** Render seconds in dark color, millis in light ([@yurishkuro](https://github.com/yurishkuro) in [#605](https://github.com/jaegertracing/jaeger-ui/pull/605))
+
+- **Trace detail:** Tweak css definition for span tree offset color ([@everett980](https://github.com/everett980) in [#604](https://github.com/jaegertracing/jaeger-ui/pull/604))
+
+- **Trace detail:** span bar row size fix ([@vankop](https://github.com/vankop) in [#599](https://github.com/jaegertracing/jaeger-ui/pull/599))
+
+- **General:** Fixed missing 'types/node' dependency ([@objectiser](https://github.com/objectiser) in [#603](https://github.com/jaegertracing/jaeger-ui/pull/603))
+
+- **General:** Update lodash from 4.17.15 to 4.17.19 ([@objectiser](https://github.com/objectiser) in [#598](https://github.com/jaegertracing/jaeger-ui/pull/598))
+
+- **Trace quality:** Allow customizing trace quality menu title ([@yurishkuro](https://github.com/yurishkuro) in [#592](https://github.com/jaegertracing/jaeger-ui/pull/592))
+
+- **Trace detail:** Avoid the horizontal scrollbar (KeyValueTable) ([@smanolloff](https://github.com/smanolloff) in [#586](https://github.com/jaegertracing/jaeger-ui/pull/586))
+
+- **Trace detail:** Don't rely on json-markup for non-json strings ([@smanolloff](https://github.com/smanolloff) in [#587](https://github.com/jaegertracing/jaeger-ui/pull/587))
+
+- **Trace detail:** Avoid resize on mouse hover (KeyValueTable) ([@smanolloff](https://github.com/smanolloff) in [#584](https://github.com/jaegertracing/jaeger-ui/pull/584))
+
+- **Trace quality:** Change QualityMetrics lookback param to hours ([@everett980](https://github.com/everett980) in [#581](https://github.com/jaegertracing/jaeger-ui/pull/581))
+
+- **Trace quality:** Make detailscard table columns filterable ([@everett980](https://github.com/everett980) in [#580](https://github.com/jaegertracing/jaeger-ui/pull/580))
+
+- **Trace quality:** Test quality metrics and DetailsCard ([@everett980](https://github.com/everett980) in [#577](https://github.com/jaegertracing/jaeger-ui/pull/577))
+
 ## v1.9.0 (May 14, 2020)
 
 ### Enhancements
