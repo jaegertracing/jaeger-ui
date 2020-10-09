@@ -42,7 +42,7 @@ export const historyUpdateMiddleware = store => next => action => {
     const url = getSearchUrl(action.meta.query);
     store.dispatch(replace(url));
   }
-  next(action);
+  return next(action);
 };
 
 export const promise = promiseMiddleware();
