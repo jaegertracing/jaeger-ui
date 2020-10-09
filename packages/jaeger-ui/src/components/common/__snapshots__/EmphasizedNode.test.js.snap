@@ -1,0 +1,28 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`<EmphasizedNode> renders with default props 1`] = `
+<Fragment>
+  <rect
+    className="EmphasizedNode--contrast is-non-scaling"
+    height={100}
+    vectorEffect="non-scaling-stroke"
+    width={500}
+  />
+  <rect
+    className="EmphasizedNode--contrast is-scaling"
+    height={100}
+    width={500}
+  />
+  <rect
+    className="EmphasizedNode is-non-scaling"
+    height={100}
+    vectorEffect="non-scaling-stroke"
+    width={500}
+  />
+  <rect
+    className="EmphasizedNode is-scaling"
+    height={100}
+    width={500}
+  />
+</Fragment>
+`;
