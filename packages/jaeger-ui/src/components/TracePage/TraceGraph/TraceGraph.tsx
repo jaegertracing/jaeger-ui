@@ -82,7 +82,7 @@ const HELP_CONTENT = (
               </Button>
             </td>
             <td>Selftime</td>
-            <td>Colored by self time</td>
+            <td>Colored by self time (*)</td>
           </tr>
         </tbody>
       </table>
@@ -104,6 +104,10 @@ const HELP_CONTENT = (
           FollowsFrom
         </text>
       </svg>
+    </div>
+    <div>
+      (*) <b>Self time</b> is the total time spent in a span when it was not waiting on children. For example,
+      a 10ms span with two 4ms non-overlapping children would have <b>self-time = 10ms - 2 * 4ms = 2ms</b>.
     </div>
   </div>
 );
