@@ -24,7 +24,7 @@ exports[`TraceHeader Attrs Attrs renders as expected when missing props 1`] = `
       Duration: 
     </span>
     <strong>
-      0ms
+      0μs
     </strong>
   </li>
   <li
@@ -67,7 +67,7 @@ exports[`TraceHeader Attrs renders as expected when provided props 1`] = `
       Duration: 
     </span>
     <strong>
-      0.7ms
+      700μs
     </strong>
   </li>
   <li

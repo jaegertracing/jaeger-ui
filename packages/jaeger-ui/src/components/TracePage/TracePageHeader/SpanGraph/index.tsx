@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import * as React from 'react';
+import memoizeOne from 'memoize-one';
 
 import CanvasSpanGraph from './CanvasSpanGraph';
 import TickLabels from './TickLabels';
@@ -31,19 +32,13 @@ type SpanGraphProps = {
   updateNextViewRangeTime: (nextUpdate: ViewRangeTimeUpdate) => void;
 };
 
-/**
- * Store `items` in state so they are not regenerated every render. Otherwise,
- * the canvas graph will re-render itself every time.
- */
-type SpanGraphState = {
-  items: {
-    valueOffset: number;
-    valueWidth: number;
-    serviceName: string;
-  }[];
+type SpanItem = {
+  valueOffset: number;
+  valueWidth: number;
+  serviceName: string;
 };
 
-function getItem(span: Span) {
+function getItem(span: Span): SpanItem {
   return {
     valueOffset: span.relativeStartTime,
     valueWidth: span.duration,
@@ -51,36 +46,24 @@ function getItem(span: Span) {
   };
 }
 
-export default class SpanGraph extends React.PureComponent<SpanGraphProps, SpanGraphState> {
-  state: SpanGraphState;
+function getItems(trace: Trace): SpanItem[] {
+  return trace.spans.map(getItem);
+}
 
+const memoizedGetItems = memoizeOne(getItems);
+
+export default class SpanGraph extends React.PureComponent<SpanGraphProps> {
   static defaultProps = {
     height: DEFAULT_HEIGHT,
   };
-
-  constructor(props: SpanGraphProps) {
-    super(props);
-    const { trace } = props;
-    this.state = {
-      items: trace ? trace.spans.map(getItem) : [],
-    };
-  }
-
-  componentWillReceiveProps(nextProps: SpanGraphProps) {
-    const { trace } = nextProps;
-    if (this.props.trace !== trace) {
-      this.setState({
-        items: trace ? trace.spans.map(getItem) : [],
-      });
-    }
-  }
 
   render() {
     const { height, trace, viewRange, updateNextViewRangeTime, updateViewRangeTime } = this.props;
     if (!trace) {
       return <div />;
     }
-    const { items } = this.state;
+
+    const items = memoizedGetItems(trace);
     return (
       <div className="ub-pb2 ub-px2">
         <TickLabels numTicks={TIMELINE_TICK_INTERVAL} duration={trace.duration} />

@@ -26,15 +26,8 @@ enum ENotifiedState {
   Outcome = 'ENotifiedState.Outcome',
 }
 
-// const NOTIFIED_PROGRESS = 'NOTIFIED_PROGRESS';
-// const NOTIFIED_OUTCOME = 'NOTIFIED_OUTCOME';
-
-// type NotifiedState = 'NOTIFIED_PROGRESS' | 'NOTIFIED_OUTCOME' | null;
-
 type Props = {
-  // eslint-disable-next-line react/no-unused-prop-types
   archivedState: TraceArchive | TNil;
-  // eslint-disable-next-line react/no-unused-prop-types
   acknowledge: () => void;
 };
 
@@ -73,7 +66,7 @@ function updateNotification(oldState: ENotifiedState | null, nextState: ENotifie
   const { acknowledge, archivedState } = props;
   if (nextState === ENotifiedState.Outcome) {
     if (archivedState && archivedState.error) {
-      const error = typeof archivedState.error === 'string' ? archivedState.error : archivedState.error;
+      const { error } = archivedState;
       notification.warn({
         key: ENotifiedState.Outcome,
         className: 'ArchiveNotifier--errorNotification',
@@ -111,11 +104,9 @@ export default class ArchiveNotifier extends React.PureComponent<Props, State> {
     this.state = { notifiedState };
   }
 
-  componentWillReceiveProps(nextProps: Props) {
-    const notifiedState = processProps(this.state.notifiedState, nextProps);
-    if (this.state.notifiedState !== notifiedState) {
-      this.setState({ notifiedState });
-    }
+  static getDerivedStateFromProps(props: Props, state: State) {
+    const notifiedState = processProps(state.notifiedState, props);
+    return { notifiedState };
   }
 
   componentWillUnmount() {

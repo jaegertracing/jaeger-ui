@@ -66,7 +66,7 @@ export class DependencyGraphPageImpl extends Component {
     };
   }
 
-  componentWillMount() {
+  componentDidMount() {
     this.props.fetchDependencies();
   }
 

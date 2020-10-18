@@ -16,7 +16,7 @@ import * as React from 'react';
 import { InputNumber } from 'antd';
 import _debounce from 'lodash/debounce';
 
-import NameSelector from '../DeepDependencies/Header/NameSelector';
+import NameSelector from '../common/NameSelector';
 
 import './Header.css';
 

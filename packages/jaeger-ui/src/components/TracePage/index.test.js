@@ -55,6 +55,7 @@ import traceGenerator from '../../demo/trace-generators';
 import transformTraceData from '../../model/transform-trace-data';
 import filterSpansSpy from '../../utils/filter-spans';
 import updateUiFindSpy from '../../utils/update-ui-find';
+import { ETraceViewType } from './types';
 
 describe('makeShortcutCallbacks()', () => {
   let adjRange;
@@ -347,7 +348,7 @@ describe('<TracePage>', () => {
     describe('calculates hideMap correctly', () => {
       it('is true if on traceGraphView', () => {
         wrapper.instance().traceDagEV = { vertices: [], nodes: [] };
-        wrapper.setState({ traceGraphView: true });
+        wrapper.setState({ viewType: ETraceViewType.TraceGraph });
         expect(wrapper.find(TracePageHeader).prop('hideMap')).toBe(true);
       });
 
@@ -432,7 +433,7 @@ describe('<TracePage>', () => {
 
         const size = 30;
         getUiFindVertexKeysSpy.mockReturnValueOnce({ size });
-        wrapper.setState({ traceGraphView: true });
+        wrapper.setState({ viewType: ETraceViewType.TraceGraph });
         wrapper.setProps({ uiFind: 'new ui find to bust memo' });
         expect(wrapper.find(TracePageHeader).prop('resultCount')).toBe(size);
       });
@@ -627,17 +628,17 @@ describe('<TracePage>', () => {
       expect(header.prop('textFilter')).toBe(s);
     });
 
-    it('propagates traceGraphView changes', () => {
-      const { onTraceGraphViewClicked } = header.props();
-      expect(header.prop('traceGraphView')).toBe(false);
-      onTraceGraphViewClicked();
+    it('propagates traceView changes', () => {
+      const { onTraceViewChange } = header.props();
+      expect(header.prop('viewType')).toBe(ETraceViewType.TraceTimelineViewer);
+      onTraceViewChange(ETraceViewType.TraceGraph);
       wrapper.update();
       refreshWrappers();
-      expect(header.prop('traceGraphView')).toBe(true);
+      expect(header.prop('viewType')).toBe(ETraceViewType.TraceGraph);
       expect(calculateTraceDagEVSpy).toHaveBeenCalledWith(defaultProps.trace.data);
 
       wrapper.setProps({ trace: {} });
-      onTraceGraphViewClicked();
+      onTraceViewChange(ETraceViewType.TraceTimelineViewer);
       expect(calculateTraceDagEVSpy).toHaveBeenCalledTimes(1);
     });
 
