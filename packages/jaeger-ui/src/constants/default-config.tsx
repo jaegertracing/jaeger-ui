@@ -64,7 +64,7 @@ export default deepFreeze(
               label: `Jaeger ${getVersion().gitVersion}`,
             },
             {
-              label: `Commit ${getVersion().gitCommit}`,
+              label: `Commit ${getVersion().gitCommit.substring(0, 7)}`,
             },
             {
               label: `Build ${getVersion().buildDate}`,
