@@ -68,19 +68,22 @@ if (getConfigValue('qualityMetrics.menuEnabled')) {
   });
 }
 
-function getItemLink(item: ConfigMenuItem) {
+function getItem(item: ConfigMenuItem) {
   const { label, anchorTarget, url } = item;
+  const link = (
+    <a href={url} target={anchorTarget || '_blank'} rel="noopener noreferrer">
+      {label}
+    </a>
+  );
   return (
-    <Menu.Item key={label}>
-      <a href={url} target={anchorTarget || '_blank'} rel="noopener noreferrer">
-        {label}
-      </a>
+    <Menu.Item key={label} disabled={!url}>
+      {url ? link : label}
     </Menu.Item>
   );
 }
 
 function CustomNavDropdown({ label, items }: ConfigMenuGroup) {
-  const menuItems = <Menu>{items.map(getItemLink)}</Menu>;
+  const menuItems = <Menu>{items.map(getItem)}</Menu>;
   return (
     <Dropdown overlay={menuItems} placement="bottomRight">
       <a>
@@ -103,7 +106,7 @@ export function TopNavImpl(props: Props) {
       <Menu theme="dark" mode="horizontal" selectable={false} className="ub-right" selectedKeys={[pathname]}>
         {menuItems.map(m => {
           if (isItem(m)) {
-            return getItemLink(m);
+            return getItem(m);
           }
           return (
             <Menu.Item key={m.label}>

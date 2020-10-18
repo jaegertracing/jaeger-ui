@@ -15,6 +15,9 @@
 import deepFreeze from 'deep-freeze';
 
 import { FALLBACK_DAG_MAX_NUM_SERVICES } from './index';
+import getVersion from '../utils/version/get-version';
+
+const { version } = require('../../package.json');
 
 export default deepFreeze(
   Object.defineProperty(
@@ -56,6 +59,18 @@ export default deepFreeze(
             {
               label: 'GitHub',
               url: 'https://github.com/jaegertracing/',
+            },
+            {
+              label: `Jaeger ${getVersion().gitVersion}`,
+            },
+            {
+              label: `Commit ${getVersion().gitCommit.substring(0, 7)}`,
+            },
+            {
+              label: `Build ${getVersion().buildDate}`,
+            },
+            {
+              label: `Jaeger UI v${version}`,
             },
           ],
         },
