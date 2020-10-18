@@ -65,5 +65,13 @@ describe('getVersion()', () => {
       embedded = null;
       expect(getVersion()).toEqual(defaultVersion);
     });
+
+    it('returns the embedded version information when it is not `null`', () => {
+      embedded = {
+        a: '1',
+        b: '2',
+      };
+      expect(getVersion()).toEqual(embedded);
+    });
   });
 });
