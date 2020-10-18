@@ -61,7 +61,7 @@ export default deepFreeze(
               url: 'https://github.com/jaegertracing/',
             },
             {
-              label: `Jaeger v${getVersion().gitVersion}`,
+              label: `Jaeger ${getVersion().gitVersion}`,
             },
             {
               label: `Commit ${getVersion().gitCommit}`,
