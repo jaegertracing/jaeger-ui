@@ -35,6 +35,11 @@ export default class DAG extends React.Component {
     serviceCalls: [],
   };
 
+  constructor(props) {
+    super(props);
+    this.cytoscapeRef = React.createRef();
+  }
+
   componentDidMount() {
     const { serviceCalls } = this.props;
     const nodeMap = {};
@@ -55,8 +60,9 @@ export default class DAG extends React.Component {
         });
       }
     });
+
     cytoscape({
-      container: document.getElementById('cy'),
+      container: this.cytoscapeRef.current,
       boxSelectionEnabled: false,
       autounselectify: true,
       layout: {
@@ -104,6 +110,7 @@ export default class DAG extends React.Component {
           left: 0,
           top: 0,
         }}
+        ref={this.cytoscapeRef}
       />
     );
   }
