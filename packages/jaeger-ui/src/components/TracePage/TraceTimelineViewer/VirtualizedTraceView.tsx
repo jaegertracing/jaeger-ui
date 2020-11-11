@@ -31,6 +31,7 @@ import {
   createViewedBoundsFunc,
   findServerChildSpan,
   isErrorSpan,
+  isKindClient,
   spanContainsErredSpan,
   ViewedBoundsFunctionType,
 } from './utils';
@@ -44,6 +45,7 @@ import TTraceTimeline from '../../../types/TTraceTimeline';
 
 import './VirtualizedTraceView.css';
 import updateUiFind from '../../../utils/update-ui-find';
+import { PEER_SERVICE } from '../../../constants/tag-keys';
 
 type RowState = {
   isDetail: boolean;
@@ -360,6 +362,17 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
         };
       }
     }
+    const peerServiceKV = span.tags.find(kv => kv.key === PEER_SERVICE);
+    // Leaf, kind == client and has peer.service tag, is likely a client span that does a request
+    // to an uninstrumented/external service
+    let noInstrumentedServer = null;
+    if (!span.hasChildren && peerServiceKV && isKindClient(span)) {
+      noInstrumentedServer = {
+        serviceName: peerServiceKV.value,
+        color: colorGenerator.getColorByKey(peerServiceKV.value),
+      };
+    }
+
     return (
       <div className="VirtualizedTraceView--row" key={key} style={style} {...attrs}>
         <SpanBarRow
@@ -373,6 +386,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
           onDetailToggled={detailToggle}
           onChildrenToggled={childrenToggle}
           rpc={rpc}
+          noInstrumentedServer={noInstrumentedServer}
           showErrorIcon={showErrorIcon}
           getViewedBounds={this.getViewedBounds()}
           traceStartTime={trace.startTime}
