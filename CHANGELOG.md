@@ -4,16 +4,16 @@
 
 ### Enhancements
 
-* Identify uninstrumented services ([#659](https://github.com/jaegertracing/jaeger-ui/pull/659), [@rubenvp8510](https://github.com/rubenvp8510))
-* Added jaeger ui version to about menu ([#606](https://github.com/jaegertracing/jaeger-ui/pull/606), [@alanisaac](https://github.com/alanisaac))
-* Explain "self time" in graph view ([#655](https://github.com/jaegertracing/jaeger-ui/pull/655), [@yurishkuro](https://github.com/yurishkuro))
-* Improve duration formatting ([#647](https://github.com/jaegertracing/jaeger-ui/pull/647), [@jamesfer](https://github.com/jamesfer))
+- Identify uninstrumented services ([#659](https://github.com/jaegertracing/jaeger-ui/pull/659), [@rubenvp8510](https://github.com/rubenvp8510))
+- Added jaeger ui version to about menu ([#606](https://github.com/jaegertracing/jaeger-ui/pull/606), [@alanisaac](https://github.com/alanisaac))
+- Explain "self time" in graph view ([#655](https://github.com/jaegertracing/jaeger-ui/pull/655), [@yurishkuro](https://github.com/yurishkuro))
+- Improve duration formatting ([#647](https://github.com/jaegertracing/jaeger-ui/pull/647), [@jamesfer](https://github.com/jamesfer))
 
 ### Fixes
 
-* Pass a function that doesn't return anything to FileUpload component ([#658](https://github.com/jaegertracing/jaeger-ui/pull/658), [@rubenvp8510](https://github.com/rubenvp8510))
-* Prevent DAG crashes because of empty service name string ([#656](https://github.com/jaegertracing/jaeger-ui/pull/656), [@rubenvp8510](https://github.com/rubenvp8510))
-* Upgrade build to Node 10 ([#649](https://github.com/jaegertracing/jaeger-ui/pull/649), [@yurishkuro](https://github.com/yurishkuro))
+- Pass a function that doesn't return anything to FileUpload component ([#658](https://github.com/jaegertracing/jaeger-ui/pull/658), [@rubenvp8510](https://github.com/rubenvp8510))
+- Prevent DAG crashes because of empty service name string ([#656](https://github.com/jaegertracing/jaeger-ui/pull/656), [@rubenvp8510](https://github.com/rubenvp8510))
+- Upgrade build to Node 10 ([#649](https://github.com/jaegertracing/jaeger-ui/pull/649), [@yurishkuro](https://github.com/yurishkuro))
 
 ## v1.11.0 (September 28, 2020)
 
