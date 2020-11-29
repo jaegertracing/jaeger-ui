@@ -12,11 +12,11 @@ jobs:
       - uses: actions/setup-node@v2-beta
         with:
           node-version: '10'
-      - name: install yarn
-        run: |
-          curl -o- -L https://yarnpkg.com/install.sh | bash
-          echo $HOME/.yarn/bin >>"$GITHUB_PATH"
-          yarn -v
+      # - name: install yarn
+      #   run: |
+      #     curl -o- -L https://yarnpkg.com/install.sh | bash
+      #     echo $HOME/.yarn/bin >>"$GITHUB_PATH"
+      #     yarn -v
       - run: yarn install --frozen-lockfile
       - run: yarn lint
       - run: yarn build
