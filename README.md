@@ -1,4 +1,4 @@
-[![ReadTheDocs][doc-img]][doc] [![Build Status][ci-img]][ci] [![Coverage Status][cov-img]][cov] [![FOSSA Status][fossa-img]][fossa]
+[![Build Status][ci-img]][ci] [![Coverage Status][cov-img]][cov] [![FOSSA Status][fossa-img]][fossa]
 
 # Jaeger UI
 
@@ -81,10 +81,8 @@ See the [configuration guide](https://www.jaegertracing.io/docs/latest/frontend-
 
 [Apache 2.0 License](./LICENSE).
 
-[doc-img]: https://readthedocs.org/projects/jaeger/badge/?version=latest
-[doc]: https://www.jaegertracing.io/docs/latest/
-[ci-img]: https://travis-ci.org/jaegertracing/jaeger-ui.svg?branch=master
-[ci]: https://travis-ci.org/jaegertracing/jaeger-ui
+[ci-img]: https://github.com/jaegertracing/jaeger-ui/workflows/Unit%20Tests/badge.svg?branch=master
+[ci]: https://github.com/jaegertracing/jaeger-ui/actions
 [cov-img]: https://codecov.io/gh/jaegertracing/jaeger-ui/branch/master/graph/badge.svg
 [cov]: https://codecov.io/gh/jaegertracing/jaeger-ui
 [aio-docs]: https://www.jaegertracing.io/docs/latest/getting-started/
