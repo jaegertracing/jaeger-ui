@@ -1,7 +1,5 @@
 name: "Unit Tests"
-
 on: [push, pull_request]
-
 jobs:
   unit-tests:
     strategy:
