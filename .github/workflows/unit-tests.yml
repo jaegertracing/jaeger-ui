@@ -17,10 +17,10 @@ jobs:
           curl -o- -L https://yarnpkg.com/install.sh | bash
           echo $HOME/.yarn/bin >>"$GITHUB_PATH"
           echo $HOME/.config/yarn/global/node_modules/.bin >>"$GITHUB_PATH"
-      # - run: yarn install --frozen-lockfile
-      # - run: yarn lint
-      # - run: yarn build
-      # - run: yarn coverage
+      - run: yarn install --frozen-lockfile
+      - run: yarn lint
+      - run: yarn build
+      - run: yarn coverage
       - name: Upload coverage to codecov.io
         run: |
           yarn global add codecov
