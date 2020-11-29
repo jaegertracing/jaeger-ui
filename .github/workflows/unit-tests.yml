@@ -24,4 +24,4 @@ jobs:
       - name: upload coverage to codecov.io
         run: |
           yarn global add codecov
-          codecov
+          yarn run codecov
