@@ -1,10 +1,6 @@
 name: "Unit Tests"
 
-on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+on: [push, pull_request]
 
 jobs:
   unit-tests:
@@ -20,9 +16,12 @@ jobs:
         run: |
           curl -o- -L https://yarnpkg.com/install.sh | bash
           echo $HOME/.yarn/bin >>"$GITHUB_PATH"
+          yarn -v
       - run: yarn install --frozen-lockfile
       - run: yarn lint
       - run: yarn build
       - run: yarn coverage
-      - run: yarn global add codecov
-      - run: codecov
+      - name: upload coverage to codecov.io
+        run: |
+          yarn global add codecov
+          codecov
