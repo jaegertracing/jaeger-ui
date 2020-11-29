@@ -8,6 +8,9 @@ jobs:
       fail-fast: true
     runs-on: ubuntu-latest
     steps:
+      - uses: everphone-gmbh/cancel-previous-workflows@v5
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2-beta
         with:
