@@ -6,7 +6,7 @@ jobs:
       fail-fast: true
     runs-on: ubuntu-latest
     steps:
-      - uses: everphone-gmbh/cancel-previous-workflows@v5
+      - uses: technote-space/auto-cancel-redundant-workflow@v1
         env:
           GITHUB_TOKEN: ${{ github.token }}
       - uses: actions/checkout@v2
