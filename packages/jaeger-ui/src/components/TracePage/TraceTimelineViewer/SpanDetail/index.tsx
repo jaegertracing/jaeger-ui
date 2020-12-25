@@ -17,6 +17,7 @@ import { Divider } from 'antd';
 
 import AccordianKeyValues from './AccordianKeyValues';
 import AccordianLogs from './AccordianLogs';
+import AccordianReferences from './AccordianReferences';
 import AccordianText from './AccordianText';
 import DetailState from './DetailState';
 import { formatDuration } from '../utils';
@@ -27,7 +28,6 @@ import { TNil } from '../../../../types';
 import { KeyValuePair, Link, Log, Span } from '../../../../types/trace';
 
 import './index.css';
-import AccordianReferences from './AccordianReferences';
 
 type SpanDetailProps = {
   detailState: DetailState;
@@ -140,14 +140,15 @@ export default function SpanDetail(props: SpanDetailProps) {
             onToggle={() => warningsToggle(spanID)}
           />
         )}
-        {references && references.length > 1 && (
-          <AccordianReferences
-            data={references}
-            isOpen={isReferencesOpen}
-            onToggle={() => referencesToggle(spanID)}
-            focusSpan={focusSpan}
-          />
-        )}
+        {references &&
+          (references.length > 1 || (references.length === 1 && references[0].refType !== 'CHILD_OF')) && (
+            <AccordianReferences
+              data={references}
+              isOpen={isReferencesOpen}
+              onToggle={() => referencesToggle(spanID)}
+              focusSpan={focusSpan}
+            />
+          )}
         <small className="SpanDetail--debugInfo">
           <span className="SpanDetail--debugLabel" data-label="SpanID:" /> {spanID}
           <CopyIcon
