@@ -140,7 +140,8 @@ export default function SpanDetail(props: SpanDetailProps) {
             onToggle={() => warningsToggle(spanID)}
           />
         )}
-        {references && references.length > 0 &&
+        {references &&
+          references.length > 0 &&
           (references.length > 1 || references[0].refType !== 'CHILD_OF') && (
             <AccordianReferences
               data={references}
