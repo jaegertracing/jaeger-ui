@@ -12,14 +12,48 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/* eslint-disable import/first */
-jest.mock('cytoscape');
-
 import React from 'react';
 import { mount } from 'enzyme';
-
 import DAG from './DAG';
 
+// mock canvas API (we don't care about canvas results)
+
+window.HTMLCanvasElement.prototype.getContext = function() {
+  return {
+    fillRect() {},
+    clearRect() {},
+    getImageData(x, y, w, h) {
+      return {
+        data: new Array(w * h * 4),
+      };
+    },
+    putImageData() {},
+    createImageData() {
+      return [];
+    },
+    setTransform() {},
+    drawImage() {},
+    save() {},
+    fillText() {},
+    restore() {},
+    beginPath() {},
+    moveTo() {},
+    lineTo() {},
+    closePath() {},
+    stroke() {},
+    translate() {},
+    scale() {},
+    rotate() {},
+    arc() {},
+    fill() {},
+    measureText() {
+      return { width: 0 };
+    },
+    transform() {},
+    rect() {},
+    clip() {},
+  };
+};
 describe('<DAG>', () => {
   it('does not explode', () => {
     const serviceCalls = [
@@ -27,6 +61,17 @@ describe('<DAG>', () => {
         callCount: 1,
         child: 'child-id',
         parent: 'parent-id',
+      },
+    ];
+    expect(mount(<DAG serviceCalls={serviceCalls} />)).toBeDefined();
+  });
+
+  it('does not explode with empty strings or string with only spaces', () => {
+    const serviceCalls = [
+      {
+        callCount: 1,
+        child: '',
+        parent: ' ',
       },
     ];
     expect(mount(<DAG serviceCalls={serviceCalls} />)).toBeDefined();
