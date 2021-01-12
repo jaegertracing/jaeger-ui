@@ -72,7 +72,7 @@ describe('<TopNav>', () => {
 
   describe('renders the default menu options', () => {
     it('renders the "Jaeger UI" button', () => {
-      const items = wrapper.find(Link).findWhere(link => /Jaeger UI/.test(link.text()));
+      const items = wrapper.find('.jaeger-home-link');
       expect(items.length).toBe(1);
     });
 

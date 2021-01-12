@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Form, Input } from 'antd';
+import { Form, Input, Icon } from 'antd';
 import { RouteComponentProps, Router as RouterHistory, withRouter } from 'react-router-dom';
 
 import { getUrl } from '../TracePage/url';
@@ -37,7 +37,12 @@ class TraceIDSearchInput extends React.PureComponent<Props> {
   render() {
     return (
       <Form layout="horizontal" onSubmit={this.goToTrace} className="TraceIDSearchInput--form">
-        <Input autosize={null} name="idInput" placeholder="Lookup by Trace ID..." />
+        <Input
+          autosize={null}
+          name="idInput"
+          placeholder="Lookup by Trace ID..."
+          prefix={<Icon type="search" />}
+        />
       </Form>
     );
   }

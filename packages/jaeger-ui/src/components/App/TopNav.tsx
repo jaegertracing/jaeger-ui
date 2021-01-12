@@ -29,6 +29,8 @@ import { ConfigMenuItem, ConfigMenuGroup } from '../../types/config';
 import { getConfigValue } from '../../utils/config/get-config';
 import prefixUrl from '../../utils/prefix-url';
 
+import JaegerHomeLink from '../../img/jaeger-home-link.svg';
+
 type Props = RouteComponentProps<any> & ReduxState;
 
 const NAV_LINKS = [
@@ -101,9 +103,13 @@ export function TopNavImpl(props: Props) {
   const { config, router } = props;
   const { pathname } = router.location;
   const menuItems = Array.isArray(config.menu) ? config.menu : [];
+
   return (
     <div>
       <Menu theme="dark" mode="horizontal" selectable={false} className="ub-right" selectedKeys={[pathname]}>
+        <Menu.Item>
+          <TraceIDSearchInput />
+        </Menu.Item>
         {menuItems.map(m => {
           if (isItem(m)) {
             return getItem(m);
@@ -117,10 +123,9 @@ export function TopNavImpl(props: Props) {
       </Menu>
       <Menu theme="dark" mode="horizontal" selectable={false} selectedKeys={[pathname]}>
         <Menu.Item>
-          <Link to={prefixUrl('/')}>Jaeger UI</Link>
-        </Menu.Item>
-        <Menu.Item>
-          <TraceIDSearchInput />
+          <Link to={prefixUrl('/')}>
+            <img alt="jaeger-home-link" className="jaeger-home-link" src={JaegerHomeLink} />
+          </Link>
         </Menu.Item>
         {NAV_LINKS.map(({ matches, to, text }) => {
           const url = typeof to === 'string' ? to : to(props);
