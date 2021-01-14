@@ -18,7 +18,12 @@
       // Jaeger UI config data is embedded by the query-service via search-replace.
       // This is later merged with defaults into the redux `state.config` via
       // src/utils/config/get-config.js.
+      // JAEGER_CONFIG_JS
+      // the line above may be replaced by user-provided JS file that should define a UIConfig function.
       function getJaegerUiConfig() {
+        if(typeof window.UIConfig === 'function') {
+          return UIConfig();
+        }
         const DEFAULT_CONFIG = null;
         const JAEGER_CONFIG = DEFAULT_CONFIG;
         return JAEGER_CONFIG;
