@@ -29,8 +29,6 @@ import { ConfigMenuItem, ConfigMenuGroup } from '../../types/config';
 import { getConfigValue } from '../../utils/config/get-config';
 import prefixUrl from '../../utils/prefix-url';
 
-import JaegerHomeLink from '../../img/jaeger-home-link.svg';
-
 type Props = RouteComponentProps<any> & ReduxState;
 
 const NAV_LINKS = [
@@ -123,8 +121,8 @@ export function TopNavImpl(props: Props) {
       </Menu>
       <Menu theme="dark" mode="horizontal" selectable={false} selectedKeys={[pathname]}>
         <Menu.Item>
-          <Link to={prefixUrl('/')}>
-            <img alt="jaeger-home-link" className="jaeger-home-link" src={JaegerHomeLink} />
+          <Link to={prefixUrl('/')} style={{ fontSize: '14px', fontWeight: 500 }}>
+            JAEGER UI
           </Link>
         </Menu.Item>
         {NAV_LINKS.map(({ matches, to, text }) => {

@@ -46,6 +46,3 @@ declare module 'react-helmet';
 declare module 'json-markup';
 declare module 'react-vis-force';
 declare module 'tween-functions';
-
-// For static assets
-declare module '*.svg';
