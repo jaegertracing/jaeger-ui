@@ -34,6 +34,7 @@ import {
   validateDurationFields,
 } from './SearchForm';
 import * as markers from './SearchForm.markers';
+import getConfig from '../../utils/config/get-config';
 
 function makeDateParams(dateOffset = 0) {
   const date = new Date();
@@ -402,6 +403,7 @@ describe('<SearchForm>', () => {
 
   it('uses config.search.maxLimit', () => {
     const maxLimit = 6789;
+    getConfig.apply({}, []);
     const config = {
       search: {
         maxLimit,
