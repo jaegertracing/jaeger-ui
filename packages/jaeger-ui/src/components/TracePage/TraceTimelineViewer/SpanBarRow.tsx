@@ -104,6 +104,7 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
       duration,
       hasChildren: isParent,
       operationName,
+      operationLabel,
       process: { serviceName },
     } = span;
     const label = formatDuration(duration);
@@ -169,7 +170,7 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
                   </span>
                 )}
               </span>
-              <small className="endpoint-name">{rpc ? rpc.operationName : operationName}</small>
+              <small className="endpoint-name">{rpc ? rpc.operationName : operationName}{operationLabel ? (' ' + operationLabel) : ''}</small>
             </a>
             {span.references && span.references.length > 1 && (
               <ReferencesButton
