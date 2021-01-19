@@ -24,6 +24,13 @@ jest.mock('./index', () => {
   return require.requireActual('./index');
 });
 
+jest.mock('../config/get-config', () => () => ({
+  tracking: {
+    gaID: 'UA-123456',
+    trackErrors: true,
+  },
+}));
+
 import ReactGA from 'react-ga';
 
 import * as tracking from './index';
@@ -36,7 +43,7 @@ function getStr(len) {
   return longStr.slice(0, len);
 }
 
-describe('tracking', () => {
+describe('google analytics tracking', () => {
   let calls;
 
   beforeEach(() => {
