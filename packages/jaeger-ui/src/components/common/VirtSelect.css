@@ -41,6 +41,7 @@ limitations under the License.
   align-items: center;
   padding: 0 0.5rem;
   white-space: nowrap;
+  overflow: scroll;
 }
 
 .VirtSelect--option.is-focused {
