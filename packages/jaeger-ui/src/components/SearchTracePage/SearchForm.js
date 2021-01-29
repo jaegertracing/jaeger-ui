@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Form, Input, Button, Popover, Select } from 'antd';
+import { Form, Input, Button, Popover, Select, Checkbox } from 'antd';
 import _get from 'lodash/get';
 import logfmtParser from 'logfmt/lib/logfmt_parser';
 import { stringify as logfmtStringify } from 'logfmt/lib/stringify';
@@ -41,6 +41,7 @@ const FormItem = Form.Item;
 const Option = Select.Option;
 
 const AdaptedInput = reduxFormFieldAdapter({ AntInputComponent: Input });
+const AdaptedCheckbox = reduxFormFieldAdapter({ AntInputComponent: Checkbox });
 const AdaptedSelect = reduxFormFieldAdapter({ AntInputComponent: Select });
 const AdaptedVirtualSelect = reduxFormFieldAdapter({
   AntInputComponent: VirtSelect,
@@ -217,6 +218,7 @@ export function submitForm(fields, searchTraces) {
     minDuration,
     maxDuration,
     lookback,
+    searchWholeTraces,
   } = fields;
   // Note: traceID is ignored when the form is submitted
   store.set('lastSearch', { service, operation });
@@ -238,7 +240,7 @@ export function submitForm(fields, searchTraces) {
     end = times.end;
   }
 
-  trackFormInput(resultsLimit, operation, tags, minDuration, maxDuration, lookback);
+  trackFormInput(resultsLimit, operation, tags, minDuration, maxDuration, lookback, searchWholeTraces);
 
   searchTraces({
     service,
@@ -250,6 +252,7 @@ export function submitForm(fields, searchTraces) {
     tags: convTagsLogfmt(tags) || undefined,
     minDuration: minDuration || null,
     maxDuration: maxDuration || null,
+    searchWholeTraces: searchWholeTraces || null,
   });
 }
 
@@ -444,6 +447,15 @@ export class SearchFormImpl extends React.PureComponent {
             component={AdaptedInput}
             placeholder="Limit Results"
             props={{ disabled, min: 1, max: getConfigValue('search.maxLimit') }}
+          />
+        </FormItem>
+
+        <FormItem label="Search Whole Traces">
+          <Field
+              name="searchWholeTraces"
+              type="checkbox"
+              component={AdaptedCheckbox}
+              props={{ disabled }}
           />
         </FormItem>
 

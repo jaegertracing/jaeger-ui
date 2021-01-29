@@ -30,6 +30,7 @@ export const CATEGORY_TAGS = `${FORM_CATEGORY_BASE}/tags`;
 export const CATEGORY_MIN_DURATION = `${FORM_CATEGORY_BASE}/min_duration`;
 export const CATEGORY_MAX_DURATION = `${FORM_CATEGORY_BASE}/max_duration`;
 export const CATEGORY_LIMIT = `${FORM_CATEGORY_BASE}/limit`;
+export const CATEGORY_SEARCH_WHOLE_TRACES = `${FORM_CATEGORY_BASE}/search_whole_traces`;
 
 export function trackFormInput(
   resultsLimit: number,
@@ -37,7 +38,8 @@ export function trackFormInput(
   tags: any,
   minDuration: number,
   maxDuration: number,
-  lookback: string
+  lookback: string,
+  searchWholeTraces: any,
 ) {
   trackEvent(CATEGORY_OPERATION, operation === constants.DEFAULT_OPERATION ? ACTION_DEFAULT : ACTION_SET);
   trackEvent(CATEGORY_LIMIT, resultsLimit === constants.DEFAULT_LIMIT ? ACTION_DEFAULT : ACTION_SET);
@@ -45,6 +47,7 @@ export function trackFormInput(
   trackEvent(CATEGORY_MIN_DURATION, minDuration ? ACTION_SET : ACTION_CLEAR);
   trackEvent(CATEGORY_TAGS, tags ? ACTION_SET : ACTION_CLEAR);
   trackEvent(CATEGORY_LOOKBACK, lookback);
+  trackEvent(CATEGORY_SEARCH_WHOLE_TRACES, searchWholeTraces);
 }
 
 export const middlewareHooks = {
