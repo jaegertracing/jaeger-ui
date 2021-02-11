@@ -14,6 +14,11 @@
 
 import { RavenStatic } from 'raven-js';
 import { TNil } from '.';
+import { Config } from './config';
+
+export interface IWebAnalyticsFunc {
+  (config: Config, versionShort: string, versionLong: string): IWebAnalytics;
+}
 
 export default interface IWebAnalytics {
   init: () => void;

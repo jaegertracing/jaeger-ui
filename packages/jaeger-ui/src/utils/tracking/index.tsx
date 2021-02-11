@@ -12,35 +12,54 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { TNil, IWebAnalytics } from '../../types';
+import { TNil } from '../../types';
+import { IWebAnalyticsFunc } from '../../types/tracking';
 import GA from './ga';
 import getConfig from '../config/get-config';
 
 const TrackingImplementation = () => {
   const config = getConfig();
+  let versionShort;
+  let versionLong;
 
-  const GenericWebAnalytics: IWebAnalytics = {
+  if (process.env.REACT_APP_VSN_STATE) {
+    try {
+      const data = JSON.parse(process.env.REACT_APP_VSN_STATE);
+      const joiner = [data.objName];
+      if (data.changed.hasChanged) {
+        joiner.push(data.changed.pretty);
+      }
+      versionShort = joiner.join(' ');
+      versionLong = data.pretty;
+    } catch (_) {
+      versionShort = process.env.REACT_APP_VSN_STATE;
+      versionLong = process.env.REACT_APP_VSN_STATE;
+    }
+    versionLong = versionLong.length > 99 ? `${versionLong.slice(0, 96)}...` : versionLong;
+  } else {
+    versionShort = 'unknown';
+    versionLong = 'unknown';
+  }
+
+  const NoopWebAnalytics: IWebAnalyticsFunc = () => ({
     init: () => {},
     trackPageView: () => {},
     trackError: () => {},
     trackEvent: () => {},
     context: null,
     isEnabled: () => false,
-  };
+  });
 
-  let webAnalytics = GenericWebAnalytics;
+  let webAnalyticsFunc = NoopWebAnalytics;
 
   if (config.tracking && config.tracking.customWebAnalytics) {
-    webAnalytics = config.tracking.customWebAnalytics(config) as IWebAnalytics;
+    webAnalyticsFunc = config.tracking.customWebAnalytics as IWebAnalyticsFunc;
   } else if (config.tracking && config.tracking.gaID) {
-    webAnalytics = new GA(config);
+    webAnalyticsFunc = GA;
   }
 
-  if (webAnalytics.isEnabled()) {
-    webAnalytics.init();
-
-    return webAnalytics;
-  }
+  const webAnalytics = webAnalyticsFunc(config, versionShort, versionLong);
+  webAnalytics.init();
 
   return webAnalytics;
 };
