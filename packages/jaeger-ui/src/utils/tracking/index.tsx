@@ -15,6 +15,7 @@
 import { TNil } from '../../types';
 import { IWebAnalyticsFunc } from '../../types/tracking';
 import GA from './ga';
+import NoopWebAnalytics from './noopWebAnalytics';
 import getConfig from '../config/get-config';
 
 const TrackingImplementation = () => {
@@ -40,15 +41,6 @@ const TrackingImplementation = () => {
     versionShort = 'unknown';
     versionLong = 'unknown';
   }
-
-  const NoopWebAnalytics: IWebAnalyticsFunc = () => ({
-    init: () => {},
-    trackPageView: () => {},
-    trackError: () => {},
-    trackEvent: () => {},
-    context: null,
-    isEnabled: () => false,
-  });
 
   let webAnalyticsFunc = NoopWebAnalytics;
 

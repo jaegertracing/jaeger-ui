@@ -20,20 +20,13 @@ jest.mock('./conv-raven-to-ga', () => () => ({
 }));
 
 jest.mock('./index', () => {
-  process.env.REACT_APP_VSN_STATE = '{}';
+  global.process.env.REACT_APP_VSN_STATE = '{}';
   return require.requireActual('./index');
 });
 
-jest.mock('../config/get-config', () => () => ({
-  tracking: {
-    gaID: 'UA-123456',
-    trackErrors: true,
-  },
-}));
-
 import ReactGA from 'react-ga';
 
-import * as tracking from './index';
+import GA from './ga';
 
 let longStr = '---';
 function getStr(len) {
@@ -45,6 +38,22 @@ function getStr(len) {
 
 describe('google analytics tracking', () => {
   let calls;
+  let tracking;
+
+  beforeAll(() => {
+    tracking = GA(
+      {
+        tracking: {
+          gaID: 'UA-123456',
+          trackErrors: true,
+        },
+      },
+      'unknown',
+      'unknown'
+    );
+
+    tracking.init();
+  });
 
   beforeEach(() => {
     calls = ReactGA.testModeAPI.calls;
