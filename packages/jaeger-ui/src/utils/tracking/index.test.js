@@ -16,12 +16,16 @@ const mockGA = {
   init: jest.fn(),
   context: jest.fn(),
   isEnabled: jest.fn(),
+  trackPageView: jest.fn(),
+  trackError: jest.fn(),
 };
 
 const mockNoopWebAnalytics = {
   init: jest.fn(),
   context: jest.fn(),
   isEnabled: jest.fn(),
+  trackPageView: jest.fn(),
+  trackError: jest.fn(),
 };
 
 jest.mock('./ga', () => ({
@@ -56,11 +60,17 @@ describe('generic analytics tracking', () => {
       };
     });
 
-    return import('.').then(() => {
+    return import('.').then(noopWA => {
       expect(internalVersionShort).toBe('unknown');
       expect(internalVersionLong).toBe('unknown');
       expect(mockNoopWebAnalytics.init).toHaveBeenCalled();
       expect(mockGA.init).not.toHaveBeenCalled();
+
+      noopWA.trackPageView('pathname', 'search');
+      noopWA.trackError('description');
+
+      expect(mockNoopWebAnalytics.trackPageView).toHaveBeenCalled();
+      expect(mockNoopWebAnalytics.trackError).toHaveBeenCalled();
     });
   });
 
@@ -76,9 +86,15 @@ describe('generic analytics tracking', () => {
       };
     });
 
-    return import('.').then(() => {
+    return import('.').then(noopWA => {
       expect(mockNoopWebAnalytics.init).not.toHaveBeenCalled();
       expect(mockGA.init).toHaveBeenCalled();
+
+      noopWA.trackPageView('pathname', 'search');
+      noopWA.trackError('description');
+
+      expect(mockGA.trackPageView).toHaveBeenCalled();
+      expect(mockGA.trackError).toHaveBeenCalled();
     });
   });
 
@@ -139,6 +155,26 @@ describe('generic analytics tracking', () => {
 
     return import('.').then(() => {
       expect(internalVersionShort).toBe(vShot);
+      expect(internalVersionLong).toBe(vLong);
+      expect(mockNoopWebAnalytics.init).toHaveBeenCalled();
+      expect(mockGA.init).not.toHaveBeenCalled();
+    });
+  });
+
+  it('get versions as an object test(hasChanged:true)', () => {
+    const vShotCommitSHA = '48956d5';
+    const vShotChanges = '2f +20 -3 1?';
+    const vLong = ' | github.com/jaegertracing/jaeger-ui | 48956d5 | master';
+    process.env.REACT_APP_VSN_STATE = `{"remote":"github.com/jaegertracing/jaeger-ui","objName":"${vShotCommitSHA}","changed":{"hasChanged":true,"files":2,"insertions":20,"deletions":3,"untracked":1,"pretty":"${vShotChanges}"},"refName":"master","pretty":"${vLong}"}`;
+    jest.doMock('../config/get-config', () => {
+      return {
+        __esModule: true,
+        default: () => ({}),
+      };
+    });
+
+    return import('.').then(() => {
+      expect(internalVersionShort).toBe(`${vShotCommitSHA} ${vShotChanges}`);
       expect(internalVersionLong).toBe(vLong);
       expect(mockNoopWebAnalytics.init).toHaveBeenCalled();
       expect(mockGA.init).not.toHaveBeenCalled();
