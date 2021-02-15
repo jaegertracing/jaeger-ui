@@ -26,6 +26,7 @@ const isTruish = (value?: string | string[]) => {
   return Boolean(value) && value !== '0' && value !== 'false';
 };
 
+/* istanbul ignore next */
 const logTrackingCalls = () => {
   const calls = ReactGA.testModeAPI.calls;
   for (let i = 0; i < calls.length; i++) {
@@ -42,7 +43,6 @@ const GA: IWebAnalyticsFunc = (config: Config, versionShort: string, versionLong
   const isDebugMode =
     (isDev && isTruish(process.env.REACT_APP_GA_DEBUG)) ||
     isTruish(queryString.parse(_get(window, 'location.search'))['ga-debug']);
-
   const gaID = _get(config, 'tracking.gaID');
   const isErrorsEnabled = isDebugMode || Boolean(_get(config, 'tracking.trackErrors'));
   const cookiesToDimensions = _get(config, 'tracking.cookiesToDimensions');

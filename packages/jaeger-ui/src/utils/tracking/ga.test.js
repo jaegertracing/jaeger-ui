@@ -46,18 +46,51 @@ describe('google analytics tracking', () => {
         tracking: {
           gaID: 'UA-123456',
           trackErrors: true,
+          cookiesToDimensions: [{ cookie: 'page', dimension: 'dimension1' }],
         },
       },
-      'unknown',
-      'unknown'
+      'c0mm1ts',
+      'c0mm1tL'
     );
-
-    tracking.init();
   });
 
   beforeEach(() => {
     calls = ReactGA.testModeAPI.calls;
     calls.length = 0;
+  });
+
+  describe('init', () => {
+    it('check init function (no cookies)', () => {
+      tracking.init();
+      expect(calls).toEqual([
+        ['create', 'UA-123456', 'auto'],
+        [
+          'set',
+          {
+            appId: 'github.com/jaegertracing/jaeger-ui',
+            appName: 'Jaeger UI',
+            appVersion: 'c0mm1tL',
+          },
+        ],
+      ]);
+    });
+
+    it('check init function (no cookies)', () => {
+      document.cookie = 'page=1;';
+      tracking.init();
+      expect(calls).toEqual([
+        ['create', 'UA-123456', 'auto'],
+        [
+          'set',
+          {
+            appId: 'github.com/jaegertracing/jaeger-ui',
+            appName: 'Jaeger UI',
+            appVersion: 'c0mm1tL',
+          },
+        ],
+        ['set', { dimension1: '1' }],
+      ]);
+    });
   });
 
   describe('trackPageView', () => {
