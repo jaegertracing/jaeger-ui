@@ -26,6 +26,7 @@ import {
   convTagsLogfmt,
   getUnixTimeStampInMSFromForm,
   lookbackToTimestamp,
+  mapDispatchToProps,
   mapStateToProps,
   optionsWithinMaxLookback,
   submitForm,
@@ -264,6 +265,23 @@ describe('submitForm()', () => {
     expect(operation).toBe(undefined);
   });
 
+  it('expects operation to be value defined in beforeEach', () => {
+    submitForm(fields, searchTraces);
+    const { calls } = searchTraces.mock;
+    expect(calls.length).toBe(1);
+    const { operation } = calls[0][0];
+    expect(operation).toBe('op-a');
+  });
+
+  it('expects operation to be value assigned before call is made', () => {
+    fields.operation = 'test';
+    submitForm(fields, searchTraces);
+    const { calls } = searchTraces.mock;
+    expect(calls.length).toBe(1);
+    const { operation } = calls[0][0];
+    expect(operation).toBe('test');
+  });
+
   describe('`fields.lookback`', () => {
     function getCalledDuration(mock) {
       const { start, end } = mock.calls[0][0];
@@ -414,6 +432,24 @@ describe('<SearchForm>', () => {
     const field = wrapper.find(`Field[name="resultsLimit"]`);
     expect(field.prop('props').max).toEqual(maxLimit);
   });
+
+  it('disables operation when no service selected', () => {
+    wrapper = shallow(<SearchForm {...defaultProps} selectedService="" />);
+    const field = wrapper.find(`Field[name="operation"]`);
+    expect(field).toMatchSnapshot();
+  });
+
+  it('enables operation when unknown service selected', () => {
+    wrapper = shallow(<SearchForm {...defaultProps} selectedService="svcC" />);
+    const field = wrapper.find(`Field[name="operation"]`);
+    expect(field).toMatchSnapshot();
+  });
+
+  it('enables operation when known service selected', () => {
+    wrapper = shallow(<SearchForm {...defaultProps} selectedService="svcB" />);
+    const field = wrapper.find(`Field[name="operation"]`);
+    expect(field).toMatchSnapshot();
+  });
 });
 
 describe('validation', () => {
@@ -439,7 +475,7 @@ describe('mapStateToProps()', () => {
   let state;
 
   beforeEach(() => {
-    state = { router: { location: { serach: '' } } };
+    state = { router: { location: { search: '' } } };
   });
 
   it('does not explode when the query string is empty', () => {
@@ -540,5 +576,13 @@ describe('mapStateToProps()', () => {
     // within 60 seconds (CI tests run slowly)
     expect(msDiff(dateParams.dateStr, '00:00', startDate, startDateTime)).toBeLessThan(60 * 1000);
     expect(msDiff(dateParams.dateStr, dateParams.dateTimeStr, endDate, endDateTime)).toBeLessThan(60 * 1000);
+  });
+});
+
+describe('mapDispatchToProps()', () => {
+  it('creates the actions correctly', () => {
+    expect(mapDispatchToProps(() => {})).toEqual({
+      onSubmit: expect.any(Function),
+    });
   });
 });
