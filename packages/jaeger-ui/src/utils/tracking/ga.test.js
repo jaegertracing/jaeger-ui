@@ -25,8 +25,8 @@ jest.mock('./index', () => {
 });
 
 import ReactGA from 'react-ga';
-
-import GA from './ga';
+import * as GA from './ga';
+import * as utils from './utils';
 
 let longStr = '---';
 function getStr(len) {
@@ -41,7 +41,7 @@ describe('google analytics tracking', () => {
   let tracking;
 
   beforeAll(() => {
-    tracking = GA(
+    tracking = GA.default(
       {
         tracking: {
           gaID: 'UA-123456',
@@ -176,5 +176,43 @@ describe('google analytics tracking', () => {
       ['send', { hitType: 'exception', exDescription: expect.any(String), exFatal: false }],
       ['send', { hitType: 'event', eventCategory: expect.any(String), eventAction: expect.any(String) }],
     ]);
+  });
+
+  describe('Debug mode', () => {
+    let trackingDebug;
+
+    beforeAll(() => {
+      const originalWindow = { ...window };
+      const windowSpy = jest.spyOn(global, 'window', 'get');
+      windowSpy.mockImplementation(() => ({
+        ...originalWindow,
+        location: {
+          ...originalWindow.location,
+          href: 'http://my.test/page',
+          search: 'ga-debug=true',
+        },
+      }));
+
+      trackingDebug = GA.default(
+        {
+          tracking: {
+            gaID: 'UA-123456',
+            trackErrors: true,
+            cookiesToDimensions: [{ cookie: 'page', dimension: 'dimension1' }],
+          },
+        },
+        'c0mm1ts',
+        'c0mm1tL'
+      );
+    });
+
+    it('isDebugMode = true', () => {
+      utils.logTrackingCalls = jest.fn();
+      trackingDebug.init();
+      trackingDebug.trackError();
+      trackingDebug.trackEvent('jaeger/some-category', 'some-action');
+      trackingDebug.trackPageView('a', 'b');
+      expect(utils.logTrackingCalls).toHaveBeenCalledTimes(4);
+    });
   });
 });

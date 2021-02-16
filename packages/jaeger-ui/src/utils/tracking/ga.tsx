@@ -21,19 +21,10 @@ import convRavenToGa from './conv-raven-to-ga';
 import { TNil } from '../../types';
 import { Config } from '../../types/config';
 import { IWebAnalyticsFunc } from '../../types/tracking';
+import { logTrackingCalls } from './utils';
 
 const isTruish = (value?: string | string[]) => {
   return Boolean(value) && value !== '0' && value !== 'false';
-};
-
-/* istanbul ignore next */
-const logTrackingCalls = () => {
-  const calls = ReactGA.testModeAPI.calls;
-  for (let i = 0; i < calls.length; i++) {
-    // eslint-disable-next-line no-console
-    console.log('[react-ga]', ...calls[i]);
-  }
-  calls.length = 0;
 };
 
 const GA: IWebAnalyticsFunc = (config: Config, versionShort: string, versionLong: string) => {
