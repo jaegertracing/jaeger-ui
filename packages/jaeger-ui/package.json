@@ -119,7 +119,8 @@
       "!src/setup*.js",
       "!src/utils/DraggableManager/demo/*.tsx",
       "!src/utils/test/**/*.js",
-      "!src/demo/**/*.js"
+      "!src/demo/**/*.js",
+      "!src/types/*"
     ]
   },
   "browserslist": [
