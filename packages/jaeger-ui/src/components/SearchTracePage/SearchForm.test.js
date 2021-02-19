@@ -448,24 +448,6 @@ describe('<SearchForm>', () => {
     const field = wrapper.find(`Field[name="resultsLimit"]`);
     expect(field.prop('props').max).toEqual(maxLimit);
   });
-
-  it('disables operation when no service selected', () => {
-    wrapper = shallow(<SearchForm {...defaultProps} selectedService="" />);
-    const field = wrapper.find(`Field[name="operation"]`);
-    expect(field).toMatchSnapshot();
-  });
-
-  it('enables operation when unknown service selected', () => {
-    wrapper = shallow(<SearchForm {...defaultProps} selectedService="svcC" />);
-    const field = wrapper.find(`Field[name="operation"]`);
-    expect(field).toMatchSnapshot();
-  });
-
-  it('enables operation when known service selected', () => {
-    wrapper = shallow(<SearchForm {...defaultProps} selectedService="svcB" />);
-    const field = wrapper.find(`Field[name="operation"]`);
-    expect(field).toMatchSnapshot();
-  });
 });
 
 describe('validation', () => {
