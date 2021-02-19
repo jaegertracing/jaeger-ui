@@ -1,5 +1,23 @@
 # Releases
 
+## Next (unreleased)
+
+### Enhancements
+
+### Fixes
+
+## v1.13.0 (February 20, 2021)
+
+### Enhancements
+
+- **General:** Generic web analytics tracking implementation ([@th3M1ke](https://github.com/th3M1ke) in [#681](https://github.com/jaegertracing/jaeger-ui/pull/681))
+
+- **General:** Rearrange nav controls ([@yoave23](https://github.com/yoave23) in [#676](https://github.com/jaegertracing/jaeger-ui/pull/676))
+
+- **General:** Change UI configuration to a Javascript file ([@th3M1ke](https://github.com/th3M1ke) in [#677](https://github.com/jaegertracing/jaeger-ui/pull/677))
+
+- **Trace detail:** Display references unless it's a single CHILD_OF ([@yurishkuro](https://github.com/yurishkuro) in [#672](https://github.com/jaegertracing/jaeger-ui/pull/672))
+
 ## v1.12.0 (November 14, 2020)
 
 ### Enhancements
