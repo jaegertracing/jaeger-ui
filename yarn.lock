@@ -1683,8 +1683,9 @@
     "@types/react" "*"
 
 "@types/react-virtualized-select@^3.0.7":
-  version "3.0.7"
-  resolved "https://registry.yarnpkg.com/@types/react-virtualized-select/-/react-virtualized-select-3.0.7.tgz#068c97c5ff1cd46b292b29a34cb06f2efa0e94d4"
+  version "3.0.8"
+  resolved "https://registry.yarnpkg.com/@types/react-virtualized-select/-/react-virtualized-select-3.0.8.tgz#0f138e64654e45f438592d1bae5a18cf10f017c8"
+  integrity sha512-2cZiWj0k3cdW7JkEfJbPiHJSurjej91FCHvh9vt76wVYnSoOcs4RIImoLO1YHegxwbNP1GD7CbFtcgUp+wNvZw==
   dependencies:
     "@types/react" "*"
     "@types/react-select" "^1"
