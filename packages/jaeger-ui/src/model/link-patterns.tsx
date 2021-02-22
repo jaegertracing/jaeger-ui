@@ -158,28 +158,25 @@ export function computeTraceLink(linkPatterns: ProcessedLinkPattern[], trace: Tr
   return result;
 }
 
-function renderPattern(
-  pattern: ProcessedLinkPattern,
+function getParameterValues(
+  parameters: string[],
   items: KeyValuePair[],
-  findInAncestorsFn: (_: string) => KeyValuePair | undefined,
-  onMissingFn: (_: string) => void
+  findInAncestorsFn?: (_: string) => KeyValuePair | undefined,
+  onMissingFn?: (_: string) => void
 ) {
   const parameterValues: Record<string, any> = {};
-  const allParameters = pattern.parameters.every(parameter => {
-    const entry = getParameterInArray(parameter, items) || findInAncestorsFn(parameter);
+  const allParameters = parameters.every(parameter => {
+    const entry = getParameterInArray(parameter, items) || (findInAncestorsFn && findInAncestorsFn(parameter));
     if (entry) {
       parameterValues[parameter] = entry.value;
       return true;
     }
-    onMissingFn(parameter);
+    if (onMissingFn) {
+      onMissingFn(parameter);
+    }
     return false;
   });
-  return (
-    allParameters && {
-      url: callTemplate(pattern.url, parameterValues),
-      text: callTemplate(pattern.text, parameterValues),
-    }
-  );
+  return allParameters && parameterValues;
 }
 
 export function computeLinks(
@@ -200,41 +197,48 @@ export function computeLinks(
   }
   return pluckTruthy(
     linkPatterns.map(
-      pattern =>
-        pattern.type(type) &&
-        pattern.key(item.key) &&
-        pattern.value(item.value) &&
-        renderPattern(
-          pattern,
-          items,
-          parameter => {
-            // do not look in ancestors for process tags because the same object may appear in different
-            // places in the hierarchy and the cache in getLinks uses that object as a key
-            return !processTags ? getParameterInAncestor(parameter, span) : undefined;
-          },
-          parameter => {
-            // eslint-disable-next-line no-console
-            console.warn(
-              `Skipping link pattern, missing parameter ${parameter} for key ${item.key} in ${type}.`,
-              pattern.object
-            );
-          }
-        )
+      pattern => {
+        if(
+          pattern.type(type) &&
+          pattern.key(item.key) &&
+          pattern.value(item.value)
+        ) {
+          const parameterValues = getParameterValues(
+            pattern.parameters,
+            items,
+            parameter => {
+              // do not look in ancestors for process tags because the same object may appear in different
+              // places in the hierarchy and the cache in getLinks uses that object as a key
+              return !processTags ? getParameterInAncestor(parameter, span) : undefined;
+            },
+            parameter => {
+              // eslint-disable-next-line no-console
+              console.warn(
+                `Skipping link pattern, missing parameter ${parameter} for key ${item.key} in ${type}.`,
+                pattern.object
+              );
+            }
+          );
+          return parameterValues && {
+            url: pattern.url.template(parameterValues),
+            text: pattern.text.template(parameterValues),
+          };
+        }
+      }
     )
   );
 }
 
 export function computeSingleTagPattern(pattern: String, span: Span) {
-  const linkPattern = processLinkPattern({
-    type: 'tags',
-    url: '',
-    text: pattern,
-  });
-  if (!linkPattern) {
+  try {
+    const { parameters, template } = processTemplate(pattern, identity);
+    const parameterValues = getParameterValues(parameters, span.tags);
+    return parameterValues && template(parameterValues);
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error(`Ignoring invalid link pattern: ${error}`, pattern);
     return false;
-  }
-  const link = renderPattern(linkPattern, span.tags, () => undefined, () => {});
-  return link && link.text;
+  }  
 }
 
 export function createGetLinks(linkPatterns: ProcessedLinkPattern[], cache: WeakMap<KeyValuePair, Link[]>) {
