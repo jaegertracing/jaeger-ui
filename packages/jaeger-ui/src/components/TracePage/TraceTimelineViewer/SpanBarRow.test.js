@@ -68,7 +68,7 @@ describe('<SpanBarRow>', () => {
 
   it('renders without exploding', () => {
     expect(wrapper).toBeDefined();
-    expect(wrapper.find('.endpoint-name').text()).toBe('rpc-op-name');
+    expect(wrapper.find('.endpoint-name').text()).toBe(props.rpc.operationName);
   });
 
   it('escalates detail toggling', () => {
@@ -179,22 +179,24 @@ describe('<SpanBarRow>', () => {
       getConfigValueSpy.mockReset();
     });
 
+    const tagKey = props.span.tags[0].key;
+
     it('has expected lebel when pattern is set and tags exist', () => {
-      getConfigValueSpy.mockReturnValue('(#{opLabelTag})');
+      getConfigValueSpy.mockReturnValue(`(#{${tagKey}})`);
       wrapper = mount(<SpanBarRow {...props} />);
-      expect(wrapper.find('.endpoint-name').text()).toBe('rpc-op-name (#id)');
+      expect(wrapper.find('.endpoint-name').text()).toBe(`${props.rpc.operationName} (${props.span.tags[0].value})`);
     });
 
     it('hides unless every tag exists', () => {
       getConfigValueSpy.mockReturnValue('#{opLabelTag} #{http.status_code}');
       wrapper = mount(<SpanBarRow {...props} />);
-      expect(wrapper.find('.endpoint-name').text()).toBe('rpc-op-name');
+      expect(wrapper.find('.endpoint-name').text()).toBe(props.rpc.operationName);
     });
 
     it('has expected lebel when no rpc', () => {
       const norpc = _omit(props, 'rpc');
       wrapper = mount(<SpanBarRow {...norpc} />);
-      expect(wrapper.find('.endpoint-name').text()).toBe('op-name');
+      expect(wrapper.find('.endpoint-name').text()).toBe(props.span.operationName);
     });
   });
 });
