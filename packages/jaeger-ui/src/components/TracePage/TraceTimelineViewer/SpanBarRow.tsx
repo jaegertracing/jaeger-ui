@@ -175,7 +175,7 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
               </span>
               <small className="endpoint-name">
                 {rpc ? rpc.operationName : operationName}
-                {opLabel ? ` ${opLabel}` : ''}
+                {opLabel && ` ${opLabel}`}
               </small>
             </a>
             {span.references && span.references.length > 1 && (
