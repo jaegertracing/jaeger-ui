@@ -42,7 +42,7 @@ describe('<SpanBarRow>', () => {
       serviceName: 'rpc-service-name',
     },
     showErrorIcon: false,
-    getViewedBounds: () => ({ start: 0, end: 1 }),
+    getViewedBounds: () => ({ start: 10, end: 1 }),
     span: {
       duration: 'test-duration',
       hasChildren: true,
