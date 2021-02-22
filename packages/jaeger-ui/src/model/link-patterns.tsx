@@ -166,7 +166,8 @@ function getParameterValues(
 ) {
   const parameterValues: Record<string, any> = {};
   const allParameters = parameters.every(parameter => {
-    const entry = getParameterInArray(parameter, items) || (findInAncestorsFn && findInAncestorsFn(parameter));
+    const entry =
+      getParameterInArray(parameter, items) || (findInAncestorsFn && findInAncestorsFn(parameter));
     if (entry) {
       parameterValues[parameter] = entry.value;
       return true;
@@ -196,36 +197,32 @@ export function computeLinks(
     type = 'tags';
   }
   return pluckTruthy(
-    linkPatterns.map(
-      pattern => {
-        if(
-          pattern.type(type) &&
-          pattern.key(item.key) &&
-          pattern.value(item.value)
-        ) {
-          const parameterValues = getParameterValues(
-            pattern.parameters,
-            items,
-            parameter => {
-              // do not look in ancestors for process tags because the same object may appear in different
-              // places in the hierarchy and the cache in getLinks uses that object as a key
-              return !processTags ? getParameterInAncestor(parameter, span) : undefined;
-            },
-            parameter => {
-              // eslint-disable-next-line no-console
-              console.warn(
-                `Skipping link pattern, missing parameter ${parameter} for key ${item.key} in ${type}.`,
-                pattern.object
-              );
-            }
-          );
-          return parameterValues && {
+    linkPatterns.map(pattern => {
+      if (pattern.type(type) && pattern.key(item.key) && pattern.value(item.value)) {
+        const parameterValues = getParameterValues(
+          pattern.parameters,
+          items,
+          parameter => {
+            // do not look in ancestors for process tags because the same object may appear in different
+            // places in the hierarchy and the cache in getLinks uses that object as a key
+            return !processTags ? getParameterInAncestor(parameter, span) : undefined;
+          },
+          parameter => {
+            // eslint-disable-next-line no-console
+            console.warn(
+              `Skipping link pattern, missing parameter ${parameter} for key ${item.key} in ${type}.`,
+              pattern.object
+            );
+          }
+        );
+        return (
+          parameterValues && {
             url: pattern.url.template(parameterValues),
             text: pattern.text.template(parameterValues),
-          };
-        }
+          }
+        );
       }
-    )
+    })
   );
 }
 
@@ -238,7 +235,7 @@ export function computeSingleTagPattern(pattern: String, span: Span) {
     // eslint-disable-next-line no-console
     console.error(`Ignoring invalid link pattern: ${error}`, pattern);
     return false;
-  }  
+  }
 }
 
 export function createGetLinks(linkPatterns: ProcessedLinkPattern[], cache: WeakMap<KeyValuePair, Link[]>) {

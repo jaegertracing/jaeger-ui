@@ -184,7 +184,9 @@ describe('<SpanBarRow>', () => {
     it('has expected level when pattern is set and tags exist', () => {
       getConfigValueSpy.mockReturnValue(`(#{${tagKey}})`);
       wrapper = mount(<SpanBarRow {...props} />);
-      expect(wrapper.find('.endpoint-name').text()).toBe(`${props.rpc.operationName} (${props.span.tags[0].value})`);
+      expect(wrapper.find('.endpoint-name').text()).toBe(
+        `${props.rpc.operationName} (${props.span.tags[0].value})`
+      );
     });
 
     it('hides unless every tag exists', () => {
