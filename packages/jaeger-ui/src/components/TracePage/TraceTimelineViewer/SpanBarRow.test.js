@@ -181,14 +181,14 @@ describe('<SpanBarRow>', () => {
 
     const tagKey = props.span.tags[0].key;
 
-    it('has expected lebel when pattern is set and tags exist', () => {
+    it('has expected level when pattern is set and tags exist', () => {
       getConfigValueSpy.mockReturnValue(`(#{${tagKey}})`);
       wrapper = mount(<SpanBarRow {...props} />);
       expect(wrapper.find('.endpoint-name').text()).toBe(`${props.rpc.operationName} (${props.span.tags[0].value})`);
     });
 
     it('hides unless every tag exists', () => {
-      getConfigValueSpy.mockReturnValue('#{opLabelTag} #{http.status_code}');
+      getConfigValueSpy.mockReturnValue('#{opLabelTag} #{ABSENT_KEY}');
       wrapper = mount(<SpanBarRow {...props} />);
       expect(wrapper.find('.endpoint-name').text()).toBe(props.rpc.operationName);
     });
