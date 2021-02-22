@@ -20,10 +20,9 @@ import { mount, shallow } from 'enzyme';
 import SpanBarRow from './SpanBarRow';
 import SpanTreeOffset from './SpanTreeOffset';
 import ReferencesButton from './ReferencesButton';
-import { getConfigValue } from '../../../utils/config/get-config';
+import * as getConfig from '../../../utils/config/get-config';
 
 jest.mock('./SpanTreeOffset');
-jest.mock('../../../utils/config/get-config');
 
 describe('<SpanBarRow>', () => {
   const spanID = 'some-id';
@@ -64,7 +63,6 @@ describe('<SpanBarRow>', () => {
   beforeEach(() => {
     props.onDetailToggled.mockReset();
     props.onChildrenToggled.mockReset();
-    getConfigValue.mockReset();
     wrapper = mount(<SpanBarRow {...props} />);
   });
 
@@ -170,21 +168,33 @@ describe('<SpanBarRow>', () => {
     expect(refButton.at(0).props().tooltipText).toEqual('This span is referenced by multiple other spans');
   });
 
-  it('has expected lebel when pattern is set and tags exist', () => {
-    getConfigValue.mockReturnValue('(#{opLabelTag})');
-    wrapper = mount(<SpanBarRow {...props} />);
-    expect(wrapper.find('.endpoint-name').text()).toBe('rpc-op-name (#id)');
-  });
+  describe('operation label', () => {
+    let getConfigValueSpy;
 
-  it('hides unless every tag exists', () => {
-    getConfigValue.mockReturnValue('#{opLabelTag} #{http.status_code}');
-    wrapper = mount(<SpanBarRow {...props} />);
-    expect(wrapper.find('.endpoint-name').text()).toBe('rpc-op-name');
-  });
+    beforeAll(() => {
+      getConfigValueSpy = jest.spyOn(getConfig, 'getConfigValue');
+    });
 
-  it('has expected lebel when no rpc', () => {
-    const norpc = _omit(props, 'rpc');
-    wrapper = mount(<SpanBarRow {...norpc} />);
-    expect(wrapper.find('.endpoint-name').text()).toBe('op-name');
+    beforeEach(() => {
+      getConfigValueSpy.mockReset();
+    });
+
+    it('has expected lebel when pattern is set and tags exist', () => {
+      getConfigValueSpy.mockReturnValue('(#{opLabelTag})');
+      wrapper = mount(<SpanBarRow {...props} />);
+      expect(wrapper.find('.endpoint-name').text()).toBe('rpc-op-name (#id)');
+    });
+
+    it('hides unless every tag exists', () => {
+      getConfigValueSpy.mockReturnValue('#{opLabelTag} #{http.status_code}');
+      wrapper = mount(<SpanBarRow {...props} />);
+      expect(wrapper.find('.endpoint-name').text()).toBe('rpc-op-name');
+    });
+
+    it('has expected lebel when no rpc', () => {
+      const norpc = _omit(props, 'rpc');
+      wrapper = mount(<SpanBarRow {...norpc} />);
+      expect(wrapper.find('.endpoint-name').text()).toBe('op-name');
+    });
   });
 });
