@@ -222,6 +222,7 @@ export function computeLinks(
           }
         );
       }
+      return null;
     })
   );
 }
