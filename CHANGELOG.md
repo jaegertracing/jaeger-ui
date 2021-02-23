@@ -6,6 +6,7 @@
 
 ### Fixes
 
+<<<<<<< HEAD
 ## v1.14.0 (June 4, 2021)
 
 ### Enhancements
@@ -17,6 +18,8 @@
 - Add null check for span.logs in search/filter-spans ([@achesin](https://github.com/achesin) in [#734](https://github.com/jaegertracing/jaeger-ui/pull/734))
 - Several updates to dependencies.
 
+=======
+>>>>>>> Preparing release v1.13.0 (#699)
 ## v1.13.0 (February 20, 2021)
 
 ### Enhancements
