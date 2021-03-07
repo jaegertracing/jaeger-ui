@@ -111,14 +111,26 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
     const viewStart = viewBounds.start;
     const viewEnd = viewBounds.end;
 
+    let labelTooltip;
+    const tooltipProp = span && span.tags && span.tags.find(({ key }) => key === 'span.tooltip');
+    if (tooltipProp) {
+      labelTooltip = tooltipProp.value;
+    }
+
     const labelDetail = `${serviceName}::${operationName}`;
     let longLabel;
     let hintSide;
     if (viewStart > 1 - viewEnd) {
       longLabel = `${labelDetail} | ${label}`;
+      if (labelTooltip) {
+        longLabel = `${labelTooltip} | ${longLabel}`;
+      }
       hintSide = 'left';
     } else {
       longLabel = `${label} | ${labelDetail}`;
+      if (labelTooltip) {
+        longLabel = `${longLabel} | ${labelTooltip}`;
+      }
       hintSide = 'right';
     }
 
@@ -170,6 +182,7 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
                 )}
               </span>
               <small className="endpoint-name">{rpc ? rpc.operationName : operationName}</small>
+              {labelTooltip && <small className="tooltip">{labelTooltip}</small>}
             </a>
             {span.references && span.references.length > 1 && (
               <ReferencesButton
