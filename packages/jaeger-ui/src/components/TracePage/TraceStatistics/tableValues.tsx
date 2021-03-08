@@ -264,6 +264,7 @@ function valueFirstDropdown(selectedTagKey: string, trace: Trace) {
   let color = '';
   let allDiffColumnValues = [];
   const allSpans = trace.spans;
+  debugger;
   // all possibilities that can be displayed
   if (selectedTagKey === serviceName) {
     const temp = _.chain(allSpans)
@@ -668,5 +669,7 @@ export function getColumnValuesSecondDropdown(
   if (selectedTagKeySecond !== 'Reset') {
     return valueSecondDropdown(actualTableValues, selectedTagKey, selectedTagKeySecond, trace);
   }
+  console.log(selectedTagKey)
+  console.log(trace);
   return getColumnValues(selectedTagKey, trace);
 }

@@ -20,5 +20,6 @@
     // Required by CRA
     "isolatedModules": true
   },
-  "include": ["src/**/*.tsx", "typings"]
+  "include": ["src/**/*.tsx", "typings"],
+  "validate.enable": false
 }
