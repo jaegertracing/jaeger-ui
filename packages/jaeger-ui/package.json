@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "jaeger-ui",
-  "version": "1.12.0",
+  "version": "1.13.0",
   "main": "src/index.js",
   "license": "Apache-2.0",
   "homepage": ".",
@@ -120,7 +120,8 @@
       "!src/setup*.js",
       "!src/utils/DraggableManager/demo/*.tsx",
       "!src/utils/test/**/*.js",
-      "!src/demo/**/*.js"
+      "!src/demo/**/*.js",
+      "!src/types/*"
     ]
   },
   "browserslist": [

@@ -85,6 +85,7 @@ export default deepFreeze(
       tracking: {
         gaID: null,
         trackErrors: true,
+        customWebAnalytics: null,
       },
     },
     // fields that should be individually merged vs wholesale replaced

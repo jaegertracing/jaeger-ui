@@ -26,6 +26,7 @@ import {
   convTagsLogfmt,
   getUnixTimeStampInMSFromForm,
   lookbackToTimestamp,
+  mapDispatchToProps,
   mapStateToProps,
   optionsWithinMaxLookback,
   submitForm,
@@ -34,6 +35,7 @@ import {
   validateDurationFields,
 } from './SearchForm';
 import * as markers from './SearchForm.markers';
+import getConfig from '../../utils/config/get-config';
 
 function makeDateParams(dateOffset = 0) {
   const date = new Date();
@@ -263,6 +265,23 @@ describe('submitForm()', () => {
     expect(operation).toBe(undefined);
   });
 
+  it('expects operation to be value defined in beforeEach', () => {
+    submitForm(fields, searchTraces);
+    const { calls } = searchTraces.mock;
+    expect(calls.length).toBe(1);
+    const { operation } = calls[0][0];
+    expect(operation).toBe('op-a');
+  });
+
+  it('expects operation to be value assigned before call is made', () => {
+    fields.operation = 'test';
+    submitForm(fields, searchTraces);
+    const { calls } = searchTraces.mock;
+    expect(calls.length).toBe(1);
+    const { operation } = calls[0][0];
+    expect(operation).toBe('test');
+  });
+
   describe('`fields.lookback`', () => {
     function getCalledDuration(mock) {
       const { start, end } = mock.calls[0][0];
@@ -369,6 +388,22 @@ describe('<SearchForm>', () => {
     expect(ops.prop('props').disabled).toBe(false);
   });
 
+  it('keeps operation disabled when no service selected', () => {
+    let ops = wrapper.find('[placeholder="Select An Operation"]');
+    expect(ops.prop('props').disabled).toBe(true);
+    wrapper = shallow(<SearchForm {...defaultProps} selectedService="" />);
+    ops = wrapper.find('[placeholder="Select An Operation"]');
+    expect(ops.prop('props').disabled).toBe(true);
+  });
+
+  it('enables operation when unknown service selected', () => {
+    let ops = wrapper.find('[placeholder="Select An Operation"]');
+    expect(ops.prop('props').disabled).toBe(true);
+    wrapper = shallow(<SearchForm {...defaultProps} selectedService="svcC" />);
+    ops = wrapper.find('[placeholder="Select An Operation"]');
+    expect(ops.prop('props').disabled).toBe(false);
+  });
+
   it('shows custom date inputs when `props.selectedLookback` is "custom"', () => {
     function getDateFieldLengths(compWrapper) {
       return [
@@ -402,6 +437,7 @@ describe('<SearchForm>', () => {
 
   it('uses config.search.maxLimit', () => {
     const maxLimit = 6789;
+    getConfig.apply({}, []);
     const config = {
       search: {
         maxLimit,
@@ -437,7 +473,7 @@ describe('mapStateToProps()', () => {
   let state;
 
   beforeEach(() => {
-    state = { router: { location: { serach: '' } } };
+    state = { router: { location: { search: '' } } };
   });
 
   it('does not explode when the query string is empty', () => {
@@ -538,5 +574,13 @@ describe('mapStateToProps()', () => {
     // within 60 seconds (CI tests run slowly)
     expect(msDiff(dateParams.dateStr, '00:00', startDate, startDateTime)).toBeLessThan(60 * 1000);
     expect(msDiff(dateParams.dateStr, dateParams.dateTimeStr, endDate, endDateTime)).toBeLessThan(60 * 1000);
+  });
+});
+
+describe('mapDispatchToProps()', () => {
+  it('creates the actions correctly', () => {
+    expect(mapDispatchToProps(() => {})).toEqual({
+      onSubmit: expect.any(Function),
+    });
   });
 });
