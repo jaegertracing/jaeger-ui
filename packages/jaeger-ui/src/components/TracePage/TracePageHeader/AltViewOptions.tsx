@@ -49,7 +49,7 @@ const MENU_ITEMS = [
   },
   {
     viewType: ETraceViewType.TraceSpansView,
-    label: 'Trace Spans View',
+    label: 'Trace Spans Table',
   },
 ];
 
