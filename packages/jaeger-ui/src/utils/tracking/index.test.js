@@ -1,4 +1,4 @@
-// Copyright (c) 2021 The Jaeger Authors.
+// Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,172 +12,120 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-const mockGA = {
-  init: jest.fn(),
-  context: jest.fn(),
-  isEnabled: jest.fn(),
-  trackPageView: jest.fn(),
-  trackError: jest.fn(),
-};
-
-const mockNoopWebAnalytics = {
-  init: jest.fn(),
-  context: jest.fn(),
-  isEnabled: jest.fn(),
-  trackPageView: jest.fn(),
-  trackError: jest.fn(),
-};
-
-jest.mock('./ga', () => ({
-  __esModule: true,
-  default: () => {
-    return mockGA;
-  },
-}));
-let internalVersionShort;
-let internalVersionLong;
-
-jest.mock('./noopWebAnalytics', () => ({
-  __esModule: true,
-  default: (config, versionShort, versionLong) => {
-    internalVersionShort = versionShort;
-    internalVersionLong = versionLong;
-    return mockNoopWebAnalytics;
-  },
+/* eslint-disable import/first */
+jest.mock('./conv-raven-to-ga', () => () => ({
+  category: 'jaeger/a',
+  action: 'some-action',
+  message: 'jaeger/a',
 }));
 
-describe('generic analytics tracking', () => {
+jest.mock('./index', () => {
+  process.env.REACT_APP_VSN_STATE = '{}';
+  return require.requireActual('./index');
+});
+
+import ReactGA from 'react-ga';
+
+import * as tracking from './index';
+
+let longStr = '---';
+function getStr(len) {
+  while (longStr.length < len) {
+    longStr += longStr.slice(0, len - longStr.length);
+  }
+  return longStr.slice(0, len);
+}
+
+describe('tracking', () => {
+  let calls;
+
   beforeEach(() => {
-    jest.resetModules();
-    jest.resetAllMocks();
+    calls = ReactGA.testModeAPI.calls;
+    calls.length = 0;
   });
 
-  it('no web analytic test', () => {
-    jest.doMock('../config/get-config', () => {
-      return {
-        __esModule: true,
-        default: () => ({}),
-      };
+  describe('trackPageView', () => {
+    it('tracks a page view', () => {
+      tracking.trackPageView('a', 'b');
+      expect(calls).toEqual([['send', { hitType: 'pageview', page: 'ab' }]]);
     });
 
-    return import('.').then(noopWA => {
-      expect(internalVersionShort).toBe('unknown');
-      expect(internalVersionLong).toBe('unknown');
-      expect(mockNoopWebAnalytics.init).toHaveBeenCalled();
-      expect(mockGA.init).not.toHaveBeenCalled();
-
-      noopWA.trackPageView('pathname', 'search');
-      noopWA.trackError('description');
-
-      expect(mockNoopWebAnalytics.trackPageView).toHaveBeenCalled();
-      expect(mockNoopWebAnalytics.trackError).toHaveBeenCalled();
+    it('ignores search when it is falsy', () => {
+      tracking.trackPageView('a');
+      expect(calls).toEqual([['send', { hitType: 'pageview', page: 'a' }]]);
     });
   });
 
-  it('Google Analytics test', () => {
-    jest.doMock('../config/get-config', () => {
-      return {
-        __esModule: true,
-        default: () => ({
-          tracking: {
-            gaID: 'UA123',
+  describe('trackError', () => {
+    it('tracks an error', () => {
+      tracking.trackError('a');
+      expect(calls).toEqual([
+        ['send', { hitType: 'exception', exDescription: expect.any(String), exFatal: false }],
+      ]);
+    });
+
+    it('ensures "jaeger" is prepended', () => {
+      tracking.trackError('a');
+      expect(calls).toEqual([['send', { hitType: 'exception', exDescription: 'jaeger/a', exFatal: false }]]);
+    });
+
+    it('truncates if needed', () => {
+      const str = `jaeger/${getStr(200)}`;
+      tracking.trackError(str);
+      expect(calls).toEqual([
+        ['send', { hitType: 'exception', exDescription: str.slice(0, 149), exFatal: false }],
+      ]);
+    });
+  });
+
+  describe('trackEvent', () => {
+    it('tracks an event', () => {
+      const category = 'jaeger/some-category';
+      const action = 'some-action';
+      tracking.trackEvent(category, action);
+      expect(calls).toEqual([
+        [
+          'send',
+          {
+            hitType: 'event',
+            eventCategory: category,
+            eventAction: action,
           },
-        }),
-      };
+        ],
+      ]);
     });
 
-    return import('.').then(noopWA => {
-      expect(mockNoopWebAnalytics.init).not.toHaveBeenCalled();
-      expect(mockGA.init).toHaveBeenCalled();
-
-      noopWA.trackPageView('pathname', 'search');
-      noopWA.trackError('description');
-
-      expect(mockGA.trackPageView).toHaveBeenCalled();
-      expect(mockGA.trackError).toHaveBeenCalled();
+    it('prepends "jaeger/" to the category, if needed', () => {
+      const category = 'some-category';
+      const action = 'some-action';
+      tracking.trackEvent(category, action);
+      expect(calls).toEqual([
+        ['send', { hitType: 'event', eventCategory: `jaeger/${category}`, eventAction: action }],
+      ]);
     });
-  });
 
-  it('Custom Web Analytics test', () => {
-    const mockCustomWA = {
-      init: jest.fn(),
-      context: jest.fn(),
-      isEnabled: jest.fn(),
-    };
-
-    jest.doMock('../config/get-config', () => {
-      return {
-        __esModule: true,
-        default: () => ({
-          tracking: {
-            gaID: 'UA123',
-            customWebAnalytics: () => mockCustomWA,
+    it('truncates values, if needed', () => {
+      const str = `jaeger/${getStr(600)}`;
+      tracking.trackEvent(str, str, str);
+      expect(calls).toEqual([
+        [
+          'send',
+          {
+            hitType: 'event',
+            eventCategory: str.slice(0, 149),
+            eventAction: str.slice(0, 499),
+            eventLabel: str.slice(0, 499),
           },
-        }),
-      };
-    });
-
-    return import('.').then(() => {
-      expect(mockNoopWebAnalytics.init).not.toHaveBeenCalled();
-      expect(mockGA.init).not.toHaveBeenCalled();
-      expect(mockCustomWA.init).toHaveBeenCalled();
+        ],
+      ]);
     });
   });
 
-  it('get versions as a string or bad JSON test', () => {
-    const version = '123456';
-    process.env.REACT_APP_VSN_STATE = version;
-    jest.doMock('../config/get-config', () => {
-      return {
-        __esModule: true,
-        default: () => ({}),
-      };
-    });
-
-    return import('.').then(() => {
-      expect(internalVersionShort).toBe(version);
-      expect(internalVersionLong).toBe(version);
-      expect(mockNoopWebAnalytics.init).toHaveBeenCalled();
-      expect(mockGA.init).not.toHaveBeenCalled();
-    });
-  });
-
-  it('get versions as an object test', () => {
-    const vShot = '48956d5';
-    const vLong = ' | github.com/jaegertracing/jaeger-ui | 48956d5 | master';
-    process.env.REACT_APP_VSN_STATE = `{"remote":"github.com/jaegertracing/jaeger-ui","objName":"${vShot}","changed":{"hasChanged":false,"files":0,"insertions":0,"deletions":0,"untracked":0,"pretty":""},"refName":"master","pretty":"${vLong}"}`;
-    jest.doMock('../config/get-config', () => {
-      return {
-        __esModule: true,
-        default: () => ({}),
-      };
-    });
-
-    return import('.').then(() => {
-      expect(internalVersionShort).toBe(vShot);
-      expect(internalVersionLong).toBe(vLong);
-      expect(mockNoopWebAnalytics.init).toHaveBeenCalled();
-      expect(mockGA.init).not.toHaveBeenCalled();
-    });
-  });
-
-  it('get versions as an object test(hasChanged:true)', () => {
-    const vShotCommitSHA = '48956d5';
-    const vShotChanges = '2f +20 -3 1?';
-    const vLong = ' | github.com/jaegertracing/jaeger-ui | 48956d5 | master';
-    process.env.REACT_APP_VSN_STATE = `{"remote":"github.com/jaegertracing/jaeger-ui","objName":"${vShotCommitSHA}","changed":{"hasChanged":true,"files":2,"insertions":20,"deletions":3,"untracked":1,"pretty":"${vShotChanges}"},"refName":"master","pretty":"${vLong}"}`;
-    jest.doMock('../config/get-config', () => {
-      return {
-        __esModule: true,
-        default: () => ({}),
-      };
-    });
-
-    return import('.').then(() => {
-      expect(internalVersionShort).toBe(`${vShotCommitSHA} ${vShotChanges}`);
-      expect(internalVersionLong).toBe(vLong);
-      expect(mockNoopWebAnalytics.init).toHaveBeenCalled();
-      expect(mockGA.init).not.toHaveBeenCalled();
-    });
+  it('converting raven-js errors', () => {
+    window.onunhandledrejection({ reason: new Error('abc') });
+    expect(calls).toEqual([
+      ['send', { hitType: 'exception', exDescription: expect.any(String), exFatal: false }],
+      ['send', { hitType: 'event', eventCategory: expect.any(String), eventAction: expect.any(String) }],
+    ]);
   });
 });

@@ -59,7 +59,6 @@ describe('getConfig()', () => {
     let getJaegerUiConfig;
 
     beforeEach(() => {
-      getConfig.apply({}, []);
       embedded = {};
       getJaegerUiConfig = jest.fn(() => embedded);
       window.getJaegerUiConfig = getJaegerUiConfig;
@@ -111,12 +110,12 @@ describe('getConfig()', () => {
       });
     });
 
-    it('processes deprecations in `getConfig` is invoked only once', () => {
+    it('processes deprecations every time `getConfig` is invoked', () => {
       processDeprecation.mockClear();
       getConfig();
       expect(processDeprecation.mock.calls.length).toBe(deprecations.length);
       getConfig();
-      expect(processDeprecation.mock.calls.length).toBe(deprecations.length);
+      expect(processDeprecation.mock.calls.length).toBe(2 * deprecations.length);
     });
   });
 });

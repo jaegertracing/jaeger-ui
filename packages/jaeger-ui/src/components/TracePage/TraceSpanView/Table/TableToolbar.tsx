@@ -1,9 +1,6 @@
 import { Button, IconButton, Theme, Toolbar, Tooltip, createStyles, makeStyles } from '@material-ui/core'
-import AddIcon from '@material-ui/icons/Add'
-import CreateIcon from '@material-ui/icons/CreateOutlined'
-import DeleteIcon from '@material-ui/icons/DeleteOutline'
-import FilterListIcon from '@material-ui/icons/FilterList'
-import ViewColumnsIcon from '@material-ui/icons/ViewColumn'
+import MdFilterList from 'react-icons/lib/md/filter-list'
+import FaColumns from 'react-icons/lib/fa/columns'
 import classnames from 'classnames'
 import React, { MouseEvent, MouseEventHandler, PropsWithChildren, ReactElement, useCallback, useState } from 'react'
 import { TableInstance } from 'react-table'
@@ -19,7 +16,11 @@ export const useStyles = makeStyles((theme: Theme) =>
       justifyContent: 'space-between',
     },
     leftButtons: {},
-    rightButtons: {},
+    rightButtons: {
+      width:'100%',
+      display: 'flex',
+      justifyContent: 'flex-end'
+    },
     leftIcons: {
       '&:first-of-type': {
         marginLeft: -12,
@@ -171,57 +172,19 @@ export function TableToolbar<T extends Record<string, unknown>>({
   // toolbar with add, edit, delete, filter/search column select.
   return (
     <Toolbar className={classes.toolbar}>
-      <div className={classes.leftButtons}>
-        {onAdd && (
-          <InstanceSmallIconActionButton<T>
-            instance={instance}
-            icon={<AddIcon />}
-            onClick={onAdd}
-            label='Add'
-            enabled={({ state }: TableInstance<T>) =>
-              !state.selectedRowIds || Object.keys(state.selectedRowIds).length === 0
-            }
-            variant='left'
-          />
-        )}
-        {onEdit && (
-          <InstanceSmallIconActionButton<T>
-            instance={instance}
-            icon={<CreateIcon />}
-            onClick={onEdit}
-            label='Edit'
-            enabled={({ state }: TableInstance<T>) =>
-              state.selectedRowIds && Object.keys(state.selectedRowIds).length === 1
-            }
-            variant='left'
-          />
-        )}
-        {onDelete && (
-          <InstanceSmallIconActionButton<T>
-            instance={instance}
-            icon={<DeleteIcon />}
-            onClick={onDelete}
-            label='Delete'
-            enabled={({ state }: TableInstance<T>) =>
-              state.selectedRowIds && Object.keys(state.selectedRowIds).length > 0
-            }
-            variant='left'
-          />
-        )}
-      </div>
       <div className={classes.rightButtons}>
         <ColumnHidePage<T> instance={instance} onClose={handleClose} show={columnsOpen} anchorEl={anchorEl} />
         <FilterPage<T> instance={instance} onClose={handleClose} show={filterOpen} anchorEl={anchorEl} />
 
           <SmallIconActionButton
-            icon={<ViewColumnsIcon />}
+          icon={<FaColumns />}
             onClick={handleColumnsClick}
             label='Show / hide columns'
             variant='right'
           />
 
         <SmallIconActionButton
-          icon={<FilterListIcon />}
+          icon={<MdFilterList />}
           onClick={handleFilterClick}
           label='Filter by columns'
           variant='right'

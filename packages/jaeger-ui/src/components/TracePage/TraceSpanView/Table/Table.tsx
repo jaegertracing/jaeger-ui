@@ -1,10 +1,11 @@
 import { TableSortLabel, TextField } from '@material-ui/core'
-import KeyboardArrowRight from '@material-ui/icons/KeyboardArrowRight'
-import KeyboardArrowUp from '@material-ui/icons/KeyboardArrowUp'
+import MdKeyboardArrowRight from 'react-icons/lib/md/keyboard-arrow-right'
+import MdKeyboardArrowUp from 'react-icons/lib/md/keyboard-arrow-up'
 import cx from 'classnames'
 import React, { CSSProperties, MouseEventHandler, PropsWithChildren, ReactElement, useEffect } from 'react'
 import {
   Cell,
+  ColumnInstance,
   FilterProps,
   HeaderGroup,
   HeaderProps,
@@ -46,9 +47,16 @@ const DefaultHeader: React.FC<HeaderProps<any>> = ({ column }) => (
   <>{column.id.startsWith('_') ? null : camelToWords(column.id)}</>
 )
 
-function DefaultColumnFilter<T extends Record<string, unknown>>({
-  column: { id, index, filterValue, setFilter, render, parent },
-}: FilterProps<T>) {
+// yes this is recursive, but the depth never exceeds three so it seems safe enough
+const findFirstColumn = <T extends Record<string, unknown>>(columns: Array<ColumnInstance<T>>): ColumnInstance<T> =>
+  columns[0].columns ? findFirstColumn(columns[0].columns) : columns[0]
+
+function mdKeyboardArrowUp (){
+  return (<MdKeyboardArrowUp />);
+} 
+
+function DefaultColumnFilter<T extends Record<string, unknown>>({ columns, column }: FilterProps<T>) {
+  const { id, filterValue, setFilter, render } = column
   const [value, setValue] = React.useState(filterValue || '')
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setValue(event.target.value)
@@ -58,13 +66,14 @@ function DefaultColumnFilter<T extends Record<string, unknown>>({
     setValue(filterValue || '')
   }, [filterValue])
 
-  const firstIndex = !(parent && parent.index)
+  const isFirstColumn = findFirstColumn(columns) === column
   return (
     <TextField
       name={id}
       label={render('Header')}
+      InputLabelProps={{ htmlFor: id }}
       value={value}
-      autoFocus={index === 0 && firstIndex}
+      autoFocus={isFirstColumn}
       variant={'standard'}
       onChange={handleChange}
       onBlur={(e) => {
@@ -110,6 +119,8 @@ const headerProps = <T extends Record<string, unknown>>(props: any, { column }: 
 
 const cellProps = <T extends Record<string, unknown>>(props: any, { cell }: Meta<T, { cell: Cell<T> }>) =>
   getStyles(props, cell.column && cell.column.disableResizing, cell.column && cell.column.align)
+
+
 
 const defaultColumn = {
   Filter: DefaultColumnFilter,
@@ -192,7 +203,7 @@ export function Table<T extends Record<string, unknown>>(props: PropsWithChildre
                       <TableSortLabel
                         active
                         direction={column.isGrouped ? 'desc' : 'asc'}
-                        IconComponent={KeyboardArrowRight}
+                        IconComponent={MdKeyboardArrowRight}
                         {...column.getGroupByToggleProps()}
                         className={classes.headerIcon}
                       />
@@ -238,10 +249,10 @@ export function Table<T extends Record<string, unknown>>(props: PropsWithChildre
                           }}
                           active
                           direction={row.isExpanded ? 'desc' : 'asc'}
-                          IconComponent={KeyboardArrowUp}
+                          IconComponent={mdKeyboardArrowUp}
                           {...row.getToggleRowExpandedProps()}
                           className={classes.cellIcon}
-                        />{' '}
+                        />{' '}s
                         {cell.render('Cell')} ({row.subRows.length})
                       </>
                     ) : cell.isAggregated ? (
