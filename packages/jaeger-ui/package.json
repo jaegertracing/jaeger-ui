@@ -123,7 +123,10 @@
       "!src/demo/**/*.js",
       "!src/types/*"
     ],
-    "reporters": [ "default", "jest-junit" ]
+    "reporters": [
+      "default",
+      "jest-junit"
+    ]
   },
   "browserslist": [
     ">0.5%",
