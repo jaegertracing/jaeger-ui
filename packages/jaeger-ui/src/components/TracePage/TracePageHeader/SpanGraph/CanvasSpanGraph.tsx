@@ -21,7 +21,8 @@ import { TNil } from '../../../../types';
 import './CanvasSpanGraph.css';
 
 type CanvasSpanGraphProps = {
-  items: { valueWidth: number; valueOffset: number; serviceName: string }[];
+  // TODO: Unclear why this is not the `SpanItem` type
+  items: { valueWidth: number; valueOffset: number; serviceName: string, cacheKey: string, rgbColor: [number, number, number] }[];
   valueWidth: number;
 };
 

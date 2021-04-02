@@ -150,6 +150,29 @@ function getCssClasses(currentViewRange: [number, number]) {
   });
 }
 
+export function getHexColorForSpan(span: Span) {
+  return colorGenerator.getColorByKey(getColorKey(span));
+}
+
+export function getRGBColorForSpan(span: Span) {
+  return colorGenerator.getRgbColorByKey(getColorKey(span));
+}
+
+/**
+ * 
+ * @param span 
+ * @returns The colour key for the span, based on the span's `service.name`,
+ *   `service.namespace`, and `service.instance.id` values.
+ */
+export function getColorKey(span: Span) {
+  const { serviceName } = span.process;
+  const service_namespace_kv = span.process.tags.find(kv => kv.key === "service.namespace");
+  const service_namespace = service_namespace_kv ? service_namespace_kv.value : "";
+  const service_instance_id_kv = span.process.tags.find(kv => kv.key === "service.instance.id");
+  const service_instance_id = service_instance_id_kv ? service_instance_id_kv.value : "";
+  return `${serviceName}:${service_namespace}:${service_instance_id}`
+}
+
 const memoizedGenerateRowStates = memoizeOne(generateRowStatesFromTrace);
 const memoizedViewBoundsFunc = memoizeOne(createViewedBoundsFunc, _isEqual);
 const memoizedGetCssClasses = memoizeOne(getCssClasses, _isEqual);
@@ -341,7 +364,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     if (!trace) {
       return null;
     }
-    const color = colorGenerator.getColorByKey(serviceName);
+    const color = getHexColorForSpan(span);
     const isCollapsed = childrenHiddenIDs.has(spanID);
     const isDetailExpanded = detailStates.has(spanID);
     const isMatchingFilter = findMatchesIDs ? findMatchesIDs.has(spanID) : false;
@@ -353,8 +376,9 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
       const rpcSpan = findServerChildSpan(trace.spans.slice(spanIndex));
       if (rpcSpan) {
         const rpcViewBounds = this.getViewedBounds()(rpcSpan.startTime, rpcSpan.startTime + rpcSpan.duration);
+ 
         rpc = {
-          color: colorGenerator.getColorByKey(rpcSpan.process.serviceName),
+          color: getHexColorForSpan(rpcSpan),
           operationName: rpcSpan.operationName,
           serviceName: rpcSpan.process.serviceName,
           viewEnd: rpcViewBounds.end,
@@ -416,7 +440,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     if (!trace || !detailState) {
       return null;
     }
-    const color = colorGenerator.getColorByKey(serviceName);
+    const color = getHexColorForSpan(span);
     return (
       <div className="VirtualizedTraceView--row" key={key} style={{ ...style, zIndex: 1 }} {...attrs}>
         <SpanDetailRow

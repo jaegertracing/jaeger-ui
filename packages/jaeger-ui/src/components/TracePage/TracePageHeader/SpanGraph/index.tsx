@@ -20,6 +20,7 @@ import TickLabels from './TickLabels';
 import ViewingLayer from './ViewingLayer';
 import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate } from '../../types';
 import { Span, Trace } from '../../../../types/trace';
+import { getColorKey, getRGBColorForSpan } from '../../TraceTimelineViewer/VirtualizedTraceView';
 
 const DEFAULT_HEIGHT = 60;
 const TIMELINE_TICK_INTERVAL = 4;
@@ -36,6 +37,8 @@ type SpanItem = {
   valueOffset: number;
   valueWidth: number;
   serviceName: string;
+  cacheKey: string,
+  rgbColor: [number, number, number];
 };
 
 function getItem(span: Span): SpanItem {
@@ -43,6 +46,8 @@ function getItem(span: Span): SpanItem {
     valueOffset: span.relativeStartTime,
     valueWidth: span.duration,
     serviceName: span.process.serviceName,
+    cacheKey: getColorKey(span),
+    rgbColor: getRGBColorForSpan(span),
   };
 }
 

@@ -66,6 +66,16 @@ export function orderTags(spanTags: KeyValuePair[], topPrefixes?: string[]) {
   return orderedTags;
 }
 
+// TODO: This duplicates getColorKey and should be refactored
+export function getServiceFromSpan(span: Span) {
+  const { serviceName } = span.process;
+  const service_namespace_kv = span.process.tags.find(kv => kv.key === "service.namespace");
+  const service_namespace = service_namespace_kv ? service_namespace_kv.value : "";
+  const service_instance_id_kv = span.process.tags.find(kv => kv.key === "service.instance.id");
+  const service_instance_id = service_instance_id_kv ? service_instance_id_kv.value : "";
+  return `${serviceName}:${service_namespace}:${service_instance_id}`
+}
+
 /**
  * NOTE: Mutates `data` - Transform the HTTP response data into the form the app
  * generally requires.
@@ -130,8 +140,10 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     if (!span) {
       return;
     }
-    const { serviceName } = span.process;
-    svcCounts[serviceName] = (svcCounts[serviceName] || 0) + 1;
+    // Service instance is uniquely identified by name + namespace + instance id
+    const service = getServiceFromSpan(span);
+
+    svcCounts[service] = (svcCounts[service] || 0) + 1;
     span.relativeStartTime = span.startTime - traceStartTime;
     span.depth = depth - 1;
     span.hasChildren = node.children.length > 0;
