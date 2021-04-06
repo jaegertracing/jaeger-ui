@@ -253,10 +253,6 @@ export function submitForm(fields, searchTraces) {
   });
 }
 
-// type FileLoaderProps = {
-//   loadJsonTraces: (fileList: FileList) => void;
-// // };
-
 export class SearchFormImpl extends React.PureComponent {
   render() {
     const {
@@ -434,7 +430,6 @@ export class SearchFormImpl extends React.PureComponent {
             </Row>
           </FormItem>,
         ]}
-        {/* <div className="inline"> */}
 
         <Row gutter={16}>
           <Col className="gutter-row" span={12}>
@@ -471,7 +466,6 @@ export class SearchFormImpl extends React.PureComponent {
             props={{ disabled, min: 1, max: getConfigValue('search.maxLimit') }}
           />
         </FormItem>
-        {/* </div> */}
 
         <Button
           htmlType="submit"
