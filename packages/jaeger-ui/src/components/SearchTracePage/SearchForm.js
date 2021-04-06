@@ -469,6 +469,7 @@ export class SearchFormImpl extends React.PureComponent {
 
         <Button
           htmlType="submit"
+          className="SearchForm--submit"
           disabled={disabled || noSelectedService || invalid}
           data-test={markers.SUBMIT_BTN}
         >
