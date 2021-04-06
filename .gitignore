@@ -9,6 +9,7 @@ build
 # reports
 coverage
 .nyc_output
+junit.xml
 
 # misc
 .DS_Store
