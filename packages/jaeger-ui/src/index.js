@@ -40,11 +40,16 @@ if (trackingContext) {
   trackingContext.context(() => {
     ReactDOM.render(
       <BrowserRouter>
-      <JaegerUIApp />
-      </BrowserRouter>, document.getElementById(UI_ROOT_ID));
+        <JaegerUIApp />
+      </BrowserRouter>,
+      document.getElementById(UI_ROOT_ID)
+    );
   });
 } else {
-  ReactDOM.render(      <BrowserRouter>
-    <JaegerUIApp />
-    </BrowserRouter>, document.getElementById(UI_ROOT_ID));
+  ReactDOM.render(
+    <BrowserRouter>
+      <JaegerUIApp />
+    </BrowserRouter>,
+    document.getElementById(UI_ROOT_ID)
+  );
 }
