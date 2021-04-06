@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Form, Input, Button, Popover, Select } from 'antd';
+import { Form, Input, Button, Popover, Select, Row, Col } from 'antd';
 import _get from 'lodash/get';
 import logfmtParser from 'logfmt/lib/logfmt_parser';
 import { stringify as logfmtStringify } from 'logfmt/lib/stringify';
@@ -253,6 +253,10 @@ export function submitForm(fields, searchTraces) {
   });
 }
 
+// type FileLoaderProps = {
+//   loadJsonTraces: (fileList: FileList) => void;
+// // };
+
 export class SearchFormImpl extends React.PureComponent {
   render() {
     const {
@@ -377,14 +381,21 @@ export class SearchFormImpl extends React.PureComponent {
               </div>
             }
           >
-            <Field
-              name="startDate"
-              type="date"
-              component={AdaptedInput}
-              placeholder="Start Date"
-              props={{ disabled }}
-            />
-            <Field name="startDateTime" type="time" component={AdaptedInput} props={{ disabled }} />
+            <Row gutter={16}>
+              <Col className="gutter-row" span={12}>
+                <Field
+                  name="startDate"
+                  type="date"
+                  component={AdaptedInput}
+                  placeholder="Start Date"
+                  props={{ disabled }}
+                />
+              </Col>
+
+              <Col className="gutter-row" span={12}>
+                <Field name="startDateTime" type="time" component={AdaptedInput} props={{ disabled }} />
+              </Col>
+            </Row>
           </FormItem>,
 
           <FormItem
@@ -406,36 +417,50 @@ export class SearchFormImpl extends React.PureComponent {
               </div>
             }
           >
-            <Field
-              name="endDate"
-              type="date"
-              component={AdaptedInput}
-              placeholder="End Date"
-              props={{ disabled }}
-            />
-            <Field name="endDateTime" type="time" component={AdaptedInput} props={{ disabled }} />
+            <Row gutter={16}>
+              <Col className="gutter-row" span={12}>
+                <Field
+                  name="endDate"
+                  type="date"
+                  component={AdaptedInput}
+                  placeholder="End Date"
+                  props={{ disabled }}
+                />
+              </Col>
+
+              <Col className="gutter-row" span={12}>
+                <Field name="endDateTime" type="time" component={AdaptedInput} props={{ disabled }} />
+              </Col>
+            </Row>
           </FormItem>,
         ]}
+        {/* <div className="inline"> */}
 
-        <FormItem label="Min Duration">
-          <Field
-            name="minDuration"
-            component={ValidatedAdaptedInput}
-            placeholder={placeholderDurationFields}
-            props={{ disabled }}
-            validate={validateDurationFields}
-          />
-        </FormItem>
+        <Row gutter={16}>
+          <Col className="gutter-row" span={12}>
+            <FormItem label="Max Duration">
+              <Field
+                name="maxDuration"
+                component={ValidatedAdaptedInput}
+                placeholder={placeholderDurationFields}
+                props={{ disabled }}
+                validate={validateDurationFields}
+              />
+            </FormItem>
+          </Col>
 
-        <FormItem label="Max Duration">
-          <Field
-            name="maxDuration"
-            component={ValidatedAdaptedInput}
-            placeholder={placeholderDurationFields}
-            props={{ disabled }}
-            validate={validateDurationFields}
-          />
-        </FormItem>
+          <Col className="gutter-row" span={12}>
+            <FormItem label="Min Duration">
+              <Field
+                name="minDuration"
+                component={ValidatedAdaptedInput}
+                placeholder={placeholderDurationFields}
+                props={{ disabled }}
+                validate={validateDurationFields}
+              />
+            </FormItem>
+          </Col>
+        </Row>
 
         <FormItem label="Limit Results">
           <Field
@@ -446,6 +471,7 @@ export class SearchFormImpl extends React.PureComponent {
             props={{ disabled, min: 1, max: getConfigValue('search.maxLimit') }}
           />
         </FormItem>
+        {/* </div> */}
 
         <Button
           htmlType="submit"
