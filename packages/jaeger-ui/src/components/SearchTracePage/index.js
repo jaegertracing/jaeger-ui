@@ -15,7 +15,7 @@
 /* eslint-disable react/require-default-props */
 
 import React, { Component } from 'react';
-import { Col, Row, Tabs } from 'antd';
+import { Col, Row, Tabs, Divider } from 'antd';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
@@ -101,14 +101,13 @@ export class SearchTracePageImpl extends Component {
             <div className="SearchTracePage--find">
               <Tabs size="large">
                 <TabPane tab="Search" key="searchForm">
-                  {!loadingServices && services ? <SearchForm services={services} /> : <LoadingIndicator />}
-                </TabPane>
-                <TabPane tab="JSON File" key="fileLoader">
                   <FileLoader
                     loadJsonTraces={(fileList: FileList) => {
                       loadJsonTraces(fileList);
                     }}
                   />
+                  <Divider />
+                  {!loadingServices && services ? <SearchForm services={services} /> : <LoadingIndicator />}
                 </TabPane>
               </Tabs>
             </div>

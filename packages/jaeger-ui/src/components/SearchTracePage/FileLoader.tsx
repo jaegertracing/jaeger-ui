@@ -13,9 +13,8 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Upload, Icon } from 'antd';
-
-const Dragger = Upload.Dragger;
+import { Upload, Button, Row, Col } from 'antd';
+import './FileLoader.css';
 
 type FileLoaderProps = {
   loadJsonTraces: (fileList: FileList) => void;
@@ -23,12 +22,13 @@ type FileLoaderProps = {
 
 export default function FileLoader(props: FileLoaderProps) {
   return (
-    <Dragger accept=".json" customRequest={props.loadJsonTraces} multiple>
-      <p className="ant-upload-drag-icon">
-        <Icon type="file-add" />
-      </p>
-      <p className="ant-upload-text">Click or drag files to this area.</p>
-      <p className="ant-upload-hint">JSON files containing one or more traces are supported.</p>
-    </Dragger>
+    <Upload accept=".jpg" customRequest={props.loadJsonTraces} multiple>
+      <Row>
+        <Col span={12} offset={6}>
+          <Button className="FileLoader--upload">Click to Upload</Button>
+        </Col>
+      </Row>
+      <p className="FileLoader--helper-text">JSON files containing one or more traces are supported.</p>
+    </Upload>
   );
 }
