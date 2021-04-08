@@ -1,26 +1,42 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`<FileLoader /> matches the snapshot 1`] = `
-<Dragger
-  accept=".json"
+<Upload
+  accept=".jpg"
+  action=""
+  beforeUpload={[Function]}
+  className=""
+  data={Object {}}
+  disabled={false}
+  listType="text"
   multiple={true}
+  prefixCls="ant-upload"
+  showUploadList={true}
+  supportServerRender={true}
+  type="select"
 >
-  <p
-    className="ant-upload-drag-icon"
+  <Row
+    gutter={0}
   >
-    <Icon
-      type="file-add"
-    />
-  </p>
+    <Col
+      offset={6}
+      span={12}
+    >
+      <Button
+        block={false}
+        className="FileLoader--upload"
+        ghost={false}
+        loading={false}
+        prefixCls="ant-btn"
+      >
+        Click to Upload
+      </Button>
+    </Col>
+  </Row>
   <p
-    className="ant-upload-text"
-  >
-    Click or drag files to this area.
-  </p>
-  <p
-    className="ant-upload-hint"
+    className="FileLoader--helper-text"
   >
     JSON files containing one or more traces are supported.
   </p>
-</Dragger>
+</Upload>
 `;
