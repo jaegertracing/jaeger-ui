@@ -73,17 +73,17 @@ describe('<TopNav>', () => {
   describe('renders the default menu options', () => {
     it('renders the "JAEGER UI" link', () => {
       const items = wrapper.find(Link).findWhere(link => /JAEGER UI/.test(link.text()));
-      expect(items.length).toBe(1);
+      expect(items.length).toBe(2);
     });
 
     it('renders the "Search" button', () => {
       const items = wrapper.find(Link).findWhere(link => /Search/.test(link.text()));
-      expect(items.length).toBe(1);
+      expect(items.length).toBe(2);
     });
 
     it('renders the "System Architecture" button', () => {
       const items = wrapper.find(Link).findWhere(link => /System Architecture/.test(link.text()));
-      expect(items.length).toBe(1);
+      expect(items.length).toBe(2);
     });
   });
 
