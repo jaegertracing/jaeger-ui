@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "jaeger-ui",
-  "version": "1.12.0",
+  "version": "1.13.0",
   "main": "src/index.js",
   "license": "Apache-2.0",
   "homepage": ".",
@@ -25,6 +25,7 @@
     "enzyme-adapter-react-16": "^1.2.0",
     "enzyme-to-json": "^3.3.0",
     "http-proxy-middleware": "^0.19.1",
+    "jest-junit": "^10.0.0",
     "less": "3.9.0",
     "less-loader": "4.1.0",
     "less-vars-to-js": "^1.2.1",
@@ -121,6 +122,10 @@
       "!src/utils/test/**/*.js",
       "!src/demo/**/*.js",
       "!src/types/*"
+    ],
+    "reporters": [
+      "default",
+      "jest-junit"
     ]
   },
   "browserslist": [
