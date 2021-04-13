@@ -25,9 +25,14 @@ export const MAX_ITEM_HEIGHT = 6;
 
 export default function renderIntoCanvas(
   canvas: HTMLCanvasElement,
-  items: { valueWidth: number; valueOffset: number; serviceName: string, cacheKey: string, rgbColor: [number, number, number] }[],
-  totalValueWidth: number,
-  getFillColor: (serviceName: string) => [number, number, number]
+  items: {
+    valueWidth: number;
+    valueOffset: number;
+    serviceName: string;
+    spanGroup: string;
+    rgbColor: [number, number, number];
+  }[],
+  totalValueWidth: number
 ) {
   const fillCache: Map<string, string | TNil> = new Map();
   const cHeight =
@@ -50,13 +55,11 @@ export default function renderIntoCanvas(
     if (width < MIN_ITEM_WIDTH) {
       width = MIN_ITEM_WIDTH;
     }
-    let fillStyle = fillCache.get(items[i].cacheKey);
+    let fillStyle = fillCache.get(items[i].spanGroup);
     const color = items[i].rgbColor;
     console.log(color);
     if (!fillStyle) {
-      fillStyle = `rgba(${color
-        .concat(ITEM_ALPHA)
-        .join()})`;
+      fillStyle = `rgba(${color.concat(ITEM_ALPHA).join()})`;
       fillCache.set(serviceName, fillStyle);
     }
     ctx.fillStyle = fillStyle;

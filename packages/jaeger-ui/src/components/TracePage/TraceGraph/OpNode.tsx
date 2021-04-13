@@ -34,7 +34,7 @@ type Props = {
   percentSelfTime: number;
   operation: string;
   service: string;
-  cacheKey: string,
+  spanGroup: string;
   mode: string;
 };
 
@@ -67,7 +67,18 @@ export function round2(percent: number) {
 
 export default class OpNode extends React.PureComponent<Props> {
   render() {
-    const { count, errors, time, percent, selfTime, percentSelfTime, operation, service, cacheKey, mode } = this.props;
+    const {
+      count,
+      errors,
+      time,
+      percent,
+      selfTime,
+      percentSelfTime,
+      operation,
+      service,
+      spanGroup,
+      mode,
+    } = this.props;
 
     // Spans over 20 % time are full red - we have probably to reconsider better approach
     let backgroundColor;
@@ -78,7 +89,7 @@ export default class OpNode extends React.PureComponent<Props> {
       backgroundColor = [255, 0, 0, percentSelfTime / 100].join();
     } else {
       backgroundColor = colorGenerator
-        .getRgbColorByKey(cacheKey)
+        .getRgbColorByKey(spanGroup)
         .concat(0.8)
         .join();
     }

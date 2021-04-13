@@ -151,26 +151,11 @@ function getCssClasses(currentViewRange: [number, number]) {
 }
 
 export function getHexColorForSpan(span: Span) {
-  return colorGenerator.getColorByKey(getColorKey(span));
+  return colorGenerator.getColorByKey(span.group);
 }
 
 export function getRGBColorForSpan(span: Span) {
-  return colorGenerator.getRgbColorByKey(getColorKey(span));
-}
-
-/**
- * 
- * @param span 
- * @returns The colour key for the span, based on the span's `service.name`,
- *   `service.namespace`, and `service.instance.id` values.
- */
-export function getColorKey(span: Span) {
-  const { serviceName } = span.process;
-  const service_namespace_kv = span.process.tags.find(kv => kv.key === "service.namespace");
-  const service_namespace = service_namespace_kv ? service_namespace_kv.value : "";
-  const service_instance_id_kv = span.process.tags.find(kv => kv.key === "service.instance.id");
-  const service_instance_id = service_instance_id_kv ? service_instance_id_kv.value : "";
-  return `${serviceName}:${service_namespace}:${service_instance_id}`
+  return colorGenerator.getRgbColorByKey(span.group);
 }
 
 const memoizedGenerateRowStates = memoizeOne(generateRowStatesFromTrace);
@@ -376,7 +361,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
       const rpcSpan = findServerChildSpan(trace.spans.slice(spanIndex));
       if (rpcSpan) {
         const rpcViewBounds = this.getViewedBounds()(rpcSpan.startTime, rpcSpan.startTime + rpcSpan.duration);
- 
+
         rpc = {
           color: getHexColorForSpan(rpcSpan),
           operationName: rpcSpan.operationName,

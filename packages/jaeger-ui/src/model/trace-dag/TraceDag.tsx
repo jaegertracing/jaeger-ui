@@ -17,7 +17,6 @@ import { ancestralPathParentOrLeaf, TIdFactory } from './id-factories';
 import { TDenseSpan, TDiffCounts, NodeID, TDenseSpanMembers } from './types';
 import TDagNode from './types/TDagNode';
 import { Trace } from '../../types/trace';
-import { getColorKey } from '../../components/TracePage/TraceTimelineViewer/VirtualizedTraceView';
 import colorGenerator from '../../utils/color-generator';
 
 export default class TraceDag<TData extends { [k: string]: unknown } = {}> {
@@ -41,7 +40,7 @@ export default class TraceDag<TData extends { [k: string]: unknown } = {}> {
           dag.addNode(id, parentNodeID, {
             operation,
             service,
-            cacheKey: getColorKey(denseSpan.span),
+            spanGroup: denseSpan.span.group,
             members: [],
           });
         node.members.push(denseSpan);
@@ -69,7 +68,10 @@ export default class TraceDag<TData extends { [k: string]: unknown } = {}> {
         b: nodeB ? nodeB.members : null,
         operation: (nodeA && nodeA.operation) || (nodeB && nodeB.operation) || '__UNSET__',
         service: (nodeA && nodeA.service) || (nodeB && nodeB.service) || '__UNSET__',
-        cacheKey: (nodeA && nodeA.cacheKey) || (nodeB && nodeB.cacheKey) || colorGenerator.getColorByKey('__UNSET__')
+        spanGroup:
+          (nodeA && nodeA.spanGroup) ||
+          (nodeB && nodeB.spanGroup) ||
+          colorGenerator.getColorByKey('__UNSET__'),
       });
     }
 

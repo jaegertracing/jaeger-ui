@@ -19,6 +19,7 @@ import { getConfigValue } from '../utils/config/get-config';
 import { getTraceName } from './trace-viewer';
 import { KeyValuePair, Span, SpanData, Trace, TraceData } from '../types/trace';
 import TreeNode from '../utils/TreeNode';
+import { getSpanGroupFromSpan } from './span';
 
 // exported for tests
 export function deduplicateTags(spanTags: KeyValuePair[]) {
@@ -64,16 +65,6 @@ export function orderTags(spanTags: KeyValuePair[], topPrefixes?: string[]) {
   });
 
   return orderedTags;
-}
-
-// TODO: This duplicates getColorKey and should be refactored
-export function getServiceFromSpan(span: Span) {
-  const { serviceName } = span.process;
-  const service_namespace_kv = span.process.tags.find(kv => kv.key === "service.namespace");
-  const service_namespace = service_namespace_kv ? service_namespace_kv.value : "";
-  const service_instance_id_kv = span.process.tags.find(kv => kv.key === "service.instance.id");
-  const service_instance_id = service_instance_id_kv ? service_instance_id_kv.value : "";
-  return `${serviceName}:${service_namespace}:${service_instance_id}`
 }
 
 /**
@@ -140,10 +131,10 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     if (!span) {
       return;
     }
-    // Service instance is uniquely identified by name + namespace + instance id
-    const service = getServiceFromSpan(span);
 
-    svcCounts[service] = (svcCounts[service] || 0) + 1;
+    span.group = getSpanGroupFromSpan(span);
+
+    svcCounts[span.group] = (svcCounts[span.group] || 0) + 1;
     span.relativeStartTime = span.startTime - traceStartTime;
     span.depth = depth - 1;
     span.hasChildren = node.children.length > 0;

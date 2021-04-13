@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import { Span } from '../types/trace';
+import { getConfigValue } from '../utils/config/get-config';
 
 /**
  * Searches the span.references to find 'CHILD_OF' reference type or returns null.
@@ -23,4 +24,78 @@ import { Span } from '../types/trace';
 export function getParent(span: Span) {
   const parentRef = span.references ? span.references.find(ref => ref.refType === 'CHILD_OF') : null;
   return parentRef ? parentRef.span : null;
+}
+
+/**
+ * Generates a group for the span that can be used when determining which
+ * colour it should have, how many distinct groups of spans exist, and so on.
+ *
+ * The group is determined from the `spanGroupKey` configuration object, with
+ * properties:
+ *
+ * - `preset` (string) - set the fields according to presets designed to work with
+ *   conventions adopted by different projects.
+ *
+ * - `tags` (string[]) - set the group according to the values of the tags
+ *   listed in this array. Process tags are searched first, followed by span
+ *   tags. The special value `serviceName` corresponds to the service's name.
+ *
+ * If `preset` is specified then `tags` is ignored.
+ *
+ * # Available presets
+ *
+ * - {@link https://github.com/open-telemetry/opentelemetry-specification/blob/ef4612dd0b1f4266e6eca7177290ee2a5f087199/specification/resource/semantic_conventions/README.md|otel-ef4612d},
+ *   the *experimental* OpenTelemetry semantic conventions at commit SHA
+ *   ef4612d. Equivalent to setting
+ *   `tags: ['serviceName', 'service.namespace', 'service.instance.id]`.
+ *
+ * # Default
+ *
+ * If no configuration value is provided the default is to use `serviceName`.
+ *
+ * @param {Span} span The span to determine the group for
+ */
+export function getSpanGroupFromSpan(span: Span) {
+  let groupKeyFields = [];
+
+  const preset = getConfigValue('spanGroupKey.preset');
+  if (preset !== undefined) {
+    switch (preset) {
+      case 'otel-ef4612d':
+        groupKeyFields = ['serviceName', 'service.namespace', 'service.instance.id'];
+        break;
+      default:
+        console.log(`Unknown value '${preset}' for 'spanGroupKey.preset' config option`);
+        break;
+    }
+  }
+
+  if (groupKeyFields.length === 0) {
+    groupKeyFields = getConfigValue('spanGroupKey.tags') || ['serviceName'];
+  }
+
+  const field_values = [];
+  for (const field of groupKeyFields) {
+    if (field === 'serviceName') {
+      field_values.push(span.process.serviceName);
+      continue;
+    }
+
+    let kv = span.process.tags.find(kv => kv.key == field);
+    if (kv && kv.value !== undefined) {
+      field_values.push(kv.value);
+      continue;
+    }
+
+    kv = span.tags.find(kv => kv.key == field);
+    if (kv && kv.value !== undefined) {
+      field_values.push(kv.value);
+      continue;
+    }
+
+    // Add an empty field so it still shows up in the UI
+    field_values.push('');
+  }
+
+  return field_values.join(':');
 }

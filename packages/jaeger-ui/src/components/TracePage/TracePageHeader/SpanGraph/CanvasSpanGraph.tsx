@@ -22,7 +22,13 @@ import './CanvasSpanGraph.css';
 
 type CanvasSpanGraphProps = {
   // TODO: Unclear why this is not the `SpanItem` type
-  items: { valueWidth: number; valueOffset: number; serviceName: string, cacheKey: string, rgbColor: [number, number, number] }[];
+  items: {
+    valueWidth: number;
+    valueOffset: number;
+    serviceName: string;
+    spanGroup: string;
+    rgbColor: [number, number, number];
+  }[];
   valueWidth: number;
 };
 
@@ -51,7 +57,7 @@ export default class CanvasSpanGraph extends React.PureComponent<CanvasSpanGraph
   _draw() {
     if (this._canvasElm) {
       const { valueWidth: totalValueWidth, items } = this.props;
-      renderIntoCanvas(this._canvasElm, items, totalValueWidth, getColor);
+      renderIntoCanvas(this._canvasElm, items, totalValueWidth);
     }
   }
 
