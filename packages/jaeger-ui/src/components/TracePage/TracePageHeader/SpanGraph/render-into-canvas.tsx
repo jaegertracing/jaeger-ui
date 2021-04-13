@@ -57,7 +57,6 @@ export default function renderIntoCanvas(
     }
     let fillStyle = fillCache.get(items[i].spanGroup);
     const color = items[i].rgbColor;
-    console.log(color);
     if (!fillStyle) {
       fillStyle = `rgba(${color.concat(ITEM_ALPHA).join()})`;
       fillCache.set(serviceName, fillStyle);
