@@ -335,7 +335,6 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
 
   renderSpanBarRow(span: Span, spanIndex: number, key: string, style: React.CSSProperties, attrs: {}) {
     const { spanID } = span;
-    const { serviceName } = span.process;
     const {
       childrenHiddenIDs,
       childrenToggle,
@@ -408,7 +407,6 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
 
   renderSpanDetailRow(span: Span, key: string, style: React.CSSProperties, attrs: {}) {
     const { spanID } = span;
-    const { serviceName } = span.process;
     const {
       detailLogItemToggle,
       detailLogsToggle,
