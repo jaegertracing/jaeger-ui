@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { SpanItem } from '.';
 import { TNil } from '../../../../types';
 
 // exported for tests
@@ -25,13 +26,7 @@ export const MAX_ITEM_HEIGHT = 6;
 
 export default function renderIntoCanvas(
   canvas: HTMLCanvasElement,
-  items: {
-    valueWidth: number;
-    valueOffset: number;
-    serviceName: string;
-    spanGroup: string;
-    rgbColor: [number, number, number];
-  }[],
+  items: SpanItem[],
   totalValueWidth: number
 ) {
   const fillCache: Map<string, string | TNil> = new Map();

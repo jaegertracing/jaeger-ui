@@ -33,7 +33,7 @@ type SpanGraphProps = {
   updateNextViewRangeTime: (nextUpdate: ViewRangeTimeUpdate) => void;
 };
 
-type SpanItem = {
+export type SpanItem = {
   valueOffset: number;
   valueWidth: number;
   serviceName: string;
@@ -51,7 +51,8 @@ function getItem(span: Span): SpanItem {
   };
 }
 
-function getItems(trace: Trace): SpanItem[] {
+// exported for test
+export function getItems(trace: Trace): SpanItem[] {
   return trace.spans.map(getItem);
 }
 

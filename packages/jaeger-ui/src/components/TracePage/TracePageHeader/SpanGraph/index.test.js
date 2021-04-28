@@ -16,7 +16,7 @@ import React from 'react';
 import { shallow } from 'enzyme';
 
 import CanvasSpanGraph from './CanvasSpanGraph';
-import SpanGraph from './index';
+import SpanGraph, { getItems } from './index';
 import TickLabels from './TickLabels';
 import ViewingLayer from './ViewingLayer';
 import traceGenerator from '../../../../demo/trace-generators';
@@ -64,16 +64,11 @@ describe('<SpanGraph>', () => {
     expect(tickHeader.prop('numTicks')).toBe(viewingLayer.prop('numTicks'));
   });
 
-  it('passes items to CanvasSpanGraph', () => {
+  it('passes SpanItem items to CanvasSpanGraph', () => {
     const canvasGraph = wrapper.find(CanvasSpanGraph).first();
-    const items = trace.spans.map(span => ({
-      valueOffset: span.relativeStartTime,
-      valueWidth: span.duration,
-      serviceName: span.process.serviceName,
-    }));
+    const items = getItems(trace);
     expect(canvasGraph.prop('items')).toEqual(items);
   });
-
   it('does not regenerate CanvasSpanGraph without new trace', () => {
     const canvasGraph = wrapper.find(CanvasSpanGraph).first();
     const items = canvasGraph.prop('items');
