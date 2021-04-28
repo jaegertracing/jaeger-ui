@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { Span } from '../types/trace';
+import { KeyValuePair, Span } from '../types/trace';
 import { getConfigValue } from '../utils/config/get-config';
 
 /**
@@ -25,6 +25,15 @@ export function getParent(span: Span) {
   const parentRef = span.references ? span.references.find(ref => ref.refType === 'CHILD_OF') : null;
   return parentRef ? parentRef.span : null;
 }
+
+/** Shape of data required to determine a span's group. */
+type SpanGroupData = {
+  process: {
+    serviceName: string;
+    tags: Array<KeyValuePair>;
+  };
+  tags: Array<KeyValuePair>;
+};
 
 /**
  * Generates a group for the span that can be used when determining which
@@ -55,7 +64,7 @@ export function getParent(span: Span) {
  *
  * @param {Span} span The span to determine the group for
  */
-export function getSpanGroupFromSpan(span: Span) {
+export function getSpanGroupFromSpan(span: SpanGroupData) {
   let groupKeyFields = [];
 
   const preset = getConfigValue('spanGroupKey.preset');
@@ -65,7 +74,9 @@ export function getSpanGroupFromSpan(span: Span) {
         groupKeyFields = ['serviceName', 'service.namespace', 'service.instance.id'];
         break;
       default:
-        console.log(`Unknown value '${preset}' for 'spanGroupKey.preset' config option`);
+        // Give the user a chance to discover the problem
+        // eslint-disable-next-line no-console
+        console.warn(`Unknown value '${preset}' for 'spanGroupKey.preset' config option`);
         break;
     }
   }
@@ -74,28 +85,29 @@ export function getSpanGroupFromSpan(span: Span) {
     groupKeyFields = getConfigValue('spanGroupKey.tags') || ['serviceName'];
   }
 
-  const field_values = [];
-  for (const field of groupKeyFields) {
+  const fieldValues: string[] = [];
+
+  groupKeyFields.forEach((field: string) => {
     if (field === 'serviceName') {
-      field_values.push(span.process.serviceName);
-      continue;
+      fieldValues.push(span.process.serviceName);
+      return;
     }
 
-    let kv = span.process.tags.find(kv => kv.key == field);
+    let kv = span.process.tags.find(kv => kv.key === field);
     if (kv && kv.value !== undefined) {
-      field_values.push(kv.value);
-      continue;
+      fieldValues.push(kv.value);
+      return;
     }
 
-    kv = span.tags.find(kv => kv.key == field);
+    kv = span.tags.find(kv => kv.key === field);
     if (kv && kv.value !== undefined) {
-      field_values.push(kv.value);
-      continue;
+      fieldValues.push(kv.value);
+      return;
     }
 
     // Add an empty field so it still shows up in the UI
-    field_values.push('');
-  }
+    fieldValues.push('');
+  });
 
-  return field_values.join(':');
+  return fieldValues.join(':');
 }
