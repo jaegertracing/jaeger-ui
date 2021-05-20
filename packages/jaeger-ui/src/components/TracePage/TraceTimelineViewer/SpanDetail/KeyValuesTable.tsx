@@ -22,8 +22,11 @@ import { TNil } from '../../../../types';
 import { KeyValuePair, Link } from '../../../../types/trace';
 
 import './KeyValuesTable.css';
+import { getConfigValue } from '../../../../utils/config/get-config';
 
 const jsonObjectOrArrayStartRegex = /^(\[|\{)/;
+
+const defaultTagsAction = getConfigValue('defaultTagsAction');
 
 function tryParseJson(value: string) {
   // if the value is a string representing actual json object or array, then use json-markup
@@ -69,6 +72,17 @@ export const LinkValue = (props: { href: string; title?: string; children: React
   </a>
 );
 
+const DataRowContainer = (props: { children: React.ReactNode, row: KeyValuePair, data: KeyValuePair[] }) => (
+  <div>
+    {props.children}
+    {
+      defaultTagsAction ?
+        <Icon type="link" className="KeyValueTable--optionalLinkIcon" onClick={() => defaultTagsAction(props.row, props.data)} /> :
+        null
+    }
+  </div>
+);
+
 LinkValue.defaultProps = {
   title: '',
 };
@@ -102,24 +116,24 @@ export default function KeyValuesTable(props: KeyValuesTableProps) {
             let valueMarkup;
             if (links && links.length === 1) {
               valueMarkup = (
-                <div>
+                <DataRowContainer row={row} data={data}>
                   <LinkValue href={links[0].url} title={links[0].text}>
                     {jsonTable}
                   </LinkValue>
-                </div>
+                </DataRowContainer>
               );
             } else if (links && links.length > 1) {
               valueMarkup = (
-                <div>
+                <DataRowContainer row={row} data={data}>
                   <Dropdown overlay={linkValueList(links)} placement="bottomRight" trigger={['click']}>
                     <a>
                       {jsonTable} <Icon className="KeyValueTable--linkIcon" type="profile" />
                     </a>
                   </Dropdown>
-                </div>
+                </DataRowContainer>
               );
             } else {
-              valueMarkup = jsonTable;
+              valueMarkup = <DataRowContainer row={row} data={data}>{jsonTable}</DataRowContainer>
             }
             return (
               // `i` is necessary in the key because row.key can repeat

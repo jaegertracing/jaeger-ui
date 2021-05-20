@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import React from 'react';
-import { Divider } from 'antd';
+import { Divider, Icon } from 'antd';
 
 import AccordianKeyValues from './AccordianKeyValues';
 import AccordianLogs from './AccordianLogs';
@@ -26,8 +26,11 @@ import LabeledList from '../../../common/LabeledList';
 
 import { TNil } from '../../../../types';
 import { KeyValuePair, Link, Log, Span } from '../../../../types/trace';
+import { getConfigValue } from '../../../../utils/config/get-config';
 
 import './index.css';
+
+const linkPatternsUrl = getConfigValue('linkPatternsUrl') || `https://www.jaegertracing.io/docs/latest/frontend-ui/#link-patterns`;
 
 type SpanDetailProps = {
   detailState: DetailState;
@@ -140,6 +143,10 @@ export default function SpanDetail(props: SpanDetailProps) {
             onToggle={() => warningsToggle(spanID)}
           />
         )}
+        <div>
+          <Icon type="info-circle-o" style={{ marginRight: '5px' }} />
+          <a href={linkPatternsUrl}>Learn how to configure links</a>
+        </div>
         {references &&
           references.length > 0 &&
           (references.length > 1 || references[0].refType !== 'CHILD_OF') && (
