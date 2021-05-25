@@ -63,3 +63,8 @@ limitations under the License.
   font-weight: bold;
   margin-left: 3px;
 }
+
+.KeyValueTable--optionalLinkIcon{
+  color: #11939a;
+  margin-left: 3px;
+}

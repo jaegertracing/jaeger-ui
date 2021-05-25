@@ -143,10 +143,7 @@ export default function SpanDetail(props: SpanDetailProps) {
             onToggle={() => warningsToggle(spanID)}
           />
         )}
-        <div>
-          <Icon type="info-circle-o" style={{ marginRight: '5px' }} />
-          <a href={linkPatternsUrl}>Learn how to configure links</a>
-        </div>
+
         {references &&
           references.length > 0 &&
           (references.length > 1 || references[0].refType !== 'CHILD_OF') && (
@@ -157,6 +154,10 @@ export default function SpanDetail(props: SpanDetailProps) {
               focusSpan={focusSpan}
             />
           )}
+        <div>
+          <Icon type="info-circle-o" className="SpanDetail--docsIcon" style={{ color: '#11939a' }} />
+          <a href={linkPatternsUrl}>Learn how to configure links</a>
+        </div>
         <small className="SpanDetail--debugInfo">
           <span className="SpanDetail--debugLabel" data-label="SpanID:" /> {spanID}
           <CopyIcon
