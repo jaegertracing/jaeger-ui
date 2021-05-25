@@ -26,7 +26,7 @@ import { getConfigValue } from '../../../../utils/config/get-config';
 
 const jsonObjectOrArrayStartRegex = /^(\[|\{)/;
 
-const defaultTagsAction = getConfigValue('defaultTagsAction');
+const tagsAction = getConfigValue('tagsAction');
 
 function tryParseJson(value: string) {
   // if the value is a string representing actual json object or array, then use json-markup
@@ -76,9 +76,8 @@ const DataRowContainer = (props: { children: React.ReactNode, row: KeyValuePair,
   <div>
     {props.children}
     {
-      defaultTagsAction ?
-        <Icon type="link" className="KeyValueTable--optionalLinkIcon" onClick={() => defaultTagsAction(props.row, props.data)} /> :
-        null
+      tagsAction &&
+      <Icon type="link" title={tagsAction.title} className="KeyValueTable--optionalLinkIcon" onClick={() => tagsAction.action(props.row, props.data)} />
     }
   </div>
 );

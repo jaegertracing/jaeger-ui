@@ -67,4 +67,5 @@ limitations under the License.
 .KeyValueTable--optionalLinkIcon{
   color: #11939a;
   margin-left: 3px;
+  cursor: pointer;
 }
