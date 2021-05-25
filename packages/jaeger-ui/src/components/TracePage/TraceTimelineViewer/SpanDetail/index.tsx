@@ -110,6 +110,7 @@ export default function SpanDetail(props: SpanDetailProps) {
             linksGetter={linksGetter}
             isOpen={isTagsOpen}
             onToggle={() => tagsToggle(spanID)}
+            span={span}
           />
           {process.tags && (
             <AccordianKeyValues
@@ -119,6 +120,7 @@ export default function SpanDetail(props: SpanDetailProps) {
               linksGetter={linksGetter}
               isOpen={isProcessOpen}
               onToggle={() => processToggle(spanID)}
+              span={span}
             />
           )}
         </div>
@@ -131,6 +133,7 @@ export default function SpanDetail(props: SpanDetailProps) {
             onToggle={() => logsToggle(spanID)}
             onItemToggle={logItem => logItemToggle(spanID, logItem)}
             timestamp={traceStartTime}
+            span={span}
           />
         )}
         {warnings && warnings.length > 0 && (
@@ -155,8 +158,10 @@ export default function SpanDetail(props: SpanDetailProps) {
             />
           )}
         <div>
-          <Icon type="info-circle-o" className="SpanDetail--docsIcon" style={{ color: '#11939a' }} />
-          <a href={linkPatternsUrl}>Learn how to configure links</a>
+          <a href={linkPatternsUrl} target='_blank' rel="noopener noreferrer">
+            <Icon type="info-circle-o" className="SpanDetail--docsIcon" />
+            Learn how to configure links
+          </a>
         </div>
         <small className="SpanDetail--debugInfo">
           <span className="SpanDetail--debugLabel" data-label="SpanID:" /> {spanID}

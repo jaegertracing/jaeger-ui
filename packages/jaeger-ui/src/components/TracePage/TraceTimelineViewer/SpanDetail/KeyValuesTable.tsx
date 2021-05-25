@@ -19,7 +19,7 @@ import { Dropdown, Icon, Menu } from 'antd';
 import CopyIcon from '../../../common/CopyIcon';
 
 import { TNil } from '../../../../types';
-import { KeyValuePair, Link } from '../../../../types/trace';
+import { KeyValuePair, Link, Span } from '../../../../types/trace';
 
 import './KeyValuesTable.css';
 import { getConfigValue } from '../../../../utils/config/get-config';
@@ -72,12 +72,12 @@ export const LinkValue = (props: { href: string; title?: string; children: React
   </a>
 );
 
-const DataRowContainer = (props: { children: React.ReactNode, row: KeyValuePair, data: KeyValuePair[] }) => (
+const DataRowContainer = (props: { children: React.ReactNode, row: KeyValuePair, span: Span }) => (
   <div>
     {props.children}
     {
       tagsAction &&
-      <Icon type="link" title={tagsAction.title} className="KeyValueTable--optionalLinkIcon" onClick={() => tagsAction.action(props.row, props.data)} />
+      <Icon type="link" title={tagsAction.title} className="KeyValueTable--optionalLinkIcon" onClick={() => tagsAction.action(props.row, props.span)} />
     }
   </div>
 );
@@ -101,10 +101,11 @@ const linkValueList = (links: Link[]) => (
 type KeyValuesTableProps = {
   data: KeyValuePair[];
   linksGetter: ((pairs: KeyValuePair[], index: number) => Link[]) | TNil;
+  span: Span;
 };
 
 export default function KeyValuesTable(props: KeyValuesTableProps) {
-  const { data, linksGetter } = props;
+  const { data, linksGetter, span } = props;
   return (
     <div className="KeyValueTable u-simple-scrollbars">
       <table className="u-width-100">
@@ -115,7 +116,7 @@ export default function KeyValuesTable(props: KeyValuesTableProps) {
             let valueMarkup;
             if (links && links.length === 1) {
               valueMarkup = (
-                <DataRowContainer row={row} data={data}>
+                <DataRowContainer row={row} span={span}>
                   <LinkValue href={links[0].url} title={links[0].text}>
                     {jsonTable}
                   </LinkValue>
@@ -123,7 +124,7 @@ export default function KeyValuesTable(props: KeyValuesTableProps) {
               );
             } else if (links && links.length > 1) {
               valueMarkup = (
-                <DataRowContainer row={row} data={data}>
+                <DataRowContainer row={row} span={span}>
                   <Dropdown overlay={linkValueList(links)} placement="bottomRight" trigger={['click']}>
                     <a>
                       {jsonTable} <Icon className="KeyValueTable--linkIcon" type="profile" />
@@ -132,7 +133,7 @@ export default function KeyValuesTable(props: KeyValuesTableProps) {
                 </DataRowContainer>
               );
             } else {
-              valueMarkup = <DataRowContainer row={row} data={data}>{jsonTable}</DataRowContainer>
+              valueMarkup = <DataRowContainer span={span} row={row}>{jsonTable}</DataRowContainer>
             }
             return (
               // `i` is necessary in the key because row.key can repeat
