@@ -30,7 +30,8 @@ import { getConfigValue } from '../../../../utils/config/get-config';
 
 import './index.css';
 
-const linkPatternsUrl = getConfigValue('linkPatternsUrl') || `https://www.jaegertracing.io/docs/latest/frontend-ui/#link-patterns`;
+const linkPatternsUrl =
+  getConfigValue('linkPatternsUrl') || `https://www.jaegertracing.io/docs/latest/frontend-ui/#link-patterns`;
 
 type SpanDetailProps = {
   detailState: DetailState;
@@ -158,7 +159,7 @@ export default function SpanDetail(props: SpanDetailProps) {
             />
           )}
         <div>
-          <a href={linkPatternsUrl} target='_blank' rel="noopener noreferrer">
+          <a href={linkPatternsUrl} target="_blank" rel="noopener noreferrer">
             <Icon type="info-circle-o" className="SpanDetail--docsIcon" />
             Learn how to configure links
           </a>

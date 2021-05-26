@@ -24,9 +24,15 @@ import { KeyValuePair, Link, Span } from '../../../../types/trace';
 import './KeyValuesTable.css';
 import { getConfigValue } from '../../../../utils/config/get-config';
 
+type TTagsActions = {
+  icon: string;
+  title: string;
+  action: (tag: KeyValuePair, span: Span) => void;
+};
+
 const jsonObjectOrArrayStartRegex = /^(\[|\{)/;
 
-const tagsAction = getConfigValue('tagsAction');
+const tagsActions: TTagsActions[] = getConfigValue('tagsActions') || [];
 
 function tryParseJson(value: string) {
   // if the value is a string representing actual json object or array, then use json-markup
@@ -72,13 +78,20 @@ export const LinkValue = (props: { href: string; title?: string; children: React
   </a>
 );
 
-const DataRowContainer = (props: { children: React.ReactNode, row: KeyValuePair, span: Span }) => (
+const DataRowContainer = (props: { children: React.ReactNode; row: KeyValuePair; span: Span }) => (
   <div>
     {props.children}
-    {
-      tagsAction &&
-      <Icon type="link" title={tagsAction.title} className="KeyValueTable--optionalLinkIcon" onClick={() => tagsAction.action(props.row, props.span)} />
-    }
+    {tagsActions.map((tagAction: TTagsActions, i: number) => {
+      return (
+        <Icon
+          key={i}
+          type={tagAction.icon || 'link'}
+          title={tagAction.title}
+          className="KeyValueTable--optionalLinkIcon"
+          onClick={() => tagAction.action(props.row, props.span)}
+        />
+      );
+    })}
   </div>
 );
 
@@ -133,7 +146,11 @@ export default function KeyValuesTable(props: KeyValuesTableProps) {
                 </DataRowContainer>
               );
             } else {
-              valueMarkup = <DataRowContainer span={span} row={row}>{jsonTable}</DataRowContainer>
+              valueMarkup = (
+                <DataRowContainer span={span} row={row}>
+                  {jsonTable}
+                </DataRowContainer>
+              );
             }
             return (
               // `i` is necessary in the key because row.key can repeat
