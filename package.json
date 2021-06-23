@@ -74,5 +74,8 @@
     "hooks": {
       "pre-commit": "npm-run-all -ln --parallel lint test"
     }
+  },
+  "dependencies": {
+    "react-highlight-words": "^0.17.0"
   }
 }
