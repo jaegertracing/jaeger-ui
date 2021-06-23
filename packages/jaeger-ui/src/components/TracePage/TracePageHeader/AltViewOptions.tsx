@@ -78,26 +78,6 @@ export default function AltViewOptions(props: Props) {
           </a>
         </Menu.Item>
       ))}
-      <Menu.Item>
-        <Link
-          to={prefixUrl(`/api/traces/${traceID}?prettyPrint=true`)}
-          rel="noopener noreferrer"
-          target="_blank"
-          onClick={trackJsonView}
-        >
-          Trace JSON
-        </Link>
-      </Menu.Item>
-      <Menu.Item>
-        <Link
-          to={prefixUrl(`/api/traces/${traceID}?raw=true&prettyPrint=true`)}
-          rel="noopener noreferrer"
-          target="_blank"
-          onClick={trackRawJsonView}
-        >
-          Trace JSON (unadjusted)
-        </Link>
-      </Menu.Item>
     </Menu>
   );
 
