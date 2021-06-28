@@ -1599,9 +1599,10 @@
   version "1.4.1"
   resolved "https://registry.yarnpkg.com/@types/d3-selection/-/d3-selection-1.4.1.tgz#fa1f8710a6b5d7cfe5c6caa61d161be7cae4a022"
 
-"@types/d3-zoom@1.7.3":
-  version "1.7.3"
-  resolved "https://registry.yarnpkg.com/@types/d3-zoom/-/d3-zoom-1.7.3.tgz#ed9421551328157f70edabc401d8c91c38d360d9"
+"@types/d3-zoom@3.0.0":
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/@types/d3-zoom/-/d3-zoom-3.0.0.tgz#49d7a9e4edbd7f8d0e957e67afe3c5ecdc67599e"
+  integrity sha512-MjVDIVY5PlO9bflS5gq+OOxfBqCZPVLY8QEXRpuNCFmWvTGEL3blG9zUwWE+C9eDuR8EthlkexCZIDizbwVnuQ==
   dependencies:
     "@types/d3-interpolate" "*"
     "@types/d3-selection" "*"
