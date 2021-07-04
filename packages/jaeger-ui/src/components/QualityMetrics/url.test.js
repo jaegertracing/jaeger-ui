@@ -16,10 +16,6 @@ import * as reactRouterDom from 'react-router-dom';
 
 import { ROUTE_PATH, matches, getUrl, getUrlState } from './url';
 
-jest.mock('react-router-dom', () => ({
-  matchPath: jest.fn(),
-}));
-
 describe('TraceDiff/url', () => {
   const lookback = 42;
   const service = 'test-service';

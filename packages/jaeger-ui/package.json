@@ -25,7 +25,6 @@
     "enzyme-adapter-react-16": "^1.2.0",
     "enzyme-to-json": "^3.3.0",
     "http-proxy-middleware": "^0.19.1",
-    "jest-junit": "^10.0.0",
     "less": "3.9.0",
     "less-loader": "4.1.0",
     "less-vars-to-js": "^1.2.1",
@@ -87,7 +86,7 @@
     "react-icons": "2.2.7",
     "react-metrics": "^2.3.2",
     "react-redux": "^5.0.6",
-    "react-router-dom": "^5.2.0",
+    "react-router-dom": "^4.3.1",
     "react-router-redux": "5.0.0-alpha.6",
     "react-virtualized-select": "^3.1.0",
     "react-vis": "^1.7.2",
@@ -122,10 +121,6 @@
       "!src/utils/test/**/*.js",
       "!src/demo/**/*.js",
       "!src/types/*"
-    ],
-    "reporters": [
-      "default",
-      "jest-junit"
     ]
   },
   "browserslist": [
