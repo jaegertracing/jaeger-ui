@@ -77,7 +77,7 @@ export default function AltViewOptions(props: Props) {
             {item.label}
           </a>
         </Menu.Item>
-      ))}      
+      ))}   
       <Menu.Item>
         <Link
           to={prefixUrl(`/api/traces/${traceID}?prettyPrint=true`)}
