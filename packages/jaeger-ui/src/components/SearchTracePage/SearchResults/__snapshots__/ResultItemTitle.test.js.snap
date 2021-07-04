@@ -15,6 +15,7 @@ exports[`ResultItemTitle renders as expected 1`] = `
   />
   <Link
     className="ResultItemTitle--item ub-flex-auto"
+    replace={false}
     to="linkToValue"
   >
     <span

@@ -54,7 +54,7 @@ export default deepFreeze(
             },
             {
               label: 'Online Chat',
-              url: 'https://cloud-native.slack.com/archives/CGG7NFUJ3',
+              url: 'https://gitter.im/jaegertracing/Lobby',
             },
             {
               label: 'GitHub',

@@ -17,10 +17,6 @@ import * as reactRouterDom from 'react-router-dom';
 
 import { ROUTE_PATH, matches, getUrl, getUrlState, sanitizeUrlState } from './url';
 
-jest.mock('react-router-dom', () => ({
-  matchPath: jest.fn(),
-}));
-
 describe('DeepDependencyGraph/url', () => {
   describe('matches', () => {
     const path = 'path argument';

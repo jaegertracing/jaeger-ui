@@ -18,7 +18,6 @@
 import './site-prefix';
 
 import React from 'react';
-import { BrowserRouter } from 'react-router-dom';
 import ReactDOM from 'react-dom';
 import { document } from 'global';
 
@@ -38,18 +37,8 @@ const UI_ROOT_ID = 'jaeger-ui-root';
 
 if (trackingContext) {
   trackingContext.context(() => {
-    ReactDOM.render(
-      <BrowserRouter>
-        <JaegerUIApp />
-      </BrowserRouter>,
-      document.getElementById(UI_ROOT_ID)
-    );
+    ReactDOM.render(<JaegerUIApp />, document.getElementById(UI_ROOT_ID));
   });
 } else {
-  ReactDOM.render(
-    <BrowserRouter>
-      <JaegerUIApp />
-    </BrowserRouter>,
-    document.getElementById(UI_ROOT_ID)
-  );
+  ReactDOM.render(<JaegerUIApp />, document.getElementById(UI_ROOT_ID));
 }
