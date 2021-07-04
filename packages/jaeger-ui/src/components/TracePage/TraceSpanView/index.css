@@ -26,11 +26,6 @@ limitations under the License.
   border-bottom: 1px solid rgb(204, 204, 204);
 }
 
-.test1893 {
-  width: 99.999%;
-}
-
-
 .ant-select-dropdown--multiple{
   z-index: 9999;
   white-space: nowrap;
