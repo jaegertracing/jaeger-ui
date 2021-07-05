@@ -26,22 +26,20 @@ limitations under the License.
   border-bottom: 1px solid rgb(204, 204, 204);
 }
 
-.ant-select-dropdown--multiple{
+.ant-select-dropdown--multiple {
   z-index: 9999;
   white-space: nowrap;
-  overflow: auto
+  overflow: auto;
 }
-
 
 .span-table .ant-dropdown {
   width: 20%;
   z-index: 1;
 }
 
-.search-box{
+.search-box {
   padding: 8px;
   background-color: white;
   width: 80%;
   border: 1px solid rgba(0, 0, 0, 0.15);
 }
-

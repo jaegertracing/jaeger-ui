@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ColumnFilterItem } from "antd/es/table/interface";
+import { ColumnFilterItem } from 'antd/es/table/interface';
 
 export interface ITableSpan {
   traceID: string;
@@ -47,8 +47,7 @@ export interface IColumnValue {
   isDecimal: boolean;
 }
 
-
-export interface FilterDropdownProps {
+export interface IFilterDropdownProps {
   prefixCls?: string;
   setSelectedKeys?: (selectedKeys: string[]) => void;
   selectedKeys: string[];

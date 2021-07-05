@@ -39,7 +39,7 @@ type State = {
   valueNameSelector1: string;
   valueNameSelector2: string | null;
   valueNameSelector3: string;
-  valueNameSelector4: string | null
+  valueNameSelector4: string | null;
   checkboxStatus: boolean;
 };
 
@@ -111,7 +111,7 @@ export default class TraceStatisticsHeader extends Component<Props, State> {
       this.getValue(),
       this.state.checkboxStatus
     );
-    this.props.handler(newTableValue, newWohleTable, value, null,null);
+    this.props.handler(newTableValue, newWohleTable, value, null, null);
   }
 
   /**
@@ -141,7 +141,7 @@ export default class TraceStatisticsHeader extends Component<Props, State> {
       this.getValue(),
       this.state.checkboxStatus
     );
-    this.props.handler(newTableValue, newWohleTable, this.state.valueNameSelector1, value , null);
+    this.props.handler(newTableValue, newWohleTable, this.state.valueNameSelector1, value, null);
   }
 
   /**
@@ -168,15 +168,15 @@ export default class TraceStatisticsHeader extends Component<Props, State> {
   }
 
   /**
-   * 
+   *
    */
-  setValueNameSelector4(value: string){
+  setValueNameSelector4(value: string) {
     this.setState({
       valueNameSelector4: value,
     });
     const newTableValue = generateColor(this.props.tableValue, this.getValue(), this.state.checkboxStatus);
     const newWholeTable = generateColor(this.props.wholeTable, this.getValue(), this.state.checkboxStatus);
-   
+
     this.props.handler(
       newTableValue,
       newWholeTable,
@@ -234,7 +234,6 @@ export default class TraceStatisticsHeader extends Component<Props, State> {
       this.state.valueNameSelector1
     );
 
-
     return (
       <div className="TraceStatisticsHeader">
         <NameSelector
@@ -257,7 +256,7 @@ export default class TraceStatisticsHeader extends Component<Props, State> {
         <NameSelector
           label="Span-Group"
           placeholder="No item selected"
-          options={["spanId"]}
+          options={['spanId']}
           value={this.state.valueNameSelector4}
           setValue={this.setValueNameSelector4}
           clearValue={this.clearValue}

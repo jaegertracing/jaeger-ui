@@ -30,7 +30,7 @@ export interface ITableSpan {
   color: string; // If it is a service name, the color will be set.
   searchColor: string;
   colorToPercent: string; // Color created by percent
-  traceID:string
+  traceID: string;
 }
 
 export interface ITableValues {

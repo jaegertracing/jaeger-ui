@@ -400,8 +400,8 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
       );
     } else if (ETraceViewType.TraceStatistics === viewType && headerHeight) {
       view = <TraceStatistics trace={data} uiFindVertexKeys={spanFindMatches} uiFind={uiFind} />;
-    } else if(ETraceViewType.TraceSpansView === viewType && headerHeight){
-      view = <TraceSpanView trace={data} uiFindVertexKeys={spanFindMatches} uiFind={uiFind}/>
+    } else if (ETraceViewType.TraceSpansView === viewType && headerHeight) {
+      view = <TraceSpanView trace={data} uiFindVertexKeys={spanFindMatches} uiFind={uiFind} />;
     }
 
     return (

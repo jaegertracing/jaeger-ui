@@ -25,7 +25,7 @@ export const ACTION_GRAPH = 'graph';
 export const ACTION_JSON = 'json';
 export const ACTION_RAW_JSON = 'rawJson';
 export const ACTION_STATISTICS = 'traceStatistics';
-export const ACTION_TRACE_SPANS_VIEW='tracesSpansView';
+export const ACTION_TRACE_SPANS_VIEW = 'tracesSpansView';
 
 // use a closure instead of bind to prevent forwarding any arguments to trackEvent()
 export const trackGanttView = () => trackEvent(CATEGORY_ALT_VIEW, ACTION_GANTT);
