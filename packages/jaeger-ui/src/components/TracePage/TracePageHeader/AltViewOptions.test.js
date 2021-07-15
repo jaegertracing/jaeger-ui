@@ -37,7 +37,7 @@ describe('AltViewOptions', () => {
       if (link.children().text() === text) return link;
     }
     const links2 = menu.find('a');
-    for (let i = 0; i < links.length; i++) {
+    for (let i = 0; i < links2.length; i++) {
       const link = links2.at(i);
       if (link.children().text() === text) return link;
     }
