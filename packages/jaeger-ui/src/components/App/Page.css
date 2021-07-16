@@ -31,3 +31,12 @@ limitations under the License.
   right: 0;
   top: var(--nav-height);
 }
+
+.Page--content--embedded {
+  display: flex;
+  flex-direction: column;
+  left: 0;
+  min-height: calc(100% - var(--nav-height));
+  position: absolute;
+  right: 0;
+}
