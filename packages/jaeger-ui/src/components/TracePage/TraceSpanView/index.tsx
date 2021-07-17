@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import React, { Component } from 'react';
-import { Row, Col, Table, Input, Button, Icon, Select } from 'antd';
+import { Row, Col, Table, Button, Select } from 'antd';
 import moment from 'moment';
 import { ColumnProps } from 'antd/es/table';
 import { SelectValue } from 'antd/lib/select';
@@ -21,7 +21,6 @@ import FormItem from 'antd/lib/form/FormItem';
 import './index.css';
 import { TNil } from '../../../types';
 import { Trace, Span } from '../../../types/trace';
-import { IFilterDropdownProps } from './types';
 
 const Option = Select.Option;
 
@@ -31,19 +30,6 @@ function getNestedProperty(path: string, span: any): string {
   }, span);
 }
 
-function isSpanValue(attribute: string, span: Span, value: any) {
-  return getNestedProperty(attribute, span)
-    .toString()
-    .toLowerCase()
-    .includes(value.toLowerCase());
-}
-
-function getHighlightedText(text: string, highlight: string) {
-  const parts = text.split(new RegExp(`(${highlight})`, 'gi'));
-  return (
-    <span>{parts.map(part => (part.toLowerCase() === highlight.toLowerCase() ? <b>{part}</b> : part))}</span>
-  );
-}
 function timeConversion(microseconds: number) {
   const milliseconds: number = parseInt((microseconds / 1000).toFixed(2), 10);
   const seconds: number = parseInt((milliseconds / 1000).toFixed(2), 10);
@@ -51,7 +37,9 @@ function timeConversion(microseconds: number) {
   const hours: number = parseInt((milliseconds / (1000 * 60 * 60)).toFixed(1), 10);
   const days: number = parseInt((milliseconds / (1000 * 60 * 60 * 24)).toFixed(1), 10);
   let timeText;
-  if (milliseconds < 1000) {
+  if (microseconds < 1000) {
+    timeText = `${microseconds}μs`;
+  } else if (milliseconds < 1000) {
     timeText = `${milliseconds}ms`;
   } else if (seconds < 60) {
     timeText = `${seconds}Sec`;
@@ -75,10 +63,10 @@ type State = {
   searchText: string;
   searchedColumn: string;
   data: Span[];
-  dataLength: number;
   serviceNamesList: string[];
   operationNamesList: string[];
-  filtered: { id: keyof Span; value: string[] }[];
+  serviceNameOperationsMap: Map<string, string[]>;
+  filtered: Record<string, string[]>;
   selectedServiceName: string[];
   selectedOperationName: string[];
   filteredData: Span[];
@@ -89,27 +77,30 @@ export default class TraceSpanView extends Component<Props, State> {
     super(props, state);
     const serviceNamesList = new Set<string>();
     const operationNamesList = new Set<string>();
+    const serviceNameOperationsMap = new Map<string, string[]>();
 
     this.props.trace.spans.map(span => {
       serviceNamesList.add(span.process.serviceName);
       operationNamesList.add(span.operationName);
+      const operationNames = serviceNameOperationsMap.get(span.process.serviceName) || [];
+      operationNames.push(span.operationName);
+      serviceNameOperationsMap.set(span.process.serviceName, operationNames);
       return { serviceNamesList, operationNamesList };
     });
-
     this.state = {
       searchText: '',
       searchedColumn: '',
       data: this.props.trace.spans,
-      dataLength: this.props.trace.spans.length,
       serviceNamesList: [...serviceNamesList],
       operationNamesList: [...operationNamesList],
+      serviceNameOperationsMap,
       filteredData: this.props.trace.spans,
-      filtered: [],
+      filtered: {},
       selectedServiceName: [],
       selectedOperationName: [],
     };
-    this.handleFilter = this.handleFilter.bind(this);
-    this.onTablePropsChange = this.onTablePropsChange.bind(this);
+    this.handleResetFilter = this.handleResetFilter.bind(this);
+    this.uniqueOperationNameOptions = this.uniqueOperationNameOptions.bind(this);
   }
 
   handleSearch(selectedKeys: string[], confirm: () => void, dataIndex: string): void {
@@ -127,135 +118,52 @@ export default class TraceSpanView extends Component<Props, State> {
       ...previousState,
       searchText: '',
       data: this.props.trace.spans,
-      dataLength: this.props.trace.spans.length,
     }));
   }
 
-  getColumnSearchProps = (dataIndex: keyof Span) => ({
-    filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }: IFilterDropdownProps) => (
-      <div className="search-box">
-        <Input
-          placeholder={`Search ${dataIndex}`}
-          value={selectedKeys && selectedKeys[0]}
-          onChange={e => setSelectedKeys && setSelectedKeys(e.target.value ? [e.target.value] : [])}
-          onPressEnter={() => this.handleSearch(selectedKeys, confirm, dataIndex)}
-          style={{ width: 220, marginBottom: 8, display: 'block' }}
-        />
-        <Button
-          type="primary"
-          onClick={() => this.handleSearch(selectedKeys, confirm, dataIndex)}
-          icon="search"
-          size="small"
-          style={{ width: '51%', marginRight: 8 }}
-        >
-          Search
-        </Button>
-        <Button onClick={() => this.handleReset(clearFilters)} size="small" style={{ width: 90 }}>
-          Reset
-        </Button>
-      </div>
-    ),
-    filterIcon: (filtered: boolean) => (
-      <Icon type="search" style={{ color: filtered ? '#1890ff' : undefined }} />
-    ),
-    onFilter: (value: string, record: Span) => {
-      return isSpanValue(dataIndex, record, value);
-    },
-
-    render: (text: string) =>
-      this.state.searchedColumn === dataIndex
-        ? getHighlightedText(text.toString(), this.state.searchText)
-        : text,
-  });
-
-  handleFilter(item: any, itemName: string) {
+  handleResetFilter() {
     this.setState(previousState => ({
-      ...previousState,
-      [itemName]: previousState.selectedServiceName.filter(a => item.value.indexOf(a) < 0),
-      filtered: previousState.filtered.filter(a => {
-        if (item[itemName] === a.value) {
-          return false;
-        }
-        return true;
-      }),
+      selectedServiceName: [],
+      selectedOperationName: [],
+      filteredData: previousState.data,
     }));
   }
 
-  uniqueOperationNameOptions(objectsArray: Span[], objectKey: keyof Span) {
-    let operationsList;
-    const a = objectsArray.map(o => {
-      if (
-        this.state.selectedOperationName.length &&
-        this.state.selectedOperationName.includes(getNestedProperty('process.serviceName', o))
-      ) {
-        operationsList = getNestedProperty(objectKey, o);
-      } else {
-        operationsList = getNestedProperty(objectKey, o);
-      }
-      return operationsList;
-    });
-
-    return a.filter((i, index) => {
-      return a.indexOf(i) >= index;
-    });
-  }
-
-  uniqueOptions(objectKey: keyof Span) {
-    const a = this.state.data.map(o => {
-      return getNestedProperty(objectKey, o);
-    });
-    return a.filter((i, index) => {
-      return a.indexOf(i) >= index;
-    });
-  }
-
-  onFilteredChangeCustom(value: string[], accessor: keyof Span) {
-    const filtered = this.state.filtered;
-    let insertNewFilter = 1;
-    if (filtered.length) {
-      filtered.forEach((filter, i) => {
-        if (filter.id === accessor) {
-          if (!value) filtered.splice(i, 1);
-          // else filter.value = value;
-          insertNewFilter = 0;
-        }
+  uniqueOperationNameOptions() {
+    let operationNamesList: string[] = [];
+    const serviceNameOperationsMap = this.state.serviceNameOperationsMap;
+    if (this.state.filtered['process.serviceName']) {
+      this.state.filtered['process.serviceName'].forEach((currentValue: any) => {
+        operationNamesList = operationNamesList.concat(serviceNameOperationsMap.get(currentValue) || []);
       });
+    } else {
+      operationNamesList = this.state.operationNamesList;
     }
+    return [...new Set(operationNamesList)];
+  }
 
-    if (insertNewFilter) {
-      filtered.push({ id: accessor, value });
-    }
+  onFilteredChangeCustom(selectedValues: string[], accessor: keyof Span) {
+    const filtered = this.state.filtered;
+    filtered[accessor] = selectedValues;
+    const data = this.state.data.filter(span => {
+      let isSpanIncluded;
+      Object.keys(filtered).every(filterColumn => {
+        if (filtered[filterColumn].length) {
+          const spanValue = getNestedProperty(filterColumn, span);
+          isSpanIncluded = filtered[filterColumn].includes(spanValue);
+        } else {
+          isSpanIncluded = true;
+        }
+        return isSpanIncluded;
+      });
+
+      return isSpanIncluded;
+    });
 
     this.setState(previousState => ({
       ...previousState,
       filtered,
-    }));
-    const data = this.state.data.filter(span =>
-      this.state.filtered.every(filter => {
-        const spanValue = getNestedProperty(filter.id, span);
-        return filter.value.includes(spanValue);
-      })
-    );
-
-    this.setState(previousState => ({
-      ...previousState,
       filteredData: data,
-    }));
-  }
-
-  onTablePropsChange(filters: any) {
-    const filterAttribute = Object.keys(filters);
-    const data = this.state.data.filter(span => {
-      return filterAttribute.every(attribute => {
-        return filters[attribute].every((value: string) => {
-          return isSpanValue(attribute, span, value);
-        });
-      });
-    });
-    this.setState(previousState => ({
-      ...previousState,
-      data,
-      dataLength: data.length,
     }));
   }
 
@@ -268,12 +176,10 @@ export default class TraceSpanView extends Component<Props, State> {
     this.setState(previousState => ({
       ...previousState,
       data: datasource,
-      dataLength: datasource.length,
     }));
   }
 
   onServiceNameFiltersChange(value: SelectValue) {
-    // this.onFiltersChange('process.serviceName', value)
     const selected = value as [];
     const datasource = this.state.data.filter(span => {
       const spanValue = getNestedProperty('process.serviceName', span) as never;
@@ -283,7 +189,6 @@ export default class TraceSpanView extends Component<Props, State> {
     this.setState(previousState => ({
       ...previousState,
       data: datasource,
-      dataLength: datasource.length,
     }));
   }
 
@@ -297,26 +202,19 @@ export default class TraceSpanView extends Component<Props, State> {
         title: 'Service Name',
         dataIndex: 'process.serviceName',
         width: '25%',
-        ...this.getColumnSearchProps('process.serviceName' as keyof Span),
       },
       {
         title: 'Operation',
         dataIndex: 'operationName',
         width: '25%',
-        ...this.getColumnSearchProps('operationName'),
       },
       {
         title: 'ID',
         dataIndex: 'spanID',
-        render: (record: Span) => {
+        render: (text: any, record: Span) => {
           return (
-            <a
-              href={`/trace/${record.traceID}?uiFind=${record.spanID}`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {' '}
-              {record.spanID}{' '}
+            <a href={`/trace/${record.traceID}?uiFind=${text}`} target="_blank" rel="noopener noreferrer">
+              {text}
             </a>
           );
         },
@@ -341,7 +239,7 @@ export default class TraceSpanView extends Component<Props, State> {
     return (
       <div>
         <h3 className="title--TraceStatistics"> Trace Tabular View</h3>
-        <Row>
+        <Row type="flex" style={{ marginTop: '8px' }}>
           <Col span={7}>
             <FormItem label="Service Name" labelCol={{ span: 6 }} wrapperCol={{ span: 18 }}>
               <Select
@@ -350,6 +248,7 @@ export default class TraceSpanView extends Component<Props, State> {
                 mode="multiple"
                 style={{ width: '100%' }}
                 maxTagCount={4}
+                value={this.state.selectedServiceName}
                 maxTagPlaceholder={`+ ${this.state.selectedServiceName.length - 4} Selected`}
                 placeholder="Please Select Service "
                 onChange={entry => {
@@ -360,7 +259,7 @@ export default class TraceSpanView extends Component<Props, State> {
                   this.onFilteredChangeCustom(entry as [], 'process.serviceName' as keyof Span);
                 }}
               >
-                {this.uniqueOptions('process.serviceName' as keyof Span).map(name => {
+                {this.state.serviceNamesList.map(name => {
                   return <Option key={name}>{name} </Option>;
                 })}
               </Select>
@@ -374,6 +273,7 @@ export default class TraceSpanView extends Component<Props, State> {
                 mode="multiple"
                 style={{ width: '100%' }}
                 maxTagCount={4}
+                value={this.state.selectedOperationName}
                 maxTagPlaceholder={`+ ${this.state.selectedOperationName.length - 4} Selected`}
                 placeholder="Please Select Operation"
                 onChange={entry => {
@@ -384,7 +284,7 @@ export default class TraceSpanView extends Component<Props, State> {
                   this.onFilteredChangeCustom(entry as [], 'operationName');
                 }}
               >
-                {this.uniqueOperationNameOptions(this.state.data, 'operationName').map(name => {
+                {this.uniqueOperationNameOptions().map((name: string) => {
                   return <Option key={name}>{name} </Option>;
                 })}
               </Select>
@@ -392,7 +292,9 @@ export default class TraceSpanView extends Component<Props, State> {
           </Col>
           <Col span={2} push={6}>
             <FormItem>
-              <Button type="primary">Reset Filters</Button>
+              <Button type="primary" htmlType="button" onClick={this.handleResetFilter}>
+                Reset Filters
+              </Button>
             </FormItem>
           </Col>
         </Row>
@@ -401,7 +303,6 @@ export default class TraceSpanView extends Component<Props, State> {
           className="span-table"
           columns={columns}
           dataSource={this.state.filteredData}
-          onChange={this.onTablePropsChange}
           pagination={{
             total: this.state.filteredData.length,
             pageSizeOptions: ['10', '20', '50', '100'],
