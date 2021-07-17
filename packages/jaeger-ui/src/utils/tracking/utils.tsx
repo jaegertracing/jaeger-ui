@@ -14,6 +14,7 @@
 
 import ReactGA from 'react-ga';
 
+// eslint-disable-next-line import/prefer-default-export
 export const logTrackingCalls = () => {
   const calls = ReactGA.testModeAPI.calls;
   for (let i = 0; i < calls.length; i++) {

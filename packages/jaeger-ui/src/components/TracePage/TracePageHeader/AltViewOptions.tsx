@@ -21,6 +21,7 @@ import {
   trackGanttView,
   trackGraphView,
   trackStatisticsView,
+  trackTraceSpansView,
   trackJsonView,
   trackRawJsonView,
 } from './TracePageHeader.track';
@@ -46,6 +47,10 @@ const MENU_ITEMS = [
     viewType: ETraceViewType.TraceStatistics,
     label: 'Trace Statistics',
   },
+  {
+    viewType: ETraceViewType.TraceSpansView,
+    label: 'Trace Spans Table',
+  },
 ];
 
 export default function AltViewOptions(props: Props) {
@@ -58,6 +63,8 @@ export default function AltViewOptions(props: Props) {
       trackGraphView();
     } else if (item === ETraceViewType.TraceStatistics) {
       trackStatisticsView();
+    } else if (item === ETraceViewType.TraceSpansView) {
+      trackTraceSpansView();
     }
     onTraceViewChange(item);
   };

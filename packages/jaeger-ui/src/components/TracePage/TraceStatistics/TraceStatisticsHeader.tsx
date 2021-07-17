@@ -30,7 +30,8 @@ type Props = {
     tableValue: ITableSpan[],
     wholeTable: ITableSpan[],
     valueNameSelector1: string,
-    valueNameSelector2: string | null
+    valueNameSelector2: string | null,
+    valueNameSelector4: string | null
   ) => void;
 };
 
@@ -38,7 +39,7 @@ type State = {
   valueNameSelector1: string;
   valueNameSelector2: string | null;
   valueNameSelector3: string;
-
+  valueNameSelector4: string | null;
   checkboxStatus: boolean;
 };
 
@@ -62,18 +63,21 @@ export default class TraceStatisticsHeader extends Component<Props, State> {
       getColumnValues('Service Name', this.props.trace),
       getColumnValues('Service Name', this.props.trace),
       'Service Name',
+      null,
       null
     );
 
     this.state = {
       valueNameSelector1: 'Service Name',
       valueNameSelector2: null,
+      valueNameSelector4: null,
       valueNameSelector3: 'Count',
       checkboxStatus: false,
     };
     this.setValueNameSelector1 = this.setValueNameSelector1.bind(this);
     this.setValueNameSelector2 = this.setValueNameSelector2.bind(this);
     this.setValueNameSelector3 = this.setValueNameSelector3.bind(this);
+    this.setValueNameSelector4 = this.setValueNameSelector4.bind(this);
     this.checkboxButton = this.checkboxButton.bind(this);
     this.clearValue = this.clearValue.bind(this);
   }
@@ -107,7 +111,7 @@ export default class TraceStatisticsHeader extends Component<Props, State> {
       this.getValue(),
       this.state.checkboxStatus
     );
-    this.props.handler(newTableValue, newWohleTable, value, null);
+    this.props.handler(newTableValue, newWohleTable, value, null, null);
   }
 
   /**
@@ -137,7 +141,7 @@ export default class TraceStatisticsHeader extends Component<Props, State> {
       this.getValue(),
       this.state.checkboxStatus
     );
-    this.props.handler(newTableValue, newWohleTable, this.state.valueNameSelector1, value);
+    this.props.handler(newTableValue, newWohleTable, this.state.valueNameSelector1, value, null);
   }
 
   /**
@@ -158,7 +162,27 @@ export default class TraceStatisticsHeader extends Component<Props, State> {
       newTableValue,
       newWohleTable,
       this.state.valueNameSelector1,
-      this.state.valueNameSelector2
+      this.state.valueNameSelector2,
+      this.state.valueNameSelector4
+    );
+  }
+
+  /**
+   *
+   */
+  setValueNameSelector4(value: string) {
+    this.setState({
+      valueNameSelector4: value,
+    });
+    const newTableValue = generateColor(this.props.tableValue, this.getValue(), this.state.checkboxStatus);
+    const newWholeTable = generateColor(this.props.wholeTable, this.getValue(), this.state.checkboxStatus);
+
+    this.props.handler(
+      newTableValue,
+      newWholeTable,
+      this.state.valueNameSelector1,
+      this.state.valueNameSelector2,
+      this.state.valueNameSelector4
     );
   }
 
@@ -176,7 +200,8 @@ export default class TraceStatisticsHeader extends Component<Props, State> {
       newTableValue,
       newWholeTable,
       this.state.valueNameSelector1,
-      this.state.valueNameSelector2
+      this.state.valueNameSelector2,
+      this.state.valueNameSelector4
     );
   }
 
@@ -198,7 +223,7 @@ export default class TraceStatisticsHeader extends Component<Props, State> {
       this.getValue(),
       this.state.checkboxStatus
     );
-    this.props.handler(newTableValue, newWholeTable, this.state.valueNameSelector1, null);
+    this.props.handler(newTableValue, newWholeTable, this.state.valueNameSelector1, null, null);
   }
 
   render() {
@@ -225,6 +250,15 @@ export default class TraceStatisticsHeader extends Component<Props, State> {
           options={optionsNameSelector2}
           value={this.state.valueNameSelector2}
           setValue={this.setValueNameSelector2}
+          clearValue={this.clearValue}
+          required={false}
+        />
+        <NameSelector
+          label="Span-Group"
+          placeholder="No item selected"
+          options={['spanId']}
+          value={this.state.valueNameSelector4}
+          setValue={this.setValueNameSelector4}
           clearValue={this.clearValue}
           required={false}
         />

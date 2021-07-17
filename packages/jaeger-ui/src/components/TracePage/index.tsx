@@ -56,6 +56,7 @@ import { EmbeddedState } from '../../types/embedded';
 import filterSpans from '../../utils/filter-spans';
 import updateUiFind from '../../utils/update-ui-find';
 import TraceStatistics from './TraceStatistics/index';
+import TraceSpanView from './TraceSpanView/index';
 
 import './index.css';
 
@@ -397,8 +398,10 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
           uiFindVertexKeys={graphFindMatches}
         />
       );
-    } else {
+    } else if (ETraceViewType.TraceStatistics === viewType && headerHeight) {
       view = <TraceStatistics trace={data} uiFindVertexKeys={spanFindMatches} uiFind={uiFind} />;
+    } else if (ETraceViewType.TraceSpansView === viewType && headerHeight) {
+      view = <TraceSpanView trace={data} uiFindVertexKeys={spanFindMatches} uiFind={uiFind} />;
     }
 
     return (

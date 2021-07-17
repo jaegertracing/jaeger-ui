@@ -26,6 +26,7 @@ describe('AltViewOptions', () => {
   let trackJsonView;
   let trackRawJsonView;
   let trackStatisticsView;
+  let trackTraceSpansView;
 
   let wrapper;
   const getLink = text => {
@@ -36,7 +37,7 @@ describe('AltViewOptions', () => {
       if (link.children().text() === text) return link;
     }
     const links2 = menu.find('a');
-    for (let i = 0; i < links.length; i++) {
+    for (let i = 0; i < links2.length; i++) {
       const link = links2.at(i);
       if (link.children().text() === text) return link;
     }
@@ -55,6 +56,7 @@ describe('AltViewOptions', () => {
     trackJsonView = jest.spyOn(track, 'trackJsonView');
     trackRawJsonView = jest.spyOn(track, 'trackRawJsonView');
     trackStatisticsView = jest.spyOn(track, 'trackStatisticsView');
+    trackTraceSpansView = jest.spyOn(track, 'trackTraceSpansView');
   });
 
   beforeEach(() => {
@@ -78,6 +80,7 @@ describe('AltViewOptions', () => {
     expect(trackJsonView).toHaveBeenCalledTimes(1);
     expect(trackGanttView).not.toHaveBeenCalled();
     expect(trackGraphView).not.toHaveBeenCalled();
+    expect(trackTraceSpansView).not.toHaveBeenCalled();
   });
 
   it('track dropdown menu', () => {
@@ -99,11 +102,19 @@ describe('AltViewOptions', () => {
         onTraceViewChangeArg: ETraceViewType.TraceTimelineViewer,
         propViewType: ETraceViewType.TraceStatisticsView,
       },
+      {
+        link: 'Trace Spans Table',
+        trackFn: trackTraceSpansView,
+        onTraceViewChangeArg: ETraceViewType.TraceSpansView,
+        propViewType: ETraceViewType.TraceTimelineViewer,
+      },
     ];
 
     viewInteractions.forEach(({ link, trackFn, propViewType }, i) => {
       if (propViewType) {
-        wrapper.setProps({ viewType: propViewType });
+        wrapper.setProps({
+          viewType: propViewType,
+        });
       }
       expect(props.onTraceViewChange).toHaveBeenCalledTimes(i);
       expect(trackFn).not.toHaveBeenCalled();
