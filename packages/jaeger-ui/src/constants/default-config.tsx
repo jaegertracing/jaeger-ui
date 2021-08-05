@@ -54,7 +54,7 @@ export default deepFreeze(
             },
             {
               label: 'Online Chat',
-              url: 'https://gitter.im/jaegertracing/Lobby',
+              url: 'https://cloud-native.slack.com/archives/CGG7NFUJ3',
             },
             {
               label: 'GitHub',
@@ -85,6 +85,7 @@ export default deepFreeze(
       tracking: {
         gaID: null,
         trackErrors: true,
+        customWebAnalytics: null,
       },
     },
     // fields that should be individually merged vs wholesale replaced

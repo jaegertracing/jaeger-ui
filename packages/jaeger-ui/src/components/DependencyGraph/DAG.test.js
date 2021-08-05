@@ -18,7 +18,7 @@ import DAG from './DAG';
 
 // mock canvas API (we don't care about canvas results)
 
-window.HTMLCanvasElement.prototype.getContext = function() {
+window.HTMLCanvasElement.prototype.getContext = function getContext() {
   return {
     fillRect() {},
     clearRect() {},
