@@ -637,6 +637,15 @@ describe('<TracePage>', () => {
       expect(header.prop('viewType')).toBe(ETraceViewType.TraceGraph);
       expect(calculateTraceDagEVSpy).toHaveBeenCalledWith(defaultProps.trace.data);
 
+      onTraceViewChange(ETraceViewType.TraceSpansView);
+      wrapper.update();
+      refreshWrappers();
+      expect(header.prop('viewType')).toBe(ETraceViewType.TraceSpansView);
+
+      onTraceViewChange(ETraceViewType.TraceStatistics);
+      wrapper.update();
+      refreshWrappers();
+      expect(header.prop('viewType')).toBe(ETraceViewType.TraceStatistics);
       wrapper.setProps({ trace: {} });
       onTraceViewChange(ETraceViewType.TraceTimelineViewer);
       expect(calculateTraceDagEVSpy).toHaveBeenCalledTimes(1);

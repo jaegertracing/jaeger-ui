@@ -21,6 +21,7 @@ import FormItem from 'antd/lib/form/FormItem';
 import './index.css';
 import { TNil } from '../../../types';
 import { Trace, Span } from '../../../types/trace';
+import { timeConversion } from '../../../utils/date';
 
 const Option = Select.Option;
 
@@ -28,29 +29,6 @@ function getNestedProperty(path: string, span: any): string {
   return path.split('.').reduce((prev, curr) => {
     return prev ? prev[curr] : null;
   }, span);
-}
-
-function timeConversion(microseconds: number) {
-  const milliseconds: number = parseInt((microseconds / 1000).toFixed(2), 10);
-  const seconds: number = parseInt((milliseconds / 1000).toFixed(2), 10);
-  const minutes: number = parseInt((milliseconds / (1000 * 60)).toFixed(1), 10);
-  const hours: number = parseInt((milliseconds / (1000 * 60 * 60)).toFixed(1), 10);
-  const days: number = parseInt((milliseconds / (1000 * 60 * 60 * 24)).toFixed(1), 10);
-  let timeText;
-  if (microseconds < 1000) {
-    timeText = `${microseconds}μs`;
-  } else if (milliseconds < 1000) {
-    timeText = `${milliseconds}ms`;
-  } else if (seconds < 60) {
-    timeText = `${seconds}Sec`;
-  } else if (minutes < 60) {
-    timeText = `${minutes}Min`;
-  } else if (hours < 24) {
-    timeText = `${hours}Hrs`;
-  } else {
-    timeText = `${days}Days`;
-  }
-  return timeText;
 }
 
 type Props = {
@@ -79,14 +57,14 @@ export default class TraceSpanView extends Component<Props, State> {
     const operationNamesList = new Set<string>();
     const serviceNameOperationsMap = new Map<string, string[]>();
 
-    this.props.trace.spans.map(span => {
+    this.props.trace.spans.forEach(span => {
       serviceNamesList.add(span.process.serviceName);
       operationNamesList.add(span.operationName);
       const operationNames = serviceNameOperationsMap.get(span.process.serviceName) || [];
       operationNames.push(span.operationName);
       serviceNameOperationsMap.set(span.process.serviceName, operationNames);
-      return { serviceNamesList, operationNamesList };
     });
+
     this.state = {
       searchText: '',
       searchedColumn: '',
@@ -167,35 +145,6 @@ export default class TraceSpanView extends Component<Props, State> {
     }));
   }
 
-  onFiltersChange(attribute: string, value: SelectValue) {
-    const selected = value as [];
-    const datasource = this.state.data.filter(span => {
-      const spanValue = getNestedProperty(attribute, span) as never;
-      return selected.indexOf(spanValue) > -1;
-    });
-    this.setState(previousState => ({
-      ...previousState,
-      data: datasource,
-    }));
-  }
-
-  onServiceNameFiltersChange(value: SelectValue) {
-    const selected = value as [];
-    const datasource = this.state.data.filter(span => {
-      const spanValue = getNestedProperty('process.serviceName', span) as never;
-      return selected.indexOf(spanValue) > -1;
-    });
-
-    this.setState(previousState => ({
-      ...previousState,
-      data: datasource,
-    }));
-  }
-
-  onOperationNameFiltersChange(value: SelectValue) {
-    this.onFiltersChange('operatioName', value);
-  }
-
   render() {
     const columns: ColumnProps<Span>[] = [
       {
@@ -238,10 +187,15 @@ export default class TraceSpanView extends Component<Props, State> {
     ];
     return (
       <div>
-        <h3 className="title--TraceStatistics"> Trace Tabular View</h3>
+        <h3 className="title--TraceSpanView"> Trace Tabular View</h3>
         <Row type="flex" style={{ marginTop: '8px' }}>
           <Col span={7}>
-            <FormItem label="Service Name" labelCol={{ span: 6 }} wrapperCol={{ span: 18 }}>
+            <FormItem
+              label="Service Name"
+              labelCol={{ span: 6 }}
+              wrapperCol={{ span: 18 }}
+              className="serviceNameDD"
+            >
               <Select
                 allowClear
                 showSearch
@@ -266,7 +220,12 @@ export default class TraceSpanView extends Component<Props, State> {
             </FormItem>
           </Col>
           <Col span={9}>
-            <FormItem label="Operation Name" labelCol={{ span: 6 }} wrapperCol={{ span: 18 }}>
+            <FormItem
+              label="Operation Name"
+              labelCol={{ span: 6 }}
+              wrapperCol={{ span: 18 }}
+              className="operationNameDD"
+            >
               <Select
                 allowClear
                 showSearch
@@ -300,7 +259,7 @@ export default class TraceSpanView extends Component<Props, State> {
         </Row>
 
         <Table
-          className="span-table"
+          className="span-table span-view-table"
           columns={columns}
           dataSource={this.state.filteredData}
           pagination={{
