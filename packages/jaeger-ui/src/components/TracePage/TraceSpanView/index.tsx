@@ -16,7 +16,6 @@ import React, { Component } from 'react';
 import { Row, Col, Table, Button, Select } from 'antd';
 import moment from 'moment';
 import { ColumnProps } from 'antd/es/table';
-import { SelectValue } from 'antd/lib/select';
 import FormItem from 'antd/lib/form/FormItem';
 import './index.css';
 import { TNil } from '../../../types';

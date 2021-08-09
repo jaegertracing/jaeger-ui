@@ -57,7 +57,7 @@ describe('<TraceSpanView>', () => {
     const event = ['op2', 'op3'];
     wrapper = shallow(<TraceSpanView {...defaultProps} />);
     wrapper.find('.operationNameDD Select').simulate('change', event);
-    expect(wrapper.state('selectedOperationName')).toEqual( ['op2', 'op3']);
+    expect(wrapper.state('selectedOperationName')).toEqual(['op2', 'op3']);
   });
   it('check handler', () => {
     const instance = wrapper.instance();
@@ -68,6 +68,5 @@ describe('<TraceSpanView>', () => {
     expect(instance.state.operationNamesList).toBeDefined();
     expect(instance.state.operationNamesList.length).toBe(6);
     expect(instance.state.operationNamesList).toEqual(['op1', 'op2', 'op3', 'op4', 'op6', 'op7']);
-
   });
 });
