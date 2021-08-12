@@ -1,10 +1,11 @@
 # Releases
 
-## Next (unreleased)
-
-### Enhancements
+## v1.15.0 (Aug 4, 2021)
 
 ### Fixes
+
+- Make favicon background transparent ([@MaxTaggart](https://github.com/MaxTaggart) in [#786](https://github.com/jaegertracing/jaeger-ui/pull/786))
+- Fix deep dependency header overlap in page header ([@stardotcode](https://github.com/stardotcode) in [#731](https://github.com/jaegertracing/jaeger-ui/pull/731) [#782](https://github.com/jaegertracing/jaeger-ui/pull/782))
 
 ## v1.14.0 (June 4, 2021)
 
