@@ -49,7 +49,6 @@ describe('<TraceSpanView>', () => {
   it('Should change value when onChange was called', () => {
     const event = ['service2'];
     wrapper = shallow(<TraceSpanView {...defaultProps} />);
-    // wrapper.state('filtered.process.serviceName', ['service1', 'service2']);
     wrapper.find('.serviceNameDD Select').simulate('change', event);
     expect(wrapper.state('selectedServiceName')).toEqual(['service2']);
   });
