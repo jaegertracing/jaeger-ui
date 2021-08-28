@@ -321,7 +321,15 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
   };
 
   render() {
-    const { archiveEnabled, archiveTraceState, embedded, id, searchUrl, uiFind, trace } = this.props;
+    const {
+      archiveEnabled,
+      archiveTraceState,
+      embedded,
+      id,
+      uiFind,
+      trace,
+      location: { state: locationState },
+    } = this.props;
     const { slimView, viewType, headerHeight, viewRange } = this.state;
     if (!trace || trace.state === fetchedState.LOADING) {
       return <LoadingIndicator className="u-mt-vast" centered />;
@@ -369,7 +377,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
       showShortcutsHelp: !isEmbedded,
       showStandaloneLink: isEmbedded,
       showViewOptions: !isEmbedded,
-      toSearch: searchUrl,
+      toSearch: (locationState && locationState.fromSearch) || null,
       trace: data,
       updateNextViewRangeTime: this.updateNextViewRangeTime,
       updateViewRangeTime: this.updateViewRangeTime,
