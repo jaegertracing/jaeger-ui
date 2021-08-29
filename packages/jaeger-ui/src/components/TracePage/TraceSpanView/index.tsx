@@ -80,24 +80,6 @@ export default class TraceSpanView extends Component<Props, State> {
     this.uniqueOperationNameOptions = this.uniqueOperationNameOptions.bind(this);
   }
 
-  handleSearch(selectedKeys: string[], confirm: () => void, dataIndex: string): void {
-    confirm();
-    this.setState(previousState => ({
-      ...previousState,
-      searchText: selectedKeys[0],
-      searchedColumn: dataIndex,
-    }));
-  }
-
-  handleReset(clearFilters: () => void) {
-    clearFilters();
-    this.setState(previousState => ({
-      ...previousState,
-      searchText: '',
-      data: this.props.trace.spans,
-    }));
-  }
-
   handleResetFilter() {
     this.setState(previousState => ({
       selectedServiceName: [],
@@ -249,7 +231,7 @@ export default class TraceSpanView extends Component<Props, State> {
             </FormItem>
           </Col>
           <Col span={2} push={6}>
-            <FormItem>
+            <FormItem className="reset-filter">
               <Button type="primary" htmlType="button" onClick={this.handleResetFilter}>
                 Reset Filters
               </Button>

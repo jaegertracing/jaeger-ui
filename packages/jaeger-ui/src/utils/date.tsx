@@ -148,9 +148,9 @@ export function formatRelativeDate(value: any, fullMonthName: boolean = false) {
 export function timeConversion(microseconds: number) {
   const milliseconds: number = parseInt((microseconds / 1000).toFixed(2), 10);
   const seconds: number = parseInt((milliseconds / 1000).toFixed(2), 10);
-  const minutes: number = parseInt((milliseconds / (1000 * 60)).toFixed(1), 10);
-  const hours: number = parseInt((milliseconds / (1000 * 60 * 60)).toFixed(1), 10);
-  const days: number = parseInt((milliseconds / (1000 * 60 * 60 * 24)).toFixed(1), 10);
+  const minutes: number = parseInt((milliseconds / (1000 * 60)).toFixed(2), 10);
+  const hours: number = parseInt((milliseconds / (1000 * 60 * 60)).toFixed(2), 10);
+  const days: number = parseInt((milliseconds / (1000 * 60 * 60 * 24)).toFixed(2), 10);
   let timeText;
   if (microseconds < 1000) {
     timeText = `${microseconds}μs`;

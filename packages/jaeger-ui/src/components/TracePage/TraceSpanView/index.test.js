@@ -42,7 +42,6 @@ describe('<TraceSpanView>', () => {
     expect(wrapper.find('table').length).toBe(1);
     expect(wrapper.find('colgroup').length).toBe(1);
     expect(wrapper.find('Pagination').length).toBe(2);
-
     expect(wrapper.find('Button').length).toBe(1);
     expect(wrapper.find('.ant-form-item-control').length).toBe(3);
   });
@@ -52,6 +51,14 @@ describe('<TraceSpanView>', () => {
     wrapper.find('.serviceNameDD Select').simulate('change', event);
     expect(wrapper.state('selectedServiceName')).toEqual(['service2']);
   });
+  it('Should change value when onChange and Rest the value when called reset', () => {
+    const event = ['service2'];
+    wrapper = shallow(<TraceSpanView {...defaultProps} />);
+    wrapper.find('.serviceNameDD Select').simulate('change', event);
+    expect(wrapper.state('selectedServiceName')).toEqual(['service2']);
+    wrapper.find('.reset-filter Button').simulate('click');
+    expect(wrapper.state('selectedServiceName')).toEqual([]);
+  });
   it('Should change value when onChange OperatioName DDwas called', () => {
     const event = ['op2', 'op3'];
     wrapper = shallow(<TraceSpanView {...defaultProps} />);
@@ -60,7 +67,6 @@ describe('<TraceSpanView>', () => {
   });
   it('check handler', () => {
     const instance = wrapper.instance();
-
     expect(instance.state.serviceNamesList).toBeDefined();
     expect(instance.state.serviceNamesList.length).toBe(2);
     expect(instance.state.serviceNamesList).toEqual(['service1', 'service2']);
