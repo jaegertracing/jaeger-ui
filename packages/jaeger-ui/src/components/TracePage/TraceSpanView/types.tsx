@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { ColumnFilterItem } from 'antd/es/table/interface';
+
 export interface ITableSpan {
+  traceID: string;
   type: string;
   name: string;
   count: number;
@@ -30,7 +33,6 @@ export interface ITableSpan {
   color: string; // If it is a service name, the color will be set.
   searchColor: string;
   colorToPercent: string; // Color created by percent
-  traceID: string;
 }
 
 export interface ITableValues {
@@ -43,4 +45,14 @@ export interface IColumnValue {
   attribute: string;
   suffix: string;
   isDecimal: boolean;
+}
+
+export interface IFilterDropdownProps {
+  prefixCls?: string;
+  setSelectedKeys?: (selectedKeys: string[]) => void;
+  selectedKeys: string[];
+  confirm: () => void;
+  clearFilters: () => void;
+  filters?: ColumnFilterItem[];
+  getPopupContainer?: (triggerNode: HTMLElement) => HTMLElement;
 }
