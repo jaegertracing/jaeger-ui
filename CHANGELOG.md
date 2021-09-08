@@ -1,5 +1,16 @@
 # Releases
 
+## v1.16.0 (Sep 6, 2021)
+
+### Enhancements
+
+- Add Table View for a trace ([@vvvprabhakar](https://github.com/vvvprabhakar) in [#781](https://github.com/jaegertracing/jaeger-ui/pull/781))
+
+### Fixes
+
+- Fix trace detail page's back button disappeared ((@shwin0901)[https://github.com/shwin0901] in [#805](https://github.com/jaegertracing/jaeger-ui/pull/805))
+- Various dependency upgrades by `dependabot`
+
 ## v1.15.0 (Aug 4, 2021)
 
 ### Fixes
