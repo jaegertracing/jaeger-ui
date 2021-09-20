@@ -16,7 +16,6 @@ import deepFreeze from 'deep-freeze';
 
 import { FALLBACK_DAG_MAX_NUM_SERVICES } from './index';
 import getVersion from '../utils/version/get-version';
-import { KeyValuePair, Trace } from '../types/trace';
 
 const { version } = require('../../package.json');
 
@@ -28,35 +27,7 @@ export default deepFreeze(
         dagMaxNumServices: FALLBACK_DAG_MAX_NUM_SERVICES,
         menuEnabled: true,
       },
-      linkPatterns: [
-        // {
-        //   type: 'tags',
-        //   key: 'http.method',
-        //   url: 'https://github.com/jaegertracing/jaeger-client-java/releases/tag/#{component}',
-        //   text: 'Information about Jaeger release #{component}',
-        // },
-        {
-          type: 'tags',
-          key: 'component',
-          action: (e: any, row: KeyValuePair, trace: Trace) =>
-            console.log('*** in tags action', e, row, trace),
-          text: 'Information about Jaeger release #{component} 1111',
-        },
-        // {
-        //   type: 'tags',
-        //   key: /./,
-        //   text: 'hello 123',
-        //   action: (e: any, row: KeyValuePair, trace: Trace) =>
-        //     console.log('*** in tags action', e, row, trace),
-        // },
-        // {
-        //   type: 'process',
-        //   key: /./,
-        //   text: 'hello 456',
-        //   action: (e: any, row: KeyValuePair, trace: Trace) =>
-        //     console.log('*** in process action', e, row, trace),
-        // },
-      ],
+      linkPatterns: [],
       qualityMetrics: {
         menuEnabled: false,
         menuLabel: 'Trace Quality',
