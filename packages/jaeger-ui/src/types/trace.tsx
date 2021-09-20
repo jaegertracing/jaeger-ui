@@ -22,9 +22,12 @@ export type KeyValuePair = {
   value: any;
 };
 
+export type LinkAction = () => void;
+
 export type Link = {
   url: string;
   text: string;
+  action?: LinkAction;
 };
 
 export type Log = {

@@ -63,11 +63,16 @@ function formatValue(value: any) {
   return <div className="ub-inline-block">{content}</div>;
 }
 
-export const LinkValue = (props: { href: string; title?: string; children: React.ReactNode }) => (
-  <a href={props.href} title={props.title} target="_blank" rel="noopener noreferrer">
-    {props.children} <Icon className="KeyValueTable--linkIcon" type="export" />
-  </a>
-);
+export const LinkValue = (props: { link: Link; children: React.ReactNode }) =>
+  props.link.url ? (
+    <a href={props.link.url} title={props.link.text} target="_blank" rel="noopener noreferrer">
+      {props.children} <Icon className="KeyValueTable--linkIcon" type="export" />
+    </a>
+  ) : (
+    <a onClick={props.link.action} title={props.link.text} role="button">
+      {props.children} <Icon className="KeyValueTable--linkIcon" type="export" />
+    </a>
+  );
 
 LinkValue.defaultProps = {
   title: '',
@@ -75,11 +80,11 @@ LinkValue.defaultProps = {
 
 const linkValueList = (links: Link[]) => (
   <Menu>
-    {links.map(({ text, url }, index) => (
+    {links.map((link: Link, index) => (
       // `index` is necessary in the key because url can repeat
       // eslint-disable-next-line react/no-array-index-key
-      <Menu.Item key={`${url}-${index}`}>
-        <LinkValue href={url}>{text}</LinkValue>
+      <Menu.Item key={`${link.url || link.action}-${index}`}>
+        <LinkValue link={link}>{link.text}</LinkValue>
       </Menu.Item>
     ))}
   </Menu>
@@ -103,9 +108,7 @@ export default function KeyValuesTable(props: KeyValuesTableProps) {
             if (links && links.length === 1) {
               valueMarkup = (
                 <div>
-                  <LinkValue href={links[0].url} title={links[0].text}>
-                    {jsonTable}
-                  </LinkValue>
+                  <LinkValue link={links[0]}>{jsonTable}</LinkValue>
                 </div>
               );
             } else if (links && links.length > 1) {
