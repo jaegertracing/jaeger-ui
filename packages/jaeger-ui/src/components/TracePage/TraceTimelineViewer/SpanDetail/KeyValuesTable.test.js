@@ -21,18 +21,16 @@ import CopyIcon from '../../../common/CopyIcon';
 import KeyValuesTable, { LinkValue } from './KeyValuesTable';
 
 describe('LinkValue', () => {
-  const title = 'titleValue';
-  const href = 'hrefValue';
+  const link = {
+    text: 'titleValue',
+    url: 'hrefValue',
+  };
   const childrenText = 'childrenTextValue';
-  const wrapper = shallow(
-    <LinkValue href={href} title={title}>
-      {childrenText}
-    </LinkValue>
-  );
+  const wrapper = shallow(<LinkValue link={link}>{childrenText}</LinkValue>);
 
   it('renders as expected', () => {
-    expect(wrapper.find('a').prop('href')).toBe(href);
-    expect(wrapper.find('a').prop('title')).toBe(title);
+    expect(wrapper.find('a').prop('href')).toBe(link.url);
+    expect(wrapper.find('a').prop('title')).toBe(link.text);
     expect(wrapper.find('a').text()).toMatch(/childrenText/);
   });
 
