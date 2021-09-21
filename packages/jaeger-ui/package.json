@@ -26,7 +26,7 @@
     "enzyme-to-json": "^3.3.0",
     "http-proxy-middleware": "^0.19.1",
     "jest-junit": "^10.0.0",
-    "less": "3.9.0",
+    "less": "4.1.1",
     "less-loader": "4.1.0",
     "less-vars-to-js": "^1.2.1",
     "react-app-rewired": "2.0.1",
