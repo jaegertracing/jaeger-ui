@@ -20,7 +20,7 @@ import CopyIcon from '../../../common/CopyIcon';
 
 import KeyValuesTable, { LinkValue } from './KeyValuesTable';
 
-describe('LinkValue', () => {
+describe('LinkValue with url', () => {
   const link = {
     text: 'titleValue',
     url: 'hrefValue',
@@ -37,6 +37,23 @@ describe('LinkValue', () => {
   it('renders correct Icon', () => {
     expect(wrapper.find(Icon).hasClass('KeyValueTable--linkIcon')).toBe(true);
     expect(wrapper.find(Icon).prop('type')).toBe('export');
+  });
+});
+
+describe('LinkValue with action', () => {
+  const action = jest.fn();
+  const link = {
+    text: 'titleValue',
+    action,
+  };
+
+  const childrenText = 'childrenTextValue';
+  const wrapper = shallow(<LinkValue link={link}>{childrenText}</LinkValue>);
+
+  it('renders as expected', () => {
+    expect(wrapper.find('a').prop('onClick')).toBe(action);
+    expect(wrapper.find('a').prop('title')).toBe(link.text);
+    expect(wrapper.find('a').text()).toMatch(/childrenText/);
   });
 });
 
@@ -69,6 +86,8 @@ describe('<KeyValuesTable>', () => {
   });
 
   it('renders a single link correctly', () => {
+    wrapper = shallow(<KeyValuesTable data={data} />);
+
     wrapper.setProps({
       linksGetter: (array, i) =>
         array[i].key === 'span.kind'
@@ -83,8 +102,10 @@ describe('<KeyValuesTable>', () => {
 
     const anchor = wrapper.find(LinkValue);
     expect(anchor).toHaveLength(1);
-    expect(anchor.prop('href')).toBe('http://example.com/?kind=client');
-    expect(anchor.prop('title')).toBe('More info about client');
+    expect(anchor.prop('link')).toEqual({
+      url: 'http://example.com/?kind=client',
+      text: 'More info about client',
+    });
     expect(
       anchor
         .closest('tr')
@@ -95,24 +116,27 @@ describe('<KeyValuesTable>', () => {
   });
 
   it('renders multiple links correctly', () => {
+    const action = jest.fn();
     wrapper.setProps({
       linksGetter: (array, i) =>
         array[i].key === 'span.kind'
           ? [
               { url: `http://example.com/1?kind=${encodeURIComponent(array[i].value)}`, text: 'Example 1' },
               { url: `http://example.com/2?kind=${encodeURIComponent(array[i].value)}`, text: 'Example 2' },
+              { action, text: 'Example 3' },
             ]
           : [],
     });
     const dropdown = wrapper.find(Dropdown);
     const menu = shallow(dropdown.prop('overlay'));
     const anchors = menu.find(LinkValue);
-    expect(anchors).toHaveLength(2);
+    expect(anchors).toHaveLength(3);
     const firstAnchor = anchors.first();
-    expect(firstAnchor.prop('href')).toBe('http://example.com/1?kind=client');
+    expect(firstAnchor.prop('link').url).toBe('http://example.com/1?kind=client');
     expect(firstAnchor.children().text()).toBe('Example 1');
-    const secondAnchor = anchors.last();
-    expect(secondAnchor.prop('href')).toBe('http://example.com/2?kind=client');
+    const secondAnchor = anchors.at(1);
+
+    expect(secondAnchor.prop('link').url).toBe('http://example.com/2?kind=client');
     expect(secondAnchor.children().text()).toBe('Example 2');
     expect(
       dropdown
@@ -121,6 +145,9 @@ describe('<KeyValuesTable>', () => {
         .first()
         .text()
     ).toBe('span.kind');
+
+    const thirdAnchor = anchors.at(2);
+    expect(thirdAnchor.prop('link').action).toBe(action);
   });
 
   it('renders a <CopyIcon /> with correct copyText for each data element', () => {

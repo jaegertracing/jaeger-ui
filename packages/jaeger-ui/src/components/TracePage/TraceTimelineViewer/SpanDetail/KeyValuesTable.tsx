@@ -63,8 +63,8 @@ function formatValue(value: any) {
   return <div className="ub-inline-block">{content}</div>;
 }
 
-export const LinkValue = (props: { link: Link; children: React.ReactNode }) =>
-  props.link.url ? (
+export const LinkValue = (props: { link: any; children: React.ReactNode }) => {
+  return props.link.url ? (
     <a href={props.link.url} title={props.link.text} target="_blank" rel="noopener noreferrer">
       {props.children} <Icon className="KeyValueTable--linkIcon" type="export" />
     </a>
@@ -73,6 +73,7 @@ export const LinkValue = (props: { link: Link; children: React.ReactNode }) =>
       {props.children} <Icon className="KeyValueTable--linkIcon" type="export" />
     </a>
   );
+};
 
 LinkValue.defaultProps = {
   title: '',
@@ -97,6 +98,7 @@ type KeyValuesTableProps = {
 
 export default function KeyValuesTable(props: KeyValuesTableProps) {
   const { data, linksGetter } = props;
+
   return (
     <div className="KeyValueTable u-simple-scrollbars">
       <table className="u-width-100">
@@ -104,6 +106,7 @@ export default function KeyValuesTable(props: KeyValuesTableProps) {
           {data.map((row, i) => {
             const jsonTable = formatValue(row.value);
             const links = linksGetter ? linksGetter(data, i) : null;
+
             let valueMarkup;
             if (links && links.length === 1) {
               valueMarkup = (
