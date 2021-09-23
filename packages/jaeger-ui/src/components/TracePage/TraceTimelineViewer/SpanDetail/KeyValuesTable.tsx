@@ -19,11 +19,20 @@ import { Dropdown, Icon, Menu } from 'antd';
 import CopyIcon from '../../../common/CopyIcon';
 
 import { TNil } from '../../../../types';
-import { KeyValuePair, Link } from '../../../../types/trace';
+import { KeyValuePair, Link, Span } from '../../../../types/trace';
 
 import './KeyValuesTable.css';
+import { getConfigValue } from '../../../../utils/config/get-config';
+
+type TTagsActions = {
+  icon: string;
+  title: string;
+  action: (tag: KeyValuePair, span: Span) => void;
+};
 
 const jsonObjectOrArrayStartRegex = /^(\[|\{)/;
+
+const tagsActions: TTagsActions[] = getConfigValue('tagsActions') || [];
 
 function tryParseJson(value: string) {
   // if the value is a string representing actual json object or array, then use json-markup
@@ -69,6 +78,23 @@ export const LinkValue = (props: { href: string; title?: string; children: React
   </a>
 );
 
+const DataRowContainer = (props: { children: React.ReactNode; row: KeyValuePair; span: Span }) => (
+  <div>
+    {props.children}
+    {tagsActions.map((tagAction: TTagsActions, i: number) => {
+      return (
+        <Icon
+          key={i}
+          type={tagAction.icon || 'link'}
+          title={tagAction.title}
+          className="KeyValueTable--optionalLinkIcon"
+          onClick={() => tagAction.action(props.row, props.span)}
+        />
+      );
+    })}
+  </div>
+);
+
 LinkValue.defaultProps = {
   title: '',
 };
@@ -88,10 +114,11 @@ const linkValueList = (links: Link[]) => (
 type KeyValuesTableProps = {
   data: KeyValuePair[];
   linksGetter: ((pairs: KeyValuePair[], index: number) => Link[]) | TNil;
+  span: Span;
 };
 
 export default function KeyValuesTable(props: KeyValuesTableProps) {
-  const { data, linksGetter } = props;
+  const { data, linksGetter, span } = props;
   return (
     <div className="KeyValueTable u-simple-scrollbars">
       <table className="u-width-100">
@@ -102,24 +129,28 @@ export default function KeyValuesTable(props: KeyValuesTableProps) {
             let valueMarkup;
             if (links && links.length === 1) {
               valueMarkup = (
-                <div>
+                <DataRowContainer row={row} span={span}>
                   <LinkValue href={links[0].url} title={links[0].text}>
                     {jsonTable}
                   </LinkValue>
-                </div>
+                </DataRowContainer>
               );
             } else if (links && links.length > 1) {
               valueMarkup = (
-                <div>
+                <DataRowContainer row={row} span={span}>
                   <Dropdown overlay={linkValueList(links)} placement="bottomRight" trigger={['click']}>
                     <a>
                       {jsonTable} <Icon className="KeyValueTable--linkIcon" type="profile" />
                     </a>
                   </Dropdown>
-                </div>
+                </DataRowContainer>
               );
             } else {
-              valueMarkup = jsonTable;
+              valueMarkup = (
+                <DataRowContainer span={span} row={row}>
+                  {jsonTable}
+                </DataRowContainer>
+              );
             }
             return (
               // `i` is necessary in the key because row.key can repeat

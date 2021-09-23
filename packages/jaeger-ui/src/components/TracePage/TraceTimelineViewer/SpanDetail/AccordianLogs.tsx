@@ -21,7 +21,7 @@ import IoIosArrowRight from 'react-icons/lib/io/ios-arrow-right';
 import AccordianKeyValues from './AccordianKeyValues';
 import { formatDuration } from '../utils';
 import { TNil } from '../../../../types';
-import { Log, KeyValuePair, Link } from '../../../../types/trace';
+import { Log, KeyValuePair, Link, Span } from '../../../../types/trace';
 
 import './AccordianLogs.css';
 
@@ -34,10 +34,21 @@ type AccordianLogsProps = {
   onToggle?: () => void;
   openedItems?: Set<Log>;
   timestamp: number;
+  span: Span;
 };
 
 export default function AccordianLogs(props: AccordianLogsProps) {
-  const { interactive, isOpen, linksGetter, logs, openedItems, onItemToggle, onToggle, timestamp } = props;
+  const {
+    interactive,
+    isOpen,
+    linksGetter,
+    logs,
+    openedItems,
+    onItemToggle,
+    onToggle,
+    timestamp,
+    span,
+  } = props;
   let arrow: React.ReactNode | null = null;
   let HeaderComponent: 'span' | 'a' = 'span';
   let headerProps: Object | null = null;
@@ -75,6 +86,7 @@ export default function AccordianLogs(props: AccordianLogsProps) {
               label={`${formatDuration(log.timestamp - timestamp)}`}
               linksGetter={linksGetter}
               onToggle={interactive && onItemToggle ? () => onItemToggle(log) : null}
+              span={span}
             />
           ))}
           <small className="AccordianLogs--footer">

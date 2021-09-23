@@ -20,7 +20,7 @@ import IoIosArrowRight from 'react-icons/lib/io/ios-arrow-right';
 import * as markers from './AccordianKeyValues.markers';
 import KeyValuesTable from './KeyValuesTable';
 import { TNil } from '../../../../types';
-import { KeyValuePair, Link } from '../../../../types/trace';
+import { KeyValuePair, Link, Span } from '../../../../types/trace';
 
 import './AccordianKeyValues.css';
 
@@ -33,6 +33,7 @@ type AccordianKeyValuesProps = {
   label: string;
   linksGetter: ((pairs: KeyValuePair[], index: number) => Link[]) | TNil;
   onToggle?: null | (() => void);
+  span: Span;
 };
 
 // export for tests
@@ -61,7 +62,7 @@ KeyValuesSummary.defaultProps = {
 };
 
 export default function AccordianKeyValues(props: AccordianKeyValuesProps) {
-  const { className, data, highContrast, interactive, isOpen, label, linksGetter, onToggle } = props;
+  const { className, data, highContrast, interactive, isOpen, label, linksGetter, onToggle, span } = props;
   const isEmpty = !Array.isArray(data) || !data.length;
   const iconCls = cx('u-align-icon', { 'AccordianKeyValues--emptyIcon': isEmpty });
   let arrow: React.ReactNode | null = null;
@@ -91,7 +92,7 @@ export default function AccordianKeyValues(props: AccordianKeyValuesProps) {
         </strong>
         {!isOpen && <KeyValuesSummary data={data} />}
       </div>
-      {isOpen && <KeyValuesTable data={data} linksGetter={linksGetter} />}
+      {isOpen && <KeyValuesTable data={data} linksGetter={linksGetter} span={span} />}
     </div>
   );
 }

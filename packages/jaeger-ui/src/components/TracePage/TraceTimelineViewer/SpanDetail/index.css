@@ -61,3 +61,8 @@ limitations under the License.
 .AccordianWarnings--label {
   color: #d36c08;
 }
+
+.SpanDetail--docsIcon {
+  margin-right: 0.3em;
+  color: #11939a;
+}

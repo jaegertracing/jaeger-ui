@@ -107,6 +107,7 @@ export default function SpanDetail(props: SpanDetailProps) {
             linksGetter={linksGetter}
             isOpen={isTagsOpen}
             onToggle={() => tagsToggle(spanID)}
+            span={span}
           />
           {process.tags && (
             <AccordianKeyValues
@@ -116,6 +117,7 @@ export default function SpanDetail(props: SpanDetailProps) {
               linksGetter={linksGetter}
               isOpen={isProcessOpen}
               onToggle={() => processToggle(spanID)}
+              span={span}
             />
           )}
         </div>
@@ -128,6 +130,7 @@ export default function SpanDetail(props: SpanDetailProps) {
             onToggle={() => logsToggle(spanID)}
             onItemToggle={logItem => logItemToggle(spanID, logItem)}
             timestamp={traceStartTime}
+            span={span}
           />
         )}
         {warnings && warnings.length > 0 && (
@@ -140,6 +143,7 @@ export default function SpanDetail(props: SpanDetailProps) {
             onToggle={() => warningsToggle(spanID)}
           />
         )}
+
         {references &&
           references.length > 0 &&
           (references.length > 1 || references[0].refType !== 'CHILD_OF') && (

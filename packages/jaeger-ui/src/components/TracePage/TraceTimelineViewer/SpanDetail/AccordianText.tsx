@@ -46,6 +46,7 @@ export default function AccordianText(props: AccordianTextProps) {
       role: 'switch',
     };
   }
+
   return (
     <div className={className || ''}>
       <div

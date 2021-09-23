@@ -63,9 +63,7 @@ export function createTestFunction(entry: any) {
   if (Array.isArray(entry)) {
     return (arg: any) => entry.indexOf(arg) > -1;
   }
-  /*
 
-  // kept on ice until #123 is implemented:
   if (entry instanceof RegExp) {
     return (arg: any) => entry.test(arg);
   }
@@ -73,7 +71,6 @@ export function createTestFunction(entry: any) {
     return entry;
   }
 
-  */
   if (entry == null) {
     return () => true;
   }
@@ -174,6 +171,7 @@ export function computeLinks(
     type = 'tags';
   }
   const result: { url: string; text: string }[] = [];
+
   linkPatterns.forEach(pattern => {
     if (pattern.type(type) && pattern.key(item.key) && pattern.value(item.value)) {
       const parameterValues: Record<string, any> = {};

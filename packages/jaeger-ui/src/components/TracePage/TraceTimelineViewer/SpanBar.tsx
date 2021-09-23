@@ -113,6 +113,7 @@ function SpanBar(props: TInnerProps) {
                 isOpen
                 logs={logGroups[positionKey]}
                 timestamp={traceStartTime}
+                span={span}
               />
             }
           >

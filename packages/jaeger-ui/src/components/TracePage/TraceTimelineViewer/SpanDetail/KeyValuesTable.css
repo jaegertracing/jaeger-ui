@@ -48,12 +48,23 @@ limitations under the License.
   visibility: hidden;
 }
 
+.KeyValueTable--row:not(:hover) .KeyValueTable--optionalLinkIcon {
+  visibility: hidden;
+}
+
 .KeyValueTable--row > td {
   padding: 0.25rem 0.5rem;
   vertical-align: top;
 }
 
-.KeyValueTable--linkIcon {
+.KeyValueTable--linkIcon .KeyValueTable--optionalLinkIcon {
   vertical-align: middle;
   font-weight: bold;
+  margin-left: 3px;
+}
+
+.KeyValueTable--optionalLinkIcon {
+  color: #11939a;
+  margin-left: 3px;
+  cursor: pointer;
 }
