@@ -40,14 +40,10 @@ type TLinksRV = { url: string; text: string }[];
 
 export function processTemplate(template: any, encodeFn: (unencoded: any) => string): ProcessedTemplate {
   if (typeof template !== 'string') {
-    /*
-
-    // kept on ice until #123 is implemented:
-    if (template && Array.isArray(template.parameters) && (typeof template.template === 'function')) {
+    if (template && Array.isArray(template.parameters) && typeof template.template === 'function') {
       return template;
     }
 
-    */
     throw new Error('Invalid template');
   }
   return {
@@ -63,17 +59,12 @@ export function createTestFunction(entry: any) {
   if (Array.isArray(entry)) {
     return (arg: any) => entry.indexOf(arg) > -1;
   }
-  /*
-
-  // kept on ice until #123 is implemented:
   if (entry instanceof RegExp) {
     return (arg: any) => entry.test(arg);
   }
   if (typeof entry === 'function') {
     return entry;
   }
-
-  */
   if (entry == null) {
     return () => true;
   }
