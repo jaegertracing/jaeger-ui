@@ -18,9 +18,6 @@ import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
 import { withRouter, RouteComponentProps } from 'react-router-dom';
 import _isEqual from 'lodash/isEqual';
-
-// import { History as RouterHistory, Location } from 'history';
-
 import memoizeOne from 'memoize-one';
 import { actions } from './duck';
 import ListView from './ListView';

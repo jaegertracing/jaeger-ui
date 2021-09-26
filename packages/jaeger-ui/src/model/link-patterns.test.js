@@ -46,9 +46,6 @@ describe('processTemplate()', () => {
     );
   });
 
-  /*
-  // kept on ice until #123 is implemented:
-
   it('correctly returns the same object when passing an already processed template', () => {
     const alreadyProcessed = {
       parameters: ['b'],
@@ -57,8 +54,6 @@ describe('processTemplate()', () => {
     const processedTemplate = processTemplate(alreadyProcessed, a => a);
     expect(processedTemplate).toBe(alreadyProcessed);
   });
-
-  */
 
   it('reports an error when passing an object that does not look like an already processed template', () => {
     expect(() =>
@@ -98,9 +93,6 @@ describe('createTestFunction()', () => {
     expect(testFn('otherValue')).toBe(false);
   });
 
-  /*
-  // kept on ice until #123 is implemented:
-
   it('accepts a regular expression', () => {
     const testFn = createTestFunction(/^my.*Value$/);
     expect(testFn('myValue')).toBe(true);
@@ -130,8 +122,6 @@ describe('createTestFunction()', () => {
     expect(mockCallback).toHaveBeenCalledTimes(4);
     expect(mockCallback).toHaveBeenCalledWith('otherValue');
   });
-
-  */
 
   it('accepts undefined', () => {
     const testFn = createTestFunction();

@@ -16,10 +16,11 @@ import * as React from 'react';
 import jsonMarkup from 'json-markup';
 import { Dropdown, Icon, Menu } from 'antd';
 
+import { connect } from 'react-redux';
 import CopyIcon from '../../../common/CopyIcon';
 
-import { TNil } from '../../../../types';
-import { KeyValuePair, Link } from '../../../../types/trace';
+import { ReduxState, TNil } from '../../../../types';
+import { KeyValuePair, Link, Trace } from '../../../../types/trace';
 
 import './KeyValuesTable.css';
 
@@ -63,13 +64,22 @@ function formatValue(value: any) {
   return <div className="ub-inline-block">{content}</div>;
 }
 
-export const LinkValue = (props: { link: any; children: React.ReactNode }) => {
+export const LinkValue = (props: {
+  link: any;
+  row: KeyValuePair;
+  trace?: Trace;
+  children: React.ReactNode;
+}) => {
   return props.link.url ? (
     <a href={props.link.url} title={props.link.text} target="_blank" rel="noopener noreferrer">
       {props.children} <Icon className="KeyValueTable--linkIcon" type="export" />
     </a>
   ) : (
-    <a onClick={props.link.action} title={props.link.text} role="button">
+    <a
+      onClick={event => props.link.action(event, props.row, props.trace)}
+      title={props.link.text}
+      role="button"
+    >
       {props.children} <Icon className="KeyValueTable--linkIcon" type="export" />
     </a>
   );
@@ -79,13 +89,15 @@ LinkValue.defaultProps = {
   title: '',
 };
 
-const linkValueList = (links: Link[]) => (
+const linkValueList = (links: Link[], row: KeyValuePair, trace?: Trace) => (
   <Menu>
     {links.map((link: Link, index) => (
       // `index` is necessary in the key because url can repeat
       // eslint-disable-next-line react/no-array-index-key
       <Menu.Item key={`${link.url || link.action}-${index}`}>
-        <LinkValue link={link}>{link.text}</LinkValue>
+        <LinkValue link={link} row={row} trace={trace}>
+          {link.text}
+        </LinkValue>
       </Menu.Item>
     ))}
   </Menu>
@@ -94,10 +106,11 @@ const linkValueList = (links: Link[]) => (
 type KeyValuesTableProps = {
   data: KeyValuePair[];
   linksGetter: ((pairs: KeyValuePair[], index: number) => Link[]) | TNil;
+  trace?: Trace;
 };
 
-export default function KeyValuesTable(props: KeyValuesTableProps) {
-  const { data, linksGetter } = props;
+const KeyValuesTable = (props: KeyValuesTableProps) => {
+  const { data, linksGetter, trace } = props;
 
   return (
     <div className="KeyValueTable u-simple-scrollbars">
@@ -105,19 +118,25 @@ export default function KeyValuesTable(props: KeyValuesTableProps) {
         <tbody className="KeyValueTable--body">
           {data.map((row, i) => {
             const jsonTable = formatValue(row.value);
-            const links = linksGetter ? linksGetter(data, i) : null;
+            const links = linksGetter ? linksGetter(data, i) : [];
 
             let valueMarkup;
-            if (links && links.length === 1) {
+            if (links.length === 1) {
               valueMarkup = (
                 <div>
-                  <LinkValue link={links[0]}>{jsonTable}</LinkValue>
+                  <LinkValue link={links[0]} row={row} trace={trace}>
+                    {jsonTable}
+                  </LinkValue>
                 </div>
               );
-            } else if (links && links.length > 1) {
+            } else if (links.length > 1) {
               valueMarkup = (
                 <div>
-                  <Dropdown overlay={linkValueList(links)} placement="bottomRight" trigger={['click']}>
+                  <Dropdown
+                    overlay={linkValueList(links, row, trace)}
+                    placement="bottomRight"
+                    trigger={['click']}
+                  >
                     <a>
                       {jsonTable} <Icon className="KeyValueTable--linkIcon" type="profile" />
                     </a>
@@ -147,4 +166,13 @@ export default function KeyValuesTable(props: KeyValuesTableProps) {
       </table>
     </div>
   );
+};
+
+// export for tests
+export function mapStateToProps(state: ReduxState, ownProps: KeyValuesTableProps) {
+  const traceID = window.location.pathname.split('/trace/')[1];
+
+  return { ...ownProps, trace: state.trace.traces[traceID].data };
 }
+
+export default connect(mapStateToProps)(KeyValuesTable);
