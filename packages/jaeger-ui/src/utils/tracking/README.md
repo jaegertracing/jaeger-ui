@@ -1,10 +1,32 @@
-# Google Analytics (GA) Tracking In Jaeger UI
+# App Analytics
 
-Page-views and errors are tracked in production when a GA tracking ID is provided in the UI config and error tracking is not disabled via the UI config. See the [documentation](http://jaeger.readthedocs.io/en/latest/deployment/#ui-configuration) for details on the UI config.
+App analytics (page views and errors) are supported in Jaeger UI through integration with Google Analytics or via customized plugins. The `tracking` section of the UI config must be provided. See the [documentation](https://www.jaegertracing.io/docs/latest/frontend-ui/) for details on the UI config.
 
 The page-view tracking is pretty basic, so details aren't provided. The GA tracking is configured with [App Tracking](https://developers.google.com/analytics/devguides/collection/analyticsjs/field-reference#apptracking) data. These fields, described [below](#app-tracking), can be used as a secondary dimension when viewing event data in GA. The error tracking is described, [below](#error-tracking).
 
-## App Tracking
+To enable custom plugin, one must use Javascript-version of the configuration and replace the `gaID` field with `customWebAnalytics`, e.g. in `UIconfig.js`:
+
+```javascript
+function UIConfig() {
+  return {
+     ...other properties
+     tracking: {
+       customWebAnalytics: function () {
+         return {
+           init: () => { /* initialization actions */ },
+           trackPageView: (pathname, search) => {},
+           trackError: (description) => {},
+           trackEvent: (category, action, labelOrValue, value) => {},
+           context: null,
+           isEnabled: () => false,
+         }
+       }
+     }
+  }
+}
+```
+
+## GA Tracking
 
 The following fields are sent for each GA session:
 
