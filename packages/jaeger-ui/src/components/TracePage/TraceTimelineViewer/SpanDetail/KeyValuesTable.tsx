@@ -109,7 +109,7 @@ type KeyValuesTableProps = {
   trace?: Trace;
 };
 
-const KeyValuesTable = (props: KeyValuesTableProps) => {
+export const KeyValuesTable = (props: KeyValuesTableProps) => {
   const { data, linksGetter, trace } = props;
 
   return (

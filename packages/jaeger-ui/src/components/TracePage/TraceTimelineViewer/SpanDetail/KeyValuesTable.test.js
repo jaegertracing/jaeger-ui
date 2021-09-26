@@ -15,10 +15,10 @@
 import React from 'react';
 import { shallow } from 'enzyme';
 import { Dropdown, Icon } from 'antd';
-
+import traceGenerator from '../../../../demo/trace-generators';
 import CopyIcon from '../../../common/CopyIcon';
 
-import KeyValuesTable, { LinkValue } from './KeyValuesTable';
+import { KeyValuesTable, LinkValue } from './KeyValuesTable';
 
 describe('LinkValue with url', () => {
   const link = {
@@ -41,17 +41,17 @@ describe('LinkValue with url', () => {
 });
 
 describe('LinkValue with action', () => {
-  const action = jest.fn();
   const link = {
     text: 'titleValue',
-    action,
+    action: jest.fn(),
   };
 
   const childrenText = 'childrenTextValue';
   const wrapper = shallow(<LinkValue link={link}>{childrenText}</LinkValue>);
 
   it('renders as expected', () => {
-    expect(wrapper.find('a').prop('onClick')).toBe(action);
+    wrapper.find('a').simulate('click');
+    expect(link.action).toHaveBeenCalled();
     expect(wrapper.find('a').prop('title')).toBe(link.text);
     expect(wrapper.find('a').text()).toMatch(/childrenText/);
   });
@@ -60,6 +60,7 @@ describe('LinkValue with action', () => {
 describe('<KeyValuesTable>', () => {
   let wrapper;
 
+  const trace = traceGenerator.trace({ numberOfSpans: 1 });
   const data = [
     { key: 'span.kind', value: 'client', expected: 'client' },
     { key: 'omg', value: 'mos-def', expected: 'mos-def' },
@@ -69,7 +70,7 @@ describe('<KeyValuesTable>', () => {
   ];
 
   beforeEach(() => {
-    wrapper = shallow(<KeyValuesTable data={data} />);
+    wrapper = shallow(<KeyValuesTable data={data} trace={trace} />);
   });
 
   it('renders without exploding', () => {
