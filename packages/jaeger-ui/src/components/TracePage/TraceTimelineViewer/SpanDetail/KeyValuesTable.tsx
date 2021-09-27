@@ -65,22 +65,23 @@ function formatValue(value: any) {
 }
 
 export const LinkValue = (props: {
-  link: any;
+  link: Link;
   row: KeyValuePair;
   trace?: Trace;
   children: React.ReactNode;
+  icon?: string;
 }) => {
   return props.link.url ? (
     <a href={props.link.url} title={props.link.text} target="_blank" rel="noopener noreferrer">
-      {props.children} <Icon className="KeyValueTable--linkIcon" type="export" />
+      {props.children} <Icon className="KeyValueTable--linkIcon" type={props.icon || 'export'} />
     </a>
   ) : (
     <a
-      onClick={event => props.link.action(event, props.row, props.trace)}
+      onClick={event => props.link.action!(event, props.row, props.trace!)}
       title={props.link.text}
       role="button"
     >
-      {props.children} <Icon className="KeyValueTable--linkIcon" type="export" />
+      {props.children} <Icon className="KeyValueTable--linkIcon" type={props.icon || 'tool'} />
     </a>
   );
 };

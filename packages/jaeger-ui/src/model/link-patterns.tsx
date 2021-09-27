@@ -35,6 +35,7 @@ type ProcessedLinkPattern = {
   text: ProcessedTemplate;
   parameters: string[];
   action?: LinkAction;
+  icon?: string;
 };
 
 type TLinksRV = { url: string; text: string }[];

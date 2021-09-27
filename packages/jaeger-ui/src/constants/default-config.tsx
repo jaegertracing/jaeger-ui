@@ -32,7 +32,6 @@ export default deepFreeze(
         {
           type: 'tags',
           key: 'component',
-          // url: 'https://test/#{component}',
           action: (e: any, key: string, trace: Trace) => console.log('aaaaaaa', key, trace),
           text: 'ggggg-#{component}',
         },
