@@ -69,11 +69,10 @@ export const LinkValue = (props: {
   row: KeyValuePair;
   trace: Trace;
   children: React.ReactNode;
-  icon?: string;
 }) => {
   return props.link.url ? (
     <a href={props.link.url} title={props.link.text} target="_blank" rel="noopener noreferrer">
-      {props.children} <Icon className="KeyValueTable--linkIcon" type={props.icon || 'export'} />
+      {props.children} <Icon className="KeyValueTable--linkIcon" type={props.link.icon || 'export'} />
     </a>
   ) : (
     <a
@@ -81,7 +80,7 @@ export const LinkValue = (props: {
       title={props.link.text}
       role="button"
     >
-      {props.children} <Icon className="KeyValueTable--linkIcon" type={props.icon || 'tool'} />
+      {props.children} <Icon className="KeyValueTable--linkIcon" type={props.link.icon || 'tool'} />
     </a>
   );
 };

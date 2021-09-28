@@ -34,6 +34,7 @@ export default deepFreeze(
           key: 'component',
           action: (e: any, key: string, trace: Trace) => console.log('aaaaaaa', key, trace),
           text: 'ggggg-#{component}',
+          icon: '',
         },
       ],
       qualityMetrics: {

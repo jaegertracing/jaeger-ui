@@ -28,6 +28,7 @@ export type Link = {
   url: string;
   text: string;
   action?: LinkAction;
+  icon?: string;
 };
 
 export type Log = {

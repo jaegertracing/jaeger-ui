@@ -88,6 +88,7 @@ export function processLinkPattern(pattern: any): ProcessedLinkPattern | TNil {
       action: pattern.action,
       text,
       parameters: _uniq(url ? url.parameters.concat(text.parameters) : text.parameters),
+      icon: pattern.icon,
     };
   } catch (error) {
     // eslint-disable-next-line no-console
@@ -194,6 +195,7 @@ export function computeLinks(
           url: pattern.url && callTemplate(pattern.url, parameterValues),
           text: callTemplate(pattern.text, parameterValues),
           action: pattern.action,
+          icon: pattern.icon,
         });
       }
     }
