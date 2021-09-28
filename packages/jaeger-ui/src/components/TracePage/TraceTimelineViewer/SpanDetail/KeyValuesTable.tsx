@@ -67,7 +67,7 @@ function formatValue(value: any) {
 export const LinkValue = (props: {
   link: Link;
   row: KeyValuePair;
-  trace?: Trace;
+  trace: Trace;
   children: React.ReactNode;
   icon?: string;
 }) => {
@@ -77,7 +77,7 @@ export const LinkValue = (props: {
     </a>
   ) : (
     <a
-      onClick={event => props.link.action!(event, props.row, props.trace!)}
+      onClick={event => props.link.action!(event, props.row, props.trace)}
       title={props.link.text}
       role="button"
     >
@@ -90,7 +90,7 @@ LinkValue.defaultProps = {
   title: '',
 };
 
-const linkValueList = (links: Link[], row: KeyValuePair, trace?: Trace) => (
+const linkValueList = (links: Link[], row: KeyValuePair, trace: Trace) => (
   <Menu>
     {links.map((link: Link, index) => (
       // `index` is necessary in the key because url can repeat
@@ -107,10 +107,9 @@ const linkValueList = (links: Link[], row: KeyValuePair, trace?: Trace) => (
 type KeyValuesTableProps = {
   data: KeyValuePair[];
   linksGetter: ((pairs: KeyValuePair[], index: number) => Link[]) | TNil;
-  trace?: Trace;
 };
 
-export const KeyValuesTable = (props: KeyValuesTableProps) => {
+export const KeyValuesTable = (props: KeyValuesTableProps & { trace: Trace }) => {
   const { data, linksGetter, trace } = props;
 
   return (
