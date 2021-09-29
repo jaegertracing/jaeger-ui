@@ -77,6 +77,9 @@ const identity = (a: any): typeof a => a;
 
 export function processLinkPattern(pattern: any): ProcessedLinkPattern | TNil {
   try {
+    if (pattern.url && pattern.action) throw new Error('Link pattern may contain a URL or an action');
+    if (!pattern.url && !pattern.action) throw new Error('Link pattern must contain a URL or an action');
+
     const url = pattern.url && processTemplate(pattern.url, encodeURIComponent);
     const text = processTemplate(pattern.text, identity);
     return {
