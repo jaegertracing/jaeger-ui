@@ -22,7 +22,7 @@ export type KeyValuePair = {
   value: any;
 };
 
-export type LinkAction = (e: any, row: KeyValuePair, trace: Trace) => void;
+export type LinkAction = (e: any, row: KeyValuePair, trace?: Trace) => void;
 
 export type Link = {
   url: string;

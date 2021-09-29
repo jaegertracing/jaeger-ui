@@ -16,13 +16,13 @@ import * as React from 'react';
 import jsonMarkup from 'json-markup';
 import { Dropdown, Icon, Menu } from 'antd';
 
-import { connect } from 'react-redux';
 import CopyIcon from '../../../common/CopyIcon';
 
-import { ReduxState, TNil } from '../../../../types';
+import { TNil } from '../../../../types';
 import { KeyValuePair, Link, Trace } from '../../../../types/trace';
 
 import './KeyValuesTable.css';
+import { TraceContext } from '../../index';
 
 const jsonObjectOrArrayStartRegex = /^(\[|\{)/;
 
@@ -67,7 +67,7 @@ function formatValue(value: any) {
 export const LinkValue = (props: {
   link: Link;
   row: KeyValuePair;
-  trace: Trace;
+  trace?: Trace;
   children: React.ReactNode;
 }) => {
   return props.link.url ? (
@@ -89,7 +89,7 @@ LinkValue.defaultProps = {
   title: '',
 };
 
-const linkValueList = (links: Link[], row: KeyValuePair, trace: Trace) => (
+const linkValueList = (links: Link[], row: KeyValuePair, trace?: Trace) => (
   <Menu>
     {links.map((link: Link, index) => (
       // `index` is necessary in the key because url can repeat
@@ -108,70 +108,65 @@ type KeyValuesTableProps = {
   linksGetter: ((pairs: KeyValuePair[], index: number) => Link[]) | TNil;
 };
 
-export const KeyValuesTable = (props: KeyValuesTableProps & { trace: Trace }) => {
-  const { data, linksGetter, trace } = props;
+export default function KeyValuesTable(props: KeyValuesTableProps) {
+  const { data, linksGetter } = props;
 
   return (
-    <div className="KeyValueTable u-simple-scrollbars">
-      <table className="u-width-100">
-        <tbody className="KeyValueTable--body">
-          {data.map((row, i) => {
-            const jsonTable = formatValue(row.value);
-            const links = linksGetter ? linksGetter(data, i) : [];
+    <TraceContext.Consumer>
+      {(trace?: Trace) => (
+        <div className="KeyValueTable u-simple-scrollbars">
+          <table className="u-width-100">
+            <tbody className="KeyValueTable--body">
+              {data.map((row, i) => {
+                const jsonTable = formatValue(row.value);
+                const links = linksGetter ? linksGetter(data, i) : [];
 
-            let valueMarkup;
-            if (links.length === 1) {
-              valueMarkup = (
-                <div>
-                  <LinkValue link={links[0]} row={row} trace={trace}>
-                    {jsonTable}
-                  </LinkValue>
-                </div>
-              );
-            } else if (links.length > 1) {
-              valueMarkup = (
-                <div>
-                  <Dropdown
-                    overlay={linkValueList(links, row, trace)}
-                    placement="bottomRight"
-                    trigger={['click']}
-                  >
-                    <a>
-                      {jsonTable} <Icon className="KeyValueTable--linkIcon" type="profile" />
-                    </a>
-                  </Dropdown>
-                </div>
-              );
-            } else {
-              valueMarkup = jsonTable;
-            }
-            return (
-              // `i` is necessary in the key because row.key can repeat
-              // eslint-disable-next-line react/no-array-index-key
-              <tr className="KeyValueTable--row" key={`${row.key}-${i}`}>
-                <td className="KeyValueTable--keyColumn">{row.key}</td>
-                <td>{valueMarkup}</td>
-                <td className="KeyValueTable--copyColumn">
-                  <CopyIcon
-                    className="KeyValueTable--copyIcon"
-                    copyText={JSON.stringify(row, null, 2)}
-                    tooltipTitle="Copy JSON"
-                  />
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
+                let valueMarkup;
+                if (links.length === 1) {
+                  valueMarkup = (
+                    <div>
+                      <LinkValue link={links[0]} row={row} trace={trace}>
+                        {jsonTable}
+                      </LinkValue>
+                    </div>
+                  );
+                } else if (links.length > 1) {
+                  valueMarkup = (
+                    <div>
+                      <Dropdown
+                        overlay={linkValueList(links, row, trace)}
+                        placement="bottomRight"
+                        trigger={['click']}
+                      >
+                        <a>
+                          {jsonTable} <Icon className="KeyValueTable--linkIcon" type="profile" />
+                        </a>
+                      </Dropdown>
+                    </div>
+                  );
+                } else {
+                  valueMarkup = jsonTable;
+                }
+                return (
+                  // `i` is necessary in the key because row.key can repeat
+                  // eslint-disable-next-line react/no-array-index-key
+                  <tr className="KeyValueTable--row" key={`${row.key}-${i}`}>
+                    <td className="KeyValueTable--keyColumn">{row.key}</td>
+                    <td>{valueMarkup}</td>
+                    <td className="KeyValueTable--copyColumn">
+                      <CopyIcon
+                        className="KeyValueTable--copyIcon"
+                        copyText={JSON.stringify(row, null, 2)}
+                        tooltipTitle="Copy JSON"
+                      />
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </TraceContext.Consumer>
   );
-};
-
-// export for tests
-export function mapStateToProps(state: ReduxState, ownProps: KeyValuesTableProps) {
-  const traceID = window.location.pathname.split('/trace/')[1];
-
-  return { ...ownProps, trace: state.trace.traces[traceID].data };
 }
-
-export default connect(mapStateToProps)(KeyValuesTable);

@@ -13,12 +13,13 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { shallow, mount } from 'enzyme';
 import { Dropdown, Icon } from 'antd';
 import traceGenerator from '../../../../demo/trace-generators';
 import CopyIcon from '../../../common/CopyIcon';
 
-import { KeyValuesTable, LinkValue } from './KeyValuesTable';
+import KeyValuesTable, { LinkValue } from './KeyValuesTable';
+import { TraceContext } from '../../index';
 
 describe('LinkValue with url', () => {
   const link = {
@@ -58,8 +59,6 @@ describe('LinkValue with action', () => {
 });
 
 describe('<KeyValuesTable>', () => {
-  let wrapper;
-
   const trace = traceGenerator.trace({ numberOfSpans: 1 });
   const data = [
     { key: 'span.kind', value: 'client', expected: 'client' },
@@ -69,16 +68,24 @@ describe('<KeyValuesTable>', () => {
     { key: 'jsonkey', value: JSON.stringify({ hello: 'world' }) },
   ];
 
-  beforeEach(() => {
-    wrapper = shallow(<KeyValuesTable data={data} trace={trace} />);
-  });
-
   it('renders without exploding', () => {
+    const wrapper = mount(
+      <TraceContext.Provider value={trace}>
+        <KeyValuesTable data={data} />
+      </TraceContext.Provider>
+    );
+
     expect(wrapper).toBeDefined();
     expect(wrapper.find('.KeyValueTable').length).toBe(1);
   });
 
   it('renders a table row for each data element', () => {
+    const wrapper = mount(
+      <TraceContext.Provider value={trace}>
+        <KeyValuesTable data={data} />
+      </TraceContext.Provider>
+    );
+
     const trs = wrapper.find('tr');
     expect(trs.length).toBe(data.length);
     trs.forEach((tr, i) => {
@@ -87,19 +94,23 @@ describe('<KeyValuesTable>', () => {
   });
 
   it('renders a single link correctly', () => {
-    wrapper = shallow(<KeyValuesTable data={data} />);
-
-    wrapper.setProps({
-      linksGetter: (array, i) =>
-        array[i].key === 'span.kind'
-          ? [
-              {
-                url: `http://example.com/?kind=${encodeURIComponent(array[i].value)}`,
-                text: `More info about ${array[i].value}`,
-              },
-            ]
-          : [],
-    });
+    const wrapper = mount(
+      <TraceContext.Provider value={trace}>
+        <KeyValuesTable
+          data={data}
+          linksGetter={(array, i) =>
+            array[i].key === 'span.kind'
+              ? [
+                  {
+                    url: `http://example.com/?kind=${encodeURIComponent(array[i].value)}`,
+                    text: `More info about ${array[i].value}`,
+                  },
+                ]
+              : []
+          }
+        />
+      </TraceContext.Provider>
+    );
 
     const anchor = wrapper.find(LinkValue);
     expect(anchor).toHaveLength(1);
@@ -118,16 +129,29 @@ describe('<KeyValuesTable>', () => {
 
   it('renders multiple links correctly', () => {
     const action = jest.fn();
-    wrapper.setProps({
-      linksGetter: (array, i) =>
-        array[i].key === 'span.kind'
-          ? [
-              { url: `http://example.com/1?kind=${encodeURIComponent(array[i].value)}`, text: 'Example 1' },
-              { url: `http://example.com/2?kind=${encodeURIComponent(array[i].value)}`, text: 'Example 2' },
-              { action, text: 'Example 3' },
-            ]
-          : [],
-    });
+
+    const wrapper = mount(
+      <TraceContext.Provider value={trace}>
+        <KeyValuesTable
+          data={data}
+          linksGetter={(array, i) =>
+            array[i].key === 'span.kind'
+              ? [
+                  {
+                    url: `http://example.com/1?kind=${encodeURIComponent(array[i].value)}`,
+                    text: 'Example 1',
+                  },
+                  {
+                    url: `http://example.com/2?kind=${encodeURIComponent(array[i].value)}`,
+                    text: 'Example 2',
+                  },
+                  { action, text: 'Example 3' },
+                ]
+              : []
+          }
+        />
+      </TraceContext.Provider>
+    );
     const dropdown = wrapper.find(Dropdown);
     const menu = shallow(dropdown.prop('overlay'));
     const anchors = menu.find(LinkValue);
@@ -152,6 +176,12 @@ describe('<KeyValuesTable>', () => {
   });
 
   it('renders a <CopyIcon /> with correct copyText for each data element', () => {
+    const wrapper = mount(
+      <TraceContext.Provider value={trace}>
+        <KeyValuesTable data={data} />
+      </TraceContext.Provider>
+    );
+
     const copyIcons = wrapper.find(CopyIcon);
     expect(copyIcons.length).toBe(data.length);
     copyIcons.forEach((copyIcon, i) => {
@@ -161,6 +191,12 @@ describe('<KeyValuesTable>', () => {
   });
 
   it('renders a span value containing numeric string correctly', () => {
+    const wrapper = mount(
+      <TraceContext.Provider value={trace}>
+        <KeyValuesTable data={data} />
+      </TraceContext.Provider>
+    );
+
     const el = wrapper.find('.ub-inline-block');
     expect(el.length).toBe(data.length);
     el.forEach((valueDiv, i) => {

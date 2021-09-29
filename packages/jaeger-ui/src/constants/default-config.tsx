@@ -16,7 +16,6 @@ import deepFreeze from 'deep-freeze';
 
 import { FALLBACK_DAG_MAX_NUM_SERVICES } from './index';
 import getVersion from '../utils/version/get-version';
-import { Trace } from '../types/trace';
 
 const { version } = require('../../package.json');
 
@@ -28,15 +27,7 @@ export default deepFreeze(
         dagMaxNumServices: FALLBACK_DAG_MAX_NUM_SERVICES,
         menuEnabled: true,
       },
-      linkPatterns: [
-        {
-          type: 'tags',
-          key: 'component',
-          action: (e: any, key: string, trace: Trace) => console.log('aaaaaaa', key, trace),
-          text: 'ggggg-#{component}',
-          icon: '',
-        },
-      ],
+      linkPatterns: [],
       qualityMetrics: {
         menuEnabled: false,
         menuLabel: 'Trace Quality',

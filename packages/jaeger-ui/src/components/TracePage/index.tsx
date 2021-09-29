@@ -120,6 +120,8 @@ export function makeShortcutCallbacks(adjRange: (start: number, end: number) => 
   return _mapValues(shortcutConfig, getHandler);
 }
 
+export const TraceContext = React.createContext<Trace | undefined>(undefined);
+
 // export for tests
 export class TracePageImpl extends React.PureComponent<TProps, TState> {
   state: TState;
@@ -413,15 +415,17 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
     }
 
     return (
-      <div>
-        {archiveEnabled && (
-          <ArchiveNotifier acknowledge={this.acknowledgeArchive} archivedState={archiveTraceState} />
-        )}
-        <div className="Tracepage--headerSection" ref={this.setHeaderHeight}>
-          <TracePageHeader {...headerProps} />
+      <TraceContext.Provider value={trace.data}>
+        <div>
+          {archiveEnabled && (
+            <ArchiveNotifier acknowledge={this.acknowledgeArchive} archivedState={archiveTraceState} />
+          )}
+          <div className="Tracepage--headerSection" ref={this.setHeaderHeight}>
+            <TracePageHeader {...headerProps} />
+          </div>
+          {headerHeight ? <section style={{ paddingTop: headerHeight }}>{view}</section> : null}
         </div>
-        {headerHeight ? <section style={{ paddingTop: headerHeight }}>{view}</section> : null}
-      </div>
+      </TraceContext.Provider>
     );
   }
 }
