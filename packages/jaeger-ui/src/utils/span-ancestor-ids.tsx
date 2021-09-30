@@ -22,7 +22,11 @@ function getFirstAncestor(span: Span): Span | TNil {
   return _get(
     _find(
       span.references,
-      ({ span: ref, refType }) => ref && ref.spanID && (refType === 'CHILD_OF' || refType === 'FOLLOWS_FROM')
+      ({ span: ref, refType }) =>
+        ref &&
+        ref.spanID &&
+        ref.spanID !== span.spanID &&
+        (refType === 'CHILD_OF' || refType === 'FOLLOWS_FROM')
     ),
     'span'
   );
