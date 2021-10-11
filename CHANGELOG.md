@@ -1,5 +1,11 @@
 # Releases
 
+## v1.17.0 (Oct 6, 2021)
+
+### Enhancements
+
+- Enable regexes and functions in link patterns ([@yoave23](https://github.com/yoave23) in [#817](https://github.com/jaegertracing/jaeger-ui/pull/817))
+
 ## v1.16.0 (Sep 6, 2021)
 
 ### Enhancements
