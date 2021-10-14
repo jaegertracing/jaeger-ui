@@ -29,5 +29,8 @@ limitations under the License.
   min-height: calc(100% - var(--nav-height));
   position: absolute;
   right: 0;
+}
+
+.Page--content--no-embedded {
   top: var(--nav-height);
 }
