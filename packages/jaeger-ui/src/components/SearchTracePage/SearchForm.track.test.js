@@ -25,6 +25,7 @@ import {
   CATEGORY_OPERATION,
   CATEGORY_SORTBY,
   CATEGORY_TAGS,
+  CATEGORY_SERVICE,
 } from './SearchForm.track';
 import { FORM_CHANGE_ACTION_TYPE } from '../../constants/search-form';
 import { trackEvent } from '../../utils/tracking';
@@ -39,8 +40,8 @@ describe('GA tracking', () => {
 
   it('sends form input to GA', () => {
     trackEvent.mockClear();
-    trackFormInput(0, '', {}, 0, 0, '');
-    expect(trackEvent.mock.calls.length).toBe(6);
+    trackFormInput(0, '', {}, 0, 0, '', '');
+    expect(trackEvent.mock.calls.length).toBe(7);
     const categoriesTracked = trackEvent.mock.calls.map(call => call[0]).sort();
     expect(categoriesTracked).toEqual(
       [
@@ -50,6 +51,7 @@ describe('GA tracking', () => {
         CATEGORY_MAX_DURATION,
         CATEGORY_MIN_DURATION,
         CATEGORY_LOOKBACK,
+        CATEGORY_SERVICE,
       ].sort()
     );
   });
