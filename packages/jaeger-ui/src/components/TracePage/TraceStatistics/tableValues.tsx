@@ -348,6 +348,7 @@ function valueFirstDropdown(selectedTagKey: string, trace: Trace) {
       searchColor: '',
       parentElement: 'none',
       colorToPercent: 'tranparent',
+      traceID: '',
     };
     tableSpan = buildOneColumn(tableSpan);
     allTableValues.push(tableSpan);
@@ -405,6 +406,7 @@ function valueFirstDropdown(selectedTagKey: string, trace: Trace) {
         searchColor: 'transparent',
         parentElement: '',
         colorToPercent: 'rgb(248,248,248)',
+        traceID: '',
       };
       tableSpanOTHERS = buildOneColumn(tableSpanOTHERS);
       allTableValues.push(tableSpanOTHERS);
@@ -476,6 +478,7 @@ function buildDetail(
       searchColor: '',
       parentElement: parentName,
       colorToPercent: 'rgb(248,248,248)',
+      traceID: '',
     };
     buildOneColumnValue = buildOneColumn(buildOneColumnValue);
     newColumnValues.push(buildOneColumnValue);
@@ -542,6 +545,7 @@ function generateDetailRest(allColumnValues: ITableSpan[], selectedTagKeySecond:
           searchColor: '',
           parentElement: allColumnValues[i].name,
           colorToPercent: 'rgb(248,248,248)',
+          traceID: '',
         };
         buildOneColumnValue = buildOneColumn(buildOneColumnValue);
         newTable.push(buildOneColumnValue);

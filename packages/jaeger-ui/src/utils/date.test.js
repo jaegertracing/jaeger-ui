@@ -12,7 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { formatDuration, ONE_MILLISECOND, ONE_SECOND, ONE_MINUTE, ONE_HOUR, ONE_DAY } from './date.tsx';
+import {
+  formatDuration,
+  timeConversion,
+  ONE_MILLISECOND,
+  ONE_SECOND,
+  ONE_MINUTE,
+  ONE_HOUR,
+  ONE_DAY,
+} from './date.tsx';
 
 describe('formatDuration', () => {
   it('keeps microseconds the same', () => {
@@ -57,5 +65,32 @@ describe('formatDuration', () => {
   it('displays times of 0', () => {
     const input = 0;
     expect(formatDuration(input)).toBe('0μs');
+  });
+});
+
+describe('timeConversion', () => {
+  it('displays time in nanoseconds', () => {
+    const input = 999;
+    expect(timeConversion(input)).toBe('999μs');
+  });
+  it('displays time in milliseconds ', () => {
+    const input = 5000;
+    expect(timeConversion(input)).toBe('5ms');
+  });
+  it('displays time in seconds', () => {
+    const input = 5000000;
+    expect(timeConversion(input)).toBe('5Sec');
+  });
+  it('displays time in mintues', () => {
+    const input = 120000000;
+    expect(timeConversion(input)).toBe('2Min');
+  });
+  it('displays time in hours', () => {
+    const input = 7200000000;
+    expect(timeConversion(input)).toBe('2Hrs');
+  });
+  it('displays time in days', () => {
+    const input = 172800000000;
+    expect(timeConversion(input)).toBe('2Days');
   });
 });

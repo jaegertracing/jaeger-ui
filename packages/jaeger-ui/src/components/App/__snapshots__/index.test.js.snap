@@ -63,19 +63,16 @@ exports[`JaegerUIApp does not explode 1`] = `
         <Redirect
           exact={true}
           path="/"
-          push={false}
           to="/search"
         />
         <Redirect
           exact={true}
           path=""
-          push={false}
           to="/search"
         />
         <Redirect
           exact={true}
           path="/"
-          push={false}
           to="/search"
         />
         <Route

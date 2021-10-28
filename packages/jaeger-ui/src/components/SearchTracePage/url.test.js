@@ -17,6 +17,10 @@ import * as reactRouterDom from 'react-router-dom';
 import { MAX_LENGTH } from '../DeepDependencies/Graph/DdgNodeContent/constants';
 import { ROUTE_PATH, getUrl, getUrlState, isSameQuery, matches } from './url';
 
+jest.mock('react-router-dom', () => ({
+  matchPath: jest.fn(),
+}));
+
 describe('SearchTracePage/url', () => {
   const span0 = 'span-0';
   const span1 = 'span-1';
