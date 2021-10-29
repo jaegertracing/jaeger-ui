@@ -46,6 +46,7 @@ export function trackFormInput(
   trackEvent(CATEGORY_MIN_DURATION, minDuration ? ACTION_SET : ACTION_CLEAR);
   trackEvent(CATEGORY_TAGS, tags ? ACTION_SET : ACTION_CLEAR);
   trackEvent(CATEGORY_LOOKBACK, lookback);
+
   trackEvent(CATEGORY_SERVICE, serviceName);
 }
 
