@@ -52,7 +52,7 @@ export class PageImpl extends React.Component<TProps> {
 
   render() {
     const { embedded } = this.props;
-    const contentCls = cx({ 'Page--content': !embedded });
+    const contentCls = cx({ 'Page--content': true, 'Page--content--no-embedded': !embedded });
     return (
       <div>
         <Helmet title="Jaeger UI" />

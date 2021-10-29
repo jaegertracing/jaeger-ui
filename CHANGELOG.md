@@ -1,10 +1,39 @@
 # Releases
 
-## Next (unreleased)
+## v1.17.0 (Oct 6, 2021)
 
 ### Enhancements
 
+- Enable regexes and functions in link patterns ([@yoave23](https://github.com/yoave23) in [#817](https://github.com/jaegertracing/jaeger-ui/pull/817))
+
+## v1.16.0 (Sep 6, 2021)
+
+### Enhancements
+
+- Add Table View for a trace ([@vvvprabhakar](https://github.com/vvvprabhakar) in [#781](https://github.com/jaegertracing/jaeger-ui/pull/781))
+
 ### Fixes
+
+- Fix trace detail page's back button disappeared ((@shwin0901)[https://github.com/shwin0901] in [#805](https://github.com/jaegertracing/jaeger-ui/pull/805))
+- Various dependency upgrades by `dependabot`
+
+## v1.15.0 (Aug 4, 2021)
+
+### Fixes
+
+- Make favicon background transparent ([@MaxTaggart](https://github.com/MaxTaggart) in [#786](https://github.com/jaegertracing/jaeger-ui/pull/786))
+- Fix deep dependency header overlap in page header ([@stardotcode](https://github.com/stardotcode) in [#731](https://github.com/jaegertracing/jaeger-ui/pull/731) [#782](https://github.com/jaegertracing/jaeger-ui/pull/782))
+
+## v1.14.0 (June 4, 2021)
+
+### Enhancements
+
+- Make search panel more compact, button more visible ([@meenal06](https://github.com/meenal06) in [#724](https://github.com/jaegertracing/jaeger-ui/pull/724))
+
+### Fixes
+
+- Add null check for span.logs in search/filter-spans ([@achesin](https://github.com/achesin) in [#734](https://github.com/jaegertracing/jaeger-ui/pull/734))
+- Several updates to dependencies.
 
 ## v1.13.0 (February 20, 2021)
 
