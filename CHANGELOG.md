@@ -10,7 +10,7 @@
 
 ### Fixes
 
-- Fix deep dependency graph not show in uiEmbed=v0 mode ([@leroy-chen](https://github.com/leroy-chen) in [#768](https://github.com/jaegertracing/jaeger-ui/pull/768))
+- Fix deep dependency graph not showing in uiEmbed=v0 mode ([@leroy-chen](https://github.com/leroy-chen) in [#768](https://github.com/jaegertracing/jaeger-ui/pull/768))
 
 ## v1.17.0 (Oct 6, 2021)
 
