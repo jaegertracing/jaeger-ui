@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Uber Technologies, Inc.
+// Copyright (c) 2021 The Jaeger Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,25 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { reducer as formReducer } from 'redux-form';
+import React from 'react';
+import { shallow } from 'enzyme';
+import MonitorATMPage from '.';
 
-import config from './config';
-import dependencies from './dependencies';
-import ddg from './ddg';
-import pathAgnosticDecorations from './path-agnostic-decorations';
-import embedded from './embedded';
-import services from './services';
-import metrics from './metrics';
-import trace from './trace';
+describe('<MonitorATMPage>', () => {
+  let wrapper;
 
-export default {
-  config,
-  dependencies,
-  ddg,
-  embedded,
-  pathAgnosticDecorations,
-  services,
-  metrics,
-  trace,
-  form: formReducer,
-};
+  beforeEach(() => {
+    wrapper = shallow(<MonitorATMPage />);
+  });
+
+  it('does not explode', () => {
+    expect(wrapper.length).toBe(1);
+  });
+
+  it('Component is displayed', () => {
+    expect(wrapper).toMatchSnapshot();
+  });
+});

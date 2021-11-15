@@ -149,4 +149,49 @@ describe('actions/jaeger-api', () => {
     jaegerApiActions.fetchDependencies();
     expect(called.verify()).toBeTruthy();
   });
+
+  it('@JAEGER_API/FETCH_ALL_SERVICE_METRICS should return the promise', () => {
+    const { payload } = jaegerApiActions.fetchAllServiceMetrics('serviceName', query);
+    expect(isPromise(payload)).toBeTruthy();
+  });
+
+  it('@JAEGER_API/FETCH_ALL_SERVICE_METRICS should fetch service metrics by name', () => {
+    mock.expects('fetchMetrics');
+    mock.expects('fetchMetrics');
+    mock.expects('fetchMetrics');
+    mock.expects('fetchMetrics');
+    mock.expects('fetchMetrics');
+    jaegerApiActions.fetchAllServiceMetrics('serviceName', query);
+    expect(() => mock.verify()).not.toThrow();
+  });
+
+  it('@JAEGER_API/FETCH_AGGREGATED_SERVICE_METRICS should return the promise', () => {
+    const { payload } = jaegerApiActions.fetchAggregatedServiceMetrics('serviceName', query);
+    expect(isPromise(payload)).toBeTruthy();
+  });
+
+  it('@JAEGER_API/FETCH_AGGREGATED_SERVICE_METRICS should fetch service metrics by name', () => {
+    mock.expects('fetchMetrics');
+    mock.expects('fetchMetrics');
+    mock.expects('fetchMetrics');
+    jaegerApiActions.fetchAggregatedServiceMetrics('serviceName', query);
+    expect(() => mock.verify()).not.toThrow();
+  });
+});
+
+describe('allSettled', () => {
+  it('validate responses', async () => {
+    const res = await jaegerApiActions.allSettled([
+      Promise.resolve(1),
+      // eslint-disable-next-line prefer-promise-reject-errors
+      Promise.reject(2),
+      Promise.resolve(3),
+    ]);
+
+    expect(res).toEqual([
+      { status: 'fulfilled', value: 1 },
+      { status: 'rejected', reason: 2 },
+      { status: 'fulfilled', value: 3 },
+    ]);
+  });
 });

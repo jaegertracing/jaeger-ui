@@ -201,3 +201,44 @@ describe('getMessageFromError()', () => {
     });
   });
 });
+
+describe('fetchMetrics', () => {
+  it('GETs metrics query', () => {
+    fetchMock.mockReset();
+    const metricsType = 'latencies';
+    const serviceName = ['serviceName'];
+    const query = {
+      quantile: 95,
+    };
+    fetchMock.mockReturnValue(
+      Promise.resolve({
+        status: 200,
+        json: () => Promise.resolve({ someObj: {} }),
+      })
+    );
+
+    JaegerAPI.fetchMetrics(metricsType, serviceName, query);
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      `${DEFAULT_API_ROOT}metrics/${metricsType}?service=${serviceName}&${queryString.stringify(query)}`,
+      defaultOptions
+    );
+  });
+
+  it('fetchMetrics() should add quantile to response', async () => {
+    const metricsType = 'latencies';
+    const serviceName = ['serviceName'];
+    const query = {
+      quantile: 95,
+    };
+
+    fetchMock.mockReturnValue(
+      Promise.resolve({
+        status: 200,
+        json: () => Promise.resolve({ someObj: {} }),
+      })
+    );
+
+    const resp = await JaegerAPI.fetchMetrics(metricsType, serviceName, query);
+    expect(resp.quantile).toBe(query.quantile);
+  });
+});
