@@ -1,0 +1,90 @@
+/*
+Copyright (c) 2021 The Jaeger Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+th.header-item {
+  background: rgba(216, 216, 216, 0.7);
+  border-left: 1px solid rgba(216, 216, 216, 1);
+  border-top: 1px solid rgba(216, 216, 216, 1);
+  border-bottom: 1px solid rgba(216, 216, 216, 1);
+  border-radius: 0px;
+  height: 40px;
+  font-size: 14px;
+  padding: 0 10px !important;
+  border-radius: 0px !important;
+}
+
+th.header-item:last-child {
+  border-right: 1px solid rgba(216, 216, 216, 1);
+}
+
+th.header-item span {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+td.header-item {
+  height: 50px;
+  border-bottom: 1px solid rgba(233, 233, 233, 1);
+  font-size: 14px;
+  font-weight: 500;
+  padding: 0 10px !important;
+}
+
+.table-row:hover {
+  background: rgba(247, 247, 247, 1);
+}
+
+.ant-table-tbody > tr.ant-table-row-level-0:hover > td {
+  background: unset;
+}
+
+.ant-progress-inner {
+  border-radius: 0px;
+  background: rgba(199, 224, 224, 1);
+}
+
+.impact {
+  padding-top: 3px;
+  padding-right: 20px;
+  height: 20px;
+}
+
+.impact .ant-progress-bg {
+  height: 12px !important;
+}
+
+.table-graph-avg {
+  align-self: center;
+  margin-left: 12px;
+}
+
+.column-container {
+  display: flex;
+}
+
+.impact-tooltip .ant-tooltip-inner {
+  word-break: keep-all;
+}
+
+.view-trace-button {
+  width: 200px;
+  height: 30px;
+}
+
+.ops-table-error-placeholder {
+  vertical-align: middle;
+  text-align: center;
+}

@@ -26,8 +26,8 @@ export default function reduxFormFieldAdapter({
   isValidatedInput = false,
 }: {
   AntInputComponent: React.ComponentType;
-  onChangeAdapter: (evt: React.ChangeEvent) => any;
-  isValidatedInput: boolean;
+  onChangeAdapter?: (evt: React.ChangeEvent) => any;
+  isValidatedInput?: boolean;
 }) {
   return function _reduxFormFieldAdapter(props: any) {
     const {

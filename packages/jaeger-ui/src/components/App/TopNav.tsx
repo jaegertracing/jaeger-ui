@@ -24,6 +24,7 @@ import * as deepDependencies from '../DeepDependencies/url';
 import * as qualityMetrics from '../QualityMetrics/url';
 import * as searchUrl from '../SearchTracePage/url';
 import * as diffUrl from '../TraceDiff/url';
+import * as monitorATMUrl from '../Monitor/url';
 import { ReduxState } from '../../types';
 import { ConfigMenuItem, ConfigMenuGroup } from '../../types/config';
 import { getConfigValue } from '../../utils/config/get-config';
@@ -68,6 +69,14 @@ if (getConfigValue('qualityMetrics.menuEnabled')) {
   });
 }
 
+if (getConfigValue('monitor.menuEnabled')) {
+  NAV_LINKS.push({
+    to: monitorATMUrl.getUrl(),
+    matches: monitorATMUrl.matches,
+    text: 'Monitor',
+  });
+}
+
 function getItem(item: ConfigMenuItem) {
   const { label, anchorTarget, url } = item;
   const link = (
@@ -75,6 +84,7 @@ function getItem(item: ConfigMenuItem) {
       {label}
     </a>
   );
+
   return (
     <Menu.Item key={label} disabled={!url}>
       {url ? link : label}
