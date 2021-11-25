@@ -19,15 +19,18 @@ import './LoadingIndicator.css';
 
 type LoadingIndicatorProps = {
   centered?: boolean;
+  vcentered?: boolean;
   className?: string;
   small?: boolean;
+  style?: React.CSSProperties;
 };
 
 export default function LoadingIndicator(props: LoadingIndicatorProps) {
-  const { centered, className, small, ...rest } = props;
+  const { centered, vcentered, className, small, ...rest } = props;
   const cls = `
     LoadingIndicator
     ${centered ? 'is-centered' : ''}
+    ${vcentered ? 'is-vcentered' : ''}
     ${small ? 'is-small' : ''}
     ${className || ''}
   `;

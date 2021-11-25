@@ -21,14 +21,15 @@ import { Config } from './config';
 import { EmbeddedState } from './embedded';
 import { SearchQuery } from './search';
 import TDdgState from './TDdgState';
-import TNil from './TNil';
-import IWebAnalytics from './tracking';
+import tNil from './TNil';
+import iWebAnalytics from './tracking';
 import { Trace } from './trace';
 import TTraceDiffState from './TTraceDiffState';
 import TTraceTimeline from './TTraceTimeline';
+import { MetricsReduxState } from './metrics';
 
-export type TNil = TNil;
-export type IWebAnalytics = IWebAnalytics;
+export type TNil = tNil;
+export type IWebAnalytics = iWebAnalytics;
 
 export type FetchedState = 'FETCH_DONE' | 'FETCH_ERROR' | 'FETCH_LOADING';
 
@@ -70,4 +71,5 @@ export type ReduxState = {
   };
   traceDiff: TTraceDiffState;
   traceTimeline: TTraceTimeline;
+  metrics: MetricsReduxState;
 };

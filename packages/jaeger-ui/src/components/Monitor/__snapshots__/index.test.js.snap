@@ -1,0 +1,3 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`<MonitorATMPage> Component is displayed 1`] = `<Connect(ReduxForm) />`;
