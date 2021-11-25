@@ -201,6 +201,9 @@ function calculateContent(trace: Trace, span: Span, allSpans: Span[], resultValu
                 overlayWithout[i].relativeStartTime +
                 overlayWithout[i].duration -
                 earliestLongerAsParent.relativeStartTime;
+              if (overlayWithout[i].duration < 0) {
+                overlayWithout[i].duration = 0;
+              }
             }
           }
 
