@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "jaeger-ui",
-  "version": "1.17.0",
+  "version": "1.18.0",
   "main": "src/index.js",
   "license": "Apache-2.0",
   "homepage": ".",
@@ -116,6 +116,7 @@
     "test": "CI=1 react-app-rewired test --env=jsdom --color"
   },
   "jest": {
+    "globalSetup": "./jest.global-setup.js",
     "collectCoverageFrom": [
       "!src/setup*.js",
       "!src/utils/DraggableManager/demo/*.tsx",

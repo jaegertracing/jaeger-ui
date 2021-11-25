@@ -41,6 +41,11 @@ limitations under the License.
   margin-right: auto;
 }
 
+.LoadingIndicator.is-vcentered {
+  display: block;
+  margin: auto;
+}
+
 .LoadingIndicator.is-small {
   font-size: 0.7em;
 }
