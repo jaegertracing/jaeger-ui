@@ -60,6 +60,10 @@ exports[`JaegerUIApp does not explode 1`] = `
           component={[Function]}
           path="/quality-metrics"
         />
+        <Route
+          component={[Function]}
+          path="/monitor"
+        />
         <Redirect
           exact={true}
           path="/"

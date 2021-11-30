@@ -1,5 +1,17 @@
 # Releases
 
+## Next (unreleased)
+
+### Enhancements
+
+### Fixes
+
+## v1.18.0 (Nov 6, 2021)
+
+### Fixes
+
+- Fix deep dependency graph not showing in uiEmbed=v0 mode ([@leroy-chen](https://github.com/leroy-chen) in [#768](https://github.com/jaegertracing/jaeger-ui/pull/768))
+
 ## v1.17.0 (Oct 6, 2021)
 
 ### Enhancements

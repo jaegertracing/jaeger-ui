@@ -36,7 +36,12 @@ export function getMessageFromError(errData, status) {
 function getJSON(url, options = {}) {
   const { query = null, ...init } = options;
   init.credentials = 'same-origin';
-  const queryStr = query ? `?${queryString.stringify(query)}` : '';
+  let queryStr = '';
+
+  if (query) {
+    queryStr = `?${typeof query === 'string' ? query : queryString.stringify(query)}`;
+  }
+
   return fetch(`${url}${queryStr}`, init).then(response => {
     if (response.status < 400) {
       return response.json();
@@ -111,6 +116,13 @@ const JaegerAPI = {
   },
   searchTraces(query) {
     return getJSON(`${this.apiRoot}traces`, { query });
+  },
+  fetchMetrics(metricType, serviceNameList, query) {
+    const servicesName = serviceNameList.map(serviceName => `service=${serviceName}`).join(',');
+
+    return getJSON(`${this.apiRoot}metrics/${metricType}`, {
+      query: `${servicesName}&${queryString.stringify(query)}`,
+    }).then(d => ({ ...d, quantile: query.quantile }));
   },
 };
 

@@ -1,0 +1,74 @@
+/*
+Copyright (c) 2021 The Jaeger Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+.service-view-container {
+  padding: 1rem 1.375rem;
+}
+
+.service-selector-header {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.operations-metrics-text {
+  margin-top: 17px;
+  margin-bottom: 14px;
+  font-size: 14;
+  font-weight: 400;
+}
+
+.timeframe-selector {
+  display: inline-flex;
+  justify-content: flex-end;
+  position: absolute;
+  bottom: 14px;
+}
+
+.operation-table-block {
+  margin-top: 54px;
+}
+
+.table-header {
+  display: inline-block;
+  margin-bottom: 15px;
+  font-size: 18;
+  font-weight: 700;
+}
+
+.select-a-service-input {
+  font-size: 14px;
+  width: 100%;
+}
+
+.select-a-timeframe-input {
+  font-size: 14px;
+  width: 128px;
+}
+
+.over-the-last {
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.select-operation-column {
+  display: inline-flex;
+  justify-content: flex-end;
+}
+
+.select-operation-input {
+  font-size: 14px;
+  width: 218px;
+}
