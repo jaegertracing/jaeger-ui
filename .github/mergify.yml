@@ -1,8 +1,0 @@
-pull_request_rules:
-  - name: automatic merge for dependabot pull requests
-    conditions:
-      - author~=^dependabot(|-preview)\[bot\]$
-    actions:
-      merge:
-        method: squash
-        commit_message: title+body

@@ -1,17 +1,25 @@
 name: "Unit Tests"
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - master
+      - main
+
+  pull_request:
+    branches:
+      - master
+      - main
 
 jobs:
   unit-tests:
-    strategy:
-      fail-fast: true
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v2.4.0
       - uses: actions/setup-node@v2.5.0
         with:
-          node-version: '10'
+          node-version: "10"
       - name: install yarn
         run: |
           curl -o- -L https://yarnpkg.com/install.sh | bash
