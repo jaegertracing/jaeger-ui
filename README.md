@@ -81,9 +81,9 @@ See the [configuration guide](https://www.jaegertracing.io/docs/latest/frontend-
 
 [Apache 2.0 License](./LICENSE).
 
-[ci-img]: https://github.com/jaegertracing/jaeger-ui/workflows/Unit%20Tests/badge.svg?branch=master
+[ci-img]: https://github.com/jaegertracing/jaeger-ui/workflows/Unit%20Tests/badge.svg?branch=main
 [ci]: https://github.com/jaegertracing/jaeger-ui/actions
-[cov-img]: https://codecov.io/gh/jaegertracing/jaeger-ui/branch/master/graph/badge.svg
+[cov-img]: https://codecov.io/gh/jaegertracing/jaeger-ui/branch/main/graph/badge.svg
 [cov]: https://codecov.io/gh/jaegertracing/jaeger-ui
 [aio-docs]: https://www.jaegertracing.io/docs/latest/getting-started/
 [fossa-img]: https://app.fossa.io/api/projects/git%2Bgithub.com%2Fjaegertracing%2Fjaeger-ui.svg?type=shield
