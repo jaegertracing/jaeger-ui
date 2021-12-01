@@ -6,6 +6,17 @@
 
 ### Fixes
 
+## v1.19.0 (Dec 1, 2021)
+
+### Enhancements
+
+- "Monitor" tab for service health metrics ([@th3M1ke](https://github.com/th3M1ke) in [#815](https://github.com/jaegertracing/jaeger-ui/pull/815)). See [#2954](https://github.com/jaegertracing/jaeger/issues/2954) for more details.
+
+### Fixes
+
+- Endless loop in TraceStatistics View ([@vvvprabhakar](https://github.com/vvvprabhakar) in [#843](https://github.com/jaegertracing/jaeger-ui/pull/843))
+- Fix searching spans in a trace page ([@w0wka91](https://github.com/w0wka91) in [#837](https://github.com/jaegertracing/jaeger-ui/pull/837))
+
 ## v1.18.0 (Nov 6, 2021)
 
 ### Fixes
