@@ -35,7 +35,7 @@ The following fields are sent for each GA session:
 - [Application ID](https://developers.google.com/analytics/devguides/collection/analyticsjs/field-reference#appId)
   - Set to `github.com/jaegertracing/jaeger-ui`
 - [Application Version](https://developers.google.com/analytics/devguides/collection/analyticsjs/field-reference#appVersion)
-  - Example: `0.0.1 | github.com/jaegertracing/jaeger-ui | 8c50c6c | 2f +2 -12 | master`
+  - Example: `0.0.1 | github.com/jaegertracing/jaeger-ui | 8c50c6c | 2f +2 -12 | main`
   - A dynamic value set to: `<version> | <git remote> | <short SHA> | <diff shortstat> | <branch name>`
   - Truncated to 96 characters
   - **version** - `package.json#version`
