@@ -388,7 +388,7 @@
 
 ## Changes released in Jaeger 1.8.2 and earlier
 
-These changes are listed in chronological order by the date they were merged into master.
+These changes are listed in chronological order by the date they were merged into mainz.
 
 ### [#263](https://github.com/jaegertracing/jaeger-ui/pull/263) Embedded components (SearchTraces and Tracepage ) ([@aljesusg](https://github.com/aljesusg))
 
