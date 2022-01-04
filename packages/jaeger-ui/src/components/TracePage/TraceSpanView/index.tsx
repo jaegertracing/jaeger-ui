@@ -21,6 +21,7 @@ import './index.css';
 import { TNil } from '../../../types';
 import { Trace, Span } from '../../../types/trace';
 import { timeConversion } from '../../../utils/date';
+import prefixUrl from '../../../utils/prefix-url';
 
 const Option = Select.Option;
 
@@ -143,7 +144,11 @@ export default class TraceSpanView extends Component<Props, State> {
         dataIndex: 'spanID',
         render: (text: any, record: Span) => {
           return (
-            <a href={`/trace/${record.traceID}?uiFind=${text}`} target="_blank" rel="noopener noreferrer">
+            <a
+              href={prefixUrl(`/trace/${record.traceID}?uiFind=${text}`)}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               {text}
             </a>
           );
