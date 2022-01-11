@@ -6,6 +6,12 @@
 
 ### Fixes
 
+## v1.20.0 (Jan 11, 2022)
+
+### Fixes
+
+- Respect BASE_URL in Trace Tabular View ([@caizixian](https://github.com/caizixian) in [#861](https://github.com/jaegertracing/jaeger-ui/pull/861))
+
 ## v1.19.0 (Dec 1, 2021)
 
 ### Enhancements
