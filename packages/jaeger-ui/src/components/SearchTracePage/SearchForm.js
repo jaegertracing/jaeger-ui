@@ -378,7 +378,7 @@ export class SearchFormImpl extends React.PureComponent {
             }
           >
             <Row gutter={16}>
-              <Col className="gutter-row" span={12}>
+              <Col className="gutter-row" span={14}>
                 <Field
                   name="startDate"
                   type="date"
@@ -388,7 +388,7 @@ export class SearchFormImpl extends React.PureComponent {
                 />
               </Col>
 
-              <Col className="gutter-row" span={12}>
+              <Col className="gutter-row" span={10}>
                 <Field name="startDateTime" type="time" component={AdaptedInput} props={{ disabled }} />
               </Col>
             </Row>
@@ -414,7 +414,7 @@ export class SearchFormImpl extends React.PureComponent {
             }
           >
             <Row gutter={16}>
-              <Col className="gutter-row" span={12}>
+              <Col className="gutter-row" span={14}>
                 <Field
                   name="endDate"
                   type="date"
@@ -424,7 +424,7 @@ export class SearchFormImpl extends React.PureComponent {
                 />
               </Col>
 
-              <Col className="gutter-row" span={12}>
+              <Col className="gutter-row" span={10}>
                 <Field name="endDateTime" type="time" component={AdaptedInput} props={{ disabled }} />
               </Col>
             </Row>
