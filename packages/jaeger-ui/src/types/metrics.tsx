@@ -97,6 +97,7 @@ export type ServiceOpsMetrics = {
 export type ServiceMetricsObject = {
   serviceName: string;
   quantile: number;
+  max: number;
   metricPoints: Points[];
 };
 
