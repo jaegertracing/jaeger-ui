@@ -82,17 +82,19 @@ function fetchServiceMetricsDone(
       if (promiseResult.status === 'fulfilled') {
         const metrics = promiseResult.value;
         if (metrics.metrics[0]) {
+          let max = 0;
           const metric: ServiceMetricsObject = {
             serviceName: metrics.metrics[0].labels[0].value,
             quantile: metrics.quantile,
+            max: 0,
             metricPoints: metrics.metrics[0].metricPoints.map((p: MetricPointObject) => {
               let y;
               try {
                 y = parseFloat(p.gaugeValue.doubleValue.toFixed(2));
+                max = y > max ? y : max;
               } catch (e) {
                 y = null;
               }
-
               return {
                 x: new Date(p.timestamp).getTime(),
                 y,
@@ -100,6 +102,7 @@ function fetchServiceMetricsDone(
             }),
           };
 
+          metric.max = max;
           if (metrics.name === 'service_latencies') {
             if (serviceMetrics[metrics.name] === null) {
               serviceMetrics[metrics.name] = [];

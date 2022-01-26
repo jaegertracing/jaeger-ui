@@ -127,6 +127,7 @@ exports[`<MonitorATMServicesView> ATM snapshot test 1`] = `
         metricsData={
           Array [
             Object {
+              "max": 189.86,
               "metricPoints": Array [
                 Object {
                   "x": 1631271823806,
@@ -141,6 +142,7 @@ exports[`<MonitorATMServicesView> ATM snapshot test 1`] = `
               "serviceName": "cartservice",
             },
             Object {
+              "max": 189.86,
               "metricPoints": Array [
                 Object {
                   "x": 1631271823806,
@@ -155,6 +157,7 @@ exports[`<MonitorATMServicesView> ATM snapshot test 1`] = `
               "serviceName": "cartservice",
             },
             Object {
+              "max": 189.86,
               "metricPoints": Array [
                 Object {
                   "x": 1631271823806,
@@ -187,6 +190,7 @@ exports[`<MonitorATMServicesView> ATM snapshot test 1`] = `
         marginClassName="error-rate-margins"
         metricsData={
           Object {
+            "max": 1,
             "metricPoints": Array [
               Object {
                 "x": 1631274747520,
@@ -222,6 +226,7 @@ exports[`<MonitorATMServicesView> ATM snapshot test 1`] = `
         marginClassName="request-margins"
         metricsData={
           Object {
+            "max": 0.05,
             "metricPoints": Array [
               Object {
                 "x": 1631271823806,

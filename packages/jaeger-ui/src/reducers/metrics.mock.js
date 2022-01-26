@@ -729,6 +729,7 @@ const originInitialState = {
 
 const serviceMetrics = {
   service_call_rate: {
+    max: 0.05,
     metricPoints: [
       {
         x: 1631271823806,
@@ -743,6 +744,7 @@ const serviceMetrics = {
     serviceName: 'cartservice',
   },
   service_error_rate: {
+    max: 1,
     metricPoints: [
       {
         x: 1631274747520,
@@ -758,6 +760,7 @@ const serviceMetrics = {
   },
   service_latencies: [
     {
+      max: 189.86,
       metricPoints: [
         {
           x: 1631271823806,
@@ -772,6 +775,7 @@ const serviceMetrics = {
       serviceName: 'cartservice',
     },
     {
+      max: 189.86,
       metricPoints: [
         {
           x: 1631271823806,
@@ -786,6 +790,7 @@ const serviceMetrics = {
       serviceName: 'cartservice',
     },
     {
+      max: 189.86,
       metricPoints: [
         {
           x: 1631271823806,
@@ -803,6 +808,7 @@ const serviceMetrics = {
 };
 const serviceMetricsWithNulls = {
   service_call_rate: {
+    max: 0.05,
     metricPoints: [
       {
         x: 1631271823806,
@@ -817,6 +823,7 @@ const serviceMetricsWithNulls = {
     serviceName: 'cartservice',
   },
   service_error_rate: {
+    max: 1,
     metricPoints: [
       {
         x: 1631274747520,
@@ -832,6 +839,7 @@ const serviceMetricsWithNulls = {
   },
   service_latencies: [
     {
+      max: 0,
       metricPoints: [
         {
           x: 1631271823806,
@@ -846,6 +854,7 @@ const serviceMetricsWithNulls = {
       serviceName: 'cartservice',
     },
     {
+      max: 189.86,
       metricPoints: [
         {
           x: 1631271823806,
@@ -860,6 +869,7 @@ const serviceMetricsWithNulls = {
       serviceName: 'cartservice',
     },
     {
+      max: 189.86,
       metricPoints: [
         {
           x: 1631271823806,
