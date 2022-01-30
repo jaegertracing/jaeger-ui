@@ -171,6 +171,7 @@ exports[`<MonitorATMServicesView> ATM snapshot test 1`] = `
           ]
         }
         name="Latency, ms"
+        selectedTimeFrame={3600000}
         showHorizontalLines={true}
         showLegend={true}
         width={300}
@@ -202,6 +203,7 @@ exports[`<MonitorATMServicesView> ATM snapshot test 1`] = `
           }
         }
         name="Error rate, %"
+        selectedTimeFrame={3600000}
         width={300}
         yDomain={
           Array [
@@ -237,6 +239,7 @@ exports[`<MonitorATMServicesView> ATM snapshot test 1`] = `
           }
         }
         name="Request rate, req/s"
+        selectedTimeFrame={3600000}
         showHorizontalLines={true}
         width={300}
       />

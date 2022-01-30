@@ -251,6 +251,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
               showLegend
               marginClassName="latency-margins"
               showHorizontalLines
+              selectedTimeFrame={selectedTimeFrame}
             />
           </Col>
           <Col span={8}>
@@ -264,6 +265,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
               marginClassName="error-rate-margins"
               color="#CD513A"
               yDomain={[0, 100]}
+              selectedTimeFrame={selectedTimeFrame}
             />
           </Col>
           <Col span={8}>
@@ -277,6 +279,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
               showHorizontalLines
               color="#4795BA"
               marginClassName="request-margins"
+              selectedTimeFrame={selectedTimeFrame}
             />
           </Col>
         </Row>

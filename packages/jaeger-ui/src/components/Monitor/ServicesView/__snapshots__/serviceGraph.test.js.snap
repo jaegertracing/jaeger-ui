@@ -80,6 +80,12 @@ exports[`<ServiceGraph> Base graph should be displayed  1`] = `
     }
     onMouseLeave={[Function]}
     width={300}
+    xDomain={
+      Array [
+        1466420890000,
+        1466424490000,
+      ]
+    }
   >
     <XAxis
       attr="x"
@@ -194,6 +200,12 @@ exports[`<ServiceGraph> Base graph with custom color should be displayed 1`] = `
     }
     onMouseLeave={[Function]}
     width={300}
+    xDomain={
+      Array [
+        1466420890000,
+        1466424490000,
+      ]
+    }
   >
     <XAxis
       attr="x"
@@ -308,6 +320,12 @@ exports[`<ServiceGraph> Base graph with horizontal lines should be displayed 1`]
     }
     onMouseLeave={[Function]}
     width={300}
+    xDomain={
+      Array [
+        1466420890000,
+        1466424490000,
+      ]
+    }
   >
     <HorizontalGridLines
       attr="y"
@@ -426,6 +444,12 @@ exports[`<ServiceGraph> Base graph with legends should be displayed 1`] = `
     }
     onMouseLeave={[Function]}
     width={300}
+    xDomain={
+      Array [
+        1466420890000,
+        1466424490000,
+      ]
+    }
   >
     <XAxis
       attr="x"
@@ -561,6 +585,12 @@ exports[`<ServiceGraph> Crosshair map test 1`] = `
     }
     onMouseLeave={[Function]}
     width={300}
+    xDomain={
+      Array [
+        1466420890000,
+        1466424490000,
+      ]
+    }
   >
     <XAxis
       attr="x"
