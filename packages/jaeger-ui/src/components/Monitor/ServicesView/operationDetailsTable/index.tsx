@@ -34,6 +34,48 @@ type TState = {
   hoveredRowKey: number;
 };
 
+type TDuration = {
+  mseconds: number;
+  seconds: number;
+  minutes: number;
+  hours: number;
+  days: number;
+};
+
+function msToTime(durationInMs: number): string {
+  const milliseconds = durationInMs % 1000;
+  const seconds = Math.floor((durationInMs / 1000) % 60);
+  const minutes = Math.floor((durationInMs / (1000 * 60)) % 60);
+  const hours = Math.floor((durationInMs / (1000 * 60 * 60)) % 24);
+  const days = Math.floor((durationInMs / (1000 * 60 * 60 * 24)) % 24);
+
+  const durationObj: TDuration = {
+    mseconds: milliseconds,
+    seconds: seconds < 1 ? 0 + seconds : seconds,
+    minutes: minutes < 1 ? 0 + minutes : minutes,
+    hours: hours < 1 ? 0 + hours : hours,
+    days: days < 1 ? 0 + days : days,
+  };
+
+  if (durationObj.days > 0) {
+    return `${durationObj.days} day${durationObj.days === 1 ? '' : 's'}`;
+  }
+
+  if (durationObj.hours > 0) {
+    return `${durationObj.hours} hour${durationObj.hours === 1 ? '' : 's'}`;
+  }
+
+  if (durationObj.minutes > 0) {
+    return `${durationObj.minutes} min`;
+  }
+
+  if (durationObj.seconds > 0) {
+    return `${durationObj.seconds} sec`;
+  }
+
+  return `${durationObj.mseconds} ms`;
+}
+
 export class OperationTableDetails extends React.PureComponent<TProps, TState> {
   state = {
     hoveredRowKey: -1,
@@ -73,7 +115,7 @@ export class OperationTableDetails extends React.PureComponent<TProps, TState> {
             />
             <div className="table-graph-avg">
               {typeof value === 'number' && row.dataPoints.service_operation_latencies.length > 0
-                ? `${value} ms`
+                ? msToTime(value)
                 : ''}
             </div>
           </div>
