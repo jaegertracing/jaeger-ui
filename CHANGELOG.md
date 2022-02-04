@@ -6,6 +6,12 @@
 
 ### Fixes
 
+## v1.20.1 (2022-02-04)
+
+### Fixes
+
+- Widen date input to avoid clipping, fixes #864 ([@bobrik](https://github.com/bobrik) in [#867](https://github.com/jaegertracing/jaeger-ui/pull/867))
+
 ## v1.20.0 (Jan 11, 2022)
 
 ### Fixes
