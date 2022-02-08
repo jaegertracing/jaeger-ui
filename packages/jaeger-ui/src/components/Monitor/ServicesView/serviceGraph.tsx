@@ -161,7 +161,7 @@ export class ServiceGraphImpl extends React.PureComponent<TProps> {
       }
 
       const pixelPerNumber = 6;
-      const minNumberNumbersToDisplay = 3;
+      const minNumberNumbersToDisplay = 2;
       const additionalPixelWidth =
         (Math.round(maxValue).toString(10).length - minNumberNumbersToDisplay) * pixelPerNumber;
 
