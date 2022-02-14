@@ -40,6 +40,9 @@ describe('<MonitorATMServicesView>', () => {
   const mockFetchServices = jest.fn();
   const mockFetchAllServiceMetrics = jest.fn();
   const mockFetchAggregatedServiceMetrics = jest.fn();
+  beforeAll(() => {
+    Date.now = jest.fn(() => 1466424490000);
+  });
 
   beforeEach(() => {
     wrapper = shallow(
@@ -54,6 +57,8 @@ describe('<MonitorATMServicesView>', () => {
 
   afterEach(() => {
     wrapper = null;
+    // dateSpy.mockRestore();
+
     jest.clearAllMocks();
   });
 

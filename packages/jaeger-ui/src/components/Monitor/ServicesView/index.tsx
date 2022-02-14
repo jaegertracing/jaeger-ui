@@ -171,6 +171,8 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
 
   render() {
     const { services, metrics, selectedTimeFrame, servicesLoading } = this.props;
+    const currentTime = Date.now();
+    const xDomain = [currentTime - selectedTimeFrame, currentTime];
 
     if (servicesLoading) {
       return <LoadingIndicator vcentered centered />;
@@ -251,7 +253,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
               showLegend
               marginClassName="latency-margins"
               showHorizontalLines
-              selectedTimeFrame={selectedTimeFrame}
+              xDomain={xDomain}
             />
           </Col>
           <Col span={8}>
@@ -265,7 +267,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
               marginClassName="error-rate-margins"
               color="#CD513A"
               yDomain={[0, 100]}
-              selectedTimeFrame={selectedTimeFrame}
+              xDomain={xDomain}
             />
           </Col>
           <Col span={8}>
@@ -279,7 +281,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
               showHorizontalLines
               color="#4795BA"
               marginClassName="request-margins"
-              selectedTimeFrame={selectedTimeFrame}
+              xDomain={xDomain}
             />
           </Col>
         </Row>

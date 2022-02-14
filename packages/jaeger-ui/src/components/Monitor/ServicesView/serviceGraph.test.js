@@ -25,19 +25,11 @@ const props = {
   loading: true,
   marginClassName: '',
   crosshairValues: [],
-  selectedTimeFrame: 3600000,
 };
 
 describe('<ServiceGraph>', () => {
   let wrapper;
-  let dateSpy;
-  beforeAll(() => {
-    const mockDate = new Date(1466424490000);
-    dateSpy = jest.spyOn(global, 'Date').mockImplementation(() => mockDate);
-  });
-  afterAll(() => {
-    dateSpy.mockRestore();
-  });
+
   beforeEach(() => {
     wrapper = shallow(<ServiceGraph {...props} />);
   });
