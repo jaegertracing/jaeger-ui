@@ -57,7 +57,6 @@ describe('<MonitorATMServicesView>', () => {
 
   afterEach(() => {
     wrapper = null;
-    // dateSpy.mockRestore();
 
     jest.clearAllMocks();
   });
