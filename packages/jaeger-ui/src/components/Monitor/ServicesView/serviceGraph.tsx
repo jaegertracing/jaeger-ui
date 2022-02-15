@@ -26,7 +26,7 @@ import {
 } from 'react-vis';
 import LoadingIndicator from '../../common/LoadingIndicator';
 import { ServiceMetricsObject, Points } from '../../../types/metrics';
-
+import { timeConversion } from '../../../utils/date';
 import './serviceGraph.css';
 import { ApiError } from '../../../types/api-error';
 
@@ -167,7 +167,7 @@ export class ServiceGraphImpl extends React.PureComponent<TProps> {
 
       return (
         <XYPlot
-          margin={{ bottom: 25, left: 40 + (additionalPixelWidth < 0 ? 0 : additionalPixelWidth) }}
+          margin={{ bottom: 25, left: 50 }}
           onMouseLeave={() => this.setState({ crosshairValues: [] })}
           width={width}
           height={this.height - 74}
@@ -175,7 +175,7 @@ export class ServiceGraphImpl extends React.PureComponent<TProps> {
         >
           {showHorizontalLines ? <HorizontalGridLines /> : null}
           <XAxis tickFormat={tickFormat} tickTotal={Math.floor(width / 60)} />
-          <YAxis />
+          <YAxis tickFormat={(timeInMS: number) => timeConversion(timeInMS * 1000)} />
           {this.renderLines()}
           <Crosshair values={this.state.crosshairValues}>
             <div style={{ width: 140 }}>
