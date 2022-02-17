@@ -103,7 +103,7 @@ const getTimeUnitByMetricsData = (serviceLatencies: ServiceMetricsObject | Servi
   }
 
   return getSuitableShortTermTimeUnit(maxValue * 1000);
-}
+};
 
 // export for tests
 export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, StateType> {
@@ -187,8 +187,6 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
     const { selectedService, services } = this.props;
     return selectedService || store.get('lastAtmSearchService') || services[0];
   }
-
-
 
   render() {
     const { services, metrics, selectedTimeFrame, servicesLoading } = this.props;
