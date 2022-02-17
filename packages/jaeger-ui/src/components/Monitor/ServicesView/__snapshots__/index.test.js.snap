@@ -177,6 +177,7 @@ exports[`<MonitorATMServicesView> ATM snapshot test 1`] = `
         showHorizontalLines={true}
         showLegend={true}
         width={300}
+        yAxisTickFormat={[Function]}
       />
     </Col>
     <Col

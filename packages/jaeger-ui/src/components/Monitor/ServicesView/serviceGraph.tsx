@@ -26,7 +26,6 @@ import {
 } from 'react-vis';
 import LoadingIndicator from '../../common/LoadingIndicator';
 import { ServiceMetricsObject, Points } from '../../../types/metrics';
-import { timeConversion } from '../../../utils/date';
 import './serviceGraph.css';
 import { ApiError } from '../../../types/api-error';
 
@@ -41,6 +40,7 @@ type TProps = {
   yDomain?: number[];
   color?: string;
   marginClassName?: string;
+  yAxisTickFormat?: (v: number) => string;
 };
 
 type TCrossHairValues = {
@@ -145,70 +145,55 @@ export class ServiceGraphImpl extends React.PureComponent<TProps> {
       marginClassName,
       name,
       error,
+      yAxisTickFormat,
     } = this.props;
     let GraphComponent = this.generatePlaceholder(<LoadingIndicator centered />);
     const noDataComponent = this.generatePlaceholder('No Data');
     const apiErrorComponent = this.generatePlaceholder('Couldn’t fetch data');
 
-    const Plot = () => {
-      let maxValue = 0;
-
-      if (metricsData && Array.isArray(metricsData)) {
-        const allMaxMetrics = metricsData.map(x => x.max);
-        maxValue = Math.max(...allMaxMetrics);
-      } else if (metricsData) {
-        maxValue = metricsData.max;
-      }
-
-      const pixelPerNumber = 6;
-      const minNumberNumbersToDisplay = 2;
-      const additionalPixelWidth =
-        (Math.round(maxValue).toString(10).length - minNumberNumbersToDisplay) * pixelPerNumber;
-
-      return (
-        <XYPlot
-          margin={{ bottom: 25, left: 50 }}
-          onMouseLeave={() => this.setState({ crosshairValues: [] })}
-          width={width}
-          height={this.height - 74}
-          yDomain={yDomain}
-        >
-          {showHorizontalLines ? <HorizontalGridLines /> : null}
-          <XAxis tickFormat={tickFormat} tickTotal={Math.floor(width / 60)} />
-          <YAxis tickFormat={(timeInMS: number) => timeConversion(timeInMS * 1000)} />
-          {this.renderLines()}
-          <Crosshair values={this.state.crosshairValues}>
-            <div style={{ width: 140 }}>
-              {this.state.crosshairValues[0] &&
-                `${new Date(this.state.crosshairValues[0].x).toLocaleDateString()} ${new Date(
-                  this.state.crosshairValues[0].x
-                ).toLocaleTimeString()}`}
-              {this.state.crosshairValues.reverse().map((d: TCrossHairValues) =>
-                showLegend ? (
-                  <div key={d.label}>
-                    P{d.label * 100}: {d.y}
-                  </div>
-                ) : (
-                  <div key={d.label}>{d.y}</div>
-                )
-              )}
-            </div>
-          </Crosshair>
-          {showLegend ? (
-            <DiscreteColorLegend
-              className="legend-label"
-              orientation="horizontal"
-              items={this.getData()
-                .map((d: ServiceMetricsObject, idx: number) => ({
-                  color: this.colors[idx],
-                  title: `${d.quantile * 100}th`,
-                }))
-                .reverse()}
-            />
-          ) : null}
-        </XYPlot>
-      );
-    };
+    const Plot = () => (
+      <XYPlot
+        margin={{ bottom: 25, left: 50 }}
+        onMouseLeave={() => this.setState({ crosshairValues: [] })}
+        width={width}
+        height={this.height - 74}
+        yDomain={yDomain}
+      >
+        {showHorizontalLines ? <HorizontalGridLines /> : null}
+        <XAxis tickFormat={tickFormat} tickTotal={Math.floor(width / 60)} />
+        <YAxis tickFormat={yAxisTickFormat} />
+        {this.renderLines()}
+        <Crosshair values={this.state.crosshairValues}>
+          <div style={{ width: 140 }}>
+            {this.state.crosshairValues[0] &&
+              `${new Date(this.state.crosshairValues[0].x).toLocaleDateString()} ${new Date(
+                this.state.crosshairValues[0].x
+              ).toLocaleTimeString()}`}
+            {this.state.crosshairValues.reverse().map((d: TCrossHairValues) =>
+              showLegend ? (
+                <div key={d.label}>
+                  P{d.label * 100}: {d.y}
+                </div>
+              ) : (
+                <div key={d.label}>{d.y}</div>
+              )
+            )}
+          </div>
+        </Crosshair>
+        {showLegend ? (
+          <DiscreteColorLegend
+            className="legend-label"
+            orientation="horizontal"
+            items={this.getData()
+              .map((d: ServiceMetricsObject, idx: number) => ({
+                color: this.colors[idx],
+                title: `${d.quantile * 100}th`,
+              }))
+              .reverse()}
+          />
+        ) : null}
+      </XYPlot>
+    );
 
     if (!loading) {
       GraphComponent = metricsData === null ? noDataComponent : Plot();

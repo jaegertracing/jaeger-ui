@@ -93,7 +93,6 @@ exports[`<ServiceGraph> Base graph should be displayed  1`] = `
       attr="y"
       attrAxis="x"
       orientation="left"
-      tickFormat={[Function]}
     />
     <AreaSeries
       className=""
@@ -209,7 +208,6 @@ exports[`<ServiceGraph> Base graph with custom color should be displayed 1`] = `
       attr="y"
       attrAxis="x"
       orientation="left"
-      tickFormat={[Function]}
     />
     <AreaSeries
       className=""
@@ -329,7 +327,6 @@ exports[`<ServiceGraph> Base graph with horizontal lines should be displayed 1`]
       attr="y"
       attrAxis="x"
       orientation="left"
-      tickFormat={[Function]}
     />
     <AreaSeries
       className=""
@@ -445,7 +442,6 @@ exports[`<ServiceGraph> Base graph with legends should be displayed 1`] = `
       attr="y"
       attrAxis="x"
       orientation="left"
-      tickFormat={[Function]}
     />
     <AreaSeries
       className=""
@@ -582,7 +578,6 @@ exports[`<ServiceGraph> Crosshair map test 1`] = `
       attr="y"
       attrAxis="x"
       orientation="left"
-      tickFormat={[Function]}
     />
     <AreaSeries
       className=""

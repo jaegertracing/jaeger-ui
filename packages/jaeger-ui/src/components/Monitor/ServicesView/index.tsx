@@ -30,8 +30,14 @@ import OperationTableDetails from './operationDetailsTable';
 import LoadingIndicator from '../../common/LoadingIndicator';
 import MonitorATMEmptyState from '../EmptyState';
 import { ReduxState } from '../../../types';
-import { MetricsAPIQueryParams, MetricsReduxState, ServiceOpsMetrics } from '../../../types/metrics';
+import {
+  MetricsAPIQueryParams,
+  MetricsReduxState,
+  ServiceMetricsObject,
+  ServiceOpsMetrics,
+} from '../../../types/metrics';
 import prefixUrl from '../../../utils/prefix-url';
+import { timeConversion, getSuitableShortTermTimeUnit } from '../../../utils/date';
 
 import './index.css';
 
@@ -85,6 +91,19 @@ export const getLoopbackInterval = (interval: number) => {
 
   return timeFrameObj.label.toLowerCase();
 };
+
+const getTimeUnitByMetricsData = (serviceLatencies: ServiceMetricsObject | ServiceMetricsObject[] | null) => {
+  let maxValue = 0;
+
+  if (serviceLatencies && Array.isArray(serviceLatencies)) {
+    const allMaxMetrics = serviceLatencies.map(x => x.max);
+    maxValue = Math.max(...allMaxMetrics);
+  } else if (serviceLatencies) {
+    maxValue = serviceLatencies.max;
+  }
+
+  return getSuitableShortTermTimeUnit(maxValue * 1000);
+}
 
 // export for tests
 export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, StateType> {
@@ -169,8 +188,11 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
     return selectedService || store.get('lastAtmSearchService') || services[0];
   }
 
+
+
   render() {
     const { services, metrics, selectedTimeFrame, servicesLoading } = this.props;
+    const serviceLatencies = metrics.serviceMetrics ? metrics.serviceMetrics.service_latencies : null;
 
     if (servicesLoading) {
       return <LoadingIndicator vcentered centered />;
@@ -245,12 +267,13 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
                 metrics.serviceError.service_latencies_95
               }
               loading={metrics.loading}
-              name="Latency, ms"
+              name={`Latency, ${getTimeUnitByMetricsData(serviceLatencies)}`}
               width={this.state.graphWidth}
-              metricsData={metrics.serviceMetrics ? metrics.serviceMetrics.service_latencies : null}
+              metricsData={serviceLatencies}
               showLegend
               marginClassName="latency-margins"
               showHorizontalLines
+              yAxisTickFormat={(timeInMS: number) => timeConversion(timeInMS * 1000)}
             />
           </Col>
           <Col span={8}>

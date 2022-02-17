@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import moment from 'moment';
+import moment, { unitOfTime } from 'moment';
 import _dropWhile from 'lodash/dropWhile';
 import _round from 'lodash/round';
 
@@ -39,6 +39,14 @@ const UNIT_STEPS: { unit: string; microseconds: number; ofPrevious: number }[] =
   { unit: 'ms', microseconds: ONE_MILLISECOND, ofPrevious: 1000 },
   { unit: 'μs', microseconds: 1, ofPrevious: 1000 },
 ];
+
+const timeUnitToShortTermMapper = {
+  milliseconds: 'ms',
+  seconds: 'Sec',
+  minutes: 'Min',
+  hours: 'Hrs',
+  days: 'Days',
+};
 
 /**
  * @param {number} timestamp
@@ -145,25 +153,36 @@ export function formatRelativeDate(value: any, fullMonthName: boolean = false) {
   return m.format(`${monthFormat} D`);
 }
 
-export function timeConversion(microseconds: number) {
-  const milliseconds: number = parseInt((microseconds / 1000).toFixed(2), 10);
-  const seconds: number = parseInt((milliseconds / 1000).toFixed(2), 10);
-  const minutes: number = parseInt((milliseconds / (1000 * 60)).toFixed(2), 10);
-  const hours: number = parseInt((milliseconds / (1000 * 60 * 60)).toFixed(2), 10);
-  const days: number = parseInt((milliseconds / (1000 * 60 * 60 * 24)).toFixed(2), 10);
-  let timeText;
+const getSuitableTimeUnit = (microseconds: number): string => {
+  const duration = moment.duration(microseconds / 1000, 'ms');
+
+  return Object.keys(timeUnitToShortTermMapper)
+    .reverse()
+    .find(timeUnit => {
+      const durationInTimeUnit = duration.as(timeUnit as unitOfTime.Base);
+
+      return durationInTimeUnit >= 1;
+    })!;
+};
+
+export function getSuitableShortTermTimeUnit(microseconds: number) {
+  if (!microseconds) return '';
   if (microseconds < 1000) {
-    timeText = `${microseconds}μs`;
-  } else if (milliseconds < 1000) {
-    timeText = `${milliseconds}ms`;
-  } else if (seconds < 60) {
-    timeText = `${seconds}Sec`;
-  } else if (minutes < 60) {
-    timeText = `${minutes}Min`;
-  } else if (hours < 24) {
-    timeText = `${hours}Hrs`;
-  } else {
-    timeText = `${days}Days`;
+    return `μs`;
   }
-  return timeText;
+
+  const timeUnit = getSuitableTimeUnit(microseconds);
+
+  return (timeUnitToShortTermMapper as any)[timeUnit];
+}
+export function timeConversion(microseconds: number) {
+  if (microseconds < 1000) {
+    return `${microseconds}μs`;
+  }
+
+  const timeUnit = getSuitableTimeUnit(microseconds);
+
+  return `${moment
+    .duration(microseconds / 1000, 'ms')
+    .as(timeUnit as unitOfTime.Base)}${getSuitableShortTermTimeUnit(microseconds)}`;
 }

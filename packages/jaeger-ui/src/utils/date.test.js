@@ -15,6 +15,7 @@
 import {
   formatDuration,
   timeConversion,
+  getSuitableShortTermTimeUnit,
   ONE_MILLISECOND,
   ONE_SECOND,
   ONE_MINUTE,
@@ -92,5 +93,36 @@ describe('timeConversion', () => {
   it('displays time in days', () => {
     const input = 172800000000;
     expect(timeConversion(input)).toBe('2Days');
+  });
+});
+
+describe('getSuitableShortTermTimeUnit', () => {
+  it('time unit should be empty', () => {
+    const input = undefined;
+    expect(getSuitableShortTermTimeUnit(input)).toBe('');
+  });
+  it('time unit should be nanoseconds', () => {
+    const input = 999;
+    expect(getSuitableShortTermTimeUnit(input)).toBe('μs');
+  });
+  it('time unit should be milliseconds ', () => {
+    const input = 5000;
+    expect(getSuitableShortTermTimeUnit(input)).toBe('ms');
+  });
+  it('time unit should be seconds', () => {
+    const input = 5000000;
+    expect(getSuitableShortTermTimeUnit(input)).toBe('Sec');
+  });
+  it('time unit should be mintues', () => {
+    const input = 120000000;
+    expect(getSuitableShortTermTimeUnit(input)).toBe('Min');
+  });
+  it('time unit should be hours', () => {
+    const input = 7200000000;
+    expect(getSuitableShortTermTimeUnit(input)).toBe('Hrs');
+  });
+  it('time unit should be days', () => {
+    const input = 172800000000;
+    expect(getSuitableShortTermTimeUnit(input)).toBe('Days');
   });
 });
