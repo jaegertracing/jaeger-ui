@@ -40,7 +40,7 @@ type TProps = {
   yDomain?: number[];
   color?: string;
   marginClassName?: string;
-  yAxisTickFormat?: (v: number) => string;
+  yAxisTickFormat?: (v: number) => number;
 };
 
 type TCrossHairValues = {
@@ -153,7 +153,7 @@ export class ServiceGraphImpl extends React.PureComponent<TProps> {
 
     const Plot = () => (
       <XYPlot
-        margin={{ bottom: 25, left: 50 }}
+        margin={{ bottom: 25 }}
         onMouseLeave={() => this.setState({ crosshairValues: [] })}
         width={width}
         height={this.height - 74}

@@ -153,7 +153,11 @@ export function formatRelativeDate(value: any, fullMonthName: boolean = false) {
   return m.format(`${monthFormat} D`);
 }
 
-const getSuitableTimeUnit = (microseconds: number): string => {
+export const getSuitableTimeUnit = (microseconds: number): string => {
+  if (microseconds < 1000) {
+    return 'microseconds';
+  }
+
   const duration = moment.duration(microseconds / 1000, 'ms');
 
   return Object.keys(timeUnitToShortTermMapper)
@@ -165,16 +169,18 @@ const getSuitableTimeUnit = (microseconds: number): string => {
     })!;
 };
 
-export function getSuitableShortTermTimeUnit(microseconds: number) {
-  if (!microseconds) return '';
-  if (microseconds < 1000) {
-    return `μs`;
-  }
-
-  const timeUnit = getSuitableTimeUnit(microseconds);
-
+export function convertTimeUnitToShortTerm(timeUnit: string) {
   return (timeUnitToShortTermMapper as any)[timeUnit];
 }
+
+export function convertToTimeUnit(microseconds: number, targetTimeUnit: string) {
+  if (microseconds < 1000) {
+    return microseconds;
+  }
+
+  return moment.duration(microseconds / 1000, 'ms').as(targetTimeUnit as unitOfTime.Base);
+}
+
 export function timeConversion(microseconds: number) {
   if (microseconds < 1000) {
     return `${microseconds}μs`;
@@ -184,5 +190,5 @@ export function timeConversion(microseconds: number) {
 
   return `${moment
     .duration(microseconds / 1000, 'ms')
-    .as(timeUnit as unitOfTime.Base)}${getSuitableShortTermTimeUnit(microseconds)}`;
+    .as(timeUnit as unitOfTime.Base)}${convertTimeUnitToShortTerm(timeUnit)}`;
 }

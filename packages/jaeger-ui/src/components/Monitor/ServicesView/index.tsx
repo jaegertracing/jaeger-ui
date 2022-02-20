@@ -37,7 +37,7 @@ import {
   ServiceOpsMetrics,
 } from '../../../types/metrics';
 import prefixUrl from '../../../utils/prefix-url';
-import { timeConversion, getSuitableShortTermTimeUnit } from '../../../utils/date';
+import { convertToTimeUnit, convertTimeUnitToShortTerm, getSuitableTimeUnit } from '../../../utils/date';
 
 import './index.css';
 
@@ -92,7 +92,7 @@ export const getLoopbackInterval = (interval: number) => {
   return timeFrameObj.label.toLowerCase();
 };
 
-const getTimeUnitByMetricsData = (serviceLatencies: ServiceMetricsObject | ServiceMetricsObject[] | null) => {
+const calcDisplayTimeUnit = (serviceLatencies: ServiceMetricsObject | ServiceMetricsObject[] | null) => {
   let maxValue = 0;
 
   if (serviceLatencies && Array.isArray(serviceLatencies)) {
@@ -102,7 +102,7 @@ const getTimeUnitByMetricsData = (serviceLatencies: ServiceMetricsObject | Servi
     maxValue = serviceLatencies.max;
   }
 
-  return getSuitableShortTermTimeUnit(maxValue * 1000);
+  return getSuitableTimeUnit(maxValue * 1000);
 };
 
 // export for tests
@@ -191,6 +191,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
   render() {
     const { services, metrics, selectedTimeFrame, servicesLoading } = this.props;
     const serviceLatencies = metrics.serviceMetrics ? metrics.serviceMetrics.service_latencies : null;
+    const displayTimeUnit = calcDisplayTimeUnit(serviceLatencies);
 
     if (servicesLoading) {
       return <LoadingIndicator vcentered centered />;
@@ -265,13 +266,13 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
                 metrics.serviceError.service_latencies_95
               }
               loading={metrics.loading}
-              name={`Latency, ${getTimeUnitByMetricsData(serviceLatencies)}`}
+              name={`Latency, ${convertTimeUnitToShortTerm(displayTimeUnit)}`}
               width={this.state.graphWidth}
               metricsData={serviceLatencies}
               showLegend
               marginClassName="latency-margins"
               showHorizontalLines
-              yAxisTickFormat={(timeInMS: number) => timeConversion(timeInMS * 1000)}
+              yAxisTickFormat={(timeInMS: number) => convertToTimeUnit(timeInMS * 1000, displayTimeUnit)}
             />
           </Col>
           <Col span={8}>
