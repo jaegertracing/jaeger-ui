@@ -173,7 +173,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
         endTs: this.endTime,
         lookback: selectedTimeFrame,
         step: 60 * 1000,
-        ratePer: 60 * 60 * 1000,
+        ratePer: 10 * 60 * 1000,
       };
 
       fetchAllServiceMetrics(currentService, metricQueryPayload);
