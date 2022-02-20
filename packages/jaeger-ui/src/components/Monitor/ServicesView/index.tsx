@@ -89,6 +89,7 @@ export const getLoopbackInterval = (interval: number) => {
 // export for tests
 export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, StateType> {
   graphDivWrapper: React.RefObject<HTMLInputElement>;
+  graphXDomain: number[];
   serviceSelectorValue: string = '';
   endTime: number = Date.now();
   state = {
@@ -100,6 +101,9 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
   constructor(props: TProps) {
     super(props);
     this.graphDivWrapper = React.createRef();
+
+    const currentTime = Date.now();
+    this.graphXDomain = [currentTime - props.selectedTimeFrame, currentTime];
   }
 
   componentDidMount() {
@@ -171,8 +175,6 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
 
   render() {
     const { services, metrics, selectedTimeFrame, servicesLoading } = this.props;
-    const currentTime = Date.now();
-    const xDomain = [currentTime - selectedTimeFrame, currentTime];
 
     if (servicesLoading) {
       return <LoadingIndicator vcentered centered />;
@@ -253,7 +255,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
               showLegend
               marginClassName="latency-margins"
               showHorizontalLines
-              xDomain={xDomain}
+              xDomain={this.graphXDomain}
             />
           </Col>
           <Col span={8}>
@@ -267,7 +269,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
               marginClassName="error-rate-margins"
               color="#CD513A"
               yDomain={[0, 100]}
-              xDomain={xDomain}
+              xDomain={this.graphXDomain}
             />
           </Col>
           <Col span={8}>
@@ -281,7 +283,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
               showHorizontalLines
               color="#4795BA"
               marginClassName="request-margins"
-              xDomain={xDomain}
+              xDomain={this.graphXDomain}
             />
           </Col>
         </Row>
