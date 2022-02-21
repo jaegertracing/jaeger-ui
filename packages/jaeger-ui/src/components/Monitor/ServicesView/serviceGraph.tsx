@@ -163,7 +163,7 @@ export class ServiceGraphImpl extends React.PureComponent<TProps> {
         <YAxis />
         {this.renderLines()}
         <Crosshair values={this.state.crosshairValues}>
-          <div style={{ width: 140 }}>
+          <div className="crosshair-value">
             {this.state.crosshairValues[0] &&
               `${new Date(this.state.crosshairValues[0].x).toLocaleDateString()} ${new Date(
                 this.state.crosshairValues[0].x
