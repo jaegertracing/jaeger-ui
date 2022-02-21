@@ -159,12 +159,7 @@ exports[`<ServiceGraph> Base graph should be displayed  1`] = `
       values={Array []}
     >
       <div
-        style={
-          Object {
-            "color": "#6B6B76",
-            "width": 140,
-          }
-        }
+        className="crosshair-value"
       />
     </Crosshair>
   </XYPlot>
@@ -274,12 +269,7 @@ exports[`<ServiceGraph> Base graph with custom color should be displayed 1`] = `
       values={Array []}
     >
       <div
-        style={
-          Object {
-            "color": "#6B6B76",
-            "width": 140,
-          }
-        }
+        className="crosshair-value"
       />
     </Crosshair>
   </XYPlot>
@@ -393,12 +383,7 @@ exports[`<ServiceGraph> Base graph with horizontal lines should be displayed 1`]
       values={Array []}
     >
       <div
-        style={
-          Object {
-            "color": "#6B6B76",
-            "width": 140,
-          }
-        }
+        className="crosshair-value"
       />
     </Crosshair>
   </XYPlot>
@@ -508,12 +493,7 @@ exports[`<ServiceGraph> Base graph with legends should be displayed 1`] = `
       values={Array []}
     >
       <div
-        style={
-          Object {
-            "color": "#6B6B76",
-            "width": 140,
-          }
-        }
+        className="crosshair-value"
       />
     </Crosshair>
     <DiscreteColorLegendItem
@@ -644,12 +624,7 @@ exports[`<ServiceGraph> Crosshair map test 1`] = `
       values={Array []}
     >
       <div
-        style={
-          Object {
-            "color": "#6B6B76",
-            "width": 140,
-          }
-        }
+        className="crosshair-value"
       />
     </Crosshair>
   </XYPlot>
