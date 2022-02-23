@@ -41,6 +41,7 @@ type TProps = {
   color?: string;
   marginClassName?: string;
   yAxisTickFormat?: (v: number) => number;
+  xDomain: number[];
 };
 
 type TCrossHairValues = {
@@ -146,6 +147,7 @@ export class ServiceGraphImpl extends React.PureComponent<TProps> {
       name,
       error,
       yAxisTickFormat,
+      xDomain,
     } = this.props;
     let GraphComponent = this.generatePlaceholder(<LoadingIndicator centered />);
     const noDataComponent = this.generatePlaceholder('No Data');
@@ -157,6 +159,7 @@ export class ServiceGraphImpl extends React.PureComponent<TProps> {
         onMouseLeave={() => this.setState({ crosshairValues: [] })}
         width={width}
         height={this.height - 74}
+        xDomain={xDomain}
         yDomain={yDomain}
       >
         {showHorizontalLines ? <HorizontalGridLines /> : null}
@@ -164,7 +167,7 @@ export class ServiceGraphImpl extends React.PureComponent<TProps> {
         <YAxis tickFormat={yAxisTickFormat} />
         {this.renderLines()}
         <Crosshair values={this.state.crosshairValues}>
-          <div style={{ width: 140 }}>
+          <div className="crosshair-value">
             {this.state.crosshairValues[0] &&
               `${new Date(this.state.crosshairValues[0].x).toLocaleDateString()} ${new Date(
                 this.state.crosshairValues[0].x
