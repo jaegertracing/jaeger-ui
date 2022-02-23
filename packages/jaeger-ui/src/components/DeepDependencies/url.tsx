@@ -53,7 +53,7 @@ function firstParam(arg: string | string[]): string {
 
 export const getUrlState = memoizeOne(function getUrlState(search: string): TDdgSparseUrlState {
   const {
-    density = EDdgDensity.PreventPathEntanglement,
+    density = EDdgDensity.MostConcise,
     decoration,
     end,
     hash,

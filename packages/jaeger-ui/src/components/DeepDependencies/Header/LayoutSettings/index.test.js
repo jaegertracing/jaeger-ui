@@ -23,7 +23,7 @@ import { EDdgDensity } from '../../../../model/ddg/types';
 
 describe('LayoutSettings', () => {
   const props = {
-    density: EDdgDensity.PreventPathEntanglement,
+    density: EDdgDensity.MostConcise,
     setDensity: jest.fn(),
     showOperations: true,
     toggleShowOperations: jest.fn(),
