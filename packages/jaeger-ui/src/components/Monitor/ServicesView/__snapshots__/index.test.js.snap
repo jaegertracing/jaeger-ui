@@ -55,7 +55,7 @@ exports[`<MonitorATMServicesView> ATM snapshot test 1`] = `
         " metrics in selected timeframe.
          
         <a
-          href="/search?end=1487076708000000&limit=20&lookback=1h&maxDuration&minDuration&service=s1&start=1487073108000000"
+          href="/search?end=1466424490000000&limit=20&lookback=1h&maxDuration&minDuration&service=s1&start=1466420890000000"
           target="blank"
         >
           View all traces
@@ -174,6 +174,12 @@ exports[`<MonitorATMServicesView> ATM snapshot test 1`] = `
         showHorizontalLines={true}
         showLegend={true}
         width={300}
+        xDomain={
+          Array [
+            1466420890000,
+            1466424490000,
+          ]
+        }
       />
     </Col>
     <Col
@@ -203,6 +209,12 @@ exports[`<MonitorATMServicesView> ATM snapshot test 1`] = `
         }
         name="Error rate, %"
         width={300}
+        xDomain={
+          Array [
+            1466420890000,
+            1466424490000,
+          ]
+        }
         yDomain={
           Array [
             0,
@@ -239,6 +251,12 @@ exports[`<MonitorATMServicesView> ATM snapshot test 1`] = `
         name="Request rate, req/s"
         showHorizontalLines={true}
         width={300}
+        xDomain={
+          Array [
+            1466420890000,
+            1466424490000,
+          ]
+        }
       />
     </Col>
   </Row>
@@ -335,7 +353,7 @@ exports[`<MonitorATMServicesView> ATM snapshot test 1`] = `
             },
           ]
         }
-        endTime={1487076708000}
+        endTime={1466424490000}
         error={
           Object {
             "opsCalls": null,
