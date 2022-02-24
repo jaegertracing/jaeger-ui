@@ -957,7 +957,7 @@ exports[`<OperationTableDetails> render some values in the table 1`] = `
                         <div
                           className="table-graph-avg"
                         >
-                          1%
+                          100%
                         </div>
                       </div>
                     </td>
