@@ -170,7 +170,11 @@ export const getSuitableTimeUnit = (microseconds: number): string => {
 };
 
 export function convertTimeUnitToShortTerm(timeUnit: string) {
-  return (timeUnitToShortTermMapper as any)[timeUnit];
+  const shortTimeUnit = (timeUnitToShortTermMapper as any)[timeUnit];
+
+  if (shortTimeUnit) return shortTimeUnit;
+
+  return '';
 }
 
 export function convertToTimeUnit(microseconds: number, targetTimeUnit: string) {

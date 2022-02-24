@@ -126,6 +126,10 @@ describe('getSuitableTimeUnit', () => {
 });
 
 describe('convertTimeUnitToShortTerm', () => {
+  it('convert non-existent timeUnit ', () => {
+    const input = 'aaa';
+    expect(convertTimeUnitToShortTerm(input)).toBe('');
+  });
   it('convert milliseconds', () => {
     const input = 'milliseconds';
     expect(convertTimeUnitToShortTerm(input)).toBe('ms');
