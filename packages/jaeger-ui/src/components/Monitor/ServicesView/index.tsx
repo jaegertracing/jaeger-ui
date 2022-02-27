@@ -270,7 +270,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
                 metrics.serviceError.service_latencies_95
               }
               loading={metrics.loading}
-              name={`Latency, ${convertTimeUnitToShortTerm(displayTimeUnit)}`}
+              name={`Latency (${convertTimeUnitToShortTerm(displayTimeUnit)})`}
               width={this.state.graphWidth}
               metricsData={serviceLatencies}
               showLegend
@@ -285,7 +285,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
               key="errRate"
               error={metrics.serviceError.service_error_rate}
               loading={metrics.loading}
-              name="Error rate, %"
+              name="Error rate (%)"
               width={this.state.graphWidth}
               metricsData={metrics.serviceMetrics ? metrics.serviceMetrics.service_error_rate : null}
               marginClassName="error-rate-margins"
@@ -299,7 +299,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
               key="requests"
               loading={metrics.loading}
               error={metrics.serviceError.service_call_rate}
-              name="Request rate, req/s"
+              name="Request rate (req/s)"
               width={this.state.graphWidth}
               metricsData={metrics.serviceMetrics ? metrics.serviceMetrics.service_call_rate : null}
               showHorizontalLines

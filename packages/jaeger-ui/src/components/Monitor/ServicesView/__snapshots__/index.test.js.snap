@@ -173,7 +173,7 @@ exports[`<MonitorATMServicesView> ATM snapshot test 1`] = `
             },
           ]
         }
-        name="Latency, ms"
+        name="Latency (ms)"
         showHorizontalLines={true}
         showLegend={true}
         width={300}
@@ -212,7 +212,7 @@ exports[`<MonitorATMServicesView> ATM snapshot test 1`] = `
             "serviceName": "cartservice",
           }
         }
-        name="Error rate, %"
+        name="Error rate (%)"
         width={300}
         xDomain={
           Array [
@@ -254,7 +254,7 @@ exports[`<MonitorATMServicesView> ATM snapshot test 1`] = `
             "serviceName": "cartservice",
           }
         }
-        name="Request rate, req/s"
+        name="Request rate (req/s)"
         showHorizontalLines={true}
         width={300}
         xDomain={
