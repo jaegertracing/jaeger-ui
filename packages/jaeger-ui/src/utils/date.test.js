@@ -79,18 +79,18 @@ describe('timeConversion', () => {
   });
   it('displays time in seconds', () => {
     const input = 5000000;
-    expect(timeConversion(input)).toBe('5Sec');
+    expect(timeConversion(input)).toBe('5s');
   });
   it('displays time in mintues', () => {
     const input = 120000000;
-    expect(timeConversion(input)).toBe('2Min');
+    expect(timeConversion(input)).toBe('2m');
   });
   it('displays time in hours', () => {
     const input = 7200000000;
-    expect(timeConversion(input)).toBe('2Hrs');
+    expect(timeConversion(input)).toBe('2h');
   });
   it('displays time in days', () => {
     const input = 172800000000;
-    expect(timeConversion(input)).toBe('2Days');
+    expect(timeConversion(input)).toBe('2d');
   });
 });

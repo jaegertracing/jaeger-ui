@@ -799,7 +799,7 @@ exports[`<OperationTableDetails> render latency in seconds in the table 1`] = `
                         <div
                           className="table-graph-avg"
                         >
-                          8Sec
+                          8s
                         </div>
                       </div>
                     </td>
