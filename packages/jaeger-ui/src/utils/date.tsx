@@ -42,10 +42,10 @@ const UNIT_STEPS: { unit: string; microseconds: number; ofPrevious: number }[] =
 
 const timeUnitToShortTermMapper = {
   milliseconds: 'ms',
-  seconds: 'Sec',
-  minutes: 'Min',
-  hours: 'Hrs',
-  days: 'Days',
+  seconds: 's',
+  minutes: 'm',
+  hours: 'h',
+  days: 'd',
 };
 
 /**

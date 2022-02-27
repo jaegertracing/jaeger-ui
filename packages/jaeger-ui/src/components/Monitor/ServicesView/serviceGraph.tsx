@@ -153,7 +153,7 @@ export class ServiceGraphImpl extends React.PureComponent<TProps> {
     const noDataComponent = this.generatePlaceholder('No Data');
     const apiErrorComponent = this.generatePlaceholder('Couldn’t fetch data');
 
-    const Plot = () => (
+    const Plot = (
       <XYPlot
         margin={{ bottom: 25 }}
         onMouseLeave={() => this.setState({ crosshairValues: [] })}
@@ -199,7 +199,7 @@ export class ServiceGraphImpl extends React.PureComponent<TProps> {
     );
 
     if (!loading) {
-      GraphComponent = metricsData === null ? noDataComponent : Plot();
+      GraphComponent = metricsData === null ? noDataComponent : Plot;
     }
 
     if (error) {
