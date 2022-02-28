@@ -196,11 +196,11 @@ exports[`<MonitorATMServicesView> ATM snapshot test 1`] = `
             "metricPoints": Array [
               Object {
                 "x": 1631274747520,
-                "y": 1,
+                "y": 100,
               },
               Object {
                 "x": 1631274807520,
-                "y": 1,
+                "y": 100,
               },
             ],
             "quantile": 0.95,

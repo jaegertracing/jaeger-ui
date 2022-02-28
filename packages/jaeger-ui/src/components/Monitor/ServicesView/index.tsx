@@ -30,7 +30,13 @@ import OperationTableDetails from './operationDetailsTable';
 import LoadingIndicator from '../../common/LoadingIndicator';
 import MonitorATMEmptyState from '../EmptyState';
 import { ReduxState } from '../../../types';
-import { MetricsAPIQueryParams, MetricsReduxState, ServiceOpsMetrics } from '../../../types/metrics';
+import {
+  MetricsAPIQueryParams,
+  MetricsReduxState,
+  Points,
+  ServiceMetricsObject,
+  ServiceOpsMetrics,
+} from '../../../types/metrics';
 import prefixUrl from '../../../utils/prefix-url';
 
 import './index.css';
@@ -84,6 +90,24 @@ export const getLoopbackInterval = (interval: number) => {
   if (timeFrameObj === undefined) return '';
 
   return timeFrameObj.label.toLowerCase();
+};
+
+const convertServiceErrorRateToPercentages = (serviceErrorRate: null | ServiceMetricsObject) => {
+  if (!serviceErrorRate) return null;
+  // const cloneServiceErrorRate: ServiceMetricsObject = JSON.parse(JSON.stringify(serviceErrorRate));
+  // cloneServiceErrorRate.metricPoints.forEach((metricPoint: Points) => {
+  //   metricPoint.y! *= 100;
+  // });
+
+  const wew = serviceErrorRate.metricPoints.map((metricPoint: Points) => {
+    // metricPoint.y! *= 100;
+
+    return { ...metricPoint, y: metricPoint.y! * 100 };
+  });
+
+  // cloneServiceErrorRate.metricPoints = wew;
+
+  return { ...serviceErrorRate, metricPoints: wew };
 };
 
 // export for tests
@@ -175,6 +199,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
 
   render() {
     const { services, metrics, selectedTimeFrame, servicesLoading } = this.props;
+    const serviceErrorRate = metrics.serviceMetrics ? metrics.serviceMetrics.service_error_rate : null;
 
     if (servicesLoading) {
       return <LoadingIndicator vcentered centered />;
@@ -265,7 +290,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
               loading={metrics.loading}
               name="Error rate, %"
               width={this.state.graphWidth}
-              metricsData={metrics.serviceMetrics ? metrics.serviceMetrics.service_error_rate : null}
+              metricsData={convertServiceErrorRateToPercentages(serviceErrorRate)}
               marginClassName="error-rate-margins"
               color="#CD513A"
               yDomain={[0, 100]}

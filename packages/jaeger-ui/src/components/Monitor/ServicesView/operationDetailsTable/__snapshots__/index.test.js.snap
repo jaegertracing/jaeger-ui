@@ -957,7 +957,7 @@ exports[`<OperationTableDetails> render greater than 0.1 requests value in the t
                         <div
                           className="table-graph-avg"
                         >
-                          1%
+                          100%
                         </div>
                       </div>
                     </td>
@@ -1647,7 +1647,7 @@ exports[`<OperationTableDetails> render number with more than 2 decimal places v
                         <div
                           className="table-graph-avg"
                         >
-                          1%
+                          100%
                         </div>
                       </div>
                     </td>
