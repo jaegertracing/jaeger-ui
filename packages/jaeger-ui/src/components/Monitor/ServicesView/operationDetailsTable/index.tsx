@@ -20,6 +20,7 @@ import { MetricsReduxState, ServiceOpsMetrics } from '../../../../types/metrics'
 import prefixUrl from '../../../../utils/prefix-url';
 
 import './index.css';
+import { timeConversion } from '../../../../utils/date';
 
 type TProps = {
   data: ServiceOpsMetrics[] | undefined;
@@ -33,6 +34,15 @@ type TProps = {
 type TState = {
   hoveredRowKey: number;
 };
+
+function formatValue(value: number) {
+  if (value < 0.1) {
+    return `< 0.1 req/s`;
+  }
+
+  // Truncate number to two decimal places
+  return `${value.toString().match(/^-?\d+(?:\.\d{0,2})?/)![0]} req/s`;
+}
 
 export class OperationTableDetails extends React.PureComponent<TProps, TState> {
   state = {
@@ -73,7 +83,7 @@ export class OperationTableDetails extends React.PureComponent<TProps, TState> {
             />
             <div className="table-graph-avg">
               {typeof value === 'number' && row.dataPoints.service_operation_latencies.length > 0
-                ? `${value} ms`
+                ? timeConversion(value * 1000)
                 : ''}
             </div>
           </div>
@@ -94,7 +104,7 @@ export class OperationTableDetails extends React.PureComponent<TProps, TState> {
             />
             <div className="table-graph-avg">
               {typeof value === 'number' && row.dataPoints.service_operation_call_rate.length > 0
-                ? `${value} req/s`
+                ? `${formatValue(value)}`
                 : ''}
             </div>
           </div>
@@ -116,7 +126,7 @@ export class OperationTableDetails extends React.PureComponent<TProps, TState> {
             />
             <div className="table-graph-avg">
               {typeof value === 'number' && row.dataPoints.service_operation_error_rate.length > 0
-                ? `${value}%`
+                ? `${value * 100}%`
                 : ''}
             </div>
           </div>
