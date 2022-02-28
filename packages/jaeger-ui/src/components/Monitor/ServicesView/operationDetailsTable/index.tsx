@@ -126,7 +126,7 @@ export class OperationTableDetails extends React.PureComponent<TProps, TState> {
             />
             <div className="table-graph-avg">
               {typeof value === 'number' && row.dataPoints.service_operation_error_rate.length > 0
-                ? `${value}%`
+                ? `${value * 100}%`
                 : ''}
             </div>
           </div>
