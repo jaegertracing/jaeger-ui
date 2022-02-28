@@ -799,7 +799,7 @@ exports[`<OperationTableDetails> render greater than 0.1 requests value in the t
                         <div
                           className="table-graph-avg"
                         >
-                          736.16 ms
+                          736ms
                         </div>
                       </div>
                     </td>
@@ -1489,7 +1489,7 @@ exports[`<OperationTableDetails> render number with more than 2 decimal places v
                         <div
                           className="table-graph-avg"
                         >
-                          736.16 ms
+                          736ms
                         </div>
                       </div>
                     </td>
@@ -2179,7 +2179,7 @@ exports[`<OperationTableDetails> render some values in the table 1`] = `
                         <div
                           className="table-graph-avg"
                         >
-                          736.16 ms
+                          736ms
                         </div>
                       </div>
                     </td>
