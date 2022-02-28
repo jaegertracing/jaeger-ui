@@ -75,6 +75,12 @@ describe('<OperationTableDetails>', () => {
     expect(wrapper).toMatchSnapshot();
   });
 
+  it('render latency in seconds in the table', () => {
+    const cloneServiceOpsMetrics = {};
+    Object.assign(cloneServiceOpsMetrics, serviceOpsMetrics[0]);
+    cloneServiceOpsMetrics.latency = 8000;
+  });
+
   it('render greater than 0.1 requests value in the table', () => {
     const cloneServiceOpsMetrics = {};
     Object.assign(cloneServiceOpsMetrics, serviceOpsMetrics[0]);

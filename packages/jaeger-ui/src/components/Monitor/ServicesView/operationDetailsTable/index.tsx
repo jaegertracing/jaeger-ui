@@ -20,6 +20,7 @@ import { MetricsReduxState, ServiceOpsMetrics } from '../../../../types/metrics'
 import prefixUrl from '../../../../utils/prefix-url';
 
 import './index.css';
+import { timeConversion } from '../../../../utils/date';
 
 type TProps = {
   data: ServiceOpsMetrics[] | undefined;
@@ -82,7 +83,7 @@ export class OperationTableDetails extends React.PureComponent<TProps, TState> {
             />
             <div className="table-graph-avg">
               {typeof value === 'number' && row.dataPoints.service_operation_latencies.length > 0
-                ? `${value} ms`
+                ? timeConversion(value * 1000)
                 : ''}
             </div>
           </div>
