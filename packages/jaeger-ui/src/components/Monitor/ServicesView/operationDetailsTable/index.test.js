@@ -75,6 +75,22 @@ describe('<OperationTableDetails>', () => {
     expect(wrapper).toMatchSnapshot();
   });
 
+  it('render greater than 0.1 requests value in the table', () => {
+    const cloneServiceOpsMetrics = {};
+    Object.assign(cloneServiceOpsMetrics, serviceOpsMetrics[0]);
+    cloneServiceOpsMetrics.requests = 0.2;
+    wrapper.setProps({ ...props, data: [cloneServiceOpsMetrics], loading: false });
+    expect(wrapper).toMatchSnapshot();
+  });
+
+  it('render number with more than 2 decimal places value in the table', () => {
+    const cloneServiceOpsMetrics = {};
+    Object.assign(cloneServiceOpsMetrics, serviceOpsMetrics[0]);
+    cloneServiceOpsMetrics.requests = 0.2888;
+    wrapper.setProps({ ...props, data: [cloneServiceOpsMetrics], loading: false });
+    expect(wrapper).toMatchSnapshot();
+  });
+
   it('test column render function', () => {
     wrapper.setProps({
       ...props,
