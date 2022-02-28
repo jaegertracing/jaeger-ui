@@ -157,13 +157,13 @@ export function timeConversion(microseconds: number) {
   } else if (milliseconds < 1000) {
     timeText = `${milliseconds}ms`;
   } else if (seconds < 60) {
-    timeText = `${seconds}Sec`;
+    timeText = `${seconds}s`;
   } else if (minutes < 60) {
-    timeText = `${minutes}Min`;
+    timeText = `${minutes}m`;
   } else if (hours < 24) {
-    timeText = `${hours}Hrs`;
+    timeText = `${hours}h`;
   } else {
-    timeText = `${days}Days`;
+    timeText = `${days}d`;
   }
   return timeText;
 }
