@@ -94,18 +94,10 @@ export const getLoopbackInterval = (interval: number) => {
 
 const convertServiceErrorRateToPercentages = (serviceErrorRate: null | ServiceMetricsObject) => {
   if (!serviceErrorRate) return null;
-  // const cloneServiceErrorRate: ServiceMetricsObject = JSON.parse(JSON.stringify(serviceErrorRate));
-  // cloneServiceErrorRate.metricPoints.forEach((metricPoint: Points) => {
-  //   metricPoint.y! *= 100;
-  // });
 
   const wew = serviceErrorRate.metricPoints.map((metricPoint: Points) => {
-    // metricPoint.y! *= 100;
-
     return { ...metricPoint, y: metricPoint.y! * 100 };
   });
-
-  // cloneServiceErrorRate.metricPoints = wew;
 
   return { ...serviceErrorRate, metricPoints: wew };
 };
