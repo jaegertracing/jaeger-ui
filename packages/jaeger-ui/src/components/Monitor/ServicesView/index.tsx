@@ -39,6 +39,7 @@ type StateType = {
   graphWidth: number;
   serviceOpsMetrics: ServiceOpsMetrics[] | undefined;
   searchOps: string;
+  graphXDomain: number[];
 };
 
 type TReduxProps = {
@@ -89,13 +90,13 @@ export const getLoopbackInterval = (interval: number) => {
 // export for tests
 export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, StateType> {
   graphDivWrapper: React.RefObject<HTMLInputElement>;
-  graphXDomain: number[] = [];
   serviceSelectorValue: string = '';
   endTime: number = Date.now();
   state = {
     graphWidth: 300,
     serviceOpsMetrics: undefined,
     searchOps: '',
+    graphXDomain: [],
   };
 
   constructor(props: TProps) {
@@ -114,16 +115,18 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
     this.calcGraphXDomain();
   }
 
-  componentDidUpdate(nextProps: TProps) {
+  componentDidUpdate(prevProps: TProps) {
     const { selectedService, selectedTimeFrame, services } = this.props;
 
-    if (nextProps.selectedService !== selectedService || nextProps.selectedTimeFrame !== selectedTimeFrame) {
+    if (prevProps.selectedService !== selectedService || prevProps.selectedTimeFrame !== selectedTimeFrame) {
       this.fetchMetrics();
-    } else if (!_isEqual(nextProps.services, services)) {
+    } else if (!_isEqual(prevProps.services, services)) {
       this.fetchMetrics();
     }
 
-    this.calcGraphXDomain();
+    if (prevProps.selectedTimeFrame !== this.props.selectedTimeFrame) {
+      this.calcGraphXDomain();
+    }
   }
 
   componentWillUnmount() {
@@ -132,7 +135,9 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
 
   calcGraphXDomain() {
     const currentTime = Date.now();
-    this.graphXDomain = [currentTime - this.props.selectedTimeFrame, currentTime];
+    this.setState({
+      graphXDomain: [currentTime - this.props.selectedTimeFrame, currentTime],
+    });
   }
 
   updateDimensions() {
@@ -260,7 +265,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
               showLegend
               marginClassName="latency-margins"
               showHorizontalLines
-              xDomain={this.graphXDomain}
+              xDomain={this.state.graphXDomain}
             />
           </Col>
           <Col span={8}>
@@ -274,7 +279,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
               marginClassName="error-rate-margins"
               color="#CD513A"
               yDomain={[0, 100]}
-              xDomain={this.graphXDomain}
+              xDomain={this.state.graphXDomain}
             />
           </Col>
           <Col span={8}>
@@ -288,7 +293,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
               showHorizontalLines
               color="#4795BA"
               marginClassName="request-margins"
-              xDomain={this.graphXDomain}
+              xDomain={this.state.graphXDomain}
             />
           </Col>
         </Row>
