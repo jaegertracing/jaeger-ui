@@ -19,11 +19,17 @@ import {
   mapStateToProps,
   mapDispatchToProps,
   getLoopbackInterval,
+  yAxisTickFormat,
 } from '.';
 import LoadingIndicator from '../../common/LoadingIndicator';
 import MonitorATMEmptyState from '../EmptyState';
 import ServiceGraph from './serviceGraph';
-import { originInitialState, serviceMetrics, serviceOpsMetrics } from '../../../reducers/metrics.mock';
+import {
+  originInitialState,
+  serviceMetrics,
+  serviceOpsMetrics,
+  serviceMetricsWithOneServiceLatency,
+} from '../../../reducers/metrics.mock';
 
 const state = {
   services: {},
@@ -83,6 +89,21 @@ describe('<MonitorATMServicesView>', () => {
       },
     });
     expect(wrapper.find(LoadingIndicator).length).toBe(0);
+  });
+
+  it('render one service latency', () => {
+    wrapper.setProps({
+      services: ['s1'],
+      selectedService: undefined,
+      metrics: {
+        ...originInitialState,
+        serviceMetricsWithOneServiceLatency,
+        serviceOpsMetrics,
+        loading: false,
+        isATMActivated: true,
+      },
+    });
+    expect(wrapper.length).toBe(1);
   });
 
   it('Render ATM not configured page', () => {
@@ -308,5 +329,13 @@ describe('getLoopbackInterval()', () => {
 
   it('timeframe exists', () => {
     expect(getLoopbackInterval(48 * 3600000)).toBe('last 2 days');
+  });
+});
+
+describe('yAxisTickFormat', () => {
+  it('value is 2 second', () => {
+    const timeInMs = 1000;
+    const displayTimeUnit = 'seconds';
+    expect(yAxisTickFormat(timeInMs, displayTimeUnit)).toBe(1);
   });
 });

@@ -106,6 +106,10 @@ const calcDisplayTimeUnit = (serviceLatencies: ServiceMetricsObject | ServiceMet
 };
 
 // export for tests
+export const yAxisTickFormat = (timeInMS: number, displayTimeUnit: string) =>
+  convertToTimeUnit(timeInMS * 1000, displayTimeUnit);
+
+// export for tests
 export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, StateType> {
   graphDivWrapper: React.RefObject<HTMLInputElement>;
   graphXDomain: number[];
@@ -276,7 +280,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
               showLegend
               marginClassName="latency-margins"
               showHorizontalLines
-              yAxisTickFormat={(timeInMS: number) => convertToTimeUnit(timeInMS * 1000, displayTimeUnit)}
+              yAxisTickFormat={timeInMs => yAxisTickFormat(timeInMs, displayTimeUnit)}
               xDomain={this.graphXDomain}
             />
           </Col>

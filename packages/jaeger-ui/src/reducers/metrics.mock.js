@@ -806,6 +806,55 @@ const serviceMetrics = {
     },
   ],
 };
+
+const serviceMetricsWithOneServiceLatency = {
+  service_call_rate: {
+    max: 0.05,
+    metricPoints: [
+      {
+        x: 1631271823806,
+        y: 0.05,
+      },
+      {
+        x: 1631271883806,
+        y: 0.05,
+      },
+    ],
+    quantile: 0.95,
+    serviceName: 'cartservice',
+  },
+  service_error_rate: {
+    max: 1,
+    metricPoints: [
+      {
+        x: 1631274747520,
+        y: 1,
+      },
+      {
+        x: 1631274807520,
+        y: 1,
+      },
+    ],
+    quantile: 0.95,
+    serviceName: 'cartservice',
+  },
+  service_latencies: {
+    max: 189.86,
+    metricPoints: [
+      {
+        x: 1631271823806,
+        y: 189.86,
+      },
+      {
+        x: 1631271883806,
+        y: 189.86,
+      },
+    ],
+    quantile: 0.5,
+    serviceName: 'cartservice',
+  },
+};
+
 const serviceMetricsWithNulls = {
   service_call_rate: {
     max: 0.05,
@@ -1278,6 +1327,7 @@ export {
   emptyResponse,
   originInitialState,
   serviceMetrics,
+  serviceMetricsWithOneServiceLatency,
   serviceOpsMetrics,
   serviceLatencies50withNull,
   serviceMetricsWithNulls,
