@@ -150,6 +150,15 @@ describe('<MonitorATMServicesView>', () => {
     expect(wrapper.state().graphWidth).toBe(76);
   });
 
+  it('should update state after choosing a new timeframe', () => {
+    const firstGraphXDomain = wrapper.state().graphXDomain;
+    wrapper.setProps({
+      selectedTimeFrame: 3600000 * 2,
+    });
+
+    expect(wrapper.state().graphXDomain).not.toBe(firstGraphXDomain);
+  });
+
   it('search test', () => {
     mockFetchServices.mockResolvedValue(['cartservice']);
     wrapper.setProps({
