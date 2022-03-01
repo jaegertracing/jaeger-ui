@@ -38,6 +38,7 @@ import {
   ServiceOpsMetrics,
 } from '../../../types/metrics';
 import prefixUrl from '../../../utils/prefix-url';
+import { convertToTimeUnit, convertTimeUnitToShortTerm, getSuitableTimeUnit } from '../../../utils/date';
 
 import './index.css';
 
@@ -93,14 +94,31 @@ export const getLoopbackInterval = (interval: number) => {
   return timeFrameObj.label.toLowerCase();
 };
 
+const calcDisplayTimeUnit = (serviceLatencies: ServiceMetricsObject | ServiceMetricsObject[] | null) => {
+  let maxValue = 0;
+
+  if (serviceLatencies && Array.isArray(serviceLatencies)) {
+    const allMaxMetrics = serviceLatencies.map(x => x.max);
+    maxValue = Math.max(...allMaxMetrics);
+  } else if (serviceLatencies) {
+    maxValue = serviceLatencies.max;
+  }
+
+  return getSuitableTimeUnit(maxValue * 1000);
+};
+
+// export for tests
+export const yAxisTickFormat = (timeInMS: number, displayTimeUnit: string) =>
+  convertToTimeUnit(timeInMS * 1000, displayTimeUnit);
+
 const convertServiceErrorRateToPercentages = (serviceErrorRate: null | ServiceMetricsObject) => {
   if (!serviceErrorRate) return null;
 
-  const wew = serviceErrorRate.metricPoints.map((metricPoint: Points) => {
+  const convertedMetricsPoints = serviceErrorRate.metricPoints.map((metricPoint: Points) => {
     return { ...metricPoint, y: metricPoint.y! * 100 };
   });
 
-  return { ...serviceErrorRate, metricPoints: wew };
+  return { ...serviceErrorRate, metricPoints: convertedMetricsPoints };
 };
 
 // export for tests
@@ -201,6 +219,8 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
 
   render() {
     const { services, metrics, selectedTimeFrame, servicesLoading } = this.props;
+    const serviceLatencies = metrics.serviceMetrics ? metrics.serviceMetrics.service_latencies : null;
+    const displayTimeUnit = calcDisplayTimeUnit(serviceLatencies);
     const serviceErrorRate = metrics.serviceMetrics ? metrics.serviceMetrics.service_error_rate : null;
 
     if (servicesLoading) {
@@ -276,12 +296,13 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
                 metrics.serviceError.service_latencies_95
               }
               loading={metrics.loading}
-              name="Latency, ms"
+              name={`Latency (${convertTimeUnitToShortTerm(displayTimeUnit)})`}
               width={this.state.graphWidth}
-              metricsData={metrics.serviceMetrics ? metrics.serviceMetrics.service_latencies : null}
+              metricsData={serviceLatencies}
               showLegend
               marginClassName="latency-margins"
               showHorizontalLines
+              yAxisTickFormat={timeInMs => yAxisTickFormat(timeInMs, displayTimeUnit)}
               xDomain={this.state.graphXDomain}
             />
           </Col>
@@ -290,7 +311,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
               key="errRate"
               error={metrics.serviceError.service_error_rate}
               loading={metrics.loading}
-              name="Error rate, %"
+              name="Error rate (%)"
               width={this.state.graphWidth}
               metricsData={convertServiceErrorRateToPercentages(serviceErrorRate)}
               marginClassName="error-rate-margins"
@@ -304,7 +325,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
               key="requests"
               loading={metrics.loading}
               error={metrics.serviceError.service_call_rate}
-              name="Request rate, req/s"
+              name="Request rate (req/s)"
               width={this.state.graphWidth}
               metricsData={metrics.serviceMetrics ? metrics.serviceMetrics.service_call_rate : null}
               showHorizontalLines

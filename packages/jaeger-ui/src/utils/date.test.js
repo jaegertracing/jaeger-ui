@@ -15,6 +15,9 @@
 import {
   formatDuration,
   timeConversion,
+  getSuitableTimeUnit,
+  convertTimeUnitToShortTerm,
+  convertToTimeUnit,
   ONE_MILLISECOND,
   ONE_SECOND,
   ONE_MINUTE,
@@ -81,7 +84,7 @@ describe('timeConversion', () => {
     const input = 5000000;
     expect(timeConversion(input)).toBe('5s');
   });
-  it('displays time in mintues', () => {
+  it('displays time in minutes', () => {
     const input = 120000000;
     expect(timeConversion(input)).toBe('2m');
   });
@@ -92,5 +95,86 @@ describe('timeConversion', () => {
   it('displays time in days', () => {
     const input = 172800000000;
     expect(timeConversion(input)).toBe('2d');
+  });
+});
+
+describe('getSuitableTimeUnit', () => {
+  it('time unit should be microseconds', () => {
+    const input = 999;
+    expect(getSuitableTimeUnit(input)).toBe('microseconds');
+  });
+  it('time unit should be milliseconds ', () => {
+    const input = 5000;
+    expect(getSuitableTimeUnit(input)).toBe('milliseconds');
+  });
+  it('time unit should be seconds', () => {
+    const input = 5000000;
+    expect(getSuitableTimeUnit(input)).toBe('seconds');
+  });
+  it('time unit should be minutes', () => {
+    const input = 120000000;
+    expect(getSuitableTimeUnit(input)).toBe('minutes');
+  });
+  it('time unit should be hours', () => {
+    const input = 7200000000;
+    expect(getSuitableTimeUnit(input)).toBe('hours');
+  });
+  it('time unit should be days', () => {
+    const input = 172800000000;
+    expect(getSuitableTimeUnit(input)).toBe('days');
+  });
+});
+
+describe('convertTimeUnitToShortTerm', () => {
+  it('convert non-existent timeUnit ', () => {
+    const input = 'aaa';
+    expect(convertTimeUnitToShortTerm(input)).toBe('');
+  });
+  it('convert milliseconds', () => {
+    const input = 'milliseconds';
+    expect(convertTimeUnitToShortTerm(input)).toBe('ms');
+  });
+  it('convert seconds', () => {
+    const input = 'seconds';
+    expect(convertTimeUnitToShortTerm(input)).toBe('s');
+  });
+  it('convert minutes', () => {
+    const input = 'minutes';
+    expect(convertTimeUnitToShortTerm(input)).toBe('m');
+  });
+  it('convert hours', () => {
+    const input = 'hours';
+    expect(convertTimeUnitToShortTerm(input)).toBe('h');
+  });
+  it('convert days', () => {
+    const input = 'days';
+    expect(convertTimeUnitToShortTerm(input)).toBe('d');
+  });
+});
+
+describe('convertToTimeUnit', () => {
+  it('convert duration to microseconds', () => {
+    const input = 999;
+    expect(convertToTimeUnit(input, 'microseconds')).toBe(999);
+  });
+  it('convert duration to milliseconds', () => {
+    const input = 5000;
+    expect(convertToTimeUnit(input, 'milliseconds')).toBe(5);
+  });
+  it('convert duration to seconds', () => {
+    const input = 5000000;
+    expect(convertToTimeUnit(input, 'seconds')).toBe(5);
+  });
+  it('convert duration to minutes', () => {
+    const input = 120000000;
+    expect(convertToTimeUnit(input, 'minutes')).toBe(2);
+  });
+  it('convert duration to hours', () => {
+    const input = 7200000000;
+    expect(convertToTimeUnit(input, 'hours')).toBe(2);
+  });
+  it('convert duration to days', () => {
+    const input = 172800000000;
+    expect(convertToTimeUnit(input, 'days')).toBe(2);
   });
 });
