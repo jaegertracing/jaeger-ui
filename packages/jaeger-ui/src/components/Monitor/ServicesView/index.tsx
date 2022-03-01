@@ -46,6 +46,7 @@ type StateType = {
   graphWidth: number;
   serviceOpsMetrics: ServiceOpsMetrics[] | undefined;
   searchOps: string;
+  graphXDomain: number[];
 };
 
 type TReduxProps = {
@@ -123,21 +124,18 @@ const convertServiceErrorRateToPercentages = (serviceErrorRate: null | ServiceMe
 // export for tests
 export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, StateType> {
   graphDivWrapper: React.RefObject<HTMLInputElement>;
-  graphXDomain: number[];
   serviceSelectorValue: string = '';
   endTime: number = Date.now();
   state = {
     graphWidth: 300,
     serviceOpsMetrics: undefined,
     searchOps: '',
+    graphXDomain: [],
   };
 
   constructor(props: TProps) {
     super(props);
     this.graphDivWrapper = React.createRef();
-
-    const currentTime = Date.now();
-    this.graphXDomain = [currentTime - props.selectedTimeFrame, currentTime];
   }
 
   componentDidMount() {
@@ -148,20 +146,32 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
     }
     window.addEventListener('resize', this.updateDimensions.bind(this));
     this.updateDimensions.apply(this);
+    this.calcGraphXDomain();
   }
 
-  componentDidUpdate(nextProps: TProps) {
+  componentDidUpdate(prevProps: TProps) {
     const { selectedService, selectedTimeFrame, services } = this.props;
 
-    if (nextProps.selectedService !== selectedService || nextProps.selectedTimeFrame !== selectedTimeFrame) {
+    if (prevProps.selectedService !== selectedService || prevProps.selectedTimeFrame !== selectedTimeFrame) {
       this.fetchMetrics();
-    } else if (!_isEqual(nextProps.services, services)) {
+    } else if (!_isEqual(prevProps.services, services)) {
       this.fetchMetrics();
+    }
+
+    if (prevProps.selectedTimeFrame !== this.props.selectedTimeFrame) {
+      this.calcGraphXDomain();
     }
   }
 
   componentWillUnmount() {
     window.removeEventListener('resize', this.updateDimensions.bind(this));
+  }
+
+  calcGraphXDomain() {
+    const currentTime = Date.now();
+    this.setState({
+      graphXDomain: [currentTime - this.props.selectedTimeFrame, currentTime],
+    });
   }
 
   updateDimensions() {
@@ -293,7 +303,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
               marginClassName="latency-margins"
               showHorizontalLines
               yAxisTickFormat={timeInMs => yAxisTickFormat(timeInMs, displayTimeUnit)}
-              xDomain={this.graphXDomain}
+              xDomain={this.state.graphXDomain}
             />
           </Col>
           <Col span={8}>
@@ -307,7 +317,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
               marginClassName="error-rate-margins"
               color="#CD513A"
               yDomain={[0, 100]}
-              xDomain={this.graphXDomain}
+              xDomain={this.state.graphXDomain}
             />
           </Col>
           <Col span={8}>
@@ -321,7 +331,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
               showHorizontalLines
               color="#4795BA"
               marginClassName="request-margins"
-              xDomain={this.graphXDomain}
+              xDomain={this.state.graphXDomain}
             />
           </Col>
         </Row>
