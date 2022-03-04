@@ -97,6 +97,7 @@ exports[`DiffSelection renders multiple traces as expected 1`] = `
     className="DiffSelection--message"
   >
     <Link
+      replace={false}
       to="/trace/trace-id-0...trace-id-1?cohort=trace-id-0&cohort=trace-id-1"
     >
       <Button

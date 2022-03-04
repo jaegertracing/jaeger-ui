@@ -19,11 +19,17 @@ import {
   mapStateToProps,
   mapDispatchToProps,
   getLoopbackInterval,
+  yAxisTickFormat,
 } from '.';
 import LoadingIndicator from '../../common/LoadingIndicator';
 import MonitorATMEmptyState from '../EmptyState';
 import ServiceGraph from './serviceGraph';
-import { originInitialState, serviceMetrics, serviceOpsMetrics } from '../../../reducers/metrics.mock';
+import {
+  originInitialState,
+  serviceMetrics,
+  serviceOpsMetrics,
+  serviceMetricsWithOneServiceLatency,
+} from '../../../reducers/metrics.mock';
 
 const state = {
   services: {},
@@ -40,6 +46,9 @@ describe('<MonitorATMServicesView>', () => {
   const mockFetchServices = jest.fn();
   const mockFetchAllServiceMetrics = jest.fn();
   const mockFetchAggregatedServiceMetrics = jest.fn();
+  beforeAll(() => {
+    Date.now = jest.fn(() => 1466424490000);
+  });
 
   beforeEach(() => {
     wrapper = shallow(
@@ -54,6 +63,7 @@ describe('<MonitorATMServicesView>', () => {
 
   afterEach(() => {
     wrapper = null;
+
     jest.clearAllMocks();
   });
 
@@ -79,6 +89,21 @@ describe('<MonitorATMServicesView>', () => {
       },
     });
     expect(wrapper.find(LoadingIndicator).length).toBe(0);
+  });
+
+  it('render one service latency', () => {
+    wrapper.setProps({
+      services: ['s1'],
+      selectedService: undefined,
+      metrics: {
+        ...originInitialState,
+        serviceMetricsWithOneServiceLatency,
+        serviceOpsMetrics,
+        loading: false,
+        isATMActivated: true,
+      },
+    });
+    expect(wrapper.length).toBe(1);
   });
 
   it('Render ATM not configured page', () => {
@@ -144,6 +169,15 @@ describe('<MonitorATMServicesView>', () => {
     };
     global.dispatchEvent(new Event('resize'));
     expect(wrapper.state().graphWidth).toBe(76);
+  });
+
+  it('should update state after choosing a new timeframe', () => {
+    const firstGraphXDomain = wrapper.state().graphXDomain;
+    wrapper.setProps({
+      selectedTimeFrame: 3600000 * 2,
+    });
+
+    expect(wrapper.state().graphXDomain).not.toBe(firstGraphXDomain);
   });
 
   it('search test', () => {
@@ -304,5 +338,13 @@ describe('getLoopbackInterval()', () => {
 
   it('timeframe exists', () => {
     expect(getLoopbackInterval(48 * 3600000)).toBe('last 2 days');
+  });
+});
+
+describe('yAxisTickFormat', () => {
+  it('value is 2 second', () => {
+    const timeInMs = 1000;
+    const displayTimeUnit = 'seconds';
+    expect(yAxisTickFormat(timeInMs, displayTimeUnit)).toBe(1);
   });
 });

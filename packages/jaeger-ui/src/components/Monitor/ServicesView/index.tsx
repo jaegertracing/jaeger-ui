@@ -30,8 +30,15 @@ import OperationTableDetails from './operationDetailsTable';
 import LoadingIndicator from '../../common/LoadingIndicator';
 import MonitorATMEmptyState from '../EmptyState';
 import { ReduxState } from '../../../types';
-import { MetricsAPIQueryParams, MetricsReduxState, ServiceOpsMetrics } from '../../../types/metrics';
+import {
+  MetricsAPIQueryParams,
+  MetricsReduxState,
+  Points,
+  ServiceMetricsObject,
+  ServiceOpsMetrics,
+} from '../../../types/metrics';
 import prefixUrl from '../../../utils/prefix-url';
+import { convertToTimeUnit, convertTimeUnitToShortTerm, getSuitableTimeUnit } from '../../../utils/date';
 
 import './index.css';
 
@@ -39,6 +46,7 @@ type StateType = {
   graphWidth: number;
   serviceOpsMetrics: ServiceOpsMetrics[] | undefined;
   searchOps: string;
+  graphXDomain: number[];
 };
 
 type TReduxProps = {
@@ -86,6 +94,33 @@ export const getLoopbackInterval = (interval: number) => {
   return timeFrameObj.label.toLowerCase();
 };
 
+const calcDisplayTimeUnit = (serviceLatencies: ServiceMetricsObject | ServiceMetricsObject[] | null) => {
+  let maxValue = 0;
+
+  if (serviceLatencies && Array.isArray(serviceLatencies)) {
+    const allMaxMetrics = serviceLatencies.map(x => x.max);
+    maxValue = Math.max(...allMaxMetrics);
+  } else if (serviceLatencies) {
+    maxValue = serviceLatencies.max;
+  }
+
+  return getSuitableTimeUnit(maxValue * 1000);
+};
+
+// export for tests
+export const yAxisTickFormat = (timeInMS: number, displayTimeUnit: string) =>
+  convertToTimeUnit(timeInMS * 1000, displayTimeUnit);
+
+const convertServiceErrorRateToPercentages = (serviceErrorRate: null | ServiceMetricsObject) => {
+  if (!serviceErrorRate) return null;
+
+  const convertedMetricsPoints = serviceErrorRate.metricPoints.map((metricPoint: Points) => {
+    return { ...metricPoint, y: metricPoint.y! * 100 };
+  });
+
+  return { ...serviceErrorRate, metricPoints: convertedMetricsPoints };
+};
+
 // export for tests
 export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, StateType> {
   graphDivWrapper: React.RefObject<HTMLInputElement>;
@@ -95,6 +130,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
     graphWidth: 300,
     serviceOpsMetrics: undefined,
     searchOps: '',
+    graphXDomain: [],
   };
 
   constructor(props: TProps) {
@@ -110,20 +146,32 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
     }
     window.addEventListener('resize', this.updateDimensions.bind(this));
     this.updateDimensions.apply(this);
+    this.calcGraphXDomain();
   }
 
-  componentDidUpdate(nextProps: TProps) {
+  componentDidUpdate(prevProps: TProps) {
     const { selectedService, selectedTimeFrame, services } = this.props;
 
-    if (nextProps.selectedService !== selectedService || nextProps.selectedTimeFrame !== selectedTimeFrame) {
+    if (prevProps.selectedService !== selectedService || prevProps.selectedTimeFrame !== selectedTimeFrame) {
       this.fetchMetrics();
-    } else if (!_isEqual(nextProps.services, services)) {
+    } else if (!_isEqual(prevProps.services, services)) {
       this.fetchMetrics();
+    }
+
+    if (prevProps.selectedTimeFrame !== this.props.selectedTimeFrame) {
+      this.calcGraphXDomain();
     }
   }
 
   componentWillUnmount() {
     window.removeEventListener('resize', this.updateDimensions.bind(this));
+  }
+
+  calcGraphXDomain() {
+    const currentTime = Date.now();
+    this.setState({
+      graphXDomain: [currentTime - this.props.selectedTimeFrame, currentTime],
+    });
   }
 
   updateDimensions() {
@@ -154,7 +202,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
         endTs: this.endTime,
         lookback: selectedTimeFrame,
         step: 60 * 1000,
-        ratePer: 60 * 60 * 1000,
+        ratePer: 10 * 60 * 1000,
       };
 
       fetchAllServiceMetrics(currentService, metricQueryPayload);
@@ -171,6 +219,9 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
 
   render() {
     const { services, metrics, selectedTimeFrame, servicesLoading } = this.props;
+    const serviceLatencies = metrics.serviceMetrics ? metrics.serviceMetrics.service_latencies : null;
+    const displayTimeUnit = calcDisplayTimeUnit(serviceLatencies);
+    const serviceErrorRate = metrics.serviceMetrics ? metrics.serviceMetrics.service_error_rate : null;
 
     if (servicesLoading) {
       return <LoadingIndicator vcentered centered />;
@@ -245,12 +296,14 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
                 metrics.serviceError.service_latencies_95
               }
               loading={metrics.loading}
-              name="Latency, ms"
+              name={`Latency (${convertTimeUnitToShortTerm(displayTimeUnit)})`}
               width={this.state.graphWidth}
-              metricsData={metrics.serviceMetrics ? metrics.serviceMetrics.service_latencies : null}
+              metricsData={serviceLatencies}
               showLegend
               marginClassName="latency-margins"
               showHorizontalLines
+              yAxisTickFormat={timeInMs => yAxisTickFormat(timeInMs, displayTimeUnit)}
+              xDomain={this.state.graphXDomain}
             />
           </Col>
           <Col span={8}>
@@ -258,12 +311,13 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
               key="errRate"
               error={metrics.serviceError.service_error_rate}
               loading={metrics.loading}
-              name="Error rate, %"
+              name="Error rate (%)"
               width={this.state.graphWidth}
-              metricsData={metrics.serviceMetrics ? metrics.serviceMetrics.service_error_rate : null}
+              metricsData={convertServiceErrorRateToPercentages(serviceErrorRate)}
               marginClassName="error-rate-margins"
               color="#CD513A"
               yDomain={[0, 100]}
+              xDomain={this.state.graphXDomain}
             />
           </Col>
           <Col span={8}>
@@ -271,12 +325,13 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
               key="requests"
               loading={metrics.loading}
               error={metrics.serviceError.service_call_rate}
-              name="Request rate, req/s"
+              name="Request rate (req/s)"
               width={this.state.graphWidth}
               metricsData={metrics.serviceMetrics ? metrics.serviceMetrics.service_call_rate : null}
               showHorizontalLines
               color="#4795BA"
               marginClassName="request-margins"
+              xDomain={this.state.graphXDomain}
             />
           </Col>
         </Row>

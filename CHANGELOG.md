@@ -6,6 +6,29 @@
 
 ### Fixes
 
+## v1.20.1 (2022-02-04)
+
+### Fixes
+
+- Widen date input to avoid clipping, fixes #864 ([@bobrik](https://github.com/bobrik) in [#867](https://github.com/jaegertracing/jaeger-ui/pull/867))
+
+## v1.20.0 (Jan 11, 2022)
+
+### Fixes
+
+- Respect BASE_URL in Trace Tabular View ([@caizixian](https://github.com/caizixian) in [#861](https://github.com/jaegertracing/jaeger-ui/pull/861))
+
+## v1.19.0 (Dec 1, 2021)
+
+### Enhancements
+
+- "Monitor" tab for service health metrics ([@th3M1ke](https://github.com/th3M1ke) in [#815](https://github.com/jaegertracing/jaeger-ui/pull/815)). See [#2954](https://github.com/jaegertracing/jaeger/issues/2954) for more details.
+
+### Fixes
+
+- Endless loop in TraceStatistics View ([@vvvprabhakar](https://github.com/vvvprabhakar) in [#843](https://github.com/jaegertracing/jaeger-ui/pull/843))
+- Fix searching spans in a trace page ([@w0wka91](https://github.com/w0wka91) in [#837](https://github.com/jaegertracing/jaeger-ui/pull/837))
+
 ## v1.18.0 (Nov 6, 2021)
 
 ### Fixes
@@ -377,7 +400,7 @@
 
 ## Changes released in Jaeger 1.8.2 and earlier
 
-These changes are listed in chronological order by the date they were merged into master.
+These changes are listed in chronological order by the date they were merged into mainz.
 
 ### [#263](https://github.com/jaegertracing/jaeger-ui/pull/263) Embedded components (SearchTraces and Tracepage ) ([@aljesusg](https://github.com/aljesusg))
 
