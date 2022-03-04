@@ -238,7 +238,7 @@ export function submitForm(fields, searchTraces) {
     end = times.end;
   }
 
-  trackFormInput(resultsLimit, operation, tags, minDuration, maxDuration, lookback);
+  trackFormInput(resultsLimit, operation, tags, minDuration, maxDuration, lookback, service);
 
   searchTraces({
     service,
