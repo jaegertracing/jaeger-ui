@@ -6,6 +6,20 @@
 
 ### Fixes
 
+## v1.21.0 (2022-03-06)
+
+### Fixes
+
+- Include serviceName in tracked events from Search Form ([@vvvprabhakar](https://github.com/vvvprabhakar) in [#842](https://github.com/jaegertracing/jaeger-ui/pull/842))
+- Monitor Tab: Cannot see the whole numbers in the legend ([@nofar9792](https://github.com/nofar9792) in [#873](https://github.com/jaegertracing/jaeger-ui/pull/873))
+- Monitor Tab: Cannot choose another timeframe ([@nofar9792](https://github.com/nofar9792) in [#898](https://github.com/jaegertracing/jaeger-ui/pull/898))
+- Monitor Tab: Error rate value should be 0-100 value and not 0-1 ([@nofar9792](https://github.com/nofar9792) in [#895](https://github.com/jaegertracing/jaeger-ui/pull/895))
+- Monitor Tab: Show 95 Latency in a more readable time-unit ([@nofar9792](https://github.com/nofar9792) in [#893](https://github.com/jaegertracing/jaeger-ui/pull/893))
+- Monitor Tab: The x-axis timeframe should be according to the selected timeframe ([@nofar9792](https://github.com/nofar9792) in [#886](https://github.com/jaegertracing/jaeger-ui/pull/886))
+- Monitor Tab: Improve request rate readability ([@nofar9792](https://github.com/nofar9792) in [#890](https://github.com/jaegertracing/jaeger-ui/pull/890))
+- Monitor Tab: Crosshair color is too light ([@nofar9792](https://github.com/nofar9792) in [#888](https://github.com/jaegertracing/jaeger-ui/pull/888))
+- Monitor Tab: Reduce ratePer window ([@albertteoh](https://github.com/albertteoh) in [#885](https://github.com/jaegertracing/jaeger-ui/pull/885))
+
 ## v1.20.1 (2022-02-04)
 
 ### Fixes
