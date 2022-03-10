@@ -418,7 +418,2077 @@ exports[`<OperationTableDetails> render No data table 1`] = `
 </div>
 `;
 
-exports[`<OperationTableDetails> render greater than 0.1 requests value in the table 1`] = `
+exports[`<OperationTableDetails> render P95 latency with more than 2 decimal places value 1`] = `
+<div
+  className="ant-row"
+>
+  <div
+    className="ant-table-wrapper"
+  >
+    <div
+      className="ant-spin-nested-loading"
+      style={null}
+    >
+      <div
+        className="ant-spin-container"
+        key="container"
+      >
+        <div
+          className="ant-table ant-table-default ant-table-scroll-position-left"
+          style={Object {}}
+        >
+          <div
+            className="ant-table-content"
+          >
+            <div
+              className="ant-table-body"
+              key="bodyTable"
+              onScroll={[Function]}
+              onWheel={[Function]}
+              style={Object {}}
+            >
+              <table
+                className=""
+                key="table"
+                style={Object {}}
+              >
+                <colgroup>
+                  <col
+                    key="name"
+                    style={
+                      Object {
+                        "minWidth": undefined,
+                        "width": undefined,
+                      }
+                    }
+                  />
+                  <col
+                    key="latency"
+                    style={
+                      Object {
+                        "minWidth": undefined,
+                        "width": undefined,
+                      }
+                    }
+                  />
+                  <col
+                    key="requests"
+                    style={
+                      Object {
+                        "minWidth": undefined,
+                        "width": undefined,
+                      }
+                    }
+                  />
+                  <col
+                    key="errRates"
+                    style={
+                      Object {
+                        "minWidth": undefined,
+                        "width": undefined,
+                      }
+                    }
+                  />
+                  <col
+                    key="impact"
+                    style={
+                      Object {
+                        "minWidth": undefined,
+                        "width": undefined,
+                      }
+                    }
+                  />
+                </colgroup>
+                <thead
+                  className="ant-table-thead"
+                >
+                  <tr
+                    style={
+                      Object {
+                        "height": null,
+                      }
+                    }
+                  >
+                    <th
+                      className="ant-table-column-has-filters header-item"
+                      key="name"
+                    >
+                      <span
+                        key="name"
+                      >
+                        Name
+                        <div
+                          className="ant-table-column-sorter"
+                        >
+                          <span
+                            className="ant-table-column-sorter-up off"
+                            onClick={[Function]}
+                            title="↑"
+                          >
+                            <i
+                              className="anticon anticon-caret-up"
+                            />
+                          </span>
+                          <span
+                            className="ant-table-column-sorter-down off"
+                            onClick={[Function]}
+                            title="↓"
+                          >
+                            <i
+                              className="anticon anticon-caret-down"
+                            />
+                          </span>
+                        </div>
+                      </span>
+                    </th>
+                    <th
+                      className="ant-table-column-has-filters header-item"
+                      key="latency"
+                    >
+                      <span
+                        key="latency"
+                      >
+                        P95 Latency
+                        <div
+                          className="ant-table-column-sorter"
+                        >
+                          <span
+                            className="ant-table-column-sorter-up off"
+                            onClick={[Function]}
+                            title="↑"
+                          >
+                            <i
+                              className="anticon anticon-caret-up"
+                            />
+                          </span>
+                          <span
+                            className="ant-table-column-sorter-down off"
+                            onClick={[Function]}
+                            title="↓"
+                          >
+                            <i
+                              className="anticon anticon-caret-down"
+                            />
+                          </span>
+                        </div>
+                      </span>
+                    </th>
+                    <th
+                      className="ant-table-column-has-filters header-item"
+                      key="requests"
+                    >
+                      <span
+                        key="requests"
+                      >
+                        Request rate
+                        <div
+                          className="ant-table-column-sorter"
+                        >
+                          <span
+                            className="ant-table-column-sorter-up off"
+                            onClick={[Function]}
+                            title="↑"
+                          >
+                            <i
+                              className="anticon anticon-caret-up"
+                            />
+                          </span>
+                          <span
+                            className="ant-table-column-sorter-down off"
+                            onClick={[Function]}
+                            title="↓"
+                          >
+                            <i
+                              className="anticon anticon-caret-down"
+                            />
+                          </span>
+                        </div>
+                      </span>
+                    </th>
+                    <th
+                      className="ant-table-column-has-filters header-item"
+                      key="errRates"
+                    >
+                      <span
+                        key="errRates"
+                      >
+                        Error rate
+                        <div
+                          className="ant-table-column-sorter"
+                        >
+                          <span
+                            className="ant-table-column-sorter-up off"
+                            onClick={[Function]}
+                            title="↑"
+                          >
+                            <i
+                              className="anticon anticon-caret-up"
+                            />
+                          </span>
+                          <span
+                            className="ant-table-column-sorter-down off"
+                            onClick={[Function]}
+                            title="↓"
+                          >
+                            <i
+                              className="anticon anticon-caret-down"
+                            />
+                          </span>
+                        </div>
+                      </span>
+                    </th>
+                    <th
+                      className="ant-table-column-has-filters header-item ant-table-column-sort"
+                      key="impact"
+                    >
+                      <span
+                        key="impact"
+                      >
+                        <div
+                          style={
+                            Object {
+                              "paddingTop": 1,
+                            }
+                          }
+                        >
+                          <span
+                            style={
+                              Object {
+                                "color": "#459798",
+                                "float": "left",
+                              }
+                            }
+                          >
+                            Impact  
+                            <i
+                              className="anticon anticon-info-circle"
+                              onMouseEnter={[Function]}
+                              onMouseLeave={[Function]}
+                            />
+                          </span>
+                        </div>
+                        <div
+                          className="ant-table-column-sorter"
+                        >
+                          <span
+                            className="ant-table-column-sorter-up off"
+                            onClick={[Function]}
+                            title="↑"
+                          >
+                            <i
+                              className="anticon anticon-caret-up"
+                            />
+                          </span>
+                          <span
+                            className="ant-table-column-sorter-down on"
+                            onClick={[Function]}
+                            title="↓"
+                          >
+                            <i
+                              className="anticon anticon-caret-down"
+                            />
+                          </span>
+                        </div>
+                      </span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody
+                  className="ant-table-tbody"
+                >
+                  <tr
+                    className="ant-table-row table-row ant-table-row-level-0"
+                    data-row-key={0}
+                    onClick={[Function]}
+                    onContextMenu={[Function]}
+                    onDoubleClick={[Function]}
+                    onMouseEnter={[Function]}
+                    onMouseLeave={[Function]}
+                    style={
+                      Object {
+                        "height": null,
+                      }
+                    }
+                  >
+                    <td
+                      className="ant-table-column-has-filters header-item"
+                      onClick={[Function]}
+                    >
+                      <span
+                        className="ant-table-row-indent indent-level-0"
+                        style={
+                          Object {
+                            "paddingLeft": "0px",
+                          }
+                        }
+                      />
+                      /PlaceOrder
+                    </td>
+                    <td
+                      className="ant-table-column-has-filters header-item"
+                      onClick={[Function]}
+                    >
+                      <div
+                        className="column-container"
+                      >
+                        <div
+                          className="ops-container"
+                        >
+                          <div
+                            className="rv-xy-plot "
+                            style={
+                              Object {
+                                "height": "15px",
+                                "width": "100px",
+                              }
+                            }
+                          >
+                            <svg
+                              className="rv-xy-plot__inner"
+                              height={15}
+                              onClick={[Function]}
+                              onDoubleClick={[Function]}
+                              onMouseDown={[Function]}
+                              onMouseEnter={[Function]}
+                              onMouseLeave={[Function]}
+                              onMouseMove={[Function]}
+                              onMouseUp={[Function]}
+                              onTouchCancel={[Function]}
+                              onTouchEnd={[Function]}
+                              onTouchMove={[Function]}
+                              onTouchStart={[Function]}
+                              onWheel={[Function]}
+                              width={100}
+                            >
+                              <path
+                                className="rv-xy-plot__series rv-xy-plot__series--line area-series-example ops-graph-style"
+                                d="M0,0L100,12L100,12L0,12Z"
+                                onClick={[Function]}
+                                onContextMenu={[Function]}
+                                onMouseOut={[Function]}
+                                onMouseOver={[Function]}
+                                style={
+                                  Object {
+                                    "fill": "#869ADD",
+                                    "opacity": 1,
+                                    "stroke": "#869ADD",
+                                  }
+                                }
+                                transform="translate(0,2)"
+                              />
+                              <path
+                                className="rv-xy-plot__series rv-xy-plot__series--line area-elevated-line-series"
+                                d="M0,0L100,12"
+                                onClick={[Function]}
+                                onContextMenu={[Function]}
+                                onMouseOut={[Function]}
+                                onMouseOver={[Function]}
+                                style={
+                                  Object {
+                                    "opacity": 1,
+                                    "stroke": "#869ADD",
+                                    "strokeDasharray": undefined,
+                                    "strokeWidth": undefined,
+                                  }
+                                }
+                                transform="translate(0,2)"
+                              />
+                            </svg>
+                          </div>
+                        </div>
+                        <div
+                          className="table-graph-avg"
+                        >
+                          298.8μs
+                        </div>
+                      </div>
+                    </td>
+                    <td
+                      className="ant-table-column-has-filters header-item"
+                      onClick={[Function]}
+                    >
+                      <div
+                        className="column-container"
+                      >
+                        <div
+                          className="ops-container"
+                        >
+                          <div
+                            className="rv-xy-plot "
+                            style={
+                              Object {
+                                "height": "15px",
+                                "width": "100px",
+                              }
+                            }
+                          >
+                            <svg
+                              className="rv-xy-plot__inner"
+                              height={15}
+                              onClick={[Function]}
+                              onDoubleClick={[Function]}
+                              onMouseDown={[Function]}
+                              onMouseEnter={[Function]}
+                              onMouseLeave={[Function]}
+                              onMouseMove={[Function]}
+                              onMouseUp={[Function]}
+                              onTouchCancel={[Function]}
+                              onTouchEnd={[Function]}
+                              onTouchMove={[Function]}
+                              onTouchStart={[Function]}
+                              onWheel={[Function]}
+                              width={100}
+                            >
+                              <path
+                                className="rv-xy-plot__series rv-xy-plot__series--line area-series-example ops-graph-style"
+                                d="M0,0L100,0L100,0L0,0Z"
+                                onClick={[Function]}
+                                onContextMenu={[Function]}
+                                onMouseOut={[Function]}
+                                onMouseOver={[Function]}
+                                style={
+                                  Object {
+                                    "fill": "#4795BA",
+                                    "opacity": 1,
+                                    "stroke": "#4795BA",
+                                  }
+                                }
+                                transform="translate(0,2)"
+                              />
+                              <path
+                                className="rv-xy-plot__series rv-xy-plot__series--line area-elevated-line-series"
+                                d="M0,0L100,0"
+                                onClick={[Function]}
+                                onContextMenu={[Function]}
+                                onMouseOut={[Function]}
+                                onMouseOver={[Function]}
+                                style={
+                                  Object {
+                                    "opacity": 1,
+                                    "stroke": "#4795BA",
+                                    "strokeDasharray": undefined,
+                                    "strokeWidth": undefined,
+                                  }
+                                }
+                                transform="translate(0,2)"
+                              />
+                            </svg>
+                          </div>
+                        </div>
+                        <div
+                          className="table-graph-avg"
+                        >
+                          &lt; 0.1 req/s
+                        </div>
+                      </div>
+                    </td>
+                    <td
+                      className="ant-table-column-has-filters header-item"
+                      onClick={[Function]}
+                    >
+                      <div
+                        className="column-container"
+                      >
+                        <div
+                          className="ops-container"
+                        >
+                          <div
+                            className="rv-xy-plot "
+                            style={
+                              Object {
+                                "height": "15px",
+                                "width": "100px",
+                              }
+                            }
+                          >
+                            <svg
+                              className="rv-xy-plot__inner"
+                              height={15}
+                              onClick={[Function]}
+                              onDoubleClick={[Function]}
+                              onMouseDown={[Function]}
+                              onMouseEnter={[Function]}
+                              onMouseLeave={[Function]}
+                              onMouseMove={[Function]}
+                              onMouseUp={[Function]}
+                              onTouchCancel={[Function]}
+                              onTouchEnd={[Function]}
+                              onTouchMove={[Function]}
+                              onTouchStart={[Function]}
+                              onWheel={[Function]}
+                              width={100}
+                            >
+                              <path
+                                className="rv-xy-plot__series rv-xy-plot__series--line area-series-example ops-graph-style"
+                                d="M0,11.88L100,11.88L100,12L0,12Z"
+                                onClick={[Function]}
+                                onContextMenu={[Function]}
+                                onMouseOut={[Function]}
+                                onMouseOver={[Function]}
+                                style={
+                                  Object {
+                                    "fill": "#CD513A",
+                                    "opacity": 1,
+                                    "stroke": "#CD513A",
+                                  }
+                                }
+                                transform="translate(0,2)"
+                              />
+                              <path
+                                className="rv-xy-plot__series rv-xy-plot__series--line area-elevated-line-series"
+                                d="M0,11.88L100,11.88"
+                                onClick={[Function]}
+                                onContextMenu={[Function]}
+                                onMouseOut={[Function]}
+                                onMouseOver={[Function]}
+                                style={
+                                  Object {
+                                    "opacity": 1,
+                                    "stroke": "#CD513A",
+                                    "strokeDasharray": undefined,
+                                    "strokeWidth": undefined,
+                                  }
+                                }
+                                transform="translate(0,2)"
+                              />
+                            </svg>
+                          </div>
+                        </div>
+                        <div
+                          className="table-graph-avg"
+                        >
+                          100%
+                        </div>
+                      </div>
+                    </td>
+                    <td
+                      className="ant-table-column-has-filters header-item ant-table-column-sort"
+                      onClick={[Function]}
+                    >
+                      <div
+                        className="column-container"
+                      >
+                        <div
+                          className="ant-progress ant-progress-line ant-progress-status-success ant-progress-default impact"
+                        >
+                          <div>
+                            <div
+                              className="ant-progress-outer"
+                            >
+                              <div
+                                className="ant-progress-inner"
+                              >
+                                <div
+                                  className="ant-progress-bg"
+                                  style={
+                                    Object {
+                                      "background": "#459798",
+                                      "borderRadius": 0,
+                                      "height": 8,
+                                      "width": "100%",
+                                    }
+                                  }
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div
+                          className="view-trace-button"
+                        />
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <ul
+          className="ant-pagination ant-table-pagination"
+          style={Object {}}
+          unselectable="unselectable"
+        >
+          <li
+            aria-disabled={true}
+            className="ant-pagination-disabled ant-pagination-prev"
+            onClick={[Function]}
+            onKeyPress={[Function]}
+            tabIndex={null}
+            title="Previous Page"
+          >
+            <a
+              className="ant-pagination-item-link"
+            />
+          </li>
+          <li
+            className="ant-pagination-item ant-pagination-item-1 ant-pagination-item-active"
+            onClick={[Function]}
+            onKeyPress={[Function]}
+            tabIndex="0"
+            title={1}
+          >
+            <a>
+              1
+            </a>
+          </li>
+          <li
+            aria-disabled={true}
+            className="ant-pagination-disabled ant-pagination-next"
+            onClick={[Function]}
+            onKeyPress={[Function]}
+            tabIndex={null}
+            title="Next Page"
+          >
+            <a
+              className="ant-pagination-item-link"
+            />
+          </li>
+          <li
+            className="ant-pagination-options"
+          >
+            <div
+              className="ant-pagination-options-size-changer ant-select ant-select-enabled"
+              key="trigger"
+              onBlur={[Function]}
+              onClick={[Function]}
+              onFocus={[Function]}
+              onMouseDown={[Function]}
+              onTouchStart={[Function]}
+            >
+              <div
+                aria-autocomplete="list"
+                aria-expanded={false}
+                aria-haspopup="true"
+                className="ant-select-selection
+            ant-select-selection--single"
+                key="selection"
+                onKeyDown={[Function]}
+                role="combobox"
+                tabIndex={0}
+              >
+                <div
+                  className="ant-select-selection__rendered"
+                >
+                  <div
+                    className="ant-select-selection-selected-value"
+                    key="value"
+                    style={
+                      Object {
+                        "display": "block",
+                        "opacity": 1,
+                      }
+                    }
+                    title="20 / page"
+                  >
+                    20 / page
+                  </div>
+                </div>
+                <span
+                  className="ant-select-arrow"
+                  key="arrow"
+                  onClick={[Function]}
+                  style={
+                    Object {
+                      "WebkitUserSelect": "none",
+                      "userSelect": "none",
+                    }
+                  }
+                  unselectable="on"
+                >
+                  <b />
+                </span>
+              </div>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`<OperationTableDetails> render error rate with more than 2 decimal places value 1`] = `
+<div
+  className="ant-row"
+>
+  <div
+    className="ant-table-wrapper"
+  >
+    <div
+      className="ant-spin-nested-loading"
+      style={null}
+    >
+      <div
+        className="ant-spin-container"
+        key="container"
+      >
+        <div
+          className="ant-table ant-table-default ant-table-scroll-position-left"
+          style={Object {}}
+        >
+          <div
+            className="ant-table-content"
+          >
+            <div
+              className="ant-table-body"
+              key="bodyTable"
+              onScroll={[Function]}
+              onWheel={[Function]}
+              style={Object {}}
+            >
+              <table
+                className=""
+                key="table"
+                style={Object {}}
+              >
+                <colgroup>
+                  <col
+                    key="name"
+                    style={
+                      Object {
+                        "minWidth": undefined,
+                        "width": undefined,
+                      }
+                    }
+                  />
+                  <col
+                    key="latency"
+                    style={
+                      Object {
+                        "minWidth": undefined,
+                        "width": undefined,
+                      }
+                    }
+                  />
+                  <col
+                    key="requests"
+                    style={
+                      Object {
+                        "minWidth": undefined,
+                        "width": undefined,
+                      }
+                    }
+                  />
+                  <col
+                    key="errRates"
+                    style={
+                      Object {
+                        "minWidth": undefined,
+                        "width": undefined,
+                      }
+                    }
+                  />
+                  <col
+                    key="impact"
+                    style={
+                      Object {
+                        "minWidth": undefined,
+                        "width": undefined,
+                      }
+                    }
+                  />
+                </colgroup>
+                <thead
+                  className="ant-table-thead"
+                >
+                  <tr
+                    style={
+                      Object {
+                        "height": null,
+                      }
+                    }
+                  >
+                    <th
+                      className="ant-table-column-has-filters header-item"
+                      key="name"
+                    >
+                      <span
+                        key="name"
+                      >
+                        Name
+                        <div
+                          className="ant-table-column-sorter"
+                        >
+                          <span
+                            className="ant-table-column-sorter-up off"
+                            onClick={[Function]}
+                            title="↑"
+                          >
+                            <i
+                              className="anticon anticon-caret-up"
+                            />
+                          </span>
+                          <span
+                            className="ant-table-column-sorter-down off"
+                            onClick={[Function]}
+                            title="↓"
+                          >
+                            <i
+                              className="anticon anticon-caret-down"
+                            />
+                          </span>
+                        </div>
+                      </span>
+                    </th>
+                    <th
+                      className="ant-table-column-has-filters header-item"
+                      key="latency"
+                    >
+                      <span
+                        key="latency"
+                      >
+                        P95 Latency
+                        <div
+                          className="ant-table-column-sorter"
+                        >
+                          <span
+                            className="ant-table-column-sorter-up off"
+                            onClick={[Function]}
+                            title="↑"
+                          >
+                            <i
+                              className="anticon anticon-caret-up"
+                            />
+                          </span>
+                          <span
+                            className="ant-table-column-sorter-down off"
+                            onClick={[Function]}
+                            title="↓"
+                          >
+                            <i
+                              className="anticon anticon-caret-down"
+                            />
+                          </span>
+                        </div>
+                      </span>
+                    </th>
+                    <th
+                      className="ant-table-column-has-filters header-item"
+                      key="requests"
+                    >
+                      <span
+                        key="requests"
+                      >
+                        Request rate
+                        <div
+                          className="ant-table-column-sorter"
+                        >
+                          <span
+                            className="ant-table-column-sorter-up off"
+                            onClick={[Function]}
+                            title="↑"
+                          >
+                            <i
+                              className="anticon anticon-caret-up"
+                            />
+                          </span>
+                          <span
+                            className="ant-table-column-sorter-down off"
+                            onClick={[Function]}
+                            title="↓"
+                          >
+                            <i
+                              className="anticon anticon-caret-down"
+                            />
+                          </span>
+                        </div>
+                      </span>
+                    </th>
+                    <th
+                      className="ant-table-column-has-filters header-item"
+                      key="errRates"
+                    >
+                      <span
+                        key="errRates"
+                      >
+                        Error rate
+                        <div
+                          className="ant-table-column-sorter"
+                        >
+                          <span
+                            className="ant-table-column-sorter-up off"
+                            onClick={[Function]}
+                            title="↑"
+                          >
+                            <i
+                              className="anticon anticon-caret-up"
+                            />
+                          </span>
+                          <span
+                            className="ant-table-column-sorter-down off"
+                            onClick={[Function]}
+                            title="↓"
+                          >
+                            <i
+                              className="anticon anticon-caret-down"
+                            />
+                          </span>
+                        </div>
+                      </span>
+                    </th>
+                    <th
+                      className="ant-table-column-has-filters header-item ant-table-column-sort"
+                      key="impact"
+                    >
+                      <span
+                        key="impact"
+                      >
+                        <div
+                          style={
+                            Object {
+                              "paddingTop": 1,
+                            }
+                          }
+                        >
+                          <span
+                            style={
+                              Object {
+                                "color": "#459798",
+                                "float": "left",
+                              }
+                            }
+                          >
+                            Impact  
+                            <i
+                              className="anticon anticon-info-circle"
+                              onMouseEnter={[Function]}
+                              onMouseLeave={[Function]}
+                            />
+                          </span>
+                        </div>
+                        <div
+                          className="ant-table-column-sorter"
+                        >
+                          <span
+                            className="ant-table-column-sorter-up off"
+                            onClick={[Function]}
+                            title="↑"
+                          >
+                            <i
+                              className="anticon anticon-caret-up"
+                            />
+                          </span>
+                          <span
+                            className="ant-table-column-sorter-down on"
+                            onClick={[Function]}
+                            title="↓"
+                          >
+                            <i
+                              className="anticon anticon-caret-down"
+                            />
+                          </span>
+                        </div>
+                      </span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody
+                  className="ant-table-tbody"
+                >
+                  <tr
+                    className="ant-table-row table-row ant-table-row-level-0"
+                    data-row-key={0}
+                    onClick={[Function]}
+                    onContextMenu={[Function]}
+                    onDoubleClick={[Function]}
+                    onMouseEnter={[Function]}
+                    onMouseLeave={[Function]}
+                    style={
+                      Object {
+                        "height": null,
+                      }
+                    }
+                  >
+                    <td
+                      className="ant-table-column-has-filters header-item"
+                      onClick={[Function]}
+                    >
+                      <span
+                        className="ant-table-row-indent indent-level-0"
+                        style={
+                          Object {
+                            "paddingLeft": "0px",
+                          }
+                        }
+                      />
+                      /PlaceOrder
+                    </td>
+                    <td
+                      className="ant-table-column-has-filters header-item"
+                      onClick={[Function]}
+                    >
+                      <div
+                        className="column-container"
+                      >
+                        <div
+                          className="ops-container"
+                        >
+                          <div
+                            className="rv-xy-plot "
+                            style={
+                              Object {
+                                "height": "15px",
+                                "width": "100px",
+                              }
+                            }
+                          >
+                            <svg
+                              className="rv-xy-plot__inner"
+                              height={15}
+                              onClick={[Function]}
+                              onDoubleClick={[Function]}
+                              onMouseDown={[Function]}
+                              onMouseEnter={[Function]}
+                              onMouseLeave={[Function]}
+                              onMouseMove={[Function]}
+                              onMouseUp={[Function]}
+                              onTouchCancel={[Function]}
+                              onTouchEnd={[Function]}
+                              onTouchMove={[Function]}
+                              onTouchStart={[Function]}
+                              onWheel={[Function]}
+                              width={100}
+                            >
+                              <path
+                                className="rv-xy-plot__series rv-xy-plot__series--line area-series-example ops-graph-style"
+                                d="M0,0L100,12L100,12L0,12Z"
+                                onClick={[Function]}
+                                onContextMenu={[Function]}
+                                onMouseOut={[Function]}
+                                onMouseOver={[Function]}
+                                style={
+                                  Object {
+                                    "fill": "#869ADD",
+                                    "opacity": 1,
+                                    "stroke": "#869ADD",
+                                  }
+                                }
+                                transform="translate(0,2)"
+                              />
+                              <path
+                                className="rv-xy-plot__series rv-xy-plot__series--line area-elevated-line-series"
+                                d="M0,0L100,12"
+                                onClick={[Function]}
+                                onContextMenu={[Function]}
+                                onMouseOut={[Function]}
+                                onMouseOver={[Function]}
+                                style={
+                                  Object {
+                                    "opacity": 1,
+                                    "stroke": "#869ADD",
+                                    "strokeDasharray": undefined,
+                                    "strokeWidth": undefined,
+                                  }
+                                }
+                                transform="translate(0,2)"
+                              />
+                            </svg>
+                          </div>
+                        </div>
+                        <div
+                          className="table-graph-avg"
+                        >
+                          33.33ms
+                        </div>
+                      </div>
+                    </td>
+                    <td
+                      className="ant-table-column-has-filters header-item"
+                      onClick={[Function]}
+                    >
+                      <div
+                        className="column-container"
+                      >
+                        <div
+                          className="ops-container"
+                        >
+                          <div
+                            className="rv-xy-plot "
+                            style={
+                              Object {
+                                "height": "15px",
+                                "width": "100px",
+                              }
+                            }
+                          >
+                            <svg
+                              className="rv-xy-plot__inner"
+                              height={15}
+                              onClick={[Function]}
+                              onDoubleClick={[Function]}
+                              onMouseDown={[Function]}
+                              onMouseEnter={[Function]}
+                              onMouseLeave={[Function]}
+                              onMouseMove={[Function]}
+                              onMouseUp={[Function]}
+                              onTouchCancel={[Function]}
+                              onTouchEnd={[Function]}
+                              onTouchMove={[Function]}
+                              onTouchStart={[Function]}
+                              onWheel={[Function]}
+                              width={100}
+                            >
+                              <path
+                                className="rv-xy-plot__series rv-xy-plot__series--line area-series-example ops-graph-style"
+                                d="M0,0L100,0L100,0L0,0Z"
+                                onClick={[Function]}
+                                onContextMenu={[Function]}
+                                onMouseOut={[Function]}
+                                onMouseOver={[Function]}
+                                style={
+                                  Object {
+                                    "fill": "#4795BA",
+                                    "opacity": 1,
+                                    "stroke": "#4795BA",
+                                  }
+                                }
+                                transform="translate(0,2)"
+                              />
+                              <path
+                                className="rv-xy-plot__series rv-xy-plot__series--line area-elevated-line-series"
+                                d="M0,0L100,0"
+                                onClick={[Function]}
+                                onContextMenu={[Function]}
+                                onMouseOut={[Function]}
+                                onMouseOver={[Function]}
+                                style={
+                                  Object {
+                                    "opacity": 1,
+                                    "stroke": "#4795BA",
+                                    "strokeDasharray": undefined,
+                                    "strokeWidth": undefined,
+                                  }
+                                }
+                                transform="translate(0,2)"
+                              />
+                            </svg>
+                          </div>
+                        </div>
+                        <div
+                          className="table-graph-avg"
+                        >
+                          &lt; 0.1 req/s
+                        </div>
+                      </div>
+                    </td>
+                    <td
+                      className="ant-table-column-has-filters header-item"
+                      onClick={[Function]}
+                    >
+                      <div
+                        className="column-container"
+                      >
+                        <div
+                          className="ops-container"
+                        >
+                          <div
+                            className="rv-xy-plot "
+                            style={
+                              Object {
+                                "height": "15px",
+                                "width": "100px",
+                              }
+                            }
+                          >
+                            <svg
+                              className="rv-xy-plot__inner"
+                              height={15}
+                              onClick={[Function]}
+                              onDoubleClick={[Function]}
+                              onMouseDown={[Function]}
+                              onMouseEnter={[Function]}
+                              onMouseLeave={[Function]}
+                              onMouseMove={[Function]}
+                              onMouseUp={[Function]}
+                              onTouchCancel={[Function]}
+                              onTouchEnd={[Function]}
+                              onTouchMove={[Function]}
+                              onTouchStart={[Function]}
+                              onWheel={[Function]}
+                              width={100}
+                            >
+                              <path
+                                className="rv-xy-plot__series rv-xy-plot__series--line area-series-example ops-graph-style"
+                                d="M0,11.88L100,11.88L100,12L0,12Z"
+                                onClick={[Function]}
+                                onContextMenu={[Function]}
+                                onMouseOut={[Function]}
+                                onMouseOver={[Function]}
+                                style={
+                                  Object {
+                                    "fill": "#CD513A",
+                                    "opacity": 1,
+                                    "stroke": "#CD513A",
+                                  }
+                                }
+                                transform="translate(0,2)"
+                              />
+                              <path
+                                className="rv-xy-plot__series rv-xy-plot__series--line area-elevated-line-series"
+                                d="M0,11.88L100,11.88"
+                                onClick={[Function]}
+                                onContextMenu={[Function]}
+                                onMouseOut={[Function]}
+                                onMouseOver={[Function]}
+                                style={
+                                  Object {
+                                    "opacity": 1,
+                                    "stroke": "#CD513A",
+                                    "strokeDasharray": undefined,
+                                    "strokeWidth": undefined,
+                                  }
+                                }
+                                transform="translate(0,2)"
+                              />
+                            </svg>
+                          </div>
+                        </div>
+                        <div
+                          className="table-graph-avg"
+                        >
+                          100%
+                        </div>
+                      </div>
+                    </td>
+                    <td
+                      className="ant-table-column-has-filters header-item ant-table-column-sort"
+                      onClick={[Function]}
+                    >
+                      <div
+                        className="column-container"
+                      >
+                        <div
+                          className="ant-progress ant-progress-line ant-progress-status-success ant-progress-default impact"
+                        >
+                          <div>
+                            <div
+                              className="ant-progress-outer"
+                            >
+                              <div
+                                className="ant-progress-inner"
+                              >
+                                <div
+                                  className="ant-progress-bg"
+                                  style={
+                                    Object {
+                                      "background": "#459798",
+                                      "borderRadius": 0,
+                                      "height": 8,
+                                      "width": "100%",
+                                    }
+                                  }
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div
+                          className="view-trace-button"
+                        />
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <ul
+          className="ant-pagination ant-table-pagination"
+          style={Object {}}
+          unselectable="unselectable"
+        >
+          <li
+            aria-disabled={true}
+            className="ant-pagination-disabled ant-pagination-prev"
+            onClick={[Function]}
+            onKeyPress={[Function]}
+            tabIndex={null}
+            title="Previous Page"
+          >
+            <a
+              className="ant-pagination-item-link"
+            />
+          </li>
+          <li
+            className="ant-pagination-item ant-pagination-item-1 ant-pagination-item-active"
+            onClick={[Function]}
+            onKeyPress={[Function]}
+            tabIndex="0"
+            title={1}
+          >
+            <a>
+              1
+            </a>
+          </li>
+          <li
+            aria-disabled={true}
+            className="ant-pagination-disabled ant-pagination-next"
+            onClick={[Function]}
+            onKeyPress={[Function]}
+            tabIndex={null}
+            title="Next Page"
+          >
+            <a
+              className="ant-pagination-item-link"
+            />
+          </li>
+          <li
+            className="ant-pagination-options"
+          >
+            <div
+              className="ant-pagination-options-size-changer ant-select ant-select-enabled"
+              key="trigger"
+              onBlur={[Function]}
+              onClick={[Function]}
+              onFocus={[Function]}
+              onMouseDown={[Function]}
+              onTouchStart={[Function]}
+            >
+              <div
+                aria-autocomplete="list"
+                aria-expanded={false}
+                aria-haspopup="true"
+                className="ant-select-selection
+            ant-select-selection--single"
+                key="selection"
+                onKeyDown={[Function]}
+                role="combobox"
+                tabIndex={0}
+              >
+                <div
+                  className="ant-select-selection__rendered"
+                >
+                  <div
+                    className="ant-select-selection-selected-value"
+                    key="value"
+                    style={
+                      Object {
+                        "display": "block",
+                        "opacity": 1,
+                      }
+                    }
+                    title="20 / page"
+                  >
+                    20 / page
+                  </div>
+                </div>
+                <span
+                  className="ant-select-arrow"
+                  key="arrow"
+                  onClick={[Function]}
+                  style={
+                    Object {
+                      "WebkitUserSelect": "none",
+                      "userSelect": "none",
+                    }
+                  }
+                  unselectable="on"
+                >
+                  <b />
+                </span>
+              </div>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`<OperationTableDetails> render lower than 0.1 P95 latency 1`] = `
+<div
+  className="ant-row"
+>
+  <div
+    className="ant-table-wrapper"
+  >
+    <div
+      className="ant-spin-nested-loading"
+      style={null}
+    >
+      <div
+        className="ant-spin-container"
+        key="container"
+      >
+        <div
+          className="ant-table ant-table-default ant-table-scroll-position-left"
+          style={Object {}}
+        >
+          <div
+            className="ant-table-content"
+          >
+            <div
+              className="ant-table-body"
+              key="bodyTable"
+              onScroll={[Function]}
+              onWheel={[Function]}
+              style={Object {}}
+            >
+              <table
+                className=""
+                key="table"
+                style={Object {}}
+              >
+                <colgroup>
+                  <col
+                    key="name"
+                    style={
+                      Object {
+                        "minWidth": undefined,
+                        "width": undefined,
+                      }
+                    }
+                  />
+                  <col
+                    key="latency"
+                    style={
+                      Object {
+                        "minWidth": undefined,
+                        "width": undefined,
+                      }
+                    }
+                  />
+                  <col
+                    key="requests"
+                    style={
+                      Object {
+                        "minWidth": undefined,
+                        "width": undefined,
+                      }
+                    }
+                  />
+                  <col
+                    key="errRates"
+                    style={
+                      Object {
+                        "minWidth": undefined,
+                        "width": undefined,
+                      }
+                    }
+                  />
+                  <col
+                    key="impact"
+                    style={
+                      Object {
+                        "minWidth": undefined,
+                        "width": undefined,
+                      }
+                    }
+                  />
+                </colgroup>
+                <thead
+                  className="ant-table-thead"
+                >
+                  <tr
+                    style={
+                      Object {
+                        "height": null,
+                      }
+                    }
+                  >
+                    <th
+                      className="ant-table-column-has-filters header-item"
+                      key="name"
+                    >
+                      <span
+                        key="name"
+                      >
+                        Name
+                        <div
+                          className="ant-table-column-sorter"
+                        >
+                          <span
+                            className="ant-table-column-sorter-up off"
+                            onClick={[Function]}
+                            title="↑"
+                          >
+                            <i
+                              className="anticon anticon-caret-up"
+                            />
+                          </span>
+                          <span
+                            className="ant-table-column-sorter-down off"
+                            onClick={[Function]}
+                            title="↓"
+                          >
+                            <i
+                              className="anticon anticon-caret-down"
+                            />
+                          </span>
+                        </div>
+                      </span>
+                    </th>
+                    <th
+                      className="ant-table-column-has-filters header-item"
+                      key="latency"
+                    >
+                      <span
+                        key="latency"
+                      >
+                        P95 Latency
+                        <div
+                          className="ant-table-column-sorter"
+                        >
+                          <span
+                            className="ant-table-column-sorter-up off"
+                            onClick={[Function]}
+                            title="↑"
+                          >
+                            <i
+                              className="anticon anticon-caret-up"
+                            />
+                          </span>
+                          <span
+                            className="ant-table-column-sorter-down off"
+                            onClick={[Function]}
+                            title="↓"
+                          >
+                            <i
+                              className="anticon anticon-caret-down"
+                            />
+                          </span>
+                        </div>
+                      </span>
+                    </th>
+                    <th
+                      className="ant-table-column-has-filters header-item"
+                      key="requests"
+                    >
+                      <span
+                        key="requests"
+                      >
+                        Request rate
+                        <div
+                          className="ant-table-column-sorter"
+                        >
+                          <span
+                            className="ant-table-column-sorter-up off"
+                            onClick={[Function]}
+                            title="↑"
+                          >
+                            <i
+                              className="anticon anticon-caret-up"
+                            />
+                          </span>
+                          <span
+                            className="ant-table-column-sorter-down off"
+                            onClick={[Function]}
+                            title="↓"
+                          >
+                            <i
+                              className="anticon anticon-caret-down"
+                            />
+                          </span>
+                        </div>
+                      </span>
+                    </th>
+                    <th
+                      className="ant-table-column-has-filters header-item"
+                      key="errRates"
+                    >
+                      <span
+                        key="errRates"
+                      >
+                        Error rate
+                        <div
+                          className="ant-table-column-sorter"
+                        >
+                          <span
+                            className="ant-table-column-sorter-up off"
+                            onClick={[Function]}
+                            title="↑"
+                          >
+                            <i
+                              className="anticon anticon-caret-up"
+                            />
+                          </span>
+                          <span
+                            className="ant-table-column-sorter-down off"
+                            onClick={[Function]}
+                            title="↓"
+                          >
+                            <i
+                              className="anticon anticon-caret-down"
+                            />
+                          </span>
+                        </div>
+                      </span>
+                    </th>
+                    <th
+                      className="ant-table-column-has-filters header-item ant-table-column-sort"
+                      key="impact"
+                    >
+                      <span
+                        key="impact"
+                      >
+                        <div
+                          style={
+                            Object {
+                              "paddingTop": 1,
+                            }
+                          }
+                        >
+                          <span
+                            style={
+                              Object {
+                                "color": "#459798",
+                                "float": "left",
+                              }
+                            }
+                          >
+                            Impact  
+                            <i
+                              className="anticon anticon-info-circle"
+                              onMouseEnter={[Function]}
+                              onMouseLeave={[Function]}
+                            />
+                          </span>
+                        </div>
+                        <div
+                          className="ant-table-column-sorter"
+                        >
+                          <span
+                            className="ant-table-column-sorter-up off"
+                            onClick={[Function]}
+                            title="↑"
+                          >
+                            <i
+                              className="anticon anticon-caret-up"
+                            />
+                          </span>
+                          <span
+                            className="ant-table-column-sorter-down on"
+                            onClick={[Function]}
+                            title="↓"
+                          >
+                            <i
+                              className="anticon anticon-caret-down"
+                            />
+                          </span>
+                        </div>
+                      </span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody
+                  className="ant-table-tbody"
+                >
+                  <tr
+                    className="ant-table-row table-row ant-table-row-level-0"
+                    data-row-key={0}
+                    onClick={[Function]}
+                    onContextMenu={[Function]}
+                    onDoubleClick={[Function]}
+                    onMouseEnter={[Function]}
+                    onMouseLeave={[Function]}
+                    style={
+                      Object {
+                        "height": null,
+                      }
+                    }
+                  >
+                    <td
+                      className="ant-table-column-has-filters header-item"
+                      onClick={[Function]}
+                    >
+                      <span
+                        className="ant-table-row-indent indent-level-0"
+                        style={
+                          Object {
+                            "paddingLeft": "0px",
+                          }
+                        }
+                      />
+                      /PlaceOrder
+                    </td>
+                    <td
+                      className="ant-table-column-has-filters header-item"
+                      onClick={[Function]}
+                    >
+                      <div
+                        className="column-container"
+                      >
+                        <div
+                          className="ops-container"
+                        >
+                          <div
+                            className="rv-xy-plot "
+                            style={
+                              Object {
+                                "height": "15px",
+                                "width": "100px",
+                              }
+                            }
+                          >
+                            <svg
+                              className="rv-xy-plot__inner"
+                              height={15}
+                              onClick={[Function]}
+                              onDoubleClick={[Function]}
+                              onMouseDown={[Function]}
+                              onMouseEnter={[Function]}
+                              onMouseLeave={[Function]}
+                              onMouseMove={[Function]}
+                              onMouseUp={[Function]}
+                              onTouchCancel={[Function]}
+                              onTouchEnd={[Function]}
+                              onTouchMove={[Function]}
+                              onTouchStart={[Function]}
+                              onWheel={[Function]}
+                              width={100}
+                            >
+                              <path
+                                className="rv-xy-plot__series rv-xy-plot__series--line area-series-example ops-graph-style"
+                                d="M0,0L100,12L100,12L0,12Z"
+                                onClick={[Function]}
+                                onContextMenu={[Function]}
+                                onMouseOut={[Function]}
+                                onMouseOver={[Function]}
+                                style={
+                                  Object {
+                                    "fill": "#869ADD",
+                                    "opacity": 1,
+                                    "stroke": "#869ADD",
+                                  }
+                                }
+                                transform="translate(0,2)"
+                              />
+                              <path
+                                className="rv-xy-plot__series rv-xy-plot__series--line area-elevated-line-series"
+                                d="M0,0L100,12"
+                                onClick={[Function]}
+                                onContextMenu={[Function]}
+                                onMouseOut={[Function]}
+                                onMouseOver={[Function]}
+                                style={
+                                  Object {
+                                    "opacity": 1,
+                                    "stroke": "#869ADD",
+                                    "strokeDasharray": undefined,
+                                    "strokeWidth": undefined,
+                                  }
+                                }
+                                transform="translate(0,2)"
+                              />
+                            </svg>
+                          </div>
+                        </div>
+                        <div
+                          className="table-graph-avg"
+                        >
+                          &lt; 0.1μs
+                        </div>
+                      </div>
+                    </td>
+                    <td
+                      className="ant-table-column-has-filters header-item"
+                      onClick={[Function]}
+                    >
+                      <div
+                        className="column-container"
+                      >
+                        <div
+                          className="ops-container"
+                        >
+                          <div
+                            className="rv-xy-plot "
+                            style={
+                              Object {
+                                "height": "15px",
+                                "width": "100px",
+                              }
+                            }
+                          >
+                            <svg
+                              className="rv-xy-plot__inner"
+                              height={15}
+                              onClick={[Function]}
+                              onDoubleClick={[Function]}
+                              onMouseDown={[Function]}
+                              onMouseEnter={[Function]}
+                              onMouseLeave={[Function]}
+                              onMouseMove={[Function]}
+                              onMouseUp={[Function]}
+                              onTouchCancel={[Function]}
+                              onTouchEnd={[Function]}
+                              onTouchMove={[Function]}
+                              onTouchStart={[Function]}
+                              onWheel={[Function]}
+                              width={100}
+                            >
+                              <path
+                                className="rv-xy-plot__series rv-xy-plot__series--line area-series-example ops-graph-style"
+                                d="M0,0L100,0L100,0L0,0Z"
+                                onClick={[Function]}
+                                onContextMenu={[Function]}
+                                onMouseOut={[Function]}
+                                onMouseOver={[Function]}
+                                style={
+                                  Object {
+                                    "fill": "#4795BA",
+                                    "opacity": 1,
+                                    "stroke": "#4795BA",
+                                  }
+                                }
+                                transform="translate(0,2)"
+                              />
+                              <path
+                                className="rv-xy-plot__series rv-xy-plot__series--line area-elevated-line-series"
+                                d="M0,0L100,0"
+                                onClick={[Function]}
+                                onContextMenu={[Function]}
+                                onMouseOut={[Function]}
+                                onMouseOver={[Function]}
+                                style={
+                                  Object {
+                                    "opacity": 1,
+                                    "stroke": "#4795BA",
+                                    "strokeDasharray": undefined,
+                                    "strokeWidth": undefined,
+                                  }
+                                }
+                                transform="translate(0,2)"
+                              />
+                            </svg>
+                          </div>
+                        </div>
+                        <div
+                          className="table-graph-avg"
+                        >
+                          &lt; 0.1 req/s
+                        </div>
+                      </div>
+                    </td>
+                    <td
+                      className="ant-table-column-has-filters header-item"
+                      onClick={[Function]}
+                    >
+                      <div
+                        className="column-container"
+                      >
+                        <div
+                          className="ops-container"
+                        >
+                          <div
+                            className="rv-xy-plot "
+                            style={
+                              Object {
+                                "height": "15px",
+                                "width": "100px",
+                              }
+                            }
+                          >
+                            <svg
+                              className="rv-xy-plot__inner"
+                              height={15}
+                              onClick={[Function]}
+                              onDoubleClick={[Function]}
+                              onMouseDown={[Function]}
+                              onMouseEnter={[Function]}
+                              onMouseLeave={[Function]}
+                              onMouseMove={[Function]}
+                              onMouseUp={[Function]}
+                              onTouchCancel={[Function]}
+                              onTouchEnd={[Function]}
+                              onTouchMove={[Function]}
+                              onTouchStart={[Function]}
+                              onWheel={[Function]}
+                              width={100}
+                            >
+                              <path
+                                className="rv-xy-plot__series rv-xy-plot__series--line area-series-example ops-graph-style"
+                                d="M0,11.88L100,11.88L100,12L0,12Z"
+                                onClick={[Function]}
+                                onContextMenu={[Function]}
+                                onMouseOut={[Function]}
+                                onMouseOver={[Function]}
+                                style={
+                                  Object {
+                                    "fill": "#CD513A",
+                                    "opacity": 1,
+                                    "stroke": "#CD513A",
+                                  }
+                                }
+                                transform="translate(0,2)"
+                              />
+                              <path
+                                className="rv-xy-plot__series rv-xy-plot__series--line area-elevated-line-series"
+                                d="M0,11.88L100,11.88"
+                                onClick={[Function]}
+                                onContextMenu={[Function]}
+                                onMouseOut={[Function]}
+                                onMouseOver={[Function]}
+                                style={
+                                  Object {
+                                    "opacity": 1,
+                                    "stroke": "#CD513A",
+                                    "strokeDasharray": undefined,
+                                    "strokeWidth": undefined,
+                                  }
+                                }
+                                transform="translate(0,2)"
+                              />
+                            </svg>
+                          </div>
+                        </div>
+                        <div
+                          className="table-graph-avg"
+                        >
+                          100%
+                        </div>
+                      </div>
+                    </td>
+                    <td
+                      className="ant-table-column-has-filters header-item ant-table-column-sort"
+                      onClick={[Function]}
+                    >
+                      <div
+                        className="column-container"
+                      >
+                        <div
+                          className="ant-progress ant-progress-line ant-progress-status-success ant-progress-default impact"
+                        >
+                          <div>
+                            <div
+                              className="ant-progress-outer"
+                            >
+                              <div
+                                className="ant-progress-inner"
+                              >
+                                <div
+                                  className="ant-progress-bg"
+                                  style={
+                                    Object {
+                                      "background": "#459798",
+                                      "borderRadius": 0,
+                                      "height": 8,
+                                      "width": "100%",
+                                    }
+                                  }
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div
+                          className="view-trace-button"
+                        />
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <ul
+          className="ant-pagination ant-table-pagination"
+          style={Object {}}
+          unselectable="unselectable"
+        >
+          <li
+            aria-disabled={true}
+            className="ant-pagination-disabled ant-pagination-prev"
+            onClick={[Function]}
+            onKeyPress={[Function]}
+            tabIndex={null}
+            title="Previous Page"
+          >
+            <a
+              className="ant-pagination-item-link"
+            />
+          </li>
+          <li
+            className="ant-pagination-item ant-pagination-item-1 ant-pagination-item-active"
+            onClick={[Function]}
+            onKeyPress={[Function]}
+            tabIndex="0"
+            title={1}
+          >
+            <a>
+              1
+            </a>
+          </li>
+          <li
+            aria-disabled={true}
+            className="ant-pagination-disabled ant-pagination-next"
+            onClick={[Function]}
+            onKeyPress={[Function]}
+            tabIndex={null}
+            title="Next Page"
+          >
+            <a
+              className="ant-pagination-item-link"
+            />
+          </li>
+          <li
+            className="ant-pagination-options"
+          >
+            <div
+              className="ant-pagination-options-size-changer ant-select ant-select-enabled"
+              key="trigger"
+              onBlur={[Function]}
+              onClick={[Function]}
+              onFocus={[Function]}
+              onMouseDown={[Function]}
+              onTouchStart={[Function]}
+            >
+              <div
+                aria-autocomplete="list"
+                aria-expanded={false}
+                aria-haspopup="true"
+                className="ant-select-selection
+            ant-select-selection--single"
+                key="selection"
+                onKeyDown={[Function]}
+                role="combobox"
+                tabIndex={0}
+              >
+                <div
+                  className="ant-select-selection__rendered"
+                >
+                  <div
+                    className="ant-select-selection-selected-value"
+                    key="value"
+                    style={
+                      Object {
+                        "display": "block",
+                        "opacity": 1,
+                      }
+                    }
+                    title="20 / page"
+                  >
+                    20 / page
+                  </div>
+                </div>
+                <span
+                  className="ant-select-arrow"
+                  key="arrow"
+                  onClick={[Function]}
+                  style={
+                    Object {
+                      "WebkitUserSelect": "none",
+                      "userSelect": "none",
+                    }
+                  }
+                  unselectable="on"
+                >
+                  <b />
+                </span>
+              </div>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`<OperationTableDetails> render lower than 0.1 error rate 1`] = `
 <div
   className="ant-row"
 >
@@ -878,7 +2948,697 @@ exports[`<OperationTableDetails> render greater than 0.1 requests value in the t
                         <div
                           className="table-graph-avg"
                         >
-                          0.2 req/s
+                          &lt; 0.1 req/s
+                        </div>
+                      </div>
+                    </td>
+                    <td
+                      className="ant-table-column-has-filters header-item"
+                      onClick={[Function]}
+                    >
+                      <div
+                        className="column-container"
+                      >
+                        <div
+                          className="ops-container"
+                        >
+                          <div
+                            className="rv-xy-plot "
+                            style={
+                              Object {
+                                "height": "15px",
+                                "width": "100px",
+                              }
+                            }
+                          >
+                            <svg
+                              className="rv-xy-plot__inner"
+                              height={15}
+                              onClick={[Function]}
+                              onDoubleClick={[Function]}
+                              onMouseDown={[Function]}
+                              onMouseEnter={[Function]}
+                              onMouseLeave={[Function]}
+                              onMouseMove={[Function]}
+                              onMouseUp={[Function]}
+                              onTouchCancel={[Function]}
+                              onTouchEnd={[Function]}
+                              onTouchMove={[Function]}
+                              onTouchStart={[Function]}
+                              onWheel={[Function]}
+                              width={100}
+                            >
+                              <path
+                                className="rv-xy-plot__series rv-xy-plot__series--line area-series-example ops-graph-style"
+                                d="M0,11.88L100,11.88L100,12L0,12Z"
+                                onClick={[Function]}
+                                onContextMenu={[Function]}
+                                onMouseOut={[Function]}
+                                onMouseOver={[Function]}
+                                style={
+                                  Object {
+                                    "fill": "#CD513A",
+                                    "opacity": 1,
+                                    "stroke": "#CD513A",
+                                  }
+                                }
+                                transform="translate(0,2)"
+                              />
+                              <path
+                                className="rv-xy-plot__series rv-xy-plot__series--line area-elevated-line-series"
+                                d="M0,11.88L100,11.88"
+                                onClick={[Function]}
+                                onContextMenu={[Function]}
+                                onMouseOut={[Function]}
+                                onMouseOver={[Function]}
+                                style={
+                                  Object {
+                                    "opacity": 1,
+                                    "stroke": "#CD513A",
+                                    "strokeDasharray": undefined,
+                                    "strokeWidth": undefined,
+                                  }
+                                }
+                                transform="translate(0,2)"
+                              />
+                            </svg>
+                          </div>
+                        </div>
+                        <div
+                          className="table-graph-avg"
+                        >
+                          &lt; 0.1%
+                        </div>
+                      </div>
+                    </td>
+                    <td
+                      className="ant-table-column-has-filters header-item ant-table-column-sort"
+                      onClick={[Function]}
+                    >
+                      <div
+                        className="column-container"
+                      >
+                        <div
+                          className="ant-progress ant-progress-line ant-progress-status-success ant-progress-default impact"
+                        >
+                          <div>
+                            <div
+                              className="ant-progress-outer"
+                            >
+                              <div
+                                className="ant-progress-inner"
+                              >
+                                <div
+                                  className="ant-progress-bg"
+                                  style={
+                                    Object {
+                                      "background": "#459798",
+                                      "borderRadius": 0,
+                                      "height": 8,
+                                      "width": "100%",
+                                    }
+                                  }
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div
+                          className="view-trace-button"
+                        />
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <ul
+          className="ant-pagination ant-table-pagination"
+          style={Object {}}
+          unselectable="unselectable"
+        >
+          <li
+            aria-disabled={true}
+            className="ant-pagination-disabled ant-pagination-prev"
+            onClick={[Function]}
+            onKeyPress={[Function]}
+            tabIndex={null}
+            title="Previous Page"
+          >
+            <a
+              className="ant-pagination-item-link"
+            />
+          </li>
+          <li
+            className="ant-pagination-item ant-pagination-item-1 ant-pagination-item-active"
+            onClick={[Function]}
+            onKeyPress={[Function]}
+            tabIndex="0"
+            title={1}
+          >
+            <a>
+              1
+            </a>
+          </li>
+          <li
+            aria-disabled={true}
+            className="ant-pagination-disabled ant-pagination-next"
+            onClick={[Function]}
+            onKeyPress={[Function]}
+            tabIndex={null}
+            title="Next Page"
+          >
+            <a
+              className="ant-pagination-item-link"
+            />
+          </li>
+          <li
+            className="ant-pagination-options"
+          >
+            <div
+              className="ant-pagination-options-size-changer ant-select ant-select-enabled"
+              key="trigger"
+              onBlur={[Function]}
+              onClick={[Function]}
+              onFocus={[Function]}
+              onMouseDown={[Function]}
+              onTouchStart={[Function]}
+            >
+              <div
+                aria-autocomplete="list"
+                aria-expanded={false}
+                aria-haspopup="true"
+                className="ant-select-selection
+            ant-select-selection--single"
+                key="selection"
+                onKeyDown={[Function]}
+                role="combobox"
+                tabIndex={0}
+              >
+                <div
+                  className="ant-select-selection__rendered"
+                >
+                  <div
+                    className="ant-select-selection-selected-value"
+                    key="value"
+                    style={
+                      Object {
+                        "display": "block",
+                        "opacity": 1,
+                      }
+                    }
+                    title="20 / page"
+                  >
+                    20 / page
+                  </div>
+                </div>
+                <span
+                  className="ant-select-arrow"
+                  key="arrow"
+                  onClick={[Function]}
+                  style={
+                    Object {
+                      "WebkitUserSelect": "none",
+                      "userSelect": "none",
+                    }
+                  }
+                  unselectable="on"
+                >
+                  <b />
+                </span>
+              </div>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`<OperationTableDetails> render lower than 0.1 request rate value 1`] = `
+<div
+  className="ant-row"
+>
+  <div
+    className="ant-table-wrapper"
+  >
+    <div
+      className="ant-spin-nested-loading"
+      style={null}
+    >
+      <div
+        className="ant-spin-container"
+        key="container"
+      >
+        <div
+          className="ant-table ant-table-default ant-table-scroll-position-left"
+          style={Object {}}
+        >
+          <div
+            className="ant-table-content"
+          >
+            <div
+              className="ant-table-body"
+              key="bodyTable"
+              onScroll={[Function]}
+              onWheel={[Function]}
+              style={Object {}}
+            >
+              <table
+                className=""
+                key="table"
+                style={Object {}}
+              >
+                <colgroup>
+                  <col
+                    key="name"
+                    style={
+                      Object {
+                        "minWidth": undefined,
+                        "width": undefined,
+                      }
+                    }
+                  />
+                  <col
+                    key="latency"
+                    style={
+                      Object {
+                        "minWidth": undefined,
+                        "width": undefined,
+                      }
+                    }
+                  />
+                  <col
+                    key="requests"
+                    style={
+                      Object {
+                        "minWidth": undefined,
+                        "width": undefined,
+                      }
+                    }
+                  />
+                  <col
+                    key="errRates"
+                    style={
+                      Object {
+                        "minWidth": undefined,
+                        "width": undefined,
+                      }
+                    }
+                  />
+                  <col
+                    key="impact"
+                    style={
+                      Object {
+                        "minWidth": undefined,
+                        "width": undefined,
+                      }
+                    }
+                  />
+                </colgroup>
+                <thead
+                  className="ant-table-thead"
+                >
+                  <tr
+                    style={
+                      Object {
+                        "height": null,
+                      }
+                    }
+                  >
+                    <th
+                      className="ant-table-column-has-filters header-item"
+                      key="name"
+                    >
+                      <span
+                        key="name"
+                      >
+                        Name
+                        <div
+                          className="ant-table-column-sorter"
+                        >
+                          <span
+                            className="ant-table-column-sorter-up off"
+                            onClick={[Function]}
+                            title="↑"
+                          >
+                            <i
+                              className="anticon anticon-caret-up"
+                            />
+                          </span>
+                          <span
+                            className="ant-table-column-sorter-down off"
+                            onClick={[Function]}
+                            title="↓"
+                          >
+                            <i
+                              className="anticon anticon-caret-down"
+                            />
+                          </span>
+                        </div>
+                      </span>
+                    </th>
+                    <th
+                      className="ant-table-column-has-filters header-item"
+                      key="latency"
+                    >
+                      <span
+                        key="latency"
+                      >
+                        P95 Latency
+                        <div
+                          className="ant-table-column-sorter"
+                        >
+                          <span
+                            className="ant-table-column-sorter-up off"
+                            onClick={[Function]}
+                            title="↑"
+                          >
+                            <i
+                              className="anticon anticon-caret-up"
+                            />
+                          </span>
+                          <span
+                            className="ant-table-column-sorter-down off"
+                            onClick={[Function]}
+                            title="↓"
+                          >
+                            <i
+                              className="anticon anticon-caret-down"
+                            />
+                          </span>
+                        </div>
+                      </span>
+                    </th>
+                    <th
+                      className="ant-table-column-has-filters header-item"
+                      key="requests"
+                    >
+                      <span
+                        key="requests"
+                      >
+                        Request rate
+                        <div
+                          className="ant-table-column-sorter"
+                        >
+                          <span
+                            className="ant-table-column-sorter-up off"
+                            onClick={[Function]}
+                            title="↑"
+                          >
+                            <i
+                              className="anticon anticon-caret-up"
+                            />
+                          </span>
+                          <span
+                            className="ant-table-column-sorter-down off"
+                            onClick={[Function]}
+                            title="↓"
+                          >
+                            <i
+                              className="anticon anticon-caret-down"
+                            />
+                          </span>
+                        </div>
+                      </span>
+                    </th>
+                    <th
+                      className="ant-table-column-has-filters header-item"
+                      key="errRates"
+                    >
+                      <span
+                        key="errRates"
+                      >
+                        Error rate
+                        <div
+                          className="ant-table-column-sorter"
+                        >
+                          <span
+                            className="ant-table-column-sorter-up off"
+                            onClick={[Function]}
+                            title="↑"
+                          >
+                            <i
+                              className="anticon anticon-caret-up"
+                            />
+                          </span>
+                          <span
+                            className="ant-table-column-sorter-down off"
+                            onClick={[Function]}
+                            title="↓"
+                          >
+                            <i
+                              className="anticon anticon-caret-down"
+                            />
+                          </span>
+                        </div>
+                      </span>
+                    </th>
+                    <th
+                      className="ant-table-column-has-filters header-item ant-table-column-sort"
+                      key="impact"
+                    >
+                      <span
+                        key="impact"
+                      >
+                        <div
+                          style={
+                            Object {
+                              "paddingTop": 1,
+                            }
+                          }
+                        >
+                          <span
+                            style={
+                              Object {
+                                "color": "#459798",
+                                "float": "left",
+                              }
+                            }
+                          >
+                            Impact  
+                            <i
+                              className="anticon anticon-info-circle"
+                              onMouseEnter={[Function]}
+                              onMouseLeave={[Function]}
+                            />
+                          </span>
+                        </div>
+                        <div
+                          className="ant-table-column-sorter"
+                        >
+                          <span
+                            className="ant-table-column-sorter-up off"
+                            onClick={[Function]}
+                            title="↑"
+                          >
+                            <i
+                              className="anticon anticon-caret-up"
+                            />
+                          </span>
+                          <span
+                            className="ant-table-column-sorter-down on"
+                            onClick={[Function]}
+                            title="↓"
+                          >
+                            <i
+                              className="anticon anticon-caret-down"
+                            />
+                          </span>
+                        </div>
+                      </span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody
+                  className="ant-table-tbody"
+                >
+                  <tr
+                    className="ant-table-row table-row ant-table-row-level-0"
+                    data-row-key={0}
+                    onClick={[Function]}
+                    onContextMenu={[Function]}
+                    onDoubleClick={[Function]}
+                    onMouseEnter={[Function]}
+                    onMouseLeave={[Function]}
+                    style={
+                      Object {
+                        "height": null,
+                      }
+                    }
+                  >
+                    <td
+                      className="ant-table-column-has-filters header-item"
+                      onClick={[Function]}
+                    >
+                      <span
+                        className="ant-table-row-indent indent-level-0"
+                        style={
+                          Object {
+                            "paddingLeft": "0px",
+                          }
+                        }
+                      />
+                      /PlaceOrder
+                    </td>
+                    <td
+                      className="ant-table-column-has-filters header-item"
+                      onClick={[Function]}
+                    >
+                      <div
+                        className="column-container"
+                      >
+                        <div
+                          className="ops-container"
+                        >
+                          <div
+                            className="rv-xy-plot "
+                            style={
+                              Object {
+                                "height": "15px",
+                                "width": "100px",
+                              }
+                            }
+                          >
+                            <svg
+                              className="rv-xy-plot__inner"
+                              height={15}
+                              onClick={[Function]}
+                              onDoubleClick={[Function]}
+                              onMouseDown={[Function]}
+                              onMouseEnter={[Function]}
+                              onMouseLeave={[Function]}
+                              onMouseMove={[Function]}
+                              onMouseUp={[Function]}
+                              onTouchCancel={[Function]}
+                              onTouchEnd={[Function]}
+                              onTouchMove={[Function]}
+                              onTouchStart={[Function]}
+                              onWheel={[Function]}
+                              width={100}
+                            >
+                              <path
+                                className="rv-xy-plot__series rv-xy-plot__series--line area-series-example ops-graph-style"
+                                d="M0,0L100,12L100,12L0,12Z"
+                                onClick={[Function]}
+                                onContextMenu={[Function]}
+                                onMouseOut={[Function]}
+                                onMouseOver={[Function]}
+                                style={
+                                  Object {
+                                    "fill": "#869ADD",
+                                    "opacity": 1,
+                                    "stroke": "#869ADD",
+                                  }
+                                }
+                                transform="translate(0,2)"
+                              />
+                              <path
+                                className="rv-xy-plot__series rv-xy-plot__series--line area-elevated-line-series"
+                                d="M0,0L100,12"
+                                onClick={[Function]}
+                                onContextMenu={[Function]}
+                                onMouseOut={[Function]}
+                                onMouseOver={[Function]}
+                                style={
+                                  Object {
+                                    "opacity": 1,
+                                    "stroke": "#869ADD",
+                                    "strokeDasharray": undefined,
+                                    "strokeWidth": undefined,
+                                  }
+                                }
+                                transform="translate(0,2)"
+                              />
+                            </svg>
+                          </div>
+                        </div>
+                        <div
+                          className="table-graph-avg"
+                        >
+                          736.16ms
+                        </div>
+                      </div>
+                    </td>
+                    <td
+                      className="ant-table-column-has-filters header-item"
+                      onClick={[Function]}
+                    >
+                      <div
+                        className="column-container"
+                      >
+                        <div
+                          className="ops-container"
+                        >
+                          <div
+                            className="rv-xy-plot "
+                            style={
+                              Object {
+                                "height": "15px",
+                                "width": "100px",
+                              }
+                            }
+                          >
+                            <svg
+                              className="rv-xy-plot__inner"
+                              height={15}
+                              onClick={[Function]}
+                              onDoubleClick={[Function]}
+                              onMouseDown={[Function]}
+                              onMouseEnter={[Function]}
+                              onMouseLeave={[Function]}
+                              onMouseMove={[Function]}
+                              onMouseUp={[Function]}
+                              onTouchCancel={[Function]}
+                              onTouchEnd={[Function]}
+                              onTouchMove={[Function]}
+                              onTouchStart={[Function]}
+                              onWheel={[Function]}
+                              width={100}
+                            >
+                              <path
+                                className="rv-xy-plot__series rv-xy-plot__series--line area-series-example ops-graph-style"
+                                d="M0,0L100,0L100,0L0,0Z"
+                                onClick={[Function]}
+                                onContextMenu={[Function]}
+                                onMouseOut={[Function]}
+                                onMouseOver={[Function]}
+                                style={
+                                  Object {
+                                    "fill": "#4795BA",
+                                    "opacity": 1,
+                                    "stroke": "#4795BA",
+                                  }
+                                }
+                                transform="translate(0,2)"
+                              />
+                              <path
+                                className="rv-xy-plot__series rv-xy-plot__series--line area-elevated-line-series"
+                                d="M0,0L100,0"
+                                onClick={[Function]}
+                                onContextMenu={[Function]}
+                                onMouseOut={[Function]}
+                                onMouseOver={[Function]}
+                                style={
+                                  Object {
+                                    "opacity": 1,
+                                    "stroke": "#4795BA",
+                                    "strokeDasharray": undefined,
+                                    "strokeWidth": undefined,
+                                  }
+                                }
+                                transform="translate(0,2)"
+                              />
+                            </svg>
+                          </div>
+                        </div>
+                        <div
+                          className="table-graph-avg"
+                        >
+                          &lt; 0.1 req/s
                         </div>
                       </div>
                     </td>
@@ -1108,7 +3868,7 @@ exports[`<OperationTableDetails> render greater than 0.1 requests value in the t
 </div>
 `;
 
-exports[`<OperationTableDetails> render number with more than 2 decimal places value in the table 1`] = `
+exports[`<OperationTableDetails> render request rate number with more than 2 decimal places value 1`] = `
 <div
   className="ant-row"
 >
