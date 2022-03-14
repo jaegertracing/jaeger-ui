@@ -316,7 +316,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
               metricsData={convertServiceErrorRateToPercentages(serviceErrorRate)}
               marginClassName="error-rate-margins"
               color="#CD513A"
-              yDomain={[0, 100]}
+              yDomain={[0, 1]}
               xDomain={this.state.graphXDomain}
             />
           </Col>
