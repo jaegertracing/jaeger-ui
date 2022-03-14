@@ -20,7 +20,12 @@ import { MetricsReduxState, ServiceOpsMetrics } from '../../../../types/metrics'
 import prefixUrl from '../../../../utils/prefix-url';
 
 import './index.css';
-import { timeConversion } from '../../../../utils/date';
+import {
+  convertTimeUnitToShortTerm,
+  convertToTimeUnit,
+  getSuitableTimeUnit,
+  timeConversion,
+} from '../../../../utils/date';
 
 type TProps = {
   data: ServiceOpsMetrics[] | undefined;
@@ -37,13 +42,19 @@ type TState = {
 
 function formatValue(value: number) {
   if (value < 0.1) {
-    return `< 0.1 req/s`;
+    return `< 0.1`;
   }
 
   // Truncate number to two decimal places
-  return `${value.toString().match(/^-?\d+(?:\.\d{0,2})?/)![0]} req/s`;
+  return `${value.toString().match(/^-?\d+(?:\.\d{0,2})?/)![0]}`;
 }
 
+function formatTimeValue(value: number) {
+  const timeUnit = getSuitableTimeUnit(value);
+
+  const formattedTime = formatValue(convertToTimeUnit(value, timeUnit));
+  return `${formattedTime}${convertTimeUnitToShortTerm(timeUnit)}`;
+}
 export class OperationTableDetails extends React.PureComponent<TProps, TState> {
   state = {
     hoveredRowKey: -1,
@@ -83,7 +94,7 @@ export class OperationTableDetails extends React.PureComponent<TProps, TState> {
             />
             <div className="table-graph-avg">
               {typeof value === 'number' && row.dataPoints.service_operation_latencies.length > 0
-                ? timeConversion(value * 1000)
+                ? formatTimeValue(value * 1000)
                 : ''}
             </div>
           </div>
@@ -104,7 +115,7 @@ export class OperationTableDetails extends React.PureComponent<TProps, TState> {
             />
             <div className="table-graph-avg">
               {typeof value === 'number' && row.dataPoints.service_operation_call_rate.length > 0
-                ? `${formatValue(value)}`
+                ? `${formatValue(value)} req/s`
                 : ''}
             </div>
           </div>
@@ -126,7 +137,7 @@ export class OperationTableDetails extends React.PureComponent<TProps, TState> {
             />
             <div className="table-graph-avg">
               {typeof value === 'number' && row.dataPoints.service_operation_error_rate.length > 0
-                ? `${value * 100}%`
+                ? `${formatValue(value * 100)}%`
                 : ''}
             </div>
           </div>

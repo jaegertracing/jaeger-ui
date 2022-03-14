@@ -130,10 +130,16 @@ describe('convertTimeUnitToShortTerm', () => {
     const input = 'aaa';
     expect(convertTimeUnitToShortTerm(input)).toBe('');
   });
+  it('convert microseconds', () => {
+    const input = 'microseconds';
+    expect(convertTimeUnitToShortTerm(input)).toBe('μs');
+  });
+
   it('convert milliseconds', () => {
     const input = 'milliseconds';
     expect(convertTimeUnitToShortTerm(input)).toBe('ms');
   });
+
   it('convert seconds', () => {
     const input = 'seconds';
     expect(convertTimeUnitToShortTerm(input)).toBe('s');

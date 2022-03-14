@@ -81,18 +81,50 @@ describe('<OperationTableDetails>', () => {
     cloneServiceOpsMetrics.latency = 8000;
   });
 
-  it('render greater than 0.1 requests value in the table', () => {
+  it('render lower than 0.1 request rate value', () => {
     const cloneServiceOpsMetrics = {};
     Object.assign(cloneServiceOpsMetrics, serviceOpsMetrics[0]);
-    cloneServiceOpsMetrics.requests = 0.2;
+    cloneServiceOpsMetrics.requests = 0.02;
     wrapper.setProps({ ...props, data: [cloneServiceOpsMetrics], loading: false });
     expect(wrapper).toMatchSnapshot();
   });
 
-  it('render number with more than 2 decimal places value in the table', () => {
+  it('render request rate number with more than 2 decimal places value', () => {
     const cloneServiceOpsMetrics = {};
     Object.assign(cloneServiceOpsMetrics, serviceOpsMetrics[0]);
     cloneServiceOpsMetrics.requests = 0.2888;
+    wrapper.setProps({ ...props, data: [cloneServiceOpsMetrics], loading: false });
+    expect(wrapper).toMatchSnapshot();
+  });
+
+  it('render lower than 0.1 error rate', () => {
+    const cloneServiceOpsMetrics = {};
+    Object.assign(cloneServiceOpsMetrics, serviceOpsMetrics[0]);
+    cloneServiceOpsMetrics.errRates = 0.00001;
+    wrapper.setProps({ ...props, data: [cloneServiceOpsMetrics], loading: false });
+    expect(wrapper).toMatchSnapshot();
+  });
+
+  it('render error rate with more than 2 decimal places value', () => {
+    const cloneServiceOpsMetrics = {};
+    Object.assign(cloneServiceOpsMetrics, serviceOpsMetrics[0]);
+    cloneServiceOpsMetrics.latency = 33.333333;
+    wrapper.setProps({ ...props, data: [cloneServiceOpsMetrics], loading: false });
+    expect(wrapper).toMatchSnapshot();
+  });
+
+  it('render lower than 0.1 P95 latency', () => {
+    const cloneServiceOpsMetrics = {};
+    Object.assign(cloneServiceOpsMetrics, serviceOpsMetrics[0]);
+    cloneServiceOpsMetrics.latency = 0.00001;
+    wrapper.setProps({ ...props, data: [cloneServiceOpsMetrics], loading: false });
+    expect(wrapper).toMatchSnapshot();
+  });
+
+  it('render P95 latency with more than 2 decimal places value', () => {
+    const cloneServiceOpsMetrics = {};
+    Object.assign(cloneServiceOpsMetrics, serviceOpsMetrics[0]);
+    cloneServiceOpsMetrics.latency = 0.2988;
     wrapper.setProps({ ...props, data: [cloneServiceOpsMetrics], loading: false });
     expect(wrapper).toMatchSnapshot();
   });
