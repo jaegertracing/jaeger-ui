@@ -920,7 +920,7 @@ exports[`<OperationTableDetails> render P95 latency with more than 2 decimal pla
                             >
                               <path
                                 className="rv-xy-plot__series rv-xy-plot__series--line area-series-example ops-graph-style"
-                                d="M0,11.88L100,11.88L100,12L0,12Z"
+                                d="M0,0L100,0L100,12L0,12Z"
                                 onClick={[Function]}
                                 onContextMenu={[Function]}
                                 onMouseOut={[Function]}
@@ -936,7 +936,7 @@ exports[`<OperationTableDetails> render P95 latency with more than 2 decimal pla
                               />
                               <path
                                 className="rv-xy-plot__series rv-xy-plot__series--line area-elevated-line-series"
-                                d="M0,11.88L100,11.88"
+                                d="M0,0L100,0"
                                 onClick={[Function]}
                                 onContextMenu={[Function]}
                                 onMouseOut={[Function]}
@@ -1610,7 +1610,7 @@ exports[`<OperationTableDetails> render error rate with more than 2 decimal plac
                             >
                               <path
                                 className="rv-xy-plot__series rv-xy-plot__series--line area-series-example ops-graph-style"
-                                d="M0,11.88L100,11.88L100,12L0,12Z"
+                                d="M0,0L100,0L100,12L0,12Z"
                                 onClick={[Function]}
                                 onContextMenu={[Function]}
                                 onMouseOut={[Function]}
@@ -1626,7 +1626,7 @@ exports[`<OperationTableDetails> render error rate with more than 2 decimal plac
                               />
                               <path
                                 className="rv-xy-plot__series rv-xy-plot__series--line area-elevated-line-series"
-                                d="M0,11.88L100,11.88"
+                                d="M0,0L100,0"
                                 onClick={[Function]}
                                 onContextMenu={[Function]}
                                 onMouseOut={[Function]}
@@ -2300,7 +2300,7 @@ exports[`<OperationTableDetails> render lower than 0.1 P95 latency 1`] = `
                             >
                               <path
                                 className="rv-xy-plot__series rv-xy-plot__series--line area-series-example ops-graph-style"
-                                d="M0,11.88L100,11.88L100,12L0,12Z"
+                                d="M0,0L100,0L100,12L0,12Z"
                                 onClick={[Function]}
                                 onContextMenu={[Function]}
                                 onMouseOut={[Function]}
@@ -2316,7 +2316,7 @@ exports[`<OperationTableDetails> render lower than 0.1 P95 latency 1`] = `
                               />
                               <path
                                 className="rv-xy-plot__series rv-xy-plot__series--line area-elevated-line-series"
-                                d="M0,11.88L100,11.88"
+                                d="M0,0L100,0"
                                 onClick={[Function]}
                                 onContextMenu={[Function]}
                                 onMouseOut={[Function]}
@@ -2990,7 +2990,7 @@ exports[`<OperationTableDetails> render lower than 0.1 error rate 1`] = `
                             >
                               <path
                                 className="rv-xy-plot__series rv-xy-plot__series--line area-series-example ops-graph-style"
-                                d="M0,11.88L100,11.88L100,12L0,12Z"
+                                d="M0,0L100,0L100,12L0,12Z"
                                 onClick={[Function]}
                                 onContextMenu={[Function]}
                                 onMouseOut={[Function]}
@@ -3006,7 +3006,7 @@ exports[`<OperationTableDetails> render lower than 0.1 error rate 1`] = `
                               />
                               <path
                                 className="rv-xy-plot__series rv-xy-plot__series--line area-elevated-line-series"
-                                d="M0,11.88L100,11.88"
+                                d="M0,0L100,0"
                                 onClick={[Function]}
                                 onContextMenu={[Function]}
                                 onMouseOut={[Function]}
@@ -3680,7 +3680,7 @@ exports[`<OperationTableDetails> render lower than 0.1 request rate value 1`] = 
                             >
                               <path
                                 className="rv-xy-plot__series rv-xy-plot__series--line area-series-example ops-graph-style"
-                                d="M0,11.88L100,11.88L100,12L0,12Z"
+                                d="M0,0L100,0L100,12L0,12Z"
                                 onClick={[Function]}
                                 onContextMenu={[Function]}
                                 onMouseOut={[Function]}
@@ -3696,7 +3696,7 @@ exports[`<OperationTableDetails> render lower than 0.1 request rate value 1`] = 
                               />
                               <path
                                 className="rv-xy-plot__series rv-xy-plot__series--line area-elevated-line-series"
-                                d="M0,11.88L100,11.88"
+                                d="M0,0L100,0"
                                 onClick={[Function]}
                                 onContextMenu={[Function]}
                                 onMouseOut={[Function]}
@@ -4370,7 +4370,7 @@ exports[`<OperationTableDetails> render request rate number with more than 2 dec
                             >
                               <path
                                 className="rv-xy-plot__series rv-xy-plot__series--line area-series-example ops-graph-style"
-                                d="M0,11.88L100,11.88L100,12L0,12Z"
+                                d="M0,0L100,0L100,12L0,12Z"
                                 onClick={[Function]}
                                 onContextMenu={[Function]}
                                 onMouseOut={[Function]}
@@ -4386,7 +4386,7 @@ exports[`<OperationTableDetails> render request rate number with more than 2 dec
                               />
                               <path
                                 className="rv-xy-plot__series rv-xy-plot__series--line area-elevated-line-series"
-                                d="M0,11.88L100,11.88"
+                                d="M0,0L100,0"
                                 onClick={[Function]}
                                 onContextMenu={[Function]}
                                 onMouseOut={[Function]}
@@ -5060,7 +5060,7 @@ exports[`<OperationTableDetails> render some values in the table 1`] = `
                             >
                               <path
                                 className="rv-xy-plot__series rv-xy-plot__series--line area-series-example ops-graph-style"
-                                d="M0,11.88L100,11.88L100,12L0,12Z"
+                                d="M0,0L100,0L100,12L0,12Z"
                                 onClick={[Function]}
                                 onContextMenu={[Function]}
                                 onMouseOut={[Function]}
@@ -5076,7 +5076,7 @@ exports[`<OperationTableDetails> render some values in the table 1`] = `
                               />
                               <path
                                 className="rv-xy-plot__series rv-xy-plot__series--line area-elevated-line-series"
-                                d="M0,11.88L100,11.88"
+                                d="M0,0L100,0"
                                 onClick={[Function]}
                                 onContextMenu={[Function]}
                                 onMouseOut={[Function]}

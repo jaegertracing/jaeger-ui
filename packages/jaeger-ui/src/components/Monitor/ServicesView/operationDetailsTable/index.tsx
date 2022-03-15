@@ -132,7 +132,7 @@ export class OperationTableDetails extends React.PureComponent<TProps, TState> {
             <REDGraph
               dataPoints={row.dataPoints.service_operation_error_rate}
               color="#CD513A"
-              yDomain={[0, 100]}
+              yDomain={[0, 1]}
               error={error.opsErrors}
             />
             <div className="table-graph-avg">
