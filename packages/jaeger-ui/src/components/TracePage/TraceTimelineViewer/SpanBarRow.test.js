@@ -12,12 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import _omit from 'lodash/omit';
+
 import React from 'react';
 import { mount, shallow } from 'enzyme';
 
 import SpanBarRow from './SpanBarRow';
 import SpanTreeOffset from './SpanTreeOffset';
 import ReferencesButton from './ReferencesButton';
+import * as getConfig from '../../../utils/config/get-config';
 
 jest.mock('./SpanTreeOffset');
 
@@ -32,7 +35,6 @@ describe('<SpanBarRow>', () => {
     isFilteredOut: false,
     onDetailToggled: jest.fn(),
     onChildrenToggled: jest.fn(),
-    operationName: 'op-name',
     numTicks: 5,
     rpc: {
       viewStart: 0.25,
@@ -45,12 +47,14 @@ describe('<SpanBarRow>', () => {
     getViewedBounds: () => ({ start: 0, end: 1 }),
     span: {
       duration: 'test-duration',
+      operationName: 'op-name',
       hasChildren: true,
       process: {
         serviceName: 'service-name',
       },
       spanID,
       logs: [],
+      tags: [{ key: 'opLabelTag', value: '#id' }],
     },
   };
 
@@ -64,6 +68,7 @@ describe('<SpanBarRow>', () => {
 
   it('renders without exploding', () => {
     expect(wrapper).toBeDefined();
+    expect(wrapper.find('.endpoint-name').text()).toBe(props.rpc.operationName);
   });
 
   it('escalates detail toggling', () => {
@@ -161,5 +166,39 @@ describe('<SpanBarRow>', () => {
     const refButton = spanRow.find(ReferencesButton);
     expect(refButton.length).toEqual(1);
     expect(refButton.at(0).props().tooltipText).toEqual('This span is referenced by multiple other spans');
+  });
+
+  describe('operation label', () => {
+    let getConfigValueSpy;
+
+    beforeAll(() => {
+      getConfigValueSpy = jest.spyOn(getConfig, 'getConfigValue');
+    });
+
+    beforeEach(() => {
+      getConfigValueSpy.mockReset();
+    });
+
+    const tagKey = props.span.tags[0].key;
+
+    it('has expected level when pattern is set and tags exist', () => {
+      getConfigValueSpy.mockReturnValue(`(#{${tagKey}})`);
+      wrapper = mount(<SpanBarRow {...props} />);
+      expect(wrapper.find('.endpoint-name').text()).toBe(
+        `${props.rpc.operationName} (${props.span.tags[0].value})`
+      );
+    });
+
+    it('hides unless every tag exists', () => {
+      getConfigValueSpy.mockReturnValue('#{opLabelTag} #{ABSENT_KEY}');
+      wrapper = mount(<SpanBarRow {...props} />);
+      expect(wrapper.find('.endpoint-name').text()).toBe(props.rpc.operationName);
+    });
+
+    it('has expected lebel when no rpc', () => {
+      const norpc = _omit(props, 'rpc');
+      wrapper = mount(<SpanBarRow {...norpc} />);
+      expect(wrapper.find('.endpoint-name').text()).toBe(props.span.operationName);
+    });
   });
 });
