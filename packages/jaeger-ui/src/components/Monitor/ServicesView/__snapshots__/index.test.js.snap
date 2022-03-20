@@ -1,377 +1,733 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`<MonitorATMServicesView> ATM snapshot test 1`] = `
-<div
-  className="service-view-container"
->
-  <Row
-    gutter={0}
-  >
-    <Col
-      span={6}
-    >
-      <h2
-        className="service-selector-header"
-      >
-        Choose service
-      </h2>
-      <Field
-        component={[Function]}
-        name="service"
-        placeholder="Select A Service"
-        props={
-          Object {
-            "className": "select-a-service-input",
-            "clearable": false,
-            "disabled": null,
-            "options": Array [
-              Object {
-                "label": "s1",
-                "value": "s1",
-              },
-              Object {
-                "label": "s2",
-                "value": "s2",
-              },
-            ],
-            "required": true,
-            "value": "s1",
-          }
-        }
-      />
-    </Col>
-  </Row>
-  <Row
-    gutter={0}
-  >
-    <Col
-      span={16}
-    >
-      <p
-        className="operations-metrics-text"
-      >
-        Aggregation of all "
-        s1
-        " metrics in selected timeframe.
-         
-        <a
-          href="/search?end=1466424490000000&limit=20&lookback=1h&maxDuration&minDuration&service=s1&start=1466420890000000"
-          target="blank"
-        >
-          View all traces
-        </a>
-      </p>
-    </Col>
-    <Col
-      className="timeframe-selector"
-      span={8}
-    >
-      <Field
-        component={[Function]}
-        name="timeframe"
-        placeholder="Select A Timeframe"
-        props={
-          Object {
-            "className": "select-a-timeframe-input",
-            "clearable": false,
-            "defaultValue": Object {
-              "label": "Last Hour",
-              "value": 3600000,
-            },
-            "disabled": null,
-            "options": Array [
-              Object {
-                "label": "Last Hour",
-                "value": 3600000,
-              },
-              Object {
-                "label": "Last 2 hour",
-                "value": 7200000,
-              },
-              Object {
-                "label": "Last 6 hour",
-                "value": 21600000,
-              },
-              Object {
-                "label": "Last 12 hour",
-                "value": 43200000,
-              },
-              Object {
-                "label": "Last 24 hours",
-                "value": 86400000,
-              },
-              Object {
-                "label": "Last 2 days",
-                "value": 172800000,
-              },
-            ],
-            "required": true,
-            "value": 3600000,
-          }
-        }
-      />
-    </Col>
-  </Row>
-  <Row
-    gutter={0}
-  >
-    <Col
-      span={8}
-    >
-      <div />
-      <ServiceGraphImpl
-        error={null}
-        key="latency"
-        loading={false}
-        marginClassName="latency-margins"
-        metricsData={
-          Array [
-            Object {
-              "max": 189.86,
-              "metricPoints": Array [
-                Object {
-                  "x": 1631271823806,
-                  "y": 189.86,
-                },
-                Object {
-                  "x": 1631271883806,
-                  "y": 189.86,
-                },
-              ],
-              "quantile": 0.5,
-              "serviceName": "cartservice",
-            },
-            Object {
-              "max": 189.86,
-              "metricPoints": Array [
-                Object {
-                  "x": 1631271823806,
-                  "y": 189.86,
-                },
-                Object {
-                  "x": 1631271883806,
-                  "y": 189.86,
-                },
-              ],
-              "quantile": 0.75,
-              "serviceName": "cartservice",
-            },
-            Object {
-              "max": 189.86,
-              "metricPoints": Array [
-                Object {
-                  "x": 1631271823806,
-                  "y": 189.86,
-                },
-                Object {
-                  "x": 1631271883806,
-                  "y": 189.86,
-                },
-              ],
-              "quantile": 0.95,
-              "serviceName": "cartservice",
-            },
-          ]
-        }
-        name="Latency (ms)"
-        showHorizontalLines={true}
-        showLegend={true}
-        width={300}
-        xDomain={
-          Array [
-            1466420890000,
-            1466424490000,
-          ]
-        }
-        yAxisTickFormat={[Function]}
-      />
-    </Col>
-    <Col
-      span={8}
-    >
-      <ServiceGraphImpl
-        color="#CD513A"
-        error={null}
-        key="errRate"
-        loading={false}
-        marginClassName="error-rate-margins"
-        metricsData={
-          Object {
-            "max": 1,
-            "metricPoints": Array [
-              Object {
-                "x": 1631274747520,
-                "y": 100,
-              },
-              Object {
-                "x": 1631274807520,
-                "y": 100,
-              },
-            ],
-            "quantile": 0.95,
-            "serviceName": "cartservice",
-          }
-        }
-        name="Error rate (%)"
-        width={300}
-        xDomain={
-          Array [
-            1466420890000,
-            1466424490000,
-          ]
-        }
-        yDomain={
-          Array [
-            0,
-            100,
-          ]
-        }
-      />
-    </Col>
-    <Col
-      span={8}
-    >
-      <ServiceGraphImpl
-        color="#4795BA"
-        error={null}
-        key="requests"
-        loading={false}
-        marginClassName="request-margins"
-        metricsData={
-          Object {
-            "max": 0.05,
-            "metricPoints": Array [
-              Object {
-                "x": 1631271823806,
-                "y": 0.05,
-              },
-              Object {
-                "x": 1631271883806,
-                "y": 0.05,
-              },
-            ],
-            "quantile": 0.95,
-            "serviceName": "cartservice",
-          }
-        }
-        name="Request rate (req/s)"
-        showHorizontalLines={true}
-        width={300}
-        xDomain={
-          Array [
-            1466420890000,
-            1466424490000,
-          ]
-        }
-      />
-    </Col>
-  </Row>
-  <Row
-    className="operation-table-block"
-    gutter={0}
+<Fragment>
+  <div
+    className="service-view-container"
   >
     <Row
       gutter={0}
     >
       <Col
-        span={16}
+        span={6}
       >
         <h2
-          className="table-header"
+          className="service-selector-header"
         >
-          Operations metrics under 
-          s1
+          Choose service
         </h2>
-         
-        <span
-          className="over-the-last"
-        >
-          Over the 
-          last hour
-        </span>
-      </Col>
-      <Col
-        className="select-operation-column"
-        span={8}
-      >
-        <Search
-          className="select-operation-input"
-          disabled={false}
-          enterButton={false}
-          inputPrefixCls="ant-input"
-          onChange={[Function]}
-          placeholder="Search operation"
-          prefixCls="ant-input-search"
-          value=""
+        <Field
+          component={[Function]}
+          name="service"
+          placeholder="Select A Service"
+          props={
+            Object {
+              "className": "select-a-service-input",
+              "clearable": false,
+              "disabled": null,
+              "options": Array [
+                Object {
+                  "label": "s1",
+                  "value": "s1",
+                },
+                Object {
+                  "label": "s2",
+                  "value": "s2",
+                },
+              ],
+              "required": true,
+              "value": "s1",
+            }
+          }
         />
       </Col>
     </Row>
     <Row
       gutter={0}
     >
-      <OperationTableDetails
-        data={
-          Array [
+      <Col
+        span={16}
+      >
+        <p
+          className="operations-metrics-text"
+        >
+          Aggregation of all "
+          s1
+          " metrics in selected timeframe.
+           
+          <a
+            href="/search?end=1466424490000000&limit=20&lookback=1h&maxDuration&minDuration&service=s1&start=1466420890000000"
+            target="blank"
+          >
+            View all traces
+          </a>
+        </p>
+      </Col>
+      <Col
+        className="timeframe-selector"
+        span={8}
+      >
+        <Field
+          component={[Function]}
+          name="timeframe"
+          placeholder="Select A Timeframe"
+          props={
             Object {
-              "dataPoints": Object {
-                "avg": Object {
-                  "service_operation_call_rate": 0.01,
-                  "service_operation_error_rate": 1,
-                  "service_operation_latencies": 736.16,
-                },
-                "service_operation_call_rate": Array [
-                  Object {
-                    "x": 1631534436235,
-                    "y": 0.01,
-                  },
-                  Object {
-                    "x": 1631534496235,
-                    "y": 0.01,
-                  },
-                ],
-                "service_operation_error_rate": Array [
-                  Object {
-                    "x": 1631534436235,
-                    "y": 1,
-                  },
-                  Object {
-                    "x": 1631534496235,
-                    "y": 1,
-                  },
-                ],
-                "service_operation_latencies": Array [
-                  Object {
-                    "x": 1631534436235,
-                    "y": 737.33,
-                  },
-                  Object {
-                    "x": 1631534496235,
-                    "y": 735,
-                  },
-                ],
+              "className": "select-a-timeframe-input",
+              "clearable": false,
+              "defaultValue": Object {
+                "label": "Last Hour",
+                "value": 3600000,
               },
-              "errRates": 1,
-              "impact": 1,
-              "key": 0,
-              "latency": 736.16,
-              "name": "/PlaceOrder",
-              "requests": 0.01,
-            },
-          ]
-        }
-        endTime={1466424490000}
-        error={
-          Object {
-            "opsCalls": null,
-            "opsErrors": null,
-            "opsLatencies": null,
+              "disabled": null,
+              "options": Array [
+                Object {
+                  "label": "Last Hour",
+                  "value": 3600000,
+                },
+                Object {
+                  "label": "Last 2 hour",
+                  "value": 7200000,
+                },
+                Object {
+                  "label": "Last 6 hour",
+                  "value": 21600000,
+                },
+                Object {
+                  "label": "Last 12 hour",
+                  "value": 43200000,
+                },
+                Object {
+                  "label": "Last 24 hours",
+                  "value": 86400000,
+                },
+                Object {
+                  "label": "Last 2 days",
+                  "value": 172800000,
+                },
+              ],
+              "required": true,
+              "value": 3600000,
+            }
           }
-        }
-        loading={null}
-        lookback={3600000}
-        serviceName="s1"
-      />
+        />
+      </Col>
     </Row>
-  </Row>
-</div>
+    <Row
+      gutter={0}
+    >
+      <Col
+        span={8}
+      >
+        <div />
+        <ServiceGraphImpl
+          error={null}
+          key="latency"
+          loading={false}
+          marginClassName="latency-margins"
+          metricsData={
+            Array [
+              Object {
+                "max": 189.86,
+                "metricPoints": Array [
+                  Object {
+                    "x": 1631271823806,
+                    "y": 189.86,
+                  },
+                  Object {
+                    "x": 1631271883806,
+                    "y": 189.86,
+                  },
+                ],
+                "quantile": 0.5,
+                "serviceName": "cartservice",
+              },
+              Object {
+                "max": 189.86,
+                "metricPoints": Array [
+                  Object {
+                    "x": 1631271823806,
+                    "y": 189.86,
+                  },
+                  Object {
+                    "x": 1631271883806,
+                    "y": 189.86,
+                  },
+                ],
+                "quantile": 0.75,
+                "serviceName": "cartservice",
+              },
+              Object {
+                "max": 189.86,
+                "metricPoints": Array [
+                  Object {
+                    "x": 1631271823806,
+                    "y": 189.86,
+                  },
+                  Object {
+                    "x": 1631271883806,
+                    "y": 189.86,
+                  },
+                ],
+                "quantile": 0.95,
+                "serviceName": "cartservice",
+              },
+            ]
+          }
+          name="Latency (ms)"
+          showHorizontalLines={true}
+          showLegend={true}
+          width={300}
+          xDomain={
+            Array [
+              1466420890000,
+              1466424490000,
+            ]
+          }
+          yAxisTickFormat={[Function]}
+        />
+      </Col>
+      <Col
+        span={8}
+      >
+        <ServiceGraphImpl
+          color="#CD513A"
+          error={null}
+          key="errRate"
+          loading={false}
+          marginClassName="error-rate-margins"
+          metricsData={
+            Object {
+              "max": 1,
+              "metricPoints": Array [
+                Object {
+                  "x": 1631274747520,
+                  "y": 100,
+                },
+                Object {
+                  "x": 1631274807520,
+                  "y": 100,
+                },
+              ],
+              "quantile": 0.95,
+              "serviceName": "cartservice",
+            }
+          }
+          name="Error rate (%)"
+          width={300}
+          xDomain={
+            Array [
+              1466420890000,
+              1466424490000,
+            ]
+          }
+          yDomain={
+            Array [
+              0,
+              100,
+            ]
+          }
+        />
+      </Col>
+      <Col
+        span={8}
+      >
+        <ServiceGraphImpl
+          color="#4795BA"
+          error={null}
+          key="requests"
+          loading={false}
+          marginClassName="request-margins"
+          metricsData={null}
+          name="Request rate (req/s)"
+          showHorizontalLines={true}
+          width={300}
+          xDomain={
+            Array [
+              1466420890000,
+              1466424490000,
+            ]
+          }
+        />
+      </Col>
+    </Row>
+    <Row
+      className="operation-table-block"
+      gutter={0}
+    >
+      <Row
+        gutter={0}
+      >
+        <Col
+          span={16}
+        >
+          <h2
+            className="table-header"
+          >
+            Operations metrics under 
+            s1
+          </h2>
+           
+          <span
+            className="over-the-last"
+          >
+            Over the 
+            last hour
+          </span>
+        </Col>
+        <Col
+          className="select-operation-column"
+          span={8}
+        >
+          <Search
+            className="select-operation-input"
+            disabled={false}
+            enterButton={false}
+            inputPrefixCls="ant-input"
+            onChange={[Function]}
+            placeholder="Search operation"
+            prefixCls="ant-input-search"
+            value=""
+          />
+        </Col>
+      </Row>
+      <Row
+        gutter={0}
+      >
+        <OperationTableDetails
+          data={
+            Array [
+              Object {
+                "dataPoints": Object {
+                  "avg": Object {
+                    "service_operation_call_rate": 0.01,
+                    "service_operation_error_rate": 1,
+                    "service_operation_latencies": 736.16,
+                  },
+                  "service_operation_call_rate": Array [
+                    Object {
+                      "x": 1631534436235,
+                      "y": 0.01,
+                    },
+                    Object {
+                      "x": 1631534496235,
+                      "y": 0.01,
+                    },
+                  ],
+                  "service_operation_error_rate": Array [
+                    Object {
+                      "x": 1631534436235,
+                      "y": 1,
+                    },
+                    Object {
+                      "x": 1631534496235,
+                      "y": 1,
+                    },
+                  ],
+                  "service_operation_latencies": Array [
+                    Object {
+                      "x": 1631534436235,
+                      "y": 737.33,
+                    },
+                    Object {
+                      "x": 1631534496235,
+                      "y": 735,
+                    },
+                  ],
+                },
+                "errRates": 1,
+                "impact": 1,
+                "key": 0,
+                "latency": 736.16,
+                "name": "/PlaceOrder",
+                "requests": 0.01,
+              },
+            ]
+          }
+          endTime={1466424490000}
+          error={
+            Object {
+              "opsCalls": null,
+              "opsErrors": null,
+              "opsLatencies": null,
+            }
+          }
+          loading={null}
+          lookback={3600000}
+          serviceName="s1"
+        />
+      </Row>
+    </Row>
+  </div>
+</Fragment>
+`;
+
+exports[`<MonitorATMServicesView> ATM snapshot test without services 1`] = `
+<Fragment>
+  <Alert
+    message={
+      <React.Fragment>
+        No data yet! Follow the
+        <Link
+          replace={false}
+          target="_blank"
+          to="//https://www.jaegertracing.io/docs/latest/frontend-ui/"
+        >
+          instructions
+        </Link>
+        to send your span metrics. Get help.
+      </React.Fragment>
+    }
+    showIcon={true}
+    type="warning"
+  />
+  <div
+    className="service-view-container"
+  >
+    <Row
+      gutter={0}
+    >
+      <Col
+        span={6}
+      >
+        <h2
+          className="service-selector-header"
+        >
+          Choose service
+        </h2>
+        <Field
+          component={[Function]}
+          name="service"
+          placeholder="Select A Service"
+          props={
+            Object {
+              "className": "select-a-service-input",
+              "clearable": false,
+              "disabled": null,
+              "options": Array [],
+              "required": true,
+              "value": "s1",
+            }
+          }
+        />
+      </Col>
+    </Row>
+    <Row
+      gutter={0}
+    >
+      <Col
+        span={16}
+      >
+        <p
+          className="operations-metrics-text"
+        >
+          Aggregation of all "
+          s1
+          " metrics in selected timeframe.
+           
+          <a
+            href="/search?end=1466424490000000&limit=20&lookback=1h&maxDuration&minDuration&service=s1&start=1466420890000000"
+            target="blank"
+          >
+            View all traces
+          </a>
+        </p>
+      </Col>
+      <Col
+        className="timeframe-selector"
+        span={8}
+      >
+        <Field
+          component={[Function]}
+          name="timeframe"
+          placeholder="Select A Timeframe"
+          props={
+            Object {
+              "className": "select-a-timeframe-input",
+              "clearable": false,
+              "defaultValue": Object {
+                "label": "Last Hour",
+                "value": 3600000,
+              },
+              "disabled": null,
+              "options": Array [
+                Object {
+                  "label": "Last Hour",
+                  "value": 3600000,
+                },
+                Object {
+                  "label": "Last 2 hour",
+                  "value": 7200000,
+                },
+                Object {
+                  "label": "Last 6 hour",
+                  "value": 21600000,
+                },
+                Object {
+                  "label": "Last 12 hour",
+                  "value": 43200000,
+                },
+                Object {
+                  "label": "Last 24 hours",
+                  "value": 86400000,
+                },
+                Object {
+                  "label": "Last 2 days",
+                  "value": 172800000,
+                },
+              ],
+              "required": true,
+              "value": 3600000,
+            }
+          }
+        />
+      </Col>
+    </Row>
+    <Row
+      gutter={0}
+    >
+      <Col
+        span={8}
+      >
+        <div />
+        <ServiceGraphImpl
+          error={null}
+          key="latency"
+          loading={false}
+          marginClassName="latency-margins"
+          metricsData={
+            Array [
+              Object {
+                "max": 189.86,
+                "metricPoints": Array [
+                  Object {
+                    "x": 1631271823806,
+                    "y": 189.86,
+                  },
+                  Object {
+                    "x": 1631271883806,
+                    "y": 189.86,
+                  },
+                ],
+                "quantile": 0.5,
+                "serviceName": "cartservice",
+              },
+              Object {
+                "max": 189.86,
+                "metricPoints": Array [
+                  Object {
+                    "x": 1631271823806,
+                    "y": 189.86,
+                  },
+                  Object {
+                    "x": 1631271883806,
+                    "y": 189.86,
+                  },
+                ],
+                "quantile": 0.75,
+                "serviceName": "cartservice",
+              },
+              Object {
+                "max": 189.86,
+                "metricPoints": Array [
+                  Object {
+                    "x": 1631271823806,
+                    "y": 189.86,
+                  },
+                  Object {
+                    "x": 1631271883806,
+                    "y": 189.86,
+                  },
+                ],
+                "quantile": 0.95,
+                "serviceName": "cartservice",
+              },
+            ]
+          }
+          name="Latency (ms)"
+          showHorizontalLines={true}
+          showLegend={true}
+          width={300}
+          xDomain={
+            Array [
+              1466420890000,
+              1466424490000,
+            ]
+          }
+          yAxisTickFormat={[Function]}
+        />
+      </Col>
+      <Col
+        span={8}
+      >
+        <ServiceGraphImpl
+          color="#CD513A"
+          error={null}
+          key="errRate"
+          loading={false}
+          marginClassName="error-rate-margins"
+          metricsData={
+            Object {
+              "max": 1,
+              "metricPoints": Array [
+                Object {
+                  "x": 1631274747520,
+                  "y": 100,
+                },
+                Object {
+                  "x": 1631274807520,
+                  "y": 100,
+                },
+              ],
+              "quantile": 0.95,
+              "serviceName": "cartservice",
+            }
+          }
+          name="Error rate (%)"
+          width={300}
+          xDomain={
+            Array [
+              1466420890000,
+              1466424490000,
+            ]
+          }
+          yDomain={
+            Array [
+              0,
+              100,
+            ]
+          }
+        />
+      </Col>
+      <Col
+        span={8}
+      >
+        <ServiceGraphImpl
+          color="#4795BA"
+          error={null}
+          key="requests"
+          loading={false}
+          marginClassName="request-margins"
+          metricsData={null}
+          name="Request rate (req/s)"
+          showHorizontalLines={true}
+          width={300}
+          xDomain={
+            Array [
+              1466420890000,
+              1466424490000,
+            ]
+          }
+        />
+      </Col>
+    </Row>
+    <Row
+      className="operation-table-block"
+      gutter={0}
+    >
+      <Row
+        gutter={0}
+      >
+        <Col
+          span={16}
+        >
+          <h2
+            className="table-header"
+          >
+            Operations metrics under 
+            s1
+          </h2>
+           
+          <span
+            className="over-the-last"
+          >
+            Over the 
+            last hour
+          </span>
+        </Col>
+        <Col
+          className="select-operation-column"
+          span={8}
+        >
+          <Search
+            className="select-operation-input"
+            disabled={false}
+            enterButton={false}
+            inputPrefixCls="ant-input"
+            onChange={[Function]}
+            placeholder="Search operation"
+            prefixCls="ant-input-search"
+            value=""
+          />
+        </Col>
+      </Row>
+      <Row
+        gutter={0}
+      >
+        <OperationTableDetails
+          data={
+            Array [
+              Object {
+                "dataPoints": Object {
+                  "avg": Object {
+                    "service_operation_call_rate": 0.01,
+                    "service_operation_error_rate": 1,
+                    "service_operation_latencies": 736.16,
+                  },
+                  "service_operation_call_rate": Array [
+                    Object {
+                      "x": 1631534436235,
+                      "y": 0.01,
+                    },
+                    Object {
+                      "x": 1631534496235,
+                      "y": 0.01,
+                    },
+                  ],
+                  "service_operation_error_rate": Array [
+                    Object {
+                      "x": 1631534436235,
+                      "y": 1,
+                    },
+                    Object {
+                      "x": 1631534496235,
+                      "y": 1,
+                    },
+                  ],
+                  "service_operation_latencies": Array [
+                    Object {
+                      "x": 1631534436235,
+                      "y": 737.33,
+                    },
+                    Object {
+                      "x": 1631534496235,
+                      "y": 735,
+                    },
+                  ],
+                },
+                "errRates": 1,
+                "impact": 1,
+                "key": 0,
+                "latency": 736.16,
+                "name": "/PlaceOrder",
+                "requests": 0.01,
+              },
+            ]
+          }
+          endTime={1466424490000}
+          error={
+            Object {
+              "opsCalls": null,
+              "opsErrors": null,
+              "opsLatencies": null,
+            }
+          }
+          loading={null}
+          lookback={3600000}
+          serviceName="s1"
+        />
+      </Row>
+    </Row>
+  </div>
+</Fragment>
 `;

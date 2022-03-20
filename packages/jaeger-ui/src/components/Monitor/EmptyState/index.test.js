@@ -13,55 +13,18 @@
 // limitations under the License.
 
 import React from 'react';
-import { mount } from 'enzyme';
-import IoIosCheckmark from 'react-icons/lib/io/ios-checkmark-outline';
-import IoIosCloseCircle from 'react-icons/lib/io/ios-circle-outline';
+import { shallow } from 'enzyme';
 import MonitorATMEmptyState from '.';
 
-const props = {
-  configureStatus: false,
-  sendDataStatus: false,
-};
-describe('<MonitorATMEmptyState>not configured', () => {
+describe('<MonitorATMEmptyState>', () => {
   let wrapper;
 
   beforeEach(() => {
-    wrapper = mount(<MonitorATMEmptyState {...props} />);
+    wrapper = shallow(<MonitorATMEmptyState />);
   });
 
   it('does not explode', () => {
     expect(wrapper.length).toBe(1);
-  });
-
-  it('shows a loading indicator when loading data', () => {
-    expect(wrapper.find(IoIosCloseCircle).length).toBe(2);
-  });
-
-  it('ATM snapshot test', () => {
-    expect(wrapper).toMatchSnapshot();
-  });
-});
-
-describe('<MonitorATMEmptyState> partially configured', () => {
-  let wrapper;
-
-  beforeEach(() => {
-    wrapper = mount(
-      <MonitorATMEmptyState
-        {...{
-          configureStatus: true,
-          sendDataStatus: false,
-        }}
-      />
-    );
-  });
-
-  it('does not explode', () => {
-    expect(wrapper.length).toBe(1);
-  });
-
-  it('should render checkbox', () => {
-    expect(wrapper.find(IoIosCheckmark).length).toBe(1);
   });
 
   it('ATM snapshot test', () => {

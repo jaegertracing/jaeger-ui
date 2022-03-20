@@ -154,6 +154,21 @@ describe('<MonitorATMServicesView>', () => {
     expect(wrapper).toMatchSnapshot();
   });
 
+  it('ATM snapshot test without services', () => {
+    mockFetchServices.mockResolvedValue([]);
+    wrapper.setProps({
+      services: [],
+      metrics: {
+        ...originInitialState,
+        serviceMetrics,
+        serviceOpsMetrics,
+        loading: false,
+        isATMActivated: true,
+      },
+    });
+    expect(wrapper).toMatchSnapshot();
+  });
+
   it('ComponentWillUnmount remove listener', () => {
     const remover = jest.spyOn(global, 'removeEventListener').mockImplementation(() => {});
     wrapper.unmount();

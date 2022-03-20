@@ -13,61 +13,43 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { List, Row, Col, Button } from 'antd';
-import IoIosCheckmark from 'react-icons/lib/io/ios-checkmark-outline';
-import IoIosCloseCircle from 'react-icons/lib/io/ios-circle-outline';
-
+import { Row, Col, Button, Alert } from 'antd';
 import './index.css';
+import { MonitorEmptyStateConfig } from '../../../types/config';
+import { getConfigValue } from '../../../utils/config/get-config';
 
-type TProps = {
-  configureStatus: boolean;
-  sendDataStatus: boolean;
-};
+export default class MonitorATMEmptyState extends React.PureComponent {
+  config: MonitorEmptyStateConfig;
 
-export default class MonitorATMEmptyState extends React.PureComponent<TProps> {
-  private configureStatus = {
-    text: 'Configured',
-    status: false,
-  };
-
-  private sendDataStatus = {
-    text: 'Sent data',
-    status: false,
-  };
-
-  constructor(props: TProps) {
+  constructor(props: any) {
     super(props);
 
-    this.configureStatus.status = props.configureStatus;
-    this.sendDataStatus.status = props.sendDataStatus;
+    this.config = getConfigValue('monitor.emptyState');
   }
 
   render() {
     return (
       <Row justify="center">
-        <Col span={12} offset={6} className="center-empty-state">
-          <List
-            itemLayout="vertical"
-            dataSource={[this.configureStatus, this.sendDataStatus]}
-            split={false}
-            size="small"
-            rowKey="-"
-            header={<h2 className="ub-m0">Get started with Services Monitor</h2>}
-            footer={
-              <Button
-                style={{ backgroundColor: '#199', color: '#fff' }}
-                href="https://www.jaegertracing.io/docs/latest/frontend-ui/"
-                target="_blank"
-              >
-                Go to documentation
-              </Button>
-            }
-            renderItem={(item: { text: string; status: boolean }) => (
-              <div>
-                &bull; {item.text} {item.status ? <IoIosCheckmark /> : <IoIosCloseCircle />}
-              </div>
-            )}
-          />
+        <Col span={6} offset={9} className="center-empty-state">
+          {this.config.imgSrc && <img alt="jaeger-monitor-tab-preview" src={this.config.imgSrc} />}
+          {this.config.mainTitle && <h2 className="main-title-empty-state">{this.config.mainTitle}</h2>}
+          {this.config.subTitle && <h3 className="sub-title-empty-state">{this.config.subTitle}</h3>}
+          {this.config.description && <h4 className="description-empty-state">{this.config.description}</h4>}
+          {this.config.button && (
+            <Button
+              className="button-empty-state"
+              onClick={() => this.config.onButtonClick && this.config.onButtonClick()}
+            >
+              {this.config.button}
+            </Button>
+          )}
+          {this.config.info && (
+            <Row justify="center">
+              <Col span={20} offset={2}>
+                <Alert message={this.config.info} type="info" showIcon />
+              </Col>
+            </Row>
+          )}
         </Col>
       </Row>
     );

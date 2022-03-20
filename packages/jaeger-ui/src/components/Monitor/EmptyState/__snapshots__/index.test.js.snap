@@ -1,217 +1,59 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`<MonitorATMEmptyState> partially configured ATM snapshot test 1`] = `
-<div
-  className="ant-row"
+exports[`<MonitorATMEmptyState> ATM snapshot test 1`] = `
+<Row
+  gutter={0}
+  justify="center"
 >
-  <div
-    className="ant-col-12 ant-col-offset-6 center-empty-state"
+  <Col
+    className="center-empty-state"
+    offset={9}
+    span={6}
   >
-    <div
-      className="ant-list ant-list-vertical ant-list-sm ant-list-something-after-last-item"
+    <img
+      alt="jaeger-monitor-tab-preview"
+      src="./media/monitor.png"
+    />
+    <h2
+      className="main-title-empty-state"
     >
-      <div
-        className="ant-list-header"
-      >
-        <h2
-          className="ub-m0"
-        >
-          Get started with Services Monitor
-        </h2>
-      </div>
-      <div
-        className="ant-spin-nested-loading"
-        style={null}
-      >
-        <div
-          className="ant-spin-container"
-          key="container"
-        >
-          <div
-            key="list-item-0/.0"
-          >
-            • 
-            Configured
-             
-            <svg
-              fill="currentColor"
-              height="1em"
-              preserveAspectRatio="xMidYMid meet"
-              style={
-                Object {
-                  "color": undefined,
-                  "verticalAlign": "middle",
-                }
-              }
-              viewBox="0 0 40 40"
-              width="1em"
-            >
-              <g>
-                <path
-                  d="m26.3 13.8l1.4 1.4-10.4 10.6c-0.2 0.1-0.5 0.3-0.8 0.3s-0.5-0.2-0.7-0.3l-4.3-4.4 1.4-1.4 3.6 3.7z m-6.5-10c8.9 0 16.2 7.2 16.2 16.2s-7.3 16.3-16.2 16.3-16.3-7.3-16.3-16.3 7.3-16.2 16.3-16.2z m0 31.1c8.2 0 14.9-6.7 14.9-14.9s-6.7-14.9-14.9-14.9-15 6.7-15 14.9 6.7 14.9 15 14.9z"
-                />
-              </g>
-            </svg>
-          </div>
-          <div
-            key="list-item-1/.1"
-          >
-            • 
-            Sent data
-             
-            <svg
-              fill="currentColor"
-              height="1em"
-              preserveAspectRatio="xMidYMid meet"
-              style={
-                Object {
-                  "color": undefined,
-                  "verticalAlign": "middle",
-                }
-              }
-              viewBox="0 0 40 40"
-              width="1em"
-            >
-              <g>
-                <path
-                  d="m19.8 3.8c8.9 0 16.2 7.2 16.2 16.2s-7.3 16.3-16.2 16.3-16.3-7.3-16.3-16.3 7.3-16.2 16.3-16.2z m0 31.1c8.2 0 14.9-6.7 14.9-14.9s-6.7-14.9-14.9-14.9-15 6.7-15 14.9 6.7 14.9 15 14.9z"
-                />
-              </g>
-            </svg>
-          </div>
-        </div>
-      </div>
-      <div
-        className="ant-list-footer"
-      >
-        <a
-          className="ant-btn"
-          href="https://www.jaegertracing.io/docs/latest/frontend-ui/"
-          onClick={[Function]}
-          style={
-            Object {
-              "backgroundColor": "#199",
-              "color": "#fff",
-            }
-          }
-          target="_blank"
-        >
-          <span
-            key=".0"
-          >
-            Go to documentation
-          </span>
-        </a>
-      </div>
-    </div>
-  </div>
-</div>
-`;
-
-exports[`<MonitorATMEmptyState>not configured ATM snapshot test 1`] = `
-<div
-  className="ant-row"
->
-  <div
-    className="ant-col-12 ant-col-offset-6 center-empty-state"
-  >
-    <div
-      className="ant-list ant-list-vertical ant-list-sm ant-list-something-after-last-item"
+      Get started with Service Monitoring
+    </h2>
+    <h3
+      className="sub-title-empty-state"
     >
-      <div
-        className="ant-list-header"
+      A high-level monitoring dashboard that helps you cut down the time to identify and resolve anomalies and issues.
+    </h3>
+    <h4
+      className="description-empty-state"
+    >
+      Service Performance Monitoring works in conjunction with a Prometheus compatible time series database. The metrics are aggregated from your tracing data through a one-time configuration. 
+    </h4>
+    <Button
+      block={false}
+      className="button-empty-state"
+      ghost={false}
+      loading={false}
+      onClick={[Function]}
+      prefixCls="ant-btn"
+    >
+      Read the Documentation
+    </Button>
+    <Row
+      gutter={0}
+      justify="center"
+    >
+      <Col
+        offset={2}
+        span={20}
       >
-        <h2
-          className="ub-m0"
-        >
-          Get started with Services Monitor
-        </h2>
-      </div>
-      <div
-        className="ant-spin-nested-loading"
-        style={null}
-      >
-        <div
-          className="ant-spin-container"
-          key="container"
-        >
-          <div
-            key="list-item-0/.0"
-          >
-            • 
-            Configured
-             
-            <svg
-              fill="currentColor"
-              height="1em"
-              preserveAspectRatio="xMidYMid meet"
-              style={
-                Object {
-                  "color": undefined,
-                  "verticalAlign": "middle",
-                }
-              }
-              viewBox="0 0 40 40"
-              width="1em"
-            >
-              <g>
-                <path
-                  d="m19.8 3.8c8.9 0 16.2 7.2 16.2 16.2s-7.3 16.3-16.2 16.3-16.3-7.3-16.3-16.3 7.3-16.2 16.3-16.2z m0 31.1c8.2 0 14.9-6.7 14.9-14.9s-6.7-14.9-14.9-14.9-15 6.7-15 14.9 6.7 14.9 15 14.9z"
-                />
-              </g>
-            </svg>
-          </div>
-          <div
-            key="list-item-1/.1"
-          >
-            • 
-            Sent data
-             
-            <svg
-              fill="currentColor"
-              height="1em"
-              preserveAspectRatio="xMidYMid meet"
-              style={
-                Object {
-                  "color": undefined,
-                  "verticalAlign": "middle",
-                }
-              }
-              viewBox="0 0 40 40"
-              width="1em"
-            >
-              <g>
-                <path
-                  d="m19.8 3.8c8.9 0 16.2 7.2 16.2 16.2s-7.3 16.3-16.2 16.3-16.3-7.3-16.3-16.3 7.3-16.2 16.3-16.2z m0 31.1c8.2 0 14.9-6.7 14.9-14.9s-6.7-14.9-14.9-14.9-15 6.7-15 14.9 6.7 14.9 15 14.9z"
-                />
-              </g>
-            </svg>
-          </div>
-        </div>
-      </div>
-      <div
-        className="ant-list-footer"
-      >
-        <a
-          className="ant-btn"
-          href="https://www.jaegertracing.io/docs/latest/frontend-ui/"
-          onClick={[Function]}
-          style={
-            Object {
-              "backgroundColor": "#199",
-              "color": "#fff",
-            }
-          }
-          target="_blank"
-        >
-          <span
-            key=".0"
-          >
-            Go to documentation
-          </span>
-        </a>
-      </div>
-    </div>
-  </div>
-</div>
+        <Alert
+          message="Service Performance Monitoring requires a Prometheus compatible time series database "
+          showIcon={true}
+          type="info"
+        />
+      </Col>
+    </Row>
+  </Col>
+</Row>
 `;
