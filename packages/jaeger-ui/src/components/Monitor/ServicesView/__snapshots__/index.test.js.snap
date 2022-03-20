@@ -373,7 +373,7 @@ exports[`<MonitorATMServicesView> ATM snapshot test without services 1`] = `
           target="_blank"
           to="//https://www.jaegertracing.io/docs/latest/frontend-ui/"
         >
-          instructions
+           instructions 
         </Link>
         to send your span metrics. Get help.
       </React.Fragment>

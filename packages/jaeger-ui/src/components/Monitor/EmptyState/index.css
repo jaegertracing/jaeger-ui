@@ -37,11 +37,12 @@ limitations under the License.
 .description-empty-state {
   font-weight: 400;
   color: #575757;
+  margin-bottom: 24px;
 }
 
 .button-empty-state {
-  margin: 24px 0;
   background-color: #11939a;
   color: white;
   float: right;
+  margin-bottom: 24px;
 }
