@@ -1,59 +1,72 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`<MonitorATMEmptyState> ATM snapshot test 1`] = `
-<Row
-  gutter={0}
-  justify="center"
->
-  <Col
-    className="center-empty-state"
-    offset={9}
-    span={6}
+<Col>
+  <Row
+    gutter={0}
+    justify="center"
   >
-    <img
-      alt="jaeger-monitor-tab-preview"
-      src="./media/monitor.png"
-    />
-    <h2
-      className="main-title-empty-state"
+    <Col
+      offset={8}
+      span={8}
     >
-      Get started with Service Monitoring
-    </h2>
-    <h3
-      className="sub-title-empty-state"
+      <img
+        alt="jaeger-monitor-tab-preview"
+        className="monitor-preview-image-empty-state"
+        src="monitor.png"
+      />
+    </Col>
+  </Row>
+  <Row
+    gutter={0}
+    justify="center"
+  >
+    <Col
+      className="center-empty-state"
+      offset={9}
+      span={6}
     >
-      A high-level monitoring dashboard that helps you cut down the time to identify and resolve anomalies and issues.
-    </h3>
-    <h4
-      className="description-empty-state"
-    >
-      Service Performance Monitoring works in conjunction with a Prometheus compatible time series database. The metrics are aggregated from your tracing data through a one-time configuration. 
-    </h4>
-    <Button
-      block={false}
-      className="button-empty-state"
-      ghost={false}
-      loading={false}
-      onClick={[Function]}
-      prefixCls="ant-btn"
-    >
-      Read the Documentation
-    </Button>
-    <Row
-      gutter={0}
-      justify="center"
-    >
-      <Col
-        offset={2}
-        span={20}
+      <h2
+        className="main-title-empty-state"
       >
-        <Alert
-          message="Service Performance Monitoring requires a Prometheus compatible time series database "
-          showIcon={true}
-          type="info"
-        />
-      </Col>
-    </Row>
-  </Col>
-</Row>
+        Get started with Service Monitoring
+      </h2>
+      <h3
+        className="sub-title-empty-state"
+      >
+        A high-level monitoring dashboard that helps you cut down the time to identify and resolve anomalies and issues.
+      </h3>
+      <h4
+        className="description-empty-state"
+      >
+        Service Performance Monitoring works in conjunction with a Prometheus compatible time series database. The metrics are aggregated from your tracing data through a one-time configuration. 
+      </h4>
+      <Button
+        block={false}
+        className="button-empty-state"
+        ghost={false}
+        loading={false}
+        onClick={[Function]}
+        prefixCls="ant-btn"
+      >
+        Read the Documentation
+      </Button>
+      <Row
+        gutter={0}
+        justify="center"
+      >
+        <Col
+          offset={2}
+          span={20}
+        >
+          <Alert
+            message="Service Performance Monitoring requires a Prometheus compatible time series database "
+            showIcon={true}
+            type="info"
+          />
+        </Col>
+      </Row>
+    </Col>
+  </Row>
+</Col>
 `;

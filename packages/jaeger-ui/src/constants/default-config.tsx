@@ -90,7 +90,6 @@ export default deepFreeze(
       monitor: {
         menuEnabled: true,
         emptyState: {
-          imgSrc: './media/monitor.png',
           mainTitle: 'Get started with Service Monitoring',
           subTitle:
             'A high-level monitoring dashboard that helps you cut down the time to identify and resolve anomalies and issues.',

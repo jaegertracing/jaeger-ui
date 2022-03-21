@@ -39,7 +39,6 @@ export type LinkPatternsConfig = {
 };
 
 export type MonitorEmptyStateConfig = {
-  imgSrc?: string;
   mainTitle?: string;
   subTitle?: string;
   description?: string;

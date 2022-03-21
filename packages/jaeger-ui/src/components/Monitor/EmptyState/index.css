@@ -20,7 +20,6 @@ limitations under the License.
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  margin-top: calc(100vh / 4.5);
 }
 
 .main-title-empty-state {
@@ -45,4 +44,10 @@ limitations under the License.
   color: white;
   float: right;
   margin-bottom: 24px;
+}
+
+.monitor-preview-image-empty-state {
+  width: 100%;
+  height: auto;
+  margin-top: calc(100vh / 10);
 }
