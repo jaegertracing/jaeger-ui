@@ -375,9 +375,8 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
                       return name.toLowerCase().includes(e.target.value.toLowerCase());
                     });
 
-                    this.setState({ searchOps: e.target.value });
-
                     this.setState({
+                      searchOps: e.target.value,
                       serviceOpsMetrics: filteredData,
                     });
                   }}
