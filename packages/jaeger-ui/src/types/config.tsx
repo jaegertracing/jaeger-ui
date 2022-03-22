@@ -42,9 +42,15 @@ export type MonitorEmptyStateConfig = {
   mainTitle?: string;
   subTitle?: string;
   description?: string;
-  button?: string;
+  buttonText?: string;
   info?: string;
   onButtonClick?: Function;
+};
+
+export type MonitorConfig = {
+  menuEnabled?: boolean;
+  emptyState?: MonitorEmptyStateConfig;
+  docsLink?: string;
 };
 
 // Default values are provided in packages/jaeger-ui/src/constants/default-config.tsx
@@ -72,9 +78,5 @@ export type Config = {
     trackErrors: boolean | TNil;
   };
   linkPatterns?: LinkPatternsConfig;
-  monitor?: {
-    menuEnabled?: boolean;
-    emptyState?: MonitorEmptyStateConfig;
-    docsLink: string;
-  };
+  monitor?: MonitorConfig;
 };

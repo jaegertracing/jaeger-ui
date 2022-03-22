@@ -95,7 +95,7 @@ export default deepFreeze(
             'A high-level monitoring dashboard that helps you cut down the time to identify and resolve anomalies and issues.',
           description:
             'Service Performance Monitoring works in conjunction with a Prometheus compatible time series database. The metrics are aggregated from your tracing data through a one-time configuration. ',
-          button: 'Read the Documentation',
+          buttonText: 'Read the Documentation',
           info: 'Service Performance Monitoring requires a Prometheus compatible time series database ',
           onButtonClick: () => window.open('https://www.jaegertracing.io/docs/latest/frontend-ui/'),
         },
