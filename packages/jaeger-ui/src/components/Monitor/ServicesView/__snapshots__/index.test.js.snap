@@ -375,7 +375,7 @@ exports[`<MonitorATMServicesView> ATM snapshot test without services 1`] = `
         >
            instructions 
         </Link>
-        to send your span metrics. Get help.
+        to send your span metrics
       </React.Fragment>
     }
     showIcon={true}
