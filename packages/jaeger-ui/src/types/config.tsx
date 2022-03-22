@@ -42,9 +42,11 @@ export type MonitorEmptyStateConfig = {
   mainTitle?: string;
   subTitle?: string;
   description?: string;
-  buttonText?: string;
+  button?: {
+    text?: string;
+    onClick?: Function;
+  };
   info?: string;
-  onButtonClick?: Function;
 };
 
 export type MonitorConfig = {

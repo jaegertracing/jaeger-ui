@@ -47,12 +47,14 @@ export default class MonitorATMEmptyState extends React.PureComponent {
             {this.config.description && (
               <h4 className="description-empty-state">{this.config.description}</h4>
             )}
-            {this.config.buttonText && (
+            {this.config.button && this.config.button.text && (
               <Button
                 className="button-empty-state"
-                onClick={() => this.config.onButtonClick && this.config.onButtonClick()}
+                onClick={() =>
+                  this.config.button && this.config.button.onClick && this.config.button.onClick()
+                }
               >
-                {this.config.buttonText}
+                {this.config.button.text}
               </Button>
             )}
             {this.config.info && (
