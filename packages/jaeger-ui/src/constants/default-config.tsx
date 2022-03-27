@@ -90,18 +90,18 @@ export default deepFreeze(
       monitor: {
         menuEnabled: true,
         emptyState: {
-          mainTitle: 'Get started with Service Monitoring',
+          mainTitle: 'Get started with Service Performance Monitoring',
           subTitle:
             'A high-level monitoring dashboard that helps you cut down the time to identify and resolve anomalies and issues.',
           description:
-            'Service Performance Monitoring works in conjunction with a Prometheus compatible time series database. The metrics are aggregated from your tracing data through a one-time configuration. ',
+            'Service Performance Monitoring works in conjunction with a Prometheus compatible time series database. The metrics are aggregated from your tracing data through a one-time configuration.',
           button: {
             text: 'Read the Documentation',
-            onClick: () => window.open('https://www.jaegertracing.io/docs/latest/frontend-ui/'),
+            onClick: () => window.open('https://www.jaegertracing.io/docs/latest/atm/'),
           },
-          info: 'Service Performance Monitoring requires a Prometheus compatible time series database ',
+          info: 'Service Performance Monitoring requires a Prometheus-compatible time series database.',
         },
-        docsLink: 'https://www.jaegertracing.io/docs/latest/frontend-ui/',
+        docsLink: 'https://www.jaegertracing.io/docs/latest/atm/',
       },
     },
     // fields that should be individually merged vs wholesale replaced

@@ -371,7 +371,7 @@ exports[`<MonitorATMServicesView> ATM snapshot test without services 1`] = `
         <Link
           replace={false}
           target="_blank"
-          to="//https://www.jaegertracing.io/docs/latest/frontend-ui/"
+          to="//https://www.jaegertracing.io/docs/latest/atm/"
         >
            instructions 
         </Link>

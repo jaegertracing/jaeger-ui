@@ -29,7 +29,7 @@ exports[`<MonitorATMEmptyState> ATM snapshot test 1`] = `
       <h2
         className="main-title-empty-state"
       >
-        Get started with Service Monitoring
+        Get started with Service Performance Monitoring
       </h2>
       <h3
         className="sub-title-empty-state"
@@ -39,7 +39,7 @@ exports[`<MonitorATMEmptyState> ATM snapshot test 1`] = `
       <h4
         className="description-empty-state"
       >
-        Service Performance Monitoring works in conjunction with a Prometheus compatible time series database. The metrics are aggregated from your tracing data through a one-time configuration. 
+        Service Performance Monitoring works in conjunction with a Prometheus compatible time series database. The metrics are aggregated from your tracing data through a one-time configuration.
       </h4>
       <Button
         block={false}
@@ -60,7 +60,7 @@ exports[`<MonitorATMEmptyState> ATM snapshot test 1`] = `
           span={20}
         >
           <Alert
-            message="Service Performance Monitoring requires a Prometheus compatible time series database "
+            message="Service Performance Monitoring requires a Prometheus-compatible time series database."
             showIcon={true}
             type="info"
           />
