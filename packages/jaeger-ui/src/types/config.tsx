@@ -47,6 +47,10 @@ export type MonitorEmptyStateConfig = {
     onClick?: Function;
   };
   info?: string;
+  alert?: {
+    message?: string,
+    type?: 'success' | 'info' | 'warning' | 'error',
+  },
 };
 
 export type MonitorConfig = {

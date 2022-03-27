@@ -99,7 +99,10 @@ export default deepFreeze(
             text: 'Read the Documentation',
             onClick: () => window.open('https://www.jaegertracing.io/docs/latest/atm/'),
           },
-          info: 'Service Performance Monitoring requires a Prometheus-compatible time series database.',
+          alert: {
+            message: 'Service Performance Monitoring requires a Prometheus-compatible time series database.',
+            type: 'info',
+          },
         },
         docsLink: 'https://www.jaegertracing.io/docs/latest/atm/',
       },

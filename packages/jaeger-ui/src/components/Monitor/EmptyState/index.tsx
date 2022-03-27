@@ -57,10 +57,10 @@ export default class MonitorATMEmptyState extends React.PureComponent {
                 {this.config.button.text}
               </Button>
             )}
-            {this.config.info && (
+            {this.config.alert && (
               <Row justify="center">
                 <Col span={20} offset={2}>
-                  <Alert message={this.config.info} type="info" showIcon />
+                  <Alert message={this.config.alert.message} type={this.config.alert.type} showIcon />
                 </Col>
               </Row>
             )}
