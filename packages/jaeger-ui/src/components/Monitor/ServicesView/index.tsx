@@ -238,7 +238,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
 
     return (
       <>
-        {_isEmpty(services) && (
+        {_isEmpty(metrics && metrics.serviceMetrics && metrics.serviceMetrics.service_latencies) && (
           <Alert
             message={
               <>

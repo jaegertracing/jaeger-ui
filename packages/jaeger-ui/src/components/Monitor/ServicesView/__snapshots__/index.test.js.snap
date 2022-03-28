@@ -362,7 +362,7 @@ exports[`<MonitorATMServicesView> ATM snapshot test 1`] = `
 </Fragment>
 `;
 
-exports[`<MonitorATMServicesView> ATM snapshot test without services 1`] = `
+exports[`<MonitorATMServicesView> ATM snapshot test with no metrics 1`] = `
 <Fragment>
   <Alert
     message={
@@ -495,56 +495,8 @@ exports[`<MonitorATMServicesView> ATM snapshot test without services 1`] = `
           key="latency"
           loading={false}
           marginClassName="latency-margins"
-          metricsData={
-            Array [
-              Object {
-                "max": 189.86,
-                "metricPoints": Array [
-                  Object {
-                    "x": 1631271823806,
-                    "y": 189.86,
-                  },
-                  Object {
-                    "x": 1631271883806,
-                    "y": 189.86,
-                  },
-                ],
-                "quantile": 0.5,
-                "serviceName": "cartservice",
-              },
-              Object {
-                "max": 189.86,
-                "metricPoints": Array [
-                  Object {
-                    "x": 1631271823806,
-                    "y": 189.86,
-                  },
-                  Object {
-                    "x": 1631271883806,
-                    "y": 189.86,
-                  },
-                ],
-                "quantile": 0.75,
-                "serviceName": "cartservice",
-              },
-              Object {
-                "max": 189.86,
-                "metricPoints": Array [
-                  Object {
-                    "x": 1631271823806,
-                    "y": 189.86,
-                  },
-                  Object {
-                    "x": 1631271883806,
-                    "y": 189.86,
-                  },
-                ],
-                "quantile": 0.95,
-                "serviceName": "cartservice",
-              },
-            ]
-          }
-          name="Latency (ms)"
+          metricsData={null}
+          name="Latency (μs)"
           showHorizontalLines={true}
           showLegend={true}
           width={300}
@@ -566,23 +518,7 @@ exports[`<MonitorATMServicesView> ATM snapshot test without services 1`] = `
           key="errRate"
           loading={false}
           marginClassName="error-rate-margins"
-          metricsData={
-            Object {
-              "max": 1,
-              "metricPoints": Array [
-                Object {
-                  "x": 1631274747520,
-                  "y": 100,
-                },
-                Object {
-                  "x": 1631274807520,
-                  "y": 100,
-                },
-              ],
-              "quantile": 0.95,
-              "serviceName": "cartservice",
-            }
-          }
+          metricsData={null}
           name="Error rate (%)"
           width={300}
           xDomain={
