@@ -104,7 +104,7 @@ export default deepFreeze(
             type: 'info',
           },
         },
-        docsLink: 'https://www.jaegertracing.io/docs/latest/atm/',
+        docsLink: 'https://www.jaegertracing.io/docs/latest/spm/',
       },
     },
     // fields that should be individually merged vs wholesale replaced
