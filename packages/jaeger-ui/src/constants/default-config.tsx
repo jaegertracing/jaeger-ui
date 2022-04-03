@@ -94,7 +94,7 @@ export default deepFreeze(
           subTitle:
             'A high-level monitoring dashboard that helps you cut down the time to identify and resolve anomalies and issues.',
           description:
-            'Service Performance Monitoring aggregates tracing data into RED metrics through a one-time configuration and visualizes these metrics through service and operation level dashboards.',
+            'Service Performance Monitoring aggregates tracing data into RED metrics and visualizes them in service and operation level dashboards.',
           button: {
             text: 'Read the Documentation',
             onClick: () => window.open('https://www.jaegertracing.io/docs/latest/spm/'),
