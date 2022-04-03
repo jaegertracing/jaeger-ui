@@ -39,7 +39,7 @@ exports[`<MonitorATMEmptyState> ATM snapshot test 1`] = `
       <h4
         className="description-empty-state"
       >
-        Service Performance Monitoring aggregates tracing data into RED metrics through a one-time configuration and visualizes these metrics through service and operation level dashboards.
+        Service Performance Monitoring aggregates tracing data into RED metrics and visualizes them in service and operation level dashboards.
       </h4>
       <Button
         block={false}
