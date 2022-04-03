@@ -246,7 +246,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
                 <Link to={`//${this.docsLink}`} target="_blank">
                   &nbsp;instructions&nbsp;
                 </Link>
-                to send your span metrics
+                on how to set up your span metrics.
               </>
             }
             type="warning"
