@@ -20,12 +20,7 @@ import { MetricsReduxState, ServiceOpsMetrics } from '../../../../types/metrics'
 import prefixUrl from '../../../../utils/prefix-url';
 
 import './index.css';
-import {
-  convertTimeUnitToShortTerm,
-  convertToTimeUnit,
-  getSuitableTimeUnit,
-  timeConversion,
-} from '../../../../utils/date';
+import { convertTimeUnitToShortTerm, convertToTimeUnit, getSuitableTimeUnit } from '../../../../utils/date';
 
 type TProps = {
   data: ServiceOpsMetrics[] | undefined;

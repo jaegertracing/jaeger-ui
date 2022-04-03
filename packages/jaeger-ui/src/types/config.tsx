@@ -38,6 +38,27 @@ export type LinkPatternsConfig = {
   text: string;
 };
 
+export type MonitorEmptyStateConfig = {
+  mainTitle?: string;
+  subTitle?: string;
+  description?: string;
+  button?: {
+    text?: string;
+    onClick?: Function;
+  };
+  info?: string;
+  alert?: {
+    message?: string;
+    type?: 'success' | 'info' | 'warning' | 'error';
+  };
+};
+
+export type MonitorConfig = {
+  menuEnabled?: boolean;
+  emptyState?: MonitorEmptyStateConfig;
+  docsLink?: string;
+};
+
 // Default values are provided in packages/jaeger-ui/src/constants/default-config.tsx
 export type Config = {
   archiveEnabled?: boolean;
@@ -63,4 +84,5 @@ export type Config = {
     trackErrors: boolean | TNil;
   };
   linkPatterns?: LinkPatternsConfig;
+  monitor?: MonitorConfig;
 };

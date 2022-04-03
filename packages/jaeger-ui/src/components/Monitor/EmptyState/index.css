@@ -16,5 +16,38 @@ limitations under the License.
 
 .center-empty-state {
   text-align: center;
-  margin-top: calc(100vh / 3.5);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.main-title-empty-state {
+  font-size: 24px;
+  line-height: 28px;
+  margin-top: 40px;
+}
+
+.sub-title-empty-state {
+  line-height: 20px;
+  margin: 8px 0;
+}
+
+.description-empty-state {
+  font-weight: 400;
+  color: #575757;
+  margin-bottom: 24px;
+}
+
+.button-empty-state {
+  background-color: #11939a;
+  color: white;
+  float: right;
+  margin-bottom: 24px;
+}
+
+.monitor-preview-image-empty-state {
+  width: 100%;
+  height: auto;
+  margin-top: calc(100vh / 10);
 }

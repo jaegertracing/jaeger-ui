@@ -13,15 +13,17 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Row, Col, Input } from 'antd';
+import { Row, Col, Input, Alert } from 'antd';
 import { ActionFunction, Action } from 'redux-actions';
 import _isEqual from 'lodash/isEqual';
+import _isEmpty from 'lodash/isEmpty';
 // @ts-ignore
 import { Field, formValueSelector, reduxForm } from 'redux-form';
 // @ts-ignore
 import store from 'store';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
+import { Link } from 'react-router-dom';
 import VirtSelect from '../../common/VirtSelect';
 import reduxFormFieldAdapter from '../../../utils/redux-form-field-adapter';
 import * as jaegerApiActions from '../../../actions/jaeger-api';
@@ -41,6 +43,7 @@ import prefixUrl from '../../../utils/prefix-url';
 import { convertToTimeUnit, convertTimeUnitToShortTerm, getSuitableTimeUnit } from '../../../utils/date';
 
 import './index.css';
+import { getConfigValue } from '../../../utils/config/get-config';
 
 type StateType = {
   graphWidth: number;
@@ -123,6 +126,7 @@ const convertServiceErrorRateToPercentages = (serviceErrorRate: null | ServiceMe
 
 // export for tests
 export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, StateType> {
+  docsLink: string;
   graphDivWrapper: React.RefObject<HTMLInputElement>;
   serviceSelectorValue: string = '';
   endTime: number = Date.now();
@@ -136,6 +140,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
   constructor(props: TProps) {
     super(props);
     this.graphDivWrapper = React.createRef();
+    this.docsLink = getConfigValue('monitor.docsLink');
   }
 
   componentDidMount() {
@@ -228,155 +233,173 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
     }
 
     if (metrics.isATMActivated === false) {
-      return <MonitorATMEmptyState configureStatus={false} sendDataStatus={false} />;
+      return <MonitorATMEmptyState />;
     }
 
     return (
-      <div className="service-view-container">
-        <Row>
-          <Col span={6}>
-            <h2 className="service-selector-header">Choose service</h2>
-            <Field
-              name="service"
-              component={AdaptedVirtualSelect}
-              placeholder="Select A Service"
-              props={{
-                className: 'select-a-service-input',
-                value: this.getSelectedService(),
-                disabled: metrics.operationMetricsLoading,
-                clearable: false,
-                options: services.map((s: string) => ({ label: s, value: s })),
-                required: true,
-              }}
-            />
-          </Col>
-        </Row>
-        <Row>
-          <Col span={16}>
-            <p className="operations-metrics-text">
-              Aggregation of all &quot;{this.getSelectedService()}&quot; metrics in selected timeframe.{' '}
-              <a
-                href={prefixUrl(
-                  `/search?end=${Date.now()}000&limit=20&lookback=${selectedTimeFrame /
-                    (3600 *
-                      1000)}h&maxDuration&minDuration&service=${this.getSelectedService()}&start=${Date.now() -
-                    selectedTimeFrame}000`
-                )}
-                target="blank"
-              >
-                View all traces
-              </a>
-            </p>
-          </Col>
-          <Col span={8} className="timeframe-selector">
-            <Field
-              name="timeframe"
-              component={AdaptedVirtualSelect}
-              placeholder="Select A Timeframe"
-              props={{
-                className: 'select-a-timeframe-input',
-                defaultValue: timeFrameOptions[0],
-                value: selectedTimeFrame,
-                disabled: metrics.operationMetricsLoading,
-                clearable: false,
-                options: timeFrameOptions,
-                required: true,
-              }}
-            />
-          </Col>
-        </Row>
-        <Row>
-          <Col span={8}>
-            <div ref={this.graphDivWrapper} />
-            <ServiceGraph
-              key="latency"
-              error={
-                metrics.serviceError.service_latencies_50 &&
-                metrics.serviceError.service_latencies_75 &&
-                metrics.serviceError.service_latencies_95
-              }
-              loading={metrics.loading}
-              name={`Latency (${convertTimeUnitToShortTerm(displayTimeUnit)})`}
-              width={this.state.graphWidth}
-              metricsData={serviceLatencies}
-              showLegend
-              marginClassName="latency-margins"
-              showHorizontalLines
-              yAxisTickFormat={timeInMs => yAxisTickFormat(timeInMs, displayTimeUnit)}
-              xDomain={this.state.graphXDomain}
-            />
-          </Col>
-          <Col span={8}>
-            <ServiceGraph
-              key="errRate"
-              error={metrics.serviceError.service_error_rate}
-              loading={metrics.loading}
-              name="Error rate (%)"
-              width={this.state.graphWidth}
-              metricsData={convertServiceErrorRateToPercentages(serviceErrorRate)}
-              marginClassName="error-rate-margins"
-              color="#CD513A"
-              yDomain={[0, 100]}
-              xDomain={this.state.graphXDomain}
-            />
-          </Col>
-          <Col span={8}>
-            <ServiceGraph
-              key="requests"
-              loading={metrics.loading}
-              error={metrics.serviceError.service_call_rate}
-              name="Request rate (req/s)"
-              width={this.state.graphWidth}
-              metricsData={metrics.serviceMetrics ? metrics.serviceMetrics.service_call_rate : null}
-              showHorizontalLines
-              color="#4795BA"
-              marginClassName="request-margins"
-              xDomain={this.state.graphXDomain}
-            />
-          </Col>
-        </Row>
-        <Row className="operation-table-block">
+      <>
+        {_isEmpty(metrics && metrics.serviceMetrics && metrics.serviceMetrics.service_latencies) && (
+          <Alert
+            message={
+              <>
+                No data yet! Please see these
+                <Link to={`//${this.docsLink}`} target="_blank">
+                  &nbsp;instructions&nbsp;
+                </Link>
+                on how to set up your span metrics.
+              </>
+            }
+            type="warning"
+            showIcon
+          />
+        )}
+        <div className="service-view-container">
           <Row>
-            <Col span={16}>
-              <h2 className="table-header">Operations metrics under {this.getSelectedService()}</h2>{' '}
-              <span className="over-the-last">Over the {getLoopbackInterval(selectedTimeFrame)}</span>
-            </Col>
-            <Col span={8} className="select-operation-column">
-              <Search
-                placeholder="Search operation"
-                className="select-operation-input"
-                value={this.state.searchOps}
-                disabled={metrics.operationMetricsLoading === true || metrics.serviceOpsMetrics === undefined}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                  const filteredData = metrics.serviceOpsMetrics!.filter(({ name }: { name: string }) => {
-                    return name.toLowerCase().includes(e.target.value.toLowerCase());
-                  });
-
-                  this.setState({ searchOps: e.target.value });
-
-                  this.setState({
-                    serviceOpsMetrics: filteredData,
-                  });
+            <Col span={6}>
+              <h2 className="service-selector-header">Choose service</h2>
+              <Field
+                name="service"
+                component={AdaptedVirtualSelect}
+                placeholder="Select A Service"
+                props={{
+                  className: 'select-a-service-input',
+                  value: this.getSelectedService(),
+                  disabled: metrics.operationMetricsLoading,
+                  clearable: false,
+                  options: services.map((s: string) => ({ label: s, value: s })),
+                  required: true,
                 }}
               />
             </Col>
           </Row>
           <Row>
-            <OperationTableDetails
-              loading={metrics.operationMetricsLoading}
-              error={metrics.opsError}
-              data={
-                this.state.serviceOpsMetrics === undefined
-                  ? metrics.serviceOpsMetrics
-                  : this.state.serviceOpsMetrics
-              }
-              endTime={this.endTime}
-              lookback={selectedTimeFrame}
-              serviceName={this.getSelectedService()}
-            />
+            <Col span={16}>
+              <p className="operations-metrics-text">
+                Aggregation of all &quot;{this.getSelectedService()}&quot; metrics in selected timeframe.{' '}
+                <a
+                  href={prefixUrl(
+                    `/search?end=${Date.now()}000&limit=20&lookback=${selectedTimeFrame /
+                      (3600 *
+                        1000)}h&maxDuration&minDuration&service=${this.getSelectedService()}&start=${Date.now() -
+                      selectedTimeFrame}000`
+                  )}
+                  target="blank"
+                >
+                  View all traces
+                </a>
+              </p>
+            </Col>
+            <Col span={8} className="timeframe-selector">
+              <Field
+                name="timeframe"
+                component={AdaptedVirtualSelect}
+                placeholder="Select A Timeframe"
+                props={{
+                  className: 'select-a-timeframe-input',
+                  defaultValue: timeFrameOptions[0],
+                  value: selectedTimeFrame,
+                  disabled: metrics.operationMetricsLoading,
+                  clearable: false,
+                  options: timeFrameOptions,
+                  required: true,
+                }}
+              />
+            </Col>
           </Row>
-        </Row>
-      </div>
+          <Row>
+            <Col span={8}>
+              <div ref={this.graphDivWrapper} />
+              <ServiceGraph
+                key="latency"
+                error={
+                  metrics.serviceError.service_latencies_50 &&
+                  metrics.serviceError.service_latencies_75 &&
+                  metrics.serviceError.service_latencies_95
+                }
+                loading={metrics.loading}
+                name={`Latency (${convertTimeUnitToShortTerm(displayTimeUnit)})`}
+                width={this.state.graphWidth}
+                metricsData={serviceLatencies}
+                showLegend
+                marginClassName="latency-margins"
+                showHorizontalLines
+                yAxisTickFormat={timeInMs => yAxisTickFormat(timeInMs, displayTimeUnit)}
+                xDomain={this.state.graphXDomain}
+              />
+            </Col>
+            <Col span={8}>
+              <ServiceGraph
+                key="errRate"
+                error={metrics.serviceError.service_error_rate}
+                loading={metrics.loading}
+                name="Error rate (%)"
+                width={this.state.graphWidth}
+                metricsData={convertServiceErrorRateToPercentages(serviceErrorRate)}
+                marginClassName="error-rate-margins"
+                color="#CD513A"
+                yDomain={[0, 100]}
+                xDomain={this.state.graphXDomain}
+              />
+            </Col>
+            <Col span={8}>
+              <ServiceGraph
+                key="requests"
+                loading={metrics.loading}
+                error={metrics.serviceError.service_call_rate}
+                name="Request rate (req/s)"
+                width={this.state.graphWidth}
+                metricsData={null}
+                showHorizontalLines
+                color="#4795BA"
+                marginClassName="request-margins"
+                xDomain={this.state.graphXDomain}
+              />
+            </Col>
+          </Row>
+          <Row className="operation-table-block">
+            <Row>
+              <Col span={16}>
+                <h2 className="table-header">Operations metrics under {this.getSelectedService()}</h2>{' '}
+                <span className="over-the-last">Over the {getLoopbackInterval(selectedTimeFrame)}</span>
+              </Col>
+              <Col span={8} className="select-operation-column">
+                <Search
+                  placeholder="Search operation"
+                  className="select-operation-input"
+                  value={this.state.searchOps}
+                  disabled={
+                    metrics.operationMetricsLoading === true || metrics.serviceOpsMetrics === undefined
+                  }
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                    const filteredData = metrics.serviceOpsMetrics!.filter(({ name }: { name: string }) => {
+                      return name.toLowerCase().includes(e.target.value.toLowerCase());
+                    });
+
+                    this.setState({
+                      searchOps: e.target.value,
+                      serviceOpsMetrics: filteredData,
+                    });
+                  }}
+                />
+              </Col>
+            </Row>
+            <Row>
+              <OperationTableDetails
+                loading={metrics.operationMetricsLoading}
+                error={metrics.opsError}
+                data={
+                  this.state.serviceOpsMetrics === undefined
+                    ? metrics.serviceOpsMetrics
+                    : this.state.serviceOpsMetrics
+                }
+                endTime={this.endTime}
+                lookback={selectedTimeFrame}
+                serviceName={this.getSelectedService()}
+              />
+            </Row>
+          </Row>
+        </div>
+      </>
     );
   }
 }
