@@ -242,7 +242,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
           <Alert
             message={
               <>
-                No data yet! Follow the
+                No data yet! Please see these
                 <Link to={`//${this.docsLink}`} target="_blank">
                   &nbsp;instructions&nbsp;
                 </Link>
