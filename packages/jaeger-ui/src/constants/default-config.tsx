@@ -97,7 +97,7 @@ export default deepFreeze(
             'Service Performance Monitoring aggregates tracing data into RED metrics through a one-time configuration and visualizes these metrics through service and operation level dashboards.',
           button: {
             text: 'Read the Documentation',
-            onClick: () => window.open('https://www.jaegertracing.io/docs/latest/atm/'),
+            onClick: () => window.open('https://www.jaegertracing.io/docs/latest/spm/'),
           },
           alert: {
             message: 'Service Performance Monitoring requires a Prometheus-compatible time series database.',
