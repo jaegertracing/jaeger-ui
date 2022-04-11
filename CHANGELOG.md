@@ -6,6 +6,18 @@
 
 ### Fixes
 
+## v1.22.0 (2022-04-11)
+
+### Enhancements
+
+- Monitor Tab - New look for empty state + make empty state configurable ([@nofar9792](https://github.com/nofar9792) in [#916](https://github.com/jaegertracing/jaeger-ui/pull/916))
+
+### Fixes
+
+- Monitor Tab - Fixed y axis on error rates ([@nofar9792](https://github.com/nofar9792) in [#913](https://github.com/jaegertracing/jaeger-ui/pull/913))
+- Monitor Tab - Truncate request rate and P95 latency numbers to two decimal places ([@nofar9792](https://github.com/nofar9792) in [#911](https://github.com/jaegertracing/jaeger-ui/pull/911))
+- Monitor Tab - Error rate graph in operation table is always a straight line ([@nofar9792](https://github.com/nofar9792) in [#909](https://github.com/jaegertracing/jaeger-ui/pull/909))
+
 ## v1.21.0 (2022-03-06)
 
 ### Fixes

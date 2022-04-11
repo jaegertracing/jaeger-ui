@@ -33,7 +33,7 @@ function getData(elm) {
   const title = elm.querySelector('[data-hovercard-type="pull_request"]').textContent;
   const url = elm.querySelector('[data-hovercard-type="pull_request"]').href;
   const pid = /#\d+/g.exec(elm.querySelector('.opened-by').textContent)[0];
-  const user = elm.querySelector('a.muted-link').textContent;
+  const user = elm.querySelector('a.Link--muted').textContent;
   const dateMerged = new Date(elm.querySelector('[datetime]').getAttribute('datetime'));
   return { title, url, pid, user, dateMerged };
 }
