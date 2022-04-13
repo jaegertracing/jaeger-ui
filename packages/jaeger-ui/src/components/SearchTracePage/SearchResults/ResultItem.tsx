@@ -52,8 +52,8 @@ const isErrorTag = ({ key, value }: KeyValuePair) => key === 'error' && (value =
 const trackTraceConversions = () => trackConversions(EAltViewActions.Traces);
 
 export default class ResultItem extends React.PureComponent<Props, State> {
-  constructor(props: Props) {
-    super(props);
+  constructor(props: Props, state: State) {
+    super(props, state);
     const { startTime, spans } = props.trace;
 
     const mDate = moment(startTime / 1000);
