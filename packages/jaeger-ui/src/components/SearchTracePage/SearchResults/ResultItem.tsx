@@ -20,6 +20,7 @@ import { sortBy } from 'lodash';
 import moment from 'moment';
 
 import IoAlert from 'react-icons/lib/io/alert';
+import { trackConversions, EAltViewActions } from './index.track';
 
 import * as markers from './ResultItem.markers';
 import ResultItemTitle from './ResultItemTitle';
@@ -48,6 +49,7 @@ type State = {
 };
 
 const isErrorTag = ({ key, value }: KeyValuePair) => key === 'error' && (value === true || value === 'true');
+const trackTraceConversions = () => trackConversions(EAltViewActions.Traces);
 
 export default class ResultItem extends React.PureComponent<Props, State> {
   constructor(props: Props) {
@@ -86,7 +88,7 @@ export default class ResultItem extends React.PureComponent<Props, State> {
     } = this.props;
     const { duration, services, startTime, traceName, traceID } = trace;
     return (
-      <div className="ResultItem">
+      <div className="ResultItem" onClick={trackTraceConversions} role="button">
         <ResultItemTitle
           duration={duration}
           durationPercent={durationPercent}
@@ -117,9 +119,7 @@ export default class ResultItem extends React.PureComponent<Props, State> {
                     <li key={name} className="ub-inline-block ub-m1">
                       <Tag
                         className="ResultItem--serviceTag"
-                        style={{
-                          borderLeftColor: colorGenerator.getColorByKey(name),
-                        }}
+                        style={{ borderLeftColor: colorGenerator.getColorByKey(name) }}
                       >
                         {this.state.erroredServices.has(name) && (
                           <IoAlert className="ResultItem--errorIcon" />
