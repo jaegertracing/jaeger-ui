@@ -40,3 +40,10 @@ it('<ResultItem /> should not render any ServiceTags when there are no services'
   const serviceTags = wrapper.find(`[data-test="${markers.SERVICE_TAGS}"]`).find(Tag);
   expect(serviceTags).toHaveLength(0);
 });
+
+it('<ResultItem /> should render error icon on ServiceTags that have an error tag', () => {
+  trace.spans[0].tags.push({ key: 'error', value: true });
+  const wrapper = shallow(<ResultItem trace={trace} durationPercent={50} linkTo="" />);
+  const errorServiceTags = wrapper.find('.ResultItem--errorIcon').getElements();
+  expect(errorServiceTags).toHaveLength(1);
+});
