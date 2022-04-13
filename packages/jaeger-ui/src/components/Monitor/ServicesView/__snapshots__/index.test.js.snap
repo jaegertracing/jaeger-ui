@@ -371,7 +371,11 @@ exports[`<MonitorATMServicesView> ATM snapshot test with no metrics 1`] = `
         <Link
           replace={false}
           target="_blank"
-          to="//https://www.jaegertracing.io/docs/latest/spm/"
+          to={
+            Object {
+              "pathname": "https://www.jaegertracing.io/docs/latest/spm/",
+            }
+          }
         >
            instructions 
         </Link>

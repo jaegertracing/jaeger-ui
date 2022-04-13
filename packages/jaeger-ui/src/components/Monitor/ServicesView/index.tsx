@@ -243,7 +243,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
             message={
               <>
                 No data yet! Please see these
-                <Link to={`//${this.docsLink}`} target="_blank">
+                <Link to={{ pathname: this.docsLink }} target="_blank">
                   &nbsp;instructions&nbsp;
                 </Link>
                 on how to set up your span metrics.
