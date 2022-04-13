@@ -19,7 +19,8 @@ import { Link } from 'react-router-dom';
 import { sortBy } from 'lodash';
 import moment from 'moment';
 
-import { trackConversions, EAltViewActions } from './index.track';
+import IoAlert from 'react-icons/lib/io/alert';
+
 import * as markers from './ResultItem.markers';
 import ResultItemTitle from './ResultItemTitle';
 import colorGenerator from '../../../utils/color-generator';
@@ -38,10 +39,42 @@ type Props = {
   disableComparision: boolean;
 };
 
-const isErrorTag = ({ key, value }: KeyValuePair) => key === 'error' && (value === true || value === 'true');
-const trackTraceConversions = () => trackConversions(EAltViewActions.Traces);
+type State = {
+  erroredServices: Set<string>;
+  numSpans: number;
+  numErredSpans: number;
+  timeStr: string;
+  fromNow: string | boolean;
+};
 
-export default class ResultItem extends React.PureComponent<Props> {
+const isErrorTag = ({ key, value }: KeyValuePair) => key === 'error' && (value === true || value === 'true');
+
+export default class ResultItem extends React.PureComponent<Props, State> {
+  constructor(props: Props) {
+    super(props);
+    const { startTime, spans } = props.trace;
+
+    const mDate = moment(startTime / 1000);
+
+    const erroredServices: Set<string> = new Set<string>();
+
+    const numErredSpans = spans.filter(sp => {
+      const hasError = sp.tags.some(isErrorTag);
+      if (hasError) {
+        erroredServices.add(sp.process.serviceName);
+      }
+      return hasError;
+    }).length;
+
+    this.state = {
+      numSpans: spans.length,
+      timeStr: mDate.format('h:mm:ss a'),
+      fromNow: mDate.fromNow(),
+      numErredSpans,
+      erroredServices,
+    };
+  }
+
   render() {
     const {
       disableComparision,
@@ -51,14 +84,9 @@ export default class ResultItem extends React.PureComponent<Props> {
       toggleComparison,
       trace,
     } = this.props;
-    const { duration, services, startTime, spans, traceName, traceID } = trace;
-    const mDate = moment(startTime / 1000);
-    const timeStr = mDate.format('h:mm:ss a');
-    const fromNow = mDate.fromNow();
-    const numSpans = spans.length;
-    const numErredSpans = spans.filter(sp => sp.tags.some(isErrorTag)).length;
+    const { duration, services, startTime, traceName, traceID } = trace;
     return (
-      <div className="ResultItem" onClick={trackTraceConversions} role="button">
+      <div className="ResultItem">
         <ResultItemTitle
           duration={duration}
           durationPercent={durationPercent}
@@ -73,11 +101,11 @@ export default class ResultItem extends React.PureComponent<Props> {
           <Row>
             <Col span={4} className="ub-p2">
               <Tag className="ub-m1" data-test={markers.NUM_SPANS}>
-                {numSpans} Span{numSpans > 1 && 's'}
+                {this.state.numSpans} Span{this.state.numSpans > 1 && 's'}
               </Tag>
-              {Boolean(numErredSpans) && (
+              {Boolean(this.state.numErredSpans) && (
                 <Tag className="ub-m1" color="red">
-                  {numErredSpans} Error{numErredSpans > 1 && 's'}
+                  {this.state.numErredSpans} Error{this.state.numErredSpans > 1 && 's'}
                 </Tag>
               )}
             </Col>
@@ -89,8 +117,13 @@ export default class ResultItem extends React.PureComponent<Props> {
                     <li key={name} className="ub-inline-block ub-m1">
                       <Tag
                         className="ResultItem--serviceTag"
-                        style={{ borderLeftColor: colorGenerator.getColorByKey(name) }}
+                        style={{
+                          borderLeftColor: colorGenerator.getColorByKey(name),
+                        }}
                       >
+                        {this.state.erroredServices.has(name) && (
+                          <IoAlert className="ResultItem--errorIcon" />
+                        )}
                         {name} ({count})
                       </Tag>
                     </li>
@@ -101,9 +134,9 @@ export default class ResultItem extends React.PureComponent<Props> {
             <Col span={4} className="ub-p3 ub-tx-right-align">
               {formatRelativeDate(startTime / 1000)}
               <Divider type="vertical" />
-              {timeStr.slice(0, -3)}&nbsp;{timeStr.slice(-2)}
+              {this.state.timeStr.slice(0, -3)}&nbsp;{this.state.timeStr.slice(-2)}
               <br />
-              <small>{fromNow}</small>
+              <small>{this.state.fromNow}</small>
             </Col>
           </Row>
         </Link>
