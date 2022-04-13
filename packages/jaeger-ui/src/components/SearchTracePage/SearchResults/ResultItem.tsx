@@ -20,8 +20,8 @@ import { sortBy } from 'lodash';
 import moment from 'moment';
 
 import IoAlert from 'react-icons/lib/io/alert';
-import { trackConversions, EAltViewActions } from './index.track';
 
+import { trackConversions, EAltViewActions } from './index.track';
 import * as markers from './ResultItem.markers';
 import ResultItemTitle from './ResultItemTitle';
 import colorGenerator from '../../../utils/color-generator';
