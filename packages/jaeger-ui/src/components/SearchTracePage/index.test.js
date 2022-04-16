@@ -79,11 +79,28 @@ describe('<SearchTracePage>', () => {
     store.get = jest.fn(() => ({ service: 'svc-b' }));
     wrapper = mount(
       <MemoryRouter>
+        <SearchTracePage {...{ ...props, urlQueryParams: {} }} />
+      </MemoryRouter>
+    );
+    expect(props.fetchServices.mock.calls.length).toBe(1);
+    expect(props.fetchServiceOperations.mock.calls.length).toBe(1);
+    expect(props.fetchServiceOperations.mock.calls[0][0]).toBe('svc-b');
+    store.get = oldFn;
+  });
+
+  it('loads the operations linked to the URL service parameter if present', () => {
+    props.fetchServices.mockClear();
+    props.fetchServiceOperations.mockClear();
+    const oldFn = store.get;
+    store.get = jest.fn(() => ({ service: 'svc-b' }));
+    wrapper = mount(
+      <MemoryRouter>
         <SearchTracePage {...props} />
       </MemoryRouter>
     );
     expect(props.fetchServices.mock.calls.length).toBe(1);
     expect(props.fetchServiceOperations.mock.calls.length).toBe(1);
+    expect(props.fetchServiceOperations.mock.calls[0][0]).toBe('svc-a');
     store.get = oldFn;
   });
 
