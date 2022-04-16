@@ -62,7 +62,10 @@ export class SearchTracePageImpl extends Component {
       fetchMultipleTraces(needForDiffs);
     }
     fetchServices();
-    const { service } = urlQueryParams || store.get('lastSearch') || {};
+    let { service } = store.get('lastSearch') || {};
+    if (urlQueryParams && urlQueryParams.service) {
+      service = urlQueryParams.service;
+    }
     if (service && service !== '-') {
       fetchServiceOperations(service);
     }
