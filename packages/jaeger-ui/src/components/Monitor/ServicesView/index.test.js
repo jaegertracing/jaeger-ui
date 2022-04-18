@@ -154,7 +154,7 @@ describe('<MonitorATMServicesView>', () => {
     expect(wrapper).toMatchSnapshot();
   });
 
-  it('ATM snapshot test with no metrics', () => {
+  it('ATM snapshot with latencies', () => {
     mockFetchServices.mockResolvedValue([]);
     wrapper.setProps({
       metrics: {
@@ -162,6 +162,19 @@ describe('<MonitorATMServicesView>', () => {
         serviceMetrics: {
           service_latencies: null,
         },
+        serviceOpsMetrics,
+        loading: false,
+        isATMActivated: true,
+      },
+    });
+    expect(wrapper).toMatchSnapshot();
+  });
+
+  it('render one service latency', () => {
+    wrapper.setProps({
+      metrics: {
+        ...originInitialState,
+        serviceMetricsWithOneServiceLatency,
         serviceOpsMetrics,
         loading: false,
         isATMActivated: true,
