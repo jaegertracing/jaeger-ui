@@ -348,7 +348,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
                 error={metrics.serviceError.service_call_rate}
                 name="Request rate (req/s)"
                 width={this.state.graphWidth}
-                metricsData={null}
+                metricsData={metrics.serviceMetrics ? metrics.serviceMetrics.service_call_rate : null}
                 showHorizontalLines
                 color="#4795BA"
                 marginClassName="request-margins"

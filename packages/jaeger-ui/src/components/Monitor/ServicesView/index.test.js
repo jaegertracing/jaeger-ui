@@ -170,6 +170,19 @@ describe('<MonitorATMServicesView>', () => {
     expect(wrapper).toMatchSnapshot();
   });
 
+  it('render one service latency', () => {
+    wrapper.setProps({
+      metrics: {
+        ...originInitialState,
+        serviceMetricsWithOneServiceLatency,
+        serviceOpsMetrics,
+        loading: false,
+        isATMActivated: true,
+      },
+    });
+    expect(wrapper).toMatchSnapshot();
+  });
+
   it('ComponentWillUnmount remove listener', () => {
     const remover = jest.spyOn(global, 'removeEventListener').mockImplementation(() => {});
     wrapper.unmount();
