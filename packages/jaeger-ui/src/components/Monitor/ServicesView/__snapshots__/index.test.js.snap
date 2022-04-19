@@ -378,7 +378,7 @@ exports[`<MonitorATMServicesView> ATM snapshot test 1`] = `
 </Fragment>
 `;
 
-exports[`<MonitorATMServicesView> ATM snapshot with latencies 1`] = `
+exports[`<MonitorATMServicesView> ATM snapshot test with no metrics 1`] = `
 <Fragment>
   <Alert
     message={

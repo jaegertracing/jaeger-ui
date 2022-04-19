@@ -154,7 +154,7 @@ describe('<MonitorATMServicesView>', () => {
     expect(wrapper).toMatchSnapshot();
   });
 
-  it('ATM snapshot with latencies', () => {
+  it('ATM snapshot test with no metrics', () => {
     mockFetchServices.mockResolvedValue([]);
     wrapper.setProps({
       metrics: {
