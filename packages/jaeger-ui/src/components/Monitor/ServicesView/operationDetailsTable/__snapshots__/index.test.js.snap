@@ -77,7 +77,8 @@ exports[`<OperationTableDetails> Table rendered successfully 1`] = `
                 }
               }
             >
-              Impact  
+              Impact
+                
               <Tooltip
                 arrowPointAtCenter={false}
                 autoAdjustOverflow={true}
@@ -102,6 +103,7 @@ exports[`<OperationTableDetails> Table rendered successfully 1`] = `
     indentSize={20}
     loading={false}
     locale={Object {}}
+    onChange={[Function]}
     onRow={[Function]}
     pagination={
       Object {
@@ -365,7 +367,8 @@ exports[`<OperationTableDetails> render No data table 1`] = `
                               }
                             }
                           >
-                            Impact  
+                            Impact
+                              
                             <i
                               className="anticon anticon-info-circle"
                               onMouseEnter={[Function]}
@@ -659,7 +662,8 @@ exports[`<OperationTableDetails> render P95 latency with more than 2 decimal pla
                               }
                             }
                           >
-                            Impact  
+                            Impact
+                              
                             <i
                               className="anticon anticon-info-circle"
                               onMouseEnter={[Function]}
@@ -1349,7 +1353,8 @@ exports[`<OperationTableDetails> render error rate with more than 2 decimal plac
                               }
                             }
                           >
-                            Impact  
+                            Impact
+                              
                             <i
                               className="anticon anticon-info-circle"
                               onMouseEnter={[Function]}
@@ -2039,7 +2044,8 @@ exports[`<OperationTableDetails> render lower than 0.1 P95 latency 1`] = `
                               }
                             }
                           >
-                            Impact  
+                            Impact
+                              
                             <i
                               className="anticon anticon-info-circle"
                               onMouseEnter={[Function]}
@@ -2729,7 +2735,8 @@ exports[`<OperationTableDetails> render lower than 0.1 error rate 1`] = `
                               }
                             }
                           >
-                            Impact  
+                            Impact
+                              
                             <i
                               className="anticon anticon-info-circle"
                               onMouseEnter={[Function]}
@@ -3419,7 +3426,8 @@ exports[`<OperationTableDetails> render lower than 0.1 request rate value 1`] = 
                               }
                             }
                           >
-                            Impact  
+                            Impact
+                              
                             <i
                               className="anticon anticon-info-circle"
                               onMouseEnter={[Function]}
@@ -4109,7 +4117,8 @@ exports[`<OperationTableDetails> render request rate number with more than 2 dec
                               }
                             }
                           >
-                            Impact  
+                            Impact
+                              
                             <i
                               className="anticon anticon-info-circle"
                               onMouseEnter={[Function]}
@@ -4799,7 +4808,8 @@ exports[`<OperationTableDetails> render some values in the table 1`] = `
                               }
                             }
                           >
-                            Impact  
+                            Impact
+                              
                             <i
                               className="anticon anticon-info-circle"
                               onMouseEnter={[Function]}
@@ -5489,7 +5499,8 @@ exports[`<OperationTableDetails> test column render function 1`] = `
                               }
                             }
                           >
-                            Impact  
+                            Impact
+                              
                             <i
                               className="anticon anticon-info-circle"
                               onMouseEnter={[Function]}

@@ -44,6 +44,12 @@ import { convertToTimeUnit, convertTimeUnitToShortTerm, getSuitableTimeUnit } fr
 
 import './index.css';
 import { getConfigValue } from '../../../utils/config/get-config';
+import {
+  trackSearchOperationDebounced,
+  trackSelectService,
+  trackSelectTimeframe,
+  trackViewAllTraces,
+} from './index.track';
 
 type StateType = {
   graphWidth: number;
@@ -79,9 +85,9 @@ const serviceFormSelector = formValueSelector('serviceForm');
 const oneHourInMilliSeconds = 3600000;
 const timeFrameOptions = [
   { label: 'Last Hour', value: oneHourInMilliSeconds },
-  { label: 'Last 2 hour', value: 2 * oneHourInMilliSeconds },
-  { label: 'Last 6 hour', value: 6 * oneHourInMilliSeconds },
-  { label: 'Last 12 hour', value: 12 * oneHourInMilliSeconds },
+  { label: 'Last 2 hours', value: 2 * oneHourInMilliSeconds },
+  { label: 'Last 6 hours', value: 6 * oneHourInMilliSeconds },
+  { label: 'Last 12 hours', value: 12 * oneHourInMilliSeconds },
   { label: 'Last 24 hours', value: 24 * oneHourInMilliSeconds },
   { label: 'Last 2 days', value: 48 * oneHourInMilliSeconds },
 ];
@@ -258,6 +264,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
             <Col span={6}>
               <h2 className="service-selector-header">Choose service</h2>
               <Field
+                onChange={(e: Event, newValue: string) => trackSelectService(newValue)}
                 name="service"
                 component={AdaptedVirtualSelect}
                 placeholder="Select A Service"
@@ -284,6 +291,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
                       selectedTimeFrame}000`
                   )}
                   target="blank"
+                  onClick={trackViewAllTraces}
                 >
                   View all traces
                 </a>
@@ -294,6 +302,10 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
                 name="timeframe"
                 component={AdaptedVirtualSelect}
                 placeholder="Select A Timeframe"
+                onChange={(e: Event, value: number) => {
+                  const { label } = timeFrameOptions.find(option => option.value === value)!;
+                  trackSelectTimeframe(label);
+                }}
                 props={{
                   className: 'select-a-timeframe-input',
                   defaultValue: timeFrameOptions[0],
@@ -379,6 +391,8 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
                       searchOps: e.target.value,
                       serviceOpsMetrics: filteredData,
                     });
+
+                    trackSearchOperationDebounced(e.target.value);
                   }}
                 />
               </Col>
