@@ -15,12 +15,12 @@
 import _debounce from 'lodash/debounce';
 import { trackEvent } from '../../../utils/tracking';
 
-const CATEGORY_SPM = 'jaeger/ux/trace/spm';
+export const CATEGORY_SPM = 'jaeger/ux/trace/spm';
 
-const ACTION_SELECT_SERVICE = 'select-service';
-const ACTION_SELECT_TIMEFRAME = 'select-timeframe';
-const ACTION_VIEW_ALL_TRACES = 'view-all-traces';
-const ACTION_SEARCH_OPERATION = 'search-operation';
+export const ACTION_SELECT_SERVICE = 'select-service';
+export const ACTION_SELECT_TIMEFRAME = 'select-timeframe';
+export const ACTION_VIEW_ALL_TRACES = 'view-all-traces';
+export const ACTION_SEARCH_OPERATION = 'search-operation';
 
 export const trackViewAllTraces = () => trackEvent(CATEGORY_SPM, ACTION_VIEW_ALL_TRACES);
 export const trackSelectService = (service: string) =>
@@ -30,5 +30,5 @@ export const trackSelectTimeframe = (timeframe: string) =>
 
 export const trackSearchOperationDebounced = _debounce(
   (searchQuery: string) => trackEvent(CATEGORY_SPM, ACTION_SEARCH_OPERATION, searchQuery),
-  1500
+  1000
 );

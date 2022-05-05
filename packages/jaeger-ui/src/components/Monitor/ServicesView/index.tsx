@@ -83,7 +83,7 @@ const AdaptedVirtualSelect = reduxFormFieldAdapter({
 
 const serviceFormSelector = formValueSelector('serviceForm');
 const oneHourInMilliSeconds = 3600000;
-const timeFrameOptions = [
+export const timeFrameOptions = [
   { label: 'Last Hour', value: oneHourInMilliSeconds },
   { label: 'Last 2 hours', value: 2 * oneHourInMilliSeconds },
   { label: 'Last 6 hours', value: 6 * oneHourInMilliSeconds },

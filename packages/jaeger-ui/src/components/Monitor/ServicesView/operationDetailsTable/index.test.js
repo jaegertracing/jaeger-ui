@@ -16,6 +16,7 @@ import React from 'react';
 import { mount, shallow } from 'enzyme';
 import OperationTableDetails from '.';
 import { originInitialState, serviceOpsMetrics } from '../../../../reducers/metrics.mock';
+import * as track from './index.track';
 
 const props = {
   data: originInitialState.serviceOpsMetrics,
@@ -346,5 +347,40 @@ describe('<OperationTableDetails>', () => {
         .at(2)
         .text()
     ).toBe('');
+  });
+
+  it('Should track all events', async () => {
+    const trackSortOperationsSpy = jest.spyOn(track, 'trackSortOperations');
+    const trackViewTracesSpy = jest.spyOn(track, 'trackViewTraces');
+    const recordIndex = 0;
+
+    wrapper.setProps({ ...props, loading: false, data: serviceOpsMetrics });
+
+    // Hover on first line in the t able and display the button
+    wrapper
+      .find('.ant-table-row.table-row')
+      .at(recordIndex)
+      .simulate('mouseenter');
+    wrapper
+      .find({ children: 'View traces' })
+      .first()
+      .simulate('click');
+
+    expect(trackViewTracesSpy).toHaveBeenCalledWith(serviceOpsMetrics[recordIndex].name);
+
+    wrapper
+      .find('.ant-table-column-sorter-down.off')
+      .first()
+      .simulate('click');
+    expect(trackSortOperationsSpy).toHaveBeenCalledWith('Name');
+
+    wrapper
+      .find('.ant-table-column-sorter-down.off')
+      .last()
+      .simulate('click');
+    expect(trackSortOperationsSpy).toHaveBeenCalledWith('Impact');
+
+    trackSortOperationsSpy.mockReset();
+    trackViewTracesSpy.mockReset();
   });
 });
