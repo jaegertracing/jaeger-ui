@@ -25,6 +25,7 @@ const props = {
   loading: true,
   marginClassName: '',
   crosshairValues: [],
+  xDomain: [1, 2],
 };
 
 describe('<ServiceGraph>', () => {
@@ -39,6 +40,11 @@ describe('<ServiceGraph>', () => {
   });
 
   it('Loading indicator is displayed', () => {
+    expect(wrapper).toMatchSnapshot();
+  });
+
+  it('Loading indicator is displayed when xDomain is empty', () => {
+    wrapper.setProps({ ...props, xDomain: [], loading: false });
     expect(wrapper).toMatchSnapshot();
   });
 
