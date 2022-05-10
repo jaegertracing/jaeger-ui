@@ -14,9 +14,8 @@
 
 import * as trackingUtils from '../../../../utils/tracking';
 import {
-  ACTION_SORT_OPERATIONS,
-  ACTION_VIEW_TRACES,
-  CATEGORY_SPM,
+  CATEGORY_VIEW_TRACES,
+  CATEGORY_SORT_OPERATIONS,
   trackSortOperations,
   trackViewTraces,
 } from './index.track';
@@ -35,12 +34,12 @@ describe('operationDetailsTable tracking', () => {
   it('trackViewTraces calls trackEvent with the match category and show action', () => {
     const traceName = 'trace-name';
     trackViewTraces(traceName);
-    expect(trackEvent).toHaveBeenCalledWith(CATEGORY_SPM, ACTION_VIEW_TRACES, traceName);
+    expect(trackEvent).toHaveBeenCalledWith(CATEGORY_VIEW_TRACES, traceName);
   });
 
   it('trackSortOperations calls trackEvent with the match category and show action', () => {
     const sortColumn = 'some-column';
     trackSortOperations(sortColumn);
-    expect(trackEvent).toHaveBeenCalledWith(CATEGORY_SPM, ACTION_SORT_OPERATIONS, sortColumn);
+    expect(trackEvent).toHaveBeenCalledWith(CATEGORY_SORT_OPERATIONS, sortColumn);
   });
 });

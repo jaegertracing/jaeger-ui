@@ -15,20 +15,18 @@
 import _debounce from 'lodash/debounce';
 import { trackEvent } from '../../../utils/tracking';
 
-export const CATEGORY_SPM = 'jaeger/ux/trace/spm';
+const SPM_CATEGORY_BASE = 'jaeger/ux/trace/spm';
 
-export const ACTION_SELECT_SERVICE = 'select-service';
-export const ACTION_SELECT_TIMEFRAME = 'select-timeframe';
-export const ACTION_VIEW_ALL_TRACES = 'view-all-traces';
-export const ACTION_SEARCH_OPERATION = 'search-operation';
+export const CATEGORY_VIEW_ALL_TRACES = `${SPM_CATEGORY_BASE}/view-all-traces`;
+export const CATEGORY_SELECT_SERVICE = `${SPM_CATEGORY_BASE}/select-service`;
+export const CATEGORY_SELECT_TIMEFRAME = `${SPM_CATEGORY_BASE}/select-timeframe`;
+export const CATEGORY_SEARCH_OPERATION = `${SPM_CATEGORY_BASE}/search-operation`;
 
-export const trackViewAllTraces = () => trackEvent(CATEGORY_SPM, ACTION_VIEW_ALL_TRACES);
-export const trackSelectService = (service: string) =>
-  trackEvent(CATEGORY_SPM, ACTION_SELECT_SERVICE, service);
-export const trackSelectTimeframe = (timeframe: string) =>
-  trackEvent(CATEGORY_SPM, ACTION_SELECT_TIMEFRAME, timeframe);
+export const trackViewAllTraces = () => trackEvent(CATEGORY_VIEW_ALL_TRACES, 'click');
+export const trackSelectService = (service: string) => trackEvent(CATEGORY_SELECT_SERVICE, service);
+export const trackSelectTimeframe = (timeframe: string) => trackEvent(CATEGORY_SELECT_TIMEFRAME, timeframe);
 
 export const trackSearchOperationDebounced = _debounce(
-  (searchQuery: string) => trackEvent(CATEGORY_SPM, ACTION_SEARCH_OPERATION, searchQuery),
+  (searchQuery: string) => trackEvent(CATEGORY_SEARCH_OPERATION, searchQuery),
   1000
 );

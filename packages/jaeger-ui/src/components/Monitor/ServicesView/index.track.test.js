@@ -14,11 +14,10 @@
 
 import * as trackingUtils from '../../../utils/tracking';
 import {
-  ACTION_SEARCH_OPERATION,
-  ACTION_SELECT_SERVICE,
-  ACTION_SELECT_TIMEFRAME,
-  ACTION_VIEW_ALL_TRACES,
-  CATEGORY_SPM,
+  CATEGORY_SEARCH_OPERATION,
+  CATEGORY_SELECT_SERVICE,
+  CATEGORY_SELECT_TIMEFRAME,
+  CATEGORY_VIEW_ALL_TRACES,
   trackSearchOperationDebounced,
   trackSelectService,
   trackSelectTimeframe,
@@ -38,19 +37,19 @@ describe('ServicesView tracking', () => {
 
   it('trackViewAllTraces calls trackEvent with the match category and show action', () => {
     trackViewAllTraces();
-    expect(trackEvent).toHaveBeenCalledWith(CATEGORY_SPM, ACTION_VIEW_ALL_TRACES);
+    expect(trackEvent).toHaveBeenCalledWith(CATEGORY_VIEW_ALL_TRACES, expect.any(String));
   });
 
   it('trackSelectService calls trackEvent with the match category and show action', () => {
     const serviceName = 'service-name';
     trackSelectService(serviceName);
-    expect(trackEvent).toHaveBeenCalledWith(CATEGORY_SPM, ACTION_SELECT_SERVICE, serviceName);
+    expect(trackEvent).toHaveBeenCalledWith(CATEGORY_SELECT_SERVICE, serviceName);
   });
 
   it('trackSelectTimeframe calls trackEvent with the match category and show action', () => {
     const timeframe = 'some-timeframe';
     trackSelectTimeframe(timeframe);
-    expect(trackEvent).toHaveBeenCalledWith(CATEGORY_SPM, ACTION_SELECT_TIMEFRAME, timeframe);
+    expect(trackEvent).toHaveBeenCalledWith(CATEGORY_SELECT_TIMEFRAME, timeframe);
   });
 
   it('trackSearchOperationDebounced calls trackEvent just once with the match category and show action', async () => {
@@ -63,6 +62,6 @@ describe('ServicesView tracking', () => {
     await new Promise(res => setTimeout(res, debounceTimeout));
 
     expect(trackEvent).toHaveBeenCalledTimes(1);
-    expect(trackEvent).toHaveBeenCalledWith(CATEGORY_SPM, ACTION_SEARCH_OPERATION, searchQuery);
+    expect(trackEvent).toHaveBeenCalledWith(CATEGORY_SEARCH_OPERATION, searchQuery);
   });
 });

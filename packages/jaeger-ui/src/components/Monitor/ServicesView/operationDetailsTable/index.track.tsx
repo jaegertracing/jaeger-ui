@@ -14,10 +14,9 @@
 
 import { trackEvent } from '../../../../utils/tracking';
 
-export const CATEGORY_SPM = 'jaeger/ux/trace/spm';
-export const ACTION_VIEW_TRACES = 'view-traces';
-export const ACTION_SORT_OPERATIONS = 'sort-operations';
+const SPM_CATEGORY_BASE = 'jaeger/ux/trace/spm';
+export const CATEGORY_VIEW_TRACES = `${SPM_CATEGORY_BASE}/view-traces`;
+export const CATEGORY_SORT_OPERATIONS = `${SPM_CATEGORY_BASE}/sort-operations`;
 
-export const trackViewTraces = (name: string) => trackEvent(CATEGORY_SPM, ACTION_VIEW_TRACES, name);
-export const trackSortOperations = (columnName: string) =>
-  trackEvent(CATEGORY_SPM, ACTION_SORT_OPERATIONS, columnName);
+export const trackViewTraces = (name: string) => trackEvent(CATEGORY_VIEW_TRACES, name);
+export const trackSortOperations = (columnName: string) => trackEvent(CATEGORY_SORT_OPERATIONS, columnName);
