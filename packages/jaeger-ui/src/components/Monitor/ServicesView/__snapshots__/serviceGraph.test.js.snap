@@ -80,6 +80,12 @@ exports[`<ServiceGraph> Base graph should be displayed  1`] = `
     }
     onMouseLeave={[Function]}
     width={300}
+    xDomain={
+      Array [
+        1,
+        2,
+      ]
+    }
   >
     <XAxis
       attr="x"
@@ -190,6 +196,12 @@ exports[`<ServiceGraph> Base graph with custom color should be displayed 1`] = `
     }
     onMouseLeave={[Function]}
     width={300}
+    xDomain={
+      Array [
+        1,
+        2,
+      ]
+    }
   >
     <XAxis
       attr="x"
@@ -300,6 +312,12 @@ exports[`<ServiceGraph> Base graph with horizontal lines should be displayed 1`]
     }
     onMouseLeave={[Function]}
     width={300}
+    xDomain={
+      Array [
+        1,
+        2,
+      ]
+    }
   >
     <HorizontalGridLines
       attr="y"
@@ -414,6 +432,12 @@ exports[`<ServiceGraph> Base graph with legends should be displayed 1`] = `
     }
     onMouseLeave={[Function]}
     width={300}
+    xDomain={
+      Array [
+        1,
+        2,
+      ]
+    }
   >
     <XAxis
       attr="x"
@@ -545,6 +569,12 @@ exports[`<ServiceGraph> Crosshair map test 1`] = `
     }
     onMouseLeave={[Function]}
     width={300}
+    xDomain={
+      Array [
+        1,
+        2,
+      ]
+    }
   >
     <XAxis
       attr="x"
@@ -650,6 +680,37 @@ exports[`<ServiceGraph> Crosshair mouse hover test 2`] = `
 `;
 
 exports[`<ServiceGraph> Loading indicator is displayed 1`] = `
+<div
+  className="graph-container "
+  style={
+    Object {
+      "height": 242,
+    }
+  }
+>
+  <h3
+    className="graph-header"
+  >
+    Hello Graph
+  </h3>
+  <div
+    className="center-placeholder"
+    style={
+      Object {
+        "height": 168,
+        "width": 300,
+      }
+    }
+  >
+    <LoadingIndicator
+      centered={true}
+      small={false}
+    />
+  </div>
+</div>
+`;
+
+exports[`<ServiceGraph> Loading indicator is displayed when xDomain is empty 1`] = `
 <div
   className="graph-container "
   style={
