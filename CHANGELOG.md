@@ -14,6 +14,7 @@
 
 ### Fixes
 
+-  Monitor tab - Fix monitor tab crashing ([@nofar9792](https://github.com/nofar9792) in [#946](https://github.com/jaegertracing/jaeger-ui/pull/946))
 - Monitor Tab - fix latencies graph ([@nofar9792](https://github.com/nofar9792) in [#934](https://github.com/jaegertracing/jaeger-ui/pull/934))
 - Fix service operations fetch by URL query params ([@FloydJohn](https://github.com/FloydJohn) in [#932](https://github.com/jaegertracing/jaeger-ui/pull/932))
 - Monitor tab - fix link to docs ([@FloydJohn](https://github.com/FloydJohn) in [#929](https://github.com/jaegertracing/jaeger-ui/pull/929))
