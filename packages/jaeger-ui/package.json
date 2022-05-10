@@ -15,6 +15,11 @@
       "react-app-rewired/**"
     ]
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jaegertracing/jaeger-ui.git",
+    "directory": "packages/jaeger-ui"
+  },
   "devDependencies": {
     "@types/match-sorter": "^2.3.0",
     "@types/react-window": "^1.8.0",
