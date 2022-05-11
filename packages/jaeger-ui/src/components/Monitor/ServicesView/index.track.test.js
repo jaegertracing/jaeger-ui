@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Uber Technologies, Inc.
+// Copyright (c) 2022 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,10 +18,10 @@ import {
   CATEGORY_SELECT_SERVICE,
   CATEGORY_SELECT_TIMEFRAME,
   CATEGORY_VIEW_ALL_TRACES,
-  trackSearchOperationDebounced,
   trackSelectService,
   trackSelectTimeframe,
   trackViewAllTraces,
+  trackSearchOperation,
 } from './index.track';
 
 describe('ServicesView tracking', () => {
@@ -52,16 +52,9 @@ describe('ServicesView tracking', () => {
     expect(trackEvent).toHaveBeenCalledWith(CATEGORY_SELECT_TIMEFRAME, timeframe);
   });
 
-  it('trackSearchOperationDebounced calls trackEvent just once with the match category and show action', async () => {
-    const debounceTimeout = 1000;
+  it('trackSearchOperation calls trackEvent with the match category and show action', async () => {
     const searchQuery = 'name';
-
-    for (let i = 0; i < 10; i++) {
-      trackSearchOperationDebounced(searchQuery);
-    }
-    await new Promise(res => setTimeout(res, debounceTimeout));
-
-    expect(trackEvent).toHaveBeenCalledTimes(1);
+    trackSearchOperation(searchQuery);
     expect(trackEvent).toHaveBeenCalledWith(CATEGORY_SEARCH_OPERATION, searchQuery);
   });
 });

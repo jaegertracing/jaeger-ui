@@ -1,4 +1,4 @@
-// Copyright (c) 2017 The Jaeger Authors.
+// Copyright (c) 2022 The Jaeger Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import _debounce from 'lodash/debounce';
 import { trackEvent } from '../../../utils/tracking';
 
 const SPM_CATEGORY_BASE = 'jaeger/ux/trace/spm';
@@ -25,8 +24,5 @@ export const CATEGORY_SEARCH_OPERATION = `${SPM_CATEGORY_BASE}/search-operation`
 export const trackViewAllTraces = () => trackEvent(CATEGORY_VIEW_ALL_TRACES, 'click');
 export const trackSelectService = (service: string) => trackEvent(CATEGORY_SELECT_SERVICE, service);
 export const trackSelectTimeframe = (timeframe: string) => trackEvent(CATEGORY_SELECT_TIMEFRAME, timeframe);
-
-export const trackSearchOperationDebounced = _debounce(
-  (searchQuery: string) => trackEvent(CATEGORY_SEARCH_OPERATION, searchQuery),
-  1000
-);
+export const trackSearchOperation = (searchQuery: string) =>
+  trackEvent(CATEGORY_SEARCH_OPERATION, searchQuery);

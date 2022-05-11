@@ -42,6 +42,7 @@ const state = {
 const props = mapStateToProps(state);
 
 Date.now = jest.fn(() => 1487076708000); // Tue, 14 Feb 2017 12:51:48 GMT'
+jest.mock('lodash/debounce', () => fn => fn);
 
 describe('<MonitorATMServicesView>', () => {
   let wrapper;
@@ -307,7 +308,7 @@ describe('<MonitorATMServicesView>', () => {
     const trackSelectServiceSpy = jest.spyOn(track, 'trackSelectService');
     const trackViewAllTracesSpy = jest.spyOn(track, 'trackViewAllTraces');
     const trackSelectTimeframeSpy = jest.spyOn(track, 'trackSelectTimeframe');
-    const trackSearchOperationDebouncedSpy = jest.spyOn(track, 'trackSearchOperationDebounced');
+    const trackSearchOperationSpy = jest.spyOn(track, 'trackSearchOperation');
 
     const newValue = 'newValue';
     const [timeFrameOption] = timeFrameOptions;
@@ -315,8 +316,9 @@ describe('<MonitorATMServicesView>', () => {
     wrapper.setProps({
       metrics: { ...originInitialState, serviceOpsMetrics },
     });
+
     wrapper.find('Search').simulate('change', { target: { value: newValue } });
-    expect(trackSearchOperationDebouncedSpy).toHaveBeenCalledWith(newValue);
+    expect(trackSearchOperationSpy).toHaveBeenCalledWith(newValue);
 
     wrapper
       .find('Field')
@@ -336,7 +338,7 @@ describe('<MonitorATMServicesView>', () => {
     trackSelectServiceSpy.mockReset();
     trackViewAllTracesSpy.mockReset();
     trackSelectTimeframeSpy.mockReset();
-    trackSearchOperationDebouncedSpy.mockReset();
+    trackSearchOperationSpy.mockReset();
   });
 });
 

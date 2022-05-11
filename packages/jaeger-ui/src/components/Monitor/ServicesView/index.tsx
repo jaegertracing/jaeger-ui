@@ -15,6 +15,7 @@
 import * as React from 'react';
 import { Row, Col, Input, Alert } from 'antd';
 import { ActionFunction, Action } from 'redux-actions';
+import _debounce from 'lodash/debounce';
 import _isEqual from 'lodash/isEqual';
 import _isEmpty from 'lodash/isEmpty';
 // @ts-ignore
@@ -45,7 +46,7 @@ import { convertToTimeUnit, convertTimeUnitToShortTerm, getSuitableTimeUnit } fr
 import './index.css';
 import { getConfigValue } from '../../../utils/config/get-config';
 import {
-  trackSearchOperationDebounced,
+  trackSearchOperation,
   trackSelectService,
   trackSelectTimeframe,
   trackViewAllTraces,
@@ -73,6 +74,8 @@ type TDispatchProps = {
   fetchAggregatedServiceMetrics: ActionFunction<Action<Promise<any>>, string, MetricsAPIQueryParams>;
   fetchAllServiceMetrics: (serviceName: string, query: MetricsAPIQueryParams) => void;
 };
+
+const trackSearchOperationDebounced = _debounce(searchQuery => trackSearchOperation(searchQuery), 1000);
 
 const Search = Input.Search;
 
