@@ -156,7 +156,8 @@ export class UnconnectedSearchResults extends React.PureComponent<SearchResultsP
     }
     const cohortIds = new Set(diffCohort.map(datum => datum.id));
     const searchUrl = queryOfResults ? getUrl(stripEmbeddedState(queryOfResults)) : getUrl();
-    const isErrorTag = ({ key, value }: KeyValuePair) => key === 'error' && (value === true || value === 'true');
+    const isErrorTag = ({ key, value }: KeyValuePair) =>
+      key === 'error' && (value === true || value === 'true');
     return (
       <div className="SearchResults">
         <div className="SearchResults--header">
@@ -169,7 +170,7 @@ export class UnconnectedSearchResults extends React.PureComponent<SearchResultsP
                   traceID: t.traceID,
                   size: t.spans.length,
                   name: t.traceName,
-                  color: t.spans.some(sp => sp.tags.some(isErrorTag)) ? "red" : "#12939A",
+                  color: t.spans.some(sp => sp.tags.some(isErrorTag)) ? 'red' : '#12939A',
                 }))}
                 onValueClick={t => {
                   goToTrace(t.traceID);
