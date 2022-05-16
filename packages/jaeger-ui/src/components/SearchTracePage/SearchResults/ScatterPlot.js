@@ -34,6 +34,7 @@ function ScatterPlotImpl(props) {
           left: 50,
         }}
         width={containerWidth}
+        colorType="literal"
         height={200}
       >
         <XAxis
