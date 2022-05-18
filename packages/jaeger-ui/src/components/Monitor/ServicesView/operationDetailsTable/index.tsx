@@ -36,7 +36,7 @@ type TProps = {
 
 type TState = {
   hoveredRowKey: number;
-  tableSorting?: Pick<SorterResult<ServiceOpsMetrics>, 'columnKey' | 'order'>;
+  tableSorting: Pick<SorterResult<ServiceOpsMetrics>, 'columnKey' | 'order'>;
 };
 
 const tableTitles = new Map([
@@ -65,6 +65,10 @@ function formatTimeValue(value: number) {
 export class OperationTableDetails extends React.PureComponent<TProps, TState> {
   state: TState = {
     hoveredRowKey: -1,
+    tableSorting: {
+      order: 'descend',
+      columnKey: 'impact',
+    },
   };
 
   render() {
@@ -231,9 +235,9 @@ export class OperationTableDetails extends React.PureComponent<TProps, TState> {
           }}
           onChange={(pagination, filters, { columnKey, order }) => {
             if (!isEqual({ columnKey, order }, this.state.tableSorting)) {
-              const trackingValue = columnKey ? tableTitles.get(columnKey)! : '_';
+              const clickedColumn = tableTitles.get(columnKey || this.state.tableSorting.columnKey);
 
-              trackSortOperations(trackingValue);
+              trackSortOperations(clickedColumn!);
               this.setState({ tableSorting: { columnKey, order } });
             }
           }}
