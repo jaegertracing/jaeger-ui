@@ -19,6 +19,7 @@ exports[`<MonitorATMServicesView> ATM snapshot test 1`] = `
         <Field
           component={[Function]}
           name="service"
+          onChange={[Function]}
           placeholder="Select A Service"
           props={
             Object {
@@ -57,6 +58,7 @@ exports[`<MonitorATMServicesView> ATM snapshot test 1`] = `
            
           <a
             href="/search?end=1466424490000000&limit=20&lookback=1h&maxDuration&minDuration&service=s1&start=1466420890000000"
+            onClick={[Function]}
             target="blank"
           >
             View all traces
@@ -70,6 +72,7 @@ exports[`<MonitorATMServicesView> ATM snapshot test 1`] = `
         <Field
           component={[Function]}
           name="timeframe"
+          onChange={[Function]}
           placeholder="Select A Timeframe"
           props={
             Object {
@@ -86,15 +89,15 @@ exports[`<MonitorATMServicesView> ATM snapshot test 1`] = `
                   "value": 3600000,
                 },
                 Object {
-                  "label": "Last 2 hour",
+                  "label": "Last 2 hours",
                   "value": 7200000,
                 },
                 Object {
-                  "label": "Last 6 hour",
+                  "label": "Last 6 hours",
                   "value": 21600000,
                 },
                 Object {
-                  "label": "Last 12 hour",
+                  "label": "Last 12 hours",
                   "value": 43200000,
                 },
                 Object {
@@ -418,6 +421,7 @@ exports[`<MonitorATMServicesView> ATM snapshot test with no metrics 1`] = `
         <Field
           component={[Function]}
           name="service"
+          onChange={[Function]}
           placeholder="Select A Service"
           props={
             Object {
@@ -447,6 +451,7 @@ exports[`<MonitorATMServicesView> ATM snapshot test with no metrics 1`] = `
            
           <a
             href="/search?end=1466424490000000&limit=20&lookback=1h&maxDuration&minDuration&service=s1&start=1466420890000000"
+            onClick={[Function]}
             target="blank"
           >
             View all traces
@@ -460,6 +465,7 @@ exports[`<MonitorATMServicesView> ATM snapshot test with no metrics 1`] = `
         <Field
           component={[Function]}
           name="timeframe"
+          onChange={[Function]}
           placeholder="Select A Timeframe"
           props={
             Object {
@@ -476,15 +482,15 @@ exports[`<MonitorATMServicesView> ATM snapshot test with no metrics 1`] = `
                   "value": 3600000,
                 },
                 Object {
-                  "label": "Last 2 hour",
+                  "label": "Last 2 hours",
                   "value": 7200000,
                 },
                 Object {
-                  "label": "Last 6 hour",
+                  "label": "Last 6 hours",
                   "value": 21600000,
                 },
                 Object {
-                  "label": "Last 12 hour",
+                  "label": "Last 12 hours",
                   "value": 43200000,
                 },
                 Object {
@@ -727,6 +733,7 @@ exports[`<MonitorATMServicesView> render one service latency 1`] = `
         <Field
           component={[Function]}
           name="service"
+          onChange={[Function]}
           placeholder="Select A Service"
           props={
             Object {
@@ -756,6 +763,7 @@ exports[`<MonitorATMServicesView> render one service latency 1`] = `
            
           <a
             href="/search?end=1466424490000000&limit=20&lookback=1h&maxDuration&minDuration&service=s1&start=1466420890000000"
+            onClick={[Function]}
             target="blank"
           >
             View all traces
@@ -769,6 +777,7 @@ exports[`<MonitorATMServicesView> render one service latency 1`] = `
         <Field
           component={[Function]}
           name="timeframe"
+          onChange={[Function]}
           placeholder="Select A Timeframe"
           props={
             Object {
@@ -785,15 +794,15 @@ exports[`<MonitorATMServicesView> render one service latency 1`] = `
                   "value": 3600000,
                 },
                 Object {
-                  "label": "Last 2 hour",
+                  "label": "Last 2 hours",
                   "value": 7200000,
                 },
                 Object {
-                  "label": "Last 6 hour",
+                  "label": "Last 6 hours",
                   "value": 21600000,
                 },
                 Object {
-                  "label": "Last 12 hour",
+                  "label": "Last 12 hours",
                   "value": 43200000,
                 },
                 Object {

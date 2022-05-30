@@ -13,6 +13,8 @@
 // limitations under the License.
 
 import * as React from 'react';
+import isEqual from 'lodash/isEqual';
+import { SorterResult } from 'antd/es/table';
 import { Row, Table, Progress, Button, Icon, Tooltip } from 'antd';
 import REDGraph from './opsGraph';
 import LoadingIndicator from '../../../common/LoadingIndicator';
@@ -21,6 +23,7 @@ import prefixUrl from '../../../../utils/prefix-url';
 
 import './index.css';
 import { convertTimeUnitToShortTerm, convertToTimeUnit, getSuitableTimeUnit } from '../../../../utils/date';
+import { trackSortOperations, trackViewTraces } from './index.track';
 
 type TProps = {
   data: ServiceOpsMetrics[] | undefined;
@@ -33,7 +36,16 @@ type TProps = {
 
 type TState = {
   hoveredRowKey: number;
+  tableSorting: Pick<SorterResult<ServiceOpsMetrics>, 'columnKey' | 'order'>;
 };
+
+const tableTitles = new Map([
+  ['name', 'Name'],
+  ['latency', 'P95 Latency'],
+  ['requests', 'Request rate'],
+  ['errRates', 'Error rate'],
+  ['impact', 'Impact'],
+]);
 
 function formatValue(value: number) {
   if (value < 0.1) {
@@ -51,8 +63,12 @@ function formatTimeValue(value: number) {
   return `${formattedTime}${convertTimeUnitToShortTerm(timeUnit)}`;
 }
 export class OperationTableDetails extends React.PureComponent<TProps, TState> {
-  state = {
+  state: TState = {
     hoveredRowKey: -1,
+    tableSorting: {
+      order: 'descend',
+      columnKey: 'impact',
+    },
   };
 
   render() {
@@ -68,14 +84,14 @@ export class OperationTableDetails extends React.PureComponent<TProps, TState> {
 
     const columnConfig = [
       {
-        title: 'Name',
+        title: tableTitles.get('name'),
         className: 'header-item',
         dataIndex: 'name',
         key: 'name',
         sorter: (a: ServiceOpsMetrics, b: ServiceOpsMetrics) => a.name.localeCompare(b.name),
       },
       {
-        title: 'P95 Latency',
+        title: tableTitles.get('latency'),
         className: 'header-item',
         dataIndex: 'latency',
         key: 'latency',
@@ -96,7 +112,7 @@ export class OperationTableDetails extends React.PureComponent<TProps, TState> {
         ),
       },
       {
-        title: 'Request rate',
+        title: tableTitles.get('requests'),
         className: 'header-item',
         dataIndex: 'requests',
         key: 'requests',
@@ -117,7 +133,7 @@ export class OperationTableDetails extends React.PureComponent<TProps, TState> {
         ),
       },
       {
-        title: 'Error rate',
+        title: tableTitles.get('errRates'),
         className: 'header-item',
         dataIndex: 'errRates',
         key: 'errRates',
@@ -142,7 +158,7 @@ export class OperationTableDetails extends React.PureComponent<TProps, TState> {
         title: (
           <div style={{ paddingTop: 1 }}>
             <span style={{ float: 'left', color: '#459798' }}>
-              Impact &nbsp;
+              {tableTitles.get('impact')} &nbsp;
               <Tooltip
                 overlayClassName="impact-tooltip"
                 placement="top"
@@ -171,6 +187,7 @@ export class OperationTableDetails extends React.PureComponent<TProps, TState> {
                   )}&service=${serviceName}&start=${endTime - lookback}000`
                 )}
                 target="blank"
+                onClick={() => trackViewTraces(row.name)}
               >
                 View traces
               </Button>
@@ -215,6 +232,14 @@ export class OperationTableDetails extends React.PureComponent<TProps, TState> {
                 });
               },
             };
+          }}
+          onChange={(pagination, filters, { columnKey, order }) => {
+            if (!isEqual({ columnKey, order }, this.state.tableSorting)) {
+              const clickedColumn = tableTitles.get(columnKey || this.state.tableSorting.columnKey);
+
+              trackSortOperations(clickedColumn!);
+              this.setState({ tableSorting: { columnKey, order } });
+            }
           }}
         />
       </Row>

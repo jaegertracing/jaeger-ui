@@ -20,6 +20,7 @@ import {
   mapDispatchToProps,
   getLoopbackInterval,
   yAxisTickFormat,
+  timeFrameOptions,
 } from '.';
 import LoadingIndicator from '../../common/LoadingIndicator';
 import MonitorATMEmptyState from '../EmptyState';
@@ -30,6 +31,7 @@ import {
   serviceOpsMetrics,
   serviceMetricsWithOneServiceLatency,
 } from '../../../reducers/metrics.mock';
+import * as track from './index.track';
 
 const state = {
   services: {},
@@ -40,12 +42,14 @@ const state = {
 const props = mapStateToProps(state);
 
 Date.now = jest.fn(() => 1487076708000); // Tue, 14 Feb 2017 12:51:48 GMT'
+jest.mock('lodash/debounce', () => fn => fn);
 
 describe('<MonitorATMServicesView>', () => {
   let wrapper;
   const mockFetchServices = jest.fn();
   const mockFetchAllServiceMetrics = jest.fn();
   const mockFetchAggregatedServiceMetrics = jest.fn();
+
   beforeAll(() => {
     Date.now = jest.fn(() => 1466424490000);
   });
@@ -298,6 +302,43 @@ describe('<MonitorATMServicesView>', () => {
         .first()
         .prop('error')
     ).not.toBeNull();
+  });
+
+  it('Should track all events', () => {
+    const trackSelectServiceSpy = jest.spyOn(track, 'trackSelectService');
+    const trackViewAllTracesSpy = jest.spyOn(track, 'trackViewAllTraces');
+    const trackSelectTimeframeSpy = jest.spyOn(track, 'trackSelectTimeframe');
+    const trackSearchOperationSpy = jest.spyOn(track, 'trackSearchOperation');
+
+    const newValue = 'newValue';
+    const [timeFrameOption] = timeFrameOptions;
+
+    wrapper.setProps({
+      metrics: { ...originInitialState, serviceOpsMetrics },
+    });
+
+    wrapper.find('Search').simulate('change', { target: { value: newValue } });
+    expect(trackSearchOperationSpy).toHaveBeenCalledWith(newValue);
+
+    wrapper
+      .find('Field')
+      .first()
+      .simulate('change', null, newValue);
+    expect(trackSelectServiceSpy).toHaveBeenCalledWith(newValue);
+
+    wrapper
+      .find('Field')
+      .last()
+      .simulate('change', null, timeFrameOption.value);
+    expect(trackSelectTimeframeSpy).toHaveBeenCalledWith(timeFrameOption.label);
+
+    wrapper.find({ children: 'View all traces' }).simulate('click');
+    expect(trackViewAllTracesSpy).toHaveBeenCalled();
+
+    trackSelectServiceSpy.mockReset();
+    trackViewAllTracesSpy.mockReset();
+    trackSelectTimeframeSpy.mockReset();
+    trackSearchOperationSpy.mockReset();
   });
 });
 
