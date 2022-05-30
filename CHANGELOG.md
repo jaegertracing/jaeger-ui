@@ -6,6 +6,13 @@
 
 ### Fixes
 
+## v1.24.0 (2022-06-01)
+
+### Enhancements
+
+- Support new user analytics events in the Monitor Tab ([@VladislavBryukhanov](https://github.com/VladislavBryukhanov) in [#943](https://github.com/jaegertracing/jaeger-ui/pull/943))
+- Use red on scatterplot for traces if any spans have an error=true tag ([@esnible](https://github.com/esnible) in [#951](https://github.com/jaegertracing/jaeger-ui/pull/951))
+
 ## v1.23.0 (2022-05-10)
 
 ### Enhancements
