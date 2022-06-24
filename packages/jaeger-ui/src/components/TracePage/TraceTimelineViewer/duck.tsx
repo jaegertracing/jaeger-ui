@@ -52,7 +52,7 @@ export function newInitialState(): TTraceTimeline {
     detailStates: new Map(),
     hoverIndentGuideIds: new Set(),
     shouldScrollToFirstUiFindMatch: false,
-    spanNameColumnWidth: 0.25,
+    spanNameColumnWidth: parseFloat(localStorage.getItem('spanNameColumnWidth') || '0.25'),
     traceID: null,
   };
 }
@@ -162,6 +162,7 @@ function setTrace(state: TTraceTimeline, { uiFind, trace }: TTraceUiFindValue) {
 }
 
 function setColumnWidth(state: TTraceTimeline, { width }: TWidthValue): TTraceTimeline {
+  localStorage.setItem('spanNameColumnWidth', width.toString());
   return { ...state, spanNameColumnWidth: width };
 }
 
