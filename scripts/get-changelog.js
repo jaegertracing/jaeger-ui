@@ -28,7 +28,10 @@ const readFilePromise = promisify(readFile);
 const DOMAIN = 'https://github.com/';
 const JAEGER_REPO = process.env.JAEGER_REPO || 'jaeger-ui';
 
-const URL_PARTS = [`${DOMAIN}jaegertracing/${JAEGER_REPO}/pulls?page=`, '&q=is%3Apr+is%3Amerged&utf8=%E2%9C%93'];
+const URL_PARTS = [
+  `${DOMAIN}jaegertracing/${JAEGER_REPO}/pulls?page=`,
+  '&q=is%3Apr+is%3Amerged&utf8=%E2%9C%93',
+];
 
 function getData(elm) {
   const title = elm.querySelector('[data-hovercard-type="pull_request"]').textContent;
