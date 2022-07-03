@@ -6,6 +6,12 @@
 
 ### Fixes
 
+## v1.25.0 (2022-07-03)
+
+### Enhancements
+
+- Store preferred span name column width in localStorage ([@bobrik](https://github.com/bobrik) in [#965](https://github.com/jaegertracing/jaeger-ui/pull/965))
+
 ## v1.24.0 (2022-06-01)
 
 ### Enhancements
