@@ -2,7 +2,7 @@ import re
 import subprocess
 
 
-pattern = re.compile(r"## (v[\d]+\.[\d]+\.[\d]) \([\d]{4}-[\d]{2}-[\d]{2}\)", flags=0)
+release_header_pattern = re.compile(r"## (v[\d]+\.[\d]+\.[\d]) \([\d]{4}-[\d]{2}-[\d]{2}\)", flags=0)
 
 
 def main():
@@ -27,7 +27,7 @@ def get_changelog():
     version = ""
     with open("CHANGELOG.md") as f:
         for line in f:
-            m = pattern.match(line)
+            m = release_header_pattern.match(line)
 
             if m is not None:
                 # Found the first release.
