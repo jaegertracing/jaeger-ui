@@ -13,7 +13,10 @@
       - If necessary, add a note detailing any impact to externally facing APIs.
    1. Update `packages/jaeger-ui/package.json#version` to refer to the version being released.
 1. Create a GitHub release.
-   - The tag and release must refer to the commit created when the PR from the previous step was merged.
-   - The tag name for the GitHub release should be the version for the release. It should include the "v", e.g. `v1.0.0`.
-   - The title of the release match the format "Jaeger UI vX.Y.Z".
-   - Copy the new CHANGELOG.md section into the release notes.
+   - Automated (requires [gh](https://cli.github.com/manual/installation)):
+     - `python ./scripts/draft-release.py`
+   - Manual:
+     - The tag and release must refer to the commit created when the PR from the previous step was merged.
+     - The tag name for the GitHub release should be the version for the release. It should include the "v", e.g. `v1.0.0`.
+     - The title of the release match the format "Jaeger UI vX.Y.Z".
+     - Copy the new CHANGELOG.md section into the release notes.
