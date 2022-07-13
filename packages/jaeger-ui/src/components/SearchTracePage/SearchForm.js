@@ -84,6 +84,18 @@ export function lookbackToTimestamp(lookback, from) {
 
 const lookbackOptions = [
   {
+    label: '5 Minutes',
+    value: '5m',
+  },
+  {
+    label: '15 Minutes',
+    value: '15m',
+  },
+  {
+    label: '30 Minutes',
+    value: '30m',
+  },
+  {
     label: 'Hour',
     value: '1h',
   },
