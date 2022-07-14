@@ -85,6 +85,18 @@ exports[`<MonitorATMServicesView> ATM snapshot test 1`] = `
               "disabled": null,
               "options": Array [
                 Object {
+                  "label": "Last 5 minutes",
+                  "value": 300000,
+                },
+                Object {
+                  "label": "Last 15 minutes",
+                  "value": 900000,
+                },
+                Object {
+                  "label": "Last 30 minutes",
+                  "value": 1800000,
+                },
+                Object {
                   "label": "Last Hour",
                   "value": 3600000,
                 },
@@ -478,6 +490,18 @@ exports[`<MonitorATMServicesView> ATM snapshot test with no metrics 1`] = `
               "disabled": null,
               "options": Array [
                 Object {
+                  "label": "Last 5 minutes",
+                  "value": 300000,
+                },
+                Object {
+                  "label": "Last 15 minutes",
+                  "value": 900000,
+                },
+                Object {
+                  "label": "Last 30 minutes",
+                  "value": 1800000,
+                },
+                Object {
                   "label": "Last Hour",
                   "value": 3600000,
                 },
@@ -789,6 +813,18 @@ exports[`<MonitorATMServicesView> render one service latency 1`] = `
               },
               "disabled": null,
               "options": Array [
+                Object {
+                  "label": "Last 5 minutes",
+                  "value": 300000,
+                },
+                Object {
+                  "label": "Last 15 minutes",
+                  "value": 900000,
+                },
+                Object {
+                  "label": "Last 30 minutes",
+                  "value": 1800000,
+                },
                 Object {
                   "label": "Last Hour",
                   "value": 3600000,
