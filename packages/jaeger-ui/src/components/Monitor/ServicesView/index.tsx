@@ -88,9 +88,9 @@ const serviceFormSelector = formValueSelector('serviceForm');
 const oneHourInMilliSeconds = 3600000;
 const oneMinuteInMilliSeconds = 60000;
 export const timeFrameOptions = [
-  { label: 'Last 5 minutes', value: oneMinuteInMilliSeconds * 5 },
-  { label: 'Last 15 minutes', value: oneMinuteInMilliSeconds * 15 },
-  { label: 'Last 30 minutes', value: oneMinuteInMilliSeconds * 30 },
+  { label: 'Last 5 minutes', value: 5 * oneMinuteInMilliSeconds },
+  { label: 'Last 15 minutes', value: 15 * oneMinuteInMilliSeconds },
+  { label: 'Last 30 minutes', value: 30 * oneMinuteInMilliSeconds },
   { label: 'Last Hour', value: oneHourInMilliSeconds },
   { label: 'Last 2 hours', value: 2 * oneHourInMilliSeconds },
   { label: 'Last 6 hours', value: 6 * oneHourInMilliSeconds },
