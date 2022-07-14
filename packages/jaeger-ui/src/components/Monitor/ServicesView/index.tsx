@@ -86,11 +86,11 @@ const AdaptedVirtualSelect = reduxFormFieldAdapter({
 
 const serviceFormSelector = formValueSelector('serviceForm');
 const oneHourInMilliSeconds = 3600000;
-const fiveMinutesInMilliSeconds = 300000;
+const oneMinuteInMilliSeconds = 60000;
 export const timeFrameOptions = [
-  { label: 'Last 5 minutes', value: fiveMinutesInMilliSeconds },
-  { label: 'Last 15 minutes', value: fiveMinutesInMilliSeconds * 3 },
-  { label: 'Last 30 minutes', value: fiveMinutesInMilliSeconds * 6 },
+  { label: 'Last 5 minutes', value: oneMinuteInMilliSeconds * 5 },
+  { label: 'Last 15 minutes', value: oneMinuteInMilliSeconds * 15 },
+  { label: 'Last 30 minutes', value: oneMinuteInMilliSeconds * 30 },
   { label: 'Last Hour', value: oneHourInMilliSeconds },
   { label: 'Last 2 hours', value: 2 * oneHourInMilliSeconds },
   { label: 'Last 6 hours', value: 6 * oneHourInMilliSeconds },
@@ -315,7 +315,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
                 }}
                 props={{
                   className: 'select-a-timeframe-input',
-                  defaultValue: timeFrameOptions[0],
+                  defaultValue: timeFrameOptions[3],
                   value: selectedTimeFrame,
                   disabled: metrics.operationMetricsLoading,
                   clearable: false,

@@ -79,8 +79,8 @@ exports[`<MonitorATMServicesView> ATM snapshot test 1`] = `
               "className": "select-a-timeframe-input",
               "clearable": false,
               "defaultValue": Object {
-                "label": "Last 5 minutes",
-                "value": 300000,
+                "label": "Last Hour",
+                "value": 3600000,
               },
               "disabled": null,
               "options": Array [
@@ -484,8 +484,8 @@ exports[`<MonitorATMServicesView> ATM snapshot test with no metrics 1`] = `
               "className": "select-a-timeframe-input",
               "clearable": false,
               "defaultValue": Object {
-                "label": "Last 5 minutes",
-                "value": 300000,
+                "label": "Last Hour",
+                "value": 3600000,
               },
               "disabled": null,
               "options": Array [
@@ -808,8 +808,8 @@ exports[`<MonitorATMServicesView> render one service latency 1`] = `
               "className": "select-a-timeframe-input",
               "clearable": false,
               "defaultValue": Object {
-                "label": "Last 5 minutes",
-                "value": 300000,
+                "label": "Last Hour",
+                "value": 3600000,
               },
               "disabled": null,
               "options": Array [
