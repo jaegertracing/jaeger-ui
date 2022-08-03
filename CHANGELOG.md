@@ -6,6 +6,12 @@
 
 ### Fixes
 
+## v1.26.0 (2022-08-03)
+
+### Enhancements
+
+- Add more selectable time ranges to the SPM UI ([@jgbernalp](https://github.com/jgbernalp) in [#971](https://github.com/jaegertracing/jaeger-ui/pull/971))
+
 ## v1.25.0 (2022-07-03)
 
 ### Enhancements
