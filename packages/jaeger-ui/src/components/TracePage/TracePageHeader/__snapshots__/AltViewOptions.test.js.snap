@@ -36,6 +36,14 @@ exports[`AltViewOptions renders correctly 1`] = `
         </a>
       </MenuItem>
       <MenuItem>
+        <a
+          onClick={[Function]}
+          role="button"
+        >
+          Trace Flamegraph
+        </a>
+      </MenuItem>
+      <MenuItem>
         <Link
           onClick={[MockFunction]}
           rel="noopener noreferrer"
