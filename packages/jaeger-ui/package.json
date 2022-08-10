@@ -42,7 +42,7 @@
   },
   "dependencies": {
     "@jaegertracing/plexus": "0.2.0",
-    "@pyroscope/flamegraph": "0.17.2",
+    "@pyroscope/flamegraph": "0.18.4-1379-557f0b4.0",
     "@types/classnames": "^2.2.7",
     "@types/deep-freeze": "^0.1.1",
     "@types/history": "^4.7.2",
