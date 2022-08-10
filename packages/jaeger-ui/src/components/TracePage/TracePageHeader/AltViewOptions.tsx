@@ -51,6 +51,10 @@ const MENU_ITEMS = [
     viewType: ETraceViewType.TraceSpansView,
     label: 'Trace Spans Table',
   },
+  {
+    viewType: ETraceViewType.TraceFlamegraph,
+    label: 'Trace Flamegraph',
+  },
 ];
 
 export default function AltViewOptions(props: Props) {
