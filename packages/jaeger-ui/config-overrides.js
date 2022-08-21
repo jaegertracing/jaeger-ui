@@ -16,6 +16,8 @@
 const fs = require('fs');
 const { addBabelPlugin, addLessLoader } = require('customize-cra');
 const lessToJs = require('less-vars-to-js');
+const ManifestPlugin = require('webpack-manifest-plugin');
+const stringify = require('json-stable-stringify');
 
 function useEslintRc(config) {
   const { rules } = config.module;
@@ -35,6 +37,23 @@ function useEslintRc(config) {
   return config;
 }
 
+/* configureStableSerializationWebpackManifestPlugin makes webpack-manifest-plugin
+  provide a stable output format. Stable output allows the resulting manifest to be packaged
+  without changing checksums. This overrides any existing formats for all instances
+  of the plugin loaded at the time that this is run.
+*/
+function configureStableSerializationWebpackManifestPlugin(_config) {
+  const serializeFunc = manifest => stringify(manifest, { space: 2 });
+  const config = _config;
+  config.plugins.forEach(_p => {
+    const p = _p;
+    if (p instanceof ManifestPlugin) {
+      p.opts.serialize = serializeFunc;
+    }
+  });
+  return config;
+}
+
 // Convert less vars to JS
 const loadedVarOverrides = fs.readFileSync('config-overrides-antd-vars.less', 'utf8');
 const modifyVars = lessToJs(loadedVarOverrides);
@@ -45,6 +64,7 @@ function webpack(_config) {
     modifyVars,
     javascriptEnabled: true,
   })(config);
+  config = configureStableSerializationWebpackManifestPlugin(config);
   config = addBabelPlugin(['import', { libraryName: 'antd', style: true }])(config);
   useEslintRc(config);
   return config;
