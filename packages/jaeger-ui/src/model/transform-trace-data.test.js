@@ -76,7 +76,13 @@ describe('transformTraceData()', () => {
       ],
       startTime,
       duration,
-      tags: [],
+      tags: [
+        {
+          key: "bigintkey",
+          type: "int64",
+          value: 780177723283783680
+        },
+      ],
       processID: 'p1',
     },
     {

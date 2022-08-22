@@ -88,7 +88,18 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
   const max = data.spans.length;
   for (let i = 0; i < max; i++) {
     const span: Span = data.spans[i] as Span;
-    const { startTime, duration, processID } = span;
+    const { startTime, duration, processID, tags } = span;
+
+    // avoid display value precision loss in case of value overflow Number.MAX_VALUE
+    if(tags) {
+      for(let j = 0; j < tags.length; j++) {
+        const tag = tags[j]
+        if(Number.isInteger(tag.value) && !Number.isSafeInteger(tag.value)) {
+          tag.value = BigInt(tag.value).toString();
+        }
+      }   
+    }
+
     //
     let spanID = span.spanID;
     // check for start / end time for the trace
