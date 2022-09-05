@@ -1517,10 +1517,10 @@
     universal-user-agent "^2.0.0"
     url-template "^2.0.8"
 
-"@pyroscope/flamegraph@0.21.1-1458-c3eb418.0":
-  version "0.21.1-1458-c3eb418.0"
-  resolved "https://registry.yarnpkg.com/@pyroscope/flamegraph/-/flamegraph-0.21.1-1458-c3eb418.0.tgz#737593e8c1c8ede37fd58c020b9d0c450fe3827e"
-  integrity sha512-KDK7QldqbalFL1IJK8pBZjyKH2akRf0gsat3IoVKLnv9wJkKPUH/zD2X0EoxzoIyS6L1uIGs5LSnUVa00FGNfQ==
+"@pyroscope/flamegraph@0.21.1":
+  version "0.21.1"
+  resolved "https://registry.yarnpkg.com/@pyroscope/flamegraph/-/flamegraph-0.21.1.tgz#7447d0cc20368f862ac7b7c3fd7388f9e20ccc0a"
+  integrity sha512-XSJoHMuV4rhwRD+NS6ELSm8TIv3HtunWCLY6PiPqz9wYPxld+0Vbylg7BxCDwlXulSLP+bMVPwMginyGr/WrBA==
 
 "@sinonjs/commons@^1", "@sinonjs/commons@^1.0.2", "@sinonjs/commons@^1.4.0":
   version "1.4.0"
