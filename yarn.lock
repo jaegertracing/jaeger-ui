@@ -11374,9 +11374,10 @@ redux-form@^7.0.3:
     prop-types "^15.6.1"
     react-lifecycles-compat "^3.0.4"
 
-redux-promise-middleware@^4.3.0:
-  version "4.4.2"
-  resolved "https://registry.yarnpkg.com/redux-promise-middleware/-/redux-promise-middleware-4.4.2.tgz#8defa5d1384299b99a6d2a7b4f4c21b96b3dda39"
+redux-promise-middleware@^6.1.2:
+  version "6.1.2"
+  resolved "https://registry.yarnpkg.com/redux-promise-middleware/-/redux-promise-middleware-6.1.2.tgz#1c14222686934be243cbb292e348ef7d5b20d6d2"
+  integrity sha512-ZqZu/nnSzGgwTtNbGoGVontpk7LjTOv0kigtt3CcgXI9gpq+8WlfXTXRZD0WTD5yaohRq0q2nYmJXSTjwXs83Q==
 
 redux-standard-action@0.0.0:
   version "0.0.0"
