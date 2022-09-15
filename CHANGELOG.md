@@ -6,6 +6,13 @@
 
 ### Fixes
 
+## v1.27.0 (2022-09-15)
+
+### Enhancements
+
+- Flamegraph visualisation works with sub-second units ([@pavelpashkovsky](https://github.com/pavelpashkovsky) in [#986](https://github.com/jaegertracing/jaeger-ui/pull/986))
+- Add trace visualization as a FlameGraph ([@pavelpashkovsky](https://github.com/pavelpashkovsky) in [#976](https://github.com/jaegertracing/jaeger-ui/pull/976))
+
 ## v1.26.0 (2022-08-03)
 
 ### Enhancements
