@@ -6,6 +6,12 @@
 
 ### Fixes
 
+## v1.27.1 (2022-10-04)
+
+### Fixes
+
+- Bump dependencies: set-value@^2.0.1 and y18n@v4.0.3
+
 ## v1.27.0 (2022-09-15)
 
 ### Enhancements
