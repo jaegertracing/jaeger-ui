@@ -23,3 +23,5 @@ jobs:
       - run: yarn coverage
       - name: Upload coverage to codecov.io
         uses: codecov/codecov-action@v3
+        fail_ci_if_error: true
+        verbose: true
