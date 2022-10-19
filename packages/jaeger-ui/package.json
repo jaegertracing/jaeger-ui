@@ -29,7 +29,7 @@
     "enzyme": "^3.8.0",
     "enzyme-adapter-react-16": "^1.2.0",
     "enzyme-to-json": "^3.3.0",
-    "http-proxy-middleware": "^0.19.1",
+    "http-proxy-middleware": "^2.0.6",
     "jest-junit": "^10.0.0",
     "less": "3.9.0",
     "less-loader": "4.1.0",
