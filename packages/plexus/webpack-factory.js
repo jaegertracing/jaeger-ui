@@ -214,9 +214,8 @@ function makeWorkerConfig() {
         {
           loader: 'worker-loader',
           options: {
-            inline: true,
-            fallback: false,
-            name: '[name].js',
+            inline: 'no-fallback',
+            filename: '[name].js',
           },
         },
       ],
