@@ -100,7 +100,7 @@
     "react-vis": "^1.7.2",
     "react-vis-force": "^0.3.1",
     "react-window": "^1.8.3",
-    "recompose": "^0.25.0",
+    "recompose": "^0.30.0",
     "redux": "^3.7.2",
     "redux-actions": "^2.2.1",
     "redux-async-middleware": "^0.0.0",
