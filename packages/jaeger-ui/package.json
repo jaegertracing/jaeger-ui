@@ -30,7 +30,7 @@
     "enzyme-adapter-react-16": "^1.2.0",
     "enzyme-to-json": "^3.3.0",
     "http-proxy-middleware": "^2.0.6",
-    "jest-junit": "^10.0.0",
+    "jest-junit": "^14.0.1",
     "less": "3.9.0",
     "less-loader": "4.1.0",
     "less-vars-to-js": "^1.2.1",
