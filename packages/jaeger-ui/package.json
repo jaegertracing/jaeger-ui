@@ -110,7 +110,7 @@
     "ts-key-enum": "^2.0.0",
     "tween-functions": "^1.2.0",
     "typescript": "3.5.3",
-    "u-basscss": "2.0.0"
+    "u-basscss": "2.0.1"
   },
   "scripts": {
     "analyze": "source-map-explorer build/static/js/main.*",

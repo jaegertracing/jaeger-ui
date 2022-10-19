@@ -13922,9 +13922,10 @@ typescript@3.5.3:
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-3.5.3.tgz#c830f657f93f1ea846819e929092f5fe5983e977"
   integrity sha512-ACzBtm/PhXBDId6a6sDJfroT2pOWt/oOnk4/dElG5G33ZL776N3Y6/6bKZJBFpd+b05F3Ct9qDjMeJmRWtE2/g==
 
-u-basscss@2.0.0:
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/u-basscss/-/u-basscss-2.0.0.tgz#5a78c543f69641fca1b693714852a497a35d9b79"
+u-basscss@2.0.1:
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/u-basscss/-/u-basscss-2.0.1.tgz#4497f09be68e55006703861e8040dd7841d824b4"
+  integrity sha512-wWgjMPRG7LxevfQpFOjQULP5GsL2hepBeoU0gbACT7nf3qJP7nZ+aXF9hyJkK3T+i2gdIF1YfZrIw+HLFoAYPw==
 
 ua-parser-js@^0.7.18:
   version "0.7.28"
