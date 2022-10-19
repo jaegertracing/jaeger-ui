@@ -73,7 +73,7 @@
     "global": "^4.3.2",
     "history": "^4.6.3",
     "is-promise": "^2.1.0",
-    "isomorphic-fetch": "^2.2.1",
+    "isomorphic-fetch": "^3.0.0",
     "json-markup": "^1.1.0",
     "lodash": "^4.17.19",
     "logfmt": "^1.2.0",
