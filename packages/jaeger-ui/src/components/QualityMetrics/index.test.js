@@ -290,7 +290,7 @@ describe('QualityMetrics', () => {
     };
 
     beforeAll(() => {
-      getUrlStateSpy = jest.spyOn(getUrl, 'getUrlState').mockImplementation(search => search && urlState);
+      getUrlStateSpy = jest.spyOn(getUrl, 'getUrlState').mockImplementation((search) => search && urlState);
     });
 
     it('gets services from redux state', () => {

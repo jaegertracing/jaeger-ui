@@ -42,11 +42,11 @@ describe('calcPositioning', () => {
   let svcMeasurements;
   let opMeasurements;
   let genStrCalls = 0;
-  const genStr = n => `${new Array(n).fill('foo').join(':')}${genStrCalls++}`;
+  const genStr = (n) => `${new Array(n).fill('foo').join(':')}${genStrCalls++}`;
   const lineHeight = LINE_HEIGHT * FONT_SIZE;
   const measureSvc = jest.fn().mockImplementation(() => [svcMeasurements[measureSvc.mock.calls.length - 1]]);
   const measureOp = jest.fn().mockImplementation(() => [opMeasurements[measureOp.mock.calls.length - 1]]);
-  const genWidths = mods => mods.map(mod => ({ width: lineHeight * mod }));
+  const genWidths = (mods) => mods.map((mod) => ({ width: lineHeight * mod }));
   const calcPos = () =>
     calcPositioning(genStr(svcMeasurements.length), opMeasurements && genStr(opMeasurements.length));
 

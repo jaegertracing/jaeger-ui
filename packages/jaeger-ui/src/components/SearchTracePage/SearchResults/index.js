@@ -44,11 +44,11 @@ import type { KeyValuePair } from '../../../types/trace';
 import './index.css';
 
 type SearchResultsProps = {
-  cohortAddTrace: string => void,
-  cohortRemoveTrace: string => void,
+  cohortAddTrace: (string) => void,
+  cohortRemoveTrace: (string) => void,
   diffCohort: FetchedTrace[],
   disableComparisons: boolean,
-  goToTrace: string => void,
+  goToTrace: (string) => void,
   hideGraph: boolean,
   history: RouterHistory,
   loading: boolean,
@@ -154,7 +154,7 @@ export class UnconnectedSearchResults extends React.PureComponent<SearchResultsP
         </React.Fragment>
       );
     }
-    const cohortIds = new Set(diffCohort.map(datum => datum.id));
+    const cohortIds = new Set(diffCohort.map((datum) => datum.id));
     const searchUrl = queryOfResults ? getUrl(stripEmbeddedState(queryOfResults)) : getUrl();
     const isErrorTag = ({ key, value }: KeyValuePair) =>
       key === 'error' && (value === true || value === 'true');
@@ -164,15 +164,15 @@ export class UnconnectedSearchResults extends React.PureComponent<SearchResultsP
           {!hideGraph && traceResultsView && (
             <div className="ub-p3 SearchResults--headerScatterPlot">
               <ScatterPlot
-                data={traces.map(t => ({
+                data={traces.map((t) => ({
                   x: t.startTime,
                   y: t.duration,
                   traceID: t.traceID,
                   size: t.spans.length,
                   name: t.traceName,
-                  color: t.spans.some(sp => sp.tags.some(isErrorTag)) ? 'red' : '#12939A',
+                  color: t.spans.some((sp) => sp.tags.some(isErrorTag)) ? 'red' : '#12939A',
                 }))}
-                onValueClick={t => {
+                onValueClick={(t) => {
                   goToTrace(t.traceID);
                 }}
               />
@@ -204,7 +204,7 @@ export class UnconnectedSearchResults extends React.PureComponent<SearchResultsP
         {traceResultsView && diffSelection}
         {traceResultsView && (
           <ul className="ub-list-reset">
-            {traces.map(trace => (
+            {traces.map((trace) => (
               <li className="ub-my3" key={trace.traceID}>
                 <ResultItem
                   durationPercent={getPercentageOfDuration(trace.duration, maxTraceDuration)}

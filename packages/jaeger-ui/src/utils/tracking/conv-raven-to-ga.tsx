@@ -55,11 +55,7 @@ function truncate(str: string, len: number, front: boolean = false) {
 
 // Replace newlines with "|" and collapse whitespace to " "
 function collapseWhitespace(value: string) {
-  return value
-    .trim()
-    .replace(/\n/g, '|')
-    .replace(/\s\s+/g, ' ')
-    .trim();
+  return value.trim().replace(/\n/g, '|').replace(/\s\s+/g, ' ').trim();
 }
 
 // shorten URLs to eitehr a short code or a word
@@ -93,10 +89,7 @@ function convErrorMessage(message: string, maxLen: number = 0) {
   const parts = ['! '];
   const j = msg.indexOf(':');
   if (j > -1) {
-    const start = msg
-      .slice(0, j)
-      .replace(/error/i, '')
-      .trim();
+    const start = msg.slice(0, j).replace(/error/i, '').trim();
     if (start) {
       parts.push(start, '! ');
     }
@@ -135,7 +128,7 @@ interface IConvException {
 }
 function convException(errValue: IConvException) {
   const message = convErrorMessage(`${errValue.type}: ${errValue.value}`, 149);
-  const frames = errValue.stacktrace.frames.map(fr => {
+  const frames = errValue.stacktrace.frames.map((fr) => {
     const filename = fr.filename.replace(origin, '').replace(/^\/static\/js\//i, '');
     const fn = collapseWhitespace(fr.function || '??');
     return { filename, fn };
@@ -351,7 +344,7 @@ function convBreadcrumbs(crumbs: ICrumb[]) {
 // Create the GA label value from the message, page, duration, git info, and
 // breadcrumbs. See <./README.md> for details.
 function getLabel(message: string, page: string, duration: number, git: string, breadcrumbs: ICrumb[]) {
-  const header = [message, page, duration, git, ''].filter(v => v != null).join('\n');
+  const header = [message, page, duration, git, ''].filter((v) => v != null).join('\n');
   const crumbs = convBreadcrumbs(breadcrumbs);
   return `${header}\n${truncate(crumbs, 498 - header.length, true)}`;
 }
@@ -365,7 +358,7 @@ export default function convRavenToGa({ data }: RavenTransportOptions) {
   const { word: page } = getSym(NAV_SYMBOLS, url);
   const value = Math.round(extra['session:duration'] / 1000);
   const category = `jaeger/${page}/error`;
-  let action = [message, tags && tags.git, url, '', stack].filter(v => v != null).join('\n');
+  let action = [message, tags && tags.git, url, '', stack].filter((v) => v != null).join('\n');
   action = truncate(action, 499);
   const label = getLabel(message, page, value, tags && tags.git, breadcrumbs && breadcrumbs.values);
   return {

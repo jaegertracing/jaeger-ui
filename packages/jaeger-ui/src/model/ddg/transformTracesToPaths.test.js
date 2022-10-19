@@ -24,7 +24,7 @@ describe('transform traces to ddg paths', () => {
   });
 
   const addExemplarTraceIDs = (path, traces) => {
-    traces.forEach(trace => {
+    traces.forEach((trace) => {
       path.attributes.push({ key: 'exemplar_trace_id', value: trace.data.traceID });
     });
     return path;

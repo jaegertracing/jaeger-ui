@@ -62,7 +62,7 @@ describe('transform ddg data', () => {
     const orderedVisIndices = Array.from(visIndicesToDistance.keys()).sort((a, b) => a - b);
     expect(orderedVisIndices).toEqual(expectedVisIndices);
     let distance = 0;
-    orderedVisIndices.forEach(orderedIdx => {
+    orderedVisIndices.forEach((orderedIdx) => {
       const currentDistance = Math.abs(visIndicesToDistance.get(orderedIdx));
       if (currentDistance < distance) {
         throw new Error('Net distance did not increase or stay equal as visibilityIdx increased');
@@ -116,13 +116,8 @@ describe('transform ddg data', () => {
   });
 
   it('sorts payload paths to ensure stable visibilityIndices', () => {
-    const {
-      focalPayloadElem,
-      simplePath,
-      longSimplePath,
-      doubleFocalPath,
-      almostDoubleFocalPath,
-    } = testResources;
+    const { focalPayloadElem, simplePath, longSimplePath, doubleFocalPath, almostDoubleFocalPath } =
+      testResources;
     const { visIdxToPathElem: presortedPathsVisIdxToPathElem } = transformDdgData(
       testResources.wrap([simplePath, doubleFocalPath, almostDoubleFocalPath, longSimplePath]),
       focalPayloadElem

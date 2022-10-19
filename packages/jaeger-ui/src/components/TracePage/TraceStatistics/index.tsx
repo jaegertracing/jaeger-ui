@@ -151,7 +151,7 @@ export default class TraceStatistics extends Component<Props, State> {
     this.searchInTable(this.props.uiFindVertexKeys!, this.state.tableValue, this.props.uiFind);
     // reload the componente
     const tableValueState = this.state.tableValue;
-    this.setState(prevState => ({
+    this.setState((prevState) => ({
       ...prevState,
       tableValue: tableValueState,
     }));
@@ -167,7 +167,7 @@ export default class TraceStatistics extends Component<Props, State> {
     valueNameSelector1: string,
     valueNameSelector2: string | null
   ) {
-    this.setState(prevState => {
+    this.setState((prevState) => {
       return {
         ...prevState,
         tableValue: this.searchInTable(
@@ -251,7 +251,7 @@ export default class TraceStatistics extends Component<Props, State> {
    */
   togglePopup(popupContent: string) {
     const showPopupState = this.state.showPopup;
-    this.setState(prevState => {
+    this.setState((prevState) => {
       return {
         ...prevState,
         showPopup: !showPopupState,
@@ -267,7 +267,7 @@ export default class TraceStatistics extends Component<Props, State> {
   sortClick(index: number) {
     const { tableValue, sortIndex, sortAsc } = this.state;
     if (sortIndex !== index) {
-      this.setState(prevState => {
+      this.setState((prevState) => {
         return {
           ...prevState,
           sortIndex: index,
@@ -276,7 +276,7 @@ export default class TraceStatistics extends Component<Props, State> {
         };
       });
     } else {
-      this.setState(prevState => {
+      this.setState((prevState) => {
         return {
           ...prevState,
           sortAsc: !sortAsc,
@@ -393,7 +393,7 @@ export default class TraceStatistics extends Component<Props, State> {
   };
 
   renderTableData() {
-    return this.state.tableValue.map(oneSpan => {
+    return this.state.tableValue.map((oneSpan) => {
       const {
         count,
         total,

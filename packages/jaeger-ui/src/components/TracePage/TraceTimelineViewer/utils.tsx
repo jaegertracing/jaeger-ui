@@ -66,7 +66,7 @@ export function spanHasTag(key: string, value: any, span: Span) {
   if (!Array.isArray(span.tags) || !span.tags.length) {
     return false;
   }
-  return span.tags.some(tag => tag.key === key && tag.value === value);
+  return span.tags.some((tag) => tag.key === key && tag.value === value);
 }
 
 export const isClientSpan = spanHasTag.bind(null, 'span.kind', 'client');

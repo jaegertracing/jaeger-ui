@@ -51,12 +51,7 @@ describe('<OpNode>', () => {
     expect(wrapper.find('.OpNode--avg').text()).toBe('40 ms');
     expect(wrapper.find('.OpNode--selfTime').text()).toBe('180 ms (90 %)');
     expect(wrapper.find('.OpNode--op').text()).toBe('op1');
-    expect(
-      wrapper
-        .find('.OpNode--service')
-        .find('strong')
-        .text()
-    ).toBe('service1');
+    expect(wrapper.find('.OpNode--service').find('strong').text()).toBe('service1');
   });
 
   it('switches mode', () => {

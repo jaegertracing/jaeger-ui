@@ -72,7 +72,7 @@ function trackParent(store: Store<ReduxState>, { payload }: Action<TSpanIdValue>
   if (!trace || !trace.data) {
     return;
   }
-  const span = trace.data.spans.find(sp => sp.spanID === spanID);
+  const span = trace.data.spans.find((sp) => sp.spanID === spanID);
   if (span) {
     trackEvent(CATEGORY_PARENT, getToggleValue(!isHidden), span.depth);
   }

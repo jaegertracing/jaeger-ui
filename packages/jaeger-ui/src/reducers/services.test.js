@@ -141,7 +141,7 @@ describe('reducers/services', () => {
     const state = serviceReducer(initialState, {
       type: `${fetchServiceServerOps}_FULFILLED`,
       meta: { serviceName },
-      payload: { data: ops.map(name => ({ name })) },
+      payload: { data: ops.map((name) => ({ name })) },
     });
     const expected = {
       ...initialState,

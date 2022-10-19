@@ -57,7 +57,7 @@ function fetchTraceErred(state, { meta, payload }) {
 function fetchMultipleTracesStarted(state, { meta }) {
   const { ids } = meta;
   const traces = { ...state.traces };
-  ids.forEach(id => {
+  ids.forEach((id) => {
     traces[id] = { id, state: fetchedState.LOADING };
   });
   return { ...state, traces };
@@ -65,12 +65,12 @@ function fetchMultipleTracesStarted(state, { meta }) {
 
 function fetchMultipleTracesDone(state, { payload }) {
   const traces = { ...state.traces };
-  payload.data.forEach(raw => {
+  payload.data.forEach((raw) => {
     const data = transformTraceData(raw);
     traces[data.traceID] = { data, id: data.traceID, state: fetchedState.DONE };
   });
   if (payload.errors) {
-    payload.errors.forEach(err => {
+    payload.errors.forEach((err) => {
       const { msg, traceID } = err;
       const error = new Error(`Error: ${msg} - ${traceID}`);
       traces[traceID] = { error, id: traceID, state: fetchedState.ERROR };
@@ -83,7 +83,7 @@ function fetchMultipleTracesErred(state, { meta, payload }) {
   const { ids } = meta;
   const traces = { ...state.traces };
   const error = payload;
-  ids.forEach(id => {
+  ids.forEach((id) => {
     traces[id] = { error, id, state: fetchedState.ERROR };
   });
   return { ...state, traces };

@@ -54,7 +54,7 @@ function compareMergedDates(a, b) {
 function getPrData(document) {
   const wrapper = document.querySelector('[aria-label="Issues"][role="group"]');
   const issues = [].slice.call(wrapper.querySelectorAll('.js-issue-row'));
-  const okIssues = issues.filter(elm => !elm.querySelector('[aria-label*="Closed"]'));
+  const okIssues = issues.filter((elm) => !elm.querySelector('[aria-label*="Closed"]'));
   return okIssues.map(getData);
 }
 
@@ -63,13 +63,13 @@ function getMergedPrs(page) {
   const url = URL_PARTS.join(_page);
   return (
     fetch(url)
-      .then(resp => resp.text())
-      .then(textContent => {
+      .then((resp) => resp.text())
+      .then((textContent) => {
         const dom = new jsdom.JSDOM(textContent, { url: DOMAIN });
         return getPrData(dom.window.document);
       })
       // eslint-disable-next-line no-console
-      .catch(error => console.error(error))
+      .catch((error) => console.error(error))
   );
 }
 
@@ -81,14 +81,14 @@ function getChangelog(pages) {
   }
   return (
     Promise.all(promises)
-      .then(groups => [].concat(...groups))
-      .then(items => {
+      .then((groups) => [].concat(...groups))
+      .then((items) => {
         items.sort(compareMergedDates);
         items.reverse();
         return items;
       })
       // eslint-disable-next-line no-console
-      .catch(error => console.error(error))
+      .catch((error) => console.error(error))
   );
 }
 
@@ -104,7 +104,7 @@ if (require.main === module) {
       )
     )
     // eslint-disable-next-line no-console
-    .catch(error => console.error(error));
+    .catch((error) => console.error(error));
 } else {
   module.exports = getChangelog;
 }

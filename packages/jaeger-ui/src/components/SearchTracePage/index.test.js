@@ -16,7 +16,7 @@ import { MemoryRouter } from 'react-router-dom';
 
 jest.mock('redux-form', () => {
   function reduxForm() {
-    return component => component;
+    return (component) => component;
   }
   function formValueSelector() {
     return () => null;
@@ -47,7 +47,10 @@ describe('<SearchTracePage>', () => {
   let props;
 
   beforeEach(() => {
-    traceResults = [{ traceID: 'a', spans: [], processes: {} }, { traceID: 'b', spans: [], processes: {} }];
+    traceResults = [
+      { traceID: 'a', spans: [], processes: {} },
+      { traceID: 'b', spans: [], processes: {} },
+    ];
     props = {
       queryOfResults,
       traceResults,
@@ -114,11 +117,7 @@ describe('<SearchTracePage>', () => {
         <SearchTracePage {...props} history={historyMock} query={query} />
       </MemoryRouter>
     );
-    wrapper
-      .find(SearchTracePage)
-      .first()
-      .instance()
-      .goToTrace(traceID);
+    wrapper.find(SearchTracePage).first().instance().goToTrace(traceID);
     expect(historyPush.mock.calls.length).toBe(1);
     expect(historyPush.mock.calls[0][0]).toEqual({
       pathname: `/trace/${traceID}`,
@@ -186,14 +185,8 @@ describe('mapStateToProps()', () => {
       services: stateServices,
     };
 
-    const {
-      maxTraceDuration,
-      traceResults,
-      diffCohort,
-      numberOfTraceResults,
-      location,
-      ...rest
-    } = mapStateToProps(state);
+    const { maxTraceDuration, traceResults, diffCohort, numberOfTraceResults, location, ...rest } =
+      mapStateToProps(state);
     expect(traceResults).toHaveLength(stateTrace.search.results.length);
     expect(traceResults[0].traceID).toBe(trace.traceID);
     expect(maxTraceDuration).toBe(trace.duration);

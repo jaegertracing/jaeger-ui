@@ -31,7 +31,7 @@ type TReferencesButtonProps = {
 export default class ReferencesButton extends React.PureComponent<TReferencesButtonProps> {
   referencesList = (references: SpanReference[]) => (
     <Menu>
-      {references.map(ref => {
+      {references.map((ref) => {
         const { span, spanID } = ref;
         return (
           <Menu.Item key={`${spanID}`}>

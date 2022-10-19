@@ -42,7 +42,7 @@ describe('GA tracking', () => {
     trackEvent.mockClear();
     trackFormInput(0, '', {}, 0, 0, '', '');
     expect(trackEvent.mock.calls.length).toBe(7);
-    const categoriesTracked = trackEvent.mock.calls.map(call => call[0]).sort();
+    const categoriesTracked = trackEvent.mock.calls.map((call) => call[0]).sort();
     expect(categoriesTracked).toEqual(
       [
         CATEGORY_OPERATION,

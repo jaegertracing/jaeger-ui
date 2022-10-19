@@ -60,7 +60,7 @@ export default class ResultItem extends React.PureComponent<Props, State> {
 
     const erroredServices: Set<string> = new Set<string>();
 
-    const numErredSpans = spans.filter(sp => {
+    const numErredSpans = spans.filter((sp) => {
       const hasError = sp.tags.some(isErrorTag);
       if (hasError) {
         erroredServices.add(sp.process.serviceName);
@@ -78,14 +78,8 @@ export default class ResultItem extends React.PureComponent<Props, State> {
   }
 
   render() {
-    const {
-      disableComparision,
-      durationPercent,
-      isInDiffCohort,
-      linkTo,
-      toggleComparison,
-      trace,
-    } = this.props;
+    const { disableComparision, durationPercent, isInDiffCohort, linkTo, toggleComparison, trace } =
+      this.props;
     const { duration, services, startTime, traceName, traceID } = trace;
     return (
       <div className="ResultItem" onClick={trackTraceConversions} role="button">
@@ -113,7 +107,7 @@ export default class ResultItem extends React.PureComponent<Props, State> {
             </Col>
             <Col span={16} className="ub-p2">
               <ul className="ub-list-reset" data-test={markers.SERVICE_TAGS}>
-                {sortBy(services, s => s.name).map(service => {
+                {sortBy(services, (s) => s.name).map((service) => {
                   const { name, numberOfSpans: count } = service;
                   return (
                     <li key={name} className="ub-inline-block ub-m1">

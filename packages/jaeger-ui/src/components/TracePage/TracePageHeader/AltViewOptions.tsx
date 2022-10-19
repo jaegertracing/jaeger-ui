@@ -75,7 +75,7 @@ export default function AltViewOptions(props: Props) {
 
   const menu = (
     <Menu>
-      {MENU_ITEMS.filter(item => item.viewType !== viewType).map(item => (
+      {MENU_ITEMS.filter((item) => item.viewType !== viewType).map((item) => (
         <Menu.Item key={item.viewType}>
           <a onClick={() => handleSelectView(item.viewType)} role="button">
             {item.label}
@@ -105,7 +105,7 @@ export default function AltViewOptions(props: Props) {
     </Menu>
   );
 
-  const currentItem = MENU_ITEMS.find(item => item.viewType === viewType);
+  const currentItem = MENU_ITEMS.find((item) => item.viewType === viewType);
   const dropdownText = currentItem ? currentItem.label : 'Alternate Views';
   return (
     <Dropdown overlay={menu}>

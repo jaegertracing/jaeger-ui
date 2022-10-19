@@ -95,7 +95,7 @@ describe('trackRange', () => {
     },
   ];
 
-  cases.forEach(_case => {
+  cases.forEach((_case) => {
     const { msg, rangeType, source, from, to } = _case;
 
     it(msg, () => {

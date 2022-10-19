@@ -374,9 +374,6 @@ export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchPro
   };
 }
 
-const DdgNodeContent = connect(
-  extractDecorationFromState,
-  mapDispatchToProps
-)(UnconnectedDdgNodeContent);
+const DdgNodeContent = connect(extractDecorationFromState, mapDispatchToProps)(UnconnectedDdgNodeContent);
 
 export default DdgNodeContent;

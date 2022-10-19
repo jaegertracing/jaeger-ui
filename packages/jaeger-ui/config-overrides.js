@@ -21,7 +21,7 @@ const stringify = require('json-stable-stringify');
 
 function useEslintRc(config) {
   const { rules } = config.module;
-  const preRule = rules.find(rule => rule.enforce === 'pre');
+  const preRule = rules.find((rule) => rule.enforce === 'pre');
   if (!preRule) {
     throw new Error('Unable to find estlint rule, pre');
   }
@@ -43,9 +43,9 @@ function useEslintRc(config) {
   of the plugin loaded at the time that this is run.
 */
 function configureStableSerializationWebpackManifestPlugin(_config) {
-  const serializeFunc = manifest => stringify(manifest, { space: 2 });
+  const serializeFunc = (manifest) => stringify(manifest, { space: 2 });
   const config = _config;
-  config.plugins.forEach(_p => {
+  config.plugins.forEach((_p) => {
     const p = _p;
     if (p instanceof ManifestPlugin) {
       p.opts.serialize = serializeFunc;

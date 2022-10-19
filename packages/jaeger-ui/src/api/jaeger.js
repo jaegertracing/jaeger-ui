@@ -42,11 +42,11 @@ function getJSON(url, options = {}) {
     queryStr = `?${typeof query === 'string' ? query : queryString.stringify(query)}`;
   }
 
-  return fetch(`${url}${queryStr}`, init).then(response => {
+  return fetch(`${url}${queryStr}`, init).then((response) => {
     if (response.status < 400) {
       return response.json();
     }
-    return response.text().then(bodyText => {
+    return response.text().then((bodyText) => {
       let data;
       let bodyTextFmt;
       let errorMessage;
@@ -58,7 +58,7 @@ function getJSON(url, options = {}) {
         bodyTextFmt = null;
       }
       if (data && Array.isArray(data.errors) && data.errors.length) {
-        errorMessage = data.errors.map(err => getMessageFromError(err, response.status)).join('; ');
+        errorMessage = data.errors.map((err) => getMessageFromError(err, response.status)).join('; ');
       } else {
         errorMessage = bodyText || `${response.status} - ${response.statusText}`;
       }
@@ -118,11 +118,11 @@ const JaegerAPI = {
     return getJSON(`${this.apiRoot}traces`, { query });
   },
   fetchMetrics(metricType, serviceNameList, query) {
-    const servicesName = serviceNameList.map(serviceName => `service=${serviceName}`).join(',');
+    const servicesName = serviceNameList.map((serviceName) => `service=${serviceName}`).join(',');
 
     return getJSON(`${this.apiRoot}metrics/${metricType}`, {
       query: `${servicesName}&${queryString.stringify(query)}`,
-    }).then(d => ({ ...d, quantile: query.quantile }));
+    }).then((d) => ({ ...d, quantile: query.quantile }));
   },
 };
 

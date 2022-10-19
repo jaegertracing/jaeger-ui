@@ -102,22 +102,22 @@ export class UnconnectedSpanTreeOffset extends React.PureComponent<TProps> {
       showChildrenIcon && hasChildren && (childrenVisible ? <IoIosArrowDown /> : <IoChevronRight />);
     return (
       <span className={`SpanTreeOffset ${hasChildren ? 'is-parent' : ''}`} {...wrapperProps}>
-        {this.ancestorIds.map(ancestorId => (
+        {this.ancestorIds.map((ancestorId) => (
           <span
             key={ancestorId}
             className={cx('SpanTreeOffset--indentGuide', {
               'is-active': this.props.hoverIndentGuideIds.has(ancestorId),
             })}
             data-ancestor-id={ancestorId}
-            onMouseEnter={event => this.handleMouseEnter(event, ancestorId)}
-            onMouseLeave={event => this.handleMouseLeave(event, ancestorId)}
+            onMouseEnter={(event) => this.handleMouseEnter(event, ancestorId)}
+            onMouseLeave={(event) => this.handleMouseLeave(event, ancestorId)}
           />
         ))}
         {icon && (
           <span
             className="SpanTreeOffset--iconWrapper"
-            onMouseEnter={event => this.handleMouseEnter(event, spanID)}
-            onMouseLeave={event => this.handleMouseLeave(event, spanID)}
+            onMouseEnter={(event) => this.handleMouseEnter(event, spanID)}
+            onMouseLeave={(event) => this.handleMouseLeave(event, spanID)}
           >
             {icon}
           </span>
@@ -137,7 +137,4 @@ export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchPro
   return { addHoverIndentGuideId, removeHoverIndentGuideId };
 }
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(UnconnectedSpanTreeOffset);
+export default connect(mapStateToProps, mapDispatchToProps)(UnconnectedSpanTreeOffset);

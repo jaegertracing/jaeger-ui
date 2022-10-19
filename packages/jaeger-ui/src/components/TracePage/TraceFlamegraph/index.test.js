@@ -27,9 +27,9 @@ describe('convertJaegerTraceToProfile', () => {
     expect(profile.version).toBe(1);
 
     expect(Array.isArray(profile.flamebearer.levels)).toBe(true);
-    expect(profile.flamebearer.levels[0].every(el => typeof el === 'number')).toBe(true);
+    expect(profile.flamebearer.levels[0].every((el) => typeof el === 'number')).toBe(true);
     expect(Array.isArray(profile.flamebearer.names)).toBe(true);
-    expect(profile.flamebearer.names.every(el => typeof el === 'string')).toBe(true);
+    expect(profile.flamebearer.names.every((el) => typeof el === 'string')).toBe(true);
     expect(typeof profile.flamebearer.numTicks).toBe('number');
 
     expect(typeof profile.metadata.format).toBe('string');

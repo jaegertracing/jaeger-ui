@@ -17,7 +17,7 @@ import { createSelector } from 'reselect';
 // eslint-disable-next-line import/prefer-default-export
 export const formatDependenciesAsNodesAndLinks = createSelector(
   ({ dependencies }) => dependencies,
-  dependencies => {
+  (dependencies) => {
     const data = dependencies.reduce(
       (response, link) => {
         const { nodeMap } = response;
@@ -48,10 +48,10 @@ export const formatDependenciesAsNodesAndLinks = createSelector(
       { nodeMap: {}, links: [] }
     );
 
-    data.nodes = Object.keys(data.nodeMap).map(id => ({
+    data.nodes = Object.keys(data.nodeMap).map((id) => ({
       callCount: data.nodeMap[id],
       radius: Math.max(Math.log(data.nodeMap[id] / 1000), 3),
-      orphan: data.links.findIndex(link => id === link.source || id === link.target) === -1,
+      orphan: data.links.findIndex((link) => id === link.source || id === link.target) === -1,
       id,
     }));
 

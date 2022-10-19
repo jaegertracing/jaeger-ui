@@ -103,7 +103,7 @@ export const edges = [];
 paths
   .trim()
   .split('\n')
-  .forEach(line => {
+  .forEach((line) => {
     const folders = line.split('/');
     vertices.push({ key: line, label: folders.slice(-1)[0] });
     if (folders.length > 1) {

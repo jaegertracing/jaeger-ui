@@ -75,13 +75,13 @@ type TDispatchProps = {
   fetchAllServiceMetrics: (serviceName: string, query: MetricsAPIQueryParams) => void;
 };
 
-const trackSearchOperationDebounced = _debounce(searchQuery => trackSearchOperation(searchQuery), 1000);
+const trackSearchOperationDebounced = _debounce((searchQuery) => trackSearchOperation(searchQuery), 1000);
 
 const Search = Input.Search;
 
 const AdaptedVirtualSelect = reduxFormFieldAdapter({
   AntInputComponent: VirtSelect,
-  onChangeAdapter: option => (option ? (option as any).value : null),
+  onChangeAdapter: (option) => (option ? (option as any).value : null),
 });
 
 const serviceFormSelector = formValueSelector('serviceForm');
@@ -103,7 +103,7 @@ export const timeFrameOptions = [
 export const getLoopbackInterval = (interval: number) => {
   if (interval === undefined) return '';
 
-  const timeFrameObj = timeFrameOptions.find(t => t.value === interval);
+  const timeFrameObj = timeFrameOptions.find((t) => t.value === interval);
 
   if (timeFrameObj === undefined) return '';
 
@@ -114,7 +114,7 @@ const calcDisplayTimeUnit = (serviceLatencies: ServiceMetricsObject | ServiceMet
   let maxValue = 0;
 
   if (serviceLatencies && Array.isArray(serviceLatencies)) {
-    const allMaxMetrics = serviceLatencies.map(x => x.max);
+    const allMaxMetrics = serviceLatencies.map((x) => x.max);
     maxValue = Math.max(...allMaxMetrics);
   } else if (serviceLatencies) {
     maxValue = serviceLatencies.max;
@@ -292,10 +292,11 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
                 Aggregation of all &quot;{this.getSelectedService()}&quot; metrics in selected timeframe.{' '}
                 <a
                   href={prefixUrl(
-                    `/search?end=${Date.now()}000&limit=20&lookback=${selectedTimeFrame /
-                      (3600 *
-                        1000)}h&maxDuration&minDuration&service=${this.getSelectedService()}&start=${Date.now() -
-                      selectedTimeFrame}000`
+                    `/search?end=${Date.now()}000&limit=20&lookback=${
+                      selectedTimeFrame / (3600 * 1000)
+                    }h&maxDuration&minDuration&service=${this.getSelectedService()}&start=${
+                      Date.now() - selectedTimeFrame
+                    }000`
                   )}
                   target="blank"
                   onClick={trackViewAllTraces}
@@ -310,7 +311,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
                 component={AdaptedVirtualSelect}
                 placeholder="Select A Timeframe"
                 onChange={(e: Event, value: number) => {
-                  const { label } = timeFrameOptions.find(option => option.value === value)!;
+                  const { label } = timeFrameOptions.find((option) => option.value === value)!;
                   trackSelectTimeframe(label);
                 }}
                 props={{
@@ -342,7 +343,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
                 showLegend
                 marginClassName="latency-margins"
                 showHorizontalLines
-                yAxisTickFormat={timeInMs => yAxisTickFormat(timeInMs, displayTimeUnit)}
+                yAxisTickFormat={(timeInMs) => yAxisTickFormat(timeInMs, displayTimeUnit)}
                 xDomain={this.state.graphXDomain}
               />
             </Col>

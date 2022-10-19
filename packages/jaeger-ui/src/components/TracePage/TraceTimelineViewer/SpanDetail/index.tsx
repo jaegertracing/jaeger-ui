@@ -58,17 +58,8 @@ export default function SpanDetail(props: SpanDetailProps) {
     focusSpan,
   } = props;
   const { isTagsOpen, isProcessOpen, logs: logsState, isWarningsOpen, isReferencesOpen } = detailState;
-  const {
-    operationName,
-    process,
-    duration,
-    relativeStartTime,
-    spanID,
-    logs,
-    tags,
-    warnings,
-    references,
-  } = span;
+  const { operationName, process, duration, relativeStartTime, spanID, logs, tags, warnings, references } =
+    span;
   const overviewItems = [
     {
       key: 'svc',
@@ -126,7 +117,7 @@ export default function SpanDetail(props: SpanDetailProps) {
             isOpen={logsState.isOpen}
             openedItems={logsState.openedItems}
             onToggle={() => logsToggle(spanID)}
-            onItemToggle={logItem => logItemToggle(spanID, logItem)}
+            onItemToggle={(logItem) => logItemToggle(spanID, logItem)}
             timestamp={traceStartTime}
           />
         )}

@@ -70,7 +70,7 @@ function syncStates(
     forceState(urlValues);
     return;
   }
-  const needSync = Array.from(urlCohort).some(id => !reduxCohort.has(id));
+  const needSync = Array.from(urlCohort).some((id) => !reduxCohort.has(id));
   if (needSync) {
     forceState(urlValues);
   }
@@ -112,8 +112,8 @@ export class TraceDiffImpl extends React.PureComponent<TStateProps & TDispatchPr
   processProps() {
     const { a, b, cohort, fetchMultipleTraces, forceState, tracesData, traceDiffState } = this.props;
     syncStates({ a, b, cohort }, traceDiffState, forceState);
-    const cohortData = cohort.map(id => tracesData.get(id) || { id, state: null });
-    const needForDiffs = cohortData.filter(ft => ft.state == null).map(ft => ft.id);
+    const cohortData = cohort.map((id) => tracesData.get(id) || { id, state: null });
+    const needForDiffs = cohortData.filter((ft) => ft.state == null).map((ft) => ft.id);
     if (needForDiffs.length) {
       fetchMultipleTraces(needForDiffs);
     }
@@ -141,7 +141,7 @@ export class TraceDiffImpl extends React.PureComponent<TStateProps & TDispatchPr
     const { graphTopOffset } = this.state;
     const traceA = a ? tracesData.get(a) || { id: a } : null;
     const traceB = b ? tracesData.get(b) || { id: b } : null;
-    const cohortData: FetchedTrace[] = cohort.map(id => tracesData.get(id) || { id });
+    const cohortData: FetchedTrace[] = cohort.map((id) => tracesData.get(id) || { id });
     return (
       <React.Fragment>
         <div key="header" ref={this.headerWrapperRef}>
@@ -169,7 +169,7 @@ export function mapStateToProps(state: ReduxState, ownProps: { match: match<TDif
   const fullCohortSet: Set<string> = new Set(pluckTruthy([a, b].concat(origCohort)));
   const cohort: string[] = Array.from(fullCohortSet);
   const { traces } = state.trace;
-  const kvPairs = cohort.map<[string, FetchedTrace]>(id => [id, traces[id] || { id, state: null }]);
+  const kvPairs = cohort.map<[string, FetchedTrace]>((id) => [id, traces[id] || { id, state: null }]);
   const tracesData: Map<string, FetchedTrace> = new Map(kvPairs);
   return {
     a,

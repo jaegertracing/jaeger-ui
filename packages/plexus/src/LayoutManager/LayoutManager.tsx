@@ -43,12 +43,12 @@ export default class LayoutManager {
     const id = this.layoutId;
     this.coordinator.getLayout(id, edges, vertices, this.options);
     this.pendingResult = { id, isPositionsResolved: false };
-    const positions: Promise<TCancelled | TPositionsDone<T>> = new Promise(resolve => {
+    const positions: Promise<TCancelled | TPositionsDone<T>> = new Promise((resolve) => {
       if (this.pendingResult && id === this.pendingResult.id) {
         this.pendingResult.resolvePositions = resolve;
       }
     });
-    const layout: Promise<TCancelled | TLayoutDone<T, U>> = new Promise(resolve => {
+    const layout: Promise<TCancelled | TLayoutDone<T, U>> = new Promise((resolve) => {
       if (this.pendingResult && id === this.pendingResult.id) {
         this.pendingResult.resolveLayout = resolve;
       }

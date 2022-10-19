@@ -362,7 +362,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
         };
       }
     }
-    const peerServiceKV = span.tags.find(kv => kv.key === PEER_SERVICE);
+    const peerServiceKV = span.tags.find((kv) => kv.key === PEER_SERVICE);
     // Leaf, kind == client and has peer.service tag, is likely a client span that does a request
     // to an uninstrumented/external service
     let noInstrumentedServer = null;
@@ -469,7 +469,7 @@ function mapStateToProps(state: ReduxState): TTraceTimeline & TExtractUiFindFrom
 
 /* istanbul ignore next */
 function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
-  return (bindActionCreators(actions, dispatch) as any) as TDispatchProps;
+  return bindActionCreators(actions, dispatch) as any as TDispatchProps;
 }
 
 export default withRouter(

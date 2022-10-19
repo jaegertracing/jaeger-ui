@@ -588,7 +588,7 @@ type TRenderDefEntryFn = (
 ```
 
 |  | Argument | Type and description |
-| :-: | :-- | :-- |
+| :-: | :-- | :-- | --- |
 | 0 | graphState | `TExposedGraphState` |
 |  |  | The current state of the graph. See [`TExposedGraphState`](#texposedgraphstate) for details.<br>&nbsp; |
 | 1 | entryProps | `Record<string, unknown> | null` |
@@ -892,7 +892,7 @@ const edgeLayersGroup = {
       key: 'edges-pointer-area',
       edges: true,
       setOnContainer: { style: { opacity: 0, strokeWidth: 4 } },
-      setOnEdge: layoutEdge => ({
+      setOnEdge: (layoutEdge) => ({
         onMouseOver: () => console.log('mouse over', layoutEdge),
         onMouseOut: () => console.log('mouse out', layoutEdge),
       }),

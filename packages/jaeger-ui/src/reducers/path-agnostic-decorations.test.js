@@ -78,7 +78,7 @@ describe('pathAgnosticDecoration reducers', () => {
   function mergeAndObjectContaining(...args) {
     const merged = _merge({}, ...args);
     const objectContaining = {};
-    Object.keys(merged).forEach(key => {
+    Object.keys(merged).forEach((key) => {
       objectContaining[key] = expect.objectContaining(merged[key]);
     });
     return objectContaining;

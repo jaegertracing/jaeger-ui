@@ -100,7 +100,7 @@ export default class FilteredList extends React.PureComponent<TProps, TState> {
           checked={checked}
           disabled={!filtered.length}
           onChange={({ target: { checked: newCheckedState } }) => {
-            if (newCheckedState) addValues(filtered.filter(f => !valueSet.has(f)));
+            if (newCheckedState) addValues(filtered.filter((f) => !valueSet.has(f)));
             else removeValues(filtered);
           }}
           indeterminate={indeterminate}

@@ -30,7 +30,7 @@ export default function filterSpans(textFilter: string, spans: Span[] | TNil) {
   textFilter
     .split(/\s+/)
     .filter(Boolean)
-    .forEach(w => {
+    .forEach((w) => {
       if (w[0] === '-') {
         excludeKeys.push(w.substr(1).toLowerCase());
       } else {
@@ -39,11 +39,11 @@ export default function filterSpans(textFilter: string, spans: Span[] | TNil) {
     });
 
   const isTextInFilters = (filters: Array<string>, text: string) =>
-    filters.some(filter => text.toLowerCase().includes(filter));
+    filters.some((filter) => text.toLowerCase().includes(filter));
 
   const isTextInKeyValues = (kvs: Array<KeyValuePair>) =>
     kvs
-      ? kvs.some(kv => {
+      ? kvs.some((kv) => {
           // ignore checking key and value for a match if key is in excludeKeys
           if (isTextInFilters(excludeKeys, kv.key)) return false;
           // match if key or value matches an item in includeFilters
@@ -57,9 +57,9 @@ export default function filterSpans(textFilter: string, spans: Span[] | TNil) {
     isTextInFilters(includeFilters, span.operationName) ||
     isTextInFilters(includeFilters, span.process.serviceName) ||
     isTextInKeyValues(span.tags) ||
-    (span.logs !== null && span.logs.some(log => isTextInKeyValues(log.fields))) ||
+    (span.logs !== null && span.logs.some((log) => isTextInKeyValues(log.fields))) ||
     isTextInKeyValues(span.process.tags) ||
-    includeFilters.some(filter => filter.replace(/^0*/, '') === span.spanID.replace(/^0*/, ''));
+    includeFilters.some((filter) => filter.replace(/^0*/, '') === span.spanID.replace(/^0*/, ''));
 
   // declare as const because need to disambiguate the type
   const rv: Set<string> = new Set(spans.filter(isSpanAMatch).map((span: Span) => span.spanID));

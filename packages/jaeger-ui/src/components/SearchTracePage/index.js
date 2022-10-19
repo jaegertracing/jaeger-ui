@@ -57,7 +57,7 @@ export class SearchTracePageImpl extends Component {
     if (!isHomepage && urlQueryParams && !isSameQuery(urlQueryParams, queryOfResults)) {
       searchTraces(urlQueryParams);
     }
-    const needForDiffs = diffCohort.filter(ft => ft.state == null).map(ft => ft.id);
+    const needForDiffs = diffCohort.filter((ft) => ft.state == null).map((ft) => ft.id);
     if (needForDiffs.length) {
       fetchMultipleTraces(needForDiffs);
     }
@@ -71,7 +71,7 @@ export class SearchTracePageImpl extends Component {
     }
   }
 
-  goToTrace = traceID => {
+  goToTrace = (traceID) => {
     const { queryOfResults } = this.props;
     const searchUrl = queryOfResults ? getUrl(stripEmbeddedState(queryOfResults)) : getUrl();
     this.props.history.push(getTraceLocation(traceID, { fromSearch: searchUrl }));
@@ -121,7 +121,7 @@ export class SearchTracePageImpl extends Component {
           {showErrors && (
             <div className="js-test-error-message">
               <h2>There was an error querying for traces:</h2>
-              {errors.map(err => (
+              {errors.map((err) => (
                 <ErrorMessage key={err.message} error={err} />
               ))}
             </div>
@@ -199,20 +199,23 @@ SearchTracePageImpl.propTypes = {
   loadJsonTraces: PropTypes.func,
 };
 
-const stateTraceXformer = memoizeOne(stateTrace => {
+const stateTraceXformer = memoizeOne((stateTrace) => {
   const { traces: traceMap, search } = stateTrace;
   const { query, results, state, error: traceError } = search;
 
   const loadingTraces = state === fetchedState.LOADING;
-  const traces = results.map(id => traceMap[id].data);
-  const maxDuration = Math.max.apply(null, traces.map(tr => tr.duration));
+  const traces = results.map((id) => traceMap[id].data);
+  const maxDuration = Math.max.apply(
+    null,
+    traces.map((tr) => tr.duration)
+  );
   return { traces, maxDuration, traceError, loadingTraces, query };
 });
 
 const stateTraceDiffXformer = memoizeOne((stateTrace, stateTraceDiff) => {
   const { traces } = stateTrace;
   const { cohort } = stateTraceDiff;
-  return cohort.map(id => traces[id] || { id });
+  return cohort.map((id) => traces[id] || { id });
 });
 
 const sortedTracesXformer = memoizeOne((traces, sortBy) => {
@@ -221,7 +224,7 @@ const sortedTracesXformer = memoizeOne((traces, sortBy) => {
   return traceResults;
 });
 
-const stateServicesXformer = memoizeOne(stateServices => {
+const stateServicesXformer = memoizeOne((stateServices) => {
   const {
     loading: loadingServices,
     services: serviceList,
@@ -230,7 +233,7 @@ const stateServicesXformer = memoizeOne(stateServices => {
   } = stateServices;
   const services =
     serviceList &&
-    serviceList.map(name => ({
+    serviceList.map((name) => ({
       name,
       operations: opsBySvc[name] || [],
     }));
@@ -242,9 +245,13 @@ export function mapStateToProps(state) {
   const { embedded, router, services: stServices, traceDiff } = state;
   const query = getUrlState(router.location.search);
   const isHomepage = !Object.keys(query).length;
-  const { query: queryOfResults, traces, maxDuration, traceError, loadingTraces } = stateTraceXformer(
-    state.trace
-  );
+  const {
+    query: queryOfResults,
+    traces,
+    maxDuration,
+    traceError,
+    loadingTraces,
+  } = stateTraceXformer(state.trace);
   const diffCohort = stateTraceDiffXformer(state.trace, traceDiff);
   const { loadingServices, services, serviceError } = stateServicesXformer(stServices);
   const errors = [];
@@ -290,7 +297,4 @@ function mapDispatchToProps(dispatch) {
   };
 }
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(SearchTracePageImpl);
+export default connect(mapStateToProps, mapDispatchToProps)(SearchTracePageImpl);

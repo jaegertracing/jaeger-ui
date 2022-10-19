@@ -97,7 +97,7 @@ function makeDevConfig() {
       },
     },
     plugins: Object.keys(entry).map(
-      name =>
+      (name) =>
         new HtmlWebpackPlugin({
           template: join(__dirname, 'demo/template.ejs'),
           appMountId: 'root',

@@ -63,7 +63,10 @@ const defaultProps = {
     label: '2 Days',
     value: '2d',
   },
-  services: [{ name: 'svcA', operations: ['A', 'B'] }, { name: 'svcB', operations: ['A', 'B'] }],
+  services: [
+    { name: 'svcA', operations: ['A', 'B'] },
+    { name: 'svcB', operations: ['A', 'B'] },
+  ],
 };
 
 describe('conversion utils', () => {
@@ -91,12 +94,8 @@ describe('conversion utils', () => {
         end: `${endMoment.valueOf()}000`,
       };
 
-      const {
-        queryStartDate,
-        queryStartDateTime,
-        queryEndDate,
-        queryEndDateTime,
-      } = convertQueryParamsToFormDates(params);
+      const { queryStartDate, queryStartDateTime, queryEndDate, queryEndDateTime } =
+        convertQueryParamsToFormDates(params);
       expect(queryStartDate).toBe(startMoment.format(DATE_FORMAT));
       expect(queryStartDateTime).toBe(startMoment.format(TIME_FORMAT));
       expect(queryEndDate).toBe(endMoment.format(DATE_FORMAT));
@@ -142,7 +141,7 @@ describe('lookback utils', () => {
     const nowInMicroseconds = now * 1000;
 
     it('creates timestamp for hours ago', () => {
-      [1, 2, 4, 7].forEach(lookbackNum => {
+      [1, 2, 4, 7].forEach((lookbackNum) => {
         expect(nowInMicroseconds - lookbackToTimestamp(`${lookbackNum}h`, now)).toBe(
           lookbackNum * hourInMicroseconds
         );
@@ -150,7 +149,7 @@ describe('lookback utils', () => {
     });
 
     it('creates timestamp for days ago', () => {
-      [1, 2, 4, 7].forEach(lookbackNum => {
+      [1, 2, 4, 7].forEach((lookbackNum) => {
         const actual = nowInMicroseconds - lookbackToTimestamp(`${lookbackNum}d`, now);
         const expected = lookbackNum * 24 * hourInMicroseconds;
         try {
@@ -162,7 +161,7 @@ describe('lookback utils', () => {
     });
 
     it('creates timestamp for weeks ago', () => {
-      [1, 2, 4, 7].forEach(lookbackNum => {
+      [1, 2, 4, 7].forEach((lookbackNum) => {
         const actual = nowInMicroseconds - lookbackToTimestamp(`${lookbackNum}w`, now);
         try {
           expect(actual).toBe(lookbackNum * 7 * 24 * hourInMicroseconds);
@@ -567,9 +566,8 @@ describe('mapStateToProps()', () => {
       return Math.abs(a - b);
     }
     const dateParams = makeDateParams(0);
-    const { startDate, startDateTime, endDate, endDateTime, ...values } = mapStateToProps(
-      state
-    ).initialValues;
+    const { startDate, startDateTime, endDate, endDateTime, ...values } =
+      mapStateToProps(state).initialValues;
 
     expect(values).toEqual({
       service: '-',

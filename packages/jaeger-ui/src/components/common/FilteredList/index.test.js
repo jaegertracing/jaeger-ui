@@ -29,7 +29,7 @@ describe('<FilteredList>', () => {
 
   const getData = () => wrapper.find(VList).prop('itemData');
 
-  const keyDown = key => wrapper.find('input').simulate('keydown', { key });
+  const keyDown = (key) => wrapper.find('input').simulate('keydown', { key });
 
   beforeEach(() => {
     props = {
@@ -128,7 +128,7 @@ describe('<FilteredList>', () => {
   describe('multi mode checkbox', () => {
     const addValues = jest.fn();
     const removeValues = jest.fn();
-    const click = checked => wrapper.find(Checkbox).simulate('change', { target: { checked } });
+    const click = (checked) => wrapper.find(Checkbox).simulate('change', { target: { checked } });
     const isChecked = () => wrapper.find(Checkbox).prop('checked');
     const isIndeterminate = () => wrapper.find(Checkbox).prop('indeterminate');
 

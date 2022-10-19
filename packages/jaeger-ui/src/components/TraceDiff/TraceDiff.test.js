@@ -41,7 +41,7 @@ describe('TraceDiff', () => {
     history: {
       push: historyPushMock,
     },
-    tracesData: new Map(defaultCohort.map(id => [id, { id, state: fetchedState.DONE }])),
+    tracesData: new Map(defaultCohort.map((id) => [id, { id, state: fetchedState.DONE }])),
     traceDiffState: {
       a: defaultA,
       b: defaultB,
@@ -318,7 +318,7 @@ describe('TraceDiff', () => {
         tracesData,
         cohort: { length: expectedSize },
       } = mapStateToProps(makeTestReduxState(), getOwnProps());
-      defaultCohortIds.forEach(id => {
+      defaultCohortIds.forEach((id) => {
         expect(tracesData.get(id)).toEqual({
           id,
           state: fetchedState.DONE,
@@ -346,7 +346,7 @@ describe('TraceDiff', () => {
     let bindActionCreatorsSpy;
 
     beforeAll(() => {
-      bindActionCreatorsSpy = jest.spyOn(redux, 'bindActionCreators').mockImplementation(actions => {
+      bindActionCreatorsSpy = jest.spyOn(redux, 'bindActionCreators').mockImplementation((actions) => {
         if (actions === jaegerApiActions) {
           return { fetchMultipleTraces: fetchMultipleTracesMock };
         }

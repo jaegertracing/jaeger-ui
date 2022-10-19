@@ -10,8 +10,9 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: '16'
-      - run: yarn workspace jaeger-ui upgrade caniuse-lite browserslist
-      - run: yarn workspace @jaegertracing/plexus upgrade caniuse-lite browserslist
+      - run: yarn install
+     # - run: yarn workspace jaeger-ui upgrade caniuse-lite browserslist
+     # - run: yarn workspace @jaegertracing/plexus upgrade caniuse-lite browserslist
       - name: Commit changes
         uses: EndBug/add-and-commit@v9
         with:

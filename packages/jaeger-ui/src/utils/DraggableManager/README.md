@@ -59,7 +59,7 @@ Note: Not all handlers are always necessary. See "Mouse events need to be piped 
 <div className="DividerDemo--realm">
   <div
     className="DividerDemo--divider"
-    onMouseDown={event => {
+    onMouseDown={(event) => {
       const { clientX, target } = event;
       const { left, width } = target.getBoundingClientRect();
       const localX = clientX - left;

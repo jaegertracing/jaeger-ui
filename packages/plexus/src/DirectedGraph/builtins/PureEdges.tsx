@@ -28,7 +28,7 @@ type TProps = {
 export default class PureEdges extends React.PureComponent<TProps> {
   render() {
     const { arrowIriRef, layoutEdges, setOnEdgePath } = this.props;
-    return layoutEdges.map(edge => (
+    return layoutEdges.map((edge) => (
       <EdgePath
         key={`${edge.edge.from}\v${edge.edge.to}`}
         pathPoints={edge.pathPoints}

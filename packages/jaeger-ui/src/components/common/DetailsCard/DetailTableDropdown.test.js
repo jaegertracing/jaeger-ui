@@ -52,12 +52,7 @@ describe('DetailTable', () => {
 
     it('handles missing clearFilters prop', () => {
       wrapper.setProps({ clearFilters: undefined });
-      expect(() =>
-        wrapper
-          .find(Button)
-          .first()
-          .simulate('click')
-      ).not.toThrow();
+      expect(() => wrapper.find(Button).first().simulate('click')).not.toThrow();
     });
   });
 
@@ -69,10 +64,7 @@ describe('DetailTable', () => {
       expect(props.confirm).not.toHaveBeenCalled();
       expect(props.setSelectedKeys).not.toHaveBeenCalled();
 
-      wrapper
-        .find(Button)
-        .at(1)
-        .simulate('click');
+      wrapper.find(Button).at(1).simulate('click');
       expect(props.setSelectedKeys).toHaveBeenCalledTimes(1);
       expect(props.setSelectedKeys).toHaveBeenCalledWith(selectedKeys);
       expect(props.confirm).not.toHaveBeenCalled();
@@ -100,10 +92,10 @@ describe('DetailTable', () => {
   });
 
   describe('FilteredList interactions', () => {
-    const getFn = propName => wrapper.find(FilteredList).prop(propName);
+    const getFn = (propName) => wrapper.find(FilteredList).prop(propName);
 
     it('adds values', () => {
-      const newValues = props.options.map(o => `not-${o}`);
+      const newValues = props.options.map((o) => `not-${o}`);
       getFn('addValues')(newValues);
       expect(props.setSelectedKeys).toHaveBeenCalledWith([...props.selectedKeys, ...newValues]);
     });

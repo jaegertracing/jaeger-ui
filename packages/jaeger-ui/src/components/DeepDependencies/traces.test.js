@@ -85,7 +85,7 @@ describe('TracesDdg', () => {
     beforeAll(() => {
       getUrlStateSpy = jest.spyOn(url, 'getUrlState');
       makeGraphSpy = jest.spyOn(GraphModel, 'makeGraph').mockReturnValue(mockGraph);
-      sanitizeUrlStateSpy = jest.spyOn(url, 'sanitizeUrlState').mockImplementation(u => u);
+      sanitizeUrlStateSpy = jest.spyOn(url, 'sanitizeUrlState').mockImplementation((u) => u);
       transformDdgDataSpy = jest.spyOn(transformDdgData, 'default').mockReturnValue(mockModel);
       transformTracesToPathsSpy = jest.spyOn(transformTracesToPaths, 'default').mockReturnValue(mockPayload);
       spies = [
@@ -98,7 +98,7 @@ describe('TracesDdg', () => {
     });
 
     beforeEach(() => {
-      spies.forEach(spy => spy.mockClear());
+      spies.forEach((spy) => spy.mockClear());
       getUrlStateSpy.mockReturnValue(urlState);
     });
 
@@ -107,8 +107,8 @@ describe('TracesDdg', () => {
     });
 
     it('calculates showOp off of urlState', () => {
-      [true, false, undefined].forEach(showOp => {
-        ['focalOperation', undefined].forEach(focalOp => {
+      [true, false, undefined].forEach((showOp) => {
+        ['focalOperation', undefined].forEach((focalOp) => {
           const mockUrlState = {
             ...urlState,
             operation: focalOp,
@@ -142,7 +142,7 @@ describe('TracesDdg', () => {
     it('feeds memoized functions same arguments for same url and state data', () => {
       mapStateToProps(state, ownProps);
       mapStateToProps(state, ownProps);
-      spies.forEach(spy => {
+      spies.forEach((spy) => {
         const [call0, call1] = spy.mock.calls;
         call0.forEach((arg, i) => expect(call1[i]).toBe(arg));
       });

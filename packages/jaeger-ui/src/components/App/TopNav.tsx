@@ -118,7 +118,7 @@ export function TopNavImpl(props: Props) {
         <Menu.Item>
           <TraceIDSearchInput />
         </Menu.Item>
-        {menuItems.map(m => {
+        {menuItems.map((m) => {
           if (isItem(m)) {
             return getItem(m);
           }

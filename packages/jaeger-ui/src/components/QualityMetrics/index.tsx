@@ -132,7 +132,7 @@ export class UnconnectedQualityMetrics extends React.PureComponent<TProps, TStat
             <BannerText bannerText={qualityMetrics.bannerText} />
             <div className="QualityMetrics--Body">
               <div className="QualityMetrics--ScoreCards">
-                {qualityMetrics.scores.map(score => (
+                {qualityMetrics.scores.map((score) => (
                   <ScoreCard
                     key={score.key}
                     score={score}
@@ -141,7 +141,7 @@ export class UnconnectedQualityMetrics extends React.PureComponent<TProps, TStat
                 ))}
               </div>
               <div className="QualityMetrics--MetricCards">
-                {qualityMetrics.metrics.map(metric => (
+                {qualityMetrics.metrics.map((metric) => (
                   <MetricCard key={metric.name} metric={metric} />
                 ))}
               </div>
@@ -169,7 +169,7 @@ export class UnconnectedQualityMetrics extends React.PureComponent<TProps, TStat
                   ]}
                   details={
                     qualityMetrics.clients &&
-                    qualityMetrics.clients.map(clientRow => ({
+                    qualityMetrics.clients.map((clientRow) => ({
                       ...clientRow,
                       examples: {
                         value: (
@@ -212,7 +212,4 @@ export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchPro
   };
 }
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(UnconnectedQualityMetrics);
+export default connect(mapStateToProps, mapDispatchToProps)(UnconnectedQualityMetrics);

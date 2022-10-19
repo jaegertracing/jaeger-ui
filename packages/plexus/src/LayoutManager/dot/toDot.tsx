@@ -51,7 +51,7 @@ function makeEdge(head: TVertexKey, tails: TVertexKey | TVertexKey[], isBidirect
   if (!Array.isArray(tails)) {
     return `"${head}"->"${tails}"${bidir};`;
   }
-  const tailStrs = tails.map(tail => `"${tail}"`);
+  const tailStrs = tails.map((tail) => `"${tail}"`);
   return `"${head}"->{ ${tailStrs.join(' ')} };`;
 }
 
@@ -62,7 +62,7 @@ export default function toDot(
 ) {
   const bidirectional: TEdge[] = [];
   const fromTo: Map<TVertexKey, TVertexKey[]> = new Map();
-  edges.forEach(edge => {
+  edges.forEach((edge) => {
     if (edge.isBidirectional) {
       bidirectional.push(edge);
       return;
@@ -72,7 +72,7 @@ export default function toDot(
     fromTo.set(edge.from, tails);
   });
   const nodeStrs = vertices.map(makeNode);
-  const bidirStrs = bidirectional.map(edge => makeEdge(edge.from, edge.to, true));
+  const bidirStrs = bidirectional.map((edge) => makeEdge(edge.from, edge.to, true));
   const edgeStrs: string[] = [];
   fromTo.forEach((tails, from) => {
     edgeStrs.push(makeEdge(from, tails));

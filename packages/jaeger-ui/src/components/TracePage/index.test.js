@@ -330,8 +330,8 @@ describe('<TracePage>', () => {
       });
 
       it('is true if either of embedded.timeline.hideSummary and embedded.timeline.hideMinimap are false', () => {
-        [true, false].forEach(hideSummary => {
-          [true, false].forEach(hideMinimap => {
+        [true, false].forEach((hideSummary) => {
+          [true, false].forEach((hideMinimap) => {
             const embedded = {
               timeline: {
                 hideSummary,
@@ -399,8 +399,8 @@ describe('<TracePage>', () => {
 
     describe('showArchiveButton', () => {
       it('is true when not embedded and archive is enabled', () => {
-        [{ timeline: {} }, undefined].forEach(embedded => {
-          [true, false].forEach(archiveEnabled => {
+        [{ timeline: {} }, undefined].forEach((embedded) => {
+          [true, false].forEach((archiveEnabled) => {
             wrapper.setProps({ embedded, archiveEnabled });
             expect(wrapper.find(TracePageHeader).prop('showArchiveButton')).toBe(!embedded && archiveEnabled);
           });
@@ -525,7 +525,7 @@ describe('<TracePage>', () => {
       state = { viewRange: { time } };
     });
 
-    cases.forEach(testCase => {
+    cases.forEach((testCase) => {
       const { message, timeViewRange, change, result } = testCase;
       it(message, () => {
         time.current = timeViewRange;

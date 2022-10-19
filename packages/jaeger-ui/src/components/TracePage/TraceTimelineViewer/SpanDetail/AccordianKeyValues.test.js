@@ -19,7 +19,10 @@ import AccordianKeyValues, { KeyValuesSummary } from './AccordianKeyValues';
 import * as markers from './AccordianKeyValues.markers';
 import KeyValuesTable from './KeyValuesTable';
 
-const tags = [{ key: 'span.kind', value: 'client' }, { key: 'omg', value: 'mos-def' }];
+const tags = [
+  { key: 'span.kind', value: 'client' },
+  { key: 'omg', value: 'mos-def' },
+];
 
 describe('<KeyValuesSummary>', () => {
   let wrapper;
@@ -44,8 +47,8 @@ describe('<KeyValuesSummary>', () => {
   });
 
   it('renders the data as text', () => {
-    const texts = wrapper.find('li').map(node => node.text());
-    const expectedTexts = tags.map(tag => `${tag.key}=${tag.value}`);
+    const texts = wrapper.find('li').map((node) => node.text());
+    const expectedTexts = tags.map((tag) => `${tag.key}=${tag.value}`);
     expect(texts).toEqual(expectedTexts);
   });
 });

@@ -42,7 +42,7 @@ type TTimelineViewerActions = {
 };
 
 function shouldDisableCollapse(allSpans: Span[], hiddenSpansIds: Set<string>) {
-  const allParentSpans = allSpans.filter(s => s.hasChildren);
+  const allParentSpans = allSpans.filter((s) => s.hasChildren);
   return allParentSpans.length === hiddenSpansIds.size;
 }
 
@@ -111,7 +111,7 @@ function calculateFocusedFindRowStates(uiFind: string, spans: Span[], allowHide:
   const detailStates: Map<string, DetailState> = new Map();
   let shouldScrollToFirstUiFindMatch: boolean = false;
 
-  spans.forEach(span => {
+  spans.forEach((span) => {
     spansMap.set(span.spanID, span);
     if (allowHide) {
       childrenHiddenIDs.add(span.spanID);
@@ -119,10 +119,10 @@ function calculateFocusedFindRowStates(uiFind: string, spans: Span[], allowHide:
   });
   const matchedSpanIds = filterSpans(uiFind, spans);
   if (matchedSpanIds && matchedSpanIds.size) {
-    matchedSpanIds.forEach(spanID => {
+    matchedSpanIds.forEach((spanID) => {
       const span = spansMap.get(spanID);
       detailStates.set(spanID, new DetailState());
-      spanAncestorIds(span).forEach(ancestorID => childrenHiddenIDs.delete(ancestorID));
+      spanAncestorIds(span).forEach((ancestorID) => childrenHiddenIDs.delete(ancestorID));
     });
     shouldScrollToFirstUiFindMatch = true;
   }

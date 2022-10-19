@@ -42,7 +42,7 @@ export default class Nodes<T = {}> extends React.Component<TProps<T>> {
 
   render() {
     const { getClassName, layoutVertices, renderUtils, layerType, renderNode, setOnNode } = this.props;
-    return layoutVertices.map(lv => (
+    return layoutVertices.map((lv) => (
       <Node
         key={lv.vertex.key}
         getClassName={getClassName}

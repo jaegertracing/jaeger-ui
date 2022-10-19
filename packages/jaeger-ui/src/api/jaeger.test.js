@@ -133,7 +133,7 @@ describe('fetchTrace', () => {
     expect(resp.data).toBe(generatedTraces);
   });
 
-  it('fetchTrace() throws an error on a >= 400 status code', done => {
+  it('fetchTrace() throws an error on a >= 400 status code', (done) => {
     const status = 400;
     const statusText = 'some-status';
     const msg = 'some-message';
@@ -146,7 +146,7 @@ describe('fetchTrace', () => {
         text: () => Promise.resolve(JSON.stringify(errorData)),
       })
     );
-    JaegerAPI.fetchTrace('trace-id').catch(err => {
+    JaegerAPI.fetchTrace('trace-id').catch((err) => {
       expect(err.message).toMatch(msg);
       expect(err.httpStatus).toBe(status);
       expect(err.httpStatusText).toBe(statusText);
@@ -154,7 +154,7 @@ describe('fetchTrace', () => {
     });
   });
 
-  it('fetchTrace() throws an useful error derived from a text payload', done => {
+  it('fetchTrace() throws an useful error derived from a text payload', (done) => {
     const status = 400;
     const statusText = 'some-status';
     const errorData = 'this is some error message';
@@ -166,7 +166,7 @@ describe('fetchTrace', () => {
         text: () => Promise.resolve(errorData),
       })
     );
-    JaegerAPI.fetchTrace('trace-id').catch(err => {
+    JaegerAPI.fetchTrace('trace-id').catch((err) => {
       expect(err.message).toMatch(errorData);
       expect(err.httpStatus).toBe(status);
       expect(err.httpStatusText).toBe(statusText);

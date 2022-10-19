@@ -85,9 +85,9 @@ class MatchHighlighter {
     const letters = tx.split('');
     const startsWith = `^(${tx})`;
     const wordStartsWith = `(\\b${letters.map(letterClass).join('')}|${initialCap})`;
-    const acronymLetters = letters.map(letter => wordBreak(letter)).join(ANY_LAZY);
+    const acronymLetters = letters.map((letter) => wordBreak(letter)).join(ANY_LAZY);
     const constains = `(${tx})`;
-    const anyLetters = letters.map(letter => `(${letter})`).join(ANY_LAZY);
+    const anyLetters = letters.map((letter) => `(${letter})`).join(ANY_LAZY);
 
     // given the query "eg", the following regular expressions will be created:
     this.matchers = [

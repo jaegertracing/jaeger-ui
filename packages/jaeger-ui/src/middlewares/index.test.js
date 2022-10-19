@@ -13,12 +13,14 @@
 // limitations under the License.
 
 /* eslint-disable import/first */
-jest.mock('node-fetch', () => () =>
-  Promise.resolve({
-    status: 200,
-    data: () => Promise.resolve({ data: null }),
-    json: () => Promise.resolve({ data: null }),
-  })
+jest.mock(
+  'node-fetch',
+  () => () =>
+    Promise.resolve({
+      status: 200,
+      data: () => Promise.resolve({ data: null }),
+      json: () => Promise.resolve({ data: null }),
+    })
 );
 
 import { change } from 'redux-form';

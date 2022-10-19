@@ -19,7 +19,7 @@ import * as getConfig from '../utils/config/get-config';
 import stringSupplant from '../utils/stringSupplant';
 import JaegerAPI from '../api/jaeger';
 
-jest.mock('lru-memoize', () => () => x => x);
+jest.mock('lru-memoize', () => () => (x) => x);
 
 describe('getDecoration', () => {
   let getConfigValueSpy;
@@ -84,7 +84,7 @@ describe('getDecoration', () => {
   });
 
   afterEach(async () => {
-    resolves.forEach(resolve => resolve());
+    resolves.forEach((resolve) => resolve());
     await Promise.all(couldBePending);
     couldBePending = [];
   });

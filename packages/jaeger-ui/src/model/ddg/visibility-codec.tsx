@@ -35,7 +35,7 @@ const VISIBILITY_BUCKET_SIZE = 31;
 export const decode: (encoded: string) => number[] = memoize(10)((encoded: string): number[] => {
   const rv: number[] = [];
   let i = 0;
-  encoded.split(DELIMITER).forEach(tupleStr => {
+  encoded.split(DELIMITER).forEach((tupleStr) => {
     const [partial, c = '1'] = tupleStr.split(COUNT_INDICATOR);
     const count = parseInt(c, 36);
     const partialAsNumber = partial ? parseInt(partial, 36) : 0;
@@ -79,7 +79,7 @@ function convertAbsoluteIdxToRelativeValues(absIdx: number) {
  */
 export const encode = (decoded: number[]): string => {
   const partials: number[] = [];
-  decoded.forEach(visIdx => {
+  decoded.forEach((visIdx) => {
     const { csvIdx, visibilityValue } = convertAbsoluteIdxToRelativeValues(visIdx);
     partials[csvIdx] |= visibilityValue;
   });
@@ -137,7 +137,7 @@ export const encodeDistance = ({
   let nextVisible: number[];
   if (prevVisEncoding) {
     nextVisible = decode(prevVisEncoding).filter(
-      idx => visIdxToPathElem[idx] && Math.sign(visIdxToPathElem[idx].distance) !== direction
+      (idx) => visIdxToPathElem[idx] && Math.sign(visIdxToPathElem[idx].distance) !== direction
     );
   } else {
     nextVisible = [

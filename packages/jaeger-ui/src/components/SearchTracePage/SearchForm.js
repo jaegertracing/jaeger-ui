@@ -44,7 +44,7 @@ const AdaptedInput = reduxFormFieldAdapter({ AntInputComponent: Input });
 const AdaptedSelect = reduxFormFieldAdapter({ AntInputComponent: Select });
 const AdaptedVirtualSelect = reduxFormFieldAdapter({
   AntInputComponent: VirtSelect,
-  onChangeAdapter: option => (option ? option.value : null),
+  onChangeAdapter: (option) => (option ? option.value : null),
 });
 const ValidatedAdaptedInput = reduxFormFieldAdapter({ AntInputComponent: Input, isValidatedInput: true });
 
@@ -62,7 +62,7 @@ export function convTagsLogfmt(tags) {
     return null;
   }
   const data = logfmtParser.parse(tags);
-  Object.keys(data).forEach(key => {
+  Object.keys(data).forEach((key) => {
     const value = data[key];
     // make sure all values are strings
     // https://github.com/jaegertracing/jaeger/issues/550#issuecomment-352850811
@@ -75,11 +75,7 @@ export function convTagsLogfmt(tags) {
 
 export function lookbackToTimestamp(lookback, from) {
   const unit = lookback.substr(-1);
-  return (
-    moment(from)
-      .subtract(parseInt(lookback, 10), unit)
-      .valueOf() * 1000
-  );
+  return moment(from).subtract(parseInt(lookback, 10), unit).valueOf() * 1000;
 }
 
 const lookbackOptions = [
@@ -149,7 +145,7 @@ const lookbackOptions = [
   },
 ];
 
-export const optionsWithinMaxLookback = memoizeOne(maxLookback => {
+export const optionsWithinMaxLookback = memoizeOne((maxLookback) => {
   const now = new Date();
   const minTimestamp = lookbackToTimestamp(maxLookback.value, now);
   const lookbackToTimestampMap = new Map();
@@ -276,7 +272,7 @@ export class SearchFormImpl extends React.PureComponent {
       services,
       submitting: disabled,
     } = this.props;
-    const selectedServicePayload = services.find(s => s.name === selectedService);
+    const selectedServicePayload = services.find((s) => s.name === selectedService);
     const opsForSvc = (selectedServicePayload && selectedServicePayload.operations) || [];
     const noSelectedService = selectedService === '-' || !selectedService;
     const tz = selectedLookback === 'custom' ? new Date().toTimeString().replace(/^.*?GMT/, 'UTC') : null;
@@ -296,7 +292,7 @@ export class SearchFormImpl extends React.PureComponent {
             props={{
               disabled,
               clearable: false,
-              options: services.map(v => ({ label: v.name, value: v.name })),
+              options: services.map((v) => ({ label: v.name, value: v.name })),
               required: true,
             }}
           />
@@ -315,7 +311,7 @@ export class SearchFormImpl extends React.PureComponent {
             props={{
               clearable: false,
               disabled: disabled || noSelectedService,
-              options: ['all'].concat(opsForSvc).map(v => ({ label: v, value: v, title: v })),
+              options: ['all'].concat(opsForSvc).map((v) => ({ label: v, value: v, title: v })),
               required: true,
             }}
           />
@@ -558,12 +554,8 @@ export function mapStateToProps(state) {
     }
   }
 
-  const {
-    queryStartDate,
-    queryStartDateTime,
-    queryEndDate,
-    queryEndDateTime,
-  } = convertQueryParamsToFormDates({ start, end });
+  const { queryStartDate, queryStartDateTime, queryEndDate, queryEndDateTime } =
+    convertQueryParamsToFormDates({ start, end });
 
   let tags;
   // continue to parse tagParams to remain backward compatible with older URLs
@@ -640,7 +632,7 @@ export function mapStateToProps(state) {
 export function mapDispatchToProps(dispatch) {
   const { searchTraces } = bindActionCreators(jaegerApiActions, dispatch);
   return {
-    onSubmit: fields => submitForm(fields, searchTraces),
+    onSubmit: (fields) => submitForm(fields, searchTraces),
   };
 }
 

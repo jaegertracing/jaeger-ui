@@ -37,12 +37,7 @@ describe('<ForceGraphArrowLink />', () => {
       <ForceGraphArrowLink {...defaultProps} link={{ ...defaultProps.link, value: 9 }} />
     );
 
-    const marker = wrapper
-      .find('g')
-      .first()
-      .find('defs')
-      .first()
-      .find('marker');
+    const marker = wrapper.find('g').first().find('defs').first().find('marker');
     expect(marker.prop('markerWidth')).toEqual(6);
     expect(marker.prop('markerHeight')).toEqual(4);
     expect(marker.prop('markerUnits')).toEqual('strokeWidth');
@@ -53,12 +48,7 @@ describe('<ForceGraphArrowLink />', () => {
       <ForceGraphArrowLink {...defaultProps} link={{ ...defaultProps.link, value: 9 }} targetRadius={2} />
     );
 
-    const marker = wrapper
-      .find('g')
-      .first()
-      .find('defs')
-      .first()
-      .find('marker');
+    const marker = wrapper.find('g').first().find('defs').first().find('marker');
     expect(marker.prop('refX')).toEqual(2 + 5);
   });
 
@@ -66,12 +56,7 @@ describe('<ForceGraphArrowLink />', () => {
     const testLink = { source: 's_node', target: 't_node', value: 10 };
 
     const wrapper = shallow(<ForceGraphArrowLink {...defaultProps} link={testLink} />);
-    const marker = wrapper
-      .find('g')
-      .first()
-      .find('defs')
-      .first()
-      .find('marker');
+    const marker = wrapper.find('g').first().find('defs').first().find('marker');
     expect(marker.prop('id')).toEqual('arrow-s_node=>t_node');
   });
 });

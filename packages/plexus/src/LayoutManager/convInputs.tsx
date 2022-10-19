@@ -20,7 +20,7 @@ function unmapVertices<T>(
   idToVertex: Map<string, TSizeVertex<any>>,
   output: TLayoutVertex<{}>[]
 ): TLayoutVertex<T>[] {
-  return output.map(lv => {
+  return output.map((lv) => {
     const sv = idToVertex.get(lv.vertex.key);
     if (!sv) {
       throw new Error(`Unable to find Vertex for ${lv.vertex.key}`);
@@ -33,7 +33,7 @@ function unmapEdges<T = Record<string, unknown>>(
   idsToEdge: Map<string, TEdge<any>>,
   output: TLayoutEdge<{}>[]
 ): TLayoutEdge<T>[] {
-  return output.map(le => {
+  return output.map((le) => {
     const id = makeEdgeId(le.edge);
     const edge = idsToEdge.get(id);
     if (!edge) {
@@ -47,7 +47,7 @@ export default function convInputs(srcEdges: TEdge<any>[], inVertices: TSizeVert
   const keyToId = new Map<string, string>();
   const idToVertex = new Map<string, TSizeVertex<any>>();
   const idsToEdge = new Map<string, TEdge<any>>();
-  const vertices = inVertices.map(v => {
+  const vertices = inVertices.map((v) => {
     const {
       vertex: { key },
       ...rest
@@ -60,7 +60,7 @@ export default function convInputs(srcEdges: TEdge<any>[], inVertices: TSizeVert
     idToVertex.set(id, v);
     return { vertex: { key: id }, ...rest };
   });
-  const edges = srcEdges.map(e => {
+  const edges = srcEdges.map((e) => {
     const { from, to, isBidirectional } = e;
     const fromId = keyToId.get(from);
     const toId = keyToId.get(to);

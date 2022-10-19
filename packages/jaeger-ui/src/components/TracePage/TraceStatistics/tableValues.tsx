@@ -270,7 +270,7 @@ function valueFirstDropdown(selectedTagKey: string, trace: Trace) {
   // all possibilities that can be displayed
   if (selectedTagKey === serviceName) {
     const temp = _.chain(allSpans)
-      .groupBy(x => x.process.serviceName)
+      .groupBy((x) => x.process.serviceName)
       .map((value, key) => ({ key }))
       .uniq()
       .value();
@@ -279,7 +279,7 @@ function valueFirstDropdown(selectedTagKey: string, trace: Trace) {
     }
   } else if (selectedTagKey === operationName) {
     const temp = _.chain(allSpans)
-      .groupBy(x => x.operationName)
+      .groupBy((x) => x.operationName)
       .map((value, key) => ({ key }))
       .uniq()
       .value();

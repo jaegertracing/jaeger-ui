@@ -42,7 +42,7 @@ const ODD_ROW_CLASS = 'KeyboardShortcutsHelp--oddRow';
 
 function convertKeys(keyConfig: string | string[]): string[][] {
   const config = Array.isArray(keyConfig) ? keyConfig : [keyConfig];
-  return config.map(str => str.split('+').map(part => SYMBOL_CONV[part] || part.toUpperCase()));
+  return config.map((str) => str.split('+').map((part) => SYMBOL_CONV[part] || part.toUpperCase()));
 }
 
 const padLeft = (text: string) => <span className="ub-pl4">{text}</span>;
@@ -56,11 +56,11 @@ function getHelpModal() {
     return kbdTable;
   }
   const data: { key: string; kbds: any; description: string }[] = [];
-  Object.keys(keyboardMappings).forEach(handle => {
+  Object.keys(keyboardMappings).forEach((handle) => {
     const { binding, label } = keyboardMappings[handle];
     const keyConfigs = convertKeys(binding);
     data.push(
-      ...keyConfigs.map(config => ({
+      ...keyConfigs.map((config) => ({
         key: String(config),
         kbds: <kbd>{config.join(' ')}</kbd>,
         description: label,

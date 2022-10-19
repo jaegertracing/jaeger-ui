@@ -16,7 +16,7 @@ import regexpEscape from './regexp-escape';
 
 describe('regexp-escape', () => {
   const chars = '-/\\^$*+?.()|[]{}'.split('');
-  chars.forEach(c => {
+  chars.forEach((c) => {
     it(`escapes "${c}" correctly`, () => {
       const result = regexpEscape(c);
       expect(result.length).toBe(2);

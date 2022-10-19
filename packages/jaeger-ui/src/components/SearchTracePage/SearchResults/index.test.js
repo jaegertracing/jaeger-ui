@@ -32,7 +32,10 @@ describe('<SearchResults>', () => {
   let props;
 
   beforeEach(() => {
-    traces = [{ traceID: 'a', spans: [], processes: {} }, { traceID: 'b', spans: [], processes: {} }];
+    traces = [
+      { traceID: 'a', spans: [], processes: {} },
+      { traceID: 'b', spans: [], processes: {} },
+    ];
     props = {
       diffCohort: [],
       goToTrace: () => {},

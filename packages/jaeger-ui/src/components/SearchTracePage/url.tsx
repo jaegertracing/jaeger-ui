@@ -74,7 +74,7 @@ export const getUrlState: (search: string) => TUrlState = memoizeOne(function ge
   const traceIDs = new Set(!traceID || Array.isArray(traceID) ? traceID : [traceID]);
   const spanLinks: Record<string, string> = {};
   if (span && span.length) {
-    (Array.isArray(span) ? span : [span]).forEach(s => {
+    (Array.isArray(span) ? span : [span]).forEach((s) => {
       const [spansStr, trace] = s.split('@');
       traceIDs.add(trace);
       if (spansStr) {

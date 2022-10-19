@@ -118,7 +118,7 @@ describe('fetch multiple traces', () => {
       const multiRefTrace = traceGenerator.trace({ numberOfSpans: 7, maxDepth: 3, spansPerLevel: 4 });
       const { traceID, spanID: rootSpanId } = multiRefTrace.spans[0];
       const [willGainRef, willNotChange] = multiRefTrace.spans.filter(
-        span => span.references.length > 0 && span.references[0].spanID !== rootSpanId
+        (span) => span.references.length > 0 && span.references[0].spanID !== rootSpanId
       );
       const { spanID: existingRefID } = willGainRef.references[0];
       const { spanID: willBeReferencedID } = willNotChange.references[0];
@@ -129,7 +129,7 @@ describe('fetch multiple traces', () => {
         spanID: willBeReferencedID,
       });
       const tTrace = transformTraceData(multiRefTrace);
-      const multiReference = tTrace.spans.filter(span => span.references && span.references.length > 1);
+      const multiReference = tTrace.spans.filter((span) => span.references && span.references.length > 1);
 
       expect(multiReference.length).toEqual(1);
       expect(new Set(multiReference[0].references)).toEqual(
@@ -139,7 +139,7 @@ describe('fetch multiple traces', () => {
         ])
       );
       const hasReferral = tTrace.spans.filter(
-        span => span.subsidiarilyReferencedBy && span.subsidiarilyReferencedBy.length > 0
+        (span) => span.subsidiarilyReferencedBy && span.subsidiarilyReferencedBy.length > 0
       );
       expect(new Set(hasReferral[0].subsidiarilyReferencedBy)).toEqual(
         new Set([expect.objectContaining({ spanID: willGainRef.spanID })])
@@ -230,7 +230,7 @@ describe('search traces', () => {
 
   it('ignores the results with the wrong query', () => {
     const otherQuery = 'some-other-query';
-    [ACTION_POSTFIX_FULFILLED, ACTION_POSTFIX_REJECTED].forEach(postfix => {
+    [ACTION_POSTFIX_FULFILLED, ACTION_POSTFIX_REJECTED].forEach((postfix) => {
       const state = traceReducer(
         { search: { query } },
         {

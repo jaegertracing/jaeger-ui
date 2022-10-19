@@ -68,7 +68,7 @@ const UxEdges = () => (
             key: 'edges-pointer-area',
             edges: true,
             setOnContainer: { style: { cursor: 'default', opacity: 0, strokeWidth: 4 } },
-            setOnEdge: layoutEdge => ({
+            setOnEdge: (layoutEdge) => ({
               // eslint-disable-next-line no-console
               onMouseOver: () => console.log('mouse over', layoutEdge),
               // eslint-disable-next-line no-console

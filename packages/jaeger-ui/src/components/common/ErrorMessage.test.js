@@ -88,7 +88,7 @@ describe('<ErrorMessage>', () => {
       const details = wrapper.find('Details');
       expect(details.length).toBe(1);
       const detailsWrapper = details.shallow();
-      Object.keys(error).forEach(key => {
+      Object.keys(error).forEach((key) => {
         if (key === 'message') {
           return;
         }

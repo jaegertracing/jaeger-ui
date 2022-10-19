@@ -63,7 +63,7 @@ export default class SvgLayer<T = {}, U = {}> extends React.PureComponent<TProps
       <g {...containerProps}>
         {defs && (
           <defs>
-            {defs.map(defEntry => (
+            {defs.map((defEntry) => (
               <SvgDefEntry<T, U>
                 key={defEntry.localId}
                 {...defEntry}

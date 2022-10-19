@@ -34,7 +34,7 @@ export function edgeToPixels(graph: TLayoutGraph, e: TLayoutEdge<{}>): TLayoutEd
   return {
     edge,
     pathPoints:
-      pathPoints && pathPoints.map<[number, number]>(pt => [round(pt[0] * DPI), round((h - pt[1]) * DPI)]),
+      pathPoints && pathPoints.map<[number, number]>((pt) => [round(pt[0] * DPI), round((h - pt[1]) * DPI)]),
   };
 }
 

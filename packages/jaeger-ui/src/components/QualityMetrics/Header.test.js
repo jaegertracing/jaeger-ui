@@ -39,7 +39,7 @@ describe('Header', () => {
   let setLookbackSpy;
 
   beforeAll(() => {
-    debounceMock.mockImplementation(fn => {
+    debounceMock.mockImplementation((fn) => {
       setLookbackSpy = jest.fn((...args) => {
         callDebouncedFn = () => fn(...args);
       });

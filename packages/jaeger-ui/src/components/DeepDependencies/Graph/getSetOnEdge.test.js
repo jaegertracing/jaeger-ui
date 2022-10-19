@@ -29,7 +29,7 @@ describe('getSetOnEdge', () => {
     [getEdgeId(notHovered.edge.from, notHovered.edge.to), EViewModifier.emphasized],
   ]);
   const fakeUtils = {
-    getGlobalId: id => id,
+    getGlobalId: (id) => id,
   };
 
   it('returns base case when given empty map', () => {

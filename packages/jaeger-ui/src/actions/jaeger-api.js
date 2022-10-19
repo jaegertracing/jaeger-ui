@@ -24,10 +24,10 @@ const metricType = {
 // export for tests
 // TODO use native `allSetteled` once #818 is done
 export function allSettled(promises) {
-  const wrappedPromises = promises.map(p =>
+  const wrappedPromises = promises.map((p) =>
     Promise.resolve(p).then(
-      val => ({ status: 'fulfilled', value: val }),
-      err => ({ status: 'rejected', reason: err })
+      (val) => ({ status: 'fulfilled', value: val }),
+      (err) => ({ status: 'rejected', reason: err })
     )
   );
   return Promise.all(wrappedPromises);
@@ -35,46 +35,46 @@ export function allSettled(promises) {
 
 export const fetchTrace = createAction(
   '@JAEGER_API/FETCH_TRACE',
-  id => JaegerAPI.fetchTrace(id),
-  id => ({ id })
+  (id) => JaegerAPI.fetchTrace(id),
+  (id) => ({ id })
 );
 
 export const fetchMultipleTraces = createAction(
   '@JAEGER_API/FETCH_MULTIPLE_TRACES',
-  ids => JaegerAPI.searchTraces({ traceID: ids }),
-  ids => ({ ids })
+  (ids) => JaegerAPI.searchTraces({ traceID: ids }),
+  (ids) => ({ ids })
 );
 
 export const archiveTrace = createAction(
   '@JAEGER_API/ARCHIVE_TRACE',
-  id => JaegerAPI.archiveTrace(id),
-  id => ({ id })
+  (id) => JaegerAPI.archiveTrace(id),
+  (id) => ({ id })
 );
 
 export const searchTraces = createAction(
   '@JAEGER_API/SEARCH_TRACES',
-  query => JaegerAPI.searchTraces(query),
-  query => ({ query })
+  (query) => JaegerAPI.searchTraces(query),
+  (query) => ({ query })
 );
 
 export const fetchServices = createAction('@JAEGER_API/FETCH_SERVICES', () => JaegerAPI.fetchServices());
 
 export const fetchServiceOperations = createAction(
   '@JAEGER_API/FETCH_SERVICE_OPERATIONS',
-  serviceName => JaegerAPI.fetchServiceOperations(serviceName),
-  serviceName => ({ serviceName })
+  (serviceName) => JaegerAPI.fetchServiceOperations(serviceName),
+  (serviceName) => ({ serviceName })
 );
 
 export const fetchServiceServerOps = createAction(
   '@JAEGER_API/FETCH_SERVICE_SERVER_OP',
-  serviceName => JaegerAPI.fetchServiceServerOps(serviceName),
-  serviceName => ({ serviceName })
+  (serviceName) => JaegerAPI.fetchServiceServerOps(serviceName),
+  (serviceName) => ({ serviceName })
 );
 
 export const fetchDeepDependencyGraph = createAction(
   '@JAEGER_API/FETCH_DEEP_DEPENDENCY_GRAPH',
-  query => JaegerAPI.fetchDeepDependencyGraph(query),
-  query => ({ query })
+  (query) => JaegerAPI.fetchDeepDependencyGraph(query),
+  (query) => ({ query })
 );
 
 export const fetchDependencies = createAction('@JAEGER_API/FETCH_DEPENDENCIES', () =>

@@ -60,7 +60,7 @@ describe('TraceDiff/url', () => {
       const cohort = ['first', 'second', 'third'];
       const result = getUrl({ cohort });
       expect(result).toMatch(`${cohort[0]}...${cohort[1]}`);
-      cohort.forEach(cohortEntry => {
+      cohort.forEach((cohortEntry) => {
         expect(result).toMatch(`cohort=${cohortEntry}`);
       });
     });

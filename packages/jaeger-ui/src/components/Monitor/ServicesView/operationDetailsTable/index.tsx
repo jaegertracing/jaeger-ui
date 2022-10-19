@@ -181,8 +181,9 @@ export class OperationTableDetails extends React.PureComponent<TProps, TState> {
             viewTraceButton = (
               <Button
                 href={prefixUrl(
-                  `/search?end=${endTime}000&limit=20&lookback=${lookback /
-                    (3600 * 1000)}h&maxDuration&minDuration&operation=${encodeURIComponent(
+                  `/search?end=${endTime}000&limit=20&lookback=${
+                    lookback / (3600 * 1000)
+                  }h&maxDuration&minDuration&operation=${encodeURIComponent(
                     row.name
                   )}&service=${serviceName}&start=${endTime - lookback}000`
                 )}
