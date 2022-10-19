@@ -30,12 +30,8 @@
     "typescript": "3.5.3"
   },
   "resolutions": {
-    "**/cheerio/parse5": "4.0.0",
-    "**/fstream": "1.0.12",
-    "**/handlebars": "4.7.7",
     "**/js-yaml": "3.13.1",
-    "**/lodash": "4.17.21",
-    "**/node-gyp/tar": "2.2.2"
+    "**/lodash": "4.17.21"
   },
   "workspaces": {
     "packages": [
