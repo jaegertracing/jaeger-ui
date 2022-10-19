@@ -30,7 +30,6 @@
     "typescript": "3.5.3"
   },
   "resolutions": {
-    "**/js-yaml": "3.13.1",
     "**/lodash": "4.17.21"
   },
   "workspaces": {
