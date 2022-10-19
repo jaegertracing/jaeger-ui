@@ -27,7 +27,7 @@
     "babel-loader": "8.0.5",
     "babel-plugin-transform-react-remove-prop-types": "0.4.24",
     "clean-webpack-plugin": "2.0.1",
-    "css-loader": "2.1.1",
+    "css-loader": "6.7.1",
     "enzyme": "3.11.0",
     "file-loader": "3.0.1",
     "html-loader": "4.2.0",
