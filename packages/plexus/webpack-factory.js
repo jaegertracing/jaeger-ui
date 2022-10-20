@@ -16,7 +16,7 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 
 const { join } = require('path');
-const CleanWebpackPlugin = require('clean-webpack-plugin');
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const nodeExternals = require('webpack-node-externals');
 
@@ -214,9 +214,8 @@ function makeWorkerConfig() {
         {
           loader: 'worker-loader',
           options: {
-            inline: true,
-            fallback: false,
-            name: '[name].js',
+            inline: 'no-fallback',
+            filename: '[name].js',
           },
         },
       ],
