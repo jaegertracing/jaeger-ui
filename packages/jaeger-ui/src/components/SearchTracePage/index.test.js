@@ -16,7 +16,7 @@ import { MemoryRouter } from 'react-router-dom';
 
 jest.mock('redux-form', () => {
   function reduxForm() {
-    return (component) => component;
+    return component => component;
   }
   function formValueSelector() {
     return () => null;

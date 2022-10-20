@@ -158,7 +158,7 @@ describe('deepDependencyGraph reducers', () => {
       viewModifier: EViewModifier.Emphasized,
     };
     const emphasizedViewModifierMap = new Map();
-    visibilityIndices.forEach((idx) => emphasizedViewModifierMap.set(idx, emphasizedPayload.viewModifier));
+    visibilityIndices.forEach(idx => emphasizedViewModifierMap.set(idx, emphasizedPayload.viewModifier));
 
     const selectedPayload = {
       ...meta.query,
@@ -166,7 +166,7 @@ describe('deepDependencyGraph reducers', () => {
       viewModifier: EViewModifier.Selected,
     };
     const selectedViewModifierMap = new Map();
-    visibilityIndices.forEach((idx) => selectedViewModifierMap.set(idx, selectedPayload.viewModifier));
+    visibilityIndices.forEach(idx => selectedViewModifierMap.set(idx, selectedPayload.viewModifier));
 
     const multiPayload = {
       ...meta.query,
@@ -174,7 +174,7 @@ describe('deepDependencyGraph reducers', () => {
       viewModifier: EViewModifier.Emphasized | EViewModifier.Selected, // eslint-disable-line no-bitwise
     };
     const multiViewModifierMap = new Map();
-    visibilityIndices.forEach((idx) => multiViewModifierMap.set(idx, multiPayload.viewModifier));
+    visibilityIndices.forEach(idx => multiViewModifierMap.set(idx, multiPayload.viewModifier));
 
     let emphasizedViewModifierState;
     let emptyDoneState;

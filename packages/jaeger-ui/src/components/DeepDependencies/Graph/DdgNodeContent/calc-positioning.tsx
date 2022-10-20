@@ -151,7 +151,7 @@ function calcWidth(lengths: number[], lines: number, longestThusFar: number = 0)
 const calcRects = _memoize(
   function calcRects(str: string | string[], span: HTMLSpanElement): TRect[] {
     const lengths = (Array.isArray(str) ? [`${str.length} Operations}`] : str.match(WORD_RX) || [str]).map(
-      (s) => {
+      s => {
         span.innerHTML = s; // eslint-disable-line no-param-reassign
         return span.getClientRects()[0].width;
       }
@@ -206,8 +206,8 @@ function smallestRadius(svcRects: TRect[], opRects?: TRect[]): TSmallestRadiusRV
 
   // Otherwise, calculate the smallest radius of possible radii from all combinations of svcRect and opRect.
   let rv: TSmallestRadiusRV | undefined;
-  svcRects.forEach((svcRect) => {
-    opRects.forEach((opRect) => {
+  svcRects.forEach(svcRect => {
+    opRects.forEach(opRect => {
       let radius;
       let svcMarginTop;
       const totalHeight = svcRect.height + opRect.height + OP_PADDING_TOP;

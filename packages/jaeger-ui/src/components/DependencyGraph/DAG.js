@@ -45,7 +45,7 @@ export default class DAG extends React.Component {
     const nodeMap = {};
     const nodes = [];
     const edges = [];
-    serviceCalls.forEach((d) => {
+    serviceCalls.forEach(d => {
       if (d.parent.trim().length !== 0 && d.child.trim().length !== 0) {
         if (!nodeMap[d.parent]) {
           nodes.push({ data: { id: d.parent } });

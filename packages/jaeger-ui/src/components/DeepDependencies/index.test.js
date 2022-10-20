@@ -79,7 +79,7 @@ describe('DeepDependencyGraphPage', () => {
     const { operation: _o, ...urlStateWithoutOp } = props.urlState;
     const ddgPageImpl = new DeepDependencyGraphPageImpl(props);
     const ddgWithoutGraph = new DeepDependencyGraphPageImpl(propsWithoutGraph);
-    const setIdx = (visibilityIdx) => ({ visibilityIdx });
+    const setIdx = visibilityIdx => ({ visibilityIdx });
 
     describe('constructor', () => {
       beforeEach(() => {
@@ -910,8 +910,8 @@ describe('DeepDependencyGraphPage', () => {
     });
 
     it('calculates showOp off of urlState', () => {
-      [true, false, undefined].forEach((showOp) => {
-        ['focalOperation', undefined].forEach((focalOp) => {
+      [true, false, undefined].forEach(showOp => {
+        ['focalOperation', undefined].forEach(focalOp => {
           const urlState = {
             ...expected.urlState,
             operation: focalOp,

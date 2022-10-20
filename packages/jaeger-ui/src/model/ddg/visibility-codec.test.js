@@ -87,7 +87,7 @@ describe('visibility-codec', () => {
           ...ddgModel.distanceToPathElems
             .get(i)
             .map(({ visibilityIdx }) => visibilityIdx)
-            .filter((idx) => !omit || !omit.has(idx))
+            .filter(idx => !omit || !omit.has(idx))
         );
       }
       return encode(expectedIndices);

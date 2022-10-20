@@ -21,6 +21,6 @@ import { Span } from '../types/trace';
  */
 // eslint-disable-next-line import/prefer-default-export
 export function getParent(span: Span) {
-  const parentRef = span.references ? span.references.find((ref) => ref.refType === 'CHILD_OF') : null;
+  const parentRef = span.references ? span.references.find(ref => ref.refType === 'CHILD_OF') : null;
   return parentRef ? parentRef.span : null;
 }

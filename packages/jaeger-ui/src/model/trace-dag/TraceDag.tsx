@@ -45,10 +45,10 @@ export default class TraceDag<TData extends { [k: string]: unknown } = {}> {
       } else {
         id = parentNodeID;
       }
-      children.forEach((childId) => addDenseSpan(denseSpansMap.get(childId), id));
+      children.forEach(childId => addDenseSpan(denseSpansMap.get(childId), id));
     }
 
-    rootIDs.forEach((rootId) => addDenseSpan(denseSpansMap.get(rootId), null));
+    rootIDs.forEach(rootId => addDenseSpan(denseSpansMap.get(rootId), null));
     return dag;
   }
 

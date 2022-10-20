@@ -78,7 +78,7 @@ export default class CohortTable extends React.PureComponent<Props> {
           key="traceID"
           title=""
           dataIndex="id"
-          render={(value) => <span className="u-tx-muted">{value && value.slice(0, 7)}</span>}
+          render={value => <span className="u-tx-muted">{value && value.slice(0, 7)}</span>}
         />
         <Column
           key="traceName"
@@ -130,7 +130,7 @@ export default class CohortTable extends React.PureComponent<Props> {
           className="ub-tx-center"
           dataIndex="data.traceID"
           key="link"
-          render={(value) => <TraceTimelineLink traceID={value} />}
+          render={value => <TraceTimelineLink traceID={value} />}
         />
       </Table>,
       cohort.length < 2 && NEED_MORE_TRACES_MESSAGE,

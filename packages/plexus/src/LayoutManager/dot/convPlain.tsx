@@ -116,7 +116,7 @@ function parseEdge(str: string, startIndex: number) {
     pathPoints.push([flatPoints[pi], flatPoints[pi + 1]]);
   }
   const edgeFlags: Record<string, boolean> = {};
-  flags.split(',').forEach((flag) => {
+  flags.split(',').forEach(flag => {
     const name = FLAG_MAPPINGS[flag];
     if (name) {
       edgeFlags[name] = true;

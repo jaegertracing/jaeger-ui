@@ -31,7 +31,7 @@ describe('SearchResults tracking', () => {
     // sanity check
     expect(actions.length).toBeGreaterThan(0);
 
-    actions.forEach((action) => {
+    actions.forEach(action => {
       trackAltView(action);
       expect(trackEvent).toHaveBeenLastCalledWith(CATEGORY_ALT_VIEW, action);
     });

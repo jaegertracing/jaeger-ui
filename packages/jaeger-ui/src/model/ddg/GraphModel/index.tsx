@@ -59,7 +59,7 @@ export default class GraphModel {
     const hasher = this.getPathElemHasher();
     const edgesById = new Map<string, TEdge>();
 
-    this.visIdxToPathElem.forEach((pathElem) => {
+    this.visIdxToPathElem.forEach(pathElem => {
       // If there is a compatible vertex for this pathElem, use it, else, make a new vertex
       const key = hasher(pathElem);
       const isFocalNode = !pathElem.distance;
@@ -166,7 +166,7 @@ export default class GraphModel {
   private getVisiblePathElems(visEncoding?: string) {
     if (visEncoding == null) return this.getDefaultVisiblePathElems();
     return decode(visEncoding)
-      .map((visIdx) => this.visIdxToPathElem[visIdx])
+      .map(visIdx => this.visIdxToPathElem[visIdx])
       .filter(Boolean);
   }
 
@@ -179,7 +179,7 @@ export default class GraphModel {
       const edges: Set<TEdge> = new Set();
       const vertices: Set<TDdgVertex> = new Set();
       const pathElems = this.getVisiblePathElems(visEncoding);
-      pathElems.forEach((pathElem) => {
+      pathElems.forEach(pathElem => {
         const edge = this.pathElemToEdge.get(pathElem);
         if (edge) edges.add(edge);
         const vertex = this.pathElemToVertex.get(pathElem);
@@ -222,9 +222,9 @@ export default class GraphModel {
       const { service, operation } = vertices[i];
       const svc = service.toLowerCase();
       const ops =
-        operation && (Array.isArray(operation) ? operation : [operation]).map((op) => op.toLowerCase());
+        operation && (Array.isArray(operation) ? operation : [operation]).map(op => op.toLowerCase());
       for (let j = 0; j < uiFindArr.length; j++) {
-        if (svc.includes(uiFindArr[j]) || (ops && ops.some((op) => op.includes(uiFindArr[j])))) {
+        if (svc.includes(uiFindArr[j]) || (ops && ops.some(op => op.includes(uiFindArr[j])))) {
           keySet.add(vertices[i].key);
           break;
         }
@@ -238,7 +238,7 @@ export default class GraphModel {
     (uiFind?: string, visEncoding?: string): Set<string> => {
       const visible = new Set(this.getVisible(visEncoding).vertices);
       const hidden: TDdgVertex[] = Array.from(this.vertices.values()).filter(
-        (vertex) => !visible.has(vertex) && !vertex.isFocalNode
+        vertex => !visible.has(vertex) && !vertex.isFocalNode
       );
 
       if (this.visIdxToPathElem.length) {
@@ -250,7 +250,7 @@ export default class GraphModel {
         if (!focalElems) throw new Error('No focal elems found');
         const visibleFocalElems = new Set(this.getVertexVisiblePathElems(FOCAL_KEY, visEncoding));
         const hiddenFocalOperations = Array.from(focalElems)
-          .filter((elem) => !visibleFocalElems.has(elem))
+          .filter(elem => !visibleFocalElems.has(elem))
           .map(({ operation }) => operation.name);
         if (hiddenFocalOperations.length) {
           hidden.push({
@@ -323,7 +323,7 @@ export default class GraphModel {
 
   public getVisWithVertices(vertexKeys: string[], visEncoding?: string) {
     const elemSet: PathElem[] = [];
-    vertexKeys.forEach((vertexKey) => {
+    vertexKeys.forEach(vertexKey => {
       const vertex = this.vertices.get(vertexKey);
       if (!vertex) throw new Error(`${vertexKey} does not exist in graph`);
       const elems = this.vertexToPathElems.get(vertex);
@@ -345,7 +345,7 @@ export default class GraphModel {
       const pathElems = this.vertexToPathElems.get(vertex);
       if (pathElems && pathElems.size) {
         const visIndices = this.getVisibleIndices(visEncoding);
-        return Array.from(pathElems).filter((elem) => {
+        return Array.from(pathElems).filter(elem => {
           return visIndices.has(elem.visibilityIdx);
         });
       }

@@ -141,7 +141,7 @@ describe('lookback utils', () => {
     const nowInMicroseconds = now * 1000;
 
     it('creates timestamp for hours ago', () => {
-      [1, 2, 4, 7].forEach((lookbackNum) => {
+      [1, 2, 4, 7].forEach(lookbackNum => {
         expect(nowInMicroseconds - lookbackToTimestamp(`${lookbackNum}h`, now)).toBe(
           lookbackNum * hourInMicroseconds
         );
@@ -149,7 +149,7 @@ describe('lookback utils', () => {
     });
 
     it('creates timestamp for days ago', () => {
-      [1, 2, 4, 7].forEach((lookbackNum) => {
+      [1, 2, 4, 7].forEach(lookbackNum => {
         const actual = nowInMicroseconds - lookbackToTimestamp(`${lookbackNum}d`, now);
         const expected = lookbackNum * 24 * hourInMicroseconds;
         try {
@@ -161,7 +161,7 @@ describe('lookback utils', () => {
     });
 
     it('creates timestamp for weeks ago', () => {
-      [1, 2, 4, 7].forEach((lookbackNum) => {
+      [1, 2, 4, 7].forEach(lookbackNum => {
         const actual = nowInMicroseconds - lookbackToTimestamp(`${lookbackNum}w`, now);
         try {
           expect(actual).toBe(lookbackNum * 7 * 24 * hourInMicroseconds);

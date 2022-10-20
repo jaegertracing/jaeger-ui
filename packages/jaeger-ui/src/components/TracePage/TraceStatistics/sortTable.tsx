@@ -75,9 +75,9 @@ export default function sortTable(array: any[], key: string, sortAsc: boolean) {
   }
   for (let j = 0; j < diffParentNames.length; j++) {
     const tempArray = _.chain(isDetailArray)
-      .filter((filterBy) => filterBy.parentElement === diffParentNames[j].parentElement)
-      .groupBy((x) => x.parentElement)
-      .map((value) => ({ parentElement: key, groupedArry: value }))
+      .filter(filterBy => filterBy.parentElement === diffParentNames[j].parentElement)
+      .groupBy(x => x.parentElement)
+      .map(value => ({ parentElement: key, groupedArry: value }))
       .value()[0].groupedArry;
 
     sortByKey(tempArray, key, sortAsc);

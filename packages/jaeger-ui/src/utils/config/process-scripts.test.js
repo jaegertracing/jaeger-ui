@@ -23,12 +23,12 @@ describe('processScripts', () => {
   const appendTextSpy = jest.fn();
   const mockValue = (text, number) => `${text} --- ${number}`;
   const texts = ['text 0', 'text 1'];
-  const configScripts = texts.map((text) => ({ text, type: 'inline' }));
+  const configScripts = texts.map(text => ({ text, type: 'inline' }));
   let scriptElems;
 
   beforeAll(() => {
-    createTextNodeSpy.mockImplementation((text) => mockValue(text, createTextNodeSpy.mock.calls.length));
-    createElementSpy.mockImplementation((text) => {
+    createTextNodeSpy.mockImplementation(text => mockValue(text, createTextNodeSpy.mock.calls.length));
+    createElementSpy.mockImplementation(text => {
       const script = {
         append: appendTextSpy,
         identifier: mockValue(text, createElementSpy.mock.calls.length),

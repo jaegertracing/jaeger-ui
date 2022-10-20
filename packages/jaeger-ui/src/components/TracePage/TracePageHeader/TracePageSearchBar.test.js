@@ -56,7 +56,7 @@ describe('<TracePageSearchBar>', () => {
     it('renders buttons', () => {
       const buttons = wrapper.find('Button');
       expect(buttons.length).toBe(4);
-      buttons.forEach((button) => {
+      buttons.forEach(button => {
         expect(button.hasClass('TracePageSearchBar--btn')).toBe(true);
         expect(button.hasClass('is-disabled')).toBe(false);
         expect(button.prop('disabled')).toBe(false);
@@ -86,7 +86,7 @@ describe('<TracePageSearchBar>', () => {
     it('renders buttons', () => {
       const buttons = wrapper.find('Button');
       expect(buttons.length).toBe(4);
-      buttons.forEach((button) => {
+      buttons.forEach(button => {
         expect(button.hasClass('TracePageSearchBar--btn')).toBe(true);
         expect(button.hasClass('is-disabled')).toBe(true);
         expect(button.prop('disabled')).toBe(true);

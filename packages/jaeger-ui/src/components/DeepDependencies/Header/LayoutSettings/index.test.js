@@ -30,7 +30,7 @@ describe('LayoutSettings', () => {
   };
   const densityIdx = densityOptions.findIndex(({ option }) => option === props.density);
 
-  const getWrapper = (overrideProps) => {
+  const getWrapper = overrideProps => {
     const content = shallow(<LayoutSettings {...props} {...overrideProps} />)
       .find(Popover)
       .prop('content');
@@ -52,7 +52,7 @@ describe('LayoutSettings', () => {
     const radios = getWrapper().find(Radio);
 
     expect(radios.length).toBe(densityOptions.length);
-    expect(Array.from(radios).findIndex((radio) => radio.props.checked)).toBe(densityIdx);
+    expect(Array.from(radios).findIndex(radio => radio.props.checked)).toBe(densityIdx);
   });
 
   it('updates density and tracks its change', () => {

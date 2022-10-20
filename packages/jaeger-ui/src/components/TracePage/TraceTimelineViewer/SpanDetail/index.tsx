@@ -117,7 +117,7 @@ export default function SpanDetail(props: SpanDetailProps) {
             isOpen={logsState.isOpen}
             openedItems={logsState.openedItems}
             onToggle={() => logsToggle(spanID)}
-            onItemToggle={(logItem) => logItemToggle(spanID, logItem)}
+            onItemToggle={logItem => logItemToggle(spanID, logItem)}
             timestamp={traceStartTime}
           />
         )}

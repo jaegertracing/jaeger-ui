@@ -182,14 +182,14 @@ describe('DetailTable', () => {
 
       it('renders filterable column if there are filterable values', () => {
         const filterableValues = ['foo', 'bar', { value: 'obj foo' }, { value: 'obj baz' }];
-        const expected = new Set(filterableValues.map((v) => v.value || v));
+        const expected = new Set(filterableValues.map(v => v.value || v));
         const values = [
           ...filterableValues,
           <ExamplesLink examples={[]} />,
           <ExamplesLink key="fookey" examples={[]} />,
           undefined,
         ];
-        const rows = values.map((value) => ({
+        const rows = values.map(value => ({
           [stringColumn]: value,
         }));
         const column = makeColumn(stringColumn, rows);
@@ -222,10 +222,10 @@ describe('DetailTable', () => {
 
     describe('function props', () => {
       const makeTestFn =
-        (fn) =>
+        fn =>
         (...vals) =>
           fn(stringColumn)(
-            ...vals.map((v) => ({
+            ...vals.map(v => ({
               [stringColumn]: v,
             }))
           );

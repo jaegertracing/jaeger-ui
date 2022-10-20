@@ -60,6 +60,7 @@
     "start": "cd packages/jaeger-ui && yarn start"
   },
   "prettier": {
+    "arrowParens": "avoid",
     "printWidth": 110,
     "proseWrap": "never",
     "singleQuote": true,

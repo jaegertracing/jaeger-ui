@@ -14,7 +14,7 @@
 
 export default class TreeNode {
   static iterFunction(fn, depth = 0) {
-    return (node) => fn(node.value, node, depth);
+    return node => fn(node.value, node, depth);
   }
 
   static searchFunction(search) {
@@ -109,7 +109,7 @@ export default class TreeNode {
         stack.push({ node: node.children[childIndex], childIndex: 0 });
       } else {
         if (node.children.length === 0) {
-          const path = stack.map((item) => item.node.value);
+          const path = stack.map(item => item.node.value);
           fn(path);
         }
         stack.pop();

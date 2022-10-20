@@ -60,7 +60,7 @@ function getChanged(shortstat, status) {
     }
     match = regex.exec(shortstat);
   }
-  const untracked = status && status.split('\n').filter((line) => line[0] === '?').length;
+  const untracked = status && status.split('\n').filter(line => line[0] === '?').length;
   if (untracked) {
     rv.untracked = untracked;
     joiner.push(`${untracked}?`);

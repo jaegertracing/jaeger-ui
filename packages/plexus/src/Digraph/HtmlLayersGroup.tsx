@@ -30,7 +30,7 @@ export default class HtmlLayersGroup<T = {}, U = {}> extends React.PureComponent
   private renderLayers() {
     const { getClassName, layers, graphState, setSizeVertices } = this.props;
 
-    return layers.map((layer) => {
+    return layers.map(layer => {
       const { key, setOnContainer } = layer;
 
       if (layer.measurable) {

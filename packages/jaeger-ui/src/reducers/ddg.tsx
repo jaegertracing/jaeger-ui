@@ -43,7 +43,7 @@ export function addViewModifier(state: TDdgState, payload: TDdgAddViewModifierPa
   }
 
   const viewModifiers = new Map(stateEntry.viewModifiers);
-  visibilityIndices.forEach((idx) => {
+  visibilityIndices.forEach(idx => {
     viewModifiers.set(idx, (viewModifiers.get(idx) || 0) | viewModifier); // eslint-disable-line no-bitwise
   });
 
@@ -68,7 +68,7 @@ export function viewModifierRemoval(state: TDdgState, payload: TDdgViewModifierR
   const viewModifiers = new Map(stateEntry.viewModifiers);
   const indicesToUpdate = visibilityIndices || Array.from(viewModifiers.keys());
 
-  indicesToUpdate.forEach((idx) => {
+  indicesToUpdate.forEach(idx => {
     const newValue = viewModifier
       ? (viewModifiers.get(idx) || 0) & ~viewModifier // eslint-disable-line no-bitwise
       : EViewModifier.None;

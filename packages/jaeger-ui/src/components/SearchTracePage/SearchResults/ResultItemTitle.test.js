@@ -56,8 +56,8 @@ describe('ResultItemTitle', () => {
     });
 
     it('is checked iff props.state !== fetchedState.ERROR && props.isInDiffCohort', () => {
-      [true, false].forEach((isInDiffCohort) => {
-        [fetchedState.ERROR, fetchedState.DONE].forEach((state) => {
+      [true, false].forEach(isInDiffCohort => {
+        [fetchedState.ERROR, fetchedState.DONE].forEach(state => {
           wrapper.setProps({ isInDiffCohort, state });
           expect(wrapper.find(Checkbox).prop('checked')).toBe(state !== fetchedState.ERROR && isInDiffCohort);
         });

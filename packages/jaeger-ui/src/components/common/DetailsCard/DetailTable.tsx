@@ -98,7 +98,7 @@ export const _makeColumns = ({ defs, rows }: { defs: TColumnDefs; rows: TRow[] }
     }
 
     const options = new Set<string>();
-    rows.forEach((row) => {
+    rows.forEach(row => {
       const value = row[dataIndex];
       if (typeof value === 'string' && value) options.add(value);
       else if (typeof value === 'object' && !Array.isArray(value) && typeof value.value === 'string') {
@@ -152,12 +152,12 @@ export default function DetailTable({
 }) {
   const columnDefs: TColumnDefs = _columnDefs ? _columnDefs.slice() : [];
   const knownColumns = new Set(
-    columnDefs.map((keyOrObj) => {
+    columnDefs.map(keyOrObj => {
       if (typeof keyOrObj === 'string') return keyOrObj;
       return keyOrObj.key;
     })
   );
-  details.forEach((row) => {
+  details.forEach(row => {
     Object.keys(row).forEach((col: string) => {
       if (!knownColumns.has(col)) {
         knownColumns.add(col);

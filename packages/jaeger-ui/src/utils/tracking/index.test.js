@@ -60,7 +60,7 @@ describe('generic analytics tracking', () => {
       };
     });
 
-    return import('.').then((noopWA) => {
+    return import('.').then(noopWA => {
       expect(internalVersionShort).toBe('unknown');
       expect(internalVersionLong).toBe('unknown');
       expect(mockNoopWebAnalytics.init).toHaveBeenCalled();
@@ -86,7 +86,7 @@ describe('generic analytics tracking', () => {
       };
     });
 
-    return import('.').then((noopWA) => {
+    return import('.').then(noopWA => {
       expect(mockNoopWebAnalytics.init).not.toHaveBeenCalled();
       expect(mockGA.init).toHaveBeenCalled();
 

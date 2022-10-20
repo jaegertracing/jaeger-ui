@@ -165,7 +165,7 @@ describe('<DdgNodeContent>', () => {
 
   describe('hover behavior', () => {
     const testIndices = [4, 8, 15, 16, 23, 42];
-    const testElems = testIndices.map((visibilityIdx) => ({ visibilityIdx }));
+    const testElems = testIndices.map(visibilityIdx => ({ visibilityIdx }));
 
     beforeEach(() => {
       props.getVisiblePathElems.mockReturnValue(testElems);
@@ -187,7 +187,7 @@ describe('<DdgNodeContent>', () => {
 
       wrapper.simulate('mouseover', { type: 'mouseover' });
       const moreIndices = [108];
-      const moreElems = moreIndices.map((visibilityIdx) => ({ visibilityIdx }));
+      const moreElems = moreIndices.map(visibilityIdx => ({ visibilityIdx }));
       props.getVisiblePathElems.mockReturnValue(moreElems);
       wrapper.simulate('mouseover', { type: 'mouseover' });
       wrapper.simulate('mouseout', { type: 'mouseout' });
@@ -398,12 +398,12 @@ describe('<DdgNodeContent>', () => {
 
     describe('viewTraces', () => {
       const click = () => wrapper.find('.DdgNodeContent--actionsItem').at(1).simulate('click');
-      const pad = (num) => `000${num}`.slice(-4);
-      const mockReturn = (ids) =>
-        props.getVisiblePathElems.mockReturnValue(ids.map((traceIDs) => ({ memberOf: { traceIDs } })));
-      const calcIdxWithinLimit = (arr) => Math.floor(0.75 * arr.length);
-      const falsifyDuplicateAndMock = (ids) => {
-        const withFalsyAndDuplicate = ids.map((arr) => arr.slice());
+      const pad = num => `000${num}`.slice(-4);
+      const mockReturn = ids =>
+        props.getVisiblePathElems.mockReturnValue(ids.map(traceIDs => ({ memberOf: { traceIDs } })));
+      const calcIdxWithinLimit = arr => Math.floor(0.75 * arr.length);
+      const falsifyDuplicateAndMock = ids => {
+        const withFalsyAndDuplicate = ids.map(arr => arr.slice());
         withFalsyAndDuplicate[0].splice(
           calcIdxWithinLimit(withFalsyAndDuplicate[0]),
           0,
@@ -418,9 +418,9 @@ describe('<DdgNodeContent>', () => {
         );
         mockReturn(withFalsyAndDuplicate);
       };
-      const makeIDsAndMock = (idCounts, makeID = (count) => `test traceID${count}`) => {
+      const makeIDsAndMock = (idCounts, makeID = count => `test traceID${count}`) => {
         let idCount = 0;
-        const ids = idCounts.map((count) => {
+        const ids = idCounts.map(count => {
           const rv = [];
           for (let i = 0; i < count; i++) {
             rv.push(makeID(pad(idCount++)));
@@ -432,7 +432,7 @@ describe('<DdgNodeContent>', () => {
       };
       let getSearchUrlSpy;
       let trackViewTracesSpy;
-      const verifyLastIDs = (expectedIDs) => {
+      const verifyLastIDs = expectedIDs => {
         const getSearchUrlCallCount = getSearchUrlSpy.mock.calls.length;
         const actualIDs = getSearchUrlSpy.mock.calls[getSearchUrlCallCount - 1][0].traceID;
 
@@ -523,7 +523,7 @@ describe('<DdgNodeContent>', () => {
         const TARGET_ID_COUNT = 31;
         const paddingLength = Math.floor(effectiveMaxLength / TARGET_ID_COUNT) - PARAM_NAME_LENGTH;
         const idPadding = 'x'.repeat(paddingLength - pad(0).length);
-        const ids = makeIDsAndMock([TARGET_ID_COUNT, TARGET_ID_COUNT, 1], (num) => `${idPadding}${num}`);
+        const ids = makeIDsAndMock([TARGET_ID_COUNT, TARGET_ID_COUNT, 1], num => `${idPadding}${num}`);
         const expected = [
           ...ids[0].slice(TARGET_ID_COUNT / 2 + 1),
           ...ids[1].slice(TARGET_ID_COUNT / 2 + 1),

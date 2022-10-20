@@ -53,7 +53,7 @@ describe('<DetailTableData>', () => {
   });
 
   it('renders TableOverviewHeadTag', () => {
-    const firstRowColumns = wrapper.find('.DetailTableData--td').map((column) => column.text());
+    const firstRowColumns = wrapper.find('.DetailTableData--td').map(column => column.text());
     expect(firstRowColumns.length).toBe(11);
 
     expect(firstRowColumns[0]).toBe('GET /owners/5');

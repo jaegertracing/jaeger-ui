@@ -33,15 +33,15 @@ describe('sortTraces()', () => {
   const { MOST_SPANS, LEAST_SPANS, LONGEST_FIRST, SHORTEST_FIRST, MOST_RECENT } = orderBy;
 
   const expecations = {
-    [MOST_RECENT]: _maxBy(traces, (trace) => trace.startTime).traceID,
-    [LONGEST_FIRST]: _maxBy(traces, (trace) => trace.duration).traceID,
-    [SHORTEST_FIRST]: _minBy(traces, (trace) => trace.duration).traceID,
+    [MOST_RECENT]: _maxBy(traces, trace => trace.startTime).traceID,
+    [LONGEST_FIRST]: _maxBy(traces, trace => trace.duration).traceID,
+    [SHORTEST_FIRST]: _minBy(traces, trace => trace.duration).traceID,
     [MOST_SPANS]: idMaxSpans,
     [LEAST_SPANS]: idMinSpans,
   };
   expecations.invalidOrderBy = expecations[LONGEST_FIRST];
 
-  Object.keys(expecations).forEach((sortBy) => {
+  Object.keys(expecations).forEach(sortBy => {
     it(`sorts by ${sortBy}`, () => {
       const traceID = expecations[sortBy];
       sortTraces(traces, sortBy);

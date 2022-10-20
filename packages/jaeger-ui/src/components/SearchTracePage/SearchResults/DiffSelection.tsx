@@ -36,7 +36,7 @@ export const CTA_MESSAGE = <h2 className="ub-m0">Compare traces by selecting res
 export default class DiffSelection extends React.PureComponent<Props> {
   render() {
     const { toggleComparison, traces } = this.props;
-    const cohort = traces.filter((ft) => ft.state !== fetchedState.ERROR).map((ft) => ft.id);
+    const cohort = traces.filter(ft => ft.state !== fetchedState.ERROR).map(ft => ft.id);
     const compareHref = cohort.length > 1 ? getUrl({ cohort }) : null;
     const compareBtn = (
       <Button className="ub-right" disabled={cohort.length < 2} htmlType="button" type="primary">
@@ -47,7 +47,7 @@ export default class DiffSelection extends React.PureComponent<Props> {
       <div className={`DiffSelection ${traces.length ? 'is-non-empty' : ''} ub-mb3`}>
         {traces.length > 0 && (
           <div className="DiffSelection--selectedItems">
-            {traces.map((fetchedTrace) => {
+            {traces.map(fetchedTrace => {
               const { data, error, id, state } = fetchedTrace;
               return (
                 <ResultItemTitle

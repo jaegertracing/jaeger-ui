@@ -39,7 +39,7 @@ export default class DetailTableDropdown extends React.PureComponent<TProps> {
     // Record the selectedKeys at this time for future cancellations.
     if (selectedKeys.length === prevProps.selectedKeys.length) {
       const prevKeys = new Set(prevProps.selectedKeys);
-      if (selectedKeys.every((key) => prevKeys.has(key))) {
+      if (selectedKeys.every(key => prevKeys.has(key))) {
         this.selected = selectedKeys;
       }
     }
@@ -61,7 +61,7 @@ export default class DetailTableDropdown extends React.PureComponent<TProps> {
     const { clearFilters = () => {}, confirm, options, selectedKeys, setSelectedKeys } = this.props;
 
     const value = new Set<string>();
-    selectedKeys.forEach((selected) => {
+    selectedKeys.forEach(selected => {
       if (typeof selected === 'string') value.add(selected);
     });
 
@@ -75,7 +75,7 @@ export default class DetailTableDropdown extends React.PureComponent<TProps> {
           options={Array.from(options)}
           removeValues={(values: string[]) => {
             const remove = new Set<React.Key>(values);
-            setSelectedKeys(selectedKeys.filter((key) => !remove.has(key)));
+            setSelectedKeys(selectedKeys.filter(key => !remove.has(key)));
           }}
           setValue={(v: string) => {
             setSelectedKeys([v]);

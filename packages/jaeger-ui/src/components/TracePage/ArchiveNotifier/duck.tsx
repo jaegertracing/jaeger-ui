@@ -31,7 +31,7 @@ const initialState: TracesArchive = {};
 const actionTypes = generateActionTypes('@jaeger-ui/archive-trace', ['ACKNOWLEDGE']);
 
 const fullActions = createActions({
-  [actionTypes.ACKNOWLEDGE]: (traceID) => traceID,
+  [actionTypes.ACKNOWLEDGE]: traceID => traceID,
 });
 
 export const actions: { [actionType: string]: ActionFunctionAny<any> } = {

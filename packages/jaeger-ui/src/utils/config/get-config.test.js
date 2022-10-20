@@ -79,9 +79,9 @@ describe('getConfig()', () => {
       describe('fields not in __mergeFields', () => {
         it('gives precedence to the embedded config', () => {
           const mergeFields = new Set(defaultConfig.__mergeFields);
-          const keys = Object.keys(defaultConfig).filter((k) => !mergeFields.has(k));
+          const keys = Object.keys(defaultConfig).filter(k => !mergeFields.has(k));
           embedded = {};
-          keys.forEach((key) => {
+          keys.forEach(key => {
             embedded[key] = key;
           });
           expect(getConfig()).toEqual({ ...defaultConfig, ...embedded });

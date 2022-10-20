@@ -92,10 +92,10 @@ describe('DetailTable', () => {
   });
 
   describe('FilteredList interactions', () => {
-    const getFn = (propName) => wrapper.find(FilteredList).prop(propName);
+    const getFn = propName => wrapper.find(FilteredList).prop(propName);
 
     it('adds values', () => {
-      const newValues = props.options.map((o) => `not-${o}`);
+      const newValues = props.options.map(o => `not-${o}`);
       getFn('addValues')(newValues);
       expect(props.setSelectedKeys).toHaveBeenCalledWith([...props.selectedKeys, ...newValues]);
     });

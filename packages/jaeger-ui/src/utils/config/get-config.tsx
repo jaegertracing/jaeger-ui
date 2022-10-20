@@ -41,7 +41,7 @@ const getConfig = memoizeOne(function getConfig() {
   }
   // check for deprecated config values
   if (Array.isArray(deprecations)) {
-    deprecations.forEach((deprecation) => processDeprecation(embedded, deprecation, !haveWarnedDeprecations));
+    deprecations.forEach(deprecation => processDeprecation(embedded, deprecation, !haveWarnedDeprecations));
     haveWarnedDeprecations = true;
   }
   const rv = { ...defaultConfig, ...embedded };

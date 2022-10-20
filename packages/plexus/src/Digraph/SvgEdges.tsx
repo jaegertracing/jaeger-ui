@@ -43,7 +43,7 @@ export default class SvgEdges<T = {}> extends React.Component<TProps<T>> {
 
   render() {
     const { getClassName, layoutEdges, markerEndId, markerStartId, renderUtils, setOnEdge } = this.props;
-    return layoutEdges.map((edge) => (
+    return layoutEdges.map(edge => (
       <SvgEdge
         key={`${edge.edge.from}\v${edge.edge.to}`}
         getClassName={getClassName}

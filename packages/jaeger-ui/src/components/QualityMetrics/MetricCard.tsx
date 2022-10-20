@@ -77,7 +77,7 @@ export default class MetricCard extends React.PureComponent<TProps> {
           </div>
           {details &&
             details.map(
-              (detail) =>
+              detail =>
                 Boolean(detail.rows && detail.rows.length) && (
                   <DetailsCard
                     key={`${detail.description}${JSON.stringify(detail.columns)}`}

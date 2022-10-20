@@ -91,7 +91,7 @@ export const HEADER_ITEMS = [
   {
     key: 'service-count',
     label: 'Services',
-    renderer: (trace: Trace) => new Set(_values(trace.processes).map((p) => p.serviceName)).size,
+    renderer: (trace: Trace) => new Set(_values(trace.processes).map(p => p.serviceName)).size,
   },
   {
     key: 'depth',
@@ -143,7 +143,7 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
   const summaryItems =
     !hideSummary &&
     !slimView &&
-    HEADER_ITEMS.map((item) => {
+    HEADER_ITEMS.map(item => {
       const { renderer, ...rest } = item;
       return { ...rest, value: renderer(trace) };
     });

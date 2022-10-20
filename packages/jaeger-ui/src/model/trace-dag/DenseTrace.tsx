@@ -20,7 +20,7 @@ function convSpans(spans: Span[]) {
   const map: Map<string, TDenseSpan> = new Map();
   const roots: Set<string> = new Set();
   const ids: string[] = [];
-  spans.forEach((span) => {
+  spans.forEach(span => {
     const { spanID: id, operationName: operation, process, references, tags: spanTags } = span;
     ids.push(id);
     const { serviceName: service } = process;
@@ -64,7 +64,7 @@ function convSpans(spans: Span[]) {
 }
 
 function makeDense(spanIDs: string[], map: Map<string, TDenseSpan>) {
-  spanIDs.forEach((id) => {
+  spanIDs.forEach(id => {
     const denseSpan = map.get(id);
     // make flow happy
     if (denseSpan) {

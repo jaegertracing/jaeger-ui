@@ -31,12 +31,12 @@ describe('getNodeRenderers', () => {
 
   describe('vectorBorder', () => {
     // Short, DRY way to calculate with (w/) versus (v) without (w/o)
-    const wvwo = (someBoolean) => (someBoolean ? 'with' : 'without');
+    const wvwo = someBoolean => (someBoolean ? 'with' : 'without');
 
-    [true, false].forEach((findMatch) => {
-      [true, false].forEach((hovered) => {
-        [true, false].forEach((pathHovered) => {
-          [true, false].forEach((focalNode) => {
+    [true, false].forEach(findMatch => {
+      [true, false].forEach(hovered => {
+        [true, false].forEach(pathHovered => {
+          [true, false].forEach(focalNode => {
             it(`returns circle ${wvwo(findMatch)} .is-findMatch,\t${wvwo(hovered)} .is-hovered,\t${wvwo(
               pathHovered
             )} .is-pathHovered,\tand ${wvwo(focalNode)} .is-focalNode`, () => {

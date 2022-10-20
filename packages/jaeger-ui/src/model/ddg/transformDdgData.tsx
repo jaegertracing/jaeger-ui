@@ -114,7 +114,7 @@ function transformDdgData(
 
       // Track all pathElems by their distance for visibilityIdx assignment and hop management
       // This needs to be a separate loop as path.focalIdx must be set before distance can be calculated
-      path.members.forEach((member) => {
+      path.members.forEach(member => {
         const elems = distanceToPathElems.get(member.distance);
         if (elems) {
           elems.push(member);

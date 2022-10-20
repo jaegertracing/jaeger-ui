@@ -24,7 +24,7 @@ export { default as trackMiddleware } from './track';
 /**
  * Middleware to load "operations" for a particular service.
  */
-export const loadOperationsForServiceMiddleware = (store) => (next) => (action) => {
+export const loadOperationsForServiceMiddleware = store => next => action => {
   if (
     action.type === '@@redux-form/CHANGE' &&
     action.meta.form === 'searchSideBar' &&
@@ -37,7 +37,7 @@ export const loadOperationsForServiceMiddleware = (store) => (next) => (action) 
   return next(action);
 };
 
-export const historyUpdateMiddleware = (store) => (next) => (action) => {
+export const historyUpdateMiddleware = store => next => action => {
   if (action.type === String(searchTraces)) {
     const url = getSearchUrl(action.meta.query);
     store.dispatch(replace(url));

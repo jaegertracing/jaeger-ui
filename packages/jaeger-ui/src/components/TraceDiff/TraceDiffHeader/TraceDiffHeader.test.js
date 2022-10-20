@@ -136,7 +136,7 @@ describe('TraceDiffHeader', () => {
     expect(wrapper.state().tableVisible).toBe(null);
     const popovers = wrapper.find(Popover);
     expect(popovers.length).toBe(2);
-    popovers.forEach((popover) => expect(popover.prop('visible')).toBe(false));
+    popovers.forEach(popover => expect(popover.prop('visible')).toBe(false));
 
     getPopoverProp(0, 'onVisibleChange')(true);
     expect(getPopoverProp(0, 'visible')).toBe(true);
@@ -152,7 +152,7 @@ describe('TraceDiffHeader', () => {
     expect(getPopoverProp(1, 'visible')).toBe(true);
 
     getPopoverProp(1, 'onVisibleChange')(false);
-    wrapper.find(Popover).forEach((popover) => expect(popover.prop('visible')).toBe(false));
+    wrapper.find(Popover).forEach(popover => expect(popover.prop('visible')).toBe(false));
   });
 
   describe('bound functions to set a & b and passes them to Popover JSX props correctly', () => {
@@ -165,8 +165,8 @@ describe('TraceDiffHeader', () => {
       b: diffSetA,
     };
 
-    ['a', 'b'].forEach((aOrB) => {
-      ['title', 'content'].forEach((popoverSection) => {
+    ['a', 'b'].forEach(aOrB => {
+      ['title', 'content'].forEach(popoverSection => {
         it(`sets trace ${aOrB} from popover ${popoverSection}`, () => {
           const selectTraceArgument = `aOrB: ${aOrB}, popoverSection: ${popoverSection}`;
           wrapper.setState({ tableVisible: aOrB });

@@ -92,7 +92,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
   }
 
   beforeEach(() => {
-    Object.keys(props).forEach((key) => {
+    Object.keys(props).forEach(key => {
       if (typeof props[key] === 'function') {
         props[key].mockReset();
       }
@@ -358,7 +358,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
 
     it('renders a SpanBarRow with a client span and no instrumented server span', () => {
       const externServiceName = 'externalServiceTest';
-      const leafSpan = trace.spans.find((span) => !span.hasChildren);
+      const leafSpan = trace.spans.find(span => !span.hasChildren);
       const leafSpanIndex = trace.spans.indexOf(leafSpan);
       const clientTags = [
         { key: 'span.kind', value: 'client' },

@@ -57,7 +57,7 @@ export default class TraceSpanView extends Component<Props, State> {
     const operationNamesList = new Set<string>();
     const serviceNameOperationsMap = new Map<string, string[]>();
 
-    this.props.trace.spans.forEach((span) => {
+    this.props.trace.spans.forEach(span => {
       serviceNamesList.add(span.process.serviceName);
       operationNamesList.add(span.operationName);
       const operationNames = serviceNameOperationsMap.get(span.process.serviceName) || [];
@@ -82,7 +82,7 @@ export default class TraceSpanView extends Component<Props, State> {
   }
 
   handleResetFilter() {
-    this.setState((previousState) => ({
+    this.setState(previousState => ({
       selectedServiceName: [],
       selectedOperationName: [],
       filteredData: previousState.data,
@@ -105,9 +105,9 @@ export default class TraceSpanView extends Component<Props, State> {
   onFilteredChangeCustom(selectedValues: string[], accessor: keyof Span) {
     const filtered = this.state.filtered;
     filtered[accessor] = selectedValues;
-    const data = this.state.data.filter((span) => {
+    const data = this.state.data.filter(span => {
       let isSpanIncluded;
-      Object.keys(filtered).every((filterColumn) => {
+      Object.keys(filtered).every(filterColumn => {
         if (filtered[filterColumn].length) {
           const spanValue = getNestedProperty(filterColumn, span);
           isSpanIncluded = filtered[filterColumn].includes(spanValue);
@@ -120,7 +120,7 @@ export default class TraceSpanView extends Component<Props, State> {
       return isSpanIncluded;
     });
 
-    this.setState((previousState) => ({
+    this.setState(previousState => ({
       ...previousState,
       filtered,
       filteredData: data,
@@ -191,15 +191,15 @@ export default class TraceSpanView extends Component<Props, State> {
                 value={this.state.selectedServiceName}
                 maxTagPlaceholder={`+ ${this.state.selectedServiceName.length - 4} Selected`}
                 placeholder="Please Select Service "
-                onChange={(entry) => {
-                  this.setState((previousState) => ({
+                onChange={entry => {
+                  this.setState(previousState => ({
                     ...previousState,
                     selectedServiceName: entry as [],
                   }));
                   this.onFilteredChangeCustom(entry as [], 'process.serviceName' as keyof Span);
                 }}
               >
-                {this.state.serviceNamesList.map((name) => {
+                {this.state.serviceNamesList.map(name => {
                   return <Option key={name}>{name} </Option>;
                 })}
               </Select>
@@ -221,8 +221,8 @@ export default class TraceSpanView extends Component<Props, State> {
                 value={this.state.selectedOperationName}
                 maxTagPlaceholder={`+ ${this.state.selectedOperationName.length - 4} Selected`}
                 placeholder="Please Select Operation"
-                onChange={(entry) => {
-                  this.setState((previousState) => ({
+                onChange={entry => {
+                  this.setState(previousState => ({
                     ...previousState,
                     selectedOperationName: entry as [],
                   }));

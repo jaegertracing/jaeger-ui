@@ -132,7 +132,7 @@ describe('DeepDependencyGraph/url', () => {
     });
 
     it('handles absent values', () => {
-      ['end', 'hash', 'operation', 'service', 'start', 'visEncoding'].forEach((param) => {
+      ['end', 'hash', 'operation', 'service', 'start', 'visEncoding'].forEach(param => {
         const { [param]: unused, ...rest } = expectedParams;
         const { [param]: alsoUnused, ...rv } = acceptableParams;
         parseSpy.mockReturnValue(rv);
@@ -159,8 +159,8 @@ describe('DeepDependencyGraph/url', () => {
     });
 
     it('omits falsy values', () => {
-      ['decoration', 'end', 'hash', 'operation', 'service', 'start', 'visEncoding'].forEach((param) => {
-        [null, undefined, ''].forEach((falsyPossibility) => {
+      ['decoration', 'end', 'hash', 'operation', 'service', 'start', 'visEncoding'].forEach(param => {
+        [null, undefined, ''].forEach(falsyPossibility => {
           parseSpy.mockReturnValue({ ...expectedParams, [param]: falsyPossibility });
           expect(Reflect.has(getUrlState(getSearch()), param)).toBe(false);
         });
@@ -169,7 +169,7 @@ describe('DeepDependencyGraph/url', () => {
 
     it('handles and warns on duplicate values', () => {
       ['decoration', 'end', 'hash', 'operation', 'service', 'showOp', 'start', 'visEncoding'].forEach(
-        (param) => {
+        param => {
           const secondParam = `second ${acceptableParams[param]}`;
           parseSpy.mockReturnValue({
             ...acceptableParams,

@@ -169,7 +169,7 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
       renderUtils: this.renderUtils,
     };
     const { layoutPhase } = graphState;
-    return topLayers.map((layer) => {
+    return topLayers.map(layer => {
       const { layerType, key, setOnContainer } = layer;
       if (layer.layers) {
         if (layer.layerType === ELayerType.Html) {

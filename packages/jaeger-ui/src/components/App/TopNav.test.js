@@ -72,16 +72,16 @@ describe('<TopNav>', () => {
 
   describe('renders the default menu options', () => {
     it('renders the "JAEGER UI" link', () => {
-      const items = wrapper.find(Link).findWhere((link) => link.prop('to') === '/');
+      const items = wrapper.find(Link).findWhere(link => link.prop('to') === '/');
       expect(items.length).toBe(1);
     });
     it('renders the "Search" button', () => {
-      const items = wrapper.find(Link).findWhere((link) => link.prop('to') === '/search');
+      const items = wrapper.find(Link).findWhere(link => link.prop('to') === '/search');
       expect(items.length).toBe(1);
     });
 
     it('renders the "System Architecture" button', () => {
-      const items = wrapper.find(Link).findWhere((link) => link.prop('to') === '/dependencies');
+      const items = wrapper.find(Link).findWhere(link => link.prop('to') === '/dependencies');
       expect(items.length).toBe(1);
     });
   });
@@ -121,7 +121,7 @@ describe('<TopNav>', () => {
       });
 
       it('renders sub-menu text', () => {
-        dropdownItems.slice(0, 0).forEach((itemConfig) => {
+        dropdownItems.slice(0, 0).forEach(itemConfig => {
           const item = subMenu.find(`[text="${itemConfig.label}"]`);
           expect(item.length).toBe(1);
           expect(item.prop('disabled')).toBe(true);
@@ -129,7 +129,7 @@ describe('<TopNav>', () => {
       });
 
       it('renders sub-menu links', () => {
-        dropdownItems.slice(1, 2).forEach((itemConfig) => {
+        dropdownItems.slice(1, 2).forEach(itemConfig => {
           const item = subMenu.find(`[href="${itemConfig.url}"]`);
           expect(item.length).toBe(1);
           expect(item.prop('target')).toBe(itemConfig.anchorTarget || '_blank');

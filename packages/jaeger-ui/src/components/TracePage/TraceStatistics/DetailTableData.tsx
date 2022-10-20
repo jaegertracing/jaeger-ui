@@ -39,7 +39,7 @@ type State = {
 export default class DetailTableData extends Component<Props, State> {
   constructor(props: Readonly<Props>) {
     super(props);
-    const element = this.props.values.map((item) => {
+    const element = this.props.values.map(item => {
       return { uid: _.uniqueId('id'), value: item };
     });
     this.state = { element };

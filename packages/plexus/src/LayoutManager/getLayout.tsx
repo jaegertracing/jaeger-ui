@@ -54,7 +54,7 @@ function getVerticesValidity(
   output: TLayoutVertex[]
 ): TVerticesValidity {
   const inputHash: { [key: string]: TSizeVertex | TLayoutVertex } = {};
-  input.forEach((v) => {
+  input.forEach(v => {
     inputHash[String(v.vertex.key)] = v;
   });
 

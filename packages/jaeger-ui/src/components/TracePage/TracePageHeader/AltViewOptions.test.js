@@ -29,7 +29,7 @@ describe('AltViewOptions', () => {
   let trackTraceSpansView;
 
   let wrapper;
-  const getLink = (text) => {
+  const getLink = text => {
     const menu = shallow(wrapper.find(Dropdown).prop('overlay'));
     const links = menu.find(Link);
     for (let i = 0; i < links.length; i++) {

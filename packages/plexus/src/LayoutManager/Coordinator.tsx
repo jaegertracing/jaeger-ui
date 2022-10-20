@@ -248,7 +248,7 @@ export default class Coordinator {
     }
     // phase is either edges or dot-only
     if (edges) {
-      const pixelEdges = edges.map((edge) => convCoord.edgeToPixels(graph, edge));
+      const pixelEdges = edges.map(edge => convCoord.edgeToPixels(graph, edge));
       const mergedEdges = input.unmapEdges(pixelEdges);
       this.callback({
         type: ECoordinatorPhase.Done,

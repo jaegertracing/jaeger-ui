@@ -892,7 +892,7 @@ const edgeLayersGroup = {
       key: 'edges-pointer-area',
       edges: true,
       setOnContainer: { style: { opacity: 0, strokeWidth: 4 } },
-      setOnEdge: (layoutEdge) => ({
+      setOnEdge: layoutEdge => ({
         onMouseOver: () => console.log('mouse over', layoutEdge),
         onMouseOut: () => console.log('mouse out', layoutEdge),
       }),

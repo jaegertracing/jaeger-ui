@@ -162,7 +162,7 @@ export const getSuitableTimeUnit = (microseconds: number): string => {
 
   return Object.keys(timeUnitToShortTermMapper)
     .reverse()
-    .find((timeUnit) => {
+    .find(timeUnit => {
       const durationInTimeUnit = duration.as(timeUnit as unitOfTime.Base);
 
       return durationInTimeUnit >= 1;

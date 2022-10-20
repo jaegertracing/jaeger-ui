@@ -130,7 +130,7 @@ describe('<SpanDetail>', () => {
     expect(
       overview
         .prop('items')
-        .map((item) => item.label)
+        .map(item => item.label)
         .sort()
     ).toEqual(words);
   });

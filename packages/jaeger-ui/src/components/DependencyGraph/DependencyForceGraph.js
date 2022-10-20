@@ -60,12 +60,12 @@ export default class DependencyForceGraph extends Component {
   render() {
     const { nodes, links } = this.props;
     const { width, height } = this.state;
-    const nodesMap = new Map(nodes.map((node) => [node.id, node]));
+    const nodesMap = new Map(nodes.map(node => [node.id, node]));
 
     return (
       <div
         ref={
-          /* istanbul ignore next */ (c) => {
+          /* istanbul ignore next */ c => {
             this.container = c;
           }
         }

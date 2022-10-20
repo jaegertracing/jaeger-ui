@@ -32,7 +32,7 @@ export const actionTypes = generateActionTypes('@jaeger-ui/PATH_AGNOSTIC_DECORAT
 export const getDecorationSchema = _memoize((id: string): TPathAgnosticDecorationSchema | undefined => {
   const schemas = getConfigValue('pathAgnosticDecorations') as TPathAgnosticDecorationSchema[] | undefined;
   if (!schemas) return undefined;
-  return schemas.find((s) => s.id === id);
+  return schemas.find(s => s.id === id);
 });
 
 let doneCount: undefined | number;
@@ -66,7 +66,7 @@ export function getDecoration(
 
   const returnPromise = !resolve || !pendingPromise;
   if (returnPromise) {
-    pendingPromise = new Promise<TNewData>((res) => {
+    pendingPromise = new Promise<TNewData>(res => {
       resolve = res;
     });
   }
@@ -87,13 +87,13 @@ export function getDecoration(
   }
 
   promise
-    .then((res) => {
+    .then(res => {
       return _get(res, getPath, `\`${getPath}\` not found in response`);
     })
-    .catch((err) => {
+    .catch(err => {
       return `Unable to fetch decoration: ${err.message || err}`;
     })
-    .then((value) => {
+    .then(value => {
       if (!pendingData) pendingData = {};
       _set(pendingData, setPath, value);
       doneCount = doneCount ? doneCount + 1 : 1;

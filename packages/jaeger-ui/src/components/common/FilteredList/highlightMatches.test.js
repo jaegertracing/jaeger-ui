@@ -56,7 +56,7 @@ describe('highlightMatches(query, text)', () => {
     },
   ];
 
-  tests.forEach((info) => {
+  tests.forEach(info => {
     const { message, query, text } = info;
     it(message, () => {
       const wrapper = shallow(<span>{highlightMatches(query, text)}</span>);

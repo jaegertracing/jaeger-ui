@@ -694,7 +694,7 @@ const serviceOpsCallsZeroDivision = {
   },
 };
 
-const emptyResponse = (responseWithData) => {
+const emptyResponse = responseWithData => {
   return {
     ...responseWithData,
     value: {

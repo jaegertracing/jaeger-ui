@@ -52,8 +52,8 @@ describe('GraphModel', () => {
       let expectedEdgeCount = 0;
       expectedVertices.forEach(({ visIndices, focalSideNeighbors = [] }) => {
         // Validate that all visIndices share the same vertex
-        const pathElems = visIndices.map((visIdx) => graph.visIdxToPathElem[visIdx]);
-        const vertices = pathElems.map((elem) => graph.pathElemToVertex.get(elem));
+        const pathElems = visIndices.map(visIdx => graph.visIdxToPathElem[visIdx]);
+        const vertices = pathElems.map(elem => graph.pathElemToVertex.get(elem));
         const vertex = vertices[0];
         expect(new Set(vertices)).toEqual(new Set([vertex]));
         // Validate that the common vertex is associated with all of its pathElems
@@ -62,11 +62,11 @@ describe('GraphModel', () => {
         // Validate that there is an edge connecting the vertex with each expected focalSideNeighbor
         expectedEdgeCount += focalSideNeighbors.length;
         const focalSideEdges = Array.from(
-          new Set(pathElems.map((elem) => graph.pathElemToEdge.get(elem)))
+          new Set(pathElems.map(elem => graph.pathElemToEdge.get(elem)))
         ).filter(Boolean);
         const focalSideKeys = focalSideEdges.map(({ to, from }) => (to === vertex.key ? from : to));
         const expectedKeys = focalSideNeighbors.map(
-          (idx) => graph.pathElemToVertex.get(graph.visIdxToPathElem[idx]).key
+          idx => graph.pathElemToVertex.get(graph.visIdxToPathElem[idx]).key
         );
         expect(focalSideKeys).toEqual(expectedKeys);
       });
@@ -560,12 +560,12 @@ describe('GraphModel', () => {
           ddgModel: simpleModel,
           density: EDdgDensity.PreventPathEntanglement,
         });
-        const expectedVertices = simpleModel.visIdxToPathElem.map((elem) =>
+        const expectedVertices = simpleModel.visIdxToPathElem.map(elem =>
           twoHopGraph.pathElemToVertex.get(elem)
         );
         const expectedEdges = simpleModel.visIdxToPathElem
-          .filter((elem) => elem.distance)
-          .map((elem) => twoHopGraph.pathElemToEdge.get(elem));
+          .filter(elem => elem.distance)
+          .map(elem => twoHopGraph.pathElemToEdge.get(elem));
         const { edges, vertices } = twoHopGraph.getVisible();
         expect(new Set(edges)).toEqual(new Set(expectedEdges));
         expect(new Set(vertices)).toEqual(new Set(expectedVertices));
@@ -616,7 +616,7 @@ describe('GraphModel', () => {
         operation: { name: withoutFocalOpFistOp },
       },
     ] = withoutFocalOpGraph.visIdxToPathElem;
-    const shorten = (str) => str.substring(0, str.length - 3);
+    const shorten = str => str.substring(0, str.length - 3);
     const visEncoding = encode([0, 1, 2, 3, 4, 5]);
     const { vertices: visibleVertices } = convergentGraph.getVisible(visEncoding);
     const {

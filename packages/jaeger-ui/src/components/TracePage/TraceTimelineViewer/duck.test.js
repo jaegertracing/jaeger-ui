@@ -229,7 +229,7 @@ describe('TraceTimelineViewer/duck', () => {
       },
     ];
 
-    tests.forEach((info) => {
+    tests.forEach(info => {
       const { msg, action, propName, initial, resultant } = info;
 
       it(msg, () => {
@@ -309,7 +309,7 @@ describe('TraceTimelineViewer/duck', () => {
       },
     ];
 
-    tests.forEach((info) => {
+    tests.forEach(info => {
       const { msg, reducerFn, initial, resultant } = info;
 
       it(msg, () => {
@@ -342,7 +342,7 @@ describe('TraceTimelineViewer/duck', () => {
       },
     ];
 
-    dispatchTests.forEach((info) => {
+    dispatchTests.forEach(info => {
       const { msg, action, resultant } = info;
 
       it(msg, () => {
@@ -362,35 +362,35 @@ describe('TraceTimelineViewer/duck', () => {
       {
         msg: 'toggles tags',
         action: actions.detailTagsToggle(id),
-        get: (state) => state.detailStates.get(id),
+        get: state => state.detailStates.get(id),
         unchecked: new DetailState(),
         checked: baseDetail.toggleTags(),
       },
       {
         msg: 'toggles process',
         action: actions.detailProcessToggle(id),
-        get: (state) => state.detailStates.get(id),
+        get: state => state.detailStates.get(id),
         unchecked: new DetailState(),
         checked: baseDetail.toggleProcess(),
       },
       {
         msg: 'toggles logs',
         action: actions.detailLogsToggle(id),
-        get: (state) => state.detailStates.get(id),
+        get: state => state.detailStates.get(id),
         unchecked: new DetailState(),
         checked: baseDetail.toggleLogs(),
       },
       {
         msg: 'toggles warnings',
         action: actions.detailWarningsToggle(id),
-        get: (state) => state.detailStates.get(id),
+        get: state => state.detailStates.get(id),
         unchecked: new DetailState(),
         checked: baseDetail.toggleWarnings(),
       },
       {
         msg: 'toggles references',
         action: actions.detailReferencesToggle(id),
-        get: (state) => state.detailStates.get(id),
+        get: state => state.detailStates.get(id),
         unchecked: new DetailState(),
         checked: baseDetail.toggleReferences(),
       },
@@ -400,7 +400,7 @@ describe('TraceTimelineViewer/duck', () => {
       store.dispatch(actions.detailToggle(id));
     });
 
-    tests.forEach((info) => {
+    tests.forEach(info => {
       const { msg, action, get, unchecked, checked } = info;
 
       it(msg, () => {

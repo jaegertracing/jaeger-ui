@@ -30,7 +30,7 @@ export default function generateActionTypes(
   topLevelTypes: string[]
 ): Record<string, string> {
   const rv: Record<string, string> = {};
-  topLevelTypes.forEach((type) => {
+  topLevelTypes.forEach(type => {
     const fullType = `${commonPrefix}/${type}`;
     rv[type] = fullType;
   });

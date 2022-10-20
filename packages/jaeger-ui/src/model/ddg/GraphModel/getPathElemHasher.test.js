@@ -28,7 +28,7 @@ describe('getPathElemHasher()', () => {
     return str
       .trim()
       .split('\n')
-      .map((line) => line.trim().split(/\s+/g).map(makePayloadEntry));
+      .map(line => line.trim().split(/\s+/g).map(makePayloadEntry));
   }
 
   const payloadStr = `

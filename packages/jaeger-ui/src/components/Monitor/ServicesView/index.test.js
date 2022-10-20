@@ -42,7 +42,7 @@ const state = {
 const props = mapStateToProps(state);
 
 Date.now = jest.fn(() => 1487076708000); // Tue, 14 Feb 2017 12:51:48 GMT'
-jest.mock('lodash/debounce', () => (fn) => fn);
+jest.mock('lodash/debounce', () => fn => fn);
 
 describe('<MonitorATMServicesView>', () => {
   let wrapper;

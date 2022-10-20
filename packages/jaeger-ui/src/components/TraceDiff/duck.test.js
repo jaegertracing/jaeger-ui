@@ -89,7 +89,7 @@ describe('TraceDiff/duck', () => {
       expect(newState.b).toBe(null);
       expect(newCohort).not.toBe(oldCohort);
       expect(newCohort.includes(oldState.b)).toBe(false);
-      expect(newCohort).toEqual(oldCohort.filter((entry) => entry !== oldState.b));
+      expect(newCohort).toEqual(oldCohort.filter(entry => entry !== oldState.b));
     });
 
     it('returns original state if traceID already exists in state', () => {

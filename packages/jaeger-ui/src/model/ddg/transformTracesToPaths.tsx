@@ -32,7 +32,7 @@ function transformTracesToPaths(
     if (data) {
       const spanMap: Map<string, Span> = new Map();
       const { traceID } = data;
-      data.spans.forEach((span) => spanMap.set(span.spanID, span));
+      data.spans.forEach(span => spanMap.set(span.spanID, span));
       const tree = getTraceSpanIdsAsTree(data);
       tree.paths((pathIds: string[]) => {
         const paths = pathIds.reduce((reducedSpans: Span[], id: string): Span[] => {
@@ -61,7 +61,7 @@ function transformTracesToPaths(
               service === focalService && (!focalOperation || operation === focalOperation)
           )
         ) {
-          const pathKey = path.map((value) => `${value.operation}:${value.service}`).join('/');
+          const pathKey = path.map(value => `${value.operation}:${value.service}`).join('/');
           const dependency = dependenciesMap.get(pathKey);
           if (!dependency) {
             dependenciesMap.set(pathKey, {

@@ -34,13 +34,13 @@ export default function configureStore(history) {
     compose(
       applyMiddleware(
         ...Object.keys(jaegerMiddlewares)
-          .map((key) => jaegerMiddlewares[key])
+          .map(key => jaegerMiddlewares[key])
           .filter(Boolean),
         routerMiddleware(history)
       ),
       process.env.NODE_ENV !== 'production' && window && window.__REDUX_DEVTOOLS_EXTENSION__
         ? window.__REDUX_DEVTOOLS_EXTENSION__()
-        : (noop) => noop
+        : noop => noop
     )
   );
 }

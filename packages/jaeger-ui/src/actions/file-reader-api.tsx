@@ -19,6 +19,6 @@ import readJsonFile from '../utils/readJsonFile';
 // eslint-disable-next-line import/prefer-default-export
 export const loadJsonTraces = createAction(
   '@FILE_READER_API/LOAD_JSON',
-  (fileList) => readJsonFile(fileList),
-  (fileList) => ({ fileList })
+  fileList => readJsonFile(fileList),
+  fileList => ({ fileList })
 );

@@ -41,7 +41,7 @@ export function References(props: ReferenceItemProps) {
   return (
     <div className="ReferencesList u-simple-scrollbars">
       <ul className="ReferencesList--List">
-        {data.map((reference) => {
+        {data.map(reference => {
           return (
             <li className="ReferencesList--Item" key={`${reference.spanID}`}>
               <ReferenceLink reference={reference} focusSpan={focusSpan}>

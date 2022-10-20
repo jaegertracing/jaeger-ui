@@ -243,7 +243,7 @@ describe('SearchTracePage/url', () => {
     });
 
     it('returns `false` if a considered key is changed or omitted', () => {
-      queryKeys.forEach((key) => {
+      queryKeys.forEach(key => {
         // eslint-disable-next-line camelcase
         const { [key]: _omitted, ...rest } = baseQuery;
         expect(isSameQuery(baseQuery, rest)).toBe(false);

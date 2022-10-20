@@ -41,7 +41,7 @@ export function getProps<TFactoryFn extends TPropFactoryFn>(
     return {};
   }
   const specs = Array.isArray(propSpec) ? propSpec : [propSpec];
-  const propsList = specs.map((spec) => (typeof spec === 'function' ? spec(...args) || {} : spec));
+  const propsList = specs.map(spec => (typeof spec === 'function' ? spec(...args) || {} : spec));
   return assignMergeCss(...propsList);
 }
 

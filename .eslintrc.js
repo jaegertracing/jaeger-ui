@@ -44,7 +44,7 @@ module.exports = {
   ],
   rules: {
     /* general */
-    'arrow-parens': [1, 'always'],
+    'arrow-parens': [1, 'as-needed'],
     'comma-dangle': 0,
     'lines-between-class-members': ['error', 'always', { exceptAfterSingleLine: true }],
     'no-continue': 0,

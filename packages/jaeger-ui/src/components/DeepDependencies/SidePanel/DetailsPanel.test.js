@@ -66,16 +66,16 @@ describe('<SidePanel>', () => {
 
       const tests = [];
 
-      ['detailUrl#{service}', undefined].forEach((detailUrl) => {
-        ['detail.path.#{service}', undefined].forEach((detailPath) => {
-          ['detail.column.def.path.#{service}', undefined].forEach((detailColumnDefPath) => {
-            ['opDetailUrl#{service}#{operation}', undefined].forEach((opDetailUrl) => {
-              ['op.detail.path.#{service}.#{operation}', undefined].forEach((opDetailPath) => {
-                ['op.detail.column.def.path.#{service}', undefined].forEach((opDetailColumnDefPath) => {
-                  ['op', ['op0', 'op1'], undefined].forEach((operation) => {
-                    [{ message: 'Err obj with message' }, 'error message', false].forEach((error) => {
-                      [true, false].forEach((hasDetails) => {
-                        [true, false].forEach((hasColumnDefPath) => {
+      ['detailUrl#{service}', undefined].forEach(detailUrl => {
+        ['detail.path.#{service}', undefined].forEach(detailPath => {
+          ['detail.column.def.path.#{service}', undefined].forEach(detailColumnDefPath => {
+            ['opDetailUrl#{service}#{operation}', undefined].forEach(opDetailUrl => {
+              ['op.detail.path.#{service}.#{operation}', undefined].forEach(opDetailPath => {
+                ['op.detail.column.def.path.#{service}', undefined].forEach(opDetailColumnDefPath => {
+                  ['op', ['op0', 'op1'], undefined].forEach(operation => {
+                    [{ message: 'Err obj with message' }, 'error message', false].forEach(error => {
+                      [true, false].forEach(hasDetails => {
+                        [true, false].forEach(hasColumnDefPath => {
                           tests.push(async () => {
                             fetchDecorationSpy.mockClear();
                             const detailsPanel = new DetailsPanel({
@@ -168,7 +168,7 @@ describe('<SidePanel>', () => {
       });
 
       const errors = [];
-      await Promise.all(tests.map((test) => test().catch((err) => errors.push(err))));
+      await Promise.all(tests.map(test => test().catch(err => errors.push(err))));
       if (errors.length) throw errors;
     });
   });

@@ -62,7 +62,7 @@ describe('transform ddg data', () => {
     const orderedVisIndices = Array.from(visIndicesToDistance.keys()).sort((a, b) => a - b);
     expect(orderedVisIndices).toEqual(expectedVisIndices);
     let distance = 0;
-    orderedVisIndices.forEach((orderedIdx) => {
+    orderedVisIndices.forEach(orderedIdx => {
       const currentDistance = Math.abs(visIndicesToDistance.get(orderedIdx));
       if (currentDistance < distance) {
         throw new Error('Net distance did not increase or stay equal as visibilityIdx increased');

@@ -56,7 +56,7 @@ describe('<MainTableData>', () => {
   it('renders TableOverviewHeadTag', () => {
     expect(wrapper.find('.MainTableData--label').text()).toBe('api-gateway');
 
-    const firstRowColumns = wrapper.find('.MainTableData--td').map((column) => column.text());
+    const firstRowColumns = wrapper.find('.MainTableData--td').map(column => column.text());
     expect(firstRowColumns.length).toBe(11);
 
     expect(firstRowColumns[0]).toBe('api-gateway');

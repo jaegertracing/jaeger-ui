@@ -215,7 +215,7 @@ function fetchOpsMetricsDone(
               };
             }
 
-            opsMetrics[opsName].metricPoints[metric.name] = metricDetails.metricPoints.map((p) => {
+            opsMetrics[opsName].metricPoints[metric.name] = metricDetails.metricPoints.map(p => {
               let y;
               try {
                 y = parseFloat(p.gaugeValue.doubleValue.toFixed(2));

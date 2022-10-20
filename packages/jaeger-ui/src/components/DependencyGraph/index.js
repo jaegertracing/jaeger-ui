@@ -70,7 +70,7 @@ export class DependencyGraphPageImpl extends Component {
     this.props.fetchDependencies();
   }
 
-  handleGraphTypeChange = (graphType) => this.setState({ graphType });
+  handleGraphTypeChange = graphType => this.setState({ graphType });
 
   render() {
     const { nodes, links, error, dependencies, loading } = this.props;
@@ -99,7 +99,7 @@ export class DependencyGraphPageImpl extends Component {
         type="card"
         tabBarStyle={{ background: '#f5f5f5', padding: '1rem 1rem 0 1rem' }}
       >
-        {GRAPH_TYPE_OPTIONS.map((opt) => (
+        {GRAPH_TYPE_OPTIONS.map(opt => (
           <TabPane className="ub-relelative" tab={opt.name} key={opt.type}>
             <div className="DependencyGraph--graphWrapper">
               {opt.type === 'FORCE_DIRECTED' && <DependencyForceGraph nodes={nodes} links={links} />}

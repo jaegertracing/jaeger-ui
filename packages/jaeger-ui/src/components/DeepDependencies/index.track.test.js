@@ -66,7 +66,7 @@ describe('DeepDependencies tracking', () => {
     const intermediate = EDdgDensity.OnePerLevel;
     const moreConcise = EDdgDensity.UpstreamVsDownstream;
     const moreDetailed = EDdgDensity.PreventPathEntanglement;
-    const options = [moreConcise, intermediate, moreDetailed].map((option) => ({ option }));
+    const options = [moreConcise, intermediate, moreDetailed].map(option => ({ option }));
 
     it('no-ops if given the same density twice', () => {
       trackDensityChange(moreConcise, moreConcise, options);

@@ -40,9 +40,9 @@ function ScatterPlotImpl(props) {
         <XAxis
           title="Time"
           tickTotal={4}
-          tickFormat={(t) => moment(t / ONE_MILLISECOND).format('hh:mm:ss a')}
+          tickFormat={t => moment(t / ONE_MILLISECOND).format('hh:mm:ss a')}
         />
-        <YAxis title="Duration" tickTotal={3} tickFormat={(t) => formatDuration(t)} />
+        <YAxis title="Duration" tickTotal={3} tickFormat={t => formatDuration(t)} />
         <MarkSeries
           sizeRange={[3, 10]}
           opacity={0.5}
@@ -86,7 +86,7 @@ ScatterPlotImpl.defaultProps = {
 const ScatterPlot = compose(
   withState('overValue', 'setOverValue', null),
   withProps(({ setOverValue }) => ({
-    onValueOver: (value) => setOverValue(value),
+    onValueOver: value => setOverValue(value),
     onValueOut: () => setOverValue(null),
   }))
 )(ScatterPlotImpl);

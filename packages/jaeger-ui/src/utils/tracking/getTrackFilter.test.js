@@ -14,7 +14,7 @@
 
 /* eslint-disable import/first */
 
-jest.mock('lodash/throttle', () => jest.fn((fn) => fn));
+jest.mock('lodash/throttle', () => jest.fn(fn => fn));
 jest.mock('../../utils/tracking');
 
 import _throttle from 'lodash/throttle';

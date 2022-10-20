@@ -41,6 +41,6 @@ const input = {
 export default input;
 
 export const sizedInput = {
-  vertices: input.vertices.map((vertex) => ({ vertex, height: 100, width: 300 })),
+  vertices: input.vertices.map(vertex => ({ vertex, height: 100, width: 300 })),
   edges: input.edges,
 };

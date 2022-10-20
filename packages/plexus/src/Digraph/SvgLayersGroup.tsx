@@ -27,7 +27,7 @@ type TProps<T = {}, U = {}> = Omit<TSvgLayersGroup<T, U>, 'layerType' | 'key'> &
 export default class SvgLayersGroup<T = {}, U = {}> extends React.PureComponent<TProps<T, U>> {
   private renderLayers() {
     const { getClassName, layers, graphState } = this.props;
-    return layers.map((layer) => {
+    return layers.map(layer => {
       const { key, setOnContainer } = layer;
       if (layer.edges) {
         return (

@@ -436,11 +436,11 @@ class Demo extends React.PureComponent<{}, TState> {
                   ),
                 },
               ]}
-              edges={largeDag.edges.map((edge) => ({
+              edges={largeDag.edges.map(edge => ({
                 from: edge.from.repeat(8),
                 to: edge.to.repeat(8),
               }))}
-              vertices={largeDag.vertices.map((vtx) => ({
+              vertices={largeDag.vertices.map(vtx => ({
                 ...vtx,
                 key: vtx.key.repeat(8),
               }))}
