@@ -469,7 +469,7 @@ function mapStateToProps(state: ReduxState): TTraceTimeline & TExtractUiFindFrom
 
 /* istanbul ignore next */
 function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
-  return bindActionCreators(actions, dispatch) as any as TDispatchProps;
+  return (bindActionCreators(actions, dispatch) as any) as TDispatchProps;
 }
 
 export default withRouter(

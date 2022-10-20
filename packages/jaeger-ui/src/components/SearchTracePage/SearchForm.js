@@ -75,7 +75,11 @@ export function convTagsLogfmt(tags) {
 
 export function lookbackToTimestamp(lookback, from) {
   const unit = lookback.substr(-1);
-  return moment(from).subtract(parseInt(lookback, 10), unit).valueOf() * 1000;
+  return (
+    moment(from)
+      .subtract(parseInt(lookback, 10), unit)
+      .valueOf() * 1000
+  );
 }
 
 const lookbackOptions = [
@@ -554,8 +558,12 @@ export function mapStateToProps(state) {
     }
   }
 
-  const { queryStartDate, queryStartDateTime, queryEndDate, queryEndDateTime } =
-    convertQueryParamsToFormDates({ start, end });
+  const {
+    queryStartDate,
+    queryStartDateTime,
+    queryEndDate,
+    queryEndDateTime,
+  } = convertQueryParamsToFormDates({ start, end });
 
   let tags;
   // continue to parse tagParams to remain backward compatible with older URLs

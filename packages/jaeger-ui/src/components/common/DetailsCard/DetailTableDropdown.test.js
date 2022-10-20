@@ -52,7 +52,12 @@ describe('DetailTable', () => {
 
     it('handles missing clearFilters prop', () => {
       wrapper.setProps({ clearFilters: undefined });
-      expect(() => wrapper.find(Button).first().simulate('click')).not.toThrow();
+      expect(() =>
+        wrapper
+          .find(Button)
+          .first()
+          .simulate('click')
+      ).not.toThrow();
     });
   });
 
@@ -64,7 +69,10 @@ describe('DetailTable', () => {
       expect(props.confirm).not.toHaveBeenCalled();
       expect(props.setSelectedKeys).not.toHaveBeenCalled();
 
-      wrapper.find(Button).at(1).simulate('click');
+      wrapper
+        .find(Button)
+        .at(1)
+        .simulate('click');
       expect(props.setSelectedKeys).toHaveBeenCalledTimes(1);
       expect(props.setSelectedKeys).toHaveBeenCalledWith(selectedKeys);
       expect(props.confirm).not.toHaveBeenCalled();

@@ -236,8 +236,9 @@ describe('GraphModel', () => {
     const { visibilityIdx: targetRootIdx } = upstreamTargets.find(external);
     const leafAndRootVisIndices = [...oneHopIndices, targetLeafIdx, targetRootIdx];
     const leafAndRootVisEncoding = encode(leafAndRootVisIndices);
-    const [hiddenDownstreamTargetNotLeaf, visibleDownstreamTargetNotLeaf] =
-      downstreamTargets.filter(internal);
+    const [hiddenDownstreamTargetNotLeaf, visibleDownstreamTargetNotLeaf] = downstreamTargets.filter(
+      internal
+    );
     const [hiddenUpstreamTargetNotRoot, visibleUpstreamTargetNotRoot] = upstreamTargets.filter(internal);
     const partialTargetVisIndices = [
       ...leafAndRootVisIndices,
@@ -619,11 +620,9 @@ describe('GraphModel', () => {
     const shorten = str => str.substring(0, str.length - 3);
     const visEncoding = encode([0, 1, 2, 3, 4, 5]);
     const { vertices: visibleVertices } = convergentGraph.getVisible(visEncoding);
-    const {
-      key: focalKey,
-      service: focalService,
-      operation: focalOperation,
-    } = visibleVertices[visibleVertices.length - 1];
+    const { key: focalKey, service: focalService, operation: focalOperation } = visibleVertices[
+      visibleVertices.length - 1
+    ];
     const { service: otherService } = visibleVertices[2];
     const { vertices: hiddenOpVertices } = hideOpGraph.getVisible(visEncoding);
     const {

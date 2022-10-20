@@ -758,7 +758,12 @@ describe('DeepDependencyGraphPage', () => {
           wrapper.setProps(makeGraphState());
           expect(wrapper.find(Graph)).toHaveLength(0);
           expect(wrapper.find('h1.Ddg--center').text()).toBe(expectedHeader);
-          expect(wrapper.find('p.Ddg--center').first().text()).toBe(expectedInstruction());
+          expect(
+            wrapper
+              .find('p.Ddg--center')
+              .first()
+              .text()
+          ).toBe(expectedInstruction());
           expect(wrapper.find('a').prop('href')).toBe(mockUrl);
           expect(getSearchUrlSpy).toHaveBeenLastCalledWith({
             lookback,
@@ -771,7 +776,12 @@ describe('DeepDependencyGraphPage', () => {
           wrapper.setProps({ urlState: urlStateWithoutOp, ...makeGraphState() });
           expect(wrapper.find(Graph)).toHaveLength(0);
           expect(wrapper.find('h1.Ddg--center').text()).toBe(expectedHeader);
-          expect(wrapper.find('p.Ddg--center').first().text()).toBe(expectedInstruction(false));
+          expect(
+            wrapper
+              .find('p.Ddg--center')
+              .first()
+              .text()
+          ).toBe(expectedInstruction(false));
           expect(wrapper.find('a').prop('href')).toBe(mockUrl);
           expect(getSearchUrlSpy).toHaveBeenLastCalledWith({
             lookback,
@@ -795,7 +805,11 @@ describe('DeepDependencyGraphPage', () => {
 
       it('renders indication of unknown state when done but no graph is provided', () => {
         const wrapper = shallow(<DeepDependencyGraphPageImpl {...propsWithoutGraph} />);
-        const unknownIndication = wrapper.find('div').find('div').last().text();
+        const unknownIndication = wrapper
+          .find('div')
+          .find('div')
+          .last()
+          .text();
         expect(wrapper.find(Graph)).toHaveLength(0);
         expect(unknownIndication).toMatch(/Unknown graphState/);
       });

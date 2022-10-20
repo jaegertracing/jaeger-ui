@@ -221,14 +221,12 @@ describe('DetailTable', () => {
     });
 
     describe('function props', () => {
-      const makeTestFn =
-        fn =>
-        (...vals) =>
-          fn(stringColumn)(
-            ...vals.map(v => ({
-              [stringColumn]: v,
-            }))
-          );
+      const makeTestFn = fn => (...vals) =>
+        fn(stringColumn)(
+          ...vals.map(v => ({
+            [stringColumn]: v,
+          }))
+        );
 
       describe('_makeFilterDropdown', () => {
         it('returns DetailsTableDropdown with correct props', () => {

@@ -89,9 +89,17 @@ describe('Selector', () => {
 
   it('disables increment/decrement buttons', () => {
     wrapper.setProps({ furthestDistance: 0 });
-    expect(getPopoverButtons().first().prop('disabled')).toBe(true);
+    expect(
+      getPopoverButtons()
+        .first()
+        .prop('disabled')
+    ).toBe(true);
 
     wrapper.setProps({ furthestDistance: hops.length - 1 });
-    expect(getPopoverButtons().last().prop('disabled')).toBe(true);
+    expect(
+      getPopoverButtons()
+        .last()
+        .prop('disabled')
+    ).toBe(true);
   });
 });

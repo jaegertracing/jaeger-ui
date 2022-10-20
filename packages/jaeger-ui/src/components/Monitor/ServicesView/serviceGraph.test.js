@@ -133,7 +133,10 @@ describe('<ServiceGraph>', () => {
       loading: false,
       metricsData: serviceMetrics.service_call_rate,
     });
-    wrapper.find('AreaSeries').at(0).prop('onNearestX')({ x: 1, y: 2 }, { index: 7 });
+    wrapper
+      .find('AreaSeries')
+      .at(0)
+      .prop('onNearestX')({ x: 1, y: 2 }, { index: 7 });
     expect(wrapper.state().crosshairValues).toEqual([{ label: 0.95 }]);
     wrapper.find('XYPlot').prop('onMouseLeave')();
     expect(wrapper.state().crosshairValues).toEqual([]);

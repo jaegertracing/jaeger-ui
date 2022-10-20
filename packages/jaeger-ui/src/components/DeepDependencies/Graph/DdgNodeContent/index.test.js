@@ -259,7 +259,10 @@ describe('<DdgNodeContent>', () => {
       });
 
       it('calls this.props.focusPathsThroughVertex with this.props.vertexKey', () => {
-        wrapper.find('.DdgNodeContent--actionsItem').at(2).simulate('click');
+        wrapper
+          .find('.DdgNodeContent--actionsItem')
+          .at(2)
+          .simulate('click');
 
         expect(props.focusPathsThroughVertex).toHaveBeenCalledWith(props.vertexKey);
         expect(props.focusPathsThroughVertex).toHaveBeenCalledTimes(1);
@@ -272,7 +275,10 @@ describe('<DdgNodeContent>', () => {
       });
 
       it('calls this.props.hideVertex with this.props.vertexKey', () => {
-        wrapper.find('.DdgNodeContent--actionsItem').at(3).simulate('click');
+        wrapper
+          .find('.DdgNodeContent--actionsItem')
+          .at(3)
+          .simulate('click');
 
         expect(props.hideVertex).toHaveBeenCalledWith(props.vertexKey);
         expect(props.hideVertex).toHaveBeenCalledTimes(1);
@@ -348,7 +354,10 @@ describe('<DdgNodeContent>', () => {
 
       it('calls this.props.updateGenerationVisibility with this.props.vertexKey', () => {
         wrapper.setState({ childrenVisibility: ECheckedStatus.Empty });
-        wrapper.find('.DdgNodeContent--actionsItem').last().simulate('click');
+        wrapper
+          .find('.DdgNodeContent--actionsItem')
+          .last()
+          .simulate('click');
 
         expect(props.updateGenerationVisibility).toHaveBeenCalledWith(props.vertexKey, EDirection.Downstream);
         expect(props.updateGenerationVisibility).toHaveBeenCalledTimes(1);
@@ -389,7 +398,10 @@ describe('<DdgNodeContent>', () => {
 
       it('calls this.props.updateGenerationVisibility with this.props.vertexKey', () => {
         wrapper.setState({ parentVisibility: ECheckedStatus.Empty });
-        wrapper.find('.DdgNodeContent--actionsItem').last().simulate('click');
+        wrapper
+          .find('.DdgNodeContent--actionsItem')
+          .last()
+          .simulate('click');
 
         expect(props.updateGenerationVisibility).toHaveBeenCalledWith(props.vertexKey, EDirection.Upstream);
         expect(props.updateGenerationVisibility).toHaveBeenCalledTimes(1);
@@ -397,7 +409,11 @@ describe('<DdgNodeContent>', () => {
     });
 
     describe('viewTraces', () => {
-      const click = () => wrapper.find('.DdgNodeContent--actionsItem').at(1).simulate('click');
+      const click = () =>
+        wrapper
+          .find('.DdgNodeContent--actionsItem')
+          .at(1)
+          .simulate('click');
       const pad = num => `000${num}`.slice(-4);
       const mockReturn = ids =>
         props.getVisiblePathElems.mockReturnValue(ids.map(traceIDs => ({ memberOf: { traceIDs } })));
@@ -565,10 +581,7 @@ describe('<DdgNodeContent>', () => {
     });
 
     it('returns a focal <DdgNodeContent />', () => {
-      const focalNode = getNodeRenderer(
-        noOp,
-        noOp
-      )({
+      const focalNode = getNodeRenderer(noOp, noOp)({
         ...ddgVertex,
         isFocalNode: true,
       });

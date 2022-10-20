@@ -113,7 +113,7 @@ const GA: IWebAnalyticsFunc = (config: Config, versionShort: string, versionLong
       appVersion: versionLong,
     });
     if (cookiesToDimensions !== undefined) {
-      (cookiesToDimensions as unknown as Array<{ cookie: string; dimension: string }>).forEach(
+      ((cookiesToDimensions as unknown) as Array<{ cookie: string; dimension: string }>).forEach(
         ({ cookie, dimension }: { cookie: string; dimension: string }) => {
           const match = ` ${document.cookie}`.match(new RegExp(`[; ]${cookie}=([^\\s;]*)`));
           if (match) ReactGA.set({ [dimension]: match[1] });

@@ -19,10 +19,7 @@ import TextList from './TextList';
 describe('<TextList>', () => {
   let wrapper;
 
-  const data = [
-    { key: 'span.kind', value: 'client' },
-    { key: 'omg', value: 'mos-def' },
-  ];
+  const data = [{ key: 'span.kind', value: 'client' }, { key: 'omg', value: 'mos-def' }];
 
   beforeEach(() => {
     wrapper = shallow(<TextList data={data} />);

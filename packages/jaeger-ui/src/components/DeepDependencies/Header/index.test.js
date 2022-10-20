@@ -73,7 +73,10 @@ describe('<Header>', () => {
     const testOp = 'test operation';
     expect(trackSetOpSpy).not.toHaveBeenCalled();
 
-    wrapper.find(NameSelector).at(1).prop('setValue')(testOp);
+    wrapper
+      .find(NameSelector)
+      .at(1)
+      .prop('setValue')(testOp);
     expect(trackSetOpSpy).toHaveBeenCalledTimes(1);
     expect(minProps.setOperation).toHaveBeenCalledWith(testOp);
   });

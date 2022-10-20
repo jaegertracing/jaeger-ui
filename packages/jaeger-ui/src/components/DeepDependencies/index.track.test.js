@@ -226,10 +226,7 @@ describe('DeepDependencies tracking', () => {
   });
 
   describe('trackToggleShowOp', () => {
-    const testTable = [
-      [ACTION_HIDE, 'hiding', false],
-      [ACTION_SHOW, 'showing', true],
-    ];
+    const testTable = [[ACTION_HIDE, 'hiding', false], [ACTION_SHOW, 'showing', true]];
 
     it.each(testTable)(
       'calls track event with the toggle show op category and %p action when %p op',

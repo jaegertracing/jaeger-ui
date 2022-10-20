@@ -13,14 +13,12 @@
 // limitations under the License.
 
 /* eslint-disable import/first */
-jest.mock(
-  'node-fetch',
-  () => () =>
-    Promise.resolve({
-      status: 200,
-      data: () => Promise.resolve({ data: null }),
-      json: () => Promise.resolve({ data: null }),
-    })
+jest.mock('node-fetch', () => () =>
+  Promise.resolve({
+    status: 200,
+    data: () => Promise.resolve({ data: null }),
+    json: () => Promise.resolve({ data: null }),
+  })
 );
 
 import sinon from 'sinon';
@@ -113,13 +111,19 @@ describe('actions/jaeger-api', () => {
   });
 
   it('@JAEGER_API/FETCH_SERVICE_OPERATIONS should call the JaegerAPI', () => {
-    const called = mock.expects('fetchServiceOperations').once().withExactArgs('service');
+    const called = mock
+      .expects('fetchServiceOperations')
+      .once()
+      .withExactArgs('service');
     jaegerApiActions.fetchServiceOperations('service');
     expect(called.verify()).toBeTruthy();
   });
 
   it('@JAEGER_API/FETCH_SERVICE_SERVER_OP should call the JaegerAPI', () => {
-    const called = mock.expects('fetchServiceServerOps').once().withExactArgs('service');
+    const called = mock
+      .expects('fetchServiceServerOps')
+      .once()
+      .withExactArgs('service');
     jaegerApiActions.fetchServiceServerOps('service');
     expect(called.verify()).toBeTruthy();
   });

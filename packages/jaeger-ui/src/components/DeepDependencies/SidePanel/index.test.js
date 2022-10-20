@@ -153,7 +153,10 @@ describe('<SidePanel>', () => {
       expect(clearSelected).toHaveBeenCalledTimes(0);
       expect(trackDecorationViewDetailsSpy).toHaveBeenCalledTimes(1);
 
-      wrapper.find('button').at(0).simulate('click');
+      wrapper
+        .find('button')
+        .at(0)
+        .simulate('click');
       expect(clearSelected).toHaveBeenCalledTimes(1);
       expect(trackDecorationViewDetailsSpy).toHaveBeenCalledTimes(2);
       expect(trackDecorationViewDetailsSpy).toHaveBeenLastCalledWith();
@@ -183,7 +186,10 @@ describe('<SidePanel>', () => {
       expect(selectDecoration).toHaveBeenCalledTimes(0);
       expect(trackDecorationSelectedSpy).toHaveBeenCalledTimes(1);
 
-      wrapper.find('.Ddg--SidePanel--DecorationBtns > button').last().simulate('click');
+      wrapper
+        .find('.Ddg--SidePanel--DecorationBtns > button')
+        .last()
+        .simulate('click');
       expect(selectDecoration).toHaveBeenCalledTimes(1);
       expect(trackDecorationSelectedSpy).toHaveBeenCalledTimes(2);
       expect(trackDecorationSelectedSpy).toHaveBeenLastCalledWith(undefined);
@@ -201,7 +207,10 @@ describe('<SidePanel>', () => {
       const wrapper = shallow(<SidePanel />);
       expect(modalInfoSpy).toHaveBeenCalledTimes(0);
 
-      wrapper.find('button').last().simulate('click');
+      wrapper
+        .find('button')
+        .last()
+        .simulate('click');
       expect(modalInfoSpy).toHaveBeenCalledTimes(1);
       expect(modalInfoSpy.mock.calls[0][0]).toMatchSnapshot();
     });

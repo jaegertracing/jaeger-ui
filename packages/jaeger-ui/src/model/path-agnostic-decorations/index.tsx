@@ -56,7 +56,9 @@ export default function extractDecorationFromState(
         text={`${decorationValue}`}
         value={decorationValue}
       />
-    ) : undefined;
+    ) : (
+      undefined
+    );
 
   return {
     decorationProgressbar,

@@ -161,7 +161,9 @@ describe('UiFind', () => {
 
     it('clears value immediately when clicked', () => {
       wrapper.setProps({ uiFind });
-      findIcon().find(Icon).simulate('click');
+      findIcon()
+        .find(Icon)
+        .simulate('click');
 
       expect(updateUiFindSpy).toHaveBeenLastCalledWith({
         history: props.history,

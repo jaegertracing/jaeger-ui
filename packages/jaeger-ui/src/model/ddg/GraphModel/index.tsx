@@ -217,7 +217,10 @@ export default class GraphModel {
     const keySet: Set<string> = new Set();
     if (!uiFind || /^\s+$/.test(uiFind)) return keySet;
 
-    const uiFindArr = uiFind.trim().toLowerCase().split(/\s+/);
+    const uiFindArr = uiFind
+      .trim()
+      .toLowerCase()
+      .split(/\s+/);
     for (let i = 0; i < vertices.length; i++) {
       const { service, operation } = vertices[i];
       const svc = service.toLowerCase();

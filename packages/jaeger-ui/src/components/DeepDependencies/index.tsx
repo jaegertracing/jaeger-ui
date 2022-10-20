@@ -435,4 +435,7 @@ export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchPro
   };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(DeepDependencyGraphPageImpl);
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(DeepDependencyGraphPageImpl);

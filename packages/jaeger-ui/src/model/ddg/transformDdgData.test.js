@@ -116,8 +116,13 @@ describe('transform ddg data', () => {
   });
 
   it('sorts payload paths to ensure stable visibilityIndices', () => {
-    const { focalPayloadElem, simplePath, longSimplePath, doubleFocalPath, almostDoubleFocalPath } =
-      testResources;
+    const {
+      focalPayloadElem,
+      simplePath,
+      longSimplePath,
+      doubleFocalPath,
+      almostDoubleFocalPath,
+    } = testResources;
     const { visIdxToPathElem: presortedPathsVisIdxToPathElem } = transformDdgData(
       testResources.wrap([simplePath, doubleFocalPath, almostDoubleFocalPath, longSimplePath]),
       focalPayloadElem

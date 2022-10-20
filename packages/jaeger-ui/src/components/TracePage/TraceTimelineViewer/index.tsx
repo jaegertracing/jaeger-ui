@@ -81,8 +81,13 @@ export class TraceTimelineViewerImpl extends React.PureComponent<TProps> {
   };
 
   render() {
-    const { setSpanNameColumnWidth, updateNextViewRangeTime, updateViewRangeTime, viewRange, ...rest } =
-      this.props;
+    const {
+      setSpanNameColumnWidth,
+      updateNextViewRangeTime,
+      updateViewRangeTime,
+      viewRange,
+      ...rest
+    } = this.props;
     const { spanNameColumnWidth, trace } = rest;
 
     return (
@@ -119,4 +124,7 @@ function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
   return { setSpanNameColumnWidth, expandAll, expandOne, collapseAll, collapseOne };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(TraceTimelineViewerImpl);
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(TraceTimelineViewerImpl);

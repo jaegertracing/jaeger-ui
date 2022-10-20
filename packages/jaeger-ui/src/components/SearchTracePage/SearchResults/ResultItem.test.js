@@ -25,7 +25,11 @@ const trace = transformTraceData(traceGenerator.trace({}));
 
 it('<ResultItem /> should render base case correctly', () => {
   const wrapper = shallow(<ResultItem trace={trace} durationPercent={50} linkTo="" />);
-  const numberOfSpanText = wrapper.find(`[data-test="${markers.NUM_SPANS}"]`).first().render().text();
+  const numberOfSpanText = wrapper
+    .find(`[data-test="${markers.NUM_SPANS}"]`)
+    .first()
+    .render()
+    .text();
   const serviceTags = wrapper.find(`[data-test="${markers.SERVICE_TAGS}"]`).find(Tag);
   expect(numberOfSpanText).toBe(`${trace.spans.length} Spans`);
   expect(serviceTags).toHaveLength(trace.services.length);

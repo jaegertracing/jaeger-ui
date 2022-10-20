@@ -33,7 +33,11 @@ describe('<SpanDetail>', () => {
 
   // use `transformTraceData` on a fake trace to get a fully processed span
   const span = transformTraceData(traceGenerator.trace({ numberOfSpans: 1 })).spans[0];
-  const detailState = new DetailState().toggleLogs().toggleProcess().toggleReferences().toggleTags();
+  const detailState = new DetailState()
+    .toggleLogs()
+    .toggleProcess()
+    .toggleReferences()
+    .toggleTags();
   const traceStartTime = 5;
   const props = {
     detailState,
@@ -49,17 +53,11 @@ describe('<SpanDetail>', () => {
   span.logs = [
     {
       timestamp: 10,
-      fields: [
-        { key: 'message', value: 'oh the log message' },
-        { key: 'something', value: 'else' },
-      ],
+      fields: [{ key: 'message', value: 'oh the log message' }, { key: 'something', value: 'else' }],
     },
     {
       timestamp: 20,
-      fields: [
-        { key: 'message', value: 'oh the next log message' },
-        { key: 'more', value: 'stuff' },
-      ],
+      fields: [{ key: 'message', value: 'oh the next log message' }, { key: 'more', value: 'stuff' }],
     },
   ];
 
@@ -184,6 +182,11 @@ describe('<SpanDetail>', () => {
   });
 
   it('renders CopyIcon with deep link URL', () => {
-    expect(wrapper.find(CopyIcon).prop('copyText').includes(`?uiFind=${props.span.spanID}`)).toBe(true);
+    expect(
+      wrapper
+        .find(CopyIcon)
+        .prop('copyText')
+        .includes(`?uiFind=${props.span.spanID}`)
+    ).toBe(true);
   });
 });

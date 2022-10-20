@@ -377,7 +377,8 @@ const serviceOpsErrors = {
   value: {
     name: 'service_operation_error_rate',
     type: 'GAUGE',
-    help: 'error rate, computed as a fraction of errors/sec over calls/sec, grouped by service \u0026 operation',
+    help:
+      'error rate, computed as a fraction of errors/sec over calls/sec, grouped by service \u0026 operation',
     metrics: [
       {
         labels: [
@@ -413,7 +414,8 @@ const serviceOpsErrorsWithNull = {
   value: {
     name: 'service_operation_error_rate',
     type: 'GAUGE',
-    help: 'error rate, computed as a fraction of errors/sec over calls/sec, grouped by service \u0026 operation',
+    help:
+      'error rate, computed as a fraction of errors/sec over calls/sec, grouped by service \u0026 operation',
     metrics: [
       {
         labels: [
@@ -475,7 +477,8 @@ const serviceOpsErrorsZeroDivision = {
   value: {
     name: 'service_operation_error_rate',
     type: 'GAUGE',
-    help: 'error rate, computed as a fraction of errors/sec over calls/sec, grouped by service \u0026 operation',
+    help:
+      'error rate, computed as a fraction of errors/sec over calls/sec, grouped by service \u0026 operation',
     metrics: [
       {
         labels: [
@@ -1279,7 +1282,8 @@ const serviceOpsErrorsNoMetrics = {
   value: {
     name: 'service_operation_error_rate',
     type: 'GAUGE',
-    help: 'error rate, computed as a fraction of errors/sec over calls/sec, grouped by service \u0026 operation',
+    help:
+      'error rate, computed as a fraction of errors/sec over calls/sec, grouped by service \u0026 operation',
     metrics: [
       {
         labels: [

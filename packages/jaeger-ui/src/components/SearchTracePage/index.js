@@ -205,10 +205,7 @@ const stateTraceXformer = memoizeOne(stateTrace => {
 
   const loadingTraces = state === fetchedState.LOADING;
   const traces = results.map(id => traceMap[id].data);
-  const maxDuration = Math.max.apply(
-    null,
-    traces.map(tr => tr.duration)
-  );
+  const maxDuration = Math.max.apply(null, traces.map(tr => tr.duration));
   return { traces, maxDuration, traceError, loadingTraces, query };
 });
 
@@ -245,13 +242,9 @@ export function mapStateToProps(state) {
   const { embedded, router, services: stServices, traceDiff } = state;
   const query = getUrlState(router.location.search);
   const isHomepage = !Object.keys(query).length;
-  const {
-    query: queryOfResults,
-    traces,
-    maxDuration,
-    traceError,
-    loadingTraces,
-  } = stateTraceXformer(state.trace);
+  const { query: queryOfResults, traces, maxDuration, traceError, loadingTraces } = stateTraceXformer(
+    state.trace
+  );
   const diffCohort = stateTraceDiffXformer(state.trace, traceDiff);
   const { loadingServices, services, serviceError } = stateServicesXformer(stServices);
   const errors = [];
@@ -297,4 +290,7 @@ function mapDispatchToProps(dispatch) {
   };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(SearchTracePageImpl);
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(SearchTracePageImpl);

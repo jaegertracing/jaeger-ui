@@ -61,10 +61,11 @@ export const setOnEdgesContainer: Record<string, TSetProps<TFromGraphStateFn<unk
 
 // exported for tests
 // The dichotomy between w/ & w/o VMs assumes that any vertex VM makes unmodified vertices de-emphasized
-export const setOnVectorBorderContainerWithViewModifiers: TSetProps<TFromGraphStateFn<TDdgVertex, unknown>> =
-  {
-    className: 'DdgVectorBorders is-withViewModifiers',
-  };
+export const setOnVectorBorderContainerWithViewModifiers: TSetProps<
+  TFromGraphStateFn<TDdgVertex, unknown>
+> = {
+  className: 'DdgVectorBorders is-withViewModifiers',
+};
 
 const edgesDefs: TNonEmptyArray<TDefEntry<TDdgVertex, unknown>> = [
   { localId: 'arrow' },

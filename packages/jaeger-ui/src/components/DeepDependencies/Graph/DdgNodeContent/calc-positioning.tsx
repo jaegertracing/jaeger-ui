@@ -242,15 +242,17 @@ function smallestRadius(svcRects: TRect[], opRects?: TRect[]): TSmallestRadiusRV
   return rv;
 }
 
-const calcPositioning: (service: string, operation?: string | string[] | null) => TSmallestRadiusRV =
-  _memoize(
-    function calcPositioningImpl(service: string, operation?: string | string[] | null) {
-      const svcRects = calcRects(service, _initSvcSpan());
-      const opRects = operation ? calcRects(operation, _initOpSpan()) : undefined;
+const calcPositioning: (
+  service: string,
+  operation?: string | string[] | null
+) => TSmallestRadiusRV = _memoize(
+  function calcPositioningImpl(service: string, operation?: string | string[] | null) {
+    const svcRects = calcRects(service, _initSvcSpan());
+    const opRects = operation ? calcRects(operation, _initOpSpan()) : undefined;
 
-      return smallestRadius(svcRects, opRects);
-    },
-    (service: string, operation?: string | null) => `${service}\t${operation}`
-  );
+    return smallestRadius(svcRects, opRects);
+  },
+  (service: string, operation?: string | null) => `${service}\t${operation}`
+);
 
 export default calcPositioning;
