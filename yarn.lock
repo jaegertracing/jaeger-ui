@@ -6563,10 +6563,6 @@ dotenv@6.0.0:
   version "6.0.0"
   resolved "https://registry.yarnpkg.com/dotenv/-/dotenv-6.0.0.tgz#24e37c041741c5f4b25324958ebbc34bca965935"
 
-dotenv@^6.2.0:
-  version "6.2.0"
-  resolved "https://registry.yarnpkg.com/dotenv/-/dotenv-6.2.0.tgz#941c0410535d942c8becf28d3f357dbd9d476064"
-
 dotenv@~10.0.0:
   version "10.0.0"
   resolved "https://registry.yarnpkg.com/dotenv/-/dotenv-10.0.0.tgz#3d4227b8fb95f81096cdd2b66653fb2c7085ba81"
@@ -14271,12 +14267,11 @@ react-app-polyfill@^0.2.0:
     raf "3.4.1"
     whatwg-fetch "3.0.0"
 
-react-app-rewired@2.0.1:
-  version "2.0.1"
-  resolved "https://registry.yarnpkg.com/react-app-rewired/-/react-app-rewired-2.0.1.tgz#5c4902e68e78aa8851ef84a03579418b6f891e0b"
+react-app-rewired@2.2.1:
+  version "2.2.1"
+  resolved "https://registry.yarnpkg.com/react-app-rewired/-/react-app-rewired-2.2.1.tgz#84901ee1e3f26add0377ebec0b41bcdfce9fc211"
+  integrity sha512-uFQWTErXeLDrMzOJHKp0h8P1z0LV9HzPGsJ6adOtGlA/B9WfT6Shh4j2tLTTGlXOfiVx6w6iWpp7SOC5pvk+gA==
   dependencies:
-    cross-spawn "^6.0.5"
-    dotenv "^6.2.0"
     semver "^5.6.0"
 
 react-circular-progressbar@^2.0.3:
