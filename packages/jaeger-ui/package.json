@@ -106,7 +106,7 @@
     "redux-async-middleware": "^0.0.0",
     "redux-form": "^8.3.8",
     "redux-promise-middleware": "^4.3.0",
-    "reselect": "^3.0.1",
+    "reselect": "^4.1.6",
     "store": "^2.0.12",
     "ts-key-enum": "^2.0.0",
     "tween-functions": "^1.2.0",
