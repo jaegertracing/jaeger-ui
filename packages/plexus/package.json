@@ -52,7 +52,7 @@
     "d3-selection": "^1.3.0",
     "d3-zoom": "^1.7.1",
     "memoize-one": "5.1.1",
-    "viz.js": "1.8.1"
+    "viz.js": "2.1.2"
   },
   "scripts": {
     "_tasks/build/lib/js": "node_modules/.bin/babel src --extensions '.tsx,.js' --out-dir lib",
