@@ -15,6 +15,9 @@
 function getBabelConfig(api) {
   const env = api.env();
   return {
+    assumptions: {
+      setPublicClassFields: true,
+    },
     plugins: [
       '@babel/plugin-syntax-dynamic-import',
       [
@@ -23,12 +26,7 @@ function getBabelConfig(api) {
           removeImport: true,
         },
       ],
-      [
-        '@babel/plugin-proposal-class-properties',
-        {
-          loose: true,
-        },
-      ],
+      '@babel/plugin-proposal-class-properties',
     ],
     presets: [
       [
