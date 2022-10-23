@@ -124,7 +124,7 @@ export type Config = {
   // See https://github.com/jaegertracing/jaeger-ui/issues/218 for background.
   topTagPrefixes?: string[];
 
-  // tracking section enables the collection of usage metrics.
+  // tracking section controls the collection of usage metrics as analytics events.
   // By default, Jaeger uses Google Analytics for event tracking (if enabled).
   tracking?: {
     // gaID is the Google Analytics account ID.
@@ -138,15 +138,9 @@ export type Config = {
     // customWebAnalytics allows using custom implementation of event reporting,
     // as an alternative to Google Analytics.
     // This only works when using a JavaScript-based configuration file,
-    // that allows passing functions to the configuration.
+    // which allows passing functions to the configuration.
     // See https://github.com/jaegertracing/jaeger-ui/issues/652 for background.
     customWebAnalytics: IWebAnalyticsFunc | TNil;
-
-    // cookieToDimension is not used.
-    cookieToDimension?: {
-      cookie: string;
-      dimension: string;
-    }[];
   };
 
   // linkPatterns allow customizing the display of traces with external links.
