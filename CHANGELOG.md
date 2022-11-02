@@ -6,6 +6,18 @@
 
 ### Fixes
 
+## v1.27.2 (2022-11-01)
+
+### Fixes
+
+- babel : migrate to the top level setPublicClassFields assumption ([@mmorel-35](https://github.com/mmorel-35) in [#1008](https://github.com/jaegertracing/jaeger-ui/pull/1008))
+
+- Add documentation to config ([@yurishkuro](https://github.com/yurishkuro) in [#1007](https://github.com/jaegertracing/jaeger-ui/pull/1007))
+
+- Upgrade many dependencies ([@mmorel-35](https://github.com/mmorel-35) in [#1001](https://github.com/jaegertracing/jaeger-ui/pull/1001))
+
+- Update node version and use github-action for codecov ([@mmorel-35](https://github.com/mmorel-35) in [#997](https://github.com/jaegertracing/jaeger-ui/pull/997))
+
 ## v1.27.1 (2022-10-04)
 
 ### Fixes
