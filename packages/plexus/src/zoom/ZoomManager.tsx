@@ -54,7 +54,7 @@ export default class ZoomManager {
     return getZoomAttr(zoomTransform);
   }
 
-  static getZoomStyle(zoomTransform: ZoomTransform | void) {
+  static getZoomStyle(zoomTransform: ZoomTransform | void): React.CSSProperties {
     return getZoomStyle(zoomTransform);
   }
 
