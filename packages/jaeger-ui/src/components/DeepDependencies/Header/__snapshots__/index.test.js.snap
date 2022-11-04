@@ -20,7 +20,7 @@ exports[`<Header> renders the hops selector if distanceToPathElems is provided 1
     className="DdgHeader--controlHeader"
   >
     <LayoutSettings />
-    <Component
+    <Memo(HopsSelector)
       distanceToPathElems={Map {}}
       handleClick={[Function]}
       visEncoding="3"
@@ -89,7 +89,7 @@ exports[`<Header> renders the operation selector iff a service is selected 1`] =
     className="DdgHeader--controlHeader"
   >
     <LayoutSettings />
-    <Component
+    <Memo(HopsSelector)
       handleClick={[Function]}
     />
     <div
@@ -160,7 +160,7 @@ exports[`<Header> renders the operation selector iff a service is selected 2`] =
     className="DdgHeader--controlHeader"
   >
     <LayoutSettings />
-    <Component
+    <Memo(HopsSelector)
       handleClick={[Function]}
     />
     <div
@@ -215,7 +215,7 @@ exports[`<Header> renders with minimal props 1`] = `
     className="DdgHeader--controlHeader"
   >
     <LayoutSettings />
-    <Component
+    <Memo(HopsSelector)
       handleClick={[Function]}
     />
     <div

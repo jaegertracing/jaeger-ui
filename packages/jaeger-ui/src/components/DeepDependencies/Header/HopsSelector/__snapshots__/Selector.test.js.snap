@@ -115,7 +115,7 @@ exports[`Selector renders buttons with expected text and classNames 1`] = `
     >
       4
     </button>
-    <Component
+    <Memo(ChevronDown)
       className="ub-ml1"
     />
   </span>
@@ -246,7 +246,7 @@ exports[`Selector renders upstream hops with negative distance correctly 1`] = `
     >
       4
     </button>
-    <Component
+    <Memo(ChevronDown)
       className="ub-ml1"
     />
   </span>
