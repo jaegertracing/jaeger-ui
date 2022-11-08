@@ -20,7 +20,7 @@
     "eslint-plugin-import": "2.26.0",
     "eslint-plugin-jsx-a11y": "6.6.1",
     "eslint-plugin-react": "7.12.4",
-    "husky": "8.0.1",
+    "husky": "8.0.2",
     "isomorphic-fetch": "3.0.0",
     "jsdom": "20.0.2",
     "lerna": "6.0.1",
