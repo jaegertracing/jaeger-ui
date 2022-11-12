@@ -65,7 +65,7 @@ export default class NameSelector extends React.PureComponent<TProps, TState> {
     this.setState({ popoverVisible });
   }
 
-  private clearValue = (evt: React.MouseEvent<React.ReactSVGElement>) => {
+  private clearValue = (evt: React.MouseEvent<HTMLElement>) => {
     if (this.props.required) throw new Error('Cannot clear value of required NameSelector');
 
     evt.stopPropagation();
