@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// eslint-disable-next-line import/no-extraneous-dependencies
 const { createProxyMiddleware } = require('http-proxy-middleware');
 
 module.exports = function setupProxy(app) {
