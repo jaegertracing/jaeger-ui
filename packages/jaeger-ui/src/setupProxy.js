@@ -13,11 +13,11 @@
 // limitations under the License.
 
 // eslint-disable-next-line import/no-extraneous-dependencies
-const proxy = require('http-proxy-middleware');
+const { createProxyMiddleware } = require('http-proxy-middleware');
 
 module.exports = function setupProxy(app) {
   app.use(
-    proxy('/api', {
+    createProxyMiddleware('/api', {
       target: 'http://localhost:16686',
       logLevel: 'silent',
       secure: false,
@@ -27,7 +27,7 @@ module.exports = function setupProxy(app) {
     })
   );
   app.use(
-    proxy('/analytics', {
+    createProxyMiddleware('/analytics', {
       target: 'http://localhost:16686',
       logLevel: 'silent',
       secure: false,
@@ -37,7 +37,7 @@ module.exports = function setupProxy(app) {
     })
   );
   app.use(
-    proxy('/serviceedges', {
+    createProxyMiddleware('/serviceedges', {
       target: 'http://localhost:16686',
       logLevel: 'silent',
       secure: false,
@@ -47,7 +47,7 @@ module.exports = function setupProxy(app) {
     })
   );
   app.use(
-    proxy('/qualitymetrics-v2', {
+    createProxyMiddleware('/qualitymetrics-v2', {
       target: 'http://localhost:16686',
       logLevel: 'silent',
       secure: false,
