@@ -65,7 +65,7 @@
     "copy-to-clipboard": "^3.1.0",
     "cytoscape": "^3.2.1",
     "cytoscape-dagre": "^2.0.0",
-    "d3-scale": "^1.0.6",
+    "d3-scale": "^4.0.2",
     "dagre": "^0.8.5",
     "deep-freeze": "^0.0.1",
     "drange": "^2.0.0",
