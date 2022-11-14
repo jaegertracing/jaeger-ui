@@ -60,7 +60,7 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
 }
 
 // export for tests
-export class TracesDdgImpl extends React.PureComponent<TProps & { showSvcOpsHeader: never; baseUrl: never }> {
+export class TracesDdgImpl extends React.PureComponent<TProps> {
   render(): React.ReactNode {
     const { location } = this.props;
     const urlArgs = queryString.parse(location.search);
@@ -68,10 +68,10 @@ export class TracesDdgImpl extends React.PureComponent<TProps & { showSvcOpsHead
     const extraArgs = { end, start, limit, lookback, maxDuration, minDuration, view };
     return (
       <DeepDependencyGraphPageImpl
+        {...this.props}
         baseUrl={ROUTE_PATH}
         extraUrlArgs={extraArgs}
         showSvcOpsHeader={false}
-        {...this.props}
       />
     );
   }

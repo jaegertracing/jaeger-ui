@@ -126,3 +126,5 @@ export const deprecations = [
     currentKey: 'tracking.gaID',
   },
 ];
+
+export const mergeFields = ['dependencies', 'search', 'tracking'];

@@ -22,13 +22,9 @@ import {
   TWorkerOutputMessage,
 } from './types';
 
-type TMessageErrorTarget = {
-  onmessageerror: ((this: Worker, ev: ErrorEvent) => any | void) | null;
-};
-
 // TODO: Use WorkerGlobalScope instead of Worker
 // eslint-disable-next-line no-restricted-globals
-const ctx: Worker & TMessageErrorTarget = self as any;
+const ctx: Worker = self as any;
 
 let currentMeta: TLayoutWorkerMeta | null;
 
@@ -61,4 +57,20 @@ function handleError(errorType: string, event: ErrorEvent) {
 
 ctx.onmessage = handleMessage;
 ctx.onerror = handleError.bind(null, 'error');
-ctx.onmessageerror = handleError.bind(ctx, 'messageerror');
+ctx.onmessageerror = (event: MessageEvent) => {
+  const colno = "", error = "", filename = "", lineno = "", message = "";
+  const errorType = "messageerror";
+  const payload: TWorkerErrorMessage = {
+    type: EWorkerErrorType.Error,
+    meta: currentMeta,
+    errorMessage: {
+      colno,
+      error,
+      errorType,
+      filename,
+      lineno,
+      message,
+    },
+  };
+  ctx.postMessage(payload);
+}
