@@ -96,7 +96,6 @@ export class UnconnectedUiFindInput extends React.PureComponent<TProps, StateTyp
 
     return (
       <Input
-        autosize={null}
         placeholder="Find..."
         {...inputProps}
         onBlur={this.handleInputBlur}
