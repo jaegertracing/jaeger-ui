@@ -17891,10 +17891,10 @@ verror@1.10.0:
     core-util-is "1.0.2"
     extsprintf "^1.2.0"
 
-viz.js@2.1.2:
-  version "2.1.2"
-  resolved "https://registry.yarnpkg.com/viz.js/-/viz.js-2.1.2.tgz#6f09cd4e10af28754a6d50b055bd2e4a7693983a"
-  integrity sha512-UO6CPAuEMJ8oNR0gLLNl+wUiIzQUsyUOp8SyyDKTqVRBtq7kk1VnFmIZW8QufjxGrGEuI+LVR7p/C7uEKy0LQw==
+viz.js@1.8.1:
+  version "1.8.1"
+  resolved "https://registry.yarnpkg.com/viz.js/-/viz.js-1.8.1.tgz#277ab3cf4367c608a95b281a7472083c3e2ee6cf"
+  integrity sha512-KrSNgnIxec+JCAqDPliO6xYA69ToH2WTYB2Kbt8Bp/XRUvm23rTyfffFi4rvQLFkIRNUz/xCnnqhh/gChhsgGA==
 
 vm-browserify@^1.0.1:
   version "1.1.2"
