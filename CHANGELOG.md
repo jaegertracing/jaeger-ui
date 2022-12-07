@@ -6,6 +6,18 @@
 
 ### Fixes
 
+## v1.27.3 (2022-12-07)
+
+### Fixes
+
+- Bump @babel/core from 7.20.2 to 7.20.5 ([@dependabot](https://github.com/dependabot) in [#1087](https://github.com/jaegertracing/jaeger-ui/pull/1087))
+- Bump lerna from 6.0.3 to 6.1.0 ([@dependabot](https://github.com/dependabot) in [#1093](https://github.com/jaegertracing/jaeger-ui/pull/1093))
+- Revert upgrade to viz.js, v2.1.2 -> v1.8.1 ([@yurishkuro](https://github.com/yurishkuro) in [#1082](https://github.com/jaegertracing/jaeger-ui/pull/1082))
+- Upgrade to antd/v3.9.0 to avoid loading fonts from alicdn ([@yurishkuro](https://github.com/yurishkuro) in [#1053](https://github.com/jaegertracing/jaeger-ui/pull/1053))
+- Upgrade more dependencies ([@yurishkuro](https://github.com/yurishkuro) in [#1057](https://github.com/jaegertracing/jaeger-ui/pull/1057))
+- Bump safe dependencies ([@yurishkuro](https://github.com/yurishkuro) in [#1045](https://github.com/jaegertracing/jaeger-ui/pull/1045))
+- Upgrade many dependencies part 2 ([@mmorel-35](https://github.com/mmorel-35) in [#1013](https://github.com/jaegertracing/jaeger-ui/pull/1013))
+
 ## v1.27.2 (2022-11-01)
 
 ### Fixes
