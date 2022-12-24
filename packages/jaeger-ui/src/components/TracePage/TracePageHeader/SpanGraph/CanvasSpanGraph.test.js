@@ -19,7 +19,15 @@ import CanvasSpanGraph from './CanvasSpanGraph';
 
 describe('<CanvasSpanGraph>', () => {
   it('renders without exploding', () => {
-    const items = [{ valueWidth: 1, valueOffset: 1, serviceName: 'service-name-0' }];
+    const items = [
+      {
+        valueWidth: 1,
+        valueOffset: 1,
+        serviceName: 'service-name-0',
+        serviceGroup: 'service-group-1',
+        rgbColor: [255, 0, 0],
+      },
+    ];
     const wrapper = shallow(<CanvasSpanGraph items={[]} valueWidth={4000} />);
     expect(wrapper).toBeDefined();
     wrapper.instance()._setCanvasRef({

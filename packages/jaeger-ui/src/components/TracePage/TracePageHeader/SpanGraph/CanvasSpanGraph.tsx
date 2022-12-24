@@ -15,17 +15,15 @@
 import * as React from 'react';
 
 import renderIntoCanvas from './render-into-canvas';
-import colorGenerator from '../../../../utils/color-generator';
 import { TNil } from '../../../../types';
 
 import './CanvasSpanGraph.css';
+import { SpanItem } from '.';
 
 type CanvasSpanGraphProps = {
-  items: { valueWidth: number; valueOffset: number; serviceName: string }[];
+  items: SpanItem[];
   valueWidth: number;
 };
-
-const getColor = (hex: string) => colorGenerator.getRgbColorByKey(hex);
 
 export default class CanvasSpanGraph extends React.PureComponent<CanvasSpanGraphProps> {
   _canvasElm: HTMLCanvasElement | TNil;
@@ -50,7 +48,7 @@ export default class CanvasSpanGraph extends React.PureComponent<CanvasSpanGraph
   _draw() {
     if (this._canvasElm) {
       const { valueWidth: totalValueWidth, items } = this.props;
-      renderIntoCanvas(this._canvasElm, items, totalValueWidth, getColor);
+      renderIntoCanvas(this._canvasElm, items, totalValueWidth);
     }
   }
 

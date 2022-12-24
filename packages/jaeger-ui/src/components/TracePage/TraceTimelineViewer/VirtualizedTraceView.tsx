@@ -150,6 +150,14 @@ function getCssClasses(currentViewRange: [number, number]) {
   });
 }
 
+export function getHexColorForSpan(span: Span) {
+  return colorGenerator.getColorByKey(span.group);
+}
+
+export function getRGBColorForSpan(span: Span) {
+  return colorGenerator.getRgbColorByKey(span.group);
+}
+
 const memoizedGenerateRowStates = memoizeOne(generateRowStatesFromTrace);
 const memoizedViewBoundsFunc = memoizeOne(createViewedBoundsFunc, _isEqual);
 const memoizedGetCssClasses = memoizeOne(getCssClasses, _isEqual);
@@ -327,7 +335,6 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
 
   renderSpanBarRow(span: Span, spanIndex: number, key: string, style: React.CSSProperties, attrs: {}) {
     const { spanID } = span;
-    const { serviceName } = span.process;
     const {
       childrenHiddenIDs,
       childrenToggle,
@@ -341,7 +348,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     if (!trace) {
       return null;
     }
-    const color = colorGenerator.getColorByKey(serviceName);
+    const color = getHexColorForSpan(span);
     const isCollapsed = childrenHiddenIDs.has(spanID);
     const isDetailExpanded = detailStates.has(spanID);
     const isMatchingFilter = findMatchesIDs ? findMatchesIDs.has(spanID) : false;
@@ -353,8 +360,9 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
       const rpcSpan = findServerChildSpan(trace.spans.slice(spanIndex));
       if (rpcSpan) {
         const rpcViewBounds = this.getViewedBounds()(rpcSpan.startTime, rpcSpan.startTime + rpcSpan.duration);
+
         rpc = {
-          color: colorGenerator.getColorByKey(rpcSpan.process.serviceName),
+          color: getHexColorForSpan(rpcSpan),
           operationName: rpcSpan.operationName,
           serviceName: rpcSpan.process.serviceName,
           viewEnd: rpcViewBounds.end,
@@ -399,7 +407,6 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
 
   renderSpanDetailRow(span: Span, key: string, style: React.CSSProperties, attrs: {}) {
     const { spanID } = span;
-    const { serviceName } = span.process;
     const {
       detailLogItemToggle,
       detailLogsToggle,
@@ -416,7 +423,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     if (!trace || !detailState) {
       return null;
     }
-    const color = colorGenerator.getColorByKey(serviceName);
+    const color = getHexColorForSpan(span);
     return (
       <div className="VirtualizedTraceView--row" key={key} style={{ ...style, zIndex: 1 }} {...attrs}>
         <SpanDetailRow

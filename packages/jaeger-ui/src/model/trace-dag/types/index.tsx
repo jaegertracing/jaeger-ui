@@ -32,6 +32,7 @@ export type TDenseSpanMembers = {
   members: TDenseSpan[];
   operation: string;
   service: string;
+  spanGroup: string;
 };
 
 export type TDiffCounts = TDenseSpanMembers & {

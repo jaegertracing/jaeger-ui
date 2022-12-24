@@ -74,6 +74,8 @@ export class ColorGenerator {
    * If the key has been used already, it will
    * use the same color.
    */
+  // HexColor might make sense as its own type. Or a Color type with rgb,rgba,
+  // hex() methods
   getColorByKey(key: string) {
     const i = this._getColorIndex(key);
     return this.colorsHex[i];
@@ -84,6 +86,7 @@ export class ColorGenerator {
    * it with a color if the key is not recognized.
    * @return {number[]} An array of three ints [0, 255] representing a color.
    */
+  // TODO: RgbColor might make sense as its own type
   getRgbColorByKey(key: string): [number, number, number] {
     const i = this._getColorIndex(key);
     return this.colorsRgb[i];

@@ -22,6 +22,7 @@ function convSpans(spans: Span[]) {
   const ids: string[] = [];
   spans.forEach(span => {
     const { spanID: id, operationName: operation, process, references, tags: spanTags } = span;
+    const spanGroup = span.group;
     ids.push(id);
     const { serviceName: service } = process;
     const tags = spanTags.reduce((accum: Record<string, any>, tag) => {
@@ -46,6 +47,7 @@ function convSpans(spans: Span[]) {
       operation,
       parentID,
       service,
+      spanGroup,
       span,
       tags,
       children: new Set<string>(),

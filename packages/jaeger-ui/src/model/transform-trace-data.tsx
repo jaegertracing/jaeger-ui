@@ -19,6 +19,7 @@ import { getConfigValue } from '../utils/config/get-config';
 import { getTraceName } from './trace-viewer';
 import { KeyValuePair, Span, SpanData, Trace, TraceData } from '../types/trace';
 import TreeNode from '../utils/TreeNode';
+import { getSpanGroupFromSpan } from './span';
 
 // exported for tests
 export function deduplicateTags(spanTags: KeyValuePair[]) {
@@ -130,8 +131,10 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     if (!span) {
       return;
     }
-    const { serviceName } = span.process;
-    svcCounts[serviceName] = (svcCounts[serviceName] || 0) + 1;
+
+    span.group = getSpanGroupFromSpan(span);
+
+    svcCounts[span.group] = (svcCounts[span.group] || 0) + 1;
     span.relativeStartTime = span.startTime - traceStartTime;
     span.depth = depth - 1;
     span.hasChildren = node.children.length > 0;
