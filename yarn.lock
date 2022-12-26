@@ -2797,6 +2797,11 @@
   resolved "https://registry.yarnpkg.com/@pyroscope/flamegraph/-/flamegraph-0.21.4.tgz#4b185854ee50767d5279baa16b58a29f9fcb3de1"
   integrity sha512-/wkTHhBNapnnuLWQ40PyHa1pz8jVMmiLYO12Ak7qq1JhgVEccE39XrQMTkcFlM4FdpqM4/1w6U7fm4xebUAzZw==
 
+"@remix-run/router@1.2.1":
+  version "1.2.1"
+  resolved "https://registry.yarnpkg.com/@remix-run/router/-/router-1.2.1.tgz#812edd4104a15a493dda1ccac0b352270d7a188c"
+  integrity sha512-XiY0IsyHR+DXYS5vBxpoBe/8veTeoRpMHP+vDosLZxL5bnpetzI0igkxkLZS235ldLzyfkxF+2divEwWHP3vMQ==
+
 "@sinclair/typebox@^0.24.1":
   version "0.24.47"
   resolved "https://registry.yarnpkg.com/@sinclair/typebox/-/typebox-0.24.47.tgz#530b67163714356f93e82bdb871e7db4b7bc564e"
@@ -15129,17 +15134,13 @@ react-redux@^5.0.6:
     react-is "^16.6.0"
     react-lifecycles-compat "^3.0.0"
 
-react-router-dom@4.3.1:
-  version "4.3.1"
-  resolved "https://registry.yarnpkg.com/react-router-dom/-/react-router-dom-4.3.1.tgz#4c2619fc24c4fa87c9fd18f4fb4a43fe63fbd5c6"
-  integrity sha512-c/MlywfxDdCp7EnB7YfPMOfMD3tOtIjrQlj/CKfNMBxdmpJP8xcz5P/UAFn3JbnQCNUxsHyVVqllF9LhgVyFCA==
+react-router-dom@6.6.1:
+  version "6.6.1"
+  resolved "https://registry.yarnpkg.com/react-router-dom/-/react-router-dom-6.6.1.tgz#1b96ec0b2cefa7319f1251383ea5b41295ee260d"
+  integrity sha512-u+8BKUtelStKbZD5UcY0NY90WOzktrkJJhyhNg7L0APn9t1qJNLowzrM9CHdpB6+rcPt6qQrlkIXsTvhuXP68g==
   dependencies:
-    history "^4.7.2"
-    invariant "^2.2.4"
-    loose-envify "^1.3.1"
-    prop-types "^15.6.1"
-    react-router "^4.3.1"
-    warning "^4.0.1"
+    "@remix-run/router" "1.2.1"
+    react-router "6.6.1"
 
 react-router-redux@5.0.0-alpha.8:
   version "5.0.0-alpha.8"
@@ -15150,7 +15151,14 @@ react-router-redux@5.0.0-alpha.8:
     prop-types "^15.6.0"
     react-router "^4.2.0"
 
-react-router@^4.2.0, react-router@^4.3.1:
+react-router@6.6.1:
+  version "6.6.1"
+  resolved "https://registry.yarnpkg.com/react-router/-/react-router-6.6.1.tgz#17de6cf285f2d1c9721a3afca999c984e5558854"
+  integrity sha512-YkvlYRusnI/IN0kDtosUCgxqHeulN5je+ew8W+iA1VvFhf86kA+JEI/X/8NqYcr11hCDDp906S+SGMpBheNeYQ==
+  dependencies:
+    "@remix-run/router" "1.2.1"
+
+react-router@^4.2.0:
   version "4.3.1"
   resolved "https://registry.yarnpkg.com/react-router/-/react-router-4.3.1.tgz#aada4aef14c809cb2e686b05cee4742234506c4e"
   dependencies:
