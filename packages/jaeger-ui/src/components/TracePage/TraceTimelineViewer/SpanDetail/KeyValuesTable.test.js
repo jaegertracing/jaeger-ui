@@ -13,26 +13,25 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { shallow, mount } from 'enzyme';
 import { Dropdown, Icon } from 'antd';
-
+import traceGenerator from '../../../../demo/trace-generators';
 import CopyIcon from '../../../common/CopyIcon';
 
 import KeyValuesTable, { LinkValue } from './KeyValuesTable';
+import { TraceContext } from '../../index';
 
-describe('LinkValue', () => {
-  const title = 'titleValue';
-  const href = 'hrefValue';
+describe('LinkValue with url', () => {
+  const link = {
+    text: 'titleValue',
+    url: 'hrefValue',
+  };
   const childrenText = 'childrenTextValue';
-  const wrapper = shallow(
-    <LinkValue href={href} title={title}>
-      {childrenText}
-    </LinkValue>
-  );
+  const wrapper = shallow(<LinkValue link={link}>{childrenText}</LinkValue>);
 
   it('renders as expected', () => {
-    expect(wrapper.find('a').prop('href')).toBe(href);
-    expect(wrapper.find('a').prop('title')).toBe(title);
+    expect(wrapper.find('a').prop('href')).toBe(link.url);
+    expect(wrapper.find('a').prop('title')).toBe(link.text);
     expect(wrapper.find('a').text()).toMatch(/childrenText/);
   });
 
@@ -42,9 +41,25 @@ describe('LinkValue', () => {
   });
 });
 
-describe('<KeyValuesTable>', () => {
-  let wrapper;
+describe('LinkValue with action', () => {
+  const link = {
+    text: 'titleValue',
+    action: jest.fn(),
+  };
 
+  const childrenText = 'childrenTextValue';
+  const wrapper = shallow(<LinkValue link={link}>{childrenText}</LinkValue>);
+
+  it('renders as expected', () => {
+    wrapper.find('a').simulate('click');
+    expect(link.action).toHaveBeenCalled();
+    expect(wrapper.find('a').prop('title')).toBe(link.text);
+    expect(wrapper.find('a').text()).toMatch(/childrenText/);
+  });
+});
+
+describe('<KeyValuesTable>', () => {
+  const trace = traceGenerator.trace({ numberOfSpans: 1 });
   const data = [
     { key: 'span.kind', value: 'client', expected: 'client' },
     { key: 'omg', value: 'mos-def', expected: 'mos-def' },
@@ -53,16 +68,24 @@ describe('<KeyValuesTable>', () => {
     { key: 'jsonkey', value: JSON.stringify({ hello: 'world' }) },
   ];
 
-  beforeEach(() => {
-    wrapper = shallow(<KeyValuesTable data={data} />);
-  });
-
   it('renders without exploding', () => {
+    const wrapper = mount(
+      <TraceContext.Provider value={trace}>
+        <KeyValuesTable data={data} />
+      </TraceContext.Provider>
+    );
+
     expect(wrapper).toBeDefined();
     expect(wrapper.find('.KeyValueTable').length).toBe(1);
   });
 
   it('renders a table row for each data element', () => {
+    const wrapper = mount(
+      <TraceContext.Provider value={trace}>
+        <KeyValuesTable data={data} />
+      </TraceContext.Provider>
+    );
+
     const trs = wrapper.find('tr');
     expect(trs.length).toBe(data.length);
     trs.forEach((tr, i) => {
@@ -71,22 +94,30 @@ describe('<KeyValuesTable>', () => {
   });
 
   it('renders a single link correctly', () => {
-    wrapper.setProps({
-      linksGetter: (array, i) =>
-        array[i].key === 'span.kind'
-          ? [
-              {
-                url: `http://example.com/?kind=${encodeURIComponent(array[i].value)}`,
-                text: `More info about ${array[i].value}`,
-              },
-            ]
-          : [],
-    });
+    const wrapper = mount(
+      <TraceContext.Provider value={trace}>
+        <KeyValuesTable
+          data={data}
+          linksGetter={(array, i) =>
+            array[i].key === 'span.kind'
+              ? [
+                  {
+                    url: `http://example.com/?kind=${encodeURIComponent(array[i].value)}`,
+                    text: `More info about ${array[i].value}`,
+                  },
+                ]
+              : []
+          }
+        />
+      </TraceContext.Provider>
+    );
 
     const anchor = wrapper.find(LinkValue);
     expect(anchor).toHaveLength(1);
-    expect(anchor.prop('href')).toBe('http://example.com/?kind=client');
-    expect(anchor.prop('title')).toBe('More info about client');
+    expect(anchor.prop('link')).toEqual({
+      url: 'http://example.com/?kind=client',
+      text: 'More info about client',
+    });
     expect(
       anchor
         .closest('tr')
@@ -97,24 +128,40 @@ describe('<KeyValuesTable>', () => {
   });
 
   it('renders multiple links correctly', () => {
-    wrapper.setProps({
-      linksGetter: (array, i) =>
-        array[i].key === 'span.kind'
-          ? [
-              { url: `http://example.com/1?kind=${encodeURIComponent(array[i].value)}`, text: 'Example 1' },
-              { url: `http://example.com/2?kind=${encodeURIComponent(array[i].value)}`, text: 'Example 2' },
-            ]
-          : [],
-    });
+    const action = jest.fn();
+
+    const wrapper = mount(
+      <TraceContext.Provider value={trace}>
+        <KeyValuesTable
+          data={data}
+          linksGetter={(array, i) =>
+            array[i].key === 'span.kind'
+              ? [
+                  {
+                    url: `http://example.com/1?kind=${encodeURIComponent(array[i].value)}`,
+                    text: 'Example 1',
+                  },
+                  {
+                    url: `http://example.com/2?kind=${encodeURIComponent(array[i].value)}`,
+                    text: 'Example 2',
+                  },
+                  { action, text: 'Example 3' },
+                ]
+              : []
+          }
+        />
+      </TraceContext.Provider>
+    );
     const dropdown = wrapper.find(Dropdown);
     const menu = shallow(dropdown.prop('overlay'));
     const anchors = menu.find(LinkValue);
-    expect(anchors).toHaveLength(2);
+    expect(anchors).toHaveLength(3);
     const firstAnchor = anchors.first();
-    expect(firstAnchor.prop('href')).toBe('http://example.com/1?kind=client');
+    expect(firstAnchor.prop('link').url).toBe('http://example.com/1?kind=client');
     expect(firstAnchor.children().text()).toBe('Example 1');
-    const secondAnchor = anchors.last();
-    expect(secondAnchor.prop('href')).toBe('http://example.com/2?kind=client');
+    const secondAnchor = anchors.at(1);
+
+    expect(secondAnchor.prop('link').url).toBe('http://example.com/2?kind=client');
     expect(secondAnchor.children().text()).toBe('Example 2');
     expect(
       dropdown
@@ -123,9 +170,18 @@ describe('<KeyValuesTable>', () => {
         .first()
         .text()
     ).toBe('span.kind');
+
+    const thirdAnchor = anchors.at(2);
+    expect(thirdAnchor.prop('link').action).toBe(action);
   });
 
   it('renders a <CopyIcon /> with correct copyText for each data element', () => {
+    const wrapper = mount(
+      <TraceContext.Provider value={trace}>
+        <KeyValuesTable data={data} />
+      </TraceContext.Provider>
+    );
+
     const copyIcons = wrapper.find(CopyIcon);
     expect(copyIcons.length).toBe(data.length);
     copyIcons.forEach((copyIcon, i) => {
@@ -135,6 +191,12 @@ describe('<KeyValuesTable>', () => {
   });
 
   it('renders a span value containing numeric string correctly', () => {
+    const wrapper = mount(
+      <TraceContext.Provider value={trace}>
+        <KeyValuesTable data={data} />
+      </TraceContext.Provider>
+    );
+
     const el = wrapper.find('.ub-inline-block');
     expect(el.length).toBe(data.length);
     el.forEach((valueDiv, i) => {

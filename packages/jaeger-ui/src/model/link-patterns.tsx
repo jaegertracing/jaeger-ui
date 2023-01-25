@@ -19,7 +19,7 @@ import { getConfigValue } from '../utils/config/get-config';
 import { encodedStringSupplant, getParamNames } from '../utils/stringSupplant';
 import { getParent } from './span';
 import { TNil } from '../types';
-import { Span, Link, KeyValuePair, Trace } from '../types/trace';
+import { Span, Link, KeyValuePair, Trace, LinkAction } from '../types/trace';
 
 type ProcessedTemplate = {
   parameters: string[];
@@ -34,6 +34,8 @@ type ProcessedLinkPattern = {
   url: ProcessedTemplate;
   text: ProcessedTemplate;
   parameters: string[];
+  action?: LinkAction;
+  icon?: string;
 };
 
 type TLinksRV = { url: string; text: string }[];
@@ -75,7 +77,10 @@ const identity = (a: any): typeof a => a;
 
 export function processLinkPattern(pattern: any): ProcessedLinkPattern | TNil {
   try {
-    const url = processTemplate(pattern.url, encodeURIComponent);
+    if ((pattern.url && pattern.action) || (!pattern.url && !pattern.action))
+      throw new Error('Link pattern may contain a URL or an action');
+
+    const url = pattern.url && processTemplate(pattern.url, encodeURIComponent);
     const text = processTemplate(pattern.text, identity);
     return {
       object: pattern,
@@ -83,8 +88,10 @@ export function processLinkPattern(pattern: any): ProcessedLinkPattern | TNil {
       key: createTestFunction(pattern.key),
       value: createTestFunction(pattern.value),
       url,
+      action: pattern.action,
       text,
-      parameters: _uniq(url.parameters.concat(text.parameters)),
+      parameters: _uniq(url ? url.parameters.concat(text.parameters) : text.parameters),
+      icon: pattern.icon,
     };
   } catch (error) {
     // eslint-disable-next-line no-console
@@ -164,7 +171,7 @@ export function computeLinks(
   if (spanTags) {
     type = 'tags';
   }
-  const result: { url: string; text: string }[] = [];
+  const result: Link[] = [];
   linkPatterns.forEach(pattern => {
     if (pattern.type(type) && pattern.key(item.key) && pattern.value(item.value)) {
       const parameterValues: Record<string, any> = {};
@@ -188,8 +195,10 @@ export function computeLinks(
       });
       if (allParameters) {
         result.push({
-          url: callTemplate(pattern.url, parameterValues),
+          url: pattern.url && callTemplate(pattern.url, parameterValues),
           text: callTemplate(pattern.text, parameterValues),
+          action: pattern.action,
+          icon: pattern.icon,
         });
       }
     }

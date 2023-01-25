@@ -19,9 +19,10 @@ import { Dropdown, Icon, Menu } from 'antd';
 import CopyIcon from '../../../common/CopyIcon';
 
 import { TNil } from '../../../../types';
-import { KeyValuePair, Link } from '../../../../types/trace';
+import { KeyValuePair, Link, Trace } from '../../../../types/trace';
 
 import './KeyValuesTable.css';
+import { TraceContext } from '../../index';
 
 const jsonObjectOrArrayStartRegex = /^(\[|\{)/;
 
@@ -63,23 +64,40 @@ function formatValue(value: any) {
   return <div className="ub-inline-block">{content}</div>;
 }
 
-export const LinkValue = (props: { href: string; title?: string; children: React.ReactNode }) => (
-  <a href={props.href} title={props.title} target="_blank" rel="noopener noreferrer">
-    {props.children} <Icon className="KeyValueTable--linkIcon" type="export" />
-  </a>
-);
+export const LinkValue = (props: {
+  link: Link;
+  row: KeyValuePair;
+  trace?: Trace;
+  children: React.ReactNode;
+}) => {
+  return props.link.url ? (
+    <a href={props.link.url} title={props.link.text} target="_blank" rel="noopener noreferrer">
+      {props.children} <Icon className="KeyValueTable--linkIcon" type={props.link.icon || 'export'} />
+    </a>
+  ) : (
+    <a
+      onClick={event => props.link.action!(event, props.row, props.trace)}
+      title={props.link.text}
+      role="button"
+    >
+      {props.children} <Icon className="KeyValueTable--linkIcon" type={props.link.icon || 'tool'} />
+    </a>
+  );
+};
 
 LinkValue.defaultProps = {
   title: '',
 };
 
-const linkValueList = (links: Link[]) => (
+const linkValueList = (links: Link[], row: KeyValuePair, trace?: Trace) => (
   <Menu>
-    {links.map(({ text, url }, index) => (
+    {links.map((link: Link, index) => (
       // `index` is necessary in the key because url can repeat
       // eslint-disable-next-line react/no-array-index-key
-      <Menu.Item key={`${url}-${index}`}>
-        <LinkValue href={url}>{text}</LinkValue>
+      <Menu.Item key={`${link.url || link.action}-${index}`}>
+        <LinkValue link={link} row={row} trace={trace}>
+          {link.text}
+        </LinkValue>
       </Menu.Item>
     ))}
   </Menu>
@@ -92,53 +110,63 @@ type KeyValuesTableProps = {
 
 export default function KeyValuesTable(props: KeyValuesTableProps) {
   const { data, linksGetter } = props;
+
   return (
-    <div className="KeyValueTable u-simple-scrollbars">
-      <table className="u-width-100">
-        <tbody className="KeyValueTable--body">
-          {data.map((row, i) => {
-            const jsonTable = formatValue(row.value);
-            const links = linksGetter ? linksGetter(data, i) : null;
-            let valueMarkup;
-            if (links && links.length === 1) {
-              valueMarkup = (
-                <div>
-                  <LinkValue href={links[0].url} title={links[0].text}>
-                    {jsonTable}
-                  </LinkValue>
-                </div>
-              );
-            } else if (links && links.length > 1) {
-              valueMarkup = (
-                <div>
-                  <Dropdown overlay={linkValueList(links)} placement="bottomRight" trigger={['click']}>
-                    <a>
-                      {jsonTable} <Icon className="KeyValueTable--linkIcon" type="profile" />
-                    </a>
-                  </Dropdown>
-                </div>
-              );
-            } else {
-              valueMarkup = jsonTable;
-            }
-            return (
-              // `i` is necessary in the key because row.key can repeat
-              // eslint-disable-next-line react/no-array-index-key
-              <tr className="KeyValueTable--row" key={`${row.key}-${i}`}>
-                <td className="KeyValueTable--keyColumn">{row.key}</td>
-                <td>{valueMarkup}</td>
-                <td className="KeyValueTable--copyColumn">
-                  <CopyIcon
-                    className="KeyValueTable--copyIcon"
-                    copyText={JSON.stringify(row, null, 2)}
-                    tooltipTitle="Copy JSON"
-                  />
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
+    <TraceContext.Consumer>
+      {(trace?: Trace) => (
+        <div className="KeyValueTable u-simple-scrollbars">
+          <table className="u-width-100">
+            <tbody className="KeyValueTable--body">
+              {data.map((row, i) => {
+                const jsonTable = formatValue(row.value);
+                const links = linksGetter ? linksGetter(data, i) : [];
+
+                let valueMarkup;
+                if (links.length === 1) {
+                  valueMarkup = (
+                    <div>
+                      <LinkValue link={links[0]} row={row} trace={trace}>
+                        {jsonTable}
+                      </LinkValue>
+                    </div>
+                  );
+                } else if (links.length > 1) {
+                  valueMarkup = (
+                    <div>
+                      <Dropdown
+                        overlay={linkValueList(links, row, trace)}
+                        placement="bottomRight"
+                        trigger={['click']}
+                      >
+                        <a>
+                          {jsonTable} <Icon className="KeyValueTable--linkIcon" type="profile" />
+                        </a>
+                      </Dropdown>
+                    </div>
+                  );
+                } else {
+                  valueMarkup = jsonTable;
+                }
+                return (
+                  // `i` is necessary in the key because row.key can repeat
+                  // eslint-disable-next-line react/no-array-index-key
+                  <tr className="KeyValueTable--row" key={`${row.key}-${i}`}>
+                    <td className="KeyValueTable--keyColumn">{row.key}</td>
+                    <td>{valueMarkup}</td>
+                    <td className="KeyValueTable--copyColumn">
+                      <CopyIcon
+                        className="KeyValueTable--copyIcon"
+                        copyText={JSON.stringify(row, null, 2)}
+                        tooltipTitle="Copy JSON"
+                      />
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </TraceContext.Consumer>
   );
 }

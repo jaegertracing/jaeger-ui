@@ -345,20 +345,27 @@ describe('computeLinks()', () => {
   const linkPatterns = [
     {
       type: 'tags',
-      key: 'myKey',
-      url: 'http://example.com/?myKey=#{myKey}',
-      text: 'first link (#{myKey})',
+      key: 'myFirstKey',
+      url: 'http://example.com/?myKey=#{myFirstKey}',
+      text: 'first link (#{myFirstKey})',
     },
     {
-      key: 'myOtherKey',
-      url: 'http://example.com/?myKey=#{myOtherKey}&myKey=#{myKey}',
-      text: 'second link (#{myOtherKey})',
+      key: 'mySecondKey',
+      url: 'http://example.com/?myKey=#{mySecondKey}&myKey=#{myFirstKey}',
+      text: 'second link (#{mySecondKey})',
+    },
+    {
+      type: 'tags',
+      key: 'myThirdKey',
+      action: jest.fn(),
+      text: 'third link (#{myThirdKey})',
     },
   ].map(processLinkPattern);
 
   const spans = [
-    { depth: 0, process: {}, tags: [{ key: 'myKey', value: 'valueOfMyKey' }] },
-    { depth: 1, process: {}, logs: [{ fields: [{ key: 'myOtherKey', value: 'valueOfMy+Other+Key' }] }] },
+    { depth: 0, process: {}, tags: [{ key: 'myFirstKey', value: 'valueOfMyFirstKey' }] },
+    { depth: 1, process: {}, logs: [{ fields: [{ key: 'mySecondKey', value: 'valueOfMy+Second+Key' }] }] },
+    { depth: 0, process: {}, tags: [{ key: 'myThirdKey', value: 'valueOfMyThirdKey' }] },
   ];
   spans[1].references = [
     {
@@ -370,14 +377,20 @@ describe('computeLinks()', () => {
   it('correctly computes links', () => {
     expect(computeLinks(linkPatterns, spans[0], spans[0].tags, 0)).toEqual([
       {
-        url: 'http://example.com/?myKey=valueOfMyKey',
-        text: 'first link (valueOfMyKey)',
+        url: 'http://example.com/?myKey=valueOfMyFirstKey',
+        text: 'first link (valueOfMyFirstKey)',
       },
     ]);
     expect(computeLinks(linkPatterns, spans[1], spans[1].logs[0].fields, 0)).toEqual([
       {
-        url: 'http://example.com/?myKey=valueOfMy%2BOther%2BKey&myKey=valueOfMyKey',
-        text: 'second link (valueOfMy+Other+Key)',
+        url: 'http://example.com/?myKey=valueOfMy%2BSecond%2BKey&myKey=valueOfMyFirstKey',
+        text: 'second link (valueOfMy+Second+Key)',
+      },
+    ]);
+    expect(computeLinks(linkPatterns, spans[2], spans[2].tags, 0)).toEqual([
+      {
+        action: expect.any(Function),
+        text: 'third link (valueOfMyThirdKey)',
       },
     ]);
   });
