@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Dropdown, Icon, Menu } from 'antd';
+import { Dropdown, Icon, Menu, Button } from 'antd';
 import { Link } from 'react-router-dom';
 import './AltViewOptions.css';
 
@@ -109,10 +109,10 @@ export default function AltViewOptions(props: Props) {
   const dropdownText = currentItem ? currentItem.label : 'Alternate Views';
   return (
     <Dropdown overlay={menu}>
-      <div className="AltViewOptions">
+      <Button className="AltViewOptions">
         {`${dropdownText} `}
         <Icon type="down" />
-      </div>
+      </Button>
     </Dropdown>
   );
 }

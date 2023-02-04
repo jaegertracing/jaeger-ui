@@ -70,13 +70,17 @@ exports[`AltViewOptions renders correctly 1`] = `
   placement="bottomLeft"
   prefixCls="ant-dropdown"
 >
-  <div
+  <Button
+    block={false}
     className="AltViewOptions"
+    ghost={false}
+    loading={false}
+    prefixCls="ant-btn"
   >
     Trace Timeline 
     <Icon
       type="down"
     />
-  </div>
+  </Button>
 </Dropdown>
 `;
