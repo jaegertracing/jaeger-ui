@@ -110,6 +110,22 @@ export function getParameterInAncestor(name: string, span: Span) {
     }
     currentSpan = getParent(currentSpan);
   }
+
+  return undefined;
+}
+
+export function getParameterInTrace(name: string, trace: Trace | undefined) {
+  if(trace) {
+    const validTraceKeys = (Object.keys(trace) as (keyof Trace)[]).filter(
+      key => typeof trace[key] === 'string' || typeof trace[key] === 'number'
+    );
+
+    const key = name as keyof Trace;
+    if(validTraceKeys.includes(key)) {
+      return { key: key, value: trace[key] };
+    }
+  }
+
   return undefined;
 }
 
@@ -152,7 +168,8 @@ export function computeLinks(
   linkPatterns: ProcessedLinkPattern[],
   span: Span,
   items: KeyValuePair[],
-  itemIndex: number
+  itemIndex: number,
+  trace: Trace | undefined
 ) {
   const item = items[itemIndex];
   let type = 'logs';
@@ -170,15 +187,23 @@ export function computeLinks(
       const parameterValues: Record<string, any> = {};
       const allParameters = pattern.parameters.every(parameter => {
         let entry = getParameterInArray(parameter, items);
+
         if (!entry && !processTags) {
           // do not look in ancestors for process tags because the same object may appear in different places in the hierarchy
           // and the cache in getLinks uses that object as a key
           entry = getParameterInAncestor(parameter, span);
         }
+
+        // look up in trace for matching keys
+        if(!entry) {
+          entry = getParameterInTrace(parameter, trace);
+        }
+
         if (entry) {
           parameterValues[parameter] = entry.value;
           return true;
         }
+
         // eslint-disable-next-line no-console
         console.warn(
           `Skipping link pattern, missing parameter ${parameter} for key ${item.key} in ${type}.`,
@@ -198,14 +223,14 @@ export function computeLinks(
 }
 
 export function createGetLinks(linkPatterns: ProcessedLinkPattern[], cache: WeakMap<KeyValuePair, Link[]>) {
-  return (span: Span, items: KeyValuePair[], itemIndex: number) => {
+  return (span: Span, items: KeyValuePair[], itemIndex: number, trace: Trace | undefined) => {
     if (linkPatterns.length === 0) {
       return [];
     }
     const item = items[itemIndex];
     let result = cache.get(item);
     if (!result) {
-      result = computeLinks(linkPatterns, span, items, itemIndex);
+      result = computeLinks(linkPatterns, span, items, itemIndex, trace);
       cache.set(item, result);
     }
     return result;
