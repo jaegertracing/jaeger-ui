@@ -20,7 +20,7 @@ rafPolyfill();
 
 /* eslint-disable import/no-extraneous-dependencies */
 const Enzyme = require('enzyme');
-const EnzymeAdapter = require('enzyme-adapter-react-16');
+const EnzymeAdapter = require('@wojtekmaj/enzyme-adapter-react-17');
 const createSerializer = require('enzyme-to-json').createSerializer;
 
 Enzyme.configure({ adapter: new EnzymeAdapter() });
