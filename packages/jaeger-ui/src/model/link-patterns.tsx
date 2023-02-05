@@ -114,15 +114,23 @@ export function getParameterInAncestor(name: string, span: Span) {
   return undefined;
 }
 
-export function getParameterInTrace(name: string, trace: Trace | undefined) {
-  if(trace) {
-    const validTraceKeys = (Object.keys(trace) as (keyof Trace)[]).filter(
+const getValidTraceKeys = memoize(10)(
+  (trace: Trace) => {
+    const validKeys = (Object.keys(trace) as (keyof Trace)[]).filter(
       key => typeof trace[key] === 'string' || typeof trace[key] === 'number'
     );
+    return validKeys;
+  }
+);
+
+export function getParameterInTrace(name: string, trace: Trace | undefined) {
+
+  if(trace) {
+    const validTraceKeys = getValidTraceKeys(trace);
 
     const key = name as keyof Trace;
     if(validTraceKeys.includes(key)) {
-      return { key: key, value: trace[key] };
+      return trace[key];
     }
   }
 
@@ -135,20 +143,17 @@ function callTemplate(template: ProcessedTemplate, data: any) {
 
 export function computeTraceLink(linkPatterns: ProcessedLinkPattern[], trace: Trace) {
   const result: TLinksRV = [];
-  const validKeys = (Object.keys(trace) as (keyof Trace)[]).filter(
-    key => typeof trace[key] === 'string' || typeof trace[key] === 'number'
-  );
 
   linkPatterns
     .filter(pattern => pattern.type('traces'))
     .forEach(pattern => {
       const parameterValues: Record<string, any> = {};
       const allParameters = pattern.parameters.every(parameter => {
-        const key = parameter as keyof Trace;
-        if (validKeys.includes(key)) {
+        const val = getParameterInTrace(parameter, trace);
+        if (val) {
           // At this point is safe to access to trace object using parameter variable because
           // we validated parameter against validKeys, this implies that parameter a keyof Trace.
-          parameterValues[parameter] = trace[key];
+          parameterValues[parameter] = val;
           return true;
         }
         return false;
@@ -186,17 +191,22 @@ export function computeLinks(
     if (pattern.type(type) && pattern.key(item.key) && pattern.value(item.value)) {
       const parameterValues: Record<string, any> = {};
       const allParameters = pattern.parameters.every(parameter => {
-        let entry = getParameterInArray(parameter, items);
+        let entry;
 
-        if (!entry && !processTags) {
-          // do not look in ancestors for process tags because the same object may appear in different places in the hierarchy
-          // and the cache in getLinks uses that object as a key
-          entry = getParameterInAncestor(parameter, span);
+        if(parameter.startsWith('trace.')) {
+          const traceVal = getParameterInTrace(parameter.split('trace.')[1], trace);
+          if(traceVal) {
+            entry = { key: parameter, value: traceVal };
+          }
         }
+        else {
+          entry = getParameterInArray(parameter, items);
 
-        // look up in trace for matching keys
-        if(!entry) {
-          entry = getParameterInTrace(parameter, trace);
+          if (!entry && !processTags) {
+            // do not look in ancestors for process tags because the same object may appear in different places in the hierarchy
+            // and the cache in getLinks uses that object as a key
+            entry = getParameterInAncestor(parameter, span);
+          }
         }
 
         if (entry) {

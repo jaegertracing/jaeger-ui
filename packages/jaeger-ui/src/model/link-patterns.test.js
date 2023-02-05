@@ -310,10 +310,7 @@ describe('getParameterInTrace()', () => {
   };
 
   it('returns an entry that is present', () => {
-    expect(getParameterInTrace('traceID', trace)).toEqual({
-        key: 'traceID',
-        value: trace.traceID,
-      });
+    expect(getParameterInTrace('startTime', trace)).toEqual(trace.startTime);
   });
 
   it('returns undefined when the entry cannot be found', () => {
@@ -385,25 +382,18 @@ describe('computeLinks()', () => {
       text: 'second link (#{myOtherKey})',
     },
     {
-      type: 'tags',
+      type: 'logs',
       key: 'myThirdKey',
-      url: 'http://example.com/?myKey1=#{myKey}&myKey=#{myThirdKey}&traceID=#{traceID}&startTime=#{startTime}',
-      text: 'third link (#{myThirdKey}) for traceID - #{traceID}',
+      url: 'http://example.com/?myKey1=#{myKey}&myKey=#{myThirdKey}&traceID=#{trace.traceID}&startTime=#{trace.startTime}',
+      text: 'third link (#{myThirdKey}) for traceID - #{trace.traceID}',
     }
   ].map(processLinkPattern);
 
   const spans = [
     { depth: 0, process: {}, tags: [{ key: 'myKey', value: 'valueOfMyKey' }] },
-    { depth: 1, process: {}, logs: [{ fields: [{ key: 'myOtherKey', value: 'valueOfMy+Other+Key' }] }] },
-    { depth: 1, process: {}, tags: [{ key: 'myThirdKey', value: 'valueOfThirdMyKey' }] },
+    { depth: 1, process: {}, logs: [{ fields: [{ key: 'myOtherKey', value: 'valueOfMy+Other+Key' }, { key: 'myThirdKey', value: 'valueOfThirdMyKey' }] }] },
   ];
   spans[1].references = [
-    {
-      refType: 'CHILD_OF',
-      span: spans[0],
-    },
-  ];
-  spans[2].references = [
     {
       refType: 'CHILD_OF',
       span: spans[0],
@@ -434,7 +424,7 @@ describe('computeLinks()', () => {
         text: 'second link (valueOfMy+Other+Key)',
       },
     ]);
-    expect(computeLinks(linkPatterns, spans[2], spans[2].tags, 0, trace)).toEqual([
+    expect(computeLinks(linkPatterns, spans[1], spans[1].logs[0].fields, 1, trace)).toEqual([
       {
         url: 'http://example.com/?myKey1=valueOfMyKey&myKey=valueOfThirdMyKey&traceID=trc1&startTime=1000',
         text: 'third link (valueOfThirdMyKey) for traceID - trc1',
