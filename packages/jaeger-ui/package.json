@@ -23,7 +23,7 @@
   "devDependencies": {
     "@types/match-sorter": "^2.3.0",
     "@types/react-window": "^1.8.0",
-    "babel-plugin-import": "1.13.5",
+    "babel-plugin-import": "1.13.6",
     "bluebird": "^3.5.0",
     "customize-cra": "0.2.9",
     "enzyme": "^3.8.0",
