@@ -114,22 +114,19 @@ export function getParameterInAncestor(name: string, span: Span) {
   return undefined;
 }
 
-const getValidTraceKeys = memoize(10)(
-  (trace: Trace) => {
-    const validKeys = (Object.keys(trace) as (keyof Trace)[]).filter(
-      key => typeof trace[key] === 'string' || typeof trace[key] === 'number'
-    );
-    return validKeys;
-  }
-);
+const getValidTraceKeys = memoize(10)((trace: Trace) => {
+  const validKeys = (Object.keys(trace) as (keyof Trace)[]).filter(
+    key => typeof trace[key] === 'string' || typeof trace[key] === 'number'
+  );
+  return validKeys;
+});
 
 export function getParameterInTrace(name: string, trace: Trace | undefined) {
-
-  if(trace) {
+  if (trace) {
     const validTraceKeys = getValidTraceKeys(trace);
 
     const key = name as keyof Trace;
-    if(validTraceKeys.includes(key)) {
+    if (validTraceKeys.includes(key)) {
       return trace[key];
     }
   }
@@ -193,13 +190,12 @@ export function computeLinks(
       const allParameters = pattern.parameters.every(parameter => {
         let entry;
 
-        if(parameter.startsWith('trace.')) {
+        if (parameter.startsWith('trace.')) {
           const traceVal = getParameterInTrace(parameter.split('trace.')[1], trace);
-          if(traceVal) {
+          if (traceVal) {
             entry = { key: parameter, value: traceVal };
           }
-        }
-        else {
+        } else {
           entry = getParameterInArray(parameter, items);
 
           if (!entry && !processTags) {

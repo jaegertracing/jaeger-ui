@@ -320,7 +320,6 @@ describe('getParameterInTrace()', () => {
   it('returns undefined when there is no trace', () => {
     expect(getParameterInTrace('traceID')).toBeUndefined();
   });
-
 });
 
 describe('computeTraceLink()', () => {
@@ -384,14 +383,26 @@ describe('computeLinks()', () => {
     {
       type: 'logs',
       key: 'myThirdKey',
-      url: 'http://example.com/?myKey1=#{myKey}&myKey=#{myThirdKey}&traceID=#{trace.traceID}&startTime=#{trace.startTime}',
+      url:
+        'http://example.com/?myKey1=#{myKey}&myKey=#{myThirdKey}&traceID=#{trace.traceID}&startTime=#{trace.startTime}',
       text: 'third link (#{myThirdKey}) for traceID - #{trace.traceID}',
-    }
+    },
   ].map(processLinkPattern);
 
   const spans = [
     { depth: 0, process: {}, tags: [{ key: 'myKey', value: 'valueOfMyKey' }] },
-    { depth: 1, process: {}, logs: [{ fields: [{ key: 'myOtherKey', value: 'valueOfMy+Other+Key' }, { key: 'myThirdKey', value: 'valueOfThirdMyKey' }] }] },
+    {
+      depth: 1,
+      process: {},
+      logs: [
+        {
+          fields: [
+            { key: 'myOtherKey', value: 'valueOfMy+Other+Key' },
+            { key: 'myThirdKey', value: 'valueOfThirdMyKey' },
+          ],
+        },
+      ],
+    },
   ];
   spans[1].references = [
     {
