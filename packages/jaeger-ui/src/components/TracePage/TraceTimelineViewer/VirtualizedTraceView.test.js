@@ -22,6 +22,7 @@ import { DEFAULT_HEIGHTS, VirtualizedTraceViewImpl } from './VirtualizedTraceVie
 import traceGenerator from '../../../demo/trace-generators';
 import transformTraceData from '../../../model/transform-trace-data';
 import updateUiFindSpy from '../../../utils/update-ui-find';
+import * as getLinks from '../../../model/link-patterns';
 
 jest.mock('./SpanTreeOffset');
 jest.mock('../../../utils/update-ui-find');
@@ -428,6 +429,24 @@ describe('<VirtualizedTraceViewImpl>', () => {
         uiFind: spanName,
       });
       expect(focusUiFindMatchesMock).toHaveBeenLastCalledWith(trace, spanName, false);
+    });
+  });
+
+  describe('linksGetter()', () => {
+    let getLinksSpy;
+
+    beforeAll(() => {
+      getLinksSpy = jest.spyOn(getLinks, 'default');
+    });
+
+    afterAll(() => {
+      getLinksSpy.mockRestore();
+    });
+
+    it('calls getLinks with expected params', () => {
+      const span = trace.spans[1];
+      instance.linksGetter(span, span.tags, 0);
+      expect(getLinksSpy).toHaveBeenCalledWith(span, span.tags, 0, trace);
     });
   });
 });
