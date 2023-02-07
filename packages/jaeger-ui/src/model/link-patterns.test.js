@@ -310,7 +310,7 @@ describe('getParameterInTrace()', () => {
   };
 
   it('returns an entry that is present', () => {
-    expect(getParameterInTrace('startTime', trace)).toEqual(trace.startTime);
+    expect(getParameterInTrace('startTime', trace)).toEqual({ key: 'startTime', value: trace.startTime });
   });
 
   it('returns undefined when the entry cannot be found', () => {

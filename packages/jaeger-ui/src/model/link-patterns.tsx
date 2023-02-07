@@ -127,7 +127,7 @@ export function getParameterInTrace(name: string, trace: Trace | undefined) {
 
     const key = name as keyof Trace;
     if (validTraceKeys.includes(key)) {
-      return trace[key];
+      return { key, value: trace[key] };
     }
   }
 
@@ -146,11 +146,11 @@ export function computeTraceLink(linkPatterns: ProcessedLinkPattern[], trace: Tr
     .forEach(pattern => {
       const parameterValues: Record<string, any> = {};
       const allParameters = pattern.parameters.every(parameter => {
-        const val = getParameterInTrace(parameter, trace);
-        if (val) {
+        const traceKV = getParameterInTrace(parameter, trace);
+        if (traceKV) {
           // At this point is safe to access to trace object using parameter variable because
           // we validated parameter against validKeys, this implies that parameter a keyof Trace.
-          parameterValues[parameter] = val;
+          parameterValues[parameter] = traceKV.value;
           return true;
         }
         return false;
@@ -191,9 +191,9 @@ export function computeLinks(
         let entry;
 
         if (parameter.startsWith('trace.')) {
-          const traceVal = getParameterInTrace(parameter.split('trace.')[1], trace);
-          if (traceVal) {
-            entry = { key: parameter, value: traceVal };
+          const traceKV = getParameterInTrace(parameter.split('trace.')[1], trace);
+          if (traceKV) {
+            entry = traceKV;
           }
         } else {
           entry = getParameterInArray(parameter, items);
@@ -243,7 +243,7 @@ export function createGetLinks(linkPatterns: ProcessedLinkPattern[], cache: Weak
   };
 }
 
-const processedLinks: ProcessedLinkPattern[] = (getConfigValue('linkPatterns') || [])
+export const processedLinks: ProcessedLinkPattern[] = (getConfigValue('linkPatterns') || [])
   .map(processLinkPattern)
   .filter(Boolean);
 

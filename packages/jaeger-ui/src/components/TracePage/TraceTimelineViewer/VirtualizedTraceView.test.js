@@ -433,20 +433,38 @@ describe('<VirtualizedTraceViewImpl>', () => {
   });
 
   describe('linksGetter()', () => {
-    let getLinksSpy;
+    const span = trace.spans[1];
+    const key = span.tags[0].key;
+    const val = encodeURIComponent(span.tags[0].value);
+    const origLinkPatterns = [...getLinks.processedLinks];
 
-    beforeAll(() => {
-      getLinksSpy = jest.spyOn(getLinks, 'default');
+    beforeEach(() => {
+      getLinks.processedLinks.splice(0, getLinks.processedLinks.length);
     });
 
     afterAll(() => {
-      getLinksSpy.mockRestore();
+      getLinks.processedLinks.splice(0, getLinks.processedLinks.length);
+      getLinks.processedLinks.push(...origLinkPatterns);
     });
 
     it('calls getLinks with expected params', () => {
-      const span = trace.spans[1];
-      instance.linksGetter(span, span.tags, 0);
-      expect(getLinksSpy).toHaveBeenCalledWith(span, span.tags, 0, trace);
+      const linkPatterns = [
+        {
+          key,
+          type: 'tags',
+          url: `http://example.com/?key1=#{${key}}&traceID=#{trace.traceID}&startTime=#{trace.startTime}`,
+          text: `For first link traceId is - #{trace.traceID}`,
+        },
+      ].map(getLinks.processLinkPattern);
+
+      getLinks.processedLinks.push(...linkPatterns);
+
+      expect(instance.linksGetter(span, span.tags, 0)).toEqual([
+        {
+          url: `http://example.com/?key1=${val}&traceID=${trace.traceID}&startTime=${trace.startTime}`,
+          text: `For first link traceId is - ${trace.traceID}`,
+        },
+      ]);
     });
   });
 });
