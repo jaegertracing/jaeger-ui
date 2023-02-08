@@ -100,10 +100,7 @@ describe('TraceDiffHeader', () => {
   let wrapper;
 
   function getPopoverProp(popoverIndex, propName) {
-    return wrapper
-      .find(Popover)
-      .at(popoverIndex)
-      .prop(propName);
+    return wrapper.find(Popover).at(popoverIndex).prop(propName);
   }
 
   beforeEach(() => {

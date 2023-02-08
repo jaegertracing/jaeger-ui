@@ -167,12 +167,8 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
     if (!this._scrollManager) {
       throw new Error('Invalid state - scrollManager is unset');
     }
-    const {
-      scrollPageDown,
-      scrollPageUp,
-      scrollToNextVisibleSpan,
-      scrollToPrevVisibleSpan,
-    } = this._scrollManager;
+    const { scrollPageDown, scrollPageUp, scrollToNextVisibleSpan, scrollToPrevVisibleSpan } =
+      this._scrollManager;
     const adjViewRange = (a: number, b: number) => this._adjustViewRange(a, b, 'kbd');
     const shortcutCallbacks = makeShortcutCallbacks(adjViewRange);
     shortcutCallbacks.scrollPageDown = scrollPageDown;
@@ -459,7 +455,4 @@ export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchPro
   return { acknowledgeArchive, archiveTrace, fetchTrace, focusUiFindMatches };
 }
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(TracePageImpl);
+export default connect(mapStateToProps, mapDispatchToProps)(TracePageImpl);

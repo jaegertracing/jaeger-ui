@@ -78,14 +78,8 @@ export default class ResultItem extends React.PureComponent<Props, State> {
   }
 
   render() {
-    const {
-      disableComparision,
-      durationPercent,
-      isInDiffCohort,
-      linkTo,
-      toggleComparison,
-      trace,
-    } = this.props;
+    const { disableComparision, durationPercent, isInDiffCohort, linkTo, toggleComparison, trace } =
+      this.props;
     const { duration, services, startTime, traceName, traceID } = trace;
     return (
       <div className="ResultItem" onClick={trackTraceConversions} role="button">

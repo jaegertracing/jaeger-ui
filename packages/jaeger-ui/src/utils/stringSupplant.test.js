@@ -30,11 +30,7 @@ describe('stringSupplant', () => {
 
   describe('encodedStringSupplant', () => {
     it('encodes present values', () => {
-      const reverse = str =>
-        str
-          .split('')
-          .reverse()
-          .join('');
+      const reverse = str => str.split('').reverse().join('');
       const encodeFn = jest.fn(reverse);
       expect(encodedStringSupplant('key0: #{value0}; key1: #{value1}', encodeFn, { value0, value1 })).toBe(
         `key0: ${reverse(value0)}; key1: ${reverse(value1)}`

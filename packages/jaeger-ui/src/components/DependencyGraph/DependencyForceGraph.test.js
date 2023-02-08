@@ -34,7 +34,10 @@ describe('chargeStrength', () => {
 });
 
 describe('<DependencyForceGraph>', () => {
-  const nodes = [{ id: 'node-a', radius: 1 }, { id: 'node-b', radius: 1 }];
+  const nodes = [
+    { id: 'node-a', radius: 1 },
+    { id: 'node-b', radius: 1 },
+  ];
   const links = [{ source: 'node-a', target: 'node-b', value: 1 }];
   let oldSize;
   let wrapper;
