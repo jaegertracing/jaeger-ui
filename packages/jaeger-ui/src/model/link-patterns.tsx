@@ -166,6 +166,11 @@ export function computeTraceLink(linkPatterns: ProcessedLinkPattern[], trace: Tr
   return result;
 }
 
+// computeLinks generates {url, text} link pairs by applying link patterms
+// to the element `itemIndex` of `items` array. The values for template
+// variables used in the patterns are looked up first in `items`, then
+// in `span.tags` and `span.process.tags`, and then in ancestor spans
+// recursively via `span.parent`.
 export function computeLinks(
   linkPatterns: ProcessedLinkPattern[],
   span: Span,

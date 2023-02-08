@@ -13,13 +13,13 @@
 // limitations under the License.
 
 // site-prefix.js must be the first import of the main webpack entrypoint
-// becaue it configures the webpack publicPath.
+// because it configures the webpack publicPath.
 /* eslint-disable import/first */
 import './site-prefix';
 
 import React from 'react';
 import { BrowserRouter } from 'react-router-dom';
-import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import { document } from 'global';
 
 import JaegerUIApp from './components/App';
@@ -36,20 +36,20 @@ import 'u-basscss/css/typography.css';
 
 const UI_ROOT_ID = 'jaeger-ui-root';
 
+const root = createRoot(document.getElementById(UI_ROOT_ID));
+
 if (trackingContext) {
   trackingContext.context(() => {
-    ReactDOM.render(
+    root.render(
       <BrowserRouter>
         <JaegerUIApp />
-      </BrowserRouter>,
-      document.getElementById(UI_ROOT_ID)
+      </BrowserRouter>
     );
   });
 } else {
-  ReactDOM.render(
+  root.render(
     <BrowserRouter>
       <JaegerUIApp />
-    </BrowserRouter>,
-    document.getElementById(UI_ROOT_ID)
+    </BrowserRouter>
   );
 }
