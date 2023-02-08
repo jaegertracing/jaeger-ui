@@ -191,10 +191,7 @@ export function computeLinks(
         let entry;
 
         if (parameter.startsWith('trace.')) {
-          const traceKV = getParameterInTrace(parameter.split('trace.')[1], trace);
-          if (traceKV) {
-            entry = traceKV;
-          }
+          entry = getParameterInTrace(parameter.split('trace.')[1], trace);
         } else {
           entry = getParameterInArray(parameter, items);
 

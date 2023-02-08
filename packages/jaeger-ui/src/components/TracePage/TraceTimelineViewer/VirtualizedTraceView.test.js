@@ -22,7 +22,7 @@ import { DEFAULT_HEIGHTS, VirtualizedTraceViewImpl } from './VirtualizedTraceVie
 import traceGenerator from '../../../demo/trace-generators';
 import transformTraceData from '../../../model/transform-trace-data';
 import updateUiFindSpy from '../../../utils/update-ui-find';
-import * as getLinks from '../../../model/link-patterns';
+import * as linkPatterns from '../../../model/link-patterns';
 
 jest.mock('./SpanTreeOffset');
 jest.mock('../../../utils/update-ui-find');
@@ -436,28 +436,28 @@ describe('<VirtualizedTraceViewImpl>', () => {
     const span = trace.spans[1];
     const key = span.tags[0].key;
     const val = encodeURIComponent(span.tags[0].value);
-    const origLinkPatterns = [...getLinks.processedLinks];
+    const origLinkPatterns = [...linkPatterns.processedLinks];
 
     beforeEach(() => {
-      getLinks.processedLinks.splice(0, getLinks.processedLinks.length);
+      linkPatterns.processedLinks.splice(0, linkPatterns.processedLinks.length);
     });
 
     afterAll(() => {
-      getLinks.processedLinks.splice(0, getLinks.processedLinks.length);
-      getLinks.processedLinks.push(...origLinkPatterns);
+      linkPatterns.processedLinks.splice(0, linkPatterns.processedLinks.length);
+      linkPatterns.processedLinks.push(...origLinkPatterns);
     });
 
-    it('calls getLinks with expected params', () => {
-      const linkPatterns = [
+    it('linksGetter is expected to receive url and text for a given link pattern', () => {
+      const linkPatternConfig = [
         {
           key,
           type: 'tags',
           url: `http://example.com/?key1=#{${key}}&traceID=#{trace.traceID}&startTime=#{trace.startTime}`,
           text: `For first link traceId is - #{trace.traceID}`,
         },
-      ].map(getLinks.processLinkPattern);
+      ].map(linkPatterns.processLinkPattern);
 
-      getLinks.processedLinks.push(...linkPatterns);
+      linkPatterns.processedLinks.push(...linkPatternConfig);
 
       expect(instance.linksGetter(span, span.tags, 0)).toEqual([
         {
