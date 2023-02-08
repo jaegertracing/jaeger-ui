@@ -212,7 +212,4 @@ export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchPro
   };
 }
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(UnconnectedQualityMetrics);
+export default connect(mapStateToProps, mapDispatchToProps)(UnconnectedQualityMetrics);

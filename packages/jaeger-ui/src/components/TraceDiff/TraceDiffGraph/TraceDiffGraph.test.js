@@ -90,12 +90,7 @@ describe('TraceDiffGraph', () => {
     });
 
     expect(wrapper.find(ErrorMessage).length).toBe(2);
-    expect(
-      wrapper
-        .find(ErrorMessage)
-        .at(1)
-        .props()
-    ).toEqual(
+    expect(wrapper.find(ErrorMessage).at(1).props()).toEqual(
       expect.objectContaining({
         error: errorB,
       })

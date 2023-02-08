@@ -292,10 +292,11 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
                 Aggregation of all &quot;{this.getSelectedService()}&quot; metrics in selected timeframe.{' '}
                 <a
                   href={prefixUrl(
-                    `/search?end=${Date.now()}000&limit=20&lookback=${selectedTimeFrame /
-                      (3600 *
-                        1000)}h&maxDuration&minDuration&service=${this.getSelectedService()}&start=${Date.now() -
-                      selectedTimeFrame}000`
+                    `/search?end=${Date.now()}000&limit=20&lookback=${
+                      selectedTimeFrame / (3600 * 1000)
+                    }h&maxDuration&minDuration&service=${this.getSelectedService()}&start=${
+                      Date.now() - selectedTimeFrame
+                    }000`
                   )}
                   target="blank"
                   onClick={trackViewAllTraces}

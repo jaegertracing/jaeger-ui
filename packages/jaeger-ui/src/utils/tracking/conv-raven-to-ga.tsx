@@ -55,11 +55,7 @@ function truncate(str: string, len: number, front: boolean = false) {
 
 // Replace newlines with "|" and collapse whitespace to " "
 function collapseWhitespace(value: string) {
-  return value
-    .trim()
-    .replace(/\n/g, '|')
-    .replace(/\s\s+/g, ' ')
-    .trim();
+  return value.trim().replace(/\n/g, '|').replace(/\s\s+/g, ' ').trim();
 }
 
 // shorten URLs to eitehr a short code or a word
@@ -93,10 +89,7 @@ function convErrorMessage(message: string, maxLen: number = 0) {
   const parts = ['! '];
   const j = msg.indexOf(':');
   if (j > -1) {
-    const start = msg
-      .slice(0, j)
-      .replace(/error/i, '')
-      .trim();
+    const start = msg.slice(0, j).replace(/error/i, '').trim();
     if (start) {
       parts.push(start, '! ');
     }
