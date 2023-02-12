@@ -58,6 +58,7 @@ import updateUiFind from '../../utils/update-ui-find';
 import TraceStatistics from './TraceStatistics/index';
 import TraceSpanView from './TraceSpanView/index';
 import TraceFlamegraph from './TraceFlamegraph/index';
+import TraceAsEventDrivenBPMNChoreography from "./TraceAsEventDrivenBPMNChoreography/index";
 
 import './index.css';
 
@@ -413,6 +414,8 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
       view = <TraceSpanView trace={data} uiFindVertexKeys={spanFindMatches} uiFind={uiFind} />;
     } else if (ETraceViewType.TraceFlamegraph === viewType && headerHeight) {
       view = <TraceFlamegraph trace={trace} />;
+    } else if (ETraceViewType.TraceAsEventDrivenBPMNChoreography === viewType && headerHeight) {
+      view = <TraceAsEventDrivenBPMNChoreography trace={trace}/>;
     }
 
     return (

@@ -1,3 +1,4 @@
 build
 coverage
 packages/plexus/src/LayoutManager/layout.worker*js*
+packages/jaeger-ui/src/components/TracePage/TraceAsEventDrivenBPMNChoreography/BPMNChoreography/lib/properties-provider/MessageDefinition.js

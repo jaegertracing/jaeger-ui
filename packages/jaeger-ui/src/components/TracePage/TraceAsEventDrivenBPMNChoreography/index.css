@@ -1,0 +1,25 @@
+.container {
+    margin-right: auto;
+    margin-left: auto;
+}
+
+.title--TraceAsEventDrivenBPMNChoreographyView {
+    width: 100%;
+    padding-top: 0.3%;
+    padding-bottom: 0.3%;
+    padding-left: 0.4%;
+    background: rgb(236, 236, 236);
+    margin-bottom: 0%;
+}
+
+.flex {
+    display: grid;
+    grid-template-columns: 30% 70%;
+}
+
+.card {
+    padding: 1em;
+    border-radius: 0.75em;
+    border: solid;
+    border-color: black;
+}

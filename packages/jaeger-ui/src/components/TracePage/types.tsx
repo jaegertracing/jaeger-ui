@@ -62,4 +62,5 @@ export enum ETraceViewType {
   TraceStatistics = 'TraceStatistics',
   TraceSpansView = 'TraceSpansView',
   TraceFlamegraph = 'TraceFlamegraph',
+  TraceAsEventDrivenBPMNChoreography = 'Trace as Event-Driven BPMN Choreography'
 }

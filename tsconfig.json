@@ -14,7 +14,7 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "jsx": "preserve"
+//    "jsx": "preserve"
   },
   "include": [
     // TODO(tiffon): Make plexus a project reference #348 is mergeds

@@ -55,6 +55,10 @@ const MENU_ITEMS = [
     viewType: ETraceViewType.TraceFlamegraph,
     label: 'Trace Flamegraph',
   },
+  {
+    viewType: ETraceViewType.TraceAsEventDrivenBPMNChoreography,
+    label: 'Trace as Event-Driven BPMN Choreography',
+  },
 ];
 
 export default function AltViewOptions(props: Props) {
