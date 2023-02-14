@@ -23,7 +23,7 @@
     "husky": "8.0.3",
     "isomorphic-fetch": "3.0.0",
     "jsdom": "21.1.0",
-    "lerna": "6.4.1",
+    "lerna": "6.5.1",
     "npm-run-all": "4.1.5",
     "prettier": "2.8.4",
     "rxjs-compat": "6.6.7",
