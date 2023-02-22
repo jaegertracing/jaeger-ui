@@ -108,18 +108,18 @@ export const timeFrameOptions = [
   { label: 'Last 2 days', value: twoDaysInMilliSeconds },
 ];
 
-// const timeframeToStepMapper  = () => {
-//   return 6;
-//   // [fiveMinsInMilliSeconds]: 5000,
-//   // [fifteenMinsInMilliSeconds]: 10000,
-//   // [thirtyMinsInMilliSeconds]: 15000,
-//   // [oneHourInMilliSeconds]: 30000,
-//   // [twoHoursInMilliSeconds]: 15000,
-//   // [sixHoursInMilliSeconds]: 15000,
-//   // [twelveHoursInMilliSeconds]: 600000,
-//   // [oneDayInMilliSeconds]: 1800000,
-//   // [twoDaysInMilliSeconds]: 3600000,
+// const timeframeToStepMapper = {
+//   [fiveMinsInMilliSeconds]: 5000,
+//   [fifteenMinsInMilliSeconds]: 10000,
+//   [thirtyMinsInMilliSeconds]: 15000,
+//   [oneHourInMilliSeconds]: 30000,
+//   [twoHoursInMilliSeconds]: 15000,
+//   [sixHoursInMilliSeconds]: 15000,
+//   [twelveHoursInMilliSeconds]: 600000,
+//   [oneDayInMilliSeconds]: 1800000,
+//   [twoDaysInMilliSeconds]: 3600000,
 // }
+const timeframeToStepMapper = () => 6;
 
 // export for tests
 export const getLoopbackInterval = (interval: number) => {
@@ -241,7 +241,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
         quantile: 0.95,
         endTs: this.endTime,
         lookback: selectedTimeFrame,
-        step: 6,
+        step: timeframeToStepMapper(),
         ratePer: 10 * 60 * 1000,
       };
 
