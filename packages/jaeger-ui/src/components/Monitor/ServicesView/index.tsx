@@ -95,6 +95,7 @@ const sixHoursInMilliSeconds = 6 * oneHourInMilliSeconds;
 const twelveHoursInMilliSeconds = 12 * oneHourInMilliSeconds;
 const oneDayInMilliSeconds = 24 * oneHourInMilliSeconds;
 const twoDaysInMilliSeconds = 48 * oneHourInMilliSeconds;
+const stepDivider = 96;
 
 export const timeFrameOptions = [
   { label: 'Last 5 minutes', value: fiveMinsInMilliSeconds },
@@ -108,18 +109,7 @@ export const timeFrameOptions = [
   { label: 'Last 2 days', value: twoDaysInMilliSeconds },
 ];
 
-// const timeframeToStepMapper = {
-//   [fiveMinsInMilliSeconds]: 5000,
-//   [fifteenMinsInMilliSeconds]: 10000,
-//   [thirtyMinsInMilliSeconds]: 15000,
-//   [oneHourInMilliSeconds]: 30000,
-//   [twoHoursInMilliSeconds]: 15000,
-//   [sixHoursInMilliSeconds]: 15000,
-//   [twelveHoursInMilliSeconds]: 600000,
-//   [oneDayInMilliSeconds]: 1800000,
-//   [twoDaysInMilliSeconds]: 3600000,
-// }
-const timeframeToStepMapper = { '0': 6 };
+const calculateStep = (timeFrame: number) => timeFrame / stepDivider;
 
 // export for tests
 export const getLoopbackInterval = (interval: number) => {
@@ -241,7 +231,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
         quantile: 0.95,
         endTs: this.endTime,
         lookback: selectedTimeFrame,
-        step: timeframeToStepMapper['0'],
+        step: calculateStep(selectedTimeFrame),
         ratePer: 10 * 60 * 1000,
       };
 
