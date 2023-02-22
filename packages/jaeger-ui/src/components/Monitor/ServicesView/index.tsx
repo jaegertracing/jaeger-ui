@@ -119,7 +119,7 @@ export const timeFrameOptions = [
 //   [oneDayInMilliSeconds]: 1800000,
 //   [twoDaysInMilliSeconds]: 3600000,
 // }
-const timeframeToStepMapper = () => 6;
+const timeframeToStepMapper = { '0': 6 };
 
 // export for tests
 export const getLoopbackInterval = (interval: number) => {
@@ -241,7 +241,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
         quantile: 0.95,
         endTs: this.endTime,
         lookback: selectedTimeFrame,
-        step: timeframeToStepMapper(),
+        step: timeframeToStepMapper['0'],
         ratePer: 10 * 60 * 1000,
       };
 
