@@ -85,18 +85,27 @@ const AdaptedVirtualSelect = reduxFormFieldAdapter({
 });
 
 const serviceFormSelector = formValueSelector('serviceForm');
-const oneHourInMilliSeconds = 3600000;
 const oneMinuteInMilliSeconds = 60000;
+const fiveMinsInMilliSeconds = 5 * oneMinuteInMilliSeconds;
+const fifteenMinsInMilliSeconds = 15 * oneMinuteInMilliSeconds;
+const thirtyMinsInMilliSeconds = 30 * oneMinuteInMilliSeconds;
+const oneHourInMilliSeconds = 3600000;
+const twoHoursInMilliSeconds = 2 * oneHourInMilliSeconds;
+const sixHoursInMilliSeconds = 6 * oneHourInMilliSeconds;
+const twelveHoursInMilliSeconds = 12 * oneHourInMilliSeconds;
+const oneDayInMilliSeconds = 24 * oneHourInMilliSeconds;
+const twoDaysInMilliSeconds = 48 * oneHourInMilliSeconds;
+
 export const timeFrameOptions = [
-  { label: 'Last 5 minutes', value: 5 * oneMinuteInMilliSeconds },
-  { label: 'Last 15 minutes', value: 15 * oneMinuteInMilliSeconds },
-  { label: 'Last 30 minutes', value: 30 * oneMinuteInMilliSeconds },
+  { label: 'Last 5 minutes', value: fiveMinsInMilliSeconds },
+  { label: 'Last 15 minutes', value: fifteenMinsInMilliSeconds },
+  { label: 'Last 30 minutes', value: thirtyMinsInMilliSeconds },
   { label: 'Last Hour', value: oneHourInMilliSeconds },
-  { label: 'Last 2 hours', value: 2 * oneHourInMilliSeconds },
-  { label: 'Last 6 hours', value: 6 * oneHourInMilliSeconds },
-  { label: 'Last 12 hours', value: 12 * oneHourInMilliSeconds },
-  { label: 'Last 24 hours', value: 24 * oneHourInMilliSeconds },
-  { label: 'Last 2 days', value: 48 * oneHourInMilliSeconds },
+  { label: 'Last 2 hours', value: twoHoursInMilliSeconds },
+  { label: 'Last 6 hours', value: sixHoursInMilliSeconds },
+  { label: 'Last 12 hours', value: twelveHoursInMilliSeconds },
+  { label: 'Last 24 hours', value: oneDayInMilliSeconds },
+  { label: 'Last 2 days', value: twoDaysInMilliSeconds },
 ];
 
 // export for tests
@@ -219,7 +228,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
         quantile: 0.95,
         endTs: this.endTime,
         lookback: selectedTimeFrame,
-        step: 60 * 1000,
+        step: 6000,
         ratePer: 10 * 60 * 1000,
       };
 
