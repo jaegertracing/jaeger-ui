@@ -1,4 +1,4 @@
-// Copyright (c) 2023 The Jaeger Authors.
+// Copyright (c) 2019 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,24 +12,5 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/**
- * Provides access to constants injected by the build system.
- */
-
-/**
- * Get the current execution environment, as inferred from NODE_ENV at build time.
- */
-export function getAppEnvironment() {
-  return __APP_ENVIRONMENT__;
-}
-
-/**
- * Get injected version details as a JSON-formatted string.
- */
-export function getVersionInfo() {
-  return __REACT_APP_VSN_STATE__;
-}
-
-export function shouldDebugGoogleAnalytics() {
-  return __REACT_APP_GA_DEBUG__;
-}
+// eslint-disable-next-line spaced-comment
+/// <reference types="vite/client" />

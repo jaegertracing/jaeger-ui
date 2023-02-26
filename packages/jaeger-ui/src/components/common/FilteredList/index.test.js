@@ -80,7 +80,7 @@ describe('<FilteredList>', () => {
   describe('up / down arrow keys', () => {
     let indices;
 
-    beforeAll(jest.useFakeTimers);
+    beforeAll(() => jest.useFakeTimers('modern'));
 
     beforeEach(() => {
       indices = {
@@ -266,7 +266,7 @@ describe('<FilteredList>', () => {
   });
 
   it('scrolling unsets the focus index', () => {
-    jest.useFakeTimers();
+    jest.useFakeTimers('modern');
     wrapper.setState({ focusedIndex: 0 });
     wrapper.instance().onListScrolled({ scrollUpdateWasRequested: false });
     jest.runAllTimers();
