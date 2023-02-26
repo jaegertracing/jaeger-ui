@@ -28,36 +28,36 @@ import './ScatterPlot.css';
 function ScatterPlotImpl(props) {
   const { data, containerWidth, onValueClick, overValue, onValueOver, onValueOut } = props;
   return (
-    <div className="TraceResultsScatterPlot">
-      <XYPlot
-        margin={{
-          left: 50,
-        }}
-        width={containerWidth}
-        colorType="literal"
-        height={200}
-      >
-        <XAxis
-          title="Time"
-          tickTotal={4}
-          tickFormat={t => moment(t / ONE_MILLISECOND).format('hh:mm:ss a')}
-        />
-        <YAxis title="Duration" tickTotal={3} tickFormat={t => formatDuration(t)} />
-        <MarkSeries
-          sizeRange={[3, 10]}
-          opacity={0.5}
-          onValueClick={onValueClick}
-          onValueMouseOver={onValueOver}
-          onValueMouseOut={onValueOut}
-          data={data}
-        />
-        {overValue && (
-          <Hint value={overValue}>
-            <h4 className="scatter-plot-hint">{overValue.name || FALLBACK_TRACE_NAME}</h4>
-          </Hint>
-        )}
-      </XYPlot>
-    </div>
+      <div className="TraceResultsScatterPlot">
+        <XYPlot
+            margin={{
+              left: 50,
+            }}
+            width={containerWidth}
+            colorType="literal"
+            height={200}
+        >
+          <XAxis
+              title="Time"
+              tickTotal={4}
+              tickFormat={t => moment(t / ONE_MILLISECOND).format('hh:mm:ss a')}
+          />
+          <YAxis title="Duration" tickTotal={3} tickFormat={t => formatDuration(t)} />
+          <MarkSeries
+              sizeRange={[3, 10]}
+              opacity={0.5}
+              onValueClick={onValueClick}
+              onValueMouseOver={onValueOver}
+              onValueMouseOut={onValueOut}
+              data={data}
+          />
+          {overValue && (
+              <Hint value={overValue}>
+                <h4 className="scatter-plot-hint">{overValue.name || FALLBACK_TRACE_NAME}</h4>
+              </Hint>
+          )}
+        </XYPlot>
+      </div>
   );
 }
 
@@ -84,11 +84,11 @@ ScatterPlotImpl.defaultProps = {
 };
 
 const ScatterPlot = compose(
-  withState('overValue', 'setOverValue', null),
-  withProps(({ setOverValue }) => ({
-    onValueOver: value => setOverValue(value),
-    onValueOut: () => setOverValue(null),
-  }))
+    withState('overValue', 'setOverValue', null),
+    withProps(({ setOverValue }) => ({
+      onValueOver: value => setOverValue(value),
+      onValueOut: () => setOverValue(null),
+    }))
 )(ScatterPlotImpl);
 
 export { ScatterPlotImpl };
