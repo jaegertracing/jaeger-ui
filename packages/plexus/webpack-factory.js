@@ -195,13 +195,14 @@ function makeCommonProdConfig() {
 function makeWorkerConfig() {
   const layoutDir = join(__dirname, 'src/LayoutManager');
   const config = {
+    experiments: {
+      outputModule: true,
+    },
     output: {
       path: layoutDir,
       publicPath: '/',
       filename: '[name].bundled.js',
-      library: 'layout.worker.bundled',
-      libraryTarget: 'umd',
-      umdNamedDefine: true,
+      libraryTarget: 'module',
     },
     entry: {
       'layout.worker': join(layoutDir, 'layout.worker.tsx'),
