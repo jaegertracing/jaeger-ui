@@ -13,4 +13,4 @@
 // limitations under the License.
 
 // eslint-disable-next-line spaced-comment
-/// <reference types="react-scripts" />
+/// <reference types="vite/client" />

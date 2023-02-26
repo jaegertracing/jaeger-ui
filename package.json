@@ -37,12 +37,7 @@
       "packages/*"
     ],
     "nohoist": [
-      "**/customize-cra",
-      "**/customize-cra/**",
-      "**/react-scripts",
-      "**/react-scripts/**",
-      "**/react-app-rewired",
-      "**/react-app-rewired/**"
+      "**/parse5"
     ]
   },
   "scripts": {

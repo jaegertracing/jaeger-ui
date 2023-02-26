@@ -11,14 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
-// Note: This is used by create-react-app (CRA) and it will overwrite values it
-// doesn't like (and remove commented out fields, in the process)
 {
   "extends": "../../tsconfig",
-  "compilerOptions": {
-    // Required by CRA
-    "isolatedModules": true
-  },
-  "include": ["src/**/*.tsx", "typings"]
+  "include": ["src/**/*.tsx", "src/**/*.jsx", "src/**/*.js", "src/**/*.json", "package.json", "typings"]
 }
