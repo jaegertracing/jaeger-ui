@@ -32,6 +32,8 @@ function getBabelConfig(api) {
       [
         '@babel/preset-env',
         {
+          // Don't transform ES modules
+          modules: false,
           // this should match the settings in jaeger-ui/package.json
           targets: ['>0.5%', 'not dead', 'not ie <= 11', 'not op_mini all'],
         },
