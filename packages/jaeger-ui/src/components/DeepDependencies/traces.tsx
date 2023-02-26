@@ -13,12 +13,13 @@
 // limitations under the License.
 
 import * as React from 'react';
+import { History as RouterHistory, Location } from 'history';
 import _get from 'lodash/get';
 import memoizeOne from 'memoize-one';
 import queryString from 'query-string';
 import { connect } from 'react-redux';
 
-import { DeepDependencyGraphPageImpl, TOwnProps, TProps, TReduxProps } from '.';
+import { DeepDependencyGraphPageImpl, TReduxProps } from '.';
 import { getUrlState, sanitizeUrlState } from './url';
 import { ROUTE_PATH } from '../SearchTracePage/url';
 import GraphModel, { makeGraph } from '../../model/ddg/GraphModel';
@@ -32,6 +33,11 @@ import { ReduxState } from '../../types';
 
 // Required for proper memoization of subsequent function calls
 const svcOp = memoizeOne((service, operation) => ({ service, operation }));
+
+type TOwnProps = {
+  history: RouterHistory;
+  location: Location;
+};
 
 // export for tests
 export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxProps {
@@ -60,7 +66,7 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
 }
 
 // export for tests
-export class TracesDdgImpl extends React.PureComponent<TProps & { showSvcOpsHeader: never; baseUrl: never }> {
+export class TracesDdgImpl extends React.PureComponent<TOwnProps & TReduxProps> {
   render(): React.ReactNode {
     const { location } = this.props;
     const urlArgs = queryString.parse(location.search);

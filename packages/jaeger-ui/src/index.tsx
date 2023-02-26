@@ -20,8 +20,7 @@ import './site-prefix';
 import React from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { createRoot } from 'react-dom/client';
-import { document } from 'global';
-
+import 'antd/dist/antd.less';
 import JaegerUIApp from './components/App';
 import { context as trackingContext } from './utils/tracking';
 
@@ -36,9 +35,9 @@ import 'u-basscss/css/typography.css';
 
 const UI_ROOT_ID = 'jaeger-ui-root';
 
-const root = createRoot(document.getElementById(UI_ROOT_ID));
+const root = createRoot(document.getElementById(UI_ROOT_ID)!);
 
-if (trackingContext) {
+if (typeof trackingContext === 'object' && trackingContext && 'context' in trackingContext) {
   trackingContext.context(() => {
     root.render(
       <BrowserRouter>

@@ -16,15 +16,14 @@
 
 import * as React from 'react';
 import { Select } from 'antd';
-import { History as RouterHistory, Location } from 'history';
-import { Link, withRouter } from 'react-router-dom';
+import { Link, RouteComponentProps, withRouter } from 'react-router-dom';
 import { Field, formValueSelector, reduxForm } from 'redux-form';
 import queryString from 'query-string';
 
 import AltViewOptions from './AltViewOptions';
 import DiffSelection from './DiffSelection';
 import * as markers from './index.markers';
-import { trackAltView } from './index.track';
+import { EAltViewActions, trackAltView } from './index.track';
 import ResultItem from './ResultItem';
 import ScatterPlot from './ScatterPlot';
 import { getUrl } from '../url';
@@ -37,29 +36,27 @@ import { getPercentageOfDuration } from '../../../utils/date';
 import { stripEmbeddedState } from '../../../utils/embedded-url';
 import reduxFormFieldAdapter from '../../../utils/redux-form-field-adapter';
 
-import type { FetchedTrace } from '../../../types';
-import type { SearchQuery } from '../../../types/search';
-import type { KeyValuePair } from '../../../types/trace';
+import { FetchedTrace } from '../../../types';
+import { SearchQuery } from '../../../types/search';
+import { KeyValuePair, Trace } from '../../../types/trace';
 
 import './index.css';
 
 type SearchResultsProps = {
-  cohortAddTrace: string => void,
-  cohortRemoveTrace: string => void,
-  diffCohort: FetchedTrace[],
-  disableComparisons: boolean,
-  goToTrace: string => void,
-  hideGraph: boolean,
-  history: RouterHistory,
-  loading: boolean,
-  location: Location,
-  maxTraceDuration: number,
-  queryOfResults?: SearchQuery,
-  showStandaloneLink: boolean,
-  skipMessage?: boolean,
-  spanLinks?: Record<string, string> | undefined | null,
-  traces: TraceSummary[],
-};
+  cohortAddTrace: (trace: string) => void;
+  cohortRemoveTrace: (trace: string) => void;
+  diffCohort: FetchedTrace[];
+  disableComparisons: boolean;
+  goToTrace: (trace: string) => void;
+  hideGraph: boolean;
+  loading: boolean;
+  maxTraceDuration: number;
+  queryOfResults?: SearchQuery;
+  showStandaloneLink: boolean;
+  skipMessage?: boolean;
+  spanLinks?: Record<string, string> | undefined;
+  traces: Trace[];
+} & RouteComponentProps;
 
 const Option = Select.Option;
 
@@ -91,11 +88,9 @@ const SelectSort = reduxForm({
 export const sortFormSelector = formValueSelector('traceResultsSort');
 
 export class UnconnectedSearchResults extends React.PureComponent<SearchResultsProps> {
-  props: SearchResultsProps;
-
   static defaultProps = { skipMessage: false, spanLinks: undefined, queryOfResults: undefined };
 
-  toggleComparison = (traceID: string, remove: boolean) => {
+  toggleComparison = (traceID: string, remove?: boolean) => {
     const { cohortAddTrace, cohortRemoveTrace } = this.props;
     if (remove) {
       cohortRemoveTrace(traceID);
@@ -107,7 +102,7 @@ export class UnconnectedSearchResults extends React.PureComponent<SearchResultsP
   onDdgViewClicked = () => {
     const { location, history } = this.props;
     const urlState = queryString.parse(location.search);
-    const view = urlState.view && urlState.view === 'ddg' ? 'traces' : 'ddg';
+    const view = urlState.view && urlState.view === 'ddg' ? EAltViewActions.Traces : EAltViewActions.Ddg;
     trackAltView(view);
     history.push(getUrl({ ...urlState, view }));
   };
@@ -158,6 +153,7 @@ export class UnconnectedSearchResults extends React.PureComponent<SearchResultsP
     const searchUrl = queryOfResults ? getUrl(stripEmbeddedState(queryOfResults)) : getUrl();
     const isErrorTag = ({ key, value }: KeyValuePair) =>
       key === 'error' && (value === true || value === 'true');
+    // @ts-ignore
     return (
       <div className="SearchResults">
         <div className="SearchResults--header">
@@ -172,7 +168,7 @@ export class UnconnectedSearchResults extends React.PureComponent<SearchResultsP
                   name: t.traceName,
                   color: t.spans.some(sp => sp.tags.some(isErrorTag)) ? 'red' : '#12939A',
                 }))}
-                onValueClick={t => {
+                onValueClick={(t: Trace) => {
                   goToTrace(t.traceID);
                 }}
               />
@@ -209,6 +205,7 @@ export class UnconnectedSearchResults extends React.PureComponent<SearchResultsP
                 <ResultItem
                   durationPercent={getPercentageOfDuration(trace.duration, maxTraceDuration)}
                   isInDiffCohort={cohortIds.has(trace.traceID)}
+                  // @ts-ignore
                   linkTo={getLocation(
                     trace.traceID,
                     { fromSearch: searchUrl },
