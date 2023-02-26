@@ -12,10 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import React from 'react';
+import React, { useRef, useState, useEffect, useLayoutEffect } from 'react';
 import moment from 'moment';
 import PropTypes from 'prop-types';
-import dimensions from 'react-dimensions';
 import { XYPlot, XAxis, YAxis, MarkSeries, Hint } from 'react-vis';
 import { compose, withState, withProps } from 'recompose';
 
@@ -26,37 +25,61 @@ import './react-vis.css';
 import './ScatterPlot.css';
 
 function ScatterPlotImpl(props) {
-  const { data, containerWidth, onValueClick, overValue, onValueOver, onValueOut } = props;
+  const { data, onValueClick, overValue, onValueOver, onValueOut, calculateContainerWidth } = props;
+
+  const containerRef = useRef(null);
+  const [containerWidth, setContainerWidth] = useState(0);
+
+  useLayoutEffect(function () {
+    if (containerRef.current) {
+      setContainerWidth(calculateContainerWidth(containerRef.current));
+    }
+  }, []);
+
+  useEffect(function () {
+    function onWindowResize() {
+      if (containerRef.current) {
+        setContainerWidth(calculateContainerWidth(containerRef.current));
+      }
+    }
+
+    window.addEventListener('resize', onWindowResize);
+
+    return () => window.removeEventListener('resize', onWindowResize);
+  }, []);
+
   return (
-      <div className="TraceResultsScatterPlot">
-        <XYPlot
-            margin={{
-              left: 50,
-            }}
-            width={containerWidth}
-            colorType="literal"
-            height={200}
-        >
-          <XAxis
-              title="Time"
-              tickTotal={4}
-              tickFormat={t => moment(t / ONE_MILLISECOND).format('hh:mm:ss a')}
-          />
-          <YAxis title="Duration" tickTotal={3} tickFormat={t => formatDuration(t)} />
-          <MarkSeries
-              sizeRange={[3, 10]}
-              opacity={0.5}
-              onValueClick={onValueClick}
-              onValueMouseOver={onValueOver}
-              onValueMouseOut={onValueOut}
-              data={data}
-          />
-          {overValue && (
-              <Hint value={overValue}>
-                <h4 className="scatter-plot-hint">{overValue.name || FALLBACK_TRACE_NAME}</h4>
-              </Hint>
-          )}
-        </XYPlot>
+      <div className="TraceResultsScatterPlot" ref={containerRef}>
+        {containerWidth && (
+            <XYPlot
+                margin={{
+                  left: 50,
+                }}
+                width={containerWidth}
+                colorType="literal"
+                height={200}
+            >
+              <XAxis
+                  title="Time"
+                  tickTotal={4}
+                  tickFormat={t => moment(t / ONE_MILLISECOND).format('hh:mm:ss a')}
+              />
+              <YAxis title="Duration" tickTotal={3} tickFormat={t => formatDuration(t)} />
+              <MarkSeries
+                  sizeRange={[3, 10]}
+                  opacity={0.5}
+                  onValueClick={onValueClick}
+                  onValueMouseOver={onValueOver}
+                  onValueMouseOut={onValueOut}
+                  data={data}
+              />
+              {overValue && (
+                  <Hint value={overValue}>
+                    <h4 className="scatter-plot-hint">{overValue.name || FALLBACK_TRACE_NAME}</h4>
+                  </Hint>
+              )}
+            </XYPlot>
+        )}
       </div>
   );
 }
@@ -70,17 +93,18 @@ const valueShape = PropTypes.shape({
 });
 
 ScatterPlotImpl.propTypes = {
-  containerWidth: PropTypes.number,
   data: PropTypes.arrayOf(valueShape).isRequired,
   overValue: valueShape,
   onValueClick: PropTypes.func.isRequired,
   onValueOut: PropTypes.func.isRequired,
   onValueOver: PropTypes.func.isRequired,
+  calculateContainerWidth: PropTypes.func,
 };
 
 ScatterPlotImpl.defaultProps = {
-  containerWidth: null,
   overValue: null,
+  // JSDOM does not, as of 2023, have a layout engine, so allow tests to supply a mock width as a workaround.
+  calculateContainerWidth: container => container.clientWidth,
 };
 
 const ScatterPlot = compose(
@@ -93,4 +117,4 @@ const ScatterPlot = compose(
 
 export { ScatterPlotImpl };
 
-export default dimensions()(ScatterPlot);
+export default ScatterPlot;

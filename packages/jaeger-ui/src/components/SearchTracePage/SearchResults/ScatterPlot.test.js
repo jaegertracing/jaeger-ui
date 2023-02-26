@@ -70,8 +70,7 @@ it('<ScatterPlot /> should render base case correctly', () => {
 it('<ScatterPlotImpl /> should render X axis correctly', () => {
   const wrapper = mount(
     <ScatterPlotImpl
-      containerWidth={1200}
-      containerHeight={200}
+      calculateContainerWidth={() => 1200}
       data={sampleData}
       onValueClick={() => null}
       onValueOut={() => null}
@@ -91,8 +90,7 @@ it('<ScatterPlotImpl /> should render X axis correctly', () => {
 it('<ScatterPlotImpl /> should render Y axis correctly', () => {
   const wrapper = mount(
     <ScatterPlotImpl
-      containerWidth={1200}
-      containerHeight={200}
+      calculateContainerWidth={() => 1200}
       data={sampleData}
       onValueClick={() => null}
       onValueOut={() => null}
