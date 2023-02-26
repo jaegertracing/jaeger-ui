@@ -108,7 +108,7 @@ export class SearchTracePageImpl extends Component {
                 </TabPane>
                 <TabPane tab="JSON File" key="fileLoader">
                   <FileLoader
-                    loadJsonTraces={(fileList) => {
+                    loadJsonTraces={fileList => {
                       loadJsonTraces(fileList);
                     }}
                   />
