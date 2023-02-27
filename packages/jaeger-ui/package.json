@@ -23,6 +23,7 @@
   "devDependencies": {
     "@types/match-sorter": "^2.3.0",
     "@types/react-window": "^1.8.0",
+    "@types/redux-form": "^8.3.5",
     "@wojtekmaj/enzyme-adapter-react-17": "^0.8.0",
     "babel-plugin-import": "1.13.5",
     "bluebird": "^3.5.0",
