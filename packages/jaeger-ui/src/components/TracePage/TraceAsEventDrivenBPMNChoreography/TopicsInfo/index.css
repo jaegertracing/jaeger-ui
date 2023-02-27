@@ -1,0 +1,33 @@
+.table--Topics {
+    width: 100%;
+}
+
+.thead--Topics {
+    color: white;
+    background-color: black;
+}
+
+.th-Topics {
+    width: 25%;
+}
+
+.ul--Topic {
+    margin: 0;
+    padding: 0;
+    list-style-type: none;
+}
+
+.li--Topic:nth-child(even) {
+    margin: 0;
+    padding: 0;
+    /*background-color: #f2f2f2;*/
+    /*border: 1px solid #ddd;*/
+}
+
+.tr--Topic {
+    border: 1px solid #ddd;
+}
+
+.td--Topic {
+    /*border: 1px solid #ddd;*/
+}

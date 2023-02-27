@@ -1,0 +1,16 @@
+.EventAccordion {
+    width: 100%;
+}
+
+.table--EventTable {
+    width: 100%;
+}
+
+
+.tr--EventAccordion:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+.button--EventAccordion {
+    width: 100%;
+}

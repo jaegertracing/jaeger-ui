@@ -12,6 +12,15 @@
     margin-bottom: 0%;
 }
 
+.title--TraceAsTopicsInfoView {
+    width: 100%;
+    padding-top: 0.3%;
+    padding-bottom: 0.3%;
+    padding-left: 0.4%;
+    background: rgb(236, 236, 236);
+    margin-bottom: 0%;
+}
+
 .flex {
     display: grid;
     grid-template-columns: 30% 70%;
