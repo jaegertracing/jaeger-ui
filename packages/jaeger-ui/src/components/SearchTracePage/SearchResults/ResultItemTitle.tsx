@@ -14,6 +14,7 @@
 
 import * as React from 'react';
 import { Checkbox } from 'antd';
+import { LocationDescriptor } from 'history';
 import { Link } from 'react-router-dom';
 
 import TraceName from '../../common/TraceName';
@@ -30,7 +31,7 @@ type Props = {
   durationPercent?: number;
   error?: ApiError;
   isInDiffCohort: boolean;
-  linkTo: string | TNil;
+  linkTo: LocationDescriptor | TNil;
   state?: FetchedState | TNil;
   targetBlank?: boolean;
   toggleComparison: (traceID: string, isInDiffCohort: boolean) => void;
@@ -72,7 +73,9 @@ export default class ResultItemTitle extends React.PureComponent<Props> {
     } = this.props;
     // Use a div when the ResultItemTitle doesn't link to anything
     let WrapperComponent: string | typeof Link = 'div';
-    const wrapperProps: Record<string, string> = { className: 'ResultItemTitle--item ub-flex-auto' };
+    const wrapperProps: Record<string, string | LocationDescriptor> = {
+      className: 'ResultItemTitle--item ub-flex-auto',
+    };
     if (linkTo) {
       wrapperProps.to = linkTo;
       WrapperComponent = Link;

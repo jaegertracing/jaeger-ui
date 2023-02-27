@@ -2718,6 +2718,14 @@
   version "2.2.1"
   resolved "https://registry.yarnpkg.com/@types/redux-actions/-/redux-actions-2.2.1.tgz#c1f4a7283ecd3cd696291550361e441bf9389370"
 
+"@types/redux-form@^8.3.5":
+  version "8.3.5"
+  resolved "https://registry.yarnpkg.com/@types/redux-form/-/redux-form-8.3.5.tgz#7c55f4182952a41eca67e9d26e2a41ad425859a5"
+  integrity sha512-SchB4i7nxgWNbJS4cXEZducztkvHzVrb5xlAXwfLpbrLPo6tMY06+kx1GqMv42+YnGy9TpCAkF51a21HatqWBA==
+  dependencies:
+    "@types/react" "*"
+    redux "^3.6.0 || ^4.0.0"
+
 "@types/scheduler@*":
   version "0.16.2"
   resolved "https://registry.yarnpkg.com/@types/scheduler/-/scheduler-0.16.2.tgz#1a62f89525723dde24ba1b01b092bf5df8ad4d39"
@@ -15310,6 +15318,13 @@ redux@^3.0.2, redux@^3.6.0, redux@^3.7.2:
     lodash-es "^4.2.1"
     loose-envify "^1.1.0"
     symbol-observable "^1.0.3"
+
+"redux@^3.6.0 || ^4.0.0":
+  version "4.2.1"
+  resolved "https://registry.yarnpkg.com/redux/-/redux-4.2.1.tgz#c08f4306826c49b5e9dc901dee0452ea8fce6197"
+  integrity sha512-LAUYz4lc+Do8/g7aeRa8JkyDErK6ekstQaqWQrNRW//MY1TvCEpMtpTWvlQ+FPbWCx+Xixu/6SHt5N0HR+SB4w==
+  dependencies:
+    "@babel/runtime" "^7.9.2"
 
 regenerate-unicode-properties@^10.1.0:
   version "10.1.0"
