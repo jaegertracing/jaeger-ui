@@ -166,6 +166,10 @@ export type Config = {
   // traceGraph controls the trace graph under trace page
   traceGraph?: TraceGraphConfig;
 
+  // Alters all links which have the target _blank to prevent the creation of
+  // a new page.
+  forbidNewPage: boolean;
+
   // Disables the file upload control.
   disableFileUploadControl: boolean;
 

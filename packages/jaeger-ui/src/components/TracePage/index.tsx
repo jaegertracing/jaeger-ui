@@ -79,9 +79,9 @@ type TReduxProps = {
   archiveEnabled: boolean;
   archiveTraceState: TraceArchive | TNil;
   embedded: null | EmbeddedState;
+  disableJsonView: boolean;
   id: string;
   searchUrl: null | string;
-  disableJsonView: boolean;
   trace: FetchedTrace | TNil;
   uiFind: string | TNil;
   traceGraphConfig?: TraceGraphConfig;
@@ -137,6 +137,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
   constructor(props: TProps) {
     super(props);
     const { embedded, trace } = props;
+
     this.state = {
       headerHeight: null,
       slimView: Boolean(embedded && embedded.timeline.collapseTitle),
@@ -326,10 +327,10 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
       archiveEnabled,
       archiveTraceState,
       embedded,
+      disableJsonView,
       id,
       uiFind,
       trace,
-      disableJsonView,
       traceGraphConfig,
       location: { state: locationState },
     } = this.props;
@@ -356,6 +357,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
     }
 
     const isEmbedded = Boolean(embedded);
+
     const headerProps = {
       focusUiFindMatches: this.focusUiFindMatches,
       slimView,
@@ -376,10 +378,10 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
       prevResult: this.prevResult,
       ref: this._searchBar,
       resultCount: findCount,
-      disableJsonView,
       showArchiveButton: !isEmbedded && archiveEnabled,
       showShortcutsHelp: !isEmbedded,
       showStandaloneLink: isEmbedded,
+      disableJsonView,
       showViewOptions: !isEmbedded,
       toSearch: (locationState && locationState.fromSearch) || null,
       trace: data,
@@ -413,7 +415,13 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
     } else if (ETraceViewType.TraceStatistics === viewType && headerHeight) {
       view = <TraceStatistics trace={data} uiFindVertexKeys={spanFindMatches} uiFind={uiFind} />;
     } else if (ETraceViewType.TraceSpansView === viewType && headerHeight) {
-      view = <TraceSpanView trace={data} uiFindVertexKeys={spanFindMatches} uiFind={uiFind} />;
+      view = (
+        <TraceSpanView
+          trace={data}
+          uiFindVertexKeys={spanFindMatches}
+          uiFind={uiFind}
+        />
+      );
     } else if (ETraceViewType.TraceFlamegraph === viewType && headerHeight) {
       view = <TraceFlamegraph trace={trace} />;
     }
@@ -437,10 +445,10 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
   const { id } = ownProps.match.params;
   const { archive, config, embedded, router } = state;
   const { traces } = state.trace;
+  const { disableJsonView } = config;
   const trace = id ? traces[id] : null;
   const archiveTraceState = id ? archive[id] : null;
   const archiveEnabled = Boolean(config.archiveEnabled);
-  const { disableJsonView } = config;
   const { state: locationState } = router.location;
   const searchUrl = (locationState && locationState.fromSearch) || null;
   const { traceGraph: traceGraphConfig } = config;
@@ -450,9 +458,9 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
     archiveEnabled,
     archiveTraceState,
     embedded,
+    disableJsonView,
     id,
     searchUrl,
-    disableJsonView,
     trace,
     traceGraphConfig,
   };

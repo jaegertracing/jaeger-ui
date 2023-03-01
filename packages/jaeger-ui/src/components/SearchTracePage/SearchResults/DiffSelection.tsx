@@ -57,7 +57,6 @@ export default class DiffSelection extends React.PureComponent<Props> {
                   isInDiffCohort
                   linkTo={getTracePageUrl(id)}
                   state={state}
-                  targetBlank
                   toggleComparison={toggleComparison}
                   traceID={id}
                   traceName={data && data.traceName}

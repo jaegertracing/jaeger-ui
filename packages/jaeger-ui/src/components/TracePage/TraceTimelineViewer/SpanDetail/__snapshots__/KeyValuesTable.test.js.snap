@@ -1,0 +1,32 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`<KeyValuesTable> renders the expected text for each span value 1`] = `
+<div
+  className="ub-inline-block"
+>
+  <div
+    dangerouslySetInnerHTML={
+      Object {
+        "__html": "<div class=\\"json-markup\\">{
+    <span class=\\"json-markup-key\\">\\"hello\\":</span> <span class=\\"json-markup-string\\">\\"world\\"</span>,
+    <span class=\\"json-markup-key\\">\\"&lt;xss&gt;\\":</span> <span class=\\"json-markup-string\\">\\"safe\\"</span>,
+    <span class=\\"json-markup-key\\">\\"link\\":</span> <span class=\\"json-markup-string\\">\\"<a href=\\"https://example.com/\\">https://example.com/</a>\\"</span>,
+    <span class=\\"json-markup-key\\">\\"xss_link\\":</span> <span class=\\"json-markup-string\\">\\"https://example.com with \\"quotes\\"\\"</span>,
+    <span class=\\"json-markup-key\\">\\"boolean\\":</span> <span class=\\"json-markup-bool\\">true</span>,
+    <span class=\\"json-markup-key\\">\\"number\\":</span> <span class=\\"json-markup-number\\">42</span>,
+    <span class=\\"json-markup-key\\">\\"null\\":</span> <span class=\\"json-markup-null\\">null</span>,
+    <span class=\\"json-markup-key\\">\\"array\\":</span> [
+        <span class=\\"json-markup-string\\">\\"x\\"</span>,
+        <span class=\\"json-markup-string\\">\\"y\\"</span>,
+        <span class=\\"json-markup-string\\">\\"z\\"</span>
+    ],
+    <span class=\\"json-markup-key\\">\\"object\\":</span> {
+        <span class=\\"json-markup-key\\">\\"a\\":</span> <span class=\\"json-markup-string\\">\\"b\\"</span>,
+        <span class=\\"json-markup-key\\">\\"x\\":</span> <span class=\\"json-markup-string\\">\\"y\\"</span>
+    }
+}</div>",
+      }
+    }
+  />
+</div>
+`;

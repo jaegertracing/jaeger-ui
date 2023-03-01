@@ -38,6 +38,7 @@ import { getTraceLinks } from '../../../model/link-patterns';
 
 import './TracePageHeader.css';
 import ExternalLinks from '../../common/ExternalLinks';
+import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
 
 type TracePageHeaderEmbedProps = {
   canCollapse: boolean;
@@ -55,12 +56,12 @@ type TracePageHeaderEmbedProps = {
   showArchiveButton: boolean;
   showShortcutsHelp: boolean;
   showStandaloneLink: boolean;
-  disableJsonView: boolean;
   showViewOptions: boolean;
   slimView: boolean;
   textFilter: string | TNil;
   toSearch: string | null;
   trace: Trace;
+  disableJsonView: boolean;
   viewType: ETraceViewType;
   updateNextViewRangeTime: (update: ViewRangeTimeUpdate) => void;
   updateViewRangeTime: TUpdateViewRangeTimeFunction;
@@ -210,7 +211,7 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
           <Link
             className="u-tx-inherit ub-nowrap ub-mx2"
             to={linkToStandalone}
-            target="_blank"
+            target={getTargetEmptyOrBlank()}
             rel="noopener noreferrer"
           >
             <NewWindowIcon isLarge />

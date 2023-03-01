@@ -13,8 +13,8 @@
 // limitations under the License.
 
 import * as React from 'react';
-import jsonMarkup from 'json-markup';
 import { Dropdown, Icon, Menu } from 'antd';
+import { jsonMarkup } from './jsonMarkup';
 
 import CopyIcon from '../../../common/CopyIcon';
 
@@ -151,6 +151,12 @@ export default function KeyValuesTable(props: KeyValuesTableProps) {
                 <td className="KeyValueTable--copyColumn">
                   <CopyIcon
                     className="KeyValueTable--copyIcon"
+                    copyText={row.value}
+                    tooltipTitle="Copy value"
+                  />
+                  <CopyIcon
+                    className="KeyValueTable--copyIcon"
+                    icon="snippets"
                     copyText={JSON.stringify(row, null, 2)}
                     tooltipTitle="Copy JSON"
                   />

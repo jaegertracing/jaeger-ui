@@ -86,10 +86,20 @@ export default class TraceDiffHeader extends React.PureComponent<Props, State> {
     if (aId) selection[aId] = { label: 'A' };
     if (bId) selection[bId] = { label: 'B' };
     const cohortTableA = (
-      <CohortTable cohort={cohort} current={aId} selectTrace={this._diffSetA} selection={selection} />
+      <CohortTable
+        cohort={cohort}
+        current={aId}
+        selectTrace={this._diffSetA}
+        selection={selection}
+      />
     );
     const cohortTableB = (
-      <CohortTable cohort={cohort} current={bId} selectTrace={this._diffSetB} selection={selection} />
+      <CohortTable
+        cohort={cohort}
+        current={bId}
+        selectTrace={this._diffSetB}
+        selection={selection}
+      />
     );
     return (
       <header className="TraecDiffHeader">

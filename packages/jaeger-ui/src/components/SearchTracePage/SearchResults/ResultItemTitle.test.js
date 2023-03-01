@@ -19,6 +19,7 @@ import { Link } from 'react-router-dom';
 
 import ResultItemTitle from './ResultItemTitle';
 import { fetchedState } from '../../../constants';
+import { getConfigValue } from '../../../utils/config/get-config';
 
 describe('ResultItemTitle', () => {
   const defaultProps = {

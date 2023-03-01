@@ -102,6 +102,7 @@ const defaultConfig: Config = {
     docsLink: 'https://www.jaegertracing.io/docs/latest/spm/',
   },
   disableFileUploadControl: false,
+  forbidNewPage: false,
   disableJsonView: false,
   traceGraph: {
     layoutManagerMemory: undefined,

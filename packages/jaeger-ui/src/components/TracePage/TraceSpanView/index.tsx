@@ -22,6 +22,7 @@ import { TNil } from '../../../types';
 import { Trace, Span } from '../../../types/trace';
 import { timeConversion } from '../../../utils/date';
 import prefixUrl from '../../../utils/prefix-url';
+import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
 
 const Option = Select.Option;
 
@@ -133,20 +134,23 @@ export default class TraceSpanView extends Component<Props, State> {
         title: 'Service Name',
         dataIndex: 'process.serviceName',
         width: '25%',
+        sorter: (a, b) => a.process.serviceName.localeCompare(b.process.serviceName),
       },
       {
         title: 'Operation',
         dataIndex: 'operationName',
         width: '25%',
+        sorter: (a, b) => a.operationName.localeCompare(b.operationName),
       },
       {
         title: 'ID',
         dataIndex: 'spanID',
+        sorter: (a, b) => a.spanID.localeCompare(b.spanID),
         render: (text: any, record: Span) => {
           return (
             <a
               href={prefixUrl(`/trace/${record.traceID}?uiFind=${text}`)}
-              target="_blank"
+              target={getTargetEmptyOrBlank()}
               rel="noopener noreferrer"
             >
               {text}

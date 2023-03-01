@@ -14,8 +14,9 @@
 
 import * as React from 'react';
 import { Dropdown, Icon, Menu, Button } from 'antd';
-import { Link } from 'react-router-dom';
 import './AltViewOptions.css';
+import { Link } from 'react-router-dom';
+import prefixUrl from '../../../utils/prefix-url';
 
 import {
   trackGanttView,
@@ -25,8 +26,8 @@ import {
   trackJsonView,
   trackRawJsonView,
 } from './TracePageHeader.track';
-import prefixUrl from '../../../utils/prefix-url';
 import { ETraceViewType } from '../types';
+import { getTargetBlankOrTop } from '../../../utils/config/get-target';
 
 type Props = {
   onTraceViewChange: (viewType: ETraceViewType) => void;
@@ -71,6 +72,7 @@ export default function AltViewOptions(props: Props) {
     } else if (item === ETraceViewType.TraceSpansView) {
       trackTraceSpansView();
     }
+
     onTraceViewChange(item);
   };
 
@@ -88,7 +90,7 @@ export default function AltViewOptions(props: Props) {
           <Link
             to={prefixUrl(`/api/traces/${traceID}?prettyPrint=true`)}
             rel="noopener noreferrer"
-            target="_blank"
+            target={getTargetBlankOrTop()}
             onClick={trackJsonView}
           >
             Trace JSON
@@ -100,7 +102,7 @@ export default function AltViewOptions(props: Props) {
           <Link
             to={prefixUrl(`/api/traces/${traceID}?raw=true&prettyPrint=true`)}
             rel="noopener noreferrer"
-            target="_blank"
+            target={getTargetBlankOrTop()}
             onClick={trackRawJsonView}
           >
             Trace JSON (unadjusted)
