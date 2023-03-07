@@ -53,7 +53,7 @@ export default defineConfig({
       exclude: ['lodash'],
     }),
     // Generate a bundle size breakdown.
-    visualizer()
+    visualizer(),
   ],
   css: {
     preprocessorOptions: {
