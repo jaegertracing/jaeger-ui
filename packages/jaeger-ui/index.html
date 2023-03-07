@@ -12,7 +12,7 @@
 
     <!-- NOTE: The document MUST have a <base> element. package.json#homepage is set to "." as part of resolving https://github.com/jaegertracing/jaeger-ui/issues/42 and therefore static assets are linked via relative URLs. This will break on many document URLs, e.g. /trace/abc, unless a valid base URL is provided. The base href defaults to "/" but the query-service can inject an override. -->
     <base href="/" data-inject-target="BASE_URL" />
-    <link rel="shortcut icon" href="%PUBLIC_URL%/favicon.ico">
+    <link rel="shortcut icon" href="/favicon.ico">
     <title>Jaeger UI</title>
     <script>
       // Jaeger UI config data is embedded by the query-service via search-replace.
@@ -34,19 +34,20 @@
         const JAEGER_VERSION = DEFAULT_VERSION;
         return JAEGER_VERSION;
       }
+
+      // Workaround some legacy NPM dependencies that assume this is always defined.
+      window.global = {};
+      // Avoid noise from redux-form until https://github.com/redux-form/redux-form/pull/4723 is released.
+      window.module = {};
     </script>
   </head>
   <body>
     <div id="jaeger-ui-root"></div>
     <!--
-      This HTML file is a template.
-      If you open it directly in the browser, you will see an empty page.
-
-      You can add webfonts, meta tags, or analytics to this file.
-      The build step will place the bundled scripts into the <body> tag.
-
-      To begin the development, run `npm start` in this folder.
-      To create a production bundle, use `npm run build`.
+      This file is the main entry point for the Jaeger UI application.
+      See https://vitejs.dev/guide/#index-html-and-project-root for more information
+      on how asset references are managed by the build system.
     -->
+    <script type="module" src="/src/index.tsx"></script>
   </body>
 </html>

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// This file is necessary because create-react-app (CRA) requires
+// This file is necessary because the build system (Vite) requires
 // isolatedModules to be true but for linting we need it to be false. We run
 // tsc-lint from the project root, but packages have their own tsconfig for
 // the lint so the typings from one package doesn't pollute other packages.

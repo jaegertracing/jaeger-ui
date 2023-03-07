@@ -12,24 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/**
- * Provides access to constants injected by the build system.
- */
+const babelJest = require('babel-jest').default;
 
-/**
- * Get the current execution environment, as inferred from NODE_ENV at build time.
- */
-export function getAppEnvironment() {
-  return __APP_ENVIRONMENT__;
-}
-
-/**
- * Get injected version details as a JSON-formatted string.
- */
-export function getVersionInfo() {
-  return __REACT_APP_VSN_STATE__;
-}
-
-export function shouldDebugGoogleAnalytics() {
-  return __REACT_APP_GA_DEBUG__;
-}
+module.exports = babelJest.createTransformer({
+  presets: [
+    ['@babel/preset-env', { targets: { node: 'current' } }],
+    ['@babel/preset-react', { development: !process.env.CI }],
+    '@babel/preset-typescript',
+  ],
+  plugins: ['babel-plugin-inline-react-svg'],
+});

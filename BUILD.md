@@ -20,14 +20,6 @@ In the project root, `typescript` is used to bolster the linting of TypeScript f
 
 In `./packages/plexus`, `typescript` is used to generate type declarations for the ES module build. See [`./packages/plexus/BUILD.md`](packages/plexus/BUILD.md#typescript---emitdeclarationonly) for details.
 
-### Workspaces
-
-[Create React App](https://facebook.github.io/create-react-app/) (CRA) is used as the build-tooling for the Jaeger UI website. In 2.1.2+ CRA introduced a guard for the `start`, `build` and `test` scripts which checks the version of NPM packages available to make sure they're consistent with CRA's expectations ([reference](https://github.com/facebook/create-react-app/blob/dea19fdb30c2e896ed8ac75b68a612b0b92b2406/packages/react-scripts/scripts/utils/verifyPackageTree.js#L23-L29)). This process checks `node_modules` in parent directories and errors if an unexpected package version is encountered.
-
-To avoid a world of pain, the [`nohoist`](https://yarnpkg.com/blog/2018/02/15/nohoist/#scope-private) feature of `yarn` workspaces is leveraged. CRA and it's dependencies are local to `./packages/jaeger-ui/node_modules` instead of `./node_modules`, i.e. they're not hoisted. This ensures CRA is using the packages it expects to use.
-
-Unfortunately, the CRA check is not savvy to `yarn` workspaces and errors even though the _`yarn` workspace-magic_ ensures the right packages are actually used by the CRA scripts. So, the escape hatch provided by CRA is used to skip the check: the envvar `SKIP_PREFLIGHT_CHECK=true`, set in `./packages/jaeger-ui/.env`.
-
 ### Scripts
 
 #### `build`
