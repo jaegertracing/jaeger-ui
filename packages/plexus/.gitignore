@@ -1,3 +1,5 @@
 dist
 lib
 src/LayoutManager/layout.worker*js*
+
+tsconfig.tsbuildinfo

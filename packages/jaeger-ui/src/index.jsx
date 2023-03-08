@@ -35,7 +35,7 @@ import 'u-basscss/css/typography.css';
 
 const UI_ROOT_ID = 'jaeger-ui-root';
 
-const root = createRoot(document.getElementById(UI_ROOT_ID)!);
+const root = createRoot(document.getElementById(UI_ROOT_ID));
 
 if (typeof trackingContext === 'object' && trackingContext !== null) {
   trackingContext.context(() => {

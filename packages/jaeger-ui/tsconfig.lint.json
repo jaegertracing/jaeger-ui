@@ -19,11 +19,14 @@
 // For that to work, project references are used
 // (https://www.typescriptlang.org/docs/handbook/project-references.html) which
 // requires `composite: true` and `isolatedModules: false`.
+// Since project references use emitted declarations to determine whether the project
+// is up to date, a single index.d.ts file is specified as the output.
 {
   "extends": "./tsconfig",
   "compilerOptions": {
     "isolatedModules": false,
-    "composite": true
+    "composite": true,
+    "outFile": "index.d.ts"
   },
   "files": [
     "src/actions/jaeger-api.js",

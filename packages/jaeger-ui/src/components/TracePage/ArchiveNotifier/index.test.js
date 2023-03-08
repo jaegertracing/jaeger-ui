@@ -16,7 +16,7 @@ import React from 'react';
 import { mount, shallow } from 'enzyme';
 import { Icon, notification } from 'antd';
 import ArchiveNotifier from './index';
-import ErrorMessage from '../../common/ErrorMessage';
+import { Details, Message } from '../../common/ErrorMessage';
 
 jest.mock('antd', () => {
   const originalModule = jest.requireActual('antd');
@@ -140,10 +140,10 @@ describe('<ArchiveNotifier>', () => {
       expect.objectContaining({
         key: 'ENotifiedState.Outcome',
         className: 'ArchiveNotifier--errorNotification',
-        description: <ErrorMessage.Details error="This is an error string" wrap />,
+        description: <Details error="This is an error string" wrap />,
         duration: null,
         icon: <Icon className="ArchiveNotifier--errorIcon" type="clock-circle-o" />,
-        message: <ErrorMessage.Message error="This is an error string" wrap />,
+        message: <Message error="This is an error string" wrap />,
         onClose: props.acknowledge,
       })
     );
