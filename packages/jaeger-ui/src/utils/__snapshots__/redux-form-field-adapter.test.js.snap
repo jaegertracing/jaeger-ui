@@ -3,7 +3,6 @@
 exports[`reduxFormFieldAdapter not validated input should render as expected 1`] = `
 <Input
   className=""
-  disabled={false}
   meta={
     Object {
       "active": false,
@@ -13,7 +12,6 @@ exports[`reduxFormFieldAdapter not validated input should render as expected 1`]
   onBlur={[Function]}
   onChange={[Function]}
   onFocus={[Function]}
-  prefixCls="ant-input"
   type="text"
   value="inputValue"
 />
@@ -26,7 +24,6 @@ exports[`reduxFormFieldAdapter validate input should render Popover as invisible
   mouseLeaveDelay={0.1}
   overlayStyle={Object {}}
   placement="bottomLeft"
-  prefixCls="ant-popover"
   title="error title"
   transitionName="zoom-big"
   trigger="hover"
@@ -34,7 +31,6 @@ exports[`reduxFormFieldAdapter validate input should render Popover as invisible
 >
   <Input
     className="AdaptedReduxFormField--isValidatedInput"
-    disabled={false}
     meta={
       Object {
         "active": true,
@@ -47,7 +43,6 @@ exports[`reduxFormFieldAdapter validate input should render Popover as invisible
     onBlur={[Function]}
     onChange={[Function]}
     onFocus={[Function]}
-    prefixCls="ant-input"
     type="text"
     value="inputValue"
   />
@@ -61,7 +56,6 @@ exports[`reduxFormFieldAdapter validate input should render Popover as visible i
   mouseLeaveDelay={0.1}
   overlayStyle={Object {}}
   placement="bottomLeft"
-  prefixCls="ant-popover"
   title="error title"
   transitionName="zoom-big"
   trigger="hover"
@@ -69,7 +63,6 @@ exports[`reduxFormFieldAdapter validate input should render Popover as visible i
 >
   <Input
     className="is-invalid AdaptedReduxFormField--isValidatedInput"
-    disabled={false}
     meta={
       Object {
         "active": false,
@@ -82,7 +75,6 @@ exports[`reduxFormFieldAdapter validate input should render Popover as visible i
     onBlur={[Function]}
     onChange={[Function]}
     onFocus={[Function]}
-    prefixCls="ant-input"
     type="text"
     value="inputValue"
   />
@@ -95,14 +87,12 @@ exports[`reduxFormFieldAdapter validate input should render as expected when the
   mouseLeaveDelay={0.1}
   overlayStyle={Object {}}
   placement="bottomLeft"
-  prefixCls="ant-popover"
   transitionName="zoom-big"
   trigger="hover"
   visible={false}
 >
   <Input
     className="AdaptedReduxFormField--isValidatedInput"
-    disabled={false}
     meta={
       Object {
         "active": false,
@@ -112,7 +102,6 @@ exports[`reduxFormFieldAdapter validate input should render as expected when the
     onBlur={[Function]}
     onChange={[Function]}
     onFocus={[Function]}
-    prefixCls="ant-input"
     type="text"
     value="inputValue"
   />

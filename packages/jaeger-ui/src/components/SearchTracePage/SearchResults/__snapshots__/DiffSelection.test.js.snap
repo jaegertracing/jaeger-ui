@@ -32,7 +32,6 @@ exports[`DiffSelection renders a trace as expected 1`] = `
       ghost={false}
       htmlType="button"
       loading={false}
-      prefixCls="ant-btn"
       type="primary"
     >
       Compare Traces
@@ -107,7 +106,6 @@ exports[`DiffSelection renders multiple traces as expected 1`] = `
         ghost={false}
         htmlType="button"
         loading={false}
-        prefixCls="ant-btn"
         type="primary"
       >
         Compare Traces
