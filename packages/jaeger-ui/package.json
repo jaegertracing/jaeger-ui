@@ -18,6 +18,8 @@
     "@svgr/babel-plugin-transform-svg-component": "^6.5.1",
     "@svgr/babel-preset": "^6.5.1",
     "@types/match-sorter": "^2.3.0",
+    "@types/react": "16.8.7",
+    "@types/react-dom": "16.8.5",
     "@types/react-router-redux": "^5.0.21",
     "@types/react-window": "^1.8.0",
     "@types/redux-form": "^8.3.5",
@@ -112,7 +114,7 @@
     "tar": "6.1.13",
     "ts-key-enum": "^2.0.0",
     "tween-functions": "^1.2.0",
-    "typescript": "3.5.3",
+    "typescript": "3.8.3",
     "u-basscss": "2.0.1"
   },
   "scripts": {
