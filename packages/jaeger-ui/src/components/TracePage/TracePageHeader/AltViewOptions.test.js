@@ -30,7 +30,7 @@ describe('AltViewOptions', () => {
 
   let wrapper;
   const getLink = text => {
-    const menu = shallow(wrapper.find(Dropdown).prop('overlay'));
+    const menu = shallow(wrapper.find(Dropdown).prop('overlay')).dive();
     const links = menu.find(Link);
     for (let i = 0; i < links.length; i++) {
       const link = links.at(i);

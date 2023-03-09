@@ -31,9 +31,9 @@ export const _makeFilterDropdown =
 // exported for tests
 export const _onCell = (dataIndex: string) => (row: TRow) => {
   const cellData = row[dataIndex];
-  if (!cellData || typeof cellData !== 'object' || Array.isArray(cellData)) return null;
+  if (!cellData || typeof cellData !== 'object' || Array.isArray(cellData)) return {};
   const { styling } = cellData;
-  if (_isEmpty(styling)) return null;
+  if (_isEmpty(styling)) return {};
   return {
     style: styling,
   };

@@ -130,7 +130,7 @@ describe('<TopNav>', () => {
 
       it('renders sub-menu links', () => {
         dropdownItems.slice(1, 2).forEach(itemConfig => {
-          const item = subMenu.find(`[href="${itemConfig.url}"]`);
+          const item = subMenu.dive().find(`[href="${itemConfig.url}"]`);
           expect(item.length).toBe(1);
           expect(item.prop('target')).toBe(itemConfig.anchorTarget || '_blank');
           expect(item.text()).toBe(itemConfig.label);

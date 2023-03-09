@@ -101,7 +101,7 @@ describe('<KeyValuesTable>', () => {
           : [],
     });
     const dropdown = wrapper.find(Dropdown);
-    const menu = shallow(dropdown.prop('overlay'));
+    const menu = shallow(dropdown.prop('overlay')).dive();
     const anchors = menu.find(LinkValue);
     expect(anchors).toHaveLength(2);
     const firstAnchor = anchors.first();

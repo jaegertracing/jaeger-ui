@@ -57,12 +57,17 @@ export default class NameSelector extends React.PureComponent<TProps, TState> {
   }
 
   private changeVisible(popoverVisible: boolean) {
-    if (popoverVisible) {
-      window.document.body.addEventListener('click', this.onBodyClicked);
-    } else {
-      window.document.body.removeEventListener('click', this.onBodyClicked);
-    }
     this.setState({ popoverVisible });
+
+    // Defer registering a click handler to hide the selector popover
+    // to avoid handling the click event that triggered opening the popover itself.
+    setTimeout(() => {
+      if (popoverVisible) {
+        window.document.body.addEventListener('click', this.onBodyClicked);
+      } else {
+        window.document.body.removeEventListener('click', this.onBodyClicked);
+      }
+    });
   }
 
   private clearValue = (evt: React.MouseEvent<HTMLElement>) => {
