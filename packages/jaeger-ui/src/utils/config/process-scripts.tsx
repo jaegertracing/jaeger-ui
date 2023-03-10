@@ -15,7 +15,7 @@
 import { getConfigValue } from './get-config';
 import { TScript } from '../../types/config';
 
-export default function () {
+export default function processScripts() {
   const scripts = getConfigValue('scripts');
   if (scripts) {
     scripts.forEach((script: TScript) => {

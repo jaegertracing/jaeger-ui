@@ -76,6 +76,7 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
 > {
   renderUtils: TRendererUtils;
 
+  // eslint-disable-next-line react/sort-comp
   static propsFactories: Record<string, TFromGraphStateFn<any, any>> = {
     classNameIsSmall,
     scaleOpacity: scaleProperty.opacity,

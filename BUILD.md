@@ -6,10 +6,6 @@
 
 ### Dependencies (dev and otherwise)
 
-#### `eslint-plugin-flowtype`
-
-While, this project does not use [`flow`](https://flow.org/), this ESLint plugin is required because the configuration extends [`react-app`](https://github.com/facebook/create-react-app/blob/master/packages/eslint-config-react-app/package.json#L18), which requires this plugin.
-
 #### `@typescript-eslint/eslint-plugin`
 
 ESLint is being used to lint the repo, as a whole. Within `./packages/plexus` (for now), [`@typescript-eslint/eslint-plugin`](https://github.com/typescript-eslint/typescript-eslint/blob/master/packages/eslint-plugin) is used to apply ESLint to TypeScript. This application is localized to plexus via configuring `./packages/plexus/.eslintrc.js` for TypeScript, which means the change in settings is only applied to subdirectories of `./packages/plexus`. This package works really well, but there are quite a few issues it doesn't catch. For that, we use the TypeScript compiler.

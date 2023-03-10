@@ -87,9 +87,7 @@ exports[`DetailTable render renders as expected 1`] = `
             className="DetailTableDropdown--Tooltip--Body"
           >
             <span>
-              Apply changes to this column
-              '
-              s filter
+              Apply changes to this column's filter
             </span>
             <span>
               Same effect as clicking outside the dropdown

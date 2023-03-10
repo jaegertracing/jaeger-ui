@@ -595,6 +595,7 @@ const serviceOpsCallsWithNull = {
           },
           {
             gaugeValue: {
+              // eslint-disable-next-line no-loss-of-precision
               doubleValue: 0.031052384663085615,
             },
             timestamp: '2021-09-13T12:01:36.235Z',
@@ -658,6 +659,7 @@ const serviceOpsCallsZeroDivision = {
           },
           {
             gaugeValue: {
+              // eslint-disable-next-line no-loss-of-precision
               doubleValue: 0.031052384663085615,
             },
             timestamp: '2021-09-13T12:01:36.235Z',
