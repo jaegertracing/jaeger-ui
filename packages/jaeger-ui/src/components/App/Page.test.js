@@ -67,9 +67,9 @@ describe('<Page>', () => {
       trackPageView.mockReset();
       props = {
         pathname: String(Math.random()),
-        search: 'embed=v0&hideGraph',
+        search: 'hideGraph',
       };
-      wrapper = mount(<Page {...props} />);
+      wrapper = mount(<Page embedded {...props} />);
     });
 
     it('does not explode', () => {

@@ -1388,7 +1388,6 @@ exports[`<DdgNodeContent> renders the number of operations if there are multiple
           mouseLeaveDelay={0.1}
           overlayStyle={Object {}}
           placement="bottom"
-          prefixCls="ant-popover"
           title="Select Operation to Filter Graph"
           transitionName="zoom-big"
           trigger="hover"

@@ -45,9 +45,9 @@ exports[`<MonitorATMEmptyState> ATM snapshot test 1`] = `
         block={false}
         className="button-empty-state"
         ghost={false}
+        htmlType="button"
         loading={false}
         onClick={[Function]}
-        prefixCls="ant-btn"
       >
         Read the Documentation
       </Button>

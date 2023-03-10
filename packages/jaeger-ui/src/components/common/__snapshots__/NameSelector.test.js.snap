@@ -22,7 +22,6 @@ exports[`<NameSelector> clear renders with clear icon when not required and with
   overlayClassName="NameSelector--overlay u-rm-popover-content-padding"
   overlayStyle={Object {}}
   placement="bottomLeft"
-  prefixCls="ant-popover"
   transitionName="zoom-big"
   trigger="click"
   visible={false}
@@ -75,7 +74,6 @@ exports[`<NameSelector> renders with is-invalid when required and without a valu
   overlayClassName="NameSelector--overlay u-rm-popover-content-padding"
   overlayStyle={Object {}}
   placement="bottomLeft"
-  prefixCls="ant-popover"
   transitionName="zoom-big"
   trigger="click"
   visible={false}
@@ -117,7 +115,6 @@ exports[`<NameSelector> renders without exploding 1`] = `
   overlayClassName="NameSelector--overlay u-rm-popover-content-padding"
   overlayStyle={Object {}}
   placement="bottomLeft"
-  prefixCls="ant-popover"
   transitionName="zoom-big"
   trigger="click"
   visible={false}
@@ -159,7 +156,6 @@ exports[`<NameSelector> renders without is-invalid when not required and without
   overlayClassName="NameSelector--overlay u-rm-popover-content-padding"
   overlayStyle={Object {}}
   placement="bottomLeft"
-  prefixCls="ant-popover"
   transitionName="zoom-big"
   trigger="click"
   visible={false}

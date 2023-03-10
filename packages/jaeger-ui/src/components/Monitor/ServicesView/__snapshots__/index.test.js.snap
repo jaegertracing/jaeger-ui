@@ -314,10 +314,8 @@ exports[`<MonitorATMServicesView> ATM snapshot test 1`] = `
             className="select-operation-input"
             disabled={false}
             enterButton={false}
-            inputPrefixCls="ant-input"
             onChange={[Function]}
             placeholder="Search operation"
-            prefixCls="ant-input-search"
             value=""
           />
         </Col>
@@ -638,10 +636,8 @@ exports[`<MonitorATMServicesView> ATM snapshot test with no metrics 1`] = `
             className="select-operation-input"
             disabled={false}
             enterButton={false}
-            inputPrefixCls="ant-input"
             onChange={[Function]}
             placeholder="Search operation"
-            prefixCls="ant-input-search"
             value=""
           />
         </Col>
@@ -963,10 +959,8 @@ exports[`<MonitorATMServicesView> render one service latency 1`] = `
             className="select-operation-input"
             disabled={false}
             enterButton={false}
-            inputPrefixCls="ant-input"
             onChange={[Function]}
             placeholder="Search operation"
-            prefixCls="ant-input-search"
             value=""
           />
         </Col>

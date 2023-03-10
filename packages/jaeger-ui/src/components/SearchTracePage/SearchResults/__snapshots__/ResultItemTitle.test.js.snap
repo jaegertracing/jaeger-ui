@@ -11,7 +11,6 @@ exports[`ResultItemTitle renders as expected 1`] = `
     indeterminate={false}
     onChange={[Function]}
     onClick={[Function]}
-    prefixCls="ant-checkbox"
   />
   <Link
     className="ResultItemTitle--item ub-flex-auto"

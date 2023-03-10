@@ -66,7 +66,7 @@ describe(ReferencesButton, () => {
     const wrapper = shallow(<ReferencesButton {...props} />);
     const dropdown = wrapper.find(Dropdown);
     expect(dropdown.length).toBe(1);
-    const menuInstance = shallow(dropdown.first().props().overlay);
+    const menuInstance = shallow(dropdown.first().props().overlay).dive();
     const submenuItems = menuInstance.find(Menu.Item);
     expect(submenuItems.length).toBe(3);
     submenuItems.forEach((submenuItem, i) => {

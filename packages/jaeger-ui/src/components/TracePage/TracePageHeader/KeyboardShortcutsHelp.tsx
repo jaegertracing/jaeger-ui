@@ -104,7 +104,6 @@ export default class KeyboardShortcutsHelp extends React.PureComponent<Props, St
           <span className="KeyboardShortcutsHelp--cta">⌘</span>
         </Button>
         <Modal
-          align={undefined}
           title="Keyboard Shortcuts"
           visible={this.state.visible}
           onOk={this.onCloserClicked}

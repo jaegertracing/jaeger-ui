@@ -36,7 +36,6 @@ exports[`<ListItem> multi mode renders as selected when selected 1`] = `
     checked={true}
     className="FilteredList--ListItem--Checkbox"
     indeterminate={false}
-    prefixCls="ant-checkbox"
   />
   a
 </div>
@@ -54,7 +53,6 @@ exports[`<ListItem> multi mode renders as selected when selected with others 1`]
     checked={true}
     className="FilteredList--ListItem--Checkbox"
     indeterminate={false}
-    prefixCls="ant-checkbox"
   />
   a
 </div>
@@ -72,7 +70,6 @@ exports[`<ListItem> multi mode renders without exploding 1`] = `
     checked={false}
     className="FilteredList--ListItem--Checkbox"
     indeterminate={false}
-    prefixCls="ant-checkbox"
   />
   a
 </div>
