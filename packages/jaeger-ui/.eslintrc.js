@@ -8,4 +8,13 @@ module.exports = {
     __REACT_APP_VSN_STATE__: false,
     __APP_ENVIRONMENT__: false,
   },
+  overrides: [
+    {
+      // Instruct ESLint not to lint build tooling files as part of the project.
+      files: ['vite.config.ts', 'src/vite-env.d.ts'],
+      parserOptions: {
+        project: null,
+      },
+    },
+  ],
 };
