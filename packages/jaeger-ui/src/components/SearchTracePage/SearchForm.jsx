@@ -278,7 +278,7 @@ export class SearchFormImpl extends React.PureComponent {
     const tz = selectedLookback === 'custom' ? new Date().toTimeString().replace(/^.*?GMT/, 'UTC') : null;
 
     return (
-      <Form layout="vertical" onFinish={handleSubmit}>
+      <Form layout="vertical">
         <FormItem
           name="service"
           label={
@@ -482,6 +482,7 @@ export class SearchFormImpl extends React.PureComponent {
           className="SearchForm--submit"
           disabled={disabled || noSelectedService || invalid}
           data-test={markers.SUBMIT_BTN}
+          onClick={handleSubmit}
         >
           Find Traces
         </Button>
