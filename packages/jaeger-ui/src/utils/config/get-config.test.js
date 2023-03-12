@@ -18,7 +18,7 @@ jest.mock('./process-deprecation');
 
 import getConfig, { getConfigValue } from './get-config';
 import processDeprecation from './process-deprecation';
-import defaultConfig, { deprecations } from '../../constants/default-config';
+import defaultConfig, { deprecations, mergeFields } from '../../constants/default-config';
 
 describe('getConfig()', () => {
   const warnFn = jest.fn();
@@ -76,10 +76,10 @@ describe('getConfig()', () => {
     });
 
     describe('overwriting precedence and merging', () => {
-      describe('fields not in __mergeFields', () => {
+      describe('fields not in mergeFields', () => {
         it('gives precedence to the embedded config', () => {
-          const mergeFields = new Set(defaultConfig.__mergeFields);
-          const keys = Object.keys(defaultConfig).filter(k => !mergeFields.has(k));
+          const mergeFieldsSet = new Set(mergeFields);
+          const keys = Object.keys(defaultConfig).filter(k => !mergeFieldsSet.has(k));
           embedded = {};
           keys.forEach(key => {
             embedded[key] = key;
@@ -88,10 +88,10 @@ describe('getConfig()', () => {
         });
       });
 
-      describe('fields in __mergeFields', () => {
+      describe('fields in mergeFields', () => {
         it('gives precedence to non-objects in embedded', () => {
           embedded = {};
-          defaultConfig.__mergeFields.forEach((k, i) => {
+          mergeFields.forEach((k, i) => {
             embedded[k] = i ? true : null;
           });
           expect(getConfig()).toEqual({ ...defaultConfig, ...embedded });
@@ -99,9 +99,9 @@ describe('getConfig()', () => {
 
         it('merges object values', () => {
           embedded = {};
-          const key = defaultConfig.__mergeFields[0];
+          const key = mergeFields[0];
           if (!key) {
-            throw new Error('invalid __mergeFields');
+            throw new Error('invalid mergeFields');
           }
           embedded[key] = { a: true, b: false };
           const expected = { ...defaultConfig, ...embedded };

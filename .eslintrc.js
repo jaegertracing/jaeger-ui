@@ -48,7 +48,6 @@ module.exports = {
       },
       plugins: ['@typescript-eslint'],
       rules: {
-        'no-unused-vars': 0,
         '@typescript-eslint/naming-convention': [
           'error',
           {
@@ -57,7 +56,16 @@ module.exports = {
             prefix: ['I'],
           },
         ],
+
+        // Disable ESLint core rules for which @typescript-eslint provides TypeScript-specific equivalents.
+        'no-unused-vars': 0,
         '@typescript-eslint/no-unused-vars': 1,
+        'no-use-before-define': 0,
+        '@typescript-eslint/no-use-before-define': 1,
+        'no-redeclare': 0,
+        '@typescript-eslint/no-redeclare': 1,
+        'no-shadow': 0,
+        '@typescript-eslint/no-shadow': 1,
 
         // Disable prop type checks for TSX components, as prop type validation is expected
         // to be handled by TypeScript there. Stray prop types in components converted from Flow
@@ -79,6 +87,7 @@ module.exports = {
     /* general */
     'arrow-body-style': 0,
     'arrow-parens': [1, 'as-needed'],
+    'class-methods-use-this': 0,
     'comma-dangle': 0,
     'lines-between-class-members': ['error', 'always', { exceptAfterSingleLine: true }],
     'no-continue': 0,
