@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import React from 'react';
-import { Icon } from 'antd';
+import { Icon as LegacyIcon } from '@ant-design/compatible';
 import './HeaderTable.css';
 
 type Props = {
@@ -33,7 +33,7 @@ export default function HeaderTable(props: Props) {
     <th className="HeaderTable--th">
       {props.element.title}
       <button type="submit" className="HeaderTable--sortButton" onClick={() => props.sortClick(props.index)}>
-        <Icon style={iconStyle} type={iconType} />
+        <LegacyIcon style={iconStyle} type={iconType} />
       </button>
     </th>
   );

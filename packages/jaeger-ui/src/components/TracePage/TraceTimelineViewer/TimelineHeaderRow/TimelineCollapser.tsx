@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import React from 'react';
-import { Tooltip, Icon } from 'antd';
+import { DoubleRightOutlined, RightOutlined } from '@ant-design/icons';
+import { Tooltip } from 'antd';
 
 import './TimelineCollapser.css';
 
@@ -44,16 +45,16 @@ export default class TimelineCollapser extends React.PureComponent<CollapserProp
     return (
       <div className="TimelineCollapser" ref={this.containerRef}>
         <Tooltip title={getTitle('Expand +1')} getPopupContainer={this.getContainer}>
-          <Icon type="right" onClick={onExpandOne} className="TimelineCollapser--btn-expand" />
+          <RightOutlined onClick={onExpandOne} className="TimelineCollapser--btn-expand" />
         </Tooltip>
         <Tooltip title={getTitle('Collapse +1')} getPopupContainer={this.getContainer}>
-          <Icon type="right" onClick={onCollapseOne} className="TimelineCollapser--btn" />
+          <RightOutlined onClick={onCollapseOne} className="TimelineCollapser--btn" />
         </Tooltip>
         <Tooltip title={getTitle('Expand All')} getPopupContainer={this.getContainer}>
-          <Icon type="double-right" onClick={onExpandAll} className="TimelineCollapser--btn-expand" />
+          <DoubleRightOutlined onClick={onExpandAll} className="TimelineCollapser--btn-expand" />
         </Tooltip>
         <Tooltip title={getTitle('Collapse All')} getPopupContainer={this.getContainer}>
-          <Icon type="double-right" onClick={onCollapseAll} className="TimelineCollapser--btn" />
+          <DoubleRightOutlined onClick={onCollapseAll} className="TimelineCollapser--btn" />
         </Tooltip>
       </div>
     );

@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Dropdown, Icon, Menu, Button } from 'antd';
+import { DownOutlined } from '@ant-design/icons';
+import { Dropdown, Menu, Button } from 'antd';
 import { Link } from 'react-router-dom';
 import './AltViewOptions.css';
 
@@ -111,7 +112,7 @@ export default function AltViewOptions(props: Props) {
     <Dropdown overlay={menu}>
       <Button className="AltViewOptions">
         {`${dropdownText} `}
-        <Icon type="down" />
+        <DownOutlined />
       </Button>
     </Dropdown>
   );

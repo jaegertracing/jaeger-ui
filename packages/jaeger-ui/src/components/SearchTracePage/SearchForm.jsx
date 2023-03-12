@@ -13,7 +13,9 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Form, Input, Button, Popover, Select, Row, Col } from 'antd';
+import { Form } from '@ant-design/compatible';
+import '@ant-design/compatible/assets/index.css';
+import { Input, Button, Popover, Select, Row, Col } from 'antd';
 import _get from 'lodash/get';
 import logfmtParser from 'logfmt/lib/logfmt_parser';
 import { stringify as logfmtStringify } from 'logfmt/lib/stringify';

@@ -14,7 +14,7 @@
 
 import * as React from 'react';
 import { shallow } from 'enzyme';
-import { Icon, Input } from 'antd';
+import { Input } from 'antd';
 import debounceMock from 'lodash/debounce';
 import queryString from 'query-string';
 

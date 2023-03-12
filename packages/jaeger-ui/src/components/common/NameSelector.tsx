@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Icon, Popover } from 'antd';
+import { CloseOutlined } from '@ant-design/icons';
+import { Popover } from 'antd';
 import cx from 'classnames';
 import IoChevronDown from 'react-icons/lib/io/chevron-down';
 
@@ -132,7 +133,7 @@ export default class NameSelector extends React.PureComponent<TProps, TState> {
           <BreakableText className="NameSelector--value" text={text} />
           <IoChevronDown className="NameSelector--chevron" />
           {!required && value && (
-            <Icon className="NameSelector--clearIcon" type="close" onClick={this.clearValue} />
+            <CloseOutlined className="NameSelector--clearIcon" onClick={this.clearValue} />
           )}
         </h2>
       </Popover>

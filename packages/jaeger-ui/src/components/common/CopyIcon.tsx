@@ -14,6 +14,8 @@
 
 import * as React from 'react';
 
+import { Icon as LegacyIcon } from '@ant-design/compatible';
+
 import { Button, Tooltip } from 'antd';
 import { TooltipPlacement } from 'antd/lib/tooltip/index';
 import cx from 'classnames';
@@ -71,7 +73,7 @@ export default class CopyIcon extends React.PureComponent<PropsType, StateType> 
         <Button
           className={cx(this.props.className, 'CopyIcon')}
           htmlType="button"
-          icon={this.props.icon}
+          icon={<LegacyIcon type={this.props.icon} />}
           onClick={this.handleClick}
         />
       </Tooltip>

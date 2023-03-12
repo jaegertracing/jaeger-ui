@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Icon, Table } from 'antd';
+import { FilterOutlined } from '@ant-design/icons';
+import { Table } from 'antd';
 import FaFilter from 'react-icons/lib/fa/filter.js';
 import _isEmpty from 'lodash/isEmpty';
 
@@ -113,7 +114,7 @@ export const _makeColumns = ({ defs, rows }: { defs: TColumnDefs; rows: TRow[] }
       filterDropdown: Boolean(options.size) && _makeFilterDropdown(dataIndex, options),
       filterIcon: (filtered: boolean) => {
         if (filtered) return <FaFilter />;
-        return <Icon type="filter" />;
+        return <FilterOutlined />;
       },
       onCell: _onCell(dataIndex),
       onHeaderCell: () => ({
