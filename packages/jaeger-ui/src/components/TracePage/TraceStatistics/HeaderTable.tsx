@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import React from 'react';
-import { Icon as LegacyIcon } from '@ant-design/compatible';
+import { UpOutlined, DownOutlined } from '@ant-design/icons';
 import './HeaderTable.css';
 
 type Props = {
@@ -28,12 +28,12 @@ type Props = {
 export default function HeaderTable(props: Props) {
   // const thStyle = { width: Math.round(window.innerWidth * 0.2) };
   const iconStyle = { opacity: props.sortIndex === props.index ? 1.0 : 0.2 };
-  const iconType = props.sortAsc && props.sortIndex === props.index ? 'up' : 'down';
+  const Icon = props.sortAsc && props.sortIndex === props.index ? UpOutlined : DownOutlined;
   return (
     <th className="HeaderTable--th">
       {props.element.title}
       <button type="submit" className="HeaderTable--sortButton" onClick={() => props.sortClick(props.index)}>
-        <LegacyIcon style={iconStyle} type={iconType} />
+        <Icon style={iconStyle} />
       </button>
     </th>
   );

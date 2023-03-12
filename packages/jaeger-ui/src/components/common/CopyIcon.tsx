@@ -13,8 +13,7 @@
 // limitations under the License.
 
 import * as React from 'react';
-
-import { Icon as LegacyIcon } from '@ant-design/compatible';
+import { CopyOutlined, LinkOutlined } from '@ant-design/icons';
 
 import { Button, Tooltip } from 'antd';
 import { TooltipPlacement } from 'antd/lib/tooltip/index';
@@ -26,7 +25,7 @@ import './CopyIcon.css';
 type PropsType = {
   className?: string;
   copyText: string;
-  icon?: string;
+  icon?: 'copy' | 'link';
   placement?: TooltipPlacement;
   tooltipTitle: string;
 };
@@ -62,6 +61,7 @@ export default class CopyIcon extends React.PureComponent<PropsType, StateType> 
   };
 
   render() {
+    const Icon = this.props.icon === 'link' ? LinkOutlined : CopyOutlined;
     return (
       <Tooltip
         arrowPointAtCenter
@@ -73,7 +73,7 @@ export default class CopyIcon extends React.PureComponent<PropsType, StateType> 
         <Button
           className={cx(this.props.className, 'CopyIcon')}
           htmlType="button"
-          icon={<LegacyIcon type={this.props.icon} />}
+          icon={<Icon />}
           onClick={this.handleClick}
         />
       </Tooltip>
