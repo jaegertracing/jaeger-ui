@@ -14,7 +14,8 @@
 
 import * as React from 'react';
 import { SearchOutlined } from '@ant-design/icons';
-import { Input, Tooltip } from 'antd';
+import { Tooltip } from 'antd';
+import type { InputRef } from 'antd';
 import MdVisibility from 'react-icons/lib/md/visibility';
 import MdVisibilityOff from 'react-icons/lib/md/visibility-off';
 
@@ -48,7 +49,7 @@ type TProps = {
   visEncoding?: string;
 };
 export default class Header extends React.PureComponent<TProps> {
-  private _uiFindInput: React.RefObject<Input> = React.createRef();
+  private _uiFindInput: React.RefObject<InputRef> = React.createRef();
 
   static defaultProps = {
     showParameters: true,

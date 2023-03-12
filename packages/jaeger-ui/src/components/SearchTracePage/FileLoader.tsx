@@ -24,7 +24,7 @@ type FileLoaderProps = {
 
 export default function FileLoader(props: FileLoaderProps) {
   return (
-    <Dragger accept=".json" customRequest={props.loadJsonTraces} multiple>
+    <Dragger accept=".json" beforeUpload={(file, fileList) => fileList.forEach(file => props.loadJsonTraces({ file }))} multiple>
       <p className="ant-upload-drag-icon">
         <FileAddOutlined />
       </p>

@@ -24,26 +24,25 @@ type TProps = {
   lookback: number;
   service?: string;
   services?: string[] | null;
-  setLookback: (lookback: number | string | undefined) => void;
+  setLookback: (lookback: number | null) => void;
   setService: (service: string) => void;
 };
 
 type TState = {
-  ownInputValue: number | undefined;
+  ownInputValue: number | null;
 };
 
 export default class Header extends React.PureComponent<TProps, TState> {
   state: TState = {
-    ownInputValue: undefined,
+    ownInputValue: null,
   };
 
-  setLookback = _debounce((lookback: number | string | undefined) => {
-    this.setState({ ownInputValue: undefined });
+  setLookback = _debounce((lookback: number | null) => {
+    this.setState({ ownInputValue: null });
     this.props.setLookback(lookback);
   }, 350);
 
-  handleInputChange = (value: string | number | undefined) => {
-    if (typeof value === 'string') return;
+  handleInputChange = (value: number | null) => {
     this.setState({ ownInputValue: value });
     this.setLookback(value);
   };

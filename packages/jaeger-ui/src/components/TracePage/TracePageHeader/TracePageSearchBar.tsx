@@ -15,6 +15,7 @@
 import * as React from 'react';
 import { CloseOutlined, DownOutlined, UpOutlined } from '@ant-design/icons';
 import { Button, Input } from 'antd';
+import type { InputRef } from 'antd';
 import cx from 'classnames';
 import IoAndroidLocate from 'react-icons/lib/io/android-locate';
 
@@ -35,7 +36,7 @@ type TracePageSearchBarProps = {
   navigable: boolean;
 };
 
-export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwardedRef: React.Ref<Input> }) {
+export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwardedRef: React.Ref<InputRef> }) {
   const {
     clearSearch,
     focusUiFindMatches,
@@ -104,6 +105,6 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwarde
   );
 }
 
-export default React.forwardRef((props: TracePageSearchBarProps, ref: React.Ref<Input>) => (
+export default React.forwardRef((props: TracePageSearchBarProps, ref: React.Ref<InputRef>) => (
   <TracePageSearchBarFn {...props} forwardedRef={ref} />
 ));

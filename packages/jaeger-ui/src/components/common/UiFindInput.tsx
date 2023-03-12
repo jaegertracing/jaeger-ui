@@ -15,6 +15,7 @@
 import * as React from 'react';
 import { CloseOutlined } from '@ant-design/icons';
 import { Input } from 'antd';
+import type { InputRef } from 'antd';
 import { History as RouterHistory, Location } from 'history';
 import _debounce from 'lodash/debounce';
 import _isString from 'lodash/isString';
@@ -27,7 +28,7 @@ import { TNil, ReduxState } from '../../types/index';
 
 type TOwnProps = RouteComponentProps<any> & {
   allowClear?: boolean;
-  forwardedRef?: React.Ref<Input>;
+  forwardedRef?: React.Ref<InputRef>;
   inputProps: Record<string, any>;
   history: RouterHistory;
   location: Location;

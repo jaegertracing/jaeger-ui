@@ -13,9 +13,7 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Form } from '@ant-design/compatible';
-import '@ant-design/compatible/assets/index.css';
-import { Input, Button, Popover, Select, Row, Col } from 'antd';
+import { Form, Input, Button, Popover, Select, Row, Col } from 'antd';
 import _get from 'lodash/get';
 import logfmtParser from 'logfmt/lib/logfmt_parser';
 import { stringify as logfmtStringify } from 'logfmt/lib/stringify';
@@ -278,9 +276,11 @@ export class SearchFormImpl extends React.PureComponent {
     const opsForSvc = (selectedServicePayload && selectedServicePayload.operations) || [];
     const noSelectedService = selectedService === '-' || !selectedService;
     const tz = selectedLookback === 'custom' ? new Date().toTimeString().replace(/^.*?GMT/, 'UTC') : null;
+
     return (
-      <Form layout="vertical" onSubmit={handleSubmit}>
+      <Form layout="vertical" onFinish={handleSubmit}>
         <FormItem
+          name="service"
           label={
             <span>
               Service <span className="SearchForm--labelCount">({services.length})</span>
