@@ -119,7 +119,7 @@ export class ServiceGraphImpl extends React.PureComponent<TProps> {
     return [];
   }
 
-  generatePlaceholder(placeHolder: string | JSX.Element) {
+  generatePlaceholder(placeHolder: string | React.ReactNode) {
     const { width } = this.props;
 
     return (

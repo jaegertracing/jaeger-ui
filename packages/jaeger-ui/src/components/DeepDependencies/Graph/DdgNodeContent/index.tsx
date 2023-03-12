@@ -111,6 +111,7 @@ export function getNodeRenderer({
   return function renderNode(vertex: TDdgVertex, _: unknown, lv: TLayoutVertex<any> | null) {
     const { isFocalNode, key, operation, service } = vertex;
     return (
+      // eslint-disable-next-line @typescript-eslint/no-use-before-define
       <DdgNodeContent
         focalNodeUrl={isFocalNode ? null : getUrl({ density, operation, service, ...extraUrlArgs }, baseUrl)}
         focusPathsThroughVertex={focusPathsThroughVertex}
