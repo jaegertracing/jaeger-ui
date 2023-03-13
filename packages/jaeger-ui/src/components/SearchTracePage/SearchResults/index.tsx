@@ -22,6 +22,7 @@ import { Field, formValueSelector, reduxForm } from 'redux-form';
 import queryString from 'query-string';
 
 import AltViewOptions from './AltViewOptions';
+import DownloadResults from './DownloadResults';
 import DiffSelection from './DiffSelection';
 import * as markers from './index.markers';
 import { EAltViewActions, trackAltView } from './index.track';
@@ -39,7 +40,7 @@ import reduxFormFieldAdapter from '../../../utils/redux-form-field-adapter';
 
 import { FetchedTrace } from '../../../types';
 import { SearchQuery } from '../../../types/search';
-import { KeyValuePair, Trace } from '../../../types/trace';
+import {KeyValuePair, Trace, TraceData} from '../../../types/trace';
 
 import './index.css';
 
@@ -59,6 +60,7 @@ type SearchResultsProps = {
   skipMessage?: boolean;
   spanLinks?: Record<string, string> | undefined;
   traces: Trace[];
+  tracesToDownload: TraceData[];
 };
 
 const Option = Select.Option;
@@ -108,6 +110,17 @@ export class UnconnectedSearchResults extends React.PureComponent<SearchResultsP
     const view = urlState.view && urlState.view === 'ddg' ? EAltViewActions.Traces : EAltViewActions.Ddg;
     trackAltView(view);
     history.push(getUrl({ ...urlState, view }));
+  };
+
+  onDownloadResultsClicked = () => {
+    const file = new Blob([JSON.stringify(this.props.tracesToDownload)], {type : "application/json"});
+    const element = document.createElement("a");
+    element.href = URL.createObjectURL(file);
+    element.download = "traces-" + Date.now() + ".json";
+    document.body.appendChild(element);
+    element.click();
+    URL.revokeObjectURL(element.href)
+    element.remove()
   };
 
   render() {
@@ -181,6 +194,7 @@ export class UnconnectedSearchResults extends React.PureComponent<SearchResultsP
               {traces.length} Trace{traces.length > 1 && 's'}
             </h2>
             {traceResultsView && <SelectSort />}
+            {traceResultsView && <DownloadResults onDownloadResultsClicked={this.onDownloadResultsClicked}/>}
             <AltViewOptions traceResultsView={traceResultsView} onDdgViewClicked={this.onDdgViewClicked} />
             {showStandaloneLink && (
               <Link
