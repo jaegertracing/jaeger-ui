@@ -6,6 +6,38 @@
 
 ### Fixes
 
+## v1.28.0 (2023-03-13)
+
+- Bump jsdom from 21.1.0 to 21.1.1 ([@dependabot](https://github.com/dependabot) in [#1257](https://github.com/jaegertracing/jaeger-ui/pull/1257))
+- Bump kind-of from 6.0.2 to 6.0.3 ([@dependabot](https://github.com/dependabot) in [#1259](https://github.com/jaegertracing/jaeger-ui/pull/1259))
+- Bump jest-environment-jsdom from 28.1.3 to 29.5.0 ([@dependabot](https://github.com/dependabot) in [#1241](https://github.com/jaegertracing/jaeger-ui/pull/1241))
+- Update TypeScript and ESLint to latest versions ([@mszabo-wikia](https://github.com/mszabo-wikia) in [#1256](https://github.com/jaegertracing/jaeger-ui/pull/1256))
+- Bump webpack from 5.75.0 to 5.76.1 ([@dependabot](https://github.com/dependabot) in [#1255](https://github.com/jaegertracing/jaeger-ui/pull/1255))
+- Bump @typescript-eslint/parser from 3.2.0 to 3.10.1 ([@dependabot](https://github.com/dependabot) in [#1253](https://github.com/jaegertracing/jaeger-ui/pull/1253))
+- Bump @typescript-eslint/eslint-plugin from 3.2.0 to 4.0.0 ([@dependabot](https://github.com/dependabot) in [#1254](https://github.com/jaegertracing/jaeger-ui/pull/1254))
+- Update ESLint and related plugins ([@mszabo-wikia](https://github.com/mszabo-wikia) in [#1250](https://github.com/jaegertracing/jaeger-ui/pull/1250))
+- Expand docs about testing ([@mszabo-wikia](https://github.com/mszabo-wikia) in [#1251](https://github.com/jaegertracing/jaeger-ui/pull/1251))
+- Bump terser from 5.16.5 to 5.16.6 ([@dependabot](https://github.com/dependabot) in [#1248](https://github.com/jaegertracing/jaeger-ui/pull/1248))
+- Bump antd to 3.26.20 ([@mszabo-wikia](https://github.com/mszabo-wikia) in [#1247](https://github.com/jaegertracing/jaeger-ui/pull/1247))
+- Bump TypeScript to 3.8.3 ([@mszabo-wikia](https://github.com/mszabo-wikia) in [#1244](https://github.com/jaegertracing/jaeger-ui/pull/1244))
+- Bump chance from 1.1.9 to 1.1.11 ([@dependabot](https://github.com/dependabot) in [#1230](https://github.com/jaegertracing/jaeger-ui/pull/1230))
+- Bump shell-quote from 1.6.1 to 1.8.0 ([@dependabot](https://github.com/dependabot) in [#1236](https://github.com/jaegertracing/jaeger-ui/pull/1236))
+- Bump loader-utils from 2.0.0 to 2.0.4 ([@dependabot](https://github.com/dependabot) in [#1237](https://github.com/jaegertracing/jaeger-ui/pull/1237))
+- Bump @typescript-eslint/typescript-estree from 5.52.0 to 5.54.1 ([@dependabot](https://github.com/dependabot) in [#1238](https://github.com/jaegertracing/jaeger-ui/pull/1238))
+- Bump json5 from 1.0.1 to 1.0.2 ([@dependabot](https://github.com/dependabot) in [#1243](https://github.com/jaegertracing/jaeger-ui/pull/1243))
+- Bump rimraf from 4.1.2 to 4.3.1 ([@dependabot](https://github.com/dependabot) in [#1239](https://github.com/jaegertracing/jaeger-ui/pull/1239))
+- Bump babel-jest from 28.1.3 to 29.5.0 ([@dependabot](https://github.com/dependabot) in [#1242](https://github.com/jaegertracing/jaeger-ui/pull/1242))
+- Migrate build tooling to Vite ([@mszabo-wikia](https://github.com/mszabo-wikia) in [#1226](https://github.com/jaegertracing/jaeger-ui/pull/1226))
+- Avoid use of require() in default-config.tsx ([@mszabo-wikia](https://github.com/mszabo-wikia) in [#1225](https://github.com/jaegertracing/jaeger-ui/pull/1225))
+- Abstract access to injected globals ([@mszabo-wikia](https://github.com/mszabo-wikia) in [#1224](https://github.com/jaegertracing/jaeger-ui/pull/1224))
+- Remove use of react-dimensions package in ScatterPlot component ([@mszabo-wikia](https://github.com/mszabo-wikia) in [#1223](https://github.com/jaegertracing/jaeger-ui/pull/1223))
+- Convert SearchResults and index components to TS ([@mszabo-wikia](https://github.com/mszabo-wikia) in [#1222](https://github.com/jaegertracing/jaeger-ui/pull/1222))
+- Make Plexus output ESM ([@mszabo-wikia](https://github.com/mszabo-wikia) in [#1219](https://github.com/jaegertracing/jaeger-ui/pull/1219))
+
+### Enhancements
+
+### Fixes
+
 ## v1.27.3 (2022-12-07)
 
 ### Fixes
