@@ -8,6 +8,10 @@
 
 ## v1.28.0 (2023-03-13)
 
+### Enhancements
+
+### Fixes
+
 - Update TypeScript and ESLint to latest versions ([@mszabo-wikia](https://github.com/mszabo-wikia) in [#1256](https://github.com/jaegertracing/jaeger-ui/pull/1256))
 - Update ESLint and related plugins ([@mszabo-wikia](https://github.com/mszabo-wikia) in [#1250](https://github.com/jaegertracing/jaeger-ui/pull/1250))
 - Expand docs about testing ([@mszabo-wikia](https://github.com/mszabo-wikia) in [#1251](https://github.com/jaegertracing/jaeger-ui/pull/1251))
@@ -17,10 +21,6 @@
 - Remove use of react-dimensions package in ScatterPlot component ([@mszabo-wikia](https://github.com/mszabo-wikia) in [#1223](https://github.com/jaegertracing/jaeger-ui/pull/1223))
 - Convert SearchResults and index components to TS ([@mszabo-wikia](https://github.com/mszabo-wikia) in [#1222](https://github.com/jaegertracing/jaeger-ui/pull/1222))
 - Make Plexus output ESM ([@mszabo-wikia](https://github.com/mszabo-wikia) in [#1219](https://github.com/jaegertracing/jaeger-ui/pull/1219))
-
-### Enhancements
-
-### Fixes
 
 ## v1.27.3 (2022-12-07)
 
