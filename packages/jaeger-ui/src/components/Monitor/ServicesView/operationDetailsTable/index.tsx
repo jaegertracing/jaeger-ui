@@ -71,10 +71,12 @@ function formatTimeValue(value: number) {
 export class OperationTableDetails extends React.PureComponent<TProps, TState> {
   state: TState = {
     hoveredRowKey: -1,
-    tableSorting: [{
-      order: 'descend',
-      columnKey: 'impact',
-    }],
+    tableSorting: [
+      {
+        order: 'descend',
+        columnKey: 'impact',
+      },
+    ],
   };
 
   render() {
@@ -241,11 +243,12 @@ export class OperationTableDetails extends React.PureComponent<TProps, TState> {
             };
           }}
           onChange={(pagination, filters, sorter) => {
-            const activeSorters = isArray(sorter) ? sorter : [ sorter ];
+            const activeSorters = isArray(sorter) ? sorter : [sorter];
             const { tableSorting } = this.state;
 
             if (!isEqual(activeSorters, tableSorting)) {
-              const lastColumn = activeSorters[activeSorters.length - 1] ?? tableSorting[tableSorting.length - 1];
+              const lastColumn =
+                activeSorters[activeSorters.length - 1] ?? tableSorting[tableSorting.length - 1];
               const lastColumnKey = lastColumn.columnKey as string;
               const clickedColumn = tableTitles.get(lastColumnKey);
 

@@ -60,7 +60,8 @@ export default class CohortTable extends React.PureComponent<Props> {
     const rowSelection = {
       ...defaultRowSelection,
       getCheckboxProps: this.getCheckboxProps,
-      onChange: (selectedRowKeys: React.Key[], selectedRows: FetchedTrace[]) => selectTrace(selectedRows[0].id),
+      onChange: (selectedRowKeys: React.Key[], selectedRows: FetchedTrace[]) =>
+        selectTrace(selectedRows[0].id),
       selectedRowKeys: current ? [current] : [],
     };
 
