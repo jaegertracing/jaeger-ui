@@ -2237,10 +2237,10 @@
   dependencies:
     esquery "^1.0.1"
 
-"@pyroscope/flamegraph@0.21.4":
-  version "0.21.4"
-  resolved "https://registry.yarnpkg.com/@pyroscope/flamegraph/-/flamegraph-0.21.4.tgz#4b185854ee50767d5279baa16b58a29f9fcb3de1"
-  integrity sha512-/wkTHhBNapnnuLWQ40PyHa1pz8jVMmiLYO12Ak7qq1JhgVEccE39XrQMTkcFlM4FdpqM4/1w6U7fm4xebUAzZw==
+"@pyroscope/flamegraph@0.35.3":
+  version "0.35.3"
+  resolved "https://registry.yarnpkg.com/@pyroscope/flamegraph/-/flamegraph-0.35.3.tgz#a2f30e5218ea49de4397376c8f47adee07b8fe60"
+  integrity sha512-gwEtm5e+g9o5n1DoimhIo9DH0bAw3B6jM94vDvhEcGB2zzIJfHNT6hbx5xSK7f2gSbVfDdvER8TQ9jyEnGkFKg==
 
 "@sinclair/typebox@^0.24.1":
   version "0.24.51"
