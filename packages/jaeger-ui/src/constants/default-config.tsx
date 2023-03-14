@@ -101,6 +101,11 @@ const defaultConfig: Config = {
     },
     docsLink: 'https://www.jaegertracing.io/docs/latest/spm/',
   },
+
+  traceGraph: {
+    layoutManagerMemory: undefined,
+  },
+
   deepDependencies: {
     menuEnabled: false,
   },

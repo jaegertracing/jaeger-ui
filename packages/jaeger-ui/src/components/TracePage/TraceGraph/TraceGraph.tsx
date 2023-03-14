@@ -31,6 +31,7 @@ import { TEv, TSumSpan } from './types';
 import { TDenseSpanMembers } from '../../../model/trace-dag/types';
 import TDagPlexusVertex from '../../../model/trace-dag/types/TDagPlexusVertex';
 import { TNil } from '../../../types';
+import { TraceGraphConfig } from '../../../types/config';
 
 import './TraceGraph.css';
 
@@ -39,6 +40,7 @@ type Props = {
   ev?: TEv | TNil;
   uiFind: string | TNil;
   uiFindVertexKeys: Set<string> | TNil;
+  traceGraphConfig?: TraceGraphConfig;
 };
 type State = {
   showHelp: boolean;
@@ -129,7 +131,11 @@ export default class TraceGraph extends React.PureComponent<Props, State> {
       showHelp: false,
       mode: MODE_SERVICE,
     };
-    this.layoutManager = new LayoutManager({ useDotEdges: true, splines: 'polyline' });
+    this.layoutManager = new LayoutManager({
+      totalMemory: props.traceGraphConfig?.layoutManagerMemory,
+      useDotEdges: true,
+      splines: 'polyline',
+    });
   }
 
   componentWillUnmount() {

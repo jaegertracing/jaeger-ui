@@ -73,6 +73,15 @@ export type MonitorConfig = {
   docsLink?: string;
 };
 
+export type TraceGraphConfig = {
+  // layoutManagerMemory controls the total memeory available for the GraphViz
+  // Emscripten module instance. The value should be a power of two.
+  // The default of 16MB should be sufficient for most cases — only consider
+  // using a larger number if you run into the error "Cannot enlarge memory arrays".
+  // See https://github.com/jaegertracing/jaeger-ui/issues/1249 for background
+  layoutManagerMemory?: number;
+};
+
 // Default values are provided in packages/jaeger-ui/src/constants/default-config.tsx
 export type Config = {
   // archiveEnabled enables the Archive Trace button in the trace view.
@@ -153,6 +162,9 @@ export type Config = {
 
   // monitor section controls Service Performance Monitoring tab.
   monitor?: MonitorConfig;
+
+  // traceGraph controls the trace graph under trace page
+  traceGraph?: TraceGraphConfig;
 
   // The following features are experimental / undocumented.
 
