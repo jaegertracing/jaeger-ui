@@ -96,7 +96,7 @@ function getItem(item: ConfigMenuItem) {
 function CustomNavDropdown({ label, items }: ConfigMenuGroup) {
   const menuItems = <Menu>{items.map(getItem)}</Menu>;
   return (
-    <Dropdown overlay={menuItems} placement="bottomRight">
+    <Dropdown overlay={menuItems} placement="bottomCenter">
       <a>
         {label} <DownOutlined />
       </a>
@@ -115,7 +115,14 @@ export function TopNavImpl(props: Props) {
 
   return (
     <div>
-      <Menu theme="dark" mode="horizontal" selectable={false} className="ub-right" selectedKeys={[pathname]}>
+      <Menu
+        theme="dark"
+        mode="horizontal"
+        selectable={false}
+        className="ub-right"
+        selectedKeys={[pathname]}
+        disabledOverflow
+      >
         <Menu.Item>
           <TraceIDSearchInput />
         </Menu.Item>
@@ -130,7 +137,7 @@ export function TopNavImpl(props: Props) {
           );
         })}
       </Menu>
-      <Menu theme="dark" mode="horizontal" selectable={false} selectedKeys={[pathname]}>
+      <Menu theme="dark" mode="horizontal" selectable={false} selectedKeys={[pathname]} disabledOverflow>
         <Menu.Item>
           <Link to={prefixUrl('/')} style={{ fontSize: '14px', fontWeight: 500 }}>
             JAEGER UI

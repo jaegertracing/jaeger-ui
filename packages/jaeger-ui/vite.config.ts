@@ -78,7 +78,7 @@ export default defineConfig({
           '@layout-body-background': '#fff',
           '@layout-header-background': '#404040',
           '@layout-footer-background': '@layout-body-background',
-          '@layout-header-height': '64px',
+          '@layout-header-height': '46px',
           '@layout-header-padding': '0 50px',
           '@layout-footer-padding': '24px 50px',
           '@layout-sider-background': '@layout-header-background',
