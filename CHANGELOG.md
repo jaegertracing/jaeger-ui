@@ -10,6 +10,7 @@
 
 ### Enhancements
 
+- Add totalMemory in config for trace graph ([@ChenX1993](https://github.com/ChenX1993) in [#1262](https://github.com/jaegertracing/jaeger-ui/pull/1262))
 - Make traceID, startTime, endTime, duration and traceName available or Link Patterns ([@MUI-Pop](https://github.com/MUI-Pop) in [#1178](https://github.com/jaegertracing/jaeger-ui/pull/1178))
 
 ### Fixes
