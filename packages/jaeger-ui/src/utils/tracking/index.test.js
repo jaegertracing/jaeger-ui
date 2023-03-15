@@ -126,13 +126,17 @@ describe('generic analytics tracking', () => {
 
   it('get versions as a string or bad JSON test', () => {
     const version = '123456';
-    process.env.REACT_APP_VSN_STATE = version;
+
     jest.doMock('../config/get-config', () => {
       return {
         __esModule: true,
         default: () => ({}),
       };
     });
+
+    jest.doMock('../constants', () => ({
+      getVersionInfo: () => version,
+    }));
 
     return import('.').then(() => {
       expect(internalVersionShort).toBe(version);
@@ -145,13 +149,17 @@ describe('generic analytics tracking', () => {
   it('get versions as an object test', () => {
     const vShot = '48956d5';
     const vLong = ' | github.com/jaegertracing/jaeger-ui | 48956d5 | main';
-    process.env.REACT_APP_VSN_STATE = `{"remote":"github.com/jaegertracing/jaeger-ui","objName":"${vShot}","changed":{"hasChanged":false,"files":0,"insertions":0,"deletions":0,"untracked":0,"pretty":""},"refName":"main","pretty":"${vLong}"}`;
+    const rawVersion = `{"remote":"github.com/jaegertracing/jaeger-ui","objName":"${vShot}","changed":{"hasChanged":false,"files":0,"insertions":0,"deletions":0,"untracked":0,"pretty":""},"refName":"main","pretty":"${vLong}"}`;
     jest.doMock('../config/get-config', () => {
       return {
         __esModule: true,
         default: () => ({}),
       };
     });
+
+    jest.doMock('../constants', () => ({
+      getVersionInfo: () => rawVersion,
+    }));
 
     return import('.').then(() => {
       expect(internalVersionShort).toBe(vShot);
@@ -165,13 +173,17 @@ describe('generic analytics tracking', () => {
     const vShotCommitSHA = '48956d5';
     const vShotChanges = '2f +20 -3 1?';
     const vLong = ' | github.com/jaegertracing/jaeger-ui | 48956d5 | main';
-    process.env.REACT_APP_VSN_STATE = `{"remote":"github.com/jaegertracing/jaeger-ui","objName":"${vShotCommitSHA}","changed":{"hasChanged":true,"files":2,"insertions":20,"deletions":3,"untracked":1,"pretty":"${vShotChanges}"},"refName":"main","pretty":"${vLong}"}`;
+    const rawVersion = `{"remote":"github.com/jaegertracing/jaeger-ui","objName":"${vShotCommitSHA}","changed":{"hasChanged":true,"files":2,"insertions":20,"deletions":3,"untracked":1,"pretty":"${vShotChanges}"},"refName":"main","pretty":"${vLong}"}`;
     jest.doMock('../config/get-config', () => {
       return {
         __esModule: true,
         default: () => ({}),
       };
     });
+
+    jest.doMock('../constants', () => ({
+      getVersionInfo: () => rawVersion,
+    }));
 
     return import('.').then(() => {
       expect(internalVersionShort).toBe(`${vShotCommitSHA} ${vShotChanges}`);

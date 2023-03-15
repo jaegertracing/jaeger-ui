@@ -17,15 +17,18 @@ import { IWebAnalyticsFunc } from '../../types/tracking';
 import GA from './ga';
 import NoopWebAnalytics from './noopWebAnalytics';
 import getConfig from '../config/get-config';
+import { getVersionInfo } from '../constants';
 
 const TrackingImplementation = () => {
   const config = getConfig();
   let versionShort;
   let versionLong;
 
-  if (process.env.REACT_APP_VSN_STATE) {
+  const versionInfo = getVersionInfo();
+
+  if (versionInfo) {
     try {
-      const data = JSON.parse(process.env.REACT_APP_VSN_STATE);
+      const data = JSON.parse(versionInfo);
       const joiner = [data.objName];
       if (data.changed.hasChanged) {
         joiner.push(data.changed.pretty);
@@ -33,8 +36,8 @@ const TrackingImplementation = () => {
       versionShort = joiner.join(' ');
       versionLong = data.pretty;
     } catch (_) {
-      versionShort = process.env.REACT_APP_VSN_STATE;
-      versionLong = process.env.REACT_APP_VSN_STATE;
+      versionShort = versionInfo;
+      versionLong = versionInfo;
     }
     versionLong = versionLong.length > 99 ? `${versionLong.slice(0, 96)}...` : versionLong;
   } else {

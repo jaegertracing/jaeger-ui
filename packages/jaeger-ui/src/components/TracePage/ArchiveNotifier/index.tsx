@@ -15,7 +15,7 @@
 import * as React from 'react';
 import { Icon, notification } from 'antd';
 
-import ErrorMessage from '../../common/ErrorMessage';
+import { Details, Message } from '../../common/ErrorMessage';
 import { TNil } from '../../../types';
 import { TraceArchive } from '../../../types/archive';
 
@@ -70,8 +70,8 @@ function updateNotification(oldState: ENotifiedState | null, nextState: ENotifie
       notification.warn({
         key: ENotifiedState.Outcome,
         className: 'ArchiveNotifier--errorNotification',
-        message: <ErrorMessage.Message error={error} wrap />,
-        description: <ErrorMessage.Details error={error} wrap />,
+        message: <Message error={error} wrap />,
+        description: <Details error={error} wrap />,
         duration: null,
         icon: <Icon type="clock-circle-o" className="ArchiveNotifier--errorIcon" />,
         onClose: acknowledge,

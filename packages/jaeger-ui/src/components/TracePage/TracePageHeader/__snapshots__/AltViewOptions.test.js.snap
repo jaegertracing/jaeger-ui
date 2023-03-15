@@ -5,12 +5,7 @@ exports[`AltViewOptions renders correctly 1`] = `
   mouseEnterDelay={0.15}
   mouseLeaveDelay={0.1}
   overlay={
-    <Menu
-      className=""
-      focusable={false}
-      prefixCls="ant-menu"
-      theme="light"
-    >
+    <Menu>
       <MenuItem>
         <a
           onClick={[Function]}
@@ -68,15 +63,18 @@ exports[`AltViewOptions renders correctly 1`] = `
     </Menu>
   }
   placement="bottomLeft"
-  prefixCls="ant-dropdown"
 >
-  <div
+  <Button
+    block={false}
     className="AltViewOptions"
+    ghost={false}
+    htmlType="button"
+    loading={false}
   >
     Trace Timeline 
     <Icon
       type="down"
     />
-  </div>
+  </Button>
 </Dropdown>
 `;

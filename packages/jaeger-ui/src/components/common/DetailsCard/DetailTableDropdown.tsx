@@ -103,7 +103,7 @@ export default class DetailTableDropdown extends React.PureComponent<TProps> {
               overlayClassName="DetailTableDropdown--Tooltip"
               title={
                 <div className="DetailTableDropdown--Tooltip--Body">
-                  <span>Apply changes to this column{"'"}s filter</span>
+                  <span>Apply changes to this column&apos;s filter</span>
                   <span>Same effect as clicking outside the dropdown</span>
                 </div>
               }

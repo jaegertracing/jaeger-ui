@@ -54,7 +54,7 @@ export type ReduxState = {
     location: Location;
   };
   services: {
-    services: (string[]) | TNil;
+    services: string[] | TNil;
     serverOpsForService: Record<string, string[]>;
     operationsForService: Record<string, string[]>;
     loading: boolean;

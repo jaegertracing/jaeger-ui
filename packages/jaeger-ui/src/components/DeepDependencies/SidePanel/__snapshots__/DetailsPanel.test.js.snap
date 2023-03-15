@@ -70,7 +70,6 @@ exports[`<SidePanel> render renders detailLink 1`] = `
       mouseEnterDelay={0.1}
       mouseLeaveDelay={0.1}
       placement="top"
-      prefixCls="ant-tooltip"
       title="More Info"
       transitionName="zoom-big-fast"
     >

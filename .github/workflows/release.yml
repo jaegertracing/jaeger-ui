@@ -1,0 +1,41 @@
+name: Publish release
+
+on:
+  release:
+    types:
+      - published
+
+# See https://github.com/jaegertracing/jaeger/issues/4017
+# and https://github.com/ossf/scorecard/blob/main/docs/checks.md#token-permissions
+permissions:
+  deployments: write
+  contents: write
+
+jobs:
+  publish-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          cache: yarn
+          node-version: '16'
+      - run: yarn install --frozen-lockfile
+      - run: yarn lint
+      - run: yarn build
+        id: yarn-build
+
+      - name: Package artifacts
+        id: package-artifacts
+        run: tar -czvf ./assets.tar.gz --strip-components=3  packages/jaeger-ui/build/
+        if: steps.yarn-build.outcome == 'success'
+
+      - name: Upload artifacts
+        uses: svenstaro/upload-release-action@cc92c9093e5f785e23a3d654fe2671640b851b5f
+        with:
+          file: 'assets.tar.gz'
+          overwrite: true
+          tag: ${{ github.ref }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+        if: steps.package-artifacts.outcome == 'success'

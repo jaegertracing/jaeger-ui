@@ -316,7 +316,10 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     return DEFAULT_HEIGHTS.detail;
   };
 
-  linksGetter = (span: Span, items: KeyValuePair[], itemIndex: number) => getLinks(span, items, itemIndex);
+  linksGetter = (span: Span, items: KeyValuePair[], itemIndex: number) => {
+    const { trace } = this.props;
+    return getLinks(span, items, itemIndex, trace);
+  };
 
   renderRow = (key: string, style: React.CSSProperties, index: number, attrs: {}) => {
     const { isDetail, span, spanIndex } = this.getRowStates()[index];
@@ -469,7 +472,7 @@ function mapStateToProps(state: ReduxState): TTraceTimeline & TExtractUiFindFrom
 
 /* istanbul ignore next */
 function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
-  return (bindActionCreators(actions, dispatch) as any) as TDispatchProps;
+  return bindActionCreators(actions, dispatch) as any as TDispatchProps;
 }
 
 export default withRouter(

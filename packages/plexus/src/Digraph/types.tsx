@@ -122,7 +122,8 @@ type TStandaloneNodesLayer<T = Record<string, unknown>, U = Record<string, unkno
     | {
         layerType: Extract<TLayerType, 'svg'>;
         defs?: TNonEmptyArray<TDefEntry<T, U>>;
-      });
+      }
+  );
 
 export type TEdgesLayer<T = Record<string, unknown>, U = Record<string, unknown>> = TKeyed &
   TSetOnContainer<T, U> & {

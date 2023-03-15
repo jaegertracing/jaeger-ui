@@ -221,12 +221,14 @@ describe('DetailTable', () => {
     });
 
     describe('function props', () => {
-      const makeTestFn = fn => (...vals) =>
-        fn(stringColumn)(
-          ...vals.map(v => ({
-            [stringColumn]: v,
-          }))
-        );
+      const makeTestFn =
+        fn =>
+        (...vals) =>
+          fn(stringColumn)(
+            ...vals.map(v => ({
+              [stringColumn]: v,
+            }))
+          );
 
       describe('_makeFilterDropdown', () => {
         it('returns DetailsTableDropdown with correct props', () => {
@@ -250,21 +252,21 @@ describe('DetailTable', () => {
       describe('_onCell', () => {
         const onCell = makeTestFn(_onCell);
 
-        it('returns null for undefined', () => {
-          expect(onCell(undefined)).toBe(null);
+        it('returns empty props for undefined', () => {
+          expect(onCell(undefined)).toEqual({});
         });
 
-        it('returns null for string', () => {
-          expect(onCell('test-string')).toBe(null);
+        it('returns empty props for string', () => {
+          expect(onCell('test-string')).toEqual({});
         });
 
-        it('returns null for array', () => {
-          expect(onCell([])).toBe(null);
+        it('returns empty props for array', () => {
+          expect(onCell([])).toEqual({});
         });
 
-        it('returns null for unstyled object', () => {
-          expect(onCell({})).toBe(null);
-          expect(onCell({ styling: {} })).toBe(null);
+        it('returns empty props for unstyled object', () => {
+          expect(onCell({})).toEqual({});
+          expect(onCell({ styling: {} })).toEqual({});
         });
 
         it('returns styling for styled object', () => {

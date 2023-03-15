@@ -22,7 +22,6 @@ exports[`DetailList renders list as expected 1`] = `
   }
   loading={false}
   pagination={false}
-  prefixCls="ant-list"
   renderItem={[Function]}
   split={true}
 />

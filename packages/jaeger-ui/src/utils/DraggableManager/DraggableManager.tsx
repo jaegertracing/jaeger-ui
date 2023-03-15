@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import _get from 'lodash/get';
+import type React from 'react';
 
 import EUpdateTypes from './EUpdateTypes';
 import { DraggableBounds, DraggingUpdate } from './types';

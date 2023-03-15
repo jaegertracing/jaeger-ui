@@ -12,28 +12,50 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// This file is necessary because create-react-app (CRA) requires
+// This file is necessary because the build system (Vite) requires
 // isolatedModules to be true but for linting we need it to be false. We run
 // tsc-lint from the project root, but packages have their own tsconfig for
 // the lint so the typings from one package doesn't pollute other packages.
 // For that to work, project references are used
 // (https://www.typescriptlang.org/docs/handbook/project-references.html) which
 // requires `composite: true` and `isolatedModules: false`.
+// Since project references use emitted declarations to determine whether the project
+// is up to date, a single index.d.ts file is specified as the output.
 {
   "extends": "./tsconfig",
   "compilerOptions": {
     "isolatedModules": false,
-    "composite": true
+    "composite": true,
+    "outFile": "index.d.ts"
   },
   "files": [
     "src/actions/jaeger-api.js",
     "src/api/jaeger.js",
+    "src/components/App/index.jsx",
+    "src/components/DependencyGraph/DAG.jsx",
+    "src/components/DependencyGraph/DependencyForceGraph.jsx",
+    "src/components/DependencyGraph/index.jsx",
+    "src/components/SearchTracePage/index.jsx",
+    "src/components/SearchTracePage/SearchForm.jsx",
+    "src/components/SearchTracePage/SearchForm.markers.js",
+    "src/components/SearchTracePage/SearchResults/ScatterPlot.jsx",
+    "src/components/SearchTracePage/SearchResults/index.markers.js",
     "src/components/SearchTracePage/SearchResults/ResultItem.markers.js",
+    "src/middlewares/index.js",
     "src/model/order-by.js",
+    "src/propTypes/dependencies.js",
+    "src/reducers/config.js",
+    "src/reducers/dependencies.js",
+    "src/reducers/index.js",
+    "src/reducers/services.js",
+    "src/reducers/trace.js",
+    "src/selectors/dependencies.js",
     "src/selectors/process.js",
     "src/selectors/span.js",
     "src/selectors/trace.js",
+    "src/utils/configure-store.js",
     "src/utils/sort.js",
-    "src/utils/TreeNode.js"
+    "src/utils/TreeNode.js",
+    "package.json"
   ]
 }

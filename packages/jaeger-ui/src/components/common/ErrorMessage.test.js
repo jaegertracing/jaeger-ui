@@ -15,7 +15,7 @@
 import React from 'react';
 import { shallow, mount } from 'enzyme';
 
-import ErrorMessage from './ErrorMessage';
+import ErrorMessage, { Details } from './ErrorMessage';
 
 describe('<ErrorMessage>', () => {
   let wrapper;
@@ -38,7 +38,7 @@ describe('<ErrorMessage>', () => {
   });
 
   it('<Details /> renders empty on string error', () => {
-    wrapper = shallow(<ErrorMessage.Details error={error} />);
+    wrapper = shallow(<Details error={error} />);
     expect(wrapper).toMatchSnapshot();
   });
 
@@ -50,7 +50,7 @@ describe('<ErrorMessage>', () => {
       httpQuery: 'value-httpQuery',
       httpBody: 'value-httpBody',
     };
-    wrapper = shallow(<ErrorMessage.Details error={error} wrap />);
+    wrapper = shallow(<Details error={error} wrap />);
     expect(wrapper).toMatchSnapshot();
   });
 
@@ -62,7 +62,7 @@ describe('<ErrorMessage>', () => {
       httpQuery: 'value-httpQuery',
       httpBody: 'value-httpBody',
     };
-    wrapper = shallow(<ErrorMessage.Details error={error} wrap wrapperClassName="TEST-WRAPPER-CLASS" />);
+    wrapper = shallow(<Details error={error} wrap wrapperClassName="TEST-WRAPPER-CLASS" />);
     expect(wrapper).toMatchSnapshot();
   });
 

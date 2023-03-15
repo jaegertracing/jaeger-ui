@@ -18,7 +18,7 @@ import { Upload, Icon } from 'antd';
 const Dragger = Upload.Dragger;
 
 type FileLoaderProps = {
-  loadJsonTraces: (fileList: FileList) => void;
+  loadJsonTraces: (fileList: { file: File }) => void;
 };
 
 export default function FileLoader(props: FileLoaderProps) {

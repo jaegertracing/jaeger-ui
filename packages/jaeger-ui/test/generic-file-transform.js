@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Uber Technologies, Inc.
+// Copyright (c) 2023 The Jaeger Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,5 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// eslint-disable-next-line spaced-comment
-/// <reference types="react-scripts" />
+const path = require('path');
+
+// Simple Jest transform that stubs out CSS files and returns the file name as the mock content for other file types.
+module.exports = {
+  process(src, filename) {
+    const fileExtension = path.extname(filename);
+    if (fileExtension === 'css') {
+      return { code: 'module.exports = "";' };
+    }
+    return { code: `module.exports = ${JSON.stringify(path.basename(filename))};` };
+  },
+};

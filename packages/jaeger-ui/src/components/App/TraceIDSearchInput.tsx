@@ -37,12 +37,7 @@ class TraceIDSearchInput extends React.PureComponent<Props> {
   render() {
     return (
       <Form layout="horizontal" onSubmit={this.goToTrace} className="TraceIDSearchInput--form">
-        <Input
-          autosize={null}
-          name="idInput"
-          placeholder="Lookup by Trace ID..."
-          prefix={<Icon type="search" />}
-        />
+        <Input name="idInput" placeholder="Lookup by Trace ID..." prefix={<Icon type="search" />} />
       </Form>
     );
   }
