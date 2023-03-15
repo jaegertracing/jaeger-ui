@@ -10,7 +10,7 @@
 
 ### Enhancements
 
-- Make traceID, startTime, endTime, duration and traceName available fo… ([@MUI-Pop](https://github.com/MUI-Pop) in [#1178](https://github.com/jaegertracing/jaeger-ui/pull/1178))
+- Make traceID, startTime, endTime, duration and traceName available or Link Patterns ([@MUI-Pop](https://github.com/MUI-Pop) in [#1178](https://github.com/jaegertracing/jaeger-ui/pull/1178))
 
 ### Fixes
 
