@@ -6,6 +6,34 @@
 
 ### Fixes
 
+## v1.28.0 (2023-03-15)
+
+### Enhancements
+
+- Add totalMemory in config for trace graph ([@ChenX1993](https://github.com/ChenX1993) in [#1262](https://github.com/jaegertracing/jaeger-ui/pull/1262))
+- Make traceID, startTime, endTime, duration and traceName available or Link Patterns ([@MUI-Pop](https://github.com/MUI-Pop) in [#1178](https://github.com/jaegertracing/jaeger-ui/pull/1178))
+
+### Fixes
+
+- Update TypeScript and ESLint to latest versions ([@mszabo-wikia](https://github.com/mszabo-wikia) in [#1256](https://github.com/jaegertracing/jaeger-ui/pull/1256))
+- Update ESLint and related plugins ([@mszabo-wikia](https://github.com/mszabo-wikia) in [#1250](https://github.com/jaegertracing/jaeger-ui/pull/1250))
+- Expand docs about testing ([@mszabo-wikia](https://github.com/mszabo-wikia) in [#1251](https://github.com/jaegertracing/jaeger-ui/pull/1251))
+- Bump antd to 3.26.20 ([@mszabo-wikia](https://github.com/mszabo-wikia) in [#1247](https://github.com/jaegertracing/jaeger-ui/pull/1247))
+- Bump TypeScript to 3.8.3 ([@mszabo-wikia](https://github.com/mszabo-wikia) in [#1244](https://github.com/jaegertracing/jaeger-ui/pull/1244))
+- Migrate build tooling to Vite ([@mszabo-wikia](https://github.com/mszabo-wikia) in [#1226](https://github.com/jaegertracing/jaeger-ui/pull/1226))
+- Avoid use of require() in default-config.tsx ([@mszabo-wikia](https://github.com/mszabo-wikia) in [#1225](https://github.com/jaegertracing/jaeger-ui/pull/1225))
+- Abstract access to injected globals ([@mszabo-wikia](https://github.com/mszabo-wikia) in [#1224](https://github.com/jaegertracing/jaeger-ui/pull/1224))
+- Remove use of react-dimensions package in ScatterPlot component ([@mszabo-wikia](https://github.com/mszabo-wikia) in [#1223](https://github.com/jaegertracing/jaeger-ui/pull/1223))
+- Convert SearchResults and index components to TS ([@mszabo-wikia](https://github.com/mszabo-wikia) in [#1222](https://github.com/jaegertracing/jaeger-ui/pull/1222))
+- Make Plexus output ESM ([@mszabo-wikia](https://github.com/mszabo-wikia) in [#1219](https://github.com/jaegertracing/jaeger-ui/pull/1219))
+- Use .jsx file extension for JS components ([@mszabo-wikia](https://github.com/mszabo-wikia) in [#1218](https://github.com/jaegertracing/jaeger-ui/pull/1218))
+- Bump Plexus React typings to React 18 ([@mszabo-wikia](https://github.com/mszabo-wikia) in [#1210](https://github.com/jaegertracing/jaeger-ui/pull/1210))
+- Bump node-pre-gyp dependency ([@rubenvp8510](https://github.com/rubenvp8510) in [#1191](https://github.com/jaegertracing/jaeger-ui/pull/1191))
+- Prevent wrapping of the timeline tick label text ([@SOF3](https://github.com/SOF3) in [#1117](https://github.com/jaegertracing/jaeger-ui/pull/1117))
+- Upgrade to React 18 ([@Sergio-Mira](https://github.com/Sergio-Mira) in [#1173](https://github.com/jaegertracing/jaeger-ui/pull/1173))
+- Move alt view dropdown to a button ([@Sergio-Mira](https://github.com/Sergio-Mira) in [#1174](https://github.com/jaegertracing/jaeger-ui/pull/1174))
+- Fix warning about Autoprefixer prefix-less CSS ([@Sergio-Mira](https://github.com/Sergio-Mira) in [#1175](https://github.com/jaegertracing/jaeger-ui/pull/1175))
+
 ## v1.27.3 (2022-12-07)
 
 ### Fixes
