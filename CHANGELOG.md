@@ -6,6 +6,12 @@
 
 ### Fixes
 
+## v1.28.1 (2023-03-15)
+
+### Fixes
+
+- Workaround antd v3 error in the production build ([@mszabo-wikia](https://github.com/mszabo-wikia) in [#1276](https://github.com/jaegertracing/jaeger-ui/pull/1276))
+
 ## v1.28.0 (2023-03-15)
 
 ### Enhancements
