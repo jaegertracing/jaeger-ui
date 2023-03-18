@@ -50,7 +50,6 @@
     "src/reducers/services.js",
     "src/reducers/trace.js",
     "src/selectors/dependencies.js",
-    "src/selectors/process.js",
     "src/selectors/span.js",
     "src/selectors/trace.js",
     "src/utils/configure-store.js",
