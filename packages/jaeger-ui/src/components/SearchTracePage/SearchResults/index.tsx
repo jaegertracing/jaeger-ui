@@ -40,7 +40,7 @@ import reduxFormFieldAdapter from '../../../utils/redux-form-field-adapter';
 
 import { FetchedTrace } from '../../../types';
 import { SearchQuery } from '../../../types/search';
-import {KeyValuePair, Trace, TraceData} from '../../../types/trace';
+import { KeyValuePair, Trace, TraceData } from '../../../types/trace';
 
 import './index.css';
 
@@ -113,14 +113,14 @@ export class UnconnectedSearchResults extends React.PureComponent<SearchResultsP
   };
 
   onDownloadResultsClicked = () => {
-    const file = new Blob([JSON.stringify(this.props.rawTraces)], {type : "application/json"});
-    const element = document.createElement("a");
+    const file = new Blob([JSON.stringify(this.props.rawTraces)], { type: 'application/json' });
+    const element = document.createElement('a');
     element.href = URL.createObjectURL(file);
-    element.download = "traces-" + Date.now() + ".json";
+    element.download = 'traces-' + Date.now() + '.json';
     document.body.appendChild(element);
     element.click();
-    URL.revokeObjectURL(element.href)
-    element.remove()
+    URL.revokeObjectURL(element.href);
+    element.remove();
   };
 
   render() {
@@ -194,7 +194,7 @@ export class UnconnectedSearchResults extends React.PureComponent<SearchResultsP
               {traces.length} Trace{traces.length > 1 && 's'}
             </h2>
             {traceResultsView && <SelectSort />}
-            {traceResultsView && <DownloadResults onDownloadResultsClicked={this.onDownloadResultsClicked}/>}
+            {traceResultsView && <DownloadResults onDownloadResultsClicked={this.onDownloadResultsClicked} />}
             <AltViewOptions traceResultsView={traceResultsView} onDdgViewClicked={this.onDdgViewClicked} />
             {showStandaloneLink && (
               <Link

@@ -25,7 +25,7 @@ import ScatterPlot from './ScatterPlot';
 import { getUrl } from '../url';
 import LoadingIndicator from '../../common/LoadingIndicator';
 import SearchResultsDDG from '../../DeepDependencies/traces';
-import DownloadResults from "./DownloadResults";
+import DownloadResults from './DownloadResults';
 
 describe('<SearchResults>', () => {
   const searchParam = 'view';
@@ -175,7 +175,7 @@ describe('<SearchResults>', () => {
       it('when click on DownloadResults then call download function', () => {
         URL.createObjectURL = jest.fn();
         URL.revokeObjectURL = jest.fn();
-        const file = new Blob([JSON.stringify(rawTraces)], {type : "application/json"});
+        const file = new Blob([JSON.stringify(rawTraces)], { type: 'application/json' });
         const view = 'traces';
         wrapper.setProps({ location: { search: `${otherSearch}&${searchParam}=${view}` } });
 

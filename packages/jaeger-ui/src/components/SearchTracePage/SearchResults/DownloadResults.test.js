@@ -12,35 +12,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
-import * as React from "react";
-import {Button} from "antd";
-import {shallow} from "enzyme";
-import DownloadResults from "./DownloadResults";
+import * as React from 'react';
+import { Button } from 'antd';
+import { shallow } from 'enzyme';
+import DownloadResults from './DownloadResults';
 
 describe('DownloadResults button', () => {
+  let wrapper;
+  const getBtn = (btnIndex = 0) => wrapper.find(Button).at(btnIndex);
+  const getLabel = (btnIndex = 0) => getBtn(btnIndex).prop('children');
+  const props = {
+    onDownloadResultsClicked: jest.fn(),
+  };
 
-    let wrapper;
-    const getBtn = (btnIndex = 0) => wrapper.find(Button).at(btnIndex);
-    const getLabel = (btnIndex = 0) => getBtn(btnIndex).prop('children');
-    const props = {
-        onDownloadResultsClicked: jest.fn(),
-    };
+  beforeEach(() => {
+    jest.clearAllMocks();
+    wrapper = shallow(<DownloadResults {...props} />);
+  });
 
-    beforeEach(() => {
-        jest.clearAllMocks();
-        wrapper = shallow(<DownloadResults {...props} />);
-    });
+  it('when renders then correct label is showing', () => {
+    expect(getLabel()).toBe('Download Results');
+  });
 
-    it('when renders then correct label is showing', () => {
-        expect(getLabel()).toBe('Download Results');
-    });
+  it('when click then call download results function', () => {
+    expect(props.onDownloadResultsClicked).toHaveBeenCalledTimes(0);
 
-    it('when click then call download results function', () => {
-        expect(props.onDownloadResultsClicked).toHaveBeenCalledTimes(0);
-
-        getBtn(0).simulate('click', {});
-        expect(props.onDownloadResultsClicked).toHaveBeenCalledTimes(1);
-    });
-
+    getBtn(0).simulate('click', {});
+    expect(props.onDownloadResultsClicked).toHaveBeenCalledTimes(1);
+  });
 });

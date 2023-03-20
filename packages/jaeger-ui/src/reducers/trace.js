@@ -115,7 +115,7 @@ function searchDone(state, { meta, payload }) {
   }
   const traces = { ...state.traces, ...resultTraces };
   const search = { ...state.search, results, state: fetchedState.DONE };
-  return { ...state, search, traces, rawTraces: payloadData};
+  return { ...state, search, traces, rawTraces: payloadData };
 }
 
 function searchErred(state, { meta, payload }) {

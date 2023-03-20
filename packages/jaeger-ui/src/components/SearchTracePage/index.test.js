@@ -192,8 +192,15 @@ describe('mapStateToProps()', () => {
       services: stateServices,
     };
 
-    const { maxTraceDuration, traceResults, traceResultsToDownload, diffCohort, numberOfTraceResults, location, ...rest } =
-      mapStateToProps(state);
+    const {
+      maxTraceDuration,
+      traceResults,
+      traceResultsToDownload,
+      diffCohort,
+      numberOfTraceResults,
+      location,
+      ...rest
+    } = mapStateToProps(state);
     expect(traceResults).toHaveLength(stateTrace.search.results.length);
     expect(traceResults[0].traceID).toBe(trace.traceID);
     expect(traceResultsToDownload[0].traceID).toBe(trace.traceID);

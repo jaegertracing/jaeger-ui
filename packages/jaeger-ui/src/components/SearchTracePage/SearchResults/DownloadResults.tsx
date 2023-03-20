@@ -13,23 +13,18 @@
 // limitations under the License.
 
 import * as React from 'react';
-import {Button} from 'antd';
+import { Button } from 'antd';
 
 type Props = {
-    onDownloadResultsClicked: () => void;
+  onDownloadResultsClicked: () => void;
 };
 
-
 export default function DownloadResults(props: Props) {
-    const {onDownloadResultsClicked} = props;
-    const downloadBtn = (
-        <Button className="ub-ml2" htmlType="button" onClick={onDownloadResultsClicked}>
-            Download Results
-        </Button>
-    );
-    return (
-        <>
-            {downloadBtn}
-        </>
-    );
+  const { onDownloadResultsClicked } = props;
+  const downloadBtn = (
+    <Button className="ub-ml2" htmlType="button" onClick={onDownloadResultsClicked}>
+      Download Results
+    </Button>
+  );
+  return <>{downloadBtn}</>;
 }
