@@ -51,6 +51,7 @@ import {
   trackSelectTimeframe,
   trackViewAllTraces,
 } from './index.track';
+import { intervalCalculatorService } from '../../../utils/interval-calculator';
 
 type StateType = {
   graphWidth: number;
@@ -87,7 +88,6 @@ const AdaptedVirtualSelect = reduxFormFieldAdapter({
 const serviceFormSelector = formValueSelector('serviceForm');
 const oneMinuteInMilliSeconds = 60000;
 const oneHourInMilliSeconds = 3600000;
-const stepDivider = 240;
 
 export const timeFrameOptions = [
   { label: 'Last 5 minutes', value: 5 * oneMinuteInMilliSeconds },
@@ -101,7 +101,15 @@ export const timeFrameOptions = [
   { label: 'Last 2 days', value: 48 * oneHourInMilliSeconds },
 ];
 
-const calculateStep = (timeFrame: number) => timeFrame / stepDivider;
+const getMetricQueryPayload = (selectedTimeFrame: number, endTime: number, isAgg:boolean) => {
+  return {
+    quantile: 0.95,
+    endTs: endTime,
+    lookback: selectedTimeFrame,
+    step: intervalCalculatorService.getIntervalMilliSecond(selectedTimeFrame, isAgg ? 50: 600),
+    ratePer: 10 * 60 * 1000,
+  };
+}
 
 // export for tests
 export const getLoopbackInterval = (interval: number) => {
@@ -219,16 +227,9 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
       store.set('lastAtmSearchTimeframe', selectedTimeFrame);
       store.set('lastAtmSearchService', this.getSelectedService());
 
-      const metricQueryPayload = {
-        quantile: 0.95,
-        endTs: this.endTime,
-        lookback: selectedTimeFrame,
-        step: calculateStep(selectedTimeFrame),
-        ratePer: 10 * 60 * 1000,
-      };
 
-      fetchAllServiceMetrics(currentService, metricQueryPayload);
-      fetchAggregatedServiceMetrics(currentService, metricQueryPayload);
+      fetchAllServiceMetrics(currentService, getMetricQueryPayload(selectedTimeFrame, this.endTime, false));
+      fetchAggregatedServiceMetrics(currentService, getMetricQueryPayload(selectedTimeFrame, this.endTime, true));
 
       this.setState({ serviceOpsMetrics: undefined, searchOps: '' });
     }
