@@ -60,7 +60,7 @@ type SearchResultsProps = {
   skipMessage?: boolean;
   spanLinks?: Record<string, string> | undefined;
   traces: Trace[];
-  tracesToDownload: TraceData[];
+  rawTraces: TraceData[];
 };
 
 const Option = Select.Option;
@@ -113,7 +113,7 @@ export class UnconnectedSearchResults extends React.PureComponent<SearchResultsP
   };
 
   onDownloadResultsClicked = () => {
-    const file = new Blob([JSON.stringify(this.props.tracesToDownload)], {type : "application/json"});
+    const file = new Blob([JSON.stringify(this.props.rawTraces)], {type : "application/json"});
     const element = document.createElement("a");
     element.href = URL.createObjectURL(file);
     element.download = "traces-" + Date.now() + ".json";

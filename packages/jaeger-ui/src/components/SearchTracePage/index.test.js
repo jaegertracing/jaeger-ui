@@ -175,7 +175,7 @@ describe('mapStateToProps()', () => {
       traces: {
         [trace.traceID]: { id: trace.traceID, data: trace, state: fetchedState.DONE },
       },
-      tracesToDownload: [trace],
+      rawTraces: [trace],
     };
     const stateServices = {
       loading: false,

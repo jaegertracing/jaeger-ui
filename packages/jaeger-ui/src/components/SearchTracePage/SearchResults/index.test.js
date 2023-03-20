@@ -34,7 +34,7 @@ describe('<SearchResults>', () => {
   const otherSearch = `?${otherParam}=${otherValue}`;
   let wrapper;
   let traces;
-  let tracesToDownload;
+  let rawTraces;
   let props;
 
   beforeEach(() => {
@@ -42,7 +42,7 @@ describe('<SearchResults>', () => {
       { traceID: 'a', spans: [], processes: {} },
       { traceID: 'b', spans: [], processes: {} },
     ];
-    tracesToDownload = traces;
+    rawTraces = traces;
     props = {
       diffCohort: [],
       goToTrace: () => {},
@@ -51,7 +51,7 @@ describe('<SearchResults>', () => {
       maxTraceDuration: 1,
       queryOfResults: {},
       traces,
-      tracesToDownload,
+      rawTraces,
     };
     wrapper = shallow(<SearchResults {...props} />);
   });
@@ -175,7 +175,7 @@ describe('<SearchResults>', () => {
       it('when click on DownloadResults then call download function', () => {
         URL.createObjectURL = jest.fn();
         URL.revokeObjectURL = jest.fn();
-        const file = new Blob([JSON.stringify(tracesToDownload)], {type : "application/json"});
+        const file = new Blob([JSON.stringify(rawTraces)], {type : "application/json"});
         const view = 'traces';
         wrapper.setProps({ location: { search: `${otherSearch}&${searchParam}=${view}` } });
 

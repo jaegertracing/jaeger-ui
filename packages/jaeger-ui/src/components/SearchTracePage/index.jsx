@@ -142,7 +142,7 @@ export class SearchTracePageImpl extends Component {
               skipMessage={isHomepage}
               spanLinks={urlQueryParams && urlQueryParams.spanLinks}
               traces={traceResults}
-              tracesToDownload={traceResultsToDownload}
+              rawTraces={traceResultsToDownload}
             />
           )}
           {showLogo && (
@@ -204,7 +204,7 @@ SearchTracePageImpl.propTypes = {
 };
 
 const stateTraceXformer = memoizeOne(stateTrace => {
-  const { traces: traceMap, tracesToDownload, search } = stateTrace;
+  const { traces: traceMap, rawTraces, search } = stateTrace;
   const { query, results, state, error: traceError } = search;
 
   const loadingTraces = state === fetchedState.LOADING;
@@ -213,7 +213,7 @@ const stateTraceXformer = memoizeOne(stateTrace => {
     null,
     traces.map(tr => tr.duration)
   );
-  return { traces, tracesToDownload, maxDuration, traceError, loadingTraces, query };
+  return { traces, rawTraces, maxDuration, traceError, loadingTraces, query };
 });
 
 const stateTraceDiffXformer = memoizeOne((stateTrace, stateTraceDiff) => {
@@ -252,7 +252,7 @@ export function mapStateToProps(state) {
   const {
     query: queryOfResults,
     traces,
-    tracesToDownload,
+    rawTraces,
     maxDuration,
     traceError,
     loadingTraces,
@@ -277,7 +277,7 @@ export function mapStateToProps(state) {
     loadingTraces,
     services,
     traceResults,
-    traceResultsToDownload: tracesToDownload,
+    traceResultsToDownload: rawTraces,
     errors: errors.length ? errors : null,
     maxTraceDuration: maxDuration,
     sortTracesBy: sortBy,
