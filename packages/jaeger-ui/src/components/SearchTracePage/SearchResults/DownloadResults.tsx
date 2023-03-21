@@ -22,8 +22,8 @@ type Props = {
 export default function DownloadResults(props: Props) {
   const { onDownloadResultsClicked } = props;
   return (
-      <Button className="ub-ml2" htmlType="button" onClick={onDownloadResultsClicked}>
-        Download Results
-      </Button>
+    <Button className="ub-ml2" htmlType="button" onClick={onDownloadResultsClicked}>
+      Download Results
+    </Button>
   );
 }
