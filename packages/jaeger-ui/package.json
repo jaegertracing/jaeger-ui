@@ -38,7 +38,7 @@
     "less": "3.13.1",
     "react-test-renderer": "^18.2.0",
     "rollup-plugin-visualizer": "^5.9.0",
-    "sinon": "7.3.2",
+    "sinon": "15.0.2",
     "source-map-explorer": "^2.5.3",
     "terser": "^5.16.5",
     "vite": "^4.1.4",
