@@ -116,7 +116,7 @@ export class UnconnectedSearchResults extends React.PureComponent<SearchResultsP
     const file = new Blob([JSON.stringify(this.props.rawTraces)], { type: 'application/json' });
     const element = document.createElement('a');
     element.href = URL.createObjectURL(file);
-    element.download = 'traces-' + Date.now() + '.json';
+    element.download = `traces-${Date.now()}.json`;
     document.body.appendChild(element);
     element.click();
     URL.revokeObjectURL(element.href);
