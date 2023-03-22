@@ -103,7 +103,8 @@ function searchDone(state, { meta, payload }) {
   if (!_isEqual(state.search.query, meta.query)) {
     return state;
   }
-  const processed = payload.data.map(transformTraceData);
+  const payloadData = payload.data;
+  const processed = payloadData.map(transformTraceData);
   const resultTraces = {};
   const results = [];
   for (let i = 0; i < processed.length; i++) {
@@ -114,7 +115,7 @@ function searchDone(state, { meta, payload }) {
   }
   const traces = { ...state.traces, ...resultTraces };
   const search = { ...state.search, results, state: fetchedState.DONE };
-  return { ...state, search, traces };
+  return { ...state, search, traces, rawTraces: payloadData };
 }
 
 function searchErred(state, { meta, payload }) {
