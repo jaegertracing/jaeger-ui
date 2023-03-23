@@ -76,7 +76,7 @@ function formatValue(key: string, value: any) {
   } else if (Array.isArray(parsed) && shouldDisplayAsStringList(key)) {
     content = stringListMarkup(parsed);
   } else {
-    content = _jsonMarkup(value);
+    content = _jsonMarkup(parsed);
   }
 
   return <div className="ub-inline-block">{content}</div>;
