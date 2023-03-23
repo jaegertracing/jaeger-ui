@@ -45,14 +45,15 @@ describe('LinkValue', () => {
 describe('<KeyValuesTable>', () => {
   let wrapper;
 
+  const jsonkeyValue = { hello: 'world' };
   const data = [
     { key: 'span.kind', value: 'client', expected: 'client' },
     { key: 'omg', value: 'mos-def', expected: 'mos-def' },
     { key: 'numericString', value: '12345678901234567890', expected: '12345678901234567890' },
     { key: 'numeric', value: 123456789, expected: '123456789' },
-    { key: 'jsonkey', value: JSON.stringify({ hello: 'world' }) },
-    { key: 'http.request.header.accept', value: ['application/json'] },
-    { key: 'http.response.header.set_cookie', value: JSON.stringify(['name=mos-def', 'code=12345']) },
+    { key: 'jsonkey', value: JSON.stringify(jsonkeyValue), expected: JSON.stringify(jsonkeyValue, null, 4) },
+    { key: 'http.request.header.accept', value: ['application/json'], expected: 'application/json' },
+    { key: 'http.response.header.set_cookie', value: JSON.stringify(['name=mos-def', 'code=12345']), expected: 'name=mos-def, code=12345' },
   ];
 
   beforeEach(() => {
@@ -124,31 +125,13 @@ describe('<KeyValuesTable>', () => {
     });
   });
 
-  it('renders a span value containing numeric string correctly', () => {
+  it('renders the expected text for each span value', () => {
     const el = wrapper.find('.ub-inline-block');
     expect(el.length).toBe(data.length);
     el.forEach((valueDiv, i) => {
       if (data[i].expected) {
-        expect(valueDiv.html()).toMatch(data[i].expected);
+        expect(valueDiv.render().text()).toBe(data[i].expected);
       }
     });
   });
-
-  it('renders HTTP headers as multiple string spans', () => {
-    const el = wrapper.find('.ub-inline-block');
-    expect(el.length).toBe(data.length);
-    el.forEach((valueDiv, i) => {
-      if (/http\.(request|response)\.header\./.test(data[i].key)) {
-        let value = data[i].value;
-        if (typeof value === 'string') {
-          value = JSON.parse(value);
-        }
-        const spans = valueDiv.find('div.json-markup > span.json-markup-string');
-        expect(spans.length).toBe(value.length);
-        spans.forEach((span, j) => {
-          expect(span.text()).toBe(value[j]);
-        });
-      }
-    });
-  })
 });
