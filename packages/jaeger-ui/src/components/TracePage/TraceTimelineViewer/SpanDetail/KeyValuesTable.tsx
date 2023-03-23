@@ -36,15 +36,17 @@ function tryParseJson(value: string) {
 }
 
 function shouldDisplayAsStringList(key: string) {
-  return (
-    key.startsWith('http.request.header.') ||
-    key.startsWith('http.response.header.')
-  );
+  return key.startsWith('http.request.header.') || key.startsWith('http.response.header.');
 }
 
 const stringListMarkup = (value: any[]) => (
   <div className="json-markup">
-    {value.map((item, i) => <>{i > 0 && ', '}<span className="json-markup-string">{item}</span></>)}
+    {value.map((item, i) => (
+      <>
+        {i > 0 && ', '}
+        <span className="json-markup-string">{item}</span>
+      </>
+    ))}
   </div>
 );
 

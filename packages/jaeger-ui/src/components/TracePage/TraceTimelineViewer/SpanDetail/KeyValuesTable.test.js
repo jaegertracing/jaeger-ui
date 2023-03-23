@@ -53,7 +53,11 @@ describe('<KeyValuesTable>', () => {
     { key: 'numeric', value: 123456789, expected: '123456789' },
     { key: 'jsonkey', value: JSON.stringify(jsonkeyValue), expected: JSON.stringify(jsonkeyValue, null, 4) },
     { key: 'http.request.header.accept', value: ['application/json'], expected: 'application/json' },
-    { key: 'http.response.header.set_cookie', value: JSON.stringify(['name=mos-def', 'code=12345']), expected: 'name=mos-def, code=12345' },
+    {
+      key: 'http.response.header.set_cookie',
+      value: JSON.stringify(['name=mos-def', 'code=12345']),
+      expected: 'name=mos-def, code=12345',
+    },
   ];
 
   beforeEach(() => {
