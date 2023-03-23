@@ -44,6 +44,7 @@ describe('<SearchTracePage>', () => {
   const queryOfResults = {};
   let wrapper;
   let traceResults;
+  let traceResultsToDownload;
   let props;
 
   beforeEach(() => {
@@ -51,9 +52,14 @@ describe('<SearchTracePage>', () => {
       { traceID: 'a', spans: [], processes: {} },
       { traceID: 'b', spans: [], processes: {} },
     ];
+    traceResultsToDownload = [
+      { traceID: 'a', spans: [], processes: {} },
+      { traceID: 'b', spans: [], processes: {} },
+    ];
     props = {
       queryOfResults,
       traceResults,
+      traceResultsToDownload,
       diffCohort: [],
       isHomepage: false,
       loadingServices: false,
@@ -169,6 +175,7 @@ describe('mapStateToProps()', () => {
       traces: {
         [trace.traceID]: { id: trace.traceID, data: trace, state: fetchedState.DONE },
       },
+      rawTraces: [trace],
     };
     const stateServices = {
       loading: false,
@@ -185,10 +192,18 @@ describe('mapStateToProps()', () => {
       services: stateServices,
     };
 
-    const { maxTraceDuration, traceResults, diffCohort, numberOfTraceResults, location, ...rest } =
-      mapStateToProps(state);
+    const {
+      maxTraceDuration,
+      traceResults,
+      traceResultsToDownload,
+      diffCohort,
+      numberOfTraceResults,
+      location,
+      ...rest
+    } = mapStateToProps(state);
     expect(traceResults).toHaveLength(stateTrace.search.results.length);
     expect(traceResults[0].traceID).toBe(trace.traceID);
+    expect(traceResultsToDownload[0].traceID).toBe(trace.traceID);
     expect(maxTraceDuration).toBe(trace.duration);
     expect(diffCohort).toHaveLength(state.traceDiff.cohort.length);
     expect(diffCohort[0].id).toBe(trace.traceID);

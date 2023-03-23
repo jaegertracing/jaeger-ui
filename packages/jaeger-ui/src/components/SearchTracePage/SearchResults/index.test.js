@@ -25,10 +25,16 @@ import ScatterPlot from './ScatterPlot';
 import { getUrl } from '../url';
 import LoadingIndicator from '../../common/LoadingIndicator';
 import SearchResultsDDG from '../../DeepDependencies/traces';
+import DownloadResults from './DownloadResults';
 
 describe('<SearchResults>', () => {
+  const searchParam = 'view';
+  const otherParam = 'param';
+  const otherValue = 'value';
+  const otherSearch = `?${otherParam}=${otherValue}`;
   let wrapper;
   let traces;
+  let rawTraces;
   let props;
 
   beforeEach(() => {
@@ -36,6 +42,7 @@ describe('<SearchResults>', () => {
       { traceID: 'a', spans: [], processes: {} },
       { traceID: 'b', spans: [], processes: {} },
     ];
+    rawTraces = traces;
     props = {
       diffCohort: [],
       goToTrace: () => {},
@@ -44,6 +51,7 @@ describe('<SearchResults>', () => {
       maxTraceDuration: 1,
       queryOfResults: {},
       traces,
+      rawTraces,
     };
     wrapper = shallow(<SearchResults {...props} />);
   });
@@ -108,7 +116,6 @@ describe('<SearchResults>', () => {
     });
 
     describe('ddg', () => {
-      const searchParam = 'view';
       const viewDdg = 'ddg';
       const viewTraces = 'traces';
       const search = `${searchParam}=${viewDdg}`;
@@ -119,9 +126,6 @@ describe('<SearchResults>', () => {
       });
 
       it('updates url to view ddg and back and back again - and tracks changes', () => {
-        const otherParam = 'param';
-        const otherValue = 'value';
-        const otherSearch = `?${otherParam}=${otherValue}`;
         const push = jest.fn();
         wrapper.setProps({ history: { push }, location: { search: otherSearch } });
 
@@ -152,6 +156,34 @@ describe('<SearchResults>', () => {
         expect(wrapper.find(SearchResultsDDG).length).toBe(1);
         expect(wrapper.find(ResultItem).length).toBe(0);
         expect(wrapper.find(ScatterPlot).length).toBe(0);
+      });
+    });
+
+    describe('DownloadResults', () => {
+      it('shows DownloadResults when view is not ddg', () => {
+        const view = 'traces';
+        wrapper.setProps({ location: { search: `${otherSearch}&${searchParam}=${view}` } });
+        expect(wrapper.find(DownloadResults).length).toBe(1);
+      });
+
+      it('does not show DownloadResults when view is ddg', () => {
+        const view = 'ddg';
+        wrapper.setProps({ location: { search: `${otherSearch}&${searchParam}=${view}` } });
+        expect(wrapper.find(DownloadResults).length).toBe(0);
+      });
+
+      it('when click on DownloadResults then call download function', () => {
+        URL.createObjectURL = jest.fn();
+        URL.revokeObjectURL = jest.fn();
+        const file = new Blob([JSON.stringify(rawTraces)], { type: 'application/json' });
+        const view = 'traces';
+        wrapper.setProps({ location: { search: `${otherSearch}&${searchParam}=${view}` } });
+
+        const download = wrapper.find(DownloadResults).prop('onDownloadResultsClicked');
+        download();
+        expect(URL.createObjectURL).toBeCalledTimes(1);
+        expect(URL.createObjectURL).toBeCalledWith(file);
+        expect(URL.revokeObjectURL).toBeCalledTimes(1);
       });
     });
   });
