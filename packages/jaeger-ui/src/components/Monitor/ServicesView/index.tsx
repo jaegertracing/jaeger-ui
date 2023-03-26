@@ -101,15 +101,15 @@ export const timeFrameOptions = [
   { label: 'Last 2 days', value: 48 * oneHourInMilliSeconds },
 ];
 
-const getMetricQueryPayload = (selectedTimeFrame: number, endTime: number, isAgg:boolean) => {
+const getMetricQueryPayload = (selectedTimeFrame: number, endTime: number, isAgg: boolean) => {
   return {
     quantile: 0.95,
     endTs: endTime,
     lookback: selectedTimeFrame,
-    step: intervalCalculatorService.getIntervalMilliSecond(selectedTimeFrame, isAgg ? 50: 600),
+    step: intervalCalculatorService.getIntervalMilliSecond(selectedTimeFrame, isAgg ? 50 : 600),
     ratePer: 10 * 60 * 1000,
   };
-}
+};
 
 // export for tests
 export const getLoopbackInterval = (interval: number) => {
@@ -227,9 +227,11 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
       store.set('lastAtmSearchTimeframe', selectedTimeFrame);
       store.set('lastAtmSearchService', this.getSelectedService());
 
-
       fetchAllServiceMetrics(currentService, getMetricQueryPayload(selectedTimeFrame, this.endTime, false));
-      fetchAggregatedServiceMetrics(currentService, getMetricQueryPayload(selectedTimeFrame, this.endTime, true));
+      fetchAggregatedServiceMetrics(
+        currentService,
+        getMetricQueryPayload(selectedTimeFrame, this.endTime, true)
+      );
 
       this.setState({ serviceOpsMetrics: undefined, searchOps: '' });
     }
