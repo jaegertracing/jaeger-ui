@@ -19,7 +19,7 @@ export const classNameIsSmall = (() => {
   // define via an IIFE to sequester consts
   const SCALE_THRESHOLD_SMALL = 0.29;
 
-  // eslint-disable-next-line no-shadow
+  // eslint-disable-next-line @typescript-eslint/no-shadow
   function classNameIsSmall<T = {}, U = {}>(graphState: TExposedGraphState<T, U>) {
     const { k = 1 } = graphState.zoomTransform || {};
     if (k <= SCALE_THRESHOLD_SMALL) {
@@ -37,7 +37,7 @@ export const scaleProperty = (() => {
   const MIN = 0.3;
   const EXP_ADJUSTER = 0.5;
 
-  // eslint-disable-next-line no-shadow
+  // eslint-disable-next-line @typescript-eslint/no-shadow
   function scaleProperty(
     property: keyof React.CSSProperties,
     valueMin: number = MIN,

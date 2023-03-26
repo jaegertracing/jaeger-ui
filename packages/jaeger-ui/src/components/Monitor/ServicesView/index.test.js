@@ -250,12 +250,7 @@ describe('<MonitorATMServicesView>', () => {
         },
       },
     });
-    expect(
-      wrapper
-        .find(ServiceGraph)
-        .first()
-        .prop('error')
-    ).toBeNull();
+    expect(wrapper.find(ServiceGraph).first().prop('error')).toBeNull();
 
     wrapper.setProps({
       services: ['s1', 's2'],
@@ -273,12 +268,7 @@ describe('<MonitorATMServicesView>', () => {
         },
       },
     });
-    expect(
-      wrapper
-        .find(ServiceGraph)
-        .first()
-        .prop('error')
-    ).toBeNull();
+    expect(wrapper.find(ServiceGraph).first().prop('error')).toBeNull();
 
     wrapper.setProps({
       services: ['s1', 's2'],
@@ -296,12 +286,7 @@ describe('<MonitorATMServicesView>', () => {
         },
       },
     });
-    expect(
-      wrapper
-        .find(ServiceGraph)
-        .first()
-        .prop('error')
-    ).not.toBeNull();
+    expect(wrapper.find(ServiceGraph).first().prop('error')).not.toBeNull();
   });
 
   it('Should track all events', () => {
@@ -320,16 +305,10 @@ describe('<MonitorATMServicesView>', () => {
     wrapper.find('Search').simulate('change', { target: { value: newValue } });
     expect(trackSearchOperationSpy).toHaveBeenCalledWith(newValue);
 
-    wrapper
-      .find('Field')
-      .first()
-      .simulate('change', null, newValue);
+    wrapper.find('Field').first().simulate('change', null, newValue);
     expect(trackSelectServiceSpy).toHaveBeenCalledWith(newValue);
 
-    wrapper
-      .find('Field')
-      .last()
-      .simulate('change', null, timeFrameOption.value);
+    wrapper.find('Field').last().simulate('change', null, timeFrameOption.value);
     expect(trackSelectTimeframeSpy).toHaveBeenCalledWith(timeFrameOption.label);
 
     wrapper.find({ children: 'View all traces' }).simulate('click');

@@ -63,6 +63,7 @@ export default class DirectedGraph<T> extends React.PureComponent<
   rootSelection: any;
   zoomManager: ZoomManager | null;
 
+  // eslint-disable-next-line react/sort-comp
   static propsFactories = {
     classNameIsSmall,
     mergePropSetters,

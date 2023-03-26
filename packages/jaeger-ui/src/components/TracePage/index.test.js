@@ -793,4 +793,20 @@ describe('mapStateToProps()', () => {
       trace: { data: {}, state: fetchedState.DONE },
     });
   });
+
+  it('propagates layoutManagerMemory correctly', () => {
+    const fakeMemory = 123;
+    state.config.traceGraph = { layoutManagerMemory: fakeMemory };
+    const props = mapStateToProps(state, ownProps);
+    expect(props).toEqual({
+      id: traceID,
+      embedded,
+      archiveEnabled: false,
+      archiveTraceState: undefined,
+      searchUrl: null,
+      uiFind: undefined,
+      trace: { data: {}, state: fetchedState.DONE },
+      traceGraphConfig: { layoutManagerMemory: fakeMemory },
+    });
+  });
 });

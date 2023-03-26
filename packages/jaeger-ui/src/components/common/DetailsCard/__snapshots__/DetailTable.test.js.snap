@@ -11,9 +11,7 @@ exports[`DetailTable _makeColumns function props _renderCell renders a regular l
 `;
 
 exports[`DetailTable render does not duplicate columns 1`] = `
-<Table
-  bordered={false}
-  className=""
+<withStore(Table)
   columns={
     Array [
       Object {
@@ -54,23 +52,15 @@ exports[`DetailTable render does not duplicate columns 1`] = `
       },
     ]
   }
-  indentSize={20}
   key="table"
-  loading={false}
-  locale={Object {}}
   pagination={false}
-  prefixCls="ant-table"
   rowKey={[Function]}
-  showHeader={true}
   size="middle"
-  useFixedHeader={false}
 />
 `;
 
 exports[`DetailTable render infers all columns 1`] = `
-<Table
-  bordered={false}
-  className=""
+<withStore(Table)
   columns={
     Array [
       Object {
@@ -107,23 +97,15 @@ exports[`DetailTable render infers all columns 1`] = `
       },
     ]
   }
-  indentSize={20}
   key="table"
-  loading={false}
-  locale={Object {}}
   pagination={false}
-  prefixCls="ant-table"
   rowKey={[Function]}
-  showHeader={true}
   size="middle"
-  useFixedHeader={false}
 />
 `;
 
 exports[`DetailTable render infers missing columns 1`] = `
-<Table
-  bordered={false}
-  className=""
+<withStore(Table)
   columns={
     Array [
       Object {
@@ -160,23 +142,15 @@ exports[`DetailTable render infers missing columns 1`] = `
       },
     ]
   }
-  indentSize={20}
   key="table"
-  loading={false}
-  locale={Object {}}
   pagination={false}
-  prefixCls="ant-table"
   rowKey={[Function]}
-  showHeader={true}
   size="middle"
-  useFixedHeader={false}
 />
 `;
 
 exports[`DetailTable render renders given rows and columns 1`] = `
-<Table
-  bordered={false}
-  className=""
+<withStore(Table)
   columns={
     Array [
       Object {
@@ -217,15 +191,9 @@ exports[`DetailTable render renders given rows and columns 1`] = `
       },
     ]
   }
-  indentSize={20}
   key="table"
-  loading={false}
-  locale={Object {}}
   pagination={false}
-  prefixCls="ant-table"
   rowKey={[Function]}
-  showHeader={true}
   size="middle"
-  useFixedHeader={false}
 />
 `;

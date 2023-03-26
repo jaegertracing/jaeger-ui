@@ -2,9 +2,7 @@
 
 exports[`<SidePanel> info button  opens info modal 1`] = `
 Object {
-  "content": <Table
-    bordered={false}
-    className=""
+  "content": <withStore(Table)
     columns={
       Array [
         Object {
@@ -38,14 +36,7 @@ Object {
         },
       ]
     }
-    indentSize={20}
-    loading={false}
-    locale={Object {}}
-    prefixCls="ant-table"
     rowKey={[Function]}
-    showHeader={true}
-    size="default"
-    useFixedHeader={false}
   />,
   "maskClosable": true,
   "title": "Decoration Options",

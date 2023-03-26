@@ -58,6 +58,7 @@ import updateUiFind from '../../utils/update-ui-find';
 import TraceStatistics from './TraceStatistics/index';
 import TraceSpanView from './TraceSpanView/index';
 import TraceFlamegraph from './TraceFlamegraph/index';
+import { TraceGraphConfig } from '../../types/config';
 
 import './index.css';
 
@@ -82,6 +83,7 @@ type TReduxProps = {
   searchUrl: null | string;
   trace: FetchedTrace | TNil;
   uiFind: string | TNil;
+  traceGraphConfig?: TraceGraphConfig;
 };
 
 type TProps = TDispatchProps & TOwnProps & TReduxProps;
@@ -167,12 +169,8 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
     if (!this._scrollManager) {
       throw new Error('Invalid state - scrollManager is unset');
     }
-    const {
-      scrollPageDown,
-      scrollPageUp,
-      scrollToNextVisibleSpan,
-      scrollToPrevVisibleSpan,
-    } = this._scrollManager;
+    const { scrollPageDown, scrollPageUp, scrollToNextVisibleSpan, scrollToPrevVisibleSpan } =
+      this._scrollManager;
     const adjViewRange = (a: number, b: number) => this._adjustViewRange(a, b, 'kbd');
     const shortcutCallbacks = makeShortcutCallbacks(adjViewRange);
     shortcutCallbacks.scrollPageDown = scrollPageDown;
@@ -330,6 +328,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
       id,
       uiFind,
       trace,
+      traceGraphConfig,
       location: { state: locationState },
     } = this.props;
     const { slimView, viewType, headerHeight, viewRange } = this.state;
@@ -405,6 +404,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
           ev={this.traceDagEV}
           uiFind={uiFind}
           uiFindVertexKeys={graphFindMatches}
+          traceGraphConfig={traceGraphConfig}
         />
       );
     } else if (ETraceViewType.TraceStatistics === viewType && headerHeight) {
@@ -439,6 +439,7 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
   const archiveEnabled = Boolean(config.archiveEnabled);
   const { state: locationState } = router.location;
   const searchUrl = (locationState && locationState.fromSearch) || null;
+  const { traceGraph: traceGraphConfig } = config;
 
   return {
     ...extractUiFindFromState(state),
@@ -448,6 +449,7 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
     id,
     searchUrl,
     trace,
+    traceGraphConfig,
   };
 }
 
@@ -459,7 +461,4 @@ export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchPro
   return { acknowledgeArchive, archiveTrace, fetchTrace, focusUiFindMatches };
 }
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(TracePageImpl);
+export default connect(mapStateToProps, mapDispatchToProps)(TracePageImpl);

@@ -22,17 +22,19 @@ import { TNil } from '../../types';
 import { Config } from '../../types/config';
 import { IWebAnalyticsFunc } from '../../types/tracking';
 import { logTrackingCalls } from './utils';
+import { getAppEnvironment, shouldDebugGoogleAnalytics } from '../constants';
 
 const isTruish = (value?: string | string[]) => {
   return Boolean(value) && value !== '0' && value !== 'false';
 };
 
 const GA: IWebAnalyticsFunc = (config: Config, versionShort: string, versionLong: string) => {
-  const isProd = process.env.NODE_ENV === 'production';
-  const isDev = process.env.NODE_ENV === 'development';
-  const isTest = process.env.NODE_ENV === 'test';
+  const appEnv = getAppEnvironment();
+  const isProd = appEnv === 'production';
+  const isDev = appEnv === 'development';
+  const isTest = appEnv === 'test';
   const isDebugMode =
-    (isDev && isTruish(process.env.REACT_APP_GA_DEBUG)) ||
+    (isDev && isTruish(shouldDebugGoogleAnalytics())) ||
     isTruish(queryString.parse(_get(window, 'location.search'))['ga-debug']);
   const gaID = _get(config, 'tracking.gaID');
   const isErrorsEnabled = isDebugMode || Boolean(_get(config, 'tracking.trackErrors'));
@@ -113,7 +115,7 @@ const GA: IWebAnalyticsFunc = (config: Config, versionShort: string, versionLong
       appVersion: versionLong,
     });
     if (cookiesToDimensions !== undefined) {
-      ((cookiesToDimensions as unknown) as Array<{ cookie: string; dimension: string }>).forEach(
+      (cookiesToDimensions as unknown as Array<{ cookie: string; dimension: string }>).forEach(
         ({ cookie, dimension }: { cookie: string; dimension: string }) => {
           const match = ` ${document.cookie}`.match(new RegExp(`[; ]${cookie}=([^\\s;]*)`));
           if (match) ReactGA.set({ [dimension]: match[1] });
@@ -130,7 +132,7 @@ const GA: IWebAnalyticsFunc = (config: Config, versionShort: string, versionLong
           dom: true,
           location: true,
         },
-        environment: process.env.NODE_ENV || 'unkonwn',
+        environment: getAppEnvironment() || 'unkonwn',
         transport: trackRavenError,
       };
       if (versionShort && versionShort !== 'unknown') {

@@ -12,20 +12,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { TextEncoder } from 'util';
 // NOTE: This must be above the enzyme related code below, and the enzyme
 // related imports MUST use `require`
-import { polyfill as rafPolyfill } from './utils/test/requestAnimationFrame';
+import { polyfill as rafPolyfill } from '../src/utils/test/requestAnimationFrame';
 // react requires requestAnimationFrame polyfill when using jsdom
 rafPolyfill();
+// Jest 28+ makes use of the TextEncoder API, which is not provided by JSDOM
+global.TextEncoder = TextEncoder;
 
 /* eslint-disable import/no-extraneous-dependencies */
 const Enzyme = require('enzyme');
-const EnzymeAdapter = require('enzyme-adapter-react-16');
+const EnzymeAdapter = require('@wojtekmaj/enzyme-adapter-react-17');
 const createSerializer = require('enzyme-to-json').createSerializer;
 
 Enzyme.configure({ adapter: new EnzymeAdapter() });
 expect.addSnapshotSerializer(createSerializer({ mode: 'deep' }));
 
-// Calls to get-config.tsx warn if this global is not a function
-// This file is executed before each test file, so this value may be overridden safely
+// Calls to get-config.tsx and get-version.tsx warn if these globals are not functions.
+// This file is executed before each test file, so they may be overridden safely.
 window.getJaegerUiConfig = () => ({});
+window.getJaegerVersion = () => ({
+  gitCommit: '',
+  gitVersion: '',
+  buildDate: '',
+});
+
+global.__APP_ENVIRONMENT__ = 'test';
+global.__REACT_APP_GA_DEBUG__ = '';
+global.__REACT_APP_VSN_STATE__ = '';

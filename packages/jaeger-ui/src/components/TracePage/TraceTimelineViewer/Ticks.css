@@ -32,6 +32,7 @@ limitations under the License.
 .Ticks--tickLabel {
   left: 0.25rem;
   position: absolute;
+  white-space: nowrap;
 }
 
 .Ticks--tickLabel.isEndAnchor {

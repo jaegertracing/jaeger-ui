@@ -14,6 +14,7 @@
 
 import * as React from 'react';
 import { Col, Divider, Row, Tag } from 'antd';
+import { LocationDescriptor } from 'history';
 import { Link } from 'react-router-dom';
 
 import { sortBy } from 'lodash';
@@ -34,7 +35,7 @@ import './ResultItem.css';
 type Props = {
   durationPercent: number;
   isInDiffCohort: boolean;
-  linkTo: string;
+  linkTo: LocationDescriptor;
   toggleComparison: (traceID: string) => void;
   trace: Trace;
   disableComparision: boolean;
@@ -78,14 +79,8 @@ export default class ResultItem extends React.PureComponent<Props, State> {
   }
 
   render() {
-    const {
-      disableComparision,
-      durationPercent,
-      isInDiffCohort,
-      linkTo,
-      toggleComparison,
-      trace,
-    } = this.props;
+    const { disableComparision, durationPercent, isInDiffCohort, linkTo, toggleComparison, trace } =
+      this.props;
     const { duration, services, startTime, traceName, traceID } = trace;
     return (
       <div className="ResultItem" onClick={trackTraceConversions} role="button">

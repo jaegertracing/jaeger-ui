@@ -588,7 +588,7 @@ type TRenderDefEntryFn = (
 ```
 
 |  | Argument | Type and description |
-| :-: | :-- | :-- |
+| :-: | :-- | :-- | --- |
 | 0 | graphState | `TExposedGraphState` |
 |  |  | The current state of the graph. See [`TExposedGraphState`](#texposedgraphstate) for details.<br>&nbsp; |
 | 1 | entryProps | `Record<string, unknown> | null` |

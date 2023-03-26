@@ -2,9 +2,7 @@
 
 exports[`CohortTable renders as expected 1`] = `
 Array [
-  <Table
-    bordered={false}
-    className=""
+  <withStore(Table)
     dataSource={
       Array [
         Object {
@@ -23,12 +21,8 @@ Array [
         },
       ]
     }
-    indentSize={20}
     key="table"
-    loading={false}
-    locale={Object {}}
     pagination={false}
-    prefixCls="ant-table"
     rowKey="id"
     rowSelection={
       Object {
@@ -41,9 +35,7 @@ Array [
         "type": "radio",
       }
     }
-    showHeader={true}
     size="middle"
-    useFixedHeader={false}
   >
     <Column
       dataIndex="id"
@@ -81,7 +73,7 @@ Array [
       key="link"
       render={[Function]}
     />
-  </Table>,
+  </withStore(Table)>,
   "",
 ]
 `;

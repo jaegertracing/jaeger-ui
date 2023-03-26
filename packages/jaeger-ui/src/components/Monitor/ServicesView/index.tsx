@@ -18,8 +18,7 @@ import { ActionFunction, Action } from 'redux-actions';
 import _debounce from 'lodash/debounce';
 import _isEqual from 'lodash/isEqual';
 import _isEmpty from 'lodash/isEmpty';
-// @ts-ignore
-import { Field, formValueSelector, reduxForm } from 'redux-form';
+import { Field, formValueSelector, InjectedFormProps, reduxForm } from 'redux-form';
 // @ts-ignore
 import store from 'store';
 import { connect } from 'react-redux';
@@ -149,8 +148,10 @@ const convertServiceErrorRateToPercentages = (serviceErrorRate: null | ServiceMe
   return { ...serviceErrorRate, metricPoints: convertedMetricsPoints };
 };
 
+type TPropsWithInjectedFormProps = TProps & InjectedFormProps<{}, TProps>;
+
 // export for tests
-export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, StateType> {
+export class MonitorATMServicesViewImpl extends React.PureComponent<TPropsWithInjectedFormProps, StateType> {
   docsLink: string;
   graphDivWrapper: React.RefObject<HTMLInputElement>;
   serviceSelectorValue: string = '';
@@ -162,7 +163,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
     graphXDomain: [],
   };
 
-  constructor(props: TProps) {
+  constructor(props: TPropsWithInjectedFormProps) {
     super(props);
     this.graphDivWrapper = React.createRef();
     this.docsLink = getConfigValue('monitor.docsLink');
@@ -278,7 +279,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
             <Col span={6}>
               <h2 className="service-selector-header">Choose service</h2>
               <Field
-                onChange={(e: Event, newValue: string) => trackSelectService(newValue)}
+                onChange={(e, newValue: string) => trackSelectService(newValue)}
                 name="service"
                 component={AdaptedVirtualSelect}
                 placeholder="Select A Service"
@@ -299,10 +300,11 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
                 Aggregation of all &quot;{this.getSelectedService()}&quot; metrics in selected timeframe.{' '}
                 <a
                   href={prefixUrl(
-                    `/search?end=${Date.now()}000&limit=20&lookback=${selectedTimeFrame /
-                      (3600 *
-                        1000)}h&maxDuration&minDuration&service=${this.getSelectedService()}&start=${Date.now() -
-                      selectedTimeFrame}000`
+                    `/search?end=${Date.now()}000&limit=20&lookback=${
+                      selectedTimeFrame / (3600 * 1000)
+                    }h&maxDuration&minDuration&service=${this.getSelectedService()}&start=${
+                      Date.now() - selectedTimeFrame
+                    }000`
                   )}
                   target="blank"
                   onClick={trackViewAllTraces}
@@ -316,7 +318,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
                 name="timeframe"
                 component={AdaptedVirtualSelect}
                 placeholder="Select A Timeframe"
-                onChange={(e: Event, value: number) => {
+                onChange={(e, value: number) => {
                   const { label } = timeFrameOptions.find(option => option.value === value)!;
                   trackSelectTimeframe(label);
                 }}
@@ -461,7 +463,7 @@ export default connect(
   mapStateToProps,
   mapDispatchToProps
 )(
-  reduxForm({
+  reduxForm<{}, TProps>({
     form: 'serviceForm',
   })(MonitorATMServicesViewImpl)
 );

@@ -14,7 +14,7 @@
 
 import React from 'react';
 import { mount, shallow } from 'enzyme';
-import { XAxis, YAxis } from 'react-vis';
+import { XAxis, XYPlot, YAxis } from 'react-vis';
 
 import ScatterPlot, { ScatterPlotImpl } from './ScatterPlot';
 import { ONE_MILLISECOND } from '../../../utils/date';
@@ -70,8 +70,7 @@ it('<ScatterPlot /> should render base case correctly', () => {
 it('<ScatterPlotImpl /> should render X axis correctly', () => {
   const wrapper = mount(
     <ScatterPlotImpl
-      containerWidth={1200}
-      containerHeight={200}
+      calculateContainerWidth={() => 1200}
       data={sampleData}
       onValueClick={() => null}
       onValueOut={() => null}
@@ -91,8 +90,7 @@ it('<ScatterPlotImpl /> should render X axis correctly', () => {
 it('<ScatterPlotImpl /> should render Y axis correctly', () => {
   const wrapper = mount(
     <ScatterPlotImpl
-      containerWidth={1200}
-      containerHeight={200}
+      calculateContainerWidth={() => 1200}
       data={sampleData}
       onValueClick={() => null}
       onValueOut={() => null}
@@ -106,4 +104,39 @@ it('<ScatterPlotImpl /> should render Y axis correctly', () => {
   expect(yAxisText).toContain('40ms');
   expect(yAxisText).toContain('60ms');
   expect(yAxisText).toContain('80ms');
+});
+
+it('<ScatterPlotImpl /> should set fixed container width on initial render', () => {
+  const wrapper = mount(
+    <ScatterPlotImpl
+      calculateContainerWidth={() => 1200}
+      data={sampleData}
+      onValueClick={() => null}
+      onValueOut={() => null}
+      onValueOver={() => null}
+    />
+  );
+
+  const xyPlot = wrapper.find(XYPlot).getDOMNode();
+
+  expect(xyPlot.style.width).toBe('1200px');
+});
+
+it('<ScatterPlotImpl /> should update container width on window resize', () => {
+  const calculateContainerWidth = jest.fn().mockReturnValue(1200).mockReturnValue(700);
+  const wrapper = mount(
+    <ScatterPlotImpl
+      calculateContainerWidth={calculateContainerWidth}
+      data={sampleData}
+      onValueClick={() => null}
+      onValueOut={() => null}
+      onValueOver={() => null}
+    />
+  );
+
+  window.dispatchEvent(new Event('resize'));
+
+  const xyPlot = wrapper.find(XYPlot).getDOMNode();
+
+  expect(xyPlot.style.width).toBe('700px');
 });
