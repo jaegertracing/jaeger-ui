@@ -107,7 +107,7 @@ export class SearchTracePageImpl extends Component {
                 <TabPane tab="Search" key="searchForm">
                   {!loadingServices && services ? <SearchForm services={services} /> : <LoadingIndicator />}
                 </TabPane>
-                <TabPane tab="JSON File" key="fileLoader">
+                <TabPane tab="Upload" key="fileLoader">
                   <FileLoader
                     loadJsonTraces={fileList => {
                       loadJsonTraces(fileList);
