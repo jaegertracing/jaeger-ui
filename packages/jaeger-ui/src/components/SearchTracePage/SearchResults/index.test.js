@@ -173,9 +173,13 @@ describe('<SearchResults>', () => {
       });
 
       it('when click on DownloadResults then call download function', () => {
+        global.Blob = function (text, options) {
+          return { text, options };
+        };
         URL.createObjectURL = jest.fn();
         URL.revokeObjectURL = jest.fn();
-        const file = new Blob([JSON.stringify(rawTraces)], { type: 'application/json' });
+        const content = [`{"data":${JSON.stringify(props.rawTraces)}}`];
+        const file = new Blob(content, { type: 'application/json' });
         const view = 'traces';
         wrapper.setProps({ location: { search: `${otherSearch}&${searchParam}=${view}` } });
 
@@ -183,6 +187,7 @@ describe('<SearchResults>', () => {
         download();
         expect(URL.createObjectURL).toBeCalledTimes(1);
         expect(URL.createObjectURL).toBeCalledWith(file);
+        expect(file.text).toBe(content);
         expect(URL.revokeObjectURL).toBeCalledTimes(1);
       });
     });
