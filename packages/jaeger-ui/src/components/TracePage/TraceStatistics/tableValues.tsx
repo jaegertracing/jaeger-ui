@@ -209,7 +209,7 @@ function calculateContent(trace: Trace, span: Span, allSpans: Span[], resultValu
 
           tempSelf = onlyOverlay(overlayWithout, allChildrenWithout, tempSelf, span);
           const diff = span.relativeStartTime + span.duration - earliestLongerAsParent.relativeStartTime;
-          tempSelf -= diff;
+          tempSelf = Math.max(0, tempSelf - diff);
         }
       } else if (longerAsParent) {
         // span is longer as Parent
