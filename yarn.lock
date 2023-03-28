@@ -11356,10 +11356,10 @@ redux-async-middleware@^0.0.0:
     redux "^3.0.2"
     redux-standard-action "0.0.0"
 
-redux-form@^8.3.9:
-  version "8.3.9"
-  resolved "https://registry.yarnpkg.com/redux-form/-/redux-form-8.3.9.tgz#bffd5c90b16c1559466f765374ecdd6cf4529155"
-  integrity sha512-PsBDydvGq+OfYNmk4AVlUMs1S9oBsBxKHikS6AfE59Kyx3NMNO7A6N4yTANRWu7D/FDu6y5LtbloLEeunFOJbw==
+redux-form@^8.3.10:
+  version "8.3.10"
+  resolved "https://registry.yarnpkg.com/redux-form/-/redux-form-8.3.10.tgz#335657fafd4b26b91b4ce65371cd9dabe3648158"
+  integrity sha512-Eeog8dJYUxCSZI/oBoy7VkprvMjj1lpUnHa3LwjVNZvYDNeiRZMoZoaAT+6nlK2YQ4aiBopKUMiLe4ihUOHCGg==
   dependencies:
     "@babel/runtime" "^7.9.2"
     es6-error "^4.1.1"
