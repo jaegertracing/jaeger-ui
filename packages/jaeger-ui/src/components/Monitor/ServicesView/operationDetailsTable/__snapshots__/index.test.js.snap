@@ -16,10 +16,8 @@ exports[`<OperationTableDetails> Loading indicator is displayed 1`] = `
 `;
 
 exports[`<OperationTableDetails> Table rendered successfully 1`] = `
-<Row
-  gutter={0}
->
-  <withStore(Table)
+<Row>
+  <ForwardRef(InternalTable)
     columns={
       Array [
         Object {
@@ -78,18 +76,11 @@ exports[`<OperationTableDetails> Table rendered successfully 1`] = `
               Impact
                 
               <Tooltip
-                arrowPointAtCenter={false}
-                autoAdjustOverflow={true}
-                mouseEnterDelay={0.1}
-                mouseLeaveDelay={0.1}
                 overlayClassName="impact-tooltip"
                 placement="top"
                 title="The result of multiplying avg. duration and requests per minute, showing the most used and slowest endpoints"
-                transitionName="zoom-big-fast"
               >
-                <Icon
-                  type="info-circle"
-                />
+                <ForwardRef(InfoCircleOutlined) />
               </Tooltip>
             </span>
           </div>,

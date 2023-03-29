@@ -24,12 +24,11 @@ exports[`Header rendering renders as expected with full props 1`] = `
   >
     Lookback:
   </label>
-  <InputNumber
+  <ForwardRef
     id="inputNumber"
     min={1}
     onChange={[Function]}
-    step={1}
-    value={4}
+    value={null}
   />
   <span
     className="QualityMetrics--Header--LookbackSuffix"
@@ -57,12 +56,11 @@ exports[`Header rendering renders as expected with minimum props 1`] = `
   >
     Lookback:
   </label>
-  <InputNumber
+  <ForwardRef
     id="inputNumber"
     min={1}
     onChange={[Function]}
-    step={1}
-    value={4}
+    value={null}
   />
   <span
     className="QualityMetrics--Header--LookbackSuffix"

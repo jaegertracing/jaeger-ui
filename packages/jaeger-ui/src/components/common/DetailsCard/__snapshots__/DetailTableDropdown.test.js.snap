@@ -25,21 +25,11 @@ exports[`DetailTable render renders as expected 1`] = `
     className="DetailTableDropdown--Footer"
   >
     <Tooltip
-      arrowPointAtCenter={false}
-      autoAdjustOverflow={true}
-      mouseEnterDelay={0.1}
-      mouseLeaveDelay={0.1}
       overlayClassName="DetailTableDropdown--Tooltip"
-      placement="top"
       title="Remove filter from this column"
-      transitionName="zoom-big-fast"
     >
       <Button
-        block={false}
         className="DetailTableDropdown--Btn Clear"
-        ghost={false}
-        htmlType="button"
-        loading={false}
         onClick={[MockFunction]}
       >
         <FaTrash
@@ -52,21 +42,11 @@ exports[`DetailTable render renders as expected 1`] = `
       className="DetailTableDropdown--Footer--CancelConfirm"
     >
       <Tooltip
-        arrowPointAtCenter={false}
-        autoAdjustOverflow={true}
-        mouseEnterDelay={0.1}
-        mouseLeaveDelay={0.1}
         overlayClassName="DetailTableDropdown--Tooltip"
-        placement="top"
         title="Cancel changes to this column's filter"
-        transitionName="zoom-big-fast"
       >
         <Button
-          block={false}
           className="DetailTableDropdown--Btn Cancel"
-          ghost={false}
-          htmlType="button"
-          loading={false}
           onClick={[Function]}
         >
           <TiCancel
@@ -76,12 +56,7 @@ exports[`DetailTable render renders as expected 1`] = `
         </Button>
       </Tooltip>
       <Tooltip
-        arrowPointAtCenter={false}
-        autoAdjustOverflow={true}
-        mouseEnterDelay={0.1}
-        mouseLeaveDelay={0.1}
         overlayClassName="DetailTableDropdown--Tooltip"
-        placement="top"
         title={
           <div
             className="DetailTableDropdown--Tooltip--Body"
@@ -94,14 +69,9 @@ exports[`DetailTable render renders as expected 1`] = `
             </span>
           </div>
         }
-        transitionName="zoom-big-fast"
       >
         <Button
-          block={false}
           className="DetailTableDropdown--Btn Apply"
-          ghost={false}
-          htmlType="button"
-          loading={false}
           onClick={[MockFunction]}
         >
           <FaCheck

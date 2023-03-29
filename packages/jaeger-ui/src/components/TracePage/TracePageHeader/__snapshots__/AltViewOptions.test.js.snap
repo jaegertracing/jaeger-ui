@@ -2,8 +2,6 @@
 
 exports[`AltViewOptions renders correctly 1`] = `
 <Dropdown
-  mouseEnterDelay={0.15}
-  mouseLeaveDelay={0.1}
   overlay={
     <Menu>
       <MenuItem>
@@ -62,19 +60,12 @@ exports[`AltViewOptions renders correctly 1`] = `
       </MenuItem>
     </Menu>
   }
-  placement="bottomLeft"
 >
   <Button
-    block={false}
     className="AltViewOptions"
-    ghost={false}
-    htmlType="button"
-    loading={false}
   >
     Trace Timeline 
-    <Icon
-      type="down"
-    />
+    <ForwardRef(DownOutlined) />
   </Button>
 </Dropdown>
 `;
