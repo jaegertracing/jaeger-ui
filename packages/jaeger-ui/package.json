@@ -45,6 +45,7 @@
     "vite-plugin-imp": "^2.3.1"
   },
   "dependencies": {
+    "@ant-design/icons": "4.8.0",
     "@jaegertracing/plexus": "0.2.0",
     "@pyroscope/flamegraph": "0.21.4",
     "@types/classnames": "^2.2.7",
