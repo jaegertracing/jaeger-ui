@@ -14,6 +14,7 @@
 
 import React from 'react';
 import { Popover } from 'antd';
+import { CloseOutlined } from '@ant-design/icons';
 import { shallow } from 'enzyme';
 
 import BreakableText from './BreakableText';
@@ -144,7 +145,7 @@ describe('<NameSelector>', () => {
 
     it('clicking clear icon clears value when not required without opening popover', () => {
       const stopPropagation = jest.fn();
-      wrapper.find(Icon).simulate('click', { stopPropagation });
+      wrapper.find(CloseOutlined).simulate('click', { stopPropagation });
 
       expect(clearValue).toHaveBeenCalled();
       expect(wrapper.state('popoverVisible')).toBe(false);

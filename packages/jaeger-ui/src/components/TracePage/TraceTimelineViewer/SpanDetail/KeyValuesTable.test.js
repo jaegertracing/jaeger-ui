@@ -15,6 +15,7 @@
 import React from 'react';
 import { shallow } from 'enzyme';
 import { Dropdown } from 'antd';
+import { ExportOutlined } from '@ant-design/icons';
 
 import CopyIcon from '../../../common/CopyIcon';
 
@@ -37,8 +38,8 @@ describe('LinkValue', () => {
   });
 
   it('renders correct Icon', () => {
-    expect(wrapper.find(Icon).hasClass('KeyValueTable--linkIcon')).toBe(true);
-    expect(wrapper.find(Icon).prop('type')).toBe('export');
+    expect(wrapper.find(ExportOutlined).hasClass('KeyValueTable--linkIcon')).toBe(true);
+    expect(wrapper.find(ExportOutlined).prop('type')).toBe('export');
   });
 });
 

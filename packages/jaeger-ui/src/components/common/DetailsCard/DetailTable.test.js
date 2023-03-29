@@ -15,6 +15,7 @@
 import React from 'react';
 import { shallow } from 'enzyme';
 import FaFilter from 'react-icons/lib/fa/filter.js';
+import { FilterOutlined } from '@ant-design/icons';
 
 import ExamplesLink from '../ExamplesLink';
 import DetailTableDropdown from './DetailTableDropdown';
@@ -170,7 +171,7 @@ describe('DetailTable', () => {
 
       it('renders filter icon without filter set', () => {
         const icon = makeColumn(stringColumn).filterIcon();
-        expect(icon.type).toBe(Icon);
+        expect(icon.type).toBe(FilterOutlined);
         expect(icon.props.type).toBe('filter');
       });
 
