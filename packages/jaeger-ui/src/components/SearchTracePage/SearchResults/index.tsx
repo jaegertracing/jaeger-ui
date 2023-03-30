@@ -113,7 +113,7 @@ export class UnconnectedSearchResults extends React.PureComponent<SearchResultsP
   };
 
   onDownloadResultsClicked = () => {
-    const file = new Blob([`{"data":${JSON.stringify(this.props.rawTraces)}}`], { type: 'application/json' });
+    const file = createBlob(this.props.rawTraces);
     const element = document.createElement('a');
     element.href = URL.createObjectURL(file);
     element.download = `traces-${Date.now()}.json`;
@@ -237,6 +237,10 @@ export class UnconnectedSearchResults extends React.PureComponent<SearchResultsP
       </div>
     );
   }
+}
+// export for tests
+export function createBlob(rawTraces: TraceData[]) {
+  return new Blob([`{"data":${JSON.stringify(rawTraces)}}`], { type: 'application/json' });
 }
 
 export default withRouter(UnconnectedSearchResults);
