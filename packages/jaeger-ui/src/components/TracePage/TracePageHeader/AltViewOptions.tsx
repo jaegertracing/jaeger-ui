@@ -55,6 +55,10 @@ const MENU_ITEMS = [
     viewType: ETraceViewType.TraceFlamegraph,
     label: 'Trace Flamegraph',
   },
+  {
+    viewType: ETraceViewType.TraceCriticalPath,
+    label: 'Trace Critical Path',
+  },
 ];
 
 export default function AltViewOptions(props: Props) {

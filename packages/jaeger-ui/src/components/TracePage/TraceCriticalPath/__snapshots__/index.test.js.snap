@@ -1,0 +1,79 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`<TraceCriticalPath /> renders as expected 1`] = `
+<div
+  className="Flamegraph-wrapper"
+>
+  <Fg
+    colorMode="light"
+    profile={
+      Object {
+        "flamebearer": Object {
+          "levels": Array [
+            Array [
+              0,
+              60000,
+              0,
+              0,
+            ],
+            Array [
+              0,
+              60000,
+              0,
+              1,
+            ],
+            Array [
+              0,
+              60000,
+              0,
+              2,
+            ],
+            Array [
+              0,
+              240000,
+              180000,
+              3,
+            ],
+            Array [
+              0,
+              60000,
+              0,
+              4,
+            ],
+            Array [
+              0,
+              60000,
+              0,
+              5,
+            ],
+            Array [
+              0,
+              60000,
+              60000,
+              6,
+            ],
+          ],
+          "maxSelf": 0,
+          "names": Array [
+            "total",
+            "service1: X",
+            "service1: X",
+            "service2: C",
+            "service1: X",
+            "service2: D",
+            "service1: X",
+          ],
+          "numTicks": 60000,
+        },
+        "metadata": Object {
+          "format": "single",
+          "sampleRate": 1000000,
+          "spyName": "tracing",
+          "units": "trace_samples",
+        },
+        "version": 1,
+      }
+    }
+  />
+</div>
+`;
