@@ -15,7 +15,7 @@
 import React from 'react';
 import { shallow } from 'enzyme';
 
-import { UnconnectedSearchResults as SearchResults } from '.';
+import { createBlob, UnconnectedSearchResults as SearchResults } from '.';
 import * as markers from './index.markers';
 import * as track from './index.track';
 import AltViewOptions from './AltViewOptions';
@@ -26,6 +26,7 @@ import { getUrl } from '../url';
 import LoadingIndicator from '../../common/LoadingIndicator';
 import SearchResultsDDG from '../../DeepDependencies/traces';
 import DownloadResults from './DownloadResults';
+import readJsonFile from '../../../utils/readJsonFile';
 
 describe('<SearchResults>', () => {
   const searchParam = 'view';
@@ -173,9 +174,14 @@ describe('<SearchResults>', () => {
       });
 
       it('when click on DownloadResults then call download function', () => {
+        const originalBlob = global.Blob;
+        global.Blob = function (text, options) {
+          return { text, options };
+        };
         URL.createObjectURL = jest.fn();
         URL.revokeObjectURL = jest.fn();
-        const file = new Blob([JSON.stringify(rawTraces)], { type: 'application/json' });
+        const content = [`{"data":${JSON.stringify(props.rawTraces)}}`];
+        const file = new Blob(content, { type: 'application/json' });
         const view = 'traces';
         wrapper.setProps({ location: { search: `${otherSearch}&${searchParam}=${view}` } });
 
@@ -183,7 +189,17 @@ describe('<SearchResults>', () => {
         download();
         expect(URL.createObjectURL).toBeCalledTimes(1);
         expect(URL.createObjectURL).toBeCalledWith(file);
+        expect(file.text).toBe(content);
         expect(URL.revokeObjectURL).toBeCalledTimes(1);
+        global.Blob = originalBlob;
+      });
+
+      it('when create a download file then it can be read back', async () => {
+        const content = `{"data":${JSON.stringify(props.rawTraces)}}`;
+        const file = new File([createBlob(props.rawTraces)], 'test.json');
+        const contentFile = await readJsonFile({ file });
+
+        return expect(JSON.stringify(contentFile)).toBe(content);
       });
     });
   });
