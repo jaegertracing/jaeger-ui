@@ -15,10 +15,9 @@
   const second = 1000;
   const minute = 60 * second;
   const hour = 60 * minute;
-  const day = 24 * hour;
 
 const intervalMin = [
-  [second * 1, second * 2.5], // < 1s
+  [second * 1, second * 0.5], // < 1s
   [second * 5, second * 1], // < 5s
   [second * 10, second * 5], // < 10s
   [second * 30, second * 10], // < 30s
