@@ -50,7 +50,7 @@ import {
   trackSelectTimeframe,
   trackViewAllTraces,
 } from './index.track';
-import { intervalCalculatorService } from '../../../utils/interval-calculator';
+import { getIntervalMilliSecond } from '../../../utils/interval-calculator';
 
 type StateType = {
   graphWidth: number;
@@ -105,7 +105,7 @@ const getMetricQueryPayload = (selectedTimeFrame: number, endTime: number, isAgg
     quantile: 0.95,
     endTs: endTime,
     lookback: selectedTimeFrame,
-    step: intervalCalculatorService.getIntervalMilliSecond(selectedTimeFrame, isAgg ? 50 : 600),
+    step: getIntervalMilliSecond(selectedTimeFrame, isAgg ? 50 : 600),
     ratePer: 10 * 60 * 1000,
   };
 };
