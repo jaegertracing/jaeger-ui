@@ -35,6 +35,21 @@ function tryParseJson(value: string) {
   }
 }
 
+function shouldDisplayAsStringList(key: string) {
+  return key.startsWith('http.request.header.') || key.startsWith('http.response.header.');
+}
+
+const stringListMarkup = (value: any[]) => (
+  <div className="json-markup">
+    {value.map((item, i) => (
+      <>
+        {i > 0 && ', '}
+        <span className="json-markup-string">{item}</span>
+      </>
+    ))}
+  </div>
+);
+
 const stringMarkup = (value: string) => (
   <div className="json-markup">
     <span className="json-markup-string">{value}</span>
@@ -50,14 +65,20 @@ function _jsonMarkup(value: any) {
   );
 }
 
-function formatValue(value: any) {
+function formatValue(key: string, value: any) {
   let content;
+  let parsed = value;
 
   if (typeof value === 'string') {
-    const parsed = tryParseJson(value);
-    content = typeof parsed === 'string' ? stringMarkup(parsed) : _jsonMarkup(parsed);
+    parsed = tryParseJson(value);
+  }
+
+  if (typeof parsed === 'string') {
+    content = stringMarkup(parsed);
+  } else if (Array.isArray(parsed) && shouldDisplayAsStringList(key)) {
+    content = stringListMarkup(parsed);
   } else {
-    content = _jsonMarkup(value);
+    content = _jsonMarkup(parsed);
   }
 
   return <div className="ub-inline-block">{content}</div>;
@@ -97,7 +118,7 @@ export default function KeyValuesTable(props: KeyValuesTableProps) {
       <table className="u-width-100">
         <tbody className="KeyValueTable--body">
           {data.map((row, i) => {
-            const jsonTable = formatValue(row.value);
+            const jsonTable = formatValue(row.key, row.value);
             const links = linksGetter ? linksGetter(data, i) : null;
             let valueMarkup;
             if (links && links.length === 1) {

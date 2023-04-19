@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Uber Technologies, Inc.
+// Copyright (c) 2023 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,5 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export const getProcessServiceName = proc => proc.serviceName;
-export const getProcessTags = proc => proc.tags;
+import * as React from 'react';
+import { Button } from 'antd';
+
+type Props = {
+  onDownloadResultsClicked: () => void;
+};
+
+export default function DownloadResults(props: Props) {
+  const { onDownloadResultsClicked } = props;
+  return (
+    <Button className="ub-ml2" htmlType="button" onClick={onDownloadResultsClicked}>
+      Download Results
+    </Button>
+  );
+}
