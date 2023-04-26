@@ -23,7 +23,7 @@
     "@babel/preset-typescript": "7.21.4",
     "@types/d3-zoom": "3.0.2",
     "@types/react": "16.8.7",
-    "@types/react-dom": "16.8.5",
+    "@types/react-dom": "18.2.1",
     "babel-loader": "9.1.2",
     "babel-plugin-transform-react-remove-prop-types": "0.4.24",
     "clean-webpack-plugin": "4.0.0",
