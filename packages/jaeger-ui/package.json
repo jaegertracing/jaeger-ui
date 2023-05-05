@@ -62,7 +62,7 @@
     "@types/react-virtualized-select": "^3.0.7",
     "@types/recompose": "^0.30.5",
     "@types/redux-actions": "2.2.1",
-    "antd": "3.26.20",
+    "antd": "4.24.10",
     "chance": "^1.0.10",
     "classnames": "^2.2.5",
     "combokeys": "^3.0.0",
