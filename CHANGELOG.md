@@ -6,6 +6,14 @@
 
 ### Fixes
 
+
+## v1.29.1 (2023-05-03)
+
+### Fixes
+
+- Fix format of a downloaded json file ([@Katarzyna-B](https://github.com/Katarzyna-B) in [#1306](https://github.com/jaegertracing/jaeger-ui/pull/1306))
+
+
 ## v1.29.0 (2023-04-10)
 
 ### Enhancements
