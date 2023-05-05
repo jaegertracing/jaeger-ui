@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Button, Input } from 'antd';
+import { Button, Input, Tooltip } from 'antd';
 import cx from 'classnames';
 import IoAndroidLocate from 'react-icons/lib/io/android-locate';
 
@@ -56,49 +56,82 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwarde
     suffix: count,
   };
 
+  const renderTooltip = () => {
+    return (
+      <div style={{ wordBreak: 'normal' }}>
+        <p>The search input is the list of space-separated strings used in a substring match.</p>
+        <p>
+          Each term is used to match against any of the following:{' '}
+          <span className="json-markup-string">service name</span>,{' '}
+          <span className="json-markup-string">operation name</span>,{' '}
+          <span className="json-markup-string">span ID</span>, and key-value pairs (
+          <span className="json-markup-string">logs</span> and{' '}
+          <span className="json-markup-string">tags</span>).
+        </p>
+        <p>
+          For key-value pairs matches apply for: <span className="json-markup-string">key</span>,{' '}
+          <span className="json-markup-string">value</span>,{' '}
+          <span className="json-markup-string">key=value</span> formatted strings.
+        </p>
+        <p>
+          Keys for key-value pairs can be excluded by prefixing them with a{' '}
+          <span className="json-markup-string">-</span> (a minus character).
+        </p>
+      </div>
+    );
+  };
+
   return (
     <div className="TracePageSearchBar">
-      {/* style inline because compact overwrites the display */}
-      <Input.Group className="ub-justify-end" compact style={{ display: 'flex' }}>
-        <UiFindInput
-          inputProps={uiFindInputInputProps}
-          forwardedRef={forwardedRef}
-          trackFindFunction={trackFilter}
-        />
-        {navigable && (
-          <>
-            <Button
-              className={cx(btnClass, 'TracePageSearchBar--locateBtn')}
-              disabled={!textFilter}
-              htmlType="button"
-              onClick={focusUiFindMatches}
-            >
-              <IoAndroidLocate />
-            </Button>
-            <Button
-              className={btnClass}
-              disabled={!textFilter}
-              htmlType="button"
-              icon="up"
-              onClick={prevResult}
-            />
-            <Button
-              className={btnClass}
-              disabled={!textFilter}
-              htmlType="button"
-              icon="down"
-              onClick={nextResult}
-            />
-          </>
-        )}
-        <Button
-          className={btnClass}
-          disabled={!textFilter}
-          htmlType="button"
-          icon="close"
-          onClick={clearSearch}
-        />
-      </Input.Group>
+      <Tooltip
+        arrowPointAtCenter
+        mouseLeaveDelay={0.5}
+        placement="bottom"
+        overlayStyle={{ maxWidth: '600px' }} // This is a large tooltip and the default is too narrow.
+        title={renderTooltip()}
+      >
+        {/* style inline because compact overwrites the display */}
+        <Input.Group className="ub-justify-end" compact style={{ display: 'flex' }}>
+          <UiFindInput
+            inputProps={uiFindInputInputProps}
+            forwardedRef={forwardedRef}
+            trackFindFunction={trackFilter}
+          />
+          {navigable && (
+            <>
+              <Button
+                className={cx(btnClass, 'TracePageSearchBar--locateBtn')}
+                disabled={!textFilter}
+                htmlType="button"
+                onClick={focusUiFindMatches}
+              >
+                <IoAndroidLocate />
+              </Button>
+              <Button
+                className={btnClass}
+                disabled={!textFilter}
+                htmlType="button"
+                icon="up"
+                onClick={prevResult}
+              />
+              <Button
+                className={btnClass}
+                disabled={!textFilter}
+                htmlType="button"
+                icon="down"
+                onClick={nextResult}
+              />
+            </>
+          )}
+          <Button
+            className={btnClass}
+            disabled={!textFilter}
+            htmlType="button"
+            icon="close"
+            onClick={clearSearch}
+          />
+        </Input.Group>
+      </Tooltip>
     </div>
   );
 }
