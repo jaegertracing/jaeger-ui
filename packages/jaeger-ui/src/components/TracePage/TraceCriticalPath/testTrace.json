@@ -1,185 +1,101 @@
 {
-  "data": {
-    "services": [
+  "data": [
       {
-        "name": "load-generator",
-        "numberOfSpans": 2
-      },
-      {
-        "name": "ride-sharing-app",
-        "numberOfSpans": 2
+          "processes": {
+              "S1": {
+                  "serviceName": "S1",
+                  "tags": [
+                  ]
+              },
+              "S2": {
+                  "serviceName": "S2",
+                  "tags": [
+                  ]
+              },
+              "S3": {
+                  "serviceName": "S3",
+                  "tags": [
+                  ]
+              },
+              "S4": {
+                  "serviceName": "S4",
+                  "tags": [
+                  ]
+              }
+          },
+          "traceID": "A",
+          "spans": [
+              {
+                  "traceID": "A",
+                  "spanID": "A",
+                  "operationName": "O1",
+                  "startTime": 0,
+                  "duration": 100,
+                  "processID": "S1",
+                  "warnings": null,
+                  "references": []
+              },
+              {
+                  "traceID": "A",
+                  "spanID": "B",
+                  "operationName": "O2",
+                  "startTime": 10,
+                  "duration": 20,
+                  "processID": "S2",
+                  "warnings": null,
+                  "references": [
+                      {
+                          "refType": "CHILD_OF",
+                          "traceID": "A",
+                          "spanID": "A"
+                      }
+                  ]
+              },
+              {
+                  "traceID": "A",
+                  "spanID": "C",
+                  "operationName": "O3",
+                  "startTime": 40,
+                  "duration": 10,
+                  "processID": "S3",
+                  "warnings": null,
+                  "references": [
+                      {
+                          "refType": "CHILD_OF",
+                          "traceID": "A",
+                          "spanID": "A"
+                      }
+                  ]
+              },
+              {
+                  "traceID": "A",
+                  "spanID": "D",
+                  "operationName": "O4",
+                  "startTime": 60,
+                  "duration": 30,
+                  "processID": "S4",
+                  "warnings": null,
+                  "references": [
+                      {
+                          "refType": "CHILD_OF",
+                          "traceID": "A",
+                          "spanID": "A"
+                      }
+                  ]
+              }
+          ]
       }
-    ],
-    "traceID": "trace-123",
-    "spans": [
-          {
-            "traceID": "trace-123",
-            "spanID": "span-1",
-            "flags": 1,
-            "operationName": "X",
-            "startTime": 1542666452979000,
-            "duration": 60000,
-            "references": [],
-            "tags": [
-              {
-                "key": "span.kind",
-                "type": "string",
-                "value": "server"
-              }
-            ],
-            "logs": [],
-            "processID": "p1",
-            "warnings": null
-          },
-          {
-            "traceID": "trace-123",
-            "spanID": "span-3",
-            "flags": 1,
-            "operationName": "X",
-            "startTime": 1542666453039000,
-            "duration": 60000,
-            "references": [
-              {
-                "refType": "CHILD_OF",
-                "traceID": "trace-123",
-                "spanID": "span-1"
-              }
-            ],
-            "tags": [
-              {
-                "key": "span.kind",
-                "type": "string",
-                "value": "client"
-              }
-            ],
-            "logs": [],
-            "processID": "p1",
-            "warnings": null
-          },
-          {
-            "traceID": "trace-123",
-            "spanID": "span-5",
-            "flags": 1,
-            "operationName": "C",
-            "startTime": 1542666453099000,
-            "duration": 240000,
-            "references": [
-              {
-                "refType": "CHILD_OF",
-                "traceID": "trace-123",
-                "spanID": "span-3"
-              }
-            ],
-            "tags": [
-              {
-                "key": "span.kind",
-                "type": "string",
-                "value": "server"
-              }
-            ],
-            "logs": [],
-            "processID": "p2",
-            "warnings": null
-          },
-          {
-            "traceID": "trace-123",
-            "spanID": "span-7",
-            "flags": 1,
-            "operationName": "X",
-            "startTime": 1542666453339000,
-            "duration": 60000,
-            "references": [
-              {
-                "refType": "CHILD_OF",
-                "traceID": "trace-123",
-                "spanID": "span-5"
-              }
-            ],
-            "tags": [
-              {
-                "key": "span.kind",
-                "type": "string",
-                "value": "producer"
-              }
-            ],
-            "logs": [],
-            "processID": "p1",
-            "warnings": null
-          },
-          {
-            "traceID": "trace-123",
-            "spanID": "span-8",
-            "flags": 1,
-            "operationName": "D",
-            "startTime": 1542666453399000,
-            "duration": 60000,
-            "references": [
-              {
-                "refType": "CHILD_OF",
-                "traceID": "trace-123",
-                "spanID": "span-7"
-              }
-            ],
-            "tags": [
-              {
-                "key": "span.kind",
-                "type": "string",
-                "value": "consumer"
-              }
-            ],
-            "logs": [],
-            "processID": "p2",
-            "warnings": null
-          },
-          {
-            "traceID": "trace-123",
-            "spanID": "span-9",
-            "flags": 1,
-            "operationName": "X",
-            "startTime": 1542666453459000,
-            "duration": 60000,
-            "references": [
-              {
-                "refType": "CHILD_OF",
-                "traceID": "trace-123",
-                "spanID": "span-8"
-              }
-            ],
-            "tags": [],
-            "logs": [],
-            "processID": "p1",
-            "warnings": null
-          }
       ],
-      "traceName": "test trace name",
-      "processes": {
-          "p1": {
-            "serviceName": "service1",
-            "tags": [
-              {
-                "key": "hostname",
-                "type": "string",
-                "value": "foobar.org"
-              }
-            ]
-          },
-          "p2": {
-            "serviceName": "service2",
-            "tags": [
-              {
-                "key": "hostname",
-                "type": "string",
-                "value": "foobar.org"
-              }
-            ]
-          }
-        },
-      "warnings": null,
-      "duration": 600000,
-      "startTime": 1542666452979000,
-      "endTime": 1542666453519000
-   },
-  "id": "84b3fad94c6112edd6af3347d06f6f1d",
-  "state": "FETCH_DONE"
+  "testing": [
+      {
+          "[S1] O1": 40,
+          "[S2] O2": 20,
+          "[S3] O3": 10,
+          "[S4] O4": 30
+      }
+  ],
+  "total": 0,
+  "limit": 0,
+  "offset": 0,
+  "errors": null
 }
-

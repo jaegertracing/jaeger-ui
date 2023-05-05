@@ -20,7 +20,7 @@ import TraceCriticalPath from './index';
 
 const testTrace = require('./testTrace.json');
 
-const profile = convertJaegerTraceToProfile(testTrace.data);
+const profile = convertJaegerTraceToProfile(testTrace.data[0]);
 
 describe('convertJaegerTraceToProfile', () => {
   it('returns correct profile format', () => {
