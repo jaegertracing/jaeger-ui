@@ -63,5 +63,8 @@
     "hooks": {
       "pre-commit": "npm-run-all -ln --parallel lint test"
     }
+  },
+  "dependencies": {
+    "redux-actions": "3.0.0"
   }
 }
