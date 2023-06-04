@@ -46,9 +46,11 @@ export default function filterSpans(textFilter: string, spans: Span[] | TNil) {
       ? kvs.some(kv => {
           // ignore checking key and value for a match if key is in excludeKeys
           if (isTextInFilters(excludeKeys, kv.key)) return false;
-          // match if key or value matches an item in includeFilters
+          // match if key, value or key=value string matches an item in includeFilters
           return (
-            isTextInFilters(includeFilters, kv.key) || isTextInFilters(includeFilters, kv.value.toString())
+            isTextInFilters(includeFilters, kv.key) ||
+            isTextInFilters(includeFilters, kv.value.toString()) ||
+            isTextInFilters(includeFilters, `${kv.key}=${kv.value.toString()}`)
           );
         })
       : false;
