@@ -60,19 +60,19 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwarde
     return (
       <div style={{ wordBreak: 'normal' }}>
         <p>
-          This is an in-page search. Enter the query as a list of space-separated string terms.
-          Each term is used in a substring match against any of the following data elements:
-          service name, operation name, span ID, and key-value pairs in tags and logs. The spans
-          that match any of the search terms will be highlighted.
+          This is an in-page search. Enter the query as a list of space-separated string terms. Each term is
+          used in a substring match against any of the following data elements: service name, operation name,
+          span ID, and key-value pairs in tags and logs. The spans that match any of the search terms will be
+          highlighted.
         </p>
         <p>
-          When matching key-value pairs, the substring search is applied separately against
-          the key, the value, and the <code>"key=value"</code> string.
-          The latter allows searching for exact matches like <code>http.status_code=200</code>.
+          When matching key-value pairs, the substring search is applied separately against the key, the
+          value, and the concatenated <code>"key=value"</code> string. The latter allows searching for exact
+          matches like <code>http.status_code=200</code>.
         </p>
         <p>
-          To preclude certain key-value pairs from participating in the matching, prefix the key
-          with the minus <code>'-'</code> sign, e.g., <code>-http.status_code</code>.
+          To preclude certain key-value pairs from participating in the matching, prefix the key with the
+          minus <code>'-'</code> sign, e.g., <code>-http.status_code</code>.
         </p>
       </div>
     );
