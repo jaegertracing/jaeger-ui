@@ -33,6 +33,7 @@ import { shallow, mount } from 'enzyme';
 import store from 'store';
 
 import { SearchTracePageImpl as SearchTracePage, mapStateToProps } from './index';
+import FileLoader from './FileLoader';
 import SearchForm from './SearchForm';
 import LoadingIndicator from '../common/LoadingIndicator';
 import { fetchedState } from '../../constants';
@@ -154,14 +155,23 @@ describe('<SearchTracePage>', () => {
     expect(wrapper.find('.js-test-logo').length).toBe(1);
   });
 
-  it('hide SearchForm if is embed', () => {
+  it('hides SearchForm if is embed', () => {
     wrapper.setProps({ embed: true });
     expect(wrapper.find(SearchForm).length).toBe(0);
   });
 
-  it('hide logo if is embed', () => {
+  it('hides logo if is embed', () => {
     wrapper.setProps({ embed: true });
     expect(wrapper.find('.js-test-logo').length).toBe(0);
+  });
+
+  it('shows Upload tab by default', () => {
+    expect(wrapper.find(FileLoader).length).toBe(1);
+  });
+
+  it('hides Upload tab if it is disabled via config', () => {
+    wrapper.setProps({ disableFileUploadControl: true });
+    expect(wrapper.find(FileLoader).length).toBe(0);
   });
 });
 
