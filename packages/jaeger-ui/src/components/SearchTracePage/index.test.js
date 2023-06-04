@@ -64,6 +64,7 @@ describe('<SearchTracePage>', () => {
       isHomepage: false,
       loadingServices: false,
       loadingTraces: false,
+      disableFileUploadControl: false,
       maxTraceDuration: 100,
       numberOfTraceResults: traceResults.length,
       services: null,
@@ -190,6 +191,9 @@ describe('mapStateToProps()', () => {
         cohort: [trace.traceID],
       },
       services: stateServices,
+      config: {
+        disableFileUploadControl: false
+      }
     };
 
     const {
@@ -210,6 +214,7 @@ describe('mapStateToProps()', () => {
     expect(diffCohort[0].data.traceID).toBe(trace.traceID);
 
     expect(rest).toEqual({
+      disableFileUploadControl: false,
       embedded: undefined,
       queryOfResults: undefined,
       isHomepage: true,
