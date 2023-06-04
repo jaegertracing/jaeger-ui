@@ -59,23 +59,20 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwarde
   const renderTooltip = () => {
     return (
       <div style={{ wordBreak: 'normal' }}>
-        <p>The search input is the list of space-separated strings used in a substring match.</p>
         <p>
-          Each term is used to match against any of the following:{' '}
-          <span className="json-markup-string">service name</span>,{' '}
-          <span className="json-markup-string">operation name</span>,{' '}
-          <span className="json-markup-string">span ID</span>, and key-value pairs (
-          <span className="json-markup-string">logs</span> and{' '}
-          <span className="json-markup-string">tags</span>).
+          This is an in-page search. Enter the query as a list of space-separated string terms.
+          Each term is used in a substring match against any of the following data elements:
+          service name, operation name, span ID, and key-value pairs in tags and logs. The spans
+          that match any of the search terms will be highlighted.
         </p>
         <p>
-          For key-value pairs matches apply for: <span className="json-markup-string">key</span>,{' '}
-          <span className="json-markup-string">value</span>,{' '}
-          <span className="json-markup-string">key=value</span> formatted strings.
+          When matching key-value pairs, the substring search is applied separately against
+          the key, the value, and the <code>"key=value"</code> string.
+          The latter allows searching for exact matches like <code>http.status_code=200</code>.
         </p>
         <p>
-          Keys for key-value pairs can be excluded by prefixing them with a{' '}
-          <span className="json-markup-string">-</span> (a minus character).
+          To preclude certain key-value pairs from participating in the matching, prefix the key
+          with the minus <code>'-'</code> sign, e.g., <code>-http.status_code</code>.
         </p>
       </div>
     );
