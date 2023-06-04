@@ -67,12 +67,12 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwarde
         </p>
         <p>
           When matching key-value pairs, the substring search is applied separately against the key, the
-          value, and the concatenated <code>"key=value"</code> string. The latter allows searching for exact
-          matches like <code>http.status_code=200</code>.
+          value, and the concatenated <code>&quot;key=value&quot;</code> string. The latter allows searching
+          for exact matches like <code>http.status_code=200</code>.
         </p>
         <p>
           To preclude certain key-value pairs from participating in the matching, prefix the key with the
-          minus <code>'-'</code> sign, e.g., <code>-http.status_code</code>.
+          minus <code>&apos;-&apos;</code> sign, e.g., <code>-http.status_code</code>.
         </p>
       </div>
     );
