@@ -166,6 +166,9 @@ export type Config = {
   // traceGraph controls the trace graph under trace page
   traceGraph?: TraceGraphConfig;
 
+  // Disables the file upload control.
+  disableFileUploadControl: boolean;
+
   // The following features are experimental / undocumented.
 
   deepDependencies?: {
