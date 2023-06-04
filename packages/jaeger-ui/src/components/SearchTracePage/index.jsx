@@ -110,11 +110,11 @@ export class SearchTracePageImpl extends Component {
                 </TabPane>
                 {!disableFileUploadControl && (
                   <TabPane tab="Upload" key="fileLoader">
-                  <FileLoader
-                    loadJsonTraces={fileList => {
-                      loadJsonTraces(fileList);
-                    }}
-                  />
+                    <FileLoader
+                      loadJsonTraces={fileList => {
+                        loadJsonTraces(fileList);
+                      }}
+                    />
                   </TabPane>
                 )}
               </Tabs>

@@ -192,8 +192,8 @@ describe('mapStateToProps()', () => {
       },
       services: stateServices,
       config: {
-        disableFileUploadControl: false
-      }
+        disableFileUploadControl: false,
+      },
     };
 
     const {
