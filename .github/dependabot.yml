@@ -5,6 +5,8 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+    # we have too many dependency PRs today
+    rebase-strategy: "disabled"
 
   - package-ecosystem: "github-actions"
     directory: "/"
