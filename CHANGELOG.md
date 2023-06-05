@@ -7,6 +7,19 @@
 ### Fixes
 
 
+## v1.30.0 (2023-06-05)
+
+### Enhancements
+
+- Allow disabling file upload via site config ([@yurishkuro](https://github.com/yurishkuro) in [#1464](https://github.com/jaegertracing/jaeger-ui/pull/1464))
+
+- Support in-page-search in trace view on key=value pairs ([@bobrik](https://github.com/bobrik) in [#1391](https://github.com/jaegertracing/jaeger-ui/pull/1391))
+
+### Fixes
+
+- Bump webpack from 5.80.0 to 5.85.0 ([@dependabot](https://github.com/dependabot) in [#1457](https://github.com/jaegertracing/jaeger-ui/pull/1457))
+
+
 ## v1.29.1 (2023-05-03)
 
 ### Fixes

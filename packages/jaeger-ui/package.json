@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "jaeger-ui",
-  "version": "1.29.1",
+  "version": "1.30.0",
   "main": "src/index.tsx",
   "license": "Apache-2.0",
   "homepage": ".",
