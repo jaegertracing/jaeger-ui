@@ -81,6 +81,7 @@ type TReduxProps = {
   embedded: null | EmbeddedState;
   id: string;
   searchUrl: null | string;
+  disableJsonView: boolean;
   trace: FetchedTrace | TNil;
   uiFind: string | TNil;
   traceGraphConfig?: TraceGraphConfig;
@@ -328,6 +329,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
       id,
       uiFind,
       trace,
+      disableJsonView,
       traceGraphConfig,
       location: { state: locationState },
     } = this.props;
@@ -374,6 +376,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
       prevResult: this.prevResult,
       ref: this._searchBar,
       resultCount: findCount,
+      disableJsonView,
       showArchiveButton: !isEmbedded && archiveEnabled,
       showShortcutsHelp: !isEmbedded,
       showStandaloneLink: isEmbedded,
@@ -437,6 +440,7 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
   const trace = id ? traces[id] : null;
   const archiveTraceState = id ? archive[id] : null;
   const archiveEnabled = Boolean(config.archiveEnabled);
+  const { disableJsonView } = config;
   const { state: locationState } = router.location;
   const searchUrl = (locationState && locationState.fromSearch) || null;
   const { traceGraph: traceGraphConfig } = config;
@@ -448,6 +452,7 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
     embedded,
     id,
     searchUrl,
+    disableJsonView,
     trace,
     traceGraphConfig,
   };

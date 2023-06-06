@@ -169,6 +169,9 @@ export type Config = {
   // Disables the file upload control.
   disableFileUploadControl: boolean;
 
+  // Disables the json view.
+  disableJsonView: boolean;
+
   // The following features are experimental / undocumented.
 
   deepDependencies?: {
