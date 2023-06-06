@@ -96,7 +96,7 @@
     "react-icons": "2.2.7",
     "react-metrics": "^2.3.2",
     "react-redux": "^5.0.6",
-    "react-router-dom": "4.3.1",
+    "react-router-dom": "6.11.2",
     "react-router-redux": "5.0.0-alpha.8",
     "react-virtualized-select": "^3.1.0",
     "react-vis": "^1.7.2",
