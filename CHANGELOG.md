@@ -6,6 +6,53 @@
 
 ### Fixes
 
+
+## v1.30.0 (2023-06-05)
+
+### Enhancements
+
+- Allow disabling file upload via site config ([@yurishkuro](https://github.com/yurishkuro) in [#1464](https://github.com/jaegertracing/jaeger-ui/pull/1464))
+
+- Support in-page-search in trace view on key=value pairs ([@bobrik](https://github.com/bobrik) in [#1391](https://github.com/jaegertracing/jaeger-ui/pull/1391))
+
+### Fixes
+
+- Bump webpack from 5.80.0 to 5.85.0 ([@dependabot](https://github.com/dependabot) in [#1457](https://github.com/jaegertracing/jaeger-ui/pull/1457))
+
+
+## v1.29.1 (2023-05-03)
+
+### Fixes
+
+- Fix format of a downloaded json file ([@Katarzyna-B](https://github.com/Katarzyna-B) in [#1306](https://github.com/jaegertracing/jaeger-ui/pull/1306))
+
+
+## v1.29.0 (2023-04-10)
+
+### Enhancements
+
+- Batch Download of traces ([@Katarzyna-B](https://github.com/Katarzyna-B) in [#1274](https://github.com/jaegertracing/jaeger-ui/pull/1274))
+- Render HTTP header tags as comma-separated strings ([@wjrogers](https://github.com/wjrogers) in [#1295](https://github.com/jaegertracing/jaeger-ui/pull/1295))
+- Rename tab from JSON File to Upload ([@yurishkuro](https://github.com/yurishkuro) in [#1308](https://github.com/jaegertracing/jaeger-ui/pull/1308))
+
+### Fixes
+
+- Bump webpack from 5.76.3 to 5.77.0 ([@dependabot](https://github.com/dependabot) in [#1320](https://github.com/jaegertracing/jaeger-ui/pull/1320))
+- Bump minimist from 1.2.0 to 1.2.8 ([@dependabot](https://github.com/dependabot) in [#1317](https://github.com/jaegertracing/jaeger-ui/pull/1317))
+- Bump eslint from 8.36.0 to 8.37.0 ([@dependabot](https://github.com/dependabot) in [#1316](https://github.com/jaegertracing/jaeger-ui/pull/1316))
+- Bump lerna from 6.5.1 to 6.6.1 ([@dependabot](https://github.com/dependabot) in [#1303](https://github.com/jaegertracing/jaeger-ui/pull/1303))
+- Update redux-form to 8.3.10 ([@mszabo-wikia](https://github.com/mszabo-wikia) in [#1314](https://github.com/jaegertracing/jaeger-ui/pull/1314))
+- Bump @svgr/babel-preset from 6.5.1 to 7.0.0 ([@dependabot](https://github.com/dependabot) in [#1301](https://github.com/jaegertracing/jaeger-ui/pull/1301))
+- Bump vite from 4.2.0 to 4.2.1 ([@dependabot](https://github.com/dependabot) in [#1287](https://github.com/jaegertracing/jaeger-ui/pull/1287))
+- Bump @svgr/babel-plugin-transform-svg-component from 6.5.1 to 7.0.0 ([@dependabot](https://github.com/dependabot) in [#1299](https://github.com/jaegertracing/jaeger-ui/pull/1299))
+- Bump terser from 5.16.6 to 5.16.8 ([@dependabot](https://github.com/dependabot) in [#1302](https://github.com/jaegertracing/jaeger-ui/pull/1302))
+- Bump webpack from 5.76.1 to 5.76.3 ([@dependabot](https://github.com/dependabot) in [#1297](https://github.com/jaegertracing/jaeger-ui/pull/1297))
+- Bump prettier from 2.8.4 to 2.8.7 ([@dependabot](https://github.com/dependabot) in [#1300](https://github.com/jaegertracing/jaeger-ui/pull/1300))
+- Bump webpack-dev-server from 4.11.1 to 4.13.0 ([@dependabot](https://github.com/dependabot) in [#1283](https://github.com/jaegertracing/jaeger-ui/pull/1283))
+- Bump vite from 4.1.4 to 4.2.0 ([@dependabot](https://github.com/dependabot) in [#1281](https://github.com/jaegertracing/jaeger-ui/pull/1281))
+- Bump typescript from 4.9.5 to 5.0.2 ([@dependabot](https://github.com/dependabot) in [#1282](https://github.com/jaegertracing/jaeger-ui/pull/1282))
+
+
 ## v1.28.1 (2023-03-15)
 
 ### Fixes
