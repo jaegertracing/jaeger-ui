@@ -110,7 +110,7 @@
     "redux-promise-middleware": "^5.1.1",
     "reselect": "^4.1.6",
     "store": "^2.0.12",
-    "tar": "6.1.13",
+    "tar": "6.1.15",
     "ts-key-enum": "^2.0.0",
     "tween-functions": "^1.2.0",
     "u-basscss": "2.0.1"
