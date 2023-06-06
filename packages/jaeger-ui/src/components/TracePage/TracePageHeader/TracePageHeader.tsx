@@ -55,6 +55,7 @@ type TracePageHeaderEmbedProps = {
   showArchiveButton: boolean;
   showShortcutsHelp: boolean;
   showStandaloneLink: boolean;
+  disableJsonView: boolean;
   showViewOptions: boolean;
   slimView: boolean;
   textFilter: string | TNil;
@@ -124,6 +125,7 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
     showShortcutsHelp,
     showStandaloneLink,
     showViewOptions,
+    disableJsonView,
     slimView,
     textFilter,
     toSearch,
@@ -191,7 +193,7 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
         />
         {showShortcutsHelp && <KeyboardShortcutsHelp className="ub-m2" />}
         {showViewOptions && (
-          <AltViewOptions onTraceViewChange={onTraceViewChange} traceID={trace.traceID} viewType={viewType} />
+          <AltViewOptions disableJsonView={disableJsonView} onTraceViewChange={onTraceViewChange} traceID={trace.traceID} viewType={viewType} />
         )}
         {showArchiveButton && (
           <Button className="ub-mr2 ub-flex ub-items-center" htmlType="button" onClick={onArchiveClicked}>
