@@ -18,7 +18,7 @@ import '@pyroscope/flamegraph/dist/index.css';
 import './index.css';
 
 const TraceCriticalPath = ({ trace }: any) => {
-  const convertedProfile = trace && trace.data ? convertJaegerTraceToProfile(trace.data) : null;
+  const convertedProfile = trace && trace.data[0] ? convertJaegerTraceToProfile(trace.data[0]) : null;
 
   return (
     <div className="Flamegraph-wrapper">
