@@ -193,7 +193,12 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
         />
         {showShortcutsHelp && <KeyboardShortcutsHelp className="ub-m2" />}
         {showViewOptions && (
-          <AltViewOptions disableJsonView={disableJsonView} onTraceViewChange={onTraceViewChange} traceID={trace.traceID} viewType={viewType} />
+          <AltViewOptions
+            disableJsonView={disableJsonView}
+            onTraceViewChange={onTraceViewChange}
+            traceID={trace.traceID}
+            viewType={viewType}
+          />
         )}
         {showArchiveButton && (
           <Button className="ub-mr2 ub-flex ub-items-center" htmlType="button" onClick={onArchiveClicked}>

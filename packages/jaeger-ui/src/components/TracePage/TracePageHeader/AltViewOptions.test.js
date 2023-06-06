@@ -71,8 +71,8 @@ describe('AltViewOptions', () => {
   it('disables json links because disableJsonView is true', () => {
     wrapper.setProps({ disableJsonView: true });
 
-    expect(() => getLink('Trace JSON')).toThrow("Could not find \"Trace JSON\"");
-    expect(() => getLink('Trace JSON (unadjusted)')).toThrow("Could not find \"Trace JSON (unadjusted)\"");
+    expect(() => getLink('Trace JSON')).toThrow('Could not find "Trace JSON"');
+    expect(() => getLink('Trace JSON (unadjusted)')).toThrow('Could not find "Trace JSON (unadjusted)"');
   });
 
   it('tracks viewing JSONs', () => {

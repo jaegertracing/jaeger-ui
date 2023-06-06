@@ -107,7 +107,6 @@ export default function AltViewOptions(props: Props) {
           </Link>
         </Menu.Item>
       )}
-     
     </Menu>
   );
 
