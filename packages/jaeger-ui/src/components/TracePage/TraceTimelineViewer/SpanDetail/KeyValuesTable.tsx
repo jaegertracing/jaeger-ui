@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import * as React from 'react';
-import jsonMarkup from './jsonMarkup';
+import { jsonMarkup } from './jsonMarkup';
 import { Dropdown, Icon, Menu } from 'antd';
 
 import CopyIcon from '../../../common/CopyIcon';

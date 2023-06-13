@@ -60,7 +60,7 @@ function escape (str) {
   return str.replace(/</g, '&lt;').replace(/>/g, '&gt;')
 }
 
-module.exports = function (doc, styleFile) {
+export function jsonMarkup(doc, styleFile) {
   var indent = ''
   var style = Stylize(styleFile)
 
@@ -109,7 +109,7 @@ module.exports = function (doc, styleFile) {
         })
 
         return forEach(keys, '{', '}', function (key) {
-          return '<span ' + style('json-markup-key') + '>"' + key + '":</span> ' + visit(obj[key])
+          return '<span ' + style('json-markup-key') + '>"' + escape(key) + '":</span> ' + visit(obj[key])
         })
     }
 

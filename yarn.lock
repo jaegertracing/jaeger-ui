@@ -8667,10 +8667,6 @@ jsesc@~0.5.0:
   version "0.5.0"
   resolved "https://registry.yarnpkg.com/jsesc/-/jsesc-0.5.0.tgz#e7dee66e35d6fc16f710fe91d5cf69f70f08911d"
 
-json-markup@^1.1.0:
-  version "1.1.3"
-  resolved "https://registry.yarnpkg.com/json-markup/-/json-markup-1.1.3.tgz#0a3531ee7a531cef6e22564ca166987a4d22b56e"
-
 json-parse-better-errors@^1.0.1:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/json-parse-better-errors/-/json-parse-better-errors-1.0.2.tgz#bb867cfb3450e69107c131d1c514bab3dc8bcaa9"

@@ -77,7 +77,6 @@
     "history": "^4.6.3",
     "is-promise": "^4.0.0",
     "isomorphic-fetch": "^3.0.0",
-    "json-markup": "^1.1.0",
     "lodash": "^4.17.19",
     "logfmt": "^1.2.0",
     "lru-memoize": "^1.1.0",
