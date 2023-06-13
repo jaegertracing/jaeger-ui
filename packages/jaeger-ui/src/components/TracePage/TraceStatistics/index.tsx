@@ -24,6 +24,8 @@ import { ITableSpan } from './types';
 import sortTable from './sortTable';
 import { TNil } from '../../../types';
 import PopupSQL from './PopupSql';
+import { Table } from 'antd';
+import { ColumnProps } from 'antd/es/table';
 
 type Props = {
   trace: Trace;
@@ -465,6 +467,94 @@ export default class TraceStatistics extends Component<Props, State> {
   }
 
   render() {
+    const columns: ColumnProps<ITableSpan>[] = [
+      {
+        title: 'Name',
+        dataIndex: 'name',
+        sorter: (a,b) => a.name.localeCompare(b.name),
+        render: (name: string,row: ITableSpan) => {
+          return <span style={{borderLeft: `4px solid ${row.color}`,padding: "7px 0px 7px 10px"}}>{name}</span>
+        }
+      },
+      {
+        title: 'Count',
+        dataIndex: 'count',
+        sorter: (a, b) => a.count - b.count,
+        
+      },
+      {
+        title: 'Total',
+        dataIndex: 'total',
+        sorter: (a, b) => a.total - b.total,
+        render: (cell: string) => {
+              return cell+'ms'
+        }
+      },
+      {
+        title: 'Avg',
+        dataIndex: 'avg',
+        sorter: (a, b) => a.avg - b.avg,
+        render: (cell: string) => {
+              return cell+'ms'
+        }
+      },
+      {
+        title: 'Min',
+        dataIndex: 'min',
+        sorter: (a, b) => a.min - b.min,
+        render: (cell: string) => {
+              return cell+'ms'
+        }
+      },
+      {
+        title: 'Max',
+        dataIndex: 'max',
+        sorter: (a, b) => a.max - b.max,
+        render: (cell: string) => {
+              return cell+'ms'
+        }
+      },
+      {
+        title: 'ST Total',
+        dataIndex: 'selfTotal',
+        sorter: (a, b) => a.selfTotal - b.selfTotal,
+        render: (cell: string) => {
+              return cell+'ms'
+        }
+      },
+      {
+        title: 'ST Avg',
+        dataIndex: 'selfAvg',
+        sorter: (a, b) => a.selfAvg - b.selfAvg,
+        render: (cell: string) => {
+              return cell+'ms'
+        }
+      },
+      {
+        title: 'ST Min',
+        dataIndex: 'selfMin',
+        sorter: (a, b) => a.selfMin - b.selfMin,
+        render: (cell: string) => {
+              return cell+'ms'
+        }
+      },
+      {
+        title: 'ST Max',
+        dataIndex: 'selfMax',
+        sorter: (a, b) => a.selfMax - b.selfMax,
+        render: (cell: string) => {
+              return cell+'ms'
+        }
+      },
+      {
+        title: 'ST in Duration',
+        dataIndex: 'percent',
+        sorter: (a, b) => a.percent - b.percent,
+        render: (cell: string) => {
+              return cell+'%'
+        }
+      },
+    ];
     return (
       <div>
         <h3 className="title--TraceStatistics"> Trace Statistics</h3>
@@ -479,12 +569,24 @@ export default class TraceStatistics extends Component<Props, State> {
         {this.state.showPopup ? (
           <PopupSQL closePopup={this.togglePopup} popupContent={this.state.popupContent} />
         ) : null}
-        <table className="test1893">
+        {/* <table className="test1893">
           <tbody className="DetailTraceTableTbody--TraceStatistics">
             {this.renderTableHead()}
             {this.renderTableData()}
           </tbody>
-        </table>
+        </table> */}
+        <Table
+            className="span-table span-view-table"
+            columns={columns}
+            dataSource={this.state.tableValue}
+            pagination={{
+            total: this.state.tableValue.length,
+            pageSizeOptions: ['10', '20', '50', '100'],
+            showSizeChanger: true,
+            showQuickJumper: true,
+            }}
+            rowKey="spanID"
+            />
       </div>
     );
   }
