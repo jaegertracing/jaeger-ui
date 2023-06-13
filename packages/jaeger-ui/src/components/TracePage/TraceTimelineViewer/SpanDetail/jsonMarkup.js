@@ -24,14 +24,15 @@
 // THE SOFTWARE.
 // 'use strict'
 
-var INDENT = '    ';
+const INDENT = '    ';
 
 function inlineRule(objRule) {
-  var str = '';
-  objRule &&
-    Object.keys(objRule).forEach(function (rule) {
+  let str = '';
+  if (objRule) {
+    Object.keys(objRule).forEach(function add(rule) {
       str += rule + ':' + objRule[rule] + ';';
     });
+  }
   return str;
 }
 
