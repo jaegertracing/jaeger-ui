@@ -104,16 +104,17 @@ export function jsonMarkup(doc, styleFile) {
           '"</span>'
         );
 
-      case 'link':
-        return (
-          '<span ' +
-          style('json-markup-string') +
-          '>"<a href="' +
-          escape(obj) +
-          '">' +
-          escape(obj) +
-          '</a>"</span>'
-        );
+      // Disable links. To re-enable, need to escape double-quotes too before using in href
+      // case 'link':
+      //   return (
+      //     '<span ' +
+      //     style('json-markup-string') +
+      //     '>"<a href="' +
+      //     escape(obj) +
+      //     '">' +
+      //     escape(obj) +
+      //     '</a>"</span>'
+      //   );
 
       case 'array':
         return forEach(obj, '[', ']', visit);
