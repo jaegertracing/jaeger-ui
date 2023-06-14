@@ -26,6 +26,8 @@ import { TNil } from '../../../types';
 import PopupSQL from './PopupSql';
 import { Table } from 'antd';
 import { ColumnProps } from 'antd/es/table';
+import { event } from 'react-ga';
+import { stringify } from 'query-string';
 
 type Props = {
   trace: Trace;
@@ -473,13 +475,26 @@ export default class TraceStatistics extends Component<Props, State> {
         dataIndex: 'name',
         sorter: (a,b) => a.name.localeCompare(b.name),
         render: (name: string,row: ITableSpan) => {
+          if(!row.color){
+            return <span style={{borderLeft: `4px solid transparent`,padding: "7px 0px 7px 10px"}}>{name}</span>
+          }
           return <span style={{borderLeft: `4px solid ${row.color}`,padding: "7px 0px 7px 10px"}}>{name}</span>
+        },
+        onCell: (record,rowIndex) => {
+          return{
+            ['style']: {background: record.colorToPercent,borderColor: record.colorToPercent}
+          };
         }
       },
       {
         title: 'Count',
         dataIndex: 'count',
         sorter: (a, b) => a.count - b.count,
+        onCell: (record,rowIndex) => {
+          return{
+            ['style']: {background: record.colorToPercent,borderColor: record.colorToPercent}
+          };
+        }
         
       },
       {
@@ -488,6 +503,11 @@ export default class TraceStatistics extends Component<Props, State> {
         sorter: (a, b) => a.total - b.total,
         render: (cell: string) => {
               return cell+'ms'
+        },
+        onCell: (record,rowIndex) => {
+          return{
+            ['style']: {background: record.colorToPercent,borderColor: record.colorToPercent}
+          };
         }
       },
       {
@@ -496,6 +516,11 @@ export default class TraceStatistics extends Component<Props, State> {
         sorter: (a, b) => a.avg - b.avg,
         render: (cell: string) => {
               return cell+'ms'
+        },
+        onCell: (record,rowIndex) => {
+          return{
+            ['style']: {background: record.colorToPercent,borderColor: record.colorToPercent}
+          };
         }
       },
       {
@@ -504,6 +529,11 @@ export default class TraceStatistics extends Component<Props, State> {
         sorter: (a, b) => a.min - b.min,
         render: (cell: string) => {
               return cell+'ms'
+        },
+        onCell: (record,rowIndex) => {
+          return{
+            ['style']: {background: record.colorToPercent,borderColor: record.colorToPercent}
+          };
         }
       },
       {
@@ -512,6 +542,11 @@ export default class TraceStatistics extends Component<Props, State> {
         sorter: (a, b) => a.max - b.max,
         render: (cell: string) => {
               return cell+'ms'
+        },
+        onCell: (record,rowIndex) => {
+          return{
+            ['style']: {background: record.colorToPercent,borderColor: record.colorToPercent}
+          };
         }
       },
       {
@@ -520,6 +555,11 @@ export default class TraceStatistics extends Component<Props, State> {
         sorter: (a, b) => a.selfTotal - b.selfTotal,
         render: (cell: string) => {
               return cell+'ms'
+        },
+        onCell: (record,rowIndex) => {
+          return{
+            ['style']: {background: record.colorToPercent,borderColor: record.colorToPercent}
+          };
         }
       },
       {
@@ -528,6 +568,11 @@ export default class TraceStatistics extends Component<Props, State> {
         sorter: (a, b) => a.selfAvg - b.selfAvg,
         render: (cell: string) => {
               return cell+'ms'
+        },
+        onCell: (record,rowIndex) => {
+          return{
+            ['style']: {background: record.colorToPercent,borderColor: record.colorToPercent}
+          };
         }
       },
       {
@@ -536,6 +581,11 @@ export default class TraceStatistics extends Component<Props, State> {
         sorter: (a, b) => a.selfMin - b.selfMin,
         render: (cell: string) => {
               return cell+'ms'
+        },
+        onCell: (record,rowIndex) => {
+          return{
+            ['style']: {background: record.colorToPercent,borderColor: record.colorToPercent}
+          };
         }
       },
       {
@@ -544,6 +594,11 @@ export default class TraceStatistics extends Component<Props, State> {
         sorter: (a, b) => a.selfMax - b.selfMax,
         render: (cell: string) => {
               return cell+'ms'
+        },
+        onCell: (record,rowIndex) => {
+          return{
+            ['style']: {background: record.colorToPercent,borderColor: record.colorToPercent}
+          };
         }
       },
       {
@@ -552,9 +607,43 @@ export default class TraceStatistics extends Component<Props, State> {
         sorter: (a, b) => a.percent - b.percent,
         render: (cell: string) => {
               return cell+'%'
+        },
+        onCell: (record,rowIndex) => {
+          return{
+            ['style']: {background: record.colorToPercent,borderColor: record.colorToPercent}
+          };
         }
       },
     ];
+    let isDetailArray: ITableSpan[] = [];
+    let isNoDetail: ITableSpan[] = [];
+  
+    const findTablesAccToSelectors = (tableValue: ITableSpan[]) => {
+      for (let i = 0; i < tableValue.length; i++) {
+        if (tableValue[i].isDetail) {
+          isDetailArray.push(tableValue[i]);
+        } else {
+          isNoDetail.push(tableValue[i]);
+        }
+      } 
+      for(let i = 0; i < isNoDetail.length; i++){
+          let newArr = isDetailArray.filter((value)=>{return ((value.parentElement) === (isNoDetail[i].name))})
+          newArr = newArr.map((value,index)=>{
+            const x = i.toString()+ index.toString();
+            const keyo = {
+              key: x
+            }
+            value = {...value,...keyo}
+            return value
+          })
+          const child = {
+            key: i.toString(),
+            children: newArr
+          }
+          isNoDetail[i] = {...isNoDetail[i],...child}
+      }
+    }
+    findTablesAccToSelectors(this.state.tableValue)
     return (
       <div>
         <h3 className="title--TraceStatistics"> Trace Statistics</h3>
@@ -578,14 +667,13 @@ export default class TraceStatistics extends Component<Props, State> {
         <Table
             className="span-table span-view-table"
             columns={columns}
-            dataSource={this.state.tableValue}
+            dataSource={isNoDetail}
             pagination={{
-            total: this.state.tableValue.length,
+            total: isNoDetail.length,
             pageSizeOptions: ['10', '20', '50', '100'],
             showSizeChanger: true,
             showQuickJumper: true,
             }}
-            rowKey="spanID"
             />
       </div>
     );
