@@ -55,7 +55,7 @@ describe('<KeyValuesTable>', () => {
     date: new Date('1995-12-17T03:24:00'),
     null: null,
     array: ['x', 'y', 'z'],
-    object: {'a': 'b', 'x': 'y'},
+    object: { a: 'b', x: 'y' },
   };
   const data = [
     { key: 'span.kind', value: 'client', expected: 'client' },
