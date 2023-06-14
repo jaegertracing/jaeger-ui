@@ -50,6 +50,10 @@ describe('<KeyValuesTable>', () => {
     '<xss>': 'safe',
     link: 'https://example.com',
     xss_link: 'https://example.com with "quotes"',
+    boolean: true,
+    number: 42,
+    date: new Date('1995-12-17T03:24:00'),
+    null: null,
   };
   const data = [
     { key: 'span.kind', value: 'client', expected: 'client' },

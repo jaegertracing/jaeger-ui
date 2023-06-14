@@ -11,7 +11,11 @@ exports[`<KeyValuesTable> renders the expected text for each span value 1`] = `
     <span class=\\"json-markup-key\\">\\"hello\\":</span> <span class=\\"json-markup-string\\">\\"world\\"</span>,
     <span class=\\"json-markup-key\\">\\"&lt;xss&gt;\\":</span> <span class=\\"json-markup-string\\">\\"safe\\"</span>,
     <span class=\\"json-markup-key\\">\\"link\\":</span> <span class=\\"json-markup-string\\">\\"<a href=\\"https://example.com/\\">https://example.com/</a>\\"</span>,
-    <span class=\\"json-markup-key\\">\\"xss_link\\":</span> <span class=\\"json-markup-string\\">\\"https://example.com with \\"quotes\\"\\"</span>
+    <span class=\\"json-markup-key\\">\\"xss_link\\":</span> <span class=\\"json-markup-string\\">\\"https://example.com with \\"quotes\\"\\"</span>,
+    <span class=\\"json-markup-key\\">\\"boolean\\":</span> <span class=\\"json-markup-bool\\">true</span>,
+    <span class=\\"json-markup-key\\">\\"number\\":</span> <span class=\\"json-markup-number\\">42</span>,
+    <span class=\\"json-markup-key\\">\\"date\\":</span> <span class=\\"json-markup-string\\">\\"1995-12-17T03:24:00.000Z\\"</span>,
+    <span class=\\"json-markup-key\\">\\"null\\":</span> <span class=\\"json-markup-null\\">null</span>
 }</div>",
       }
     }
