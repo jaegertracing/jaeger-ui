@@ -38,8 +38,6 @@ function type(doc) {
       return 'string';
     }
   }
-  if (typeof doc === 'object' && typeof doc.toISOString === 'function') return 'date';
-
   return typeof doc;
 }
 
@@ -76,9 +74,6 @@ export function jsonMarkup(doc, styleFile) {
 
       case 'number':
         return '<span ' + style('json-markup-number') + '>' + obj + '</span>';
-
-      case 'date':
-        return '<span class="json-markup-string">"' + escape(obj.toISOString()) + '"</span>';
 
       case 'null':
         return '<span ' + style('json-markup-null') + '>null</span>';

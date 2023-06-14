@@ -52,7 +52,6 @@ describe('<KeyValuesTable>', () => {
     xss_link: 'https://example.com with "quotes"',
     boolean: true,
     number: 42,
-    date: new Date('1995-12-17T03:24:00'),
     null: null,
     array: ['x', 'y', 'z'],
     object: { a: 'b', x: 'y' },
