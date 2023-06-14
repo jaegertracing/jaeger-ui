@@ -26,29 +26,6 @@
 
 const INDENT = '    ';
 
-function inlineRule(objRule) {
-  let str = '';
-  if (objRule) {
-    Object.keys(objRule).forEach(function add(rule) {
-      str += rule + ':' + objRule[rule] + ';';
-    });
-  }
-  return str;
-}
-
-function Stylize(styleFile) {
-  function styleClass(cssClass) {
-    return 'class="' + cssClass + '"';
-  }
-
-  function styleInline(cssClass) {
-    return 'style="' + inlineRule(styleFile['.' + cssClass]) + '"';
-  }
-
-  if (!styleFile) return styleClass;
-  return styleInline;
-}
-
 function type(doc) {
   if (doc === null) return 'null';
   if (Array.isArray(doc)) return 'array';
@@ -72,7 +49,9 @@ function escape(str) {
 
 export function jsonMarkup(doc, styleFile) {
   var indent = '';
-  var style = Stylize(styleFile);
+  function style(cssClass) {
+    return 'class="' + cssClass + '"';
+  }
 
   var forEach = function (list, start, end, fn) {
     if (!list.length) return start + ' ' + end;
