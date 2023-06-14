@@ -41,6 +41,7 @@
     "src/components/SearchTracePage/SearchResults/ScatterPlot.jsx",
     "src/components/SearchTracePage/SearchResults/index.markers.js",
     "src/components/SearchTracePage/SearchResults/ResultItem.markers.js",
+    "src/components/TracePage/TraceTimelineViewer/SpanDetail/jsonMarkup.js",
     "src/middlewares/index.js",
     "src/model/order-by.js",
     "src/propTypes/dependencies.js",
