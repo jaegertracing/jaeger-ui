@@ -56,13 +56,19 @@ describe('<KeyValuesTable>', () => {
     { key: 'omg', value: 'mos-def', expected: 'mos-def' },
     { key: 'numericString', value: '12345678901234567890', expected: '12345678901234567890' },
     { key: 'numeric', value: 123456789, expected: '123456789' },
-    { key: 'jsonkey', value: JSON.stringify(jsonValue), expected: JSON.stringify(jsonValue, null, 4) },
     { key: 'http.request.header.accept', value: ['application/json'], expected: 'application/json' },
     {
       key: 'http.response.header.set_cookie',
       value: JSON.stringify(['name=mos-def', 'code=12345']),
       expected: 'name=mos-def, code=12345',
     },
+    // render().text() does not preserve full escaping of rendered JSON,
+    // so instead rely on jest snapshot comparison.
+    // Key observations:
+    // - "<xss>" key is encoded as &lt;xss&gt;
+    // - link value is rendered as <a>
+    // - xss_link value is rendered as plain string
+    { key: 'jsonkey', value: JSON.stringify(jsonValue), snapshot: true },
   ];
 
   beforeEach(() => {
@@ -87,17 +93,9 @@ describe('<KeyValuesTable>', () => {
     expect(el.length).toBe(data.length);
     el.forEach((valueDiv, i) => {
       if (data[i].expected) {
-        if (data[i].key === 'jsonkey') {
-          // render().text() below does not preserve full escaping of rendered JSON,
-          // so instead rely on jest snapshot comparison.
-          // Key observations:
-          // - "<xss>" key is encoded as &lt;xss&gt;
-          // - link value is rendered as <a>
-          // - xss_link value is rendered as plain string
-          expect(valueDiv).toMatchSnapshot();
-          return;
-        }
         expect(valueDiv.render().text()).toBe(data[i].expected);
+      } else if (data[i].snapshot) {
+        expect(valueDiv).toMatchSnapshot();
       }
     });
   });
