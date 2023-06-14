@@ -16,18 +16,12 @@ import * as _ from 'lodash';
 import React, { Component } from 'react';
 import './index.css';
 import { Trace } from '../../../types/trace';
-import HeaderTable from './HeaderTable';
-import MainTableData from './MainTableData';
-import DetailTableData from './DetailTableData';
 import TraceStatisticsHeader from './TraceStatisticsHeader';
 import { ITableSpan } from './types';
-import sortTable from './sortTable';
 import { TNil } from '../../../types';
 import PopupSQL from './PopupSql';
 import { Table } from 'antd';
 import { ColumnProps } from 'antd/es/table';
-import { event } from 'react-ga';
-import { stringify } from 'query-string';
 
 type Props = {
   trace: Trace;
@@ -134,9 +128,7 @@ export default class TraceStatistics extends Component<Props, State> {
     };
 
     this.handler = this.handler.bind(this);
-    this.sortClick = this.sortClick.bind(this);
     this.togglePopup = this.togglePopup.bind(this);
-    this.clickColumn = this.clickColumn.bind(this);
 
     this.searchInTable(this.props.uiFindVertexKeys!, this.state.tableValue, this.props.uiFind);
   }
@@ -176,7 +168,7 @@ export default class TraceStatistics extends Component<Props, State> {
         ...prevState,
         tableValue: this.searchInTable(
           this.props.uiFindVertexKeys!,
-          this.sortTableWithOthers(tableValue, 1, false),
+          tableValue,
           this.props.uiFind
         ),
         sortIndex: 1,
@@ -187,67 +179,6 @@ export default class TraceStatistics extends Component<Props, State> {
       };
     });
   }
-
-  /**
-   * Searches for the others of the share and sorts afterwards.
-   */
-  sortTableWithOthers = (tableValue: ITableSpan[], sortIndex: number, sortAsc: boolean) => {
-    let rememberIndexNoDetail = -1;
-    let rememberIndex = -1;
-    let othersInDetail = false;
-    let sortArray = [];
-    const sortArray2 = [];
-    let i;
-
-    for (i = 0; i < tableValue.length; i++) {
-      if (tableValue[i].type !== 'undefined') {
-        sortArray.push(tableValue[i]);
-      } else if (!tableValue[i].isDetail) {
-        rememberIndexNoDetail = i;
-      } else {
-        othersInDetail = true;
-      }
-    }
-    sortArray = sortTable(sortArray, columnsArray[sortIndex].attribute, sortAsc);
-    if (rememberIndexNoDetail !== -1) {
-      sortArray.push(tableValue[rememberIndexNoDetail]);
-    }
-
-    if (!othersInDetail) {
-      return sortArray;
-    }
-
-    let parentElements = [];
-    for (i = 0; i < tableValue.length; i++) {
-      if (!tableValue[i].isDetail) {
-        parentElements.push(tableValue[i]);
-      }
-    }
-    parentElements = sortTable(parentElements, columnsArray[sortIndex].attribute, sortAsc);
-    for (i = 0; i < parentElements.length; i++) {
-      sortArray2.push(parentElements[i]);
-      let tempArray = [];
-      for (let j = 0; j < tableValue.length; j++) {
-        if (parentElements[i].name === tableValue[j].parentElement && tableValue[j].type !== 'undefined') {
-          tempArray.push(tableValue[j]);
-        } else if (
-          parentElements[i].name === tableValue[j].parentElement &&
-          tableValue[j].type === 'undefined'
-        ) {
-          rememberIndex = j;
-        }
-      }
-      tempArray = sortTable(tempArray, columnsArray[sortIndex].attribute, sortAsc);
-      if (rememberIndex !== -1) {
-        tempArray.push(tableValue[rememberIndex]);
-        rememberIndex = -1;
-      }
-      for (let j = 0; j < tempArray.length; j++) {
-        sortArray2.push(tempArray[j]);
-      }
-    }
-    return sortArray2;
-  };
 
   /**
    * Opern the popup button.
@@ -262,71 +193,6 @@ export default class TraceStatistics extends Component<Props, State> {
         popupContent,
       };
     });
-  }
-
-  /**
-   * Change the sortButton an calls the sort function.
-   * @param index the index of the clicked column
-   */
-  sortClick(index: number) {
-    const { tableValue, sortIndex, sortAsc } = this.state;
-    if (sortIndex !== index) {
-      this.setState(prevState => {
-        return {
-          ...prevState,
-          sortIndex: index,
-          sortAsc: false,
-          tableValue: this.sortTableWithOthers(tableValue, index, false),
-        };
-      });
-    } else {
-      this.setState(prevState => {
-        return {
-          ...prevState,
-          sortAsc: !sortAsc,
-          tableValue: this.sortTableWithOthers(tableValue, index, !sortAsc),
-        };
-      });
-    }
-  }
-
-  /**
-   * Hides the child at the first click.
-   */
-  clickColumn(selectedSpan: string) {
-    if (this.state.valueNameSelector2 !== null) {
-      let add = true;
-      const actualTable = this.state.tableValue;
-      let newTable = [];
-      for (let i = 0; i < actualTable.length; i++) {
-        if (actualTable[i].parentElement === selectedSpan) {
-          add = false;
-        }
-        if (actualTable[i].parentElement !== selectedSpan) {
-          newTable.push(actualTable[i]);
-        }
-      }
-      if (add) {
-        newTable = [];
-        for (let i = 0; i < actualTable.length; i++) {
-          if (actualTable[i].name !== selectedSpan) {
-            newTable.push(actualTable[i]);
-          } else {
-            newTable.push(actualTable[i]);
-            for (let j = 0; j < this.state.wholeTable.length; j++) {
-              if (this.state.wholeTable[j].parentElement === selectedSpan) {
-                newTable.push(this.state.wholeTable[j]);
-              }
-            }
-          }
-        }
-        newTable = this.searchInTable(this.props.uiFindVertexKeys!, newTable, this.props.uiFind);
-        newTable = this.sortTableWithOthers(newTable, this.state.sortIndex, this.state.sortAsc);
-      }
-      this.setState({
-        tableValue: newTable,
-      });
-    }
   }
 
   /**
@@ -396,91 +262,38 @@ export default class TraceStatistics extends Component<Props, State> {
     return allTableSpansChange;
   };
 
-  renderTableData() {
-    return this.state.tableValue.map(oneSpan => {
-      const {
-        count,
-        total,
-        avg,
-        min,
-        max,
-        selfTotal,
-        selfAvg,
-        selfMin,
-        selfMax,
-        percent,
-        color,
-        searchColor,
-        colorToPercent,
-      } = oneSpan;
-      const values: any[] = [count, total, avg, min, max, selfTotal, selfAvg, selfMin, selfMax, percent];
-      const uid = _.uniqueId('id');
-      if (!oneSpan.isDetail) {
-        return (
-          <MainTableData
-            key={uid}
-            type={oneSpan.type}
-            name={oneSpan.name}
-            searchColor={searchColor}
-            values={values}
-            columnsArray={columnsArray}
-            togglePopup={this.togglePopup}
-            valueNameSelector1={this.state.valueNameSelector1}
-            valueNameSelector2={this.state.valueNameSelector2}
-            color={color}
-            clickColumn={this.clickColumn}
-            colorToPercent={colorToPercent}
-          />
-        );
-      }
-      return (
-        <DetailTableData
-          key={uid}
-          type={oneSpan.type}
-          name={oneSpan.name}
-          searchColor={searchColor}
-          values={values}
-          columnsArray={columnsArray}
-          color={color}
-          togglePopup={this.togglePopup}
-          valueNameSelector2={this.state.valueNameSelector2}
-          colorToPercent={colorToPercent}
-        />
-      );
-    });
-  }
-
-  renderTableHead() {
-    const { sortAsc, sortIndex } = this.state;
-    return (
-      <tr>
-        {columnsArray.map((element: any, index: number) => (
-          <HeaderTable
-            element={element}
-            key={element.title}
-            sortIndex={sortIndex}
-            index={index}
-            sortClick={this.sortClick}
-            sortAsc={sortAsc}
-          />
-        ))}
-      </tr>
-    );
-  }
-
   render() {
+
+    const onClickOption = (type:string,name:string) => {
+      if(this.state.valueNameSelector1 === 'sql.query' && type !== 'undefined')
+              this.togglePopup(name)
+    }
+
     const columns: ColumnProps<ITableSpan>[] = [
       {
         title: 'Name',
         dataIndex: 'name',
-        sorter: (a,b) => a.name.localeCompare(b.name),
+        sorter: (a,b) => {
+          if(a.type === 'undefined'){
+            return -1
+          }
+          if(b.type === 'undefined'){
+            return 1
+          }
+          return a.name.localeCompare(b.name)
+        },
         render: (name: string,row: ITableSpan) => {
           if(!row.color){
-            return <span style={{borderLeft: `4px solid transparent`,padding: "7px 0px 7px 10px"}}>{name}</span>
+            return <span onClick={()=>onClickOption(row.type,row.name)} style={{borderLeft: `4px solid transparent`,padding: "7px 0px 7px 10px",cursor: "default"}}>{name}</span>
           }
-          return <span style={{borderLeft: `4px solid ${row.color}`,padding: "7px 0px 7px 10px"}}>{name}</span>
+          return <span onClick={()=>onClickOption(row.type,row.name)} style={{borderLeft: `4px solid ${row.color}`,padding: "7px 0px 7px 10px",cursor: "default"}}>{name}</span>
         },
         onCell: (record,rowIndex) => {
+          if(this.props.uiFind && record.searchColor !== 'transparent'){
+            return{
+              ['style']: {background: record.searchColor,borderColor: record.searchColor}
+            }
+          }
           return{
             ['style']: {background: record.colorToPercent,borderColor: record.colorToPercent}
           };
@@ -489,22 +302,48 @@ export default class TraceStatistics extends Component<Props, State> {
       {
         title: 'Count',
         dataIndex: 'count',
-        sorter: (a, b) => a.count - b.count,
+        sorter: (a, b) => {
+          if(a.type === 'undefined'){
+            return -1
+          }
+          if(b.type === 'undefined'){
+            return 1
+          }
+          return a.count - b.count;
+        },
         onCell: (record,rowIndex) => {
+          if(this.props.uiFind && record.searchColor !== 'transparent'){
+            return{
+              ['style']: {background: record.searchColor,borderColor: record.searchColor}
+            }
+          }
           return{
             ['style']: {background: record.colorToPercent,borderColor: record.colorToPercent}
           };
-        }
-        
+        },
+        defaultSortOrder: 'descend'
       },
       {
         title: 'Total',
         dataIndex: 'total',
-        sorter: (a, b) => a.total - b.total,
+        sorter: (a, b) => {
+          if(a.type === 'undefined'){
+            return -1
+          }
+          if(b.type === 'undefined'){
+            return 1
+          }
+          return a.total - b.total
+        },
         render: (cell: string) => {
               return cell+'ms'
         },
         onCell: (record,rowIndex) => {
+          if(this.props.uiFind && record.searchColor !== 'transparent'){
+            return{
+              ['style']: {background: record.searchColor,borderColor: record.searchColor}
+            }
+          }
           return{
             ['style']: {background: record.colorToPercent,borderColor: record.colorToPercent}
           };
@@ -513,11 +352,24 @@ export default class TraceStatistics extends Component<Props, State> {
       {
         title: 'Avg',
         dataIndex: 'avg',
-        sorter: (a, b) => a.avg - b.avg,
+        sorter: (a, b) => {
+          if(a.type === 'undefined'){
+            return -1
+          }
+          if(b.type === 'undefined'){
+            return 1
+          }
+          return a.avg - b.avg
+        },
         render: (cell: string) => {
               return cell+'ms'
         },
         onCell: (record,rowIndex) => {
+          if(this.props.uiFind && record.searchColor !== 'transparent'){
+            return{
+              ['style']: {background: record.searchColor,borderColor: record.searchColor}
+            }
+          }
           return{
             ['style']: {background: record.colorToPercent,borderColor: record.colorToPercent}
           };
@@ -526,11 +378,24 @@ export default class TraceStatistics extends Component<Props, State> {
       {
         title: 'Min',
         dataIndex: 'min',
-        sorter: (a, b) => a.min - b.min,
+        sorter: (a, b) => {
+          if(a.type === 'undefined'){
+            return -1
+          }
+          if(b.type === 'undefined'){
+            return 1
+          }
+          return a.min - b.min
+        },
         render: (cell: string) => {
               return cell+'ms'
         },
         onCell: (record,rowIndex) => {
+          if(this.props.uiFind && record.searchColor !== 'transparent'){
+            return{
+              ['style']: {background: record.searchColor,borderColor: record.searchColor}
+            }
+          }
           return{
             ['style']: {background: record.colorToPercent,borderColor: record.colorToPercent}
           };
@@ -539,11 +404,24 @@ export default class TraceStatistics extends Component<Props, State> {
       {
         title: 'Max',
         dataIndex: 'max',
-        sorter: (a, b) => a.max - b.max,
+        sorter: (a, b) => {
+          if(a.type === 'undefined'){
+            return -1
+          }
+          if(b.type === 'undefined'){
+            return 1
+          }
+          return a.max - b.max
+        },
         render: (cell: string) => {
               return cell+'ms'
         },
         onCell: (record,rowIndex) => {
+          if(this.props.uiFind && record.searchColor !== 'transparent'){
+            return{
+              ['style']: {background: record.searchColor,borderColor: record.searchColor}
+            }
+          }
           return{
             ['style']: {background: record.colorToPercent,borderColor: record.colorToPercent}
           };
@@ -552,11 +430,24 @@ export default class TraceStatistics extends Component<Props, State> {
       {
         title: 'ST Total',
         dataIndex: 'selfTotal',
-        sorter: (a, b) => a.selfTotal - b.selfTotal,
+        sorter: (a, b) => {
+          if(a.type === 'undefined'){
+            return -1
+          }
+          if(b.type === 'undefined'){
+            return 1
+          }
+          return a.selfTotal - b.selfTotal
+        },
         render: (cell: string) => {
               return cell+'ms'
         },
         onCell: (record,rowIndex) => {
+          if(this.props.uiFind && record.searchColor !== 'transparent'){
+            return{
+              ['style']: {background: record.searchColor,borderColor: record.searchColor}
+            }
+          }
           return{
             ['style']: {background: record.colorToPercent,borderColor: record.colorToPercent}
           };
@@ -565,11 +456,24 @@ export default class TraceStatistics extends Component<Props, State> {
       {
         title: 'ST Avg',
         dataIndex: 'selfAvg',
-        sorter: (a, b) => a.selfAvg - b.selfAvg,
+        sorter: (a, b) => {
+          if(a.type === 'undefined'){
+            return -1
+          }
+          if(b.type === 'undefined'){
+            return 1
+          }
+          return a.selfAvg - b.selfAvg
+        },
         render: (cell: string) => {
               return cell+'ms'
         },
         onCell: (record,rowIndex) => {
+          if(this.props.uiFind && record.searchColor !== 'transparent'){
+            return{
+              ['style']: {background: record.searchColor,borderColor: record.searchColor}
+            }
+          }
           return{
             ['style']: {background: record.colorToPercent,borderColor: record.colorToPercent}
           };
@@ -578,11 +482,24 @@ export default class TraceStatistics extends Component<Props, State> {
       {
         title: 'ST Min',
         dataIndex: 'selfMin',
-        sorter: (a, b) => a.selfMin - b.selfMin,
+        sorter: (a, b) => {
+          if(a.type === 'undefined'){
+            return -1
+          }
+          if(b.type === 'undefined'){
+            return 1
+          }
+          return a.selfMin - b.selfMin
+        },
         render: (cell: string) => {
               return cell+'ms'
         },
         onCell: (record,rowIndex) => {
+          if(this.props.uiFind && record.searchColor !== 'transparent'){
+            return{
+              ['style']: {background: record.searchColor,borderColor: record.searchColor}
+            }
+          }
           return{
             ['style']: {background: record.colorToPercent,borderColor: record.colorToPercent}
           };
@@ -591,11 +508,24 @@ export default class TraceStatistics extends Component<Props, State> {
       {
         title: 'ST Max',
         dataIndex: 'selfMax',
-        sorter: (a, b) => a.selfMax - b.selfMax,
+        sorter: (a, b) => {
+          if(a.type === 'undefined'){
+            return -1
+          }
+          if(b.type === 'undefined'){
+            return 1
+          }
+          return a.selfMax - b.selfMax
+        },
         render: (cell: string) => {
               return cell+'ms'
         },
         onCell: (record,rowIndex) => {
+          if(this.props.uiFind && record.searchColor !== 'transparent'){
+            return{
+              ['style']: {background: record.searchColor,borderColor: record.searchColor}
+            }
+          }
           return{
             ['style']: {background: record.colorToPercent,borderColor: record.colorToPercent}
           };
@@ -604,11 +534,24 @@ export default class TraceStatistics extends Component<Props, State> {
       {
         title: 'ST in Duration',
         dataIndex: 'percent',
-        sorter: (a, b) => a.percent - b.percent,
+        sorter: (a, b) => {
+          if(a.type === 'undefined'){
+            return -1
+          }
+          if(b.type === 'undefined'){
+            return 1
+          }
+          return a.percent - b.percent
+        },
         render: (cell: string) => {
               return cell+'%'
         },
         onCell: (record,rowIndex) => {
+          if(this.props.uiFind && record.searchColor !== 'transparent'){
+            return{
+              ['style']: {background: record.searchColor,borderColor: record.searchColor}
+            }
+          }
           return{
             ['style']: {background: record.colorToPercent,borderColor: record.colorToPercent}
           };
@@ -669,11 +612,20 @@ export default class TraceStatistics extends Component<Props, State> {
             columns={columns}
             dataSource={isNoDetail}
             pagination={{
-            total: isNoDetail.length,
-            pageSizeOptions: ['10', '20', '50', '100'],
-            showSizeChanger: true,
-            showQuickJumper: true,
+              total: isNoDetail.length,
+              pageSizeOptions: ['10', '20', '50', '100'],
+              showSizeChanger: true,
+              showQuickJumper: true,
             }}
+            rowClassName={(record,index)=>{
+              if(record.type === 'undefined'){
+                return "undefClass"
+              }
+              return "MainTableData--tr" 
+            }}
+            key={isNoDetail.length}
+            defaultExpandAllRows={true}
+            sortDirections={['ascend', 'descend', 'ascend']}
             />
       </div>
     );
