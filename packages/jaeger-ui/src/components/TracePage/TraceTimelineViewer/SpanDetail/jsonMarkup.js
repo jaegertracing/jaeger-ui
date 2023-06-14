@@ -52,7 +52,15 @@ function Stylize(styleFile) {
 function type(doc) {
   if (doc === null) return 'null';
   if (Array.isArray(doc)) return 'array';
-  if (typeof doc === 'string' && /^https?:/.test(doc)) return 'link';
+  if (typeof doc === 'string' && /^https?:/.test(doc)) {
+    try {
+      const u = new URL(doc);
+      return 'link';
+    } catch {
+      // malformed URL
+      return 'string';
+    }
+  }
   if (typeof doc === 'object' && typeof doc.toISOString === 'function') return 'date';
 
   return typeof doc;
@@ -105,17 +113,17 @@ export function jsonMarkup(doc, styleFile) {
           '"</span>'
         );
 
-      // Disable links. To re-enable, need to escape double-quotes too before using in href
-      // case 'link':
-      //   return (
-      //     '<span ' +
-      //     style('json-markup-string') +
-      //     '>"<a href="' +
-      //     escape(obj) +
-      //     '">' +
-      //     escape(obj) +
-      //     '</a>"</span>'
-      //   );
+      case 'link':
+        let url = new URL(obj);
+        return (
+          '<span ' +
+          style('json-markup-string') +
+          '>"<a href="' +
+          (url.href) +
+          '">' +
+          url.href +
+          '</a>"</span>'
+        );
 
       case 'array':
         return forEach(obj, '[', ']', visit);
