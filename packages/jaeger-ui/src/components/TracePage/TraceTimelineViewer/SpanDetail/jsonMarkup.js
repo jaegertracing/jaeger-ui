@@ -116,13 +116,7 @@ export function jsonMarkup(doc, styleFile) {
       case 'link':
         let url = new URL(obj);
         return (
-          '<span ' +
-          style('json-markup-string') +
-          '>"<a href="' +
-          (url.href) +
-          '">' +
-          url.href +
-          '</a>"</span>'
+          '<span ' + style('json-markup-string') + '>"<a href="' + url.href + '">' + url.href + '</a>"</span>'
         );
 
       case 'array':

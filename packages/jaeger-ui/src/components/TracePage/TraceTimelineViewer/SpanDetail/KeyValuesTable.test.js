@@ -46,10 +46,10 @@ describe('<KeyValuesTable>', () => {
   let wrapper;
 
   const jsonValue = {
-    'hello': 'world',
+    hello: 'world',
     '<xss>': 'safe',
-    'link': 'https://example.com',
-    'xss_link': 'https://example.com with "quotes"',
+    link: 'https://example.com',
+    xss_link: 'https://example.com with "quotes"',
   };
   const data = [
     { key: 'span.kind', value: 'client', expected: 'client' },
