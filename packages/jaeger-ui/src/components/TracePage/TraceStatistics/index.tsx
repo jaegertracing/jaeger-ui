@@ -22,7 +22,7 @@ import { TNil } from '../../../types';
 import PopupSQL from './PopupSql';
 import { Table } from 'antd';
 import { ColumnProps } from 'antd/es/table';
-import { number } from 'prop-types';
+
 
 type Props = {
   trace: Trace;
