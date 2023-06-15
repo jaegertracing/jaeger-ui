@@ -22,6 +22,7 @@ import { TNil } from '../../../types';
 import PopupSQL from './PopupSql';
 import { Table } from 'antd';
 import { ColumnProps } from 'antd/es/table';
+import { number } from 'prop-types';
 
 type Props = {
   trace: Trace;
@@ -269,293 +270,130 @@ export default class TraceStatistics extends Component<Props, State> {
               this.togglePopup(name)
     }
 
+    const sorterFunction = (a:any,b:any)=>{
+      if(a.type === 'undefined'){
+        return 0
+      }
+      if(b.type === 'undefined'){
+        return -1
+      }
+      if(typeof a.index === 'number')
+      return a.index - b.index
+      else if(typeof a.index === 'string')
+      return a.index.localeCompare(b.index)
+    }
+
+    const onCellFunction = (record: ITableSpan) => {
+      if(this.props.uiFind && record.searchColor !== 'transparent'){
+        return{
+          ['style']: {background: record.searchColor,borderColor: record.searchColor}
+        }
+      }
+      return{
+        ['style']: {background: record.colorToPercent,borderColor: record.colorToPercent}
+      };
+    }
+
     const columns: ColumnProps<ITableSpan>[] = [
       {
         title: 'Name',
         dataIndex: 'name',
-        sorter: (a,b) => {
-          if(a.type === 'undefined'){
-            return -1
-          }
-          if(b.type === 'undefined'){
-            return 1
-          }
-          return a.name.localeCompare(b.name)
-        },
+        sorter: (a,b) => sorterFunction({"type": a.type,"index": a.name},{"type": b.type,"index": b.name}),
         render: (name: string,row: ITableSpan) => {
           if(!row.color){
             return <span onClick={()=>onClickOption(row.type,row.name)} style={{borderLeft: `4px solid transparent`,padding: "7px 0px 7px 10px",cursor: "default"}}>{name}</span>
           }
           return <span onClick={()=>onClickOption(row.type,row.name)} style={{borderLeft: `4px solid ${row.color}`,padding: "7px 0px 7px 10px",cursor: "default"}}>{name}</span>
         },
-        onCell: (record,rowIndex) => {
-          if(this.props.uiFind && record.searchColor !== 'transparent'){
-            return{
-              ['style']: {background: record.searchColor,borderColor: record.searchColor}
-            }
-          }
-          return{
-            ['style']: {background: record.colorToPercent,borderColor: record.colorToPercent}
-          };
-        }
+        onCell: (record) => onCellFunction(record)
       },
       {
         title: 'Count',
         dataIndex: 'count',
-        sorter: (a, b) => {
-          if(a.type === 'undefined'){
-            return -1
-          }
-          if(b.type === 'undefined'){
-            return 1
-          }
-          return a.count - b.count;
-        },
-        onCell: (record,rowIndex) => {
-          if(this.props.uiFind && record.searchColor !== 'transparent'){
-            return{
-              ['style']: {background: record.searchColor,borderColor: record.searchColor}
-            }
-          }
-          return{
-            ['style']: {background: record.colorToPercent,borderColor: record.colorToPercent}
-          };
-        },
-        defaultSortOrder: 'descend'
+        sorter: (a,b) => sorterFunction({"type": a.type,"index": a.count},{"type": b.type,"index": b.count}),
+        onCell: (record) => onCellFunction(record),
+        defaultSortOrder: 'ascend'
       },
       {
         title: 'Total',
         dataIndex: 'total',
-        sorter: (a, b) => {
-          if(a.type === 'undefined'){
-            return -1
-          }
-          if(b.type === 'undefined'){
-            return 1
-          }
-          return a.total - b.total
-        },
+        sorter: (a, b) => sorterFunction({"type": a.type,"index": a.total},{"type": b.type,"index": b.total}),
         render: (cell: string) => {
               return cell+'ms'
         },
-        onCell: (record,rowIndex) => {
-          if(this.props.uiFind && record.searchColor !== 'transparent'){
-            return{
-              ['style']: {background: record.searchColor,borderColor: record.searchColor}
-            }
-          }
-          return{
-            ['style']: {background: record.colorToPercent,borderColor: record.colorToPercent}
-          };
-        }
+        onCell: (record) => onCellFunction(record)
       },
       {
         title: 'Avg',
         dataIndex: 'avg',
-        sorter: (a, b) => {
-          if(a.type === 'undefined'){
-            return -1
-          }
-          if(b.type === 'undefined'){
-            return 1
-          }
-          return a.avg - b.avg
-        },
+        sorter: (a, b) => sorterFunction({"type": a.type,"index": a.avg},{"type": b.type,"index": b.avg}),
         render: (cell: string) => {
               return cell+'ms'
         },
-        onCell: (record,rowIndex) => {
-          if(this.props.uiFind && record.searchColor !== 'transparent'){
-            return{
-              ['style']: {background: record.searchColor,borderColor: record.searchColor}
-            }
-          }
-          return{
-            ['style']: {background: record.colorToPercent,borderColor: record.colorToPercent}
-          };
-        }
+        onCell: (record) => onCellFunction(record)
       },
       {
         title: 'Min',
         dataIndex: 'min',
-        sorter: (a, b) => {
-          if(a.type === 'undefined'){
-            return -1
-          }
-          if(b.type === 'undefined'){
-            return 1
-          }
-          return a.min - b.min
-        },
+        sorter: (a, b) => sorterFunction({"type": a.type,"index": a.min},{"type": b.type,"index": b.min}),
         render: (cell: string) => {
               return cell+'ms'
         },
-        onCell: (record,rowIndex) => {
-          if(this.props.uiFind && record.searchColor !== 'transparent'){
-            return{
-              ['style']: {background: record.searchColor,borderColor: record.searchColor}
-            }
-          }
-          return{
-            ['style']: {background: record.colorToPercent,borderColor: record.colorToPercent}
-          };
-        }
+        onCell: (record) => onCellFunction(record)
       },
       {
         title: 'Max',
         dataIndex: 'max',
-        sorter: (a, b) => {
-          if(a.type === 'undefined'){
-            return -1
-          }
-          if(b.type === 'undefined'){
-            return 1
-          }
-          return a.max - b.max
-        },
+        sorter: (a, b) => sorterFunction({"type": a.type,"index": a.max},{"type": b.type,"index": b.max}),
         render: (cell: string) => {
               return cell+'ms'
         },
-        onCell: (record,rowIndex) => {
-          if(this.props.uiFind && record.searchColor !== 'transparent'){
-            return{
-              ['style']: {background: record.searchColor,borderColor: record.searchColor}
-            }
-          }
-          return{
-            ['style']: {background: record.colorToPercent,borderColor: record.colorToPercent}
-          };
-        }
+        onCell: (record) => onCellFunction(record)
       },
       {
         title: 'ST Total',
         dataIndex: 'selfTotal',
-        sorter: (a, b) => {
-          if(a.type === 'undefined'){
-            return -1
-          }
-          if(b.type === 'undefined'){
-            return 1
-          }
-          return a.selfTotal - b.selfTotal
-        },
+        sorter: (a, b) => sorterFunction({"type": a.type,"index": a.selfTotal},{"type": b.type,"index": b.selfTotal}),
         render: (cell: string) => {
               return cell+'ms'
         },
-        onCell: (record,rowIndex) => {
-          if(this.props.uiFind && record.searchColor !== 'transparent'){
-            return{
-              ['style']: {background: record.searchColor,borderColor: record.searchColor}
-            }
-          }
-          return{
-            ['style']: {background: record.colorToPercent,borderColor: record.colorToPercent}
-          };
-        }
+        onCell: (record) => onCellFunction(record)
       },
       {
         title: 'ST Avg',
         dataIndex: 'selfAvg',
-        sorter: (a, b) => {
-          if(a.type === 'undefined'){
-            return -1
-          }
-          if(b.type === 'undefined'){
-            return 1
-          }
-          return a.selfAvg - b.selfAvg
-        },
+        sorter: (a, b) => sorterFunction({"type": a.type,"index": a.selfAvg},{"type": b.type,"index": b.selfAvg}),
         render: (cell: string) => {
               return cell+'ms'
         },
-        onCell: (record,rowIndex) => {
-          if(this.props.uiFind && record.searchColor !== 'transparent'){
-            return{
-              ['style']: {background: record.searchColor,borderColor: record.searchColor}
-            }
-          }
-          return{
-            ['style']: {background: record.colorToPercent,borderColor: record.colorToPercent}
-          };
-        }
+        onCell: (record) => onCellFunction(record)
       },
       {
         title: 'ST Min',
         dataIndex: 'selfMin',
-        sorter: (a, b) => {
-          if(a.type === 'undefined'){
-            return -1
-          }
-          if(b.type === 'undefined'){
-            return 1
-          }
-          return a.selfMin - b.selfMin
-        },
+        sorter: (a, b) => sorterFunction({"type": a.type,"index": a.selfMin},{"type": b.type,"index": b.selfMin}),
         render: (cell: string) => {
               return cell+'ms'
         },
-        onCell: (record,rowIndex) => {
-          if(this.props.uiFind && record.searchColor !== 'transparent'){
-            return{
-              ['style']: {background: record.searchColor,borderColor: record.searchColor}
-            }
-          }
-          return{
-            ['style']: {background: record.colorToPercent,borderColor: record.colorToPercent}
-          };
-        }
+        onCell: (record) => onCellFunction(record)
       },
       {
         title: 'ST Max',
         dataIndex: 'selfMax',
-        sorter: (a, b) => {
-          if(a.type === 'undefined'){
-            return -1
-          }
-          if(b.type === 'undefined'){
-            return 1
-          }
-          return a.selfMax - b.selfMax
-        },
+        sorter: (a, b) => sorterFunction({"type": a.type,"index": a.selfMax},{"type": b.type,"index": b.selfMax}),
         render: (cell: string) => {
               return cell+'ms'
         },
-        onCell: (record,rowIndex) => {
-          if(this.props.uiFind && record.searchColor !== 'transparent'){
-            return{
-              ['style']: {background: record.searchColor,borderColor: record.searchColor}
-            }
-          }
-          return{
-            ['style']: {background: record.colorToPercent,borderColor: record.colorToPercent}
-          };
-        }
+        onCell: (record) => onCellFunction(record)
       },
       {
         title: 'ST in Duration',
         dataIndex: 'percent',
-        sorter: (a, b) => {
-          if(a.type === 'undefined'){
-            return -1
-          }
-          if(b.type === 'undefined'){
-            return 1
-          }
-          return a.percent - b.percent
-        },
+        sorter: (a, b) => sorterFunction({"type": a.type,"index": a.percent},{"type": b.type,"index": b.percent}),
         render: (cell: string) => {
               return cell+'%'
         },
-        onCell: (record,rowIndex) => {
-          if(this.props.uiFind && record.searchColor !== 'transparent'){
-            return{
-              ['style']: {background: record.searchColor,borderColor: record.searchColor}
-            }
-          }
-          return{
-            ['style']: {background: record.colorToPercent,borderColor: record.colorToPercent}
-          };
-        }
+        onCell: (record) => onCellFunction(record)
       },
     ];
     let isDetailArray: ITableSpan[] = [];
