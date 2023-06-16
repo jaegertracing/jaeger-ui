@@ -25,7 +25,7 @@ export interface ITableSpan {
   selfMin: number;
   selfMax: number;
   percent: number;
-  isDetail: boolean;
+  isDetail: boolean;//It is about sub-grouping.It is true if it belongs to subgroup.
   parentElement: string;
   color: string; // If it is a service name, the color will be set.
   searchColor: string;
