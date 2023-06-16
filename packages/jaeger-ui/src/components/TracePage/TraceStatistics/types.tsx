@@ -47,5 +47,5 @@ export interface IColumnValue {
 
 export interface ISorterInput {
   type: string;
-  index: number | string;
+  value: number | string;
 }
