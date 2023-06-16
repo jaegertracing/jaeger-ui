@@ -342,16 +342,13 @@ export default class TraceStatistics extends Component<Props, State> {
     ];
 
     const findTablesAccToSelectors = (tableValue: ITableSpan[]): ITableSpan[] => {
-      let isDetailArray: ITableSpan[] = [];
-      let isNoDetail: ITableSpan[] = [];
-
-      isDetailArray = tableValue.filter((val: ITableSpan) => val.isDetail);
-      isNoDetail = tableValue.filter((val: ITableSpan) => !val.isDetail);
+      const isDetailArray: ITableSpan[] = tableValue.filter((val: ITableSpan) => val.isDetail);
+      const isNoDetail: ITableSpan[] = tableValue.filter((val: ITableSpan) => !val.isDetail);
       for (let i = 0; i < isNoDetail.length; i++) {
         let newArr = isDetailArray.filter(value => value.parentElement === isNoDetail[i].name);
         newArr = newArr.map((value, index) => {
           const _key = {
-            key: `$${i}-${index}`,
+            key: `${i}-${index}`,
           };
           const value2 = { ...value, ..._key };
           return value2;
