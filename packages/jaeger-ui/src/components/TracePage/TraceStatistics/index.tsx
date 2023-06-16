@@ -205,13 +205,9 @@ export default class TraceStatistics extends Component<Props, State> {
     };
 
     const onCellFunction = (record: ITableSpan) => {
-      if (this.props.uiFind && record.searchColor !== 'transparent') {
-        return {
-          style: { background: record.searchColor, borderColor: record.searchColor },
-        };
-      }
+      const backgroundColor = this.props.uiFind && record.searchColor !== 'transparent'?record.searchColor:record.colorToPercent;
       return {
-        style: { background: record.colorToPercent, borderColor: record.colorToPercent },
+        style: { background: backgroundColor, borderColor: backgroundColor },
       };
     };
 
