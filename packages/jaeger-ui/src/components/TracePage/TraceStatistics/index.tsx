@@ -12,17 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as _ from 'lodash';
 import React, { Component } from 'react';
 import './index.css';
-import { Trace } from '../../../types/trace';
-import TraceStatisticsHeader from './TraceStatisticsHeader';
-import { ITableSpan } from './types';
-import { TNil } from '../../../types';
-import PopupSQL from './PopupSql';
 import { Table } from 'antd';
 import { ColumnProps } from 'antd/es/table';
-
+import { Trace } from '../../../types/trace';
+import TraceStatisticsHeader from './TraceStatisticsHeader';
+import { ITableSpan, ISorterInput } from './types';
+import { TNil } from '../../../types';
+import PopupSQL from './PopupSql';
 
 type Props = {
   trace: Trace;
@@ -40,75 +38,6 @@ type State = {
   valueNameSelector1: string;
   valueNameSelector2: string | null;
 };
-
-const columnsArray: any[] = [
-  {
-    title: 'Name',
-    attribute: 'name',
-    suffix: '',
-    isDecimal: false,
-  },
-  {
-    title: 'Count',
-    attribute: 'count',
-    suffix: '',
-    isDecimal: false,
-  },
-  {
-    title: 'Total',
-    attribute: 'total',
-    suffix: 'ms',
-    isDecimal: true,
-  },
-  {
-    title: 'Avg',
-    attribute: 'avg',
-    suffix: 'ms',
-    isDecimal: true,
-  },
-  {
-    title: 'Min',
-    attribute: 'min',
-    suffix: 'ms',
-    isDecimal: true,
-  },
-  {
-    title: 'Max',
-    attribute: 'max',
-    suffix: 'ms',
-    isDecimal: true,
-  },
-  {
-    title: 'ST Total',
-    attribute: 'selfTotal',
-    suffix: 'ms',
-    isDecimal: true,
-  },
-  {
-    title: 'ST Avg',
-    attribute: 'selfAvg',
-    suffix: 'ms',
-    isDecimal: true,
-  },
-  {
-    title: 'ST Min',
-    attribute: 'selfMin',
-    suffix: 'ms',
-    isDecimal: true,
-  },
-  {
-    title: 'ST Max',
-    attribute: 'selfMax',
-    suffix: 'ms',
-    isDecimal: true,
-  },
-  {
-    title: 'ST in Duration',
-    attribute: 'percent',
-    suffix: '%',
-    isDecimal: true,
-  },
-];
 
 /**
  * Trace Tag Overview Component
@@ -167,11 +96,7 @@ export default class TraceStatistics extends Component<Props, State> {
     this.setState(prevState => {
       return {
         ...prevState,
-        tableValue: this.searchInTable(
-          this.props.uiFindVertexKeys!,
-          tableValue,
-          this.props.uiFind
-        ),
+        tableValue: this.searchInTable(this.props.uiFindVertexKeys!, tableValue, this.props.uiFind),
         sortIndex: 1,
         sortAsc: false,
         valueNameSelector1,
@@ -182,7 +107,7 @@ export default class TraceStatistics extends Component<Props, State> {
   }
 
   /**
-   * Opern the popup button.
+   * Open the popup button.
    * @param popupContent
    */
   togglePopup(popupContent: string) {
@@ -264,167 +189,182 @@ export default class TraceStatistics extends Component<Props, State> {
   };
 
   render() {
+    const onClickOption = (type: string, name: string) => {
+      if (this.state.valueNameSelector1 === 'sql.query' && type !== 'undefined') this.togglePopup(name);
+    };
 
-    const onClickOption = (type:string,name:string) => {
-      if(this.state.valueNameSelector1 === 'sql.query' && type !== 'undefined')
-              this.togglePopup(name)
-    }
-
-    const sorterFunction = (a:any,b:any)=>{
-      if(a.type === 'undefined'){
-        return 0
+    const sorterFunction = (a: ISorterInput, b: ISorterInput) => {
+      if (a.type === 'undefined') {
+        return 0;
       }
-      if(b.type === 'undefined'){
-        return -1
+      if (b.type === 'undefined') {
+        return -1;
       }
-      if(typeof a.index === 'number')
-      return a.index - b.index
-      else if(typeof a.index === 'string')
-      return a.index.localeCompare(b.index)
-    }
+      if (typeof a.index === 'number' && typeof b.index === 'number') return a.index - b.index;
+      return (a.index as string).localeCompare(b.index as string);
+    };
 
     const onCellFunction = (record: ITableSpan) => {
-      if(this.props.uiFind && record.searchColor !== 'transparent'){
-        return{
-          ['style']: {background: record.searchColor,borderColor: record.searchColor}
-        }
+      if (this.props.uiFind && record.searchColor !== 'transparent') {
+        return {
+          style: { background: record.searchColor, borderColor: record.searchColor },
+        };
       }
-      return{
-        ['style']: {background: record.colorToPercent,borderColor: record.colorToPercent}
+      return {
+        style: { background: record.colorToPercent, borderColor: record.colorToPercent },
       };
-    }
+    };
 
     const columns: ColumnProps<ITableSpan>[] = [
       {
         title: 'Name',
         dataIndex: 'name',
-        sorter: (a,b) => sorterFunction({"type": a.type,"index": a.name},{"type": b.type,"index": b.name}),
-        render: (name: string,row: ITableSpan) => {
-          if(!row.color){
-            return <span onClick={()=>onClickOption(row.type,row.name)} style={{borderLeft: `4px solid transparent`,padding: "7px 0px 7px 10px",cursor: "default"}}>{name}</span>
+        sorter: (a, b) => sorterFunction({ type: a.type, index: a.name }, { type: b.type, index: b.name }),
+        render: (name: string, row: ITableSpan) => {
+          if (!row.color) {
+            return (
+              <span
+                onClick={() => onClickOption(row.type, row.name)}
+                style={{
+                  borderLeft: `4px solid transparent`,
+                  padding: '7px 0px 7px 10px',
+                  cursor: 'default',
+                }}
+              >
+                {name}
+              </span>
+            );
           }
-          return <span onClick={()=>onClickOption(row.type,row.name)} style={{borderLeft: `4px solid ${row.color}`,padding: "7px 0px 7px 10px",cursor: "default"}}>{name}</span>
+          return (
+            <span
+              onClick={() => onClickOption(row.type, row.name)}
+              style={{ borderLeft: `4px solid ${row.color}`, padding: '7px 0px 7px 10px', cursor: 'default' }}
+            >
+              {name}
+            </span>
+          );
         },
-        onCell: (record) => onCellFunction(record)
+        onCell: record => onCellFunction(record),
       },
       {
         title: 'Count',
         dataIndex: 'count',
-        sorter: (a,b) => sorterFunction({"type": a.type,"index": a.count},{"type": b.type,"index": b.count}),
-        onCell: (record) => onCellFunction(record),
-        defaultSortOrder: 'ascend'
+        sorter: (a, b) => sorterFunction({ type: a.type, index: a.count }, { type: b.type, index: b.count }),
+        onCell: record => onCellFunction(record),
+        defaultSortOrder: 'ascend',
       },
       {
         title: 'Total',
         dataIndex: 'total',
-        sorter: (a, b) => sorterFunction({"type": a.type,"index": a.total},{"type": b.type,"index": b.total}),
+        sorter: (a, b) => sorterFunction({ type: a.type, index: a.total }, { type: b.type, index: b.total }),
         render: (cell: string) => {
-              return cell+'ms'
+          return `${cell} ms`;
         },
-        onCell: (record) => onCellFunction(record)
+        onCell: record => onCellFunction(record),
       },
       {
         title: 'Avg',
         dataIndex: 'avg',
-        sorter: (a, b) => sorterFunction({"type": a.type,"index": a.avg},{"type": b.type,"index": b.avg}),
+        sorter: (a, b) => sorterFunction({ type: a.type, index: a.avg }, { type: b.type, index: b.avg }),
         render: (cell: string) => {
-              return cell+'ms'
+          return `${cell} ms`;
         },
-        onCell: (record) => onCellFunction(record)
+        onCell: record => onCellFunction(record),
       },
       {
         title: 'Min',
         dataIndex: 'min',
-        sorter: (a, b) => sorterFunction({"type": a.type,"index": a.min},{"type": b.type,"index": b.min}),
+        sorter: (a, b) => sorterFunction({ type: a.type, index: a.min }, { type: b.type, index: b.min }),
         render: (cell: string) => {
-              return cell+'ms'
+          return `${cell} ms`;
         },
-        onCell: (record) => onCellFunction(record)
+        onCell: record => onCellFunction(record),
       },
       {
         title: 'Max',
         dataIndex: 'max',
-        sorter: (a, b) => sorterFunction({"type": a.type,"index": a.max},{"type": b.type,"index": b.max}),
+        sorter: (a, b) => sorterFunction({ type: a.type, index: a.max }, { type: b.type, index: b.max }),
         render: (cell: string) => {
-              return cell+'ms'
+          return `${cell} ms`;
         },
-        onCell: (record) => onCellFunction(record)
+        onCell: record => onCellFunction(record),
       },
       {
         title: 'ST Total',
         dataIndex: 'selfTotal',
-        sorter: (a, b) => sorterFunction({"type": a.type,"index": a.selfTotal},{"type": b.type,"index": b.selfTotal}),
+        sorter: (a, b) =>
+          sorterFunction({ type: a.type, index: a.selfTotal }, { type: b.type, index: b.selfTotal }),
         render: (cell: string) => {
-              return cell+'ms'
+          return `${cell} ms`;
         },
-        onCell: (record) => onCellFunction(record)
+        onCell: record => onCellFunction(record),
       },
       {
         title: 'ST Avg',
         dataIndex: 'selfAvg',
-        sorter: (a, b) => sorterFunction({"type": a.type,"index": a.selfAvg},{"type": b.type,"index": b.selfAvg}),
+        sorter: (a, b) =>
+          sorterFunction({ type: a.type, index: a.selfAvg }, { type: b.type, index: b.selfAvg }),
         render: (cell: string) => {
-              return cell+'ms'
+          return `${cell} ms`;
         },
-        onCell: (record) => onCellFunction(record)
+        onCell: record => onCellFunction(record),
       },
       {
         title: 'ST Min',
         dataIndex: 'selfMin',
-        sorter: (a, b) => sorterFunction({"type": a.type,"index": a.selfMin},{"type": b.type,"index": b.selfMin}),
+        sorter: (a, b) =>
+          sorterFunction({ type: a.type, index: a.selfMin }, { type: b.type, index: b.selfMin }),
         render: (cell: string) => {
-              return cell+'ms'
+          return `${cell} ms`;
         },
-        onCell: (record) => onCellFunction(record)
+        onCell: record => onCellFunction(record),
       },
       {
         title: 'ST Max',
         dataIndex: 'selfMax',
-        sorter: (a, b) => sorterFunction({"type": a.type,"index": a.selfMax},{"type": b.type,"index": b.selfMax}),
+        sorter: (a, b) =>
+          sorterFunction({ type: a.type, index: a.selfMax }, { type: b.type, index: b.selfMax }),
         render: (cell: string) => {
-              return cell+'ms'
+          return `${cell} ms`;
         },
-        onCell: (record) => onCellFunction(record)
+        onCell: record => onCellFunction(record),
       },
       {
         title: 'ST in Duration',
         dataIndex: 'percent',
-        sorter: (a, b) => sorterFunction({"type": a.type,"index": a.percent},{"type": b.type,"index": b.percent}),
+        sorter: (a, b) =>
+          sorterFunction({ type: a.type, index: a.percent }, { type: b.type, index: b.percent }),
         render: (cell: string) => {
-              return cell+'%'
+          return `${cell} %`;
         },
-        onCell: (record) => onCellFunction(record)
+        onCell: record => onCellFunction(record),
       },
     ];
-    let isDetailArray: ITableSpan[] = [];
-    let isNoDetail: ITableSpan[] = [];
-  
-    const findTablesAccToSelectors = (tableValue: ITableSpan[]) => {
-      for (let i = 0; i < tableValue.length; i++) {
-        if (tableValue[i].isDetail) {
-          isDetailArray.push(tableValue[i]);
-        } else {
-          isNoDetail.push(tableValue[i]);
-        }
-      } 
-      for(let i = 0; i < isNoDetail.length; i++){
-          let newArr = isDetailArray.filter((value)=>{return ((value.parentElement) === (isNoDetail[i].name))})
-          newArr = newArr.map((value,index)=>{
-            const x = i.toString()+ index.toString();
-            const keyo = {
-              key: x
-            }
-            value = {...value,...keyo}
-            return value
-          })
-          const child = {
-            key: i.toString(),
-            children: newArr
-          }
-          isNoDetail[i] = {...isNoDetail[i],...child}
+
+    const findTablesAccToSelectors = (tableValue: ITableSpan[]): ITableSpan[] => {
+      let isDetailArray: ITableSpan[] = [];
+      let isNoDetail: ITableSpan[] = [];
+
+      isDetailArray = tableValue.filter((val: ITableSpan) => val.isDetail);
+      isNoDetail = tableValue.filter((val: ITableSpan) => !val.isDetail);
+      for (let i = 0; i < isNoDetail.length; i++) {
+        let newArr = isDetailArray.filter(value => value.parentElement === isNoDetail[i].name);
+        newArr = newArr.map((value, index) => {
+          const _key = {
+            key: `$${i}-${index}`,
+          };
+          const value2 = { ...value, ..._key };
+          return value2;
+        });
+        const child = {
+          key: i.toString(),
+          children: newArr,
+        };
+        isNoDetail[i] = { ...isNoDetail[i], ...child };
       }
-    }
-    findTablesAccToSelectors(this.state.tableValue)
+      return isNoDetail;
+    };
+    const isNoDetail: ITableSpan[] = findTablesAccToSelectors(this.state.tableValue);
     return (
       <div>
         <h3 className="title--TraceStatistics"> Trace Statistics</h3>
@@ -439,32 +379,26 @@ export default class TraceStatistics extends Component<Props, State> {
         {this.state.showPopup ? (
           <PopupSQL closePopup={this.togglePopup} popupContent={this.state.popupContent} />
         ) : null}
-        {/* <table className="test1893">
-          <tbody className="DetailTraceTableTbody--TraceStatistics">
-            {this.renderTableHead()}
-            {this.renderTableData()}
-          </tbody>
-        </table> */}
         <Table
-            className="span-table span-view-table"
-            columns={columns}
-            dataSource={isNoDetail}
-            pagination={{
-              total: isNoDetail.length,
-              pageSizeOptions: ['10', '20', '50', '100'],
-              showSizeChanger: true,
-              showQuickJumper: true,
-            }}
-            rowClassName={(record,index)=>{
-              if(record.type === 'undefined'){
-                return "undefClass"
-              }
-              return "MainTableData--tr" 
-            }}
-            key={isNoDetail.length}
-            defaultExpandAllRows={true}
-            sortDirections={['ascend', 'descend', 'ascend']}
-            />
+          className="span-table span-view-table"
+          columns={columns}
+          dataSource={isNoDetail}
+          pagination={{
+            total: isNoDetail.length,
+            pageSizeOptions: ['10', '20', '50', '100'],
+            showSizeChanger: true,
+            showQuickJumper: true,
+          }}
+          rowClassName={record => {
+            if (record.type === 'undefined') {
+              return 'undefClass';
+            }
+            return 'MainTableData--tr';
+          }}
+          key={isNoDetail.length}
+          defaultExpandAllRows
+          sortDirections={['ascend', 'descend', 'ascend']}
+        />
       </div>
     );
   }

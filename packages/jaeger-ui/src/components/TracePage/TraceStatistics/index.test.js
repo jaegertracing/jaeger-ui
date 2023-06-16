@@ -15,9 +15,6 @@
 import React from 'react';
 import { mount } from 'enzyme';
 import TraceStatistics from './index';
-import MainTableData from './MainTableData';
-import DetailTableData from './DetailTableData';
-import HeaderTable from './HeaderTable';
 import TraceStatisticsHeader from './TraceStatisticsHeader';
 import PopupSql from './PopupSql';
 import transformTraceData from '../../../model/transform-trace-data';
@@ -48,12 +45,9 @@ describe('<TraceTagOverview>', () => {
   });
 
   it('renders Trace Tag Overview', () => {
-    expect(wrapper.find(HeaderTable).length).toBe(11);
     expect(wrapper.find(TraceStatisticsHeader).length).toBe(1);
     expect(wrapper.state('valueNameSelector1')).toBe('Service Name');
     expect(wrapper.state('valueNameSelector2')).toBe(null);
-    expect(wrapper.find(MainTableData).length).toBe(2);
-    expect(wrapper.find(DetailTableData).length).toBe(0);
     expect(wrapper.find(PopupSql).length).toBe(0);
   });
 

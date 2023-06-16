@@ -30,8 +30,8 @@ limitations under the License.
   width: 99.999%;
 }
 
-.undefClass{
-  color: rgb(153,153,153);
+.undefClass {
+  color: rgb(153, 153, 153);
   font-style: italic;
   cursor: default;
 }
