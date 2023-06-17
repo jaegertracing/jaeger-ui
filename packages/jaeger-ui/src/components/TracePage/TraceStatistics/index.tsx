@@ -320,6 +320,7 @@ export default class TraceStatistics extends Component<Props, State> {
       return { ...val, onCell: record => onCellFunction(record) };
     });
 
+    //This function adds the subgroup rows for each row according to valuenameselector2 value
     const findTablesAccToSelectors = (tableValue: ITableSpan[]): ITableSpan[] => {
       const withDetail: ITableSpan[] = tableValue.filter((val: ITableSpan) => val.isDetail);
       const withoutDetail: ITableSpan[] = tableValue.filter((val: ITableSpan) => !val.isDetail);
@@ -367,9 +368,9 @@ export default class TraceStatistics extends Component<Props, State> {
           }}
           rowClassName={row => {
             if (row.type === 'undefined') {
-              return 'undefClass';
+              return 'undefClass--TraceStatistics';
             }
-            return 'MainTableData--tr';
+            return 'MainTableData--TraceStatistics';
           }}
           key={withoutDetail.length}
           defaultExpandAllRows

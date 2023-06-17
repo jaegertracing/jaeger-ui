@@ -22,25 +22,17 @@ limitations under the License.
   margin-bottom: 0%;
 }
 
-.DetailTraceTableTbody--TraceStatistics {
-  border-bottom: 1px solid rgb(204, 204, 204);
-}
-
-.test1893 {
-  width: 99.999%;
-}
-
-.undefClass {
+.undefClass--TraceStatistics {
   color: rgb(153, 153, 153);
   font-style: italic;
   cursor: default;
 }
 
-.MainTableData--tr {
+.MainTableData--TraceStatistics {
   border-top: 1px solid rgb(255, 255, 255);
 }
 
-.MainTableData--tr:hover {
+.MainTableData--TraceStatistics:hover {
   background: rgb(250, 250, 250);
   color: rgb(0, 0, 0);
 }
