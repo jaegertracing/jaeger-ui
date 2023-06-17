@@ -25,7 +25,7 @@ export interface ITableSpan {
   selfMin: number;
   selfMax: number;
   percent: number;
-  isDetail: boolean; // True is the entry represents a subgroup aggregation.
+  isDetail: boolean; // True is the entry which represents a subgroup aggregation.
   parentElement: string;
   color: string; // If it is a service name, the color will be set.
   searchColor: string;
