@@ -226,7 +226,7 @@ export default class TraceStatistics extends Component<Props, State> {
             <span
               onClick={() => onClickOption(row.type, row.name)}
               style={{
-                borderLeft: `4px solid ${`${row.color}` || `transparent`}`,
+                borderLeft: `4px solid ${row.color || `transparent`}`,
                 padding: '7px 0px 7px 10px',
                 cursor: 'default',
               }}
