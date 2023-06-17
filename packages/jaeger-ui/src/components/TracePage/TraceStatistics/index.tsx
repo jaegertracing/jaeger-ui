@@ -15,10 +15,10 @@
 import React, { Component } from 'react';
 import './index.css';
 import { Table } from 'antd';
-import { ColumnProps } from 'antd/es/table';
+import { ColumnProps, CompareFn } from 'antd/es/table';
 import { Trace } from '../../../types/trace';
 import TraceStatisticsHeader from './TraceStatisticsHeader';
-import { ITableSpan, ISorterInput } from './types';
+import { ITableSpan} from './types';
 import { TNil } from '../../../types';
 import PopupSQL from './PopupSql';
 
@@ -193,17 +193,22 @@ export default class TraceStatistics extends Component<Props, State> {
       if (this.state.valueNameSelector1 === 'sql.query' && type !== 'undefined') this.togglePopup(name);
     };
 
-    const sorterFunction = (a: ISorterInput, b: ISorterInput) => {
-      if (a.type === 'undefined') {
-        return 0;
-      }
-      if (b.type === 'undefined') {
-        return -1;
-      }
-      if (typeof a.value === 'number' && typeof b.value === 'number') return a.value - b.value;
-      return (a.value as string).localeCompare(b.value as string);
+    const sorterFunction = <T extends keyof ITableSpan>(field: T): CompareFn<ITableSpan> => {
+      const sort = (a: ITableSpan, b: ITableSpan) => {
+        if (a.type === 'undefined') {
+          return 0;
+        }
+        if (b.type === 'undefined') {
+          return -1;
+        }
+        if (field === 'name') {
+          return (a[field] as string).localeCompare(b[field] as string);
+        }
+        return (a[field] as number) - (b[field] as number)
+      };
+      return sort;
     };
-
+    
     const onCellFunction = (record: ITableSpan) => {
       const backgroundColor = this.props.uiFind && record.searchColor !== 'transparent'?record.searchColor:record.colorToPercent;
       return {
@@ -215,7 +220,7 @@ export default class TraceStatistics extends Component<Props, State> {
       {
         title: 'Name',
         dataIndex: 'name',
-        sorter: (a, b) => sorterFunction({ type: a.type, value: a.name }, { type: b.type, value: b.name }),
+        sorter: sorterFunction('name'),
         render: (name: string, row: ITableSpan) => {
           return (
             <span
@@ -234,13 +239,13 @@ export default class TraceStatistics extends Component<Props, State> {
       {
         title: 'Count',
         dataIndex: 'count',
-        sorter: (a, b) => sorterFunction({ type: a.type, value: a.count }, { type: b.type, value: b.count }),
+        sorter: sorterFunction('count'),
         defaultSortOrder: 'ascend',
       },
       {
         title: 'Total',
         dataIndex: 'total',
-        sorter: (a, b) => sorterFunction({ type: a.type, value: a.total }, { type: b.type, value: b.total }),
+        sorter: sorterFunction('total'),
         render: (cell: string) => {
           return `${cell} ms`;
         },
@@ -248,7 +253,7 @@ export default class TraceStatistics extends Component<Props, State> {
       {
         title: 'Avg',
         dataIndex: 'avg',
-        sorter: (a, b) => sorterFunction({ type: a.type, value: a.avg }, { type: b.type, value: b.avg }),
+        sorter: sorterFunction('avg'),
         render: (cell: string) => {
           return `${cell} ms`;
         },
@@ -256,7 +261,7 @@ export default class TraceStatistics extends Component<Props, State> {
       {
         title: 'Min',
         dataIndex: 'min',
-        sorter: (a, b) => sorterFunction({ type: a.type, value: a.min }, { type: b.type, value: b.min }),
+        sorter: sorterFunction('min'),
         render: (cell: string) => {
           return `${cell} ms`;
         },
@@ -264,7 +269,7 @@ export default class TraceStatistics extends Component<Props, State> {
       {
         title: 'Max',
         dataIndex: 'max',
-        sorter: (a, b) => sorterFunction({ type: a.type, value: a.max }, { type: b.type, value: b.max }),
+        sorter:sorterFunction('max'),
         render: (cell: string) => {
           return `${cell} ms`;
         },
@@ -272,8 +277,7 @@ export default class TraceStatistics extends Component<Props, State> {
       {
         title: 'ST Total',
         dataIndex: 'selfTotal',
-        sorter: (a, b) =>
-          sorterFunction({ type: a.type, value: a.selfTotal }, { type: b.type, value: b.selfTotal }),
+        sorter:sorterFunction('selfTotal'),
         render: (cell: string) => {
           return `${cell} ms`;
         },
@@ -281,8 +285,7 @@ export default class TraceStatistics extends Component<Props, State> {
       {
         title: 'ST Avg',
         dataIndex: 'selfAvg',
-        sorter: (a, b) =>
-          sorterFunction({ type: a.type, value: a.selfAvg }, { type: b.type, value: b.selfAvg }),
+        sorter: sorterFunction('selfAvg'),
         render: (cell: string) => {
           return `${cell} ms`;
         },
@@ -290,8 +293,7 @@ export default class TraceStatistics extends Component<Props, State> {
       {
         title: 'ST Min',
         dataIndex: 'selfMin',
-        sorter: (a, b) =>
-          sorterFunction({ type: a.type, value: a.selfMin }, { type: b.type, value: b.selfMin }),
+        sorter:sorterFunction( 'selfMin' ),
         render: (cell: string) => {
           return `${cell} ms`;
         },
@@ -299,8 +301,7 @@ export default class TraceStatistics extends Component<Props, State> {
       {
         title: 'ST Max',
         dataIndex: 'selfMax',
-        sorter: (a, b) =>
-          sorterFunction({ type: a.type, value: a.selfMax }, { type: b.type, value: b.selfMax }),
+        sorter:sorterFunction('selfMax'),
         render: (cell: string) => {
           return `${cell} ms`;
         },
@@ -308,8 +309,7 @@ export default class TraceStatistics extends Component<Props, State> {
       {
         title: 'ST in Duration',
         dataIndex: 'percent',
-        sorter: (a, b) =>
-          sorterFunction({ type: a.type, value: a.percent }, { type: b.type, value: b.percent }),
+        sorter:sorterFunction('percent'),
         render: (cell: string) => {
           return `${cell} %`;
         },

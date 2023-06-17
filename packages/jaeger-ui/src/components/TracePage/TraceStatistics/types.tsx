@@ -44,8 +44,3 @@ export interface IColumnValue {
   suffix: string;
   isDecimal: boolean;
 }
-
-export interface ISorterInput {
-  type: string;
-  value: number | string;
-}
