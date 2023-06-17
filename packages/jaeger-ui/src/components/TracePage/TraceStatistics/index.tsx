@@ -320,8 +320,10 @@ export default class TraceStatistics extends Component<Props, State> {
       return { ...val, onCell: record => onCellFunction(record) };
     });
 
-    //  This function adds the subgroup rows for each row according to valuenameselector2 value
-    const findTablesAccToSelectors = (tableValue: ITableSpan[]): ITableSpan[] => {
+    /**
+    * Pre-process the table data into groups and sub-groups
+    */
+    const groupAndSubgroupSpanData = (tableValue: ITableSpan[]): ITableSpan[] => {
       const withDetail: ITableSpan[] = tableValue.filter((val: ITableSpan) => val.isDetail);
       const withoutDetail: ITableSpan[] = tableValue.filter((val: ITableSpan) => !val.isDetail);
       for (let i = 0; i < withoutDetail.length; i++) {
@@ -341,7 +343,7 @@ export default class TraceStatistics extends Component<Props, State> {
       }
       return withoutDetail;
     };
-    const withoutDetail: ITableSpan[] = findTablesAccToSelectors(this.state.tableValue);
+    const groupedAndSubgroupedSpanData: ITableSpan[] = groupAndSubgroupSpanData(this.state.tableValue);
     return (
       <div>
         <h3 className="title--TraceStatistics"> Trace Statistics</h3>
@@ -359,20 +361,15 @@ export default class TraceStatistics extends Component<Props, State> {
         <Table
           className="span-table span-view-table"
           columns={columns}
-          dataSource={withoutDetail}
+          dataSource={groupedAndSubgroupedSpanData}
           pagination={{
-            total: withoutDetail.length,
+            total: groupedAndSubgroupedSpanData.length,
             pageSizeOptions: ['10', '20', '50', '100'],
             showSizeChanger: true,
             showQuickJumper: true,
           }}
-          rowClassName={row => {
-            if (row.type === 'undefined') {
-              return 'undefClass--TraceStatistics';
-            }
-            return 'MainTableData--TraceStatistics';
-          }}
-          key={withoutDetail.length}
+          rowClassName={row => row.type === 'undefined' ? 'undefClass--TraceStatistics' : 'MainTableData--TraceStatistics'}
+          key={groupedAndSubgroupedSpanData.length}
           defaultExpandAllRows
           sortDirections={['ascend', 'descend', 'ascend']}
         />
