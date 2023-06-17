@@ -150,9 +150,9 @@ describe('<KeyValuesTable>', () => {
 
   it('renders a <CopyIcon /> with correct copyText for each data element', () => {
     const copyIcons = wrapper.find(CopyIcon);
-    expect(copyIcons.length).toBe(2*data.length); // Copy and Copy JSON buttons
+    expect(copyIcons.length).toBe(2 * data.length); // Copy and Copy JSON buttons
     copyIcons.forEach((copyIcon, i) => {
-      let datum = data[Math.floor(i/2)];
+      let datum = data[Math.floor(i / 2)];
       if (i % 2 == 0) {
         expect(copyIcon.prop('copyText')).toBe(datum.value);
         expect(copyIcon.prop('tooltipTitle')).toBe('Copy value');
