@@ -153,7 +153,7 @@ describe('<KeyValuesTable>', () => {
     expect(copyIcons.length).toBe(2 * data.length); // Copy and Copy JSON buttons
     copyIcons.forEach((copyIcon, i) => {
       const datum = data[Math.floor(i / 2)];
-      if (i % 2 == 0) {
+      if (i % 2 === 0) {
         expect(copyIcon.prop('copyText')).toBe(datum.value);
         expect(copyIcon.prop('tooltipTitle')).toBe('Copy value');
       } else {
