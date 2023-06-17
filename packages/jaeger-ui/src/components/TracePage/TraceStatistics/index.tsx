@@ -320,7 +320,7 @@ export default class TraceStatistics extends Component<Props, State> {
       return { ...val, onCell: record => onCellFunction(record) };
     });
 
-    //This function adds the subgroup rows for each row according to valuenameselector2 value
+    //  This function adds the subgroup rows for each row according to valuenameselector2 value
     const findTablesAccToSelectors = (tableValue: ITableSpan[]): ITableSpan[] => {
       const withDetail: ITableSpan[] = tableValue.filter((val: ITableSpan) => val.isDetail);
       const withoutDetail: ITableSpan[] = tableValue.filter((val: ITableSpan) => !val.isDetail);
