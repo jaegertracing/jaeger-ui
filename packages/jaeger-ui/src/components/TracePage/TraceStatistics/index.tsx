@@ -135,9 +135,9 @@ export default class TraceStatistics extends Component<Props, State> {
     const yellowSearchCollor = 'rgb(255,243,215)';
     const defaultGrayCollor = 'rgb(248,248,248)';
     for (let i = 0; i < allTableSpansChange.length; i++) {
-      if (!allTableSpansChange[i].isDetail && allTableSpansChange[i].type !== 'undefined') {
+      if (!allTableSpansChange[i].isDetail && allTableSpansChange[i].hasSubgroupValue) {
         allTableSpansChange[i].searchColor = 'transparent';
-      } else if (allTableSpansChange[i].type !== 'undefined') {
+      } else if (allTableSpansChange[i].hasSubgroupValue) {
         allTableSpansChange[i].searchColor = defaultGrayCollor;
       } else {
         allTableSpansChange[i].searchColor = defaultGrayCollor;
@@ -189,16 +189,16 @@ export default class TraceStatistics extends Component<Props, State> {
   };
 
   render() {
-    const onClickOption = (type: string, name: string) => {
-      if (this.state.valueNameSelector1 === 'sql.query' && type !== 'undefined') this.togglePopup(name);
+    const onClickOption = (hasSubgroupValue: boolean, name: string) => {
+      if (this.state.valueNameSelector1 === 'sql.query' && hasSubgroupValue) this.togglePopup(name);
     };
 
     const sorterFunction = <T extends keyof ITableSpan>(field: T): CompareFn<ITableSpan> => {
       const sort = (a: ITableSpan, b: ITableSpan) => {
-        if (a.type === 'undefined') {
+        if (!a.hasSubgroupValue) {
           return 0;
         }
-        if (b.type === 'undefined') {
+        if (!b.hasSubgroupValue) {
           return -1;
         }
         if (field === 'name') {
@@ -224,7 +224,7 @@ export default class TraceStatistics extends Component<Props, State> {
         render: (name: string, row: ITableSpan) => {
           return (
             <span
-              onClick={() => onClickOption(row.type, row.name)}
+              onClick={() => onClickOption(row.hasSubgroupValue, row.name)}
               style={{
                 borderLeft: `4px solid ${row.color || `transparent`}`,
                 padding: '7px 0px 7px 10px',
@@ -368,7 +368,7 @@ export default class TraceStatistics extends Component<Props, State> {
             showSizeChanger: true,
             showQuickJumper: true,
           }}
-          rowClassName={row => row.type === 'undefined' ? 'undefClass--TraceStatistics' : 'MainTableData--TraceStatistics'}
+          rowClassName={row => !row.hasSubgroupValue ? 'undefClass--TraceStatistics' : 'MainTableData--TraceStatistics'}
           key={groupedAndSubgroupedSpanData.length}
           defaultExpandAllRows
           sortDirections={['ascend', 'descend', 'ascend']}

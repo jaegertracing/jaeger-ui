@@ -13,7 +13,7 @@
 // limitations under the License.
 
 export interface ITableSpan {
-  type: string;
+  hasSubgroupValue: boolean; // True is the entry which has the subgroup tag in it.
   name: string;
   count: number;
   total: number;
