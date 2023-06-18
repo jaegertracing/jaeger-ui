@@ -18,7 +18,7 @@ import { Table } from 'antd';
 import { ColumnProps, CompareFn } from 'antd/es/table';
 import { Trace } from '../../../types/trace';
 import TraceStatisticsHeader from './TraceStatisticsHeader';
-import { ITableSpan} from './types';
+import { ITableSpan } from './types';
 import { TNil } from '../../../types';
 import PopupSQL from './PopupSql';
 
@@ -38,6 +38,64 @@ type State = {
   valueNameSelector1: string;
   valueNameSelector2: string | null;
 };
+
+const columnsArray: any[] = [
+  {
+    title: 'Name',
+    attribute: 'name',
+    suffix: '',
+  },
+  {
+    title: 'Count',
+    attribute: 'count',
+    suffix: '',
+  },
+  {
+    title: 'Total',
+    attribute: 'total',
+    suffix: 'ms',
+  },
+  {
+    title: 'Avg',
+    attribute: 'avg',
+    suffix: 'ms',
+  },
+  {
+    title: 'Min',
+    attribute: 'min',
+    suffix: 'ms',
+  },
+  {
+    title: 'Max',
+    attribute: 'max',
+    suffix: 'ms',
+  },
+  {
+    title: 'ST Total',
+    attribute: 'selfTotal',
+    suffix: 'ms',
+  },
+  {
+    title: 'ST Avg',
+    attribute: 'selfAvg',
+    suffix: 'ms',
+  },
+  {
+    title: 'ST Min',
+    attribute: 'selfMin',
+    suffix: 'ms',
+  },
+  {
+    title: 'ST Max',
+    attribute: 'selfMax',
+    suffix: 'ms',
+  },
+  {
+    title: 'ST in Duration',
+    attribute: 'percent',
+    suffix: '%',
+  },
+];
 
 /**
  * Trace Tag Overview Component
@@ -204,24 +262,24 @@ export default class TraceStatistics extends Component<Props, State> {
         if (field === 'name') {
           return (a[field] as string).localeCompare(b[field] as string);
         }
-        return (a[field] as number) - (b[field] as number)
+        return (a[field] as number) - (b[field] as number);
       };
       return sort;
     };
-    
+
     const onCellFunction = (record: ITableSpan) => {
-      const backgroundColor = this.props.uiFind && record.searchColor !== 'transparent'?record.searchColor:record.colorToPercent;
+      const backgroundColor =
+        this.props.uiFind && record.searchColor !== 'transparent'
+          ? record.searchColor
+          : record.colorToPercent;
       return {
         style: { background: backgroundColor, borderColor: backgroundColor },
       };
     };
 
-    let columns: ColumnProps<ITableSpan>[] = [
-      {
-        title: 'Name',
-        dataIndex: 'name',
-        sorter: sorterFunction('name'),
-        render: (name: string, row: ITableSpan) => {
+    const columns: ColumnProps<ITableSpan>[] = columnsArray.map(val => {
+      const renderFunction = (cell: string, row: ITableSpan) => {
+        if (val.attribute === 'name')
           return (
             <span
               onClick={() => onClickOption(row.hasSubgroupValue, row.name)}
@@ -231,98 +289,23 @@ export default class TraceStatistics extends Component<Props, State> {
                 cursor: 'default',
               }}
             >
-              {name}
+              {cell}
             </span>
           );
-        },
-      },
-      {
-        title: 'Count',
-        dataIndex: 'count',
-        sorter: sorterFunction('count'),
-        defaultSortOrder: 'ascend',
-      },
-      {
-        title: 'Total',
-        dataIndex: 'total',
-        sorter: sorterFunction('total'),
-        render: (cell: string) => {
-          return `${cell} ms`;
-        },
-      },
-      {
-        title: 'Avg',
-        dataIndex: 'avg',
-        sorter: sorterFunction('avg'),
-        render: (cell: string) => {
-          return `${cell} ms`;
-        },
-      },
-      {
-        title: 'Min',
-        dataIndex: 'min',
-        sorter: sorterFunction('min'),
-        render: (cell: string) => {
-          return `${cell} ms`;
-        },
-      },
-      {
-        title: 'Max',
-        dataIndex: 'max',
-        sorter:sorterFunction('max'),
-        render: (cell: string) => {
-          return `${cell} ms`;
-        },
-      },
-      {
-        title: 'ST Total',
-        dataIndex: 'selfTotal',
-        sorter:sorterFunction('selfTotal'),
-        render: (cell: string) => {
-          return `${cell} ms`;
-        },
-      },
-      {
-        title: 'ST Avg',
-        dataIndex: 'selfAvg',
-        sorter: sorterFunction('selfAvg'),
-        render: (cell: string) => {
-          return `${cell} ms`;
-        },
-      },
-      {
-        title: 'ST Min',
-        dataIndex: 'selfMin',
-        sorter:sorterFunction( 'selfMin' ),
-        render: (cell: string) => {
-          return `${cell} ms`;
-        },
-      },
-      {
-        title: 'ST Max',
-        dataIndex: 'selfMax',
-        sorter:sorterFunction('selfMax'),
-        render: (cell: string) => {
-          return `${cell} ms`;
-        },
-      },
-      {
-        title: 'ST in Duration',
-        dataIndex: 'percent',
-        sorter:sorterFunction('percent'),
-        render: (cell: string) => {
-          return `${cell} %`;
-        },
-      },
-    ];
-
-    columns = columns.map(val => {
-      return { ...val, onCell: record => onCellFunction(record) };
+        return `${cell}${val.suffix}`;
+      };
+      const ele = {
+        title: val.title,
+        dataIndex: val.attribute,
+        sorter: sorterFunction(val.attribute),
+        render: renderFunction,
+        onCell: onCellFunction,
+      };
+      return val.attribute === 'count' ? { ...ele, defaultSortOrder: 'ascend' } : ele;
     });
-
     /**
-    * Pre-process the table data into groups and sub-groups
-    */
+     * Pre-process the table data into groups and sub-groups
+     */
     const groupAndSubgroupSpanData = (tableValue: ITableSpan[]): ITableSpan[] => {
       const withDetail: ITableSpan[] = tableValue.filter((val: ITableSpan) => val.isDetail);
       const withoutDetail: ITableSpan[] = tableValue.filter((val: ITableSpan) => !val.isDetail);
@@ -368,7 +351,9 @@ export default class TraceStatistics extends Component<Props, State> {
             showSizeChanger: true,
             showQuickJumper: true,
           }}
-          rowClassName={row => !row.hasSubgroupValue ? 'undefClass--TraceStatistics' : 'MainTableData--TraceStatistics'}
+          rowClassName={row =>
+            !row.hasSubgroupValue ? 'undefClass--TraceStatistics' : 'MainTableData--TraceStatistics'
+          }
           key={groupedAndSubgroupedSpanData.length}
           defaultExpandAllRows
           sortDirections={['ascend', 'descend', 'ascend']}
