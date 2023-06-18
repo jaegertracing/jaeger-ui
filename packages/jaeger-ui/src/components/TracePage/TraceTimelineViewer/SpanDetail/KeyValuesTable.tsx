@@ -151,6 +151,12 @@ export default function KeyValuesTable(props: KeyValuesTableProps) {
                 <td className="KeyValueTable--copyColumn">
                   <CopyIcon
                     className="KeyValueTable--copyIcon"
+                    copyText={row.value}
+                    tooltipTitle="Copy value"
+                  />
+                  <CopyIcon
+                    className="KeyValueTable--copyIcon"
+                    icon="snippets"
                     copyText={JSON.stringify(row, null, 2)}
                     tooltipTitle="Copy JSON"
                   />
