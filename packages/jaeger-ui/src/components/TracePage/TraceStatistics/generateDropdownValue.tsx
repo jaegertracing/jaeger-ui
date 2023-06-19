@@ -29,7 +29,7 @@ function getValueTagIsPicked(tableValue: ITableSpan[], trace: Trace, nameSelecto
   // add all Spans with this tag key
 
   for (let i = 0; i < tableValue.length; i++) {
-    if (tableValue[i].type !== 'undefined') {
+    if (tableValue[i].hasSubgroupValue) {
       for (let j = 0; j < allSpans.length; j++) {
         for (let l = 0; l < allSpans[j].tags.length; l++) {
           if (nameSelectorTitle === allSpans[j].tags[l].key) {
