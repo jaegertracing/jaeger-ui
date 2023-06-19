@@ -11,7 +11,7 @@
     "@babel/eslint-parser": "^7.19.1",
     "@typescript-eslint/eslint-plugin": "5.59.11",
     "@typescript-eslint/parser": "5.59.11",
-    "eslint": "8.42.0",
+    "eslint": "8.43.0",
     "eslint-config-airbnb": "19.0.4",
     "eslint-config-prettier": "8.7.0",
     "eslint-plugin-import": "2.27.5",
