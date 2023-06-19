@@ -21,7 +21,6 @@ import transformTraceData from '../../../model/transform-trace-data';
 import { getColumnValues, getColumnValuesSecondDropdown } from './tableValues';
 
 const testTrace = require('./tableValuesTestTrace/testTrace.json');
-const secondTestTrace = require('./tableValuesTestTrace/spanLongerAsParent.json');
 
 const transformedTrace = transformTraceData(testTrace);
 
