@@ -43,6 +43,7 @@ import { SearchQuery } from '../../../types/search';
 import { KeyValuePair, Trace, TraceData } from '../../../types/trace';
 
 import './index.css';
+import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
 
 type SearchResultsProps = {
   cohortAddTrace: (traceId: string) => void;
@@ -200,7 +201,7 @@ export class UnconnectedSearchResults extends React.PureComponent<SearchResultsP
               <Link
                 className="u-tx-inherit ub-nowrap ub-ml3"
                 to={searchUrl}
-                target="_blank"
+                target={getTargetEmptyOrBlank()}
                 rel="noopener noreferrer"
               >
                 <NewWindowIcon isLarge />
