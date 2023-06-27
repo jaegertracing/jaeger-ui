@@ -103,6 +103,7 @@ const defaultConfig: Config = {
   },
   disableFileUploadControl: false,
   disableJsonView: false,
+  forbidNewPage: false,
   traceGraph: {
     layoutManagerMemory: undefined,
   },

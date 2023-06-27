@@ -22,6 +22,7 @@ import { TNil } from '../../../types';
 import { Trace, Span } from '../../../types/trace';
 import { timeConversion } from '../../../utils/date';
 import prefixUrl from '../../../utils/prefix-url';
+import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
 
 const Option = Select.Option;
 
@@ -149,7 +150,7 @@ export default class TraceSpanView extends Component<Props, State> {
           return (
             <a
               href={prefixUrl(`/trace/${record.traceID}?uiFind=${text}`)}
-              target="_blank"
+              target={getTargetEmptyOrBlank()}
               rel="noopener noreferrer"
             >
               {text}

@@ -27,6 +27,7 @@ import {
 } from './TracePageHeader.track';
 import prefixUrl from '../../../utils/prefix-url';
 import { ETraceViewType } from '../types';
+import { getTargetBlankOrTop } from '../../../utils/config/get-target';
 
 type Props = {
   onTraceViewChange: (viewType: ETraceViewType) => void;
@@ -88,7 +89,7 @@ export default function AltViewOptions(props: Props) {
           <Link
             to={prefixUrl(`/api/traces/${traceID}?prettyPrint=true`)}
             rel="noopener noreferrer"
-            target="_blank"
+            target={getTargetBlankOrTop()}
             onClick={trackJsonView}
           >
             Trace JSON
@@ -100,7 +101,7 @@ export default function AltViewOptions(props: Props) {
           <Link
             to={prefixUrl(`/api/traces/${traceID}?raw=true&prettyPrint=true`)}
             rel="noopener noreferrer"
-            target="_blank"
+            target={getTargetBlankOrTop()}
             onClick={trackRawJsonView}
           >
             Trace JSON (unadjusted)

@@ -172,6 +172,10 @@ export type Config = {
   // Disables the json view.
   disableJsonView: boolean;
 
+  // Alters all targets of links to empty or top to
+  // prevent the creation of a new page.
+  forbidNewPage: boolean;
+
   // The following features are experimental / undocumented.
 
   deepDependencies?: {

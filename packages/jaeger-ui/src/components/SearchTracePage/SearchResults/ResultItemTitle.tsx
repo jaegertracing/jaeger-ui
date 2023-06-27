@@ -25,6 +25,7 @@ import { FetchedState, TNil } from '../../../types';
 import { ApiError } from '../../../types/api-error';
 
 import './ResultItemTitle.css';
+import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
 
 type Props = {
   duration?: number;
@@ -80,7 +81,7 @@ export default class ResultItemTitle extends React.PureComponent<Props> {
       wrapperProps.to = linkTo;
       WrapperComponent = Link;
       if (targetBlank) {
-        wrapperProps.target = '_blank';
+        wrapperProps.target = getTargetEmptyOrBlank();
         wrapperProps.rel = 'noopener noreferrer';
       }
     }
