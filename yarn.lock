@@ -71,7 +71,7 @@
   resolved "https://registry.yarnpkg.com/@babel/compat-data/-/compat-data-7.22.5.tgz#b1f6c86a02d85d2dd3368a2b67c09add8cd0c255"
   integrity sha512-4Jc/YuIaYqKnDDz892kPIledykKg12Aw1PYX5i/TY28anJtacvM1Rrr8wbieB9GfEJwlzqT0hUEao0CxEebiDA==
 
-"@babel/core@7.22.5", "@babel/core@^7.11.6", "@babel/core@^7.12.10", "@babel/core@^7.12.3", "@babel/core@^7.21.0", "@babel/core@^7.21.4":
+"@babel/core@7.22.5", "@babel/core@^7.11.6", "@babel/core@^7.12.10", "@babel/core@^7.12.3", "@babel/core@^7.21.0", "@babel/core@^7.21.4", "@babel/core@^7.22.5":
   version "7.22.5"
   resolved "https://registry.yarnpkg.com/@babel/core/-/core-7.22.5.tgz#d67d9747ecf26ee7ecd3ebae1ee22225fe902a89"
   integrity sha512-SBuTAjg91A3eKOvD+bPEz3LlhHZRNu1nFOVts9lzDJTXshHTjII0BAtDS3Y2DAkdZdDKWVZGVwkDfc4Clxn1dg==
@@ -1033,7 +1033,7 @@
     "@babel/helper-create-regexp-features-plugin" "^7.22.5"
     "@babel/helper-plugin-utils" "^7.22.5"
 
-"@babel/preset-env@7.22.5", "@babel/preset-env@^7.20.2", "@babel/preset-env@^7.21.4":
+"@babel/preset-env@7.22.5", "@babel/preset-env@^7.20.2", "@babel/preset-env@^7.22.5":
   version "7.22.5"
   resolved "https://registry.yarnpkg.com/@babel/preset-env/-/preset-env-7.22.5.tgz#3da66078b181f3d62512c51cf7014392c511504e"
   integrity sha512-fj06hw89dpiZzGZtxn+QybifF07nNiZjZ7sazs2aVDcysAZVGjW7+7iFYxg6GLNM47R/thYfLdrXc+2f11Vi9A==
@@ -2963,14 +2963,14 @@
     eslint-visitor-keys "^3.3.0"
 
 "@vitejs/plugin-legacy@^4.0.1":
-  version "4.0.4"
-  resolved "https://registry.yarnpkg.com/@vitejs/plugin-legacy/-/plugin-legacy-4.0.4.tgz#3b661ead636f55715c19dff833b71050f9d12974"
-  integrity sha512-UwVfkMfUEszbQ2vs3RDfiDxxvYnIjmtIrGxTnxRev5Sh8ZoDpieV2dwvTUB7zXKJpfRsOgimM6MxQ65VDHJeQw==
+  version "4.0.5"
+  resolved "https://registry.yarnpkg.com/@vitejs/plugin-legacy/-/plugin-legacy-4.0.5.tgz#3937d8141c09dafc6fb0bb14e4b96ac4d493cff9"
+  integrity sha512-0N1CSAHjFTaxcKC9IcKDWMapmAfGn2mNdbROMf6UW0kypYLzDK8vAAbJIFW0jWvkv2aZfTgNs4KmQxoQDupUuQ==
   dependencies:
-    "@babel/core" "^7.21.4"
-    "@babel/preset-env" "^7.21.4"
-    browserslist "^4.21.5"
-    core-js "^3.30.1"
+    "@babel/core" "^7.22.5"
+    "@babel/preset-env" "^7.22.5"
+    browserslist "^4.21.9"
+    core-js "^3.31.0"
     magic-string "^0.30.0"
     regenerator-runtime "^0.13.11"
     systemjs "^6.14.1"
@@ -3846,13 +3846,13 @@ braces@^3.0.2, braces@~3.0.2:
   dependencies:
     fill-range "^7.0.1"
 
-browserslist@^4.14.5, browserslist@^4.21.3, browserslist@^4.21.5:
-  version "4.21.7"
-  resolved "https://registry.yarnpkg.com/browserslist/-/browserslist-4.21.7.tgz#e2b420947e5fb0a58e8f4668ae6e23488127e551"
-  integrity sha512-BauCXrQ7I2ftSqd2mvKHGo85XR0u7Ru3C/Hxsy/0TkfCtjrmAbPdzLGasmoiBxplpDXlPvdjX9u7srIMfgasNA==
+browserslist@^4.14.5, browserslist@^4.21.3, browserslist@^4.21.5, browserslist@^4.21.9:
+  version "4.21.9"
+  resolved "https://registry.yarnpkg.com/browserslist/-/browserslist-4.21.9.tgz#e11bdd3c313d7e2a9e87e8b4b0c7872b13897635"
+  integrity sha512-M0MFoZzbUrRU4KNfCrDLnvyE7gub+peetoTid3TBIqtunaDJyXlwhakT+/VkvSXcfIzFfK/nkCs4nmyTmxdNSg==
   dependencies:
-    caniuse-lite "^1.0.30001489"
-    electron-to-chromium "^1.4.411"
+    caniuse-lite "^1.0.30001503"
+    electron-to-chromium "^1.4.431"
     node-releases "^2.0.12"
     update-browserslist-db "^1.0.11"
 
@@ -3986,10 +3986,10 @@ camelcase@^6.2.0:
   resolved "https://registry.yarnpkg.com/camelcase/-/camelcase-6.3.0.tgz#5685b95eb209ac9c0c177467778c9c84df58ba9a"
   integrity sha512-Gmy6FhYlCY7uOElZUSbxo2UCDH8owEk996gkbrpsgGtrJLM3J7jGxl9Ic7Qwwj4ivOE5AWZWRMecDdF7hqGjFA==
 
-caniuse-lite@^1.0.30001489:
-  version "1.0.30001495"
-  resolved "https://registry.yarnpkg.com/caniuse-lite/-/caniuse-lite-1.0.30001495.tgz#64a0ccef1911a9dcff647115b4430f8eff1ef2d9"
-  integrity sha512-F6x5IEuigtUfU5ZMQK2jsy5JqUUlEFRVZq8bO2a+ysq5K7jD6PPc9YXZj78xDNS3uNchesp1Jw47YXEqr+Viyg==
+caniuse-lite@^1.0.30001503:
+  version "1.0.30001509"
+  resolved "https://registry.yarnpkg.com/caniuse-lite/-/caniuse-lite-1.0.30001509.tgz#2b7ad5265392d6d2de25cd8776d1ab3899570d14"
+  integrity sha512-2uDDk+TRiTX5hMcUYT/7CSyzMZxjfGu0vAUjS2g0LSD8UoXOv0LtpH4LxGMemsiPq6LCVIUjNwVM0erkOkGCDA==
 
 chalk@4.1.0:
   version "4.1.0"
@@ -4498,10 +4498,10 @@ core-js@^2.4.0:
   version "2.6.5"
   resolved "https://registry.yarnpkg.com/core-js/-/core-js-2.6.5.tgz#44bc8d249e7fb2ff5d00e0341a7ffb94fbf67895"
 
-core-js@^3.30.1:
-  version "3.30.2"
-  resolved "https://registry.yarnpkg.com/core-js/-/core-js-3.30.2.tgz#6528abfda65e5ad728143ea23f7a14f0dcf503fc"
-  integrity sha512-uBJiDmwqsbJCWHAwjrx3cvjbMXP7xD72Dmsn5LOJpiRmE3WbBbN5rCqQ2Qh6Ek6/eOrjlWngEynBWo4VxerQhg==
+core-js@^3.31.0:
+  version "3.31.0"
+  resolved "https://registry.yarnpkg.com/core-js/-/core-js-3.31.0.tgz#4471dd33e366c79d8c0977ed2d940821719db344"
+  integrity sha512-NIp2TQSGfR6ba5aalZD+ZQ1fSxGhDo/s1w0nx3RYzf2pnJxt7YynxFlFScP6eV7+GZsKO95NSjGxyJsU3DZgeQ==
 
 core-util-is@~1.0.0:
   version "1.0.2"
@@ -5284,10 +5284,10 @@ ejs@^3.1.5, ejs@^3.1.7:
   dependencies:
     jake "^10.8.5"
 
-electron-to-chromium@^1.4.411:
-  version "1.4.421"
-  resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.4.421.tgz#2b8c0ef98ba00d4aef4c664933d570922da52161"
-  integrity sha512-wZOyn3s/aQOtLGAwXMZfteQPN68kgls2wDAnYOA8kCjBvKVrW5RwmWVspxJYTqrcN7Y263XJVsC66VCIGzDO3g==
+electron-to-chromium@^1.4.431:
+  version "1.4.445"
+  resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.4.445.tgz#058d2c5f3a2981ab1a37440f5a5e42d15672aa6d"
+  integrity sha512-++DB+9VK8SBJwC+X1zlMfJ1tMA3F0ipi39GdEp+x3cV2TyBihqAgad8cNMWtLDEkbH39nlDQP7PfGrDr3Dr7HA==
 
 emittery@^0.10.2:
   version "0.10.2"
