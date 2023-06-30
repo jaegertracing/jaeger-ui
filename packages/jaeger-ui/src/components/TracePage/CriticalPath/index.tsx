@@ -33,7 +33,7 @@ function TraceCriticalPath(props: Tprops ){
         console.log("Refined Span Data is");
         console.log(refinedSpanData);
     }
-    return <div>Hi</div>
+    return null
 }
 
 export default TraceCriticalPath
