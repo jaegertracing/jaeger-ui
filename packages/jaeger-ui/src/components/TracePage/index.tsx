@@ -61,6 +61,7 @@ import TraceFlamegraph from './TraceFlamegraph/index';
 import { TraceGraphConfig } from '../../types/config';
 
 import './index.css';
+import TraceCriticalPath from './TraceCriticalPath/index';
 
 type TDispatchProps = {
   acknowledgeArchive: (id: string) => void;
@@ -416,6 +417,8 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
       view = <TraceSpanView trace={data} uiFindVertexKeys={spanFindMatches} uiFind={uiFind} />;
     } else if (ETraceViewType.TraceFlamegraph === viewType && headerHeight) {
       view = <TraceFlamegraph trace={trace} />;
+    } else if(ETraceViewType.TraceCriticalPath === viewType && headerHeight) {
+      view = <TraceCriticalPath trace = {data} />
     }
 
     return (
