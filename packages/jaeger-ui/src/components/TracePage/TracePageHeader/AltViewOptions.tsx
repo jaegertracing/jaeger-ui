@@ -76,7 +76,7 @@ export default function AltViewOptions(props: Props) {
     } else if (item === ETraceViewType.TraceSpansView) {
       trackTraceSpansView();
     } else if (item === ETraceViewType.TraceCriticalPath){
-      //To add required function
+      // To add required function
     }
     onTraceViewChange(item);
   };
