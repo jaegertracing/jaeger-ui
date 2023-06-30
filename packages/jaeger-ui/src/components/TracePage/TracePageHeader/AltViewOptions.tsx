@@ -57,10 +57,6 @@ const MENU_ITEMS = [
     viewType: ETraceViewType.TraceFlamegraph,
     label: 'Trace Flamegraph',
   },
-  {
-    viewType: ETraceViewType.TraceCriticalPath,
-    label: 'Trace Critical Path'
-  }
 ];
 
 export default function AltViewOptions(props: Props) {
@@ -75,8 +71,6 @@ export default function AltViewOptions(props: Props) {
       trackStatisticsView();
     } else if (item === ETraceViewType.TraceSpansView) {
       trackTraceSpansView();
-    } else if (item === ETraceViewType.TraceCriticalPath){
-      // To add required function
     }
     onTraceViewChange(item);
   };

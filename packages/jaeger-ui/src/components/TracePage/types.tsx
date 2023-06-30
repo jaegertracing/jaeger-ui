@@ -62,5 +62,4 @@ export enum ETraceViewType {
   TraceStatistics = 'TraceStatistics',
   TraceSpansView = 'TraceSpansView',
   TraceFlamegraph = 'TraceFlamegraph',
-  TraceCriticalPath = 'TraceCriticalPath'
 }
