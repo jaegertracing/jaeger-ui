@@ -17,13 +17,12 @@ limitations under the License.
   background-color: transparent;
   border: 1px solid white;
   color: inherit;
-  height: 100%;
-  width : 90px;
+  height : 23.98px;
+  padding : 2px;
   overflow: hidden;
-  padding: 5px;
-  margin: 2px;
+  margin : 2px;
   border-radius: 5px;
-  transition: background-color 0.4s ease, transform 0.4s ease, box-shadow 0.4s ease;
+  transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
@@ -35,8 +34,3 @@ limitations under the License.
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
-.CopyIcon:focus {
-  background-color: rgba(255, 255, 255, 0.25);
-  color: inherit;
-  width : 90px
-}

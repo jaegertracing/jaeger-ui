@@ -67,10 +67,10 @@ export default class CopyIcon extends React.PureComponent<PropsType, StateType> 
         mouseLeaveDelay={0.1}
         onVisibleChange={this.handleTooltipVisibilityChange}
         placement={this.props.placement}
-        title={this.state.hasCopied ? 'Copied' : ''}
+        title={this.state.hasCopied ? 'Copied' : this.props.tooltipTitle}
       >
-        <Button className={cx(this.props.className, 'CopyIcon')} htmlType="button" onClick={this.handleClick}>
-          {this.state.hasCopied ? 'Copied' : this.props.buttonText}
+        <Button className={cx(this.props.className, 'CopyIcon')} htmlType="button" onClick={this.handleClick} icon = {this.props.icon}>
+          {this.props.buttonText}
         </Button>
       </Tooltip>
     );
