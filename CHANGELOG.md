@@ -6,6 +6,40 @@
 
 ### Fixes
 
+## v1.31.0 (2023-07-05)
+
+### Enhancements
+
+- Add boolean property to config to prevent popups to a new page ([@Binrix](https://github.com/Binrix) in [#1521](https://github.com/jaegertracing/jaeger-ui/pull/1521))
+- Trace statistics table is now using antd Table component to fix visual design consistency ([@GLVSKiriti](https://github.com/GLVSKiriti) in [#1500](https://github.com/jaegertracing/jaeger-ui/pull/1500))
+- Add second copy icon for value only to make it easier to get tool tips ([@yurishkuro](https://github.com/yurishkuro) in [#1505](https://github.com/jaegertracing/jaeger-ui/pull/1505))
+- Escape keys/values when rendering JSON objects to fix some parsing and additional tests ([@yurishkuro](https://github.com/yurishkuro) in [#1498](https://github.com/jaegertracing/jaeger-ui/pull/1498))
+
+### Fixes
+
+- Bump lerna from 7.1.0 to 7.1.1 ([@dependabot](https://github.com/dependabot) in [#1529](https://github.com/jaegertracing/jaeger-ui/pull/1529))
+- Bump webpack from 5.87.0 to 5.88.1 ([@dependabot](https://github.com/dependabot) in [#1528](https://github.com/jaegertracing/jaeger-ui/pull/1528))
+- Bump terser from 5.18.0 to 5.18.2 ([@dependabot](https://github.com/dependabot) in [#1527](https://github.com/jaegertracing/jaeger-ui/pull/1527))
+- Bump typescript from 5.1.3 to 5.1.6 ([@dependabot](https://github.com/dependabot) in [#1530](https://github.com/jaegertracing/jaeger-ui/pull/1530))
+- Bump @typescript-eslint/parser from 5.59.11 to 5.60.1 ([@dependabot](https://github.com/dependabot) in [#1525](https://github.com/jaegertracing/jaeger-ui/pull/1525))
+- Bump lerna from 7.0.2 to 7.1.0 ([@dependabot](https://github.com/dependabot) in [#1523](https://github.com/jaegertracing/jaeger-ui/pull/1523))
+- Bump @typescript-eslint/eslint-plugin from 5.59.11 to 5.60.1 ([@dependabot](https://github.com/dependabot) in [#1522](https://github.com/jaegertracing/jaeger-ui/pull/1522))
+- Bump eslint from 8.42.0 to 8.43.0 ([@dependabot](https://github.com/dependabot) in [#1508](https://github.com/jaegertracing/jaeger-ui/pull/1508))
+- Bump lerna from 7.0.1 to 7.0.2 ([@dependabot](https://github.com/dependabot) in [#1504](https://github.com/jaegertracing/jaeger-ui/pull/1504))
+- Bump webpack from 5.86.0 to 5.87.0 ([@dependabot](https://github.com/dependabot) in [#1501](https://github.com/jaegertracing/jaeger-ui/pull/1501))
+- Bump lerna from 6.6.2 to 7.0.1 ([@dependabot](https://github.com/dependabot) in [#1492](https://github.com/jaegertracing/jaeger-ui/pull/1492))
+- Bump @typescript-eslint/eslint-plugin from 5.59.9 to 5.59.11 ([@dependabot](https://github.com/dependabot) in [#1495](https://github.com/jaegertracing/jaeger-ui/pull/1495))
+- Bump @types/react-dom from 18.2.4 to 18.2.5 ([@dependabot](https://github.com/dependabot) in [#1496](https://github.com/jaegertracing/jaeger-ui/pull/1496))
+- Bump terser from 5.17.7 to 5.18.0 ([@dependabot](https://github.com/dependabot) in [#1497](https://github.com/jaegertracing/jaeger-ui/pull/1497))
+- Escape keys/values when rendering JSON objects ([@yurishkuro](https://github.com/yurishkuro) in [#1498](https://github.com/jaegertracing/jaeger-ui/pull/1498))
+- Bump webpack-dev-server from 4.15.0 to 4.15.1 ([@dependabot](https://github.com/dependabot) in [#1488](https://github.com/jaegertracing/jaeger-ui/pull/1488))
+- Bump rollup-plugin-visualizer from 5.9.0 to 5.9.2 ([@dependabot](https://github.com/dependabot) in [#1486](https://github.com/jaegertracing/jaeger-ui/pull/1486))
+- Bump html-webpack-plugin from 5.5.1 to 5.5.3 ([@dependabot](https://github.com/dependabot) in [#1487](https://github.com/jaegertracing/jaeger-ui/pull/1487))
+- Bump @babel/preset-typescript from 7.21.5 to 7.22.5 ([@dependabot](https://github.com/dependabot) in [#1481](https://github.com/jaegertracing/jaeger-ui/pull/1481))
+- Bump @babel/preset-env from 7.22.4 to 7.22.5 ([@dependabot](https://github.com/dependabot) in [#1482](https://github.com/jaegertracing/jaeger-ui/pull/1482))
+- Bump @babel/eslint-parser from 7.21.8 to 7.22.5 ([@dependabot](https://github.com/dependabot) in [#1483](https://github.com/jaegertracing/jaeger-ui/pull/1483))
+- Bump @babel/core from 7.22.1 to 7.22.5 ([@dependabot](https://github.com/dependabot) in [#1484](https://github.com/jaegertracing/jaeger-ui/pull/1484))
+
 
 ## v1.30.0 (2023-06-05)
 
