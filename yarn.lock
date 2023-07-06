@@ -43,10 +43,10 @@
   resolved "https://registry.yarnpkg.com/@ant-design/icons/-/icons-2.1.1.tgz#7b9c08dffd4f5d41db667d9dbe5e0107d0bd9a4a"
   integrity sha512-jCH+k2Vjlno4YWl6g535nHR09PwCEmTBKAG6VqF+rhkrSPRLfgpU2maagwbZPLjaHuU5Jd1DFQ2KJpQuI6uG8w==
 
-"@babel/cli@7.22.5":
-  version "7.22.5"
-  resolved "https://registry.yarnpkg.com/@babel/cli/-/cli-7.22.5.tgz#eb323bd69f50297792c2b7c205a97306a305d703"
-  integrity sha512-N5d7MjzwsQ2wppwjhrsicVDhJSqF9labEP/swYiHhio4Ca2XjEehpgPmerjnLQl7BPE59BLud0PTWGYwqFl/cQ==
+"@babel/cli@7.22.6":
+  version "7.22.6"
+  resolved "https://registry.yarnpkg.com/@babel/cli/-/cli-7.22.6.tgz#63f5be2a0abd587ccfbdc93424fa85f43142cc53"
+  integrity sha512-Be3/RfEDmkMRGT1+ru5nTkfcvWz5jDOYg1V9rXqTz2u9Qt96O1ryboGvxVBp7wOnYWDB8DNHIWb6DThrpudfOw==
   dependencies:
     "@jridgewell/trace-mapping" "^0.3.17"
     commander "^4.0.1"
@@ -6432,17 +6432,7 @@ glob@7.1.4:
     once "^1.3.0"
     path-is-absolute "^1.0.0"
 
-glob@^10.0.0:
-  version "10.0.0"
-  resolved "https://registry.yarnpkg.com/glob/-/glob-10.0.0.tgz#034ab2e93644ba702e769c3e0558143d3fbd1612"
-  integrity sha512-zmp9ZDC6NpDNLujV2W2n+3lH+BafIVZ4/ct+Yj3BMZTH/+bgm/eVjHzeFLwxJrrIGgjjS2eiQLlpurHsNlEAtQ==
-  dependencies:
-    fs.realpath "^1.0.0"
-    minimatch "^9.0.0"
-    minipass "^5.0.0"
-    path-scurry "^1.6.4"
-
-glob@^10.2.2:
+glob@^10.0.0, glob@^10.2.2:
   version "10.2.7"
   resolved "https://registry.yarnpkg.com/glob/-/glob-10.2.7.tgz#9dd2828cd5bc7bd861e7738d91e7113dda41d7d8"
   integrity sha512-jTKehsravOJo8IJxUGfZILnkvVJM/MOfHRs8QcXolVef2zNI9Tqyy5+SeuOAZd3upViEZQLyFpQhYiHLrMUNmA==
@@ -8852,11 +8842,6 @@ lru-cache@^7.4.4, lru-cache@^7.5.1, lru-cache@^7.7.1:
   resolved "https://registry.yarnpkg.com/lru-cache/-/lru-cache-7.14.0.tgz#21be64954a4680e303a09e9468f880b98a0b3c7f"
   integrity sha512-EIRtP1GrSJny0dqb50QXRUNBxHJhcpxHC++M5tD7RYbvLLn5KVWKsbyswSSqDuU15UFi3bgTQIY8nhDMeF6aDQ==
 
-lru-cache@^9.0.0:
-  version "9.0.1"
-  resolved "https://registry.yarnpkg.com/lru-cache/-/lru-cache-9.0.1.tgz#ac061ed291f8b9adaca2b085534bb1d3b61bef83"
-  integrity sha512-C8QsKIN1UIXeOs3iWmiZ1lQY+EnKDojWd37fXy1aSbJvH4iSma1uy2OWuoB3m4SYRli5+CUjDv3Dij5DVoetmg==
-
 lru-cache@^9.1.1:
   version "9.1.2"
   resolved "https://registry.yarnpkg.com/lru-cache/-/lru-cache-9.1.2.tgz#255fdbc14b75589d6d0e73644ca167a8db506835"
@@ -10089,14 +10074,6 @@ path-scurry@^1.6.1:
   dependencies:
     lru-cache "^7.14.1"
     minipass "^4.0.2"
-
-path-scurry@^1.6.4:
-  version "1.6.4"
-  resolved "https://registry.yarnpkg.com/path-scurry/-/path-scurry-1.6.4.tgz#020a9449e5382a4acb684f9c7e1283bc5695de66"
-  integrity sha512-Qp/9IHkdNiXJ3/Kon++At2nVpnhRiPq/aSvQN+H3U1WZbvNRK0RIQK/o4HMqPoXjpuGJUEWpHSs6Mnjxqh3TQg==
-  dependencies:
-    lru-cache "^9.0.0"
-    minipass "^5.0.0"
 
 path-scurry@^1.7.0:
   version "1.9.2"
