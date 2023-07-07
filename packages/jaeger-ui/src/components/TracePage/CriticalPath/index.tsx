@@ -62,12 +62,11 @@ export const computeCriticalPath = (
   let lastFinishingChildSpanId: string | undefined;
   let spanCriticalSection: criticalPathSection;
   if (spawnTime) {
-    lastFinishingChildSpanId = currentSpan.childSpanIds.find(each => {
-      return (
+    lastFinishingChildSpanId = currentSpan.childSpanIds.find(
+      each =>
         traceData.spans.filter(span => span.spanID === each && span.startTime + span.duration < spawnTime)
           .length > 0
-      );
-    });
+    );
   } else {
     lastFinishingChildSpanId = currentSpan.childSpanIds[0];
   }

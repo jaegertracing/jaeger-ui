@@ -12,51 +12,53 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+const startTime = 1579070675083000;
+
 const criticalPathSections = [
   {
     spanId: '150c193cf155b46b',
-    section_start: 1579070675086319,
-    section_end: 1579070675087902,
+    section_start: startTime + 3319,
+    section_end: startTime + 4902,
   },
   {
     spanId: '22be69e72cbcde0b',
-    section_start: 1579070675085939,
-    section_end: 1579070675086319,
+    section_start: startTime + 2939,
+    section_end: startTime + 3319,
   },
   {
     spanId: 'e821b549888cbc3b',
-    section_start: 1579070675085892,
-    section_end: 1579070675085939,
+    section_start: startTime + 2892,
+    section_end: startTime + 2939,
   },
   {
     spanId: '622a5079b565623e',
-    section_start: 1579070675085840,
-    section_end: 1579070675085892,
+    section_start: startTime + 2840,
+    section_end: startTime + 2892,
   },
   {
     spanId: 'e821b549888cbc3b',
-    section_start: 1579070675085080,
-    section_end: 1579070675085840,
+    section_start: startTime + 2080,
+    section_end: startTime + 2840,
   },
   {
     spanId: '4085dddb47429851',
-    section_start: 1579070675085059,
-    section_end: 1579070675085080,
+    section_start: startTime + 2059,
+    section_end: startTime + 2080,
   },
   {
     spanId: 'e821b549888cbc3b',
-    section_start: 1579070675084200,
-    section_end: 1579070675085059,
+    section_start: startTime + 1200,
+    section_end: startTime + 2059,
   },
   {
     spanId: '22be69e72cbcde0b',
-    section_start: 1579070675083820,
-    section_end: 1579070675084200,
+    section_start: startTime + 820,
+    section_end: startTime + 1200,
   },
   {
     spanId: '150c193cf155b46b',
-    section_start: 1579070675083000,
-    section_end: 1579070675083820,
+    section_start: startTime,
+    section_end: startTime + 820,
   },
 ];
 
