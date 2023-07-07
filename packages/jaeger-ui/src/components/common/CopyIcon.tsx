@@ -27,6 +27,7 @@ type PropsType = {
   icon?: string;
   placement?: TooltipPlacement;
   tooltipTitle: string;
+  buttonText: string;
 };
 
 type StateType = {
@@ -73,7 +74,9 @@ export default class CopyIcon extends React.PureComponent<PropsType, StateType> 
           htmlType="button"
           icon={this.props.icon}
           onClick={this.handleClick}
-        />
+        >
+          {this.props.buttonText}
+        </Button>
       </Tooltip>
     );
   }
