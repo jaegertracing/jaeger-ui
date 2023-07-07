@@ -30,7 +30,7 @@ export const findRootSpanId = (spans: Span[]): string | undefined => {
   return rootSpan?.spanID;
 };
 
-// This function finds child spans for each span
+// This function finds child spans for each span and also sorts childSpanIds based on endTime
 export const findChildSpanIds = (spans: Span[]): Span[] => {
   const refinedSpanData: Span[] = [];
   spans.forEach(span => {
@@ -51,6 +51,20 @@ export const findChildSpanIds = (spans: Span[]): Span[] => {
   return refinedSpanData;
 };
 
+// This function finds LFC of a current span which is less than the spawn event
+export const findLastFinishingChildSpanId = (
+  traceData: Trace,
+  currentSpan: Span,
+  spawnTime?: number
+): string | undefined => {
+  if (spawnTime) {
+    return currentSpan.childSpanIds.find(each =>
+      traceData.spans.some(span => span.spanID === each && span.startTime + span.duration < spawnTime)
+    );
+  }
+  return currentSpan.childSpanIds[0];
+};
+
 export const computeCriticalPath = (
   traceData: Trace,
   spanId: string,
@@ -59,17 +73,9 @@ export const computeCriticalPath = (
 ) => {
   // spawnTime refers to spawn synchronization event of current span
   const currentSpan: Span = traceData.spans.filter(span => span.spanID === spanId)[0];
-  let lastFinishingChildSpanId: string | undefined;
+
+  const lastFinishingChildSpanId = findLastFinishingChildSpanId(traceData, currentSpan, spawnTime);
   let spanCriticalSection: criticalPathSection;
-  if (spawnTime) {
-    lastFinishingChildSpanId = currentSpan.childSpanIds.find(
-      each =>
-        traceData.spans.filter(span => span.spanID === each && span.startTime + span.duration < spawnTime)
-          .length > 0
-    );
-  } else {
-    lastFinishingChildSpanId = currentSpan.childSpanIds[0];
-  }
 
   if (lastFinishingChildSpanId) {
     const lfcSpan = traceData.spans.filter(span => span.spanID === lastFinishingChildSpanId)[0];
@@ -79,6 +85,7 @@ export const computeCriticalPath = (
       section_end: spawnTime || currentSpan.startTime + currentSpan.duration,
     };
     criticalPath.push(spanCriticalSection);
+    // Now lfc turns to the currentspan and we again do the same algorithm
     computeCriticalPath(traceData, lastFinishingChildSpanId, criticalPath);
   } else {
     // If there is no last finishing child then total section upto startTime of span is on critical path
