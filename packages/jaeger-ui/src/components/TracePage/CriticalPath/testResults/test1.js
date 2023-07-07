@@ -12,6 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+/*
+
+  │                            span A                                   │
+  ++++┌────────────────────────────────────────────────────────┐++++++++++
+      │                         span B                         │
+      +++++++++++++++++++++++++++++++──────────────────────+++++
+                                    │      span C          │
+                                    +++──────+++++──────┐+++
+                                      │span D│   │span E│
+                                      ++++++++   ++++++++
+
+Here +++++ are critical path sections
+
+*/
 const startTime = 1579070675083000;
 
 const criticalPathSections = [
