@@ -106,17 +106,17 @@ export const computeCriticalPath = (
   return criticalPath;
 };
 
-function TraceCriticalPath(props: Tprops) {
-  let traceData: Trace = props.trace;
+function TraceCriticalPath(traceProp: Tprops) {
+  let traceData: Trace = traceProp.trace;
   let criticalPath: criticalPathSection[] = [];
 
-  const rootSpanId = findRootSpanId(props.trace.spans);
+  const rootSpanId = findRootSpanId(traceProp.trace.spans);
   // If there is root span then algorithm implements
   if (rootSpanId) {
-    const refinedSpanData: Span[] = findChildSpanIds(props.trace.spans);
+    const refinedSpanData: Span[] = findChildSpanIds(traceProp.trace.spans);
     traceData = { ...traceData, spans: refinedSpanData };
     criticalPath = computeCriticalPath(traceData, rootSpanId, []);
-    console.log(criticalPath);
+    return criticalPath;
     // Now you got the critical path sections
   }
   return null;

@@ -419,9 +419,9 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
       view = <TraceFlamegraph trace={trace} />;
     }
 
+    const criticalPath = TraceCriticalPath({ trace: data });
     return (
       <div>
-        <TraceCriticalPath trace={data} />
         {archiveEnabled && (
           <ArchiveNotifier acknowledge={this.acknowledgeArchive} archivedState={archiveTraceState} />
         )}
