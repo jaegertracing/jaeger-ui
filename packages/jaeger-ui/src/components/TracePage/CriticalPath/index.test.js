@@ -24,7 +24,7 @@ const defaultProps = {
   trace: transformedTrace,
 };
 
-describe('<TraceCriticalPath />', () => {
+describe('Happy Path', () => {
   it('Critical path sections', () => {
     const consoleLogMock = jest.spyOn(console, 'log').mockImplementation();
     TraceCriticalPath(defaultProps);
