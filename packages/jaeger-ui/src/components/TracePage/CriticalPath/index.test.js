@@ -67,8 +67,7 @@ describe('Happy Path', () => {
   });
 
   it('Critical path sections', () => {
-    const consoleLogMock = jest.spyOn(console, 'log').mockImplementation();
-    TraceCriticalPath(defaultProps);
-    expect(consoleLogMock).toHaveBeenCalledWith(criticalPathSections);
+    const criticalPath = TraceCriticalPath(defaultProps);
+    expect(criticalPath).toStrictEqual(criticalPathSections);
   });
 });
