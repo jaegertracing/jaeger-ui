@@ -117,7 +117,6 @@ function TraceCriticalPath(traceProp: Tprops) {
     traceData = { ...traceData, spans: refinedSpanData };
     criticalPath = computeCriticalPath(traceData, rootSpanId, []);
     return criticalPath;
-    // Now you got the critical path sections
   }
   return null;
 }

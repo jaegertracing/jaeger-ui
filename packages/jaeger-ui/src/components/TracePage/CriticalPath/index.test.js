@@ -20,13 +20,21 @@ import TraceCriticalPath, {
 } from './index';
 import transformTraceData from '../../../model/transform-trace-data';
 import criticalPathSections from './testResults/test1';
+import happyTraceCriticalPathSections from './testResults/test2';
 
 const testTrace = require('../TraceStatistics/tableValuesTestTrace/testTraceNormal.json');
 
+const happyTrace = require(`./testCases/happyTrace.json`);
+
 const transformedTrace = transformTraceData(testTrace);
+const transformedHappyTrace = transformTraceData(happyTrace);
 
 const defaultProps = {
   trace: transformedTrace,
+};
+
+const defaultProps2 = {
+  trace: transformedHappyTrace,
 };
 
 describe('Happy Path', () => {
@@ -69,5 +77,48 @@ describe('Happy Path', () => {
   it('Critical path sections', () => {
     const criticalPath = TraceCriticalPath(defaultProps);
     expect(criticalPath).toStrictEqual(criticalPathSections);
+  });
+});
+
+describe('Happy Path test2', () => {
+  it('Should find RootSpanId correctly', () => {
+    const rootSpanId = findRootSpanId(defaultProps2.trace.spans);
+    expect(rootSpanId).toBe('span-X');
+  });
+
+  it('Should find child spanIds correctly and also in sortorder of endTime', () => {
+    const refinedSpanData = findChildSpanIds(defaultProps2.trace.spans);
+    expect(refinedSpanData.length).toBe(5);
+    expect(refinedSpanData[0].childSpanIds).toStrictEqual(['span-D', 'span-C', 'span-A']);
+    expect(refinedSpanData[1].childSpanIds).toStrictEqual(['span-B']);
+    expect(refinedSpanData[2].childSpanIds.length).toBe(0);
+    expect(refinedSpanData[3].childSpanIds.length).toBe(0);
+    expect(refinedSpanData[4].childSpanIds.length).toBe(0);
+  });
+
+  it('Should find lfc of a span correctly', () => {
+    const refinedSpanData = findChildSpanIds(defaultProps2.trace.spans);
+    const traceData = { ...transformedHappyTrace, spans: refinedSpanData };
+
+    let currentSpan = traceData.spans.filter(span => span.spanID === 'span-X')[0];
+    let lastFinishingChildSpanId = findLastFinishingChildSpanId(traceData, currentSpan);
+    expect(lastFinishingChildSpanId).toBe('span-D');
+
+    // Second Case to check if it works with spawn time or not
+    currentSpan = traceData.spans.filter(span => span.spanID === 'span-X')[0];
+    lastFinishingChildSpanId = findLastFinishingChildSpanId(traceData, currentSpan, 8);
+    expect(lastFinishingChildSpanId).toBe('span-C');
+  });
+
+  it('Should find criticalPathSections correctly', () => {
+    const refinedSpanData = findChildSpanIds(defaultProps2.trace.spans);
+    const traceData = { ...transformedHappyTrace, spans: refinedSpanData };
+    const criticalPath = computeCriticalPath(traceData, 'span-X', []);
+    expect(criticalPath).toStrictEqual(happyTraceCriticalPathSections);
+  });
+
+  it('Critical path sections', () => {
+    const criticalPath = TraceCriticalPath(defaultProps2);
+    expect(criticalPath).toStrictEqual(happyTraceCriticalPathSections);
   });
 });
