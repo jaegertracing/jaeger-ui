@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import transformTraceData from '../../../../model/transform-trace-data';
+
 /*
  + ┌───────────────────────────────────────────────────────────────────────┐+
  + │                               Span X                                  │+
@@ -35,8 +37,17 @@
                                                     
 Here ++++++ is critical path
 */
+const happyTrace = require(`../testCases/happyTrace.json`);
+const transformedTrace = transformTraceData(happyTrace);
 
-const happyTraceCriticalPathSections = [
+const refinedSpanData = transformedTrace.spans;
+refinedSpanData[0].childSpanIds = ['span-D', 'span-C', 'span-A'];
+refinedSpanData[1].childSpanIds = ['span-B'];
+refinedSpanData[2].childSpanIds = [];
+refinedSpanData[3].childSpanIds = [];
+refinedSpanData[4].childSpanIds = [];
+
+const criticalPathSections = [
   {
     spanId: 'span-X',
     section_start: 9,
@@ -64,4 +75,15 @@ const happyTraceCriticalPathSections = [
   },
 ];
 
-export default happyTraceCriticalPathSections;
+const test2 = {
+  criticalPathSections,
+  trace: transformedTrace,
+  refinedSpanData,
+  rootSpanId: 'span-X',
+  lfcInputSpan: 'span-X',
+  lfc: 'span-D',
+  lfcWithSpawnTime: 'span-C',
+  spawnTime: 8,
+};
+
+export default test2;

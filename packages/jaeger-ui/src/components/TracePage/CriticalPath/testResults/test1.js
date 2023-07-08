@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import transformTraceData from '../../../../model/transform-trace-data';
+
 /*
 
   │                            span A                                   │
@@ -26,6 +28,17 @@
 Here +++++ are critical path sections
 
 */
+const testTrace = require('../../TraceStatistics/tableValuesTestTrace/testTraceNormal.json');
+
+const transformedTrace = transformTraceData(testTrace);
+
+const refinedSpanData = transformedTrace.spans;
+refinedSpanData[0].childSpanIds = ['22be69e72cbcde0b'];
+refinedSpanData[1].childSpanIds = ['e821b549888cbc3b'];
+refinedSpanData[2].childSpanIds = ['622a5079b565623e', '4085dddb47429851'];
+refinedSpanData[3].childSpanIds = [];
+refinedSpanData[4].childSpanIds = [];
+
 const startTime = 1579070675083000;
 
 const criticalPathSections = [
@@ -76,4 +89,15 @@ const criticalPathSections = [
   },
 ];
 
-export default criticalPathSections;
+const test1 = {
+  criticalPathSections,
+  trace: transformedTrace,
+  refinedSpanData,
+  rootSpanId: '150c193cf155b46b',
+  lfcInputSpan: 'e821b549888cbc3b',
+  lfc: '622a5079b565623e',
+  lfcWithSpawnTime: '4085dddb47429851',
+  spawnTime: 1579070675085840,
+};
+
+export default test1;
