@@ -1,0 +1,152 @@
+{
+  "traceID": "trace-123",
+  "spans": [
+    {
+      "traceID": "trace-123",
+      "spanID": "span-X",
+      "flags": 1,
+      "operationName": "op1",
+      "startTime": 1,
+      "duration": 9,
+      "references": [],
+      "tags": [
+        {
+          "key": "span.kind",
+          "type": "string",
+          "value": "server"
+        }
+      ],
+      "logs": [],
+      "processID": "p1",
+      "warnings": null
+    },
+    {
+      "traceID": "trace-123",
+      "spanID": "span-A",
+      "flags": 1,
+      "operationName": "op2",
+      "startTime": 2,
+      "duration": 4,
+      "references": [
+        {
+          "refType": "CHILD_OF",
+          "traceID": "trace-123",
+          "spanID": "span-X"
+        }
+      ],
+      "tags": [
+        {
+          "key": "span.kind",
+          "type": "string",
+          "value": "client"
+        },
+        {
+          "key": "error",
+          "type": "bool",
+          "value": "true"
+        }
+      ],
+      "logs": [],
+      "processID": "p1",
+      "warnings": null
+    },
+    {
+      "traceID": "trace-123",
+      "spanID": "span-B",
+      "flags": 1,
+      "operationName": "op2",
+      "startTime": 4,
+      "duration": 1,
+      "references": [
+        {
+          "refType": "CHILD_OF",
+          "traceID": "trace-123",
+          "spanID": "span-A"
+        }
+      ],
+      "tags": [
+        {
+          "key": "span.kind",
+          "type": "string",
+          "value": "client"
+        }
+      ],
+      "logs": [],
+      "processID": "p1",
+      "warnings": null
+    },
+    {
+      "traceID": "trace-123",
+      "spanID": "span-C",
+      "flags": 1,
+      "operationName": "op3",
+      "startTime": 3,
+      "duration": 4,
+      "references": [
+        {
+          "refType": "CHILD_OF",
+          "traceID": "trace-123",
+          "spanID": "span-X"
+        }
+      ],
+      "tags": [
+        {
+          "key": "span.kind",
+          "type": "string",
+          "value": "client"
+        }
+      ],
+      "logs": [],
+      "processID": "p1",
+      "warnings": null
+    },
+    {
+      "traceID": "trace-123",
+      "spanID": "span-D",
+      "flags": 1,
+      "operationName": "op1",
+      "startTime": 8,
+      "duration": 1,
+      "references": [
+        {
+          "refType": "CHILD_OF",
+          "traceID": "trace-123",
+          "spanID": "span-X"
+        }
+      ],
+      "tags": [
+        {
+          "key": "span.kind",
+          "type": "string",
+          "value": "server"
+        }
+      ],
+      "logs": [],
+      "processID": "p2",
+      "warnings": null
+    }
+  ],
+  "processes": {
+    "p1": {
+      "serviceName": "service1",
+      "tags": [
+        {
+          "key": "hostname",
+          "type": "string",
+          "value": "foobar.org"
+        }
+      ]
+    },
+    "p2": {
+      "serviceName": "service2",
+      "tags": [
+        {
+          "key": "hostname",
+          "type": "string",
+          "value": "foobar.org"
+        }
+      ]
+    }
+  },
+  "warnings": null
+}
