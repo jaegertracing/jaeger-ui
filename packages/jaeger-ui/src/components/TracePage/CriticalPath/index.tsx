@@ -65,6 +65,42 @@ export const findLastFinishingChildSpanId = (
   return currentSpan.childSpanIds[0];
 };
 
+// This function turncates/drops the overflowing child spans
+export const sanitizeOverFlowingChildren = (spans: Span[]): Span[] => {
+  const sanitizedSpanData: Span[] = [];
+
+  spans.forEach(span => {
+    if (span.references.length) {
+      const parentSpan = span.references.filter(ref => ref.refType === 'CHILD_OF')[0].span!;
+      const childEndTime = span.startTime + span.duration;
+      const parentEndTime = parentSpan.startTime + parentSpan.duration;
+      if (span.startTime >= parentSpan.startTime && childEndTime <= parentEndTime) {
+        sanitizedSpanData.push(span);
+      } else if (
+        span.startTime < parentSpan.startTime &&
+        childEndTime <= parentEndTime &&
+        childEndTime > parentSpan.startTime
+      ) {
+        sanitizedSpanData.push({
+          ...span,
+          startTime: parentSpan.startTime,
+          duration: childEndTime - parentSpan.startTime,
+        });
+      } else if (
+        span.startTime >= parentSpan.startTime &&
+        childEndTime > parentEndTime &&
+        span.startTime < parentEndTime
+      ) {
+        sanitizedSpanData.push({ ...span, duration: parentEndTime - span.startTime });
+      }
+    } else {
+      sanitizedSpanData.push(span);
+    }
+  });
+
+  return sanitizedSpanData;
+};
+
 export const computeCriticalPath = (
   traceData: Trace,
   spanId: string,
@@ -113,7 +149,8 @@ function TraceCriticalPath(traceProp: Tprops) {
   const rootSpanId = findRootSpanId(traceProp.trace.spans);
   // If there is root span then algorithm implements
   if (rootSpanId) {
-    const refinedSpanData: Span[] = findChildSpanIds(traceProp.trace.spans);
+    const sanitizedSpanData = sanitizeOverFlowingChildren(traceProp.trace.spans);
+    const refinedSpanData: Span[] = findChildSpanIds(sanitizedSpanData);
     traceData = { ...traceData, spans: refinedSpanData };
     criticalPath = computeCriticalPath(traceData, rootSpanId, []);
     return criticalPath;
