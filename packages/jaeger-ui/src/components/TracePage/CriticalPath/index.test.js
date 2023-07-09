@@ -22,15 +22,16 @@ import TraceCriticalPath, {
 import test1 from './testCases/test1';
 import test2 from './testCases/test2';
 import test3 from './testCases/test3';
+import test4 from './testCases/test4';
 
-describe.each([[test1], [test2], [test3]])('findRootSpanId', testProps => {
+describe.each([[test1], [test2], [test3], [test4]])('findRootSpanId', testProps => {
   it('Should find RootSpanId correctly', () => {
     const rootSpanId = findRootSpanId(testProps.trace.spans);
     expect(rootSpanId).toBe(testProps.rootSpanId);
   });
 });
 
-describe.each([[test1], [test2], [test3]])('findChildSpanIds', testProps => {
+describe.each([[test1], [test2], [test3], [test4]])('findChildSpanIds', testProps => {
   it('Should find child spanIds correctly and also in sortorder of endTime', () => {
     const sanitizedData = sanitizeOverFlowingChildren(testProps.trace.spans);
     const refinedSpanData = findChildSpanIds(sanitizedData);
@@ -39,7 +40,7 @@ describe.each([[test1], [test2], [test3]])('findChildSpanIds', testProps => {
   });
 });
 
-describe.each([[test1], [test2], [test3]])('findLastFinishingChildSpanId', testProps => {
+describe.each([[test1], [test2], [test3], [test4]])('findLastFinishingChildSpanId', testProps => {
   it('Should find lfc of a span correctly', () => {
     const sanitizedData = sanitizeOverFlowingChildren(testProps.trace.spans);
     const refinedSpanData = findChildSpanIds(sanitizedData);
@@ -56,7 +57,7 @@ describe.each([[test1], [test2], [test3]])('findLastFinishingChildSpanId', testP
   });
 });
 
-describe.each([[test1], [test2], [test3]])('Happy Path', testProps => {
+describe.each([[test1], [test2], [test3], [test4]])('Happy Path', testProps => {
   it('Should find criticalPathSections correctly', () => {
     const sanitizedData = sanitizeOverFlowingChildren(testProps.trace.spans);
     const refinedSpanData = findChildSpanIds(sanitizedData);
