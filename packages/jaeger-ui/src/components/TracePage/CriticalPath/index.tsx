@@ -64,6 +64,8 @@ export const findLastFinishingChildSpanId = (
 // This function turncates/drops the overflowing child spans
 export const sanitizeOverFlowingChildren = (spans: Span[]): Span[] => {
   const sanitizedSpanData: Span[] = [];
+  const droppedSpans: Span[] = [];
+  const refinedSantitizedSpanData: Span[] = [];
 
   spans.forEach(span => {
     if (span.references.length) {
@@ -71,12 +73,18 @@ export const sanitizeOverFlowingChildren = (spans: Span[]): Span[] => {
       const childEndTime = span.startTime + span.duration;
       const parentEndTime = parentSpan.startTime + parentSpan.duration;
       if (span.startTime >= parentSpan.startTime && childEndTime <= parentEndTime) {
+        // case 1: everything looks good
+        // |----parent----|
+        //   |----child--|
         sanitizedSpanData.push(span);
       } else if (
         span.startTime < parentSpan.startTime &&
         childEndTime <= parentEndTime &&
         childEndTime > parentSpan.startTime
       ) {
+        // case 2: child start before parent, truncate is needed
+        //      |----parent----|
+        //   |----child--|
         sanitizedSpanData.push({
           ...span,
           startTime: parentSpan.startTime,
@@ -87,14 +95,38 @@ export const sanitizeOverFlowingChildren = (spans: Span[]): Span[] => {
         childEndTime > parentEndTime &&
         span.startTime < parentEndTime
       ) {
+        // case 3: child end after parent, truncate is needed
+        //      |----parent----|
+        //              |----child--|
         sanitizedSpanData.push({ ...span, duration: parentEndTime - span.startTime });
+      } else {
+        // case 4: child outside of parent range =>  drop the child span
+        //      |----parent----|
+        //                        |----child--|
+        // or
+        //                      |----parent----|
+        //       |----child--|
+        droppedSpans.push({ ...span });
       }
     } else {
       sanitizedSpanData.push(span);
     }
   });
+  // This make sure to also drop the all childs of dropped spans
+  sanitizedSpanData.forEach(span => {
+    if (span.references.length && span.references[0].refType === 'CHILD_OF') {
+      const childOfDroppedSpan = droppedSpans.find(b => span.references[0].spanID === b.spanID);
+      if (childOfDroppedSpan) {
+        droppedSpans.push(span);
+      } else {
+        refinedSantitizedSpanData.push(span);
+      }
+    } else {
+      refinedSantitizedSpanData.push(span);
+    }
+  });
 
-  return sanitizedSpanData;
+  return refinedSantitizedSpanData;
 };
 
 export const computeCriticalPath = (
