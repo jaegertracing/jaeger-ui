@@ -19,9 +19,9 @@ import TraceCriticalPath, {
   sanitizeOverFlowingChildren,
   computeCriticalPath,
 } from './index';
-import test1 from './testResults/test1';
-import test2 from './testResults/test2';
-import test3 from './testResults/test3';
+import test1 from './testCases/test1';
+import test2 from './testCases/test2';
+import test3 from './testCases/test3';
 
 describe.each([[test1], [test2], [test3]])('findRootSpanId', testProps => {
   it('Should find RootSpanId correctly', () => {
