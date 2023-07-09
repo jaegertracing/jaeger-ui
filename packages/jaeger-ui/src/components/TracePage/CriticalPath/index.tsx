@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Uber Technologies, Inc.
+// Copyright (c) 2023 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,10 +13,6 @@
 // limitations under the License.
 
 import { Span, Trace } from '../../../types/trace';
-
-type Tprops = {
-  trace: Trace;
-};
 
 // It is a section of span that lies on critical path
 type criticalPathSection = {
@@ -142,14 +138,14 @@ export const computeCriticalPath = (
   return criticalPath;
 };
 
-function TraceCriticalPath(traceProp: Tprops) {
-  let traceData: Trace = traceProp.trace;
+function TraceCriticalPath(trace: Trace) {
+  let traceData: Trace = trace;
   let criticalPath: criticalPathSection[] = [];
 
-  const rootSpanId = findRootSpanId(traceProp.trace.spans);
+  const rootSpanId = findRootSpanId(trace.spans);
   // If there is root span then algorithm implements
   if (rootSpanId) {
-    const sanitizedSpanData = sanitizeOverFlowingChildren(traceProp.trace.spans);
+    const sanitizedSpanData = sanitizeOverFlowingChildren(trace.spans);
     const refinedSpanData: Span[] = findChildSpanIds(sanitizedSpanData);
     traceData = { ...traceData, spans: refinedSpanData };
     criticalPath = computeCriticalPath(traceData, rootSpanId, []);

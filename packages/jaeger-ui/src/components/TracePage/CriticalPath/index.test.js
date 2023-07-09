@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Uber Technologies, Inc.
+// Copyright (c) 2023 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -66,7 +66,7 @@ describe.each([[test1], [test2], [test3]])('Happy Path', testProps => {
   });
 
   it('Critical path sections', () => {
-    const criticalPath = TraceCriticalPath({ trace: testProps.trace });
+    const criticalPath = TraceCriticalPath(testProps.trace);
     expect(criticalPath).toStrictEqual(testProps.criticalPathSections);
   });
 });
