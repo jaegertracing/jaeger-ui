@@ -13,6 +13,7 @@
 // limitations under the License.
 
 module.exports = {
+  root:true,
   env: {
     browser: true,
     jest: true,
@@ -25,20 +26,8 @@ module.exports = {
       },
     },
   },
-  extends: ['airbnb', 'prettier'],
+  extends: ['airbnb', 'prettier','eslint:recommended','plugin:@typescript-eslint/recommended'],
   overrides: [
-    {
-      files: ['*.jsx', '*.test.js'],
-      parser: '@babel/eslint-parser',
-      parserOptions: {
-        requireConfigFile: false,
-        babelOptions: {
-          babelrc: false,
-          configFile: false,
-          presets: ["@babel/preset-react"],
-        },
-      }
-    },
     {
       files: ['*.ts', '*.tsx'],
       parser: '@typescript-eslint/parser',
@@ -73,13 +62,6 @@ module.exports = {
         'react/require-default-props': 0,
         'react/default-props-match-prop-types': 0,
         'react/no-unused-prop-types': 0,
-      },
-    },
-    {
-      files: ['*.test.js'],
-      rules: {
-        // Used for Jest module mocking.
-        'no-import-assign': 0,
       },
     },
   ],
