@@ -7,6 +7,13 @@ updates:
       interval: "daily"
     # we have too many dependency PRs today
     rebase-strategy: "disabled"
+    groups:
+      babel:
+        patterns:
+          - "@babel/*"
+      typescript-eslint:
+        patterns:
+          - "@typescript-eslint/*"
 
   - package-ecosystem: "github-actions"
     directory: "/"
