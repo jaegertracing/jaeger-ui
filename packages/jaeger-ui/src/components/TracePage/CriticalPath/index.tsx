@@ -47,7 +47,11 @@ export const findChildSpanIds = (spans: Span[]): Span[] => {
   return refinedSpanData;
 };
 
-// This function finds LFC of a current span which is less than the spawn event
+// This function finds LFC of a current span which is less than the spawn event time
+// |-------------spanA--------------|
+//    |--spanB--|    |--spanC--|
+// Here span-C will be LFC of spanA. But spanA doesnt have LFC.So, it returns to parent
+// from its creationTime (startTime) and this is referred as spawnTime below
 export const findLastFinishingChildSpanId = (
   traceData: Trace,
   currentSpan: Span,
@@ -70,47 +74,54 @@ export const sanitizeOverFlowingChildren = (spans: Span[]): Span[] => {
   spans.forEach(span => {
     if (!span.references.length) {
       sanitizedSpanData.push(span);
-    }else {
+    } else {
       const parentSpan = span.references.filter(ref => ref.refType === 'CHILD_OF')[0].span!;
       const childEndTime = span.startTime + span.duration;
       const parentEndTime = parentSpan.startTime + parentSpan.duration;
-      if (span.startTime >= parentSpan.startTime && childEndTime <= parentEndTime) {
-        // case 1: everything looks good
-        // |----parent----|
-        //   |----child--|
-        sanitizedSpanData.push(span);
-      } else if (
-        span.startTime < parentSpan.startTime &&
-        childEndTime <= parentEndTime &&
-        childEndTime > parentSpan.startTime
-      ) {
-        // case 2: child start before parent, truncate is needed
-        //      |----parent----|
-        //   |----child--|
-        sanitizedSpanData.push({
-          ...span,
-          startTime: parentSpan.startTime,
-          duration: childEndTime - parentSpan.startTime,
-        });
-      } else if (
-        span.startTime >= parentSpan.startTime &&
-        childEndTime > parentEndTime &&
-        span.startTime < parentEndTime
-      ) {
-        // case 3: child end after parent, truncate is needed
-        //      |----parent----|
-        //              |----child--|
-        sanitizedSpanData.push({ ...span, duration: parentEndTime - span.startTime });
-      } else {
-        // case 4: child outside of parent range =>  drop the child span
-        //      |----parent----|
-        //                        |----child--|
-        // or
-        //                      |----parent----|
-        //       |----child--|
-        droppedSpans.push({ ...span });
+      switch (true) {
+        case span.startTime >= parentSpan.startTime && childEndTime <= parentEndTime:
+          // case 1: everything looks good
+          // |----parent----|
+          //   |----child--|
+          sanitizedSpanData.push(span);
+          break;
+
+        case span.startTime < parentSpan.startTime &&
+          childEndTime <= parentEndTime &&
+          childEndTime > parentSpan.startTime:
+          // case 2: child start before parent, truncate is needed
+          //      |----parent----|
+          //   |----child--|
+          sanitizedSpanData.push({
+            ...span,
+            startTime: parentSpan.startTime,
+            duration: childEndTime - parentSpan.startTime,
+          });
+          break;
+
+        case span.startTime >= parentSpan.startTime &&
+          childEndTime > parentEndTime &&
+          span.startTime < parentEndTime:
+          // case 3: child end after parent, truncate is needed
+          //      |----parent----|
+          //              |----child--|
+          sanitizedSpanData.push({
+            ...span,
+            duration: parentEndTime - span.startTime,
+          });
+          break;
+
+        default:
+          // case 4: child outside of parent range => drop the child span
+          //      |----parent----|
+          //                        |----child--|
+          // or
+          //                      |----parent----|
+          //       |----child--|
+          droppedSpans.push({ ...span });
+          break;
       }
-    } 
+    }
   });
   // This make sure to also drop the all childs of dropped spans
   sanitizedSpanData.forEach(span => {
