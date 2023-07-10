@@ -31,12 +31,12 @@ describe.each([[test1], [test2], [test3], [test4]])('findRootSpanId', testProps 
   });
 });
 
-describe.each([[test1], [test2], [test3], [test4]])('sanitizeOverFlowingChildren',testProps => {
+describe.each([[test1], [test2], [test3], [test4]])('sanitizeOverFlowingChildren', testProps => {
   it('Should sanitize the data(overflowing spans) correctly', () => {
     const sanitizedData = sanitizeOverFlowingChildren(testProps.trace.spans);
     expect(sanitizedData).toStrictEqual(testProps.sanitizedSpanData);
   });
-})
+});
 
 describe.each([[test1], [test2], [test3], [test4]])('findChildSpanIds', testProps => {
   it('Should find child spanIds correctly and also in sortorder of endTime', () => {
