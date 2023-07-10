@@ -78,6 +78,7 @@ const happyTrace = {
 
 const transformedTrace = transformTraceData(happyTrace);
 
+const sanitizedSpanData = transformedTrace.spans;
 const refinedSpanData = transformedTrace.spans;
 refinedSpanData[0].childSpanIds = ['span-C', 'span-A'];
 refinedSpanData[1].childSpanIds = [];
@@ -104,6 +105,7 @@ const criticalPathSections = [
 const test2 = {
   criticalPathSections,
   trace: transformedTrace,
+  sanitizedSpanData,
   refinedSpanData,
   rootSpanId: 'span-X',
   lfcInputSpan: 'span-X',
