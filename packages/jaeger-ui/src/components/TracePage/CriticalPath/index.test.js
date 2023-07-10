@@ -31,10 +31,16 @@ describe.each([[test1], [test2], [test3], [test4]])('findRootSpanId', testProps 
   });
 });
 
+describe.each([[test1], [test2], [test3], [test4]])('sanitizeOverFlowingChildren',testProps => {
+  it('Should sanitize the data(overflowing spans) correctly', () => {
+    const sanitizedData = sanitizeOverFlowingChildren(testProps.trace.spans);
+    expect(sanitizedData).toStrictEqual(testProps.sanitizedSpanData);
+  });
+})
+
 describe.each([[test1], [test2], [test3], [test4]])('findChildSpanIds', testProps => {
   it('Should find child spanIds correctly and also in sortorder of endTime', () => {
-    const sanitizedData = sanitizeOverFlowingChildren(testProps.trace.spans);
-    const refinedSpanData = findChildSpanIds(sanitizedData);
+    const refinedSpanData = findChildSpanIds(testProps.sanitizedSpanData);
     expect(refinedSpanData.length).toBe(testProps.refinedSpanData.length);
     expect(refinedSpanData).toStrictEqual(testProps.refinedSpanData);
   });
@@ -42,9 +48,7 @@ describe.each([[test1], [test2], [test3], [test4]])('findChildSpanIds', testProp
 
 describe.each([[test1], [test2], [test3], [test4]])('findLastFinishingChildSpanId', testProps => {
   it('Should find lfc of a span correctly', () => {
-    const sanitizedData = sanitizeOverFlowingChildren(testProps.trace.spans);
-    const refinedSpanData = findChildSpanIds(sanitizedData);
-    const traceData = { ...testProps.trace, spans: refinedSpanData };
+    const traceData = { ...testProps.trace, spans: testProps.refinedSpanData };
 
     let currentSpan = traceData.spans.filter(span => span.spanID === testProps.lfcInputSpan)[0];
     let lastFinishingChildSpanId = findLastFinishingChildSpanId(traceData, currentSpan);
@@ -59,9 +63,7 @@ describe.each([[test1], [test2], [test3], [test4]])('findLastFinishingChildSpanI
 
 describe.each([[test1], [test2], [test3], [test4]])('Happy Path', testProps => {
   it('Should find criticalPathSections correctly', () => {
-    const sanitizedData = sanitizeOverFlowingChildren(testProps.trace.spans);
-    const refinedSpanData = findChildSpanIds(sanitizedData);
-    const traceData = { ...testProps.trace, spans: refinedSpanData };
+    const traceData = { ...testProps.trace, spans: testProps.refinedSpanData };
     const criticalPath = computeCriticalPath(traceData, testProps.rootSpanId, []);
     expect(criticalPath).toStrictEqual(testProps.criticalPathSections);
   });
