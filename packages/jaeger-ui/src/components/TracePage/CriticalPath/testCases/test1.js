@@ -15,14 +15,19 @@
 import transformTraceData from '../../../../model/transform-trace-data';
 
 /*
-      +──────────────────────+
-      │      span C          │
-      +++──────+++++──────┐+++
-        │span D│   │span E│
-        ++++++++   ++++++++
+
+     ┌──────────────────────────────────────┐       |            
+     │             Span C                   │       |          
+     └──┬──────────▲─────────┬──────────▲───┘       |           span C
+     +++│          │+++++++++│          │++++       |           /    \
+        │          │         │          │           |          /      \
+        ▼──────────┤         ▼──────────┤           |       span D     span E
+        │ Span D   │         │ Span E   │           |
+        └──────────┘         └──────────┘           |      (parent-child tree)
+        +++++++++++          ++++++++++++           |
+
 
 Here +++++ are critical path sections
-
 */
 const testTrace = {
   traceID: 'test1-trace',

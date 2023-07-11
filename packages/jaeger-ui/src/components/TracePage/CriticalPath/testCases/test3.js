@@ -14,16 +14,17 @@
 
 import transformTraceData from '../../../../model/transform-trace-data';
 /*
-
-      x┌──────────┐x
-      x│ Span A   │x
-      x└──────────┘x
-      xxxxxxxxxxxxxx     ┌─────────────────────────────────────┐
-                         │              Span B                 │
-                         └─────────────────────────────────────┘
-
-
-Span B will be dropped and span A is on critical path
+                                                  |
+      ┌──────────┐                                |
+      │ Span A   │                                |          span A
+      └──────────┘                                |           /
+      ++++++++++++    ┌───────────────────┐       |          /
+                      │      Span B       │       |      span B
+                      └───────────────────┘       |
+                                                  |   (parent-child tree)
+                                                  | 
+Span B will be dropped.                           |
+span A is on critical path(+++++)                 |
 */
 
 const trace = require('../../TraceStatistics/tableValuesTestTrace/traceWithSingleChildSpanLongerThanParent.json');

@@ -15,18 +15,20 @@
 import transformTraceData from '../../../../model/transform-trace-data';
 
 /*
-     x ┌────────┐ x
-     x │ Span A │ x
-     x └────────┘ x
-     xxxxxxxxxxxxxx   ┌───────────┐
-                      │   Span B  │
-                      └─┬───────▲─┘
-                        │       │
-                        ◄───────┤
-                        │ Span C│
-                        └───────┘
-
-Here Both spanB and spanC will be dropped and span A is on critical path
+    ┌──────────┐                         |
+    │ Span A   │                         |  
+    └──────────┘                         |
+    ++++++++++++  ┌────────────┐         |              span A
+                  │  Span B    │         |              /    
+                  └┬───────▲───┘         |             /      
+                   │       │             |           span B
+                   │       │             |            /
+                   ▼───────┤             |           /
+                   │Span C │             |         span C
+                   └───────┘             |
+                                         |   (parent-child tree)
+Both spanB and spanC will be dropped.    |
+span A is on critical path(+++++)        |
 */
 
 const trace = {
