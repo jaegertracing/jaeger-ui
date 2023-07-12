@@ -31,11 +31,6 @@ const trace = require('../../TraceStatistics/tableValuesTestTrace/traceWithSingl
 
 const transformedTrace = transformTraceData(trace);
 
-const sanitizedSpanData = [transformedTrace.spans[0]];
-
-const refinedSpanData = sanitizedSpanData;
-refinedSpanData[0].childSpanIds = [];
-
 const criticalPathSections = [
   {
     spanId: '006c3cf93508f205',
@@ -47,13 +42,6 @@ const criticalPathSections = [
 const test3 = {
   criticalPathSections,
   trace: transformedTrace,
-  sanitizedSpanData,
-  refinedSpanData,
-  rootSpanId: '006c3cf93508f205',
-  lfcInputSpan: '006c3cf93508f205',
-  lfc: undefined,
-  lfcWithSpawnTime: undefined,
-  spawnTime: undefined,
 };
 
 export default test3;

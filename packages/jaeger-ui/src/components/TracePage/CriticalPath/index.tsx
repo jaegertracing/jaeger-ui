@@ -13,131 +13,16 @@
 // limitations under the License.
 
 import { Span, Trace } from '../../../types/trace';
+import findChildSpanIds from './utils/findChildSpanIds';
+import findLastFinishingChildSpanId from './utils/findLastFinishingChildSpanId';
+import findRootSpanId from './utils/findRootSpanId';
+import sanitizeOverFlowingChildren from './utils/sanitizeOverFlowingChildren';
 
 // It is a section of span that lies on critical path
 type criticalPathSection = {
   spanId: string;
   section_start: number;
   section_end: number;
-};
-
-export const findRootSpanId = (spans: Span[]): string | undefined => {
-  const rootSpan = spans.find(span => span.references.length === 0 && span.depth === 0);
-  return rootSpan?.spanID;
-};
-
-// This function finds child spans for each span and also sorts childSpanIds based on endTime
-export const findChildSpanIds = (spans: Span[]): Span[] => {
-  const refinedSpanData: Span[] = [];
-  spans.forEach(span => {
-    if (span.hasChildren) {
-      const Children = spans
-        .filter(span2 =>
-          span2.references.some(
-            reference => reference.refType === 'CHILD_OF' && reference.spanID === span.spanID
-          )
-        )
-        .sort((a, b) => b.startTime + b.duration - (a.startTime + a.duration))
-        .map(span2 => span2.spanID);
-      refinedSpanData.push({ ...span, childSpanIds: Children });
-    } else {
-      refinedSpanData.push({ ...span, childSpanIds: [] });
-    }
-  });
-  return refinedSpanData;
-};
-
-// This function finds LFC of a current span which is less than the spawn event time
-// |-------------spanA--------------|
-//    |--spanB--|    |--spanC--|
-// Here span-C will be LFC of spanA. But spanA doesnt have LFC.So, it returns to parent
-// from its creationTime (startTime) and this is referred as spawnTime below
-export const findLastFinishingChildSpanId = (
-  traceData: Trace,
-  currentSpan: Span,
-  spawnTime?: number
-): string | undefined => {
-  if (spawnTime) {
-    return currentSpan.childSpanIds.find(each =>
-      traceData.spans.some(span => span.spanID === each && span.startTime + span.duration < spawnTime)
-    );
-  }
-  return currentSpan.childSpanIds[0];
-};
-
-// This function turncates/drops the overflowing child spans
-export const sanitizeOverFlowingChildren = (spans: Span[]): Span[] => {
-  const sanitizedSpanData: Span[] = [];
-  const droppedSpans: Span[] = [];
-  const refinedSantitizedSpanData: Span[] = [];
-
-  spans.forEach(span => {
-    if (!span.references.length) {
-      sanitizedSpanData.push(span);
-    } else {
-      const parentSpan = span.references.filter(ref => ref.refType === 'CHILD_OF')[0].span!;
-      const childEndTime = span.startTime + span.duration;
-      const parentEndTime = parentSpan.startTime + parentSpan.duration;
-      switch (true) {
-        case span.startTime >= parentSpan.startTime && childEndTime <= parentEndTime:
-          // case 1: everything looks good
-          // |----parent----|
-          //   |----child--|
-          sanitizedSpanData.push(span);
-          break;
-
-        case span.startTime < parentSpan.startTime &&
-          childEndTime <= parentEndTime &&
-          childEndTime > parentSpan.startTime:
-          // case 2: child start before parent, truncate is needed
-          //      |----parent----|
-          //   |----child--|
-          sanitizedSpanData.push({
-            ...span,
-            startTime: parentSpan.startTime,
-            duration: childEndTime - parentSpan.startTime,
-          });
-          break;
-
-        case span.startTime >= parentSpan.startTime &&
-          childEndTime > parentEndTime &&
-          span.startTime < parentEndTime:
-          // case 3: child end after parent, truncate is needed
-          //      |----parent----|
-          //              |----child--|
-          sanitizedSpanData.push({
-            ...span,
-            duration: parentEndTime - span.startTime,
-          });
-          break;
-
-        default:
-          // case 4: child outside of parent range => drop the child span
-          //      |----parent----|
-          //                        |----child--|
-          // or
-          //                      |----parent----|
-          //       |----child--|
-          droppedSpans.push({ ...span });
-          break;
-      }
-    }
-  });
-  // This make sure to also drop the all childs of dropped spans
-  sanitizedSpanData.forEach(span => {
-    if (span.references.length && span.references[0].refType === 'CHILD_OF') {
-      const childOfDroppedSpan = droppedSpans.find(b => span.references[0].spanID === b.spanID);
-      if (childOfDroppedSpan) {
-        droppedSpans.push(span);
-      } else {
-        refinedSantitizedSpanData.push(span);
-      }
-    } else {
-      refinedSantitizedSpanData.push(span);
-    }
-  });
-
-  return refinedSantitizedSpanData;
 };
 
 export const computeCriticalPath = (
@@ -189,7 +74,7 @@ function TraceCriticalPath(trace: Trace) {
   // If there is root span then algorithm implements
   if (rootSpanId) {
     const sanitizedSpanData = sanitizeOverFlowingChildren(trace.spans);
-    const refinedSpanData: Span[] = findChildSpanIds(sanitizedSpanData);
+    const refinedSpanData = findChildSpanIds(sanitizedSpanData);
     traceData = { ...traceData, spans: refinedSpanData };
     criticalPath = computeCriticalPath(traceData, rootSpanId, []);
     return criticalPath;

@@ -420,7 +420,6 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
     }
 
     const criticalPath = TraceCriticalPath(data);
-    console.log(criticalPath);
 
     return (
       <div>

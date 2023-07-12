@@ -27,7 +27,7 @@ import transformTraceData from '../../../../model/transform-trace-data';
                 ▼────────────────────────┤               |     (parent-child tree)
                 │         Span C         │               | 
                 └────────────────────────┘               |
-                ++++++++++++++++++++++++++++             |
+                ++++++++++++++++++++++++++               |
                                                          |
 Here ++++++ is critical path                             |
 */
@@ -78,12 +78,6 @@ const happyTrace = {
 
 const transformedTrace = transformTraceData(happyTrace);
 
-const sanitizedSpanData = transformedTrace.spans;
-const refinedSpanData = transformedTrace.spans;
-refinedSpanData[0].childSpanIds = ['span-C', 'span-A'];
-refinedSpanData[1].childSpanIds = [];
-refinedSpanData[2].childSpanIds = [];
-
 const criticalPathSections = [
   {
     spanId: 'span-X',
@@ -105,13 +99,6 @@ const criticalPathSections = [
 const test2 = {
   criticalPathSections,
   trace: transformedTrace,
-  sanitizedSpanData,
-  refinedSpanData,
-  rootSpanId: 'span-X',
-  lfcInputSpan: 'span-X',
-  lfc: 'span-C',
-  lfcWithSpawnTime: undefined,
-  spawnTime: 20,
 };
 
 export default test2;
