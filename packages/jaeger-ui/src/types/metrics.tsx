@@ -147,11 +147,11 @@ export type FetchedAllServiceMetricsResponse = [
   PromiseFulfilledResult<MetricsAPIServiceResponseData<'service_latencies', 0.75>> | PromiseRejectedResult,
   PromiseFulfilledResult<MetricsAPIServiceResponseData<'service_latencies'>> | PromiseRejectedResult,
   PromiseFulfilledResult<MetricsAPIServiceResponseData<'service_call_rate'>> | PromiseRejectedResult,
-  PromiseFulfilledResult<MetricsAPIServiceResponseData<'service_error_rate'>> | PromiseRejectedResult
+  PromiseFulfilledResult<MetricsAPIServiceResponseData<'service_error_rate'>> | PromiseRejectedResult,
 ];
 
 export type FetchAggregatedServiceMetricsResponse = [
   PromiseFulfilledResult<MetricsAPIOpsResponseData<'service_operation_latencies'>> | PromiseRejectedResult,
   PromiseFulfilledResult<MetricsAPIOpsResponseData<'service_operation_call_rate'>> | PromiseRejectedResult,
-  PromiseFulfilledResult<MetricsAPIOpsResponseData<'service_operation_error_rate'>> | PromiseRejectedResult
+  PromiseFulfilledResult<MetricsAPIOpsResponseData<'service_operation_error_rate'>> | PromiseRejectedResult,
 ];
