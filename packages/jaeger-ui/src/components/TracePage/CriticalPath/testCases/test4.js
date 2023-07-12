@@ -78,11 +78,6 @@ const trace = {
 
 const transformedTrace = transformTraceData(trace);
 
-const sanitizedSpanData = [transformedTrace.spans[0]];
-
-const refinedSpanData = sanitizedSpanData;
-refinedSpanData[0].childSpanIds = [];
-
 const criticalPathSections = [
   {
     spanId: 'span-A',
@@ -94,13 +89,6 @@ const criticalPathSections = [
 const test4 = {
   criticalPathSections,
   trace: transformedTrace,
-  sanitizedSpanData,
-  refinedSpanData,
-  rootSpanId: 'span-A',
-  lfcInputSpan: 'span-A',
-  lfc: undefined,
-  lfcWithSpawnTime: undefined,
-  spawnTime: undefined,
 };
 
 export default test4;
