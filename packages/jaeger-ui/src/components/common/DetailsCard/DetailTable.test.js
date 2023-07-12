@@ -15,7 +15,7 @@
 import React from 'react';
 import { shallow } from 'enzyme';
 import { Icon } from 'antd';
-import FaFilter from 'react-icons/lib/fa/filter.js';
+import { FaFilter } from 'react-icons/fa';
 
 import ExamplesLink from '../ExamplesLink';
 import DetailTableDropdown from './DetailTableDropdown';

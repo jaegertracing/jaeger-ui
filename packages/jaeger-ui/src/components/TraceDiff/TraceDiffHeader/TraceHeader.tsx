@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import * as React from 'react';
-import IoChevronDown from 'react-icons/lib/io/chevron-down';
+import { IoChevronDownOutline } from 'react-icons/io5';
 
 import TraceTimelineLink from './TraceTimelineLink';
 import RelativeDate from '../../common/RelativeDate';
@@ -91,7 +91,7 @@ export default function TraceHeader(props: Props) {
             <span className="u-tx-muted">Select a Trace...</span>
           )}
         </span>
-        <IoChevronDown className="TraecDiffHeader--traceTitleChevron" />
+        <IoChevronDownOutline className="TraecDiffHeader--traceTitleChevron" />
       </h1>
       <AttrsComponent startTime={startTime} duration={duration} totalSpans={totalSpans} />
     </div>

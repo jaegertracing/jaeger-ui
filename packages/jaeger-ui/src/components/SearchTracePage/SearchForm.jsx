@@ -21,7 +21,7 @@ import moment from 'moment';
 import memoizeOne from 'memoize-one';
 import PropTypes from 'prop-types';
 import queryString from 'query-string';
-import IoHelp from 'react-icons/lib/io/help';
+import { IoMdHelp } from 'react-icons/io';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import { Field, reduxForm, formValueSelector } from 'redux-form';
@@ -345,7 +345,7 @@ export class SearchFormImpl extends React.PureComponent {
                   </div>
                 }
               >
-                <IoHelp className="SearchForm--hintTrigger" />
+                <IoMdHelp className="SearchForm--hintTrigger" />
               </Popover>
             </div>
           }
@@ -380,7 +380,7 @@ export class SearchFormImpl extends React.PureComponent {
                     </h3>
                   }
                 >
-                  <IoHelp className="SearchForm--hintTrigger" />
+                  <IoMdHelp className="SearchForm--hintTrigger" />
                 </Popover>
               </div>
             }
@@ -416,7 +416,7 @@ export class SearchFormImpl extends React.PureComponent {
                     </h3>
                   }
                 >
-                  <IoHelp className="SearchForm--hintTrigger" />
+                  <IoMdHelp className="SearchForm--hintTrigger" />
                 </Popover>
               </div>
             }

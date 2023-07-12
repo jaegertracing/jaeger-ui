@@ -14,8 +14,8 @@
 
 import React, { PureComponent } from 'react';
 import { Popover } from 'antd';
-import SortAmountAsc from 'react-icons/lib/fa/sort-amount-asc.js';
-import IoChevronRight from 'react-icons/lib/io/chevron-right';
+import { FaSortAmountUpAlt } from 'react-icons/fa';
+import { IoChevronForwardOutline } from 'react-icons/io5';
 
 import ChevronDown from '../ChevronDown';
 import { trackHopChange } from '../../index.track';
@@ -48,7 +48,9 @@ export default class Selector extends PureComponent<TProps> {
     const { direction } = this.props;
     return (
       <React.Fragment key={`${distance} ${direction} ${suffix}`}>
-        {Boolean(showChevron) && <IoChevronRight className={`${CLASSNAME}--ChevronRight is-${fullness}`} />}
+        {Boolean(showChevron) && (
+          <IoChevronForwardOutline className={`${CLASSNAME}--ChevronRight is-${fullness}`} />
+        )}
         <button
           className={`${CLASSNAME}--btn is-${fullness} ${CLASSNAME}--${suffix}`}
           type="button"
@@ -109,7 +111,7 @@ export default class Selector extends PureComponent<TProps> {
         title={`Visible ${lowercaseLabel}`}
       >
         <span className={CLASSNAME}>
-          <SortAmountAsc className={`${CLASSNAME}--AscIcon is-${streamText}`} />
+          <FaSortAmountUpAlt className={`${CLASSNAME}--AscIcon is-${streamText}`} />
           {streamLabel}
           {furthestBtn}
           <span className={`${CLASSNAME}--delimiter`}>/</span>

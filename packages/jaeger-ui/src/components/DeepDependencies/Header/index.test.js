@@ -15,8 +15,7 @@
 import React from 'react';
 import { shallow } from 'enzyme';
 import { Tooltip } from 'antd';
-import MdVisibility from 'react-icons/lib/md/visibility';
-import MdVisibilityOff from 'react-icons/lib/md/visibility-off';
+import { RiEyeLine, RiEyeCloseLine } from 'react-icons/ri';
 
 import Header from './index';
 import HopsSelector from './HopsSelector';
@@ -120,16 +119,16 @@ describe('<Header>', () => {
       expect(getMatchesInfo().text()).not.toEqual(expectedHiddenCount);
       expect(getTooltip().prop('title')).toBe(expectedTitle);
       expect(getBtn().prop('disabled')).toBe(true);
-      expect(wrapper.find(MdVisibility)).toHaveLength(1);
-      expect(wrapper.find(MdVisibilityOff)).toHaveLength(0);
+      expect(wrapper.find(RiEyeLine)).toHaveLength(1);
+      expect(wrapper.find(RiEyeCloseLine)).toHaveLength(0);
 
       wrapper.setProps({ hiddenUiFindMatches: new Set() });
       expect(getMatchesInfo().text()).toEqual(expectedFindCount);
       expect(getMatchesInfo().text()).not.toEqual(expectedHiddenCount);
       expect(getTooltip().prop('title')).toBe(expectedTitle);
       expect(getBtn().prop('disabled')).toBe(true);
-      expect(wrapper.find(MdVisibility)).toHaveLength(1);
-      expect(wrapper.find(MdVisibilityOff)).toHaveLength(0);
+      expect(wrapper.find(RiEyeLine)).toHaveLength(1);
+      expect(wrapper.find(RiEyeCloseLine)).toHaveLength(0);
     });
 
     it('renders both visible and hidden counts if both are provided', () => {
@@ -139,8 +138,8 @@ describe('<Header>', () => {
       expect(getMatchesInfo().text()).toEqual(expectedHiddenCount);
       expect(getTooltip().prop('title')).toBe(expectedHiddenTitle);
       expect(getBtn().prop('disabled')).toBe(false);
-      expect(wrapper.find(MdVisibility)).toHaveLength(1);
-      expect(wrapper.find(MdVisibilityOff)).toHaveLength(1);
+      expect(wrapper.find(RiEyeLine)).toHaveLength(1);
+      expect(wrapper.find(RiEyeCloseLine)).toHaveLength(1);
     });
 
     it('renders 0 with correct tooltip if there are no visible nor hidden matches', () => {
@@ -150,8 +149,8 @@ describe('<Header>', () => {
       expect(getMatchesInfo().text()).toBe('0');
       expect(getTooltip().prop('title')).toBe(expectedTitle);
       expect(getBtn().prop('disabled')).toBe(true);
-      expect(wrapper.find(MdVisibility)).toHaveLength(0);
-      expect(wrapper.find(MdVisibilityOff)).toHaveLength(0);
+      expect(wrapper.find(RiEyeLine)).toHaveLength(0);
+      expect(wrapper.find(RiEyeCloseLine)).toHaveLength(0);
     });
 
     it('renders 0 with correct tooltip if there are no matches but there are hidden matches', () => {
@@ -162,8 +161,8 @@ describe('<Header>', () => {
       expect(getMatchesInfo().text()).toEqual(expectedHiddenCount);
       expect(getTooltip().prop('title')).toBe(expectedHiddenTitle);
       expect(getBtn().prop('disabled')).toBe(false);
-      expect(wrapper.find(MdVisibility)).toHaveLength(1);
-      expect(wrapper.find(MdVisibilityOff)).toHaveLength(1);
+      expect(wrapper.find(RiEyeLine)).toHaveLength(1);
+      expect(wrapper.find(RiEyeCloseLine)).toHaveLength(1);
     });
 
     it('renders correct plurality in tooltip', () => {

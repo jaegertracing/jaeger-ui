@@ -13,10 +13,8 @@
 // limitations under the License.
 
 import * as React from 'react';
-import IoAlert from 'react-icons/lib/io/alert';
-import IoArrowRightA from 'react-icons/lib/io/arrow-right-a';
-import IoNetwork from 'react-icons/lib/io/network';
-import MdFileUpload from 'react-icons/lib/md/file-upload';
+import { IoAlertCircleOutline, IoChevronForwardOutline, IoGitNetworkOutline } from 'react-icons/io5';
+import { MdCloudUpload } from 'react-icons/md';
 import ReferencesButton from './ReferencesButton';
 import TimelineRow from './TimelineRow';
 import { formatDuration, ViewedBoundsFunctionType } from './utils';
@@ -149,18 +147,18 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
               <span
                 className={`span-svc-name ${isParent && !isChildrenExpanded ? 'is-children-collapsed' : ''}`}
               >
-                {showErrorIcon && <IoAlert className="SpanBarRow--errorIcon" />}
+                {showErrorIcon && <IoAlertCircleOutline className="SpanBarRow--errorIcon" />}
                 {serviceName}{' '}
                 {rpc && (
                   <span>
-                    <IoArrowRightA />{' '}
+                    <IoChevronForwardOutline />{' '}
                     <i className="SpanBarRow--rpcColorMarker" style={{ background: rpc.color }} />
                     {rpc.serviceName}
                   </span>
                 )}
                 {noInstrumentedServer && (
                   <span>
-                    <IoArrowRightA />{' '}
+                    <IoChevronForwardOutline />{' '}
                     <i
                       className="SpanBarRow--rpcColorMarker"
                       style={{ background: noInstrumentedServer.color }}
@@ -177,7 +175,7 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
                 tooltipText="Contains multiple references"
                 focusSpan={focusSpan}
               >
-                <IoNetwork />
+                <IoGitNetworkOutline />
               </ReferencesButton>
             )}
             {span.subsidiarilyReferencedBy && span.subsidiarilyReferencedBy.length > 0 && (
@@ -188,7 +186,7 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
                 }`}
                 focusSpan={focusSpan}
               >
-                <MdFileUpload />
+                <MdCloudUpload />
               </ReferencesButton>
             )}
           </div>

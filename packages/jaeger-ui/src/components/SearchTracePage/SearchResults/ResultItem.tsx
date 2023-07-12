@@ -20,7 +20,7 @@ import { Link } from 'react-router-dom';
 import { sortBy } from 'lodash';
 import moment from 'moment';
 
-import IoAlert from 'react-icons/lib/io/alert';
+import { IoAlertCircleOutline } from 'react-icons/io5';
 
 import { trackConversions, EAltViewActions } from './index.track';
 import * as markers from './ResultItem.markers';
@@ -117,7 +117,7 @@ export default class ResultItem extends React.PureComponent<Props, State> {
                         style={{ borderLeftColor: colorGenerator.getColorByKey(name) }}
                       >
                         {this.state.erroredServices.has(name) && (
-                          <IoAlert className="ResultItem--errorIcon" />
+                          <IoAlertCircleOutline className="ResultItem--errorIcon" />
                         )}
                         {name} ({count})
                       </Tag>
