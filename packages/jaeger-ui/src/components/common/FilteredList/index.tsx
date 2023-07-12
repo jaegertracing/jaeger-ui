@@ -16,7 +16,7 @@ import * as React from 'react';
 import { Checkbox, Tooltip } from 'antd';
 import _debounce from 'lodash/debounce';
 import matchSorter from 'match-sorter';
-import IoIosSearch from 'react-icons/lib/io/ios-search';
+import { IoSearchOutline } from 'react-icons/io5';
 import { FixedSizeList as VList, ListOnItemsRenderedProps, ListOnScrollProps } from 'react-window';
 import { Key as EKey } from 'ts-key-enum';
 
@@ -89,9 +89,8 @@ export default class FilteredList extends React.PureComponent<TProps, TState> {
       }
     }
     const checked = Boolean(checkedCount) && checkedCount === filtered.length;
-    const title = `Click to ${checked ? 'unselect' : 'select'} all ${
-      filtered.length < options.length ? 'filtered ' : ''
-    }options`;
+    const title = `Click to ${checked ? 'unselect' : 'select'} all ${filtered.length < options.length ? 'filtered ' : ''
+      }options`;
 
     return (
       <Tooltip title={title}>
@@ -194,7 +193,7 @@ export default class FilteredList extends React.PureComponent<TProps, TState> {
         <div className="FilteredList--filterWrapper">
           {filteredCheckbox}
           <label className="FilteredList--inputWrapper">
-            <IoIosSearch className="FilteredList--filterIcon" />
+            <IoSearchOutline className="FilteredList--filterIcon" />
             <input
               className="FilteredList--filterInput"
               placeholder="Filter..."

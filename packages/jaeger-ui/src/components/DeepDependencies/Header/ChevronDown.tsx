@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import * as React from 'react';
-import IoChevronDown from 'react-icons/lib/io/chevron-down';
+import { IoChevronDownOutline } from 'react-icons/io5';
+
 
 import './ChevronDown.css';
 
@@ -25,7 +26,7 @@ type TProps = {
 function ChevronDown(props: TProps) {
   const { className, style } = props;
   const cls = `Ddg--Header--ChevronDown ${className || ''}`;
-  return <IoChevronDown className={cls} style={style} />;
+  return <IoChevronDownOutline className={cls} style={style} />;
 }
 
 export default React.memo(ChevronDown);

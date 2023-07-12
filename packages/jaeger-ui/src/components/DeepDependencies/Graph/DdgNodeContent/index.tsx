@@ -16,8 +16,9 @@ import * as React from 'react';
 import { Checkbox, Popover } from 'antd';
 import cx from 'classnames';
 import { TLayoutVertex } from '@jaegertracing/plexus/lib/types';
-import IoAndroidLocate from 'react-icons/lib/io/android-locate';
-import MdVisibilityOff from 'react-icons/lib/md/visibility-off';
+import { IoLocationSharp } from 'react-icons/io5';
+import { RiEyeCloseLine } from 'react-icons/ri';
+
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
 
@@ -238,9 +239,9 @@ export class UnconnectedDdgNodeContent extends React.PureComponent<TProps, TStat
     const hovered = event.type === 'mouseover';
     const visIndices = hovered
       ? (getVisiblePathElems(vertexKey) || []).map(({ visibilityIdx }) => {
-          this.hoveredIndices.add(visibilityIdx);
-          return visibilityIdx;
-        })
+        this.hoveredIndices.add(visibilityIdx);
+        return visibilityIdx;
+      })
       : Array.from(this.hoveredIndices);
     setViewModifier(visIndices, EViewModifier.Hovered, hovered);
 
@@ -326,7 +327,7 @@ export class UnconnectedDdgNodeContent extends React.PureComponent<TProps, TStat
           {!isFocalNode && (
             <a className="DdgNodeContent--actionsItem" onClick={this.focusPaths} role="button">
               <span className="DdgNodeContent--actionsItemIconWrapper">
-                <IoAndroidLocate />
+                <IoLocationSharp />
               </span>
               <span className="DdgNodeContent--actionsItemText">Focus paths through this node</span>
             </a>
@@ -334,7 +335,7 @@ export class UnconnectedDdgNodeContent extends React.PureComponent<TProps, TStat
           {!isFocalNode && (
             <a className="DdgNodeContent--actionsItem" onClick={this.hideVertex} role="button">
               <span className="DdgNodeContent--actionsItemIconWrapper">
-                <MdVisibilityOff />
+                <RiEyeCloseLine />
               </span>
               <span className="DdgNodeContent--actionsItemText">Hide node</span>
             </a>

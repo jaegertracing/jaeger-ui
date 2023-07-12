@@ -14,8 +14,9 @@
 
 import * as React from 'react';
 import { Icon, Input, Tooltip } from 'antd';
-import MdVisibility from 'react-icons/lib/md/visibility';
-import MdVisibilityOff from 'react-icons/lib/md/visibility-off';
+import { RiEyeLine } from 'react-icons/ri';
+import { RiEyeCloseLine } from 'react-icons/ri';
+
 
 import HopsSelector from './HopsSelector';
 import NameSelector from '../../common/NameSelector';
@@ -74,7 +75,7 @@ export default class Header extends React.PureComponent<TProps> {
       hiddenInfo = (
         <span className="DdgHeader--uiFindInfo--hidden">
           {size}
-          <MdVisibilityOff className="DdgHeader--uiFindInfo--icon" />
+          <RiEyeCloseLine className="DdgHeader--uiFindInfo--icon" />
         </span>
       );
     }
@@ -90,7 +91,7 @@ export default class Header extends React.PureComponent<TProps> {
             type="button"
           >
             {uiFindCount}
-            {(uiFindCount !== 0 || hasHidden) && <MdVisibility className="DdgHeader--uiFindInfo--icon" />}
+            {(uiFindCount !== 0 || hasHidden) && <RiEyeLine className="DdgHeader--uiFindInfo--icon" />}
             {hiddenInfo}
           </button>
         </span>

@@ -15,7 +15,8 @@
 import * as React from 'react';
 import { Icon, Popover } from 'antd';
 import cx from 'classnames';
-import IoChevronDown from 'react-icons/lib/io/chevron-down';
+import { IoChevronDownOutline } from 'react-icons/io5';
+
 
 import BreakableText from './BreakableText';
 import FilteredList from './FilteredList';
@@ -130,7 +131,7 @@ export default class NameSelector extends React.PureComponent<TProps, TState> {
         <h2 className={rootCls}>
           {useLabel && <span className="NameSelector--label">{label}:</span>}
           <BreakableText className="NameSelector--value" text={text} />
-          <IoChevronDown className="NameSelector--chevron" />
+          <IoChevronDownOutline className="NameSelector--chevron" />
           {!required && value && (
             <Icon className="NameSelector--clearIcon" type="close" onClick={this.clearValue} />
           )}

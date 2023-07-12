@@ -13,10 +13,10 @@
 // limitations under the License.
 
 import * as React from 'react';
-import IoAlert from 'react-icons/lib/io/alert';
-import IoArrowRightA from 'react-icons/lib/io/arrow-right-a';
-import IoNetwork from 'react-icons/lib/io/network';
-import MdFileUpload from 'react-icons/lib/md/file-upload';
+import { IoAlertCircleOutline } from 'react-icons/io5';
+import { IoChevronForwardOutline } from 'react-icons/io5';
+import { IoGitNetworkOutline } from 'react-icons/io5';
+import { MdCloudUpload } from 'react-icons/md';
 import ReferencesButton from './ReferencesButton';
 import TimelineRow from './TimelineRow';
 import { formatDuration, ViewedBoundsFunctionType } from './utils';
@@ -40,20 +40,20 @@ type SpanBarRowProps = {
   onChildrenToggled: (spanID: string) => void;
   numTicks: number;
   rpc?:
-    | {
-        viewStart: number;
-        viewEnd: number;
-        color: string;
-        operationName: string;
-        serviceName: string;
-      }
-    | TNil;
+  | {
+    viewStart: number;
+    viewEnd: number;
+    color: string;
+    operationName: string;
+    serviceName: string;
+  }
+  | TNil;
   noInstrumentedServer?:
-    | {
-        color: string;
-        serviceName: string;
-      }
-    | TNil;
+  | {
+    color: string;
+    serviceName: string;
+  }
+  | TNil;
   showErrorIcon: boolean;
   getViewedBounds: ViewedBoundsFunctionType;
   traceStartTime: number;
@@ -149,18 +149,18 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
               <span
                 className={`span-svc-name ${isParent && !isChildrenExpanded ? 'is-children-collapsed' : ''}`}
               >
-                {showErrorIcon && <IoAlert className="SpanBarRow--errorIcon" />}
+                {showErrorIcon && <IoAlertCircleOutline className="SpanBarRow--errorIcon" />}
                 {serviceName}{' '}
                 {rpc && (
                   <span>
-                    <IoArrowRightA />{' '}
+                    <IoChevronForwardOutline />{' '}
                     <i className="SpanBarRow--rpcColorMarker" style={{ background: rpc.color }} />
                     {rpc.serviceName}
                   </span>
                 )}
                 {noInstrumentedServer && (
                   <span>
-                    <IoArrowRightA />{' '}
+                    <IoChevronForwardOutline />{' '}
                     <i
                       className="SpanBarRow--rpcColorMarker"
                       style={{ background: noInstrumentedServer.color }}
@@ -177,18 +177,17 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
                 tooltipText="Contains multiple references"
                 focusSpan={focusSpan}
               >
-                <IoNetwork />
+                <IoGitNetworkOutline />
               </ReferencesButton>
             )}
             {span.subsidiarilyReferencedBy && span.subsidiarilyReferencedBy.length > 0 && (
               <ReferencesButton
                 references={span.subsidiarilyReferencedBy}
-                tooltipText={`This span is referenced by ${
-                  span.subsidiarilyReferencedBy.length === 1 ? 'another span' : 'multiple other spans'
-                }`}
+                tooltipText={`This span is referenced by ${span.subsidiarilyReferencedBy.length === 1 ? 'another span' : 'multiple other spans'
+                  }`}
                 focusSpan={focusSpan}
               >
-                <MdFileUpload />
+                <MdCloudUpload />
               </ReferencesButton>
             )}
           </div>

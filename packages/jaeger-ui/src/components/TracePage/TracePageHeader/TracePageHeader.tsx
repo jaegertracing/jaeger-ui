@@ -17,9 +17,9 @@ import { Button, Input } from 'antd';
 import _get from 'lodash/get';
 import _maxBy from 'lodash/maxBy';
 import _values from 'lodash/values';
-import IoAndroidArrowBack from 'react-icons/lib/io/android-arrow-back';
-import IoIosFilingOutline from 'react-icons/lib/io/ios-filing-outline';
-import MdKeyboardArrowRight from 'react-icons/lib/md/keyboard-arrow-right';
+import { IoArrowBackOutline } from 'react-icons/io5';
+import { IoDocumentOutline } from 'react-icons/io5';
+import { IoChevronForwardOutline } from 'react-icons/io5';
 import { Link } from 'react-router-dom';
 
 import AltViewOptions from './AltViewOptions';
@@ -163,7 +163,7 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
       <div className="TracePageHeader--titleRow">
         {toSearch && (
           <Link className="TracePageHeader--back" to={toSearch}>
-            <IoAndroidArrowBack />
+            <IoArrowBackOutline />
           </Link>
         )}
         {links && links.length > 0 && <ExternalLinks links={links} />}
@@ -174,7 +174,7 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
             role="switch"
             aria-checked={!slimView}
           >
-            <MdKeyboardArrowRight
+            <IoChevronForwardOutline
               className={`TracePageHeader--detailToggle ${!slimView ? 'is-expanded' : ''}`}
             />
             {title}
@@ -203,7 +203,7 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
         )}
         {showArchiveButton && (
           <Button className="ub-mr2 ub-flex ub-items-center" htmlType="button" onClick={onArchiveClicked}>
-            <IoIosFilingOutline className="TracePageHeader--archiveIcon" />
+            <IoDocumentOutline className="TracePageHeader--archiveIcon" />
             Archive Trace
           </Button>
         )}

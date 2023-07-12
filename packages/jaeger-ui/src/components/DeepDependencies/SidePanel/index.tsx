@@ -14,8 +14,9 @@
 
 import * as React from 'react';
 import { Modal, Table } from 'antd';
-import MdExitToApp from 'react-icons/lib/md/exit-to-app';
-import MdInfoOutline from 'react-icons/lib/md/info-outline';
+import { RiLogoutBoxLine } from 'react-icons/ri';
+import { MdInfoOutline } from 'react-icons/md';
+
 
 import { TDdgVertex } from '../../../model/ddg/types';
 import { TPathAgnosticDecorationSchema } from '../../../model/path-agnostic-decorations/types';
@@ -102,7 +103,7 @@ export default class SidePanel extends React.PureComponent<TProps> {
             type="button"
             onClick={this.clearSelected}
           >
-            <MdExitToApp />
+            <RiLogoutBoxLine />
           </button>
           <div className="Ddg--SidePanel--DecorationBtns">
             {this.decorations.map(({ acronym, id }) => (
