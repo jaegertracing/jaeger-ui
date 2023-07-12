@@ -17,9 +17,7 @@ import { Button, Input } from 'antd';
 import _get from 'lodash/get';
 import _maxBy from 'lodash/maxBy';
 import _values from 'lodash/values';
-import { IoArrowBackOutline } from 'react-icons/io5';
-import { IoDocumentOutline } from 'react-icons/io5';
-import { IoChevronForwardOutline } from 'react-icons/io5';
+import { IoArrowBackOutline, IoDocumentOutline, IoChevronForwardOutline } from 'react-icons/io5';
 import { Link } from 'react-router-dom';
 
 import AltViewOptions from './AltViewOptions';

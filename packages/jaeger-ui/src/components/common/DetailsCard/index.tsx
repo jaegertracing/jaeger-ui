@@ -16,7 +16,6 @@ import * as React from 'react';
 import cx from 'classnames';
 import { IoMdArrowDropdown } from 'react-icons/io';
 
-
 import { TColumnDefs, TDetails, TRow } from './types';
 import DetailTable from './DetailTable';
 import DetailList from './DetailList';

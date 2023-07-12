@@ -17,7 +17,6 @@ import { Icon, Popover } from 'antd';
 import cx from 'classnames';
 import { IoChevronDownOutline } from 'react-icons/io5';
 
-
 import BreakableText from './BreakableText';
 import FilteredList from './FilteredList';
 

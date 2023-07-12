@@ -14,10 +14,8 @@
 
 import * as React from 'react';
 import { Button, Tooltip } from 'antd';
-import { FaCheck } from 'react-icons/fa';
-import { FaTrash } from 'react-icons/fa';
+import { FaCheck, FaTrash } from 'react-icons/fa';
 import { TiTimes } from 'react-icons/ti';
-
 
 import FilteredList from '../FilteredList';
 
@@ -59,7 +57,7 @@ export default class DetailTableDropdown extends React.PureComponent<TProps> {
   };
 
   render() {
-    const { clearFilters = () => { }, confirm, options, selectedKeys, setSelectedKeys } = this.props;
+    const { clearFilters = () => {}, confirm, options, selectedKeys, setSelectedKeys } = this.props;
 
     const value = new Set<string>();
     selectedKeys.forEach(selected => {

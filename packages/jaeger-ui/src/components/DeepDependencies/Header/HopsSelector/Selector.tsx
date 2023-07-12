@@ -17,7 +17,6 @@ import { Popover } from 'antd';
 import { FaSortAmountUpAlt } from 'react-icons/fa';
 import { IoChevronForwardOutline } from 'react-icons/io5';
 
-
 import ChevronDown from '../ChevronDown';
 import { trackHopChange } from '../../index.track';
 import { ECheckedStatus, EDirection, THop } from '../../../../model/ddg/types';
@@ -49,7 +48,9 @@ export default class Selector extends PureComponent<TProps> {
     const { direction } = this.props;
     return (
       <React.Fragment key={`${distance} ${direction} ${suffix}`}>
-        {Boolean(showChevron) && <IoChevronForwardOutline className={`${CLASSNAME}--ChevronRight is-${fullness}`} />}
+        {Boolean(showChevron) && (
+          <IoChevronForwardOutline className={`${CLASSNAME}--ChevronRight is-${fullness}`} />
+        )}
         <button
           className={`${CLASSNAME}--btn is-${fullness} ${CLASSNAME}--${suffix}`}
           type="button"

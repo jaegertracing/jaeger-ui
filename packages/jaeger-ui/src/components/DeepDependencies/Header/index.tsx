@@ -14,9 +14,7 @@
 
 import * as React from 'react';
 import { Icon, Input, Tooltip } from 'antd';
-import { RiEyeLine } from 'react-icons/ri';
-import { RiEyeCloseLine } from 'react-icons/ri';
-
+import { RiEyeLine, RiEyeCloseLine } from 'react-icons/ri';
 
 import HopsSelector from './HopsSelector';
 import NameSelector from '../../common/NameSelector';

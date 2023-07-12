@@ -15,7 +15,6 @@
 import * as React from 'react';
 import { IoChevronDownOutline } from 'react-icons/io5';
 
-
 import './ChevronDown.css';
 
 type TProps = {

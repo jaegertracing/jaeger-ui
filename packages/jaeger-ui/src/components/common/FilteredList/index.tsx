@@ -89,8 +89,9 @@ export default class FilteredList extends React.PureComponent<TProps, TState> {
       }
     }
     const checked = Boolean(checkedCount) && checkedCount === filtered.length;
-    const title = `Click to ${checked ? 'unselect' : 'select'} all ${filtered.length < options.length ? 'filtered ' : ''
-      }options`;
+    const title = `Click to ${checked ? 'unselect' : 'select'} all ${
+      filtered.length < options.length ? 'filtered ' : ''
+    }options`;
 
     return (
       <Tooltip title={title}>

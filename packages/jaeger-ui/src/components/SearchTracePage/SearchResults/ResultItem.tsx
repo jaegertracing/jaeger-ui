@@ -22,7 +22,6 @@ import moment from 'moment';
 
 import { IoAlertCircleOutline } from 'react-icons/io5';
 
-
 import { trackConversions, EAltViewActions } from './index.track';
 import * as markers from './ResultItem.markers';
 import ResultItemTitle from './ResultItemTitle';

@@ -17,7 +17,6 @@ import { Modal, Table } from 'antd';
 import { RiLogoutBoxLine } from 'react-icons/ri';
 import { MdInfoOutline } from 'react-icons/md';
 
-
 import { TDdgVertex } from '../../../model/ddg/types';
 import { TPathAgnosticDecorationSchema } from '../../../model/path-agnostic-decorations/types';
 import { getConfigValue } from '../../../utils/config/get-config';

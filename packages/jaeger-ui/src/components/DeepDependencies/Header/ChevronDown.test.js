@@ -14,7 +14,7 @@
 
 import React from 'react';
 import { shallow } from 'enzyme';
-import IoChevronDown from 'react-icons/lib/io/chevron-down';
+import { IoChevronDownOutline } from 'react-icons/io5';
 
 import ChevronDown from './ChevronDown';
 
@@ -27,7 +27,7 @@ describe('ChevronDown', () => {
     const wrapper = shallow(<ChevronDown className={className} style={style} />);
 
     expect(wrapper.hasClass(className)).toBe(true);
-    expect(wrapper.find(IoChevronDown).prop('style')).toBe(style);
+    expect(wrapper.find(IoChevronDownOutline).prop('style')).toBe(style);
   });
 
   it('does not add `undefined` as a className when not given a className', () => {

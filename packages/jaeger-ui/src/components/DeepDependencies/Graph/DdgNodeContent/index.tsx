@@ -239,9 +239,9 @@ export class UnconnectedDdgNodeContent extends React.PureComponent<TProps, TStat
     const hovered = event.type === 'mouseover';
     const visIndices = hovered
       ? (getVisiblePathElems(vertexKey) || []).map(({ visibilityIdx }) => {
-        this.hoveredIndices.add(visibilityIdx);
-        return visibilityIdx;
-      })
+          this.hoveredIndices.add(visibilityIdx);
+          return visibilityIdx;
+        })
       : Array.from(this.hoveredIndices);
     setViewModifier(visIndices, EViewModifier.Hovered, hovered);
 

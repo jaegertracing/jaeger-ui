@@ -14,8 +14,7 @@
 
 import * as React from 'react';
 import cx from 'classnames';
-import { IoChevronDownOutline } from 'react-icons/io5';
-import { IoChevronForwardOutline } from 'react-icons/io5';
+import { IoChevronDownOutline, IoChevronForwardOutline } from 'react-icons/io5';
 import * as markers from './AccordianKeyValues.markers';
 import KeyValuesTable from './KeyValuesTable';
 import { TNil } from '../../../../types';
@@ -66,7 +65,11 @@ export default function AccordianKeyValues(props: AccordianKeyValuesProps) {
   let arrow: React.ReactNode | null = null;
   let headerProps: Object | null = null;
   if (interactive) {
-    arrow = isOpen ? <IoChevronDownOutline className={iconCls} /> : <IoChevronForwardOutline className={iconCls} />;
+    arrow = isOpen ? (
+      <IoChevronDownOutline className={iconCls} />
+    ) : (
+      <IoChevronForwardOutline className={iconCls} />
+    );
     headerProps = {
       'aria-checked': isOpen,
       onClick: isEmpty ? null : onToggle,

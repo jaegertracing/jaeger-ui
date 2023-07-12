@@ -183,9 +183,9 @@ export function validateDurationFields(value) {
   return /\d[\d\\.]*(us|ms|s|m|h)$/.test(value)
     ? undefined
     : {
-      content: `Please enter a number followed by a duration unit, ${placeholderDurationFields}`,
-      title: 'Please match the requested format.',
-    };
+        content: `Please enter a number followed by a duration unit, ${placeholderDurationFields}`,
+        title: 'Please match the requested format.',
+      };
 }
 
 export function convertQueryParamsToFormDates({ start, end }) {

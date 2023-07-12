@@ -13,9 +13,7 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { IoAlertCircleOutline } from 'react-icons/io5';
-import { IoChevronForwardOutline } from 'react-icons/io5';
-import { IoGitNetworkOutline } from 'react-icons/io5';
+import { IoAlertCircleOutline, IoChevronForwardOutline, IoGitNetworkOutline } from 'react-icons/io5';
 import { MdCloudUpload } from 'react-icons/md';
 import ReferencesButton from './ReferencesButton';
 import TimelineRow from './TimelineRow';
@@ -40,20 +38,20 @@ type SpanBarRowProps = {
   onChildrenToggled: (spanID: string) => void;
   numTicks: number;
   rpc?:
-  | {
-    viewStart: number;
-    viewEnd: number;
-    color: string;
-    operationName: string;
-    serviceName: string;
-  }
-  | TNil;
+    | {
+        viewStart: number;
+        viewEnd: number;
+        color: string;
+        operationName: string;
+        serviceName: string;
+      }
+    | TNil;
   noInstrumentedServer?:
-  | {
-    color: string;
-    serviceName: string;
-  }
-  | TNil;
+    | {
+        color: string;
+        serviceName: string;
+      }
+    | TNil;
   showErrorIcon: boolean;
   getViewedBounds: ViewedBoundsFunctionType;
   traceStartTime: number;
@@ -183,8 +181,9 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
             {span.subsidiarilyReferencedBy && span.subsidiarilyReferencedBy.length > 0 && (
               <ReferencesButton
                 references={span.subsidiarilyReferencedBy}
-                tooltipText={`This span is referenced by ${span.subsidiarilyReferencedBy.length === 1 ? 'another span' : 'multiple other spans'
-                  }`}
+                tooltipText={`This span is referenced by ${
+                  span.subsidiarilyReferencedBy.length === 1 ? 'another span' : 'multiple other spans'
+                }`}
                 focusSpan={focusSpan}
               >
                 <MdCloudUpload />
