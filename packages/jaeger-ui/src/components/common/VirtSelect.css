@@ -20,9 +20,7 @@ limitations under the License.
 
 .VirtSelect.is-focused:not(.is-open) > .Select-control {
   border-color: #199;
-  box-shadow:
-    inset 0 1px 1px rgba(0, 0, 0, 0.075),
-    0 0 0 3px rgba(17, 153, 153, 0.1);
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 0 3px rgba(17, 153, 153, 0.1);
 }
 
 .VirtSelect.is-disabled > .Select-control {
