@@ -61,7 +61,7 @@ import TraceFlamegraph from './TraceFlamegraph/index';
 import { TraceGraphConfig } from '../../types/config';
 
 import './index.css';
-import TraceCriticalPath from './CriticalPath/index';
+import memoizedTraceCriticalPath from './CriticalPath/index';
 
 type TDispatchProps = {
   acknowledgeArchive: (id: string) => void;
@@ -389,6 +389,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
     };
 
     let view;
+    const criticalPath = memoizedTraceCriticalPath(data);
     if (ETraceViewType.TraceTimelineViewer === viewType && headerHeight) {
       view = (
         <TraceTimelineViewer
@@ -418,8 +419,6 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
     } else if (ETraceViewType.TraceFlamegraph === viewType && headerHeight) {
       view = <TraceFlamegraph trace={trace} />;
     }
-
-    const criticalPath = TraceCriticalPath(data);
 
     return (
       <div>

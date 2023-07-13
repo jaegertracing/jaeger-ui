@@ -84,3 +84,10 @@ export type Trace = TraceData & {
   traceName: string;
   services: { name: string; numberOfSpans: number }[];
 };
+
+// It is a section of span that lies on critical path
+export type criticalPathSection = {
+  spanId: string;
+  section_start: number;
+  section_end: number;
+};
