@@ -152,7 +152,7 @@ const GA: IWebAnalyticsFunc = (config: Config, versionShort: string, versionLong
 
   const trackPageView = (pathname: string, search: string | TNil) => {
     const pagePath = search ? `${pathname}${search}` : pathname;
-    ReactGA.send({hitType: "pageview",path: pagePath});
+    ReactGA.send({hitType: "pageview", path: pagePath});
     if (isDebugMode) {
       logTrackingCalls();
     }
