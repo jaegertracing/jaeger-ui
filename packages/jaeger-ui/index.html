@@ -14,18 +14,6 @@
     <base href="/" data-inject-target="BASE_URL" />
     <link rel="shortcut icon" href="/favicon.ico">
     <title>Jaeger UI</title>
-
-    <!--Paste your Google tag ID in the code sample below-->
-    <script
-      async
-      src="https://www.googletagmanager.com/gtag/js?id=TAG_ID" >
-    </script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'TAG_ID')
-    </script>
     <script>
       // Jaeger UI config data is embedded by the query-service via search-replace.
       // This is later merged with defaults into the redux `state.config` via
