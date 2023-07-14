@@ -25,7 +25,7 @@ export const logTrackingCalls = () => {
   };
   for (let i = 0; i < calls.length; i++) {
     // eslint-disable-next-line no-console
-    console.log('[react-ga]', ...calls[i]);
+    console.log('[react-ga4]', ...calls[i]);
   }
   calls.length = 0;
 };
