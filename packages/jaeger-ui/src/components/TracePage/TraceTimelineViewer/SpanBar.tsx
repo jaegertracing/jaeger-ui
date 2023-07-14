@@ -136,22 +136,23 @@ function SpanBar(props: TInnerProps) {
           }}
         />
       )}
-      {criticalPath && criticalPath.map((each, index) => {
-        const critcalPathViewBounds = getViewedBounds(each.section_start, each.section_end);
-        const criticalPathViewStart = critcalPathViewBounds.start;
-        const criticalPathViewEnd = critcalPathViewBounds.end;
-        return (
-          <div
-            key={index}
-            className="SpanBar--cp"
-            style={{
-              background: 'black',
-              left: toPercentInDecimal(criticalPathViewStart),
-              width: toPercentInDecimal(criticalPathViewEnd - criticalPathViewStart),
-            }}
-          />
-        );
-      })}
+      {criticalPath &&
+        criticalPath.map((each, index) => {
+          const critcalPathViewBounds = getViewedBounds(each.section_start, each.section_end);
+          const criticalPathViewStart = critcalPathViewBounds.start;
+          const criticalPathViewEnd = critcalPathViewBounds.end;
+          return (
+            <div
+              key={index}
+              className="SpanBar--cp"
+              style={{
+                background: 'black',
+                left: toPercentInDecimal(criticalPathViewStart),
+                width: toPercentInDecimal(criticalPathViewEnd - criticalPathViewStart),
+              }}
+            />
+          );
+        })}
     </div>
   );
 }
