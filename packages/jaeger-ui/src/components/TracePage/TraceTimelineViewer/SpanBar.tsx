@@ -136,7 +136,7 @@ function SpanBar(props: TInnerProps) {
           }}
         />
       )}
-      {criticalPath.map((each, index) => {
+      {criticalPath && criticalPath.map((each, index) => {
         const critcalPathViewBounds = getViewedBounds(each.section_start, each.section_end);
         const criticalPathViewStart = critcalPathViewBounds.start;
         const criticalPathViewEnd = critcalPathViewBounds.end;

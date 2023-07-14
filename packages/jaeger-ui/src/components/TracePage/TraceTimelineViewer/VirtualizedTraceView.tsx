@@ -347,7 +347,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
       return null;
     }
 
-    const criticalPathSections = criticalPath.filter(each => each.spanId === spanID);
+    const criticalPathSections = criticalPath?.filter(each => each.spanId === spanID);
     const color = colorGenerator.getColorByKey(serviceName);
     const isCollapsed = childrenHiddenIDs.has(spanID);
     const isDetailExpanded = detailStates.has(spanID);
