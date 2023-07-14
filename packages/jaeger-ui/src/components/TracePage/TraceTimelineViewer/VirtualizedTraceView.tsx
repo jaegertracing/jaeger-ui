@@ -40,7 +40,7 @@ import { extractUiFindFromState, TExtractUiFindFromStateReturn } from '../../com
 import getLinks from '../../../model/link-patterns';
 import colorGenerator from '../../../utils/color-generator';
 import { TNil, ReduxState } from '../../../types';
-import { Log, Span, Trace, KeyValuePair } from '../../../types/trace';
+import { Log, Span, Trace, KeyValuePair, criticalPathSection } from '../../../types/trace';
 import TTraceTimeline from '../../../types/TTraceTimeline';
 
 import './VirtualizedTraceView.css';
@@ -59,6 +59,7 @@ type TVirtualizedTraceViewOwnProps = {
   scrollToFirstVisibleSpan: () => void;
   registerAccessors: (accesors: Accessors) => void;
   trace: Trace;
+  criticalPath: criticalPathSection[];
 };
 
 type TDispatchProps = {
@@ -339,11 +340,14 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
       findMatchesIDs,
       spanNameColumnWidth,
       trace,
+      criticalPath
     } = this.props;
     // to avert flow error
     if (!trace) {
       return null;
     }
+
+    const criticalPathSections = criticalPath.filter((each)=>each.spanId===spanID);
     const color = colorGenerator.getColorByKey(serviceName);
     const isCollapsed = childrenHiddenIDs.has(spanID);
     const isDetailExpanded = detailStates.has(spanID);
@@ -381,6 +385,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
         <SpanBarRow
           className={this.getClippingCssClasses()}
           color={color}
+          criticalPath={criticalPathSections}
           columnDivision={spanNameColumnWidth}
           isChildrenExpanded={!isCollapsed}
           isDetailExpanded={isDetailExpanded}

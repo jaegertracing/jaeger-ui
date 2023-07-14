@@ -44,6 +44,13 @@ limitations under the License.
   z-index: 1;
 }
 
+.SpanBar--cp {
+  position: absolute;
+  top: 46%;
+  height: 8%;
+  z-index: 1;
+}
+
 .SpanBar--label {
   color: #aaa;
   font-size: 12px;
