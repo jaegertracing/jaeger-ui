@@ -51,7 +51,7 @@ export function getTraceSpanIdsAsTree(trace) {
   const comparator = (nodeA, nodeB) => {
     const a = spansById.get(nodeA.value);
     const b = spansById.get(nodeB.value);
-    return (a, b) => b.startTime + b.duration - (a.startTime + a.duration);
+    return b.startTime + b.duration - (a.startTime + a.duration);
   };
   trace.spans.forEach(span => {
     const node = nodesById.get(span.spanID);
