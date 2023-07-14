@@ -397,7 +397,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
           scrollToFirstVisibleSpan={this._scrollManager.scrollToFirstVisibleSpan}
           findMatchesIDs={spanFindMatches}
           trace={data}
-          criticalPath = {criticalPath}
+          criticalPath={criticalPath}
           updateNextViewRangeTime={this.updateNextViewRangeTime}
           updateViewRangeTime={this.updateViewRangeTime}
           viewRange={viewRange}

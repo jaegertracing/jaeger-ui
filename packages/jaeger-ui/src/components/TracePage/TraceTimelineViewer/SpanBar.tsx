@@ -30,7 +30,7 @@ type TCommonProps = {
   hintSide: string;
   // onClick: (evt: React.MouseEvent<any>) => void;
   onClick?: (evt: React.MouseEvent<any>) => void;
-  criticalPath: criticalPathSection[]
+  criticalPath: criticalPathSection[];
   viewEnd: number;
   viewStart: number;
   getViewedBounds: ViewedBoundsFunctionType;
@@ -61,7 +61,7 @@ function toPercent(value: number) {
 }
 
 function toPercentInDecimal(value: number) {
-  return `${(value * 100)}%`;
+  return `${value * 100}%`;
 }
 
 function SpanBar(props: TInnerProps) {
@@ -136,23 +136,22 @@ function SpanBar(props: TInnerProps) {
           }}
         />
       )}
-      {criticalPath.map((each,index)=>{
+      {criticalPath.map((each, index) => {
         const critcalPathViewBounds = getViewedBounds(each.section_start, each.section_end);
         const criticalPathViewStart = critcalPathViewBounds.start;
         const criticalPathViewEnd = critcalPathViewBounds.end;
         return (
           <div
-          key={index}
-          className="SpanBar--cp"
-          style={{
-            background: "black",
-            left: toPercentInDecimal(criticalPathViewStart),
-            width: toPercentInDecimal(criticalPathViewEnd-criticalPathViewStart)
-          }}
-        />
-        )
+            key={index}
+            className="SpanBar--cp"
+            style={{
+              background: 'black',
+              left: toPercentInDecimal(criticalPathViewStart),
+              width: toPercentInDecimal(criticalPathViewEnd - criticalPathViewStart),
+            }}
+          />
+        );
       })}
-      
     </div>
   );
 }
