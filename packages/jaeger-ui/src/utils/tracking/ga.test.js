@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import ReactGA from 'react-ga';
+import ReactGA from 'react-ga4';
 import * as GA from './ga';
 import * as utils from './utils';
 import { getVersionInfo, getAppEnvironment } from '../constants';

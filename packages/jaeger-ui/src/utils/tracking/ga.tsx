@@ -14,7 +14,7 @@
 
 import _get from 'lodash/get';
 import queryString from 'query-string';
-import ReactGA from 'react-ga';
+import ReactGA from 'react-ga4';
 import Raven, { RavenOptions, RavenTransportOptions } from 'raven-js';
 
 import convRavenToGa from './conv-raven-to-ga';
@@ -56,7 +56,7 @@ const GA: IWebAnalyticsFunc = (config: Config, versionShort: string, versionLong
       msg = `jaeger/${msg}`;
     }
     msg = msg.slice(0, 149);
-    ReactGA.exception({ description: msg, fatal: false });
+    ReactGA.send({ description: msg, fatal: false });
     if (isDebugMode) {
       logTrackingCalls();
     }
@@ -152,7 +152,7 @@ const GA: IWebAnalyticsFunc = (config: Config, versionShort: string, versionLong
 
   const trackPageView = (pathname: string, search: string | TNil) => {
     const pagePath = search ? `${pathname}${search}` : pathname;
-    ReactGA.pageview(pagePath);
+    ReactGA.send({hitType: "pageview",path: pagePath});
     if (isDebugMode) {
       logTrackingCalls();
     }
