@@ -56,7 +56,7 @@ const GA: IWebAnalyticsFunc = (config: Config, versionShort: string, versionLong
       msg = `jaeger/${msg}`;
     }
     msg = msg.slice(0, 149);
-    ReactGA.send({ description: msg, fatal: false });
+    ReactGA.send({hitType: "exception", description: msg, fatal: false });
     if (isDebugMode) {
       logTrackingCalls();
     }
