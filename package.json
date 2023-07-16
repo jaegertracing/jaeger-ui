@@ -64,7 +64,4 @@
       "pre-commit": "npm-run-all -ln --parallel lint test"
     }
   },
-  "dependencies": {
-    "react-ga4": "^2.1.0"
-  }
 }
