@@ -63,6 +63,7 @@ export const computeCriticalPath = (
 function TraceCriticalPath(trace: Trace) {
   let traceData: Trace = trace;
   let criticalPath: criticalPathSection[] = [];
+  console.log('Hi');
   const rootSpanId = findRootSpanId(trace.spans);
   // If there is root span then algorithm implements
   if (rootSpanId) {
