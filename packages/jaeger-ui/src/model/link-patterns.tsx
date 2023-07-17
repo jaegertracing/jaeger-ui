@@ -249,12 +249,12 @@ export const processedLinks: ProcessedLinkPattern[] = (getConfigValue('linkPatte
   .map(processLinkPattern)
   .filter(Boolean);
 
-export const getTraceLinks: (trace: Trace | undefined) => TLinksRV = memoize(10)((
-  trace: Trace | undefined
-) => {
-  const result: TLinksRV = [];
-  if (!trace) return result;
-  return computeTraceLink(processedLinks, trace);
-});
+export const getTraceLinks: (trace: Trace | undefined) => TLinksRV = memoize(10)(
+  (trace: Trace | undefined) => {
+    const result: TLinksRV = [];
+    if (!trace) return result;
+    return computeTraceLink(processedLinks, trace);
+  }
+);
 
 export default createGetLinks(processedLinks, new WeakMap());
