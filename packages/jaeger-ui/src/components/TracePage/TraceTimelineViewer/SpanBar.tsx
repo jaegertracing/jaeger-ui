@@ -144,7 +144,7 @@ function SpanBar(props: TInnerProps) {
           return (
             <div
               key={index}
-              className="SpanBar--cp"
+              className="SpanBar--criticalPath"
               style={{
                 background: 'black',
                 left: toPercentInDecimal(criticalPathViewStart),
