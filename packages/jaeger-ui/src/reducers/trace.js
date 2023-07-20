@@ -36,7 +36,7 @@ function fetchTraceStarted(state, { meta }) {
 
 function fetchTraceDone(state, { meta, payload }) {
   const { id } = meta;
-  const data = transformTraceData(payload.data[0]);
+  const data = transformTraceData(payload.data[0], 'endTime');
   let trace;
   if (!data) {
     trace = { id, state: fetchedState.ERROR, error: new Error('Invalid trace data recieved.') };
