@@ -68,6 +68,13 @@ const sanitizeOverFlowingChildren = (spans: Span[]): Span[] => {
           //                      |----parent----|
           //       |----child--|
           droppedSpans.push({ ...span });
+          // Remove the childSpanId from its parent span
+          sanitizedSpanData.forEach(each => {
+            if (each.spanID === span.references[0].spanID) {
+              const index = each.childSpanIds.findIndex(id => id === span.spanID);
+              each.childSpanIds.splice(index, 1);
+            }
+          });
           break;
       }
     }

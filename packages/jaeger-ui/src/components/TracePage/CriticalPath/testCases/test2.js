@@ -76,7 +76,7 @@ const happyTrace = {
   },
 };
 
-const transformedTrace = transformTraceData(happyTrace);
+const transformedTrace = transformTraceData(happyTrace, 'endTime');
 
 const criticalPathSections = [
   {

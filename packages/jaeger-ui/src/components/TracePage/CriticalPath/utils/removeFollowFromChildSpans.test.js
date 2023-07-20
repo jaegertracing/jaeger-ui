@@ -13,26 +13,17 @@
 // limitations under the License.
 
 import test2 from '../testCases/test2';
-import test4 from '../testCases/test4';
-import findChildSpanIds from './findChildSpanIds';
+import removeFollowFromChildSpans from './removeFollowFromChildSpans';
 import sanitizeOverFlowingChildren from './sanitizeOverFlowingChildren';
 
-describe('findChildSpanIds', () => {
-  it('Should find child spanIds correctly and also in sortorder of endTime', () => {
+describe('removeFollowFromChildSpans', () => {
+  it('Should remove FollowFrom child spans if there are any', () => {
     const expectedRefinedSpanData = [...test2.trace.spans];
     expectedRefinedSpanData[0].childSpanIds = ['span-C', 'span-A'];
     const sanitizedData = sanitizeOverFlowingChildren(test2.trace.spans);
-    const refinedSpanData = findChildSpanIds(sanitizedData);
+    const refinedSpanData = removeFollowFromChildSpans(sanitizedData);
 
     expect(refinedSpanData.length).toBe(3);
-    expect(refinedSpanData).toStrictEqual(expectedRefinedSpanData);
-  });
-  it('Should find child spanIds correctly and also in sortorder of endTime', () => {
-    const expectedRefinedSpanData = [test4.trace.spans[0]];
-    const sanitizedData = sanitizeOverFlowingChildren(test4.trace.spans);
-    const refinedSpanData = findChildSpanIds(sanitizedData);
-
-    expect(refinedSpanData.length).toBe(1);
     expect(refinedSpanData).toStrictEqual(expectedRefinedSpanData);
   });
 });

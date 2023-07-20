@@ -14,25 +14,19 @@
 
 import { Span } from '../../../../types/trace';
 
-// This function finds child spans for each span and also sorts childSpanIds based on endTime
-const findChildSpanIds = (spans: Span[]): Span[] => {
-  const refinedSpanData: Span[] = [];
+// This function removes child spans whose refType is FOLLOWS_FROM
+const removeFollowFromChildSpans = (spans: Span[]): Span[] => {
+  let refinedSpanData: Span[] = [];
+  const droppedSpans: String[] = [];
   spans.forEach(span => {
-    if (span.hasChildren) {
-      const Children = spans
-        .filter(span2 =>
-          span2.references.some(
-            reference => reference.refType === 'CHILD_OF' && reference.spanID === span.spanID
-          )
-        )
-        .sort((a, b) => b.startTime + b.duration - (a.startTime + a.duration))
-        .map(span2 => span2.spanID);
-      refinedSpanData.push(Children.length ? { ...span, childSpanIds: Children } : { ...span });
+    if (span.references[0]?.refType !== 'FOLLOWS_FROM') {
+      refinedSpanData.push(span);
     } else {
-      refinedSpanData.push({ ...span });
+      droppedSpans.push(span.spanID);
     }
   });
+  refinedSpanData = refinedSpanData.filter(each => !droppedSpans.includes(each.references[0]?.spanID));
   return refinedSpanData;
 };
 
-export default findChildSpanIds;
+export default removeFollowFromChildSpans;

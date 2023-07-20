@@ -14,7 +14,7 @@
 
 import memoizeOne from 'memoize-one';
 import { Span, Trace, criticalPathSection } from '../../../types/trace';
-import findChildSpanIds from './utils/findChildSpanIds';
+import removeFollowFromChildSpans from './utils/removeFollowFromChildSpans';
 import findLastFinishingChildSpanId from './utils/findLastFinishingChildSpanId';
 import findRootSpanId from './utils/findRootSpanId';
 import sanitizeOverFlowingChildren from './utils/sanitizeOverFlowingChildren';
@@ -63,12 +63,11 @@ export const computeCriticalPath = (
 function TraceCriticalPath(trace: Trace) {
   let traceData: Trace = trace;
   let criticalPath: criticalPathSection[] = [];
-  console.log('Hi');
   const rootSpanId = findRootSpanId(trace.spans);
   // If there is root span then algorithm implements
   if (rootSpanId) {
     const sanitizedSpanData = sanitizeOverFlowingChildren(trace.spans);
-    const refinedSpanData = findChildSpanIds(sanitizedSpanData);
+    const refinedSpanData = removeFollowFromChildSpans(sanitizedSpanData);
     traceData = { ...traceData, spans: refinedSpanData };
     criticalPath = computeCriticalPath(traceData, rootSpanId, []);
   }

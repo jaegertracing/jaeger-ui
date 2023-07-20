@@ -16,6 +16,9 @@ import test3 from '../testCases/test3';
 import test4 from '../testCases/test4';
 import sanitizeOverFlowingChildren from './sanitizeOverFlowingChildren';
 
+test3.trace.spans[0].childSpanIds = [];
+test4.trace.spans[0].childSpanIds = [];
+
 describe.each([
   [test3, [test3.trace.spans[0]]],
   [test4, [test4.trace.spans[0]]],
