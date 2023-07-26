@@ -55,7 +55,7 @@ Start the development server with hot loading:
 yarn start
 ```
 
-The above command will run a web server on port :3000 that will serve the UI assets, with hot reloading support, and it will proxy all API requests to `http://localhost:16686` where Jaeger query should be running.
+The above command will run a web server on port :5173 that will serve the UI assets, with hot reloading support, and it will proxy all API requests to `http://localhost:16686` where Jaeger query should be running.
 
 #### Commands
 
