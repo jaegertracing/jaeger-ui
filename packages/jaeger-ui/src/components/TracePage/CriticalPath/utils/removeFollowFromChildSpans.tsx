@@ -25,6 +25,7 @@ const removeFollowFromChildSpans = (spans: Span[]): Span[] => {
       droppedSpans.push(span.spanID);
     }
   });
+  // Removing child spans of dropped spans
   refinedSpanData = refinedSpanData.filter(each => !droppedSpans.includes(each.references[0]?.spanID));
   return refinedSpanData;
 };
