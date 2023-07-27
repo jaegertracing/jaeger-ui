@@ -70,7 +70,10 @@ export function orderTags(spanTags: KeyValuePair[], topPrefixes?: string[]) {
  * NOTE: Mutates `data` - Transform the HTTP response data into the form the app
  * generally requires.
  */
-export default function transformTraceData(data: TraceData & { spans: SpanData[] }): Trace | null {
+export default function transformTraceData(
+  data: TraceData & { spans: SpanData[] },
+  sortOrderBy = 'startTime'
+): Trace | null {
   let { traceID } = data;
   if (!traceID) {
     return null;
@@ -118,7 +121,7 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
   }
   // tree is necessary to sort the spans, so children follow parents, and
   // siblings are sorted by start time
-  const tree = getTraceSpanIdsAsTree(data);
+  const tree = getTraceSpanIdsAsTree(data, sortOrderBy);
   const spans: Span[] = [];
   const svcCounts: Record<string, number> = {};
 
@@ -135,6 +138,7 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     span.relativeStartTime = span.startTime - traceStartTime;
     span.depth = depth - 1;
     span.hasChildren = node.children.length > 0;
+    span.childSpanIds = node.children.map(each => each.value);
     span.warnings = span.warnings || [];
     span.tags = span.tags || [];
     span.references = span.references || [];

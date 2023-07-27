@@ -12,19 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import test3 from '../testCases/test3';
-import test4 from '../testCases/test4';
+import test2 from '../testCases/test2';
+import removeFollowFromChildSpans from './removeFollowFromChildSpans';
 import sanitizeOverFlowingChildren from './sanitizeOverFlowingChildren';
 
-test3.trace.spans[0].childSpanIds = [];
-test4.trace.spans[0].childSpanIds = [];
+describe('removeFollowFromChildSpans', () => {
+  it('Should remove FollowFrom child spans if there are any', () => {
+    const expectedRefinedSpanData = [...test2.trace.spans];
+    expectedRefinedSpanData[0].childSpanIds = ['span-C', 'span-A'];
+    const sanitizedData = sanitizeOverFlowingChildren(test2.trace.spans);
+    const refinedSpanData = removeFollowFromChildSpans(sanitizedData);
 
-describe.each([
-  [test3, [test3.trace.spans[0]]],
-  [test4, [test4.trace.spans[0]]],
-])('sanitizeOverFlowingChildren', (testProps, expectedSanitizedData) => {
-  it('Should sanitize the data(overflowing spans) correctly', () => {
-    const sanitizedData = sanitizeOverFlowingChildren(testProps.trace.spans);
-    expect(sanitizedData).toStrictEqual(expectedSanitizedData);
+    expect(refinedSpanData.length).toBe(3);
+    expect(refinedSpanData).toStrictEqual(expectedRefinedSpanData);
   });
 });
