@@ -24,7 +24,7 @@ const sanitizeOverFlowingChildren = (spans: Span[]): Span[] => {
     if (!span.references.length) {
       sanitizedSpanData.push(span);
     } else {
-      const parentSpan = span.references.filter(ref => ref.refType === 'CHILD_OF')[0].span!;
+      const parentSpan = span.references[0].span!;
       const childEndTime = span.startTime + span.duration;
       const parentEndTime = parentSpan.startTime + parentSpan.duration;
       switch (true) {
@@ -81,7 +81,7 @@ const sanitizeOverFlowingChildren = (spans: Span[]): Span[] => {
   });
   // This make sure to also drop the all childs of dropped spans
   sanitizedSpanData.forEach(span => {
-    if (span.references.length && span.references[0].refType === 'CHILD_OF') {
+    if (span.references.length && (span.references[0].refType === 'CHILD_OF' || 'FOLLOWS_FROM')) {
       const childOfDroppedSpan = droppedSpans.find(b => span.references[0].spanID === b.spanID);
       if (childOfDroppedSpan) {
         droppedSpans.push(span);

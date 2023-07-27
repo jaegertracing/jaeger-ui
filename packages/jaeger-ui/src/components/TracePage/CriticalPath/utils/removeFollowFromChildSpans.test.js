@@ -13,17 +13,25 @@
 // limitations under the License.
 
 import test2 from '../testCases/test2';
+import test5 from '../testCases/test5';
 import removeFollowFromChildSpans from './removeFollowFromChildSpans';
 import sanitizeOverFlowingChildren from './sanitizeOverFlowingChildren';
 
 describe('removeFollowFromChildSpans', () => {
-  it('Should remove FollowFrom child spans if there are any', () => {
+  it('Should not remove CHILD_OF child spans if there are any', () => {
     const expectedRefinedSpanData = [...test2.trace.spans];
-    expectedRefinedSpanData[0].childSpanIds = ['span-C', 'span-A'];
     const sanitizedData = sanitizeOverFlowingChildren(test2.trace.spans);
     const refinedSpanData = removeFollowFromChildSpans(sanitizedData);
 
     expect(refinedSpanData.length).toBe(3);
+    expect(refinedSpanData).toStrictEqual(expectedRefinedSpanData);
+  });
+  it('Should remove FOLLOWS_FROM child spans if there are any', () => {
+    const expectedRefinedSpanData = [test5.trace.spans[0]];
+    const sanitizedData = sanitizeOverFlowingChildren(test5.trace.spans);
+    const refinedSpanData = removeFollowFromChildSpans(sanitizedData);
+
+    expect(refinedSpanData.length).toBe(1);
     expect(refinedSpanData).toStrictEqual(expectedRefinedSpanData);
   });
 });
