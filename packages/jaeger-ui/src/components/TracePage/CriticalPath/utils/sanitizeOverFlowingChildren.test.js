@@ -14,11 +14,26 @@
 
 import test3 from '../testCases/test3';
 import test4 from '../testCases/test4';
+import test6 from '../testCases/test6';
 import sanitizeOverFlowingChildren from './sanitizeOverFlowingChildren';
+
+function getExpectedSanitizedData(spans) {
+  const expectedSanitizedData = spans.map((span, index) => {
+    if (index === 1) {
+      return { ...span, duration: 16 };
+    }
+    if (index === 2) {
+      return { ...span, duration: 10, startTime: 15 };
+    }
+    return span;
+  });
+  return expectedSanitizedData;
+}
 
 describe.each([
   [test3, [test3.trace.spans[0]]],
   [test4, [test4.trace.spans[0]]],
+  [test6, getExpectedSanitizedData(test6.trace.spans)],
 ])('sanitizeOverFlowingChildren', (testProps, expectedSanitizedData) => {
   it('Should sanitize the data(overflowing spans) correctly', () => {
     const sanitizedData = sanitizeOverFlowingChildren(testProps.trace.spans);
