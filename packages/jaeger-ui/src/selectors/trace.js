@@ -30,8 +30,8 @@ export const TREE_ROOT_ID = '__root__';
  * @return {TreeNode}    A tree of spanIDs derived from the relationships
  *                       between spans in the trace.
  */
-export function getTraceSpanIdsAsTree(trace, sortOrderBy = 'startTime') {
-  const nodesById = new Map(trace.spans.map(span => [span.spanID, new TreeNode(span.spanID)]));
+export function getTraceSpanIdsAsTree(trace) {
+  const nodesById = new Map(trace.spans.map(span => [span.spanID, new TreeNode(span.spanID,span.startTime+span.duration)]));
   const spansById = new Map(trace.spans.map(span => [span.spanID, span]));
   const root = new TreeNode(TREE_ROOT_ID);
   trace.spans.forEach(span => {
@@ -53,17 +53,12 @@ export function getTraceSpanIdsAsTree(trace, sortOrderBy = 'startTime') {
     const b = spansById.get(nodeB.value);
     return +(a.startTime > b.startTime) || +(a.startTime === b.startTime) - 1;
   };
-  const comparator2 = (nodeA, nodeB) => {
-    const a = spansById.get(nodeA.value);
-    const b = spansById.get(nodeB.value);
-    return b.startTime + b.duration - (a.startTime + a.duration);
-  };
   trace.spans.forEach(span => {
     const node = nodesById.get(span.spanID);
     if (node.children.length > 1) {
-      node.children.sort(sortOrderBy === 'endTime' ? comparator2 : comparator);
+      node.children.sort(comparator);
     }
   });
-  root.children.sort(sortOrderBy === 'endTime' ? comparator2 : comparator);
+  root.children.sort(comparator);
   return root;
 }
