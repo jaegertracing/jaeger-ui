@@ -135,6 +135,7 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     span.relativeStartTime = span.startTime - traceStartTime;
     span.depth = depth - 1;
     span.hasChildren = node.children.length > 0;
+    // Get the childSpanIds sorted based on endTime without changing tree structure
     span.childSpanIds = node.children
       .slice()
       .sort((a, b) => b.endTime - a.endTime)

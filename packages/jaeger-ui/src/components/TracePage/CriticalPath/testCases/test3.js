@@ -29,7 +29,7 @@ span A is on critical path(+++++)                 |
 
 const trace = require('../../TraceStatistics/tableValuesTestTrace/traceWithSingleChildSpanLongerThanParent.json');
 
-const transformedTrace = transformTraceData(trace, 'endTime');
+const transformedTrace = transformTraceData(trace);
 
 const criticalPathSections = [
   {

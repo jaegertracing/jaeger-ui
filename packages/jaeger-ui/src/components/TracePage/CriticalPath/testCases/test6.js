@@ -73,7 +73,7 @@ const trace = {
   },
 };
 
-const transformedTrace = transformTraceData(trace, 'endTime');
+const transformedTrace = transformTraceData(trace);
 
 const criticalPathSections = [
   {
