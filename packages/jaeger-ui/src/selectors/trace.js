@@ -31,7 +31,9 @@ export const TREE_ROOT_ID = '__root__';
  *                       between spans in the trace.
  */
 export function getTraceSpanIdsAsTree(trace) {
-  const nodesById = new Map(trace.spans.map(span => [span.spanID, new TreeNode(span.spanID,span.startTime+span.duration)]));
+  const nodesById = new Map(
+    trace.spans.map(span => [span.spanID, new TreeNode(span.spanID, span.startTime + span.duration)])
+  );
   const spansById = new Map(trace.spans.map(span => [span.spanID, span]));
   const root = new TreeNode(TREE_ROOT_ID);
   trace.spans.forEach(span => {

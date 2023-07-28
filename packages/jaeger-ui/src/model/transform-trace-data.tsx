@@ -70,9 +70,7 @@ export function orderTags(spanTags: KeyValuePair[], topPrefixes?: string[]) {
  * NOTE: Mutates `data` - Transform the HTTP response data into the form the app
  * generally requires.
  */
-export default function transformTraceData(
-  data: TraceData & { spans: SpanData[] }
-): Trace | null {
+export default function transformTraceData(data: TraceData & { spans: SpanData[] }): Trace | null {
   let { traceID } = data;
   if (!traceID) {
     return null;
@@ -137,7 +135,10 @@ export default function transformTraceData(
     span.relativeStartTime = span.startTime - traceStartTime;
     span.depth = depth - 1;
     span.hasChildren = node.children.length > 0;
-    span.childSpanIds = node.children.slice().sort((a,b)=>(b.endTime-a.endTime)).map(each => each.value);
+    span.childSpanIds = node.children
+      .slice()
+      .sort((a, b) => b.endTime - a.endTime)
+      .map(each => each.value);
     span.warnings = span.warnings || [];
     span.tags = span.tags || [];
     span.references = span.references || [];

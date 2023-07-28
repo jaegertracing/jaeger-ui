@@ -22,7 +22,7 @@ it('TreeNode constructor should return a tree node', () => {
 });
 
 it('TreeNode constructor should return a tree node', () => {
-  const node = new TreeNode(4,Infinity, [new TreeNode(3)]);
+  const node = new TreeNode(4, Infinity, [new TreeNode(3)]);
 
   expect(node.value).toBe(4);
   expect(node.children).toEqual([new TreeNode(3)]);
@@ -79,7 +79,7 @@ it('addChild() should add a child to the set', () => {
   treeRoot.addChild(1);
   treeRoot.addChild(2);
 
-  expect(treeRoot).toEqual(new TreeNode(4, Infinity,[new TreeNode(3), new TreeNode(1), new TreeNode(2)]));
+  expect(treeRoot).toEqual(new TreeNode(4, Infinity, [new TreeNode(3), new TreeNode(1), new TreeNode(2)]));
 });
 
 it('addChild() should support taking a treenode', () => {
@@ -89,7 +89,7 @@ it('addChild() should support taking a treenode', () => {
   treeRoot.addChild(1);
   treeRoot.addChild(2);
 
-  expect(treeRoot).toEqual(new TreeNode(4, Infinity,[otherNode, new TreeNode(1), new TreeNode(2)]));
+  expect(treeRoot).toEqual(new TreeNode(4, Infinity, [otherNode, new TreeNode(1), new TreeNode(2)]));
 });
 
 it('addChild() should support the parent argument for nested insertion', () => {
@@ -99,7 +99,7 @@ it('addChild() should support the parent argument for nested insertion', () => {
   treeRoot.addChild(secondTier);
   secondTier.addChild(thirdTier);
 
-  expect(treeRoot).toEqual(new TreeNode(1, Infinity,[new TreeNode(2, Infinity,[new TreeNode(3)])]));
+  expect(treeRoot).toEqual(new TreeNode(1, Infinity, [new TreeNode(2, Infinity, [new TreeNode(3)])]));
 });
 
 it('find() should return the found item for a function', () => {
