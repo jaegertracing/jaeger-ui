@@ -66,7 +66,7 @@ The above command will run a web server on port :5173 that will serve the UI ass
 
 ## Build
 
-Running `build` will pakacge all the asset files to the `packages/jaeger-ui/build` folder:
+Running `build` will package all the UI files to the `packages/jaeger-ui/build` folder:
 
 ```
 yarn build
