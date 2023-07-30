@@ -36,7 +36,7 @@ const trace = {
       operationName: 'op-A',
       references: [],
       startTime: 1,
-      duration: 30,
+      duration: 29,
       processID: 'p1',
     },
     {
@@ -53,7 +53,7 @@ const trace = {
       processID: 'p1',
     },
     {
-      spanID: 'span-c',
+      spanID: 'span-C',
       operationName: 'op-C',
       references: [
         {
