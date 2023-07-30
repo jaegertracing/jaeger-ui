@@ -24,10 +24,8 @@ const removeFollowFromChildSpans = (spans: Span[]): Span[] => {
     } else {
       droppedSpans.push(span.spanID);
       // Remove dropped spanId from its parent chilsSpanIds array
-      spans.forEach((each)=> {
-        if(each.spanID === span.references[0].spanID){
-        each.childSpanIds = each.childSpanIds.filter(a=>a!==span.spanID)
-      }})
+      const parentSpan = spans.find(each => each.spanID === span.references[0].spanID)!;
+      parentSpan.childSpanIds = parentSpan.childSpanIds.filter(a => a !== span.spanID);
     }
   });
   // Removing child spans of dropped spans

@@ -29,74 +29,73 @@ import transformTraceData from '../../../../model/transform-trace-data';
 */
 
 const trace = {
-    traceID: 'trace-abc',
-    spans: [
-      {
-        spanID: 'span-A',
-        operationName: 'op-A',
-        references: [],
-        startTime: 1,
-        duration: 29,
-        processID: 'p1',
-      },
-      {
-        spanID: 'span-B',
-        operationName: 'op-B',
-        references: [
-          {
-            refType: 'CHILD_OF',
-            spanID: 'span-A',
-          },
-        ],
-        startTime: 15,
-        duration: 20,
-        processID: 'p1',
-      },
-      {
-        spanID: 'span-C',
-        operationName: 'op-C',
-        references: [
-          {
-            refType: 'CHILD_OF',
-            spanID: 'span-B',
-          },
-        ],
-        startTime: 20,
-        duration: 20,
-        processID: 'p1',
-      },
-    ],
-    processes: {
-      p1: {
-        serviceName: 'service-one',
-      },
-    },
-  };
-  
-  const transformedTrace = transformTraceData(trace);
-  
-  const criticalPathSections = [
+  traceID: 'trace-abc',
+  spans: [
     {
-        spanId: 'span-C',
-        section_start: 20,
-        section_end: 30,
+      spanID: 'span-A',
+      operationName: 'op-A',
+      references: [],
+      startTime: 1,
+      duration: 29,
+      processID: 'p1',
     },
     {
-        spanId: 'span-B',
-        section_start: 15,
-        section_end: 20,
+      spanID: 'span-B',
+      operationName: 'op-B',
+      references: [
+        {
+          refType: 'CHILD_OF',
+          spanID: 'span-A',
+        },
+      ],
+      startTime: 15,
+      duration: 20,
+      processID: 'p1',
     },
     {
-        spanId: 'span-A',
-        section_start: 1,
-        section_end: 15,
+      spanID: 'span-C',
+      operationName: 'op-C',
+      references: [
+        {
+          refType: 'CHILD_OF',
+          spanID: 'span-B',
+        },
+      ],
+      startTime: 20,
+      duration: 20,
+      processID: 'p1',
     },
-  ];
-  
-  const test7 = {
-    criticalPathSections,
-    trace: transformedTrace,
-  };
-  
-  export default test7;
-  
+  ],
+  processes: {
+    p1: {
+      serviceName: 'service-one',
+    },
+  },
+};
+
+const transformedTrace = transformTraceData(trace);
+
+const criticalPathSections = [
+  {
+    spanId: 'span-C',
+    section_start: 20,
+    section_end: 30,
+  },
+  {
+    spanId: 'span-B',
+    section_start: 15,
+    section_end: 20,
+  },
+  {
+    spanId: 'span-A',
+    section_start: 1,
+    section_end: 15,
+  },
+];
+
+const test7 = {
+  criticalPathSections,
+  trace: transformedTrace,
+};
+
+export default test7;
