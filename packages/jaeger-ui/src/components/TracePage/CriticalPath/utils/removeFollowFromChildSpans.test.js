@@ -28,6 +28,7 @@ describe('removeFollowFromChildSpans', () => {
   });
   it('Should remove FOLLOWS_FROM child spans if there are any', () => {
     const expectedRefinedSpanData = [test5.trace.spans[0]];
+    expectedRefinedSpanData[0].childSpanIds = [];
     const sanitizedData = sanitizeOverFlowingChildren(test5.trace.spans);
     const refinedSpanData = removeFollowFromChildSpans(sanitizedData);
 

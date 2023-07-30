@@ -38,7 +38,9 @@ export const computeCriticalPath = (
       section_start: lfcSpan.startTime + lfcSpan.duration,
       section_end: spawnTime || currentSpan.startTime + currentSpan.duration,
     };
-    criticalPath.push(spanCriticalSection);
+    if (spanCriticalSection.section_start !== spanCriticalSection.section_end) {
+      criticalPath.push(spanCriticalSection);
+    }
     // Now lfc turns to the currentspan and we again do the same algorithm
     computeCriticalPath(traceData, lastFinishingChildSpanId, criticalPath);
   } else {
@@ -48,7 +50,9 @@ export const computeCriticalPath = (
       section_start: currentSpan.startTime,
       section_end: spawnTime || currentSpan.startTime + currentSpan.duration,
     };
-    criticalPath.push(spanCriticalSection);
+    if (spanCriticalSection.section_start !== spanCriticalSection.section_end) {
+      criticalPath.push(spanCriticalSection);
+    }
     // Now as there are no lfc's it goes back to parent span from startTime(spawn Event)
     if (currentSpan.references.length) {
       const parentSpan: string = currentSpan.references.filter(

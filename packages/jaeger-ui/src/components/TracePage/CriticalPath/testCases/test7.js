@@ -15,17 +15,17 @@
 import transformTraceData from '../../../../model/transform-trace-data';
 
 /*
-           ┌────────────────────────────┐           |
-           │        Span A              │           |
-           └────────────┬───────────────┘           |               span A
-                        │                           |               /
-                       ┌▼──────────────────────┐    |              /
-                       │      Span B           │    |             span B  
-                       └──────────▲────────────┘    |             /  
-                                  │                 |            /   
-                   ┌──────────────┤                 |           span C
-                   │   Span C     │                 |      
-                   └──────────────┘                 |       (parent-child tree)
+   ┌─────────────────┐                    |
+   │     Span A      │                    |                         spanA
+   └───────┬─────────┘                    |                          /   
+           │                              |                         /            
+          ┌▼──────────────┐               |                       spanB  
+          │    Span B     │               |                       /
+          └─────┬─────────┘               |                      /   
+                │                         |                     spanC
+               ┌▼─────────────┐           |
+               │    Span C    │           |             ((parent-child tree))
+               └──────────────┘           |
 */
 
 const trace = {
@@ -61,8 +61,8 @@ const trace = {
           spanID: 'span-B',
         },
       ],
-      startTime: 10,
-      duration: 15,
+      startTime: 20,
+      duration: 20,
       processID: 'p1',
     },
   ],
@@ -77,14 +77,14 @@ const transformedTrace = transformTraceData(trace);
 
 const criticalPathSections = [
   {
-    spanId: 'span-B',
-    section_start: 25,
+    spanId: 'span-C',
+    section_start: 20,
     section_end: 30,
   },
   {
-    spanId: 'span-C',
+    spanId: 'span-B',
     section_start: 15,
-    section_end: 25,
+    section_end: 20,
   },
   {
     spanId: 'span-A',
@@ -93,9 +93,9 @@ const criticalPathSections = [
   },
 ];
 
-const test6 = {
+const test7 = {
   criticalPathSections,
   trace: transformedTrace,
 };
 
-export default test6;
+export default test7;

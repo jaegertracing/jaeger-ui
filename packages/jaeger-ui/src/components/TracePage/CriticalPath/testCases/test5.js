@@ -64,7 +64,7 @@ const criticalPathSections = [
   {
     spanId: 'span-A',
     section_start: 1,
-    section_end: 30,
+    section_end: 31,
   },
 ];
 
