@@ -87,3 +87,4 @@ See the [configuration guide](https://www.jaegertracing.io/docs/latest/frontend-
 [aio-docs]: https://www.jaegertracing.io/docs/latest/getting-started/
 [fossa-img]: https://app.fossa.io/api/projects/git%2Bgithub.com%2Fjaegertracing%2Fjaeger-ui.svg?type=shield
 [fossa]: https://app.fossa.io/projects/git%2Bgithub.com%2Fjaegertracing%2Fjaeger-ui?ref=badge_shield
+
