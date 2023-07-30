@@ -45,7 +45,7 @@ If you don't have it running locally, then tunnel to the correct host and port.
 ssh -fN -L 16686:$BACKEND_HOST:$BACKEND_PORT $BACKEND_HOST
 ```
 
-If you are using [UI Base Path](https://www.jaegertracing.io/docs/1.7/deployment/#ui-base-path) feature, you need to append the base path into `proxy->/api->target` in package.json file. for example: if the base path is `"/jaeger"`, then the target should be `"http://localhost:16686/jaeger"`
+If you are using [UI Base Path](https://www.jaegertracing.io/docs/1.7/deployment/#ui-base-path) feature, you need to append the base path into `jaeger-ui/jaeger-ui/vite.config.js` in ```proxyConfig``` object. for example: if the base path is `"/jaeger"`, then the ```target``` should be `"http://localhost:16686/jaeger"`
 
 Start the development server with hot loading:
 
