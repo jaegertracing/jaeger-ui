@@ -34,9 +34,7 @@ nvm use
 Install dependencies via `yarn`:
 
 ```
-yarn install
-# or
-yarn
+yarn install --frozen-lockfile
 ```
 
 Make sure you have the Jaeger Query service running on http://localhost:16686. For example, you can run Jaeger all-in-one Docker image as described in the [documentation][aio-docs].
@@ -68,10 +66,9 @@ The above command will run a web server on port :5173 that will serve the UI ass
 
 ## Build
 
-Running build will output all the static files to the `packages/jaeger-ui/build` folder:
+Running `build` will package all the UI files to the `packages/jaeger-ui/build` folder:
 
 ```
-yarn install
 yarn build
 ```
 
