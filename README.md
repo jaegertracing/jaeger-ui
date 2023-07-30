@@ -55,6 +55,21 @@ yarn start
 
 The above command will run a web server on port :5173 that will serve the UI assets, with hot reloading support, and it will proxy all API requests to `http://localhost:16686` where Jaeger query should be running.
 
+------------
+### Using Windows OS for Development?
+
+While we don't natively support Windows OS for running the Jaeger UI Dev Environment, you can use WSL to run it.
+
+Here are some steps to follow:
+1. Install WSL: https://learn.microsoft.com/en-us/windows/wsl/install
+2. Install Node.JS: https://learn.microsoft.com/en-us/windows/dev-environment/javascript/nodejs-on-wsl
+3. Connect WSL Environment with VSCode: https://learn.microsoft.com/en-us/windows/dev-environment/javascript/nodejs-on-wsl#install-visual-studio-code
+4. Use the WSL Terminal inside VSCode and [follow the Jaeger UI installation steps](https://github.com/jaegertracing/jaeger-ui#running-the-application)
+
+Stuck somewhere or found a bug? [Create a GitHub Issue](https://github.com/jaegertracing/jaeger-ui/issues/new/choose), or try asking for help in the [Slack Channel](https://cloud-native.slack.com/archives/CGG7NFUJ3)
+
+---------------
+
 #### Commands
 
 | Command      | Description                                                         |
