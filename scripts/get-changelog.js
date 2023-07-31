@@ -18,10 +18,10 @@
 
 const { readFile } = require('fs');
 // eslint-disable-next-line import/no-extraneous-dependencies
+const { promisify } = require('util');
 const fetch = require('isomorphic-fetch');
 // eslint-disable-next-line import/no-extraneous-dependencies
 const jsdom = require('jsdom');
-const { promisify } = require('util');
 
 const readFilePromise = promisify(readFile);
 
