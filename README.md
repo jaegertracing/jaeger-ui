@@ -12,7 +12,7 @@ Visualize distributed tracing with Jaeger.
 
 See [CONTRIBUTING](./CONTRIBUTING.md).
 
-Stuck somewhere or found a bug? [Create a GitHub Issue](https://github.com/jaegertracing/jaeger-ui/issues/new/choose), or try asking for help in the [Slack Channel](https://www.jaegertracing.io/get-in-touch/)
+Stuck somewhere or found a bug? See [Getting in Touch](https://www.jaegertracing.io/get-in-touch/) on how to ask for help.
 
 ## Development
 
