@@ -97,6 +97,9 @@ export default defineConfig({
     },
   },
   server: {
+    watch: {
+      usePolling: true
+    },
     proxy: {
       // Proxy jaeger-query resource paths for local development.
       '/api': proxyConfig,
