@@ -16,8 +16,6 @@ Stuck somewhere or found a bug? See [Getting in Touch](https://www.jaegertracing
 
 ## Development
 
-Table of content:
-
 - [Prerequisites](#prerequisites)
 - [Running the application](#running-the-application)
 - [Running on Windows OS](#running-on-windows-os)
@@ -32,7 +30,7 @@ The app was built with [create-react-app](https://github.com/facebookincubator/c
 
 ### Running the application
 
-Fork, then clone the `jaeger-ui` repo and change directory into it.
+Fork and/or clone the `jaeger-ui` repo and change directory into it.
 
 ```
 git clone https://github.com/jaegertracing/jaeger-ui.git
@@ -53,13 +51,14 @@ yarn install --frozen-lockfile
 
 Make sure you have the Jaeger Query service running on http://localhost:16686. For example, you can run Jaeger all-in-one Docker image as described in the [documentation][aio-docs].
 
-If you don't have it running locally, then tunnel to the correct host and port.
+If you don't have it running locally, then tunnel to the correct host and port:
 
 ```
 ssh -fN -L 16686:$BACKEND_HOST:$BACKEND_PORT $BACKEND_HOST
 ```
 
-If you are using [UI Base Path](https://www.jaegertracing.io/docs/1.7/deployment/#ui-base-path) feature, you need to append the base path into `jaeger-ui/jaeger-ui/vite.config.js` in `proxyConfig` object. for example: if the base path is `"/jaeger"`, then the `target` should be `"http://localhost:16686/jaeger"` and your `proxyConfig` object would be:
+If you are using the [UI Base Path](https://www.jaegertracing.io/docs/1.7/deployment/#ui-base-path) feature, you need to append the base path into `jaeger-ui/jaeger-ui/vite.config.js` in `proxyConfig` object. For example, if the base path is `"/jaeger"`, then the `target` should be `"http://localhost:16686/jaeger"` and your `proxyConfig` object would be:
+
 ```js
 const proxyConfig = {
   target: 'http://localhost:16686/jaeger',
@@ -76,18 +75,7 @@ Start the development server with hot loading:
 yarn start
 ```
 
-The above command will run a web server on port :5173 that will serve the UI assets, with hot reloading support, and it will proxy all API requests to `http://localhost:16686` where Jaeger query should be running.
-
-### Running on Windows OS
-
-While we don't natively support Windows OS for running the Jaeger UI Dev Environment, you can use WSL to run it.
-
-Here are some steps to follow:
-1. Install WSL: https://learn.microsoft.com/en-us/windows/wsl/install
-2. Install Node.JS: https://learn.microsoft.com/en-us/windows/dev-environment/javascript/nodejs-on-wsl
-3. Install Yarn on WSL: https://dev.to/bonstine/installing-yarn-on-wsl-38p2
-4. Connect WSL Environment with VSCode: https://learn.microsoft.com/en-us/windows/dev-environment/javascript/nodejs-on-wsl#install-visual-studio-code
-5. Use the WSL Terminal inside VSCode and [follow the Jaeger UI installation steps](https://github.com/jaegertracing/jaeger-ui#running-the-application)
+The above command will run a web server on `http://localhost:5173` that will serve the UI assets, with hot reloading support, and it will proxy all API requests to `http://localhost:16686` where Jaeger query should be running.
 
 #### Commands
 
@@ -96,15 +84,19 @@ Here are some steps to follow:
 | `yarn start` | Starts development server with hot reloading and api proxy.         |
 | `yarn test`  | Run all the tests                                                   |
 | `yarn lint`  | Lint the project (eslint, prettier, typescript)                     |
+| `yarn fmt`   | Apply Prettier source code formatting                               |
 | `yarn build` | Runs production build. Outputs files to `packages/jaeger-ui/build`. |
 
-## Build
+### Running on Windows OS
 
-Running `build` will package all the UI files to the `packages/jaeger-ui/build` folder:
+While we don't natively support Windows OS for running the Jaeger UI Dev Environment, you can use Windows Subsystem for Linux (WSL) to run it.
 
-```
-yarn build
-```
+Here are some steps to follow:
+1. Install WSL: https://learn.microsoft.com/en-us/windows/wsl/install
+2. Install Node.JS: https://learn.microsoft.com/en-us/windows/dev-environment/javascript/nodejs-on-wsl
+3. Install Yarn: https://dev.to/bonstine/installing-yarn-on-wsl-38p2
+4. Connect WSL Environment with VSCode: https://learn.microsoft.com/en-us/windows/dev-environment/javascript/nodejs-on-wsl#install-visual-studio-code
+5. Use the WSL Terminal inside VSCode and [follow the Jaeger UI installation steps](#running-the-application)
 
 ## UI Configuration
 
