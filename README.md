@@ -18,9 +18,9 @@ Stuck somewhere or found a bug? [Create a GitHub Issue](https://github.com/jaege
 
 Table of content:
 
-- [Prerequisites](https://github.com/anshgoyalevil/jaeger-ui/edit/wsl-steps/README.md#prerequisites)
-- [Running the application](https://github.com/anshgoyalevil/jaeger-ui/edit/wsl-steps/README.md#running-the-application)
-- [Running on Windows OS](https://github.com/anshgoyalevil/jaeger-ui/edit/wsl-steps/README.md#running-on-windows-os)
+- [Prerequisites](#prerequisites)
+- [Running the application](#running-the-application)
+- [Running on Windows OS](#running-on-windows-os)
 
 ### Prerequisites
 - [nvm (Node Version Manager)](https://github.com/nvm-sh/nvm)
