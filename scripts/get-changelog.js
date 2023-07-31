@@ -17,8 +17,8 @@
 // This code will generate changelog entries
 
 const { readFile } = require('fs');
-// eslint-disable-next-line import/no-extraneous-dependencies
 const { promisify } = require('util');
+// eslint-disable-next-line import/no-extraneous-dependencies
 const fetch = require('isomorphic-fetch');
 // eslint-disable-next-line import/no-extraneous-dependencies
 const jsdom = require('jsdom');
