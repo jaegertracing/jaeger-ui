@@ -12,7 +12,21 @@ Visualize distributed tracing with Jaeger.
 
 See [CONTRIBUTING](./CONTRIBUTING.md).
 
+Stuck somewhere or found a bug? [Create a GitHub Issue](https://github.com/jaegertracing/jaeger-ui/issues/new/choose), or try asking for help in the [Slack Channel](https://www.jaegertracing.io/get-in-touch/)
+
 ## Development
+
+Table of content:
+
+- [Prerequisites](https://github.com/anshgoyalevil/jaeger-ui/edit/wsl-steps/README.md#prerequisites)
+- [Running the application](https://github.com/anshgoyalevil/jaeger-ui/edit/wsl-steps/README.md#running-the-application)
+- [Running on Windows OS](https://github.com/anshgoyalevil/jaeger-ui/edit/wsl-steps/README.md#running-on-windows-os)
+
+### Prerequisites
+- [nvm (Node Version Manager)](https://github.com/nvm-sh/nvm)
+- [Node.JS](https://nodejs.org/en)
+- npm package manager
+- [yarn package manager](https://yarnpkg.com/)
 
 The app was built with [create-react-app](https://github.com/facebookincubator/create-react-app).
 
@@ -45,7 +59,16 @@ If you don't have it running locally, then tunnel to the correct host and port.
 ssh -fN -L 16686:$BACKEND_HOST:$BACKEND_PORT $BACKEND_HOST
 ```
 
-If you are using [UI Base Path](https://www.jaegertracing.io/docs/1.7/deployment/#ui-base-path) feature, you need to append the base path into `jaeger-ui/jaeger-ui/vite.config.js` in ```proxyConfig``` object. for example: if the base path is `"/jaeger"`, then the ```target``` should be `"http://localhost:16686/jaeger"`
+If you are using [UI Base Path](https://www.jaegertracing.io/docs/1.7/deployment/#ui-base-path) feature, you need to append the base path into `jaeger-ui/jaeger-ui/vite.config.js` in `proxyConfig` object. for example: if the base path is `"/jaeger"`, then the `target` should be `"http://localhost:16686/jaeger"` and your `proxyConfig` object would be:
+```js
+const proxyConfig = {
+  target: 'http://localhost:16686/jaeger',
+  secure: false,
+  changeOrigin: true,
+  ws: true,
+  xfwd: true,
+};
+```
 
 Start the development server with hot loading:
 
@@ -55,20 +78,16 @@ yarn start
 
 The above command will run a web server on port :5173 that will serve the UI assets, with hot reloading support, and it will proxy all API requests to `http://localhost:16686` where Jaeger query should be running.
 
-------------
-### Using Windows OS for Development?
+### Running on Windows OS
 
 While we don't natively support Windows OS for running the Jaeger UI Dev Environment, you can use WSL to run it.
 
 Here are some steps to follow:
 1. Install WSL: https://learn.microsoft.com/en-us/windows/wsl/install
 2. Install Node.JS: https://learn.microsoft.com/en-us/windows/dev-environment/javascript/nodejs-on-wsl
-3. Connect WSL Environment with VSCode: https://learn.microsoft.com/en-us/windows/dev-environment/javascript/nodejs-on-wsl#install-visual-studio-code
-4. Use the WSL Terminal inside VSCode and [follow the Jaeger UI installation steps](https://github.com/jaegertracing/jaeger-ui#running-the-application)
-
-Stuck somewhere or found a bug? [Create a GitHub Issue](https://github.com/jaegertracing/jaeger-ui/issues/new/choose), or try asking for help in the [Slack Channel](https://cloud-native.slack.com/archives/CGG7NFUJ3)
-
----------------
+3. Install Yarn on WSL: https://dev.to/bonstine/installing-yarn-on-wsl-38p2
+4. Connect WSL Environment with VSCode: https://learn.microsoft.com/en-us/windows/dev-environment/javascript/nodejs-on-wsl#install-visual-studio-code
+5. Use the WSL Terminal inside VSCode and [follow the Jaeger UI installation steps](https://github.com/jaegertracing/jaeger-ui#running-the-application)
 
 #### Commands
 
