@@ -18,8 +18,6 @@
 
 const { readFile } = require('fs').promises;
 // eslint-disable-next-line import/no-extraneous-dependencies
-const fetch = require('isomorphic-fetch');
-// eslint-disable-next-line import/no-extraneous-dependencies
 const jsdom = require('jsdom');
 
 const readFilePromise = readFile;
