@@ -44,7 +44,8 @@ describe('<SpanBarRow>', () => {
     showErrorIcon: false,
     getViewedBounds: () => ({ start: 0, end: 1 }),
     span: {
-      duration: 'test-duration',
+      startTime: 10,
+      duration: 50,
       hasChildren: true,
       process: {
         serviceName: 'service-name',
