@@ -17,6 +17,8 @@
 /* eslint-disable import/first */
 import './site-prefix';
 
+import TraceProvider from './tracing';
+
 import React from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { createRoot } from 'react-dom/client';
@@ -47,8 +49,11 @@ if (typeof trackingContext === 'object' && trackingContext !== null) {
   });
 } else {
   root.render(
-    <BrowserRouter>
-      <JaegerUIApp />
-    </BrowserRouter>
+    <TraceProvider>
+      <BrowserRouter>
+        <JaegerUIApp />
+      </BrowserRouter>
+    </TraceProvider>
+    
   );
 }
