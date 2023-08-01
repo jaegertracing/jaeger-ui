@@ -16,7 +16,6 @@ import React, { useRef, useState, useLayoutEffect } from 'react';
 import moment from 'moment';
 import PropTypes from 'prop-types';
 import { XYPlot, XAxis, YAxis, MarkSeries, Hint } from 'react-vis';
-import { compose, withState, withProps } from 'recompose';
 
 import { FALLBACK_TRACE_NAME } from '../../../constants';
 import { ONE_MILLISECOND, formatDuration } from '../../../utils/date';
@@ -24,11 +23,21 @@ import { ONE_MILLISECOND, formatDuration } from '../../../utils/date';
 import './react-vis.css';
 import './ScatterPlot.css';
 
-function ScatterPlotImpl(props) {
-  const { data, onValueClick, overValue, onValueOver, onValueOut, calculateContainerWidth } = props;
+export default function ScatterPlot(props) {
+  const { data, onValueClick, calculateContainerWidth } = props;
 
   const containerRef = useRef(null);
   const [containerWidth, setContainerWidth] = useState(0);
+
+  const [overValue, setValueOver] = useState(null);
+
+  const onValueOver = value => {
+    setValueOver(value);
+  };
+
+  const onValueOut = () => {
+    setValueOver(null);
+  };
 
   useLayoutEffect(() => {
     function updateContainerWidth() {
@@ -89,29 +98,13 @@ const valueShape = PropTypes.shape({
   name: PropTypes.string,
 });
 
-ScatterPlotImpl.propTypes = {
+ScatterPlot.propTypes = {
   data: PropTypes.arrayOf(valueShape).isRequired,
-  overValue: valueShape,
   onValueClick: PropTypes.func.isRequired,
-  onValueOut: PropTypes.func.isRequired,
-  onValueOver: PropTypes.func.isRequired,
   calculateContainerWidth: PropTypes.func,
 };
 
-ScatterPlotImpl.defaultProps = {
-  overValue: null,
+ScatterPlot.defaultProps = {
   // JSDOM does not, as of 2023, have a layout engine, so allow tests to supply a mock width as a workaround.
   calculateContainerWidth: container => container.clientWidth,
 };
-
-const ScatterPlot = compose(
-  withState('overValue', 'setOverValue', null),
-  withProps(({ setOverValue }) => ({
-    onValueOver: value => setOverValue(value),
-    onValueOut: () => setOverValue(null),
-  }))
-)(ScatterPlotImpl);
-
-export { ScatterPlotImpl };
-
-export default ScatterPlot;

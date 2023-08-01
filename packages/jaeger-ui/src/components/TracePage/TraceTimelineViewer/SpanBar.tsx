@@ -12,10 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Popover } from 'antd';
 import _groupBy from 'lodash/groupBy';
-import { onlyUpdateForKeys, compose, withState, withProps } from 'recompose';
 
 import AccordianLogs from './SpanDetail/AccordianLogs';
 
@@ -42,37 +41,27 @@ type TCommonProps = {
     | TNil;
   traceStartTime: number;
   span: Span;
-};
-
-type TInnerProps = {
-  label: string;
-  setLongLabel: () => void;
-  setShortLabel: () => void;
-} & TCommonProps;
-
-type TOuterProps = {
   longLabel: string;
   shortLabel: string;
-} & TCommonProps;
+};
 
 function toPercent(value: number) {
   return `${(value * 100).toFixed(1)}%`;
 }
 
-function SpanBar(props: TInnerProps) {
+function SpanBar(props: TCommonProps) {
   const {
     viewEnd,
     viewStart,
     getViewedBounds,
     color,
-    label,
     hintSide,
     onClick,
-    setLongLabel,
-    setShortLabel,
     rpc,
     traceStartTime,
     span,
+    shortLabel,
+    longLabel,
   } = props;
   // group logs based on timestamps
   const logGroups = _groupBy(span.logs, log => {
@@ -80,6 +69,16 @@ function SpanBar(props: TInnerProps) {
     // round to the nearest 0.2%
     return toPercent(Math.round(posPercent * 500) / 500);
   });
+
+  const [label, setLabel] = useState(shortLabel);
+
+  const setShortLabel = () => {
+    setLabel(shortLabel);
+  };
+
+  const setLongLabel = () => {
+    setLabel(longLabel);
+  };
 
   return (
     <div
@@ -134,21 +133,4 @@ function SpanBar(props: TInnerProps) {
   );
 }
 
-export default compose<TInnerProps, TOuterProps>(
-  withState('label', 'setLabel', (props: { shortLabel: string }) => props.shortLabel),
-  withProps(
-    ({
-      setLabel,
-      shortLabel,
-      longLabel,
-    }: {
-      setLabel: (label: string) => void;
-      shortLabel: string;
-      longLabel: string;
-    }) => ({
-      setLongLabel: () => setLabel(longLabel),
-      setShortLabel: () => setLabel(shortLabel),
-    })
-  ),
-  onlyUpdateForKeys(['label', 'rpc', 'viewStart', 'viewEnd'])
-)(SpanBar);
+export default SpanBar;
