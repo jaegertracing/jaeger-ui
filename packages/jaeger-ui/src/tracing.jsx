@@ -19,13 +19,9 @@ const collectorExporter = new OTLPTraceExporter({
 });
 
 const provider = new WebTracerProvider({
-
   resource: new Resource({
-
     [SemanticResourceAttributes.SERVICE_NAME]: 'Jaeger-UI' || process.env.REACT_APP_NAME
-
   })
-
 });
 
 const fetchInstrumentation = new FetchInstrumentation({});
@@ -39,27 +35,17 @@ provider.addSpanProcessor(new SimpleSpanProcessor(collectorExporter));
 provider.register();
 
 registerInstrumentations({
-
   instrumentations: [
-
     fetchInstrumentation
-
   ],
 
   tracerProvider: provider
-
 });
 
 export default function TraceProvider ({ children }) {
-
   return (
-
    <>
-
       {children}
-
    </>
-
   );
-
 }
