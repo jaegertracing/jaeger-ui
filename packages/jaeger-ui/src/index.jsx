@@ -24,6 +24,9 @@ import { createRoot } from 'react-dom/client';
 import JaegerUIApp from './components/App';
 import { context as trackingContext } from './utils/tracking';
 
+// tracer provider to initiate tracing
+import TraceProvider from './tracing';
+
 // these need to go after the App import
 /* eslint-disable import/first */
 import 'u-basscss/css/flexbox.css';
@@ -40,9 +43,12 @@ const root = createRoot(document.getElementById(UI_ROOT_ID));
 if (typeof trackingContext === 'object' && trackingContext !== null) {
   trackingContext.context(() => {
     root.render(
-      <BrowserRouter>
-        <JaegerUIApp />
-      </BrowserRouter>
+      <TraceProvider>
+        <BrowserRouter>
+          <JaegerUIApp />
+        </BrowserRouter>
+      </TraceProvider>
+
     );
   });
 } else {
