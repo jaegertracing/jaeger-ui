@@ -42,7 +42,10 @@ describe('<SpanBarRow>', () => {
       serviceName: 'rpc-service-name',
     },
     showErrorIcon: false,
-    getViewedBounds: () => ({ start: 0, end: 1 }),
+    getViewedBounds: jest
+      .fn()
+      .mockReturnValueOnce({ start: 0.5, end: 0.6 })
+      .mockReturnValue({ start: 0, end: 1 }),
     span: {
       duration: 'test-duration',
       hasChildren: true,
