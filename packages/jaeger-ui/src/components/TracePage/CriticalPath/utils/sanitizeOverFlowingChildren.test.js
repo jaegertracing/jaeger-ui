@@ -18,7 +18,7 @@ import test6 from '../testCases/test6';
 import test7 from '../testCases/test7';
 import sanitizeOverFlowingChildren from './sanitizeOverFlowingChildren';
 
-// Function to make excpected data for test6 and test7
+// Function to make expected data for test6 and test7
 function getExpectedSanitizedData(spans, test = 'test6') {
   const expectedSanitizedData = spans.map((span, index) => {
     if (index === 1) {

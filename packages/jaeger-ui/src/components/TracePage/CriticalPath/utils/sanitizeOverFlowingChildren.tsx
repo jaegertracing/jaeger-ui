@@ -14,7 +14,7 @@
 
 import { Span } from '../../../../types/trace';
 
-// This function turncates/drops the overflowing child spans
+// This function truncates/drops the overflowing child spans
 const sanitizeOverFlowingChildren = (spans: Span[]): Span[] => {
   let sanitizedSpanData: Span[] = [];
 
