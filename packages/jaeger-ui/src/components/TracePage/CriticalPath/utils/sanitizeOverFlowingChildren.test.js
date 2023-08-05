@@ -19,23 +19,18 @@ import test7 from '../testCases/test7';
 import sanitizeOverFlowingChildren from './sanitizeOverFlowingChildren';
 
 // Function to make expected data for test6 and test7
-function getExpectedSanitizedData(spans, test = 'test6') {
-  const expectedSanitizedData = spans.map((span, index) => {
-    if (index === 1) {
-      return { ...span, duration: 15 };
-    }
-    if (index === 2) {
-      return test === 'test7' ? { ...span, duration: 10 } : { ...span, duration: 10, startTime: 15 };
-    }
-    return span;
-  });
-  return expectedSanitizedData;
+function getExpectedSanitizedData(spans, test) {
+  const testSanitizedData = {
+    test6: [spans[0], { ...spans[1], duration: 15 }, { ...spans[2], duration: 10, startTime: 15 }],
+    test7: [spans[0], { ...spans[1], duration: 15 }, { ...spans[2], duration: 10 }],
+  };
+  return testSanitizedData[test];
 }
 
 describe.each([
   [test3, [test3.trace.spans[0]]],
   [test4, [test4.trace.spans[0]]],
-  [test6, getExpectedSanitizedData(test6.trace.spans)],
+  [test6, getExpectedSanitizedData(test6.trace.spans, 'test6')],
   [test7, getExpectedSanitizedData(test7.trace.spans, 'test7')],
 ])('sanitizeOverFlowingChildren', (testProps, expectedSanitizedData) => {
   it('Should sanitize the data(overflowing spans) correctly', () => {
