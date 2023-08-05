@@ -14,14 +14,14 @@
 
 import test1 from '../testCases/test1';
 import test2 from '../testCases/test2';
-import removeFollowFromChildSpans from './removeFollowFromChildSpans';
+import getChildOfSpans from './getChildOfSpans';
 import findLastFinishingChildSpanId from './findLastFinishingChildSpanId';
 import sanitizeOverFlowingChildren from './sanitizeOverFlowingChildren';
 
 describe('findLastFinishingChildSpanId', () => {
   it('Should find lfc of a span correctly', () => {
     const sanitizedSpanData = sanitizeOverFlowingChildren(test1.trace.spans);
-    const refinedSpanData = removeFollowFromChildSpans(sanitizedSpanData);
+    const refinedSpanData = getChildOfSpans(sanitizedSpanData);
     const traceData = { ...test1.trace, spans: refinedSpanData };
 
     let currentSpan = traceData.spans.filter(span => span.spanID === 'span-C')[0];
@@ -36,7 +36,7 @@ describe('findLastFinishingChildSpanId', () => {
 
   it('Should find lfc of a span correctly', () => {
     const sanitizedSpanData = sanitizeOverFlowingChildren(test2.trace.spans);
-    const refinedSpanData = removeFollowFromChildSpans(sanitizedSpanData);
+    const refinedSpanData = getChildOfSpans(sanitizedSpanData);
     const traceData = { ...test2.trace, spans: refinedSpanData };
 
     let currentSpan = traceData.spans.filter(span => span.spanID === 'span-X')[0];

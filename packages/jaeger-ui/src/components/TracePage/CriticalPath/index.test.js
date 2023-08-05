@@ -17,7 +17,7 @@ import test1 from './testCases/test1';
 import test2 from './testCases/test2';
 import test3 from './testCases/test3';
 import test4 from './testCases/test4';
-import removeFollowFromChildSpans from './utils/removeFollowFromChildSpans';
+import getChildOfSpans from './utils/getChildOfSpans';
 import findRootSpanId from './utils/findRootSpanId';
 import sanitizeOverFlowingChildren from './utils/sanitizeOverFlowingChildren';
 import test6 from './testCases/test6';
@@ -27,7 +27,7 @@ import test5 from './testCases/test5';
 describe.each([[test1], [test2], [test3], [test4], [test5], [test6], [test7]])('Happy Path', testProps => {
   it('Should find criticalPathSections correctly', () => {
     const sanitizedSpanData = sanitizeOverFlowingChildren(testProps.trace.spans);
-    const refinedSpanData = removeFollowFromChildSpans(sanitizedSpanData);
+    const refinedSpanData = getChildOfSpans(sanitizedSpanData);
     const traceData = { ...testProps.trace, spans: refinedSpanData };
     const rootSpanId = findRootSpanId(traceData.spans);
     const criticalPath = computeCriticalPath(traceData, rootSpanId, []);

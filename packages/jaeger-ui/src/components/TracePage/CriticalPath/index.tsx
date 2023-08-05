@@ -14,7 +14,7 @@
 
 import memoizeOne from 'memoize-one';
 import { Span, Trace, criticalPathSection } from '../../../types/trace';
-import removeFollowFromChildSpans from './utils/removeFollowFromChildSpans';
+import removeFollowFromChildSpans from './utils/getChildOfSpans';
 import findLastFinishingChildSpanId from './utils/findLastFinishingChildSpanId';
 import findRootSpanId from './utils/findRootSpanId';
 import sanitizeOverFlowingChildren from './utils/sanitizeOverFlowingChildren';
