@@ -17,7 +17,7 @@ import { Span, Trace } from '../../../../types/trace';
 // This function finds LFC of a current span which is less than the spawn event time
 // |-------------spanA--------------|
 //    |--spanB--|    |--spanC--|
-// Here span-C will be LFC of spanA. But spanA doesnt have LFC.So, it returns to parent
+// Here span-C will be LFC of spanA. But spanC doesnt have LFC.So, it returns to parent
 // from its creationTime (startTime) and this is referred as spawnTime below
 const findLastFinishingChildSpanId = (
   traceData: Trace,
