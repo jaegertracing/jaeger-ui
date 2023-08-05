@@ -25,9 +25,8 @@ export default class TreeNode {
     return (value, node) => (search instanceof TreeNode ? node === search : value === search);
   }
 
-  constructor(value, endTime = Infinity, children = []) {
+  constructor(value, children = []) {
     this.value = value;
-    this.endTime = endTime;
     this.children = children;
   }
 
