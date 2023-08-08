@@ -14,11 +14,20 @@
 
 import { Span, Trace } from '../../../../types/trace';
 
-// This function finds LFC of a current span which is less than the spawn event time
-// |-------------spanA--------------|
-//    |--spanB--|    |--spanC--|
-// Here span-C will be LFC of spanA. But spanC doesnt have LFC.So, it returns to parent
-// from its creationTime (startTime) and this is referred as spawnTime below
+/**
+ * This function finds the Last Finishing Child (LFC) span of a given current span
+ *  Example:
+ * |-------------spanA--------------|
+ *    |--spanB--|    |--spanC--|
+ * The LFC of spanA would be spanC, as it finishes last among its child spans.
+ *
+ * However, if a child span (like spanC) doesn't have any child spans of its own,
+ * the focus shifts to the parent span (spanA). In this case, we check whether
+ * there is an LFC of spanA that finishes before the startTime of spanC.
+ * This 'startTime' is referred to as 'spawnTime' below.
+ * @param spawnTime - The startTime of a subsequent span (like spanC) that triggers the
+ *                   need to find the Last Finishing Child span of the current span.
+ */
 const findLastFinishingChildSpanId = (
   traceData: Trace,
   currentSpan: Span,
