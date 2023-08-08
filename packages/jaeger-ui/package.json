@@ -47,6 +47,8 @@
   "dependencies": {
     "@jaegertracing/plexus": "0.2.0",
     "@pyroscope/flamegraph": "0.21.4",
+    "@testing-library/jest-dom": "^5.17.0",
+    "@testing-library/react": "^14.0.0",
     "@types/deep-freeze": "^0.1.1",
     "@types/lodash": "^4.14.123",
     "@types/object-hash": "^3.0.2",

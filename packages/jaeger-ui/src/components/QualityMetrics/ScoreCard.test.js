@@ -13,8 +13,7 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
-
+import { render } from '@testing-library/react';
 import ScoreCard from './ScoreCard';
 
 describe('ScoreCard', () => {
@@ -24,47 +23,44 @@ describe('ScoreCard', () => {
   const max = 108;
 
   it('renders as expected when score is below max', () => {
-    expect(
-      shallow(
-        <ScoreCard
-          link={link}
-          score={{
-            label,
-            max,
-            value,
-          }}
-        />
-      )
-    ).toMatchSnapshot();
+    const { container } = render(
+      <ScoreCard
+        link={link}
+        score={{
+          label,
+          max,
+          value,
+        }}
+      />
+    );
+    expect(container).toMatchSnapshot();
   });
 
   it('renders as expected when score is max', () => {
-    expect(
-      shallow(
-        <ScoreCard
-          link={link}
-          score={{
-            label,
-            max,
-            value: max,
-          }}
-        />
-      )
-    ).toMatchSnapshot();
+    const { container } = render(
+      <ScoreCard
+        link={link}
+        score={{
+          label,
+          max,
+          value: max,
+        }}
+      />
+    );
+    expect(container).toMatchSnapshot();
   });
 
   it('renders as expected when score is zero', () => {
-    expect(
-      shallow(
-        <ScoreCard
-          link={link}
-          score={{
-            label,
-            max,
-            value: 0,
-          }}
-        />
-      )
-    ).toMatchSnapshot();
+    const { container } = render(
+      <ScoreCard
+        link={link}
+        score={{
+          label,
+          max,
+          value: 0,
+        }}
+      />
+    );
+    expect(container).toMatchSnapshot();
   });
 });
