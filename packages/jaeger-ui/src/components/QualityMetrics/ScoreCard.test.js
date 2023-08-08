@@ -23,41 +23,47 @@ describe('ScoreCard', () => {
   const max = 108;
 
   it('renders as expected when score is below max', () => {
-    expect(render(
-      <ScoreCard
-        link={link}
-        score={{
-          label,
-          max,
-          value,
-        }}
-      />
-    ).container).toMatchSnapshot();
+    expect(
+      render(
+        <ScoreCard
+          link={link}
+          score={{
+            label,
+            max,
+            value,
+          }}
+        />
+      )
+    ).toMatchSnapshot();
   });
 
   it('renders as expected when score is max', () => {
-    expect(render(
-      <ScoreCard
-        link={link}
-        score={{
-          label,
-          max,
-          value: max,
-        }}
-      />
-    ).container).toMatchSnapshot();
+    expect(
+      render(
+        <ScoreCard
+          link={link}
+          score={{
+            label,
+            max,
+            value: max,
+          }}
+        />
+      ).container
+    ).toMatchSnapshot();
   });
 
   it('renders as expected when score is zero', () => {
-    expect(render(
-      <ScoreCard
-        link={link}
-        score={{
-          label,
-          max,
-          value: 0,
-        }}
-      />
-    ).container).toMatchSnapshot();
+    expect(
+      render(
+        <ScoreCard
+          link={link}
+          score={{
+            label,
+            max,
+            value: 0,
+          }}
+        />
+      ).container
+    ).toMatchSnapshot();
   });
 });
