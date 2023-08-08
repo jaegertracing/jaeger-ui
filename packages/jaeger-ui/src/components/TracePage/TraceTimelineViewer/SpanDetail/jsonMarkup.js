@@ -42,7 +42,7 @@ function type(doc) {
 }
 
 function escape(str) {
-  return str.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return str.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace('{', '{\\').replace('":', '\\":');
 }
 
 export function jsonMarkup(doc, styleFile) {
