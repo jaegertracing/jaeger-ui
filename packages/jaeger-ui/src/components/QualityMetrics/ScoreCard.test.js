@@ -33,7 +33,7 @@ describe('ScoreCard', () => {
             value,
           }}
         />
-      )
+      ).container
     ).toMatchSnapshot();
   });
 
