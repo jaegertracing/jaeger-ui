@@ -23,7 +23,7 @@ describe('ScoreCard', () => {
   const max = 108;
 
   it('renders as expected when score is below max', () => {
-    const { container } = render(
+    expect(render(
       <ScoreCard
         link={link}
         score={{
@@ -32,12 +32,11 @@ describe('ScoreCard', () => {
           value,
         }}
       />
-    );
-    expect(container).toMatchSnapshot();
+    ).container).toMatchSnapshot();
   });
 
   it('renders as expected when score is max', () => {
-    const { container } = render(
+    expect(render(
       <ScoreCard
         link={link}
         score={{
@@ -46,12 +45,11 @@ describe('ScoreCard', () => {
           value: max,
         }}
       />
-    );
-    expect(container).toMatchSnapshot();
+    ).container).toMatchSnapshot();
   });
 
   it('renders as expected when score is zero', () => {
-    const { container } = render(
+    expect(render(
       <ScoreCard
         link={link}
         score={{
@@ -60,7 +58,6 @@ describe('ScoreCard', () => {
           value: 0,
         }}
       />
-    );
-    expect(container).toMatchSnapshot();
+    ).container).toMatchSnapshot();
   });
 });
