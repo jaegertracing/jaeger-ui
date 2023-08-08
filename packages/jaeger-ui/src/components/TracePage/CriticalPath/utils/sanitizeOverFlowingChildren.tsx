@@ -60,7 +60,7 @@ const sanitizeOverFlowingChildren = (spans: Span[]): Span[] => {
             });
             break;
 
-          default:
+          case span.startTime >= parentEndTime || childEndTime <= parentSpan.startTime:
             // case 4: child outside of parent range => drop the child span
             //      |----parent----|
             //                        |----child--|
@@ -75,6 +75,11 @@ const sanitizeOverFlowingChildren = (spans: Span[]): Span[] => {
                 each.childSpanIds.splice(index, 1);
               }
             });
+            break;
+
+          default:
+            // Never reaches to default
+            // Something unexpected happened
             break;
         }
       }
