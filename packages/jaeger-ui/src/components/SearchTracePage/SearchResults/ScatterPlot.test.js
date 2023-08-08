@@ -14,9 +14,9 @@
 
 import React from 'react';
 import { mount, shallow } from 'enzyme';
-import { XAxis, XYPlot, YAxis } from 'react-vis';
+import { XAxis, XYPlot, YAxis, MarkSeries, Hint } from 'react-vis';
 
-import ScatterPlot, { ScatterPlotImpl } from './ScatterPlot';
+import ScatterPlot from './ScatterPlot';
 import { ONE_MILLISECOND } from '../../../utils/date';
 
 const generateTimestamp = (hours, minutes, seconds) => {
@@ -67,15 +67,9 @@ it('<ScatterPlot /> should render base case correctly', () => {
   expect(wrapper).toBeTruthy();
 });
 
-it('<ScatterPlotImpl /> should render X axis correctly', () => {
+it('<ScatterPlot /> should render X axis correctly', () => {
   const wrapper = mount(
-    <ScatterPlotImpl
-      calculateContainerWidth={() => 1200}
-      data={sampleData}
-      onValueClick={() => null}
-      onValueOut={() => null}
-      onValueOver={() => null}
-    />
+    <ScatterPlot calculateContainerWidth={() => 1200} data={sampleData} onValueClick={() => null} />
   );
 
   const xAxisText = wrapper.find(XAxis).text();
@@ -87,15 +81,9 @@ it('<ScatterPlotImpl /> should render X axis correctly', () => {
   expect(xAxisText).toContain('10:11:00 pm');
 });
 
-it('<ScatterPlotImpl /> should render Y axis correctly', () => {
+it('<ScatterPlot /> should render Y axis correctly', () => {
   const wrapper = mount(
-    <ScatterPlotImpl
-      calculateContainerWidth={() => 1200}
-      data={sampleData}
-      onValueClick={() => null}
-      onValueOut={() => null}
-      onValueOver={() => null}
-    />
+    <ScatterPlot calculateContainerWidth={() => 1200} data={sampleData} onValueClick={() => null} />
   );
 
   const yAxisText = wrapper.find(YAxis).text();
@@ -106,15 +94,9 @@ it('<ScatterPlotImpl /> should render Y axis correctly', () => {
   expect(yAxisText).toContain('80ms');
 });
 
-it('<ScatterPlotImpl /> should set fixed container width on initial render', () => {
+it('<ScatterPlot /> should set fixed container width on initial render', () => {
   const wrapper = mount(
-    <ScatterPlotImpl
-      calculateContainerWidth={() => 1200}
-      data={sampleData}
-      onValueClick={() => null}
-      onValueOut={() => null}
-      onValueOver={() => null}
-    />
+    <ScatterPlot calculateContainerWidth={() => 1200} data={sampleData} onValueClick={() => null} />
   );
 
   const xyPlot = wrapper.find(XYPlot).getDOMNode();
@@ -122,10 +104,10 @@ it('<ScatterPlotImpl /> should set fixed container width on initial render', () 
   expect(xyPlot.style.width).toBe('1200px');
 });
 
-it('<ScatterPlotImpl /> should update container width on window resize', () => {
+it('<ScatterPlot /> should update container width on window resize', () => {
   const calculateContainerWidth = jest.fn().mockReturnValue(1200).mockReturnValue(700);
   const wrapper = mount(
-    <ScatterPlotImpl
+    <ScatterPlot
       calculateContainerWidth={calculateContainerWidth}
       data={sampleData}
       onValueClick={() => null}
@@ -139,4 +121,25 @@ it('<ScatterPlotImpl /> should update container width on window resize', () => {
   const xyPlot = wrapper.find(XYPlot).getDOMNode();
 
   expect(xyPlot.style.width).toBe('700px');
+});
+
+it('<ScatterPlot /> should render Hint correctly', () => {
+  const wrapper = mount(
+    <ScatterPlot calculateContainerWidth={() => 1200} data={sampleData} onValueClick={() => null} />
+  );
+  expect(wrapper).toBeDefined();
+
+  const markSeries = wrapper.find(MarkSeries);
+  expect(markSeries.length).toEqual(1);
+
+  const circle = wrapper.find('.rv-xy-plot__series--mark circle:first-child');
+  expect(circle.length).toEqual(1);
+
+  circle.simulate('mouseOver');
+  const hint = wrapper.find(Hint);
+  expect(hint.length).toEqual(1);
+
+  circle.simulate('mouseOut');
+  const noHint = wrapper.find(Hint);
+  expect(noHint.length).toEqual(0);
 });
