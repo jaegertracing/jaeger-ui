@@ -194,7 +194,7 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
           </div>
         </TimelineRow.Cell>
         <TimelineRow.Cell
-          className="span-view2"
+          className="span-view23"
           style={{ cursor: 'pointer' }}
           width={1 - columnDivision}
           onClick={this._detailToggle}
