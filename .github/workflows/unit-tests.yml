@@ -2,10 +2,10 @@ name: "Unit Tests"
 
 on:
   push:
-    branches: [dom]
+    branches: [main]
 
   pull_request:
-    branches: [dom]
+    branches: [main]
 
 jobs:
   unit-tests:
