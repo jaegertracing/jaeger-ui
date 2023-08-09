@@ -17,9 +17,9 @@ import ShallowRenderer from 'react-test-renderer/shallow';
 import { isFragment, isLazy, isPortal, isMemo, isSuspense, isForwardRef } from 'react-is';
 
 class ReactShallowRenderer {
-  instance = null;
-  shallowRenderer = null;
-  constructor(children, { Wrapper = null } = {}) {
+  constructor(children, options) {
+    const localOptions = options === undefined ? {} : options;
+    const Wrapper = localOptions.Wrapper || null;
     this.shallowRenderer = new ShallowRenderer();
     this.shallowWrapper = Wrapper
       ? this.shallowRenderer.render(<Wrapper>{children}</Wrapper>)
@@ -28,6 +28,7 @@ class ReactShallowRenderer {
 
   getRenderOutput() {
     if (!this.shallowWrapper) return this.shallowWrapper;
+
     const getNodeName = node => {
       return node.displayName || node.name || '';
     };
@@ -68,7 +69,7 @@ class ReactShallowRenderer {
     };
 
     const transformNode = node => {
-      const extractProps = ({ children, ...props } = {}, key) => {
+      const extractProps = ({ children, ...props }, key) => {
         const childrenArray = Array.isArray(children) ? children : [children];
         return {
           children: childrenArray.filter(Boolean).flatMap(transformNode),
@@ -85,7 +86,6 @@ class ReactShallowRenderer {
         return node;
       }
       return {
-        // this symbol is used by Jest to prettify serialized React test objects: https://github.com/facebook/jest/blob/e0b33b74b5afd738edc183858b5c34053cfc26dd/packages/pretty-format/src/plugins/ReactTestComponent.ts
         $$typeof: Symbol.for('react.test.json'),
         type: extractType(node),
         ...extractProps(node.props, node.key),
