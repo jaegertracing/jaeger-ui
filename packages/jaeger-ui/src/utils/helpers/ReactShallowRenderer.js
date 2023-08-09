@@ -17,84 +17,78 @@ import React from 'react';
 import ShallowRenderer from 'react-test-renderer/shallow';
 import { isFragment, isLazy, isPortal, isMemo, isSuspense, isForwardRef } from 'react-is';
 
-class ReactShallowRenderer {
-  constructor(children, options) {
-    const localOptions = options === undefined ? {} : options;
-    const Wrapper = localOptions.Wrapper || null;
-    this.shallowRenderer = new ShallowRenderer();
-    this.shallowWrapper = Wrapper
-      ? this.shallowRenderer.render(<Wrapper>{children}</Wrapper>)
-      : this.shallowRenderer.render(children);
-  }
+const shallow = (element, options) => {
+  const localOptions = options === undefined ? {} : options;
+  const Wrapper = localOptions.Wrapper || null;
+  const shallowRenderer = new ShallowRenderer();
+  const shallowWrapper = Wrapper
+    ? shallowRenderer.render(<Wrapper>{element}</Wrapper>)
+    : shallowRenderer.render(element);
 
-  getRenderOutput() {
-    if (!this.shallowWrapper) return this.shallowWrapper;
+  const getNodeName = node => {
+    return node.displayName || node.name || '';
+  };
 
-    const getNodeName = node => {
-      return node.displayName || node.name || '';
-    };
+  const getWrappedName = (outerNode, innerNode, wrapperName) => {
+    const functionName = getNodeName(innerNode);
+    return (
+      outerNode.type.displayName || (functionName !== '' ? `${wrapperName}(${functionName})` : wrapperName)
+    );
+  };
 
-    const getWrappedName = (outerNode, innerNode, wrapperName) => {
-      const functionName = getNodeName(innerNode);
-      return (
-        outerNode.type.displayName || (functionName !== '' ? `${wrapperName}(${functionName})` : wrapperName)
-      );
-    };
+  const extractType = node => {
+    if (typeof node === 'string') return node;
+    const name = getNodeName(node.type) || node.type || 'Component';
+    if (isLazy(node)) {
+      return 'Lazy';
+    }
 
-    const extractType = node => {
-      if (typeof node === 'string') return node;
-      const name = getNodeName(node.type) || node.type || 'Component';
-      if (isLazy(node)) {
-        return 'Lazy';
-      }
+    if (isMemo(node)) {
+      return `Memo(${name || extractType(node.type)})`;
+    }
 
-      if (isMemo(node)) {
-        return `Memo(${name || extractType(node.type)})`;
-      }
+    if (isSuspense(node)) {
+      return 'Suspense';
+    }
 
-      if (isSuspense(node)) {
-        return 'Suspense';
-      }
+    if (isPortal(node)) {
+      return 'Portal';
+    }
 
-      if (isPortal(node)) {
-        return 'Portal';
-      }
+    if (isFragment(node)) {
+      return 'Fragment';
+    }
+    if (isForwardRef(node)) {
+      return getWrappedName(node, node.type.render, 'ForwardRef');
+    }
+    return name;
+  };
 
-      if (isFragment(node)) {
-        return 'Fragment';
-      }
-      if (isForwardRef(node)) {
-        return getWrappedName(node, node.type.render, 'ForwardRef');
-      }
-      return name;
-    };
-
-    const transformNode = node => {
-      const extractProps = ({ children, ...props }, key) => {
-        const childrenArray = Array.isArray(children) ? children : [children];
-        return {
-          children: childrenArray.filter(Boolean).flatMap(transformNode),
-          props: {
-            ...props,
-            ...(key ? { key } : {}),
-          },
-        };
-      };
-      if (Array.isArray(node)) {
-        return node.map(transformNode);
-      }
-      if (typeof node !== 'object') {
-        return node;
-      }
+  const transformNode = current => {
+    const extractProps = ({ children, ...props }, key) => {
+      const childrenArray = Array.isArray(children) ? children : [children];
       return {
-        $$typeof: Symbol.for('react.test.json'),
-        type: extractType(node),
-        ...extractProps(node.props, node.key),
+        children: childrenArray.filter(Boolean).map(transformNode),
+        props: {
+          ...props,
+          ...(key ? { key } : {}),
+        },
       };
     };
+    if (Array.isArray(current)) {
+      return current.map(transformNode);
+    }
+    if (typeof current !== 'object') {
+      return current;
+    }
+    return {
+      $$typeof: Symbol.for('react.test.json'),
+      type: extractType(current),
+      ...extractProps(current.props, current.key),
+    };
+  };
 
-    return transformNode(this.shallowWrapper);
-  }
-}
+  return transformNode(shallowWrapper);
+};
 
-export default ReactShallowRenderer;
+export default shallow;

@@ -14,7 +14,7 @@
 
 import React from 'react';
 import ScoreCard from './ScoreCard';
-import ReactShallowRenderer from '../../utils/helpers/ReactShallowRenderer';
+import shallow from '../../utils/helpers/ReactShallowRenderer';
 
 describe('ScoreCard', () => {
   const link = 'test.link';
@@ -24,52 +24,46 @@ describe('ScoreCard', () => {
 
   it('renders as expected when score is below max', () => {
     expect(
-      new ReactShallowRenderer(
-        (
-          <ScoreCard
-            link={link}
-            score={{
-              label,
-              max,
-              value,
-            }}
-          />
-        )
-      ).getRenderOutput()
+      shallow(
+        <ScoreCard
+          link={link}
+          score={{
+            label,
+            max,
+            value,
+          }}
+        />
+      )
     ).toMatchSnapshot();
   });
 
   it('renders as expected when score is max', () => {
     expect(
-      new ReactShallowRenderer(
-        (
-          <ScoreCard
-            link={link}
-            score={{
-              label,
-              max,
-              value: max,
-            }}
-          />
-        )
-      ).getRenderOutput()
+      shallow(
+        <ScoreCard
+          link={link}
+          score={{
+            label,
+            max,
+            value: max,
+          }}
+        />
+      )
     ).toMatchSnapshot();
   });
 
   it('renders as expected when score is zero', () => {
     expect(
-      new ReactShallowRenderer(
-        (
-          <ScoreCard
-            link={link}
-            score={{
-              label,
-              max,
-              value: 0,
-            }}
-          />
-        )
-      ).getRenderOutput()
+      shallow(
+        <ScoreCard
+          link={link}
+          score={{
+            label,
+            max,
+            value: 0,
+          }}
+        />
+      )
     ).toMatchSnapshot();
   });
 });
