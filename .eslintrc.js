@@ -77,6 +77,12 @@ module.exports = {
     'no-self-compare': 0,
     'no-underscore-dangle': 0,
     'prefer-destructuring': 0,
+    
+    /* tsx */
+    "@typescript-eslint/no-var-requires": 1,
+    "@typescript-eslint/no-empty-function": 1,
+    "@typescript-eslint/ban-types": 1,
+    "@typescript-eslint/ban-ts-comment": 1,
 
     /* jsx */
     'jsx-a11y/anchor-is-valid': 0,

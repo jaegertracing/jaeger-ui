@@ -49,7 +49,7 @@ export default function TraceName(props: Props) {
   } else if (state === fetchedState.LOADING) {
     title = <LoadingIndicator small />;
   } else {
-    const text: string = String(traceName || FALLBACK_TRACE_NAME);
+    const text = String(traceName || FALLBACK_TRACE_NAME);
     title = <BreakableText text={text} />;
   }
   return <span className={`TraceName ${errorCssClass} ${className || ''}`}>{title}</span>;

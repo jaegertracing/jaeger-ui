@@ -83,7 +83,7 @@ export const _makeColumns = ({ defs, rows }: { defs: TColumnDefs; rows: TRow[] }
   defs.map((def: TColumnDef | string) => {
     let dataIndex: string;
     let key: string;
-    let sortable: boolean = true;
+    let sortable = true;
     let style: React.CSSProperties | undefined;
     let title: string;
     if (typeof def === 'string') {

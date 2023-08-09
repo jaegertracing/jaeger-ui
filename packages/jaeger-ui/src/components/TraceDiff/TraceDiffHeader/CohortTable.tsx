@@ -36,7 +36,7 @@ const { Column } = Table;
 
 const defaultRowSelection = {
   hideDefaultSelections: true,
-  type: 'radio' as 'radio',
+  type: 'radio' as const,
 };
 
 export const NEED_MORE_TRACES_MESSAGE = (
