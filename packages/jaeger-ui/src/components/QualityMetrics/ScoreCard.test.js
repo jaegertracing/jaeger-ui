@@ -13,8 +13,8 @@
 // limitations under the License.
 
 import React from 'react';
-import { render } from '@testing-library/react';
 import ScoreCard from './ScoreCard';
+import ReactShallowRenderer from '../../utils/helpers/ReactShallowRenderer';
 
 describe('ScoreCard', () => {
   const link = 'test.link';
@@ -24,46 +24,52 @@ describe('ScoreCard', () => {
 
   it('renders as expected when score is below max', () => {
     expect(
-      render(
-        <ScoreCard
-          link={link}
-          score={{
-            label,
-            max,
-            value,
-          }}
-        />
-      ).container
+      new ReactShallowRenderer(
+        (
+          <ScoreCard
+            link={link}
+            score={{
+              label,
+              max,
+              value,
+            }}
+          />
+        )
+      ).getRenderOutput()
     ).toMatchSnapshot();
   });
 
   it('renders as expected when score is max', () => {
     expect(
-      render(
-        <ScoreCard
-          link={link}
-          score={{
-            label,
-            max,
-            value: max,
-          }}
-        />
-      ).container
+      new ReactShallowRenderer(
+        (
+          <ScoreCard
+            link={link}
+            score={{
+              label,
+              max,
+              value: max,
+            }}
+          />
+        )
+      ).getRenderOutput()
     ).toMatchSnapshot();
   });
 
   it('renders as expected when score is zero', () => {
     expect(
-      render(
-        <ScoreCard
-          link={link}
-          score={{
-            label,
-            max,
-            value: 0,
-          }}
-        />
-      ).container
+      new ReactShallowRenderer(
+        (
+          <ScoreCard
+            link={link}
+            score={{
+              label,
+              max,
+              value: 0,
+            }}
+          />
+        )
+      ).getRenderOutput()
     ).toMatchSnapshot();
   });
 });

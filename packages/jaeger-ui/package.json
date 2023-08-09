@@ -38,6 +38,8 @@
     "jest-environment-jsdom": "^29.5.0",
     "jest-junit": "^16.0.0",
     "less": "3.13.1",
+    "react-is": "^18.2.0",
+    "react-shallow-renderer": "^16.15.0",
     "react-test-renderer": "^18.2.0",
     "rollup-plugin-visualizer": "^5.9.0",
     "sinon": "7.3.2",
