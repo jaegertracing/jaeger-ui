@@ -14,14 +14,14 @@
 
 import test2 from '../testCases/test2';
 import test5 from '../testCases/test5';
-import removeFollowFromChildSpans from './removeFollowFromChildSpans';
+import getChildOfSpans from './getChildOfSpans';
 import sanitizeOverFlowingChildren from './sanitizeOverFlowingChildren';
 
-describe('removeFollowFromChildSpans', () => {
+describe('getChildOfSpans', () => {
   it('Should not remove CHILD_OF child spans if there are any', () => {
     const expectedRefinedSpanData = [...test2.trace.spans];
     const sanitizedData = sanitizeOverFlowingChildren(test2.trace.spans);
-    const refinedSpanData = removeFollowFromChildSpans(sanitizedData);
+    const refinedSpanData = getChildOfSpans(sanitizedData);
 
     expect(refinedSpanData.length).toBe(3);
     expect(refinedSpanData).toStrictEqual(expectedRefinedSpanData);
@@ -30,7 +30,7 @@ describe('removeFollowFromChildSpans', () => {
     const expectedRefinedSpanData = [test5.trace.spans[0]];
     expectedRefinedSpanData[0].childSpanIds = [];
     const sanitizedData = sanitizeOverFlowingChildren(test5.trace.spans);
-    const refinedSpanData = removeFollowFromChildSpans(sanitizedData);
+    const refinedSpanData = getChildOfSpans(sanitizedData);
 
     expect(refinedSpanData.length).toBe(1);
     expect(refinedSpanData).toStrictEqual(expectedRefinedSpanData);

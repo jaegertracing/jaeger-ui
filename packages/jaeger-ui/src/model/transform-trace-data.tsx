@@ -138,7 +138,11 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     // Get the childSpanIds sorted based on endTime without changing tree structure
     span.childSpanIds = node.children
       .slice()
-      .sort((a, b) => b.endTime - a.endTime)
+      .sort((a, b) => {
+        const spanA = spanMap.get(a.value)!;
+        const spanB = spanMap.get(b.value)!;
+        return spanB.startTime + spanB.duration - (spanA.startTime + spanA.duration);
+      })
       .map(each => each.value);
     span.warnings = span.warnings || [];
     span.tags = span.tags || [];

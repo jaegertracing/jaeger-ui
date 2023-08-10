@@ -15,7 +15,7 @@
 import { Span } from '../../../../types/trace';
 
 // This function removes child spans whose refType is FOLLOWS_FROM
-const removeFollowFromChildSpans = (spans: Span[]): Span[] => {
+const getChildOfSpans = (spans: Span[]): Span[] => {
   let refinedSpanData: Span[] = [];
   const droppedSpans: String[] = [];
   spans.forEach(span => {
@@ -33,4 +33,4 @@ const removeFollowFromChildSpans = (spans: Span[]): Span[] => {
   return refinedSpanData;
 };
 
-export default removeFollowFromChildSpans;
+export default getChildOfSpans;
