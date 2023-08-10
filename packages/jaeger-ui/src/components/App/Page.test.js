@@ -17,7 +17,7 @@ jest.mock('./TopNav', () => () => <div />);
 jest.mock('../../utils/tracking');
 
 import React from 'react';
-import { mount } from 'enzyme';
+import { render } from '@testing-library/react';
 
 import { mapStateToProps, PageImpl as Page } from './Page';
 import { trackPageView } from '../../utils/tracking';
@@ -35,7 +35,6 @@ describe('mapStateToProps()', () => {
 
 describe('<Page>', () => {
   let props;
-  let wrapper;
 
   beforeEach(() => {
     trackPageView.mockReset();
@@ -43,23 +42,24 @@ describe('<Page>', () => {
       pathname: String(Math.random()),
       search: String(Math.random()),
     };
-    wrapper = mount(<Page {...props} />);
   });
 
-  it('does not explode', () => {
-    expect(wrapper).toBeDefined();
+  it('renders without exploding', () => {
+    render(<Page {...props} />);
   });
 
   it('tracks an initial page-view', () => {
     const { pathname, search } = props;
-    expect(trackPageView.mock.calls).toEqual([[pathname, search]]);
+    render(<Page {...props} />);
+    expect(trackPageView).toHaveBeenCalledWith(pathname, search);
   });
 
   it('tracks a pageView when the location changes', () => {
     trackPageView.mockReset();
-    props = { pathname: 'le-path', search: 'searching' };
-    wrapper.setProps(props);
-    expect(trackPageView.mock.calls).toEqual([[props.pathname, props.search]]);
+    const newProps = { pathname: 'le-path', search: 'searching' };
+    const { rerender } = render(<Page {...props} />);
+    rerender(<Page {...newProps} />);
+    expect(trackPageView).toHaveBeenCalledWith(newProps.pathname, newProps.search);
   });
 
   describe('Page embedded', () => {
@@ -69,15 +69,15 @@ describe('<Page>', () => {
         pathname: String(Math.random()),
         search: 'hideGraph',
       };
-      wrapper = mount(<Page embedded {...props} />);
     });
 
-    it('does not explode', () => {
-      expect(wrapper).toBeDefined();
+    it('renders without exploding', () => {
+      render(<Page embedded {...props} />);
     });
 
     it('does not render Header', () => {
-      expect(wrapper.find('Header').length).toBe(0);
+      const { queryByText } = render(<Page embedded {...props} />);
+      expect(queryByText('Header')).toBeNull();
     });
   });
 });
