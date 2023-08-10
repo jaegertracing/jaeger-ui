@@ -89,4 +89,20 @@ describe('<SpanBar>', () => {
     const wrapper = mount(<SpanBar {...props} />);
     expect(wrapper.find(Popover).length).toEqual(2);
   });
+
+  it('Critical Path is rendered', () => {
+    const newProps = {
+      ...props,
+      criticalPath: [
+        {
+          spanId: 'Test-SpanId',
+          section_start: 10,
+          section_end: 20,
+        },
+      ],
+      getViewedBounds: () => ({ start: 0.1, end: 0.5 }),
+    };
+    const wrapper = mount(<SpanBar {...newProps} />);
+    expect(wrapper.find('.SpanBar--criticalPath').length).toEqual(1);
+  });
 });
