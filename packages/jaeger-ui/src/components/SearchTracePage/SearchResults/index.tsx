@@ -93,6 +93,11 @@ const SelectSort = reduxForm({
 
 export const sortFormSelector = formValueSelector('traceResultsSort');
 
+// export for tests
+export function createBlob(rawTraces: TraceData[]) {
+  return new Blob([`{"data":${JSON.stringify(rawTraces)}}`], { type: 'application/json' });
+}
+
 export class UnconnectedSearchResults extends React.PureComponent<SearchResultsProps & RouteComponentProps> {
   static defaultProps = { skipMessage: false, spanLinks: undefined, queryOfResults: undefined };
 
@@ -238,10 +243,6 @@ export class UnconnectedSearchResults extends React.PureComponent<SearchResultsP
       </div>
     );
   }
-}
-// export for tests
-export function createBlob(rawTraces: TraceData[]) {
-  return new Blob([`{"data":${JSON.stringify(rawTraces)}}`], { type: 'application/json' });
 }
 
 export default withRouter(UnconnectedSearchResults);
