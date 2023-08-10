@@ -43,6 +43,6 @@ export default class HtmlLayer<T = {}, U = {}> extends React.PureComponent<TProp
       zoomStyle,
       getProps(setOnContainer, graphState)
     );
-    return <div {...containerProps}></div>;
+    return <div {...containerProps}>{children}</div>;
   }
 }
