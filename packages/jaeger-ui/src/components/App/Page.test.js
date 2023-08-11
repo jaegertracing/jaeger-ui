@@ -17,7 +17,8 @@ jest.mock('./TopNav', () => () => <div />);
 jest.mock('../../utils/tracking');
 
 import React from 'react';
-import { render } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
+import '@testing-library/jest-dom';
 
 import { mapStateToProps, PageImpl as Page } from './Page';
 import { trackPageView } from '../../utils/tracking';
@@ -42,15 +43,15 @@ describe('<Page>', () => {
       pathname: String(Math.random()),
       search: String(Math.random()),
     };
+    render(<Page {...props} />);
   });
 
   it('renders without exploding', () => {
-    render(<Page {...props} />);
+    expect(screen.getByRole('banner')).toBeInTheDocument();
   });
 
   it('tracks an initial page-view', () => {
     const { pathname, search } = props;
-    render(<Page {...props} />);
     expect(trackPageView).toHaveBeenCalledWith(pathname, search);
   });
 
@@ -69,15 +70,15 @@ describe('<Page>', () => {
         pathname: String(Math.random()),
         search: 'hideGraph',
       };
-    });
-
-    it('renders without exploding', () => {
       render(<Page embedded {...props} />);
     });
 
+    it('renders without exploding', () => {
+      expect(screen.getByRole('banner')).toBeInTheDocument();
+    });
+
     it('does not render Header', () => {
-      const { queryByText } = render(<Page embedded {...props} />);
-      expect(queryByText('Header')).toBeNull();
+      expect(screen.queryByText('Header')).toBeNull();
     });
   });
 });
