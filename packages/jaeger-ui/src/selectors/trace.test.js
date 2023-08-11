@@ -13,7 +13,6 @@
 // limitations under the License.
 
 import { followsFromRef } from './trace.fixture';
-import { getSpanId } from './span';
 import * as traceSelectors from './trace';
 import traceGenerator from '../demo/trace-generators';
 
@@ -21,7 +20,7 @@ const generatedTrace = traceGenerator.trace({ numberOfSpans: 45 });
 
 describe('getTraceSpanIdsAsTree()', () => {
   const getTraceSpansAsMap = trace =>
-    trace.spans.reduce((map, span) => map.set(getSpanId(span), span), new Map());
+    trace.spans.reduce((map, span) => map.set(span.spanID, span), new Map());
   it('builds the tree properly', () => {
     const tree = traceSelectors.getTraceSpanIdsAsTree(generatedTrace);
     const spanMap = getTraceSpansAsMap(generatedTrace);
