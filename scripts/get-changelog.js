@@ -16,14 +16,11 @@
 
 // This code will generate changelog entries
 
-const { readFile } = require('fs');
-// eslint-disable-next-line import/no-extraneous-dependencies
-const fetch = require('isomorphic-fetch');
+const { readFile } = require('fs').promises;
 // eslint-disable-next-line import/no-extraneous-dependencies
 const jsdom = require('jsdom');
-const { promisify } = require('util');
 
-const readFilePromise = promisify(readFile);
+const readFilePromise = readFile;
 
 const DOMAIN = 'https://github.com/';
 const JAEGER_REPO = process.env.JAEGER_REPO || 'jaeger-ui';

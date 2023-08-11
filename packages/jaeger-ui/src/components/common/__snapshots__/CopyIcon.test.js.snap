@@ -5,9 +5,9 @@ exports[`<CopyIcon /> renders as expected 1`] = `
   arrowPointAtCenter={true}
   autoAdjustOverflow={true}
   mouseEnterDelay={0.1}
-  mouseLeaveDelay={0.1}
+  mouseLeaveDelay={0}
   onVisibleChange={[Function]}
-  placement="left"
+  placement="top"
   title="tooltipTitleValue"
   transitionName="zoom-big-fast"
 >

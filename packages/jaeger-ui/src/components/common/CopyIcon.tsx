@@ -38,7 +38,7 @@ export default class CopyIcon extends React.PureComponent<PropsType, StateType> 
   static defaultProps: Partial<PropsType> = {
     className: undefined,
     icon: 'copy',
-    placement: 'left',
+    placement: 'top',
   };
 
   state = {
@@ -64,7 +64,7 @@ export default class CopyIcon extends React.PureComponent<PropsType, StateType> 
     return (
       <Tooltip
         arrowPointAtCenter
-        mouseLeaveDelay={0.1}
+        mouseLeaveDelay={0}
         onVisibleChange={this.handleTooltipVisibilityChange}
         placement={this.props.placement}
         title={this.state.hasCopied ? 'Copied' : this.props.tooltipTitle}

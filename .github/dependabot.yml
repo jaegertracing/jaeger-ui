@@ -5,8 +5,20 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
-    # we have too many dependency PRs today
+    # we have too many dependency PRs today to rebase automatically
     rebase-strategy: "disabled"
+    groups:
+      babel:
+        patterns:
+          - "@babel/*"
+          - "babel-loader"
+      typescript-eslint:
+        patterns:
+          - "@typescript-eslint/*"
+      vite:
+        patterns:
+          - "vite"
+          - "@vitejs/*"
 
   - package-ecosystem: "github-actions"
     directory: "/"
