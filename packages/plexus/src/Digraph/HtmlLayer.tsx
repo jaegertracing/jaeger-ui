@@ -13,13 +13,14 @@
 // limitations under the License.
 
 import * as React from 'react';
-
+import {ReactNode} from 'react'
 import { TSetOnContainer, TExposedGraphState } from './types';
 import { assignMergeCss, getProps } from './utils';
 import ZoomManager from '../zoom/ZoomManager';
 
 type TProps<T = {}, U = {}> = Record<string, unknown> &
   TSetOnContainer<T, U> & {
+    children: ReactNode;
     classNamePart: string;
     getClassName: (name: string) => string;
     graphState: TExposedGraphState<T, U>;

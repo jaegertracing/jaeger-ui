@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import * as React from 'react';
-
+import {ReactNode} from 'react'
 import SvgDefEntry from './SvgDefEntry';
 import { TSetOnContainer, TExposedGraphState, TDefEntry } from './types';
 import { assignMergeCss, getProps } from './utils';
@@ -22,6 +22,7 @@ import ZoomManager from '../zoom/ZoomManager';
 
 type TProps<T = {}, U = {}> = Record<string, unknown> &
   TSetOnContainer<T, U> & {
+    children: ReactNode;
     classNamePart: string;
     getClassName: (name: string) => string;
     defs?: TNonEmptyArray<TDefEntry<T, U>>;
@@ -73,7 +74,7 @@ export default class SvgLayer<T = {}, U = {}> extends React.PureComponent<TProps
             ))}
           </defs>
         )}
-      {children}
+        {children}
       </g>
     );
     if (extraWrapper) {
