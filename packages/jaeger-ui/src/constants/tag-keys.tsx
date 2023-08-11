@@ -12,6 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export const HTTP_METHOD = 'http.method' as const;
-export const PEER_SERVICE = 'peer.service' as const;
-export const SPAN_KIND = 'span.kind' as const;
+export const HTTP_METHOD = 'http.method';
+export const PEER_SERVICE = 'peer.service';
+export const SPAN_KIND = 'span.kind';
