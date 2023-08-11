@@ -282,6 +282,7 @@ export default class TraceStatistics extends Component<Props, State> {
         if (val.attribute === 'name')
           return (
             <span
+              role="button"
               onClick={() => onClickOption(row.hasSubgroupValue, row.name)}
               style={{
                 borderLeft: `4px solid ${row.color || `transparent`}`,

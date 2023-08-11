@@ -175,8 +175,11 @@ describe('<SearchResults>', () => {
 
       it('when click on DownloadResults then call download function', () => {
         const originalBlob = global.Blob;
-        global.Blob = function (text, options) {
-          return { text, options };
+        global.Blob = class {
+          constructor(text, options) {
+            this.text = text;
+            this.options = options;
+          }
         };
         URL.createObjectURL = jest.fn();
         URL.revokeObjectURL = jest.fn();
