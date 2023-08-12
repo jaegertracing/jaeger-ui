@@ -20,7 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-// NOTICE: do not shallow() for snapshot testing if possible.
+// NOTICE: do not use shallow() for snapshot testing if possible.
 
 /* eslint-disable import/no-extraneous-dependencies */
 import React from 'react';
