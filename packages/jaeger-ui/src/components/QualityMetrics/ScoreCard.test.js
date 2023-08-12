@@ -14,7 +14,7 @@
 
 import React from 'react';
 import ScoreCard from './ScoreCard';
-import shallow from '../../utils/helpers/ReactShallowRenderer.js';
+import shallow from '../../utils/ReactShallowRenderer.test.js';
 
 describe('ScoreCard', () => {
   const link = 'test.link';
