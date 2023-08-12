@@ -74,7 +74,7 @@ export default class SvgLayer<T = {}, U = {}> extends React.PureComponent<TProps
             ))}
           </defs>
         )}
-      {children}
+        {children}
       </g>
     );
     if (extraWrapper) {
