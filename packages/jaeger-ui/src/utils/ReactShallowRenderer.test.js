@@ -20,10 +20,18 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+// NOTICE: do not shallow() for snapshot testing if possible.
+
 /* eslint-disable import/no-extraneous-dependencies */
 import React from 'react';
 import ShallowRenderer from 'react-test-renderer/shallow';
 import { isFragment, isLazy, isPortal, isMemo, isSuspense, isForwardRef } from 'react-is';
+
+describe('dummy test', () => {
+  it('dummy test', () => {
+    // this file defines a helper module for use in other tests.
+  });
+});
 
 const shallow = (element, options) => {
   const localOptions = options === undefined ? {} : options;
