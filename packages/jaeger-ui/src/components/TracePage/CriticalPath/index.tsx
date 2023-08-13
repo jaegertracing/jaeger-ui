@@ -24,9 +24,9 @@ export const computeCriticalPath = (
   spanId: string,
   criticalPath: criticalPathSection[],
   spawnTime?: number
-) => {
+): criticalPathSection[] => {
   // spawnTime refers to spawn synchronization event of current span
-  const currentSpan: Span = traceData.spans.filter(span => span.spanID === spanId)[0];
+  const currentSpan: Span = traceData.spans.find(span => span.spanID === spanId)!;
 
   const lastFinishingChildSpanId = findLastFinishingChildSpanId(traceData, currentSpan, spawnTime);
   let spanCriticalSection: criticalPathSection;
