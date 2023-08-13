@@ -80,7 +80,7 @@ const sanitizeOverFlowingChildren = (spans: Span[]): Span[] => {
           default:
             // Never reaches to default
             // Something unexpected happened
-            break;
+            throw RangeError(`Error while computing Critical Path Algorithm.`);
         }
       }
     }
