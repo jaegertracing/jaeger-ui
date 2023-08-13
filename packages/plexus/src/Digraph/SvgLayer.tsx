@@ -22,7 +22,7 @@ import ZoomManager from '../zoom/ZoomManager';
 
 type TProps<T = {}, U = {}> = Record<string, unknown> &
   TSetOnContainer<T, U> & {
-    children: ReactNode
+    children: ReactNode;
     classNamePart: string;
     getClassName: (name: string) => string;
     defs?: TNonEmptyArray<TDefEntry<T, U>>;
