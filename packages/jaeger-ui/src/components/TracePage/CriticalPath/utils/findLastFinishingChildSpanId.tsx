@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { Span, Trace } from '../../../../types/trace';
+import { Span } from '../../../../types/trace';
 
 /**
  * This function finds the Last Finishing Child (LFC) span of a given current span
@@ -29,13 +29,15 @@ import { Span, Trace } from '../../../../types/trace';
  *                   need to find the Last Finishing Child span of the current span.
  */
 const findLastFinishingChildSpanId = (
-  traceData: Trace,
+  spanMap: Map<string, Span>,
   currentSpan: Span,
   spawnTime?: number
 ): string | undefined => {
   if (spawnTime) {
-    return currentSpan.childSpanIds.find(each =>
-      traceData.spans.some(span => span.spanID === each && span.startTime + span.duration < spawnTime)
+    return currentSpan.childSpanIds.find(
+      each =>
+        // Look up the span using the map
+        spanMap.has(each) && spanMap.get(each)!.startTime + spanMap.get(each)!.duration < spawnTime
     );
   }
   return currentSpan.childSpanIds ? currentSpan.childSpanIds[0] : undefined;

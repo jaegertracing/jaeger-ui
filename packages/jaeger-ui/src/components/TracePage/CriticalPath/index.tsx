@@ -21,6 +21,7 @@ import sanitizeOverFlowingChildren from './utils/sanitizeOverFlowingChildren';
 
 export const computeCriticalPath = (
   traceData: Trace,
+  spanMap: Map<string, Span>,
   spanId: string,
   criticalPath: criticalPathSection[],
   spawnTime?: number
@@ -28,7 +29,7 @@ export const computeCriticalPath = (
   // spawnTime refers to spawn synchronization event of current span
   const currentSpan: Span = traceData.spans.find(span => span.spanID === spanId)!;
 
-  const lastFinishingChildSpanId = findLastFinishingChildSpanId(traceData, currentSpan, spawnTime);
+  const lastFinishingChildSpanId = findLastFinishingChildSpanId(spanMap, currentSpan, spawnTime);
   let spanCriticalSection: criticalPathSection;
 
   if (lastFinishingChildSpanId) {
@@ -42,7 +43,7 @@ export const computeCriticalPath = (
       criticalPath.push(spanCriticalSection);
     }
     // Now lfc turns to the currentspan and we again do the same algorithm
-    computeCriticalPath(traceData, lastFinishingChildSpanId, criticalPath);
+    computeCriticalPath(traceData, spanMap, lastFinishingChildSpanId, criticalPath);
   } else {
     // If there is no last finishing child then total section upto startTime of span is on critical path
     spanCriticalSection = {
@@ -58,7 +59,7 @@ export const computeCriticalPath = (
       const parentSpan: string = currentSpan.references.filter(
         reference => reference.refType === 'CHILD_OF'
       )[0].spanID;
-      computeCriticalPath(traceData, parentSpan, criticalPath, currentSpan.startTime);
+      computeCriticalPath(traceData, spanMap, parentSpan, criticalPath, currentSpan.startTime);
     }
   }
   return criticalPath;
@@ -73,7 +74,11 @@ function TraceCriticalPath(trace: Trace) {
     const sanitizedSpanData = sanitizeOverFlowingChildren(trace.spans);
     const refinedSpanData = getChildOfSpans(sanitizedSpanData);
     traceData = { ...traceData, spans: refinedSpanData };
-    criticalPath = computeCriticalPath(traceData, rootSpanId, []);
+    const spanMap = refinedSpanData.reduce((map, span) => {
+      map.set(span.spanID, span);
+      return map;
+    }, new Map<string, Span>());
+    criticalPath = computeCriticalPath(traceData, spanMap, rootSpanId, []);
   }
   return criticalPath;
 }

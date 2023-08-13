@@ -29,8 +29,12 @@ describe.each([[test1], [test2], [test3], [test4], [test5], [test6], [test7]])('
     const sanitizedSpanData = sanitizeOverFlowingChildren(testProps.trace.spans);
     const refinedSpanData = getChildOfSpans(sanitizedSpanData);
     const traceData = { ...testProps.trace, spans: refinedSpanData };
+    const spanMap = refinedSpanData.reduce((map, span) => {
+      map.set(span.spanID, span);
+      return map;
+    }, new Map());
     const rootSpanId = findRootSpanId(traceData.spans);
-    const criticalPath = computeCriticalPath(traceData, rootSpanId, []);
+    const criticalPath = computeCriticalPath(traceData, spanMap, rootSpanId, []);
     expect(criticalPath).toStrictEqual(testProps.criticalPathSections);
   });
 
