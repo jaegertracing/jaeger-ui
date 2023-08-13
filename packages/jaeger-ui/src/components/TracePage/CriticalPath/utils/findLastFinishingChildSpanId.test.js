@@ -22,18 +22,16 @@ describe('findLastFinishingChildSpanId', () => {
   it('Should find lfc of a span correctly', () => {
     const sanitizedSpanData = sanitizeOverFlowingChildren(test1.trace.spans);
     const refinedSpanData = getChildOfSpans(sanitizedSpanData);
-    const traceData = { ...test1.trace, spans: refinedSpanData };
     const spanMap = refinedSpanData.reduce((map, span) => {
       map.set(span.spanID, span);
       return map;
     }, new Map());
 
-    let currentSpan = traceData.spans.filter(span => span.spanID === 'span-C')[0];
+    const currentSpan = spanMap.get('span-C');
     let lastFinishingChildSpanId = findLastFinishingChildSpanId(spanMap, currentSpan);
     expect(lastFinishingChildSpanId).toBe('span-E');
 
     // Second Case to check if it works with spawn time or not
-    currentSpan = traceData.spans.filter(span => span.spanID === 'span-C')[0];
     lastFinishingChildSpanId = findLastFinishingChildSpanId(spanMap, currentSpan, 50);
     expect(lastFinishingChildSpanId).toBe('span-D');
   });
@@ -41,18 +39,16 @@ describe('findLastFinishingChildSpanId', () => {
   it('Should find lfc of a span correctly', () => {
     const sanitizedSpanData = sanitizeOverFlowingChildren(test2.trace.spans);
     const refinedSpanData = getChildOfSpans(sanitizedSpanData);
-    const traceData = { ...test2.trace, spans: refinedSpanData };
     const spanMap = refinedSpanData.reduce((map, span) => {
       map.set(span.spanID, span);
       return map;
     }, new Map());
 
-    let currentSpan = traceData.spans.filter(span => span.spanID === 'span-X')[0];
+    const currentSpan = spanMap.get('span-X');
     let lastFinishingChildSpanId = findLastFinishingChildSpanId(spanMap, currentSpan);
     expect(lastFinishingChildSpanId).toBe('span-C');
 
     // Second Case to check if it works with spawn time or not
-    currentSpan = traceData.spans.filter(span => span.spanID === 'span-X')[0];
     lastFinishingChildSpanId = findLastFinishingChildSpanId(spanMap, currentSpan, 20);
     expect(lastFinishingChildSpanId).toBeUndefined();
   });

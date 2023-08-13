@@ -20,20 +20,19 @@ import findRootSpanId from './utils/findRootSpanId';
 import sanitizeOverFlowingChildren from './utils/sanitizeOverFlowingChildren';
 
 export const computeCriticalPath = (
-  traceData: Trace,
   spanMap: Map<string, Span>,
   spanId: string,
   criticalPath: criticalPathSection[],
   spawnTime?: number
 ): criticalPathSection[] => {
   // spawnTime refers to spawn synchronization event of current span
-  const currentSpan: Span = traceData.spans.find(span => span.spanID === spanId)!;
+  const currentSpan: Span = spanMap.get(spanId)!;
 
   const lastFinishingChildSpanId = findLastFinishingChildSpanId(spanMap, currentSpan, spawnTime);
   let spanCriticalSection: criticalPathSection;
 
   if (lastFinishingChildSpanId) {
-    const lfcSpan = traceData.spans.filter(span => span.spanID === lastFinishingChildSpanId)[0];
+    const lfcSpan = spanMap.get(lastFinishingChildSpanId)!;
     spanCriticalSection = {
       spanId: currentSpan.spanID,
       section_start: lfcSpan.startTime + lfcSpan.duration,
@@ -43,7 +42,7 @@ export const computeCriticalPath = (
       criticalPath.push(spanCriticalSection);
     }
     // Now lfc turns to the currentspan and we again do the same algorithm
-    computeCriticalPath(traceData, spanMap, lastFinishingChildSpanId, criticalPath);
+    computeCriticalPath(spanMap, lastFinishingChildSpanId, criticalPath);
   } else {
     // If there is no last finishing child then total section upto startTime of span is on critical path
     spanCriticalSection = {
@@ -59,26 +58,24 @@ export const computeCriticalPath = (
       const parentSpan: string = currentSpan.references.filter(
         reference => reference.refType === 'CHILD_OF'
       )[0].spanID;
-      computeCriticalPath(traceData, spanMap, parentSpan, criticalPath, currentSpan.startTime);
+      computeCriticalPath(spanMap, parentSpan, criticalPath, currentSpan.startTime);
     }
   }
   return criticalPath;
 };
 
 function TraceCriticalPath(trace: Trace) {
-  let traceData: Trace = trace;
   let criticalPath: criticalPathSection[] = [];
   const rootSpanId = findRootSpanId(trace.spans);
   // If there is root span then algorithm implements
   if (rootSpanId) {
     const sanitizedSpanData = sanitizeOverFlowingChildren(trace.spans);
     const refinedSpanData = getChildOfSpans(sanitizedSpanData);
-    traceData = { ...traceData, spans: refinedSpanData };
     const spanMap = refinedSpanData.reduce((map, span) => {
       map.set(span.spanID, span);
       return map;
     }, new Map<string, Span>());
-    criticalPath = computeCriticalPath(traceData, spanMap, rootSpanId, []);
+    criticalPath = computeCriticalPath(spanMap, rootSpanId, []);
   }
   return criticalPath;
 }

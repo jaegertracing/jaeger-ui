@@ -26,15 +26,14 @@ import test5 from './testCases/test5';
 
 describe.each([[test1], [test2], [test3], [test4], [test5], [test6], [test7]])('Happy Path', testProps => {
   it('Should find criticalPathSections correctly', () => {
+    const rootSpanId = findRootSpanId(testProps.trace.spans);
     const sanitizedSpanData = sanitizeOverFlowingChildren(testProps.trace.spans);
     const refinedSpanData = getChildOfSpans(sanitizedSpanData);
-    const traceData = { ...testProps.trace, spans: refinedSpanData };
     const spanMap = refinedSpanData.reduce((map, span) => {
       map.set(span.spanID, span);
       return map;
     }, new Map());
-    const rootSpanId = findRootSpanId(traceData.spans);
-    const criticalPath = computeCriticalPath(traceData, spanMap, rootSpanId, []);
+    const criticalPath = computeCriticalPath(spanMap, rootSpanId, []);
     expect(criticalPath).toStrictEqual(testProps.criticalPathSections);
   });
 
