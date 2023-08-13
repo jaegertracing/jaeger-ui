@@ -32,7 +32,6 @@
     "@wojtekmaj/enzyme-adapter-react-17": "^0.8.0",
     "babel-jest": "^29.5.0",
     "babel-plugin-inline-react-svg": "^2.0.2",
-    "bluebird": "^3.5.0",
     "enzyme": "^3.8.0",
     "enzyme-to-json": "^3.6.2",
     "jest": "^28.1.3",
