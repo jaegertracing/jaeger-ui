@@ -28,19 +28,22 @@ import { Span } from '../../../../types/trace';
  * @param spawnTime - The startTime of a subsequent span (like spanC) that triggers the
  *                   need to find the Last Finishing Child span of the current span.
  */
-const findLastFinishingChildSpanId = (
+const findLastFinishingChildSpan = (
   spanMap: Map<string, Span>,
   currentSpan: Span,
   spawnTime?: number
-): string | undefined => {
+): Span | undefined => {
+  let lastFinishingChildSpanId: string | undefined;
   if (spawnTime) {
-    return currentSpan.childSpanIds.find(
+    lastFinishingChildSpanId = currentSpan.childSpanIds.find(
       each =>
         // Look up the span using the map
         spanMap.has(each) && spanMap.get(each)!.startTime + spanMap.get(each)!.duration < spawnTime
     );
+  } else {
+    lastFinishingChildSpanId = currentSpan.childSpanIds[0];
   }
-  return currentSpan.childSpanIds ? currentSpan.childSpanIds[0] : undefined;
+  return lastFinishingChildSpanId ? spanMap.get(lastFinishingChildSpanId) : undefined;
 };
 
-export default findLastFinishingChildSpanId;
+export default findLastFinishingChildSpan;

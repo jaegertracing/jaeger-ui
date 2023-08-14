@@ -15,7 +15,7 @@
 import test1 from '../testCases/test1';
 import test2 from '../testCases/test2';
 import getChildOfSpans from './getChildOfSpans';
-import findLastFinishingChildSpanId from './findLastFinishingChildSpanId';
+import findLastFinishingChildSpanId from './findLastFinishingChildSpan';
 import sanitizeOverFlowingChildren from './sanitizeOverFlowingChildren';
 
 describe('findLastFinishingChildSpanId', () => {
@@ -28,12 +28,12 @@ describe('findLastFinishingChildSpanId', () => {
     }, new Map());
 
     const currentSpan = spanMap.get('span-C');
-    let lastFinishingChildSpanId = findLastFinishingChildSpanId(spanMap, currentSpan);
-    expect(lastFinishingChildSpanId).toBe('span-E');
+    let lastFinishingChildSpan = findLastFinishingChildSpanId(spanMap, currentSpan);
+    expect(lastFinishingChildSpan).toStrictEqual(spanMap.get('span-E'));
 
     // Second Case to check if it works with spawn time or not
-    lastFinishingChildSpanId = findLastFinishingChildSpanId(spanMap, currentSpan, 50);
-    expect(lastFinishingChildSpanId).toBe('span-D');
+    lastFinishingChildSpan = findLastFinishingChildSpanId(spanMap, currentSpan, 50);
+    expect(lastFinishingChildSpan).toStrictEqual(spanMap.get('span-D'));
   });
 
   it('Should find lfc of a span correctly', () => {
@@ -46,7 +46,7 @@ describe('findLastFinishingChildSpanId', () => {
 
     const currentSpan = spanMap.get('span-X');
     let lastFinishingChildSpanId = findLastFinishingChildSpanId(spanMap, currentSpan);
-    expect(lastFinishingChildSpanId).toBe('span-C');
+    expect(lastFinishingChildSpanId).toStrictEqual(spanMap.get('span-C'));
 
     // Second Case to check if it works with spawn time or not
     lastFinishingChildSpanId = findLastFinishingChildSpanId(spanMap, currentSpan, 20);

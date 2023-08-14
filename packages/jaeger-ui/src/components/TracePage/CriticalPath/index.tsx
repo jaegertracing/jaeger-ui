@@ -15,7 +15,7 @@
 import memoizeOne from 'memoize-one';
 import { Span, Trace, criticalPathSection } from '../../../types/trace';
 import getChildOfSpans from './utils/getChildOfSpans';
-import findLastFinishingChildSpanId from './utils/findLastFinishingChildSpanId';
+import findLastFinishingChildSpan from './utils/findLastFinishingChildSpan';
 import findRootSpanId from './utils/findRootSpanId';
 import sanitizeOverFlowingChildren from './utils/sanitizeOverFlowingChildren';
 
@@ -28,21 +28,20 @@ export const computeCriticalPath = (
   // spawnTime refers to spawn synchronization event of current span
   const currentSpan: Span = spanMap.get(spanId)!;
 
-  const lastFinishingChildSpanId = findLastFinishingChildSpanId(spanMap, currentSpan, spawnTime);
+  const lastFinishingChildSpan = findLastFinishingChildSpan(spanMap, currentSpan, spawnTime);
   let spanCriticalSection: criticalPathSection;
 
-  if (lastFinishingChildSpanId) {
-    const lfcSpan = spanMap.get(lastFinishingChildSpanId)!;
+  if (lastFinishingChildSpan) {
     spanCriticalSection = {
       spanId: currentSpan.spanID,
-      section_start: lfcSpan.startTime + lfcSpan.duration,
+      section_start: lastFinishingChildSpan.startTime + lastFinishingChildSpan.duration,
       section_end: spawnTime || currentSpan.startTime + currentSpan.duration,
     };
     if (spanCriticalSection.section_start !== spanCriticalSection.section_end) {
       criticalPath.push(spanCriticalSection);
     }
     // Now lfc turns to the currentspan and we again do the same algorithm
-    computeCriticalPath(spanMap, lastFinishingChildSpanId, criticalPath);
+    computeCriticalPath(spanMap, lastFinishingChildSpan.spanID, criticalPath);
   } else {
     // If there is no last finishing child then total section upto startTime of span is on critical path
     spanCriticalSection = {
@@ -55,10 +54,10 @@ export const computeCriticalPath = (
     }
     // Now as there are no lfc's it goes back to parent span from startTime(spawn Event)
     if (currentSpan.references.length) {
-      const parentSpan: string = currentSpan.references.filter(
+      const parentSpanId: string = currentSpan.references.filter(
         reference => reference.refType === 'CHILD_OF'
       )[0].spanID;
-      computeCriticalPath(spanMap, parentSpan, criticalPath, currentSpan.startTime);
+      computeCriticalPath(spanMap, parentSpanId, criticalPath, currentSpan.startTime);
     }
   }
   return criticalPath;
