@@ -98,7 +98,6 @@
     "react-window": "^1.8.3",
     "redux": "^3.7.2",
     "redux-actions": "^2.2.1",
-    "redux-async-middleware": "^0.0.0",
     "redux-form": "^8.3.10",
     "redux-promise-middleware": "^5.1.1",
     "reselect": "^4.1.6",
