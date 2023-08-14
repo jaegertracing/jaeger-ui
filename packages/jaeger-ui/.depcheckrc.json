@@ -1,13 +1,12 @@
 {
-    "ignores": [
-      "@babel/preset-env",
-      "@babel/preset-react",
-      "@babel/preset-typescript",
-      "@types/react-dom",
-      "@types/react-router-redux",
-      "babel-plugin-inline-react-svg",
-      "jest-environment-jsdom"
-    ],
-    "skip-missing": true
-  }
-  
+  "ignores": [
+    "@babel/preset-env",
+    "@babel/preset-react",
+    "@babel/preset-typescript",
+    "@types/react-dom",
+    "@types/react-router-redux",
+    "babel-plugin-inline-react-svg",
+    "jest-environment-jsdom"
+  ],
+  "skip-missing": true
+}
