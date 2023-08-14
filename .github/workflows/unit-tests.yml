@@ -22,7 +22,7 @@ jobs:
       - name: Run depcheck
         working-directory: ./packages/jaeger-ui
         run: |
-          depcheck --ignores="some,ignored,dependencies"
+          depcheck
           DEPCHECK_STATUS=$?
           if [ $DEPCHECK_STATUS -ne 0 ]; then
             echo "Unused dependencies found by depcheck."
