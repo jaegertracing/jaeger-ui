@@ -1,16 +1,10 @@
 {
     "ignores": [
       "@babel/preset-env",
-      "@types/react-copy-to-clipboard",
-      "@types/recompose",
-      "tar",
       "@babel/preset-react",
       "@babel/preset-typescript",
-      "@svgr/babel-plugin-transform-svg-component",
-      "@svgr/babel-preset",
       "@types/react-dom",
       "@types/react-router-redux",
-      "@types/testing-library__jest-dom",
       "babel-plugin-inline-react-svg",
       "jest-environment-jsdom"
     ],

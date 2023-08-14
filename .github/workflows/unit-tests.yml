@@ -2,10 +2,10 @@ name: "Unit Tests"
 
 on:
   push:
-    branches: [add-depcheck]
+    branches: [main]
 
   pull_request:
-    branches: [add-depcheck]
+    branches: [main]
 
 jobs:
   unit-tests:
@@ -28,7 +28,6 @@ jobs:
             echo "Unused dependencies found by depcheck."
             exit 1  # Exit with a failure status
           fi
-      - run: yarn install --frozen-lockfile
       - run: yarn lint
       - run: yarn build
       - run: yarn coverage
