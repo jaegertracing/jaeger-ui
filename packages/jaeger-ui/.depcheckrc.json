@@ -1,0 +1,4 @@
+{
+    "ignores": ["@babel/preset-env"],
+    "skip-missing": true
+}

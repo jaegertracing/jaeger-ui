@@ -2,10 +2,10 @@ name: "Unit Tests"
 
 on:
   push:
-    branches: [main]
+    branches: [add-depcheck]
 
   pull_request:
-    branches: [main]
+    branches: [add-depcheck]
 
 jobs:
   unit-tests:
@@ -17,6 +17,17 @@ jobs:
         with:
           cache: yarn
           node-version: '16'
+      - run: yarn global add depcheck
+      - run: yarn install --frozen-lockfile
+      - name: Run depcheck
+        working-directory: ./packages/jaeger-ui
+        run: |
+          depcheck --ignores="some,ignored,dependencies"
+          DEPCHECK_STATUS=$?
+          if [ $DEPCHECK_STATUS -ne 0 ]; then
+            echo "Unused dependencies found by depcheck."
+            exit 1  # Exit with a failure status
+          fi
       - run: yarn install --frozen-lockfile
       - run: yarn lint
       - run: yarn build
