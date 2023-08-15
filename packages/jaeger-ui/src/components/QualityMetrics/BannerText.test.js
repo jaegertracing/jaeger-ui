@@ -16,6 +16,7 @@ import React from 'react';
 import { render } from '@testing-library/react'
 
 import BannerText from './BannerText';
+import shallow from '../../utils/ReactShallowRenderer.test';
 
 describe('BannerText', () => {
   it('renders null when props.bannerText is falsy', () => {
@@ -24,12 +25,12 @@ describe('BannerText', () => {
   });
 
   it('renders header when props.bannerText is a string', () => {
-    const {container} = render(<BannerText bannerText="foo text" />);
-    expect(container.firstChild).toMatchSnapshot();
+    expect(shallow(<BannerText bannerText="foo text" />)).toMatchSnapshot();
   });
 
   it('renders styled header when props.bannerText is a styled value', () => {
-      render(
+    expect(
+      shallow(
         <BannerText
           bannerText={{
             styling: {
@@ -39,7 +40,7 @@ describe('BannerText', () => {
             value: 'foo text',
           }}
         />
-      );
-    expect(container.firstChild).toMatchSnapshot();
+      )
+    ).toMatchSnapshot();
   });
 });

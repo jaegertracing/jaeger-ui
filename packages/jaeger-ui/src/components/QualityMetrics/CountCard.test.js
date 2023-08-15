@@ -16,25 +16,24 @@ import React from 'react';
 import { render } from '@testing-library/react'
 
 import CountCard from './CountCard';
+import shallow from '../../utils/ReactShallowRenderer.test';
 
 describe('CountCard', () => {
   const count = 108;
   const title = 'Test Title';
 
   it('renders null when props.count or props.title is absent', () => {
-    const {wrapper} = render(<CountCard count={count} />)
-    expect(wrapper.firstChild).toBe(null);
-    const {container} = render(<CountCard title={title} />)
-    expect(container.firstChild).type().toBe(null);
+    const {container: containerWithoutCount} = render(<CountCard count={count} />)
+    expect(containerWithoutCount.firstChild).toBe(null);
+    const {container: containerWithoutTitle} = render(<CountCard title={title} />)
+    expect(containerWithoutTitle.firstChild).toBe(null);
   });
 
   it('renders as expected when given count and title', () => {
-    const {container} = render(<CountCard count={count} title={title} />)
-    expect(container.firstChild).toMatchSnapshot();
+    expect(shallow(<CountCard count={count} title={title} />)).toMatchSnapshot();
   });
 
   it('renders as expected when given count, title, and examples', () => {
-    const {container} = render(<CountCard count={count} title={title} examples={['foo']} />)
-    expect(container.firstChild).toMatchSnapshot();
+    expect(shallow(<CountCard count={count} title={title} examples={['foo']} />)).toMatchSnapshot();
   });
 });
