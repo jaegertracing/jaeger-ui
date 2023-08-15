@@ -2425,10 +2425,10 @@
   resolved "https://registry.yarnpkg.com/@svgr/babel-plugin-svg-em-dimensions/-/babel-plugin-svg-em-dimensions-8.0.0.tgz#35e08df300ea8b1d41cb8f62309c241b0369e501"
   integrity sha512-mURHYnu6Iw3UBTbhGwE/vsngtCIbHE43xCRK7kCw4t01xyGqb2Pd+WXekRRoFOBIY29ZoOhUCTEweDMdrjfi9g==
 
-"@svgr/babel-plugin-transform-react-native-svg@8.0.0":
-  version "8.0.0"
-  resolved "https://registry.yarnpkg.com/@svgr/babel-plugin-transform-react-native-svg/-/babel-plugin-transform-react-native-svg-8.0.0.tgz#023cd0895b98521f566060d6bb92100b9fee3775"
-  integrity sha512-UKrY3860AQICgH7g+6h2zkoxeVEPLYwX/uAjmqo4PIq2FIHppwhIqZstIyTz0ZtlwreKR41O3W3BzsBBiJV2Aw==
+"@svgr/babel-plugin-transform-react-native-svg@8.1.0":
+  version "8.1.0"
+  resolved "https://registry.yarnpkg.com/@svgr/babel-plugin-transform-react-native-svg/-/babel-plugin-transform-react-native-svg-8.1.0.tgz#90a8b63998b688b284f255c6a5248abd5b28d754"
+  integrity sha512-Tx8T58CHo+7nwJ+EhUwx3LfdNSG9R2OKfaIXXs5soiy5HtgoAEkDay9LIimLOcG8dJQH1wPZp/cnAv6S9CrR1Q==
 
 "@svgr/babel-plugin-transform-svg-component@8.0.0", "@svgr/babel-plugin-transform-svg-component@^8.0.0":
   version "8.0.0"
@@ -2436,9 +2436,9 @@
   integrity sha512-DFx8xa3cZXTdb/k3kfPeaixecQLgKh5NVBMwD0AQxOzcZawK4oo1Jh9LbrcACUivsCA7TLG8eeWgrDXjTMhRmw==
 
 "@svgr/babel-preset@^8.0.0":
-  version "8.0.0"
-  resolved "https://registry.yarnpkg.com/@svgr/babel-preset/-/babel-preset-8.0.0.tgz#6d78100b3b6daf11c940b82d5bd8c3164b9c6ad9"
-  integrity sha512-KLcjiZychInVrhs86OvcYPLTFu9L5XV2vj0XAaE1HwE3J3jLmIzRY8ttdeAg/iFyp8nhavJpafpDZTt+1LIpkQ==
+  version "8.1.0"
+  resolved "https://registry.yarnpkg.com/@svgr/babel-preset/-/babel-preset-8.1.0.tgz#0e87119aecdf1c424840b9d4565b7137cabf9ece"
+  integrity sha512-7EYDbHE7MxHpv4sxvnVPngw5fuR6pw79SkcrILHJ/iMpuKySNCl5W1qcwPEpU+LgyRXOaAFgH0KhwD18wwg6ug==
   dependencies:
     "@svgr/babel-plugin-add-jsx-attribute" "8.0.0"
     "@svgr/babel-plugin-remove-jsx-attribute" "8.0.0"
@@ -2446,7 +2446,7 @@
     "@svgr/babel-plugin-replace-jsx-attribute-value" "8.0.0"
     "@svgr/babel-plugin-svg-dynamic-title" "8.0.0"
     "@svgr/babel-plugin-svg-em-dimensions" "8.0.0"
-    "@svgr/babel-plugin-transform-react-native-svg" "8.0.0"
+    "@svgr/babel-plugin-transform-react-native-svg" "8.1.0"
     "@svgr/babel-plugin-transform-svg-component" "8.0.0"
 
 "@testing-library/dom@^9.0.0":
