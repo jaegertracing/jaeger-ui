@@ -17,10 +17,11 @@ jobs:
         with:
           cache: yarn
           node-version: '16'
-      - run: yarn global add depcheck
       - run: yarn install --frozen-lockfile
       - name: Run depcheck
-        run: yarn run depcheck
+        run: |
+          yarn global add depcheck
+          yarn run depcheck
       - run: yarn lint
       - run: yarn build
       - run: yarn coverage
