@@ -18,16 +18,15 @@ import { Span } from '../../../../types/trace';
  * This function takes an array of spans and sanitizes them by handling overflow
  * scenarios where child spans extend beyond the boundaries of their parent spans.
  */
-const sanitizeOverFlowingChildren = (spans: Span[]): Span[] => {
-  let sanitizedSpanData: Span[] = [];
+const sanitizeOverFlowingChildren = (spanMap: Map<string, Span>): Map<string, Span> => {
+  let spanIds:string[] = [...spanMap.keys()];
 
-  spans.forEach(span => {
-    if (!span.references.length) {
-      sanitizedSpanData.push(span);
-    } else {
+  spanIds.forEach(spanId => {
+    const span = spanMap.get(spanId)!;
+    if(span.references.length){
       // parentSpan will be undefined when its parentSpan is dropped previously
-      const parentSpan = sanitizedSpanData.find(s => s.spanID === span.references[0].spanID)!;
-      if (parentSpan) {
+      const parentSpan = spanMap.get(span.references[0].spanID);
+      if(parentSpan){
         const childEndTime = span.startTime + span.duration;
         const parentEndTime = parentSpan.startTime + parentSpan.duration;
         switch (true) {
@@ -35,7 +34,6 @@ const sanitizeOverFlowingChildren = (spans: Span[]): Span[] => {
             // case 1: everything looks good
             // |----parent----|
             //   |----child--|
-            sanitizedSpanData.push(span);
             break;
 
           case span.startTime < parentSpan.startTime &&
@@ -44,7 +42,7 @@ const sanitizeOverFlowingChildren = (spans: Span[]): Span[] => {
             // case 2: child start before parent, truncate is needed
             //      |----parent----|
             //   |----child--|
-            sanitizedSpanData.push({
+            spanMap.set(span.spanID,{
               ...span,
               startTime: parentSpan.startTime,
               duration: childEndTime - parentSpan.startTime,
@@ -57,7 +55,7 @@ const sanitizeOverFlowingChildren = (spans: Span[]): Span[] => {
             // case 3: child end after parent, truncate is needed
             //      |----parent----|
             //              |----child--|
-            sanitizedSpanData.push({
+            spanMap.set(span.spanID,{
               ...span,
               duration: parentEndTime - span.startTime,
             });
@@ -71,13 +69,12 @@ const sanitizeOverFlowingChildren = (spans: Span[]): Span[] => {
             //                      |----parent----|
             //       |----child--|
 
+            // Remove the childSpan from spanMap
+            spanMap.delete(span.spanID);
+
             // Remove the childSpanId from its parent span
-            sanitizedSpanData.forEach(each => {
-              if (each.spanID === span.references[0].spanID) {
-                const index = each.childSpanIds.findIndex(id => id === span.spanID);
-                each.childSpanIds.splice(index, 1);
-              }
-            });
+            parentSpan.childSpanIds = parentSpan.childSpanIds.filter(id => id === span.spanID);
+            spanMap.set(parentSpan.spanID,{...parentSpan})
             break;
 
           default:
@@ -86,18 +83,26 @@ const sanitizeOverFlowingChildren = (spans: Span[]): Span[] => {
             throw RangeError(`Error while computing Critical Path Algorithm.`);
         }
       }
+      else{
+        // Drop the child spans of dropped parent span
+        spanMap.delete(span.spanID);
+      }
     }
-  });
-  // Update Child Span References
-  sanitizedSpanData = sanitizedSpanData.map(each => {
-    const spanCopy = { ...each };
-    if (each.references.length) {
-      const parentSpan = sanitizedSpanData.find(span => span.spanID === each.references[0].spanID);
-      spanCopy.references[0].span = parentSpan;
-    }
-    return spanCopy;
-  });
+  })
 
-  return sanitizedSpanData;
+  // Updated spanIds to ensure to not include dropped spans
+  spanIds = [...spanMap.keys()];
+  // Update Child Span References with updated parent span 
+  spanIds.forEach(spanId => {
+    const span = spanMap.get(spanId)!;
+    if (span.references.length){
+      const parentSpan = spanMap.get(span.references[0].spanID)
+      span.references[0].span = parentSpan;
+      spanMap.set(spanId,{...span});
+    }
+
+  })
+
+  return spanMap;
 };
 export default sanitizeOverFlowingChildren;

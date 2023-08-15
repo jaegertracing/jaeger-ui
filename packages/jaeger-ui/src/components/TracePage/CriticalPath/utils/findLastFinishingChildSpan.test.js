@@ -20,36 +20,36 @@ import sanitizeOverFlowingChildren from './sanitizeOverFlowingChildren';
 
 describe('findLastFinishingChildSpanId', () => {
   it('Should find lfc of a span correctly', () => {
-    const sanitizedSpanData = sanitizeOverFlowingChildren(test1.trace.spans);
-    const refinedSpanData = getChildOfSpans(sanitizedSpanData);
-    const spanMap = refinedSpanData.reduce((map, span) => {
+    const refinedSpanData = getChildOfSpans(test1.trace.spans);
+    const SpanMap = refinedSpanData.reduce((map, span) => {
       map.set(span.spanID, span);
       return map;
     }, new Map());
+    const sanitizedSpanMap = sanitizeOverFlowingChildren(SpanMap);
 
-    const currentSpan = spanMap.get('span-C');
-    let lastFinishingChildSpan = findLastFinishingChildSpanId(spanMap, currentSpan);
-    expect(lastFinishingChildSpan).toStrictEqual(spanMap.get('span-E'));
+    const currentSpan = sanitizedSpanMap.get('span-C');
+    let lastFinishingChildSpan = findLastFinishingChildSpanId(sanitizedSpanMap, currentSpan);
+    expect(lastFinishingChildSpan).toStrictEqual(sanitizedSpanMap.get('span-E'));
 
     // Second Case to check if it works with spawn time or not
-    lastFinishingChildSpan = findLastFinishingChildSpanId(spanMap, currentSpan, 50);
-    expect(lastFinishingChildSpan).toStrictEqual(spanMap.get('span-D'));
+    lastFinishingChildSpan = findLastFinishingChildSpanId(sanitizedSpanMap, currentSpan, 50);
+    expect(lastFinishingChildSpan).toStrictEqual(sanitizedSpanMap.get('span-D'));
   });
 
   it('Should find lfc of a span correctly', () => {
-    const sanitizedSpanData = sanitizeOverFlowingChildren(test2.trace.spans);
-    const refinedSpanData = getChildOfSpans(sanitizedSpanData);
-    const spanMap = refinedSpanData.reduce((map, span) => {
+    const refinedSpanData = getChildOfSpans(test2.trace.spans);
+    const SpanMap = refinedSpanData.reduce((map, span) => {
       map.set(span.spanID, span);
       return map;
     }, new Map());
+    const sanitizedSpanMap = sanitizeOverFlowingChildren(SpanMap);
 
-    const currentSpan = spanMap.get('span-X');
-    let lastFinishingChildSpanId = findLastFinishingChildSpanId(spanMap, currentSpan);
-    expect(lastFinishingChildSpanId).toStrictEqual(spanMap.get('span-C'));
+    const currentSpan = sanitizedSpanMap.get('span-X');
+    let lastFinishingChildSpanId = findLastFinishingChildSpanId(sanitizedSpanMap, currentSpan);
+    expect(lastFinishingChildSpanId).toStrictEqual(sanitizedSpanMap.get('span-C'));
 
     // Second Case to check if it works with spawn time or not
-    lastFinishingChildSpanId = findLastFinishingChildSpanId(spanMap, currentSpan, 20);
+    lastFinishingChildSpanId = findLastFinishingChildSpanId(sanitizedSpanMap, currentSpan, 20);
     expect(lastFinishingChildSpanId).toBeUndefined();
   });
 });
