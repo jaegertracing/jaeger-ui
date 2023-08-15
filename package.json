@@ -38,9 +38,9 @@
   },
   "scripts": {
     "build": "lerna run build",
-    "check-license": "chmod +x scripts/check-license.sh && ./scripts/check-license.sh",
+    "check-license": "./scripts/check-license.sh",
     "coverage": "lerna run coverage",
-    "depcheck": "chmod +x scripts/run-depcheck.sh && ./scripts/run-depcheck.sh",
+    "depcheck": "./scripts/run-depcheck.sh",
     "eslint": "eslint --cache 'scripts/*.{js,jsx,ts,tsx}' 'packages/*/src/**/*.{js,jsx,ts,tsx}' 'packages/*/*.{js,jsx,ts,tsx}'",
     "fmt": "yarn prettier",
     "lint": "npm-run-all -ln --parallel prettier-lint tsc-lint eslint check-license",
