@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Uber Technologies, Inc.
+// Copyright (c) 2023 The Jaeger Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@ import test3 from '../testCases/test3';
 import test4 from '../testCases/test4';
 import test6 from '../testCases/test6';
 import test7 from '../testCases/test7';
+import getChildOfSpans from './getChildOfSpans';
 import sanitizeOverFlowingChildren from './sanitizeOverFlowingChildren';
 
 // Function to make expected data for test6 and test7
@@ -24,17 +25,26 @@ function getExpectedSanitizedData(spans, test) {
     test6: [spans[0], { ...spans[1], duration: 15 }, { ...spans[2], duration: 10, startTime: 15 }],
     test7: [spans[0], { ...spans[1], duration: 15 }, { ...spans[2], duration: 10 }],
   };
-  return testSanitizedData[test];
+  const SpanMap = testSanitizedData[test].reduce((map, span) => {
+    map.set(span.spanID, span);
+    return map;
+  }, new Map());
+  return SpanMap;
 }
 
 describe.each([
-  [test3, [test3.trace.spans[0]]],
-  [test4, [test4.trace.spans[0]]],
+  [test3, new Map().set(test3.trace.spans[0].spanID, test3.trace.spans[0])],
+  [test4, new Map().set(test4.trace.spans[0].spanID, test4.trace.spans[0])],
   [test6, getExpectedSanitizedData(test6.trace.spans, 'test6')],
   [test7, getExpectedSanitizedData(test7.trace.spans, 'test7')],
 ])('sanitizeOverFlowingChildren', (testProps, expectedSanitizedData) => {
   it('Should sanitize the data(overflowing spans) correctly', () => {
-    const sanitizedData = sanitizeOverFlowingChildren(testProps.trace.spans);
-    expect(sanitizedData).toStrictEqual(expectedSanitizedData);
+    const refinedSpanData = getChildOfSpans(testProps.trace.spans);
+    const SpanMap = refinedSpanData.reduce((map, span) => {
+      map.set(span.spanID, span);
+      return map;
+    }, new Map());
+    const sanitizedSpanMap = sanitizeOverFlowingChildren(SpanMap);
+    expect(sanitizedSpanMap).toStrictEqual(expectedSanitizedData);
   });
 });

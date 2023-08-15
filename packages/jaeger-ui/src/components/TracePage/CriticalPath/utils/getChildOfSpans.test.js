@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Uber Technologies, Inc.
+// Copyright (c) 2023 The Jaeger Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,24 +15,31 @@
 import test2 from '../testCases/test2';
 import test5 from '../testCases/test5';
 import getChildOfSpans from './getChildOfSpans';
-import sanitizeOverFlowingChildren from './sanitizeOverFlowingChildren';
 
 describe('getChildOfSpans', () => {
   it('Should not remove CHILD_OF child spans if there are any', () => {
-    const expectedRefinedSpanData = [...test2.trace.spans];
-    const sanitizedData = sanitizeOverFlowingChildren(test2.trace.spans);
-    const refinedSpanData = getChildOfSpans(sanitizedData);
+    const SpanMap = test2.trace.spans.reduce((map, span) => {
+      map.set(span.spanID, span);
+      return map;
+    }, new Map());
+    const refinedSpanMap = getChildOfSpans(SpanMap);
+    const expectedRefinedSpanMap = SpanMap;
 
-    expect(refinedSpanData.length).toBe(3);
-    expect(refinedSpanData).toStrictEqual(expectedRefinedSpanData);
+    expect(refinedSpanMap.size).toBe(3);
+    expect(refinedSpanMap).toStrictEqual(expectedRefinedSpanMap);
   });
   it('Should remove FOLLOWS_FROM child spans if there are any', () => {
-    const expectedRefinedSpanData = [test5.trace.spans[0]];
-    expectedRefinedSpanData[0].childSpanIds = [];
-    const sanitizedData = sanitizeOverFlowingChildren(test5.trace.spans);
-    const refinedSpanData = getChildOfSpans(sanitizedData);
+    const SpanMap = test5.trace.spans.reduce((map, span) => {
+      map.set(span.spanID, span);
+      return map;
+    }, new Map());
+    const refinedSpanMap = getChildOfSpans(SpanMap);
+    const expectedRefinedSpanMap = new Map().set(test5.trace.spans[0].spanID, {
+      ...test5.trace.spans[0],
+      childSpanIds: [],
+    });
 
-    expect(refinedSpanData.length).toBe(1);
-    expect(refinedSpanData).toStrictEqual(expectedRefinedSpanData);
+    expect(refinedSpanMap.size).toBe(1);
+    expect(refinedSpanMap).toStrictEqual(expectedRefinedSpanMap);
   });
 });

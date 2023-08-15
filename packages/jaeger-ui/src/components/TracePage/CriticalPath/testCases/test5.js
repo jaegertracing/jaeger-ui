@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Uber Technologies, Inc.
+// Copyright (c) 2023 The Jaeger Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,9 +20,13 @@ import transformTraceData from '../../../../model/transform-trace-data';
       └───┬────────────────┘                 |                  /
           │                                  |                 /         
           ▼────────────┐                     |              span B(FOLLOW_FROM)
-          │  Span B    │                     |
-          └────────────┘                     |
-                                             |              (parent-child tree)
+          │  Span B    │                     |                /
+          └──────────▲─┘                     |               / 
+            │        │                       |          span C(CHILD_OF)             
+            ▼────────┐                       |              
+            │ Span C │                       |
+            └────────┘                       |        (parent-child tree)
+                                             |              
 Here span B is ref-type is 'FOLLOWS_FROM'    |
 */
 
@@ -48,6 +52,19 @@ const trace = {
       ],
       startTime: 10,
       duration: 10,
+      processID: 'p1',
+    },
+    {
+      spanID: 'span-C',
+      operationName: 'op-C',
+      references: [
+        {
+          refType: 'CHILD_OF',
+          spanID: 'span-B',
+        },
+      ],
+      startTime: 12,
+      duration: 2,
       processID: 'p1',
     },
   ],

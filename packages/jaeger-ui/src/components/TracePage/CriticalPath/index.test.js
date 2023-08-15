@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Uber Technologies, Inc.
+// Copyright (c) 2023 The Jaeger Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ import test2 from './testCases/test2';
 import test3 from './testCases/test3';
 import test4 from './testCases/test4';
 import getChildOfSpans from './utils/getChildOfSpans';
-import findRootSpanId from './utils/findRootSpanId';
 import sanitizeOverFlowingChildren from './utils/sanitizeOverFlowingChildren';
 import test6 from './testCases/test6';
 import test7 from './testCases/test7';
@@ -26,11 +25,14 @@ import test5 from './testCases/test5';
 
 describe.each([[test1], [test2], [test3], [test4], [test5], [test6], [test7]])('Happy Path', testProps => {
   it('Should find criticalPathSections correctly', () => {
-    const sanitizedSpanData = sanitizeOverFlowingChildren(testProps.trace.spans);
-    const refinedSpanData = getChildOfSpans(sanitizedSpanData);
-    const traceData = { ...testProps.trace, spans: refinedSpanData };
-    const rootSpanId = findRootSpanId(traceData.spans);
-    const criticalPath = computeCriticalPath(traceData, rootSpanId, []);
+    const rootSpanId = testProps.trace.spans[0].spanID;
+    const SpanMap = testProps.trace.spans.reduce((map, span) => {
+      map.set(span.spanID, span);
+      return map;
+    }, new Map());
+    const refinedSpanMap = getChildOfSpans(SpanMap);
+    const sanitizedSpanMap = sanitizeOverFlowingChildren(refinedSpanMap);
+    const criticalPath = computeCriticalPath(sanitizedSpanMap, rootSpanId, []);
     expect(criticalPath).toStrictEqual(testProps.criticalPathSections);
   });
 
