@@ -18,18 +18,28 @@ import getChildOfSpans from './getChildOfSpans';
 
 describe('getChildOfSpans', () => {
   it('Should not remove CHILD_OF child spans if there are any', () => {
-    const expectedRefinedSpanData = [...test2.trace.spans];
-    const refinedSpanData = getChildOfSpans(test2.trace.spans);
+    const SpanMap = test2.trace.spans.reduce((map, span) => {
+      map.set(span.spanID, span);
+      return map;
+    }, new Map());
+    const refinedSpanMap = getChildOfSpans(SpanMap);
+    const expectedRefinedSpanMap = SpanMap;
 
-    expect(refinedSpanData.length).toBe(3);
-    expect(refinedSpanData).toStrictEqual(expectedRefinedSpanData);
+    expect(refinedSpanMap.size).toBe(3);
+    expect(refinedSpanMap).toStrictEqual(expectedRefinedSpanMap);
   });
   it('Should remove FOLLOWS_FROM child spans if there are any', () => {
-    const expectedRefinedSpanData = [test5.trace.spans[0]];
-    expectedRefinedSpanData[0].childSpanIds = [];
-    const refinedSpanData = getChildOfSpans(test5.trace.spans);
+    const SpanMap = test5.trace.spans.reduce((map, span) => {
+      map.set(span.spanID, span);
+      return map;
+    }, new Map());
+    const refinedSpanMap = getChildOfSpans(SpanMap);
+    const expectedRefinedSpanMap = new Map().set(test5.trace.spans[0].spanID, {
+      ...test5.trace.spans[0],
+      childSpanIds: [],
+    });
 
-    expect(refinedSpanData.length).toBe(1);
-    expect(refinedSpanData).toStrictEqual(expectedRefinedSpanData);
+    expect(refinedSpanMap.size).toBe(1);
+    expect(refinedSpanMap).toStrictEqual(expectedRefinedSpanMap);
   });
 });
