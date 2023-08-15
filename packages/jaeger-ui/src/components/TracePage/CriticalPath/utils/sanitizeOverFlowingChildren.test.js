@@ -45,7 +45,6 @@ describe.each([
       return map;
     }, new Map());
     const sanitizedSpanMap = sanitizeOverFlowingChildren(SpanMap);
-    console.log(sanitizedSpanMap);
     expect(sanitizedSpanMap).toStrictEqual(expectedSanitizedData);
   });
 });

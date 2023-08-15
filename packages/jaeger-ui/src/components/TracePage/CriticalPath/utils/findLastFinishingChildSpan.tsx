@@ -15,18 +15,9 @@
 import { Span } from '../../../../types/trace';
 
 /**
- * This function finds the Last Finishing Child (LFC) span of a given current span
- *  Example:
- * |-------------spanA--------------|
- *    |--spanB--|    |--spanC--|
- * The LFC of spanA would be spanC, as it finishes last among its child spans.
- *
- * However, if a child span (like spanC) doesn't have any child spans of its own,
- * the focus shifts to the parent span (spanA). In this case, we check whether
- * there is an LFC of spanA that finishes before the startTime of spanC.
- * This 'startTime' is referred to as 'spawnTime' below.
- * @param spawnTime - The startTime of a subsequent span (like spanC) that triggers the
- *                   need to find the Last Finishing Child span of the current span.
+ * @returns - Returns the span that finished last among the remaining child spans.
+ * If a `spawnTime` is provided as a parameter, it returns the child span that finishes
+ * just before the specified `spawnTime`.
  */
 const findLastFinishingChildSpan = (
   spanMap: Map<string, Span>,
@@ -41,6 +32,8 @@ const findLastFinishingChildSpan = (
         spanMap.has(each) && spanMap.get(each)!.startTime + spanMap.get(each)!.duration < spawnTime
     );
   } else {
+    // If `spawnTime` is not provided, select the first child span.
+    // As they are sorted based on endTime
     lastFinishingChildSpanId = currentSpan.childSpanIds[0];
   }
   return lastFinishingChildSpanId ? spanMap.get(lastFinishingChildSpanId) : undefined;
