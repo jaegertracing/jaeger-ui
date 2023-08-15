@@ -14,7 +14,6 @@
 
 /* eslint-disable import/no-extraneous-dependencies */
 const fs = require('fs');
-const prettier = require('prettier');
 const { babelConfiguration } = require('../packages/jaeger-ui/test/babel-transform');
 
 // Extract package names from presets and plugins
@@ -39,10 +38,5 @@ const depcheckrcContent = {
 // Path to depcheckrc.json file
 const depcheckrcFilePath = 'packages/jaeger-ui/.depcheckrc.json';
 
-// Format the content using Prettier
-(async () => {
-  const formattedContent = await prettier.format(JSON.stringify(depcheckrcContent, null, 2), {
-    parser: 'json',
-  });
-  await fs.writeFileSync(depcheckrcFilePath, formattedContent, 'utf-8');
-})();
+// Generate .depcheckrc.json file
+fs.writeFileSync(depcheckrcFilePath, JSON.stringify(depcheckrcContent, null, 2));

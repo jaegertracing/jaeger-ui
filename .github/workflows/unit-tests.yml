@@ -19,19 +19,8 @@ jobs:
           node-version: '16'
       - run: yarn global add depcheck
       - run: yarn install --frozen-lockfile
-      - name: Generate .depcheckrc.json
-        run: node scripts/generateDepcheckrc.js
       - name: Run depcheck
-        working-directory: ./packages/jaeger-ui
-        run: |
-          depcheck
-          DEPCHECK_STATUS=$?
-          if [ $DEPCHECK_STATUS -ne 0 ]; then
-            echo "Unused dependencies found by depcheck."
-            exit 1  # Exit with a failure status
-          fi
-      - name: Remove .depcheckrc.js
-        run: rm packages/jaeger-ui/.depcheckrc.json
+        run: yarn run depcheck
       - run: yarn lint
       - run: yarn build
       - run: yarn coverage
