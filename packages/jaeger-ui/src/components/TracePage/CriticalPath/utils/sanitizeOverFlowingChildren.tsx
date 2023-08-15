@@ -15,18 +15,22 @@
 import { Span } from '../../../../types/trace';
 
 /**
- * This function takes an array of spans and sanitizes them by handling overflow
- * scenarios where child spans extend beyond the boundaries of their parent spans.
+ * This function resolves overflowing child spans for each span.
+ * An overflowing child span is one whose time range falls outside its parent span's time range.
+ * The function adjusts the start time and duration of overflowing child spans
+ * to ensure they fit within the time range of their parent span.
+ * @param spanMap - A Map where span IDs are keys and the corresponding spans are values.
+ * @returns - A sanitized span Map.
  */
 const sanitizeOverFlowingChildren = (spanMap: Map<string, Span>): Map<string, Span> => {
-  let spanIds:string[] = [...spanMap.keys()];
+  let spanIds: string[] = [...spanMap.keys()];
 
   spanIds.forEach(spanId => {
     const span = spanMap.get(spanId)!;
-    if(span.references.length){
+    if (span.references.length) {
       // parentSpan will be undefined when its parentSpan is dropped previously
       const parentSpan = spanMap.get(span.references[0].spanID);
-      if(parentSpan){
+      if (parentSpan) {
         const childEndTime = span.startTime + span.duration;
         const parentEndTime = parentSpan.startTime + parentSpan.duration;
         switch (true) {
@@ -42,7 +46,7 @@ const sanitizeOverFlowingChildren = (spanMap: Map<string, Span>): Map<string, Sp
             // case 2: child start before parent, truncate is needed
             //      |----parent----|
             //   |----child--|
-            spanMap.set(span.spanID,{
+            spanMap.set(span.spanID, {
               ...span,
               startTime: parentSpan.startTime,
               duration: childEndTime - parentSpan.startTime,
@@ -55,7 +59,7 @@ const sanitizeOverFlowingChildren = (spanMap: Map<string, Span>): Map<string, Sp
             // case 3: child end after parent, truncate is needed
             //      |----parent----|
             //              |----child--|
-            spanMap.set(span.spanID,{
+            spanMap.set(span.spanID, {
               ...span,
               duration: parentEndTime - span.startTime,
             });
@@ -74,7 +78,7 @@ const sanitizeOverFlowingChildren = (spanMap: Map<string, Span>): Map<string, Sp
 
             // Remove the childSpanId from its parent span
             parentSpan.childSpanIds = parentSpan.childSpanIds.filter(id => id === span.spanID);
-            spanMap.set(parentSpan.spanID,{...parentSpan})
+            spanMap.set(parentSpan.spanID, { ...parentSpan });
             break;
 
           default:
@@ -82,26 +86,24 @@ const sanitizeOverFlowingChildren = (spanMap: Map<string, Span>): Map<string, Sp
             // Something unexpected happened
             throw RangeError(`Error while computing Critical Path Algorithm.`);
         }
-      }
-      else{
+      } else {
         // Drop the child spans of dropped parent span
         spanMap.delete(span.spanID);
       }
     }
-  })
+  });
 
   // Updated spanIds to ensure to not include dropped spans
   spanIds = [...spanMap.keys()];
-  // Update Child Span References with updated parent span 
+  // Update Child Span References with updated parent span
   spanIds.forEach(spanId => {
     const span = spanMap.get(spanId)!;
-    if (span.references.length){
-      const parentSpan = spanMap.get(span.references[0].spanID)
+    if (span.references.length) {
+      const parentSpan = spanMap.get(span.references[0].spanID);
       span.references[0].span = parentSpan;
-      spanMap.set(spanId,{...span});
+      spanMap.set(spanId, { ...span });
     }
-
-  })
+  });
 
   return spanMap;
 };
