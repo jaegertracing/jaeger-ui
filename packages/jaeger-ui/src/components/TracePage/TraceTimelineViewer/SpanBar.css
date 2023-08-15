@@ -46,8 +46,8 @@ limitations under the License.
 
 .SpanBar--criticalPath {
   position: absolute;
-  top: 46%;
-  height: 10%;
+  top: 45%;
+  height: 11%;
   z-index: 2;
 }
 
