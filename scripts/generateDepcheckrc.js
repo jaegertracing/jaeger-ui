@@ -14,29 +14,77 @@
 
 /* eslint-disable import/no-extraneous-dependencies */
 const fs = require('fs');
-const { babelConfiguration } = require('../packages/jaeger-ui/test/babel-transform');
+const {
+  babelConfiguration: babelConfigurationJaegerUI,
+} = require('../packages/jaeger-ui/test/babel-transform');
+const getBabelConfig = require('../packages/plexus/babel.config');
+const babelConfigurationPlexus = getBabelConfig({
+  env: () => {
+    'development';
+  },
+});
+const args = process.argv.slice(3);
 
-// Extract package names from presets and plugins
-const packageNames = [
-  ...babelConfiguration.presets.flatMap(preset => {
+let targetPackage;
+
+// Check if the command line argument is provided and is valid
+if (args.length > 0) {
+  const providedPackage = args[0].toLowerCase();
+  if (providedPackage === 'plexus' || providedPackage === 'jaeger-ui') {
+    targetPackage = providedPackage;
+  } else {
+    console.error('Invalid package name. Please provide "plexus" or "jaeger-ui".');
+    process.exit(1); // Exit the process with an error code
+  }
+} else {
+  console.error('Please provide the --package flag with either "plexus" or "jaeger-ui".');
+  process.exit(1);
+}
+
+// Extract package names from presets and plugins in jaeger-ui babel
+const packageNamesJaegerUI = [
+  ...babelConfigurationJaegerUI.presets.flatMap(preset => {
     if (Array.isArray(preset)) {
       return [preset[0]];
     }
     return [preset];
   }),
-  ...babelConfiguration.plugins,
+  ...babelConfigurationJaegerUI.plugins,
 ];
 
-const otherPackages = ['jest-environment-jsdom'];
+// Extract package names from presets and plugins in plexus babel
+const packageNamesPlexus = [
+  ...babelConfigurationPlexus.presets.flatMap(preset => {
+    if (Array.isArray(preset)) {
+      return [preset[0]];
+    }
+    return [preset];
+  }),
+  ...babelConfigurationPlexus.plugins.flatMap(plugin => {
+    if (Array.isArray(plugin)) {
+      return [plugin[0]];
+    }
+    return [plugin];
+  }),
+];
 
-// Generate the depcheckrc content
+const otherPackagesJaegerUI = ['jest-environment-jsdom'];
+const otherPackagesPlexus = ['rimraf', 'webpack-cli'];
+
+// Use the selected targetPackage for generating depcheckrcContent
 const depcheckrcContent = {
-  ignores: [...packageNames, ...otherPackages],
+  ignores:
+    targetPackage === 'plexus'
+      ? [...packageNamesPlexus, ...otherPackagesPlexus]
+      : [...packageNamesJaegerUI, ...otherPackagesJaegerUI],
   'ignore-dirs': ['build'],
 };
 
-// Path to depcheckrc.json file
-const depcheckrcFilePath = 'packages/jaeger-ui/.depcheckrc.json';
+const pathToJaegerUI = 'packages/jaeger-ui/.depcheckrc.json';
+const pathToPlexus = 'packages/plexus/.depcheckrc.json';
 
-// Generate .depcheckrc.json file
-fs.writeFileSync(depcheckrcFilePath, JSON.stringify(depcheckrcContent, null, 2));
+if (targetPackage === 'plexus') {
+  fs.writeFileSync(pathToPlexus, JSON.stringify(depcheckrcContent, null, 2));
+} else {
+  fs.writeFileSync(pathToJaegerUI, JSON.stringify(depcheckrcContent, null, 2));
+}
