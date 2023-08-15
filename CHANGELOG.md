@@ -6,6 +6,22 @@
 
 ### Fixes
 
+## v1.32.0 (2023-08-14)
+
+### Enhancements
+
+- Add text label to copy buttons on tags ([@Yushmanth-reddy](https://github.com/Yushmanth-reddy) in [#1547](https://github.com/jaegertracing/jaeger-ui/pull/1547))
+
+### Fixes
+
+- Migrate ScoreCard.test.js from Enzyme to React Shallow Renderer ([@anshgoyalevil](https://github.com/anshgoyalevil) in [#1653](https://github.com/jaegertracing/jaeger-ui/pull/1653))
+- Fix the tooltip position of copy value and JSON Buttton ([@anikdhabal](https://github.com/anikdhabal) in [#1650](https://github.com/jaegertracing/jaeger-ui/pull/1650))
+- Fix lint issues when bumping eslint-plugin-import ([@Kavinjsir](https://github.com/Kavinjsir) in [#1652](https://github.com/jaegertracing/jaeger-ui/pull/1652))
+- [deps] Remove @types/moment, @types/history and @types/classnames ([@anshgoyalevil](https://github.com/anshgoyalevil) in [#1637](https://github.com/jaegertracing/jaeger-ui/pull/1637))
+- Remove dependency on isomorphic-fetch ([@Yushmanth-reddy](https://github.com/Yushmanth-reddy) in [#1616](https://github.com/jaegertracing/jaeger-ui/pull/1616))
+- Fix flaky test causing spurious drops in code coverage ([@GLVSKiriti](https://github.com/GLVSKiriti) in [#1632](https://github.com/jaegertracing/jaeger-ui/pull/1632))
+- [deps] Remove @types/memoize-one dep ([@anshgoyalevil](https://github.com/anshgoyalevil) in [#1625](https://github.com/jaegertracing/jaeger-ui/pull/1625))
+
 ## v1.31.0 (2023-07-05)
 
 ### Enhancements
