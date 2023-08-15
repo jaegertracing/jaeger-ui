@@ -13,22 +13,23 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render } from '@testing-library/react'
 
 import BannerText from './BannerText';
 
 describe('BannerText', () => {
   it('renders null when props.bannerText is falsy', () => {
-    expect(shallow(<BannerText />).type()).toBe(null);
+    const {container} = render(<BannerText />);
+    expect(container.firstChild).toBe(null);
   });
 
   it('renders header when props.bannerText is a string', () => {
-    expect(shallow(<BannerText bannerText="foo text" />)).toMatchSnapshot();
+    const {container} = render(<BannerText bannerText="foo text" />);
+    expect(container.firstChild).toMatchSnapshot();
   });
 
   it('renders styled header when props.bannerText is a styled value', () => {
-    expect(
-      shallow(
+      render(
         <BannerText
           bannerText={{
             styling: {
@@ -38,7 +39,7 @@ describe('BannerText', () => {
             value: 'foo text',
           }}
         />
-      )
-    ).toMatchSnapshot();
+      );
+    expect(container.firstChild).toMatchSnapshot();
   });
 });

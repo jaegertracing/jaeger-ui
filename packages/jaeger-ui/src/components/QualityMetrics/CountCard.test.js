@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render } from '@testing-library/react'
 
 import CountCard from './CountCard';
 
@@ -22,15 +22,19 @@ describe('CountCard', () => {
   const title = 'Test Title';
 
   it('renders null when props.count or props.title is absent', () => {
-    expect(shallow(<CountCard count={count} />).type()).toBe(null);
-    expect(shallow(<CountCard title={title} />).type()).toBe(null);
+    const {wrapper} = render(<CountCard count={count} />)
+    expect(wrapper.firstChild).toBe(null);
+    const {container} = render(<CountCard title={title} />)
+    expect(container.firstChild).type().toBe(null);
   });
 
   it('renders as expected when given count and title', () => {
-    expect(shallow(<CountCard count={count} title={title} />)).toMatchSnapshot();
+    const {container} = render(<CountCard count={count} title={title} />)
+    expect(container.firstChild).toMatchSnapshot();
   });
 
   it('renders as expected when given count, title, and examples', () => {
-    expect(shallow(<CountCard count={count} title={title} examples={['foo']} />)).toMatchSnapshot();
+    const {container} = render(<CountCard count={count} title={title} examples={['foo']} />)
+    expect(container.firstChild).toMatchSnapshot();
   });
 });

@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render } from '@testing-library/react'
 
 import MetricCard from './MetricCard';
 
@@ -63,9 +63,9 @@ describe('MetricCard', () => {
   ];
 
   it('renders as expected without details', () => {
-    expect(shallow(<MetricCard metric={metric} />)).toMatchSnapshot();
-    expect(
-      shallow(
+    const {contain} = (<MetricCard metric={metric} />)
+    expect(contain.firstChild).toMatchSnapshot();
+    const {container} = render(
         <MetricCard
           metric={{
             ...metric,
@@ -73,12 +73,12 @@ describe('MetricCard', () => {
           }}
         />
       )
-    ).toMatchSnapshot();
+    expect(container.firstChild).toMatchSnapshot();
   });
 
   it('renders as expected with details', () => {
-    expect(
-      shallow(
+    
+    const {container} = render(
         <MetricCard
           metric={{
             ...metric,
@@ -86,12 +86,11 @@ describe('MetricCard', () => {
           }}
         />
       )
-    ).toMatchSnapshot();
+    expect(container.firstChild).toMatchSnapshot();
   });
 
   it('renders as expected when passCount is zero', () => {
-    expect(
-      shallow(
+    const {container} = render(
         <MetricCard
           metric={{
             ...metric,
@@ -99,6 +98,6 @@ describe('MetricCard', () => {
           }}
         />
       )
-    ).toMatchSnapshot();
+    expect(container.firstChild).toMatchSnapshot();
   });
 });
