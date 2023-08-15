@@ -17,11 +17,11 @@ import { Button, Input, Tooltip } from 'antd';
 import cx from 'classnames';
 import IoAndroidLocate from 'react-icons/lib/io/android-locate';
 
+import IoHelp from 'react-icons/lib/io/help';
 import * as markers from './TracePageSearchBar.markers';
 import { trackFilter } from '../index.track';
 import UiFindInput from '../../common/UiFindInput';
 import { TNil } from '../../../types';
-
 import './TracePageSearchBar.css';
 
 type TracePageSearchBarProps = {
@@ -80,13 +80,6 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwarde
 
   return (
     <div className="TracePageSearchBar">
-      <Tooltip
-        arrowPointAtCenter
-        mouseLeaveDelay={0.5}
-        placement="bottom"
-        overlayStyle={{ maxWidth: '600px' }} // This is a large tooltip and the default is too narrow.
-        title={renderTooltip()}
-      >
         {/* style inline because compact overwrites the display */}
         <Input.Group className="ub-justify-end" compact style={{ display: 'flex' }}>
           <UiFindInput
@@ -94,6 +87,14 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwarde
             forwardedRef={forwardedRef}
             trackFindFunction={trackFilter}
           />
+        <Tooltip
+        arrowPointAtCenter
+        placement="bottomLeft"
+        trigger='click'
+        overlayStyle={{ maxWidth: '600px' }} // This is a large tooltip and the default is too narrow.
+        title={renderTooltip()}>
+        <Button htmlType="button"><IoHelp className="SearchForm--hintTrigger" /></Button>
+        </Tooltip>
           {navigable && (
             <>
               <Button
@@ -128,7 +129,6 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwarde
             onClick={clearSearch}
           />
         </Input.Group>
-      </Tooltip>
     </div>
   );
 }
