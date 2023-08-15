@@ -48,9 +48,5 @@ describe('CountCard', () => {
 
     expect(countElement).toBeInTheDocument();
     expect(titleElement).toBeInTheDocument();
-    // examples.forEach(example => {
-    //   const exampleElement = getByText(example);
-    //   expect(exampleElement).toBeInTheDocument();
-    // });
   });
 });
