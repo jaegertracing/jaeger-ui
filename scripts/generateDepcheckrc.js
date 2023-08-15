@@ -18,6 +18,7 @@ const {
   babelConfiguration: babelConfigurationJaegerUI,
 } = require('../packages/jaeger-ui/test/babel-transform');
 const getBabelConfig = require('../packages/plexus/babel.config');
+
 const babelConfigurationPlexus = getBabelConfig({
   env: () => {
     'development';
@@ -33,11 +34,9 @@ if (args.length > 0) {
   if (providedPackage === 'plexus' || providedPackage === 'jaeger-ui') {
     targetPackage = providedPackage;
   } else {
-    console.error('Invalid package name. Please provide "plexus" or "jaeger-ui".');
     process.exit(1); // Exit the process with an error code
   }
 } else {
-  console.error('Please provide the --package flag with either "plexus" or "jaeger-ui".');
   process.exit(1);
 }
 
