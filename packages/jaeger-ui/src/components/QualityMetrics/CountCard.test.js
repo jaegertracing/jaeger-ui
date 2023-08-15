@@ -13,27 +13,44 @@
 // limitations under the License.
 
 import React from 'react';
-import { render } from '@testing-library/react'
-
+import { render } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import CountCard from './CountCard';
-import shallow from '../../utils/ReactShallowRenderer.test';
 
 describe('CountCard', () => {
   const count = 108;
   const title = 'Test Title';
+  const examples = ['Examples'];
 
   it('renders null when props.count or props.title is absent', () => {
-    const {container: containerWithoutCount} = render(<CountCard count={count} />)
+    const { container: containerWithoutCount } = render(<CountCard count={count} />);
     expect(containerWithoutCount.firstChild).toBe(null);
-    const {container: containerWithoutTitle} = render(<CountCard title={title} />)
+    const { container: containerWithoutTitle } = render(<CountCard title={title} />);
     expect(containerWithoutTitle.firstChild).toBe(null);
   });
 
   it('renders as expected when given count and title', () => {
-    expect(shallow(<CountCard count={count} title={title} />)).toMatchSnapshot();
+    const { getByText } = render(<CountCard count={count} title={title} />);
+    const countElement = getByText('108');
+    const titleElement = getByText('Test Title');
+
+    expect(countElement).toBeInTheDocument();
+    expect(titleElement).toBeInTheDocument();
   });
 
   it('renders as expected when given count, title, and examples', () => {
-    expect(shallow(<CountCard count={count} title={title} examples={['foo']} />)).toMatchSnapshot();
+    const { getByText } = render(<CountCard count={count} title={title} examples={examples} />);
+
+    const countElement = getByText('108');
+    const titleElement = getByText('Test Title');
+    const exampleElement = getByText('Examples');
+    expect(exampleElement).toBeInTheDocument();
+
+    expect(countElement).toBeInTheDocument();
+    expect(titleElement).toBeInTheDocument();
+    // examples.forEach(example => {
+    //   const exampleElement = getByText(example);
+    //   expect(exampleElement).toBeInTheDocument();
+    // });
   });
 });

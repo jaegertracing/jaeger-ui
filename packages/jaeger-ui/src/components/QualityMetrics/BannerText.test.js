@@ -13,34 +13,38 @@
 // limitations under the License.
 
 import React from 'react';
-import { render } from '@testing-library/react'
-
+import { render } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import BannerText from './BannerText';
-import shallow from '../../utils/ReactShallowRenderer.test';
 
 describe('BannerText', () => {
   it('renders null when props.bannerText is falsy', () => {
-    const {container} = render(<BannerText />);
+    const { container } = render(<BannerText />);
     expect(container.firstChild).toBe(null);
   });
 
   it('renders header when props.bannerText is a string', () => {
-    expect(shallow(<BannerText bannerText="foo text" />)).toMatchSnapshot();
+    const { getByText } = render(<BannerText bannerText="foo text" />);
+    const headerElement = getByText('foo text');
+    expect(headerElement).toBeInTheDocument();
   });
 
   it('renders styled header when props.bannerText is a styled value', () => {
-    expect(
-      shallow(
-        <BannerText
-          bannerText={{
-            styling: {
-              background: 'red',
-              color: 'white',
-            },
-            value: 'foo text',
-          }}
-        />
-      )
-    ).toMatchSnapshot();
+    const { getByText } = render(
+      <BannerText
+        bannerText={{
+          styling: {
+            background: 'red',
+            color: 'white',
+          },
+          value: 'foo text',
+        }}
+      />
+    );
+
+    const headerElement = getByText('foo text');
+
+    expect(headerElement).toBeInTheDocument();
+    expect(headerElement).toHaveStyle('background: red; color: white;');
   });
 });
