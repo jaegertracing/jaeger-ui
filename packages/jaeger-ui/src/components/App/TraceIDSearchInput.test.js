@@ -41,17 +41,14 @@ describe('<TraceIDSearchInput />', () => {
     const traceId = 'MOCK-TRACE-ID';
     const idInput = screen.getByPlaceholderText('Lookup by Trace ID...');
     fireEvent.change(idInput, { target: { value: traceId } });
-
-    const form = screen.getByTestId('TraceIDSearchInput--form');
-    fireEvent.submit(form);
+    fireEvent.submit(screen.getByTestId('TraceIDSearchInput--form'));
 
     expect(history.length).toEqual(2);
     expect(history.location.pathname).toEqual(`/trace/${traceId}`);
   });
 
   it('does not push to history on falsy input value', () => {
-    const form = screen.getByTestId('TraceIDSearchInput--form');
-    fireEvent.submit(form);
+    fireEvent.submit(screen.getByTestId('TraceIDSearchInput--form'));
 
     expect(history.length).toEqual(1);
   });
