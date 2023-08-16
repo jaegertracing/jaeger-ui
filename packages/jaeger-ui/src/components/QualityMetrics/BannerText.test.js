@@ -13,32 +13,35 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
-
+import { render, screen } from '@testing-library/react';
+import '@testing-library/jest-dom/';
 import BannerText from './BannerText';
 
 describe('BannerText', () => {
   it('renders null when props.bannerText is falsy', () => {
-    expect(shallow(<BannerText />).type()).toBe(null);
+    const { container } = render(<BannerText />);
+    expect(container.firstChild).toBe(null);
   });
 
   it('renders header when props.bannerText is a string', () => {
-    expect(shallow(<BannerText bannerText="foo text" />)).toMatchSnapshot();
+    render(<BannerText bannerText="foo text" />);
+    expect(screen.getByText('foo text')).toBeInTheDocument();
   });
 
   it('renders styled header when props.bannerText is a styled value', () => {
-    expect(
-      shallow(
-        <BannerText
-          bannerText={{
-            styling: {
-              background: 'red',
-              color: 'white',
-            },
-            value: 'foo text',
-          }}
-        />
-      )
-    ).toMatchSnapshot();
+    render(
+      <BannerText
+        bannerText={{
+          styling: {
+            background: 'red',
+            color: 'white',
+          },
+          value: 'foo text',
+        }}
+      />
+    );
+
+    expect(screen.getByText('foo text')).toBeInTheDocument();
+    expect(screen.getByText('foo text')).toHaveStyle('background: red; color: white;');
   });
 });
