@@ -34,7 +34,7 @@ describe('<TraceIDSearchInput />', () => {
   });
 
   it('renders as expected', () => {
-    expect(screen.getByRole('form')).toBeInTheDocument();
+    expect(screen.getByTestId('idInput')).toBeInTheDocument();
   });
 
   it('pushes input id to history', () => {
@@ -42,7 +42,7 @@ describe('<TraceIDSearchInput />', () => {
     const idInput = screen.getByPlaceholderText('Lookup by Trace ID...');
     fireEvent.change(idInput, { target: { value: traceId } });
 
-    const form = screen.getByRole('form');
+    const form = screen.getByTestId('TraceIDSearchInput--form');
     fireEvent.submit(form);
 
     expect(history.length).toEqual(2);
@@ -50,7 +50,7 @@ describe('<TraceIDSearchInput />', () => {
   });
 
   it('does not push to history on falsy input value', () => {
-    const form = screen.getByRole('form');
+    const form = screen.getByTestId('TraceIDSearchInput--form');
     fireEvent.submit(form);
 
     expect(history.length).toEqual(1);
