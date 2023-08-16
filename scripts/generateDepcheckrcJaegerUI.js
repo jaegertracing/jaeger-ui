@@ -14,6 +14,7 @@
 
 /* eslint-disable import/no-extraneous-dependencies */
 const fs = require('fs');
+const path = require('path');
 const { babelConfiguration } = require('../packages/jaeger-ui/test/babel-transform');
 
 const packageNames = [
@@ -34,4 +35,14 @@ const depcheckrcContent = {
   'ignore-dirs': ['build'],
 };
 
-fs.writeFileSync('packages/jaeger-ui/.depcheckrc.json', JSON.stringify(depcheckrcContent, null, 2));
+// Use the argument provided to the script as the output file path
+const outputFile = process.argv[2];
+
+if (!outputFile) {
+  console.error('Usage: node generateDepcheckrcJaegerUI.js <outputFile>');
+  process.exit(1);
+}
+
+const depcheckrcPath = path.resolve(__dirname, outputFile);
+
+fs.writeFileSync(depcheckrcPath, JSON.stringify(depcheckrcContent, null, 2));

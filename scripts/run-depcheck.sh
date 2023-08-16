@@ -1,24 +1,12 @@
 #!/bin/sh
-# This script runs depcheck on two different packages: 'jaeger-ui' and 'plexus'
+set -ex
 
-# Run depcheck for the 'jaeger-ui' package
-(
-  node scripts/generateDepcheckrcJaegerUI.js &&               # Generate depcheckrc for 'jaeger-ui'
-  depcheck packages/jaeger-ui &&                              # Run depcheck on 'jaeger-ui'
-  rm -f packages/jaeger-ui/.depcheckrc.json                   # Clean up generated depcheckrc
-) || (
-  EXIT_CODE=$?                                                # Store the exit code from the previous command
-  rm -f packages/jaeger-ui/.depcheckrc.json                   # Clean up generated depcheckrc
-  exit $EXIT_CODE                                             # Exit with the stored exit code
-)
+# Create a temporary depcheckrc file for 'jaeger-ui'
+tempfile_jaeger=$(mktemp /tmp/depcheckrc.XXXXXX.json)
+node scripts/generateDepcheckrcJaegerUI.js "$tempfile_jaeger"
+depcheck packages/jaeger-ui --config "$tempfile_jaeger"
 
-# Run depcheck for the 'plexus' package
-(
-  node scripts/generateDepcheckrcPlexus.js &&                 # Generate depcheckrc for 'plexus'
-  depcheck packages/plexus &&                                 # Run depcheck on 'plexus'
-  rm -f packages/plexus/.depcheckrc.json                      # Clean up generated depcheckrc
-) || (
-  EXIT_CODE=$?                                                # Store the exit code from the previous command
-  rm -f packages/plexus/.depcheckrc.json                      # Clean up generated depcheckrc
-  exit $EXIT_CODE                                             # Exit with the stored exit code
-)
+# Create a temporary depcheckrc file for 'plexus'
+tempfile_plexus=$(mktemp /tmp/depcheckrc.XXXXXX.json)
+node scripts/generateDepcheckrcPlexus.js "$tempfile_plexus"
+depcheck packages/plexus --config "$tempfile_plexus"
