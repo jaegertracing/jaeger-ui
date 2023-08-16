@@ -27,7 +27,7 @@ const packageNames = [
   ...babelConfiguration.plugins,
 ];
 
-const otherPackages = ['jest-environment-jsdom'];
+const otherPackages = ['jest-environment-jsdom', 'babel-plugin-react-remove-properties'];
 
 // Use the selected targetPackage for generating depcheckrcContent
 const depcheckrcContent = {

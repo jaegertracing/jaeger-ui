@@ -18,6 +18,7 @@ import react from '@vitejs/plugin-react';
 import legacy from '@vitejs/plugin-legacy';
 import vitePluginImp from 'vite-plugin-imp';
 import visualizer from 'rollup-plugin-visualizer';
+import babel from '@rollup/plugin-babel';
 
 const proxyConfig = {
   target: 'http://localhost:16686',
@@ -42,7 +43,11 @@ export default defineConfig({
     },
   },
   plugins: [
-    react(),
+    react({
+      babel: {
+        plugins: [['babel-plugin-react-remove-properties', { properties: ['data-testid'] }]],
+      },
+    }),
     legacy({
       targets: ['>0.5%', 'not dead', 'not ie <= 11', 'not op_mini all'],
     }),
