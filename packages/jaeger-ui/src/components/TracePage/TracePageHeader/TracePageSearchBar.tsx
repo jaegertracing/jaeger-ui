@@ -93,7 +93,7 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwarde
         trigger='click'
         overlayStyle={{ maxWidth: '600px' }} // This is a large tooltip and the default is too narrow.
         title={renderTooltip()}>
-        <Button htmlType="button"><IoHelp className="SearchForm--hintTrigger" /></Button>
+        <Button><IoHelp className="help-button"/></Button>
         </Tooltip>
           {navigable && (
             <>
