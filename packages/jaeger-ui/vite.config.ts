@@ -44,7 +44,7 @@ export default defineConfig({
   plugins: [
     react({
       babel: {
-        plugins: [['babel-plugin-react-remove-properties', { properties: ['data-testid'] }]],
+        babelrc: true,
       },
     }),
     legacy({
