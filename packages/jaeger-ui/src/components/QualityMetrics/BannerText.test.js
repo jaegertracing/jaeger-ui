@@ -13,8 +13,8 @@
 // limitations under the License.
 
 import React from 'react';
-import { render } from '@testing-library/react';
-import '@testing-library/jest-dom';
+import { render, screen } from '@testing-library/react';
+import '@testing-library/jest-dom/';
 import BannerText from './BannerText';
 
 describe('BannerText', () => {
@@ -24,13 +24,12 @@ describe('BannerText', () => {
   });
 
   it('renders header when props.bannerText is a string', () => {
-    const { getByText } = render(<BannerText bannerText="foo text" />);
-    const headerElement = getByText('foo text');
-    expect(headerElement).toBeInTheDocument();
+    render(<BannerText bannerText="foo text" />);
+    expect(screen.getByText('foo text')).toBeInTheDocument();
   });
 
   it('renders styled header when props.bannerText is a styled value', () => {
-    const { getByText } = render(
+    render(
       <BannerText
         bannerText={{
           styling: {
@@ -42,9 +41,7 @@ describe('BannerText', () => {
       />
     );
 
-    const headerElement = getByText('foo text');
-
-    expect(headerElement).toBeInTheDocument();
-    expect(headerElement).toHaveStyle('background: red; color: white;');
+    expect(screen.getByText('foo text')).toBeInTheDocument();
+    expect(screen.getByText('foo text')).toHaveStyle('background: red; color: white;');
   });
 });

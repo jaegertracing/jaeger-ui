@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import React from 'react';
-import { render } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import CountCard from './CountCard';
 
@@ -30,23 +30,17 @@ describe('CountCard', () => {
   });
 
   it('renders as expected when given count and title', () => {
-    const { getByText } = render(<CountCard count={count} title={title} />);
-    const countElement = getByText('108');
-    const titleElement = getByText('Test Title');
+    render(<CountCard count={count} title={title} />);
 
-    expect(countElement).toBeInTheDocument();
-    expect(titleElement).toBeInTheDocument();
+    expect(screen.getByText('108')).toBeInTheDocument();
+    expect(screen.getByText('Test Title')).toBeInTheDocument();
   });
 
   it('renders as expected when given count, title, and examples', () => {
-    const { getByText } = render(<CountCard count={count} title={title} examples={examples} />);
+    render(<CountCard count={count} title={title} examples={examples} />);
 
-    const countElement = getByText('108');
-    const titleElement = getByText('Test Title');
-    const exampleElement = getByText('Examples');
-    expect(exampleElement).toBeInTheDocument();
-
-    expect(countElement).toBeInTheDocument();
-    expect(titleElement).toBeInTheDocument();
+    expect(screen.getByText('108')).toBeInTheDocument();
+    expect(screen.getByText('Test Title')).toBeInTheDocument();
+    expect(screen.getByText('Examples')).toBeInTheDocument();
   });
 });
