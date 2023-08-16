@@ -39,7 +39,6 @@ const depcheckrcContent = {
 const outputFile = process.argv[2];
 
 if (!outputFile) {
-  console.error('Usage: node generateDepcheckrcJaegerUI.js <outputFile>');
   process.exit(1);
 }
 
