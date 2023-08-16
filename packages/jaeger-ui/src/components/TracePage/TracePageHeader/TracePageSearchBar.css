@@ -43,11 +43,18 @@ limitations under the License.
 .TracePageSearchBar--locateBtn {
   padding: 1px 8px 4px;
 }
-.help-button{
+.help-btn-container {
+  border: 1px solid gainsboro;
+  padding: 3px 7px;
+}
+.help-btn-container:hover {
+  border-top-color: rgb(23, 184, 190);
+  border-bottom-color: rgb(23, 184, 190);
+}
+.help-button {
   border: 1px solid #999;
   border-radius: 100px;
   color: #999;
   cursor: pointer;
   padding: 1px;
-  margin: 0 -6px;
 }
