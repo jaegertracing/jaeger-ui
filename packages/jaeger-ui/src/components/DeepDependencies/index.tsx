@@ -265,7 +265,9 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps, TSt
     } = this.props;
     const { density, operation, service, visEncoding } = urlState;
     const distanceToPathElems =
-      graphState && graphState.state === fetchedState.DONE && 'model' in graphState ? graphState.model.distanceToPathElems : undefined;
+      graphState && graphState.state === fetchedState.DONE && 'model' in graphState
+        ? graphState.model.distanceToPathElems
+        : undefined;
     const uiFindMatches = graph && graph.getVisibleUiFindMatches(uiFind, visEncoding);
     const hiddenUiFindMatches = graph && graph.getHiddenUiFindMatches(uiFind, visEncoding);
 
