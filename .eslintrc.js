@@ -48,8 +48,6 @@ module.exports = {
 
         // Disable ESLint core rules for which @typescript-eslint provides TypeScript-specific equivalents.
         '@typescript-eslint/no-this-alias': 0,
-        'no-unused-vars': 0,
-        '@typescript-eslint/no-unused-vars': 1,
         'no-use-before-define': 0,
         '@typescript-eslint/no-use-before-define': 1,
         'no-redeclare': 0,
@@ -80,7 +78,8 @@ module.exports = {
     'prefer-destructuring': 0,
     
     /* tsx */
-    '@typescript-eslint/no-explicit-any': "warn",
+    "@typescript-eslint/no-explicit-any": "warn",
+    "@typescript-eslint/no-unused-vars": "warn",
     "@typescript-eslint/no-var-requires": "warn",
     "@typescript-eslint/no-empty-function": "warn",
     "@typescript-eslint/ban-types": "warn",
