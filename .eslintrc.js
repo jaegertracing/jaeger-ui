@@ -80,6 +80,7 @@ module.exports = {
     'prefer-destructuring': 0,
     
     /* tsx */
+    '@typescript-eslint/no-explicit-any': "warn",
     "@typescript-eslint/no-var-requires": "warn",
     "@typescript-eslint/no-empty-function": "warn",
     "@typescript-eslint/ban-types": "warn",
