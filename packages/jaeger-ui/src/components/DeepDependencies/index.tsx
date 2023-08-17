@@ -173,7 +173,7 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps, TSt
     const { graphState } = this.props;
     const { visEncoding } = this.props.urlState;
 
-    if (graphState && graphState.state === fetchedState.DONE) {
+    if (graphState && graphState.state === fetchedState.DONE && 'model' in graphState) {
       const { model: ddgModel } = graphState;
 
       this.updateUrlState({
@@ -265,7 +265,7 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps, TSt
     } = this.props;
     const { density, operation, service, visEncoding } = urlState;
     const distanceToPathElems =
-      graphState && graphState.state === fetchedState.DONE ? graphState.model.distanceToPathElems : undefined;
+      graphState && graphState.state === fetchedState.DONE && 'model' in graphState ? graphState.model.distanceToPathElems : undefined;
     const uiFindMatches = graph && graph.getVisibleUiFindMatches(uiFind, visEncoding);
     const hiddenUiFindMatches = graph && graph.getHiddenUiFindMatches(uiFind, visEncoding);
 
@@ -273,7 +273,7 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps, TSt
     let wrapperClassName = '';
     if (!graphState) {
       content = <h1>Enter query above</h1>;
-    } else if (graphState.state === fetchedState.DONE && graph) {
+    } else if (graphState.state === fetchedState.DONE && graph && 'model' in graphState) {
       const { edges, vertices } = graph.getVisible(visEncoding);
       const { viewModifiers } = graphState;
       const { edges: edgesViewModifiers, vertices: verticesViewModifiers } = graph.getDerivedViewModifiers(
@@ -346,7 +346,7 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps, TSt
       }
     } else if (graphState.state === fetchedState.LOADING) {
       content = <LoadingIndicator centered className="u-mt-vast" />;
-    } else if (graphState.state === fetchedState.ERROR) {
+    } else if (graphState.state === fetchedState.ERROR && 'error' in graphState) {
       content = (
         <>
           <ErrorMessage error={graphState.error} className="ub-m4" />
@@ -404,7 +404,7 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
     graphState = _get(state.ddg, getStateEntryKey({ service, operation, start: 0, end: 0 }));
   }
   let graph: GraphModel | undefined;
-  if (graphState && graphState.state === fetchedState.DONE) {
+  if (graphState && graphState.state === fetchedState.DONE && 'model' in graphState) {
     graph = makeGraph(graphState.model, showOp, density);
   }
   return {
