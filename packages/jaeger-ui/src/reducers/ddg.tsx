@@ -25,6 +25,7 @@ import {
   TDdgActionMeta,
   TDdgAddViewModifierPayload,
   TDdgClearViewModifiersFromIndicesPayload,
+  TDdgModel,
   TDdgPayload,
   TDdgRemoveViewModifierFromIndicesPayload,
   TDdgRemoveViewModifierPayload,
@@ -32,6 +33,12 @@ import {
 } from '../model/ddg/types';
 import TDdgState, { TDdgStateEntry } from '../types/TDdgState';
 import guardReducer, { guardReducerWithMeta } from '../utils/guardReducer';
+
+interface IDoneState {
+  state: typeof fetchedState.DONE;
+  model: TDdgModel;
+  viewModifiers: Map<number, number>;
+}
 
 export function addViewModifier(state: TDdgState, payload: TDdgAddViewModifierPayload) {
   const { visibilityIndices, viewModifier } = payload;
@@ -42,10 +49,7 @@ export function addViewModifier(state: TDdgState, payload: TDdgAddViewModifierPa
     return state;
   }
 
-  const viewModifiers: any =
-    stateEntry && stateEntry.state === fetchedState.DONE && 'viewModifiers' in stateEntry
-      ? new Map(stateEntry.viewModifiers)
-      : undefined;
+  const viewModifiers: any = new Map((stateEntry as IDoneState).viewModifiers);
   visibilityIndices.forEach(idx => {
     viewModifiers.set(idx, (viewModifiers.get(idx) || 0) | viewModifier); // eslint-disable-line no-bitwise
   });
@@ -68,10 +72,7 @@ export function viewModifierRemoval(state: TDdgState, payload: TDdgViewModifierR
     return state;
   }
 
-  const viewModifiers: any =
-    stateEntry && stateEntry.state === fetchedState.DONE && 'viewModifiers' in stateEntry
-      ? new Map(stateEntry.viewModifiers)
-      : undefined;
+  const viewModifiers: any = new Map((stateEntry as IDoneState).viewModifiers);
   const indicesToUpdate = visibilityIndices || Array.from(viewModifiers.keys());
 
   indicesToUpdate.forEach(idx => {

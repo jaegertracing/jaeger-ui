@@ -37,6 +37,7 @@ import {
   EDdgDensity,
   EDirection,
   EViewModifier,
+  TDdgModel,
   TDdgModelParams,
   TDdgSparseUrlState,
   TDdgVertex,
@@ -47,6 +48,17 @@ import { ReduxState } from '../../types';
 import { TDdgStateEntry } from '../../types/TDdgState';
 
 import './index.css';
+import { ApiError } from '../../types/api-error';
+
+interface IDoneState {
+  state: typeof fetchedState.DONE;
+  model: TDdgModel;
+  viewModifiers: Map<number, number>;
+}
+interface IErrorState {
+  state: typeof fetchedState.ERROR;
+  error: ApiError;
+}
 
 export type TDispatchProps = {
   addViewModifier?: (kwarg: TDdgModelParams & { viewModifier: number; visibilityIndices: number[] }) => void;
@@ -173,8 +185,8 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps, TSt
     const { graphState } = this.props;
     const { visEncoding } = this.props.urlState;
 
-    if (graphState && graphState.state === fetchedState.DONE && 'model' in graphState) {
-      const { model: ddgModel } = graphState;
+    if (graphState && graphState.state === fetchedState.DONE) {
+      const { model: ddgModel } = graphState as IDoneState;
 
       this.updateUrlState({
         visEncoding: encodeDistance({
@@ -265,8 +277,8 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps, TSt
     } = this.props;
     const { density, operation, service, visEncoding } = urlState;
     const distanceToPathElems =
-      graphState && graphState.state === fetchedState.DONE && 'model' in graphState
-        ? graphState.model.distanceToPathElems
+      graphState && graphState.state === fetchedState.DONE
+        ? (graphState as IDoneState).model.distanceToPathElems
         : undefined;
     const uiFindMatches = graph && graph.getVisibleUiFindMatches(uiFind, visEncoding);
     const hiddenUiFindMatches = graph && graph.getHiddenUiFindMatches(uiFind, visEncoding);
@@ -275,9 +287,9 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps, TSt
     let wrapperClassName = '';
     if (!graphState) {
       content = <h1>Enter query above</h1>;
-    } else if (graphState.state === fetchedState.DONE && graph && 'model' in graphState) {
+    } else if (graphState.state === fetchedState.DONE && graph) {
       const { edges, vertices } = graph.getVisible(visEncoding);
-      const { viewModifiers } = graphState;
+      const { viewModifiers } = graphState as IDoneState;
       const { edges: edgesViewModifiers, vertices: verticesViewModifiers } = graph.getDerivedViewModifiers(
         visEncoding,
         viewModifiers
@@ -315,8 +327,8 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps, TSt
           </>
         );
       } else if (
-        graphState.model.distanceToPathElems.has(-1) ||
-        graphState.model.distanceToPathElems.has(1)
+        (graphState as IDoneState).model.distanceToPathElems.has(-1) ||
+        (graphState as IDoneState).model.distanceToPathElems.has(1)
       ) {
         content = (
           <>
@@ -348,10 +360,10 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps, TSt
       }
     } else if (graphState.state === fetchedState.LOADING) {
       content = <LoadingIndicator centered className="u-mt-vast" />;
-    } else if (graphState.state === fetchedState.ERROR && 'error' in graphState) {
+    } else if (graphState.state === fetchedState.ERROR) {
       content = (
         <>
-          <ErrorMessage error={graphState.error} className="ub-m4" />
+          <ErrorMessage error={(graphState as IErrorState).error} className="ub-m4" />
           <p className="Ddg--center">If you are using an adblocker, whitelist Jaeger and retry.</p>
         </>
       );
@@ -406,8 +418,8 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
     graphState = _get(state.ddg, getStateEntryKey({ service, operation, start: 0, end: 0 }));
   }
   let graph: GraphModel | undefined;
-  if (graphState && graphState.state === fetchedState.DONE && 'model' in graphState) {
-    graph = makeGraph(graphState.model, showOp, density);
+  if (graphState && graphState.state === fetchedState.DONE) {
+    graph = makeGraph((graphState as IDoneState).model, showOp, density);
   }
   return {
     graph,
