@@ -142,7 +142,7 @@ type TPropsWithInjectedFormProps = TProps & InjectedFormProps<{}, TProps>;
 export class MonitorATMServicesViewImpl extends React.PureComponent<TPropsWithInjectedFormProps, StateType> {
   docsLink: string;
   graphDivWrapper: React.RefObject<HTMLInputElement>;
-  serviceSelectorValue: string = '';
+  serviceSelectorValue = '';
   endTime: number = Date.now();
   state = {
     graphWidth: 300,

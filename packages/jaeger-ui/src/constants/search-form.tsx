@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export const DEFAULT_OPERATION = 'all' as 'all';
-export const DEFAULT_LOOKBACK = '1h' as '1h';
-export const DEFAULT_LIMIT = 20 as 20;
+export const DEFAULT_OPERATION = 'all';
+export const DEFAULT_LOOKBACK = '1h';
+export const DEFAULT_LIMIT = 20;
 
-export const FORM_CHANGE_ACTION_TYPE = '@@redux-form/CHANGE' as '@@redux-form/CHANGE';
+export const FORM_CHANGE_ACTION_TYPE = '@@redux-form/CHANGE';
