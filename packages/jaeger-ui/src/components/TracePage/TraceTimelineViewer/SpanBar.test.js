@@ -76,13 +76,13 @@ describe('<SpanBar>', () => {
     render(<SpanBar {...props} />);
     const labelElm = screen.getByText(shortLabel);
     expect(labelElm).toBeInTheDocument();
-    expect(screen.queryByText(longLabel)).not.toBeInTheDocument();
+    expect(screen.queryByText(longLabel)).toBeNull();
     fireEvent.mouseOver(labelElm);
     expect(screen.getByText(longLabel)).toBeInTheDocument();
-    expect(screen.queryByText(shortLabel)).not.toBeInTheDocument();
+    expect(screen.queryByText(shortLabel)).toBeNull();
     fireEvent.mouseOut(labelElm);
     expect(screen.getByText(shortLabel)).toBeInTheDocument();
-    expect(screen.queryByText(longLabel)).not.toBeInTheDocument();
+    expect(screen.queryByText(longLabel)).toBeNull();
   });
 
   it('log markers count', () => {
