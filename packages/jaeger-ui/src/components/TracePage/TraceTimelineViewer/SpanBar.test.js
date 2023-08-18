@@ -75,11 +75,13 @@ describe('<SpanBar>', () => {
   it('renders without exploding', () => {
     render(<SpanBar {...props} />);
     const labelElm = screen.getByText(shortLabel);
-    expect(screen.getByText(shortLabel)).toBeInTheDocument();
+    expect(labelElm).toBeInTheDocument();
     fireEvent.mouseOver(labelElm);
     expect(screen.getByText(longLabel)).toBeInTheDocument();
+    expect(screen.queryByText(shortLabel)).not.toBeInTheDocument();
     fireEvent.mouseOut(labelElm);
     expect(screen.getByText(shortLabel)).toBeInTheDocument();
+    expect(screen.queryByText(longLabel)).not.toBeInTheDocument();
   });
 
   it('log markers count', () => {
