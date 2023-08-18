@@ -115,7 +115,11 @@ function SpanBar(props: TCommonProps) {
               />
             }
           >
-            <div className="SpanBar--logMarker" style={{ left: positionKey }} />
+            <div
+              data-testid="SpanBar--logMarker"
+              className="SpanBar--logMarker"
+              style={{ left: positionKey }}
+            />
           </Popover>
         ))}
       </div>
