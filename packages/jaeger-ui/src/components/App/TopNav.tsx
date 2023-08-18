@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import React from 'react';
-import { Dropdown, Icon, Menu } from 'antd';
+import { Dropdown, Menu } from 'antd';
+import { DownOutlined } from '@ant-design/icons';
 import _has from 'lodash/has';
 import { connect } from 'react-redux';
 import { RouteComponentProps, Link, withRouter } from 'react-router-dom';
@@ -97,7 +98,7 @@ function CustomNavDropdown({ label, items }: ConfigMenuGroup) {
   return (
     <Dropdown overlay={menuItems} placement="bottomRight">
       <a>
-        {label} <Icon type="down" />
+        {label} <DownOutlined />
       </a>
     </Dropdown>
   );
