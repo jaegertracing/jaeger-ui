@@ -8,9 +8,7 @@ exports[`<FileLoader /> matches the snapshot 1`] = `
   <p
     className="ant-upload-drag-icon"
   >
-    <Icon
-      type="file-add"
-    />
+    <ForwardRef(FileAddOutlined) />
   </p>
   <p
     className="ant-upload-text"
