@@ -76,6 +76,7 @@ describe('<SpanBar>', () => {
     render(<SpanBar {...props} />);
     const labelElm = screen.getByText(shortLabel);
     expect(labelElm).toBeInTheDocument();
+    expect(screen.queryByText(longLabel)).not.toBeInTheDocument();
     fireEvent.mouseOver(labelElm);
     expect(screen.getByText(longLabel)).toBeInTheDocument();
     expect(screen.queryByText(shortLabel)).not.toBeInTheDocument();
