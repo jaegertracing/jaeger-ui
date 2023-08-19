@@ -33,7 +33,7 @@ describe('NewWindowIcon', () => {
     expect(container.querySelector('.is-large')).toBeNull();
 
     // Re-render with isLarge prop set to true
-    rerender(<NewWindowIcon notIsLarge="not is large" isLarge={true} />);
+    rerender(<NewWindowIcon {...props} isLarge />);
 
     // After re-render, is-large should be true
     expect(container.querySelector('.is-large')).toBeInTheDocument();
