@@ -21,8 +21,7 @@ import TDagNode from '../../../model/trace-dag/types/TDagNode';
 import { TDenseSpanMembers } from '../../../model/trace-dag/types';
 import { Trace, Span, KeyValuePair } from '../../../types/trace';
 import { TSumSpan, TEv } from './types';
-
-let parentChildOfMap: Record<string, Span[]>;
+import getChildOfSpans from '../../../utils/getChildOfSpans';
 
 export function isError(tags: Array<KeyValuePair>) {
   if (tags) {
@@ -50,28 +49,15 @@ function mapFollowsFrom(
   });
 }
 
-function getChildOfSpans(parentID: string, trace: Trace): Span[] {
-  if (!parentChildOfMap) {
-    parentChildOfMap = {};
-    trace.spans.forEach(s => {
-      if (s.references) {
-        // Filter for CHILD_OF we don't want to calculate FOLLOWS_FROM (prod-cons)
-        const parentIDs = s.references.filter(r => r.refType === 'CHILD_OF').map(r => r.spanID);
-        parentIDs.forEach((pID: string) => {
-          parentChildOfMap[pID] = parentChildOfMap[pID] || [];
-          parentChildOfMap[pID].push(s);
-        });
-      }
-    });
-  }
-  return parentChildOfMap[parentID] || [];
-}
-
-function getChildOfDrange(parentID: string, trace: Trace) {
+function getChildOfDrange(parentID: string, spanMap: Map<string, Span>) {
   const childrenDrange = new DRange();
-  getChildOfSpans(parentID, trace).forEach(s => {
+  spanMap.get(parentID)?.childSpanIds.forEach(id => {
+    const childSpan = spanMap.get(id)!;
     // -1 otherwise it will take for each child a micro (incluse,exclusive)
-    childrenDrange.add(s.startTime, s.startTime + (s.duration <= 0 ? 0 : s.duration - 1));
+    childrenDrange.add(
+      childSpan.startTime,
+      childSpan.startTime + (childSpan.duration <= 0 ? 0 : childSpan.duration - 1)
+    );
   });
   return childrenDrange;
 }
@@ -79,6 +65,11 @@ function getChildOfDrange(parentID: string, trace: Trace) {
 export function calculateTraceDag(trace: Trace): TraceDag<TSumSpan & TDenseSpanMembers> {
   const baseDag = TraceDag.newFromTrace(trace);
   const dag = new TraceDag<TSumSpan & TDenseSpanMembers>();
+  const SpanMap = trace.spans.reduce((map, span) => {
+    map.set(span.spanID, span);
+    return map;
+  }, new Map<string, Span>());
+  const refinedSpanMap = getChildOfSpans(SpanMap);
 
   baseDag.nodesMap.forEach(node => {
     const ntime = node.members.reduce((p, m) => p + m.span.duration, 0);
@@ -86,7 +77,7 @@ export function calculateTraceDag(trace: Trace): TraceDag<TSumSpan & TDenseSpanM
     const childDurationsDRange = node.members.reduce((p, m) => {
       // Using DRange to handle overlapping spans (fork-join)
       const cdr = new DRange(m.span.startTime, m.span.startTime + m.span.duration).intersect(
-        getChildOfDrange(m.span.spanID, trace)
+        getChildOfDrange(m.span.spanID, refinedSpanMap)
       );
       return p + cdr.length;
     }, 0);
