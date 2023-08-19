@@ -13,27 +13,29 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
-
+import { render } from '@testing-library/react';
+import '@testing-library/jest-dom/';
 import NewWindowIcon from './NewWindowIcon';
 
 describe('NewWindowIcon', () => {
   const props = {
     notIsLarge: 'not is large',
   };
-  let wrapper;
-
-  beforeEach(() => {
-    wrapper = shallow(<NewWindowIcon {...props} />);
-  });
-
-  it('renders as expected', () => {
-    expect(wrapper).toMatchSnapshot();
+  it('renders without is-large className when props.isLarge is false', () => {
+    const { container } = render(<NewWindowIcon {...props} />);
+    expect(container.querySelector('.is-large')).toBeNull();
   });
 
   it('adds is-large className when props.isLarge is true', () => {
-    expect(wrapper.hasClass('is-large')).toBe(false);
-    wrapper.setProps({ isLarge: true });
-    expect(wrapper.hasClass('is-large')).toBe(true);
+    const { rerender, container } = render(<NewWindowIcon {...props} />);
+
+    // Initial render, is-large should be false
+    expect(container.querySelector('.is-large')).toBeNull();
+
+    // Re-render with isLarge prop set to true
+    rerender(<NewWindowIcon notIsLarge="not is large" isLarge={true} />);
+
+    // After re-render, is-large should be true
+    expect(container.querySelector('.is-large')).toBeInTheDocument();
   });
 });
