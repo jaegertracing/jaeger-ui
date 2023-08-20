@@ -13,8 +13,8 @@
 // limitations under the License.
 
 import React from 'react';
-import { mount } from 'enzyme';
-import { Popover } from 'antd';
+import { render, screen, fireEvent } from '@testing-library/react';
+import '@testing-library/jest-dom/';
 
 import SpanBar from './SpanBar';
 
@@ -73,21 +73,22 @@ describe('<SpanBar>', () => {
   };
 
   it('renders without exploding', () => {
-    const wrapper = mount(<SpanBar {...props} />);
-    expect(wrapper).toBeDefined();
-    const { onMouseOver, onMouseOut } = wrapper.find('.SpanBar--wrapper').props();
-    const labelElm = wrapper.find('.SpanBar--label');
-    expect(labelElm.text()).toBe(shortLabel);
-    onMouseOver();
-    expect(labelElm.text()).toBe(longLabel);
-    onMouseOut();
-    expect(labelElm.text()).toBe(shortLabel);
+    render(<SpanBar {...props} />);
+    const labelElm = screen.getByText(shortLabel);
+    expect(labelElm).toBeInTheDocument();
+    expect(screen.queryByText(longLabel)).toBeNull();
+    fireEvent.mouseOver(labelElm);
+    expect(screen.getByText(longLabel)).toBeInTheDocument();
+    expect(screen.queryByText(shortLabel)).toBeNull();
+    fireEvent.mouseOut(labelElm);
+    expect(screen.getByText(shortLabel)).toBeInTheDocument();
+    expect(screen.queryByText(longLabel)).toBeNull();
   });
 
   it('log markers count', () => {
     // 3 log entries, two grouped together with the same timestamp
-    const wrapper = mount(<SpanBar {...props} />);
-    expect(wrapper.find(Popover).length).toEqual(2);
+    render(<SpanBar {...props} />);
+    expect(screen.getAllByTestId('SpanBar--logMarker').length).toEqual(2);
   });
 
   it('Critical Path is rendered', () => {

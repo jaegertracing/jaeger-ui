@@ -102,7 +102,7 @@ export function _initOpSpan() {
  *     recursive call stack.
  * @returns {number} - Width of narrowest rectangle that contains given words across given lines.
  */
-function calcWidth(lengths: number[], lines: number, longestThusFar: number = 0): number {
+function calcWidth(lengths: number[], lines: number, longestThusFar = 0): number {
   // Base case: all words on one line means line length is total word length
   const total = lengths.reduce((sum, curr) => curr + sum, 0);
   if (lines === 1) return total;

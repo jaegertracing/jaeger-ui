@@ -13,6 +13,7 @@
 // limitations under the License.
 
 module.exports = {
+  root:true,
   env: {
     browser: true,
     jest: true,
@@ -25,20 +26,8 @@ module.exports = {
       },
     },
   },
-  extends: ['airbnb', 'prettier'],
+  extends: ['airbnb', 'prettier','eslint:recommended','plugin:@typescript-eslint/recommended'],
   overrides: [
-    {
-      files: ['*.jsx', '*.test.js'],
-      parser: '@babel/eslint-parser',
-      parserOptions: {
-        requireConfigFile: false,
-        babelOptions: {
-          babelrc: false,
-          configFile: false,
-          presets: ["@babel/preset-react"],
-        },
-      }
-    },
     {
       files: ['*.ts', '*.tsx'],
       parser: '@typescript-eslint/parser',
@@ -58,8 +47,7 @@ module.exports = {
         ],
 
         // Disable ESLint core rules for which @typescript-eslint provides TypeScript-specific equivalents.
-        'no-unused-vars': 0,
-        '@typescript-eslint/no-unused-vars': 1,
+        '@typescript-eslint/no-this-alias': 0,
         'no-use-before-define': 0,
         '@typescript-eslint/no-use-before-define': 1,
         'no-redeclare': 0,
@@ -75,13 +63,6 @@ module.exports = {
         'react/no-unused-prop-types': 0,
       },
     },
-    {
-      files: ['*.test.js'],
-      rules: {
-        // Used for Jest module mocking.
-        'no-import-assign': 0,
-      },
-    },
   ],
   rules: {
     /* general */
@@ -95,6 +76,14 @@ module.exports = {
     'no-self-compare': 0,
     'no-underscore-dangle': 0,
     'prefer-destructuring': 0,
+    
+    /* tsx */
+    "@typescript-eslint/no-explicit-any": "warn",
+    "@typescript-eslint/no-unused-vars": "warn",
+    "@typescript-eslint/no-var-requires": "warn",
+    "@typescript-eslint/no-empty-function": "warn",
+    "@typescript-eslint/ban-types": "warn",
+    "@typescript-eslint/ban-ts-comment": "warn",
 
     /* jsx */
     'jsx-a11y/anchor-is-valid': 0,

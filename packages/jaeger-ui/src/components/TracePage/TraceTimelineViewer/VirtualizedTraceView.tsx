@@ -32,6 +32,7 @@ import {
   findServerChildSpan,
   isErrorSpan,
   isKindClient,
+  isKindProducer,
   spanContainsErredSpan,
   ViewedBoundsFunctionType,
 } from './utils';
@@ -388,7 +389,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     // Leaf, kind == client and has peer.service tag, is likely a client span that does a request
     // to an uninstrumented/external service
     let noInstrumentedServer = null;
-    if (!span.hasChildren && peerServiceKV && isKindClient(span)) {
+    if (!span.hasChildren && peerServiceKV && (isKindClient(span) || isKindProducer(span))) {
       noInstrumentedServer = {
         serviceName: peerServiceKV.value,
         color: colorGenerator.getColorByKey(peerServiceKV.value),

@@ -13,9 +13,8 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
-
 import ScoreCard from './ScoreCard';
+import shallow from '../../utils/ReactShallowRenderer.test.js';
 
 describe('ScoreCard', () => {
   const link = 'test.link';

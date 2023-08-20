@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import React from 'react';
-import { mount } from 'enzyme';
+import { render, screen } from '@testing-library/react';
 import DAG from './DAG';
 
 // mock canvas API (we don't care about canvas results)
@@ -63,7 +63,8 @@ describe('<DAG>', () => {
         parent: 'parent-id',
       },
     ];
-    expect(mount(<DAG serviceCalls={serviceCalls} />)).toBeDefined();
+    render(<DAG serviceCalls={serviceCalls} />);
+    expect(screen.getByTestId('cy')).toBeDefined();
   });
 
   it('does not explode with empty strings or string with only spaces', () => {
@@ -74,6 +75,7 @@ describe('<DAG>', () => {
         parent: ' ',
       },
     ];
-    expect(mount(<DAG serviceCalls={serviceCalls} />)).toBeDefined();
+    render(<DAG serviceCalls={serviceCalls} />);
+    expect(screen.getByTestId('cy')).toBeDefined();
   });
 });

@@ -122,7 +122,7 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
   const spans: Span[] = [];
   const svcCounts: Record<string, number> = {};
 
-  tree.walk((spanID: string, node: TreeNode, depth: number = 0) => {
+  tree.walk((spanID: string, node: TreeNode, depth = 0) => {
     if (spanID === '__root__') {
       return;
     }
