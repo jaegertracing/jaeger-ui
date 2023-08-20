@@ -110,6 +110,7 @@ export default class DAG extends React.Component {
           left: 0,
           top: 0,
         }}
+        data-testid="cy"
         ref={this.cytoscapeRef}
       />
     );

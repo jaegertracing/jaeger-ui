@@ -15,7 +15,8 @@
 /* eslint-disable import/no-extraneous-dependencies */
 
 import * as React from 'react';
-import { Icon } from 'antd';
+import { DownOutlined } from '@ant-design/icons';
+
 import VirtualizedSelect from 'react-virtualized-select';
 
 import 'react-select/dist/react-select.css';
@@ -87,7 +88,7 @@ any) /* RenderOptionArgs) \*\/: JSX.Element */ {
 }
 
 function renderArrow({ isOpen }: RenderArrowArgs) {
-  return <Icon className={`VirtSelect--arrow ${isOpen ? 'is-open' : ''}`} type="down" />;
+  return <DownOutlined className={`VirtSelect--arrow ${isOpen ? 'is-open' : ''}`} />;
 }
 
 export default function VirtSelect(props: object) {
