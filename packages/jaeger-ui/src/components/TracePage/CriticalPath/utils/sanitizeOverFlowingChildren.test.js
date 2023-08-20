@@ -25,11 +25,11 @@ function getExpectedSanitizedData(spans, test) {
     test6: [spans[0], { ...spans[1], duration: 15 }, { ...spans[2], duration: 10, startTime: 15 }],
     test7: [spans[0], { ...spans[1], duration: 15 }, { ...spans[2], duration: 10 }],
   };
-  const SpanMap = testSanitizedData[test].reduce((map, span) => {
+  const spanMap = testSanitizedData[test].reduce((map, span) => {
     map.set(span.spanID, span);
     return map;
   }, new Map());
-  return SpanMap;
+  return spanMap;
 }
 
 describe.each([
@@ -40,11 +40,11 @@ describe.each([
 ])('sanitizeOverFlowingChildren', (testProps, expectedSanitizedData) => {
   it('Should sanitize the data(overflowing spans) correctly', () => {
     const refinedSpanData = getChildOfSpans(testProps.trace.spans);
-    const SpanMap = refinedSpanData.reduce((map, span) => {
+    const spanMap = refinedSpanData.reduce((map, span) => {
       map.set(span.spanID, span);
       return map;
     }, new Map());
-    const sanitizedSpanMap = sanitizeOverFlowingChildren(SpanMap);
+    const sanitizedSpanMap = sanitizeOverFlowingChildren(spanMap);
     expect(sanitizedSpanMap).toStrictEqual(expectedSanitizedData);
   });
 });
