@@ -18,22 +18,22 @@ import getChildOfSpans from './getChildOfSpans';
 
 describe('getChildOfSpans', () => {
   it('Should not remove CHILD_OF child spans if there are any', () => {
-    const SpanMap = test2.trace.spans.reduce((map, span) => {
+    const spanMap = test2.trace.spans.reduce((map, span) => {
       map.set(span.spanID, span);
       return map;
     }, new Map());
-    const refinedSpanMap = getChildOfSpans(SpanMap);
-    const expectedRefinedSpanMap = SpanMap;
+    const refinedSpanMap = getChildOfSpans(spanMap);
+    const expectedRefinedSpanMap = spanMap;
 
     expect(refinedSpanMap.size).toBe(3);
     expect(refinedSpanMap).toStrictEqual(expectedRefinedSpanMap);
   });
   it('Should remove FOLLOWS_FROM child spans if there are any', () => {
-    const SpanMap = test5.trace.spans.reduce((map, span) => {
+    const spanMap = test5.trace.spans.reduce((map, span) => {
       map.set(span.spanID, span);
       return map;
     }, new Map());
-    const refinedSpanMap = getChildOfSpans(SpanMap);
+    const refinedSpanMap = getChildOfSpans(spanMap);
     const expectedRefinedSpanMap = new Map().set(test5.trace.spans[0].spanID, {
       ...test5.trace.spans[0],
       childSpanIds: [],
