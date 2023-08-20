@@ -16,23 +16,24 @@ import { Span } from '../../../../types/trace';
 
 /**
  * @returns - Returns the span that finished last among the remaining child spans.
- * If a `spawnTime` is provided as a parameter, it returns the child span that finishes
- * just before the specified `spawnTime`.
+ * If a `returningChildStartTime` is provided as a parameter, it returns the child span that finishes
+ * just before the specified `returningChildStartTime`.
  */
 const findLastFinishingChildSpan = (
   spanMap: Map<string, Span>,
   currentSpan: Span,
-  spawnTime?: number
+  returningChildStartTime?: number
 ): Span | undefined => {
   let lastFinishingChildSpanId: string | undefined;
-  if (spawnTime) {
+  if (returningChildStartTime) {
     lastFinishingChildSpanId = currentSpan.childSpanIds.find(
       each =>
         // Look up the span using the map
-        spanMap.has(each) && spanMap.get(each)!.startTime + spanMap.get(each)!.duration < spawnTime
+        spanMap.has(each) &&
+        spanMap.get(each)!.startTime + spanMap.get(each)!.duration < returningChildStartTime
     );
   } else {
-    // If `spawnTime` is not provided, select the first child span.
+    // If `returningChildStartTime` is not provided, select the first child span.
     // As they are sorted based on endTime
     lastFinishingChildSpanId = currentSpan.childSpanIds[0];
   }

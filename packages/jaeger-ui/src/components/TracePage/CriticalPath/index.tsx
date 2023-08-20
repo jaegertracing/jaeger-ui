@@ -27,7 +27,7 @@ import sanitizeOverFlowingChildren from './utils/sanitizeOverFlowingChildren';
  * @param spanMap - A map associating span IDs with spans.
  * @param spanId - The ID of the current span.
  * @param criticalPath - An array of critical path sections.
- * @param spawnTime - Optional parameter representing the span's start time.
+ * @param returningChildStartTime - Optional parameter representing the span's start time.
  *                    It is provided only during the recursive return phase.
  * @returns - An array of critical path sections for the trace.
  * @example -
@@ -35,25 +35,25 @@ import sanitizeOverFlowingChildren from './utils/sanitizeOverFlowingChildren';
  *    |--spanB--|    |--spanC--|
  * The LFC of spanA is spanC, as it finishes last among its child spans.
  * After invoking CP recursively on LFC, for spanC there is no LFC, so the algorithm walks backward.
- * At this point, it uses spawnTime (startTime of spanC) to select another child that finished
+ * At this point, it uses returningChildStartTime (startTime of spanC) to select another child that finished
  * immediately before the LFC's start.
  */
 export const computeCriticalPath = (
   spanMap: Map<string, Span>,
   spanId: string,
   criticalPath: criticalPathSection[],
-  spawnTime?: number
+  returningChildStartTime?: number
 ): criticalPathSection[] => {
   const currentSpan: Span = spanMap.get(spanId)!;
 
-  const lastFinishingChildSpan = findLastFinishingChildSpan(spanMap, currentSpan, spawnTime);
+  const lastFinishingChildSpan = findLastFinishingChildSpan(spanMap, currentSpan, returningChildStartTime);
   let spanCriticalSection: criticalPathSection;
 
   if (lastFinishingChildSpan) {
     spanCriticalSection = {
       spanId: currentSpan.spanID,
       section_start: lastFinishingChildSpan.startTime + lastFinishingChildSpan.duration,
-      section_end: spawnTime || currentSpan.startTime + currentSpan.duration,
+      section_end: returningChildStartTime || currentSpan.startTime + currentSpan.duration,
     };
     if (spanCriticalSection.section_start !== spanCriticalSection.section_end) {
       criticalPath.push(spanCriticalSection);
@@ -65,13 +65,14 @@ export const computeCriticalPath = (
     spanCriticalSection = {
       spanId: currentSpan.spanID,
       section_start: currentSpan.startTime,
-      section_end: spawnTime || currentSpan.startTime + currentSpan.duration,
+      section_end: returningChildStartTime || currentSpan.startTime + currentSpan.duration,
     };
     if (spanCriticalSection.section_start !== spanCriticalSection.section_end) {
       criticalPath.push(spanCriticalSection);
     }
     // Now as there are no lfc's focus shifts to parent span from startTime of span
     // return from recursion and walk backwards to one level depth to parent span
+    // provide span's startTime as returningChildStartTime
     if (currentSpan.references.length) {
       const parentSpanId: string = currentSpan.references.filter(
         reference => reference.refType === 'CHILD_OF'
@@ -88,13 +89,13 @@ function TraceCriticalPath(trace: Trace) {
   const rootSpanId = trace.spans[0].spanID;
   // If there is root span then algorithm implements
   if (rootSpanId) {
-    const SpanMap = trace.spans.reduce((map, span) => {
+    const spanMap = trace.spans.reduce((map, span) => {
       map.set(span.spanID, span);
       return map;
     }, new Map<string, Span>());
-    const refinedSpanMap = getChildOfSpans(SpanMap);
+    const refinedSpanMap = getChildOfSpans(spanMap);
     const sanitizedSpanMap = sanitizeOverFlowingChildren(refinedSpanMap);
-    criticalPath = computeCriticalPath(sanitizedSpanMap, rootSpanId, []);
+    criticalPath = computeCriticalPath(sanitizedSpanMap, rootSpanId, criticalPath);
   }
   return criticalPath;
 }
