@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Dropdown, Icon, Menu } from 'antd';
+import { Dropdown, Menu } from 'antd';
+import { ExportOutlined, ProfileOutlined } from '@ant-design/icons';
 import { jsonMarkup } from './jsonMarkup';
 
 import CopyIcon from '../../../common/CopyIcon';
@@ -86,7 +87,7 @@ function formatValue(key: string, value: any) {
 
 export const LinkValue = (props: { href: string; title?: string; children: React.ReactNode }) => (
   <a href={props.href} title={props.title} target="_blank" rel="noopener noreferrer">
-    {props.children} <Icon className="KeyValueTable--linkIcon" type="export" />
+    {props.children} <ExportOutlined className="KeyValueTable--linkIcon" />
   </a>
 );
 
@@ -134,7 +135,7 @@ export default function KeyValuesTable(props: KeyValuesTableProps) {
                 <div>
                   <Dropdown overlay={linkValueList(links)} placement="bottomRight" trigger={['click']}>
                     <a>
-                      {jsonTable} <Icon className="KeyValueTable--linkIcon" type="profile" />
+                      {jsonTable} <ProfileOutlined className="KeyValueTable--linkIcon" />
                     </a>
                   </Dropdown>
                 </div>
