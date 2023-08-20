@@ -16,7 +16,7 @@ import * as React from 'react';
 import isEqual from 'lodash/isEqual';
 import { SorterResult } from 'antd/es/table';
 import { Row, Table, Progress, Button, Tooltip } from 'antd';
-import { InfoCircleFilled } from '@ant-design/icons';
+import { InfoCircleOutlined } from '@ant-design/icons';
 import REDGraph from './opsGraph';
 import LoadingIndicator from '../../../common/LoadingIndicator';
 import { MetricsReduxState, ServiceOpsMetrics } from '../../../../types/metrics';
@@ -165,7 +165,7 @@ export class OperationTableDetails extends React.PureComponent<TProps, TState> {
                 placement="top"
                 title="The result of multiplying avg. duration and requests per minute, showing the most used and slowest endpoints"
               >
-                <InfoCircleFilled />
+                <InfoCircleOutlined />
               </Tooltip>
             </span>
           </div>
