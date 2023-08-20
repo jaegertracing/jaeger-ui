@@ -103,7 +103,7 @@ describe('<SpanBar>', () => {
       ],
       getViewedBounds: () => ({ start: 0.1, end: 0.5 }),
     };
-    const wrapper = mount(<SpanBar {...newProps} />);
+    const wrapper = render(<SpanBar {...newProps} />);
     expect(wrapper.find('.SpanBar--criticalPath').length).toEqual(1);
   });
 });
