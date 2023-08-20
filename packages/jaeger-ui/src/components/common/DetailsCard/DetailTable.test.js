@@ -172,7 +172,6 @@ describe('DetailTable', () => {
       it('renders filter icon without filter set', () => {
         const icon = makeColumn(stringColumn).filterIcon();
         expect(icon.type).toBe(FilterOutlined);
-        
       });
 
       it('renders filter icon with filter set', () => {

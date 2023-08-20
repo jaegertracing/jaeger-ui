@@ -87,9 +87,7 @@ exports[`<OperationTableDetails> Table rendered successfully 1`] = `
                 title="The result of multiplying avg. duration and requests per minute, showing the most used and slowest endpoints"
                 transitionName="zoom-big-fast"
               >
-                <Icon
-                  type="info-circle"
-                />
+                <ForwardRef(InfoCircleFilled) />
               </Tooltip>
             </span>
           </div>,
@@ -525,11 +523,12 @@ exports[`<OperationTableDetails> render No data table 1`] = `
                               >
                                 Impact
                                   
-                                <i
-                                  aria-label="icon: info-circle"
+                                <span
+                                  aria-label="info-circle"
                                   className="anticon anticon-info-circle"
                                   onMouseEnter={[Function]}
                                   onMouseLeave={[Function]}
+                                  role="img"
                                 >
                                   <svg
                                     aria-hidden="true"
@@ -543,15 +542,11 @@ exports[`<OperationTableDetails> render No data table 1`] = `
                                     width="1em"
                                   >
                                     <path
-                                      d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372 372 166.6 372 372-166.6 372-372 372z"
+                                      d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm32 664c0 4.4-3.6 8-8 8h-48c-4.4 0-8-3.6-8-8V456c0-4.4 3.6-8 8-8h48c4.4 0 8 3.6 8 8v272zm-32-344a48.01 48.01 0 010-96 48.01 48.01 0 010 96z"
                                       key="svg-info-circle-svg-0"
                                     />
-                                    <path
-                                      d="M464 336a48 48 0 1 0 96 0 48 48 0 1 0-96 0zm72 112h-48c-4.4 0-8 3.6-8 8v272c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V456c0-4.4-3.6-8-8-8z"
-                                      key="svg-info-circle-svg-1"
-                                    />
                                   </svg>
-                                </i>
+                                </span>
                               </span>
                             </div>
                           </span>
@@ -1086,11 +1081,12 @@ exports[`<OperationTableDetails> render P95 latency with more than 2 decimal pla
                               >
                                 Impact
                                   
-                                <i
-                                  aria-label="icon: info-circle"
+                                <span
+                                  aria-label="info-circle"
                                   className="anticon anticon-info-circle"
                                   onMouseEnter={[Function]}
                                   onMouseLeave={[Function]}
+                                  role="img"
                                 >
                                   <svg
                                     aria-hidden="true"
@@ -1104,15 +1100,11 @@ exports[`<OperationTableDetails> render P95 latency with more than 2 decimal pla
                                     width="1em"
                                   >
                                     <path
-                                      d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372 372 166.6 372 372-166.6 372-372 372z"
+                                      d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm32 664c0 4.4-3.6 8-8 8h-48c-4.4 0-8-3.6-8-8V456c0-4.4 3.6-8 8-8h48c4.4 0 8 3.6 8 8v272zm-32-344a48.01 48.01 0 010-96 48.01 48.01 0 010 96z"
                                       key="svg-info-circle-svg-0"
                                     />
-                                    <path
-                                      d="M464 336a48 48 0 1 0 96 0 48 48 0 1 0-96 0zm72 112h-48c-4.4 0-8 3.6-8 8v272c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V456c0-4.4-3.6-8-8-8z"
-                                      key="svg-info-circle-svg-1"
-                                    />
                                   </svg>
-                                </i>
+                                </span>
                               </span>
                             </div>
                           </span>
@@ -2058,11 +2050,12 @@ exports[`<OperationTableDetails> render error rate with more than 2 decimal plac
                               >
                                 Impact
                                   
-                                <i
-                                  aria-label="icon: info-circle"
+                                <span
+                                  aria-label="info-circle"
                                   className="anticon anticon-info-circle"
                                   onMouseEnter={[Function]}
                                   onMouseLeave={[Function]}
+                                  role="img"
                                 >
                                   <svg
                                     aria-hidden="true"
@@ -2076,15 +2069,11 @@ exports[`<OperationTableDetails> render error rate with more than 2 decimal plac
                                     width="1em"
                                   >
                                     <path
-                                      d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372 372 166.6 372 372-166.6 372-372 372z"
+                                      d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm32 664c0 4.4-3.6 8-8 8h-48c-4.4 0-8-3.6-8-8V456c0-4.4 3.6-8 8-8h48c4.4 0 8 3.6 8 8v272zm-32-344a48.01 48.01 0 010-96 48.01 48.01 0 010 96z"
                                       key="svg-info-circle-svg-0"
                                     />
-                                    <path
-                                      d="M464 336a48 48 0 1 0 96 0 48 48 0 1 0-96 0zm72 112h-48c-4.4 0-8 3.6-8 8v272c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V456c0-4.4-3.6-8-8-8z"
-                                      key="svg-info-circle-svg-1"
-                                    />
                                   </svg>
-                                </i>
+                                </span>
                               </span>
                             </div>
                           </span>
@@ -3030,11 +3019,12 @@ exports[`<OperationTableDetails> render lower than 0.1 P95 latency 1`] = `
                               >
                                 Impact
                                   
-                                <i
-                                  aria-label="icon: info-circle"
+                                <span
+                                  aria-label="info-circle"
                                   className="anticon anticon-info-circle"
                                   onMouseEnter={[Function]}
                                   onMouseLeave={[Function]}
+                                  role="img"
                                 >
                                   <svg
                                     aria-hidden="true"
@@ -3048,15 +3038,11 @@ exports[`<OperationTableDetails> render lower than 0.1 P95 latency 1`] = `
                                     width="1em"
                                   >
                                     <path
-                                      d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372 372 166.6 372 372-166.6 372-372 372z"
+                                      d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm32 664c0 4.4-3.6 8-8 8h-48c-4.4 0-8-3.6-8-8V456c0-4.4 3.6-8 8-8h48c4.4 0 8 3.6 8 8v272zm-32-344a48.01 48.01 0 010-96 48.01 48.01 0 010 96z"
                                       key="svg-info-circle-svg-0"
                                     />
-                                    <path
-                                      d="M464 336a48 48 0 1 0 96 0 48 48 0 1 0-96 0zm72 112h-48c-4.4 0-8 3.6-8 8v272c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V456c0-4.4-3.6-8-8-8z"
-                                      key="svg-info-circle-svg-1"
-                                    />
                                   </svg>
-                                </i>
+                                </span>
                               </span>
                             </div>
                           </span>
@@ -4002,11 +3988,12 @@ exports[`<OperationTableDetails> render lower than 0.1 error rate 1`] = `
                               >
                                 Impact
                                   
-                                <i
-                                  aria-label="icon: info-circle"
+                                <span
+                                  aria-label="info-circle"
                                   className="anticon anticon-info-circle"
                                   onMouseEnter={[Function]}
                                   onMouseLeave={[Function]}
+                                  role="img"
                                 >
                                   <svg
                                     aria-hidden="true"
@@ -4020,15 +4007,11 @@ exports[`<OperationTableDetails> render lower than 0.1 error rate 1`] = `
                                     width="1em"
                                   >
                                     <path
-                                      d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372 372 166.6 372 372-166.6 372-372 372z"
+                                      d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm32 664c0 4.4-3.6 8-8 8h-48c-4.4 0-8-3.6-8-8V456c0-4.4 3.6-8 8-8h48c4.4 0 8 3.6 8 8v272zm-32-344a48.01 48.01 0 010-96 48.01 48.01 0 010 96z"
                                       key="svg-info-circle-svg-0"
                                     />
-                                    <path
-                                      d="M464 336a48 48 0 1 0 96 0 48 48 0 1 0-96 0zm72 112h-48c-4.4 0-8 3.6-8 8v272c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V456c0-4.4-3.6-8-8-8z"
-                                      key="svg-info-circle-svg-1"
-                                    />
                                   </svg>
-                                </i>
+                                </span>
                               </span>
                             </div>
                           </span>
@@ -4974,11 +4957,12 @@ exports[`<OperationTableDetails> render lower than 0.1 request rate value 1`] = 
                               >
                                 Impact
                                   
-                                <i
-                                  aria-label="icon: info-circle"
+                                <span
+                                  aria-label="info-circle"
                                   className="anticon anticon-info-circle"
                                   onMouseEnter={[Function]}
                                   onMouseLeave={[Function]}
+                                  role="img"
                                 >
                                   <svg
                                     aria-hidden="true"
@@ -4992,15 +4976,11 @@ exports[`<OperationTableDetails> render lower than 0.1 request rate value 1`] = 
                                     width="1em"
                                   >
                                     <path
-                                      d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372 372 166.6 372 372-166.6 372-372 372z"
+                                      d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm32 664c0 4.4-3.6 8-8 8h-48c-4.4 0-8-3.6-8-8V456c0-4.4 3.6-8 8-8h48c4.4 0 8 3.6 8 8v272zm-32-344a48.01 48.01 0 010-96 48.01 48.01 0 010 96z"
                                       key="svg-info-circle-svg-0"
                                     />
-                                    <path
-                                      d="M464 336a48 48 0 1 0 96 0 48 48 0 1 0-96 0zm72 112h-48c-4.4 0-8 3.6-8 8v272c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V456c0-4.4-3.6-8-8-8z"
-                                      key="svg-info-circle-svg-1"
-                                    />
                                   </svg>
-                                </i>
+                                </span>
                               </span>
                             </div>
                           </span>
@@ -5946,11 +5926,12 @@ exports[`<OperationTableDetails> render request rate number with more than 2 dec
                               >
                                 Impact
                                   
-                                <i
-                                  aria-label="icon: info-circle"
+                                <span
+                                  aria-label="info-circle"
                                   className="anticon anticon-info-circle"
                                   onMouseEnter={[Function]}
                                   onMouseLeave={[Function]}
+                                  role="img"
                                 >
                                   <svg
                                     aria-hidden="true"
@@ -5964,15 +5945,11 @@ exports[`<OperationTableDetails> render request rate number with more than 2 dec
                                     width="1em"
                                   >
                                     <path
-                                      d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372 372 166.6 372 372-166.6 372-372 372z"
+                                      d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm32 664c0 4.4-3.6 8-8 8h-48c-4.4 0-8-3.6-8-8V456c0-4.4 3.6-8 8-8h48c4.4 0 8 3.6 8 8v272zm-32-344a48.01 48.01 0 010-96 48.01 48.01 0 010 96z"
                                       key="svg-info-circle-svg-0"
                                     />
-                                    <path
-                                      d="M464 336a48 48 0 1 0 96 0 48 48 0 1 0-96 0zm72 112h-48c-4.4 0-8 3.6-8 8v272c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V456c0-4.4-3.6-8-8-8z"
-                                      key="svg-info-circle-svg-1"
-                                    />
                                   </svg>
-                                </i>
+                                </span>
                               </span>
                             </div>
                           </span>
@@ -6918,11 +6895,12 @@ exports[`<OperationTableDetails> render some values in the table 1`] = `
                               >
                                 Impact
                                   
-                                <i
-                                  aria-label="icon: info-circle"
+                                <span
+                                  aria-label="info-circle"
                                   className="anticon anticon-info-circle"
                                   onMouseEnter={[Function]}
                                   onMouseLeave={[Function]}
+                                  role="img"
                                 >
                                   <svg
                                     aria-hidden="true"
@@ -6936,15 +6914,11 @@ exports[`<OperationTableDetails> render some values in the table 1`] = `
                                     width="1em"
                                   >
                                     <path
-                                      d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372 372 166.6 372 372-166.6 372-372 372z"
+                                      d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm32 664c0 4.4-3.6 8-8 8h-48c-4.4 0-8-3.6-8-8V456c0-4.4 3.6-8 8-8h48c4.4 0 8 3.6 8 8v272zm-32-344a48.01 48.01 0 010-96 48.01 48.01 0 010 96z"
                                       key="svg-info-circle-svg-0"
                                     />
-                                    <path
-                                      d="M464 336a48 48 0 1 0 96 0 48 48 0 1 0-96 0zm72 112h-48c-4.4 0-8 3.6-8 8v272c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V456c0-4.4-3.6-8-8-8z"
-                                      key="svg-info-circle-svg-1"
-                                    />
                                   </svg>
-                                </i>
+                                </span>
                               </span>
                             </div>
                           </span>
@@ -7890,11 +7864,12 @@ exports[`<OperationTableDetails> test column render function 1`] = `
                               >
                                 Impact
                                   
-                                <i
-                                  aria-label="icon: info-circle"
+                                <span
+                                  aria-label="info-circle"
                                   className="anticon anticon-info-circle"
                                   onMouseEnter={[Function]}
                                   onMouseLeave={[Function]}
+                                  role="img"
                                 >
                                   <svg
                                     aria-hidden="true"
@@ -7908,15 +7883,11 @@ exports[`<OperationTableDetails> test column render function 1`] = `
                                     width="1em"
                                   >
                                     <path
-                                      d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372 372 166.6 372 372-166.6 372-372 372z"
+                                      d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm32 664c0 4.4-3.6 8-8 8h-48c-4.4 0-8-3.6-8-8V456c0-4.4 3.6-8 8-8h48c4.4 0 8 3.6 8 8v272zm-32-344a48.01 48.01 0 010-96 48.01 48.01 0 010 96z"
                                       key="svg-info-circle-svg-0"
                                     />
-                                    <path
-                                      d="M464 336a48 48 0 1 0 96 0 48 48 0 1 0-96 0zm72 112h-48c-4.4 0-8 3.6-8 8v272c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V456c0-4.4-3.6-8-8-8z"
-                                      key="svg-info-circle-svg-1"
-                                    />
                                   </svg>
-                                </i>
+                                </span>
                               </span>
                             </div>
                           </span>
