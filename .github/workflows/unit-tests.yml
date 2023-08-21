@@ -2,8 +2,7 @@ name: "Unit Tests"
 
 on:
   push:
-    branches:
-      - '**'
+    branches: [main]
 
   pull_request:
     branches: [main]
@@ -39,4 +38,3 @@ jobs:
           # Cannot define it as secret as we need it accessible from forks.
           # See https://github.com/codecov/codecov-action/issues/837
           token: 31c3122b-7b49-4267-a117-8c9354a97119
-
