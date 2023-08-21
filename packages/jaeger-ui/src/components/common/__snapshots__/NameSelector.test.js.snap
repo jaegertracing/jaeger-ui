@@ -43,10 +43,9 @@ exports[`<NameSelector> clear renders with clear icon when not required and with
     <IoChevronDown
       className="NameSelector--chevron"
     />
-    <Icon
+    <ForwardRef(CloseOutlined)
       className="NameSelector--clearIcon"
       onClick={[Function]}
-      type="close"
     />
   </h2>
 </Popover>
