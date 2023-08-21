@@ -42,6 +42,7 @@ limitations under the License.
 .TraceDiffGraph--dag {
   transition: background 0.5s ease;
   stroke-width: 0.9;
+  z-index: -1;
 }
 
 .TraceDiffGraph--dag.is-uiFind-mode {
