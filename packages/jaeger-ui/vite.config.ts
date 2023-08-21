@@ -69,6 +69,7 @@ export default defineConfig({
   css: {
     preprocessorOptions: {
       less: {
+        math: 'always',
         javascriptEnabled: true,
         modifyVars: {
           // Supply appropriate overrides to the Ant Design System.
