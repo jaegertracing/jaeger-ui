@@ -72,9 +72,7 @@ exports[`AltViewOptions renders correctly 1`] = `
     loading={false}
   >
     Trace Timeline 
-    <Icon
-      type="down"
-    />
+    <ForwardRef(DownOutlined) />
   </Button>
 </Dropdown>
 `;
