@@ -12,6 +12,10 @@ updates:
         patterns:
           - "@babel/*"
           - "babel-loader"
+      jest:
+        patterns:
+          - "jest*"
+          - "babel-jest"
       typescript-eslint:
         patterns:
           - "@typescript-eslint/*"
