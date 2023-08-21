@@ -16,9 +16,10 @@ updates:
         patterns:
           - "jest*"
           - "babel-jest"
-      typescript-eslint:
+      eslint:
         patterns:
           - "@typescript-eslint/*"
+          - "^eslint*"
       vite:
         patterns:
           - "vite"
