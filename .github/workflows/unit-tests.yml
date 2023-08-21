@@ -2,8 +2,8 @@ name: "Unit Tests"
 
 on:
   push:
-    branches-ignore:
-      - '*'
+    branches:
+      - '**'
 
   pull_request:
     branches: [main]
