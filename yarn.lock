@@ -2609,11 +2609,11 @@
     "@types/react" "*"
 
 "@types/react-virtualized-select@^3.0.7":
-  version "3.0.11"
-  resolved "https://registry.yarnpkg.com/@types/react-virtualized-select/-/react-virtualized-select-3.0.11.tgz#d50ada4939a86d9e7cd869da9f67c5a982d037c5"
-  integrity sha512-1dgomao+k+ftr4+eNpeQ3U4FN2QMiRHOZdaddaNj60w2vK9PuTPheUmF8lXnEZDjzaESNQTsrdJ02qkqZmhn4g==
+  version "3.0.12"
+  resolved "https://registry.yarnpkg.com/@types/react-virtualized-select/-/react-virtualized-select-3.0.12.tgz#bb06c87e4d545c8084db75d07fce6a636c066f7a"
+  integrity sha512-xDjql+6GwB+9MSdXWi/YNIkVRa7giY8k3XWO/4znwQHLBnSXiiyTR6wIlsr4vpru+bTsXzMs60eokkeNVf6PPg==
   dependencies:
-    "@types/react" "*"
+    "@types/react" "^17"
     "@types/react-select" "^1.0.0"
     "@types/react-virtualized" "*"
 
@@ -2631,7 +2631,16 @@
   dependencies:
     "@types/react" "*"
 
-"@types/react@*", "@types/react@16.8.7":
+"@types/react@*", "@types/react@^17":
+  version "17.0.64"
+  resolved "https://registry.yarnpkg.com/@types/react/-/react-17.0.64.tgz#468162c66c33ddb4548eb1a0e36682028d9e9a62"
+  integrity sha512-IlgbX/vglDTwrCRgad6fTCzOT+D/5C0xwuvrzfuqfhg9gJrkFqAGADpUFlEtqbrP1IEo9QLSbo41MaFfoIu9Aw==
+  dependencies:
+    "@types/prop-types" "*"
+    "@types/scheduler" "*"
+    csstype "^3.0.2"
+
+"@types/react@16.8.7":
   version "16.8.7"
   resolved "https://registry.yarnpkg.com/@types/react/-/react-16.8.7.tgz#7b1c0223dd5494f9b4501ad2a69aa6acb350a29b"
   dependencies:
@@ -2662,6 +2671,11 @@
   dependencies:
     "@types/node" "*"
     rollup "^2.42.3"
+
+"@types/scheduler@*":
+  version "0.16.3"
+  resolved "https://registry.yarnpkg.com/@types/scheduler/-/scheduler-0.16.3.tgz#cef09e3ec9af1d63d2a6cc5b383a737e24e6dcf5"
+  integrity sha512-5cJ8CB4yAx7BH1oMvdU0Jh9lrEXyPkar6F9G/ERswkCuvP4KQZfZkSjcMbAICCpQTN4OuZn8tz0HiKv9TGZgrQ==
 
 "@types/semver@^7.5.0":
   version "7.5.0"
