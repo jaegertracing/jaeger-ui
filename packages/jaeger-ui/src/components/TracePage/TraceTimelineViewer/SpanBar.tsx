@@ -147,6 +147,7 @@ function SpanBar(props: TCommonProps) {
           return (
             <div
               key={index}
+              data-testid="SpanBar--criticalPath"
               className="SpanBar--criticalPath"
               style={{
                 background: 'black',

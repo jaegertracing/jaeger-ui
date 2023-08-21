@@ -104,6 +104,6 @@ describe('<SpanBar>', () => {
       getViewedBounds: () => ({ start: 0.1, end: 0.5 }),
     };
     const wrapper = render(<SpanBar {...newProps} />);
-    expect(wrapper.find('.SpanBar--criticalPath').length).toEqual(1);
+    expect(wrapper.getAllByTestId('SpanBar--criticalPath').length).toEqual(1);
   });
 });
