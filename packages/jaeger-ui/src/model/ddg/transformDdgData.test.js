@@ -15,6 +15,7 @@
 import _filter from 'lodash/filter';
 import _flatten from 'lodash/flatten';
 import _map from 'lodash/map';
+import _ from 'lodash';
 
 import transformDdgData from './transformDdgData';
 import * as testResources from './sample-paths.test.resources';
@@ -170,7 +171,7 @@ describe('transform ddg data', () => {
     const simpleModel = transformDdgData(wrap([simplePath, longSimplePath]), focalPayloadElem);
     const reverseModel = transformDdgData(wrap([longSimplePath, simplePath]), focalPayloadElem);
 
-    expect(reverseModel).not.toEqual(simpleModel);
+    expect(_.isEqual(reverseModel, simpleModel)).toBe(false);
     expect(reverseModel).not.toBe(simpleModel);
     expect(reverseModel.hash).toBe(simpleModel.hash);
 
