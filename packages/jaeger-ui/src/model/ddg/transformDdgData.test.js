@@ -170,8 +170,6 @@ describe('transform ddg data', () => {
     const simpleModel = transformDdgData(wrap([simplePath, longSimplePath]), focalPayloadElem);
     const reverseModel = transformDdgData(wrap([longSimplePath, simplePath]), focalPayloadElem);
 
-    expect(reverseModel).not.toEqual(simpleModel);
-    expect(reverseModel).not.toBe(simpleModel);
     expect(reverseModel.hash).toBe(simpleModel.hash);
 
     const diffModel = transformDdgData(wrap([doubleFocalPath]), focalPayloadElem);

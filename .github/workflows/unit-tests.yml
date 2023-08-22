@@ -7,6 +7,10 @@ on:
   pull_request:
     branches: [main]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ (github.event.pull_request && github.event.pull_request.number) || github.ref || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
   unit-tests:
     runs-on: ubuntu-latest
@@ -18,6 +22,10 @@ jobs:
           cache: yarn
           node-version: '16'
       - run: yarn install --frozen-lockfile
+      - name: Run depcheck
+        run: |
+          yarn global add depcheck
+          yarn run depcheck
       - run: yarn lint
       - run: yarn build
       - run: yarn coverage
@@ -30,4 +38,3 @@ jobs:
           # Cannot define it as secret as we need it accessible from forks.
           # See https://github.com/codecov/codecov-action/issues/837
           token: 31c3122b-7b49-4267-a117-8c9354a97119
-

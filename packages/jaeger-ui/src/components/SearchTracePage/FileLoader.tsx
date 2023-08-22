@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Upload, Icon } from 'antd';
+import { Upload } from 'antd';
+import { FileAddOutlined } from '@ant-design/icons';
 
 const Dragger = Upload.Dragger;
 
@@ -25,7 +26,7 @@ export default function FileLoader(props: FileLoaderProps) {
   return (
     <Dragger accept=".json" customRequest={props.loadJsonTraces} multiple>
       <p className="ant-upload-drag-icon">
-        <Icon type="file-add" />
+        <FileAddOutlined />
       </p>
       <p className="ant-upload-text">Click or drag files to this area.</p>
       <p className="ant-upload-hint">JSON files containing one or more traces are supported.</p>

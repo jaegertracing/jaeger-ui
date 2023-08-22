@@ -42,7 +42,11 @@ export default defineConfig({
     },
   },
   plugins: [
-    react(),
+    react({
+      babel: {
+        babelrc: true,
+      },
+    }),
     legacy({
       targets: ['>0.5%', 'not dead', 'not ie <= 11', 'not op_mini all'],
     }),
@@ -65,6 +69,7 @@ export default defineConfig({
   css: {
     preprocessorOptions: {
       less: {
+        math: 'always',
         javascriptEnabled: true,
         modifyVars: {
           // Supply appropriate overrides to the Ant Design System.
