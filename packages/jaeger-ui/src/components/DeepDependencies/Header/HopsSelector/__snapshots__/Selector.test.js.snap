@@ -23,7 +23,7 @@ exports[`Selector renders buttons with expected text and classNames 1`] = `
         </button>
       </React.Fragment>,
       <React.Fragment>
-        <IoChevronRight
+        <FaChevronRight
           className="HopsSelector--Selector--ChevronRight is-partial"
         />
         <button
@@ -35,7 +35,7 @@ exports[`Selector renders buttons with expected text and classNames 1`] = `
         </button>
       </React.Fragment>,
       <React.Fragment>
-        <IoChevronRight
+        <FaChevronRight
           className="HopsSelector--Selector--ChevronRight is-full"
         />
         <button
@@ -47,7 +47,7 @@ exports[`Selector renders buttons with expected text and classNames 1`] = `
         </button>
       </React.Fragment>,
       <React.Fragment>
-        <IoChevronRight
+        <FaChevronRight
           className="HopsSelector--Selector--ChevronRight is-empty"
         />
         <button
@@ -59,7 +59,7 @@ exports[`Selector renders buttons with expected text and classNames 1`] = `
         </button>
       </React.Fragment>,
       <React.Fragment>
-        <IoChevronRight
+        <FaChevronRight
           className="HopsSelector--Selector--ChevronRight is-empty"
         />
         <button
@@ -91,7 +91,7 @@ exports[`Selector renders buttons with expected text and classNames 1`] = `
   <span
     className="HopsSelector--Selector"
   >
-    <FaSortAmountAsc
+    <ImSortAmountAsc
       className="HopsSelector--Selector--AscIcon is-Down"
     />
     Downstream hops
@@ -153,7 +153,7 @@ exports[`Selector renders upstream hops with negative distance correctly 1`] = `
         </button>
       </React.Fragment>,
       <React.Fragment>
-        <IoChevronRight
+        <FaChevronRight
           className="HopsSelector--Selector--ChevronRight is-partial"
         />
         <button
@@ -165,7 +165,7 @@ exports[`Selector renders upstream hops with negative distance correctly 1`] = `
         </button>
       </React.Fragment>,
       <React.Fragment>
-        <IoChevronRight
+        <FaChevronRight
           className="HopsSelector--Selector--ChevronRight is-full"
         />
         <button
@@ -177,7 +177,7 @@ exports[`Selector renders upstream hops with negative distance correctly 1`] = `
         </button>
       </React.Fragment>,
       <React.Fragment>
-        <IoChevronRight
+        <FaChevronRight
           className="HopsSelector--Selector--ChevronRight is-empty"
         />
         <button
@@ -189,7 +189,7 @@ exports[`Selector renders upstream hops with negative distance correctly 1`] = `
         </button>
       </React.Fragment>,
       <React.Fragment>
-        <IoChevronRight
+        <FaChevronRight
           className="HopsSelector--Selector--ChevronRight is-empty"
         />
         <button
@@ -221,7 +221,7 @@ exports[`Selector renders upstream hops with negative distance correctly 1`] = `
   <span
     className="HopsSelector--Selector"
   >
-    <FaSortAmountAsc
+    <ImSortAmountAsc
       className="HopsSelector--Selector--AscIcon is-Up"
     />
     Upstream hops
