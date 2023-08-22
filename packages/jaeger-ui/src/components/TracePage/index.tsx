@@ -79,6 +79,7 @@ type TOwnProps = {
 type TReduxProps = {
   archiveEnabled: boolean;
   archiveTraceState: TraceArchive | TNil;
+  criticalPathEnabled: boolean;
   embedded: null | EmbeddedState;
   id: string;
   searchUrl: null | string;
@@ -326,6 +327,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
     const {
       archiveEnabled,
       archiveTraceState,
+      criticalPathEnabled,
       embedded,
       id,
       uiFind,
@@ -389,7 +391,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
     };
 
     let view;
-    const criticalPath = memoizedTraceCriticalPath(data);
+    const criticalPath = criticalPathEnabled ? memoizedTraceCriticalPath(data) : [];
     if (ETraceViewType.TraceTimelineViewer === viewType && headerHeight) {
       view = (
         <TraceTimelineViewer
@@ -443,7 +445,7 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
   const trace = id ? traces[id] : null;
   const archiveTraceState = id ? archive[id] : null;
   const archiveEnabled = Boolean(config.archiveEnabled);
-  const { disableJsonView } = config;
+  const { disableJsonView, criticalPathEnabled } = config;
   const { state: locationState } = router.location;
   const searchUrl = (locationState && locationState.fromSearch) || null;
   const { traceGraph: traceGraphConfig } = config;
@@ -452,6 +454,7 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
     ...extractUiFindFromState(state),
     archiveEnabled,
     archiveTraceState,
+    criticalPathEnabled,
     embedded,
     id,
     searchUrl,
