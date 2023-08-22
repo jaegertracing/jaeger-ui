@@ -22,7 +22,7 @@
     "@babel/preset-react": "7.22.5",
     "@babel/preset-typescript": "7.22.5",
     "@types/d3-zoom": "3.0.3",
-    "@types/react": "16.8.7",
+    "@types/react": "18.2.20",
     "@types/react-dom": "18.2.5",
     "@typescript-eslint/eslint-plugin": "^6.4.0",
     "@typescript-eslint/parser": "^6.4.0",
