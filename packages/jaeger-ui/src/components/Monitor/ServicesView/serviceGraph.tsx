@@ -14,18 +14,18 @@
 
 import * as React from 'react';
 import {
-  XYPlot,
+  ComposedChart,
+  Line,
+  Area,
   XAxis,
   YAxis,
-  HorizontalGridLines,
-  LineSeries,
-  AreaSeries,
-  Crosshair,
-  DiscreteColorLegend,
-  // @ts-ignore
-} from 'react-vis';
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from 'recharts';
 import LoadingIndicator from '../../common/LoadingIndicator';
-import { ServiceMetricsObject, Points } from '../../../types/metrics';
+import { ServiceMetricsObject } from '../../../types/metrics';
 import './serviceGraph.css';
 import { ApiError } from '../../../types/api-error';
 
@@ -40,16 +40,11 @@ type TProps = {
   yDomain?: number[];
   color?: string;
   marginClassName?: string;
-  yAxisTickFormat?: (v: number) => number;
+  yAxisTickFormat?: (v: number) => string;
   xDomain: number[];
 };
 
-type TCrossHairValues = {
-  label: number;
-  x: number;
-  y: number | null;
-};
-
+const data: any = [];
 // export for tests
 export const tickFormat = (v: number) => {
   const dateObj = new Date(v);
@@ -63,9 +58,6 @@ export const tickFormat = (v: number) => {
 export class ServiceGraphImpl extends React.PureComponent<TProps> {
   height = 242;
   colors: string[] = ['#DCA3D2', '#EA9977', '#869ADD'];
-  state: { crosshairValues: TCrossHairValues[] } = {
-    crosshairValues: [],
-  };
 
   getData(): ServiceMetricsObject[] {
     const { metricsData } = this.props;
@@ -87,30 +79,20 @@ export class ServiceGraphImpl extends React.PureComponent<TProps> {
 
       this.getData().forEach((line: ServiceMetricsObject, idx: number) => {
         graphs.push(
-          <AreaSeries
+          <Area
             key={i++}
-            data={line.metricPoints ? line.metricPoints : []}
-            getNull={(d: Points) => d.y !== null}
-            onNearestX={(_datapoint: Points, { index }: { index: number }) => {
-              this.setState({
-                crosshairValues: this.getData().map((d: ServiceMetricsObject) => ({
-                  ...d.metricPoints[index],
-                  label: d.quantile,
-                })),
-              });
-            }}
-            opacity={0.1}
-            color={[color || this.colors[idx]]}
+            type="monotone"
+            dataKey="y"
+            connectNulls
+            fillOpacity={0.1}
+            stroke={color || this.colors[idx]}
+            fill={color || this.colors[idx]}
           />
         );
         graphs.push(
-          <LineSeries
-            getNull={(d: Points) => d.y !== null}
-            key={i++}
-            data={line.metricPoints ? line.metricPoints : []}
-            color={[color || this.colors[idx]]}
-          />
+          <Line connectNulls key={i++} type="monotone" dataKey="y" stroke={color || this.colors[idx]} />
         );
+        data.push(line.metricPoints ? line.metricPoints : []);
       });
 
       return graphs;
@@ -154,48 +136,45 @@ export class ServiceGraphImpl extends React.PureComponent<TProps> {
     const apiErrorComponent = this.generatePlaceholder('Couldn’t fetch data');
 
     const Plot = (
-      <XYPlot
-        margin={{ bottom: 25 }}
-        onMouseLeave={() => this.setState({ crosshairValues: [] })}
-        width={width}
-        height={this.height - 74}
-        xDomain={xDomain}
-        yDomain={yDomain}
-      >
-        {showHorizontalLines ? <HorizontalGridLines /> : null}
-        <XAxis tickFormat={tickFormat} tickTotal={Math.floor(width / 60)} />
-        <YAxis tickFormat={yAxisTickFormat} />
-        {this.renderLines()}
-        <Crosshair values={this.state.crosshairValues}>
-          <div className="crosshair-value">
-            {this.state.crosshairValues[0] &&
-              `${new Date(this.state.crosshairValues[0].x).toLocaleDateString()} ${new Date(
-                this.state.crosshairValues[0].x
-              ).toLocaleTimeString()}`}
-            {this.state.crosshairValues.reverse().map((d: TCrossHairValues) =>
-              showLegend ? (
-                <div key={d.label}>
-                  P{d.label * 100}: {d.y}
-                </div>
-              ) : (
-                <div key={d.label}>{d.y}</div>
-              )
-            )}
-          </div>
-        </Crosshair>
-        {showLegend ? (
-          <DiscreteColorLegend
-            className="legend-label"
-            orientation="horizontal"
-            items={this.getData()
-              .map((d: ServiceMetricsObject, idx: number) => ({
-                color: this.colors[idx],
-                title: `${d.quantile * 100}th`,
-              }))
-              .reverse()}
+      <ResponsiveContainer width={width} height={this.height - 74}>
+        <ComposedChart data={data} margin={{ bottom: 25 }}>
+          <CartesianGrid horizontal={showHorizontalLines} vertical={false} />
+          <XAxis
+            dataKey="x"
+            reversed
+            tickFormatter={tickFormat}
+            interval={Math.floor(width / 60)}
+            domain={xDomain}
           />
-        ) : null}
-      </XYPlot>
+          <YAxis tickFormatter={yAxisTickFormat} domain={yDomain} />
+          {this.renderLines()}
+
+          <Tooltip
+            contentStyle={{ width: 140, color: '#6b6b76' }}
+            formatter={(value: number, _name: string, entry: any) => {
+              const formattedLabel = new Date(entry.payload.x).toLocaleTimeString();
+              const tooltipContent = [
+                `label: ${entry.payload.label * 100}`,
+                `x: ${formattedLabel}`,
+                `Y: ${entry.payload.y}`,
+              ];
+
+              return tooltipContent;
+            }}
+          />
+          {showLegend && (
+            <Legend
+              verticalAlign="top"
+              margin={{ left: '10px' }}
+              formatter={(value: any, entry: any, index: number) => {
+                const dataVal = this.getData();
+                const idx = dataVal.length - index - 1;
+                return `${dataVal[idx].quantile * 100}th`;
+              }}
+            />
+          )}
+        </ComposedChart>
+      </ResponsiveContainer>
     );
 
     if (!loading && xDomain.length > 0) {

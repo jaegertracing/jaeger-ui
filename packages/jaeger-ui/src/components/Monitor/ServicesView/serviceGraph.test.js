@@ -93,7 +93,7 @@ describe('<ServiceGraph>', () => {
     expect(wrapper).toMatchSnapshot();
   });
 
-  it('Crosshair map test', () => {
+  it('Tooltip test', () => {
     wrapper.setProps({
       ...props,
       loading: false,
@@ -108,7 +108,7 @@ describe('<ServiceGraph>', () => {
     expect(wrapper).toMatchSnapshot();
   });
 
-  it('Crosshair mouse hover test', () => {
+  it('Tooltip hover test', () => {
     wrapper.setProps({
       ...props,
       loading: false,
@@ -116,27 +116,9 @@ describe('<ServiceGraph>', () => {
         ...serviceMetrics.service_call_rate,
         metricPoints: [{ x: 1631271783806, y: null }, ...serviceMetrics.service_call_rate.metricPoints],
       },
-      crosshairValues: [
-        {
-          key: 1,
-          ...serviceMetrics.service_call_rate.metricPoints[0],
-        },
-      ],
     });
-    expect(wrapper.find('AreaSeries').render()).toMatchSnapshot();
-    expect(wrapper.find('LineSeries').render()).toMatchSnapshot();
-  });
-
-  it('AreaSeries onNearestX, XYPlot onMouseLeave', () => {
-    wrapper.setProps({
-      ...props,
-      loading: false,
-      metricsData: serviceMetrics.service_call_rate,
-    });
-    wrapper.find('AreaSeries').at(0).prop('onNearestX')({ x: 1, y: 2 }, { index: 7 });
-    expect(wrapper.state().crosshairValues).toEqual([{ label: 0.95 }]);
-    wrapper.find('XYPlot').prop('onMouseLeave')();
-    expect(wrapper.state().crosshairValues).toEqual([]);
+    expect(wrapper.find('Area').render()).toMatchSnapshot();
+    expect(wrapper.find('Line').render()).toMatchSnapshot();
   });
 });
 

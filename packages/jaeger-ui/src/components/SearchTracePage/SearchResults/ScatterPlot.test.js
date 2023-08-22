@@ -14,7 +14,7 @@
 
 import React from 'react';
 import { mount, shallow } from 'enzyme';
-import { XAxis, XYPlot, YAxis, MarkSeries, Hint } from 'react-vis';
+import { XAxis, ScatterChart, YAxis, Scatter, Tooltip } from 'recharts';
 
 import ScatterPlot from './ScatterPlot';
 import { ONE_MILLISECOND } from '../../../utils/date';
@@ -99,7 +99,7 @@ it('<ScatterPlot /> should set fixed container width on initial render', () => {
     <ScatterPlot calculateContainerWidth={() => 1200} data={sampleData} onValueClick={() => null} />
   );
 
-  const xyPlot = wrapper.find(XYPlot).getDOMNode();
+  const xyPlot = wrapper.find(ScatterChart).getDOMNode();
 
   expect(xyPlot.style.width).toBe('1200px');
 });
@@ -118,7 +118,7 @@ it('<ScatterPlot /> should update container width on window resize', () => {
 
   window.dispatchEvent(new Event('resize'));
 
-  const xyPlot = wrapper.find(XYPlot).getDOMNode();
+  const xyPlot = wrapper.find(ScatterChart).getDOMNode();
 
   expect(xyPlot.style.width).toBe('700px');
 });
@@ -129,17 +129,17 @@ it('<ScatterPlot /> should render Hint correctly', () => {
   );
   expect(wrapper).toBeDefined();
 
-  const markSeries = wrapper.find(MarkSeries);
+  const markSeries = wrapper.find(Scatter);
   expect(markSeries.length).toEqual(1);
 
   const circle = wrapper.find('.rv-xy-plot__series--mark circle:first-child');
   expect(circle.length).toEqual(1);
 
   circle.simulate('mouseOver');
-  const hint = wrapper.find(Hint);
+  const hint = wrapper.find(Tooltip);
   expect(hint.length).toEqual(1);
 
   circle.simulate('mouseOut');
-  const noHint = wrapper.find(Hint);
+  const noHint = wrapper.find(Tooltip);
   expect(noHint.length).toEqual(0);
 });

@@ -15,13 +15,19 @@
 import React, { useRef, useState, useLayoutEffect } from 'react';
 import moment from 'moment';
 import PropTypes from 'prop-types';
-import { XYPlot, XAxis, YAxis, MarkSeries, Hint } from 'react-vis';
+import { ScatterChart, XAxis, YAxis, Scatter, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
 import { FALLBACK_TRACE_NAME } from '../../../constants';
 import { ONE_MILLISECOND, formatDuration } from '../../../utils/date';
 
-import './react-vis.css';
 import './ScatterPlot.css';
+
+const CustomTooltip = ({ overValue }) => {
+  if (overValue) {
+    return <h4 className="scatter-plot-hint">{overValue.current?.name || FALLBACK_TRACE_NAME}</h4>;
+  }
+  return null;
+};
 
 export default function ScatterPlot(props) {
   const { data, onValueClick, calculateContainerWidth } = props;
@@ -29,14 +35,14 @@ export default function ScatterPlot(props) {
   const containerRef = useRef(null);
   const [containerWidth, setContainerWidth] = useState(0);
 
-  const [overValue, setValueOver] = useState(null);
+  const overValue = useRef();
 
   const onValueOver = value => {
-    setValueOver(value);
+    overValue.current = value;
   };
 
   const onValueOut = () => {
-    setValueOver(null);
+    overValue.current = null;
   };
 
   useLayoutEffect(() => {
@@ -57,34 +63,36 @@ export default function ScatterPlot(props) {
   return (
     <div className="TraceResultsScatterPlot" ref={containerRef}>
       {containerWidth && (
-        <XYPlot
-          margin={{
-            left: 50,
-          }}
-          width={containerWidth}
-          colorType="literal"
-          height={200}
-        >
-          <XAxis
-            title="Time"
-            tickTotal={4}
-            tickFormat={t => moment(t / ONE_MILLISECOND).format('hh:mm:ss a')}
-          />
-          <YAxis title="Duration" tickTotal={3} tickFormat={t => formatDuration(t)} />
-          <MarkSeries
-            sizeRange={[3, 10]}
-            opacity={0.5}
-            onValueClick={onValueClick}
-            onValueMouseOver={onValueOver}
-            onValueMouseOut={onValueOut}
-            data={data}
-          />
-          {overValue && (
-            <Hint value={overValue}>
-              <h4 className="scatter-plot-hint">{overValue.name || FALLBACK_TRACE_NAME}</h4>
-            </Hint>
-          )}
-        </XYPlot>
+        <ResponsiveContainer width={containerWidth} height={200}>
+          <ScatterChart>
+            <XAxis
+              label={{ value: 'Time', position: 'insideRight' }}
+              dataKey="x"
+              reversed
+              minTickGap={150}
+              tickFormatter={t => moment(t / ONE_MILLISECOND).format('hh:mm:ss a')}
+            />
+            <YAxis
+              label={{ value: 'Duration', angle: -90, position: 'insideLeft' }}
+              dataKey="y"
+              type="number"
+              tickCount={3}
+              tickFormatter={t => formatDuration(t)}
+            />
+            <Scatter
+              data={data}
+              onClick={onValueClick}
+              onMouseOver={onValueOver}
+              onMouseOut={onValueOut}
+              fillOpacity={0.5}
+            >
+              {data.map(entry => (
+                <Cell key={`cell-${entry.traceID}`} fill={entry.color} />
+              ))}
+            </Scatter>
+            <Tooltip cursor={false} content={<CustomTooltip overValue={overValue} />} />
+          </ScatterChart>
+        </ResponsiveContainer>
       )}
     </div>
   );
@@ -96,6 +104,7 @@ const valueShape = PropTypes.shape({
   traceID: PropTypes.string,
   size: PropTypes.number,
   name: PropTypes.string,
+  color: PropTypes.string,
 });
 
 ScatterPlot.propTypes = {

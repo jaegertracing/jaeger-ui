@@ -13,12 +13,7 @@
 // limitations under the License.
 
 import * as React from 'react';
-import {
-  XYPlot,
-  AreaSeries,
-  LineSeries,
-  // @ts-ignore
-} from 'react-vis';
+import { ComposedChart, Line, Area, XAxis, YAxis, ResponsiveContainer } from 'recharts';
 import { ApiError } from '../../../../types/api-error';
 import { Points } from '../../../../types/metrics';
 
@@ -60,25 +55,22 @@ export class OperationsGraph extends React.PureComponent<TProps> {
 
     return (
       <div className="ops-container">
-        <XYPlot
-          margin={{
-            left: 0,
-            right: 0,
-            bottom: 1,
-            top: 2,
-          }}
-          width={100}
-          height={15}
-        >
-          <AreaSeries
-            className="area-series-example ops-graph-style"
-            curve="curveLinear"
-            color={color}
+        <ResponsiveContainer width={100} height={15}>
+          <ComposedChart
+            margin={{
+              left: 0,
+              right: 0,
+              bottom: 1,
+              top: 2,
+            }}
             data={dataPoints}
-            {...dynProps}
-          />
-          <LineSeries className="area-elevated-line-series" color={color} data={dataPoints} {...dynProps} />
-        </XYPlot>
+          >
+            <XAxis dataKey="x" hide />
+            <YAxis hide />
+            <Area type="monotone" dataKey="y" stroke={color} fill={color} {...dynProps} />
+            <Line type="monotone" dataKey="y" stroke={color} {...dynProps} />
+          </ComposedChart>
+        </ResponsiveContainer>
       </div>
     );
   }
