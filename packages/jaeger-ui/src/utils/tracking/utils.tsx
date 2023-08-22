@@ -18,7 +18,7 @@ import ReactGA from 'react-ga4';
 export const logTrackingCalls = () => {
   const originalSend = ReactGA.send;
   const calls: any[] = [];
- 
+
   ReactGA.send = (...args) => {
     calls.push(args);
     originalSend(...args);
