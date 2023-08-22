@@ -15,8 +15,7 @@
 import React from 'react';
 import { shallow } from 'enzyme';
 import { Tooltip } from 'antd';
-import MdVisibility from 'react-icons/lib/md/visibility';
-import MdVisibilityOff from 'react-icons/lib/md/visibility-off';
+import { MdVisibility, MdVisibilityOff } from 'react-icons/md';
 
 import Header from './index';
 import HopsSelector from './HopsSelector';

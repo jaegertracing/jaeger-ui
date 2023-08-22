@@ -20,7 +20,7 @@ import { Link } from 'react-router-dom';
 import { sortBy } from 'lodash';
 import moment from 'moment';
 
-import IoAlert from 'react-icons/lib/io/alert';
+import { IoAlert } from 'react-icons/io5';
 
 import { trackConversions, EAltViewActions } from './index.track';
 import * as markers from './ResultItem.markers';

@@ -14,7 +14,7 @@
 
 import * as React from 'react';
 import cx from 'classnames';
-import MdKeyboardArrowDown from 'react-icons/lib/md/keyboard-arrow-down';
+import { MdKeyboardArrowDown } from 'react-icons/md';
 
 import { TColumnDefs, TDetails, TRow } from './types';
 import DetailTable from './DetailTable';
