@@ -13,10 +13,10 @@
 // limitations under the License.
 
 import * as React from 'react';
-import IoAlert from 'react-icons/lib/io/alert';
-import IoArrowRightA from 'react-icons/lib/io/arrow-right-a';
-import IoNetwork from 'react-icons/lib/io/network';
-import MdFileUpload from 'react-icons/lib/md/file-upload';
+import { IoAlert } from 'react-icons/io5';
+import { ImArrowRight } from 'react-icons/im';
+import { IoMdGitNetwork } from 'react-icons/io';
+import { MdFileUpload } from 'react-icons/md';
 import ReferencesButton from './ReferencesButton';
 import TimelineRow from './TimelineRow';
 import { formatDuration, ViewedBoundsFunctionType } from './utils';
@@ -153,14 +153,14 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
                 {serviceName}{' '}
                 {rpc && (
                   <span>
-                    <IoArrowRightA />{' '}
+                    <ImArrowRight />{' '}
                     <i className="SpanBarRow--rpcColorMarker" style={{ background: rpc.color }} />
                     {rpc.serviceName}
                   </span>
                 )}
                 {noInstrumentedServer && (
                   <span>
-                    <IoArrowRightA />{' '}
+                    <ImArrowRight />{' '}
                     <i
                       className="SpanBarRow--rpcColorMarker"
                       style={{ background: noInstrumentedServer.color }}
@@ -177,7 +177,7 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
                 tooltipText="Contains multiple references"
                 focusSpan={focusSpan}
               >
-                <IoNetwork />
+                <IoMdGitNetwork />
               </ReferencesButton>
             )}
             {span.subsidiarilyReferencedBy && span.subsidiarilyReferencedBy.length > 0 && (
