@@ -12,10 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+/* eslint-disable import/no-extraneous-dependencies */
 import * as React from 'react';
 import { Dropdown, Menu } from 'antd';
 import { ExportOutlined, ProfileOutlined } from '@ant-design/icons';
-import { jsonMarkup } from './jsonMarkup';
+import { JsonView, allExpanded, defaultStyles } from 'react-json-view-lite';
 
 import CopyIcon from '../../../common/CopyIcon';
 
@@ -57,15 +58,6 @@ const stringMarkup = (value: string) => (
   </div>
 );
 
-function _jsonMarkup(value: any) {
-  const markup = { __html: jsonMarkup(value) };
-
-  return (
-    // eslint-disable-next-line react/no-danger
-    <div dangerouslySetInnerHTML={markup} />
-  );
-}
-
 function formatValue(key: string, value: any) {
   let content;
   let parsed = value;
@@ -79,7 +71,26 @@ function formatValue(key: string, value: any) {
   } else if (Array.isArray(parsed) && shouldDisplayAsStringList(key)) {
     content = stringListMarkup(parsed);
   } else {
-    content = _jsonMarkup(parsed);
+    content = (
+      <JsonView
+        data={parsed}
+        shouldInitiallyExpand={allExpanded}
+        style={{
+          ...defaultStyles,
+          container: 'json-markup',
+          label: 'json-markup-key',
+          stringValue: 'json-markup-string',
+          numberValue: 'json-markup-number',
+          booleanValue: 'json-markup-bool',
+          nullValue: 'json-markup-null',
+          undefinedValue: 'json-markup-undefined',
+          expander: 'json-markup-expander',
+          basicChildStyle: 'json-markup-child',
+          punctuation: 'json-markup-puncuation',
+          otherValue: 'json-markup-other',
+        }}
+      />
+    );
   }
 
   return <div className="ub-inline-block">{content}</div>;
@@ -114,6 +125,7 @@ type KeyValuesTableProps = {
 
 export default function KeyValuesTable(props: KeyValuesTableProps) {
   const { data, linksGetter } = props;
+
   return (
     <div className="KeyValueTable u-simple-scrollbars">
       <table className="u-width-100">
@@ -122,7 +134,7 @@ export default function KeyValuesTable(props: KeyValuesTableProps) {
             const jsonTable = formatValue(row.key, row.value);
             const links = linksGetter ? linksGetter(data, i) : null;
             let valueMarkup;
-            if (links && links.length === 1) {
+            if (links?.length === 1) {
               valueMarkup = (
                 <div>
                   <LinkValue href={links[0].url} title={links[0].text}>
