@@ -10506,6 +10506,11 @@ react-is@^17.0.0, react-is@^17.0.1, react-is@^17.0.2:
   resolved "https://registry.yarnpkg.com/react-is/-/react-is-17.0.2.tgz#e691d4a8e9c789365655539ab372762b0efb54f0"
   integrity sha512-w2GsyukL62IJnlaff/nRegPQR94C/XXamvMWmSHRJ4y7Ts/4ocGRmTHvOs8PSE6pB3dWOrD/nueuU5sduBsQ4w==
 
+react-json-view-lite@^0.9.8:
+  version "0.9.8"
+  resolved "https://registry.yarnpkg.com/react-json-view-lite/-/react-json-view-lite-0.9.8.tgz#d3d91bc16d62ef774a7b5c4ad95ccaaa623362d6"
+  integrity sha512-4D0UgQ5SjanNi2KzgEsEKOb9kj0L9HQz/3IshwIZN5reZsSU62t6sp8c+vskV42lXjGQCi7qGfoXIpNRsON7LA==
+
 react-lazy-load@^3.0.13:
   version "3.1.14"
   resolved "https://registry.yarnpkg.com/react-lazy-load/-/react-lazy-load-3.1.14.tgz#536047d295f578614540a5b417b70b1155f36d9a"
