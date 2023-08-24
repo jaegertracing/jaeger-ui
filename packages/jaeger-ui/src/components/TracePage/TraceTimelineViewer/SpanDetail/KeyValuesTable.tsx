@@ -16,7 +16,7 @@
 import * as React from 'react';
 import { Dropdown, Menu } from 'antd';
 import { ExportOutlined, ProfileOutlined } from '@ant-design/icons';
-import { JsonView, allExpanded, defaultStyles } from 'react-json-view-lite';
+import { JsonView, allExpanded, collapseAllNested, defaultStyles } from 'react-json-view-lite';
 
 import CopyIcon from '../../../common/CopyIcon';
 
@@ -71,10 +71,12 @@ function formatValue(key: string, value: any) {
   } else if (Array.isArray(parsed) && shouldDisplayAsStringList(key)) {
     content = stringListMarkup(parsed);
   } else {
+    const shouldJsonTreeExpand = Object.keys(parsed).length <= 10;
+
     content = (
       <JsonView
         data={parsed}
-        shouldInitiallyExpand={allExpanded}
+        shouldInitiallyExpand={shouldJsonTreeExpand ? allExpanded : collapseAllNested}
         style={{
           ...defaultStyles,
           container: 'json-markup',

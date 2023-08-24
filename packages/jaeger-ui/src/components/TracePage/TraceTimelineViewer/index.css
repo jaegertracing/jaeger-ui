@@ -24,9 +24,6 @@ limitations under the License.
   font-family: monospace;
 
   white-space: pre-wrap;
-  white-space: -moz-pre-wrap;
-  white-space: -pre-wrap;
-  white-space: -o-pre-wrap;
 
   word-break: break-all;
   word-wrap: break-word;
