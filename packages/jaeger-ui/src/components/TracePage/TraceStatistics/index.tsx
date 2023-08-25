@@ -15,7 +15,7 @@
 import React, { Component } from 'react';
 import './index.css';
 import { Table } from 'antd';
-import { ColumnProps, CompareFn } from 'antd/es/table';
+import { ColumnProps } from 'antd/es/table';
 import { Trace } from '../../../types/trace';
 import TraceStatisticsHeader from './TraceStatisticsHeader';
 import { ITableSpan } from './types';
@@ -251,8 +251,8 @@ export default class TraceStatistics extends Component<Props, State> {
       if (this.state.valueNameSelector1 === 'sql.query' && hasSubgroupValue) this.togglePopup(name);
     };
 
-    const sorterFunction = <T extends keyof ITableSpan>(field: T): CompareFn<ITableSpan> => {
-      const sort = (a: ITableSpan, b: ITableSpan) => {
+    const sorterFunction = <T extends keyof ITableSpan>(field: T) => {
+      return (a: ITableSpan, b: ITableSpan) => {
         if (!a.hasSubgroupValue) {
           return 0;
         }
@@ -264,7 +264,6 @@ export default class TraceStatistics extends Component<Props, State> {
         }
         return (a[field] as number) - (b[field] as number);
       };
-      return sort;
     };
 
     const onCellFunction = (record: ITableSpan) => {

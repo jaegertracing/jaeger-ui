@@ -42,12 +42,7 @@ exports[`drawNode diffNode renders as expected when props.a and props.b are the 
     </table>
   }
   mouseEnterDelay={0.25}
-  mouseLeaveDelay={0.1}
   overlayClassName="DiffNode--popover is-same"
-  overlayStyle={Object {}}
-  placement="top"
-  transitionName="zoom-big"
-  trigger="hover"
 >
   <table
     className="DiffNode is-same"
@@ -151,12 +146,7 @@ exports[`drawNode diffNode renders as expected when props.a is 0 1`] = `
     </table>
   }
   mouseEnterDelay={0.25}
-  mouseLeaveDelay={0.1}
   overlayClassName="DiffNode--popover is-changed is-added"
-  overlayStyle={Object {}}
-  placement="top"
-  transitionName="zoom-big"
-  trigger="hover"
 >
   <table
     className="DiffNode is-changed is-added"
@@ -280,12 +270,7 @@ exports[`drawNode diffNode renders as expected when props.a is less than props.b
     </table>
   }
   mouseEnterDelay={0.25}
-  mouseLeaveDelay={0.1}
   overlayClassName="DiffNode--popover is-changed is-more"
-  overlayStyle={Object {}}
-  placement="top"
-  transitionName="zoom-big"
-  trigger="hover"
 >
   <table
     className="DiffNode is-changed is-more"
@@ -409,12 +394,7 @@ exports[`drawNode diffNode renders as expected when props.a is more than props.b
     </table>
   }
   mouseEnterDelay={0.25}
-  mouseLeaveDelay={0.1}
   overlayClassName="DiffNode--popover is-changed is-less"
-  overlayStyle={Object {}}
-  placement="top"
-  transitionName="zoom-big"
-  trigger="hover"
 >
   <table
     className="DiffNode is-changed is-less"
@@ -538,12 +518,7 @@ exports[`drawNode diffNode renders as expected when props.b is 0 1`] = `
     </table>
   }
   mouseEnterDelay={0.25}
-  mouseLeaveDelay={0.1}
   overlayClassName="DiffNode--popover is-changed is-removed"
-  overlayStyle={Object {}}
-  placement="top"
-  transitionName="zoom-big"
-  trigger="hover"
 >
   <table
     className="DiffNode is-changed is-removed"
@@ -647,12 +622,7 @@ exports[`drawNode diffNode renders as expected when props.isUiFindMatch is true 
     </table>
   }
   mouseEnterDelay={0.25}
-  mouseLeaveDelay={0.1}
   overlayClassName="DiffNode--popover is-same"
-  overlayStyle={Object {}}
-  placement="top"
-  transitionName="zoom-big"
-  trigger="hover"
 >
   <table
     className="DiffNode is-same"

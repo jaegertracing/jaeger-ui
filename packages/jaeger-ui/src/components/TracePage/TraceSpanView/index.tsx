@@ -178,7 +178,7 @@ export default class TraceSpanView extends Component<Props, State> {
     return (
       <div>
         <h3 className="title--TraceSpanView"> Trace Tabular View</h3>
-        <Row type="flex" style={{ marginTop: '8px' }}>
+        <Row style={{ marginTop: '8px' }}>
           <Col span={7}>
             <FormItem
               label="Service Name"

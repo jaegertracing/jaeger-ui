@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Input, Tooltip } from 'antd';
+import { Tooltip } from 'antd';
+import type { InputRef } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import { MdVisibility, MdVisibilityOff } from 'react-icons/md';
 
@@ -47,7 +48,7 @@ type TProps = {
   visEncoding?: string;
 };
 export default class Header extends React.PureComponent<TProps> {
-  private _uiFindInput: React.RefObject<Input> = React.createRef();
+  private _uiFindInput: React.RefObject<InputRef> = React.createRef();
 
   static defaultProps = {
     showParameters: true,

@@ -3,7 +3,6 @@
 exports[`<MonitorATMEmptyState> ATM snapshot test 1`] = `
 <Col>
   <Row
-    gutter={0}
     justify="center"
   >
     <Col
@@ -18,7 +17,6 @@ exports[`<MonitorATMEmptyState> ATM snapshot test 1`] = `
     </Col>
   </Row>
   <Row
-    gutter={0}
     justify="center"
   >
     <Col
@@ -42,17 +40,12 @@ exports[`<MonitorATMEmptyState> ATM snapshot test 1`] = `
         Service Performance Monitoring aggregates tracing data into RED metrics and visualizes them in service and operation level dashboards.
       </h4>
       <Button
-        block={false}
         className="button-empty-state"
-        ghost={false}
-        htmlType="button"
-        loading={false}
         onClick={[Function]}
       >
         Read the Documentation
       </Button>
       <Row
-        gutter={0}
         justify="center"
       >
         <Col

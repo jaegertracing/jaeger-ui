@@ -40,7 +40,7 @@ class TraceIDSearchInput extends React.PureComponent<Props> {
       <Form
         data-testid="TraceIDSearchInput--form"
         layout="horizontal"
-        onSubmit={this.goToTrace}
+        onFinish={this.goToTrace}
         className="TraceIDSearchInput--form"
       >
         <Input

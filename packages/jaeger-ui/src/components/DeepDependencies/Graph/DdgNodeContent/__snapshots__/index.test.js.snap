@@ -1384,13 +1384,8 @@ exports[`<DdgNodeContent> renders the number of operations if there are multiple
               value={null}
             />
           }
-          mouseEnterDelay={0.1}
-          mouseLeaveDelay={0.1}
-          overlayStyle={Object {}}
           placement="bottom"
           title="Select Operation to Filter Graph"
-          transitionName="zoom-big"
-          trigger="hover"
         >
           <span>
             4 Operations

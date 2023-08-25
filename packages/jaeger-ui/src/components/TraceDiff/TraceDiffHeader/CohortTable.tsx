@@ -60,8 +60,8 @@ export default class CohortTable extends React.PureComponent<Props> {
     const rowSelection = {
       ...defaultRowSelection,
       getCheckboxProps: this.getCheckboxProps,
-      // TODO: Antd Table believes onChange can be called with a string or number, but that seems wrong
-      onChange: (ids: number[] | string[]) => selectTrace(ids[0] as string),
+      onChange: (selectedRowKeys: React.Key[], selectedRows: FetchedTrace[]) =>
+        selectTrace(selectedRows[0].id),
       selectedRowKeys: current ? [current] : [],
     };
 

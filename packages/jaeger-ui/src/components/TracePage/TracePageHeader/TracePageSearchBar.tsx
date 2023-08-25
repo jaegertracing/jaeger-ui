@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Button, Input, Tooltip } from 'antd';
+import { Button, Input, InputRef, Tooltip } from 'antd';
 import cx from 'classnames';
 import { IoLocate, IoHelp } from 'react-icons/io5';
 
@@ -33,7 +33,7 @@ type TracePageSearchBarProps = {
   navigable: boolean;
 };
 
-export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwardedRef: React.Ref<Input> }) {
+export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwardedRef: React.Ref<InputRef> }) {
   const {
     clearSearch,
     focusUiFindMatches,
@@ -135,6 +135,6 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwarde
   );
 }
 
-export default React.forwardRef((props: TracePageSearchBarProps, ref: React.Ref<Input>) => (
+export default React.forwardRef((props: TracePageSearchBarProps, ref: React.Ref<InputRef>) => (
   <TracePageSearchBarFn {...props} forwardedRef={ref} />
 ));

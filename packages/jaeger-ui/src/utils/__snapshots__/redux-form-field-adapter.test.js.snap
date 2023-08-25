@@ -1,7 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`reduxFormFieldAdapter not validated input should render as expected 1`] = `
-<Input
+<ForwardRef
   className=""
   meta={
     Object {
@@ -12,7 +12,6 @@ exports[`reduxFormFieldAdapter not validated input should render as expected 1`]
   onBlur={[Function]}
   onChange={[Function]}
   onFocus={[Function]}
-  type="text"
   value="inputValue"
 />
 `;
@@ -20,16 +19,11 @@ exports[`reduxFormFieldAdapter not validated input should render as expected 1`]
 exports[`reduxFormFieldAdapter validate input should render Popover as invisible if there is an error but the field is active 1`] = `
 <Popover
   content="error content"
-  mouseEnterDelay={0.1}
-  mouseLeaveDelay={0.1}
-  overlayStyle={Object {}}
   placement="bottomLeft"
   title="error title"
-  transitionName="zoom-big"
-  trigger="hover"
   visible={false}
 >
-  <Input
+  <ForwardRef
     className="AdaptedReduxFormField--isValidatedInput"
     meta={
       Object {
@@ -43,7 +37,6 @@ exports[`reduxFormFieldAdapter validate input should render Popover as invisible
     onBlur={[Function]}
     onChange={[Function]}
     onFocus={[Function]}
-    type="text"
     value="inputValue"
   />
 </Popover>
@@ -52,16 +45,11 @@ exports[`reduxFormFieldAdapter validate input should render Popover as invisible
 exports[`reduxFormFieldAdapter validate input should render Popover as visible if there is an error and the field is not active 1`] = `
 <Popover
   content="error content"
-  mouseEnterDelay={0.1}
-  mouseLeaveDelay={0.1}
-  overlayStyle={Object {}}
   placement="bottomLeft"
   title="error title"
-  transitionName="zoom-big"
-  trigger="hover"
   visible={true}
 >
-  <Input
+  <ForwardRef
     className="is-invalid AdaptedReduxFormField--isValidatedInput"
     meta={
       Object {
@@ -75,7 +63,6 @@ exports[`reduxFormFieldAdapter validate input should render Popover as visible i
     onBlur={[Function]}
     onChange={[Function]}
     onFocus={[Function]}
-    type="text"
     value="inputValue"
   />
 </Popover>
@@ -83,15 +70,10 @@ exports[`reduxFormFieldAdapter validate input should render Popover as visible i
 
 exports[`reduxFormFieldAdapter validate input should render as expected when there is not an error 1`] = `
 <Popover
-  mouseEnterDelay={0.1}
-  mouseLeaveDelay={0.1}
-  overlayStyle={Object {}}
   placement="bottomLeft"
-  transitionName="zoom-big"
-  trigger="hover"
   visible={false}
 >
-  <Input
+  <ForwardRef
     className="AdaptedReduxFormField--isValidatedInput"
     meta={
       Object {
@@ -102,7 +84,6 @@ exports[`reduxFormFieldAdapter validate input should render as expected when the
     onBlur={[Function]}
     onChange={[Function]}
     onFocus={[Function]}
-    type="text"
     value="inputValue"
   />
 </Popover>
