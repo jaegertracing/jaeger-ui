@@ -2,7 +2,7 @@ name: "Unit Tests"
 
 on:
   push:
-    branches: [bump-1]
+    branches: [bump2]
 
   pull_request:
     branches: [main]
