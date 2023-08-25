@@ -44,6 +44,12 @@
   "dependencies": {
     "@ant-design/icons": "4.0.0",
     "@jaegertracing/plexus": "0.2.0",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.41.1",
+    "@opentelemetry/instrumentation": "^0.41.1",
+    "@opentelemetry/instrumentation-fetch": "^0.41.1",
+    "@opentelemetry/resources": "^1.15.1",
+    "@opentelemetry/sdk-trace-web": "^1.15.1",
+    "@opentelemetry/semantic-conventions": "^1.15.1",
     "@pyroscope/flamegraph": "0.21.4",
     "@types/deep-freeze": "^0.1.1",
     "@types/lodash": "^4.14.123",
