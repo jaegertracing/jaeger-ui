@@ -22,6 +22,7 @@ updates:
           - "@jest*"
           - "jest*"
           - "babel-jest"
+          - "@testing-library/jest*"
       react:
         patterns:
           - "@types/react"
