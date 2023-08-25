@@ -15,9 +15,8 @@
 import * as React from 'react';
 import { Button, Input, Tooltip } from 'antd';
 import cx from 'classnames';
-import IoAndroidLocate from 'react-icons/lib/io/android-locate';
+import { IoLocate, IoHelp } from 'react-icons/io5';
 
-import IoHelp from 'react-icons/lib/io/help';
 import * as markers from './TracePageSearchBar.markers';
 import { trackFilter } from '../index.track';
 import UiFindInput from '../../common/UiFindInput';
@@ -106,7 +105,7 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwarde
               htmlType="button"
               onClick={focusUiFindMatches}
             >
-              <IoAndroidLocate />
+              <IoLocate />
             </Button>
             <Button
               className={btnClass}

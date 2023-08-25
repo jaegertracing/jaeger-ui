@@ -15,7 +15,7 @@
 import * as React from 'react';
 import { Table } from 'antd';
 import { FilterOutlined } from '@ant-design/icons';
-import FaFilter from 'react-icons/lib/fa/filter.js';
+import { FaFilter } from 'react-icons/fa';
 import _isEmpty from 'lodash/isEmpty';
 
 import ExamplesLink, { TExample } from '../ExamplesLink';

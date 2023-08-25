@@ -15,8 +15,7 @@
 import * as React from 'react';
 import cx from 'classnames';
 import _sortBy from 'lodash/sortBy';
-import IoIosArrowDown from 'react-icons/lib/io/ios-arrow-down';
-import IoIosArrowRight from 'react-icons/lib/io/ios-arrow-right';
+import { IoIosArrowDown, IoIosArrowForward } from 'react-icons/io';
 
 import AccordianKeyValues from './AccordianKeyValues';
 import { formatDuration } from '../utils';
@@ -45,7 +44,7 @@ export default function AccordianLogs(props: AccordianLogsProps) {
     arrow = isOpen ? (
       <IoIosArrowDown className="u-align-icon" />
     ) : (
-      <IoIosArrowRight className="u-align-icon" />
+      <IoIosArrowForward className="u-align-icon" />
     );
     HeaderComponent = 'a';
     headerProps = {

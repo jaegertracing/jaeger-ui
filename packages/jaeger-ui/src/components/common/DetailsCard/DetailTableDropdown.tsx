@@ -14,9 +14,8 @@
 
 import * as React from 'react';
 import { Button, Tooltip } from 'antd';
-import FaCheck from 'react-icons/lib/fa/check.js';
-import FaTrash from 'react-icons/lib/fa/trash.js';
-import TiCancel from 'react-icons/lib/ti/cancel.js';
+import { FaCheck, FaTrash } from 'react-icons/fa';
+import { TiCancel } from 'react-icons/ti';
 
 import FilteredList from '../FilteredList';
 
