@@ -98,7 +98,7 @@ function CustomNavDropdown({ label, items }: ConfigMenuGroup) {
   return (
     <Dropdown overlay={menuItems} placement="bottomRight">
       <a>
-        {label} <DownOutlined />
+        {label} <DownOutlined style={{ paddingRight: '10px' }} />
       </a>
     </Dropdown>
   );
@@ -115,7 +115,14 @@ export function TopNavImpl(props: Props) {
 
   return (
     <div>
-      <Menu theme="dark" mode="horizontal" selectable={false} className="ub-right" selectedKeys={[pathname]}>
+      <Menu
+        style={{ lineHeight: '48px' }}
+        theme="dark"
+        mode="horizontal"
+        selectable={false}
+        className="ub-right"
+        selectedKeys={[pathname]}
+      >
         <Menu.Item>
           <TraceIDSearchInput />
         </Menu.Item>
@@ -123,14 +130,16 @@ export function TopNavImpl(props: Props) {
           if (isItem(m)) {
             return getItem(m);
           }
-          return (
-            <Menu.Item key={m.label}>
-              <CustomNavDropdown key={m.label} {...m} />
-            </Menu.Item>
-          );
+          return <CustomNavDropdown key={m.label} {...m} />;
         })}
       </Menu>
-      <Menu theme="dark" mode="horizontal" selectable={false} selectedKeys={[pathname]}>
+      <Menu
+        style={{ lineHeight: '48px' }}
+        theme="dark"
+        mode="horizontal"
+        selectable={false}
+        selectedKeys={[pathname]}
+      >
         <Menu.Item>
           <Link to={prefixUrl('/')} style={{ fontSize: '14px', fontWeight: 500 }}>
             JAEGER UI
