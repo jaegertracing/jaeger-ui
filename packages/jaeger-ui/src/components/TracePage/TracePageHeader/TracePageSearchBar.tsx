@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import * as React from 'react';
+import { CloseOutlined, DownOutlined, UpOutlined } from '@ant-design/icons';
 import { Button, Input, InputRef, Tooltip } from 'antd';
 import cx from 'classnames';
 import { IoLocate, IoHelp } from 'react-icons/io5';
@@ -111,14 +112,14 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwarde
               className={btnClass}
               disabled={!textFilter}
               htmlType="button"
-              icon="up"
+              icon={<UpOutlined />}
               onClick={prevResult}
             />
             <Button
               className={btnClass}
               disabled={!textFilter}
               htmlType="button"
-              icon="down"
+              icon={<DownOutlined />}
               onClick={nextResult}
             />
           </>
@@ -127,7 +128,7 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwarde
           className={btnClass}
           disabled={!textFilter}
           htmlType="button"
-          icon="close"
+          icon={<CloseOutlined />}
           onClick={clearSearch}
         />
       </Input.Group>
