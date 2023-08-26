@@ -54,7 +54,7 @@
     "@types/react-router-dom": "^4.3.1",
     "@types/react-virtualized-select": "^3.0.7",
     "@types/redux-actions": "2.2.1",
-    "antd": "4.24.8",
+    "antd": "4.24.13",
     "chance": "^1.0.10",
     "classnames": "^2.2.5",
     "combokeys": "^3.0.0",

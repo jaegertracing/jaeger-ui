@@ -6,7 +6,6 @@ exports[`<MonitorATMEmptyState> ATM snapshot test 1`] = `
     justify="center"
   >
     <Col
-      offset={8}
       span={8}
     >
       <img
@@ -21,7 +20,6 @@ exports[`<MonitorATMEmptyState> ATM snapshot test 1`] = `
   >
     <Col
       className="center-empty-state"
-      offset={9}
       span={6}
     >
       <h2
@@ -49,7 +47,6 @@ exports[`<MonitorATMEmptyState> ATM snapshot test 1`] = `
         justify="center"
       >
         <Col
-          offset={2}
           span={20}
         >
           <Alert

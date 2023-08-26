@@ -11,7 +11,11 @@ exports[`<CopyIcon /> renders as expected 1`] = `
   <Button
     className="classNameValue CopyIcon"
     htmlType="button"
-    icon="copy"
+    icon={
+      <Icon
+        type="copy"
+      />
+    }
     onClick={[Function]}
   />
 </Tooltip>
