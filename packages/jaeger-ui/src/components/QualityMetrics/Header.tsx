@@ -50,7 +50,7 @@ export default class Header extends React.PureComponent<TProps, TState> {
   render() {
     const { lookback, service, services, setService } = this.props;
     const { ownInputValue } = this.state;
-    const lookbackValue = ownInputValue !== undefined ? ownInputValue : lookback;
+    const lookbackValue = ownInputValue !== null ? ownInputValue : lookback;
 
     return (
       <header className="QualityMetrics--Header">

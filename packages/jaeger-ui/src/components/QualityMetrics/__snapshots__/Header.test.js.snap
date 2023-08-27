@@ -28,7 +28,7 @@ exports[`Header rendering renders as expected with full props 1`] = `
     id="inputNumber"
     min={1}
     onChange={[Function]}
-    value={null}
+    value={4}
   />
   <span
     className="QualityMetrics--Header--LookbackSuffix"
@@ -60,7 +60,7 @@ exports[`Header rendering renders as expected with minimum props 1`] = `
     id="inputNumber"
     min={1}
     onChange={[Function]}
-    value={null}
+    value={4}
   />
   <span
     className="QualityMetrics--Header--LookbackSuffix"
