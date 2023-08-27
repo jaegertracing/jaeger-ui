@@ -18,6 +18,7 @@ import moment from 'moment';
 import { ColumnProps } from 'antd/es/table';
 import FormItem from 'antd/lib/form/FormItem';
 import './index.css';
+import { Form } from '@ant-design/compatible';
 import { TNil } from '../../../types';
 import { Trace, Span } from '../../../types/trace';
 import { timeConversion } from '../../../utils/date';
@@ -180,7 +181,8 @@ export default class TraceSpanView extends Component<Props, State> {
         <h3 className="title--TraceSpanView"> Trace Tabular View</h3>
         <Row style={{ marginTop: '8px' }}>
           <Col span={7}>
-            <FormItem
+            <Form.Item
+              colon
               label="Service Name"
               labelCol={{ span: 6 }}
               wrapperCol={{ span: 18 }}
@@ -207,10 +209,11 @@ export default class TraceSpanView extends Component<Props, State> {
                   return <Option key={name}>{name} </Option>;
                 })}
               </Select>
-            </FormItem>
+            </Form.Item>
           </Col>
           <Col span={9}>
-            <FormItem
+            <Form.Item
+              colon
               label="Operation Name"
               labelCol={{ span: 6 }}
               wrapperCol={{ span: 18 }}
@@ -237,14 +240,14 @@ export default class TraceSpanView extends Component<Props, State> {
                   return <Option key={name}>{name} </Option>;
                 })}
               </Select>
-            </FormItem>
+            </Form.Item>
           </Col>
           <Col span={2} push={6}>
-            <FormItem className="reset-filter">
+            <Form.Item className="reset-filter">
               <Button type="primary" htmlType="button" onClick={this.handleResetFilter}>
                 Reset Filters
               </Button>
-            </FormItem>
+            </Form.Item>
           </Col>
         </Row>
 
