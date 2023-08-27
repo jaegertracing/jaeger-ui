@@ -69,11 +69,8 @@ describe('CohortTable', () => {
     wrapper = shallow(<CohortTable {...props} {...specifiedProps} />);
   }
 
-  function getRowRenderer(dataIndex, fromData = true) {
-    return wrapper
-      .find(Column)
-      .find(`[dataIndex="${fromData ? 'data.' : ''}${dataIndex}"]`)
-      .prop('render');
+  function getRowRenderer(dataIndex) {
+    return wrapper.find(Column).find(`[data-testid="${dataIndex}"]`).prop('render');
   }
 
   beforeAll(() => {
@@ -139,7 +136,7 @@ describe('CohortTable', () => {
   });
 
   it('renders shortened id', () => {
-    const idRenderer = getRowRenderer('id', false);
+    const idRenderer = getRowRenderer('id');
     const traceID = 'trace-id-longer-than-eight-characters';
     const renderedId = shallow(idRenderer(traceID));
     expect(renderedId.text()).toBe(traceID.slice(0, 7));
