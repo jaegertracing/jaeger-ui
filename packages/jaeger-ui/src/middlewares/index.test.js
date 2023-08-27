@@ -24,7 +24,6 @@ jest.mock(
 );
 
 import { change } from 'redux-form';
-import sinon from 'sinon';
 
 import * as jaegerMiddlewares from './index';
 import { fetchServiceOperations } from '../actions/jaeger-api';
@@ -35,10 +34,10 @@ it('jaegerMiddlewares should contain the promise middleware', () => {
 
 it('loadOperationsForServiceMiddleware fetches operations for services', () => {
   const { loadOperationsForServiceMiddleware } = jaegerMiddlewares;
-  const dispatch = sinon.spy();
-  const next = sinon.spy();
+  const dispatch = jest.fn();
+  const next = jest.fn();
   const action = change('searchSideBar', 'service', 'yo');
   loadOperationsForServiceMiddleware({ dispatch })(next)(action);
-  expect(dispatch.calledWith(fetchServiceOperations('yo'))).toBeTruthy();
-  expect(dispatch.calledWith(change('searchSideBar', 'operation', 'all'))).toBeTruthy();
+  expect(dispatch).toHaveBeenCalledWith(fetchServiceOperations('yo'));
+  expect(dispatch).toHaveBeenCalledWith(change('searchSideBar', 'operation', 'all'));
 });
