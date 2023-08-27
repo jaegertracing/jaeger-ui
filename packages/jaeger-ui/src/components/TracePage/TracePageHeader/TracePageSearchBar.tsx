@@ -113,6 +113,7 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwarde
               disabled={!textFilter}
               htmlType="button"
               icon={<UpOutlined />}
+              data-testid="UpOutlined"
               onClick={prevResult}
             />
             <Button
@@ -120,6 +121,7 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwarde
               disabled={!textFilter}
               htmlType="button"
               icon={<DownOutlined />}
+              data-testid="DownOutlined"
               onClick={nextResult}
             />
           </>
@@ -129,6 +131,7 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwarde
           disabled={!textFilter}
           htmlType="button"
           icon={<CloseOutlined />}
+          data-testid="CloseOutlined"
           onClick={clearSearch}
         />
       </Input.Group>

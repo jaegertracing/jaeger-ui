@@ -41,7 +41,9 @@ exports[`<MonitorATMServicesView> ATM snapshot test 1`] = `
         />
       </Col>
     </Row>
-    <Row>
+    <Row
+      align="middle"
+    >
       <Col
         span={16}
       >
@@ -279,101 +281,99 @@ exports[`<MonitorATMServicesView> ATM snapshot test 1`] = `
     <Row
       className="operation-table-block"
     >
-      <Row>
-        <Col
-          span={16}
+      <Col
+        span={16}
+      >
+        <h2
+          className="table-header"
         >
-          <h2
-            className="table-header"
-          >
-            Operations metrics under 
-            s1
-          </h2>
-           
-          <span
-            className="over-the-last"
-          >
-            Over the 
-            last hour
-          </span>
-        </Col>
-        <Col
-          className="select-operation-column"
-          span={8}
+          Operations metrics under 
+          s1
+        </h2>
+         
+        <span
+          className="over-the-last"
         >
-          <Search
-            className="select-operation-input"
-            disabled={false}
-            onChange={[Function]}
-            placeholder="Search operation"
-            value=""
-          />
-        </Col>
-      </Row>
-      <Row>
-        <OperationTableDetails
-          data={
-            Array [
-              Object {
-                "dataPoints": Object {
-                  "avg": Object {
-                    "service_operation_call_rate": 0.01,
-                    "service_operation_error_rate": 1,
-                    "service_operation_latencies": 736.16,
-                  },
-                  "service_operation_call_rate": Array [
-                    Object {
-                      "x": 1631534436235,
-                      "y": 0.01,
-                    },
-                    Object {
-                      "x": 1631534496235,
-                      "y": 0.01,
-                    },
-                  ],
-                  "service_operation_error_rate": Array [
-                    Object {
-                      "x": 1631534436235,
-                      "y": 1,
-                    },
-                    Object {
-                      "x": 1631534496235,
-                      "y": 1,
-                    },
-                  ],
-                  "service_operation_latencies": Array [
-                    Object {
-                      "x": 1631534436235,
-                      "y": 737.33,
-                    },
-                    Object {
-                      "x": 1631534496235,
-                      "y": 735,
-                    },
-                  ],
-                },
-                "errRates": 1,
-                "impact": 1,
-                "key": 0,
-                "latency": 736.16,
-                "name": "/PlaceOrder",
-                "requests": 0.01,
-              },
-            ]
-          }
-          endTime={1466424490000}
-          error={
-            Object {
-              "opsCalls": null,
-              "opsErrors": null,
-              "opsLatencies": null,
-            }
-          }
-          loading={null}
-          lookback={3600000}
-          serviceName="s1"
+          Over the 
+          last hour
+        </span>
+      </Col>
+      <Col
+        className="select-operation-column"
+        span={8}
+      >
+        <Search
+          className="select-operation-input"
+          disabled={false}
+          onChange={[Function]}
+          placeholder="Search operation"
+          value=""
         />
-      </Row>
+      </Col>
+    </Row>
+    <Row>
+      <OperationTableDetails
+        data={
+          Array [
+            Object {
+              "dataPoints": Object {
+                "avg": Object {
+                  "service_operation_call_rate": 0.01,
+                  "service_operation_error_rate": 1,
+                  "service_operation_latencies": 736.16,
+                },
+                "service_operation_call_rate": Array [
+                  Object {
+                    "x": 1631534436235,
+                    "y": 0.01,
+                  },
+                  Object {
+                    "x": 1631534496235,
+                    "y": 0.01,
+                  },
+                ],
+                "service_operation_error_rate": Array [
+                  Object {
+                    "x": 1631534436235,
+                    "y": 1,
+                  },
+                  Object {
+                    "x": 1631534496235,
+                    "y": 1,
+                  },
+                ],
+                "service_operation_latencies": Array [
+                  Object {
+                    "x": 1631534436235,
+                    "y": 737.33,
+                  },
+                  Object {
+                    "x": 1631534496235,
+                    "y": 735,
+                  },
+                ],
+              },
+              "errRates": 1,
+              "impact": 1,
+              "key": 0,
+              "latency": 736.16,
+              "name": "/PlaceOrder",
+              "requests": 0.01,
+            },
+          ]
+        }
+        endTime={1466424490000}
+        error={
+          Object {
+            "opsCalls": null,
+            "opsErrors": null,
+            "opsLatencies": null,
+          }
+        }
+        loading={null}
+        lookback={3600000}
+        serviceName="s1"
+      />
     </Row>
   </div>
 </Fragment>
@@ -432,7 +432,9 @@ exports[`<MonitorATMServicesView> ATM snapshot test with no metrics 1`] = `
         />
       </Col>
     </Row>
-    <Row>
+    <Row
+      align="middle"
+    >
       <Col
         span={16}
       >
@@ -589,101 +591,99 @@ exports[`<MonitorATMServicesView> ATM snapshot test with no metrics 1`] = `
     <Row
       className="operation-table-block"
     >
-      <Row>
-        <Col
-          span={16}
+      <Col
+        span={16}
+      >
+        <h2
+          className="table-header"
         >
-          <h2
-            className="table-header"
-          >
-            Operations metrics under 
-            s1
-          </h2>
-           
-          <span
-            className="over-the-last"
-          >
-            Over the 
-            last hour
-          </span>
-        </Col>
-        <Col
-          className="select-operation-column"
-          span={8}
+          Operations metrics under 
+          s1
+        </h2>
+         
+        <span
+          className="over-the-last"
         >
-          <Search
-            className="select-operation-input"
-            disabled={false}
-            onChange={[Function]}
-            placeholder="Search operation"
-            value=""
-          />
-        </Col>
-      </Row>
-      <Row>
-        <OperationTableDetails
-          data={
-            Array [
-              Object {
-                "dataPoints": Object {
-                  "avg": Object {
-                    "service_operation_call_rate": 0.01,
-                    "service_operation_error_rate": 1,
-                    "service_operation_latencies": 736.16,
-                  },
-                  "service_operation_call_rate": Array [
-                    Object {
-                      "x": 1631534436235,
-                      "y": 0.01,
-                    },
-                    Object {
-                      "x": 1631534496235,
-                      "y": 0.01,
-                    },
-                  ],
-                  "service_operation_error_rate": Array [
-                    Object {
-                      "x": 1631534436235,
-                      "y": 1,
-                    },
-                    Object {
-                      "x": 1631534496235,
-                      "y": 1,
-                    },
-                  ],
-                  "service_operation_latencies": Array [
-                    Object {
-                      "x": 1631534436235,
-                      "y": 737.33,
-                    },
-                    Object {
-                      "x": 1631534496235,
-                      "y": 735,
-                    },
-                  ],
-                },
-                "errRates": 1,
-                "impact": 1,
-                "key": 0,
-                "latency": 736.16,
-                "name": "/PlaceOrder",
-                "requests": 0.01,
-              },
-            ]
-          }
-          endTime={1466424490000}
-          error={
-            Object {
-              "opsCalls": null,
-              "opsErrors": null,
-              "opsLatencies": null,
-            }
-          }
-          loading={null}
-          lookback={3600000}
-          serviceName="s1"
+          Over the 
+          last hour
+        </span>
+      </Col>
+      <Col
+        className="select-operation-column"
+        span={8}
+      >
+        <Search
+          className="select-operation-input"
+          disabled={false}
+          onChange={[Function]}
+          placeholder="Search operation"
+          value=""
         />
-      </Row>
+      </Col>
+    </Row>
+    <Row>
+      <OperationTableDetails
+        data={
+          Array [
+            Object {
+              "dataPoints": Object {
+                "avg": Object {
+                  "service_operation_call_rate": 0.01,
+                  "service_operation_error_rate": 1,
+                  "service_operation_latencies": 736.16,
+                },
+                "service_operation_call_rate": Array [
+                  Object {
+                    "x": 1631534436235,
+                    "y": 0.01,
+                  },
+                  Object {
+                    "x": 1631534496235,
+                    "y": 0.01,
+                  },
+                ],
+                "service_operation_error_rate": Array [
+                  Object {
+                    "x": 1631534436235,
+                    "y": 1,
+                  },
+                  Object {
+                    "x": 1631534496235,
+                    "y": 1,
+                  },
+                ],
+                "service_operation_latencies": Array [
+                  Object {
+                    "x": 1631534436235,
+                    "y": 737.33,
+                  },
+                  Object {
+                    "x": 1631534496235,
+                    "y": 735,
+                  },
+                ],
+              },
+              "errRates": 1,
+              "impact": 1,
+              "key": 0,
+              "latency": 736.16,
+              "name": "/PlaceOrder",
+              "requests": 0.01,
+            },
+          ]
+        }
+        endTime={1466424490000}
+        error={
+          Object {
+            "opsCalls": null,
+            "opsErrors": null,
+            "opsLatencies": null,
+          }
+        }
+        loading={null}
+        lookback={3600000}
+        serviceName="s1"
+      />
     </Row>
   </div>
 </Fragment>
@@ -742,7 +742,9 @@ exports[`<MonitorATMServicesView> render one service latency 1`] = `
         />
       </Col>
     </Row>
-    <Row>
+    <Row
+      align="middle"
+    >
       <Col
         span={16}
       >
@@ -900,101 +902,99 @@ exports[`<MonitorATMServicesView> render one service latency 1`] = `
     <Row
       className="operation-table-block"
     >
-      <Row>
-        <Col
-          span={16}
+      <Col
+        span={16}
+      >
+        <h2
+          className="table-header"
         >
-          <h2
-            className="table-header"
-          >
-            Operations metrics under 
-            s1
-          </h2>
-           
-          <span
-            className="over-the-last"
-          >
-            Over the 
-            last hour
-          </span>
-        </Col>
-        <Col
-          className="select-operation-column"
-          span={8}
+          Operations metrics under 
+          s1
+        </h2>
+         
+        <span
+          className="over-the-last"
         >
-          <Search
-            className="select-operation-input"
-            disabled={false}
-            onChange={[Function]}
-            placeholder="Search operation"
-            value=""
-          />
-        </Col>
-      </Row>
-      <Row>
-        <OperationTableDetails
-          data={
-            Array [
-              Object {
-                "dataPoints": Object {
-                  "avg": Object {
-                    "service_operation_call_rate": 0.01,
-                    "service_operation_error_rate": 1,
-                    "service_operation_latencies": 736.16,
-                  },
-                  "service_operation_call_rate": Array [
-                    Object {
-                      "x": 1631534436235,
-                      "y": 0.01,
-                    },
-                    Object {
-                      "x": 1631534496235,
-                      "y": 0.01,
-                    },
-                  ],
-                  "service_operation_error_rate": Array [
-                    Object {
-                      "x": 1631534436235,
-                      "y": 1,
-                    },
-                    Object {
-                      "x": 1631534496235,
-                      "y": 1,
-                    },
-                  ],
-                  "service_operation_latencies": Array [
-                    Object {
-                      "x": 1631534436235,
-                      "y": 737.33,
-                    },
-                    Object {
-                      "x": 1631534496235,
-                      "y": 735,
-                    },
-                  ],
-                },
-                "errRates": 1,
-                "impact": 1,
-                "key": 0,
-                "latency": 736.16,
-                "name": "/PlaceOrder",
-                "requests": 0.01,
-              },
-            ]
-          }
-          endTime={1466424490000}
-          error={
-            Object {
-              "opsCalls": null,
-              "opsErrors": null,
-              "opsLatencies": null,
-            }
-          }
-          loading={null}
-          lookback={3600000}
-          serviceName="s1"
+          Over the 
+          last hour
+        </span>
+      </Col>
+      <Col
+        className="select-operation-column"
+        span={8}
+      >
+        <Search
+          className="select-operation-input"
+          disabled={false}
+          onChange={[Function]}
+          placeholder="Search operation"
+          value=""
         />
-      </Row>
+      </Col>
+    </Row>
+    <Row>
+      <OperationTableDetails
+        data={
+          Array [
+            Object {
+              "dataPoints": Object {
+                "avg": Object {
+                  "service_operation_call_rate": 0.01,
+                  "service_operation_error_rate": 1,
+                  "service_operation_latencies": 736.16,
+                },
+                "service_operation_call_rate": Array [
+                  Object {
+                    "x": 1631534436235,
+                    "y": 0.01,
+                  },
+                  Object {
+                    "x": 1631534496235,
+                    "y": 0.01,
+                  },
+                ],
+                "service_operation_error_rate": Array [
+                  Object {
+                    "x": 1631534436235,
+                    "y": 1,
+                  },
+                  Object {
+                    "x": 1631534496235,
+                    "y": 1,
+                  },
+                ],
+                "service_operation_latencies": Array [
+                  Object {
+                    "x": 1631534436235,
+                    "y": 737.33,
+                  },
+                  Object {
+                    "x": 1631534496235,
+                    "y": 735,
+                  },
+                ],
+              },
+              "errRates": 1,
+              "impact": 1,
+              "key": 0,
+              "latency": 736.16,
+              "name": "/PlaceOrder",
+              "requests": 0.01,
+            },
+          ]
+        }
+        endTime={1466424490000}
+        error={
+          Object {
+            "opsCalls": null,
+            "opsErrors": null,
+            "opsLatencies": null,
+          }
+        }
+        loading={null}
+        lookback={3600000}
+        serviceName="s1"
+      />
     </Row>
   </div>
 </Fragment>
