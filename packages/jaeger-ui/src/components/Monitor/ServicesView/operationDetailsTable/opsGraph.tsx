@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { ComposedChart, Line, Area, XAxis, YAxis, ResponsiveContainer } from 'recharts';
+import { ComposedChart, Line, Area, ResponsiveContainer } from 'recharts';
 import { ApiError } from '../../../../types/api-error';
 import { Points } from '../../../../types/metrics';
 
@@ -65,8 +65,6 @@ export class OperationsGraph extends React.PureComponent<TProps> {
             }}
             data={dataPoints}
           >
-            <XAxis dataKey="x" hide />
-            <YAxis hide />
             <Area type="monotone" dataKey="y" stroke={color} fill={color} {...dynProps} />
             <Line type="monotone" dataKey="y" stroke={color} {...dynProps} />
           </ComposedChart>

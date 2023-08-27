@@ -44,7 +44,6 @@ type TProps = {
   xDomain: number[];
 };
 
-const data: any = [];
 // export for tests
 export const tickFormat = (v: number) => {
   const dateObj = new Date(v);
@@ -92,7 +91,6 @@ export class ServiceGraphImpl extends React.PureComponent<TProps> {
         graphs.push(
           <Line connectNulls key={i++} type="monotone" dataKey="y" stroke={color || this.colors[idx]} />
         );
-        data.push(line.metricPoints ? line.metricPoints : []);
       });
 
       return graphs;
@@ -137,7 +135,7 @@ export class ServiceGraphImpl extends React.PureComponent<TProps> {
 
     const Plot = (
       <ResponsiveContainer width={width} height={this.height - 74}>
-        <ComposedChart data={data} margin={{ bottom: 25 }}>
+        <ComposedChart data={this.getData()} margin={{ bottom: 25 }}>
           <CartesianGrid horizontal={showHorizontalLines} vertical={false} />
           <XAxis
             dataKey="x"

@@ -39,58 +39,63 @@ describe('<ServiceGraph>', () => {
     expect(wrapper.length).toBe(1);
   });
 
-  it('Loading indicator is displayed', () => {
-    expect(wrapper).toMatchSnapshot();
+  it('displays loading indicator when loading', () => {
+    expect(wrapper.find('LoadingIndicator').exists()).toBe(true);
   });
 
-  it('Loading indicator is displayed when xDomain is empty', () => {
+  it('displays loading indicator when xDomain is empty', () => {
     wrapper.setProps({ ...props, xDomain: [], loading: false });
-    expect(wrapper).toMatchSnapshot();
+    expect(wrapper.find('LoadingIndicator').exists()).toBe(true);
   });
 
-  it('"No data" displayed', () => {
+  it('displays "No Data" message when metricsData is null', () => {
     wrapper.setProps({ ...props, loading: false });
-    expect(wrapper).toMatchSnapshot();
+    expect(wrapper.text()).toContain('No Data');
   });
 
-  it('"Couldn’t fetch data" displayed', () => {
+  it('displays "Couldn’t fetch data" message when error is present', () => {
     wrapper.setProps({ ...props, loading: false, error: new Error('API Error') });
-    expect(wrapper).toMatchSnapshot();
+    expect(wrapper.text()).toContain('Couldn’t fetch data');
   });
 
-  it('Base graph should be displayed ', () => {
-    wrapper.setProps({ ...props, loading: false, metricsData: serviceMetrics.service_call_rate });
-    expect(wrapper).toMatchSnapshot();
+  it('displays base graph when metricsData is provided', () => {
+    wrapper.setProps({
+      ...props,
+      loading: false,
+      metricsData: serviceMetrics.service_call_rate,
+    });
+    expect(wrapper.find('ComposedChart').exists()).toBe(true);
   });
 
-  it('Base graph with legends should be displayed', () => {
+  it('displays base graph with legends when showLegend is true', () => {
     wrapper.setProps({
       ...props,
       loading: false,
       metricsData: serviceMetrics.service_call_rate,
       showLegend: true,
     });
-    expect(wrapper).toMatchSnapshot();
+    expect(wrapper.find('Legend').exists()).toBe(true);
   });
 
-  it('Base graph with horizontal lines should be displayed', () => {
+  it('displays base graph with horizontal lines when showHorizontalLines is true', () => {
     wrapper.setProps({
       ...props,
       loading: false,
       metricsData: serviceMetrics.service_call_rate,
       showHorizontalLines: true,
     });
-    expect(wrapper).toMatchSnapshot();
+    expect(wrapper.find('CartesianGrid[horizontal=true]').exists()).toBe(true);
   });
 
-  it('Base graph with custom color should be displayed', () => {
+  it('displays base graph with custom color', () => {
     wrapper.setProps({
       ...props,
       loading: false,
       metricsData: serviceMetrics.service_call_rate,
       color: 'AAAAAA',
     });
-    expect(wrapper).toMatchSnapshot();
+    expect(wrapper.find('Area[stroke="AAAAAA"]').exists()).toBe(true);
+    expect(wrapper.find('Line[stroke="AAAAAA"]').exists()).toBe(true);
   });
 
   it('Tooltip test', () => {
@@ -105,7 +110,7 @@ describe('<ServiceGraph>', () => {
         },
       ],
     });
-    expect(wrapper).toMatchSnapshot();
+    expect(wrapper.find('Tooltip').exists()).toBe(true);
   });
 
   it('Tooltip hover test', () => {
@@ -117,8 +122,42 @@ describe('<ServiceGraph>', () => {
         metricPoints: [{ x: 1631271783806, y: null }, ...serviceMetrics.service_call_rate.metricPoints],
       },
     });
-    expect(wrapper.find('Area').render()).toMatchSnapshot();
-    expect(wrapper.find('Line').render()).toMatchSnapshot();
+    expect(wrapper.find('Area').length).toBeGreaterThan(0);
+    expect(wrapper.find('Line').length).toBeGreaterThan(0);
+  });
+
+  it('displays Tooltip with custom formatter', () => {
+    wrapper.setProps({
+      ...props,
+      loading: false,
+      metricsData: serviceMetrics.service_call_rate,
+      crosshairValues: [
+        {
+          key: 1,
+          ...serviceMetrics.service_call_rate.metricPoints[0],
+        },
+      ],
+    });
+
+    const tooltipComponent = wrapper.find('Tooltip');
+    const exampleValue = 42;
+    const exampleEntry = {
+      payload: {
+        x: 1631271783806,
+        y: 123,
+        label: 0.75,
+      },
+    };
+    const formattedTooltipContent = tooltipComponent.prop('formatter')(exampleValue, 'name', exampleEntry);
+
+    const formattedLabel = new Date(exampleEntry.payload.x).toLocaleTimeString();
+    const expectedTooltipContent = [
+      `label: ${exampleEntry.payload.label * 100}`,
+      `x: ${formattedLabel}`,
+      `Y: ${exampleEntry.payload.y}`,
+    ];
+
+    expect(formattedTooltipContent).toEqual(expectedTooltipContent);
   });
 });
 

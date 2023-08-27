@@ -52,49 +52,6 @@ exports[`<OperationsGraph> Graph rendered successfully 1`] = `
       stackOffset="none"
       syncMethod="index"
     >
-      <XAxis
-        allowDataOverflow={false}
-        allowDecimals={true}
-        allowDuplicatedCategory={true}
-        dataKey="x"
-        height={30}
-        hide={true}
-        mirror={false}
-        orientation="bottom"
-        padding={
-          Object {
-            "left": 0,
-            "right": 0,
-          }
-        }
-        reversed={false}
-        scale="auto"
-        tickCount={5}
-        type="category"
-        width={0}
-        xAxisId={0}
-      />
-      <YAxis
-        allowDataOverflow={false}
-        allowDecimals={true}
-        allowDuplicatedCategory={true}
-        height={0}
-        hide={true}
-        mirror={false}
-        orientation="left"
-        padding={
-          Object {
-            "bottom": 0,
-            "top": 0,
-          }
-        }
-        reversed={false}
-        scale="auto"
-        tickCount={5}
-        type="number"
-        width={60}
-        yAxisId={0}
-      />
       <Area
         activeDot={true}
         animationBegin={0}

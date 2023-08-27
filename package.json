@@ -63,8 +63,5 @@
     "hooks": {
       "pre-commit": "npm-run-all -ln --parallel lint test"
     }
-  },
-  "dependencies": {
-    "recharts": "^2.7.3"
   }
 }
