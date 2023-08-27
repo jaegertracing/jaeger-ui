@@ -16,7 +16,9 @@ exports[`<OperationTableDetails> Loading indicator is displayed 1`] = `
 `;
 
 exports[`<OperationTableDetails> Table rendered successfully 1`] = `
-<Row>
+<Col
+  span={24}
+>
   <ForwardRef(InternalTable)
     columns={
       Array [
@@ -102,12 +104,12 @@ exports[`<OperationTableDetails> Table rendered successfully 1`] = `
     }
     rowClassName={[Function]}
   />
-</Row>
+</Col>
 `;
 
 exports[`<OperationTableDetails> render No data table 1`] = `
 <div
-  className="ant-row"
+  className="ant-col ant-col-24"
   style={Object {}}
 >
   <div
@@ -646,7 +648,7 @@ exports[`<OperationTableDetails> render No data table 1`] = `
 
 exports[`<OperationTableDetails> render P95 latency with more than 2 decimal places value 1`] = `
 <div
-  className="ant-row"
+  className="ant-col ant-col-24"
   style={Object {}}
 >
   <div
@@ -1621,7 +1623,7 @@ exports[`<OperationTableDetails> render P95 latency with more than 2 decimal pla
 
 exports[`<OperationTableDetails> render error rate with more than 2 decimal places value 1`] = `
 <div
-  className="ant-row"
+  className="ant-col ant-col-24"
   style={Object {}}
 >
   <div
@@ -2596,7 +2598,7 @@ exports[`<OperationTableDetails> render error rate with more than 2 decimal plac
 
 exports[`<OperationTableDetails> render lower than 0.1 P95 latency 1`] = `
 <div
-  className="ant-row"
+  className="ant-col ant-col-24"
   style={Object {}}
 >
   <div
@@ -3571,7 +3573,7 @@ exports[`<OperationTableDetails> render lower than 0.1 P95 latency 1`] = `
 
 exports[`<OperationTableDetails> render lower than 0.1 error rate 1`] = `
 <div
-  className="ant-row"
+  className="ant-col ant-col-24"
   style={Object {}}
 >
   <div
@@ -4546,7 +4548,7 @@ exports[`<OperationTableDetails> render lower than 0.1 error rate 1`] = `
 
 exports[`<OperationTableDetails> render lower than 0.1 request rate value 1`] = `
 <div
-  className="ant-row"
+  className="ant-col ant-col-24"
   style={Object {}}
 >
   <div
@@ -5521,7 +5523,7 @@ exports[`<OperationTableDetails> render lower than 0.1 request rate value 1`] = 
 
 exports[`<OperationTableDetails> render request rate number with more than 2 decimal places value 1`] = `
 <div
-  className="ant-row"
+  className="ant-col ant-col-24"
   style={Object {}}
 >
   <div
@@ -6496,7 +6498,7 @@ exports[`<OperationTableDetails> render request rate number with more than 2 dec
 
 exports[`<OperationTableDetails> render some values in the table 1`] = `
 <div
-  className="ant-row"
+  className="ant-col ant-col-24"
   style={Object {}}
 >
   <div
@@ -7471,7 +7473,7 @@ exports[`<OperationTableDetails> render some values in the table 1`] = `
 
 exports[`<OperationTableDetails> test column render function 1`] = `
 <div
-  className="ant-row"
+  className="ant-col ant-col-24"
   style={Object {}}
 >
   <div

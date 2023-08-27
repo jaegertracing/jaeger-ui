@@ -236,27 +236,26 @@ describe('<OperationTableDetails>', () => {
     });
 
     wrapper.setProps({ ...props, data, loading: false });
-
-    expect(wrapper.find('TableCell td').first().text()).toBe('/PlaceOrder');
+    expect(wrapper.find('td').first().text()).toBe('/PlaceOrder');
     // click on name
-    wrapper.find('th Icon[type="caret-up"]').at(0).simulate('click');
-    expect(wrapper.find('TableCell td').first().text()).toBe('/Accounts');
+    wrapper.find('[aria-label="caret-up"]').at(0).simulate('click');
+    expect(wrapper.find('td').first().text()).toBe('/Accounts');
 
     // click on latencies
-    wrapper.find('th Icon[type="caret-up"]').at(1).simulate('click');
-    expect(wrapper.find('TableCell td').first().text()).toBe('/PlaceOrder');
+    wrapper.find('[aria-label="caret-up"]').at(1).simulate('click');
+    expect(wrapper.find('td').first().text()).toBe('/PlaceOrder');
 
     // click on request
-    wrapper.find('th Icon[type="caret-up"]').at(2).simulate('click');
-    expect(wrapper.find('TableCell td').first().text()).toBe('/Accounts');
+    wrapper.find('[aria-label="caret-up"]').at(2).simulate('click');
+    expect(wrapper.find('td').first().text()).toBe('/Accounts');
 
     // click on errors
-    wrapper.find('th Icon[type="caret-up"]').at(3).simulate('click');
-    expect(wrapper.find('TableCell td').first().text()).toBe('/PlaceOrder');
+    wrapper.find('[aria-label="caret-up"]').at(3).simulate('click');
+    expect(wrapper.find('td').first().text()).toBe('/PlaceOrder');
 
     // click on errors
-    wrapper.find('th Icon[type="caret-up"]').at(4).simulate('click');
-    expect(wrapper.find('TableCell td').first().text()).toBe('/Accounts');
+    wrapper.find('[aria-label="caret-up"]').at(4).simulate('click');
+    expect(wrapper.find('td').first().text()).toBe('/Accounts');
   });
 
   it('Graph avg label test', () => {
@@ -306,10 +305,10 @@ describe('<OperationTableDetails>', () => {
 
     expect(trackViewTracesSpy).toHaveBeenCalledWith(serviceOpsMetrics[recordIndex].name);
 
-    wrapper.find('.ant-table-column-sorter-down.off').first().simulate('click');
+    wrapper.find('.ant-table-column-sorter-down').first().simulate('click');
     expect(trackSortOperationsSpy).toHaveBeenCalledWith('Name');
 
-    wrapper.find('.ant-table-column-sorter-down.off').last().simulate('click');
+    wrapper.find('.ant-table-column-sorter-down').last().simulate('click');
     expect(trackSortOperationsSpy).toHaveBeenCalledWith('Impact');
 
     trackSortOperationsSpy.mockReset();

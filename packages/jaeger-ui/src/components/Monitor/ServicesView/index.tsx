@@ -287,7 +287,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TPropsWithIn
               />
             </Col>
           </Row>
-          <Row align={'middle'}>
+          <Row align="middle">
             <Col span={16}>
               <p className="operations-metrics-text">
                 Aggregation of all &quot;{this.getSelectedService()}&quot; metrics in selected timeframe.{' '}
