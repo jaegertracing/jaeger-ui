@@ -108,7 +108,7 @@ describe('CohortTable', () => {
     });
 
     it('calls props.selectTrace on row selection', () => {
-      rowSelection.onChange([cohort[1].id, cohort[2].id]);
+      rowSelection.onChange([cohort[1].id, cohort[2].id], [cohort[1], cohort[2]]);
       expect(selectTrace).toHaveBeenCalledWith(cohort[1].id);
     });
 

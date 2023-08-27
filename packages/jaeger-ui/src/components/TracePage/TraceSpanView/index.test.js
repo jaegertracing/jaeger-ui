@@ -54,7 +54,7 @@ describe('<TraceSpanView>', () => {
   it('does not explode', () => {
     expect(wrapper).toBeDefined();
     expect(wrapper.find('.title--TraceSpanView').length).toBe(1);
-    expect(wrapper.find('.span-view-table').length).toBe(3);
+    expect(wrapper.find('.span-view-table').length).toBe(2);
     expect(wrapper.find('table').length).toBe(1);
     expect(wrapper.find('colgroup').length).toBe(1);
     expect(wrapper.find('Pagination').length).toBe(2);

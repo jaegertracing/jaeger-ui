@@ -132,7 +132,7 @@ export default class TraceSpanView extends Component<Props, State> {
     const columns: ColumnProps<Span>[] = [
       {
         title: 'Service Name',
-        dataIndex: 'process.serviceName',
+        dataIndex: ['process', 'serviceName'],
         width: '25%',
         sorter: (a, b) => a.process.serviceName.localeCompare(b.process.serviceName),
       },
