@@ -56,7 +56,7 @@ const GA: IWebAnalyticsFunc = (config: Config, versionShort: string, versionLong
       msg = `jaeger/${msg}`;
     }
     msg = msg.slice(0, 149);
-    ReactGA.send({hitType: "exception", description: msg, fatal: false});
+    ReactGA.send({ hitType: 'exception', description: msg, fatal: false });
     if (isDebugMode) {
       logTrackingCalls();
     }
@@ -152,7 +152,7 @@ const GA: IWebAnalyticsFunc = (config: Config, versionShort: string, versionLong
 
   const trackPageView = (pathname: string, search: string | TNil) => {
     const pagePath = search ? `${pathname}${search}` : pathname;
-    ReactGA.send({hitType: "pageview", path: pagePath});
+    ReactGA.send({ hitType: 'pageview', path: pagePath });
     if (isDebugMode) {
       logTrackingCalls();
     }

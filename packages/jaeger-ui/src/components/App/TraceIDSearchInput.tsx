@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Form, Input, Icon } from 'antd';
+import { Form, Input } from 'antd';
+import { SearchOutlined } from '@ant-design/icons';
 import { RouteComponentProps, Router as RouterHistory, withRouter } from 'react-router-dom';
 
 import { getUrl } from '../TracePage/url';
@@ -36,8 +37,18 @@ class TraceIDSearchInput extends React.PureComponent<Props> {
 
   render() {
     return (
-      <Form layout="horizontal" onSubmit={this.goToTrace} className="TraceIDSearchInput--form">
-        <Input name="idInput" placeholder="Lookup by Trace ID..." prefix={<Icon type="search" />} />
+      <Form
+        data-testid="TraceIDSearchInput--form"
+        layout="horizontal"
+        onSubmit={this.goToTrace}
+        className="TraceIDSearchInput--form"
+      >
+        <Input
+          data-testid="idInput"
+          name="idInput"
+          placeholder="Lookup by Trace ID..."
+          prefix={<SearchOutlined />}
+        />
       </Form>
     );
   }

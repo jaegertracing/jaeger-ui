@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Card, Icon, Button, Tooltip } from 'antd';
+import { Card, Button, Tooltip } from 'antd';
+import { CloseOutlined, QuestionCircleOutlined } from '@ant-design/icons';
 import cx from 'classnames';
 import { Digraph, LayoutManager } from '@jaegertracing/plexus';
 import cacheAs from '@jaegertracing/plexus/lib/cacheAs';
@@ -215,7 +216,7 @@ export default class TraceGraph extends React.PureComponent<Props, State> {
         <div className="TraceGraph--sidebar-container">
           <ul className="TraceGraph--menu">
             <li>
-              <Icon type="question-circle" onClick={this.showHelp} />
+              <QuestionCircleOutlined onClick={this.showHelp} />
             </li>
             <li>
               <Tooltip placement="left" title="Service">
@@ -263,7 +264,7 @@ export default class TraceGraph extends React.PureComponent<Props, State> {
               bordered={false}
               extra={
                 <a onClick={this.closeSidebar} role="button">
-                  <Icon type="close" />
+                  <CloseOutlined />
                 </a>
               }
             >

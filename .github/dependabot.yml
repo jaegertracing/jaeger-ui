@@ -12,9 +12,23 @@ updates:
         patterns:
           - "@babel/*"
           - "babel-loader"
-      typescript-eslint:
+      eslint:
         patterns:
           - "@typescript-eslint/*"
+          - "eslint"
+          - "eslint*"
+      jest:
+        patterns:
+          - "@jest*"
+          - "jest*"
+          - "babel-jest"
+          - "@testing-library/jest*"
+      react:
+        patterns:
+          - "@types/react"
+          - "@types/react-dom"
+          - "react"
+          - "react-dom"
       vite:
         patterns:
           - "vite"

@@ -14,8 +14,7 @@
 
 import * as React from 'react';
 import { Modal, Table } from 'antd';
-import MdExitToApp from 'react-icons/lib/md/exit-to-app';
-import MdInfoOutline from 'react-icons/lib/md/info-outline';
+import { MdExitToApp, MdInfoOutline } from 'react-icons/md';
 
 import { TDdgVertex } from '../../../model/ddg/types';
 import { TPathAgnosticDecorationSchema } from '../../../model/path-agnostic-decorations/types';

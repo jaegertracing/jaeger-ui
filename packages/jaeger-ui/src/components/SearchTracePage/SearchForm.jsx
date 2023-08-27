@@ -21,7 +21,7 @@ import moment from 'moment';
 import memoizeOne from 'memoize-one';
 import PropTypes from 'prop-types';
 import queryString from 'query-string';
-import IoHelp from 'react-icons/lib/io/help';
+import { IoHelp } from 'react-icons/io5';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import { Field, reduxForm, formValueSelector } from 'redux-form';

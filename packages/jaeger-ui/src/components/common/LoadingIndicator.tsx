@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import React from 'react';
-import { Icon } from 'antd';
+import { LoadingOutlined } from '@ant-design/icons';
 
 import './LoadingIndicator.css';
 
@@ -34,7 +34,7 @@ export default function LoadingIndicator(props: LoadingIndicatorProps) {
     ${small ? 'is-small' : ''}
     ${className || ''}
   `;
-  return <Icon type="loading" className={cls} {...rest} />;
+  return <LoadingOutlined className={cls} {...rest} />;
 }
 
 LoadingIndicator.defaultProps = {

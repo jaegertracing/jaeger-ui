@@ -13,9 +13,9 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Icon, Input, Tooltip } from 'antd';
-import MdVisibility from 'react-icons/lib/md/visibility';
-import MdVisibilityOff from 'react-icons/lib/md/visibility-off';
+import { Input, Tooltip } from 'antd';
+import { SearchOutlined } from '@ant-design/icons';
+import { MdVisibility, MdVisibilityOff } from 'react-icons/md';
 
 import HopsSelector from './HopsSelector';
 import NameSelector from '../../common/NameSelector';
@@ -165,7 +165,7 @@ export default class Header extends React.PureComponent<TProps> {
           />
           <div className="DdgHeader--findWrapper">
             <div className="DdgHeader--uiFind" role="button" onClick={this.focusUiFindInput}>
-              <Icon className="DdgHeader--uiFindSearchIcon" type="search" />
+              <SearchOutlined className="DdgHeader--uiFindSearchIcon" />
               <UiFindInput
                 allowClear
                 forwardedRef={this._uiFindInput}
