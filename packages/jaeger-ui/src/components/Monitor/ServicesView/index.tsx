@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Row, Col, Input, Alert } from 'antd';
+import { Row, Col, Input, Alert, Select } from 'antd';
 import { ActionFunction, Action } from 'redux-actions';
 import _debounce from 'lodash/debounce';
 import _isEqual from 'lodash/isEqual';
@@ -24,7 +24,6 @@ import store from 'store';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
 import { Link } from 'react-router-dom';
-import VirtSelect from '../../common/VirtSelect';
 import reduxFormFieldAdapter from '../../../utils/redux-form-field-adapter';
 import * as jaegerApiActions from '../../../actions/jaeger-api';
 import ServiceGraph from './serviceGraph';
@@ -77,11 +76,7 @@ type TDispatchProps = {
 const trackSearchOperationDebounced = _debounce(searchQuery => trackSearchOperation(searchQuery), 1000);
 
 const Search = Input.Search;
-
-const AdaptedVirtualSelect = reduxFormFieldAdapter({
-  AntInputComponent: VirtSelect,
-  onChangeAdapter: option => (option ? (option as any).value : null),
-});
+const Option = Select.Option;
 
 const serviceFormSelector = formValueSelector('serviceForm');
 const oneHourInMilliSeconds = 3600000;
@@ -276,17 +271,21 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TPropsWithIn
               <Field
                 onChange={(e, newValue: string) => trackSelectService(newValue)}
                 name="service"
-                component={AdaptedVirtualSelect}
+                component={reduxFormFieldAdapter({ AntInputComponent: Select })}
                 placeholder="Select A Service"
                 props={{
                   className: 'select-a-service-input',
                   value: this.getSelectedService(),
                   disabled: metrics.operationMetricsLoading,
-                  clearable: false,
-                  options: services.map((s: string) => ({ label: s, value: s })),
-                  required: true,
+                  loading: metrics.operationMetricsLoading,
                 }}
-              />
+              >
+                {services.map((service: string) => (
+                  <Option key={service} value={service}>
+                    {service}
+                  </Option>
+                ))}
+              </Field>
             </Col>
           </Row>
           <Row>
@@ -311,7 +310,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TPropsWithIn
             <Col span={8} className="timeframe-selector">
               <Field
                 name="timeframe"
-                component={AdaptedVirtualSelect}
+                component={reduxFormFieldAdapter({ AntInputComponent: Select })}
                 placeholder="Select A Timeframe"
                 onChange={(e, value: number) => {
                   const { label } = timeFrameOptions.find(option => option.value === value)!;
@@ -322,11 +321,15 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TPropsWithIn
                   defaultValue: timeFrameOptions[3],
                   value: selectedTimeFrame,
                   disabled: metrics.operationMetricsLoading,
-                  clearable: false,
-                  options: timeFrameOptions,
-                  required: true,
+                  loading: metrics.operationMetricsLoading,
                 }}
-              />
+              >
+                {timeFrameOptions.map(option => (
+                  <Option key={option.value} value={option.value}>
+                    {option.label}
+                  </Option>
+                ))}
+              </Field>
             </Col>
           </Row>
           <Row>

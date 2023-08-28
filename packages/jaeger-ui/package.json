@@ -51,7 +51,6 @@
     "@types/react-helmet": "^6.1.5",
     "@types/react-redux": "^5.0.6",
     "@types/react-router-dom": "^4.3.1",
-    "@types/react-virtualized-select": "^3.0.7",
     "@types/redux-actions": "2.2.1",
     "antd": "3.26.20",
     "chance": "^1.0.10",
