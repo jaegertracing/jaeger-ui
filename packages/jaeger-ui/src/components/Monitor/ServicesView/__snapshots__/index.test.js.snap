@@ -22,23 +22,25 @@ exports[`<MonitorATMServicesView> ATM snapshot test 1`] = `
           props={
             Object {
               "className": "select-a-service-input",
-              "clearable": false,
               "disabled": null,
-              "options": Array [
-                Object {
-                  "label": "s1",
-                  "value": "s1",
-                },
-                Object {
-                  "label": "s2",
-                  "value": "s2",
-                },
-              ],
-              "required": true,
+              "loading": null,
               "value": "s1",
             }
           }
-        />
+        >
+          <Option
+            key="s1"
+            value="s1"
+          >
+            s1
+          </Option>
+          <Option
+            key="s2"
+            value="s2"
+          >
+            s2
+          </Option>
+        </Field>
       </Col>
     </Row>
     <Row
@@ -75,55 +77,71 @@ exports[`<MonitorATMServicesView> ATM snapshot test 1`] = `
           props={
             Object {
               "className": "select-a-timeframe-input",
-              "clearable": false,
               "defaultValue": Object {
                 "label": "Last Hour",
                 "value": 3600000,
               },
               "disabled": null,
-              "options": Array [
-                Object {
-                  "label": "Last 5 minutes",
-                  "value": 300000,
-                },
-                Object {
-                  "label": "Last 15 minutes",
-                  "value": 900000,
-                },
-                Object {
-                  "label": "Last 30 minutes",
-                  "value": 1800000,
-                },
-                Object {
-                  "label": "Last Hour",
-                  "value": 3600000,
-                },
-                Object {
-                  "label": "Last 2 hours",
-                  "value": 7200000,
-                },
-                Object {
-                  "label": "Last 6 hours",
-                  "value": 21600000,
-                },
-                Object {
-                  "label": "Last 12 hours",
-                  "value": 43200000,
-                },
-                Object {
-                  "label": "Last 24 hours",
-                  "value": 86400000,
-                },
-                Object {
-                  "label": "Last 2 days",
-                  "value": 172800000,
-                },
-              ],
-              "required": true,
+              "loading": null,
               "value": 3600000,
             }
           }
-        />
+        >
+          <Option
+            key="300000"
+            value={300000}
+          >
+            Last 5 minutes
+          </Option>
+          <Option
+            key="900000"
+            value={900000}
+          >
+            Last 15 minutes
+          </Option>
+          <Option
+            key="1800000"
+            value={1800000}
+          >
+            Last 30 minutes
+          </Option>
+          <Option
+            key="3600000"
+            value={3600000}
+          >
+            Last Hour
+          </Option>
+          <Option
+            key="7200000"
+            value={7200000}
+          >
+            Last 2 hours
+          </Option>
+          <Option
+            key="21600000"
+            value={21600000}
+          >
+            Last 6 hours
+          </Option>
+          <Option
+            key="43200000"
+            value={43200000}
+          >
+            Last 12 hours
+          </Option>
+          <Option
+            key="86400000"
+            value={86400000}
+          >
+            Last 24 hours
+          </Option>
+          <Option
+            key="172800000"
+            value={172800000}
+          >
+            Last 2 days
+          </Option>
+        </Field>
       </Col>
     </Row>
     <Row>
@@ -422,10 +440,8 @@ exports[`<MonitorATMServicesView> ATM snapshot test with no metrics 1`] = `
           props={
             Object {
               "className": "select-a-service-input",
-              "clearable": false,
               "disabled": null,
-              "options": Array [],
-              "required": true,
+              "loading": null,
               "value": "s1",
             }
           }
@@ -466,55 +482,71 @@ exports[`<MonitorATMServicesView> ATM snapshot test with no metrics 1`] = `
           props={
             Object {
               "className": "select-a-timeframe-input",
-              "clearable": false,
               "defaultValue": Object {
                 "label": "Last Hour",
                 "value": 3600000,
               },
               "disabled": null,
-              "options": Array [
-                Object {
-                  "label": "Last 5 minutes",
-                  "value": 300000,
-                },
-                Object {
-                  "label": "Last 15 minutes",
-                  "value": 900000,
-                },
-                Object {
-                  "label": "Last 30 minutes",
-                  "value": 1800000,
-                },
-                Object {
-                  "label": "Last Hour",
-                  "value": 3600000,
-                },
-                Object {
-                  "label": "Last 2 hours",
-                  "value": 7200000,
-                },
-                Object {
-                  "label": "Last 6 hours",
-                  "value": 21600000,
-                },
-                Object {
-                  "label": "Last 12 hours",
-                  "value": 43200000,
-                },
-                Object {
-                  "label": "Last 24 hours",
-                  "value": 86400000,
-                },
-                Object {
-                  "label": "Last 2 days",
-                  "value": 172800000,
-                },
-              ],
-              "required": true,
+              "loading": null,
               "value": 3600000,
             }
           }
-        />
+        >
+          <Option
+            key="300000"
+            value={300000}
+          >
+            Last 5 minutes
+          </Option>
+          <Option
+            key="900000"
+            value={900000}
+          >
+            Last 15 minutes
+          </Option>
+          <Option
+            key="1800000"
+            value={1800000}
+          >
+            Last 30 minutes
+          </Option>
+          <Option
+            key="3600000"
+            value={3600000}
+          >
+            Last Hour
+          </Option>
+          <Option
+            key="7200000"
+            value={7200000}
+          >
+            Last 2 hours
+          </Option>
+          <Option
+            key="21600000"
+            value={21600000}
+          >
+            Last 6 hours
+          </Option>
+          <Option
+            key="43200000"
+            value={43200000}
+          >
+            Last 12 hours
+          </Option>
+          <Option
+            key="86400000"
+            value={86400000}
+          >
+            Last 24 hours
+          </Option>
+          <Option
+            key="172800000"
+            value={172800000}
+          >
+            Last 2 days
+          </Option>
+        </Field>
       </Col>
     </Row>
     <Row>
@@ -732,10 +764,8 @@ exports[`<MonitorATMServicesView> render one service latency 1`] = `
           props={
             Object {
               "className": "select-a-service-input",
-              "clearable": false,
               "disabled": null,
-              "options": Array [],
-              "required": true,
+              "loading": null,
               "value": "s1",
             }
           }
@@ -776,55 +806,71 @@ exports[`<MonitorATMServicesView> render one service latency 1`] = `
           props={
             Object {
               "className": "select-a-timeframe-input",
-              "clearable": false,
               "defaultValue": Object {
                 "label": "Last Hour",
                 "value": 3600000,
               },
               "disabled": null,
-              "options": Array [
-                Object {
-                  "label": "Last 5 minutes",
-                  "value": 300000,
-                },
-                Object {
-                  "label": "Last 15 minutes",
-                  "value": 900000,
-                },
-                Object {
-                  "label": "Last 30 minutes",
-                  "value": 1800000,
-                },
-                Object {
-                  "label": "Last Hour",
-                  "value": 3600000,
-                },
-                Object {
-                  "label": "Last 2 hours",
-                  "value": 7200000,
-                },
-                Object {
-                  "label": "Last 6 hours",
-                  "value": 21600000,
-                },
-                Object {
-                  "label": "Last 12 hours",
-                  "value": 43200000,
-                },
-                Object {
-                  "label": "Last 24 hours",
-                  "value": 86400000,
-                },
-                Object {
-                  "label": "Last 2 days",
-                  "value": 172800000,
-                },
-              ],
-              "required": true,
+              "loading": null,
               "value": 3600000,
             }
           }
-        />
+        >
+          <Option
+            key="300000"
+            value={300000}
+          >
+            Last 5 minutes
+          </Option>
+          <Option
+            key="900000"
+            value={900000}
+          >
+            Last 15 minutes
+          </Option>
+          <Option
+            key="1800000"
+            value={1800000}
+          >
+            Last 30 minutes
+          </Option>
+          <Option
+            key="3600000"
+            value={3600000}
+          >
+            Last Hour
+          </Option>
+          <Option
+            key="7200000"
+            value={7200000}
+          >
+            Last 2 hours
+          </Option>
+          <Option
+            key="21600000"
+            value={21600000}
+          >
+            Last 6 hours
+          </Option>
+          <Option
+            key="43200000"
+            value={43200000}
+          >
+            Last 12 hours
+          </Option>
+          <Option
+            key="86400000"
+            value={86400000}
+          >
+            Last 24 hours
+          </Option>
+          <Option
+            key="172800000"
+            value={172800000}
+          >
+            Last 2 days
+          </Option>
+        </Field>
       </Col>
     </Row>
     <Row>

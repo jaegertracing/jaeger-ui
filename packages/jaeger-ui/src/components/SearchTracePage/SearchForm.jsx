@@ -31,7 +31,6 @@ import store from 'store';
 
 import * as markers from './SearchForm.markers';
 import { trackFormInput } from './SearchForm.track';
-import VirtSelect from '../common/VirtSelect';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import { formatDate, formatTime } from '../../utils/date';
 import reduxFormFieldAdapter from '../../utils/redux-form-field-adapter';
@@ -44,10 +43,6 @@ const Option = Select.Option;
 
 const AdaptedInput = reduxFormFieldAdapter({ AntInputComponent: Input });
 const AdaptedSelect = reduxFormFieldAdapter({ AntInputComponent: Select });
-const AdaptedVirtualSelect = reduxFormFieldAdapter({
-  AntInputComponent: VirtSelect,
-  onChangeAdapter: option => (option ? option.value : null),
-});
 const ValidatedAdaptedInput = reduxFormFieldAdapter({ AntInputComponent: Input, isValidatedInput: true });
 
 export function getUnixTimeStampInMSFromForm({ startDate, startDateTime, endDate, endDateTime }) {
@@ -278,6 +273,7 @@ export class SearchFormImpl extends React.PureComponent {
     const opsForSvc = (selectedServicePayload && selectedServicePayload.operations) || [];
     const noSelectedService = selectedService === '-' || !selectedService;
     const tz = selectedLookback === 'custom' ? new Date().toTimeString().replace(/^.*?GMT/, 'UTC') : null;
+
     return (
       <Form layout="vertical" onSubmit={handleSubmit}>
         <FormItem
@@ -289,15 +285,18 @@ export class SearchFormImpl extends React.PureComponent {
         >
           <Field
             name="service"
-            component={AdaptedVirtualSelect}
+            component={AdaptedSelect}
             placeholder="Select A Service"
             props={{
               disabled,
-              clearable: false,
-              options: services.map(v => ({ label: v.name, value: v.name })),
-              required: true,
             }}
-          />
+          >
+            {services.map(service => (
+              <Option key={service.name} value={service.name}>
+                {service.name}
+              </Option>
+            ))}
+          </Field>
         </FormItem>
         <FormItem
           label={
@@ -308,15 +307,18 @@ export class SearchFormImpl extends React.PureComponent {
         >
           <Field
             name="operation"
-            component={AdaptedVirtualSelect}
+            component={AdaptedSelect}
             placeholder="Select An Operation"
             props={{
-              clearable: false,
               disabled: disabled || noSelectedService,
-              options: ['all'].concat(opsForSvc).map(v => ({ label: v, value: v, title: v })),
-              required: true,
             }}
-          />
+          >
+            {['all'].concat(opsForSvc).map(op => (
+              <Option key={op} value={op}>
+                {op}
+              </Option>
+            ))}
+          </Field>
         </FormItem>
 
         <FormItem
