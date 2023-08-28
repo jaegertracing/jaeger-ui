@@ -115,7 +115,9 @@ const JaegerAPI = {
     return getJSON(`${this.apiRoot}traces/${id}`);
   },
   searchTraces(query) {
-    return getJSON(`${this.apiRoot}traces`, { query });
+    const encodedTags = encodeURIComponent(JSON.stringify(query.tags)); 
+    const encodedQuery = { ...query, tags: encodedTags }; 
+    return getJSON(`${this.apiRoot}traces`, { query: encodedQuery });
   },
   fetchMetrics(metricType, serviceNameList, query) {
     const servicesName = serviceNameList.map(serviceName => `service=${serviceName}`).join(',');
