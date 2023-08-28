@@ -17,7 +17,7 @@ jest.mock('store');
 
 import React from 'react';
 import { shallow } from 'enzyme';
-import moment from 'moment';
+import dayjs from 'dayjs';
 import queryString from 'query-string';
 import store from 'store';
 
@@ -87,19 +87,19 @@ describe('conversion utils', () => {
 
   describe('convertQueryParamsToFormDates()', () => {
     it('converts correctly', () => {
-      const startMoment = moment().subtract(1, 'day');
-      const endMoment = moment();
+      const startDayjs = dayjs().subtract(1, 'day');
+      const endDayjs = dayjs();
       const params = {
-        start: `${startMoment.valueOf()}000`,
-        end: `${endMoment.valueOf()}000`,
+        start: `${startDayjs.valueOf()}000`,
+        end: `${endDayjs.valueOf()}000`,
       };
 
       const { queryStartDate, queryStartDateTime, queryEndDate, queryEndDateTime } =
         convertQueryParamsToFormDates(params);
-      expect(queryStartDate).toBe(startMoment.format(DATE_FORMAT));
-      expect(queryStartDateTime).toBe(startMoment.format(TIME_FORMAT));
-      expect(queryEndDate).toBe(endMoment.format(DATE_FORMAT));
-      expect(queryEndDateTime).toBe(endMoment.format(TIME_FORMAT));
+      expect(queryStartDate).toBe(startDayjs.format(DATE_FORMAT));
+      expect(queryStartDateTime).toBe(startDayjs.format(TIME_FORMAT));
+      expect(queryEndDate).toBe(endDayjs.format(DATE_FORMAT));
+      expect(queryEndDateTime).toBe(endDayjs.format(TIME_FORMAT));
     });
   });
 
@@ -298,7 +298,7 @@ describe('submitForm()', () => {
     function getCalledDuration(mock) {
       const { start, end } = mock.calls[0][0];
       const diffMs = (Number(end) - Number(start)) / 1000;
-      return moment.duration(diffMs);
+      return dayjs.duration(diffMs);
     }
 
     it('subtracts `lookback` from `fields.end`', () => {

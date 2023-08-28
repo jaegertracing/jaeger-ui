@@ -13,10 +13,13 @@
 // limitations under the License.
 
 import fetch from 'isomorphic-fetch';
-import moment from 'moment';
+import dayjs from 'dayjs';
+import _duration from 'dayjs/plugin/duration';
 import queryString from 'query-string';
 
 import prefixUrl from '../utils/prefix-url';
+
+dayjs.extend(_duration);
 
 // export for tests
 export function getMessageFromError(errData, status) {
@@ -78,7 +81,7 @@ function getJSON(url, options = {}) {
 
 export const DEFAULT_API_ROOT = prefixUrl('/api/');
 export const ANALYTICS_ROOT = prefixUrl('/analytics/');
-export const DEFAULT_DEPENDENCY_LOOKBACK = moment.duration(1, 'weeks').asMilliseconds();
+export const DEFAULT_DEPENDENCY_LOOKBACK = dayjs.duration(1, 'weeks').asMilliseconds();
 
 const JaegerAPI = {
   apiRoot: DEFAULT_API_ROOT,

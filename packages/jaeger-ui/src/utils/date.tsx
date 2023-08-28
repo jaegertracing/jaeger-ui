@@ -12,11 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import moment, { unitOfTime } from 'moment';
+import dayjs from 'dayjs';
 import _dropWhile from 'lodash/dropWhile';
 import _round from 'lodash/round';
+import _duration, { DurationUnitType } from 'dayjs/plugin/duration';
 
 import { toFloatPrecision } from './number';
+
+dayjs.extend(_duration);
 
 const TODAY = 'Today';
 const YESTERDAY = 'Yesterday';
@@ -66,7 +69,7 @@ const quantizeDuration = (duration: number, floatPrecision: number, conversionFa
  * @return {string} formatted, unit-labelled string with time in milliseconds
  */
 export function formatDate(duration: number) {
-  return moment(duration / ONE_MILLISECOND).format(STANDARD_DATE_FORMAT);
+  return dayjs(duration / ONE_MILLISECOND).format(STANDARD_DATE_FORMAT);
 }
 
 /**
@@ -74,7 +77,7 @@ export function formatDate(duration: number) {
  * @return {string} formatted, unit-labelled string with time in milliseconds
  */
 export function formatTime(duration: number) {
-  return moment(duration / ONE_MILLISECOND).format(STANDARD_TIME_FORMAT);
+  return dayjs(duration / ONE_MILLISECOND).format(STANDARD_TIME_FORMAT);
 }
 
 /**
@@ -82,7 +85,7 @@ export function formatTime(duration: number) {
  * @return {string} formatted, unit-labelled string with time in milliseconds
  */
 export function formatDatetime(duration: number) {
-  return moment(duration / ONE_MILLISECOND).format(STANDARD_DATETIME_FORMAT);
+  return dayjs(duration / ONE_MILLISECOND).format(STANDARD_DATETIME_FORMAT);
 }
 
 /**
@@ -91,7 +94,7 @@ export function formatDatetime(duration: number) {
  */
 export function formatMillisecondTime(duration: number) {
   const targetDuration = quantizeDuration(duration, DEFAULT_MS_PRECISION, ONE_MILLISECOND);
-  return `${moment.duration(targetDuration / ONE_MILLISECOND).asMilliseconds()}ms`;
+  return `${dayjs.duration(targetDuration / ONE_MILLISECOND).asMilliseconds()}ms`;
 }
 
 /**
@@ -100,7 +103,7 @@ export function formatMillisecondTime(duration: number) {
  */
 export function formatSecondTime(duration: number) {
   const targetDuration = quantizeDuration(duration, DEFAULT_MS_PRECISION, ONE_SECOND);
-  return `${moment.duration(targetDuration / ONE_MILLISECOND).asSeconds()}s`;
+  return `${dayjs.duration(targetDuration / ONE_MILLISECOND).asSeconds()}s`;
 }
 
 /**
@@ -134,7 +137,8 @@ export function formatDuration(duration: number): string {
 }
 
 export function formatRelativeDate(value: any, fullMonthName = false) {
-  const m = moment.isMoment(value) ? value : moment(value);
+  const m = dayjs.isDayjs(value) ? value : dayjs(value);
+
   const monthFormat = fullMonthName ? 'MMMM' : 'MMM';
   const dt = new Date();
   if (dt.getFullYear() !== m.year()) {
@@ -158,12 +162,12 @@ export const getSuitableTimeUnit = (microseconds: number): string => {
     return 'microseconds';
   }
 
-  const duration = moment.duration(microseconds / 1000, 'ms');
+  const duration = dayjs.duration(microseconds / 1000, 'ms');
 
   return Object.keys(timeUnitToShortTermMapper)
     .reverse()
     .find(timeUnit => {
-      const durationInTimeUnit = duration.as(timeUnit as unitOfTime.Base);
+      const durationInTimeUnit = duration.as(timeUnit as DurationUnitType);
 
       return durationInTimeUnit >= 1;
     })!;
@@ -184,7 +188,7 @@ export function convertToTimeUnit(microseconds: number, targetTimeUnit: string) 
     return microseconds;
   }
 
-  return moment.duration(microseconds / 1000, 'ms').as(targetTimeUnit as unitOfTime.Base);
+  return dayjs.duration(microseconds / 1000, 'ms').as(targetTimeUnit as DurationUnitType);
 }
 
 export function timeConversion(microseconds: number) {
@@ -194,7 +198,7 @@ export function timeConversion(microseconds: number) {
 
   const timeUnit = getSuitableTimeUnit(microseconds);
 
-  return `${moment
+  return `${dayjs
     .duration(microseconds / 1000, 'ms')
-    .as(timeUnit as unitOfTime.Base)}${convertTimeUnitToShortTerm(timeUnit)}`;
+    .as(timeUnit as DurationUnitType)}${convertTimeUnitToShortTerm(timeUnit)}`;
 }
