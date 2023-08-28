@@ -61,6 +61,7 @@ export type SpanData = {
 export type Span = SpanData & {
   depth: number;
   hasChildren: boolean;
+  childSpanIds: string[];
   process: Process;
   relativeStartTime: number;
   tags: NonNullable<SpanData['tags']>;

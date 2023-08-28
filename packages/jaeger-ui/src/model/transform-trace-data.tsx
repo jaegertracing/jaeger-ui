@@ -135,6 +135,7 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     span.relativeStartTime = span.startTime - traceStartTime;
     span.depth = depth - 1;
     span.hasChildren = node.children.length > 0;
+    span.childSpanIds = node.children.map(each => each.value);
     span.warnings = span.warnings || [];
     span.tags = span.tags || [];
     span.references = span.references || [];
