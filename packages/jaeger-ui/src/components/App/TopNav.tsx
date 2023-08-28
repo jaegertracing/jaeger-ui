@@ -97,7 +97,7 @@ function CustomNavDropdown({ label, items }: ConfigMenuGroup) {
   const menuItems = <Menu>{items.map(getItem)}</Menu>;
   return (
     <Dropdown overlay={menuItems} placement="bottomCenter">
-      <a>
+      <a style={{ color: 'white' }}>
         {label} <DownOutlined style={{ paddingRight: '20px' }} />
       </a>
     </Dropdown>
