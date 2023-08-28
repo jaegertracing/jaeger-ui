@@ -15,7 +15,7 @@
 import React, { useRef, useState, useLayoutEffect } from 'react';
 import moment from 'moment';
 import PropTypes from 'prop-types';
-import { ScatterChart, XAxis, YAxis, Scatter, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { ScatterChart, XAxis, YAxis, ZAxis, Scatter, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
 import { FALLBACK_TRACE_NAME } from '../../../constants';
 import { ONE_MILLISECOND, formatDuration } from '../../../utils/date';
@@ -79,6 +79,7 @@ export default function ScatterPlot(props) {
               tickCount={3}
               tickFormatter={t => formatDuration(t)}
             />
+            <ZAxis dataKey="size" type="number" range={[90, 300]} />
             <Scatter
               data={data}
               onClick={onValueClick}
