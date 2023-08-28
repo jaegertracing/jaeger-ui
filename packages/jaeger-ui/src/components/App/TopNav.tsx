@@ -98,7 +98,7 @@ function CustomNavDropdown({ label, items }: ConfigMenuGroup) {
   return (
     <Dropdown overlay={menuItems} placement="bottomCenter">
       <a>
-        {label} <DownOutlined />
+        {label} <DownOutlined style={{paddingRight: "20px"}} />
       </a>
     </Dropdown>
   );
@@ -123,11 +123,7 @@ export function TopNavImpl(props: Props) {
           if (isItem(m)) {
             return getItem(m);
           }
-          return (
-            <Menu.Item key={m.label}>
-              <CustomNavDropdown key={m.label} {...m} />
-            </Menu.Item>
-          );
+          return <CustomNavDropdown key={m.label} {...m} />;
         })}
       </Menu>
       <Menu theme="dark" mode="horizontal" selectable={false} selectedKeys={[pathname]} disabledOverflow>
