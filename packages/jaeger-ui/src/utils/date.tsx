@@ -43,13 +43,19 @@ const UNIT_STEPS: { unit: string; microseconds: number; ofPrevious: number }[] =
   { unit: 'μs', microseconds: 1, ofPrevious: 1000 },
 ];
 
-const timeUnitToShortTermMapper = {
+type ShortTimeUnit = 'μs' | 'ms' | 's' | 'm' | 'h' | 'd';
+type LongTimeUnit = 'microseconds' | 'milliseconds' | 'seconds' | 'minutes' | 'hours' | 'days';
+
+const timeUnitToShortTermMapper: {
+  [key in LongTimeUnit]: ShortTimeUnit;
+} = {
+  microseconds: 'μs',
   milliseconds: 'ms',
   seconds: 's',
   minutes: 'm',
   hours: 'h',
   days: 'd',
-};
+} as const;
 
 /**
  * @param {number} timestamp
@@ -157,30 +163,30 @@ export function formatRelativeDate(value: any, fullMonthName = false) {
   return m.format(`${monthFormat} D`);
 }
 
-export const getSuitableTimeUnit = (microseconds: number): string => {
+export const getSuitableTimeUnit = (microseconds: number): LongTimeUnit => {
   if (microseconds < 1000) {
     return 'microseconds';
   }
 
-  const duration = dayjs.duration(microseconds / 1000, 'ms');
+  const durationInMilliseconds = dayjs.duration(microseconds / 1000, 'ms');
 
-  return Object.keys(timeUnitToShortTermMapper)
-    .reverse()
-    .find(timeUnit => {
-      const durationInTimeUnit = duration.as(timeUnit as DurationUnitType);
+  const longUnitsDescending: Exclude<LongTimeUnit, 'microseconds'>[] = [
+    'days',
+    'hours',
+    'minutes',
+    'seconds',
+    'milliseconds',
+  ];
 
-      return durationInTimeUnit >= 1;
-    })!;
+  return longUnitsDescending.find(timeUnit => {
+    const durationInTimeUnit = durationInMilliseconds.as(timeUnit);
+
+    return durationInTimeUnit >= 1;
+  })!;
 };
 
-export function convertTimeUnitToShortTerm(timeUnit: string) {
-  if (timeUnit === 'microseconds') return 'μs';
-
-  const shortTimeUnit = (timeUnitToShortTermMapper as any)[timeUnit];
-
-  if (shortTimeUnit) return shortTimeUnit;
-
-  return '';
+export function convertTimeUnitToShortTerm(timeUnit: LongTimeUnit): ShortTimeUnit | '' {
+  return timeUnitToShortTermMapper[timeUnit] ?? '';
 }
 
 export function convertToTimeUnit(microseconds: number, targetTimeUnit: string) {
@@ -196,9 +202,7 @@ export function timeConversion(microseconds: number) {
     return `${microseconds}μs`;
   }
 
-  const timeUnit = getSuitableTimeUnit(microseconds);
+  const timeUnit = getSuitableTimeUnit(microseconds) as Exclude<LongTimeUnit, 'microseconds'>;
 
-  return `${dayjs
-    .duration(microseconds / 1000, 'ms')
-    .as(timeUnit as DurationUnitType)}${convertTimeUnitToShortTerm(timeUnit)}`;
+  return `${dayjs.duration(microseconds / 1000, 'ms').as(timeUnit)}${convertTimeUnitToShortTerm(timeUnit)}`;
 }

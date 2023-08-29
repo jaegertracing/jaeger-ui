@@ -60,7 +60,7 @@ export default class ResultItem extends React.PureComponent<Props, State> {
     super(props, state);
     const { startTime, spans } = props.trace;
 
-    const dayjsDate = dayjs(startTime / 1000);
+    const startTimeDayjs = dayjs(startTime / 1000);
 
     const erroredServices: Set<string> = new Set<string>();
 
@@ -74,8 +74,8 @@ export default class ResultItem extends React.PureComponent<Props, State> {
 
     this.state = {
       numSpans: spans.length,
-      timeStr: dayjsDate.format('h:mm:ss a'),
-      fromNow: dayjsDate.fromNow(),
+      timeStr: startTimeDayjs.format('h:mm:ss a'),
+      fromNow: startTimeDayjs.fromNow(),
       numErredSpans,
       erroredServices,
     };
