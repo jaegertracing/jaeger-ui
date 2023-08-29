@@ -87,19 +87,16 @@ describe('conversion utils', () => {
 
   describe('convertQueryParamsToFormDates()', () => {
     it('converts correctly', () => {
-      const startDayjs = dayjs().subtract(1, 'day');
-      const endDayjs = dayjs();
-      const params = {
-        start: `${startDayjs.valueOf()}000`,
-        end: `${endDayjs.valueOf()}000`,
-      };
-
       const { queryStartDate, queryStartDateTime, queryEndDate, queryEndDateTime } =
-        convertQueryParamsToFormDates(params);
-      expect(queryStartDate).toBe(startDayjs.format(DATE_FORMAT));
-      expect(queryStartDateTime).toBe(startDayjs.format(TIME_FORMAT));
-      expect(queryEndDate).toBe(endDayjs.format(DATE_FORMAT));
-      expect(queryEndDateTime).toBe(endDayjs.format(TIME_FORMAT));
+        convertQueryParamsToFormDates({
+          start: '946720800000000', // Jan 1, 2000 10:00 AM
+          end: '946807200000000', // Jan 2, 2000 10:00 AM
+        });
+
+      expect(queryStartDate).toBe('2000-01-01');
+      expect(queryStartDateTime).toBe('10:00');
+      expect(queryEndDate).toBe('2000-01-02');
+      expect(queryEndDateTime).toBe('10:00');
     });
   });
 
