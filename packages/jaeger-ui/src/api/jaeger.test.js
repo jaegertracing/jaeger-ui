@@ -242,3 +242,30 @@ describe('fetchMetrics', () => {
     expect(resp.quantile).toBe(query.quantile);
   });
 });
+
+describe('searchTraces', () => {
+  it('GETs the specified query with encoded tags', () => {
+    const query = {
+      tags: {"http.url":"http://0.0.0.0:8081/customer?customer567"},
+      start: 1692952866480000,
+      end: 1692956466480000,
+      limit: 20,
+      lookback: 1,
+      maxDuration: null,
+      minDuration: null,
+      service: 'frontend'
+    };
+
+    const encodedTags = encodeURIComponent(JSON.stringify(query.tags));
+    const encodedQuery = { ...query, tags: encodedTags };
+
+    JaegerAPI.searchTraces(query);
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      `${DEFAULT_API_ROOT}traces`,
+      {
+        query: encodedQuery,
+        ...defaultOptions,
+      }
+    );
+  });
+});
