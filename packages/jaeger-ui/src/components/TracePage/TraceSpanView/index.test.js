@@ -43,7 +43,7 @@ describe('<TraceSpanView>', () => {
     expect(wrapper.find('colgroup').length).toBe(1);
     expect(wrapper.find('Pagination').length).toBe(2);
     expect(wrapper.find('Button').length).toBe(1);
-    expect(wrapper.find('.ant-form-item-control').length).toBe(3);
+    expect(wrapper.find('.ant-legacy-form-item-control').length).toBe(3);
   });
   it('Should change value when onChange was called', () => {
     const event = ['service2'];

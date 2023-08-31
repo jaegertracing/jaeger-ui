@@ -286,7 +286,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TPropsWithIn
               </Field>
             </Col>
           </Row>
-          <Row>
+          <Row align="middle">
             <Col span={16}>
               <p className="operations-metrics-text">
                 Aggregation of all &quot;{this.getSelectedService()}&quot; metrics in selected timeframe.{' '}
@@ -381,48 +381,44 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TPropsWithIn
             </Col>
           </Row>
           <Row className="operation-table-block">
-            <Row>
-              <Col span={16}>
-                <h2 className="table-header">Operations metrics under {this.getSelectedService()}</h2>{' '}
-                <span className="over-the-last">Over the {getLoopbackInterval(selectedTimeFrame)}</span>
-              </Col>
-              <Col span={8} className="select-operation-column">
-                <Search
-                  placeholder="Search operation"
-                  className="select-operation-input"
-                  value={this.state.searchOps}
-                  disabled={
-                    metrics.operationMetricsLoading === true || metrics.serviceOpsMetrics === undefined
-                  }
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                    const filteredData = metrics.serviceOpsMetrics!.filter(({ name }: { name: string }) => {
-                      return name.toLowerCase().includes(e.target.value.toLowerCase());
-                    });
+            <Col span={16}>
+              <h2 className="table-header">Operations metrics under {this.getSelectedService()}</h2>{' '}
+              <span className="over-the-last">Over the {getLoopbackInterval(selectedTimeFrame)}</span>
+            </Col>
+            <Col span={8} className="select-operation-column">
+              <Search
+                placeholder="Search operation"
+                className="select-operation-input"
+                value={this.state.searchOps}
+                disabled={metrics.operationMetricsLoading === true || metrics.serviceOpsMetrics === undefined}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                  const filteredData = metrics.serviceOpsMetrics!.filter(({ name }: { name: string }) => {
+                    return name.toLowerCase().includes(e.target.value.toLowerCase());
+                  });
 
-                    this.setState({
-                      searchOps: e.target.value,
-                      serviceOpsMetrics: filteredData,
-                    });
+                  this.setState({
+                    searchOps: e.target.value,
+                    serviceOpsMetrics: filteredData,
+                  });
 
-                    trackSearchOperationDebounced(e.target.value);
-                  }}
-                />
-              </Col>
-            </Row>
-            <Row>
-              <OperationTableDetails
-                loading={metrics.operationMetricsLoading}
-                error={metrics.opsError}
-                data={
-                  this.state.serviceOpsMetrics === undefined
-                    ? metrics.serviceOpsMetrics
-                    : this.state.serviceOpsMetrics
-                }
-                endTime={this.endTime}
-                lookback={selectedTimeFrame}
-                serviceName={this.getSelectedService()}
+                  trackSearchOperationDebounced(e.target.value);
+                }}
               />
-            </Row>
+            </Col>
+          </Row>
+          <Row>
+            <OperationTableDetails
+              loading={metrics.operationMetricsLoading}
+              error={metrics.opsError}
+              data={
+                this.state.serviceOpsMetrics === undefined
+                  ? metrics.serviceOpsMetrics
+                  : this.state.serviceOpsMetrics
+              }
+              endTime={this.endTime}
+              lookback={selectedTimeFrame}
+              serviceName={this.getSelectedService()}
+            />
           </Row>
         </div>
       </>

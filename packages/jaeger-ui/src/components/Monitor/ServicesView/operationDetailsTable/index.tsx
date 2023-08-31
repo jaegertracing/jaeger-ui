@@ -15,7 +15,7 @@
 import * as React from 'react';
 import isEqual from 'lodash/isEqual';
 import { SorterResult } from 'antd/es/table';
-import { Row, Table, Progress, Button, Tooltip } from 'antd';
+import { Table, Progress, Button, Tooltip, Col } from 'antd';
 import { InfoCircleOutlined } from '@ant-design/icons';
 import REDGraph from './opsGraph';
 import LoadingIndicator from '../../../common/LoadingIndicator';
@@ -215,7 +215,7 @@ export class OperationTableDetails extends React.PureComponent<TProps, TState> {
     ];
 
     return (
-      <Row>
+      <Col span={24}>
         <Table
           rowClassName={() => 'table-row'}
           columns={columnConfig}
@@ -244,7 +244,7 @@ export class OperationTableDetails extends React.PureComponent<TProps, TState> {
             }
           }}
         />
-      </Row>
+      </Col>
     );
   }
 }
