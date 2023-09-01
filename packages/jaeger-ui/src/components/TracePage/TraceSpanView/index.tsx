@@ -133,7 +133,7 @@ export default class TraceSpanView extends Component<Props, State> {
     const columns: ColumnProps<Span>[] = [
       {
         title: 'Service Name',
-        dataIndex: 'process.serviceName',
+        dataIndex: ['process', 'serviceName'],
         width: '25%',
         sorter: (a, b) => a.process.serviceName.localeCompare(b.process.serviceName),
       },
@@ -205,7 +205,11 @@ export default class TraceSpanView extends Component<Props, State> {
                 }}
               >
                 {this.state.serviceNamesList.map(name => {
-                  return <Option key={name}>{name} </Option>;
+                  return (
+                    <Option value={name} key={name}>
+                      {name}{' '}
+                    </Option>
+                  );
                 })}
               </Select>
             </Form.Item>
@@ -235,7 +239,11 @@ export default class TraceSpanView extends Component<Props, State> {
                 }}
               >
                 {this.uniqueOperationNameOptions().map((name: string) => {
-                  return <Option key={name}>{name} </Option>;
+                  return (
+                    <Option value={name} key={name}>
+                      {name}{' '}
+                    </Option>
+                  );
                 })}
               </Select>
             </Form.Item>

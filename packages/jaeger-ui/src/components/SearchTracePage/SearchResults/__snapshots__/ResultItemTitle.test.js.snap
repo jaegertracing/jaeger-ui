@@ -8,7 +8,6 @@ exports[`ResultItemTitle renders as expected 1`] = `
     checked={true}
     className="ResultItemTitle--item ub-flex-none"
     disabled={false}
-    indeterminate={false}
     onChange={[Function]}
     onClick={[Function]}
   />

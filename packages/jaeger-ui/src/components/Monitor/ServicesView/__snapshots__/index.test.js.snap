@@ -5,9 +5,7 @@ exports[`<MonitorATMServicesView> ATM snapshot test 1`] = `
   <div
     className="service-view-container"
   >
-    <Row
-      gutter={0}
-    >
+    <Row>
       <Col
         span={6}
       >
@@ -47,7 +45,6 @@ exports[`<MonitorATMServicesView> ATM snapshot test 1`] = `
     </Row>
     <Row
       align="middle"
-      gutter={0}
     >
       <Col
         span={16}
@@ -147,9 +144,7 @@ exports[`<MonitorATMServicesView> ATM snapshot test 1`] = `
         </Field>
       </Col>
     </Row>
-    <Row
-      gutter={0}
-    >
+    <Row>
       <Col
         span={8}
       >
@@ -303,7 +298,6 @@ exports[`<MonitorATMServicesView> ATM snapshot test 1`] = `
     </Row>
     <Row
       className="operation-table-block"
-      gutter={0}
     >
       <Col
         span={16}
@@ -329,16 +323,13 @@ exports[`<MonitorATMServicesView> ATM snapshot test 1`] = `
         <Search
           className="select-operation-input"
           disabled={false}
-          enterButton={false}
           onChange={[Function]}
           placeholder="Search operation"
           value=""
         />
       </Col>
     </Row>
-    <Row
-      gutter={0}
-    >
+    <Row>
       <OperationTableDetails
         data={
           Array [
@@ -432,9 +423,7 @@ exports[`<MonitorATMServicesView> ATM snapshot test with no metrics 1`] = `
   <div
     className="service-view-container"
   >
-    <Row
-      gutter={0}
-    >
+    <Row>
       <Col
         span={6}
       >
@@ -461,7 +450,6 @@ exports[`<MonitorATMServicesView> ATM snapshot test with no metrics 1`] = `
     </Row>
     <Row
       align="middle"
-      gutter={0}
     >
       <Col
         span={16}
@@ -561,9 +549,7 @@ exports[`<MonitorATMServicesView> ATM snapshot test with no metrics 1`] = `
         </Field>
       </Col>
     </Row>
-    <Row
-      gutter={0}
-    >
+    <Row>
       <Col
         span={8}
       >
@@ -636,7 +622,6 @@ exports[`<MonitorATMServicesView> ATM snapshot test with no metrics 1`] = `
     </Row>
     <Row
       className="operation-table-block"
-      gutter={0}
     >
       <Col
         span={16}
@@ -662,16 +647,13 @@ exports[`<MonitorATMServicesView> ATM snapshot test with no metrics 1`] = `
         <Search
           className="select-operation-input"
           disabled={false}
-          enterButton={false}
           onChange={[Function]}
           placeholder="Search operation"
           value=""
         />
       </Col>
     </Row>
-    <Row
-      gutter={0}
-    >
+    <Row>
       <OperationTableDetails
         data={
           Array [
@@ -765,9 +747,7 @@ exports[`<MonitorATMServicesView> render one service latency 1`] = `
   <div
     className="service-view-container"
   >
-    <Row
-      gutter={0}
-    >
+    <Row>
       <Col
         span={6}
       >
@@ -794,7 +774,6 @@ exports[`<MonitorATMServicesView> render one service latency 1`] = `
     </Row>
     <Row
       align="middle"
-      gutter={0}
     >
       <Col
         span={16}
@@ -894,9 +873,7 @@ exports[`<MonitorATMServicesView> render one service latency 1`] = `
         </Field>
       </Col>
     </Row>
-    <Row
-      gutter={0}
-    >
+    <Row>
       <Col
         span={8}
       >
@@ -970,7 +947,6 @@ exports[`<MonitorATMServicesView> render one service latency 1`] = `
     </Row>
     <Row
       className="operation-table-block"
-      gutter={0}
     >
       <Col
         span={16}
@@ -996,16 +972,13 @@ exports[`<MonitorATMServicesView> render one service latency 1`] = `
         <Search
           className="select-operation-input"
           disabled={false}
-          enterButton={false}
           onChange={[Function]}
           placeholder="Search operation"
           value=""
         />
       </Col>
     </Row>
-    <Row
-      gutter={0}
-    >
+    <Row>
       <OperationTableDetails
         data={
           Array [

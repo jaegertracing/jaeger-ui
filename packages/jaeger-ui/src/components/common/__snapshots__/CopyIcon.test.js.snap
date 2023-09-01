@@ -9,15 +9,11 @@ exports[`<CopyIcon /> renders as expected 1`] = `
   onVisibleChange={[Function]}
   placement="top"
   title="tooltipTitleValue"
-  transitionName="zoom-big-fast"
 >
   <Button
-    block={false}
     className="classNameValue CopyIcon"
-    ghost={false}
     htmlType="button"
     icon="copy"
-    loading={false}
     onClick={[Function]}
   />
 </Tooltip>

@@ -71,7 +71,6 @@ exports[`<SidePanel> render renders detailLink 1`] = `
       mouseLeaveDelay={0.1}
       placement="top"
       title="More Info"
-      transitionName="zoom-big-fast"
     >
       <a
         className="Ddg--DetailsPanel--DetailLink"

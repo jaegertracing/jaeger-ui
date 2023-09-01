@@ -25,7 +25,6 @@ exports[`reduxFormFieldAdapter validate input should render Popover as invisible
   overlayStyle={Object {}}
   placement="bottomLeft"
   title="error title"
-  transitionName="zoom-big"
   trigger="hover"
   visible={false}
 >
@@ -57,7 +56,6 @@ exports[`reduxFormFieldAdapter validate input should render Popover as visible i
   overlayStyle={Object {}}
   placement="bottomLeft"
   title="error title"
-  transitionName="zoom-big"
   trigger="hover"
   visible={true}
 >
@@ -87,7 +85,6 @@ exports[`reduxFormFieldAdapter validate input should render as expected when the
   mouseLeaveDelay={0.1}
   overlayStyle={Object {}}
   placement="bottomLeft"
-  transitionName="zoom-big"
   trigger="hover"
   visible={false}
 >

@@ -60,8 +60,8 @@ export default class CohortTable extends React.PureComponent<Props> {
     const rowSelection = {
       ...defaultRowSelection,
       getCheckboxProps: this.getCheckboxProps,
-      // TODO: Antd Table believes onChange can be called with a string or number, but that seems wrong
-      onChange: (ids: number[] | string[]) => selectTrace(ids[0] as string),
+      onChange: (selectedRowKeys: React.Key[], selectedRows: FetchedTrace[]) =>
+        selectTrace(selectedRows[0].id),
       selectedRowKeys: current ? [current] : [],
     };
 
@@ -78,13 +78,15 @@ export default class CohortTable extends React.PureComponent<Props> {
           key="traceID"
           title=""
           dataIndex="id"
+          data-testid="id"
           render={value => <span className="u-tx-muted">{value && value.slice(0, 7)}</span>}
         />
         <Column
           key="traceName"
           title="Service &amp; Operation"
           sortOrder="descend"
-          dataIndex="data.traceName"
+          dataIndex={['data', 'traceName']}
+          data-testid="traceName"
           render={(_, record: FetchedTrace) => {
             const { data, error, id, state } = record;
             const { traceName = undefined } = data || {};
@@ -109,7 +111,8 @@ export default class CohortTable extends React.PureComponent<Props> {
         />
         <Column
           title="Date"
-          dataIndex="data.startTime"
+          dataIndex={['data', 'startTime']}
+          data-testid="startTime"
           key="startTime"
           render={(value, record: FetchedTrace) =>
             record.state === fetchedState.DONE && (
@@ -119,16 +122,18 @@ export default class CohortTable extends React.PureComponent<Props> {
         />
         <Column
           title="Duration"
-          dataIndex="data.duration"
+          dataIndex={['data', 'duration']}
+          data-testid="duration"
           key="duration"
           render={(value, record: FetchedTrace) =>
             record.state === fetchedState.DONE && formatDuration(value)
           }
         />
-        <Column title="Spans" dataIndex="data.spans.length" key="spans" />
+        <Column title="Spans" dataIndex={['data', 'spans', 'length']} key="spans" />
         <Column
           className="ub-tx-center"
-          dataIndex="data.traceID"
+          dataIndex={['data', 'traceID']}
+          data-testid="traceID"
           key="link"
           render={value => <TraceTimelineLink traceID={value} />}
         />

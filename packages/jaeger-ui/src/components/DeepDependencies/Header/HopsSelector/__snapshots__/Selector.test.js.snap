@@ -85,7 +85,6 @@ exports[`Selector renders buttons with expected text and classNames 1`] = `
   overlayStyle={Object {}}
   placement="bottom"
   title="Visible downstream hops"
-  transitionName="zoom-big"
   trigger="hover"
 >
   <span
@@ -215,7 +214,6 @@ exports[`Selector renders upstream hops with negative distance correctly 1`] = `
   overlayStyle={Object {}}
   placement="bottom"
   title="Visible upstream hops"
-  transitionName="zoom-big"
   trigger="hover"
 >
   <span
