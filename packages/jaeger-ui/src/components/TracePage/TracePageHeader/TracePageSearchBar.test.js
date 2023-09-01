@@ -14,7 +14,7 @@
 
 import React from 'react';
 import { shallow } from 'enzyme';
-
+import { CloseOutlined } from '@ant-design/icons';
 import * as markers from './TracePageSearchBar.markers';
 import DefaultTracePageSearchBar, { TracePageSearchBarFn as TracePageSearchBar } from './TracePageSearchBar';
 import { trackFilter } from '../index.track';
@@ -61,16 +61,16 @@ describe('<TracePageSearchBar>', () => {
         expect(button.hasClass('is-disabled')).toBe(false);
         expect(button.prop('disabled')).toBe(false);
       });
-      expect(wrapper.find('Button[icon="up"]').prop('onClick')).toBe(defaultProps.prevResult);
-      expect(wrapper.find('Button[icon="down"]').prop('onClick')).toBe(defaultProps.nextResult);
-      expect(wrapper.find('Button[icon="close"]').prop('onClick')).toBe(defaultProps.clearSearch);
+      expect(wrapper.find('[data-testid="UpOutlined"]').prop('onClick')).toBe(defaultProps.prevResult);
+      expect(wrapper.find('[data-testid="DownOutlined"]').prop('onClick')).toBe(defaultProps.nextResult);
+      expect(wrapper.find('[data-testid="CloseOutlined"]').prop('onClick')).toBe(defaultProps.clearSearch);
     });
 
     it('hides navigation buttons when not navigable', () => {
       wrapper.setProps({ navigable: false });
       const button = wrapper.find('Button');
       expect(button.length).toBe(1);
-      expect(button.prop('icon')).toBe('close');
+      expect(button.getElement(CloseOutlined)).toBeDefined();
     });
   });
 
