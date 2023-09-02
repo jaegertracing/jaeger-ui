@@ -53,7 +53,7 @@
     "@types/react-redux": "^5.0.6",
     "@types/react-router-dom": "^4.3.1",
     "@types/redux-actions": "2.2.1",
-    "antd": "4.15.6",
+    "antd": "4.24.13",
     "chance": "^1.0.10",
     "classnames": "^2.2.5",
     "combokeys": "^3.0.0",
