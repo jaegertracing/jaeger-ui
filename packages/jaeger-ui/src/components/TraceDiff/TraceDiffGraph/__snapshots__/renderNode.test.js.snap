@@ -46,7 +46,6 @@ exports[`drawNode diffNode renders as expected when props.a and props.b are the 
   overlayClassName="DiffNode--popover is-same"
   overlayStyle={Object {}}
   placement="top"
-  transitionName="zoom-big"
   trigger="hover"
 >
   <table
@@ -155,7 +154,6 @@ exports[`drawNode diffNode renders as expected when props.a is 0 1`] = `
   overlayClassName="DiffNode--popover is-changed is-added"
   overlayStyle={Object {}}
   placement="top"
-  transitionName="zoom-big"
   trigger="hover"
 >
   <table
@@ -284,7 +282,6 @@ exports[`drawNode diffNode renders as expected when props.a is less than props.b
   overlayClassName="DiffNode--popover is-changed is-more"
   overlayStyle={Object {}}
   placement="top"
-  transitionName="zoom-big"
   trigger="hover"
 >
   <table
@@ -413,7 +410,6 @@ exports[`drawNode diffNode renders as expected when props.a is more than props.b
   overlayClassName="DiffNode--popover is-changed is-less"
   overlayStyle={Object {}}
   placement="top"
-  transitionName="zoom-big"
   trigger="hover"
 >
   <table
@@ -542,7 +538,6 @@ exports[`drawNode diffNode renders as expected when props.b is 0 1`] = `
   overlayClassName="DiffNode--popover is-changed is-removed"
   overlayStyle={Object {}}
   placement="top"
-  transitionName="zoom-big"
   trigger="hover"
 >
   <table
@@ -651,7 +646,6 @@ exports[`drawNode diffNode renders as expected when props.isUiFindMatch is true 
   overlayClassName="DiffNode--popover is-same"
   overlayStyle={Object {}}
   placement="top"
-  transitionName="zoom-big"
   trigger="hover"
 >
   <table

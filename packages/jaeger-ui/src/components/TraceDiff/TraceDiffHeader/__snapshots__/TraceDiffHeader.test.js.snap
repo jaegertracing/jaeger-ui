@@ -99,7 +99,6 @@ exports[`TraceDiffHeader handles absent a & b 1`] = `
         selectTrace={[Function]}
       />
     }
-    transitionName="zoom-big"
     trigger="click"
     visible={false}
   >
@@ -213,7 +212,6 @@ exports[`TraceDiffHeader handles absent a & b 1`] = `
         selectTrace={[Function]}
       />
     }
-    transitionName="zoom-big"
     trigger="click"
     visible={false}
   >
@@ -331,7 +329,6 @@ exports[`TraceDiffHeader handles absent a 1`] = `
         selectTrace={[Function]}
       />
     }
-    transitionName="zoom-big"
     trigger="click"
     visible={false}
   >
@@ -452,7 +449,6 @@ exports[`TraceDiffHeader handles absent a 1`] = `
         selectTrace={[Function]}
       />
     }
-    transitionName="zoom-big"
     trigger="click"
     visible={false}
   >
@@ -579,7 +575,6 @@ exports[`TraceDiffHeader handles absent b 1`] = `
         selectTrace={[Function]}
       />
     }
-    transitionName="zoom-big"
     trigger="click"
     visible={false}
   >
@@ -707,7 +702,6 @@ exports[`TraceDiffHeader handles absent b 1`] = `
         selectTrace={[Function]}
       />
     }
-    transitionName="zoom-big"
     trigger="click"
     visible={false}
   >
@@ -829,7 +823,6 @@ exports[`TraceDiffHeader renders as expected 1`] = `
         selectTrace={[Function]}
       />
     }
-    transitionName="zoom-big"
     trigger="click"
     visible={false}
   >
@@ -961,7 +954,6 @@ exports[`TraceDiffHeader renders as expected 1`] = `
         selectTrace={[Function]}
       />
     }
-    transitionName="zoom-big"
     trigger="click"
     visible={false}
   >

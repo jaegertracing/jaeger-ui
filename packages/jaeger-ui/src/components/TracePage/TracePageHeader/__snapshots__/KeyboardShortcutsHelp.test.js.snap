@@ -3,11 +3,8 @@
 exports[`KeyboardShortcutsHelp renders as expected 1`] = `
 <Fragment>
   <Button
-    block={false}
     className="test--ClassName"
-    ghost={false}
     htmlType="button"
-    loading={false}
     onClick={[Function]}
   >
     <span
@@ -30,16 +27,14 @@ exports[`KeyboardShortcutsHelp renders as expected 1`] = `
       }
     }
     confirmLoading={false}
-    maskTransitionName="fade"
     okType="primary"
     onCancel={[Function]}
     onOk={[Function]}
     title="Keyboard Shortcuts"
-    transitionName="zoom"
     visible={false}
     width={520}
   >
-    <withStore(Table)
+    <Table
       className="KeyboardShortcutsHelp--table u-simple-scrollbars"
       dataSource={
         Array [
@@ -201,6 +196,7 @@ exports[`KeyboardShortcutsHelp renders as expected 1`] = `
       }
       pagination={false}
       rowClassName={[Function]}
+      rowKey="key"
       showHeader={false}
       size="middle"
     >
@@ -217,7 +213,7 @@ exports[`KeyboardShortcutsHelp renders as expected 1`] = `
         render={[Function]}
         title="Key(s)"
       />
-    </withStore(Table)>
+    </Table>
   </Modal>
 </Fragment>
 `;

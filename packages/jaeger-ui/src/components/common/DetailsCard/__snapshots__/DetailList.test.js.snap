@@ -12,7 +12,6 @@ exports[`DetailList renders item as expected 1`] = `
 
 exports[`DetailList renders list as expected 1`] = `
 <List
-  bordered={false}
   dataSource={
     Array [
       "foo",
@@ -20,9 +19,6 @@ exports[`DetailList renders list as expected 1`] = `
       "baz",
     ]
   }
-  loading={false}
-  pagination={false}
   renderItem={[Function]}
-  split={true}
 />
 `;

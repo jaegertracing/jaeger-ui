@@ -30,7 +30,6 @@ exports[`MetricCard renders as expected when passCount is zero 1`] = `
         mouseLeaveDelay={0.1}
         placement="top"
         title="Metric Documentation"
-        transitionName="zoom-big-fast"
       >
         <a
           href="metric.documentation.link"
@@ -112,7 +111,6 @@ exports[`MetricCard renders as expected with details 1`] = `
         mouseLeaveDelay={0.1}
         placement="top"
         title="Metric Documentation"
-        transitionName="zoom-big-fast"
       >
         <a
           href="metric.documentation.link"
@@ -236,7 +234,6 @@ exports[`MetricCard renders as expected without details 1`] = `
         mouseLeaveDelay={0.1}
         placement="top"
         title="Metric Documentation"
-        transitionName="zoom-big-fast"
       >
         <a
           href="metric.documentation.link"
@@ -318,7 +315,6 @@ exports[`MetricCard renders as expected without details 2`] = `
         mouseLeaveDelay={0.1}
         placement="top"
         title="Metric Documentation"
-        transitionName="zoom-big-fast"
       >
         <a
           href="metric.documentation.link"

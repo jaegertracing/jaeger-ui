@@ -62,14 +62,9 @@ exports[`AltViewOptions renders correctly 1`] = `
       </MenuItem>
     </Menu>
   }
-  placement="bottomLeft"
 >
   <Button
-    block={false}
     className="AltViewOptions"
-    ghost={false}
-    htmlType="button"
-    loading={false}
   >
     Trace Timeline 
     <ForwardRef(DownOutlined) />

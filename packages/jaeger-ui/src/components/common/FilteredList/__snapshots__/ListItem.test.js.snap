@@ -35,7 +35,6 @@ exports[`<ListItem> multi mode renders as selected when selected 1`] = `
   <Checkbox
     checked={true}
     className="FilteredList--ListItem--Checkbox"
-    indeterminate={false}
   />
   a
 </div>
@@ -52,7 +51,6 @@ exports[`<ListItem> multi mode renders as selected when selected with others 1`]
   <Checkbox
     checked={true}
     className="FilteredList--ListItem--Checkbox"
-    indeterminate={false}
   />
   a
 </div>
@@ -69,7 +67,6 @@ exports[`<ListItem> multi mode renders without exploding 1`] = `
   <Checkbox
     checked={false}
     className="FilteredList--ListItem--Checkbox"
-    indeterminate={false}
   />
   a
 </div>

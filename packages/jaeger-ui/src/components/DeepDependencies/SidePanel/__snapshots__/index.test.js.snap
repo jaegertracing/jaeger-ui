@@ -2,7 +2,7 @@
 
 exports[`<SidePanel> info button  opens info modal 1`] = `
 Object {
-  "content": <withStore(Table)
+  "content": <Table
     columns={
       Array [
         Object {

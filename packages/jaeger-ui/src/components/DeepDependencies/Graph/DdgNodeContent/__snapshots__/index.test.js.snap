@@ -1389,7 +1389,6 @@ exports[`<DdgNodeContent> renders the number of operations if there are multiple
           overlayStyle={Object {}}
           placement="bottom"
           title="Select Operation to Filter Graph"
-          transitionName="zoom-big"
           trigger="hover"
         >
           <span>
