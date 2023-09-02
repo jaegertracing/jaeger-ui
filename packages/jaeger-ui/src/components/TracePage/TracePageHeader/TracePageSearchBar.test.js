@@ -14,7 +14,6 @@
 
 import React from 'react';
 import { shallow } from 'enzyme';
-import { CloseOutlined } from '@ant-design/icons';
 import * as markers from './TracePageSearchBar.markers';
 import DefaultTracePageSearchBar, { TracePageSearchBarFn as TracePageSearchBar } from './TracePageSearchBar';
 import { trackFilter } from '../index.track';
@@ -70,7 +69,7 @@ describe('<TracePageSearchBar>', () => {
       wrapper.setProps({ navigable: false });
       const button = wrapper.find('Button');
       expect(button.length).toBe(1);
-      expect(button.getElement(CloseOutlined)).toBeDefined();
+      expect(button.find('[data-testid="CloseOutlined"]').exists()).toBe(true);
     });
   });
 
