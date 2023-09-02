@@ -21,6 +21,7 @@ Stuck somewhere or found a bug? See [Getting in Touch](https://www.jaegertracing
 - [Running on Windows OS](#running-on-windows-os)
 
 ### Prerequisites
+
 - [nvm (Node Version Manager)](https://github.com/nvm-sh/nvm)
 - [Node.JS](https://nodejs.org/en)
 - npm package manager
@@ -92,6 +93,7 @@ The above command will run a web server on `http://localhost:5173` that will ser
 While we don't natively support Windows OS for running the Jaeger UI Dev Environment, you can use Windows Subsystem for Linux (WSL) to run it.
 
 Here are some steps to follow:
+
 1. Install WSL: https://learn.microsoft.com/en-us/windows/wsl/install
 2. Install Node.JS: https://learn.microsoft.com/en-us/windows/dev-environment/javascript/nodejs-on-wsl
 3. Install Yarn: https://dev.to/bonstine/installing-yarn-on-wsl-38p2
@@ -113,4 +115,3 @@ See the [configuration guide](https://www.jaegertracing.io/docs/latest/frontend-
 [aio-docs]: https://www.jaegertracing.io/docs/latest/getting-started/
 [fossa-img]: https://app.fossa.io/api/projects/git%2Bgithub.com%2Fjaegertracing%2Fjaeger-ui.svg?type=shield
 [fossa]: https://app.fossa.io/projects/git%2Bgithub.com%2Fjaegertracing%2Fjaeger-ui?ref=badge_shield
-

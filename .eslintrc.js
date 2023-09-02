@@ -13,7 +13,7 @@
 // limitations under the License.
 
 module.exports = {
-  root:true,
+  root: true,
   env: {
     browser: true,
     jest: true,
@@ -26,7 +26,7 @@ module.exports = {
       },
     },
   },
-  extends: ['airbnb', 'prettier','eslint:recommended','plugin:@typescript-eslint/recommended'],
+  extends: ['airbnb', 'prettier', 'eslint:recommended', 'plugin:@typescript-eslint/recommended'],
   overrides: [
     {
       files: ['*.ts', '*.tsx'],
@@ -76,14 +76,14 @@ module.exports = {
     'no-self-compare': 0,
     'no-underscore-dangle': 0,
     'prefer-destructuring': 0,
-    
+
     /* tsx */
-    "@typescript-eslint/no-explicit-any": "warn",
-    "@typescript-eslint/no-unused-vars": "warn",
-    "@typescript-eslint/no-var-requires": "warn",
-    "@typescript-eslint/no-empty-function": "warn",
-    "@typescript-eslint/ban-types": "warn",
-    "@typescript-eslint/ban-ts-comment": "warn",
+    '@typescript-eslint/no-explicit-any': 'warn',
+    '@typescript-eslint/no-unused-vars': 'warn',
+    '@typescript-eslint/no-var-requires': 'warn',
+    '@typescript-eslint/no-empty-function': 'warn',
+    '@typescript-eslint/ban-types': 'warn',
+    '@typescript-eslint/ban-ts-comment': 'warn',
 
     /* jsx */
     'jsx-a11y/anchor-is-valid': 0,
