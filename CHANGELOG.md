@@ -56,7 +56,6 @@
 - Bump @babel/eslint-parser from 7.21.8 to 7.22.5 ([@dependabot](https://github.com/dependabot) in [#1483](https://github.com/jaegertracing/jaeger-ui/pull/1483))
 - Bump @babel/core from 7.22.1 to 7.22.5 ([@dependabot](https://github.com/dependabot) in [#1484](https://github.com/jaegertracing/jaeger-ui/pull/1484))
 
-
 ## v1.30.0 (2023-06-05)
 
 ### Enhancements
@@ -69,13 +68,11 @@
 
 - Bump webpack from 5.80.0 to 5.85.0 ([@dependabot](https://github.com/dependabot) in [#1457](https://github.com/jaegertracing/jaeger-ui/pull/1457))
 
-
 ## v1.29.1 (2023-05-03)
 
 ### Fixes
 
 - Fix format of a downloaded json file ([@Katarzyna-B](https://github.com/Katarzyna-B) in [#1306](https://github.com/jaegertracing/jaeger-ui/pull/1306))
-
 
 ## v1.29.0 (2023-04-10)
 
@@ -101,7 +98,6 @@
 - Bump webpack-dev-server from 4.11.1 to 4.13.0 ([@dependabot](https://github.com/dependabot) in [#1283](https://github.com/jaegertracing/jaeger-ui/pull/1283))
 - Bump vite from 4.1.4 to 4.2.0 ([@dependabot](https://github.com/dependabot) in [#1281](https://github.com/jaegertracing/jaeger-ui/pull/1281))
 - Bump typescript from 4.9.5 to 5.0.2 ([@dependabot](https://github.com/dependabot) in [#1282](https://github.com/jaegertracing/jaeger-ui/pull/1282))
-
 
 ## v1.28.1 (2023-03-15)
 
