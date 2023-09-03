@@ -96,12 +96,7 @@ function getItem(item: ConfigMenuItem) {
 function CustomNavDropdown({ label, items }: ConfigMenuGroup) {
   const menuItems = <Menu>{items.map(getItem)}</Menu>;
   return (
-    <Dropdown
-      trigger={['click']}
-      overlay={menuItems}
-      overlayStyle={{ paddingRight: '20px' }}
-      placement="bottomRight"
-    >
+    <Dropdown overlay={menuItems} overlayStyle={{ paddingRight: '20px' }} placement="bottomRight">
       <a style={{ color: 'white' }}>
         {label} <DownOutlined style={{ paddingRight: '30px' }} />
       </a>
