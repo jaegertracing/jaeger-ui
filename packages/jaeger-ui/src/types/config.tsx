@@ -88,6 +88,9 @@ export type Config = {
   // Requires Query Service to be configured with "archive" storage backend.
   archiveEnabled?: boolean;
 
+  // criticalPath enables to show the criticalPath of each span in a trace view.
+  criticalPathEnabled: boolean;
+
   // dependencies controls the behavior of System Architecture tab.
   dependencies?: {
     // menuEnabled enables or disables the System Architecture tab.

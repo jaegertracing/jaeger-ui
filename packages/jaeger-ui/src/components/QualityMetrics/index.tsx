@@ -102,8 +102,8 @@ export class UnconnectedQualityMetrics extends React.PureComponent<TProps, TStat
       });
   }
 
-  setLookback = (lookback: number | string | undefined) => {
-    if (!lookback || typeof lookback === 'string') return;
+  setLookback = (lookback: number | null) => {
+    if (!lookback) return;
     if (lookback < 1 || lookback !== Math.floor(lookback)) return;
 
     const { history, service = '' } = this.props;

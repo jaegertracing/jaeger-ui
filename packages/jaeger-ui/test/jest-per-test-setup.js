@@ -38,6 +38,18 @@ window.getJaegerVersion = () => ({
   buildDate: '',
 });
 
+// Provide a matchMedia() stub as some Ant Design components attempt to use this
+window.matchMedia = jest.fn().mockImplementation(query => ({
+  matches: false,
+  media: query,
+  onchange: null,
+  addListener: jest.fn(), // deprecated
+  removeListener: jest.fn(), // deprecated
+  addEventListener: jest.fn(),
+  removeEventListener: jest.fn(),
+  dispatchEvent: jest.fn(),
+}));
+
 global.__APP_ENVIRONMENT__ = 'test';
 global.__REACT_APP_GA_DEBUG__ = '';
 global.__REACT_APP_VSN_STATE__ = '';

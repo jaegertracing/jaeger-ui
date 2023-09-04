@@ -1,3 +1,4 @@
+/* eslint-disable import/no-extraneous-dependencies */
 // Copyright (c) 2018 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,7 +17,7 @@ import React, { Component } from 'react';
 import { Row, Col, Table, Button, Select } from 'antd';
 import moment from 'moment';
 import { ColumnProps } from 'antd/es/table';
-import FormItem from 'antd/lib/form/FormItem';
+import { Form } from '@ant-design/compatible';
 import './index.css';
 import { TNil } from '../../../types';
 import { Trace, Span } from '../../../types/trace';
@@ -132,7 +133,7 @@ export default class TraceSpanView extends Component<Props, State> {
     const columns: ColumnProps<Span>[] = [
       {
         title: 'Service Name',
-        dataIndex: 'process.serviceName',
+        dataIndex: ['process', 'serviceName'],
         width: '25%',
         sorter: (a, b) => a.process.serviceName.localeCompare(b.process.serviceName),
       },
@@ -178,9 +179,9 @@ export default class TraceSpanView extends Component<Props, State> {
     return (
       <div>
         <h3 className="title--TraceSpanView"> Trace Tabular View</h3>
-        <Row type="flex" style={{ marginTop: '8px' }}>
+        <Row style={{ marginTop: '8px' }}>
           <Col span={7}>
-            <FormItem
+            <Form.Item
               label="Service Name"
               labelCol={{ span: 6 }}
               wrapperCol={{ span: 18 }}
@@ -204,13 +205,17 @@ export default class TraceSpanView extends Component<Props, State> {
                 }}
               >
                 {this.state.serviceNamesList.map(name => {
-                  return <Option key={name}>{name} </Option>;
+                  return (
+                    <Option value={name} key={name}>
+                      {name}{' '}
+                    </Option>
+                  );
                 })}
               </Select>
-            </FormItem>
+            </Form.Item>
           </Col>
           <Col span={9}>
-            <FormItem
+            <Form.Item
               label="Operation Name"
               labelCol={{ span: 6 }}
               wrapperCol={{ span: 18 }}
@@ -234,17 +239,21 @@ export default class TraceSpanView extends Component<Props, State> {
                 }}
               >
                 {this.uniqueOperationNameOptions().map((name: string) => {
-                  return <Option key={name}>{name} </Option>;
+                  return (
+                    <Option value={name} key={name}>
+                      {name}{' '}
+                    </Option>
+                  );
                 })}
               </Select>
-            </FormItem>
+            </Form.Item>
           </Col>
           <Col span={2} push={6}>
-            <FormItem className="reset-filter">
+            <Form.Item className="reset-filter">
               <Button type="primary" htmlType="button" onClick={this.handleResetFilter}>
                 Reset Filters
               </Button>
-            </FormItem>
+            </Form.Item>
           </Col>
         </Row>
 

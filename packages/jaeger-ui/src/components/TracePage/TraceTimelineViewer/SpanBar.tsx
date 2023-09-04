@@ -20,7 +20,7 @@ import AccordianLogs from './SpanDetail/AccordianLogs';
 
 import { ViewedBoundsFunctionType } from './utils';
 import { TNil } from '../../../types';
-import { Span } from '../../../types/trace';
+import { Span, criticalPathSection } from '../../../types/trace';
 
 import './SpanBar.css';
 
@@ -29,6 +29,7 @@ type TCommonProps = {
   hintSide: string;
   // onClick: (evt: React.MouseEvent<any>) => void;
   onClick?: (evt: React.MouseEvent<any>) => void;
+  criticalPath: criticalPathSection[];
   viewEnd: number;
   viewStart: number;
   getViewedBounds: ViewedBoundsFunctionType;
@@ -49,8 +50,13 @@ function toPercent(value: number) {
   return `${(value * 100).toFixed(1)}%`;
 }
 
+function toPercentInDecimal(value: number) {
+  return `${value * 100}%`;
+}
+
 function SpanBar(props: TCommonProps) {
   const {
+    criticalPath,
     viewEnd,
     viewStart,
     getViewedBounds,
@@ -133,6 +139,24 @@ function SpanBar(props: TCommonProps) {
           }}
         />
       )}
+      {criticalPath &&
+        criticalPath.map((each, index) => {
+          const critcalPathViewBounds = getViewedBounds(each.section_start, each.section_end);
+          const criticalPathViewStart = critcalPathViewBounds.start;
+          const criticalPathViewEnd = critcalPathViewBounds.end;
+          return (
+            <div
+              key={index}
+              data-testid="SpanBar--criticalPath"
+              className="SpanBar--criticalPath"
+              style={{
+                background: 'black',
+                left: toPercentInDecimal(criticalPathViewStart),
+                width: toPercentInDecimal(criticalPathViewEnd - criticalPathViewStart),
+              }}
+            />
+          );
+        })}
     </div>
   );
 }
