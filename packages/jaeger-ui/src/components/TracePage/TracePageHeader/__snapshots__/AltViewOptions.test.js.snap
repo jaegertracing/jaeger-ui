@@ -2,8 +2,6 @@
 
 exports[`AltViewOptions renders correctly 1`] = `
 <Dropdown
-  mouseEnterDelay={0.15}
-  mouseLeaveDelay={0.1}
   overlay={
     <Menu>
       <MenuItem>

@@ -3,8 +3,6 @@
 exports[`<CopyIcon /> renders as expected 1`] = `
 <Tooltip
   arrowPointAtCenter={true}
-  autoAdjustOverflow={true}
-  mouseEnterDelay={0.1}
   mouseLeaveDelay={0}
   onVisibleChange={[Function]}
   placement="top"

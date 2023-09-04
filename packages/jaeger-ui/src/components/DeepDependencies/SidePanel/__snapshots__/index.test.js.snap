@@ -2,7 +2,7 @@
 
 exports[`<SidePanel> info button  opens info modal 1`] = `
 Object {
-  "content": <Table
+  "content": <ForwardRef(InternalTable)
     columns={
       Array [
         Object {

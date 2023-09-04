@@ -19,7 +19,7 @@ exports[`<OperationTableDetails> Table rendered successfully 1`] = `
 <Col
   span={24}
 >
-  <Table
+  <ForwardRef(InternalTable)
     columns={
       Array [
         Object {
@@ -78,10 +78,6 @@ exports[`<OperationTableDetails> Table rendered successfully 1`] = `
               Impact
                 
               <Tooltip
-                arrowPointAtCenter={false}
-                autoAdjustOverflow={true}
-                mouseEnterDelay={0.1}
-                mouseLeaveDelay={0.1}
                 overlayClassName="impact-tooltip"
                 placement="top"
                 title="The result of multiplying avg. duration and requests per minute, showing the most used and slowest endpoints"
@@ -107,7 +103,6 @@ exports[`<OperationTableDetails> Table rendered successfully 1`] = `
       }
     }
     rowClassName={[Function]}
-    rowKey="key"
   />
 </Col>
 `;
@@ -151,11 +146,16 @@ exports[`<OperationTableDetails> render No data table 1`] = `
                 >
                   <tr>
                     <th
+                      aria-label="Name"
                       className="ant-table-cell header-item ant-table-column-has-sorters"
                       colSpan={null}
                       onClick={[Function]}
+                      onKeyDown={[Function]}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
+                      tabIndex={0}
                     >
                       <div
                         className="ant-table-column-sorters"
@@ -163,7 +163,9 @@ exports[`<OperationTableDetails> render No data table 1`] = `
                         onMouseEnter={[Function]}
                         onMouseLeave={[Function]}
                       >
-                        <span>
+                        <span
+                          className="ant-table-column-title"
+                        >
                           Name
                         </span>
                         <span
@@ -175,7 +177,7 @@ exports[`<OperationTableDetails> render No data table 1`] = `
                             <span
                               aria-label="caret-up"
                               className="anticon anticon-caret-up ant-table-column-sorter-up"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -196,7 +198,7 @@ exports[`<OperationTableDetails> render No data table 1`] = `
                             <span
                               aria-label="caret-down"
                               className="anticon anticon-caret-down ant-table-column-sorter-down"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -219,11 +221,16 @@ exports[`<OperationTableDetails> render No data table 1`] = `
                       </div>
                     </th>
                     <th
+                      aria-label="P95 Latency"
                       className="ant-table-cell header-item ant-table-column-has-sorters"
                       colSpan={null}
                       onClick={[Function]}
+                      onKeyDown={[Function]}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
+                      tabIndex={0}
                     >
                       <div
                         className="ant-table-column-sorters"
@@ -231,7 +238,9 @@ exports[`<OperationTableDetails> render No data table 1`] = `
                         onMouseEnter={[Function]}
                         onMouseLeave={[Function]}
                       >
-                        <span>
+                        <span
+                          className="ant-table-column-title"
+                        >
                           P95 Latency
                         </span>
                         <span
@@ -243,7 +252,7 @@ exports[`<OperationTableDetails> render No data table 1`] = `
                             <span
                               aria-label="caret-up"
                               className="anticon anticon-caret-up ant-table-column-sorter-up"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -264,7 +273,7 @@ exports[`<OperationTableDetails> render No data table 1`] = `
                             <span
                               aria-label="caret-down"
                               className="anticon anticon-caret-down ant-table-column-sorter-down"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -287,11 +296,16 @@ exports[`<OperationTableDetails> render No data table 1`] = `
                       </div>
                     </th>
                     <th
+                      aria-label="Request rate"
                       className="ant-table-cell header-item ant-table-column-has-sorters"
                       colSpan={null}
                       onClick={[Function]}
+                      onKeyDown={[Function]}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
+                      tabIndex={0}
                     >
                       <div
                         className="ant-table-column-sorters"
@@ -299,7 +313,9 @@ exports[`<OperationTableDetails> render No data table 1`] = `
                         onMouseEnter={[Function]}
                         onMouseLeave={[Function]}
                       >
-                        <span>
+                        <span
+                          className="ant-table-column-title"
+                        >
                           Request rate
                         </span>
                         <span
@@ -311,7 +327,7 @@ exports[`<OperationTableDetails> render No data table 1`] = `
                             <span
                               aria-label="caret-up"
                               className="anticon anticon-caret-up ant-table-column-sorter-up"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -332,7 +348,7 @@ exports[`<OperationTableDetails> render No data table 1`] = `
                             <span
                               aria-label="caret-down"
                               className="anticon anticon-caret-down ant-table-column-sorter-down"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -355,11 +371,16 @@ exports[`<OperationTableDetails> render No data table 1`] = `
                       </div>
                     </th>
                     <th
+                      aria-label="Error rate"
                       className="ant-table-cell header-item ant-table-column-has-sorters"
                       colSpan={null}
                       onClick={[Function]}
+                      onKeyDown={[Function]}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
+                      tabIndex={0}
                     >
                       <div
                         className="ant-table-column-sorters"
@@ -367,7 +388,9 @@ exports[`<OperationTableDetails> render No data table 1`] = `
                         onMouseEnter={[Function]}
                         onMouseLeave={[Function]}
                       >
-                        <span>
+                        <span
+                          className="ant-table-column-title"
+                        >
                           Error rate
                         </span>
                         <span
@@ -379,7 +402,7 @@ exports[`<OperationTableDetails> render No data table 1`] = `
                             <span
                               aria-label="caret-up"
                               className="anticon anticon-caret-up ant-table-column-sorter-up"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -400,7 +423,7 @@ exports[`<OperationTableDetails> render No data table 1`] = `
                             <span
                               aria-label="caret-down"
                               className="anticon anticon-caret-down ant-table-column-sorter-down"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -423,11 +446,16 @@ exports[`<OperationTableDetails> render No data table 1`] = `
                       </div>
                     </th>
                     <th
+                      aria-sort="descending"
                       className="ant-table-cell header-item ant-table-column-sort ant-table-column-has-sorters"
                       colSpan={null}
                       onClick={[Function]}
+                      onKeyDown={[Function]}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
+                      tabIndex={0}
                     >
                       <div
                         className="ant-table-column-sorters"
@@ -435,7 +463,9 @@ exports[`<OperationTableDetails> render No data table 1`] = `
                         onMouseEnter={[Function]}
                         onMouseLeave={[Function]}
                       >
-                        <span>
+                        <span
+                          className="ant-table-column-title"
+                        >
                           <div
                             style={
                               Object {
@@ -493,7 +523,7 @@ exports[`<OperationTableDetails> render No data table 1`] = `
                             <span
                               aria-label="caret-up"
                               className="anticon anticon-caret-up ant-table-column-sorter-up"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -514,7 +544,7 @@ exports[`<OperationTableDetails> render No data table 1`] = `
                             <span
                               aria-label="caret-down"
                               className="anticon anticon-caret-down ant-table-column-sorter-down active"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -552,6 +582,8 @@ exports[`<OperationTableDetails> render No data table 1`] = `
                     <td
                       className="ant-table-cell"
                       colSpan={5}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
                     >
@@ -598,7 +630,7 @@ exports[`<OperationTableDetails> render No data table 1`] = `
                         <div
                           className="ant-empty-description"
                         >
-                          No Data
+                          No data
                         </div>
                       </div>
                     </td>
@@ -653,11 +685,16 @@ exports[`<OperationTableDetails> render P95 latency with more than 2 decimal pla
                 >
                   <tr>
                     <th
+                      aria-label="Name"
                       className="ant-table-cell header-item ant-table-column-has-sorters"
                       colSpan={null}
                       onClick={[Function]}
+                      onKeyDown={[Function]}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
+                      tabIndex={0}
                     >
                       <div
                         className="ant-table-column-sorters"
@@ -665,7 +702,9 @@ exports[`<OperationTableDetails> render P95 latency with more than 2 decimal pla
                         onMouseEnter={[Function]}
                         onMouseLeave={[Function]}
                       >
-                        <span>
+                        <span
+                          className="ant-table-column-title"
+                        >
                           Name
                         </span>
                         <span
@@ -677,7 +716,7 @@ exports[`<OperationTableDetails> render P95 latency with more than 2 decimal pla
                             <span
                               aria-label="caret-up"
                               className="anticon anticon-caret-up ant-table-column-sorter-up"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -698,7 +737,7 @@ exports[`<OperationTableDetails> render P95 latency with more than 2 decimal pla
                             <span
                               aria-label="caret-down"
                               className="anticon anticon-caret-down ant-table-column-sorter-down"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -721,11 +760,16 @@ exports[`<OperationTableDetails> render P95 latency with more than 2 decimal pla
                       </div>
                     </th>
                     <th
+                      aria-label="P95 Latency"
                       className="ant-table-cell header-item ant-table-column-has-sorters"
                       colSpan={null}
                       onClick={[Function]}
+                      onKeyDown={[Function]}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
+                      tabIndex={0}
                     >
                       <div
                         className="ant-table-column-sorters"
@@ -733,7 +777,9 @@ exports[`<OperationTableDetails> render P95 latency with more than 2 decimal pla
                         onMouseEnter={[Function]}
                         onMouseLeave={[Function]}
                       >
-                        <span>
+                        <span
+                          className="ant-table-column-title"
+                        >
                           P95 Latency
                         </span>
                         <span
@@ -745,7 +791,7 @@ exports[`<OperationTableDetails> render P95 latency with more than 2 decimal pla
                             <span
                               aria-label="caret-up"
                               className="anticon anticon-caret-up ant-table-column-sorter-up"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -766,7 +812,7 @@ exports[`<OperationTableDetails> render P95 latency with more than 2 decimal pla
                             <span
                               aria-label="caret-down"
                               className="anticon anticon-caret-down ant-table-column-sorter-down"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -789,11 +835,16 @@ exports[`<OperationTableDetails> render P95 latency with more than 2 decimal pla
                       </div>
                     </th>
                     <th
+                      aria-label="Request rate"
                       className="ant-table-cell header-item ant-table-column-has-sorters"
                       colSpan={null}
                       onClick={[Function]}
+                      onKeyDown={[Function]}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
+                      tabIndex={0}
                     >
                       <div
                         className="ant-table-column-sorters"
@@ -801,7 +852,9 @@ exports[`<OperationTableDetails> render P95 latency with more than 2 decimal pla
                         onMouseEnter={[Function]}
                         onMouseLeave={[Function]}
                       >
-                        <span>
+                        <span
+                          className="ant-table-column-title"
+                        >
                           Request rate
                         </span>
                         <span
@@ -813,7 +866,7 @@ exports[`<OperationTableDetails> render P95 latency with more than 2 decimal pla
                             <span
                               aria-label="caret-up"
                               className="anticon anticon-caret-up ant-table-column-sorter-up"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -834,7 +887,7 @@ exports[`<OperationTableDetails> render P95 latency with more than 2 decimal pla
                             <span
                               aria-label="caret-down"
                               className="anticon anticon-caret-down ant-table-column-sorter-down"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -857,11 +910,16 @@ exports[`<OperationTableDetails> render P95 latency with more than 2 decimal pla
                       </div>
                     </th>
                     <th
+                      aria-label="Error rate"
                       className="ant-table-cell header-item ant-table-column-has-sorters"
                       colSpan={null}
                       onClick={[Function]}
+                      onKeyDown={[Function]}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
+                      tabIndex={0}
                     >
                       <div
                         className="ant-table-column-sorters"
@@ -869,7 +927,9 @@ exports[`<OperationTableDetails> render P95 latency with more than 2 decimal pla
                         onMouseEnter={[Function]}
                         onMouseLeave={[Function]}
                       >
-                        <span>
+                        <span
+                          className="ant-table-column-title"
+                        >
                           Error rate
                         </span>
                         <span
@@ -881,7 +941,7 @@ exports[`<OperationTableDetails> render P95 latency with more than 2 decimal pla
                             <span
                               aria-label="caret-up"
                               className="anticon anticon-caret-up ant-table-column-sorter-up"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -902,7 +962,7 @@ exports[`<OperationTableDetails> render P95 latency with more than 2 decimal pla
                             <span
                               aria-label="caret-down"
                               className="anticon anticon-caret-down ant-table-column-sorter-down"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -925,11 +985,16 @@ exports[`<OperationTableDetails> render P95 latency with more than 2 decimal pla
                       </div>
                     </th>
                     <th
+                      aria-sort="descending"
                       className="ant-table-cell header-item ant-table-column-sort ant-table-column-has-sorters"
                       colSpan={null}
                       onClick={[Function]}
+                      onKeyDown={[Function]}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
+                      tabIndex={0}
                     >
                       <div
                         className="ant-table-column-sorters"
@@ -937,7 +1002,9 @@ exports[`<OperationTableDetails> render P95 latency with more than 2 decimal pla
                         onMouseEnter={[Function]}
                         onMouseLeave={[Function]}
                       >
-                        <span>
+                        <span
+                          className="ant-table-column-title"
+                        >
                           <div
                             style={
                               Object {
@@ -995,7 +1062,7 @@ exports[`<OperationTableDetails> render P95 latency with more than 2 decimal pla
                             <span
                               aria-label="caret-up"
                               className="anticon anticon-caret-up ant-table-column-sorter-up"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -1016,7 +1083,7 @@ exports[`<OperationTableDetails> render P95 latency with more than 2 decimal pla
                             <span
                               aria-label="caret-down"
                               className="anticon anticon-caret-down ant-table-column-sorter-down active"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -1054,6 +1121,8 @@ exports[`<OperationTableDetails> render P95 latency with more than 2 decimal pla
                     <td
                       className="ant-table-cell header-item"
                       colSpan={null}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
                     >
@@ -1062,6 +1131,8 @@ exports[`<OperationTableDetails> render P95 latency with more than 2 decimal pla
                     <td
                       className="ant-table-cell header-item"
                       colSpan={null}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
                     >
@@ -1143,6 +1214,8 @@ exports[`<OperationTableDetails> render P95 latency with more than 2 decimal pla
                     <td
                       className="ant-table-cell header-item"
                       colSpan={null}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
                     >
@@ -1224,6 +1297,8 @@ exports[`<OperationTableDetails> render P95 latency with more than 2 decimal pla
                     <td
                       className="ant-table-cell header-item"
                       colSpan={null}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
                     >
@@ -1305,6 +1380,8 @@ exports[`<OperationTableDetails> render P95 latency with more than 2 decimal pla
                     <td
                       className="ant-table-cell header-item ant-table-column-sort"
                       colSpan={null}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
                     >
@@ -1313,12 +1390,19 @@ exports[`<OperationTableDetails> render P95 latency with more than 2 decimal pla
                       >
                         <div
                           className="ant-progress ant-progress-line ant-progress-status-success ant-progress-default impact"
+                          role="progressbar"
                         >
                           <div
                             className="ant-progress-outer"
                           >
                             <div
                               className="ant-progress-inner"
+                              style={
+                                Object {
+                                  "backgroundColor": undefined,
+                                  "borderRadius": 0,
+                                }
+                              }
                             >
                               <div
                                 className="ant-progress-bg"
@@ -1348,7 +1432,6 @@ exports[`<OperationTableDetails> render P95 latency with more than 2 decimal pla
         <ul
           className="ant-pagination ant-table-pagination ant-table-pagination-right"
           style={Object {}}
-          unselectable="unselectable"
         >
           <li
             aria-disabled={true}
@@ -1468,6 +1551,7 @@ exports[`<OperationTableDetails> render P95 latency with more than 2 decimal pla
                       aria-owns="undefined_list"
                       autoComplete="off"
                       className="ant-select-selection-search-input"
+                      disabled={false}
                       onChange={[Function]}
                       onCompositionEnd={[Function]}
                       onCompositionStart={[Function]}
@@ -1576,11 +1660,16 @@ exports[`<OperationTableDetails> render error rate with more than 2 decimal plac
                 >
                   <tr>
                     <th
+                      aria-label="Name"
                       className="ant-table-cell header-item ant-table-column-has-sorters"
                       colSpan={null}
                       onClick={[Function]}
+                      onKeyDown={[Function]}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
+                      tabIndex={0}
                     >
                       <div
                         className="ant-table-column-sorters"
@@ -1588,7 +1677,9 @@ exports[`<OperationTableDetails> render error rate with more than 2 decimal plac
                         onMouseEnter={[Function]}
                         onMouseLeave={[Function]}
                       >
-                        <span>
+                        <span
+                          className="ant-table-column-title"
+                        >
                           Name
                         </span>
                         <span
@@ -1600,7 +1691,7 @@ exports[`<OperationTableDetails> render error rate with more than 2 decimal plac
                             <span
                               aria-label="caret-up"
                               className="anticon anticon-caret-up ant-table-column-sorter-up"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -1621,7 +1712,7 @@ exports[`<OperationTableDetails> render error rate with more than 2 decimal plac
                             <span
                               aria-label="caret-down"
                               className="anticon anticon-caret-down ant-table-column-sorter-down"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -1644,11 +1735,16 @@ exports[`<OperationTableDetails> render error rate with more than 2 decimal plac
                       </div>
                     </th>
                     <th
+                      aria-label="P95 Latency"
                       className="ant-table-cell header-item ant-table-column-has-sorters"
                       colSpan={null}
                       onClick={[Function]}
+                      onKeyDown={[Function]}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
+                      tabIndex={0}
                     >
                       <div
                         className="ant-table-column-sorters"
@@ -1656,7 +1752,9 @@ exports[`<OperationTableDetails> render error rate with more than 2 decimal plac
                         onMouseEnter={[Function]}
                         onMouseLeave={[Function]}
                       >
-                        <span>
+                        <span
+                          className="ant-table-column-title"
+                        >
                           P95 Latency
                         </span>
                         <span
@@ -1668,7 +1766,7 @@ exports[`<OperationTableDetails> render error rate with more than 2 decimal plac
                             <span
                               aria-label="caret-up"
                               className="anticon anticon-caret-up ant-table-column-sorter-up"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -1689,7 +1787,7 @@ exports[`<OperationTableDetails> render error rate with more than 2 decimal plac
                             <span
                               aria-label="caret-down"
                               className="anticon anticon-caret-down ant-table-column-sorter-down"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -1712,11 +1810,16 @@ exports[`<OperationTableDetails> render error rate with more than 2 decimal plac
                       </div>
                     </th>
                     <th
+                      aria-label="Request rate"
                       className="ant-table-cell header-item ant-table-column-has-sorters"
                       colSpan={null}
                       onClick={[Function]}
+                      onKeyDown={[Function]}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
+                      tabIndex={0}
                     >
                       <div
                         className="ant-table-column-sorters"
@@ -1724,7 +1827,9 @@ exports[`<OperationTableDetails> render error rate with more than 2 decimal plac
                         onMouseEnter={[Function]}
                         onMouseLeave={[Function]}
                       >
-                        <span>
+                        <span
+                          className="ant-table-column-title"
+                        >
                           Request rate
                         </span>
                         <span
@@ -1736,7 +1841,7 @@ exports[`<OperationTableDetails> render error rate with more than 2 decimal plac
                             <span
                               aria-label="caret-up"
                               className="anticon anticon-caret-up ant-table-column-sorter-up"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -1757,7 +1862,7 @@ exports[`<OperationTableDetails> render error rate with more than 2 decimal plac
                             <span
                               aria-label="caret-down"
                               className="anticon anticon-caret-down ant-table-column-sorter-down"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -1780,11 +1885,16 @@ exports[`<OperationTableDetails> render error rate with more than 2 decimal plac
                       </div>
                     </th>
                     <th
+                      aria-label="Error rate"
                       className="ant-table-cell header-item ant-table-column-has-sorters"
                       colSpan={null}
                       onClick={[Function]}
+                      onKeyDown={[Function]}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
+                      tabIndex={0}
                     >
                       <div
                         className="ant-table-column-sorters"
@@ -1792,7 +1902,9 @@ exports[`<OperationTableDetails> render error rate with more than 2 decimal plac
                         onMouseEnter={[Function]}
                         onMouseLeave={[Function]}
                       >
-                        <span>
+                        <span
+                          className="ant-table-column-title"
+                        >
                           Error rate
                         </span>
                         <span
@@ -1804,7 +1916,7 @@ exports[`<OperationTableDetails> render error rate with more than 2 decimal plac
                             <span
                               aria-label="caret-up"
                               className="anticon anticon-caret-up ant-table-column-sorter-up"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -1825,7 +1937,7 @@ exports[`<OperationTableDetails> render error rate with more than 2 decimal plac
                             <span
                               aria-label="caret-down"
                               className="anticon anticon-caret-down ant-table-column-sorter-down"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -1848,11 +1960,16 @@ exports[`<OperationTableDetails> render error rate with more than 2 decimal plac
                       </div>
                     </th>
                     <th
+                      aria-sort="descending"
                       className="ant-table-cell header-item ant-table-column-sort ant-table-column-has-sorters"
                       colSpan={null}
                       onClick={[Function]}
+                      onKeyDown={[Function]}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
+                      tabIndex={0}
                     >
                       <div
                         className="ant-table-column-sorters"
@@ -1860,7 +1977,9 @@ exports[`<OperationTableDetails> render error rate with more than 2 decimal plac
                         onMouseEnter={[Function]}
                         onMouseLeave={[Function]}
                       >
-                        <span>
+                        <span
+                          className="ant-table-column-title"
+                        >
                           <div
                             style={
                               Object {
@@ -1918,7 +2037,7 @@ exports[`<OperationTableDetails> render error rate with more than 2 decimal plac
                             <span
                               aria-label="caret-up"
                               className="anticon anticon-caret-up ant-table-column-sorter-up"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -1939,7 +2058,7 @@ exports[`<OperationTableDetails> render error rate with more than 2 decimal plac
                             <span
                               aria-label="caret-down"
                               className="anticon anticon-caret-down ant-table-column-sorter-down active"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -1977,6 +2096,8 @@ exports[`<OperationTableDetails> render error rate with more than 2 decimal plac
                     <td
                       className="ant-table-cell header-item"
                       colSpan={null}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
                     >
@@ -1985,6 +2106,8 @@ exports[`<OperationTableDetails> render error rate with more than 2 decimal plac
                     <td
                       className="ant-table-cell header-item"
                       colSpan={null}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
                     >
@@ -2066,6 +2189,8 @@ exports[`<OperationTableDetails> render error rate with more than 2 decimal plac
                     <td
                       className="ant-table-cell header-item"
                       colSpan={null}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
                     >
@@ -2147,6 +2272,8 @@ exports[`<OperationTableDetails> render error rate with more than 2 decimal plac
                     <td
                       className="ant-table-cell header-item"
                       colSpan={null}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
                     >
@@ -2228,6 +2355,8 @@ exports[`<OperationTableDetails> render error rate with more than 2 decimal plac
                     <td
                       className="ant-table-cell header-item ant-table-column-sort"
                       colSpan={null}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
                     >
@@ -2236,12 +2365,19 @@ exports[`<OperationTableDetails> render error rate with more than 2 decimal plac
                       >
                         <div
                           className="ant-progress ant-progress-line ant-progress-status-success ant-progress-default impact"
+                          role="progressbar"
                         >
                           <div
                             className="ant-progress-outer"
                           >
                             <div
                               className="ant-progress-inner"
+                              style={
+                                Object {
+                                  "backgroundColor": undefined,
+                                  "borderRadius": 0,
+                                }
+                              }
                             >
                               <div
                                 className="ant-progress-bg"
@@ -2271,7 +2407,6 @@ exports[`<OperationTableDetails> render error rate with more than 2 decimal plac
         <ul
           className="ant-pagination ant-table-pagination ant-table-pagination-right"
           style={Object {}}
-          unselectable="unselectable"
         >
           <li
             aria-disabled={true}
@@ -2391,6 +2526,7 @@ exports[`<OperationTableDetails> render error rate with more than 2 decimal plac
                       aria-owns="undefined_list"
                       autoComplete="off"
                       className="ant-select-selection-search-input"
+                      disabled={false}
                       onChange={[Function]}
                       onCompositionEnd={[Function]}
                       onCompositionStart={[Function]}
@@ -2499,11 +2635,16 @@ exports[`<OperationTableDetails> render lower than 0.1 P95 latency 1`] = `
                 >
                   <tr>
                     <th
+                      aria-label="Name"
                       className="ant-table-cell header-item ant-table-column-has-sorters"
                       colSpan={null}
                       onClick={[Function]}
+                      onKeyDown={[Function]}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
+                      tabIndex={0}
                     >
                       <div
                         className="ant-table-column-sorters"
@@ -2511,7 +2652,9 @@ exports[`<OperationTableDetails> render lower than 0.1 P95 latency 1`] = `
                         onMouseEnter={[Function]}
                         onMouseLeave={[Function]}
                       >
-                        <span>
+                        <span
+                          className="ant-table-column-title"
+                        >
                           Name
                         </span>
                         <span
@@ -2523,7 +2666,7 @@ exports[`<OperationTableDetails> render lower than 0.1 P95 latency 1`] = `
                             <span
                               aria-label="caret-up"
                               className="anticon anticon-caret-up ant-table-column-sorter-up"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -2544,7 +2687,7 @@ exports[`<OperationTableDetails> render lower than 0.1 P95 latency 1`] = `
                             <span
                               aria-label="caret-down"
                               className="anticon anticon-caret-down ant-table-column-sorter-down"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -2567,11 +2710,16 @@ exports[`<OperationTableDetails> render lower than 0.1 P95 latency 1`] = `
                       </div>
                     </th>
                     <th
+                      aria-label="P95 Latency"
                       className="ant-table-cell header-item ant-table-column-has-sorters"
                       colSpan={null}
                       onClick={[Function]}
+                      onKeyDown={[Function]}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
+                      tabIndex={0}
                     >
                       <div
                         className="ant-table-column-sorters"
@@ -2579,7 +2727,9 @@ exports[`<OperationTableDetails> render lower than 0.1 P95 latency 1`] = `
                         onMouseEnter={[Function]}
                         onMouseLeave={[Function]}
                       >
-                        <span>
+                        <span
+                          className="ant-table-column-title"
+                        >
                           P95 Latency
                         </span>
                         <span
@@ -2591,7 +2741,7 @@ exports[`<OperationTableDetails> render lower than 0.1 P95 latency 1`] = `
                             <span
                               aria-label="caret-up"
                               className="anticon anticon-caret-up ant-table-column-sorter-up"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -2612,7 +2762,7 @@ exports[`<OperationTableDetails> render lower than 0.1 P95 latency 1`] = `
                             <span
                               aria-label="caret-down"
                               className="anticon anticon-caret-down ant-table-column-sorter-down"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -2635,11 +2785,16 @@ exports[`<OperationTableDetails> render lower than 0.1 P95 latency 1`] = `
                       </div>
                     </th>
                     <th
+                      aria-label="Request rate"
                       className="ant-table-cell header-item ant-table-column-has-sorters"
                       colSpan={null}
                       onClick={[Function]}
+                      onKeyDown={[Function]}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
+                      tabIndex={0}
                     >
                       <div
                         className="ant-table-column-sorters"
@@ -2647,7 +2802,9 @@ exports[`<OperationTableDetails> render lower than 0.1 P95 latency 1`] = `
                         onMouseEnter={[Function]}
                         onMouseLeave={[Function]}
                       >
-                        <span>
+                        <span
+                          className="ant-table-column-title"
+                        >
                           Request rate
                         </span>
                         <span
@@ -2659,7 +2816,7 @@ exports[`<OperationTableDetails> render lower than 0.1 P95 latency 1`] = `
                             <span
                               aria-label="caret-up"
                               className="anticon anticon-caret-up ant-table-column-sorter-up"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -2680,7 +2837,7 @@ exports[`<OperationTableDetails> render lower than 0.1 P95 latency 1`] = `
                             <span
                               aria-label="caret-down"
                               className="anticon anticon-caret-down ant-table-column-sorter-down"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -2703,11 +2860,16 @@ exports[`<OperationTableDetails> render lower than 0.1 P95 latency 1`] = `
                       </div>
                     </th>
                     <th
+                      aria-label="Error rate"
                       className="ant-table-cell header-item ant-table-column-has-sorters"
                       colSpan={null}
                       onClick={[Function]}
+                      onKeyDown={[Function]}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
+                      tabIndex={0}
                     >
                       <div
                         className="ant-table-column-sorters"
@@ -2715,7 +2877,9 @@ exports[`<OperationTableDetails> render lower than 0.1 P95 latency 1`] = `
                         onMouseEnter={[Function]}
                         onMouseLeave={[Function]}
                       >
-                        <span>
+                        <span
+                          className="ant-table-column-title"
+                        >
                           Error rate
                         </span>
                         <span
@@ -2727,7 +2891,7 @@ exports[`<OperationTableDetails> render lower than 0.1 P95 latency 1`] = `
                             <span
                               aria-label="caret-up"
                               className="anticon anticon-caret-up ant-table-column-sorter-up"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -2748,7 +2912,7 @@ exports[`<OperationTableDetails> render lower than 0.1 P95 latency 1`] = `
                             <span
                               aria-label="caret-down"
                               className="anticon anticon-caret-down ant-table-column-sorter-down"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -2771,11 +2935,16 @@ exports[`<OperationTableDetails> render lower than 0.1 P95 latency 1`] = `
                       </div>
                     </th>
                     <th
+                      aria-sort="descending"
                       className="ant-table-cell header-item ant-table-column-sort ant-table-column-has-sorters"
                       colSpan={null}
                       onClick={[Function]}
+                      onKeyDown={[Function]}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
+                      tabIndex={0}
                     >
                       <div
                         className="ant-table-column-sorters"
@@ -2783,7 +2952,9 @@ exports[`<OperationTableDetails> render lower than 0.1 P95 latency 1`] = `
                         onMouseEnter={[Function]}
                         onMouseLeave={[Function]}
                       >
-                        <span>
+                        <span
+                          className="ant-table-column-title"
+                        >
                           <div
                             style={
                               Object {
@@ -2841,7 +3012,7 @@ exports[`<OperationTableDetails> render lower than 0.1 P95 latency 1`] = `
                             <span
                               aria-label="caret-up"
                               className="anticon anticon-caret-up ant-table-column-sorter-up"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -2862,7 +3033,7 @@ exports[`<OperationTableDetails> render lower than 0.1 P95 latency 1`] = `
                             <span
                               aria-label="caret-down"
                               className="anticon anticon-caret-down ant-table-column-sorter-down active"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -2900,6 +3071,8 @@ exports[`<OperationTableDetails> render lower than 0.1 P95 latency 1`] = `
                     <td
                       className="ant-table-cell header-item"
                       colSpan={null}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
                     >
@@ -2908,6 +3081,8 @@ exports[`<OperationTableDetails> render lower than 0.1 P95 latency 1`] = `
                     <td
                       className="ant-table-cell header-item"
                       colSpan={null}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
                     >
@@ -2989,6 +3164,8 @@ exports[`<OperationTableDetails> render lower than 0.1 P95 latency 1`] = `
                     <td
                       className="ant-table-cell header-item"
                       colSpan={null}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
                     >
@@ -3070,6 +3247,8 @@ exports[`<OperationTableDetails> render lower than 0.1 P95 latency 1`] = `
                     <td
                       className="ant-table-cell header-item"
                       colSpan={null}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
                     >
@@ -3151,6 +3330,8 @@ exports[`<OperationTableDetails> render lower than 0.1 P95 latency 1`] = `
                     <td
                       className="ant-table-cell header-item ant-table-column-sort"
                       colSpan={null}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
                     >
@@ -3159,12 +3340,19 @@ exports[`<OperationTableDetails> render lower than 0.1 P95 latency 1`] = `
                       >
                         <div
                           className="ant-progress ant-progress-line ant-progress-status-success ant-progress-default impact"
+                          role="progressbar"
                         >
                           <div
                             className="ant-progress-outer"
                           >
                             <div
                               className="ant-progress-inner"
+                              style={
+                                Object {
+                                  "backgroundColor": undefined,
+                                  "borderRadius": 0,
+                                }
+                              }
                             >
                               <div
                                 className="ant-progress-bg"
@@ -3194,7 +3382,6 @@ exports[`<OperationTableDetails> render lower than 0.1 P95 latency 1`] = `
         <ul
           className="ant-pagination ant-table-pagination ant-table-pagination-right"
           style={Object {}}
-          unselectable="unselectable"
         >
           <li
             aria-disabled={true}
@@ -3314,6 +3501,7 @@ exports[`<OperationTableDetails> render lower than 0.1 P95 latency 1`] = `
                       aria-owns="undefined_list"
                       autoComplete="off"
                       className="ant-select-selection-search-input"
+                      disabled={false}
                       onChange={[Function]}
                       onCompositionEnd={[Function]}
                       onCompositionStart={[Function]}
@@ -3422,11 +3610,16 @@ exports[`<OperationTableDetails> render lower than 0.1 error rate 1`] = `
                 >
                   <tr>
                     <th
+                      aria-label="Name"
                       className="ant-table-cell header-item ant-table-column-has-sorters"
                       colSpan={null}
                       onClick={[Function]}
+                      onKeyDown={[Function]}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
+                      tabIndex={0}
                     >
                       <div
                         className="ant-table-column-sorters"
@@ -3434,7 +3627,9 @@ exports[`<OperationTableDetails> render lower than 0.1 error rate 1`] = `
                         onMouseEnter={[Function]}
                         onMouseLeave={[Function]}
                       >
-                        <span>
+                        <span
+                          className="ant-table-column-title"
+                        >
                           Name
                         </span>
                         <span
@@ -3446,7 +3641,7 @@ exports[`<OperationTableDetails> render lower than 0.1 error rate 1`] = `
                             <span
                               aria-label="caret-up"
                               className="anticon anticon-caret-up ant-table-column-sorter-up"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -3467,7 +3662,7 @@ exports[`<OperationTableDetails> render lower than 0.1 error rate 1`] = `
                             <span
                               aria-label="caret-down"
                               className="anticon anticon-caret-down ant-table-column-sorter-down"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -3490,11 +3685,16 @@ exports[`<OperationTableDetails> render lower than 0.1 error rate 1`] = `
                       </div>
                     </th>
                     <th
+                      aria-label="P95 Latency"
                       className="ant-table-cell header-item ant-table-column-has-sorters"
                       colSpan={null}
                       onClick={[Function]}
+                      onKeyDown={[Function]}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
+                      tabIndex={0}
                     >
                       <div
                         className="ant-table-column-sorters"
@@ -3502,7 +3702,9 @@ exports[`<OperationTableDetails> render lower than 0.1 error rate 1`] = `
                         onMouseEnter={[Function]}
                         onMouseLeave={[Function]}
                       >
-                        <span>
+                        <span
+                          className="ant-table-column-title"
+                        >
                           P95 Latency
                         </span>
                         <span
@@ -3514,7 +3716,7 @@ exports[`<OperationTableDetails> render lower than 0.1 error rate 1`] = `
                             <span
                               aria-label="caret-up"
                               className="anticon anticon-caret-up ant-table-column-sorter-up"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -3535,7 +3737,7 @@ exports[`<OperationTableDetails> render lower than 0.1 error rate 1`] = `
                             <span
                               aria-label="caret-down"
                               className="anticon anticon-caret-down ant-table-column-sorter-down"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -3558,11 +3760,16 @@ exports[`<OperationTableDetails> render lower than 0.1 error rate 1`] = `
                       </div>
                     </th>
                     <th
+                      aria-label="Request rate"
                       className="ant-table-cell header-item ant-table-column-has-sorters"
                       colSpan={null}
                       onClick={[Function]}
+                      onKeyDown={[Function]}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
+                      tabIndex={0}
                     >
                       <div
                         className="ant-table-column-sorters"
@@ -3570,7 +3777,9 @@ exports[`<OperationTableDetails> render lower than 0.1 error rate 1`] = `
                         onMouseEnter={[Function]}
                         onMouseLeave={[Function]}
                       >
-                        <span>
+                        <span
+                          className="ant-table-column-title"
+                        >
                           Request rate
                         </span>
                         <span
@@ -3582,7 +3791,7 @@ exports[`<OperationTableDetails> render lower than 0.1 error rate 1`] = `
                             <span
                               aria-label="caret-up"
                               className="anticon anticon-caret-up ant-table-column-sorter-up"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -3603,7 +3812,7 @@ exports[`<OperationTableDetails> render lower than 0.1 error rate 1`] = `
                             <span
                               aria-label="caret-down"
                               className="anticon anticon-caret-down ant-table-column-sorter-down"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -3626,11 +3835,16 @@ exports[`<OperationTableDetails> render lower than 0.1 error rate 1`] = `
                       </div>
                     </th>
                     <th
+                      aria-label="Error rate"
                       className="ant-table-cell header-item ant-table-column-has-sorters"
                       colSpan={null}
                       onClick={[Function]}
+                      onKeyDown={[Function]}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
+                      tabIndex={0}
                     >
                       <div
                         className="ant-table-column-sorters"
@@ -3638,7 +3852,9 @@ exports[`<OperationTableDetails> render lower than 0.1 error rate 1`] = `
                         onMouseEnter={[Function]}
                         onMouseLeave={[Function]}
                       >
-                        <span>
+                        <span
+                          className="ant-table-column-title"
+                        >
                           Error rate
                         </span>
                         <span
@@ -3650,7 +3866,7 @@ exports[`<OperationTableDetails> render lower than 0.1 error rate 1`] = `
                             <span
                               aria-label="caret-up"
                               className="anticon anticon-caret-up ant-table-column-sorter-up"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -3671,7 +3887,7 @@ exports[`<OperationTableDetails> render lower than 0.1 error rate 1`] = `
                             <span
                               aria-label="caret-down"
                               className="anticon anticon-caret-down ant-table-column-sorter-down"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -3694,11 +3910,16 @@ exports[`<OperationTableDetails> render lower than 0.1 error rate 1`] = `
                       </div>
                     </th>
                     <th
+                      aria-sort="descending"
                       className="ant-table-cell header-item ant-table-column-sort ant-table-column-has-sorters"
                       colSpan={null}
                       onClick={[Function]}
+                      onKeyDown={[Function]}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
+                      tabIndex={0}
                     >
                       <div
                         className="ant-table-column-sorters"
@@ -3706,7 +3927,9 @@ exports[`<OperationTableDetails> render lower than 0.1 error rate 1`] = `
                         onMouseEnter={[Function]}
                         onMouseLeave={[Function]}
                       >
-                        <span>
+                        <span
+                          className="ant-table-column-title"
+                        >
                           <div
                             style={
                               Object {
@@ -3764,7 +3987,7 @@ exports[`<OperationTableDetails> render lower than 0.1 error rate 1`] = `
                             <span
                               aria-label="caret-up"
                               className="anticon anticon-caret-up ant-table-column-sorter-up"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -3785,7 +4008,7 @@ exports[`<OperationTableDetails> render lower than 0.1 error rate 1`] = `
                             <span
                               aria-label="caret-down"
                               className="anticon anticon-caret-down ant-table-column-sorter-down active"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -3823,6 +4046,8 @@ exports[`<OperationTableDetails> render lower than 0.1 error rate 1`] = `
                     <td
                       className="ant-table-cell header-item"
                       colSpan={null}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
                     >
@@ -3831,6 +4056,8 @@ exports[`<OperationTableDetails> render lower than 0.1 error rate 1`] = `
                     <td
                       className="ant-table-cell header-item"
                       colSpan={null}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
                     >
@@ -3912,6 +4139,8 @@ exports[`<OperationTableDetails> render lower than 0.1 error rate 1`] = `
                     <td
                       className="ant-table-cell header-item"
                       colSpan={null}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
                     >
@@ -3993,6 +4222,8 @@ exports[`<OperationTableDetails> render lower than 0.1 error rate 1`] = `
                     <td
                       className="ant-table-cell header-item"
                       colSpan={null}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
                     >
@@ -4074,6 +4305,8 @@ exports[`<OperationTableDetails> render lower than 0.1 error rate 1`] = `
                     <td
                       className="ant-table-cell header-item ant-table-column-sort"
                       colSpan={null}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
                     >
@@ -4082,12 +4315,19 @@ exports[`<OperationTableDetails> render lower than 0.1 error rate 1`] = `
                       >
                         <div
                           className="ant-progress ant-progress-line ant-progress-status-success ant-progress-default impact"
+                          role="progressbar"
                         >
                           <div
                             className="ant-progress-outer"
                           >
                             <div
                               className="ant-progress-inner"
+                              style={
+                                Object {
+                                  "backgroundColor": undefined,
+                                  "borderRadius": 0,
+                                }
+                              }
                             >
                               <div
                                 className="ant-progress-bg"
@@ -4117,7 +4357,6 @@ exports[`<OperationTableDetails> render lower than 0.1 error rate 1`] = `
         <ul
           className="ant-pagination ant-table-pagination ant-table-pagination-right"
           style={Object {}}
-          unselectable="unselectable"
         >
           <li
             aria-disabled={true}
@@ -4237,6 +4476,7 @@ exports[`<OperationTableDetails> render lower than 0.1 error rate 1`] = `
                       aria-owns="undefined_list"
                       autoComplete="off"
                       className="ant-select-selection-search-input"
+                      disabled={false}
                       onChange={[Function]}
                       onCompositionEnd={[Function]}
                       onCompositionStart={[Function]}
@@ -4345,11 +4585,16 @@ exports[`<OperationTableDetails> render lower than 0.1 request rate value 1`] = 
                 >
                   <tr>
                     <th
+                      aria-label="Name"
                       className="ant-table-cell header-item ant-table-column-has-sorters"
                       colSpan={null}
                       onClick={[Function]}
+                      onKeyDown={[Function]}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
+                      tabIndex={0}
                     >
                       <div
                         className="ant-table-column-sorters"
@@ -4357,7 +4602,9 @@ exports[`<OperationTableDetails> render lower than 0.1 request rate value 1`] = 
                         onMouseEnter={[Function]}
                         onMouseLeave={[Function]}
                       >
-                        <span>
+                        <span
+                          className="ant-table-column-title"
+                        >
                           Name
                         </span>
                         <span
@@ -4369,7 +4616,7 @@ exports[`<OperationTableDetails> render lower than 0.1 request rate value 1`] = 
                             <span
                               aria-label="caret-up"
                               className="anticon anticon-caret-up ant-table-column-sorter-up"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -4390,7 +4637,7 @@ exports[`<OperationTableDetails> render lower than 0.1 request rate value 1`] = 
                             <span
                               aria-label="caret-down"
                               className="anticon anticon-caret-down ant-table-column-sorter-down"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -4413,11 +4660,16 @@ exports[`<OperationTableDetails> render lower than 0.1 request rate value 1`] = 
                       </div>
                     </th>
                     <th
+                      aria-label="P95 Latency"
                       className="ant-table-cell header-item ant-table-column-has-sorters"
                       colSpan={null}
                       onClick={[Function]}
+                      onKeyDown={[Function]}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
+                      tabIndex={0}
                     >
                       <div
                         className="ant-table-column-sorters"
@@ -4425,7 +4677,9 @@ exports[`<OperationTableDetails> render lower than 0.1 request rate value 1`] = 
                         onMouseEnter={[Function]}
                         onMouseLeave={[Function]}
                       >
-                        <span>
+                        <span
+                          className="ant-table-column-title"
+                        >
                           P95 Latency
                         </span>
                         <span
@@ -4437,7 +4691,7 @@ exports[`<OperationTableDetails> render lower than 0.1 request rate value 1`] = 
                             <span
                               aria-label="caret-up"
                               className="anticon anticon-caret-up ant-table-column-sorter-up"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -4458,7 +4712,7 @@ exports[`<OperationTableDetails> render lower than 0.1 request rate value 1`] = 
                             <span
                               aria-label="caret-down"
                               className="anticon anticon-caret-down ant-table-column-sorter-down"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -4481,11 +4735,16 @@ exports[`<OperationTableDetails> render lower than 0.1 request rate value 1`] = 
                       </div>
                     </th>
                     <th
+                      aria-label="Request rate"
                       className="ant-table-cell header-item ant-table-column-has-sorters"
                       colSpan={null}
                       onClick={[Function]}
+                      onKeyDown={[Function]}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
+                      tabIndex={0}
                     >
                       <div
                         className="ant-table-column-sorters"
@@ -4493,7 +4752,9 @@ exports[`<OperationTableDetails> render lower than 0.1 request rate value 1`] = 
                         onMouseEnter={[Function]}
                         onMouseLeave={[Function]}
                       >
-                        <span>
+                        <span
+                          className="ant-table-column-title"
+                        >
                           Request rate
                         </span>
                         <span
@@ -4505,7 +4766,7 @@ exports[`<OperationTableDetails> render lower than 0.1 request rate value 1`] = 
                             <span
                               aria-label="caret-up"
                               className="anticon anticon-caret-up ant-table-column-sorter-up"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -4526,7 +4787,7 @@ exports[`<OperationTableDetails> render lower than 0.1 request rate value 1`] = 
                             <span
                               aria-label="caret-down"
                               className="anticon anticon-caret-down ant-table-column-sorter-down"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -4549,11 +4810,16 @@ exports[`<OperationTableDetails> render lower than 0.1 request rate value 1`] = 
                       </div>
                     </th>
                     <th
+                      aria-label="Error rate"
                       className="ant-table-cell header-item ant-table-column-has-sorters"
                       colSpan={null}
                       onClick={[Function]}
+                      onKeyDown={[Function]}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
+                      tabIndex={0}
                     >
                       <div
                         className="ant-table-column-sorters"
@@ -4561,7 +4827,9 @@ exports[`<OperationTableDetails> render lower than 0.1 request rate value 1`] = 
                         onMouseEnter={[Function]}
                         onMouseLeave={[Function]}
                       >
-                        <span>
+                        <span
+                          className="ant-table-column-title"
+                        >
                           Error rate
                         </span>
                         <span
@@ -4573,7 +4841,7 @@ exports[`<OperationTableDetails> render lower than 0.1 request rate value 1`] = 
                             <span
                               aria-label="caret-up"
                               className="anticon anticon-caret-up ant-table-column-sorter-up"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -4594,7 +4862,7 @@ exports[`<OperationTableDetails> render lower than 0.1 request rate value 1`] = 
                             <span
                               aria-label="caret-down"
                               className="anticon anticon-caret-down ant-table-column-sorter-down"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -4617,11 +4885,16 @@ exports[`<OperationTableDetails> render lower than 0.1 request rate value 1`] = 
                       </div>
                     </th>
                     <th
+                      aria-sort="descending"
                       className="ant-table-cell header-item ant-table-column-sort ant-table-column-has-sorters"
                       colSpan={null}
                       onClick={[Function]}
+                      onKeyDown={[Function]}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
+                      tabIndex={0}
                     >
                       <div
                         className="ant-table-column-sorters"
@@ -4629,7 +4902,9 @@ exports[`<OperationTableDetails> render lower than 0.1 request rate value 1`] = 
                         onMouseEnter={[Function]}
                         onMouseLeave={[Function]}
                       >
-                        <span>
+                        <span
+                          className="ant-table-column-title"
+                        >
                           <div
                             style={
                               Object {
@@ -4687,7 +4962,7 @@ exports[`<OperationTableDetails> render lower than 0.1 request rate value 1`] = 
                             <span
                               aria-label="caret-up"
                               className="anticon anticon-caret-up ant-table-column-sorter-up"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -4708,7 +4983,7 @@ exports[`<OperationTableDetails> render lower than 0.1 request rate value 1`] = 
                             <span
                               aria-label="caret-down"
                               className="anticon anticon-caret-down ant-table-column-sorter-down active"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -4746,6 +5021,8 @@ exports[`<OperationTableDetails> render lower than 0.1 request rate value 1`] = 
                     <td
                       className="ant-table-cell header-item"
                       colSpan={null}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
                     >
@@ -4754,6 +5031,8 @@ exports[`<OperationTableDetails> render lower than 0.1 request rate value 1`] = 
                     <td
                       className="ant-table-cell header-item"
                       colSpan={null}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
                     >
@@ -4835,6 +5114,8 @@ exports[`<OperationTableDetails> render lower than 0.1 request rate value 1`] = 
                     <td
                       className="ant-table-cell header-item"
                       colSpan={null}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
                     >
@@ -4916,6 +5197,8 @@ exports[`<OperationTableDetails> render lower than 0.1 request rate value 1`] = 
                     <td
                       className="ant-table-cell header-item"
                       colSpan={null}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
                     >
@@ -4997,6 +5280,8 @@ exports[`<OperationTableDetails> render lower than 0.1 request rate value 1`] = 
                     <td
                       className="ant-table-cell header-item ant-table-column-sort"
                       colSpan={null}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
                     >
@@ -5005,12 +5290,19 @@ exports[`<OperationTableDetails> render lower than 0.1 request rate value 1`] = 
                       >
                         <div
                           className="ant-progress ant-progress-line ant-progress-status-success ant-progress-default impact"
+                          role="progressbar"
                         >
                           <div
                             className="ant-progress-outer"
                           >
                             <div
                               className="ant-progress-inner"
+                              style={
+                                Object {
+                                  "backgroundColor": undefined,
+                                  "borderRadius": 0,
+                                }
+                              }
                             >
                               <div
                                 className="ant-progress-bg"
@@ -5040,7 +5332,6 @@ exports[`<OperationTableDetails> render lower than 0.1 request rate value 1`] = 
         <ul
           className="ant-pagination ant-table-pagination ant-table-pagination-right"
           style={Object {}}
-          unselectable="unselectable"
         >
           <li
             aria-disabled={true}
@@ -5160,6 +5451,7 @@ exports[`<OperationTableDetails> render lower than 0.1 request rate value 1`] = 
                       aria-owns="undefined_list"
                       autoComplete="off"
                       className="ant-select-selection-search-input"
+                      disabled={false}
                       onChange={[Function]}
                       onCompositionEnd={[Function]}
                       onCompositionStart={[Function]}
@@ -5268,11 +5560,16 @@ exports[`<OperationTableDetails> render request rate number with more than 2 dec
                 >
                   <tr>
                     <th
+                      aria-label="Name"
                       className="ant-table-cell header-item ant-table-column-has-sorters"
                       colSpan={null}
                       onClick={[Function]}
+                      onKeyDown={[Function]}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
+                      tabIndex={0}
                     >
                       <div
                         className="ant-table-column-sorters"
@@ -5280,7 +5577,9 @@ exports[`<OperationTableDetails> render request rate number with more than 2 dec
                         onMouseEnter={[Function]}
                         onMouseLeave={[Function]}
                       >
-                        <span>
+                        <span
+                          className="ant-table-column-title"
+                        >
                           Name
                         </span>
                         <span
@@ -5292,7 +5591,7 @@ exports[`<OperationTableDetails> render request rate number with more than 2 dec
                             <span
                               aria-label="caret-up"
                               className="anticon anticon-caret-up ant-table-column-sorter-up"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -5313,7 +5612,7 @@ exports[`<OperationTableDetails> render request rate number with more than 2 dec
                             <span
                               aria-label="caret-down"
                               className="anticon anticon-caret-down ant-table-column-sorter-down"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -5336,11 +5635,16 @@ exports[`<OperationTableDetails> render request rate number with more than 2 dec
                       </div>
                     </th>
                     <th
+                      aria-label="P95 Latency"
                       className="ant-table-cell header-item ant-table-column-has-sorters"
                       colSpan={null}
                       onClick={[Function]}
+                      onKeyDown={[Function]}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
+                      tabIndex={0}
                     >
                       <div
                         className="ant-table-column-sorters"
@@ -5348,7 +5652,9 @@ exports[`<OperationTableDetails> render request rate number with more than 2 dec
                         onMouseEnter={[Function]}
                         onMouseLeave={[Function]}
                       >
-                        <span>
+                        <span
+                          className="ant-table-column-title"
+                        >
                           P95 Latency
                         </span>
                         <span
@@ -5360,7 +5666,7 @@ exports[`<OperationTableDetails> render request rate number with more than 2 dec
                             <span
                               aria-label="caret-up"
                               className="anticon anticon-caret-up ant-table-column-sorter-up"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -5381,7 +5687,7 @@ exports[`<OperationTableDetails> render request rate number with more than 2 dec
                             <span
                               aria-label="caret-down"
                               className="anticon anticon-caret-down ant-table-column-sorter-down"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -5404,11 +5710,16 @@ exports[`<OperationTableDetails> render request rate number with more than 2 dec
                       </div>
                     </th>
                     <th
+                      aria-label="Request rate"
                       className="ant-table-cell header-item ant-table-column-has-sorters"
                       colSpan={null}
                       onClick={[Function]}
+                      onKeyDown={[Function]}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
+                      tabIndex={0}
                     >
                       <div
                         className="ant-table-column-sorters"
@@ -5416,7 +5727,9 @@ exports[`<OperationTableDetails> render request rate number with more than 2 dec
                         onMouseEnter={[Function]}
                         onMouseLeave={[Function]}
                       >
-                        <span>
+                        <span
+                          className="ant-table-column-title"
+                        >
                           Request rate
                         </span>
                         <span
@@ -5428,7 +5741,7 @@ exports[`<OperationTableDetails> render request rate number with more than 2 dec
                             <span
                               aria-label="caret-up"
                               className="anticon anticon-caret-up ant-table-column-sorter-up"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -5449,7 +5762,7 @@ exports[`<OperationTableDetails> render request rate number with more than 2 dec
                             <span
                               aria-label="caret-down"
                               className="anticon anticon-caret-down ant-table-column-sorter-down"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -5472,11 +5785,16 @@ exports[`<OperationTableDetails> render request rate number with more than 2 dec
                       </div>
                     </th>
                     <th
+                      aria-label="Error rate"
                       className="ant-table-cell header-item ant-table-column-has-sorters"
                       colSpan={null}
                       onClick={[Function]}
+                      onKeyDown={[Function]}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
+                      tabIndex={0}
                     >
                       <div
                         className="ant-table-column-sorters"
@@ -5484,7 +5802,9 @@ exports[`<OperationTableDetails> render request rate number with more than 2 dec
                         onMouseEnter={[Function]}
                         onMouseLeave={[Function]}
                       >
-                        <span>
+                        <span
+                          className="ant-table-column-title"
+                        >
                           Error rate
                         </span>
                         <span
@@ -5496,7 +5816,7 @@ exports[`<OperationTableDetails> render request rate number with more than 2 dec
                             <span
                               aria-label="caret-up"
                               className="anticon anticon-caret-up ant-table-column-sorter-up"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -5517,7 +5837,7 @@ exports[`<OperationTableDetails> render request rate number with more than 2 dec
                             <span
                               aria-label="caret-down"
                               className="anticon anticon-caret-down ant-table-column-sorter-down"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -5540,11 +5860,16 @@ exports[`<OperationTableDetails> render request rate number with more than 2 dec
                       </div>
                     </th>
                     <th
+                      aria-sort="descending"
                       className="ant-table-cell header-item ant-table-column-sort ant-table-column-has-sorters"
                       colSpan={null}
                       onClick={[Function]}
+                      onKeyDown={[Function]}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
+                      tabIndex={0}
                     >
                       <div
                         className="ant-table-column-sorters"
@@ -5552,7 +5877,9 @@ exports[`<OperationTableDetails> render request rate number with more than 2 dec
                         onMouseEnter={[Function]}
                         onMouseLeave={[Function]}
                       >
-                        <span>
+                        <span
+                          className="ant-table-column-title"
+                        >
                           <div
                             style={
                               Object {
@@ -5610,7 +5937,7 @@ exports[`<OperationTableDetails> render request rate number with more than 2 dec
                             <span
                               aria-label="caret-up"
                               className="anticon anticon-caret-up ant-table-column-sorter-up"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -5631,7 +5958,7 @@ exports[`<OperationTableDetails> render request rate number with more than 2 dec
                             <span
                               aria-label="caret-down"
                               className="anticon anticon-caret-down ant-table-column-sorter-down active"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -5669,6 +5996,8 @@ exports[`<OperationTableDetails> render request rate number with more than 2 dec
                     <td
                       className="ant-table-cell header-item"
                       colSpan={null}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
                     >
@@ -5677,6 +6006,8 @@ exports[`<OperationTableDetails> render request rate number with more than 2 dec
                     <td
                       className="ant-table-cell header-item"
                       colSpan={null}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
                     >
@@ -5758,6 +6089,8 @@ exports[`<OperationTableDetails> render request rate number with more than 2 dec
                     <td
                       className="ant-table-cell header-item"
                       colSpan={null}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
                     >
@@ -5839,6 +6172,8 @@ exports[`<OperationTableDetails> render request rate number with more than 2 dec
                     <td
                       className="ant-table-cell header-item"
                       colSpan={null}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
                     >
@@ -5920,6 +6255,8 @@ exports[`<OperationTableDetails> render request rate number with more than 2 dec
                     <td
                       className="ant-table-cell header-item ant-table-column-sort"
                       colSpan={null}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
                     >
@@ -5928,12 +6265,19 @@ exports[`<OperationTableDetails> render request rate number with more than 2 dec
                       >
                         <div
                           className="ant-progress ant-progress-line ant-progress-status-success ant-progress-default impact"
+                          role="progressbar"
                         >
                           <div
                             className="ant-progress-outer"
                           >
                             <div
                               className="ant-progress-inner"
+                              style={
+                                Object {
+                                  "backgroundColor": undefined,
+                                  "borderRadius": 0,
+                                }
+                              }
                             >
                               <div
                                 className="ant-progress-bg"
@@ -5963,7 +6307,6 @@ exports[`<OperationTableDetails> render request rate number with more than 2 dec
         <ul
           className="ant-pagination ant-table-pagination ant-table-pagination-right"
           style={Object {}}
-          unselectable="unselectable"
         >
           <li
             aria-disabled={true}
@@ -6083,6 +6426,7 @@ exports[`<OperationTableDetails> render request rate number with more than 2 dec
                       aria-owns="undefined_list"
                       autoComplete="off"
                       className="ant-select-selection-search-input"
+                      disabled={false}
                       onChange={[Function]}
                       onCompositionEnd={[Function]}
                       onCompositionStart={[Function]}
@@ -6191,11 +6535,16 @@ exports[`<OperationTableDetails> render some values in the table 1`] = `
                 >
                   <tr>
                     <th
+                      aria-label="Name"
                       className="ant-table-cell header-item ant-table-column-has-sorters"
                       colSpan={null}
                       onClick={[Function]}
+                      onKeyDown={[Function]}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
+                      tabIndex={0}
                     >
                       <div
                         className="ant-table-column-sorters"
@@ -6203,7 +6552,9 @@ exports[`<OperationTableDetails> render some values in the table 1`] = `
                         onMouseEnter={[Function]}
                         onMouseLeave={[Function]}
                       >
-                        <span>
+                        <span
+                          className="ant-table-column-title"
+                        >
                           Name
                         </span>
                         <span
@@ -6215,7 +6566,7 @@ exports[`<OperationTableDetails> render some values in the table 1`] = `
                             <span
                               aria-label="caret-up"
                               className="anticon anticon-caret-up ant-table-column-sorter-up"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -6236,7 +6587,7 @@ exports[`<OperationTableDetails> render some values in the table 1`] = `
                             <span
                               aria-label="caret-down"
                               className="anticon anticon-caret-down ant-table-column-sorter-down"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -6259,11 +6610,16 @@ exports[`<OperationTableDetails> render some values in the table 1`] = `
                       </div>
                     </th>
                     <th
+                      aria-label="P95 Latency"
                       className="ant-table-cell header-item ant-table-column-has-sorters"
                       colSpan={null}
                       onClick={[Function]}
+                      onKeyDown={[Function]}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
+                      tabIndex={0}
                     >
                       <div
                         className="ant-table-column-sorters"
@@ -6271,7 +6627,9 @@ exports[`<OperationTableDetails> render some values in the table 1`] = `
                         onMouseEnter={[Function]}
                         onMouseLeave={[Function]}
                       >
-                        <span>
+                        <span
+                          className="ant-table-column-title"
+                        >
                           P95 Latency
                         </span>
                         <span
@@ -6283,7 +6641,7 @@ exports[`<OperationTableDetails> render some values in the table 1`] = `
                             <span
                               aria-label="caret-up"
                               className="anticon anticon-caret-up ant-table-column-sorter-up"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -6304,7 +6662,7 @@ exports[`<OperationTableDetails> render some values in the table 1`] = `
                             <span
                               aria-label="caret-down"
                               className="anticon anticon-caret-down ant-table-column-sorter-down"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -6327,11 +6685,16 @@ exports[`<OperationTableDetails> render some values in the table 1`] = `
                       </div>
                     </th>
                     <th
+                      aria-label="Request rate"
                       className="ant-table-cell header-item ant-table-column-has-sorters"
                       colSpan={null}
                       onClick={[Function]}
+                      onKeyDown={[Function]}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
+                      tabIndex={0}
                     >
                       <div
                         className="ant-table-column-sorters"
@@ -6339,7 +6702,9 @@ exports[`<OperationTableDetails> render some values in the table 1`] = `
                         onMouseEnter={[Function]}
                         onMouseLeave={[Function]}
                       >
-                        <span>
+                        <span
+                          className="ant-table-column-title"
+                        >
                           Request rate
                         </span>
                         <span
@@ -6351,7 +6716,7 @@ exports[`<OperationTableDetails> render some values in the table 1`] = `
                             <span
                               aria-label="caret-up"
                               className="anticon anticon-caret-up ant-table-column-sorter-up"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -6372,7 +6737,7 @@ exports[`<OperationTableDetails> render some values in the table 1`] = `
                             <span
                               aria-label="caret-down"
                               className="anticon anticon-caret-down ant-table-column-sorter-down"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -6395,11 +6760,16 @@ exports[`<OperationTableDetails> render some values in the table 1`] = `
                       </div>
                     </th>
                     <th
+                      aria-label="Error rate"
                       className="ant-table-cell header-item ant-table-column-has-sorters"
                       colSpan={null}
                       onClick={[Function]}
+                      onKeyDown={[Function]}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
+                      tabIndex={0}
                     >
                       <div
                         className="ant-table-column-sorters"
@@ -6407,7 +6777,9 @@ exports[`<OperationTableDetails> render some values in the table 1`] = `
                         onMouseEnter={[Function]}
                         onMouseLeave={[Function]}
                       >
-                        <span>
+                        <span
+                          className="ant-table-column-title"
+                        >
                           Error rate
                         </span>
                         <span
@@ -6419,7 +6791,7 @@ exports[`<OperationTableDetails> render some values in the table 1`] = `
                             <span
                               aria-label="caret-up"
                               className="anticon anticon-caret-up ant-table-column-sorter-up"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -6440,7 +6812,7 @@ exports[`<OperationTableDetails> render some values in the table 1`] = `
                             <span
                               aria-label="caret-down"
                               className="anticon anticon-caret-down ant-table-column-sorter-down"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -6463,11 +6835,16 @@ exports[`<OperationTableDetails> render some values in the table 1`] = `
                       </div>
                     </th>
                     <th
+                      aria-sort="descending"
                       className="ant-table-cell header-item ant-table-column-sort ant-table-column-has-sorters"
                       colSpan={null}
                       onClick={[Function]}
+                      onKeyDown={[Function]}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
+                      tabIndex={0}
                     >
                       <div
                         className="ant-table-column-sorters"
@@ -6475,7 +6852,9 @@ exports[`<OperationTableDetails> render some values in the table 1`] = `
                         onMouseEnter={[Function]}
                         onMouseLeave={[Function]}
                       >
-                        <span>
+                        <span
+                          className="ant-table-column-title"
+                        >
                           <div
                             style={
                               Object {
@@ -6533,7 +6912,7 @@ exports[`<OperationTableDetails> render some values in the table 1`] = `
                             <span
                               aria-label="caret-up"
                               className="anticon anticon-caret-up ant-table-column-sorter-up"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -6554,7 +6933,7 @@ exports[`<OperationTableDetails> render some values in the table 1`] = `
                             <span
                               aria-label="caret-down"
                               className="anticon anticon-caret-down ant-table-column-sorter-down active"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -6592,6 +6971,8 @@ exports[`<OperationTableDetails> render some values in the table 1`] = `
                     <td
                       className="ant-table-cell header-item"
                       colSpan={null}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
                     >
@@ -6600,6 +6981,8 @@ exports[`<OperationTableDetails> render some values in the table 1`] = `
                     <td
                       className="ant-table-cell header-item"
                       colSpan={null}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
                     >
@@ -6681,6 +7064,8 @@ exports[`<OperationTableDetails> render some values in the table 1`] = `
                     <td
                       className="ant-table-cell header-item"
                       colSpan={null}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
                     >
@@ -6762,6 +7147,8 @@ exports[`<OperationTableDetails> render some values in the table 1`] = `
                     <td
                       className="ant-table-cell header-item"
                       colSpan={null}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
                     >
@@ -6843,6 +7230,8 @@ exports[`<OperationTableDetails> render some values in the table 1`] = `
                     <td
                       className="ant-table-cell header-item ant-table-column-sort"
                       colSpan={null}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
                     >
@@ -6851,12 +7240,19 @@ exports[`<OperationTableDetails> render some values in the table 1`] = `
                       >
                         <div
                           className="ant-progress ant-progress-line ant-progress-status-success ant-progress-default impact"
+                          role="progressbar"
                         >
                           <div
                             className="ant-progress-outer"
                           >
                             <div
                               className="ant-progress-inner"
+                              style={
+                                Object {
+                                  "backgroundColor": undefined,
+                                  "borderRadius": 0,
+                                }
+                              }
                             >
                               <div
                                 className="ant-progress-bg"
@@ -6886,7 +7282,6 @@ exports[`<OperationTableDetails> render some values in the table 1`] = `
         <ul
           className="ant-pagination ant-table-pagination ant-table-pagination-right"
           style={Object {}}
-          unselectable="unselectable"
         >
           <li
             aria-disabled={true}
@@ -7006,6 +7401,7 @@ exports[`<OperationTableDetails> render some values in the table 1`] = `
                       aria-owns="undefined_list"
                       autoComplete="off"
                       className="ant-select-selection-search-input"
+                      disabled={false}
                       onChange={[Function]}
                       onCompositionEnd={[Function]}
                       onCompositionStart={[Function]}
@@ -7114,11 +7510,16 @@ exports[`<OperationTableDetails> test column render function 1`] = `
                 >
                   <tr>
                     <th
+                      aria-label="Name"
                       className="ant-table-cell header-item ant-table-column-has-sorters"
                       colSpan={null}
                       onClick={[Function]}
+                      onKeyDown={[Function]}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
+                      tabIndex={0}
                     >
                       <div
                         className="ant-table-column-sorters"
@@ -7126,7 +7527,9 @@ exports[`<OperationTableDetails> test column render function 1`] = `
                         onMouseEnter={[Function]}
                         onMouseLeave={[Function]}
                       >
-                        <span>
+                        <span
+                          className="ant-table-column-title"
+                        >
                           Name
                         </span>
                         <span
@@ -7138,7 +7541,7 @@ exports[`<OperationTableDetails> test column render function 1`] = `
                             <span
                               aria-label="caret-up"
                               className="anticon anticon-caret-up ant-table-column-sorter-up"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -7159,7 +7562,7 @@ exports[`<OperationTableDetails> test column render function 1`] = `
                             <span
                               aria-label="caret-down"
                               className="anticon anticon-caret-down ant-table-column-sorter-down"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -7182,11 +7585,16 @@ exports[`<OperationTableDetails> test column render function 1`] = `
                       </div>
                     </th>
                     <th
+                      aria-label="P95 Latency"
                       className="ant-table-cell header-item ant-table-column-has-sorters"
                       colSpan={null}
                       onClick={[Function]}
+                      onKeyDown={[Function]}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
+                      tabIndex={0}
                     >
                       <div
                         className="ant-table-column-sorters"
@@ -7194,7 +7602,9 @@ exports[`<OperationTableDetails> test column render function 1`] = `
                         onMouseEnter={[Function]}
                         onMouseLeave={[Function]}
                       >
-                        <span>
+                        <span
+                          className="ant-table-column-title"
+                        >
                           P95 Latency
                         </span>
                         <span
@@ -7206,7 +7616,7 @@ exports[`<OperationTableDetails> test column render function 1`] = `
                             <span
                               aria-label="caret-up"
                               className="anticon anticon-caret-up ant-table-column-sorter-up"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -7227,7 +7637,7 @@ exports[`<OperationTableDetails> test column render function 1`] = `
                             <span
                               aria-label="caret-down"
                               className="anticon anticon-caret-down ant-table-column-sorter-down"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -7250,11 +7660,16 @@ exports[`<OperationTableDetails> test column render function 1`] = `
                       </div>
                     </th>
                     <th
+                      aria-label="Request rate"
                       className="ant-table-cell header-item ant-table-column-has-sorters"
                       colSpan={null}
                       onClick={[Function]}
+                      onKeyDown={[Function]}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
+                      tabIndex={0}
                     >
                       <div
                         className="ant-table-column-sorters"
@@ -7262,7 +7677,9 @@ exports[`<OperationTableDetails> test column render function 1`] = `
                         onMouseEnter={[Function]}
                         onMouseLeave={[Function]}
                       >
-                        <span>
+                        <span
+                          className="ant-table-column-title"
+                        >
                           Request rate
                         </span>
                         <span
@@ -7274,7 +7691,7 @@ exports[`<OperationTableDetails> test column render function 1`] = `
                             <span
                               aria-label="caret-up"
                               className="anticon anticon-caret-up ant-table-column-sorter-up"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -7295,7 +7712,7 @@ exports[`<OperationTableDetails> test column render function 1`] = `
                             <span
                               aria-label="caret-down"
                               className="anticon anticon-caret-down ant-table-column-sorter-down"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -7318,11 +7735,16 @@ exports[`<OperationTableDetails> test column render function 1`] = `
                       </div>
                     </th>
                     <th
+                      aria-label="Error rate"
                       className="ant-table-cell header-item ant-table-column-has-sorters"
                       colSpan={null}
                       onClick={[Function]}
+                      onKeyDown={[Function]}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
+                      tabIndex={0}
                     >
                       <div
                         className="ant-table-column-sorters"
@@ -7330,7 +7752,9 @@ exports[`<OperationTableDetails> test column render function 1`] = `
                         onMouseEnter={[Function]}
                         onMouseLeave={[Function]}
                       >
-                        <span>
+                        <span
+                          className="ant-table-column-title"
+                        >
                           Error rate
                         </span>
                         <span
@@ -7342,7 +7766,7 @@ exports[`<OperationTableDetails> test column render function 1`] = `
                             <span
                               aria-label="caret-up"
                               className="anticon anticon-caret-up ant-table-column-sorter-up"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -7363,7 +7787,7 @@ exports[`<OperationTableDetails> test column render function 1`] = `
                             <span
                               aria-label="caret-down"
                               className="anticon anticon-caret-down ant-table-column-sorter-down"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -7386,11 +7810,16 @@ exports[`<OperationTableDetails> test column render function 1`] = `
                       </div>
                     </th>
                     <th
+                      aria-sort="descending"
                       className="ant-table-cell header-item ant-table-column-sort ant-table-column-has-sorters"
                       colSpan={null}
                       onClick={[Function]}
+                      onKeyDown={[Function]}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
+                      tabIndex={0}
                     >
                       <div
                         className="ant-table-column-sorters"
@@ -7398,7 +7827,9 @@ exports[`<OperationTableDetails> test column render function 1`] = `
                         onMouseEnter={[Function]}
                         onMouseLeave={[Function]}
                       >
-                        <span>
+                        <span
+                          className="ant-table-column-title"
+                        >
                           <div
                             style={
                               Object {
@@ -7456,7 +7887,7 @@ exports[`<OperationTableDetails> test column render function 1`] = `
                             <span
                               aria-label="caret-up"
                               className="anticon anticon-caret-up ant-table-column-sorter-up"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -7477,7 +7908,7 @@ exports[`<OperationTableDetails> test column render function 1`] = `
                             <span
                               aria-label="caret-down"
                               className="anticon anticon-caret-down ant-table-column-sorter-down active"
-                              role="img"
+                              role="presentation"
                             >
                               <svg
                                 aria-hidden="true"
@@ -7514,12 +7945,16 @@ exports[`<OperationTableDetails> test column render function 1`] = `
                     <td
                       className="ant-table-cell header-item"
                       colSpan={null}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
                     />
                     <td
                       className="ant-table-cell header-item"
                       colSpan={null}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
                     >
@@ -7539,6 +7974,8 @@ exports[`<OperationTableDetails> test column render function 1`] = `
                     <td
                       className="ant-table-cell header-item"
                       colSpan={null}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
                     >
@@ -7558,6 +7995,8 @@ exports[`<OperationTableDetails> test column render function 1`] = `
                     <td
                       className="ant-table-cell header-item"
                       colSpan={null}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
                     >
@@ -7577,6 +8016,8 @@ exports[`<OperationTableDetails> test column render function 1`] = `
                     <td
                       className="ant-table-cell header-item ant-table-column-sort"
                       colSpan={null}
+                      onMouseEnter={[Function]}
+                      onMouseLeave={[Function]}
                       rowSpan={null}
                       style={Object {}}
                     >
@@ -7585,12 +8026,19 @@ exports[`<OperationTableDetails> test column render function 1`] = `
                       >
                         <div
                           className="ant-progress ant-progress-line ant-progress-status-normal ant-progress-default impact"
+                          role="progressbar"
                         >
                           <div
                             className="ant-progress-outer"
                           >
                             <div
                               className="ant-progress-inner"
+                              style={
+                                Object {
+                                  "backgroundColor": undefined,
+                                  "borderRadius": 0,
+                                }
+                              }
                             >
                               <div
                                 className="ant-progress-bg"
@@ -7620,7 +8068,6 @@ exports[`<OperationTableDetails> test column render function 1`] = `
         <ul
           className="ant-pagination ant-table-pagination ant-table-pagination-right"
           style={Object {}}
-          unselectable="unselectable"
         >
           <li
             aria-disabled={true}
@@ -7740,6 +8187,7 @@ exports[`<OperationTableDetails> test column render function 1`] = `
                       aria-owns="undefined_list"
                       autoComplete="off"
                       className="ant-select-selection-search-input"
+                      disabled={false}
                       onChange={[Function]}
                       onCompositionEnd={[Function]}
                       onCompositionStart={[Function]}

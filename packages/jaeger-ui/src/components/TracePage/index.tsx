@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Input } from 'antd';
+import { Input, InputRef } from 'antd';
 import { Location, History as RouterHistory } from 'history';
 import _clamp from 'lodash/clamp';
 import _get from 'lodash/get';
@@ -130,7 +130,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
 
   _headerElm: HTMLElement | TNil;
   _filterSpans: typeof filterSpans;
-  _searchBar: React.RefObject<Input>;
+  _searchBar: React.RefObject<InputRef>;
   _scrollManager: ScrollManager;
   traceDagEV: TEv | TNil;
 

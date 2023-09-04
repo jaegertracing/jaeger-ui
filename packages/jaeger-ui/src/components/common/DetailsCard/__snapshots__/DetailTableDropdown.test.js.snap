@@ -25,12 +25,7 @@ exports[`DetailTable render renders as expected 1`] = `
     className="DetailTableDropdown--Footer"
   >
     <Tooltip
-      arrowPointAtCenter={false}
-      autoAdjustOverflow={true}
-      mouseEnterDelay={0.1}
-      mouseLeaveDelay={0.1}
       overlayClassName="DetailTableDropdown--Tooltip"
-      placement="top"
       title="Remove filter from this column"
     >
       <Button
@@ -47,12 +42,7 @@ exports[`DetailTable render renders as expected 1`] = `
       className="DetailTableDropdown--Footer--CancelConfirm"
     >
       <Tooltip
-        arrowPointAtCenter={false}
-        autoAdjustOverflow={true}
-        mouseEnterDelay={0.1}
-        mouseLeaveDelay={0.1}
         overlayClassName="DetailTableDropdown--Tooltip"
-        placement="top"
         title="Cancel changes to this column's filter"
       >
         <Button
@@ -66,12 +56,7 @@ exports[`DetailTable render renders as expected 1`] = `
         </Button>
       </Tooltip>
       <Tooltip
-        arrowPointAtCenter={false}
-        autoAdjustOverflow={true}
-        mouseEnterDelay={0.1}
-        mouseLeaveDelay={0.1}
         overlayClassName="DetailTableDropdown--Tooltip"
-        placement="top"
         title={
           <div
             className="DetailTableDropdown--Tooltip--Body"
