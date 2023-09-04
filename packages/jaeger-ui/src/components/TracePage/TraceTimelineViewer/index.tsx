@@ -23,7 +23,7 @@ import { merge as mergeShortcuts } from '../keyboard-shortcuts';
 import { Accessors } from '../ScrollManager';
 import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate } from '../types';
 import { TNil, ReduxState } from '../../../types';
-import { Span, Trace } from '../../../types/trace';
+import { criticalPathSection, Span, Trace } from '../../../types/trace';
 
 import './index.css';
 
@@ -41,6 +41,7 @@ type TProps = TDispatchProps & {
   scrollToFirstVisibleSpan: () => void;
   spanNameColumnWidth: number;
   trace: Trace;
+  criticalPath: criticalPathSection[];
   updateNextViewRangeTime: (update: ViewRangeTimeUpdate) => void;
   updateViewRangeTime: TUpdateViewRangeTimeFunction;
   viewRange: IViewRange;

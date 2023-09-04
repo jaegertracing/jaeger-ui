@@ -2,7 +2,7 @@
 
 exports[`CohortTable renders as expected 1`] = `
 Array [
-  <withStore(Table)
+  <ForwardRef(InternalTable)
     dataSource={
       Array [
         Object {
@@ -38,42 +38,73 @@ Array [
     size="middle"
   >
     <Column
+      data-testid="id"
       dataIndex="id"
       key="traceID"
       render={[Function]}
       title=""
     />
     <Column
-      dataIndex="data.traceName"
+      data-testid="traceName"
+      dataIndex={
+        Array [
+          "data",
+          "traceName",
+        ]
+      }
       key="traceName"
       render={[Function]}
       sortOrder="descend"
       title="Service & Operation"
     />
     <Column
-      dataIndex="data.startTime"
+      data-testid="startTime"
+      dataIndex={
+        Array [
+          "data",
+          "startTime",
+        ]
+      }
       key="startTime"
       render={[Function]}
       title="Date"
     />
     <Column
-      dataIndex="data.duration"
+      data-testid="duration"
+      dataIndex={
+        Array [
+          "data",
+          "duration",
+        ]
+      }
       key="duration"
       render={[Function]}
       title="Duration"
     />
     <Column
-      dataIndex="data.spans.length"
+      dataIndex={
+        Array [
+          "data",
+          "spans",
+          "length",
+        ]
+      }
       key="spans"
       title="Spans"
     />
     <Column
       className="ub-tx-center"
-      dataIndex="data.traceID"
+      data-testid="traceID"
+      dataIndex={
+        Array [
+          "data",
+          "traceID",
+        ]
+      }
       key="link"
       render={[Function]}
     />
-  </withStore(Table)>,
+  </ForwardRef(InternalTable)>,
   "",
 ]
 `;

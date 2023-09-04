@@ -41,7 +41,7 @@ import { extractUiFindFromState, TExtractUiFindFromStateReturn } from '../../com
 import getLinks from '../../../model/link-patterns';
 import colorGenerator from '../../../utils/color-generator';
 import { TNil, ReduxState } from '../../../types';
-import { Log, Span, Trace, KeyValuePair } from '../../../types/trace';
+import { Log, Span, Trace, KeyValuePair, criticalPathSection } from '../../../types/trace';
 import TTraceTimeline from '../../../types/TTraceTimeline';
 
 import './VirtualizedTraceView.css';
@@ -60,6 +60,7 @@ type TVirtualizedTraceViewOwnProps = {
   scrollToFirstVisibleSpan: () => void;
   registerAccessors: (accesors: Accessors) => void;
   trace: Trace;
+  criticalPath: criticalPathSection[];
 };
 
 type TDispatchProps = {
@@ -330,7 +331,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
   };
 
   renderSpanBarRow(span: Span, spanIndex: number, key: string, style: React.CSSProperties, attrs: {}) {
-    const { spanID } = span;
+    const { spanID, childSpanIds } = span;
     const { serviceName } = span.process;
     const {
       childrenHiddenIDs,
@@ -340,6 +341,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
       findMatchesIDs,
       spanNameColumnWidth,
       trace,
+      criticalPath,
     } = this.props;
     // to avert flow error
     if (!trace) {
@@ -350,7 +352,24 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     const isDetailExpanded = detailStates.has(spanID);
     const isMatchingFilter = findMatchesIDs ? findMatchesIDs.has(spanID) : false;
     const showErrorIcon = isErrorSpan(span) || (isCollapsed && spanContainsErredSpan(trace.spans, spanIndex));
-
+    const criticalPathSections = criticalPath?.filter(each => {
+      if (isCollapsed) {
+        const allChildSpanIds = [spanID, ...childSpanIds];
+        // This function called recursively to find all descendants of a span
+        const findAllDescendants = (currentChildSpanIds: string[]) => {
+          currentChildSpanIds.forEach(eachId => {
+            const currentChildSpan = trace.spans.find(a => a.spanID === eachId)!;
+            if (currentChildSpan.hasChildren) {
+              allChildSpanIds.push(...currentChildSpan.childSpanIds);
+              findAllDescendants(currentChildSpan.childSpanIds);
+            }
+          });
+        };
+        findAllDescendants(childSpanIds);
+        return allChildSpanIds.includes(each.spanId);
+      }
+      return each.spanId === spanID;
+    });
     // Check for direct child "server" span if the span is a "client" span.
     let rpc = null;
     if (isCollapsed) {
@@ -382,6 +401,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
         <SpanBarRow
           className={this.getClippingCssClasses()}
           color={color}
+          criticalPath={criticalPathSections}
           columnDivision={spanNameColumnWidth}
           isChildrenExpanded={!isCollapsed}
           isDetailExpanded={isDetailExpanded}

@@ -24,25 +24,25 @@ type TProps = {
   lookback: number;
   service?: string;
   services?: string[] | null;
-  setLookback: (lookback: number | string | undefined) => void;
+  setLookback: (lookback: number | null) => void;
   setService: (service: string) => void;
 };
 
 type TState = {
-  ownInputValue: number | undefined;
+  ownInputValue: number | null;
 };
 
 export default class Header extends React.PureComponent<TProps, TState> {
   state: TState = {
-    ownInputValue: undefined,
+    ownInputValue: null,
   };
 
-  setLookback = _debounce((lookback: number | string | undefined) => {
-    this.setState({ ownInputValue: undefined });
+  setLookback = _debounce((lookback: number | null) => {
+    this.setState({ ownInputValue: null });
     this.props.setLookback(lookback);
   }, 350);
 
-  handleInputChange = (value: string | number | undefined) => {
+  handleInputChange = (value: number | null) => {
     if (typeof value === 'string') return;
     this.setState({ ownInputValue: value });
     this.setLookback(value);
@@ -51,7 +51,7 @@ export default class Header extends React.PureComponent<TProps, TState> {
   render() {
     const { lookback, service, services, setService } = this.props;
     const { ownInputValue } = this.state;
-    const lookbackValue = ownInputValue !== undefined ? ownInputValue : lookback;
+    const lookbackValue = ownInputValue !== null ? ownInputValue : lookback;
 
     return (
       <header className="QualityMetrics--Header">

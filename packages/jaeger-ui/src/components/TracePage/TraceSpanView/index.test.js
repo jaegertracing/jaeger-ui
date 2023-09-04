@@ -38,23 +38,23 @@ describe('<TraceSpanView>', () => {
   it('does not explode', () => {
     expect(wrapper).toBeDefined();
     expect(wrapper.find('.title--TraceSpanView').length).toBe(1);
-    expect(wrapper.find('.span-view-table').length).toBe(3);
+    expect(wrapper.find('.span-view-table').length).toBe(2);
     expect(wrapper.find('table').length).toBe(1);
     expect(wrapper.find('colgroup').length).toBe(1);
     expect(wrapper.find('Pagination').length).toBe(2);
     expect(wrapper.find('Button').length).toBe(1);
-    expect(wrapper.find('.ant-form-item-control').length).toBe(3);
+    expect(wrapper.find('.ant-legacy-form-item-control').length).toBe(3);
   });
   it('Should change value when onChange was called', () => {
     const event = ['service2'];
     wrapper = shallow(<TraceSpanView {...defaultProps} />);
-    wrapper.find('.serviceNameDD Select').simulate('change', event);
+    wrapper.find('.serviceNameDD ForwardRef(InternalSelect)').simulate('change', event);
     expect(wrapper.state('selectedServiceName')).toEqual(['service2']);
   });
   it('Should change value when onChange and Rest the value when called reset', () => {
     const event = ['service2'];
     wrapper = shallow(<TraceSpanView {...defaultProps} />);
-    wrapper.find('.serviceNameDD Select').simulate('change', event);
+    wrapper.find('.serviceNameDD ForwardRef(InternalSelect)').simulate('change', event);
     expect(wrapper.state('selectedServiceName')).toEqual(['service2']);
     wrapper.find('.reset-filter Button').simulate('click');
     expect(wrapper.state('selectedServiceName')).toEqual([]);
@@ -62,7 +62,7 @@ describe('<TraceSpanView>', () => {
   it('Should change value when onChange OperatioName DDwas called', () => {
     const event = ['op2', 'op3'];
     wrapper = shallow(<TraceSpanView {...defaultProps} />);
-    wrapper.find('.operationNameDD Select').simulate('change', event);
+    wrapper.find('.operationNameDD ForwardRef(InternalSelect)').simulate('change', event);
     expect(wrapper.state('selectedOperationName')).toEqual(['op2', 'op3']);
   });
   it('check handler', () => {

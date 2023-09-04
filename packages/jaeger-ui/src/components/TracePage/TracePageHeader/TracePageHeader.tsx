@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Button, Input } from 'antd';
+import { Button, InputRef } from 'antd';
 import _get from 'lodash/get';
 import _maxBy from 'lodash/maxBy';
 import _values from 'lodash/values';
@@ -107,7 +107,7 @@ export const HEADER_ITEMS = [
   },
 ];
 
-export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwardedRef: React.Ref<Input> }) {
+export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwardedRef: React.Ref<InputRef> }) {
   const {
     canCollapse,
     clearSearch,
@@ -231,6 +231,6 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
   );
 }
 
-export default React.forwardRef((props: TracePageHeaderEmbedProps, ref: React.Ref<Input>) => (
+export default React.forwardRef((props: TracePageHeaderEmbedProps, ref: React.Ref<InputRef>) => (
   <TracePageHeaderFn {...props} forwardedRef={ref} />
 ));

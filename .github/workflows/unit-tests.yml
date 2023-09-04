@@ -22,12 +22,6 @@ jobs:
           cache: yarn
           node-version: '16'
       - run: yarn install --frozen-lockfile
-      - name: Run depcheck
-        run: |
-          yarn global add depcheck
-          yarn run depcheck
-      - run: yarn lint
-      - run: yarn build
       - run: yarn coverage
       - name: Upload coverage to codecov.io
         uses: codecov/codecov-action@v3

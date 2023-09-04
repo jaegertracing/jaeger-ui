@@ -96,9 +96,9 @@ function getItem(item: ConfigMenuItem) {
 function CustomNavDropdown({ label, items }: ConfigMenuGroup) {
   const menuItems = <Menu>{items.map(getItem)}</Menu>;
   return (
-    <Dropdown overlay={menuItems} placement="bottomRight">
-      <a>
-        {label} <DownOutlined />
+    <Dropdown overlay={menuItems} overlayStyle={{ paddingRight: '20px' }} placement="bottomRight">
+      <a style={{ color: 'white' }}>
+        {label} <DownOutlined style={{ paddingRight: '30px' }} />
       </a>
     </Dropdown>
   );
@@ -116,18 +116,14 @@ export function TopNavImpl(props: Props) {
   return (
     <div>
       <Menu theme="dark" mode="horizontal" selectable={false} className="ub-right" selectedKeys={[pathname]}>
-        <Menu.Item>
+        <Menu.Item style={{ paddingRight: '40px' }}>
           <TraceIDSearchInput />
         </Menu.Item>
         {menuItems.map(m => {
           if (isItem(m)) {
             return getItem(m);
           }
-          return (
-            <Menu.Item key={m.label}>
-              <CustomNavDropdown key={m.label} {...m} />
-            </Menu.Item>
-          );
+          return <CustomNavDropdown key={m.label} {...m} />;
         })}
       </Menu>
       <Menu theme="dark" mode="horizontal" selectable={false} selectedKeys={[pathname]}>

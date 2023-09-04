@@ -77,7 +77,7 @@ describe('Header', () => {
   describe('setting lookback', () => {
     it('no-ops for string values', () => {
       wrapper.find(InputNumber).prop('onChange')('foo');
-      expect(wrapper.state('ownInputValue')).toBe(undefined);
+      expect(wrapper.state('ownInputValue')).toBe(null);
     });
 
     it('updates state with numeric value, then clears state and calls props.setLookback after debounce', () => {
@@ -89,7 +89,7 @@ describe('Header', () => {
       expect(props.setLookback).not.toHaveBeenCalled();
 
       callDebouncedFn();
-      expect(wrapper.state('ownInputValue')).toBe(undefined);
+      expect(wrapper.state('ownInputValue')).toBe(null);
       expect(props.setLookback).toHaveBeenCalledWith(42);
     });
   });

@@ -25,13 +25,14 @@ import SpanBar from './SpanBar';
 import Ticks from './Ticks';
 
 import { TNil } from '../../../types';
-import { Span } from '../../../types/trace';
+import { criticalPathSection, Span } from '../../../types/trace';
 
 import './SpanBarRow.css';
 
 type SpanBarRowProps = {
   className?: string;
   color: string;
+  criticalPath: criticalPathSection[];
   columnDivision: number;
   isChildrenExpanded: boolean;
   isDetailExpanded: boolean;
@@ -87,6 +88,7 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
     const {
       className,
       color,
+      criticalPath,
       columnDivision,
       isChildrenExpanded,
       isDetailExpanded,
@@ -201,6 +203,7 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
         >
           <Ticks numTicks={numTicks} />
           <SpanBar
+            criticalPath={criticalPath}
             rpc={rpc}
             viewStart={viewStart}
             viewEnd={viewEnd}
