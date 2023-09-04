@@ -88,11 +88,8 @@ exports[`TraceDiffHeader handles absent a & b 1`] = `
         selection={Object {}}
       />
     }
-    mouseEnterDelay={0.1}
-    mouseLeaveDelay={0.1}
     onVisibleChange={[Function]}
     overlayClassName="TraceDiffHeader--popover"
-    overlayStyle={Object {}}
     placement="bottomLeft"
     title={
       <TraceIdInput
@@ -201,11 +198,8 @@ exports[`TraceDiffHeader handles absent a & b 1`] = `
         selection={Object {}}
       />
     }
-    mouseEnterDelay={0.1}
-    mouseLeaveDelay={0.1}
     onVisibleChange={[Function]}
     overlayClassName="TraceDiffHeader--popover"
-    overlayStyle={Object {}}
     placement="bottomLeft"
     title={
       <TraceIdInput
@@ -318,11 +312,8 @@ exports[`TraceDiffHeader handles absent a 1`] = `
         }
       />
     }
-    mouseEnterDelay={0.1}
-    mouseLeaveDelay={0.1}
     onVisibleChange={[Function]}
     overlayClassName="TraceDiffHeader--popover"
-    overlayStyle={Object {}}
     placement="bottomLeft"
     title={
       <TraceIdInput
@@ -438,11 +429,8 @@ exports[`TraceDiffHeader handles absent a 1`] = `
         }
       />
     }
-    mouseEnterDelay={0.1}
-    mouseLeaveDelay={0.1}
     onVisibleChange={[Function]}
     overlayClassName="TraceDiffHeader--popover"
-    overlayStyle={Object {}}
     placement="bottomLeft"
     title={
       <TraceIdInput
@@ -564,11 +552,8 @@ exports[`TraceDiffHeader handles absent b 1`] = `
         }
       />
     }
-    mouseEnterDelay={0.1}
-    mouseLeaveDelay={0.1}
     onVisibleChange={[Function]}
     overlayClassName="TraceDiffHeader--popover"
-    overlayStyle={Object {}}
     placement="bottomLeft"
     title={
       <TraceIdInput
@@ -691,11 +676,8 @@ exports[`TraceDiffHeader handles absent b 1`] = `
         }
       />
     }
-    mouseEnterDelay={0.1}
-    mouseLeaveDelay={0.1}
     onVisibleChange={[Function]}
     overlayClassName="TraceDiffHeader--popover"
-    overlayStyle={Object {}}
     placement="bottomLeft"
     title={
       <TraceIdInput
@@ -812,11 +794,8 @@ exports[`TraceDiffHeader renders as expected 1`] = `
         }
       />
     }
-    mouseEnterDelay={0.1}
-    mouseLeaveDelay={0.1}
     onVisibleChange={[Function]}
     overlayClassName="TraceDiffHeader--popover"
-    overlayStyle={Object {}}
     placement="bottomLeft"
     title={
       <TraceIdInput
@@ -943,11 +922,8 @@ exports[`TraceDiffHeader renders as expected 1`] = `
         }
       />
     }
-    mouseEnterDelay={0.1}
-    mouseLeaveDelay={0.1}
     onVisibleChange={[Function]}
     overlayClassName="TraceDiffHeader--popover"
-    overlayStyle={Object {}}
     placement="bottomLeft"
     title={
       <TraceIdInput

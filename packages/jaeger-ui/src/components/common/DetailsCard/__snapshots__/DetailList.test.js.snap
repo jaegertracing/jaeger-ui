@@ -2,11 +2,11 @@
 
 exports[`DetailList renders item as expected 1`] = `
 <div>
-  <Item>
+  <ForwardRef(InternalItem)>
     <span>
       foo
     </span>
-  </Item>
+  </ForwardRef(InternalItem)>
 </div>
 `;
 

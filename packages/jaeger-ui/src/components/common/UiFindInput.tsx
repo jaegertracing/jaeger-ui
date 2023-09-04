@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Input } from 'antd';
+import { Input, InputRef } from 'antd';
 import { CloseOutlined } from '@ant-design/icons';
 import { History as RouterHistory, Location } from 'history';
 import _debounce from 'lodash/debounce';
@@ -27,7 +27,7 @@ import { TNil, ReduxState } from '../../types/index';
 
 type TOwnProps = RouteComponentProps<any> & {
   allowClear?: boolean;
-  forwardedRef?: React.Ref<Input>;
+  forwardedRef?: React.Ref<InputRef>;
   inputProps: Record<string, any>;
   history: RouterHistory;
   location: Location;

@@ -80,12 +80,8 @@ exports[`Selector renders buttons with expected text and classNames 1`] = `
       </button>,
     ]
   }
-  mouseEnterDelay={0.1}
-  mouseLeaveDelay={0.1}
-  overlayStyle={Object {}}
   placement="bottom"
   title="Visible downstream hops"
-  trigger="hover"
 >
   <span
     className="HopsSelector--Selector"
@@ -209,12 +205,8 @@ exports[`Selector renders upstream hops with negative distance correctly 1`] = `
       </button>,
     ]
   }
-  mouseEnterDelay={0.1}
-  mouseLeaveDelay={0.1}
-  overlayStyle={Object {}}
   placement="bottom"
   title="Visible upstream hops"
-  trigger="hover"
 >
   <span
     className="HopsSelector--Selector"

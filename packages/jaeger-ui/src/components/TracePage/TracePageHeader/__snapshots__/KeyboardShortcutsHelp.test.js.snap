@@ -26,15 +26,12 @@ exports[`KeyboardShortcutsHelp renders as expected 1`] = `
         },
       }
     }
-    confirmLoading={false}
-    okType="primary"
     onCancel={[Function]}
     onOk={[Function]}
     title="Keyboard Shortcuts"
     visible={false}
-    width={520}
   >
-    <Table
+    <ForwardRef(InternalTable)
       className="KeyboardShortcutsHelp--table u-simple-scrollbars"
       dataSource={
         Array [
@@ -196,7 +193,6 @@ exports[`KeyboardShortcutsHelp renders as expected 1`] = `
       }
       pagination={false}
       rowClassName={[Function]}
-      rowKey="key"
       showHeader={false}
       size="middle"
     >
@@ -213,7 +209,7 @@ exports[`KeyboardShortcutsHelp renders as expected 1`] = `
         render={[Function]}
         title="Key(s)"
       />
-    </Table>
+    </ForwardRef(InternalTable)>
   </Modal>
 </Fragment>
 `;

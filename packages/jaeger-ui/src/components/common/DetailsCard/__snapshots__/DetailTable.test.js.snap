@@ -11,7 +11,7 @@ exports[`DetailTable _makeColumns function props _renderCell renders a regular l
 `;
 
 exports[`DetailTable render does not duplicate columns 1`] = `
-<Table
+<ForwardRef(InternalTable)
   columns={
     Array [
       Object {
@@ -60,7 +60,7 @@ exports[`DetailTable render does not duplicate columns 1`] = `
 `;
 
 exports[`DetailTable render infers all columns 1`] = `
-<Table
+<ForwardRef(InternalTable)
   columns={
     Array [
       Object {
@@ -105,7 +105,7 @@ exports[`DetailTable render infers all columns 1`] = `
 `;
 
 exports[`DetailTable render infers missing columns 1`] = `
-<Table
+<ForwardRef(InternalTable)
   columns={
     Array [
       Object {
@@ -150,7 +150,7 @@ exports[`DetailTable render infers missing columns 1`] = `
 `;
 
 exports[`DetailTable render renders given rows and columns 1`] = `
-<Table
+<ForwardRef(InternalTable)
   columns={
     Array [
       Object {
