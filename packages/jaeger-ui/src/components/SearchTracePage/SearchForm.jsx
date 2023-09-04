@@ -1,3 +1,4 @@
+/* eslint-disable import/no-extraneous-dependencies */
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +14,9 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Form, Input, Button, Popover, Select, Row, Col } from 'antd';
+import { Form } from '@ant-design/compatible';
+import '@ant-design/compatible/assets/index.css';
+import { Input, Button, Popover, Select, Row, Col } from 'antd';
 import _get from 'lodash/get';
 import logfmtParser from 'logfmt/lib/logfmt_parser';
 import { stringify as logfmtStringify } from 'logfmt/lib/stringify';
@@ -21,7 +24,7 @@ import moment from 'moment';
 import memoizeOne from 'memoize-one';
 import PropTypes from 'prop-types';
 import queryString from 'query-string';
-import IoHelp from 'react-icons/lib/io/help';
+import { IoHelp } from 'react-icons/io5';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import { Field, reduxForm, formValueSelector } from 'redux-form';
@@ -29,7 +32,6 @@ import store from 'store';
 
 import * as markers from './SearchForm.markers';
 import { trackFormInput } from './SearchForm.track';
-import VirtSelect from '../common/VirtSelect';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import { formatDate, formatTime } from '../../utils/date';
 import reduxFormFieldAdapter from '../../utils/redux-form-field-adapter';
@@ -42,10 +44,6 @@ const Option = Select.Option;
 
 const AdaptedInput = reduxFormFieldAdapter({ AntInputComponent: Input });
 const AdaptedSelect = reduxFormFieldAdapter({ AntInputComponent: Select });
-const AdaptedVirtualSelect = reduxFormFieldAdapter({
-  AntInputComponent: VirtSelect,
-  onChangeAdapter: option => (option ? option.value : null),
-});
 const ValidatedAdaptedInput = reduxFormFieldAdapter({ AntInputComponent: Input, isValidatedInput: true });
 
 export function getUnixTimeStampInMSFromForm({ startDate, startDateTime, endDate, endDateTime }) {
@@ -276,6 +274,7 @@ export class SearchFormImpl extends React.PureComponent {
     const opsForSvc = (selectedServicePayload && selectedServicePayload.operations) || [];
     const noSelectedService = selectedService === '-' || !selectedService;
     const tz = selectedLookback === 'custom' ? new Date().toTimeString().replace(/^.*?GMT/, 'UTC') : null;
+
     return (
       <Form layout="vertical" onSubmit={handleSubmit}>
         <FormItem
@@ -287,15 +286,18 @@ export class SearchFormImpl extends React.PureComponent {
         >
           <Field
             name="service"
-            component={AdaptedVirtualSelect}
+            component={AdaptedSelect}
             placeholder="Select A Service"
             props={{
               disabled,
-              clearable: false,
-              options: services.map(v => ({ label: v.name, value: v.name })),
-              required: true,
             }}
-          />
+          >
+            {services.map(service => (
+              <Option key={service.name} value={service.name}>
+                {service.name}
+              </Option>
+            ))}
+          </Field>
         </FormItem>
         <FormItem
           label={
@@ -306,15 +308,18 @@ export class SearchFormImpl extends React.PureComponent {
         >
           <Field
             name="operation"
-            component={AdaptedVirtualSelect}
+            component={AdaptedSelect}
             placeholder="Select An Operation"
             props={{
-              clearable: false,
               disabled: disabled || noSelectedService,
-              options: ['all'].concat(opsForSvc).map(v => ({ label: v, value: v, title: v })),
-              required: true,
             }}
-          />
+          >
+            {['all'].concat(opsForSvc).map(op => (
+              <Option key={op} value={op}>
+                {op}
+              </Option>
+            ))}
+          </Field>
         </FormItem>
 
         <FormItem

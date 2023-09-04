@@ -2,9 +2,6 @@ build
 coverage
 packages/plexus/src/LayoutManager/layout.worker*js*
 
-# Ignore forked file
-packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/jsonMarkup.js
-
 # Ignore generated files
 packages/jaeger-ui/index.d.ts
 packages/plexus/dist

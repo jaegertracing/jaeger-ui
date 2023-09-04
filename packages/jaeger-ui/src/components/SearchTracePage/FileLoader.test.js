@@ -19,12 +19,22 @@ import FileLoader from './FileLoader';
 
 describe('<FileLoader />', () => {
   let wrapper;
+  const mockLoadJsonTraces = jest.fn();
 
   beforeEach(() => {
-    wrapper = shallow(<FileLoader loadJsonTrace={jest.fn()} />);
+    wrapper = shallow(<FileLoader loadJsonTraces={mockLoadJsonTraces} />);
   });
 
   it('matches the snapshot', () => {
     expect(wrapper).toMatchSnapshot();
+  });
+
+  it('calls loadJsonTraces with the uploaded file', () => {
+    const file = new File(['sample content'], 'sample.json', { type: 'application/json' });
+    const fileList = [file];
+
+    wrapper.find('Dragger').prop('beforeUpload')(file, fileList);
+
+    expect(mockLoadJsonTraces).toHaveBeenCalledWith({ file });
   });
 });

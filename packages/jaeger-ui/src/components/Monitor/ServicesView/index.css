@@ -33,8 +33,6 @@ limitations under the License.
 .timeframe-selector {
   display: inline-flex;
   justify-content: flex-end;
-  position: absolute;
-  bottom: 14px;
 }
 
 .operation-table-block {

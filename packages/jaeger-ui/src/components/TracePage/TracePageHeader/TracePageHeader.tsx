@@ -13,13 +13,13 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Button, Input } from 'antd';
+import { Button, InputRef } from 'antd';
 import _get from 'lodash/get';
 import _maxBy from 'lodash/maxBy';
 import _values from 'lodash/values';
-import IoAndroidArrowBack from 'react-icons/lib/io/android-arrow-back';
-import IoIosFilingOutline from 'react-icons/lib/io/ios-filing-outline';
-import MdKeyboardArrowRight from 'react-icons/lib/md/keyboard-arrow-right';
+import { IoArrowBack } from 'react-icons/io5';
+import { IoIosFiling } from 'react-icons/io';
+import { MdKeyboardArrowRight } from 'react-icons/md';
 import { Link } from 'react-router-dom';
 
 import AltViewOptions from './AltViewOptions';
@@ -107,7 +107,7 @@ export const HEADER_ITEMS = [
   },
 ];
 
-export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwardedRef: React.Ref<Input> }) {
+export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwardedRef: React.Ref<InputRef> }) {
   const {
     canCollapse,
     clearSearch,
@@ -163,7 +163,7 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
       <div className="TracePageHeader--titleRow">
         {toSearch && (
           <Link className="TracePageHeader--back" to={toSearch}>
-            <IoAndroidArrowBack />
+            <IoArrowBack />
           </Link>
         )}
         {links && links.length > 0 && <ExternalLinks links={links} />}
@@ -203,7 +203,7 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
         )}
         {showArchiveButton && (
           <Button className="ub-mr2 ub-flex ub-items-center" htmlType="button" onClick={onArchiveClicked}>
-            <IoIosFilingOutline className="TracePageHeader--archiveIcon" />
+            <IoIosFiling className="TracePageHeader--archiveIcon" />
             Archive Trace
           </Button>
         )}
@@ -231,6 +231,6 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
   );
 }
 
-export default React.forwardRef((props: TracePageHeaderEmbedProps, ref: React.Ref<Input>) => (
+export default React.forwardRef((props: TracePageHeaderEmbedProps, ref: React.Ref<InputRef>) => (
   <TracePageHeaderFn {...props} forwardedRef={ref} />
 ));

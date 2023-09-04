@@ -16,8 +16,8 @@ import * as React from 'react';
 import { Checkbox, Popover } from 'antd';
 import cx from 'classnames';
 import { TLayoutVertex } from '@jaegertracing/plexus/lib/types';
-import IoAndroidLocate from 'react-icons/lib/io/android-locate';
-import MdVisibilityOff from 'react-icons/lib/md/visibility-off';
+import { MdVisibilityOff } from 'react-icons/md';
+import { IoLocate } from 'react-icons/io5';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
 
@@ -326,7 +326,7 @@ export class UnconnectedDdgNodeContent extends React.PureComponent<TProps, TStat
           {!isFocalNode && (
             <a className="DdgNodeContent--actionsItem" onClick={this.focusPaths} role="button">
               <span className="DdgNodeContent--actionsItemIconWrapper">
-                <IoAndroidLocate />
+                <IoLocate />
               </span>
               <span className="DdgNodeContent--actionsItemText">Focus paths through this node</span>
             </a>

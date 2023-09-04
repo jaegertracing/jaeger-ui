@@ -1,11 +1,10 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`UiFind rendering renders as expected 1`] = `
-<Input
+<ForwardRef
   onBlur={[Function]}
   onChange={[Function]}
   placeholder="Find..."
   suffix={<React.Fragment />}
-  type="text"
 />
 `;

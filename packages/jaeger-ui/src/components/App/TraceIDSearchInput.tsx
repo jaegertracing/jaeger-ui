@@ -1,3 +1,4 @@
+/* eslint-disable import/no-extraneous-dependencies */
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +14,9 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Form, Input } from 'antd';
+import { Form } from '@ant-design/compatible';
+import '@ant-design/compatible/assets/index.css';
+import { Input } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import { RouteComponentProps, Router as RouterHistory, withRouter } from 'react-router-dom';
 
