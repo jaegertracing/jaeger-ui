@@ -22,6 +22,7 @@ import { Config } from '../types/config';
 
 const defaultConfig: Config = {
   archiveEnabled: false,
+  criticalPathEnabled: true,
   dependencies: {
     dagMaxNumServices: FALLBACK_DAG_MAX_NUM_SERVICES,
     menuEnabled: true,

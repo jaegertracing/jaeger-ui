@@ -25,6 +25,7 @@ jest.mock('./TracePageHeader/SpanGraph');
 jest.mock('./TracePageHeader/TracePageHeader.track');
 jest.mock('./TracePageHeader/TracePageSearchBar');
 jest.mock('./TraceTimelineViewer');
+jest.mock('./CriticalPath/index');
 
 import React from 'react';
 import sinon from 'sinon';

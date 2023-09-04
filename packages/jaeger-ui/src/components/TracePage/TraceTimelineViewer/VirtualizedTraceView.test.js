@@ -23,6 +23,7 @@ import traceGenerator from '../../../demo/trace-generators';
 import transformTraceData from '../../../model/transform-trace-data';
 import updateUiFindSpy from '../../../utils/update-ui-find';
 import * as linkPatterns from '../../../model/link-patterns';
+import memoizedTraceCriticalPath from '../CriticalPath/index';
 
 jest.mock('./SpanTreeOffset');
 jest.mock('../../../utils/update-ui-find');
@@ -33,6 +34,8 @@ describe('<VirtualizedTraceViewImpl>', () => {
   const focusUiFindMatchesMock = jest.fn();
 
   const trace = transformTraceData(traceGenerator.trace({ numberOfSpans: 10 }));
+  const criticalPath = memoizedTraceCriticalPath(trace);
+
   const props = {
     childrenHiddenIDs: new Set(),
     childrenToggle: jest.fn(),
@@ -53,6 +56,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
     shouldScrollToFirstUiFindMatch: false,
     spanNameColumnWidth: 0.5,
     trace,
+    criticalPath,
     uiFind: 'uiFind',
     history: {
       replace: () => {},

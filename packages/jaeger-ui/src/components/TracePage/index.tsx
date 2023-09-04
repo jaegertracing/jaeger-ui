@@ -61,6 +61,7 @@ import TraceFlamegraph from './TraceFlamegraph/index';
 import { TraceGraphConfig } from '../../types/config';
 
 import './index.css';
+import memoizedTraceCriticalPath from './CriticalPath/index';
 
 type TDispatchProps = {
   acknowledgeArchive: (id: string) => void;
@@ -78,6 +79,7 @@ type TOwnProps = {
 type TReduxProps = {
   archiveEnabled: boolean;
   archiveTraceState: TraceArchive | TNil;
+  criticalPathEnabled: boolean;
   embedded: null | EmbeddedState;
   id: string;
   searchUrl: null | string;
@@ -325,6 +327,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
     const {
       archiveEnabled,
       archiveTraceState,
+      criticalPathEnabled,
       embedded,
       id,
       uiFind,
@@ -388,6 +391,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
     };
 
     let view;
+    const criticalPath = criticalPathEnabled ? memoizedTraceCriticalPath(data) : [];
     if (ETraceViewType.TraceTimelineViewer === viewType && headerHeight) {
       view = (
         <TraceTimelineViewer
@@ -395,6 +399,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
           scrollToFirstVisibleSpan={this._scrollManager.scrollToFirstVisibleSpan}
           findMatchesIDs={spanFindMatches}
           trace={data}
+          criticalPath={criticalPath}
           updateNextViewRangeTime={this.updateNextViewRangeTime}
           updateViewRangeTime={this.updateViewRangeTime}
           viewRange={viewRange}
@@ -440,7 +445,7 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
   const trace = id ? traces[id] : null;
   const archiveTraceState = id ? archive[id] : null;
   const archiveEnabled = Boolean(config.archiveEnabled);
-  const { disableJsonView } = config;
+  const { disableJsonView, criticalPathEnabled } = config;
   const { state: locationState } = router.location;
   const searchUrl = (locationState && locationState.fromSearch) || null;
   const { traceGraph: traceGraphConfig } = config;
@@ -449,6 +454,7 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
     ...extractUiFindFromState(state),
     archiveEnabled,
     archiveTraceState,
+    criticalPathEnabled,
     embedded,
     id,
     searchUrl,
