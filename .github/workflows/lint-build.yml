@@ -1,4 +1,4 @@
-name: "Unit Tests"
+name: "Lint and Build"
 
 on:
   push:
@@ -12,7 +12,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  unit-tests:
+  lint-build:
     runs-on: ubuntu-latest
 
     steps:
