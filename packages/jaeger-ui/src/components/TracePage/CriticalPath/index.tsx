@@ -83,7 +83,7 @@ export const computeCriticalPath = (
   return criticalPath;
 };
 
-function TraceCriticalPath(trace: Trace) {
+function criticalPathForTrace(trace: Trace) {
   let criticalPath: criticalPathSection[] = [];
   // As spans are already sorted based on startTime first span is always rootSpan
   const rootSpanId = trace.spans[0].spanID;
@@ -95,11 +95,15 @@ function TraceCriticalPath(trace: Trace) {
     }, new Map<string, Span>());
     const refinedSpanMap = getChildOfSpans(spanMap);
     const sanitizedSpanMap = sanitizeOverFlowingChildren(refinedSpanMap);
-    criticalPath = computeCriticalPath(sanitizedSpanMap, rootSpanId, criticalPath);
+    try {
+      criticalPath = computeCriticalPath(sanitizedSpanMap, rootSpanId, criticalPath);
+    } catch (error) {
+      console.log('error while computing critical path for a trace', error);
+    }
   }
   return criticalPath;
 }
 
-const memoizedTraceCriticalPath = memoizeOne(TraceCriticalPath);
+const memoizedTraceCriticalPath = memoizeOne(criticalPathForTrace);
 
 export default memoizedTraceCriticalPath;
