@@ -6,6 +6,56 @@
 
 ### Fixes
 
+## v1.33.0 (2023-08-06)
+
+### Enhancements
+
+- [feature] Visualize Critical Path of a trace ([@GLVSKiriti](https://github.com/GLVSKiriti) in [#1582](https://github.com/jaegertracing/jaeger-ui/pull/1582))
+- Add JSON Folding Support in Logs ([@prathamesh-mutkure](https://github.com/prathamesh-mutkure) in [#1724](https://github.com/jaegertracing/jaeger-ui/pull/1724))
+- Recognize uninstrumented services via both producer and client span kinds ([@Wck-iipi](https://github.com/Wck-iipi) in [#1681](https://github.com/jaegertracing/jaeger-ui/pull/1681))
+
+### Fixes
+
+- fix: Make popup on the Search input field less intrusive enhancement ([@anikdhabal](https://github.com/anikdhabal) in [#1685](https://github.com/jaegertracing/jaeger-ui/pull/1685))
+- Resolves #1697 - Bug fix of popover not closing ([@jriyyya](https://github.com/jriyyya) in [#1705](https://github.com/jaegertracing/jaeger-ui/pull/1705))
+- Upgrade antd to v4.24.13 from v4.16.0 ([@anshgoyalevil](https://github.com/anshgoyalevil) in [#1751](https://github.com/jaegertracing/jaeger-ui/pull/1751))
+- Upgrade antd to v4.16.0 from v4.15.6 ([@anshgoyalevil](https://github.com/anshgoyalevil) in [#1750](https://github.com/jaegertracing/jaeger-ui/pull/1750))
+- Bump the babel group with 1 update ([@dependabot](https://github.com/dependabot) in [#1745](https://github.com/jaegertracing/jaeger-ui/pull/1745))
+- Bump terser from 5.19.0 to 5.19.3 ([@dependabot](https://github.com/dependabot) in [#1744](https://github.com/jaegertracing/jaeger-ui/pull/1744))
+- Bump prettier from 3.0.2 to 3.0.3 ([@dependabot](https://github.com/dependabot) in [#1742](https://github.com/jaegertracing/jaeger-ui/pull/1742))
+- Upgrade antd to v4.15.6 ([@anshgoyalevil](https://github.com/anshgoyalevil) in [#1748](https://github.com/jaegertracing/jaeger-ui/pull/1748))
+- Bump lerna from 7.1.5 to 7.2.0 ([@dependabot](https://github.com/dependabot) in [#1741](https://github.com/jaegertracing/jaeger-ui/pull/1741))
+- Bump the eslint group with 3 updates ([@dependabot](https://github.com/dependabot) in [#1743](https://github.com/jaegertracing/jaeger-ui/pull/1743))
+- Add antd/compatible package for form and fix grids ([@anshgoyalevil](https://github.com/anshgoyalevil) in [#1746](https://github.com/jaegertracing/jaeger-ui/pull/1746))
+- Replace react-virtualized-select with Ant's Select ([@prathamesh-mutkure](https://github.com/prathamesh-mutkure) in [#1737](https://github.com/jaegertracing/jaeger-ui/pull/1737))
+- Bump the babel group with 3 updates ([@dependabot](https://github.com/dependabot) in [#1730](https://github.com/jaegertracing/jaeger-ui/pull/1730))
+- Bump typescript from 5.1.6 to 5.2.2 ([@dependabot](https://github.com/dependabot) in [#1731](https://github.com/jaegertracing/jaeger-ui/pull/1731))
+- Bump the jest group with 3 updates ([@dependabot](https://github.com/dependabot) in [#1732](https://github.com/jaegertracing/jaeger-ui/pull/1732))
+- Bump @types/d3-zoom from 3.0.3 to 3.0.4 ([@dependabot](https://github.com/dependabot) in [#1727](https://github.com/jaegertracing/jaeger-ui/pull/1727))
+- Upgrade react-icons from 2.2.7 to 4.10.1 ([@anshgoyalevil](https://github.com/anshgoyalevil) in [#1721](https://github.com/jaegertracing/jaeger-ui/pull/1721))
+- Bump the eslint group with 1 update ([@dependabot](https://github.com/dependabot) in [#1719](https://github.com/jaegertracing/jaeger-ui/pull/1719))
+- dependabot: group react and add pattern for jest ([@mmorel-35](https://github.com/mmorel-35) in [#1717](https://github.com/jaegertracing/jaeger-ui/pull/1717))
+- Bump sinon from 7.3.2 to 15.2.0 ([@anshgoyalevil](https://github.com/anshgoyalevil) in [#1718](https://github.com/jaegertracing/jaeger-ui/pull/1718))
+- Bump the eslint group with 2 updates ([@dependabot](https://github.com/dependabot) in [#1716](https://github.com/jaegertracing/jaeger-ui/pull/1716))
+- Combine typescript-eslint and eslint dependabot upgrades ([@yurishkuro](https://github.com/yurishkuro) in [#1715](https://github.com/jaegertracing/jaeger-ui/pull/1715))
+- Bump the jest group with 2 updates ([@dependabot](https://github.com/dependabot) in [#1713](https://github.com/jaegertracing/jaeger-ui/pull/1713))
+- Revert part of #1710 for custom branches ([@yurishkuro](https://github.com/yurishkuro) in [#1714](https://github.com/jaegertracing/jaeger-ui/pull/1714))
+- Add jest dependabot group ([@mmorel-35](https://github.com/mmorel-35) in [#1711](https://github.com/jaegertracing/jaeger-ui/pull/1711))
+- Bump jest from 28.1.3 to 29.6.2 ([@anshgoyalevil](https://github.com/anshgoyalevil) in [#1708](https://github.com/jaegertracing/jaeger-ui/pull/1708))
+- Bump less from 3.13.1 to 4.2.0 ([@anshgoyalevil](https://github.com/anshgoyalevil) in [#1704](https://github.com/jaegertracing/jaeger-ui/pull/1704))
+- Antd icons from V3 to V4 complete ([@bupd](https://github.com/bupd) in [#1702](https://github.com/jaegertracing/jaeger-ui/pull/1702))
+- Bump @testing-library/jest-dom from 6.0.0 to 6.0.1 ([@dependabot](https://github.com/dependabot) in [#1696](https://github.com/jaegertracing/jaeger-ui/pull/1696))
+- Upgrade antd icons to V4 ([@bupd](https://github.com/bupd) in [#1699](https://github.com/jaegertracing/jaeger-ui/pull/1699))
+- Bump react-virtualized from 9.21.0 to 9.22.5 ([@dependabot](https://github.com/dependabot) in [#1693](https://github.com/jaegertracing/jaeger-ui/pull/1693))
+- Bump svenstaro/upload-release-action from 2.6.1 to 2.7.0 ([@dependabot](https://github.com/dependabot) in [#1618](https://github.com/jaegertracing/jaeger-ui/pull/1618))
+- Bump eslint-plugin-react from 7.33.1 to 7.33.2 ([@dependabot](https://github.com/dependabot) in [#1689](https://github.com/jaegertracing/jaeger-ui/pull/1689))
+- Bump prettier from 3.0.1 to 3.0.2 ([@dependabot](https://github.com/dependabot) in [#1690](https://github.com/jaegertracing/jaeger-ui/pull/1690))
+- [plexus] Remove unused deps and add missing deps ([@anshgoyalevil](https://github.com/anshgoyalevil) in [#1688](https://github.com/jaegertracing/jaeger-ui/pull/1688))
+- Remove unused type defs and packages ([@anshgoyalevil](https://github.com/anshgoyalevil) in [#1682](https://github.com/jaegertracing/jaeger-ui/pull/1682))
+- Bump the typescript-eslint group with 2 updates ([@dependabot](https://github.com/dependabot) in [#1686](https://github.com/jaegertracing/jaeger-ui/pull/1686))
+- Bump eslint from 8.46.0 to 8.47.0 ([@dependabot](https://github.com/dependabot) in [#1678](https://github.com/jaegertracing/jaeger-ui/pull/1678))
+- Remove unused packages ([@anshgoyalevil](https://github.com/anshgoyalevil) in [#1675](https://github.com/jaegertracing/jaeger-ui/pull/1675))
+
 ## v1.32.0 (2023-08-14)
 
 ### Enhancements
