@@ -18,6 +18,7 @@ import {
   getSuitableTimeUnit,
   convertTimeUnitToShortTerm,
   convertToTimeUnit,
+  formatRelativeDate,
   ONE_MILLISECOND,
   ONE_SECOND,
   ONE_MINUTE,
@@ -182,5 +183,38 @@ describe('convertToTimeUnit', () => {
   it('convert duration to days', () => {
     const input = 172800000000;
     expect(convertToTimeUnit(input, 'days')).toBe(2);
+  });
+});
+
+describe('formatRelativeDate', () => {
+  const currentTimestamp = Date.now();
+  const currentDate = new Date(currentTimestamp);
+
+  it('Displays Date MM-DD-YYY (Different Year) ', () => {
+    const input = new Date(currentTimestamp);
+    input.setFullYear(currentDate.getFullYear() - 2);
+    const output = input.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+    expect(formatRelativeDate(input)).toBe(output);
+  });
+  it('Displays Today (Todays date)', () => {
+    expect(formatRelativeDate(currentDate)).toBe('Today');
+  });
+  it('Displays YESTERDAY (Yesterday date)', () => {
+    const input = new Date(currentTimestamp);
+    input.setDate(currentDate.getDate() - 1);
+    expect(formatRelativeDate(input)).toBe('Yesterday');
+  });
+  it('Displays MM-DAY (Same month different date)', () => {
+    const input = new Date(currentTimestamp);
+    input.setDate(currentDate.getDate() - 4);
+    const output = input.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+    });
+    expect(formatRelativeDate(input)).toBe(output);
   });
 });
