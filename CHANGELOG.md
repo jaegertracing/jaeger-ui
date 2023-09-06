@@ -6,6 +6,19 @@
 
 ### Fixes
 
+## v1.33.0 (2023-08-06)
+
+### Enhancements
+
+- [feature] Visualize Critical Path of a trace ([@GLVSKiriti](https://github.com/GLVSKiriti) in [#1582](https://github.com/jaegertracing/jaeger-ui/pull/1582))
+- Add JSON Folding Support in Logs ([@prathamesh-mutkure](https://github.com/prathamesh-mutkure) in [#1724](https://github.com/jaegertracing/jaeger-ui/pull/1724))
+- Recognize uninstrumented services via both producer and client span kinds ([@Wck-iipi](https://github.com/Wck-iipi) in [#1681](https://github.com/jaegertracing/jaeger-ui/pull/1681))
+
+### Fixes
+
+- fix: Make popup on the Search input field less intrusive enhancement ([@anikdhabal](https://github.com/anikdhabal) in [#1685](https://github.com/jaegertracing/jaeger-ui/pull/1685))
+- Resolves #1697 - Bug fix of popover not closing ([@jriyyya](https://github.com/jriyyya) in [#1705](https://github.com/jaegertracing/jaeger-ui/pull/1705))
+
 ## v1.32.0 (2023-08-14)
 
 ### Enhancements
