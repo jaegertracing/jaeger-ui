@@ -22,22 +22,26 @@ import sanitizeOverFlowingChildren from './utils/sanitizeOverFlowingChildren';
 import test6 from './testCases/test6';
 import test7 from './testCases/test7';
 import test5 from './testCases/test5';
+import test8 from './testCases/test8';
 
-describe.each([[test1], [test2], [test3], [test4], [test5], [test6], [test7]])('Happy Path', testProps => {
-  it('Should find criticalPathSections correctly', () => {
-    const rootSpanId = testProps.trace.spans[0].spanID;
-    const spanMap = testProps.trace.spans.reduce((map, span) => {
-      map.set(span.spanID, span);
-      return map;
-    }, new Map());
-    const refinedSpanMap = getChildOfSpans(spanMap);
-    const sanitizedSpanMap = sanitizeOverFlowingChildren(refinedSpanMap);
-    const criticalPath = computeCriticalPath(sanitizedSpanMap, rootSpanId, []);
-    expect(criticalPath).toStrictEqual(testProps.criticalPathSections);
-  });
+describe.each([[test1], [test2], [test3], [test4], [test5], [test6], [test7], [test8]])(
+  'Happy Path',
+  testProps => {
+    it('Should find criticalPathSections correctly', () => {
+      const rootSpanId = testProps.trace.spans[0].spanID;
+      const spanMap = testProps.trace.spans.reduce((map, span) => {
+        map.set(span.spanID, span);
+        return map;
+      }, new Map());
+      const refinedSpanMap = getChildOfSpans(spanMap);
+      const sanitizedSpanMap = sanitizeOverFlowingChildren(refinedSpanMap);
+      const criticalPath = computeCriticalPath(sanitizedSpanMap, rootSpanId, []);
+      expect(criticalPath).toStrictEqual(testProps.criticalPathSections);
+    });
 
-  it('Critical path sections', () => {
-    const criticalPath = TraceCriticalPath(testProps.trace);
-    expect(criticalPath).toStrictEqual(testProps.criticalPathSections);
-  });
-});
+    it('Critical path sections', () => {
+      const criticalPath = TraceCriticalPath(testProps.trace);
+      expect(criticalPath).toStrictEqual(testProps.criticalPathSections);
+    });
+  }
+);
