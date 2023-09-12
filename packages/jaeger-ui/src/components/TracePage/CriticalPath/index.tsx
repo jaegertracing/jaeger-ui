@@ -38,7 +38,7 @@ import sanitizeOverFlowingChildren from './utils/sanitizeOverFlowingChildren';
  * At this point, it uses returningChildStartTime (startTime of spanC) to select another child that finished
  * immediately before the LFC's start.
  */
-export const computeCriticalPath = (
+const computeCriticalPath = (
   spanMap: Map<string, Span>,
   spanId: string,
   criticalPath: criticalPathSection[],
