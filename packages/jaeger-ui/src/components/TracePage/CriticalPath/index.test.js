@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import TraceCriticalPath, { computeCriticalPath } from './index';
+import TraceCriticalPath from './index';
 import test1 from './testCases/test1';
 import test2 from './testCases/test2';
 import test3 from './testCases/test3';
@@ -27,7 +27,7 @@ import test8 from './testCases/test8';
 describe.each([[test1], [test2], [test3], [test4], [test5], [test6], [test7], [test8]])(
   'Happy Path',
   testProps => {
-    it('Critical path sections', () => {
+    it('should find criticalPathSections correctly', () => {
       const criticalPath = TraceCriticalPath(testProps.trace);
       expect(criticalPath).toStrictEqual(testProps.criticalPathSections);
     });
