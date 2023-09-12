@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import TreeNode from '../utils/TreeNode';
+import { Span, SpanData } from '../types/trace';
 
 export const TREE_ROOT_ID = '__root__';
 
@@ -26,16 +27,23 @@ export const TREE_ROOT_ID = '__root__';
  *
  * The children are sorted by `span.startTime` after the tree is built.
  *
- * @param  {Trace} trace The trace to build the tree of spanIDs.
- * @return {TreeNode}    A tree of spanIDs derived from the relationships
- *                       between spans in the trace.
+ * @param  {Trace}             trace The trace to build the tree of spanIDs.
+ * @param  {Map<string, Span>} spanMap map from span IDs to Spans
+ * @return {TreeNode}          A tree of spanIDs derived from the relationships
+ *                             between spans in the trace.
  */
-export function getTraceSpanIdsAsTree(trace) {
-  const nodesById = new Map(trace.spans.map(span => [span.spanID, new TreeNode(span.spanID)]));
-  const spansById = new Map(trace.spans.map(span => [span.spanID, span]));
-  const root = new TreeNode(TREE_ROOT_ID);
+export function getTraceSpanIdsAsTree(
+  trace: { spans: SpanData[] },
+  spanMap: Map<string, Span> | null = null
+) {
+  const nodesById = new Map(trace.spans.map(span => [span.spanID, new TreeNode<string>(span.spanID)]));
+  const spansById = spanMap ?? new Map(trace.spans.map(span => [span.spanID, span]));
+  const root = new TreeNode<string>(TREE_ROOT_ID);
   trace.spans.forEach(span => {
     const node = nodesById.get(span.spanID);
+    if (!node) {
+      return;
+    }
     if (Array.isArray(span.references) && span.references.length) {
       const { refType, spanID: parentID } = span.references[0];
       if (refType === 'CHILD_OF' || refType === 'FOLLOWS_FROM') {
@@ -48,14 +56,17 @@ export function getTraceSpanIdsAsTree(trace) {
       root.children.push(node);
     }
   });
-  const comparator = (nodeA, nodeB) => {
+  const comparator = (nodeA: TreeNode<string>, nodeB: TreeNode<string>): number => {
     const a = spansById.get(nodeA.value);
     const b = spansById.get(nodeB.value);
+    if (!a || !b) {
+      return 0;
+    }
     return +(a.startTime > b.startTime) || +(a.startTime === b.startTime) - 1;
   };
   trace.spans.forEach(span => {
     const node = nodesById.get(span.spanID);
-    if (node.children.length > 1) {
+    if (node && node.children.length > 1) {
       node.children.sort(comparator);
     }
   });
