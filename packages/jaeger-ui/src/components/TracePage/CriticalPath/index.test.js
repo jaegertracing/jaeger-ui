@@ -17,8 +17,6 @@ import test1 from './testCases/test1';
 import test2 from './testCases/test2';
 import test3 from './testCases/test3';
 import test4 from './testCases/test4';
-import getChildOfSpans from './utils/getChildOfSpans';
-import sanitizeOverFlowingChildren from './utils/sanitizeOverFlowingChildren';
 import test6 from './testCases/test6';
 import test7 from './testCases/test7';
 import test5 from './testCases/test5';
