@@ -53,7 +53,6 @@
     "src/selectors/trace.js",
     "src/utils/configure-store.js",
     "src/utils/sort.js",
-    "src/utils/TreeNode.js",
     "package.json"
   ]
 }
