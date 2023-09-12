@@ -93,9 +93,9 @@ function criticalPathForTrace(trace: Trace) {
       map.set(span.spanID, span);
       return map;
     }, new Map<string, Span>());
-    const refinedSpanMap = getChildOfSpans(spanMap);
-    const sanitizedSpanMap = sanitizeOverFlowingChildren(refinedSpanMap);
     try {
+      const refinedSpanMap = getChildOfSpans(spanMap);
+      const sanitizedSpanMap = sanitizeOverFlowingChildren(refinedSpanMap);
       criticalPath = computeCriticalPath(sanitizedSpanMap, rootSpanId, criticalPath);
     } catch (error) {
       console.log('error while computing critical path for a trace', error);
