@@ -73,5 +73,3 @@ export function getTraceSpanIdsAsTree(
   root.children.sort(comparator);
   return root;
 }
-
-export default getTraceSpanIdsAsTree;
