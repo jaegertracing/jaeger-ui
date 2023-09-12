@@ -25,7 +25,8 @@ export default class TreeNode<TValue> {
       return search;
     }
 
-    return (value: TValue, node: TreeNode<TValue>) => (search instanceof TreeNode ? node === search : value === search);
+    return (value: TValue, node: TreeNode<TValue>) =>
+      search instanceof TreeNode ? node === search : value === search;
   }
 
   constructor(value: TValue, children: Array<TreeNode<TValue>> = []) {
@@ -65,7 +66,10 @@ export default class TreeNode<TValue> {
   getPath(search: Function) {
     const searchFn = TreeNode.iterFunction(TreeNode.searchFunction(search));
 
-    const findPath = (currentNode: TreeNode<TValue>, currentPath: Array<TreeNode<TValue>>): Array<TreeNode<TValue>> | null => {
+    const findPath = (
+      currentNode: TreeNode<TValue>,
+      currentPath: Array<TreeNode<TValue>>
+    ): Array<TreeNode<TValue>> | null => {
       // skip if we already found the result
       const attempt = currentPath.concat([currentNode]);
       // base case: return the array when there is a match

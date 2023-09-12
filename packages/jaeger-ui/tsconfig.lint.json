@@ -50,7 +50,6 @@
     "src/reducers/services.js",
     "src/reducers/trace.js",
     "src/selectors/dependencies.js",
-    "src/selectors/trace.js",
     "src/utils/configure-store.js",
     "src/utils/sort.js",
     "package.json"

@@ -14,7 +14,7 @@
 
 import _isEqual from 'lodash/isEqual';
 
-import { getTraceSpanIdsAsTree } from '../selectors/trace';
+import { getTraceSpanIdsAsTree, TREE_ROOT_ID } from '../selectors/trace';
 import { getConfigValue } from '../utils/config/get-config';
 import { getTraceName } from './trace-viewer';
 import { KeyValuePair, Span, SpanData, Trace, TraceData } from '../types/trace';
@@ -79,19 +79,17 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
 
   let traceEndTime = 0;
   let traceStartTime = Number.MAX_SAFE_INTEGER;
-  const spanIdCounts = new Map();
+  const spanIdCounts = new Map<string, number>();
   const spanMap = new Map<string, Span>();
   // filter out spans with empty start times
   // eslint-disable-next-line no-param-reassign
   data.spans = data.spans.filter(span => Boolean(span.startTime));
 
-  const max = data.spans.length;
-  for (let i = 0; i < max; i++) {
+  const numSpans = data.spans.length;
+  for (let i = 0; i < numSpans; i++) {
     const span: Span = data.spans[i] as Span;
     const { startTime, duration, processID } = span;
-    //
-    let spanID = span.spanID;
-    // check for start / end time for the trace
+    // update trace's start / end time
     if (startTime < traceStartTime) {
       traceStartTime = startTime;
     }
@@ -99,6 +97,7 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
       traceEndTime = startTime + duration;
     }
     // make sure span IDs are unique
+    let spanID = span.spanID;
     const idCount = spanIdCounts.get(spanID);
     if (idCount != null) {
       // eslint-disable-next-line no-console
@@ -118,12 +117,12 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
   }
   // tree is necessary to sort the spans, so children follow parents, and
   // siblings are sorted by start time
-  const tree = getTraceSpanIdsAsTree(data);
+  const tree = getTraceSpanIdsAsTree(data, spanMap);
   const spans: Span[] = [];
   const svcCounts: Record<string, number> = {};
 
-  tree.walk((spanID: string, node: TreeNode, depth = 0) => {
-    if (spanID === '__root__') {
+  tree.walk((spanID: string, node: TreeNode<string>, depth = 0) => {
+    if (spanID === TREE_ROOT_ID) {
       return;
     }
     const span = spanMap.get(spanID) as Span;
@@ -136,6 +135,7 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     span.depth = depth - 1;
     span.hasChildren = node.children.length > 0;
     // Get the childSpanIds sorted based on endTime without changing tree structure
+    // TODO move this enrichment into Critical Path computation
     span.childSpanIds = node.children
       .slice()
       .sort((a, b) => {
@@ -176,7 +176,9 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     spans,
     traceID,
     traceName,
-    // can't use spread operator for intersection types
+    // TODO why not store `tree` here for easier access to tree structure?
+    // ...
+    // Can't use spread operator for intersection types
     // repl: https://goo.gl/4Z23MJ
     // issue: https://github.com/facebook/flow/issues/1511
     processes: data.processes,
