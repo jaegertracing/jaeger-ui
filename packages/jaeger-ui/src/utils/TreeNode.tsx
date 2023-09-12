@@ -99,6 +99,7 @@ export default class TreeNode<TValue> {
     nodeStack.push({ node: this, depth: actualDepth });
     while (nodeStack.length) {
       const entry: StackEntry = nodeStack[nodeStack.length - 1];
+      nodeStack.pop();
       const { node, depth } = entry;
       fn(node.value, node, depth);
       actualDepth = depth + 1;
