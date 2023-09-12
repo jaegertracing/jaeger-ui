@@ -16,7 +16,7 @@ import TreeNode from '../utils/TreeNode';
 import { Span, SpanData } from '../types/trace';
 
 export const TREE_ROOT_ID = '__root__';
-//
+
 /**
  * Build a tree of { value: spanID, children } items derived from the
  * `span.references` information. The tree represents the grouping of parent /
