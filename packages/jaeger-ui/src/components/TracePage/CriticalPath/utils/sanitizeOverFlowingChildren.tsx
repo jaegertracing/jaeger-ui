@@ -65,8 +65,19 @@ const sanitizeOverFlowingChildren = (spanMap: Map<string, Span>): Map<string, Sp
             });
             break;
 
+          case span.startTime < parentSpan.startTime && childEndTime > parentEndTime:
+            // case 4: child start before parent and end after parent, truncate is needed
+            //      |----parent----|
+            //  |---------child---------|
+            spanMap.set(span.spanID, {
+              ...span,
+              startTime: parentSpan.startTime,
+              duration: parentEndTime - parentSpan.startTime,
+            });
+            break;
+
           case span.startTime >= parentEndTime || childEndTime <= parentSpan.startTime:
-            // case 4: child outside of parent range => drop the child span
+            // case 5: child outside of parent range => drop the child span
             //      |----parent----|
             //                        |----child--|
             // or
