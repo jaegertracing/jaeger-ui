@@ -14,7 +14,8 @@
 
 import React from 'react';
 import { Tooltip } from 'antd';
-import { DoubleRightOutlined, RightOutlined } from '@ant-design/icons';
+import { DoubleRightOutlined } from '@ant-design/icons';
+import { IoChevronForward } from 'react-icons/io5';
 
 import './TimelineCollapser.css';
 
@@ -45,10 +46,10 @@ export default class TimelineCollapser extends React.PureComponent<CollapserProp
     return (
       <div className="TimelineCollapser" ref={this.containerRef}>
         <Tooltip title={getTitle('Expand +1')} getPopupContainer={this.getContainer}>
-          <RightOutlined onClick={onExpandOne} className="TimelineCollapser--btn-expand" />
+          <IoChevronForward onClick={onExpandOne} className="TimelineCollapser--btn-expand" />
         </Tooltip>
         <Tooltip title={getTitle('Collapse +1')} getPopupContainer={this.getContainer}>
-          <RightOutlined onClick={onCollapseOne} className="TimelineCollapser--btn" />
+          <IoChevronForward onClick={onCollapseOne} className="TimelineCollapser--btn" />
         </Tooltip>
         <Tooltip title={getTitle('Expand All')} getPopupContainer={this.getContainer}>
           <DoubleRightOutlined onClick={onExpandAll} className="TimelineCollapser--btn-expand" />

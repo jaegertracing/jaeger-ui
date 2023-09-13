@@ -14,8 +14,7 @@
 
 import * as React from 'react';
 import { Button, Tooltip } from 'antd';
-import { FaCheck, FaTrash } from 'react-icons/fa';
-import { TiCancel } from 'react-icons/ti';
+import { IoCheckmarkCircle, IoTrash, IoBan } from 'react-icons/io5';
 
 import FilteredList from '../FilteredList';
 
@@ -84,7 +83,7 @@ export default class DetailTableDropdown extends React.PureComponent<TProps> {
         <div className="DetailTableDropdown--Footer">
           <Tooltip overlayClassName="DetailTableDropdown--Tooltip" title="Remove filter from this column">
             <Button className="DetailTableDropdown--Btn Clear" onClick={clearFilters}>
-              <FaTrash size={18} />
+              <IoTrash size={18} />
               Clear Filter
             </Button>
           </Tooltip>
@@ -94,7 +93,7 @@ export default class DetailTableDropdown extends React.PureComponent<TProps> {
               title="Cancel changes to this column's filter"
             >
               <Button className="DetailTableDropdown--Btn Cancel" onClick={this.cancel}>
-                <TiCancel size={20} />
+                <IoBan size={20} />
                 Cancel
               </Button>
             </Tooltip>
@@ -108,7 +107,7 @@ export default class DetailTableDropdown extends React.PureComponent<TProps> {
               }
             >
               <Button className="DetailTableDropdown--Btn Apply" onClick={confirm}>
-                <FaCheck size={18} />
+                <IoCheckmarkCircle size={18} />
                 Apply
               </Button>
             </Tooltip>

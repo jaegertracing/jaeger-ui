@@ -14,7 +14,7 @@
 
 import * as React from 'react';
 import cx from 'classnames';
-import { IoIosArrowDown, IoIosArrowForward } from 'react-icons/io';
+import { IoChevronDown, IoChevronForward } from 'react-icons/io5';
 import './AccordianReferences.css';
 import { SpanReference } from '../../../../types/trace';
 import ReferenceLink from '../../url/ReferenceLink';
@@ -85,7 +85,7 @@ export default class AccordianReferences extends React.PureComponent<AccordianRe
     let arrow: React.ReactNode | null = null;
     let headerProps: Object | null = null;
     if (interactive) {
-      arrow = isOpen ? <IoIosArrowDown className={iconCls} /> : <IoIosArrowForward className={iconCls} />;
+      arrow = isOpen ? <IoChevronDown className={iconCls} /> : <IoChevronForward className={iconCls} />;
       headerProps = {
         'aria-checked': isOpen,
         onClick: isEmpty ? null : onToggle,

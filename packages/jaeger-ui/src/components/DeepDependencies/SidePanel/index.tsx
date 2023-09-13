@@ -14,7 +14,7 @@
 
 import * as React from 'react';
 import { Modal, Table } from 'antd';
-import { MdExitToApp, MdInfoOutline } from 'react-icons/md';
+import { IoExitOutline, IoInformationCircleOutline } from 'react-icons/io5';
 
 import { TDdgVertex } from '../../../model/ddg/types';
 import { TPathAgnosticDecorationSchema } from '../../../model/path-agnostic-decorations/types';
@@ -101,7 +101,7 @@ export default class SidePanel extends React.PureComponent<TProps> {
             type="button"
             onClick={this.clearSelected}
           >
-            <MdExitToApp />
+            <IoExitOutline />
           </button>
           <div className="Ddg--SidePanel--DecorationBtns">
             {this.decorations.map(({ acronym, id }) => (
@@ -124,7 +124,7 @@ export default class SidePanel extends React.PureComponent<TProps> {
             </button>
           </div>
           <button className="Ddg--SidePanel--infoBtn" onClick={this.openInfoModal} type="button">
-            <MdInfoOutline />
+            <IoInformationCircleOutline />
           </button>
         </div>
         <div className={`Ddg--SidePanel--Details ${selectedVertex && selectedSchema ? '.is-expanded' : ''}`}>

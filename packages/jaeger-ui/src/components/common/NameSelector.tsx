@@ -14,9 +14,8 @@
 
 import * as React from 'react';
 import { Popover } from 'antd';
-import { CloseOutlined } from '@ant-design/icons';
 import cx from 'classnames';
-import { IoChevronDown } from 'react-icons/io5';
+import { IoChevronDown, IoClose } from 'react-icons/io5';
 
 import BreakableText from './BreakableText';
 import FilteredList from './FilteredList';
@@ -71,7 +70,7 @@ export default class NameSelector extends React.PureComponent<TProps, TState> {
     });
   }
 
-  private clearValue = (evt: React.MouseEvent<HTMLElement>) => {
+  private clearValue = (evt: React.MouseEvent<any>) => {
     if (this.props.required) throw new Error('Cannot clear value of required NameSelector');
 
     evt.stopPropagation();
@@ -132,9 +131,7 @@ export default class NameSelector extends React.PureComponent<TProps, TState> {
           {useLabel && <span className="NameSelector--label">{label}:</span>}
           <BreakableText className="NameSelector--value" text={text} />
           <IoChevronDown className="NameSelector--chevron" />
-          {!required && value && (
-            <CloseOutlined className="NameSelector--clearIcon" onClick={this.clearValue} />
-          )}
+          {!required && value && <IoClose className="NameSelector--clearIcon" onClick={this.clearValue} />}
         </h2>
       </Popover>
     );
