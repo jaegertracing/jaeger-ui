@@ -17,6 +17,7 @@ import test4 from '../testCases/test4';
 import test6 from '../testCases/test6';
 import test7 from '../testCases/test7';
 import test8 from '../testCases/test8';
+import test9 from '../testCases/test9';
 import getChildOfSpans from './getChildOfSpans';
 import sanitizeOverFlowingChildren from './sanitizeOverFlowingChildren';
 
@@ -40,6 +41,7 @@ describe.each([
   [test6, getExpectedSanitizedData(test6.trace.spans, 'test6')],
   [test7, getExpectedSanitizedData(test7.trace.spans, 'test7')],
   [test8, getExpectedSanitizedData(test8.trace.spans, 'test8')],
+  [test9, new Map().set(test9.trace.spans[0].spanID, { ...test9.trace.spans[0], childSpanIds: [] })],
 ])('sanitizeOverFlowingChildren', (testProps, expectedSanitizedData) => {
   it('Should sanitize the data(overflowing spans) correctly', () => {
     const refinedSpanData = getChildOfSpans(testProps.trace.spans);

@@ -50,7 +50,6 @@ const sanitizeOverFlowingChildren = (spanMap: Map<string, Span>): Map<string, Sp
 
         // Remove the childSpanId from its parent span
         parentSpan.childSpanIds = parentSpan.childSpanIds.filter(id => id !== span.spanID);
-        spanMap.set(parentSpan.spanID, { ...parentSpan });
         return;
       }
       if (childEndTime > parentEndTime) {
@@ -78,7 +77,6 @@ const sanitizeOverFlowingChildren = (spanMap: Map<string, Span>): Map<string, Sp
 
       // Remove the childSpanId from its parent span
       parentSpan.childSpanIds = parentSpan.childSpanIds.filter(id => id !== span.spanID);
-      spanMap.set(parentSpan.spanID, { ...parentSpan });
     } else if (childEndTime <= parentEndTime) {
       // child start before parent, truncate is needed
       //      |----parent----|
