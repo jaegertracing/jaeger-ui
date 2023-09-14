@@ -14,8 +14,8 @@
 
 import * as React from 'react';
 import { shallow } from 'enzyme';
-import { Icon, Input } from 'antd';
-import { CloseOutlined } from '@ant-design/icons';
+import { Input } from 'antd';
+import { IoClose } from 'react-icons/io5';
 import debounceMock from 'lodash/debounce';
 import queryString from 'query-string';
 
@@ -144,25 +144,25 @@ describe('UiFind', () => {
     });
 
     it('renders clear icon iff clear is enabled and value is a string with at least one character', () => {
-      expect(findIcon().find(CloseOutlined)).toHaveLength(0);
+      expect(findIcon().find(IoClose)).toHaveLength(0);
 
       wrapper.setProps({ uiFind: '' });
-      expect(findIcon().find(CloseOutlined)).toHaveLength(0);
+      expect(findIcon().find(IoClose)).toHaveLength(0);
 
       wrapper.setProps({ uiFind });
-      expect(findIcon().find(CloseOutlined)).toHaveLength(1);
+      expect(findIcon().find(IoClose)).toHaveLength(1);
 
       wrapper.setProps({ allowClear: false });
-      expect(findIcon().find(CloseOutlined)).toHaveLength(0);
+      expect(findIcon().find(IoClose)).toHaveLength(0);
 
       wrapper.setProps({ allowClear: true });
       wrapper.setState({ ownInputValue: '' });
-      expect(findIcon().find(CloseOutlined)).toHaveLength(0);
+      expect(findIcon().find(IoClose)).toHaveLength(0);
     });
 
     it('clears value immediately when clicked', () => {
       wrapper.setProps({ uiFind });
-      findIcon().find(CloseOutlined).simulate('click');
+      findIcon().find(IoClose).simulate('click');
 
       expect(updateUiFindSpy).toHaveBeenLastCalledWith({
         history: props.history,

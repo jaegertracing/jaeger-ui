@@ -32,7 +32,7 @@ exports[`DetailTable render renders as expected 1`] = `
         className="DetailTableDropdown--Btn Clear"
         onClick={[MockFunction]}
       >
-        <FaTrash
+        <IoTrash
           size={18}
         />
         Clear Filter
@@ -49,7 +49,7 @@ exports[`DetailTable render renders as expected 1`] = `
           className="DetailTableDropdown--Btn Cancel"
           onClick={[Function]}
         >
-          <TiCancel
+          <IoBan
             size={20}
           />
           Cancel
@@ -74,7 +74,7 @@ exports[`DetailTable render renders as expected 1`] = `
           className="DetailTableDropdown--Btn Apply"
           onClick={[MockFunction]}
         >
-          <FaCheck
+          <IoCheckmarkCircle
             size={18}
           />
           Apply

@@ -15,7 +15,7 @@
 import React from 'react';
 import { shallow } from 'enzyme';
 import { Dropdown } from 'antd';
-import { ExportOutlined } from '@ant-design/icons';
+import { IoOpenOutline } from 'react-icons/io5';
 
 import CopyIcon from '../../../common/CopyIcon';
 
@@ -38,7 +38,7 @@ describe('LinkValue', () => {
   });
 
   it('renders correct Icon', () => {
-    expect(wrapper.find(ExportOutlined).hasClass('KeyValueTable--linkIcon')).toBe(true);
+    expect(wrapper.find(IoOpenOutline).hasClass('KeyValueTable--linkIcon')).toBe(true);
   });
 });
 

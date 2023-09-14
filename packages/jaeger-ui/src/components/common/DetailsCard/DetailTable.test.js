@@ -14,8 +14,7 @@
 
 import React from 'react';
 import { shallow } from 'enzyme';
-import { FilterOutlined } from '@ant-design/icons';
-import { FaFilter } from 'react-icons/fa';
+import { IoFunnel, IoFunnelOutline } from 'react-icons/io5';
 
 import ExamplesLink from '../ExamplesLink';
 import DetailTableDropdown from './DetailTableDropdown';
@@ -171,12 +170,12 @@ describe('DetailTable', () => {
 
       it('renders filter icon without filter set', () => {
         const icon = makeColumn(stringColumn).filterIcon();
-        expect(icon.type).toBe(FilterOutlined);
+        expect(icon.type).toBe(IoFunnelOutline);
       });
 
       it('renders filter icon with filter set', () => {
         const icon = makeColumn(stringColumn).filterIcon(true);
-        expect(icon.type).toBe(FaFilter);
+        expect(icon.type).toBe(IoFunnel);
       });
 
       it('renders filterable column if there are filterable values', () => {

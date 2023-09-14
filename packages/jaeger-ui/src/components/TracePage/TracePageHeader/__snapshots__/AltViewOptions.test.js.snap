@@ -65,7 +65,7 @@ exports[`AltViewOptions renders correctly 1`] = `
     className="AltViewOptions"
   >
     Trace Timeline 
-    <ForwardRef(DownOutlined) />
+    <IoChevronDown />
   </Button>
 </Dropdown>
 `;

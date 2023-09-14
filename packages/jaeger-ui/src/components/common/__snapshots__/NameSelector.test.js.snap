@@ -39,7 +39,7 @@ exports[`<NameSelector> clear renders with clear icon when not required and with
     <IoChevronDown
       className="NameSelector--chevron"
     />
-    <ForwardRef(CloseOutlined)
+    <IoClose
       className="NameSelector--clearIcon"
       onClick={[Function]}
     />
