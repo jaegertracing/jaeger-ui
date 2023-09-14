@@ -35,8 +35,8 @@ function getExpectedSanitizedData(spans, test) {
 }
 
 describe.each([
-  [test3, new Map().set(test3.trace.spans[0].spanID, test3.trace.spans[0])],
-  [test4, new Map().set(test4.trace.spans[0].spanID, test4.trace.spans[0])],
+  [test3, new Map().set(test3.trace.spans[0].spanID, { ...test3.trace.spans[0], childSpanIds: [] })],
+  [test4, new Map().set(test4.trace.spans[0].spanID, { ...test4.trace.spans[0], childSpanIds: [] })],
   [test6, getExpectedSanitizedData(test6.trace.spans, 'test6')],
   [test7, getExpectedSanitizedData(test7.trace.spans, 'test7')],
   [test8, getExpectedSanitizedData(test8.trace.spans, 'test8')],
