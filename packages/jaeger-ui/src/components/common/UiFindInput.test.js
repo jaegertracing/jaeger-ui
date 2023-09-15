@@ -20,7 +20,7 @@ import debounceMock from 'lodash/debounce';
 
 import { UnconnectedUiFindInput, extractUiFindFromState } from './UiFindInput';
 import updateUiFindSpy from '../../utils/update-ui-find';
-import parseQuery from '../../utils/parseQuery.test';
+import parseQuery from '../../utils/parseQuery';
 
 jest.mock('lodash/debounce');
 

@@ -20,7 +20,7 @@ import prefixUrl from '../../utils/prefix-url';
 import { MAX_LENGTH } from '../DeepDependencies/Graph/DdgNodeContent/constants';
 
 import { SearchQuery } from '../../types/search';
-import parseQuery from '../../utils/parseQuery.test';
+import parseQuery from '../../utils/parseQuery';
 
 function eqEq(a: string | number | null | undefined, b: string | number | null | undefined) {
   return (a == null && b == null) || String(a) === String(b);

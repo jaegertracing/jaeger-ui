@@ -30,7 +30,7 @@ import TTraceDiffState from '../../types/TTraceDiffState';
 import pluckTruthy from '../../utils/ts/pluckTruthy';
 
 import './TraceDiff.css';
-import parseQuery from '../../utils/parseQuery.test';
+import parseQuery from '../../utils/parseQuery';
 
 type TStateProps = {
   a: string | undefined;

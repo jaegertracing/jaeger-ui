@@ -16,7 +16,7 @@ import _isEmpty from 'lodash/isEmpty';
 import memoizeOne from 'memoize-one';
 import { matchPath } from 'react-router-dom';
 import queryString from 'query-string';
-import parseQuery from '../../utils/parseQuery.test';
+import parseQuery from '../../utils/parseQuery';
 
 import { EDdgDensity, TDdgSparseUrlState } from '../../model/ddg/types';
 import prefixUrl from '../../utils/prefix-url';

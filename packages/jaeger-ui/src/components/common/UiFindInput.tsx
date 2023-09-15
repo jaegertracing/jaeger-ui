@@ -23,7 +23,7 @@ import { RouteComponentProps, withRouter } from 'react-router-dom';
 
 import updateUiFind from '../../utils/update-ui-find';
 import { TNil, ReduxState } from '../../types/index';
-import parseQuery from '../../utils/parseQuery.test';
+import parseQuery from '../../utils/parseQuery';
 
 type TOwnProps = RouteComponentProps<any> & {
   allowClear?: boolean;

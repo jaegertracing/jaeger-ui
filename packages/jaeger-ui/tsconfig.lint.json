@@ -51,7 +51,7 @@
     "src/reducers/trace.js",
     "src/selectors/dependencies.js",
     "src/utils/configure-store.js",
-    "src/utils/parseQuery.test.ts",
+    "src/utils/parseQuery.ts",
     "src/utils/sort.js",
     "package.json"
   ]

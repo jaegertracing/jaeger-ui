@@ -22,7 +22,7 @@ import { Config } from '../../types/config';
 import { IWebAnalyticsFunc } from '../../types/tracking';
 import { logTrackingCalls } from './utils';
 import { getAppEnvironment, shouldDebugGoogleAnalytics } from '../constants';
-import parseQuery from '../parseQuery.test';
+import parseQuery from '../parseQuery';
 
 const isTruish = (value?: string | string[]) => {
   return Boolean(value) && value !== '0' && value !== 'false';

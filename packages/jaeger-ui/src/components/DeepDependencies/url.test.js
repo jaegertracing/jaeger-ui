@@ -15,7 +15,7 @@
 import * as reactRouterDom from 'react-router-dom';
 
 import { ROUTE_PATH, matches, getUrl, getUrlState, sanitizeUrlState } from './url';
-import parseQuery from '../../utils/parseQuery.test';
+import parseQuery from '../../utils/parseQuery';
 
 jest.mock('react-router-dom', () => ({
   matchPath: jest.fn(),
