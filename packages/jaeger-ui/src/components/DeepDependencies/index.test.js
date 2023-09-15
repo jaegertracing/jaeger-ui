@@ -37,7 +37,9 @@ describe('DeepDependencyGraphPage', () => {
     const vertexKey = 'test vertex key';
     const propsWithoutGraph = {
       addViewModifier: jest.fn(),
-      fetchDeepDependencyGraph: () => {},
+      fetchDeepDependencyGraph: () => {
+        /* empty */
+      },
       fetchServices: jest.fn(),
       fetchServiceServerOps: jest.fn(),
       graphState: {
@@ -76,6 +78,7 @@ describe('DeepDependencyGraphPage', () => {
         getVisWithUpdatedGeneration: jest.fn(),
       },
     };
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { operation: _o, ...urlStateWithoutOp } = props.urlState;
     const ddgPageImpl = new DeepDependencyGraphPageImpl(props);
     const ddgWithoutGraph = new DeepDependencyGraphPageImpl(propsWithoutGraph);
@@ -143,6 +146,7 @@ describe('DeepDependencyGraphPage', () => {
       });
 
       it('leaves unspecified, previously-undefined values as undefined', () => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { start: _s, end: _e, ...otherUrlState } = props.urlState;
         const otherProps = {
           ...props,
@@ -313,7 +317,8 @@ describe('DeepDependencyGraphPage', () => {
           const distance = -3;
           const prevVisEncoding = props.urlState.visEncoding;
 
-          const { graphState: e, ...graphStatelessProps } = props;
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { graphState: _, ...graphStatelessProps } = props;
           const graphStateless = new DeepDependencyGraphPageImpl(graphStatelessProps);
           graphStateless.setDistance(distance, direction);
           expect(encodeDistanceSpy).not.toHaveBeenCalled();
@@ -569,10 +574,12 @@ describe('DeepDependencyGraphPage', () => {
       });
 
       it('no-ops if not given dispatch fn or graph or service', () => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { addViewModifier: _add, ...propsWithoutAdd } = props;
         const ddgWithoutAdd = new DeepDependencyGraphPageImpl(propsWithoutAdd);
         ddgWithoutAdd.setViewModifier(vertexKey, EViewModifier.emphasized, true);
 
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { removeViewModifierFromIndices: _remove, ...propsWithoutRemove } = props;
         const ddgWithoutRemove = new DeepDependencyGraphPageImpl(propsWithoutRemove);
         ddgWithoutRemove.setViewModifier(vertexKey, EViewModifier.emphasized, false);
@@ -582,6 +589,7 @@ describe('DeepDependencyGraphPage', () => {
         expect(props.removeViewModifierFromIndices).not.toHaveBeenCalled();
 
         const {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           urlState: { service: _service, ...urlStateWithoutService },
           ...propsWithoutService
         } = props;
@@ -826,6 +834,7 @@ describe('DeepDependencyGraphPage', () => {
         wrapper.setProps({ serverOpsForService });
         expect(wrapper.find(Header).prop('operations')).toBe(serverOpsForService[props.urlState.service]);
 
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { service: _, ...urlStateWithoutService } = props.urlState;
         wrapper.setProps({ urlState: urlStateWithoutService });
         expect(wrapper.find(Header).prop('operations')).toBe(undefined);
@@ -835,7 +844,11 @@ describe('DeepDependencyGraphPage', () => {
 
   describe('mapDispatchToProps()', () => {
     it('creates the actions correctly', () => {
-      expect(mapDispatchToProps(() => {})).toEqual({
+      expect(
+        mapDispatchToProps(() => {
+          /* empty */
+        })
+      ).toEqual({
         addViewModifier: expect.any(Function),
         fetchDeepDependencyGraph: expect.any(Function),
         fetchServices: expect.any(Function),
@@ -935,6 +948,7 @@ describe('DeepDependencyGraphPage', () => {
       const result = mapStateToProps(reduxState, ownProps);
       expect(result.graphState).toEqual(graphState);
 
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { operation: _op, ...rest } = expected.urlState;
       getUrlStateSpy.mockReturnValue(rest);
       const resultWithoutOp = mapStateToProps(reduxState, ownProps);
