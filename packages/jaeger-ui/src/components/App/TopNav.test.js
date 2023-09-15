@@ -12,17 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import React from 'react';
-import { shallow } from 'enzyme';
-import { Link } from 'react-router-dom';
+import React from 'react'
+import { render, screen, fireEvent, getByText } from '@testing-library/react'
+import { BrowserRouter, Router } from 'react-router-dom'
+import '@testing-library/jest-dom'
 
-import { mapStateToProps, TopNavImpl as TopNav } from './TopNav';
+import { mapStateToProps, TopNavImpl as TopNav } from './TopNav'
 
 describe('<TopNav>', () => {
-  const labelGitHub = 'GitHub';
-  const githubUrl = 'https://github.com/uber/jaeger';
-  const blogUrl = 'https://medium.com/jaegertracing/';
-  const labelAbout = 'About Jaeger';
+  const labelGitHub = 'GitHub'
+  const githubUrl = 'https://github.com/uber/jaeger'
+  const blogUrl = 'https://medium.com/jaegertracing/'
+  const labelAbout = 'About Jaeger'
   const dropdownItems = [
     {
       label: 'Version 1',
@@ -36,12 +37,12 @@ describe('<TopNav>', () => {
       url: 'https://twitter.com/JaegerTracing',
       anchorTarget: '_self',
     },
-  ];
+  ]
 
   const configMenuGroup = {
     label: labelAbout,
     items: dropdownItems,
-  };
+  }
 
   const defaultProps = {
     config: {
@@ -55,94 +56,119 @@ describe('<TopNav>', () => {
           label: 'Blog',
           url: blogUrl,
         },
+        {
+          label: 'Docs',
+          url: 'http://jaeger.readthedocs.io/en/latest/',
+        },
         configMenuGroup,
       ],
     },
     router: {
-      location: { location: { pathname: 'some-path ' } },
+      location: { location: { pathname: 'some-path' } },
     },
     traceDiff: {},
-  };
-
-  let wrapper;
-
-  beforeEach(() => {
-    wrapper = shallow(<TopNav {...defaultProps} />);
-  });
+  }
 
   describe('renders the default menu options', () => {
+    let component
+    beforeEach(() => {
+      component = render(
+        <BrowserRouter>
+          <TopNav {...defaultProps} />
+        </BrowserRouter>
+      )
+    })
+
+    afterEach(() => {
+      component.unmount()
+    })
+
     it('renders the "JAEGER UI" link', () => {
-      const items = wrapper.find(Link).findWhere(link => link.prop('to') === '/');
-      expect(items.length).toBe(1);
-    });
+      const items = screen.getByRole('link', { name: 'JAEGER UI' })
+      expect(items).toBeInTheDocument()
+    })
+
     it('renders the "Search" button', () => {
-      const items = wrapper.find(Link).findWhere(link => link.prop('to') === '/search');
-      expect(items.length).toBe(1);
-    });
+      const items = screen.getByRole('link', { name: 'Search' })
+      expect(items).toBeInTheDocument()
+    })
 
     it('renders the "System Architecture" button', () => {
-      const items = wrapper.find(Link).findWhere(link => link.prop('to') === '/dependencies');
-      expect(items.length).toBe(1);
-    });
-  });
+      const items = screen.getByRole('link', { name: 'System Architecture' })
+      expect(items).toBeInTheDocument()
+    })
+  })
 
   describe('renders the custom menu', () => {
+    let component
+    beforeEach(() => {
+      component = render(
+        <BrowserRouter>
+          <TopNav {...defaultProps} />
+        </BrowserRouter>
+      )
+    })
+
+    afterEach(() => {
+      component.unmount()
+    })
+
     it('renders the top-level item', () => {
-      const item = wrapper.find(`[href="${githubUrl}"]`);
-      expect(item.length).toBe(1);
-      expect(item.text()).toMatch(labelGitHub);
-    });
+      const item = screen.getByRole('link', { name: labelGitHub })
+      expect(item).toBeInTheDocument()
+      expect(item.href).toBe(githubUrl)
+    })
 
     it('renders the nested menu items', () => {
-      const item = wrapper.find(TopNav.CustomNavDropdown);
-      expect(item.length).toBe(1);
-      expect(item.prop('label')).toBe(labelAbout);
-      expect(item.prop('items')).toBe(dropdownItems);
-    });
+      const item = screen.getAllByText(labelAbout)[0]
+      expect(item).toBeInTheDocument()
+    })
 
     it('adds target=_self to top-level item', () => {
-      const item = wrapper.find(`[href="${githubUrl}"]`);
-      expect(item.length).toBe(1);
-      expect(item.find(`[target="_self"]`).length).toBe(1);
-    });
+      const item = screen.getByRole('link', { name: labelGitHub })
+      expect(item.target).toBe('_self')
+    })
 
     it('sets target=_blank by default', () => {
-      const item = wrapper.find(`[href="${blogUrl}"]`);
-      expect(item.length).toBe(1);
-      expect(item.find(`[target="_blank"]`).length).toBe(1);
-    });
+      const item = screen.getByRole('link', { name: 'Blog' })
+      expect(item.target).toBe('_blank')
+    })
 
     describe('<CustomNavDropdown>', () => {
-      let subMenu;
-
+      let component
       beforeEach(() => {
-        wrapper = shallow(<TopNav.CustomNavDropdown {...configMenuGroup} />);
-        subMenu = shallow(wrapper.find('Dropdown').props().overlay);
-      });
+        component = render(<TopNav.CustomNavDropdown {...configMenuGroup} />)
+      })
+
+      afterEach(() => {
+        component.unmount()
+      })
 
       it('renders sub-menu text', () => {
         dropdownItems.slice(0, 0).forEach(itemConfig => {
-          const item = subMenu.find(`[text="${itemConfig.label}"]`);
-          expect(item.length).toBe(1);
-          expect(item.prop('disabled')).toBe(true);
-        });
-      });
+          const item = getByText(itemConfig.label)
+          expect(item).toBeInTheDocument()
+          expect(item.disabled).toBe(true)
+        })
+      })
 
       it('renders sub-menu links', () => {
         dropdownItems.slice(1, 2).forEach(itemConfig => {
-          const item = subMenu.dive().find(`[href="${itemConfig.url}"]`);
-          expect(item.length).toBe(1);
-          expect(item.prop('target')).toBe(itemConfig.anchorTarget || '_blank');
-          expect(item.text()).toBe(itemConfig.label);
-        });
-      });
-    });
-  });
-});
+          //fireEvent.mouseEnter(screen.getByText(labelAbout))
+          console.log(itemConfig.label)
+          const item = screen.getByRole('link', { name: itemConfig.label })
+          expect(item).toBeInTheDocument()
+          expect(item.href).toBe(itemConfig.url)
+          expect(item.target).toBe(itemConfig.anchorTarget || '_blank')
+        })
+      })
+    })
+  })
+})
 
 describe('mapStateToProps', () => {
   it('returns entire state', () => {
-    const testState = {};
-    expect(mapStateToProps(testState)).toBe(testState);
-  });
-});
+    const testState = {}
+    expect(mapStateToProps(testState)).toBe(testState)
+  })
+})
