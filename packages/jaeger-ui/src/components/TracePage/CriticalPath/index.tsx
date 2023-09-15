@@ -98,6 +98,7 @@ function criticalPathForTrace(trace: Trace) {
       const sanitizedSpanMap = sanitizeOverFlowingChildren(refinedSpanMap);
       criticalPath = computeCriticalPath(sanitizedSpanMap, rootSpanId, criticalPath);
     } catch (error) {
+      /* eslint-disable no-console */
       console.log('error while computing critical path for a trace', error);
     }
   }

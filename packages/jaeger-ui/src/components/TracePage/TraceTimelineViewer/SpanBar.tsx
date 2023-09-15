@@ -146,7 +146,7 @@ function SpanBar(props: TCommonProps) {
           const criticalPathViewEnd = critcalPathViewBounds.end;
           return (
             <div
-              key={index}
+              key={each.spanId}
               data-testid="SpanBar--criticalPath"
               className="SpanBar--criticalPath"
               style={{

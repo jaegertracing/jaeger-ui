@@ -78,12 +78,12 @@ module.exports = {
     'prefer-destructuring': 0,
 
     /* tsx */
-    '@typescript-eslint/no-explicit-any': 'warn',
-    '@typescript-eslint/no-unused-vars': 'warn',
-    '@typescript-eslint/no-var-requires': 'warn',
-    '@typescript-eslint/no-empty-function': 'warn',
-    '@typescript-eslint/ban-types': 'warn',
-    '@typescript-eslint/ban-ts-comment': 'warn',
+    '@typescript-eslint/no-explicit-any': 0,
+    '@typescript-eslint/no-unused-vars': 0,
+    '@typescript-eslint/no-var-requires': 0,
+    '@typescript-eslint/no-empty-function': 0,
+    '@typescript-eslint/ban-types': 0,
+    '@typescript-eslint/ban-ts-comment': 0,
 
     /* jsx */
     'jsx-a11y/anchor-is-valid': 0,
