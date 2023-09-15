@@ -18,10 +18,7 @@ interface IParsedQuery {
   [key: string]: string | null | (string | null)[];
 }
 
-export default function parseQuery(
-  query: string,
-  options?: ParseOptions
-): { [key: string]: string | string[] } {
+function parseQuery(query: string, options?: ParseOptions): { [key: string]: string | string[] } {
   const parsed: IParsedQuery = queryString.parse(query, options);
 
   const result: { [key: string]: string | string[] } = {};
@@ -36,3 +33,7 @@ export default function parseQuery(
 
   return result;
 }
+
+parseQuery.wrapper = parseQuery;
+
+export default parseQuery;

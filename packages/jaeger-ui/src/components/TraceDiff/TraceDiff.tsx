@@ -166,7 +166,7 @@ export class TraceDiffImpl extends React.PureComponent<TStateProps & TDispatchPr
 // TODO(joe): simplify but do not invalidate the URL
 export function mapStateToProps(state: ReduxState, ownProps: { match: match<TDiffRouteParams> }) {
   const { a, b } = ownProps.match.params;
-  const { cohort: origCohort = [] } = parseQuery(state.router.location.search);
+  const { cohort: origCohort = [] } = parseQuery.wrapper(state.router.location.search);
   const fullCohortSet: Set<string> = new Set(pluckTruthy([a, b].concat(origCohort)));
   const cohort: string[] = Array.from(fullCohortSet);
   const { traces } = state.trace;

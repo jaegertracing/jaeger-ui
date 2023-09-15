@@ -17,10 +17,10 @@ import { shallow } from 'enzyme';
 import { Icon, Input } from 'antd';
 import { CloseOutlined } from '@ant-design/icons';
 import debounceMock from 'lodash/debounce';
-import queryString from 'query-string';
 
 import { UnconnectedUiFindInput, extractUiFindFromState } from './UiFindInput';
 import updateUiFindSpy from '../../utils/update-ui-find';
+import parseQuery from '../../utils/parseQuery.test';
 
 jest.mock('lodash/debounce');
 
@@ -28,7 +28,7 @@ jest.mock('../../utils/update-ui-find');
 
 describe('UiFind', () => {
   const flushMock = jest.fn();
-  const queryStringParseSpy = jest.spyOn(queryString, 'parse');
+  const queryStringParseSpy = jest.spyOn(parseQuery, 'wrapper');
 
   const uiFind = 'uiFind';
   const ownInputValue = 'ownInputValue';

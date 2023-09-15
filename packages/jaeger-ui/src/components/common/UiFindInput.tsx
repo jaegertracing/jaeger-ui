@@ -110,7 +110,7 @@ export class UnconnectedUiFindInput extends React.PureComponent<TProps, StateTyp
 }
 
 export function extractUiFindFromState(state: ReduxState): TExtractUiFindFromStateReturn {
-  const { uiFind: uiFindFromUrl } = parseQuery(state.router.location.search);
+  const { uiFind: uiFindFromUrl } = parseQuery.wrapper(state.router.location.search);
   const uiFind = Array.isArray(uiFindFromUrl) ? uiFindFromUrl.join(' ') : uiFindFromUrl;
   return { uiFind };
 }
