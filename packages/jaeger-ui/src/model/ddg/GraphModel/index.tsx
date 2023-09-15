@@ -234,7 +234,7 @@ export default class GraphModel {
     return keySet;
   }
 
-  public getHiddenUiFindMatches: (uiFind?: string, visEncoding?: string) => Set<string> = memoize(10)(
+  public getHiddenUiFindMatches: (uiFind?: string | null, visEncoding?: string) => Set<string> = memoize(10)(
     (uiFind?: string, visEncoding?: string): Set<string> => {
       const visible = new Set(this.getVisible(visEncoding).vertices);
       const hidden: TDdgVertex[] = Array.from(this.vertices.values()).filter(
@@ -264,7 +264,7 @@ export default class GraphModel {
     }
   );
 
-  public getVisibleUiFindMatches: (uiFind?: string, visEncoding?: string) => Set<string> = memoize(10)(
+  public getVisibleUiFindMatches: (uiFind?: string | null, visEncoding?: string) => Set<string> = memoize(10)(
     (uiFind?: string, visEncoding?: string): Set<string> => {
       const { vertices } = this.getVisible(visEncoding);
       return GraphModel.getUiFindMatches(vertices, uiFind);

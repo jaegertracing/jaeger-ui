@@ -24,7 +24,7 @@ import { IWebAnalyticsFunc } from '../../types/tracking';
 import { logTrackingCalls } from './utils';
 import { getAppEnvironment, shouldDebugGoogleAnalytics } from '../constants';
 
-const isTruish = (value?: string | string[]) => {
+const isTruish = (value?: string | (string | null)[] | null) => {
   return Boolean(value) && value !== '0' && value !== 'false';
 };
 

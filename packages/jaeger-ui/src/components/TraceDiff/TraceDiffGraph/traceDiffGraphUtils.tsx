@@ -25,7 +25,7 @@ import { Trace } from '../../../types/trace';
 import filterSpans from '../../../utils/filter-spans';
 
 function getUiFindVertexKeysFn(
-  uiFind: string,
+  uiFind: string | null,
   vertices: TDagPlexusVertex<TDenseSpanMembers>[]
 ): Set<TVertexKey> {
   if (!uiFind) return new Set<TVertexKey>();

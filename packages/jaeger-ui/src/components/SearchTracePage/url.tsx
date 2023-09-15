@@ -33,8 +33,8 @@ export function matches(path: string) {
   return Boolean(matchPath(path, ROUTE_MATCHER));
 }
 
-type TUrlState = Record<string, string | string[] | undefined | Record<string, string>> & {
-  traceID?: string | string[];
+type TUrlState = Record<string, string | (string | null)[] | null | undefined | Record<string, string>> & {
+  traceID?: string | (string | null)[];
   spanLinks?: Record<string, string>;
 };
 
@@ -45,7 +45,7 @@ export function getUrl(query?: TUrlState) {
   const { traceID, spanLinks, ...rest } = query;
   let ids = traceID;
   if (spanLinks && traceID) {
-    ids = (Array.isArray(traceID) ? traceID : [traceID]).filter((id: string) => !spanLinks[id]);
+    ids = (Array.isArray(traceID) ? traceID : [traceID]).filter((id: string | null) => !spanLinks[id!]);
   }
   const stringifyArg = {
     ...rest,
@@ -75,7 +75,7 @@ export const getUrlState: (search: string) => TUrlState = memoizeOne(function ge
   const spanLinks: Record<string, string> = {};
   if (span && span.length) {
     (Array.isArray(span) ? span : [span]).forEach(s => {
-      const [spansStr, trace] = s.split('@');
+      const [spansStr, trace] = s!.split('@');
       traceIDs.add(trace);
       if (spansStr) {
         if (spanLinks[trace]) spanLinks[trace] = spanLinks[trace].concat(' ', spansStr);

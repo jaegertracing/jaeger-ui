@@ -42,13 +42,13 @@ export function getUrl(args?: { [key: string]: unknown; showOp?: boolean }, base
   return baseUrl;
 }
 
-function firstParam(arg: string | string[]): string {
+function firstParam(arg: string | (string | null)[] | null): string {
   if (Array.isArray(arg)) {
     const returnVal = arg[0];
     console.warn(`Found multiple query parameters: "${arg}", using "${returnVal}"`); // eslint-disable-line no-console
-    return returnVal;
+    return returnVal as string;
   }
-  return arg;
+  return arg as string;
 }
 
 export const getUrlState = memoizeOne(function getUrlState(search: string): TDdgSparseUrlState {

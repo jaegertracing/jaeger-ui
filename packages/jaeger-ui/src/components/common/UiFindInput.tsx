@@ -36,7 +36,7 @@ type TOwnProps = RouteComponentProps<any> & {
 };
 
 export type TExtractUiFindFromStateReturn = {
-  uiFind: string | undefined;
+  uiFind: string | null | undefined;
 };
 
 type TProps = TOwnProps & TExtractUiFindFromStateReturn;
@@ -103,7 +103,7 @@ export class UnconnectedUiFindInput extends React.PureComponent<TProps, StateTyp
         onChange={this.handleInputChange}
         ref={forwardedRef}
         suffix={suffix}
-        value={inputValue}
+        value={inputValue!}
       />
     );
   }
