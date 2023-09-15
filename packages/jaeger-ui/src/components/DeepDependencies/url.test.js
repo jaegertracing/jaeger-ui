@@ -140,11 +140,11 @@ describe('DeepDependencyGraph/url', () => {
       });
     });
 
-    it("defaults `density` to 'ppe'", () => {
+    it("defaults `density` to 'mc'", () => {
       const { density: unused, ...rest } = expectedParams;
       const { density: alsoUnused, ...rv } = acceptableParams;
       parseSpy.mockReturnValue(rv);
-      expect(getUrlState(getSearch())).toEqual({ ...rest, density: 'ppe' });
+      expect(getUrlState(getSearch())).toEqual({ ...rest, density: 'mc' });
     });
 
     it('ignores extraneous query parameters', () => {
