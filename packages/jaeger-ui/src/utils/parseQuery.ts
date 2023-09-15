@@ -34,6 +34,4 @@ function parseQuery(query: string, options?: ParseOptions): { [key: string]: str
   return result;
 }
 
-parseQuery.wrapper = parseQuery;
-
 export default parseQuery;

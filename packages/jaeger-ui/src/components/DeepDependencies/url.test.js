@@ -15,7 +15,7 @@
 import * as reactRouterDom from 'react-router-dom';
 
 import { ROUTE_PATH, matches, getUrl, getUrlState, sanitizeUrlState } from './url';
-import parseQuery from '../../utils/parseQuery';
+import * as parseQuery from '../../utils/parseQuery';
 
 jest.mock('react-router-dom', () => ({
   matchPath: jest.fn(),
@@ -111,7 +111,7 @@ describe('DeepDependencyGraph/url', () => {
     let parseSpy;
 
     beforeAll(() => {
-      parseSpy = jest.spyOn(parseQuery, 'wrapper');
+      parseSpy = jest.spyOn(parseQuery, 'default');
       warnSpy = jest.spyOn(console, 'warn').mockImplementation();
     });
 

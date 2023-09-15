@@ -20,7 +20,7 @@ import debounceMock from 'lodash/debounce';
 
 import { UnconnectedUiFindInput, extractUiFindFromState } from './UiFindInput';
 import updateUiFindSpy from '../../utils/update-ui-find';
-import parseQuery from '../../utils/parseQuery';
+import * as parseQuery from '../../utils/parseQuery';
 
 jest.mock('lodash/debounce');
 
@@ -28,7 +28,7 @@ jest.mock('../../utils/update-ui-find');
 
 describe('UiFind', () => {
   const flushMock = jest.fn();
-  const queryStringParseSpy = jest.spyOn(parseQuery, 'wrapper');
+  const queryStringParseSpy = jest.spyOn(parseQuery, 'default');
 
   const uiFind = 'uiFind';
   const ownInputValue = 'ownInputValue';

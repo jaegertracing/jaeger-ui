@@ -35,7 +35,7 @@ const GA: IWebAnalyticsFunc = (config: Config, versionShort: string, versionLong
   const isTest = appEnv === 'test';
   const isDebugMode =
     (isDev && isTruish(shouldDebugGoogleAnalytics())) ||
-    isTruish(parseQuery.wrapper(_get(window, 'location.search'))['ga-debug']);
+    isTruish(parseQuery(_get(window, 'location.search'))['ga-debug']);
   const gaID = _get(config, 'tracking.gaID');
   const isErrorsEnabled = isDebugMode || Boolean(_get(config, 'tracking.trackErrors'));
   const cookiesToDimensions = _get(config, 'tracking.cookiesToDimensions');

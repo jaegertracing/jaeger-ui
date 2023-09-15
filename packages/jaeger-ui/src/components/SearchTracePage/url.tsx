@@ -70,7 +70,7 @@ export function getUrl(query?: TUrlState) {
 export const getUrlState: (search: string) => TUrlState = memoizeOne(function getUrlState(
   search: string
 ): TUrlState {
-  const { traceID, span, ...rest } = parseQuery.wrapper(search);
+  const { traceID, span, ...rest } = parseQuery(search);
   const rv: TUrlState = { ...rest };
   const traceIDs = new Set(!traceID || Array.isArray(traceID) ? traceID : [traceID]);
   const spanLinks: Record<string, string> = {};
