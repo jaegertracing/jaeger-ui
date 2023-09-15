@@ -14,8 +14,9 @@
 
 import _isEmpty from 'lodash/isEmpty';
 import memoizeOne from 'memoize-one';
-import queryString from 'query-string';
 import { matchPath } from 'react-router-dom';
+import queryString from 'query-string';
+import parseQuery from '../../utils/parseQuery.test';
 
 import { EDdgDensity, TDdgSparseUrlState } from '../../model/ddg/types';
 import prefixUrl from '../../utils/prefix-url';
@@ -62,7 +63,7 @@ export const getUrlState = memoizeOne(function getUrlState(search: string): TDdg
     showOp,
     start,
     visEncoding,
-  } = queryString.parse(search);
+  } = parseQuery(search);
   const rv: TDdgSparseUrlState = {
     density: firstParam(density) as EDdgDensity,
   };
