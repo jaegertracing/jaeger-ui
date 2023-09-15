@@ -25,7 +25,7 @@ exports[`<KeyValuesTable> renders the expected text for each span value 1`] = `
         "xss_link": "https://example.com with \\"quotes\\"",
       }
     }
-    shouldInitiallyExpand={[Function]}
+    shouldExpandNode ={[Function]}
     style={
       Object {
         "basicChildStyle": "json-markup-child",

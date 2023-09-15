@@ -76,7 +76,7 @@ function formatValue(key: string, value: any) {
     content = (
       <JsonView
         data={parsed}
-        shouldInitiallyExpand={shouldJsonTreeExpand ? allExpanded : collapseAllNested}
+        shouldExpandNode ={shouldJsonTreeExpand ? allExpanded : collapseAllNested}
         style={{
           ...defaultStyles,
           container: 'json-markup',
