@@ -15,7 +15,7 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import * as React from 'react';
 import { Dropdown, Menu } from 'antd';
-import { ExportOutlined, ProfileOutlined } from '@ant-design/icons';
+import { ExportOutlined, ProfileOutlined, SnippetsOutlined } from '@ant-design/icons';
 import { JsonView, allExpanded, collapseAllNested, defaultStyles } from 'react-json-view-lite';
 
 import CopyIcon from '../../../common/CopyIcon';
@@ -172,7 +172,7 @@ export default function KeyValuesTable(props: KeyValuesTableProps) {
                   />
                   <CopyIcon
                     className="KeyValueTable--copyIcon"
-                    icon="snippets"
+                    icon={<SnippetsOutlined />}
                     copyText={JSON.stringify(row, null, 2)}
                     tooltipTitle="Copy JSON"
                     buttonText="JSON"
