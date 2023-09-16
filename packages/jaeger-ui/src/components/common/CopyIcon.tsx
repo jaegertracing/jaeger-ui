@@ -20,11 +20,12 @@ import cx from 'classnames';
 import copy from 'copy-to-clipboard';
 
 import './CopyIcon.css';
+import { CopyOutlined } from '@ant-design/icons';
 
 type PropsType = {
   className?: string;
   copyText: string;
-  icon?: string;
+  icon?: React.ReactNode;
   placement?: TooltipPlacement;
   tooltipTitle: string;
   buttonText: string;
@@ -37,7 +38,7 @@ type StateType = {
 export default class CopyIcon extends React.PureComponent<PropsType, StateType> {
   static defaultProps: Partial<PropsType> = {
     className: undefined,
-    icon: 'copy',
+    icon: <CopyOutlined />,
     placement: 'top',
   };
 

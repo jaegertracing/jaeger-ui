@@ -15,7 +15,7 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import * as React from 'react';
 import { Dropdown, Menu } from 'antd';
-import { IoOpenOutline, IoList } from 'react-icons/io5';
+import { IoOpenOutline, IoList, IoCopyOutline } from 'react-icons/io5';
 import { JsonView, allExpanded, collapseAllNested, defaultStyles } from 'react-json-view-lite';
 
 import CopyIcon from '../../../common/CopyIcon';
@@ -172,7 +172,7 @@ export default function KeyValuesTable(props: KeyValuesTableProps) {
                   />
                   <CopyIcon
                     className="KeyValueTable--copyIcon"
-                    icon="snippets"
+                    icon={<IoCopyOutline />}
                     copyText={JSON.stringify(row, null, 2)}
                     tooltipTitle="Copy JSON"
                     buttonText="JSON"
