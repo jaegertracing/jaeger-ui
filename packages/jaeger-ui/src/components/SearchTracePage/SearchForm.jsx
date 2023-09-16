@@ -339,7 +339,9 @@ export class SearchFormImpl extends React.PureComponent {
                   </h3>,
                   <ul key="info" className="SearchForm--tagsHintInfo">
                     <li>Use space for AND conjunctions</li>
-                    <li>Values containing whitespace or equal-sign &apos=&apos should be enclosed in quotes</li>
+                    <li>
+                      Values containing whitespace or equal-sign &apos=&apos should be enclosed in quotes
+                    </li>
                   </ul>,
                 ]}
                 content={
