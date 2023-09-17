@@ -82,7 +82,7 @@ module.exports = {
     '@typescript-eslint/no-unused-vars': 'warn',
     '@typescript-eslint/no-var-requires': 'warn',
     '@typescript-eslint/no-empty-function': 0,
-    '@typescript-eslint/ban-types': 0,
+    '@typescript-eslint/ban-types': 'warn',
     '@typescript-eslint/ban-ts-comment': 0,
 
     /* jsx */
