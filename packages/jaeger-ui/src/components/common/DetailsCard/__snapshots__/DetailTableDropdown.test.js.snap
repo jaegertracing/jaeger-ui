@@ -74,7 +74,7 @@ exports[`DetailTable render renders as expected 1`] = `
           className="DetailTableDropdown--Btn Apply"
           onClick={[MockFunction]}
         >
-          <IoCheckmarkCircle
+          <IoCheckmark
             size={18}
           />
           Apply
