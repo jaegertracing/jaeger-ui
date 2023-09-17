@@ -13,8 +13,10 @@
 // limitations under the License.
 
 /* eslint-disable import/no-extraneous-dependencies */
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+
+/* eslint-disable @typescript-eslint/no-var-requires */
 const { babelConfiguration } = require('../packages/jaeger-ui/test/babel-transform');
 
 const packageNames = [

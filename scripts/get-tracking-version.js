@@ -16,6 +16,7 @@
 
 // See the comment on `getVersion(..)` for details on what this script does.
 
+/* eslint-disable @typescript-eslint/no-var-requires */
 const spawnSync = require('child_process').spawnSync;
 
 const version = require('../package.json').version;
