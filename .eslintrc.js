@@ -78,7 +78,7 @@ module.exports = {
     'prefer-destructuring': 0,
 
     /* tsx */
-    '@typescript-eslint/no-explicit-any': 0,
+    '@typescript-eslint/no-explicit-any': 'warn',
     '@typescript-eslint/no-unused-vars': 'warn',
     '@typescript-eslint/no-var-requires': 'warn',
     '@typescript-eslint/no-empty-function': 0,
