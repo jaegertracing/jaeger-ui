@@ -83,7 +83,7 @@ module.exports = {
     '@typescript-eslint/no-var-requires': 'warn',
     '@typescript-eslint/no-empty-function': 0,
     '@typescript-eslint/ban-types': 'warn',
-    '@typescript-eslint/ban-ts-comment': 0,
+    '@typescript-eslint/ban-ts-comment': 'warn',
 
     /* jsx */
     'jsx-a11y/anchor-is-valid': 0,
