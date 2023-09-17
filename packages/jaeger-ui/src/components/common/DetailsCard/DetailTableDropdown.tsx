@@ -14,7 +14,7 @@
 
 import * as React from 'react';
 import { Button, Tooltip } from 'antd';
-import { IoCheckmarkCircle, IoTrash, IoBan } from 'react-icons/io5';
+import { IoTrash, IoBan, IoCheckmark } from 'react-icons/io5';
 
 import FilteredList from '../FilteredList';
 
@@ -107,7 +107,7 @@ export default class DetailTableDropdown extends React.PureComponent<TProps> {
               }
             >
               <Button className="DetailTableDropdown--Btn Apply" onClick={confirm}>
-                <IoCheckmarkCircle size={18} />
+                <IoCheckmark size={18} />
                 Apply
               </Button>
             </Tooltip>
