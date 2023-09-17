@@ -75,7 +75,7 @@
     "moment": "^2.18.1",
     "object-hash": "^3.0.0",
     "prop-types": "^15.5.10",
-    "query-string": "^6.3.0",
+    "query-string": "^8.1.0",
     "raven-js": "^3.22.1",
     "react": "^18.2.0",
     "react-circular-progressbar": "^2.1.0",
