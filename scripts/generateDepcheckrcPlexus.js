@@ -13,10 +13,9 @@
 // limitations under the License.
 
 /* eslint-disable import/no-extraneous-dependencies */
-import fs from 'fs';
-import path from 'path';
-
 /* eslint-disable @typescript-eslint/no-var-requires */
+const fs = require('fs');
+const path = require('path');
 const getBabelConfig = require('../packages/plexus/babel.config');
 
 const babelConfiguration = getBabelConfig({
