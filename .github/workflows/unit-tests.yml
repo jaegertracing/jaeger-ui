@@ -13,6 +13,9 @@ concurrency:
 
 jobs:
   unit-tests:
+    strategy:
+      matrix:
+        workers: [8] # Adjust the number of workers as needed
     runs-on: ubuntu-latest
 
     steps:
