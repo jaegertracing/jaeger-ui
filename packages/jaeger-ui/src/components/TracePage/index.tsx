@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Input, InputRef } from 'antd';
+import { InputRef } from 'antd';
 import { Location, History as RouterHistory } from 'history';
 import _clamp from 'lodash/clamp';
 import _get from 'lodash/get';

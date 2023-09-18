@@ -130,6 +130,7 @@ describe('TraceDiffGraph', () => {
   it('renders an empty div when a or b lack data', () => {
     expect(wrapper.children().length).not.toBe(0);
 
+    /* eslint-disable @typescript-eslint/no-unused-vars */
     const { data: unusedAData, ...aWithoutData } = props.a;
     wrapper.setProps({ a: aWithoutData });
     expect(wrapper.children().length).toBe(0);

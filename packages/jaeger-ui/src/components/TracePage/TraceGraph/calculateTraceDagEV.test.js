@@ -15,7 +15,7 @@
 import transformTraceData from '../../../model/transform-trace-data';
 import calculateTraceDagEV from './calculateTraceDagEV';
 
-const testTrace = require('./testTrace.json');
+import testTrace from './testTrace.json';
 
 const transformedTrace = transformTraceData(testTrace);
 
