@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import React from 'react';
-import { render, screen, getByText } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
 
@@ -154,8 +154,6 @@ describe('<TopNav>', () => {
 
       it('renders sub-menu links', () => {
         dropdownItems.slice(1, 2).forEach(itemConfig => {
-          //fireEvent.mouseEnter(screen.getByText(labelAbout))
-          console.log(itemConfig.label);
           const item = screen.getByRole('link', { name: itemConfig.label });
           expect(item).toBeInTheDocument();
           expect(item.href).toBe(itemConfig.url);

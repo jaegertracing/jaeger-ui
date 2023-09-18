@@ -18,12 +18,12 @@ import { CloseOutlined } from '@ant-design/icons';
 import { History as RouterHistory, Location } from 'history';
 import _debounce from 'lodash/debounce';
 import _isString from 'lodash/isString';
-import queryString from 'query-string';
 import { connect } from 'react-redux';
 import { RouteComponentProps, withRouter } from 'react-router-dom';
 
 import updateUiFind from '../../utils/update-ui-find';
 import { TNil, ReduxState } from '../../types/index';
+import parseQuery from '../../utils/parseQuery';
 
 type TOwnProps = RouteComponentProps<any> & {
   allowClear?: boolean;
@@ -110,7 +110,7 @@ export class UnconnectedUiFindInput extends React.PureComponent<TProps, StateTyp
 }
 
 export function extractUiFindFromState(state: ReduxState): TExtractUiFindFromStateReturn {
-  const { uiFind: uiFindFromUrl } = queryString.parse(state.router.location.search);
+  const { uiFind: uiFindFromUrl } = parseQuery(state.router.location.search);
   const uiFind = Array.isArray(uiFindFromUrl) ? uiFindFromUrl.join(' ') : uiFindFromUrl;
   return { uiFind };
 }

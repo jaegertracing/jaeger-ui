@@ -20,7 +20,7 @@ import PopupSql from './PopupSql';
 import transformTraceData from '../../../model/transform-trace-data';
 import { getColumnValues, getColumnValuesSecondDropdown } from './tableValues';
 
-const testTrace = require('./tableValuesTestTrace/testTrace.json');
+import testTrace from './tableValuesTestTrace/testTrace.json';
 
 const transformedTrace = transformTraceData(testTrace);
 

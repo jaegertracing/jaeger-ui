@@ -13,7 +13,6 @@
 // limitations under the License.
 
 import _get from 'lodash/get';
-import queryString from 'query-string';
 import ReactGA from 'react-ga';
 import Raven, { RavenOptions, RavenTransportOptions } from 'raven-js';
 
@@ -23,6 +22,7 @@ import { Config } from '../../types/config';
 import { IWebAnalyticsFunc } from '../../types/tracking';
 import { logTrackingCalls } from './utils';
 import { getAppEnvironment, shouldDebugGoogleAnalytics } from '../constants';
+import parseQuery from '../parseQuery';
 
 const isTruish = (value?: string | string[]) => {
   return Boolean(value) && value !== '0' && value !== 'false';
@@ -35,7 +35,7 @@ const GA: IWebAnalyticsFunc = (config: Config, versionShort: string, versionLong
   const isTest = appEnv === 'test';
   const isDebugMode =
     (isDev && isTruish(shouldDebugGoogleAnalytics())) ||
-    isTruish(queryString.parse(_get(window, 'location.search'))['ga-debug']);
+    isTruish(parseQuery(_get(window, 'location.search'))['ga-debug']);
   const gaID = _get(config, 'tracking.gaID');
   const isErrorsEnabled = isDebugMode || Boolean(_get(config, 'tracking.trackErrors'));
   const cookiesToDimensions = _get(config, 'tracking.cookiesToDimensions');

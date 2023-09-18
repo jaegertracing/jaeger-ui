@@ -14,13 +14,13 @@
 
 import * as React from 'react';
 import { shallow } from 'enzyme';
-import { Icon, Input } from 'antd';
+import { Input } from 'antd';
 import { CloseOutlined } from '@ant-design/icons';
 import debounceMock from 'lodash/debounce';
-import queryString from 'query-string';
 
 import { UnconnectedUiFindInput, extractUiFindFromState } from './UiFindInput';
 import updateUiFindSpy from '../../utils/update-ui-find';
+import * as parseQuery from '../../utils/parseQuery';
 
 jest.mock('lodash/debounce');
 
@@ -28,7 +28,7 @@ jest.mock('../../utils/update-ui-find');
 
 describe('UiFind', () => {
   const flushMock = jest.fn();
-  const queryStringParseSpy = jest.spyOn(queryString, 'parse');
+  const queryStringParseSpy = jest.spyOn(parseQuery, 'default');
 
   const uiFind = 'uiFind';
   const ownInputValue = 'ownInputValue';
