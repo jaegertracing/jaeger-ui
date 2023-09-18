@@ -15,7 +15,7 @@
 import * as React from 'react';
 import { Checkbox, Tooltip } from 'antd';
 import _debounce from 'lodash/debounce';
-import matchSorter from 'match-sorter';
+import { matchSorter } from 'match-sorter';
 import { IoSearch } from 'react-icons/io5';
 import { FixedSizeList as VList, ListOnItemsRenderedProps, ListOnScrollProps } from 'react-window';
 import { Key as EKey } from 'ts-key-enum';
