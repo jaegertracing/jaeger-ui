@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import dayjs from 'dayjs';
+import dayjs, { ConfigType } from 'dayjs';
 import _dropWhile from 'lodash/dropWhile';
 import _round from 'lodash/round';
 import _duration, { DurationUnitType } from 'dayjs/plugin/duration';
@@ -142,7 +142,7 @@ export function formatDuration(duration: number): string {
   return secondaryValue === 0 ? primaryUnitString : `${primaryUnitString} ${secondaryUnitString}`;
 }
 
-export function formatRelativeDate(value: any, fullMonthName = false): string {
+export function formatRelativeDate(value: ConfigType, fullMonthName = false): string {
   const m = dayjs.isDayjs(value) ? value : dayjs(value);
 
   const monthFormat = fullMonthName ? 'MMMM' : 'MMM';
