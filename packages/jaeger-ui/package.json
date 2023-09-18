@@ -107,7 +107,7 @@
     "start:ga-debug": "REACT_APP_GA_DEBUG=1 REACT_APP_VSN_STATE=$(../../scripts/get-tracking-version.js) vite",
     "start": "vite",
     "test": "jest",
-    "test-ci": "CI=1 jest --silent --color"
+    "test-ci": "CI=1 jest --silent --color --maxWorkers=8"
   },
   "jest": {
     "globalSetup": "./test/jest.global-setup.js",
