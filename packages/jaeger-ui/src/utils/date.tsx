@@ -71,7 +71,7 @@ const quantizeDuration = (duration: number, floatPrecision: number, conversionFa
   toFloatPrecision(duration / conversionFactor, floatPrecision) * conversionFactor;
 
 /**
- * @param {number} duration (in microseconds)
+ * @param {number} duration - number of microseconds elapsed since midnight, January 1, 1970 Universal Coordinated Time (UTC).
  * @return {string} formatted, unit-labelled string with time in milliseconds
  */
 export function formatDate(duration: number): string {
@@ -79,7 +79,7 @@ export function formatDate(duration: number): string {
 }
 
 /**
- * @param {number} duration (in microseconds)
+ * @param {number} duration - number of microseconds elapsed since midnight, January 1, 1970 Universal Coordinated Time (UTC).
  * @return {string} formatted, unit-labelled string with time in milliseconds
  */
 export function formatTime(duration: number): string {
@@ -87,7 +87,7 @@ export function formatTime(duration: number): string {
 }
 
 /**
- * @param {number} duration (in microseconds)
+ * @param {number} duration - number of microseconds elapsed since midnight, January 1, 1970 Universal Coordinated Time (UTC).
  * @return {string} formatted, unit-labelled string with time in milliseconds
  */
 export function formatDatetime(duration: number): string {
@@ -95,7 +95,7 @@ export function formatDatetime(duration: number): string {
 }
 
 /**
- * @param {number} duration (in microseconds)
+ * @param {number} duration - number of microseconds elapsed since midnight, January 1, 1970 Universal Coordinated Time (UTC).
  * @return {string} formatted, unit-labelled string with time in milliseconds
  */
 export function formatMillisecondTime(duration: number): string {
@@ -104,7 +104,7 @@ export function formatMillisecondTime(duration: number): string {
 }
 
 /**
- * @param {number} duration (in microseconds)
+ * @param {number} duration - number of microseconds elapsed since midnight, January 1, 1970 Universal Coordinated Time (UTC).
  * @return {string} formatted, unit-labelled string with time in seconds
  */
 export function formatSecondTime(duration: number): string {
@@ -120,7 +120,7 @@ export function formatSecondTime(duration: number): string {
  * 1000μs => 1ms
  * 183840s => 2d 3h
  *
- * @param {number} duration (in microseconds)
+ * @param {number} duration - number of microseconds elapsed since midnight, January 1, 1970 Universal Coordinated Time (UTC).
  * @return {string} formatted duration
  */
 export function formatDuration(duration: number): string {
