@@ -27,7 +27,8 @@ const YESTERDAY = 'Yesterday';
 export const STANDARD_DATE_FORMAT = 'YYYY-MM-DD';
 export const STANDARD_TIME_FORMAT = 'HH:mm';
 export const STANDARD_DATETIME_FORMAT = 'MMMM D YYYY, HH:mm:ss.SSS';
-export const ONE_MILLISECOND = 1000;
+export const ONE_MICROSECOND = 1;
+export const ONE_MILLISECOND = 1000 * ONE_MICROSECOND;
 export const ONE_SECOND = 1000 * ONE_MILLISECOND;
 export const ONE_MINUTE = 60 * ONE_SECOND;
 export const ONE_HOUR = 60 * ONE_MINUTE;
@@ -71,7 +72,7 @@ const quantizeDuration = (duration: number, floatPrecision: number, conversionFa
   toFloatPrecision(duration / conversionFactor, floatPrecision) * conversionFactor;
 
 /**
- * @param {number} duration - number of microseconds elapsed since midnight, January 1, 1970 Universal Coordinated Time (UTC).
+ * @param {number} duration - Unix Time
  * @return {string} formatted, unit-labelled string with time in milliseconds
  *
  * @example
@@ -84,7 +85,7 @@ export function formatDate(duration: number): string {
 }
 
 /**
- * @param {number} duration - number of microseconds elapsed since midnight, January 1, 1970 Universal Coordinated Time (UTC).
+ * @param {number} duration - Unix Time
  * @return {string} formatted, unit-labelled string with time in milliseconds
  *
  * @example
@@ -97,7 +98,7 @@ export function formatTime(duration: number): string {
 }
 
 /**
- * @param {number} duration - number of microseconds elapsed since midnight, January 1, 1970 Universal Coordinated Time (UTC).
+ * @param {number} duration - Unix Time
  * @return {string} formatted, unit-labelled string with time in milliseconds
  *
  * @example
@@ -110,7 +111,7 @@ export function formatDatetime(duration: number): string {
 }
 
 /**
- * @param {number} duration - number of microseconds elapsed since midnight, January 1, 1970 Universal Coordinated Time (UTC).
+ * @param {number} duration - Unix Time
  * @return {string} formatted, unit-labelled string with time in milliseconds
  *
  * @example
@@ -125,7 +126,7 @@ export function formatMillisecondTime(duration: number): string {
 }
 
 /**
- * @param {number} duration - number of microseconds elapsed since midnight, January 1, 1970 Universal Coordinated Time (UTC).
+ * @param {number} duration - Unix Time
  * @return {string} formatted, unit-labelled string with time in seconds
  *
  * @example
@@ -142,12 +143,12 @@ export function formatSecondTime(duration: number): string {
 /**
  * Humanizes the duration for display.
  *
- * Example:
+ * @example
  * 5000ms => 5s
  * 1000μs => 1ms
  * 183840s => 2d 3h
  *
- * @param {number} duration - number of microseconds elapsed since midnight, January 1, 1970 Universal Coordinated Time (UTC).
+ * @param {number} duration - Unix Time
  * @return {string} formatted duration
  */
 export function formatDuration(duration: number): string {
