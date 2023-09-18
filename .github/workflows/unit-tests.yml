@@ -2,7 +2,7 @@ name: "Unit Tests"
 
 on:
   push:
-    branches: [main]
+    branches: [jest-boost]
 
   pull_request:
     branches: [main]
