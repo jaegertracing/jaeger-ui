@@ -228,7 +228,7 @@ describe('formatRelativeDate', () => {
   });
 });
 
-describe('formatTime', () => {
+describe('format microseconds', () => {
   const dateStr = 'January 1 2000, 10:00:00.000';
   const dateInMilliseconds = Date.parse(dateStr);
 

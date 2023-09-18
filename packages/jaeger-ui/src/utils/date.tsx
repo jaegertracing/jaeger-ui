@@ -73,6 +73,11 @@ const quantizeDuration = (duration: number, floatPrecision: number, conversionFa
 /**
  * @param {number} duration - number of microseconds elapsed since midnight, January 1, 1970 Universal Coordinated Time (UTC).
  * @return {string} formatted, unit-labelled string with time in milliseconds
+ *
+ * @example
+ * ```
+ * formatDate(0) // => 1970-01-01
+ * ```
  */
 export function formatDate(duration: number): string {
   return dayjs(duration / ONE_MILLISECOND).format(STANDARD_DATE_FORMAT);
@@ -81,6 +86,11 @@ export function formatDate(duration: number): string {
 /**
  * @param {number} duration - number of microseconds elapsed since midnight, January 1, 1970 Universal Coordinated Time (UTC).
  * @return {string} formatted, unit-labelled string with time in milliseconds
+ *
+ * @example
+ * ```
+ * formatTime(0) // => 00:00
+ * ```
  */
 export function formatTime(duration: number): string {
   return dayjs(duration / ONE_MILLISECOND).format(STANDARD_TIME_FORMAT);
@@ -89,6 +99,11 @@ export function formatTime(duration: number): string {
 /**
  * @param {number} duration - number of microseconds elapsed since midnight, January 1, 1970 Universal Coordinated Time (UTC).
  * @return {string} formatted, unit-labelled string with time in milliseconds
+ *
+ * @example
+ * ```
+ * formatDatetime(0) // => January 1 1970, 00:00:00.000
+ * ```
  */
 export function formatDatetime(duration: number): string {
   return dayjs(duration / ONE_MILLISECOND).format(STANDARD_DATETIME_FORMAT);
@@ -97,6 +112,12 @@ export function formatDatetime(duration: number): string {
 /**
  * @param {number} duration - number of microseconds elapsed since midnight, January 1, 1970 Universal Coordinated Time (UTC).
  * @return {string} formatted, unit-labelled string with time in milliseconds
+ *
+ * @example
+ * ```
+ * formatMillisecondTime(1_000) // => 1ms
+ * formatMillisecondTime(10_000) // => 10ms
+ * ```
  */
 export function formatMillisecondTime(duration: number): string {
   const targetDuration = quantizeDuration(duration, DEFAULT_MS_PRECISION, ONE_MILLISECOND);
@@ -106,6 +127,12 @@ export function formatMillisecondTime(duration: number): string {
 /**
  * @param {number} duration - number of microseconds elapsed since midnight, January 1, 1970 Universal Coordinated Time (UTC).
  * @return {string} formatted, unit-labelled string with time in seconds
+ *
+ * @example
+ * ```
+ * formatSecondTime(1_000_000) // => 1s
+ * formatSecondTime(10_000_000) // => 10s
+ * ```
  */
 export function formatSecondTime(duration: number): string {
   const targetDuration = quantizeDuration(duration, DEFAULT_MS_PRECISION, ONE_SECOND);
