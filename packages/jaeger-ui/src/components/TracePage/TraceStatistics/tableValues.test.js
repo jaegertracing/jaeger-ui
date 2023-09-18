@@ -15,17 +15,17 @@
 import transformTraceData from '../../../model/transform-trace-data';
 import { getColumnValues, getColumnValuesSecondDropdown } from './tableValues';
 
-const testTraceNormal = require('./tableValuesTestTrace/testTraceNormal.json');
-const traceSpanAmongEachOther = require('./tableValuesTestTrace/spansAmongEachOther.json');
-const traceSpanAmongEachOtherGrouped = require('./tableValuesTestTrace/spansAmongEachOtherGrouped.json');
-const traceSpanAmongEachOtherGroupedAndSpans = require('./tableValuesTestTrace/spanAmongEachOtherGroupedAndSpans.json');
-const traceSpanLongerAsParent = require('./tableValuesTestTrace/spanLongerAsParent.json');
-const traceWithOverlappingChildrenLongerThanParent = require('./tableValuesTestTrace/traceWithOverlappingChildrenLongerThanParent.json');
-const traceWithTwoNonOverlappingChildren = require('./tableValuesTestTrace/traceWithTwoNonOverlappingChildren.json');
-const traceWithOverlappingChildren = require('./tableValuesTestTrace/traceWithOverlappingChildren.json');
-const traceWithSingleChildSpanLongerThanParent = require('./tableValuesTestTrace/traceWithSingleChildSpanLongerThanParent.json');
-const traceWithThreeShortChildren = require('./tableValuesTestTrace/traceWithThreeShortChildren.json');
-const traceWithTwoChildrenStartedAtTraceStart = require('./tableValuesTestTrace/traceWithTwoChildrenStartedAtTraceStart.json');
+import testTraceNormal from './tableValuesTestTrace/testTraceNormal.json';
+import traceSpanAmongEachOther from './tableValuesTestTrace/spansAmongEachOther.json';
+import traceSpanAmongEachOtherGrouped from './tableValuesTestTrace/spansAmongEachOtherGrouped.json';
+import traceSpanAmongEachOtherGroupedAndSpans from './tableValuesTestTrace/spanAmongEachOtherGroupedAndSpans.json';
+import traceSpanLongerAsParent from './tableValuesTestTrace/spanLongerAsParent.json';
+import traceWithOverlappingChildrenLongerThanParent from './tableValuesTestTrace/traceWithOverlappingChildrenLongerThanParent.json';
+import traceWithTwoNonOverlappingChildren from './tableValuesTestTrace/traceWithTwoNonOverlappingChildren.json';
+import traceWithOverlappingChildren from './tableValuesTestTrace/traceWithOverlappingChildren.json';
+import traceWithSingleChildSpanLongerThanParent from './tableValuesTestTrace/traceWithSingleChildSpanLongerThanParent.json';
+import traceWithThreeShortChildren from './tableValuesTestTrace/traceWithThreeShortChildren.json';
+import traceWithTwoChildrenStartedAtTraceStart from './tableValuesTestTrace/traceWithTwoChildrenStartedAtTraceStart.json';
 
 const transformedTrace = transformTraceData(testTraceNormal);
 const transformedTraceSpanAmongEachOthe = transformTraceData(traceSpanAmongEachOther);

@@ -10,13 +10,13 @@
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
-// limitations under the License.
+// limitations under the License
 
 export default class TreeNode<TValue> {
   value: TValue;
   children: Array<TreeNode<TValue>>;
 
-  static iterFunction<TValue>(fn: Function, depth = 0) {
+  static iterFunction<TValue>(fn: (value: TValue, node: TreeNode<TValue>, depth: number) => any, depth = 0) {
     return (node: TreeNode<TValue>) => fn(node.value, node, depth);
   }
 
@@ -89,7 +89,7 @@ export default class TreeNode<TValue> {
     return findPath(this, []);
   }
 
-  walk(fn: Function, startDepth = 0) {
+  walk(fn: (spanID: TValue, node: TreeNode<TValue>, depth: number) => void, startDepth = 0) {
     type StackEntry = {
       node: TreeNode<TValue>;
       depth: number;
@@ -111,7 +111,7 @@ export default class TreeNode<TValue> {
     }
   }
 
-  paths(fn: Function) {
+  paths(fn: (pathIds: TValue[]) => void) {
     type StackEntry = {
       node: TreeNode<TValue>;
       childIndex: number;
