@@ -27,12 +27,25 @@ const YESTERDAY = 'Yesterday';
 export const STANDARD_DATE_FORMAT = 'YYYY-MM-DD';
 export const STANDARD_TIME_FORMAT = 'HH:mm';
 export const STANDARD_DATETIME_FORMAT = 'MMMM D YYYY, HH:mm:ss.SSS';
+
+/** @constant 1μs is the precision of Jaeger timestamps */
 export const ONE_MICROSECOND = 1;
+
+/** @constant 1ms as the number of microseconds, which is the precision of Jaeger timestamps */
 export const ONE_MILLISECOND = 1000 * ONE_MICROSECOND;
+
+/** @constant 1s as the number of microseconds, which is the precision of Jaeger timestamps */
 export const ONE_SECOND = 1000 * ONE_MILLISECOND;
+
+/** @constant 1m as the number of microseconds, which is the precision of Jaeger timestamps */
 export const ONE_MINUTE = 60 * ONE_SECOND;
+
+/** @constant 1h as the number of microseconds, which is the precision of Jaeger timestamps */
 export const ONE_HOUR = 60 * ONE_MINUTE;
+
+/** @constant 1d as the number of microseconds, which is the precision of Jaeger timestamps */
 export const ONE_DAY = 24 * ONE_HOUR;
+
 export const DEFAULT_MS_PRECISION = Math.log10(ONE_MILLISECOND);
 
 const UNIT_STEPS: { unit: string; microseconds: number; ofPrevious: number }[] = [
