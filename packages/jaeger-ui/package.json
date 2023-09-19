@@ -83,7 +83,7 @@
     "react-helmet": "^6.1.0",
     "react-icons": "^4.10.1",
     "react-is": "^18.2.0",
-    "react-json-view-lite": "^0.9.8",
+    "react-json-view-lite": "1.0.0",
     "react-redux": "^5.0.6",
     "react-router-dom": "4.3.1",
     "react-router-redux": "5.0.0-alpha.8",
