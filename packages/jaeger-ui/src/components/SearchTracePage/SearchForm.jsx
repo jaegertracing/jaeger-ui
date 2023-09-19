@@ -37,6 +37,7 @@ import { formatDate, formatTime } from '../../utils/date';
 import reduxFormFieldAdapter from '../../utils/redux-form-field-adapter';
 import { DEFAULT_OPERATION, DEFAULT_LIMIT, DEFAULT_LOOKBACK } from '../../constants/search-form';
 import { getConfigValue } from '../../utils/config/get-config';
+import { antSelectSearchByLabel } from '../../utils/ant-design';
 import './SearchForm.css';
 
 const FormItem = Form.Item;
@@ -163,7 +164,7 @@ export const optionsWithinMaxLookback = memoizeOne(maxLookback => {
   }
   return options.map(({ label, value }) => (
     <Option key={value} value={value}>
-      Last {label}
+      {`Last ${label}`}
     </Option>
   ));
 });
@@ -290,6 +291,8 @@ export class SearchFormImpl extends React.PureComponent {
             placeholder="Select A Service"
             props={{
               disabled,
+              showSearch: true,
+              filterOption: antSelectSearchByLabel,
             }}
           >
             {services.map(service => (
@@ -312,6 +315,8 @@ export class SearchFormImpl extends React.PureComponent {
             placeholder="Select An Operation"
             props={{
               disabled: disabled || noSelectedService,
+              showSearch: true,
+              filterOption: antSelectSearchByLabel,
             }}
           >
             {['all'].concat(opsForSvc).map(op => (
@@ -377,7 +382,16 @@ export class SearchFormImpl extends React.PureComponent {
         </FormItem>
 
         <FormItem label="Lookback">
-          <Field name="lookback" component={AdaptedSelect} props={{ disabled, defaultValue: '1h' }}>
+          <Field
+            name="lookback"
+            component={AdaptedSelect}
+            props={{
+              disabled,
+              defaultValue: '1h',
+              showSearch: true,
+              filterOption: antSelectSearchByLabel,
+            }}
+          >
             {optionsWithinMaxLookback(searchMaxLookback)}
             <Option value="custom">Custom Time Range</Option>
           </Field>

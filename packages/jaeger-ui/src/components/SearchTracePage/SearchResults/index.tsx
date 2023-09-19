@@ -37,6 +37,7 @@ import * as orderBy from '../../../model/order-by';
 import { getPercentageOfDuration } from '../../../utils/date';
 import { stripEmbeddedState } from '../../../utils/embedded-url';
 import reduxFormFieldAdapter from '../../../utils/redux-form-field-adapter';
+import { antSelectSearchByLabel } from '../../../utils/ant-design';
 
 import { FetchedTrace } from '../../../types';
 import { SearchQuery } from '../../../types/search';
@@ -74,7 +75,14 @@ function SelectSortImpl() {
   return (
     <label>
       Sort:{' '}
-      <Field name="sortBy" component={reduxFormFieldAdapter({ AntInputComponent: Select })}>
+      <Field
+        name="sortBy"
+        component={reduxFormFieldAdapter({ AntInputComponent: Select })}
+        props={{
+          showSearch: true,
+          filterOption: antSelectSearchByLabel,
+        }}
+      >
         <Option value={orderBy.MOST_RECENT}>Most Recent</Option>
         <Option value={orderBy.LONGEST_FIRST}>Longest First</Option>
         <Option value={orderBy.SHORTEST_FIRST}>Shortest First</Option>

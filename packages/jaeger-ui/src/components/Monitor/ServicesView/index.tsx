@@ -40,6 +40,7 @@ import {
 } from '../../../types/metrics';
 import prefixUrl from '../../../utils/prefix-url';
 import { convertToTimeUnit, convertTimeUnitToShortTerm, getSuitableTimeUnit } from '../../../utils/date';
+import { antSelectSearchByLabel } from '../../../utils/ant-design';
 
 import './index.css';
 import { getConfigValue } from '../../../utils/config/get-config';
@@ -277,6 +278,8 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TPropsWithIn
                   value: this.getSelectedService(),
                   disabled: metrics.operationMetricsLoading,
                   loading: metrics.operationMetricsLoading,
+                  showSearch: true,
+                  filterOption: antSelectSearchByLabel,
                 }}
               >
                 {services.map((service: string) => (
@@ -321,6 +324,8 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TPropsWithIn
                   value: selectedTimeFrame,
                   disabled: metrics.operationMetricsLoading,
                   loading: metrics.operationMetricsLoading,
+                  showSearch: true,
+                  filterOption: antSelectSearchByLabel,
                 }}
               >
                 {timeFrameOptions.map(option => (

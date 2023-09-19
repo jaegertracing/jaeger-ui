@@ -24,6 +24,7 @@ import { Trace, Span } from '../../../types/trace';
 import { timeConversion } from '../../../utils/date';
 import prefixUrl from '../../../utils/prefix-url';
 import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
+import { antSelectSearchByLabel } from '../../../utils/ant-design';
 
 const Option = Select.Option;
 
@@ -203,6 +204,7 @@ export default class TraceSpanView extends Component<Props, State> {
                   }));
                   this.onFilteredChangeCustom(entry as [], 'process.serviceName' as keyof Span);
                 }}
+                filterOption={antSelectSearchByLabel}
               >
                 {this.state.serviceNamesList.map(name => {
                   return (
@@ -237,6 +239,7 @@ export default class TraceSpanView extends Component<Props, State> {
                   }));
                   this.onFilteredChangeCustom(entry as [], 'operationName');
                 }}
+                filterOption={antSelectSearchByLabel}
               >
                 {this.uniqueOperationNameOptions().map((name: string) => {
                   return (
