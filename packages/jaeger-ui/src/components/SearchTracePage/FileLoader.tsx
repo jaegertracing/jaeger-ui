@@ -14,7 +14,9 @@
 
 import * as React from 'react';
 import { Upload } from 'antd';
-import { FileAddOutlined } from '@ant-design/icons';
+import { IoDocumentAttachOutline } from 'react-icons/io5';
+
+import './FileLoader.css';
 
 const Dragger = Upload.Dragger;
 
@@ -31,9 +33,7 @@ export default function FileLoader(props: FileLoaderProps) {
       }
       multiple
     >
-      <p className="ant-upload-drag-icon">
-        <FileAddOutlined />
-      </p>
+      <IoDocumentAttachOutline className="Dragger--icon" />
       <p className="ant-upload-text">Click or drag files to this area.</p>
       <p className="ant-upload-hint">JSON files containing one or more traces are supported.</p>
     </Dragger>

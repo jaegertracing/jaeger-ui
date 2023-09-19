@@ -14,7 +14,7 @@
 
 import * as React from 'react';
 import { Input, InputRef } from 'antd';
-import { CloseOutlined } from '@ant-design/icons';
+import { IoClose } from 'react-icons/io5';
 import { History as RouterHistory, Location } from 'history';
 import _debounce from 'lodash/debounce';
 import _isString from 'lodash/isString';
@@ -90,7 +90,7 @@ export class UnconnectedUiFindInput extends React.PureComponent<TProps, StateTyp
     const inputValue = _isString(this.state.ownInputValue) ? this.state.ownInputValue : this.props.uiFind;
     const suffix = (
       <>
-        {allowClear && inputValue && inputValue.length && <CloseOutlined onClick={this.clearUiFind} />}
+        {allowClear && inputValue && inputValue.length && <IoClose onClick={this.clearUiFind} />}
         {inputProps.suffix}
       </>
     );

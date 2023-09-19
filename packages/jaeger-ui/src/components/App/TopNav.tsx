@@ -14,7 +14,7 @@
 
 import React from 'react';
 import { Dropdown, Menu } from 'antd';
-import { DownOutlined } from '@ant-design/icons';
+import { IoChevronDown } from 'react-icons/io5';
 import _has from 'lodash/has';
 import { connect } from 'react-redux';
 import { RouteComponentProps, Link, withRouter } from 'react-router-dom';
@@ -30,6 +30,8 @@ import { ReduxState } from '../../types';
 import { ConfigMenuItem, ConfigMenuGroup } from '../../types/config';
 import { getConfigValue } from '../../utils/config/get-config';
 import prefixUrl from '../../utils/prefix-url';
+
+import './TopNav.css';
 
 type Props = RouteComponentProps<any> & ReduxState;
 
@@ -96,9 +98,9 @@ function getItem(item: ConfigMenuItem) {
 function CustomNavDropdown({ label, items }: ConfigMenuGroup) {
   const menuItems = <Menu>{items.map(getItem)}</Menu>;
   return (
-    <Dropdown overlay={menuItems} overlayStyle={{ paddingRight: '20px' }} placement="bottomRight">
-      <a style={{ color: 'white' }}>
-        {label} <DownOutlined style={{ paddingRight: '30px' }} />
+    <Dropdown overlay={menuItems} placement="bottomRight">
+      <a className="Dropdown--icon-container">
+        {label} <IoChevronDown className="Dropdown--icon" />
       </a>
     </Dropdown>
   );

@@ -17,7 +17,7 @@ import * as React from 'react';
 import { Form } from '@ant-design/compatible';
 import '@ant-design/compatible/assets/index.css';
 import { Input } from 'antd';
-import { SearchOutlined } from '@ant-design/icons';
+import { IoSearch } from 'react-icons/io5';
 import { RouteComponentProps, Router as RouterHistory, withRouter } from 'react-router-dom';
 
 import { getUrl } from '../TracePage/url';
@@ -50,7 +50,7 @@ class TraceIDSearchInput extends React.PureComponent<Props> {
           data-testid="idInput"
           name="idInput"
           placeholder="Lookup by Trace ID..."
-          prefix={<SearchOutlined />}
+          prefix={<IoSearch />}
         />
       </Form>
     );

@@ -14,8 +14,7 @@
 
 import * as React from 'react';
 import { InputRef, Tooltip } from 'antd';
-import { SearchOutlined } from '@ant-design/icons';
-import { MdVisibility, MdVisibilityOff } from 'react-icons/md';
+import { IoSearch, IoEye, IoEyeOff } from 'react-icons/io5';
 
 import HopsSelector from './HopsSelector';
 import NameSelector from '../../common/NameSelector';
@@ -74,7 +73,7 @@ export default class Header extends React.PureComponent<TProps> {
       hiddenInfo = (
         <span className="DdgHeader--uiFindInfo--hidden">
           {size}
-          <MdVisibilityOff className="DdgHeader--uiFindInfo--icon" />
+          <IoEyeOff className="DdgHeader--uiFindInfo--icon" />
         </span>
       );
     }
@@ -90,7 +89,7 @@ export default class Header extends React.PureComponent<TProps> {
             type="button"
           >
             {uiFindCount}
-            {(uiFindCount !== 0 || hasHidden) && <MdVisibility className="DdgHeader--uiFindInfo--icon" />}
+            {(uiFindCount !== 0 || hasHidden) && <IoEye className="DdgHeader--uiFindInfo--icon" />}
             {hiddenInfo}
           </button>
         </span>
@@ -165,7 +164,7 @@ export default class Header extends React.PureComponent<TProps> {
           />
           <div className="DdgHeader--findWrapper">
             <div className="DdgHeader--uiFind" role="button" onClick={this.focusUiFindInput}>
-              <SearchOutlined className="DdgHeader--uiFindSearchIcon" />
+              <IoSearch className="DdgHeader--uiFindSearchIcon" />
               <UiFindInput
                 allowClear
                 forwardedRef={this._uiFindInput}

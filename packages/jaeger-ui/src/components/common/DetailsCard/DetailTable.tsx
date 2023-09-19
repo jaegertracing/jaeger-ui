@@ -14,8 +14,7 @@
 
 import * as React from 'react';
 import { Table } from 'antd';
-import { FilterOutlined } from '@ant-design/icons';
-import { FaFilter } from 'react-icons/fa';
+import { IoFunnel, IoFunnelOutline } from 'react-icons/io5';
 import _isEmpty from 'lodash/isEmpty';
 
 import ExamplesLink, { TExample } from '../ExamplesLink';
@@ -113,8 +112,8 @@ export const _makeColumns = ({ defs, rows }: { defs: TColumnDefs; rows: TRow[] }
       title,
       filterDropdown: Boolean(options.size) && _makeFilterDropdown(dataIndex, options),
       filterIcon: (filtered: boolean) => {
-        if (filtered) return <FaFilter />;
-        return <FilterOutlined />;
+        if (filtered) return <IoFunnel />;
+        return <IoFunnelOutline />;
       },
       onCell: _onCell(dataIndex),
       onHeaderCell: () => ({

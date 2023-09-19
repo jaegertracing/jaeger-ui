@@ -14,35 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-.TimelineCollapser {
-  align-items: center;
-  display: flex;
-  flex: none;
-  justify-content: center;
-  margin-right: 0.5rem;
-}
-
-.TimelineCollapser--tooltipTitle {
-  white-space: pre;
-}
-
-.TimelineCollapser--btn,
-.TimelineCollapser--btn-expand {
-  color: rgba(0, 0, 0, 0.5);
-  cursor: pointer;
-  margin-right: 0.3rem;
-  padding: 0.1rem;
-}
-
-.TimelineCollapser--btn:hover,
-.TimelineCollapser--btn-expand:hover {
-  color: rgba(0, 0, 0, 0.85);
-}
-
-.TimelineCollapser--btn-expand {
-  transform: rotate(90deg);
-}
-
-.TimelineCollapser--btn-size {
-  font-size: 20px;
+.Dragger--icon {
+  font-size: 56px;
+  color: #2da6a2;
+  margin: 10px 0;
 }

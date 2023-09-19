@@ -13,10 +13,9 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { CloseOutlined, DownOutlined, UpOutlined } from '@ant-design/icons';
 import { Button, Input, InputRef, Tooltip } from 'antd';
 import cx from 'classnames';
-import { IoLocate, IoHelp } from 'react-icons/io5';
+import { IoLocate, IoHelp, IoClose, IoChevronDown, IoChevronUp } from 'react-icons/io5';
 
 import * as markers from './TracePageSearchBar.markers';
 import { trackFilter } from '../index.track';
@@ -109,31 +108,34 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwarde
               <IoLocate />
             </Button>
             <Button
-              className={btnClass}
+              className={cx(btnClass, 'TracePageSearchBar--ButtonUp')}
               disabled={!textFilter}
               htmlType="button"
-              icon={<UpOutlined />}
               data-testid="UpOutlined"
               onClick={prevResult}
-            />
+            >
+              <IoChevronUp />
+            </Button>
             <Button
-              className={btnClass}
+              className={cx(btnClass, 'TracePageSearchBar--ButtonDown')}
               disabled={!textFilter}
               htmlType="button"
-              icon={<DownOutlined />}
               data-testid="DownOutlined"
               onClick={nextResult}
-            />
+            >
+              <IoChevronDown />
+            </Button>
           </>
         )}
         <Button
-          className={btnClass}
+          className={cx(btnClass, 'TracePageSearchBar--ButtonClose')}
           disabled={!textFilter}
           htmlType="button"
-          icon={<CloseOutlined />}
           data-testid="CloseOutlined"
           onClick={clearSearch}
-        />
+        >
+          <IoClose />
+        </Button>
       </Input.Group>
     </div>
   );
