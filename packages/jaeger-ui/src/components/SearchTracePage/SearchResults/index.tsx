@@ -185,7 +185,7 @@ export class UnconnectedSearchResults extends React.PureComponent<SearchResultsP
                   x: t.startTime,
                   y: t.duration,
                   traceID: t.traceID,
-                  size: t.spans.length,
+                  size: t.spans.length * 30,
                   name: t.traceName,
                   color: t.spans.some(sp => sp.tags.some(isErrorTag)) ? 'red' : '#12939A',
                 }))}

@@ -394,6 +394,6 @@ describe('yAxisTickFormat', () => {
   it('value is 2 second', () => {
     const timeInMs = 1000;
     const displayTimeUnit = 'seconds';
-    expect(yAxisTickFormat(timeInMs, displayTimeUnit)).toBe(1);
+    expect(yAxisTickFormat(timeInMs, displayTimeUnit)).toBe('1');
   });
 });
