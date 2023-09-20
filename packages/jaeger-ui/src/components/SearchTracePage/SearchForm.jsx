@@ -342,6 +342,12 @@ export class SearchFormImpl extends React.PureComponent {
                     <li>
                       Values containing whitespace or equal-sign &apos=&apos should be enclosed in quotes
                     </li>
+                    <li>
+                      Elasticsearch/OpenSearch storage requires escaping{' '}
+                       <a href="https://lucene.apache.org/core/8_9_0/core/index.html" rel="noopener noreferrer" target="_blank">
+                         reserved characters
+                       </a>{' '}for exact match queries.
+                    </li>
                   </ul>,
                 ]}
                 content={
