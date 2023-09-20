@@ -344,7 +344,7 @@ export class SearchFormImpl extends React.PureComponent {
                     </li>
                     <li>
                       Elasticsearch/OpenSearch storage requires escaping{' '}
-                       <a href="https://lucene.apache.org/core/8_9_0/core/index.html" rel="noopener noreferrer" target="_blank">
+                       <a href="https://lucene.apache.org/core/9_0_0/core/org/apache/lucene/util/automaton/RegExp.html" rel="noopener noreferrer" target="_blank">
                          reserved characters
                        </a>{' '}for exact match queries.
                     </li>
