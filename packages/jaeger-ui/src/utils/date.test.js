@@ -20,16 +20,17 @@ import {
   convertToTimeUnit,
   formatRelativeDate,
   ONE_MILLISECOND,
-  ONE_SECOND,
-  ONE_MINUTE,
-  ONE_HOUR,
-  ONE_DAY,
   formatDate,
   formatTime,
   formatDatetime,
   formatMillisecondTime,
   formatSecondTime,
 } from './date.tsx';
+
+const ONE_SECOND = 1000 * ONE_MILLISECOND;
+const ONE_MINUTE = 60 * ONE_SECOND;
+const ONE_HOUR = 60 * ONE_MINUTE;
+const ONE_DAY = 24 * ONE_HOUR;
 
 describe('formatDuration', () => {
   it('keeps microseconds the same', () => {
