@@ -20,11 +20,17 @@ import {
   convertToTimeUnit,
   formatRelativeDate,
   ONE_MILLISECOND,
-  ONE_SECOND,
-  ONE_MINUTE,
-  ONE_HOUR,
-  ONE_DAY,
+  formatDate,
+  formatTime,
+  formatDatetime,
+  formatMillisecondTime,
+  formatSecondTime,
 } from './date.tsx';
+
+const ONE_SECOND = 1000 * ONE_MILLISECOND;
+const ONE_MINUTE = 60 * ONE_SECOND;
+const ONE_HOUR = 60 * ONE_MINUTE;
+const ONE_DAY = 24 * ONE_HOUR;
 
 describe('formatDuration', () => {
   it('keeps microseconds the same', () => {
@@ -184,6 +190,10 @@ describe('convertToTimeUnit', () => {
     const input = 172800000000;
     expect(convertToTimeUnit(input, 'days')).toBe(2);
   });
+  it('convert duration to days', () => {
+    const input = 172800000000;
+    expect(convertToTimeUnit(input, 'days')).toBe(2);
+  });
 });
 
 describe('formatRelativeDate', () => {
@@ -216,5 +226,35 @@ describe('formatRelativeDate', () => {
       day: 'numeric',
     });
     expect(formatRelativeDate(input)).toBe(output);
+  });
+});
+
+describe('format microseconds', () => {
+  const dateStr = 'January 1 2000, 10:00:00.000';
+  const dateInMilliseconds = Date.parse(dateStr);
+
+  it('formateDate formats microseconds to date', () => {
+    const dateInMicroseconds = dateInMilliseconds * ONE_MILLISECOND;
+    expect(formatDate(dateInMicroseconds)).toBe('2000-01-01');
+  });
+
+  it('formatTime formats microseconds to time', () => {
+    const dateInMicroseconds = dateInMilliseconds * ONE_MILLISECOND;
+    expect(formatTime(dateInMicroseconds)).toBe('10:00');
+  });
+
+  it('formatDateTime formats microseconds to standard date format', () => {
+    const dateInMicroseconds = dateInMilliseconds * ONE_MILLISECOND;
+    expect(formatDatetime(dateInMicroseconds)).toBe('January 1 2000, 10:00:00.000');
+  });
+
+  it('formatMillisecondTime formats microseconds to milliseconds', () => {
+    const durationInMicroseconds = 1000 * ONE_MILLISECOND;
+    expect(formatMillisecondTime(durationInMicroseconds)).toBe('1000ms');
+  });
+
+  it('formatSecondTime formats microseconds to seconds', () => {
+    const durationInMicroseconds = 1000 * ONE_MILLISECOND;
+    expect(formatSecondTime(durationInMicroseconds)).toBe('1s');
   });
 });

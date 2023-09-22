@@ -20,7 +20,7 @@ import { Input, Button, Popover, Select, Row, Col } from 'antd';
 import _get from 'lodash/get';
 import logfmtParser from 'logfmt/lib/logfmt_parser';
 import { stringify as logfmtStringify } from 'logfmt/lib/stringify';
-import moment from 'moment';
+import dayjs from 'dayjs';
 import memoizeOne from 'memoize-one';
 import PropTypes from 'prop-types';
 import queryString from 'query-string';
@@ -50,8 +50,8 @@ export function getUnixTimeStampInMSFromForm({ startDate, startDateTime, endDate
   const start = `${startDate} ${startDateTime}`;
   const end = `${endDate} ${endDateTime}`;
   return {
-    start: `${moment(start, 'YYYY-MM-DD HH:mm').valueOf()}000`,
-    end: `${moment(end, 'YYYY-MM-DD HH:mm').valueOf()}000`,
+    start: `${dayjs(start, 'YYYY-MM-DD HH:mm').valueOf()}000`,
+    end: `${dayjs(end, 'YYYY-MM-DD HH:mm').valueOf()}000`,
   };
 }
 
@@ -73,7 +73,7 @@ export function convTagsLogfmt(tags) {
 
 export function lookbackToTimestamp(lookback, from) {
   const unit = lookback.substr(-1);
-  return moment(from).subtract(parseInt(lookback, 10), unit).valueOf() * 1000;
+  return dayjs(from).subtract(parseInt(lookback, 10), unit).valueOf() * 1000;
 }
 
 const lookbackOptions = [
@@ -538,7 +538,7 @@ export function mapStateToProps(state) {
     traceID: traceIDParams,
   } = queryString.parse(state.router.location.search);
 
-  const nowInMicroseconds = moment().valueOf() * 1000;
+  const nowInMicroseconds = dayjs().valueOf() * 1000;
   const today = formatDate(nowInMicroseconds);
   const currentTime = formatTime(nowInMicroseconds);
   const lastSearch = store.get('lastSearch');
