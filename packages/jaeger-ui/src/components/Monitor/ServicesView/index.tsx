@@ -40,7 +40,6 @@ import {
 } from '../../../types/metrics';
 import prefixUrl from '../../../utils/prefix-url';
 import { convertToTimeUnit, convertTimeUnitToShortTerm, getSuitableTimeUnit } from '../../../utils/date';
-import { antSelectSearchByLabel } from '../../../utils/ant-design';
 
 import './index.css';
 import { getConfigValue } from '../../../utils/config/get-config';
@@ -51,6 +50,7 @@ import {
   trackViewAllTraces,
 } from './index.track';
 import withRouteProps from '../../../utils/withRouteProps';
+import SearchableSelect from '../../common/SearchableSelect';
 
 type StateType = {
   graphWidth: number;
@@ -271,15 +271,13 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TPropsWithIn
               <Field
                 onChange={(e, newValue: string) => trackSelectService(newValue)}
                 name="service"
-                component={reduxFormFieldAdapter({ AntInputComponent: Select })}
+                component={reduxFormFieldAdapter({ AntInputComponent: SearchableSelect })}
                 placeholder="Select A Service"
                 props={{
                   className: 'select-a-service-input',
                   value: this.getSelectedService(),
                   disabled: metrics.operationMetricsLoading,
                   loading: metrics.operationMetricsLoading,
-                  showSearch: true,
-                  filterOption: antSelectSearchByLabel,
                 }}
               >
                 {services.map((service: string) => (
@@ -312,7 +310,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TPropsWithIn
             <Col span={8} className="timeframe-selector">
               <Field
                 name="timeframe"
-                component={reduxFormFieldAdapter({ AntInputComponent: Select })}
+                component={reduxFormFieldAdapter({ AntInputComponent: SearchableSelect })}
                 placeholder="Select A Timeframe"
                 onChange={(e, value: number) => {
                   const { label } = timeFrameOptions.find(option => option.value === value)!;
@@ -324,8 +322,6 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TPropsWithIn
                   value: selectedTimeFrame,
                   disabled: metrics.operationMetricsLoading,
                   loading: metrics.operationMetricsLoading,
-                  showSearch: true,
-                  filterOption: antSelectSearchByLabel,
                 }}
               >
                 {timeFrameOptions.map(option => (

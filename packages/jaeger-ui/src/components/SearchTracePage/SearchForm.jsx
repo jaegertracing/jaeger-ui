@@ -37,14 +37,14 @@ import { formatDate, formatTime } from '../../utils/date';
 import reduxFormFieldAdapter from '../../utils/redux-form-field-adapter';
 import { DEFAULT_OPERATION, DEFAULT_LIMIT, DEFAULT_LOOKBACK } from '../../constants/search-form';
 import { getConfigValue } from '../../utils/config/get-config';
-import { antSelectSearchByLabel } from '../../utils/ant-design';
+import SearchableSelect from '../common/SearchableSelect';
 import './SearchForm.css';
 
 const FormItem = Form.Item;
 const Option = Select.Option;
 
 const AdaptedInput = reduxFormFieldAdapter({ AntInputComponent: Input });
-const AdaptedSelect = reduxFormFieldAdapter({ AntInputComponent: Select });
+const AdaptedSelect = reduxFormFieldAdapter({ AntInputComponent: SearchableSelect });
 const ValidatedAdaptedInput = reduxFormFieldAdapter({ AntInputComponent: Input, isValidatedInput: true });
 
 export function getUnixTimeStampInMSFromForm({ startDate, startDateTime, endDate, endDateTime }) {
@@ -291,8 +291,6 @@ export class SearchFormImpl extends React.PureComponent {
             placeholder="Select A Service"
             props={{
               disabled,
-              showSearch: true,
-              filterOption: antSelectSearchByLabel,
             }}
           >
             {services.map(service => (
@@ -315,8 +313,6 @@ export class SearchFormImpl extends React.PureComponent {
             placeholder="Select An Operation"
             props={{
               disabled: disabled || noSelectedService,
-              showSearch: true,
-              filterOption: antSelectSearchByLabel,
             }}
           >
             {['all'].concat(opsForSvc).map(op => (
@@ -388,8 +384,6 @@ export class SearchFormImpl extends React.PureComponent {
             props={{
               disabled,
               defaultValue: '1h',
-              showSearch: true,
-              filterOption: antSelectSearchByLabel,
             }}
           >
             {optionsWithinMaxLookback(searchMaxLookback)}

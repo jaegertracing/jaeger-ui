@@ -12,19 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import React, { FunctionComponent } from 'react';
+import { Select, SelectProps } from 'antd';
 import { DefaultOptionType } from 'antd/lib/select';
 
-/**
- * This enables search by label in Ant Design's Select component (v4.x)
- *
- * Pass this to the `filterOption` prop with `showSearch` prop set to `true`
- *
- * @example
- * ```
- * <Select {...props} filterOption={antSelectSearchByLabel} showSearch={true} />
- * ```
- */
-// eslint-disable-next-line import/prefer-default-export
-export function antSelectSearchByLabel(input: string, option?: DefaultOptionType) {
-  return (option?.children?.toString() ?? '').toLowerCase().includes(input.toLowerCase());
-}
+const SearchableSelect: FunctionComponent<SelectProps> = props => {
+  return (
+    <Select
+      showSearch
+      filterOption={(input: string, option?: DefaultOptionType) => {
+        return (option?.children?.toString() ?? '').toLowerCase().includes(input.toLowerCase());
+      }}
+      {...props}
+    />
+  );
+};
+
+export default SearchableSelect;

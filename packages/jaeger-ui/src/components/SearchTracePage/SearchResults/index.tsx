@@ -37,7 +37,6 @@ import * as orderBy from '../../../model/order-by';
 import { getPercentageOfDuration } from '../../../utils/date';
 import { stripEmbeddedState } from '../../../utils/embedded-url';
 import reduxFormFieldAdapter from '../../../utils/redux-form-field-adapter';
-import { antSelectSearchByLabel } from '../../../utils/ant-design';
 
 import { FetchedTrace } from '../../../types';
 import { SearchQuery } from '../../../types/search';
@@ -46,6 +45,7 @@ import { KeyValuePair, Trace, TraceData } from '../../../types/trace';
 import './index.css';
 import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
 import withRouteProps from '../../../utils/withRouteProps';
+import SearchableSelect from '../../common/SearchableSelect';
 
 type SearchResultsProps = {
   cohortAddTrace: (traceId: string) => void;
@@ -77,11 +77,8 @@ function SelectSortImpl() {
       Sort:{' '}
       <Field
         name="sortBy"
-        component={reduxFormFieldAdapter({ AntInputComponent: Select })}
-        props={{
-          showSearch: true,
-          filterOption: antSelectSearchByLabel,
-        }}
+        component={reduxFormFieldAdapter({ AntInputComponent: SearchableSelect })}
+        props={{}}
       >
         <Option value={orderBy.MOST_RECENT}>Most Recent</Option>
         <Option value={orderBy.LONGEST_FIRST}>Longest First</Option>
