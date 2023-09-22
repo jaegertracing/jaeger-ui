@@ -31,19 +31,12 @@ export const STANDARD_DATETIME_FORMAT = 'MMMM D YYYY, HH:mm:ss.SSS';
 /** @constant 1ms as the number of microseconds, which is the precision of Jaeger timestamps */
 export const ONE_MILLISECOND = 1000 * 1;
 
-/** @constant 1s as the number of microseconds, which is the precision of Jaeger timestamps */
-export const ONE_SECOND = 1000 * ONE_MILLISECOND;
+const ONE_SECOND = 1000 * ONE_MILLISECOND;
+const ONE_MINUTE = 60 * ONE_SECOND;
+const ONE_HOUR = 60 * ONE_MINUTE;
+const ONE_DAY = 24 * ONE_HOUR;
 
-/** @constant 1m as the number of microseconds, which is the precision of Jaeger timestamps */
-export const ONE_MINUTE = 60 * ONE_SECOND;
-
-/** @constant 1h as the number of microseconds, which is the precision of Jaeger timestamps */
-export const ONE_HOUR = 60 * ONE_MINUTE;
-
-/** @constant 1d as the number of microseconds, which is the precision of Jaeger timestamps */
-export const ONE_DAY = 24 * ONE_HOUR;
-
-export const DEFAULT_MS_PRECISION = Math.log10(ONE_MILLISECOND);
+const DEFAULT_MS_PRECISION = Math.log10(ONE_MILLISECOND);
 
 const UNIT_STEPS: { unit: string; microseconds: number; ofPrevious: number }[] = [
   { unit: 'd', microseconds: ONE_DAY, ofPrevious: 24 },
