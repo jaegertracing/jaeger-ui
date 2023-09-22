@@ -23,9 +23,7 @@ exports[`<MonitorATMServicesView> ATM snapshot test 1`] = `
             Object {
               "className": "select-a-service-input",
               "disabled": null,
-              "filterOption": [Function],
               "loading": null,
-              "showSearch": true,
               "value": "s1",
             }
           }
@@ -84,9 +82,7 @@ exports[`<MonitorATMServicesView> ATM snapshot test 1`] = `
                 "value": 3600000,
               },
               "disabled": null,
-              "filterOption": [Function],
               "loading": null,
-              "showSearch": true,
               "value": 3600000,
             }
           }
@@ -444,9 +440,7 @@ exports[`<MonitorATMServicesView> ATM snapshot test with no metrics 1`] = `
             Object {
               "className": "select-a-service-input",
               "disabled": null,
-              "filterOption": [Function],
               "loading": null,
-              "showSearch": true,
               "value": "s1",
             }
           }
@@ -492,9 +486,7 @@ exports[`<MonitorATMServicesView> ATM snapshot test with no metrics 1`] = `
                 "value": 3600000,
               },
               "disabled": null,
-              "filterOption": [Function],
               "loading": null,
-              "showSearch": true,
               "value": 3600000,
             }
           }
@@ -771,9 +763,7 @@ exports[`<MonitorATMServicesView> render one service latency 1`] = `
             Object {
               "className": "select-a-service-input",
               "disabled": null,
-              "filterOption": [Function],
               "loading": null,
-              "showSearch": true,
               "value": "s1",
             }
           }
@@ -819,9 +809,7 @@ exports[`<MonitorATMServicesView> render one service latency 1`] = `
                 "value": 3600000,
               },
               "disabled": null,
-              "filterOption": [Function],
               "loading": null,
-              "showSearch": true,
               "value": 3600000,
             }
           }

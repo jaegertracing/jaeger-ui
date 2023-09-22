@@ -203,6 +203,7 @@ export default class TraceSpanView extends Component<Props, State> {
                   }));
                   this.onFilteredChangeCustom(entry as [], 'process.serviceName' as keyof Span);
                 }}
+                data-testid="select-service"
               >
                 {this.state.serviceNamesList.map(name => {
                   return (
@@ -236,7 +237,7 @@ export default class TraceSpanView extends Component<Props, State> {
                   }));
                   this.onFilteredChangeCustom(entry as [], 'operationName');
                 }}
-                // filterOption={antSelectSearchByLabel}
+                data-testid="select-operation"
               >
                 {this.uniqueOperationNameOptions().map((name: string) => {
                   return (
