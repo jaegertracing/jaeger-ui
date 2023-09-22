@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import moment from 'moment';
+import dayjs from 'dayjs';
 
 import { formatRelativeDate } from '../../utils/date';
 
@@ -26,7 +26,7 @@ type Props = {
 // https://github.com/Microsoft/TypeScript/issues/21699
 export default function RelativeDate(props: Props): any {
   const { value, includeTime, fullMonthName } = props;
-  const m = moment.isMoment(value) ? value : moment(value);
+  const m = dayjs.isDayjs(value) ? value : dayjs(value);
   const dateStr = formatRelativeDate(m, Boolean(fullMonthName));
   const timeStr = includeTime ? `, ${m.format('h:mm:ss a')}` : '';
   return `${dateStr}${timeStr}`;
