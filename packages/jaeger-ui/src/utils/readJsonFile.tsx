@@ -22,8 +22,10 @@ export default function readJsonFile(fileList: { file: File }) {
       }
       try {
         resolve(JSON.parse(reader.result));
-      } catch (error: any) {
-        reject(new Error(`Error parsing JSON: ${error.message}`));
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          reject(new Error(`Error parsing JSON: ${error.message}`));
+        }
       }
     };
     reader.onerror = () => {
@@ -37,9 +39,11 @@ export default function readJsonFile(fileList: { file: File }) {
     };
     try {
       reader.readAsText(fileList.file);
-    } catch (error: any) {
-      // eslint-disable-next-line no-console
-      reject(new Error(`Error reading the JSON file: ${error.message}`));
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        // eslint-disable-next-line no-console
+        reject(new Error(`Error reading the JSON file: ${error.message}`));
+      }
     }
   });
 }

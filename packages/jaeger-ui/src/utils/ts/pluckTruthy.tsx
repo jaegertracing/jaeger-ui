@@ -13,7 +13,7 @@
 // limitations under the License.
 
 // Because TypeScript doesn't believe in Array#filter(Boolean)
-export default function pluckTruthy<T>(values: (T | any)[]): T[] {
+export default function pluckTruthy<T>(values: (T | undefined)[]): T[] {
   const rv: T[] = [];
   for (let i = 0; i < values.length; i++) {
     const value = values[i];

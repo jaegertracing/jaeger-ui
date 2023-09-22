@@ -40,7 +40,16 @@ const UNIT_STEPS: { unit: string; microseconds: number; ofPrevious: number }[] =
   { unit: 'μs', microseconds: 1, ofPrevious: 1000 },
 ];
 
-const timeUnitToShortTermMapper = {
+type TimeUnitToShortTermMapper = {
+  [key: string]: string;
+  milliseconds: string;
+  seconds: string;
+  minutes: string;
+  hours: string;
+  days: string;
+};
+
+const timeUnitToShortTermMapper: TimeUnitToShortTermMapper = {
   milliseconds: 'ms',
   seconds: 's',
   minutes: 'm',
@@ -133,7 +142,7 @@ export function formatDuration(duration: number): string {
   return secondaryValue === 0 ? primaryUnitString : `${primaryUnitString} ${secondaryUnitString}`;
 }
 
-export function formatRelativeDate(value: any, fullMonthName = false) {
+export function formatRelativeDate(value: moment.Moment | number, fullMonthName = false) {
   const m = moment.isMoment(value) ? value : moment(value);
   const monthFormat = fullMonthName ? 'MMMM' : 'MMM';
   const dt = new Date();
@@ -172,7 +181,7 @@ export const getSuitableTimeUnit = (microseconds: number): string => {
 export function convertTimeUnitToShortTerm(timeUnit: string) {
   if (timeUnit === 'microseconds') return 'μs';
 
-  const shortTimeUnit = (timeUnitToShortTermMapper as any)[timeUnit];
+  const shortTimeUnit = timeUnitToShortTermMapper[timeUnit];
 
   if (shortTimeUnit) return shortTimeUnit;
 

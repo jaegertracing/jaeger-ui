@@ -14,7 +14,6 @@
 
 import * as React from 'react';
 import { History as RouterHistory } from 'history';
-import queryString from 'query-string';
 import { connect } from 'react-redux';
 import { match } from 'react-router-dom';
 import { bindActionCreators, Dispatch } from 'redux';
