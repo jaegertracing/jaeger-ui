@@ -12,8 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Because TypeScript doesn't believe in Array#filter(Boolean)
-export default function pluckTruthy<T>(values: (T | undefined)[]): T[] {
+export default function pluckTruthy<T>(values: (T | any)[]): T[] {
   const rv: T[] = [];
   for (let i = 0; i < values.length; i++) {
     const value = values[i];
