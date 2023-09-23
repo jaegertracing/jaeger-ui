@@ -4,11 +4,11 @@ exports[`JaegerUIApp does not explode 1`] = `
 <Provider
   store={
     Object {
+      "@@observable": [Function],
       "dispatch": [Function],
       "getState": [Function],
       "replaceReducer": [Function],
       "subscribe": [Function],
-      Symbol(observable): [Function],
     }
   }
 >
@@ -37,27 +37,69 @@ exports[`JaegerUIApp does not explode 1`] = `
     <withRouter(Connect(PageImpl))>
       <Switch>
         <Route
-          component={[Function]}
+          component={
+            Object {
+              "$$typeof": Symbol(react.memo),
+              "WrappedComponent": [Function],
+              "compare": null,
+              "type": [Function],
+            }
+          }
           path="/search"
         />
         <Route
-          component={[Function]}
+          component={
+            Object {
+              "$$typeof": Symbol(react.memo),
+              "WrappedComponent": [Function],
+              "compare": null,
+              "type": [Function],
+            }
+          }
           path="/trace/:a?\\\\.\\\\.\\\\.:b?"
         />
         <Route
-          component={[Function]}
+          component={
+            Object {
+              "$$typeof": Symbol(react.memo),
+              "WrappedComponent": [Function],
+              "compare": null,
+              "type": [Function],
+            }
+          }
           path="/trace/:id"
         />
         <Route
-          component={[Function]}
+          component={
+            Object {
+              "$$typeof": Symbol(react.memo),
+              "WrappedComponent": [Function],
+              "compare": null,
+              "type": [Function],
+            }
+          }
           path="/dependencies"
         />
         <Route
-          component={[Function]}
+          component={
+            Object {
+              "$$typeof": Symbol(react.memo),
+              "WrappedComponent": [Function],
+              "compare": null,
+              "type": [Function],
+            }
+          }
           path="/deep-dependencies"
         />
         <Route
-          component={[Function]}
+          component={
+            Object {
+              "$$typeof": Symbol(react.memo),
+              "WrappedComponent": [Function],
+              "compare": null,
+              "type": [Function],
+            }
+          }
           path="/quality-metrics"
         />
         <Route
