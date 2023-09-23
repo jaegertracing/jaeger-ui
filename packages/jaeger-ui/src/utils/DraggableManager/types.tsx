@@ -26,7 +26,7 @@ export type DraggableBounds = {
 };
 
 export type DraggingUpdate = {
-  event: React.MouseEvent<any> | MouseEvent;
+  event: React.MouseEvent<HTMLDivElement | SVGSVGElement, MouseEvent> | MouseEvent;
   manager: DraggableManager;
   tag: string | TNil;
   type: EUpdateTypes;
