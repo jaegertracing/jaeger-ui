@@ -82,8 +82,6 @@ describe('makeShortcutCallbacks()', () => {
 });
 
 describe('<TracePage>', () => {
-  TraceTimelineViewer.prototype.shouldComponentUpdate.mockReturnValue(false);
-
   const trace = transformTraceData(traceGenerator.trace({}));
   const defaultProps = {
     acknowledgeArchive: () => {},

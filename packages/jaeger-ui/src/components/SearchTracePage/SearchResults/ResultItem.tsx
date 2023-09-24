@@ -18,7 +18,8 @@ import { LocationDescriptor } from 'history';
 import { Link } from 'react-router-dom';
 
 import { sortBy } from 'lodash';
-import moment from 'moment';
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
 
 import { IoAlert } from 'react-icons/io5';
 
@@ -31,6 +32,8 @@ import { formatRelativeDate } from '../../../utils/date';
 import { KeyValuePair, Trace } from '../../../types/trace';
 
 import './ResultItem.css';
+
+dayjs.extend(relativeTime);
 
 type Props = {
   durationPercent: number;
@@ -57,7 +60,7 @@ export default class ResultItem extends React.PureComponent<Props, State> {
     super(props, state);
     const { startTime, spans } = props.trace;
 
-    const mDate = moment(startTime / 1000);
+    const startTimeDayjs = dayjs(startTime / 1000);
 
     const erroredServices: Set<string> = new Set<string>();
 
@@ -71,8 +74,8 @@ export default class ResultItem extends React.PureComponent<Props, State> {
 
     this.state = {
       numSpans: spans.length,
-      timeStr: mDate.format('h:mm:ss a'),
-      fromNow: mDate.fromNow(),
+      timeStr: startTimeDayjs.format('h:mm:ss a'),
+      fromNow: startTimeDayjs.fromNow(),
       numErredSpans,
       erroredServices,
     };

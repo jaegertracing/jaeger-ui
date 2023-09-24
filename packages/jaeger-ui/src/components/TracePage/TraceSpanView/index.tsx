@@ -15,7 +15,7 @@
 
 import React, { Component } from 'react';
 import { Row, Col, Table, Button, Select } from 'antd';
-import moment from 'moment';
+import dayjs from 'dayjs';
 import { ColumnProps } from 'antd/es/table';
 import { Form } from '@ant-design/compatible';
 import './index.css';
@@ -172,7 +172,7 @@ export default class TraceSpanView extends Component<Props, State> {
         dataIndex: 'startTime',
         sorter: (a, b) => a.startTime - b.startTime,
         render: (cell: number) => {
-          return moment(cell / 1000).format('DD MMM YYYY hh:mm A');
+          return dayjs(cell / 1000).format('DD MMM YYYY hh:mm A');
         },
       },
     ];
