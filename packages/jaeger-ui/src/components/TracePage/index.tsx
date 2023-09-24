@@ -19,9 +19,9 @@ import _clamp from 'lodash/clamp';
 import _get from 'lodash/get';
 import _mapValues from 'lodash/mapValues';
 import _memoize from 'lodash/memoize';
-import { connect, Dispatch } from 'react-redux';
+import { connect } from 'react-redux';
 import { match as Match } from 'react-router-dom';
-import { bindActionCreators } from 'redux';
+import { bindActionCreators, Dispatch } from 'redux';
 
 import ArchiveNotifier from './ArchiveNotifier';
 import { actions as archiveActions } from './ArchiveNotifier/duck';

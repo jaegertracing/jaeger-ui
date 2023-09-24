@@ -15,6 +15,7 @@
 import { Router } from 'react-router-dom';
 import { Location } from 'history';
 
+import { Action } from 'redux';
 import { ApiError } from './api-error';
 import { TracesArchive } from './archive';
 import { Config } from './config';
@@ -42,6 +43,7 @@ export type FetchedTrace = {
 
 export type ReduxState = {
   archive: TracesArchive;
+  type: Action;
   config: Config;
   ddg: TDdgState;
   dependencies: {

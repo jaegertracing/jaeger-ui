@@ -439,10 +439,10 @@ export function mapStateToProps(state: ReduxState): TReduxProps {
 }
 
 export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
-  const { fetchServices, fetchAllServiceMetrics, fetchAggregatedServiceMetrics } = bindActionCreators<any>(
-    jaegerApiActions,
-    dispatch
-  );
+  const { fetchServices, fetchAllServiceMetrics, fetchAggregatedServiceMetrics } = bindActionCreators<
+    {},
+    any
+  >(jaegerApiActions, dispatch);
 
   return {
     fetchServices,
