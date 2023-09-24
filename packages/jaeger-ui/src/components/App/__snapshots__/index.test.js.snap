@@ -33,6 +33,15 @@ exports[`JaegerUIApp does not explode 1`] = `
         "replace": [Function],
       }
     }
+    store={
+      Object {
+        "@@observable": [Function],
+        "dispatch": [Function],
+        "getState": [Function],
+        "replaceReducer": [Function],
+        "subscribe": [Function],
+      }
+    }
   >
     <withRouter(Connect(PageImpl))>
       <Switch>

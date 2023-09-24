@@ -56,7 +56,7 @@ export default class JaegerUIApp extends Component {
   render() {
     return (
       <Provider store={this.store}>
-        <ConnectedRouter history={history}>
+        <ConnectedRouter store={this.store} history={history}>
           <Page>
             <Switch>
               <Route path={searchPath} component={SearchTracePage} />
