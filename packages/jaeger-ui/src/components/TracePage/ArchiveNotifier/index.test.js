@@ -15,8 +15,8 @@
 import React from 'react';
 import { mount, shallow } from 'enzyme';
 import { notification } from 'antd';
-import { LoadingOutlined } from '@ant-design/icons';
 import { IoTimeOutline } from 'react-icons/io5';
+import LoadingIndicator from '../../common/LoadingIndicator';
 import ArchiveNotifier from './index';
 import { Details, Message } from '../../common/ErrorMessage';
 
@@ -128,7 +128,7 @@ describe('<ArchiveNotifier>', () => {
         key: 'ENotifiedState.Progress',
         description: null,
         duration: 0,
-        icon: <LoadingOutlined />,
+        icon: <LoadingIndicator />,
         message: 'Archiving trace...',
       })
     );

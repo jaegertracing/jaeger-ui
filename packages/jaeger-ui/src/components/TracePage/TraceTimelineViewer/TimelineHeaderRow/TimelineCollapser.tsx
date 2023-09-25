@@ -14,8 +14,9 @@
 
 import React from 'react';
 import { Tooltip } from 'antd';
-import { DoubleRightOutlined } from '@ant-design/icons';
-import { IoChevronForward } from 'react-icons/io5';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { ChevronsRight, ChevronsDown } from 'lucide-react';
+import { IoChevronDown, IoChevronForward } from 'react-icons/io5';
 
 import './TimelineCollapser.css';
 
@@ -52,16 +53,16 @@ export default class TimelineCollapser extends React.PureComponent<CollapserProp
           />
         </Tooltip>
         <Tooltip title={getTitle('Collapse +1')} getPopupContainer={this.getContainer}>
-          <IoChevronForward
+          <IoChevronDown
             onClick={onCollapseOne}
             className="TimelineCollapser--btn TimelineCollapser--btn-size"
           />
         </Tooltip>
         <Tooltip title={getTitle('Expand All')} getPopupContainer={this.getContainer}>
-          <DoubleRightOutlined onClick={onExpandAll} className="TimelineCollapser--btn-expand" />
+          <ChevronsDown onClick={onExpandAll} className="TimelineCollapser--btn-expand" />
         </Tooltip>
         <Tooltip title={getTitle('Collapse All')} getPopupContainer={this.getContainer}>
-          <DoubleRightOutlined onClick={onCollapseAll} className="TimelineCollapser--btn" />
+          <ChevronsRight onClick={onCollapseAll} className="TimelineCollapser--btn" />
         </Tooltip>
       </div>
     );

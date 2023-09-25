@@ -30,17 +30,13 @@ limitations under the License.
 .TimelineCollapser--btn-expand {
   color: rgba(0, 0, 0, 0.5);
   cursor: pointer;
-  margin-right: 0.3rem;
+  margin-right: 0.2rem;
   padding: 0.1rem;
 }
 
 .TimelineCollapser--btn:hover,
 .TimelineCollapser--btn-expand:hover {
   color: rgba(0, 0, 0, 0.85);
-}
-
-.TimelineCollapser--btn-expand {
-  transform: rotate(90deg);
 }
 
 .TimelineCollapser--btn-size {

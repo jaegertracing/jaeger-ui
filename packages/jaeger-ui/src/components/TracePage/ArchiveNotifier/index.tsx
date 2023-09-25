@@ -14,9 +14,9 @@
 
 import * as React from 'react';
 import { notification } from 'antd';
-import { LoadingOutlined } from '@ant-design/icons';
 import { IoTimeOutline } from 'react-icons/io5';
 
+import LoadingIndicator from '../../common/LoadingIndicator';
 import { Details, Message } from '../../common/ErrorMessage';
 import { TNil } from '../../../types';
 import { TraceArchive } from '../../../types/archive';
@@ -60,7 +60,7 @@ function updateNotification(oldState: ENotifiedState | null, nextState: ENotifie
       key: ENotifiedState.Progress,
       description: null,
       duration: 0,
-      icon: <LoadingOutlined />,
+      icon: <LoadingIndicator />,
       message: 'Archiving trace...',
     });
     return;
