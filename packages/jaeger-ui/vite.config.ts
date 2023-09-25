@@ -34,13 +34,6 @@ export default defineConfig({
     __REACT_APP_VSN_STATE__: JSON.stringify(process.env.REACT_APP_VSN_STATE || ''),
     __APP_ENVIRONMENT__: JSON.stringify(process.env.NODE_ENV || 'development'),
   },
-  // Workaround an imports issue with antd v3 that causes an error in the production build.
-  // https://github.com/ant-design/ant-design/issues/19002
-  resolve: {
-    alias: {
-      '@ant-design/icons/lib/dist': '@ant-design/icons/lib/index.es.js',
-    },
-  },
   plugins: [
     react({
       babel: {
