@@ -42,7 +42,7 @@
   },
   "dependencies": {
     "@ant-design/compatible": "^1.1.2",
-    "@ant-design/icons": "4.0.0",
+    "@ant-design/icons": "5.2.6",
     "@jaegertracing/plexus": "0.2.0",
     "@pyroscope/flamegraph": "0.21.4",
     "@types/deep-freeze": "^0.1.1",
