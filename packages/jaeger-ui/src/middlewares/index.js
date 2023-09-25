@@ -45,4 +45,4 @@ export const historyUpdateMiddleware = store => next => action => {
   return next(action);
 };
 
-export const promise = promiseMiddleware();
+export const promise = promiseMiddleware;
