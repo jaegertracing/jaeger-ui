@@ -15,7 +15,7 @@
 import React from 'react';
 import { Divider } from 'antd';
 
-import { LinkOutlined } from '@ant-design/icons';
+import { IoLinkOutline } from 'react-icons/io5';
 import AccordianKeyValues from './AccordianKeyValues';
 import AccordianLogs from './AccordianLogs';
 import AccordianReferences from './AccordianReferences';
@@ -146,7 +146,7 @@ export default function SpanDetail(props: SpanDetailProps) {
           <span className="SpanDetail--debugLabel" data-label="SpanID:" /> {spanID}
           <CopyIcon
             copyText={deepLinkCopyText}
-            icon={<LinkOutlined />}
+            icon={<IoLinkOutline />}
             placement="topRight"
             tooltipTitle="Copy deep link to this span"
           />
