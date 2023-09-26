@@ -58,10 +58,16 @@ export default class TimelineCollapser extends React.PureComponent<CollapserProp
           />
         </Tooltip>
         <Tooltip title={getTitle('Expand All')} getPopupContainer={this.getContainer}>
-          <LuChevronsRight onClick={onExpandAll} className="TimelineCollapser--btn-expand TimelineCollapser--btn-size TimelineCollapser--btn-down" />
+          <LuChevronsRight
+            onClick={onExpandAll}
+            className="TimelineCollapser--btn-expand TimelineCollapser--btn-size TimelineCollapser--btn-down"
+          />
         </Tooltip>
         <Tooltip title={getTitle('Collapse All')} getPopupContainer={this.getContainer}>
-          <LuChevronsRight onClick={onCollapseAll} className="TimelineCollapser--btn TimelineCollapser--btn-size" />
+          <LuChevronsRight
+            onClick={onCollapseAll}
+            className="TimelineCollapser--btn TimelineCollapser--btn-size"
+          />
         </Tooltip>
       </div>
     );
