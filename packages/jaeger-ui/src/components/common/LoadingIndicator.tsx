@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import React from 'react';
-import { Loader2 } from 'lucide-react';
+import { LuLoader2 } from 'react-icons/lu';
 
 import './LoadingIndicator.css';
 
@@ -34,7 +34,7 @@ export default function LoadingIndicator(props: LoadingIndicatorProps) {
     ${small ? 'is-small' : ''}
     ${className || ''}
   `;
-  return <Loader2 className={cls} {...rest} />;
+  return <LuLoader2 className={cls} {...rest} />;
 }
 
 LoadingIndicator.defaultProps = {

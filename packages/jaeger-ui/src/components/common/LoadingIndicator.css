@@ -44,8 +44,8 @@ limitations under the License.
     0.5px 0 rgba(0, 128, 128, 0.6),
     0 -0.5px rgba(0, 128, 128, 0.6);
 
-  width: 46px;
-  height: 46px;
+  width: 42px;
+  height: 42px;
 }
 
 .LoadingIndicator.is-centered {

@@ -40,5 +40,14 @@ limitations under the License.
 }
 
 .TimelineCollapser--btn-size {
-  font-size: 20px;
+  font-size: 22px;
+}
+
+.TimelineCollapser--btn-down {
+  transform: rotate(90deg);
+}
+
+.TimelineCollapser .TimelineCollapser--btn-size:nth-child(3),
+.TimelineCollapser .TimelineCollapser--btn-size:nth-child(4) {
+  font-size: 24px;
 }
