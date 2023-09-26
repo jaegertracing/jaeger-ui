@@ -14,7 +14,7 @@
 
 import promiseMiddleware from 'redux-promise-middleware';
 import { change } from 'redux-form';
-import { replace } from 'react-router-redux';
+import { replace } from 'redux-first-history';
 
 import { searchTraces, fetchServiceOperations } from '../actions/jaeger-api';
 import { getUrl as getSearchUrl } from '../components/SearchTracePage/url';
