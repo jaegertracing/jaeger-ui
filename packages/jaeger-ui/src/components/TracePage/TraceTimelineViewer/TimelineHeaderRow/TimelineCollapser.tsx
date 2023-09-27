@@ -15,7 +15,7 @@
 import React from 'react';
 import { Tooltip } from 'antd';
 import { LuChevronsRight } from 'react-icons/lu';
-import { IoChevronDown, IoChevronForward } from 'react-icons/io5';
+import { IoChevronForward } from 'react-icons/io5';
 
 import './TimelineCollapser.css';
 
