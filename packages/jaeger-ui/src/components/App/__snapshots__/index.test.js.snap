@@ -12,17 +12,20 @@ exports[`JaegerUIApp does not explode 1`] = `
     }
   }
 >
-  <ConnectedRouter
+  <Router
     history={
       Object {
         "action": "POP",
+        "back": [Function],
         "block": [Function],
         "createHref": [Function],
+        "forward": [Function],
         "go": [Function],
         "goBack": [Function],
         "goForward": [Function],
         "length": 1,
         "listen": [Function],
+        "listenObject": false,
         "location": Object {
           "hash": "",
           "pathname": "/",
@@ -31,15 +34,6 @@ exports[`JaegerUIApp does not explode 1`] = `
         },
         "push": [Function],
         "replace": [Function],
-      }
-    }
-    store={
-      Object {
-        "@@observable": [Function],
-        "dispatch": [Function],
-        "getState": [Function],
-        "replaceReducer": [Function],
-        "subscribe": [Function],
       }
     }
   >
@@ -138,6 +132,6 @@ exports[`JaegerUIApp does not explode 1`] = `
         />
       </Switch>
     </withRouter(Connect(PageImpl))>
-  </ConnectedRouter>
+  </Router>
 </Provider>
 `;
