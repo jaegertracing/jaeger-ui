@@ -17,7 +17,6 @@ import { Layout } from 'antd';
 import cx from 'classnames';
 import Helmet from 'react-helmet';
 import { connect } from 'react-redux';
-import { RouteComponentProps, withRouter } from 'react-router-dom';
 
 import TopNav from './TopNav';
 import { ReduxState } from '../../types';
@@ -25,8 +24,9 @@ import { EmbeddedState } from '../../types/embedded';
 import { trackPageView } from '../../utils/tracking';
 
 import './Page.css';
+import withRouteProps from '../../utils/withRouteProps';
 
-type TProps = RouteComponentProps<any> & {
+type TProps = {
   children: React.ReactNode;
   embedded: EmbeddedState;
   pathname: string;
@@ -76,4 +76,4 @@ export function mapStateToProps(state: ReduxState) {
   return { embedded, pathname, search };
 }
 
-export default withRouter(connect(mapStateToProps)(PageImpl));
+export default connect(mapStateToProps)(withRouteProps(PageImpl));

@@ -18,14 +18,15 @@ import { Form } from '@ant-design/compatible';
 import '@ant-design/compatible/assets/index.css';
 import { Input } from 'antd';
 import { IoSearch } from 'react-icons/io5';
-import { RouteComponentProps, Router as RouterHistory, withRouter } from 'react-router-dom';
 
+import { History } from 'history';
 import { getUrl } from '../TracePage/url';
 
 import './TraceIDSearchInput.css';
+import withRouteProps from '../../utils/withRouteProps';
 
-type Props = RouteComponentProps<any> & {
-  history: RouterHistory;
+type Props = {
+  history: History;
 };
 
 class TraceIDSearchInput extends React.PureComponent<Props> {
@@ -57,4 +58,4 @@ class TraceIDSearchInput extends React.PureComponent<Props> {
   }
 }
 
-export default withRouter(TraceIDSearchInput);
+export default withRouteProps(TraceIDSearchInput);

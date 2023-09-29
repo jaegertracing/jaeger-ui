@@ -17,7 +17,7 @@ import { Dropdown, Menu } from 'antd';
 import { IoChevronDown } from 'react-icons/io5';
 import _has from 'lodash/has';
 import { connect } from 'react-redux';
-import { RouteComponentProps, Link, withRouter } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 import TraceIDSearchInput from './TraceIDSearchInput';
 import * as dependencyGraph from '../DependencyGraph/url';
@@ -32,8 +32,9 @@ import { getConfigValue } from '../../utils/config/get-config';
 import prefixUrl from '../../utils/prefix-url';
 
 import './TopNav.css';
+import withRouteProps from '../../utils/withRouteProps';
 
-type Props = RouteComponentProps<any> & ReduxState;
+type Props = ReduxState;
 
 const NAV_LINKS = [
   {
@@ -155,4 +156,4 @@ export function mapStateToProps(state: ReduxState) {
   return state;
 }
 
-export default withRouter(connect(mapStateToProps)(TopNavImpl));
+export default connect(mapStateToProps)(withRouteProps(TopNavImpl));

@@ -16,10 +16,11 @@
 
 import React from 'react';
 import { createMemoryHistory } from 'history';
-import { Router } from 'react-router-dom';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
+import { Router } from 'react-router-dom';
 import TraceIDSearchInput from './TraceIDSearchInput';
+import { HistoryProvider } from '../../utils/useHistory';
 
 describe('<TraceIDSearchInput />', () => {
   let history;
@@ -27,9 +28,11 @@ describe('<TraceIDSearchInput />', () => {
   beforeEach(() => {
     history = createMemoryHistory();
     render(
-      <Router history={history}>
-        <TraceIDSearchInput />
-      </Router>
+      <HistoryProvider history={history}>
+        <Router history={history}>
+          <TraceIDSearchInput />
+        </Router>
+      </HistoryProvider>
     );
   });
 
