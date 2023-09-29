@@ -34,7 +34,22 @@ export function getPathPrefix(orig?: string, sitePref?: string) {
   return s.replace(rx, '');
 }
 
+function getBackend(pathname: string) {
+  if (!pathname.startsWith('/--/')) {
+    return { backendPrefix: '', backendBase: '' };
+  }
+  // http://my.jaeger.com/--/http--localhost--9001--j/abc
+  // --> http://my.jaeger.com/abc
+  const backend = pathname.split('/')[2];
+  const [protocol, host, port, ...rest] = backend.split('--');
+  const backendBase = `${protocol}://${host}${port && port !== '0' ? `:${port}` : ''}${
+    rest.length > 0 ? `/${rest.join('/')}` : ''
+  }`;
+  return { backendPrefix: `/--/${backend}`, backendBase };
+}
+
 const pathPrefix = getPathPrefix(origin, sitePrefix);
+const { backendPrefix, backendBase } = getBackend(window.location.pathname);
 
 /**
  * Add the path prefix to the  URL. See [site-prefix.js](../site-prefix.js) and
@@ -45,5 +60,13 @@ const pathPrefix = getPathPrefix(origin, sitePrefix);
  */
 export default function prefixUrl(value?: string) {
   const s = value == null ? '' : String(value);
-  return `${pathPrefix}${s}`;
+  return `${pathPrefix}${backendPrefix}${s}`;
+}
+
+export function backendUrl(value?: string) {
+  const s = value == null ? '' : String(value);
+  if (!backendPrefix) {
+    return prefixUrl(s);
+  }
+  return `${backendBase}${s}`;
 }

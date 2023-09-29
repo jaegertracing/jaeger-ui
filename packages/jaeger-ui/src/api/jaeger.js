@@ -17,7 +17,7 @@ import dayjs from 'dayjs';
 import _duration from 'dayjs/plugin/duration';
 import queryString from 'query-string';
 
-import prefixUrl from '../utils/prefix-url';
+import prefixUrl, { backendUrl } from '../utils/prefix-url';
 
 dayjs.extend(_duration);
 
@@ -79,7 +79,7 @@ function getJSON(url, options = {}) {
   });
 }
 
-export const DEFAULT_API_ROOT = prefixUrl('/api/');
+export const DEFAULT_API_ROOT = backendUrl('/api/');
 export const ANALYTICS_ROOT = prefixUrl('/analytics/');
 export const DEFAULT_DEPENDENCY_LOOKBACK = dayjs.duration(1, 'weeks').asMilliseconds();
 
