@@ -99,7 +99,7 @@
     "u-basscss": "2.0.1"
   },
   "scripts": {
-    "build": "NODE_ENV=production REACT_APP_VSN_STATE=$(../../scripts/get-tracking-version.js) vite build",
+    "build": "echo $BASE_URL && NODE_ENV=production REACT_APP_VSN_STATE=$(../../scripts/get-tracking-version.js) vite build",
     "coverage": "yarn run test-ci --coverage",
     "start:ga-debug": "REACT_APP_GA_DEBUG=1 REACT_APP_VSN_STATE=$(../../scripts/get-tracking-version.js) vite",
     "start": "vite",
