@@ -67,7 +67,7 @@ exports[`JaegerUIApp does not explode 1`] = `
           <Route
             path="/search"
           >
-            <Connect(SearchTracePageImpl) />
+            <WithRouteProps />
           </Route>
           <Route
             path="/trace/:a?\\\\.\\\\.\\\\.:b?"
@@ -102,18 +102,27 @@ exports[`JaegerUIApp does not explode 1`] = `
           <Route
             exact={true}
             path="/"
-            render={[Function]}
-          />
+          >
+            <Redirect
+              to="/search"
+            />
+          </Route>
           <Route
             exact={true}
             path=""
-            render={[Function]}
-          />
+          >
+            <Redirect
+              to="/search"
+            />
+          </Route>
           <Route
             exact={true}
             path="/"
-            render={[Function]}
-          />
+          >
+            <Redirect
+              to="/search"
+            />
+          </Route>
           <Route>
             <NotFound />
           </Route>
