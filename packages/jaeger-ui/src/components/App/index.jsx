@@ -56,19 +56,35 @@ export default class JaegerUIApp extends Component {
           <Router history={history}>
             <Page>
               <Switch>
-                <Route path={searchPath} component={SearchTracePage} />
-                <Route path={traceDiffPath} component={TraceDiff} />
-                <Route path={tracePath} component={TracePage} />
-                <Route path={dependenciesPath} component={DependencyGraph} />
-                <Route path={deepDependenciesPath} component={DeepDependencies} />
-                <Route path={qualityMetricsPath} component={QualityMetrics} />
-                <Route path={monitorATMPath} component={MonitorATMPage} />
+                <Route path={searchPath}>
+                  <SearchTracePage />
+                </Route>
+                <Route path={traceDiffPath}>
+                  <TraceDiff />
+                </Route>
+                <Route path={tracePath}>
+                  <TracePage />
+                </Route>
+                <Route path={dependenciesPath}>
+                  <DependencyGraph />
+                </Route>
+                <Route path={deepDependenciesPath}>
+                  <DeepDependencies />
+                </Route>
+                <Route path={qualityMetricsPath}>
+                  <QualityMetrics />
+                </Route>
+                <Route path={monitorATMPath}>
+                  <MonitorATMPage />
+                </Route>
 
-                <Redirect exact path="/" to={searchPath} />
-                <Redirect exact path={prefixUrl()} to={searchPath} />
-                <Redirect exact path={prefixUrl('/')} to={searchPath} />
+                <Route exact path="/" render={() => <Redirect to={searchPath} />} />
+                <Route exact path={prefixUrl()} render={() => <Redirect to={searchPath} />} />
+                <Route exact path={prefixUrl('/')} render={() => <Redirect to={searchPath} />} />
 
-                <Route component={NotFound} />
+                <Route>
+                  <NotFound />
+                </Route>
               </Switch>
             </Page>
           </Router>

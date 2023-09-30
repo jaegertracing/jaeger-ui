@@ -65,93 +65,58 @@ exports[`JaegerUIApp does not explode 1`] = `
       <Connect(WithRouteProps)>
         <Switch>
           <Route
-            component={
-              Object {
-                "$$typeof": Symbol(react.memo),
-                "WrappedComponent": [Function],
-                "compare": null,
-                "type": [Function],
-              }
-            }
             path="/search"
-          />
+          >
+            <Connect(SearchTracePageImpl) />
+          </Route>
           <Route
-            component={
-              Object {
-                "$$typeof": Symbol(react.memo),
-                "WrappedComponent": [Function],
-                "compare": null,
-                "type": [Function],
-              }
-            }
             path="/trace/:a?\\\\.\\\\.\\\\.:b?"
-          />
+          >
+            <WithRouteProps />
+          </Route>
           <Route
-            component={
-              Object {
-                "$$typeof": Symbol(react.memo),
-                "WrappedComponent": [Function],
-                "compare": null,
-                "type": [Function],
-              }
-            }
             path="/trace/:id"
-          />
+          >
+            <WithRouteProps />
+          </Route>
           <Route
-            component={
-              Object {
-                "$$typeof": Symbol(react.memo),
-                "WrappedComponent": [Function],
-                "compare": null,
-                "type": [Function],
-              }
-            }
             path="/dependencies"
-          />
+          >
+            <Connect(DependencyGraphPageImpl) />
+          </Route>
           <Route
-            component={
-              Object {
-                "$$typeof": Symbol(react.memo),
-                "WrappedComponent": [Function],
-                "compare": null,
-                "type": [Function],
-              }
-            }
             path="/deep-dependencies"
-          />
+          >
+            <Connect(DeepDependencyGraphPageImpl) />
+          </Route>
           <Route
-            component={
-              Object {
-                "$$typeof": Symbol(react.memo),
-                "WrappedComponent": [Function],
-                "compare": null,
-                "type": [Function],
-              }
-            }
             path="/quality-metrics"
-          />
+          >
+            <Connect(UnconnectedQualityMetrics) />
+          </Route>
           <Route
-            component={[Function]}
             path="/monitor"
-          />
-          <Redirect
+          >
+            <MonitorATMPage />
+          </Route>
+          <Route
             exact={true}
             path="/"
-            to="/search"
+            render={[Function]}
           />
-          <Redirect
+          <Route
             exact={true}
             path=""
-            to="/search"
-          />
-          <Redirect
-            exact={true}
-            path="/"
-            to="/search"
+            render={[Function]}
           />
           <Route
-            component={[Function]}
+            exact={true}
+            path="/"
+            render={[Function]}
           />
+          <Route>
+            <NotFound />
+          </Route>
         </Switch>
       </Connect(WithRouteProps)>
     </Router>
