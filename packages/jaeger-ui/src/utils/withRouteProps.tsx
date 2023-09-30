@@ -25,7 +25,7 @@ export type IWithRouteProps = {
   history: History;
 };
 
-export default function withRouteProps(WrappedComponent: any) {
+export default function withRouteProps(WrappedComponent: React.ElementType) {
   return function WithRouteProps(props: IWithRouteProps | object) {
     const location = useLocation();
     const params = useParams();
