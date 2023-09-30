@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Uber Technologies, Inc.
+// Copyright (c) 2023 The Jaeger Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,14 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import React, { createContext, useContext } from 'react';
+import React, { ReactNode, createContext, useContext, FC } from 'react';
+import { History } from 'history';
 
-const HistoryContext = createContext(undefined);
+const HistoryContext = createContext<History | undefined>(undefined);
+interface IHistoryProviderProps {
+  children: ReactNode;
+  history: History;
+}
 
-export const useHistory = () => {
+export const useHistory = (): History | undefined => {
   return useContext(HistoryContext);
 };
 
-export const HistoryProvider = ({ children, history }: any) => {
+export const HistoryProvider: FC<IHistoryProviderProps> = ({ children, history }) => {
   return <HistoryContext.Provider value={history}>{children}</HistoryContext.Provider>;
 };

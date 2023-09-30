@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Uber Technologies, Inc.
+// Copyright (c) 2023 The Jaeger Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,26 +12,44 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import React from 'react';
+import React, { ReactNode } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
+import { Location, History } from 'history';
 import { useHistory } from './useHistory';
 
-export default function withRouteProps(WrappedComponent: any) {
-  return function WithRouteProps(props: any) {
+interface IWithRouteProps {
+  children?: (props: {
+    location: Location;
+    pathname: string;
+    search: string;
+    params: object;
+    history: History;
+  }) => ReactNode;
+}
+
+interface IRouteProps {
+  location: Location;
+  pathname: string;
+  search: string;
+  params: object;
+  history: History | undefined;
+}
+
+export default function withRouteProps(WrappedComponent: React.ComponentType<IWithRouteProps>) {
+  return function WithRouteProps(props: IWithRouteProps) {
     const location = useLocation();
     const params = useParams();
     const { pathname, search } = location;
     const history = useHistory();
 
-    return (
-      <WrappedComponent
-        {...props}
-        location={location}
-        pathname={pathname}
-        search={search}
-        params={params}
-        history={history}
-      />
-    );
+    const routeProps: IRouteProps = {
+      location,
+      pathname,
+      search,
+      params,
+      history,
+    };
+
+    return <WrappedComponent {...props} {...routeProps} />;
   };
 }
