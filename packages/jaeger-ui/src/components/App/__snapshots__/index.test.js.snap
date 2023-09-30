@@ -12,7 +12,7 @@ exports[`JaegerUIApp does not explode 1`] = `
     }
   }
 >
-  <Router
+  <HistoryProvider
     history={
       Object {
         "action": "POP",
@@ -37,98 +37,124 @@ exports[`JaegerUIApp does not explode 1`] = `
       }
     }
   >
-    <withRouter(Connect(PageImpl))>
-      <Switch>
-        <Route
-          component={
-            Object {
-              "$$typeof": Symbol(react.memo),
-              "WrappedComponent": [Function],
-              "compare": null,
-              "type": [Function],
+    <Router
+      history={
+        Object {
+          "action": "POP",
+          "back": [Function],
+          "block": [Function],
+          "createHref": [Function],
+          "forward": [Function],
+          "go": [Function],
+          "goBack": [Function],
+          "goForward": [Function],
+          "length": 1,
+          "listen": [Function],
+          "listenObject": false,
+          "location": Object {
+            "hash": "",
+            "pathname": "/",
+            "search": "",
+            "state": undefined,
+          },
+          "push": [Function],
+          "replace": [Function],
+        }
+      }
+    >
+      <Connect(WithRouteProps)>
+        <Switch>
+          <Route
+            component={
+              Object {
+                "$$typeof": Symbol(react.memo),
+                "WrappedComponent": [Function],
+                "compare": null,
+                "type": [Function],
+              }
             }
-          }
-          path="/search"
-        />
-        <Route
-          component={
-            Object {
-              "$$typeof": Symbol(react.memo),
-              "WrappedComponent": [Function],
-              "compare": null,
-              "type": [Function],
+            path="/search"
+          />
+          <Route
+            component={
+              Object {
+                "$$typeof": Symbol(react.memo),
+                "WrappedComponent": [Function],
+                "compare": null,
+                "type": [Function],
+              }
             }
-          }
-          path="/trace/:a?\\\\.\\\\.\\\\.:b?"
-        />
-        <Route
-          component={
-            Object {
-              "$$typeof": Symbol(react.memo),
-              "WrappedComponent": [Function],
-              "compare": null,
-              "type": [Function],
+            path="/trace/:a?\\\\.\\\\.\\\\.:b?"
+          />
+          <Route
+            component={
+              Object {
+                "$$typeof": Symbol(react.memo),
+                "WrappedComponent": [Function],
+                "compare": null,
+                "type": [Function],
+              }
             }
-          }
-          path="/trace/:id"
-        />
-        <Route
-          component={
-            Object {
-              "$$typeof": Symbol(react.memo),
-              "WrappedComponent": [Function],
-              "compare": null,
-              "type": [Function],
+            path="/trace/:id"
+          />
+          <Route
+            component={
+              Object {
+                "$$typeof": Symbol(react.memo),
+                "WrappedComponent": [Function],
+                "compare": null,
+                "type": [Function],
+              }
             }
-          }
-          path="/dependencies"
-        />
-        <Route
-          component={
-            Object {
-              "$$typeof": Symbol(react.memo),
-              "WrappedComponent": [Function],
-              "compare": null,
-              "type": [Function],
+            path="/dependencies"
+          />
+          <Route
+            component={
+              Object {
+                "$$typeof": Symbol(react.memo),
+                "WrappedComponent": [Function],
+                "compare": null,
+                "type": [Function],
+              }
             }
-          }
-          path="/deep-dependencies"
-        />
-        <Route
-          component={
-            Object {
-              "$$typeof": Symbol(react.memo),
-              "WrappedComponent": [Function],
-              "compare": null,
-              "type": [Function],
+            path="/deep-dependencies"
+          />
+          <Route
+            component={
+              Object {
+                "$$typeof": Symbol(react.memo),
+                "WrappedComponent": [Function],
+                "compare": null,
+                "type": [Function],
+              }
             }
-          }
-          path="/quality-metrics"
-        />
-        <Route
-          component={[Function]}
-          path="/monitor"
-        />
-        <Redirect
-          exact={true}
-          path="/"
-          to="/search"
-        />
-        <Redirect
-          exact={true}
-          path=""
-          to="/search"
-        />
-        <Redirect
-          exact={true}
-          path="/"
-          to="/search"
-        />
-        <Route
-          component={[Function]}
-        />
-      </Switch>
-    </withRouter(Connect(PageImpl))>
-  </Router>
+            path="/quality-metrics"
+          />
+          <Route
+            component={[Function]}
+            path="/monitor"
+          />
+          <Redirect
+            exact={true}
+            path="/"
+            to="/search"
+          />
+          <Redirect
+            exact={true}
+            path=""
+            to="/search"
+          />
+          <Redirect
+            exact={true}
+            path="/"
+            to="/search"
+          />
+          <Route
+            component={[Function]}
+          />
+        </Switch>
+      </Connect(WithRouteProps)>
+    </Router>
+  </HistoryProvider>
 </Provider>
 `;

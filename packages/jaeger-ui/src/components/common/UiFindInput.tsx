@@ -19,13 +19,13 @@ import { History as RouterHistory, Location } from 'history';
 import _debounce from 'lodash/debounce';
 import _isString from 'lodash/isString';
 import { connect } from 'react-redux';
-import { RouteComponentProps, withRouter } from 'react-router-dom';
 
 import updateUiFind from '../../utils/update-ui-find';
 import { TNil, ReduxState } from '../../types/index';
 import parseQuery from '../../utils/parseQuery';
+import withRouteProps from '../../utils/withRouteProps';
 
-type TOwnProps = RouteComponentProps<any> & {
+type TOwnProps = {
   allowClear?: boolean;
   forwardedRef?: React.Ref<InputRef>;
   inputProps: Record<string, any>;
@@ -115,4 +115,4 @@ export function extractUiFindFromState(state: ReduxState): TExtractUiFindFromSta
   return { uiFind };
 }
 
-export default withRouter<TOwnProps>(connect(extractUiFindFromState)(UnconnectedUiFindInput) as any);
+export default connect(extractUiFindFromState)(withRouteProps(UnconnectedUiFindInput)) as any;

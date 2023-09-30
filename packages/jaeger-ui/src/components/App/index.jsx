@@ -40,6 +40,7 @@ import '../common/vars.css';
 import '../common/utils.css';
 import './index.css';
 import { history, store } from '../../utils/configure-store';
+import { HistoryProvider } from '../../utils/useHistory';
 
 export default class JaegerUIApp extends Component {
   constructor(props) {
@@ -51,25 +52,27 @@ export default class JaegerUIApp extends Component {
   render() {
     return (
       <Provider store={store}>
-        <Router history={history}>
-          <Page>
-            <Switch>
-              <Route path={searchPath} component={SearchTracePage} />
-              <Route path={traceDiffPath} component={TraceDiff} />
-              <Route path={tracePath} component={TracePage} />
-              <Route path={dependenciesPath} component={DependencyGraph} />
-              <Route path={deepDependenciesPath} component={DeepDependencies} />
-              <Route path={qualityMetricsPath} component={QualityMetrics} />
-              <Route path={monitorATMPath} component={MonitorATMPage} />
+        <HistoryProvider history={history}>
+          <Router history={history}>
+            <Page>
+              <Switch>
+                <Route path={searchPath} component={SearchTracePage} />
+                <Route path={traceDiffPath} component={TraceDiff} />
+                <Route path={tracePath} component={TracePage} />
+                <Route path={dependenciesPath} component={DependencyGraph} />
+                <Route path={deepDependenciesPath} component={DeepDependencies} />
+                <Route path={qualityMetricsPath} component={QualityMetrics} />
+                <Route path={monitorATMPath} component={MonitorATMPage} />
 
-              <Redirect exact path="/" to={searchPath} />
-              <Redirect exact path={prefixUrl()} to={searchPath} />
-              <Redirect exact path={prefixUrl('/')} to={searchPath} />
+                <Redirect exact path="/" to={searchPath} />
+                <Redirect exact path={prefixUrl()} to={searchPath} />
+                <Redirect exact path={prefixUrl('/')} to={searchPath} />
 
-              <Route component={NotFound} />
-            </Switch>
-          </Page>
-        </Router>
+                <Route component={NotFound} />
+              </Switch>
+            </Page>
+          </Router>
+        </HistoryProvider>
       </Provider>
     );
   }

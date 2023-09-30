@@ -48,7 +48,7 @@
     "@types/lodash": "^4.14.123",
     "@types/object-hash": "^3.0.2",
     "@types/react-helmet": "^6.1.5",
-    "@types/react-router-dom": "^4.3.1",
+    "@types/react-router-dom": "^5.1.0",
     "@types/redux-actions": "2.2.1",
     "antd": "4.24.13",
     "chance": "^1.0.10",

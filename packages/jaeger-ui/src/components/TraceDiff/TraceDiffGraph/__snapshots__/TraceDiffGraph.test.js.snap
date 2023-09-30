@@ -70,7 +70,7 @@ exports[`TraceDiffGraph renders a DiGraph when it has data 1`] = `
     vertices={Array []}
     zoom={true}
   />
-  <withRouter(Connect(UnconnectedUiFindInput))
+  <Connect(WithRouteProps)
     inputProps={
       Object {
         "className": "TraceDiffGraph--uiFind",

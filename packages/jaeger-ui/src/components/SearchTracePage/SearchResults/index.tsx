@@ -17,7 +17,7 @@
 import * as React from 'react';
 import { Select } from 'antd';
 import { History as RouterHistory, Location } from 'history';
-import { Link, RouteComponentProps, withRouter } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Field, formValueSelector, reduxForm } from 'redux-form';
 import queryString from 'query-string';
 
@@ -44,6 +44,7 @@ import { KeyValuePair, Trace, TraceData } from '../../../types/trace';
 
 import './index.css';
 import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
+import withRouteProps from '../../../utils/withRouteProps';
 
 type SearchResultsProps = {
   cohortAddTrace: (traceId: string) => void;
@@ -98,7 +99,7 @@ export function createBlob(rawTraces: TraceData[]) {
   return new Blob([`{"data":${JSON.stringify(rawTraces)}}`], { type: 'application/json' });
 }
 
-export class UnconnectedSearchResults extends React.PureComponent<SearchResultsProps & RouteComponentProps> {
+export class UnconnectedSearchResults extends React.PureComponent<SearchResultsProps> {
   static defaultProps = { skipMessage: false, spanLinks: undefined, queryOfResults: undefined };
 
   toggleComparison = (traceID: string, remove?: boolean) => {
@@ -245,4 +246,4 @@ export class UnconnectedSearchResults extends React.PureComponent<SearchResultsP
   }
 }
 
-export default withRouter(UnconnectedSearchResults);
+export default withRouteProps(UnconnectedSearchResults);

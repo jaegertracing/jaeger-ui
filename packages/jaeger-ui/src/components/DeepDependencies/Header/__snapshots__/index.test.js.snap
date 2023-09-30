@@ -36,7 +36,7 @@ exports[`<Header> renders the hops selector if distanceToPathElems is provided 1
         <IoSearch
           className="DdgHeader--uiFindSearchIcon"
         />
-        <withRouter(Connect(UnconnectedUiFindInput))
+        <Connect(WithRouteProps)
           allowClear={true}
           forwardedRef={
             Object {
@@ -102,7 +102,7 @@ exports[`<Header> renders the operation selector iff a service is selected 1`] =
         <IoSearch
           className="DdgHeader--uiFindSearchIcon"
         />
-        <withRouter(Connect(UnconnectedUiFindInput))
+        <Connect(WithRouteProps)
           allowClear={true}
           forwardedRef={
             Object {
@@ -172,7 +172,7 @@ exports[`<Header> renders the operation selector iff a service is selected 2`] =
         <IoSearch
           className="DdgHeader--uiFindSearchIcon"
         />
-        <withRouter(Connect(UnconnectedUiFindInput))
+        <Connect(WithRouteProps)
           allowClear={true}
           forwardedRef={
             Object {
@@ -226,7 +226,7 @@ exports[`<Header> renders with minimal props 1`] = `
         <IoSearch
           className="DdgHeader--uiFindSearchIcon"
         />
-        <withRouter(Connect(UnconnectedUiFindInput))
+        <Connect(WithRouteProps)
           allowClear={true}
           forwardedRef={
             Object {
