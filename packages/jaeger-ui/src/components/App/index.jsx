@@ -48,17 +48,6 @@ export default class JaegerUIApp extends Component {
     processScripts();
   }
 
-  componentDidMount() {
-    if (window.location.pathname === '/') {
-      const params = new URLSearchParams(window.location.search);
-      const traceId = params.get('traceId');
-      if (traceId) {
-        params.delete('traceId');
-        history.replace(`/trace/${encodeURIComponent(traceId)}?${params.toString()}`);
-      }
-    }
-  }
-
   render() {
     return (
       <Provider store={store}>
@@ -73,9 +62,9 @@ export default class JaegerUIApp extends Component {
               <Route path={qualityMetricsPath} component={QualityMetrics} />
               <Route path={monitorATMPath} component={MonitorATMPage} />
 
-              {/* <Redirect exact path="/" to={searchPath} /> */}
-              {/* <Redirect exact path={prefixUrl()} to={searchPath} /> */}
-              {/* <Redirect exact path={prefixUrl('/')} to={searchPath} /> */}
+              <Route exact path="/" component={TracePage} />
+              <Route exact path={prefixUrl()} component={TracePage} />
+              <Route exact path={prefixUrl('/')} component={TracePage} />
 
               <Route component={NotFound} />
             </Switch>
