@@ -15,7 +15,6 @@
 import * as React from 'react';
 import { History as RouterHistory } from 'history';
 import { connect } from 'react-redux';
-import { match } from 'react-router-dom';
 import { bindActionCreators, Dispatch } from 'redux';
 
 import { actions as diffActions } from './duck';
@@ -30,6 +29,7 @@ import pluckTruthy from '../../utils/ts/pluckTruthy';
 
 import './TraceDiff.css';
 import parseQuery from '../../utils/parseQuery';
+import withRouteProps from '../../utils/withRouteProps';
 
 type TStateProps = {
   a: string | undefined;
@@ -46,7 +46,7 @@ type TDispatchProps = {
 
 type TOwnProps = {
   history: RouterHistory;
-  match: match<TDiffRouteParams>;
+  params: TDiffRouteParams;
 };
 
 type TState = {
@@ -163,8 +163,8 @@ export class TraceDiffImpl extends React.PureComponent<TStateProps & TDispatchPr
 }
 
 // TODO(joe): simplify but do not invalidate the URL
-export function mapStateToProps(state: ReduxState, ownProps: { match: match<TDiffRouteParams> }) {
-  const { a, b } = ownProps.match.params;
+export function mapStateToProps(state: ReduxState, ownProps: TOwnProps) {
+  const { a, b } = ownProps.params;
   const { cohort: origCohort = [] } = parseQuery(state.router.location.search);
   const fullCohortSet: Set<string> = new Set(pluckTruthy([a, b].concat(origCohort)));
   const cohort: string[] = Array.from(fullCohortSet);
@@ -187,7 +187,9 @@ export function mapDispatchToProps(dispatch: Dispatch<any>) {
   return { fetchMultipleTraces, forceState };
 }
 
-export default connect<TStateProps, TDispatchProps, TOwnProps, ReduxState>(
-  mapStateToProps,
-  mapDispatchToProps
-)(TraceDiffImpl);
+export default withRouteProps(
+  connect<TStateProps, TDispatchProps, TOwnProps, ReduxState>(
+    mapStateToProps,
+    mapDispatchToProps
+  )(TraceDiffImpl)
+);

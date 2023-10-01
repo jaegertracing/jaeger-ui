@@ -32,6 +32,7 @@ import { ReduxState } from '../../types';
 import { TQualityMetrics } from './types';
 
 import './index.css';
+import withRouteProps from '../../utils/withRouteProps';
 
 type TOwnProps = {
   history: RouterHistory;
@@ -212,4 +213,4 @@ export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchPro
   };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(UnconnectedQualityMetrics);
+export default withRouteProps(connect(mapStateToProps, mapDispatchToProps)(UnconnectedQualityMetrics));
