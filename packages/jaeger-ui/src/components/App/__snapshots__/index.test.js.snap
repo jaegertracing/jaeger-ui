@@ -82,17 +82,17 @@ exports[`JaegerUIApp does not explode 1`] = `
           <Route
             path="/dependencies"
           >
-            <Connect(DependencyGraphPageImpl) />
+            <WithRouteProps />
           </Route>
           <Route
             path="/deep-dependencies"
           >
-            <Connect(DeepDependencyGraphPageImpl) />
+            <WithRouteProps />
           </Route>
           <Route
             path="/quality-metrics"
           >
-            <Connect(UnconnectedQualityMetrics) />
+            <WithRouteProps />
           </Route>
           <Route
             path="/monitor"

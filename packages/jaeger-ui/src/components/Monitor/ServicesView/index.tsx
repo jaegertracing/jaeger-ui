@@ -49,6 +49,7 @@ import {
   trackSelectTimeframe,
   trackViewAllTraces,
 } from './index.track';
+import withRouteProps from '../../../utils/withRouteProps';
 
 type StateType = {
   graphWidth: number;
@@ -451,11 +452,13 @@ export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchPro
   };
 }
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(
-  reduxForm<{}, TProps>({
-    form: 'serviceForm',
-  })(MonitorATMServicesViewImpl)
+export default withRouteProps(
+  connect(
+    mapStateToProps,
+    mapDispatchToProps
+  )(
+    reduxForm<{}, TProps>({
+      form: 'serviceForm',
+    })(MonitorATMServicesViewImpl)
+  )
 );
