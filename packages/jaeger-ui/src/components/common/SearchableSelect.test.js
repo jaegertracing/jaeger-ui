@@ -16,7 +16,7 @@ import React from 'react';
 import { shallow } from 'enzyme';
 
 import { Select } from 'antd';
-import SearchableSelect from './SearchableSelect';
+import SearchableSelect, { filterOptionsByLabel } from './SearchableSelect';
 
 describe('SearchableSelect', () => {
   let wrapper;
@@ -29,7 +29,7 @@ describe('SearchableSelect', () => {
 
   beforeEach(() => {
     wrapper = shallow(
-      <SearchableSelect data-testid="search-select">
+      <SearchableSelect>
         {options.map((option, i) => (
           <Select.Option key={option.value} value={option.value} data-testid={`option-${i}`}>
             {option.label}
@@ -56,5 +56,45 @@ describe('SearchableSelect', () => {
       expect(op.props().value).toBe(options[i].value);
       expect(op.props().children).toBe(options[i].label);
     });
+  });
+});
+
+describe('filterOptionsByLabel', () => {
+  const options = [
+    {
+      children: 'Test 1',
+      label: 'Test 1',
+      value: 'test1',
+    },
+  ];
+
+  it('should return true when passed empty input', () => {
+    const input = filterOptionsByLabel('', options[0]);
+
+    expect(input).toBe(true);
+  });
+
+  it('should return true when passed matching lowercase string', () => {
+    const input = filterOptionsByLabel('test', options[0]);
+
+    expect(input).toBe(true);
+  });
+
+  it('should return true when passed matching uppercase string', () => {
+    const input = filterOptionsByLabel('TEST', options[0]);
+
+    expect(input).toBe(true);
+  });
+
+  it('should return false when passed non-matching', () => {
+    const input = filterOptionsByLabel('jaeger', options[0]);
+
+    expect(input).toBe(false);
+  });
+
+  it('should return false when passed null option', () => {
+    const input = filterOptionsByLabel('jaeger', null);
+
+    expect(input).toBe(false);
   });
 });

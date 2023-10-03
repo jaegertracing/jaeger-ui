@@ -16,16 +16,12 @@ import React, { FunctionComponent } from 'react';
 import { Select, SelectProps } from 'antd';
 import { DefaultOptionType } from 'antd/lib/select';
 
+export const filterOptionsByLabel = (input: string, option?: DefaultOptionType) => {
+  return (option?.children?.toString() ?? '').toLowerCase().includes(input.toLowerCase());
+};
+
 const SearchableSelect: FunctionComponent<SelectProps> = props => {
-  return (
-    <Select
-      showSearch
-      filterOption={(input: string, option?: DefaultOptionType) => {
-        return (option?.children?.toString() ?? '').toLowerCase().includes(input.toLowerCase());
-      }}
-      {...props}
-    />
-  );
+  return <Select showSearch filterOption={filterOptionsByLabel} {...props} />;
 };
 
 export default SearchableSelect;
