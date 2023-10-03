@@ -50,7 +50,7 @@
     "@types/react-helmet": "^6.1.5",
     "@types/react-router-dom": "^5.1.0",
     "@types/redux-actions": "2.2.1",
-    "antd": "4.24.13",
+    "antd": "4.24.14",
     "chance": "^1.0.10",
     "classnames": "^2.2.5",
     "combokeys": "^3.0.0",
