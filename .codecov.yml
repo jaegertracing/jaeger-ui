@@ -32,3 +32,4 @@ coverage:
         paths: null
 ignore:
   - "packages/jaeger-ui/src/utils/helpers/ReactShallowRenderer.js"
+  - "scripts"

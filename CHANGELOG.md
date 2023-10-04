@@ -34,7 +34,6 @@
 - Extend try/catch for critical path ([@yurishkuro](https://github.com/yurishkuro) in [#1778](https://github.com/jaegertracing/jaeger-ui/pull/1778))
 - Convert utils/treenode.js and selectors/trace.js to typescript ([@yurishkuro](https://github.com/yurishkuro) in [#1777](https://github.com/jaegertracing/jaeger-ui/pull/1777))
 
-
 ## v1.33.0 (2023-08-06)
 
 ### Enhancements
