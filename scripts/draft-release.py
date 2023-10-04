@@ -1,8 +1,10 @@
+#!/usr/bin/env python3
+
 import re
 import subprocess
 
 
-release_header_pattern = re.compile(r"## (v[\d]+\.[\d]+\.[\d]) \([\d]{4}-[\d]{2}-[\d]{2}\)", flags=0)
+release_header_pattern = re.compile(r"## (v\d+\.\d+\.\d) \(\d{4}-\d{2}-\d{2}\)", flags=0)
 
 
 def main():
@@ -27,13 +29,13 @@ def get_changelog():
     version = ""
     with open("CHANGELOG.md") as f:
         for line in f:
-            m = release_header_pattern.match(line)
+            release_header_match = release_header_pattern.match(line)
 
-            if m is not None:
+            if release_header_match is not None:
                 # Found the first release.
                 if not in_changelog_text:
                     in_changelog_text = True
-                    version = m.group(1)
+                    version = release_header_match.group(1)
                 else:
                     # Found the next release.
                     break
