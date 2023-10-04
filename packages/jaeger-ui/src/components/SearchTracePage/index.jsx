@@ -38,6 +38,7 @@ import FileLoader from './FileLoader';
 
 import './index.css';
 import JaegerLogo from '../../img/jaeger-logo.svg';
+import withRouteProps from '../../utils/withRouteProps';
 
 const TabPane = Tabs.TabPane;
 
@@ -309,4 +310,4 @@ function mapDispatchToProps(dispatch) {
   };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(SearchTracePageImpl);
+export default withRouteProps(connect(mapStateToProps, mapDispatchToProps)(SearchTracePageImpl));

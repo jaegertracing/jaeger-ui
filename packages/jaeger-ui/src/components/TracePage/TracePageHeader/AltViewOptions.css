@@ -20,4 +20,10 @@ limitations under the License.
   line-height: 30px;
   margin-right: 1rem;
   padding: 0 8px;
+  display: flex;
+  align-items: center;
+}
+
+.AltViewOptions svg {
+  margin-left: 3px;
 }

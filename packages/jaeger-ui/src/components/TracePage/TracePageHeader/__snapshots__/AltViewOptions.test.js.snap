@@ -40,7 +40,6 @@ exports[`AltViewOptions renders correctly 1`] = `
         <Link
           onClick={[MockFunction]}
           rel="noopener noreferrer"
-          replace={false}
           target="_blank"
           to="/api/traces/test trace ID?prettyPrint=true"
         >
@@ -51,7 +50,6 @@ exports[`AltViewOptions renders correctly 1`] = `
         <Link
           onClick={[MockFunction]}
           rel="noopener noreferrer"
-          replace={false}
           target="_blank"
           to="/api/traces/test trace ID?raw=true&prettyPrint=true"
         >
@@ -65,7 +63,7 @@ exports[`AltViewOptions renders correctly 1`] = `
     className="AltViewOptions"
   >
     Trace Timeline 
-    <ForwardRef(DownOutlined) />
+    <IoChevronDown />
   </Button>
 </Dropdown>
 `;

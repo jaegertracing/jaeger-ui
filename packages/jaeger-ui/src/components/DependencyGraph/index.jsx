@@ -29,6 +29,7 @@ import { formatDependenciesAsNodesAndLinks } from '../../selectors/dependencies'
 import { getConfigValue } from '../../utils/config/get-config';
 
 import './index.css';
+import withRouteProps from '../../utils/withRouteProps';
 
 const TabPane = Tabs.TabPane;
 
@@ -131,4 +132,4 @@ export function mapDispatchToProps(dispatch) {
   return { fetchDependencies };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(DependencyGraphPageImpl);
+export default withRouteProps(connect(mapStateToProps, mapDispatchToProps)(DependencyGraphPageImpl));

@@ -13,15 +13,14 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Input, InputRef } from 'antd';
+import { InputRef } from 'antd';
 import { Location, History as RouterHistory } from 'history';
 import _clamp from 'lodash/clamp';
 import _get from 'lodash/get';
 import _mapValues from 'lodash/mapValues';
 import _memoize from 'lodash/memoize';
-import { connect, Dispatch } from 'react-redux';
-import { match as Match } from 'react-router-dom';
-import { bindActionCreators } from 'redux';
+import { connect } from 'react-redux';
+import { bindActionCreators, Dispatch } from 'redux';
 
 import ArchiveNotifier from './ArchiveNotifier';
 import { actions as archiveActions } from './ArchiveNotifier/duck';
@@ -62,6 +61,7 @@ import { TraceGraphConfig } from '../../types/config';
 
 import './index.css';
 import memoizedTraceCriticalPath from './CriticalPath/index';
+import withRouteProps from '../../utils/withRouteProps';
 
 type TDispatchProps = {
   acknowledgeArchive: (id: string) => void;
@@ -73,7 +73,7 @@ type TDispatchProps = {
 type TOwnProps = {
   history: RouterHistory;
   location: Location;
-  match: Match<{ id: string }>;
+  params: { id: string };
 };
 
 type TReduxProps = {
@@ -439,7 +439,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
 
 // export for tests
 export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxProps {
-  const { id } = ownProps.match.params;
+  const { id } = ownProps.params;
   const { archive, config, embedded, router } = state;
   const { traces } = state.trace;
   const trace = id ? traces[id] : null;
@@ -472,4 +472,4 @@ export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchPro
   return { acknowledgeArchive, archiveTrace, fetchTrace, focusUiFindMatches };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(TracePageImpl);
+export default withRouteProps(connect(mapStateToProps, mapDispatchToProps)(TracePageImpl));

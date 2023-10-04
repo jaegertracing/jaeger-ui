@@ -17,7 +17,7 @@
 import * as React from 'react';
 import { Select } from 'antd';
 import { History as RouterHistory, Location } from 'history';
-import { Link, RouteComponentProps, withRouter } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Field, formValueSelector, reduxForm } from 'redux-form';
 import queryString from 'query-string';
 
@@ -44,6 +44,8 @@ import { KeyValuePair, Trace, TraceData } from '../../../types/trace';
 
 import './index.css';
 import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
+import withRouteProps from '../../../utils/withRouteProps';
+import SearchableSelect from '../../common/SearchableSelect';
 
 type SearchResultsProps = {
   cohortAddTrace: (traceId: string) => void;
@@ -73,7 +75,11 @@ function SelectSortImpl() {
   return (
     <label>
       Sort:{' '}
-      <Field name="sortBy" component={reduxFormFieldAdapter({ AntInputComponent: Select })}>
+      <Field
+        name="sortBy"
+        component={reduxFormFieldAdapter({ AntInputComponent: SearchableSelect })}
+        props={{}}
+      >
         <Option value={orderBy.MOST_RECENT}>Most Recent</Option>
         <Option value={orderBy.LONGEST_FIRST}>Longest First</Option>
         <Option value={orderBy.SHORTEST_FIRST}>Shortest First</Option>
@@ -98,7 +104,7 @@ export function createBlob(rawTraces: TraceData[]) {
   return new Blob([`{"data":${JSON.stringify(rawTraces)}}`], { type: 'application/json' });
 }
 
-export class UnconnectedSearchResults extends React.PureComponent<SearchResultsProps & RouteComponentProps> {
+export class UnconnectedSearchResults extends React.PureComponent<SearchResultsProps> {
   static defaultProps = { skipMessage: false, spanLinks: undefined, queryOfResults: undefined };
 
   toggleComparison = (traceID: string, remove?: boolean) => {
@@ -245,4 +251,4 @@ export class UnconnectedSearchResults extends React.PureComponent<SearchResultsP
   }
 }
 
-export default withRouter(UnconnectedSearchResults);
+export default withRouteProps(UnconnectedSearchResults);

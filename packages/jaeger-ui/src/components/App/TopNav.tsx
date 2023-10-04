@@ -14,10 +14,10 @@
 
 import React from 'react';
 import { Dropdown, Menu } from 'antd';
-import { DownOutlined } from '@ant-design/icons';
+import { IoChevronDown } from 'react-icons/io5';
 import _has from 'lodash/has';
 import { connect } from 'react-redux';
-import { RouteComponentProps, Link, withRouter } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 import TraceIDSearchInput from './TraceIDSearchInput';
 import * as dependencyGraph from '../DependencyGraph/url';
@@ -31,7 +31,10 @@ import { ConfigMenuItem, ConfigMenuGroup } from '../../types/config';
 import { getConfigValue } from '../../utils/config/get-config';
 import prefixUrl from '../../utils/prefix-url';
 
-type Props = RouteComponentProps<any> & ReduxState;
+import './TopNav.css';
+import withRouteProps from '../../utils/withRouteProps';
+
+type Props = ReduxState;
 
 const NAV_LINKS = [
   {
@@ -96,9 +99,9 @@ function getItem(item: ConfigMenuItem) {
 function CustomNavDropdown({ label, items }: ConfigMenuGroup) {
   const menuItems = <Menu>{items.map(getItem)}</Menu>;
   return (
-    <Dropdown overlay={menuItems} overlayStyle={{ paddingRight: '20px' }} placement="bottomRight">
-      <a style={{ color: 'white' }}>
-        {label} <DownOutlined style={{ paddingRight: '30px' }} />
+    <Dropdown overlay={menuItems} placement="bottomRight">
+      <a className="Dropdown--icon-container">
+        {label} <IoChevronDown className="Dropdown--icon" />
       </a>
     </Dropdown>
   );
@@ -153,4 +156,4 @@ export function mapStateToProps(state: ReduxState) {
   return state;
 }
 
-export default withRouter(connect(mapStateToProps)(TopNavImpl));
+export default connect(mapStateToProps)(withRouteProps(TopNavImpl));

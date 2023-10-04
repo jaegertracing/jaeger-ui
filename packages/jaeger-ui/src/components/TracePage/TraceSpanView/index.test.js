@@ -17,7 +17,7 @@ import { mount, shallow } from 'enzyme';
 import TraceSpanView from './index';
 import transformTraceData from '../../../model/transform-trace-data';
 
-const testTrace = require('../TraceStatistics/tableValuesTestTrace/testTrace.json');
+import testTrace from '../TraceStatistics/tableValuesTestTrace/testTrace.json';
 
 const transformedTrace = transformTraceData(testTrace);
 
@@ -48,13 +48,14 @@ describe('<TraceSpanView>', () => {
   it('Should change value when onChange was called', () => {
     const event = ['service2'];
     wrapper = shallow(<TraceSpanView {...defaultProps} />);
-    wrapper.find('.serviceNameDD ForwardRef(InternalSelect)').simulate('change', event);
+
+    wrapper.find({ 'data-testid': 'select-service' }).simulate('change', event);
     expect(wrapper.state('selectedServiceName')).toEqual(['service2']);
   });
   it('Should change value when onChange and Rest the value when called reset', () => {
     const event = ['service2'];
     wrapper = shallow(<TraceSpanView {...defaultProps} />);
-    wrapper.find('.serviceNameDD ForwardRef(InternalSelect)').simulate('change', event);
+    wrapper.find({ 'data-testid': 'select-service' }).simulate('change', event);
     expect(wrapper.state('selectedServiceName')).toEqual(['service2']);
     wrapper.find('.reset-filter Button').simulate('click');
     expect(wrapper.state('selectedServiceName')).toEqual([]);
@@ -62,7 +63,7 @@ describe('<TraceSpanView>', () => {
   it('Should change value when onChange OperatioName DDwas called', () => {
     const event = ['op2', 'op3'];
     wrapper = shallow(<TraceSpanView {...defaultProps} />);
-    wrapper.find('.operationNameDD ForwardRef(InternalSelect)').simulate('change', event);
+    wrapper.find({ 'data-testid': 'select-operation' }).simulate('change', event);
     expect(wrapper.state('selectedOperationName')).toEqual(['op2', 'op3']);
   });
   it('check handler', () => {

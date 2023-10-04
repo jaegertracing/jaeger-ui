@@ -404,7 +404,6 @@ exports[`<MonitorATMServicesView> ATM snapshot test with no metrics 1`] = `
       <React.Fragment>
         No data yet! Please see these
         <Link
-          replace={false}
           target="_blank"
           to={
             Object {
@@ -728,7 +727,6 @@ exports[`<MonitorATMServicesView> render one service latency 1`] = `
       <React.Fragment>
         No data yet! Please see these
         <Link
-          replace={false}
           target="_blank"
           to={
             Object {

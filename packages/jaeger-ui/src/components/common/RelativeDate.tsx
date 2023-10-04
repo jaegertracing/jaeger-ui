@@ -12,22 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import moment from 'moment';
+import React from 'react';
+import dayjs from 'dayjs';
 
 import { formatRelativeDate } from '../../utils/date';
 
 type Props = {
   fullMonthName: boolean | undefined | null;
   includeTime: boolean | undefined | null;
-  value: number | Date | any;
+  value: number | Date;
 };
 
 // TODO typescript doesn't understand text or null as react nodes
 // https://github.com/Microsoft/TypeScript/issues/21699
-export default function RelativeDate(props: Props): any {
+export default function RelativeDate(props: Props): JSX.Element {
   const { value, includeTime, fullMonthName } = props;
-  const m = moment.isMoment(value) ? value : moment(value);
+  const m = dayjs.isDayjs(value) ? value : dayjs(value);
   const dateStr = formatRelativeDate(m, Boolean(fullMonthName));
   const timeStr = includeTime ? `, ${m.format('h:mm:ss a')}` : '';
-  return `${dateStr}${timeStr}`;
+  return <span>{`${dateStr}${timeStr}`}</span>;
 }

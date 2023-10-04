@@ -15,7 +15,8 @@
 import React from 'react';
 import { mount, shallow } from 'enzyme';
 import { notification } from 'antd';
-import { ClockCircleOutlined, LoadingOutlined } from '@ant-design/icons';
+import { IoTimeOutline } from 'react-icons/io5';
+import LoadingIndicator from '../../common/LoadingIndicator';
 import ArchiveNotifier from './index';
 import { Details, Message } from '../../common/ErrorMessage';
 
@@ -61,7 +62,7 @@ describe('<ArchiveNotifier>', () => {
         key: 'ENotifiedState.Outcome',
         description: null,
         duration: null,
-        icon: <ClockCircleOutlined className="ArchiveNotifier--doneIcon" />,
+        icon: <IoTimeOutline className="ArchiveNotifier--doneIcon" />,
         message: 'This trace has been archived.',
         onClose: defaultProps.acknowledge,
       })
@@ -127,7 +128,7 @@ describe('<ArchiveNotifier>', () => {
         key: 'ENotifiedState.Progress',
         description: null,
         duration: 0,
-        icon: <LoadingOutlined />,
+        icon: <LoadingIndicator />,
         message: 'Archiving trace...',
       })
     );
@@ -143,7 +144,7 @@ describe('<ArchiveNotifier>', () => {
         className: 'ArchiveNotifier--errorNotification',
         description: <Details error="This is an error string" wrap />,
         duration: null,
-        icon: <ClockCircleOutlined className="ArchiveNotifier--errorIcon" />,
+        icon: <IoTimeOutline className="ArchiveNotifier--errorIcon" />,
         message: <Message error="This is an error string" wrap />,
         onClose: props.acknowledge,
       })

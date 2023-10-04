@@ -16,6 +16,7 @@
 
 // This code will generate changelog entries
 
+/* eslint-disable @typescript-eslint/no-var-requires */
 const { readFile } = require('fs').promises;
 // eslint-disable-next-line import/no-extraneous-dependencies
 const jsdom = require('jsdom');

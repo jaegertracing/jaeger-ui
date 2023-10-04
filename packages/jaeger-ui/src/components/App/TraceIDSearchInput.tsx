@@ -17,15 +17,16 @@ import * as React from 'react';
 import { Form } from '@ant-design/compatible';
 import '@ant-design/compatible/assets/index.css';
 import { Input } from 'antd';
-import { SearchOutlined } from '@ant-design/icons';
-import { RouteComponentProps, Router as RouterHistory, withRouter } from 'react-router-dom';
+import { IoSearch } from 'react-icons/io5';
 
+import { History } from 'history';
 import { getUrl } from '../TracePage/url';
 
 import './TraceIDSearchInput.css';
+import withRouteProps from '../../utils/withRouteProps';
 
-type Props = RouteComponentProps<any> & {
-  history: RouterHistory;
+type Props = {
+  history: History;
 };
 
 class TraceIDSearchInput extends React.PureComponent<Props> {
@@ -50,11 +51,11 @@ class TraceIDSearchInput extends React.PureComponent<Props> {
           data-testid="idInput"
           name="idInput"
           placeholder="Lookup by Trace ID..."
-          prefix={<SearchOutlined />}
+          prefix={<IoSearch />}
         />
       </Form>
     );
   }
 }
 
-export default withRouter(TraceIDSearchInput);
+export default withRouteProps(TraceIDSearchInput);

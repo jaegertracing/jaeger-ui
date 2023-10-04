@@ -15,7 +15,7 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import * as React from 'react';
 import { Dropdown, Menu } from 'antd';
-import { ExportOutlined, ProfileOutlined, SnippetsOutlined } from '@ant-design/icons';
+import { IoOpenOutline, IoList, IoCopyOutline } from 'react-icons/io5';
 import { JsonView, allExpanded, collapseAllNested, defaultStyles } from 'react-json-view-lite';
 
 import CopyIcon from '../../../common/CopyIcon';
@@ -76,17 +76,19 @@ function formatValue(key: string, value: any) {
     content = (
       <JsonView
         data={parsed}
-        shouldInitiallyExpand={shouldJsonTreeExpand ? allExpanded : collapseAllNested}
+        shouldExpandNode={shouldJsonTreeExpand ? allExpanded : collapseAllNested}
         style={{
           ...defaultStyles,
           container: 'json-markup',
           label: 'json-markup-key',
           stringValue: 'json-markup-string',
+          collapseIcon: 'json-markup-icon-collapse',
+          collapsedContent: 'json-markup-collapse-content',
+          expandIcon: 'json-markup-icon-expand',
           numberValue: 'json-markup-number',
           booleanValue: 'json-markup-bool',
           nullValue: 'json-markup-null',
           undefinedValue: 'json-markup-undefined',
-          expander: 'json-markup-expander',
           basicChildStyle: 'json-markup-child',
           punctuation: 'json-markup-puncuation',
           otherValue: 'json-markup-other',
@@ -100,7 +102,7 @@ function formatValue(key: string, value: any) {
 
 export const LinkValue = (props: { href: string; title?: string; children: React.ReactNode }) => (
   <a href={props.href} title={props.title} target="_blank" rel="noopener noreferrer">
-    {props.children} <ExportOutlined className="KeyValueTable--linkIcon" />
+    {props.children} <IoOpenOutline className="KeyValueTable--linkIcon" />
   </a>
 );
 
@@ -149,7 +151,7 @@ export default function KeyValuesTable(props: KeyValuesTableProps) {
                 <div>
                   <Dropdown overlay={linkValueList(links)} placement="bottomRight" trigger={['click']}>
                     <a>
-                      {jsonTable} <ProfileOutlined className="KeyValueTable--linkIcon" />
+                      {jsonTable} <IoList className="KeyValueTable--linkIcon" />
                     </a>
                   </Dropdown>
                 </div>
@@ -172,7 +174,7 @@ export default function KeyValuesTable(props: KeyValuesTableProps) {
                   />
                   <CopyIcon
                     className="KeyValueTable--copyIcon"
-                    icon={<SnippetsOutlined />}
+                    icon={<IoCopyOutline />}
                     copyText={JSON.stringify(row, null, 2)}
                     tooltipTitle="Copy JSON"
                     buttonText="JSON"

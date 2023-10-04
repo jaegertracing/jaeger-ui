@@ -14,8 +14,9 @@
 
 import * as React from 'react';
 import { notification } from 'antd';
-import { ClockCircleOutlined, LoadingOutlined } from '@ant-design/icons';
+import { IoTimeOutline } from 'react-icons/io5';
 
+import LoadingIndicator from '../../common/LoadingIndicator';
 import { Details, Message } from '../../common/ErrorMessage';
 import { TNil } from '../../../types';
 import { TraceArchive } from '../../../types/archive';
@@ -59,7 +60,7 @@ function updateNotification(oldState: ENotifiedState | null, nextState: ENotifie
       key: ENotifiedState.Progress,
       description: null,
       duration: 0,
-      icon: <LoadingOutlined />,
+      icon: <LoadingIndicator />,
       message: 'Archiving trace...',
     });
     return;
@@ -74,7 +75,7 @@ function updateNotification(oldState: ENotifiedState | null, nextState: ENotifie
         message: <Message error={error} wrap />,
         description: <Details error={error} wrap />,
         duration: null,
-        icon: <ClockCircleOutlined className="ArchiveNotifier--errorIcon" />,
+        icon: <IoTimeOutline className="ArchiveNotifier--errorIcon" />,
         onClose: acknowledge,
       });
     } else if (archivedState && archivedState.isArchived) {
@@ -82,7 +83,7 @@ function updateNotification(oldState: ENotifiedState | null, nextState: ENotifie
         key: ENotifiedState.Outcome,
         description: null,
         duration: null,
-        icon: <ClockCircleOutlined className="ArchiveNotifier--doneIcon" />,
+        icon: <IoTimeOutline className="ArchiveNotifier--doneIcon" />,
         message: 'This trace has been archived.',
         onClose: acknowledge,
       });

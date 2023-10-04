@@ -82,8 +82,6 @@ describe('makeShortcutCallbacks()', () => {
 });
 
 describe('<TracePage>', () => {
-  TraceTimelineViewer.prototype.shouldComponentUpdate.mockReturnValue(false);
-
   const trace = transformTraceData(traceGenerator.trace({}));
   const defaultProps = {
     acknowledgeArchive: () => {},
@@ -728,9 +726,7 @@ describe('mapStateToProps()', () => {
   const trace = {};
   const embedded = 'a-faux-embedded-config';
   const ownProps = {
-    match: {
-      params: { id: traceID },
-    },
+    params: { id: traceID },
   };
   let state;
   beforeEach(() => {
@@ -766,10 +762,8 @@ describe('mapStateToProps()', () => {
 
   it('handles falsy ownProps.match.params.id', () => {
     const props = mapStateToProps(state, {
-      match: {
-        params: {
-          id: '',
-        },
+      params: {
+        id: '',
       },
     });
     expect(props).toEqual(

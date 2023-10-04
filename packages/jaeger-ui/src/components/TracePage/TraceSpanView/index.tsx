@@ -15,7 +15,7 @@
 
 import React, { Component } from 'react';
 import { Row, Col, Table, Button, Select } from 'antd';
-import moment from 'moment';
+import dayjs from 'dayjs';
 import { ColumnProps } from 'antd/es/table';
 import { Form } from '@ant-design/compatible';
 import './index.css';
@@ -24,6 +24,7 @@ import { Trace, Span } from '../../../types/trace';
 import { timeConversion } from '../../../utils/date';
 import prefixUrl from '../../../utils/prefix-url';
 import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
+import SearchableSelect from '../../common/SearchableSelect';
 
 const Option = Select.Option;
 
@@ -172,7 +173,7 @@ export default class TraceSpanView extends Component<Props, State> {
         dataIndex: 'startTime',
         sorter: (a, b) => a.startTime - b.startTime,
         render: (cell: number) => {
-          return moment(cell / 1000).format('DD MMM YYYY hh:mm A');
+          return dayjs(cell / 1000).format('DD MMM YYYY hh:mm A');
         },
       },
     ];
@@ -187,9 +188,8 @@ export default class TraceSpanView extends Component<Props, State> {
               wrapperCol={{ span: 18 }}
               className="serviceNameDD"
             >
-              <Select
+              <SearchableSelect
                 allowClear
-                showSearch
                 mode="multiple"
                 style={{ width: '100%' }}
                 maxTagCount={4}
@@ -203,6 +203,7 @@ export default class TraceSpanView extends Component<Props, State> {
                   }));
                   this.onFilteredChangeCustom(entry as [], 'process.serviceName' as keyof Span);
                 }}
+                data-testid="select-service"
               >
                 {this.state.serviceNamesList.map(name => {
                   return (
@@ -211,7 +212,7 @@ export default class TraceSpanView extends Component<Props, State> {
                     </Option>
                   );
                 })}
-              </Select>
+              </SearchableSelect>
             </Form.Item>
           </Col>
           <Col span={9}>
@@ -221,9 +222,8 @@ export default class TraceSpanView extends Component<Props, State> {
               wrapperCol={{ span: 18 }}
               className="operationNameDD"
             >
-              <Select
+              <SearchableSelect
                 allowClear
-                showSearch
                 mode="multiple"
                 style={{ width: '100%' }}
                 maxTagCount={4}
@@ -237,6 +237,7 @@ export default class TraceSpanView extends Component<Props, State> {
                   }));
                   this.onFilteredChangeCustom(entry as [], 'operationName');
                 }}
+                data-testid="select-operation"
               >
                 {this.uniqueOperationNameOptions().map((name: string) => {
                   return (
@@ -245,7 +246,7 @@ export default class TraceSpanView extends Component<Props, State> {
                     </Option>
                   );
                 })}
-              </Select>
+              </SearchableSelect>
             </Form.Item>
           </Col>
           <Col span={2} push={6}>

@@ -32,7 +32,7 @@ limitations under the License.
 }
 
 .TracePageSearchBar--btn {
-  border-left: none;
+  border-left: 1px solid #d9d9d9;
   transition: 0.2s;
 }
 
@@ -40,12 +40,11 @@ limitations under the License.
   opacity: 0.5;
 }
 
-.TracePageSearchBar--locateBtn {
-  padding: 1px 8px 4px;
-}
-.help-btn-container {
+.ant-input-group.ant-input-group-compact .help-btn-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border: 1px solid gainsboro;
-  padding: 3px 7px;
 }
 .help-btn-container:hover {
   border-top-color: rgb(23, 184, 190);
@@ -57,4 +56,21 @@ limitations under the License.
   color: #999;
   cursor: pointer;
   padding: 1px;
+  margin: 0 10px;
+  font-size: 18px;
+}
+
+.ant-input-group.ant-input-group-compact .TracePageSearchBar--locateBtn,
+.ant-input-group.ant-input-group-compact .TracePageSearchBar--ButtonUp,
+.ant-input-group.ant-input-group-compact .TracePageSearchBar--ButtonDown,
+.ant-input-group.ant-input-group-compact .TracePageSearchBar--ButtonClose {
+  display: flex;
+  align-items: center;
+}
+
+.ant-input-group.ant-input-group-compact .TracePageSearchBar--locateBtn svg,
+.ant-input-group.ant-input-group-compact .TracePageSearchBar--ButtonUp svg,
+.ant-input-group.ant-input-group-compact .TracePageSearchBar--ButtonDown svg,
+.ant-input-group.ant-input-group-compact .TracePageSearchBar--ButtonClose svg {
+  font-size: 18px;
 }

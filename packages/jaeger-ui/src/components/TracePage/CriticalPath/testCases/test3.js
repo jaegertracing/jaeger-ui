@@ -27,7 +27,7 @@ Span B will be dropped.                           |
 span A is on critical path(+++++)                 |
 */
 
-const trace = require('../../TraceStatistics/tableValuesTestTrace/traceWithSingleChildSpanLongerThanParent.json');
+import trace from '../../TraceStatistics/tableValuesTestTrace/traceWithSingleChildSpanLongerThanParent.json';
 
 const transformedTrace = transformTraceData(trace);
 const traceStart = 1679437737490189;
