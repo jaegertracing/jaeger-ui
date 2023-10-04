@@ -14,6 +14,7 @@
 
 ### Fixes
 
+- Restore ability to search in select fields ([@prathamesh-mutkure](https://github.com/prathamesh-mutkure) in [#1805](https://github.com/jaegertracing/jaeger-ui/pull/1805))
 - Replace match.params with useparams hook ([@anshgoyalevil](https://github.com/anshgoyalevil) in [#1837](https://github.com/jaegertracing/jaeger-ui/pull/1837))
 - Add custom withrouteprops hoc for react-router-dom v6 migration ([@anshgoyalevil](https://github.com/anshgoyalevil) in [#1836](https://github.com/jaegertracing/jaeger-ui/pull/1836))
 - Remove unused icon ([@priyanshu-kun](https://github.com/priyanshu-kun) in [#1829](https://github.com/jaegertracing/jaeger-ui/pull/1829))
