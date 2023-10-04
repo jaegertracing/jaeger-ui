@@ -1,7 +1,8 @@
 .PHONY: changelog
 changelog:
-	wget https://github.com/jaegertracing/jaeger/blob/main/scripts/release-notes.py -O ./scripts/release-notes.py -q
-	./scripts/release-notes.py --exclude-dependabot --repo jaeger-ui --point-markdown-char '-'
+	wget https://raw.githubusercontent.com/jaegertracing/jaeger/main/scripts/release-notes.py -O ./scripts/release-notes.py -q
+	chmod 755 ./scripts/release-notes.py
+	./scripts/release-notes.py --exclude-dependabot --repo jaeger-ui
 
 .PHONY: draft-release
 draft-release:
