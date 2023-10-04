@@ -45,6 +45,7 @@ import { KeyValuePair, Trace, TraceData } from '../../../types/trace';
 import './index.css';
 import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
 import withRouteProps from '../../../utils/withRouteProps';
+import SearchableSelect from '../../common/SearchableSelect';
 
 type SearchResultsProps = {
   cohortAddTrace: (traceId: string) => void;
@@ -74,7 +75,11 @@ function SelectSortImpl() {
   return (
     <label>
       Sort:{' '}
-      <Field name="sortBy" component={reduxFormFieldAdapter({ AntInputComponent: Select })}>
+      <Field
+        name="sortBy"
+        component={reduxFormFieldAdapter({ AntInputComponent: SearchableSelect })}
+        props={{}}
+      >
         <Option value={orderBy.MOST_RECENT}>Most Recent</Option>
         <Option value={orderBy.LONGEST_FIRST}>Longest First</Option>
         <Option value={orderBy.SHORTEST_FIRST}>Shortest First</Option>

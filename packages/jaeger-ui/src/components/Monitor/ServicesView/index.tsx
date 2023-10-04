@@ -50,6 +50,7 @@ import {
   trackViewAllTraces,
 } from './index.track';
 import withRouteProps from '../../../utils/withRouteProps';
+import SearchableSelect from '../../common/SearchableSelect';
 
 type StateType = {
   graphWidth: number;
@@ -270,7 +271,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TPropsWithIn
               <Field
                 onChange={(e, newValue: string) => trackSelectService(newValue)}
                 name="service"
-                component={reduxFormFieldAdapter({ AntInputComponent: Select })}
+                component={reduxFormFieldAdapter({ AntInputComponent: SearchableSelect })}
                 placeholder="Select A Service"
                 props={{
                   className: 'select-a-service-input',
@@ -309,7 +310,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TPropsWithIn
             <Col span={8} className="timeframe-selector">
               <Field
                 name="timeframe"
-                component={reduxFormFieldAdapter({ AntInputComponent: Select })}
+                component={reduxFormFieldAdapter({ AntInputComponent: SearchableSelect })}
                 placeholder="Select A Timeframe"
                 onChange={(e, value: number) => {
                   const { label } = timeFrameOptions.find(option => option.value === value)!;

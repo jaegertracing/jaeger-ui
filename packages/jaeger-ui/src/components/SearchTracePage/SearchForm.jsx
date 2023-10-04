@@ -37,13 +37,14 @@ import { formatDate, formatTime } from '../../utils/date';
 import reduxFormFieldAdapter from '../../utils/redux-form-field-adapter';
 import { DEFAULT_OPERATION, DEFAULT_LIMIT, DEFAULT_LOOKBACK } from '../../constants/search-form';
 import { getConfigValue } from '../../utils/config/get-config';
+import SearchableSelect from '../common/SearchableSelect';
 import './SearchForm.css';
 
 const FormItem = Form.Item;
 const Option = Select.Option;
 
 const AdaptedInput = reduxFormFieldAdapter({ AntInputComponent: Input });
-const AdaptedSelect = reduxFormFieldAdapter({ AntInputComponent: Select });
+const AdaptedSelect = reduxFormFieldAdapter({ AntInputComponent: SearchableSelect });
 const ValidatedAdaptedInput = reduxFormFieldAdapter({ AntInputComponent: Input, isValidatedInput: true });
 
 export function getUnixTimeStampInMSFromForm({ startDate, startDateTime, endDate, endDateTime }) {
@@ -163,7 +164,7 @@ export const optionsWithinMaxLookback = memoizeOne(maxLookback => {
   }
   return options.map(({ label, value }) => (
     <Option key={value} value={value}>
-      Last {label}
+      {`Last ${label}`}
     </Option>
   ));
 });
@@ -377,7 +378,14 @@ export class SearchFormImpl extends React.PureComponent {
         </FormItem>
 
         <FormItem label="Lookback">
-          <Field name="lookback" component={AdaptedSelect} props={{ disabled, defaultValue: '1h' }}>
+          <Field
+            name="lookback"
+            component={AdaptedSelect}
+            props={{
+              disabled,
+              defaultValue: '1h',
+            }}
+          >
             {optionsWithinMaxLookback(searchMaxLookback)}
             <Option value="custom">Custom Time Range</Option>
           </Field>

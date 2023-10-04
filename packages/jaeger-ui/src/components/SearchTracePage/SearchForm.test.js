@@ -212,7 +212,7 @@ describe('lookback utils', () => {
       expect(options.length).toBe(threeHoursOfExpectedOptions.length);
       options.forEach(({ props }, i) => {
         expect(props.value).toBe(threeHoursOfExpectedOptions[i].value);
-        expect(props.children[1]).toBe(threeHoursOfExpectedOptions[i].label);
+        expect(props.children).toBe(`Last ${threeHoursOfExpectedOptions[i].label}`);
       });
     });
 
@@ -227,7 +227,7 @@ describe('lookback utils', () => {
       expect(options.length).toBe(expectedOptions.length);
       options.forEach(({ props }, i) => {
         expect(props.value).toBe(expectedOptions[i].value);
-        expect(props.children[1]).toBe(expectedOptions[i].label);
+        expect(props.children).toBe(`Last ${expectedOptions[i].label}`);
       });
     });
 
@@ -243,7 +243,7 @@ describe('lookback utils', () => {
       expect(options.length).toBe(expectedOptions.length);
       options.forEach(({ props }, i) => {
         expect(props.value).toBe(expectedOptions[i].value);
-        expect(props.children[1]).toBe(expectedOptions[i].label);
+        expect(props.children).toBe(`Last ${expectedOptions[i].label}`);
       });
     });
   });
