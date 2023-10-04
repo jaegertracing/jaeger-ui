@@ -147,7 +147,7 @@ export default chance.mixin({
       operationName: chance.pickone(operations),
       references: [],
       startTime,
-      duration: chance.integer({ min: 1, max: traceEndTime - startTime }),
+      duration: chance.integer({ min: 1, max: Math.max(1, traceEndTime - startTime)}),
       tags: chance.tags(),
       logs: [],
     };
