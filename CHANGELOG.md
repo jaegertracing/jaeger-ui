@@ -10,7 +10,7 @@
 
 ### Enhancements
 
-- Handle the case in which child span starts before and ends after parent span. ([@GLVSKiriti](https://github.com/GLVSKiriti) in [#1780](https://github.com/jaegertracing/jaeger-ui/pull/1780))
+- Handle Critical Path computation when child span starts before and ends after parent span. ([@GLVSKiriti](https://github.com/GLVSKiriti) in [#1780](https://github.com/jaegertracing/jaeger-ui/pull/1780))
 
 ### Fixes
 
