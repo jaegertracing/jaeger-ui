@@ -6,6 +6,35 @@
 
 ### Fixes
 
+## v1.34.0 (2023-10-04)
+
+### Enhancements
+
+- Handle Critical Path computation when child span starts before and ends after parent span. ([@GLVSKiriti](https://github.com/GLVSKiriti) in [#1780](https://github.com/jaegertracing/jaeger-ui/pull/1780))
+
+### Fixes
+
+- Restore ability to search in select fields ([@prathamesh-mutkure](https://github.com/prathamesh-mutkure) in [#1805](https://github.com/jaegertracing/jaeger-ui/pull/1805))
+- Replace match.params with useparams hook ([@anshgoyalevil](https://github.com/anshgoyalevil) in [#1837](https://github.com/jaegertracing/jaeger-ui/pull/1837))
+- Add custom withrouteprops hoc for react-router-dom v6 migration ([@anshgoyalevil](https://github.com/anshgoyalevil) in [#1836](https://github.com/jaegertracing/jaeger-ui/pull/1836))
+- Remove unused icon ([@priyanshu-kun](https://github.com/priyanshu-kun) in [#1829](https://github.com/jaegertracing/jaeger-ui/pull/1829))
+- Improve tooltip for elasticsearch tag queries ([@pavolloffay](https://github.com/pavolloffay) in [#1809](https://github.com/jaegertracing/jaeger-ui/pull/1809))
+- Replace react-router-redux with redux-first-history ([@anshgoyalevil](https://github.com/anshgoyalevil) in [#1826](https://github.com/jaegertracing/jaeger-ui/pull/1826))
+- Fix all controversial icons. ([@priyanshu-kun](https://github.com/priyanshu-kun) in [#1824](https://github.com/jaegertracing/jaeger-ui/pull/1824))
+- Speed up tests locally by upto 45% ([@anshgoyalevil](https://github.com/anshgoyalevil) in [#1818](https://github.com/jaegertracing/jaeger-ui/pull/1818))
+- Priyanshu kun/clean any ([@priyanshu-kun](https://github.com/priyanshu-kun) in [#1814](https://github.com/jaegertracing/jaeger-ui/pull/1814))
+- Moment.js replaced with dayjs ([@prathamesh-mutkure](https://github.com/prathamesh-mutkure) in [#1738](https://github.com/jaegertracing/jaeger-ui/pull/1738))
+- Replaced all uncontroversial icons from various icon sets to io5 ([@priyanshu-kun](https://github.com/priyanshu-kun) in [#1771](https://github.com/jaegertracing/jaeger-ui/pull/1771))
+- Speed up ci unit-test workflow by 28% ([@anshgoyalevil](https://github.com/anshgoyalevil) in [#1804](https://github.com/jaegertracing/jaeger-ui/pull/1804))
+- Fix linting warnings for no-unused-vars, no-var-requires ([@priyanshu-kun](https://github.com/priyanshu-kun) in [#1800](https://github.com/jaegertracing/jaeger-ui/pull/1800))
+- Improve tooltip for tag search ([@yurishkuro](https://github.com/yurishkuro) in [#1799](https://github.com/jaegertracing/jaeger-ui/pull/1799))
+- Fix copyicon to receive reactnode instead of string ([@anshgoyalevil](https://github.com/anshgoyalevil) in [#1791](https://github.com/jaegertracing/jaeger-ui/pull/1791))
+- Refactor critical path code to prevent it from ever throwing exceptions ([@GLVSKiriti](https://github.com/GLVSKiriti) in [#1785](https://github.com/jaegertracing/jaeger-ui/pull/1785))
+- Print suggestion on fixing prettier-lint errors ([@yurishkuro](https://github.com/yurishkuro) in [#1783](https://github.com/jaegertracing/jaeger-ui/pull/1783))
+- Upgrade to node 18 ([@yurishkuro](https://github.com/yurishkuro) in [#1776](https://github.com/jaegertracing/jaeger-ui/pull/1776))
+- Extend try/catch for critical path ([@yurishkuro](https://github.com/yurishkuro) in [#1778](https://github.com/jaegertracing/jaeger-ui/pull/1778))
+- Convert utils/treenode.js and selectors/trace.js to typescript ([@yurishkuro](https://github.com/yurishkuro) in [#1777](https://github.com/jaegertracing/jaeger-ui/pull/1777))
+
 ## v1.33.0 (2023-08-06)
 
 ### Enhancements
