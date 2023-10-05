@@ -8,4 +8,4 @@ changelog:
 draft-release:
 	wget https://raw.githubusercontent.com/jaegertracing/jaeger/main/scripts/draft-release.py -O ./scripts/draft-release.py -q
 	chmod 755 ./scripts/draft-release.py
-	./scripts/draft-release.py
+	./scripts/draft-release.py --title "Jaeger UI" --repo jaeger-ui
