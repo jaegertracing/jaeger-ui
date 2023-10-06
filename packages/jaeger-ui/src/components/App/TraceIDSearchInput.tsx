@@ -14,9 +14,7 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Form } from '@ant-design/compatible';
-import '@ant-design/compatible/assets/index.css';
-import { Input } from 'antd';
+import { Form, Input } from 'antd';
 import { IoSearch } from 'react-icons/io5';
 
 import { History } from 'history';
@@ -44,7 +42,7 @@ class TraceIDSearchInput extends React.PureComponent<Props> {
       <Form
         data-testid="TraceIDSearchInput--form"
         layout="horizontal"
-        onSubmit={this.goToTrace}
+        onSubmitCapture={this.goToTrace}
         className="TraceIDSearchInput--form"
       >
         <Input

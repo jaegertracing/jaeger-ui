@@ -14,9 +14,7 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Form } from '@ant-design/compatible';
-import '@ant-design/compatible/assets/index.css';
-import { Input, Button, Popover, Select, Row, Col } from 'antd';
+import { Input, Button, Popover, Select, Row, Col, Form } from 'antd';
 import _get from 'lodash/get';
 import logfmtParser from 'logfmt/lib/logfmt_parser';
 import { stringify as logfmtStringify } from 'logfmt/lib/stringify';
@@ -182,9 +180,9 @@ export function validateDurationFields(value) {
   return /\d[\d\\.]*(us|ms|s|m|h)$/.test(value)
     ? undefined
     : {
-        content: `Please enter a number followed by a duration unit, ${placeholderDurationFields}`,
-        title: 'Please match the requested format.',
-      };
+      content: `Please enter a number followed by a duration unit, ${placeholderDurationFields}`,
+      title: 'Please match the requested format.',
+    };
 }
 
 export function convertQueryParamsToFormDates({ start, end }) {
@@ -277,7 +275,7 @@ export class SearchFormImpl extends React.PureComponent {
     const tz = selectedLookback === 'custom' ? new Date().toTimeString().replace(/^.*?GMT/, 'UTC') : null;
 
     return (
-      <Form layout="vertical" onSubmit={handleSubmit}>
+      <Form layout="vertical" onSubmitCapture={handleSubmit}>
         <FormItem
           label={
             <span>
