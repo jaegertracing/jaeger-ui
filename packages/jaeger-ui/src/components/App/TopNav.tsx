@@ -89,17 +89,13 @@ function getItem(item: ConfigMenuItem) {
     </a>
   );
 
-  return (
-    <Menu.Item key={label} disabled={!url}>
-      {url ? link : label}
-    </Menu.Item>
-  );
+  return { label: url ? link : label, key: label, disabled: !url };
 }
 
 function CustomNavDropdown({ label, items }: ConfigMenuGroup) {
-  const menuItems = <Menu>{items.map(getItem)}</Menu>;
+  const menuItems = items.map(getItem);
   return (
-    <Dropdown overlay={menuItems} placement="bottomRight">
+    <Dropdown menu={{ items: menuItems }} placement="bottomRight">
       <a className="Dropdown--icon-container">
         {label} <IoChevronDown className="Dropdown--icon" />
       </a>
@@ -127,19 +123,40 @@ export function TopNavImpl(props: Props) {
   const { pathname } = router.location;
   const menuItems = Array.isArray(config.menu) ? config.menu : [];
 
+  const itemsGlobalRight: MenuProps['items'] = [
+    {
+      label: <TraceIDSearchInput />,
+      key: 'TraceIDSearchInput',
+    },
+    {
+      label: menuItems.map(m => {
+        if (isItem(m)) {
+          return getItem(m);
+        }
+        return <CustomNavDropdown key={m.label} {...m} />;
+      }),
+      key: 'About Jaeger',
+    },
+  ];
+
+  menuItems.map(m => {
+    if (isItem(m)) {
+      return getItem(m);
+    }
+    return <CustomNavDropdown key={m.label} {...m} />;
+  });
+
   return (
     <div>
-      <Menu theme="dark" mode="horizontal" selectable={false} className="ub-right" selectedKeys={[pathname]}>
-        <Menu.Item style={{ paddingRight: '40px' }}>
-          <TraceIDSearchInput />
-        </Menu.Item>
-        {menuItems.map(m => {
-          if (isItem(m)) {
-            return getItem(m);
-          }
-          return <CustomNavDropdown key={m.label} {...m} />;
-        })}
-      </Menu>
+      <Menu
+        theme="dark"
+        mode="horizontal"
+        selectable={false}
+        className="ub-right"
+        disabledOverflow
+        selectedKeys={[pathname]}
+        items={itemsGlobalRight}
+      />
       <Menu
         theme="dark"
         items={itemsGlobalLeft?.concat(
