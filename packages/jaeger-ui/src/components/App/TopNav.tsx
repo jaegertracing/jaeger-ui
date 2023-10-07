@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import React from 'react';
-import { Dropdown, Menu } from 'antd';
+import { Dropdown, Menu, MenuProps } from 'antd';
 import { IoChevronDown } from 'react-icons/io5';
 import _has from 'lodash/has';
 import { connect } from 'react-redux';
@@ -111,6 +111,17 @@ function isItem(itemOrGroup: ConfigMenuItem | ConfigMenuGroup): itemOrGroup is C
   return !_has(itemOrGroup, 'items');
 }
 
+const itemsGlobalLeft: MenuProps['items'] = [
+  {
+    label: (
+      <Link to={prefixUrl('/')} style={{ fontSize: '14px', fontWeight: 500 }}>
+        JAEGER UI
+      </Link>
+    ),
+    key: 'JAEGER UI',
+  },
+];
+
 export function TopNavImpl(props: Props) {
   const { config, router } = props;
   const { pathname } = router.location;
@@ -129,22 +140,19 @@ export function TopNavImpl(props: Props) {
           return <CustomNavDropdown key={m.label} {...m} />;
         })}
       </Menu>
-      <Menu theme="dark" mode="horizontal" selectable={false} selectedKeys={[pathname]}>
-        <Menu.Item>
-          <Link to={prefixUrl('/')} style={{ fontSize: '14px', fontWeight: 500 }}>
-            JAEGER UI
-          </Link>
-        </Menu.Item>
-        {NAV_LINKS.map(({ matches, to, text }) => {
-          const url = typeof to === 'string' ? to : to(props);
-          const key = matches(pathname) ? pathname : url;
-          return (
-            <Menu.Item key={key}>
-              <Link to={url}>{text}</Link>
-            </Menu.Item>
-          );
-        })}
-      </Menu>
+      <Menu
+        theme="dark"
+        items={itemsGlobalLeft?.concat(
+          NAV_LINKS.map(({ matches, to, text }) => {
+            const url = typeof to === 'string' ? to : to(props);
+            const key = matches(pathname) ? pathname : url;
+            return { key, label: <Link to={url}>{text}</Link> };
+          })
+        )}
+        mode="horizontal"
+        selectable={false}
+        selectedKeys={[pathname]}
+      />
     </div>
   );
 }
