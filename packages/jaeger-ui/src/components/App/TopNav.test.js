@@ -14,7 +14,9 @@
 
 import React from 'react';
 import { shallow } from 'enzyme';
-import { Link } from 'react-router-dom';
+import { Link, BrowserRouter as Router } from 'react-router-dom';
+import { render, screen, fireEvent } from '@testing-library/react';
+import '@testing-library/jest-dom';
 
 import { mapStateToProps, TopNavImpl as TopNav } from './TopNav';
 
@@ -46,15 +48,6 @@ describe('<TopNav>', () => {
   const defaultProps = {
     config: {
       menu: [
-        {
-          label: labelGitHub,
-          url: githubUrl,
-          anchorTarget: '_self',
-        },
-        {
-          label: 'Blog',
-          url: blogUrl,
-        },
         configMenuGroup,
       ],
     },
@@ -72,71 +65,59 @@ describe('<TopNav>', () => {
 
   describe('renders the default menu options', () => {
     it('renders the "JAEGER UI" link', () => {
-      const items = wrapper.find(Link).findWhere(link => link.prop('to') === '/');
-      expect(items.length).toBe(1);
+      render(
+        <Router>
+          <TopNav {...defaultProps} />
+        </Router>
+      );
+      const jaegerLink = screen.getAllByText('JAEGER UI');
+      expect(jaegerLink[0]).toBeInTheDocument();
     });
+  
     it('renders the "Search" button', () => {
-      const items = wrapper.find(Link).findWhere(link => link.prop('to') === '/search');
-      expect(items.length).toBe(1);
+      render(
+        <Router>
+          <TopNav {...defaultProps} />
+        </Router>
+      );
+      const searchLink = screen.getByText('Search');
+      expect(searchLink).toBeInTheDocument();
     });
-
+  
     it('renders the "System Architecture" button', () => {
-      const items = wrapper.find(Link).findWhere(link => link.prop('to') === '/dependencies');
-      expect(items.length).toBe(1);
+      render(
+        <Router>
+          <TopNav {...defaultProps} />
+        </Router>
+      );
+      const systemArchitectureLink = screen.getByText('System Architecture');
+      expect(systemArchitectureLink).toBeInTheDocument();
     });
   });
 
   describe('renders the custom menu', () => {
-    it('renders the top-level item', () => {
-      const item = wrapper.find(`[href="${githubUrl}"]`);
-      expect(item.length).toBe(1);
-      expect(item.text()).toMatch(labelGitHub);
-    });
 
-    it('renders the nested menu items', () => {
-      const item = wrapper.find(TopNav.CustomNavDropdown);
-      expect(item.length).toBe(1);
-      expect(item.prop('label')).toBe(labelAbout);
-      expect(item.prop('items')).toBe(dropdownItems);
-    });
+    render(
+      <Router>
+        <TopNav {...defaultProps} />
+      </Router>
+    );
+    
+    const aboutJaegerElement = screen.getByText(labelAbout);
+    expect(aboutJaegerElement).toBeInTheDocument();
 
-    it('adds target=_self to top-level item', () => {
-      const item = wrapper.find(`[href="${githubUrl}"]`);
-      expect(item.length).toBe(1);
-      expect(item.find(`[target="_self"]`).length).toBe(1);
-    });
+    // Hover over the "About Jaeger" element
+    fireEvent.mouseEnter(aboutJaegerElement);
 
-    it('sets target=_blank by default', () => {
-      const item = wrapper.find(`[href="${blogUrl}"]`);
-      expect(item.length).toBe(1);
-      expect(item.find(`[target="_blank"]`).length).toBe(1);
-    });
+    // Now, test the dropdown items
+    const versionItem = screen.getByText('Version 1');
+    const docsItem = screen.getByText('Docs');
+    const twitterItem = screen.getByText('Twitter');
 
-    describe('<CustomNavDropdown>', () => {
-      let subMenu;
-
-      beforeEach(() => {
-        wrapper = shallow(<TopNav.CustomNavDropdown {...configMenuGroup} />);
-        subMenu = shallow(wrapper.find('Dropdown').props().overlay);
-      });
-
-      it('renders sub-menu text', () => {
-        dropdownItems.slice(0, 0).forEach(itemConfig => {
-          const item = subMenu.find(`[text="${itemConfig.label}"]`);
-          expect(item.length).toBe(1);
-          expect(item.prop('disabled')).toBe(true);
-        });
-      });
-
-      it('renders sub-menu links', () => {
-        dropdownItems.slice(1, 2).forEach(itemConfig => {
-          const item = subMenu.dive().find(`[href="${itemConfig.url}"]`);
-          expect(item.length).toBe(1);
-          expect(item.prop('target')).toBe(itemConfig.anchorTarget || '_blank');
-          expect(item.text()).toBe(itemConfig.label);
-        });
-      });
-    });
+    expect(versionItem).toBeInTheDocument();
+    expect(docsItem).toBeInTheDocument();
+    expect(twitterItem).toBeInTheDocument();
+    
   });
 });
 

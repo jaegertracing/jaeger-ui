@@ -95,7 +95,7 @@ function getItem(item: ConfigMenuItem) {
 function CustomNavDropdown({ label, items }: ConfigMenuGroup) {
   const menuItems = items.map(getItem);
   return (
-    <Dropdown menu={{ items: menuItems }} placement="bottomRight">
+    <Dropdown menu={{ items: menuItems }} data-testid='dropdown' placement="bottomRight">
       <a className="Dropdown--icon-container">
         {label} <IoChevronDown className="Dropdown--icon" />
       </a>
@@ -131,7 +131,7 @@ export function TopNavImpl(props: Props) {
     {
       label: menuItems.map(m => {
         if (isItem(m)) {
-          return getItem(m);
+          return getItem(m).label;
         }
         return <CustomNavDropdown key={m.label} {...m} />;
       }),
