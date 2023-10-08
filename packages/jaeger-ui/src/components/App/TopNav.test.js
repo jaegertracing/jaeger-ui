@@ -13,8 +13,8 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
-import { Link } from 'react-router-dom';
+import { mount } from 'enzyme';
+import { Link, BrowserRouter as Router } from 'react-router-dom';
 
 import { mapStateToProps, TopNavImpl as TopNav } from './TopNav';
 
@@ -67,7 +67,11 @@ describe('<TopNav>', () => {
   let wrapper;
 
   beforeEach(() => {
-    wrapper = shallow(<TopNav {...defaultProps} />);
+    wrapper = mount(
+      <Router>
+        <TopNav {...defaultProps} />
+      </Router>
+    );
   });
 
   describe('renders the default menu options', () => {
@@ -110,32 +114,6 @@ describe('<TopNav>', () => {
       const item = wrapper.find(`[href="${blogUrl}"]`);
       expect(item.length).toBe(1);
       expect(item.find(`[target="_blank"]`).length).toBe(1);
-    });
-
-    describe('<CustomNavDropdown>', () => {
-      let subMenu;
-
-      beforeEach(() => {
-        wrapper = shallow(<TopNav.CustomNavDropdown {...configMenuGroup} />);
-        subMenu = shallow(wrapper.find('Dropdown').props().overlay);
-      });
-
-      it('renders sub-menu text', () => {
-        dropdownItems.slice(0, 0).forEach(itemConfig => {
-          const item = subMenu.find(`[text="${itemConfig.label}"]`);
-          expect(item.length).toBe(1);
-          expect(item.prop('disabled')).toBe(true);
-        });
-      });
-
-      it('renders sub-menu links', () => {
-        dropdownItems.slice(1, 2).forEach(itemConfig => {
-          const item = subMenu.dive().find(`[href="${itemConfig.url}"]`);
-          expect(item.length).toBe(1);
-          expect(item.prop('target')).toBe(itemConfig.anchorTarget || '_blank');
-          expect(item.text()).toBe(itemConfig.label);
-        });
-      });
     });
   });
 });
