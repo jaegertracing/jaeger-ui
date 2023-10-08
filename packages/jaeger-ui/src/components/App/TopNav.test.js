@@ -91,11 +91,29 @@ describe('<TopNav>', () => {
   });
 
   describe('renders the custom menu', () => {
+    it('renders the top-level item', () => {
+      const item = wrapper.find(`[href="${githubUrl}"]`);
+      expect(item.length).toBe(1);
+      expect(item.text()).toMatch(labelGitHub);
+    });
+
     it('renders the nested menu items', () => {
       const item = wrapper.find(TopNav.CustomNavDropdown);
       expect(item.length).toBe(1);
       expect(item.prop('label')).toBe(labelAbout);
       expect(item.prop('items')).toBe(dropdownItems);
+    });
+
+    it('adds target=_self to top-level item', () => {
+      const item = wrapper.find(`[href="${githubUrl}"]`);
+      expect(item.length).toBe(1);
+      expect(item.find(`[target="_self"]`).length).toBe(1);
+    });
+
+    it('sets target=_blank by default', () => {
+      const item = wrapper.find(`[href="${blogUrl}"]`);
+      expect(item.length).toBe(1);
+      expect(item.find(`[target="_blank"]`).length).toBe(1);
     });
   });
 });
