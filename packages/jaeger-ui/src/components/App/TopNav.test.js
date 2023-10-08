@@ -13,10 +13,8 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { mount } from 'enzyme';
 import { Link, BrowserRouter as Router } from 'react-router-dom';
-import { render, screen, fireEvent } from '@testing-library/react';
-import '@testing-library/jest-dom';
 
 import { mapStateToProps, TopNavImpl as TopNav } from './TopNav';
 
@@ -49,6 +47,15 @@ describe('<TopNav>', () => {
     config: {
       menu: [
         configMenuGroup,
+        {
+          label: labelGitHub,
+          url: githubUrl,
+          anchorTarget: '_self',
+        },
+        {
+          label: 'Blog',
+          url: blogUrl,
+        },
       ],
     },
     router: {
@@ -60,64 +67,36 @@ describe('<TopNav>', () => {
   let wrapper;
 
   beforeEach(() => {
-    wrapper = shallow(<TopNav {...defaultProps} />);
-  });
-
-  describe('renders the default menu options', () => {
-    it('renders the "JAEGER UI" link', () => {
-      render(
-        <Router>
-          <TopNav {...defaultProps} />
-        </Router>
-      );
-      const jaegerLink = screen.getAllByText('JAEGER UI');
-      expect(jaegerLink[0]).toBeInTheDocument();
-    });
-  
-    it('renders the "Search" button', () => {
-      render(
-        <Router>
-          <TopNav {...defaultProps} />
-        </Router>
-      );
-      const searchLink = screen.getByText('Search');
-      expect(searchLink).toBeInTheDocument();
-    });
-  
-    it('renders the "System Architecture" button', () => {
-      render(
-        <Router>
-          <TopNav {...defaultProps} />
-        </Router>
-      );
-      const systemArchitectureLink = screen.getByText('System Architecture');
-      expect(systemArchitectureLink).toBeInTheDocument();
-    });
-  });
-
-  describe('renders the custom menu', () => {
-
-    render(
+    wrapper = mount(
       <Router>
         <TopNav {...defaultProps} />
       </Router>
     );
-    
-    const aboutJaegerElement = screen.getByText(labelAbout);
-    expect(aboutJaegerElement).toBeInTheDocument();
+  });
 
-    // Hover over the "About Jaeger" element
-    fireEvent.mouseEnter(aboutJaegerElement);
+  describe('renders the default menu options', () => {
+    it('renders the "JAEGER UI" link', () => {
+      const items = wrapper.find(Link).findWhere(link => link.prop('to') === '/');
+      expect(items.length).toBe(1);
+    });
+    it('renders the "Search" button', () => {
+      const items = wrapper.find(Link).findWhere(link => link.prop('to') === '/search');
+      expect(items.length).toBe(1);
+    });
 
-    // Now, test the dropdown items
-    const versionItem = screen.getByText('Version 1');
-    const docsItem = screen.getByText('Docs');
-    const twitterItem = screen.getByText('Twitter');
+    it('renders the "System Architecture" button', () => {
+      const items = wrapper.find(Link).findWhere(link => link.prop('to') === '/dependencies');
+      expect(items.length).toBe(1);
+    });
+  });
 
-    expect(versionItem).toBeInTheDocument();
-    expect(docsItem).toBeInTheDocument();
-    expect(twitterItem).toBeInTheDocument();
-    
+  describe('renders the custom menu', () => {
+    it('renders the nested menu items', () => {
+      const item = wrapper.find(TopNav.CustomNavDropdown);
+      expect(item.length).toBe(1);
+      expect(item.prop('label')).toBe(labelAbout);
+      expect(item.prop('items')).toBe(dropdownItems);
+    });
   });
 });
 

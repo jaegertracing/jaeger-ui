@@ -95,7 +95,7 @@ function getItem(item: ConfigMenuItem) {
 function CustomNavDropdown({ label, items }: ConfigMenuGroup) {
   const menuItems = items.map(getItem);
   return (
-    <Dropdown menu={{ items: menuItems }} data-testid='dropdown' placement="bottomRight">
+    <Dropdown menu={{ items: menuItems }} placement="bottomRight">
       <a className="Dropdown--icon-container">
         {label} <IoChevronDown className="Dropdown--icon" />
       </a>
