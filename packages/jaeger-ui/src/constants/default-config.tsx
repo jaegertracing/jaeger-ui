@@ -32,7 +32,7 @@ const defaultConfig: Config = {
       label: 'About Jaeger',
       items: [
         {
-          label: 'Website/Docs',
+          label: 'Website / Docs',
           url: 'https://www.jaegertracing.io/',
         },
         {
@@ -44,8 +44,8 @@ const defaultConfig: Config = {
           url: 'https://twitter.com/JaegerTracing',
         },
         {
-          label: 'Discussion Group',
-          url: 'https://groups.google.com/forum/#!forum/jaeger-tracing',
+          label: 'Discussions / Q&A',
+          url: 'https://github.com/orgs/jaegertracing/discussions',
         },
         {
           label: 'Online Chat',
