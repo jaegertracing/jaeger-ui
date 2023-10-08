@@ -46,7 +46,6 @@ describe('<TopNav>', () => {
   const defaultProps = {
     config: {
       menu: [
-        configMenuGroup,
         {
           label: labelGitHub,
           url: githubUrl,
@@ -56,6 +55,7 @@ describe('<TopNav>', () => {
           label: 'Blog',
           url: blogUrl,
         },
+        configMenuGroup,
       ],
     },
     router: {

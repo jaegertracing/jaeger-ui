@@ -128,23 +128,13 @@ export function TopNavImpl(props: Props) {
       label: <TraceIDSearchInput />,
       key: 'TraceIDSearchInput',
     },
-    {
-      label: menuItems.map(m => {
-        if (isItem(m)) {
-          return getItem(m).label;
-        }
-        return <CustomNavDropdown key={m.label} {...m} />;
-      }),
-      key: 'About Jaeger',
-    },
+    ...menuItems.map(m => {
+      if (isItem(m)) {
+        return { label: getItem(m).label, key: getItem(m).key };
+      }
+      return { label: <CustomNavDropdown key={m.label} {...m} />, key: m.label };
+    }),
   ];
-
-  menuItems.map(m => {
-    if (isItem(m)) {
-      return getItem(m);
-    }
-    return <CustomNavDropdown key={m.label} {...m} />;
-  });
 
   return (
     <div>
