@@ -105,7 +105,7 @@ export default class KeyboardShortcutsHelp extends React.PureComponent<Props, St
         </Button>
         <Modal
           title="Keyboard Shortcuts"
-          visible={this.state.visible}
+          open={this.state.visible}
           onOk={this.onCloserClicked}
           onCancel={this.onCloserClicked}
           cancelButtonProps={{ style: { display: 'none' } }}
