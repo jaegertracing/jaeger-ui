@@ -108,13 +108,7 @@ export class SearchTracePageImpl extends Component {
       tabItems.push({
         label: 'Upload',
         key: 'fileLoader',
-        children: (
-          <FileLoader
-            loadJsonTraces={fileList => {
-              loadJsonTraces(fileList);
-            }}
-          />
-        ),
+        children: <FileLoader loadJsonTraces={loadJsonTraces} />,
       });
     }
     return (
