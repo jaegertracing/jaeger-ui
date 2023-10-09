@@ -28,8 +28,8 @@ exports[`KeyboardShortcutsHelp renders as expected 1`] = `
     }
     onCancel={[Function]}
     onOk={[Function]}
+    open={false}
     title="Keyboard Shortcuts"
-    visible={false}
   >
     <ForwardRef(InternalTable)
       className="KeyboardShortcutsHelp--table u-simple-scrollbars"
