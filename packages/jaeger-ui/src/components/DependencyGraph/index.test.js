@@ -13,11 +13,8 @@
 // limitations under the License.
 
 import React from 'react';
-import { Tabs } from 'antd';
 import { shallow } from 'enzyme';
 
-import DAG from './DAG';
-import DependencyForceGraph from './DependencyForceGraph';
 import {
   DependencyGraphPageImpl as DependencyGraph,
   GRAPH_TYPES,
@@ -78,21 +75,23 @@ describe('<DependencyGraph>', () => {
 
   describe('graph types', () => {
     it('renders a menu with options for the graph types', () => {
-      expect(wrapper.find(Tabs.TabPane).length).toBe(Object.keys(GRAPH_TYPES).length);
-      expect(wrapper.find({ tab: GRAPH_TYPES.FORCE_DIRECTED.name }).length).toBe(1);
-      expect(wrapper.find({ tab: GRAPH_TYPES.DAG.name }).length).toBe(1);
+      expect(wrapper.props().items.length).toBe(Object.keys(GRAPH_TYPES).length);
+      expect(wrapper.props().items[0].name).toBe(Object.keys(GRAPH_TYPES)[0].name);
+      expect(wrapper.props().items[1].name).toBe(Object.keys(GRAPH_TYPES)[1].name);
     });
 
     it('renders a force graph when FORCE_GRAPH is the selected type', () => {
       wrapper.simulate('change', GRAPH_TYPES.FORCE_DIRECTED.type);
       expect(wrapper.state('graphType')).toBe(GRAPH_TYPES.FORCE_DIRECTED.type);
-      expect(wrapper.find(DependencyForceGraph).length).toBe(1);
+      expect(wrapper.props().activeKey).toBe(GRAPH_TYPES.FORCE_DIRECTED.type);
+      expect(wrapper.props().activeKey).not.toBe(GRAPH_TYPES.DAG.type);
     });
 
     it('renders a DAG graph when DAG is the selected type', () => {
       wrapper.simulate('change', GRAPH_TYPES.DAG.type);
       expect(wrapper.state('graphType')).toBe(GRAPH_TYPES.DAG.type);
-      expect(wrapper.find(DAG).length).toBe(1);
+      expect(wrapper.props().activeKey).toBe(GRAPH_TYPES.DAG.type);
+      expect(wrapper.props().activeKey).not.toBe(GRAPH_TYPES.FORCE_DIRECTED.type);
     });
   });
 });
