@@ -30,16 +30,10 @@ describe('AltViewOptions', () => {
 
   let wrapper;
   const getLink = text => {
-    const menu = shallow(wrapper.find(Dropdown).prop('overlay')).dive();
-    const links = menu.find(Link);
+    const links = wrapper.find(Dropdown).prop('menu').items;
     for (let i = 0; i < links.length; i++) {
-      const link = links.at(i);
-      if (link.children().text() === text) return link;
-    }
-    const links2 = menu.find('a');
-    for (let i = 0; i < links2.length; i++) {
-      const link = links2.at(i);
-      if (link.children().text() === text) return link;
+      const link = links[i];
+      if (link.label.props.children === text) return link.label.props;
     }
     throw new Error(`Could not find "${text}"`);
   };
@@ -77,11 +71,11 @@ describe('AltViewOptions', () => {
 
   it('tracks viewing JSONs', () => {
     expect(trackJsonView).not.toHaveBeenCalled();
-    getLink('Trace JSON').simulate('click');
+    getLink('Trace JSON').onClick();
     expect(trackJsonView).toHaveBeenCalledTimes(1);
 
     expect(trackRawJsonView).not.toHaveBeenCalled();
-    getLink('Trace JSON (unadjusted)').simulate('click');
+    getLink('Trace JSON (unadjusted)').onClick();
     expect(trackRawJsonView).toHaveBeenCalledTimes(1);
 
     expect(trackJsonView).toHaveBeenCalledTimes(1);
@@ -126,7 +120,7 @@ describe('AltViewOptions', () => {
       expect(props.onTraceViewChange).toHaveBeenCalledTimes(i);
       expect(trackFn).not.toHaveBeenCalled();
 
-      getLink(link).simulate('click');
+      getLink(link).onClick();
       expect(props.onTraceViewChange).toHaveBeenCalledTimes(i + 1);
       viewInteractions.forEach(({ trackFn: fn }, j) => {
         expect(fn).toHaveBeenCalledTimes(j <= i ? 1 : 0);
