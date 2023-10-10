@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { Dropdown, Menu, MenuProps } from 'antd';
+import { Dropdown } from 'antd';
 import * as React from 'react';
 import { Link } from '../../types/trace';
 import NewWindowIcon from './NewWindowIcon';
