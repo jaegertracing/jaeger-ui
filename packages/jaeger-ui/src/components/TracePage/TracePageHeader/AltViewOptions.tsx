@@ -78,17 +78,18 @@ export default function AltViewOptions(props: Props) {
 
   const dropdownItems = [
     ...MENU_ITEMS.filter(item => item.viewType !== viewType).map(item => ({
+      key: item.viewType as ETraceViewType | string,
       label: (
         <a onClick={() => handleSelectView(item.viewType)} role="button">
           {item.label}
         </a>
       ),
-      key: item.viewType as ETraceViewType | string,
     })),
   ];
   if (!disableJsonView) {
     dropdownItems.push(
       {
+        key: 'trace-json',
         label: (
           <Link
             to={prefixUrl(`/api/traces/${traceID}?prettyPrint=true`)}
@@ -99,9 +100,9 @@ export default function AltViewOptions(props: Props) {
             Trace JSON
           </Link>
         ),
-        key: 'trace-json',
       },
       {
+        key: 'trace-json-unadjusted',
         label: (
           <Link
             to={prefixUrl(`/api/traces/${traceID}?raw=true&prettyPrint=true`)}
@@ -112,7 +113,6 @@ export default function AltViewOptions(props: Props) {
             Trace JSON (unadjusted)
           </Link>
         ),
-        key: 'trace-json-unadjusted',
       }
     );
   }

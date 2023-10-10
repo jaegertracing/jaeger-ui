@@ -84,14 +84,12 @@ describe('<DependencyGraph>', () => {
       wrapper.simulate('change', GRAPH_TYPES.FORCE_DIRECTED.type);
       expect(wrapper.state('graphType')).toBe(GRAPH_TYPES.FORCE_DIRECTED.type);
       expect(wrapper.props().activeKey).toBe(GRAPH_TYPES.FORCE_DIRECTED.type);
-      expect(wrapper.props().activeKey).not.toBe(GRAPH_TYPES.DAG.type);
     });
 
     it('renders a DAG graph when DAG is the selected type', () => {
       wrapper.simulate('change', GRAPH_TYPES.DAG.type);
       expect(wrapper.state('graphType')).toBe(GRAPH_TYPES.DAG.type);
       expect(wrapper.props().activeKey).toBe(GRAPH_TYPES.DAG.type);
-      expect(wrapper.props().activeKey).not.toBe(GRAPH_TYPES.FORCE_DIRECTED.type);
     });
   });
 });
