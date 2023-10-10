@@ -40,12 +40,12 @@ const LinkValue = (props: {
 
 // export for testing
 export const linkValueList = (links: Link[]) => {
-  const menuItems: MenuProps['items'] = links.map(({ text, url }, index) => ({
+  const dropdownItems = links.map(({ text, url }, index) => ({
     label: <LinkValue href={url}>{text}</LinkValue>,
     key: `${url}-${index}`,
   }));
 
-  return [{ label: <Menu items={menuItems} />, key: 'external-links' }];
+  return dropdownItems;
 };
 
 export default function ExternalLinks(props: ExternalLinksProps) {

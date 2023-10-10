@@ -30,7 +30,7 @@ describe('<ExternalLinks>', () => {
       const wrapper = shallow(<ExternalLinks links={links} />);
       const dropdown = wrapper.find(Dropdown);
       expect(dropdown.length).toBe(1);
-      const submenuItems = wrapper.props().menu.items[0].label.props.items;
+      const submenuItems = wrapper.props().menu.items;
       expect(submenuItems.length).toBe(links.length);
       submenuItems.forEach((subMenu, i) => {
         expect(subMenu.label.props.href).toBe(links[i].url);
