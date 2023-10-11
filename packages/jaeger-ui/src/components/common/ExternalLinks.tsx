@@ -48,6 +48,8 @@ export const linkValueList = (links: Link[]) => {
   return dropdownItems;
 };
 
+// ExternalLinks are displayed as a menu at the trace level.
+// Example: https://github.com/jaegertracing/jaeger-ui/assets/94157520/7f0d84bc-c2fb-488c-9e50-1ec9484ea1e6
 export default function ExternalLinks(props: ExternalLinksProps) {
   const { links } = props;
   if (links.length === 1) {
