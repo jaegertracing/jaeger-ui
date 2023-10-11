@@ -133,8 +133,6 @@ export default function KeyValuesTable(props: KeyValuesTableProps) {
           {data.map((row, i) => {
             const jsonTable = formatValue(row.key, row.value);
             const links = linksGetter ? linksGetter(data, i) : null;
-            links?.push({ text: 'JSON', url: JSON.stringify(row, null, 2) });
-            links?.push({ text: 'JSON (Raw)', url: JSON.stringify(row, null, 2) });
             let valueMarkup;
             if (links?.length === 1) {
               valueMarkup = (
