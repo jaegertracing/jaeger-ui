@@ -14,7 +14,7 @@
 
 /* eslint-disable import/no-extraneous-dependencies */
 import * as React from 'react';
-import { Dropdown, Menu } from 'antd';
+import { Dropdown } from 'antd';
 import { IoOpenOutline, IoList, IoCopyOutline } from 'react-icons/io5';
 import { JsonView, allExpanded, collapseAllNested, defaultStyles } from 'react-json-view-lite';
 
@@ -110,17 +110,13 @@ LinkValue.defaultProps = {
   title: '',
 };
 
-const linkValueList = (links: Link[]) => (
-  <Menu>
-    {links.map(({ text, url }, index) => (
-      // `index` is necessary in the key because url can repeat
-      // eslint-disable-next-line react/no-array-index-key
-      <Menu.Item key={`${url}-${index}`}>
-        <LinkValue href={url}>{text}</LinkValue>
-      </Menu.Item>
-    ))}
-  </Menu>
-);
+const linkValueList = (links: Link[]) => {
+  const dropdownItems = links.map(({ text, url }, index) => ({
+    label: <LinkValue href={url}>{text}</LinkValue>,
+    key: `${url}-${index}`,
+  }));
+  return dropdownItems;
+};
 
 type KeyValuesTableProps = {
   data: KeyValuePair[];
@@ -137,6 +133,8 @@ export default function KeyValuesTable(props: KeyValuesTableProps) {
           {data.map((row, i) => {
             const jsonTable = formatValue(row.key, row.value);
             const links = linksGetter ? linksGetter(data, i) : null;
+            links?.push({ text: 'JSON', url: JSON.stringify(row, null, 2) });
+            links?.push({ text: 'JSON (Raw)', url: JSON.stringify(row, null, 2) });
             let valueMarkup;
             if (links?.length === 1) {
               valueMarkup = (
@@ -149,7 +147,11 @@ export default function KeyValuesTable(props: KeyValuesTableProps) {
             } else if (links && links.length > 1) {
               valueMarkup = (
                 <div>
-                  <Dropdown overlay={linkValueList(links)} placement="bottomRight" trigger={['click']}>
+                  <Dropdown
+                    menu={{ items: linkValueList(links) }}
+                    placement="bottomRight"
+                    trigger={['click']}
+                  >
                     <a>
                       {jsonTable} <IoList className="KeyValueTable--linkIcon" />
                     </a>
