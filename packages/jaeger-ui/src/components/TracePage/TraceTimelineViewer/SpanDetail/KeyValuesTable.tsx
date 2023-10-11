@@ -123,6 +123,8 @@ type KeyValuesTableProps = {
   linksGetter: ((pairs: KeyValuePair[], index: number) => Link[]) | TNil;
 };
 
+// KeyValuesTable is displayed as a menu at span level.
+// Example: https://github.com/jaegertracing/jaeger-ui/assets/94157520/b518cad9-cb37-4775-a3d6-b667a1235f89
 export default function KeyValuesTable(props: KeyValuesTableProps) {
   const { data, linksGetter } = props;
 
