@@ -117,7 +117,6 @@ describe('<KeyValuesTable>', () => {
             ]
           : [],
     });
-
     const anchor = wrapper.find(LinkValue);
     expect(anchor).toHaveLength(1);
     expect(anchor.prop('href')).toBe('http://example.com/?kind=client');
@@ -136,15 +135,14 @@ describe('<KeyValuesTable>', () => {
           : [],
     });
     const dropdown = wrapper.find(Dropdown);
-    const menu = shallow(dropdown.prop('overlay')).dive();
-    const anchors = menu.find(LinkValue);
+    const anchors = dropdown.prop('menu').items;
     expect(anchors).toHaveLength(2);
-    const firstAnchor = anchors.first();
-    expect(firstAnchor.prop('href')).toBe('http://example.com/1?kind=client');
-    expect(firstAnchor.children().text()).toBe('Example 1');
-    const secondAnchor = anchors.last();
-    expect(secondAnchor.prop('href')).toBe('http://example.com/2?kind=client');
-    expect(secondAnchor.children().text()).toBe('Example 2');
+    const firstAnchor = anchors[0];
+    expect(firstAnchor.label.props.href).toBe('http://example.com/1?kind=client');
+    expect(firstAnchor.label.props.children).toBe('Example 1');
+    const secondAnchor = anchors[anchors.length - 1];
+    expect(secondAnchor.label.props.href).toBe('http://example.com/2?kind=client');
+    expect(secondAnchor.label.props.children).toBe('Example 2');
     expect(dropdown.closest('tr').find('td').first().text()).toBe('span.kind');
   });
 

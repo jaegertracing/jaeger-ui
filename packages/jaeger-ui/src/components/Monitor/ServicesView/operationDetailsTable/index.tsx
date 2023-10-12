@@ -203,20 +203,18 @@ export class OperationTableDetails extends React.PureComponent<TProps, TState> {
             );
           }
 
-          return {
-            children: (
-              <div className="column-container">
-                <Progress
-                  className="impact"
-                  percent={value * 100}
-                  strokeLinecap="square"
-                  strokeColor="#459798"
-                  showInfo={false}
-                />
-                <div className="view-trace-button">{viewTraceButton}</div>
-              </div>
-            ),
-          };
+          return (
+            <div className="column-container">
+              <Progress
+                className="impact"
+                percent={value * 100}
+                strokeLinecap="square"
+                strokeColor="#459798"
+                showInfo={false}
+              />
+              <div className="view-trace-button">{viewTraceButton}</div>
+            </div>
+          );
         },
       },
     ];
