@@ -152,14 +152,14 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
                 {serviceName}{' '}
                 {rpc && (
                   <span>
-                    <IoArrowForward className='SpanBarRow--arrowForwardIcon' />{' '}
+                    <IoArrowForward className="SpanBarRow--arrowForwardIcon" />{' '}
                     <i className="SpanBarRow--rpcColorMarker" style={{ background: rpc.color }} />
                     {rpc.serviceName}
                   </span>
                 )}
                 {noInstrumentedServer && (
                   <span>
-                    <IoArrowForward className='SpanBarRow--arrowForwardIcon' />{' '}
+                    <IoArrowForward className="SpanBarRow--arrowForwardIcon" />{' '}
                     <i
                       className="SpanBarRow--rpcColorMarker"
                       style={{ background: noInstrumentedServer.color }}
