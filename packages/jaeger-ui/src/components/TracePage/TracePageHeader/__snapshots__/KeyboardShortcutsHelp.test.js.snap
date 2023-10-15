@@ -3,13 +3,9 @@
 exports[`KeyboardShortcutsHelp renders as expected 1`] = `
 <Fragment>
   <Button
-    block={false}
     className="test--ClassName"
-    ghost={false}
     htmlType="button"
-    loading={false}
     onClick={[Function]}
-    prefixCls="ant-btn"
   >
     <span
       className="KeyboardShortcutsHelp--cta"
@@ -23,7 +19,6 @@ exports[`KeyboardShortcutsHelp renders as expected 1`] = `
         "padding": 0,
       }
     }
-    cancelButtonDisabled={false}
     cancelButtonProps={
       Object {
         "style": Object {
@@ -31,20 +26,12 @@ exports[`KeyboardShortcutsHelp renders as expected 1`] = `
         },
       }
     }
-    confirmLoading={false}
-    maskTransitionName="fade"
-    okButtonDisabled={false}
-    okType="primary"
     onCancel={[Function]}
     onOk={[Function]}
-    prefixCls="ant-modal"
+    open={false}
     title="Keyboard Shortcuts"
-    transitionName="zoom"
-    visible={false}
-    width={520}
   >
-    <Table
-      bordered={false}
+    <ForwardRef(InternalTable)
       className="KeyboardShortcutsHelp--table u-simple-scrollbars"
       dataSource={
         Array [
@@ -204,16 +191,10 @@ exports[`KeyboardShortcutsHelp renders as expected 1`] = `
           },
         ]
       }
-      indentSize={20}
-      loading={false}
-      locale={Object {}}
       pagination={false}
-      prefixCls="ant-table"
       rowClassName={[Function]}
-      rowKey="key"
       showHeader={false}
       size="middle"
-      useFixedHeader={false}
     >
       <Column
         dataIndex="description"
@@ -228,7 +209,7 @@ exports[`KeyboardShortcutsHelp renders as expected 1`] = `
         render={[Function]}
         title="Key(s)"
       />
-    </Table>
+    </ForwardRef(InternalTable)>
   </Modal>
 </Fragment>
 `;

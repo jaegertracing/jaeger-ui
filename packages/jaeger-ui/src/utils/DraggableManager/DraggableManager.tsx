@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import _get from 'lodash/get';
+import type React from 'react';
 
 import EUpdateTypes from './EUpdateTypes';
 import { DraggableBounds, DraggingUpdate } from './types';
@@ -59,10 +60,10 @@ export default class DraggableManager {
   tag: string | TNil;
 
   // handlers for integration with DOM elements
-  handleMouseEnter: (event: React.MouseEvent<any>) => void;
-  handleMouseMove: (event: React.MouseEvent<any>) => void;
-  handleMouseLeave: (event: React.MouseEvent<any>) => void;
-  handleMouseDown: (event: React.MouseEvent<any>) => void;
+  handleMouseEnter: (event: React.MouseEvent<HTMLDivElement | SVGSVGElement, MouseEvent>) => void;
+  handleMouseMove: (event: React.MouseEvent<HTMLDivElement | SVGSVGElement, MouseEvent>) => void;
+  handleMouseLeave: (event: React.MouseEvent<HTMLDivElement | SVGSVGElement, MouseEvent>) => void;
+  handleMouseDown: (event: React.MouseEvent<HTMLDivElement | SVGSVGElement, MouseEvent>) => void;
 
   constructor({ getBounds, tag, resetBoundsOnResize = true, ...rest }: DraggableManagerOptions) {
     this.handleMouseDown = this._handleDragEvent;
@@ -141,7 +142,7 @@ export default class DraggableManager {
     this._bounds = undefined;
   };
 
-  _handleMinorMouseEvent = (event: React.MouseEvent<any>) => {
+  _handleMinorMouseEvent = (event: React.MouseEvent<HTMLDivElement | SVGSVGElement, MouseEvent>) => {
     const { button, clientX, type: eventType } = event;
     if (this._isDragging || button !== LEFT_MOUSE_BUTTON) {
       return;
@@ -174,7 +175,7 @@ export default class DraggableManager {
     });
   };
 
-  _handleDragEvent = (event: MouseEvent | React.MouseEvent<any>) => {
+  _handleDragEvent = (event: MouseEvent | React.MouseEvent<HTMLDivElement | SVGSVGElement, MouseEvent>) => {
     const { button, clientX, type: eventType } = event;
     let type: EUpdateTypes | null = null;
     let handler: ((update: DraggingUpdate) => void) | TNil;

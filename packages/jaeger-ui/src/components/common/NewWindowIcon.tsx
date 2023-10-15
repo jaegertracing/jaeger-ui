@@ -14,7 +14,7 @@
 
 import React from 'react';
 import cx from 'classnames';
-import IoAndroidOpen from 'react-icons/lib/io/android-open';
+import { IoOpenOutline } from 'react-icons/io5';
 
 import './NewWindowIcon.css';
 
@@ -25,7 +25,7 @@ type Props = {
 export default function NewWindowIcon(props: Props) {
   const { isLarge, ...rest } = props;
   const cls = cx('NewWindowIcon', { 'is-large': isLarge });
-  return <IoAndroidOpen className={cls} {...rest} />;
+  return <IoOpenOutline className={cls} {...rest} />;
 }
 
 NewWindowIcon.defaultProps = {

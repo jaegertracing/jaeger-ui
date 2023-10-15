@@ -76,10 +76,7 @@ export default class OpNode extends React.PureComponent<Props> {
     } else if (mode === MODE_SELFTIME) {
       backgroundColor = [255, 0, 0, percentSelfTime / 100].join();
     } else {
-      backgroundColor = colorGenerator
-        .getRgbColorByKey(service)
-        .concat(0.8)
-        .join();
+      backgroundColor = colorGenerator.getRgbColorByKey(service).concat(0.8).join();
     }
 
     const table = (

@@ -13,15 +13,14 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Input } from 'antd';
+import { InputRef } from 'antd';
 import { Location, History as RouterHistory } from 'history';
 import _clamp from 'lodash/clamp';
 import _get from 'lodash/get';
 import _mapValues from 'lodash/mapValues';
 import _memoize from 'lodash/memoize';
-import { connect, Dispatch } from 'react-redux';
-import { match as Match } from 'react-router-dom';
-import { bindActionCreators } from 'redux';
+import { connect } from 'react-redux';
+import { bindActionCreators, Dispatch } from 'redux';
 
 import ArchiveNotifier from './ArchiveNotifier';
 import { actions as archiveActions } from './ArchiveNotifier/duck';
@@ -57,8 +56,12 @@ import filterSpans from '../../utils/filter-spans';
 import updateUiFind from '../../utils/update-ui-find';
 import TraceStatistics from './TraceStatistics/index';
 import TraceSpanView from './TraceSpanView/index';
+import TraceFlamegraph from './TraceFlamegraph/index';
+import { TraceGraphConfig } from '../../types/config';
 
 import './index.css';
+import memoizedTraceCriticalPath from './CriticalPath/index';
+import withRouteProps from '../../utils/withRouteProps';
 
 type TDispatchProps = {
   acknowledgeArchive: (id: string) => void;
@@ -70,17 +73,20 @@ type TDispatchProps = {
 type TOwnProps = {
   history: RouterHistory;
   location: Location;
-  match: Match<{ id: string }>;
+  params: { id: string };
 };
 
 type TReduxProps = {
   archiveEnabled: boolean;
   archiveTraceState: TraceArchive | TNil;
+  criticalPathEnabled: boolean;
   embedded: null | EmbeddedState;
   id: string;
   searchUrl: null | string;
+  disableJsonView: boolean;
   trace: FetchedTrace | TNil;
   uiFind: string | TNil;
+  traceGraphConfig?: TraceGraphConfig;
 };
 
 type TProps = TDispatchProps & TOwnProps & TReduxProps;
@@ -126,7 +132,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
 
   _headerElm: HTMLElement | TNil;
   _filterSpans: typeof filterSpans;
-  _searchBar: React.RefObject<Input>;
+  _searchBar: React.RefObject<InputRef>;
   _scrollManager: ScrollManager;
   traceDagEV: TEv | TNil;
 
@@ -166,12 +172,8 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
     if (!this._scrollManager) {
       throw new Error('Invalid state - scrollManager is unset');
     }
-    const {
-      scrollPageDown,
-      scrollPageUp,
-      scrollToNextVisibleSpan,
-      scrollToPrevVisibleSpan,
-    } = this._scrollManager;
+    const { scrollPageDown, scrollPageUp, scrollToNextVisibleSpan, scrollToPrevVisibleSpan } =
+      this._scrollManager;
     const adjViewRange = (a: number, b: number) => this._adjustViewRange(a, b, 'kbd');
     const shortcutCallbacks = makeShortcutCallbacks(adjViewRange);
     shortcutCallbacks.scrollPageDown = scrollPageDown;
@@ -325,10 +327,13 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
     const {
       archiveEnabled,
       archiveTraceState,
+      criticalPathEnabled,
       embedded,
       id,
       uiFind,
       trace,
+      disableJsonView,
+      traceGraphConfig,
       location: { state: locationState },
     } = this.props;
     const { slimView, viewType, headerHeight, viewRange } = this.state;
@@ -374,6 +379,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
       prevResult: this.prevResult,
       ref: this._searchBar,
       resultCount: findCount,
+      disableJsonView,
       showArchiveButton: !isEmbedded && archiveEnabled,
       showShortcutsHelp: !isEmbedded,
       showStandaloneLink: isEmbedded,
@@ -385,6 +391,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
     };
 
     let view;
+    const criticalPath = criticalPathEnabled ? memoizedTraceCriticalPath(data) : [];
     if (ETraceViewType.TraceTimelineViewer === viewType && headerHeight) {
       view = (
         <TraceTimelineViewer
@@ -392,6 +399,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
           scrollToFirstVisibleSpan={this._scrollManager.scrollToFirstVisibleSpan}
           findMatchesIDs={spanFindMatches}
           trace={data}
+          criticalPath={criticalPath}
           updateNextViewRangeTime={this.updateNextViewRangeTime}
           updateViewRangeTime={this.updateViewRangeTime}
           viewRange={viewRange}
@@ -404,12 +412,15 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
           ev={this.traceDagEV}
           uiFind={uiFind}
           uiFindVertexKeys={graphFindMatches}
+          traceGraphConfig={traceGraphConfig}
         />
       );
     } else if (ETraceViewType.TraceStatistics === viewType && headerHeight) {
       view = <TraceStatistics trace={data} uiFindVertexKeys={spanFindMatches} uiFind={uiFind} />;
     } else if (ETraceViewType.TraceSpansView === viewType && headerHeight) {
       view = <TraceSpanView trace={data} uiFindVertexKeys={spanFindMatches} uiFind={uiFind} />;
+    } else if (ETraceViewType.TraceFlamegraph === viewType && headerHeight) {
+      view = <TraceFlamegraph trace={trace} />;
     }
 
     return (
@@ -428,23 +439,28 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
 
 // export for tests
 export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxProps {
-  const { id } = ownProps.match.params;
+  const { id } = ownProps.params;
   const { archive, config, embedded, router } = state;
   const { traces } = state.trace;
   const trace = id ? traces[id] : null;
   const archiveTraceState = id ? archive[id] : null;
   const archiveEnabled = Boolean(config.archiveEnabled);
+  const { disableJsonView, criticalPathEnabled } = config;
   const { state: locationState } = router.location;
   const searchUrl = (locationState && locationState.fromSearch) || null;
+  const { traceGraph: traceGraphConfig } = config;
 
   return {
     ...extractUiFindFromState(state),
     archiveEnabled,
     archiveTraceState,
+    criticalPathEnabled,
     embedded,
     id,
     searchUrl,
+    disableJsonView,
     trace,
+    traceGraphConfig,
   };
 }
 
@@ -456,7 +472,4 @@ export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchPro
   return { acknowledgeArchive, archiveTrace, fetchTrace, focusUiFindMatches };
 }
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(TracePageImpl);
+export default withRouteProps(connect(mapStateToProps, mapDispatchToProps)(TracePageImpl));

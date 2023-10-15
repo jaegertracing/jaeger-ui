@@ -13,9 +13,9 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Icon, Popover } from 'antd';
+import { Popover } from 'antd';
 import cx from 'classnames';
-import IoChevronDown from 'react-icons/lib/io/chevron-down';
+import { IoChevronDown, IoClose } from 'react-icons/io5';
 
 import BreakableText from './BreakableText';
 import FilteredList from './FilteredList';
@@ -57,15 +57,20 @@ export default class NameSelector extends React.PureComponent<TProps, TState> {
   }
 
   private changeVisible(popoverVisible: boolean) {
-    if (popoverVisible) {
-      window.document.body.addEventListener('click', this.onBodyClicked);
-    } else {
-      window.document.body.removeEventListener('click', this.onBodyClicked);
-    }
     this.setState({ popoverVisible });
+
+    // Defer registering a click handler to hide the selector popover
+    // to avoid handling the click event that triggered opening the popover itself.
+    setTimeout(() => {
+      if (popoverVisible) {
+        window.document.body.addEventListener('click', this.onBodyClicked);
+      } else {
+        window.document.body.removeEventListener('click', this.onBodyClicked);
+      }
+    });
   }
 
-  private clearValue = (evt: React.MouseEvent<React.ReactSVGElement>) => {
+  private clearValue = (evt: React.MouseEvent<any>) => {
     if (this.props.required) throw new Error('Cannot clear value of required NameSelector');
 
     evt.stopPropagation();
@@ -108,7 +113,7 @@ export default class NameSelector extends React.PureComponent<TProps, TState> {
     return (
       <Popover
         overlayClassName="NameSelector--overlay u-rm-popover-content-padding"
-        onVisibleChange={this.onPopoverVisibleChanged}
+        onOpenChange={this.onPopoverVisibleChanged}
         placement="bottomLeft"
         content={
           <FilteredList
@@ -120,15 +125,13 @@ export default class NameSelector extends React.PureComponent<TProps, TState> {
           />
         }
         trigger="click"
-        visible={popoverVisible}
+        open={popoverVisible}
       >
         <h2 className={rootCls}>
           {useLabel && <span className="NameSelector--label">{label}:</span>}
           <BreakableText className="NameSelector--value" text={text} />
           <IoChevronDown className="NameSelector--chevron" />
-          {!required && value && (
-            <Icon className="NameSelector--clearIcon" type="close" onClick={this.clearValue} />
-          )}
+          {!required && value && <IoClose className="NameSelector--clearIcon" onClick={this.clearValue} />}
         </h2>
       </Popover>
     );

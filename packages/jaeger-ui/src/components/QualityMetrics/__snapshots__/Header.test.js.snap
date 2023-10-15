@@ -24,12 +24,10 @@ exports[`Header rendering renders as expected with full props 1`] = `
   >
     Lookback:
   </label>
-  <InputNumber
+  <ForwardRef
     id="inputNumber"
     min={1}
     onChange={[Function]}
-    prefixCls="ant-input-number"
-    step={1}
     value={4}
   />
   <span
@@ -58,12 +56,10 @@ exports[`Header rendering renders as expected with minimum props 1`] = `
   >
     Lookback:
   </label>
-  <InputNumber
+  <ForwardRef
     id="inputNumber"
     min={1}
     onChange={[Function]}
-    prefixCls="ant-input-number"
-    step={1}
     value={4}
   />
   <span

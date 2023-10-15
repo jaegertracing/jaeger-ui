@@ -14,9 +14,7 @@
 
 import * as React from 'react';
 import { Button, Tooltip } from 'antd';
-import FaCheck from 'react-icons/lib/fa/check.js';
-import FaTrash from 'react-icons/lib/fa/trash.js';
-import TiCancel from 'react-icons/lib/ti/cancel.js';
+import { IoTrash, IoBan, IoCheckmark } from 'react-icons/io5';
 
 import FilteredList from '../FilteredList';
 
@@ -85,7 +83,7 @@ export default class DetailTableDropdown extends React.PureComponent<TProps> {
         <div className="DetailTableDropdown--Footer">
           <Tooltip overlayClassName="DetailTableDropdown--Tooltip" title="Remove filter from this column">
             <Button className="DetailTableDropdown--Btn Clear" onClick={clearFilters}>
-              <FaTrash size={18} />
+              <IoTrash size={18} />
               Clear Filter
             </Button>
           </Tooltip>
@@ -95,7 +93,7 @@ export default class DetailTableDropdown extends React.PureComponent<TProps> {
               title="Cancel changes to this column's filter"
             >
               <Button className="DetailTableDropdown--Btn Cancel" onClick={this.cancel}>
-                <TiCancel size={20} />
+                <IoBan size={20} />
                 Cancel
               </Button>
             </Tooltip>
@@ -103,13 +101,13 @@ export default class DetailTableDropdown extends React.PureComponent<TProps> {
               overlayClassName="DetailTableDropdown--Tooltip"
               title={
                 <div className="DetailTableDropdown--Tooltip--Body">
-                  <span>Apply changes to this column{"'"}s filter</span>
+                  <span>Apply changes to this column&apos;s filter</span>
                   <span>Same effect as clicking outside the dropdown</span>
                 </div>
               }
             >
               <Button className="DetailTableDropdown--Btn Apply" onClick={confirm}>
-                <FaCheck size={18} />
+                <IoCheckmark size={18} />
                 Apply
               </Button>
             </Tooltip>

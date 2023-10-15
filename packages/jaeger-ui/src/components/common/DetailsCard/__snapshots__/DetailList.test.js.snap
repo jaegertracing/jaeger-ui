@@ -2,17 +2,16 @@
 
 exports[`DetailList renders item as expected 1`] = `
 <div>
-  <Item>
+  <ForwardRef(InternalItem)>
     <span>
       foo
     </span>
-  </Item>
+  </ForwardRef(InternalItem)>
 </div>
 `;
 
 exports[`DetailList renders list as expected 1`] = `
 <List
-  bordered={false}
   dataSource={
     Array [
       "foo",
@@ -20,10 +19,6 @@ exports[`DetailList renders list as expected 1`] = `
       "baz",
     ]
   }
-  loading={false}
-  pagination={false}
-  prefixCls="ant-list"
   renderItem={[Function]}
-  split={true}
 />
 `;

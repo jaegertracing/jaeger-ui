@@ -1,0 +1,55 @@
+/*
+Copyright (c) 2021 The Jaeger Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+.legend-label span {
+  display: inherit !important;
+  margin-left: 10px !important;
+}
+
+.graph-container {
+  border: 1px solid #d7d7d7;
+  padding: 14px 12px 12px 12px;
+  border-radius: 4px;
+}
+
+.graph-header {
+  margin-bottom: 0;
+  font-size: 14;
+  font-weight: 500;
+}
+
+.latency-margins {
+  margin: 0px 7px 0px 0px;
+}
+
+.error-rate-margins {
+  margin: 0px 3px;
+}
+
+.request-margins {
+  margin: 0px 0px 0px 7px;
+}
+
+.center-placeholder {
+  vertical-align: middle;
+  text-align: center;
+  display: table-cell;
+}
+
+.crosshair-value {
+  width: 140;
+  color: #6b6b76;
+}

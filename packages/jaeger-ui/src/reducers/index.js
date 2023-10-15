@@ -20,6 +20,7 @@ import ddg from './ddg';
 import pathAgnosticDecorations from './path-agnostic-decorations';
 import embedded from './embedded';
 import services from './services';
+import metrics from './metrics';
 import trace from './trace';
 
 export default {
@@ -29,6 +30,7 @@ export default {
   embedded,
   pathAgnosticDecorations,
   services,
+  metrics,
   trace,
   form: formReducer,
 };

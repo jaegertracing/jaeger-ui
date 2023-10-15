@@ -32,6 +32,7 @@ import { ReduxState } from '../../types';
 import { TQualityMetrics } from './types';
 
 import './index.css';
+import withRouteProps from '../../utils/withRouteProps';
 
 type TOwnProps = {
   history: RouterHistory;
@@ -102,8 +103,8 @@ export class UnconnectedQualityMetrics extends React.PureComponent<TProps, TStat
       });
   }
 
-  setLookback = (lookback: number | string | undefined) => {
-    if (!lookback || typeof lookback === 'string') return;
+  setLookback = (lookback: number | null) => {
+    if (!lookback) return;
     if (lookback < 1 || lookback !== Math.floor(lookback)) return;
 
     const { history, service = '' } = this.props;
@@ -212,7 +213,4 @@ export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchPro
   };
 }
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(UnconnectedQualityMetrics);
+export default withRouteProps(connect(mapStateToProps, mapDispatchToProps)(UnconnectedQualityMetrics));

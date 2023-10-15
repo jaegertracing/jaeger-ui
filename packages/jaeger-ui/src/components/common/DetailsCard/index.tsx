@@ -14,7 +14,7 @@
 
 import * as React from 'react';
 import cx from 'classnames';
-import MdKeyboardArrowDown from 'react-icons/lib/md/keyboard-arrow-down';
+import { IoChevronDown } from 'react-icons/io5';
 
 import { TColumnDefs, TDetails, TRow } from './types';
 import DetailTable from './DetailTable';
@@ -80,7 +80,7 @@ export default class DetailsCard extends React.PureComponent<TProps> {
               type="button"
               className={cx('DetailsCard--Collapser', { 'is-collapsed': collapsed })}
             >
-              <MdKeyboardArrowDown />
+              <IoChevronDown />
             </button>
           )}
           <div className="DetailsCard--HeaderWrapper">

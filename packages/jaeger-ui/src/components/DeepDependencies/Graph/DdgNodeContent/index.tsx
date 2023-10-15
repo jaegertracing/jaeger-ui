@@ -16,8 +16,7 @@ import * as React from 'react';
 import { Checkbox, Popover } from 'antd';
 import cx from 'classnames';
 import { TLayoutVertex } from '@jaegertracing/plexus/lib/types';
-import IoAndroidLocate from 'react-icons/lib/io/android-locate';
-import MdVisibilityOff from 'react-icons/lib/md/visibility-off';
+import { IoLocate, IoEyeOff } from 'react-icons/io5';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
 
@@ -111,6 +110,7 @@ export function getNodeRenderer({
   return function renderNode(vertex: TDdgVertex, _: unknown, lv: TLayoutVertex<any> | null) {
     const { isFocalNode, key, operation, service } = vertex;
     return (
+      // eslint-disable-next-line @typescript-eslint/no-use-before-define
       <DdgNodeContent
         focalNodeUrl={isFocalNode ? null : getUrl({ density, operation, service, ...extraUrlArgs }, baseUrl)}
         focusPathsThroughVertex={focusPathsThroughVertex}
@@ -325,7 +325,7 @@ export class UnconnectedDdgNodeContent extends React.PureComponent<TProps, TStat
           {!isFocalNode && (
             <a className="DdgNodeContent--actionsItem" onClick={this.focusPaths} role="button">
               <span className="DdgNodeContent--actionsItemIconWrapper">
-                <IoAndroidLocate />
+                <IoLocate />
               </span>
               <span className="DdgNodeContent--actionsItemText">Focus paths through this node</span>
             </a>
@@ -333,7 +333,7 @@ export class UnconnectedDdgNodeContent extends React.PureComponent<TProps, TStat
           {!isFocalNode && (
             <a className="DdgNodeContent--actionsItem" onClick={this.hideVertex} role="button">
               <span className="DdgNodeContent--actionsItemIconWrapper">
-                <MdVisibilityOff />
+                <IoEyeOff />
               </span>
               <span className="DdgNodeContent--actionsItemText">Hide node</span>
             </a>
@@ -374,9 +374,6 @@ export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchPro
   };
 }
 
-const DdgNodeContent = connect(
-  extractDecorationFromState,
-  mapDispatchToProps
-)(UnconnectedDdgNodeContent);
+const DdgNodeContent = connect(extractDecorationFromState, mapDispatchToProps)(UnconnectedDdgNodeContent);
 
 export default DdgNodeContent;

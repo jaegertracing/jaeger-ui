@@ -14,7 +14,8 @@
 
 import React from 'react';
 import { shallow } from 'enzyme';
-import { Dropdown, Icon } from 'antd';
+import { Dropdown } from 'antd';
+import { IoOpenOutline } from 'react-icons/io5';
 
 import CopyIcon from '../../../common/CopyIcon';
 
@@ -37,20 +38,42 @@ describe('LinkValue', () => {
   });
 
   it('renders correct Icon', () => {
-    expect(wrapper.find(Icon).hasClass('KeyValueTable--linkIcon')).toBe(true);
-    expect(wrapper.find(Icon).prop('type')).toBe('export');
+    expect(wrapper.find(IoOpenOutline).hasClass('KeyValueTable--linkIcon')).toBe(true);
   });
 });
 
 describe('<KeyValuesTable>', () => {
   let wrapper;
 
+  const jsonValue = {
+    hello: 'world',
+    '<xss>': 'safe',
+    link: 'https://example.com',
+    xss_link: 'https://example.com with "quotes"',
+    boolean: true,
+    number: 42,
+    null: null,
+    array: ['x', 'y', 'z'],
+    object: { a: 'b', x: 'y' },
+  };
   const data = [
     { key: 'span.kind', value: 'client', expected: 'client' },
     { key: 'omg', value: 'mos-def', expected: 'mos-def' },
     { key: 'numericString', value: '12345678901234567890', expected: '12345678901234567890' },
     { key: 'numeric', value: 123456789, expected: '123456789' },
-    { key: 'jsonkey', value: JSON.stringify({ hello: 'world' }) },
+    { key: 'http.request.header.accept', value: ['application/json'], expected: 'application/json' },
+    {
+      key: 'http.response.header.set_cookie',
+      value: JSON.stringify(['name=mos-def', 'code=12345']),
+      expected: 'name=mos-def, code=12345',
+    },
+    // render().text() does not preserve full escaping of rendered JSON,
+    // so instead rely on jest snapshot comparison.
+    // Key observations:
+    // - "<xss>" key is encoded as &lt;xss&gt;
+    // - link value is rendered as <a>
+    // - xss_link value is rendered as plain string
+    { key: 'jsonkey', value: JSON.stringify(jsonValue), snapshot: true },
   ];
 
   beforeEach(() => {
@@ -70,6 +93,18 @@ describe('<KeyValuesTable>', () => {
     });
   });
 
+  it('renders the expected text for each span value', () => {
+    const el = wrapper.find('.ub-inline-block');
+    expect(el.length).toBe(data.length);
+    el.forEach((valueDiv, i) => {
+      if (data[i].expected) {
+        expect(valueDiv.render().text()).toBe(data[i].expected);
+      } else if (data[i].snapshot) {
+        expect(valueDiv).toMatchSnapshot();
+      }
+    });
+  });
+
   it('renders a single link correctly', () => {
     wrapper.setProps({
       linksGetter: (array, i) =>
@@ -82,18 +117,11 @@ describe('<KeyValuesTable>', () => {
             ]
           : [],
     });
-
     const anchor = wrapper.find(LinkValue);
     expect(anchor).toHaveLength(1);
     expect(anchor.prop('href')).toBe('http://example.com/?kind=client');
     expect(anchor.prop('title')).toBe('More info about client');
-    expect(
-      anchor
-        .closest('tr')
-        .find('td')
-        .first()
-        .text()
-    ).toBe('span.kind');
+    expect(anchor.closest('tr').find('td').first().text()).toBe('span.kind');
   });
 
   it('renders multiple links correctly', () => {
@@ -107,39 +135,28 @@ describe('<KeyValuesTable>', () => {
           : [],
     });
     const dropdown = wrapper.find(Dropdown);
-    const menu = shallow(dropdown.prop('overlay'));
-    const anchors = menu.find(LinkValue);
+    const anchors = dropdown.prop('menu').items;
     expect(anchors).toHaveLength(2);
-    const firstAnchor = anchors.first();
-    expect(firstAnchor.prop('href')).toBe('http://example.com/1?kind=client');
-    expect(firstAnchor.children().text()).toBe('Example 1');
-    const secondAnchor = anchors.last();
-    expect(secondAnchor.prop('href')).toBe('http://example.com/2?kind=client');
-    expect(secondAnchor.children().text()).toBe('Example 2');
-    expect(
-      dropdown
-        .closest('tr')
-        .find('td')
-        .first()
-        .text()
-    ).toBe('span.kind');
+    const firstAnchor = anchors[0];
+    expect(firstAnchor.label.props.href).toBe('http://example.com/1?kind=client');
+    expect(firstAnchor.label.props.children).toBe('Example 1');
+    const secondAnchor = anchors[anchors.length - 1];
+    expect(secondAnchor.label.props.href).toBe('http://example.com/2?kind=client');
+    expect(secondAnchor.label.props.children).toBe('Example 2');
+    expect(dropdown.closest('tr').find('td').first().text()).toBe('span.kind');
   });
 
   it('renders a <CopyIcon /> with correct copyText for each data element', () => {
     const copyIcons = wrapper.find(CopyIcon);
-    expect(copyIcons.length).toBe(data.length);
+    expect(copyIcons.length).toBe(2 * data.length); // Copy and Copy JSON buttons
     copyIcons.forEach((copyIcon, i) => {
-      expect(copyIcon.prop('copyText')).toBe(JSON.stringify(data[i], null, 2));
-      expect(copyIcon.prop('tooltipTitle')).toBe('Copy JSON');
-    });
-  });
-
-  it('renders a span value containing numeric string correctly', () => {
-    const el = wrapper.find('.ub-inline-block');
-    expect(el.length).toBe(data.length);
-    el.forEach((valueDiv, i) => {
-      if (data[i].key !== 'jsonkey') {
-        expect(valueDiv.html()).toMatch(data[i].expected);
+      const datum = data[Math.floor(i / 2)];
+      if (i % 2 === 0) {
+        expect(copyIcon.prop('copyText')).toBe(datum.value);
+        expect(copyIcon.prop('tooltipTitle')).toBe('Copy value');
+      } else {
+        expect(copyIcon.prop('copyText')).toBe(JSON.stringify(datum, null, 2));
+        expect(copyIcon.prop('tooltipTitle')).toBe('Copy JSON');
       }
     });
   });

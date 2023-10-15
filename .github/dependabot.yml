@@ -1,9 +1,38 @@
 version: 2
 updates:
   - package-ecosystem: "npm"
+    open-pull-requests-limit: 50
     directory: "/"
     schedule:
       interval: "daily"
+    # we have too many dependency PRs today to rebase automatically
+    rebase-strategy: "disabled"
+    groups:
+      babel:
+        patterns:
+          - "@babel/*"
+          - "babel-loader"
+      eslint:
+        patterns:
+          - "@typescript-eslint/*"
+          - "eslint"
+          - "eslint*"
+      jest:
+        patterns:
+          - "@jest*"
+          - "jest*"
+          - "babel-jest"
+          - "@testing-library/jest*"
+      react:
+        patterns:
+          - "@types/react"
+          - "@types/react-dom"
+          - "react"
+          - "react-dom"
+      vite:
+        patterns:
+          - "vite"
+          - "@vitejs/*"
 
   - package-ecosystem: "github-actions"
     directory: "/"

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 module.exports = {
+  root: true,
   env: {
     browser: true,
     jest: true,
@@ -21,30 +22,53 @@ module.exports = {
   settings: {
     'import/resolver': {
       node: {
-        extensions: ['.js', 'json', '.tsx'],
+        extensions: ['.js', '.jsx', 'json', '.ts', '.tsx'],
       },
     },
   },
-  extends: ['react-app', 'airbnb', 'prettier', 'prettier/react'],
+  extends: ['airbnb', 'prettier', 'eslint:recommended', 'plugin:@typescript-eslint/recommended'],
   overrides: [
     {
       files: ['*.ts', '*.tsx'],
       parser: '@typescript-eslint/parser',
       parserOptions: {
-        project: './tsconfig.json',
+        project: ['./packages/*/tsconfig.json'],
         tsconfigRootDir: '.',
       },
       plugins: ['@typescript-eslint'],
       rules: {
-        'no-unused-vars': 0,
-        '@typescript-eslint/interface-name-prefix': ['error', 'always'],
-        '@typescript-eslint/no-unused-vars': 1,
+        '@typescript-eslint/naming-convention': [
+          'error',
+          {
+            selector: 'interface',
+            format: ['PascalCase'],
+            prefix: ['I'],
+          },
+        ],
+
+        // Disable ESLint core rules for which @typescript-eslint provides TypeScript-specific equivalents.
+        '@typescript-eslint/no-this-alias': 0,
+        'no-use-before-define': 0,
+        '@typescript-eslint/no-use-before-define': 1,
+        'no-redeclare': 0,
+        '@typescript-eslint/no-redeclare': 1,
+        'no-shadow': 0,
+        '@typescript-eslint/no-shadow': 1,
+
+        // Disable prop type checks for TSX components, as prop type validation is expected
+        // to be handled by TypeScript there. Stray prop types in components converted from Flow
+        // should eventually be removed.
+        'react/require-default-props': 0,
+        'react/default-props-match-prop-types': 0,
+        'react/no-unused-prop-types': 0,
       },
     },
   ],
   rules: {
     /* general */
+    'arrow-body-style': 0,
     'arrow-parens': [1, 'as-needed'],
+    'class-methods-use-this': 0,
     'comma-dangle': 0,
     'lines-between-class-members': ['error', 'always', { exceptAfterSingleLine: true }],
     'no-continue': 0,
@@ -52,6 +76,14 @@ module.exports = {
     'no-self-compare': 0,
     'no-underscore-dangle': 0,
     'prefer-destructuring': 0,
+
+    /* tsx */
+    '@typescript-eslint/no-explicit-any': 'warn',
+    '@typescript-eslint/no-unused-vars': 'warn',
+    '@typescript-eslint/no-var-requires': 'warn',
+    '@typescript-eslint/no-empty-function': 0,
+    '@typescript-eslint/ban-types': 'warn',
+    '@typescript-eslint/ban-ts-comment': 'warn',
 
     /* jsx */
     'jsx-a11y/anchor-is-valid': 0,
@@ -68,13 +100,16 @@ module.exports = {
     'react/jsx-curly-brace-presence': ['error', 'never'],
     'react/jsx-filename-extension': 0,
     'react/forbid-prop-types': 1,
+    'react/function-component-definition': 0,
     'react/require-default-props': 1,
     'react/no-array-index-key': 1,
+    'react/no-unused-class-component-methods': 0,
     'react/sort-comp': [
       2,
       {
         order: [
           'type-annotations',
+          'defaultProps',
           'statics',
           'state',
           'propTypes',
@@ -88,6 +123,23 @@ module.exports = {
         ],
       },
     ],
+
+    // eslint-config-airbnb v18+ relaxations
+    'jsx-a11y/control-has-associated-label': 0,
+    'react/jsx-props-no-spreading': 0,
+    'react/state-in-constructor': 0,
+    'react/static-property-placement': 0,
+    'react/jsx-fragments': 0,
+    'react/prop-types': 0,
+    'max-classes-per-file': 0,
+    'no-restricted-exports': [
+      'error',
+      {
+        restrictedNamedExports: ['then'],
+      },
+    ],
+    'prefer-arrow-callback': 0,
+    'prefer-object-spread': 0,
 
     /* import */
     'import/prefer-default-export': 1,

@@ -13,7 +13,9 @@
 // limitations under the License.
 
 import React from 'react';
-import { Tooltip, Icon } from 'antd';
+import { Tooltip } from 'antd';
+import { LuChevronsRight } from 'react-icons/lu';
+import { IoChevronForward } from 'react-icons/io5';
 
 import './TimelineCollapser.css';
 
@@ -44,16 +46,28 @@ export default class TimelineCollapser extends React.PureComponent<CollapserProp
     return (
       <div className="TimelineCollapser" ref={this.containerRef}>
         <Tooltip title={getTitle('Expand +1')} getPopupContainer={this.getContainer}>
-          <Icon type="right" onClick={onExpandOne} className="TimelineCollapser--btn-expand" />
+          <IoChevronForward
+            onClick={onExpandOne}
+            className="TimelineCollapser--btn-expand TimelineCollapser--btn-size TimelineCollapser--btn-down"
+          />
         </Tooltip>
         <Tooltip title={getTitle('Collapse +1')} getPopupContainer={this.getContainer}>
-          <Icon type="right" onClick={onCollapseOne} className="TimelineCollapser--btn" />
+          <IoChevronForward
+            onClick={onCollapseOne}
+            className="TimelineCollapser--btn TimelineCollapser--btn-size"
+          />
         </Tooltip>
         <Tooltip title={getTitle('Expand All')} getPopupContainer={this.getContainer}>
-          <Icon type="double-right" onClick={onExpandAll} className="TimelineCollapser--btn-expand" />
+          <LuChevronsRight
+            onClick={onExpandAll}
+            className="TimelineCollapser--btn-expand TimelineCollapser--btn-size TimelineCollapser--btn-down"
+          />
         </Tooltip>
         <Tooltip title={getTitle('Collapse All')} getPopupContainer={this.getContainer}>
-          <Icon type="double-right" onClick={onCollapseAll} className="TimelineCollapser--btn" />
+          <LuChevronsRight
+            onClick={onCollapseAll}
+            className="TimelineCollapser--btn TimelineCollapser--btn-size"
+          />
         </Tooltip>
       </div>
     );

@@ -70,7 +70,8 @@ limitations under the License.
 }
 
 .TracePageHeader--detailToggle {
-  font-size: 2.5rem;
+  font-size: 2rem;
+  margin: 0 12px;
   transition: transform 0.07s ease-out;
 }
 

@@ -22,6 +22,8 @@ import { DEFAULT_HEIGHTS, VirtualizedTraceViewImpl } from './VirtualizedTraceVie
 import traceGenerator from '../../../demo/trace-generators';
 import transformTraceData from '../../../model/transform-trace-data';
 import updateUiFindSpy from '../../../utils/update-ui-find';
+import * as linkPatterns from '../../../model/link-patterns';
+import memoizedTraceCriticalPath from '../CriticalPath/index';
 
 jest.mock('./SpanTreeOffset');
 jest.mock('../../../utils/update-ui-find');
@@ -32,6 +34,8 @@ describe('<VirtualizedTraceViewImpl>', () => {
   const focusUiFindMatchesMock = jest.fn();
 
   const trace = transformTraceData(traceGenerator.trace({ numberOfSpans: 10 }));
+  const criticalPath = memoizedTraceCriticalPath(trace);
+
   const props = {
     childrenHiddenIDs: new Set(),
     childrenToggle: jest.fn(),
@@ -52,6 +56,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
     shouldScrollToFirstUiFindMatch: false,
     spanNameColumnWidth: 0.5,
     trace,
+    criticalPath,
     uiFind: 'uiFind',
     history: {
       replace: () => {},
@@ -356,21 +361,33 @@ describe('<VirtualizedTraceViewImpl>', () => {
       ).toBe(true);
     });
 
-    it('renders a SpanBarRow with a client span and no instrumented server span', () => {
+    it('renders a SpanBarRow with a client or producer span and no instrumented server span', () => {
       const externServiceName = 'externalServiceTest';
       const leafSpan = trace.spans.find(span => !span.hasChildren);
       const leafSpanIndex = trace.spans.indexOf(leafSpan);
-      const clientTags = [
-        { key: 'span.kind', value: 'client' },
-        { key: 'peer.service', value: externServiceName },
-        ...leafSpan.tags,
+      const tags = [
+        [
+          // client span
+          { key: 'span.kind', value: 'client' },
+          { key: 'peer.service', value: externServiceName },
+          ...leafSpan.tags,
+        ],
+        [
+          // producer span
+          { key: 'span.kind', value: 'producer' },
+          { key: 'peer.service', value: externServiceName },
+          ...leafSpan.tags,
+        ],
       ];
-      const altTrace = updateSpan(trace, leafSpanIndex, { tags: clientTags });
-      wrapper.setProps({ trace: altTrace });
-      const rowWrapper = mount(instance.renderRow('some-key', {}, leafSpanIndex, {}));
-      const spanBarRow = rowWrapper.find(SpanBarRow);
-      expect(spanBarRow.length).toBe(1);
-      expect(spanBarRow.prop('noInstrumentedServer')).not.toBeNull();
+
+      tags.forEach(tag => {
+        const altTrace = updateSpan(trace, leafSpanIndex, { tags: tag });
+        wrapper.setProps({ trace: altTrace });
+        const rowWrapper = mount(instance.renderRow('some-key', {}, leafSpanIndex, {}));
+        const spanBarRow = rowWrapper.find(SpanBarRow);
+        expect(spanBarRow.length).toBe(1);
+        expect(spanBarRow.prop('noInstrumentedServer')).not.toBeNull();
+      });
     });
   });
 
@@ -428,6 +445,42 @@ describe('<VirtualizedTraceViewImpl>', () => {
         uiFind: spanName,
       });
       expect(focusUiFindMatchesMock).toHaveBeenLastCalledWith(trace, spanName, false);
+    });
+  });
+
+  describe('linksGetter()', () => {
+    const span = trace.spans[1];
+    const key = span.tags[0].key;
+    const val = encodeURIComponent(span.tags[0].value);
+    const origLinkPatterns = [...linkPatterns.processedLinks];
+
+    beforeEach(() => {
+      linkPatterns.processedLinks.splice(0, linkPatterns.processedLinks.length);
+    });
+
+    afterAll(() => {
+      linkPatterns.processedLinks.splice(0, linkPatterns.processedLinks.length);
+      linkPatterns.processedLinks.push(...origLinkPatterns);
+    });
+
+    it('linksGetter is expected to receive url and text for a given link pattern', () => {
+      const linkPatternConfig = [
+        {
+          key,
+          type: 'tags',
+          url: `http://example.com/?key1=#{${key}}&traceID=#{trace.traceID}&startTime=#{trace.startTime}`,
+          text: `For first link traceId is - #{trace.traceID}`,
+        },
+      ].map(linkPatterns.processLinkPattern);
+
+      linkPatterns.processedLinks.push(...linkPatternConfig);
+
+      expect(instance.linksGetter(span, span.tags, 0)).toEqual([
+        {
+          url: `http://example.com/?key1=${val}&traceID=${trace.traceID}&startTime=${trace.startTime}`,
+          text: `For first link traceId is - ${trace.traceID}`,
+        },
+      ]);
     });
   });
 });

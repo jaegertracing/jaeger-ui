@@ -88,21 +88,16 @@ exports[`TraceDiffHeader handles absent a & b 1`] = `
         selection={Object {}}
       />
     }
-    mouseEnterDelay={0.1}
-    mouseLeaveDelay={0.1}
-    onVisibleChange={[Function]}
+    onOpenChange={[Function]}
+    open={false}
     overlayClassName="TraceDiffHeader--popover"
-    overlayStyle={Object {}}
     placement="bottomLeft"
-    prefixCls="ant-popover"
     title={
       <TraceIdInput
         selectTrace={[Function]}
       />
     }
-    transitionName="zoom-big"
     trigger="click"
-    visible={false}
   >
     <div
       className="ub-flex u-flex-1"
@@ -203,21 +198,16 @@ exports[`TraceDiffHeader handles absent a & b 1`] = `
         selection={Object {}}
       />
     }
-    mouseEnterDelay={0.1}
-    mouseLeaveDelay={0.1}
-    onVisibleChange={[Function]}
+    onOpenChange={[Function]}
+    open={false}
     overlayClassName="TraceDiffHeader--popover"
-    overlayStyle={Object {}}
     placement="bottomLeft"
-    prefixCls="ant-popover"
     title={
       <TraceIdInput
         selectTrace={[Function]}
       />
     }
-    transitionName="zoom-big"
     trigger="click"
-    visible={false}
   >
     <div
       className="ub-flex u-flex-1"
@@ -322,21 +312,16 @@ exports[`TraceDiffHeader handles absent a 1`] = `
         }
       />
     }
-    mouseEnterDelay={0.1}
-    mouseLeaveDelay={0.1}
-    onVisibleChange={[Function]}
+    onOpenChange={[Function]}
+    open={false}
     overlayClassName="TraceDiffHeader--popover"
-    overlayStyle={Object {}}
     placement="bottomLeft"
-    prefixCls="ant-popover"
     title={
       <TraceIdInput
         selectTrace={[Function]}
       />
     }
-    transitionName="zoom-big"
     trigger="click"
-    visible={false}
   >
     <div
       className="ub-flex u-flex-1"
@@ -444,21 +429,16 @@ exports[`TraceDiffHeader handles absent a 1`] = `
         }
       />
     }
-    mouseEnterDelay={0.1}
-    mouseLeaveDelay={0.1}
-    onVisibleChange={[Function]}
+    onOpenChange={[Function]}
+    open={false}
     overlayClassName="TraceDiffHeader--popover"
-    overlayStyle={Object {}}
     placement="bottomLeft"
-    prefixCls="ant-popover"
     title={
       <TraceIdInput
         selectTrace={[Function]}
       />
     }
-    transitionName="zoom-big"
     trigger="click"
-    visible={false}
   >
     <div
       className="ub-flex u-flex-1"
@@ -572,21 +552,16 @@ exports[`TraceDiffHeader handles absent b 1`] = `
         }
       />
     }
-    mouseEnterDelay={0.1}
-    mouseLeaveDelay={0.1}
-    onVisibleChange={[Function]}
+    onOpenChange={[Function]}
+    open={false}
     overlayClassName="TraceDiffHeader--popover"
-    overlayStyle={Object {}}
     placement="bottomLeft"
-    prefixCls="ant-popover"
     title={
       <TraceIdInput
         selectTrace={[Function]}
       />
     }
-    transitionName="zoom-big"
     trigger="click"
-    visible={false}
   >
     <div
       className="ub-flex u-flex-1"
@@ -701,21 +676,16 @@ exports[`TraceDiffHeader handles absent b 1`] = `
         }
       />
     }
-    mouseEnterDelay={0.1}
-    mouseLeaveDelay={0.1}
-    onVisibleChange={[Function]}
+    onOpenChange={[Function]}
+    open={false}
     overlayClassName="TraceDiffHeader--popover"
-    overlayStyle={Object {}}
     placement="bottomLeft"
-    prefixCls="ant-popover"
     title={
       <TraceIdInput
         selectTrace={[Function]}
       />
     }
-    transitionName="zoom-big"
     trigger="click"
-    visible={false}
   >
     <div
       className="ub-flex u-flex-1"
@@ -824,21 +794,16 @@ exports[`TraceDiffHeader renders as expected 1`] = `
         }
       />
     }
-    mouseEnterDelay={0.1}
-    mouseLeaveDelay={0.1}
-    onVisibleChange={[Function]}
+    onOpenChange={[Function]}
+    open={false}
     overlayClassName="TraceDiffHeader--popover"
-    overlayStyle={Object {}}
     placement="bottomLeft"
-    prefixCls="ant-popover"
     title={
       <TraceIdInput
         selectTrace={[Function]}
       />
     }
-    transitionName="zoom-big"
     trigger="click"
-    visible={false}
   >
     <div
       className="ub-flex u-flex-1"
@@ -957,21 +922,16 @@ exports[`TraceDiffHeader renders as expected 1`] = `
         }
       />
     }
-    mouseEnterDelay={0.1}
-    mouseLeaveDelay={0.1}
-    onVisibleChange={[Function]}
+    onOpenChange={[Function]}
+    open={false}
     overlayClassName="TraceDiffHeader--popover"
-    overlayStyle={Object {}}
     placement="bottomLeft"
-    prefixCls="ant-popover"
     title={
       <TraceIdInput
         selectTrace={[Function]}
       />
     }
-    transitionName="zoom-big"
     trigger="click"
-    visible={false}
   >
     <div
       className="ub-flex u-flex-1"

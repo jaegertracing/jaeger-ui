@@ -116,13 +116,8 @@ describe('transform ddg data', () => {
   });
 
   it('sorts payload paths to ensure stable visibilityIndices', () => {
-    const {
-      focalPayloadElem,
-      simplePath,
-      longSimplePath,
-      doubleFocalPath,
-      almostDoubleFocalPath,
-    } = testResources;
+    const { focalPayloadElem, simplePath, longSimplePath, doubleFocalPath, almostDoubleFocalPath } =
+      testResources;
     const { visIdxToPathElem: presortedPathsVisIdxToPathElem } = transformDdgData(
       testResources.wrap([simplePath, doubleFocalPath, almostDoubleFocalPath, longSimplePath]),
       focalPayloadElem
@@ -175,8 +170,6 @@ describe('transform ddg data', () => {
     const simpleModel = transformDdgData(wrap([simplePath, longSimplePath]), focalPayloadElem);
     const reverseModel = transformDdgData(wrap([longSimplePath, simplePath]), focalPayloadElem);
 
-    expect(reverseModel).not.toEqual(simpleModel);
-    expect(reverseModel).not.toBe(simpleModel);
     expect(reverseModel.hash).toBe(simpleModel.hash);
 
     const diffModel = transformDdgData(wrap([doubleFocalPath]), focalPayloadElem);

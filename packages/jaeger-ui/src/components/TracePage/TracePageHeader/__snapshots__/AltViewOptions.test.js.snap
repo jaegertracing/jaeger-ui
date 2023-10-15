@@ -2,71 +2,76 @@
 
 exports[`AltViewOptions renders correctly 1`] = `
 <Dropdown
-  mouseEnterDelay={0.15}
-  mouseLeaveDelay={0.1}
-  overlay={
-    <Menu
-      className=""
-      focusable={false}
-      prefixCls="ant-menu"
-      theme="light"
-    >
-      <MenuItem>
-        <a
-          onClick={[Function]}
-          role="button"
-        >
-          Trace Graph
-        </a>
-      </MenuItem>
-      <MenuItem>
-        <a
-          onClick={[Function]}
-          role="button"
-        >
-          Trace Statistics
-        </a>
-      </MenuItem>
-      <MenuItem>
-        <a
-          onClick={[Function]}
-          role="button"
-        >
-          Trace Spans Table
-        </a>
-      </MenuItem>
-      <MenuItem>
-        <ForwardRef
-          onClick={[MockFunction]}
-          rel="noopener noreferrer"
-          target="_blank"
-          to="/api/traces/test trace ID?prettyPrint=true"
-        >
-          Trace JSON
-        </ForwardRef>
-      </MenuItem>
-      <MenuItem>
-        <ForwardRef
-          onClick={[MockFunction]}
-          rel="noopener noreferrer"
-          target="_blank"
-          to="/api/traces/test trace ID?raw=true&prettyPrint=true"
-        >
-          Trace JSON (unadjusted)
-        </ForwardRef>
-      </MenuItem>
-    </Menu>
+  menu={
+    Object {
+      "items": Array [
+        Object {
+          "key": "TraceGraph",
+          "label": <a
+            onClick={[Function]}
+            role="button"
+          >
+            Trace Graph
+          </a>,
+        },
+        Object {
+          "key": "TraceStatistics",
+          "label": <a
+            onClick={[Function]}
+            role="button"
+          >
+            Trace Statistics
+          </a>,
+        },
+        Object {
+          "key": "TraceSpansView",
+          "label": <a
+            onClick={[Function]}
+            role="button"
+          >
+            Trace Spans Table
+          </a>,
+        },
+        Object {
+          "key": "TraceFlamegraph",
+          "label": <a
+            onClick={[Function]}
+            role="button"
+          >
+            Trace Flamegraph
+          </a>,
+        },
+        Object {
+          "key": "trace-json",
+          "label": <Link
+            onClick={[MockFunction]}
+            rel="noopener noreferrer"
+            target="_blank"
+            to="/api/traces/test trace ID?prettyPrint=true"
+          >
+            Trace JSON
+          </Link>,
+        },
+        Object {
+          "key": "trace-json-unadjusted",
+          "label": <Link
+            onClick={[MockFunction]}
+            rel="noopener noreferrer"
+            target="_blank"
+            to="/api/traces/test trace ID?raw=true&prettyPrint=true"
+          >
+            Trace JSON (unadjusted)
+          </Link>,
+        },
+      ],
+    }
   }
-  placement="bottomLeft"
-  prefixCls="ant-dropdown"
 >
-  <div
+  <Button
     className="AltViewOptions"
   >
     Trace Timeline 
-    <Icon
-      type="down"
-    />
-  </div>
+    <IoChevronDown />
+  </Button>
 </Dropdown>
 `;

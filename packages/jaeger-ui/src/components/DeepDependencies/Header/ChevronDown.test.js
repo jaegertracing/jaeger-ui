@@ -14,7 +14,7 @@
 
 import React from 'react';
 import { shallow } from 'enzyme';
-import IoChevronDown from 'react-icons/lib/io/chevron-down';
+import { IoChevronDown } from 'react-icons/io5';
 
 import ChevronDown from './ChevronDown';
 

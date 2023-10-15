@@ -14,7 +14,7 @@
 
 import React from 'react';
 import { shallow } from 'enzyme';
-import { Menu, Dropdown, Tooltip } from 'antd';
+import { Dropdown, Tooltip } from 'antd';
 
 import ReferencesButton from './ReferencesButton';
 import transformTraceData from '../../../model/transform-trace-data';
@@ -66,18 +66,11 @@ describe(ReferencesButton, () => {
     const wrapper = shallow(<ReferencesButton {...props} />);
     const dropdown = wrapper.find(Dropdown);
     expect(dropdown.length).toBe(1);
-    const menuInstance = shallow(dropdown.first().props().overlay);
-    const submenuItems = menuInstance.find(Menu.Item);
+    const submenuItems = dropdown.prop('menu').items;
     expect(submenuItems.length).toBe(3);
     submenuItems.forEach((submenuItem, i) => {
-      expect(submenuItem.find(ReferenceLink).prop('reference')).toBe(moreReferences[i]);
+      expect(submenuItem.label.props.reference).toBe(moreReferences[i]);
     });
-    expect(
-      submenuItems
-        .at(2)
-        .find(ReferenceLink)
-        .childAt(0)
-        .text()
-    ).toBe(`(another trace) - ${moreReferences[2].spanID}`);
+    expect(submenuItems[2].label.props.children[0]).toBe(`(another trace) - ${moreReferences[2].spanID}`);
   });
 });

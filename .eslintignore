@@ -1,3 +1,8 @@
 build
 coverage
 packages/plexus/src/LayoutManager/layout.worker*js*
+
+# Ignore generated files
+packages/jaeger-ui/index.d.ts
+packages/plexus/dist
+packages/plexus/lib

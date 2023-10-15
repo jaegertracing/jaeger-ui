@@ -2,9 +2,7 @@
 
 exports[`<SidePanel> info button  opens info modal 1`] = `
 Object {
-  "content": <Table
-    bordered={false}
-    className=""
+  "content": <ForwardRef(InternalTable)
     columns={
       Array [
         Object {
@@ -38,14 +36,7 @@ Object {
         },
       ]
     }
-    indentSize={20}
-    loading={false}
-    locale={Object {}}
-    prefixCls="ant-table"
     rowKey={[Function]}
-    showHeader={true}
-    size="default"
-    useFixedHeader={false}
   />,
   "maskClosable": true,
   "title": "Decoration Options",
@@ -65,7 +56,7 @@ exports[`<SidePanel> render ignores selectedVertex without selected decoration 1
       onClick={[Function]}
       type="button"
     >
-      <MdExitToApp />
+      <IoExitOutline />
     </button>
     <div
       className="Ddg--SidePanel--DecorationBtns"
@@ -108,7 +99,7 @@ exports[`<SidePanel> render ignores selectedVertex without selected decoration 1
       onClick={[Function]}
       type="button"
     >
-      <MdInfoOutline />
+      <IoInformationCircleOutline />
     </button>
   </div>
   <div
@@ -129,7 +120,7 @@ exports[`<SidePanel> render renders config decorations with clear button 1`] = `
       onClick={[Function]}
       type="button"
     >
-      <MdExitToApp />
+      <IoExitOutline />
     </button>
     <div
       className="Ddg--SidePanel--DecorationBtns"
@@ -172,7 +163,7 @@ exports[`<SidePanel> render renders config decorations with clear button 1`] = `
       onClick={[Function]}
       type="button"
     >
-      <MdInfoOutline />
+      <IoInformationCircleOutline />
     </button>
   </div>
   <div
@@ -193,7 +184,7 @@ exports[`<SidePanel> render renders selected decoration 1`] = `
       onClick={[Function]}
       type="button"
     >
-      <MdExitToApp />
+      <IoExitOutline />
     </button>
     <div
       className="Ddg--SidePanel--DecorationBtns"
@@ -236,7 +227,7 @@ exports[`<SidePanel> render renders selected decoration 1`] = `
       onClick={[Function]}
       type="button"
     >
-      <MdInfoOutline />
+      <IoInformationCircleOutline />
     </button>
   </div>
   <div
@@ -257,7 +248,7 @@ exports[`<SidePanel> render renders sidePanel and closeBtn when vertex and decor
       onClick={[Function]}
       type="button"
     >
-      <MdExitToApp />
+      <IoExitOutline />
     </button>
     <div
       className="Ddg--SidePanel--DecorationBtns"
@@ -300,7 +291,7 @@ exports[`<SidePanel> render renders sidePanel and closeBtn when vertex and decor
       onClick={[Function]}
       type="button"
     >
-      <MdInfoOutline />
+      <IoInformationCircleOutline />
     </button>
   </div>
   <div

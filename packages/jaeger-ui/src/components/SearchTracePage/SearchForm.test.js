@@ -17,7 +17,7 @@ jest.mock('store');
 
 import React from 'react';
 import { shallow } from 'enzyme';
-import moment from 'moment';
+import dayjs from 'dayjs';
 import queryString from 'query-string';
 import store from 'store';
 
@@ -63,7 +63,10 @@ const defaultProps = {
     label: '2 Days',
     value: '2d',
   },
-  services: [{ name: 'svcA', operations: ['A', 'B'] }, { name: 'svcB', operations: ['A', 'B'] }],
+  services: [
+    { name: 'svcA', operations: ['A', 'B'] },
+    { name: 'svcB', operations: ['A', 'B'] },
+  ],
 };
 
 describe('conversion utils', () => {
@@ -84,23 +87,16 @@ describe('conversion utils', () => {
 
   describe('convertQueryParamsToFormDates()', () => {
     it('converts correctly', () => {
-      const startMoment = moment().subtract(1, 'day');
-      const endMoment = moment();
-      const params = {
-        start: `${startMoment.valueOf()}000`,
-        end: `${endMoment.valueOf()}000`,
-      };
+      const { queryStartDate, queryStartDateTime, queryEndDate, queryEndDateTime } =
+        convertQueryParamsToFormDates({
+          start: '946720800000000', // Jan 1, 2000 10:00 AM
+          end: '946807200000000', // Jan 2, 2000 10:00 AM
+        });
 
-      const {
-        queryStartDate,
-        queryStartDateTime,
-        queryEndDate,
-        queryEndDateTime,
-      } = convertQueryParamsToFormDates(params);
-      expect(queryStartDate).toBe(startMoment.format(DATE_FORMAT));
-      expect(queryStartDateTime).toBe(startMoment.format(TIME_FORMAT));
-      expect(queryEndDate).toBe(endMoment.format(DATE_FORMAT));
-      expect(queryEndDateTime).toBe(endMoment.format(TIME_FORMAT));
+      expect(queryStartDate).toBe('2000-01-01');
+      expect(queryStartDateTime).toBe('10:00');
+      expect(queryEndDate).toBe('2000-01-02');
+      expect(queryEndDateTime).toBe('10:00');
     });
   });
 
@@ -176,6 +172,18 @@ describe('lookback utils', () => {
   describe('optionsWithinMaxLookback', () => {
     const threeHoursOfExpectedOptions = [
       {
+        label: '5 Minutes',
+        value: '5m',
+      },
+      {
+        label: '15 Minutes',
+        value: '15m',
+      },
+      {
+        label: '30 Minutes',
+        value: '30m',
+      },
+      {
         label: 'Hour',
         value: '1h',
       },
@@ -198,13 +206,13 @@ describe('lookback utils', () => {
     });
 
     it('returns options within config.search.maxLookback', () => {
-      const configValue = threeHoursOfExpectedOptions[2];
+      const configValue = threeHoursOfExpectedOptions[threeHoursOfExpectedOptions.length - 1];
       const options = optionsWithinMaxLookback(configValue);
 
       expect(options.length).toBe(threeHoursOfExpectedOptions.length);
       options.forEach(({ props }, i) => {
         expect(props.value).toBe(threeHoursOfExpectedOptions[i].value);
-        expect(props.children[1]).toBe(threeHoursOfExpectedOptions[i].label);
+        expect(props.children).toBe(`Last ${threeHoursOfExpectedOptions[i].label}`);
       });
     });
 
@@ -219,7 +227,7 @@ describe('lookback utils', () => {
       expect(options.length).toBe(expectedOptions.length);
       options.forEach(({ props }, i) => {
         expect(props.value).toBe(expectedOptions[i].value);
-        expect(props.children[1]).toBe(expectedOptions[i].label);
+        expect(props.children).toBe(`Last ${expectedOptions[i].label}`);
       });
     });
 
@@ -228,13 +236,14 @@ describe('lookback utils', () => {
         label: '180 minutes is equivalent to 3 hours',
         value: '180m',
       };
-      const expectedOptions = [threeHoursOfExpectedOptions[0], threeHoursOfExpectedOptions[1], configValue];
+
+      const expectedOptions = [...threeHoursOfExpectedOptions.slice(0, -1), configValue];
       const options = optionsWithinMaxLookback(configValue);
 
       expect(options.length).toBe(expectedOptions.length);
       options.forEach(({ props }, i) => {
         expect(props.value).toBe(expectedOptions[i].value);
-        expect(props.children[1]).toBe(expectedOptions[i].label);
+        expect(props.children).toBe(`Last ${expectedOptions[i].label}`);
       });
     });
   });
@@ -286,7 +295,7 @@ describe('submitForm()', () => {
     function getCalledDuration(mock) {
       const { start, end } = mock.calls[0][0];
       const diffMs = (Number(end) - Number(start)) / 1000;
-      return moment.duration(diffMs);
+      return dayjs.duration(diffMs);
     }
 
     it('subtracts `lookback` from `fields.end`', () => {
@@ -554,9 +563,8 @@ describe('mapStateToProps()', () => {
       return Math.abs(a - b);
     }
     const dateParams = makeDateParams(0);
-    const { startDate, startDateTime, endDate, endDateTime, ...values } = mapStateToProps(
-      state
-    ).initialValues;
+    const { startDate, startDateTime, endDate, endDateTime, ...values } =
+      mapStateToProps(state).initialValues;
 
     expect(values).toEqual({
       service: '-',

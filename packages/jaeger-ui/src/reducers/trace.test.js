@@ -200,6 +200,7 @@ describe('search traces', () => {
           state: fetchedState.DONE,
         },
       },
+      rawTraces: [trace],
       search: {
         query,
         state: fetchedState.DONE,

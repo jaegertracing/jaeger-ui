@@ -52,7 +52,7 @@ export function newInitialState(): TTraceTimeline {
     detailStates: new Map(),
     hoverIndentGuideIds: new Set(),
     shouldScrollToFirstUiFindMatch: false,
-    spanNameColumnWidth: 0.25,
+    spanNameColumnWidth: parseFloat(localStorage.getItem('spanNameColumnWidth') || '0.25'),
     traceID: null,
   };
 }
@@ -105,11 +105,11 @@ const fullActions = createActions<TActionTypes>({
 
 export const actions = (fullActions as any).jaegerUi.traceTimelineViewer as TTimelineViewerActions;
 
-function calculateFocusedFindRowStates(uiFind: string, spans: Span[], allowHide: boolean = true) {
+function calculateFocusedFindRowStates(uiFind: string, spans: Span[], allowHide = true) {
   const spansMap = new Map();
   const childrenHiddenIDs: Set<string> = new Set();
   const detailStates: Map<string, DetailState> = new Map();
-  let shouldScrollToFirstUiFindMatch: boolean = false;
+  let shouldScrollToFirstUiFindMatch = false;
 
   spans.forEach(span => {
     spansMap.set(span.spanID, span);
@@ -162,6 +162,7 @@ function setTrace(state: TTraceTimeline, { uiFind, trace }: TTraceUiFindValue) {
 }
 
 function setColumnWidth(state: TTraceTimeline, { width }: TWidthValue): TTraceTimeline {
+  localStorage.setItem('spanNameColumnWidth', width.toString());
   return { ...state, spanNameColumnWidth: width };
 }
 

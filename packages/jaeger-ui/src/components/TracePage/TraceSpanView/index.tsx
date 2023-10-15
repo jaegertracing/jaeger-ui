@@ -1,3 +1,4 @@
+/* eslint-disable import/no-extraneous-dependencies */
 // Copyright (c) 2018 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,14 +14,16 @@
 // limitations under the License.
 
 import React, { Component } from 'react';
-import { Row, Col, Table, Button, Select } from 'antd';
-import moment from 'moment';
+import { Row, Col, Table, Button, Select, Form } from 'antd';
+import dayjs from 'dayjs';
 import { ColumnProps } from 'antd/es/table';
-import FormItem from 'antd/lib/form/FormItem';
 import './index.css';
 import { TNil } from '../../../types';
 import { Trace, Span } from '../../../types/trace';
 import { timeConversion } from '../../../utils/date';
+import prefixUrl from '../../../utils/prefix-url';
+import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
+import SearchableSelect from '../../common/SearchableSelect';
 
 const Option = Select.Option;
 
@@ -130,20 +133,27 @@ export default class TraceSpanView extends Component<Props, State> {
     const columns: ColumnProps<Span>[] = [
       {
         title: 'Service Name',
-        dataIndex: 'process.serviceName',
+        dataIndex: ['process', 'serviceName'],
         width: '25%',
+        sorter: (a, b) => a.process.serviceName.localeCompare(b.process.serviceName),
       },
       {
         title: 'Operation',
         dataIndex: 'operationName',
         width: '25%',
+        sorter: (a, b) => a.operationName.localeCompare(b.operationName),
       },
       {
         title: 'ID',
         dataIndex: 'spanID',
+        sorter: (a, b) => a.spanID.localeCompare(b.spanID),
         render: (text: any, record: Span) => {
           return (
-            <a href={`/trace/${record.traceID}?uiFind=${text}`} target="_blank" rel="noopener noreferrer">
+            <a
+              href={prefixUrl(`/trace/${record.traceID}?uiFind=${text}`)}
+              target={getTargetEmptyOrBlank()}
+              rel="noopener noreferrer"
+            >
               {text}
             </a>
           );
@@ -162,24 +172,23 @@ export default class TraceSpanView extends Component<Props, State> {
         dataIndex: 'startTime',
         sorter: (a, b) => a.startTime - b.startTime,
         render: (cell: number) => {
-          return moment(cell / 1000).format('DD MMM YYYY hh:mm A');
+          return dayjs(cell / 1000).format('DD MMM YYYY hh:mm A');
         },
       },
     ];
     return (
       <div>
         <h3 className="title--TraceSpanView"> Trace Tabular View</h3>
-        <Row type="flex" style={{ marginTop: '8px' }}>
+        <Row style={{ marginTop: '8px' }}>
           <Col span={7}>
-            <FormItem
+            <Form.Item
               label="Service Name"
               labelCol={{ span: 6 }}
               wrapperCol={{ span: 18 }}
               className="serviceNameDD"
             >
-              <Select
+              <SearchableSelect
                 allowClear
-                showSearch
                 mode="multiple"
                 style={{ width: '100%' }}
                 maxTagCount={4}
@@ -193,23 +202,27 @@ export default class TraceSpanView extends Component<Props, State> {
                   }));
                   this.onFilteredChangeCustom(entry as [], 'process.serviceName' as keyof Span);
                 }}
+                data-testid="select-service"
               >
                 {this.state.serviceNamesList.map(name => {
-                  return <Option key={name}>{name} </Option>;
+                  return (
+                    <Option value={name} key={name}>
+                      {name}{' '}
+                    </Option>
+                  );
                 })}
-              </Select>
-            </FormItem>
+              </SearchableSelect>
+            </Form.Item>
           </Col>
           <Col span={9}>
-            <FormItem
+            <Form.Item
               label="Operation Name"
               labelCol={{ span: 6 }}
               wrapperCol={{ span: 18 }}
               className="operationNameDD"
             >
-              <Select
+              <SearchableSelect
                 allowClear
-                showSearch
                 mode="multiple"
                 style={{ width: '100%' }}
                 maxTagCount={4}
@@ -223,19 +236,24 @@ export default class TraceSpanView extends Component<Props, State> {
                   }));
                   this.onFilteredChangeCustom(entry as [], 'operationName');
                 }}
+                data-testid="select-operation"
               >
                 {this.uniqueOperationNameOptions().map((name: string) => {
-                  return <Option key={name}>{name} </Option>;
+                  return (
+                    <Option value={name} key={name}>
+                      {name}{' '}
+                    </Option>
+                  );
                 })}
-              </Select>
-            </FormItem>
+              </SearchableSelect>
+            </Form.Item>
           </Col>
           <Col span={2} push={6}>
-            <FormItem className="reset-filter">
+            <Form.Item className="reset-filter">
               <Button type="primary" htmlType="button" onClick={this.handleResetFilter}>
                 Reset Filters
               </Button>
-            </FormItem>
+            </Form.Item>
           </Col>
         </Row>
 

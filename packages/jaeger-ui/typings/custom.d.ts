@@ -25,14 +25,9 @@ declare interface Window {
   getJaegerVersion?: () => Record<string, any>;
 }
 
-// For inlined envvars
-declare const process: {
-  env: {
-    NODE_ENV: string;
-    REACT_APP_GA_DEBUG?: string;
-    REACT_APP_VSN_STATE?: string;
-  }
-}
+declare const __REACT_APP_GA_DEBUG__: string | undefined;
+declare const __REACT_APP_VSN_STATE__: string | undefined;
+declare const __APP_ENVIRONMENT__:? string | undefined;
 
 declare module 'combokeys' {
   export default class Combokeys {
@@ -46,3 +41,4 @@ declare module 'react-helmet';
 declare module 'json-markup';
 declare module 'react-vis-force';
 declare module 'tween-functions';
+declare module '*.png' { export default '' as string; }

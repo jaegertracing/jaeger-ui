@@ -3,24 +3,16 @@
 exports[`<CopyIcon /> renders as expected 1`] = `
 <Tooltip
   arrowPointAtCenter={true}
-  autoAdjustOverflow={true}
-  mouseEnterDelay={0.1}
-  mouseLeaveDelay={0.5}
-  onVisibleChange={[Function]}
-  placement="left"
-  prefixCls="ant-tooltip"
+  mouseLeaveDelay={0}
+  onOpenChange={[Function]}
+  placement="top"
   title="tooltipTitleValue"
-  transitionName="zoom-big-fast"
 >
   <Button
-    block={false}
     className="classNameValue CopyIcon"
-    ghost={false}
     htmlType="button"
-    icon="copy"
-    loading={false}
+    icon={<IoCopyOutline />}
     onClick={[Function]}
-    prefixCls="ant-btn"
   />
 </Tooltip>
 `;

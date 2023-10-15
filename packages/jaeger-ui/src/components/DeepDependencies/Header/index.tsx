@@ -13,9 +13,8 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Icon, Input, Tooltip } from 'antd';
-import MdVisibility from 'react-icons/lib/md/visibility';
-import MdVisibilityOff from 'react-icons/lib/md/visibility-off';
+import { InputRef, Tooltip } from 'antd';
+import { IoSearch, IoEye, IoEyeOff } from 'react-icons/io5';
 
 import HopsSelector from './HopsSelector';
 import NameSelector from '../../common/NameSelector';
@@ -47,7 +46,7 @@ type TProps = {
   visEncoding?: string;
 };
 export default class Header extends React.PureComponent<TProps> {
-  private _uiFindInput: React.RefObject<Input> = React.createRef();
+  private _uiFindInput: React.RefObject<InputRef> = React.createRef();
 
   static defaultProps = {
     showParameters: true,
@@ -74,7 +73,7 @@ export default class Header extends React.PureComponent<TProps> {
       hiddenInfo = (
         <span className="DdgHeader--uiFindInfo--hidden">
           {size}
-          <MdVisibilityOff className="DdgHeader--uiFindInfo--icon" />
+          <IoEyeOff className="DdgHeader--uiFindInfo--icon" />
         </span>
       );
     }
@@ -90,7 +89,7 @@ export default class Header extends React.PureComponent<TProps> {
             type="button"
           >
             {uiFindCount}
-            {(uiFindCount !== 0 || hasHidden) && <MdVisibility className="DdgHeader--uiFindInfo--icon" />}
+            {(uiFindCount !== 0 || hasHidden) && <IoEye className="DdgHeader--uiFindInfo--icon" />}
             {hiddenInfo}
           </button>
         </span>
@@ -165,7 +164,7 @@ export default class Header extends React.PureComponent<TProps> {
           />
           <div className="DdgHeader--findWrapper">
             <div className="DdgHeader--uiFind" role="button" onClick={this.focusUiFindInput}>
-              <Icon className="DdgHeader--uiFindSearchIcon" type="search" />
+              <IoSearch className="DdgHeader--uiFindSearchIcon" />
               <UiFindInput
                 allowClear
                 forwardedRef={this._uiFindInput}

@@ -12,23 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/* eslint-disable import/first */
+import ReactGA from 'react-ga';
+import * as GA from './ga';
+import * as utils from './utils';
+import { getVersionInfo, getAppEnvironment } from '../constants';
+
 jest.mock('./conv-raven-to-ga', () => () => ({
   category: 'jaeger/a',
   action: 'some-action',
   message: 'jaeger/a',
 }));
 
-jest.mock('./index', () => {
-  global.process.env.REACT_APP_VSN_STATE = '{}';
-  return require.requireActual('./index');
-});
-
-import ReactGA from 'react-ga';
-import * as GA from './ga';
-import * as utils from './utils';
+jest.mock('../constants');
 
 let longStr = '---';
+
 function getStr(len) {
   while (longStr.length < len) {
     longStr += longStr.slice(0, len - longStr.length);
@@ -41,6 +39,7 @@ describe('google analytics tracking', () => {
   let tracking;
 
   beforeAll(() => {
+    getAppEnvironment.mockReturnValue('test');
     tracking = GA.default(
       {
         tracking: {
@@ -55,6 +54,7 @@ describe('google analytics tracking', () => {
   });
 
   beforeEach(() => {
+    getVersionInfo.mockReturnValue('{}');
     calls = ReactGA.testModeAPI.calls;
     calls.length = 0;
   });
@@ -207,6 +207,7 @@ describe('google analytics tracking', () => {
     });
 
     it('isDebugMode = true', () => {
+      // eslint-disable-next-line no-import-assign
       utils.logTrackingCalls = jest.fn();
       trackingDebug.init();
       trackingDebug.trackError();

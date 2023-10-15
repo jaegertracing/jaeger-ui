@@ -160,6 +160,12 @@ describe('filterSpans', () => {
     expect(filterSpans('tagValue2', spans)).toEqual(new Set([spanID2]));
   });
 
+  it("should return spans whose tags' kv.key=kv.value match a filter", () => {
+    expect(filterSpans('tagKey1=tagValue1', spans)).toEqual(new Set([spanID0]));
+    expect(filterSpans('tagKey0=tagValue0', spans)).toEqual(new Set([spanID0]));
+    expect(filterSpans('tagKey2=tagValue1', spans)).toEqual(new Set([spanID2]));
+  });
+
   it("should exclude span whose tags' kv.value or kv.key match a filter if the key matches an excludeKey", () => {
     expect(filterSpans('tagValue1 -tagKey2', spans)).toEqual(new Set([spanID0]));
     expect(filterSpans('tagValue1 -tagKey1', spans)).toEqual(new Set([spanID2]));
@@ -175,6 +181,12 @@ describe('filterSpans', () => {
     expect(filterSpans('logFieldValue1', spans)).toEqual(new Set([spanID0, spanID2]));
     expect(filterSpans('logFieldValue0', spans)).toEqual(new Set([spanID0]));
     expect(filterSpans('logFieldValue2', spans)).toEqual(new Set([spanID2]));
+  });
+
+  it('should return spans whose logs have a field whose kv.key=kv.value match a filter', () => {
+    expect(filterSpans('logFieldKey1=logFieldValue1', spans)).toEqual(new Set([spanID0]));
+    expect(filterSpans('logFieldKey0=logFieldValue0', spans)).toEqual(new Set([spanID0]));
+    expect(filterSpans('logFieldKey2=logFieldValue1', spans)).toEqual(new Set([spanID2]));
   });
 
   it('should exclude span whose logs have a field whose kv.value or kv.key match a filter if the key matches an excludeKey', () => {
@@ -197,6 +209,12 @@ describe('filterSpans', () => {
     expect(filterSpans('processTagValue1', spans)).toEqual(new Set([spanID0, spanID2]));
     expect(filterSpans('processTagValue0', spans)).toEqual(new Set([spanID0]));
     expect(filterSpans('processTagValue2', spans)).toEqual(new Set([spanID2]));
+  });
+
+  it("should return spans whose process.processTags' kv.keykv.value match a filter", () => {
+    expect(filterSpans('processTagKey1=processTagValue1', spans)).toEqual(new Set([spanID0]));
+    expect(filterSpans('processTagKey0=processTagValue0', spans)).toEqual(new Set([spanID0]));
+    expect(filterSpans('processTagKey2=processTagValue1', spans)).toEqual(new Set([spanID2]));
   });
 
   it("should exclude span whose process.processTags' kv.value or kv.key match a filter if the key matches an excludeKey", () => {

@@ -12,16 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as _ from 'lodash';
 import React, { Component } from 'react';
 import './index.css';
+import { Table } from 'antd';
+import { ColumnProps } from 'antd/es/table';
 import { Trace } from '../../../types/trace';
-import HeaderTable from './HeaderTable';
-import MainTableData from './MainTableData';
-import DetailTableData from './DetailTableData';
 import TraceStatisticsHeader from './TraceStatisticsHeader';
 import { ITableSpan } from './types';
-import sortTable from './sortTable';
 import { TNil } from '../../../types';
 import PopupSQL from './PopupSql';
 
@@ -47,67 +44,56 @@ const columnsArray: any[] = [
     title: 'Name',
     attribute: 'name',
     suffix: '',
-    isDecimal: false,
   },
   {
     title: 'Count',
     attribute: 'count',
     suffix: '',
-    isDecimal: false,
   },
   {
     title: 'Total',
     attribute: 'total',
     suffix: 'ms',
-    isDecimal: true,
   },
   {
     title: 'Avg',
     attribute: 'avg',
     suffix: 'ms',
-    isDecimal: true,
   },
   {
     title: 'Min',
     attribute: 'min',
     suffix: 'ms',
-    isDecimal: true,
   },
   {
     title: 'Max',
     attribute: 'max',
     suffix: 'ms',
-    isDecimal: true,
   },
   {
     title: 'ST Total',
     attribute: 'selfTotal',
     suffix: 'ms',
-    isDecimal: true,
   },
   {
     title: 'ST Avg',
     attribute: 'selfAvg',
     suffix: 'ms',
-    isDecimal: true,
   },
   {
     title: 'ST Min',
     attribute: 'selfMin',
     suffix: 'ms',
-    isDecimal: true,
   },
   {
     title: 'ST Max',
     attribute: 'selfMax',
     suffix: 'ms',
-    isDecimal: true,
   },
   {
     title: 'ST in Duration',
     attribute: 'percent',
     suffix: '%',
-    isDecimal: true,
   },
 ];
 
@@ -130,9 +116,7 @@ export default class TraceStatistics extends Component<Props, State> {
     };
 
     this.handler = this.handler.bind(this);
-    this.sortClick = this.sortClick.bind(this);
     this.togglePopup = this.togglePopup.bind(this);
-    this.clickColumn = this.clickColumn.bind(this);
 
     this.searchInTable(this.props.uiFindVertexKeys!, this.state.tableValue, this.props.uiFind);
   }
@@ -170,11 +154,7 @@ export default class TraceStatistics extends Component<Props, State> {
     this.setState(prevState => {
       return {
         ...prevState,
-        tableValue: this.searchInTable(
-          this.props.uiFindVertexKeys!,
-          this.sortTableWithOthers(tableValue, 1, false),
-          this.props.uiFind
-        ),
+        tableValue: this.searchInTable(this.props.uiFindVertexKeys!, tableValue, this.props.uiFind),
         sortIndex: 1,
         sortAsc: false,
         valueNameSelector1,
@@ -185,68 +165,7 @@ export default class TraceStatistics extends Component<Props, State> {
   }
 
   /**
-   * Searches for the others of the share and sorts afterwards.
-   */
-  sortTableWithOthers = (tableValue: ITableSpan[], sortIndex: number, sortAsc: boolean) => {
-    let rememberIndexNoDetail = -1;
-    let rememberIndex = -1;
-    let othersInDetail = false;
-    let sortArray = [];
-    const sortArray2 = [];
-    let i;
-
-    for (i = 0; i < tableValue.length; i++) {
-      if (tableValue[i].type !== 'undefined') {
-        sortArray.push(tableValue[i]);
-      } else if (!tableValue[i].isDetail) {
-        rememberIndexNoDetail = i;
-      } else {
-        othersInDetail = true;
-      }
-    }
-    sortArray = sortTable(sortArray, columnsArray[sortIndex].attribute, sortAsc);
-    if (rememberIndexNoDetail !== -1) {
-      sortArray.push(tableValue[rememberIndexNoDetail]);
-    }
-
-    if (!othersInDetail) {
-      return sortArray;
-    }
-
-    let parentElements = [];
-    for (i = 0; i < tableValue.length; i++) {
-      if (!tableValue[i].isDetail) {
-        parentElements.push(tableValue[i]);
-      }
-    }
-    parentElements = sortTable(parentElements, columnsArray[sortIndex].attribute, sortAsc);
-    for (i = 0; i < parentElements.length; i++) {
-      sortArray2.push(parentElements[i]);
-      let tempArray = [];
-      for (let j = 0; j < tableValue.length; j++) {
-        if (parentElements[i].name === tableValue[j].parentElement && tableValue[j].type !== 'undefined') {
-          tempArray.push(tableValue[j]);
-        } else if (
-          parentElements[i].name === tableValue[j].parentElement &&
-          tableValue[j].type === 'undefined'
-        ) {
-          rememberIndex = j;
-        }
-      }
-      tempArray = sortTable(tempArray, columnsArray[sortIndex].attribute, sortAsc);
-      if (rememberIndex !== -1) {
-        tempArray.push(tableValue[rememberIndex]);
-        rememberIndex = -1;
-      }
-      for (let j = 0; j < tempArray.length; j++) {
-        sortArray2.push(tempArray[j]);
-      }
-    }
-    return sortArray2;
-  };
-
-  /**
-   * Opern the popup button.
+   * Open the popup button.
    * @param popupContent
    */
   togglePopup(popupContent: string) {
@@ -258,71 +177,6 @@ export default class TraceStatistics extends Component<Props, State> {
         popupContent,
       };
     });
-  }
-
-  /**
-   * Change the sortButton an calls the sort function.
-   * @param index the index of the clicked column
-   */
-  sortClick(index: number) {
-    const { tableValue, sortIndex, sortAsc } = this.state;
-    if (sortIndex !== index) {
-      this.setState(prevState => {
-        return {
-          ...prevState,
-          sortIndex: index,
-          sortAsc: false,
-          tableValue: this.sortTableWithOthers(tableValue, index, false),
-        };
-      });
-    } else {
-      this.setState(prevState => {
-        return {
-          ...prevState,
-          sortAsc: !sortAsc,
-          tableValue: this.sortTableWithOthers(tableValue, index, !sortAsc),
-        };
-      });
-    }
-  }
-
-  /**
-   * Hides the child at the first click.
-   */
-  clickColumn(selectedSpan: string) {
-    if (this.state.valueNameSelector2 !== null) {
-      let add = true;
-      const actualTable = this.state.tableValue;
-      let newTable = [];
-      for (let i = 0; i < actualTable.length; i++) {
-        if (actualTable[i].parentElement === selectedSpan) {
-          add = false;
-        }
-        if (actualTable[i].parentElement !== selectedSpan) {
-          newTable.push(actualTable[i]);
-        }
-      }
-      if (add) {
-        newTable = [];
-        for (let i = 0; i < actualTable.length; i++) {
-          if (actualTable[i].name !== selectedSpan) {
-            newTable.push(actualTable[i]);
-          } else {
-            newTable.push(actualTable[i]);
-            for (let j = 0; j < this.state.wholeTable.length; j++) {
-              if (this.state.wholeTable[j].parentElement === selectedSpan) {
-                newTable.push(this.state.wholeTable[j]);
-              }
-            }
-          }
-        }
-        newTable = this.searchInTable(this.props.uiFindVertexKeys!, newTable, this.props.uiFind);
-        newTable = this.sortTableWithOthers(newTable, this.state.sortIndex, this.state.sortAsc);
-      }
-      this.setState({
-        tableValue: newTable,
-      });
-    }
   }
 
   /**
@@ -339,9 +193,9 @@ export default class TraceStatistics extends Component<Props, State> {
     const yellowSearchCollor = 'rgb(255,243,215)';
     const defaultGrayCollor = 'rgb(248,248,248)';
     for (let i = 0; i < allTableSpansChange.length; i++) {
-      if (!allTableSpansChange[i].isDetail && allTableSpansChange[i].type !== 'undefined') {
+      if (!allTableSpansChange[i].isDetail && allTableSpansChange[i].hasSubgroupValue) {
         allTableSpansChange[i].searchColor = 'transparent';
-      } else if (allTableSpansChange[i].type !== 'undefined') {
+      } else if (allTableSpansChange[i].hasSubgroupValue) {
         allTableSpansChange[i].searchColor = defaultGrayCollor;
       } else {
         allTableSpansChange[i].searchColor = defaultGrayCollor;
@@ -392,79 +246,88 @@ export default class TraceStatistics extends Component<Props, State> {
     return allTableSpansChange;
   };
 
-  renderTableData() {
-    return this.state.tableValue.map(oneSpan => {
-      const {
-        count,
-        total,
-        avg,
-        min,
-        max,
-        selfTotal,
-        selfAvg,
-        selfMin,
-        selfMax,
-        percent,
-        color,
-        searchColor,
-        colorToPercent,
-      } = oneSpan;
-      const values: any[] = [count, total, avg, min, max, selfTotal, selfAvg, selfMin, selfMax, percent];
-      const uid = _.uniqueId('id');
-      if (!oneSpan.isDetail) {
-        return (
-          <MainTableData
-            key={uid}
-            type={oneSpan.type}
-            name={oneSpan.name}
-            searchColor={searchColor}
-            values={values}
-            columnsArray={columnsArray}
-            togglePopup={this.togglePopup}
-            valueNameSelector1={this.state.valueNameSelector1}
-            valueNameSelector2={this.state.valueNameSelector2}
-            color={color}
-            clickColumn={this.clickColumn}
-            colorToPercent={colorToPercent}
-          />
-        );
-      }
-      return (
-        <DetailTableData
-          key={uid}
-          type={oneSpan.type}
-          name={oneSpan.name}
-          searchColor={searchColor}
-          values={values}
-          columnsArray={columnsArray}
-          color={color}
-          togglePopup={this.togglePopup}
-          valueNameSelector2={this.state.valueNameSelector2}
-          colorToPercent={colorToPercent}
-        />
-      );
-    });
-  }
-
-  renderTableHead() {
-    const { sortAsc, sortIndex } = this.state;
-    return (
-      <tr>
-        {columnsArray.map((element: any, index: number) => (
-          <HeaderTable
-            element={element}
-            key={element.title}
-            sortIndex={sortIndex}
-            index={index}
-            sortClick={this.sortClick}
-            sortAsc={sortAsc}
-          />
-        ))}
-      </tr>
-    );
-  }
-
   render() {
+    const onClickOption = (hasSubgroupValue: boolean, name: string) => {
+      if (this.state.valueNameSelector1 === 'sql.query' && hasSubgroupValue) this.togglePopup(name);
+    };
+
+    const sorterFunction = <T extends keyof ITableSpan>(field: T) => {
+      const sort = (a: ITableSpan, b: ITableSpan) => {
+        if (!a.hasSubgroupValue) {
+          return 0;
+        }
+        if (!b.hasSubgroupValue) {
+          return -1;
+        }
+        if (field === 'name') {
+          return (a[field] as string).localeCompare(b[field] as string);
+        }
+        return (a[field] as number) - (b[field] as number);
+      };
+      return sort;
+    };
+
+    const onCellFunction = (record: ITableSpan) => {
+      const backgroundColor =
+        this.props.uiFind && record.searchColor !== 'transparent'
+          ? record.searchColor
+          : record.colorToPercent;
+      return {
+        style: { background: backgroundColor, borderColor: backgroundColor },
+      };
+    };
+
+    const columns: ColumnProps<ITableSpan>[] = columnsArray.map(val => {
+      const renderFunction = (cell: string, row: ITableSpan) => {
+        if (val.attribute === 'name')
+          return (
+            <span
+              role="button"
+              onClick={() => onClickOption(row.hasSubgroupValue, row.name)}
+              style={{
+                borderLeft: `4px solid ${row.color || `transparent`}`,
+                padding: '7px 0px 7px 10px',
+                cursor: 'default',
+              }}
+            >
+              {cell}
+            </span>
+          );
+        return `${cell}${val.suffix}`;
+      };
+      const ele = {
+        title: val.title,
+        dataIndex: val.attribute,
+        sorter: sorterFunction(val.attribute),
+        render: renderFunction,
+        onCell: onCellFunction,
+      };
+      return val.attribute === 'count' ? { ...ele, defaultSortOrder: 'ascend' } : ele;
+    });
+    /**
+     * Pre-process the table data into groups and sub-groups
+     */
+    const groupAndSubgroupSpanData = (tableValue: ITableSpan[]): ITableSpan[] => {
+      const withDetail: ITableSpan[] = tableValue.filter((val: ITableSpan) => val.isDetail);
+      const withoutDetail: ITableSpan[] = tableValue.filter((val: ITableSpan) => !val.isDetail);
+      for (let i = 0; i < withoutDetail.length; i++) {
+        let newArr = withDetail.filter(value => value.parentElement === withoutDetail[i].name);
+        newArr = newArr.map((value, index) => {
+          const _key = {
+            key: `${i}-${index}`,
+          };
+          const value2 = { ...value, ..._key };
+          return value2;
+        });
+        const child = {
+          key: i.toString(),
+          children: newArr,
+        };
+        withoutDetail[i] = { ...withoutDetail[i], ...child };
+      }
+      return withoutDetail;
+    };
+    const groupedAndSubgroupedSpanData: ITableSpan[] = groupAndSubgroupSpanData(this.state.tableValue);
     return (
       <div>
         <h3 className="title--TraceStatistics"> Trace Statistics</h3>
@@ -479,12 +342,23 @@ export default class TraceStatistics extends Component<Props, State> {
         {this.state.showPopup ? (
           <PopupSQL closePopup={this.togglePopup} popupContent={this.state.popupContent} />
         ) : null}
-        <table className="test1893">
-          <tbody className="DetailTraceTableTbody--TraceStatistics">
-            {this.renderTableHead()}
-            {this.renderTableData()}
-          </tbody>
-        </table>
+        <Table
+          className="span-table span-view-table"
+          columns={columns}
+          dataSource={groupedAndSubgroupedSpanData}
+          pagination={{
+            total: groupedAndSubgroupedSpanData.length,
+            pageSizeOptions: ['10', '20', '50', '100'],
+            showSizeChanger: true,
+            showQuickJumper: true,
+          }}
+          rowClassName={row =>
+            !row.hasSubgroupValue ? 'undefClass--TraceStatistics' : 'MainTableData--TraceStatistics'
+          }
+          key={groupedAndSubgroupedSpanData.length}
+          defaultExpandAllRows
+          sortDirections={['ascend', 'descend', 'ascend']}
+        />
       </div>
     );
   }

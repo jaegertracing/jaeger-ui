@@ -25,25 +25,14 @@ exports[`DetailTable render renders as expected 1`] = `
     className="DetailTableDropdown--Footer"
   >
     <Tooltip
-      arrowPointAtCenter={false}
-      autoAdjustOverflow={true}
-      mouseEnterDelay={0.1}
-      mouseLeaveDelay={0.1}
       overlayClassName="DetailTableDropdown--Tooltip"
-      placement="top"
-      prefixCls="ant-tooltip"
       title="Remove filter from this column"
-      transitionName="zoom-big-fast"
     >
       <Button
-        block={false}
         className="DetailTableDropdown--Btn Clear"
-        ghost={false}
-        loading={false}
         onClick={[MockFunction]}
-        prefixCls="ant-btn"
       >
-        <FaTrash
+        <IoTrash
           size={18}
         />
         Clear Filter
@@ -53,63 +42,39 @@ exports[`DetailTable render renders as expected 1`] = `
       className="DetailTableDropdown--Footer--CancelConfirm"
     >
       <Tooltip
-        arrowPointAtCenter={false}
-        autoAdjustOverflow={true}
-        mouseEnterDelay={0.1}
-        mouseLeaveDelay={0.1}
         overlayClassName="DetailTableDropdown--Tooltip"
-        placement="top"
-        prefixCls="ant-tooltip"
         title="Cancel changes to this column's filter"
-        transitionName="zoom-big-fast"
       >
         <Button
-          block={false}
           className="DetailTableDropdown--Btn Cancel"
-          ghost={false}
-          loading={false}
           onClick={[Function]}
-          prefixCls="ant-btn"
         >
-          <TiCancel
+          <IoBan
             size={20}
           />
           Cancel
         </Button>
       </Tooltip>
       <Tooltip
-        arrowPointAtCenter={false}
-        autoAdjustOverflow={true}
-        mouseEnterDelay={0.1}
-        mouseLeaveDelay={0.1}
         overlayClassName="DetailTableDropdown--Tooltip"
-        placement="top"
-        prefixCls="ant-tooltip"
         title={
           <div
             className="DetailTableDropdown--Tooltip--Body"
           >
             <span>
-              Apply changes to this column
-              '
-              s filter
+              Apply changes to this column's filter
             </span>
             <span>
               Same effect as clicking outside the dropdown
             </span>
           </div>
         }
-        transitionName="zoom-big-fast"
       >
         <Button
-          block={false}
           className="DetailTableDropdown--Btn Apply"
-          ghost={false}
-          loading={false}
           onClick={[MockFunction]}
-          prefixCls="ant-btn"
         >
-          <FaCheck
+          <IoCheckmark
             size={18}
           />
           Apply

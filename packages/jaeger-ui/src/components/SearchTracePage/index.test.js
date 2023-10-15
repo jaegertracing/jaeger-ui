@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { MemoryRouter } from 'react-router-dom';
+import { BrowserRouter, MemoryRouter } from 'react-router-dom';
 
 jest.mock('redux-form', () => {
   function reduxForm() {
@@ -29,9 +29,10 @@ jest.mock('store');
 
 /* eslint-disable import/first */
 import React from 'react';
-import { shallow, mount } from 'enzyme';
+import { mount } from 'enzyme';
 import store from 'store';
 
+import { Provider } from 'react-redux';
 import { SearchTracePageImpl as SearchTracePage, mapStateToProps } from './index';
 import SearchForm from './SearchForm';
 import LoadingIndicator from '../common/LoadingIndicator';
@@ -39,22 +40,41 @@ import { fetchedState } from '../../constants';
 import traceGenerator from '../../demo/trace-generators';
 import { MOST_RECENT } from '../../model/order-by';
 import transformTraceData from '../../model/transform-trace-data';
+import { store as globalStore } from '../../utils/configure-store';
+
+const AllProvider = ({ children }) => (
+  <BrowserRouter>
+    <Provider store={globalStore}>
+      <MemoryRouter>{children}</MemoryRouter>
+    </Provider>
+  </BrowserRouter>
+);
 
 describe('<SearchTracePage>', () => {
   const queryOfResults = {};
   let wrapper;
   let traceResults;
+  let traceResultsToDownload;
   let props;
 
   beforeEach(() => {
-    traceResults = [{ traceID: 'a', spans: [], processes: {} }, { traceID: 'b', spans: [], processes: {} }];
+    traceResults = [
+      { traceID: 'a', spans: [], processes: {} },
+      { traceID: 'b', spans: [], processes: {} },
+    ];
+    traceResultsToDownload = [
+      { traceID: 'a', spans: [], processes: {} },
+      { traceID: 'b', spans: [], processes: {} },
+    ];
     props = {
       queryOfResults,
       traceResults,
+      traceResultsToDownload,
       diffCohort: [],
       isHomepage: false,
       loadingServices: false,
       loadingTraces: false,
+      disableFileUploadControl: false,
       maxTraceDuration: 100,
       numberOfTraceResults: traceResults.length,
       services: null,
@@ -65,7 +85,7 @@ describe('<SearchTracePage>', () => {
       fetchServices: jest.fn(),
       searchTraces: jest.fn(),
     };
-    wrapper = shallow(<SearchTracePage {...props} />);
+    wrapper = mount(<SearchTracePage {...props} />, { wrappingComponent: AllProvider });
   });
 
   it('searches for traces if `service` or `traceID` are in the query string', () => {
@@ -79,11 +99,28 @@ describe('<SearchTracePage>', () => {
     store.get = jest.fn(() => ({ service: 'svc-b' }));
     wrapper = mount(
       <MemoryRouter>
+        <SearchTracePage {...{ ...props, urlQueryParams: {} }} />
+      </MemoryRouter>
+    );
+    expect(props.fetchServices.mock.calls.length).toBe(1);
+    expect(props.fetchServiceOperations.mock.calls.length).toBe(1);
+    expect(props.fetchServiceOperations.mock.calls[0][0]).toBe('svc-b');
+    store.get = oldFn;
+  });
+
+  it('loads the operations linked to the URL service parameter if present', () => {
+    props.fetchServices.mockClear();
+    props.fetchServiceOperations.mockClear();
+    const oldFn = store.get;
+    store.get = jest.fn(() => ({ service: 'svc-b' }));
+    wrapper = mount(
+      <MemoryRouter>
         <SearchTracePage {...props} />
       </MemoryRouter>
     );
     expect(props.fetchServices.mock.calls.length).toBe(1);
     expect(props.fetchServiceOperations.mock.calls.length).toBe(1);
+    expect(props.fetchServiceOperations.mock.calls[0][0]).toBe('svc-a');
     store.get = oldFn;
   });
 
@@ -97,11 +134,7 @@ describe('<SearchTracePage>', () => {
         <SearchTracePage {...props} history={historyMock} query={query} />
       </MemoryRouter>
     );
-    wrapper
-      .find(SearchTracePage)
-      .first()
-      .instance()
-      .goToTrace(traceID);
+    wrapper.find(SearchTracePage).first().instance().goToTrace(traceID);
     expect(historyPush.mock.calls.length).toBe(1);
     expect(historyPush.mock.calls[0][0]).toEqual({
       pathname: `/trace/${traceID}`,
@@ -131,14 +164,23 @@ describe('<SearchTracePage>', () => {
     expect(wrapper.find('.js-test-logo').length).toBe(1);
   });
 
-  it('hide SearchForm if is embed', () => {
+  it('hides SearchForm if is embed', () => {
     wrapper.setProps({ embed: true });
     expect(wrapper.find(SearchForm).length).toBe(0);
   });
 
-  it('hide logo if is embed', () => {
+  it('hides logo if is embed', () => {
     wrapper.setProps({ embed: true });
     expect(wrapper.find('.js-test-logo').length).toBe(0);
+  });
+
+  it('shows Upload tab by default', () => {
+    expect(wrapper.find({ 'data-node-key': 'fileLoader' }).length).toBe(1);
+  });
+
+  it('hides Upload tab if it is disabled via config', () => {
+    wrapper.setProps({ disableFileUploadControl: true });
+    expect(wrapper.find({ 'data-node-key': 'fileLoader' }).length).toBe(0);
   });
 });
 
@@ -153,6 +195,7 @@ describe('mapStateToProps()', () => {
       traces: {
         [trace.traceID]: { id: trace.traceID, data: trace, state: fetchedState.DONE },
       },
+      rawTraces: [trace],
     };
     const stateServices = {
       loading: false,
@@ -167,24 +210,23 @@ describe('mapStateToProps()', () => {
         cohort: [trace.traceID],
       },
       services: stateServices,
+      config: {
+        disableFileUploadControl: false,
+      },
     };
 
-    const {
-      maxTraceDuration,
-      traceResults,
-      diffCohort,
-      numberOfTraceResults,
-      location,
-      ...rest
-    } = mapStateToProps(state);
+    const { maxTraceDuration, traceResults, traceResultsToDownload, diffCohort, ...rest } =
+      mapStateToProps(state);
     expect(traceResults).toHaveLength(stateTrace.search.results.length);
     expect(traceResults[0].traceID).toBe(trace.traceID);
+    expect(traceResultsToDownload[0].traceID).toBe(trace.traceID);
     expect(maxTraceDuration).toBe(trace.duration);
     expect(diffCohort).toHaveLength(state.traceDiff.cohort.length);
     expect(diffCohort[0].id).toBe(trace.traceID);
     expect(diffCohort[0].data.traceID).toBe(trace.traceID);
 
     expect(rest).toEqual({
+      disableFileUploadControl: false,
       embedded: undefined,
       queryOfResults: undefined,
       isHomepage: true,

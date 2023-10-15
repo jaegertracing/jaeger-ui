@@ -4,25 +4,28 @@ exports[`JaegerUIApp does not explode 1`] = `
 <Provider
   store={
     Object {
+      "@@observable": [Function],
       "dispatch": [Function],
       "getState": [Function],
       "replaceReducer": [Function],
       "subscribe": [Function],
-      Symbol(observable): [Function],
     }
   }
 >
-  <ConnectedRouter
+  <HistoryProvider
     history={
       Object {
         "action": "POP",
+        "back": [Function],
         "block": [Function],
         "createHref": [Function],
+        "forward": [Function],
         "go": [Function],
         "goBack": [Function],
         "goForward": [Function],
         "length": 1,
         "listen": [Function],
+        "listenObject": false,
         "location": Object {
           "hash": "",
           "pathname": "/",
@@ -34,52 +37,98 @@ exports[`JaegerUIApp does not explode 1`] = `
       }
     }
   >
-    <withRouter(Connect(PageImpl))>
-      <Switch>
-        <Route
-          component={[Function]}
-          path="/search"
-        />
-        <Route
-          component={[Function]}
-          path="/trace/:a?\\\\.\\\\.\\\\.:b?"
-        />
-        <Route
-          component={[Function]}
-          path="/trace/:id"
-        />
-        <Route
-          component={[Function]}
-          path="/dependencies"
-        />
-        <Route
-          component={[Function]}
-          path="/deep-dependencies"
-        />
-        <Route
-          component={[Function]}
-          path="/quality-metrics"
-        />
-        <Redirect
-          exact={true}
-          path="/"
-          to="/search"
-        />
-        <Redirect
-          exact={true}
-          path=""
-          to="/search"
-        />
-        <Redirect
-          exact={true}
-          path="/"
-          to="/search"
-        />
-        <Route
-          component={[Function]}
-        />
-      </Switch>
-    </withRouter(Connect(PageImpl))>
-  </ConnectedRouter>
+    <Router
+      history={
+        Object {
+          "action": "POP",
+          "back": [Function],
+          "block": [Function],
+          "createHref": [Function],
+          "forward": [Function],
+          "go": [Function],
+          "goBack": [Function],
+          "goForward": [Function],
+          "length": 1,
+          "listen": [Function],
+          "listenObject": false,
+          "location": Object {
+            "hash": "",
+            "pathname": "/",
+            "search": "",
+            "state": undefined,
+          },
+          "push": [Function],
+          "replace": [Function],
+        }
+      }
+    >
+      <Connect(WithRouteProps)>
+        <Switch>
+          <Route
+            path="/search"
+          >
+            <WithRouteProps />
+          </Route>
+          <Route
+            path="/trace/:a?\\\\.\\\\.\\\\.:b?"
+          >
+            <WithRouteProps />
+          </Route>
+          <Route
+            path="/trace/:id"
+          >
+            <WithRouteProps />
+          </Route>
+          <Route
+            path="/dependencies"
+          >
+            <WithRouteProps />
+          </Route>
+          <Route
+            path="/deep-dependencies"
+          >
+            <WithRouteProps />
+          </Route>
+          <Route
+            path="/quality-metrics"
+          >
+            <WithRouteProps />
+          </Route>
+          <Route
+            path="/monitor"
+          >
+            <MonitorATMPage />
+          </Route>
+          <Route
+            exact={true}
+            path="/"
+          >
+            <Redirect
+              to="/search"
+            />
+          </Route>
+          <Route
+            exact={true}
+            path=""
+          >
+            <Redirect
+              to="/search"
+            />
+          </Route>
+          <Route
+            exact={true}
+            path="/"
+          >
+            <Redirect
+              to="/search"
+            />
+          </Route>
+          <Route>
+            <NotFound />
+          </Route>
+        </Switch>
+      </Connect(WithRouteProps)>
+    </Router>
+  </HistoryProvider>
 </Provider>
 `;

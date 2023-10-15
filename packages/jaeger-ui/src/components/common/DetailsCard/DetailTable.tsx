@@ -13,8 +13,8 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Icon, Table } from 'antd';
-import FaFilter from 'react-icons/lib/fa/filter.js';
+import { Table } from 'antd';
+import { IoFunnel, IoFunnelOutline } from 'react-icons/io5';
 import _isEmpty from 'lodash/isEmpty';
 
 import ExamplesLink, { TExample } from '../ExamplesLink';
@@ -23,25 +23,24 @@ import DetailTableDropdown from './DetailTableDropdown';
 import { TColumnDef, TColumnDefs, TFilterDropdownProps, TRow, TStyledValue } from './types';
 
 // exported for tests
-export const _makeFilterDropdown = (dataIndex: string, options: Set<string>) => (
-  props: TFilterDropdownProps
-) => {
-  return <DetailTableDropdown {...props} key={dataIndex} options={options} />;
-};
+export const _makeFilterDropdown =
+  (dataIndex: string, options: Set<string>) => (props: TFilterDropdownProps) => {
+    return <DetailTableDropdown {...props} key={dataIndex} options={options} />;
+  };
 
 // exported for tests
 export const _onCell = (dataIndex: string) => (row: TRow) => {
   const cellData = row[dataIndex];
-  if (!cellData || typeof cellData !== 'object' || Array.isArray(cellData)) return null;
+  if (!cellData || typeof cellData !== 'object' || Array.isArray(cellData)) return {};
   const { styling } = cellData;
-  if (_isEmpty(styling)) return null;
+  if (_isEmpty(styling)) return {};
   return {
     style: styling,
   };
 };
 
 // exported for tests
-export const _onFilter = (dataIndex: string) => (value: string, row: TRow) => {
+export const _onFilter = (dataIndex: string) => (value: string | number | boolean, row: TRow) => {
   const data = row[dataIndex];
   if (typeof data === 'object' && !Array.isArray(data) && typeof data.value === 'string') {
     return data.value === value;
@@ -84,7 +83,7 @@ export const _makeColumns = ({ defs, rows }: { defs: TColumnDefs; rows: TRow[] }
   defs.map((def: TColumnDef | string) => {
     let dataIndex: string;
     let key: string;
-    let sortable: boolean = true;
+    let sortable = true;
     let style: React.CSSProperties | undefined;
     let title: string;
     if (typeof def === 'string') {
@@ -113,8 +112,8 @@ export const _makeColumns = ({ defs, rows }: { defs: TColumnDefs; rows: TRow[] }
       title,
       filterDropdown: Boolean(options.size) && _makeFilterDropdown(dataIndex, options),
       filterIcon: (filtered: boolean) => {
-        if (filtered) return <FaFilter />;
-        return <Icon type="filter" />;
+        if (filtered) return <IoFunnel />;
+        return <IoFunnelOutline />;
       },
       onCell: _onCell(dataIndex),
       onHeaderCell: () => ({
@@ -128,21 +127,21 @@ export const _makeColumns = ({ defs, rows }: { defs: TColumnDefs; rows: TRow[] }
 
 // exported for tests
 export const _rowKey = (row: TRow) =>
-  JSON.stringify(row, function replacer(
-    key: string,
-    value: TRow | undefined | string | number | TStyledValue | TExample[]
-  ) {
-    function isRow(v: typeof value): v is TRow {
-      return v === row;
+  JSON.stringify(
+    row,
+    function replacer(key: string, value: TRow | undefined | string | number | TStyledValue | TExample[]) {
+      function isRow(v: typeof value): v is TRow {
+        return v === row;
+      }
+      if (isRow(value)) return value;
+      if (Array.isArray(value)) return JSON.stringify(value);
+      if (typeof value === 'object') {
+        if (typeof value.value === 'string') return JSON.stringify(value);
+        return value.value.key || 'Unknown';
+      }
+      return value;
     }
-    if (isRow(value)) return value;
-    if (Array.isArray(value)) return JSON.stringify(value);
-    if (typeof value === 'object') {
-      if (typeof value.value === 'string') return JSON.stringify(value);
-      return value.value.key || 'Unknown';
-    }
-    return value;
-  });
+  );
 
 export default function DetailTable({
   columnDefs: _columnDefs,

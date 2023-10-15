@@ -13,10 +13,7 @@
 // limitations under the License.
 
 import * as React from 'react';
-import IoAlert from 'react-icons/lib/io/alert';
-import IoArrowRightA from 'react-icons/lib/io/arrow-right-a';
-import IoNetwork from 'react-icons/lib/io/network';
-import MdFileUpload from 'react-icons/lib/md/file-upload';
+import { IoAlert, IoGitNetwork, IoCloudUploadOutline, IoArrowForward } from 'react-icons/io5';
 import ReferencesButton from './ReferencesButton';
 import TimelineRow from './TimelineRow';
 import { formatDuration, ViewedBoundsFunctionType } from './utils';
@@ -25,13 +22,14 @@ import SpanBar from './SpanBar';
 import Ticks from './Ticks';
 
 import { TNil } from '../../../types';
-import { Span } from '../../../types/trace';
+import { criticalPathSection, Span } from '../../../types/trace';
 
 import './SpanBarRow.css';
 
 type SpanBarRowProps = {
   className?: string;
   color: string;
+  criticalPath: criticalPathSection[];
   columnDivision: number;
   isChildrenExpanded: boolean;
   isDetailExpanded: boolean;
@@ -87,6 +85,7 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
     const {
       className,
       color,
+      criticalPath,
       columnDivision,
       isChildrenExpanded,
       isDetailExpanded,
@@ -153,14 +152,14 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
                 {serviceName}{' '}
                 {rpc && (
                   <span>
-                    <IoArrowRightA />{' '}
+                    <IoArrowForward className="SpanBarRow--arrowForwardIcon" />{' '}
                     <i className="SpanBarRow--rpcColorMarker" style={{ background: rpc.color }} />
                     {rpc.serviceName}
                   </span>
                 )}
                 {noInstrumentedServer && (
                   <span>
-                    <IoArrowRightA />{' '}
+                    <IoArrowForward className="SpanBarRow--arrowForwardIcon" />{' '}
                     <i
                       className="SpanBarRow--rpcColorMarker"
                       style={{ background: noInstrumentedServer.color }}
@@ -177,7 +176,7 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
                 tooltipText="Contains multiple references"
                 focusSpan={focusSpan}
               >
-                <IoNetwork />
+                <IoGitNetwork />
               </ReferencesButton>
             )}
             {span.subsidiarilyReferencedBy && span.subsidiarilyReferencedBy.length > 0 && (
@@ -188,7 +187,7 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
                 }`}
                 focusSpan={focusSpan}
               >
-                <MdFileUpload />
+                <IoCloudUploadOutline />
               </ReferencesButton>
             )}
           </div>
@@ -201,6 +200,7 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
         >
           <Ticks numTicks={numTicks} />
           <SpanBar
+            criticalPath={criticalPath}
             rpc={rpc}
             viewStart={viewStart}
             viewEnd={viewEnd}

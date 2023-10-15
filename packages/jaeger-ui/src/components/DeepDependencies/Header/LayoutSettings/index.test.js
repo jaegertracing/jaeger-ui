@@ -76,25 +76,15 @@ describe('LayoutSettings', () => {
   });
 
   it('renders showOperations checkbox', () => {
-    expect(
-      getWrapper()
-        .find(Checkbox)
-        .prop('checked')
-    ).toBe(props.showOperations);
+    expect(getWrapper().find(Checkbox).prop('checked')).toBe(props.showOperations);
 
     const showOperations = !props.showOperations;
-    expect(
-      getWrapper({ showOperations })
-        .find(Checkbox)
-        .prop('checked')
-    ).toBe(showOperations);
+    expect(getWrapper({ showOperations }).find(Checkbox).prop('checked')).toBe(showOperations);
   });
 
   it('toggles showOperation and tracks its toggle', () => {
     const checked = !props.showOperations;
-    getWrapper()
-      .find(Checkbox)
-      .simulate('change', { target: { checked } });
+    getWrapper().find(Checkbox).simulate('change', { target: { checked } });
 
     expect(props.toggleShowOperations).toHaveBeenCalledWith(checked);
     expect(trackToggleShowOpSpy).toHaveBeenCalledWith(checked);

@@ -22,7 +22,8 @@ export default function readJsonFile(fileList: { file: File }) {
       }
       try {
         resolve(JSON.parse(reader.result));
-      } catch (error) {
+        /* eslint-disable @typescript-eslint/no-explicit-any */
+      } catch (error: any) {
         reject(new Error(`Error parsing JSON: ${error.message}`));
       }
     };
@@ -37,8 +38,7 @@ export default function readJsonFile(fileList: { file: File }) {
     };
     try {
       reader.readAsText(fileList.file);
-    } catch (error) {
-      // eslint-disable-next-line no-console
+    } catch (error: any) {
       reject(new Error(`Error reading the JSON file: ${error.message}`));
     }
   });

@@ -201,12 +201,15 @@ function calculateContent(trace: Trace, span: Span, allSpans: Span[], resultValu
                 overlayWithout[i].relativeStartTime +
                 overlayWithout[i].duration -
                 earliestLongerAsParent.relativeStartTime;
+              if (overlayWithout[i].duration < 0) {
+                overlayWithout[i].duration = 0;
+              }
             }
           }
 
           tempSelf = onlyOverlay(overlayWithout, allChildrenWithout, tempSelf, span);
           const diff = span.relativeStartTime + span.duration - earliestLongerAsParent.relativeStartTime;
-          tempSelf -= diff;
+          tempSelf = Math.max(0, tempSelf - diff);
         }
       } else if (longerAsParent) {
         // span is longer as Parent
@@ -331,7 +334,7 @@ function valueFirstDropdown(selectedTagKey: string, trace: Trace) {
     resultValue.selfAvg = resultValue.selfTotal / resultValue.count;
     resultValue.avg = resultValue.total / resultValue.count;
     let tableSpan = {
-      type: 'defined',
+      hasSubgroupValue: true,
       name: allDiffColumnValues[i],
       count: resultValue.count,
       total: resultValue.total,
@@ -389,7 +392,7 @@ function valueFirstDropdown(selectedTagKey: string, trace: Trace) {
       resultValue.selfAvg = resultValue.selfTotal / resultValue.count;
       resultValue.avg = resultValue.total / resultValue.count;
       let tableSpanOTHERS = {
-        type: 'undefined',
+        hasSubgroupValue: false,
         name: `Without Tag: ${selectedTagKey}`,
         count: resultValue.count,
         total: resultValue.total,
@@ -461,7 +464,7 @@ function buildDetail(
     resultValue.selfAvg = resultValue.selfTotal / resultValue.count;
     resultValue.avg = resultValue.total / resultValue.count;
     let buildOneColumnValue = {
-      type: 'defined',
+      hasSubgroupValue: true,
       name: diffNamesA[j],
       count: resultValue.count,
       total: resultValue.total,
@@ -528,7 +531,7 @@ function generateDetailRest(allColumnValues: ITableSpan[], selectedTagKeySecond:
       resultValue.selfAvg = resultValue.selfTotal / resultValue.count;
       if (resultValue.count !== 0) {
         let buildOneColumnValue = {
-          type: 'undefined',
+          hasSubgroupValue: false,
           name: `Without Tag: ${selectedTagKeySecond}`,
           count: resultValue.count,
           total: resultValue.total,

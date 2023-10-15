@@ -16,7 +16,7 @@ import _get from 'lodash/get';
 import memoizeOne from 'memoize-one';
 
 import processDeprecation from './process-deprecation';
-import defaultConfig, { deprecations } from '../../constants/default-config';
+import defaultConfig, { deprecations, mergeFields } from '../../constants/default-config';
 
 let haveWarnedFactoryFn = false;
 let haveWarnedDeprecations = false;
@@ -45,8 +45,8 @@ const getConfig = memoizeOne(function getConfig() {
     haveWarnedDeprecations = true;
   }
   const rv = { ...defaultConfig, ...embedded };
-  // __mergeFields config values should be merged instead of fully replaced
-  const keys = defaultConfig.__mergeFields || [];
+  // mergeFields config values should be merged instead of fully replaced
+  const keys = mergeFields;
   for (let i = 0; i < keys.length; i++) {
     const key = keys[i];
     if (typeof embedded[key] === 'object' && embedded[key] !== null) {
