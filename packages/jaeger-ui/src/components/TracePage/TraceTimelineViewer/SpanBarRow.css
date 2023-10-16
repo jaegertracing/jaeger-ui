@@ -194,3 +194,7 @@ limitations under the License.
   width: 1em;
   vertical-align: middle;
 }
+
+.SpanBarRow--arrowForwardIcon {
+  vertical-align: middle;
+}

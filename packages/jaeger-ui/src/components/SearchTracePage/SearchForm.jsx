@@ -14,13 +14,11 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Form } from '@ant-design/compatible';
-import '@ant-design/compatible/assets/index.css';
-import { Input, Button, Popover, Select, Row, Col } from 'antd';
+import { Input, Button, Popover, Select, Row, Col, Form } from 'antd';
 import _get from 'lodash/get';
 import logfmtParser from 'logfmt/lib/logfmt_parser';
 import { stringify as logfmtStringify } from 'logfmt/lib/stringify';
-import moment from 'moment';
+import dayjs from 'dayjs';
 import memoizeOne from 'memoize-one';
 import PropTypes from 'prop-types';
 import queryString from 'query-string';
@@ -37,21 +35,22 @@ import { formatDate, formatTime } from '../../utils/date';
 import reduxFormFieldAdapter from '../../utils/redux-form-field-adapter';
 import { DEFAULT_OPERATION, DEFAULT_LIMIT, DEFAULT_LOOKBACK } from '../../constants/search-form';
 import { getConfigValue } from '../../utils/config/get-config';
+import SearchableSelect from '../common/SearchableSelect';
 import './SearchForm.css';
 
 const FormItem = Form.Item;
 const Option = Select.Option;
 
 const AdaptedInput = reduxFormFieldAdapter({ AntInputComponent: Input });
-const AdaptedSelect = reduxFormFieldAdapter({ AntInputComponent: Select });
+const AdaptedSelect = reduxFormFieldAdapter({ AntInputComponent: SearchableSelect });
 const ValidatedAdaptedInput = reduxFormFieldAdapter({ AntInputComponent: Input, isValidatedInput: true });
 
 export function getUnixTimeStampInMSFromForm({ startDate, startDateTime, endDate, endDateTime }) {
   const start = `${startDate} ${startDateTime}`;
   const end = `${endDate} ${endDateTime}`;
   return {
-    start: `${moment(start, 'YYYY-MM-DD HH:mm').valueOf()}000`,
-    end: `${moment(end, 'YYYY-MM-DD HH:mm').valueOf()}000`,
+    start: `${dayjs(start, 'YYYY-MM-DD HH:mm').valueOf()}000`,
+    end: `${dayjs(end, 'YYYY-MM-DD HH:mm').valueOf()}000`,
   };
 }
 
@@ -73,7 +72,7 @@ export function convTagsLogfmt(tags) {
 
 export function lookbackToTimestamp(lookback, from) {
   const unit = lookback.substr(-1);
-  return moment(from).subtract(parseInt(lookback, 10), unit).valueOf() * 1000;
+  return dayjs(from).subtract(parseInt(lookback, 10), unit).valueOf() * 1000;
 }
 
 const lookbackOptions = [
@@ -163,7 +162,7 @@ export const optionsWithinMaxLookback = memoizeOne(maxLookback => {
   }
   return options.map(({ label, value }) => (
     <Option key={value} value={value}>
-      Last {label}
+      {`Last ${label}`}
     </Option>
   ));
 });
@@ -276,7 +275,7 @@ export class SearchFormImpl extends React.PureComponent {
     const tz = selectedLookback === 'custom' ? new Date().toTimeString().replace(/^.*?GMT/, 'UTC') : null;
 
     return (
-      <Form layout="vertical" onSubmit={handleSubmit}>
+      <Form layout="vertical" onSubmitCapture={handleSubmit}>
         <FormItem
           label={
             <span>
@@ -342,6 +341,17 @@ export class SearchFormImpl extends React.PureComponent {
                     <li>
                       Values containing whitespace or equal-sign &apos=&apos should be enclosed in quotes
                     </li>
+                    <li>
+                      Elasticsearch/OpenSearch storage supports regexp query, therefore{' '}
+                      <a
+                        href="https://lucene.apache.org/core/9_0_0/core/org/apache/lucene/util/automaton/RegExp.html"
+                        rel="noopener noreferrer"
+                        target="_blank"
+                      >
+                        reserved characters
+                      </a>{' '}
+                      need to be escaped for exact match queries.
+                    </li>
                   </ul>,
                 ]}
                 content={
@@ -366,7 +376,14 @@ export class SearchFormImpl extends React.PureComponent {
         </FormItem>
 
         <FormItem label="Lookback">
-          <Field name="lookback" component={AdaptedSelect} props={{ disabled, defaultValue: '1h' }}>
+          <Field
+            name="lookback"
+            component={AdaptedSelect}
+            props={{
+              disabled,
+              defaultValue: '1h',
+            }}
+          >
             {optionsWithinMaxLookback(searchMaxLookback)}
             <Option value="custom">Custom Time Range</Option>
           </Field>
@@ -538,7 +555,7 @@ export function mapStateToProps(state) {
     traceID: traceIDParams,
   } = queryString.parse(state.router.location.search);
 
-  const nowInMicroseconds = moment().valueOf() * 1000;
+  const nowInMicroseconds = dayjs().valueOf() * 1000;
   const today = formatDate(nowInMicroseconds);
   const currentTime = formatTime(nowInMicroseconds);
   const lastSearch = store.get('lastSearch');

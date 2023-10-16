@@ -29,8 +29,7 @@ import { formatDependenciesAsNodesAndLinks } from '../../selectors/dependencies'
 import { getConfigValue } from '../../utils/config/get-config';
 
 import './index.css';
-
-const TabPane = Tabs.TabPane;
+import withRouteProps from '../../utils/withRouteProps';
 
 // export for tests
 export const GRAPH_TYPES = {
@@ -91,6 +90,19 @@ export class DependencyGraphPageImpl extends Component {
     if (dependencies.length <= dagMaxNumServices) {
       GRAPH_TYPE_OPTIONS.push(GRAPH_TYPES.DAG);
     }
+    const tabItems = [];
+    GRAPH_TYPE_OPTIONS.forEach(opt => {
+      tabItems.push({
+        label: opt.name,
+        key: opt.type,
+        children: (
+          <div className="DependencyGraph--graphWrapper">
+            {opt.type === 'FORCE_DIRECTED' && <DependencyForceGraph nodes={nodes} links={links} />}
+            {opt.type === 'DAG' && <DAG serviceCalls={dependencies} />}
+          </div>
+        ),
+      });
+    });
 
     return (
       <Tabs
@@ -98,16 +110,8 @@ export class DependencyGraphPageImpl extends Component {
         activeKey={graphType}
         type="card"
         tabBarStyle={{ background: '#f5f5f5', padding: '1rem 1rem 0 1rem' }}
-      >
-        {GRAPH_TYPE_OPTIONS.map(opt => (
-          <TabPane className="ub-relelative" tab={opt.name} key={opt.type}>
-            <div className="DependencyGraph--graphWrapper">
-              {opt.type === 'FORCE_DIRECTED' && <DependencyForceGraph nodes={nodes} links={links} />}
-              {opt.type === 'DAG' && <DAG serviceCalls={dependencies} />}
-            </div>
-          </TabPane>
-        ))}
-      </Tabs>
+        items={tabItems}
+      />
     );
   }
 }
@@ -131,4 +135,4 @@ export function mapDispatchToProps(dispatch) {
   return { fetchDependencies };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(DependencyGraphPageImpl);
+export default withRouteProps(connect(mapStateToProps, mapDispatchToProps)(DependencyGraphPageImpl));

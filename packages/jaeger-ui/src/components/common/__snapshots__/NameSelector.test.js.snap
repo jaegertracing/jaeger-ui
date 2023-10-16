@@ -16,11 +16,11 @@ exports[`<NameSelector> clear renders with clear icon when not required and with
       value="foo"
     />
   }
-  onVisibleChange={[Function]}
+  onOpenChange={[Function]}
+  open={false}
   overlayClassName="NameSelector--overlay u-rm-popover-content-padding"
   placement="bottomLeft"
   trigger="click"
-  visible={false}
 >
   <h2
     className="NameSelector"
@@ -39,7 +39,7 @@ exports[`<NameSelector> clear renders with clear icon when not required and with
     <IoChevronDown
       className="NameSelector--chevron"
     />
-    <ForwardRef(CloseOutlined)
+    <IoClose
       className="NameSelector--clearIcon"
       onClick={[Function]}
     />
@@ -63,11 +63,11 @@ exports[`<NameSelector> renders with is-invalid when required and without a valu
       value={null}
     />
   }
-  onVisibleChange={[Function]}
+  onOpenChange={[Function]}
+  open={false}
   overlayClassName="NameSelector--overlay u-rm-popover-content-padding"
   placement="bottomLeft"
   trigger="click"
-  visible={false}
 >
   <h2
     className="NameSelector is-invalid"
@@ -100,11 +100,11 @@ exports[`<NameSelector> renders without exploding 1`] = `
       value={null}
     />
   }
-  onVisibleChange={[Function]}
+  onOpenChange={[Function]}
+  open={false}
   overlayClassName="NameSelector--overlay u-rm-popover-content-padding"
   placement="bottomLeft"
   trigger="click"
-  visible={false}
 >
   <h2
     className="NameSelector is-invalid"
@@ -137,11 +137,11 @@ exports[`<NameSelector> renders without is-invalid when not required and without
       value={null}
     />
   }
-  onVisibleChange={[Function]}
+  onOpenChange={[Function]}
+  open={false}
   overlayClassName="NameSelector--overlay u-rm-popover-content-padding"
   placement="bottomLeft"
   trigger="click"
-  visible={false}
 >
   <h2
     className="NameSelector"

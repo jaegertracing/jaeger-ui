@@ -38,8 +38,7 @@ import FileLoader from './FileLoader';
 
 import './index.css';
 import JaegerLogo from '../../img/jaeger-logo.svg';
-
-const TabPane = Tabs.TabPane;
+import withRouteProps from '../../utils/withRouteProps';
 
 // export for tests
 export class SearchTracePageImpl extends Component {
@@ -99,25 +98,25 @@ export class SearchTracePageImpl extends Component {
     const hasTraceResults = traceResults && traceResults.length > 0;
     const showErrors = errors && !loadingTraces;
     const showLogo = isHomepage && !hasTraceResults && !loadingTraces && !errors;
+    const tabItems = [];
+    if (!loadingServices && services) {
+      tabItems.push({ label: 'Search', key: 'searchForm', children: <SearchForm services={services} /> });
+    } else {
+      tabItems.push({ label: 'Search', key: 'searchForm', children: <LoadingIndicator /> });
+    }
+    if (!disableFileUploadControl) {
+      tabItems.push({
+        label: 'Upload',
+        key: 'fileLoader',
+        children: <FileLoader loadJsonTraces={loadJsonTraces} />,
+      });
+    }
     return (
       <Row className="SearchTracePage--row">
         {!embedded && (
           <Col span={6} className="SearchTracePage--column">
             <div className="SearchTracePage--find">
-              <Tabs size="large">
-                <TabPane tab="Search" key="searchForm">
-                  {!loadingServices && services ? <SearchForm services={services} /> : <LoadingIndicator />}
-                </TabPane>
-                {!disableFileUploadControl && (
-                  <TabPane tab="Upload" key="fileLoader">
-                    <FileLoader
-                      loadJsonTraces={fileList => {
-                        loadJsonTraces(fileList);
-                      }}
-                    />
-                  </TabPane>
-                )}
-              </Tabs>
+              <Tabs size="large" items={tabItems} />
             </div>
           </Col>
         )}
@@ -309,4 +308,4 @@ function mapDispatchToProps(dispatch) {
   };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(SearchTracePageImpl);
+export default withRouteProps(connect(mapStateToProps, mapDispatchToProps)(SearchTracePageImpl));

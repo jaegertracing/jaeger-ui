@@ -14,8 +14,8 @@
 
 /* eslint-disable import/no-extraneous-dependencies */
 import * as React from 'react';
-import { Dropdown, Menu } from 'antd';
-import { ExportOutlined, ProfileOutlined, SnippetsOutlined } from '@ant-design/icons';
+import { Dropdown } from 'antd';
+import { IoOpenOutline, IoList, IoCopyOutline } from 'react-icons/io5';
 import { JsonView, allExpanded, collapseAllNested, defaultStyles } from 'react-json-view-lite';
 
 import CopyIcon from '../../../common/CopyIcon';
@@ -76,17 +76,19 @@ function formatValue(key: string, value: any) {
     content = (
       <JsonView
         data={parsed}
-        shouldInitiallyExpand={shouldJsonTreeExpand ? allExpanded : collapseAllNested}
+        shouldExpandNode={shouldJsonTreeExpand ? allExpanded : collapseAllNested}
         style={{
           ...defaultStyles,
           container: 'json-markup',
           label: 'json-markup-key',
           stringValue: 'json-markup-string',
+          collapseIcon: 'json-markup-icon-collapse',
+          collapsedContent: 'json-markup-collapse-content',
+          expandIcon: 'json-markup-icon-expand',
           numberValue: 'json-markup-number',
           booleanValue: 'json-markup-bool',
           nullValue: 'json-markup-null',
           undefinedValue: 'json-markup-undefined',
-          expander: 'json-markup-expander',
           basicChildStyle: 'json-markup-child',
           punctuation: 'json-markup-puncuation',
           otherValue: 'json-markup-other',
@@ -100,7 +102,7 @@ function formatValue(key: string, value: any) {
 
 export const LinkValue = (props: { href: string; title?: string; children: React.ReactNode }) => (
   <a href={props.href} title={props.title} target="_blank" rel="noopener noreferrer">
-    {props.children} <ExportOutlined className="KeyValueTable--linkIcon" />
+    {props.children} <IoOpenOutline className="KeyValueTable--linkIcon" />
   </a>
 );
 
@@ -108,23 +110,21 @@ LinkValue.defaultProps = {
   title: '',
 };
 
-const linkValueList = (links: Link[]) => (
-  <Menu>
-    {links.map(({ text, url }, index) => (
-      // `index` is necessary in the key because url can repeat
-      // eslint-disable-next-line react/no-array-index-key
-      <Menu.Item key={`${url}-${index}`}>
-        <LinkValue href={url}>{text}</LinkValue>
-      </Menu.Item>
-    ))}
-  </Menu>
-);
+const linkValueList = (links: Link[]) => {
+  const dropdownItems = links.map(({ text, url }, index) => ({
+    label: <LinkValue href={url}>{text}</LinkValue>,
+    key: `${url}-${index}`,
+  }));
+  return dropdownItems;
+};
 
 type KeyValuesTableProps = {
   data: KeyValuePair[];
   linksGetter: ((pairs: KeyValuePair[], index: number) => Link[]) | TNil;
 };
 
+// KeyValuesTable is displayed as a menu at span level.
+// Example: https://github.com/jaegertracing/jaeger-ui/assets/94157520/b518cad9-cb37-4775-a3d6-b667a1235f89
 export default function KeyValuesTable(props: KeyValuesTableProps) {
   const { data, linksGetter } = props;
 
@@ -147,9 +147,13 @@ export default function KeyValuesTable(props: KeyValuesTableProps) {
             } else if (links && links.length > 1) {
               valueMarkup = (
                 <div>
-                  <Dropdown overlay={linkValueList(links)} placement="bottomRight" trigger={['click']}>
+                  <Dropdown
+                    menu={{ items: linkValueList(links) }}
+                    placement="bottomRight"
+                    trigger={['click']}
+                  >
                     <a>
-                      {jsonTable} <ProfileOutlined className="KeyValueTable--linkIcon" />
+                      {jsonTable} <IoList className="KeyValueTable--linkIcon" />
                     </a>
                   </Dropdown>
                 </div>
@@ -172,7 +176,7 @@ export default function KeyValuesTable(props: KeyValuesTableProps) {
                   />
                   <CopyIcon
                     className="KeyValueTable--copyIcon"
-                    icon={<SnippetsOutlined />}
+                    icon={<IoCopyOutline />}
                     copyText={JSON.stringify(row, null, 2)}
                     tooltipTitle="Copy JSON"
                     buttonText="JSON"

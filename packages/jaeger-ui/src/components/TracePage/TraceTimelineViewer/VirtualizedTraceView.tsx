@@ -16,12 +16,12 @@ import * as React from 'react';
 import cx from 'classnames';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
-import { withRouter, RouteComponentProps } from 'react-router-dom';
 import _isEqual from 'lodash/isEqual';
 
 // import { History as RouterHistory, Location } from 'history';
 
 import memoizeOne from 'memoize-one';
+import { Location, History } from 'history';
 import { actions } from './duck';
 import ListView from './ListView';
 import SpanBarRow from './SpanBarRow';
@@ -47,6 +47,7 @@ import TTraceTimeline from '../../../types/TTraceTimeline';
 import './VirtualizedTraceView.css';
 import updateUiFind from '../../../utils/update-ui-find';
 import { PEER_SERVICE } from '../../../constants/tag-keys';
+import withRouteProps from '../../../utils/withRouteProps';
 
 type RowState = {
   isDetail: boolean;
@@ -78,11 +79,16 @@ type TDispatchProps = {
   focusUiFindMatches: (trace: Trace, uiFind: string | TNil, allowHide?: boolean) => void;
 };
 
+type RouteProps = {
+  location: Location;
+  history: History;
+};
+
 type VirtualizedTraceViewProps = TVirtualizedTraceViewOwnProps &
   TDispatchProps &
   TExtractUiFindFromStateReturn &
   TTraceTimeline &
-  RouteComponentProps;
+  RouteProps;
 
 // export for tests
 export const DEFAULT_HEIGHTS = {
@@ -496,14 +502,12 @@ function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
   return bindActionCreators(actions, dispatch) as any as TDispatchProps;
 }
 
-export default withRouter(
-  connect<
-    TTraceTimeline & TExtractUiFindFromStateReturn,
-    TDispatchProps,
-    TVirtualizedTraceViewOwnProps,
-    ReduxState
-  >(
-    mapStateToProps,
-    mapDispatchToProps
-  )(VirtualizedTraceViewImpl)
-);
+export default connect<
+  TTraceTimeline & TExtractUiFindFromStateReturn,
+  TDispatchProps,
+  TVirtualizedTraceViewOwnProps,
+  ReduxState
+>(
+  mapStateToProps,
+  mapDispatchToProps
+)(withRouteProps(VirtualizedTraceViewImpl));

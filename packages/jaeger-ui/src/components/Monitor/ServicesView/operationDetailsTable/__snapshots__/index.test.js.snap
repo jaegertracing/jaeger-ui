@@ -82,7 +82,7 @@ exports[`<OperationTableDetails> Table rendered successfully 1`] = `
                 placement="top"
                 title="The result of multiplying avg. duration and requests per minute, showing the most used and slowest endpoints"
               >
-                <ForwardRef(InfoCircleOutlined) />
+                <IoInformationCircleOutline />
               </Tooltip>
             </span>
           </div>,
@@ -483,34 +483,50 @@ exports[`<OperationTableDetails> render No data table 1`] = `
                             >
                               Impact
                                 
-                              <span
-                                aria-label="info-circle"
-                                className="anticon anticon-info-circle"
+                              <svg
+                                fill="currentColor"
+                                height="1em"
                                 onMouseEnter={[Function]}
                                 onMouseLeave={[Function]}
-                                role="img"
+                                stroke="currentColor"
+                                strokeWidth="0"
+                                style={
+                                  Object {
+                                    "color": undefined,
+                                  }
+                                }
+                                viewBox="0 0 512 512"
+                                width="1em"
+                                xmlns="http://www.w3.org/2000/svg"
                               >
-                                <svg
-                                  aria-hidden="true"
-                                  className=""
-                                  data-icon="info-circle"
-                                  fill="currentColor"
-                                  focusable="false"
-                                  height="1em"
-                                  key="svg-info-circle"
-                                  viewBox="64 64 896 896"
-                                  width="1em"
-                                >
-                                  <path
-                                    d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372 372 166.6 372 372-166.6 372-372 372z"
-                                    key="svg-info-circle-svg-0"
-                                  />
-                                  <path
-                                    d="M464 336a48 48 0 1096 0 48 48 0 10-96 0zm72 112h-48c-4.4 0-8 3.6-8 8v272c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V456c0-4.4-3.6-8-8-8z"
-                                    key="svg-info-circle-svg-1"
-                                  />
-                                </svg>
-                              </span>
+                                <path
+                                  d="M248 64C146.39 64 64 146.39 64 248s82.39 184 184 184 184-82.39 184-184S349.61 64 248 64z"
+                                  fill="none"
+                                  key="0"
+                                  strokeMiterlimit="10"
+                                  strokeWidth="32"
+                                />
+                                <path
+                                  d="M220 220h32v116"
+                                  fill="none"
+                                  key="1"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="32"
+                                />
+                                <path
+                                  d="M208 340h88"
+                                  fill="none"
+                                  key="2"
+                                  strokeLinecap="round"
+                                  strokeMiterlimit="10"
+                                  strokeWidth="32"
+                                />
+                                <path
+                                  d="M248 130a26 26 0 1026 26 26 26 0 00-26-26z"
+                                  key="3"
+                                />
+                              </svg>
                             </span>
                           </div>
                         </span>
@@ -1022,34 +1038,50 @@ exports[`<OperationTableDetails> render P95 latency with more than 2 decimal pla
                             >
                               Impact
                                 
-                              <span
-                                aria-label="info-circle"
-                                className="anticon anticon-info-circle"
+                              <svg
+                                fill="currentColor"
+                                height="1em"
                                 onMouseEnter={[Function]}
                                 onMouseLeave={[Function]}
-                                role="img"
+                                stroke="currentColor"
+                                strokeWidth="0"
+                                style={
+                                  Object {
+                                    "color": undefined,
+                                  }
+                                }
+                                viewBox="0 0 512 512"
+                                width="1em"
+                                xmlns="http://www.w3.org/2000/svg"
                               >
-                                <svg
-                                  aria-hidden="true"
-                                  className=""
-                                  data-icon="info-circle"
-                                  fill="currentColor"
-                                  focusable="false"
-                                  height="1em"
-                                  key="svg-info-circle"
-                                  viewBox="64 64 896 896"
-                                  width="1em"
-                                >
-                                  <path
-                                    d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372 372 166.6 372 372-166.6 372-372 372z"
-                                    key="svg-info-circle-svg-0"
-                                  />
-                                  <path
-                                    d="M464 336a48 48 0 1096 0 48 48 0 10-96 0zm72 112h-48c-4.4 0-8 3.6-8 8v272c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V456c0-4.4-3.6-8-8-8z"
-                                    key="svg-info-circle-svg-1"
-                                  />
-                                </svg>
-                              </span>
+                                <path
+                                  d="M248 64C146.39 64 64 146.39 64 248s82.39 184 184 184 184-82.39 184-184S349.61 64 248 64z"
+                                  fill="none"
+                                  key="0"
+                                  strokeMiterlimit="10"
+                                  strokeWidth="32"
+                                />
+                                <path
+                                  d="M220 220h32v116"
+                                  fill="none"
+                                  key="1"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="32"
+                                />
+                                <path
+                                  d="M208 340h88"
+                                  fill="none"
+                                  key="2"
+                                  strokeLinecap="round"
+                                  strokeMiterlimit="10"
+                                  strokeWidth="32"
+                                />
+                                <path
+                                  d="M248 130a26 26 0 1026 26 26 26 0 00-26-26z"
+                                  key="3"
+                                />
+                              </svg>
                             </span>
                           </div>
                         </span>
@@ -1997,34 +2029,50 @@ exports[`<OperationTableDetails> render error rate with more than 2 decimal plac
                             >
                               Impact
                                 
-                              <span
-                                aria-label="info-circle"
-                                className="anticon anticon-info-circle"
+                              <svg
+                                fill="currentColor"
+                                height="1em"
                                 onMouseEnter={[Function]}
                                 onMouseLeave={[Function]}
-                                role="img"
+                                stroke="currentColor"
+                                strokeWidth="0"
+                                style={
+                                  Object {
+                                    "color": undefined,
+                                  }
+                                }
+                                viewBox="0 0 512 512"
+                                width="1em"
+                                xmlns="http://www.w3.org/2000/svg"
                               >
-                                <svg
-                                  aria-hidden="true"
-                                  className=""
-                                  data-icon="info-circle"
-                                  fill="currentColor"
-                                  focusable="false"
-                                  height="1em"
-                                  key="svg-info-circle"
-                                  viewBox="64 64 896 896"
-                                  width="1em"
-                                >
-                                  <path
-                                    d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372 372 166.6 372 372-166.6 372-372 372z"
-                                    key="svg-info-circle-svg-0"
-                                  />
-                                  <path
-                                    d="M464 336a48 48 0 1096 0 48 48 0 10-96 0zm72 112h-48c-4.4 0-8 3.6-8 8v272c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V456c0-4.4-3.6-8-8-8z"
-                                    key="svg-info-circle-svg-1"
-                                  />
-                                </svg>
-                              </span>
+                                <path
+                                  d="M248 64C146.39 64 64 146.39 64 248s82.39 184 184 184 184-82.39 184-184S349.61 64 248 64z"
+                                  fill="none"
+                                  key="0"
+                                  strokeMiterlimit="10"
+                                  strokeWidth="32"
+                                />
+                                <path
+                                  d="M220 220h32v116"
+                                  fill="none"
+                                  key="1"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="32"
+                                />
+                                <path
+                                  d="M208 340h88"
+                                  fill="none"
+                                  key="2"
+                                  strokeLinecap="round"
+                                  strokeMiterlimit="10"
+                                  strokeWidth="32"
+                                />
+                                <path
+                                  d="M248 130a26 26 0 1026 26 26 26 0 00-26-26z"
+                                  key="3"
+                                />
+                              </svg>
                             </span>
                           </div>
                         </span>
@@ -2972,34 +3020,50 @@ exports[`<OperationTableDetails> render lower than 0.1 P95 latency 1`] = `
                             >
                               Impact
                                 
-                              <span
-                                aria-label="info-circle"
-                                className="anticon anticon-info-circle"
+                              <svg
+                                fill="currentColor"
+                                height="1em"
                                 onMouseEnter={[Function]}
                                 onMouseLeave={[Function]}
-                                role="img"
+                                stroke="currentColor"
+                                strokeWidth="0"
+                                style={
+                                  Object {
+                                    "color": undefined,
+                                  }
+                                }
+                                viewBox="0 0 512 512"
+                                width="1em"
+                                xmlns="http://www.w3.org/2000/svg"
                               >
-                                <svg
-                                  aria-hidden="true"
-                                  className=""
-                                  data-icon="info-circle"
-                                  fill="currentColor"
-                                  focusable="false"
-                                  height="1em"
-                                  key="svg-info-circle"
-                                  viewBox="64 64 896 896"
-                                  width="1em"
-                                >
-                                  <path
-                                    d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372 372 166.6 372 372-166.6 372-372 372z"
-                                    key="svg-info-circle-svg-0"
-                                  />
-                                  <path
-                                    d="M464 336a48 48 0 1096 0 48 48 0 10-96 0zm72 112h-48c-4.4 0-8 3.6-8 8v272c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V456c0-4.4-3.6-8-8-8z"
-                                    key="svg-info-circle-svg-1"
-                                  />
-                                </svg>
-                              </span>
+                                <path
+                                  d="M248 64C146.39 64 64 146.39 64 248s82.39 184 184 184 184-82.39 184-184S349.61 64 248 64z"
+                                  fill="none"
+                                  key="0"
+                                  strokeMiterlimit="10"
+                                  strokeWidth="32"
+                                />
+                                <path
+                                  d="M220 220h32v116"
+                                  fill="none"
+                                  key="1"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="32"
+                                />
+                                <path
+                                  d="M208 340h88"
+                                  fill="none"
+                                  key="2"
+                                  strokeLinecap="round"
+                                  strokeMiterlimit="10"
+                                  strokeWidth="32"
+                                />
+                                <path
+                                  d="M248 130a26 26 0 1026 26 26 26 0 00-26-26z"
+                                  key="3"
+                                />
+                              </svg>
                             </span>
                           </div>
                         </span>
@@ -3947,34 +4011,50 @@ exports[`<OperationTableDetails> render lower than 0.1 error rate 1`] = `
                             >
                               Impact
                                 
-                              <span
-                                aria-label="info-circle"
-                                className="anticon anticon-info-circle"
+                              <svg
+                                fill="currentColor"
+                                height="1em"
                                 onMouseEnter={[Function]}
                                 onMouseLeave={[Function]}
-                                role="img"
+                                stroke="currentColor"
+                                strokeWidth="0"
+                                style={
+                                  Object {
+                                    "color": undefined,
+                                  }
+                                }
+                                viewBox="0 0 512 512"
+                                width="1em"
+                                xmlns="http://www.w3.org/2000/svg"
                               >
-                                <svg
-                                  aria-hidden="true"
-                                  className=""
-                                  data-icon="info-circle"
-                                  fill="currentColor"
-                                  focusable="false"
-                                  height="1em"
-                                  key="svg-info-circle"
-                                  viewBox="64 64 896 896"
-                                  width="1em"
-                                >
-                                  <path
-                                    d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372 372 166.6 372 372-166.6 372-372 372z"
-                                    key="svg-info-circle-svg-0"
-                                  />
-                                  <path
-                                    d="M464 336a48 48 0 1096 0 48 48 0 10-96 0zm72 112h-48c-4.4 0-8 3.6-8 8v272c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V456c0-4.4-3.6-8-8-8z"
-                                    key="svg-info-circle-svg-1"
-                                  />
-                                </svg>
-                              </span>
+                                <path
+                                  d="M248 64C146.39 64 64 146.39 64 248s82.39 184 184 184 184-82.39 184-184S349.61 64 248 64z"
+                                  fill="none"
+                                  key="0"
+                                  strokeMiterlimit="10"
+                                  strokeWidth="32"
+                                />
+                                <path
+                                  d="M220 220h32v116"
+                                  fill="none"
+                                  key="1"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="32"
+                                />
+                                <path
+                                  d="M208 340h88"
+                                  fill="none"
+                                  key="2"
+                                  strokeLinecap="round"
+                                  strokeMiterlimit="10"
+                                  strokeWidth="32"
+                                />
+                                <path
+                                  d="M248 130a26 26 0 1026 26 26 26 0 00-26-26z"
+                                  key="3"
+                                />
+                              </svg>
                             </span>
                           </div>
                         </span>
@@ -4922,34 +5002,50 @@ exports[`<OperationTableDetails> render lower than 0.1 request rate value 1`] = 
                             >
                               Impact
                                 
-                              <span
-                                aria-label="info-circle"
-                                className="anticon anticon-info-circle"
+                              <svg
+                                fill="currentColor"
+                                height="1em"
                                 onMouseEnter={[Function]}
                                 onMouseLeave={[Function]}
-                                role="img"
+                                stroke="currentColor"
+                                strokeWidth="0"
+                                style={
+                                  Object {
+                                    "color": undefined,
+                                  }
+                                }
+                                viewBox="0 0 512 512"
+                                width="1em"
+                                xmlns="http://www.w3.org/2000/svg"
                               >
-                                <svg
-                                  aria-hidden="true"
-                                  className=""
-                                  data-icon="info-circle"
-                                  fill="currentColor"
-                                  focusable="false"
-                                  height="1em"
-                                  key="svg-info-circle"
-                                  viewBox="64 64 896 896"
-                                  width="1em"
-                                >
-                                  <path
-                                    d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372 372 166.6 372 372-166.6 372-372 372z"
-                                    key="svg-info-circle-svg-0"
-                                  />
-                                  <path
-                                    d="M464 336a48 48 0 1096 0 48 48 0 10-96 0zm72 112h-48c-4.4 0-8 3.6-8 8v272c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V456c0-4.4-3.6-8-8-8z"
-                                    key="svg-info-circle-svg-1"
-                                  />
-                                </svg>
-                              </span>
+                                <path
+                                  d="M248 64C146.39 64 64 146.39 64 248s82.39 184 184 184 184-82.39 184-184S349.61 64 248 64z"
+                                  fill="none"
+                                  key="0"
+                                  strokeMiterlimit="10"
+                                  strokeWidth="32"
+                                />
+                                <path
+                                  d="M220 220h32v116"
+                                  fill="none"
+                                  key="1"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="32"
+                                />
+                                <path
+                                  d="M208 340h88"
+                                  fill="none"
+                                  key="2"
+                                  strokeLinecap="round"
+                                  strokeMiterlimit="10"
+                                  strokeWidth="32"
+                                />
+                                <path
+                                  d="M248 130a26 26 0 1026 26 26 26 0 00-26-26z"
+                                  key="3"
+                                />
+                              </svg>
                             </span>
                           </div>
                         </span>
@@ -5897,34 +5993,50 @@ exports[`<OperationTableDetails> render request rate number with more than 2 dec
                             >
                               Impact
                                 
-                              <span
-                                aria-label="info-circle"
-                                className="anticon anticon-info-circle"
+                              <svg
+                                fill="currentColor"
+                                height="1em"
                                 onMouseEnter={[Function]}
                                 onMouseLeave={[Function]}
-                                role="img"
+                                stroke="currentColor"
+                                strokeWidth="0"
+                                style={
+                                  Object {
+                                    "color": undefined,
+                                  }
+                                }
+                                viewBox="0 0 512 512"
+                                width="1em"
+                                xmlns="http://www.w3.org/2000/svg"
                               >
-                                <svg
-                                  aria-hidden="true"
-                                  className=""
-                                  data-icon="info-circle"
-                                  fill="currentColor"
-                                  focusable="false"
-                                  height="1em"
-                                  key="svg-info-circle"
-                                  viewBox="64 64 896 896"
-                                  width="1em"
-                                >
-                                  <path
-                                    d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372 372 166.6 372 372-166.6 372-372 372z"
-                                    key="svg-info-circle-svg-0"
-                                  />
-                                  <path
-                                    d="M464 336a48 48 0 1096 0 48 48 0 10-96 0zm72 112h-48c-4.4 0-8 3.6-8 8v272c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V456c0-4.4-3.6-8-8-8z"
-                                    key="svg-info-circle-svg-1"
-                                  />
-                                </svg>
-                              </span>
+                                <path
+                                  d="M248 64C146.39 64 64 146.39 64 248s82.39 184 184 184 184-82.39 184-184S349.61 64 248 64z"
+                                  fill="none"
+                                  key="0"
+                                  strokeMiterlimit="10"
+                                  strokeWidth="32"
+                                />
+                                <path
+                                  d="M220 220h32v116"
+                                  fill="none"
+                                  key="1"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="32"
+                                />
+                                <path
+                                  d="M208 340h88"
+                                  fill="none"
+                                  key="2"
+                                  strokeLinecap="round"
+                                  strokeMiterlimit="10"
+                                  strokeWidth="32"
+                                />
+                                <path
+                                  d="M248 130a26 26 0 1026 26 26 26 0 00-26-26z"
+                                  key="3"
+                                />
+                              </svg>
                             </span>
                           </div>
                         </span>
@@ -6872,34 +6984,50 @@ exports[`<OperationTableDetails> render some values in the table 1`] = `
                             >
                               Impact
                                 
-                              <span
-                                aria-label="info-circle"
-                                className="anticon anticon-info-circle"
+                              <svg
+                                fill="currentColor"
+                                height="1em"
                                 onMouseEnter={[Function]}
                                 onMouseLeave={[Function]}
-                                role="img"
+                                stroke="currentColor"
+                                strokeWidth="0"
+                                style={
+                                  Object {
+                                    "color": undefined,
+                                  }
+                                }
+                                viewBox="0 0 512 512"
+                                width="1em"
+                                xmlns="http://www.w3.org/2000/svg"
                               >
-                                <svg
-                                  aria-hidden="true"
-                                  className=""
-                                  data-icon="info-circle"
-                                  fill="currentColor"
-                                  focusable="false"
-                                  height="1em"
-                                  key="svg-info-circle"
-                                  viewBox="64 64 896 896"
-                                  width="1em"
-                                >
-                                  <path
-                                    d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372 372 166.6 372 372-166.6 372-372 372z"
-                                    key="svg-info-circle-svg-0"
-                                  />
-                                  <path
-                                    d="M464 336a48 48 0 1096 0 48 48 0 10-96 0zm72 112h-48c-4.4 0-8 3.6-8 8v272c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V456c0-4.4-3.6-8-8-8z"
-                                    key="svg-info-circle-svg-1"
-                                  />
-                                </svg>
-                              </span>
+                                <path
+                                  d="M248 64C146.39 64 64 146.39 64 248s82.39 184 184 184 184-82.39 184-184S349.61 64 248 64z"
+                                  fill="none"
+                                  key="0"
+                                  strokeMiterlimit="10"
+                                  strokeWidth="32"
+                                />
+                                <path
+                                  d="M220 220h32v116"
+                                  fill="none"
+                                  key="1"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="32"
+                                />
+                                <path
+                                  d="M208 340h88"
+                                  fill="none"
+                                  key="2"
+                                  strokeLinecap="round"
+                                  strokeMiterlimit="10"
+                                  strokeWidth="32"
+                                />
+                                <path
+                                  d="M248 130a26 26 0 1026 26 26 26 0 00-26-26z"
+                                  key="3"
+                                />
+                              </svg>
                             </span>
                           </div>
                         </span>
@@ -7847,34 +7975,50 @@ exports[`<OperationTableDetails> test column render function 1`] = `
                             >
                               Impact
                                 
-                              <span
-                                aria-label="info-circle"
-                                className="anticon anticon-info-circle"
+                              <svg
+                                fill="currentColor"
+                                height="1em"
                                 onMouseEnter={[Function]}
                                 onMouseLeave={[Function]}
-                                role="img"
+                                stroke="currentColor"
+                                strokeWidth="0"
+                                style={
+                                  Object {
+                                    "color": undefined,
+                                  }
+                                }
+                                viewBox="0 0 512 512"
+                                width="1em"
+                                xmlns="http://www.w3.org/2000/svg"
                               >
-                                <svg
-                                  aria-hidden="true"
-                                  className=""
-                                  data-icon="info-circle"
-                                  fill="currentColor"
-                                  focusable="false"
-                                  height="1em"
-                                  key="svg-info-circle"
-                                  viewBox="64 64 896 896"
-                                  width="1em"
-                                >
-                                  <path
-                                    d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372 372 166.6 372 372-166.6 372-372 372z"
-                                    key="svg-info-circle-svg-0"
-                                  />
-                                  <path
-                                    d="M464 336a48 48 0 1096 0 48 48 0 10-96 0zm72 112h-48c-4.4 0-8 3.6-8 8v272c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V456c0-4.4-3.6-8-8-8z"
-                                    key="svg-info-circle-svg-1"
-                                  />
-                                </svg>
-                              </span>
+                                <path
+                                  d="M248 64C146.39 64 64 146.39 64 248s82.39 184 184 184 184-82.39 184-184S349.61 64 248 64z"
+                                  fill="none"
+                                  key="0"
+                                  strokeMiterlimit="10"
+                                  strokeWidth="32"
+                                />
+                                <path
+                                  d="M220 220h32v116"
+                                  fill="none"
+                                  key="1"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="32"
+                                />
+                                <path
+                                  d="M208 340h88"
+                                  fill="none"
+                                  key="2"
+                                  strokeLinecap="round"
+                                  strokeMiterlimit="10"
+                                  strokeWidth="32"
+                                />
+                                <path
+                                  d="M248 130a26 26 0 1026 26 26 26 0 00-26-26z"
+                                  key="3"
+                                />
+                              </svg>
                             </span>
                           </div>
                         </span>

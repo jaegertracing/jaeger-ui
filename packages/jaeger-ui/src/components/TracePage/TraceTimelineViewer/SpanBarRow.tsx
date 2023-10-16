@@ -13,10 +13,7 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { IoAlert } from 'react-icons/io5';
-import { ImArrowRight } from 'react-icons/im';
-import { IoMdGitNetwork } from 'react-icons/io';
-import { MdFileUpload } from 'react-icons/md';
+import { IoAlert, IoGitNetwork, IoCloudUploadOutline, IoArrowForward } from 'react-icons/io5';
 import ReferencesButton from './ReferencesButton';
 import TimelineRow from './TimelineRow';
 import { formatDuration, ViewedBoundsFunctionType } from './utils';
@@ -155,14 +152,14 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
                 {serviceName}{' '}
                 {rpc && (
                   <span>
-                    <ImArrowRight />{' '}
+                    <IoArrowForward className="SpanBarRow--arrowForwardIcon" />{' '}
                     <i className="SpanBarRow--rpcColorMarker" style={{ background: rpc.color }} />
                     {rpc.serviceName}
                   </span>
                 )}
                 {noInstrumentedServer && (
                   <span>
-                    <ImArrowRight />{' '}
+                    <IoArrowForward className="SpanBarRow--arrowForwardIcon" />{' '}
                     <i
                       className="SpanBarRow--rpcColorMarker"
                       style={{ background: noInstrumentedServer.color }}
@@ -179,7 +176,7 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
                 tooltipText="Contains multiple references"
                 focusSpan={focusSpan}
               >
-                <IoMdGitNetwork />
+                <IoGitNetwork />
               </ReferencesButton>
             )}
             {span.subsidiarilyReferencedBy && span.subsidiarilyReferencedBy.length > 0 && (
@@ -190,7 +187,7 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
                 }`}
                 focusSpan={focusSpan}
               >
-                <MdFileUpload />
+                <IoCloudUploadOutline />
               </ReferencesButton>
             )}
           </div>

@@ -88,7 +88,8 @@ exports[`TraceDiffHeader handles absent a & b 1`] = `
         selection={Object {}}
       />
     }
-    onVisibleChange={[Function]}
+    onOpenChange={[Function]}
+    open={false}
     overlayClassName="TraceDiffHeader--popover"
     placement="bottomLeft"
     title={
@@ -97,7 +98,6 @@ exports[`TraceDiffHeader handles absent a & b 1`] = `
       />
     }
     trigger="click"
-    visible={false}
   >
     <div
       className="ub-flex u-flex-1"
@@ -198,7 +198,8 @@ exports[`TraceDiffHeader handles absent a & b 1`] = `
         selection={Object {}}
       />
     }
-    onVisibleChange={[Function]}
+    onOpenChange={[Function]}
+    open={false}
     overlayClassName="TraceDiffHeader--popover"
     placement="bottomLeft"
     title={
@@ -207,7 +208,6 @@ exports[`TraceDiffHeader handles absent a & b 1`] = `
       />
     }
     trigger="click"
-    visible={false}
   >
     <div
       className="ub-flex u-flex-1"
@@ -312,7 +312,8 @@ exports[`TraceDiffHeader handles absent a 1`] = `
         }
       />
     }
-    onVisibleChange={[Function]}
+    onOpenChange={[Function]}
+    open={false}
     overlayClassName="TraceDiffHeader--popover"
     placement="bottomLeft"
     title={
@@ -321,7 +322,6 @@ exports[`TraceDiffHeader handles absent a 1`] = `
       />
     }
     trigger="click"
-    visible={false}
   >
     <div
       className="ub-flex u-flex-1"
@@ -429,7 +429,8 @@ exports[`TraceDiffHeader handles absent a 1`] = `
         }
       />
     }
-    onVisibleChange={[Function]}
+    onOpenChange={[Function]}
+    open={false}
     overlayClassName="TraceDiffHeader--popover"
     placement="bottomLeft"
     title={
@@ -438,7 +439,6 @@ exports[`TraceDiffHeader handles absent a 1`] = `
       />
     }
     trigger="click"
-    visible={false}
   >
     <div
       className="ub-flex u-flex-1"
@@ -552,7 +552,8 @@ exports[`TraceDiffHeader handles absent b 1`] = `
         }
       />
     }
-    onVisibleChange={[Function]}
+    onOpenChange={[Function]}
+    open={false}
     overlayClassName="TraceDiffHeader--popover"
     placement="bottomLeft"
     title={
@@ -561,7 +562,6 @@ exports[`TraceDiffHeader handles absent b 1`] = `
       />
     }
     trigger="click"
-    visible={false}
   >
     <div
       className="ub-flex u-flex-1"
@@ -676,7 +676,8 @@ exports[`TraceDiffHeader handles absent b 1`] = `
         }
       />
     }
-    onVisibleChange={[Function]}
+    onOpenChange={[Function]}
+    open={false}
     overlayClassName="TraceDiffHeader--popover"
     placement="bottomLeft"
     title={
@@ -685,7 +686,6 @@ exports[`TraceDiffHeader handles absent b 1`] = `
       />
     }
     trigger="click"
-    visible={false}
   >
     <div
       className="ub-flex u-flex-1"
@@ -794,7 +794,8 @@ exports[`TraceDiffHeader renders as expected 1`] = `
         }
       />
     }
-    onVisibleChange={[Function]}
+    onOpenChange={[Function]}
+    open={false}
     overlayClassName="TraceDiffHeader--popover"
     placement="bottomLeft"
     title={
@@ -803,7 +804,6 @@ exports[`TraceDiffHeader renders as expected 1`] = `
       />
     }
     trigger="click"
-    visible={false}
   >
     <div
       className="ub-flex u-flex-1"
@@ -922,7 +922,8 @@ exports[`TraceDiffHeader renders as expected 1`] = `
         }
       />
     }
-    onVisibleChange={[Function]}
+    onOpenChange={[Function]}
+    open={false}
     overlayClassName="TraceDiffHeader--popover"
     placement="bottomLeft"
     title={
@@ -931,7 +932,6 @@ exports[`TraceDiffHeader renders as expected 1`] = `
       />
     }
     trigger="click"
-    visible={false}
   >
     <div
       className="ub-flex u-flex-1"

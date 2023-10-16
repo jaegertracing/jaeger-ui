@@ -189,7 +189,7 @@ exports[`<DdgNodeContent> omits the operation if it is null 1`] = `
       <span
         className="DdgNodeContent--actionsItemIconWrapper"
       >
-        <MdVisibilityOff />
+        <IoEyeOff />
       </span>
       <span
         className="DdgNodeContent--actionsItemText"
@@ -325,7 +325,7 @@ exports[`<DdgNodeContent> omits the operation if it is null 2`] = `
       <span
         className="DdgNodeContent--actionsItemIconWrapper"
       >
-        <MdVisibilityOff />
+        <IoEyeOff />
       </span>
       <span
         className="DdgNodeContent--actionsItemText"
@@ -476,7 +476,7 @@ exports[`<DdgNodeContent> renders correctly when decorationValue is a string 1`]
       <span
         className="DdgNodeContent--actionsItemIconWrapper"
       >
-        <MdVisibilityOff />
+        <IoEyeOff />
       </span>
       <span
         className="DdgNodeContent--actionsItemText"
@@ -627,7 +627,7 @@ exports[`<DdgNodeContent> renders correctly when decorationValue is a string 2`]
       <span
         className="DdgNodeContent--actionsItemIconWrapper"
       >
-        <MdVisibilityOff />
+        <IoEyeOff />
       </span>
       <span
         className="DdgNodeContent--actionsItemText"
@@ -778,7 +778,7 @@ exports[`<DdgNodeContent> renders correctly when given decorationProgressbar 1`]
       <span
         className="DdgNodeContent--actionsItemIconWrapper"
       >
-        <MdVisibilityOff />
+        <IoEyeOff />
       </span>
       <span
         className="DdgNodeContent--actionsItemText"
@@ -932,7 +932,7 @@ exports[`<DdgNodeContent> renders correctly when given decorationProgressbar 2`]
       <span
         className="DdgNodeContent--actionsItemIconWrapper"
       >
-        <MdVisibilityOff />
+        <IoEyeOff />
       </span>
       <span
         className="DdgNodeContent--actionsItemText"
@@ -1083,7 +1083,7 @@ exports[`<DdgNodeContent> renders correctly when isFocalNode = true and focalNod
       <span
         className="DdgNodeContent--actionsItemIconWrapper"
       >
-        <MdVisibilityOff />
+        <IoEyeOff />
       </span>
       <span
         className="DdgNodeContent--actionsItemText"
@@ -1312,7 +1312,7 @@ exports[`<DdgNodeContent> renders the number of operations if there are multiple
       <span
         className="DdgNodeContent--actionsItemIconWrapper"
       >
-        <MdVisibilityOff />
+        <IoEyeOff />
       </span>
       <span
         className="DdgNodeContent--actionsItemText"
@@ -1480,7 +1480,7 @@ exports[`<DdgNodeContent> renders the number of operations if there are multiple
       <span
         className="DdgNodeContent--actionsItemIconWrapper"
       >
-        <MdVisibilityOff />
+        <IoEyeOff />
       </span>
       <span
         className="DdgNodeContent--actionsItemText"

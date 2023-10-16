@@ -20,7 +20,7 @@ import cx from 'classnames';
 import copy from 'copy-to-clipboard';
 
 import './CopyIcon.css';
-import { CopyOutlined } from '@ant-design/icons';
+import { IoCopyOutline } from 'react-icons/io5';
 
 type PropsType = {
   className?: string;
@@ -38,7 +38,7 @@ type StateType = {
 export default class CopyIcon extends React.PureComponent<PropsType, StateType> {
   static defaultProps: Partial<PropsType> = {
     className: undefined,
-    icon: <CopyOutlined />,
+    icon: <IoCopyOutline />,
     placement: 'top',
   };
 
@@ -66,7 +66,7 @@ export default class CopyIcon extends React.PureComponent<PropsType, StateType> 
       <Tooltip
         arrowPointAtCenter
         mouseLeaveDelay={0}
-        onVisibleChange={this.handleTooltipVisibilityChange}
+        onOpenChange={this.handleTooltipVisibilityChange}
         placement={this.props.placement}
         title={this.state.hasCopied ? 'Copied' : this.props.tooltipTitle}
       >

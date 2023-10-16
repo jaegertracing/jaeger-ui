@@ -13,10 +13,8 @@
 // limitations under the License.
 
 import React, { Component } from 'react';
-import createHistory from 'history/createBrowserHistory';
 import { Provider } from 'react-redux';
-import { Route, Redirect, Switch } from 'react-router-dom';
-import { ConnectedRouter } from 'react-router-redux';
+import { Route, Redirect, Switch, Router } from 'react-router-dom';
 
 import NotFound from './NotFound';
 import Page from './Page';
@@ -35,46 +33,68 @@ import { ROUTE_PATH as tracePath } from '../TracePage/url';
 import MonitorATMPage from '../Monitor';
 import { ROUTE_PATH as monitorATMPath } from '../Monitor/url';
 import JaegerAPI, { DEFAULT_API_ROOT } from '../../api/jaeger';
-import configureStore from '../../utils/configure-store';
 import processScripts from '../../utils/config/process-scripts';
 import prefixUrl from '../../utils/prefix-url';
 
 import '../common/vars.css';
 import '../common/utils.css';
 import './index.css';
-
-const history = createHistory();
+import { history, store } from '../../utils/configure-store';
+import { HistoryProvider } from '../../utils/useHistory';
 
 export default class JaegerUIApp extends Component {
   constructor(props) {
     super(props);
-    this.store = configureStore(history);
     JaegerAPI.apiRoot = DEFAULT_API_ROOT;
     processScripts();
   }
 
   render() {
     return (
-      <Provider store={this.store}>
-        <ConnectedRouter history={history}>
-          <Page>
-            <Switch>
-              <Route path={searchPath} component={SearchTracePage} />
-              <Route path={traceDiffPath} component={TraceDiff} />
-              <Route path={tracePath} component={TracePage} />
-              <Route path={dependenciesPath} component={DependencyGraph} />
-              <Route path={deepDependenciesPath} component={DeepDependencies} />
-              <Route path={qualityMetricsPath} component={QualityMetrics} />
-              <Route path={monitorATMPath} component={MonitorATMPage} />
+      <Provider store={store}>
+        <HistoryProvider history={history}>
+          <Router history={history}>
+            <Page>
+              <Switch>
+                <Route path={searchPath}>
+                  <SearchTracePage />
+                </Route>
+                <Route path={traceDiffPath}>
+                  <TraceDiff />
+                </Route>
+                <Route path={tracePath}>
+                  <TracePage />
+                </Route>
+                <Route path={dependenciesPath}>
+                  <DependencyGraph />
+                </Route>
+                <Route path={deepDependenciesPath}>
+                  <DeepDependencies />
+                </Route>
+                <Route path={qualityMetricsPath}>
+                  <QualityMetrics />
+                </Route>
+                <Route path={monitorATMPath}>
+                  <MonitorATMPage />
+                </Route>
 
-              <Redirect exact path="/" to={searchPath} />
-              <Redirect exact path={prefixUrl()} to={searchPath} />
-              <Redirect exact path={prefixUrl('/')} to={searchPath} />
+                <Route exact path="/">
+                  <Redirect to={searchPath} />
+                </Route>
+                <Route exact path={prefixUrl()}>
+                  <Redirect to={searchPath} />
+                </Route>
+                <Route exact path={prefixUrl('/')}>
+                  <Redirect to={searchPath} />
+                </Route>
 
-              <Route component={NotFound} />
-            </Switch>
-          </Page>
-        </ConnectedRouter>
+                <Route>
+                  <NotFound />
+                </Route>
+              </Switch>
+            </Page>
+          </Router>
+        </HistoryProvider>
       </Provider>
     );
   }

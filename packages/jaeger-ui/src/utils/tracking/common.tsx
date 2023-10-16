@@ -15,6 +15,6 @@
 export const OPEN = 'open';
 export const CLOSE = 'close';
 
-export function getToggleValue(value: any) {
+export function getToggleValue(value: boolean) {
   return value ? CLOSE : OPEN;
 }

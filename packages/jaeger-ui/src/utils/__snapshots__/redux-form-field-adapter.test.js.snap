@@ -19,9 +19,9 @@ exports[`reduxFormFieldAdapter not validated input should render as expected 1`]
 exports[`reduxFormFieldAdapter validate input should render Popover as invisible if there is an error but the field is active 1`] = `
 <Popover
   content="error content"
+  open={false}
   placement="bottomLeft"
   title="error title"
-  visible={false}
 >
   <ForwardRef
     className="AdaptedReduxFormField--isValidatedInput"
@@ -45,9 +45,9 @@ exports[`reduxFormFieldAdapter validate input should render Popover as invisible
 exports[`reduxFormFieldAdapter validate input should render Popover as visible if there is an error and the field is not active 1`] = `
 <Popover
   content="error content"
+  open={true}
   placement="bottomLeft"
   title="error title"
-  visible={true}
 >
   <ForwardRef
     className="is-invalid AdaptedReduxFormField--isValidatedInput"
@@ -70,8 +70,8 @@ exports[`reduxFormFieldAdapter validate input should render Popover as visible i
 
 exports[`reduxFormFieldAdapter validate input should render as expected when there is not an error 1`] = `
 <Popover
+  open={false}
   placement="bottomLeft"
-  visible={false}
 >
   <ForwardRef
     className="AdaptedReduxFormField--isValidatedInput"

@@ -136,7 +136,7 @@ export default chance.mixin({
   }) {
     const startTime = chance.integer({
       min: traceStartTime,
-      max: traceEndTime,
+      max: traceEndTime - 1,
     });
 
     return {

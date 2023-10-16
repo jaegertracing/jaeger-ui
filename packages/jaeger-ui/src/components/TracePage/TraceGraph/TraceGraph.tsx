@@ -14,7 +14,7 @@
 
 import * as React from 'react';
 import { Card, Button, Tooltip } from 'antd';
-import { CloseOutlined, QuestionCircleOutlined } from '@ant-design/icons';
+import { IoClose, IoHelpCircleOutline } from 'react-icons/io5';
 import cx from 'classnames';
 import { Digraph, LayoutManager } from '@jaegertracing/plexus';
 import cacheAs from '@jaegertracing/plexus/lib/cacheAs';
@@ -216,7 +216,7 @@ export default class TraceGraph extends React.PureComponent<Props, State> {
         <div className="TraceGraph--sidebar-container">
           <ul className="TraceGraph--menu">
             <li>
-              <QuestionCircleOutlined onClick={this.showHelp} />
+              <IoHelpCircleOutline onClick={this.showHelp} />
             </li>
             <li>
               <Tooltip placement="left" title="Service">
@@ -264,7 +264,7 @@ export default class TraceGraph extends React.PureComponent<Props, State> {
               bordered={false}
               extra={
                 <a onClick={this.closeSidebar} role="button">
-                  <CloseOutlined />
+                  <IoClose />
                 </a>
               }
             >

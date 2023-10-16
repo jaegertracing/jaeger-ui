@@ -102,8 +102,8 @@ export default class TraceDiffHeader extends React.PureComponent<Props, State> {
           placement="bottomLeft"
           title={<TraceIdInput selectTrace={this._diffSetA} />}
           content={cohortTableA}
-          visible={tableVisible === 'a'}
-          onVisibleChange={this._toggleTableA}
+          open={tableVisible === 'a'}
+          onOpenChange={this._toggleTableA}
         >
           <div className="ub-flex u-flex-1">
             <TraceHeader
@@ -129,8 +129,8 @@ export default class TraceDiffHeader extends React.PureComponent<Props, State> {
           placement="bottomLeft"
           title={<TraceIdInput selectTrace={this._diffSetB} />}
           content={cohortTableB}
-          visible={tableVisible === 'b'}
-          onVisibleChange={this._toggleTableB}
+          open={tableVisible === 'b'}
+          onOpenChange={this._toggleTableB}
         >
           <div className="ub-flex u-flex-1">
             <TraceHeader
