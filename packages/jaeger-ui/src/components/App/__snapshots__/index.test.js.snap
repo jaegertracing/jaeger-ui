@@ -62,7 +62,7 @@ exports[`JaegerUIApp does not explode 1`] = `
         }
       }
     >
-      <Connect(WithRouteProps)>
+      <Memo(Connect(WithRouteProps))>
         <Switch>
           <Route
             path="/search"
@@ -127,7 +127,7 @@ exports[`JaegerUIApp does not explode 1`] = `
             <NotFound />
           </Route>
         </Switch>
-      </Connect(WithRouteProps)>
+      </Memo(Connect(WithRouteProps))>
     </Router>
   </HistoryProvider>
 </Provider>
