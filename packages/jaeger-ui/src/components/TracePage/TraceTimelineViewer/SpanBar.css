@@ -49,6 +49,32 @@ limitations under the License.
   top: 45%;
   height: 11%;
   z-index: 2;
+  overflow: hidden;
+}
+
+.SpanBar--criticalPath::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  width: 10%; 
+  height: 100%;
+  visibility: hidden;
+  background-color: white;
+  border: 1px solid white;
+}
+
+.SpanBar--criticalPath:hover::before {
+  visibility: visible;
+  animation: runOnce 2s forwards;
+}
+
+@keyframes runOnce {
+  0% {
+    left: 0;
+  }
+  100% {
+    left: 100%;
+  }
 }
 
 .SpanBar--label {
