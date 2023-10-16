@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import shallow from '../../utils/ReactShallowRenderer.test';
 
 import JaegerUIApp from './index';
 
