@@ -135,15 +135,6 @@ describe('<TopNav>', () => {
     });
 
     describe('<CustomNavDropdown>', () => {
-      let component;
-      beforeEach(() => {
-        component = render(<TopNav.CustomNavDropdown {...configMenuGroup} />);
-      });
-
-      afterEach(() => {
-        component.unmount();
-      });
-
       it('renders sub-menu text', () => {
         dropdownItems.slice(0, 0).forEach(itemConfig => {
           const item = screen.getByText(itemConfig.label);
