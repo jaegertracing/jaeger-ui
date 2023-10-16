@@ -146,7 +146,14 @@ function SpanBar(props: TCommonProps) {
           const criticalPathViewEnd = critcalPathViewBounds.end;
           const key = `${each.spanId}-${index}`;
           return (
-            <Tooltip placement="top" title="Critical Path">
+            <Tooltip
+              placement="top"
+              title={
+                <div>
+                  A segment on the <em>critical path</em> of the overall trace/request/workflow.
+                </div>
+              }
+            >
               <div
                 key={key}
                 data-testid="SpanBar--criticalPath"
