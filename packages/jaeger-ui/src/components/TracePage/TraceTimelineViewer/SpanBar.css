@@ -56,7 +56,7 @@ limitations under the License.
   content: '';
   position: absolute;
   top: 0;
-  width: 10%; 
+  width: 10%;
   height: 100%;
   visibility: hidden;
   background-color: white;
@@ -104,13 +104,15 @@ limitations under the License.
   background-color: rgba(0, 0, 0, 0.5);
   cursor: pointer;
   height: 60%;
-  min-width: 1px;
+  min-width: 2px;
   position: absolute;
   top: 20%;
 }
 
 .SpanBar--logMarker:hover {
   background-color: #000;
+  transform: scale(1.2);
+  transition: transform 0.3s ease;
 }
 
 .SpanBar--logMarker::before,
