@@ -111,7 +111,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
   });
 
   it('renders when a trace is not set', () => {
-    wrapper.setProps({ trace: null });
+    wrapper.setProps({ trace: [] });
     expect(wrapper).toBeDefined();
   });
 
