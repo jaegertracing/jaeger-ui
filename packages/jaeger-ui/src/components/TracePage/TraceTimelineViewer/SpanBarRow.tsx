@@ -201,6 +201,7 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
           <Ticks numTicks={numTicks} />
           <SpanBar
             criticalPath={criticalPath}
+            isChildrenExpanded={isChildrenExpanded}
             rpc={rpc}
             viewStart={viewStart}
             viewEnd={viewEnd}
