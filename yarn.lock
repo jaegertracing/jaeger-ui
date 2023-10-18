@@ -2403,9 +2403,9 @@
     "@types/d3-selection" "*"
 
 "@types/deep-freeze@^0.1.1":
-  version "0.1.2"
-  resolved "https://registry.yarnpkg.com/@types/deep-freeze/-/deep-freeze-0.1.2.tgz#68e5379291910e82c2f0d1629732163c2aa662cc"
-  integrity sha512-M6x29Vk4681dght4IMnPIcF1SNmeEm0c4uatlTFhp+++H1oDK1THEIzuCC2WeCBVhX+gU0NndsseDS3zaCtlcQ==
+  version "0.1.4"
+  resolved "https://registry.yarnpkg.com/@types/deep-freeze/-/deep-freeze-0.1.4.tgz#e893f67b9dae9e994f4c9bede8464e729652d48d"
+  integrity sha512-axIlS/9rrHXqet5THlrX2VJNh4tQR3E6bvAsSnGR0fqT45IiZBC/UqCXZfpSkiKBO1YEKRZhI36f6Y+zU0lheg==
 
 "@types/eslint-scope@^3.7.3":
   version "3.7.4"
