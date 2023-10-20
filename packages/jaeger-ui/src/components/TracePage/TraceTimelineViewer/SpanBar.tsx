@@ -30,7 +30,6 @@ type TCommonProps = {
   // onClick: (evt: React.MouseEvent<any>) => void;
   onClick?: (evt: React.MouseEvent<any>) => void;
   criticalPath: criticalPathSection[];
-  isChildrenExpanded: boolean;
   viewEnd: number;
   viewStart: number;
   getViewedBounds: ViewedBoundsFunctionType;
@@ -58,7 +57,6 @@ function toPercentInDecimal(value: number) {
 function SpanBar(props: TCommonProps) {
   const {
     criticalPath,
-    isChildrenExpanded,
     viewEnd,
     viewStart,
     getViewedBounds,
@@ -87,23 +85,6 @@ function SpanBar(props: TCommonProps) {
   const setLongLabel = () => {
     setLabel(longLabel);
   };
-
-  let criticalPathWhenParentCollapsed = {
-    ViewStart: Infinity,
-    ViewEnd: -Infinity,
-  };
-  if (!isChildrenExpanded && criticalPath) {
-    criticalPathWhenParentCollapsed = criticalPath.reduce((accumulator, each) => {
-      const critcalPathViewBounds = getViewedBounds(each.section_start, each.section_end);
-      const criticalPathViewStart = critcalPathViewBounds.start;
-      const criticalPathViewEnd = critcalPathViewBounds.end;
-
-      accumulator.ViewStart = Math.min(accumulator.ViewStart, criticalPathViewStart);
-      accumulator.ViewEnd = Math.max(accumulator.ViewEnd, criticalPathViewEnd);
-
-      return accumulator;
-    }, criticalPathWhenParentCollapsed);
-  }
 
   return (
     <div
@@ -159,7 +140,6 @@ function SpanBar(props: TCommonProps) {
         />
       )}
       {criticalPath &&
-        (!span.hasChildren || isChildrenExpanded) &&
         criticalPath.map((each, index) => {
           const critcalPathViewBounds = getViewedBounds(each.section_start, each.section_end);
           const criticalPathViewStart = critcalPathViewBounds.start;
@@ -187,28 +167,6 @@ function SpanBar(props: TCommonProps) {
             </Tooltip>
           );
         })}
-      {criticalPath && span.hasChildren && !isChildrenExpanded && (
-        <Tooltip
-          placement="top"
-          title={
-            <div>
-              A segment on the <em>critical path</em> of the overall trace/request/workflow.
-            </div>
-          }
-        >
-          <div
-            data-testid="SpanBar--criticalPath"
-            className="SpanBar--criticalPath"
-            style={{
-              background: 'black',
-              left: toPercentInDecimal(criticalPathWhenParentCollapsed.ViewStart),
-              width: toPercentInDecimal(
-                criticalPathWhenParentCollapsed.ViewEnd - criticalPathWhenParentCollapsed.ViewStart
-              ),
-            }}
-          />
-        </Tooltip>
-      )}
     </div>
   );
 }
