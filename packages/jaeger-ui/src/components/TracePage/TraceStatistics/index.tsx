@@ -45,67 +45,68 @@ const columnsArray: any[] = [
     title: 'Name',
     attribute: 'name',
     suffix: '',
-    titleDescription: 'Name Description',
+    titleDescription: 'Service Name of a span',
   },
   {
     title: 'Count',
     attribute: 'count',
     suffix: '',
-    titleDescription: 'Count Description',
+    titleDescription: 'Number of spans',
   },
   {
     title: 'Total',
     attribute: 'total',
     suffix: 'ms',
-    titleDescription: 'Total Description',
+    titleDescription: 'Total duaration of all spans',
   },
   {
     title: 'Avg',
     attribute: 'avg',
     suffix: 'ms',
-    titleDescription: 'Avg Description',
+    titleDescription: 'Average duaration of all spans',
   },
   {
     title: 'Min',
     attribute: 'min',
     suffix: 'ms',
-    titleDescription: 'Min Description',
+    titleDescription: 'Minimum duaration from the duaration of all spans',
   },
   {
     title: 'Max',
     attribute: 'max',
     suffix: 'ms',
-    titleDescription: 'Max Description',
+    titleDescription: 'Maximum duaration from the duaration of all spans',
   },
   {
     title: 'ST Total',
     attribute: 'selfTotal',
     suffix: 'ms',
-    titleDescription: 'ST Total Description',
+    titleDescription:
+      'Sum of Self time(Total time spent in a span when it was not waiting on children.) of all spans',
   },
   {
     title: 'ST Avg',
     attribute: 'selfAvg',
     suffix: 'ms',
-    titleDescription: 'ST Avg Description',
+    titleDescription: 'Average value of self time of all spans',
   },
   {
     title: 'ST Min',
     attribute: 'selfMin',
     suffix: 'ms',
-    titleDescription: 'ST Min Description',
+    titleDescription: 'Minimum value from self time of all spans',
   },
   {
     title: 'ST Max',
     attribute: 'selfMax',
     suffix: 'ms',
-    titleDescription: 'ST Max Description',
+    titleDescription: 'Maximum value from self time of all spans',
   },
   {
     title: 'ST in Duration',
     attribute: 'percent',
     suffix: '%',
-    titleDescription: 'ST in Duration Description',
+    titleDescription: 'Percentage of self time in the total duration of all spans',
   },
 ];
 
@@ -315,7 +316,11 @@ export default class TraceStatistics extends Component<Props, State> {
       const ele = {
         title: (
           <Tooltip title={<span>{val.titleDescription}</span>}>
-            <span onMouseOver={() => this.toogleToolTip(false)} onMouseLeave={() => this.toogleToolTip(true)}>
+            <span
+              data-testid={val.title}
+              onMouseOver={() => this.toogleToolTip(false)}
+              onMouseLeave={() => this.toogleToolTip(true)}
+            >
               {val.title}
             </span>
           </Tooltip>

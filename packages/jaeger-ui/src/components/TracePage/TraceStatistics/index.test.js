@@ -89,4 +89,12 @@ describe('<TraceTagOverview>', () => {
     expect(instance.state.popupContent).toBe('select *');
     expect(instance.state.showPopup).toBe(false);
   });
+
+  it('check toggleToolTip', () => {
+    const instance = wrapper.instance();
+    wrapper.find({ 'data-testid': 'Name' }).simulate('mouseover');
+    expect(instance.state.showSorterTooltip).toBe(false);
+    wrapper.find({ 'data-testid': 'Name' }).simulate('mouseleave');
+    expect(instance.state.showSorterTooltip).toBe(true);
+  });
 });
