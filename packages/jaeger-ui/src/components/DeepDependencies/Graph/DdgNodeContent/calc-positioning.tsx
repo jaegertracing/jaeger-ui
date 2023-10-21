@@ -166,7 +166,7 @@ const calcRects = _memoize(
     }
     return rects;
   },
-  (str: string, span: HTMLSpanElement) => `${str}\t${span.style.fontWeight}`
+  (str: string | string[], span: HTMLSpanElement) => `${str}\t${span.style.fontWeight}`
 );
 
 const sq = (n: number): number => n ** 2;
@@ -250,7 +250,7 @@ const calcPositioning: (service: string, operation?: string | string[] | null) =
 
       return smallestRadius(svcRects, opRects);
     },
-    (service: string, operation?: string | null) => `${service}\t${operation}`
+    (service: string, operation?: string | string[] | null) => `${service}\t${operation}`
   );
 
 export default calcPositioning;
