@@ -14,7 +14,7 @@
 
 import React, { Component } from 'react';
 import './index.css';
-import { Table } from 'antd';
+import { Table, Tooltip } from 'antd';
 import { ColumnProps } from 'antd/es/table';
 import { Trace } from '../../../types/trace';
 import TraceStatisticsHeader from './TraceStatisticsHeader';
@@ -33,6 +33,7 @@ type State = {
   sortIndex: number;
   sortAsc: boolean;
   showPopup: boolean;
+  showSorterTooltip: boolean;
   popupContent: string;
   wholeTable: ITableSpan[];
   valueNameSelector1: string;
@@ -44,56 +45,67 @@ const columnsArray: any[] = [
     title: 'Name',
     attribute: 'name',
     suffix: '',
+    titleDescription: 'Name Description',
   },
   {
     title: 'Count',
     attribute: 'count',
     suffix: '',
+    titleDescription: 'Count Description',
   },
   {
     title: 'Total',
     attribute: 'total',
     suffix: 'ms',
+    titleDescription: 'Total Description',
   },
   {
     title: 'Avg',
     attribute: 'avg',
     suffix: 'ms',
+    titleDescription: 'Avg Description',
   },
   {
     title: 'Min',
     attribute: 'min',
     suffix: 'ms',
+    titleDescription: 'Min Description',
   },
   {
     title: 'Max',
     attribute: 'max',
     suffix: 'ms',
+    titleDescription: 'Max Description',
   },
   {
     title: 'ST Total',
     attribute: 'selfTotal',
     suffix: 'ms',
+    titleDescription: 'ST Total Description',
   },
   {
     title: 'ST Avg',
     attribute: 'selfAvg',
     suffix: 'ms',
+    titleDescription: 'ST Avg Description',
   },
   {
     title: 'ST Min',
     attribute: 'selfMin',
     suffix: 'ms',
+    titleDescription: 'ST Min Description',
   },
   {
     title: 'ST Max',
     attribute: 'selfMax',
     suffix: 'ms',
+    titleDescription: 'ST Max Description',
   },
   {
     title: 'ST in Duration',
     attribute: 'percent',
     suffix: '%',
+    titleDescription: 'ST in Duration Description',
   },
 ];
 
@@ -109,6 +121,7 @@ export default class TraceStatistics extends Component<Props, State> {
       sortIndex: 1,
       sortAsc: false,
       showPopup: false,
+      showSorterTooltip: true,
       popupContent: '',
       wholeTable: [],
       valueNameSelector1: 'Service Name',
@@ -177,6 +190,10 @@ export default class TraceStatistics extends Component<Props, State> {
         popupContent,
       };
     });
+  }
+
+  toogleToolTip(a: boolean) {
+    this.setState(prevState => ({ ...prevState, showSorterTooltip: a }));
   }
 
   /**
@@ -296,11 +313,18 @@ export default class TraceStatistics extends Component<Props, State> {
         return `${cell}${val.suffix}`;
       };
       const ele = {
-        title: val.title,
+        title: (
+          <Tooltip title={<span>{val.titleDescription}</span>}>
+            <span onMouseOver={() => this.toogleToolTip(false)} onMouseLeave={() => this.toogleToolTip(true)}>
+              {val.title}
+            </span>
+          </Tooltip>
+        ),
         dataIndex: val.attribute,
         sorter: sorterFunction(val.attribute),
         render: renderFunction,
         onCell: onCellFunction,
+        showSorterTooltip: this.state.showSorterTooltip,
       };
       return val.attribute === 'count' ? { ...ele, defaultSortOrder: 'ascend' } : ele;
     });
