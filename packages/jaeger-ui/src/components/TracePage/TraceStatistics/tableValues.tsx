@@ -13,83 +13,13 @@
 // limitations under the License.
 
 import * as _ from 'lodash';
+import DRange from 'drange';
 import { Trace, Span } from '../../../types/trace';
 import { ITableSpan } from './types';
 import colorGenerator from '../../../utils/color-generator';
 
 const serviceName = 'Service Name';
 const operationName = 'Operation Name';
-
-/**
- * Return the lowest startTime.
- */
-function getLowestStartTime(allOverlay: Span[]) {
-  let result;
-  const temp = _.minBy(allOverlay, function calc(a) {
-    return a.relativeStartTime;
-  });
-  if (temp !== undefined) {
-    result = { duration: temp.duration, lowestStartTime: temp.relativeStartTime };
-  } else {
-    result = { duration: -1, lowestStartTime: -1 };
-  }
-  return result;
-}
-
-/**
- * Determines whether the cut spans belong together and then calculates the duration.
- */
-function getDuration(lowestStartTime: number, duration: number, allOverlay: Span[]) {
-  let durationChange = duration;
-  let didDelete = false;
-  for (let i = 0; i < allOverlay.length; i++) {
-    if (lowestStartTime + durationChange >= allOverlay[i].relativeStartTime) {
-      if (lowestStartTime + durationChange < allOverlay[i].relativeStartTime + allOverlay[i].duration) {
-        const tempDuration =
-          allOverlay[i].relativeStartTime + allOverlay[i].duration - lowestStartTime + durationChange;
-        durationChange = tempDuration;
-      }
-      allOverlay.splice(i, 1);
-      didDelete = true;
-      break;
-    }
-  }
-  const result = { allOverlay, duration: durationChange, didDelete };
-  return result;
-}
-
-/**
- * Return the selfTime of overlay spans.
- */
-function onlyOverlay(allOverlay: Span[], allChildren: Span[], tempSelf: number, span: Span) {
-  let tempSelfChange = tempSelf;
-  let duration = 0;
-  let resultGetDuration = { allOverlay, duration, didDelete: false };
-  const noOverlay = _.difference(allChildren, allOverlay);
-  let lowestStartTime = 0;
-  let totalDuration = 0;
-  const result = getLowestStartTime(allOverlay);
-  lowestStartTime = result.lowestStartTime;
-  duration = result.duration;
-
-  do {
-    resultGetDuration = getDuration(lowestStartTime, duration, resultGetDuration.allOverlay);
-    if (!resultGetDuration.didDelete && resultGetDuration.allOverlay.length > 0) {
-      totalDuration = resultGetDuration.duration;
-      const temp = getLowestStartTime(resultGetDuration.allOverlay);
-      lowestStartTime = temp.lowestStartTime;
-      duration = temp.duration;
-    }
-  } while (resultGetDuration.allOverlay.length > 1);
-  duration = resultGetDuration.duration + totalDuration;
-  // no cut is observed
-  for (let i = 0; i < noOverlay.length; i++) {
-    duration += noOverlay[i].duration;
-  }
-  tempSelfChange += span.duration - duration;
-
-  return tempSelfChange;
-}
 
 /**
  * Used to calculated the content.
@@ -106,125 +36,25 @@ function calculateContent(trace: Trace, span: Span, allSpans: Span[], resultValu
   }
   // selfTime
   let tempSelf = 0;
-  let longerAsParent = false;
-  let kinderSchneiden = false;
-  let allOverlay = [];
-  const longerAsParentSpan = [];
   if (span.hasChildren) {
-    const allChildren = [] as any;
-    for (let i = 0; i < allSpans.length; i++) {
-      // i am a child?
-      if (allSpans[i].references.length === 1) {
-        if (span.spanID === allSpans[i].references[0].spanID) {
-          allChildren.push(allSpans[i]);
-        }
+    const spanDRange = new DRange(span.startTime, span.startTime + span.duration);
+    const childrenDrange = new DRange();
+    span.childSpanIds.forEach(eachId => {
+      const childSpan = allSpans.find(a => a.spanID === eachId && a.references[0].refType === 'CHILD_OF');
+      if (childSpan) {
+        childrenDrange.add(
+          childSpan.startTime,
+          childSpan.startTime + (childSpan.duration <= 0 ? 0 : childSpan.duration)
+        );
       }
-    }
-    // i only have one child
-    if (allChildren.length === 1) {
-      if (
-        span.relativeStartTime + span.duration >=
-        allChildren[0].relativeStartTime + allChildren[0].duration
-      ) {
-        tempSelf = span.duration - allChildren[0].duration;
-      } else {
-        tempSelf = allChildren[0].relativeStartTime - span.relativeStartTime;
-      }
-    } else {
-      // is the child longer as parent
-      for (let i = 0; i < allChildren.length; i++) {
-        if (
-          span.duration + span.relativeStartTime <
-          allChildren[i].duration + allChildren[i].relativeStartTime
-        ) {
-          longerAsParent = true;
-          longerAsParentSpan.push(allChildren[i]);
-        }
-      }
-      // Do the children overlap?
-      for (let i = 0; i < allChildren.length; i++) {
-        for (let j = 0; j < allChildren.length; j++) {
-          // aren't they the same kids?
-          if (allChildren[i].spanID !== allChildren[j].spanID) {
-            // if yes the children cut themselves or lie into each other
-            if (
-              allChildren[i].relativeStartTime <= allChildren[j].relativeStartTime &&
-              allChildren[i].relativeStartTime + allChildren[i].duration >= allChildren[j].relativeStartTime
-            ) {
-              kinderSchneiden = true;
-              allOverlay.push(allChildren[i]);
-              allOverlay.push(allChildren[j]);
-            }
-          }
-        }
-      }
-      allOverlay = [...new Set(allOverlay)];
-      // diff options
-      if (!longerAsParent && !kinderSchneiden) {
-        tempSelf = span.duration;
-        for (let i = 0; i < allChildren.length; i++) {
-          tempSelf -= allChildren[i].duration;
-        }
-      } else if (longerAsParent && kinderSchneiden) {
-        // cut only longerAsParent
-        if (_.isEmpty(_.xor(allOverlay, longerAsParentSpan))) {
-          // find ealiesr longerasParent
-          const earliestLongerAsParent = _.minBy(longerAsParentSpan, function calc(a) {
-            return a.relativeStartTime;
-          });
-          // remove all children wo are longer as Parent
-          const allChildrenWithout = _.difference(allChildren, longerAsParentSpan);
-          tempSelf = earliestLongerAsParent.relativeStartTime - span.relativeStartTime;
-          for (let i = 0; i < allChildrenWithout.length; i++) {
-            tempSelf -= allChildrenWithout[i].duration;
-          }
-        } else {
-          const overlayOnly = _.difference(allOverlay, longerAsParentSpan);
-          const allChildrenWithout = _.difference(allChildren, longerAsParentSpan);
-          const earliestLongerAsParent = _.minBy(longerAsParentSpan, function calc(a) {
-            return a.relativeStartTime;
-          });
+    });
 
-          // overlay between longerAsParent and overlayOnly
-          const overlayWithout = [];
-          for (let i = 0; i < overlayOnly.length; i++) {
-            if (!earliestLongerAsParent.relativeStartTime <= overlayOnly[i].relativeStartTime) {
-              overlayWithout.push(overlayOnly[i]);
-            }
-          }
-          for (let i = 0; i < overlayWithout.length; i++) {
-            if (
-              overlayWithout[i].relativeStartTime + overlayWithout[i].duration >
-              earliestLongerAsParent.relativeStartTime
-            ) {
-              overlayWithout[i].duration -=
-                overlayWithout[i].relativeStartTime +
-                overlayWithout[i].duration -
-                earliestLongerAsParent.relativeStartTime;
-              if (overlayWithout[i].duration < 0) {
-                overlayWithout[i].duration = 0;
-              }
-            }
-          }
-
-          tempSelf = onlyOverlay(overlayWithout, allChildrenWithout, tempSelf, span);
-          const diff = span.relativeStartTime + span.duration - earliestLongerAsParent.relativeStartTime;
-          tempSelf = Math.max(0, tempSelf - diff);
-        }
-      } else if (longerAsParent) {
-        // span is longer as Parent
-        tempSelf = longerAsParentSpan[0].relativeStartTime - span.relativeStartTime;
-        for (let i = 0; i < allChildren.length; i++) {
-          if (allChildren[i].spanID !== longerAsParentSpan[0].spanID) {
-            tempSelf -= allChildren[i].duration;
-          }
-        }
-      } else {
-        // Overlay
-        tempSelf = onlyOverlay(allOverlay, allChildren, tempSelf, span);
-      }
-    }
-    // no children
+    // Number of subranges
+    const n = childrenDrange.subranges().length;
+    // -1 for each subrange as in a DRange.length = high-low+1
+    const durationOfchildrenDrange = spanDRange.clone().intersect(childrenDrange).length - n;
+    const selfTime = span.duration - durationOfchildrenDrange;
+    tempSelf += selfTime;
   } else {
     tempSelf += span.duration;
   }
