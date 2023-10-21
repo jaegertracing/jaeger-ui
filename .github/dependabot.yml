@@ -2,6 +2,7 @@ version: 2
 updates:
   - package-ecosystem: "npm"
     open-pull-requests-limit: 50
+    labels: [ "changelog:dependencies" ]
     directory: "/"
     schedule:
       interval: "daily"
@@ -38,3 +39,4 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+    labels: [ "changelog:dependencies" ]
