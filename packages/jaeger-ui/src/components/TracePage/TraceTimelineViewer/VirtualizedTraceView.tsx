@@ -181,9 +181,7 @@ function mergeChildrenCriticalPath(
   const criticalPathSections: criticalPathSection[] = [];
   criticalPath.forEach(each => {
     if (allRequiredSpanIds.includes(each.spanId)) {
-      if (criticalPathSections.length === 0) {
-        criticalPathSections.unshift({ ...each });
-      } else if (each.section_end === criticalPathSections[0].section_start) {
+      if (criticalPathSections.length !== 0 && each.section_end === criticalPathSections[0].section_start) {
         // Merge Critical Paths if they are consecutive
         criticalPathSections[0].section_start = each.section_start;
       } else {
