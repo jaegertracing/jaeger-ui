@@ -41,7 +41,7 @@ type State = {
 
 const columnsArray: any[] = [
   {
-    title: 'Name',
+    title: 'Group',
     attribute: 'name',
     suffix: '',
   },
@@ -49,51 +49,61 @@ const columnsArray: any[] = [
     title: 'Count',
     attribute: 'count',
     suffix: '',
+    titleDescription: 'Number of spans',
   },
   {
     title: 'Total',
     attribute: 'total',
     suffix: 'ms',
+    titleDescription: 'Total duration of all spans',
   },
   {
     title: 'Avg',
     attribute: 'avg',
     suffix: 'ms',
+    titleDescription: 'Average duration of all spans',
   },
   {
     title: 'Min',
     attribute: 'min',
     suffix: 'ms',
+    titleDescription: 'Minimum duration across all spans',
   },
   {
     title: 'Max',
     attribute: 'max',
     suffix: 'ms',
+    titleDescription: 'Maximum duration across all spans',
   },
   {
     title: 'ST Total',
     attribute: 'selfTotal',
     suffix: 'ms',
+    titleDescription: 'Sum of Self Time (time spent in a span when it was not waiting on children)',
   },
   {
     title: 'ST Avg',
     attribute: 'selfAvg',
     suffix: 'ms',
+    titleDescription: 'Average Self Time (time spent in a span when it was not waiting on children)',
   },
   {
     title: 'ST Min',
     attribute: 'selfMin',
     suffix: 'ms',
+    titleDescription: 'Minimum Self Time (time spent in a span when it was not waiting on children)',
   },
   {
     title: 'ST Max',
     attribute: 'selfMax',
     suffix: 'ms',
+    titleDescription: 'Maximum Self Time (time spent in a span when it was not waiting on children)',
   },
   {
     title: 'ST in Duration',
     attribute: 'percent',
     suffix: '%',
+    titleDescription: 'Percentage of ST Total vs. Total',
   },
 ];
 
@@ -301,6 +311,7 @@ export default class TraceStatistics extends Component<Props, State> {
         sorter: sorterFunction(val.attribute),
         render: renderFunction,
         onCell: onCellFunction,
+        showSorterTooltip: val.attribute !== 'name' ? { title: val.titleDescription } : false,
       };
       return val.attribute === 'count' ? { ...ele, defaultSortOrder: 'ascend' } : ele;
     });
