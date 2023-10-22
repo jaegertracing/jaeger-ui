@@ -30,13 +30,13 @@ span A is on critical path(+++++)                 |
 import trace from '../../TraceStatistics/tableValuesTestTrace/traceWithSingleChildSpanLongerThanParent.json';
 
 const transformedTrace = transformTraceData(trace);
-const traceStart = 1679437737490189;
+const traceStart = 100;
 
 const criticalPathSections = [
   {
     spanId: '006c3cf93508f205',
     section_start: traceStart,
-    section_end: traceStart + 36,
+    section_end: traceStart + 40,
   },
 ];
 

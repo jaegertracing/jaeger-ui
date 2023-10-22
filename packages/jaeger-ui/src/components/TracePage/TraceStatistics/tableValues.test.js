@@ -506,12 +506,12 @@ describe('check self time', () => {
       'Service Name',
       transformedTraceWithOverlappingChildrenLongerThanParent
     );
-    expect(serviceOne.selfTotal).toBe(10.33);
+    expect(serviceOne.selfTotal).toBe(0.03);
   });
 
   it('span with two children that do not overlap and one is longer than its parent', () => {
     const [serviceOne] = getColumnValues('Service Name', transformedTraceWithTwoNonOverlappingChildren);
-    expect(serviceOne.selfTotal).toBe(1.51);
+    expect(serviceOne.selfTotal).toBe(0.03);
   });
 
   it('span with two overlapping children where one is longer than its parent', () => {
@@ -521,7 +521,7 @@ describe('check self time', () => {
 
   it('span with single child span longer than its parent', () => {
     const [serviceOne] = getColumnValues('Service Name', transformedTraceWithSingleChildSpanLongerThanParent);
-    expect(serviceOne.selfTotal).toBe(1.34);
+    expect(serviceOne.selfTotal).toBe(0.04);
   });
 
   it('span with three children shorter than their parent, two of which overlap', () => {
