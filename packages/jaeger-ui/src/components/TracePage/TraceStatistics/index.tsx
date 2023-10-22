@@ -14,7 +14,7 @@
 
 import React, { Component } from 'react';
 import './index.css';
-import { Table, Tooltip } from 'antd';
+import { Table } from 'antd';
 import { ColumnProps } from 'antd/es/table';
 import { Trace } from '../../../types/trace';
 import TraceStatisticsHeader from './TraceStatisticsHeader';
@@ -41,10 +41,9 @@ type State = {
 
 const columnsArray: any[] = [
   {
-    title: 'Name',
+    title: 'Group',
     attribute: 'name',
     suffix: '',
-    titleDescription: 'Service Name of a span',
   },
   {
     title: 'Count',
@@ -312,7 +311,7 @@ export default class TraceStatistics extends Component<Props, State> {
         sorter: sorterFunction(val.attribute),
         render: renderFunction,
         onCell: onCellFunction,
-        showSorterTooltip: { title: val.titleDescription },
+        showSorterTooltip: val.attribute !== 'name' ? { title: val.titleDescription } : false,
       };
       return val.attribute === 'count' ? { ...ele, defaultSortOrder: 'ascend' } : ele;
     });
