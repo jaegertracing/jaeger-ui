@@ -33,7 +33,6 @@ type State = {
   sortIndex: number;
   sortAsc: boolean;
   showPopup: boolean;
-  showSorterTooltip: boolean;
   popupContent: string;
   wholeTable: ITableSpan[];
   valueNameSelector1: string;
@@ -121,7 +120,6 @@ export default class TraceStatistics extends Component<Props, State> {
       sortIndex: 1,
       sortAsc: false,
       showPopup: false,
-      showSorterTooltip: true,
       popupContent: '',
       wholeTable: [],
       valueNameSelector1: 'Service Name',
@@ -190,10 +188,6 @@ export default class TraceStatistics extends Component<Props, State> {
         popupContent,
       };
     });
-  }
-
-  toogleToolTip(a: boolean) {
-    this.setState(prevState => ({ ...prevState, showSorterTooltip: a }));
   }
 
   /**
@@ -313,22 +307,12 @@ export default class TraceStatistics extends Component<Props, State> {
         return `${cell}${val.suffix}`;
       };
       const ele = {
-        title: (
-          <Tooltip title={<span>{val.titleDescription}</span>}>
-            <span
-              data-testid={val.title}
-              onMouseOver={() => this.toogleToolTip(false)}
-              onMouseLeave={() => this.toogleToolTip(true)}
-            >
-              {val.title}
-            </span>
-          </Tooltip>
-        ),
+        title: val.title,
         dataIndex: val.attribute,
         sorter: sorterFunction(val.attribute),
         render: renderFunction,
         onCell: onCellFunction,
-        showSorterTooltip: this.state.showSorterTooltip,
+        showSorterTooltip: { title: val.titleDescription },
       };
       return val.attribute === 'count' ? { ...ele, defaultSortOrder: 'ascend' } : ele;
     });
