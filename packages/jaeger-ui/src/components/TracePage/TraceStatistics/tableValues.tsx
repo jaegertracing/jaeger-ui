@@ -37,23 +37,24 @@ function calculateContent(trace: Trace, span: Span, allSpans: Span[], resultValu
   // selfTime
   let tempSelf = 0;
   if (span.hasChildren) {
-    const spanDRange = new DRange(span.startTime, span.startTime + span.duration);
-    const childrenDrange = new DRange();
-    span.childSpanIds.forEach(eachId => {
-      const childSpan = allSpans.find(a => a.spanID === eachId && a.references[0].refType === 'CHILD_OF');
-      if (childSpan) {
-        childrenDrange.add(
-          childSpan.startTime,
-          childSpan.startTime + (childSpan.duration <= 0 ? 0 : childSpan.duration)
-        );
-      }
+    const spanRange = new DRange(span.startTime, span.startTime + span.duration);
+    // Filter for CHILD_OF we don't want to calculate FOLLOWS_FROM
+    const children = allSpans.filter(
+      each =>
+        span.childSpanIds.includes(each.spanID) &&
+        each.references[0].spanID === span.spanID &&
+        each.references[0].refType === 'CHILD_OF'
+    );
+    children.forEach(child => {
+      // A DRange(start,end) builds interval as whole numbers.
+      // So when subtarcting a DRange directly do (+1 , -1) to (start,end) otherwise
+      // for each subtaracting of a DRange it will take extra 2 microseconds
+      spanRange.subtract(child.startTime + 1, child.startTime + child.duration - 1);
     });
-
-    // Number of subranges
-    const n = childrenDrange.subranges().length;
-    // -1 for each subrange as in a DRange.length = high-low+1
-    const durationOfchildrenDrange = spanDRange.clone().intersect(childrenDrange).length - n;
-    const selfTime = span.duration - durationOfchildrenDrange;
+    const selfTime = spanRange
+      .subranges()
+      .map(r => r.high - r.low)
+      .reduce((sum, v) => sum + v, 0);
     tempSelf += selfTime;
   } else {
     tempSelf += span.duration;
