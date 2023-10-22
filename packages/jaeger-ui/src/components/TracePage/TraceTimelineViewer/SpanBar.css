@@ -104,7 +104,7 @@ limitations under the License.
   background-color: rgba(0, 0, 0, 0.5);
   cursor: pointer;
   height: 60%;
-  min-width: 2px;
+  min-width: 1px;
   position: absolute;
   top: 20%;
 }
@@ -122,7 +122,7 @@ limitations under the License.
   top: 0;
   bottom: 0;
   right: 0;
-  border: 1px solid transparent;
+  border: 3px solid transparent;
 }
 
 .SpanBar--logMarker::after {
