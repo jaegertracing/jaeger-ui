@@ -158,6 +158,43 @@ function getCssClasses(currentViewRange: [number, number]) {
   });
 }
 
+function mergeChildrenCriticalPath(
+  trace: Trace,
+  spanID: string,
+  criticalPath: criticalPathSection[]
+): criticalPathSection[] {
+  // Define an array to store the IDs of the span and its descendants (if the span is collapsed)
+  const allRequiredSpanIds = [spanID];
+
+  // If the span is collapsed, recursively find all of its descendants.
+  const findAllDescendants = (currentChildSpanIds: string[]) => {
+    currentChildSpanIds.forEach(eachId => {
+      const currentChildSpan = trace.spans.find(a => a.spanID === eachId)!;
+      if (currentChildSpan.hasChildren) {
+        allRequiredSpanIds.push(...currentChildSpan.childSpanIds);
+        findAllDescendants(currentChildSpan.childSpanIds);
+      }
+    });
+  };
+  findAllDescendants(allRequiredSpanIds);
+
+  const criticalPathSections: criticalPathSection[] = [];
+  criticalPath.forEach(each => {
+    if (allRequiredSpanIds.includes(each.spanId)) {
+      if (criticalPathSections.length === 0) {
+        criticalPathSections.unshift({ ...each });
+      } else if (each.section_end === criticalPathSections[0].section_start) {
+        // Merge Critical Paths if they are consecutive
+        criticalPathSections[0].section_start = each.section_start;
+      } else {
+        criticalPathSections.unshift({ ...each });
+      }
+    }
+  });
+
+  return criticalPathSections;
+}
+
 const memoizedGenerateRowStates = memoizeOne(generateRowStatesFromTrace);
 const memoizedViewBoundsFunc = memoizeOne(createViewedBoundsFunc, _isEqual);
 const memoizedGetCssClasses = memoizeOne(getCssClasses, _isEqual);
@@ -358,39 +395,9 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     const isDetailExpanded = detailStates.has(spanID);
     const isMatchingFilter = findMatchesIDs ? findMatchesIDs.has(spanID) : false;
     const showErrorIcon = isErrorSpan(span) || (isCollapsed && spanContainsErredSpan(trace.spans, spanIndex));
-
-    // Define an array to store the IDs of the span and its descendants (if the span is collapsed)
-    const allRequiredSpanIds = [spanID];
-
-    // If the span is collapsed, recursively find all of its descendants.
-    if (isCollapsed) {
-      const findAllDescendants = (currentChildSpanIds: string[]) => {
-        currentChildSpanIds.forEach(eachId => {
-          const currentChildSpan = trace.spans.find(a => a.spanID === eachId)!;
-          if (currentChildSpan.hasChildren) {
-            allRequiredSpanIds.push(...currentChildSpan.childSpanIds);
-            findAllDescendants(currentChildSpan.childSpanIds);
-          }
-        });
-      };
-      findAllDescendants(allRequiredSpanIds);
-    }
-    const criticalPathSections: criticalPathSection[] = [];
-    // Make a deep copy of the criticalpath to avoid reference errors
-    const criticalPathCopy: criticalPathSection[] = JSON.parse(JSON.stringify(criticalPath));
-    criticalPathCopy.forEach(each => {
-      if (allRequiredSpanIds.includes(each.spanId)) {
-        if (criticalPathSections.length === 0) {
-          criticalPathSections.unshift(each);
-        } else if (each.section_end === criticalPathSections[0].section_start) {
-          // Merge Critical Paths if they are consecutive
-          criticalPathSections[0].section_start = each.section_start;
-        } else {
-          criticalPathSections.unshift(each);
-        }
-      }
-    });
-
+    const criticalPathSections = isCollapsed
+      ? mergeChildrenCriticalPath(trace, spanID, criticalPath)
+      : criticalPath.filter(each => each.spanId === spanID);
     // Check for direct child "server" span if the span is a "client" span.
     let rpc = null;
     if (isCollapsed) {
