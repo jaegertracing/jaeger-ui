@@ -520,7 +520,10 @@ describe('check self time', () => {
   });
 
   it('span with single child span longer than its parent', () => {
-    const [serviceOne] = getColumnValues('Service Name', transformedtraceWithSingleChildLongerThanParentAndStartsAfterParent);
+    const [serviceOne] = getColumnValues(
+      'Service Name',
+      transformedtraceWithSingleChildLongerThanParentAndStartsAfterParent
+    );
     expect(serviceOne.selfTotal).toBe(0.04);
   });
 

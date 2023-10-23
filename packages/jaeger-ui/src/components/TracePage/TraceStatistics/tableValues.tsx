@@ -55,10 +55,7 @@ function computeColumnValues(trace: Trace, span: Span, allSpans: Span[], resultV
     children.forEach(child => {
       spanRange.subtract(10 * child.startTime, 10 * (child.startTime + child.duration) - 1);
     });
-    const selfTime = spanRange
-      .subranges()
-      .map(r => r.high - r.low)
-      .reduce((sum, v) => sum + v, 0);
+    const selfTime = spanRange.length;
     tempSelf += Math.round(selfTime / 10);
   } else {
     tempSelf += span.duration;
