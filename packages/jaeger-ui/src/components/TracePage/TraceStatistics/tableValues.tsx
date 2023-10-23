@@ -21,18 +21,7 @@ import colorGenerator from '../../../utils/color-generator';
 const serviceName = 'Service Name';
 const operationName = 'Operation Name';
 
-function computeColumnValues(trace: Trace, span: Span, allSpans: Span[], resultValue: any) {
-  const resultValueChange = resultValue;
-  resultValueChange.count += 1;
-  resultValueChange.total += span.duration;
-  if (resultValueChange.min > span.duration) {
-    resultValueChange.min = span.duration;
-  }
-  if (resultValueChange.max < span.duration) {
-    resultValueChange.max = span.duration;
-  }
-  // selfTime
-  let tempSelf = 0;
+function computeSelfTime(span: Span, allSpans: Span[]): number {
   if (span.hasChildren) {
     // We want to represent spans as half-open intervals like [startTime, startTime + duration).
     // This way the subtraction preserves the right boundaries. However, DRange treats all
@@ -54,10 +43,23 @@ function computeColumnValues(trace: Trace, span: Span, allSpans: Span[], resultV
     children.forEach(child => {
       spanRange.subtract(10 * child.startTime, 10 * (child.startTime + child.duration) - 1);
     });
-    tempSelf += Math.round(spanRange.length / 10);
-  } else {
-    tempSelf += span.duration;
+    return Math.round(spanRange.length / 10);
   }
+  return span.duration;
+}
+
+function computeColumnValues(trace: Trace, span: Span, allSpans: Span[], resultValue: any) {
+  const resultValueChange = resultValue;
+  resultValueChange.count += 1;
+  resultValueChange.total += span.duration;
+  if (resultValueChange.min > span.duration) {
+    resultValueChange.min = span.duration;
+  }
+  if (resultValueChange.max < span.duration) {
+    resultValueChange.max = span.duration;
+  }
+
+  const tempSelf = computeSelfTime(span, allSpans);
   if (resultValueChange.selfMin > tempSelf) {
     resultValueChange.selfMin = tempSelf;
   }
