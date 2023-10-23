@@ -36,7 +36,7 @@ function computeColumnValues(trace: Trace, span: Span, allSpans: Span[], resultV
   if (span.hasChildren) {
     // We want to represent spans as half-open intervals like [startTime, startTime + duration).
     // This way the subtraction preserves the right boundaries. However, DRange treats all
-    // intervals as exclusive. For example,
+    // intervals as inclusive. For example,
     //       range(1, 10).subtract(4, 8) => range([1, 3], [9-10])
     //       length=(3-1)+(10-9)=2+1=3
     // In other words, we took an interval of length=10-1=9 and subtracted length=8-4=4.
@@ -54,8 +54,7 @@ function computeColumnValues(trace: Trace, span: Span, allSpans: Span[], resultV
     children.forEach(child => {
       spanRange.subtract(10 * child.startTime, 10 * (child.startTime + child.duration) - 1);
     });
-    const selfTime = spanRange.length;
-    tempSelf += Math.round(selfTime / 10);
+    tempSelf += Math.round(spanRange.length / 10);
   } else {
     tempSelf += span.duration;
   }
