@@ -14,7 +14,7 @@
 
 import React from 'react';
 import { Dropdown, Tooltip } from 'antd';
-import { TooltipPlacement } from 'antd/lib/tooltip';
+import { TooltipPlacement } from 'antd/es/tooltip';
 import NewWindowIcon from '../../common/NewWindowIcon';
 import { SpanReference } from '../../../types/trace';
 
