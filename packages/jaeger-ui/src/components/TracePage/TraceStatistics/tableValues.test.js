@@ -23,7 +23,7 @@ import traceSpanLongerAsParent from './tableValuesTestTrace/spanLongerAsParent.j
 import traceWithOverlappingChildrenLongerThanParent from './tableValuesTestTrace/traceWithOverlappingChildrenLongerThanParent.json';
 import traceWithTwoNonOverlappingChildren from './tableValuesTestTrace/traceWithTwoNonOverlappingChildren.json';
 import traceWithOverlappingChildren from './tableValuesTestTrace/traceWithOverlappingChildren.json';
-import traceWithSingleChildSpanLongerThanParent from './tableValuesTestTrace/traceWithSingleChildSpanLongerThanParent.json';
+import traceWithSingleChildLongerThanParentAndStartsAfterParent from './tableValuesTestTrace/traceWithSingleChildLongerThanParentAndStartsAfterParent.json';
 import traceWithThreeShortChildren from './tableValuesTestTrace/traceWithThreeShortChildren.json';
 import traceWithTwoChildrenStartedAtTraceStart from './tableValuesTestTrace/traceWithTwoChildrenStartedAtTraceStart.json';
 
@@ -39,8 +39,8 @@ const transformedTraceWithOverlappingChildrenLongerThanParent = transformTraceDa
 );
 const transformedTraceWithTwoNonOverlappingChildren = transformTraceData(traceWithTwoNonOverlappingChildren);
 const transformedTraceWithOverlappingChildren = transformTraceData(traceWithOverlappingChildren);
-const transformedTraceWithSingleChildSpanLongerThanParent = transformTraceData(
-  traceWithSingleChildSpanLongerThanParent
+const transformedtraceWithSingleChildLongerThanParentAndStartsAfterParent = transformTraceData(
+  traceWithSingleChildLongerThanParentAndStartsAfterParent
 );
 const transformedTraceWithThreeShortChildren = transformTraceData(traceWithThreeShortChildren);
 const transformedTraceWithTwoChildrenStartedAtTraceStart = transformTraceData(
@@ -520,7 +520,7 @@ describe('check self time', () => {
   });
 
   it('span with single child span longer than its parent', () => {
-    const [serviceOne] = getColumnValues('Service Name', transformedTraceWithSingleChildSpanLongerThanParent);
+    const [serviceOne] = getColumnValues('Service Name', transformedtraceWithSingleChildLongerThanParentAndStartsAfterParent);
     expect(serviceOne.selfTotal).toBe(0.04);
   });
 
