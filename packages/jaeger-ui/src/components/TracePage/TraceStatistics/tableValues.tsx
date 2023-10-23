@@ -21,10 +21,7 @@ import colorGenerator from '../../../utils/color-generator';
 const serviceName = 'Service Name';
 const operationName = 'Operation Name';
 
-/**
- * Used to calculated the content.
- */
-function calculateContent(trace: Trace, span: Span, allSpans: Span[], resultValue: any) {
+function computeColumnValues(trace: Trace, span: Span, allSpans: Span[], resultValue: any) {
   const resultValueChange = resultValue;
   resultValueChange.count += 1;
   resultValueChange.total += span.duration;
@@ -37,6 +34,16 @@ function calculateContent(trace: Trace, span: Span, allSpans: Span[], resultValu
   // selfTime
   let tempSelf = 0;
   if (span.hasChildren) {
+    // DRange treats all intervals as inclusive, even for subtract operations.
+    // We want to represent spans as half-open intervals like [startTime, startTime + duration).
+    // This way the subtraction preserves the right boundaries. However, DRange treats all
+    // intervals as exclusive. For example,
+    //       range(1, 10).subtract(4, 8) => range([1, 3], [9-10])
+    //       length=(3-1)+(10-9)=2+1=3
+    // In other words, we took an interval of length=10-1=9 and subtracted length=8-4=4.
+    // We should've ended up with length 9-4=5, but we got 3.
+    // To work around that, we multiply start/end times by 10 and subtract one from the end.
+    // So instead of [1-10] we get [10-99]. This makes the intervals work like half-open.
     const spanRange = new DRange(10 * span.startTime, 10 * (span.startTime + span.duration) - 1);
     // Filter for CHILD_OF we don't want to calculate FOLLOWS_FROM
     const children = allSpans.filter(
@@ -143,18 +150,18 @@ function valueFirstDropdown(selectedTagKey: string, trace: Trace) {
     for (let j = 0; j < allSpans.length; j++) {
       if (selectedTagKey === serviceName) {
         if (allSpans[j].process.serviceName === allDiffColumnValues[i]) {
-          resultValue = calculateContent(trace, allSpans[j], allSpans, resultValue);
+          resultValue = computeColumnValues(trace, allSpans[j], allSpans, resultValue);
           color = colorGenerator.getColorByKey(allSpans[j].process.serviceName);
         }
       } else if (selectedTagKey === operationName) {
         if (allSpans[j].operationName === allDiffColumnValues[i]) {
-          resultValue = calculateContent(trace, allSpans[j], allSpans, resultValue);
+          resultValue = computeColumnValues(trace, allSpans[j], allSpans, resultValue);
         }
       } else {
         // used when a tag is selected
         for (let l = 0; l < allSpans[j].tags.length; l++) {
           if (allSpans[j].tags[l].value === allDiffColumnValues[i]) {
-            resultValue = calculateContent(trace, allSpans[j], allSpans, resultValue);
+            resultValue = computeColumnValues(trace, allSpans[j], allSpans, resultValue);
           }
         }
       }
@@ -213,7 +220,7 @@ function valueFirstDropdown(selectedTagKey: string, trace: Trace) {
       percent: 0,
     };
     for (let i = 0; i < spanWithNoSelectedTag.length; i++) {
-      resultValue = calculateContent(trace, spanWithNoSelectedTag[i], allSpans, resultValue);
+      resultValue = computeColumnValues(trace, spanWithNoSelectedTag[i], allSpans, resultValue);
     }
     if (resultValue.count !== 0) {
       // Others is build
@@ -277,16 +284,16 @@ function buildDetail(
       if (isDetail) {
         for (let a = 0; a < tempArray[l].tags.length; a++) {
           if (diffNamesA[j] === tempArray[l].tags[a].value) {
-            resultValue = calculateContent(trace, tempArray[l], allSpans, resultValue);
+            resultValue = computeColumnValues(trace, tempArray[l], allSpans, resultValue);
           }
         }
       } else if (selectedTagKeySecond === serviceName) {
         if (diffNamesA[j] === tempArray[l].process.serviceName) {
-          resultValue = calculateContent(trace, tempArray[l], allSpans, resultValue);
+          resultValue = computeColumnValues(trace, tempArray[l], allSpans, resultValue);
           color = colorGenerator.getColorByKey(tempArray[l].process.serviceName);
         }
       } else if (diffNamesA[j] === tempArray[l].operationName) {
-        resultValue = calculateContent(trace, tempArray[l], allSpans, resultValue);
+        resultValue = computeColumnValues(trace, tempArray[l], allSpans, resultValue);
       }
     }
     resultValue.selfAvg = resultValue.selfTotal / resultValue.count;
@@ -351,7 +358,7 @@ function generateDetailRest(allColumnValues: ITableSpan[], selectedTagKeySecond:
             }
           }
           if (rest) {
-            resultValue = calculateContent(trace, allSpans[j], allSpans, resultValue);
+            resultValue = computeColumnValues(trace, allSpans[j], allSpans, resultValue);
           }
         }
       }
