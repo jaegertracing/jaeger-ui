@@ -34,7 +34,6 @@ function computeColumnValues(trace: Trace, span: Span, allSpans: Span[], resultV
   // selfTime
   let tempSelf = 0;
   if (span.hasChildren) {
-    // DRange treats all intervals as inclusive, even for subtract operations.
     // We want to represent spans as half-open intervals like [startTime, startTime + duration).
     // This way the subtraction preserves the right boundaries. However, DRange treats all
     // intervals as exclusive. For example,
