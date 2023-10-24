@@ -146,6 +146,7 @@ export function TopNavImpl(props: Props) {
         disabledOverflow
         selectedKeys={[pathname]}
         items={itemsGlobalRight}
+        style={{ color: '#fff' }}
       />
       <Menu
         theme="dark"
@@ -159,6 +160,7 @@ export function TopNavImpl(props: Props) {
         mode="horizontal"
         selectable={false}
         selectedKeys={[pathname]}
+        style={{ color: '#fff' }}
       />
     </div>
   );

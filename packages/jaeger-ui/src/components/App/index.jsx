@@ -86,9 +86,7 @@ export default class JaegerUIApp extends Component {
 
   render() {
     return (
-      <ConfigProvider
-        theme={jaegerTheme}
-      >
+      <ConfigProvider theme={jaegerTheme}>
         <Provider store={store}>
           <HistoryProvider history={history}>
             <Router history={history}>
