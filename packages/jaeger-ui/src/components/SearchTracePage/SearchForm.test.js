@@ -54,6 +54,9 @@ function makeDateParams(dateOffset = 0) {
   };
 }
 
+/* eslint-disable @typescript-eslint/no-unused-vars */
+const DATE_FORMAT = 'YYYY-MM-DD';
+const TIME_FORMAT = 'HH:mm';
 const defaultProps = {
   dataCenters: ['dc1'],
   handleSubmit: () => {},
