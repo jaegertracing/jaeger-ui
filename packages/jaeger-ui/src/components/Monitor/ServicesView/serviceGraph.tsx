@@ -22,6 +22,7 @@ import {
   AreaSeries,
   Crosshair,
   DiscreteColorLegend,
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
 } from 'react-vis';
 import LoadingIndicator from '../../common/LoadingIndicator';

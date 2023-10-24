@@ -19,6 +19,7 @@ import _debounce from 'lodash/debounce';
 import _isEqual from 'lodash/isEqual';
 import _isEmpty from 'lodash/isEmpty';
 import { Field, formValueSelector, InjectedFormProps, reduxForm } from 'redux-form';
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import store from 'store';
 import { connect } from 'react-redux';
