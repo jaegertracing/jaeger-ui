@@ -47,6 +47,7 @@ const fullActions = createActions<TDdgAddViewModifierPayload | TDdgViewModifierR
   [actionTypes.REMOVE_VIEW_MODIFIER_FROM_INDICES]: removeViewModifierFromIndices,
 });
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default (fullActions as any).jaegerUi.deepDependencyGraph as Record<
   string,
   ActionFunctionAny<Action<TDdgViewModifierRemovalPayload>>

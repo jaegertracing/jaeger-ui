@@ -29,6 +29,7 @@ export default function generateColor(tableValue: ITableSpan[], attribute: strin
       } else {
         let max = 0;
         // find hights value
+        /* eslint-disable @typescript-eslint/no-explicit-any */
         for (let j = 0; j < tableValue2.length; j++) {
           if (max < (tableValue2[j] as any)[attribute]) {
             max = (tableValue2[j] as any)[attribute];

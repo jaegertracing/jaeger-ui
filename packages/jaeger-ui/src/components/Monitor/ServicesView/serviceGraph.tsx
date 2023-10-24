@@ -82,7 +82,7 @@ export class ServiceGraphImpl extends React.PureComponent<TProps> {
     const { metricsData, color } = this.props;
 
     if (metricsData) {
-      const graphs: any = [];
+      const graphs: any = []; // eslint-disable-line @typescript-eslint/no-explicit-any
       let i = 0;
 
       this.getData().forEach((line: ServiceMetricsObject, idx: number) => {

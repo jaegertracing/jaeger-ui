@@ -50,6 +50,7 @@ type State = {
 
 const { classNameIsSmall, scaleOpacity, scaleStrokeOpacity } = Digraph.propsFactories;
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export function setOnEdgePath(e: any) {
   return e.followsFrom ? { strokeDasharray: 4 } : {};
 }

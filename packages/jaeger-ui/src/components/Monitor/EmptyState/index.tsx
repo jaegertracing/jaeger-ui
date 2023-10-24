@@ -22,6 +22,7 @@ import monitorImg from './media/monitor.png';
 export default class MonitorATMEmptyState extends React.PureComponent {
   config: MonitorEmptyStateConfig;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   constructor(props: any) {
     super(props);
 

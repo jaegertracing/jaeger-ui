@@ -58,6 +58,7 @@ export function getEmbeddedState(search: string): null | EmbeddedState {
   };
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function stripEmbeddedState(state: Record<string, any>) {
   const { uiEmbed = undefined, ...rv } = state;
   if (uiEmbed === VERSION_0) {

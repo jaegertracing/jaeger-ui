@@ -27,6 +27,7 @@ export function getUrl(id: string, uiFind?: string): string {
   return `${traceUrl}?${queryString.stringify({ uiFind })}`;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function getLocation(id: string, state: Record<string, any> | TNil, uiFind?: string) {
   return {
     state,

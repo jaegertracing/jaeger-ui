@@ -17,6 +17,7 @@ import cx from 'classnames';
 
 import './Scrubber.css';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 type ScrubberProps = {
   isDragging: boolean;
   position: number;

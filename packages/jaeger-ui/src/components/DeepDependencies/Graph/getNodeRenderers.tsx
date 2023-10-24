@@ -43,6 +43,7 @@ export default function getNodeRenderers(findMatches: Set<string>, viewModifiers
     );
   }
 
+  /* eslint-disable @typescript-eslint/no-explicit-any */
   function htmlEmphasis(lv: TLayoutVertex<any>) {
     const matchClasses = cx({
       'is-findMatch': findMatches.has(lv.vertex.key),

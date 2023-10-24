@@ -89,6 +89,7 @@ function trackLogsItem(store: Store<ReduxState>, action: Action<TSpanIdLogValue>
   trackEvent(CATEGORY_LOGS_ITEM, getToggleValue(isOpen));
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const trackColumnWidth = (_: any, { payload }: Action<TWidthValue>) =>
   payload && trackEvent(CATEGORY_COLUMN, ACTION_RESIZE, Math.round(payload.width * 1000));
 const trackDetailRow = (isOpen: boolean) => trackEvent(CATEGORY_ROW, getToggleValue(isOpen));

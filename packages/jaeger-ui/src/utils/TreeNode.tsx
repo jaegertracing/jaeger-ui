@@ -16,6 +16,7 @@ export default class TreeNode<TValue> {
   value: TValue;
   children: Array<TreeNode<TValue>>;
 
+  /* eslint-disable @typescript-eslint/no-explicit-any */
   static iterFunction<TValue>(fn: (value: TValue, node: TreeNode<TValue>, depth: number) => any, depth = 0) {
     return (node: TreeNode<TValue>) => fn(node.value, node, depth);
   }

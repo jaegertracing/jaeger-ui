@@ -192,6 +192,7 @@ function fetchOpsMetricsDone(
             service_operation_call_rate: 0,
             service_operation_error_rate: 0,
           };
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           metricDetails.labels.forEach((label: any) => {
             if (label.name === 'operation') {
               opsName = label.value;

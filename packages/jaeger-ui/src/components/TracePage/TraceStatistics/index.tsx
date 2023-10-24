@@ -39,6 +39,7 @@ type State = {
   valueNameSelector2: string | null;
 };
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 const columnsArray: any[] = [
   {
     title: 'Group',

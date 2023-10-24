@@ -181,6 +181,7 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps) {
 }
 
 // export for tests
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function mapDispatchToProps(dispatch: Dispatch<any>) {
   const { fetchMultipleTraces } = bindActionCreators(jaegerApiActions, dispatch);
   const { forceState } = bindActionCreators(diffActions, dispatch);

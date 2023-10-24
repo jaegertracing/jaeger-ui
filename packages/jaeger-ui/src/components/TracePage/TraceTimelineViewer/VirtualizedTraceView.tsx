@@ -519,6 +519,7 @@ function mapStateToProps(state: ReduxState): TTraceTimeline & TExtractUiFindFrom
 
 /* istanbul ignore next */
 function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return bindActionCreators(actions, dispatch) as any as TDispatchProps;
 }
 

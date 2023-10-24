@@ -94,6 +94,8 @@ function onlyOverlay(allOverlay: Span[], allChildren: Span[], tempSelf: number, 
 /**
  * Used to calculated the content.
  */
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
 function calculateContent(trace: Trace, span: Span, allSpans: Span[], resultValue: any) {
   const resultValueChange = resultValue;
   resultValueChange.count += 1;

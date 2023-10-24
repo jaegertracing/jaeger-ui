@@ -21,6 +21,7 @@ import { getParent } from './span';
 import { TNil } from '../types';
 import { Span, Link, KeyValuePair, Trace } from '../types/trace';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 type ProcessedTemplate = {
   parameters: string[];
   template: (template: { [key: string]: any }) => string;
