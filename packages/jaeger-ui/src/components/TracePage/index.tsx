@@ -104,7 +104,7 @@ const VIEW_CHANGE_BASE = 0.005;
 const VIEW_CHANGE_FAST = 0.05;
 
 // export for tests
-export const shortcutConfig = {
+export const shortcutConfig: { [name: string]: [number, number] } = {
   panLeft: [-VIEW_CHANGE_BASE, -VIEW_CHANGE_BASE],
   panLeftFast: [-VIEW_CHANGE_FAST, -VIEW_CHANGE_FAST],
   panRight: [VIEW_CHANGE_BASE, VIEW_CHANGE_BASE],

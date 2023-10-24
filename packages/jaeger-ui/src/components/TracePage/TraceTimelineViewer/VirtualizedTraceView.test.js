@@ -13,6 +13,7 @@
 // limitations under the License.
 import React from 'react';
 import { shallow, mount } from 'enzyme';
+import { render, screen } from '@testing-library/react';
 
 import ListView from './ListView';
 import SpanBarRow from './SpanBarRow';
@@ -24,6 +25,8 @@ import transformTraceData from '../../../model/transform-trace-data';
 import updateUiFindSpy from '../../../utils/update-ui-find';
 import * as linkPatterns from '../../../model/link-patterns';
 import memoizedTraceCriticalPath from '../CriticalPath/index';
+
+import criticalPathTest from '../CriticalPath/testCases/test2';
 
 jest.mock('./SpanTreeOffset');
 jest.mock('../../../utils/update-ui-find');
@@ -324,6 +327,26 @@ describe('<VirtualizedTraceViewImpl>', () => {
           />
         )
       ).toBe(true);
+    });
+
+    it('renders Critical Path segments when row is not collapsed', () => {
+      wrapper.setProps({
+        trace: criticalPathTest.trace,
+        criticalPath: criticalPathTest.criticalPathSections,
+      });
+      render(instance.renderRow('some-key', {}, 0, {}));
+      expect(screen.getAllByTestId('SpanBar--criticalPath').length).toBe(2);
+    });
+
+    it('renders Critical Path segments are merged if consecutive when row is collapased', () => {
+      const childrenHiddenIDs = new Set([criticalPathTest.trace.spans[0].spanID]);
+      wrapper.setProps({
+        childrenHiddenIDs,
+        trace: criticalPathTest.trace,
+        criticalPath: criticalPathTest.criticalPathSections,
+      });
+      render(instance.renderRow('some-key', {}, 0, {}));
+      expect(screen.getAllByTestId('SpanBar--criticalPath').length).toBe(1);
     });
 
     it('renders a SpanBarRow with a RPC span if the row is collapsed and a client span', () => {
