@@ -364,6 +364,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     return getLinks(span, items, itemIndex, trace);
   };
 
+  /* eslint-disable @typescript-eslint/ban-types */
   renderRow = (key: string, style: React.CSSProperties, index: number, attrs: {}) => {
     const { isDetail, span, spanIndex } = this.getRowStates()[index];
     return isDetail

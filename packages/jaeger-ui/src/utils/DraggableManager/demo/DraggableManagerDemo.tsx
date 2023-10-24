@@ -26,6 +26,7 @@ export type DraggableManagerDemoState = {
   regionDragging: [number, number] | TNil;
 };
 
+/* eslint-disable @typescript-eslint/ban-types */
 export default class DraggableManagerDemo extends React.PureComponent<{}, DraggableManagerDemoState> {
   state: DraggableManagerDemoState;
 

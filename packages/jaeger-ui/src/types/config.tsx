@@ -58,7 +58,7 @@ export type MonitorEmptyStateConfig = {
   description?: string;
   button?: {
     text?: string;
-    onClick?: Function;
+    onClick?: Function; // eslint-disable-line @typescript-eslint/ban-types
   };
   info?: string;
   alert?: {

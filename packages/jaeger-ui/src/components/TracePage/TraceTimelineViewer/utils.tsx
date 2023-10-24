@@ -119,10 +119,10 @@ export function findServerChildSpan(spans: Span[]) {
   return null;
 }
 
-export const isKindClient = (span: Span): Boolean =>
+export const isKindClient = (span: Span): boolean =>
   span.tags.some(({ key, value }) => key === 'span.kind' && value === 'client');
 
-export const isKindProducer = (span: Span): Boolean =>
+export const isKindProducer = (span: Span): boolean =>
   span.tags.some(({ key, value }) => key === 'span.kind' && value === 'producer');
 
 export { formatDuration } from '../../../utils/date';
