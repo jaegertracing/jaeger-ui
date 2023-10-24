@@ -17,6 +17,7 @@ import {
   XYPlot,
   AreaSeries,
   LineSeries,
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
 } from 'react-vis';
 import { ApiError } from '../../../../types/api-error';
