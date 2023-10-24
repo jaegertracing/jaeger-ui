@@ -25,7 +25,7 @@ interface ITimelineRowCellProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   className?: string;
   width: number;
-  style?: Object;
+  style?: Object; // eslint-disable-line @typescript-eslint/ban-types
 }
 
 export default function TimelineRow(props: TTimelineRowProps) {

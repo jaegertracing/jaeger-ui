@@ -35,7 +35,7 @@ export type TActionTypes =
   | TSpansValue
   | TTraceUiFindValue
   | TWidthValue
-  | {};
+  | {}; // eslint-disable-line @typescript-eslint/ban-types
 
 type TTimelineViewerActions = {
   [actionName: string]: ActionFunctionAny<Action<TActionTypes>>;

@@ -83,6 +83,7 @@ export default class AccordianReferences extends React.PureComponent<AccordianRe
     const isEmpty = !Array.isArray(data) || !data.length;
     const iconCls = cx('u-align-icon', { 'AccordianKReferences--emptyIcon': isEmpty });
     let arrow: React.ReactNode | null = null;
+    // eslint-disable-next-line @typescript-eslint/ban-types
     let headerProps: Object | null = null;
     if (interactive) {
       arrow = isOpen ? <IoChevronDown className={iconCls} /> : <IoChevronForward className={iconCls} />;

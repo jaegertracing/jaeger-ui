@@ -134,6 +134,7 @@ const convertServiceErrorRateToPercentages = (serviceErrorRate: null | ServiceMe
   return { ...serviceErrorRate, metricPoints: convertedMetricsPoints };
 };
 
+/* eslint-disable @typescript-eslint/ban-types */
 type TPropsWithInjectedFormProps = TProps & InjectedFormProps<{}, TProps>;
 
 // export for tests

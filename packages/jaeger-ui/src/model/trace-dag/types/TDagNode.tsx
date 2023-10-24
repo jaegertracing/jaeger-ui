@@ -14,6 +14,7 @@
 
 import { NodeID } from './index';
 
+// eslint-disable-next-line @typescript-eslint/ban-types
 type TDagNode<TData extends { [k: string]: unknown } = {}> = TData & {
   parentID: NodeID | null;
   id: NodeID;

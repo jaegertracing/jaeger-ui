@@ -39,6 +39,7 @@ export default function AccordianLogs(props: AccordianLogsProps) {
   const { interactive, isOpen, linksGetter, logs, openedItems, onItemToggle, onToggle, timestamp } = props;
   let arrow: React.ReactNode | null = null;
   let HeaderComponent: 'span' | 'a' = 'span';
+  // eslint-disable-next-line @typescript-eslint/ban-types
   let headerProps: Object | null = null;
   if (interactive) {
     arrow = isOpen ? (
