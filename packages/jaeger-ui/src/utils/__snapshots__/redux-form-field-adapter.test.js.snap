@@ -1,7 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`reduxFormFieldAdapter not validated input should render as expected 1`] = `
-<ForwardRef
+<Input
   className=""
   meta={
     Object {
@@ -23,7 +23,7 @@ exports[`reduxFormFieldAdapter validate input should render Popover as invisible
   placement="bottomLeft"
   title="error title"
 >
-  <ForwardRef
+  <Input
     className="AdaptedReduxFormField--isValidatedInput"
     meta={
       Object {
@@ -49,7 +49,7 @@ exports[`reduxFormFieldAdapter validate input should render Popover as visible i
   placement="bottomLeft"
   title="error title"
 >
-  <ForwardRef
+  <Input
     className="is-invalid AdaptedReduxFormField--isValidatedInput"
     meta={
       Object {
@@ -73,7 +73,7 @@ exports[`reduxFormFieldAdapter validate input should render as expected when the
   open={false}
   placement="bottomLeft"
 >
-  <ForwardRef
+  <Input
     className="AdaptedReduxFormField--isValidatedInput"
     meta={
       Object {

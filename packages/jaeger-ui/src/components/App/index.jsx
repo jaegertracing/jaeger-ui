@@ -54,37 +54,39 @@ export default class JaegerUIApp extends Component {
 
   render() {
     return (
-      <ConfigProvider theme={{
-        token: {
-          ...defaultTheme.token,
-          colorPrimary: "#199",
-        },
-        components: {
-          ...defaultTheme.components,
-          Layout: {
-            ...defaultTheme.components.Layout,
-            bodyBg: '#fff',
-            headerBg: '#404040',
-            footerBg: '#fff',
-            headerHeight: 48,
-            headerPadding: '0 50',
-            footerPadding: '24 50',
-            siderBg: '#404040',
-            triggerHeight: 48,
-            triggerBg: 'tint(#fff, 20%)',
-            zeroTriggerWidth: 36,
-            zeroTriggerHeight: 42,
+      <ConfigProvider
+        theme={{
+          token: {
+            ...defaultTheme.token,
+            colorPrimary: '#199',
           },
-          Menu: {
-            ...defaultTheme.components.Menu,
-            darkItemBg: '#151515',
+          components: {
+            ...defaultTheme.components,
+            Layout: {
+              ...defaultTheme.components.Layout,
+              bodyBg: '#fff',
+              headerBg: '#404040',
+              footerBg: '#fff',
+              headerHeight: 48,
+              headerPadding: '0 50',
+              footerPadding: '24 50',
+              siderBg: '#404040',
+              triggerHeight: 48,
+              triggerBg: 'tint(#fff, 20%)',
+              zeroTriggerWidth: 36,
+              zeroTriggerHeight: 42,
+            },
+            Menu: {
+              ...defaultTheme.components.Menu,
+              darkItemBg: '#151515',
+            },
+            Table: {
+              ...defaultTheme.components.Table,
+              rowHoverBg: '#e5f2f2',
+            },
           },
-          Table: {
-            ...defaultTheme.components.Table,
-            rowHoverBg: '#e5f2f2',
-          }
-        }
-      }}>
+        }}
+      >
         <Provider store={store}>
           <HistoryProvider history={history}>
             <Router history={history}>
