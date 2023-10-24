@@ -32,6 +32,7 @@ type SubPartProps = {
   wrapperClassName?: string;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function ErrorAttr({ name, value }: { name: string; value: any }) {
   return (
     <tr className="ErrorMessage--detailItem">

@@ -49,6 +49,7 @@ export function addViewModifier(state: TDdgState, payload: TDdgAddViewModifierPa
     return state;
   }
 
+  /* eslint-disable @typescript-eslint/no-explicit-any */
   const viewModifiers: any = new Map((stateEntry as IDoneState).viewModifiers);
   visibilityIndices.forEach(idx => {
     viewModifiers.set(idx, (viewModifiers.get(idx) || 0) | viewModifier); // eslint-disable-line no-bitwise

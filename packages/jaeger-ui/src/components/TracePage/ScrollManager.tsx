@@ -268,7 +268,7 @@ export default class ScrollManager {
 
   destroy() {
     this._trace = undefined;
-    this._scroller = undefined as any;
+    this._scroller = undefined as any; // eslint-disable-line @typescript-eslint/no-explicit-any
     this._accessors = undefined;
   }
 }

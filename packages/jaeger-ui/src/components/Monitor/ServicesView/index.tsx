@@ -69,6 +69,7 @@ type TReduxProps = {
 
 type TProps = TReduxProps & TDispatchProps;
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 type TDispatchProps = {
   fetchServices: ActionFunction<Action<Promise<any>>>;
   fetchAggregatedServiceMetrics: ActionFunction<Action<Promise<any>>, string, MetricsAPIQueryParams>;

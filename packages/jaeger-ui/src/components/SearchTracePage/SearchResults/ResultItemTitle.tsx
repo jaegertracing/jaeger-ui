@@ -99,6 +99,7 @@ export default class ResultItemTitle extends React.PureComponent<Props> {
       <div className="ResultItemTitle">
         {!disableComparision && <Checkbox {...checkboxProps} />}
         {/* TODO: Shouldn't need cast */}
+        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
         <WrapperComponent {...(wrapperProps as { [key: string]: any; to: string })}>
           <span
             className="ResultItemTitle--durationBar"

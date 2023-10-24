@@ -17,7 +17,7 @@ export type ApiError = // eslint-disable-line import/prefer-default-export
     | string
     | {
         message: string;
-        httpStatus?: any;
+        httpStatus?: any; // eslint-disable-line @typescript-eslint/no-explicit-any
         httpStatusText?: string;
         httpUrl?: string;
         httpQuery?: string;

@@ -189,6 +189,7 @@ export default class ListView extends React.Component<TListViewProps> {
     this._htmlTopOffset = -1;
     this._windowScrollListenerAdded = false;
     // _htmlElm is only relevant if props.windowScroller is true
+    /* eslint-disable @typescript-eslint/no-explicit-any */
     this._htmlElm = document.documentElement as any;
     this._wrapperElm = undefined;
     this._itemHolderElm = undefined;

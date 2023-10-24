@@ -17,6 +17,7 @@ import { FlamegraphRenderer, convertJaegerTraceToProfile } from '@pyroscope/flam
 import '@pyroscope/flamegraph/dist/index.css';
 import './index.css';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const TraceFlamegraph = ({ trace }: any) => {
   const convertedProfile = trace && trace.data ? convertJaegerTraceToProfile(trace.data) : null;
 

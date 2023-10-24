@@ -25,6 +25,7 @@ import { TNil, ReduxState } from '../../types/index';
 import parseQuery from '../../utils/parseQuery';
 import withRouteProps from '../../utils/withRouteProps';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 type TOwnProps = {
   allowClear?: boolean;
   forwardedRef?: React.Ref<InputRef>;

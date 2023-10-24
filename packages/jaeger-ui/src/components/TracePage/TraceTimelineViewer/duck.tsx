@@ -103,6 +103,7 @@ const fullActions = createActions<TActionTypes>({
   [actionTypes.SET_TRACE]: (trace: Trace, uiFind: string | TNil) => ({ trace, uiFind }),
 });
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const actions = (fullActions as any).jaegerUi.traceTimelineViewer as TTimelineViewerActions;
 
 function calculateFocusedFindRowStates(uiFind: string, spans: Span[], allowHide = true) {

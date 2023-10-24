@@ -49,6 +49,7 @@ const fullActions = createActions<TTraceIdValue | TNewStateValue>({
   [actionTypes.FORCE_STATE]: (newState: TTraceDiffState) => ({ newState }),
 });
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const actions = (fullActions as any).jaegerUi.traceDiff as TTraceDiffActions;
 
 function cohortAddTrace(state: TTraceDiffState, { traceID }: TTraceIdValue) {

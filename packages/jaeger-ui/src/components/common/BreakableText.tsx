@@ -28,7 +28,7 @@ type Props = {
 // https://github.com/Microsoft/TypeScript/issues/21699
 export default function BreakableText(
   props: Props
-): any /* React.ReactNode /* React.ReactElement | React.ReactElement[] \*\/ */ {
+): any /* eslint-disable-line @typescript-eslint/no-explicit-any */ {
   const { className, text, wordRegexp = WORD_RX } = props;
   if (!text) {
     return typeof text === 'string' ? text : null;

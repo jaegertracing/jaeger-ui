@@ -28,6 +28,7 @@ import {
 const stringifyEntry = ({ service, operation }: TDdgPayloadEntry) => `${service}\v${operation}`;
 
 // TODO: Everett Tech Debt: Fix KeyValuePair types
+/* eslint-disable @typescript-eslint/no-explicit-any */
 function group(arg: { key: string; value: any }[]): Record<string, any[]> {
   const result: Record<string, any[]> = {};
   arg.forEach(({ key, value }) => {

@@ -31,6 +31,7 @@ export const CATEGORY_MIN_DURATION = `${FORM_CATEGORY_BASE}/min_duration`;
 export const CATEGORY_MAX_DURATION = `${FORM_CATEGORY_BASE}/max_duration`;
 export const CATEGORY_LIMIT = `${FORM_CATEGORY_BASE}/limit`;
 export const CATEGORY_SERVICE = `${FORM_CATEGORY_BASE}/serviceName`;
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export function trackFormInput(
   resultsLimit: number,
   operation: string,

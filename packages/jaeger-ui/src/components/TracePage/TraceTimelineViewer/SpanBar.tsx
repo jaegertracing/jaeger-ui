@@ -28,7 +28,7 @@ type TCommonProps = {
   color: string;
   hintSide: string;
   // onClick: (evt: React.MouseEvent<any>) => void;
-  onClick?: (evt: React.MouseEvent<any>) => void;
+  onClick?: (evt: React.MouseEvent<any>) => void; // eslint-disable-line @typescript-eslint/no-explicit-any
   criticalPath: criticalPathSection[];
   viewEnd: number;
   viewStart: number;

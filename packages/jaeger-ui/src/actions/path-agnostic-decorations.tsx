@@ -73,6 +73,7 @@ export function getDecoration(
 
   pendingCount = pendingCount ? pendingCount + 1 : 1;
   const { summaryUrl, opSummaryUrl, summaryPath, opSummaryPath } = schema;
+  /* eslint-disable @typescript-eslint/no-explicit-any */
   let promise: Promise<Record<string, any>>;
   let getPath: string;
   let setPath: string;

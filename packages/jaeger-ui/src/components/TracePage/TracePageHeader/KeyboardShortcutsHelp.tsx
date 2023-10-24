@@ -20,6 +20,7 @@ import track from './KeyboardShortcutsHelp.track';
 
 import './KeyboardShortcutsHelp.css';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 type Props = {
   className: string;
 };

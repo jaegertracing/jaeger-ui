@@ -17,6 +17,7 @@ import Combokeys from 'combokeys';
 
 import keyboardMappings from './keyboard-mappings';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export type CombokeysHandler =
   | (() => void)
   | ((event: React.KeyboardEvent<any>) => void)

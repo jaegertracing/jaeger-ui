@@ -165,6 +165,7 @@ export default class TraceStatisticsHeader extends Component<Props, State> {
   /**
    * Is called after the checkbox changes its status.
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   checkboxButton(e: any) {
     this.setState({
       checkboxStatus: e.target.checked,
