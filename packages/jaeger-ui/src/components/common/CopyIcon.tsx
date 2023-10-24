@@ -15,7 +15,7 @@
 import * as React from 'react';
 
 import { Button, Tooltip } from 'antd';
-import { TooltipPlacement } from 'antd/lib/tooltip/index';
+import { TooltipPlacement } from 'antd/es/tooltip/index';
 import cx from 'classnames';
 import copy from 'copy-to-clipboard';
 

@@ -142,7 +142,7 @@ export function TopNavImpl(props: Props) {
         theme="dark"
         mode="horizontal"
         selectable={false}
-        className="ub-right"
+        className="ub-right Menu--item"
         disabledOverflow
         selectedKeys={[pathname]}
         items={itemsGlobalRight}
@@ -156,6 +156,7 @@ export function TopNavImpl(props: Props) {
             return { key, label: <Link to={url}>{text}</Link> };
           })
         )}
+        className="Menu--item"
         mode="horizontal"
         selectable={false}
         selectedKeys={[pathname]}

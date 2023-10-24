@@ -1,43 +1,58 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`JaegerUIApp does not explode 1`] = `
-<Provider
-  store={
+<ConfigProvider
+  theme={
     Object {
-      "@@observable": [Function],
-      "dispatch": [Function],
-      "getState": [Function],
-      "replaceReducer": [Function],
-      "subscribe": [Function],
+      "components": Object {
+        "Layout": Object {
+          "bodyBg": "#fff",
+          "footerBg": "#fff",
+          "footerPadding": "24 50",
+          "headerBg": "#404040",
+          "headerHeight": 48,
+          "headerPadding": "0 50",
+          "siderBg": "#404040",
+          "triggerBg": "tint(#fff, 20%)",
+          "triggerHeight": 48,
+          "zeroTriggerHeight": 42,
+          "zeroTriggerWidth": 36,
+        },
+        "Menu": Object {
+          "activeBarWidth": 3,
+          "darkItemBg": "#151515",
+          "itemBorderRadius": 0,
+          "itemHoverBg": "transparent",
+          "itemHoverColor": "#1890ff",
+          "itemMarginInline": 0,
+          "itemSelectedBg": "#e6f7ff",
+          "itemSelectedColor": "#1890ff",
+          "subMenuItemBorderRadius": 0,
+        },
+        "Table": Object {
+          "rowHoverBg": "#e5f2f2",
+        },
+      },
+      "token": Object {
+        "borderRadius": 2,
+        "colorPrimary": "#199",
+        "wireframe": true,
+      },
     }
   }
 >
-  <HistoryProvider
-    history={
+  <Provider
+    store={
       Object {
-        "action": "POP",
-        "back": [Function],
-        "block": [Function],
-        "createHref": [Function],
-        "forward": [Function],
-        "go": [Function],
-        "goBack": [Function],
-        "goForward": [Function],
-        "length": 1,
-        "listen": [Function],
-        "listenObject": false,
-        "location": Object {
-          "hash": "",
-          "pathname": "/",
-          "search": "",
-          "state": undefined,
-        },
-        "push": [Function],
-        "replace": [Function],
+        "@@observable": [Function],
+        "dispatch": [Function],
+        "getState": [Function],
+        "replaceReducer": [Function],
+        "subscribe": [Function],
       }
     }
   >
-    <Router
+    <HistoryProvider
       history={
         Object {
           "action": "POP",
@@ -62,73 +77,99 @@ exports[`JaegerUIApp does not explode 1`] = `
         }
       }
     >
-      <Memo(Connect(WithRouteProps))>
-        <Switch>
-          <Route
-            path="/search"
-          >
-            <WithRouteProps />
-          </Route>
-          <Route
-            path="/trace/:a?\\\\.\\\\.\\\\.:b?"
-          >
-            <WithRouteProps />
-          </Route>
-          <Route
-            path="/trace/:id"
-          >
-            <WithRouteProps />
-          </Route>
-          <Route
-            path="/dependencies"
-          >
-            <WithRouteProps />
-          </Route>
-          <Route
-            path="/deep-dependencies"
-          >
-            <WithRouteProps />
-          </Route>
-          <Route
-            path="/quality-metrics"
-          >
-            <WithRouteProps />
-          </Route>
-          <Route
-            path="/monitor"
-          >
-            <MonitorATMPage />
-          </Route>
-          <Route
-            exact={true}
-            path="/"
-          >
-            <Redirect
-              to="/search"
-            />
-          </Route>
-          <Route
-            exact={true}
-            path=""
-          >
-            <Redirect
-              to="/search"
-            />
-          </Route>
-          <Route
-            exact={true}
-            path="/"
-          >
-            <Redirect
-              to="/search"
-            />
-          </Route>
-          <Route>
-            <NotFound />
-          </Route>
-        </Switch>
-      </Memo(Connect(WithRouteProps))>
-    </Router>
-  </HistoryProvider>
-</Provider>
+      <Router
+        history={
+          Object {
+            "action": "POP",
+            "back": [Function],
+            "block": [Function],
+            "createHref": [Function],
+            "forward": [Function],
+            "go": [Function],
+            "goBack": [Function],
+            "goForward": [Function],
+            "length": 1,
+            "listen": [Function],
+            "listenObject": false,
+            "location": Object {
+              "hash": "",
+              "pathname": "/",
+              "search": "",
+              "state": undefined,
+            },
+            "push": [Function],
+            "replace": [Function],
+          }
+        }
+      >
+        <Memo(Connect(WithRouteProps))>
+          <Switch>
+            <Route
+              path="/search"
+            >
+              <WithRouteProps />
+            </Route>
+            <Route
+              path="/trace/:a?\\\\.\\\\.\\\\.:b?"
+            >
+              <WithRouteProps />
+            </Route>
+            <Route
+              path="/trace/:id"
+            >
+              <WithRouteProps />
+            </Route>
+            <Route
+              path="/dependencies"
+            >
+              <WithRouteProps />
+            </Route>
+            <Route
+              path="/deep-dependencies"
+            >
+              <WithRouteProps />
+            </Route>
+            <Route
+              path="/quality-metrics"
+            >
+              <WithRouteProps />
+            </Route>
+            <Route
+              path="/monitor"
+            >
+              <MonitorATMPage />
+            </Route>
+            <Route
+              exact={true}
+              path="/"
+            >
+              <Redirect
+                to="/search"
+              />
+            </Route>
+            <Route
+              exact={true}
+              path=""
+            >
+              <Redirect
+                to="/search"
+              />
+            </Route>
+            <Route
+              exact={true}
+              path="/"
+            >
+              <Redirect
+                to="/search"
+              />
+            </Route>
+            <Route>
+              <NotFound />
+            </Route>
+          </Switch>
+        </Memo(Connect(WithRouteProps))>
+      </Router>
+    </HistoryProvider>
+  </Provider>
+</ConfigProvider>
 `;

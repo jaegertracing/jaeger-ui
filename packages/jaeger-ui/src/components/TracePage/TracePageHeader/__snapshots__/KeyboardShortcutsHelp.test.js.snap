@@ -31,7 +31,7 @@ exports[`KeyboardShortcutsHelp renders as expected 1`] = `
     open={false}
     title="Keyboard Shortcuts"
   >
-    <ForwardRef(InternalTable)
+    <Table
       className="KeyboardShortcutsHelp--table u-simple-scrollbars"
       dataSource={
         Array [
@@ -209,7 +209,7 @@ exports[`KeyboardShortcutsHelp renders as expected 1`] = `
         render={[Function]}
         title="Key(s)"
       />
-    </ForwardRef(InternalTable)>
+    </Table>
   </Modal>
 </Fragment>
 `;

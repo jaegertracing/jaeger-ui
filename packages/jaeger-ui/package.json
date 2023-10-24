@@ -17,7 +17,7 @@
     "@babel/preset-typescript": "^7.21.0",
     "@testing-library/jest-dom": "^6.0.0",
     "@testing-library/react": "^14.0.0",
-    "@types/react": "18.2.31",
+    "@types/react": "16.14.35",
     "@types/react-window": "^1.8.0",
     "@types/redux-form": "^8.3.5",
     "@types/rollup-plugin-visualizer": "^4.2.1",
@@ -41,6 +41,7 @@
     "vite-plugin-imp": "^2.3.1"
   },
   "dependencies": {
+    "@ant-design/compatible": "^5.1.2",
     "@jaegertracing/plexus": "0.2.0",
     "@pyroscope/flamegraph": "0.21.4",
     "@types/deep-freeze": "^0.1.1",
@@ -49,7 +50,7 @@
     "@types/react-helmet": "^6.1.5",
     "@types/react-router-dom": "^5.1.0",
     "@types/redux-actions": "2.2.1",
-    "antd": "4.24.14",
+    "antd": "^5.10.2",
     "chance": "^1.0.10",
     "classnames": "^2.2.5",
     "combokeys": "^3.0.0",
