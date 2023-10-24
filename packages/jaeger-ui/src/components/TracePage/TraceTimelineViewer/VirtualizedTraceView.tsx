@@ -372,6 +372,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
   };
 
   renderSpanBarRow(span: Span, spanIndex: number, key: string, style: React.CSSProperties, attrs: {}) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { spanID, childSpanIds } = span;
     const { serviceName } = span.process;
     const {
