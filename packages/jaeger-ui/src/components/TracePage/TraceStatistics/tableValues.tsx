@@ -22,30 +22,28 @@ const serviceName = 'Service Name';
 const operationName = 'Operation Name';
 
 function computeSelfTime(span: Span, allSpans: Span[]): number {
-  if (span.hasChildren) {
-    // We want to represent spans as half-open intervals like [startTime, startTime + duration).
-    // This way the subtraction preserves the right boundaries. However, DRange treats all
-    // intervals as inclusive. For example,
-    //       range(1, 10).subtract(4, 8) => range([1, 3], [9-10])
-    //       length=(3-1)+(10-9)=2+1=3
-    // In other words, we took an interval of length=10-1=9 and subtracted length=8-4=4.
-    // We should've ended up with length 9-4=5, but we got 3.
-    // To work around that, we multiply start/end times by 10 and subtract one from the end.
-    // So instead of [1-10] we get [10-99]. This makes the intervals work like half-open.
-    const spanRange = new DRange(10 * span.startTime, 10 * (span.startTime + span.duration) - 1);
-    // Filter for CHILD_OF we don't want to calculate FOLLOWS_FROM
-    const children = allSpans.filter(
-      each =>
-        span.childSpanIds.includes(each.spanID) &&
-        each.references[0].spanID === span.spanID &&
-        each.references[0].refType === 'CHILD_OF'
-    );
-    children.forEach(child => {
-      spanRange.subtract(10 * child.startTime, 10 * (child.startTime + child.duration) - 1);
-    });
-    return Math.round(spanRange.length / 10);
-  }
-  return span.duration;
+  if (!span.hasChildren) return span.duration;
+  // We want to represent spans as half-open intervals like [startTime, startTime + duration).
+  // This way the subtraction preserves the right boundaries. However, DRange treats all
+  // intervals as inclusive. For example,
+  //       range(1, 10).subtract(4, 8) => range([1, 3], [9-10])
+  //       length=(3-1)+(10-9)=2+1=3
+  // In other words, we took an interval of length=10-1=9 and subtracted length=8-4=4.
+  // We should've ended up with length 9-4=5, but we got 3.
+  // To work around that, we multiply start/end times by 10 and subtract one from the end.
+  // So instead of [1-10] we get [10-99]. This makes the intervals work like half-open.
+  const spanRange = new DRange(10 * span.startTime, 10 * (span.startTime + span.duration) - 1);
+  // Only keep CHILD_OF spans. FOLLOWS_FROM spans do not block the parent.
+  const children = allSpans.filter(
+    each =>
+      span.childSpanIds.includes(each.spanID) &&
+      each.references[0].spanID === span.spanID &&
+      each.references[0].refType === 'CHILD_OF'
+  );
+  children.forEach(child => {
+    spanRange.subtract(10 * child.startTime, 10 * (child.startTime + child.duration) - 1);
+  });
+  return Math.round(spanRange.length / 10);
 }
 
 function computeColumnValues(trace: Trace, span: Span, allSpans: Span[], resultValue: any) {
