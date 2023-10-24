@@ -39,6 +39,7 @@ const GA: IWebAnalyticsFunc = (config: Config, versionShort: string, versionLong
   const gaID = _get(config, 'tracking.gaID');
   const isErrorsEnabled = isDebugMode || Boolean(_get(config, 'tracking.trackErrors'));
   const cookiesToDimensions = _get(config, 'tracking.cookiesToDimensions');
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const context = isErrorsEnabled ? Raven : (null as any);
   const EVENT_LENGTHS = {
     action: 499,

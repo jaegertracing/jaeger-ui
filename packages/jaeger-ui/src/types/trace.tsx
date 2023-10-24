@@ -19,7 +19,7 @@
 // TODO: Everett Tech Debt: Fix KeyValuePair types
 export type KeyValuePair = {
   key: string;
-  value: any;
+  value: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 };
 
 export type Link = {

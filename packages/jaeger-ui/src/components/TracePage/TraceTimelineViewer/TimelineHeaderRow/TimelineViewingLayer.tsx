@@ -27,7 +27,7 @@ type TimelineViewingLayerProps = {
    * bounds for dragging need to be recalculated. In practice, the name column
    * width serves fine for this.
    */
-  boundsInvalidator: any | null | undefined;
+  boundsInvalidator: any | null | undefined; // eslint-disable-line @typescript-eslint/no-explicit-any
   updateNextViewRangeTime: (update: ViewRangeTimeUpdate) => void;
   updateViewRangeTime: TUpdateViewRangeTimeFunction;
   viewRangeTime: IViewRangeTime;

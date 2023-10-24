@@ -20,6 +20,7 @@ import './redux-form-field-adapter.css';
 
 const noop = () => {};
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export default function reduxFormFieldAdapter({
   AntInputComponent,
   onChangeAdapter,

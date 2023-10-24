@@ -41,6 +41,7 @@ function shouldDisplayAsStringList(key: string) {
   return key.startsWith('http.request.header.') || key.startsWith('http.response.header.');
 }
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 const stringListMarkup = (value: any[]) => (
   <div className="json-markup">
     {value.map((item, i) => (

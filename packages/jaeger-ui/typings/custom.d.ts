@@ -21,6 +21,7 @@ declare interface Window {
   // For setting the site-prefix
   __webpack_public_path__: string; // eslint-disable-line camelcase
   // For getting ui config
+  /* eslint-disable @typescript-eslint/no-explicit-any */
   getJaegerUiConfig?: () => Record<string, any>;
   getJaegerVersion?: () => Record<string, any>;
 }

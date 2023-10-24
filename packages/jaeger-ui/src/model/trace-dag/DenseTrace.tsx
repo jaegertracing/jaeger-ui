@@ -24,6 +24,7 @@ function convSpans(spans: Span[]) {
     const { spanID: id, operationName: operation, process, references, tags: spanTags } = span;
     ids.push(id);
     const { serviceName: service } = process;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const tags = spanTags.reduce((accum: Record<string, any>, tag) => {
       const { key, value } = tag;
       // eslint-disable-next-line no-param-reassign

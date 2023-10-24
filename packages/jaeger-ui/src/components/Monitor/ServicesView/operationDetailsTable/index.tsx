@@ -228,6 +228,7 @@ export class OperationTableDetails extends React.PureComponent<TProps, TState> {
           pagination={{ defaultPageSize: 20, showSizeChanger: true, pageSizeOptions: ['20', '50', '100'] }}
           onRow={() => {
             return {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               onMouseEnter: (event: any) => {
                 this.setState({
                   hoveredRowKey: parseInt(event.currentTarget.getAttribute('data-row-key'), 10),

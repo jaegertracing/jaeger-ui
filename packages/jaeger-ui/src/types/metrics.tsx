@@ -139,7 +139,7 @@ export type PromiseFulfilledResult<T> = {
 
 export type PromiseRejectedResult = {
   status: PromiseStatus.rejected;
-  reason: any;
+  reason: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 };
 
 export type FetchedAllServiceMetricsResponse = [

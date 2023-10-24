@@ -20,6 +20,7 @@ import { middlewareHooks as timelineHooks } from '../components/TracePage/TraceT
 import { isWaEnabled } from '../utils/tracking';
 import { ReduxState } from '../types';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 type TMiddlewareFn = (store: Store<ReduxState>, action: Action<any>) => void;
 
 const middlewareHooks: { [actionType: string]: TMiddlewareFn } = { ...timelineHooks, ...searchHooks };

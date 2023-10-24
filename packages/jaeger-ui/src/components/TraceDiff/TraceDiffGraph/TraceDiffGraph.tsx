@@ -79,6 +79,7 @@ export class UnconnectedTraceDiffGraph extends React.PureComponent<Props> {
     const { edges, vertices } = getEdgesAndVertices(aData, bData);
     const keys = getUiFindVertexKeys(uiFind, vertices);
     const dagClassName = cx('TraceDiffGraph--dag', { 'is-uiFind-mode': uiFind });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const inputProps: Record<string, any> = {
       className: 'TraceDiffGraph--uiFind',
       suffix: uiFind.length ? String(keys.size) : undefined,

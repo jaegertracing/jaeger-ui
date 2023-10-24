@@ -27,6 +27,7 @@ import SearchableSelect from '../../common/SearchableSelect';
 
 const Option = Select.Option;
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 function getNestedProperty(path: string, span: any): string {
   return path.split('.').reduce((prev, curr) => {
     return prev ? prev[curr] : null;

@@ -22,7 +22,7 @@ export type TDenseSpan = {
   id: string;
   service: string;
   operation: string;
-  tags: Record<string, any>;
+  tags: Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
   parentID: string | TNil;
   skipToChild: boolean;
   children: Set<string>;

@@ -62,6 +62,8 @@ export function createViewedBoundsFunc(viewRange: {
  *                        items.
  * @return {boolean}      True if a match was found.
  */
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function spanHasTag(key: string, value: any, span: Span) {
   if (!Array.isArray(span.tags) || !span.tags.length) {
     return false;

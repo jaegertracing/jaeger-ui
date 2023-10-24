@@ -30,6 +30,7 @@ type Props = {
 class TraceIDSearchInput extends React.PureComponent<Props> {
   goToTrace = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const target = event.target as any;
     const value = target.elements.idInput.value;
     if (value) {
