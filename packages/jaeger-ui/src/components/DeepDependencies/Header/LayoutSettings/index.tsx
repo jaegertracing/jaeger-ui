@@ -14,8 +14,8 @@
 
 import * as React from 'react';
 import { Checkbox, Popover, Radio } from 'antd';
-import { CheckboxChangeEvent } from 'antd/lib/checkbox';
-import { RadioChangeEvent } from 'antd/lib/radio';
+import { CheckboxChangeEvent } from 'antd/es/checkbox';
+import { RadioChangeEvent } from 'antd/es/radio';
 
 import settingsIcon from './settingsIcon';
 import ChevronDown from '../ChevronDown';

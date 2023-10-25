@@ -2,7 +2,7 @@
 
 exports[`CohortTable renders as expected 1`] = `
 Array [
-  <ForwardRef(InternalTable)
+  <Table
     dataSource={
       Array [
         Object {
@@ -104,7 +104,7 @@ Array [
       key="link"
       render={[Function]}
     />
-  </ForwardRef(InternalTable)>,
+  </Table>,
   "",
 ]
 `;

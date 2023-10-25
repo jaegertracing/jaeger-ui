@@ -14,7 +14,7 @@
 
 import React, { FunctionComponent } from 'react';
 import { Select, SelectProps } from 'antd';
-import { DefaultOptionType } from 'antd/lib/select';
+import { DefaultOptionType } from 'antd/es/select';
 
 export const filterOptionsByLabel = (input: string, option?: DefaultOptionType) => {
   return (option?.children?.toString() ?? '').toLowerCase().includes(input.toLowerCase());

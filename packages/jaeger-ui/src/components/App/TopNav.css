@@ -30,3 +30,7 @@ limitations under the License.
 .Dropdown--icon-container .Dropdown--icon {
   margin-left: 5px;
 }
+
+.Menu--item {
+  color: white;
+}
