@@ -15,7 +15,6 @@
 import * as React from 'react';
 import { shallow } from 'enzyme';
 import { Dropdown } from 'antd';
-import { Link } from 'react-router-dom';
 import AltViewOptions from './AltViewOptions';
 import * as track from './TracePageHeader.track';
 import { ETraceViewType } from '../types';
