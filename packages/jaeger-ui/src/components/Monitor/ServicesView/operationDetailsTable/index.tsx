@@ -112,9 +112,7 @@ export class OperationTableDetails extends React.PureComponent<TProps, TState> {
               error={error.opsLatencies}
             />
             <div className="table-graph-avg">
-              {typeof value === 'number' && row.dataPoints.service_operation_latencies.length > 0
-                ? formatTimeValue(value * 1000)
-                : ''}
+              {row.dataPoints.service_operation_latencies.length > 0 ? formatTimeValue(value * 1000) : ''}
             </div>
           </div>
         ),
@@ -133,9 +131,7 @@ export class OperationTableDetails extends React.PureComponent<TProps, TState> {
               error={error.opsCalls}
             />
             <div className="table-graph-avg">
-              {typeof value === 'number' && row.dataPoints.service_operation_call_rate.length > 0
-                ? `${formatValue(value)} req/s`
-                : ''}
+              {row.dataPoints.service_operation_call_rate.length > 0 ? `${formatValue(value)} req/s` : ''}
             </div>
           </div>
         ),
@@ -155,9 +151,7 @@ export class OperationTableDetails extends React.PureComponent<TProps, TState> {
               error={error.opsErrors}
             />
             <div className="table-graph-avg">
-              {typeof value === 'number' && row.dataPoints.service_operation_error_rate.length > 0
-                ? `${formatValue(value * 100)}%`
-                : ''}
+              {row.dataPoints.service_operation_error_rate.length > 0 ? `${formatValue(value * 100)}%` : ''}
             </div>
           </div>
         ),
