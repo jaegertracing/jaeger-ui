@@ -58,7 +58,7 @@ export type MonitorEmptyStateConfig = {
   description?: string;
   button?: {
     text?: string;
-    onClick?: Function;
+    onClick?: () => void;
   };
   info?: string;
   alert?: {

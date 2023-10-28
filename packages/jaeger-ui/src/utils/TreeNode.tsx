@@ -49,7 +49,7 @@ export default class TreeNode<TValue> {
     return this;
   }
 
-  find(search: Function): TreeNode<TValue> | null {
+  find(search: (node: TreeNode<TValue>) => boolean): TreeNode<TValue> | null {
     const searchFn = TreeNode.iterFunction(TreeNode.searchFunction(search));
     if (searchFn(this)) {
       return this;
@@ -63,7 +63,7 @@ export default class TreeNode<TValue> {
     return null;
   }
 
-  getPath(search: Function) {
+  getPath(search: (node: TreeNode<TValue>) => boolean) {
     const searchFn = TreeNode.iterFunction(TreeNode.searchFunction(search));
 
     const findPath = (
