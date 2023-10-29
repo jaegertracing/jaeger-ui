@@ -22,16 +22,16 @@ Stuck somewhere or found a bug? See [Getting in Touch](https://www.jaegertracing
 
 ### Prerequisites
 
-- [nvm (Node Version Manager)](https://github.com/nvm-sh/nvm)
-- [Node.JS](https://nodejs.org/en)
-- npm package manager
+- [nvm (Node Version Manager)](https://github.com/nvm-sh/nvm).
+- [Node.JS](https://nodejs.org/en).
+- npm package manager.
 - [yarn package manager](https://yarnpkg.com/)
 
 The app was built with [create-react-app](https://github.com/facebookincubator/create-react-app).
 
 ### Running the application
 
-Fork and/or clone the `jaeger-ui` repo and change directory into it.
+Fork and/or clone the `jaeger-ui` repo and change directory into it:
 
 ```
 git clone https://github.com/jaegertracing/jaeger-ui.git
@@ -83,9 +83,9 @@ The above command will run a web server on `http://localhost:5173` that will ser
 | Command      | Description                                                         |
 | ------------ | ------------------------------------------------------------------- |
 | `yarn start` | Starts development server with hot reloading and api proxy.         |
-| `yarn test`  | Run all the tests                                                   |
-| `yarn lint`  | Lint the project (eslint, prettier, typescript)                     |
-| `yarn fmt`   | Apply Prettier source code formatting                               |
+| `yarn test`  | Run all the tests.                                                  |
+| `yarn lint`  | Lint the project (eslint, prettier, typescript).                 |
+| `yarn fmt`   | Apply Prettier source code formatting.                             |
 | `yarn build` | Runs production build. Outputs files to `packages/jaeger-ui/build`. |
 
 ### Running on Windows OS
