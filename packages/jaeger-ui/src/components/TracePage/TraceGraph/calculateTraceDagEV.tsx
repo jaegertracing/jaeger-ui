@@ -81,7 +81,12 @@ export function calculateTraceDag(trace: Trace): TraceDag<TSumSpan & TDenseSpanM
   const dag = new TraceDag<TSumSpan & TDenseSpanMembers>();
 
   baseDag.nodesMap.forEach(node => {
-    const ntime = node.members.reduce((p, m) => p + m.span.duration, 0);
+    const ntime = node.members.reduce(
+      (mdr, m) =>
+        mdr.add(m.span.startTime, m.span.startTime + (m.span.duration <= 0 ? 0 : m.span.duration - 1)),
+      new DRange()
+    ).length;
+    const totalTime = node.members.reduce((p, m) => p + m.span.duration, 0);
     const numErrors = node.members.reduce((p, m) => (p + isError(m.span.tags) ? 1 : 0), 0);
     const childDurationsDRange = node.members.reduce((p, m) => {
       // Using DRange to handle overlapping spans (fork-join)
@@ -96,6 +101,7 @@ export function calculateTraceDag(trace: Trace): TraceDag<TSumSpan & TDenseSpanM
       count: node.members.length,
       errors: numErrors,
       time: ntime,
+      totalTime: totalTime,
       percent: (100 / trace.duration) * ntime,
       selfTime: stime,
       percentSelfTime: (100 / ntime) * stime,
