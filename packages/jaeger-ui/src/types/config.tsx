@@ -84,6 +84,7 @@ export type TraceGraphConfig = {
 
 // Default values are provided in packages/jaeger-ui/src/constants/default-config.tsx
 export type Config = {
+  //
   // archiveEnabled enables the Archive Trace button in the trace view.
   // Requires Query Service to be configured with "archive" storage backend.
   archiveEnabled?: boolean;
