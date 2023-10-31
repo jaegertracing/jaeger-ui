@@ -30,11 +30,15 @@ import { getConfigValue } from '../../utils/config/get-config';
 
 import './index.css';
 import withRouteProps from '../../utils/withRouteProps';
+import DAGDirectedGraph from './_DAG_DirectedGraph';
+import DAGDiagraph from './_DAG_Diagraph';
 
 // export for tests
 export const GRAPH_TYPES = {
   FORCE_DIRECTED: { type: 'FORCE_DIRECTED', name: 'Force Directed Graph' },
   DAG: { type: 'DAG', name: 'DAG' },
+  DAG_DirectedGraph: { type: 'DAG_DirectedGraph', name: 'DAG_DirectedGraph' },
+  DAG_Digraph: { type: 'DAG_Digraph', name: 'DAG_Digraph' },
 };
 
 const dagMaxNumServices = getConfigValue('dependencies.dagMaxNumServices') || FALLBACK_DAG_MAX_NUM_SERVICES;
@@ -101,6 +105,8 @@ export class DependencyGraphPageImpl extends Component {
 
     if (dependencies.length <= dagMaxNumServices) {
       GRAPH_TYPE_OPTIONS.push(GRAPH_TYPES.DAG);
+      GRAPH_TYPE_OPTIONS.push(GRAPH_TYPES.DAG_DirectedGraph);
+      GRAPH_TYPE_OPTIONS.push(GRAPH_TYPES.DAG_Digraph);
     }
     const tabItems = [];
     GRAPH_TYPE_OPTIONS.forEach(opt => {
@@ -111,6 +117,8 @@ export class DependencyGraphPageImpl extends Component {
           <div className="DependencyGraph--graphWrapper">
             {opt.type === 'FORCE_DIRECTED' && <DependencyForceGraph nodes={nodes} links={links} />}
             {opt.type === 'DAG' && <DAG serviceCalls={dependencies} />}
+            {opt.type === 'DAG_DirectedGraph' && <DAGDirectedGraph serviceCalls={dependencies} />}
+            {opt.type === 'DAG_Digraph' && <DAGDiagraph serviceCalls={dependencies} />}
           </div>
         ),
       });
