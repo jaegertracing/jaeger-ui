@@ -16,21 +16,27 @@
     <title>Jaeger UI</title>
     <script>
       // Jaeger UI config data is embedded by the query-service via search-replace.
-      // This is later merged with defaults into the redux `state.config` via
-      // src/utils/config/get-config.js.
+      // Please see ./README.md#configuration for details.
+
+      // TODO the JSON/JS bifurcation below could be avoided by using a single template function like:
+      // function getJaegerUiConfig() { return null; }
+
+      // Important! Do not alter the following line; query-service looks for that exact pattern.
       // JAEGER_CONFIG_JS
-      // the line above may be replaced by user-provided JS file that should define a UIConfig function.
+
       function getJaegerUiConfig() {
         if(typeof window.UIConfig === 'function') {
           return UIConfig();
         }
         const DEFAULT_CONFIG = null;
+        // Important! Do not alter the following line; query-service looks for that exact pattern.
         const JAEGER_CONFIG = DEFAULT_CONFIG;
         return JAEGER_CONFIG;
       }
       // Jaeger version data is embedded by the query-service via search/replace.
       function getJaegerVersion() {
-        const DEFAULT_VERSION = {"gitCommit":"", "gitVersion":"", "buildDate":""};
+        const DEFAULT_VERSION = {'gitCommit':'', 'gitVersion':'', 'buildDate':''};
+        // Important! Do not alter the following line; query-service looks for that exact pattern.
         const JAEGER_VERSION = DEFAULT_VERSION;
         return JAEGER_VERSION;
       }
