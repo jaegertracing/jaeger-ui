@@ -1,10 +1,13 @@
 # Releases
 
-## Next (unreleased)
+<details>
+<summary>next release template</summary>
 
-### Enhancements
+## v1.xx.0 (202x-xx-xx)
 
-### Fixes
+Run `make changelog` to generate content.
+
+<details>
 
 ## v1.35.0 (2023-11-02)
 
