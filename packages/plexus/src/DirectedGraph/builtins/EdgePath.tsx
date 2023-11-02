@@ -68,13 +68,14 @@ export default class EdgePath extends React.PureComponent<TProps> {
           d={d}
           id={id}
           fill="none"
-          stroke="#000"
+          stroke="#808080"
+          strokeWidth="2"
           vectorEffect="non-scaling-stroke"
           markerEnd={markerEnd}
           {...rest}
         />
 
-        <text x={labelX - xOffset} y={labelY} fill="#000" fontSize="14px">
+        <text x={labelX - xOffset} y={labelY} fill="#000" fontSize="1rem" fontWeight="bold">
           {label}
         </text>
       </g>

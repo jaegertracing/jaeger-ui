@@ -28,18 +28,30 @@ function getNodeLabel(vertex: { key: string; label?: string }) {
     <div
       style={{
         position: 'relative',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
       }}
     >
       <div
         style={{
-          backgroundColor: 'cyan',
+          backgroundColor: '#10939B',
           borderRadius: '50%',
           height: '3rem',
           width: '3rem',
         }}
       />
 
-      <div style={{ margin: '0 auto', width: '100%', textAlign: 'center' }}>{label}</div>
+      <div
+        style={{
+          textAlign: 'center',
+          fontWeight: 'bold',
+          fontSize: '1.25rem',
+          color: '#7F7F7F',
+        }}
+      >
+        {label}
+      </div>
     </div>
   );
 }

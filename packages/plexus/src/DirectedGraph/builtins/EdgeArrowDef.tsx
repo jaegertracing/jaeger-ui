@@ -48,7 +48,7 @@ export default class EdgeArrowDef extends React.PureComponent<TProps> {
           refX={scale * 8}
           refY={scale * 3}
         >
-          <path d={`M0,0 L0,${scale * 6} L${scale * 9},${scale * 3} z`} fill="#000" />
+          <path d={`M0,0 L0,${scale * 6} L${scale * 9},${scale * 3} z`} fill="#808080" />
         </marker>
       </defs>
     );
