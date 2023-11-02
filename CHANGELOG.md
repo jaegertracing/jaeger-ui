@@ -6,6 +6,28 @@
 
 ### Fixes
 
+## v1.35.0 (2023-11-02)
+
+#### ✨ New Features:
+
+* Add tooltip when hovering critical path ([@GLVSKiriti](https://github.com/GLVSKiriti) in [#1871](https://github.com/jaegertracing/jaeger-ui/pull/1871))
+* Added tooltip when hovered on header column of tracestatistics view ([@GLVSKiriti](https://github.com/GLVSKiriti) in [#1902](https://github.com/jaegertracing/jaeger-ui/pull/1902))
+
+#### 🐞 Bug fixes, Minor Improvements:
+
+* Upgrade ant-design to v5.x ([@anshgoyalevil](https://github.com/anshgoyalevil) in [#1907](https://github.com/jaegertracing/jaeger-ui/pull/1907))
+* [refactor]: enhancement to selftime calculation logic in tracestatistics view ([@GLVSKiriti](https://github.com/GLVSKiriti) in [#1901](https://github.com/jaegertracing/jaeger-ui/pull/1901))
+* Fix: disregard malformed references pointing to the same span ([@zimv](https://github.com/zimv) in [#823](https://github.com/jaegertracing/jaeger-ui/pull/823))
+* Fix: add style for ioarrowforward ([@NineKama](https://github.com/NineKama) in [#1869](https://github.com/jaegertracing/jaeger-ui/pull/1869))
+* Replace deprecated ant-design props from referencebutton and keyvaluestable ([@anshgoyalevil](https://github.com/anshgoyalevil) in [#1864](https://github.com/jaegertracing/jaeger-ui/pull/1864))
+* Remove deprecated usages from antd dropdown, tooltip, and tab components ([@anshgoyalevil](https://github.com/anshgoyalevil) in [#1859](https://github.com/jaegertracing/jaeger-ui/pull/1859))
+* Replace deprecated visible prop of ant-design v3 with open prop of ant-design v4 ([@anshgoyalevil](https://github.com/anshgoyalevil) in [#1855](https://github.com/jaegertracing/jaeger-ui/pull/1855))
+* Replace deprecated usage of ant-design tabs component from searchtracepage ([@anshgoyalevil](https://github.com/anshgoyalevil) in [#1857](https://github.com/jaegertracing/jaeger-ui/pull/1857))
+
+#### 👷 CI Improvements:
+
+* Ci: add the label-check workflow to verify changelog labels on each pr ([@anshgoyalevil](https://github.com/anshgoyalevil) in [#1897](https://github.com/jaegertracing/jaeger-ui/pull/1897))
+
 ## v1.34.0 (2023-10-04)
 
 ### Enhancements
