@@ -7,7 +7,7 @@
 
 Run `make changelog` to generate content.
 
-<details>
+</details>
 
 ## v1.35.0 (2023-11-02)
 
