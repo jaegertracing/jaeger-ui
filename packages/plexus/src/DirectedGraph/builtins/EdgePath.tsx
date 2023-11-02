@@ -15,6 +15,8 @@
 import * as React from 'react';
 
 type TProps = Record<string, any> & {
+  id: string;
+  label?: string;
   markerEnd: string;
   pathPoints: [number, number][];
 };
@@ -50,17 +52,32 @@ const D_CMDS = ['M', 'C'];
 
 export default class EdgePath extends React.PureComponent<TProps> {
   render() {
-    const { markerEnd, pathPoints, ...rest } = this.props;
+    const { markerEnd, pathPoints, id, label, ...rest } = this.props;
     const d = pathPoints.map((pt, i) => `${D_CMDS[i] || ''}${pt.join(',')}`).join(' ');
+
+    const [startX, startY] = pathPoints[0];
+    const [endX, endY] = pathPoints[pathPoints.length - 1];
+
+    const xOffset = (label?.length ?? 0) * 5;
+    const labelX = (startX + endX) / 2;
+    const labelY = (startY + endY) / 2;
+
     return (
-      <path
-        d={d}
-        fill="none"
-        stroke="#000"
-        vectorEffect="non-scaling-stroke"
-        markerEnd={markerEnd}
-        {...rest}
-      />
+      <g>
+        <path
+          d={d}
+          id={id}
+          fill="none"
+          stroke="#000"
+          vectorEffect="non-scaling-stroke"
+          markerEnd={markerEnd}
+          {...rest}
+        />
+
+        <text x={labelX - xOffset} y={labelY} fill="#000" fontSize="14px">
+          {label}
+        </text>
+      </g>
     );
   }
 }

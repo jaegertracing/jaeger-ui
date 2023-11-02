@@ -79,7 +79,7 @@ export default class DAGDirectedGraph extends React.Component<TProps> {
   state: TState;
 
   private layoutManager: LayoutManager = new LayoutManager({
-    nodesep: 0.55,
+    nodesep: 0.8,
     ranksep: 1.5,
     rankdir: 'TB',
     // shape: 'circle',
@@ -140,7 +140,11 @@ export default class DAGDirectedGraph extends React.Component<TProps> {
         minimap
         minimapClassName="u-miniMap"
         layoutManager={this.layoutManager}
-        edges={this.state.edges.map(edge => ({ from: edge.data.source, to: edge.data.target }))}
+        edges={this.state.edges.map(edge => ({
+          from: edge.data.source,
+          to: edge.data.target,
+          edgeLabel: edge.data.label,
+        }))}
         vertices={this.state.nodes.map(node => ({ key: node.data.id }))}
         getNodeLabel={getNodeLabel}
       />

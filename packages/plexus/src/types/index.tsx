@@ -39,6 +39,7 @@ export type TEdge<T = {}> = T & {
   from: TVertexKey;
   to: TVertexKey;
   isBidirectional?: boolean;
+  edgeLabel?: string;
 };
 
 export type TLayoutEdge<T = {}> = {
