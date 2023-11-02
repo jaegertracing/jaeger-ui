@@ -15,6 +15,7 @@
 import React from 'react';
 
 import { LayoutManager, DirectedGraph } from '@jaegertracing/plexus';
+import { TEdge, TVertex } from '@jaegertracing/plexus/lib/types';
 
 function getNodeLabel(vertex: { key: string; label?: string }) {
   let { label } = vertex;
@@ -64,22 +65,8 @@ type TProps = {
   }[];
 };
 
-type TNode = {
-  data: {
-    id: string;
-  };
-};
-
-type TEdge = {
-  data: {
-    source: string;
-    target: string;
-    label: string;
-  };
-};
-
 type TState = {
-  nodes: TNode[];
+  nodes: TVertex[];
   edges: TEdge[];
 };
 
@@ -113,23 +100,25 @@ export default class DAGDirectedGraph extends React.Component<TProps> {
 
     const nodeMap: Record<string, boolean> = {};
 
-    const nodes: TNode[] = [];
+    const nodes: TVertex[] = [];
     const edges: TEdge[] = [];
 
     serviceCalls.forEach(d => {
       if (d.parent.trim().length !== 0 && d.child.trim().length !== 0) {
         if (!nodeMap[d.parent]) {
-          nodes.push({ data: { id: d.parent } });
+          nodes.push({ key: d.parent });
           nodeMap[d.parent] = true;
         }
 
         if (!nodeMap[d.child]) {
-          nodes.push({ data: { id: d.child } });
+          nodes.push({ key: d.child });
           nodeMap[d.child] = true;
         }
 
         edges.push({
-          data: { source: d.parent, target: d.child, label: `${d.callCount}` },
+          from: d.parent,
+          to: d.child,
+          edgeLabel: `${d.callCount}`,
         });
       }
     });
@@ -152,12 +141,8 @@ export default class DAGDirectedGraph extends React.Component<TProps> {
         minimap
         minimapClassName="u-miniMap"
         layoutManager={this.layoutManager}
-        edges={this.state.edges.map(edge => ({
-          from: edge.data.source,
-          to: edge.data.target,
-          edgeLabel: edge.data.label,
-        }))}
-        vertices={this.state.nodes.map(node => ({ key: node.data.id }))}
+        edges={this.state.edges}
+        vertices={this.state.nodes}
         getNodeLabel={getNodeLabel}
       />
     );
