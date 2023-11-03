@@ -104,9 +104,7 @@ npm install --save @jaegertracing/plexus
 ```tsx
 import * as React from 'react';
 
-import { LayoutManager } from 'plexus';
-// TODO(joe): Update import after killing `DirectedGraph`
-import Digraph from 'plexus/Digraph';
+import { LayoutManager, Digraph } from 'plexus';
 ```
 
 ### Data
