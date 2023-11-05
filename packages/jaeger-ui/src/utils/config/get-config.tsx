@@ -26,35 +26,44 @@ let haveWarnedDeprecations = false;
  * default config from `../../constants/default-config`.
  */
 const getConfig = memoizeOne(function getConfig() {
-  const getJaegerUiConfig = window.getJaegerUiConfig;
-  if (typeof getJaegerUiConfig !== 'function') {
-    if (!haveWarnedFactoryFn) {
-      // eslint-disable-next-line no-console
-      console.warn('Embedded config not available');
-      haveWarnedFactoryFn = true;
-    }
-    return { ...defaultConfig };
-  }
-  const embedded = getJaegerUiConfig();
+  const capabilities = getCapabilities();
+
+  const embedded = getUiConfig();
   if (!embedded) {
-    return { ...defaultConfig };
+    return {...defaultConfig, storageCapabilities: capabilities};
   }
   // check for deprecated config values
   if (Array.isArray(deprecations)) {
     deprecations.forEach(deprecation => processDeprecation(embedded, deprecation, !haveWarnedDeprecations));
     haveWarnedDeprecations = true;
   }
-  const rv = { ...defaultConfig, ...embedded };
+  const rv = { ...defaultConfig, ...embedded};
   // mergeFields config values should be merged instead of fully replaced
   const keys = mergeFields;
   for (let i = 0; i < keys.length; i++) {
     const key = keys[i];
-    if (typeof embedded[key] === 'object' && embedded[key] !== null) {
+    if (embedded && typeof embedded[key] === 'object' && embedded[key] !== null) {
       rv[key] = { ...defaultConfig[key], ...embedded[key] };
     }
   }
-  return rv;
+  return {...rv, storageCapabilities: capabilities};
 });
+
+function getUiConfig() {
+  const getter = window.getJaegerUiConfig;
+  if (typeof getter !== 'function') {
+    // eslint-disable-next-line no-console
+    console.warn('Embedded config not available');
+    return { ...defaultConfig };
+  }
+  return getter();
+}
+
+function getCapabilities() {
+  const getter = window.getJaegerStorageCapabilities;
+  const capabilities = (typeof getter === 'function') ? getter() : null;
+  return (capabilities) ? capabilities :  defaultConfig.storageCapabilities;
+}
 
 export default getConfig;
 

@@ -57,7 +57,7 @@ import updateUiFind from '../../utils/update-ui-find';
 import TraceStatistics from './TraceStatistics/index';
 import TraceSpanView from './TraceSpanView/index';
 import TraceFlamegraph from './TraceFlamegraph/index';
-import { TraceGraphConfig } from '../../types/config';
+import { StorageCapabilities, TraceGraphConfig } from '../../types/config';
 
 import './index.css';
 import memoizedTraceCriticalPath from './CriticalPath/index';
@@ -78,6 +78,7 @@ type TOwnProps = {
 
 type TReduxProps = {
   archiveEnabled: boolean;
+  storageCapabilities: StorageCapabilities | TNil;
   archiveTraceState: TraceArchive | TNil;
   criticalPathEnabled: boolean;
   embedded: null | EmbeddedState;
@@ -326,6 +327,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
   render() {
     const {
       archiveEnabled,
+      storageCapabilities,
       archiveTraceState,
       criticalPathEnabled,
       embedded,
@@ -359,6 +361,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
     }
 
     const isEmbedded = Boolean(embedded);
+    const hasArchiveStorage = Boolean(storageCapabilities?.archiveStorage);
     const headerProps = {
       focusUiFindMatches: this.focusUiFindMatches,
       slimView,
@@ -380,7 +383,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
       ref: this._searchBar,
       resultCount: findCount,
       disableJsonView,
-      showArchiveButton: !isEmbedded && archiveEnabled,
+      showArchiveButton: !isEmbedded && archiveEnabled && hasArchiveStorage,
       showShortcutsHelp: !isEmbedded,
       showStandaloneLink: isEmbedded,
       showViewOptions: !isEmbedded,
@@ -445,6 +448,7 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
   const trace = id ? traces[id] : null;
   const archiveTraceState = id ? archive[id] : null;
   const archiveEnabled = Boolean(config.archiveEnabled);
+  const storageCapabilities = config.storageCapabilities;
   const { disableJsonView, criticalPathEnabled } = config;
   const { state: locationState } = router.location;
   const searchUrl = (locationState && locationState.fromSearch) || null;
@@ -453,6 +457,7 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
   return {
     ...extractUiFindFromState(state),
     archiveEnabled,
+    storageCapabilities,
     archiveTraceState,
     criticalPathEnabled,
     embedded,
