@@ -2448,10 +2448,10 @@
   version "1.4.1"
   resolved "https://registry.yarnpkg.com/@types/d3-selection/-/d3-selection-1.4.1.tgz#fa1f8710a6b5d7cfe5c6caa61d161be7cae4a022"
 
-"@types/d3-zoom@3.0.6":
-  version "3.0.6"
-  resolved "https://registry.yarnpkg.com/@types/d3-zoom/-/d3-zoom-3.0.6.tgz#deb4fca8a020e8b7b0e04d636d35f2ab3da1d431"
-  integrity sha512-dGZQaXEu7aNcCL71LPpjB58IjoQNM9oDPfQuMUJ7N/fbkcIWGX2PnmUWO1jPJ+RLbZBpRUggJUX8twKRvo2hKQ==
+"@types/d3-zoom@3.0.8":
+  version "3.0.8"
+  resolved "https://registry.yarnpkg.com/@types/d3-zoom/-/d3-zoom-3.0.8.tgz#dccb32d1c56b1e1c6e0f1180d994896f038bc40b"
+  integrity sha512-iqMC4/YlFCSlO8+2Ii1GGGliCAY4XdeG748w5vQUbevlbDu0zSjH/+jojorQVBK/se0j6DUFNPBGSqD3YWYnDw==
   dependencies:
     "@types/d3-interpolate" "*"
     "@types/d3-selection" "*"
