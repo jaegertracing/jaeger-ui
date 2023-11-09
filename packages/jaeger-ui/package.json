@@ -88,7 +88,7 @@
     "react-vis-force": "^0.3.1",
     "react-window": "^1.8.3",
     "redux": "^4.2.1",
-    "redux-actions": "2.6.5",
+    "redux-actions": "3.0.0",
     "redux-first-history": "^5.1.1",
     "redux-form": "^8.3.10",
     "redux-promise-middleware": "^6.1.3",
