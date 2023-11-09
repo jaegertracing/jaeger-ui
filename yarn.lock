@@ -2750,9 +2750,9 @@
   resolved "https://registry.yarnpkg.com/@types/redux-actions/-/redux-actions-2.2.1.tgz#c1f4a7283ecd3cd696291550361e441bf9389370"
 
 "@types/redux-form@^8.3.5":
-  version "8.3.5"
-  resolved "https://registry.yarnpkg.com/@types/redux-form/-/redux-form-8.3.5.tgz#7c55f4182952a41eca67e9d26e2a41ad425859a5"
-  integrity sha512-SchB4i7nxgWNbJS4cXEZducztkvHzVrb5xlAXwfLpbrLPo6tMY06+kx1GqMv42+YnGy9TpCAkF51a21HatqWBA==
+  version "8.3.9"
+  resolved "https://registry.yarnpkg.com/@types/redux-form/-/redux-form-8.3.9.tgz#b3677de9f24dbbd1103ffcea0938d75d281ba7d8"
+  integrity sha512-ajjKokq4tyxoS7PYn8ZzUtMPnf3gYgypqy67T/hxFmNNcUFYhCypUn5wqblhPYcrUjOVbFWw+wZDbYh5jt5Jag==
   dependencies:
     "@types/react" "*"
     redux "^3.6.0 || ^4.0.0"
