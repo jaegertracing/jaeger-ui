@@ -2763,9 +2763,9 @@
   integrity sha512-wWKOClTTiizcZhXnPY4wikVAwmdYHp8q6DmC+EJUzAMsycb7HB32Kh9RN4+0gExjmPmZSAQjgURXIGATPegAvA==
 
 "@types/rollup-plugin-visualizer@^4.2.1":
-  version "4.2.1"
-  resolved "https://registry.yarnpkg.com/@types/rollup-plugin-visualizer/-/rollup-plugin-visualizer-4.2.1.tgz#84b317bcb218b4e35dd9f529f2e379e373935a27"
-  integrity sha512-Fk4y0EgmsSbvbayYhtSI9+cGvgw1rcQ9RlbExkQt4ivXRdiEwFKuRpxNuJCr0JktXIvOPUuPR7GSmtyZu0dujQ==
+  version "4.2.3"
+  resolved "https://registry.yarnpkg.com/@types/rollup-plugin-visualizer/-/rollup-plugin-visualizer-4.2.3.tgz#e2e36fa95146f42bf6c0cb1ed31bd356d4ffbe63"
+  integrity sha512-eaAcHN/44KJ1uzLV7NYd6vTS3MsG7rev0eOJVpnsiNwNt/u8HFsOFr/71rZ4urR9il1r7FdZFP7Awky2sK7HAg==
   dependencies:
     "@types/node" "*"
     rollup "^2.42.3"
