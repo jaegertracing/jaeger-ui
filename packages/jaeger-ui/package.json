@@ -17,7 +17,7 @@
     "@babel/preset-typescript": "^7.21.0",
     "@testing-library/jest-dom": "^6.0.0",
     "@testing-library/react": "^14.0.0",
-    "@types/react": "^18.2.33",
+    "@types/react": "^18.2.37",
     "@types/react-window": "^1.8.0",
     "@types/redux-form": "^8.3.5",
     "@types/rollup-plugin-visualizer": "^4.2.1",
