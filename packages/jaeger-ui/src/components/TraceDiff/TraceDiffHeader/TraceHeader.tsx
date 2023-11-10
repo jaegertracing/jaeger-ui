@@ -45,8 +45,10 @@ type AttrsProps = {
 // exported for tests
 export function EmptyAttrs() {
   return (
-    <ul className="TraecDiffHeader--traceAttributes">
-      <li className="TraecDiffHeader--traceAttr">&nbsp;</li>
+    <ul className="TraceDiffHeader--traceAttributes">
+      <li className="TraceDiffHeader--traceAttr" data-testid="TraceDiffHeader--traceAttr">
+        &nbsp;
+      </li>
     </ul>
   );
 }
@@ -55,18 +57,19 @@ export function EmptyAttrs() {
 export function Attrs(props: AttrsProps) {
   const { startTime, duration, totalSpans } = props;
   return (
-    <ul className="TraecDiffHeader--traceAttributes">
-      <li className="TraecDiffHeader--traceAttr">
-        <strong>
+    <ul className="TraceDiffHeader--traceAttributes">
+      <li className="TraceDiffHeader--traceAttr" data-testid="TraceDiffHeader--traceAttr">
+        <strong data-testid="TraceDiffHeader--traceAttr--date">
           <RelativeDate value={(startTime || 0) / 1000} includeTime fullMonthName />
         </strong>
       </li>
-      <li className="TraecDiffHeader--traceAttr">
+      <li className="TraceDiffHeader--traceAttr" data-testid="TraceDiffHeader--traceAttr">
         <span className="u-tx-muted">Duration: </span>
-        <strong>{formatDuration(duration || 0)}</strong>
+        <strong data-testid="TraceDiffHeader--traceAttr--duration">{formatDuration(duration || 0)}</strong>
       </li>
-      <li className="TraecDiffHeader--traceAttr">
-        <span className="u-tx-muted">Spans: </span> <strong>{totalSpans || 0}</strong>
+      <li className="TraceDiffHeader--traceAttr" data-testid="TraceDiffHeader--traceAttr">
+        <span className="u-tx-muted">Spans: </span>{' '}
+        <strong data-testid="TraceDiffHeader--traceAttr--spans">{totalSpans || 0}</strong>
       </li>
     </ul>
   );
@@ -75,9 +78,10 @@ export function Attrs(props: AttrsProps) {
 export default function TraceHeader(props: Props) {
   const { duration, error, startTime, state, traceID, totalSpans, traceName } = props;
   const AttrsComponent = state === fetchedState.DONE ? Attrs : EmptyAttrs;
+
   return (
-    <div className="TraecDiffHeader--traceHeader">
-      <h1 className="TraecDiffHeader--traceTitle">
+    <div className="TraceDiffHeader--traceHeader" data-testid="TraceDiffHeader--traceHeader">
+      <h1 className="TraceDiffHeader--traceTitle">
         <span>
           {traceID ? (
             <React.Fragment>
@@ -91,7 +95,7 @@ export default function TraceHeader(props: Props) {
             <span className="u-tx-muted">Select a Trace...</span>
           )}
         </span>
-        <IoChevronDown className="TraecDiffHeader--traceTitleChevron" />
+        <IoChevronDown className="TraceDiffHeader--traceTitleChevron" />
       </h1>
       <AttrsComponent startTime={startTime} duration={duration} totalSpans={totalSpans} />
     </div>

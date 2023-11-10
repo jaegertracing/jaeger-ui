@@ -13,57 +13,77 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import '@testing-library/jest-dom';
 
 import TraceHeader, { Attrs, EmptyAttrs } from './TraceHeader';
 import { fetchedState } from '../../../constants';
 
 describe('TraceHeader', () => {
-  const props = {
-    duration: 700,
-    error: { errorKey: 'errorValue' },
-    traceID: 'trace-id',
-    traceName: 'trace name',
-  };
-  let wrapper;
+  describe(`TraceHeader`, () => {
+    const renderWithProps = passedProps => {
+      const originalProps = {
+        duration: 700,
+        error: { errorKey: 'errorValue' },
+        traceID: 'trace-id',
+        traceName: 'trace name',
+      };
 
-  beforeEach(() => {
-    wrapper = shallow(<TraceHeader {...props} />);
-  });
+      const props = {
+        ...originalProps,
+        ...passedProps,
+      };
 
-  it('renders as expected', () => {
-    expect(wrapper).toMatchSnapshot();
-  });
+      render(<TraceHeader {...props} />);
+    };
 
-  it('renders populated attrs component when props.state === fetchedState.DONE', () => {
-    wrapper.setProps({
-      startTime: 150,
-      totalSpans: 50,
-      state: fetchedState.DONE,
+    it('renders as expected', () => {
+      renderWithProps({});
+      expect(screen.getAllByTestId('TraceDiffHeader--traceHeader').length).toBe(1);
     });
-    expect(wrapper).toMatchSnapshot();
-  });
 
-  it('renders "Select a Trace..." when props.traceID is not provided ', () => {
-    wrapper.setProps({
-      traceID: null,
+    it('renders populated Attrs component when props.state === fetchedState.DONE', () => {
+      renderWithProps({
+        startTime: 150,
+        totalSpans: 50,
+        state: fetchedState.DONE,
+      });
+      expect(screen.getAllByTestId('TraceDiffHeader--traceAttr').length).toBe(3);
     });
-    expect(wrapper.find('.u-tx-muted').text()).toBe('Select a Trace...');
+
+    it('renders "Select a Trace..." when props.traceID is not provided ', () => {
+      renderWithProps({
+        traceID: null,
+      });
+      expect(screen.getByText('Select a Trace...'));
+    });
   });
 
   describe('EmptyAttrs', () => {
     it('renders as expected', () => {
-      expect(shallow(<EmptyAttrs />)).toMatchSnapshot();
+      render(<EmptyAttrs />);
+      expect(screen.getAllByTestId('TraceDiffHeader--traceAttr').length).toBe(1);
+      expect(screen.getByTestId('TraceDiffHeader--traceAttr').textContent.trim()).toBe('');
     });
   });
 
   describe('Attrs', () => {
     it('renders as expected when provided props', () => {
-      expect(shallow(<Attrs duration={700} startTime={150} totalSpans={50} />)).toMatchSnapshot();
+      render(<Attrs duration={700} startTime={150} totalSpans={50} />);
+
+      // Test that the shown values are correctly formatted
+      expect(screen.getByText('January 1, 1970, 12:00:00 am'));
+      expect(screen.getByTestId('TraceDiffHeader--traceAttr--duration').textContent).toBe('700μs');
+      expect(screen.getByTestId('TraceDiffHeader--traceAttr--spans').textContent).toBe('50');
     });
 
     it('Attrs renders as expected when missing props', () => {
-      expect(shallow(<Attrs />)).toMatchSnapshot();
+      render(<Attrs />);
+
+      // Test that the default values are correctly
+      expect(screen.getByText('January 1, 1970, 12:00:00 am'));
+      expect(screen.getByTestId('TraceDiffHeader--traceAttr--duration').textContent).toBe('0μs');
+      expect(screen.getByTestId('TraceDiffHeader--traceAttr--spans').textContent).toBe('0');
     });
   });
 });
