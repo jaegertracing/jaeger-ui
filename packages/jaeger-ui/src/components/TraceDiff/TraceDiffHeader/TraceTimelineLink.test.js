@@ -29,7 +29,9 @@ describe('TraceTimelineLink', () => {
   });
 
   it('links to the given trace', () => {
-    expect(screen.getByRole('link').href).toBe(`http://localhost/trace/${traceID}`);
+    const link = screen.getByRole('link');
+    const url = new URL(link.href);
+    expect(url.pathname).toBe(`/trace/${traceID}`);
   });
 
   it('stops event propagation', () => {
