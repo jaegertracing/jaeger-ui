@@ -14,6 +14,7 @@
 
 import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
+import '@testing-library/jest-dom';
 
 import ReferenceLink from './ReferenceLink';
 
@@ -43,7 +44,7 @@ describe(ReferenceLink, () => {
 
     it('render for external trace', () => {
       render(<ReferenceLink reference={externalRef} focusSpan={focusMock} />);
-      expect(screen.getByRole('link').href).toBe('http://localhost/trace/trace2?uiFind=span2');
+      expect(screen.getByRole('link')).toHaveAttribute('href', '/trace/trace2?uiFind=span2');
     });
   });
 
