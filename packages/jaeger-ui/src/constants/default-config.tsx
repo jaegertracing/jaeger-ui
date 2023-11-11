@@ -21,7 +21,7 @@ import { version } from '../../package.json';
 import { Config } from '../types/config';
 
 const defaultConfig: Config = {
-  archiveEnabled: false,
+  archiveEnabled: true,
   criticalPathEnabled: true,
   dependencies: {
     dagMaxNumServices: FALLBACK_DAG_MAX_NUM_SERVICES,
@@ -76,6 +76,9 @@ const defaultConfig: Config = {
       value: '2d',
     },
     maxLimit: 1500,
+  },
+  storageCapabilities: {
+    archiveStorage: false,
   },
   tracking: {
     gaID: null,
