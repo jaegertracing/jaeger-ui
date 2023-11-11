@@ -108,8 +108,8 @@ describe('getConfig()', () => {
           }
           embedded[key] = { a: true, b: false };
           const expected = { ...defaultConfig, ...embedded };
-          expected[key] = { ...defaultConfig[key], ...embedded[key]};
-          expect(getConfig()).toEqual({...expected, storageCapabilities: capabilities});
+          expected[key] = { ...defaultConfig[key], ...embedded[key] };
+          expect(getConfig()).toEqual({ ...expected, storageCapabilities: capabilities });
         });
       });
     });

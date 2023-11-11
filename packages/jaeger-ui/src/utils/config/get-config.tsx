@@ -30,14 +30,14 @@ const getConfig = memoizeOne(function getConfig() {
 
   const embedded = getUiConfig();
   if (!embedded) {
-    return {...defaultConfig, storageCapabilities: capabilities};
+    return { ...defaultConfig, storageCapabilities: capabilities };
   }
   // check for deprecated config values
   if (Array.isArray(deprecations)) {
     deprecations.forEach(deprecation => processDeprecation(embedded, deprecation, !haveWarnedDeprecations));
     haveWarnedDeprecations = true;
   }
-  const rv = { ...defaultConfig, ...embedded};
+  const rv = { ...defaultConfig, ...embedded };
   // mergeFields config values should be merged instead of fully replaced
   const keys = mergeFields;
   for (let i = 0; i < keys.length; i++) {
@@ -46,7 +46,7 @@ const getConfig = memoizeOne(function getConfig() {
       rv[key] = { ...defaultConfig[key], ...embedded[key] };
     }
   }
-  return {...rv, storageCapabilities: capabilities};
+  return { ...rv, storageCapabilities: capabilities };
 });
 
 function getUiConfig() {
@@ -61,8 +61,8 @@ function getUiConfig() {
 
 function getCapabilities() {
   const getter = window.getJaegerStorageCapabilities;
-  const capabilities = (typeof getter === 'function') ? getter() : null;
-  return (capabilities) ? capabilities :  defaultConfig.storageCapabilities;
+  const capabilities = typeof getter === 'function' ? getter() : null;
+  return capabilities ? capabilities : defaultConfig.storageCapabilities;
 }
 
 export default getConfig;
