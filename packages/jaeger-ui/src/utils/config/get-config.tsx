@@ -18,9 +18,6 @@ import memoizeOne from 'memoize-one';
 import processDeprecation from './process-deprecation';
 import defaultConfig, { deprecations, mergeFields } from '../../constants/default-config';
 
-let haveWarnedFactoryFn = false;
-let haveWarnedDeprecations = false;
-
 /**
  * Merge the embedded config from the query service (if present) with the
  * default config from `../../constants/default-config`.
@@ -34,18 +31,15 @@ const getConfig = memoizeOne(function getConfig() {
   }
   // check for deprecated config values
   if (Array.isArray(deprecations)) {
-    deprecations.forEach(deprecation => processDeprecation(embedded, deprecation, !haveWarnedDeprecations));
-    haveWarnedDeprecations = true;
+    deprecations.forEach(deprecation => processDeprecation(embedded, deprecation, true));
   }
   const rv = { ...defaultConfig, ...embedded };
   // mergeFields config values should be merged instead of fully replaced
-  const keys = mergeFields;
-  for (let i = 0; i < keys.length; i++) {
-    const key = keys[i];
+  mergeFields.forEach(key => {
     if (embedded && typeof embedded[key] === 'object' && embedded[key] !== null) {
       rv[key] = { ...defaultConfig[key], ...embedded[key] };
     }
-  }
+  });
   return { ...rv, storageCapabilities: capabilities };
 });
 
@@ -62,7 +56,7 @@ function getUiConfig() {
 function getCapabilities() {
   const getter = window.getJaegerStorageCapabilities;
   const capabilities = typeof getter === 'function' ? getter() : null;
-  return capabilities ? capabilities : defaultConfig.storageCapabilities;
+  return capabilities ?? defaultConfig.storageCapabilities;
 }
 
 export default getConfig;
