@@ -20,43 +20,41 @@ import TraceHeader, { Attrs, EmptyAttrs } from './TraceHeader';
 import { fetchedState } from '../../../constants';
 
 describe('TraceHeader', () => {
-  describe(`TraceHeader`, () => {
-    const renderWithProps = passedProps => {
-      const originalProps = {
-        duration: 700,
-        error: { errorKey: 'errorValue' },
-        traceID: 'trace-id',
-        traceName: 'trace name',
-      };
-
-      const props = {
-        ...originalProps,
-        ...passedProps,
-      };
-
-      render(<TraceHeader {...props} />);
+  const renderWithProps = (passedProps = {}) => {
+    const originalProps = {
+      duration: 700,
+      error: { errorKey: 'errorValue' },
+      traceID: 'trace-id',
+      traceName: 'trace name',
     };
 
-    it('renders as expected', () => {
-      renderWithProps({});
-      expect(screen.getAllByTestId('TraceDiffHeader--traceHeader').length).toBe(1);
-    });
+    const props = {
+      ...originalProps,
+      ...passedProps,
+    };
 
-    it('renders populated Attrs component when props.state === fetchedState.DONE', () => {
-      renderWithProps({
-        startTime: 150,
-        totalSpans: 50,
-        state: fetchedState.DONE,
-      });
-      expect(screen.getAllByTestId('TraceDiffHeader--traceAttr').length).toBe(3);
-    });
+    render(<TraceHeader {...props} />);
+  };
 
-    it('renders "Select a Trace..." when props.traceID is not provided ', () => {
-      renderWithProps({
-        traceID: null,
-      });
-      expect(screen.getByText('Select a Trace...'));
+  it('renders as expected', () => {
+    renderWithProps();
+    expect(screen.getAllByTestId('TraceDiffHeader--traceHeader').length).toBe(1);
+  });
+
+  it('renders populated Attrs component when props.state === fetchedState.DONE', () => {
+    renderWithProps({
+      startTime: 150,
+      totalSpans: 50,
+      state: fetchedState.DONE,
     });
+    expect(screen.getAllByTestId('TraceDiffHeader--traceAttr').length).toBe(3);
+  });
+
+  it('renders "Select a Trace..." when props.traceID is not provided ', () => {
+    renderWithProps({
+      traceID: null,
+    });
+    expect(screen.getByText('Select a Trace...'));
   });
 
   describe('EmptyAttrs', () => {
