@@ -19,6 +19,7 @@ import './site-prefix';
 
 import React from 'react';
 import { BrowserRouter } from 'react-router-dom';
+import { CompatRouter } from 'react-router-dom-v5-compat';
 import { createRoot } from 'react-dom/client';
 
 import JaegerUIApp from './components/App';
@@ -41,14 +42,18 @@ if (typeof trackingContext === 'object' && trackingContext !== null) {
   trackingContext.context(() => {
     root.render(
       <BrowserRouter>
-        <JaegerUIApp />
+        <CompatRouter>
+          <JaegerUIApp />
+        </CompatRouter>
       </BrowserRouter>
     );
   });
 } else {
   root.render(
     <BrowserRouter>
-      <JaegerUIApp />
+      <CompatRouter>
+        <JaegerUIApp />
+      </CompatRouter>
     </BrowserRouter>
   );
 }
