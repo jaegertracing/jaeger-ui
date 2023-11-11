@@ -82,7 +82,19 @@ export class DependencyGraphPageImpl extends Component {
     }
 
     if (!nodes || !links) {
-      return <div className="u-simple-card ub-m3">No service dependencies found.</div>;
+      return (
+        <div className="u-simple-card ub-m3">
+          No service dependencies found.{' '}
+          <a
+            href="https://www.jaegertracing.io/docs/latest/faq/#why-is-the-dependencies-page-empty"
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            See FAQ
+          </a>
+          .
+        </div>
+      );
     }
 
     const GRAPH_TYPE_OPTIONS = [GRAPH_TYPES.FORCE_DIRECTED];

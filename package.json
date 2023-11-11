@@ -26,8 +26,7 @@
     "typescript": "5.2.2"
   },
   "resolutions": {
-    "**/lodash": "4.17.21",
-    "**/@types/react": "18.2.33"
+    "**/lodash": "^4.17.21"
   },
   "workspaces": {
     "packages": [
