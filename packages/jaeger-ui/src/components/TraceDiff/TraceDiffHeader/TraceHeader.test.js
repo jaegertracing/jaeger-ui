@@ -38,6 +38,7 @@ describe('TraceHeader', () => {
 
   it('renders as expected', () => {
     renderWithProps();
+
     expect(screen.getAllByTestId('TraceDiffHeader--traceHeader').length).toBe(1);
   });
 
@@ -47,19 +48,24 @@ describe('TraceHeader', () => {
       totalSpans: 50,
       state: fetchedState.DONE,
     });
-    expect(screen.getAllByTestId('TraceDiffHeader--traceAttr').length).toBe(3);
+
+    expect(screen.getByTestId('TraceDiffHeader--traceAttr--date'));
+    expect(screen.getByTestId('TraceDiffHeader--traceAttr--duration'));
+    expect(screen.getByTestId('TraceDiffHeader--traceAttr--spans'));
   });
 
   it('renders "Select a Trace..." when props.traceID is not provided ', () => {
     renderWithProps({
       traceID: null,
     });
+
     expect(screen.getByText('Select a Trace...'));
   });
 
   describe('EmptyAttrs', () => {
     it('renders as expected', () => {
       render(<EmptyAttrs />);
+
       expect(screen.getAllByTestId('TraceDiffHeader--traceAttr').length).toBe(1);
       expect(screen.getByTestId('TraceDiffHeader--traceAttr').textContent.trim()).toBe('');
     });
