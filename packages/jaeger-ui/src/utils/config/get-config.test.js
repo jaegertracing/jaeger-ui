@@ -37,9 +37,10 @@ describe('getConfig()', () => {
     console.warn = oldWarn;
   });
 
-  describe('`window.getJaegerUiConfig` is not a function', () => {
+  describe('index functions are not yet injected by backend', () => {
     beforeAll(() => {
       window.getJaegerUiConfig = undefined;
+      window.getJaegerStorageCapabilities = undefined;
     });
 
     it('warns once', () => {
@@ -54,15 +55,16 @@ describe('getConfig()', () => {
     });
   });
 
-  describe('`window.getJaegerUiConfig` is a function', () => {
+  describe('index functions are injected by backend', () => {
     let embedded;
-    let getJaegerUiConfig;
+    let capabilities;
 
     beforeEach(() => {
       getConfig.apply({}, []);
       embedded = {};
-      getJaegerUiConfig = jest.fn(() => embedded);
-      window.getJaegerUiConfig = getJaegerUiConfig;
+      window.getJaegerUiConfig = jest.fn(() => embedded);
+      capabilities = defaultConfig.storageCapabilities;
+      window.getJaegerStorageCapabilities = jest.fn(() => capabilities);
     });
 
     it('returns the default config when the embedded config is `null`', () => {
@@ -70,9 +72,10 @@ describe('getConfig()', () => {
       expect(getConfig()).toEqual(defaultConfig);
     });
 
-    it('merges the defaultConfig with the embedded config ', () => {
+    it('merges the defaultConfig with the embedded config and storage capabilities', () => {
       embedded = { novel: 'prop' };
-      expect(getConfig()).toEqual({ ...defaultConfig, ...embedded });
+      capabilities = { archiveStorage: true };
+      expect(getConfig()).toEqual({ ...defaultConfig, ...embedded, storageCapabilities: capabilities });
     });
 
     describe('overwriting precedence and merging', () => {
@@ -84,7 +87,7 @@ describe('getConfig()', () => {
           keys.forEach(key => {
             embedded[key] = key;
           });
-          expect(getConfig()).toEqual({ ...defaultConfig, ...embedded });
+          expect(getConfig()).toEqual({ ...defaultConfig, ...embedded, storageCapabilities: capabilities });
         });
       });
 
@@ -94,7 +97,7 @@ describe('getConfig()', () => {
           mergeFields.forEach((k, i) => {
             embedded[k] = i ? true : null;
           });
-          expect(getConfig()).toEqual({ ...defaultConfig, ...embedded });
+          expect(getConfig()).toEqual({ ...defaultConfig, ...embedded, storageCapabilities: capabilities });
         });
 
         it('merges object values', () => {
@@ -106,7 +109,7 @@ describe('getConfig()', () => {
           embedded[key] = { a: true, b: false };
           const expected = { ...defaultConfig, ...embedded };
           expected[key] = { ...defaultConfig[key], ...embedded[key] };
-          expect(getConfig()).toEqual(expected);
+          expect(getConfig()).toEqual({ ...expected, storageCapabilities: capabilities });
         });
       });
     });

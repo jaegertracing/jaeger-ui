@@ -33,6 +33,12 @@
         const JAEGER_CONFIG = DEFAULT_CONFIG;
         return JAEGER_CONFIG;
       }
+      // Jaeger storage compabilities data is embedded by the query-service via search-replace.
+      function getJaegerStorageCapabilities() {
+        const DEFAULT_STORAGE_CAPABILITIES = { "archiveStorage": false };
+        const JAEGER_STORAGE_CAPABILITIES = DEFAULT_STORAGE_CAPABILITIES;
+        return JAEGER_STORAGE_CAPABILITIES;
+      }
       // Jaeger version data is embedded by the query-service via search/replace.
       function getJaegerVersion() {
         const DEFAULT_VERSION = {'gitCommit':'', 'gitVersion':'', 'buildDate':''};
