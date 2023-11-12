@@ -45,8 +45,8 @@ type AttrsProps = {
 // exported for tests
 export function EmptyAttrs() {
   return (
-    <ul className="TraceDiffHeader--traceAttributes">
-      <li className="TraceDiffHeader--traceAttr" data-testid="TraceDiffHeader--traceAttr">
+    <ul className="TraceDiffHeader--traceAttributes" data-testid="TraceDiffHeader--emptyTraceAttributes">
+      <li className="TraceDiffHeader--traceAttr" data-testid="TraceDiffHeader--traceAttr--empty">
         &nbsp;
       </li>
     </ul>
@@ -57,7 +57,7 @@ export function EmptyAttrs() {
 export function Attrs(props: AttrsProps) {
   const { startTime, duration, totalSpans } = props;
   return (
-    <ul className="TraceDiffHeader--traceAttributes">
+    <ul className="TraceDiffHeader--traceAttributes" data-testid="TraceDiffHeader--traceAttributes">
       <li className="TraceDiffHeader--traceAttr" data-testid="TraceDiffHeader--traceAttr">
         <strong data-testid="TraceDiffHeader--traceAttr--date">
           <RelativeDate value={(startTime || 0) / 1000} includeTime fullMonthName />

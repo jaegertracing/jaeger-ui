@@ -49,9 +49,23 @@ describe('TraceHeader', () => {
       state: fetchedState.DONE,
     });
 
+    expect(screen.getByTestId('TraceDiffHeader--traceAttributes'));
     expect(screen.getByTestId('TraceDiffHeader--traceAttr--date'));
     expect(screen.getByTestId('TraceDiffHeader--traceAttr--duration'));
     expect(screen.getByTestId('TraceDiffHeader--traceAttr--spans'));
+
+    expect(() => screen.getByTestId('TraceDiffHeader--emptyTraceAttributes')).toThrow();
+  });
+
+  it('renders populated EmptyAttrs component when props.state !== fetchedState.DONE', () => {
+    renderWithProps({
+      startTime: 150,
+      totalSpans: 50,
+      state: fetchedState.LOADING,
+    });
+
+    expect(screen.getByTestId('TraceDiffHeader--emptyTraceAttributes'));
+    expect(() => screen.getByTestId('TraceDiffHeader--traceAttributes')).toThrow();
   });
 
   it('renders "Select a Trace..." when props.traceID is not provided ', () => {
@@ -66,17 +80,19 @@ describe('TraceHeader', () => {
     it('renders as expected', () => {
       render(<EmptyAttrs />);
 
-      expect(screen.getAllByTestId('TraceDiffHeader--traceAttr').length).toBe(1);
-      expect(screen.getByTestId('TraceDiffHeader--traceAttr').textContent.trim()).toBe('');
+      expect(screen.getByTestId('TraceDiffHeader--traceAttr--empty'));
     });
   });
 
   describe('Attrs', () => {
     it('renders as expected when provided props', () => {
-      render(<Attrs duration={700} startTime={150} totalSpans={50} />);
+      // Represents a minute in microseconds
+      const ONE_MINUTE = 60 * 10 ** 6;
+
+      render(<Attrs duration={700} startTime={ONE_MINUTE} totalSpans={50} />);
 
       // Test that the shown values are correctly formatted
-      expect(screen.getByText('January 1, 1970, 12:00:00 am'));
+      expect(screen.getByText('January 1, 1970, 12:01:00 am'));
       expect(screen.getByTestId('TraceDiffHeader--traceAttr--duration').textContent).toBe('700μs');
       expect(screen.getByTestId('TraceDiffHeader--traceAttr--spans').textContent).toBe('50');
     });
