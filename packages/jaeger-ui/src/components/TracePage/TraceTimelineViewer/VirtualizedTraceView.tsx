@@ -163,8 +163,8 @@ function mergeChildrenCriticalPath(
   spanID: string,
   criticalPath: criticalPathSection[]
 ): criticalPathSection[] {
-  if (criticalPath.length == 0) {
-    return criticalPath;
+  if (!criticalPath) {
+    return [];
   }
   // Define an array to store the IDs of the span and its descendants (if the span is collapsed)
   const allRequiredSpanIds = [spanID];
