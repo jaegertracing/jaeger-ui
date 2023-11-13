@@ -82,8 +82,14 @@ export type TraceGraphConfig = {
   layoutManagerMemory?: number;
 };
 
+export type StorageCapabilities = {
+  // archiveStorage indicates whether the query service supports archive storage.
+  archiveStorage?: boolean;
+};
+
 // Default values are provided in packages/jaeger-ui/src/constants/default-config.tsx
 export type Config = {
+  //
   // archiveEnabled enables the Archive Trace button in the trace view.
   // Requires Query Service to be configured with "archive" storage backend.
   archiveEnabled?: boolean;
@@ -128,6 +134,9 @@ export type Config = {
   // scripts is an array of URLs of additional JavaScript files to be loaded.
   // TODO when is it useful?
   scripts?: readonly TScript[];
+
+  // storage capabilities given by the query service.
+  storageCapabilities?: StorageCapabilities;
 
   // topTagPrefixes defines a set of prefixes for span tag names that are considered
   // "important" and cause the matching tags to appear higher in the list of tags.
