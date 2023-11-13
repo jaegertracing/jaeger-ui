@@ -28,11 +28,11 @@ html {
 }
 
 .DemoGraph {
-  border: 1px solid #bbb;
+  /* border: 1px solid #bbb; */
   cursor: move;
   overflow: hidden;
-  height: 700px;
-  width: 700px;
+  height: 100%;
+  width: 100%;
   position: relative;
 }
 

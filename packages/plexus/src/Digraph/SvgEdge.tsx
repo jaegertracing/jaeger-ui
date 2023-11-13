@@ -62,15 +62,31 @@ export default class SvgEdge<U = {}> extends React.PureComponent<TProps<U>> {
       },
       getProps(setOnEdge, layoutEdge, renderUtils)
     );
+
+    const label = 'Label';
+
+    const [startX, startY] = pathPoints[0];
+    const [endX, endY] = pathPoints[pathPoints.length - 1];
+
+    const xOffset = (label?.length ?? 0) * 5;
+    const labelX = (startX + endX) / 2;
+    const labelY = (startY + endY) / 2;
+
     return (
-      <path
-        d={d}
-        fill="none"
-        vectorEffect="non-scaling-stroke"
-        markerEnd={markerEnd}
-        markerStart={markerStart}
-        {...customProps}
-      />
+      <g>
+        <path
+          d={d}
+          fill="none"
+          vectorEffect="non-scaling-stroke"
+          markerEnd={markerEnd}
+          markerStart={markerStart}
+          {...customProps}
+        />
+
+        <text x={labelX - xOffset} y={labelY} fill="#000" fontSize="1rem" fontWeight="bold">
+          {label}
+        </text>
+      </g>
     );
   }
 }
