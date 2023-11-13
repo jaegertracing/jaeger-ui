@@ -112,6 +112,9 @@ export default class Graph extends PureComponent<TProps> {
     } = this.props;
     const nodeRenderers = this.getNodeRenderers(uiFindMatches || this.emptyFindSet, verticesViewModifiers);
 
+    // console.log(edges);
+    // console.log(vertices);
+
     return (
       <Digraph<TDdgVertex>
         minimap

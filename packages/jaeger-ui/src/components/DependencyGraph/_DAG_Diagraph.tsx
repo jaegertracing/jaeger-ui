@@ -14,45 +14,10 @@
 
 import React from 'react';
 
-import memoize from 'memoize-one';
+import { Digraph, LayoutManager } from '@jaegertracing/plexus';
+import { TEdge, TVertex } from '@jaegertracing/plexus/lib/types';
 
-import { Digraph, LayoutManager, cacheAs } from '@jaegertracing/plexus';
-// import { TSetProps, TFromGraphStateFn, TDefEntry } from '@jaegertracing/plexus/lib/Digraph/types';
-// import { TEdge } from '@jaegertracing/plexus/lib/types';
-// import TNonEmptyArray from '@jaegertracing/plexus/lib/types/TNonEmptyArray';
-
-import { TLayoutEdge, TLayoutVertex, TVertex } from '@jaegertracing/plexus/lib/types';
-import { getNodeRenderer, measureNode } from '../DeepDependencies/Graph/DdgNodeContent';
-import getNodeRenderers from '../DeepDependencies/Graph/getNodeRenderers';
-import getSetOnEdge from '../DeepDependencies/Graph/getSetOnEdge';
-
-function getColorNodeLabel(vertex: { key: string; label?: string }) {
-  let { label } = vertex;
-  label = !label ? String(vertex.key) : label;
-
-  if (typeof label !== 'string' && !React.isValidElement(label)) {
-    label = String(label);
-  }
-
-  return (
-    <div
-      style={{
-        position: 'relative',
-      }}
-    >
-      <div
-        style={{
-          backgroundColor: 'cyan',
-          borderRadius: '50%',
-          height: '3rem',
-          width: '3rem',
-        }}
-      />
-
-      <div style={{ margin: '0 auto', width: '100%', textAlign: 'center' }}>{label}</div>
-    </div>
-  );
-}
+import './dag-new.css';
 
 type TProps = {
   serviceCalls: {
@@ -62,49 +27,10 @@ type TProps = {
   }[];
 };
 
-type TNode = {
-  data: {
-    id: string;
-  };
-};
-
-type TEdge = {
-  data: {
-    source: string;
-    target: string;
-    label: string;
-  };
-};
-
 type TState = {
-  nodes: TNode[];
+  nodes: TVertex[];
   edges: TEdge[];
 };
-
-const VOWELS = new Set(['a', 'e', 'i', 'o', 'u', 'y']);
-
-function renderVowelEmphasisHtml(lv: TLayoutVertex<any>) {
-  return VOWELS.has(lv.vertex.key[0]) ? <div className="DemoGraph--node--emphasized" /> : null;
-}
-
-const { classNameIsSmall: layeredClassNameIsSmall, scaleStrokeOpacity } = Digraph.propsFactories;
-
-function getNodeLabel(vertex: TVertex<{ key: string }>) {
-  const [svc, op] = vertex.key.split('::', 2);
-  return (
-    <span className="DemoGraph--nodeLabel">
-      <strong>{svc}</strong>
-      <br />
-      {op}
-    </span>
-  );
-}
-
-const setOnNode = (vertex: TVertex) => ({
-  className: 'DemoGraph--node',
-  // eslint-disable-next-line no-console
-  onClick: () => console.log(vertex.key),
-});
 
 export default class DAGDiagraph extends React.Component<TProps> {
   static defaultProps = {
@@ -113,15 +39,10 @@ export default class DAGDiagraph extends React.Component<TProps> {
 
   state: TState;
 
-  private getNodeRenderers = memoize(getNodeRenderers);
-  private getNodeContentRenderer = memoize(getNodeRenderer);
-  private getSetOnEdge = memoize(getSetOnEdge);
-
   private layoutManager: LayoutManager = new LayoutManager({
-    nodesep: 0.55,
+    nodesep: 1.5,
     ranksep: 1.5,
     rankdir: 'TB',
-    // shape: 'circle',
     splines: 'polyline',
     useDotEdges: true,
   });
@@ -140,31 +61,33 @@ export default class DAGDiagraph extends React.Component<TProps> {
 
     const nodeMap: Record<string, boolean> = {};
 
-    const nodes: TNode[] = [];
+    const nodes: TVertex[] = [];
     const edges: TEdge[] = [];
 
     serviceCalls.forEach(d => {
       if (d.parent.trim().length !== 0 && d.child.trim().length !== 0) {
         if (!nodeMap[d.parent]) {
-          nodes.push({ data: { id: d.parent } });
+          nodes.push({ key: d.parent });
           nodeMap[d.parent] = true;
         }
 
         if (!nodeMap[d.child]) {
-          nodes.push({ data: { id: d.child } });
+          nodes.push({ key: d.child });
           nodeMap[d.child] = true;
         }
 
         edges.push({
-          data: { source: d.parent, target: d.child, label: `${d.callCount}` },
+          from: d.parent,
+          to: d.child,
+          edgeLabel: `${d.callCount}`,
         });
       }
     });
 
     this.setState(prevState => ({
       ...prevState,
-      nodes,
       edges,
+      nodes,
     }));
   }
 
@@ -172,80 +95,55 @@ export default class DAGDiagraph extends React.Component<TProps> {
     this.layoutManager.stopAndRelease();
   }
 
-  private setUxOnEdge = (layoutEdge: TLayoutEdge<any>) => ({
-    onMouseOver: () => this.onEdgeEnter(layoutEdge),
-    onMouseOut: () => this.onEdgeExit(layoutEdge),
-  });
-
-  private onEdgeEnter = (le: TLayoutEdge<any>) => {
-    // this.hovering = le;
-    // this.setState(this.updateHoveredState);
-  };
-
-  private onEdgeExit = (le: TLayoutEdge<any>) => {
-    // if (this.hovering === le) {
-    //   this.hovering = null;
-    // }
-    // this.setState(this.updateHoveredState);
-  };
-
   render() {
-    const nodeRenderers = this.getNodeRenderers(new Set(), new Map());
+    // console.log(this.state.nodes);
+    // console.log(this.state.edges);
+
     return (
-      <Digraph
-        zoom
-        minimap
-        minimapClassName="u-miniMap"
-        // layoutManager={this.layoutManager}
-        layoutManager={new LayoutManager({ useDotEdges: true })}
-        edges={this.state.edges.map(edge => ({ from: edge.data.source, to: edge.data.target }))}
-        vertices={this.state.nodes.map(node => ({
-          key: node.data.id,
-          service: node.data.id,
-          operation: node.data.id,
-        }))}
-        measurableNodesKey="nodes/content"
-        // getNodeLabel={getColorNodeLabel}
-        layers={[
-          {
-            key: 'nodes-layers',
-            layerType: 'html',
-            layers: [
-              {
-                key: 'emph-nodes',
-                renderNode: renderVowelEmphasisHtml,
-              },
-              {
-                setOnNode,
-                key: 'main-nodes',
-                measurable: true,
-                renderNode: getNodeLabel,
-              },
-            ],
-          },
-          {
-            key: 'edges-layers',
-            layerType: 'svg',
-            defs: [{ localId: 'arrow-head' }],
-            layers: [
-              {
-                key: 'edges',
-                markerEndId: 'arrow-head',
-                edges: true,
-                setOnContainer: scaleStrokeOpacity,
-              },
-              {
-                key: 'edges-pointer-area',
-                edges: true,
-                setOnContainer: cacheAs('html-effects/edges-pointer-area/set-on-container', {
-                  style: { cursor: 'default', opacity: 0, strokeWidth: 4 },
-                }),
-                setOnEdge: this.setUxOnEdge,
-              },
-            ],
-          },
-        ]}
-      />
+      <>
+        <p>{this.state.nodes.length}</p>
+        <Digraph
+          zoom
+          minimap
+          minimapClassName="u-miniMap"
+          layoutManager={this.layoutManager}
+          measurableNodesKey="nodes"
+          setOnGraph={{
+            style: {
+              fontFamily: 'sans-serif',
+              height: '100%',
+              position: 'fixed',
+              width: '100%',
+            },
+          }}
+          edges={this.state.edges}
+          vertices={this.state.nodes}
+          // vertices={this.state.nodes.map(n => ({
+          //   key: n.key,
+          //   service: n.key,
+          //   isFocalNode: false,
+          //   operation: null,
+          // }))}
+          layers={[
+            {
+              key: 'edges',
+              edges: true,
+              layerType: 'svg',
+              defs: [{ localId: 'edge-arrow' }],
+              markerEndId: 'edge-arrow',
+            },
+            // {
+            //   key: 'nodes',
+            //   layerType: 'html',
+            //   measurable: true,
+            //   renderNode: (vertex: TVertex) => {
+            //     return vertex.key;
+            //   },
+            //   setOnNode: { style: { padding: '1rem', whiteSpace: 'nowrap', background: '#e8e8e8' } },
+            // },
+          ]}
+        />
+      </>
     );
   }
 }

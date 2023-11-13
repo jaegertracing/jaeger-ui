@@ -78,10 +78,9 @@ export default class DAGDirectedGraph extends React.Component<TProps> {
   state: TState;
 
   private layoutManager: LayoutManager = new LayoutManager({
-    nodesep: 0.8,
+    nodesep: 1.5,
     ranksep: 1.5,
     rankdir: 'TB',
-    // shape: 'circle',
     splines: 'polyline',
     useDotEdges: true,
   });
