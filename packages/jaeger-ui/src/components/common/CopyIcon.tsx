@@ -64,7 +64,9 @@ export default class CopyIcon extends React.PureComponent<PropsType, StateType> 
   render() {
     return (
       <Tooltip
-        arrowPointAtCenter
+        arrow={{
+          pointAtCenter: true,
+        }}
         mouseLeaveDelay={0}
         onOpenChange={this.handleTooltipVisibilityChange}
         placement={this.props.placement}
