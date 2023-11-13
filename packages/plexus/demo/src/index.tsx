@@ -174,7 +174,7 @@ function renderNodeVectorBorder(lv: TLayoutVertex<any>) {
   );
 }
 
-class Demo extends React.PureComponent<{}, TState> {
+export class Demo extends React.PureComponent<{}, TState> {
   state: TState = {
     hoveredEdge: null,
   };
@@ -533,4 +533,4 @@ class Demo extends React.PureComponent<{}, TState> {
   }
 }
 
-render(<Demo />, document.querySelector('#root'));
+// render(<Demo />, document.querySelector('#root'));
