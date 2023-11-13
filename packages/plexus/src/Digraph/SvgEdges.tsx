@@ -52,6 +52,7 @@ export default class SvgEdges<T = {}> extends React.Component<TProps<T>> {
         markerStartId={markerStartId}
         renderUtils={renderUtils}
         setOnEdge={setOnEdge}
+        label={edge.edge.edgeLabel}
       />
     ));
   }
