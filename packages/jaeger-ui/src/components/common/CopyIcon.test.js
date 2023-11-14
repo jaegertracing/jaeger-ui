@@ -13,8 +13,7 @@
 // limitations under the License.
 
 import React from 'react';
-import { screen, render, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { screen, render, waitFor, fireEvent, waitForElementToBeRemoved } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
 import * as copy from 'copy-to-clipboard';
@@ -24,13 +23,14 @@ import CopyIcon from './CopyIcon';
 jest.mock('copy-to-clipboard');
 
 describe('<CopyIcon />', () => {
+  const tooltipTitle = 'testTooltipTitleValue';
+
   const props = {
     className: 'classNameValue',
     copyText: 'copyTextValue',
-    tooltipTitle: 'tooltipTitleValue',
+    tooltipTitle,
   };
   let copySpy;
-  let user;
 
   beforeAll(() => {
     copySpy = jest.spyOn(copy, 'default');
@@ -38,7 +38,6 @@ describe('<CopyIcon />', () => {
 
   beforeEach(() => {
     copySpy.mockReset();
-    user = userEvent.setup();
     render(<CopyIcon {...props} />);
   });
 
@@ -47,15 +46,24 @@ describe('<CopyIcon />', () => {
   });
 
   it('updates state and copies when clicked', async () => {
-    // Intially there should be nothing in the clipboard, and thus the tooltip should have the default title
-    await user.hover(screen.getByRole('button'));
-    await waitFor(() => expect(screen.getByText('tooltipTitleValue')).toBeInTheDocument());
+    const triggerElement = screen.getByRole('button');
+
+    // Intially when we hover over the icon, there should be nothing in the clipboard and the tooltip should have the default title
+    fireEvent.mouseEnter(triggerElement);
+    await waitFor(() => expect(screen.getByText(tooltipTitle)).toBeInTheDocument());
     expect(copySpy).not.toHaveBeenCalled();
 
-    // Simulate the click
-    await user.click(screen.getByRole('button'));
-    await user.hover(screen.getByRole('button'));
+    // Simulate the click and check if the tooltip value changes
+    fireEvent.click(triggerElement);
     expect(screen.getByText('Copied')).toBeInTheDocument();
     expect(copySpy).toHaveBeenCalledWith(props.copyText);
+
+    // On undoing the hover state, the tooltip should be removed
+    fireEvent.mouseLeave(triggerElement);
+    await waitForElementToBeRemoved(() => screen.getByText('Copied'));
+
+    // On hovering again, the tooltip title should be restored
+    fireEvent.mouseEnter(triggerElement);
+    await waitFor(() => expect(screen.getByText(tooltipTitle)).toBeInTheDocument());
   });
 });
