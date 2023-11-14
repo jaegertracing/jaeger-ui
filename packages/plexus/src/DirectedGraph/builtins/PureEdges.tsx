@@ -32,7 +32,7 @@ export default class PureEdges extends React.PureComponent<TProps> {
       <EdgePath
         key={`${edge.edge.from}\v${edge.edge.to}`}
         id={`${edge.edge.from}-${edge.edge.to}`}
-        label={edge.edge.edgeLabel}
+        label={edge.edge.label}
         pathPoints={edge.pathPoints}
         markerEnd={arrowIriRef}
         {...(setOnEdgePath && setOnEdgePath(edge.edge))}

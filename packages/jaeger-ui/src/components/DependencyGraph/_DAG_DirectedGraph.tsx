@@ -17,7 +17,7 @@ import React from 'react';
 import { LayoutManager, DirectedGraph } from '@jaegertracing/plexus';
 import { TEdge, TVertex } from '@jaegertracing/plexus/lib/types';
 
-function getNodeLabel(vertex: { key: string; label?: string }) {
+export function getNodeLabel(vertex: { key: string; label?: string }) {
   let { label } = vertex;
   label = !label ? String(vertex.key) : label;
 
@@ -117,7 +117,7 @@ export default class DAGDirectedGraph extends React.Component<TProps> {
         edges.push({
           from: d.parent,
           to: d.child,
-          edgeLabel: `${d.callCount}`,
+          label: `${d.callCount}`,
         });
       }
     });

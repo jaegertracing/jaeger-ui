@@ -16,9 +16,8 @@ import React from 'react';
 
 import { Digraph, LayoutManager, cacheAs } from '@jaegertracing/plexus';
 import { TEdge, TVertex, TLayoutVertex } from '@jaegertracing/plexus/lib/types';
-import { TLargeNode } from '@jaegertracing/plexus/demo/src/data-large';
+import largeDag, { TLargeNode } from '@jaegertracing/plexus/demo/src/data-large';
 import { TRendererUtils, TMeasureNodeUtils } from '@jaegertracing/plexus/src/Digraph/types';
-import largeDag from '@jaegertracing/plexus/demo/src/data-large';
 
 import './dag-new.css';
 
@@ -42,27 +41,27 @@ const testData = {
     {
       from: 'frontend',
       to: 'driver',
-      edgeLabel: '9',
+      label: '9',
     },
     {
       from: 'customer',
       to: 'mysql',
-      edgeLabel: '9',
+      label: '9',
     },
     {
       from: 'frontend',
       to: 'route',
-      edgeLabel: '90',
+      label: '90',
     },
     {
       from: 'frontend',
       to: 'customer',
-      edgeLabel: '9',
+      label: '9',
     },
     {
       from: 'driver',
       to: 'redis-manual',
-      edgeLabel: '122',
+      label: '122',
     },
   ],
   nodes: [
@@ -134,7 +133,7 @@ export default class DAGDiagraph extends React.Component<TProps> {
         edges.push({
           from: d.parent,
           to: d.child,
-          edgeLabel: `${d.callCount}`,
+          label: `${d.callCount}`,
         });
       }
     });
