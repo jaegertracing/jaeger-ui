@@ -16,7 +16,6 @@ import React from 'react';
 
 import { Digraph, LayoutManager, cacheAs } from '@jaegertracing/plexus';
 import { TEdge, TVertex, TLayoutVertex } from '@jaegertracing/plexus/lib/types';
-import largeDag, { TLargeNode } from '@jaegertracing/plexus/demo/src/data-large';
 import { TRendererUtils, TMeasureNodeUtils } from '@jaegertracing/plexus/src/Digraph/types';
 
 import './dag-new.css';
@@ -34,56 +33,6 @@ type TProps = {
 type TState = {
   nodes: TVertex[];
   edges: TEdge[];
-};
-
-const testData = {
-  edges: [
-    {
-      from: 'frontend',
-      to: 'driver',
-      label: '9',
-    },
-    {
-      from: 'customer',
-      to: 'mysql',
-      label: '9',
-    },
-    {
-      from: 'frontend',
-      to: 'route',
-      label: '90',
-    },
-    {
-      from: 'frontend',
-      to: 'customer',
-      label: '9',
-    },
-    {
-      from: 'driver',
-      to: 'redis-manual',
-      label: '122',
-    },
-  ],
-  nodes: [
-    {
-      key: 'frontend',
-    },
-    {
-      key: 'customer',
-    },
-    {
-      key: 'driver',
-    },
-    {
-      key: 'redis-manual',
-    },
-    {
-      key: 'mysql',
-    },
-    {
-      key: 'route',
-    },
-  ],
 };
 
 export default class DAGDiagraph extends React.Component<TProps> {
@@ -150,21 +99,16 @@ export default class DAGDiagraph extends React.Component<TProps> {
   }
 
   render() {
-    // console.log(this.state.nodes);
-    // console.log(this.state.edges);
-
-    // console.log(this.state);
-    // console.log(largeDag);
-
     return (
       <div className="DemoGraph">
-        <Digraph<TLargeNode>
+        <Digraph<TVertex>
+          key={this.state.nodes.length}
           zoom
           minimap
           className="DemoGraph--dag"
-          layoutManager={new LayoutManager({ useDotEdges: true, rankdir: 'TB' })}
+          layoutManager={this.layoutManager}
           minimapClassName="Demo--miniMap"
-          setOnGraph={layeredClassNameIsSmall}
+          setOnGraph={layeredClassNameIsSmall} // No effect
           measurableNodesKey="nodes"
           layers={[
             {
@@ -189,11 +133,7 @@ export default class DAGDiagraph extends React.Component<TProps> {
               renderNode: cacheAs(
                 'svg-nodes/nodes/render',
                 // eslint-disable-next-line react/no-unstable-nested-components
-                (
-                  vertex: TVertex<TLargeNode>,
-                  utils: TRendererUtils,
-                  lv: TLayoutVertex<TLargeNode> | null
-                ) => (
+                (vertex: TVertex<TVertex>, utils: TRendererUtils, lv: TLayoutVertex<TVertex> | null) => (
                   <>
                     {lv && (
                       <rect
@@ -213,68 +153,10 @@ export default class DAGDiagraph extends React.Component<TProps> {
               ),
             },
           ]}
-          // edges={this.state.edges}
-          // vertices={this.state.nodes.map(n => ({
-          //   key: n.key,
-          //   service: n.key,
-          //   operation: n.key,
-          // }))}
-
-          // edges={largeDag.edges}
-          // vertices={largeDag.vertices}
-
-          edges={testData.edges}
-          vertices={testData.nodes.map(n => ({
-            key: n.key,
-            service: n.key,
-            operation: n.key,
-          }))}
+          edges={this.state.edges}
+          vertices={this.state.nodes}
         />
       </div>
     );
-
-    // return (
-    //   <Digraph
-    //     zoom
-    //     minimap
-    //     minimapClassName="u-miniMap"
-    //     layoutManager={this.layoutManager}
-    //     measurableNodesKey="nodes"
-    //     setOnGraph={{
-    //       style: {
-    //         fontFamily: 'sans-serif',
-    //         height: '100%',
-    //         position: 'fixed',
-    //         width: '100%',
-    //       },
-    //     }}
-    //     edges={this.state.edges}
-    //     vertices={this.state.nodes}
-    //     // vertices={this.state.nodes.map(n => ({
-    //     //   key: n.key,
-    //     //   service: n.key,
-    //     //   isFocalNode: false,
-    //     //   operation: null,
-    //     // }))}
-    //     layers={[
-    //       {
-    //         key: 'edges',
-    //         edges: true,
-    //         layerType: 'svg',
-    //         defs: [{ localId: 'edge-arrow' }],
-    //         markerEndId: 'edge-arrow',
-    //       },
-    //       // {
-    //       //   key: 'nodes',
-    //       //   layerType: 'html',
-    //       //   measurable: true,
-    //       //   renderNode: (vertex: TVertex) => {
-    //       //     return vertex.key;
-    //       //   },
-    //       //   setOnNode: { style: { padding: '1rem', whiteSpace: 'nowrap', background: '#e8e8e8' } },
-    //       // },
-    //     ]}
-    //   />
-    // );
   }
 }
