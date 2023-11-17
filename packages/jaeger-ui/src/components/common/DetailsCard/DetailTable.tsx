@@ -40,7 +40,7 @@ export const _onCell = (dataIndex: string) => (row: TRow) => {
 };
 
 // exported for tests
-export const _onFilter = (dataIndex: string) => (value: string | number | boolean, row: TRow) => {
+export const _onFilter = (dataIndex: string) => (value: React.Key | boolean, row: TRow) => {
   const data = row[dataIndex];
   if (typeof data === 'object' && !Array.isArray(data) && typeof data.value === 'string') {
     return data.value === value;
