@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import memoizeOne from 'memoize-one';
 import * as _ from 'lodash';
 import DRange from 'drange';
 import { Trace, Span } from '../../../types/trace';
@@ -21,23 +22,25 @@ import colorGenerator from '../../../utils/color-generator';
 const serviceName = 'Service Name';
 const operationName = 'Operation Name';
 
-let parentChildOfMap: Record<string, Span[]>;
+function parentChildOfMap(allSpans: Span[]): Record<string, Span[]> {
+  let parentChildOfMap = {};
+  allSpans.forEach(s => {
+    if (s.references) {
+      // Filter for CHILD_OF we don't want to calculate FOLLOWS_FROM (prod-cons)
+      const parentIDs = s.references.filter(r => r.refType === 'CHILD_OF').map(r => r.spanID);
+      parentIDs.forEach((pID: string) => {
+        parentChildOfMap[pID] = parentChildOfMap[pID] || [];
+        parentChildOfMap[pID].push(s);
+      });
+    }
+  });
+  return parentChildOfMap;
+}
+
+const memoizedParentChildOfMap = memoizeOne(parentChildOfMap);
 
 function getChildOfSpans(parentID: string, allSpans: Span[]): Span[] {
-  if (!parentChildOfMap) {
-    parentChildOfMap = {};
-    allSpans.forEach(s => {
-      if (s.references) {
-        // Filter for CHILD_OF we don't want to calculate FOLLOWS_FROM (prod-cons)
-        const parentIDs = s.references.filter(r => r.refType === 'CHILD_OF').map(r => r.spanID);
-        parentIDs.forEach((pID: string) => {
-          parentChildOfMap[pID] = parentChildOfMap[pID] || [];
-          parentChildOfMap[pID].push(s);
-        });
-      }
-    });
-  }
-  return parentChildOfMap[parentID] || [];
+  return memoizedParentChildOfMap(allSpans)[parentID] || [];
 }
 
 function getChildOfDrange(parentID: string, allSpans: Span[]) {
@@ -50,10 +53,20 @@ function getChildOfDrange(parentID: string, allSpans: Span[]) {
 }
 
 function computeSelfTime(span: Span, allSpans: Span[]): number {
-  const cdr = new DRange(span.startTime, span.startTime + span.duration - 1).intersect(
+  // We want to represent spans as half-open intervals like [startTime, startTime + duration).
+  // This way the subtraction preserves the right boundaries. However, DRange treats all
+  // intervals as inclusive. For example,
+  //       range(1, 10).subtract(4, 8) => range([1, 3], [9-10])
+  //       length=(3-1)+(10-9)=2+1=3
+  // In other words, we took an interval of length=10-1=9 and subtracted length=8-4=4.
+  // We should've ended up with length 9-4=5, but we got 3.
+  // To work around that, we multiply start/end times by 10 and subtract one from the end.
+  // So instead of [1-10] we get [10-99]. This makes the intervals work like half-open.
+  if (!span.hasChildren) return span.duration;
+  const spanRange = new DRange(span.startTime, span.startTime + span.duration - 1).subtract(
     getChildOfDrange(span.spanID, allSpans)
   );
-  return span.duration - cdr.length;
+  return spanRange.length;
 }
 
 function computeColumnValues(trace: Trace, span: Span, allSpans: Span[], resultValue: any) {
@@ -107,7 +120,6 @@ function valueFirstDropdown(selectedTagKey: string, trace: Trace) {
   let color = '';
   let allDiffColumnValues = [];
   const allSpans = trace.spans;
-  parentChildOfMap = null;
   // all possibilities that can be displayed
   if (selectedTagKey === serviceName) {
     const temp = _.chain(allSpans)
@@ -271,7 +283,6 @@ function buildDetail(
   isDetail: boolean,
   trace: Trace
 ) {
-  parentChildOfMap = null;
   const newColumnValues = [];
   for (let j = 0; j < diffNamesA.length; j++) {
     let color = '';
@@ -337,7 +348,6 @@ function buildDetail(
 function generateDetailRest(allColumnValues: ITableSpan[], selectedTagKeySecond: string, trace: Trace) {
   const allSpans = trace.spans;
   const newTable = [];
-  parentChildOfMap = null;
   for (let i = 0; i < allColumnValues.length; i++) {
     newTable.push(allColumnValues[i]);
     if (!allColumnValues[i].isDetail) {
