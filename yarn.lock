@@ -114,7 +114,7 @@
   resolved "https://registry.yarnpkg.com/@babel/compat-data/-/compat-data-7.23.3.tgz#3febd552541e62b5e883a25eb3effd7c7379db11"
   integrity sha512-BmR4bWbDIoFJmJ9z2cZ8Gmm2MXgEDgjdWgpKmKWUt54UGFJdlj31ECtbaDvCG/qVdG3AQ1SfpZEs01lUFbzLOQ==
 
-"@babel/core@7.23.3", "@babel/core@^7.11.6", "@babel/core@^7.12.10", "@babel/core@^7.12.3", "@babel/core@^7.21.0", "@babel/core@^7.23.2", "@babel/core@^7.23.3":
+"@babel/core@7.23.3", "@babel/core@^7.11.6", "@babel/core@^7.12.10", "@babel/core@^7.12.3", "@babel/core@^7.21.0", "@babel/core@^7.23.3":
   version "7.23.3"
   resolved "https://registry.yarnpkg.com/@babel/core/-/core-7.23.3.tgz#5ec09c8803b91f51cc887dedc2654a35852849c9"
   integrity sha512-Jg+msLuNuCJDyBvFv5+OKOUjWMZgd85bKjbICd3zWrKAo+bJ49HJufi7CQE0q0uR8NGyO6xkCACScNqyjHSZew==
@@ -985,17 +985,17 @@
   dependencies:
     "@babel/plugin-transform-react-jsx" "^7.22.5"
 
-"@babel/plugin-transform-react-jsx-self@^7.22.5":
-  version "7.22.5"
-  resolved "https://registry.yarnpkg.com/@babel/plugin-transform-react-jsx-self/-/plugin-transform-react-jsx-self-7.22.5.tgz#ca2fdc11bc20d4d46de01137318b13d04e481d8e"
-  integrity sha512-nTh2ogNUtxbiSbxaT4Ds6aXnXEipHweN9YRgOX/oNXdf0cCrGn/+2LozFa3lnPV5D90MkjhgckCPBrsoSc1a7g==
+"@babel/plugin-transform-react-jsx-self@^7.23.3":
+  version "7.23.3"
+  resolved "https://registry.yarnpkg.com/@babel/plugin-transform-react-jsx-self/-/plugin-transform-react-jsx-self-7.23.3.tgz#ed3e7dadde046cce761a8e3cf003a13d1a7972d9"
+  integrity sha512-qXRvbeKDSfwnlJnanVRp0SfuWE5DQhwQr5xtLBzp56Wabyo+4CMosF6Kfp+eOD/4FYpql64XVJ2W0pVLlJZxOQ==
   dependencies:
     "@babel/helper-plugin-utils" "^7.22.5"
 
-"@babel/plugin-transform-react-jsx-source@^7.22.5":
-  version "7.22.5"
-  resolved "https://registry.yarnpkg.com/@babel/plugin-transform-react-jsx-source/-/plugin-transform-react-jsx-source-7.22.5.tgz#49af1615bfdf6ed9d3e9e43e425e0b2b65d15b6c"
-  integrity sha512-yIiRO6yobeEIaI0RTbIr8iAK9FcBHLtZq0S89ZPjDLQXBA4xvghaKqI0etp/tF3htTM0sazJKKLz9oEiGRtu7w==
+"@babel/plugin-transform-react-jsx-source@^7.23.3":
+  version "7.23.3"
+  resolved "https://registry.yarnpkg.com/@babel/plugin-transform-react-jsx-source/-/plugin-transform-react-jsx-source-7.23.3.tgz#03527006bdc8775247a78643c51d4e715fe39a3e"
+  integrity sha512-91RS0MDnAWDNvGC6Wio5XYkyWI39FMFO+JK9+4AlgaTH+yWwVTsw7/sn6LK0lH7c5F+TFkpv/3LfCJ1Ydwof/g==
   dependencies:
     "@babel/helper-plugin-utils" "^7.22.5"
 
@@ -2429,10 +2429,10 @@
   resolved "https://registry.yarnpkg.com/@types/aria-query/-/aria-query-5.0.1.tgz#3286741fb8f1e1580ac28784add4c7a1d49bdfbc"
   integrity sha512-XTIieEY+gvJ39ChLcB4If5zHtPxt3Syj5rgZR+e1ctpmK8NjPf0zFqsz4JpLJT0xla9GFDKjy8Cpu331nrmE1Q==
 
-"@types/babel__core@^7.1.14", "@types/babel__core@^7.20.3":
-  version "7.20.3"
-  resolved "https://registry.yarnpkg.com/@types/babel__core/-/babel__core-7.20.3.tgz#d5625a50b6f18244425a1359a858c73d70340778"
-  integrity sha512-54fjTSeSHwfan8AyHWrKbfBWiEUrNTZsUwPTDSNaaP1QDQIZbeNUg3a59E9D+375MzUw/x1vx2/0F5LBz+AeYA==
+"@types/babel__core@^7.1.14", "@types/babel__core@^7.20.4":
+  version "7.20.4"
+  resolved "https://registry.yarnpkg.com/@types/babel__core/-/babel__core-7.20.4.tgz#26a87347e6c6f753b3668398e34496d6d9ac6ac0"
+  integrity sha512-mLnSC22IC4vcWiuObSRjrLd9XcBTGf59vUSoq2jkQDJ/QQ8PMI9rSuzE+aEV8karUMbskw07bKYoUJCKTUaygg==
   dependencies:
     "@babel/parser" "^7.20.7"
     "@babel/types" "^7.20.7"
@@ -2955,14 +2955,14 @@
     systemjs "^6.14.2"
 
 "@vitejs/plugin-react@^4.0.0":
-  version "4.1.1"
-  resolved "https://registry.yarnpkg.com/@vitejs/plugin-react/-/plugin-react-4.1.1.tgz#a10254dc76778027407d01b6ddbca53b23852a72"
-  integrity sha512-Jie2HERK+uh27e+ORXXwEP5h0Y2lS9T2PRGbfebiHGlwzDO0dEnd2aNtOR/qjBlPb1YgxwAONeblL1xqLikLag==
+  version "4.2.0"
+  resolved "https://registry.yarnpkg.com/@vitejs/plugin-react/-/plugin-react-4.2.0.tgz#d71352b1a443c09c7aae8f278dd071ab3d9d8490"
+  integrity sha512-+MHTH/e6H12kRp5HUkzOGqPMksezRMmW+TNzlh/QXfI8rRf6l2Z2yH/v12no1UvTwhZgEDMuQ7g7rrfMseU6FQ==
   dependencies:
-    "@babel/core" "^7.23.2"
-    "@babel/plugin-transform-react-jsx-self" "^7.22.5"
-    "@babel/plugin-transform-react-jsx-source" "^7.22.5"
-    "@types/babel__core" "^7.20.3"
+    "@babel/core" "^7.23.3"
+    "@babel/plugin-transform-react-jsx-self" "^7.23.3"
+    "@babel/plugin-transform-react-jsx-source" "^7.23.3"
+    "@types/babel__core" "^7.20.4"
     react-refresh "^0.14.0"
 
 "@webassemblyjs/ast@1.11.5", "@webassemblyjs/ast@^1.11.5":
