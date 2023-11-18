@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { shallow } from 'enzyme';
 import DAG from './DAG';
 
 // mock canvas API (we don't care about canvas results)
@@ -54,6 +54,7 @@ window.HTMLCanvasElement.prototype.getContext = function getContext() {
     clip() {},
   };
 };
+
 describe('<DAG>', () => {
   it('does not explode', () => {
     const serviceCalls = [
@@ -63,8 +64,10 @@ describe('<DAG>', () => {
         parent: 'parent-id',
       },
     ];
-    render(<DAG serviceCalls={serviceCalls} />);
-    expect(screen.getByTestId('cy')).toBeDefined();
+
+    const wrapper = shallow(<DAG serviceCalls={serviceCalls} />);
+
+    expect(wrapper.exists('.DAG')).toBe(true);
   });
 
   it('does not explode with empty strings or string with only spaces', () => {
@@ -75,7 +78,9 @@ describe('<DAG>', () => {
         parent: ' ',
       },
     ];
-    render(<DAG serviceCalls={serviceCalls} />);
-    expect(screen.getByTestId('cy')).toBeDefined();
+
+    const wrapper = shallow(<DAG serviceCalls={serviceCalls} />);
+
+    expect(wrapper.exists('.DAG')).toBe(true);
   });
 });
