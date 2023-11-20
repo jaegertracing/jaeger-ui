@@ -23,7 +23,7 @@ const serviceName = 'Service Name';
 const operationName = 'Operation Name';
 
 function parentChildOfMap(allSpans: Span[]): Record<string, Span[]> {
-  let parentChildOfMap = {};
+  const parentChildOfMap: Record<string, Span[]> = {};
   allSpans.forEach(s => {
     if (s.references) {
       // Filter for CHILD_OF we don't want to calculate FOLLOWS_FROM (prod-cons)
