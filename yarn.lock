@@ -12635,9 +12635,9 @@ vite-plugin-imp@^2.3.1:
     pascal-case "^3.1.2"
 
 vite@^5.0.0:
-  version "5.0.0"
-  resolved "https://registry.yarnpkg.com/vite/-/vite-5.0.0.tgz#3bfb65acda2a97127e4fa240156664a1f234ce08"
-  integrity sha512-ESJVM59mdyGpsiNAeHQOR/0fqNoOyWPYesFto8FFZugfmhdHx8Fzd8sF3Q/xkVhZsyOxHfdM7ieiVAorI9RjFw==
+  version "5.0.1"
+  resolved "https://registry.yarnpkg.com/vite/-/vite-5.0.1.tgz#457d6505a302dde8002e551139cdc462f5ec0c49"
+  integrity sha512-T2plNaDK+olJPoxwmpGxKcI+BScI2OAulAtRUAljTrb6QxSqJShWMUT+7ilXcBHTMAzbYHfWROuC1J/g2oRhEw==
   dependencies:
     esbuild "^0.19.3"
     postcss "^8.4.31"
