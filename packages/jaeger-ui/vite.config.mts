@@ -13,11 +13,11 @@
 // limitations under the License.
 
 /* eslint-disable import/no-extraneous-dependencies */
-import { defineConfig } from 'vite';
+import { PluginOption, defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import legacy from '@vitejs/plugin-legacy';
 import vitePluginImp from 'vite-plugin-imp';
-import visualizer from 'rollup-plugin-visualizer';
+import {visualizer} from 'rollup-plugin-visualizer';
 
 const proxyConfig = {
   target: 'http://localhost:16686',
@@ -57,7 +57,7 @@ export default defineConfig({
       exclude: ['lodash'],
     }),
     // Generate a bundle size breakdown.
-    visualizer(),
+    visualizer() as PluginOption,
   ],
   css: {
     preprocessorOptions: {
