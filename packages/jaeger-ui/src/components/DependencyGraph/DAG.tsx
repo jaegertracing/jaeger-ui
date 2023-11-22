@@ -20,17 +20,14 @@ import { TMeasureNodeUtils } from '@jaegertracing/plexus/src/Digraph/types';
 
 import './dag.css';
 
-type TProps = {
-  serviceCalls: {
-    parent: string;
-    child: string;
-    callCount: number;
-  }[];
+type TServiceCall = {
+  parent: string;
+  child: string;
+  callCount: number;
 };
 
-type TState = {
-  nodes: TVertex[];
-  edges: TEdge[];
+type TProps = {
+  serviceCalls: TServiceCall[];
 };
 
 const renderNode = (vertex: TVertex<TVertex>): ReactNode => {
@@ -43,12 +40,49 @@ const renderNode = (vertex: TVertex<TVertex>): ReactNode => {
   ) as ReactNode;
 };
 
+const formatServiceCalls = (
+  serviceCalls: TServiceCall[]
+): {
+  nodes: TVertex[];
+  edges: TEdge[];
+} => {
+  const nodeMap: Record<string, boolean> = {};
+
+  const nodes: TVertex[] = [];
+  const edges: TEdge[] = [];
+
+  serviceCalls.forEach(d => {
+    if (d.parent.trim().length !== 0 && d.child.trim().length !== 0) {
+      if (!nodeMap[d.parent]) {
+        nodes.push({ key: d.parent });
+        nodeMap[d.parent] = true;
+      }
+
+      if (!nodeMap[d.child]) {
+        nodes.push({ key: d.child });
+        nodeMap[d.child] = true;
+      }
+
+      edges.push({
+        from: d.parent,
+        to: d.child,
+        label: `${d.callCount}`,
+      });
+    }
+  });
+
+  return { nodes, edges };
+};
+
 export default class DAG extends React.Component<TProps> {
   static defaultProps = {
     serviceCalls: [],
   };
 
-  state: TState;
+  private data: {
+    nodes: TVertex[];
+    edges: TEdge[];
+  };
 
   private layoutManager: LayoutManager = new LayoutManager({
     nodesep: 1.5,
@@ -61,45 +95,7 @@ export default class DAG extends React.Component<TProps> {
   constructor(props: TProps) {
     super(props);
 
-    this.state = {
-      nodes: [],
-      edges: [],
-    };
-  }
-
-  componentDidMount() {
-    const { serviceCalls } = this.props;
-
-    const nodeMap: Record<string, boolean> = {};
-
-    const nodes: TVertex[] = [];
-    const edges: TEdge[] = [];
-
-    serviceCalls.forEach(d => {
-      if (d.parent.trim().length !== 0 && d.child.trim().length !== 0) {
-        if (!nodeMap[d.parent]) {
-          nodes.push({ key: d.parent });
-          nodeMap[d.parent] = true;
-        }
-
-        if (!nodeMap[d.child]) {
-          nodes.push({ key: d.child });
-          nodeMap[d.child] = true;
-        }
-
-        edges.push({
-          from: d.parent,
-          to: d.child,
-          label: `${d.callCount}`,
-        });
-      }
-    });
-
-    this.setState(prevState => ({
-      ...prevState,
-      edges,
-      nodes,
-    }));
+    this.data = formatServiceCalls(props.serviceCalls);
   }
 
   componentWillUnmount() {
@@ -110,7 +106,6 @@ export default class DAG extends React.Component<TProps> {
     return (
       <div className="DAG">
         <Digraph<TVertex>
-          key={this.state.nodes.length}
           zoom
           minimap
           className="DAG--dag"
@@ -136,8 +131,8 @@ export default class DAG extends React.Component<TProps> {
               renderNode,
             },
           ]}
-          edges={this.state.edges}
-          vertices={this.state.nodes}
+          edges={this.data.edges}
+          vertices={this.data.nodes}
         />
       </div>
     );
