@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import ShallowRenderer from 'react-test-renderer/shallow';
 import DAG from './DAG';
 
 // mock canvas API (we don't care about canvas results)
@@ -56,6 +56,12 @@ window.HTMLCanvasElement.prototype.getContext = function getContext() {
 };
 
 describe('<DAG>', () => {
+  let renderer;
+
+  beforeEach(() => {
+    renderer = new ShallowRenderer();
+  });
+
   it('does not explode', () => {
     const serviceCalls = [
       {
@@ -65,9 +71,10 @@ describe('<DAG>', () => {
       },
     ];
 
-    const wrapper = shallow(<DAG serviceCalls={serviceCalls} />);
+    renderer.render(<DAG serviceCalls={serviceCalls} />);
+    const result = renderer.getRenderOutput();
 
-    expect(wrapper.exists('.DAG')).toBe(true);
+    expect(result.props.children.props.vertices.length).toBe(2);
   });
 
   it('does not explode with empty strings or string with only spaces', () => {
@@ -79,8 +86,11 @@ describe('<DAG>', () => {
       },
     ];
 
-    const wrapper = shallow(<DAG serviceCalls={serviceCalls} />);
+    renderer.render(<DAG serviceCalls={serviceCalls} />);
+    const result = renderer.getRenderOutput();
 
-    expect(wrapper.exists('.DAG')).toBe(true);
+    // Empty or blank strings getting skipped is desirable
+    // But should not cause the component to break
+    expect(result.props.children.props.vertices.length).toBe(0);
   });
 });

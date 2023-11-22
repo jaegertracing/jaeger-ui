@@ -34,7 +34,6 @@ const renderNode = (vertex: TVertex<TVertex>): ReactNode => {
   return (
     <div className="DAG--node">
       <div className="DAG--nodeCircle" />
-
       <div className="DAG--nodeLabel">{vertex.key}</div>
     </div>
   ) as ReactNode;
