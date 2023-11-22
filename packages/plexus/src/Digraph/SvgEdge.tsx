@@ -48,6 +48,17 @@ function makePathD(points: [number, number][]) {
   return dArr.join(' ');
 }
 
+function computeLabelCoord(pathPoints: [number, number][], label?: string | undefined) {
+  const [startX, startY] = pathPoints[0];
+  const [endX, endY] = pathPoints[pathPoints.length - 1];
+
+  const xOffset = (label?.length ?? 0) * 5;
+  const labelX = (startX + endX) / 2 - xOffset;
+  const labelY = (startY + endY) / 2;
+
+  return { labelX, labelY };
+}
+
 export default class SvgEdge<U = {}> extends React.PureComponent<TProps<U>> {
   makePathD = memoizeOne(makePathD);
 
@@ -65,12 +76,7 @@ export default class SvgEdge<U = {}> extends React.PureComponent<TProps<U>> {
       getProps(setOnEdge, layoutEdge, renderUtils)
     );
 
-    const [startX, startY] = pathPoints[0];
-    const [endX, endY] = pathPoints[pathPoints.length - 1];
-
-    const xOffset = (label?.length ?? 0) * 5;
-    const labelX = (startX + endX) / 2;
-    const labelY = (startY + endY) / 2;
+    const { labelX, labelY } = computeLabelCoord(pathPoints, label);
 
     return (
       <g>
@@ -84,7 +90,7 @@ export default class SvgEdge<U = {}> extends React.PureComponent<TProps<U>> {
         />
 
         {label && (
-          <text x={labelX - xOffset} y={labelY} fill="#000" fontSize="1rem" fontWeight="bold">
+          <text x={labelX} y={labelY} fill="#000" fontSize="1rem" fontWeight="bold">
             {label}
           </text>
         )}
