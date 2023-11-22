@@ -17,7 +17,7 @@ import { PluginOption, defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import legacy from '@vitejs/plugin-legacy';
 import vitePluginImp from 'vite-plugin-imp';
-import {visualizer} from 'rollup-plugin-visualizer';
+import { visualizer } from 'rollup-plugin-visualizer';
 
 const proxyConfig = {
   target: 'http://localhost:16686',
