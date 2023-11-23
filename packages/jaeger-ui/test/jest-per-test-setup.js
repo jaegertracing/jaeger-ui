@@ -22,9 +22,9 @@ rafPolyfill();
 global.TextEncoder = TextEncoder;
 
 /* eslint-disable import/no-extraneous-dependencies */
-const Enzyme = require('enzyme');
-const EnzymeAdapter = require('@wojtekmaj/enzyme-adapter-react-17');
-const createSerializer = require('enzyme-to-json').createSerializer;
+import Enzyme from 'enzyme';
+import EnzymeAdapter from '@wojtekmaj/enzyme-adapter-react-17';
+import { createSerializer } from 'enzyme-to-json';
 
 Enzyme.configure({ adapter: new EnzymeAdapter() });
 expect.addSnapshotSerializer(createSerializer({ mode: 'deep' }));

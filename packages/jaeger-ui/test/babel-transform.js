@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-const babelJest = require('babel-jest').default;
+import babelJest from 'babel-jest';
 
 const babelConfiguration = {
   presets: [

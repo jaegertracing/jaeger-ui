@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-const path = require('path');
+import path from 'path';
 
 // Simple Jest transform that stubs out CSS files and returns the file name as the mock content for other file types.
 module.exports = {
