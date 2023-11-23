@@ -19,7 +19,7 @@
     "@testing-library/react": "^14.0.0",
     "@types/react": "^18.2.33",
     "@types/react-window": "^1.8.0",
-    "@types/redux-form": "^8.3.5",
+    "@types/redux-form": "^8.3.10",
     "@types/rollup-plugin-visualizer": "^4.2.1",
     "@vitejs/plugin-legacy": "^5.0.0",
     "@vitejs/plugin-react": "^4.0.0",
