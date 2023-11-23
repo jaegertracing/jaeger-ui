@@ -14,7 +14,8 @@
 
 import React from 'react';
 import ShallowRenderer from 'react-test-renderer/shallow';
-import DAG from './DAG';
+import { render, screen } from '@testing-library/react';
+import DAG, { renderNode } from './DAG';
 
 // mock canvas API (we don't care about canvas results)
 
@@ -62,7 +63,7 @@ describe('<DAG>', () => {
     renderer = new ShallowRenderer();
   });
 
-  it('does not explode', () => {
+  it('shows correct number of nodes and vertices', () => {
     const serviceCalls = [
       {
         callCount: 1,
@@ -72,12 +73,13 @@ describe('<DAG>', () => {
     ];
 
     renderer.render(<DAG serviceCalls={serviceCalls} />);
-    const result = renderer.getRenderOutput();
+    const element = renderer.getRenderOutput();
 
-    expect(result.props.children.props.vertices.length).toBe(2);
+    expect(element.props.children.props.vertices.length).toBe(2);
+    expect(element.props.children.props.edges.length).toBe(1);
   });
 
-  it('does not explode with empty strings or string with only spaces', () => {
+  it('does not show nodes with empty strings or string with only spaces', () => {
     const serviceCalls = [
       {
         callCount: 1,
@@ -87,10 +89,81 @@ describe('<DAG>', () => {
     ];
 
     renderer.render(<DAG serviceCalls={serviceCalls} />);
-    const result = renderer.getRenderOutput();
+    const element = renderer.getRenderOutput();
 
     // Empty or blank strings getting skipped is desirable
     // But should not cause the component to break
-    expect(result.props.children.props.vertices.length).toBe(0);
+    expect(element.props.children.props.vertices.length).toBe(0);
+    expect(element.props.children.props.edges.length).toBe(0);
+  });
+});
+
+describe('renderNode', () => {
+  it('correctly displays the vertex key', async () => {
+    const vertex = {
+      key: 'Test',
+    };
+
+    render(renderNode(vertex));
+
+    const element = await screen.findByTestId('dagNodeLabel');
+
+    expect(element.textContent).toBe('Test');
+  });
+
+  it('correctly displays the vertex key if it is number', async () => {
+    const vertex = {
+      key: 2,
+    };
+
+    render(renderNode(vertex));
+
+    const element = await screen.findByTestId('dagNodeLabel');
+
+    expect(element.textContent).toBe('2');
+  });
+
+  it('displays nothing if vertext is undefined', async () => {
+    const vertex = undefined;
+
+    render(renderNode(vertex));
+
+    const element = await screen.findByTestId('dagNodeLabel');
+
+    expect(element.textContent).toBe('');
+  });
+
+  it('displays nothing if vertext is null', async () => {
+    const vertex = null;
+
+    render(renderNode(vertex));
+
+    const element = await screen.findByTestId('dagNodeLabel');
+
+    expect(element.textContent).toBe('');
+  });
+
+  it('displays nothing if vertext key is undefined', async () => {
+    const vertex = {
+      key: undefined,
+    };
+
+    render(renderNode(vertex));
+
+    const element = await screen.findByTestId('dagNodeLabel');
+
+    expect(element.textContent).toBe('');
+  });
+
+  it('displays nothing if vertext key is null', async () => {
+    const vertex = {
+      key: null,
+    };
+
+    render(renderNode(vertex));
+
+    const element = await screen.findByTestId('dagNodeLabel');
+
+    expect(element.textContent).toBe('');
   });
 });

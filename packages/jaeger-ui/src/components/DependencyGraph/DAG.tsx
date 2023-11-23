@@ -30,11 +30,13 @@ type TProps = {
   serviceCalls: TServiceCall[];
 };
 
-const renderNode = (vertex: TVertex<TVertex>): ReactNode => {
+export const renderNode = (vertex: TVertex): ReactNode => {
   return (
     <div className="DAG--node">
       <div className="DAG--nodeCircle" />
-      <div className="DAG--nodeLabel">{vertex.key}</div>
+      <div className="DAG--nodeLabel" data-testid="dagNodeLabel">
+        {vertex?.key ?? ''}
+      </div>
     </div>
   ) as ReactNode;
 };
