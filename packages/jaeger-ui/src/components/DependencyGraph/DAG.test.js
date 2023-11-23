@@ -15,6 +15,7 @@
 import React from 'react';
 import ShallowRenderer from 'react-test-renderer/shallow';
 import { render, screen } from '@testing-library/react';
+import { shallow } from 'enzyme';
 import DAG, { renderNode } from './DAG';
 
 // mock canvas API (we don't care about canvas results)
@@ -165,5 +166,14 @@ describe('renderNode', () => {
     const element = await screen.findByTestId('dagNodeLabel');
 
     expect(element.textContent).toBe('');
+  });
+});
+
+describe('clean up', () => {
+  it('stops LayoutManager before unmounting', () => {
+    const wrapper = shallow(<DAG serviceCalls={[]} />);
+    const stopAndReleaseSpy = jest.spyOn(wrapper.instance().layoutManager, 'stopAndRelease');
+    wrapper.unmount();
+    expect(stopAndReleaseSpy).toHaveBeenCalledTimes(1);
   });
 });
