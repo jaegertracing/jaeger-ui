@@ -125,10 +125,6 @@ export default class DAG extends React.Component<TProps> {
               key: 'nodes',
               layerType: 'html',
               measurable: true,
-              measureNode: cacheAs('html-nodes/nodes/measure', (_: TVertex, utils: TMeasureNodeUtils) => {
-                const { height, width } = utils.getWrapperSize();
-                return { height, width };
-              }),
               renderNode,
             },
           ]}
