@@ -110,7 +110,7 @@ export default class DAG extends React.Component<TProps> {
           zoom
           minimap
           className="DAG--dag"
-          minimapClassName="DAG--miniMap"
+          minimapClassName="u-miniMap"
           layoutManager={this.layoutManager}
           measurableNodesKey="nodes"
           layers={[
