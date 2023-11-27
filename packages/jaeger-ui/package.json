@@ -34,7 +34,7 @@
     "jest-junit": "^16.0.0",
     "less": "4.2.0",
     "react-test-renderer": "^18.2.0",
-    "rollup-plugin-visualizer": "^5.9.0",
+    "rollup-plugin-visualizer": "^5.9.3",
     "sinon": "^17.0.0",
     "terser": "^5.16.5",
     "vite": "^5.0.0",
