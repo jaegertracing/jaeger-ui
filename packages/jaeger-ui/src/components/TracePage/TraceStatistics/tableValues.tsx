@@ -47,7 +47,7 @@ function getChildOfDrange(parentID: string, allSpans: Span[]) {
   const childrenDrange = new DRange();
   getChildOfSpans(parentID, allSpans).forEach(s => {
     // -1 otherwise it will take for each child a micro (incluse,exclusive)
-    childrenDrange.add(s.startTime, s.startTime + (s.duration <= 0 ? 0 : s.duration - 1));
+    childrenDrange.add(10 * s.startTime, 10 * (s.startTime + Math.max(s.duration, 0)) - 1);
   });
   return childrenDrange;
 }
@@ -63,10 +63,10 @@ function computeSelfTime(span: Span, allSpans: Span[]): number {
   // To work around that, we multiply start/end times by 10 and subtract one from the end.
   // So instead of [1-10] we get [10-99]. This makes the intervals work like half-open.
   if (!span.hasChildren) return span.duration;
-  const spanRange = new DRange(span.startTime, span.startTime + span.duration - 1).subtract(
+  const spanRange = new DRange(10 * span.startTime, 10 * (span.startTime + span.duration) - 1).subtract(
     getChildOfDrange(span.spanID, allSpans)
   );
-  return spanRange.length;
+  return Math.round(spanRange.length / 10);
 }
 
 function computeColumnValues(trace: Trace, span: Span, allSpans: Span[], resultValue: any) {
