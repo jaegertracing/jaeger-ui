@@ -43,15 +43,6 @@ function getChildOfSpans(parentID: string, allSpans: Span[]): Span[] {
   return memoizedParentChildOfMap(allSpans)[parentID] || [];
 }
 
-function getChildOfDrange(parentID: string, allSpans: Span[]) {
-  const childrenDrange = new DRange();
-  getChildOfSpans(parentID, allSpans).forEach(s => {
-    // -1 otherwise it will take for each child a micro (incluse,exclusive)
-    childrenDrange.add(10 * s.startTime, 10 * (s.startTime + Math.max(s.duration, 0)) - 1);
-  });
-  return childrenDrange;
-}
-
 function computeSelfTime(span: Span, allSpans: Span[]): number {
   // We want to represent spans as half-open intervals like [startTime, startTime + duration).
   // This way the subtraction preserves the right boundaries. However, DRange treats all
@@ -65,8 +56,8 @@ function computeSelfTime(span: Span, allSpans: Span[]): number {
   if (!span.hasChildren) return span.duration;
   const spanRange = new DRange(10 * span.startTime, 10 * (span.startTime + span.duration) - 1);
   const children = getChildOfSpans(span.spanID, allSpans);
-  children.forEach(child => {
-    spanRange.subtract(10 * child.startTime, 10 * (child.startTime + child.duration) - 1);
+  children.forEach(child =>
+    spanRange.subtract(10 * child.startTime, 10 * (child.startTime + child.duration) - 1)
   );
   return Math.round(spanRange.length / 10);
 }
