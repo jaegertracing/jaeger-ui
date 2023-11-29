@@ -63,8 +63,10 @@ function computeSelfTime(span: Span, allSpans: Span[]): number {
   // To work around that, we multiply start/end times by 10 and subtract one from the end.
   // So instead of [1-10] we get [10-99]. This makes the intervals work like half-open.
   if (!span.hasChildren) return span.duration;
-  const spanRange = new DRange(10 * span.startTime, 10 * (span.startTime + span.duration) - 1).subtract(
-    getChildOfDrange(span.spanID, allSpans)
+  const spanRange = new DRange(10 * span.startTime, 10 * (span.startTime + span.duration) - 1);
+  const children = getChildOfSpans(span.spanID, allSpans);
+  children.forEach(child => {
+    spanRange.subtract(10 * child.startTime, 10 * (child.startTime + child.duration) - 1);
   );
   return Math.round(spanRange.length / 10);
 }
