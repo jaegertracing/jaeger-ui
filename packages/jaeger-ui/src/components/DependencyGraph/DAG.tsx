@@ -14,9 +14,8 @@
 
 import React, { ReactNode } from 'react';
 
-import { Digraph, LayoutManager, cacheAs } from '@jaegertracing/plexus';
+import { Digraph, LayoutManager } from '@jaegertracing/plexus';
 import { TEdge, TVertex } from '@jaegertracing/plexus/lib/types';
-import { TMeasureNodeUtils } from '@jaegertracing/plexus/src/Digraph/types';
 
 import './dag.css';
 
@@ -75,6 +74,8 @@ const formatServiceCalls = (
   return { nodes, edges };
 };
 
+const { classNameIsSmall } = Digraph.propsFactories;
+
 export default class DAG extends React.Component<TProps> {
   static defaultProps = {
     serviceCalls: [],
@@ -110,6 +111,7 @@ export default class DAG extends React.Component<TProps> {
           zoom
           minimap
           className="DAG--dag"
+          setOnGraph={classNameIsSmall}
           minimapClassName="u-miniMap"
           layoutManager={this.layoutManager}
           measurableNodesKey="nodes"
