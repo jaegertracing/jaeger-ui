@@ -44,6 +44,7 @@ function getChildOfSpans(parentID: string, allSpans: Span[]): Span[] {
 }
 
 function computeSelfTime(span: Span, allSpans: Span[]): number {
+  if (!span.hasChildren) return span.duration;
   // We want to represent spans as half-open intervals like [startTime, startTime + duration).
   // This way the subtraction preserves the right boundaries. However, DRange treats all
   // intervals as inclusive. For example,
@@ -53,12 +54,11 @@ function computeSelfTime(span: Span, allSpans: Span[]): number {
   // We should've ended up with length 9-4=5, but we got 3.
   // To work around that, we multiply start/end times by 10 and subtract one from the end.
   // So instead of [1-10] we get [10-99]. This makes the intervals work like half-open.
-  if (!span.hasChildren) return span.duration;
   const spanRange = new DRange(10 * span.startTime, 10 * (span.startTime + span.duration) - 1);
   const children = getChildOfSpans(span.spanID, allSpans);
-  children.forEach(child =>
-    spanRange.subtract(10 * child.startTime, 10 * (child.startTime + child.duration) - 1)
-  );
+  children.forEach(child => {
+    spanRange.subtract(10 * child.startTime, 10 * (child.startTime + child.duration) - 1);
+  });
   return Math.round(spanRange.length / 10);
 }
 
