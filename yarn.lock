@@ -10143,10 +10143,10 @@ vite-plugin-imp@^2.3.1:
     param-case "^3.0.4"
     pascal-case "^3.1.2"
 
-vite@^5.0.0:
-  version "5.0.2"
-  resolved "https://registry.yarnpkg.com/vite/-/vite-5.0.2.tgz#3c94627dace83b9bf04b64eaf618038e30fb95c0"
-  integrity sha512-6CCq1CAJCNM1ya2ZZA7+jS2KgnhbzvxakmlIjN24cF/PXhRMzpM/z8QgsVJA/Dm5fWUWnVEsmtBoMhmerPxT0g==
+vite@^5.0.4:
+  version "5.0.4"
+  resolved "https://registry.yarnpkg.com/vite/-/vite-5.0.4.tgz#d984d2aaa8bac30f1ca9b9eea9b97e052f88c307"
+  integrity sha512-RzAr8LSvM8lmhB4tQ5OPcBhpjOZRZjuxv9zO5UcxeoY2bd3kP3Ticd40Qma9/BqZ8JS96Ll/jeBX9u+LJZrhVg==
   dependencies:
     esbuild "^0.19.3"
     postcss "^8.4.31"
