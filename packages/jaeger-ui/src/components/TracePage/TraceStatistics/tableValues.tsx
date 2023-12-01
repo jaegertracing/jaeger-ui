@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import memoizeOne from 'memoize-one';
 import * as _ from 'lodash';
 import DRange from 'drange';
 import { Trace, Span } from '../../../types/trace';
@@ -20,6 +21,27 @@ import colorGenerator from '../../../utils/color-generator';
 
 const serviceName = 'Service Name';
 const operationName = 'Operation Name';
+
+function parentChildOfMap(allSpans: Span[]): Record<string, Span[]> {
+  const parentChildOfMap: Record<string, Span[]> = {};
+  allSpans.forEach(s => {
+    if (s.references) {
+      // Filter for CHILD_OF we don't want to calculate FOLLOWS_FROM (prod-cons)
+      const parentIDs = s.references.filter(r => r.refType === 'CHILD_OF').map(r => r.spanID);
+      parentIDs.forEach((pID: string) => {
+        parentChildOfMap[pID] = parentChildOfMap[pID] || [];
+        parentChildOfMap[pID].push(s);
+      });
+    }
+  });
+  return parentChildOfMap;
+}
+
+const memoizedParentChildOfMap = memoizeOne(parentChildOfMap);
+
+function getChildOfSpans(parentID: string, allSpans: Span[]): Span[] {
+  return memoizedParentChildOfMap(allSpans)[parentID] || [];
+}
 
 function computeSelfTime(span: Span, allSpans: Span[]): number {
   if (!span.hasChildren) return span.duration;
@@ -33,13 +55,7 @@ function computeSelfTime(span: Span, allSpans: Span[]): number {
   // To work around that, we multiply start/end times by 10 and subtract one from the end.
   // So instead of [1-10] we get [10-99]. This makes the intervals work like half-open.
   const spanRange = new DRange(10 * span.startTime, 10 * (span.startTime + span.duration) - 1);
-  // Only keep CHILD_OF spans. FOLLOWS_FROM spans do not block the parent.
-  const children = allSpans.filter(
-    each =>
-      span.childSpanIds.includes(each.spanID) &&
-      each.references[0].spanID === span.spanID &&
-      each.references[0].refType === 'CHILD_OF'
-  );
+  const children = getChildOfSpans(span.spanID, allSpans);
   children.forEach(child => {
     spanRange.subtract(10 * child.startTime, 10 * (child.startTime + child.duration) - 1);
   });
