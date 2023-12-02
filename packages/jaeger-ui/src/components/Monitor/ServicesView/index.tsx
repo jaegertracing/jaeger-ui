@@ -103,7 +103,7 @@ export const spanKindOptions = [
   { label: 'Internal', value: 'internal' },
   { label: 'Producer', value: 'producer' },
   { label: 'Consumer', value: 'consumer' },
-]
+];
 
 // export for tests
 export const getLoopbackInterval = (interval: number) => {
@@ -178,7 +178,11 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TPropsWithIn
   componentDidUpdate(prevProps: TProps) {
     const { selectedService, selectedSpanKind, selectedTimeFrame, services } = this.props;
 
-    if (prevProps.selectedService !== selectedService || prevProps.selectedSpanKind !== selectedSpanKind || prevProps.selectedTimeFrame !== selectedTimeFrame) {
+    if (
+      prevProps.selectedService !== selectedService ||
+      prevProps.selectedSpanKind !== selectedSpanKind ||
+      prevProps.selectedTimeFrame !== selectedTimeFrame
+    ) {
       this.fetchMetrics();
     } else if (!_isEqual(prevProps.services, services)) {
       this.fetchMetrics();
@@ -207,7 +211,6 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TPropsWithIn
       });
     }
   }
-
 
   fetchMetrics() {
     const {
@@ -304,25 +307,25 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TPropsWithIn
             <Col span={6}>
               <h2 className="span-kind-selector-header">Choose kind</h2>
               <Field
-                  name="spanKind"
-                  component={reduxFormFieldAdapter({ AntInputComponent: SearchableSelect })}
-                  placeholder="Select A Span Kind"
-                  onChange={(e, value: string) => {
-                    const { label } = spanKindOptions.find(option => option.value === value)!;
-                    trackSelectSpanKind(label);
-                  }}
-                  props={{
-                    className: 'span-kind-selector',
-                    defaultValue: spanKindOptions[0],
-                    value: selectedSpanKind,
-                    disabled: metrics.operationMetricsLoading,
-                    loading: metrics.operationMetricsLoading,
-                  }}
+                name="spanKind"
+                component={reduxFormFieldAdapter({ AntInputComponent: SearchableSelect })}
+                placeholder="Select A Span Kind"
+                onChange={(e, value: string) => {
+                  const { label } = spanKindOptions.find(option => option.value === value)!;
+                  trackSelectSpanKind(label);
+                }}
+                props={{
+                  className: 'span-kind-selector',
+                  defaultValue: spanKindOptions[0],
+                  value: selectedSpanKind,
+                  disabled: metrics.operationMetricsLoading,
+                  loading: metrics.operationMetricsLoading,
+                }}
               >
                 {spanKindOptions.map(option => (
-                    <Option key={option.value} value={option.value}>
-                      {option.label}
-                    </Option>
+                  <Option key={option.value} value={option.value}>
+                    {option.label}
+                  </Option>
                 ))}
               </Field>
             </Col>
@@ -475,7 +478,7 @@ export function mapStateToProps(state: ReduxState): TReduxProps {
     metrics,
     selectedService: serviceFormSelector(state, 'service') || store.get('lastAtmSearchService'),
     selectedSpanKind:
-        serviceFormSelector(state, 'spanKind') || store.get('lastAtmSearchSpanKind') || 'server',
+      serviceFormSelector(state, 'spanKind') || store.get('lastAtmSearchSpanKind') || 'server',
     selectedTimeFrame:
       serviceFormSelector(state, 'timeframe') || store.get('lastAtmSearchTimeframe') || oneHourInMilliSeconds,
   };
