@@ -284,7 +284,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TPropsWithIn
         <div className="service-view-container">
           <Row>
             <Col span={6}>
-              <h2 className="service-selector-header">Choose service</h2>
+              <h2 className="service-selector-header">Service</h2>
               <Field
                 onChange={(e, newValue: string) => trackSelectService(newValue)}
                 name="service"
@@ -305,7 +305,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TPropsWithIn
               </Field>
             </Col>
             <Col span={6}>
-              <h2 className="span-kind-selector-header">Choose kind</h2>
+              <h2 className="span-kind-selector-header">Span Kind</h2>
               <Field
                 name="spanKind"
                 component={reduxFormFieldAdapter({ AntInputComponent: SearchableSelect })}
