@@ -38,12 +38,12 @@ describe('<TraceSpanView>', () => {
   it('does not explode', () => {
     expect(wrapper).toBeDefined();
     expect(wrapper.find('.title--TraceSpanView').length).toBe(1);
-    expect(wrapper.find('.span-view-table').length).toBe(2);
+    expect(wrapper.find('.span-view-table').length).toBe(3);
     expect(wrapper.find('table').length).toBe(1);
     expect(wrapper.find('colgroup').length).toBe(1);
     expect(wrapper.find('Pagination').length).toBe(2);
     expect(wrapper.find('Button').length).toBe(1);
-    expect(wrapper.find('.ant-legacy-form-item-control').length).toBe(3);
+    expect(wrapper.find('.ant-form-item-control-input').length).toBe(3);
   });
   it('Should change value when onChange was called', () => {
     const event = ['service2'];

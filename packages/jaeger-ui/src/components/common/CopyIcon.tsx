@@ -15,7 +15,7 @@
 import * as React from 'react';
 
 import { Button, Tooltip } from 'antd';
-import { TooltipPlacement } from 'antd/lib/tooltip/index';
+import { TooltipPlacement } from 'antd/es/tooltip/index';
 import cx from 'classnames';
 import copy from 'copy-to-clipboard';
 
@@ -66,7 +66,7 @@ export default class CopyIcon extends React.PureComponent<PropsType, StateType> 
       <Tooltip
         arrowPointAtCenter
         mouseLeaveDelay={0}
-        onVisibleChange={this.handleTooltipVisibilityChange}
+        onOpenChange={this.handleTooltipVisibilityChange}
         placement={this.props.placement}
         title={this.state.hasCopied ? 'Copied' : this.props.tooltipTitle}
       >

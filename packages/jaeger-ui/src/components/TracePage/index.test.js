@@ -400,8 +400,12 @@ describe('<TracePage>', () => {
       it('is true when not embedded and archive is enabled', () => {
         [{ timeline: {} }, undefined].forEach(embedded => {
           [true, false].forEach(archiveEnabled => {
-            wrapper.setProps({ embedded, archiveEnabled });
-            expect(wrapper.find(TracePageHeader).prop('showArchiveButton')).toBe(!embedded && archiveEnabled);
+            [{ archiveStorage: false }, { archiveStorage: true }].forEach(storageCapabilities => {
+              wrapper.setProps({ embedded, archiveEnabled, storageCapabilities });
+              expect(wrapper.find(TracePageHeader).prop('showArchiveButton')).toBe(
+                !embedded && archiveEnabled && storageCapabilities.archiveStorage
+              );
+            });
           });
         });
       });

@@ -51,7 +51,7 @@ export default function extractDecorationFromState(
         key={`${service}\t${operation}`}
         backgroundHue={120}
         decorationHue={0}
-        maxValue={decorationMax}
+        maxValue={decorationMax as unknown as number}
         strokeWidth={(PROGRESS_BAR_STROKE_WIDTH / RADIUS) * 50}
         text={`${decorationValue}`}
         value={decorationValue}

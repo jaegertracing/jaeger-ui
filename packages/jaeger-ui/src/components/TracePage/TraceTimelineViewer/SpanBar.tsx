@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import React, { useState } from 'react';
-import { Popover } from 'antd';
+import { Popover, Tooltip } from 'antd';
 import _groupBy from 'lodash/groupBy';
 
 import AccordianLogs from './SpanDetail/AccordianLogs';
@@ -124,7 +124,7 @@ function SpanBar(props: TCommonProps) {
             <div
               data-testid="SpanBar--logMarker"
               className="SpanBar--logMarker"
-              style={{ left: positionKey }}
+              style={{ left: positionKey, zIndex: 3 }}
             />
           </Popover>
         ))}
@@ -146,16 +146,25 @@ function SpanBar(props: TCommonProps) {
           const criticalPathViewEnd = critcalPathViewBounds.end;
           const key = `${each.spanId}-${index}`;
           return (
-            <div
-              key={key}
-              data-testid="SpanBar--criticalPath"
-              className="SpanBar--criticalPath"
-              style={{
-                background: 'black',
-                left: toPercentInDecimal(criticalPathViewStart),
-                width: toPercentInDecimal(criticalPathViewEnd - criticalPathViewStart),
-              }}
-            />
+            <Tooltip
+              placement="top"
+              title={
+                <div>
+                  A segment on the <em>critical path</em> of the overall trace/request/workflow.
+                </div>
+              }
+            >
+              <div
+                key={key}
+                data-testid="SpanBar--criticalPath"
+                className="SpanBar--criticalPath"
+                style={{
+                  background: 'black',
+                  left: toPercentInDecimal(criticalPathViewStart),
+                  width: toPercentInDecimal(criticalPathViewEnd - criticalPathViewStart),
+                }}
+              />
+            </Tooltip>
           );
         })}
     </div>

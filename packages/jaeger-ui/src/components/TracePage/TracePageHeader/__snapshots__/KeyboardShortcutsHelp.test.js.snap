@@ -28,10 +28,10 @@ exports[`KeyboardShortcutsHelp renders as expected 1`] = `
     }
     onCancel={[Function]}
     onOk={[Function]}
+    open={false}
     title="Keyboard Shortcuts"
-    visible={false}
   >
-    <ForwardRef(InternalTable)
+    <Table
       className="KeyboardShortcutsHelp--table u-simple-scrollbars"
       dataSource={
         Array [
@@ -209,7 +209,7 @@ exports[`KeyboardShortcutsHelp renders as expected 1`] = `
         render={[Function]}
         title="Key(s)"
       />
-    </ForwardRef(InternalTable)>
+    </Table>
   </Modal>
 </Fragment>
 `;

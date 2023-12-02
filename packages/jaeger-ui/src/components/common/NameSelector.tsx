@@ -113,7 +113,7 @@ export default class NameSelector extends React.PureComponent<TProps, TState> {
     return (
       <Popover
         overlayClassName="NameSelector--overlay u-rm-popover-content-padding"
-        onVisibleChange={this.onPopoverVisibleChanged}
+        onOpenChange={this.onPopoverVisibleChanged}
         placement="bottomLeft"
         content={
           <FilteredList
@@ -125,7 +125,7 @@ export default class NameSelector extends React.PureComponent<TProps, TState> {
           />
         }
         trigger="click"
-        visible={popoverVisible}
+        open={popoverVisible}
       >
         <h2 className={rootCls}>
           {useLabel && <span className="NameSelector--label">{label}:</span>}

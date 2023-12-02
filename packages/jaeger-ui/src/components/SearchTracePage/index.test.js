@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { MemoryRouter } from 'react-router-dom';
+import { BrowserRouter, MemoryRouter } from 'react-router-dom';
 
 jest.mock('redux-form', () => {
   function reduxForm() {
@@ -29,17 +29,26 @@ jest.mock('store');
 
 /* eslint-disable import/first */
 import React from 'react';
-import { shallow, mount } from 'enzyme';
+import { mount } from 'enzyme';
 import store from 'store';
 
+import { Provider } from 'react-redux';
 import { SearchTracePageImpl as SearchTracePage, mapStateToProps } from './index';
-import FileLoader from './FileLoader';
 import SearchForm from './SearchForm';
 import LoadingIndicator from '../common/LoadingIndicator';
 import { fetchedState } from '../../constants';
 import traceGenerator from '../../demo/trace-generators';
 import { MOST_RECENT } from '../../model/order-by';
 import transformTraceData from '../../model/transform-trace-data';
+import { store as globalStore } from '../../utils/configure-store';
+
+const AllProvider = ({ children }) => (
+  <BrowserRouter>
+    <Provider store={globalStore}>
+      <MemoryRouter>{children}</MemoryRouter>
+    </Provider>
+  </BrowserRouter>
+);
 
 describe('<SearchTracePage>', () => {
   const queryOfResults = {};
@@ -76,7 +85,7 @@ describe('<SearchTracePage>', () => {
       fetchServices: jest.fn(),
       searchTraces: jest.fn(),
     };
-    wrapper = shallow(<SearchTracePage {...props} />);
+    wrapper = mount(<SearchTracePage {...props} />, { wrappingComponent: AllProvider });
   });
 
   it('searches for traces if `service` or `traceID` are in the query string', () => {
@@ -166,12 +175,12 @@ describe('<SearchTracePage>', () => {
   });
 
   it('shows Upload tab by default', () => {
-    expect(wrapper.find(FileLoader).length).toBe(1);
+    expect(wrapper.find({ 'data-node-key': 'fileLoader' }).length).toBe(1);
   });
 
   it('hides Upload tab if it is disabled via config', () => {
     wrapper.setProps({ disableFileUploadControl: true });
-    expect(wrapper.find(FileLoader).length).toBe(0);
+    expect(wrapper.find({ 'data-node-key': 'fileLoader' }).length).toBe(0);
   });
 });
 

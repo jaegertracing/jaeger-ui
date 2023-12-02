@@ -53,7 +53,7 @@ function updateNotification(oldState: ENotifiedState | null, nextState: ENotifie
     return;
   }
   if (oldState) {
-    notification.close(oldState);
+    notification.destroy(oldState);
   }
   if (nextState === ENotifiedState.Progress) {
     notification.info({
@@ -69,7 +69,7 @@ function updateNotification(oldState: ENotifiedState | null, nextState: ENotifie
   if (nextState === ENotifiedState.Outcome) {
     if (archivedState && archivedState.error) {
       const { error } = archivedState;
-      notification.warn({
+      notification.warning({
         key: ENotifiedState.Outcome,
         className: 'ArchiveNotifier--errorNotification',
         message: <Message error={error} wrap />,
@@ -114,7 +114,7 @@ export default class ArchiveNotifier extends React.PureComponent<Props, State> {
   componentWillUnmount() {
     const { notifiedState } = this.state;
     if (notifiedState) {
-      notification.close(notifiedState);
+      notification.destroy(notifiedState);
     }
   }
 

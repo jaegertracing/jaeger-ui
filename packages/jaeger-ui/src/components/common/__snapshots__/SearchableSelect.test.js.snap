@@ -1,7 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`SearchableSelect SearchableSelect renders with all props and options 1`] = `
-<ForwardRef(InternalSelect)
+<Select
   filterOption={[Function]}
   showSearch={true}
 >
@@ -26,5 +26,5 @@ exports[`SearchableSelect SearchableSelect renders with all props and options 1`
   >
     Test 3
   </Option>
-</ForwardRef(InternalSelect)>
+</Select>
 `;

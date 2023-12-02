@@ -25,7 +25,7 @@ type Props = {
 export default function NewWindowIcon(props: Props) {
   const { isLarge, ...rest } = props;
   const cls = cx('NewWindowIcon', { 'is-large': isLarge });
-  return <IoOpenOutline className={cls} {...rest} />;
+  return <IoOpenOutline className={cls} {...rest} data-testid="NewWindowIcon" />;
 }
 
 NewWindowIcon.defaultProps = {

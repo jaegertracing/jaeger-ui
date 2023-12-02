@@ -4,7 +4,7 @@ exports[`<CopyIcon /> renders as expected 1`] = `
 <Tooltip
   arrowPointAtCenter={true}
   mouseLeaveDelay={0}
-  onVisibleChange={[Function]}
+  onOpenChange={[Function]}
   placement="top"
   title="tooltipTitleValue"
 >

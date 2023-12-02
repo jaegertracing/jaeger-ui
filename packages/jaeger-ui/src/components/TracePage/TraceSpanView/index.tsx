@@ -14,10 +14,9 @@
 // limitations under the License.
 
 import React, { Component } from 'react';
-import { Row, Col, Table, Button, Select } from 'antd';
+import { Row, Col, Table, Button, Select, Form } from 'antd';
 import dayjs from 'dayjs';
 import { ColumnProps } from 'antd/es/table';
-import { Form } from '@ant-design/compatible';
 import './index.css';
 import { TNil } from '../../../types';
 import { Trace, Span } from '../../../types/trace';

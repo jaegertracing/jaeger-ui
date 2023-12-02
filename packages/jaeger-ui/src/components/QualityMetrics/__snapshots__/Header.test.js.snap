@@ -24,7 +24,7 @@ exports[`Header rendering renders as expected with full props 1`] = `
   >
     Lookback:
   </label>
-  <ForwardRef
+  <InputNumber
     id="inputNumber"
     min={1}
     onChange={[Function]}
@@ -56,7 +56,7 @@ exports[`Header rendering renders as expected with minimum props 1`] = `
   >
     Lookback:
   </label>
-  <ForwardRef
+  <InputNumber
     id="inputNumber"
     min={1}
     onChange={[Function]}

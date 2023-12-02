@@ -32,6 +32,7 @@ expect.addSnapshotSerializer(createSerializer({ mode: 'deep' }));
 // Calls to get-config.tsx and get-version.tsx warn if these globals are not functions.
 // This file is executed before each test file, so they may be overridden safely.
 window.getJaegerUiConfig = () => ({});
+window.getJaegerStorageCapabilities = () => ({});
 window.getJaegerVersion = () => ({
   gitCommit: '',
   gitVersion: '',

@@ -116,7 +116,7 @@ describe('<NameSelector>', () => {
   it('controls the visibility of the popover', () => {
     expect(wrapper.state('popoverVisible')).toBe(false);
     const popover = wrapper.find(Popover);
-    popover.prop('onVisibleChange')(true);
+    popover.prop('onOpenChange')(true);
     expect(wrapper.state('popoverVisible')).toBe(true);
   });
 

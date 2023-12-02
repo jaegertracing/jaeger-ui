@@ -136,23 +136,23 @@ describe('TraceDiffHeader', () => {
     expect(wrapper.state().tableVisible).toBe(null);
     const popovers = wrapper.find(Popover);
     expect(popovers.length).toBe(2);
-    popovers.forEach(popover => expect(popover.prop('visible')).toBe(false));
+    popovers.forEach(popover => expect(popover.prop('open')).toBe(false));
 
-    getPopoverProp(0, 'onVisibleChange')(true);
-    expect(getPopoverProp(0, 'visible')).toBe(true);
-    expect(getPopoverProp(1, 'visible')).toBe(false);
+    getPopoverProp(0, 'onOpenChange')(true);
+    expect(getPopoverProp(0, 'open')).toBe(true);
+    expect(getPopoverProp(1, 'open')).toBe(false);
 
-    getPopoverProp(1, 'onVisibleChange')(true);
-    expect(getPopoverProp(0, 'visible')).toBe(false);
-    expect(getPopoverProp(1, 'visible')).toBe(true);
+    getPopoverProp(1, 'onOpenChange')(true);
+    expect(getPopoverProp(0, 'open')).toBe(false);
+    expect(getPopoverProp(1, 'open')).toBe(true);
 
-    // repeat onVisibleChange call to test that visibility remains correct
-    getPopoverProp(1, 'onVisibleChange')(true);
-    expect(getPopoverProp(0, 'visible')).toBe(false);
-    expect(getPopoverProp(1, 'visible')).toBe(true);
+    // repeat onOpenChange call to test that visibility remains correct
+    getPopoverProp(1, 'onOpenChange')(true);
+    expect(getPopoverProp(0, 'open')).toBe(false);
+    expect(getPopoverProp(1, 'open')).toBe(true);
 
-    getPopoverProp(1, 'onVisibleChange')(false);
-    wrapper.find(Popover).forEach(popover => expect(popover.prop('visible')).toBe(false));
+    getPopoverProp(1, 'onOpenChange')(false);
+    wrapper.find(Popover).forEach(popover => expect(popover.prop('open')).toBe(false));
   });
 
   describe('bound functions to set a & b and passes them to Popover JSX props correctly', () => {

@@ -64,7 +64,7 @@ describe('reduxFormFieldAdapter', () => {
     it('should render Popover as visible if there is an error and the field is not active', () => {
       meta.error = error;
       const wrapper = shallow(<AdaptedInput input={input} meta={meta} />);
-      expect(wrapper.find(Popover).prop('visible')).toBeTruthy();
+      expect(wrapper.find(Popover).prop('open')).toBeTruthy();
       expect(wrapper).toMatchSnapshot();
     });
   });

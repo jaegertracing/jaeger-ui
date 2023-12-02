@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Dropdown, Menu, Button } from 'antd';
+import { Dropdown, Button } from 'antd';
 import { IoChevronDown } from 'react-icons/io5';
 import { Link } from 'react-router-dom';
 import './AltViewOptions.css';
@@ -76,17 +76,21 @@ export default function AltViewOptions(props: Props) {
     onTraceViewChange(item);
   };
 
-  const menu = (
-    <Menu>
-      {MENU_ITEMS.filter(item => item.viewType !== viewType).map(item => (
-        <Menu.Item key={item.viewType}>
-          <a onClick={() => handleSelectView(item.viewType)} role="button">
-            {item.label}
-          </a>
-        </Menu.Item>
-      ))}
-      {!disableJsonView && (
-        <Menu.Item>
+  const dropdownItems = [
+    ...MENU_ITEMS.filter(item => item.viewType !== viewType).map(item => ({
+      key: item.viewType as ETraceViewType | string,
+      label: (
+        <a onClick={() => handleSelectView(item.viewType)} role="button">
+          {item.label}
+        </a>
+      ),
+    })),
+  ];
+  if (!disableJsonView) {
+    dropdownItems.push(
+      {
+        key: 'trace-json',
+        label: (
           <Link
             to={prefixUrl(`/api/traces/${traceID}?prettyPrint=true`)}
             rel="noopener noreferrer"
@@ -95,10 +99,11 @@ export default function AltViewOptions(props: Props) {
           >
             Trace JSON
           </Link>
-        </Menu.Item>
-      )}
-      {!disableJsonView && (
-        <Menu.Item>
+        ),
+      },
+      {
+        key: 'trace-json-unadjusted',
+        label: (
           <Link
             to={prefixUrl(`/api/traces/${traceID}?raw=true&prettyPrint=true`)}
             rel="noopener noreferrer"
@@ -107,15 +112,15 @@ export default function AltViewOptions(props: Props) {
           >
             Trace JSON (unadjusted)
           </Link>
-        </Menu.Item>
-      )}
-    </Menu>
-  );
+        ),
+      }
+    );
+  }
 
   const currentItem = MENU_ITEMS.find(item => item.viewType === viewType);
   const dropdownText = currentItem ? currentItem.label : 'Alternate Views';
   return (
-    <Dropdown overlay={menu}>
+    <Dropdown menu={{ items: dropdownItems }}>
       <Button className="AltViewOptions">
         {`${dropdownText} `}
         <IoChevronDown />

@@ -21,7 +21,7 @@ import { version } from '../../package.json';
 import { Config } from '../types/config';
 
 const defaultConfig: Config = {
-  archiveEnabled: false,
+  archiveEnabled: true,
   criticalPathEnabled: true,
   dependencies: {
     dagMaxNumServices: FALLBACK_DAG_MAX_NUM_SERVICES,
@@ -32,7 +32,7 @@ const defaultConfig: Config = {
       label: 'About Jaeger',
       items: [
         {
-          label: 'Website/Docs',
+          label: 'Website / Docs',
           url: 'https://www.jaegertracing.io/',
         },
         {
@@ -44,8 +44,8 @@ const defaultConfig: Config = {
           url: 'https://twitter.com/JaegerTracing',
         },
         {
-          label: 'Discussion Group',
-          url: 'https://groups.google.com/forum/#!forum/jaeger-tracing',
+          label: 'Discussions / Q&A',
+          url: 'https://github.com/orgs/jaegertracing/discussions',
         },
         {
           label: 'Online Chat',
@@ -76,6 +76,9 @@ const defaultConfig: Config = {
       value: '2d',
     },
     maxLimit: 1500,
+  },
+  storageCapabilities: {
+    archiveStorage: false,
   },
   tracking: {
     gaID: null,
