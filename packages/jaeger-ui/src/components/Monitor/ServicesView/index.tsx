@@ -316,7 +316,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TPropsWithIn
                 }}
                 props={{
                   className: 'span-kind-selector',
-                  defaultValue: spanKindOptions[0],
+                  defaultValue: 'server',
                   value: selectedSpanKind,
                   disabled: metrics.operationMetricsLoading,
                   loading: metrics.operationMetricsLoading,

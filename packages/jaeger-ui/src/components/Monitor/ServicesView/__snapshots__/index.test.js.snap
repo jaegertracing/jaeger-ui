@@ -58,10 +58,7 @@ exports[`<MonitorATMServicesView> ATM snapshot test 1`] = `
           props={
             Object {
               "className": "span-kind-selector",
-              "defaultValue": Object {
-                "label": "Client",
-                "value": "client",
-              },
+              "defaultValue": "server",
               "disabled": null,
               "loading": null,
               "value": "server",
@@ -520,10 +517,7 @@ exports[`<MonitorATMServicesView> ATM snapshot test with no metrics 1`] = `
           props={
             Object {
               "className": "span-kind-selector",
-              "defaultValue": Object {
-                "label": "Client",
-                "value": "client",
-              },
+              "defaultValue": "server",
               "disabled": null,
               "loading": null,
               "value": "server",
@@ -901,10 +895,7 @@ exports[`<MonitorATMServicesView> render one service latency 1`] = `
           props={
             Object {
               "className": "span-kind-selector",
-              "defaultValue": Object {
-                "label": "Client",
-                "value": "client",
-              },
+              "defaultValue": "server",
               "disabled": null,
               "loading": null,
               "value": "server",
