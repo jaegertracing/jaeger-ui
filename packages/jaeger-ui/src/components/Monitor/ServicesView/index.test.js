@@ -361,6 +361,7 @@ describe('mapStateToProps()', () => {
       metrics: originInitialState,
       services: [],
       selectedService: 's1',
+      selectedSpanKind: 'server',
       selectedTimeFrame: 3600000,
     });
   });

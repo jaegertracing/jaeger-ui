@@ -96,8 +96,11 @@ export const timeFrameOptions = [
   { label: 'Last 2 days', value: 48 * oneHourInMilliSeconds },
 ];
 export const spanKindOptions = [
-  { label: 'Server', value: 'server' },
   { label: 'Client', value: 'client' },
+  { label: 'Server', value: 'server' },
+  { label: 'Internal', value: 'internal' },
+  { label: 'Producer', value: 'producer' },
+  { label: 'Consumer', value: 'consumer' },
 ]
 
 // export for tests
