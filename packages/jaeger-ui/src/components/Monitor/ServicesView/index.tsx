@@ -36,7 +36,7 @@ import {
   MetricsReduxState,
   Points,
   ServiceMetricsObject,
-  ServiceOpsMetrics,
+  ServiceOpsMetrics, spanKinds,
 } from '../../../types/metrics';
 import prefixUrl from '../../../utils/prefix-url';
 import { convertToTimeUnit, convertTimeUnitToShortTerm, getSuitableTimeUnit } from '../../../utils/date';
@@ -45,7 +45,7 @@ import './index.css';
 import { getConfigValue } from '../../../utils/config/get-config';
 import {
   trackSearchOperation,
-  trackSelectService,
+  trackSelectService, trackSelectSpankind,
   trackSelectTimeframe,
   trackViewAllTraces,
 } from './index.track';
@@ -64,6 +64,7 @@ type TReduxProps = {
   servicesLoading: boolean;
   metrics: MetricsReduxState;
   selectedService: string;
+  selectedSpankind: spanKinds;
   selectedTimeFrame: number;
 };
 
@@ -94,6 +95,10 @@ export const timeFrameOptions = [
   { label: 'Last 24 hours', value: 24 * oneHourInMilliSeconds },
   { label: 'Last 2 days', value: 48 * oneHourInMilliSeconds },
 ];
+export const spankindOptions = [
+  { label: 'Server', value: 'server' },
+  { label: 'Client', value: 'client' },
+]
 
 // export for tests
 export const getLoopbackInterval = (interval: number) => {
@@ -166,9 +171,9 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TPropsWithIn
   }
 
   componentDidUpdate(prevProps: TProps) {
-    const { selectedService, selectedTimeFrame, services } = this.props;
+    const { selectedService, selectedSpankind, selectedTimeFrame, services } = this.props;
 
-    if (prevProps.selectedService !== selectedService || prevProps.selectedTimeFrame !== selectedTimeFrame) {
+    if (prevProps.selectedService !== selectedService || prevProps.selectedSpankind !== selectedSpankind || prevProps.selectedTimeFrame !== selectedTimeFrame) {
       this.fetchMetrics();
     } else if (!_isEqual(prevProps.services, services)) {
       this.fetchMetrics();
@@ -198,9 +203,11 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TPropsWithIn
     }
   }
 
+
   fetchMetrics() {
     const {
       selectedService,
+      selectedSpankind,
       selectedTimeFrame,
       fetchAllServiceMetrics,
       fetchAggregatedServiceMetrics,
@@ -210,6 +217,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TPropsWithIn
 
     if (currentService) {
       this.endTime = Date.now();
+      store.set('lastAtmSearchSpankind', selectedSpankind);
       store.set('lastAtmSearchTimeframe', selectedTimeFrame);
       store.set('lastAtmSearchService', this.getSelectedService());
 
@@ -219,6 +227,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TPropsWithIn
         lookback: selectedTimeFrame,
         step: 60 * 1000,
         ratePer: 10 * 60 * 1000,
+        spanKind: selectedSpankind,
       };
 
       fetchAllServiceMetrics(currentService, metricQueryPayload);
@@ -234,7 +243,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TPropsWithIn
   }
 
   render() {
-    const { services, metrics, selectedTimeFrame, servicesLoading } = this.props;
+    const { services, metrics, selectedSpankind, selectedTimeFrame, servicesLoading } = this.props;
     const serviceLatencies = metrics.serviceMetrics ? metrics.serviceMetrics.service_latencies : null;
     const displayTimeUnit = calcDisplayTimeUnit(serviceLatencies);
     const serviceErrorRate = metrics.serviceMetrics ? metrics.serviceMetrics.service_error_rate : null;
@@ -284,6 +293,31 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TPropsWithIn
                   <Option key={service} value={service}>
                     {service}
                   </Option>
+                ))}
+              </Field>
+            </Col>
+            <Col span={6}>
+              <h2 className="spankind-selector-header">Choose kind</h2>
+              <Field
+                  name="spankind"
+                  component={reduxFormFieldAdapter({ AntInputComponent: SearchableSelect })}
+                  placeholder="Select A Span Kind"
+                  onChange={(e, value: string) => {
+                    const { label } = spankindOptions.find(option => option.value === value)!;
+                    trackSelectSpankind(label);
+                  }}
+                  props={{
+                    className: 'spankind-selector',
+                    defaultValue: spankindOptions[0],
+                    value: selectedSpankind,
+                    disabled: metrics.operationMetricsLoading,
+                    loading: metrics.operationMetricsLoading,
+                  }}
+              >
+                {spankindOptions.map(option => (
+                    <Option key={option.value} value={option.value}>
+                      {option.label}
+                    </Option>
                 ))}
               </Field>
             </Col>
@@ -435,6 +469,8 @@ export function mapStateToProps(state: ReduxState): TReduxProps {
     servicesLoading: services.loading,
     metrics,
     selectedService: serviceFormSelector(state, 'service') || store.get('lastAtmSearchService'),
+    selectedSpankind:
+        serviceFormSelector(state, 'spankind') || store.get('lastAtmSearchSpankind') || 'server',
     selectedTimeFrame:
       serviceFormSelector(state, 'timeframe') || store.get('lastAtmSearchTimeframe') || oneHourInMilliSeconds,
   };

@@ -23,6 +23,8 @@ export type AvailableOpsMetrics =
   | 'service_operation_latencies'
   | 'service_operation_error_rate';
 
+export type spanKinds = 'unspecified' | 'internal' | 'server' | 'client' | 'producer' | 'consumer'
+
 export type MetricsAPIQueryParams = {
   quantile: number;
   groupByOperation?: boolean;
@@ -30,7 +32,7 @@ export type MetricsAPIQueryParams = {
   lookback?: number;
   step?: number;
   ratePer?: number;
-  spanKind?: 'unspecified' | 'internal' | 'server' | 'client' | 'producer' | 'consumer';
+  spanKind?: spanKinds;
 };
 
 export type LableObject = {
