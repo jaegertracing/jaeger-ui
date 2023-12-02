@@ -28,11 +28,11 @@ export type spanKinds = 'unspecified' | 'internal' | 'server' | 'client' | 'prod
 export type MetricsAPIQueryParams = {
   quantile: number;
   groupByOperation?: boolean;
-  endTs?: number;
-  lookback?: number;
-  step?: number;
-  ratePer?: number;
-  spanKind?: spanKinds;
+  endTs: number;
+  lookback: number;
+  step: number;
+  ratePer: number;
+  spanKind: spanKinds;
 };
 
 export type LableObject = {
