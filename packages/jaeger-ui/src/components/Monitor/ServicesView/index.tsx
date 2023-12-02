@@ -36,7 +36,8 @@ import {
   MetricsReduxState,
   Points,
   ServiceMetricsObject,
-  ServiceOpsMetrics, spanKinds,
+  ServiceOpsMetrics,
+  spanKinds,
 } from '../../../types/metrics';
 import prefixUrl from '../../../utils/prefix-url';
 import { convertToTimeUnit, convertTimeUnitToShortTerm, getSuitableTimeUnit } from '../../../utils/date';
@@ -45,7 +46,8 @@ import './index.css';
 import { getConfigValue } from '../../../utils/config/get-config';
 import {
   trackSearchOperation,
-  trackSelectService, trackSelectSpanKind,
+  trackSelectService,
+  trackSelectSpanKind,
   trackSelectTimeframe,
   trackViewAllTraces,
 } from './index.track';
