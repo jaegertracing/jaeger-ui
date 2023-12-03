@@ -18,11 +18,12 @@ import {
   CATEGORY_SELECT_SERVICE,
   CATEGORY_SELECT_TIMEFRAME,
   CATEGORY_VIEW_ALL_TRACES,
+  CATEGORY_SELECT_SPAN_KIND,
   trackSelectService,
   trackSelectSpanKind,
   trackSelectTimeframe,
   trackViewAllTraces,
-  trackSearchOperation, CATEGORY_SELECT_SPAN_KIND,
+  trackSearchOperation,
 } from './index.track';
 
 describe('ServicesView tracking', () => {
