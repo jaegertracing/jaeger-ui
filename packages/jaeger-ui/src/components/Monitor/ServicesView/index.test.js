@@ -20,7 +20,8 @@ import {
   mapDispatchToProps,
   getLoopbackInterval,
   yAxisTickFormat,
-  timeFrameOptions, spanKindOptions,
+  timeFrameOptions,
+  spanKindOptions,
 } from '.';
 import LoadingIndicator from '../../common/LoadingIndicator';
 import MonitorATMEmptyState from '../EmptyState';
