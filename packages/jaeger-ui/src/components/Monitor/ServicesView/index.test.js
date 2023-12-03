@@ -311,7 +311,7 @@ describe('<MonitorATMServicesView>', () => {
     wrapper.find('Field').first().simulate('change', null, newValue);
     expect(trackSelectServiceSpy).toHaveBeenCalledWith(newValue);
 
-    wrapper.find({ name: "spanKind" }).simulate('change', null, spanKindOption.value);
+    wrapper.find({ name: 'spanKind' }).simulate('change', null, spanKindOption.value);
     expect(trackSelectSpanKindSpy).toHaveBeenCalledWith(spanKindOption.label);
 
     wrapper.find('Field').last().simulate('change', null, timeFrameOption.value);
