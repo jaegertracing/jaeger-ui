@@ -8943,10 +8943,10 @@ requires-port@^1.0.0:
   resolved "https://registry.yarnpkg.com/requires-port/-/requires-port-1.0.0.tgz#925d2601d39ac485e091cf0da5c6e694dc3dcaff"
   integrity sha1-kl0mAdOaxIXgkc8NpcbmlNw9yv8=
 
-reselect@^4.1.6:
-  version "4.1.8"
-  resolved "https://registry.yarnpkg.com/reselect/-/reselect-4.1.8.tgz#3f5dc671ea168dccdeb3e141236f69f02eaec524"
-  integrity sha512-ab9EmR80F/zQTMNeneUr4cv+jSwPJgIlvEmVwLerwrWVbpLlBuls9XHzIeTFy4cegU2NHBp3va0LKOzU5qFEYQ==
+reselect@^5.0.0:
+  version "5.0.0"
+  resolved "https://registry.yarnpkg.com/reselect/-/reselect-5.0.0.tgz#36344481f36b5852de3a862c51e2152c9c67b2d2"
+  integrity sha512-8YRuy8VJoLZ2+qtfVylxMLQOpx7uPH9KPtgPNoSKFeYMmiKKrvRX7Z/E3ouHqrcWlLqfyzDY6WUD96dSUKk06A==
 
 resize-observer-polyfill@^1.5.1:
   version "1.5.1"
