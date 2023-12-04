@@ -18,7 +18,9 @@ import {
   CATEGORY_SELECT_SERVICE,
   CATEGORY_SELECT_TIMEFRAME,
   CATEGORY_VIEW_ALL_TRACES,
+  CATEGORY_SELECT_SPAN_KIND,
   trackSelectService,
+  trackSelectSpanKind,
   trackSelectTimeframe,
   trackViewAllTraces,
   trackSearchOperation,
@@ -44,6 +46,12 @@ describe('ServicesView tracking', () => {
     const serviceName = 'service-name';
     trackSelectService(serviceName);
     expect(trackEvent).toHaveBeenCalledWith(CATEGORY_SELECT_SERVICE, serviceName);
+  });
+
+  it('trackSelectSpanKind calls trackEvent with the match category and show action', () => {
+    const spanKind = 'producer';
+    trackSelectSpanKind(spanKind);
+    expect(trackEvent).toHaveBeenCalledWith(CATEGORY_SELECT_SPAN_KIND, spanKind);
   });
 
   it('trackSelectTimeframe calls trackEvent with the match category and show action', () => {
