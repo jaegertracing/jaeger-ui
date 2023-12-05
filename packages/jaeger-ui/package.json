@@ -47,7 +47,7 @@
     "@types/deep-freeze": "^0.1.1",
     "@types/lodash": "^4.14.123",
     "@types/object-hash": "^3.0.2",
-    "@types/react-helmet": "^6.1.5",
+    "@types/react-helmet": "^6.1.10",
     "@types/react-router-dom": "^5.1.0",
     "@types/redux-actions": "2.2.1",
     "antd": "^5.10.2",
