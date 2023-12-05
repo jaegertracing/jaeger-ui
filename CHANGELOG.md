@@ -26,7 +26,6 @@ Run `make changelog` to generate content.
 
 * Change vite config from cjs to esm ([@ShivamMadlani](https://github.com/ShivamMadlani) in [#1992](https://github.com/jaegertracing/jaeger-ui/pull/1992))
 * Restore scripts/get-tracking-version.js deleted by accident ([@yurishkuro](https://github.com/yurishkuro) in [#1998](https://github.com/jaegertracing/jaeger-ui/pull/1998))
-* Remove lerna dependency ([@andreasgerstmayr](https://github.com/andreasgerstmayr) in [#1997](https://github.com/jaegertracing/jaeger-ui/pull/1997))
 
 
 ## v1.35.0 (2023-11-02)
