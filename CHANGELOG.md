@@ -9,6 +9,26 @@ Run `make changelog` to generate content.
 
 </details>
 
+## v1.36.0 (2023-12-05)
+
+#### ✨ New Features:
+
+* [SPM] Add span kind selector ([@albertteoh](https://github.com/albertteoh) in [#2012](https://github.com/jaegertracing/jaeger-ui/pull/2012))
+* Make ArchiveTrace button auto-configurable ([@thecoons](https://github.com/thecoons) in [#1944](https://github.com/jaegertracing/jaeger-ui/pull/1944))
+
+#### 🐞 Bug fixes, Minor Improvements:
+
+* Speed up trace statistics view calculation ([@maxgaponov](https://github.com/maxgaponov) in [#1941](https://github.com/jaegertracing/jaeger-ui/pull/1941))
+* Exit `mergeChildrenCriticalPath` early for an empty critical path ([@maxgaponov](https://github.com/maxgaponov) in [#1974](https://github.com/jaegertracing/jaeger-ui/pull/1974))
+* Add link to faq explaining why service map is empty ([@yurishkuro](https://github.com/yurishkuro) in [#1963](https://github.com/jaegertracing/jaeger-ui/pull/1963))
+
+#### 👷 CI Improvements:
+
+* Change vite config from cjs to esm ([@ShivamMadlani](https://github.com/ShivamMadlani) in [#1992](https://github.com/jaegertracing/jaeger-ui/pull/1992))
+* Restore scripts/get-tracking-version.js deleted by accident ([@yurishkuro](https://github.com/yurishkuro) in [#1998](https://github.com/jaegertracing/jaeger-ui/pull/1998))
+* Remove lerna dependency ([@andreasgerstmayr](https://github.com/andreasgerstmayr) in [#1997](https://github.com/jaegertracing/jaeger-ui/pull/1997))
+
+
 ## v1.35.0 (2023-11-02)
 
 #### ✨ New Features:
