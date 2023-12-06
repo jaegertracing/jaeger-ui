@@ -65,6 +65,10 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwarde
           highlighted.
         </p>
         <p>
+          For exact phrase search surround the query in double quotes like{' '}
+          <code>&quot;The quick brown fox&quot;</code>
+        </p>
+        <p>
           When matching key-value pairs, the substring search is applied separately against the key, the
           value, and the concatenated <code>&quot;key=value&quot;</code> string. The latter allows searching
           for exact matches like <code>http.status_code=200</code>.
