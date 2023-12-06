@@ -12,7 +12,7 @@ exports[`<MonitorATMServicesView> ATM snapshot test 1`] = `
         <h2
           className="service-selector-header"
         >
-          Choose service
+          Service
         </h2>
         <Field
           component={[Function]}
@@ -39,6 +39,61 @@ exports[`<MonitorATMServicesView> ATM snapshot test 1`] = `
             value="s2"
           >
             s2
+          </Option>
+        </Field>
+      </Col>
+      <Col
+        span={6}
+      >
+        <h2
+          className="span-kind-selector-header"
+        >
+          Span Kind
+        </h2>
+        <Field
+          component={[Function]}
+          name="spanKind"
+          onChange={[Function]}
+          placeholder="Select A Span Kind"
+          props={
+            Object {
+              "className": "span-kind-selector",
+              "defaultValue": "server",
+              "disabled": null,
+              "loading": null,
+              "value": "server",
+            }
+          }
+        >
+          <Option
+            key="client"
+            value="client"
+          >
+            Client
+          </Option>
+          <Option
+            key="server"
+            value="server"
+          >
+            Server
+          </Option>
+          <Option
+            key="internal"
+            value="internal"
+          >
+            Internal
+          </Option>
+          <Option
+            key="producer"
+            value="producer"
+          >
+            Producer
+          </Option>
+          <Option
+            key="consumer"
+            value="consumer"
+          >
+            Consumer
           </Option>
         </Field>
       </Col>
@@ -404,7 +459,6 @@ exports[`<MonitorATMServicesView> ATM snapshot test with no metrics 1`] = `
       <React.Fragment>
         No data yet! Please see these
         <Link
-          replace={false}
           target="_blank"
           to={
             Object {
@@ -430,7 +484,7 @@ exports[`<MonitorATMServicesView> ATM snapshot test with no metrics 1`] = `
         <h2
           className="service-selector-header"
         >
-          Choose service
+          Service
         </h2>
         <Field
           component={[Function]}
@@ -446,6 +500,61 @@ exports[`<MonitorATMServicesView> ATM snapshot test with no metrics 1`] = `
             }
           }
         />
+      </Col>
+      <Col
+        span={6}
+      >
+        <h2
+          className="span-kind-selector-header"
+        >
+          Span Kind
+        </h2>
+        <Field
+          component={[Function]}
+          name="spanKind"
+          onChange={[Function]}
+          placeholder="Select A Span Kind"
+          props={
+            Object {
+              "className": "span-kind-selector",
+              "defaultValue": "server",
+              "disabled": null,
+              "loading": null,
+              "value": "server",
+            }
+          }
+        >
+          <Option
+            key="client"
+            value="client"
+          >
+            Client
+          </Option>
+          <Option
+            key="server"
+            value="server"
+          >
+            Server
+          </Option>
+          <Option
+            key="internal"
+            value="internal"
+          >
+            Internal
+          </Option>
+          <Option
+            key="producer"
+            value="producer"
+          >
+            Producer
+          </Option>
+          <Option
+            key="consumer"
+            value="consumer"
+          >
+            Consumer
+          </Option>
+        </Field>
       </Col>
     </Row>
     <Row
@@ -728,7 +837,6 @@ exports[`<MonitorATMServicesView> render one service latency 1`] = `
       <React.Fragment>
         No data yet! Please see these
         <Link
-          replace={false}
           target="_blank"
           to={
             Object {
@@ -754,7 +862,7 @@ exports[`<MonitorATMServicesView> render one service latency 1`] = `
         <h2
           className="service-selector-header"
         >
-          Choose service
+          Service
         </h2>
         <Field
           component={[Function]}
@@ -770,6 +878,61 @@ exports[`<MonitorATMServicesView> render one service latency 1`] = `
             }
           }
         />
+      </Col>
+      <Col
+        span={6}
+      >
+        <h2
+          className="span-kind-selector-header"
+        >
+          Span Kind
+        </h2>
+        <Field
+          component={[Function]}
+          name="spanKind"
+          onChange={[Function]}
+          placeholder="Select A Span Kind"
+          props={
+            Object {
+              "className": "span-kind-selector",
+              "defaultValue": "server",
+              "disabled": null,
+              "loading": null,
+              "value": "server",
+            }
+          }
+        >
+          <Option
+            key="client"
+            value="client"
+          >
+            Client
+          </Option>
+          <Option
+            key="server"
+            value="server"
+          >
+            Server
+          </Option>
+          <Option
+            key="internal"
+            value="internal"
+          >
+            Internal
+          </Option>
+          <Option
+            key="producer"
+            value="producer"
+          >
+            Producer
+          </Option>
+          <Option
+            key="consumer"
+            value="consumer"
+          >
+            Consumer
+          </Option>
+        </Field>
       </Col>
     </Row>
     <Row

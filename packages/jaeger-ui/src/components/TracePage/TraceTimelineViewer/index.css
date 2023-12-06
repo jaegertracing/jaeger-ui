@@ -55,10 +55,31 @@ limitations under the License.
   color: lightgrey;
 }
 
-.json-markup-expander {
-  font-size: 1.2em;
-  margin-right: 5px;
-  user-select: none;
+.json-markup-icon-expand {
+  margin-right: 4px;
+}
+
+.json-markup-icon-expand::after {
+  content: '\25B6';
+  color: black;
+  font-size: 12px;
+}
+
+.json-markup-icon-collapse {
+  margin-right: 4px;
+}
+
+.json-markup-icon-collapse::after {
+  content: '\25BC';
+  color: black;
+  font-size: 12px;
+}
+
+.json-markup-collapse-content::after {
+  content: '\2026';
+  color: black;
+  font-size: 18px;
+  margin-right: 4px;
 }
 
 .json-markup-child {

@@ -225,11 +225,9 @@ describe('TraceDiff', () => {
 
   describe('mapStateToProps', () => {
     const getOwnProps = ({ a = defaultA, b = defaultB } = {}) => ({
-      match: {
-        params: {
-          a,
-          b,
-        },
+      params: {
+        a,
+        b,
       },
     });
     const makeTestReduxState = ({ cohortIds = defaultCohortIds } = {}) => ({

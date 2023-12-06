@@ -49,6 +49,7 @@ import { TDdgStateEntry } from '../../types/TDdgState';
 
 import './index.css';
 import { ApiError } from '../../types/api-error';
+import withRouteProps from '../../utils/withRouteProps';
 
 interface IDoneState {
   state: typeof fetchedState.DONE;
@@ -449,4 +450,4 @@ export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchPro
   };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(DeepDependencyGraphPageImpl);
+export default withRouteProps(connect(mapStateToProps, mapDispatchToProps)(DeepDependencyGraphPageImpl));

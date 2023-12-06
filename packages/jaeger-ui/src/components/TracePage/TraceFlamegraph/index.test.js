@@ -18,7 +18,7 @@ import { convertJaegerTraceToProfile } from '@pyroscope/flamegraph';
 
 import TraceFlamegraph from './index';
 
-const testTrace = require('./testTrace.json');
+import testTrace from './testTrace.json';
 
 const profile = convertJaegerTraceToProfile(testTrace.data);
 

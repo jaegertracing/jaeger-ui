@@ -13,8 +13,8 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
-import { IoChevronDown } from 'react-icons/io5';
+import { render } from '@testing-library/react';
+import '@testing-library/jest-dom';
 
 import ChevronDown from './ChevronDown';
 
@@ -24,14 +24,14 @@ describe('ChevronDown', () => {
     const style = {
       border: 'black solid 1px',
     };
-    const wrapper = shallow(<ChevronDown className={className} style={style} />);
+    const { container } = render(<ChevronDown className={className} style={style} />);
 
-    expect(wrapper.hasClass(className)).toBe(true);
-    expect(wrapper.find(IoChevronDown).prop('style')).toBe(style);
+    expect(container.firstChild).toHaveClass(className);
+    expect(container.firstChild).toHaveStyle(style);
   });
 
   it('does not add `undefined` as a className when not given a className', () => {
-    const wrapper = shallow(<ChevronDown />);
-    expect(wrapper.hasClass('undefined')).toBe(false);
+    const { container } = render(<ChevronDown />);
+    expect(container.firstChild).not.toHaveClass('undefined');
   });
 });

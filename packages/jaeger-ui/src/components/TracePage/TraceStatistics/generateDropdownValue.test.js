@@ -16,7 +16,7 @@ import { generateDropdownValue, generateSecondDropdownValue } from './generateDr
 import transformTraceData from '../../../model/transform-trace-data';
 import { getColumnValues } from './tableValues';
 
-const testTrace = require('./tableValuesTestTrace/testTrace.json');
+import testTrace from './tableValuesTestTrace/testTrace.json';
 
 const transformedTrace = transformTraceData(testTrace);
 

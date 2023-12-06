@@ -15,17 +15,17 @@
 import transformTraceData from '../../../model/transform-trace-data';
 import { getColumnValues, getColumnValuesSecondDropdown } from './tableValues';
 
-const testTraceNormal = require('./tableValuesTestTrace/testTraceNormal.json');
-const traceSpanAmongEachOther = require('./tableValuesTestTrace/spansAmongEachOther.json');
-const traceSpanAmongEachOtherGrouped = require('./tableValuesTestTrace/spansAmongEachOtherGrouped.json');
-const traceSpanAmongEachOtherGroupedAndSpans = require('./tableValuesTestTrace/spanAmongEachOtherGroupedAndSpans.json');
-const traceSpanLongerAsParent = require('./tableValuesTestTrace/spanLongerAsParent.json');
-const traceWithOverlappingChildrenLongerThanParent = require('./tableValuesTestTrace/traceWithOverlappingChildrenLongerThanParent.json');
-const traceWithTwoNonOverlappingChildren = require('./tableValuesTestTrace/traceWithTwoNonOverlappingChildren.json');
-const traceWithOverlappingChildren = require('./tableValuesTestTrace/traceWithOverlappingChildren.json');
-const traceWithSingleChildSpanLongerThanParent = require('./tableValuesTestTrace/traceWithSingleChildSpanLongerThanParent.json');
-const traceWithThreeShortChildren = require('./tableValuesTestTrace/traceWithThreeShortChildren.json');
-const traceWithTwoChildrenStartedAtTraceStart = require('./tableValuesTestTrace/traceWithTwoChildrenStartedAtTraceStart.json');
+import testTraceNormal from './tableValuesTestTrace/testTraceNormal.json';
+import traceSpanAmongEachOther from './tableValuesTestTrace/spansAmongEachOther.json';
+import traceSpanAmongEachOtherGrouped from './tableValuesTestTrace/spansAmongEachOtherGrouped.json';
+import traceSpanAmongEachOtherGroupedAndSpans from './tableValuesTestTrace/spanAmongEachOtherGroupedAndSpans.json';
+import traceSpanLongerAsParent from './tableValuesTestTrace/spanLongerAsParent.json';
+import traceWithOverlappingChildrenLongerThanParent from './tableValuesTestTrace/traceWithOverlappingChildrenLongerThanParent.json';
+import traceWithTwoNonOverlappingChildren from './tableValuesTestTrace/traceWithTwoNonOverlappingChildren.json';
+import traceWithOverlappingChildren from './tableValuesTestTrace/traceWithOverlappingChildren.json';
+import traceWithSingleChildLongerThanParentAndStartsAfterParent from './tableValuesTestTrace/traceWithSingleChildLongerThanParentAndStartsAfterParent.json';
+import traceWithThreeShortChildren from './tableValuesTestTrace/traceWithThreeShortChildren.json';
+import traceWithTwoChildrenStartedAtTraceStart from './tableValuesTestTrace/traceWithTwoChildrenStartedAtTraceStart.json';
 
 const transformedTrace = transformTraceData(testTraceNormal);
 const transformedTraceSpanAmongEachOthe = transformTraceData(traceSpanAmongEachOther);
@@ -39,8 +39,8 @@ const transformedTraceWithOverlappingChildrenLongerThanParent = transformTraceDa
 );
 const transformedTraceWithTwoNonOverlappingChildren = transformTraceData(traceWithTwoNonOverlappingChildren);
 const transformedTraceWithOverlappingChildren = transformTraceData(traceWithOverlappingChildren);
-const transformedTraceWithSingleChildSpanLongerThanParent = transformTraceData(
-  traceWithSingleChildSpanLongerThanParent
+const transformedtraceWithSingleChildLongerThanParentAndStartsAfterParent = transformTraceData(
+  traceWithSingleChildLongerThanParentAndStartsAfterParent
 );
 const transformedTraceWithThreeShortChildren = transformTraceData(traceWithThreeShortChildren);
 const transformedTraceWithTwoChildrenStartedAtTraceStart = transformTraceData(
@@ -506,12 +506,12 @@ describe('check self time', () => {
       'Service Name',
       transformedTraceWithOverlappingChildrenLongerThanParent
     );
-    expect(serviceOne.selfTotal).toBe(10.33);
+    expect(serviceOne.selfTotal).toBe(0.03);
   });
 
   it('span with two children that do not overlap and one is longer than its parent', () => {
     const [serviceOne] = getColumnValues('Service Name', transformedTraceWithTwoNonOverlappingChildren);
-    expect(serviceOne.selfTotal).toBe(1.51);
+    expect(serviceOne.selfTotal).toBe(0.03);
   });
 
   it('span with two overlapping children where one is longer than its parent', () => {
@@ -520,8 +520,11 @@ describe('check self time', () => {
   });
 
   it('span with single child span longer than its parent', () => {
-    const [serviceOne] = getColumnValues('Service Name', transformedTraceWithSingleChildSpanLongerThanParent);
-    expect(serviceOne.selfTotal).toBe(1.34);
+    const [serviceOne] = getColumnValues(
+      'Service Name',
+      transformedtraceWithSingleChildLongerThanParentAndStartsAfterParent
+    );
+    expect(serviceOne.selfTotal).toBe(0.04);
   });
 
   it('span with three children shorter than their parent, two of which overlap', () => {

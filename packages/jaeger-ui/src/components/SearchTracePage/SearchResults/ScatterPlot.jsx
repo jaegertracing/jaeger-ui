@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import React, { useRef, useState, useLayoutEffect } from 'react';
-import moment from 'moment';
+import dayjs from 'dayjs';
 import PropTypes from 'prop-types';
 import { XYPlot, XAxis, YAxis, MarkSeries, Hint } from 'react-vis';
 
@@ -68,7 +68,7 @@ export default function ScatterPlot(props) {
           <XAxis
             title="Time"
             tickTotal={4}
-            tickFormat={t => moment(t / ONE_MILLISECOND).format('hh:mm:ss a')}
+            tickFormat={t => dayjs(t / ONE_MILLISECOND).format('hh:mm:ss a')}
           />
           <YAxis title="Duration" tickTotal={3} tickFormat={t => formatDuration(t)} />
           <MarkSeries

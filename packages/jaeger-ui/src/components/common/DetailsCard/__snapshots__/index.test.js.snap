@@ -35,7 +35,7 @@ exports[`DetailsCard renders as collapsible 1`] = `
       onClick={[Function]}
       type="button"
     >
-      <MdKeyboardArrowDown />
+      <IoChevronDown />
     </button>
     <div
       className="DetailsCard--HeaderWrapper"

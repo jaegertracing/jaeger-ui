@@ -15,8 +15,8 @@
 import * as React from 'react';
 import { Checkbox, Tooltip } from 'antd';
 import _debounce from 'lodash/debounce';
-import matchSorter from 'match-sorter';
-import { IoIosSearch } from 'react-icons/io';
+import { matchSorter } from 'match-sorter';
+import { IoSearch } from 'react-icons/io5';
 import { FixedSizeList as VList, ListOnItemsRenderedProps, ListOnScrollProps } from 'react-window';
 import { Key as EKey } from 'ts-key-enum';
 
@@ -194,7 +194,7 @@ export default class FilteredList extends React.PureComponent<TProps, TState> {
         <div className="FilteredList--filterWrapper">
           {filteredCheckbox}
           <label className="FilteredList--inputWrapper">
-            <IoIosSearch className="FilteredList--filterIcon" />
+            <IoSearch className="FilteredList--filterIcon" />
             <input
               className="FilteredList--filterInput"
               placeholder="Filter..."

@@ -8,7 +8,7 @@ exports[`<FilteredList> renders without exploding 1`] = `
     <label
       className="FilteredList--inputWrapper"
     >
-      <IoIosSearch
+      <IoSearch
         className="FilteredList--filterIcon"
       />
       <input

@@ -129,6 +129,7 @@ describe('TracesDdg', () => {
         })
       );
 
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { service: _, ...urlStateWithoutService } = urlState;
       getUrlStateSpy.mockReturnValue(urlStateWithoutService);
       expect(mapStateToProps(state, ownProps)).toEqual(

@@ -15,7 +15,7 @@
 import React, { PureComponent } from 'react';
 import { Popover } from 'antd';
 import { ImSortAmountAsc } from 'react-icons/im';
-import { FaChevronRight } from 'react-icons/fa';
+import { IoChevronForward } from 'react-icons/io5';
 
 import ChevronDown from '../ChevronDown';
 import { trackHopChange } from '../../index.track';
@@ -48,7 +48,7 @@ export default class Selector extends PureComponent<TProps> {
     const { direction } = this.props;
     return (
       <React.Fragment key={`${distance} ${direction} ${suffix}`}>
-        {Boolean(showChevron) && <FaChevronRight className={`${CLASSNAME}--ChevronRight is-${fullness}`} />}
+        {Boolean(showChevron) && <IoChevronForward className={`${CLASSNAME}--ChevronRight is-${fullness}`} />}
         <button
           className={`${CLASSNAME}--btn is-${fullness} ${CLASSNAME}--${suffix}`}
           type="button"

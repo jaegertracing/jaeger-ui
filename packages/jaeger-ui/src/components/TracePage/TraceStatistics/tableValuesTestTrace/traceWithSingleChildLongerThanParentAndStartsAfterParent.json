@@ -7,8 +7,8 @@
       "flags": 1,
       "operationName": "send",
       "references": [],
-      "startTime": 1679437737490189,
-      "duration": 36,
+      "startTime": 100,
+      "duration": 40,
       "tags": [
         {
           "key": "span.kind",
@@ -32,8 +32,8 @@
           "spanID": "006c3cf93508f205"
         }
       ],
-      "startTime": 1679437737491529,
-      "duration": 79182,
+      "startTime": 200,
+      "duration": 300,
       "tags": [
         {
           "key": "span.kind",

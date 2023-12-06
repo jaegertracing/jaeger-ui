@@ -6,11 +6,9 @@ exports[`<FileLoader /> matches the snapshot 1`] = `
   beforeUpload={[Function]}
   multiple={true}
 >
-  <p
-    className="ant-upload-drag-icon"
-  >
-    <ForwardRef(FileAddOutlined) />
-  </p>
+  <IoDocumentAttachOutline
+    className="Dragger--icon"
+  />
   <p
     className="ant-upload-text"
   >

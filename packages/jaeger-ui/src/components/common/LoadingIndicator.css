@@ -27,15 +27,25 @@ limitations under the License.
   }
 }
 
+@keyframes LoadingIndicator--spin {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
 .LoadingIndicator {
-  animation: LoadingIndicator--colorAnim 1s infinite alternate;
-  font-size: 36px;
+  animation:
+    LoadingIndicator--colorAnim 1s infinite alternate,
+    LoadingIndicator--spin 1.2s infinite linear;
   /* outline / stroke the loading indicator */
   text-shadow:
     -0.5px 0 rgba(0, 128, 128, 0.6),
     0 0.5px rgba(0, 128, 128, 0.6),
     0.5px 0 rgba(0, 128, 128, 0.6),
     0 -0.5px rgba(0, 128, 128, 0.6);
+
+  width: 42px;
+  height: 42px;
 }
 
 .LoadingIndicator.is-centered {
@@ -50,5 +60,6 @@ limitations under the License.
 }
 
 .LoadingIndicator.is-small {
-  font-size: 0.7em;
+  width: 32px;
+  height: 32px;
 }

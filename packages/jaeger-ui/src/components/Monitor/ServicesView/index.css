@@ -23,10 +23,20 @@ limitations under the License.
   font-weight: 800;
 }
 
+.span-kind-selector-header {
+  padding-left: 10px;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.span-kind-selector {
+  padding-left: 10px;
+}
+
 .operations-metrics-text {
   margin-top: 17px;
   margin-bottom: 14px;
-  font-size: 14;
+  font-size: 14px;
   font-weight: 400;
 }
 

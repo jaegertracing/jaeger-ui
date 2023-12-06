@@ -13,11 +13,11 @@
 // limitations under the License.
 
 /* eslint-disable import/no-extraneous-dependencies */
-import { defineConfig } from 'vite';
+import { PluginOption, defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import legacy from '@vitejs/plugin-legacy';
 import vitePluginImp from 'vite-plugin-imp';
-import visualizer from 'rollup-plugin-visualizer';
+import { visualizer } from 'rollup-plugin-visualizer';
 
 const proxyConfig = {
   target: 'http://localhost:16686',
@@ -33,13 +33,6 @@ export default defineConfig({
     __REACT_APP_GA_DEBUG__: JSON.stringify(process.env.REACT_APP_GA_DEBUG || ''),
     __REACT_APP_VSN_STATE__: JSON.stringify(process.env.REACT_APP_VSN_STATE || ''),
     __APP_ENVIRONMENT__: JSON.stringify(process.env.NODE_ENV || 'development'),
-  },
-  // Workaround an imports issue with antd v3 that causes an error in the production build.
-  // https://github.com/ant-design/ant-design/issues/19002
-  resolve: {
-    alias: {
-      '@ant-design/icons/lib/dist': '@ant-design/icons/lib/index.es.js',
-    },
   },
   plugins: [
     react({
@@ -64,40 +57,13 @@ export default defineConfig({
       exclude: ['lodash'],
     }),
     // Generate a bundle size breakdown.
-    visualizer(),
+    visualizer() as PluginOption,
   ],
   css: {
     preprocessorOptions: {
       less: {
         math: 'always',
         javascriptEnabled: true,
-        modifyVars: {
-          // Supply appropriate overrides to the Ant Design System.
-          '@primary-color': '#199',
-
-          '@font-size-base': '14px',
-          '@text-color-dark': '#e4e4e4',
-          '@text-color-secondary-dark': '#fff',
-
-          // Layout
-          '@layout-body-background': '#fff',
-          '@layout-header-background': '#404040',
-          '@layout-footer-background': '@layout-body-background',
-          '@layout-header-height': '48px',
-          '@layout-header-padding': '0 50px',
-          '@layout-footer-padding': '24px 50px',
-          '@layout-sider-background': '@layout-header-background',
-          '@layout-trigger-height': '48px',
-          '@layout-trigger-background': 'tint(@heading-color, 20%)',
-          '@layout-trigger-color': '#fff',
-          '@layout-zero-trigger-width': '36px',
-          '@layout-zero-trigger-height': '42px',
-
-          '@menu-dark-bg': '#151515',
-
-          // Table
-          '@table-row-hover-bg': '#e5f2f2',
-        },
       },
     },
   },

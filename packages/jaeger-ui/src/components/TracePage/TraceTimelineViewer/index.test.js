@@ -53,7 +53,7 @@ describe('<TraceTimelineViewer>', () => {
 
   beforeEach(() => {
     wrapper = shallow(<TraceTimelineViewerImpl {...props} />, options);
-    connectedWrapper = shallow(<TraceTimelineViewer {...props} />, options);
+    connectedWrapper = shallow(<TraceTimelineViewer store={options.context.store} {...props} />, options);
   });
 
   it('it does not explode', () => {

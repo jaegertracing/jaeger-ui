@@ -17,9 +17,7 @@ import { Button, InputRef } from 'antd';
 import _get from 'lodash/get';
 import _maxBy from 'lodash/maxBy';
 import _values from 'lodash/values';
-import { IoArrowBack } from 'react-icons/io5';
-import { IoIosFiling } from 'react-icons/io';
-import { MdKeyboardArrowRight } from 'react-icons/md';
+import { IoArrowBack, IoFileTrayFull, IoChevronForward } from 'react-icons/io5';
 import { Link } from 'react-router-dom';
 
 import AltViewOptions from './AltViewOptions';
@@ -174,9 +172,7 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
             role="switch"
             aria-checked={!slimView}
           >
-            <MdKeyboardArrowRight
-              className={`TracePageHeader--detailToggle ${!slimView ? 'is-expanded' : ''}`}
-            />
+            <IoChevronForward className={`TracePageHeader--detailToggle ${!slimView ? 'is-expanded' : ''}`} />
             {title}
           </a>
         ) : (
@@ -203,7 +199,7 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
         )}
         {showArchiveButton && (
           <Button className="ub-mr2 ub-flex ub-items-center" htmlType="button" onClick={onArchiveClicked}>
-            <IoIosFiling className="TracePageHeader--archiveIcon" />
+            <IoFileTrayFull className="TracePageHeader--archiveIcon" />
             Archive Trace
           </Button>
         )}

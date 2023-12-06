@@ -16,8 +16,7 @@ import * as React from 'react';
 import { Checkbox, Popover } from 'antd';
 import cx from 'classnames';
 import { TLayoutVertex } from '@jaegertracing/plexus/lib/types';
-import { MdVisibilityOff } from 'react-icons/md';
-import { IoLocate } from 'react-icons/io5';
+import { IoLocate, IoEyeOff } from 'react-icons/io5';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
 
@@ -334,7 +333,7 @@ export class UnconnectedDdgNodeContent extends React.PureComponent<TProps, TStat
           {!isFocalNode && (
             <a className="DdgNodeContent--actionsItem" onClick={this.hideVertex} role="button">
               <span className="DdgNodeContent--actionsItemIconWrapper">
-                <MdVisibilityOff />
+                <IoEyeOff />
               </span>
               <span className="DdgNodeContent--actionsItemText">Hide node</span>
             </a>

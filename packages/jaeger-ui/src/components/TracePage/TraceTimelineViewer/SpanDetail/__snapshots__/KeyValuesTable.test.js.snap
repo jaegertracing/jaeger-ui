@@ -25,18 +25,19 @@ exports[`<KeyValuesTable> renders the expected text for each span value 1`] = `
         "xss_link": "https://example.com with \\"quotes\\"",
       }
     }
-    shouldInitiallyExpand={[Function]}
+    shouldExpandNode={[Function]}
     style={
       Object {
         "basicChildStyle": "json-markup-child",
         "booleanValue": "json-markup-bool",
+        "collapseIcon": "json-markup-icon-collapse",
+        "collapsedContent": "json-markup-collapse-content",
         "container": "json-markup",
-        "expander": "json-markup-expander",
+        "expandIcon": "json-markup-icon-expand",
         "label": "json-markup-key",
         "nullValue": "json-markup-null",
         "numberValue": "json-markup-number",
         "otherValue": "json-markup-other",
-        "pointer": "_1MFti",
         "punctuation": "json-markup-puncuation",
         "stringValue": "json-markup-string",
         "undefinedValue": "json-markup-undefined",

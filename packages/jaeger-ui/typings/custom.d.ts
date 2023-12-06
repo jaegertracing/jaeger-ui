@@ -22,6 +22,7 @@ declare interface Window {
   __webpack_public_path__: string; // eslint-disable-line camelcase
   // For getting ui config
   getJaegerUiConfig?: () => Record<string, any>;
+  getJaegerStorageCapabilities?: () => Record<string, any>;
   getJaegerVersion?: () => Record<string, any>;
 }
 

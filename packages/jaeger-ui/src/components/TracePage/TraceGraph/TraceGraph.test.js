@@ -20,7 +20,7 @@ import calculateTraceDagEV from './calculateTraceDagEV';
 import TraceGraph, { setOnEdgePath } from './TraceGraph';
 import { MODE_SERVICE, MODE_TIME, MODE_SELFTIME } from './OpNode';
 
-const testTrace = require('./testTrace.json');
+import testTrace from './testTrace.json';
 
 const transformedTrace = transformTraceData(testTrace);
 const ev = calculateTraceDagEV(transformedTrace);

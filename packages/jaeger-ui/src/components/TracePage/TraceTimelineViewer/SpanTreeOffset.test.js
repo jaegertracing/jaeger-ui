@@ -14,8 +14,7 @@
 
 import { shallow } from 'enzyme';
 import React from 'react';
-import { FaChevronRight } from 'react-icons/fa';
-import { IoIosArrowDown } from 'react-icons/io';
+import { IoChevronForward, IoChevronDown } from 'react-icons/io5';
 
 import { mapDispatchToProps, mapStateToProps, UnconnectedSpanTreeOffset } from './SpanTreeOffset';
 import spanAncestorIdsSpy from '../../../utils/span-ancestor-ids';
@@ -108,25 +107,25 @@ describe('SpanTreeOffset', () => {
 
     it('does not render icon if props.span.hasChildren is false', () => {
       wrapper.setProps({ span: { ...props.span, hasChildren: false } });
-      expect(wrapper.find(FaChevronRight).length).toBe(0);
-      expect(wrapper.find(IoIosArrowDown).length).toBe(0);
+      expect(wrapper.find(IoChevronForward).length).toBe(0);
+      expect(wrapper.find(IoChevronDown).length).toBe(0);
     });
 
     it('does not render icon if props.span.hasChildren is true and showChildrenIcon is false', () => {
       wrapper.setProps({ showChildrenIcon: false });
-      expect(wrapper.find(FaChevronRight).length).toBe(0);
-      expect(wrapper.find(IoIosArrowDown).length).toBe(0);
+      expect(wrapper.find(IoChevronForward).length).toBe(0);
+      expect(wrapper.find(IoChevronDown).length).toBe(0);
     });
 
     it('renders IoChevronRight if props.span.hasChildren is true and props.childrenVisible is false', () => {
-      expect(wrapper.find(FaChevronRight).length).toBe(1);
-      expect(wrapper.find(IoIosArrowDown).length).toBe(0);
+      expect(wrapper.find(IoChevronForward).length).toBe(1);
+      expect(wrapper.find(IoChevronDown).length).toBe(0);
     });
 
     it('renders IoIosArrowDown if props.span.hasChildren is true and props.childrenVisible is true', () => {
       wrapper.setProps({ childrenVisible: true });
-      expect(wrapper.find(FaChevronRight).length).toBe(0);
-      expect(wrapper.find(IoIosArrowDown).length).toBe(1);
+      expect(wrapper.find(IoChevronForward).length).toBe(0);
+      expect(wrapper.find(IoChevronDown).length).toBe(1);
     });
 
     it('calls props.addHoverIndentGuideId on mouse enter', () => {

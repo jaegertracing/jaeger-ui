@@ -33,10 +33,10 @@ exports[`<Header> renders the hops selector if distanceToPathElems is provided 1
         onClick={[Function]}
         role="button"
       >
-        <ForwardRef(SearchOutlined)
+        <IoSearch
           className="DdgHeader--uiFindSearchIcon"
         />
-        <withRouter(Connect(UnconnectedUiFindInput))
+        <Connect(WithRouteProps)
           allowClear={true}
           forwardedRef={
             Object {
@@ -99,10 +99,10 @@ exports[`<Header> renders the operation selector iff a service is selected 1`] =
         onClick={[Function]}
         role="button"
       >
-        <ForwardRef(SearchOutlined)
+        <IoSearch
           className="DdgHeader--uiFindSearchIcon"
         />
-        <withRouter(Connect(UnconnectedUiFindInput))
+        <Connect(WithRouteProps)
           allowClear={true}
           forwardedRef={
             Object {
@@ -169,10 +169,10 @@ exports[`<Header> renders the operation selector iff a service is selected 2`] =
         onClick={[Function]}
         role="button"
       >
-        <ForwardRef(SearchOutlined)
+        <IoSearch
           className="DdgHeader--uiFindSearchIcon"
         />
-        <withRouter(Connect(UnconnectedUiFindInput))
+        <Connect(WithRouteProps)
           allowClear={true}
           forwardedRef={
             Object {
@@ -223,10 +223,10 @@ exports[`<Header> renders with minimal props 1`] = `
         onClick={[Function]}
         role="button"
       >
-        <ForwardRef(SearchOutlined)
+        <IoSearch
           className="DdgHeader--uiFindSearchIcon"
         />
-        <withRouter(Connect(UnconnectedUiFindInput))
+        <Connect(WithRouteProps)
           allowClear={true}
           forwardedRef={
             Object {

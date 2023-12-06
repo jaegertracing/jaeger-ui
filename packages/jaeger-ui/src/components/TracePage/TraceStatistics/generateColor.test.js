@@ -16,7 +16,7 @@ import generateColor from './generateColor';
 import transformTraceData from '../../../model/transform-trace-data';
 import { getColumnValuesSecondDropdown, getColumnValues } from './tableValues';
 
-const testTrace = require('./tableValuesTestTrace/testTrace.json');
+import testTrace from './tableValuesTestTrace/testTrace.json';
 
 const transformedTrace = transformTraceData(testTrace);
 

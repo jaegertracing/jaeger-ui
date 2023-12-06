@@ -38,7 +38,7 @@ import sanitizeOverFlowingChildren from './utils/sanitizeOverFlowingChildren';
  * At this point, it uses returningChildStartTime (startTime of spanC) to select another child that finished
  * immediately before the LFC's start.
  */
-export const computeCriticalPath = (
+const computeCriticalPath = (
   spanMap: Map<string, Span>,
   spanId: string,
   criticalPath: criticalPathSection[],
@@ -83,7 +83,7 @@ export const computeCriticalPath = (
   return criticalPath;
 };
 
-function TraceCriticalPath(trace: Trace) {
+function criticalPathForTrace(trace: Trace) {
   let criticalPath: criticalPathSection[] = [];
   // As spans are already sorted based on startTime first span is always rootSpan
   const rootSpanId = trace.spans[0].spanID;
@@ -93,13 +93,18 @@ function TraceCriticalPath(trace: Trace) {
       map.set(span.spanID, span);
       return map;
     }, new Map<string, Span>());
-    const refinedSpanMap = getChildOfSpans(spanMap);
-    const sanitizedSpanMap = sanitizeOverFlowingChildren(refinedSpanMap);
-    criticalPath = computeCriticalPath(sanitizedSpanMap, rootSpanId, criticalPath);
+    try {
+      const refinedSpanMap = getChildOfSpans(spanMap);
+      const sanitizedSpanMap = sanitizeOverFlowingChildren(refinedSpanMap);
+      criticalPath = computeCriticalPath(sanitizedSpanMap, rootSpanId, criticalPath);
+    } catch (error) {
+      /* eslint-disable no-console */
+      console.log('error while computing critical path for a trace', error);
+    }
   }
   return criticalPath;
 }
 
-const memoizedTraceCriticalPath = memoizeOne(TraceCriticalPath);
+const memoizedTraceCriticalPath = memoizeOne(criticalPathForTrace);
 
 export default memoizedTraceCriticalPath;

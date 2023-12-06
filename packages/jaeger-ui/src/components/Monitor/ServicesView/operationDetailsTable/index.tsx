@@ -16,7 +16,7 @@ import * as React from 'react';
 import isEqual from 'lodash/isEqual';
 import isArray from 'lodash/isArray';
 import { Table, Progress, Button, Tooltip, Col } from 'antd';
-import { InfoCircleOutlined } from '@ant-design/icons';
+import { IoInformationCircleOutline } from 'react-icons/io5';
 import REDGraph from './opsGraph';
 import LoadingIndicator from '../../../common/LoadingIndicator';
 import { MetricsReduxState, ServiceOpsMetrics } from '../../../../types/metrics';
@@ -112,9 +112,7 @@ export class OperationTableDetails extends React.PureComponent<TProps, TState> {
               error={error.opsLatencies}
             />
             <div className="table-graph-avg">
-              {typeof value === 'number' && row.dataPoints.service_operation_latencies.length > 0
-                ? formatTimeValue(value * 1000)
-                : ''}
+              {row.dataPoints.service_operation_latencies.length > 0 ? formatTimeValue(value * 1000) : ''}
             </div>
           </div>
         ),
@@ -133,9 +131,7 @@ export class OperationTableDetails extends React.PureComponent<TProps, TState> {
               error={error.opsCalls}
             />
             <div className="table-graph-avg">
-              {typeof value === 'number' && row.dataPoints.service_operation_call_rate.length > 0
-                ? `${formatValue(value)} req/s`
-                : ''}
+              {row.dataPoints.service_operation_call_rate.length > 0 ? `${formatValue(value)} req/s` : ''}
             </div>
           </div>
         ),
@@ -155,9 +151,7 @@ export class OperationTableDetails extends React.PureComponent<TProps, TState> {
               error={error.opsErrors}
             />
             <div className="table-graph-avg">
-              {typeof value === 'number' && row.dataPoints.service_operation_error_rate.length > 0
-                ? `${formatValue(value * 100)}%`
-                : ''}
+              {row.dataPoints.service_operation_error_rate.length > 0 ? `${formatValue(value * 100)}%` : ''}
             </div>
           </div>
         ),
@@ -172,7 +166,7 @@ export class OperationTableDetails extends React.PureComponent<TProps, TState> {
                 placement="top"
                 title="The result of multiplying avg. duration and requests per minute, showing the most used and slowest endpoints"
               >
-                <InfoCircleOutlined />
+                <IoInformationCircleOutline />
               </Tooltip>
             </span>
           </div>
@@ -203,20 +197,18 @@ export class OperationTableDetails extends React.PureComponent<TProps, TState> {
             );
           }
 
-          return {
-            children: (
-              <div className="column-container">
-                <Progress
-                  className="impact"
-                  percent={value * 100}
-                  strokeLinecap="square"
-                  strokeColor="#459798"
-                  showInfo={false}
-                />
-                <div className="view-trace-button">{viewTraceButton}</div>
-              </div>
-            ),
-          };
+          return (
+            <div className="column-container">
+              <Progress
+                className="impact"
+                percent={value * 100}
+                strokeLinecap="square"
+                strokeColor="#459798"
+                showInfo={false}
+              />
+              <div className="view-trace-button">{viewTraceButton}</div>
+            </div>
+          );
         },
       },
     ];

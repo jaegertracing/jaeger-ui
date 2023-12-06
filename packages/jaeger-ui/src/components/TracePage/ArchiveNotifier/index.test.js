@@ -15,7 +15,8 @@
 import React from 'react';
 import { mount, shallow } from 'enzyme';
 import { notification } from 'antd';
-import { ClockCircleOutlined, LoadingOutlined } from '@ant-design/icons';
+import { IoTimeOutline } from 'react-icons/io5';
+import LoadingIndicator from '../../common/LoadingIndicator';
 import ArchiveNotifier from './index';
 import { Details, Message } from '../../common/ErrorMessage';
 
@@ -26,10 +27,10 @@ jest.mock('antd', () => {
     __esModule: true, // Use it when dealing with esModules
     ...originalModule,
     notification: {
-      close: jest.fn(),
+      destroy: jest.fn(),
       info: jest.fn(),
       success: jest.fn(),
-      warn: jest.fn(),
+      warning: jest.fn(),
     },
   };
 });
@@ -61,7 +62,7 @@ describe('<ArchiveNotifier>', () => {
         key: 'ENotifiedState.Outcome',
         description: null,
         duration: null,
-        icon: <ClockCircleOutlined className="ArchiveNotifier--doneIcon" />,
+        icon: <IoTimeOutline className="ArchiveNotifier--doneIcon" />,
         message: 'This trace has been archived.',
         onClose: defaultProps.acknowledge,
       })
@@ -70,7 +71,7 @@ describe('<ArchiveNotifier>', () => {
 
   it('notification close() is called onUnmount', () => {
     wrapper.unmount();
-    expect(notification.close).toBeCalledWith('ENotifiedState.Outcome');
+    expect(notification.destroy).toBeCalledWith('ENotifiedState.Outcome');
   });
 
   it('notification close() is not called onUnmount of null state', () => {
@@ -79,7 +80,7 @@ describe('<ArchiveNotifier>', () => {
 
     expect(wrapper.state().notifiedState).toEqual(null);
     wrapper.unmount();
-    expect(notification.close).not.toBeCalled();
+    expect(notification.destroy).not.toBeCalled();
   });
 
   it('notification close() is not called onUnmount of isAcknowledged state', () => {
@@ -87,7 +88,7 @@ describe('<ArchiveNotifier>', () => {
     wrapper = mount(<ArchiveNotifier {...props} />);
 
     wrapper.unmount();
-    expect(notification.close).not.toBeCalled();
+    expect(notification.destroy).not.toBeCalled();
   });
 
   it('will throw on missing both isArchived and error from archivedState prop', () => {
@@ -127,7 +128,7 @@ describe('<ArchiveNotifier>', () => {
         key: 'ENotifiedState.Progress',
         description: null,
         duration: 0,
-        icon: <LoadingOutlined />,
+        icon: <LoadingIndicator />,
         message: 'Archiving trace...',
       })
     );
@@ -137,13 +138,13 @@ describe('<ArchiveNotifier>', () => {
     const props = { ...defaultProps, archivedState: { error: 'This is an error string' } };
     wrapper = mount(<ArchiveNotifier {...props} />);
 
-    expect(notification.warn).toBeCalledWith(
+    expect(notification.warning).toBeCalledWith(
       expect.objectContaining({
         key: 'ENotifiedState.Outcome',
         className: 'ArchiveNotifier--errorNotification',
         description: <Details error="This is an error string" wrap />,
         duration: null,
-        icon: <ClockCircleOutlined className="ArchiveNotifier--errorIcon" />,
+        icon: <IoTimeOutline className="ArchiveNotifier--errorIcon" />,
         message: <Message error="This is an error string" wrap />,
         onClose: props.acknowledge,
       })
@@ -157,13 +158,13 @@ describe('<ArchiveNotifier>', () => {
     const newProps = { ...props, archivedState: { isArchived: true } };
     wrapper.setProps(newProps);
 
-    expect(notification.close).toBeCalledWith('ENotifiedState.Progress');
+    expect(notification.destroy).toBeCalledWith('ENotifiedState.Progress');
   });
 
   it('will call notification.close on null state update', () => {
     const newProps = { ...defaultProps, archivedState: null };
     wrapper.setProps(newProps);
 
-    expect(notification.close).toBeCalledWith('ENotifiedState.Outcome');
+    expect(notification.destroy).toBeCalledWith('ENotifiedState.Outcome');
   });
 });

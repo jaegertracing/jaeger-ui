@@ -41,6 +41,16 @@ limitations under the License.
   float: right;
 }
 
+.SearchForm--submit:hover {
+  background-color: #fff;
+  float: right;
+}
+
+.SearchForm--submit:active {
+  background-color: #fff;
+  float: right;
+}
+
 .SearchForm--tagsHintInfo {
   padding-left: 1.7em;
 }

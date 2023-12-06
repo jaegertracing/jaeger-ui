@@ -20,6 +20,7 @@ import prefixUrl from '../../utils/prefix-url';
 import { MAX_LENGTH } from '../DeepDependencies/Graph/DdgNodeContent/constants';
 
 import { SearchQuery } from '../../types/search';
+import parseQuery from '../../utils/parseQuery';
 
 function eqEq(a: string | number | null | undefined, b: string | number | null | undefined) {
   return (a == null && b == null) || String(a) === String(b);
@@ -69,7 +70,7 @@ export function getUrl(query?: TUrlState) {
 export const getUrlState: (search: string) => TUrlState = memoizeOne(function getUrlState(
   search: string
 ): TUrlState {
-  const { traceID, span, ...rest } = queryString.parse(search);
+  const { traceID, span, ...rest } = parseQuery(search);
   const rv: TUrlState = { ...rest };
   const traceIDs = new Set(!traceID || Array.isArray(traceID) ? traceID : [traceID]);
   const spanLinks: Record<string, string> = {};

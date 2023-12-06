@@ -13,15 +13,14 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Input, InputRef } from 'antd';
+import { InputRef } from 'antd';
 import { Location, History as RouterHistory } from 'history';
 import _clamp from 'lodash/clamp';
 import _get from 'lodash/get';
 import _mapValues from 'lodash/mapValues';
 import _memoize from 'lodash/memoize';
-import { connect, Dispatch } from 'react-redux';
-import { match as Match } from 'react-router-dom';
-import { bindActionCreators } from 'redux';
+import { connect } from 'react-redux';
+import { bindActionCreators, Dispatch } from 'redux';
 
 import ArchiveNotifier from './ArchiveNotifier';
 import { actions as archiveActions } from './ArchiveNotifier/duck';
@@ -58,10 +57,11 @@ import updateUiFind from '../../utils/update-ui-find';
 import TraceStatistics from './TraceStatistics/index';
 import TraceSpanView from './TraceSpanView/index';
 import TraceFlamegraph from './TraceFlamegraph/index';
-import { TraceGraphConfig } from '../../types/config';
+import { StorageCapabilities, TraceGraphConfig } from '../../types/config';
 
 import './index.css';
 import memoizedTraceCriticalPath from './CriticalPath/index';
+import withRouteProps from '../../utils/withRouteProps';
 
 type TDispatchProps = {
   acknowledgeArchive: (id: string) => void;
@@ -73,11 +73,12 @@ type TDispatchProps = {
 type TOwnProps = {
   history: RouterHistory;
   location: Location;
-  match: Match<{ id: string }>;
+  params: { id: string };
 };
 
 type TReduxProps = {
   archiveEnabled: boolean;
+  storageCapabilities: StorageCapabilities | TNil;
   archiveTraceState: TraceArchive | TNil;
   criticalPathEnabled: boolean;
   embedded: null | EmbeddedState;
@@ -104,7 +105,7 @@ const VIEW_CHANGE_BASE = 0.005;
 const VIEW_CHANGE_FAST = 0.05;
 
 // export for tests
-export const shortcutConfig = {
+export const shortcutConfig: { [name: string]: [number, number] } = {
   panLeft: [-VIEW_CHANGE_BASE, -VIEW_CHANGE_BASE],
   panLeftFast: [-VIEW_CHANGE_FAST, -VIEW_CHANGE_FAST],
   panRight: [VIEW_CHANGE_BASE, VIEW_CHANGE_BASE],
@@ -326,6 +327,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
   render() {
     const {
       archiveEnabled,
+      storageCapabilities,
       archiveTraceState,
       criticalPathEnabled,
       embedded,
@@ -359,6 +361,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
     }
 
     const isEmbedded = Boolean(embedded);
+    const hasArchiveStorage = Boolean(storageCapabilities?.archiveStorage);
     const headerProps = {
       focusUiFindMatches: this.focusUiFindMatches,
       slimView,
@@ -380,7 +383,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
       ref: this._searchBar,
       resultCount: findCount,
       disableJsonView,
-      showArchiveButton: !isEmbedded && archiveEnabled,
+      showArchiveButton: !isEmbedded && archiveEnabled && hasArchiveStorage,
       showShortcutsHelp: !isEmbedded,
       showStandaloneLink: isEmbedded,
       showViewOptions: !isEmbedded,
@@ -439,12 +442,13 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
 
 // export for tests
 export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxProps {
-  const { id } = ownProps.match.params;
+  const { id } = ownProps.params;
   const { archive, config, embedded, router } = state;
   const { traces } = state.trace;
   const trace = id ? traces[id] : null;
   const archiveTraceState = id ? archive[id] : null;
   const archiveEnabled = Boolean(config.archiveEnabled);
+  const storageCapabilities = config.storageCapabilities;
   const { disableJsonView, criticalPathEnabled } = config;
   const { state: locationState } = router.location;
   const searchUrl = (locationState && locationState.fromSearch) || null;
@@ -453,6 +457,7 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
   return {
     ...extractUiFindFromState(state),
     archiveEnabled,
+    storageCapabilities,
     archiveTraceState,
     criticalPathEnabled,
     embedded,
@@ -472,4 +477,4 @@ export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchPro
   return { acknowledgeArchive, archiveTrace, fetchTrace, focusUiFindMatches };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(TracePageImpl);
+export default withRouteProps(connect(mapStateToProps, mapDispatchToProps)(TracePageImpl));

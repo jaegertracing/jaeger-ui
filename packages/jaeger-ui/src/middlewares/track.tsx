@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { Action } from 'redux-actions';
-import { Dispatch, Store } from 'react-redux';
+import { Dispatch, Store } from 'redux';
 
 import { middlewareHooks as searchHooks } from '../components/SearchTracePage/SearchForm.track';
 import { middlewareHooks as timelineHooks } from '../components/TracePage/TraceTimelineViewer/duck.track';
