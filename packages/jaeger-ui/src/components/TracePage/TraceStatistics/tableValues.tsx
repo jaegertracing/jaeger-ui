@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import memoizeOne from 'memoize-one';
-import * as _ from 'lodash';
+import _get from 'lodash/get';
 import DRange from 'drange';
 import { Trace, Span } from '../../../types/trace';
 import { ITableSpan } from './types';
@@ -115,7 +115,7 @@ function valueFirstDropdown(selectedTagKey: string, trace: Trace) {
   const allSpans = trace.spans;
   // all possibilities that can be displayed
   if (selectedTagKey === serviceName) {
-    const temp = _.chain(allSpans)
+    const temp = _get.chain(allSpans)
       .groupBy(x => x.process.serviceName)
       .map((value, key) => ({ key }))
       .uniq()

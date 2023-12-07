@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import _ from 'lodash';
+import _map from 'lodash/map';
 import { Trace } from '../../../types/trace';
 import { ITableSpan } from './types';
 
@@ -41,9 +41,9 @@ function getValueTagIsPicked(tableValue: ITableSpan[], trace: Trace, nameSelecto
   }
   availableTags = [...new Set(availableTags)];
 
-  const tags = _(availableTags).map('tags').flatten().value();
-  let tagKeys = _(tags).map('key').uniq().value();
-  tagKeys = _.filter(tagKeys, function calc(o) {
+  const tags = _map(availableTags).map('tags').flatten().value();
+  let tagKeys = _map(tags).map('key').uniq().value();
+  tagKeys = _map.filter(tagKeys, function calc(o) {
     return o !== nameSelectorTitle;
   });
   availableTags = [];
@@ -77,9 +77,9 @@ function getValueNoTagIsPicked(trace: Trace, nameSelectorTitle: string) {
 
 export function generateDropdownValue(trace: Trace) {
   const allSpans = trace.spans;
-  const tags = _(allSpans).map('tags').flatten().value();
-  const tagKeys = _(tags).map('key').uniq().value();
-  const values = _.concat(serviceName, operationName, tagKeys);
+  const tags = _map(allSpans).map('tags').flatten().value();
+  const tagKeys = _map(tags).map('key').uniq().value();
+  const values = _map.concat(serviceName, operationName, tagKeys);
   return values;
 }
 
