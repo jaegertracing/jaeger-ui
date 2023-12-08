@@ -1771,10 +1771,10 @@
   resolved "https://registry.yarnpkg.com/@pkgjs/parseargs/-/parseargs-0.11.0.tgz#a77ea742fab25775145434eb1d2328cf5013ac33"
   integrity sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==
 
-"@pyroscope/flamegraph@0.21.4":
-  version "0.21.4"
-  resolved "https://registry.yarnpkg.com/@pyroscope/flamegraph/-/flamegraph-0.21.4.tgz#4b185854ee50767d5279baa16b58a29f9fcb3de1"
-  integrity sha512-/wkTHhBNapnnuLWQ40PyHa1pz8jVMmiLYO12Ak7qq1JhgVEccE39XrQMTkcFlM4FdpqM4/1w6U7fm4xebUAzZw==
+"@pyroscope/flamegraph@0.35.6":
+  version "0.35.6"
+  resolved "https://registry.yarnpkg.com/@pyroscope/flamegraph/-/flamegraph-0.35.6.tgz#ac07abb2c9155a075ab6ccba9e1d08d6c07b6ba1"
+  integrity sha512-YNTNcF3Zb20gO7vbzPUmTOju8AF0p5XBw5eaPlOa8FxPIfUnYQ9sQ/8okde3wrZhYkEiUveo0dcHML6IEng4BA==
 
 "@rc-component/color-picker@~1.4.1":
   version "1.4.1"
