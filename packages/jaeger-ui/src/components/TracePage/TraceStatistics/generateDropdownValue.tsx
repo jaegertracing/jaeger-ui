@@ -12,10 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import _map from 'lodash/map';
-import _uniq from 'lodash/uniq';
-import _flatten from 'lodash/flatten';
-import _concat from 'lodash/concat';
+import _ from 'lodash';
 import { Trace } from '../../../types/trace';
 import { ITableSpan } from './types';
 
@@ -44,9 +41,9 @@ function getValueTagIsPicked(tableValue: ITableSpan[], trace: Trace, nameSelecto
   }
   availableTags = [...new Set(availableTags)];
 
-  const tags = _flatten(availableTags).map('tags').flatten().value();
-  let tagKeys = _uniq(tags).map('key').uniq().value();
-  tagKeys = _map.filter(tagKeys, function calc(o) {
+  const tags = _(availableTags).map('tags').flatten().value();
+  let tagKeys = _(tags).map('key').uniq().value();
+  tagKeys = _.filter(tagKeys, function calc(o) {
     return o !== nameSelectorTitle;
   });
   availableTags = [];
@@ -80,9 +77,9 @@ function getValueNoTagIsPicked(trace: Trace, nameSelectorTitle: string) {
 
 export function generateDropdownValue(trace: Trace) {
   const allSpans = trace.spans;
-  const tags = _flatten(allSpans).map('tags').flatten().value();
-  const tagKeys = _uniq(tags).map('key').uniq().value();
-  const values = _concat.concat(serviceName, operationName, tagKeys);
+  const tags = _(allSpans).map('tags').flatten().value();
+  const tagKeys = _(tags).map('key').uniq().value();
+  const values = _.concat(serviceName, operationName, tagKeys);
   return values;
 }
 
