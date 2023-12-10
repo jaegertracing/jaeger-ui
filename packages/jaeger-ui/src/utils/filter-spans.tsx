@@ -26,17 +26,18 @@ export default function filterSpans(textFilter: string, spans: Span[] | TNil) {
   // values with keys that include text in any one of the excludeKeys will be ignored
   const excludeKeys: string[] = [];
 
-  // split textFilter by whitespace, remove empty strings, and extract includeFilters and excludeKeys
-  textFilter
-    .split(/\s+/)
-    .filter(Boolean)
-    .forEach(w => {
-      if (w[0] === '-') {
-        excludeKeys.push(w.substr(1).toLowerCase());
-      } else {
-        includeFilters.push(w.toLowerCase());
-      }
-    });
+  // split textFilter by whitespace, but not that in double quotes, remove empty strings, and extract includeFilters and excludeKeys
+  const regex = /[^\s"]+|"([^"]*)"/g;
+  const match = textFilter.match(regex);
+  const results = match ? match.map(e => e.replace(/"(.*)"/, '$1')) : [];
+
+  results.filter(Boolean).forEach(w => {
+    if (w[0] === '-') {
+      excludeKeys.push(w.substr(1).toLowerCase());
+    } else {
+      includeFilters.push(w.toLowerCase());
+    }
+  });
 
   const isTextInFilters = (filters: Array<string>, text: string) =>
     filters.some(filter => text.toLowerCase().includes(filter));

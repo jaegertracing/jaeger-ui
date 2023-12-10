@@ -17,7 +17,7 @@ import { Col, Divider, Row, Tag } from 'antd';
 import { LocationDescriptor } from 'history';
 import { Link } from 'react-router-dom';
 
-import { sortBy } from 'lodash';
+import _sortBy from 'lodash/sortBy';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 
@@ -111,7 +111,7 @@ export default class ResultItem extends React.PureComponent<Props, State> {
             </Col>
             <Col span={16} className="ub-p2">
               <ul className="ub-list-reset" data-test={markers.SERVICE_TAGS}>
-                {sortBy(services, s => s.name).map(service => {
+                {_sortBy(services, s => s.name).map(service => {
                   const { name, numberOfSpans: count } = service;
                   return (
                     <li key={name} className="ub-inline-block ub-m1">

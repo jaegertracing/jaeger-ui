@@ -37,6 +37,7 @@ import {
   Points,
   ServiceMetricsObject,
   ServiceOpsMetrics,
+  spanKinds,
 } from '../../../types/metrics';
 import prefixUrl from '../../../utils/prefix-url';
 import { convertToTimeUnit, convertTimeUnitToShortTerm, getSuitableTimeUnit } from '../../../utils/date';
@@ -46,6 +47,7 @@ import { getConfigValue } from '../../../utils/config/get-config';
 import {
   trackSearchOperation,
   trackSelectService,
+  trackSelectSpanKind,
   trackSelectTimeframe,
   trackViewAllTraces,
 } from './index.track';
@@ -64,6 +66,7 @@ type TReduxProps = {
   servicesLoading: boolean;
   metrics: MetricsReduxState;
   selectedService: string;
+  selectedSpanKind: spanKinds;
   selectedTimeFrame: number;
 };
 
@@ -93,6 +96,13 @@ export const timeFrameOptions = [
   { label: 'Last 12 hours', value: 12 * oneHourInMilliSeconds },
   { label: 'Last 24 hours', value: 24 * oneHourInMilliSeconds },
   { label: 'Last 2 days', value: 48 * oneHourInMilliSeconds },
+];
+export const spanKindOptions = [
+  { label: 'Client', value: 'client' },
+  { label: 'Server', value: 'server' },
+  { label: 'Internal', value: 'internal' },
+  { label: 'Producer', value: 'producer' },
+  { label: 'Consumer', value: 'consumer' },
 ];
 
 // export for tests
@@ -166,9 +176,13 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TPropsWithIn
   }
 
   componentDidUpdate(prevProps: TProps) {
-    const { selectedService, selectedTimeFrame, services } = this.props;
+    const { selectedService, selectedSpanKind, selectedTimeFrame, services } = this.props;
 
-    if (prevProps.selectedService !== selectedService || prevProps.selectedTimeFrame !== selectedTimeFrame) {
+    if (
+      prevProps.selectedService !== selectedService ||
+      prevProps.selectedSpanKind !== selectedSpanKind ||
+      prevProps.selectedTimeFrame !== selectedTimeFrame
+    ) {
       this.fetchMetrics();
     } else if (!_isEqual(prevProps.services, services)) {
       this.fetchMetrics();
@@ -201,6 +215,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TPropsWithIn
   fetchMetrics() {
     const {
       selectedService,
+      selectedSpanKind,
       selectedTimeFrame,
       fetchAllServiceMetrics,
       fetchAggregatedServiceMetrics,
@@ -210,6 +225,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TPropsWithIn
 
     if (currentService) {
       this.endTime = Date.now();
+      store.set('lastAtmSearchSpanKind', selectedSpanKind);
       store.set('lastAtmSearchTimeframe', selectedTimeFrame);
       store.set('lastAtmSearchService', this.getSelectedService());
 
@@ -219,6 +235,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TPropsWithIn
         lookback: selectedTimeFrame,
         step: 60 * 1000,
         ratePer: 10 * 60 * 1000,
+        spanKind: selectedSpanKind,
       };
 
       fetchAllServiceMetrics(currentService, metricQueryPayload);
@@ -234,7 +251,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TPropsWithIn
   }
 
   render() {
-    const { services, metrics, selectedTimeFrame, servicesLoading } = this.props;
+    const { services, metrics, selectedSpanKind, selectedTimeFrame, servicesLoading } = this.props;
     const serviceLatencies = metrics.serviceMetrics ? metrics.serviceMetrics.service_latencies : null;
     const displayTimeUnit = calcDisplayTimeUnit(serviceLatencies);
     const serviceErrorRate = metrics.serviceMetrics ? metrics.serviceMetrics.service_error_rate : null;
@@ -267,7 +284,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TPropsWithIn
         <div className="service-view-container">
           <Row>
             <Col span={6}>
-              <h2 className="service-selector-header">Choose service</h2>
+              <h2 className="service-selector-header">Service</h2>
               <Field
                 onChange={(e, newValue: string) => trackSelectService(newValue)}
                 name="service"
@@ -283,6 +300,31 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TPropsWithIn
                 {services.map((service: string) => (
                   <Option key={service} value={service}>
                     {service}
+                  </Option>
+                ))}
+              </Field>
+            </Col>
+            <Col span={6}>
+              <h2 className="span-kind-selector-header">Span Kind</h2>
+              <Field
+                name="spanKind"
+                component={reduxFormFieldAdapter({ AntInputComponent: SearchableSelect })}
+                placeholder="Select A Span Kind"
+                onChange={(e, value: string) => {
+                  const { label } = spanKindOptions.find(option => option.value === value)!;
+                  trackSelectSpanKind(label);
+                }}
+                props={{
+                  className: 'span-kind-selector',
+                  defaultValue: 'server',
+                  value: selectedSpanKind,
+                  disabled: metrics.operationMetricsLoading,
+                  loading: metrics.operationMetricsLoading,
+                }}
+              >
+                {spanKindOptions.map(option => (
+                  <Option key={option.value} value={option.value}>
+                    {option.label}
                   </Option>
                 ))}
               </Field>
@@ -435,6 +477,8 @@ export function mapStateToProps(state: ReduxState): TReduxProps {
     servicesLoading: services.loading,
     metrics,
     selectedService: serviceFormSelector(state, 'service') || store.get('lastAtmSearchService'),
+    selectedSpanKind:
+      serviceFormSelector(state, 'spanKind') || store.get('lastAtmSearchSpanKind') || 'server',
     selectedTimeFrame:
       serviceFormSelector(state, 'timeframe') || store.get('lastAtmSearchTimeframe') || oneHourInMilliSeconds,
   };
