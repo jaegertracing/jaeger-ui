@@ -177,7 +177,7 @@ export function mapStateToProps(state) {
   let links;
   let nodes;
   if (dependencies && dependencies.length > 0) {
-    const formatted = formatDependenciesAsNodesAndLinks({ dependencies });
+    const formatted = formatDependenciesAsNodesAndLinks(dependencies);
     links = formatted.links;
     nodes = formatted.nodes;
   }
