@@ -46,12 +46,12 @@ function getValueTagIsPicked(tableValue: ITableSpan[], trace: Trace, nameSelecto
   availableTags = [...new Set(availableTags)];
 
   const tags = _map(availableTags, 'tags');
-  let tagKeys = _uniq(_map(_flatten(tags), 'key'));
-  tagKeys = _filter(tagKeys, o => o !== nameSelectorTitle);
+  let spansWithFilterTag = _uniq(_map(_flatten(tags), 'key'));
+  spansWithFilterTag = _filter(spansWithFilterTag, o => o !== nameSelectorTitle);
   availableTags = [];
   availableTags.push(serviceName);
   availableTags.push(operationName);
-  availableTags = availableTags.concat(tagKeys);
+  availableTags = availableTags.concat(spansWithFilterTag);
 
   return availableTags;
 }
