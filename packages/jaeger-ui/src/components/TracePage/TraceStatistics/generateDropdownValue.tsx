@@ -15,7 +15,6 @@
 import _map from 'lodash/map';
 import _flatten from 'lodash/flatten';
 import _uniq from 'lodash/uniq';
-import _filter from 'lodash/filter';
 import _concat from 'lodash/concat';
 import { Trace } from '../../../types/trace';
 import { ITableSpan } from './types';
@@ -24,11 +23,11 @@ const serviceName = 'Service Name';
 const operationName = 'Operation Name';
 
 /**
- * Used to get the values if no tag is picked from the first dropdown.
+ * Used to get the values if tag is picked from the first dropdown.
  */
 function getValueTagIsPicked(tableValue: ITableSpan[], trace: Trace, nameSelectorTitle: string) {
   const allSpans = trace.spans;
-  let availableTags = [];
+  let spansWithFilterTag = [];
 
   // add all Spans with this tag key
 
@@ -37,44 +36,44 @@ function getValueTagIsPicked(tableValue: ITableSpan[], trace: Trace, nameSelecto
       for (let j = 0; j < allSpans.length; j++) {
         for (let l = 0; l < allSpans[j].tags.length; l++) {
           if (nameSelectorTitle === allSpans[j].tags[l].key) {
-            availableTags.push(allSpans[j]);
+            spansWithFilterTag.push(allSpans[j]);
           }
         }
       }
     }
   }
-  availableTags = [...new Set(availableTags)];
+  spansWithFilterTag = [...new Set(spansWithFilterTag)];
 
-  const tags = _map(availableTags, 'tags');
-  let spansWithFilterTag = _uniq(_map(_flatten(tags), 'key'));
-  spansWithFilterTag = _filter(spansWithFilterTag, o => o !== nameSelectorTitle);
-  availableTags = [];
-  availableTags.push(serviceName);
-  availableTags.push(operationName);
-  availableTags = availableTags.concat(spansWithFilterTag);
+  const tags = spansWithFilterTag.map(o => o.tags);
+  let tagKeys = _uniq(_map(_flatten(tags), 'key'));
+  tagKeys = tagKeys.filter(o => o !== nameSelectorTitle);
+  spansWithFilterTag = [];
+  spansWithFilterTag.push(serviceName);
+  spansWithFilterTag.push(operationName);
+  spansWithFilterTag = spansWithFilterTag.concat(tagKeys);
 
-  return availableTags;
+  return spansWithFilterTag;
 }
 
 /**
  * Used to get the values if no tag is picked from the first dropdown.
  */
 function getValueNoTagIsPicked(trace: Trace, nameSelectorTitle: string) {
-  let availableTags = [];
+  let spansWithFilterTag = [];
   const allSpans = trace.spans;
   if (nameSelectorTitle === serviceName) {
-    availableTags.push(operationName);
+    spansWithFilterTag.push(operationName);
   } else {
-    availableTags.push(serviceName);
+    spansWithFilterTag.push(serviceName);
   }
   for (let i = 0; i < allSpans.length; i++) {
     for (let j = 0; j < allSpans[i].tags.length; j++) {
-      availableTags.push(allSpans[i].tags[j].key);
+      spansWithFilterTag.push(allSpans[i].tags[j].key);
     }
   }
-  availableTags = [...new Set(availableTags)];
+  spansWithFilterTag = [...new Set(spansWithFilterTag)];
 
-  return availableTags;
+  return spansWithFilterTag;
 }
 
 export function generateDropdownValue(trace: Trace) {
