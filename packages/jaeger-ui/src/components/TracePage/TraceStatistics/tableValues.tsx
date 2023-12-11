@@ -13,8 +13,7 @@
 // limitations under the License.
 
 import memoizeOne from 'memoize-one';
-import _groupBy from 'lodash/groupBy';
-import _uniq from 'lodash/uniq';
+import _uniqBy from 'lodash/uniqBy';
 import _map from 'lodash/map';
 import DRange from 'drange';
 import { Trace, Span } from '../../../types/trace';
@@ -117,21 +116,17 @@ function valueFirstDropdown(selectedTagKey: string, trace: Trace) {
   const allSpans = trace.spans;
   // all possibilities that can be displayed
   if (selectedTagKey === serviceName) {
-    const temp = _uniq(
-      _map(
-        _groupBy(allSpans, x => x.process.serviceName),
-        (value, key) => ({ key })
-      )
+    const temp = _map(
+      _uniqBy(allSpans, x => x.process.serviceName),
+      x => ({ key: x.process.serviceName })
     );
     for (let i = 0; i < temp.length; i++) {
       allDiffColumnValues.push(temp[i].key);
     }
   } else if (selectedTagKey === operationName) {
-    const temp = _uniq(
-      _map(
-        _groupBy(allSpans, x => x.operationName),
-        (value, key) => ({ key })
-      )
+    const temp = _map(
+      _uniqBy(allSpans, x => x.operationName),
+      x => ({ key: x.operationName })
     );
     for (let i = 0; i < temp.length; i++) {
       allDiffColumnValues.push(temp[i].key);
