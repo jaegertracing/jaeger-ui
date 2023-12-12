@@ -126,7 +126,7 @@ function valueFirstDropdown(selectedTagKey: string, trace: Trace) {
         }
       }
     }
-    allDiffColumnValues = [...new Set(allDiffColumnValues)];
+    allDiffColumnValues = _uniq(allDiffColumnValues);
   }
   // used to build the table
   const allTableValues = [];
@@ -436,7 +436,7 @@ function valueSecondDropdown(
       let newColumnValues = [] as any;
       // if second dropdown is no tag
       if (selectedTagKeySecond === serviceName || selectedTagKeySecond === operationName) {
-        diffNamesA = [...new Set(diffNamesA)];
+        diffNamesA = _uniq(diffNamesA);
         newColumnValues = buildDetail(
           diffNamesA,
           tempArray,
@@ -456,7 +456,7 @@ function valueSecondDropdown(
             }
           }
         }
-        diffNamesA = [...new Set(diffNamesA)];
+        diffNamesA = _uniq(diffNamesA);
         newColumnValues = buildDetail(
           diffNamesA,
           tempArray,

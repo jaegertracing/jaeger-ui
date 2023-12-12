@@ -12,10 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import _map from 'lodash/map';
 import _flatten from 'lodash/flatten';
 import _uniq from 'lodash/uniq';
-import _concat from 'lodash/concat';
 import { Trace } from '../../../types/trace';
 import { ITableSpan } from './types';
 
@@ -42,45 +40,39 @@ function getValueTagIsPicked(tableValue: ITableSpan[], trace: Trace, nameSelecto
       }
     }
   }
-  spansWithFilterTag = [...new Set(spansWithFilterTag)];
+  spansWithFilterTag = _uniq(spansWithFilterTag);
 
   const tags = spansWithFilterTag.map(o => o.tags);
-  let tagKeys = _uniq(_map(_flatten(tags), 'key'));
+  let tagKeys = _uniq(_flatten(tags).map(o => o.key));
   tagKeys = tagKeys.filter(o => o !== nameSelectorTitle);
-  spansWithFilterTag = [];
-  spansWithFilterTag.push(serviceName);
-  spansWithFilterTag.push(operationName);
-  spansWithFilterTag = spansWithFilterTag.concat(tagKeys);
 
-  return spansWithFilterTag;
+  return [serviceName, operationName, ...tagKeys];
 }
 
 /**
  * Used to get the values if no tag is picked from the first dropdown.
  */
 function getValueNoTagIsPicked(trace: Trace, nameSelectorTitle: string) {
-  let spansWithFilterTag = [];
+  const availableTags = [];
   const allSpans = trace.spans;
   if (nameSelectorTitle === serviceName) {
-    spansWithFilterTag.push(operationName);
+    availableTags.push(operationName);
   } else {
-    spansWithFilterTag.push(serviceName);
+    availableTags.push(serviceName);
   }
   for (let i = 0; i < allSpans.length; i++) {
     for (let j = 0; j < allSpans[i].tags.length; j++) {
-      spansWithFilterTag.push(allSpans[i].tags[j].key);
+      availableTags.push(allSpans[i].tags[j].key);
     }
   }
-  spansWithFilterTag = [...new Set(spansWithFilterTag)];
-
-  return spansWithFilterTag;
+  return _uniq(availableTags);
 }
 
 export function generateDropdownValue(trace: Trace) {
   const allSpans = trace.spans;
-  const tags = _flatten(_map(allSpans, 'tags'));
-  const tagKeys = _uniq(_map(tags, 'key'));
-  const values = _concat(serviceName, operationName, tagKeys);
+  const tags = _flatten(allSpans.map(o => o.tags));
+  const tagKeys = _uniq(tags.map(o => o.key));
+  const values = [serviceName, operationName, ...tagKeys];
   return values;
 }
 
