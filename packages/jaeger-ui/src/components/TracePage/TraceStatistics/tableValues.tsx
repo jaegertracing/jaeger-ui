@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import memoizeOne from 'memoize-one';
-import * as _ from 'lodash';
+import _uniq from 'lodash/uniq';
 import DRange from 'drange';
 import { Trace, Span } from '../../../types/trace';
 import { ITableSpan } from './types';
@@ -115,23 +115,9 @@ function valueFirstDropdown(selectedTagKey: string, trace: Trace) {
   const allSpans = trace.spans;
   // all possibilities that can be displayed
   if (selectedTagKey === serviceName) {
-    const temp = _.chain(allSpans)
-      .groupBy(x => x.process.serviceName)
-      .map((value, key) => ({ key }))
-      .uniq()
-      .value();
-    for (let i = 0; i < temp.length; i++) {
-      allDiffColumnValues.push(temp[i].key);
-    }
+    allDiffColumnValues = _uniq(allSpans.map(x => x.process.serviceName));
   } else if (selectedTagKey === operationName) {
-    const temp = _.chain(allSpans)
-      .groupBy(x => x.operationName)
-      .map((value, key) => ({ key }))
-      .uniq()
-      .value();
-    for (let i = 0; i < temp.length; i++) {
-      allDiffColumnValues.push(temp[i].key);
-    }
+    allDiffColumnValues = _uniq(allSpans.map(x => x.operationName));
   } else {
     for (let i = 0; i < allSpans.length; i++) {
       for (let j = 0; j < allSpans[i].tags.length; j++) {
@@ -140,7 +126,7 @@ function valueFirstDropdown(selectedTagKey: string, trace: Trace) {
         }
       }
     }
-    allDiffColumnValues = [...new Set(allDiffColumnValues)];
+    allDiffColumnValues = _uniq(allDiffColumnValues);
   }
   // used to build the table
   const allTableValues = [];
@@ -450,7 +436,7 @@ function valueSecondDropdown(
       let newColumnValues = [] as any;
       // if second dropdown is no tag
       if (selectedTagKeySecond === serviceName || selectedTagKeySecond === operationName) {
-        diffNamesA = [...new Set(diffNamesA)];
+        diffNamesA = _uniq(diffNamesA);
         newColumnValues = buildDetail(
           diffNamesA,
           tempArray,
@@ -470,7 +456,7 @@ function valueSecondDropdown(
             }
           }
         }
-        diffNamesA = [...new Set(diffNamesA)];
+        diffNamesA = _uniq(diffNamesA);
         newColumnValues = buildDetail(
           diffNamesA,
           tempArray,

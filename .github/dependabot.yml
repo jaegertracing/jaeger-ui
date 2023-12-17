@@ -5,7 +5,8 @@ updates:
     labels: [ "changelog:dependencies" ]
     directory: "/"
     schedule:
-      interval: "daily"
+      interval: "weekly"
+      day: "tuesday"
     # we have too many dependency PRs today to rebase automatically
     rebase-strategy: "disabled"
     groups:
@@ -38,5 +39,6 @@ updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "daily"
+      interval: "weekly"
+      day: "tuesday"
     labels: [ "changelog:dependencies" ]
