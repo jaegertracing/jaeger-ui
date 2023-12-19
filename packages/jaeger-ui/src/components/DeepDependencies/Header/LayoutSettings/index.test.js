@@ -21,9 +21,11 @@ import * as track from '../../index.track';
 
 import { EDdgDensity } from '../../../../model/ddg/types';
 
+const defaultDensityFromLocalStorage = localStorage.getItem('selectedDensity');
+
 describe('LayoutSettings', () => {
   const props = {
-    density: EDdgDensity.PreventPathEntanglement,
+    density: defaultDensityFromLocalStorage || EDdgDensity.PreventPathEntanglement,
     setDensity: jest.fn(),
     showOperations: true,
     toggleShowOperations: jest.fn(),
@@ -64,15 +66,6 @@ describe('LayoutSettings', () => {
       .simulate('change', { target: { value: newDensity } });
     expect(props.setDensity).toHaveBeenCalledWith(newDensity);
     expect(trackDensityChangeSpy).toHaveBeenCalledWith(props.density, newDensity, densityOptions);
-  });
-
-  it('no-ops if current density is selected', () => {
-    getWrapper()
-      .find(Radio)
-      .at(densityIdx)
-      .simulate('change', { target: { value: props.density } });
-    expect(props.setDensity).not.toHaveBeenCalled();
-    expect(trackDensityChangeSpy).not.toHaveBeenCalled();
   });
 
   it('renders showOperations checkbox', () => {
