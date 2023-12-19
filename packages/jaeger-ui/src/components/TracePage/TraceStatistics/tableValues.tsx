@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as _ from 'lodash';
+import memoizeOne from 'memoize-one';
+import _uniq from 'lodash/uniq';
 import DRange from 'drange';
 import { Trace, Span } from '../../../types/trace';
 import { ITableSpan } from './types';
@@ -20,6 +21,27 @@ import colorGenerator from '../../../utils/color-generator';
 
 const serviceName = 'Service Name';
 const operationName = 'Operation Name';
+
+function parentChildOfMap(allSpans: Span[]): Record<string, Span[]> {
+  const parentChildOfMap: Record<string, Span[]> = {};
+  allSpans.forEach(s => {
+    if (s.references) {
+      // Filter for CHILD_OF we don't want to calculate FOLLOWS_FROM (prod-cons)
+      const parentIDs = s.references.filter(r => r.refType === 'CHILD_OF').map(r => r.spanID);
+      parentIDs.forEach((pID: string) => {
+        parentChildOfMap[pID] = parentChildOfMap[pID] || [];
+        parentChildOfMap[pID].push(s);
+      });
+    }
+  });
+  return parentChildOfMap;
+}
+
+const memoizedParentChildOfMap = memoizeOne(parentChildOfMap);
+
+function getChildOfSpans(parentID: string, allSpans: Span[]): Span[] {
+  return memoizedParentChildOfMap(allSpans)[parentID] || [];
+}
 
 function computeSelfTime(span: Span, allSpans: Span[]): number {
   if (!span.hasChildren) return span.duration;
@@ -33,13 +55,7 @@ function computeSelfTime(span: Span, allSpans: Span[]): number {
   // To work around that, we multiply start/end times by 10 and subtract one from the end.
   // So instead of [1-10] we get [10-99]. This makes the intervals work like half-open.
   const spanRange = new DRange(10 * span.startTime, 10 * (span.startTime + span.duration) - 1);
-  // Only keep CHILD_OF spans. FOLLOWS_FROM spans do not block the parent.
-  const children = allSpans.filter(
-    each =>
-      span.childSpanIds.includes(each.spanID) &&
-      each.references[0].spanID === span.spanID &&
-      each.references[0].refType === 'CHILD_OF'
-  );
+  const children = getChildOfSpans(span.spanID, allSpans);
   children.forEach(child => {
     spanRange.subtract(10 * child.startTime, 10 * (child.startTime + child.duration) - 1);
   });
@@ -99,23 +115,9 @@ function valueFirstDropdown(selectedTagKey: string, trace: Trace) {
   const allSpans = trace.spans;
   // all possibilities that can be displayed
   if (selectedTagKey === serviceName) {
-    const temp = _.chain(allSpans)
-      .groupBy(x => x.process.serviceName)
-      .map((value, key) => ({ key }))
-      .uniq()
-      .value();
-    for (let i = 0; i < temp.length; i++) {
-      allDiffColumnValues.push(temp[i].key);
-    }
+    allDiffColumnValues = _uniq(allSpans.map(x => x.process.serviceName));
   } else if (selectedTagKey === operationName) {
-    const temp = _.chain(allSpans)
-      .groupBy(x => x.operationName)
-      .map((value, key) => ({ key }))
-      .uniq()
-      .value();
-    for (let i = 0; i < temp.length; i++) {
-      allDiffColumnValues.push(temp[i].key);
-    }
+    allDiffColumnValues = _uniq(allSpans.map(x => x.operationName));
   } else {
     for (let i = 0; i < allSpans.length; i++) {
       for (let j = 0; j < allSpans[i].tags.length; j++) {
@@ -124,7 +126,7 @@ function valueFirstDropdown(selectedTagKey: string, trace: Trace) {
         }
       }
     }
-    allDiffColumnValues = [...new Set(allDiffColumnValues)];
+    allDiffColumnValues = _uniq(allDiffColumnValues);
   }
   // used to build the table
   const allTableValues = [];
@@ -434,7 +436,7 @@ function valueSecondDropdown(
       let newColumnValues = [] as any;
       // if second dropdown is no tag
       if (selectedTagKeySecond === serviceName || selectedTagKeySecond === operationName) {
-        diffNamesA = [...new Set(diffNamesA)];
+        diffNamesA = _uniq(diffNamesA);
         newColumnValues = buildDetail(
           diffNamesA,
           tempArray,
@@ -454,7 +456,7 @@ function valueSecondDropdown(
             }
           }
         }
-        diffNamesA = [...new Set(diffNamesA)];
+        diffNamesA = _uniq(diffNamesA);
         newColumnValues = buildDetail(
           diffNamesA,
           tempArray,

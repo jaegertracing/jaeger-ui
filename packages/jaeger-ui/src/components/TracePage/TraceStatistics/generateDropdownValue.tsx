@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import _ from 'lodash';
+import _flatten from 'lodash/flatten';
+import _uniq from 'lodash/uniq';
 import { Trace } from '../../../types/trace';
 import { ITableSpan } from './types';
 
@@ -20,11 +21,11 @@ const serviceName = 'Service Name';
 const operationName = 'Operation Name';
 
 /**
- * Used to get the values if no tag is picked from the first dropdown.
+ * Used to get the values if tag is picked from the first dropdown.
  */
 function getValueTagIsPicked(tableValue: ITableSpan[], trace: Trace, nameSelectorTitle: string) {
   const allSpans = trace.spans;
-  let availableTags = [];
+  let spansWithFilterTag = [];
 
   // add all Spans with this tag key
 
@@ -33,32 +34,26 @@ function getValueTagIsPicked(tableValue: ITableSpan[], trace: Trace, nameSelecto
       for (let j = 0; j < allSpans.length; j++) {
         for (let l = 0; l < allSpans[j].tags.length; l++) {
           if (nameSelectorTitle === allSpans[j].tags[l].key) {
-            availableTags.push(allSpans[j]);
+            spansWithFilterTag.push(allSpans[j]);
           }
         }
       }
     }
   }
-  availableTags = [...new Set(availableTags)];
+  spansWithFilterTag = _uniq(spansWithFilterTag);
 
-  const tags = _(availableTags).map('tags').flatten().value();
-  let tagKeys = _(tags).map('key').uniq().value();
-  tagKeys = _.filter(tagKeys, function calc(o) {
-    return o !== nameSelectorTitle;
-  });
-  availableTags = [];
-  availableTags.push(serviceName);
-  availableTags.push(operationName);
-  availableTags = availableTags.concat(tagKeys);
+  const tags = spansWithFilterTag.map(o => o.tags);
+  let tagKeys = _uniq(_flatten(tags).map(o => o.key));
+  tagKeys = tagKeys.filter(o => o !== nameSelectorTitle);
 
-  return availableTags;
+  return [serviceName, operationName, ...tagKeys];
 }
 
 /**
  * Used to get the values if no tag is picked from the first dropdown.
  */
 function getValueNoTagIsPicked(trace: Trace, nameSelectorTitle: string) {
-  let availableTags = [];
+  const availableTags = [];
   const allSpans = trace.spans;
   if (nameSelectorTitle === serviceName) {
     availableTags.push(operationName);
@@ -70,16 +65,14 @@ function getValueNoTagIsPicked(trace: Trace, nameSelectorTitle: string) {
       availableTags.push(allSpans[i].tags[j].key);
     }
   }
-  availableTags = [...new Set(availableTags)];
-
-  return availableTags;
+  return _uniq(availableTags);
 }
 
 export function generateDropdownValue(trace: Trace) {
   const allSpans = trace.spans;
-  const tags = _(allSpans).map('tags').flatten().value();
-  const tagKeys = _(tags).map('key').uniq().value();
-  const values = _.concat(serviceName, operationName, tagKeys);
+  const tags = _flatten(allSpans.map(o => o.tags));
+  const tagKeys = _uniq(tags.map(o => o.key));
+  const values = [serviceName, operationName, ...tagKeys];
   return values;
 }
 
