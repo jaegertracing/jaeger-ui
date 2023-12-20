@@ -79,7 +79,7 @@ export default class LayoutSettings extends React.PureComponent<TProps> {
     const storedDensity = localStorage.getItem(LayoutSettings.DEFAULT_DENSITY);
     if (storedDensity && densityOptions.some(option => option.option === storedDensity)) {
       // Set the stored density as the default if it's a valid option
-    this.props.setDensity(storedDensity as EDdgDensity);
+      this.props.setDensity(storedDensity as EDdgDensity);
     }
   }
 
