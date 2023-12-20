@@ -66,7 +66,8 @@ export function round2(percent: number) {
 
 export default class OpNode extends React.PureComponent<Props> {
   render() {
-    const { count, errors, time, percent, selfTime, percentSelfTime, operation, service, mode } = this.props;
+    const { count, errors, time, totalTime, percent, selfTime, percentSelfTime, operation, service, mode } =
+      this.props;
 
     // Spans over 20 % time are full red - we have probably to reconsider better approach
     let backgroundColor;
@@ -99,7 +100,7 @@ export default class OpNode extends React.PureComponent<Props> {
                 tooltipTitle="Copy label"
               />
             </td>
-            <td className="OpNode--metricCell OpNode--avg">{round2(time / 1000 / count)} ms</td>
+            <td className="OpNode--metricCell OpNode--avg">{round2(totalTime / 1000 / count)} ms</td>
           </tr>
           <tr>
             <td className="OpNode--metricCell OpNode--time">

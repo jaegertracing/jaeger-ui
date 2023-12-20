@@ -24,6 +24,7 @@ export type TSumSpan = {
   percentSelfTime: number;
   selfTime: number;
   time: number;
+  totalTime: number;
 };
 
 export type TEv = {

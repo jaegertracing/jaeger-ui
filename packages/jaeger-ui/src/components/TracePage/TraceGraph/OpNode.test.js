@@ -35,6 +35,7 @@ describe('<OpNode>', () => {
       selfTime: 180000,
       service: 'service1',
       time: 200000,
+      totalTime: 200000,
     };
     wrapper = shallow(<OpNode {...props} mode={mode} />);
   });

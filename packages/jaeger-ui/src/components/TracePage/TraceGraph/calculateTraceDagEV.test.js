@@ -19,7 +19,7 @@ import testTrace from './testTrace.json';
 
 const transformedTrace = transformTraceData(testTrace);
 
-function assertData(nodes, service, operation, count, errors, time, percent, selfTime) {
+function assertData(nodes, service, operation, count, errors, time, totalTime, percent, selfTime) {
   const d = nodes.find(({ data: n }) => n.service === service && n.operation === operation).data;
   expect(d).toBeDefined();
   expect(d.count).toBe(count);
@@ -34,18 +34,18 @@ describe('calculateTraceDagEV', () => {
     const traceDag = calculateTraceDagEV(transformedTrace);
     const { vertices: nodes } = traceDag;
     expect(nodes.length).toBe(9);
-    assertData(nodes, 'service1', 'op1', 1, 0, 390, 39, 224);
+    assertData(nodes, 'service1', 'op1', 1, 0, 390, 390, 39, 224);
     // accumulate data (count,times)
-    assertData(nodes, 'service1', 'op2', 2, 1, 70, 7, 70);
+    assertData(nodes, 'service1', 'op2', 2, 1, 70, 70, 7, 70);
     // self-time is substracted from child
-    assertData(nodes, 'service1', 'op3', 1, 0, 66, 6.6, 46);
-    assertData(nodes, 'service2', 'op1', 1, 0, 20, 2, 2);
-    assertData(nodes, 'service2', 'op2', 1, 0, 18, 1.8, 18);
+    assertData(nodes, 'service1', 'op3', 1, 0, 66, 66, 6.6, 46);
+    assertData(nodes, 'service2', 'op1', 1, 0, 20, 20, 2, 2);
+    assertData(nodes, 'service2', 'op2', 1, 0, 18, 18, 1.8, 18);
     // follows_from relation will not influence self-time
-    assertData(nodes, 'service1', 'op4', 1, 0, 20, 2, 20);
-    assertData(nodes, 'service2', 'op3', 1, 0, 200, 20, 200);
+    assertData(nodes, 'service1', 'op4', 1, 0, 20, 20, 2, 20);
+    assertData(nodes, 'service2', 'op3', 1, 0, 200, 200, 20, 200);
     // fork-join self-times are calculated correctly (self-time drange)
-    assertData(nodes, 'service1', 'op6', 1, 0, 10, 1, 1);
-    assertData(nodes, 'service1', 'op7', 2, 0, 17, 1.7, 17);
+    assertData(nodes, 'service1', 'op6', 1, 0, 10, 10, 1, 1);
+    assertData(nodes, 'service1', 'op7', 2, 0, 9, 17, 0.9, 9);
   });
 });
