@@ -83,7 +83,8 @@ export default class LayoutSettings extends React.PureComponent<TProps> {
     }
   }
 
-  private static readonly DEFAULT_DENSITY = 'selectedDensity';
+  // key used to store density selection in local storage
+  private static readonly STORED_DENSITY_KEY = 'ddg.layout.density';
   
   private updateDensity = (event: RadioChangeEvent) => {
     const { density: prevDensity } = this.props;
