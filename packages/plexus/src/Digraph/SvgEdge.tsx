@@ -26,6 +26,7 @@ type TProps<U = {}> = {
   markerStartId?: string;
   renderUtils: TRendererUtils;
   setOnEdge?: TSetProps<(edge: TLayoutEdge<U>, utils: TRendererUtils) => TAnyProps | null>;
+  label?: string;
 };
 
 function makeIriRef(renderUtils: TRendererUtils, localId: string | undefined) {
@@ -47,11 +48,23 @@ function makePathD(points: [number, number][]) {
   return dArr.join(' ');
 }
 
+function computeLabelCoord(pathPoints: [number, number][], label?: string | undefined) {
+  const [startX, startY] = pathPoints[0];
+  const [endX, endY] = pathPoints[pathPoints.length - 1];
+
+  const xOffset = (label?.length ?? 0) * 5;
+  const labelX = (startX + endX) / 2 - xOffset;
+  const labelY = (startY + endY) / 2;
+
+  return { labelX, labelY };
+}
+
 export default class SvgEdge<U = {}> extends React.PureComponent<TProps<U>> {
   makePathD = memoizeOne(makePathD);
 
   render() {
-    const { getClassName, layoutEdge, markerEndId, markerStartId, renderUtils, setOnEdge } = this.props;
+    const { getClassName, layoutEdge, markerEndId, markerStartId, renderUtils, setOnEdge, label } =
+      this.props;
     const { pathPoints } = layoutEdge;
     const d = makePathD(pathPoints);
     const markerEnd = makeIriRef(renderUtils, markerEndId);
@@ -62,15 +75,26 @@ export default class SvgEdge<U = {}> extends React.PureComponent<TProps<U>> {
       },
       getProps(setOnEdge, layoutEdge, renderUtils)
     );
+
+    const { labelX, labelY } = computeLabelCoord(pathPoints, label);
+
     return (
-      <path
-        d={d}
-        fill="none"
-        vectorEffect="non-scaling-stroke"
-        markerEnd={markerEnd}
-        markerStart={markerStart}
-        {...customProps}
-      />
+      <g>
+        <path
+          d={d}
+          fill="none"
+          vectorEffect="non-scaling-stroke"
+          markerEnd={markerEnd}
+          markerStart={markerStart}
+          {...customProps}
+        />
+
+        {label && (
+          <text x={labelX} y={labelY} fill="#000" fontSize="1rem" fontWeight="bold">
+            {label}
+          </text>
+        )}
+      </g>
     );
   }
 }

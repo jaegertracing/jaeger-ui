@@ -21,6 +21,7 @@ import {
   getLoopbackInterval,
   yAxisTickFormat,
   timeFrameOptions,
+  spanKindOptions,
 } from '.';
 import LoadingIndicator from '../../common/LoadingIndicator';
 import MonitorATMEmptyState from '../EmptyState';
@@ -292,10 +293,12 @@ describe('<MonitorATMServicesView>', () => {
   it('Should track all events', () => {
     const trackSelectServiceSpy = jest.spyOn(track, 'trackSelectService');
     const trackViewAllTracesSpy = jest.spyOn(track, 'trackViewAllTraces');
+    const trackSelectSpanKindSpy = jest.spyOn(track, 'trackSelectSpanKind');
     const trackSelectTimeframeSpy = jest.spyOn(track, 'trackSelectTimeframe');
     const trackSearchOperationSpy = jest.spyOn(track, 'trackSearchOperation');
 
     const newValue = 'newValue';
+    const [spanKindOption] = spanKindOptions;
     const [timeFrameOption] = timeFrameOptions;
 
     wrapper.setProps({
@@ -308,6 +311,9 @@ describe('<MonitorATMServicesView>', () => {
     wrapper.find('Field').first().simulate('change', null, newValue);
     expect(trackSelectServiceSpy).toHaveBeenCalledWith(newValue);
 
+    wrapper.find({ name: 'spanKind' }).simulate('change', null, spanKindOption.value);
+    expect(trackSelectSpanKindSpy).toHaveBeenCalledWith(spanKindOption.label);
+
     wrapper.find('Field').last().simulate('change', null, timeFrameOption.value);
     expect(trackSelectTimeframeSpy).toHaveBeenCalledWith(timeFrameOption.label);
 
@@ -316,6 +322,7 @@ describe('<MonitorATMServicesView>', () => {
 
     trackSelectServiceSpy.mockReset();
     trackViewAllTracesSpy.mockReset();
+    trackSelectSpanKindSpy.mockReset();
     trackSelectTimeframeSpy.mockReset();
     trackSearchOperationSpy.mockReset();
   });
@@ -361,6 +368,7 @@ describe('mapStateToProps()', () => {
       metrics: originInitialState,
       services: [],
       selectedService: 's1',
+      selectedSpanKind: 'server',
       selectedTimeFrame: 3600000,
     });
   });

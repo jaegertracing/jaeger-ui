@@ -15,7 +15,7 @@
 import React, { Component } from 'react';
 import { InteractiveForceGraph, ForceGraphNode } from 'react-vis-force';
 import { window } from 'global';
-import { debounce } from 'lodash';
+import _debounce from 'lodash/debounce';
 import ForceGraphArrowLink from './ForceGraphArrowLink';
 
 import { nodesPropTypes, linksPropTypes } from '../../propTypes/dependencies';
@@ -39,7 +39,7 @@ export default class DependencyForceGraph extends Component {
 
   componentDidMount() {
     this.onResize();
-    this.debouncedResize = debounce((...args) => this.onResize(...args), 50);
+    this.debouncedResize = _debounce((...args) => this.onResize(...args), 50);
     window.addEventListener('resize', this.debouncedResize);
   }
 
