@@ -76,7 +76,7 @@ export default class LayoutSettings extends React.PureComponent<TProps> {
 
   componentDidMount() {
     // Check local storage for previously selected density
-    const storedDensity = localStorage.getItem(LayoutSettings.DEFAULT_DENSITY);
+    const storedDensity = localStorage.getItem(LayoutSettings.STORED_DENSITY_KEY);
     if (storedDensity && densityOptions.some(option => option.option === storedDensity)) {
       // Set the stored density as the default if it's a valid option
       this.props.setDensity(storedDensity as EDdgDensity);
@@ -93,7 +93,7 @@ export default class LayoutSettings extends React.PureComponent<TProps> {
     if (prevDensity === nextDensity) return;
 
     // Save the selected density in local storage
-    localStorage.setItem(LayoutSettings.DEFAULT_DENSITY, nextDensity);
+    localStorage.setItem(LayoutSettings.STORED_DENSITY_KEY, nextDensity);
 
     trackDensityChange(prevDensity, nextDensity, densityOptions);
     this.props.setDensity(nextDensity);

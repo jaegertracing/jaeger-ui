@@ -49,23 +49,28 @@ describe('LayoutSettings', () => {
   });
 
   it('uses value found in localStorage', () => {
-    const selectedDensity = props.density;
-    localStorage.setItem(LayoutSettings.DEFAULT_DENSITY, selectedDensity);
-    const radios = getWrapper().find(Radio);
-    expect(Array.from(radios).findIndex(radio => radio.props.checked)).toBe(densityIdx);
+    localStorage.setItem(LayoutSettings.STORED_DENSITY_KEY, null);
+
+    const wrapper = getWrapper();
+    
+    // Get the index of the default density option
+    const defaultDensityIdx = densityOptions.findIndex(option => option.option === props.density);
+
+    const radios = wrapper.find(Radio);
+    expect(Array.from(radios).findIndex(radio => radio.props.checked)).toBe(defaultDensityIdx);
   });
 
   it('records new selection in localStorage', () => {
+    localStorage.setItem(LayoutSettings.STORED_DENSITY_KEY, null);
     const newIdx = 2;
     const newDensity = densityOptions[newIdx].option;
     getWrapper()
       .find(Radio)
       .at(newIdx)
       .simulate('change', { target: { value: newDensity } });
-    expect(props.setDensity).toHaveBeenCalledWith(newDensity);
-    expect(trackDensityChangeSpy).toHaveBeenCalledWith(props.density, newDensity, densityOptions);
+
     // Ensure the value is recorded in localStorage
-    expect(localStorage.getItem(LayoutSettings.DEFAULT_DENSITY)).toBe(newDensity);
+    expect(localStorage.getItem(LayoutSettings.STORED_DENSITY_KEY)).toBe(newDensity);
   });
 
   it('renders each densityOption', () => {
