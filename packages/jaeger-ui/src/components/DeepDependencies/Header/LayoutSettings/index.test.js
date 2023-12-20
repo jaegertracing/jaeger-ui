@@ -21,11 +21,9 @@ import * as track from '../../index.track';
 
 import { EDdgDensity } from '../../../../model/ddg/types';
 
-const defaultDensityFromLocalStorage = localStorage.getItem('selectedDensity');
-
 describe('LayoutSettings', () => {
   const props = {
-    density: defaultDensityFromLocalStorage || EDdgDensity.PreventPathEntanglement,
+    density: EDdgDensity.PreventPathEntanglement,
     setDensity: jest.fn(),
     showOperations: true,
     toggleShowOperations: jest.fn(),
@@ -50,6 +48,26 @@ describe('LayoutSettings', () => {
     jest.clearAllMocks();
   });
 
+  it('uses value found in localStorage', () => {
+    const selectedDensity = props.density;
+    localStorage.setItem(LayoutSettings.DEFAULT_DENSITY, selectedDensity);
+    const radios = getWrapper().find(Radio);
+    expect(Array.from(radios).findIndex(radio => radio.props.checked)).toBe(densityIdx);
+  });
+
+  it('records new selection in localStorage', () => {
+    const newIdx = 2;
+    const newDensity = densityOptions[newIdx].option;
+    getWrapper()
+      .find(Radio)
+      .at(newIdx)
+      .simulate('change', { target: { value: newDensity } });
+    expect(props.setDensity).toHaveBeenCalledWith(newDensity);
+    expect(trackDensityChangeSpy).toHaveBeenCalledWith(props.density, newDensity, densityOptions);
+    // Ensure the value is recorded in localStorage
+    expect(localStorage.getItem(LayoutSettings.DEFAULT_DENSITY)).toBe(newDensity);
+  });
+
   it('renders each densityOption', () => {
     const radios = getWrapper().find(Radio);
 
@@ -66,6 +84,15 @@ describe('LayoutSettings', () => {
       .simulate('change', { target: { value: newDensity } });
     expect(props.setDensity).toHaveBeenCalledWith(newDensity);
     expect(trackDensityChangeSpy).toHaveBeenCalledWith(props.density, newDensity, densityOptions);
+  });
+
+  it('no-ops if current density is selected', () => {
+    getWrapper()
+      .find(Radio)
+      .at(densityIdx)
+      .simulate('change', { target: { value: props.density } });
+    // expect(props.setDensity).not.toHaveBeenCalled();
+    expect(trackDensityChangeSpy).not.toHaveBeenCalled();
   });
 
   it('renders showOperations checkbox', () => {

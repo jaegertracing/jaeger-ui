@@ -73,15 +73,18 @@ export const densityOptions = [
 ];
 
 export default class LayoutSettings extends React.PureComponent<TProps> {
+
   componentDidMount() {
     // Check local storage for previously selected density
-    const storedDensity = localStorage.getItem('selectedDensity');
+    const storedDensity = localStorage.getItem(LayoutSettings.DEFAULT_DENSITY);
     if (storedDensity && densityOptions.some(option => option.option === storedDensity)) {
       // Set the stored density as the default if it's a valid option
-      this.props.setDensity(storedDensity as EDdgDensity);
+    this.props.setDensity(storedDensity as EDdgDensity);
     }
   }
 
+  private static readonly DEFAULT_DENSITY = 'selectedDensity';
+  
   private updateDensity = (event: RadioChangeEvent) => {
     const { density: prevDensity } = this.props;
     const { value: nextDensity } = event.target;
@@ -89,7 +92,7 @@ export default class LayoutSettings extends React.PureComponent<TProps> {
     if (prevDensity === nextDensity) return;
 
     // Save the selected density in local storage
-    localStorage.setItem('selectedDensity', nextDensity);
+    localStorage.setItem(LayoutSettings.DEFAULT_DENSITY, nextDensity);
 
     trackDensityChange(prevDensity, nextDensity, densityOptions);
     this.props.setDensity(nextDensity);
