@@ -52,7 +52,7 @@ describe('LayoutSettings', () => {
     localStorage.setItem(LayoutSettings.STORED_DENSITY_KEY, null);
 
     const wrapper = getWrapper();
-    
+
     // Get the index of the default density option
     const defaultDensityIdx = densityOptions.findIndex(option => option.option === props.density);
 
@@ -92,11 +92,12 @@ describe('LayoutSettings', () => {
   });
 
   it('no-ops if current density is selected', () => {
+    localStorage.setItem(LayoutSettings.STORED_DENSITY_KEY, null);
     getWrapper()
       .find(Radio)
       .at(densityIdx)
       .simulate('change', { target: { value: props.density } });
-    // expect(props.setDensity).not.toHaveBeenCalled();
+    expect(props.setDensity).not.toHaveBeenCalled();
     expect(trackDensityChangeSpy).not.toHaveBeenCalled();
   });
 
