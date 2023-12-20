@@ -73,7 +73,6 @@ export const densityOptions = [
 ];
 
 export default class LayoutSettings extends React.PureComponent<TProps> {
-
   componentDidMount() {
     // Check local storage for previously selected density
     const storedDensity = localStorage.getItem(LayoutSettings.STORED_DENSITY_KEY);
@@ -85,7 +84,7 @@ export default class LayoutSettings extends React.PureComponent<TProps> {
 
   // key used to store density selection in local storage
   private static readonly STORED_DENSITY_KEY = 'ddg.layout.density';
-  
+
   private updateDensity = (event: RadioChangeEvent) => {
     const { density: prevDensity } = this.props;
     const { value: nextDensity } = event.target;
