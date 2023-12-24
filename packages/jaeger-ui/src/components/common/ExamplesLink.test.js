@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import '@testing-library/jest-dom';
 
 import ExamplesLink from './ExamplesLink';
 
@@ -25,45 +26,49 @@ describe('ExamplesLink', () => {
     {
       traceID: 'bar',
     },
-    {
-      traceID: 'baz',
-    },
   ];
+
   const spanLinks = traceLinks.map(({ traceID }, i) => ({
     traceID: `${traceID}${i}`,
     spanIDs: new Array(i + 1).fill('spanID').map((str, j) => `${str}${i}${j}`),
   }));
 
+  const expectedTraceParams = 'traceID=foo&traceID=bar';
+  const expectedSpanParams = 'span=spanID00%40foo0&span=spanID10%20spanID11%40bar1';
+
   it('renders null when props.examples is absent', () => {
-    expect(shallow(<ExamplesLink />).type()).toBe(null);
+    render(<ExamplesLink />);
+    expect(screen.queryByRole('link')).toBeNull();
   });
 
   it('renders null when props.examples is empty', () => {
-    expect(shallow(<ExamplesLink examples={[]} />).type()).toBe(null);
+    render(<ExamplesLink examples={[]} />);
+    expect(screen.queryByRole('link')).toBeNull();
   });
 
-  it('renders as expected when given trace links', () => {
-    expect(shallow(<ExamplesLink examples={traceLinks} />)).toMatchSnapshot();
+  it('renders correctly when given trace links', () => {
+    render(<ExamplesLink examples={traceLinks} />);
+    expect(screen.getByRole('link')).toHaveAttribute('href', `/search?${expectedTraceParams}`);
   });
 
   it('renders as expected when given span links', () => {
-    expect(shallow(<ExamplesLink examples={spanLinks} />)).toMatchSnapshot();
+    render(<ExamplesLink examples={spanLinks} />);
+    expect(screen.getByRole('link')).toHaveAttribute('href', `/search?${expectedSpanParams}`);
   });
 
   it('renders as expected when given both span and trace links', () => {
-    expect(shallow(<ExamplesLink examples={spanLinks.concat(traceLinks)} />)).toMatchSnapshot();
+    render(<ExamplesLink examples={spanLinks.concat(traceLinks)} />);
+    expect(screen.getByRole('link')).toHaveAttribute(
+      'href',
+      `/search?${expectedSpanParams}&${expectedTraceParams}`
+    );
   });
 
   it('renders label text iff props.includeText is true', () => {
-    expect(
-      shallow(<ExamplesLink examples={traceLinks} />)
-        .find('a')
-        .props().children[0]
-    ).toBe(undefined);
-    expect(
-      shallow(<ExamplesLink examples={traceLinks} includeText />)
-        .find('a')
-        .props().children[0]
-    ).toBe('Examples ');
+    render(<ExamplesLink examples={traceLinks} />);
+    expect(screen.queryByText('Examples')).toBeNull();
+
+    render(<ExamplesLink examples={traceLinks} includeText />);
+    expect(screen.getByText('Examples')).toBeInTheDocument();
   });
 });
