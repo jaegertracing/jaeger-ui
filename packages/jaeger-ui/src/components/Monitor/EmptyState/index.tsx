@@ -22,7 +22,7 @@ import monitorImg from './media/monitor.png';
 export default class MonitorATMEmptyState extends React.PureComponent {
   config: MonitorEmptyStateConfig;
 
-  constructor(props: any) {
+  constructor(props: object) {
     super(props);
 
     this.config = getConfigValue('monitor.emptyState');

@@ -94,7 +94,7 @@ export default function renderNode(vertex: TDagPlexusVertex<TDiffCounts>) {
 }
 
 export function getNodeEmphasisRenderer(keys: Set<string>) {
-  return function drawEmphasizedNode(lv: TLayoutVertex<any>) {
+  return function drawEmphasizedNode(lv: TLayoutVertex) {
     if (!keys.has(lv.vertex.key)) {
       return null;
     }

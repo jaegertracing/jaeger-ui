@@ -95,7 +95,7 @@ export default class TraceSpanView extends Component<Props, State> {
     let operationNamesList: string[] = [];
     const serviceNameOperationsMap = this.state.serviceNameOperationsMap;
     if (this.state.filtered['process.serviceName']) {
-      this.state.filtered['process.serviceName'].forEach((currentValue: any) => {
+      this.state.filtered['process.serviceName'].forEach((currentValue: string) => {
         operationNamesList = operationNamesList.concat(serviceNameOperationsMap.get(currentValue) || []);
       });
     } else {
@@ -147,7 +147,7 @@ export default class TraceSpanView extends Component<Props, State> {
         title: 'ID',
         dataIndex: 'spanID',
         sorter: (a, b) => a.spanID.localeCompare(b.spanID),
-        render: (text: any, record: Span) => {
+        render: (text: string, record: Span) => {
           return (
             <a
               href={prefixUrl(`/trace/${record.traceID}?uiFind=${text}`)}

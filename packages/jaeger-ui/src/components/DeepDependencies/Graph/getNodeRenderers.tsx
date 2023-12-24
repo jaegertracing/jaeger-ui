@@ -43,7 +43,7 @@ export default function getNodeRenderers(findMatches: Set<string>, viewModifiers
     );
   }
 
-  function htmlEmphasis(lv: TLayoutVertex<any>) {
+  function htmlEmphasis(lv: TLayoutVertex<{ isFocalNode: boolean }>) {
     const matchClasses = cx({
       'is-findMatch': findMatches.has(lv.vertex.key),
       'is-focalNode': lv.vertex.isFocalNode,
@@ -62,10 +62,11 @@ export default function getNodeRenderers(findMatches: Set<string>, viewModifiers
     };
   }
 
-  function vectorFindColorBand(lv: TLayoutVertex<any>) {
+  function vectorFindColorBand(lv: TLayoutVertex) {
     if (!findMatches.has(lv.vertex.key)) {
       return null;
     }
+
     return (
       <circle
         className="DdgNode--VectorFindEmphasis--colorBand"

@@ -27,7 +27,7 @@ export function getUrl(id: string, uiFind?: string): string {
   return `${traceUrl}?${queryString.stringify({ uiFind })}`;
 }
 
-export function getLocation(id: string, state: Record<string, any> | TNil, uiFind?: string) {
+export function getLocation(id: string, state: Record<string, string> | TNil, uiFind?: string) {
   return {
     state,
     pathname: getUrl(id),

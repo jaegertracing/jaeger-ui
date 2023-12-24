@@ -20,9 +20,9 @@ import './Scrubber.css';
 type ScrubberProps = {
   isDragging: boolean;
   position: number;
-  onMouseDown: (evt: React.MouseEvent<any>) => void;
-  onMouseEnter: (evt: React.MouseEvent<any>) => void;
-  onMouseLeave: (evt: React.MouseEvent<any>) => void;
+  onMouseDown: React.MouseEventHandler<SVGGElement | HTMLDivElement>;
+  onMouseEnter: React.MouseEventHandler<SVGGElement | HTMLDivElement>;
+  onMouseLeave: React.MouseEventHandler<SVGGElement | HTMLDivElement>;
 };
 
 export default function Scrubber({

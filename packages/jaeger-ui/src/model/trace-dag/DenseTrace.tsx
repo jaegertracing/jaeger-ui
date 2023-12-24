@@ -24,12 +24,12 @@ function convSpans(spans: Span[]) {
     const { spanID: id, operationName: operation, process, references, tags: spanTags } = span;
     ids.push(id);
     const { serviceName: service } = process;
-    const tags = spanTags.reduce((accum: Record<string, any>, tag) => {
+
+    const tags = spanTags.reduce((accum: Record<string, string>, tag) => {
       const { key, value } = tag;
-      // eslint-disable-next-line no-param-reassign
-      accum[key] = value;
-      return accum;
+      return { ...accum, [key]: value };
     }, {});
+
     let parentID: string | null = null;
     if (references && references.length) {
       const { refType, spanID } = references[0];

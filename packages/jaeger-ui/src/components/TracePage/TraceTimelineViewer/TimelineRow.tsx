@@ -25,7 +25,7 @@ interface ITimelineRowCellProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   className?: string;
   width: number;
-  style?: Object;
+  style?: object;
 }
 
 export default function TimelineRow(props: TTimelineRowProps) {
