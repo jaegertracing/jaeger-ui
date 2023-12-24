@@ -87,7 +87,7 @@ function isSpanHidden(span: Span, childrenAreHidden: Set<string>, spansMap: Map<
  */
 export default class ScrollManager {
   _trace: Trace | TNil;
-  _scroller: IScroller | undefined;
+  _scroller: IScroller | TNil;
   _accessors: Accessors | TNil;
 
   constructor(trace: Trace | TNil, scroller: IScroller) {
