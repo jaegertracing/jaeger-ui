@@ -35,7 +35,7 @@ export type TActionTypes =
   | TSpansValue
   | TTraceUiFindValue
   | TWidthValue
-  | {};
+  | object;
 
 type TTimelineViewerActions = {
   [actionName: string]: ActionFunctionAny<Action<TActionTypes>>;

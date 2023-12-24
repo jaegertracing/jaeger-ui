@@ -20,9 +20,9 @@ import './Scrubber.css';
 type ScrubberProps = {
   isDragging: boolean;
   position: number;
-  onMouseDown: (evt: React.MouseEvent<any>) => void;
-  onMouseEnter: (evt: React.MouseEvent<any>) => void;
-  onMouseLeave: (evt: React.MouseEvent<any>) => void;
+  onMouseDown: (evt: React.MouseEvent) => void;
+  onMouseEnter: (evt: React.MouseEvent) => void;
+  onMouseLeave: (evt: React.MouseEvent) => void;
 };
 
 export default function Scrubber({

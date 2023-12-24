@@ -118,8 +118,6 @@ const HELP_CONTENT = (
 export default class TraceGraph extends React.PureComponent<Props, State> {
   state: State;
 
-  cache: any;
-
   layoutManager: LayoutManager;
 
   static defaultProps = {

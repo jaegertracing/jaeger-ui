@@ -64,7 +64,7 @@ export default function AccordianKeyValues(props: AccordianKeyValuesProps) {
   const isEmpty = !Array.isArray(data) || !data.length;
   const iconCls = cx('u-align-icon', { 'AccordianKeyValues--emptyIcon': isEmpty });
   let arrow: React.ReactNode | null = null;
-  let headerProps: Object | null = null;
+  let headerProps: object | null = null;
   if (interactive) {
     arrow = isOpen ? <IoChevronDown className={iconCls} /> : <IoChevronForward className={iconCls} />;
     headerProps = {

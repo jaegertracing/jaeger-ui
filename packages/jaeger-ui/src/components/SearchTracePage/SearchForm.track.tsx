@@ -50,7 +50,7 @@ export function trackFormInput(
 }
 
 export const middlewareHooks = {
-  [constants.FORM_CHANGE_ACTION_TYPE]: (store: Store<ReduxState>, action: any) => {
+  [constants.FORM_CHANGE_ACTION_TYPE]: (_: Store<ReduxState>, action: any) => {
     if (action.meta.form === 'sortBy') {
       trackEvent(CATEGORY_SORTBY, action.payload);
     }

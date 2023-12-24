@@ -58,7 +58,7 @@ export function getEmbeddedState(search: string): null | EmbeddedState {
   };
 }
 
-export function stripEmbeddedState(state: Record<string, any>) {
+export function stripEmbeddedState(state: Record<string, string>) {
   const { uiEmbed = undefined, ...rv } = state;
   if (uiEmbed === VERSION_0) {
     PARAM_KEYS_V0.forEach(Reflect.deleteProperty.bind(null, rv));

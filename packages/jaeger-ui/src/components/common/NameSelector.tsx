@@ -70,7 +70,7 @@ export default class NameSelector extends React.PureComponent<TProps, TState> {
     });
   }
 
-  private clearValue = (evt: React.MouseEvent<any>) => {
+  private clearValue = (evt: React.MouseEvent) => {
     if (this.props.required) throw new Error('Cannot clear value of required NameSelector');
 
     evt.stopPropagation();

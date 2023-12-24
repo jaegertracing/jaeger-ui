@@ -14,7 +14,7 @@
 
 import { NodeID } from './index';
 
-type TDagNode<TData extends { [k: string]: unknown } = {}> = TData & {
+type TDagNode<TData extends { [k: string]: unknown }> = TData & {
   parentID: NodeID | null;
   id: NodeID;
   children: Set<NodeID>;

@@ -39,7 +39,12 @@ type State = {
   valueNameSelector2: string | null;
 };
 
-const columnsArray: any[] = [
+const columnsArray: {
+  title: string;
+  attribute: keyof ITableSpan;
+  suffix: string;
+  titleDescription?: string;
+}[] = [
   {
     title: 'Group',
     attribute: 'name',
@@ -111,7 +116,7 @@ const columnsArray: any[] = [
  * Trace Tag Overview Component
  */
 export default class TraceStatistics extends Component<Props, State> {
-  constructor(props: any) {
+  constructor(props: Props) {
     super(props);
 
     this.state = {
@@ -135,7 +140,7 @@ export default class TraceStatistics extends Component<Props, State> {
    * If the search props change the search function is called.
    * @param props all props
    */
-  componentDidUpdate(props: any) {
+  componentDidUpdate(props: Props) {
     if (this.props.uiFindVertexKeys !== props.uiFindVertexKeys) {
       this.changeTableValueSearch();
     }
