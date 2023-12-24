@@ -115,4 +115,4 @@ export function extractUiFindFromState(state: ReduxState): TExtractUiFindFromSta
   return { uiFind };
 }
 
-export default connect(extractUiFindFromState)(withRouteProps(UnconnectedUiFindInput));
+export default connect(extractUiFindFromState)(withRouteProps(UnconnectedUiFindInput)) as any;
