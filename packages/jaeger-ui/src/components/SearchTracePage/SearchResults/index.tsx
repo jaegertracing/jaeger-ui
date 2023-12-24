@@ -179,7 +179,7 @@ export class UnconnectedSearchResults extends React.PureComponent<SearchResultsP
     }
     const cohortIds = new Set(diffCohort.map(datum => datum.id));
     const searchUrl = queryOfResults ? getUrl(stripEmbeddedState(queryOfResults)) : getUrl();
-    const isErrorTag = ({ key, value }: KeyValuePair) =>
+    const isErrorTag = ({ key, value }: KeyValuePair<string | boolean>) =>
       key === 'error' && (value === true || value === 'true');
     return (
       <div className="SearchResults">
