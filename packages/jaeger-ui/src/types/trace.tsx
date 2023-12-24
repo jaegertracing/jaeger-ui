@@ -16,10 +16,9 @@
  * All timestamps are in microseconds
  */
 
-// TODO: Everett Tech Debt: Fix KeyValuePair types
-export type KeyValuePair = {
+export type KeyValuePair<ValueType = string> = {
   key: string;
-  value: any;
+  value: ValueType;
 };
 
 export type Link = {
