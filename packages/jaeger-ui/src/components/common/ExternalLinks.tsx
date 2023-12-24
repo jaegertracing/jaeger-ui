@@ -23,7 +23,7 @@ type ExternalLinksProps = {
 
 const LinkValue = (props: {
   href: string;
-  title?: string;
+  title: string;
   children?: React.ReactNode;
   className?: string;
 }) => (
@@ -41,7 +41,11 @@ const LinkValue = (props: {
 // export for testing
 export const linkValueList = (links: Link[]) => {
   const dropdownItems = links.map(({ text, url }, index) => ({
-    label: <LinkValue href={url}>{text}</LinkValue>,
+    label: (
+      <LinkValue href={url} title={text}>
+        {text}
+      </LinkValue>
+    ),
     key: `${url}-${index}`,
   }));
 
@@ -52,12 +56,14 @@ export const linkValueList = (links: Link[]) => {
 // Example: https://github.com/jaegertracing/jaeger-ui/assets/94157520/7f0d84bc-c2fb-488c-9e50-1ec9484ea1e6
 export default function ExternalLinks(props: ExternalLinksProps) {
   const { links } = props;
+
   if (links.length === 1) {
     return <LinkValue href={links[0].url} title={links[0].text} className="TracePageHeader--back" />;
   }
+
   return (
     <Dropdown menu={{ items: linkValueList(links) }} placement="bottomRight" trigger={['click']}>
-      <a className="TracePageHeader--back">
+      <a className="TracePageHeader--back" data-testid="dropdown">
         <NewWindowIcon isLarge />
       </a>
     </Dropdown>
