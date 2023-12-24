@@ -52,7 +52,8 @@ type State = {
   fromNow: string | boolean;
 };
 
-const isErrorTag = ({ key, value }: KeyValuePair) => key === 'error' && (value === true || value === 'true');
+const isErrorTag = ({ key, value }: KeyValuePair<boolean | string>) =>
+  key === 'error' && (value === true || value === 'true');
 const trackTraceConversions = () => trackConversions(EAltViewActions.Traces);
 
 export default class ResultItem extends React.PureComponent<Props, State> {

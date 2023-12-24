@@ -34,7 +34,7 @@ export const CATEGORY_SERVICE = `${FORM_CATEGORY_BASE}/serviceName`;
 export function trackFormInput(
   resultsLimit: number,
   operation: string,
-  tags: any,
+  tags: string,
   minDuration: number,
   maxDuration: number,
   lookback: string,

@@ -141,7 +141,7 @@ export type PromiseFulfilledResult<T> = {
 
 export type PromiseRejectedResult = {
   status: PromiseStatus.rejected;
-  reason: any;
+  reason: ApiError;
 };
 
 export type FetchedAllServiceMetricsResponse = [

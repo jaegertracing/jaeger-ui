@@ -113,28 +113,27 @@ function fetchServiceMetricsDone(
           }
         }
       } else {
-        if (
-          typeof (promiseResult as PromiseRejectedResult).reason === 'object' &&
-          (promiseResult as PromiseRejectedResult).reason.httpStatus === 501
-        ) {
+        const reason = (promiseResult as PromiseRejectedResult).reason;
+
+        if (typeof reason === 'object' && reason.httpStatus === 501) {
           isATMActivated = false;
         }
 
         switch (i) {
           case 0:
-            serviceError.service_latencies_50 = (promiseResult as PromiseRejectedResult).reason;
+            serviceError.service_latencies_50 = reason;
             break;
           case 1:
-            serviceError.service_latencies_75 = (promiseResult as PromiseRejectedResult).reason;
+            serviceError.service_latencies_75 = reason;
             break;
           case 2:
-            serviceError.service_latencies_95 = (promiseResult as PromiseRejectedResult).reason;
+            serviceError.service_latencies_95 = reason;
             break;
           case 3:
-            serviceError.service_call_rate = (promiseResult as PromiseRejectedResult).reason;
+            serviceError.service_call_rate = reason;
             break;
           case 4:
-            serviceError.service_error_rate = (promiseResult as PromiseRejectedResult).reason;
+            serviceError.service_error_rate = reason;
             break;
         }
       }
@@ -192,7 +191,7 @@ function fetchOpsMetricsDone(
             service_operation_call_rate: 0,
             service_operation_error_rate: 0,
           };
-          metricDetails.labels.forEach((label: any) => {
+          metricDetails.labels.forEach((label: { name: string; value: string }) => {
             if (label.name === 'operation') {
               opsName = label.value;
             }
