@@ -13,23 +13,25 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render } from '@testing-library/react';
 import EmphasizedNode from './EmphasizedNode';
+import '@testing-library/jest-dom';
 
 describe('<EmphasizedNode>', () => {
-  let wrapper;
-  let defaultProps;
-
-  beforeEach(() => {
-    defaultProps = {
-      height: 100,
-      width: 500,
-    };
-
-    wrapper = shallow(<EmphasizedNode {...defaultProps} />);
-  });
+  const defaultProps = {
+    height: 100,
+    width: 500,
+  };
 
   it('renders with default props', () => {
-    expect(wrapper).toMatchSnapshot();
+    const { container } = render(<EmphasizedNode {...defaultProps} />);
+
+    const recElements = container.querySelectorAll('rect');
+
+    expect(recElements.length).toBe(4);
+    recElements.forEach(element => {
+      expect(element).toHaveAttribute('height', defaultProps.height.toString());
+      expect(element).toHaveAttribute('width', defaultProps.width.toString());
+    });
   });
 });
