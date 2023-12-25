@@ -37,6 +37,8 @@ type ErrorAttrProps = {
   value: string | number;
 };
 
+export const MAX_DETAIL_LENGTH = 1024;
+
 function ErrorAttr({ name, value }: ErrorAttrProps) {
   return (
     <tr className="ErrorMessage--detailItem">
@@ -78,10 +80,16 @@ export function Details(props: SubPartProps) {
   }
 
   const { httpStatus, httpStatusText, httpUrl, httpQuery, httpBody } = error;
-  const bodyExcerpt = httpBody && httpBody.length > 1024 ? `${httpBody.slice(0, 1021).trim()}...` : httpBody;
+  const bodyExcerpt =
+    httpBody && httpBody.length > MAX_DETAIL_LENGTH
+      ? `${httpBody.slice(0, MAX_DETAIL_LENGTH - 3).trim()}...`
+      : httpBody;
 
   const details = (
-    <div className={`ErrorMessage--details ${className || ''} u-simple-scrollbars`}>
+    <div
+      className={`ErrorMessage--details ${className || ''} u-simple-scrollbars`}
+      data-testid="ErrorMessage--details"
+    >
       <table className="ErrorMessage--detailsTable">
         <tbody>
           {httpStatus && <ErrorAttr name="Status" value={httpStatus} />}
@@ -96,7 +104,7 @@ export function Details(props: SubPartProps) {
 
   if (wrap) {
     return (
-      <div className={`ErrorMessage ${wrapperClassName || ''}`} data-testid="ErrorMessage--wrapper">
+      <div className={`ErrorMessage ${wrapperClassName || ''}`} data-testid="ErrorMessage--details--wrapper">
         {details}
       </div>
     );
@@ -126,7 +134,7 @@ export default function ErrorMessage({
   }
 
   return (
-    <div className={`ErrorMessage ${className || ''}`}>
+    <div className={`ErrorMessage ${className || ''}`} data-testid="ErrorMessage">
       <Message error={error} className={messageClassName} />
       <Details error={error} className={detailClassName} />
     </div>

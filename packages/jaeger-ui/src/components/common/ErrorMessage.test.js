@@ -14,16 +14,16 @@
 
 import React from 'react';
 import { screen, render } from '@testing-library/react';
-import ErrorMessage, { Details } from './ErrorMessage';
+import ErrorMessage, { Details, MAX_DETAIL_LENGTH } from './ErrorMessage';
 
 import '@testing-library/jest-dom';
 
 describe('<ErrorMessage>', () => {
   const errorMessage = 'some error message';
 
-  it('is ok when not passed an error', () => {
+  it('renders empty when not passed an error', () => {
     render(<ErrorMessage />);
-    expect(screen).toBeDefined();
+    expect(screen.queryByTestId('ErrorMessage')).toBeNull();
   });
 
   it('renders a message when passed a string', () => {
@@ -33,7 +33,8 @@ describe('<ErrorMessage>', () => {
 
   it('<Details /> renders empty on string error', () => {
     render(<Details error={errorMessage} />);
-    expect(screen).toBeDefined();
+    expect(screen.queryByTestId('ErrorMessage--details')).toBeNull();
+    expect(screen.queryByTestId('ErrorMessage--details--wrapper')).toBeNull();
   });
 
   it('<Details /> renders wrapper on wrap', () => {
@@ -47,7 +48,7 @@ describe('<ErrorMessage>', () => {
     render(<Details error={error} wrap />);
 
     // The wrapper element should be present
-    expect(screen.getByTestId('ErrorMessage--wrapper')).toBeInTheDocument();
+    expect(screen.getByTestId('ErrorMessage--details--wrapper')).toBeInTheDocument();
 
     // All the error attributes should be present
     Object.keys(error).forEach(key => {
@@ -66,8 +67,8 @@ describe('<ErrorMessage>', () => {
     render(<Details error={error} wrap wrapperClassName="TEST-WRAPPER-CLASS" />);
 
     // The wrapper element should be present
-    expect(screen.getByTestId('ErrorMessage--wrapper')).toBeInTheDocument();
-    expect(screen.getByTestId('ErrorMessage--wrapper')).toHaveClass('TEST-WRAPPER-CLASS');
+    expect(screen.getByTestId('ErrorMessage--details--wrapper')).toBeInTheDocument();
+    expect(screen.getByTestId('ErrorMessage--details--wrapper')).toHaveClass('TEST-WRAPPER-CLASS');
 
     // All the error attributes should be present
     Object.keys(error).forEach(key => {
@@ -116,7 +117,9 @@ describe('<ErrorMessage>', () => {
     });
 
     // The body should be truncated
-    expect(screen.getByText(`${error.httpBody.slice(0, 1021).trim()}...`)).toBeInTheDocument();
+    expect(
+      screen.getByText(`${error.httpBody.slice(0, MAX_DETAIL_LENGTH - 3).trim()}...`)
+    ).toBeInTheDocument();
   });
 
   it('renders on missing httpStatus from the error', () => {
