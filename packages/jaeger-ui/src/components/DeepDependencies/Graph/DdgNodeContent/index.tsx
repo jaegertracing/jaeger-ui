@@ -107,7 +107,7 @@ export function getNodeRenderer({
   setViewModifier: (visIndices: number[], viewModifier: EViewModifier, isEnabled: boolean) => void;
   updateGenerationVisibility: (vertexKey: string, direction: EDirection) => void;
 }) {
-  return function renderNode(vertex: TDdgVertex, _: unknown, lv: TLayoutVertex<any> | null) {
+  return function renderNode(vertex: TDdgVertex, _: unknown, lv: TLayoutVertex | null) {
     const { isFocalNode, key, operation, service } = vertex;
     return (
       // eslint-disable-next-line @typescript-eslint/no-use-before-define

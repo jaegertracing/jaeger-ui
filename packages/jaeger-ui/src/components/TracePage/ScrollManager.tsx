@@ -87,7 +87,7 @@ function isSpanHidden(span: Span, childrenAreHidden: Set<string>, spansMap: Map<
  */
 export default class ScrollManager {
   _trace: Trace | TNil;
-  _scroller: IScroller;
+  _scroller: IScroller | TNil;
   _accessors: Accessors | TNil;
 
   constructor(trace: Trace | TNil, scroller: IScroller) {
@@ -117,7 +117,7 @@ export default class ScrollManager {
       y -= vh;
     }
     y += direction * 0.5 * vh;
-    this._scroller.scrollTo(y);
+    this._scroller?.scrollTo(y);
   }
 
   _scrollToVisibleSpan(direction: 1 | -1, startRow?: number) {
@@ -268,7 +268,7 @@ export default class ScrollManager {
 
   destroy() {
     this._trace = undefined;
-    this._scroller = undefined as any;
+    this._scroller = undefined;
     this._accessors = undefined;
   }
 }

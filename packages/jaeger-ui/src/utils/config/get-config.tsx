@@ -18,6 +18,22 @@ import memoizeOne from 'memoize-one';
 import processDeprecation from './process-deprecation';
 import defaultConfig, { deprecations, mergeFields } from '../../constants/default-config';
 
+function getUiConfig() {
+  const getter = window.getJaegerUiConfig;
+  if (typeof getter !== 'function') {
+    // eslint-disable-next-line no-console
+    console.warn('Embedded config not available');
+    return { ...defaultConfig };
+  }
+  return getter();
+}
+
+function getCapabilities() {
+  const getter = window.getJaegerStorageCapabilities;
+  const capabilities = typeof getter === 'function' ? getter() : null;
+  return capabilities ?? defaultConfig.storageCapabilities;
+}
+
 /**
  * Merge the embedded config from the query service (if present) with the
  * default config from `../../constants/default-config`.
@@ -42,22 +58,6 @@ const getConfig = memoizeOne(function getConfig() {
   });
   return { ...rv, storageCapabilities: capabilities };
 });
-
-function getUiConfig() {
-  const getter = window.getJaegerUiConfig;
-  if (typeof getter !== 'function') {
-    // eslint-disable-next-line no-console
-    console.warn('Embedded config not available');
-    return { ...defaultConfig };
-  }
-  return getter();
-}
-
-function getCapabilities() {
-  const getter = window.getJaegerStorageCapabilities;
-  const capabilities = typeof getter === 'function' ? getter() : null;
-  return capabilities ?? defaultConfig.storageCapabilities;
-}
 
 export default getConfig;
 

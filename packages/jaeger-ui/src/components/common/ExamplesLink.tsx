@@ -39,10 +39,12 @@ function hasSpans(example: TExample | TExampleWithSpans): example is TExampleWit
 function getGetUrlArg(examples: TExample[]): { spanLinks: Record<string, string>; traceID: string[] } {
   const spanLinks: Record<string, string> = {};
   const traceID: string[] = [];
+
   examples.forEach((example: TExample) => {
     if (hasSpans(example)) spanLinks[example.traceID] = example.spanIDs.join(' ');
     else traceID.push(example.traceID);
   });
+
   return {
     spanLinks,
     traceID,

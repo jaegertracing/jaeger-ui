@@ -143,7 +143,7 @@ const convertServiceErrorRateToPercentages = (serviceErrorRate: null | ServiceMe
   return { ...serviceErrorRate, metricPoints: convertedMetricsPoints };
 };
 
-type TPropsWithInjectedFormProps = TProps & InjectedFormProps<{}, TProps>;
+type TPropsWithInjectedFormProps = TProps & InjectedFormProps<object, TProps>;
 
 // export for tests
 export class MonitorATMServicesViewImpl extends React.PureComponent<TPropsWithInjectedFormProps, StateType> {
@@ -486,7 +486,7 @@ export function mapStateToProps(state: ReduxState): TReduxProps {
 
 export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
   const { fetchServices, fetchAllServiceMetrics, fetchAggregatedServiceMetrics } = bindActionCreators<
-    {},
+    object,
     any
   >(jaegerApiActions, dispatch);
 
@@ -502,7 +502,7 @@ export default withRouteProps(
     mapStateToProps,
     mapDispatchToProps
   )(
-    reduxForm<{}, TProps>({
+    reduxForm<object, TProps>({
       form: 'serviceForm',
     })(MonitorATMServicesViewImpl)
   )

@@ -18,7 +18,7 @@ import { TDenseSpan, TDiffCounts, NodeID, TDenseSpanMembers } from './types';
 import TDagNode from './types/TDagNode';
 import { Trace } from '../../types/trace';
 
-export default class TraceDag<TData extends { [k: string]: unknown } = {}> {
+export default class TraceDag<TData extends { [k: string]: unknown }> {
   static newFromTrace(trace: Trace, idFactory: TIdFactory = ancestralPathParentOrLeaf) {
     const dag: TraceDag<TDenseSpanMembers> = new TraceDag();
     const { denseSpansMap, rootIDs } = new DenseTrace(trace);
