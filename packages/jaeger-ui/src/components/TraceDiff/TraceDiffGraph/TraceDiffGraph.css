@@ -23,6 +23,29 @@ limitations under the License.
   right: 0;
   top: 0;
 }
+.TraceDiffGraph--zoomWrapper {
+  width: 1250px;
+  height: 1250px;
+  position: relative;
+  margin-top: -350px;
+  margin-right: 0px;
+  padding-bottom: 0px;
+}
+
+.TraceDiffGraph--zoomButton {
+  background: #ccc;
+  color: #888;
+  cursor: pointer;
+  font-size: 1.8em;
+  line-height: 0;
+  padding: 0.8rem 0.5rem;
+  position: relative;
+  margin-left: 15px;
+}
+
+button:hover {
+  background: #ddd;
+}
 
 .TraceDiffGraph--errorsWrapper {
   background: #eee;
