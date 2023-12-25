@@ -13,7 +13,6 @@
 // limitations under the License.
 
 import _get from 'lodash/get';
-import ReactGA from 'react-ga';
 import Raven, { RavenOptions, RavenTransportOptions } from 'raven-js';
 
 import convRavenToGa from './conv-raven-to-ga';
@@ -23,6 +22,40 @@ import { IWebAnalyticsFunc } from '../../types/tracking';
 import { logTrackingCalls } from './utils';
 import { getAppEnvironment, shouldDebugGoogleAnalytics } from '../constants';
 import parseQuery from '../parseQuery';
+
+// Modify the global scope to add the `gtag` function and the `dataLayer` array
+declare global {
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  interface Window {
+    dataLayer: object[];
+    gtag: (...args: (string | object)[]) => void;
+  }
+}
+
+// Function to initialize the Google Analytics script
+const initGA = (GA_MEASUREMENT_ID: string, gtagUrl = 'https://www.googletagmanager.com/gtag/js') => {
+  if (typeof window === 'undefined' || typeof document === 'undefined') {
+    return;
+  }
+
+  const script = document.createElement('script');
+  script.async = true;
+  script.src = `${gtagUrl}?id=${GA_MEASUREMENT_ID}`;
+  document.body.appendChild(script);
+
+  window.dataLayer = window.dataLayer || [];
+  window.gtag = (...args) => {
+    window.dataLayer.push(args);
+  };
+};
+
+// Function to call the `gtag` function defined on the window object
+const gtag = (...args: (string | object)[]) => {
+  if (typeof window !== 'undefined')
+    if (typeof window.gtag === 'function') {
+      window.gtag(...args);
+    }
+};
 
 const isTruish = (value?: string | string[]) => {
   return Boolean(value) && value !== '0' && value !== 'false';
@@ -56,7 +89,12 @@ const GA: IWebAnalyticsFunc = (config: Config, versionShort: string, versionLong
       msg = `jaeger/${msg}`;
     }
     msg = msg.slice(0, 149);
-    ReactGA.exception({ description: msg, fatal: false });
+
+    gtag('event', 'exception', {
+      description: msg,
+      fatal: false,
+    });
+
     if (isDebugMode) {
       logTrackingCalls();
     }
@@ -90,7 +128,13 @@ const GA: IWebAnalyticsFunc = (config: Config, versionShort: string, versionLong
     if (value != null) {
       event.value = Math.round(value);
     }
-    ReactGA.event(event);
+
+    gtag('event', event.action, {
+      event_category: event.category,
+      event_label: event.label,
+      value: event.value,
+    });
+
     if (isDebugMode) {
       logTrackingCalls();
     }
@@ -107,18 +151,22 @@ const GA: IWebAnalyticsFunc = (config: Config, versionShort: string, versionLong
       return;
     }
 
-    const gaConfig = { testMode: isTest || isDebugMode, titleCase: false, debug: true };
-    ReactGA.initialize(gaID || 'debug-mode', gaConfig);
-    ReactGA.set({
+    initGA(gaID || 'debug-mode');
+    gtag('set', {
       appId: 'github.com/jaegertracing/jaeger-ui',
       appName: 'Jaeger UI',
       appVersion: versionLong,
     });
+
     if (cookiesToDimensions !== undefined) {
       (cookiesToDimensions as unknown as Array<{ cookie: string; dimension: string }>).forEach(
         ({ cookie, dimension }: { cookie: string; dimension: string }) => {
           const match = ` ${document.cookie}`.match(new RegExp(`[; ]${cookie}=([^\\s;]*)`));
-          if (match) ReactGA.set({ [dimension]: match[1] });
+          if (match) {
+            gtag('set', {
+              [dimension]: match[1],
+            });
+          }
           // eslint-disable-next-line no-console
           else console.warn(`${cookie} not present in cookies, could not set dimension: ${dimension}`);
         }
@@ -152,7 +200,9 @@ const GA: IWebAnalyticsFunc = (config: Config, versionShort: string, versionLong
 
   const trackPageView = (pathname: string, search: string | TNil) => {
     const pagePath = search ? `${pathname}${search}` : pathname;
-    ReactGA.pageview(pagePath);
+    gtag('event', 'page_view', {
+      page_path: pagePath,
+    });
     if (isDebugMode) {
       logTrackingCalls();
     }
