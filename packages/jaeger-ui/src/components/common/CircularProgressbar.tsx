@@ -39,25 +39,27 @@ export default class CircularProgressbar extends React.PureComponent<TProps> {
     const decorationBackgroundColor = `hsl(${backgroundHue}, ${backgroundSaturation}%, ${backgroundLight}%)`;
 
     return (
-      <CircularProgressbarImpl
-        styles={{
-          path: {
-            stroke: decorationColor,
-            strokeLinecap: 'butt',
-          },
-          text: {
-            fill: decorationColor,
-          },
-          trail: {
-            stroke: backgroundHue !== undefined ? decorationBackgroundColor : 'transparent',
-            strokeLinecap: 'butt',
-          },
-        }}
-        maxValue={maxValue}
-        strokeWidth={strokeWidth}
-        text={text}
-        value={value}
-      />
+      <div data-testid="circular-progress-bar">
+        <CircularProgressbarImpl
+          styles={{
+            path: {
+              stroke: decorationColor,
+              strokeLinecap: 'butt',
+            },
+            text: {
+              fill: decorationColor,
+            },
+            trail: {
+              stroke: backgroundHue !== undefined ? decorationBackgroundColor : 'transparent',
+              strokeLinecap: 'butt',
+            },
+          }}
+          maxValue={maxValue}
+          strokeWidth={strokeWidth}
+          text={text}
+          value={value}
+        />
+      </div>
     );
   }
 }
