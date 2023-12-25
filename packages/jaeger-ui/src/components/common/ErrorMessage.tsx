@@ -32,7 +32,14 @@ type SubPartProps = {
   wrapperClassName?: string;
 };
 
-function ErrorAttr({ name, value }: { name: string; value: any }) {
+type ErrorAttrProps = {
+  name: string;
+  value: string | number;
+};
+
+export const MAX_DETAIL_LENGTH = 1024;
+
+function ErrorAttr({ name, value }: ErrorAttrProps) {
   return (
     <tr className="ErrorMessage--detailItem">
       <td className="ErrorMessage--attr">{name}</td>
@@ -44,15 +51,18 @@ function ErrorAttr({ name, value }: { name: string; value: any }) {
 export function Message(props: SubPartProps) {
   const { className, error, wrap, wrapperClassName } = props;
   const cssClass = `ErrorMessage--msg ${className || ''}`;
+
   const msg =
     typeof error === 'string' ? (
       <h3 className={cssClass}>{error}</h3>
     ) : (
       <h3 className={cssClass}>{error.message}</h3>
     );
+
   if (wrap) {
     return <div className={`ErrorMessage ${wrapperClassName || ''}`}>{msg}</div>;
   }
+
   return msg;
 }
 
@@ -64,28 +74,42 @@ Message.defaultProps = {
 
 export function Details(props: SubPartProps) {
   const { className, error, wrap, wrapperClassName } = props;
+
   if (typeof error === 'string') {
     return null;
   }
+
   const { httpStatus, httpStatusText, httpUrl, httpQuery, httpBody } = error;
-  const bodyExcerpt = httpBody && httpBody.length > 1024 ? `${httpBody.slice(0, 1021).trim()}...` : httpBody;
+  const bodyExcerpt =
+    httpBody && httpBody.length > MAX_DETAIL_LENGTH
+      ? `${httpBody.slice(0, MAX_DETAIL_LENGTH - 3).trim()}...`
+      : httpBody;
+
   const details = (
-    <div className={`ErrorMessage--details ${className || ''} u-simple-scrollbars`}>
+    <div
+      className={`ErrorMessage--details ${className || ''} u-simple-scrollbars`}
+      data-testid="ErrorMessage--details"
+    >
       <table className="ErrorMessage--detailsTable">
         <tbody>
-          {httpStatus ? <ErrorAttr name="Status" value={httpStatus} /> : null}
-          {httpStatusText ? <ErrorAttr name="Status text" value={httpStatusText} /> : null}
-          {httpUrl ? <ErrorAttr name="URL" value={httpUrl} /> : null}
-          {httpQuery ? <ErrorAttr name="Query" value={httpQuery} /> : null}
-          {bodyExcerpt ? <ErrorAttr name="Response body" value={bodyExcerpt} /> : null}
+          {httpStatus && <ErrorAttr name="Status" value={httpStatus} />}
+          {httpStatusText && <ErrorAttr name="Status text" value={httpStatusText} />}
+          {httpUrl && <ErrorAttr name="URL" value={httpUrl} />}
+          {httpQuery && <ErrorAttr name="Query" value={httpQuery} />}
+          {bodyExcerpt && <ErrorAttr name="Response body" value={bodyExcerpt} />}
         </tbody>
       </table>
     </div>
   );
 
   if (wrap) {
-    return <div className={`ErrorMessage ${wrapperClassName || ''}`}>{details}</div>;
+    return (
+      <div className={`ErrorMessage ${wrapperClassName || ''}`} data-testid="ErrorMessage--details--wrapper">
+        {details}
+      </div>
+    );
   }
+
   return details;
 }
 
@@ -104,11 +128,13 @@ export default function ErrorMessage({
   if (!error) {
     return null;
   }
+
   if (typeof error === 'string') {
     return <Message className={messageClassName} error={error} wrapperClassName={className} wrap />;
   }
+
   return (
-    <div className={`ErrorMessage ${className || ''}`}>
+    <div className={`ErrorMessage ${className || ''}`} data-testid="ErrorMessage">
       <Message error={error} className={messageClassName} />
       <Details error={error} className={detailClassName} />
     </div>
