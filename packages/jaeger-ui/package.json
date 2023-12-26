@@ -63,7 +63,7 @@
     "is-promise": "^4.0.0",
     "isomorphic-fetch": "^3.0.0",
     "lodash": "^4.17.19",
-    "logfmt": "^1.2.0",
+    "logfmt": "^1.4.0",
     "lru-memoize": "^1.1.0",
     "match-sorter": "^6.3.1",
     "memoize-one": "^6.0.0",
