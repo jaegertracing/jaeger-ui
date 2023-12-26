@@ -18,8 +18,9 @@
 declare namespace global {
   // eslint-disable-next-line @typescript-eslint/naming-convention
   interface Window {
-    // dataLayer is used by Google Tag Manager
-    // It should never be changed by any module except utils/tracking/ga.ts
+    // dataLayer property is used by Google Tag Manager
+    // It should be only be changed with the help of the custom Interface WindowWithGATracking
+    // defined in utils/tracking/ga.ts
     dataLayer: never;
   }
 }

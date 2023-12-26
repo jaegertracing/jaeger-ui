@@ -25,12 +25,13 @@ import parseQuery from '../parseQuery';
 
 // Modify the `window` object to have an additional attribute `dataLayer`
 // This is required by the gtag.js script to work
-declare global {
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  interface Window {
-    dataLayer: (string | object)[][] | undefined;
-  }
+
+// eslint-disable-next-line @typescript-eslint/naming-convention
+export interface WindowWithGATracking extends Window {
+  dataLayer: (string | object)[][] | undefined;
 }
+
+declare let window: WindowWithGATracking;
 
 // Function to add a new event to the Google Analytics dataLayer
 const gtag = (...args: (string | object)[]) => {
@@ -42,10 +43,6 @@ const gtag = (...args: (string | object)[]) => {
 
 // Function to initialize the Google Analytics script
 const initGA = (GA_MEASUREMENT_ID: string) => {
-  if (typeof window === 'undefined' || typeof document === 'undefined') {
-    return;
-  }
-
   const gtagUrl = 'https://www.googletagmanager.com/gtag/js';
 
   // Load the script asynchronously

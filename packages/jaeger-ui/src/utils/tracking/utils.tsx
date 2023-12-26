@@ -12,6 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { WindowWithGATracking } from './ga';
+
+declare let window: WindowWithGATracking;
+
 // eslint-disable-next-line import/prefer-default-export
 export const logTrackingCalls = () => {
   // eslint-disable-next-line no-console
