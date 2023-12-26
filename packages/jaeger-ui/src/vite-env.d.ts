@@ -14,3 +14,12 @@
 
 // eslint-disable-next-line spaced-comment
 /// <reference types="vite/client" />
+
+declare namespace JaegerUI {
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  interface Window {
+    // dataLayer is used by Google Tag Manager
+    // It should never be changed by any module except utils/tracking/ga.ts
+    dataLayer: never;
+  }
+}

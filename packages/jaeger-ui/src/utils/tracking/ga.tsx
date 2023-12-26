@@ -23,38 +23,41 @@ import { logTrackingCalls } from './utils';
 import { getAppEnvironment, shouldDebugGoogleAnalytics } from '../constants';
 import parseQuery from '../parseQuery';
 
-// Modify the global scope to add the `gtag` function and the `dataLayer` array
+// Modify the `window` object to have an additional attribute `dataLayer`
+// This is required by the gtag.js script to work
 declare global {
   // eslint-disable-next-line @typescript-eslint/naming-convention
   interface Window {
-    dataLayer: object[];
-    gtag: (...args: (string | object)[]) => void;
+    dataLayer: (string | object)[][] | undefined;
   }
 }
 
+// Function to add a new event to the Google Analytics dataLayer
+const gtag = (...args: (string | object)[]) => {
+  if (window !== undefined)
+    if (window.dataLayer !== undefined) {
+      window.dataLayer.push(args);
+    }
+};
+
 // Function to initialize the Google Analytics script
-const initGA = (GA_MEASUREMENT_ID: string, gtagUrl = 'https://www.googletagmanager.com/gtag/js') => {
+const initGA = (GA_MEASUREMENT_ID: string) => {
   if (typeof window === 'undefined' || typeof document === 'undefined') {
     return;
   }
 
+  const gtagUrl = 'https://www.googletagmanager.com/gtag/js';
+
+  // Load the script asynchronously
   const script = document.createElement('script');
   script.async = true;
   script.src = `${gtagUrl}?id=${GA_MEASUREMENT_ID}`;
   document.body.appendChild(script);
 
+  // Initialize the dataLayer and send initial configuration data
   window.dataLayer = window.dataLayer || [];
-  window.gtag = (...args) => {
-    window.dataLayer.push(args);
-  };
-};
-
-// Function to call the `gtag` function defined on the window object
-const gtag = (...args: (string | object)[]) => {
-  if (typeof window !== 'undefined')
-    if (typeof window.gtag === 'function') {
-      window.gtag(...args);
-    }
+  gtag('js', new Date());
+  gtag('config', GA_MEASUREMENT_ID);
 };
 
 const isTruish = (value?: string | string[]) => {
@@ -152,6 +155,7 @@ const GA: IWebAnalyticsFunc = (config: Config, versionShort: string, versionLong
     }
 
     initGA(gaID || 'debug-mode');
+
     gtag('set', {
       appId: 'github.com/jaegertracing/jaeger-ui',
       appName: 'Jaeger UI',
