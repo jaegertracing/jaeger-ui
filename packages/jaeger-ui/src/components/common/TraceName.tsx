@@ -32,11 +32,12 @@ type Props = {
 
 export default function TraceName(props: Props) {
   const { className, error, state, traceName } = props;
+
   const isErred = state === fetchedState.ERROR;
+
   let title: string | React.ReactNode = traceName || FALLBACK_TRACE_NAME;
-  let errorCssClass = '';
+
   if (isErred) {
-    errorCssClass = 'is-error';
     let titleStr = '';
     if (error) {
       titleStr = typeof error === 'string' ? error : error.message || String(error);
@@ -44,13 +45,17 @@ export default function TraceName(props: Props) {
     if (!titleStr) {
       titleStr = 'Error: Unknown error';
     }
-    title = titleStr;
+
     title = <BreakableText text={titleStr} />;
   } else if (state === fetchedState.LOADING) {
-    title = <LoadingIndicator small />;
+    title = <LoadingIndicator small data-testid="loadingIndicator" />;
   } else {
-    const text = String(traceName || FALLBACK_TRACE_NAME);
-    title = <BreakableText text={text} />;
+    title = <BreakableText text={String(traceName || FALLBACK_TRACE_NAME)} />;
   }
-  return <span className={`TraceName ${errorCssClass} ${className || ''}`}>{title}</span>;
+
+  return (
+    <span className={`TraceName ${isErred ? 'is-error' : ''} ${className || ''}`} data-testid="traceName">
+      {title}
+    </span>
+  );
 }
