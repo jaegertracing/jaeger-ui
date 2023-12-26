@@ -12,14 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import ReactGA from 'react-ga';
-
 // eslint-disable-next-line import/prefer-default-export
 export const logTrackingCalls = () => {
-  const calls = ReactGA.testModeAPI.calls;
-  for (let i = 0; i < calls.length; i++) {
-    // eslint-disable-next-line no-console
-    console.log('[react-ga]', ...calls[i]);
-  }
-  calls.length = 0;
+  // eslint-disable-next-line no-console
+  window.dataLayer?.forEach(callArgs => console.log('[GA Tracking]', ...callArgs));
+  window.dataLayer = [];
 };
