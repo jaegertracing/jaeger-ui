@@ -13,7 +13,6 @@
 // limitations under the License.
 
 import * as GA from './ga';
-import * as utils from './utils';
 import { getAppEnvironment } from '../constants';
 
 jest.mock('./conv-raven-to-ga', () => () => ({
@@ -205,16 +204,18 @@ describe('google analytics tracking', () => {
       );
     });
 
+    /* eslint-disable no-console */
     it('isDebugMode = true', () => {
       // eslint-disable-next-line no-import-assign
-      utils.logTrackingCalls = jest.fn();
+      console.log = jest.fn();
 
       trackingDebug.init();
+      expect(console.log).toHaveBeenCalledTimes(4);
+
       trackingDebug.trackError();
       trackingDebug.trackEvent('jaeger/some-category', 'some-action');
       trackingDebug.trackPageView('a', 'b');
-
-      expect(utils.logTrackingCalls).toHaveBeenCalledTimes(4);
+      expect(console.log).toHaveBeenCalledTimes(7);
     });
   });
 });

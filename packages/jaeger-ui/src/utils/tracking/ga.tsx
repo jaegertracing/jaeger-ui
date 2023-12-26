@@ -19,7 +19,6 @@ import convRavenToGa from './conv-raven-to-ga';
 import { TNil } from '../../types';
 import { Config } from '../../types/config';
 import { IWebAnalyticsFunc } from '../../types/tracking';
-import { logTrackingCalls } from './utils';
 import { getAppEnvironment, shouldDebugGoogleAnalytics } from '../constants';
 import parseQuery from '../parseQuery';
 
@@ -27,35 +26,11 @@ import parseQuery from '../parseQuery';
 // This is required by the gtag.js script to work
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
-export interface WindowWithGATracking extends Window {
+interface WindowWithGATracking extends Window {
   dataLayer: (string | object)[][] | undefined;
 }
 
 declare let window: WindowWithGATracking;
-
-// Function to add a new event to the Google Analytics dataLayer
-const gtag = (...args: (string | object)[]) => {
-  if (window !== undefined)
-    if (window.dataLayer !== undefined) {
-      window.dataLayer.push(args);
-    }
-};
-
-// Function to initialize the Google Analytics script
-const initGA = (GA_MEASUREMENT_ID: string) => {
-  const gtagUrl = 'https://www.googletagmanager.com/gtag/js';
-
-  // Load the script asynchronously
-  const script = document.createElement('script');
-  script.async = true;
-  script.src = `${gtagUrl}?id=${GA_MEASUREMENT_ID}`;
-  document.body.appendChild(script);
-
-  // Initialize the dataLayer and send initial configuration data
-  window.dataLayer = window.dataLayer || [];
-  gtag('js', new Date());
-  gtag('config', GA_MEASUREMENT_ID);
-};
 
 const isTruish = (value?: string | string[]) => {
   return Boolean(value) && value !== '0' && value !== 'false';
@@ -83,6 +58,18 @@ const GA: IWebAnalyticsFunc = (config: Config, versionShort: string, versionLong
     return isTest || isDebugMode || (isProd && Boolean(gaID));
   };
 
+  // Function to add a new event to the Google Analytics dataLayer
+  const gtag = (...args: (string | object)[]) => {
+    if (window !== undefined)
+      if (window.dataLayer !== undefined && Array.isArray(window.dataLayer)) {
+        window.dataLayer.push(args);
+        if (isDebugMode) {
+          // eslint-disable-next-line no-console
+          console.log('[GA Tracking]', ...args);
+        }
+      }
+  };
+
   const trackError = (description: string) => {
     let msg = description;
     if (!/^jaeger/i.test(msg)) {
@@ -94,10 +81,6 @@ const GA: IWebAnalyticsFunc = (config: Config, versionShort: string, versionLong
       description: msg,
       fatal: false,
     });
-
-    if (isDebugMode) {
-      logTrackingCalls();
-    }
   };
 
   const trackEvent = (
@@ -134,10 +117,6 @@ const GA: IWebAnalyticsFunc = (config: Config, versionShort: string, versionLong
       ...(event.label && { event_label: event.label }),
       ...(event.value && { event_value: event.value }),
     });
-
-    if (isDebugMode) {
-      logTrackingCalls();
-    }
   };
 
   const trackRavenError = (ravenData: RavenTransportOptions) => {
@@ -151,8 +130,19 @@ const GA: IWebAnalyticsFunc = (config: Config, versionShort: string, versionLong
       return;
     }
 
-    initGA(gaID || 'debug-mode');
+    const gtagUrl = 'https://www.googletagmanager.com/gtag/js';
+    const GA_MEASUREMENT_ID = gaID || 'debug-mode';
 
+    // Load the script asynchronously
+    const script = document.createElement('script');
+    script.async = true;
+    script.src = `${gtagUrl}?id=${GA_MEASUREMENT_ID}`;
+    document.body.appendChild(script);
+
+    // Initialize the dataLayer and send initial configuration data
+    window.dataLayer = window.dataLayer || [];
+    gtag('js', new Date());
+    gtag('config', GA_MEASUREMENT_ID);
     gtag('set', {
       appId: 'github.com/jaegertracing/jaeger-ui',
       appName: 'Jaeger UI',
@@ -194,9 +184,6 @@ const GA: IWebAnalyticsFunc = (config: Config, versionShort: string, versionLong
         Raven.captureException(evt.reason);
       };
     }
-    if (isDebugMode) {
-      logTrackingCalls();
-    }
   };
 
   const trackPageView = (pathname: string, search: string | TNil) => {
@@ -204,9 +191,6 @@ const GA: IWebAnalyticsFunc = (config: Config, versionShort: string, versionLong
     gtag('event', 'page_view', {
       page_path: pagePath,
     });
-    if (isDebugMode) {
-      logTrackingCalls();
-    }
   };
 
   return {
