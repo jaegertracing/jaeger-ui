@@ -21,18 +21,6 @@ const metricType = {
   errors: 'errors',
 };
 
-// export for tests
-// TODO use native `allSetteled` once #818 is done
-export function allSettled(promises) {
-  const wrappedPromises = promises.map(p =>
-    Promise.resolve(p).then(
-      val => ({ status: 'fulfilled', value: val }),
-      err => ({ status: 'rejected', reason: err })
-    )
-  );
-  return Promise.all(wrappedPromises);
-}
-
 export const fetchTrace = createAction(
   '@JAEGER_API/FETCH_TRACE',
   id => JaegerAPI.fetchTrace(id),
@@ -84,7 +72,7 @@ export const fetchDependencies = createAction('@JAEGER_API/FETCH_DEPENDENCIES', 
 export const fetchAllServiceMetrics = createAction(
   '@JAEGER_API/FETCH_ALL_SERVICE_METRICS',
   (serviceName, query) => {
-    return allSettled([
+    return Promise.allSettled([
       JaegerAPI.fetchMetrics(metricType.latencies, [serviceName], { ...query, quantile: 0.5 }),
       JaegerAPI.fetchMetrics(metricType.latencies, [serviceName], { ...query, quantile: 0.75 }),
       JaegerAPI.fetchMetrics(metricType.latencies, [serviceName], query),
@@ -98,7 +86,7 @@ export const fetchAggregatedServiceMetrics = createAction(
   '@JAEGER_API/FETCH_AGGREGATED_SERVICE_METRICS',
   (serviceName, queryParams) => {
     const query = { ...queryParams, groupByOperation: true };
-    return allSettled([
+    return Promise.allSettled([
       JaegerAPI.fetchMetrics(metricType.latencies, [serviceName], query),
       JaegerAPI.fetchMetrics(metricType.calls, [serviceName], query),
       JaegerAPI.fetchMetrics(metricType.errors, [serviceName], query),
