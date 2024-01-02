@@ -60,7 +60,6 @@
     "drange": "^2.0.0",
     "global": "^4.3.2",
     "history": "^4.6.3",
-    "is-promise": "^4.0.0",
     "isomorphic-fetch": "^3.0.0",
     "lodash": "^4.17.19",
     "logfmt": "^1.4.0",

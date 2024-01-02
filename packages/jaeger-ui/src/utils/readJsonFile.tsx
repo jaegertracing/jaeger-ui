@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export default function readJsonFile(fileList: { file: File }) {
+export default function readJsonFile(fileList: { file: File }): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => {
@@ -22,24 +22,21 @@ export default function readJsonFile(fileList: { file: File }) {
       }
       try {
         resolve(JSON.parse(reader.result));
-        /* eslint-disable @typescript-eslint/no-explicit-any */
-      } catch (error: any) {
-        reject(new Error(`Error parsing JSON: ${error.message}`));
+      } catch (error: unknown) {
+        reject(new Error(`Error parsing JSON: ${(error as Error).message}`));
       }
     };
     reader.onerror = () => {
-      // eslint-disable-next-line no-console
       const errMessage = reader.error ? `: ${String(reader.error)}` : '';
       reject(new Error(`Error reading the JSON file${errMessage}`));
     };
     reader.onabort = () => {
-      // eslint-disable-next-line no-console
       reject(new Error(`Reading the JSON file has been aborted`));
     };
     try {
       reader.readAsText(fileList.file);
-    } catch (error: any) {
-      reject(new Error(`Error reading the JSON file: ${error.message}`));
+    } catch (error: unknown) {
+      reject(new Error(`Error reading the JSON file: ${(error as Error).message}`));
     }
   });
 }
