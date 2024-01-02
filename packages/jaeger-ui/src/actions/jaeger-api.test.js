@@ -23,8 +23,11 @@ jest.mock(
     })
 );
 
-import sinon from 'sinon';
+function isPromise(p) {
+  return p !== null && typeof p === 'object' && typeof p.then === 'function' && typeof p.catch === 'function';
+}
 
+import sinon from 'sinon';
 import * as jaegerApiActions from './jaeger-api';
 import JaegerAPI from '../api/jaeger';
 
@@ -48,6 +51,11 @@ describe('actions/jaeger-api', () => {
     expect(() => mock.verify()).not.toThrow();
   });
 
+  it('@JAEGER_API/FETCH_TRACE should return the promise', () => {
+    const { payload } = jaegerApiActions.fetchTrace(id);
+    expect(isPromise(payload)).toBeTruthy();
+  });
+
   it('@JAEGER_API/FETCH_TRACE should attach the id as meta', () => {
     const { meta } = jaegerApiActions.fetchTrace(id);
     expect(meta.id).toBe(id);
@@ -57,6 +65,11 @@ describe('actions/jaeger-api', () => {
     mock.expects('searchTraces').withExactArgs(sinon.match.has('traceID', ids));
     jaegerApiActions.fetchMultipleTraces(ids);
     expect(() => mock.verify()).not.toThrow();
+  });
+
+  it('@JAEGER_API/FETCH_MULTIPLE_TRACES should return the promise', () => {
+    const { payload } = jaegerApiActions.fetchMultipleTraces(ids);
+    expect(isPromise(payload)).toBeTruthy();
   });
 
   it('@JAEGER_API/FETCH_MULTIPLE_TRACES should attach the ids as meta', () => {
@@ -70,6 +83,11 @@ describe('actions/jaeger-api', () => {
     expect(() => mock.verify()).not.toThrow();
   });
 
+  it('@JAEGER_API/ARCHIVE_TRACE should return the promise', () => {
+    const { payload } = jaegerApiActions.archiveTrace(id);
+    expect(isPromise(payload)).toBeTruthy();
+  });
+
   it('@JAEGER_API/ARCHIVE_TRACE should attach the id as meta', () => {
     const { meta } = jaegerApiActions.archiveTrace(id);
     expect(meta.id).toBe(id);
@@ -81,9 +99,19 @@ describe('actions/jaeger-api', () => {
     expect(() => mock.verify()).not.toThrow();
   });
 
+  it('@JAEGER_API/SEARCH_TRACES should return the promise', () => {
+    const { payload } = jaegerApiActions.searchTraces(query);
+    expect(isPromise(payload)).toBeTruthy();
+  });
+
   it('@JAEGER_API/SEARCH_TRACES should attach the query as meta', () => {
     const { meta } = jaegerApiActions.searchTraces(query);
     expect(meta.query).toEqual(query);
+  });
+
+  it('@JAEGER_API/FETCH_SERVICES should return a promise', () => {
+    const { payload } = jaegerApiActions.fetchServices();
+    expect(isPromise(payload)).toBeTruthy();
   });
 
   it('@JAEGER_API/FETCH_SERVICE_OPERATIONS should call the JaegerAPI', () => {
@@ -104,6 +132,11 @@ describe('actions/jaeger-api', () => {
     expect(() => mock.verify()).not.toThrow();
   });
 
+  it('@JAEGER_API/FETCH_DEEP_DEPENDENCY_GRAPH should return the promise', () => {
+    const { payload } = jaegerApiActions.fetchDeepDependencyGraph(query);
+    expect(isPromise(payload)).toBeTruthy();
+  });
+
   it('@JAEGER_API/FETCH_DEEP_DEPENDENCY_GRAPH should attach the query as meta', () => {
     const { meta } = jaegerApiActions.fetchDeepDependencyGraph(query);
     expect(meta.query).toEqual(query);
@@ -115,6 +148,11 @@ describe('actions/jaeger-api', () => {
     expect(called.verify()).toBeTruthy();
   });
 
+  it('@JAEGER_API/FETCH_ALL_SERVICE_METRICS should return the promise', () => {
+    const { payload } = jaegerApiActions.fetchAllServiceMetrics('serviceName', query);
+    expect(isPromise(payload)).toBeTruthy();
+  });
+
   it('@JAEGER_API/FETCH_ALL_SERVICE_METRICS should fetch service metrics by name', () => {
     mock.expects('fetchMetrics');
     mock.expects('fetchMetrics');
@@ -123,6 +161,11 @@ describe('actions/jaeger-api', () => {
     mock.expects('fetchMetrics');
     jaegerApiActions.fetchAllServiceMetrics('serviceName', query);
     expect(() => mock.verify()).not.toThrow();
+  });
+
+  it('@JAEGER_API/FETCH_AGGREGATED_SERVICE_METRICS should return the promise', () => {
+    const { payload } = jaegerApiActions.fetchAggregatedServiceMetrics('serviceName', query);
+    expect(isPromise(payload)).toBeTruthy();
   });
 
   it('@JAEGER_API/FETCH_AGGREGATED_SERVICE_METRICS should fetch service metrics by name', () => {
