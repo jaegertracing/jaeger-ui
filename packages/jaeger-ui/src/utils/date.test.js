@@ -224,6 +224,7 @@ describe('formatRelativeDate', () => {
     const output = input.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
+      year: 'numeric',
     });
     expect(formatRelativeDate(input)).toBe(output);
   });
