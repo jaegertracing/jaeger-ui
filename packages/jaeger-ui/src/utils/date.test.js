@@ -197,8 +197,8 @@ describe('convertToTimeUnit', () => {
 });
 
 describe('formatRelativeDate', () => {
-  var currentTimestamp;
-  var currentDate;
+  let currentTimestamp;
+  let currentDate;
   beforeEach(() => {
     // Set a fixed date to avoid issues like https://github.com/jaegertracing/jaeger-ui/issues/2090.
     jest.useFakeTimers();
