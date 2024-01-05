@@ -12,18 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import isPromise from 'is-promise';
-
 import readJsonFile from './readJsonFile';
 
 describe('fileReader.readJsonFile', () => {
-  it('returns a promise', () => {
-    const promise = readJsonFile({ rando: true });
-    // prevent the unhandled rejection warning
-    promise.catch(() => {});
-    expect(isPromise(promise)).toBeTruthy();
-  });
-
   it('rejects when given an invalid file', () => {
     const p = readJsonFile({ rando: true });
     return expect(p).rejects.toMatchObject(expect.any(Error));

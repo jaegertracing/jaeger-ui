@@ -12,10 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import ReactGA from 'react-ga';
 import * as GA from './ga';
-import * as utils from './utils';
-import { getVersionInfo, getAppEnvironment } from '../constants';
+import { getAppEnvironment } from '../constants';
 
 jest.mock('./conv-raven-to-ga', () => () => ({
   category: 'jaeger/a',
@@ -35,7 +33,6 @@ function getStr(len) {
 }
 
 describe('google analytics tracking', () => {
-  let calls;
   let tracking;
 
   beforeAll(() => {
@@ -54,16 +51,18 @@ describe('google analytics tracking', () => {
   });
 
   beforeEach(() => {
-    getVersionInfo.mockReturnValue('{}');
-    calls = ReactGA.testModeAPI.calls;
-    calls.length = 0;
+    jest.useFakeTimers();
+    // Set an arbitrary date so that we can test the date-based dimension
+    jest.setSystemTime(new Date('2023-01-01'));
+    window.dataLayer = [];
   });
 
   describe('init', () => {
     it('check init function (no cookies)', () => {
       tracking.init();
-      expect(calls).toEqual([
-        ['create', 'UA-123456', 'auto'],
+      expect(window.dataLayer).toEqual([
+        ['js', new Date()],
+        ['config', 'UA-123456'],
         [
           'set',
           {
@@ -78,8 +77,9 @@ describe('google analytics tracking', () => {
     it('check init function (no cookies)', () => {
       document.cookie = 'page=1;';
       tracking.init();
-      expect(calls).toEqual([
-        ['create', 'UA-123456', 'auto'],
+      expect(window.dataLayer).toEqual([
+        ['js', new Date()],
+        ['config', 'UA-123456'],
         [
           'set',
           {
@@ -96,33 +96,33 @@ describe('google analytics tracking', () => {
   describe('trackPageView', () => {
     it('tracks a page view', () => {
       tracking.trackPageView('a', 'b');
-      expect(calls).toEqual([['send', { hitType: 'pageview', page: 'ab' }]]);
+      expect(window.dataLayer).toEqual([['event', 'page_view', { page_path: 'ab' }]]);
     });
 
     it('ignores search when it is falsy', () => {
       tracking.trackPageView('a');
-      expect(calls).toEqual([['send', { hitType: 'pageview', page: 'a' }]]);
+      expect(window.dataLayer).toEqual([['event', 'page_view', { page_path: 'a' }]]);
     });
   });
 
   describe('trackError', () => {
     it('tracks an error', () => {
       tracking.trackError('a');
-      expect(calls).toEqual([
-        ['send', { hitType: 'exception', exDescription: expect.any(String), exFatal: false }],
+      expect(window.dataLayer).toEqual([
+        ['event', 'exception', { description: expect.any(String), fatal: false }],
       ]);
     });
 
     it('ensures "jaeger" is prepended', () => {
       tracking.trackError('a');
-      expect(calls).toEqual([['send', { hitType: 'exception', exDescription: 'jaeger/a', exFatal: false }]]);
+      expect(window.dataLayer).toEqual([['event', 'exception', { description: 'jaeger/a', fatal: false }]]);
     });
 
     it('truncates if needed', () => {
       const str = `jaeger/${getStr(200)}`;
       tracking.trackError(str);
-      expect(calls).toEqual([
-        ['send', { hitType: 'exception', exDescription: str.slice(0, 149), exFatal: false }],
+      expect(window.dataLayer).toEqual([
+        ['event', 'exception', { description: str.slice(0, 149), fatal: false }],
       ]);
     });
   });
@@ -132,13 +132,12 @@ describe('google analytics tracking', () => {
       const category = 'jaeger/some-category';
       const action = 'some-action';
       tracking.trackEvent(category, action);
-      expect(calls).toEqual([
+      expect(window.dataLayer).toEqual([
         [
-          'send',
+          'event',
+          'some-action',
           {
-            hitType: 'event',
-            eventCategory: category,
-            eventAction: action,
+            event_category: category,
           },
         ],
       ]);
@@ -148,22 +147,19 @@ describe('google analytics tracking', () => {
       const category = 'some-category';
       const action = 'some-action';
       tracking.trackEvent(category, action);
-      expect(calls).toEqual([
-        ['send', { hitType: 'event', eventCategory: `jaeger/${category}`, eventAction: action }],
-      ]);
+      expect(window.dataLayer).toEqual([['event', 'some-action', { event_category: `jaeger/${category}` }]]);
     });
 
     it('truncates values, if needed', () => {
       const str = `jaeger/${getStr(600)}`;
       tracking.trackEvent(str, str, str);
-      expect(calls).toEqual([
+      expect(window.dataLayer).toEqual([
         [
-          'send',
+          'event',
+          str.slice(0, 499),
           {
-            hitType: 'event',
-            eventCategory: str.slice(0, 149),
-            eventAction: str.slice(0, 499),
-            eventLabel: str.slice(0, 499),
+            event_category: str.slice(0, 149),
+            event_label: str.slice(0, 499),
           },
         ],
       ]);
@@ -171,10 +167,12 @@ describe('google analytics tracking', () => {
   });
 
   it('converting raven-js errors', () => {
-    window.onunhandledrejection({ reason: new Error('abc') });
-    expect(calls).toEqual([
-      ['send', { hitType: 'exception', exDescription: expect.any(String), exFatal: false }],
-      ['send', { hitType: 'event', eventCategory: expect.any(String), eventAction: expect.any(String) }],
+    window.onunhandledrejection({
+      reason: new Error('abc'),
+    });
+    expect(window.dataLayer).toEqual([
+      ['event', 'exception', { description: expect.any(String), fatal: false }],
+      ['event', expect.any(String), { event_category: expect.any(String) }],
     ]);
   });
 
@@ -206,14 +204,18 @@ describe('google analytics tracking', () => {
       );
     });
 
+    /* eslint-disable no-console */
     it('isDebugMode = true', () => {
       // eslint-disable-next-line no-import-assign
-      utils.logTrackingCalls = jest.fn();
+      console.log = jest.fn();
+
       trackingDebug.init();
+      expect(console.log).toHaveBeenCalledTimes(4);
+
       trackingDebug.trackError();
       trackingDebug.trackEvent('jaeger/some-category', 'some-action');
       trackingDebug.trackPageView('a', 'b');
-      expect(utils.logTrackingCalls).toHaveBeenCalledTimes(4);
+      expect(console.log).toHaveBeenCalledTimes(7);
     });
   });
 });

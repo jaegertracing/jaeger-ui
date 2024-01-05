@@ -13,141 +13,127 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow, mount } from 'enzyme';
+import { screen, render } from '@testing-library/react';
+import ErrorMessage, { Details, MAX_DETAIL_LENGTH } from './ErrorMessage';
 
-import ErrorMessage, { Details } from './ErrorMessage';
+import '@testing-library/jest-dom';
 
 describe('<ErrorMessage>', () => {
-  let wrapper;
-  let error;
+  const errorMessage = 'some error message';
 
-  beforeEach(() => {
-    error = 'some-error';
-    wrapper = shallow(<ErrorMessage error={error} />);
-  });
-
-  it('is ok when not passed an error', () => {
-    wrapper.setProps({ error: null });
-    expect(wrapper).toBeDefined();
+  it('renders empty when not passed an error', () => {
+    render(<ErrorMessage />);
+    expect(screen.queryByTestId('ErrorMessage')).toBeNull();
   });
 
   it('renders a message when passed a string', () => {
-    const msg = wrapper.find('Message');
-    expect(msg.length).toBe(1);
-    expect(msg.shallow().text()).toMatch(error);
+    render(<ErrorMessage error={errorMessage} />);
+    expect(screen.getByText(errorMessage)).toBeInTheDocument();
   });
 
   it('<Details /> renders empty on string error', () => {
-    wrapper = shallow(<Details error={error} />);
-    expect(wrapper).toMatchSnapshot();
+    render(<Details error={errorMessage} />);
+    expect(screen.queryByTestId('ErrorMessage--details')).toBeNull();
+    expect(screen.queryByTestId('ErrorMessage--details--wrapper')).toBeNull();
   });
 
   it('<Details /> renders wrapper on wrap', () => {
-    error = {
-      message: 'some-http-ish-message',
+    const error = {
+      httpStatus: 'value-httpStatus',
       httpStatusText: 'value-httpStatusText',
       httpUrl: 'value-httpUrl',
       httpQuery: 'value-httpQuery',
       httpBody: 'value-httpBody',
     };
-    wrapper = shallow(<Details error={error} wrap />);
-    expect(wrapper).toMatchSnapshot();
+    render(<Details error={error} wrap />);
+
+    // The wrapper element should be present
+    expect(screen.getByTestId('ErrorMessage--details--wrapper')).toBeInTheDocument();
+
+    // All the error attributes should be present
+    Object.keys(error).forEach(key => {
+      expect(screen.getByText(error[key])).toBeInTheDocument();
+    });
   });
 
   it('<Details /> renders custom wrapper class', () => {
-    error = {
+    const error = {
+      httpStatus: 'value-httpStatus',
+      httpStatusText: 'value-httpStatusText',
+      httpUrl: 'value-httpUrl',
+      httpQuery: 'value-httpQuery',
+      httpBody: 'value-httpBody',
+    };
+    render(<Details error={error} wrap wrapperClassName="TEST-WRAPPER-CLASS" />);
+
+    // The wrapper element should be present
+    expect(screen.getByTestId('ErrorMessage--details--wrapper')).toBeInTheDocument();
+    expect(screen.getByTestId('ErrorMessage--details--wrapper')).toHaveClass('TEST-WRAPPER-CLASS');
+
+    // All the error attributes should be present
+    Object.keys(error).forEach(key => {
+      expect(screen.getByText(error[key])).toBeInTheDocument();
+    });
+  });
+
+  it('renders the error message', () => {
+    const error = new Error('another-error');
+    render(<ErrorMessage error={error} />);
+
+    expect(screen.getByText(error.message)).toBeInTheDocument();
+  });
+
+  it('renders HTTP related data from the error', () => {
+    const error = {
+      message: 'some-http-ish-message',
+      httpStatus: 'value-httpStatus',
+      httpStatusText: 'value-httpStatusText',
+      httpUrl: 'value-httpUrl',
+      httpQuery: 'value-httpQuery',
+      httpBody: 'value-httpBody',
+    };
+
+    render(<ErrorMessage error={error} />);
+    Object.keys(error).forEach(key => {
+      expect(screen.getByText(error[key])).toBeInTheDocument();
+    });
+  });
+
+  it('renders truncated body excerpt on large body', () => {
+    const error = {
+      message: 'some-http-ish-message',
+      httpStatus: 'value-httpStatus',
+      httpStatusText: 'value-httpStatusText',
+      httpUrl: 'value-httpUrl',
+      httpQuery: 'value-httpQuery',
+      httpBody: `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed ac maximus elit. Curabitur non urna in odio dictum porttitor. Fusce sed mi mauris. Sed vehicula mi nec nulla ultricies, a faucibus nisi feugiat. Aliquam varius diam in porttitor maximus. Quisque in varius neque, vel consequat enim. Donec faucibus lorem tortor, a aliquam augue vulputate eu. Pellentesque tincidunt, nisl vitae tristique fringilla, elit augue eleifend leo, eget laoreet turpis justo et dui. Suspendisse nec lacinia tortor, non fermentum arcu. Morbi at nunc nisi. Vestibulum condimentum sollicitudin nibh ut cursus. Nullam neque erat, eleifend eget libero eget, porta maximus diam. Integer ut est congue, placerat ipsum nec, varius ligula. Integer maximus gravida velit quis commodo. Phasellus posuere a nulla id sodales. Aliquam ultrices purus et iaculis imperdiet. Morbi in felis maximus, dictum sapien in, malesuada augue. Duis sit amet tortor ac ante pellentesque iaculis eget vestibulum ex. Nunc malesuada egestas mauris, ut tempus eros hendrerit dui.`,
+    };
+
+    render(<ErrorMessage error={error} />);
+
+    // All the keys expect httpBody should be present as is
+    Object.keys(error).forEach(key => {
+      if (key !== 'httpBody') expect(screen.getByText(error[key])).toBeInTheDocument();
+    });
+
+    // The body should be truncated
+    expect(
+      screen.getByText(`${error.httpBody.slice(0, MAX_DETAIL_LENGTH - 3).trim()}...`)
+    ).toBeInTheDocument();
+  });
+
+  it('renders on missing httpStatus from the error', () => {
+    const error = {
       message: 'some-http-ish-message',
       httpStatusText: 'value-httpStatusText',
       httpUrl: 'value-httpUrl',
       httpQuery: 'value-httpQuery',
       httpBody: 'value-httpBody',
     };
-    wrapper = shallow(<Details error={error} wrap wrapperClassName="TEST-WRAPPER-CLASS" />);
-    expect(wrapper).toMatchSnapshot();
-  });
 
-  describe('rendering more complex errors', () => {
-    it('renders the error message', () => {
-      error = new Error('another-error');
-      wrapper.setProps({ error });
-      const msg = wrapper.find('Message');
-      expect(msg.length).toBe(1);
-      expect(msg.shallow().text()).toMatch(error.message);
+    render(<ErrorMessage error={error} />);
+    Object.keys(error).forEach(key => {
+      expect(screen.getByText(error[key])).toBeInTheDocument();
     });
-
-    it('renders HTTP related data from the error', () => {
-      error = {
-        message: 'some-http-ish-message',
-        httpStatus: 'value-httpStatus',
-        httpStatusText: 'value-httpStatusText',
-        httpUrl: 'value-httpUrl',
-        httpQuery: 'value-httpQuery',
-        httpBody: 'value-httpBody',
-      };
-      wrapper.setProps({ error });
-      const details = wrapper.find('Details');
-      expect(details.length).toBe(1);
-      const detailsWrapper = details.shallow();
-      Object.keys(error).forEach(key => {
-        if (key === 'message') {
-          return;
-        }
-        const errorAttr = detailsWrapper.find(`ErrorAttr[value="${error[key]}"]`);
-        expect(errorAttr.length).toBe(1);
-      });
-    });
-
-    it('renders truncated body excerpt on large body', () => {
-      error = {
-        message: 'some-http-ish-message',
-        httpStatus: 'value-httpStatus',
-        httpStatusText: 'value-httpStatusText',
-        httpUrl: 'value-httpUrl',
-        httpQuery: 'value-httpQuery',
-        httpBody: `value-httpBody-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed vel
-          arcu mattis, pellentesque metus eget, fermentum dolor. Pellentesque habitant morbi
-          tristique senectus et netus et malesuada fames ac turpis egestas. Integer placerat turpis
-          diam, in eleifend est congue maximus. Sed dictum ipsum a dolor pellentesque, vestibulum
-          congue mi pharetra. Pellentesque id augue sit amet libero consectetur rutrum ac rutrum
-          nisl. Proin suscipit, libero et gravida tristique, magna dolor pulvinar ex, sit amet
-          accumsan tellus metus vel elit. Ut condimentum ultrices felis vel feugiat. Praesent tellus
-          nisl, feugiat ut est sed, lobortis lacinia elit. Aenean consequat nunc arcu, in tincidunt
-          libero blandit non.
-          
-          Vestibulum aliquet lobortis tincidunt. Donec in nunc a sapien rutrum ultricies eu ac
-          felis. Vestibulum feugiat in mauris id fringilla. Nulla enim nisl, rutrum vel tellus vel,
-          tincidunt aliquam enim. Nullam in tortor mi. Vestibulum pellentesque velit eget eros
-          varius, ut sollicitudin urna consectetur. Ut gravida, dolor id varius faucibus, magna
-          lorem condimentum metus, sit amet hendrerit nisi nisi eu dolor. Nulla vel metus sit amet
-          odio rhoncus rutrum eu in sapien. Mauris aliquam sed sem sit amet dignissim.`,
-      };
-
-      wrapper.setProps({ error });
-      const details = wrapper.find('Details');
-      expect(details.length).toBe(1);
-      const detailsWrapper = details.shallow();
-      expect(detailsWrapper).toMatchSnapshot();
-    });
-
-    it('renders on missing httpStatus from the error', () => {
-      error = {
-        message: 'some-http-ish-message',
-        httpStatusText: 'value-httpStatusText',
-        httpUrl: 'value-httpUrl',
-        httpQuery: 'value-httpQuery',
-        httpBody: 'value-httpBody',
-      };
-      wrapper.setProps({ error });
-      const details = wrapper.find('Details');
-      expect(details.length).toBe(1);
-      const detailsWrapper = details.shallow();
-      expect(detailsWrapper).toMatchSnapshot();
-    });
-  });
-
-  it('is fine when mounted', () => {
-    error = { message: 'le-error', httpStatus: 'some-status' };
-    wrapper = mount(<ErrorMessage error={error} />);
-    expect(wrapper).toBeDefined();
   });
 });
