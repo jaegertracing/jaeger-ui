@@ -15,7 +15,7 @@
 import * as React from 'react';
 import { Checkbox, Popover } from 'antd';
 import cx from 'classnames';
-import { TLayoutVertex } from '@jaegertracing/plexus/lib/types';
+import { TLayoutVertex } from '@jaegertracing/plexus/src/types';
 import { IoLocate, IoEyeOff } from 'react-icons/io5';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';

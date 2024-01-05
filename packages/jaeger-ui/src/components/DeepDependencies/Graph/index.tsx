@@ -15,9 +15,9 @@
 import React, { PureComponent } from 'react';
 import memoize from 'memoize-one';
 import { Digraph, LayoutManager } from '@jaegertracing/plexus';
-import { TSetProps, TFromGraphStateFn, TDefEntry } from '@jaegertracing/plexus/lib/Digraph/types';
-import { TEdge } from '@jaegertracing/plexus/lib/types';
-import TNonEmptyArray from '@jaegertracing/plexus/lib/types/TNonEmptyArray';
+import { TSetProps, TFromGraphStateFn, TDefEntry } from '@jaegertracing/plexus/src/Digraph/types';
+import { TEdge } from '@jaegertracing/plexus/src/types';
+import TNonEmptyArray from '@jaegertracing/plexus/src/types/TNonEmptyArray';
 
 import { getNodeRenderer, measureNode } from './DdgNodeContent';
 import getNodeRenderers from './getNodeRenderers';

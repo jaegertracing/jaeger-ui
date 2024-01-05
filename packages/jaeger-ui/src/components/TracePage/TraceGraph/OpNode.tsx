@@ -14,7 +14,7 @@
 
 import * as React from 'react';
 import { Popover } from 'antd';
-import { TLayoutVertex } from '@jaegertracing/plexus/lib/types';
+import { TLayoutVertex } from '@jaegertracing/plexus/src/types';
 
 import { TSumSpan } from './types';
 import CopyIcon from '../../common/CopyIcon';

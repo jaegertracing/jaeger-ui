@@ -14,7 +14,7 @@
 
 import DRange from 'drange';
 
-import { TEdge } from '@jaegertracing/plexus/lib/types';
+import { TEdge } from '@jaegertracing/plexus/src/types';
 import convPlexus from '../../../model/trace-dag/convPlexus';
 import TraceDag from '../../../model/trace-dag/TraceDag';
 import TDagNode from '../../../model/trace-dag/types/TDagNode';

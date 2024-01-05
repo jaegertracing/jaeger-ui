@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { TEdge } from '@jaegertracing/plexus/lib/types';
+import { TEdge } from '@jaegertracing/plexus/src/types';
 
 import { NodeID } from './types';
 import TDagNode from './types/TDagNode';

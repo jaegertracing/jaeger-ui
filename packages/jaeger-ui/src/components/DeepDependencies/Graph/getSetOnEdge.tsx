@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { TRendererUtils } from '@jaegertracing/plexus/lib/Digraph/types';
-import { TLayoutEdge } from '@jaegertracing/plexus/lib/types';
+import { TRendererUtils } from '@jaegertracing/plexus/src/Digraph/types';
+import { TLayoutEdge } from '@jaegertracing/plexus/src/types';
 
 import { getEdgeId } from '../../../model/ddg/GraphModel';
 

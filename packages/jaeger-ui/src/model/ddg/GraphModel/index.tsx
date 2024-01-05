@@ -14,7 +14,7 @@
 
 import memoize from 'lru-memoize';
 
-import { TEdge } from '@jaegertracing/plexus/lib/types';
+import { TEdge } from '@jaegertracing/plexus/src/types';
 
 import getDerivedViewModifiers from './getDerivedViewModifiers';
 import getEdgeId from './getEdgeId';

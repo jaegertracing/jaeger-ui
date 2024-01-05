@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "version": "0.2.0",
   "description": "Directed Graph React component",
-  "main": "lib/index.js",
+  "main": "src/index.tsx",
   "files": [
     "lib",
     "dist"
